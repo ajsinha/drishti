@@ -177,6 +177,16 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public java.util.Optional<String> dataVersion(String kind) {
+        return delegate.dataVersion(kind);
+    }
+
+    @Override
+    public java.util.Optional<String> dataVersion(String kind, java.time.LocalDate date) {
+        return delegate.dataVersion(kind, date);
+    }
+
+    @Override
     public String health() {
         return delegate.health();
     }

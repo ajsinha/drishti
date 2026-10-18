@@ -41,7 +41,10 @@ final class TableProblems {
     private static final System.Logger LOGGER = System.getLogger(TableProblems.class.getName());
     private static final int MAX_REASON = 300;
 
-    /** One failure: the table version it was seen at ({@code -1} when the log itself failed), why, when. */
+    /**
+     * One failure: the table commit it was seen at (the commit's time, so a table removed and written again, whose version numbers start at 0
+     * again, is a new commit; {@code -1} when the log itself failed), why, when.
+     */
     record Problem(String kind, String where, long version, String reason, Instant at) {}
 
     /** The ids of a kind that could not be listed, and since when; the listing kept is from {@code keptFrom} (null: none). */
@@ -86,7 +89,7 @@ final class TableProblems {
         }
     }
 
-    /** The kind's table is now at {@code version}: failures seen at other versions may be fixed, so they are forgotten. */
+    /** The kind's table is now at the commit {@code version} (its time): failures seen at other commits may be fixed, so they are forgotten. */
     void version(String kind, long version) {
         byKey.values().removeIf(p -> p.kind().equals(kind) && p.version() >= 0 && p.version() != version);
     }

@@ -148,8 +148,8 @@ public final class BiAiService {
         String target;
         if (report != null && !report.isBlank()) {
             BiReportService.Base t = reports.target(p, report);
-            model = t.model();
-            target = String.valueOf(model.get("id"));
+            target = String.valueOf(t.model().get("id"));
+            model = layered(t.model());                    // a report on a model: its describe as tables and fields, as the prompt lists them
             run = q -> datasets.json(datasets.ask(p, t.dsItem(), q, false));
         } else if (dataset != null && !dataset.isBlank() && reports.layerRef(p, dataset) != null) {
             model = layered(datasets.describeModel(p, reports.layerRef(p, dataset)));     // a model of the model layer: asked as a model query, as the reader

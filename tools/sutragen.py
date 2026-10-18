@@ -16,7 +16,7 @@
 """Draft Sutras from folders of JSON Lines files: one Sutra per kind, or one per distinct combination of the values
 of some "match" fields (for example one per productType), each with its own samples under tests/.
 
-    uv run --with pyyaml python tools/sutragen.py data/jsonl --key tradeId --match productType --out /tmp/sutras
+    uv run --with pyyaml python tools/sutragen.py data/testdata/trades/endur --kind trade --key TRADE_ID --match PRODUCT_TYPE --out data/build/sutras
 
 Input: one or more folders (every *.jsonl in them; -r for subfolders) and/or single .jsonl files. A line is one plain JSON document, or the loader
 envelope {"kind": ..., "id": ..., "doc": {...} | "<json text>"} whose doc is unwrapped (and whose kind wins over the
@@ -83,13 +83,13 @@ def input_files(inputs, recursive: bool = False) -> list[pathlib.Path]:
         i = pathlib.Path(i)
         if i.is_dir():
             pick = "**/" if recursive else ""
-            files += sorted(list(i.glob(pick + "*.jsonl")) + [f for f in i.glob(pick + "*.json") if is_json_array(f)])
+            files += sorted(list(i.glob(pick + "*.jsonl")) + list(i.glob(pick + "*.jsonl.gz")) + [f for f in i.glob(pick + "*.json") if is_json_array(f)])
         elif i.is_file():
             files.append(i)
         else:
             raise SystemExit(f"sutragen: {i} does not exist")
     if not files:
-        raise SystemExit(f"sutragen: no *.jsonl files (or .json arrays) in {', '.join(map(str, inputs))}")
+        raise SystemExit(f"sutragen: no *.jsonl or *.jsonl.gz files (or .json arrays) in {', '.join(map(str, inputs))}")
     return files
 
 
@@ -157,12 +157,14 @@ def read_records(files, say_bad=None):
             except ValueError as e:
                 say_bad(str(e))
             continue
-        with open(f, encoding="utf-8") as fh:
+        gz = f.suffix.lower() == ".gz"                         # JSON Lines compressed (data/testdata's .jsonl.gz)
+        stem = pathlib.Path(f.stem).stem if gz else f.stem      # x.jsonl.gz -> x
+        with (__import__("gzip").open(f, "rt", encoding="utf-8") if gz else open(f, encoding="utf-8")) as fh:
             for n, line in enumerate(fh, 1):
                 if not line.strip():
                     continue
                 try:
-                    k, doc = unwrap(json.loads(line), f.stem)
+                    k, doc = unwrap(json.loads(line), stem)
                 except ValueError as e:
                     say_bad(f"{f}:{n}: not JSON ({e})")
                     continue

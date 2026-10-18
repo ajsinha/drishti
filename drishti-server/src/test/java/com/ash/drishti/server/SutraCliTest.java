@@ -209,6 +209,12 @@ class SutraCliTest {
         }
         assertThat(Files.exists(tmp.resolve("evil.sutra.yaml"))).isFalse();
         assertThat(Files.exists(out.resolve("../../evil.sutra.yaml"))).isFalse();
+        // a pack's samples/<kind>.jsonl: every line is a sample, not only the first
+        Path jsonl = tmp.resolve("trade.jsonl");
+        Files.writeString(jsonl, "{\"TRADE_ID\":\"T1\",\"NOTIONAL\":100}\n{\"TRADE_ID\":\"T2\",\"NOTIONAL\":250,\"DESK\":\"FX\"}\n{\"TRADE_ID\":\"T3\",\"NOTIONAL\":75}\n");
+        Run lines = run("shape", jsonl.toString());
+        assertThat(lines.code()).isZero();
+        assertThat(lines.out()).contains("DESK").contains("3");
     }
 
     @Test

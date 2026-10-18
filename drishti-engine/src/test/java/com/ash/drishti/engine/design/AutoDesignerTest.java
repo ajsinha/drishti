@@ -86,9 +86,9 @@ class AutoDesignerTest {
         Design d = design(example("all-panels-showcase"), null);
         Map<String, String> k = kindById(d);
         assertThat(k.values()).contains("line", "waterfall", "candlestick", "histogram", "graph", "timeline", "status", "pivot");
-        assertThat(k.get("pnlhistory")).isEqualTo("line");
-        assertThat(k.get("pnlexplain")).isEqualTo("waterfall");
-        assertThat(k.get("scenariopnl")).isEqualTo("histogram");
+        assertThat(k.get("pnl-history")).isEqualTo("line");
+        assertThat(k.get("pnl-explain")).isEqualTo("waterfall");
+        assertThat(k.get("scenario-pnl")).isEqualTo("histogram");
         assertThat(k.get("ohlc")).isEqualTo("candlestick");
         assertThat(k.get("hierarchy")).isEqualTo("graph");
         assertThat(k.get("lifecycle-timeline")).isEqualTo("timeline");
@@ -96,8 +96,8 @@ class AutoDesignerTest {
         assertThat(k.get("profile")).isEqualTo("area");
         assertThat(k.get("grid")).isEqualTo("surface");
         assertThat(k.get("positions")).isEqualTo("pivot");
-        assertThat(k.get("booktree")).isEqualTo("table");
-        assertThat(d.yaml()).contains("children: \"@.children\"").contains("by: [");
+        assertThat(k.get("book-tree")).isEqualTo("table");
+        assertThat(d.yaml()).contains("children: \"@.CHILDREN\"").contains("by: [");
     }
 
     @Test
@@ -131,7 +131,7 @@ class AutoDesignerTest {
         assertThat(kindById(design(example("pivot-row-groups"), null)).values()).contains("pivot");
         assertThat(design(example("pivot-row-groups"), null).yaml()).contains("by: [");
         assertThat(kindById(design(example("tree-table"), null)).get("units")).isEqualTo("table");
-        assertThat(design(example("tree-table"), null).yaml()).contains("children: \"@.children\"");
+        assertThat(design(example("tree-table"), null).yaml()).contains("children: \"@.CHILDREN\"");
         assertThat(kindById(design(example("pnl-explain"), null)).values()).contains("waterfall");
         assertThat(kindById(design(example("exposure-profile"), null)).get("profile")).isEqualTo("area");
         assertThat(kindById(design(example("relationships"), null)).values()).contains("graph");
@@ -142,8 +142,8 @@ class AutoDesignerTest {
     @Test
     void linksGetKeysAndTheTitleShowsTheIdAndALink() throws IOException {
         Design d = design(example("all-panels-showcase"), null);
-        assertThat(d.yaml()).contains("id: \"$.tradeId\"").contains("keys: {").contains("F7: \"link($.nettingSet, 'netting-set')\"");
-        assertThat(d.yaml()).contains("with: \"link($.counterparty.id, 'counterparty', $.counterparty.name)\"");
+        assertThat(d.yaml()).contains("id: \"$.TRADE_ID\"").contains("keys: {").contains("F7: \"link($.NETTING_SET, 'netting-set')\"");
+        assertThat(d.yaml()).contains("with: \"link($.COUNTERPARTY.ID, 'counterparty', $.COUNTERPARTY.NAME)\"");
     }
 
     // ----------------------------------------------------------------------------------------------- sample-aware
@@ -280,13 +280,13 @@ class AutoDesignerTest {
         List<Sample> samples = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
             ObjectNode o = JSON.createObjectNode();
-            o.put("tradeId", "T-" + i);
-            o.put("notional", 1000000 * (i + 1));
-            o.putObject("terms").put("notional", 2000000 * (i + 1));
+            o.put("TRADE_ID", "T-" + i);
+            o.put("NOTIONAL", 1000000 * (i + 1));
+            o.putObject("TERMS").put("NOTIONAL", 2000000 * (i + 1));
             samples.add(new Sample("s" + i + ".json", o));
         }
         Design d = design(samples, null);
-        assertThat(d.yaml()).contains("$.notional").contains("$.terms.notional");
+        assertThat(d.yaml()).contains("$.NOTIONAL").contains("$.TERMS.NOTIONAL");
         assertThat(d.reasons()).containsKey("strip");
     }
 
@@ -307,20 +307,20 @@ class AutoDesignerTest {
     void aSingleMeasureIsOfferedAsAMetricWithItsFormatAndAGaugeAsTheRunnerUp() throws IOException {
         List<Sample> samples = example("all-panels-showcase");
         BuilderProperties props = BuilderProperties.defaults();
-        List<PanelChoice> s = new AutoDesigner(props, SEMANTICS).suggest(shapes(props).infer(samples), samples, "$.mtm", null);
+        List<PanelChoice> s = new AutoDesigner(props, SEMANTICS).suggest(shapes(props).infer(samples), samples, "$.MTM", null);
         assertThat(s.get(0).kind()).isEqualTo("metric");
-        assertThat(s.get(0).options()).containsEntry("value", "$.mtm").containsKey("fmt");
+        assertThat(s.get(0).options()).containsEntry("value", "$.MTM").containsKey("fmt");
         assertThat(s.get(0).reason()).contains("big number");
         assertThat(s.stream().map(PanelChoice::kind)).contains("gauge", "kv");
     }
 
     @Test
     void aDocumentsOneHeadlineMeasureIsDraftedAsAMetricWithAlternatives() {
-        List<Sample> samples = List.of(new Sample("one.json", doc("{\"tradeId\":\"T-1\",\"desk\":\"RATES\",\"mtm\":1250000.5,"
-                + "\"legs\":[{\"leg\":\"A\",\"pv\":10},{\"leg\":\"B\",\"pv\":-4}]}")));
+        List<Sample> samples = List.of(new Sample("one.json", doc("{\"TRADE_ID\":\"T-1\",\"DESK\":\"RATES\",\"MTM\":1250000.5,"
+                + "\"LEGS\":[{\"LEG\":\"A\",\"PV\":10},{\"LEG\":\"B\",\"PV\":-4}]}")));
         Design d = design(samples, null);
         assertThat(kindById(d).values()).contains("metric");
-        assertThat(d.yaml()).contains("kind: metric").contains("value: \"$.mtm\"");
+        assertThat(d.yaml()).contains("kind: metric").contains("value: \"$.MTM\"");
     }
 
     private static String first(String example, String path) throws IOException {
@@ -335,21 +335,21 @@ class AutoDesignerTest {
 
     @Test
     void suggestReturnsTheExpectedFirstChoicePerRole() throws IOException {
-        assertThat(first("all-panels-showcase", "$.pnlHistory")).isEqualTo("line");
-        assertThat(first("all-panels-showcase", "$.sensitivities")).isEqualTo("hbar");
-        assertThat(first("all-panels-showcase", "$.pnlExplain")).isEqualTo("waterfall");
-        assertThat(first("all-panels-showcase", "$.scenarioPnl")).isEqualTo("histogram");
-        assertThat(first("all-panels-showcase", "$.ohlc")).isEqualTo("candlestick");
-        assertThat(first("all-panels-showcase", "$.grid")).isEqualTo("surface");
-        assertThat(first("all-panels-showcase", "$.hierarchy")).isEqualTo("graph");
-        assertThat(first("all-panels-showcase", "$.lifecycle.timeline")).isEqualTo("timeline");
-        assertThat(first("all-panels-showcase", "$.bookTree")).isEqualTo("table");
-        assertThat(first("all-panels-showcase", "$.confirmation.status")).isEqualTo("status");
-        assertThat(first("all-panels-showcase", "$.counterparty")).isEqualTo("links");
-        assertThat(first("all-panels-showcase", "$.mtm")).isEqualTo("metric");           // a lone measure: a big number first, the dial as the runner-up
-        assertThat(first("all-panels-showcase", "$.terms")).isEqualTo("kv");
-        assertThat(first("all-panels-showcase", "$.profile")).isEqualTo("area");
-        assertThat(first("all-panels-showcase", "$.positions")).isEqualTo("pivot");
+        assertThat(first("all-panels-showcase", "$.PNL_HISTORY")).isEqualTo("line");
+        assertThat(first("all-panels-showcase", "$.SENSITIVITIES")).isEqualTo("hbar");
+        assertThat(first("all-panels-showcase", "$.PNL_EXPLAIN")).isEqualTo("waterfall");
+        assertThat(first("all-panels-showcase", "$.SCENARIO_PNL")).isEqualTo("histogram");
+        assertThat(first("all-panels-showcase", "$.OHLC")).isEqualTo("candlestick");
+        assertThat(first("all-panels-showcase", "$.GRID")).isEqualTo("surface");
+        assertThat(first("all-panels-showcase", "$.HIERARCHY")).isEqualTo("graph");
+        assertThat(first("all-panels-showcase", "$.LIFECYCLE.TIMELINE")).isEqualTo("timeline");
+        assertThat(first("all-panels-showcase", "$.BOOK_TREE")).isEqualTo("table");
+        assertThat(first("all-panels-showcase", "$.CONFIRMATION.STATUS")).isEqualTo("status");
+        assertThat(first("all-panels-showcase", "$.COUNTERPARTY")).isEqualTo("links");
+        assertThat(first("all-panels-showcase", "$.MTM")).isEqualTo("metric");           // a lone measure: a big number first, the dial as the runner-up
+        assertThat(first("all-panels-showcase", "$.TERMS")).isEqualTo("kv");
+        assertThat(first("all-panels-showcase", "$.PROFILE")).isEqualTo("area");
+        assertThat(first("all-panels-showcase", "$.POSITIONS")).isEqualTo("pivot");
     }
 
     @Test
@@ -358,14 +358,14 @@ class AutoDesignerTest {
         BuilderProperties props = BuilderProperties.defaults();
         Shape shape = shapes(props).infer(samples);
         AutoDesigner designer = new AutoDesigner(props, SEMANTICS);
-        List<PanelChoice> s = designer.suggest(shape, samples, "$.positions[].book", "$.positions[].mtm");
+        List<PanelChoice> s = designer.suggest(shape, samples, "$.POSITIONS[].BOOK", "$.POSITIONS[].MTM");
         assertThat(s.get(0).kind()).isEqualTo("pivot");
         assertThat(s.get(0).options()).containsKeys("rows", "by", "across", "value");
-        assertThat(s.get(0).options().get("rows")).isEqualTo("$.positions");
-        assertThat(designer.suggest(shape, samples, "$.positions[].mtm", "$.positions[].book").get(0).kind()).isEqualTo("pivot");
-        assertThat(designer.suggest(shape, samples, "$.positions[].mtm", "$.positions[].trades").get(0).kind()).isEqualTo("scatter");
-        assertThat(designer.suggest(shape, samples, "$.positions[].book", null).get(0).kind()).isEqualTo("pivot");
-        assertThat(designer.suggest(shape, samples, "$.positions[].mtm", null).get(0).kind()).isEqualTo("histogram");
+        assertThat(s.get(0).options().get("rows")).isEqualTo("$.POSITIONS");
+        assertThat(designer.suggest(shape, samples, "$.POSITIONS[].MTM", "$.POSITIONS[].BOOK").get(0).kind()).isEqualTo("pivot");
+        assertThat(designer.suggest(shape, samples, "$.POSITIONS[].MTM", "$.POSITIONS[].TRADES").get(0).kind()).isEqualTo("scatter");
+        assertThat(designer.suggest(shape, samples, "$.POSITIONS[].BOOK", null).get(0).kind()).isEqualTo("pivot");
+        assertThat(designer.suggest(shape, samples, "$.POSITIONS[].MTM", null).get(0).kind()).isEqualTo("histogram");
     }
 
     @Test

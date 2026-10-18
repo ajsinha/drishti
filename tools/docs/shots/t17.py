@@ -19,6 +19,8 @@ development one off, roles, API tokens, the health page (heap, connectors), the 
 administrator for a moment and enables it again."""
 from __future__ import annotations
 
+import os
+
 from _bi import bi, clean_items, quiet_inbox
 from _tut import ADMIN, ADMIN_PASSWORD, OUT, SERVER_ENV, call, elem_shot, go, login  # noqa: F401
 from shotlib import Ctx, register
@@ -122,7 +124,7 @@ def migrated(c: Ctx):
     clean_items(c, title, "world-economics-21-economies")      # a run before left the model and the dataset it made
     made = bi(c, "POST", "/workspaces/me/items", {"kind": "dataset", "title": title,
                                                   "body": (ROOT / "docs" / "tutorials" / "data" / "world-economics-21.dataset.yaml").read_text()})
-    token = mint_token(ADMIN, ["admin"], SERVER_ENV["DRISHTI_TOKEN_SECRET"], 600)
+    token = mint_token(ADMIN, ["admin"], os.environ.get("DRISHTI_TOKEN_SECRET") or SERVER_ENV["DRISHTI_TOKEN_SECRET"], 600)   # a running stack's own secret wins
     req = urllib.request.Request(f"http://127.0.0.1:{shotlib.SERVER_PORT}/api/v1/bi/migrate/models", data=json.dumps({"dryRun": False}).encode(), method="POST",
                                  headers={"Authorization": "Bearer " + token, "Content-Type": "application/json"})
     print("  migrate:", urllib.request.urlopen(req, timeout=120).read().decode()[:300])

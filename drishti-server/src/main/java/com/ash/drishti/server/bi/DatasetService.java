@@ -763,7 +763,14 @@ public final class DatasetService {
         return queries.layers().generation(key, date);
     }
 
+    /** As {@link #generationAt(String, java.time.LocalDate)}, after checking the dataset's sources for data no load signal announced. */
+    public long generationAt(String key, Dataset ds, java.time.LocalDate date) {
+        queries.syncVersions(key, ds);
+        return queries.layers().generation(key, date);
+    }
+
     public long generation(String id, String key, Dataset ds) {
+        queries.syncVersions(key, ds);                                    // a rebuilt lake moves the generation before any cached answer is read
         Object live = queries.liveTick(new QueryService.Loaded(id, key, ds, "")).get("generation");
         return queries.layers().generation(key) * 1_000_003L + (live instanceof Number n ? n.longValue() : 0L);
     }

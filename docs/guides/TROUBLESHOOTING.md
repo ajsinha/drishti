@@ -171,12 +171,13 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
   key in its `pack.yaml` differ), "`packs require each other in a cycle`", and "`… is defined by both pack 'a'
   and pack 'b'`" (two unrelated packs claim the same mnemonic or kind). See [PACKS.md](PACKS.md).
 
-### Only the finance pack loads (or a pack you expected is missing)
+### A pack you expected is missing
 
-- **Cause:** `DRISHTI_PACKS` was not set for the server process; its default is `finance`.
-- **Check:** `curl -s http://localhost:18480/api/v1/packs | python3 -c "import json,sys; print([p['name'] for p in json.load(sys.stdin)])"`.
+- **Cause:** `DRISHTI_PACKS` was set for the server process to a list without it (unset, it is the seven shipped packs,
+  `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets`), or the pack is a retired example under `examples/packs/` that `DRISHTI_PACKS_EXTRA_DIRS` does not name.
+- **Check:** `curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" http://localhost:18480/api/v1/packs | python3 -c "import json,sys; print([p['name'] for p in json.load(sys.stdin)])"`.
 - **Fix:** restart the server with the list you want, for example
-  `DRISHTI_PACKS=core,market-data,trading,market-risk,counterparty-risk`.
+  `DRISHTI_PACKS=core,market-data,trading,market-risk,counterparty-risk`, or press **Load** in Admin → Packs.
 
 ### An old version runs, or the wrong jar starts
 
@@ -228,7 +229,7 @@ Admin → Connectors (Test connection shows the plugin's own message).
 
 ### A connector says "no free connection in the … pool"
 
-The full message: `no free connection in the trading-store pool within 10000 ms (20 of 20 in use, 3 waiting, longest borrow 41500 ms); raise pool-size or find
+The full message: `no free connection in the trade-endur pool within 10000 ms (20 of 20 in use, 3 waiting, longest borrow 41500 ms); raise pool-size or find
 what holds connections`. Every connection of that connector's pool (`pool-size`, 20 by default) was borrowed for longer than `pool-connection-timeout` (10 s).
 Open the connector's page (Admin → Connectors): *Connection pool* shows in use, waiting and the **longest current borrow**.
 
@@ -666,8 +667,8 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Fix:** pick a date the lake covers, or build more history:
 
   ```bash
-  uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \
-      --samples examples/packs/finance/samples --root data/delta --domain finance --days 30
+  drishti-console/.venv/bin/python tools/drishti.py lake demo                  # the seven business days ending today
+  drishti-console/.venv/bin/python tools/drishti.py lake demo --as-of 2026-10-30  # or ending on another date
   ```
 
 ### "Latest data on or before … is from …"
@@ -857,13 +858,13 @@ The message names up to six of the mnemonics the server has loaded (from its pac
   the server did not load it.
 - **Fix:** press **Load** on its row: the server checks it, records it in `data/packs/added.yaml` and puts it to use
   at once, with no restart. If it says *cannot load 'finance': kind trade is defined by both pack 'trading' and pack 'finance'*, the
-  pack clashes with one already loaded (`finance` and the banking packs define the same kinds), and nothing
+  pack clashes with one already loaded (the retired example pack `finance` defines the same kinds as `trading`), and nothing
   changed ([PACKS.md](PACKS.md#the-packs-that-ship)).
 
 ### "Switch off" is greyed, or the API says "… is needed by …; switch those off first"
 
 - **Cause:** another switched-on pack builds on this one (`DRS-5001 'trading' is needed by [market-risk,
-  counterparty-risk, liquidity-risk, climate-risk]; switch those off first`).
+  counterparty-risk]; switch those off first`).
 - **Fix:** switch off the packs named first, then this one. Switching any of them on later switches this one on
   again by itself.
 
@@ -1109,7 +1110,7 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
   A `perspective-grid`, `perspective-pivot` or `perspective-chart` visual of a 2.1 report is drawn as Drishti's own grid of the server's answer.
 - **Fix:** none needed; to get a chart or a pivot back, change the visual to a `matrix` or a chart type in the designer (the server groups and totals it).
 
-### A Perspective grid or pivot shows `•••` in a column
+### A grid (or a 2.1 Perspective grid) shows `•••` in a column
 
 - **Cause:** that column is masked for you (Drishti's field masks, or the dataset's `security.masked` and you lack `raw`): the server replaced it before the rows left. The same mask reads in every visual of the report.
 - **Fix:** nothing: ask an administrator for the `raw` power if you need the values.

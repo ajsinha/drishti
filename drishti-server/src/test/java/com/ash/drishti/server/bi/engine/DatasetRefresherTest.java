@@ -96,6 +96,11 @@ class DatasetRefresherTest {
         }
 
         @Override
+        public String dataVersion(String connector, String kind, LocalDate date) {
+            return null;                         // no versions: the failures count reads only
+        }
+
+        @Override
         public List<EntityRef> ids(String kind, LocalDate date, int limit) {
             return lake.ids(kind, date, limit);
         }

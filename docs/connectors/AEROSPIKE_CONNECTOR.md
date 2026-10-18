@@ -73,22 +73,19 @@ A data domain (`trading`) now uses three sets in the namespace:
 For one trade on one day:
 
 ```
-set trading, key "trade/MX-20000017/20260930"
+set trading, key "trade/MX-20000001/20260930"
   kind              "trade"
-  id                "MX-20000017"
+  id                "MX-20000001"
   date              20260930                                  the business day as a number (yyyyMMdd)
-  doc               "{\"tradeId\":\"MX-20000017\",\"sourceSystem\":\"Murex\",…,\"businessDate\":\"2026-09-30\"}"
-  tradeId           "MX-20000017"                             promoted fields: text …
-  productType       "IRS_FIXFLOAT"
-  book              "BOOK-RATES-3"
-  desk              "DESK-RATES"
-  counterparty_id   "CP-MERIDIAN-RE"
-  counterpar_f5fe   "Meridian Reinsurance Ltd"                counterparty.name (too long for a bin name: see below)
-  notional          242000000.0                               … and numbers, stored as doubles
-  mtm               1875863.0
-  risk_dv01         -155245.0
+  doc               "{\"SOURCE_SYSTEM\":\"MUREX\",\"SOURCE_UPDATE_TIME\":\"2026-09-30T18:30:00Z\",…,\"TRADE_ID\":\"MX-20000001\",…}"
+  TRADE_ID          "MX-20000001"                             promoted fields: text …
+  PRODUCT_TYPE      "IRS_FIXFLOAT"
+  PORTFOLIO         "BOOK-RATES-3"
+  COUNTERPARTY      "CP-MERIDIAN-RE"
+  PRODUCT_SU_cf84   "Interest rate swap (fixed/float)"        PRODUCT_SUB_TYPE (too long for a bin name: see below)
+  QUANTITY          242000000.0                               … and numbers, stored as doubles
 
-set trading_ix, key "trade/MX-20000017"
+set trading_ix, key "trade/MX-20000001"
   kind              "trade"
   id                "MX-20000017"
   dates             [20260928, 20260929, 20260930]            sorted, each day once
@@ -114,7 +111,7 @@ Why each part is shaped this way:
 
 **Bin names are at most 15 characters** in Aerospike. A promoted path becomes a bin name by replacing dots with
 underscores (`counterparty.id` → `counterparty_id`); a longer name is cut to 10 characters, followed by an underscore and
-the first 4 hex digits of the path's SHA-1 (`counterparty.name` → `counterpar_f5fe`), so two long paths never share a bin.
+the first 4 hex digits of the path's SHA-1 (`PRODUCT_SUB_TYPE` → `PRODUCT_SU_cf84`, `counterparty.name` → `counterpar_f5fe`), so two long paths never share a bin.
 The reserved names (`kind`, `id`, `date`, `doc`, `dates`) are never used for a promoted field. The loader and the
 connector share this rule (`AerospikeLayout.bin`); compute the hash part of any path with
 `python3 -c "import hashlib;print(hashlib.sha1(b'counterparty.name').hexdigest()[:4])"`. Numbers are stored as doubles,
@@ -124,35 +121,38 @@ everything else as text. The `doc` bin holds the day's JSON document as text.
 
 The pack declares the fields to promote on the connector that stores the kind, exactly as for Delta Lake (see
 [DELTA_CONNECTOR.md, section 4](DELTA_CONNECTOR.md#4-declaring-the-layout-in-a-pack) for how to choose them). The
-trading pack declares them on `trading-store`; the `aerospike` profile (`SPRING_PROFILES_ACTIVE=aerospike`) switches that
+trading pack declares them on `trade-endur`; the `aerospike` profile (`SPRING_PROFILES_ACTIVE=aerospike`) switches that
 connector to the Aerospike plugin and keeps the pack's settings, so the same declaration applies:
 
 ```yaml
-# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trading-store.yaml at the first start)
+# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trade-endur.yaml at the first start)
 connectors:
-  trading-store:
+  trade-endur:
     settings:
       domain: trading
       layout:
         trade:
-          columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
-                    tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
-                    risk.dv01, sourceSystem]
+          columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
 
 # drishti-server application-aerospike.yaml (the profile; deprecated, see \"As a connector file\" below)
 drishti:
   sources:
     connectors:
-      trading-store: { plugin: aerospike, settings: { hosts: "${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}",
+      trading-store: { plugin: aerospike, settings: { hosts: "${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}",   # 2.2's name, see the note
                                                        namespace: "${DRISHTI_AEROSPIKE_NAMESPACE:test}" } }
 ```
+
+> **2.3.0:** the trades are read per source system (`trade-endur`, `trade-calypso`, `trade-murex`, one Delta table each). The deprecated
+> store profiles still name 2.2's `trading-store`, so a profile leaves the trades on Delta; point a store at the trades with connector
+> files named after the three connectors (below).
+
 
 The connector reads `layout.<kind>.columns`; the set is the connector's `domain` (`trading`). The `sort-by`, `file-rows`
 and `row-group-rows` keys of the layout concern files and do not apply to Aerospike.
 
 ## 4. Loading
 
-`tools/load-aerospike.sh` loads the banking packs' data, and optionally a large generated book, through
+`tools/load-aerospike.sh` loads the seven packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large generated book, through
 `AerospikeLoader` (in the plugin):
 
 ```bash
@@ -314,18 +314,18 @@ Aerospike first:
 drishti:
   sources:
     routes:
-      trade: trading-store                     # asked first
+      trade: trade-endur                     # asked first
     connectors:
-      trading-store:                           # Aerospike: the last 90 business days, TTL-expired
+      trade-endur:                           # Aerospike: the last 90 business days, TTL-expired
         plugin: aerospike
         kinds: [trade]
         settings: { hosts: "aero1:3000,aero2:3000", namespace: risk, domain: trading, lookback-days: 10,
-                    "layout.trade.columns": "tradeId,productType,…" }
+                    "layout.trade.columns": "TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,…" }
       trading-history:                         # Delta Lake: every business day for seven years
         plugin: delta
         kinds: [trade]
         settings: { root: "s3a://risk-lake/banking", domain: trading, lookback-days: 10,
-                    "layout.trade.columns": "tradeId,productType,…" }
+                    "layout.trade.columns": "TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,…" }
 ```
 
 How Drishti uses them:
@@ -375,6 +375,11 @@ server with the `aerospike` profile, times over HTTP:
 
 Before this design the same book could not be held: the old layout's records would have exceeded 8 MB after four and a
 half years, and every search read at most 20,000 documents.
+
+**The figures below were measured in 2.2**, when the generated trades were written in camel case (`mtm`, `notional`, `book`),
+so the searches are shown as they were run; the trades now carry the source systems' UPPER_SNAKE attributes and no MTM (that is the
+market-risk pack's trade valuation): today's equivalents read `TRD where QUANTITY > 500m and CURRENCY = 'USD'` and
+`TRD PORTFOLIO=BOOK-RATES-3`. Not re-measured for 2.3.
 
 **The scaling curve, measured with the scale benchmark (2026-10-01).** `tools/bench/scale.sh`
 ([SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)) loaded 10,000, 25,000 and 50,000 trades a day over three business
@@ -427,7 +432,7 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 ids now:
 
 ```json
-{"name": "trading-store", "health": "UP", "cache": {"ids": 1000000, "columnSets": 1, "datesIndexed": 10, "kinds": 1}}
+{"name": "trade-endur", "health": "UP", "cache": {"ids": 1000000, "columnSets": 1, "datesIndexed": 10, "kinds": 1}}
 ```
 
 | Symptom | Likely cause | What to do |
@@ -439,7 +444,7 @@ ids now:
 | a trade is in type-ahead but does not open on a date | its record for that day expired (TTL) or was never loaded | check the index record's `dates`; with a Delta Lake connector behind, older days come from there |
 | searches say `partial: true` | a field the query reads is not a promoted bin | add it to `layout.<kind>.columns` and reload |
 | the first search after a load is slow | the newest day's columns are loading | they load in the background after each refresh (`refresh-seconds`) |
-| linked entities missing for a large kind | no promoted link bins, and the day exceeds `max-load-rows` | promote the link fields (`nettingSet`, `book`, `counterparty.id`) |
+| linked entities missing for a large kind | no promoted link bins, and the day exceeds `max-load-rows` | promote the link fields (`COUNTERPARTY`, `PORTFOLIO`, `LEGAL_ENTITY`) |
 | loader: `max connections … would be exceeded` | an old loader with the client's default of 100 connections | use the current loader (256 connections per node) |
 | error 22 `operation not allowed at this time` in logs | too many concurrent scans on the cluster | the connector already limits itself to two; check other scanning clients |
 | `stop writes` / out of space while loading | the namespace's storage is too small | file or device storage, sized by [section 7](#7-seven-years-sizing-and-aerospike-with-delta-lake) |
@@ -534,7 +539,7 @@ start without a client certificate; and the start-up errors below.
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: aerospike
 kinds: [trade]
 description: Trading documents and promoted bins in Aerospike
@@ -544,7 +549,7 @@ settings:
   namespace: ${DRISHTI_AEROSPIKE_NAMESPACE:test}
   layout:                       # nesting is flattened: layout.trade.columns
     trade:
-      columns: [tradeId, mtm, book, desk, counterparty.id, counterparty.name, nettingSet, risk.dv01]
+      columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
   refresh-seconds: '60'
   scan-threads: '8'
   columns-cache-mb: '1024'
@@ -617,8 +622,8 @@ SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=counterparty-risk,market-risk \
    [section 4](#4-loading) and [section 6](#6-retention-ttl-instead-of-a-maintenance-job). A loader line:
 
 ```json
-{"domain": "trading", "kind": "trade", "id": "MX-20000001", "date": "2026-09-30", "doc": "{\"tradeId\": ...}",
- "columns": {"mtm": 1875863, "book": "BOOK-RATES-3", "counterparty.name": "Meridian Reinsurance Ltd", ...}}
+{"domain": "trading", "kind": "trade", "id": "MX-20000001", "date": "2026-09-30", "doc": "{\"SOURCE_SYSTEM\": \"MUREX\", ...}",
+ "columns": {"TRADE_ID": "MX-20000001", "QUANTITY": 242000000.0, "PORTFOLIO": "BOOK-RATES-3", "COUNTERPARTY": "CP-MERIDIAN-RE", ...}}
 ```
 
 4. **In the terminal**: `TRD MX-20000001 <GO>`, dated. The first search of a day waits for its promoted bins unless
@@ -627,27 +632,27 @@ SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=counterparty-risk,market-risk \
 
 ### Configuration by example
 
-**Site form, as a connector file.** `config/connectors/trading-store.yaml` points the trading pack's `trading-store` at Aerospike
-(`config/connectors.examples/aerospike/` has all six banking `<domain>-store` connectors; the `aerospike` profile,
+**Site form, as a connector file.** `config/connectors/trade-endur.yaml` points the trading pack's `trade-endur` at Aerospike
+(`config/connectors.examples/aerospike/` has a `<domain>-store` connector for each of the six data domains; the `aerospike` profile,
 `application-aerospike.yaml`, did the same and still works but is deprecated). A file replaces the pack's template wholesale, so it
 names the kinds and the promoted bins it needs ([section 3](#3-declaring-which-fields-are-bins)):
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: aerospike                                     # replaces the pack's "delta"
 kinds: [trade]
 settings:
   domain: trading                                     # the set, unless `set` is given
   hosts: ${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}    # host:port, comma-separated
   namespace: ${DRISHTI_AEROSPIKE_NAMESPACE:test}
-  layout.trade.columns: tradeId,mtm,book,desk,counterparty.id,counterparty.name,nettingSet,risk.dv01   # the promoted bins
+  layout.trade.columns: TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,PRODUCT_SUB_TYPE,PRODUCT_GROUP,TRADE_STATUS,TRADE_VERSION,BUY_SELL_CODE,CURRENCY,QUANTITY,TRADE_DATE,MATURITY_DATE,COUNTERPARTY,LEGAL_ENTITY,PORTFOLIO,TRADER_ID   # the promoted bins
 ```
 
-**Pack form**, the pack's suggested template (every key is in [section 12](#12-settings)); the server writes it to `config/connectors/trading-store.yaml` at the first start if the site has no such file:
+**Pack form**, the pack's suggested template (every key is in [section 12](#12-settings)); the server writes it to `config/connectors/trade-endur.yaml` at the first start if the site has no such file:
 
 ```yaml
 connectors:
-  trading-store:
+  trade-endur:
     plugin: aerospike
     kinds: [trade]
     settings:
@@ -656,7 +661,7 @@ connectors:
       set: trading                 # the domain: sets trading, trading_ix and trading_kinds
       layout:
         trade:
-          columns: [tradeId, mtm, book, desk, counterparty.id, counterparty.name, nettingSet, risk.dv01]
+          columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
       refresh-seconds: 60          # re-read the kinds' dates and the ids
       scan-threads: 8              # partition ranges scanned at once for a day's promoted bins
       columns-cache-mb: 1024       # memory for days of promoted bins
@@ -664,7 +669,7 @@ connectors:
       # user: ${AS_USER}            # security-enabled clusters
       # password: ${AS_PASSWORD}
 routes:
-  trade: trading-store
+  trade: trade-endur
 ```
 
 **Try it**, with a million trades a day and retention:

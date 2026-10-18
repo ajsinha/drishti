@@ -119,7 +119,7 @@ def authoring(c: Ctx):
                                                       "audienceRoles": audience})
     STATE["model"] = made["id"]
     open_item(c, made["id"])
-    edit_body(c, lambda t: t.replace("hierarchies:\n", "fields:\n  trade.book: { display: Book, description: The trading book }\nhierarchies:\n"), "name and describe the book")
+    edit_body(c, lambda t: t.replace("hierarchies:\n", "fields:\n  trade.PORTFOLIO: { display: Book, description: The trading book }\nhierarchies:\n"), "name and describe the book")
     edit_body(c, lambda t: t.replace("  Trades:   { expr", "  Deals:    { expr"), "rename the count measure")
     c.page.select_option("[data-diff-from]", "r1")
     c.page.select_option("[data-diff-to]", "draft")
@@ -189,7 +189,7 @@ def certify(c: Ctx):
     show("lineage_model", bi(c, "GET", "/lineage/trades-model@1"))
     show("consumers", bi(c, "GET", "/models/trades-model@1/consumers"))
     show("lineage_report", bi(c, "GET", f"/items/{report}/lineage"))
-    show("impact_on_book", bi(c, "GET", "/models/trades-model@1/impact?target=trade.book"))
+    show("impact_on_book", bi(c, "GET", "/models/trades-model@1/impact?target=trade.PORTFOLIO"))
 
 
 @shot("11-contract-change.jpg", also=("12-dataset-refused.jpg",))
@@ -202,14 +202,14 @@ def impact(c: Ctx):
     c.page.click('[data-tab="contract"]')
     c.page.wait_for_selector("[data-c-exposes]", timeout=20000)
     c.page.select_option("[data-c-exposes]", "listed")                 # listing starts from everything: untick what to take away
-    c.page.wait_for_selector('[data-c-pick="trade.book"]:checked', timeout=20000)
-    c.page.uncheck('[data-c-pick="trade.book"]')
+    c.page.wait_for_selector('[data-c-pick="trade.PORTFOLIO"]:checked', timeout=20000)
+    c.page.uncheck('[data-c-pick="trade.PORTFOLIO"]')
     c.page.wait_for_selector("[data-contract-changes] li", timeout=30000)
     c.page.wait_for_timeout(800)
     page_shot(c, "11-contract-change.jpg", c.page.evaluate("() => { const b = document.querySelector('[data-contract-pane]').getBoundingClientRect(); return {x: b.x, y: b.y + window.scrollY, width: b.width, height: Math.min(b.height, 640)}; }"), pad=8)
     # the dataset: the column goes, and the server says the version must say so
     ds = STATE.get("dataset") or item_id(c, DATASET)
-    body = (DATA / "rates-trades.dataset.yaml").read_text().replace("  book:     { type: string }\n", "")
+    body = (DATA / "rates-trades.dataset.yaml").read_text().replace("  PORTFOLIO:    { type: string }\n", "")
     bi(c, "PUT", f"/items/{ds}", {"body": body, "message": "drop the book column"})
     bi(c, "POST", f"/items/{ds}/propose", {"note": "we no longer split by book"})
     as_(c, "sue")

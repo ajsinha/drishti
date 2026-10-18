@@ -53,6 +53,8 @@ public class TestLake implements SourceGateway {
 
     public final Map<LocalDate, List<Trade>> trades = new LinkedHashMap<>();
     public final AtomicInteger scans = new AtomicInteger();
+    /** The trades' data version per business date (a Delta date's files); empty: the connector cannot tell, as before. */
+    public final Map<LocalDate, String> versions = new java.util.concurrent.ConcurrentHashMap<>();
     final AtomicInteger recordReads = new AtomicInteger();
     volatile long scanDelayMillis;
     final boolean promoted;
@@ -146,6 +148,14 @@ public class TestLake implements SourceGateway {
         @Override
         public Set<String> columnar(String kind) {
             return promoted ? Set.of("desk", "ccy", "counterparty.id", "notional", "mtm", "tradeDate") : Set.of();
+        }
+
+        @Override
+        public Optional<String> dataVersion(String kind, LocalDate date) {
+            if (versions.isEmpty()) {
+                return Optional.empty();
+            }
+            return Optional.of(date == null ? new java.util.TreeMap<>(versions).toString() : versions.getOrDefault(date, "none"));
         }
 
         @Override

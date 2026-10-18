@@ -40,7 +40,7 @@ def register(bi, srv, ctx) -> None:
     f.add_argument("--scope", choices=["row", "rule", "aggregate"], help="only the functions allowed there")
     f.set_defaults(func=lambda a, extra: functions(a, ctx))
     v = ea.add_parser("validate", help="check one expression in its scope (exit 1 on an error)", parents=[srv], formatter_class=argparse.RawDescriptionHelpFormatter,
-                      epilog="examples:\n  drishti.py bi expr validate \"sum(trades.mtm, where=trades.status == 'Live')\" --model trading-risk@1\n"
+                      epilog="examples:\n  drishti.py bi expr validate \"sum(trades.MTM, where=trades.TRADE_STATUS == 'VALIDATED')\" --model trading-risk@1\n"
                              "  drishti.py bi expr validate \"notional * 2\" --scope row --model dataset:pack.trading.trade")
     v.add_argument("expr")
     v.add_argument("--scope", choices=["row", "rule", "aggregate"], default="aggregate")

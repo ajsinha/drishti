@@ -21,7 +21,7 @@ settings:
   bootstrap-servers: kafka-1.example.com:9093,kafka-2.example.com:9093
   topics: [trades]
   kind: trade
-  id-field: tradeId
+  id-field: TRADE_ID
   security.protocol: SSL
   tls:
     truststore: /etc/drishti/tls/ca.p12

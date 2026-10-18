@@ -20,12 +20,14 @@ kept. Needs deltalake, pyarrow and PyYAML (uv run --with deltalake --with pyarro
 from __future__ import annotations
 
 import contextlib
+import http.server
 import io
 import json
 import os
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 
@@ -45,6 +47,36 @@ FAKE = [{"SOURCE_SYSTEM": "ENDUR", "TRADE_ID": 99000001, "PRODUCT_TYPE": "Cash",
          "MATURITY_DATE": "2027-01-01", "LEGS": [{"LEG_ID": 1, "NOTIONAL": 0, "CASH_FLOWS": []}], "EVENTS": []}]
 
 
+class FakeServer:
+    """A server that answers its health and records the data-load signals."""
+
+    def __init__(self):
+        got = self.got = []
+
+        class H(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b'{"status":"UP"}')
+
+            def do_POST(self):
+                got.append((self.path, json.loads(self.rfile.read(int(self.headers["Content-Length"])))))
+                self.send_response(201)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(b"{}")
+
+            def log_message(self, *a):
+                pass
+        self.srv = http.server.HTTPServer(("127.0.0.1", 0), H)
+        self.url = f"http://127.0.0.1:{self.srv.server_port}"
+        threading.Thread(target=self.srv.serve_forever, daemon=True).start()
+
+    def close(self):
+        self.srv.shutdown()
+        self.srv.server_close()
+
+
 @unittest.skipUnless(HAVE, "needs deltalake and PyYAML")
 class LakeDemo(unittest.TestCase):
     def test_seven_days_per_table_real_extras_only_in_the_lake_and_connector_files_moved(self):
@@ -60,15 +92,22 @@ class LakeDemo(unittest.TestCase):
             conn.mkdir()
             (conn / "trade-endur.yaml").write_text("plugin: delta\nkinds: [trade]\nsettings:\n  root: /nowhere/else\n  domain: trading\n"
                                                    "  table:\n    trade: trade_endur\n")
+            server = FakeServer()
             old = os.environ.get("DRISHTI_DATA_DIR")
             os.environ["DRISHTI_DATA_DIR"] = str(data)
             try:
                 a = demo.build_parser().parse_args(["--testdata", str(td), "--lake", str(lake), "--connectors-dir", str(conn), "--with-real", str(real),
                                                     "--only", "trades/,core/counterparty,counterparty-risk/netting-set,counterparty-risk/agreement",
-                                                    "--as-of", "2026-10-30", "-q"])
+                                                    "--as-of", "2026-10-30", "-q", "--server", server.url])
                 with contextlib.redirect_stdout(io.StringIO()) as out:
                     self.assertEqual(demo.run(a), 0)
+                # no server: the stamp the server reads at its next start, in its BI store
+                b = demo.build_parser().parse_args(["--testdata", str(td), "--lake", str(lake), "--connectors-dir", str(conn), "--only", "core/desk",
+                                                    "--as-of", "2026-10-30", "-q", "--server", "http://127.0.0.1:9"])
+                with contextlib.redirect_stdout(io.StringIO()) as out2:
+                    self.assertEqual(demo.run(b), 0)
             finally:
+                server.close()
                 os.environ.pop("DRISHTI_DATA_DIR") if old is None else os.environ.__setitem__("DRISHTI_DATA_DIR", old)
             # the seven days moved to end on --as-of: the seven USNY business days up to 2026-10-30
             dates = ["2026-10-22", "2026-10-23", "2026-10-26", "2026-10-27", "2026-10-28", "2026-10-29", "2026-10-30"]
@@ -96,6 +135,15 @@ class LakeDemo(unittest.TestCase):
             self.assertFalse((data / "build" / "lake-demo").exists())        # staging removed
             self.assertTrue((data / "feeds" / "fixing" / "SOFR-HISTORY.csv").is_file())
             self.assertIn("Demo lake ready", out.getvalue())
+            # the server told: each table written, each of the seven dates
+            told = {(path.split("/")[4], body["kind"], body["businessDate"]) for path, body in server.got}
+            self.assertIn(("trading", "trade", "2026-10-30"), told)
+            self.assertIn(("core", "counterparty", "2026-10-22"), told)
+            self.assertEqual(len(server.got), 7 * 7, sorted(told))              # 3 trade tables, counterparty (and group), netting set, agreement
+            self.assertIn("data-load signals", out.getvalue())
+            stamp = data / "bi-store" / "lake-rebuilt.json"
+            self.assertEqual(json.loads(stamp.read_text())["tables"], ["reference/desk"])
+            self.assertIn("no server at http://127.0.0.1:9", out2.getvalue())
 
 
 if __name__ == "__main__":

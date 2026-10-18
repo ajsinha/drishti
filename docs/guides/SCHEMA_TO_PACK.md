@@ -116,7 +116,7 @@ kind the server refuses to start, so the page and the command line warn when the
 
 | Where | From |
 |---|---|
-| A field's label | `x-drishti-label`, else `title`, else the name made readable (`tradeDate` → *Trade date*, `counterparty_id` → *Counterparty ID*, `mtm` → *MTM*, `dv01` → *DV01*), plus ` (unit)` from `x-drishti-unit` |
+| A field's label | `x-drishti-label`, else `title`, else the name made readable (`tradeDate` → *Trade date*, `counterparty_id` → *Counterparty ID*, `TRADE_ID` → *Trade ID*, `BUY_SELL_CODE` → *Buy sell code*, `mtm` → *MTM*, `dv01` → *DV01*), plus ` (unit)` from `x-drishti-unit` |
 | A panel's title (a table, a group) | the title of the array or object field (`legs` with `"title": "Legs"`) |
 | The Sutra's `description` | the kind's description, or the variant's |
 | *About this page*, the sentence | the kind's `description`: `${$.tradeId}: A bilateral derivative trade ...` (it is a template over the document) |
@@ -428,19 +428,19 @@ Its strip holds the bond's own figure (`coupon`, formatted `pct2` because the sc
 $ python3 tools/drishti.py pack make --schema docs/guides/examples/schemas docs/guides/examples/schemas/data \
       --name desk-pack --store files --yes
 book: key bookId (named <kind>Id, required); date businessDate; match (none); 1 Sutra(s); synthetic samples
-counterparty: key id (named id, required); date (none); match (none); 1 Sutra(s); links parentId->counterparty; real samples: 5
+counterparty: key id (named id, required, unique in all 5 sample documents); date (none); match (none); 1 Sutra(s); links parentId->counterparty; real samples: 5
 instrument: key instrumentId (named <kind>Id, required); date (none); match type; 3 Sutra(s); synthetic samples
-trade: key tradeId (named <kind>Id, required); date tradeDate; match productType; 4 Sutra(s); links counterpartyId->counterparty, bookId->book; real samples: 30
+trade: key tradeId (named <kind>Id, required, unique in all 30 sample documents); date tradeDate; match productType; 3 Sutra(s); links counterpartyId->counterparty, bookId->book; real samples: 30
   warning: no real documents for book, instrument: their previews and tests use synthetic samples generated from the schema, marked synthetic
   warning: book: 3 field(s) have no description (About-this-page text will say TODO): businessDate, createdBy, createdAt
   warning: counterparty: 3 field(s) have no description (About-this-page text will say TODO): headOffice.city, parentId, email
   warning: instrument: 4 field(s) have no description (About-this-page text will say TODO): instrumentId, type, maturity, ticker
   warning: trade: 2 field(s) have no description (About-this-page text will say TODO): executedAt, terms.index
   warning: trade: fields in the samples that the schema does not describe: extra
-drafting 9 Sutra(s) with one `sutra design --each` run ...
-  trade 2026-03-01: 10 rows -> build/desk-pack-1.0.0/data/files/desk-pack/2026-03-01/trade.jsonl
-  trade 2026-03-02: 10 rows -> build/desk-pack-1.0.0/data/files/desk-pack/2026-03-02/trade.jsonl
-  trade 2026-03-03: 10 rows -> build/desk-pack-1.0.0/data/files/desk-pack/2026-03-03/trade.jsonl
+drafting 8 Sutra(s) with one `sutra design --each` run ...
+  trade 2026-03-01: 10 rows -> data/build/desk-pack-1.0.0/data/files/desk-pack/2026-03-01/trade.jsonl
+  trade 2026-03-02: 10 rows -> data/build/desk-pack-1.0.0/data/files/desk-pack/2026-03-02/trade.jsonl
+  trade 2026-03-03: 10 rows -> data/build/desk-pack-1.0.0/data/files/desk-pack/2026-03-03/trade.jsonl
 kind                business date        rows
 trade               2026-03-01             10
 trade               2026-03-02             10
@@ -452,22 +452,27 @@ total rows: 30
 == desk-pack: sutra test: exit 0
 
 == pack bundle
-bundled desk-pack 1.0.0: 113 files
-  build/desk-pack-1.0.0/bundle/desk-pack-1.0.0.tar.gz
-  sha256 ab5f2248408fdc6e5d66fd4aa932affffe13629a15ba2c8f9aca35a48cbb0cc0
+bundled desk-pack 1.0.0: 66 files
+  data/build/desk-pack-1.0.0/bundle/desk-pack-1.0.0.tar.gz
+  sha256 6c9a2b925676f946740e95b870056731199217acb2dbf73e4a2297a89559d643
 
 == pack verify
-verify build/desk-pack-1.0.0/bundle/desk-pack-1.0.0.tar.gz: desk-pack 1.0.0
+verify data/build/desk-pack-1.0.0/bundle/desk-pack-1.0.0.tar.gz: desk-pack 1.0.0
   checksums ok
   schema    ok
   server    ok
   sutra     ok
 verified
 
-pack make: build/desk-pack-1.0.0
-  9 Sutra(s) for 4 kind(s) (4 tested on synthetic samples only); pack check passed, pack verify passed
-next: read build/desk-pack-1.0.0/README.txt, then  DRISHTI_JAR=<exec jar> DRISHTI_PORT=18480 build/desk-pack-1.0.0/run-server.sh
+pack make: data/build/desk-pack-1.0.0
+  8 Sutra(s) for 4 kind(s) (4 tested on synthetic samples only); pack check passed, pack verify passed
+next: read data/build/desk-pack-1.0.0/README.txt, then  DRISHTI_JAR=<exec jar> DRISHTI_PORT=18480 data/build/desk-pack-1.0.0/run-server.sh
 ```
+
+The trade's three Sutras are its three `productType` values (`trade-irs`, `trade-fxs`, `trade-fut`); the instrument's are `instrument-bond`,
+`instrument-equity` (the `oneOf` variants) and `instrument-default`. The example schemas and their JSON Lines are camel case
+(`tradeId`, `productType`): the rules read any naming, and the same run on UPPER_SNAKE schemas (`TRADE_ID`, `PRODUCT_TYPE`, as the shipped
+packs write them) finds the same keys, dates, matches and links.
 
 `trade` and `counterparty` had real documents (30 and 5), so their Sutras were tested on those; `book` and `instrument` had none, so they were tested on synthetic samples, and the run
 says so. The `extra` field of `trades.jsonl` is not in the schema: it is reported, shown in the Sutra and given a `TODO` glossary entry. Exit codes are those of `pack make`: 0, 1
@@ -666,9 +671,11 @@ The same plan from the command line, where every choice above has a flag:
 
 ```bash
 python3 tools/drishti.py pack make deals.json --name book --kind deals --store files --yes
-#   deals: key TRADE_ID (named like the id of a trade ...); date (none); match PRODUCT_TYPE; 5 Sutra(s);
-#   links COUNTERPARTY->deals-counterparty, PORTFOLIO->deals-portfolio
-#   deals 2026-10-16: 5000 rows -> build/book-1.0.0/data/files/book/2026-10-16/deals.jsonl
+#   deals: key TRADE_ID (named like the id of a trade, unique in all 5000 sample documents (other id-like fields: TRANSACTION_ID));
+#   date (none); match PRODUCT_TYPE; 5 Sutra(s); links COUNTERPARTY->deals-counterparty, PORTFOLIO->deals-portfolio
+#   deals-counterparty / deals-portfolio / deals-index: key id (the value the documents share); links dealsIds->deals
+#   deals 2026-10-16: 5000 rows -> data/build/book-1.0.0/data/files/book/2026-10-16/deals.jsonl   (the day: today's business date)
+#   pack make: data/build/book-1.0.0   8 Sutra(s) for 4 kind(s); pack check passed, pack verify passed
 # --match COL          another type column
 # --key TRADE_ID       --date FIELD (instead of a snapshot)       --as-of 2026-10-16 (the day a snapshot is stored under)
 # --related none       no pages per value; --related COUNTERPARTY,PORTFOLIO for these only
@@ -740,7 +747,7 @@ The same from a script, or offline:
 curl -sS -X POST "http://HOST:18480/api/v1/admin/packs/book/data?kind=deals&date=2026-10-16" \
      -H "Authorization: Bearer $DRISHTI_TOKEN" -H "Content-Type: application/json" --data-binary @deals.json
 # offline, into the File connector's folder (JSON Lines: comswap_synth.py --jsonl writes them)
-python3 tools/drishti.py data ingest --from deals.jsonl --pack build/book-1.0.0/pack/book --store files --root /path/to/files --as-of 2026-10-16
+python3 tools/drishti.py data ingest --from deals.jsonl --pack data/build/book-1.0.0/pack/book --store files --root /path/to/files --as-of 2026-10-16
 ```
 
 ### 5. A deal
@@ -830,7 +837,7 @@ measures:
 ```
 
 ```bash
-python3 tools/drishti.py bi mq --model book-deals@1 --select deals.PRODUCT_TYPE --measures "Deals documents,Cash flows,Resets" --server http://HOST:18480 --token ...
+python3 tools/drishti.py bi mq --model book-deals@1 --select deals.PRODUCT_TYPE --measures "Deals documents,Cash flows,Resets" --server http://HOST:18480 --token-file my-token.txt
 ```
 
 ### What is still short of a trading terminal

@@ -63,7 +63,7 @@ def design(c: Ctx):
     p.click("[data-canvas-grid]", position=grid_cell(p, 11, 0))
     p.click('.bi-vtype[data-type="map"]')
     p.wait_for_selector('[data-well="location"]')
-    p.select_option('[data-add="location"]', "economies.iso3")
+    p.select_option('[data-add="location"]', "economies.ISO3")
     p.select_option('[data-add="values"]', "GDP per capita (USD)")
     settled_design(p)
     p.wait_for_timeout(1000)
@@ -72,13 +72,13 @@ def design(c: Ctx):
     p.click("[data-canvas-grid]", position=grid_cell(p, 11, 0))
     p.click('.bi-vtype[data-type="bar"]')
     p.wait_for_selector('[data-well="axis"]')
-    p.select_option('[data-add="axis"]', "economies.name")
+    p.select_option('[data-add="axis"]', "economies.NAME")
     p.select_option('[data-add="values"]', "GDP (USD bn)")
     settled_design(p)
     p.click("[data-canvas-grid]", position=grid_cell(p, 11, 0))
     p.click('.bi-vtype[data-type="slicer"]')
     p.wait_for_selector('.bi-dvis[data-type="slicer"]')
-    p.select_option('[data-add="field"]', "economies.regionName")
+    p.select_option('[data-add="field"]', "economies.REGION_NAME")
     p.click("[data-ptab='format']")
     p.select_option("[data-format-mode]", "dropdown")
     settled_design(p)
@@ -88,7 +88,7 @@ def design(c: Ctx):
     yaml = p.evaluate("window.drishtiBi.design.yamlText()")
     places = (("card-1", "x: 0, y: 0, w: 3, h: 2", "GDP (USD bn)", ""), ("card-2", "x: 3, y: 0, w: 3, h: 2", "Population (m)", ""),
               ("slicer-1", "x: 6, y: 0, w: 6, h: 2", "Region", ""), ("map-1", "x: 0, y: 2, w: 8, h: 8", "GDP per capita (USD): click a country", ""),
-              ("bar-1", "x: 8, y: 2, w: 4, h: 8", "Largest economies (GDP, USD bn)", "\n        filters: [{ field: economies.name, op: top, n: 10, by: GDP (USD bn) }]"))
+              ("bar-1", "x: 8, y: 2, w: 4, h: 8", "Largest economies (GDP, USD bn)", "\n        filters: [{ field: economies.NAME, op: top, n: 10, by: GDP (USD bn) }]"))
     for vid, at, title, extra in places:
         yaml = re.sub(r"(- id: " + vid + r"\n\s+type: \w+\n)(\s+)at: \{[^}]*\}", lambda m: m.group(1) + m.group(2) + 'title: "' + title + '"\n' + m.group(2) + "at: { " + at + " }" + extra, yaml, count=1)
     p.evaluate("(y) => window.drishtiBi.design.loadYaml(y)", yaml)
@@ -135,10 +135,10 @@ def publish(c: Ctx):
     c.page.wait_for_timeout(1500)
     item = mine(c)
     go(c, "/bi/i/" + item["id"], wait="[data-actions] button", settle=1200)
-    c.page.click("[data-actions] >> text=Move to workspace")
+    c.page.locator("[data-actions]").get_by_role("button", name="Move…").click()
     c.page.select_option("[data-actions] select", label=WORKSPACE)
     c.save("13-move.jpg", clip={"x": 240, "y": 56, "width": 1040, "height": 300})
-    c.page.click("[data-actions] >> text=Move")
+    c.page.locator("[data-actions]").get_by_role("button", name="Move", exact=True).click()
     c.page.wait_for_timeout(1500)
     c.page.reload()
     c.page.wait_for_selector("[data-actions] button")
@@ -239,33 +239,29 @@ def slicer_kinds(c: Ctx):
     c.save("25-slicer-kinds.jpg", clip={"x": 240, "y": 230, "width": 1040, "height": 670})
 
 
-COMPOSED = "file:dataset:desk-pnl-vs-exposure"
+RISK_MODEL = "file:model:trading-risk"
 PNL_REPORT = "file:report:pnl-vs-exposure"
 
 
-@shot("26-composed-dataset.jpg", also=("27-composed-preview.jpg", "28-model-view.jpg"))
-def composed(c: Ctx):
-    """The composed sample dataset: what it is built from, a query preview of the joined table, and the Model view that draws the two sources, the join and the table."""
+@shot("26-two-facts-model.jpg", also=("27-two-facts-measures.jpg",))
+def two_facts(c: Ctx):
+    """The model Trading and counterparty risk in the model designer: two fact tables (trades, netting sets) and the dimensions they meet at, then its
+    measures (P&L 1d from the trades, exposure from the netting sets, and the ratio of the two)."""
     login(c, height=900)
-    go(c, "/bi/d/" + COMPOSED, wait="[data-built-sec]:not([hidden])", settle=1500)
-    element_shot(c, "26-composed-dataset.jpg", "[data-built-sec]", pad=10)
-    c.page.wait_for_selector("[data-fields] option", state="attached", timeout=30000)
-    c.page.select_option("[data-fields]", ["joined.name", "joined.sector"])
-    c.page.select_option("[data-measures]", ["Desk P&L", "Exposure (EE peak)", "P&L per exposure"])
-    c.page.fill("[data-limit]", "8")
-    c.page.click("[data-run]")
-    c.page.wait_for_selector("[data-grid] tbody tr", timeout=60000)
-    c.page.wait_for_timeout(800)
-    c.page.evaluate("document.querySelector('[data-result-meta]').scrollIntoView()")
-    c.page.wait_for_timeout(300)
-    elem_shot(c, "27-composed-preview.jpg", "[data-grid-wrap]", pad=14)
-    go(c, "/bi/m/" + COMPOSED, wait="[data-model-root][data-ready=yes]", settle=1500)
-    c.save("28-model-view.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 560})
+    go(c, "/bi/md/" + RISK_MODEL, wait="[data-md-root][data-ready=yes]", settle=1800)
+    c.page.click('[data-tab="canvas"]')
+    c.page.wait_for_timeout(1500)
+    c.page.evaluate("window.scrollTo(0, 0)")
+    c.save("26-two-facts-model.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 760})
+    c.page.click('[data-tab="measures"]')
+    c.page.wait_for_timeout(1200)
+    c.page.evaluate("window.scrollTo(0, 0)")
+    c.save("27-two-facts-measures.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 760})
 
 
 @shot("29-two-datasets-report.jpg", also=("30-sector-chosen.jpg",))
 def two_datasets(c: Ctx):
-    """The sample report over two datasets, then a sector chosen in the slicer that reads the second dataset: the cards and the bars of the composed one follow it."""
+    """The sample report over the two fact tables of trading-risk, then a sector chosen in the slicer: the P&L of the trades and the exposure of the netting sets both follow it."""
     login(c, height=900)
     open_report(c, PNL_REPORT)
     c.page.evaluate("window.scrollTo(0, 0)")
@@ -281,30 +277,28 @@ def two_datasets(c: Ctx):
     c.save("30-sector-chosen.jpg")
 
 
-RELATIVE = """rachana: 1
+RELATIVE = """rachana: 2
 report: relative-dates
-dates: { from: 2026-10-07, to: 2026-10-08 }
 title: Relative dates
-dataset: trades-basic
+model: trades-basic@1
 pages:
   - id: main
     title: Main
     visuals:
-      - { id: when, type: slicer, title: When, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { field: [trade.tradeDate] }, format: { mode: relative-date, default: last-30-days } }
+      - { id: when, type: slicer, title: When, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { field: [trade.TRADE_DATE] }, format: { mode: relative-date, default: last-30-days } }
       - { id: count, type: card, title: Trades, at: { x: 4, y: 0, w: 4, h: 3 }, wells: { values: [Trades] } }
       - { id: mtm, type: card, title: Mark to market, at: { x: 8, y: 0, w: 4, h: 3 }, wells: { values: [MTM] } }
-      - { id: desk, type: bar, title: MTM by desk, at: { x: 0, y: 3, w: 12, h: 6 }, wells: { axis: [trade.desk], values: [MTM] } }
+      - { id: desk, type: bar, title: MTM by desk, at: { x: 0, y: 3, w: 12, h: 6 }, wells: { axis: [trade.DESK], values: [MTM] } }
 """
 
 
 @shot("31-relative-date.jpg")
 def relative_date(c: Ctx):
-    """A relative-date slicer: its default applies until a name is chosen; the server works the dates out (here four weeks ending 8 October)."""
+    """A relative-date slicer: its default applies until a name is chosen; the server works the dates out (four weeks ending on the business date)."""
     login(c, height=900)
     clean_items(c, "Relative dates")
     made = bi(c, "POST", "/workspaces/me/items", {"kind": "report", "title": "Relative dates", "body": RELATIVE})
     print("relative-date report:", made.get("id"), made.get("problems"))
-    print("latest trade dates:", bi(c, "POST", "/datasets/file:dataset:trades-basic/query", {"fields": ["trade.tradeDate"], "orderBy": [{"by": "trade.tradeDate", "desc": True}], "limit": 3}).get("rows"))
     open_report(c, made["id"], height=620)
     c.page.select_option("[data-relative]", "last-4-weeks")
     c.page.wait_for_timeout(600)
@@ -327,31 +321,18 @@ def entity_view(c: Ctx):
     c.save("32-entity-view.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 744})
 
 
-TABLET = """rachana: 1
-report: tablet-demo
-title: Tablet demo
-dataset: trades-basic
-pages:
-  - id: main
-    title: Main
-    visuals:
-      - { id: trades, type: card, title: Trades, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }
-      - { id: mtm, type: card, title: Mark to market, at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [MTM] } }
-      - { id: notional, type: card, title: Notional, at: { x: 6, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }
-      - { id: desk, type: bar, title: MTM by desk, at: { x: 0, y: 2, w: 8, h: 6 }, wells: { axis: [trade.desk], values: [MTM] } }
-      - { id: rows, type: table, title: Desks, at: { x: 8, y: 2, w: 4, h: 6 }, wells: { columns: [trade.desk, Trades, MTM] } }
-layouts:
+TABLET = RELATIVE.replace("report: relative-dates", "report: tablet-demo").replace("title: Relative dates", "title: Tablet demo") + """layouts:
   tablet:
     main:
-      order: [desk, trades, mtm, notional, rows]
-      wide: [desk, rows]
-      span: { desk: 5, rows: 4 }
+      order: [desk, count, mtm]
+      wide: [desk]
+      span: { desk: 5 }
 """
 
 
 @shot("33-tablet-tab.jpg", also=("34-tablet-view.jpg",))
 def tablet(c: Ctx):
-    """The designer's Tablet tab (order, Wide, rows) and the report on an 820 px screen: two columns, the bar and the table across."""
+    """The designer's Tablet tab (order, Wide, rows) and the report on an 820 px screen: the bar across, the cards in two columns (tutorial 10 step 12's YAML)."""
     login(c, height=900)
     clean_items(c, "Tablet demo")
     made = bi(c, "POST", "/workspaces/me/items", {"kind": "report", "title": "Tablet demo", "body": TABLET})
@@ -375,7 +356,7 @@ WIZ_TITLE = "Large economies"
 WIZ_NAME = "large-economies"
 WIZ_MODEL = "Large economies model"
 WIZ_DESK = "Models desk"
-WIZ_COLUMNS = ["name", "iso3", "regionName", "incomeName", "gdpUsdBn", "populationM"]
+WIZ_COLUMNS = ["NAME", "ISO3", "REGION_NAME", "INCOME_NAME", "GDP_USD_BN", "POPULATION_M"]
 
 
 def desk(c: Ctx) -> str:
@@ -394,7 +375,7 @@ def wiz_next(c: Ctx, step: str):
 
 @shot("35-wizard-source.jpg", also=("36-wizard-columns.jpg", "37-wizard-derive.jpg", "38-wizard-preview.jpg", "39-wizard-save.jpg", "43-new-model.jpg"))
 def wizard(c: Ctx):
-    """The dataset wizard of the model layer on the economics pack's Economy dataset (columns, a row filter, a worked-out column, the preview, save and
+    """The dataset wizard of the model layer on the world-economy pack's Economy dataset (columns, a row filter, a worked-out column, the preview, save and
     publish), then a model of it made with one click and opened in the model designer."""
     login(c, height=900)
     clean_everywhere(c, WIZ_TITLE, WIZ_MODEL)
@@ -406,7 +387,7 @@ def wizard(c: Ctx):
     p.evaluate("() => window.sessionStorage.clear()")
     go(c, "/bi/datasets/new-layer", wait="[data-lw-root][data-ready=yes]", settle=800)
     p.check('[data-src="extends"]')
-    p.select_option("[data-src-extends]", "pack.economics.economy")
+    p.select_option("[data-src-extends]", "pack.world-economy.economy")
     p.wait_for_timeout(600)
     c.save("35-wizard-source.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 620})
     wiz_next(c, "columns")
@@ -416,19 +397,20 @@ def wizard(c: Ctx):
     p.wait_for_timeout(600)
     c.save("36-wizard-columns.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 720})
     wiz_next(c, "filter")
-    p.fill("[data-where]", "gdpUsdBn >= 100")
+    p.fill("[data-where]", "GDP_USD_BN >= 100")
     p.wait_for_timeout(800)
     wiz_next(c, "grain")
     wiz_next(c, "derive")
     p.click('[data-derive-add="expr"]')
-    p.fill('[data-derive-name="0"]', "gdpPerHead")
-    p.fill('[data-derive-expr="0"]', "gdpUsdBn / populationM * 1000")
+    p.fill('[data-derive-name="0"]', "GDP_PER_HEAD")
+    p.fill('[data-derive-expr="0"]', "GDP_USD_BN / POPULATION_M * 1000")
     p.keyboard.press("Tab")
     p.wait_for_timeout(1500)
     c.save("37-wizard-derive.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 620})
     wiz_next(c, "group")
     wiz_next(c, "preview")
     p.click("[data-preview-go]")
+    p.get_by_role("button", name="Save the draft and preview").click()   # the server previews a saved draft: it asks first
     p.wait_for_selector("[data-preview-table] tbody tr", timeout=60000)
     p.wait_for_timeout(800)
     c.save("38-wizard-preview.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 760})
@@ -452,17 +434,17 @@ def wizard(c: Ctx):
     c.save("43-new-model.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 760})
 
 
-CONTROLS = """rachana: 1
+CONTROLS = """rachana: 2
 report: controls-demo
 title: Controls demo
-dataset: trades-basic
+model: trades-basic@1
 pages:
   - id: main
     title: Main
     visuals:
-      - { id: when, type: slicer, title: When, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { field: [trade.tradeDate] }, format: { mode: list } }
+      - { id: when, type: slicer, title: When, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { field: [trade.TRADE_DATE] }, format: { mode: list } }
       - { id: count, type: card, title: Trades, at: { x: 4, y: 0, w: 4, h: 3 }, wells: { values: [Trades] } }
-      - { id: desk, type: bar, title: MTM by desk, at: { x: 0, y: 3, w: 12, h: 6 }, wells: { axis: [trade.desk], values: [MTM] } }
+      - { id: desk, type: bar, title: MTM by desk, at: { x: 0, y: 3, w: 12, h: 6 }, wells: { axis: [trade.DESK], values: [MTM] } }
 """
 
 
@@ -486,7 +468,7 @@ def controls(c: Ctx):
     p.wait_for_timeout(900)
     c.save("40-slicer-relative.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 1100})
     p.click('[data-add-filter="report"]')
-    p.select_option('[data-filter-editor] [name="field"]', "trade.desk")
+    p.select_option('[data-filter-editor] [name="field"]', "trade.DESK")
     p.select_option('[data-filter-editor] [name="mode"]', "top")
     p.fill('[data-filter-editor] [name="n"]', "3")
     p.wait_for_timeout(500)

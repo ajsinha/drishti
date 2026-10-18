@@ -90,19 +90,19 @@ For one trade on one day (generation `9c41e07a2b5d13f0`, the load that last repl
 
 ```
 {trading:trade:days}:gens              HASH   20260929 → 5e0a…, 20260930 → 9c41e07a2b5d13f0
-trading:trade:{MX-20000017}            ZSET   20260929 → 20260929, 20260930 → 20260930
-trading:trade:{MX-20000017}:20260930.9c41e07a2b5d13f0
+trading:trade:{MX-20000001}            ZSET   20260929 → 20260929, 20260930 → 20260930
+trading:trade:{MX-20000001}:20260930.9c41e07a2b5d13f0
                                        STRING 0x03 <4-byte dictionary id> <zstd frame>          about 820 bytes
-                                              (6,300 bytes of JSON: {"tradeId":"MX-20000017","sourceSystem":"Murex",…})
+                                              (the JSON document: {"SOURCE_SYSTEM":"MUREX","SOURCE_UPDATE_TIME":"2026-09-30T18:30:00Z",…})
 
 {trading:trade:20260930}:cols:9c41e07a2b5d13f0
                                        HASH
   meta                 "version 1790857967807\nrows 1000000\nchunk-rows 10000\nchunks 100\n
-                        text tradeId\ntext productType\n…\nnumber notional\nnumber mtm\n…\ntext sourceSystem\n"
+                        text TRADE_ID\ntext SOURCE_SYSTEM\ntext PRODUCT_TYPE\n…\nnumber QUANTITY\n…\ntext TRADER_ID\n"
   #id:0 … #id:99       the ids, sorted, 10,000 per chunk
-  mtm:0 … mtm:99       10,000 doubles per chunk
-  book:0 … book:99     10,000 texts per chunk (a dictionary of the chunk's distinct books, then an index per row)
-  …                    one field per promoted path per chunk: 2,000 fields for nineteen paths
+  QUANTITY:0 … QUANTITY:99    10,000 doubles per chunk
+  PORTFOLIO:0 … PORTFOLIO:99  10,000 texts per chunk (a dictionary of the chunk's distinct portfolios, then an index per row)
+  …                    one field per promoted path per chunk: 1,600 fields for the trading pack's sixteen paths
 ```
 
 Why each part is shaped this way:
@@ -184,24 +184,27 @@ The pack declares the fields to promote on the connector that stores the kind, e
 packs' settings, so the same declaration applies:
 
 ```yaml
-# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trading-store.yaml at the first start)
+# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trade-endur.yaml at the first start)
 connectors:
-  trading-store:
+  trade-endur:
     settings:
       domain: trading
       layout:
         trade:
-          columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
-                    tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
-                    risk.dv01, sourceSystem]
+          columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
 
 # drishti-server application-redis.yaml (the profile; deprecated, see \"As a connector file\" below)
 drishti:
   sources:
     connectors:
-      trading-store: { plugin: redis, settings: { uri: "${DRISHTI_REDIS_URI:redis://localhost:6379}",
+      trading-store: { plugin: redis, settings: { uri: "${DRISHTI_REDIS_URI:redis://localhost:6379}",   # 2.2's name, see the note
                                                    cluster: "${DRISHTI_REDIS_CLUSTER:false}" } }
 ```
+
+> **2.3.0:** the trades are read per source system (`trade-endur`, `trade-calypso`, `trade-murex`, one Delta table each). The deprecated
+> store profiles still name 2.2's `trading-store`, so a profile leaves the trades on Delta; point a store at the trades with connector
+> files named after the three connectors (below).
+
 
 The connector reads `layout.<kind>.columns`; the key prefix is the connector's `domain` (`trading`). The loader takes
 the values from each line's `columns` object ([section 4](#4-loading)), which the generators fill from the same layout.
@@ -209,7 +212,7 @@ The `sort-by`, `file-rows` and `row-group-rows` keys of the layout concern files
 
 ## 4. Loading
 
-`tools/load-redis.sh` loads the banking packs' data, and optionally a large generated book, through `RedisLoader` (in
+`tools/load-redis.sh` loads the seven packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large generated book, through `RedisLoader` (in
 the plugin):
 
 ```bash
@@ -228,7 +231,7 @@ redis: trading:trade 2026-09-30: 1,000,000 rows, 19 columns in 2,000 chunks of 1
 redis: loaded 1,000,000 rows into redis://localhost:26479 in 81 s; documents 6,021 MB as JSON, 811 MB stored (7.4 times smaller)
 ```
 
-With `--trades`, the script merges the samples (`--merge`) and the bulk book, which starts with the 750 sample trades,
+With `--trades`, the script merges the samples (`--merge`) and the bulk book, which starts with the 765 sample trades of the trading pack,
 replaces the trade days it covers.
 
 How the loader works:
@@ -462,18 +465,18 @@ Configure both connectors for the kind, Redis first:
 drishti:
   sources:
     routes:
-      trade: trading-store                     # asked first
+      trade: trade-endur                     # asked first
     connectors:
-      trading-store:                           # Redis: the last five business days, TTL-expired, live
+      trade-endur:                           # Redis: the last five business days, TTL-expired, live
         plugin: redis
         kinds: [trade]
         settings: { uri: "rediss://drishti:${REDIS_PASSWORD}@redis.internal:6380", domain: trading, lookback-days: 10,
-                    "layout.trade.columns": "tradeId,productType,…" }
+                    "layout.trade.columns": "TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,…" }
       trading-history:                         # Delta Lake: every business day for seven years
         plugin: delta
         kinds: [trade]
         settings: { root: "s3a://risk-lake/banking", domain: trading, lookback-days: 10,
-                    "layout.trade.columns": "tradeId,productType,…" }
+                    "layout.trade.columns": "TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,…" }
 ```
 
 How Drishti uses them:
@@ -543,6 +546,11 @@ before Java 24). Jedis pipelines write faster from one thread, but the loader is
 12,000 to 20,000 trades a second, and the loader kept up) and sends two commands a trade without a TTL, four with one:
 at most about 80,000 commands a second, under a third of what Lettuce sustains. Lettuce also gives Redis Cluster, TLS and pub/sub with one API.
 
+**The figures below were measured in 2.2**, when the generated trades were written in camel case (`mtm`, `notional`, `book`),
+so the searches are shown as they were run; the trades now carry the source systems' UPPER_SNAKE attributes and no MTM (that is the
+market-risk pack's trade valuation): today's equivalents read `TRD where QUANTITY > 500m and CURRENCY = 'USD'` and
+`TRD PORTFOLIO=BOOK-RATES-3`. Not re-measured for 2.3.
+
 **The scaling curve, measured with the scale benchmark (2026-10-01).** `tools/bench/scale.sh`
 ([SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)) loaded 10,000, 25,000 and 50,000 trades a day over three business
 days (plus the banking samples) and asked the same questions over HTTP each time: a 24-thread laptop shared with other
@@ -601,7 +609,7 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 `GET /api/v1/admin/health` shows the connector and its catalogue:
 
 ```json
-{"name": "trading-store", "health": "UP", "live": true, "lastUpdate": "2026-10-01T12:32:48.435Z",
+{"name": "trade-endur", "health": "UP", "live": true, "lastUpdate": "2026-10-01T12:32:48.435Z",
  "cache": {"kinds": 1, "datesIndexed": 10, "ids": 1000000, "columnSets": 2, "columnSetsMb": 438, "dictionaries": 1,
            "liveViews": 0}}
 ```
@@ -714,7 +722,7 @@ These are the messages from a real Redis 8 in the integration test.
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: redis
 kinds: [trade]
 description: Trading documents in Redis
@@ -724,9 +732,7 @@ settings:
   cluster: ${DRISHTI_REDIS_CLUSTER:false}
   layout:
     trade:
-      columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
-                tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
-                risk.dv01, sourceSystem]
+      columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
 ```
 
 The `redis` profile (`SPRING_PROFILES_ACTIVE=redis`) did this for the banking stores and still works, but is deprecated. A file replaces the pack's template wholesale, so it repeats the promoted `layout` the pack declared ([section 3](#3-declaring-which-fields-are-columns)).

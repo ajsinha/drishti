@@ -13,11 +13,11 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 roles:
-  - { role: age, pattern: "hours$", fmt: age0, weight: 80 }
-  - { role: label, pattern: "priority|team|tier|shift", weight: 64 }
+  - { role: age, pattern: "HOURS$", fmt: age0, weight: 80 }   # field-name patterns ignore case
+  - { role: label, pattern: "PRIORITY|TEAM|TIER|SHIFT", weight: 64 }
 labels:
-  ageHours: Age (h)
-  assignee: Agent
-  hoursOpen: Hours open
-  oldestHours: Oldest (h)
-idFields: ["ticketId", "agentId", "clientId"]
+  AGE_HOURS: Age (h)
+  ASSIGNEE: Agent
+  HOURS_OPEN: Hours open
+  OLDEST_HOURS: Oldest (h)
+idFields: ["TICKET_ID", "AGENT_ID", "CLIENT_ID"]

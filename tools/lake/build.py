@@ -318,6 +318,8 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say) -> tuple[int, dic
             if any(not s.get("ok") for s in sig):
                 code = EXIT_PARTIAL
                 summary["status"] = "partial"
+        if not a.no_stamp and served_lake(lake) and (not a.signal or any(not s.get("ok") for s in summary.get("signal") or [])):
+            summary["stamp"] = str(leave_stamp(lake, table, summary))
         prog.update(force=True, phase="done", status=summary["status"])
         return _finish(a, lake, summary, code, started, say)
     finally:
@@ -361,6 +363,32 @@ def signal(a, p, summary) -> list[dict]:
         except (urllib.error.URLError, OSError) as e:
             out.append({"date": day, "ok": False, "error": str(getattr(e, "reason", e))})
     return out
+
+
+def bi_store() -> pathlib.Path:
+    """The server's BI store: DRISHTI_BI_STORE, else <data>/bi-store (DRISHTI_DATA_DIR, else the repository's data folder)."""
+    data = pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or (HERE.parents[1] / "data"))
+    return pathlib.Path(os.environ.get("DRISHTI_BI_STORE") or (data / "bi-store"))
+
+
+def served_lake(lake) -> bool:
+    """Whether the lake is the one the server reads: DRISHTI_DELTA_ROOT, else <data>/delta. A scratch lake elsewhere leaves no stamp, so a
+    server's next start does not clear its BI store for data it never reads."""
+    if lake is None:
+        return False
+    data = pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or (HERE.parents[1] / "data"))
+    served = pathlib.Path(os.environ.get("DRISHTI_DELTA_ROOT") or (data / "delta"))
+    return pathlib.Path(lake).resolve() == served.resolve()
+
+
+def leave_stamp(lake, table, summary) -> pathlib.Path:
+    """No server took the data-load signal: <bi-store>/lake-rebuilt.json tells the server, at its next start, to clear the BI columns and
+    rollups it read from the lake (a running server notices a changed Delta date by itself)."""
+    stamp = bi_store() / "lake-rebuilt.json"
+    stamp.parent.mkdir(parents=True, exist_ok=True)
+    stamp.write_text(json.dumps({"at": now_iso(), "by": "drishti.py lake build", "lake": str(lake), "table": str(table),
+                                 "dates": sorted(summary.get("rows") or {})}, indent=1) + "\n", encoding="utf-8")
+    return stamp
 
 
 # ------------------------------------------------------------------------------------------------ summary, log, output
@@ -467,6 +495,7 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     g.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then drishti-server/target)")
     g.add_argument("--java", help="the java binary (default: JAVA_HOME, then java on the PATH)")
     g.add_argument("--dry-run", action="store_true", help="read and count, write nothing")
+    g.add_argument("--no-stamp", action="store_true", help="without --signal, leave no <bi-store>/lake-rebuilt.json for the server's next start")
     g.add_argument("--keep-staging", action="store_true", help="keep the staged rows under <lake>/_drishti-lake/staging (to debug)")
     g = p.add_argument_group("afterwards")
     g.add_argument("--signal", metavar="URL", help="tell this server the data landed (POST /api/v1/packs/{pack}/loads); needs a token with loads:write")

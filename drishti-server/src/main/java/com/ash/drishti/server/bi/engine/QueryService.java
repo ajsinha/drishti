@@ -122,6 +122,7 @@ public final class QueryService implements AutoCloseable {
         this.sources = sources;
         this.liveTables = new LiveTables(engine, sources, liveProps, clock, bus);
         this.layers = new Layers(engine, sources, props, clock);
+        this.layers.clearIfLakeRebuilt();                       // a lake rebuilt while the server was down (lake demo's stamp)
         this.admission = new Admission(props.maxConcurrent(), props.maxConcurrentPerUser(), ExecProperties.defaults().perModelShare());
         // one budget in bytes; every entry weighs at least budget / entries, so the entry count is bounded too
         long budget = Math.max(1, props.cacheMaxBytes());
@@ -238,6 +239,7 @@ public final class QueryService implements AutoCloseable {
 
     private Result query(Loaded ds, QueryRequest q, Caller who, boolean explain, Frames frames, StagedTables staged) {
         queries.incrementAndGet();
+        syncVersions(ds.key(), ds.dataset());
         Frames.Rows rows = null;
         if (frames != null && ds.dataset().framed() && (explain || cache == null || cache.getIfPresent(cacheKey(ds, q, who) + "|frames:" + frames.fingerprint()) == null)) {
             rows = frames.load();                   // the sources are asked before this query takes a place of its own: they are queries too, and must not wait for it
@@ -767,6 +769,21 @@ public final class QueryService implements AutoCloseable {
     }
 
     // ---- data loads --------------------------------------------------------------------------------------------------
+
+    /**
+     * The source holds new data that no load signal announced (a lake rebuilt, a date restated): moves the dataset's generation, drops its cached
+     * answers and tells standing queries. Called before any cache of an answer is read (here, and by the model query's own cache). Cheap.
+     */
+    public boolean syncVersions(String key, Dataset dataset) {
+        if (!layers.sync(key, dataset)) {
+            return false;
+        }
+        if (cache != null) {
+            cache.asMap().keySet().removeIf(k -> k.startsWith(key + "|"));
+        }
+        bus.publish(new GenerationBus.Notice(key, null, "load", null, layers.generation(key), null));
+        return true;
+    }
 
     /**
      * A data-load signal for a kind on a business date: clears the date's partitions of every table of the given datasets that read the kind,

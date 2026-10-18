@@ -75,7 +75,15 @@ import java.util.concurrent.TimeUnit;
  */
 public final class DeltaSourcePlugin implements SourcePlugin {
 
-    private record PartKey(String kind, long version, LocalDate date) {}
+    /**
+     * A partition of one table version. The version's commit time is part of the key: a table removed and written again (lake demo, a
+     * rebuild) starts its versions at 0 again, so the number alone would serve the old table's ids, documents and columns.
+     */
+    private record PartKey(String kind, long version, long at, LocalDate date) {
+        PartKey(String kind, DeltaTable.Layout l, LocalDate date) {
+            this(kind, l.version(), l.timestamp(), date);
+        }
+    }
 
     /** One partition in memory: documents by id, and a reverse index (referenced id to referring ids). */
     private record Part(Map<String, String> docs, Map<String, Set<String>> refs) {}
@@ -181,7 +189,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             }
         });
         this.dated = new DatedHitIndex(sourceName, DatedHitIndex.defaultRoot(), ctx.settings(), this::dayHits, (k, d) -> {
-            Long v = versions.get(k);
+            String v = versions.get(k);
             return v == null ? null : "v" + v;
         });
         reindex();
@@ -269,7 +277,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     private DeltaTable.IdMap idMap(String kind, DeltaTable.Layout l, LocalDate date) {
-        return join(idMaps.get(new PartKey(kind, l.version(), date), k -> tables.get(kind).ids(l, date)));
+        return join(idMaps.get(new PartKey(kind, l, date), k -> tables.get(kind).ids(l, date)));
     }
 
     /** The promoted paths the table really has as columns (a pack may declare more than a writer wrote). */
@@ -285,7 +293,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     private Part part(String kind, DeltaTable.Layout l, LocalDate date) {
-        return join(parts.get(new PartKey(kind, l.version(), date), k -> {
+        return join(parts.get(new PartKey(kind, l, date), k -> {
             Map<String, String> docs = tables.get(kind).read(l, date);
             Map<String, Set<String>> refs = new HashMap<>();
             docs.forEach((id, json) -> ReferenceScanner.referencedIds(json).forEach(r -> refs.computeIfAbsent(r, x -> new HashSet<>()).add(id)));
@@ -352,7 +360,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             } catch (RuntimeException e) {
                 // the date's files cannot be read (truncated, a codec the engine does not decompress): the read fails
                 // naming them, rather than looking as if the table did not hold the entity
-                throw problems.failed(ref.kind(), d.toString(), l.get().version(), e);
+                throw problems.failed(ref.kind(), d.toString(), l.get().timestamp(), e);
             }
             problems.ok(ref.kind(), d.toString());           // the date's files were read
             if (json == null) {
@@ -372,7 +380,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         if (file < 0) {
             return null;
         }
-        String key = ref.kind() + "\u001f" + l.version() + "\u001f" + d + "\u001f" + ref.id();
+        String key = ref.kind() + "\u001f" + l.version() + "@" + l.timestamp() + "\u001f" + d + "\u001f" + ref.id();
         String json = docs.getIfPresent(key);
         if (json == null) {
             docReads.acquireUninterruptibly();
@@ -454,7 +462,33 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     /** The newest commit time among the domain's tables (data loaded, appended or restated). */
     private volatile java.time.Instant lastUpdate;
-    private final Map<String, Long> versions = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, String> versions = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** The table's version and its commit time ({@code 7@1760700000000}): a rewritten table has a new one even when its version number repeats. */
+    private static String stamp(DeltaTable.Layout l) {
+        return l.version() + "@" + l.timestamp();
+    }
+
+    @Override
+    public Optional<String> dataVersion(String kind, LocalDate date) {
+        if (date == null) {
+            return dataVersion(kind);
+        }
+        try {
+            return layout(kind, null).map(l -> DeltaTable.filesStamp(l, date));
+        } catch (RuntimeException e) {
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public Optional<String> dataVersion(String kind) {
+        try {
+            return layout(kind, null).map(DeltaSourcePlugin::stamp);
+        } catch (RuntimeException e) {
+            return Optional.empty();                           // the log cannot be read now: the caller keeps what it has
+        }
+    }
 
     @Override
     public java.time.Instant lastUpdate() {
@@ -479,7 +513,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                     problems.listingOk(kind);
                     continue;
                 }
-                version = layout.get().version();
+                version = layout.get().timestamp();             // the commit, by its time: a table written again restarts its version numbers
                 problems.version(kind, version);
                 if (!layout.get().files().isEmpty()) {
                     where = layout.get().files().lastKey().toString();
@@ -515,8 +549,8 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     /** The kind's ids on its newest date, for type-ahead; warms that date's columns for the first search. */
     private List<EntityHit> hits(String kind, DeltaTable.Layout l) {
         List<EntityHit> hits = new ArrayList<>();
-        Long was = versions.put(kind, l.version());
-        if (was == null || was != l.version()) {
+        String was = versions.put(kind, stamp(l));
+        if (was == null || !was.equals(stamp(l))) {
             Instant committed = Instant.ofEpochMilli(l.timestamp());   // the version's commit time
             Instant before = lastUpdate;
             if (before == null || committed.isAfter(before)) {
@@ -531,7 +565,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             if (dated.enabled()) {
                 dated.putDay(kind, l.files().lastKey(), hits);
                 dated.plan(kind, l.files().navigableKeySet());
-                if (was != null && was != l.version()) {
+                if (was != null && !was.equals(stamp(l))) {
                     dated.restatedAll(kind);                    // a commit: a past day may have been restated
                 }
             }
@@ -584,7 +618,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         try {
             all = columnSet(kind, l.get(), dates.get(0), cols);
         } catch (RuntimeException e) {
-            throw problems.failed(kind, dates.get(0).toString(), l.get().version(), e);
+            throw problems.failed(kind, dates.get(0).toString(), l.get().timestamp(), e);
         }
         problems.ok(kind, dates.get(0).toString());
         Map<String, double[]> nums = new LinkedHashMap<>();
@@ -601,7 +635,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     /** Every promoted column of one date, read once and kept (by memory), shared by searches and aggregates. */
     private com.ash.drishti.api.ColumnSet columnSet(String kind, DeltaTable.Layout l, LocalDate date, Map<String, String> cols) {
-        return join(columnSets.get(new PartKey(kind, l.version(), date), k -> {
+        return join(columnSets.get(new PartKey(kind, l, date), k -> {
             Map<String, Boolean> numeric = new LinkedHashMap<>();
             cols.forEach((path, column) -> numeric.put(path,
                     l.schema().get(column).getDataType() instanceof io.delta.kernel.types.DoubleType));

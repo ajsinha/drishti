@@ -115,8 +115,19 @@ The walk-through, with real output and pictures, is [tutorial 7 · Load data dai
 batch (step 3), the same through the API (step 4), the history and what is due (step 5) and an alert for a missing day (step 6). In short: **announce** a batch when your ETL has written it,
 
 ```
-$ python tools/drishti.py data landed --server http://127.0.0.1:18970 --pack market-risk --kind var --date 2026-10-05 --rows 1200 --batch eod-20261005-1
+$ drishti-console/.venv/bin/python tools/drishti.py data landed --pack market-risk --kind var --date 2026-10-16 --rows 10 --batch eod-20261016-1
+var for 2026-10-16 loaded: 10 rows; 0 alerts fired
+  load mvczs759-1  status ready  verified verified  attempt 1
+  record  ok      recorded
+  refresh ok      caches dropped: file, risk-store
+  verify  ok      10 var entities on 2026-10-16
+  alerts  ok      0 alerts fired
+  smoke   skipped not asked for (loads.smoke is 0)
+  notices ok      1 person told
 ```
+
+(On the quick-start server, the demo lakes' last business day; `DRISHTI_SERVER` and `DRISHTI_TOKEN` name the server and an
+administrator's token. Run it again and the line under `load` ends `(already announced: nothing ran again)`.)
 
 or `POST /api/v1/packs/{pack}/loads` ([section 4](#4-the-api-reference)); Drishti then records it, refreshes the caches, verifies that the rows are readable, checks alerts, runs a smoke test and tells people
 ([section 7](#7-what-happens-step-by-step)). Reading the history is `data loads` ([section 5](#5-the-command-line-reference)); the expectations that make late data visible are [section 8](#8-expectations-and-late-data).
@@ -185,10 +196,12 @@ different `rows` and it is a reload.
 | 401 | `DRS-5010` | no or an unknown bearer token | `{"title":"unauthenticated","status":401,"code":"DRS-5010","detail":"DRS-5010 missing bearer token"}` |
 | 403 | `DRS-5002` | not an administrator and no `loads:write` token; a token without the scope; the token's user may not open the kind | `{"title":"forbidden","status":403,"code":"DRS-5002","detail":"this token lacks the scope loads:write"}` |
 | 404 | `DRS-5011` | no loaded pack with that name (also for a pack none of whose kinds the caller may open: the two look the same) | `{"type":"about:blank","title":"load pack not found","status":404,"detail":"DRS-5011 no loaded pack named 'nope'","instance":"/api/v1/packs/nope/loads","code":"DRS-5011"}` |
-| 422 | `DRS-5012` | the pack has no such kind | `{"type":"about:blank","title":"load kind unknown","status":422,"detail":"DRS-5012 pack 'market-risk' has no kind 'nope'; its kinds are [var, stress-scenario, stress-result, frtb-sensitivity, pnl-explain]","instance":"/api/v1/packs/market-risk/loads","code":"DRS-5012"}` |
+| 422 | `DRS-5012` | the pack has no such kind | `{"type":"about:blank","title":"load kind unknown","status":422,"detail":"DRS-5012 pack 'market-risk' has no kind 'nope'; its kinds are [var, stress-scenario, stress-result, frtb-sensitivity, pnl-explain, trade-valuation]","instance":"/api/v1/packs/market-risk/loads","code":"DRS-5012"}` |
 
 A `ready` load that was recorded but could not be verified is **not** an error: it is `201` with `"verified": "not-found"` and a `warn`
-`verify` step, so your job can decide (the CLI exits 1). For example (the shape; a dated connector with no data for the date):
+`verify` step, so your job can decide (the CLI exits 1). For example (the shape; a dated connector with no data for the date). On the
+demo lakes this does not happen for a date before the first business day: the check counts the kind's ids from the connectors' listing,
+which is the newest one, so `2026-10-05` (before the lakes begin) also reads `10 var entities on 2026-10-05`, a known limit of 2.3.0:
 
 ```json
 {"status":"ready","verified":"not-found","entities":0,"alerts":0,"notices":1,

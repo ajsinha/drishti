@@ -17,16 +17,16 @@ sutra: pnl-explain
 version: 1
 description: "Where a trade's P&L came from: a waterfall of the explain, bars of sensitivity and the figures in a key-value panel."
 match: { kind: trade }
-title: { pill: "P&L explain · ${$.tradeId}", id: $.tradeId }
+title: { pill: "P&L explain · ${$.TRADE_ID}", id: $.TRADE_ID }
 panels:
-  - { id: explain, kind: waterfall, title: "P&L explain (USD)", span: 7, height: 10, rows: $.pnlExplain, label: step, value: pnl, sum: Closing MTM, fmt: signed0 }
+  - { id: explain, kind: waterfall, title: "P&L explain (USD)", span: 7, height: 10, rows: $.PNL_EXPLAIN, label: STEP, value: PNL, sum: Closing MTM, fmt: signed0 }
   - id: figures
     kind: kv
     title: Figures
     span: 5
     columns:
-      - { label: MTM, bind: $.mtm, fmt: signed0, tone: sign }
-      - { label: 1-day P&L, bind: $.pnl1d, fmt: signed0, tone: sign }
-      - { label: DV01, bind: $.risk.dv01, fmt: signed0, tone: sign }
-      - { label: Yield, bind: $.terms.yield, fmt: pct4 }
-  - { id: dv01, kind: hbar, title: "DV01 by bucket (USD)", rows: $.sensitivities, label: bucket, value: dv01, fmt: signed0, tone: sign }
+      - { label: MTM, bind: $.MTM, fmt: signed0, tone: sign }
+      - { label: 1-day P&L, bind: $.PNL1D, fmt: signed0, tone: sign }
+      - { label: DV01, bind: $.RISK.DV01, fmt: signed0, tone: sign }
+      - { label: Yield, bind: $.TERMS.YIELD, fmt: pct4 }
+  - { id: dv01, kind: hbar, title: "DV01 by bucket (USD)", rows: $.SENSITIVITIES, label: BUCKET, value: DV01, fmt: signed0, tone: sign }

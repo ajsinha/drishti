@@ -18,105 +18,105 @@ version: 1
 description: >
   All twenty-two panel kinds on one screen, each reading the self-contained bond trade in all-panels-showcase.json.
   Copy the panel you need; the number in each title is the kind's place in this list.
-match: { kind: trade, where: "$.productType == 'GOVT_BOND'", priority: 1 }
+match: { kind: trade, where: "$.PRODUCT_TYPE == 'GOVT_BOND'", priority: 1 }
 title:
-  pill: "Showcase · ${$.productName}"
-  id: $.tradeId
+  pill: "Showcase · ${$.PRODUCT_NAME}"
+  id: $.TRADE_ID
 strip:
-  - { label: Notional, bind: "$.currency + ' ' + fmt($.notional, 'amount0')" }
-  - { label: Direction, bind: $.direction }
-  - { label: Maturity, bind: $.maturityDate, fmt: date }
-  - { label: MTM (USD), bind: $.mtm, fmt: signed0, tone: sign, emphasis: true }
-  - { label: 1-day P&L, bind: $.pnl1d, fmt: signed0, tone: sign }
-  - { label: DV01 (USD), bind: $.risk.dv01, fmt: signed0, tone: sign }
+  - { label: Notional, bind: "$.CURRENCY + ' ' + fmt($.NOTIONAL, 'amount0')" }
+  - { label: Direction, bind: $.DIRECTION }
+  - { label: Maturity, bind: $.MATURITY_DATE, fmt: date }
+  - { label: MTM (USD), bind: $.MTM, fmt: signed0, tone: sign, emphasis: true }
+  - { label: 1-day P&L, bind: $.PNL1D, fmt: signed0, tone: sign }
+  - { label: DV01 (USD), bind: $.RISK.DV01, fmt: signed0, tone: sign }
 panels:
   - id: terms
     kind: kv
     title: "1 · kv: bond terms"
     span: 8
     columns:
-      - { label: Coupon, bind: $.terms.coupon, fmt: pct4 }
-      - { label: Frequency, bind: $.terms.couponFrequency }
-      - { label: Face amount, bind: $.terms.faceAmount, fmt: amount0 }
-      - { label: Clean price, bind: $.terms.cleanPrice, fmt: price2 }
-      - { label: Yield, bind: $.terms.yield, fmt: pct4 }
+      - { label: Coupon, bind: $.TERMS.COUPON, fmt: pct4 }
+      - { label: Frequency, bind: $.TERMS.COUPON_FREQUENCY }
+      - { label: Face amount, bind: $.TERMS.FACE_AMOUNT, fmt: amount0 }
+      - { label: Clean price, bind: $.TERMS.CLEAN_PRICE, fmt: price2 }
+      - { label: Yield, bind: $.TERMS.YIELD, fmt: pct4 }
   - id: ops
     kind: status
     title: "2 · status: operations"
     span: 4
     fields:
-      - { label: Confirmation, bind: $.confirmation.status, tone: status }
-      - { label: Clearing, bind: $.clearing.status, tone: status }
-      - { label: Reporting, bind: $.regulatory.reportingStatus, tone: status }
+      - { label: Confirmation, bind: $.CONFIRMATION.STATUS, tone: status }
+      - { label: Clearing, bind: $.CLEARING.STATUS, tone: status }
+      - { label: Reporting, bind: $.REGULATORY.REPORTING_STATUS, tone: status }
   - { id: explain, kind: waterfall, title: "3 · waterfall: P&L explain (USD)", span: 6, height: 9,
-      rows: $.pnlExplain, label: step, value: pnl, sum: Closing MTM, fmt: signed0 }
-  - { id: pnl, kind: line, title: "4 · line: daily P&L (USD)", span: 6, height: 9, rows: $.pnlHistory, x: date, y: pnl, fmt: signed0 }
-  - { id: dv01, kind: hbar, title: "5 · hbar: DV01 by bucket (USD)", span: 8, rows: $.sensitivities, label: bucket, value: dv01, fmt: signed0, tone: sign }
-  - { id: dv01use, kind: gauge, title: "6 · gauge: DV01 of a 250k guideline", span: 4, value: "abs($.risk.dv01)", max: "250000" }
+      rows: $.PNL_EXPLAIN, label: STEP, value: PNL, sum: Closing MTM, fmt: signed0 }
+  - { id: pnl, kind: line, title: "4 · line: daily P&L (USD)", span: 6, height: 9, rows: $.PNL_HISTORY, x: DATE, y: PNL, fmt: signed0 }
+  - { id: dv01, kind: hbar, title: "5 · hbar: DV01 by bucket (USD)", span: 8, rows: $.SENSITIVITIES, label: BUCKET, value: DV01, fmt: signed0, tone: sign }
+  - { id: dv01use, kind: gauge, title: "6 · gauge: DV01 of a 250k guideline", span: 4, value: "abs($.RISK.DV01)", max: "250000" }
   - id: coupons
     kind: ladder
     title: "7 · ladder: coupon schedule"
     height: 8
-    rows: $.schedule
-    highlight: "#index == $.nextIndex"
+    rows: $.SCHEDULE
+    highlight: "#index == $.NEXT_INDEX"
     columns:
-      - { label: Pay date, bind: "@.date", fmt: date }
-      - { label: Rate, bind: "@.rate", fmt: pct4 }
-      - { label: Amount, bind: "@.amount", fmt: amount0, total: true }
-      - { label: Status, bind: "@.status", tone: status }
-  - { id: life, kind: timeline, title: "8 · timeline: lifecycle", span: 7, rows: $.lifecycle.timeline, label: event, detail: description }
+      - { label: Pay date, bind: "@.DATE", fmt: date }
+      - { label: Rate, bind: "@.RATE", fmt: pct4 }
+      - { label: Amount, bind: "@.AMOUNT", fmt: amount0, total: true }
+      - { label: Status, bind: "@.STATUS", tone: status }
+  - { id: life, kind: timeline, title: "8 · timeline: lifecycle", span: 7, rows: $.LIFECYCLE.TIMELINE, label: EVENT, detail: DESCRIPTION }
   - id: versions
     kind: table
     title: "9 · table: versions"
     span: 5
-    rows: $.lifecycle.events
+    rows: $.LIFECYCLE.EVENTS
     columns:
-      - { label: "#", bind: "@.version" }
-      - { label: Event, bind: "@.event" }
-      - { label: Reason, bind: "@.reason" }
-      - { label: By, bind: "@.by" }
+      - { label: "#", bind: "@.VERSION" }
+      - { label: Event, bind: "@.EVENT" }
+      - { label: Reason, bind: "@.REASON" }
+      - { label: By, bind: "@.BY" }
   - id: tree
     kind: table
     title: "9b · table with children: desk → book → trade, click ▸ to expand"
-    rows: $.bookTree
-    children: "@.children"
+    rows: $.BOOK_TREE
+    children: "@.CHILDREN"
     expand: 1
     columns:
-      - { label: Name, bind: "@.name" }
-      - { label: Trades, bind: "@.trades" }
-      - { label: MTM (USD), bind: "@.mtm", fmt: signed0, tone: sign, total: true }
+      - { label: Name, bind: "@.NAME" }
+      - { label: Trades, bind: "@.TRADES" }
+      - { label: MTM (USD), bind: "@.MTM", fmt: signed0, tone: sign, total: true }
   - id: sets
     kind: tabs
     title: "10 · tabs: netting sets, one tab each"
     span: 6
-    each: $.nettingSets
-    tabTitle: "@.id"
+    each: $.NETTING_SETS
+    tabTitle: "@.ID"
     body:
       kind: kv
       columns:
-        - { label: Agreement, bind: "@.agreement" }
-        - { label: Trades, bind: "@.trades" }
-        - { label: Net MTM, bind: "@.netMtm", fmt: signed0, tone: sign }
+        - { label: Agreement, bind: "@.AGREEMENT" }
+        - { label: Trades, bind: "@.TRADES" }
+        - { label: Net MTM, bind: "@.NET_MTM", fmt: signed0, tone: sign }
   - { id: exposure, kind: area, title: "12 · area: exposure profile (USD)", span: 6,
-      rows: $.profile, x: tenor, limit: $.limit,
-      series: [ { label: EE, value: ee, tone: link }, { label: PFE 95, value: pfe, tone: accent } ] }
-  - { id: group, kind: graph, title: "11 · graph: the counterparty's group", height: 12, nodes: $.hierarchy.nodes, edges: $.hierarchy.edges }
-  - { id: grid, kind: pivot, title: "13 · pivot: MTM by book and family (USD)", rows: $.positions, by: [book, family], across: currency,
-      value: mtm, fmt: compact, tone: sign }
+      rows: $.PROFILE, x: TENOR, limit: $.LIMIT,
+      series: [ { label: EE, value: EE, tone: link }, { label: PFE 95, value: PFE, tone: accent } ] }
+  - { id: group, kind: graph, title: "11 · graph: the counterparty's group", height: 12, nodes: $.HIERARCHY.NODES, edges: $.HIERARCHY.EDGES }
+  - { id: grid, kind: pivot, title: "13 · pivot: MTM by book and family (USD)", rows: $.POSITIONS, by: [BOOK, FAMILY], across: CURRENCY,
+      value: MTM, fmt: compact, tone: sign }
   - { id: books, kind: scatter, title: "14 · scatter: books, MTM vs trades", span: 6, height: 9,
-      rows: $.books, x: mtm, y: trades, label: id, xFmt: compact, xLabel: MTM (USD), yLabel: Trades }
-  - { id: scenarios, kind: histogram, title: "15 · histogram: scenario P&L (USD)", span: 6, height: 9, rows: $.scenarioPnl, fmt: compact,
-      markers: [ { label: VaR 99%, value: "-$.var99", tone: neg } ] }
-  - { id: bars, kind: candlestick, title: "16 · candlestick: front month (USD/bbl)", height: 10, rows: $.ohlc, volume: volume, fmt: price2 }
-  - { id: smile, kind: surface, title: "17 · surface: implied vol (%)", height: 12, view: 3d, rows: $.grid, y: month,
-      columns: [ { label: 90%, bind: "@.m90" }, { label: ATM, bind: "@.m100" }, { label: 110%, bind: "@.m110" } ] }
+      rows: $.BOOKS, x: MTM, y: TRADES, label: ID, xFmt: compact, xLabel: MTM (USD), yLabel: Trades }
+  - { id: scenarios, kind: histogram, title: "15 · histogram: scenario P&L (USD)", span: 6, height: 9, rows: $.SCENARIO_PNL, fmt: compact,
+      markers: [ { label: VaR 99%, value: "-$.VAR99", tone: neg } ] }
+  - { id: bars, kind: candlestick, title: "16 · candlestick: front month (USD/bbl)", height: 10, rows: $.OHLC, volume: VOLUME, fmt: price2 }
+  - { id: smile, kind: surface, title: "17 · surface: implied vol (%)", height: 12, view: 3d, rows: $.GRID, y: MONTH,
+      columns: [ { label: 90%, bind: "@.M90" }, { label: ATM, bind: "@.M100" }, { label: 110%, bind: "@.M110" } ] }
   - { id: built, kind: provenance, title: "18 · provenance: how this view was built" }
   - id: note
     kind: markdown
     title: "19 · markdown: reading this view"
     area: right
-    text: "A ${lower($.direction)} ${$.currency} bond. Every panel reads the document in all-panels-showcase.json."
+    text: "A ${lower($.DIRECTION)} ${$.CURRENCY} bond. Every panel reads the document in all-panels-showcase.json."
   - { id: refs, kind: links, title: "20 · links: linked entities", code: REFS, area: right, height: 10 }
-  - { id: headline, kind: metric, title: "21 · metric: mark to market (USD)", area: right, value: $.mtm, fmt: signed0, tone: sign,
-      label: Mark to market, unit: USD, delta: $.pnl1d, deltaFmt: signed0, caption: "change over the last day" }
-  - { id: where, kind: map, title: "22 · map: the issuer's country", area: right, highlight: $.issuerCountry, height: 10 }
+  - { id: headline, kind: metric, title: "21 · metric: mark to market (USD)", area: right, value: $.MTM, fmt: signed0, tone: sign,
+      label: Mark to market, unit: USD, delta: $.PNL1D, deltaFmt: signed0, caption: "change over the last day" }
+  - { id: where, kind: map, title: "22 · map: the issuer's country", area: right, highlight: $.ISSUER_COUNTRY, height: 10 }

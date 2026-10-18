@@ -73,10 +73,9 @@ CREATE TABLE trading.entities (
   id            text  NOT NULL,
   business_date date  NOT NULL,
   doc           jsonb COMPRESSION lz4 NOT NULL,
-  "tradeId" text, "productType" text, "productName" text, direction text, currency text,
-  notional double precision, mtm double precision, "pnl1d" double precision, "maturityDate" text, "tradeDate" text,
-  book text, desk text, status text, "assetClass" text, "counterparty__id" text, "counterparty__name" text,
-  "nettingSet" text, "risk__dv01" double precision, "sourceSystem" text,
+  "TRADE_ID" text, "SOURCE_SYSTEM" text, "PRODUCT_TYPE" text, "PRODUCT_SUB_TYPE" text, "PRODUCT_GROUP" text,
+  "TRADE_STATUS" text, "TRADE_VERSION" text, "BUY_SELL_CODE" text, "CURRENCY" text, "QUANTITY" double precision,
+  "TRADE_DATE" text, "MATURITY_DATE" text, "COUNTERPARTY" text, "LEGAL_ENTITY" text, "PORTFOLIO" text, "TRADER_ID" text,
   PRIMARY KEY (kind, id, business_date)
 ) PARTITION BY RANGE (business_date);
 
@@ -93,16 +92,17 @@ One row, for one trade on one day (the document shortened):
 
 ```
 kind               trade
-id                 MX-30000017
-business_date      2026-09-30
-doc                {"tradeId": "MX-30000017", "sourceSystem": "Murex", "productType": "IRS_FIXFLOAT", "mtm": 1875863, …}
-tradeId            MX-30000017
-productType        IRS_FIXFLOAT
-notional           242000000
-mtm                1875863
-book               BOOK-RATES-3
-counterparty__id   CP-MERIDIAN-RE
-nettingSet         NS-MERIDIAN-RE-ISDA
+id                 MX-20000001
+business_date      2026-09-17
+doc                {"SOURCE_SYSTEM": "MUREX", "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z", "TRADE_DATE": "2025-07-25", "TRADE_ID": "MX-20000001", …}
+TRADE_ID           MX-20000001
+SOURCE_SYSTEM      MUREX
+PRODUCT_TYPE       IRS_FIXFLOAT
+CURRENCY           AUD
+QUANTITY           242000000
+PORTFOLIO          BOOK-RATES-3
+COUNTERPARTY       CP-MERIDIAN-RE
+…
 risk__dv01         -155245
 …
 ```
@@ -131,35 +131,38 @@ Why each part is shaped this way:
 
 The pack declares the fields on the connector that stores the kind, exactly as for Delta Lake (see
 [DELTA_CONNECTOR.md, section 4](DELTA_CONNECTOR.md#4-declaring-the-layout-in-a-pack) for how to choose them). The trading
-pack declares them on `trading-store`; the `postgres` profile (`SPRING_PROFILES_ACTIVE=postgres`) switches that
+pack declares them on `trade-endur`; the `postgres` profile (`SPRING_PROFILES_ACTIVE=postgres`) switches that
 connector to the `jdbc` plugin in table mode and keeps the pack's settings, so the declaration applies unchanged:
 
 ```yaml
-# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trading-store.yaml at the first start)
+# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trade-endur.yaml at the first start)
 connectors:
-  trading-store:
+  trade-endur:
     settings:
       layout:
         trade:
-          columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
-                    tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
-                    risk.dv01, sourceSystem]
+          columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
 
 # drishti-server application-postgres.yaml (the profile; deprecated, see \"As a connector file\" below)
 drishti:
   sources:
     connectors:
-      trading-store: { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}",
+      trading-store: { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}",   # 2.2's name, see the note
                        user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD}",
                        table: trading.entities } }
 ```
+
+> **2.3.0:** the trades are read per source system (`trade-endur`, `trade-calypso`, `trade-murex`, one Delta table each). The deprecated
+> store profiles still name 2.2's `trading-store`, so a profile leaves the trades on Delta; point a store at the trades with connector
+> files named after the three connectors (below).
+
 
 The connector serves a path as a column only when the table has that column; a declared path the table lacks shows in
 Health ([section 11](#11-diagnosing)).
 
 ## 4. Loading
 
-`tools/load-postgres.sh` loads the banking packs' data, and optionally a large generated book:
+`tools/load-postgres.sh` loads the seven packs' sample data (written by `tools/packgen/banking/make_data.py`), and optionally a large generated book:
 
 ```bash
 tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti                               # samples: 1,791 documents x 10 days
@@ -220,7 +223,7 @@ How the loader works:
 CREATE TABLE IF NOT EXISTS trading.entities_y2026m10 PARTITION OF trading.entities FOR VALUES FROM ('2026-10-01') TO ('2026-11-01');
 BEGIN;
 DELETE FROM trading.entities WHERE kind = 'trade' AND business_date = '2026-10-01';
-COPY trading.entities (kind, id, business_date, doc, "tradeId", notional, mtm, book, "counterparty__id", "nettingSet") FROM STDIN;
+COPY trading.entities (kind, id, business_date, doc, "TRADE_ID", "QUANTITY", "CURRENCY", "PORTFOLIO", "COUNTERPARTY", …) FROM STDIN;
 INSERT INTO trading.entity_dates (kind, business_date, rows) VALUES ('trade', '2026-10-01', 1000000)
   ON CONFLICT (kind, business_date) DO UPDATE SET rows = EXCLUDED.rows, loaded_at = now();
 COMMIT;
@@ -288,7 +291,7 @@ reads them as a column set:
 2. **Read the ranges at once**, each on its own pooled connection, streaming (`fetchSize` 20,000):
 
    ```sql
-   SELECT id, mtm, notional, …, book, "nettingSet" FROM trading.entities
+   SELECT id, "QUANTITY", "CURRENCY", …, "PORTFOLIO", "COUNTERPARTY" FROM trading.entities
     WHERE kind = 'trade' AND business_date = '2026-09-30' AND id >= 'IMG-500375' AND id < 'MX-30083833'
    ```
 
@@ -384,7 +387,7 @@ the `postgres` profile and `-Xmx8g`, times over HTTP:
 | type-ahead `TRD CLY-40834` | 46 ms |
 | open a trade (view), first / again | 154 ms / 40 ms |
 | a trade's document, today / a past day | 43 ms / 30 ms |
-| `TRD where mtm < -50m order by mtm` | 102 ms (2,041 matches of 1,000,000) |
+| `TRD where mtm < -50m order by mtm` (2.2 field names) | 102 ms (2,041 matches of 1,000,000) |
 | `TRD where currency = 'USD' and notional > 500m …` | 225 ms (13,523 matches) |
 | `TRD book=BOOK-RATES-3` | 189 ms (70,649 matches) |
 | pick list `TRD END-1100` | 106 ms |
@@ -396,6 +399,11 @@ the `postgres` profile and `-Xmx8g`, times over HTTP:
 Every search answered over all 1,000,000 trades (`partial: false`), with the same matches as the Delta Lake and
 Aerospike connectors on the same book. Loading a smaller demo book is quick: the samples plus 20,000 trades a day for two
 days load in 12 s.
+
+**The figures below were measured in 2.2**, when the generated trades were written in camel case (`mtm`, `notional`, `book`),
+so the searches are shown as they were run; the trades now carry the source systems' UPPER_SNAKE attributes and no MTM (that is the
+market-risk pack's trade valuation): today's equivalents read `TRD where QUANTITY > 500m and CURRENCY = 'USD'` and
+`TRD PORTFOLIO=BOOK-RATES-3`. Not re-measured for 2.3.
 
 **The scaling curve, measured with the scale benchmark (2026-10-01).** `tools/bench/scale.sh`
 ([SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)) loaded 10,000, 25,000 and 50,000 trades a day over three business
@@ -450,7 +458,7 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 `GET /api/v1/admin/health` shows the connector and its catalogue:
 
 ```json
-{"name": "trading-store", "health": "UP", "cache": {"ids": 1000000, "kinds": 1, "datesIndexed": 10, "columnSets": 1}}
+{"name": "trade-endur", "health": "UP", "cache": {"ids": 1000000, "kinds": 1, "datesIndexed": 10, "columnSets": 1}}
 ```
 
 | Symptom | Likely cause | What to do |
@@ -588,7 +596,7 @@ Messages from a real PostgreSQL 18 (`jdbc has not read its table yet: catalogue 
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: jdbc
 kinds: [trade]
 description: Trading documents in PostgreSQL (table mode)
@@ -603,9 +611,7 @@ settings:
   lookback-days: '10'
   layout:
     trade:
-      columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
-                tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
-                risk.dv01, sourceSystem]
+      columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
 ```
 
 A database URL may not carry a password (`jdbc:…//user:pw@host`, `?password=…`): the page, the API and the CLI refuse it with the name to use. The `postgres` profile did this for the six banking stores and still works, but is deprecated.
@@ -693,7 +699,7 @@ connector file of the same name replaces the suggestion wholesale; `config/conne
 profile, `application-postgres.yaml`, did the same and still works but is deprecated). For one connector:
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: jdbc                                   # replaces the pack's "delta"
 kinds: [trade]
 settings:
@@ -705,11 +711,11 @@ settings:
   # pool-size: inherits drishti.db.pool.size (20)
 ```
 
-**Pack form, a pack that owns its PostgreSQL store** (its suggested template; the server writes it to `config/connectors/trading-store.yaml` at the first start):
+**Pack form, a pack that owns its PostgreSQL store** (its suggested template; the server writes it to `config/connectors/trade-endur.yaml` at the first start):
 
 ```yaml
 connectors:
-  trading-store:
+  trade-endur:
     plugin: jdbc
     kinds: [trade]
     settings:
@@ -721,7 +727,7 @@ connectors:
       lookback-days: 10                              # snapshot kinds: how far back a picked date may fall
       # kinds: trade                                 # optional; otherwise the kinds the table holds
 routes:
-  trade: trading-store
+  trade: trade-endur
 ```
 
 #### Try it
@@ -743,7 +749,7 @@ million trades a day is in [section 7](#7-seven-years-sizing-and-postgresql-with
 curl -s "http://localhost:18480/api/v1/entities/trade/MX-20000001/raw?asOf=2026-09-29" | jq -c .provenance
 ```
 
-You should see `"source":"trading-store"` and `"businessDate":"2026-09-29"`.
+You should see `"source":"trade-endur"` and `"businessDate":"2026-09-29"`.
 
 #### In the terminal
 

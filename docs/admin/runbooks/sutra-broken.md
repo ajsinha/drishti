@@ -143,7 +143,7 @@ match: { kind: trade, where: "$.productType == 'IRS_FIXFLOAT'" }
 ### Step 2. Check which version a view uses
 
 ```bash
-curl -s http://localhost:18480/api/v1/views/trade/END-1000008 | python3 -c 'import json,sys; print(json.load(sys.stdin)["provenance"]["layout"])'
+curl -s http://localhost:18480/api/v1/views/trade/1000001 | python3 -c 'import json,sys; print(json.load(sys.stdin)["provenance"]["layout"])'
 ```
 
 ```text
@@ -172,7 +172,7 @@ cmd-forward 1 [1] $.productType == 'CMD_FORWARD'
 Open the Sutra in the Build workbench, at the entity you are fixing (the old `/studio` address redirects there):
 
 ```text
-http://localhost:17480/studio?sutra=cmd-forward@1&kind=trade&id=END-1000008
+http://localhost:17480/studio?sutra=cmd-forward@1&kind=trade&id=1000001
 ```
 
 Press **Ctrl+Enter** to preview the text in the editor against the entity. Problems are listed by line; click one

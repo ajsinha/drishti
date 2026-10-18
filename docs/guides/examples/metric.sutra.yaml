@@ -17,13 +17,13 @@ sutra: metric
 version: 1
 description: "A desk's headline numbers as big-number tiles: a toned figure, its change, a unit and a caption."
 match: { kind: desk-summary }
-title: { pill: "Desk · ${$.name}", id: $.deskId }
+title: { pill: "Desk · ${$.NAME}", id: $.DESK_ID }
 panels:
-  - { id: mtm, kind: metric, title: Mark to market, span: 3, value: $.mtm, fmt: signed0, tone: sign, label: Net MTM,
-      unit: USD, delta: "$.mtm - $.mtmYesterday", deltaFmt: signed0, caption: "versus yesterday's close" }
-  - { id: var, kind: metric, title: Value at risk, span: 3, value: $.var99, fmt: compact, tone: warn, label: "99% 1-day VaR",
-      unit: USD, delta: "$.var99 / $.var99Yesterday - 1", deltaFmt: pct2, deltaTone: neg }
-  - { id: use, kind: metric, title: Limit use, span: 3, value: $.limitUse, fmt: pct0, label: Of the desk limit,
-      caption: "limit ${fmt($.limit, 'compact')} USD" }
-  - { id: trades, kind: metric, title: Open trades, span: 3, value: $.openTrades, fmt: amount0 }
-  - { id: books, kind: hbar, title: MTM by book (USD), rows: $.books, label: book, value: mtm, fmt: signed0, tone: sign }
+  - { id: mtm, kind: metric, title: Mark to market, span: 3, value: $.MTM, fmt: signed0, tone: sign, label: Net MTM,
+      unit: USD, delta: "$.MTM - $.MTM_YESTERDAY", deltaFmt: signed0, caption: "versus yesterday's close" }
+  - { id: var, kind: metric, title: Value at risk, span: 3, value: $.VAR99, fmt: compact, tone: warn, label: "99% 1-day VaR",
+      unit: USD, delta: "$.VAR99 / $.VAR99_YESTERDAY - 1", deltaFmt: pct2, deltaTone: neg }
+  - { id: use, kind: metric, title: Limit use, span: 3, value: $.LIMIT_USE, fmt: pct0, label: Of the desk limit,
+      caption: "limit ${fmt($.LIMIT, 'compact')} USD" }
+  - { id: trades, kind: metric, title: Open trades, span: 3, value: $.OPEN_TRADES, fmt: amount0 }
+  - { id: books, kind: hbar, title: MTM by book (USD), rows: $.BOOKS, label: BOOK, value: MTM, fmt: signed0, tone: sign }

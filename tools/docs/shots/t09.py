@@ -23,7 +23,7 @@ from _tut import OUT, SERVER_ENV, VERA, call, go, login, people  # noqa: F401
 from shotlib import Ctx, register
 
 shot = register("t09", OUT / "t09")
-QUERY = "TRD where mtm < -10000000 order by mtm"
+QUERY = "TVAL where MTM < -200m order by MTM"
 
 
 def clean(c: Ctx, *names: str):
@@ -73,6 +73,8 @@ def subscription(c: Ctx):
     c.page.locator("[data-subscribe-form]").wait_for(timeout=30000)
     f = c.page.locator("[data-subscribe-form]")
     f.locator("[name=name]").fill("Swap for Vera")
+    f.locator("[data-when-kind]").select_option("custom")          # "on a schedule I write": after-load is not one of the plain choices
+    f.get_by_text("Advanced: the schedule as text").click()          # the schedule as text is folded away under the plain choices
     f.locator("[name=schedule]").fill("after-load trade")
     f.locator("[name=date]").select_option("load")
     f.locator("[name=format]").select_option("pdf")

@@ -19,7 +19,7 @@ Everything you can open in the terminal you can also read from code, as yourself
 A token reads what you may read (your roles and packs, at the time of each call) and, unless you gave it a **write scope**,
 **never changes anything**: any request other than `GET` with a read-only token is refused (`403 DRS-5002 API tokens only
 read`), except the `POST`s that only read (`/search/pivot/**`, `/command`, the allow-list
-`drishti.security.token-read-posts`, which also lets a token run a dataset query for BI). Tools and CI that must change things get a token with the scope for
+`drishti.security.token-read-posts`, which also lets a token ask a BI model, `POST /api/v1/bi/mq`). Tools and CI that must change things get a token with the scope for
 that job (the table in section 1); see "Personal API tokens" in [CLI_GUIDE.md](CLI_GUIDE.md) and below.
 
 ## 1. Make a token
@@ -47,10 +47,11 @@ that job (the table in section 1); see "Personal API tokens" in [CLI_GUIDE.md](C
 Send it in the `Authorization` header:
 
 ```bash
-curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "https://drishti.bank.example:18480/api/v1/entities/trade/MX-20000001/raw" | jq .data.mtm
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "https://drishti.bank.example:18480/api/v1/entities/trade/MX-20000001/raw" | jq .data.QUANTITY
 ```
 
-You should see the trade's MTM, for example `1876068`.
+You should see the trade's quantity: on the demo lakes `242000000` (the MUREX interest-rate swap's notional; the trades carry no MTM,
+that is in the market-risk pack's trade valuations, `TVAL`).
 
 Keep tokens like passwords: in an environment variable or a secrets store, never in a shared file. If one leaks,
 revoke it: it stops at once. A token also stops when its owner is disabled, and when it expires. Administrators see
@@ -67,16 +68,16 @@ from drishti_client import Drishti
 
 d = Drishti("https://drishti.bank.example:18480", token="drk_…")   # or set DRISHTI_URL and DRISHTI_TOKEN
 
-d.field("trade", "MX-20000001", "mtm")                 # 1875863.0
-d.field("trade", "MX-20000001", "legs[0].rate")        # a path into the document
+d.field("trade", "MX-20000001", "QUANTITY")            # 242000000.0
+d.field("trade", "MX-20000001", "LEGS[0].NOTIONAL")    # a path into the document: 242000000.0
 doc = d.document("trade", "MX-20000001")               # the whole document (masked fields stay masked)
 
-rows = d.search("TRD productType=Revolver")         # a pick list: one dict per entity, with the pack's key columns
-# [{'kind': 'trade', 'id': 'CLY-3000055', 'title': …, 'Product type': 'REVOLVER', 'Notional': 202000000, …}, …]
+rows = d.search("TRD PRODUCT_TYPE=REPO")            # a pick list: one dict per entity, with the pack's key columns (96 repos)
+# [{'kind': 'trade', 'id': 'CLY-3000265', 'title': 'CLY-3000265', 'Product type': 'REPO', 'Source system': 'CALYPSO', …, 'Quantity': 180000000, …}, …]
 
-d.search("TRD where notional > 250m order by mtm desc limit 20", as_of="2026-09-29")   # a past business date
-d.diff("trade", "MX-20000001", "2026-09-25", "2026-09-30")                                # what changed between two dates
-df = d.to_pandas("CPTY rating=BBB")                 # a pandas DataFrame, if pandas is installed
+d.search("TRD where QUANTITY > 1bn order by QUANTITY desc limit 20", as_of="2026-10-14")   # a past business date
+d.diff("trade", "MX-20000022", "2026-10-07", "2026-10-16")                                    # what changed between two dates
+df = d.to_pandas("CPTY RATING=BBB")                 # a pandas DataFrame, if pandas is installed: 3 rows, columns kind, id, title, Rating, Name, …
 ```
 
 A refusal raises `DrishtiError` with the server's code: `e.code == "DRS-5002"` (not yours to open), `"DRS-1001"` (no
@@ -86,9 +87,9 @@ From the shell, the same client writes CSV:
 
 ```bash
 export DRISHTI_URL=https://drishti.bank.example:18480 DRISHTI_TOKEN=drk_…
-python3 clients/python/drishti_client.py search "TRD productType=Revolver" > revolvers.csv
-python3 clients/python/drishti_client.py field trade MX-20000001 mtm
-python3 clients/python/drishti_client.py --as-of 2026-09-29 document trade MX-20000001
+python3 clients/python/drishti_client.py search "TRD PRODUCT_TYPE=REPO" > repos.csv
+python3 clients/python/drishti_client.py field trade MX-20000001 QUANTITY          # 242000000.0
+python3 clients/python/drishti_client.py --as-of 2026-10-14 document trade MX-20000001
 ```
 
 ## 3. Excel
@@ -103,7 +104,7 @@ columns) and one row per entity, values unformatted. Text that a spreadsheet wou
 let
     Url    = "https://drishti.bank.example:18480/api/v1/search/csv",
     Token  = "drk_…",
-    Source = Csv.Document(Web.Contents(Url, [Query = [q = "TRD productType=Revolver"],
+    Source = Csv.Document(Web.Contents(Url, [Query = [q = "TRD PRODUCT_TYPE=REPO"],
                                              Headers = [Authorization = "Bearer " & Token]]),
                           [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
     Table  = Table.PromoteHeaders(Source, [PromoteAllScalars = true])
@@ -111,8 +112,9 @@ in
     Table
 ```
 
-Press **Close & Load**: the sheet fills with the six revolvers and their key columns; **Refresh** reads them again.
-For another query change `q`; for a past business date add `Headers = [Authorization = …, #"X-Drishti-As-Of" = "2026-09-29"]`.
+Press **Close & Load**: the sheet fills with the 96 repos of the demo lakes and their key columns (`kind,id,title,Product type,Source
+system,Trade status,Trade date,Buy sell code,Currency,Quantity,Maturity date,Portfolio,Counterparty`); **Refresh** reads them again.
+For another query change `q`; for a past business date add `Headers = [Authorization = …, #"X-Drishti-As-Of" = "2026-10-14"]`.
 When Excel asks how to connect, choose **Anonymous**: the token in the header is the credential. Better than writing
 the token into the query: keep it in a named cell or a Power Query parameter only you can see.
 
@@ -129,10 +131,17 @@ It is plain HTTP and JSON; the [API guide](API_GUIDE.md) lists every endpoint. T
 | a pack's kinds | `/api/v1/packs/{code}/overview` |
 | the BI catalogue, an item, a dataset or report | `/api/v1/bi/catalogue`, `/api/v1/bi/items/{id}`, `/api/v1/bi/datasets/{id}`, `/api/v1/bi/reports/{id}` |
 
-A dataset query is a `POST` with the fields, measures and filters in the body (`/api/v1/bi/datasets/{id}/query`); it only reads, so a read-only token may call it, and the answer
-carries the owner's row rules and masks ([DATASETS.md](DATASETS.md), [API_GUIDE.md](API_GUIDE.md)).
+A BI question is a model query, a `POST` with the fields, measures and filters in the body (`/api/v1/bi/mq`; the 2.1 dataset query
+`/api/v1/bi/datasets/{id}/query` answers `410` since 2.2); it only reads, so a read-only token may call it, and the answer carries the
+owner's row rules and masks ([BI_MODEL_SPEC.md](../architecture/BI_MODEL_SPEC.md), [API_GUIDE.md](API_GUIDE.md)):
 
-Add `X-Drishti-As-Of: 2026-09-29` for a past business date and `X-Drishti-Known-At: 2026-09-29T14:30:00Z` for the
+```bash
+curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' "$DRISHTI_URL/api/v1/bi/mq" \
+  -d '{"mq":1,"model":"trades-basic","define":{"N":"count(trade)"},"select":{"fields":["trade.SOURCE_SYSTEM"],"measures":["N"]},"time":{"as-of":"2026-10-16"}}'
+# "rows":[["CALYPSO",5000],["ENDUR",5000],["MUREX",5000]]
+```
+
+Add `X-Drishti-As-Of: 2026-10-14` for a past business date and `X-Drishti-Known-At: 2026-10-14T14:30:00Z` for the
 data as known at an instant (stores with time travel only; others answer `DRS-1007`). For an id with a `/` (or `\`),
 put `~` in its place and the id in the query: `/api/v1/entities/trade/~/raw?id=sl%2Fash-6`; the Python client does
 this by itself.

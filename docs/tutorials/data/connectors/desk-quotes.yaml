@@ -14,7 +14,7 @@
 
 # Tutorial 4: the desk's end-of-day quotes, one folder per business day, read by the shipped `file` plugin.
 plugin: file
-kinds: [quote]
+kinds: [desk-quote]
 description: Desk quotes from the tutorial folder
 settings:
   id-field: ID

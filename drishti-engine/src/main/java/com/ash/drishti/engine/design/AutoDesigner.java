@@ -276,6 +276,21 @@ public final class AutoDesigner {
 
         // --------------------------------------------------------------------------------------------- title
 
+        /**
+         * The link a field makes: to its value, or for an {id, name} record to its id with its name shown, by the record's own field names
+         * ({@code ID} and {@code NAME} in an UPPER_SNAKE document).
+         */
+        private static String linkTo(FieldNode p) {
+            if (!p.object()) {
+                return "link(" + p.path() + ", '" + p.role().kind() + "')";
+            }
+            return "link(" + child(p, "id") + ", '" + p.role().kind() + "', " + child(p, "name") + ")";
+        }
+
+        private static String child(FieldNode p, String name) {
+            return p.props().values().stream().filter(c -> c.name().equalsIgnoreCase(name)).map(FieldNode::path).findFirst().orElse(p.path() + "." + name);
+        }
+
         private void title() {
             FieldNode root = model.root();
             FieldNode id = root.props().values().stream().filter(p -> p.scalar() && p.is("id")).findFirst().orElse(null);
@@ -283,8 +298,7 @@ public final class AutoDesigner {
             List<FieldNode> links = root.props().values().stream().filter(p -> p.is("link") && !p.array() && p.role().kind() != null).toList();
             FieldNode link = links.stream().filter(FieldNode::object).findFirst().orElse(links.isEmpty() ? null : links.get(0));
             String pill = Semantics.humanize(kind.replace('-', ' ')) + (dim == null ? "" : " · ${" + dim.path() + "}");
-            String with = link == null ? null : link.object() ? "link(" + link.path() + ".id, '" + link.role().kind() + "', " + link.path() + ".name)"
-                    : "link(" + link.path() + ", '" + link.role().kind() + "')";
+            String with = link == null ? null : linkTo(link);
             title = new Title(pill, id == null ? "'" + kind + "'" : id.path(), with);
             if (id != null) {
                 used.add(id);
@@ -394,8 +408,7 @@ public final class AutoDesigner {
                     break;
                 }
                 if (p.is("link") && !p.array() && p.role().kind() != null) {
-                    keys.put("F" + n++, p.object() ? "link(" + p.path() + ".id, '" + p.role().kind() + "', " + p.path() + ".name)"
-                            : "link(" + p.path() + ", '" + p.role().kind() + "')");
+                    keys.put("F" + n++, linkTo(p));
                 }
             }
         }

@@ -71,38 +71,42 @@ A running server is **never touched** by `pack deploy`. That is deliberate: copy
 ## 3. Make a bundle
 
 ```bash
-python3 tools/drishti.py pack bundle examples/packs/finance --out dist
+drishti-console/.venv/bin/python tools/drishti.py pack bundle config/packs/trading --out dist
 ```
 
+Captured on a fresh clone (the shipped `trading` pack; the examples below use it throughout, and any pack folder works the same way):
+
 ```text
-== finance: sutra lint: exit 0
-== finance: sutra test: exit 0
-bundled finance 1.0.0: 58 files
-  dist/finance-1.0.0.tar.gz
-  sha256 244a3feead2efd619f4e4aec1b196a25ddb4c073cb3c2da34832e91f5e552e38
+== trading: sutra lint: exit 0
+== trading: sutra test: exit 0
+bundled trading 1.0.0: 428 files
+  dist/trading-1.0.0.tar.gz
+  sha256 bd505178b12aa7c25c6cdab0ba8280e3c749bc050906280ba61e2a6bb6c5f901
 ```
 
 (The bundle runs `pack check` first, so a pack that does not lint and test never becomes an artifact; `--no-check` skips that.) You get three files:
 
 ```text
-dist/finance-1.0.0.tar.gz          the artifact: copy THIS
-dist/finance-1.0.0.tar.gz.sha256   its checksum, in `sha256sum` format; keep it next to the archive
-dist/finance-1.0.0.manifest.json   a copy of the manifest, readable without unpacking
+dist/trading-1.0.0.tar.gz          the artifact: copy THIS
+dist/trading-1.0.0.tar.gz.sha256   its checksum, in `sha256sum` format; keep it next to the archive
+dist/trading-1.0.0.manifest.json   a copy of the manifest, readable without unpacking
 ```
 
-The manifest (also inside the archive as `finance/MANIFEST.json`) describes the artifact:
+The manifest (also inside the archive as `trading/MANIFEST.json`) describes the artifact (captured, files shortened):
 
 ```json
 {
   "format": 1,
-  "pack": "finance",
+  "pack": "trading",
   "version": "1.0.0",
-  "extends": [],
-  "kinds": ["trade", "netting-set", "csa", "..."],
-  "requiresServer": ">=1.18.0",
-  "generator": { "tool": "drishti.py pack bundle", "python": "3.14.7", "server": "1.18.0" },
-  "data": { "ingest": {}, "connectors": [], "note": "the bundle carries the pack only; data ... is deployed separately" },
-  "files": [ { "path": "pack.yaml", "sha256": "…", "size": 1210 }, "…" ]
+  "title": "Trading",
+  "extends": ["core", "market-data"],
+  "kinds": ["trade", "counterparty-trades", "portfolio-trades", "legal-entity-trades", "index-trades"],
+  "requiresServer": ">=2.2.0",
+  "generator": { "tool": "drishti.py pack bundle", "python": "3.13.15", "server": "2.2.0" },
+  "data": { "ingest": {}, "connectors": ["trade-calypso", "trade-endur", "trade-murex", "trade-pages", "trading-stream"],
+            "note": "the bundle carries the pack only; data (Delta lake, files root) is deployed separately, see OPERATIONALISING.md" },
+  "files": [ { "path": "pack.yaml", "sha256": "…", "size": … }, "…" ]
 }
 ```
 
@@ -120,11 +124,11 @@ the same checksum, whoever builds it. `.git`, `__pycache__` and editor files are
 ## 4. Verify a bundle, offline
 
 ```bash
-python3 tools/drishti.py pack verify dist/finance-1.0.0.tar.gz
+drishti-console/.venv/bin/python tools/drishti.py pack verify dist/trading-1.0.0.tar.gz
 ```
 
 ```text
-verify dist/finance-1.0.0.tar.gz: finance 1.0.0
+verify dist/trading-1.0.0.tar.gz: trading 1.0.0
   checksums ok
   schema    ok
   server    ok
@@ -143,8 +147,8 @@ verified
 `pack verify` also takes a **folder**, which is how you check a pack that is already deployed for drift: a hand edit shows at once.
 
 ```text
-$ drishti.py pack verify prod/packs/finance --no-sutra
-verify prod/packs/finance: finance 1.0.0
+$ drishti.py pack verify prod/packs/trading --no-sutra          # after a hand edit of prod/packs/trading/pack.yaml
+verify prod/packs/trading: trading 1.0.0
   checksums FAILED
     - checksum mismatch: pack.yaml
   schema    ok
@@ -157,7 +161,7 @@ NOT verified
 A tampered archive is refused before anything is unpacked:
 
 ```text
-drishti: finance-1.0.1.tar.gz: sha256 does not match finance-1.0.1.tar.gz.sha256 (the file changed after it was bundled)
+drishti: trading-1.0.0.tar.gz: sha256 does not match trading-1.0.0.tar.gz.sha256 (the file changed after it was bundled)
 [exit 1]
 ```
 
@@ -170,23 +174,25 @@ signed instead ([PACKS.md, registry](PACKS.md); `pack publish`/`verify --registr
 ### 5.1 One command
 
 ```bash
-python3 tools/drishti.py pack deploy dist/finance-1.0.1.tar.gz --to /opt/drishti/packs --backup /opt/drishti/backups
+drishti-console/.venv/bin/python tools/drishti.py pack deploy dist/trading-1.0.0.tar.gz --to /opt/drishti/packs --backup /opt/drishti/backups --no-sutra
 ```
 
+Captured (deploying the same bundle a second time, so a previous copy is kept):
+
 ```text
-verify dist/finance-1.0.1.tar.gz: finance 1.0.1
+verify dist/trading-1.0.0.tar.gz: trading 1.0.0
   checksums ok
   schema    ok
   server    ok
   sutra     skipped
 verified
-deployed finance 1.0.1 to /opt/drishti/packs/finance; previous 1.0.0 kept at /opt/drishti/backups/finance-1.0.0-20261005T181007_529311
-next: DRISHTI_PACKS must name it (restart) or Admin > Packs > Load; Sutra edits of a loaded pack hot-reload
+deployed trading 1.0.0 to /opt/drishti/packs/trading; previous 1.0.0 kept at /opt/drishti/backups/trading-1.0.0-20261017T214051_360916
+next: a running server watches its packs folder (drishti.packs.watch): it checks the copied pack and loads it by itself within seconds, no restart; a pack that does not check out is shown in Admin > Packs and not loaded. Admin > Packs > Load does it at once, and DRISHTI_PACKS keeps it for every start
 ```
 
-What it does, in order: verifies (above); copies the pack into a **temporary sibling** `/opt/drishti/packs/.finance.incoming-<pid>`
+What it does, in order: verifies (above); copies the pack into a **temporary sibling** `/opt/drishti/packs/.trading.incoming-<pid>`
 (same filesystem, so the last step is a rename); checks the copy against the manifest; moves the current
-`finance/` to the backup folder, named `<name>-<version>-<UTC stamp>`; renames the new folder into place; deletes the
+`trading/` to the backup folder, named `<name>-<version>-<UTC stamp>`; renames the new folder into place; deletes the
 temporary folder. If the final rename fails the old folder is moved back. A reader never sees a half-copied pack, and the
 previous version is never lost. A folder that begins with a dot is ignored by the server.
 
@@ -198,9 +204,9 @@ previous version is never lost. A folder that begins with a dot is ignored by th
 | `--no-sutra`, `--server-version V`, `--strict`, `--json` | as `pack verify` |
 
 ```text
-$ drishti.py pack deploy dist/finance-1.0.0.tar.gz --to prod/packs --dry-run
+$ drishti.py pack deploy dist/trading-1.0.0.tar.gz --to prod/packs --dry-run --no-sutra
 …
-dry run: would copy finance 1.0.0 to prod/packs/finance (a new pack)
+dry run: would copy trading 1.0.0 to prod/packs/trading (a new pack)
 ```
 
 Deploying refuses (exit 1, nothing copied) when verification fails.
@@ -211,11 +217,11 @@ Deploying refuses (exit 1, nothing copied) when verification fails.
 
 ```bash
 # copy the artifact, then run deploy there (needs the repo's tools/ or just the one file tools/packbundle.py + drishti.py)
-scp dist/finance-1.0.1.tar.gz* ops@prod1:/srv/drishti/incoming/
-ssh ops@prod1 'python3 /srv/drishti/tools/drishti.py pack deploy /srv/drishti/incoming/finance-1.0.1.tar.gz --to /srv/drishti/packs --backup /srv/drishti/backups --no-sutra'
+scp dist/trading-1.0.1.tar.gz* ops@prod1:/srv/drishti/incoming/
+ssh ops@prod1 'python3 /srv/drishti/tools/drishti.py pack deploy /srv/drishti/incoming/trading-1.0.1.tar.gz --to /srv/drishti/packs --backup /srv/drishti/backups --no-sutra'
 
 # or verify here, then rsync the verified folder (rsync -a keeps modes; --delete makes it an exact mirror)
-python3 tools/drishti.py pack verify dist/finance-1.0.1.tar.gz
+python3 tools/drishti.py pack verify dist/trading-1.0.1.tar.gz
 ```
 
 ### 5.3 By hand, no tool at all
@@ -224,11 +230,11 @@ On a server that has only `tar` and `sha256sum`:
 
 ```bash
 cd /srv/drishti/incoming
-sha256sum -c finance-1.0.1.tar.gz.sha256            # finance-1.0.1.tar.gz: OK
-mkdir -p ../config/packs/.stage && tar -xzf finance-1.0.1.tar.gz -C ../config/packs/.stage
-mv ../examples/packs/finance ../backups/finance-1.0.0         # keep the old one (skip on a first deploy)
-mv ../config/packs/.stage/finance ../examples/packs/finance          # the rename is the switch
-rmdir ../config/packs/.stage
+sha256sum -c trading-1.0.1.tar.gz.sha256            # trading-1.0.1.tar.gz: OK
+mkdir -p ../stage && tar -xzf trading-1.0.1.tar.gz -C ../stage      # outside the packs folder: the server never sees a half-copied pack
+mv ../packs/trading ../backups/trading-1.0.0                        # keep the old one (skip on a first deploy)
+mv ../stage/trading ../packs/trading                                # the rename is the switch (same filesystem)
+rmdir ../stage
 ```
 
 `MANIFEST.json` stays inside the deployed folder, so `pack verify <folder>` can check it any time.
@@ -238,10 +244,10 @@ rmdir ../config/packs/.stage
 The point of a bundle is that **what you tested is what you ship**. Build once, on CI, and copy the same file through the stages:
 
 ```text
-git (examples/packs/finance, tag v1.0.1)
+git (config/packs/trading, tag v1.0.1)
    │  CI: pack check, pack bundle
    ▼
-finance-1.0.1.tar.gz + .sha256        ← built ONCE, stored as a CI artifact
+trading-1.0.1.tar.gz + .sha256        ← built ONCE, stored as a CI artifact
    │  pack deploy                  │  pack deploy                  │  pack deploy
    ▼                               ▼                               ▼
  dev server                     test server                     prod server
@@ -249,7 +255,7 @@ finance-1.0.1.tar.gz + .sha256        ← built ONCE, stored as a CI artifact
 
 Rules that keep it honest:
 
-1. **Never rebuild per environment.** Compare the checksum: `sha256sum finance-1.0.1.tar.gz` must print the same value on every machine, and `pack verify` checks it for you.
+1. **Never rebuild per environment.** Compare the checksum: `sha256sum trading-1.0.1.tar.gz` must print the same value on every machine, and `pack verify` checks it for you.
 2. **Environment differences live in configuration, not in the pack**: `DRISHTI_PACKS`, `DRISHTI_DELTA_ROOT`, connector URLs in `${ENV_VAR:default}` form inside `pack.yaml`, secrets in the environment file ([OPERATIONS.md, §6 and §7](../admin/OPERATIONS.md)).
 3. Promote by **copying the artifact** (a shared folder, an artifact store, `scp`), not by re-running the build.
 4. Deploy to test, run the smoke checks ([section 9](#9-check-it-after-a-deploy)), then deploy the identical file to prod.
@@ -267,8 +273,8 @@ Prefer shipping a Sutra change as a **new bundle** (a version, a checksum, a rol
 `pack verify <deployed folder>` will then report the drift until you redeploy a bundle.
 
 ```bash
-cp new-var.sutra.yaml /opt/drishti/packs/market-risk/sutras/market-risk/       # live within a second or two
-curl -s localhost:18480/api/v1/admin/health | python3 -c "import json,sys; print([(p['name'],p['sutraProblems']) for p in json.load(sys.stdin)['packs']])"
+cp new-var.sutra.yaml /opt/drishti/packs/market-risk/sutras/       # live within a second or two
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" localhost:18480/api/v1/admin/health | python3 -c "import json,sys; print([(p['name'],p['sutraProblems']) for p in json.load(sys.stdin)['packs']])"
 ```
 
 ## 8. Data: a Delta lake or a files root
@@ -285,10 +291,10 @@ while it is half-finished.** Write somewhere else, then make it appear in one st
 
 ```bash
 # 1. produce a day somewhere private (the ingest tool is idempotent per business date)
-python3 tools/drishti.py data ingest --from new-day.jsonl --pack examples/packs/finance --store files --root /srv/stage/files
-# 2. copy the date folder next to the others: first under a dot name, then rename (a rename is atomic on one filesystem)
-cp -r /srv/stage/files/finance/2026-10-05 /srv/drishti/files/finance/.2026-10-05.part
-mv /srv/drishti/files/finance/.2026-10-05.part /srv/drishti/files/finance/2026-10-05
+python3 tools/drishti.py data ingest --from new-day.jsonl --pack config/packs/trading --store files --root /srv/stage/files
+# 2. copy the date folder next to the others: first under a dot name the connector skips, then rename (a rename is atomic on one filesystem)
+cp -r /srv/stage/files/trading/2026-10-05 /srv/drishti/files/trading/.2026-10-05.part
+mv /srv/drishti/files/trading/.2026-10-05.part /srv/drishti/files/trading/2026-10-05
 ```
 
 A single file: write to `<kind>.jsonl.tmp`-style temporary name and `mv` it to `<kind>.jsonl` ([FILE_CONNECTOR.md](../connectors/FILE_CONNECTOR.md)).
@@ -298,15 +304,15 @@ To replace a whole root: build `files.new/`, then `mv files files.old && mv file
 Parquet files plus a `_delta_log`; the log decides what is visible, and a new commit is atomic. Two safe ways:
 
 - **Ingest into the live lake with the tool** (`data ingest --lake`): it commits through Delta, so readers see the new version only when it is complete. This is the normal route for a daily load.
-- **Copy a finished lake or partitions:** build it in a stage folder, copy **the Parquet data files first and `_delta_log/` last** (the log is what makes files visible), for example `rsync -a stage/finance/trade/ live/finance/trade/ --exclude _delta_log && rsync -a stage/finance/trade/_delta_log/ live/finance/trade/_delta_log/`. Replacing a whole lake: `mv lake lake.old && mv lake.new lake`, then restart or wait for the connector (`refresh-seconds`, 10; the search index within about a minute). For `s3a://`, upload the same way (data first, log last) with `aws s3 sync`.
+- **Copy a finished lake or partitions:** build it in a stage folder, copy **the Parquet data files first and `_delta_log/` last** (the log is what makes files visible), for example `rsync -a stage/trading/trade_endur/ live/trading/trade_endur/ --exclude _delta_log && rsync -a stage/trading/trade_endur/_delta_log/ live/trading/trade_endur/_delta_log/`. Replacing a whole lake: `mv lake lake.old && mv lake.new lake`, then restart or wait for the connector (`refresh-seconds`, 10; the search index within about a minute). For `s3a://`, upload the same way (data first, log last) with `aws s3 sync`.
 
 Keep local test loads small ([DEMO_DATA.md](../connectors/DEMO_DATA.md)). For what the layout must be, see the manifest's `data.ingest` and [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md).
 
 ## 9. Check it after a deploy
 
 ```bash
-# 1. is the server healthy, and is every pack OK with no Sutra problems?
-curl -s http://localhost:18480/api/v1/admin/health | python3 -c "
+# 1. is the server healthy, and is every pack OK with no Sutra problems? (an administrator's token)
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" http://localhost:18480/api/v1/admin/health | python3 -c "
 import json,sys
 for p in json.load(sys.stdin)['packs']: print(p['name'], p['version'], p['status'], 'problems:', p['sutraProblems'], 'down:', p['connectorsDown'])"
 # 2. the same, as a command with an exit code (1 unless OK)
@@ -323,15 +329,15 @@ command from the pack. Pass criteria: the version is the one you shipped, `statu
 ## 10. Roll back
 
 ```bash
-python3 tools/drishti.py pack rollback finance --to /opt/drishti/packs --backup /opt/drishti/backups
+drishti-console/.venv/bin/python tools/drishti.py pack rollback trading --to /opt/drishti/packs --backup /opt/drishti/backups
 ```
 
 ```text
-restored finance 1.0.0 from prod/backups/finance-1.0.0-20261005T181007_529311; the 1.0.1 it replaced is kept at prod/backups/finance-1.0.1-20261005T181007_529311
+restored trading 1.0.0 from /opt/drishti/backups/trading-1.0.0-20261017T214051_360916; the 1.0.0 it replaced is kept at /opt/drishti/backups/trading-1.0.0-20261017T214051_738374
 ```
 
 It puts back the **newest** backup (`--version 1.0.0` picks one), keeps the version it replaced (so rolling back is itself
-undoable) and swaps in one rename. The packs-folder watcher then reloads the restored version by itself (restart only when `drishti.packs.watch` is `off`). By hand: `mv examples/packs/finance examples/packs/finance.bad && mv backups/finance-1.0.0-… examples/packs/finance`.
+undoable) and swaps in one rename. The packs-folder watcher then reloads the restored version by itself (restart only when `drishti.packs.watch` is `off`). By hand: `mv packs/trading backups/trading-bad && mv backups/trading-1.0.0-… packs/trading`.
 Data rolls back by `mv files files.new && mv files.old files` (section 8) or, for Delta, by `RESTORE`/time travel on the table.
 
 ## 11. Git as the source of truth, and a CI example
@@ -353,14 +359,14 @@ jobs:
         with: { distribution: temurin, java-version: 21 }
       - uses: astral-sh/setup-uv@v5
       - run: ./mvnw -q -DskipTests package -pl drishti-server -am        # the exec jar that lint and test use
-      - run: uv run --with pyyaml python tools/drishti.py pack check examples/packs/finance --strict --junit build/reports
-      - run: uv run --with pyyaml python tools/drishti.py pack bundle examples/packs/finance --out dist
-      - run: uv run --with pyyaml python tools/drishti.py pack verify dist/finance-*.tar.gz
+      - run: uv run --with pyyaml python tools/drishti.py pack check config/packs/trading --strict --junit build/reports
+      - run: uv run --with pyyaml python tools/drishti.py pack bundle config/packs/trading --out dist
+      - run: uv run --with pyyaml python tools/drishti.py pack verify dist/trading-*.tar.gz
       - uses: actions/upload-artifact@v4
-        with: { name: finance-bundle, path: "dist/finance-*" }
+        with: { name: trading-bundle, path: "dist/trading-*" }
 ```
 
-A deploy job (or a person) downloads `finance-bundle` and runs `pack deploy` per environment, in order.
+A deploy job (or a person) downloads `trading-bundle` and runs `pack deploy` per environment, in order.
 
 ## 12. Permissions and ownership
 
@@ -394,8 +400,8 @@ spec:
     - { name: packs, emptyDir: {} }
   initContainers:
     - name: packs
-      image: registry.example.com/drishti-packs:1.0.1        # FROM busybox; COPY finance-1.0.1.tar.gz* /bundles/
-      command: ["sh", "-c", "cd /bundles && sha256sum -c finance-1.0.1.tar.gz.sha256 && tar -xzf finance-1.0.1.tar.gz -C /packs"]
+      image: registry.example.com/drishti-packs:1.0.1        # FROM busybox; COPY trading-1.0.1.tar.gz* /bundles/
+      command: ["sh", "-c", "cd /bundles && sha256sum -c trading-1.0.1.tar.gz.sha256 && tar -xzf trading-1.0.1.tar.gz -C /packs"]
       volumeMounts: [{ name: packs, mountPath: /packs }]
   containers:
     - name: drishti-server
@@ -410,10 +416,10 @@ The checksum check makes the pod fail to start on a damaged artifact. Rolling ba
 The tools are the same; use `py` and backslash or forward-slash paths. PowerShell:
 
 ```powershell
-py tools\drishti.py pack bundle packs\finance --out dist
-py tools\drishti.py pack deploy dist\finance-1.0.1.tar.gz --to D:\drishti\packs --backup D:\drishti\backups
-Get-FileHash dist\finance-1.0.1.tar.gz -Algorithm SHA256     # compare with the .sha256 file
-tar -xzf dist\finance-1.0.1.tar.gz -C D:\drishti\packs\.stage   # tar.exe ships with Windows 10+
+drishti-console\.venv\Scripts\python tools\drishti.py pack bundle config\packs\trading --out dist
+drishti-console\.venv\Scripts\python tools\drishti.py pack deploy dist\trading-1.0.1.tar.gz --to D:\drishti\packs --backup D:\drishti\backups
+Get-FileHash dist\trading-1.0.1.tar.gz -Algorithm SHA256     # compare with the .sha256 file
+tar -xzf dist\trading-1.0.1.tar.gz -C D:\drishti\stage   # tar.exe ships with Windows 10+; then move the folder into the packs folder
 ```
 
 Keep the packs folder on the **same drive** as the backup folder so the swap is a rename; antivirus or an open Explorer window
@@ -447,11 +453,12 @@ Sections 3 to 9 build the artifacts one command at a time. When you start from J
 them in a single folder, so that what you carry to a server is that folder:
 
 ```bash
-uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py pack make data/jsonl \
-    --kind trade --match productType --name my-bank
+drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz \
+    --kind trade --match PRODUCT_TYPE --name my-bank
 ```
 
-The folder (`build/my-bank-1.0.0/`) holds the pack (`pack/my-bank/`, section 5: copy it into the packs folder), the data
+(the committed ENDUR trades of the test data; your own JSON Lines in their place, and `--date` with your business-date field:
+[CLI_GUIDE.md](CLI_GUIDE.md#quickest-path-pack-make) shows the run and why). The folder (`data/build/my-bank-1.0.0/`) holds the pack (`pack/my-bank/`, section 5: copy it into the packs folder), the data
 (`data/delta/`, section 8: copy to the lake root or point `DRISHTI_DELTA_ROOT` at it), the bundle (`bundle/`, section 3 and 4,
 already verified), a ready configuration overlay, `run-server.sh` and `.ps1`, a `MANIFEST.json`, and a `README.txt` with the deploy,
 verify, "lift the data from Delta", update and rollback steps filled in with your kind, ids and dates. Options and the folder tree:
@@ -553,15 +560,16 @@ needs the **packs:admin** scope (and its user the admin role). Every option and 
 
 A pack does not carry connection settings. It **names** the connectors it reads through (`connectors:` in `pack.yaml`, a list of names) and says which
 connector answers each kind (`routes:`). A **connector** is a site resource: one YAML file in `config/connectors/`, whose file name is the connector's
-name (`config/connectors/trading-store.yaml` is `trading-store`). The file holds the plugin (a Delta lake, JSON Lines files, a database...), the kinds it
+name (`config/connectors/trade-endur.yaml` is `trade-endur`). The file holds the plugin (a Delta lake, JSON Lines files, a database...), the kinds it
 serves and its settings (a `root`, a JDBC `url`...). The whole reference, with an example for every store, is [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md);
 what an operator needs is here.
 
 ```
-pack.yaml                         config/connectors/trading-lake.yaml          the system behind it
-kinds: [trade]                    plugin: delta
-connectors: [trading-lake]   ──►  kinds: [trade]                         ──►   a Delta lake, a database,
-routes: {trade: trading-lake}     settings: { root: /mnt/lake, … }             a Kafka topic, ...
+pack.yaml (trading)               config/connectors/trade-endur.yaml           the system behind it
+kinds: [trade, ...]               plugin: delta
+connectors: {trade-endur: ...,    kinds: [trade]                         ──►   a Delta lake, a database,
+  trade-calypso, trade-murex} ──► settings: { root: ..., domain: trading,      a Kafka topic, ...
+routes: {trade: trade-endur}        table.trade: trade_endur, union: "true" }
 ```
 
 **Who writes the file.** A pack may also carry a **template** (a suggestion: the older `connectors:` mapping of definitions, or `connector-templates:`).
@@ -571,11 +579,12 @@ wholesale (nothing is merged). The precedence, highest first: environment variab
 (deprecated; they override a file setting by setting), then the file, then the pack's template.
 
 ```
-$ ls config/connectors
-desk-quotes.yaml  desk-totals.yaml  ecb-estr-feed.yaml  ecb-fx-feed.yaml  fred-feed.yaml  ledger-db.yaml  market-store.yaml
-nyfed-sofr-feed.yaml  reference-store.yaml  site-quotes.yaml  trading-store.yaml  trading-stream.yaml  us-treasury-feed.yaml
+$ ls config/connectors                      # a fresh clone after the first start with the seven packs (and lake demo)
+civic-store.yaml  collateral-store.yaml  credit-store.yaml  ecb-estr-feed.yaml  ecb-fx-feed.yaml  fred-feed.yaml  legal-store.yaml
+macro-store.yaml  market-store.yaml  news-store.yaml  news.yaml  nyfed-sofr-feed.yaml  reference-store.yaml  risk-store.yaml
+trade-calypso.yaml  trade-endur.yaml  trade-murex.yaml  trade-pages.yaml  trading-stream.yaml  us-treasury-feed.yaml  yfinance.yaml
 
-connectors: connector file trading-store.yaml generated from the template of pack 'trading'
+connectors: connector file trade-endur.yaml generated from the template of pack 'trading'      (the server's log)
 ```
 
 **Changing where a pack reads.** Edit the file (in an editor, in version control, or in **Admin → Connectors**) and the running server applies it to that one
@@ -584,9 +593,9 @@ given `connectors-drain` to finish), a deleted file stops it. A bad file never t
 Admin → Health shows the problem. From the terminal:
 
 ```bash
-python3 tools/drishti.py connector get trading-store --yaml > trading-store.yaml     # edit root: ...
-python3 tools/drishti.py connector apply trading-store.yaml --test-first             # test, then save and apply, if nobody changed it meanwhile
-python3 tools/drishti.py connector history trading-store                             # every earlier text; restore from the page or the API
+python3 tools/drishti.py connector get trade-endur --yaml > trade-endur.yaml        # edit root: ...
+python3 tools/drishti.py connector apply trade-endur.yaml --test-first              # test, then save and apply, if nobody changed it meanwhile
+python3 tools/drishti.py connector history trade-endur                              # every earlier text; restore from the page or the API
 ```
 
 `apply` reads the file's current version and sends it as `If-Match`, so a job that runs while someone else edits fails instead of overwriting.

@@ -24,6 +24,6 @@ settings:
   api-secret: ${CONFLUENT_API_SECRET}
   topics: [trades]
   kind: trade
-  id-field: tradeId
+  id-field: TRADE_ID
   schema-registry.url: https://psrc-xxxxx.us-east-1.aws.confluent.cloud
   schema-registry.basic-auth: ${CONFLUENT_SR_KEY}:${CONFLUENT_SR_SECRET}

@@ -178,7 +178,7 @@ def expression(c: Ctx):
     rows.fill("$.")
     c.page.wait_for_timeout(300)
     c.save("11-expression.jpg", ".wb-right")
-    rows.fill("$.schedule")
+    rows.fill("$.SCHEDULE")
     rows.blur()
     c.page.wait_for_timeout(500)
 
@@ -214,11 +214,11 @@ def tests(c: Ctx):
     json_text, sutra = showcase()
     doc = json.loads(json_text)
     thin = dict(doc)
-    for k in ("legs", "schedule", "pnlHistory"):
+    for k in ("LEGS", "SCHEDULE", "PNL_HISTORY"):
         thin.pop(k, None)
-    thin["tradeId"] = "DEMO-BOND-THIN"
+    thin["TRADE_ID"] = "DEMO-BOND-THIN"
     other = dict(doc)
-    other["tradeId"] = "DEMO-BOND-2"
+    other["TRADE_ID"] = "DEMO-BOND-2"
     c.open(c.design("Screenshots: tests", files={"full.json": json_text, "thin.json": json.dumps(thin), "second.json": json.dumps(other)}, sutra=sutra))
     c.page.get_by_role("tab", name="Tests").click()
     c.page.locator(".wb-matrix").wait_for(timeout=30000)
@@ -230,8 +230,8 @@ def tests(c: Ctx):
 def preview_file(c: Ctx):
     json_text, sutra = showcase()
     doc = json.loads(json_text)
-    doc["tradeId"] = "TRY-IT-ON-THE-SPOT"
-    doc["productName"] = "A file that is not in the design"
+    doc["TRADE_ID"] = "TRY-IT-ON-THE-SPOT"
+    doc["PRODUCT_NAME"] = "A file that is not in the design"
     tmp = Path(tempfile.mkdtemp()) / "try-this.json"
     tmp.write_text(json.dumps(doc))
     c.open(c.design("Screenshots: preview", files={"full.json": json_text}, sutra=sutra))
@@ -281,8 +281,8 @@ def phone(c: Ctx):
 
 @shot("20-autodesign.jpg")
 def autodesign(c: Ctx):
-    docs = {f"trade-{i}.json": json.dumps({"tradeId": f"T-{i}", "book": ["rates", "fx", "credit"][i % 3], "notional": 1000000 * (i + 1), "mtm": 12345 * i - 20000,
-                                           "legs": [{"leg": 1, "rate": 0.01 * i, "amount": 100 * i}, {"leg": 2, "rate": 0.02, "amount": 200}]}) for i in range(1, 6)}
+    docs = {f"trade-{i}.json": json.dumps({"TRADE_ID": f"T-{i}", "BOOK": ["rates", "fx", "credit"][i % 3], "NOTIONAL": 1000000 * (i + 1), "MTM": 12345 * i - 20000,
+                                           "LEGS": [{"LEG": 1, "RATE": 0.01 * i, "AMOUNT": 100 * i}, {"LEG": 2, "RATE": 0.02, "AMOUNT": 200}]}) for i in range(1, 6)}
     c.open(c.design("Screenshots: auto-design", files=docs))
     c.page.on("dialog", lambda d: d.accept())
     rev = c.rev()

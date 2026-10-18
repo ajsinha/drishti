@@ -238,6 +238,14 @@ which needs no SQL at all. `reverse-index: false` turns reverse lookups off.
 Values: decimals become numbers (whole numbers as integers), dates `yyyy-MM-dd`, timestamps ISO instants, JSON columns
 nested data; a JSON value that does not parse stays text, so one bad cell never fails a view.
 
+**With the shipped packs (2.3.0).** The seven packs read UPPER_SNAKE attributes (`TRADE_ID`, `PRODUCT_TYPE`, `COUNTERPARTY`), but the
+mapping above turns every column label with an underscore into camel case, so `SELECT TRADE_ID ...` gives `tradeId` and the packs'
+Sutras do not find it. Until query mode keeps labels as written, give the document in one `json` column, which replaces the
+fields entirely (`query.trade: SELECT doc AS json, business_date FROM trades WHERE trade_id = :id AND business_date = :asOf`, the
+document holding the UPPER_SNAKE attributes), and declare the promoted paths in `layout.trade.columns` (`TRADE_ID, CURRENCY, ...`):
+a `columns.trade` label is then matched to the declared path whatever its case (`trade_id` reads as `TRADE_ID`). Otherwise read the
+table with a pack of your own whose Sutras use the camel-case names. A known limit of 2.3.0.
+
 ## 10. A complete example
 
 A trading schema in PostgreSQL:

@@ -84,13 +84,12 @@ Every question a user asks needs very little of a day:
 
 | Question | What it really needs |
 |---|---|
-| open trade `MX-20000017` | one document |
-| type-ahead `TRD CLY-4083` | the ids, sorted |
-| `TRD where mtm < -50m order by mtm` | the id and `mtm` of every trade |
-| `TRD book=BOOK-RATES-3` (pick list) | `book` and the pick-list columns of every trade |
-| desk P&L | `desk`, `mtm`, `pnl1d`, `risk.dv01` … of every trade |
-| impact (F8) of a netting set | `nettingSet` and `mtm` of every trade |
-| linked entities (reverse lookups) | the link fields (`nettingSet`, `book`, `counterparty.id`) of every trade |
+| open trade `MX-20000001` | one document |
+| type-ahead `TRD MX-200` | the ids, sorted |
+| `TRD where QUANTITY > 1bn order by QUANTITY desc` | the id and `QUANTITY` of every trade |
+| `TRD PORTFOLIO=BOOK-RATES-3` (pick list) | `PORTFOLIO` and the pick-list columns of every trade |
+| a page per portfolio or counterparty (derived) | `PORTFOLIO` or `COUNTERPARTY`, and the fields it sums, of every trade |
+| linked entities (reverse lookups) | the link fields (`COUNTERPARTY`, `PORTFOLIO`, `LEGAL_ENTITY`) of every trade |
 
 So the design is: **store each day so that each of these can be read on its own, and read only that.** Concretely:
 
@@ -128,30 +127,30 @@ Each row has these columns:
 
 | Column | Type | Content |
 |---|---|---|
-| `id` | string | the entity's id, `MX-20000017` |
+| `id` | string | the entity's id, `MX-20000001` |
 | `doc` | string | the whole JSON document, exactly what a view shows |
 | `business_date` | date | the partition column |
-| `tradeId`, `productType`, `productName`, `direction`, `currency`, `maturityDate`, `tradeDate`, `book`, `desk`, `status`, `assetClass`, `nettingSet`, `sourceSystem` | string | promoted fields |
-| `notional`, `mtm`, `pnl1d` | double | promoted fields |
-| `counterparty__id`, `counterparty__name` | string | promoted nested fields (`counterparty.id`: a dot becomes `__`) |
-| `risk__dv01` | double | promoted nested field |
+| `PRODUCT_TYPE` | string | the second partition column of the trade tables (`partition-by` of `lake build`), also a promoted field |
+| `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_SUB_TYPE`, `PRODUCT_GROUP`, `TRADE_STATUS`, `TRADE_VERSION`, `BUY_SELL_CODE`, `CURRENCY`, `TRADE_DATE`, `MATURITY_DATE`, `COUNTERPARTY`, `LEGAL_ENTITY`, `PORTFOLIO`, `TRADER_ID` | string | promoted fields (the trading pack's `layout.trade.columns`) |
+| `QUANTITY` | double | promoted field |
 
-One row, as the writer produces it (the document shortened):
+A nested path is promoted with its dot as `__` (`LEGS.CURRENCY` → `LEGS__CURRENCY`). One row, as `lake demo` writes it
+(`data/delta/trading/trade_murex`, read with `deltalake`; the document shortened):
 
 ```
-id                  MX-20000017
-business_date       2026-09-30
-doc                 {"tradeId": "MX-20000017", "sourceSystem": "Murex", "sourceTradeId": "20000017",
-                     "productType": "IRS_FIXFLOAT", "notional": 242000000.0, "mtm": 1875863, "book": "BOOK-RATES-3",
-                     "counterparty": {"id": "CP-MERIDIAN-RE", "name": "Meridian Reinsurance Ltd"}, "legs": [ … ], …}
-tradeId             MX-20000017
-productType         IRS_FIXFLOAT
-notional            242000000.0
-mtm                 1875863.0
-book                BOOK-RATES-3
-counterparty__id    CP-MERIDIAN-RE
-counterparty__name  Meridian Reinsurance Ltd
-risk__dv01          -155245.0
+id                  MX-20000001
+business_date       2026-10-16
+doc                 {"SOURCE_SYSTEM":"MUREX","SOURCE_UPDATE_TIME":"2026-10-07T18:30:00Z","TRADE_DATE":"2025-07-25",
+                     "INPUT_DATE":"2025-07-25","TRADE_ID":"MX-20000001","TRADE_STATUS":"AMENDED", …, "LEGS": [ … ], "EVENTS": [ … ]}
+PRODUCT_TYPE        IRS_FIXFLOAT
+TRADE_ID            MX-20000001
+SOURCE_SYSTEM       MUREX
+PRODUCT_SUB_TYPE    Interest rate swap (fixed/float)
+TRADE_STATUS        AMENDED
+CURRENCY            AUD
+QUANTITY            242000000.0
+COUNTERPARTY        CP-MERIDIAN-RE
+PORTFOLIO           BOOK-RATES-3
 …
 ```
 
@@ -207,7 +206,7 @@ connectors:
 
 | Key | Meaning |
 |---|---|
-| `layout.<kind>.columns` | Document paths to promote, as written in the document (`QUANTITY`, `counterparty.id`). The column name is the path with `.` replaced by `__`. |
+| `layout.<kind>.columns` | Document paths to promote, as written in the document (`QUANTITY`, `LEGS.CURRENCY`). The column name is the path with `.` replaced by `__`. |
 | `table.<kind>` | The kind's table folder under the domain when it is not the kind's name (`trade_endur`): several connectors then serve one kind from tables side by side. Only the named kinds are this connector's tables. |
 | `layout.<kind>.sort-by` | `id` (the default and the right choice for entity tables): rows sorted by id within each business day. |
 | `layout.<kind>.file-rows` | Rows per file (default 250,000). Each file holds a contiguous id range. |
@@ -266,26 +265,24 @@ from pyspark.sql import functions as F
 
 day = (spark.read.json(source)                                  # the day's documents
        .withColumn("doc", F.to_json(F.struct("*")))
-       .select(F.col("tradeId").alias("id"), "doc", F.lit("2026-09-30").cast("date").alias("business_date"),
-               "tradeId", "productType", "productName", "direction", "currency", "notional", "mtm", "pnl1d",
-               "maturityDate", "tradeDate", "book", "desk", "status", "assetClass",
-               F.col("counterparty.id").alias("counterparty__id"), F.col("counterparty.name").alias("counterparty__name"),
-               "nettingSet", F.col("risk.dv01").alias("risk__dv01"), "sourceSystem"))
+       .select(F.col("TRADE_ID").cast("string").alias("id"), "doc", F.lit("2026-09-30").cast("date").alias("business_date"),
+               "PRODUCT_TYPE", "TRADE_ID", "SOURCE_SYSTEM", "PRODUCT_SUB_TYPE", "PRODUCT_GROUP", "TRADE_STATUS", "TRADE_VERSION", "BUY_SELL_CODE",
+               "CURRENCY", "QUANTITY", "TRADE_DATE", "MATURITY_DATE", "COUNTERPARTY", "LEGAL_ENTITY", "PORTFOLIO", "TRADER_ID"))
 
 (day.repartitionByRange(4, "id").sortWithinPartitions("id")      # four files, each its own id range, sorted
     .write.format("delta").mode("overwrite")
     .option("replaceWhere", "business_date = '2026-09-30'")
     .option("parquet.block.size", 8 * 1024 * 1024)                # small row groups (about 1,000 trade documents)
-    .partitionBy("business_date")
-    .save("s3a://risk-lake/banking/trading/trade"))
+    .partitionBy("business_date", "PRODUCT_TYPE")
+    .save("s3a://risk-lake/trading/trade_endur"))
 ```
 
 and once, on the table:
 
 ```sql
-ALTER TABLE delta.`s3a://risk-lake/banking/trading/trade` SET TBLPROPERTIES (
-  'delta.dataSkippingStatsColumns' = 'id,business_date,tradeId,productType,productName,direction,currency,notional,mtm,
-pnl1d,maturityDate,tradeDate,book,desk,status,assetClass,counterparty__id,counterparty__name,nettingSet,risk__dv01,sourceSystem');
+ALTER TABLE delta.`s3a://risk-lake/trading/trade_endur` SET TBLPROPERTIES (
+  'delta.dataSkippingStatsColumns' = 'id,business_date,PRODUCT_TYPE,TRADE_ID,SOURCE_SYSTEM,PRODUCT_SUB_TYPE,PRODUCT_GROUP,
+TRADE_STATUS,TRADE_VERSION,BUY_SELL_CODE,CURRENCY,QUANTITY,TRADE_DATE,MATURITY_DATE,COUNTERPARTY,LEGAL_ENTITY,PORTFOLIO,TRADER_ID');
 ```
 
 What matters, whatever the tool: **the promoted columns hold exactly the document's values**, **each business day is
@@ -410,11 +407,16 @@ If any field is not promoted, the search reads documents as before, up to `drish
 
 ### 7.2 Derived kinds
 
-A derived kind (desk P&L: trades grouped by `desk`, `count`, `sum $.mtm` …, see [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds))
-is computed from columns when all its expressions are plain paths that are promoted:
+A derived kind (the trading pack's `portfolio-trades`: trades grouped by `$.PORTFOLIO`, `count`, `distinct $.CURRENCY` …, see
+[PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds)) is computed from columns
+when all its expressions are plain paths that are promoted:
 
-1. Rows are grouped by the key column directly (the `desk` value of each row).
-2. Each aggregate runs over the column arrays: a sum over `mtm` is a loop over a `double[]`.
+1. Rows are grouped by the key column directly (the `PORTFOLIO` value of each row).
+2. Each aggregate runs over the column arrays: a sum over `QUANTITY` is a loop over a `double[]`.
+
+The shipped trade pages also sum `first($.LEGS).NOTIONAL` and list `$.EVENTS` per member, which are not promoted columns, so they are
+computed from the members' documents (at most `max-members`, 20,000); on 15,000 trades a page per portfolio reads thousands of documents
+the first time, which is why it is slower than a page whose fields are all promoted.
 3. Only the members it lists get a small document, for its rows table: at most `max-members` (desk P&L: 250). The
    aggregates and `memberCount` count every member.
 
@@ -425,7 +427,7 @@ after start. Desk P&L of every desk from a million trades: **327 ms** the first 
 ### 7.3 Impact (F8)
 
 Impact of a netting set finds every trade referencing it (a reverse lookup over columns), then sums the kind's measure
-(`mtm`) over all of them from the column set and follows the roll-up fields (`nettingSet`, `creditLimit`) that are
+(`MTM` of a trade valuation) over all of them from the column set and follows the roll-up fields (`NETTING_SET`, `CREDIT_LIMIT`) that are
 promoted. It lists at most 200 entities per group, with the count of the rest; the total covers every one. Impact of a
 netting set with 143,982 trades: **0.7–0.9 s**.
 
@@ -536,6 +538,11 @@ trades a day over three business days, times over HTTP from the same machine:
 Writing: `bulk_trades.py` writes a million trades a day for three days in 82–125 s (about 28 s per million trade-days),
 4.85–5.2 GB.
 
+**The figures below were measured in 2.2**, when the generated trades were written in camel case (`mtm`, `notional`, `book`),
+so the searches are shown as they were run; the trades now carry the source systems' UPPER_SNAKE attributes and no MTM (that is the
+market-risk pack's trade valuation): today's equivalents read `TRD where QUANTITY > 500m and CURRENCY = 'USD'` and
+`TRD PORTFOLIO=BOOK-RATES-3`. Not re-measured for 2.3.
+
 **The scaling curve, measured with the scale benchmark (2026-10-01).** `tools/bench/scale.sh`
 ([SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)) loaded 10,000, 25,000 and 50,000 trades a day over three business
 days (plus the banking samples) and asked the same questions over HTTP each time: a 24-thread laptop shared with other
@@ -595,11 +602,12 @@ to lose: each read goes to storage afresh, so reads recover as soon as the stora
 unreachable, a read that is not cached ends with `DRS-1004 timed out reading …` (S3A retries for longer than
 `fetch-timeout`) or `DRS-1003`. The connector lists the domain's tables when it starts and again at every reindex (six
 `refresh-seconds`), unless `kinds` is given, so a table added while the server runs is served from the next reindex
-with no restart; check with `curl -s $B/sources | jq '.sources[] | select(.name=="trading-store").kinds'`. For a
+with no restart; check with `curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" $B/sources | jq '.sources[] | select(.name=="trade-endur").kinds'`
+(on the demo lakes: `["trade"]`). For a
 pack-declared layout the table does not have, says so:
 
 ```
-trading-store   UP (engine: native; not laid out as the pack declares: trade (12 of 19 columns); searches read documents)
+trade-endur   UP (engine: native; not laid out as the pack declares: trade (12 of 16 columns); searches read documents)
 ```
 
 `GET /api/v1/admin/health` lists the connector's caches:
@@ -628,7 +636,7 @@ when it was; a document search says `"partial": true` with a smaller `scanned`.
 | the log directory grows by megabytes a day | statistics include the document | `maintain.py` sets `delta.dataSkippingStatsColumns`; or set it yourself |
 | Health: `DEGRADED: cannot read trade 2026-09-30: …` | the last read of that table and date failed: pages in a codec the engine does not decompress (BROTLI, LZO), a page that does not decode, a truncated or missing Parquet file, or (`trade log`) a log missing a commit | the reason says which; codecs: [section 16](#16-engines-native-and-hadoop); a damaged file: restore it or rewrite the date. Health turns `UP` once a read of the date succeeds or the table gets a new version |
 | a view fails with `DRS-1003 … failed reading` while other dates open | that date's files cannot be read (see the row above); the view does not fall back to another store's data | as above |
-| searches say `partial: true` with `failed: [{"source": "trading-store", …}]` | a date or the table's ids could not be read; the type-ahead keeps the ids it listed before | as above; the reason is in the answer and in Health |
+| searches say `partial: true` with `failed: [{"source": "trade-endur", …}]` | a date or the table's ids could not be read; the type-ahead keeps the ids it listed before | as above; the reason is in the answer and in Health |
 
 ## Security: TLS and credentials
 
@@ -707,19 +715,20 @@ no-proxy, site default, `proxy: none`) and `HadoopLakeProxyTest` (the `fs.s3a.pr
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: delta
 enabled: ${DRISHTI_LAKE_ENABLED:true}
 kinds: [trade]
-description: Trading lake
+description: The ENDUR trades of the trading pack
 settings:
   root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
   domain: trading
+  table.trade: trade_endur        # the table of this source system: <root>/trading/trade_endur
+  union: "true"                   # one of the connectors whose trades together are the kind (ENDUR, CALYPSO, MUREX)
   layout:
     trade:
-      columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
-                tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
-                risk.dv01, sourceSystem]
+      columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE,
+                CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
       sort-by: id
       file-rows: '250000'
       row-group-rows: '1000'
@@ -855,7 +864,7 @@ uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.
 ```
 
 A table the connector cannot read (BROTLI or LZO pages, a corrupt LZ4 page, a truncated file) fails reads of that date
-with `DRS-1003 trading-store failed reading trade/MX-1: trade 2026-09-30 cannot be read: the native Delta engine does
+with `DRS-1003 trade-murex failed reading trade/MX-20000001: trade 2026-09-30 cannot be read: the native Delta engine does
 not decompress BROTLI Parquet pages …; rewrite the date with Snappy or ZSTD (tools/lake/maintain.py relayout --force
 --dates <date>) [file …]`, searches over the date say `partial: true` and name the connector and reason, the type-ahead
 keeps the ids it listed before, and **Admin → Health** shows the connector `DEGRADED: cannot read trade 2026-09-30: …`;
@@ -883,7 +892,7 @@ import json, datetime, pyarrow as pa
 from deltalake import write_deltalake
 
 day = datetime.date(2026, 9, 30)
-docs = {"MX-20000001": {"tradeId": "MX-20000001", "mtm": 1875863, "businessDate": day.isoformat()}}
+docs = {"MX-20000001": {"TRADE_ID": "MX-20000001", "QUANTITY": 242000000.0, "SOURCE_UPDATE_TIME": day.isoformat() + "T18:30:00Z"}}
 table = pa.table({"id": pa.array(list(docs), pa.string()),
                   "doc": pa.array([json.dumps(d) for d in docs.values()], pa.string()),
                   "business_date": pa.array([day] * len(docs), pa.date32())})
@@ -899,18 +908,17 @@ write_deltalake("data/delta/trading/trade", table, mode="overwrite",
 3. **Load sample data.**
 
 ```bash
-# every banking domain (reference, market, trading, risk, credit, collateral), ten business days
-uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta --days 10
-# or one pack's samples into one domain
-uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \
-    --samples examples/packs/finance/samples --root data/delta --domain finance --days 10 [--as-of 2026-09-30] [--calendar USNY]
-DRISHTI_PACKS=counterparty-risk,market-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+# the seven packs' lakes from the committed test data: seven business days ending today (data/testdata/README.md)
+drishti-console/.venv/bin/python tools/drishti.py lake demo
+# or one pack's samples into one domain (tools/samplegen/lake.py, section 5)
+drishti-console/.venv/bin/python tools/samplegen/lake.py --samples config/packs/market-data/samples --root data/delta --domain market --days 10
+java -jar drishti-server/target/drishti-server-*-exec.jar          # DRISHTI_PACKS unset: the seven packs
 ```
 
-   What `lake.py` writes is described in [section 5](#5-writing-the-lake). For S3, build locally and copy the folders up
+   What the writers produce is described in [section 5](#5-writing-the-lake). For S3, build locally and copy the folders up
    (`aws s3 sync data/delta/trading s3://risk-lake/banking/trading`), bearing in mind that time travel then resolves
    against the upload times.
-4. **In the terminal**: `TRD MX-20000001 <GO>`; pick 29 September in the top bar and the numbers change; *Raw JSON* (F9)
+4. **In the terminal**: `TRD MX-20000001 <GO>`; pick an earlier business date in the top bar and an amended trade's numbers change; *Raw JSON* (F9)
    shows `businessDate`. `CPTY CP-NORTHBRIDGE <GO>` on a picked date lists its netting sets (*Netting sets* panel) and F8
    (impact) its trades: the reverse lookups of [section 6.6](#66-reverse-lookups).
 5. **Keep the lake bounded** with `tools/lake/maintain.py` ([section 10](#10-keeping-the-lake-in-shape)); Drishti only
@@ -919,20 +927,29 @@ DRISHTI_PACKS=counterparty-risk,market-risk java -jar drishti-server/target/dris
 
 ### Configuration by example
 
-**The pack's suggested template**, as shipped in `config/packs/trading/pack.yaml` (the layout keys are in [section 4](#4-declaring-the-layout-in-a-pack)); the file `config/connectors/trading-store.yaml` has the same settings:
+**The pack's suggested template**, as shipped in `config/packs/trading/pack.yaml` (abridged; the layout keys are in [section 4](#4-declaring-the-layout-in-a-pack)); the
+file `config/connectors/trade-endur.yaml` written from it at the first start has the same settings, and `trade-calypso` and `trade-murex` differ only in
+their table and source name:
 
 ```yaml
 connectors:
-  trading-store:                          # routes, health and provenance use this name
+  trade-endur:                            # routes, health and provenance use this name
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true} # one switch for every pack's lake
     kinds:
     - trade                               # serve only trades from this domain
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # one variable moves every pack's lake
-      domain: trading                     # tables live under <root>/trading/<kind>/
+      domain: trading                     # tables live under <root>/trading/
+      table:
+        trade: trade_endur                # ... in the table trade_endur (not trade): one table per source system
+      union: true                         # the kind is the union of every connector that says so
+      source-name: trade-endur
+      layout: { trade: { columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, ...], sort-by: id, file-rows: 250000, row-group-rows: 1000 } }
+  trade-calypso: { ..., settings: { ..., table: { trade: trade_calypso }, union: true, source-name: trade-calypso } }
+  trade-murex:   { ..., settings: { ..., table: { trade: trade_murex },   union: true, source-name: trade-murex } }
 routes:
-  trade: trading-store                    # trades are asked of the lake first
+  trade: trade-endur                      # a single-entity read asks trade-endur first, then the other union members
 ```
 
 Reference data that changes rarely is `effective` (from `config/packs/core/pack.yaml`):
@@ -942,7 +959,7 @@ connectors:
   reference-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
-    kinds: [counterparty, counterparty-group, issuer, agreement, ccp, legal-entity, book, desk, trader, calendar, csa, clearing-account]
+    kinds: [counterparty, counterparty-group, issuer, ccp, legal-entity, book, desk, trader, calendar, clearing-account]
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: reference
@@ -951,7 +968,7 @@ connectors:
       # ... one mode.<kind> line per kind
 ```
 
-`examples/packs/finance/pack.yaml` declares its lake without `kinds`, so it serves every table it finds:
+A connector without `kinds` serves every table it finds in its domain (the retired example pack `examples/packs/finance` declares its lake so):
 `finance-lake: { plugin: delta, enabled: "${DRISHTI_LAKE_ENABLED:true}", settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: finance, lookback-days: 10 } }`.
 
 **Site form**, your own domain, as the connector file `config/connectors/treasury-lake.yaml`:
@@ -973,11 +990,13 @@ name; the settings are in [section 14](#14-settings). The file replaces the pack
 and `domain`:
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: delta
 kinds: [trade]
 settings:
   domain: trading
+  table.trade: trade_endur
+  union: "true"
   root: s3a://risk-lake/banking            # read through Hadoop's S3A (or the native engine)
   s3.region: us-east-1
   # credentials: the AWS chain (environment, profile, instance role), or
@@ -989,7 +1008,7 @@ settings:
   # hadoop.fs.s3a.connection.maximum: "200" # any Hadoop setting, prefixed hadoop.
 ```
 
-The tables are read at `s3a://risk-lake/banking/trading/<kind>`.
+The table is read at `s3a://risk-lake/banking/trading/trade_endur`.
 `DRISHTI_DELTA_ROOT=s3a://risk-lake/banking` moves every pack's lake at once.
 
 **Maintenance** for a smaller window, as in `deploy/lake-maintenance.yaml` ([section 10](#10-keeping-the-lake-in-shape)):

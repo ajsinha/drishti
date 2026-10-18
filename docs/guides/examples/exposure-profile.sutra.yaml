@@ -17,15 +17,15 @@ sutra: exposure-profile
 version: 1
 description: An area chart of expected and potential future exposure over tenor, with a limit line.
 match: { kind: exposure }
-title: { pill: "Exposure · ${$.nettingSet}", id: $.nettingSet }
+title: { pill: "Exposure · ${$.NETTING_SET}", id: $.NETTING_SET }
 panels:
   - id: exposure
     kind: area
     title: Exposure profile (USD)
     height: 11
-    rows: $.profile
-    x: tenor
-    limit: $.limit
+    rows: $.PROFILE
+    x: TENOR
+    limit: $.LIMIT
     series:
-      - { label: EE, value: ee, tone: link }
-      - { label: PFE 95, value: pfe, tone: accent }
+      - { label: EE, value: EE, tone: link }
+      - { label: PFE 95, value: PFE, tone: accent }

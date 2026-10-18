@@ -205,7 +205,7 @@ Plugin `duckdb`. A book in one embedded file.
 A connector file (`config/connectors/<name>.yaml`):
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: duckdb
 kinds: [trade]
 description: Trading documents in an embedded DuckDB file
@@ -217,9 +217,7 @@ settings:
   pool-size: '8'
   layout:
     trade:
-      columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
-                tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
-                risk.dv01, sourceSystem]
+      columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
 ```
 
 Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [DUCKDB_CONNECTOR.md](DUCKDB_CONNECTOR.md).

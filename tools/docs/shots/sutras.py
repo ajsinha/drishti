@@ -33,19 +33,19 @@ sutra: bond-short
 version: 1
 description: "A short bond layout, the strip leading with what is checked first."
 match: { kind: trade, priority: 20 }
-title: { pill: "Bond · ${$.productName}", id: $.tradeId, with: "link($.counterparty.id, 'counterparty', $.counterparty.name)" }
+title: { pill: "Bond · ${$.PRODUCT_NAME}", id: $.TRADE_ID, with: "link($.COUNTERPARTY.ID, 'counterparty', $.COUNTERPARTY.NAME)" }
 strip:
-  - { label: MTM (USD), bind: $.mtm, fmt: signed0, tone: sign, emphasis: true }
-  - { label: 1-day P&L, bind: $.pnl1d, fmt: signed0, tone: sign }
-  - { label: DV01 (USD), bind: $.risk.dv01, fmt: signed0, tone: sign }
+  - { label: MTM (USD), bind: $.MTM, fmt: signed0, tone: sign, emphasis: true }
+  - { label: 1-day P&L, bind: $.PNL1D, fmt: signed0, tone: sign }
+  - { label: DV01 (USD), bind: $.RISK.DV01, fmt: signed0, tone: sign }
 panels:
   - id: terms
     kind: kv
     title: Terms
     columns:
-      - { label: Coupon, bind: $.terms.coupon, fmt: pct4 }
-      - { label: Clean price, bind: $.terms.cleanPrice, fmt: price2 }
-      - { label: Yield, bind: $.terms.yield, fmt: pct4 }
+      - { label: Coupon, bind: $.TERMS.COUPON, fmt: pct4 }
+      - { label: Clean price, bind: $.TERMS.CLEAN_PRICE, fmt: price2 }
+      - { label: Yield, bind: $.TERMS.YIELD, fmt: pct4 }
 """
 
 
@@ -64,8 +64,8 @@ def yaml_problems(c):
 def preview(c):
     json_text, sutra = showcase()
     doc = json.loads(json_text)
-    doc["tradeId"] = "TRY-IT-ON-THE-SPOT"
-    doc["productName"] = "A file that is not in the design"
+    doc["TRADE_ID"] = "TRY-IT-ON-THE-SPOT"
+    doc["PRODUCT_NAME"] = "A file that is not in the design"
     tmp = Path(tempfile.mkdtemp()) / "try-this.json"
     tmp.write_text(json.dumps(doc))
     c.open(c.design("Screenshots: sutra preview", files={"full.json": json_text}, sutra=sutra))
@@ -89,11 +89,11 @@ def tests_tab(c):
     json_text, sutra = showcase()
     doc = json.loads(json_text)
     thin = dict(doc)
-    for k in ("legs", "schedule", "pnlHistory"):
+    for k in ("LEGS", "SCHEDULE", "PNL_HISTORY"):
         thin.pop(k, None)
-    thin["tradeId"] = "DEMO-BOND-THIN"
+    thin["TRADE_ID"] = "DEMO-BOND-THIN"
     other = dict(doc)
-    other["tradeId"] = "DEMO-BOND-2"
+    other["TRADE_ID"] = "DEMO-BOND-2"
     c.open(c.design("Screenshots: sutra tests", files={"full.json": json_text, "thin.json": json.dumps(thin), "second.json": json.dumps(other)}, sutra=sutra))
     c.page.get_by_role("tab", name="Tests").click()
     c.page.locator(".wb-matrix").wait_for(timeout=30000)

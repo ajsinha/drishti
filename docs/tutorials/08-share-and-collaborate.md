@@ -26,7 +26,7 @@ About 25 minutes.
 
 - [Tutorial 1](01-first-15-minutes.md) done, with sign-in **on**: sharing needs two people.
 - Two browsers or two sessions: one for you (the development administrator), one for Vera, a colleague you create in Step 1. (A second private window is the easy way; each sign-in replaces the session of the same window.)
-- The sample history built, so the shared view can be pinned to a past date.
+- The demo lakes built (tutorial 1), so the shared view can be pinned to a past date: the outputs use 2026-10-15, the day before the lakes' last date; use yours.
 
 ## What you will learn
 
@@ -43,15 +43,23 @@ want that to be part of your test. (Roles and packs per user are explained in [U
 
 ![Admin → Users: the development administrator and Vera Lim, role viewer](img/t08/00-users.jpg)
 
-You should see Vera in the list with the role `viewer`. The bundled `viewer` role cannot see the fields the site masks (the trader's name, for instance): that matters in Step 4.
+You should see Vera in the list with the role `viewer`. The bundled `viewer` role cannot see the fields the site masks (the trader on a trade, `TRADER_ID`, for instance): that matters in Step 4.
+
+**From the command line** there is no user command: users are an administrator's page (a personal API token cannot create one), and the list is one call from a signed-in
+session, `GET /api/v1/admin/users`:
+
+```text
+{"username": "vera", "displayName": "Vera Lim", "email": "vera@example.com", "desk": "", "roles": ["viewer"], "enabled": true, "mustChangePassword": false, "locked": false, ...}
+```
 
 ## Step 2 · Filter a view, then share it
 
-Sign in as yourself, pick `2026-09-30` in the date box and open `TRD MX-20000001`. In the **Cashflows** panel set **Paid between** to *Next 90 days* and untick leg 2 in **Legs**.
+Sign in as yourself, pick `2026-10-15` in the date box and open `TRD MX-20000001`. The **Events** panel has two controls in its header: set **Between** to *Next 90 days*
+and untick leg `2` in **Legs**.
 
-![The swap on 30 September with the cashflows narrowed to one leg and the next 90 days](img/t08/01-filtered-view.jpg)
+![The swap on 15 October with its events narrowed to leg 1 and the next 90 days](img/t08/01-filtered-view.jpg)
 
-You should see the date box amber, and the cashflows table showing only the fixed leg's coming payments. What you chose is in the page's address, so a link reproduces it. Press `Alt+S` (or **Share** in the title line).
+You should see the date box amber, and the events table showing only leg 1's events in the next 90 days. What you chose is in the page's address, so a link reproduces it. Press `Alt+S` (or **Share** in the title line).
 
 ![The Share dialog: the whole view as of 2026-09-30, to Vera Lim, with a note](img/t08/02-share-dialog.jpg)
 
@@ -76,8 +84,8 @@ You should see one row: *Shared by Drishti dev admin*, the time, the title of th
 
 ![The shared view: a banner with your note and a Reply box, the date as shared, and the view with Vera's own access](img/t08/06-shared-view.jpg)
 
-You should see a banner at the top: *Shared by Drishti dev admin*, your note, and a **Reply** box. Below it the banner says *You are seeing 2026-09-30 as known at ... as it was shared*, with **Go live** to
-leave the pinned date. The view is drawn **for Vera**: whatever her roles do not allow is masked (`•••`) even though you saw it. A note that quotes a masked number in `{...}` reads `•••` for her too, and the
+You should see a banner at the top: *Shared by Drishti dev admin*, your note, and a **Reply** box. Below it the banner says *You are seeing 2026-10-15 as known at ... as it was shared*, with **Go live** to
+leave the pinned date. The view is drawn **for Vera**: whatever her roles do not allow is masked (`•••`) even though you saw it: in the **Deal ticket** her *Trader* reads `•••` where yours reads `A. Shah`. A note that quotes a masked number in `{...}` reads `•••` for her too, and the
 picture of a shared panel is rendered with the rights of the sender *and* the recipient, whichever is less.
 
 On a phone the same share is one column:
@@ -88,12 +96,12 @@ You should see the banner, the date notice and the title above the first panel.
 
 ## Step 4 · Discuss it, and mention her
 
-Back as yourself, on the same view, press `Alt+N` (or **Discussion**). In the drawer type `@ver` and press Enter to pick Vera, then ` the first fixed payment is {` and type `mtm` to pick the field to quote, Enter, and finish the sentence.
+Back as yourself, on the same view, press `Alt+N` (or **Discussion**). In the drawer type `@ver` and press Enter to pick Vera, then ` who booked this? the ticket says {` and type `trader` to pick the field to quote (*Trader*, `TRADER_ID`), Enter, and finish the sentence.
 
 ![The Discussion drawer: a mention of @vera and a quoted number, ready to post](img/t08/08-discussion-write.jpg)
 
-You should see a suggestion list for the mention and another for the `{` quote (fields of the view). A `{...}` in a comment is filled **when the reader opens it**, with the reader's own view of the number: Vera sees `•••` where the field is
-masked for her, and the figure itself where she may see it. Press `Ctrl+Enter` to post.
+You should see a suggestion list for the mention and another for the `{` quote (fields of the view). A `{...}` in a comment is filled **when the reader opens it**, with the reader's own view of the value: you see `A. Shah`, Vera sees `•••`
+because the trader is masked for her, and a field she may see shows its value. Press `Ctrl+Enter` to post.
 
 ![The posted comment, with the mention and the number filled in](img/t08/09-discussion-posted.jpg)
 
@@ -110,12 +118,13 @@ You should see a new row, *Drishti dev admin mentioned you*, with the text. Open
 
 ![Vera's reply in the thread](img/t08/11-reply.jpg)
 
-You should see Vera's reply under your comment, her number shown as *she* may see it. Back in your own window the bell now shows a reply; the thread is followed by both of you, and the **Viewed by** list in the title line says who has looked at the view.
+You should see Vera's reply under your comment, any value she quotes shown as *she* may see it. Back in your own window the bell now shows a reply; the thread is followed by both of you, and the **Viewed by** list in the title line says who has looked at the view.
 
 ## Next steps
 
 - [Tutorial 9 · Reports](09-reports.md) sends a view to people on a schedule.
 - [USER_GUIDE.md › Share a view with a note](../guides/USER_GUIDE.md#share-a-view-with-a-note), [Your inbox](../guides/USER_GUIDE.md#your-inbox) and [Discussion](../guides/USER_GUIDE.md#discussion) are the references.
+- Sharing, the inbox and discussions have no `drishti.py` command: they belong to people, and the API takes a signed-in session for them ([API_GUIDE.md](../guides/API_GUIDE.md)).
   An administrator sets collaboration limits and the email channel in **Admin → Collaboration** ([OPERATIONS.md](../admin/OPERATIONS.md)).
 
 ## If something goes wrong

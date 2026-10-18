@@ -19,6 +19,7 @@
 import gzip
 import http.server
 import json
+import os
 import sys
 import tempfile
 import threading
@@ -43,6 +44,23 @@ def deal(i: int, day: str) -> dict:
 
 def book(n: int, dates=DATES) -> list[dict]:
     return [deal(i, dates[i % len(dates)]) for i in range(n)]
+
+
+_STORE = None
+
+
+def setUpModule():
+    """The BI-store stamp a build leaves goes to a temporary folder, never the repository's data/; the lakes the tests build count as the
+    server's lake (DRISHTI_DELTA_ROOT is set per test), except where a test says otherwise."""
+    global _STORE
+    _STORE = tempfile.TemporaryDirectory()
+    os.environ["DRISHTI_BI_STORE"] = _STORE.name
+
+
+def tearDownModule():
+    os.environ.pop("DRISHTI_BI_STORE", None)
+    os.environ.pop("DRISHTI_DELTA_ROOT", None)
+    _STORE.cleanup()
 
 
 def args(**kw):
@@ -108,6 +126,7 @@ class BuildTest(unittest.TestCase):
         self.tmp.cleanup()
 
     def base(self, **kw):
+        os.environ["DRISHTI_DELTA_ROOT"] = str(self.lake)          # the server reads this lake: a build leaves the stamp
         d = dict(src=[str(self.src)], lake=str(self.lake), domain="trading", kind="deal", key="TRADE_ID", date="TRADE_DATE",
                  partition_by=["PRODUCT_TYPE"], promote=["NOTIONAL,BOOK.NAME"], engine="deltalake")
         d.update(kw)
@@ -234,8 +253,29 @@ class BuildTest(unittest.TestCase):
         self.assertEqual(sorted(b["businessDate"] for _, b, _ in got), DATES)
         self.assertTrue(all(p == "/api/v1/packs/synth-book/loads" and t == "Bearer drk_secret" for p, _, t in got))
         self.assertNotIn("drk_secret", json.dumps(s))
+        stamp = Path(os.environ["DRISHTI_BI_STORE"]) / "lake-rebuilt.json"
+        stamp.unlink(missing_ok=True)
+        self.assertNotIn("stamp", s)                            # the server was told: no stamp
         code, s = build.run(self.base(signal="http://127.0.0.1:9", pack_name="synth-book"), quiet)
         self.assertEqual(code, build.EXIT_PARTIAL)              # written, but the server was not told
+        self.assertEqual(s["stamp"], str(stamp))               # ... so its next start clears the BI columns read from the lake
+        self.assertEqual(json.loads(stamp.read_text())["dates"], DATES)
+
+    def test_without_a_signal_the_stamp_is_left_unless_asked_not_to(self):
+        stamp = Path(os.environ["DRISHTI_BI_STORE"]) / "lake-rebuilt.json"
+        stamp.unlink(missing_ok=True)
+        code, s = build.run(self.base(no_stamp=True), quiet)
+        self.assertEqual(code, 0, s.get("error"))
+        self.assertFalse(stamp.exists())
+        code, s = build.run(self.base(), quiet)
+        self.assertEqual(code, 0, s.get("error"))
+        self.assertTrue(json.loads(stamp.read_text())["table"].endswith("deal"))
+        stamp.unlink()
+        base = self.base()
+        os.environ["DRISHTI_DELTA_ROOT"] = str(self.root / "another-lake")   # a scratch lake the server does not read: no stamp
+        code, s = build.run(base, quiet)
+        self.assertEqual(code, 0, s.get("error"))
+        self.assertFalse(stamp.exists())
 
 
 @unittest.skipUnless(__import__("writers").java_command(None, None), "Drishti's writer: build the server jar or set DRISHTI_LAKE_CLASSPATH")

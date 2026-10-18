@@ -85,7 +85,7 @@ public record BuilderProperties(Integer maxSamples, Integer maxFileMb, Integer m
         statusWords = list(statusWords, "live", "settled", "failed", "pending", "confirmed", "cleared", "scheduled", "paid", "done",
                 "booked", "active", "inactive", "open", "closed", "cancelled", "matured", "approved", "rejected", "ok", "error");
         statusNames = statusNames == null || statusNames.isBlank() ? "(status|state|stage)$" : statusNames;
-        idNames = idNames == null || idNames.isBlank() ? "(^id$|[a-z0-9]Id$|^code$|(^|_)ref$|Ref$|^uuid$|^key$)" : idNames;
+        idNames = idNames == null || idNames.isBlank() ? "(^id$|[a-z0-9]Id$|_id$|^code$|(^|_)ref$|Ref$|^uuid$|^key$)" : idNames;
         labelNames = list(labelNames, "label", "name", "title", "event", "step", "description", "text", "note", "category");
         ohlcNames = list(ohlcNames, "open", "high", "low", "close");
         graphNodeNames = list(graphNodeNames, "nodes", "vertices");

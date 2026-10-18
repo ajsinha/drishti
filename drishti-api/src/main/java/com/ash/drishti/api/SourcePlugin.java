@@ -91,6 +91,23 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
+     * An identifier of the kind's data as the source holds it now (a Delta table's version and commit time), or empty when the source
+     * cannot tell. When it changes, whatever was built from the old data (the BI store's columns and rollups) is stale and is built again.
+     * Must be cheap: it is asked on every BI query that reads a stored layer.
+     */
+    default Optional<String> dataVersion(String kind) {
+        return Optional.empty();
+    }
+
+    /**
+     * The version of one business date's data of the kind (a Delta table's files for that date), or the kind's {@link #dataVersion(String)}
+     * when the source cannot be more precise: a later day appended leaves an earlier day's stored layer valid.
+     */
+    default Optional<String> dataVersion(String kind, java.time.LocalDate date) {
+        return dataVersion(kind);
+    }
+
+    /**
      * The document paths this source keeps as columns for the kind (a Delta table's promoted columns), so searches and
      * aggregates can read them without documents; empty when it keeps none.
      */

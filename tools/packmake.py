@@ -15,7 +15,7 @@
 
 """`drishti.py pack make`: JSON Lines in, ONE folder out that you take and deploy.
 
-    drishti.py pack make data/jsonl --kind trade --match productType --name my-bank
+    drishti.py pack make data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank
 
 Writes <out>/ with README.txt, pack/<name>/ (Sutras, samples, tests, about), data/delta (or data/files), bundle/, config/, run-server.sh,
 run-server.ps1 and MANIFEST.json. It reuses packgen/pack_from_jsonl.py (which uses sutragen.py and ingest_jsonl.py) and packbundle.py

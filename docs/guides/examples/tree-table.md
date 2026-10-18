@@ -17,10 +17,10 @@
 
 Tables and ladders whose rows hold their own children: an organisation of units, each with sub-units, to any depth.
 
-**Panel kinds:** `table` and `ladder`, both with `children` and `expand`.
+**Panel kinds:** `table` and `ladder`, both with `CHILDREN` and `expand`.
 
 **Open it:** in the workbench, **Build → New → Examples** and pick `tree-table`: it opens as a copy (this Sutra, the JSON as samples, this note as notes). Or **File → Open** in the workbench with `tree-table.sutra.yaml` and `tree-table.json`.
 
 **What to look for:** a triangle beside each unit that has children; it opens in place, indented. The table opens to the second level (`expand: 2`), the ladder opens everything (`expand: all`). The `Total` adds up only rows without children, so nothing counts twice. Type in the filter: parents of the rows found stay.
 
-**Lines to copy:** `children: "@.children"` (an expression per row, giving the rows nested under it) and `expand`.
+**Lines to copy:** `children: "@.CHILDREN"` (an expression per row, giving the rows nested under it) and `expand`.

@@ -341,7 +341,7 @@ provider again), `connections()` (how many live connections the page holds: one 
 ## `<drishti-report>`
 
 A **published** report, one **page** of it or one **visual** of it, in a Shadow DOM, drawn with the console viewer's own code. What is in it: the page tabs, the slicers, the business date, bookmarks, *click a mark to filter or highlight*, **cross-filtering** between the visuals, *show as a table*, and, for a report over a live table, a live
-bar and redraws as the data ticks (each tick asks the visuals again, as the person looking, so their row rules and masks apply to every update). What is not: drill down and through, *Alert me*, *Show the rows behind this visual*, Export and Subscribe, and Perspective visuals (they need WebAssembly under a policy of their own: the element shows a note).
+bar and redraws as the data ticks (each tick asks the visuals again, as the person looking, so their row rules and masks apply to every update). What is not: drill down and through, *Alert me*, *Show the rows behind this visual*, Export and Subscribe. A 2.1 `perspective-*` visual is drawn as in the viewer, Drishti's own grid of the server's answer (since 2.3.0 no BI page, and no element, loads WebAssembly).
 The design is [ELEMENTS.md section 18](../architecture/ELEMENTS.md#18-drishti-report-a-published-report-in-another-web-application).
 
 ```html

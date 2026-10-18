@@ -23,4 +23,4 @@ How risk is spread: scenario P&L as a histogram with VaR lines, books as points,
 
 **What to look for:** dashed marker lines for VaR 99%, ES 97.5% and the mean on the histogram; one labelled point per book on the scatter; the gauge reading usage against the limit.
 
-**Lines to copy:** `markers:` with `value: "-$.var99"` (an expression over the document), `x`, `y` and `label` on the scatter, `value` and `max` on the gauge.
+**Lines to copy:** `markers:` with `value: "-$.VAR99"` (an expression over the document), `x`, `y` and `label` on the scatter, `value` and `max` on the gauge.

@@ -27,7 +27,9 @@ About 40 minutes.
 
 - [Tutorial 1](01-first-15-minutes.md) done; the server started with `DRISHTI_STUDIO_SAVE=true`; signed in. Anyone may design; saving a Sutra for everyone needs an author and a reviewer, which this tutorial does not do.
 - The data: three desk documents in `docs/tutorials/data/desks/` (`desk-rates.json`, `desk-fx.json`, `desk-credit.json`: each a desk with its currencies and their trades), and the Sutra itself,
-  `docs/tutorials/data/desk-book.sutra.yaml`. The workbench guide ([SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md)) and the earlier [workbench tutorial]() go further; this one is the shortest route to a finished screen.
+  `docs/tutorials/data/desk-book.sutra.yaml`. The fields are UPPER_SNAKE (`DESK_ID`, `REGION`, `MTM`, `CURRENCIES[].TRADES[].NOTIONAL`), as production data is. The workbench guide
+  ([SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md)) goes further; this tutorial is the shortest route to a finished screen.
+- For the command-line checks: the console's Python (tutorial 1); `sutra lint` and `sutra preview` run the server jar's Sutra tool locally, with no server needed.
 
 ## What you will learn
 
@@ -50,8 +52,8 @@ You should see `3 files ready.`, the name and the kind filled in, and the start 
 ![The first draft: a strip, a details panel and a links panel drafted from the documents](img/t06/02-first-draft.jpg)
 
 You should see the workbench: your files as **Samples** on the left (switch between them with the arrows at the bottom), the **Design** canvas in the middle with a first draft the auto-designer made
-(a title, a strip of the document's figures, a *Details* panel, a *Currencies* table), and the **Inspector** on the right. The first draft is a start: its figures show as raw values (`Limit use 1`), and
-the currencies are a plain table. Next you replace it with a designed one.
+(a title, a strip of the document's figures, a *Details* panel, a *Currencies* table), and the **Inspector** on the right. The first draft is a start: its figures show as raw values
+(`LIMIT_USE` as `0.58`, not `58%`), and the currencies are a plain table. Next you replace it with a designed one.
 
 ## Step 2 · Read the Sutra, and replace it
 
@@ -62,11 +64,29 @@ Open the **YAML** tab. Select everything, and paste the contents of `docs/tutori
 You should see the Sutra in the editor. Read it from the top:
 
 - `match: { kind: desk }`: it applies to every document of the kind `desk`.
-- `title`: a pill (`Desk · ${$.region}`), the id (`$.deskId`) and the desk's name.
-- `strip`: five key figures, each a label, a path into the document (`$.mtm`) and a format (`signed0`, `pct0`); `tone: sign` colours a number by its sign.
+- `title`: a pill (`Desk · ${$.REGION}`), the id (`$.DESK_ID`) and the desk's name (`$.NAME`).
+- `strip`: five key figures, each a label, a path into the document (`bind: $.MTM`) and a format (`signed0`, `pct0`); `tone: sign` colours a number by its sign.
 - `controls`: one control, a slider called `minNotional`.
-- `panels`: one `tabs` panel; `each: $.currencies` makes one tab for each currency, named by `tabTitle: "@.code"`, and `panels:` lists what each tab holds. Inside a tab `@` is that currency.
-  The second panel's `where: "@.notional >= ctl.minNotional"` keeps the trades at least as big as the slider says.
+- `panels`: one `tabs` panel; `each: $.CURRENCIES` makes one tab for each currency, named by `tabTitle: "@.CODE"`, and `panels:` lists what each tab holds. Inside a tab `@` is that currency.
+  The second panel's `where: "@.NOTIONAL >= ctl.minNotional"` keeps the trades at least as big as the slider says.
+
+The top of the file, as you pasted it:
+
+```yaml
+match: { kind: desk }
+title:
+  pill: "Desk · ${$.REGION}"
+  id: $.DESK_ID
+  with: $.NAME
+strip:
+  - { label: Net MTM (USD), bind: $.MTM, fmt: signed0, tone: sign, emphasis: true }
+  - { label: VaR 99%, bind: $.VAR_99, fmt: amount0 }
+  - { label: Limit used, bind: $.LIMIT_USE, fmt: pct0 }
+  - { label: Open trades, bind: $.OPEN_TRADES, fmt: amount0 }
+  - { label: Head of desk, bind: $.HEAD_OF_DESK }
+controls:
+  - { id: minNotional, kind: slider, label: Notional at least, min: 0, max: 250000000, step: 25000000, placement: strip }
+```
 
 Click the **Design** tab.
 
@@ -87,18 +107,19 @@ You should see the card and `The controls read without problems.` Scroll to **Tr
 
 ![The slider at 100000000: the Trades table shows only the three trades of 100 million or more](img/t06/06-slider-moved.jpg)
 
-You should see the label `Notional at least`, the handle and its value, and the trades table shrink: with the handle at 100,000,000 only 3 of the 9 EUR trades are left. A reader on the live screen gets the
+You should see the label `Notional at least`, the handle and its value, and the trades table shrink: with the handle at 100,000,000 only 3 of the 9 EUR trades are left
+(GBP keeps 3 of 6, USD 2 of 9). A reader on the live screen gets the
 same slider, and what they choose is in the page's address, so a link reproduces it. Keys: `←` `→` one step, `PageUp` `PageDown` ten, `Home` `End` the ends; on a phone the handle is 44 pixels. A slider
 with `range: true` has two handles and gives `from..to`.
 
 ## Step 4 · Column filters, and the phone
 
-Every table in Drishti has a funnel on each column heading, like a spreadsheet. The workbench preview is a sketch, so look at one on a live view: open `TRD MX-20000001`, find the cashflows table and click
-the funnel in the **Amount** heading.
+Every table in Drishti has a funnel on each column heading, like a spreadsheet. The workbench preview is a sketch, so look at one on a live view: open `TRD MX-20000001`, find the
+**Events** table (the trade's booking events and cash settlements, leg by leg) and click the funnel in the **Amount** heading.
 
 ![The Amount column's menu: sort, the condition Greater than 5m, a search box and the values with tick boxes](img/t06/07-column-filter.jpg)
 
-You should see a menu with two sort buttons, a **condition** (equals, greater than, between, top 10 ...) with its value box, a search box over the column's values and the list of values with tick boxes, and **OK**, **Cancel** and **Clear**. Choose *Greater than*, type `5m` and press **OK**: only the rows above 5 million stay, and the funnel on the heading is filled in. A tick-box list works for text, a date condition for dates. [USER_GUIDE.md › Filter a table like Excel](../guides/USER_GUIDE.md#filter-a-table-like-excel) has them all.
+You should see a menu with two sort buttons, a **condition** (equals, greater than, between, top 10 ...) with its value box, a search box over the column's values and the list of values with tick boxes, and **OK**, **Cancel** and **Clear**. Choose *Greater than*, type `5m` and press **OK**: only the settlements above 5 million stay (`+8,987,301.85` on 2026-06-29 is one), and the funnel on the heading is filled in. The table's own **Legs** and **Between** controls, in the panel's header, narrow it too. A tick-box list works for text, a date condition for dates. [USER_GUIDE.md › Filter a table like Excel](../guides/USER_GUIDE.md#filter-a-table-like-excel) has them all.
 
 ![The same table at 390 px: one column, funnels still there](img/t06/08-phone.jpg)
 
@@ -118,35 +139,44 @@ The command line runs the same checks, which is what a CI job would do. Put the 
 ```bash
 mkdir -p desk-test && cp docs/tutorials/data/desk-book.sutra.yaml desk-test/
 cp docs/tutorials/data/desks/desk-rates.json desk-test/desk-book.json
-python3 tools/drishti.py sutra lint desk-test/desk-book.sutra.yaml
+drishti-console/.venv/bin/python tools/drishti.py sutra lint desk-test/desk-book.sutra.yaml
 ```
 
 ```text
-$ python3 tools/drishti.py sutra lint desk-book.sutra.yaml
-ok      desk-book.sutra.yaml
-desk-book.sutra.yaml:1 warning DRS-2047 field 'mtm' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
+$ drishti-console/.venv/bin/python tools/drishti.py sutra lint desk-test/desk-book.sutra.yaml
+ok      desk-test/desk-book.sutra.yaml
+desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'MTM' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
+desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'VAR_99' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
 ...
+[exit 0]
 ```
 
-You should see `ok desk-book.sutra.yaml` and a list of warnings, `DRS-2047 field 'mtm' is shown but has no glossary entry`: the screen works, but nothing yet says what its fields mean. (Lint is quiet by
-default about help text; `--strict` makes these warnings fail the run.)
+You should see `ok desk-test/desk-book.sutra.yaml` and a list of warnings, one per field the screen shows, `DRS-2047 field 'MTM' is shown but has no glossary entry`: the screen works, but nothing yet says what its fields mean. (Lint is quiet by
+default about help text: exit 0; `--strict` makes these warnings fail the run.)
 
 ```text
-$ python3 tools/drishti.py sutra lint --strict desk-book.sutra.yaml
-ok      desk-book.sutra.yaml
-desk-book.sutra.yaml:1 warning DRS-2047 field 'mtm' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-desk-book.sutra.yaml:1 warning DRS-2047 field 'var99' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-desk-book.sutra.yaml:1 warning DRS-2047 field 'limitUse' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-desk-book.sutra.yaml:1 warning DRS-2047 field 'openTrades' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-desk-book.sutra.yaml:1 warning DRS-2047 field 'headOfDesk' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-...
+$ drishti-console/.venv/bin/python tools/drishti.py sutra lint --strict desk-test/desk-book.sutra.yaml
+ok      desk-test/desk-book.sutra.yaml
+desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'MTM' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
+desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'VAR_99' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
+desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'LIMIT_USE' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
+desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'OPEN_TRADES' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
+desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'HEAD_OF_DESK' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
+desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'CODE' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
+desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'NET_MTM' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
+desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'NOTIONAL' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
+desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'TRADES.ID' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
+desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'TRADES.PRODUCT' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
+desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'TRADES.NOTIONAL' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
+desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'TRADES.MTM' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
+desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'TRADES.MATURITY' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
 [exit 1]
 ```
 
 `preview` renders every sample and reports panels in error:
 
 ```text
-$ python3 tools/drishti.py sutra preview desk-book.sutra.yaml
+$ drishti-console/.venv/bin/python tools/drishti.py sutra preview desk-test/desk-book.sutra.yaml
 desk-book / desk-book.json: 1 panels, 0 in error
 ```
 
@@ -164,7 +194,7 @@ You should see a drawer with the page's text, a line for each panel, a glossary 
 ![The About tab: the skeleton for the kind, the glossary entries to write, and the card the drawer will show](img/t06/09-about-tab.jpg)
 
 You should see a skeleton for the kind, the panel texts and a glossary entry for each field the preview shows, marked as still to write (`What mtm means.`), and the **About card** under it. The line under the
-button reads `13 fields; 13 explained (help coverage 13/13)`. Write real sentences in the box and the card updates as you type; the lint warnings vanish as entries appear. The text is saved with the design and
+button counts the fields and how many are explained (the thirteen fields `--strict` listed above). Write real sentences in the box and the card updates as you type; the lint warnings vanish as entries appear. The text is saved with the design and
 travels with the pack fragment you export; it goes live when an administrator deploys the pack ([SCREEN_DESIGNER.md › The About tab](../guides/SCREEN_DESIGNER.md#the-about-tab)).
 
 ## Step 7 · A map on a screen
@@ -187,12 +217,12 @@ You should see **Indonesia's own page** (`JUR-IDN`), with the map now highlighti
 - id: geography
   kind: map
   title: Where it is
-  highlight: $.iso3                                   # the country to colour: an ISO alpha-3 or alpha-2 code, or its English name
+  highlight: $.ISO3                                   # the country to colour: an ISO alpha-3 or alpha-2 code, or its English name
   link: { kind: jurisdiction, id: "JUR-{iso3}" }      # a click on a country opens this entity (the id is built from the country's code)
   height: 11
 ```
 
-`highlight` takes the country (or a list of them) from the document; `region: $.iso3` draws the **regions** of a country instead (its states, provinces or counties, from ISO 3166-2 codes such as `AU-NSW`); `link` makes a click open another entity, and a `shade: { kind: economy, field: $.gdpUsdBn, label: "GDP (USD bn)" }` colours the countries by a figure read across a kind. Now build one yourself in the workbench: **Build**, **New screen**, the tab **Examples**, and open **map**: it opens as **your own copy**, with its own sample document.
+`highlight` takes the country (or a list of them) from the document; `region: $.ISO3` draws the **regions** of a country instead (its states, provinces or counties, from ISO 3166-2 codes such as `AU-NSW`); `link` makes a click open another entity (`{iso3}` is the map's own code of the country clicked), and a `shade: { kind: economy, field: $.GDP_PER_CAPITA, by: $.ISO3, fmt: amount0, label: GDP per capita (USD) }` colours the countries by a figure read across a kind (the economy page of the same pack does exactly that). Now build one yourself in the workbench: **Build**, **New screen**, the tab **Examples**, and open **map**: it opens as **your own copy**, with its own sample document.
 
 ![The workbench with the map example: the sample map.json, the palette on the left with metric, map, kv, status ..., and the canvas with the two panels The world and Its regions](img/t06/14-map-workbench.jpg)
 
@@ -200,12 +230,13 @@ You should see the canvas with **two map panels** (the world with Australia in t
 
 ![The palette: metric, map, kv, status, provenance, markdown, table, ladder, pivot, tabs, line, area, each with an Add button](img/t06/15-map-palette.jpg)
 
-You should see `map` among the kinds with an **Add** button (or drag it onto the canvas); the **YAML** tab shows the lines above, and the **Inspector** takes `highlight`, `region`, `link` and `shade` as boxes. In the example's YAML the two panels are `highlight: $.iso3` and `region: $.iso3`: the same field, two views of it. [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) and [PANELS.md](../guides/PANELS.md) have the rest of the options, and the reports have a map visual of their own ([tutorial 10](10-first-bi-report.md)).
+You should see `map` among the kinds with an **Add** button (or drag it onto the canvas); the **YAML** tab shows the lines above, and the **Inspector** takes `highlight`, `region`, `link` and `shade` as boxes. In the example's YAML the two panels are `highlight` and `region` on the same country field: the same field, two views of it. [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) and [PANELS.md](../guides/PANELS.md) have the rest of the options, and the reports have a map visual of their own ([tutorial 10](10-first-bi-report.md)).
 
 ## Step 8 · What you have, and what comes next
 
 The design is yours (see **My designs** under Build). To make it live for everyone: **Submit for review**, a reviewer with the approve power reads the diff and the evidence, and approves; or export it as a pack
-fragment (**Ship**) and put it in a pack. []() walks through proposing and approving as two people.
+fragment (**Ship**) and put it in a pack. [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) walks through proposing and approving as two people; from the command line,
+`drishti.py design create|save|check|propose|approve` do the same over REST ([CLI_GUIDE.md](../guides/CLI_GUIDE.md)).
 
 You should see, under **Build → My designs**, `Desk book` with the status *draft* and your edits listed.
 

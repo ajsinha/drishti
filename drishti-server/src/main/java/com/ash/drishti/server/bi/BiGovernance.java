@@ -530,12 +530,50 @@ public final class BiGovernance {
         return m;
     }
 
+    /**
+     * The model layer's lineage with, past each connector its chain names, what that connector reads from (as version 1 lineage shows it: the values for an
+     * administrator, that there is one for anyone else).
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> withSources(Principal p, Map<String, Object> layer) {
+        if (!(layer.get("upstream") instanceof List<?> upstream)) {
+            return layer;
+        }
+        List<Object> out = new ArrayList<>();
+        for (Object u : upstream) {
+            if (!(u instanceof Map<?, ?> um) || !(um.get("chain") instanceof List<?> chain)) {
+                out.add(u);
+                continue;
+            }
+            List<Object> links = new ArrayList<>();
+            for (Object x : chain) {
+                if (x instanceof Map<?, ?> xm) {
+                    Object c = "pack-kind".equals(xm.get("kind")) ? xm.get("connector") : "connector-query".equals(xm.get("kind")) ? xm.get("name") : null;
+                    Map<String, Object> source = c == null ? null : sources.of(p, String.valueOf(c));
+                    if (source != null) {
+                        Map<String, Object> copy = new LinkedHashMap<>((Map<String, Object>) xm);
+                        copy.put("source", source);
+                        links.add(copy);
+                        continue;
+                    }
+                }
+                links.add(x);
+            }
+            Map<String, Object> copy = new LinkedHashMap<>((Map<String, Object>) um);
+            copy.put("chain", links);
+            out.add(copy);
+        }
+        Map<String, Object> m = new LinkedHashMap<>(layer);
+        m.put("upstream", out);
+        return m;
+    }
+
     /** Where an item comes from and what depends on it: a dataset's pack kinds and connectors and the reports that read it; a report's dataset, fields and measures. */
     public Map<String, Object> lineage(Principal p, String id) {
         BiStore.Item i = bi.readableForGovernance(p, id);
         Map<String, Object> layer = layered == null ? null : layered.lineage(p, i);
         if (layer != null) {
-            return layer;
+            return withSources(p, layer);
         }
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("item", itemRef(p, i));

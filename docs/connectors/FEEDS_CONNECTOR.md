@@ -15,17 +15,24 @@
 -->
 # The public feeds connector: SOFR, €STR, ECB FX, the Treasury curve and FRED
 
-The `feed` plugin (module `plugins/drishti-plugin-feeds`) brings five public data sets into Drishti as ordinary
-entities: the NY Fed's SOFR, the ECB's €STR, the ECB's euro reference FX rates, the US Treasury daily par yield curve,
-and any daily FRED series. Each feed is one connector, fetched over HTTPS at start and every hour, held in memory with
-its recent history, and served for Live and for picked business dates. This document explains what each feed fetches,
-what it turns the response into, how reads are answered, what happens when the internet or the publisher is
-unavailable, how to run the feeds behind a proxy or without internet, and every setting.
+The `feed` plugin (module `plugins/drishti-plugin-feeds`) brings five public data sets into Drishti as ordinary entities: the NY
+Fed's SOFR, the ECB's €STR, the ECB's euro reference FX rates, the US Treasury daily par yield curve, and any daily FRED series. Each
+feed is one connector, fetched over HTTPS at start and every hour, held in memory with its recent history, and served for Live and for
+picked business dates. This document explains what each feed fetches, what it turns the response into, how reads are answered, what
+happens when the internet or the publisher is unavailable, how to run the feeds behind a proxy or without internet, and every setting.
 
-For a first setup see [the walk-through at the end of this document](#walk-through-step-by-step); the short
-reference is [the configuration examples at the end of this document](#configuration-by-example) and
+For a first setup see [the walk-through at the end of this document](#walk-through-step-by-step); the short reference is
+[the configuration examples at the end of this document](#configuration-by-example) and
 [CONFIGURATION.md](../admin/CONFIGURATION.md#feed--public-data-feeds). For long history next to the feeds see
-[DELTA_CONNECTOR.md](DELTA_CONNECTOR.md).
+[DELTA_CONNECTOR.md](DELTA_CONNECTOR.md); the demo lakes (`drishti.py lake demo`) already hold seven days of the market-data pack's own
+fixings, curves and FX (`FIX-SOFR`, `CRV-USD-OIS`, `FX-EURUSD`), which the feeds sit beside.
+
+> **Known gap in 2.3.0: field names.** Every shipped pack's documents are UPPER_SNAKE (`INDEX_ID`, `FIXINGS`, `RATE_PCT`, `PAIR`,
+> `MID`, `CURVE_ID`, `POINTS`, `ZERO_RATE`, …), and the market-data pack's Sutras read those names. The feed plugin still writes its
+> documents in the older camelCase shape (`indexId`, `fixings`, `ratePct`, `pair`, `mid`, `curveId`, `points`, `zeroRate`), shown in
+> section 3.6. A feed's entity therefore opens with the market-data Sutra's frame but empty fields until the plugin is moved to the
+> UPPER_SNAKE names; its raw document (`/api/v1/entities/<kind>/<id>/raw`), searches by its own field names and type-ahead work. The
+> feeds are off by default, so the demo stack is not affected.
 
 ## Contents
 
@@ -55,8 +62,9 @@ reference is [the configuration examples at the end of this document](#configura
 | any daily FRED series (`DGS10`, `DFF`, `SOFR`, …) | history beyond the last 60 observations, 90 days of FX or about two months of Treasury curve: archive it ([section 7](#7-scale-limits-and-history-from-a-lake)) |
 | a server with outbound HTTPS, or a mirror on disk | a server that must make no outbound request and has no mirror process |
 
-The feeds are small (one to ten entities each) and cost almost nothing to serve: every read is answered from memory.
-They are **off by default**: each connector of the `market-data` pack starts only when its variable is `true`.
+The feeds are small (one to ten entities each) and cost almost nothing to serve: every read is answered from memory. They are **off by
+default**: each connector of the `market-data` pack starts only when its variable is `true` (on the demo stack `drishti.py connector
+list` shows the five as `disabled`).
 
 ## 2. The five feeds
 
@@ -68,16 +76,15 @@ They are **off by default**: each connector of the `market-data` pack starts onl
 | `us-treasury` | `us-treasury-feed` | `DRISHTI_FEED_US_TREASURY=true` | `ir-curve` | `CRV-USD-UST` |
 | `fred` | `fred-feed` | `DRISHTI_FEED_FRED=true` and `FRED_API_KEY` | `rate-fixing` | `FIX-FRED-<series>`, series from `DRISHTI_FRED_SERIES` (default `DGS10,DFF`) |
 
-Every id names its publisher, so a feed never collides with the pack's samples (`FIX-SOFR`, `CRV-USD-OIS`) or with
-your own data. The documents have the same shape as the samples of the same kind, so the market-data pack's Sutras
-lay them out unchanged. Users type `FIX FIX-SOFR-NYFED <GO>`, `FX FX-EURUSD-ECB <GO>`, `CRV CRV-USD-UST <GO>`.
+Every id names its publisher, so a feed never collides with the pack's own data in the lake (`FIX-SOFR`, `CRV-USD-OIS`, `FX-EURUSD`) or
+with yours. Users type `FIX FIX-SOFR-NYFED <GO>`, `FX FX-EURUSD-ECB <GO>`, `CRV CRV-USD-UST <GO>` (the market-data pack's mnemonics
+`FIX`, `FX` and `CRV`).
 
 ## 3. What each feed fetches and what it becomes
 
-Each feed is a small adapter (`Feeds.java`): the URLs to fetch, a parser from the responses to dated observations
-per entity, and a function that builds the entity's document for a business date from the observations on or before
-it. The examples below are computed from the recorded responses the tests use
-(`plugins/drishti-plugin-feeds/src/test/resources/recorded/`).
+Each feed is a small adapter (`Feeds.java`): the URLs to fetch, a parser from the responses to dated observations per entity, and a
+function that builds the entity's document for a business date from the observations on or before it. The examples below are computed
+from the recorded responses the tests use (`plugins/drishti-plugin-feeds/src/test/resources/recorded/`).
 
 ### 3.1 `nyfed-sofr`: the Secured Overnight Financing Rate
 
@@ -95,16 +102,15 @@ it. The examples below are computed from the recorded responses the tests use
   … ] }
 ```
 
-**Becomes** one `rate-fixing`, `FIX-SOFR-NYFED`, with one observation per `effectiveDate` (60 at most). The 1st and
-99th percentiles are kept with each observation but not shown in the document.
+**Becomes** one `rate-fixing`, `FIX-SOFR-NYFED`, with one observation per `effectiveDate` (60 at most). The 1st and 99th percentiles
+are kept with each observation but not shown in the document.
 
 ### 3.2 `ecb-estr`: the euro short-term rate
 
-**Fetched:** `https://data-api.ecb.europa.eu/service/data/EST/B.EU000A2X2A25.WT?lastNObservations=60&format=csvdata`,
-one request.
+**Fetched:** `https://data-api.ecb.europa.eu/service/data/EST/B.EU000A2X2A25.WT?lastNObservations=60&format=csvdata`, one request.
 
-**Response read** (CSV with a header row; the connector reads the `TIME_PERIOD` and `OBS_VALUE` columns, found by
-name, and skips rows whose value is blank):
+**Response read** (CSV with a header row; the connector reads the `TIME_PERIOD` and `OBS_VALUE` columns, found by name, and skips rows
+whose value is blank):
 
 ```text
 KEY,FREQ,BENCHMARK_ITEM,DATA_TYPE_EST,TIME_PERIOD,OBS_VALUE,OBS_STATUS,CONF_STATUS,…,TITLE,TITLE_COMPL,UNIT_INDEX_BASE,UNIT_MEASURE,UNIT_MULT
@@ -115,8 +121,8 @@ EST.B.EU000A2X2A25.WT,B,EU000A2X2A25,WT,2026-09-02,2.188,A,F,…,Euro short-term
 
 ### 3.3 `ecb-fx`: the euro foreign exchange reference rates
 
-**Fetched:** `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml`, one request: the last 90 calendar
-days, about 64 publication days.
+**Fetched:** `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml`, one request: the last 90 calendar days, about 64
+publication days.
 
 **Response read** (XML; one `Cube time="…"` per day, one `Cube currency="…" rate="…"` per currency, rates per euro):
 
@@ -125,9 +131,9 @@ days, about 64 publication days.
   <Cube currency="GBP" rate="0.857…"/> … <Cube currency="CNY" rate="…"/></Cube>
 ```
 
-**Becomes** ten `fx-spot` entities. Each day's rates are put per euro (`EUR` = 1); `CNY` stands in for `CNH`; each
-pair's mid is `rate(quote) / rate(base)`, so `USDJPY` = JPY per euro ÷ USD per euro. A pair is produced on a day only
-when both of its currencies were published that day. On the recorded file (latest day 2026-09-30) the mids are:
+**Becomes** ten `fx-spot` entities. Each day's rates are put per euro (`EUR` = 1); `CNY` stands in for `CNH`; each pair's mid is
+`rate(quote) / rate(base)`, so `USDJPY` = JPY per euro ÷ USD per euro. A pair is produced on a day only when both of its currencies
+were published that day. On the recorded file (latest day 2026-09-30) the mids are:
 
 | Pair | Mid | Pair | Mid |
 |---|---|---|---|
@@ -139,18 +145,16 @@ when both of its currencies were published that day. On the recorded file (lates
 
 ### 3.4 `us-treasury`: the daily par yield curve
 
-**Fetched:** two requests, the previous calendar month and the current one, the month taken from today's date in
-New York:
+**Fetched:** two requests, the previous calendar month and the current one, the month taken from today's date in New York:
 
 ```text
-https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value_month=202608
 https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value_month=202609
+https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value_month=202610
 ```
 
-**Response read** (an Atom feed; one `m:properties` per day; the connector reads `NEW_DATE` and the twelve tenors
-`BC_1MONTH`, `BC_2MONTH`, `BC_3MONTH`, `BC_6MONTH`, `BC_1YEAR`, `BC_2YEAR`, `BC_3YEAR`, `BC_5YEAR`, `BC_7YEAR`,
-`BC_10YEAR`, `BC_20YEAR`, `BC_30YEAR`; others such as `BC_1_5MONTH` and `BC_4MONTH` are ignored, and a blank tenor
-is skipped):
+**Response read** (an Atom feed; one `m:properties` per day; the connector reads `NEW_DATE` and the twelve tenors `BC_1MONTH`,
+`BC_2MONTH`, `BC_3MONTH`, `BC_6MONTH`, `BC_1YEAR`, `BC_2YEAR`, `BC_3YEAR`, `BC_5YEAR`, `BC_7YEAR`, `BC_10YEAR`, `BC_20YEAR`,
+`BC_30YEAR`; others such as `BC_1_5MONTH` and `BC_4MONTH` are ignored, and a blank tenor is skipped):
 
 ```xml
 <m:properties>
@@ -163,8 +167,8 @@ is skipped):
 </m:properties>
 ```
 
-**Becomes** one `ir-curve`, `CRV-USD-UST`, with one observation per day: between one and two months of curves
-(21 days on the recorded September file). For each tenor present the document has a point:
+**Becomes** one `ir-curve`, `CRV-USD-UST`, with one observation per day: between one and two months of curves (21 days on the
+recorded September file). For each tenor present the document has a point:
 
 | Field | Value |
 |---|---|
@@ -183,8 +187,7 @@ is skipped):
 https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=<api-key>&file_type=json&sort_order=desc&limit=60
 ```
 
-**Response read** (JSON; `date` and `value` of each observation; a value of `"."`, FRED's mark for a missing day, is
-skipped):
+**Response read** (JSON; `date` and `value` of each observation; a value of `"."`, FRED's mark for a missing day, is skipped):
 
 ```json
 {"units":"lin","file_type":"json","sort_order":"desc","count":6,"limit":6,"observations":[
@@ -192,14 +195,26 @@ skipped):
  {"realtime_start":"2026-09-30","realtime_end":"2026-09-30","date":"2026-09-24","value":"."}, …]}
 ```
 
-**Becomes** one `rate-fixing` per series, `FIX-FRED-DGS10`, `FIX-FRED-DFF`, …, named `FRED series DGS10`, tenor
-`Daily`, currency `USD`. Every series is treated as a rate in percent, whatever FRED's units are.
+**Becomes** one `rate-fixing` per series, `FIX-FRED-DGS10`, `FIX-FRED-DFF`, …, named `FRED series DGS10`, tenor `Daily`, currency
+`USD`. Every series is treated as a rate in percent, whatever FRED's units are.
 
 ### 3.6 The documents
 
-A `rate-fixing` (SOFR, €STR, FRED) for a business date holds up to the **20** most recent observations on or before
-it, newest first; `rate` is the percent rate as a fraction, rounded to six decimals; `volumeBn` is present for SOFR
-only. SOFR on the recorded file, Live:
+The feed documents keep the plugin's own field names (camelCase; see the known gap at the top). The same kinds in the pack's lake are
+UPPER_SNAKE: `FIX-SOFR` in `market-store` reads `{"INDEX_ID": "FIX-SOFR", "NAME": "Secured Overnight Financing Rate", "LATEST":
+0.03906, "ADMINISTRATOR": "FRBNY", …, "FIXINGS": [{"DATE": …, "RATE": …, "RATE_PCT": …, "VOLUME_BN": …}]}` (real output of
+`GET /api/v1/entities/rate-fixing/FIX-SOFR/raw` on the demo lakes); the table below maps each feed field to the pack's name.
+
+| Feed document | Pack's name | Feed document | Pack's name |
+|---|---|---|---|
+| `indexId`, `name`, `latest` | `INDEX_ID`, `NAME`, `LATEST` | `pair`, `pairName`, `mid`, `bid`, `ask` | `PAIR`, `PAIR_NAME`, `MID`, `BID`, `ASK` |
+| `administrator`, `tenor`, `currency` | `ADMINISTRATOR`, `TENOR`, `CURRENCY` | `change1d`, `spotDate`, `history` | `CHANGE_1D`, `SPOT_DATE`, `HISTORY` |
+| `fixings[].date`, `.rate`, `.ratePct`, `.volumeBn` | `FIXINGS[].DATE`, `.RATE`, `.RATE_PCT`, `.VOLUME_BN` | `curveId`, `curveType`, `tenY`, `slope2s10s`, `asOf` | `CURVE_ID`, `CURVE_TYPE`, `TEN_Y`, `SLOPE_2S_10S`, `AS_OF` |
+| | | `points[].tenor`, `.maturity`, `.instrument`, `.quote`, `.zeroRate`, `.df` | `POINTS[].TENOR`, `.MATURITY`, `.INSTRUMENT`, `.QUOTE`, `.ZERO_RATE`, `.DF` |
+
+A `rate-fixing` (SOFR, €STR, FRED) for a business date holds up to the **20** most recent observations on or before it, newest first;
+`rate` is the percent rate as a fraction, rounded to six decimals; `volumeBn` is present for SOFR only. SOFR on the recorded file,
+Live:
 
 ```json
 { "indexId": "FIX-SOFR-NYFED", "name": "Secured Overnight Financing Rate (NY Fed)", "latest": 0.0388,
@@ -209,11 +224,11 @@ only. SOFR on the recorded file, Live:
                { "date": "2026-09-25", "rate": 0.039,  "ratePct": 3.9,  "volumeBn": 2914.0 }, … ] }
 ```
 
-€STR has `name` `Euro short-term rate (ECB)`, `administrator` `European Central Bank`, `currency` `EUR`; FRED has
-`administrator` `Federal Reserve Bank of St. Louis (FRED)`.
+€STR has `name` `Euro short-term rate (ECB)`, `administrator` `European Central Bank`, `currency` `EUR`; FRED has `administrator`
+`Federal Reserve Bank of St. Louis (FRED)`.
 
-An `fx-spot` holds the latest mid on or before the date, the change from the observation before it, and up to 30
-observations of history, oldest first:
+An `fx-spot` holds the latest mid on or before the date, the change from the observation before it, and up to 30 observations of
+history, oldest first:
 
 ```json
 { "pair": "FX-EURGBP-ECB", "pairName": "EUR/GBP", "mid": 0.85463, "bid": 0.85463, "ask": 0.85463,
@@ -236,17 +251,16 @@ An `ir-curve` (the recorded 30 September curve, three of its twelve points):
   "forwards": [], "source": "U.S. Department of the Treasury, Daily Treasury Par Yield Curve Rates" }
 ```
 
-`tenY` is the 10-year par yield as a fraction; `slope2s10s` is 10Y minus 2Y in basis points, to 0.1 bp; either is
-`null` when a tenor is missing. Numbers are written as Java doubles, so a value such as `0.0402` may show as
-`0.04019999999999999`.
+`tenY` is the 10-year par yield as a fraction; `slope2s10s` is 10Y minus 2Y in basis points, to 0.1 bp; either is `null` when a tenor
+is missing. Numbers are written as Java doubles, so a value such as `0.0402` may show as `0.04019999999999999`.
 
 ## 4. Configuration
 
 ### 4.1 The pack form, as shipped
 
 `config/packs/market-data/pack.yaml` suggests the five connectors as templates (two shown; the other three differ only in name, switch,
-`kinds` and `feed`). At the first start the server writes each one to `config/connectors/<name>.yaml` (`nyfed-sofr-feed.yaml`, `fred-feed.yaml`, …), and those files are then
-the site's; the file form is in [As a connector file](#as-a-connector-file):
+`kinds` and `feed`). At the first start the server writes each one to `config/connectors/<name>.yaml` (`nyfed-sofr-feed.yaml`,
+`fred-feed.yaml`, …), and those files are then the site's; the file form is in [As a connector file](#as-a-connector-file):
 
 ```yaml
 connectors:
@@ -279,13 +293,13 @@ routes:
   # … every market kind routes to the pack's Delta Lake connector
 ```
 
-With the default branding the `User-Agent` header is `Drishti public data feed connector`. `stale-after: 4d` covers a
-weekend and a holiday (see [section 8](#8-failure-and-recovery)).
+With the default branding the `User-Agent` header is `Drishti public data feed connector`. `stale-after: 4d` covers a weekend and a
+holiday (see [section 8](#8-failure-and-recovery)).
 
-Switch feeds on with their variables:
+Switch feeds on with their variables (on top of the server settings you start with,
+[GETTING_STARTED.md](../guides/GETTING_STARTED.md#step-6--start-the-server)):
 
 ```bash
-DRISHTI_PACKS=counterparty-risk,market-risk \
 DRISHTI_FEED_NYFED_SOFR=true DRISHTI_FEED_ECB_FX=true DRISHTI_FEED_US_TREASURY=true \
 DRISHTI_FEED_FRED=true FRED_API_KEY=… DRISHTI_FRED_SERIES=DGS10,DFF,SOFR \
   java -jar drishti-server/target/drishti-server-*-exec.jar
@@ -293,9 +307,9 @@ DRISHTI_FEED_FRED=true FRED_API_KEY=… DRISHTI_FRED_SERIES=DGS10,DFF,SOFR \
 
 ### 4.2 The site form
 
-The site edits the files the server wrote, in **Admin → Connectors** or by hand (a file is the whole definition, so the pack's template is not merged into it;
-[CONNECTOR_FILES.md, Precedence](CONNECTOR_FILES.md#precedence)). Switching a feed on, whatever its variable says, and changing its schedule is
-`config/connectors/ecb-fx-feed.yaml`:
+The site edits the files the server wrote, in **Admin → Connectors**, by hand, or with `drishti.py connector apply` (a file is the
+whole definition, so the pack's template is not merged into it; [CONNECTOR_FILES.md, Precedence](CONNECTOR_FILES.md#precedence)).
+Switching a feed on, whatever its variable says, and changing its schedule is `config/connectors/ecb-fx-feed.yaml`:
 
 ```yaml
 plugin: feed
@@ -308,8 +322,8 @@ settings:
   timeout-seconds: '10'
 ```
 
-`config/connectors/fred-feed.yaml` with three series, written with the key in the environment (the pack's template has an empty default, `${FRED_API_KEY:}`, which a
-credential reference may not carry in a file you write):
+`config/connectors/fred-feed.yaml` with three series, written with the key in the environment (the pack's template has an empty
+default, `${FRED_API_KEY:}`, which a credential reference may not carry in a file you write through Admin → Connectors or the CLI):
 
 ```yaml
 plugin: feed
@@ -323,10 +337,10 @@ settings:
   stale-after: 4d
 ```
 
-A feed off for this site is `enabled: false` in its file (`us-treasury-feed.yaml`).
+A feed off for this site is `enabled: false` in its file (`us-treasury-feed.yaml`), or `drishti.py connector disable us-treasury-feed`.
 
-A feed without the market-data pack is a named connector of your own, `config/connectors/sofr-public.yaml`; it needs `plugin: feed` and `settings.feed`,
-and its kinds need a pack mnemonic before a user can type them:
+A feed without the market-data pack is a named connector of your own, `config/connectors/sofr-public.yaml`; it needs `plugin: feed` and
+`settings.feed`, and its kinds need a pack mnemonic before a user can type them:
 
 ```yaml
 plugin: feed
@@ -338,36 +352,33 @@ Two connectors with the same `feed` are independent: each fetches on its own sch
 
 ### 4.3 Running as itself
 
-The plugin is on the server's class path. Without the market-data pack, and not listed under
-`drishti.sources.plugins`, it starts as itself with no `feed` setting, throws `PluginNotConfigured`, and the log says:
+The plugin is on the server's class path. Without the market-data pack, and not listed under `drishti.sources.plugins`, it starts as
+itself with no `feed` setting, throws `PluginNotConfigured`, and the log says:
 
 ```text
 source plugin feed is installed but not configured (feed needs settings.feed (nyfed-sofr, ecb-estr, ecb-fx, us-treasury, fred)); it stays idle
 ```
 
-This is not a failure and does not appear in health. An unknown `feed` value is a failure: the connector is listed
-under `failedToStart` with `unknown feed 'x' (nyfed-sofr, ecb-estr, ecb-fx, us-treasury, fred)`.
+This is not a failure and does not appear in health. An unknown `feed` value is a failure: the connector is listed under
+`failedToStart` with `unknown feed 'x' (nyfed-sofr, ecb-estr, ecb-fx, us-treasury, fred)`.
 
 ## 5. How the connector reads
 
 ### 5.1 The refresh
 
 At start the connector fetches its URLs once, **inside `start`**, before it is registered; it then fetches again every
-`refresh-minutes` (60), measured from the end of the previous fetch (a fixed delay, on the server's shared scheduler).
-A refresh:
+`refresh-minutes` (60), measured from the end of the previous fetch (a fixed delay, on the server's shared scheduler). A refresh:
 
-1. fetches every URL in turn (a `file:` URL is read from disk), with a 10-second connect timeout and a
-   `timeout-seconds` (20) request timeout, following redirects except from HTTPS to HTTP;
+1. fetches every URL in turn (a `file:` URL is read from disk), with a 10-second connect timeout and a `timeout-seconds` (20) request
+   timeout, following redirects except from HTTPS to HTTP, through the proxy when one applies ([Outbound proxy](#outbound-proxy));
 2. parses all responses; any exception stops the refresh before anything is replaced;
-3. if the responses yield no series at all, stops there too: nothing is replaced, and health says
-   `DOWN: the feed returned no data (serving the last data)` (or `DOWN: the feed returned no data` when nothing was
-   ever fetched);
-4. otherwise replaces each parsed entity's observations, and replaces the type-ahead index with the entities just
-   parsed;
+3. if the responses yield no series at all, stops there too: nothing is replaced, and health says `DOWN: the feed returned no data
+   (serving the last data)` (or `DOWN: the feed returned no data` when nothing was ever fetched);
+4. otherwise replaces each parsed entity's observations, and replaces the type-ahead index with the entities just parsed;
 5. sets `fetchedAt`, health `UP`, and the time of the last update.
 
-Connectors start in parallel, but the server waits for every `start`, so an unreachable feed can lengthen server start
-by up to its timeouts (two requests for `us-treasury`, one per series for `fred`).
+Connectors start in parallel, but the server waits for every `start`, so an unreachable feed can lengthen server start by up to its
+timeouts (two requests for `us-treasury`, one per series for `fred`).
 
 ### 5.2 Every read path and its cost
 
@@ -380,12 +391,11 @@ by up to its timeouts (two requests for `us-treasury`, one per series for `fred`
 | reverse lookups | not supported (`reverseLookup: false`) | — |
 | live push | none (`live: false`): a view is a static read; reopening it after a refresh shows the new data | — |
 
-A read never waits for the network and never fails: an entity the connector does not hold, or a date before its
-first observation, answers *not held* and the router asks the next connector. The connector therefore never causes
-`DRS-1003` or `DRS-1004`.
+A read never waits for the network and never fails: an entity the connector does not hold, or a date before its first observation,
+answers *not held* and the router asks the next connector. The connector therefore never causes `DRS-1003` or `DRS-1004`.
 
-Every document carries `Provenance(source = connector name, generation = fetchedAt in epoch milliseconds,
-fetchedAt, live = false, businessDate = the observation date used)`:
+Every document carries `Provenance(source = connector name, generation = fetchedAt in epoch milliseconds, fetchedAt, live = false,
+businessDate = the observation date used)`:
 
 ```json
 {"source":"nyfed-sofr-feed","generation":1790818508749,"fetchedAt":"2026-10-01T01:35:08.749439520Z","live":false,"businessDate":"2026-09-29"}
@@ -393,17 +403,17 @@ fetchedAt, live = false, businessDate = the observation date used)`:
 
 ### 5.3 Where a read goes
 
-The pack routes `rate-fixing`, `fx-spot` and `ir-curve` to `market-store` (Delta Lake). For `FIX-SOFR-NYFED` the
-router asks the lake first (route), the demo samples (default route; on Live, being live, they are asked first), then
-every other connector serving the kind, which includes the feeds. The lake and the samples do not hold the feed ids,
-answer *not held*, and the feed answers. Three feed connectors serve `rate-fixing`; each answers *not held* for the
-others' ids.
+The pack routes `rate-fixing`, `fx-spot` and `ir-curve` to `market-store` (the Delta lake). For `FIX-SOFR-NYFED` the router asks the
+lake first (the route), then the demo samples when the demo source is on (`DRISHTI_DEMO_ENABLED`, on by default; the demo-lakes run
+configuration turns it off), then every other connector serving the kind, which includes the feeds. The lake and the samples do not
+hold the feed ids, answer *not held*, and the feed answers. Three feed connectors serve `rate-fixing`; each answers *not held* for the
+others' ids. (The feeds are not a union: `union: true` is for slices of one data set with unique ids, such as the trades of three
+source systems, [CONNECTOR_FILES.md](CONNECTOR_FILES.md#6-how-packs-and-files-fit-together).)
 
 ## 6. Dates and history
 
-The connector is **dated** (`dated: true`). For a read on a date it takes the newest observation on or before that
-date; the document is built from the observations up to it, and `businessDate` is that observation's date, which may
-be earlier than the date asked:
+The connector is **dated** (`dated: true`). For a read on a date it takes the newest observation on or before that date; the document
+is built from the observations up to it, and `businessDate` is that observation's date, which may be earlier than the date asked:
 
 | Feed | Published | Live shows | History held |
 |---|---|---|---|
@@ -415,15 +425,14 @@ be earlier than the date asked:
 
 Points to know:
 
-- **History is the last fetch's window, not an accumulation.** Each refresh replaces an entity's observations with
-  what the publisher returned. Observations that fell out of the window (the 61st SOFR fixing back) are gone, even
-  though the connector saw them earlier.
+- **History is the last fetch's window, not an accumulation.** Each refresh replaces an entity's observations with what the publisher
+  returned. Observations that fell out of the window (the 61st SOFR fixing back) are gone, even though the connector saw them earlier.
 - **A date before the window is not held**, so the next connector answers; a lake with older history answers it
   ([section 7](#7-scale-limits-and-history-from-a-lake)).
-- **There is no `lookback-days` limit.** If a feed stopped updating, a picked date long after its last observation
-  still answers with that last observation, with its `businessDate` showing how old it is.
-- Holidays and weekends need nothing: the date simply resolves to the previous observation (the test reads the
-  Treasury curve on Sunday 27 September 2026 and gets Friday 25 September).
+- **There is no `lookback-days` limit.** If a feed stopped updating, a picked date long after its last observation still answers with
+  that last observation, with its `businessDate` showing how old it is.
+- Holidays and weekends need nothing: the date simply resolves to the previous observation (the test reads the Treasury curve on Sunday
+  27 September 2026 and gets Friday 25 September).
 
 ## 7. Scale, limits, and history from a lake
 
@@ -437,8 +446,8 @@ Points to know:
 | `fred` | one entity per series, 60 observations each |
 
 All five feeds together hold a few thousand numbers: no cache setting is needed, nothing is written to disk, and the
-million-entities-a-day concerns of the other connectors do not arise. The limit is the window each publisher returns
-(section 6), not memory.
+million-entities-a-day concerns of the other connectors do not arise. The limit is the window each publisher returns (section 6), not
+memory.
 
 ### 7.2 Requests made
 
@@ -448,23 +457,24 @@ million-entities-a-day concerns of the other connectors do not arise. The limit 
 | `us-treasury` | 2 | 48 |
 | `fred` | one per series | 24 per series |
 
-Add one refresh per server start and per purge. The connector has no rate limiting, retry or backoff of its own: a
-failed refresh waits for the next scheduled one. FRED limits requests per API key; one key shared by many servers
-or many series multiplies the count above. Several Drishti servers each fetch independently: use a mirror
-([section 9](#9-running-without-internet-mirrors)) to make one request for all of them.
+Add one refresh per server start and per purge. The connector has no rate limiting, retry or backoff of its own: a failed refresh waits
+for the next scheduled one. FRED limits requests per API key; one key shared by many servers or many series multiplies the count above.
+Several Drishti servers each fetch independently: use a mirror ([section 9](#9-running-without-internet-mirrors)) to make one request
+for all of them.
 
 ### 7.3 Longer history from a lake
 
-To keep more than the window (years of SOFR fixings, every Treasury curve), archive the feed's documents into a dated
-store under the **same ids**, for example a daily job that reads
-`GET /api/v1/entities/rate-fixing/FIX-SOFR-NYFED/raw?asOf=<date>` and writes the document as a row for that business
-date into the market domain of the lake (see [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md) for the rows and loaders).
+To keep more than the window (years of SOFR fixings, every Treasury curve), archive the feed's documents into a dated store under the
+**same ids**, for example a daily job that reads `GET /api/v1/entities/rate-fixing/FIX-SOFR-NYFED/raw?asOf=<date>` and writes the
+document as a row for that business date into the market domain of the lake: `drishti.py lake build --from <the day's JSON Lines>
+--pack config/packs/market-data --kind rate-fixing --connector market-store --key INDEX_ID --as-of <date> --lake data/delta` (the
+`lake build` command, [TOOLS.md](../guides/TOOLS.md); give the key the field name the archived document uses, `indexId` for a feed
+document today, see the known gap).
 
-The router then asks the connectors in order and takes the first that holds the date. With the pack's route
-(`rate-fixing: market-store`) the **lake is asked first**, so once it holds the id it answers every date within its
-`lookback-days` (10) of its newest row, Live included, and the feed answers only dates the lake does not cover.
-Either keep the archive current (load it every business day), or route the kind to the feed so that the feed answers
-inside its window and the lake answers before it:
+The router then asks the connectors in order and takes the first that holds the date. With the pack's route (`rate-fixing:
+market-store`) the **lake is asked first**, so once it holds the id it answers every date within its `lookback-days` (10) of its newest
+row, Live included, and the feed answers only dates the lake does not cover. Either keep the archive current (load it every business
+day), or route the kind to the feed so that the feed answers inside its window and the lake answers before it:
 
 ```yaml
 drishti:
@@ -473,8 +483,8 @@ drishti:
       rate-fixing: nyfed-sofr-feed    # the feed first; dates before its window fall to market-store (dated)
 ```
 
-A route is per kind: with this route the other `rate-fixing` ids (the samples, `FIX-ESTR-ECB`) are still found, one
-*not held* later.
+A route is per kind: with this route the other `rate-fixing` ids (the lake's `FIX-SOFR`, `FIX-ESTR-ECB`) are still found, one *not
+held* later.
 
 ## 8. Failure and recovery
 
@@ -485,7 +495,7 @@ A route is per kind: with this route the other `rate-fixing` ids (the samples, `
 | Health | When |
 |---|---|
 | `DOWN: not fetched yet` | before the first refresh completes; since that refresh runs inside `start`, a running connector is not normally seen in this state |
-| `UP` | the last refresh parsed at least one entity |
+| `UP` | the last refresh parsed at least one entity (`UP via proxy <host:port> (<where it came from>)` through a proxy) |
 | `DOWN: the feed returned no data (serving the last data)` | the last refresh parsed no entity at all, and the data of an earlier refresh is still served; in practice only `ecb-fx`, when the file has no day with a pair's two currencies |
 | `DOWN: the feed returned no data` | the same, but no refresh ever brought data, so nothing is served |
 | `DOWN: <Exception>: <message>` | the last refresh failed; `<Exception>` is the Java class's simple name |
@@ -498,56 +508,54 @@ Typical exception texts:
 | `DOWN: IllegalStateException: HTTP 400 from api.stlouisfed.org` | FRED rejected the request: no or wrong `api-key`, or an unknown series |
 | `DOWN: HttpTimeoutException: request timed out` | no response within `timeout-seconds` |
 | `DOWN: HttpConnectTimeoutException: …`, `DOWN: ConnectException: …` | no connection within 10 s, or refused; the message may be `null` |
+| `DOWN: IOException: cannot connect to the proxy 10.1.2.3:3128 (Connection refused): check proxy.url and that the proxy is running` | the proxy is down or misnamed |
 | `DOWN: NoSuchFileException: /srv/mirror/sofr-last-60.json` | a `file:` mirror is missing |
 | `DOWN: JsonParseException: …`, `DOWN: SAXParseException: …`, `DOWN: IndexOutOfBoundsException: …` | the body was not in the expected format (a proxy's HTML page, an empty or changed file) |
 
 ### 8.2 What is kept
 
-- **A failed refresh keeps the last good data.** Reads, type-ahead and searches go on answering from the previous
-  fetch; only health changes. The next scheduled refresh tries again, `refresh-minutes` later.
-- **A server started without internet** starts normally, with health `DOWN: <Exception>: …`, and holds nothing:
-  reads answer *not held* (`DRS-1001` if nothing else holds the id). Data arrives with the first refresh that
-  succeeds, up to `refresh-minutes` later; a purge (below) fetches at once.
-- **A response that parses but holds no rows** (a SOFR, €STR, FRED or Treasury answer with no observations, an
-  `ecb-fx` file with no usable day) keeps the last good data, reads and type-ahead alike, and health says
-  `DOWN: the feed returned no data (serving the last data)`, or `DOWN: the feed returned no data` when nothing was ever
-  fetched. A series without a single observation is ignored; the others of the same answer are taken.
-- **A purge** (Admin → Caches, or `POST /api/v1/admin/caches/<connector>/purge`) clears the data and refetches at
-  once, on the caller's request. If that fetch fails, the data is gone until the next good refresh: do not purge a
-  feed while its publisher is unreachable.
+- **A failed refresh keeps the last good data.** Reads, type-ahead and searches go on answering from the previous fetch; only health
+  changes. The next scheduled refresh tries again, `refresh-minutes` later.
+- **A server started without internet** starts normally, with health `DOWN: <Exception>: …`, and holds nothing: reads answer *not held*
+  (`DRS-1001` if nothing else holds the id). Data arrives with the first refresh that succeeds, up to `refresh-minutes` later; a purge
+  (below) fetches at once.
+- **A response that parses but holds no rows** (a SOFR, €STR, FRED or Treasury answer with no observations, an `ecb-fx` file with no
+  usable day) keeps the last good data, reads and type-ahead alike, and health says `DOWN: the feed returned no data (serving the last
+  data)`, or `DOWN: the feed returned no data` when nothing was ever fetched. A series without a single observation is ignored; the
+  others of the same answer are taken.
+- **A purge** (Admin → Caches, or `POST /api/v1/admin/caches/<connector>/purge`) clears the data and refetches at once, on the caller's
+  request. If that fetch fails, the data is gone until the next good refresh: do not purge a feed while its publisher is unreachable.
 
 ### 8.3 Staleness
 
-`stale-after` (an engine setting; the pack sets `4d`) marks the connector stale when no refresh has brought data for
-that long: Admin → Health shows it in amber, the overall status becomes `DEGRADED`, and views carry a banner. The
-time is that of the last refresh that parsed something, **not** of the newest observation: a publisher that keeps
-returning the same old data is not reported stale. To watch for that, compare `businessDate` in provenance with the
-expected date.
+`stale-after` (an engine setting; the pack sets `4d`) marks the connector stale when no refresh has brought data for that long: Admin →
+Health shows it in amber, the overall status becomes `DEGRADED`, and views carry a banner. The time is that of the last refresh that
+parsed something, **not** of the newest observation: a publisher that keeps returning the same old data is not reported stale. To watch
+for that, compare `businessDate` in provenance with the expected date.
 
-There is nothing to reconnect: each refresh opens new HTTP connections (the client is shared and reuses them), and
-recovery needs no restart ([CONNECTOR_DEVELOPER_GUIDE.md, Reconnecting and failures](CONNECTOR_DEVELOPER_GUIDE.md#reconnecting-and-failures)).
+There is nothing to reconnect: each refresh opens new HTTP connections (the client is shared and reuses them), and recovery needs no
+restart ([CONNECTOR_DEVELOPER_GUIDE.md, Reconnecting and failures](CONNECTOR_DEVELOPER_GUIDE.md#reconnecting-and-failures)).
 
 ## 9. Running without internet: mirrors
 
-`url` replaces the public URL. A `file:` URL is read straight from disk (as UTF-8); any `http:` or `https:` URL is
-fetched like the public one, so an internal web server works as well. The body must be exactly the publisher's
-format. For `us-treasury` and `fred`, `url` is a comma list: one URL per month for the Treasury (oldest first; the
-connector no longer computes the months, so the mirror job must), one per series for FRED, in the order of `series`
-(the ids come from `series`, position by position).
+`url` replaces the public URL. A `file:` URL is read straight from disk (as UTF-8); any `http:` or `https:` URL is fetched like the
+public one, so an internal web server works as well. The body must be exactly the publisher's format. For `us-treasury` and `fred`,
+`url` is a comma list: one URL per month for the Treasury (oldest first; the connector no longer computes the months, so the mirror job
+must), one per series for FRED, in the order of `series` (the ids come from `series`, position by position).
 
-A mirror job (cron, every hour, on a host with internet; write to a temporary name and rename so the connector never
-reads half a file):
+A mirror job (cron, every hour, on a host with internet; write to a temporary name and rename so the connector never reads half a
+file):
 
 ```bash
 M=/srv/mirror
-curl -fsS https://markets.newyorkfed.org/api/rates/secured/sofr/last/60.json -o $M/.sofr && mv $M/.sofr $M/sofr-last-60.json
-curl -fsS 'https://data-api.ecb.europa.eu/service/data/EST/B.EU000A2X2A25.WT?lastNObservations=60&format=csvdata' -o $M/.estr && mv $M/.estr $M/estr.csv
-curl -fsS https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml -o $M/.fx && mv $M/.fx $M/ecb-fx-90d.xml
+curl -fsS https://markets.newyorkfed.org/api/rates/secured/sofr/last/60.json -o $M/sofr.tmp && mv $M/sofr.tmp $M/sofr-last-60.json
+curl -fsS 'https://data-api.ecb.europa.eu/service/data/EST/B.EU000A2X2A25.WT?lastNObservations=60&format=csvdata' -o $M/estr.tmp && mv $M/estr.tmp $M/estr.csv
+curl -fsS https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml -o $M/fx.tmp && mv $M/fx.tmp $M/ecb-fx-90d.xml
 for m in $(date -d '-1 month' +%Y%m) $(date +%Y%m); do
-  curl -fsS "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value_month=$m" -o $M/.ust && mv $M/.ust $M/ust-$m.xml
+  curl -fsS "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value_month=$m" -o $M/ust.tmp && mv $M/ust.tmp $M/ust-$m.xml
 done
 for s in DGS10 DFF; do
-  curl -fsS "https://api.stlouisfed.org/fred/series/observations?series_id=$s&api_key=$FRED_API_KEY&file_type=json&sort_order=desc&limit=60" -o $M/.f && mv $M/.f $M/fred-$s.json
+  curl -fsS "https://api.stlouisfed.org/fred/series/observations?series_id=$s&api_key=$FRED_API_KEY&file_type=json&sort_order=desc&limit=60" -o $M/f.tmp && mv $M/f.tmp $M/fred-$s.json
 done
 ```
 
@@ -562,28 +570,28 @@ settings:
 # the other mirrors, in their own files:
 #   ecb-estr-feed.yaml     settings.url: file:///srv/mirror/estr.csv
 #   ecb-fx-feed.yaml       settings.url: file:///srv/mirror/ecb-fx-90d.xml
-#   us-treasury-feed.yaml  settings.url: file:///srv/mirror/ust-202608.xml,file:///srv/mirror/ust-202609.xml
+#   us-treasury-feed.yaml  settings.url: file:///srv/mirror/ust-202609.xml,file:///srv/mirror/ust-202610.xml
 #   fred-feed.yaml         settings.url: file:///srv/mirror/fred-DGS10.json,file:///srv/mirror/fred-DFF.json   and   settings.series: DGS10,DFF
 ```
 
-The connector re-reads the files every `refresh-minutes`. Because the Treasury URLs name months, change them (or keep
-fixed file names such as `ust-previous.xml` and `ust-current.xml`, written by the job) when the month turns. The
-tests use the same mechanism with recorded responses (`src/test/resources/recorded/`, described in `RECORDED.md`).
+The connector re-reads the files every `refresh-minutes`. Because the Treasury URLs name months, change them (or keep fixed file names
+such as `ust-previous.xml` and `ust-current.xml`, written by the job) when the month turns. The tests use the same mechanism with
+recorded responses (`src/test/resources/recorded/`, described in `RECORDED.md`).
 
 ## 10. Security
 
-- **Outbound requests only.** The connector makes HTTPS `GET` requests to the five publishers' hosts (or your
-  mirror) and accepts nothing inbound. Allow `markets.newyorkfed.org`, `data-api.ecb.europa.eu`, `www.ecb.europa.eu`,
-  `home.treasury.gov` and `api.stlouisfed.org` for the feeds you switch on.
-- **The FRED key** comes from `FRED_API_KEY` through the pack's placeholder (`api-key: ${FRED_API_KEY:}`); keep it in
-  the environment or a secret store, never in a YAML file. It travels in the request's query string over TLS; health
-  and errors name only the host, so the key does not appear in Admin → Health. A proxy that terminates TLS can see
-  it in the URL. With an empty key FRED rejects the request and the connector reports the HTTP status.
-- **TLS** for the five publishers uses the JVM's default trust store. A proxy that inspects TLS needs its CA in that trust
-  store (`-Djavax.net.ssl.trustStore=…`, or imported into the JDK's `cacerts`); this affects every HTTPS client in the server.
-  A **mirror** inside your network ([section 9](#9-running-without-internet-mirrors)) on a private CA is configured on the
-  connector itself with the shared `tls.*` settings ([TLS.md](TLS.md)): `url` is the mirror's `https://` address and
-  `tls.ca-file` its CA; `tls.cert-file` + `tls.key-file` for a mirror that asks for a client certificate.
+- **Outbound requests only.** The connector makes HTTPS `GET` requests to the five publishers' hosts (or your mirror) and accepts
+  nothing inbound. Allow `markets.newyorkfed.org`, `data-api.ecb.europa.eu`, `www.ecb.europa.eu`, `home.treasury.gov` and
+  `api.stlouisfed.org` for the feeds you switch on.
+- **The FRED key** comes from `FRED_API_KEY` through the pack's placeholder (`api-key: ${FRED_API_KEY:}`); keep it in the environment
+  or a secret store, never in a YAML file (Admin → Connectors and `drishti.py connector apply` refuse a literal). It travels in the
+  request's query string over TLS; health and errors name only the host, so the key does not appear in Admin → Health. A proxy that
+  terminates TLS can see it in the URL. With an empty key FRED rejects the request and the connector reports the HTTP status.
+- **TLS** for the five publishers uses the JVM's default trust store. A proxy that inspects TLS needs its CA in that trust store
+  (`-Djavax.net.ssl.trustStore=…`, or imported into the JDK's `cacerts`); this affects every HTTPS client in the server. A **mirror**
+  inside your network ([section 9](#9-running-without-internet-mirrors)) on a private CA is configured on the connector itself with the
+  shared `tls.*` settings ([TLS.md](TLS.md)): `url` is the mirror's `https://` address and `tls.ca-file` its CA; `tls.cert-file` +
+  `tls.key-file` for a mirror that asks for a client certificate.
 
   ```yaml
   plugin: feed
@@ -594,33 +602,35 @@ tests use the same mechanism with recorded responses (`src/test/resources/record
       ca-file: /etc/drishti/tls/ca.pem
   ```
 
-  `tls.*` with a `file:` or `http://` `url` is a start-up error (`tls.* is set but url is not https://`). An unreachable or
-  untrusted mirror is a `DOWN` health text with the reason (`PKIX path building failed ...`), and the last good data keeps
-  being served. The mirror's certificate expiry is added to the health text when it has under 30 days left.
-- **Proxies.** The HTTP client uses the JVM's default proxy selector, which reads the standard system properties
-  (`-Dhttps.proxyHost=proxy.bank.example -Dhttps.proxyPort=8080 -Dhttp.nonProxyHosts=…`, or
-  `-Djava.net.useSystemProxies=true`), not the `HTTPS_PROXY` environment variable. No proxy credentials are
-  configured: behind a proxy that requires authentication, use a mirror.
-- **Parsing.** XML responses are parsed with DOCTYPE declarations refused and entity references not expanded, so a
-  hostile or tampered response cannot read local files (XXE). JSON and CSV are parsed as data only.
-- **`file:` URLs** read any file the server's user can read; they come only from configuration, which only the
-  operator controls.
+  `tls.*` with a `file:` or `http://` `url` is a start-up error (`tls.* is set but url is not https://`). An unreachable or untrusted
+  mirror is a `DOWN` health text with the reason (`PKIX path building failed ...`), and the last good data keeps being served. The
+  mirror's certificate expiry is added to the health text when it has under 30 days left.
+- **Proxies.** The connector takes the shared `proxy.*` settings, or the site default `drishti.http.proxy.*`, for the public feeds and
+  an `http(s)` mirror alike; HTTPS targets are tunnelled with `CONNECT`, and a proxy that asks for credentials gets `proxy.username`
+  and `proxy.password` (an `${ENV}` reference). See [Outbound proxy](#outbound-proxy).
+- **Parsing.** XML responses are parsed with DOCTYPE declarations refused and entity references not expanded, so a hostile or tampered
+  response cannot read local files (XXE). JSON and CSV are parsed as data only.
+- **`file:` URLs** read any file the server's user can read; they come only from configuration, which only the operator controls.
 - **Entitlements** apply as for any kind: the server redacts what it serves; the connector itself applies none.
 
 ## 11. Diagnosing
 
-`GET /api/v1/admin/health` shows each feed connector; its cache figures are the series, the observations and the
-time of the last successful fetch:
+`GET /api/v1/admin/health` shows each feed connector; its cache figures are the series, the observations and the time of the last
+successful fetch:
 
 ```json
 {"name": "ecb-fx-feed", "health": "UP", "kinds": ["fx-spot"], "live": false, "dated": true, "search": true,
  "cache": {"series": 10, "observations": 640, "fetchedAt": "2026-10-01T01:35:09.770409225Z"}}
 ```
 
+`drishti.py connector test ecb-fx-feed` (a personal token with `packs:admin`) starts a throwaway instance on the saved file and prints
+what it holds, without switching the connector on.
+
 | Symptom | Likely cause | What to do |
 |---|---|---|
-| `FIX FIX-SOFR-NYFED` → `DRS-1001` | the feed is off (listed under the pack's `connectorsOff`), or nothing was fetched yet | set its variable to `true` and restart; if health is `DOWN`, see below |
-| `DOWN: ConnectException: …`, `HttpConnectTimeoutException`, `HttpTimeoutException` | no outbound internet, a firewall, or a proxy the JVM does not know | allow the host, set the proxy system properties, or use a mirror |
+| `FIX FIX-SOFR-NYFED` → `DRS-1001` | the feed is off (listed under the pack's `connectorsOff`, `disabled` in `drishti.py connector list`), or nothing was fetched yet | set its variable to `true` and restart, or `enabled: true` in its file; if health is `DOWN`, see below |
+| The view opens with empty fields | the field-name gap at the top of this page | read the raw document; the fix is the plugin's move to UPPER_SNAKE |
+| `DOWN: ConnectException: …`, `HttpConnectTimeoutException`, `HttpTimeoutException` | no outbound internet, a firewall, or a proxy Drishti is not told about | allow the host, set `proxy.url` (or the site default), or use a mirror |
 | `DOWN: IllegalStateException: HTTP 400 from api.stlouisfed.org` | no or bad `FRED_API_KEY`, or a misspelt series | get a free key from the St. Louis Fed; check `DRISHTI_FRED_SERIES` |
 | `DOWN: IllegalStateException: HTTP 403 …` / `HTTP 429 …` | the publisher refused or throttled the server | lower the frequency (`refresh-minutes`), share one fetch through a mirror |
 | `DOWN: JsonParseException …` / `SAXParseException …` | an HTML page instead of data (a proxy login page, a changed endpoint) | fetch the URL by hand from the server host and compare with section 3 |
@@ -636,30 +646,54 @@ time of the last successful fetch:
 
 ## Outbound proxy
 
-The settings and rules are shared by every HTTP-based connector: [TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
+The settings and rules are shared by every HTTP-based connector: [TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers).
+A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}`
+placeholder, never a literal.
+
+```yaml
+plugin: feed
+enabled: true
+kinds: [rate-fixing]
+settings:
+  feed: nyfed-sofr
+  proxy:
+    url: http://proxy.corp.example:3128
+    username: drishti-feeds
+    password: ${FEEDS_PROXY_PASSWORD}
+    no-proxy: mirror.bank.example,.internal
+```
 
 The built-in feeds (NY Fed, ECB, US Treasury, FRED) and a mirror `url` both go through the proxy; `file:` URLs never do. Health:
-`UP via proxy proxy.corp.example:3128 (site default)`, and a failure keeps the proxy in the message (`DOWN: IOException: cannot connect to the proxy 10.1.2.3:3128
-(Connection refused): check proxy.url and that the proxy is running`). Tested in `FeedProxyTest`.
+`UP via proxy proxy.corp.example:3128 (site default)`, and a failure keeps the proxy in the message (`DOWN: IOException: cannot connect
+to the proxy 10.1.2.3:3128 (Connection refused): check proxy.url and that the proxy is running`). Tested in `FeedProxyTest`.
 
 ## As a connector file
 
-A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
+A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this
+document go under `settings:` in that file, with nesting flattened to dotted keys; `${ENV_VAR}` placeholders are resolved when the
+connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through
+and may suggest a template; the server writes the template to the file once, at the first start (with a marker in
+`<data dir>/connectors/generated/`), and the file is then the site's. The file the server wrote on the demo stack:
 
 ```yaml
-# config/connectors/nyfed-sofr-feed.yaml (generated from the market-data pack's template at the first start)
+# Generated at first start from the connector template of pack 'market-data'. Edit it freely: it is never overwritten.
 plugin: feed
-enabled: ${DRISHTI_FEED_NYFED_SOFR:false}
+enabled: "${DRISHTI_FEED_NYFED_SOFR:false}"
 kinds:
 - rate-fixing
 settings:
   feed: nyfed-sofr
-  user-agent: Drishti public data feed connector
+  user-agent: "${drishti.branding.product:feed} public data feed connector"
   stale-after: 4d
-  refresh-minutes: '60'
+  refresh-minutes: 60
 ```
 
-The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). The five feeds have no hand-written example: their files are generated from the pack's templates (list them with `drishti.py connector list`); the other stores' examples are in [`config/connectors.examples/`](../../config/connectors.examples).
+The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin →
+Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector
+apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in
+[CONNECTOR_FILES.md](CONNECTOR_FILES.md). The five feeds have no hand-written example: their files are generated from the pack's
+templates (list them with `drishti.py connector list`); the other stores' examples are in
+[`config/connectors.examples/`](../../config/connectors.examples).
 
 ## 12. Settings
 
@@ -676,7 +710,8 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 | `user-agent` | `public-data-feed-connector` | the `User-Agent` header; the pack sets `<product> public data feed connector` |
 | `source-name` | the connector's name (as itself: the `feed` value) | the name in provenance, health and search subtitles |
 | `stale-after` | none (the pack sets `4d`) | an engine setting: mark the connector stale when no refresh has brought data for this long |
-| `proxy.*` | none | the outbound HTTP proxy ([TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none` |
+| `tls.*` | none | for an `https://` mirror on a private CA ([TLS.md](TLS.md)) |
+| `proxy.*` | the site default | the outbound HTTP proxy ([TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none` |
 
 And on the connector itself: `plugin: feed`, `enabled` (the pack uses `${DRISHTI_FEED_<NAME>:false}`), and `kinds`.
 
@@ -688,35 +723,39 @@ And on the connector itself: `plugin: feed`, `enabled` (the pack uses `${DRISHTI
 
 ## 13. Checklist for production
 
-1. Switch on only the feeds you use; each is one variable.
-2. Check that the server reaches the publishers' hosts (or set the JVM proxy properties); if not, run a mirror job
-   and point `url` at it.
+1. Switch on only the feeds you use; each is one variable (or `enabled: true` in its file).
+2. Check that the server reaches the publishers' hosts (or set `proxy.url` / the site default proxy); if not, run a mirror job and point
+   `url` at it.
 3. For FRED, keep `FRED_API_KEY` in the environment or a secret store, and choose `DRISHTI_FRED_SERIES`.
 4. Keep `refresh-minutes` at 60 or more; with several servers, fetch once into a mirror and point every server at it.
 5. Keep `timeout-seconds` short enough that a dead feed does not hold up server start.
 6. Keep `stale-after` (4d) so a fetch failing for days shows in health, and alert on `DEGRADED`.
 7. Do not purge a feed while its publisher is unreachable: the purge drops the last good data.
-8. If you need history beyond the feeds' windows, archive each business day into a dated store under the same ids
-   and decide which connector is asked first ([section 7.3](#73-longer-history-from-a-lake)).
-9. Remember what the data is: ECB FX are reference rates (`bid` = `ask` = `mid`), the Treasury curve's `zeroRate` is
-   the par yield, and FRED series are all shown as percent rates.
+8. If you need history beyond the feeds' windows, archive each business day into a dated store under the same ids and decide which
+   connector is asked first ([section 7.3](#73-longer-history-from-a-lake)).
+9. Remember what the data is: ECB FX are reference rates (`bid` = `ask` = `mid`), the Treasury curve's `zeroRate` is the par yield, and
+   FRED series are all shown as percent rates.
+10. Until the plugin writes UPPER_SNAKE fields, show the feeds through the raw document or a Sutra of your own over its camelCase fields.
 
 ---
 
 ## Appendix: walk-through and worked examples
 
-Worked output for the feeds above. The reference is in the numbered sections: the source of each feed and the
-entities it makes ([section 3](#3-what-each-feed-fetches-and-what-it-becomes)), configuration
-([section 4](#4-configuration)), history ([section 6](#6-dates-and-history)), health and failure
-([section 8](#8-failure-and-recovery)) and settings ([section 12](#12-settings)).
+Worked output for the feeds above. The reference is in the numbered sections: the source of each feed and the entities it makes
+([section 3](#3-what-each-feed-fetches-and-what-it-becomes)), configuration ([section 4](#4-configuration)), history
+([section 6](#6-dates-and-history)), health and failure ([section 8](#8-failure-and-recovery)) and settings ([section 12](#12-settings)).
 
 ### Walk-through, step by step
 
-Real output from a server with the three feeds above on:
+1. **See the feeds off.** On a fresh stack: `drishti.py connector list` lists `nyfed-sofr-feed`, `ecb-estr-feed`, `ecb-fx-feed`,
+   `fred-feed` and `us-treasury-feed` as `disabled`, used by `market-data`.
+2. **Switch one on** without a restart: Admin → Connectors → `nyfed-sofr-feed` → **Enable** (or `drishti.py connector enable
+   nyfed-sofr-feed`). It fetches at once.
+3. **Read it.** Real output from a server with the feed on (the recorded responses):
 
 ```bash
-curl -s http://localhost:18480/api/v1/entities/rate-fixing/FIX-SOFR-NYFED/raw | jq -c .provenance
-curl -s "http://localhost:18480/api/v1/entities/rate-fixing/FIX-SOFR-NYFED/raw?asOf=2026-09-15" \
+curl -s http://localhost:18480/api/v1/entities/rate-fixing/FIX-SOFR-NYFED/raw -H "Authorization: Bearer $DRISHTI_TOKEN" | jq -c .provenance
+curl -s "http://localhost:18480/api/v1/entities/rate-fixing/FIX-SOFR-NYFED/raw?asOf=2026-09-15" -H "Authorization: Bearer $DRISHTI_TOKEN" \
   | jq -c '{provenance, latest: .data.latest, first: .data.fixings[0]}'
 ```
 
@@ -726,29 +765,28 @@ curl -s "http://localhost:18480/api/v1/entities/rate-fixing/FIX-SOFR-NYFED/raw?a
  "latest":0.0364,"first":{"date":"2026-09-15","rate":0.0364,"ratePct":3.64,"volumeBn":2952.0}}
 ```
 
-In the terminal: `FIX FIX-SOFR-NYFED <GO>`, `FX FX-EURUSD-ECB <GO>`, `CRV CRV-USD-UST <GO>`. Typing
-`FX FX-EURUSD-E` offers `FX-EURUSD-ECB` with the subtitle `fx-spot · ecb-fx-feed (public feed)`. `rate-fixing`,
-`fx-spot` and `ir-curve` are routed to `market-store`; neither the lake nor the samples hold these ids, so the read
-passes on until the feed connector answers.
+In the terminal: `FIX FIX-SOFR-NYFED <GO>`, `FX FX-EURUSD-ECB <GO>`, `CRV CRV-USD-UST <GO>`. Typing `FX FX-EURUSD-E` offers
+`FX-EURUSD-ECB` with the subtitle `fx-spot · ecb-fx-feed (public feed)`. `rate-fixing`, `fx-spot` and `ir-curve` are routed to
+`market-store`; neither the lake nor the samples hold these ids, so the read passes on until the feed connector answers.
 
-Health and what happens when a feed is unreachable are in [section 8](#8-failure-and-recovery); the cache figures
-are in [section 11](#11-diagnosing). In `GET /api/v1/admin/health`, a feed you have not switched on is listed under
-its pack's `connectorsOff` (`"connectorsOff": ["ecb-estr-feed", "fred-feed"]`), not as a failure.
+Health and what happens when a feed is unreachable are in [section 8](#8-failure-and-recovery); the cache figures are in
+[section 11](#11-diagnosing). In `GET /api/v1/admin/health`, a feed you have not switched on is listed under its pack's `connectorsOff`
+(`"connectorsOff": ["ecb-estr-feed", "fred-feed"]`), not as a failure.
 
 ### Configuration by example
 
 `config/packs/market-data/pack.yaml` declares all five connectors, each off until its variable is set
 ([section 4.1](#41-the-pack-form-as-shipped)); every setting is in [section 12](#12-settings).
 
-The SOFR document:
+The SOFR document (feed field names; the pack's lake document `FIX-SOFR` has the same content in UPPER_SNAKE, section 3.6):
 
 ```json
-{ "indexId": "FIX-SOFR-NYFED", "name": "Secured Overnight Financing Rate (NY Fed)", "latest": 0.0431,
+{ "indexId": "FIX-SOFR-NYFED", "name": "Secured Overnight Financing Rate (NY Fed)", "latest": 0.0388,
   "administrator": "Federal Reserve Bank of New York", "tenor": "Overnight", "currency": "USD",
-  "fixings": [ { "date": "2026-09-29", "rate": 0.0431, "ratePct": 4.31, "volumeBn": 2512.0 }, … ] }
+  "fixings": [ { "date": "2026-09-29", "rate": 0.0388, "ratePct": 3.88, "volumeBn": 2967.0 }, … ] }
 ```
 
-An `fx-spot` document has `pair`, `pairName`, `mid` (also as `bid` and `ask`), `change1d`, `spotDate`, 30 days of
-`history` and `conventions`; the `ir-curve` document has `curveId`, `tenY`, `slope2s10s` (bp), `asOf` and `points`
-(`tenor`, `maturity`, `quote`, `zeroRate`, `df`) from 1M to 30Y. Which business date a document answers, and how
-long the history is, are in [section 6](#6-dates-and-history).
+An `fx-spot` document has `pair`, `pairName`, `mid` (also as `bid` and `ask`), `change1d`, `spotDate`, 30 days of `history` and
+`conventions`; the `ir-curve` document has `curveId`, `tenY`, `slope2s10s` (bp), `asOf` and `points` (`tenor`, `maturity`, `quote`,
+`zeroRate`, `df`) from 1M to 30Y. Which business date a document answers, and how long the history is, are in
+[section 6](#6-dates-and-history).

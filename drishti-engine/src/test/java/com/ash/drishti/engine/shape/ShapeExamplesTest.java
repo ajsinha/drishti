@@ -56,13 +56,13 @@ class ShapeExamplesTest {
 
     @Test
     void allPanelsShowcaseHasLinksIdsMeasuresAndStatus() throws IOException {
-        roles("all-panels-showcase", Map.of("$.tradeId", "id", "$.counterparty", "link", "$.notional", "measure", "$.maturityDate", "date",
-                "$.confirmation.status", "status", "$.nettingSet", "link"));
+        roles("all-panels-showcase", Map.of("$.TRADE_ID", "id", "$.COUNTERPARTY", "link", "$.NOTIONAL", "measure", "$.MATURITY_DATE", "date",
+                "$.CONFIRMATION.STATUS", "status", "$.NETTING_SET", "link"));
     }
 
     @Test
     void exposureProfileIsASeriesOnATenorAxis() throws IOException {
-        roles("exposure-profile", Map.of("$.profile", "series", "$.limit", "measure"));
+        roles("exposure-profile", Map.of("$.PROFILE", "series", "$.LIMIT", "measure"));
     }
 
     @Test
@@ -72,38 +72,38 @@ class ShapeExamplesTest {
 
     @Test
     void marketChartsHasCandlesAGridAndAHistory() throws IOException {
-        roles("market-charts", Map.of("$.ohlc", "ohlc", "$.grid", "grid", "$.history", "series"));
+        roles("market-charts", Map.of("$.OHLC", "ohlc", "$.GRID", "grid", "$.HISTORY", "series"));
     }
 
     @Test
     void operationsStatusHasStatusesAScheduleAndATimeline() throws IOException {
-        roles("operations-status", Map.of("$.confirmation.status", "status", "$.clearing.status", "status", "$.schedule", "series",
-                "$.lifecycle.timeline", "events"));
+        roles("operations-status", Map.of("$.CONFIRMATION.STATUS", "status", "$.CLEARING.STATUS", "status", "$.SCHEDULE", "series",
+                "$.LIFECYCLE.TIMELINE", "events"));
     }
 
     @Test
     void pivotRowGroupsHasDimensionsAndMeasures() throws IOException {
-        roles("pivot-row-groups", Map.of("$.positions", "table", "$.positions[].desk", "dimension", "$.positions[].book", "dimension",
-                "$.positions[].mtm", "measure"));
+        roles("pivot-row-groups", Map.of("$.POSITIONS", "table", "$.POSITIONS[].DESK", "dimension", "$.POSITIONS[].BOOK", "dimension",
+                "$.POSITIONS[].MTM", "measure"));
     }
 
     @Test
     void pnlExplainHasStepsASensitivityLadderAndMeasures() throws IOException {
-        roles("pnl-explain", Map.of("$.pnlExplain", "steps", "$.sensitivities", "series", "$.mtm", "measure", "$.risk.dv01", "measure"));
+        roles("pnl-explain", Map.of("$.PNL_EXPLAIN", "steps", "$.SENSITIVITIES", "series", "$.MTM", "measure", "$.RISK.DV01", "measure"));
     }
 
     @Test
     void relationshipsHasAGraphAndLinks() throws IOException {
-        roles("relationships", Map.of("$.hierarchy", "graph", "$.counterparty", "link", "$.nettingSets", "table"));
+        roles("relationships", Map.of("$.HIERARCHY", "graph", "$.COUNTERPARTY", "link", "$.NETTING_SETS", "table"));
     }
 
     @Test
     void riskDistributionHasADistributionOfScenarioPnl() throws IOException {
-        roles("risk-distribution", Map.of("$.scenarioPnl", "distribution", "$.var99", "measure", "$.books", "table"));
+        roles("risk-distribution", Map.of("$.SCENARIO_PNL", "distribution", "$.VAR99", "measure", "$.BOOKS", "table"));
     }
 
     @Test
     void treeTableHasATree() throws IOException {
-        roles("tree-table", Map.of("$.units", "tree", "$.units[].exposure", "measure"));
+        roles("tree-table", Map.of("$.UNITS", "tree", "$.UNITS[].EXPOSURE", "measure"));
     }
 }

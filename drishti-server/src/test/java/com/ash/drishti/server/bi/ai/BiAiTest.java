@@ -368,6 +368,15 @@ class BiAiTest {
     }
 
     @Test
+    void askingOnAReportOverAModelGivesTheModelItsFields() throws Exception {
+        List<String> labels = new ArrayList<>();
+        spying(labels, "labels-only").ask(new Principal("rita", List.of("bi-risk")), "file:report:lake-model-report", "", "notional by desk");
+        assertThat(labels).hasSize(1);
+        assertThat(labels.get(0)).as("the prompt lists the model's tables and fields, as a question by the model's name does")
+                .contains("trades.desk").contains("Notional");
+    }
+
+    @Test
     void explainGivesTheLineageTheEnginesBreakdownAndRespectsTheFeatureRoles() throws Exception {
         Map<String, Object> body = Map.of("report", REPORT, "page", "main", "visual", "by-desk", "state", Map.of("dates", Map.of("from", "2026-10-08", "to", "2026-10-08")));
         JsonNode r = ok(send("/api/v1/bi/ai/explain", as("rita", "bi-risk"), body));

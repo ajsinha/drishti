@@ -34,8 +34,9 @@ source: |
       """pnl: counterparty, name, Desk P&L, Trades.  exposure: counterparty, sector, Exposure (EE peak), Exposure (PFE peak)."""
       # Since 2.2 the Python dataset desk-pnl-vs-exposure-py-result hands over model-query answers, each column named by the last part of its field or
       # measure name (counterparties.id is id); the 2.1 derived dataset renamed them with `as`. Both shapes are accepted (a missing name is left alone).
-      pnl = pnl.rename(columns={"id": "counterparty", "P&L 1d": "Desk P&L"})
-      exposure = exposure.rename(columns={"id": "counterparty"})
+      # The columns of the trading packs are UPPER_SNAKE (counterparties.NAME is NAME); the table this returns keeps its own lower-case names.
+      pnl = pnl.rename(columns={"id": "counterparty", "P&L 1d": "Desk P&L", "NAME": "name"})
+      exposure = exposure.rename(columns={"id": "counterparty", "SECTOR": "sector"})
       m = pnl.merge(exposure, on="counterparty", how="left")
       m = m.rename(columns={"Desk P&L": "desk_pnl", "Exposure (EE peak)": "ee_peak", "Exposure (PFE peak)": "pfe_peak"})
       floor = float(params.get("floor", 1.0))

@@ -45,9 +45,12 @@ Sutras, the data in a Delta lake partitioned by business date, a checksummed bun
 `README.txt` with your real values filled in.
 
 ```bash
-uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py pack make data/jsonl \
-    --kind trade --match productType --name my-bank
+drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz \
+    --kind trade --match PRODUCT_TYPE --name my-bank
 ```
+
+The input here is the committed test data: the ENDUR trades of the first business day ([data/testdata/README.md](../../data/testdata/README.md));
+put your own folder of JSON Lines (or one file, `.jsonl`, `.jsonl.gz` or a `.json` array) in its place.
 
 | Option | Meaning |
 |---|---|
@@ -55,8 +58,8 @@ uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py pac
 | `--kind KIND` | the kind of every document, e.g. `trade` (required) |
 | `--match COL[,COL]` | the column(s) whose values split the kind: **one Sutra per value** (required) |
 | `--name NAME` | the pack name, lower case, digits and `-` (required) |
-| `--key FIELD` | the id field. Default: **detected**: a field present and unique in every document, `<kind>Id` / `id` first; it prints what it chose and why, and **refuses** (naming `--key`) when none is unique |
-| `--date FIELD` | the business-date field. Default: **detected**: a date-valued field (`businessDate`, `asOf`, `date`, ...) present in at least 95% of the documents; none found: no data folder, the pack serves its samples |
+| `--key FIELD` | the id field. Default: **detected**: a field present and unique in every document, `<KIND>_ID`, `<kind>Id` or `id` first; it prints what it chose and why, and **refuses** (naming `--key`) when none is unique |
+| `--date FIELD` | the business-date field. Default: **detected**: a date-valued field present in at least 95% of the documents, one named like a business date first (`BUSINESS_DATE`, `AS_OF`, `DATE`, `VALUATION_DATE`, in any case); else the date field with the fewest distinct dates, **which may not be a business date at all** (on the test data it is `START_DATE`): check the `date:` line it prints and pass `--date`. None found: no data folder, the pack serves its samples |
 | `--title`, `--version` | the pack title; the version (default `1.0.0`) |
 | `--store delta\|files` | the dated store: `delta` (default) or the File connector's files |
 | `--out DIR` | the folder to create (default `data/build/<name>-<version>`, under `DRISHTI_DATA_DIR`); `--force` replaces it |
@@ -65,7 +68,7 @@ uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py pac
 What it makes (everything the server needs is in this one folder):
 
 ```text
-build/my-bank-1.0.0/
+data/build/my-bank-1.0.0/
 ├── README.txt                  step by step: what is inside, deploy, verify, LIFT DATA FROM DELTA, update, roll back, troubleshooting
 ├── pack/my-bank/               pack.yaml, sutras/, tests/, samples/, config/about.yaml, README.md
 ├── data/delta/my-bank/trade/   the documents, one Delta table, partitioned by business_date=YYYY-MM-DD   (data/files/ with --store files)
@@ -79,7 +82,7 @@ build/my-bank-1.0.0/
 It ends by running `pack check` and `pack verify` on what it made and prints a summary and the next command. Open `README.txt`:
 deploying is "copy `pack/my-bank` into the server's packs folder (or `drishti.packs.installed-dir`), copy `data/delta` to its lake
 root or set `DRISHTI_DELTA_ROOT`, switch the pack on with `DRISHTI_PACKS`". New days later:
-`data ingest --from new-days --pack build/my-bank-1.0.0/pack/my-bank --lake <the lake>`. The details are in
+`data ingest --from new-days --pack data/build/my-bank-1.0.0/pack/my-bank --lake <the lake>`. The details are in
 [section 5](#pack-make-everything-in-one-folder) and [OPERATIONALISING.md](OPERATIONALISING.md#16-pack-make-one-folder-to-deploy).
 
 ## 1. What it is
@@ -112,10 +115,12 @@ Concepts used throughout (each is explained in its own guide; this one only link
   `drishti.py pack new --load`, `server packs load` and `pack install` are the command-line forms of the last two.
   [PACKS.md#loading-a-pack-while-the-server-runs](PACKS.md#loading-a-pack-while-the-server-runs) has the rules.
 
-Run the program from the repository root, or from anywhere with its path. These examples write `python3 tools/drishti.py`;
+Run the program from the repository root, or from anywhere with its path, with the console's interpreter
+(`drishti-console/.venv/bin/python`, which the quick start of [data/testdata/README.md](../../data/testdata/README.md) installs with PyYAML, deltalake
+and pyarrow). Many examples write `python3 tools/drishti.py`: any Python 3.10+ with PyYAML runs every command that does not write a Delta lake;
 `drishti.py` in the output is the same program.
 
-**`drishti.py --help`**
+**`drishti.py --help`** (captured on a fresh clone)
 
 ```text
 usage: drishti.py [-h] GROUP ...
@@ -124,25 +129,41 @@ drishti: one command line for building, checking, loading and shipping Drishti p
 
 positional arguments:
   GROUP
-    sutra     The Sutra tool: shape, design, lint, test, preview (Java) and
-              gen (one Sutra per group of JSON Lines)
-    pack      Packs: generate from JSON Lines, check in CI, find missing help
-              text, publish and install
-    data      Data: ingest your own JSON Lines into a lake or files store;
-              load the demo data into any store
-    server    A running server over REST: health and pack management
-              (administrator)
-    design    Screen Designer designs over REST: create, edit, check, propose,
-              approve, ship (anyone may design; approving needs an approver)
-    docs      Documentation tooling
+    sutra       The Sutra tool: shape, design, lint, test, preview (Java) and
+                gen (one Sutra per group of JSON Lines)
+    pack        Packs: generate from JSON Lines, check in CI, find missing
+                help text, publish and install
+    data        Data: ingest your own JSON Lines into a lake or files store;
+                load the demo data into any store
+    server      A running server over REST: health and pack management
+                (administrator)
+    connector   Connectors over REST (Admin -> Connectors): list, get, apply a
+                YAML file, test, enable, delete (administrator; a token needs
+                packs:admin)
+    design      Screen Designer designs over REST: create, edit, check,
+                propose, approve, ship (anyone may design; approving needs an
+                approver)
+    docs        Documentation tooling
+    doctor      doctor: is this machine ready (Java, jar, Python, directories,
+                ports, and with --server the token)
+    bi          Business intelligence (Rupaka) over REST: workspaces and the
+                catalogue, as the token's user sees them (a write needs the
+                bi:write scope)
+    view        A rendered entity view in the terminal, as the caller's token
+                sees it (masks apply)
+    lake        Delta lakes: build one from a large JSON export (memory flat,
+                safe to re-run), scan an export, status, maintain
+    completion  completion: print a shell completion script (bash, zsh,
+                powershell)
 
 options:
-  -h, --help  show this help message and exit
+  -h, --help    show this help message and exit
 
     python3 tools/drishti.py <group> <command> [options]          (or: uv run --with pyyaml python tools/drishti.py ...)
 
-Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (new, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install),
-data (ingest your own JSON Lines, load the demo data), server (health, packs), design (the Screen Designer's designs over
+Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback,
+publish, keygen, install), data (profile and ingest your own JSON Lines or watch a drop folder, load the demo data), server (health, packs, smoke),
+lake (build a Delta lake from a large JSON export, scan, status, maintain), view (get, explain), doctor, completion, design (the Screen Designer's designs over
 REST: create, save, check, propose, approve, export, import, bind) and docs (screenshots).
 Needs Python 3.10+ and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
 recipes and real output is docs/guides/CLI_GUIDE.md.
@@ -174,11 +195,13 @@ uv run --with pyyaml python tools/drishti.py --help
 uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta
 ```
 
-**With a virtual environment** (what an IDE wants, see [section 14](#14-running-the-tools-from-pycharm-and-the-java-sutra-from-intellij)):
+**With the console's environment** (what an IDE wants, see [section 14](#14-running-the-tools-from-pycharm-and-the-java-sutra-from-intellij);
+the run configurations use it):
 
 ```bash
-uv venv .venv-tools && uv pip install --python .venv-tools/bin/python pyyaml deltalake pyarrow
-.venv-tools/bin/python tools/drishti.py --help
+python3 -m venv drishti-console/.venv && drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt
+#   or, where python3 -m venv lacks ensurepip:  uv venv --python 3.13 drishti-console/.venv && uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
+drishti-console/.venv/bin/python tools/drishti.py --help
 ```
 
 **Environment variables** the program reads:
@@ -298,7 +321,7 @@ examples:
 Unknown options are passed to the Java tool. Exit codes as the Java tool: 0 ok, 1 problems, 2 usage.
 ```
 
-**Lint a pack** (the shipped help-desk example; the warnings are help-text gaps, DRS-2047, not errors, so the exit code is 0):
+**Lint a pack** (the shipped help-desk example; it prints the Sutra's absolute path, shortened here):
 
 ```bash
 python3 tools/drishti.py sutra lint docs/guides/examples/pack/helpdesk
@@ -306,23 +329,26 @@ python3 tools/drishti.py sutra lint docs/guides/examples/pack/helpdesk
 
 ```text
 ok      docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml
-docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml:15 warning DRS-2047 field 'subject' is shown but has no glossary entry (kinds.ticket...
-docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml:15 warning DRS-2047 field 'priority' is shown but has no glossary entry (kinds.ticke...
-docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml:15 warning DRS-2047 field 'ageHours' is shown but has no glossary entry (kinds.ticke...
-docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml:15 warning DRS-2047 field 'assignee' is shown but has no glossary entry (kinds.ticke...
-docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml:15 warning DRS-2047 field 'client' is shown but has no glossary entry (kinds.ticket....
-docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml:15 warning DRS-2047 field 'history.event' is shown but has no glossary entry (kinds....
+```
+
+A field a Sutra shows without a glossary entry in `config/about.yaml` is a warning (DRS-2047), not an error, so the exit code stays 0. With
+only the `AGE_HOURS` and `PRIORITY` entries the same command adds lines such as:
+
+```text
+docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml:15 warning DRS-2047 field 'ASSIGNEE' is shown but has no glossary entry (kinds.ticket.glossary in config/about.yaml, or a vocabulary entry)
+docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml:15 warning DRS-2047 field 'HISTORY.EVENT' is shown but has no glossary entry (kinds.ticket.glossary in config/about.yaml, or a vocabulary entry)
 ```
 
 `--strict` turns those DRS-2045 to 2047 help warnings into failures (exit 1). `sutra test <pack>` renders every Sutra against
 its `tests/<sutra>/` samples and checks `expect.yaml`; `--junit report.xml` writes a JUnit file; `sutra preview <pack> --out
 build/html` writes an HTML snapshot per sample.
 
-**Infer a shape** (a JSON Schema with Drishti's role annotations) and **draft a Sutra** from sample documents:
+**Infer a shape** (a JSON Schema with Drishti's role annotations) and **draft a Sutra** from sample documents (a folder of JSON
+files, one document each: here the help-desk example's test tickets):
 
 ```bash
-python3 tools/drishti.py sutra shape docs/guides/examples/pack/helpdesk/samples/ticket
-python3 tools/drishti.py sutra design docs/guides/examples/pack/helpdesk/samples/ticket --kind ticket
+python3 tools/drishti.py sutra shape docs/guides/examples/pack/helpdesk/tests/ticket
+python3 tools/drishti.py sutra design docs/guides/examples/pack/helpdesk/tests/ticket --kind ticket
 ```
 
 ```text
@@ -330,20 +356,26 @@ python3 tools/drishti.py sutra design docs/guides/examples/pack/helpdesk/samples
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
   "properties" : {
-    "ticketId" : {
+    "TICKET_ID" : {
       "type" : "string",
       "x-drishti" : {
-        "role" : "id",
-        "reason" : "named like an id, and no value repeats"
+        "role" : "link",
+        "reason" : "every value is the id of a ticket",
+        "kind" : "ticket"
       }
     },
-    "subject" : {
+    "SUBJECT" : {
       "type" : "string"
     },
-    "status" : {
+    "STATUS" : {
       "type" : "string",
+      "x-drishti" : {
+        "role" : "status",
+        "reason" : "named 'STATUS' with 2 distinct value(s)"
 ...
-    "samples" : 3
+  "required" : [ "TICKET_ID", "SUBJECT", "STATUS", "PRIORITY", "ASSIGNEE", "CLIENT", "CLIENT_NAME", "AGE_HOURS", "HISTORY", "_meta" ],
+  "x-drishti" : {
+    "samples" : 2
   }
 }
 ```
@@ -352,15 +384,13 @@ python3 tools/drishti.py sutra design docs/guides/examples/pack/helpdesk/samples
 rachana: 1
 sutra: ticket-auto
 version: 1
-description: Drafted by auto-design from 3 samples. Edit freely.
+description: Drafted by auto-design from 2 samples. Edit freely.
 match: { kind: ticket, priority: 1 }
-title: { pill: "Ticket · ${$.assignee}", id: "$.ticketId" }
+title: { pill: "Ticket · ${$.PRIORITY}", id: "'ticket'", with: "link($.TICKET_ID, 'ticket')" }
 strip:
-  - { label: "Status", bind: "$.status", tone: "status" }
-  - { label: "Client", bind: "$.client" }
-  - { label: "Client name", bind: "$.clientName" }
-  - { label: "Age hours", bind: "$.ageHours", fmt: "amount0", emphasis: true }
-  - { label: "Source", bind: "$._meta.source" }
+  - { label: "Status", bind: "$.STATUS", tone: "status" }
+  - { label: "Client name", bind: "$.CLIENT_NAME" }
+  - { label: "Age (h)", bind: "$.AGE_HOURS", fmt: "age0", emphasis: true }
   - { label: "Generation", bind: "$._meta.generation", fmt: "pct0" }
 panels:
   - id: details
@@ -368,13 +398,18 @@ panels:
     title: "Details"
     key: "F2"
 ...
-    kind: gauge
-    title: "Generation"
-    area: right
-    value: "$._meta.generation"
-    fmt: "pct0"
-    max: "1"
+  - id: history
+    kind: timeline
+    title: "History"
+    key: "F3"
+    rows: "$.HISTORY"
+    date: "DATE"
+    label: "EVENT"
+...
 ```
+
+A draft is a start, not a screen: here the id was read as a link to a ticket, so the title shows the word `ticket` and links the id;
+change it to `id: $.TICKET_ID` before you keep it.
 
 `sutra design --each DIR` drafts one Sutra per subfolder of samples in a single run (`<out>/<subfolder>.sutra.yaml`; the
 kind is `--kind`, else the folder's one-line `kind` file, else the folder name).
@@ -431,75 +466,75 @@ options:
   --no-lint             do not run `sutra lint` on the result
 
 example:
-  drishti.py sutra gen data/jsonl --key trade=tradeId --match trade=productType --out build/sutras
+  drishti.py sutra gen data/testdata/trades/endur --kind trade --key TRADE_ID --match PRODUCT_TYPE --out data/build/sutras
 ```
 
+On the three trade sources of the test data (every `*.jsonl` and `*.jsonl.gz` of each folder: the first day's snapshot and the six days of
+changes), one run:
+
 ```bash
-python3 tools/drishti.py sutra gen data/jsonl --key trade=tradeId,counterparty=counterpartyId \
-    --date businessDate --match trade=productType --out build/sutras
+drishti-console/.venv/bin/python tools/drishti.py sutra gen data/testdata/trades/endur data/testdata/trades/calypso \
+    data/testdata/trades/murex --kind trade --key TRADE_ID --match PRODUCT_TYPE --out data/build/sutras
 ```
 
 ```text
-sutra: build/sutras does not exist
-usage: sutra <command> <path>... [options]
-  lint    <pack-dir | sutra-file>      parse and check every Sutra
-  test    <pack-dir | sutra-file>      render each Sutra against its samples and check expect.yaml
-  preview <pack-dir | sutra-file>      render samples; --out writes HTML snapshots
-  shape   <samples.json | dir>         infer the shape (JSON Schema) of the samples
-  design  <samples.json | dir>         draft a Sutra from the samples (--kind names it)
-  design --each <dir>                  one Sutra per subfolder of .json samples, in one run: <out>/<subfolder>.sutra.yaml;
-                                       the kind is --kind, else the subfolder's one-line 'kind' file, else the folder name
-options: --junit file   JUnit XML report     --out dir   write results here
-         --strict       lint: help warnings (DRS-2045 to 2047) fail the run
-         --samples path JSON samples to use instead of the pack's tests/ folder or the Sutra's sibling .json
-exit codes: 0 ok, 1 problems, 2 usage
-64 documents, 2 kind(s), 4 group(s)
-drafting 4 Sutra(s) with one `sutra design --each` run ...
+19523 documents, 1 kind(s), 130 group(s)
+drafting 130 Sutra(s) with one `sutra design --each` run ...
 kind            group                                          docs samples  sutra
-counterparty    (all)                                             4       4  counterparty-default
-trade           productType=bond                                 17       5  trade-bond
-trade           productType=fx-forward                           24       5  trade-fx-forward
-trade           productType=swap                                 19       5  trade-swap
+trade           PRODUCT_TYPE=ABS                                131       5  trade-abs
+trade           PRODUCT_TYPE=ACCRETING_SWAP                      91       5  trade-accreting-swap
+trade           PRODUCT_TYPE=AMORT_BOND                         129       5  trade-amort-bond
+...
+trade           PRODUCT_TYPE=ZC_INFL_SWAP                        89       5  trade-zc-infl-swap
+trade           PRODUCT_TYPE=ZC_SWAP                             92       5  trade-zc-swap
+trade           PRODUCT_TYPE=ZERO_BOND                          136       5  trade-zero-bond
+...
+ok      data/build/sutras/trade/trade-zc-swap.v1.sutra.yaml
+ok      data/build/sutras/trade/trade-zero-bond.v1.sutra.yaml
 ```
 
-Each Sutra is `build/sutras/<kind>/<kind>-<group>.v1.sutra.yaml` with its `where` clause, and
-`build/sutras/tests/<sutra>/sample-*.json` holds samples drawn across the dates. The generator is described in
+19,523 documents are the 15,000 trades and their amended versions of the later days (a trade counts once per file it is in). Each
+Sutra is `data/build/sutras/<kind>/<kind>-<group>.v1.sutra.yaml` with its `where` clause, and `data/build/sutras/tests/<sutra>/sample-*.json`
+holds samples drawn across the dates (with `--date FIELD`; the test data's trades carry no business-date field, their business date is the
+file's day). The `--out` folder is created when missing; it must not hold files of yours. A per-kind form names the field for each kind when
+one run reads several kinds: `--key trade=TRADE_ID,counterparty=COUNTERPARTY_ID`. The generator is described in
 [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md); `--fallback` also writes a `<kind>-default` Sutra for documents no group matches.
 
 
 #### Many product types in many files: one command, one Sutra per product type
 
-A common case: a folder of JSON Lines files where every line is a trade with a unique `tradeId` and a product type, with
+A common case: a folder of JSON Lines files where every line is a trade with a unique `TRADE_ID` and a product type, with
 the products mixed across files in any way. **One run does it all**: `sutra gen` reads every file, groups the trades by
 the `--match` field across all of them, and writes **one Sutra per distinct product type**. There is no need to split the
 files by product or to run the command once per product.
 
 ```bash
-python3 tools/drishti.py sutra gen data/jsonl --kind trade --key tradeId --match product_type --out build/sutras
+drishti-console/.venv/bin/python tools/drishti.py sutra gen data/testdata/trades/endur data/testdata/trades/calypso \
+    data/testdata/trades/murex --kind trade --key TRADE_ID --match PRODUCT_TYPE --out data/build/sutras
 ```
 
 Two things decide whether it does what you expect:
 
-1. **The kind comes from the file name** unless you say otherwise. `trade.jsonl` is kind `trade`; a file named
-   `trades_2026-10-01.jsonl` or `book1.jsonl` would be its own kind, and the per-kind form `--key trade=tradeId` would not
-   apply to it. When every line is a trade, pass **`--kind trade`**; then the plain forms `--key tradeId` and
-   `--match product_type` are enough. (Loader envelope lines carry their own `kind` and need no `--kind`.)
-2. **Use the field name exactly as it is in the data** (`product_type` and `productType` are different fields). A
+1. **The kind comes from the file name** unless you say otherwise. `trade.jsonl` is kind `trade`; the test data's
+   `snapshot-2026-09-22.jsonl.gz` would be kind `snapshot-2026-09-22`, and the per-kind form `--key trade=TRADE_ID` would not
+   apply to it. When every line is a trade, pass **`--kind trade`**; then the plain forms `--key TRADE_ID` and
+   `--match PRODUCT_TYPE` are enough. (Loader envelope lines carry their own `kind` and need no `--kind`.)
+2. **Use the field name exactly as it is in the data** (`PRODUCT_TYPE`, `product_type` and `productType` are three different fields). A
    misspelt match field puts every trade in one group without the field, so you would get a single Sutra; add
    `--skip-missing` to leave out documents that lack a match field instead.
 
-What comes out, for 40 product types:
+What comes out, for the 130 product types of the three sources:
 
 | Output | Where |
 |---|---|
-| 40 Sutras, each with `match: { kind: trade, where: "$.product_type == 'IRS'", priority: 10 }` and the title id `$.tradeId` | `build/sutras/trade/trade-<product>.v1.sutra.yaml` |
-| up to 5 sample trades per Sutra (`--samples N`; chosen deterministically, across dates with `--date`) | `build/sutras/tests/<sutra>/sample-*.json` |
+| 130 Sutras, each with `match: { kind: trade, where: "$.PRODUCT_TYPE == 'IRS_FIXFLOAT'", priority: 10 }` and the title id `$.TRADE_ID` | `data/build/sutras/trade/trade-<product>.v1.sutra.yaml` |
+| up to 5 sample trades per Sutra (`--samples N`; chosen deterministically, across dates with `--date`) | `data/build/sutras/tests/<sutra>/sample-*.json` |
 | a lint of everything written | exit code 1 if any Sutra has a problem |
 
 Options that help here: `--fallback` adds a low-priority `trade-default` Sutra so a product type that appears later still
 gets a designed screen (rather than an inferred one); `--min-docs N` skips product types with fewer documents;
-`--date businessDate` picks samples across business dates, newest first; several match fields
-(`--match product_type,currency`) give one Sutra per combination. To get a whole pack (kinds, mnemonics, tests, About
+`--date BUSINESS_DATE` (your data's business-date field) picks samples across business dates, newest first; several match fields
+(`--match PRODUCT_TYPE,CURRENCY`) give one Sutra per combination. To get a whole pack (kinds, mnemonics, tests, About
 skeleton, optionally a Delta lake or files) instead of Sutra files only, use `pack new` with the same options
 ([below](#pack-new-a-complete-pack-from-json-lines)).
 
@@ -523,21 +558,38 @@ those tools (`tools/packmake.py` only chooses the key and the date, lays the fol
 `config/drishti-site.yaml`, `run-server.sh`, `run-server.ps1` and `MANIFEST.json`).
 
 ```text
-$ python3 tools/drishti.py pack make data/jsonl --kind trade --match productType --name my-bank
-read 750 trade document(s)
-key:   tradeId  (named <kind>Id, present and unique in all 750 documents)
-date:  businessDate  (date-valued, named like a business date, 1 distinct date(s))
+$ drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank
+read 4980 trade document(s)
+key:   TRADE_ID  (named <kind>_id, present and unique in all 4980 documents)
+date:  START_DATE  (the date-valued field with the fewest distinct dates (26); pass --date to choose another)
+4980 documents, 1 kind(s), 6 group(s)
+drafting 6 Sutra(s) with one `sutra design --each` run ...
+kind            group                                          docs samples  sutra
+trade           PRODUCT_TYPE=CallNot                             55       5  trade-callnot
+trade           PRODUCT_TYPE=Cash                               815       5  trade-cash
+trade           PRODUCT_TYPE=ComFut                             994       5  trade-comfut
+trade           PRODUCT_TYPE=ComSwap                           2266       5  trade-comswap
+trade           PRODUCT_TYPE=Commodity                          850       5  trade-commodity
+trade           (all)                                          4980       5  trade-default
+...
+== pack bundle
+bundled my-bank 1.0.0: 47 files
 ...
 == pack verify
   checksums ok / schema ok / server ok / sutra ok
 verified
 
-pack make: /work/build/my-bank-1.0.0
-  126 Sutra group(s) for 750 trade document(s), 1 date(s) in data/delta; pack check passed, pack verify passed
-next: read /work/build/my-bank-1.0.0/README.txt, then  DRISHTI_JAR=<exec jar> DRISHTI_PORT=18480 /work/build/my-bank-1.0.0/run-server.sh
+pack make: data/build/my-bank-1.0.0
+  6 Sutra group(s) for 4980 trade document(s), 26 date(s) in data/delta; pack check passed, pack verify passed
+next: read data/build/my-bank-1.0.0/README.txt; for a new server  DRISHTI_JAR=<exec jar> ...
 ```
 
-Try it without touching anything of yours: `DRISHTI_JAR=... DRISHTI_PORT=18974 build/my-bank-1.0.0/run-server.sh`, then
+Read the `date:` line. The test data's trades carry no business-date field (a file is one business day), so `pack make` took the date
+field with the fewest distinct values, `START_DATE`, and stored each trade under its start date: 26 "business dates" that are not business
+dates. For such snapshots, build the lake with [`lake build --as-of`](TOOLS.md) (or the demo lakes, `drishti.py lake demo`) and use
+`pack make` for the pack alone; for documents that carry their business date, pass `--date` with that field.
+
+Try it without touching anything of yours: `DRISHTI_JAR=... DRISHTI_PORT=18974 data/build/my-bank-1.0.0/run-server.sh`, then
 `curl 'http://localhost:18974/api/v1/views/trade/<an id>?asOf=<a date>'`. Documents of another day are added with `data ingest`
 (default mode `overwrite-dates`) into the same `data/delta`. Exit codes: 0 made and both checks passed, 1 made but a check failed
 (the folder is still written), 2 usage (no unique key, a missing field, `--out` exists without `--force`).
@@ -628,11 +680,33 @@ server connection:
   --timeout TIMEOUT     seconds to wait for the server (default 60)
 
 examples:
-  drishti.py pack new data/jsonl --name my-bank --key trade=tradeId --date trade=businessDate --lake data/delta
-  drishti.py pack new data/jsonl --name my-bank --date businessDate --store files --files-root data/files --load --server http://localhost:18977
+  drishti.py pack new data/testdata/trades/murex --name murex-book --kind trade --key TRADE_ID --match PRODUCT_TYPE --out data/build/murex-book
+  drishti.py pack new your-folder/ --name my-bank --date BUSINESS_DATE --store files --files-root data/files --load --server http://localhost:18977
 ```
 
-**The dated store.** `--date FIELD` names each document's business-date field. Where the documents go is `--store`:
+On the MUREX snapshot of the test data (it has no business-date field, so no `--date`: the pack serves its samples and no dated store
+is written), with `--out` outside `config/packs` so nothing of the server's changes:
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/trades/murex/snapshot-2026-09-22.jsonl.gz --name murex-book \
+    --title "MUREX book" --kind trade --key TRADE_ID --match PRODUCT_TYPE --out data/build/murex-book
+```
+
+```text
+4933 documents, 1 kind(s), 74 group(s)
+drafting 74 Sutra(s) with one `sutra design --each` run ...
+kind            group                                          docs samples  sutra
+trade           PRODUCT_TYPE=ACCRETING_SWAP                      72       5  trade-accreting-swap
+trade           PRODUCT_TYPE=AMORT_SWAP                          72       5  trade-amort-swap
+...
+trade           PRODUCT_TYPE=RANGE_ACCRUAL_NOTE                  66       5  trade-range-accrual-note
+...
+pack written to data/build/murex-book
+sutra lint: exit 0
+sutra test: exit 0
+```
+
+**The dated store.** `--date FIELD` names each document's business-date field (in the examples below `BUSINESS_DATE` stands for yours). Where the documents go is `--store`:
 
 | `--store` | Writes | The pack declares | Needs |
 |---|---|---|---|
@@ -642,87 +716,75 @@ examples:
 Serve it by starting the server with `DRISHTI_DELTA_ROOT=<lake>` or `DRISHTI_FILES_ROOT=<root>`. The pack is read from the
 store for every date you ingested; the business-date picker and history work.
 
+The interest-rate curves of the test data carry their business date in `AS_OF` (seven files, one a day, 28 curves each), so they
+fill a dated store:
+
 ```bash
-python3 tools/drishti.py pack new data/jsonl --name jsonl-demo --title "JSONL demo" \
-    --key trade=tradeId,counterparty=counterpartyId --date businessDate --match trade=productType \
-    --store files --files-root data/files --out config/packs/jsonl-demo
+drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/market-data/ir-curve --name curves-demo --title "Curves demo" \
+    --kind ir-curve --key CURVE_ID --date AS_OF --match CURVE_TYPE --store files --files-root data/build/files --out data/build/curves-demo
 ```
 
 ```text
-64 documents, 2 kind(s), 4 group(s)
+196 documents, 1 kind(s), 4 group(s)
 drafting 4 Sutra(s) with one `sutra design --each` run ...
 kind            group                                          docs samples  sutra
-counterparty    (all)                                             4       4  counterparty-default
-trade           productType=bond                                 17       5  trade-bond
-trade           productType=fx-forward                           24       5  trade-fx-forward
-trade           productType=swap                                 19       5  trade-swap
-  counterparty 2026-10-02: 4 rows -> data/files/jsonl-demo/2026-10-02/counterparty.jsonl
-  trade 2026-10-01: 30 rows -> data/files/jsonl-demo/2026-10-01/trade.jsonl
-  trade 2026-10-02: 30 rows -> data/files/jsonl-demo/2026-10-02/trade.jsonl
+ir-curve        CURVE_TYPE=Cross-currency basis                  49       5  ir-curve-cross-currency-basis
+ir-curve        CURVE_TYPE=Discount (OIS)                        49       5  ir-curve-discount-ois
+ir-curve        CURVE_TYPE=Government                            49       5  ir-curve-government
+ir-curve        CURVE_TYPE=Projection                            49       5  ir-curve-projection
+  ir-curve 2026-09-22: 28 rows -> data/build/files/curves-demo/2026-09-22/ir-curve.jsonl
+  ir-curve 2026-09-23: 28 rows -> data/build/files/curves-demo/2026-09-23/ir-curve.jsonl
+  ...
+  ir-curve 2026-09-30: 28 rows -> data/build/files/curves-demo/2026-09-30/ir-curve.jsonl
 kind                business date        rows
-counterparty        2026-10-02              4
-trade               2026-10-01             30
-trade               2026-10-02             30
-total rows: 64
-Dated store (files): 64 rows written to data/files (domain jsonl-demo); 0 document(s) without a date or id skipped
-Dated store (files): 64 rows written to data/files (domain jsonl-demo); 0 document(s) without a date or id skipped
-pack written to config/packs/jsonl-demo
+ir-curve            2026-09-22             28
 ...
-ok      config/packs/jsonl-demo/sutras/trade/trade-bond.v1.sutra.yaml
-ok      config/packs/jsonl-demo/sutras/trade/trade-fx-forward.v1.sutra.yaml
+ir-curve            2026-09-30             28
+total rows: 196
+Dated store (files): 196 rows written to data/build/files (domain curves-demo); 0 document(s) without a date or id skipped
+pack written to data/build/curves-demo
+sutra lint: exit 0
+sutra test: exit 0
 ```
 
-The same, into a **Delta lake** (needs `deltalake` and `pyarrow`, so run it with `uv run --with ...`):
+The same, into a **Delta lake** (`deltalake` and `pyarrow` are in the console's requirements):
 
 ```bash
-uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py pack new data/jsonl --name jsonl-lake \
-    --key trade=tradeId,counterparty=counterpartyId --date businessDate --match trade=productType --lake data/delta
+drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/market-data/ir-curve --name curves-lake --kind ir-curve \
+    --key CURVE_ID --date AS_OF --match CURVE_TYPE --lake data/build/delta --out data/build/curves-lake
 ```
 
 ```text
-64 documents, 2 kind(s), 4 group(s)
-drafting 4 Sutra(s) with one `sutra design --each` run ...
-kind            group                                          docs samples  sutra
-counterparty    (all)                                             4       4  counterparty-default
-trade           productType=bond                                 17       5  trade-bond
-trade           productType=fx-forward                           24       5  trade-fx-forward
-trade           productType=swap                                 19       5  trade-swap
-  counterparty 2026-10-02: 4 rows
-  trade 2026-10-01: 30 rows
-  trade 2026-10-02: 30 rows
-kind                business date        rows
-counterparty        2026-10-02              4
-trade               2026-10-01             30
-trade               2026-10-02             30
+196 documents, 1 kind(s), 4 group(s)
 ...
-     trade-bond: help coverage 1/5 (20%)
-ok   config/packs/jsonl-lake/sutras/trade/trade-bond.v1.sutra.yaml (5 samples)
-     trade-fx-forward: help coverage 1/5 (20%)
-ok   config/packs/jsonl-lake/sutras/trade/trade-fx-forward.v1.sutra.yaml (5 samples)
-     trade-swap: help coverage 1/5 (20%)
-ok   config/packs/jsonl-lake/sutras/trade/trade-swap.v1.sutra.yaml (5 samples)
+  ir-curve 2026-09-22: 28 rows
+  ...
+  ir-curve 2026-09-30: 28 rows
+total rows: 196
+Dated store (delta): 196 rows written to data/build/delta (domain curves-lake); 0 document(s) without a date or id skipped
+pack written to data/build/curves-lake
+sutra lint: exit 0
+sutra test: exit 0
 ```
 
 **`--load --server URL`** asks the running server to load the pack straight away (it calls `POST /api/v1/admin/packs/<name>/load`;
-you must be an administrator, and it takes effect at once, with no restart). The pack has to be where the server reads packs from: its
-`drishti.packs.dir` (default `./config/packs`) or its installed-dir. If `--out` is somewhere else the command says so.
+you must be an administrator, and it takes effect at once, with no restart: the server answers `Applied now; no restart.`). The pack has
+to be where the server reads packs from: its `drishti.packs.dir` (default `./config/packs`) or its installed-dir. If `--out` is somewhere
+else the command says so.
 
 ```bash
-python3 tools/drishti.py pack new data/jsonl --name jsonl-demo --date businessDate --store files \
-    --files-root data/files --load --server http://localhost:18977
+drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/market-data/ir-curve --name curves-demo --kind ir-curve \
+    --key CURVE_ID --date AS_OF --match CURVE_TYPE --store files --files-root data/files --load --server http://localhost:18480
 ```
 
-```text
-...
-load jsonl-demo: Applied now; no restart.
-```
-
-**The `ingest:` block.** `pack new` records which field is each kind's id and which is its business date in `pack.yaml`:
+**The `ingest:` block.** `pack new` records which field is each kind's id and which is its business date in `pack.yaml` (here,
+`data/build/curves-demo/pack.yaml`):
 
 ```yaml
 ingest:
-  trade:        { key: tradeId,        date: businessDate }
-  counterparty: { key: counterpartyId, date: businessDate }
+  ir-curve:
+    key: CURVE_ID
+    date: AS_OF
 ```
 
 It is an optional **tooling key**: `data ingest --pack` and `pack check` read it, the server ignores it (it is listed in the
@@ -772,45 +834,44 @@ exit: 0 all passed, 1 any failure, 2 usage
 ```
 
 ```bash
-python3 tools/drishti.py pack check config/packs/jsonl-demo --junit build/reports
+drishti-console/.venv/bin/python tools/drishti.py pack check data/build/curves-demo --junit data/build/reports
 ```
 
 ```text
-== jsonl-demo: sutra lint: exit 0
-config/packs/jsonl-demo/sutras/trade/trade-fx-forward.v1.sutra.yaml:1 warning DRS-2047 field 'notional' is shown but has no glossary entry (kinds.trade.gl...
+== curves-demo: sutra lint: exit 0
+data/build/curves-demo/sutras/ir-curve/ir-curve-government.v1.sutra.yaml:1 warning DRS-2047 field 'POINTS.ZERO_RATE' is shown but has no glossary entry (kinds.ir-curve.gl...
 ...
-config/packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml:1 warning DRS-2047 field 'mtm' is shown but has no glossary entry (kinds.trade.glossary in c...
-config/packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml:1 warning DRS-2047 field 'businessDate' is shown but has no glossary entry (kinds.trade.glos...
-config/packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml:1 warning DRS-2047 field 'productType' is shown but has no glossary entry (kinds.trade.gloss...
-== jsonl-demo: sutra test: exit 0
-     counterparty-default: help coverage 2/4 (50%)
-ok   config/packs/jsonl-demo/sutras/counterparty/counterparty-default.v1.sutra.yaml (4 samples)
-     trade-bond: help coverage 1/5 (20%)
-ok   config/packs/jsonl-demo/sutras/trade/trade-bond.v1.sutra.yaml (5 samples)
-     trade-fx-forward: help coverage 1/5 (20%)
-ok   config/packs/jsonl-demo/sutras/trade/trade-fx-forward.v1.sutra.yaml (5 samples)
-     trade-swap: help coverage 1/5 (20%)
-ok   config/packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml (5 samples)
+data/build/curves-demo/sutras/ir-curve/ir-curve-projection.v1.sutra.yaml:1 warning DRS-2047 field 'POINTS.DF' is shown but has no glossary entry (kinds.ir-curve.glossary...
+== curves-demo: sutra test: exit 0
+     ir-curve-cross-currency-basis: help coverage 9/15 (60%)
+ok   data/build/curves-demo/sutras/ir-curve/ir-curve-cross-currency-basis.v1.sutra.yaml (5 samples)
+     ir-curve-discount-ois: help coverage 9/15 (60%)
+ok   data/build/curves-demo/sutras/ir-curve/ir-curve-discount-ois.v1.sutra.yaml (5 samples)
+     ir-curve-government: help coverage 9/15 (60%)
+ok   data/build/curves-demo/sutras/ir-curve/ir-curve-government.v1.sutra.yaml (5 samples)
+     ir-curve-projection: help coverage 9/15 (60%)
+ok   data/build/curves-demo/sutras/ir-curve/ir-curve-projection.v1.sutra.yaml (5 samples)
 ```
 
 The exit code is 0 here; with `--strict` the generated pack's unexplained fields fail the run:
 
 ```bash
-python3 tools/drishti.py pack check config/packs/jsonl-demo --strict --tail 3
+drishti-console/.venv/bin/python tools/drishti.py pack check data/build/curves-demo --strict --tail 3
 ```
 
 ```text
-== jsonl-demo: sutra lint --strict: exit 1
-config/packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml:1 warning DRS-2047 field 'mtm' is shown but has no glossary entry (kinds.trade.glossary in c...
-config/packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml:1 warning DRS-2047 field 'businessDate' is shown but has no glossary entry (kinds.trade.glos...
-config/packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml:1 warning DRS-2047 field 'productType' is shown but has no glossary entry (kinds.trade.gloss...
-== jsonl-demo: sutra test: exit 0
-ok   config/packs/jsonl-demo/sutras/trade/trade-fx-forward.v1.sutra.yaml (5 samples)
-     trade-swap: help coverage 1/5 (20%)
-ok   config/packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml (5 samples)
+== curves-demo: sutra lint --strict: exit 1
+data/build/curves-demo/sutras/ir-curve/ir-curve-projection.v1.sutra.yaml:1 warning DRS-2047 field 'POINTS.QUOTE' is shown but has no glossary entry (kinds.ir-curve.glossa...
+data/build/curves-demo/sutras/ir-curve/ir-curve-projection.v1.sutra.yaml:1 warning DRS-2047 field 'POINTS.ZERO_RATE' is shown but has no glossary entry (kinds.ir-curve.gl...
+data/build/curves-demo/sutras/ir-curve/ir-curve-projection.v1.sutra.yaml:1 warning DRS-2047 field 'POINTS.DF' is shown but has no glossary entry (kinds.ir-curve.glossary...
+== curves-demo: sutra test: exit 0
+ok   data/build/curves-demo/sutras/ir-curve/ir-curve-government.v1.sutra.yaml (5 samples)
+     ir-curve-projection: help coverage 9/15 (60%)
+ok   data/build/curves-demo/sutras/ir-curve/ir-curve-projection.v1.sutra.yaml (5 samples)
 ```
 
-`--junit DIR` writes `DIR/<pack>-lint.xml` and `DIR/<pack>-test.xml`, which any CI shows as test results.
+`--junit DIR` writes `DIR/<pack>-lint.xml` and `DIR/<pack>-test.xml` (here `data/build/reports/curves-demo-lint.xml` and
+`curves-demo-test.xml`), which any CI shows as test results.
 
 ### `pack about-check`: fields shown without help text
 
@@ -844,17 +905,18 @@ Runs `sutra lint` and lists its help warnings per Sutra. Exit 1 when any field i
 ```
 
 ```bash
-python3 tools/drishti.py pack about-check config/packs/jsonl-demo
+drishti-console/.venv/bin/python tools/drishti.py pack about-check data/build/curves-demo
 ```
 
 ```text
-== jsonl-demo: 14 field(s) shown without glossary text in 4 Sutra(s); 11 placeholder TODO text(s) in config/about.yaml
-  counterparty-default.v1: businessDate, rating
-  trade-bond.v1: notional, mtm, businessDate, productType
-  trade-fx-forward.v1: notional, mtm, businessDate, productType
-  trade-swap.v1: notional, mtm, businessDate, productType
-  TODO: counterparty, counterparty.businessDate, counterparty.name, counterparty.rating, counterparty.country, trade, trade.notional, trade.currenc...
-14 gap(s): add glossary entries under kinds.<kind>.glossary (or vocabulary) in config/about.yaml; see PACK_DEVELOPER_GUIDE.
+== curves-demo: 24 field(s) shown without glossary text in 4 Sutra(s); 10 placeholder TODO text(s) in config/about.yaml
+  ir-curve-cross-currency-basis.v1: POINTS.TENOR, POINTS.MATURITY, POINTS.INSTRUMENT, POINTS.QUOTE, POINTS.ZERO_RATE, POINTS.DF
+  ir-curve-discount-ois.v1: POINTS.TENOR, POINTS.MATURITY, POINTS.INSTRUMENT, POINTS.QUOTE, POINTS.ZERO_RATE, POINTS.DF
+  ir-curve-government.v1: POINTS.TENOR, POINTS.MATURITY, POINTS.INSTRUMENT, POINTS.QUOTE, POINTS.ZERO_RATE, POINTS.DF
+  ir-curve-projection.v1: POINTS.TENOR, POINTS.MATURITY, POINTS.INSTRUMENT, POINTS.QUOTE, POINTS.ZERO_RATE, POINTS.DF
+  TODO: ir-curve, ir-curve.CURVE_TYPE, ir-curve.INDEX, ir-curve.TEN_Y, ir-curve.SLOPE_2S_10S, ir-curve.AS_OF, ir-curve.BUILT_AT, ir-curve.CURRENCY, ir-curve.INTERPOLATION, ir-curve.DAY_COUNT
+24 gap(s): add glossary entries under kinds.<kind>.glossary (or vocabulary) in config/about.yaml; see PACK_DEVELOPER_GUIDE.
+(exit 1)
 ```
 
 Fix each by adding the field under `kinds.<kind>.glossary` (or a pack-wide `vocabulary` entry) in `config/about.yaml`; the
@@ -878,48 +940,64 @@ pack is *ours*, the fresh generation is *theirs* (`tools/packregen.py`). Commit 
 | you deleted a file the generator still makes | `deleted`: it stays deleted |
 | no `generated/` (a pack made before this) | nothing is merged: differing files are `no-baseline` (kept, exit 1), new files are added |
 
+A worked run on the test data: a pack made from the ENDUR snapshot (five product types), two hand edits (the `ComSwap` Sutra's
+priority set to 15, the About sentence of the kind written), then the data grows: the CALYPSO snapshot joins it.
+
 ```text
-$ python3 tools/drishti.py pack new few.jsonl --name mb --kind trade --match productType --key tradeId --out mb
+$ drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz --name mb \
+    --kind trade --match PRODUCT_TYPE --key TRADE_ID --out data/build/mb
+4980 documents, 1 kind(s), 5 group(s)
 ...
-$ python3 tools/drishti.py pack regenerate mb trade.jsonl --dry-run
-pack regenerate --dry-run: mb
+$ drishti-console/.venv/bin/python tools/drishti.py pack regenerate data/build/mb data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz \
+    data/testdata/trades/calypso/snapshot-2026-09-22.jsonl.gz --dry-run
+pack regenerate --dry-run: data/build/mb
   add         sutras/trade/trade-abs.v1.sutra.yaml
   add         sutras/trade/trade-amort-bond.v1.sutra.yaml
-  add         sutras/trade/trade-autocallable.v1.sutra.yaml
-  add         ... and 826 more
+  add         sutras/trade/trade-buy-sell-back.v1.sutra.yaml
+  add         sutras/trade/trade-call-account.v1.sutra.yaml
+  add         sutras/trade/trade-callable-bond.v1.sutra.yaml
+  add         sutras/trade/trade-cds-index.v1.sutra.yaml
+  add         ... and 351 more
   refresh     README.md
   refresh     pack.yaml
   refresh     samples/catalog.json
+  refresh     samples/trade.jsonl
   merge       config/about.yaml   (your edit and the new text merged cleanly)
-  keep        sutras/trade/trade-accreting-swap.v1.sutra.yaml   (your edit kept; the generated text did not change)
-  remove      samples/trade/MX-20000001.json   (no longer generated and you never edited it)
-  remove      ... and 23 more
-summary: 829 add, 1 keep, 1 merge, 3 refresh, 24 remove; 70 unchanged
+  keep        sutras/trade/trade-comswap.v1.sutra.yaml   (your edit kept; the generated text did not change)
+summary: 357 add, 1 keep, 1 merge, 4 refresh; 34 unchanged
 (exit 0)
 ```
 
-Here two files had been edited by hand (a strip label in `trade-accreting-swap`, the About sentence): the label edit is kept, the
-About edit is merged with the regenerated skeleton. Without `--dry-run` the same plan is written, then `generated/` is replaced by
-what was just generated (not by the merged result, so the next run still sees your edits as yours). A real conflict, here the
-generator now writes `priority: 20` on a line you changed to 15:
+The priority edit is kept, the About edit is merged with the regenerated skeleton. Without `--dry-run` the same plan is written, then
+`generated/` is replaced by what was just generated (not by the merged result, so the next run still sees your edits as yours). A real
+conflict, here the generator now writes `priority: 20` on the line you changed to 15:
 
 ```text
-$ python3 tools/drishti.py pack regenerate mb trade.jsonl --priority 20
-pack regenerate: mb
-  refresh     sutras/trade/trade-abs.v1.sutra.yaml
+$ drishti-console/.venv/bin/python tools/drishti.py pack regenerate data/build/mb data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz \
+    data/testdata/trades/calypso/snapshot-2026-09-22.jsonl.gz --priority 20
+pack regenerate: data/build/mb
+  add         sutras/trade/trade-abs.v1.sutra.yaml
   ...
-  conflict    sutras/trade/trade-accreting-swap.v1.sutra.yaml   (1 conflict(s): markers written, resolve them by hand)
-  keep        config/about.yaml   (your edit kept; the generated text did not change)
-summary: 1 conflict, 1 keep, 124 refresh; 778 unchanged
-attention: 1 file(s) need you (search for '<<<<<<<'), then  drishti.py pack check mb
+  add         ... and 351 more
+  refresh     README.md
+  refresh     pack.yaml
+  refresh     sutras/trade/trade-callnot.v1.sutra.yaml
+  refresh     sutras/trade/trade-cash.v1.sutra.yaml
+  refresh     sutras/trade/trade-comfut.v1.sutra.yaml
+  refresh     sutras/trade/trade-commodity.v1.sutra.yaml
+  refresh     ... and 2 more
+  merge       config/about.yaml   (your edit and the new text merged cleanly)
+  conflict    sutras/trade/trade-comswap.v1.sutra.yaml   (1 conflict(s): markers written, resolve them by hand)
+summary: 357 add, 1 conflict, 1 merge, 8 refresh; 30 unchanged
+attention: 1 file(s) need you (search for '<<<<<<<'), then  drishti.py pack check data/build/mb
 (exit 1)
 
-$ grep -n -A4 '<<<<<<<' mb/sutras/trade/trade-accreting-swap.v1.sutra.yaml
-<<<<<<< yours (the pack)
-match: { kind: trade, where: "$.productType == 'ACCRETING_SWAP'", priority: 15 }
-=======
-match: { kind: trade, where: "$.productType == 'ACCRETING_SWAP'", priority: 20 }
->>>>>>> regenerated from the new data
+$ grep -n -A4 '<<<<<<<' data/build/mb/sutras/trade/trade-comswap.v1.sutra.yaml
+5:<<<<<<< yours (the pack)
+6-match: { kind: trade, where: "$.PRODUCT_TYPE == 'ComSwap'", priority: 15 }
+7-=======
+8-match: { kind: trade, where: "$.PRODUCT_TYPE == 'ComSwap'", priority: 20 }
+9->>>>>>> regenerated from the new data
 ```
 
 Options not given on the command line (`--key`, `--date`, `--match`, `--priority`, `--samples`, `--version`...) are taken from the
@@ -929,24 +1007,35 @@ folder first. Exit codes: 0 merged cleanly, 1 conflicts (or `no-baseline` files)
 
 ### `pack diff`: what changed between two versions, and what breaks
 
+The same pack, bundled before the CALYPSO data joined it (`pack bundle data/build/mb --out data/build/dist`), against the folder
+after `pack regenerate ... --priority 20 --version 1.1.0` (no hand edits this time, so no conflict):
+
 ```text
-$ python3 tools/drishti.py pack diff dist/my-bank-1.0.0.tar.gz config/packs/my-bank
-pack diff: my-bank 1.0.0 -> my-bank 1.1.0
+$ drishti-console/.venv/bin/python tools/drishti.py pack diff data/build/dist/mb-1.0.0.tar.gz data/build/mb
+pack diff: mb 1.0.0 -> mb 1.1.0
 
-BREAKING (1)
-  mnemonic renamed           TRA   TRA -> TRD for kind trade (typed commands and saved links use it)
+SELECTION (56)
+  sutra added                trade-abs   sutras/trade/trade-abs.v1.sutra.yaml: match $.PRODUCT_TYPE == 'ABS', priority 20
+  sutra added                trade-amort-bond   sutras/trade/trade-amort-bond.v1.sutra.yaml: match $.PRODUCT_TYPE == 'AMORT_BOND', priority 20
+  ...
+  screen selection changes   trade-callnot   priority 10 -> 20
+  screen selection changes   trade-cash   priority 10 -> 20
+  screen selection changes   trade-comfut   priority 10 -> 20
+  screen selection changes   trade-commodity   priority 10 -> 20
+  screen selection changes   trade-comswap   priority 10 -> 20
 
-SELECTION (2)
-  sutra removed              trade-abs   sutras/trade/trade-abs.v1.sutra.yaml: its documents fall to another Sutra (match $.productType == 'ABS')
-  screen selection changes   trade-accreting-swap   priority 10 -> 20
-
-CHANGE (3)
-  version                    my-bank   1.0.0 -> 1.1.0
-  sutra changed              trade-accreting-swap   content changed
-  sutra changed              trade-amort-bond   content changed
-
-summary: 1 breaking, 2 selection, 3 change  (fail-on breaking: FAIL)
+CHANGE (12)
+  version                    mb   1.0.0 -> 1.1.0
+  sutra changed              trade-callnot   content changed
+  ...
+  glossary added             trade.COUNTERPARTY_COUNTRY_OF_RISK
+  glossary added             trade.COUNTERPARTY_UEN
+  ...
+summary: 56 selection, 12 change  (fail-on breaking: ok)
+(exit 0)
 ```
+
+A pack with conflict markers still in it cannot be diffed (`drishti: ...: while scanning a simple key`, exit 2): resolve them first.
 
 `OLD` and `NEW` are pack folders, `pack make` output folders or bundles (`.tar.gz`). Findings have four levels: **breaking** (a kind or
 a mnemonic removed or renamed: monitors, workspaces and alerts name them), **selection** (a Sutra added or removed, its match `where`,
@@ -958,30 +1047,45 @@ exists); `--json` prints `{counts, findings: [{level, what, name, detail}], fail
 ### `pack catalogue`: a readable catalogue for business review
 
 ```text
-$ python3 tools/drishti.py pack catalogue config/packs/my-bank --out build/catalogue --format html --shots
-pack catalogue: 1 kind(s), 125 Sutra(s), 125 preview(s) -> build/catalogue/index.html
+$ drishti-console/.venv/bin/python tools/drishti.py pack catalogue data/build/curves-demo --out data/build/catalogue
+pack catalogue: 1 kind(s), 4 Sutra(s) -> data/build/catalogue/catalogue.md
 ```
 
-The page (or `catalogue.md` with the default `--format md`) lists, per kind, the About sentence and mnemonic, the glossary (term,
-meaning, unit, sign, notes, values) and the fields the Sutras show that no entry explains yet; then every Sutra with what it shows
-(description, key figures, panels with their kind and title) and the rule that selects it. The start of the Markdown:
+The page (or `catalogue.md` with the default `--format md`; `--format html` writes `index.html`) lists, per kind, the About sentence and
+mnemonic, the glossary (term, meaning, unit, sign, notes, values) and the fields the Sutras show that no entry explains yet; then every
+Sutra with what it shows (description, key figures, panels with their kind and title) and the rule that selects it. The start of the
+Markdown:
 
 ```text
-## Trade (`trade`, mnemonic TRD)
+# Curves demo
 
-A trade booked in the front office, e.g. ${$.tradeId}.
+Pack `curves-demo` version 1.0.0. Generated from ir-curve by tools/packgen/pack_from_jsonl.py.
+
+1 kind(s), 4 Sutra(s). Text in `${...}` is filled in from the document when a screen is shown.
+
+## Ir curve (`ir-curve`, mnemonic IC)
+
+TODO: one sentence about a ir-curve, e.g. ${$.CURVE_ID}.
 
 ### Fields and glossary
 
 | Field | Term | Meaning | Unit | Sign, notes |
 |---|---|---|---|---|
-| assetClass | assetClass | TODO: what this field means. |  |  |
+| AS_OF | AS_OF | TODO: what this field means. |  |  |
+| BUILT_AT | BUILT_AT | TODO: what this field means. |  |  |
 ...
-#### trade-accreting-swap
 
-- **Selected when:** `$.productType == 'ACCRETING_SWAP'`, priority 10
-- **Key figures:** Notional, MTM, DV01, Vega, NPV, Clean PV
-- **Panels:** Details (kv), Sensitivities (area), Schedule (ladder), Pnl history (line)
+Shown but not yet explained: `CURVE_ID`
+
+### Screens for ir-curve
+
+#### ir-curve-cross-currency-basis
+
+Sutra for ir-curve documents where CURVE_TYPE=Cross-currency basis.
+
+- **Selected when:** `$.CURVE_TYPE == 'Cross-currency basis'`, priority 10
+- **Key figures:** Curve type, Index, Ten y, Slope 2s 10s, As of, Built at
+- **Panels:** Details (kv), Points (ladder), Forwards (line), How this view was built (provenance), Linked entities (links)
 ```
 
 `--shots` runs `sutra preview` over the pack (needs the jar) and links each Sutra's HTML snapshots from `previews/`. About text not yet
@@ -990,19 +1094,24 @@ written shows as its `TODO` placeholder, so the catalogue doubles as a review ch
 ### `pack i18n`: translate the About text through a spreadsheet
 
 ```text
-$ python3 tools/drishti.py pack i18n export config/packs/my-bank --lang fr --out build/fr.csv
-pack i18n export: 40 texts of my-bank -> build/fr.csv  (0 already translated, 40 to do)
-next: fill the 'translation' column, then  drishti.py pack i18n import config/packs/my-bank build/fr.csv --lang fr
+$ drishti-console/.venv/bin/python tools/drishti.py pack i18n export data/build/curves-demo --lang fr --out data/build/fr.csv
+pack i18n export: 20 texts of curves-demo -> data/build/fr.csv  (0 already translated, 20 to do)
+next: fill the 'translation' column, then  drishti.py pack i18n import data/build/curves-demo data/build/fr.csv --lang fr
 
-$ python3 tools/drishti.py pack i18n import config/packs/my-bank build/fr.csv --lang fr
-pack i18n import: 2 of 40 texts -> config/packs/my-bank/config/about.fr.yaml
-  missing (shown in English): 38
-    kinds/trade/glossary/assetClass/term
+$ drishti-console/.venv/bin/python tools/drishti.py pack i18n import data/build/curves-demo data/build/fr.csv --lang fr
+pack i18n import: 0 of 20 texts -> data/build/curves-demo/config/about.fr.yaml
+  missing (shown in English): 20
+    kinds/ir-curve/title
+    kinds/ir-curve/about
+    kinds/ir-curve/glossary/AS_OF/term
+    kinds/ir-curve/glossary/AS_OF/means
     ...
-  EXTRA keys (not in about.yaml, ignored): 1
-    kinds/ghost/title
-(exit 1)
+    ... and 12 more
+(exit 0)
 ```
+
+(Imported before any translation was filled in: every text is missing, which is a warning, so the exit code is 0; an extra key or a
+`${...}` expression changed in a translation is an error, exit 1.)
 
 `export` writes a CSV with the columns `key`, `source` (the English text) and `translation` (prefilled from an existing
 `config/about.<lang>.yaml`). Keys are `/`-separated paths: `kinds/<kind>/title`, `.../about`, `.../glossary/<field>/<term|means|unit|sign|note>`,
@@ -1019,10 +1128,11 @@ The offline path: no server API and no token. Full guide with real output, promo
 [OPERATIONALISING.md](OPERATIONALISING.md).
 
 ```bash
-drishti.py pack bundle examples/packs/finance --out dist                 # finance-1.0.0.tar.gz + .sha256 + .manifest.json (runs pack check first)
-drishti.py pack verify dist/finance-1.0.0.tar.gz                # sha256, manifest checksums, schema, server version, sutra lint + test
-drishti.py pack deploy dist/finance-1.0.0.tar.gz --to /opt/drishti/packs --backup /opt/drishti/backups [--dry-run]
-drishti.py pack rollback finance --to /opt/drishti/packs --backup /opt/drishti/backups [--version 1.0.0]
+drishti.py pack bundle config/packs/trading --out dist                  # trading-1.0.0.tar.gz + .sha256 + .manifest.json (runs pack check first)
+drishti.py pack verify dist/trading-1.0.0.tar.gz                # sha256, manifest checksums, schema, server version, sutra lint + test
+drishti.py pack deploy dist/trading-1.0.0.tar.gz --to /opt/drishti/packs --backup /opt/drishti/backups [--dry-run]
+drishti.py pack rollback trading --to /opt/drishti/packs --backup /opt/drishti/backups [--version 1.0.0]
+# real output of each, on the shipped trading pack: OPERATIONALISING.md sections 3 to 5 and 10
 ```
 
 `pack bundle` also takes `--no-check` (skip the `pack check` that runs first), `--requires-server VERSION` (the minimum server version written into the manifest; default this checkout's) and `--json`.
@@ -1060,19 +1170,22 @@ example:
 ```
 
 ```bash
-python3 tools/drishti.py pack keygen --out keys/me.pem
-python3 tools/drishti.py pack publish config/packs/jsonl-demo --registry registry --key keys/me.pem --publisher me
+drishti-console/.venv/bin/python tools/drishti.py pack keygen --out data/build/keys/me.pem
+drishti-console/.venv/bin/python tools/drishti.py pack publish data/build/curves-demo --registry data/build/registry \
+    --key data/build/keys/me.pem --publisher me
 ```
 
 ```text
-private key: keys/me.pem (keep it secret; it signs packs)
-public key:  MCowBQYDK2VwAyEAk8tNeCMeKT1JRMWgC2iMgT2zpmrSUfP9ReTRF5PFL6k=
+private key: data/build/keys/me.pem (keep it secret; it signs packs)
+public key:  MCowBQYDK2VwAyEAaCsj0I61FgZt234CuN6tg+juf4VrdSiinu2kgDgYXJ0=
 servers trust it with:  drishti.packs.registry.trusted-keys.<publisher>: <public key>
 ```
 
 ```text
-published jsonl-demo 1.0.0 (18296 bytes, sha256 59f5e76fd4ea…) signed by me
+published curves-demo 1.0.0 (53987 bytes, sha256 d0c68128a431…) signed by me
 ```
+
+(Your key, and so the public key and the checksum, differ: a new key pair is made each time.)
 
 A server trusts a publisher by being configured with the public key
 (`drishti.packs.registry.trusted-keys.<publisher>`); see [PACKS.md](PACKS.md).
@@ -1134,41 +1247,51 @@ needs. Memory is bounded: `--max-distinct` (default 10,000) values are tracked p
 `>=10000` and the field cannot be a key or a match column.
 
 ```text
-$ python3 tools/drishti.py data profile data/jsonl/trade.jsonl
-data profile: 1 file(s), 750 document(s), 1 kind(s)
+$ drishti-console/.venv/bin/python tools/drishti.py data profile data/testdata/trades/murex/snapshot-2026-09-22.jsonl.gz --kind trade
+data profile: 1 file(s), 4933 document(s), 1 kind(s)
 
-== trade: 750 document(s), 402 field(s)
-  field                                 type            cover  distinct  examples
-  tradeId                               string           100%       750  MX-20000001, MX-20000002, MX-20000003
-  sourceSystem                          string           100%         6  Murex, Wall Street Systems, Calypso
-  productType                           string           100%       125  IRS_FIXFLOAT, OIS, BASIS_SWAP
-  tradeDate                             string           100%       385  2025-07-25, 2025-02-06, 2026-09-18
-  notional                              number           100%       247  242000000.0, 110000000.0, 204000000.0
-  counterparty.id                       string           100%        18  CP-MERIDIAN-RE, CP-HALCYON, CP-AURORA
-  terms.fixedRate                       number             7%        54  0.040829, 0.019194, 0.015994
-  sensitivities[].bucket                string           100%        10  3M, 6M, 1Y
-  legs[].leg                            integer           22%         2  1, 2
+== trade: 4933 document(s), 107 field(s)
+  field                                           type            cover  distinct  examples
+  SOURCE_SYSTEM                                   string           100%         1  MUREX
+  SOURCE_UPDATE_TIME                              string           100%         1  2026-09-22T18:30:00Z
+  TRADE_DATE                                      string           100%       292  2025-07-25, 2025-02-06, 2026-09-18
+  INPUT_DATE                                      string           100%       292  2025-07-25, 2025-02-06, 2026-09-18
+  TRADE_ID                                        string           100%      4933  MX-20000001, MX-20000002, MX-20000003
+  TRADE_STATUS                                    string           100%         3  AMENDED, VALIDATED, MATURED
+  ...
+  LEGS[].CASH_FLOWS[].RESETS                      array            100%         0
+  EVENTS                                          array            100%         0
   ...
   key candidates (present and unique everywhere):
-    tradeId                      exact     present in all 750 documents, 750 different values
-    sourceTradeId                exact     present in all 750 documents, 750 different values
+    TRADE_ID                     exact     present in all 4933 documents, 4933 different values
+    TRANSACTION_ID               exact     present in all 4933 documents, 4933 different values
   date candidates (ISO dates in at least 95% of the documents):
-    tradeDate                    385 date(s) 2024-04-12 .. 2026-09-25, coverage 100%
-    effectiveDate                328 date(s) 2024-04-15 .. 2026-09-28, coverage 100%
+    SOURCE_UPDATE_TIME           1 date(s) 2026-09-22 .. 2026-09-22, coverage 100%
+    TRADE_DATE                   292 date(s) 2024-04-16 .. 2026-09-22, coverage 100%
+    INPUT_DATE                   292 date(s) 2024-04-16 .. 2026-09-22, coverage 100%
+    START_DATE                   259 date(s) 2024-04-18 .. 2026-09-24, coverage 100%
+    MATURITY_DATE                361 date(s) 2026-09-30 .. 2038-02-01, coverage 100%
   match candidates (split the kind into screens; score 0..1):
-    assetClass                   1.000  coverage 100%, 10 values over 750 documents (average 75.0 per value, evenness 0.94; largest group Rates = 156); name suggests a category
-    family                       1.000  coverage 100%, 13 values over 750 documents (average 57.7 per value, evenness 0.88; largest group swap = 144); name suggests a category
-    productType                  0.958  coverage 100%, 125 values over 750 documents (average 6.0 per value, evenness 1.00; largest group IRS_FIXFLOAT = 6); name suggests a category
+    PRODUCT_TYPE                 1.000  coverage 100%, 74 values over 4933 documents (average 66.7 per value, evenness 1.00; largest group IRS_FIXFLOAT = 72); name suggests a category
+    PRODUCT_SUB_TYPE             1.000  coverage 100%, 74 values over 4933 documents (average 66.7 per value, evenness 1.00; largest group Interest rate swap (fixed/float) = 72); name suggests a category
+    COUNTERPARTY                 0.985  coverage 100%, 18 values over 4933 documents (average 274.1 per value, evenness 0.98; largest group CP-SUMMIT = 759)
+    COUNTERPARTY_UEN             0.985  coverage 100%, 18 values over 4933 documents (average 274.1 per value, evenness 0.98; largest group UEN0100592 = 759)
+    PORTFOLIO                    0.962  coverage 100%, 15 values over 4933 documents (average 328.9 per value, evenness 0.93; largest group BOOK-RATES-2 = 635)
+    TT_BOOK                      0.962  coverage 100%, 15 values over 4933 documents (average 328.9 per value, evenness 0.93; largest group BOOK-RATES-2 = 635)
   suggested:
-    python3 tools/drishti.py pack make data/jsonl/trade.jsonl --kind trade --match assetClass --key tradeId --date tradeDate --name trade-pack
+    python3 tools/drishti.py pack make data/testdata/trades/murex/snapshot-2026-09-22.jsonl.gz --kind trade --match PRODUCT_TYPE --key TRADE_ID --date SOURCE_UPDATE_TIME --name trade-pack
 ```
+
+Here `SOURCE_UPDATE_TIME` (the extract's time stamp: one date in the file, the snapshot's business day) is the right business date, and
+`PRODUCT_TYPE` the match column; on the ENDUR file, whose `SOURCE_UPDATE_TIME` is empty, no field holds the business date (see the
+`pack make` note above).
 
 A **key** is a scalar present in every document with a different value in each (`exact` while the values fit in `--max-distinct`,
 `probable` beyond; id-like names first). A **date** is a field whose every value is an ISO date, present in at least 95% of the
 documents. A **match** column splits the kind into screens; the score (0 to 1) is `coverage x (1 - distinct/documents) x min(1,
 average group size/5) x min(1, distinct/8) x (0.5 + 0.5 x evenness)`, times 1.15 when the name ends in type, class, category, kind,
 family, product, segment, region or status, times 0.9 per nesting level; each line says why. It is a ranking, not a decision: here
-`assetClass` gives ten broad screens, `productType` gives 125 specific ones, and you choose. `--json` prints every field and
+`PRODUCT_TYPE` gives 74 screens (one per product), `COUNTERPARTY` 18 and `PORTFOLIO` 15, and you choose. `--json` prints every field and
 candidate; exit 0, or 2 when nothing could be read.
 
 ### `data ingest`: your JSON Lines into a lake or files
@@ -1218,35 +1341,42 @@ examples:
 `--mode overwrite-dates` (the default) replaces only the dates in your input, so re-running a day is safe; `append` adds;
 `replace` rebuilds the kind. Documents without a date or id are counted and left out, never silently dropped.
 
+The curves of the test data into the files store of the `curves-demo` pack made [above](#pack-new-a-complete-pack-from-json-lines)
+(its `ingest:` block gives the key `CURVE_ID` and the date `AS_OF`; `--kind` because the file names are not kinds):
+
 ```bash
 # look first
-python3 tools/drishti.py data ingest --from data/jsonl --pack config/packs/jsonl-demo --store files --root data/files2 --dry-run
+drishti-console/.venv/bin/python tools/drishti.py data ingest --from data/testdata/market-data/ir-curve --kind ir-curve \
+    --pack data/build/curves-demo --store files --root data/build/files2 --dry-run
 ```
 
 ```text
 kind                business date        rows   (dry run)
-counterparty        2026-10-02              4
-trade               2026-10-01             30
-trade               2026-10-02             30
-total rows: 64
+ir-curve            2026-09-22             28
+ir-curve            2026-09-23             28
+...
+ir-curve            2026-09-30             28
+total rows: 196
 ```
 
 ```bash
-python3 tools/drishti.py data ingest --from data/jsonl --pack config/packs/jsonl-demo --store files --root data/files2
+drishti-console/.venv/bin/python tools/drishti.py data ingest --from data/testdata/market-data/ir-curve --kind ir-curve \
+    --pack data/build/curves-demo --store files --root data/build/files2
 ```
 
 ```text
-  counterparty 2026-10-02: 4 rows -> data/files2/jsonl-demo/2026-10-02/counterparty.jsonl
-  trade 2026-10-01: 30 rows -> data/files2/jsonl-demo/2026-10-01/trade.jsonl
-  trade 2026-10-02: 30 rows -> data/files2/jsonl-demo/2026-10-02/trade.jsonl
+  ir-curve 2026-09-22: 28 rows -> data/build/files2/curves-demo/2026-09-22/ir-curve.jsonl
+  ir-curve 2026-09-23: 28 rows -> data/build/files2/curves-demo/2026-09-23/ir-curve.jsonl
+  ...
+  ir-curve 2026-09-30: 28 rows -> data/build/files2/curves-demo/2026-09-30/ir-curve.jsonl
 kind                business date        rows
-counterparty        2026-10-02              4
-trade               2026-10-01             30
-trade               2026-10-02             30
-total rows: 64
+ir-curve            2026-09-22             28
+...
+ir-curve            2026-09-30             28
+total rows: 196
 ```
 
-For Delta (`--store delta --lake DIR`, the default store) run it with `uv run --with pyyaml --with deltalake --with pyarrow`.
+For Delta (`--store delta --lake DIR`, the default store) the console's interpreter has `deltalake` and `pyarrow` already.
 
 ### `data ingest --watch`: a drop folder that feeds the lake
 
@@ -1413,17 +1543,37 @@ server connection:
 ```
 
 ```bash
-python3 tools/drishti.py server health
+drishti-console/.venv/bin/python tools/drishti.py server health
 ```
 
+On the quick-start server (the demo lakes, sign-in on, the token in `DRISHTI_TOKEN`) after tutorials 4 and 5, which add the
+`desk-quotes` pack and its connectors, and with a connector file of [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) that points
+at a folder this machine does not have:
+
 ```text
-status DEGRADED  version 2.2.0  java 21.0.12.1  uptime 190s
-packs 2  sources 4 (degraded 0, down 2)  packs with problems 1  failed to start 0
-  file                        DOWN      DOWN: no directory /srv/drishti/run/data/feeds
-  genomics-store              DOWN      DOWN: cannot reach /srv/drishti/delta/genomics (engine: native)
-  demo                        UP        UP
-  jsonl-demo-store            UP        UP
+status DEGRADED  version 2.2.0  java 21.0.12.1  uptime 2111s
+packs 8  sources 17 (degraded 0, down 2)  packs with problems 1  failed to start 0
+  desk-quotes-store           DOWN      DOWN: cannot reach <repository>/data/delta/desk-quotes (engine: native)
+  orders-lake                 DOWN      DOWN: no directory /srv/lake/orders
+  civic-store                 UP        UP (engine: native)
+  collateral-store            UP        UP (engine: native)
+  credit-store                UP        UP (engine: native)
+  desk-quotes                 UP        UP
+  file                        UP        UP
+  legal-store                 UP        UP (engine: native)
+  macro-store                 UP        UP (engine: native)
+  market-store                UP        UP (engine: native)
+  news-store                  UP        UP (engine: native)
+  reference-store             UP        UP (engine: native)
+  risk-store                  UP        UP (engine: native)
+  trade-calypso               UP        UP (engine: native)
+  trade-endur                 UP        UP (engine: native)
+  trade-murex                 UP        UP (engine: native)
+  trade-pages                 UP        UP
+(exit 1)
 ```
+
+The other 14 sources are the seven packs' own, all `UP`; [TOOLS.md section 5.4](TOOLS.md#54-server-and-doctor) has another capture.
 
 The exit code is 1 unless the status is `OK` (here two sources are down, so `DEGRADED`). `--json` prints the server's own
 `GET /api/v1/admin/health` document.
@@ -1462,14 +1612,23 @@ server connection:
 ```
 
 ```bash
-python3 tools/drishti.py server packs list
+drishti-console/.venv/bin/python tools/drishti.py server packs list
 ```
 
 ```text
 pack                  version  loaded  on   added  kinds
-genomics              1.0.0    yes     yes         8
-jsonl-demo            1.0.0    yes     yes  yes    2
+core                  1.0.0    yes     yes         10
+market-data           1.0.0    yes     yes         20
+trading               1.0.0    yes     yes         5
+counterparty-risk     1.0.0    yes     yes         10
+market-risk           1.0.0    yes     yes         6
+world-economy         1.0.0    yes     yes         13
+news-and-markets      1.0.0    yes     yes         4
+desk-quotes           1.0.0    yes     yes  yes    1
+(exit 0)
 ```
+
+The seven packs come from `DRISHTI_PACKS`; `desk-quotes` was **added** by an administrator (tutorial 5) and is in the overlay file.
 
 ```bash
 python3 tools/drishti.py server packs load my-bank       # POST /api/v1/admin/packs/my-bank/load
@@ -1706,29 +1865,40 @@ connector does not work; **2** usage (no such file, unknown option). The server 
 `DRS-5032` instead of being overwritten. A new connector needs no version. A literal credential in the file is refused with `DRS-5031`; write `${ENV_VAR}` or `file:/path`.
 
 ```text
-$ python3 tools/drishti.py connector list
-14 connector(s) in /srv/drishti/config/connectors   (watching: WATCHING)
-  name              origin       plugin   kinds                                      state           used by       problems
-  ----------------  -----------  -------  -----------------------------------------  --------------  ------------  ----------------------------------------------------------------------------
-  desk-quotes       file         file     quote                                      running         desk-demo
-  desk-totals       file         derived  desk-pnl                                   running         trading
-  ecb-estr-feed     file         feed     rate-fixing                                disabled        market-data
-  ecb-fx-feed       file         feed     fx-spot                                    disabled        market-data
-  fred-feed         file         feed     rate-fixing                                disabled        market-data
-  ledger-db         file         jdbc     ledger-entry                               running (DOWN)
-  legacy-feed       application  file                                                running                       defined in application.yaml (deprecated); save it to create legacy-feed.yaml
-  market-store      file         delta    ir-curve,repo-curve,fx-spot +17            running (DOWN)  market-data
-  nyfed-sofr-feed   file         feed     rate-fixing                                disabled        market-data
-  reference-store   file         delta    counterparty,counterparty-group,issuer +9  running (DOWN)  core
-  site-quotes       file         file     quote                                      running
-  trading-store     file         delta    trade                                      running (DOWN)  trading
-  trading-stream    file         kafka    trade                                      disabled        trading
-  us-treasury-feed  file         feed     ir-curve                                   disabled        market-data
-  deprecated: legacy-feed is defined in the server's own configuration; apply a file to replace it
+$ drishti-console/.venv/bin/python tools/drishti.py connector list
+24 connector(s) in <repo>/config/connectors   (watching: WATCHING)
+  name               origin  plugin    kinds                                                        state           used by            problems
+  -----------------  ------  --------  -----------------------------------------------------------  --------------  -----------------  --------
+  civic-store        file    delta     jurisdiction,party,office-holder +3                          running         world-economy
+  collateral-store   file    delta     collateral-balance,margin-call,simm                          running         counterparty-risk
+  credit-store       file    delta     netting-set,credit-limit,exposure-profile +2                 running         counterparty-risk
+  desk-ledger        file    jdbc      ledger-entry                                                 down, retrying
+  desk-quotes        file    file      desk-quote                                                   running
+  desk-quotes-store  file    delta     desk-quote                                                   down, retrying  desk-quotes
+  ecb-estr-feed      file    feed      rate-fixing                                                  disabled        market-data
+  ecb-fx-feed        file    feed      fx-spot                                                      disabled        market-data
+  fred-feed          file    feed      rate-fixing                                                  disabled        market-data
+  legal-store        file    delta     agreement,csa                                                running         counterparty-risk
+  macro-store        file    delta     economy,macro-indicator,economic-forecast +4                 running         world-economy
+  market-store       file    delta     ir-curve,repo-curve,fx-spot +17                              running         market-data
+  news               file    news      news                                                         disabled        news-and-markets
+  news-store         file    delta     news-topic,listed-company                                    running         news-and-markets
+  nyfed-sofr-feed    file    feed      rate-fixing                                                  disabled        market-data
+  reference-store    file    delta     counterparty,counterparty-group,issuer +7                    running         core
+  risk-store         file    delta     var,stress-scenario,stress-result +3                         running         market-risk
+  trade-calypso      file    delta     trade                                                        running         trading
+  trade-endur        file    delta     trade                                                        running         trading
+  trade-murex        file    delta     trade                                                        running         trading
+  trade-pages        file    derived   counterparty-trades,portfolio-trades,legal-entity-trades +1  running         trading
+  trading-stream     file    kafka     trade                                                        disabled        trading
+  us-treasury-feed   file    feed      ir-curve                                                     disabled        market-data
+  yfinance           file    yfinance  quote                                                        disabled        news-and-markets
 ```
 
-(The scratch server of these examples has no Delta lake or PostgreSQL, so those connectors are `DOWN`.) The `origin` is `file` (a file in the folder), `pack` (a
-pack's template that has no file yet) or `application` (the deprecated `drishti.sources.connectors` of the server's own configuration).
+(Captured on a fresh clone after `lake demo` with the seven packs, and two packs a tutorial added: `desk-quotes` and its JDBC `desk-ledger` are down
+because their stores are not there. The feeds, `news`, `yfinance` and `trading-stream` (Kafka) ship disabled.) The `origin` is `file` (a file in the folder), `pack` (a
+pack's template that has no file yet) or `application` (the deprecated `drishti.sources.connectors` of the server's own configuration, then flagged
+`deprecated` under the table).
 
 ```text
 $ python3 tools/drishti.py connector get site-quotes
@@ -1832,15 +2002,15 @@ $ python3 tools/drishti.py connector history orders-lake
 Switching off or deleting a connector packs use asks first (`DRS-5032`, exit 1) and goes ahead with `--confirm`; a connector a pack's template suggests is never deleted:
 
 ```text
-$ python3 tools/drishti.py connector disable trading-store
-drishti: the server said 409 DRS-5032: DRS-5032 disabling connector 'trading-store' would stop serving pack trading (trade); repeat with confirm=true to go ahead
+$ drishti-console/.venv/bin/python tools/drishti.py connector disable trade-endur
+drishti: the server said 409 DRS-5032: DRS-5032 disabling connector 'trade-endur' would stop serving pack trading (trade); repeat with confirm=true to go ahead
 [exit 1]
-$ python3 tools/drishti.py connector disable trading-store --confirm
-trading-store is off (disabled)
-$ python3 tools/drishti.py connector enable trading-store
-trading-store is on (running)
-$ python3 tools/drishti.py connector delete trading-store
-drishti: the server said 409 DRS-5032: DRS-5032 connector 'trading-store' is named by pack trading's template, so it is not deleted: reset it to the pack's default, or disable it
+$ drishti-console/.venv/bin/python tools/drishti.py connector disable trade-endur --confirm
+trade-endur is off (disabled)
+$ drishti-console/.venv/bin/python tools/drishti.py connector enable trade-endur
+trade-endur is on (running)
+$ drishti-console/.venv/bin/python tools/drishti.py connector delete trade-endur
+drishti: the server said 409 DRS-5032: DRS-5032 connector 'trade-endur' is named by pack trading's template, so it is not deleted: reset it to the pack's default, or disable it
 [exit 1]
 $ python3 tools/drishti.py connector delete orders-lake
 deleted orders-lake (its text is kept in the connector folder's history/ folder)
@@ -1959,7 +2129,7 @@ drishti.py bi mq --model REF --select F,... --measures M,... [--define "Name=DEL
 ```
 
 `REF` is `name@major` (`trading-risk@1`), a model item id or `dataset:<name>` (a dataset's implicit model). `bi mq --define` adds a measure of this query
-only, in DEL (`--define "Open MTM=sum(trades.mtm, where=trades.status == 'Live')" --measures "Open MTM"`), as a report's own measure travels. `--sort BY`
+only, in DEL (`--define "Live MTM=sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')" --measures "Live MTM"`), as a report's own measure travels. `--sort BY`
 sorts by a field or measure, `--sort=-BY` descending (the `=` keeps the minus from reading as an option), repeatable: `--sort=-MTM --limit 3` is the top three. The answer is
 a table with its plan, its as-of date and the columns masked for you; `--json` prints the server's answer as it is.
 
@@ -2065,27 +2235,34 @@ server connection:
   --timeout TIMEOUT     seconds to wait for the server (default 60)
 ```
 
-**Create, check, hand over.** Against a scratch server on port 18977 (sign-in off, `DRISHTI_STUDIO_SAVE=true`):
+**Create, check, hand over.** Against the quick-start server (sign-in on, `DRISHTI_STUDIO_SAVE=true`, the development administrator's
+token in `DRISHTI_TOKEN`), with the all-panels showcase document of the Sutra examples as the sample:
 
 ```bash
-export DRISHTI_SERVER=http://localhost:18977
-python3 tools/drishti.py design create --name swap-demo --kind trade --samples config/packs/jsonl-demo/tests/trade-swap --autodesign
+export DRISHTI_SERVER=http://localhost:18480
+python3 tools/drishti.py design create --name swap-demo --kind trade --samples docs/guides/examples/all-panels-showcase.json --autodesign
 python3 tools/drishti.py design list
-python3 tools/drishti.py design check f0bc597072b6
-python3 tools/drishti.py design propose f0bc597072b6 --note "first cut"
+python3 tools/drishti.py design check bdc51fed0ce7
+python3 tools/drishti.py design propose bdc51fed0ce7 --note "first cut"
 python3 tools/drishti.py design proposals
-python3 tools/drishti.py design approve P-000001 --comment "looks right"
+python3 tools/drishti.py design reject P-000002 --comment "not this time"      # or: design approve P-000002 --comment "looks right"
 ```
 
 ```text
-created f0bc597072b6  swap-demo  kind trade  status draft  rev 1
-  samples: sample-1.json, sample-2.json, sample-3.json, sample-4.json, sample-5.json
-f0bc597072b6  swap-demo                   trade         draft     rev 1   5 sample(s)
+created bdc51fed0ce7  swap-demo  kind trade  status draft  rev 1
+  samples: all-panels-showcase.json
+bdc51fed0ce7  swap-demo                   trade         draft     rev 1   1 sample(s)
+...
 check of rev 1: all samples ok
-proposed: proposal P-000001 for trade-auto v1 is pending; an approver decides it
-P-000001  trade-auto v1  pending  by anonymous
-approve: proposal P-000001: trade-auto v1 is approved
+proposed: proposal P-000002 for trade-auto v1 is pending; an approver decides it
+P-000002  trade-auto v1  pending  by drishti-dev-admin
+P-000001  counterparty-mine v1  withdrawn  by drishti-dev-admin
+reject: proposal P-000002: trade-auto v1 is rejected
 ```
+
+`design list` also lists your other designs (the drafts of **Build → New pack** are designs too); the ids and proposal numbers are your
+own. `design approve` answers the same way (`approve: proposal P-000002: trade-auto v1 is approved`) and puts the Sutra live: on a
+shared server, reject or delete what you only tried (`design delete bdc51fed0ce7`).
 
 (`design check` exits 1 and lists each failing sample when something does not render.)
 
@@ -2232,52 +2409,78 @@ options:
 ### 10.1 JSONL folder or file to a pack, a lake or files, a running server and a live view
 
 You have JSON Lines: one file per kind (`trade.jsonl`, `counterparty.jsonl`), or a file mixing kinds with an envelope
-`{"kind": "...", "doc": {...}}`; every document has an id and a business date.
+`{"kind": "...", "doc": {...}}`, or (as here) files named by day with `--kind`; every document has an id and a business date. Run on the
+quick-start server (the demo lakes, sign-in on, an administrator's token in `DRISHTI_TOKEN`) with the test data's interest-rate curves
+as a pack of its own. Its kind is `demo-curve`: a kind name is unique across the loaded packs, and `ir-curve` is market-data's.
 
 ```bash
-# 1. look at what you have, then build the pack and put the documents in a dated store (files: nothing extra to install)
-python3 tools/drishti.py pack new data/jsonl --name jsonl-demo --title "JSONL demo" \
-    --key trade=tradeId,counterparty=counterpartyId --date businessDate --match trade=productType \
-    --store files --files-root data/files
+# 1. build the pack in the server's packs folder and put the documents in the files store the server reads (<data>/files)
+drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/market-data/ir-curve --name curves-demo --title "Curves demo" \
+    --kind demo-curve --key CURVE_ID --date AS_OF --match CURVE_TYPE --store files --files-root data/files
 
 # 2. check it, and list the help text still to write
-python3 tools/drishti.py pack check config/packs/jsonl-demo
-python3 tools/drishti.py pack about-check config/packs/jsonl-demo
-
-# 3. restart the server once with the store's root (DRISHTI_FILES_ROOT=$PWD/data/files, as in QUICKSTART or your IDE run
-#    configuration), then load the pack into it without another restart of yours
-python3 tools/drishti.py server packs load jsonl-demo --server http://localhost:18480
-```
-
-With a **Delta lake** instead: `--lake data/delta` in step 1 (run with `uv run --with pyyaml --with deltalake --with pyarrow`), and
-start the server with `DRISHTI_DELTA_ROOT=$PWD/data/delta`.
-
-4. Open the console, type `TRA TRD-0050` and press Enter (the mnemonic `pack new` chose is the kind's initials; see the pack's
-   `README.md`). The view is read from your store. Pick the business date in the top bar: each date you ingested has its
-   documents. On the scratch server of this guide the same check from a shell:
-
-```bash
-curl -s "http://localhost:18977/api/v1/views/trade/TRD-0050?asOf=2026-10-02" | head -c 160
+drishti-console/.venv/bin/python tools/drishti.py pack check config/packs/curves-demo
+drishti-console/.venv/bin/python tools/drishti.py pack about-check config/packs/curves-demo
 ```
 
 ```text
-{"ref":{"kind":"trade","id":"TRD-0050"},"mnemonic":"TRA","title":{"pill":"Trade · fx-forward","id":"TRD-0050","with":{"text":"CP-003",...
+196 documents, 1 kind(s), 4 group(s)
+drafting 4 Sutra(s) with one `sutra design --each` run ...
+kind            group                                          docs samples  sutra
+demo-curve      CURVE_TYPE=Cross-currency basis                  49       5  demo-curve-cross-currency-basis
+demo-curve      CURVE_TYPE=Discount (OIS)                        49       5  demo-curve-discount-ois
+demo-curve      CURVE_TYPE=Government                            49       5  demo-curve-government
+demo-curve      CURVE_TYPE=Projection                            49       5  demo-curve-projection
+...
+Dated store (files): 196 rows written to data/files (domain curves-demo); 0 document(s) without a date or id skipped
+pack written to config/packs/curves-demo
+sutra lint: exit 0
+sutra test: exit 0
+== curves-demo: sutra lint: exit 0
+config/packs/curves-demo/sutras/demo-curve/demo-curve-government.v1.sutra.yaml:15 warning DRS-2047 field 'POINTS.ZERO_RATE' is shown but has no glossary entry (kinds.demo-curve.glossary in config/about.yaml, or a vocabulary entry)
+...
+== curves-demo: sutra test: exit 0
 ```
 
-`TRD-0050` is not among the pack's sample files, so this answer came **from the files store**. New documents tomorrow: run
-`data ingest --from data/new --pack config/packs/jsonl-demo --store files --root data/files`; the default mode replaces only the dates
-in the input, and the server picks the new files up on its next rescan.
+3. **The server picks the pack up by itself.** It watches its packs folder (`drishti.packs.dir`, default `./config/packs`): a new
+   pack folder is loaded within seconds, with no restart and no command. `server packs load` is for a pack on disk the server did not
+   load (one switched off, or one in `drishti.packs.installed-dir`); for this one it answers that it is loaded already:
 
-**Three ways a pack becomes known** to a server (the third is section 10.4): start with `DRISHTI_PACKS=...,jsonl-demo` and a
-restart; `server packs load jsonl-demo` (or **Admin → Packs → Load**; it takes effect at once, with no restart, and is remembered in
-`data/packs/added.yaml`); install from a registry. See [PACKS.md#loading-a-pack-while-the-server-runs](PACKS.md#loading-a-pack-while-the-server-runs).
+```text
+$ drishti-console/.venv/bin/python tools/drishti.py server packs load curves-demo
+drishti: the server said 400 DRS-5001: DRS-5001 'curves-demo' is already loaded
+```
+
+With a **Delta lake** instead: `--lake data/delta` in step 1 (the server's `DRISHTI_DELTA_ROOT`, default `<data>/delta`).
+
+4. Open the console, type `DC CRV-USD-OIS` and press Enter (`DC` is the mnemonic `pack new` chose, the kind's initials; see the pack's
+   `README.md`). Pick a business date in the top bar: each date you ingested has its documents. The same from a shell:
+
+```bash
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "$DRISHTI_SERVER/api/v1/views/demo-curve/CRV-USD-OIS?asOf=2026-09-30" | head -c 300
+```
+
+```text
+{"ref":{"kind":"demo-curve","id":"CRV-USD-OIS"},"mnemonic":"DC","title":{"pill":"Demo curve · USD","id":"CRV-USD-OIS","with":{"text":"CRV-USD-OIS","link":{"kind":"ir-curve","id":"CRV-USD-OIS","mnemonic":"CRV"}}},"strip":[{"label":...
+```
+
+The title links to market-data's own `ir-curve` of the same id (the link graph knows `CURVE_ID` values are curves). New documents
+tomorrow: `data ingest --from new-day/ --kind demo-curve --pack config/packs/curves-demo --store files --root data/files`; the default
+mode replaces only the dates in the input, and the server picks the new files up on its next rescan. To take the pack away again:
+`server packs unload curves-demo` (`unload curves-demo: Applied now; no restart.`), then delete `config/packs/curves-demo` and
+`data/files/curves-demo`.
+
+**Three ways a pack becomes known** to a server (the third is section 10.4): start with `DRISHTI_PACKS=...,curves-demo` and a
+restart, or put it in the watched packs folder as above; `server packs load curves-demo` (or **Admin → Packs → Load**; it takes effect at
+once, with no restart, and is remembered in `data/packs/added.yaml`); install from a registry. See
+[PACKS.md#loading-a-pack-while-the-server-runs](PACKS.md#loading-a-pack-while-the-server-runs).
 
 ### 10.2 A CI pipeline: lint, test, JUnit
 
 ```bash
 set -e
-python3 tools/drishti.py pack check config/packs/my-bank --strict --junit build/reports       # exit 1 fails the job
-python3 tools/drishti.py pack check config/packs/my-bank --json > build/pack-check.json       # for a dashboard
+python3 tools/drishti.py pack check config/packs/my-bank --strict --junit data/build/reports  # exit 1 fails the job
+python3 tools/drishti.py pack check config/packs/my-bank --json > data/build/pack-check.json  # for a dashboard
 ```
 
 A GitHub Actions job (the jar is built once and reused):
@@ -2341,37 +2544,31 @@ stay on stderr.
 
 | Command | Shape |
 |---|---|
-| `pack check --json` | `{ok, packs: [{pack, path, steps: {lint: {exit, output, error}, test: {...}}, packYaml: [problems], ok}]}` |
+| `pack check --json` | `{ok, packs: [{pack, path, steps: {lint: {exit, output, error}, test: {...}}, packYaml: [problems], ok}]}` (`output` is the step's text, lines joined) |
 | `pack about-check --json` | `{ok, strict, gaps, packs: [{pack, sutras: {<sutra>: {missing: [fields], other: [warnings]}}, todo: [...], gaps, lintExit}]}` |
 | `pack publish --json` | `{published, pack, registry, publisher}` |
 | `server health --json`, `server packs list --json`, `pack install [--list] --json` | the server's own JSON |
 | every `design ... --json` | the server's own JSON (`design export` prints `{file, bytes}`) |
 
+On the help-desk example pack (`docs/guides/examples/pack/helpdesk`, fully explained):
+
 ```text
-$ python3 tools/drishti.py pack check config/packs/jsonl-demo --json
+$ python3 tools/drishti.py pack check docs/guides/examples/pack/helpdesk --json
 {
   "ok": true,
   "packs": [
     {
-      "pack": "jsonl-demo",
-      "path": "config/packs/jsonl-demo",
+      "pack": "helpdesk",
+      "path": "docs/guides/examples/pack/helpdesk",
       "steps": {
         "lint": {
           "exit": 0,
-          "output": [
-            "ok      config/packs/jsonl-demo/sutras/counterparty/counterparty-default.v1.sutra.yaml",
-            "ok      config/packs/jsonl-demo/sutras/trade/trade-bond.v1.sutra.yaml",
-            "ok      config/packs/jsonl-demo/sutras/trade/trade-fx-forward.v1.sutra.yaml"
-          ],
-          "error": "hutosh-IdeaProjects-drishti/efa68c11-fb98-4f9a-8faa-96a952090c0e/scratchpad/cli-work/packs/jsonl-demo/sutras/trade/trade-fx-for...
+          "output": "ok      docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml",
+          "error": ""
         },
         "test": {
           "exit": 0,
-          "output": [
-            "     counterparty-default: help coverage 2/4 (50%)",
-            "ok   config/packs/jsonl-demo/sutras/counterparty/counterparty-default.v1.sutra.yaml (4 samples)",
-            "     trade-bond: help coverage 1/5 (20%)"
-          ],
+          "output": "     ticket: help coverage 8/8 (100%)\nok   docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml (2 samples)",
           "error": ""
         }
       },
@@ -2383,33 +2580,25 @@ $ python3 tools/drishti.py pack check config/packs/jsonl-demo --json
 ```
 
 ```text
-$ python3 tools/drishti.py pack about-check config/packs/jsonl-demo --json
+$ python3 tools/drishti.py pack about-check docs/guides/examples/pack/helpdesk --json
 {
-  "ok": false,
+  "ok": true,
   "strict": false,
-  "gaps": 14,
+  "gaps": 0,
   "packs": [
     {
-      "pack": "jsonl-demo",
-      "sutras": {
-        "counterparty-default.v1": {
-          "missing": [
-            "businessDate",
-            "rating"
-          ],
-          "other": []
-        },
-        "trade-bond.v1": {
-          "missing": [
-            "notional",
-            "mtm",
-            "businessDate",
-            "productType"
-          ],
-          "other": []
-        },
-...
+      "pack": "helpdesk",
+      "sutras": {},
+      "todo": [],
+      "gaps": 0,
+      "lintExit": 0
+    }
+  ]
+}
 ```
+
+On a generated pack (the `curves-demo` of section 5) `about-check --json` has `"ok": false`, `"gaps": 24` and, per Sutra,
+`{"missing": ["POINTS.TENOR", ...], "other": []}`.
 
 `design check --json` is the server's matrix, for example `{"ok": true, "samples": [{"name": "sample-1.json", "layout":
 "Sutra trade-auto v1", "status": "ok"}, ...], "panels": [...], "rev": 1}`.
@@ -2461,14 +2650,15 @@ empty PyCharm to a run configuration for each common task.
 2. Make a virtual environment with `uv` (any virtual environment works), in a terminal at the repository root:
 
    ```bash
-   uv venv .venv-tools
-   uv pip install --python .venv-tools/bin/python pyyaml deltalake pyarrow
+   uv venv --python 3.13 drishti-console/.venv
+   uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
    ```
 
-   `pyyaml` is enough for everything except Delta lakes; `deltalake` and `pyarrow` are for `--store delta` (the default of
-   `pack make`) and `data ingest --lake`. On Windows the interpreter is `.venv-tools\Scripts\python.exe`.
+   This is the console's own environment, the one the quick start installs and the shipped run configurations (`run-configs/`) use: it has
+   `pyyaml`, `deltalake` and `pyarrow` (the last two for `--store delta`, the default of `pack make`, `data ingest --lake` and `lake build`).
+   On Windows the interpreter is `drishti-console\.venv\Scripts\python.exe`.
 3. **Settings (Ctrl+Alt+S) → Project → Python Interpreter → Add Interpreter → Add Local Interpreter → Existing**, pick
-   `.venv-tools/bin/python`, **OK**. Keep it separate from the console's `drishti-console/.venv`.
+   `drishti-console/.venv/bin/python`, **OK**.
 4. Optional: **Settings → Project → Project Structure**: mark `tools` as *Sources* so PyCharm resolves `import sutragen` and
    `import ingest_jsonl` when you click through code.
 
@@ -2479,7 +2669,7 @@ empty PyCharm to a run configuration for each common task.
 | Field | Value |
 |---|---|
 | **Script path** (not *Module name*; switch the toggle on the left of the field) | `<repo>/tools/drishti.py` |
-| **Python interpreter** | the `.venv-tools` interpreter from 14.1 |
+| **Python interpreter** | the `drishti-console/.venv` interpreter from 14.1 |
 | **Working directory** | **the repository root**: relative paths in *Parameters* resolve from here |
 | **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-2.2.0-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
 
@@ -2488,12 +2678,12 @@ Click the folder icon next to **Environment variables** to edit them as a table 
 
 | Name | **Parameters** |
 |---|---|
-| `drishti pack make` | `pack make data/jsonl --kind trade --match productType --name my-bank --out build/my-bank --force` |
-| `drishti data profile` | `data profile data/jsonl` |
-| `drishti pack regenerate` | `pack regenerate config/packs/my-bank data/jsonl --dry-run` |
-| `drishti sutra gen` | `sutra gen data/jsonl --kind trade --match productType --out build/sutras` |
-| `drishti data ingest` | `data ingest --from data/new --pack build/my-bank/pack/my-bank --lake build/my-bank/data/delta --dry-run` (remove `--dry-run` to write) |
-| `drishti pack check` | `pack check build/my-bank/pack/my-bank --strict --junit build/reports` |
+| `drishti pack make` | `pack make data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank --force` |
+| `drishti data profile` | `data profile data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz` |
+| `drishti pack regenerate` | `pack regenerate data/build/my-bank/pack/my-bank data/testdata/trades/endur/changes-2026-09-23.jsonl.gz --dry-run` |
+| `drishti sutra gen` | `sutra gen data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz --kind trade --match PRODUCT_TYPE --out data/build/sutras` |
+| `drishti data ingest` | `data ingest --from your-new-days/ --pack data/build/my-bank/pack/my-bank --lake data/build/my-bank/data/delta --dry-run` (remove `--dry-run` to write) |
+| `drishti pack check` | `pack check data/build/my-bank/pack/my-bank --strict --junit data/build/reports` |
 | `drishti server packs load` | `server packs load my-bank --server http://localhost:18480` with `DRISHTI_TOKEN` set |
 | `drishti sutra lint` | `sutra lint config/packs/my-bank` |
 | `drishti server health` | `server health` |
@@ -2540,7 +2730,7 @@ The format is one `<configuration>` element in a `ProjectRunConfigurationManager
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <option name="IS_MODULE_SDK" value="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/drishti.py" />
-    <option name="PARAMETERS" value="pack make data/jsonl --kind trade --match productType --name my-bank --out build/my-bank --force" />
+    <option name="PARAMETERS" value="pack make data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank --force" />
     <method v="2" />
   </configuration>
 </component>

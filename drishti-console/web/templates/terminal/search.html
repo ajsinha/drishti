@@ -25,7 +25,7 @@
   <h1>{% if picking and data %}Pick {{ 'an' if (data.kind or 'x')[0] in 'aeiou' else 'a' }} {{ data.kind | replace('-', ' ') }}{% else %}Search by value{% endif %}</h1>
   <form class="srch-form" method="get" action="/s" role="search">
     <label for="srchQ" class="visually-hidden">Search</label>
-    <input id="srchQ" class="srch-q mono" name="q" value="{{ q }}" placeholder="TRD MX-200000 · TRD PRODUCT_TYPE=Revolver · TRD where QUANTITY > 1m order by QUANTITY desc" autocomplete="off" spellcheck="false">
+    <input id="srchQ" class="srch-q mono" name="q" value="{{ q }}" placeholder="TRD MX-200000 · TRD PRODUCT_TYPE=FX_QUANTO · TRD where QUANTITY > 1m order by QUANTITY desc" autocomplete="off" spellcheck="false">
     {% if q %}<a class="srch-vs lnk" href="/reports?q={{ q | urlencode }}" title="Run this search on a schedule and deliver it as CSV">Schedule…</a>{% endif %}
     <label for="srchVs" class="srch-vs" title="Run the same search on another business date: each number shows its change">Compare with
       <input id="srchVs" name="vs" type="date" class="mono" value="{{ vs or '' }}"></label>
@@ -49,14 +49,14 @@
     <span class="mono">&lt;mnemonic&gt; &lt;start of an id or a name&gt;</span> lists what it names (<span class="mono">MX-2*0</span>: <span class="mono">*</span> is any text) ·
     <span class="mono">&lt;mnemonic&gt; &lt;field&gt;=&lt;value&gt;</span> lists by value · case never matters · one match opens at once.<br>
     <span class="mono">&lt;mnemonic&gt; [where] &lt;condition&gt; [order by &lt;field&gt; [desc]] [limit N]</span> · fields by name or path
-    (<span class="mono">counterparty.name</span>, <span class="mono">legs[0].rate</span>) · <span class="mono">= != &lt; &lt;= &gt; &gt;=</span>
+    (<span class="mono">COUNTERPARTY</span>, <span class="mono">LEGS[0].NOTIONAL</span>) · <span class="mono">= != &lt; &lt;= &gt; &gt;=</span>
     · <span class="mono">and or not</span> · <span class="mono">contains</span> · <span class="mono">startswith</span> · amounts <span class="mono">250k 1.5m 2bn</span>.
     It follows the date in the top bar.</p>
   {% if error %}
     <p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <span class="mono">{{ drs_message(error.code, error.detail) }}</span></p>
   {% elif data %}
     <div class="cmp-sum">
-      <span><b>{{ data.matched }}</b> of {{ data.scanned }} {{ data.kind | replace('-', ' ') }}{{ '' if data.scanned == 1 else 's' }} match{% if data.matched > rows | length %}; the first {{ rows | length }} are shown{% endif %}</span>
+      <span><b>{{ data.matched }}</b> of {{ data.scanned }} {% set k = data.kind | replace('-', ' ') %}{% if data.scanned == 1 %}{{ k }}{% elif k[-1:] == 'y' and k[-2:-1] not in 'aeiou' %}{{ k[:-1] }}ies{% else %}{{ k }}s{% endif %} match{% if data.matched > rows | length %}; the first {{ rows | length }} are shown{% endif %}</span>
       <span class="text-muted-d mono">{{ data.elapsedMs }} ms</span>
       {% if rows %}<a class="lnk" href="/export/search.csv?q={{ q | urlencode }}" title="Download the results as CSV"><i class="bi bi-download" aria-hidden="true"></i> CSV</a>{% endif %}
       {% if rows %}<form class="srch-watch" method="post" action="/s/watch">
@@ -86,11 +86,11 @@
   {% else %}
     <h2 class="ws-h">Examples</h2>
     <ul class="srch-ex">
-      {% for ex in ["TRD MX-200000", "TRD PRODUCT_TYPE=Revolver", "TRD MX-2000* CURRENCY=usd order by QUANTITY desc", "CPTY north",
-                    "TRD where notional >= 250m and assetClass = 'Rates' order by mtm desc limit 20",
-                    "TRD where counterparty.name contains 'Meridian'",
-                    "TRD where mtm < 0 and maturityDate < '2027-01-01' order by mtm",
-                    "LIM where utilisation > 0.8 order by utilisation desc"] %}
+      {% for ex in ["TRD MX-200000", "TRD PRODUCT_TYPE=FX_QUANTO", "TRD MX-2000* CURRENCY=usd order by QUANTITY desc", "CPTY north",
+                    "TRD where QUANTITY >= 250m and PRODUCT_GROUP = 'Rates' order by QUANTITY desc limit 20",
+                    "TRD where COUNTERPARTY contains 'MERIDIAN'",
+                    "TVAL where MTM < 0 and MATURITY_DATE < '2027-01-01' order by MTM",
+                    "LIM where UTILISATION > 0.8 order by UTILISATION desc"] %}
       <li><a class="lnk mono" href="/s?q={{ ex | urlencode }}">{{ ex }}</a></li>{% endfor %}
     </ul>
   {% endif %}

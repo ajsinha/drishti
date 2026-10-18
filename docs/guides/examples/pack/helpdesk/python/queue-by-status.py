@@ -17,4 +17,4 @@
 # kinds: ticket
 
 import pandas as pd
-pd.DataFrame([{"status": view.doc["status"], "hours": view.doc["ageHours"]}])
+pd.DataFrame([{"status": view.doc["STATUS"], "hours": view.doc["AGE_HOURS"]}])

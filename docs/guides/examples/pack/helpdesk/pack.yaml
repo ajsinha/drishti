@@ -34,29 +34,29 @@ graph:
     - { pattern: "^AGT-", kind: agent }
     - { pattern: "^CLI-", kind: client }
   fields:
-    assignee:  { kind: agent,  label: Assigned agent }
-    client:    { kind: client, label: Client }
-    ticketIds: { kind: ticket, label: Ticket }
+    ASSIGNEE:   { kind: agent,  label: Assigned agent }
+    CLIENT:     { kind: client, label: Client }
+    TICKET_IDS: { kind: ticket, label: Ticket }
   badges:
-    agent:  "$.openTickets + ' open'"
-    client: "$.tier"
+    agent:  "$.OPEN_TICKETS + ' open'"
+    client: "$.TIER"
   impact:
-    follow: [client]
-    measures: { ticket: "$.ageHours" }
+    follow: [CLIENT]
+    measures: { ticket: "$.AGE_HOURS" }
     formats:  { ticket: amount0 }
 
 columns:
-  ticket: [subject, status, priority, assignee, ageHours]
-  agent:  [name, team, openTickets]
-  client: [name, tier, country]
-  agent-load: [ticketCount, hoursOpen, oldestHours]
+  ticket: [SUBJECT, STATUS, PRIORITY, ASSIGNEE, AGE_HOURS]
+  agent:  [NAME, TEAM, OPEN_TICKETS]
+  client: [NAME, TIER, COUNTRY]
+  agent-load: [TICKET_COUNT, HOURS_OPEN, OLDEST_HOURS]
 
 pivot:
   ticket:
-    fields: [status, priority, assignee, client, ageHours]
-    rows: [assignee]
-    columns: [status]
-    values: [{ field: ageHours, agg: sum }]
+    fields: [STATUS, PRIORITY, ASSIGNEE, CLIENT, AGE_HOURS]
+    rows: [ASSIGNEE]
+    columns: [STATUS]
+    values: [{ field: AGE_HOURS, agg: sum }]
 
 roles:
   support:      { kinds: [ticket, agent, client, agent-load] }
@@ -65,9 +65,9 @@ roles:
 alerts:
   - kind: ticket
     name: "Open more than a day"
-    when: "$.ageHours > 24 && $.status != 'Closed'"
+    when: "$.AGE_HOURS > 24 && $.STATUS != 'Closed'"
     severity: warn
-    message: "${$.ticketId}: open ${fmt($.ageHours, 'age0')} (${$.clientName})"
+    message: "${$.TICKET_ID}: open ${fmt($.AGE_HOURS, 'age0')} (${$.CLIENT_NAME})"
 
 # A derived kind: no source holds it, the server sums it from the tickets.
 connectors:
@@ -78,14 +78,14 @@ connectors:
       refresh: 30s
       agent-load:
         from: ticket
-        group-by: $.assignee
-        where: $.status != 'Closed'
-        id-field: agent
-        members: ticketIds
+        group-by: $.ASSIGNEE
+        where: $.STATUS != 'Closed'
+        id-field: AGENT
+        members: TICKET_IDS
         fields:
-          ticketCount: count
-          hoursOpen: sum $.ageHours
-          oldestHours: max $.ageHours
+          TICKET_COUNT: count
+          HOURS_OPEN: sum $.AGE_HOURS
+          OLDEST_HOURS: max $.AGE_HOURS
 routes:
   agent-load: agent-totals
 

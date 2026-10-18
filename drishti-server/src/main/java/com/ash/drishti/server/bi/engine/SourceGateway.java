@@ -47,6 +47,22 @@ public interface SourceGateway {
         return plugin(connector, kind).map(List::of).orElse(List.of());
     }
 
+    /**
+     * The version of the data a table reads on a business date (null: the whole table), its connectors' {@link SourcePlugin#dataVersion}
+     * joined, or null when a connector cannot tell: a stored layer built at another version is stale.
+     */
+    default String dataVersion(String connector, String kind, LocalDate date) {
+        List<String> v = new java.util.ArrayList<>();
+        for (SourcePlugin p : plugins(connector, kind)) {
+            Optional<String> d = p.dataVersion(kind, date);
+            if (d.isEmpty()) {
+                return null;
+            }
+            v.add(p.manifest().name() + "=" + d.get());
+        }
+        return v.isEmpty() ? null : String.join(",", v);
+    }
+
     /** Ids of the kind on the business date (null for the latest), at most {@code limit}; the slow path for sources that cannot scan columns. */
     List<EntityRef> ids(String kind, LocalDate date, int limit);
 

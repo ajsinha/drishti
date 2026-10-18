@@ -18,16 +18,39 @@ kinds:
   ticket:
     title: Support ticket
     about: >-
-      ${$.ticketId} ("${$.subject}") is a ${lower($.priority)}-priority ticket for ${$.clientName}, ${lower($.status)} for
-      ${$.ageHours} hours and assigned to ${$.assignee}.
+      ${$.TICKET_ID} ("${$.SUBJECT}") is a ${lower($.PRIORITY)}-priority ticket for ${$.CLIENT_NAME}, ${lower($.STATUS)} for
+      ${$.AGE_HOURS} hours and assigned to ${$.ASSIGNEE}.
     glossary:
-      ageHours:
+      AGE_HOURS:
         term: Age
         means: Hours since the ticket was opened. It keeps counting while the ticket is open.
         unit: hours
-      priority:
+      PRIORITY:
         term: Priority
         means: How soon the team has promised to look at it.
         values:
           High: Within four working hours
           Normal: Within one working day
+          Low: Within five working days
+      SUBJECT:
+        term: Subject
+        means: The client's own one-line summary of the problem, as they raised it.
+      STATUS:
+        term: Status
+        means: Where the ticket is in its life.
+        values:
+          Open: Being worked by the assigned agent
+          Waiting on client: The agent has asked the client something and waits for the answer
+          Closed: Resolved; it no longer counts in an agent's workload
+      ASSIGNEE:
+        term: Agent
+        means: The agent who owns the ticket now. Opens the agent.
+      CLIENT:
+        term: Client
+        means: The organisation that raised the ticket. Opens the client.
+      HISTORY.DATE:
+        term: Date
+        means: The day the event happened.
+      HISTORY.EVENT:
+        term: Event
+        means: What happened to the ticket that day, in the help-desk system's words.

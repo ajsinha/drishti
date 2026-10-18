@@ -56,7 +56,13 @@ derived: { ... }            # a derived dataset: a Python Transform that returns
 columns: { ... }            #   ... and the columns it returns, typed
 ```
 
-Unknown top-level keys are a warning. Five complete, commented examples ship in `config/bi/datasets/`: `trades-basic` (one table), `trading-risk` (five tables across three packs, a row rule, masks, a rollup) and `trading-cashflows` (nested arrays as tables), which [BI_RECIPES.md](BI_RECIPES.md) reads, and the live `live-trading` and `live-exposure` (section 7.1, [tutorial 12](../tutorials/12-live-bi-and-boards.md)); `world-economics` (real World Bank data by country) and `region-economics` (Australian and US states, illustrative figures rounded from public figures, not for reporting) feed the map reports.
+Unknown top-level keys are a warning. The shipped samples are **models** in `config/bi/models/` over datasets in `config/bi/datasets/` (since 2.2 a
+multi-table dataset is a model whose tables are datasets of their own: `trading-risk` reads `trading-risk-trades`, `trading-risk-netting-sets` and
+the rest), every one commented and in the packs' UPPER_SNAKE column names: `trades-basic` (one table), `trading-risk` (five tables across three packs, a row
+rule, masks, a rollup) and `trading-cashflows` (nested arrays as tables), which [BI_RECIPES.md](BI_RECIPES.md) reads, and the live `live-trading` and
+`live-exposure` (section 7.1, [tutorial 12](../tutorials/12-live-bi-and-boards.md)); `world-economics` (real World Bank data by country) and
+`region-economics` (Australian and US states, illustrative figures rounded from public figures, not for reporting) feed the map reports. The examples
+on this page are written in the same names and run on the demo lakes (`drishti.py lake demo`).
 
 ## 2. Tables and columns
 
@@ -64,7 +70,7 @@ Unknown top-level keys are a warning. Five complete, commented examples ship in 
 tables:
   trades:                                   # the table's name: letters, digits, underscore (it is written in expressions)
     source:
-      connector: trading-store              # a connector by its LOGICAL name (config/connectors/<name>.yaml); empty: whichever serves the kind
+      connector: trade-endur                # a connector by its LOGICAL name (config/connectors/<name>.yaml); empty: whichever serves the kind
       kind: trade                           # the pack kind
       each: legs                            # optional: one row per element of this array in each document (below)
     mode: cached                            # cached (default) | direct | live  (section 7; live: 7.1)
@@ -72,11 +78,11 @@ tables:
       on-load: true                         # rebuild the date when a data-load signal for the kind arrives (default true)
       schedule: "0 */15 * * *"              # rebuild this table on a schedule (section 7.2); a five-field cron, or any schedule of section 7.2
     columns:
-      tradeId:   { type: string, key: true }
-      desk:      string                     # shorthand for { type: string } with the path equal to the name
-      cpty:      { path: counterparty.id, type: string }    # a path into the document; "$." in front is allowed and dropped
-      notional:  { type: decimal, format: amount0 }
-      mtmK:      { type: decimal, expr: "mtm / 1000" }       # calculated column (below)
+      TRADE_ID:      { type: string, key: true }
+      PORTFOLIO:     string                 # shorthand for { type: string } with the path equal to the name
+      LEG_CURRENCY:  { path: LEGS.0.CURRENCY, type: string }    # a path into the document; "$." in front is allowed and dropped
+      QUANTITY:      { type: decimal, format: amount0 }
+      QUANTITY_K:    { type: decimal, expr: "QUANTITY / 1000" }  # calculated column (below)
 ```
 
 * **Types:** `string`, `integer`, `decimal`, `boolean`, `date`, `timestamp`. A value that cannot be cast to its type is null (never an error).
@@ -99,8 +105,8 @@ the columns a dataset uses* in the connector's layout: the tables of the samples
 
 ```yaml
 relationships:
-  - { from: trades.desk, to: desks.id, cardinality: many-to-one }      # from = the MANY side, to = the ONE side
-  - { from: trades.nettingSet, to: netting_sets.id, cardinality: many-to-one, direction: single, active: true }
+  - { from: trades.DESK, to: desks.id, cardinality: many-to-one }      # from = the MANY side, to = the ONE side
+  - { from: trades.NETTING_SET, to: netting_sets.id, cardinality: many-to-one, direction: single, active: true }
 ```
 
 `cardinality` is `many-to-one` (default), `one-to-many`, `one-to-one` or `many-to-many`; `direction` `single` or `both`; `active` true or false. Both columns must exist and have
@@ -117,50 +123,54 @@ turned on by a measure.
 Two fact tables that share dimensions (every trade has a desk; every limit has a desk) are not joined to each other: joining them would repeat each desk's limits once per trade. A query that asks for a measure of each, grouped by the shared dimension, is answered **per fact, then joined**:
 
 ```yaml
-tables:
-  trades:  { source: { connector: trading-store, kind: trade }, columns: { tradeId: { type: string, key: true }, counterpartyId: { path: counterparty.id, type: string }, mtm: decimal } }
-  netting_sets: { source: { connector: credit-store, kind: netting-set }, columns: { counterparty: string, eePeak: decimal } }
-  counterparties: { source: { connector: reference-store, kind: counterparty }, columns: { name: string, sector: string } }
+# the shape of config/bi/models/trading-risk.model.yaml (its tables are datasets of their own: trading-risk-trades and the rest)
+datasets:
+  trades:         { dataset: trading-risk-trades, role: fact }           # risk-store, kind trade-valuation: TRADE_ID, DESK, COUNTERPARTY, MTM, ...
+  netting_sets:   { dataset: trading-risk-netting-sets, role: fact }     # credit-store, kind netting-set: COUNTERPARTY, EE_PEAK, ...
+  counterparties: { dataset: trading-risk-counterparties, role: dimension }   # reference-store, kind counterparty: NAME, SECTOR, ...
 relationships:
-  - { from: trades.counterpartyId,      to: counterparties.id, cardinality: many-to-one }
-  - { from: netting_sets.COUNTERPARTY,  to: counterparties.id, cardinality: many-to-one }
+  - { from: trades.COUNTERPARTY,        to: counterparties.id }
+  - { from: netting_sets.COUNTERPARTY,  to: counterparties.id }
 measures:
-  MTM: { expr: "sum(trades.mtm)" }   Trades: { expr: "count(trades)" }   Exposure: { expr: "sum(netting_sets.EE_PEAK)" }   Netting sets: { expr: "count(netting_sets)" }
+  MTM: { expr: "sum(trades.MTM)" }   Trades: { expr: "count(trades)" }   Exposure (EE peak): { expr: "sum(netting_sets.EE_PEAK)" }   Netting sets: { expr: "count(netting_sets)" }
 ```
 
-`fields: [counterparties.SECTOR]`, `measures: [MTM, Trades, Exposure, Netting sets]` (real answer, first four sectors, with `?explain=true` for the SQL; the table sources are shortened):
+`fields: [counterparties.SECTOR]`, `measures: [MTM, Trades, Exposure (EE peak), Netting sets]` (real answer on the demo lakes, first four sectors, with
+`options.explain: true` for the SQL; the table sources are shortened):
 
 ```text
-Agriculture        20378377.0   35    59019457.0    4
-Airlines           15984208.0   33    73868165.0    4
-Asset management   70776928.0  153   289738661.0   15
-Banking            23279594.0   94   240271956.0   12
+Agriculture        568985576.94    576   2063231430.0    4
+Airlines           573874414.58    579   2069018990.0    4
+Asset management   -45767272.11   2424   7874503708.0   16
+Banking             53660470.33   1727   6781678461.0   13
+warnings: 2 fact tables, each aggregated alone at the query's fields and then joined: [trades, counterparties, netting_sets]
 ```
 ```sql
-SELECT "counterparties.SECTOR", "MTM", "Trades", "Exposure", "Netting sets" FROM (
-  SELECT coalesce("p0"."counterparties.SECTOR", "p1"."counterparties.SECTOR") AS "counterparties.SECTOR", "p0"."MTM" AS "MTM", "p0"."Trades" AS "Trades", "p1"."Exposure" AS "Exposure", "p1"."Netting sets" AS "Netting sets"
-  FROM (SELECT "counterparties"."sector" AS "counterparties.SECTOR", (sum("trades"."mtm")) AS "MTM", (count(*)) AS "Trades"
-        FROM (trades) AS "trades" LEFT JOIN (counterparties) AS "counterparties" ON "trades"."counterpartyId" = "counterparties"."id" GROUP BY "counterparties"."sector" ...) AS "p0"
-  FULL OUTER JOIN (SELECT "counterparties"."sector" AS "counterparties.SECTOR", (sum("netting_sets"."eePeak")) AS "Exposure", (count(*)) AS "Netting sets"
-        FROM (netting_sets) AS "netting_sets" LEFT JOIN (counterparties) AS "counterparties" ON "netting_sets"."counterparty" = "counterparties"."id" GROUP BY "counterparties"."sector" ...) AS "p1"
+SELECT "counterparties.SECTOR", "MTM", "Trades", "Exposure (EE peak)", "Netting sets" FROM (
+  SELECT coalesce("p0"."counterparties.SECTOR", "p1"."counterparties.SECTOR") AS "counterparties.SECTOR", "p0"."MTM" AS "MTM", "p0"."Trades" AS "Trades",
+         "p1"."Exposure (EE peak)" AS "Exposure (EE peak)", "p1"."Netting sets" AS "Netting sets"
+  FROM (SELECT "counterparties"."SECTOR" AS "counterparties.SECTOR", (sum("trades"."MTM")) AS "MTM", (count(*)) AS "Trades"
+        FROM (trades) AS "trades" LEFT JOIN (counterparties) AS "counterparties" ON "trades"."COUNTERPARTY" = "counterparties"."id" ...) AS "p0"
+  FULL OUTER JOIN (SELECT "counterparties"."SECTOR" AS "counterparties.SECTOR", (sum("netting_sets"."EE_PEAK")) AS "Exposure (EE peak)", (count(*)) AS "Netting sets"
+        FROM (netting_sets) AS "netting_sets" LEFT JOIN (counterparties) AS "counterparties" ON "netting_sets"."COUNTERPARTY" = "counterparties"."id" ...) AS "p1"
   ON "p0"."counterparties.SECTOR" IS NOT DISTINCT FROM "p1"."counterparties.SECTOR") AS "q" ORDER BY "counterparties.SECTOR" ASC LIMIT 4
 ```
 
 * Each part is the ordinary query of one fact: its own row rules, filters and masks. The parts are **full-outer-joined** on the fields (a null equals a null), so a sector one fact lacks still shows with the other's figures (and an empty cell for the missing one).
 * With **no fields** the totals sit side by side in one row. A **filter on a shared dimension** reaches every fact; a filter on a measure (`LimitTotal gt 50`) is applied to the joined rows, as are the sort and the limit.
-* **Refused, safely:** a field one fact cannot reach many-to-one (`trades.desk` beside a measure of `limits`: `DRS-9020`, no many-to-one path); a measure that mixes the facts (`measure('MTM') / measure('LimitTotal')`: combine them in a composed dataset, section 11); a window measure (4.3) with another fact; and a **row rule that reads a fact table** the other fact cannot reach (a desk-head's `trades.desk in user.desks` against limits): the query is refused rather than shown unrestricted.
+* **Refused, safely:** a field one fact cannot reach many-to-one (`trades.DESK` beside a measure of `limits`: `DRS-9020`, no many-to-one path); a measure that mixes the facts (`measure('MTM') / measure('LimitTotal')`: combine them in a composed dataset, section 11); a window measure (4.3) with another fact; and a **row rule that reads a fact table** the other fact cannot reach (a desk-head's `trades.DESK in user.desks` against limits): the query is refused rather than shown unrestricted.
 * A rollup does not answer a several-facts query; each part reads its own layers.
 
 ## 4. Measures and the expression language
 
 ```yaml
 measures:
-  Notional:   { expr: "sum(trades.notional)", format: amount0, description: "..." }
-  MTM:        "sum(trades.mtm)"                                   # shorthand: just the expression
-  MTM per 1m: { expr: "ratio(sum(trades.mtm), sum(trades.notional)) * 1_000_000" }
+  Notional:   { expr: "sum(trades.NOTIONAL)", format: amount0, description: "..." }
+  MTM:        "sum(trades.MTM)"                                   # shorthand: just the expression
+  MTM per 1m: { expr: "ratio(sum(trades.MTM), sum(trades.NOTIONAL)) * 1_000_000" }
   Share:      { expr: "measure('MTM') / measure('Notional')" }   # measure('Name') uses another measure
-  Open MTM:   { expr: "sum(trades.mtm, where=trades.status == 'Live')" }   # a condition inside the aggregate
-  Vol:        { python: desk-pnl-volatility, inputs: [trades.pnl1d], by: [trades.desk] }   # a PYTHON measure: run by the console's runner, shown by a python visual (4.2)
+  Open MTM:   { expr: "sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')" }   # a condition inside the aggregate
+  Vol:        { python: desk-pnl-volatility, inputs: [trades.PNL_1D], by: [trades.DESK] }   # a PYTHON measure: run by the console's runner, shown by a python visual (4.2)
 ```
 
 The expression language is **DEL** (since 2.2.0): a safe, side-effect-free subset of **Python's expression syntax** extended with aggregation. It compiles
@@ -183,20 +193,22 @@ the problems with their fixes, and fifty-odd finance and risk recipes; the expre
 | `abs`, `round(x, n=0)`, `coalesce(a, b, ...)`, `upper`, `lower`, `len`, `contains(text, part)`, `startswith`, `endswith`, `date('2026-10-09')`, `days_between(a, b)`, `business_days_between(a, b)` | |
 | `year(d)`, `quarter`, `month`, `week`, `day`, and the field form `table.dateColumn.year` (also `quarter`, `month`, `day`, `week`) | date parts of a `date` or `timestamp` column |
 
-A measure must aggregate (a column outside an aggregate is `DRS-9127` with the fix *wrap it: `sum(trades.mtm)`*), aggregates do not nest (except
+A measure must aggregate (a column outside an aggregate is `DRS-9127` with the fix *wrap it: `sum(trades.MTM)`*), aggregates do not nest (except
 `ratio`'s two arguments), and measures may not refer to each other in a circle. **Window functions** (`lag`, `lead`, `rank`, `dense_rank`,
 `percent_rank`, `moving_avg`, `moving_sum`, `moving_min`, `moving_max`, `cumulative`) are built: section 4.3. Time intelligence and running totals:
 section 4.1. The older syntax (`[Measure]`, `&&`, `c ? a : b`, a positional condition) is refused with `DRS-9100` and its DEL text as the fix
 ([EXPRESSIONS.md section 10](EXPRESSIONS.md#10-the-old-syntax-and-the-converter)).
 
-Real compiled output (captured from the `trades-basic` sample by a BI author's `?explain=true`; the values are placeholders, never in the text):
+Real compiled output (captured on the demo lakes from the `trades-basic` sample model, `fields: [trade.DESK]`, its four measures, by an
+administrator with `options.explain: true`; the values are placeholders, never in the text):
 
 ```sql
-SELECT "trade"."desk" AS "trade.desk", (sum("trade"."notional")) AS "Notional", (sum("trade"."mtm")) AS "MTM", (count(*)) AS "Trades",
-       ((CAST((sum("trade"."mtm")) AS DOUBLE) / NULLIF((count(*)), 0))) AS "Average MTM per trade"
-FROM (SELECT t.*, (CAST(t."mtm" AS DOUBLE) / NULLIF(?, 0)) AS "mtmInMillions"
-      FROM (SELECT * FROM read_parquet(['.../columns/file_dataset_trades-basic/trade/date=2026-09-30/part.parquet'], union_by_name = true)) AS t) AS "trade"
-GROUP BY "trade"."desk" ORDER BY "trade.desk" ASC LIMIT 100001
+SELECT "trade"."DESK" AS "trade.DESK", (sum("trade"."NOTIONAL")) AS "Notional", (sum("trade"."MTM")) AS "MTM", (count(*)) AS "Trades",
+       ((CAST((sum("trade"."MTM")) AS DOUBLE) / NULLIF((count(*)), 0))) AS "Average MTM per trade"
+FROM (SELECT t.*, (CAST(t."MTM" AS DOUBLE) / NULLIF(?, 0)) AS "MTM_IN_MILLIONS"
+      FROM (SELECT * FROM read_parquet(['<data>/bi-store/columns/file_model_trades-basic/trade/date=2026-10-16/part.parquet'], union_by_name = true)) AS t) AS "trade"
+GROUP BY "trade"."DESK" ORDER BY "trade.DESK" ASC LIMIT 3
+-->  DESK-COMM  888803742773.65  -429967635.39  5990  -71780.91      DESK-CREDIT  344825753000.0  360552941.89  1172  307639.03   ...
 ```
 
 ### 4.1 Time intelligence
@@ -206,13 +218,13 @@ or `timestamp`; `businessDate` is one):
 
 ```yaml
 measures:
-  MTM ytd:      { expr: "ytd(sum(trades.mtm), trades.tradeDate)" }
-  MTM mtd:      { expr: "mtd(sum(trades.mtm), trades.tradeDate)" }
-  Trades qtd:   { expr: "qtd(count(trades), trades.tradeDate)" }
-  MTM prior:    { expr: "prior_period(sum(trades.mtm), trades.tradeDate)" }
-  MTM last year: { expr: "same_period_last_year(sum(trades.mtm), trades.tradeDate)" }
-  MTM running:  { expr: "running(sum(trades.mtm), trades.tradeDate)" }
-  Share of ytd: { expr: "ratio(sum(trades.mtm), ytd(sum(trades.mtm), trades.tradeDate))" }    # inside a ratio, or any expression with other measures
+  MTM ytd:      { expr: "ytd(sum(trades.MTM), trades.TRADE_DATE)" }
+  MTM mtd:      { expr: "mtd(sum(trades.MTM), trades.TRADE_DATE)" }
+  Trades qtd:   { expr: "qtd(count(trades), trades.TRADE_DATE)" }
+  MTM prior:    { expr: "prior_period(sum(trades.MTM), trades.TRADE_DATE)" }
+  MTM last year: { expr: "same_period_last_year(sum(trades.MTM), trades.TRADE_DATE)" }
+  MTM running:  { expr: "running(sum(trades.MTM), trades.TRADE_DATE)" }
+  Share of ytd: { expr: "ratio(sum(trades.MTM), ytd(sum(trades.MTM), trades.TRADE_DATE))" }    # inside a ratio, or any expression with other measures
 ```
 
 | Function | Rows it adds up | Business-day aware? |
@@ -240,20 +252,20 @@ same_period_last_year  (Sun 6 July 2025 is not a business day: the window is Mon
 Real compiled SQL (a test lake with one trade a weekday for a year; `Ytd` and `Mtd` by desk, as-of 2026-07-07; the four bound dates are 2026-01-01, 2026-07-07, 2026-07-01 and 2026-07-07) and its answer:
 
 ```sql
-SELECT "trades"."desk" AS "trades.desk",
-       (sum("trades"."mtm") FILTER (WHERE ("trades"."tradeDate" >= CAST(? AS DATE) AND "trades"."tradeDate" <= CAST(? AS DATE)))) AS "Ytd",
-       (sum("trades"."mtm") FILTER (WHERE ("trades"."tradeDate" >= CAST(? AS DATE) AND "trades"."tradeDate" <= CAST(? AS DATE)))) AS "Mtd"
+SELECT "trades"."DESK" AS "trades.DESK",
+       (sum("trades"."MTM") FILTER (WHERE ("trades"."TRADE_DATE" >= CAST(? AS DATE) AND "trades"."TRADE_DATE" <= CAST(? AS DATE)))) AS "Ytd",
+       (sum("trades"."MTM") FILTER (WHERE ("trades"."TRADE_DATE" >= CAST(? AS DATE) AND "trades"."TRADE_DATE" <= CAST(? AS DATE)))) AS "Mtd"
 FROM (SELECT t.*, (CAST(t."mtm" AS DOUBLE) / NULLIF(?, 0)) AS "mtmK" FROM (SELECT * FROM read_parquet([...], union_by_name = true)) AS t) AS "trades"
-GROUP BY "trades"."desk" ORDER BY "trades.desk" ASC LIMIT 100001
+GROUP BY "trades"."DESK" ORDER BY "trades.DESK" ASC LIMIT 100001
 -->  DESK-A  2084.0  42.0      DESK-B  2341.0  148.0      DESK-C  2390.0  20.0
 ```
 
-A running total is a window over the grouped rows, ordered by the date **field the visual groups by** and restarting for each combination of its other fields (a coarser part of the same date, `trades.tradeDate.year` beside
-`trades.tradeDate.month`, restarts it each year). By day, 1 to 7 July 2026 (`fields: [trades.tradeDate]`, `measures: [Running]`):
+A running total is a window over the grouped rows, ordered by the date **field the visual groups by** and restarting for each combination of its other fields (a coarser part of the same date, `trades.TRADE_DATE.year` beside
+`trades.TRADE_DATE.month`, restarts it each year). By day, 1 to 7 July 2026 (`fields: [trades.TRADE_DATE]`, `measures: [Running]`):
 
 ```sql
-SELECT "trades"."tradeDate" AS "trades.tradeDate", (sum(sum("trades"."mtm")) OVER (ORDER BY "trades"."tradeDate")) AS "Running"
-FROM (...) AS "trades" WHERE ("trades"."tradeDate" BETWEEN CAST(? AS DATE) AND CAST(? AS DATE)) GROUP BY "trades"."tradeDate" ORDER BY "trades.tradeDate" ASC LIMIT 100001
+SELECT "trades"."TRADE_DATE" AS "trades.TRADE_DATE", (sum(sum("trades"."MTM")) OVER (ORDER BY "trades"."TRADE_DATE")) AS "Running"
+FROM (...) AS "trades" WHERE ("trades"."TRADE_DATE" BETWEEN CAST(? AS DATE) AND CAST(? AS DATE)) GROUP BY "trades"."TRADE_DATE" ORDER BY "trades.TRADE_DATE" ASC LIMIT 100001
 -->  2026-07-01  69.0     2026-07-02  74.0     2026-07-03  116.0     2026-07-06  195.0     2026-07-07  210.0
 ```
 
@@ -277,34 +289,38 @@ A window function is worked out **over the rows the query returns**, after the r
 | `cumulative(agg, date)` | a running total (the same as `running`, 4.1) |
 | `rank(agg, desc=True, by=[fields])`, `dense_rank(...)`, `percent_rank(...)` | the position of the row by the aggregate (`desc=False`: lowest first); `rank` leaves gaps after a tie, `dense_rank` does not, `percent_rank` is 0 to 1 |
 
-`agg` is an aggregate expression (`sum(trades.mtm)`, `ratio(...)`, `count(trades)`). `order` is a **column** of the dataset (`trades.tradeDate`) and must be a **field of the visual** (its axis), as for `running`; the window runs along its finest part (`trades.tradeDate.month` before `trades.tradeDate`). Without `by=` the window **restarts for each combination of the visual's other fields**; with it (`lag(sum(trades.mtm), 1, trades.tradeDate, by=[trades.desk])`) it restarts by those fields, which must be fields of the visual too. `rank` with no partition ranks all rows.
+`agg` is an aggregate expression (`sum(trades.MTM)`, `ratio(...)`, `count(trades)`). `order` is a **column** of the dataset (`trades.TRADE_DATE`) and must be a **field of the visual** (its axis), as for `running`; the window runs along its finest part (`trades.TRADE_DATE.month` before `trades.TRADE_DATE`). Without `by=` the window **restarts for each combination of the visual's other fields**; with it (`lag(sum(trades.MTM), 1, trades.TRADE_DATE, by=[trades.DESK])`) it restarts by those fields, which must be fields of the visual too. `rank` with no partition ranks all rows.
 
 ```yaml
 measures:
-  MTM rank:          { expr: "rank(sum(trades.mtm))" }
-  MTM 3-day average: { expr: "moving_avg(sum(trades.mtm), 3, trades.tradeDate)", format: signed0 }
-  Change on prior:   { expr: "sum(trades.mtm) - lag(sum(trades.mtm), 1, trades.tradeDate)" }
+  MTM rank:          { expr: "rank(sum(trades.MTM))" }
+  MTM 3-day average: { expr: "moving_avg(sum(trades.MTM), 3, trades.TRADE_DATE)", format: signed0 }
+  Change on prior:   { expr: "sum(trades.MTM) - lag(sum(trades.MTM), 1, trades.TRADE_DATE)" }
 ```
 
-Real answers on the Trading and counterparty risk sample (`fields: [trades.desk]`, `measures: [MTM, MTM rank]`, five rows; the rank is answered from the stored rollup), and by trade date with the three-row average, newest five rows (`orderBy` descending, the window itself runs in date order):
+Real answers on the Trading and counterparty risk sample over the demo lakes (`fields: [trades.DESK]`, `measures: [MTM, MTM rank]`, five rows;
+the rank is answered from the stored rollup `by_desk_currency`), and by trade date with the three-row average, newest five rows (sorted descending,
+the window itself runs in date order):
 
 ```text
-DESK-RATES   161766771.0  1       SELECT "trades"."desk" AS "trades.desk", (sum(m0)) AS "MTM", (rank() OVER (ORDER BY sum(m0) DESC NULLS LAST)) AS "MTM rank" FROM (...) AS "trades" GROUP BY "trades"."desk" ORDER BY "MTM rank" ASC NULLS LAST LIMIT 5
-DESK-COMM     16954390.0  2
-DESK-STRUCT   15784130.0  3
-DESK-MM        9453242.0  4
-DESK-CREDIT    7948456.0  5
+DESK-RATES    4108728089.5   1     SELECT "trades"."DESK" AS "trades.DESK", (sum(m0)) AS "MTM", (rank() OVER (ORDER BY sum(m0) DESC NULLS LAST)) AS "MTM rank"
+DESK-MM        393805216.87  2       FROM (... rollups/file_model_trading-risk/by_desk_currency/date=2026-10-16/part.parquet ...) AS "trades"
+DESK-STRUCT    382608464.96  3       WHERE (TRUE) GROUP BY "trades"."DESK" ORDER BY "MTM rank" ASC NULLS LAST LIMIT 5
+DESK-CREDIT    360552941.89  4
+DESK-SFT        51375248.69  5
 
-2026-09-25    5276528.0   167656.67      SELECT "trades"."tradeDate" AS "trades.tradeDate", (sum("trades"."mtm")) AS "MTM",
-2026-09-24     193584.0  -886751.67             (avg(sum("trades"."mtm")) OVER (ORDER BY "trades"."tradeDate" ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)) AS "MTM 3-day average"
-2026-09-23   -4967142.0  -977848.67      FROM (...) AS "trades" GROUP BY "trades"."tradeDate" ORDER BY "trades.tradeDate" DESC NULLS LAST LIMIT 5
-2026-09-22    2113303.0  12167064.33
-2026-09-21     -79707.0  11413476.33
+2026-09-25    194142159.93     6524586.52     SELECT "trades"."TRADE_DATE" AS "trades.TRADE_DATE", (sum("trades"."MTM")) AS "MTM",
+2026-09-24    -12250237.66   -39827321.79       (avg(sum("trades"."MTM")) OVER (ORDER BY "trades"."TRADE_DATE" ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)) AS "MTM 3-day average"
+2026-09-23   -162318162.72   -36410881.81     FROM (... columns/file_model_trading-risk/trades/date=2026-10-16/part.parquet ...) AS "trades" WHERE (TRUE)
+2026-09-22     55086435.01    17976990.77     GROUP BY "trades"."TRADE_DATE" ORDER BY "trades.TRADE_DATE" DESC NULLS LAST LIMIT 5
+2026-09-21     -2000917.71     -412716.24
 ```
+
+(The trade dates are the trades' own; the business date read is the latest of the demo lakes, 2026-10-16 here.)
 
 **What they refuse.** The shape is checked when the dataset is read (`DRS-9011` for a wrong number of arguments, an `n` that is not a whole number from 1 to 1000, an `agg` that does not aggregate, another window, time function or `measure('…')` inside `agg`, an order or partition that is not a column). A window needs its order column as a **field** of the visual (`422 DRS-9020` otherwise); it cannot be **filtered on** (`DRS-9020`: filter the rows, then rank); a masked order column makes the whole measure read as masked; a **rollup** can hold only a `rank` with no direction or partition (anything else runs on the columns layer); and it cannot be asked together with the measures of another fact table (3.1).
 
-A "row" is a row of the visual, not a calendar day: `lag(..., 1, trades.tradeDate)` is the previous *date that has trades* (a weekend with none is not a row), and a moving average of three is three rows. Ask for the dates you want (a date dimension, or a filter) when the gaps matter.
+A "row" is a row of the visual, not a calendar day: `lag(..., 1, trades.TRADE_DATE)` is the previous *date that has trades* (a weekend with none is not a row), and a moving average of three is three rows. Ask for the dates you want (a date dimension, or a filter) when the gaps matter.
 
 ### 4.2 Python measures (phase 6)
 
@@ -315,8 +331,8 @@ make a group, all `table.column` and all of **one table**:
 measures:
   Desk P&L volatility:
     python: desk-pnl-volatility       # config/bi/python/desk-pnl-volatility.python.yaml
-    inputs: [trade.pnl1d]
-    by: [trade.desk]                  # one number per desk
+    inputs: [trade.PNL_1D]
+    by: [trade.DESK]                  # one number per desk
     description: Standard deviation of the one-day P&L per desk, computed in Python.
 ```
 
@@ -329,7 +345,7 @@ item once per group. Checks: the item is named, `inputs` is not empty, every nam
 
 ```yaml
 hierarchies:
-  Trade date: [trades.tradeDate.year, trades.tradeDate.quarter, trades.tradeDate.month, trades.tradeDate]
+  Trade date: [trades.TRADE_DATE.year, trades.TRADE_DATE.quarter, trades.TRADE_DATE.month, trades.TRADE_DATE]
   Desk and book: [desks.NAME, books.NAME]
 ```
 
@@ -341,7 +357,7 @@ returned with the model for the designer and the viewer (phase 3) to drill with:
 ```yaml
 security:
   rows:
-    - { role: desk-head, where: "trades.desk in user.desks" }
+    - { role: desk-head, where: "trades.DESK in user.desks" }
     - { role: risk,      where: "True" }
   masked: [counterpartyName, counterparties.NAME]
 ```
@@ -368,7 +384,7 @@ are applied **before aggregation, column by column**, and the result is built so
 | a filter on a masked column, or a sort on it | refused, `403 DRS-9021` |
 | a masked column used in a row rule | fine: rules run on the server before the mask |
 
-Real output (the sample `trading-risk`, the same query, three readers; `Counterparties` is `distinct(trades.counterpartyId)`, a masked column; `rita` has `risk`, `hana` is a
+Real output (captured in 2.2 on the sample `trading-risk` over the 750 demo trades of the time, the same query, three readers; on the demo lakes the figures are larger and the behaviour the same; `Counterparties` is `distinct(trades.COUNTERPARTY)`, a masked column; `rita` has `risk`, `hana` is a
 desk-head whose profile desk is `DESK-FX`, `ann` is an `analyst` without `raw`):
 
 ```
@@ -491,9 +507,9 @@ tables:
     live:                       # retention: the most rows it holds (and, optionally, `age:` how long a row may go without changing, below)
       rows: 5000
     columns:
-      tradeId: { type: string, key: true }
-      desk:    string
-      mtm:     { type: decimal, format: signed0 }
+      TRADE_ID: { type: string, key: true }
+      DESK:     string
+      MTM:      { type: decimal, format: signed0 }
 ```
 
 **Where the changes come from.** The connector's `subscribe` for each entity: the demo source ticks its live samples; the Kafka and Redis connectors (and any connector that implements `subscribe`) feed the table the way they feed a live view. `connector:` names
@@ -508,10 +524,10 @@ columns did not change does not move the table's counters (a source that republi
 
 ```yaml
 rollups:
-  - { name: byDeskBook, table: trade, by: [desk, book, productType, currency], measures: [Trades, Notional, MTM, PnL 1d, Worst trade, Best trade] }
+  - { name: byDeskBook, table: trade, by: [DESK, PORTFOLIO, PRODUCT_TYPE, CURRENCY], measures: [Trades, Notional, MTM, PnL 1d, Worst trade, Best trade] }
 ```
 
-The Live trading desk sample (`config/bi/datasets/live-trading.dataset.yaml`) declares that. A bar of `Notional`, `MTM` and `Worst trade` by desk, with the demo ticker running (real answer, `?explain=true`), reads 90 trades for `DESK-COMM` from the kept groups, not from the trades:
+The Live trading desk sample (`config/bi/datasets/live-trading.dataset.yaml`) declares that. A bar of `Notional`, `MTM` and `Worst trade` by desk, with the demo ticker running (real answer, `?explain=true`, captured in 2.2 over the 750 demo trades of the time, whose columns were lower case; over the demo lakes the columns are `DESK` and the rest), reads 90 trades for `DESK-COMM` from the kept groups, not from the trades:
 
 ```text
 SELECT "trade"."desk" AS "trade.desk", (CAST(coalesce(sum(m0), 0) AS BIGINT)) AS "Trades", (sum(m1)) AS "Notional", (sum(m2)) AS "MTM", (min(m4)) AS "Worst trade"
@@ -525,10 +541,10 @@ and the dataset's `layers[].live.aggregates` says how it is going (after about a
 {"rollup": "byDeskBook", "groups": 572, "incremental": 5788, "recomputedGroups": 1826}
 ```
 
-**Recomputed instead** (the fallback, and always correct): a measure that is not a plain stored aggregate (`sum(trade.mtm, trade.mtm < 0)` has a condition inside; `percentile`, `distinct`, `ratio` of an expression), a rollup grouped by a calculated column, a query the rollup cannot answer (a column outside its `by`), `layer: columns` asked for, and every table when `drishti.bi.live.incremental-aggregates` is `false`. The tests compare the two for sums, counts, averages, minimums and maximums through inserts, replacements, moves between groups, deletions and eviction. Sums are floating-point: a long run of additions and subtractions can differ from a fresh sum in the last digits (never in what a card shows).
+**Recomputed instead** (the fallback, and always correct): a measure that is not a plain stored aggregate (`sum(trade.MTM, trade.MTM < 0)` has a condition inside; `percentile`, `distinct`, `ratio` of an expression), a rollup grouped by a calculated column, a query the rollup cannot answer (a column outside its `by`), `layer: columns` asked for, and every table when `drishti.bi.live.incremental-aggregates` is `false`. The tests compare the two for sums, counts, averages, minimums and maximums through inserts, replacements, moves between groups, deletions and eviction. Sums are floating-point: a long run of additions and subtractions can differ from a fresh sum in the last digits (never in what a card shows).
 
 **Retention.** `live: { rows, age }` (both optional). `rows` bounds the table: past it the rows changed longest ago go first (`drishti.bi.live.max-rows`, 50,000, is the ceiling whatever a dataset asks). `age` drops rows that have not changed for that long (`90s`, `15m`, `2h`,
-`1d` or ISO `PT15M`); it is applied with every batch and on every resync, so a quiet table forgets too. Whatever leaves (evicted, or deleted by the source) starts a new **epoch** of the table; a client that holds rows (a Perspective grid) reads them again.
+`1d` or ISO `PT15M`); it is applied with every batch and on every resync, so a quiet table forgets too. Whatever leaves (evicted, or deleted by the source) starts a new **epoch** of the table; a client that holds rows (a grid of the table's rows) reads them again.
 
 **Two columns every live table has**, queryable like any other and never declared:
 
@@ -567,7 +583,7 @@ tables:
         table: history            # the name of the dataset table (default: history)
         every: 10s                # the time between samples, 1s or more (default 10s)
         keep: 360                 # samples kept, 2 to 100000: the newest go on, the oldest go off (default 360: an hour at 10s)
-        by: [desk]                # optional: one row per desk and sample (columns of the live table; default none: one row per sample)
+        by: [DESK]                # optional: one row per desk and sample (columns of the live table; default none: one row per sample)
         measures: [MTM, Losses, Trades]     # measures of this dataset that aggregate the live table (not Python, not window or time-intelligence measures)
 ```
 
@@ -592,7 +608,7 @@ How it behaves:
 ```
 
 A sample is stamped to the second.
-* **Nobody's data leaks through it.** The history holds raw values, like the live table, and the **reader's masks apply when it is read**: a `by` column is masked when the live table's column is, and a sampled measure's column is masked when the measure reads a column the reader may not see (the same rule as a query of the measure itself). A **row rule** on the live table (`trades.desk in user.desks`) cannot be applied to the history (no relationship leads from it to the live table), so a query that touches the history for a reader whose role has such a rule is **refused** (`DRS-9020`, no relationship path) rather than answered with everybody's figures; a role with the rule `true` reads it.
+* **Nobody's data leaks through it.** The history holds raw values, like the live table, and the **reader's masks apply when it is read**: a `by` column is masked when the live table's column is, and a sampled measure's column is masked when the measure reads a column the reader may not see (the same rule as a query of the measure itself). A **row rule** on the live table (`trades.DESK in user.desks`) cannot be applied to the history (no relationship leads from it to the live table), so a query that touches the history for a reader whose role has such a rule is **refused** (`DRS-9020`, no relationship path) rather than answered with everybody's figures; a role with the rule `true` reads it.
 * **A sample that cannot be taken** (the measures fail) is kept as the history's `error` and tried again at the next time; the table keeps what it has. A history needs `drishti.bi.live.enabled`; with live tables off a query of it answers `DRS-9020`.
 * **Problems found when the dataset is read:** `history.by` names a column that is not a stored column of the live table, `history.measures` empty or naming a measure that is not an engine measure, a table name that is already a table of the dataset, `every` under 1 s, `keep` outside 2 to 100000 (all `DRS-9050`).
 
@@ -613,11 +629,11 @@ A dataset may declare what a number should be. **Check** (the dataset page's *Ex
 
 ```yaml
 tests:
-  - name: The book holds 750 trades
+  - name: The book holds 15,000 valuations
     measure: Trades                       # a measure of the dataset (a Python measure cannot be checked)
-    expect: 750                           # a number, a range { min: 745, max: 755 } or [745, 755]
-  - { name: Rates desk, measure: MTM, by: [trades.desk], row: { trades.desk: DESK-RATES }, expect: 161766771, tolerance: 0.5% }
-  - { name: USD only, measure: Notional, filters: [{ field: trades.currency, op: eq, values: [USD] }], date: 2026-10-09, expect: { min: 1000000 } }
+    expect: 15000                         # a number, a range { min: 14900, max: 15100 } or [14900, 15100]
+  - { name: Rates desk, measure: MTM, by: [trades.DESK], row: { trades.DESK: DESK-RATES }, expect: 4108728089.5, tolerance: 0.5% }
+  - { name: USD only, measure: Notional, filters: [{ field: trades.CURRENCY, op: eq, values: [USD] }], expect: { min: 1000000 } }
 ```
 
 `by` groups the answer and `row` picks one row of it by the values of its fields (without `row` the answer must be exactly one row); `filters` are the form of a report filter (`field`, `op`, `values`); `date` is the business date (default the latest); `tolerance` is an amount (`0.01`) or a percentage (`'0.5%'`) and widens a number or the ends of a range. `role` runs the test as a role. Each test comes back as `pass`, `fail` (with the figure found) or `error` (it could not run, and why: a masked figure, an answer of several rows, a role you do not hold). The same list is read by reports (REPORTS.md section 14), where a test may also name a visual.
@@ -682,7 +698,7 @@ from:                                   # a question put to another dataset, as 
     by: ["counterparties.id as counterparty", "counterparties.NAME as name"]     # grouping columns; "as" names the column of the joined table
     measures: ["P&L 1d as Desk P&L", Trades]                                     # measures of that dataset ("as" renames)
     key: [counterparty]                 # optional: the columns that identify one row (the rest are attributes of them)
-    filters: [{ field: trades.status, op: in, values: [Live] }]                  # optional: conditions of a report filter's form
+    filters: [{ field: trades.TRADE_STATUS, op: in, values: [NEW, AMENDED, VALIDATED] }]                  # optional: conditions of a report filter's form
   exposure:
     dataset: counterparty-exposure
     by: ["counterparties.id as counterparty", "counterparties.SECTOR as sector"]
@@ -868,8 +884,9 @@ type, role, meaning, referenced kind, unit, additivity and default measure, then
  "mode": "snapshot", "endorsement": "certified", "columns": 10, "query": "dataset:pack.core.book"}
 ```
 
-`query` is how a model query names the dataset's **implicit model**: the dataset as a fact, its pack dimensions one hop away (a trade's `desk` brings
-`pack.core.desk` as `desk`), and default measures (`Sum of mtm`, `Count of trade`). So a report can start from a bare dataset: the dataset page's
+`query` is how a model query names the dataset's **implicit model**: the dataset as a fact, its pack dimensions one hop away (a trade valuation's `DESK`
+brings `pack.core.desk` as `desk`, its `COUNTERPARTY` `pack.core.counterparty`), and default measures (`Sum of MTM`, `Count of trade_valuation`;
+`drishti.py bi model describe dataset:pack.market-risk.trade-valuation` lists them). So a report can start from a bare dataset: the dataset page's
 **Start a report on it** does exactly that, and **Make it a model** writes the implicit model out as a draft model you can extend.
 
 **A dataset of your own** (`/bi/datasets/new-layer`, also *New dataset* on the Models page) is for what a pack does not give: a pack dataset **narrowed**
@@ -890,7 +907,9 @@ time: {mode: snapshot}
 refresh: {on-load: true}
 columns:
   desk_id: {type: string, role: dimension, references: desk}
+  limit_type: {type: string, role: dimension}
   limit_amount: {type: decimal, role: amount, unit: {currency: currency}, additive: {over-time: last}}
+  currency: {type: string, role: dimension}
 ```
 
 Check (`POST /api/v1/bi/models/validate` with `{yaml}`) answers the problems with codes `DRS-9100` to `DRS-9108` (BI_MODEL_SPEC.md section 1.11). Every source
@@ -916,7 +935,7 @@ extends: pack.trading.trade@^1
 ```
 
 and Check (`POST /bi/models/validate`) answers it valid with the base's columns and grain:
-`{"kind":"dataset","name":"trade-narrowed","valid":true,"extends":"pack.trading.trade@^1","chain":["trade-narrowed","pack.trading.trade"],"columns":[...10 columns...],"grain":{"keys":["id"],"says":"One row per trade per business date"}}`.
+`{"kind":"dataset","name":"trade-narrowed","valid":true,"extends":"pack.trading.trade@^1","chain":["trade-narrowed","pack.trading.trade"],"columns":[...16 columns: BUY_SELL_CODE, COUNTERPARTY, ... TRADE_VERSION...],"grain":{"keys":["id"],"says":"One row per trade per business date"}}`.
 `GET /bi/layer-datasets/<item>` returns the item as stored (`yaml`) and **as it reads** (`resolved`: the chain folded in, the base's columns, grain and
 time, every layer's row rules under `security.rows`, `chain`), with Check's `problems`; the dataset page and the model designer show the resolved form. The
 draft is listed under *Your datasets* at once (`draft: true`); a model can use it once it is published.
@@ -932,14 +951,14 @@ rachana: 2
 expressions: 2
 dataset: live-trades
 version: 1.0.0
-extends: pack.trading.trade@^1
-columns: [tradeId, desk, book, currency, notional, mtm, status, updatedAt]   # a subset of the base's columns; its keys cannot be dropped (DRS-9105)
-where: "status == 'LIVE'"                                                    # a row filter (row scope)
-grain: { one-row-per: tradeId, keep: latest by updatedAt }                   # explicit de-duplication: the latest (or earliest) row per key and business date
+extends: pack.market-risk.trade-valuation@^1
+columns: [TRADE_ID, DESK, PORTFOLIO, CURRENCY, NOTIONAL, MTM, TRADE_STATUS, VALUATION_DATE]   # a subset of the base's columns; its keys cannot be dropped (DRS-9105)
+where: "TRADE_STATUS != 'MATURED'"                                                # a row filter (row scope)
+grain: { one-row-per: TRADE_ID, keep: latest by VALUATION_DATE }                  # explicit de-duplication: the latest (or earliest) row per key and business date
 derive:
-  notionalK: { expr: "notional / 1000", type: decimal }                      # a DEL column, worked out for each row
-  deskName:  { expr: "related(desk.name)", type: string }                    # one hop along a pack reference (desk references the kind desk)
-  bucket:    { python: notional-bucket, inputs: [notional], type: string }   # a Python column (a transform item, until wave B's column interface)
+  NOTIONAL_K: { expr: "NOTIONAL / 1000", type: decimal }                          # a DEL column, worked out for each row
+  BOOK_NAME:  { expr: "related(PORTFOLIO.NAME)", type: string }                   # one hop along a pack reference (PORTFOLIO references the kind book)
+  BUCKET:     { python: notional-bucket, inputs: [NOTIONAL], type: string }       # a Python column (a transform item, until wave B's column interface)
 ```
 
 ```yaml
@@ -947,16 +966,16 @@ rachana: 2
 expressions: 2
 dataset: desk-ccy
 version: 1.0.0
-extends: trades@1
+extends: pack.market-risk.trade-valuation@^1        # any published dataset, by name@major
 derive:
-  notionalK: { expr: "notional / 1000", type: decimal }
+  NOTIONAL_K: { expr: "NOTIONAL / 1000", type: decimal }
 group:                                                                       # a coarser grain, declared
-  by: [desk, currency]
-  columns: { notional: sum, notionalK: sum, mtm: sum, trades: count }        # sum, avg, min, max, count, distinct of the same-named column; count of a new name counts rows
+  by: [DESK, CURRENCY]
+  columns: { NOTIONAL: sum, NOTIONAL_K: sum, MTM: sum, TRADES: count }       # sum, avg, min, max, count, distinct of the same-named column; count of a new name counts rows
   grain: { says: One row per desk and currency }
 security:
   rows:
-    - { role: desk-head, where: "desk in user.desks" }                       # a grouped dataset's rules name its group-by columns (DRS-9106)
+    - { role: desk-head, where: "DESK in user.desks" }                       # a grouped dataset's rules name its group-by columns (DRS-9106)
 ```
 
 | Key | Does | Rules |
@@ -996,7 +1015,7 @@ you have seen, Back and Next move one step, and the unfinished dataset is kept i
 | **One row is** | the keys as chips, in words; and **which duplicate wins**: none (the source has one row per key; Check says when it has not), the **latest** or the **earliest** row of each key by a column | `grain: {one-row-per: tradeId, keep: latest by updatedAt}`, or `grain: {says, keys}` |
 | **Worked-out columns** | **A formula column** (a name, a type, a meaning, the formula in the expression editor, e.g. `mtm / notional * 10000`) or **A Python column** (a name, a type, the Python column item and the columns it reads; no item yet? **Write one** opens the Python catalogue in a new tab, then **Read the list again**, as for the Python Transform source) | `derive: {notionalUsd: {expr: ..., type: decimal, meaning: amount}, tenorBucket: {python: buckets.by_tenor, inputs: [maturityDate], type: string}}` |
 | **Group** (optional) | *Group the rows*: one row per the columns you tick, each other column summed, averaged, its minimum, maximum, count or distinct count, or left out; a count of the rows under a name | `group: {by: [desk], columns: {mtm: sum, trades: count}, grain: {says, keys}}` |
-| **Preview** | the server previews a saved draft, so the first **Preview** asks first (*Save the draft and preview*; Cancel saves nothing); later previews update that same draft. Its first rows, answered by the server as you (your row rules and masks), the headers as the dataset names its columns (`mtm`, not `trade.mtm`); for an SQL view, the statement's first rows | — |
+| **Preview** | the server previews a saved draft, so the first **Preview** asks first (*Save the draft and preview*; Cancel saves nothing); later previews update that same draft. Its first rows, answered by the server as you (your row rules and masks), the headers as the dataset names its columns (`mtm`, not `trade.MTM`); for an SQL view, the statement's first rows | — |
 | **Save** | title, name (it follows the title until you type one), workspace, masked columns, the YAML for review; **Save draft** or **Save and publish** | the item |
 
 Never a silent distinct: a dataset whose rows repeat a key says which one wins, and the YAML says it too.
@@ -1022,18 +1041,18 @@ rachana: 2
 dataset: live-trades-by-desk
 version: 1.0.0
 title: Live trades by desk
-extends: pack.trading.trade@^1
-columns: [currency, desk, mtm, notional, pnl1d, productType, status, tradeDate, tradeId]
-where: status == 'Live'
-grain: {one-row-per: id, keep: latest by tradeDate, says: One row per trade per business date}
+extends: pack.market-risk.trade-valuation@^1
+columns: [CURRENCY, DESK, MTM, NOTIONAL, PNL_1D, PRODUCT_TYPE, TRADE_STATUS, TRADE_DATE, TRADE_ID]
+where: TRADE_STATUS != 'MATURED'
+grain: {one-row-per: id, keep: latest by TRADE_DATE, says: One row per trade per business date}
 derive:
-  notionalM: {expr: notional / 1000000, type: decimal}
+  NOTIONAL_M: {expr: NOTIONAL / 1000000, type: decimal}
 group:
-  by: [desk]
-  columns: {mtm: sum, notional: sum, pnl1d: sum, notionalM: sum, trades: count}
+  by: [DESK]
+  columns: {MTM: sum, NOTIONAL: sum, PNL_1D: sum, NOTIONAL_M: sum, TRADES: count}
   grain:
     says: One row per desk
-    keys: [desk]
+    keys: [DESK]
 ```
 
 ![The Save step: title Live trades by desk, the name live-trades-by-desk, the workspace, masked columns and the YAML](img/bi-languages/wizard-save.jpg)
@@ -1043,8 +1062,10 @@ the worked-out columns after the kept ones, and for a grouped dataset the `by` c
 `trades`). **The same from the command line:** check a row filter or a formula before you save it, against the dataset's implicit model:
 
 ```bash
-drishti.py bi expr validate "status == 'Live'" --scope row --model dataset:pack.trading.trade
-drishti.py bi expr validate "notional / 1000000" --scope row --model dataset:pack.trading.trade
+drishti.py bi expr validate "TRADE_STATUS != 'MATURED'" --scope row --model dataset:pack.market-risk.trade-valuation
+drishti.py bi expr validate "NOTIONAL / 1000000" --scope row --model dataset:pack.market-risk.trade-valuation
+# valid  (del2, row scope, type boolean)
+# valid  (del2, row scope, type decimal)
 ```
 
 and save the YAML as a draft with the API (`POST /api/v1/bi/workspaces/<id>/items` with `{kind: dataset, title, body}`) or put the file under
@@ -1065,10 +1086,24 @@ rachana: 2
 dataset: desk-mtm
 version: 1.0.0
 title: Desk MTM
-source: {sql: 'SELECT desk.name AS desk, MEASURE(''Sum of mtm'') AS mtm FROM trade JOIN desk GROUP BY desk.name', model: sql-model@1}
+source: {sql: 'SELECT desk.NAME AS desk, MEASURE(''Sum of MTM'') AS mtm FROM trade_valuation JOIN desk GROUP BY desk.NAME', model: 'dataset:pack.market-risk.trade-valuation'}
+grain: {says: One row per desk, keys: [desk]}
+columns:
+  desk: {type: string, role: dimension}
+  mtm: {type: decimal, role: amount}
 ```
 
-The same statement from the command line, as you: `drishti.py bi sql "SELECT desk.name AS desk, MEASURE('Sum of mtm') AS mtm FROM trade JOIN desk GROUP BY desk.name" --model sql-model@1`.
+The same statement from the command line, as you (captured on the demo lakes, first rows):
+
+```
+$ drishti.py bi sql "SELECT desk.NAME AS desk, MEASURE('Sum of MTM') AS mtm FROM trade_valuation JOIN desk GROUP BY desk.NAME" --model dataset:pack.market-risk.trade-valuation
+desk                         mtm
+---------------------------  -----------------
+Bonds and securitised        -42,949,081.83
+Commodities                  -429,967,635.39
+Credit trading               360,552,941.89
+...
+```
 
 The console calls: `POST /bi/model-api/dataset-yaml` (the document to YAML and the server's Check, `POST /api/v1/bi/models/validate`),
 `POST /bi/api/expr/validate` (each formula, with `model: dataset:<base>` and `alias`), `POST /bi/api/sql/validate` (the SQL view), and for the preview the

@@ -37,7 +37,7 @@ def register(cli, packs, data, add, jvm, js, PFJ) -> None:
 
     # data profile
     p = add(data, "profile", guarded("dataprofile", lambda m, a: m.run(a, cli)), "data profile: every field of your JSON Lines (types, coverage, distinct, examples) and the key, date and match candidates, with a ready `pack make` line",
-            [js], "example:\n  drishti.py data profile data/jsonl\n  drishti.py data profile data/jsonl --kind trade --json\n"
+            [js], "example:\n  drishti.py data profile data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz\n  drishti.py data profile data/testdata/trades/endur --kind trade --json\n"
             "Streaming: memory is bounded by --max-distinct per field. Exit 0; 2 when nothing could be read.")
     p.add_argument("inputs", type=pathlib.Path, nargs="+", help="folders of *.jsonl and/or single .jsonl files")
     p.add_argument("--kind", help="treat every document as this kind (default: the file stem, or the loader envelope's kind)")
@@ -48,7 +48,7 @@ def register(cli, packs, data, add, jvm, js, PFJ) -> None:
     p = add(packs, "regenerate", guarded("packregen", lambda m, a: m.regenerate(a, cli, getattr(a, "_actions", ()))),
             "pack regenerate: regenerate Sutras, about text and tests from new data and three-way merge them into the pack, keeping your edits",
             [PFJ.build_parser(add_help=False), js],
-            "example:\n  drishti.py pack regenerate config/packs/my-bank data/jsonl --dry-run\n  drishti.py pack regenerate config/packs/my-bank data/jsonl\n"
+            "example:\n  drishti.py pack regenerate data/build/my-bank/pack/my-bank data/testdata/trades/endur/changes-2026-09-23.jsonl.gz --dry-run\n  drishti.py pack regenerate data/build/my-bank/pack/my-bank data/testdata/trades/endur/changes-2026-09-23.jsonl.gz\n"
             "Options not given are taken from the ones the pack was generated with (stored in <pack>/generated/). Untouched generated files are refreshed, new\n"
             "groups added, files you edited kept, files edited on both sides merged line by line (conflict markers, listed, exit 1). Needs the jar (like pack new).")
     # the parents' positional `inputs` comes first; this command takes the pack folder before it, and does not require --name (the pack has one)

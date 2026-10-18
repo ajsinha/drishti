@@ -48,7 +48,7 @@ In the top bar the **Forms** icon is lit on `/forms` and on any form. The old ad
 | a number or an amount | one box, or two for *between* | `=`, between, `>`, `<`, `≥`, `≤`; amounts take `250k`, `1.5m`, `2bn` |
 | a date | a date picker, two for *between*, or text for *relative* | on, between, before, after, or a range on the business-day calendar: `last 5 business days`, `next 10 business days`, `last 30 days`, `this week`, `month to date`, `year to date` |
 | one of a few values (up to 6: direction, status) | a row of tick boxes, one for each value the data holds | is one of the ticked values |
-| one of many values (asset class, product type, book, desk, currency) | **one dropdown the size of a select**, showing "All", the one value, or "3 selected: ABS, REPO, +1"; open it (`Enter` or `Space`) for a search box (type to filter), *Select all* / *Clear* (they act on the values the search leaves), and a tick box per value (`↓` `↑` move, `Space` ticks, a letter jumps, `Enter` or `Esc` closes). 44 pixels a row on a touch screen | is one of the ticked values; the address is the same as for tick boxes (`v.productType=BOND&v.productType=REPO`) |
+| one of many values (asset class, product type, book, desk, currency) | **one dropdown the size of a select**, showing "All", the one value, or "3 selected: ABS, CORP_BOND, +1"; open it (`Enter` or `Space`) for a search box (type to filter), *Select all* / *Clear* (they act on the values the search leaves), and a tick box per value (`↓` `↑` move, `Space` ticks, a letter jumps, `Enter` or `Esc` closes). 44 pixels a row on a touch screen | is one of the ticked values; the address is the same as for tick boxes (`v.PRODUCT_TYPE=CORP_BOND&v.PRODUCT_TYPE=GOVT_BOND`) |
 | an identifier | a box to paste a list: spaces, commas or lines | is one of them; `MX-2*` is any id starting `MX-2` |
 | yes or no | Any, Yes, No | is |
 
@@ -59,22 +59,25 @@ fine for a few thousand, slow for a million. Below the fields choose how to **so
 
 ![The results: the command the form made with a Copy button, the count, and the table of trades with its column funnels](img/form/02-results.jpg)
 
-The line under the form is the search, in the grammar of [Search by value](USER_GUIDE.md#search-by-value). For the form above, on the real server:
+The line under the form is the search, in the grammar of [Search by value](USER_GUIDE.md#search-by-value). With **Currency** EUR and USD
+ticked and **Quantity** `>= 100m`, on the quick-start server (the demo lakes):
 
 ```text
-TRD where (currency = 'EUR' or currency = 'USD') and notional >= 100m and mtm > 0 order by mtm desc limit 25
+TRD where (CURRENCY = 'EUR' or CURRENCY = 'USD') and QUANTITY >= 100m limit 100
 ```
+
+It matches 3,415 of the 15,000 trades of the three source systems; the table shows the first 100 (**Show** below the fields).
 
 **Copy** puts it on the clipboard (paste it into the command line or the search box); **Edit as text** opens it in the search box. The table is the
 console's table: sort by a heading, filter each column with its funnel ([Filter a table like Excel](USER_GUIDE.md#filter-a-table-like-excel)), page and walk it by keyboard. The key
 cell opens the view; **Alt+Left** brings you back to the form with your criteria in place and the results again, because everything you filled in is in the
-page's address (`/form/trading?kind=trade&op.mtm=>&v.mtm=1m&run=1`): bookmark it or send it.
+page's address (`/form/trading?kind=trade&v.CURRENCY=EUR&v.CURRENCY=USD&op.QUANTITY=>=&v.QUANTITY=100m&run=1`): bookmark it or send it.
 
 ## Give the results the room: hide the form
 
 ![After Search the form folds to one line of what you asked, above the command and the results](img/form/06-form-folded.jpg)
 
-When results arrive the form folds to **one line of your criteria** (`Trade id in IRS-48213 · Mark to market > 1m · +2 more`) so the table gets the screen.
+When results arrive the form folds to **one line of your criteria** (`Currency in EUR,USD · Quantity >= 100m`; beyond three criteria `· +2 more`) so the table gets the screen.
 Click the line, press **Show form**, or press **Alt+F** to open it again with every box as you left it; **Hide form** (or Alt+F again) folds it. The button
 carries `aria-expanded` and `aria-controls`, and on a phone it is a 44 px target. The state is in the page's address (`&form=hidden` or `&form=shown`), so a
 link or **Alt+←** from a result returns to the form as it was; and in this tab a form you opened by hand stays open for the next Search. An administrator who

@@ -122,11 +122,11 @@ POST /api/v1/bi/items/bi-f99d2f18d5/publish  { "note": "drop book", "force": tru
 A report in a list is named only if you could open it; the rest are counted ("2 more reports you cannot open"). Boards are not in the lineage (a board names reports, and a report that loses a visual a board uses is found when the board is read, [BOARDS.md section 10](BOARDS.md#10-built-and-not-built)) and notebooks are not run, so they have none.
 
 ```
-GET /api/v1/bi/items/bi-f99d2f18d5/lineage
+GET /api/v1/bi/items/bi-f99d2f18d5/lineage          (a workspace dataset of 2.1; captured in 2.1, before the model layer)
 { "item": { "title": "Trades model", "kind": "dataset", "endorsement": "certified", "publishedVersion": 1 },
-  "upstream":   [ { "table": "trade", "kind": "trade", "packs": ["trading"], "connector": "trading-store", "each": null, "mode": "cached" } ],
+  "upstream":   [ { "table": "trade", "kind": "trade", "packs": ["trading"], "connector": "trade-endur", "each": null, "mode": "cached" } ],
   "downstream": [ { "id": "bi-0ae16dad69", "title": "Trades report", "status": "published", "endorsement": "certified",
-                    "uses": { "fields": ["trade.book", "trade.desk"], "measures": ["MTM", "Notional"], "hierarchies": [] } } ],
+                    "uses": { "fields": ["trade.PORTFOLIO", "trade.DESK"], "measures": ["MTM", "Notional"], "hierarchies": [] } } ],
   "hidden": 0 }
 ```
 
@@ -152,10 +152,10 @@ drafts) that read it, under which alias and at which version, and the datasets t
 what it uses, and the datasets of the aliases it touches.
 
 ```
-GET /api/v1/bi/items/file:dataset:trading-risk-trades/lineage
+GET /api/v1/bi/items/file:dataset:trading-risk-trades/lineage          (captured on the demo lakes)
 {"item": {...}, "layer": true, "dataset": {"name": "trading-risk-trades", "version": "1.0.0"},
  "upstream": [{"table": "trading_risk_trades", "dataset": "trading-risk-trades", "version": "1.0.0",
-               "chain": [{"kind": "dataset", "name": "trading-risk-trades"}, {"kind": "pack-kind", "name": "trade", "pack": "trading", "connector": "trading-store"}]}],
+               "chain": [{"kind": "dataset", "name": "trading-risk-trades"}, {"kind": "pack-kind", "name": "trade-valuation", "pack": "market-risk", "connector": "risk-store"}]}],
  "downstream": [{"id": "file:model:trading-risk", "kind": "model", "title": "Trading and counterparty risk", "as": "trades", "range": "", "reads": "1.0.0", ...}],
  "hidden": 0}
 ```

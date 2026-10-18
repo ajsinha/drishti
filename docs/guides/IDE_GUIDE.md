@@ -85,9 +85,9 @@ the project's JDK and no absolute path of yours.
 
 | Run configuration | What it does | Ports |
 |---|---|---|
-| **Drishti server** | `DrishtiApplication` of module `drishti-server`, working directory = the repository root, the nine quickstart packs, sign-in on with the documented development administrator (`drishti-dev-admin` / `drishti-dev-admin123`), `DRISHTI_EXTERNAL_LIB=$PROJECT_DIR$/external_lib`, `-Xmx2g`. Data in `./data`. | 18480 |
+| **Drishti server** | `DrishtiApplication` of module `drishti-server`, working directory = the repository root, the seven packs (`DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets`), sign-in on with the documented development administrator (`drishti-dev-admin` / `drishti-dev-admin123`), `DRISHTI_EXTERNAL_LIB=$PROJECT_DIR$/external_lib`, `-Xmx2g`. Data in `./data`. | 18480 |
 | **Drishti server (QA profile)** | The same, with **its own data folder `data/qa/data`** (git-ignored) so QA never touches `./data` or another stack. | **18580** |
-| **Drishti server (debug-friendly)** | The QA profile with sign-in **off** and DEBUG logging for `com.ash.drishti`: for stepping through code without logging in. | 18580 |
+| **Drishti server (debug-friendly)** | The QA profile with sign-in **off**, DEBUG logging for `com.ash.drishti` and `-Xmx1g`: for stepping through code without logging in (pair it with a console whose sign-in is off too). | 18580 |
 | **Drishti build server jar** | Maven: `package -DskipTests -pl drishti-server -am`; produces `drishti-server/target/drishti-server-<version>-exec.jar`. | |
 | **Build demo lakes** | `drishti.py lake demo`: the seven packs' Delta lakes under `data/delta`, seven business days, from the committed test data ([data/testdata/README.md](../../data/testdata/README.md)); under a minute; the seven days end on today's business date. Then start **Drishti server (demo lakes)**. | |
 | **Drishti server (demo lakes)** | **Drishti server** with the samples off (`DRISHTI_DEMO_ENABLED=false`), so every page reads the demo lakes, and `-Xmx4g` (15,000 trades over seven days and the BI tables of them). | 18480 |
@@ -101,7 +101,8 @@ To change one for yourself without touching the committed file, **Copy Configura
 If you build a configuration by hand instead: **Run -> Edit Configurations -> + -> Application**, main class
 `com.ash.drishti.server.DrishtiApplication`, *Use classpath of module* `drishti-server`, JRE 21 or newer, **Working directory = the
 repository root** (the default, the `drishti-server` folder, is wrong: the server reads `./config/packs`, `./data` and `./sutras`
-relative to it), and environment variables as in the table above. Without `DRISHTI_PACKS` only the `finance` pack loads. The
+relative to it), and environment variables as in the table above. Without `DRISHTI_PACKS` the same seven packs load (the default of
+`drishti.packs.enabled` in `application.yaml`). The
 development token secret in the committed files is the documented development value; never use it outside your own machine.
 
 ### 3.2 Run it
@@ -163,8 +164,8 @@ PyCharm reads the same `run-configs/` folder of the repository root when you ope
 
 | Run configuration | Parameters | Talks to |
 |---|---|---|
-| **Drishti console** | `--server.port=17480 --backend.url=http://127.0.0.1:18480` | the default server |
-| **Drishti console (QA profile)** | `--server.port=17580 --backend.url=http://127.0.0.1:18580`, environment `DRISHTI_LAKE_ROOTS=$PROJECT_DIR$/data/qa/delta` (Admin -> Data loads -> Lakes may write there) | the QA server |
+| **Drishti console** | `--server.port=17480 --backend.url=http://127.0.0.1:18480`, environment `DRISHTI_AUTH_ENABLED=true`, `DRISHTI_TOKEN_SECRET` and `DRISHTI_SESSION_SECRET` (the development values, matching the server's), `DRISHTI_SECURE_COOKIE=false` (plain http on your machine) | the default server |
+| **Drishti console (QA profile)** | `--server.port=17580 --backend.url=http://127.0.0.1:18580`, environment `DRISHTI_LAKE_ROOTS=$PROJECT_DIR$/data/qa/delta` (Admin -> Data loads -> Lakes may write there) and the same sign-in settings | the QA server |
 
 Both run `drishti-console/run_drishti_web.py` from the repository root with the interpreter `drishti-console/.venv/bin/python`
 (the path is stored relative to the project; if PyCharm shows the interpreter as invalid, pick it once as in section 4.2).
@@ -190,7 +191,7 @@ it includes.
 The pack and Sutra tools (`tools/drishti.py`: `pack make` (JSON Lines to one deployable folder), `pack new`, `pack check`, `sutra lint`, `data ingest`, the REST commands) run from PyCharm
 the same way, and the Java `sutra` tool runs from IntelliJ IDEA: run configurations, the interpreter with PyYAML (and `deltalake`,
 `pyarrow`), `DRISHTI_TOKEN` and the working directory are in
-[CLI_GUIDE.md](CLI_GUIDE.md#14-running-the-tools-from-pycharm-and-the-java-sutra-from-intellij), which also covers debugging them and sharing run configurations through `run-configs/` (two samples are committed: `pack make` and `sutra gen`).
+[CLI_GUIDE.md](CLI_GUIDE.md#14-running-the-tools-from-pycharm-and-the-java-sutra-from-intellij), which also covers debugging them and sharing run configurations through `run-configs/` (committed: **drishti pack make**, **drishti sutra gen**, **drishti pack regenerate** and **drishti data profile** on the test data, **drishti view get**, **drishti doctor** and **drishti server smoke** against the default server).
 
 ## 5. Running the tests from the IDEs
 
@@ -200,7 +201,8 @@ Run a test class or method from its gutter icon, a module's tests from **right-c
 from the Maven tool window (**drishti → Lifecycle → verify**: builds, runs every test and every rule, as the drill does).
 
 - **Clear the `DRISHTI_*` variables** in test run configurations (or in the JUnit template: **Run → Edit Configurations →
-  Edit configuration templates → JUnit**). Tests expect the defaults (the `finance` pack) and fail when `DRISHTI_PACKS`
+  Edit configuration templates → JUnit**). The server tests set their own packs (the retired `finance` pack from `examples/packs` as a
+  fixture) and fail when `DRISHTI_PACKS`
   and its siblings are set ([DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#22-maven-commands)).
 - Tests that need a broker or database (PostgreSQL, Kafka, RabbitMQ, S3 and others) start it in Docker with
   Testcontainers. Without Docker they are skipped (`disabledWithoutDocker`), not failed.
@@ -235,14 +237,15 @@ This is the walk a tester follows without a terminal. It uses ports 18580 (serve
 5. **Check the stack.** Run **QA server smoke** and **QA doctor**: smoke ends `smoke: OK`; doctor shows no red lines.
 6. **Make the pack from your JSON (optional if you build it in the browser, step 8).** Open **QA pack make (from JSON)**, set
    *Parameters*: the first argument is your sample file (JSON, JSON Lines or `.gz`; the placeholder is
-   `$USER_HOME$/Downloads/YOUR_SAMPLE.jsonl`), `--kind` the entity kind, `--match` the field that tells the kinds apart, `--name` the
-   pack's name. It writes `data/qa/packs/<name>/` (the pack is in `data/qa/packs/<name>/pack/<name>`).
+   `$USER_HOME$/Downloads/YOUR_SAMPLE.jsonl`), `--kind` the entity kind, `--match` the field that tells the kinds apart (the placeholder
+   is `PRODUCT_TYPE`), `--name` the pack's name. To try it without a file of your own, use the committed test data:
+   `data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz`. It writes `data/qa/packs/<name>/` (the pack is in `data/qa/packs/<name>/pack/<name>`).
 7. **Build the lake from the big JSON.** Open **QA lake build (big JSON to Delta)** and edit *Parameters*:
 
    | Parameter | Meaning | Placeholder |
    |---|---|---|
    | `--from` | your big `.json` array, `.jsonl` or `.gz` (or a folder of them) | `$USER_HOME$/Downloads/YOUR_BIG_FILE.json` |
-   | `--kind`, `--key`, `--date` | entity kind, its id field, its business-date field | `trade`, `tradeId`, `tradeDate` |
+   | `--kind`, `--key`, `--date` | entity kind, its id field, its business-date field | `trade`, `TRADE_ID`, `TRADE_DATE` (use your file's business-date field) |
    | `--partition-by` | the column(s) the Delta table is split by | `PRODUCT_TYPE` |
    | `--lake` | where the Delta table goes | `data/qa/delta` |
    | `--pack` | the pack folder from step 6 (the folder that holds `pack.yaml`) | `data/qa/packs/qa-pack/pack/qa-pack` |

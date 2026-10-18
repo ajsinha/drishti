@@ -27,10 +27,10 @@ shot = register("t14", OUT / "t14")
 DATA = ROOT / "docs" / "tutorials" / "data"
 ITEM, REPORT = "Notional by desk chart", "Desks in Python"
 WORKSPACE = "economics-desk"
-DSQL = ("SELECT trade.desk, MEASURE('Trades') AS trades, MEASURE('Notional') AS notional\nFROM trade\nGROUP BY trade.desk\nORDER BY notional DESC")
-CHART = ("g = df.groupby('desk', as_index=False)['notional'].sum()\n"
-         "result = {'title': {'text': 'Notional by desk'}, 'xAxis': {'type': 'category', 'data': list(g['desk'])}, 'yAxis': {'type': 'value'}, "
-         "'series': [{'type': 'bar', 'data': [float(v) for v in g['notional']]}]}")
+DSQL = ("SELECT trade.DESK, MEASURE('Trades') AS trades, MEASURE('Notional') AS notional\nFROM trade\nGROUP BY trade.DESK\nORDER BY notional DESC")
+CHART = ("g = df.groupby('DESK', as_index=False)['NOTIONAL'].sum()\n"
+         "result = {'title': {'text': 'Notional by desk'}, 'xAxis': {'type': 'category', 'data': list(g['DESK'])}, 'yAxis': {'type': 'value'}, "
+         "'series': [{'type': 'bar', 'data': [float(v) for v in g['NOTIONAL']]}]}")
 
 
 def open_py(c: Ctx, item: str):
@@ -101,9 +101,9 @@ def analyse(c: Ctx):
     c.save("05-analyse-start.jpg", clip={"x": 240, "y": 56, "width": 1040, "height": 844})
     c.page.click("[data-open-go]")
     c.page.wait_for_function("() => /rows,/.test(document.querySelector('[data-info]').textContent)", timeout=60000)
-    c.page.click('.bx-chip[data-field="desk"] [data-to="rows"]')
-    c.page.click('.bx-chip[data-field="currency"] [data-to="columns"]') if c.page.locator('.bx-chip[data-field="currency"]').count() else c.page.click('.bx-chip[data-field="book"] [data-to="columns"]')
-    c.page.click('.bx-chip[data-field="notional"] [data-to="values"]')
+    c.page.click('.bx-chip[data-field="DESK"] [data-to="rows"]')
+    c.page.click('.bx-chip[data-field="CURRENCY"] [data-to="columns"]') if c.page.locator('.bx-chip[data-field="CURRENCY"]').count() else c.page.click('.bx-chip[data-field="PORTFOLIO"] [data-to="columns"]')
+    c.page.click('.bx-chip[data-field="NOTIONAL"] [data-to="values"]')
     c.page.wait_for_selector("[data-pivot] table")
     c.page.wait_for_timeout(500)
     elem_shot(c, "06-slice.jpg", "#bx", pad=6)
@@ -231,7 +231,7 @@ def analyse_engines(c: Ctx):
     c.page.wait_for_function("() => document.querySelectorAll('[data-promote-target] option').length > 1", timeout=30000)
     c.page.locator("[data-promote-target]").select_option(label=f"the report: {REPORT_DRAFT}")
     c.page.click("#bxT-sql")
-    c.page.fill("[data-cells=sql] textarea", "SELECT trade.desk, MEASURE('MTM') AS mtm\nFROM trade\nWHERE trade.currency = 'USD'\nGROUP BY trade.desk\nORDER BY mtm DESC")
+    c.page.fill("[data-cells=sql] textarea", "SELECT trade.DESK, MEASURE('MTM') AS mtm\nFROM trade\nWHERE trade.CURRENCY = 'USD'\nGROUP BY trade.DESK\nORDER BY mtm DESC")
     c.page.click("[data-cells=sql] [data-run]")
     c.page.wait_for_selector("[data-cells=sql] table", timeout=60000)
     c.page.wait_for_timeout(600)
@@ -261,11 +261,11 @@ def calc_bi(c: Ctx):
     """Calc's BI client (drishti_bi.query: the engine's answer as you, a DataFrame) and Graphic Walker over that frame (drishti_bi.walk)."""
     login(c, height=900)
     quiet_inbox(c)
-    open_calc(c, "import drishti_bi\ndf = await drishti_bi.query_async('trades-basic@1', measures=['MTM', 'Trades'], by=['trade.desk'])\nshow(df, 'MTM by desk')")
+    open_calc(c, "import drishti_bi\ndf = await drishti_bi.query_async('trades-basic@1', measures=['MTM', 'Trades'], by=['trade.DESK'])\nshow(df, 'MTM by desk')")
     assert "Done" in c.page.inner_text("[data-calc-status]"), c.page.inner_text("[data-calc-status]")
     c.page.wait_for_timeout(500)
     c.save("21-calc-bi.jpg", "#calcDrawer")
-    open_calc(c, "import drishti_bi\ndf = await drishti_bi.query_async('trades-basic@1', measures=['MTM'], by=['trade.desk', 'trade.currency'])\ndrishti_bi.walk(df, 'MTM by desk and currency')")
+    open_calc(c, "import drishti_bi\ndf = await drishti_bi.query_async('trades-basic@1', measures=['MTM'], by=['trade.DESK', 'trade.CURRENCY'])\ndrishti_bi.walk(df, 'MTM by desk and currency')")
     c.page.wait_for_selector("[data-calc-walker]", timeout=30000)
     frame = c.page.frame_locator("[data-calc-walker]")
     frame.locator("#walker[data-ready='1']").wait_for(timeout=60000)
@@ -286,7 +286,7 @@ def python_starter(c: Ctx):
     p.select_option('[data-new-item] [name="kind"]', "python")
     p.select_option('[data-new-item] [name="pyinterface"]', "measure")
     p.fill('[data-new-item] [name="title"]', STARTER)
-    p.fill('[data-new-item] [name="pyinputs"]', "notional")
+    p.fill('[data-new-item] [name="pyinputs"]', "NOTIONAL")
     p.evaluate("document.querySelector('[data-new-item]').scrollIntoView({block: 'center'})")
     p.wait_for_timeout(400)
     c.save("23-python-starter.jpg", locator="[data-new-item]")

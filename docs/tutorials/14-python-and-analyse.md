@@ -25,11 +25,15 @@ About 55 minutes.
 
 ## Before you start
 
-- [Tutorial 10](10-first-bi-report.md) done (reports, workspaces, `Economics desk`). You sign in as the development administrator, who holds the `bi-author` power that Python needs (reading with **Slice** and **SQL** needs only `bi`).
-- The console's Python environment from [tutorial 1](01-first-15-minutes.md) (`drishti-console/.venv`): it carries `pandas`, `numpy` and `pyarrow`, which Python items may import. Nothing else to install: since 2.3.0 every Python item and cell runs on the console, in its sandbox (a fork-server forks one child per call), never in
-  the browser.
+- The quick-start environment of [tutorial 10](10-first-bi-report.md#before-you-start) (the demo lakes: 15,000 trade valuations over ten desks,
+  business date 2026-10-16) and tutorial 10 done (reports, workspaces, `Economics desk`). You sign in as the development administrator, who holds the `bi-author` power that Python needs (reading with **Slice** and **SQL** needs only `bi`).
+- The console's Python environment from [tutorial 1](01-first-15-minutes.md) (`drishti-console/.venv`): it carries `pandas`, `numpy` and `pyarrow`, which Python items may import. Nothing else to install for BI: since 2.3.0 every Python item and Analyse cell runs on the console, in its sandbox (a fork-server forks one child per call), never in
+  the browser. **Calc** (the step that asks a BI model from a view, Alt+C) is the one exception: it is Python on the screen you are on, in your browser, so its
+  runtime must be installed once on the console with `tools/fetch-pyodide.sh` ([GETTING_STARTED.md](../guides/GETTING_STARTED.md)); without it Calc says
+  *Python runtime not installed* and Run stays disabled.
 - Two small files in [data/](data/): [notional-by-desk.python.yaml](data/notional-by-desk.python.yaml) (a Python visual) and [desk-python.report.yaml](data/desk-python.report.yaml) (a report on the model `trades-basic@1` that uses it).
-- The command line token of tutorial 1 (`DRISHTI_TOKEN`).
+- The personal API token of [tutorial 1, step 9](01-first-15-minutes.md#step-9--make-a-token-for-the-command-line) in `DRISHTI_TOKEN` (with `bi:write`),
+  and `DRISHTI_SERVER`. The Analyse and Calc calls quoted below are the console's, made with your session: a personal token does not reach them.
 
 ## What you will learn
 
@@ -43,10 +47,12 @@ About 55 minutes.
 
 Open **Catalogue → Desk P&L risk (Python)**.
 
-![The sample Python report: P&L volatility per desk as bars, and a histogram of one-day P&L; each frame says Python, the item, v1, server, the time and 750 rows](img/t14/01-python-report.jpg)
+![The sample Python report: P&L volatility per desk as bars, and a histogram of one-day P&L; each frame says Python, the item, v1, server, the time and the rows](img/t14/01-python-report.jpg)
 
-You should see two charts. Under each is a line such as `Python · desk-pnl-volatility v1 · server · 278 ms · 750 rows`: the **item** that drew it, its version, **where it ran** (the console's sandboxed worker, `server`) and how many rows it was handed. The left chart is a **Python measure** (the volatility of one-day P&L of each desk); the right one is a **Python visual** (a histogram drawn with numpy).
-Both worked on the 750 trades **as you may see them**: masks and row rules were applied before Python saw a row.
+You should see two charts. Under each is a line such as `Python · desk-pnl-volatility v1 · server · 278 ms · 10000 rows`: the **item** that drew it, its version, **where it ran** (the console's sandboxed worker, `server`) and how many rows it was handed. The left chart is a **Python measure** (the volatility of one-day P&L of each desk); the right one is a **Python visual** (a histogram drawn with numpy).
+Both worked on the trades **as you may see them**: masks and row rules were applied before Python saw a row. A Python visual is handed at most 10,000
+rows, so on the demo lake's 15,000 trade valuations it works on the first 10,000 (the server says so: `DRS-9022` is what a plain JSON answer of more rows
+is told); a Python measure for a figure over every row belongs in a model query, or in a Transform over grouped answers (step 8).
 
 The measure's source is a short YAML item, `config/bi/python/desk-pnl-volatility.python.yaml`:
 
@@ -54,7 +60,7 @@ The measure's source is a short YAML item, `config/bi/python/desk-pnl-volatility
 python: desk-pnl-volatility
 title: Desk P&L volatility
 interface: measure
-inputs: [pnl1d]                  # the columns the function reads
+inputs: [PNL_1D]                 # the columns the function reads, as the table names them
 packages: [pandas]               # what the source imports (must be on the allow-list)
 target: server                   # the console runs it (2.3.0: there is no browser target)
 timeout: 10                      # seconds
@@ -63,7 +69,7 @@ params: { min_trades: 2 }
 source: |
   def compute(table, params):
       """One number for the rows of one group."""
-      pnl = table["pnl1d"].dropna()
+      pnl = table["PNL_1D"].dropna()
       if len(pnl) < int(params.get("min_trades", 2)):
           return 0.0
       return float(pnl.std(ddof=1))
@@ -76,8 +82,8 @@ not an expression:
 measures:
   Desk P&L volatility:
     python: desk-pnl-volatility      # the item
-    inputs: [trade.pnl1d]            # columns of ONE dataset of the model
-    by: [trade.desk]                 # one number per desk
+    inputs: [trade.PNL_1D]           # columns of ONE dataset of the model
+    by: [trade.DESK]                 # one number per desk
 ```
 
 **On the command line** the model lists it with its item, beside the measures that are expressions:
@@ -87,22 +93,42 @@ $ python3 tools/drishti.py bi model describe trades-basic@1
 Trades, the basics  (trades-basic@1)
 
 trade  fact  trades-basic-trade 1.0.0
-  trade.tradeId                      string    key
-  trade.desk                         string    dimension
-  ...
-  trade.pnl1d                        decimal   amount        signed0
+  trade.VALUATION_ID                 string    key
+  trade.TRADE_ID                     string    dimension
+  trade.SOURCE_SYSTEM                string    dimension
+  trade.DESK                         string    dimension
+  trade.PORTFOLIO                    string    dimension
+  trade.PRODUCT_TYPE                 string    dimension
+  trade.CURRENCY                     string    dimension
+  trade.TRADE_STATUS                 string    dimension
+  trade.NOTIONAL                     decimal   amount        amount0
+  trade.MTM                          decimal   amount        signed0
+  trade.PNL_1D                       decimal   amount        signed0
+  trade.TRADE_DATE                   date      date
+  trade.MTM_IN_MILLIONS              decimal   amount
 
 measures
-  Notional                          sum(trade.notional)
-  MTM                               sum(trade.mtm)
+  Notional                          sum(trade.NOTIONAL)
+  MTM                               sum(trade.MTM)
   Trades                            count(trade)
   Average MTM per trade             measure('MTM') / measure('Trades')
   Desk P&L volatility               python: desk-pnl-volatility
   Count of trade                    count(trade)  (default)
 ```
 
-A model query cannot compute it (`DRS-9162`: a python visual runs a Python measure; a grouped query cannot): it is drawn by the report's python visual,
-which hands the rows to the item.
+A model query computes it like any measure, on the server's rows (every row, not the visual's 10,000), one call of the item per group:
+
+```text
+$ python3 tools/drishti.py bi mq --model trades-basic@1 --select trade.DESK --measures "Desk P&L volatility" --limit 3
+trade.DESK   Desk P&L volatility
+-----------  -------------------
+DESK-COMM    217,782.36
+DESK-CREDIT  159,732.60
+DESK-EQD     183,546.29
+3 row(s)  as of 2026-10-16  plan p_8978bc854cd42c41
+```
+
+The report's python visual draws it from the rows it is handed.
 
 ## Step 2 · A Python visual of your own
 
@@ -114,25 +140,25 @@ python: notional-by-desk
 title: Notional by desk chart
 interface: visual
 output: echarts
-inputs: [desk, notional]
+inputs: [DESK, NOTIONAL]
 packages: [pandas]
 target: server
 params: { top: 8 }
 source: |
   def render(table, params):
       top = int(params.get("top", 8))
-      g = table.groupby("desk", as_index=False)["notional"].sum().sort_values("notional", ascending=False).head(top)
+      g = table.groupby("DESK", as_index=False)["NOTIONAL"].sum().sort_values("NOTIONAL", ascending=False).head(top)
       return {
           "title": {"text": f"Notional of the {len(g)} largest desks", "left": "center"},
           "xAxis": {"type": "value", "name": "Notional"},
-          "yAxis": {"type": "category", "data": list(g["desk"])[::-1]},
-          "series": [{"type": "bar", "data": [float(v) for v in g["notional"]][::-1]}],
+          "yAxis": {"type": "category", "data": list(g["DESK"])[::-1]},
+          "series": [{"type": "bar", "data": [float(v) for v in g["NOTIONAL"]][::-1]}],
       }
 ```
 
 A Python item is a BI item like a dataset or a report: stored, versioned, reviewed and published. Create it in your workspace. **In the UI** that is a form, and you do not start from a blank page: **My workspace → New item**, kind *python*, and **What does it make?** asks for *a measure* (one number per group), *a visual* (a chart drawn by Python) or *a table* (a Transform, which joins datasets), and for the columns it reads (or, for a table, the datasets it reads). **Create and open the editor** makes the item with a valid, commented starter body (the manifest the server checks, a function of the right shape, and for a measure a test) and opens it with its editor ready, so you change the code and press **Check the Python**.
 
-![New item, kind python: it makes a measure, reads the column notional, titled Mean notional](img/t14/23-python-starter.jpg)
+![New item, kind python: it makes a measure, reads the column NOTIONAL, titled Mean notional](img/t14/23-python-starter.jpg)
 
 ![The starter body in the item's editor: params, a test of the mean of three values, and def compute(table, params)](img/t14/24-python-starter-editor.jpg)
 
@@ -171,7 +197,7 @@ that names your item, and one that uses the shipped measure.
   type: python
   title: "Notional by desk (my Python visual)"
   at: { x: 0, y: 2, w: 6, h: 6 }
-  wells: { columns: [trade.desk, trade.notional] }       # the rows handed to Python
+  wells: { columns: [trade.DESK, trade.NOTIONAL] }       # the rows handed to Python
   format: { python: Notional by desk chart, params: { top: 8 }, run: auto }
 - id: volatility
   type: python
@@ -183,7 +209,7 @@ Create it (New item, kind *report*, or `python3 tools/drishti.py bi item new eco
 
 ![Desks in Python: a currency slicer, my Python bar chart of the eight largest desks, and the shipped volatility measure](img/t14/04-desks-in-python.jpg)
 
-You should see your chart, `Notional of the 8 largest desks`, drawn by your function, beside the shipped one; the footer of yours reads `Python · bi-... v1 · server · 320 ms · 750 rows`. Choose a currency in the slicer: the chart is asked again and Python gets only those rows (the rows are the table's own, under the page's slicers, filters and business date, at most 10,000). `format.run` is `auto` (the server first, the browser if the server cannot), `server` or `browser`.
+You should see your chart, `Notional of the 8 largest desks`, drawn by your function, beside the shipped one; the footer of yours reads `Python · bi-... v1 · server · 320 ms · 10000 rows`. Choose a currency in the slicer: the chart is asked again and Python gets only those rows (the rows are the table's own, under the page's slicers, filters and business date, at most 10,000). `format.run` is `auto` (the server first, the browser if the server cannot), `server` or `browser`.
 
 **The sandbox.** The server target runs a short-lived worker process per call: **no network**, a scratch folder only, limits on CPU, memory, time and output, and **nothing kept between calls**, so nothing leaks between people. `import` works for the allow-listed packages. Python never reaches the server's data directly; it receives the Arrow rows the server built for the person.
 
@@ -194,7 +220,8 @@ datasets and the packs' datasets, one group per pack), tick the fields you want 
 
 ![The Analyse page: the Extract card with the model Trades, the basics and its fields ticked, and the Open the extract button](img/t14/05-analyse-start.jpg)
 
-You should see the fields grouped by the model's alias (`trade`) and, after **Open the extract**, the line `750 rows, 10 columns.` The extract is **one
+You should see the fields grouped by the model's alias (`trade`) and, after **Open the extract**, the line `10000 rows, 10 columns.` with a note that the
+extract was cut (the lake holds 15,000). The extract is **one
 model query** (its rows, `shape: rows`) asked as **you** (masked columns arrive empty, and the line says `Masked for you: ...`), cut to
 `bi.explore.max_rows` (10,000; a cut says so). It is rebuilt on every run and never kept, so a mask or row rule changed on the server applies the next
 time. Because it can be cut, Slice gives the **extract's** totals; for true totals use a SQL cell on the server (step 5) or a report. **On the command
@@ -203,7 +230,7 @@ line** the same rows are a model query, and **the YAML** of it is what Analyse s
 ```yaml
 mq: 1
 model: trades-basic@1
-select: { fields: [trade.tradeId, trade.desk, trade.book, trade.currency, trade.notional, trade.mtm], measures: [] }
+select: { fields: [trade.TRADE_ID, trade.DESK, trade.PORTFOLIO, trade.CURRENCY, trade.NOTIONAL, trade.MTM], measures: [] }
 shape: rows                 # the rows themselves, not grouped
 limit: 10000
 ```
@@ -212,11 +239,13 @@ limit: 10000
 
 ## Step 4 · Slice
 
-On the **Slice** tab each field is a chip with four small buttons: `R` rows, `C` columns, `V` values, `F` filters. Press `R` on `desk`, `C` on `currency` and `V` on `notional`.
+On the **Slice** tab each field is a chip with four small buttons: `R` rows, `C` columns, `V` values, `F` filters. Press `R` on `DESK`, `C` on `CURRENCY` and `V` on `NOTIONAL`.
 
-![Slice: desk down, currency across, notional summed; a pivot of the 750 trades](img/t14/06-slice.jpg)
+![Slice: desk down, currency across, notional summed; a pivot of the extract](img/t14/06-slice.jpg)
 
-You should see the pivot redraw at once: ten desks down, seven currencies across, notional summed in the cells (`750 of 750 rows used; 10 pivot rows`). A value takes `sum`, `avg`, `count`, `min` or `max`; a filter keeps rows equal to chosen values. It is plain JavaScript over the extract the page holds.
+You should see the pivot redraw: the desks down, the currencies across, notional summed in the cells (`10000 of 10000 rows used`). A value takes `sum`,
+`avg`, `count`, `min` or `max`; a filter keeps rows equal to chosen values. Since 2.3.0 the console works the pivot out (the line under it says *Worked out
+by the console*); nothing is computed in the browser.
 
 ## Step 5 · SQL
 
@@ -225,9 +254,9 @@ the cell is asked of the **server**, over the model the extract reads, so its an
 aliases and a measure is `MEASURE('name')` ([SQL.md](../guides/SQL.md)):
 
 ```sql
-SELECT trade.desk, MEASURE('Trades') AS trades, MEASURE('Notional') AS notional
+SELECT trade.DESK, MEASURE('Trades') AS trades, MEASURE('Notional') AS notional
 FROM trade
-GROUP BY trade.desk
+GROUP BY trade.DESK
 ORDER BY notional DESC
 ```
 
@@ -235,18 +264,18 @@ Press **Run**.
 
 ![The SQL cell in Drishti SQL on the server: desks with trade counts and notional, largest first, and the line naming the model, the plan and as you](img/t14/07-sql.jpg)
 
-You should see a table, the largest desk first (`DESK-RATES`, `156` trades, `20,281,000,000` of notional), and the line *10 rows in 7 ms · Drishti SQL,
+You should see a table, the largest desk first (`DESK-COMM`, `5,990` trades, `888,803,742,774` of notional: true totals over all 15,000 rows, not the extract's), and the line *10 rows in 7 ms · Drishti SQL,
 run by the server over trades-basic@1 as you · plan p_...*: the same plan a visual of the same question would run. **From the command line** the same
 statement (and what a write is told):
 
 ```text
-$ python3 tools/drishti.py bi sql "SELECT trade.desk, MEASURE('Trades') AS trades, MEASURE('Notional') AS notional FROM trade GROUP BY trade.desk ORDER BY notional DESC LIMIT 3" --model trades-basic@1
-trade.desk  trades  notional
-----------  ------  -----------------
-DESK-RATES  156     20,281,000,000.00
-DESK-EQD    132     15,806,000,000.00
-DESK-COMM   90      11,359,000,000.00
-3 row(s)  shape mq  plan p_ea2aec6d2bb26c60
+$ python3 tools/drishti.py bi sql "SELECT trade.DESK, MEASURE('Trades') AS trades, MEASURE('Notional') AS notional FROM trade GROUP BY trade.DESK ORDER BY notional DESC LIMIT 3" --model trades-basic@1
+trade.DESK  trades  notional
+----------  ------  ------------------
+DESK-COMM   5990    888,803,742,773.65
+DESK-RATES  1832    596,934,185,000.00
+DESK-EQD    1452    428,542,341,000.00
+3 row(s)  shape mq  plan p_3773eb23294dfb01
 
 $ python3 tools/drishti.py bi sql "DROP TABLE trade" --model trades-basic@1
 drishti: the server said 422 DRS-9170: DRS-9170 Drishti SQL is read-only: DROP is refused; a statement is one SELECT (or WITH ... SELECT)
@@ -271,23 +300,23 @@ in a notebook (step 7).
 Open the **Python** tab. A cell sees three names: `df` (the extract as a pandas table), `params` and `quant` (a pricing helper). What it prints comes back as text; what it puts in `result` is **drawn**: a table as a table, a dict as an ECharts option, SVG or PNG as an image.
 
 ```python
-g = df.groupby('desk', as_index=False)['notional'].sum()
-result = {'title': {'text': 'Notional by desk'}, 'xAxis': {'type': 'category', 'data': list(g['desk'])}, 'yAxis': {'type': 'value'},
-          'series': [{'type': 'bar', 'data': [float(v) for v in g['notional']]}]}
+g = df.groupby('DESK', as_index=False)['NOTIONAL'].sum()
+result = {'title': {'text': 'Notional by desk'}, 'xAxis': {'type': 'category', 'data': list(g['DESK'])}, 'yAxis': {'type': 'value'},
+          'series': [{'type': 'bar', 'data': [float(v) for v in g['NOTIONAL']]}]}
 ```
 
 Press **Run** (the line beside it says *Runs on the console (sandbox)*: since 2.3.0 there is no browser target).
 
-![A Python cell and its chart: Notional by desk, ten bars; the line says Python, server, 262 ms, 750 rows](img/t14/08-python-cell.jpg)
+![A Python cell and its chart: Notional by desk, ten bars; the line says Python, server, the time and the rows](img/t14/08-python-cell.jpg)
 
-You should see `Python · server · 262 ms · 750 rows` and the chart. The same worker as a Python visual runs it, with the same sandbox. A cell that only prints and returns a table, run on the same extract:
+You should see `Python · server · ... ms · 10000 rows` and the chart. The same worker as a Python visual runs it, with the same sandbox. A cell that only prints and returns a table, run on the same extract:
 
 ```text
-POST /bi/explore/python   {"source": "print(len(df))\nresult = df.groupby('desk')['notional'].sum().head(3)", "target": "server"}
-200 {"kind":"cell","stdout":"750\n","table":{"columns":["notional"],"rows":[[11359000000.0],[8598000000.0],[15806000000.0]],"rowCount":3},"ms":257,"inputRows":750,"masked":[],"target":"server","truncatedInput":false}
+POST /bi/explore/python   {"source": "print(len(df))\nresult = df.groupby('DESK')['NOTIONAL'].sum().head(3)", "target": "server"}
+200 {"kind":"cell","stdout":"10000\n","table":{"columns":["NOTIONAL"],"rows":[...],"rowCount":3},"ms":...,"inputRows":10000,"masked":[],"target":"server",...}
 ```
 
-You should see `750` printed and a three-row table. Running Python needs `bi-author`; a person with only `bi` sees the Slice and SQL tabs work and the Python tab explain why it will not run. (Python cells have no command of their own: the call above is the console's, with your session.)
+You should see `10000` printed (the extract, cut) and a three-row table. Running Python needs `bi-author`; a person with only `bi` sees the Slice and SQL tabs work and the Python tab explain why it will not run. (Python cells have no command of their own: the call above is the console's, with your session.)
 
 ## Step 7 · Keep it as a notebook, promote it
 
@@ -302,24 +331,24 @@ rachana: 1
 notebook: desk-notional-first-look
 title: Desk notional, first look
 dataset: mq:trades-basic@1            # the model the extract reads
-fields: [trade.tradeId, trade.desk, trade.book, trade.productType, trade.currency, trade.status, trade.notional, trade.mtm, trade.pnl1d, trade.mtmInMillions]
+fields: [trade.TRADE_ID, trade.DESK, trade.PORTFOLIO, trade.PRODUCT_TYPE, trade.CURRENCY, trade.TRADE_STATUS, trade.NOTIONAL, trade.MTM, trade.PNL_1D, trade.MTM_IN_MILLIONS]
 cells:
 - type: slice
   slice:
-    rows: [desk]
-    columns: [currency]
+    rows: [DESK]
+    columns: [CURRENCY]
     values:
-    - {field: notional, agg: sum}
+    - {field: NOTIONAL, agg: sum}
     filters: []
 - type: sql
   source: |
-    SELECT trade.desk, MEASURE('Trades') AS trades, MEASURE('Notional') AS notional
+    SELECT trade.DESK, MEASURE('Trades') AS trades, MEASURE('Notional') AS notional
     FROM trade
-    GROUP BY trade.desk
+    GROUP BY trade.DESK
     ORDER BY notional DESC
 - type: python
   source: |
-    g = df.groupby('desk', as_index=False)['notional'].sum()
+    g = df.groupby('DESK', as_index=False)['NOTIONAL'].sum()
     result = {'title': {'text': 'Notional by desk'}, ...}
   target: server
 ```
@@ -336,7 +365,7 @@ You should see `Python visual draft saved in your workspace: Analyse cell (visua
 
 You should see, beside the button, `Report draft saved in your workspace: Slice of Trades, the basics.` and **Open the draft**. The draft is a one-page
 report on the same model (`model: trades-basic@1`) with a **matrix** (rows, the column field, and the model's measure that is exactly the slice's
-aggregate: `sum(notional)` is `Notional`), which you open in the designer to finish ([tutorial 10](10-first-bi-report.md)).
+aggregate: `sum(NOTIONAL)` is `Notional`), which you open in the designer to finish ([tutorial 10](10-first-bi-report.md)).
 
 ## Step 8 · Two models: a Python Transform and a join in Analyse
 
@@ -359,8 +388,8 @@ version: 1.0.0
 source:
   python: pnl-vs-exposure
   inputs:                       # each a model query, asked as the reader (their row rules and masks)
-    pnl: { model: trading-risk@1, select: { fields: [counterparties.id, counterparties.name], measures: [P&L 1d, Trades] } }
-    exposure: { model: counterparty-exposure@1, select: { fields: [counterparties.id, counterparties.sector], measures: [Exposure (EE peak), Exposure (PFE peak)] } }
+    pnl: { model: trading-risk@1, select: { fields: [counterparties.id, counterparties.NAME], measures: [P&L 1d, Trades] } }
+    exposure: { model: counterparty-exposure@1, select: { fields: [counterparties.id, counterparties.SECTOR], measures: [Exposure (EE peak), Exposure (PFE peak)] } }
   params: { floor: 1.0 }
 grain: { keys: [counterparty] }
 columns:
@@ -373,28 +402,30 @@ Transform runs for you on the first question):
 
 ```text
 $ python3 tools/drishti.py bi mq --model desk-pnl-vs-exposure-py@1 --select result.counterparty,result.name,result.sector --measures "Desk P&L,Exposure (EE peak),P&L per exposure" --limit 3
-result.counterparty  result.name                   result.sector     Desk P&L    Exposure (EE peak)  P&L per exposure
--------------------  ----------------------------  ----------------  ----------  ------------------  ----------------
-CP-ALDERSHOT         Aldershot Pension Trust       Pensions          946,326.00  98,882,895.00       0.01
-CP-AURORA            Aurora Sovereign Wealth Fund  Government        125,106.00  67,990,537.00       0.00
-CP-BRAMBLE           Bramble Asset Management      Asset management  219,599.00  75,741,467.00       0.00
-3 row(s)  as of 2026-10-13  plan p_32de77bdd356d928
+result.counterparty  result.name                   result.sector     Desk P&L       Exposure (EE peak)  P&L per exposure
+-------------------  ----------------------------  ----------------  -------------  ------------------  ----------------
+CP-ALDERSHOT         Aldershot Pension Trust       Pensions          9,940,482.84   2,599,390,291.00    0.00
+CP-AURORA            Aurora Sovereign Wealth Fund  Government        -5,475,341.95  1,991,425,202.00    -0.00
+CP-BRAMBLE           Bramble Asset Management      Asset management  6,448,473.64   1,999,491,936.00    0.00
+3 row(s)  as of 2026-10-16  plan p_1f01f95e79f2ef30
 ```
 
-The item is `config/bi/python/pnl-vs-exposure.python.yaml`; the reference is [PYTHON_BI.md section 13](../guides/PYTHON_BI.md#13-transforms-a-table-in-a-table-out).
+The item is `config/bi/python/pnl-vs-exposure.python.yaml` (the model queries hand their columns over as the models name them, `NAME` and `SECTOR`;
+the Transform renames them to the table's own `name` and `sector`); the reference is [PYTHON_BI.md section 13](../guides/PYTHON_BI.md#13-transforms-a-table-in-a-table-out).
 
 How would you write such a Transform? In **Analyse**, with **two extracts**. Open the notebook **Desk P&L vs counterparty exposure, in pandas** (the Notebook box in the Extract card).
 
-![Analyse with the sample notebook: the first extract is the trades of the model trading-risk (750 rows, 3 columns); under More extracts, the second is called exposure and reads the same model's netting sets](img/t14/13-analyse-extracts.jpg)
+![Analyse with the sample notebook: the first extract is the trades of the model trading-risk (3 columns); under More extracts, the second is called exposure and reads the same model's netting sets](img/t14/13-analyse-extracts.jpg)
 
-You should see `750 rows, 3 columns.` for the first extract (the trades of the model **Trading and counterparty risk**) and, in **More extracts: join
+You should see `10000 rows, 3 columns.` for the first extract (cut: the lake holds 15,000 trade valuations) (the trades of the model **Trading and counterparty risk**) and, in **More extracts: join
 several datasets**, a second one called `exposure` (`mq:trading-risk@1`, 3 fields: the netting sets of the same model). Each is built for you by the
 server, with your row rules and masks. Open the **Python** tab and **Run** its cell.
 
 ![The join cell: df and extract("exposure") grouped and merged; the result is a table of counterparties with their P&L, exposure and P&L per exposure, largest exposure first](img/t14/14-analyse-join.jpg)
 
-You should see the cell (`df` is the trades; `extract("exposure")` is the netting sets) and a table of counterparties: `CP-HALCYON` with P&L `-1194728`
-and exposure `133327214`, then `CP-MERIDIAN` and the rest. The same join works in a SQL cell over the extract: the second extract is a table called
+You should see the cell (`df` is the trades; `extract("exposure")` is the netting sets) and a table of counterparties, the largest exposure first:
+`CP-NORTHPLAINS` with exposure `2846661899` (the 76 netting sets are all in the second extract), then `CP-SUMMIT` and the rest. The P&L column adds up the
+trades **of the extract**, cut at 10,000 rows, so it is not the counterparty's full P&L: the server's figure is the Transform's, or Drishti SQL's below. The same join works in a SQL cell over the extract: the second extract is a table called
 `exposure` (`SELECT ... FROM extract JOIN exposure ON ...`); on the server, one model already joins its facts through the counterparty (Drishti SQL
 `FROM trades JOIN counterparties JOIN netting_sets`). When the pandas join is what you want to keep, press **Promote to a Transform**.
 
@@ -434,14 +465,24 @@ drafts. Choose one, write a SQL cell and **Run** it:
 
 ![A SQL cell on the server engine: MTM by desk for the USD trades, the engine select, and the line naming the model and the plan](img/t14/19-analyse-engines.jpg)
 
-You should see the engine *Server: Drishti SQL over the model*, ten desks (`DESK-RATES` `103040009` first, for the USD trades) and the line naming
-`trades-basic@1`. Press **Promote to a report visual**:
+You should see the engine *Server: Drishti SQL over the model*, ten desks (`DESK-RATES` `2,863,034,263` first, for the USD trades) and the line naming
+`trades-basic@1`. **From the command line**:
+
+```text
+$ python3 tools/drishti.py bi sql "SELECT trade.DESK, MEASURE('MTM') AS mtm FROM trade WHERE trade.CURRENCY = 'USD' GROUP BY trade.DESK ORDER BY mtm DESC LIMIT 3" --model trades-basic@1
+trade.DESK   mtm
+-----------  ----------------
+DESK-RATES   2,863,034,262.92
+DESK-STRUCT  409,340,516.24
+DESK-SFT     264,809,126.60
+3 row(s)  shape mq  plan p_3fefc5a51db918b6
+``` Press **Promote to a report visual**:
 
 ![A SQL cell promoted into the report draft "Desk views": the note says what a report cannot say (the ORDER BY) and that the report was written again](img/t14/20-promote-existing.jpg)
 
 You should see, beside the button, `Visual sql added to the report draft: Desk views.` and notes: the `ORDER BY` was left out (a visual sorts in its own
-settings) and the report was written again by the designer's writer. Open the draft in the designer: a new `matrix` (rows `trade.desk`, values `MTM`, the
-filter `trade.currency eq USD`) below what was there. The reader understands Drishti SQL (aliases and `MEASURE('...')`) and SQL over the extract
+settings) and the report was written again by the designer's writer. Open the draft in the designer: a new `matrix` (rows `trade.DESK`, values `MTM`, the
+filter `trade.CURRENCY eq USD`) below what was there. The reader understands Drishti SQL (aliases and `MEASURE('...')`) and SQL over the extract
 (columns and plain aggregates, matched to the model's measures). **The YAML** of the visual it added:
 
 ```yaml
@@ -449,8 +490,8 @@ filter `trade.currency eq USD`) below what was there. The reader understands Dri
         type: matrix
         title: Desk views
         at: { x: 0, y: 8, w: 12, h: 6 }
-        wells: { rows: [trade.desk], values: [MTM] }
-        filters: [{ field: trade.currency, op: eq, values: [USD] }]
+        wells: { rows: [trade.DESK], values: [MTM] }
+        filters: [{ field: trade.CURRENCY, op: eq, values: [USD] }]
 ```
 
 A slice or SQL cell of **another** model is not added to an existing report (a report reads one model: `DRS-9070` names both); promote it to a new draft.
@@ -463,32 +504,46 @@ dataset's name reads the model the converter made of it, `trades-basic` is `trad
 
 ```python
 import drishti_bi
-df = await drishti_bi.query_async('trades-basic@1', measures=['MTM', 'Trades'], by=['trade.desk'])
+df = await drishti_bi.query_async('trades-basic@1', measures=['MTM', 'Trades'], by=['trade.DESK'])
 show(df, 'MTM by desk')
 ```
 
 ![Calc: drishti_bi.query on the model trades-basic@1 in the editor, and the DataFrame it returned, shown as a table](img/t14/21-calc-bi.jpg)
 
-You should see ten desks with their MTM and trade counts: the same numbers a report shows, with the same masks (the command line's `bi mq --model
-trades-basic@1 --select trade.desk --measures MTM,Trades` prints the same). `drishti_bi.walk(df)` explores a frame with **Graphic Walker** (PygWalker's
+You should see ten desks with their MTM and trade counts: the same numbers a report shows, with the same masks. The command line prints the same:
+
+```text
+$ python3 tools/drishti.py bi mq --model trades-basic@1 --select trade.DESK --measures MTM,Trades --limit 3
+trade.DESK   MTM              Trades
+-----------  ---------------  ------
+DESK-COMM    -429,967,635.39  5990
+DESK-CREDIT  360,552,941.89   1172
+DESK-EQD     -79,395,510.75   1452
+3 row(s)  as of 2026-10-16  plan p_5d2cad2dda86953b
+``` `drishti_bi.walk(df)` explores a frame with **Graphic Walker** (PygWalker's
 front end, vendored):
 
 ![Graphic Walker over the frame: fields on the left, shelves for the axes, colour and size, and the chart builder](img/t14/22-calc-walker.jpg)
 
-Drag `trade.desk` to the X axis and `MTM` to the Y axis. The chart is drawn in a **sandboxed frame** that cannot reach the network or the console: the rows went in by message and nothing goes out ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#19-the-bi-client-and-graphic-walker)).
+Drag `trade.DESK` to the X axis and `MTM` to the Y axis. The chart is drawn in a **sandboxed frame** that cannot reach the network or the console: the rows went in by message and nothing goes out ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#19-the-bi-client-and-graphic-walker)).
 
-Last, a **Python measure in an alert**. An alert on a measure of a model asks a model query, and a model query does not run Python measures (they are
-drawn by a python visual), so **Alerts → New → Watch a measure of a model** on **Desk P&L volatility** is refused with the reason, captured:
+Last, a **Python measure in an alert**. An alert on a measure of a model asks a model query, and a model query runs Python measures (step 1), so
+**Alerts → New → Watch a measure of a model** on **Desk P&L volatility** works like any other: choose the model `trades-basic@1`, the measure, *crosses a
+limit*, *above* `100000`, **Save**. What the form sends, with your session (a personal API token may not call `/me/...`), and the alert at once firing
+(the largest desk volatility, `1,117,385`, is above the limit), captured:
 
 ```text
-$ curl -s -X PUT -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
-    -d '{"source":{"type":"model","model":"trades-basic@1","query":{"select":{"fields":["trade.desk"],"measures":["Desk P&L volatility"]}},"reduce":"max"},
-         "condition":{"type":"threshold","op":"above","value":100000},"trigger":{"mode":"after-load"}}' \
-    "$DRISHTI_SERVER/api/v1/me/measure-alerts/Desk%20volatility%20ceiling"
-422 {"code": "DRS-9062", "detail": "you cannot use this source yourself, so it cannot be watched: DRS-9162 'Desk P&L volatility' is a Python measure (desk-pnl-volatility): a python visual runs it; a grouped query cannot"}
+PUT /api/v1/me/measure-alerts/Desk%20volatility%20ceiling
+    {"source":{"type":"model","model":"trades-basic@1","query":{"select":{"fields":["trade.DESK"],"measures":["Desk P&L volatility"]}},"reduce":"max"},
+     "condition":{"type":"threshold","op":"above","value":100000},"trigger":{"mode":"after-load"}}
+200 {"name":"Desk volatility ceiling", ..., "source":{"type":"model","model":"trades-basic@1","measure":"Desk P&L volatility","reduce":"max", ...},
+     "describe":"above 100,000","label":"trades-basic@1 · Desk P&L volatility","link":"/bi/i/trades-basic%401"}
+POST /api/v1/me/measure-alerts/Desk%20volatility%20ceiling/check
+200 {... "history":[{"action":"fired","trigger":"saved","value":1117385.1394432886,"asOf":"2026-10-16",
+     "message":"Desk volatility ceiling — now 1,117,385.1394 (above 100,000)","delivered":{"inbox":"ok","email":"off","bridge":"off","sms":"off"}}]}
 ```
 
-Watch a measure the model computes instead (an expression, step 1), or a visual of a report.
+`reduce: max` watches the largest of the desks' figures; `first` or a filter on one desk watches one.
 
 ## Next steps
 
@@ -504,7 +559,6 @@ Watch a measure the model computes instead (an expression, step 1), or a visual 
 | `DRS-9072` | the SQL ran too long or was too long (`bi.explore.sql_max_seconds`, `sql_max_chars`) |
 | `DRS-9073` | the SQL over the extract tried to do more than read the table `extract` |
 | `DRS-9170` | Drishti SQL on the server was asked to do more than one SELECT (a write, a second statement) |
-| `DRS-9162` | a model query was asked for a Python measure: a python visual runs it |
 | `DRS-9074` | the runner is busy or not installed (`bi.python.workers`, the pandas environment) |
 | the Python tab will not run | you lack the `bi-author` power |
 | a column is empty in the extract | it is masked for your role; the line under the form names it |

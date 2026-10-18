@@ -505,7 +505,7 @@ and [MCP_CLIENT.md](../architecture/MCP_CLIENT.md).
 | Period (dates) | ISO-8601 period | `P5Y` (five years), `P18M`, `P90D` |
 | Boolean | `true` / `false` | `true` |
 | List | YAML list, or a comma-separated string (handy in env vars) | `[market-risk, trading]` or `market-risk,trading` |
-| Map | YAML mapping | `routes: { trade: trading-store }` |
+| Map | YAML mapping | `routes: { trade: trade-endur }` |
 | Plugin and connector settings | always strings; quote numbers if you like | `pool-size: "4"` or `pool-size: 4` |
 
 ---
@@ -557,7 +557,7 @@ start-up with `drishti.security.secret must be at least 32 bytes when security i
 drishti:
   sources:
     routes:
-      trade: trading-store       # a connector or plugin name
+      trade: trade-endur       # a connector or plugin name
 ```
 
 ### Add a site Delta Lake connector
@@ -566,11 +566,11 @@ Create the file `config/connectors/ops-lake.yaml` (the file name is the connecto
 
 ```yaml
 plugin: delta
-kinds: [shipment]
+kinds: [counterparty]
 settings:
   root: /data/lake          # or s3a://my-bucket/lake
-  domain: logistics
-  mode.shipment: effective
+  domain: reference
+  mode.counterparty: effective
 ```
 
 No restart: the folder is watched, so within a few seconds `curl -s localhost:18480/api/v1/sources` shows an entry named
@@ -601,7 +601,7 @@ drishti:
     fetch-timeout: 2s
     plugin-dir: /opt/drishti/plugins
     default-route: demo
-    routes: { trade: trading-store }
+    routes: { trade: trade-endur }
     plugins:
       rest: { enabled: true, settings: { base-url: "https://risk.internal/api" } }
     connectors:                  # deprecated: use config/connectors/<name>.yaml
@@ -618,7 +618,7 @@ drishti:
 | `fetch-timeout` | `2s` | The longest a single source read may take. Slower reads show the entity as unavailable instead of holding the view. |
 | `plugin-dir` | empty (`DRISHTI_PLUGIN_DIR`) | A directory of extra plugin jars. Each jar gets its own class loader. Plugins on the class path are always found. |
 | `default-route` | `demo` | The plugin or connector tried first for a kind that has no route. |
-| `routes.<kind>` | `{}` plus from packs | Which plugin or connector serves a kind. Packs route their kinds to their connectors (`trade: trading-store`). |
+| `routes.<kind>` | `{}` plus from packs | Which plugin or connector serves a kind. Packs route their kinds to their connectors (`trade: trade-endur`). |
 | `plugins.<name>.enabled` | `true` for any plugin not listed | Whether the plugin runs as itself (one instance). A plugin used only through `connectors` does not also run as itself unless it is listed here. |
 | `plugins.<name>.settings.*` | per plugin | Settings for that single instance; see [connector settings](#connector-settings-plugin-by-plugin). |
 | `connectors-dir` | `./config/connectors` (`DRISHTI_CONNECTORS_DIR`) | The folder of connector files: one `<name>.yaml` per connector, the file name being the connector's name. Created on the first write. Details: [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md). |
@@ -984,7 +984,7 @@ comes from the environment only, and the model gets no tools. See [the privacy n
 | Key | Default | Meaning |
 |---|---|---|
 | `enabled` | `false` (`DRISHTI_ASK_ENABLED`) | The global switch. While `false` no network call is ever attempted and `POST …/ask` answers `404 DRS-4007`. |
-| `packs` | `[]` | The packs where the box is drawn (per-pack opt-in); empty means none. `DRISHTI_EXPLAIN_ASK_PACKS=market-risk,genomics`. |
+| `packs` | `[]` | The packs where the box is drawn (per-pack opt-in); empty means none. `DRISHTI_EXPLAIN_ASK_PACKS=market-risk,counterparty-risk`. |
 | `endpoint` | empty (`DRISHTI_ASK_ENDPOINT`) | The model's URL: an OpenAI-compatible chat completions URL, or an Anthropic Messages URL. |
 | `api` | `openai` | `openai` or `anthropic`: the request and response shape. |
 | `model` | empty (`DRISHTI_ASK_MODEL`) | The model name sent to the endpoint. |
@@ -1181,7 +1181,7 @@ shipped, read-only files. The BI powers are granted on roles, see below.
 
 **Console.** `bi.enabled` (`DRISHTI_BI_ENABLED`, default `true`) switches the BI menu, the `/bi` pages and the `RUPAKA` keyword on or off in the console.
 
-**Console, compressed static files.** The console serves `/static/...` compressed (the 36 MB DuckDB-Wasm module is 8 MB gzipped): `static.compress` (default `true`), `static.compress_min_bytes` (`1024`; smaller files are sent as they are),
+**Console, compressed static files.** The console serves `/static/...` compressed (the 1.1 MB `echarts.min.js` travels as 370 KB gzipped; until 2.2 the 36 MB DuckDB-Wasm module was the large one): `static.compress` (default `true`), `static.compress_min_bytes` (`1024`; smaller files are sent as they are),
 `static.brotli_quality` (`5`; Brotli is used when the `brotli` package is installed and the browser accepts it, else gzip) and `static.cache_dir` (empty: the system temp folder, `drishti-console-static`). Each file is compressed once per version
 (path, size and modification time) and served from the cache; range requests, images and fonts go as they are.
 
@@ -1227,7 +1227,7 @@ How many rows each kind of visual asks the engine for ([REPORTS.md](../guides/RE
 | `top-candidates` | `10000` | Most values a top-N filter ranks before it keeps its N. |
 | `distribution-rows` | `20000` | Most members a **histogram** or **box plot** reads (the server bins or summarises them; the picture is a few dozen rows). |
 | `totals-max-rows` | `2000` | Most rows one level of **true totals** (a matrix's subtotal level or a table's total) may return. |
-| `perspective-rows` | `20000` | Most rows a Perspective grid or pivot is sent (phase 5). The browser holds them: the retest of [RUPAKA_POC.md](../architecture/RUPAKA_POC.md#12-the-perspective-retest-phase-5) measured 10,000 rows at 21 MB of JS heap. |
+| `perspective-rows` | `20000` | Most rows a 2.1 `perspective-*` visual is sent. Since 2.3.0 the page draws them in Drishti's own grid (no Perspective, no WebAssembly); until then the browser held and pivoted them (the retest of [RUPAKA_POC.md](../architecture/RUPAKA_POC.md#12-the-perspective-retest-phase-5) measured 10,000 rows at 21 MB of JS heap). |
 | `python-rows` | `10000` | Most rows a **python visual** hands the Python runner ([PYTHON_BI.md](../guides/PYTHON_BI.md), phase 6). |
 | `python-packages` | `pandas, numpy, pyarrow, scipy, statsmodels` | The packages a Python item's manifest may list (publishing refuses another: `DRS-9070`). Keep it equal to the console's `bi.python.packages`, which is what the runner enforces. |
 | `python-max-seconds` | `60` | The largest `timeout` a Python manifest may ask for. |
@@ -2238,7 +2238,7 @@ DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=kafka:
 
 `SPRING_PROFILES_ACTIVE=<profile>` (`postgres`, `aerospike`, `duckdb`, `files`, `iceberg`, `mongodb` or `redis`) loads
 `application-<profile>.yaml`, which redefines the banking data-domain connectors (`reference-store`,
-`market-store`, `trading-store`, `risk-store`, `credit-store`, `collateral-store`) to read a database instead of
+`market-store`, `trade-endur`, `risk-store`, `credit-store`, `collateral-store`) to read a database instead of
 the lake. The packs still decide kinds, routes and modes.
 
 **Deprecated since 1.19.** The profiles still work and the server logs a warning that names the equivalent connector file; the way forward is one YAML file per connector in `config/connectors/` ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)), with an example for every store in `config/connectors.examples/`.

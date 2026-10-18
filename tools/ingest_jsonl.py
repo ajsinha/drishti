@@ -17,7 +17,7 @@
 pack declares), so a running server picks them up within its refresh interval.
 
     uv run --with deltalake --with pyarrow --with pyyaml python tools/ingest_jsonl.py \\
-        --from data/jsonl --pack config/packs/my-bank --lake /var/lib/drishti/delta
+        --from your-folder/ --pack config/packs/my-bank --lake /var/lib/drishti/delta
 
 Input: --from is a folder (its *.jsonl; -r for subfolders) or one .jsonl file, repeatable; a line is a plain JSON document or the loader envelope
 {"kind", "id", "doc"} (doc an object or JSON text, unwrapped). The kind is the file stem unless the envelope says one.

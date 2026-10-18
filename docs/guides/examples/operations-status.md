@@ -17,10 +17,10 @@
 
 The back office on one screen: where a trade stands and what comes next.
 
-**Panel kinds:** `status`, `timeline`, `ladder`, `markdown`, `provenance`.
+**Panel kinds:** `STATUS`, `TIMELINE`, `ladder`, `markdown`, `provenance`.
 
 **Open it:** in the workbench, **Build → New → Examples** and pick `operations-status`: it opens as a copy (this Sutra, the JSON as samples, this note as notes). Or **File → Open** in the workbench with `operations-status.sutra.yaml` and `operations-status.json`.
 
 **What to look for:** coloured status lights (`tone: status`); the timeline in date order with the pending event in amber; the coupon ladder with the next payment highlighted and a total; the note and provenance in the right-hand column.
 
-**Lines to copy:** `highlight: "#index == $.nextIndex"` on the ladder, `label` and `detail` on the timeline, `area: right` to put a panel in the side column.
+**Lines to copy:** `highlight: "#index == $.NEXT_INDEX"` on the ladder, `label` and `detail` on the timeline, `area: right` to put a panel in the side column.

@@ -19,19 +19,16 @@ Business intelligence in Drishti (it is called **Rūpaka**; type `BI <GO>` or ch
 (pages of **visuals** that ask the dataset questions), and the **catalogue** where published reports are found. In this tutorial you build a report of your own on the **World economics** sample: two cards, a **map** you can drill from the world to a country
 and its regions, a bar, and a slicer. You look at it, cross-filter it, publish it, learn the slicers in detail on the **Trades overview** sample, and meet the cross-filter and drill-through of **Counterparty risk**.
 
-### In the designer
-
-You can build the same report yourself with two datasets (pictures to follow). Open **Designer**, start a report on `trading-risk`, and in the Fields pane press **Add dataset** and choose `counterparty-exposure`: a second tree appears, labelled. Drag `counterparties.SECTOR` of the *second* tree onto the canvas: the new visual reads that dataset and carries a small tag with its name. Drag a field of the second tree onto a visual of the first and you are told *this visual reads ...; put ... fields in another visual, or make a composed dataset*. Under the tree the **Links between datasets** panel offers fields that mean the same; tick one and the report's `links:` has it, so a slicer on one dataset filters the other. **Make a composed dataset from these** shows the `from:` / `join:` draft for you to read before anything is saved.
-
 ## Time to complete
 
 About 60 minutes.
 
 ## Before you start
 
-- [Tutorial 1](01-first-15-minutes.md) done: server and console running with sign-in on, you are signed in as the development administrator, and the token for the command line is set (`DRISHTI_TOKEN`).
-- Nothing else to install. The sample datasets and reports are files in `config/bi/` that every server reads. The data of **World economics** is real and public: about 200 economies from the World Bank (CC BY 4.0), through the `world-economy` pack. The dataset uses only the World Bank
-  fields on purpose; the pack's IMF fields stay out of it ([REAL_DATA.md](../guides/REAL_DATA.md)).
+- **The quick-start environment** ([data/testdata/README.md](../../data/testdata/README.md)): the demo lakes built (`drishti-console/.venv/bin/python tools/drishti.py lake demo`, or the run configuration **Build demo lakes**), the server started on them (run configuration **Drishti server (demo lakes)**: sign-in on, the seven packs, the samples off) and the console (**Drishti console**). The figures below are from the lake `lake demo` built on 17 October 2026: seven business days ending **2026-10-16**, 5,000 trades in each of ENDUR, CALYPSO and MUREX. `lake demo` moves the days to end on *your* business date, so your dates differ; the counts are the same.
+- Signed in as the development administrator (`drishti-dev-admin`, password `drishti-dev-admin123`, the run configuration's seed), and, for the command line, a **personal API token** in `DRISHTI_TOKEN` (click your name → **My account** → **API tokens**, tick `bi:write` among the scopes, **Create token**; [tutorial 1, step 9](01-first-15-minutes.md#step-9--make-a-token-for-the-command-line)). Every command line below is run from the repository folder with the console's Python, `drishti-console/.venv/bin/python tools/drishti.py ...` (written `python3 tools/drishti.py` for short), against `DRISHTI_SERVER` (default `http://localhost:18480`).
+- Nothing else to install. The sample models, datasets and reports are files in `config/bi/` that every server reads. The data of **World economics** is real and public: about 200 economies from the World Bank (CC BY 4.0), through the `world-economy` pack. The dataset uses only the World Bank
+  fields on purpose; the pack's IMF fields stay out of it ([REAL_DATA.md](../guides/REAL_DATA.md)). Every column of every shipped model is in **UPPER_SNAKE** (`REGION_NAME`, `GDP_USD_BN`, `TRADE_DATE`), the names the data has in production.
 
 ## What you will learn
 
@@ -42,9 +39,9 @@ About 60 minutes.
 - how to publish: your own workspace, a shared workspace, the catalogue;
 - **filter like Power BI**: list, dropdown and range slicers, page and report scope, a top-N filter that tames a busy donut, bookmarks, and when to use a slicer instead of a click;
 - the **Counterparty risk** sample: slicers that reach across packs, a selected bar, and drill-through;
-- **two datasets in one report**: a dataset composed of two others, joined in YAML, and a slicer of one dataset that filters the visuals of the other;
+- **two fact tables in one model**: trades and netting sets, each added up on its own and joined through the counterparty, so one-day P&L and exposure stand side by side and one slicer filters both;
 - (step 13) **a dataset and a model of your own, in the wizard**: narrow a pack dataset (some columns, some rows, a worked-out column), preview it, publish it and make a model of it in one click, with no YAML typed.
-- (preview, 2.2.0) **models**: a pack dataset with nothing to build, a report on it at once, then a model of trades and desks with a suggested relationship, a measure, a row rule and the security safeguard, published, opened in Analyse and watched by an alert, in the UI, over the API and as YAML.
+- (step 14) **models**: a pack dataset with nothing to build, a report on it at once, then a model of trades and desks with a suggested relationship, a measure, a row rule and the security safeguard, published, opened in Analyse and watched by an alert, in the UI, over the API and as YAML.
 
 ## Step 1 · Look at the model
 
@@ -83,7 +80,7 @@ Latin America & Caribbean                          7,327.57      666.55         
 Middle East, North Africa, Afghanistan & Pakistan  5,136.27      828.03          6,203.03
 South Asia                                         4,578.02      1,692.26        2,705.28
 Sub-Saharan Africa                                 2,213.29      1,318.05        1,679.22
-7 row(s)  as of 2026-10-16  plan p_96fa8e1c36a0693d
+7 row(s)  as of 2026-10-16  plan p_1050f114e2f1aee5
 ```
 
 **As YAML**, the same question is a file you can keep and run with `python3 tools/drishti.py bi mq gdp-by-region.yaml`:
@@ -119,6 +116,16 @@ Drag the measure `GDP (USD bn)` from **Fields** onto the canvas, then `Populatio
 
 You should see two cards with real figures: `117,327` (billion dollars) and `8,161.83` (million people). A **measure alone becomes a card**; a column alone would become a table; a column with a measure becomes a bar. Under each card is the line the server answered with: rows, time
 and the layer.
+
+**From the command line** the two cards are one question with no field (and **in the YAML** each is a visual `{ type: card, wells: { values: [GDP (USD bn)] } }`):
+
+```text
+$ python3 tools/drishti.py bi mq --model world-economics@1 --measures "GDP (USD bn),Population (m)"
+GDP (USD bn)  Population (m)
+------------  --------------
+117,326.82    8,161.83
+1 row(s)  as of 2026-10-16  plan p_bb1fc09a9657bad8
+```
 
 ## Step 4 · A map
 
@@ -175,6 +182,17 @@ You should see the toolbar (business date, *Click a mark to filter the page / hi
 You should see three things at once. A **chip** under the toolbar, `economies.ISO3: AUS`, says what is filtering the page. The cards answer for Australia alone (`1,799` billion dollars of GDP, `27.61` million people): this is the **cross-filter**. And the map **drilled**:
 its title bar says **World › Australia**, and the shapes of Australia's states and territories replace the world.
 
+The cross-filter is a filter on the click's field; **from the command line** it is `--where`:
+
+```text
+$ python3 tools/drishti.py bi mq --model world-economics@1 --select economies.ISO3,economies.NAME \
+    --measures "GDP (USD bn),Population (m)" --where economies.ISO3=AUS
+economies.ISO3  economies.NAME  GDP (USD bn)  Population (m)
+--------------  --------------  ------------  --------------
+AUS             Australia       1,798.52      27.61
+1 row(s)  as of 2026-10-16  plan p_8ed71c662895f1ed
+```
+
 ![The map one level down: World then Australia, the states and territories](img/t10/10-regions.jpg)
 
 Under the map you read `No figures at region level for Australia: the location field holds countries, not their regions.` That is honest: this dataset has one row per **country**. To shade regions give the map a field of ISO 3166-2 codes (`AU-NSW`, `US-CA`) and the same visual
@@ -190,7 +208,7 @@ A draft in **My workspace** is private. To publish, move it to a **shared worksp
 
 ![New workspace: name Economics desk, description Reports on the world economy, a box to require review](img/t10/12-workspace.jpg)
 
-You should see the form; leave *Require review before publishing* unticked for now and press **Create workspace** (a workspace that requires review needs a second person to approve, which is [tutorial 13](13-govern-bi.md)). Open your report's page (**My workspace**, then the report), choose **Move to workspace…**, pick `Economics desk` and press **Move**.
+You should see the form; leave *Require review before publishing* unticked for now and press **Create workspace** (a workspace that requires review needs a second person to approve, which is [tutorial 13](13-govern-bi.md)). Open your report's page (**My workspace**, then the report), press **Move…**, pick `Economics desk` and press **Move**.
 
 ![The report's page: the workspace chooser beside Edit and the Move button](img/t10/13-move.jpg)
 
@@ -206,24 +224,26 @@ You should see your report beside the shipped one, with its workspace and owner.
 
 ```text
 $ python3 tools/drishti.py bi catalogue list
-id                               kind     endorsed  status    ver  title
-file:report:trades-overview      report   promoted  published v2   Trades overview  (Shipped content, shipped)
-file:report:world-economics      report   promoted  published v1   World economics  (Shipped content, shipped)
-file:report:counterparty-risk    report   promoted  published v1   Counterparty risk  (Shipped content, shipped)
-bi-7f8269ba14                    report   none      published v1   My world report  (Economics desk, drishti-dev-admin)
+id                                                 kind     endorsed  status    ver  title
+file:report:cashflow-ladder                         report   promoted  published v1   Cashflow ladder  (Shipped content, shipped)
+file:model:counterparty-exposure                    model    promoted  published v1   Counterparty exposure  (Shipped content, shipped)
 ...
-17 item(s)
+bi-7f8269ba14                                       report   none      published v1   My world report  (Economics desk, drishti-dev-admin)
+...
+file:report:world-economics                         report   promoted  published v1   World economics  (Shipped content, shipped)
+file:dataset:world-economics-economies              dataset  promoted  published v1   World economics: economies  (Shipped content, shipped)
+45 item(s)
 ```
 
 ```text
 $ python3 tools/drishti.py bi workspace list
 id                            role          items  name
-u-drishti-dev-admin-eb6f      admin             1  My workspace  [personal]
+u-drishti-dev-admin-eb6f      admin             0  My workspace  [personal]
 economics-desk                admin             1  Economics desk
-shipped                       viewer           16  Shipped content
+shipped                       viewer           44  Shipped content
 ```
 
-You should see the report with `published v1` and the workspace with one item. (Ids, counts and dates differ on your machine.)
+You should see the report with `published v1` among the 44 shipped items (nine models, their datasets, nine reports, two boards, a notebook and four Python items), and the workspace with one item. (Ids and dates differ on your machine.)
 
 ## Step 8 · Filter like Power BI
 
@@ -232,13 +252,13 @@ The sample **Trades overview** has a second page, **By product**, built to show 
 A **slicer** is a visual that holds choices and filters other visuals. It has a mode and a scope. **In the UI** select the slicer and open **Format**: **Mode** is a choice of *list*, *dropdown*, *range* and *relative date*, and **Filters** is *this page* or *every page*. **In the YAML** the same two settings are:
 
 ```yaml
-- { id: pick-product, type: slicer, title: Product type, wells: { field: [trade.productType] }, format: { mode: dropdown, scope: page } }
+- { id: pick-product, type: slicer, title: Product type, wells: { field: [trade.PRODUCT_TYPE] }, format: { mode: dropdown, scope: page } }
 ```
 
 | `format.mode` | What it looks like | Use it for |
 |---|---|---|
 | `list` (the default) | a checkbox list with a search box, always open | a field with a handful of values (desks, currencies) |
-| `dropdown` | a closed box that opens a **floating** checkbox list with a search box, **Select all** and **Clear** | a field with many values (product types: about forty) |
+| `dropdown` | a closed box that opens a **floating** checkbox list with a search box, **Select all** and **Clear** | a field with many values (product types: 130 across the three source systems) |
 | `range` | two boxes, *From* and *To* | a number or a date field (notional, trade date) |
 
 | `format.scope` | A choice filters |
@@ -258,7 +278,39 @@ You should see the list **floating over** the visuals below it (it does not push
 
 ![Two product types chosen: the slicer says "2 selected", a chip names the filter, the donut shows two rings, the matrix has one desk](img/t10/17-dropdown-chosen.jpg)
 
-You should see `2 selected: AMORT_SWAP, BASIS_SWAP` in the box, a **chip** `Product type: AMORT_SWAP, BASIS_SWAP` under the toolbar, the Desk and Currency slicers narrowed to values that still exist (a slicer never filters itself; **other** slicers filter it), a donut of two rings and a matrix of one desk. **Reset** clears all of it.
+You should see `2 selected: AMORT_SWAP, BASIS_SWAP` in the box, a **chip** `Product type: AMORT_SWAP, BASIS_SWAP` under the toolbar, the Desk and Currency slicers narrowed to values that still exist (a slicer never filters itself; **other** slicers filter it), a donut of two slices (72 trades each) and a matrix of one desk, `DESK-RATES`, in four currencies (CAD, EUR, GBP, USD). **Reset** clears all of it.
+
+**From the command line** the matrix's question with the slicer's choice is a filter (`--where` once per value is an *and*; a list of values is the YAML's `in`):
+
+```text
+$ python3 tools/drishti.py bi mq --model trades-basic@1 --select trade.DESK,trade.CURRENCY --measures Trades --where trade.PRODUCT_TYPE=AMORT_SWAP
+trade.DESK  trade.CURRENCY  Trades
+----------  --------------  ------
+DESK-RATES  CAD             12
+DESK-RATES  EUR             12
+DESK-RATES  GBP             24
+DESK-RATES  USD             24
+4 row(s)  as of 2026-10-16  plan p_d924968cb041d34d
+```
+
+The slicer's two choices together, as a file (`python3 tools/drishti.py bi mq both-swaps.yaml`):
+
+```yaml
+mq: 1
+model: trades-basic@1
+select: { fields: [trade.DESK, trade.CURRENCY], measures: [Trades] }
+where: [{ field: trade.PRODUCT_TYPE, op: in, values: [AMORT_SWAP, BASIS_SWAP] }]
+```
+
+```text
+trade.DESK  trade.CURRENCY  Trades
+----------  --------------  ------
+DESK-RATES  CAD             12
+DESK-RATES  EUR             36
+DESK-RATES  GBP             60
+DESK-RATES  USD             36
+4 row(s)  as of 2026-10-16  plan p_a58f9885efd49c3b
+```
 
 **Taming a busy donut.** The donut on this page could have about forty product types. It does not draw forty slices: it carries a **top filter**. **In the UI** that is the **Filters** pane: *On this visual*, **Add a filter**, filter type **Top N**, how many, highest or lowest, and the measure to rank by:
 
@@ -267,13 +319,13 @@ You should see `2 selected: AMORT_SWAP, BASIS_SWAP` in the box, a **chip** `Prod
 **In the YAML** it is one line (both write the same):
 
 ```yaml
-- { id: share, type: donut, title: "Notional by product type (top 12)", wells: { axis: [trade.productType], values: [Notional] },
-    filters: [{ field: trade.productType, op: top, n: 12, by: Notional }] }
+- { id: share, type: donut, title: "Notional by product type (top 12)", wells: { axis: [trade.PRODUCT_TYPE], values: [Notional] },
+    filters: [{ field: trade.PRODUCT_TYPE, op: top, n: 12, by: Notional }] }
 ```
 
 ![The donut with its twelve largest product types, labels and a paged legend](img/t10/18-donut-top.jpg)
 
-You should see twelve slices and the title `(top 12)`. The server ranks the product types **in the context of the slicers**, so the top twelve of the swaps you chose is a different twelve from the top twelve overall. `n` is how many, `by` the measure to rank by.
+You should see twelve slices and the title `(top 12)`, ENDUR's `ComSwap` the largest (`500,779,109,245` of notional), then `FRA` and `Commodity`. The server ranks the product types **in the context of the slicers**, so the top twelve of the swaps you chose is a different twelve from the top twelve overall. `n` is how many, `by` the measure to rank by.
 
 **Bookmarks** save a state. **In the UI**, in the designer, select nothing (click the empty canvas) and open **Format**: under **Bookmarks** type a name, set the slicer choices you want kept (a relative-date slicer offers its windows), and press **Save this page as a bookmark**; it keeps the page, the filters of the Filters pane and those slicer choices. Each saved bookmark can be renamed in place, updated from the page's filters again, or removed:
 
@@ -281,32 +333,55 @@ You should see twelve slices and the title `(top 12)`. The server ranks the prod
 
 **In the YAML** they are `bookmarks:` (a name, a page, slicer choices and filters). Either way they appear in the **Bookmarks** box of the viewer's toolbar. On the **Overview** page choose the bookmark `FX desk only`.
 
-![The Overview page after choosing the bookmark: a chip trade.desk: DESK-FX, all visuals answering for that desk](img/t10/19-bookmark.jpg)
+![The Overview page after choosing the bookmark: a chip trade.DESK: DESK-FX, all visuals answering for that desk](img/t10/19-bookmark.jpg)
 
-You should see the page filtered to `DESK-FX` (84 trades, notional `8,485,000,000`) with a chip, as if you had made the choice yourself. A bookmark is written in the designer, not captured from what a reader has chosen on screen in the viewer.
+You should see the page filtered to `DESK-FX` (`1,428` trades, notional `366,591,303,000`, MTM `-669,248,940`) with a chip, as if you had made the choice yourself. **From the command line**: `python3 tools/drishti.py bi mq --model trades-basic@1 --select trade.DESK --measures Trades,Notional,MTM --where trade.DESK=DESK-FX` prints the same three numbers. **In the YAML** the bookmark is `- { name: FX desk only, page: overview, slicers: {}, filters: [{ field: trade.DESK, op: in, values: [DESK-FX] }] }` (`config/bi/reports/trades-overview.report.yaml`). A bookmark is written in the designer, not captured from what a reader has chosen on screen in the viewer.
 
 **Slicer or click?** Both filter. A **slicer** is a choice you make on purpose from a list, it stays visible, and it can be page or report wide. A **click on a mark** (a bar, a slice, a country) is exploring: it filters the **other** visuals of the page, it highlights what you picked, and it is gone when you click again.
 Click the `DESK-FX` bar on the Overview page:
 
-![DESK-FX selected: the chip trade.desk: DESK-FX, the cards for that desk, the bar showing only DESK-FX](img/t10/20-crossfilter.jpg)
+![DESK-FX selected: the chip trade.DESK: DESK-FX, the cards for that desk, the bar showing only DESK-FX](img/t10/20-crossfilter.jpg)
 
 You should see the same figures as the bookmark gave. *Click a mark to* **highlight** (in the toolbar) keeps the whole answer on bar and column charts and draws the chosen share over it instead of filtering.
 
 ## Step 9 · Counterparty risk: slicers across packs, and drill-through
 
-Open the shipped report **Counterparty risk**. Its dataset joins three packs (trades from `trading`, counterparties from `core`, netting sets from `counterparty-risk`) and its two slicers, Sector and Country, are `scope: report`: they filter every page and reach the trades and the netting sets **through the relationships**.
+Open the shipped report **Counterparty risk**. It reads the model **Trading and counterparty risk** (`trading-risk@1`), which joins three packs (trade valuations from `market-risk`, counterparties, desks and books from `core`, netting sets from `counterparty-risk`), and its two slicers, Sector and Country, are `scope: report`: they filter every page and reach the trades and the netting sets **through the relationships**.
 
 ![Counterparty risk: cards for exposure, slicers for sector and country, the ten counterparties with the highest exposure](img/t10/21-counterparty.jpg)
 
-You should see exposure cards, the two dropdown slicers and a bar of the ten counterparties with the highest expected exposure (a **top 10** filter again). Click the bar of **Halcyon Shipping plc**.
+You should see exposure cards (`40,648,705,220` EE peak, `92,604,754,421` PFE peak, `76` netting sets), the two dropdown slicers and a bar of the ten counterparties with the highest expected exposure (a **top 10** filter again), Northern Plains Energy Canada first. Click the bar of **Halcyon Shipping plc**.
 
 ![Halcyon Shipping plc selected: a chip, the cards answering for it, its bar highlighted, and an arrow icon in the visual's header: drill through](img/t10/22-counterparty-select.jpg)
 
-You should see a chip, the cards narrowed to that counterparty (`133,327,214` expected exposure) and, in the bar's header, a **drill-through** button. Press it.
+You should see a chip, the cards narrowed to that counterparty (`2,100,393,518` expected exposure) and, in the bar's header, a **drill-through** button. Press it.
 
 ![The counterparty's own page: the name carried as a chip, four cards, and its trades with ids that open the terminal](img/t10/23-drill-through.jpg)
 
-You should see a second page, **Counterparty**, with the name carried in as a chip **and in the address** (so the link can be shared), a **Back** button, four cards (`40` trades, notional `5,035,000,000`) and a table of its trades whose ids are links: `MX-20000043` opens that trade's view in the terminal.
+You should see a second page, **Counterparty**, with the name carried in as a chip **and in the address** (so the link can be shared), a **Back** button, four cards (`608` trades, notional `157,772,189,914`) and a table of its trades, highest MTM first, whose ids are links: `MX-30003139` (a MUREX zero-coupon swap of DESK-RATES) opens that trade's view in the terminal.
+
+**From the command line**, the bar and the drill-through page are two model queries:
+
+```text
+$ python3 tools/drishti.py bi mq --model trading-risk@1 --select counterparties.NAME \
+    --measures "Exposure (EE peak),Exposure (PFE peak)" --sort="-Exposure (EE peak)" --limit 3
+counterparties.NAME            Exposure (EE peak)  Exposure (PFE peak)
+-----------------------------  ------------------  -------------------
+Northern Plains Energy Canada  2,846,661,899.00    6,618,488,915.00
+Summit Clearing LLC            2,638,994,501.00    6,267,982,439.00
+Aldershot Pension Trust        2,599,390,291.00    5,900,834,180.00
+3 row(s)  as of 2026-10-16  plan p_c8d200416d786832
+$ python3 tools/drishti.py bi mq --model trading-risk@1 --select trades.TRADE_ID,trades.DESK,trades.PRODUCT_TYPE --measures MTM \
+    --where "counterparties.NAME=Halcyon Shipping plc" --sort=-MTM --limit 3
+trades.TRADE_ID  trades.DESK  trades.PRODUCT_TYPE  MTM
+---------------  -----------  -------------------  --------------
+MX-30003139      DESK-RATES   ZC_SWAP              109,538,863.39
+MX-30001819      DESK-RATES   ACCRETING_SWAP       77,363,035.99
+MX-30002230      DESK-RATES   OIS                  73,904,909.87
+3 row(s)  as of 2026-10-16  plan p_95fd0ea4dc7544fa
+```
+
+**In the YAML** the drill-through is two lines of `config/bi/reports/counterparty-risk.report.yaml`: the bar's `drillthrough: { page: counterparty, field: counterparties.NAME }` and the target page's `drillthrough: { fields: [counterparties.NAME] }`.
 
 ## Step 10 · On a phone
 
@@ -316,31 +391,76 @@ Open your report on a phone-width window (390 px).
 
 You should see one column in reading order, the map at the full width, targets at least 44 pixels high and no sideways scroll. A report can also have a **phone layout** of its own (which visuals, in what order): [tutorial 16](16-embed-drishti.md) and the designer's **Phone** tab.
 
-## Step 11 · Two datasets in one report
+## Step 11 · Two fact tables in one model
 
-Everything so far read **one** dataset. The question "what is each counterparty's P&L next to its exposure?" needs two: P&L is in `trading-risk` (trades) and exposure is in `counterparty-exposure` (netting sets). In `trading-risk` alone a desk head's row rule on trades makes exposure by counterparty unanswerable for them (`DRS-9020`, step 9); here each dataset keeps its **own** rules and a third dataset **joins** what each lets you see.
+Everything so far added up **one** table. The question "what is each counterparty's one-day P&L next to its exposure?" needs two: P&L is a
+column of the **trades** (one row per trade valuation) and exposure a column of the **netting sets** (one row per netting set). Adding them up in
+one table would count a netting set's exposure once for every trade under it. A **model** keeps each as a **fact table** of its own: each is added
+up alone at the visual's fields, and the two answers are joined on the dimension both reach, here the counterparty.
 
-Open **Datasets** and **Desk P&L vs counterparty exposure**.
+**In the UI.** Choose **Models** and open **Trading and counterparty risk** (`trading-risk`, `model 1.0.0 · published`) in the designer, on the
+**Canvas** tab.
 
-![The Built from other datasets section: two sources, trading-risk as pnl and counterparty-exposure as exposure, each grouped by the counterparty id, and the left join between them](img/t10/26-composed-dataset.jpg)
+![The model designer on Trading and counterparty risk: the fact tables trades and netting_sets, the dimensions counterparties, desks and books, and the lines between them](img/t10/26-two-facts-model.jpg)
 
-You should see a section **Built from other datasets**: this dataset has no tables of its own. The source `pnl` asks `trading-risk` for the one-day P&L by counterparty, the source `exposure` asks `counterparty-exposure` for the expected and potential future exposure by counterparty, and one join line says `pnl left join exposure on counterparty`. Each source is asked **as you**, with that dataset's row rules and masks, and only then are the answers joined. Run a preview as in step 1: group by `joined.name` and `joined.sector`, and choose the measures `Desk P&L`, `Exposure (EE peak)` and `P&L per exposure`.
+You should see five datasets under their aliases: two **facts**, `trades` and `netting_sets`, and three **dimensions**, `counterparties`, `desks`
+and `books`, with a line for each relationship (from the many side to the one side): `trades.COUNTERPARTY → counterparties.id` and
+`netting_sets.COUNTERPARTY → counterparties.id`, the two paths that meet at the counterparty. (`trades.NETTING_SET → netting_sets.id` is an
+**inactive** relationship, `active: false`, so the two facts are never joined row to row.) Press the **Measures** tab.
 
-![The preview: a row per counterparty with its sector, its P&L, its expected exposure and P&L per exposure; the line says it was answered from the composed layer](img/t10/27-composed-preview.jpg)
+![The Measures tab: P&L 1d = sum(trades.PNL_1D), Exposure (EE peak) = sum(netting_sets.EE_PEAK), and P&L per exposure = measure('P&L 1d') / measure('Exposure (EE peak)')](img/t10/27-two-facts-measures.jpg)
 
-You should see a row per counterparty (Aldershot Pension Trust, Pensions: P&L `946,326`, exposure `98,882,895`) and `answered from the composed layer`. `P&L per exposure` is a measure of the composed dataset itself, `measure('Desk P&L') / measure('Exposure (EE peak)')`: the ratio of the two sums, whatever the grouping. As an author press **Model view** to see how it is put together.
-
-![The Model view of the composed dataset: the source pnl, the source exposure, a line between their counterparty columns labelled left, and the joined table both feed](img/t10/28-model-view.jpg)
-
-You should see the two sources as boxes (their grouping columns and measures, the join key marked), the join between the `counterparty` columns and the table `joined` that they make. Now open the report **Desk P&L vs counterparty exposure** from the catalogue.
+You should see `P&L 1d` (`sum(trades.PNL_1D)`), `Exposure (EE peak)` (`sum(netting_sets.EE_PEAK)`) and `P&L per exposure`,
+`measure('P&L 1d') / measure('Exposure (EE peak)')`: the ratio of the two sums, whatever the grouping. Now open the report **Desk P&L vs
+counterparty exposure** from the catalogue.
 
 ![The report: three cards, a Sector slicer, bars of P&L and exposure for the ten counterparties with the most exposure, a donut of exposure by sector, and a table](img/t10/29-two-datasets-report.jpg)
 
-You should see `Desk P&L` `2,671,113`, `Exposure (EE peak)` `1,447,544,943` and the ratio. Two visuals of this report read a **different dataset** from the rest: the **Sector** slicer and the donut read `counterparty-exposure` directly, while the cards, the bars and the table read the composed one. The report's `links:` say that the exposure dataset's `counterparties.SECTOR` and the composed dataset's `joined.sector` are the same thing. In the Sector slicer choose **Banking**.
+You should see `Desk P&L` `91,932,705`, `Exposure (EE peak)` `40,648,705,220` and the ratio `0.00`, the ten counterparties with the most exposure
+as pairs of bars, a donut of exposure by sector and the table of every counterparty. In the Sector slicer choose **Banking**.
 
-![Banking chosen: the cards read -1,456,152 and 240,271,956, the bars keep only banks, the donut is Banking 100%](img/t10/30-sector-chosen.jpg)
+![Banking chosen: the cards read 51,389,455 and 6,781,678,461, the bars keep only banks, the donut is Banking 100%](img/t10/30-sector-chosen.jpg)
 
-You should see a chip `Sector: Banking`, the cards narrowed to the banks (`Desk P&L` `-1,456,152`, exposure `240,271,956`), three banks in the bar chart and the donut a single slice: the slicer's choice reached the visuals of the *other* dataset through the link. Click a slice of the donut instead and the same happens. Open the report as a desk head and the numbers shrink to the counterparties your desk trades with; open it as an analyst and the names read `•••` (the join is on the counterparty's **id**, which is not masked, so the report still works). The same table made by a Python Transform is in [tutorial 14](14-python-and-analyse.md); the reference is [DATASETS.md section 11](../guides/DATASETS.md#11-composed-and-derived-datasets) and [REPORTS.md section 16](../guides/REPORTS.md#16-reports-over-several-datasets).
+You should see a chip `Sector: Banking`, the cards narrowed to the banks (`Desk P&L` `51,389,455`, exposure `6,781,678,461`), four banks in the
+bar chart (Harbor Point Bank, Tokai Mutual Trust Bank, Rheintal Landesbank, Harbourline Bank London Branch) and the donut a single slice: one
+slicer on the dimension filters **both** facts. Click a slice of the donut instead and the same happens. Open the report as a desk head and the P&L
+shrinks to the trades of your desks (the exposure does not: the model says `may-see-all` for the netting sets); open it as an analyst and the
+names read `•••` (the bars are ranked by the counterparty's **id**, which is not masked, so the report still works).
+
+**From the command line** the table of the report is one model query; the server says how it answered (the two facts aggregated alone, then
+joined):
+
+```text
+$ python3 tools/drishti.py bi mq --model trading-risk@1 --select counterparties.NAME,counterparties.SECTOR \
+    --measures "P&L 1d,Exposure (EE peak),P&L per exposure" --sort="-Exposure (EE peak)" --limit 4 --json | jq -c '.rows[], .meta.warnings'
+["Northern Plains Energy Canada","Utilities",-4950242.0,2846661899.0,-0.0017389638023886727]
+["Summit Clearing LLC","Financial services",-31728275.089999977,2638994501.0,-0.01202286517761864]
+["Aldershot Pension Trust","Pensions",9940482.839999989,2599390291.0,0.0038241594093882027]
+["Harbor Point Bank","Banking",16248725.440000003,2552263980.0,0.006366396880310164]
+["2 fact tables, each aggregated alone at the query's fields and then joined: [trades, counterparties, netting_sets]","a measure that combines measures of different grains is worked out over the joined results: P&L per exposure"]
+```
+
+**In the YAML** (`config/bi/models/trading-risk.model.yaml`), the part that makes it work:
+
+```yaml
+datasets:
+  trades:         { dataset: trading-risk-trades, role: fact }
+  netting_sets:   { dataset: trading-risk-netting-sets, role: fact }
+  counterparties: { dataset: trading-risk-counterparties, role: dimension }
+relationships:                  # from the MANY side to the ONE side
+  - { from: trades.COUNTERPARTY, to: counterparties.id }
+  - { from: trades.NETTING_SET, to: netting_sets.id, active: false }
+  - { from: netting_sets.COUNTERPARTY, to: counterparties.id }
+measures:
+  P&L 1d:             { expr: "sum(trades.PNL_1D)", format: signed0 }
+  Exposure (EE peak): { expr: "sum(netting_sets.EE_PEAK)", format: amount0 }
+  P&L per exposure:   { expr: "measure('P&L 1d') / measure('Exposure (EE peak)')", format: signed2 }
+```
+
+and the report (`config/bi/reports/pnl-vs-exposure.report.yaml`) only says `model: trading-risk@1`. When the two numbers live in **two models**
+(each with its own row rules), a report can still read both side by side and link their fields: that is [tutorial 18](18-several-datasets-in-one-report.md).
+The same table made by a Python Transform is in [tutorial 14](14-python-and-analyse.md); the reference is
+[BI_MODEL_SPEC.md](../architecture/BI_MODEL_SPEC.md) and [REPORTS.md section 16](../guides/REPORTS.md#16-reports-over-several-datasets).
 
 ## Step 12 · Relative dates, a tablet, and a view inside a report
 
@@ -348,31 +468,52 @@ Three things a real report needs. Each is a few controls in the designer, and ea
 
 **A slicer that says "last 4 weeks".** A slicer on a date column can offer named windows instead of values. The server works them out from the report's date and the business-day calendar, so the same name means the same dates on the screen, in an export and in a subscription.
 
-**In the UI:** drag the date field (`trade.tradeDate`) onto the canvas, choose **slicer**, open **Format** and set **Mode** to *relative date (a date field)*. Two more controls appear: **Starts as** (the window used until a reader chooses; it is the `default`) and **Windows it offers** (a tick for each of the sixteen names; unticking one narrows the list, the `options`).
+**In the UI:** drag the date field (`trade.TRADE_DATE`) onto the canvas, choose **slicer**, open **Format** and set **Mode** to *relative date (a date field)*. Two more controls appear: **Starts as** (the window used until a reader chooses; it is the `default`) and **Windows it offers** (a tick for each of the sixteen names; unticking one narrows the list, the `options`).
 
 ![The designer's Format tab for a slicer set to relative date: Starts as Last 30 days, and the windows it offers ticked, with Last 90 days and Last 12 months off](img/t10/40-slicer-relative.jpg)
 
 **In the YAML:**
 
 ```yaml
-rachana: 1
+rachana: 2
 report: relative-dates
-dates: { from: 2026-10-07, to: 2026-10-08 }
 title: Relative dates
-dataset: trades-basic
+model: trades-basic@1
 pages:
   - id: main
     title: Main
     visuals:
-      - { id: when, type: slicer, title: When, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { field: [trade.tradeDate] }, format: { mode: relative-date, default: last-30-days } }
+      - { id: when, type: slicer, title: When, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { field: [trade.TRADE_DATE] }, format: { mode: relative-date, default: last-30-days } }
       - { id: count, type: card, title: Trades, at: { x: 4, y: 0, w: 4, h: 3 }, wells: { values: [Trades] } }
       - { id: mtm, type: card, title: Mark to market, at: { x: 8, y: 0, w: 4, h: 3 }, wells: { values: [MTM] } }
-      - { id: desk, type: bar, title: MTM by desk, at: { x: 0, y: 3, w: 12, h: 6 }, wells: { axis: [trade.desk], values: [MTM] } }
+      - { id: desk, type: bar, title: MTM by desk, at: { x: 0, y: 3, w: 12, h: 6 }, wells: { axis: [trade.DESK], values: [MTM] } }
+```
+
+**From the command line**, check it before saving (`Check`, nothing stored) and ask what the window holds: *last 4 weeks* is the 28 days
+ending on the report's date, 2026-09-19 to 2026-10-16 here, of `TRADE_DATE`:
+
+```text
+$ jq -Rs '{yaml: .}' relative-dates.report.yaml | curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" \
+    -H 'Content-Type: application/json' -d @- $DRISHTI_SERVER/api/v1/bi/reports/validate | jq -c '{valid, problems}'
+{"valid":true,"problems":[]}
+$ python3 tools/drishti.py bi mq relative-window.yaml
+Trades  MTM
+------  -------------
+227     73,422,045.85
+1 row(s)  as of 2026-10-16  plan p_d7fa7cdebfaae903
+```
+
+```yaml
+# relative-window.yaml: the window the slicer works out, as an explicit filter
+mq: 1
+model: trades-basic@1
+select: { measures: [Trades, MTM] }
+where: [{ field: trade.TRADE_DATE, op: between, values: [2026-09-19, 2026-10-16] }]
 ```
 
 ![The relative-date slicer set to Last 4 weeks: a chip names it, the cards read 74 trades and +66,886,850](img/t10/31-relative-date.jpg)
 
-You should see the slicer's dropdown (the report's `default: last-30-days` is chosen until you pick another) and, after choosing **Last 4 weeks**, a chip `When: Last 4 weeks` and cards narrowed to the 74 trades of the four weeks ending on the report's date (the whole book is 750). The names are `last-N-days`, `last-N-business-days`, `last-N-weeks`, `last-N-months`, `this-week|month|quarter|year` (to date), `previous-...` and `all`: [REPORTS.md section 6.1](../guides/REPORTS.md#61-the-relative-date-slicer).
+You should see the slicer's dropdown (the report's `default: last-30-days` is chosen until you pick another) and, after choosing **Last 4 weeks**, a chip `When: Last 4 weeks` and cards narrowed to the `227` trades booked in the four weeks ending on the report's date (MTM `+73,422,046`; the whole book is `15,000` trades). Your count depends on the day you built the lake: the trade dates stay, the business dates move. The names are `last-N-days`, `last-N-business-days`, `last-N-weeks`, `last-N-months`, `this-week|month|quarter|year` (to date), `previous-...` and `all`: [REPORTS.md section 6.1](../guides/REPORTS.md#61-the-relative-date-slicer).
 
 **A tablet layout.** A phone gets one column ([step 10](#step-10--on-a-phone)); a tablet (up to 1024 px) can get two, with some visuals across:
 
@@ -380,26 +521,26 @@ You should see the slicer's dropdown (the report's `default: last-30-days` is ch
 layouts:
   tablet:
     main:
-      order: [desk, trades, mtm, notional, rows]    # first, in this order
-      wide: [desk, rows]                            # the whole width; the others take half
-      span: { desk: 5, rows: 4 }                    # heights in grid rows
+      order: [desk, count, mtm]                     # first, in this order (the visuals' ids)
+      wide: [desk]                                  # the whole width; the others take half
+      span: { desk: 5 }                             # heights in grid rows
 ```
 
 **In the UI** open the draft in the designer and press the **Tablet** tab (the **Phone** tab is the same for a phone). Every key above has a control there: the arrows or a drag set the `order`, **Hide** hides a visual, **Wide** is `wide` (tablet only) and **Rows** is `span`:
 
-![The designer's Tablet tab: five visuals in tablet order, the bar and the table ticked Wide, a row-height box for each](img/t10/33-tablet-tab.jpg)
+![The designer's Tablet tab: the four visuals in tablet order, the bar ticked Wide, a row-height box for each](img/t10/33-tablet-tab.jpg)
 
 You should see the visuals in tablet order with **Hide**, **Wide** and **Rows**, and a preview below. Then open the report on an 820 px screen:
 
 ![The report on an 820 px screen: the bar across the page, then two cards side by side](img/t10/34-tablet-view.jpg)
 
-You should see the bar the whole width, then the cards in two columns. A phone, or a desktop, is not affected.
+You should see the bar the whole width, then the cards in two columns. A phone, or a desktop, is not affected. **From the command line** there is no layout command: the layout is part of the report's YAML, so `python3 tools/drishti.py bi item new me relative-dates.report.yaml` saves the whole report, `layouts:` included, as a draft in your own workspace (`me`), and `bi item save <id> FILE` saves a changed file over it.
 
 **A counterparty's own view inside the report.** The sample **Counterparty risk** has a page *Counterparty lookup*: a bar of the ten largest counterparties and, beside it, a visual of `type: entity-view` with `wells: { key: [counterparties.id] }`. Open it and click a bar:
 
-![Counterparty lookup: a bar of ten counterparties with CP-HALCYON selected, and its Drishti view beside it with the netting sets](img/t10/32-entity-view.jpg)
+![Counterparty lookup: a bar of ten counterparties with CP-NORTHPLAINS selected, and its Drishti view beside it with the netting sets](img/t10/32-entity-view.jpg)
 
-You should see the counterparty's own **Drishti view** (its name, rating, net MTM and netting sets) in the frame beside the bar, with a chip `counterparties.id: CP-HALCYON`. It is the view page built **for you**: someone who may not see a field does not see it here either. [REPORTS.md section 3.4](../guides/REPORTS.md#34-the-entity-view).
+You should see the counterparty's own **Drishti view** (its name, rating, net MTM and netting sets) in the frame beside the bar, with a chip `counterparties.id: CP-NORTHPLAINS` (the first bar: the largest expected exposure). It is the view page built **for you**: someone who may not see a field does not see it here either. [REPORTS.md section 3.4](../guides/REPORTS.md#34-the-entity-view).
 
 ## Step 13 · A dataset and a model of your own, in the wizard
 
@@ -413,23 +554,25 @@ server's check of what you chose.
 query in a SQL connector, a Python Transform, or the answer of a model. Choose **A pack dataset** and `pack.world-economy.economy` (every kind of every pack
 is a dataset already, certified and read-only; this one narrows it).
 
-![The wizard's source step: A pack dataset chosen, pack.economics.economy picked](img/t10/35-wizard-source.jpg)
+![The wizard's source step: A pack dataset chosen, pack.world-economy.economy picked](img/t10/35-wizard-source.jpg)
 
-**2 · Columns.** Tick the columns to keep: press **Only the keys**, then tick `name`, `iso3`, `regionName`, `incomeName`, `gdpUsdBn` and `populationM`
-(each shows its type and role; the key `economyId` always stays, a row must still say what it is).
+**2 · Columns.** Tick the columns to keep: press **Only the keys**, then tick `NAME`, `ISO3`, `REGION_NAME`, `INCOME_NAME`, `GDP_USD_BN` and `POPULATION_M`
+(each shows its type and role; the key `id` always stays, a row must still say what it is).
 
 ![The columns step: the economy kind's columns as ticks, six chosen, the key kept](img/t10/36-wizard-columns.jpg)
 
-**3 · Rows.** *Keep the rows where* `gdpUsdBn >= 100` (a filter of the table in DEL, not a security rule: row rules are set on the model). **4 · One row
-is**: the pack's grain stays, one row per economy per business date. **5 · Worked-out columns.** Press **A formula column**, name it `gdpPerHead`, type
-`decimal`, formula `gdpUsdBn / populationM * 1000`: the server checks it as you type.
+**3 · Rows.** *Keep the rows where* `GDP_USD_BN >= 100` (a filter of the table in DEL, not a security rule: row rules are set on the model). **4 · One row
+is**: the pack's grain stays, one row per economy per business date. **5 · Worked-out columns.** Press **A formula column**, name it `GDP_PER_HEAD`, type
+`decimal`, formula `GDP_USD_BN / POPULATION_M * 1000`: the server checks it as you type.
 
-![A formula column gdpPerHead, decimal, gdpUsdBn / populationM * 1000, and the line Checks clean: gives decimal](img/t10/37-wizard-derive.jpg)
+![A formula column GDP_PER_HEAD, decimal, GDP_USD_BN / POPULATION_M * 1000, and the line Checks clean: gives decimal](img/t10/37-wizard-derive.jpg)
 
-**6 · Group** (optional) makes a coarser grain; leave it. **7 · Preview** saves your draft (visible only to you) and asks the server for the first rows,
-as you.
+**6 · Group** (optional) makes a coarser grain; leave it. **7 · Preview**: press **Preview**, then **Save the draft and preview** when it asks (the server previews a saved
+draft, visible only to you; Save later updates the same draft): it answers the first rows, as you.
 
 ![The preview: the first 20 rows of the draft as you, Algeria, Angola, Argentina, Australia with their region, income group and GDP](img/t10/38-wizard-preview.jpg)
+
+You should see 76 economies in all (GDP of 100 billion dollars or more), Australia with `GDP_USD_BN` `1,798.52` and `GDP_PER_HEAD` `65,129.79`.
 
 **8 · Save.** Title `Large economies` (the name, what models use, follows: `large-economies`), the **workspace** (a shared one, here *Models desk*: a
 private draft cannot be published), the columns to mask, and the YAML the wizard wrote, for review.
@@ -439,9 +582,9 @@ private draft cannot be published), the columns to mask, and the YAML the wizard
 Press **Save and publish**. **You should see** the next steps under the buttons: **Open the dataset**, **Start a report on it** (a report on its implicit model,
 `dataset:large-economies`) and **Use it in a new model**. Press **Use it in a new model**, choose *Models desk* and **Make the model**: the model
 designer opens on **Large economies model**, the dataset placed as a fact under the alias `large_economies`, with the default measures of its columns
-(`Count of large_economies`, `Sum of gdpUsdBn`, `Sum of populationM`).
+(`Count of large_economies`, `Sum of GDP_USD_BN`, `Sum of POPULATION_M`).
 
-![The model designer on Large economies model: v1.0.0, Saved draft, Valid; the dataset large_economies as a fact with its columns, gdpPerHead among them](img/t10/43-new-model.jpg)
+![The model designer on Large economies model: v1.0.0, Saved draft, Valid; the dataset large_economies as a fact with its columns, GDP_PER_HEAD among them](img/t10/43-new-model.jpg)
 
 From here it is the model designer of the preview section below: add measures, relationships and row rules, **Save**, **Publish**, then **New report
 on this model**. To change the dataset later, open it (Models → *Your datasets* → **Open**) and choose **Narrow it** or edit its YAML; publishing a
@@ -454,16 +597,16 @@ rachana: 2
 expressions: 2
 dataset: large-economies
 version: 1.0.0
-id: ds_f57ba227
+id: ds_482151d0
 title: Large economies
-extends: pack.economics.economy@^1
-columns: [name, iso3, regionName, incomeName, gdpUsdBn, populationM]
-where: gdpUsdBn >= 100
+extends: pack.world-economy.economy@^1
+columns: [NAME, ISO3, REGION_NAME, INCOME_NAME, GDP_USD_BN, POPULATION_M]
+where: GDP_USD_BN >= 100
 grain:
   says: One row per economy per business date
   keys: [id]
 derive:
-  gdpPerHead: {expr: gdpUsdBn / populationM * 1000, type: decimal}
+  GDP_PER_HEAD: {expr: GDP_USD_BN / POPULATION_M * 1000, type: decimal}
 ```
 
 ```yaml
@@ -471,30 +614,56 @@ rachana: 2
 expressions: 2
 model: large-economies-model
 version: 1.0.0
-id: md_b51eb4ac
+id: md_52756ba0
 title: Large economies model
 datasets:
   large_economies: {dataset: large-economies@^1, role: fact}
 relationships: []
-measures: {}          # the defaults of the columns: Count of large_economies, Sum of gdpUsdBn, Sum of populationM
+measures: {}          # the defaults of the columns: Count of large_economies, Sum of GDP_USD_BN, Sum of POPULATION_M
 ```
 
 **From the command line.** The same two files make the same items (a write needs a token with the `bi:write` scope and the `bi-author` power; the
-ids differ on your machine):
+ids differ on your machine). The shared workspace is made once on the **Workspaces** page, or over REST (there is no `bi workspace new`):
 
 ```text
-$ python3 tools/drishti.py bi model check large-economies.DATASET.yaml          # the server's Check, nothing stored
-$ python3 tools/drishti.py bi item new models-desk large-economies.DATASET.yaml
-$ python3 tools/drishti.py bi catalogue publish <the dataset's id>
+$ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
+    -d '{"name": "Models desk", "id": "models-desk"}' $DRISHTI_SERVER/api/v1/bi/workspaces | jq -c '{id, name, role}'
+{"id":"models-desk","name":"Models desk","role":"admin"}
+```
+
+```text
+$ python3 tools/drishti.py bi model check large-economies.dataset.yaml          # the server's Check, nothing stored
+valid  (dataset large-economies)
+$ python3 tools/drishti.py bi item new models-desk large-economies.dataset.yaml
+bi-23cecf80ac  dataset  Large economies  draft in Models desk
+$ python3 tools/drishti.py bi catalogue publish bi-23cecf80ac
+published Large economies as version 1
 $ python3 tools/drishti.py bi item new models-desk large-economies-model.model.yaml
-$ python3 tools/drishti.py bi mq --model large-economies-model@1 --select large_economies.regionName \
+bi-f7cc3473c2  model  Large economies model  draft in Models desk
+$ python3 tools/drishti.py bi model describe large-economies-model@1
+Large economies model  (large-economies-model@1)
+
+large_economies  fact  large-economies 1.0.0
+  large_economies.GDP_USD_BN         decimal   amount
+  large_economies.INCOME_NAME        string    dimension
+  large_economies.ISO3               string    dimension
+  large_economies.NAME               string    dimension
+  large_economies.POPULATION_M       decimal   amount
+  large_economies.REGION_NAME        string    dimension
+  large_economies.GDP_PER_HEAD       decimal   amount
+
+measures
+  Count of large_economies          count(large_economies)  (default)
+  Sum of GDP_USD_BN                 sum(large_economies.GDP_USD_BN)  (default)
+  Sum of POPULATION_M               sum(large_economies.POPULATION_M)  (default)
+$ python3 tools/drishti.py bi mq --model large-economies-model@1 --select large_economies.REGION_NAME \
     --measures "Count of large_economies" --sort="-Count of large_economies" --limit 3
-large_economies.regionName                         Count of large_economies
+large_economies.REGION_NAME                        Count of large_economies
 -------------------------------------------------  ------------------------
 Europe & Central Asia                              29
 Middle East, North Africa, Afghanistan & Pakistan  12
 Latin America & Caribbean                          12
-3 row(s)  as of 2026-10-16  plan p_14611e0c9ed42ee4
+3 row(s)  as of 2026-10-16  plan p_45f9cfca00d22d04
 ```
 
 A draft model answers its owner (and is listed as `draft` by `bi model list`); a report on it is published once the model is. The reference for the
@@ -508,105 +677,127 @@ wizard's every step is [BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-
 - **CLI.** `drishti.py bi catalogue get <id>` shows the item with its `etag`; a propose, approve or publish of a report that cannot be drawn is refused with `DRS-9030` and the errors (a bi-admin may force it).
 - **YAML.** Nothing new to write: the extra datasets are named in each visual's `dataset:` and the report's `links:` (REPORTS.md section 16); `?also=a,b` on the designer URL opens extra datasets in the Fields pane.
 
-## Preview · Models: from a pack dataset to a report (wave W1)
+## Step 14 · Models: from a pack dataset to a report
 
-Release 2.2.0 brings the **model layer** ([BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1)). The steps
-above stay valid; this is a short look at the new way, which the migration wave (W4) turns into the main walk-through. The numbers below are from the
-browser test's small lake (two days of 60 trades over three desks); yours differ.
+Release 2.2.0 brought the **model layer** ([BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1)): every
+kind of every pack is a dataset already, and a model is a few of them joined. This step goes from the pack's **Trade valuation** (one row per trade
+per business date, with its desk, MTM and P&L, in the `market-risk` pack) to a model of trades and desks with a row rule, published, analysed and
+watched. The numbers are from the demo lake (15,000 trade valuations over ten desks).
 
-**UI.**
+**In the UI.**
 
-1. **BI → Models** in the rail. Under *Datasets from the packs* every kind is already a dataset: find **Trade** (`pack.trading.trade`, certified,
-   read-only). Its title opens its page: *One row per trade per business date*, keys `id`, time *snapshot*, and `desk` marked `desk →` (it holds desk ids).
-2. Press **Use** on the Trade card and choose your workspace: a report opens in the designer on the **implicit model of Trade**. Fields lists `trade`
-   and, brought along by the pack reference, `desk`; drag **Sum of mtm** onto the canvas, then **desk → name** onto the card: a bar of MTM by desk name,
-   with nothing modelled by hand. *Query of the selected visual* shows the model query it asked.
-3. Back on **Models**, press **New model**, title it *Trades and desks*, tick **Trade** and **Desk**, **Create and open the designer**. Desk is placed as
-   a **dimension** (Trade references it). Under the canvas, *Suggested relationships* offers `trade.desk → desk.id` (*trade.desk holds desk ids (from the
-   pack)*): press **Add**.
-4. **Measures**: dataset `trade`, column `mtm`, **Add measure**: `Sum of mtm`, `sum(trade.mtm)`, adds up: yes.
-5. **Security**: on `trade`, roles `desk-head`, *the column matches the reader*, column `desk`, *the reader's desks*, **Add the rule**. The tab shows ⚠ 1:
+1. **BI → Models** in the rail. Under *Datasets from the packs* every kind is already a dataset: find **Trade valuation**
+   (`pack.market-risk.trade-valuation`, certified, read-only). Its title opens its page: *One row per trade valuation per business date*, key `id`,
+   time *snapshot*, and `DESK` marked `desk →` (it holds desk ids; `COUNTERPARTY`, `PORTFOLIO`, `NETTING_SET` and `TRADER_ID` likewise).
+2. Press **Use** on the card and choose your workspace: a report opens in the designer on the **implicit model of Trade valuation**. Fields lists
+   `trade_valuation` and, brought along by the pack reference, `desk`; drag **Sum of MTM** onto the canvas, then **desk → NAME** onto the card: a bar of
+   MTM by desk name, with nothing modelled by hand. *Query of the selected visual* shows the model query it asked.
+3. Back on **Models**, press **New model**, title it *Trades and desks*, tick **Trade valuation** and **Desk**, **Create and open the designer**. Desk is
+   placed as a **dimension** (Trade valuation references it). Under the canvas, *Suggested relationships* offers `trade.DESK → desk.id` (*trade.DESK holds
+   desk ids (from the pack)*): press **Add**. (The designer names the alias after the dataset; rename it `trade` in the **Fields** tab to match the YAML
+   below.)
+4. **Measures**: dataset `trade`, column `MTM`, **Add measure**: `Sum of MTM`, `sum(trade.MTM)`, adds up: yes.
+5. **Security**: on `trade`, roles `desk-head`, *the column matches the reader*, column `DESK`, *the reader's desks*, **Add the rule**. The tab shows ⚠ 1:
    *The role desk-head is restricted elsewhere in this model, but desk has no rule*, and the header badge agrees (*Valid, 1 to fix before publishing*).
    Press **desk-head may see every row of desk** (desks are not secret); the ⚠ goes. Add a second rule so you see every trade yourself: under **Roles**
-   tick your own role (the list holds the roles the server knows; any other can be typed under it), *every row*. The note under the list says *roles
-   without a rule see no rows*: a reader no rule matches reads nothing of that dataset.
+   tick your own role (`admin` for the development administrator; the list holds the roles the server knows, any other can be typed under it), *every
+   row*. The note under the list says *roles without a rule see no rows*: a reader no rule matches reads nothing of that dataset.
 6. **Save** (the badge says *Valid*), then **New report on this model**: the Fields pane's header says *Model Trades and desks*, *this report
    references the model*. A model is shared: **Used by** (above the tabs) lists the reports, boards, alerts, subscriptions and notebooks that read it, and
    **New board on this model** starts a board on it. Deleting a report never deletes its model, and a model that is used cannot be deleted.
-7. **Publish.** In your private workspace Publish is disabled with the reason and **Move to a workspace** beside it: choose a shared workspace and Move, then
-   **Publish** (it checks the model and its security safeguard first). A report on the published model publishes the same way from its item page.
+7. **Publish.** In your private workspace Publish says to move it to a shared workspace first, with **Move…** beside it: choose a shared workspace (*Models
+   desk* of step 13) and Move, then **Publish** (it checks the model and its security safeguard first). A report on the published model publishes the same
+   way from its item page.
 8. **Analyse it.** Open **Analyse** (`/bi/explore`): the *Model or dataset* picker lists *Models*, *Your datasets* and one group per pack. Choose
-   **Trades and desks (model 1.0.0, published)**, tick `trade.desk`, `trade.mtm` and `desk.name`, **Open the extract**: the rows you may see, as one model query.
-9. **Alert on it.** **Alerts → New**, *Watch: measure of a model*: choose the model, then the measure `Sum of mtm`, a filter (`trade.desk is one of DESK-FX`),
-   *Tell me when* it is above a limit, **Check now** (it reads your own number; a masked one cannot be saved) and **Save alert**.
+   **Trades and desks (model 1.0.0, published)**, tick `trade.DESK`, `trade.MTM` and `desk.NAME`, **Open the extract**: the rows you may see, as one model
+   query.
+9. **Alert on it.** **Alerts → New**, *Watch: measure of a model*: choose the model, then the measure `Sum of MTM`, a filter (`trade.DESK is one of
+   DESK-FX`), *Tell me when* it is above a limit, **Check now** (it reads your own number; a masked one cannot be saved) and **Save alert**.
 
-**CLI.** The same through the REST API, with the token of tutorial 1. The pack datasets, then a question to the implicit model of Trade:
+You should see, in step 2, the bar of MTM by desk name led by `Rates · Swaps and options` (`4,108,728,089.50` over 1,832 valuations), then
+`Money markets` and `Structured products`: the same three rows the command line below prints.
 
+**From the command line.** The same through the CLI and the REST API, with your token. The pack datasets (66 of them for the seven packs), then a
+question to the implicit model of Trade valuation:
+
+```text
+$ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" $DRISHTI_SERVER/api/v1/bi/pack-datasets | jq -c '.datasets | length, .[0]'
+66
+{"name":"pack.core.book","id":"ds_pack_core_book","title":"Book","description":"Book: one row per book per business date, from the Core pack.","pack":"core","kind":"book","version":"1.0.0","mode":"snapshot","endorsement":"certified","columns":10,"query":"dataset:pack.core.book"}
+$ python3 tools/drishti.py bi mq --model dataset:pack.market-risk.trade-valuation --select desk.NAME \
+    --measures "Sum of MTM,Count of trade_valuation" --sort="-Sum of MTM" --limit 3
+desk.NAME                  Sum of MTM        Count of trade_valuation
+-------------------------  ----------------  ------------------------
+Rates · Swaps and options  4,108,728,089.50  1832
+Money markets              393,805,216.87    480
+Structured products        382,608,464.96    330
+3 row(s)  as of 2026-10-16  plan p_e12a982e03ccdf81
 ```
-$ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" http://localhost:18480/api/v1/bi/pack-datasets
-{"datasets":[{"name":"pack.core.agreement","id":"ds_pack_banking_core_agreement","title":"Master agreement","pack":"core","kind":"agreement",
- "version":"1.0.0","mode":"snapshot","endorsement":"certified","columns":14,"query":"dataset:pack.core.agreement"}, ...]}
-$ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
-    -d '{"mq":1,"model":"dataset:pack.trading.trade","select":{"fields":["desk.name"],"measures":["Sum of mtm","Count of trade"]}}' \
-    http://localhost:18480/api/v1/bi/mq
-{"mq":1,"model":{"id":"implicit:ds_pack_trading_trade@1","name":"pack.trading.trade","version":"1.0.0","implicit":true,"compat":false},
- "columns":[{"name":"desk.name","kind":"field","type":"string",...},{"name":"Sum of mtm","kind":"measure","type":"decimal","additive":true,...},
-            {"name":"Count of trade","kind":"measure","type":"integer",...}],
- "rows":[["Bonds and securitised",-75000.0,20],["Equity derivatives",425000.0,20],["G10 and EM FX",-575000.0,20]],"rowCount":3,
- "meta":{"asOf":"2026-10-09","dates":["2026-10-08","2026-10-09"],"layer":"columns","tables":["trade","desk"],...}}
-```
 
-and Check of a model's YAML without storing it (`POST /api/v1/bi/models/validate` with `{"yaml": "..."}`): before step 5's **may see every row**, it
-answers `"valid": true` with the warning `DRS-9130` and `"exposures": [{"dataset": "desk", "role": "desk-head"}]`, which a publish refuses.
+Check of the model's YAML without storing it: `python3 tools/drishti.py bi model check trades-and-desks.model.yaml`, or
+`POST /api/v1/bi/models/validate` with `{"yaml": "..."}`. Before step 5's **may see every row**, it answers `"valid": true` with the warning
+`DRS-9130` and `"exposures": [{"dataset": "desk", "role": "desk-head"}]`, which a publish refuses; after it, only `DRS-9131` remains (the roles
+`approver`, `author` and `viewer` have no rule and see no trades: on purpose here).
 
-**YAML.** What the designer wrote in steps 3 to 5 (you typed none of it; the server added `id` on save):
+**In the YAML.** What the designer wrote in steps 3 to 5 (you typed none of it; the server added `id` on save):
 
 ```yaml
 rachana: 2
 expressions: 2
 model: trades-and-desks
 version: 1.0.0
-id: md_84db68c3
+id: md_...
 title: Trades and desks
 datasets:
-  trade: {dataset: pack.trading.trade@^1, role: fact}
+  trade: {dataset: pack.market-risk.trade-valuation@^1, role: fact}
   desk: {dataset: pack.core.desk@^1, role: dimension}
 relationships:
-  - {from: trade.desk, to: desk.id, suggested: {from: pack-reference}}
+  - {from: trade.DESK, to: desk.id, suggested: {from: pack-reference}}
 measures:
-  Sum of mtm: {expr: sum(trade.mtm)}
+  Sum of MTM: {expr: sum(trade.MTM)}
 security:
   rows:
     trade:
-      - {role: desk-head, where: trade.desk in user.desks}
-      - {role: bi-writer, where: 'True'}
+      - {role: desk-head, where: trade.DESK in user.desks}
+      - {role: admin, where: 'True'}
   may-see-all:
     desk: [desk-head]
 ```
 
-and the report of step 6 says `model: trades-and-desks@1` where the reports above say `dataset:`. It publishes like any report once its model is published and
-passes its safeguard ([REPORTS.md section 18](../guides/REPORTS.md#18-a-report-on-a-model-wave-w1)).
+and the report of step 6 says `model: trades-and-desks@1`. It publishes like any report once its model is published and passes its safeguard
+([REPORTS.md section 18](../guides/REPORTS.md#18-a-report-on-a-model-wave-w1)).
 
-**CLI and YAML for steps 7 to 9.** Publish the model and ask it (through the console the same two calls are `/bi/api/items/<id>/publish` and
-**`/bi/api/mq`**; the console's own `/bi/model-api/...` routes are the designer's helpers and have no `mq`), and the alert the form writes:
+**Steps 7 to 9 from the command line.** Make the item, publish it and ask it (through the console the same calls are `/bi/api/items/<id>/publish`
+and **`/bi/api/mq`**):
 
+```text
+$ python3 tools/drishti.py bi item new models-desk trades-and-desks.model.yaml
+bi-6b99de51c7  model  Trades and desks  draft in Models desk
+$ python3 tools/drishti.py bi catalogue publish bi-6b99de51c7
+published Trades and desks as version 1
+$ python3 tools/drishti.py bi mq --model trades-and-desks@1 --select desk.NAME --measures "Sum of MTM" --sort="-Sum of MTM" --limit 3
+desk.NAME                  Sum of MTM
+-------------------------  ----------------
+Rates · Swaps and options  4,108,728,089.50
+Money markets              393,805,216.87
+Structured products        382,608,464.96
+3 row(s)  as of 2026-10-16  plan p_0bc0e41f625fe579
+warning: connector 'reference-store' cannot scan desk as columns for table desk: reading documents one by one (slow for a large table; promote the columns in the connector's layout, or fewer columns)
 ```
-$ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' -d '{"note":"from the tutorial"}' \
-    http://localhost:18480/api/v1/bi/items/<model item id>/publish
-$ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
-    -d '{"mq":1,"model":"trades-and-desks@1","select":{"fields":["desk.name"],"measures":["Sum of mtm"]},"shape":"rows"}' \
-    http://localhost:18480/api/v1/bi/mq
-```
+
+The alert is made in the console only (`/me/measure-alerts` is never open to a personal API token); what **Alerts → New** writes, as
+`PUT /api/v1/me/measure-alerts/<name>` with title, severity, trigger and delivery around it:
 
 ```yaml
-# an alert on a measure of the model (what Alerts -> New writes as PUT /api/v1/me/measure-alerts/<name>, with title, severity, trigger and delivery around it)
 source:
   type: model
   model: trades-and-desks@1
-  query: {select: {fields: [], measures: ["Sum of mtm"]}, where: [{field: trade.desk, op: in, values: [DESK-FX]}]}
+  query: {select: {fields: [], measures: ["Sum of MTM"]}, where: [{field: trade.DESK, op: in, values: [DESK-FX]}]}
   reduce: first
 condition: {type: threshold, op: above, value: 1000000}
 ```
+
+`Sum of MTM` for `DESK-FX` is `-669,248,940` today, so this alert stays quiet; [tutorial 11](11-bi-that-runs-itself.md) makes one that fires.
 
 ## Next steps
 

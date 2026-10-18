@@ -92,12 +92,26 @@ final class RoleDetector {
                 && edges.items.onlyObjects()) {
             return Optional.of(new RoleInfo("graph", "has '" + nodes.name + "' and '" + edges.name + "' lists of records", null));
         }
-        Facts id = f.props.get("id");
-        if (id != null && (f.props.containsKey("name") || f.props.containsKey("kind") || f.props.containsKey("label")) && id.only("string")) {
-            String kind = f.props.containsKey("kind") ? first(f.props.get("kind").examples) : kindOfValues(id).orElse(null);
+        Facts id = prop(f, "id");                     // {id, name} or, in UPPER_SNAKE documents, {ID, NAME}
+        if (id != null && (prop(f, "name") != null || prop(f, "kind") != null || prop(f, "label") != null) && id.only("string")) {
+            String kind = prop(f, "kind") != null ? first(prop(f, "kind").examples) : kindOfValues(id).orElse(null);
             return Optional.of(new RoleInfo("link", "an {id, name} record" + (kind == null ? "" : ", kind " + kind), kind));
         }
         return Optional.empty();
+    }
+
+    /** The record's property of that name in any case ({@code id}, {@code ID}, {@code Id}): the exact name first. */
+    private static Facts prop(Facts f, String name) {
+        Facts exact = f.props.get(name);
+        if (exact != null) {
+            return exact;
+        }
+        for (var e : f.props.entrySet()) {
+            if (e.getKey().equalsIgnoreCase(name)) {
+                return e.getValue();
+            }
+        }
+        return null;
     }
 
     private static Facts firstOf(Facts f, List<String> names) {

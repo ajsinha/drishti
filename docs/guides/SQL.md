@@ -22,19 +22,31 @@ reader sees the model (a hidden column does not exist), row rules and masks appl
 
 ```sql
 -- the model is named by the request (or the item), never inside the text
-SELECT counterparties.counterpartyName AS counterparty,
-       MEASURE('MTM')                  AS mtm,
-       MEASURE('PFE peak')             AS pfe,
-       SUM(trades.notional)            AS notional_local      -- an inline aggregate: a local measure
+SELECT counterparties.NAME     AS counterparty,
+       MEASURE('MTM')         AS mtm,
+       MEASURE('Trades')      AS trades,
+       SUM(trades.NOTIONAL)   AS notional_local               -- an inline aggregate: a local measure
 FROM   trades
 JOIN   counterparties                                         -- no ON: the model's relationship is used
-WHERE  trades.currency IN ('USD', 'EUR')
-  AND  trades.tradeDate >= DATE '2026-10-01'
-GROUP  BY counterparties.counterpartyName
+WHERE  trades.CURRENCY IN ('USD', 'EUR')
+  AND  trades.TRADE_DATE >= DATE '2026-01-01'
+GROUP  BY counterparties.NAME
 HAVING MEASURE('MTM') < 0
-ORDER  BY pfe DESC
+ORDER  BY mtm
 LIMIT  20
 ```
+
+Every example on this page runs on the shipped model **`trading-risk`** (`config/bi/models/trading-risk.model.yaml`: tables `trades`,
+`netting_sets`, `counterparties`, `desks`, `books`, columns in the packs' UPPER_SNAKE names) over the demo lakes
+(`drishti.py lake demo`, [data/testdata/README.md](../../data/testdata/README.md)), asked as the seeded administrator. The demo lakes end on
+**today's** business date, so your dates differ from the ones captured here (the seven days 2026-10-07 to 2026-10-16); the figures of each of the
+seven days are the same. The statement above answered six counterparties, the first `["Northern Plains Energy Canada", -251066943.0, 528,
+125556404805.7]`.
+
+A filter on `trades` does not reach `netting_sets`: `MEASURE('Exposure (PFE peak)')` in the statement above is refused with `DRS-9156` (the
+measures aggregate `[trades, netting_sets]`, which no many-to-one path connects) and the fix names the fields both reach. Without the `WHERE`,
+`SELECT counterparties.NAME, MEASURE('MTM'), MEASURE('Exposure (PFE peak)') FROM trades JOIN counterparties GROUP BY counterparties.NAME` is
+answered, each fact aggregated alone and joined (the warning says so).
 
 Contents: [1](#1-where-you-use-it) where · [2](#2-the-dialect) the dialect · [3](#3-how-a-statement-compiles) how it compiles ·
 [4](#4-composite-statements) composite statements · [5](#5-time) time · [6](#6-explain) explain · [7](#7-sql-view-datasets) SQL view datasets ·
@@ -57,7 +69,7 @@ Free querying needs **read on the model** (as `POST /bi/mq` does): a person who 
 
 ## 2. The dialect
 
-One `SELECT` (or `WITH ... SELECT`), the ANSI subset below. Keywords are case-insensitive; names may be quoted (`"trades"."desk"`).
+One `SELECT` (or `WITH ... SELECT`), the ANSI subset below. Keywords are case-insensitive; names may be quoted (`"trades"."DESK"`).
 
 | Allowed | Refused |
 |---|---|
@@ -82,7 +94,7 @@ The binder resolves every name against the model as the caller sees it, then:
 
 * An **MQ-shaped** statement (one grouped `SELECT` over the model's tables: fields, measures, filters, having, order, limit) becomes **exactly one model
   query**. The selected columns are its fields (they must be the `GROUP BY`), `MEASURE('x')` its measures, an inline aggregate a local measure in DEL
-  (`SUM(trades.notional)` is `sum(trades.notional)`, `COUNT(*)` is `count(trades)`, `COUNT(DISTINCT x)` is `distinct(x)`, `CASE WHEN c THEN a ELSE b END`
+  (`SUM(trades.NOTIONAL)` is `sum(trades.NOTIONAL)`, `COUNT(*)` is `count(trades)`, `COUNT(DISTINCT x)` is `distinct(x)`, `CASE WHEN c THEN a ELSE b END`
   is `a if c else b`), `WHERE` its `where`, `HAVING` its `having`, the time clause its `time`. Its answer is the model query's, with the columns named and
   ordered as the `SELECT` says; `meta.query` shows the model query and `meta.plan` its plan hash, the same as the MQ's.
 * A **composite** statement (`WITH`, `UNION`, a subquery in `FROM`, a window over the answer) is a plan whose **leaves are model queries** (each secured
@@ -90,38 +102,44 @@ The binder resolves every name against the model as the caller sees it, then:
   nothing else. A join, filter, sort or partition on a column masked for the reader is refused (`DRS-9161`); aggregating answers again is refused
   (`DRS-9179`: a measure belongs in the model).
 
-Captured (`rita`, risk; the test model `lang-model` of one dataset `trades`):
+Captured (the administrator, on `trading-risk`; the sixth of the seven demo days):
 
 ```
-POST /api/v1/bi/sql {"model":"lang-model@1","sql":"SELECT trades.desk AS desk, MEASURE('Notional') AS notional, COUNT(*) AS n FROM trades
-                     GROUP BY trades.desk ORDER BY desk AS OF DATE '2026-10-08'"}
-{"sql": 1, "model": {"id": "file:model:lang-model", "name": "lang-model", "version": "1.0.0", "implicit": false, "compat": false},
- "columns": [{"name": "desk", "kind": "field", "type": "string", "masked": false, "source": "trades.desk"},
-             {"name": "notional", "id": "m_notional", "kind": "measure", "type": "decimal", "additive": true, "masked": false, "source": "Notional"},
+POST /api/v1/bi/sql {"model":"trading-risk@1","sql":"SELECT trades.DESK AS desk, MEASURE('Notional') AS notional, COUNT(*) AS n FROM trades
+                     GROUP BY trades.DESK ORDER BY desk AS OF DATE '2026-10-15'"}
+{"sql": 1, "model": {"id": "file:model:trading-risk", "name": "trading-risk", "version": "1.0.0", "implicit": false, "compat": false},
+ "columns": [{"name": "desk", "kind": "field", "type": "string", "masked": false, "source": "trades.DESK"},
+             {"name": "notional", "kind": "measure", "type": "decimal", "format": "amount0", "additive": true, "masked": false, "source": "Notional"},
              {"name": "n", "kind": "measure", "type": "integer", "additive": true, "masked": false, "source": "n"}],
- "rows": [["DESK-A", 92000.0, 8], ["DESK-B", 100000.0, 8], ["DESK-C", 108000.0, 8]], "rowCount": 3,
- "meta": {"asOf": "2026-10-08", "layer": "columns", "cached": false, "plan": "p_01efcdbb78ac26db", "signature": "s_3031a71137741749", "shape": "mq",
-          "query": {"define": {"n": "count(trades)"}, "model": "lang-model@1", "mq": 1, "select": {"fields": ["trades.desk"], "measures": ["Notional", "n"]},
-                    "shape": "grouped", "sort": [{"by": "trades.desk", "desc": false}], "time": {"as-of": "2026-10-08"}}, ...}}
+ "rows": [["DESK-COMM", 888803742773.65, 5990], ["DESK-CREDIT", 344825753000.0, 1172], ["DESK-EQD", 428542341000.0, 1452], ...
+          ["DESK-RATES", 596934185000.0, 1832], ["DESK-SFT", 225972124000.0, 672], ["DESK-STRUCT", 105176308000.0, 330]], "rowCount": 10,
+ "meta": {"asOf": "2026-10-15", "layer": "rollup", "rollup": "by_desk_currency", "cached": false, "plan": "p_24cad7f700108507",
+          "signature": "s_38f790bd34b573e4", "shape": "mq",
+          "query": {"define": {"n": "count(trades)"}, "model": "trading-risk@1", "mq": 1, "select": {"fields": ["trades.DESK"], "measures": ["Notional", "n"]},
+                    "shape": "grouped", "sort": [{"by": "trades.DESK", "desc": false}], "time": {"as-of": "2026-10-15"}}, ...}}
 ```
 
-As `hana` (a desk-head of DESK-A) the same statement answers one row, `["DESK-A", 92000.0, 8]`.
+The rollup `by_desk_currency` of the model answered it. A `desk-head` (the model's row rule `DESK in user.desks`) asking the same statement gets
+the rows of their own desks only, and a different `signature`.
 
 ## 4. Composite statements
 
 ```sql
-WITH m AS (SELECT trades.desk AS desk, MEASURE('MTM') AS mtm FROM trades GROUP BY trades.desk),
-     l AS (SELECT limits.desk AS desk, MEASURE('Limit') AS lim FROM limits GROUP BY limits.desk)
-SELECT m.desk, m.mtm, l.lim, m.mtm / l.lim AS usage
-FROM   m LEFT JOIN l ON m.desk = l.desk
-ORDER  BY m.desk
+WITH m AS (SELECT trades.COUNTERPARTY AS cp, MEASURE('MTM') AS mtm FROM trades GROUP BY trades.COUNTERPARTY),
+     e AS (SELECT netting_sets.COUNTERPARTY AS cp, MEASURE('Exposure (EE peak)') AS ee FROM netting_sets GROUP BY netting_sets.COUNTERPARTY)
+SELECT m.cp, m.mtm, e.ee
+FROM   m LEFT JOIN e ON m.cp = e.cp
+ORDER  BY m.cp
+-- ["CP-ALDERSHOT", 470417505.43, 2599390291.0], ["CP-AURORA", 548784382.85, 1991425202.0], ...
 
-SELECT trades.desk AS desk, MEASURE('Notional') AS notional, RANK() OVER (ORDER BY notional DESC) AS r
-FROM   trades GROUP BY trades.desk ORDER BY r                  -- a window over the answer
+SELECT trades.DESK AS desk, MEASURE('Notional') AS notional, RANK() OVER (ORDER BY notional DESC) AS r
+FROM   trades GROUP BY trades.DESK ORDER BY r                  -- a window over the answer
+-- ["DESK-COMM", 888803742773.65, 1], ["DESK-RATES", 596934185000.0, 2], ...
 
-SELECT trades.desk, MEASURE('Trades') FROM trades GROUP BY trades.desk
+SELECT trades.DESK, MEASURE('Trades') FROM trades GROUP BY trades.DESK
 UNION ALL
-SELECT trades.currency, MEASURE('Trades') FROM trades GROUP BY trades.currency
+SELECT trades.CURRENCY, MEASURE('Trades') FROM trades GROUP BY trades.CURRENCY
+-- 17 rows: the ten desks, then the seven currencies (["USD", 8562] among them)
 ```
 
 Each `SELECT` over the model's tables is one model query asked as you (`meta.leaves` lists their plan hashes); the outer query joins, filters, ranks,
@@ -129,12 +147,12 @@ sorts and limits their answers. A `WITH` query is a plain `SELECT` over the mode
 `drishti.bi.sql.max-leaves` (8) leaves. Captured (`rita`):
 
 ```
-WITH d AS (SELECT trades.desk AS desk, MEASURE('Notional') AS notional FROM trades GROUP BY trades.desk AS OF DATE '2026-10-08')
-SELECT d.desk, d.notional, RANK() OVER (ORDER BY d.notional DESC) AS r FROM d ORDER BY r
+WITH d AS (SELECT trades.DESK AS desk, MEASURE('Notional') AS notional FROM trades GROUP BY trades.DESK AS OF DATE '2026-10-15')
+SELECT d.desk, d.notional, RANK() OVER (ORDER BY d.notional DESC) AS r FROM d ORDER BY r LIMIT 3
 {"sql": 1, "columns": [{"name": "desk", "type": "string", "masked": false}, {"name": "notional", "type": "decimal", "masked": false},
                        {"name": "r", "type": "integer", "masked": false}],
- "rows": [["DESK-C", 108000.0, 1], ["DESK-B", 100000.0, 2], ["DESK-A", 92000.0, 3]], "rowCount": 3,
- "meta": {"shape": "composite", "leaves": ["p_5d0497af69d9a881"], "signature": "s_3031a71137741749", "cached": false, "warnings": [], "millis": 22.2}}
+ "rows": [["DESK-COMM", 888803742773.65, 1], ["DESK-RATES", 596934185000.0, 2], ["DESK-EQD", 428542341000.0, 3]], "rowCount": 3,
+ "meta": {"shape": "composite", "leaves": ["p_ed39a5d62d7577b8"], "signature": "s_38f790bd34b573e4", "cached": false, "warnings": [], "millis": 24.2}}
 ```
 
 ## 5. Time
@@ -146,16 +164,18 @@ TO DATE '2026-10-09'`. Without one, the statement reads the current business dat
 ## 6. Explain
 
 `EXPLAIN SELECT ...` answers the plan instead of the rows: its hash, the reader's security signature, the model queries, a composite's outer SQL, and the
-plan as a tree and as text. A scan says *that* row rules applied, never their text. Captured (`hana`):
+plan as a tree and as text. A scan says *that* row rules applied, never their text. Captured (`EXPLAIN` before the statement of section 3):
 
 ```
-plan: p_01efcdbb78ac26db   signature: s_f82a28ede96c9a86   time: as-of 2026-10-08
-- Answer {columns=[trades.desk, Notional, n], shape=grouped}
+plan: p_24cad7f700108507   signature: s_38f790bd34b573e4   time: as-of 2026-10-15
+- Answer {binding={define={n=count(trades)}}, columns=[trades.DESK, Notional, n], shape=grouped}
   - Limit {n=500}
-    - Sort {keys=[trades.desk asc]}
-      - Aggregate trades by [trades.desk]: [Notional, n]
-        - SecureScan trades (lang-trade@1.0.0)  rules: 1 applied  columns: [desk, notional]
+    - Sort {keys=[trades.DESK asc]}
+      - Aggregate trades by [trades.DESK]: [Notional, n]  (rollup by_desk_currency)
+        - SecureScan trades (trading-risk-trades@1.0.0)  rules: 1 applied  columns: [DESK, NOTIONAL]
 ```
+
+The plan hash is the statement's own (`p_24cad7f700108507`, the same as the answer's `meta.plan` above): the SQL and its model query are one plan.
 
 ## 7. SQL view datasets
 
@@ -165,11 +185,11 @@ query's date when it names none; the dataset declares its columns and grain like
 ```yaml
 rachana: 2
 expressions: 2
-dataset: lang-desk-sql
+dataset: desk-notional-sql
 version: 1.0.0
 source:
-  model: lang-model@1
-  sql: "SELECT trades.desk AS desk, MEASURE('Notional') AS notional, MEASURE('Trades') AS trades FROM trades GROUP BY trades.desk"
+  model: trading-risk@1
+  sql: "SELECT trades.DESK AS desk, MEASURE('Notional') AS notional, MEASURE('Trades') AS trades FROM trades GROUP BY trades.DESK"
 grain: { keys: [desk] }
 columns:
   desk:     { type: string, role: key }
@@ -187,8 +207,8 @@ A model's `tests:` may ask Drishti SQL and expect a number: the statement runs a
 
 ```yaml
 tests:
-  - { name: DESK-A notional, sql: "SELECT MEASURE('Notional') FROM trades WHERE trades.desk = 'DESK-A' AS OF DATE '2026-10-08'", expect: 92000, role: bi-risk }
-  - { name: by desk, sql: "SELECT trades.desk, MEASURE('Trades') AS n FROM trades GROUP BY trades.desk", row: { trades.desk: DESK-B }, column: n, expect: 8 }
+  - { name: rates notional, sql: "SELECT MEASURE('Notional') FROM trades WHERE trades.DESK = 'DESK-RATES' AS OF DATE '2026-10-15'", expect: 596934185000, role: risk }
+  - { name: by desk, sql: "SELECT trades.DESK, MEASURE('Trades') AS n FROM trades GROUP BY trades.DESK AS OF DATE '2026-10-15'", row: { trades.DESK: DESK-RATES }, column: n, expect: 1832 }
 ```
 
 ## 9. Problems: DRS-9170 to DRS-9179
@@ -199,31 +219,48 @@ Every refusal carries the code, the message, a `fix` (what to write) and the pos
 | Code | Meaning | Example | Fix |
 |---|---|---|---|
 | `DRS-9170` | not a statement of the dialect | `DELETE FROM trades`; `SELECT 1; SELECT 2` | one read-only `SELECT` |
-| `DRS-9171` | a table or column the model lacks for you | `SELECT trades.desk FROM trades JOIN desks ...` on a one-dataset model | the model's aliases (`FROM trades`) |
-| `DRS-9172` | a join that is not a relationship | `JOIN desks ON trades.notional = desks.desk` | `JOIN desks` without `ON` |
+| `DRS-9171` | a table or column the model lacks for you | `SELECT trades.DESK FROM trades JOIN limits ...` on `trading-risk` (no `limits` table) | the model's aliases (`FROM trades`) |
+| `DRS-9172` | a join that is not a relationship | `JOIN desks ON trades.NOTIONAL = desks.id` | `JOIN desks` without `ON` |
 | `DRS-9173` | a function the dialect does not take | `random()`, `read_parquet('/etc/passwd')` | the listed functions |
 | `DRS-9174` | an aggregate over a measure; a measure in `WHERE` | `SUM(MEASURE('MTM'))`; `WHERE MEASURE('MTM') > 0` | the measure as it is; `HAVING` |
 | `DRS-9175` | a window over a dataset's rows | `SUM(RANK() OVER (...))` | rank the answer's rows |
 | `DRS-9176` | something outside the model | `FROM pack.trading.trade`, `read_parquet(...)` | the model's aliases |
 | `DRS-9177` | two times in one statement | two `WITH` queries `AS OF` different dates | one time clause |
-| `DRS-9178` | `SELECT DISTINCT` without `GROUP BY` | `SELECT DISTINCT trades.desk FROM trades` | `GROUP BY trades.desk` |
+| `DRS-9178` | `SELECT DISTINCT` without `GROUP BY` | `SELECT DISTINCT trades.DESK FROM trades` | `GROUP BY trades.DESK` |
 | `DRS-9179` | not (yet) in the dialect | `SELECT *`; `WHERE a = 1 OR b = 2`; `GROUP BY` over `WITH` queries | named columns; a derived column; a measure |
 
 The model query's own codes also apply to what a statement compiles to (`DRS-9152` an unknown measure, `DRS-9156` not reachable, `DRS-9161` masked,
 `DRS-9158` currencies). Captured:
 
 ```
+POST /api/v1/bi/sql {"model":"trading-risk@1","sql":"SELECT trades.DESK FROM trades JOIN limits GROUP BY trades.DESK"}
 422 {"title": "sql name", "status": 422, "code": "DRS-9171", "path": "sql@36", "fix": {"at": 36, "write": "FROM trades"},
-     "detail": "DRS-9171 no table 'desks' in this model: its tables are [trades]",
-     "problems": [{"code": "DRS-9171", "path": "sql@36", "detail": "no table 'desks' in this model: its tables are [trades]", "fix": {"at": 36, "write": "FROM trades"}}]}
+     "detail": "DRS-9171 no table 'limits' in this model: its tables are [trades, netting_sets, counterparties, desks, books]",
+     "problems": [{"code": "DRS-9171", "path": "sql@36", "detail": "no table 'limits' in this model: its tables are [trades, netting_sets, counterparties, desks, books]",
+                   "fix": {"at": 36, "write": "FROM trades"}}]}
 ```
 
 ## 10. The API and the CLI
 
 ```bash
-drishti.py bi sql "SELECT trades.desk, MEASURE('MTM') FROM trades GROUP BY trades.desk" --model trading-risk@1
-drishti.py bi sql "EXPLAIN SELECT trades.desk, MEASURE('MTM') FROM trades GROUP BY trades.desk" --model trading-risk@1
+drishti.py bi sql "SELECT trades.DESK, MEASURE('MTM') FROM trades GROUP BY trades.DESK" --model trading-risk@1
+drishti.py bi sql "EXPLAIN SELECT trades.DESK, MEASURE('MTM') FROM trades GROUP BY trades.DESK" --model trading-risk@1
 drishti.py bi sql --file q.sql --model trading-risk@1 --format csv > answer.csv
+```
+
+The first, captured on the demo lakes (the latest day; `--server` / `DRISHTI_SERVER` and `DRISHTI_TOKEN` as for every command that talks to a server):
+
+```
+trades.DESK  MTM
+-----------  -----------------
+DESK-COMM    -429,967,635.39
+DESK-CREDIT  360,552,941.89
+DESK-EQD     -79,395,510.75
+...
+DESK-RATES   4,108,728,089.50
+DESK-SFT     51,375,248.69
+DESK-STRUCT  382,608,464.96
+10 row(s)  shape mq  plan p_f6760cccf51a3ad5
 ```
 
 `POST /api/v1/bi/sql {model, sql, format: json|csv|arrow}` and `POST /api/v1/bi/sql/validate {model, sql}`

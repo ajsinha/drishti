@@ -191,9 +191,9 @@ The same Sutras serve every country: the United States and Nigeria below, Brazil
 The definitions and units are in each pack's *About this page* glossary (`config/about.yaml`, from `tools/packgen/*/about.yaml`, which `tools/realdata/about.py` generates) and in each macro or social indicator's
 *About this series* panel. World Governance Indicators are estimates from about -2.5 (weak) to 2.5 (strong).
 
-![FORM economics: growth above 6% among economies over USD 100 bn](img/realdata/form-economics.jpg)
+![FORM world-economy economy: growth above 6% among economies over USD 100 bn](img/realdata/form-economics.jpg)
 
-`FORM economics economy` searches the real data: the form above finds six economies larger than USD 100 bn growing above 6% (Ethiopia, India, Ireland, Kazakhstan,
+`FORM world-economy economy` searches the real data (the picture was taken when the economics half was a pack of its own, `FORM economics`): the form above finds six economies larger than USD 100 bn growing above 6% (Ethiopia, India, Ireland, Kazakhstan,
 Uzbekistan, Viet Nam in the April 2026 data).
 
 ## The tool: `tools/realdata/`

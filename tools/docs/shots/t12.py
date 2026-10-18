@@ -95,7 +95,7 @@ pages:
     title: Trading desk
     tiles:
       - { id: net-mtm, report: live-trading-desk, visual: mtm, title: Net MTM, at: { x: 0, y: 0, w: 4, h: 3 },
-          alert: { on: MTM, warn: { op: lt, value: 150000000 }, crit: { op: lt, value: 100000000 }, hysteresis: 5000000 } }
+          alert: { on: MTM, warn: { op: lt, value: 0 }, crit: { op: lt, value: -1000000000 }, hysteresis: 25000000 } }
       - { id: trades, report: live-trading-desk, visual: trades, at: { x: 4, y: 0, w: 2, h: 3 } }
       - { id: by-desk, report: live-trading-desk, visual: by-desk, at: { x: 0, y: 3, w: 6, h: 5 } }
 """
@@ -145,12 +145,13 @@ def board_designer(c: Ctx):
 
 
 @shot("15-chart-page.jpg")
-def perspective_chart(c: Ctx):
-    """The chart page of the live desk report: a 2.1 Perspective visual, drawn since wave B as Drishti's own grid of the server's answer."""
+def desk_currency_chart(c: Ctx):
+    """The Chart page of the live desk report: net MTM by desk, one stacked series per currency, a column visual the server groups and the browser only
+    draws (2.3.0: no Perspective, no computing in the browser)."""
     login(c, height=900)
     c.page.set_viewport_size({"width": 1280, "height": 900})
     c.page.goto(f"{c.base}/bi/r/{LIVE_REPORT}/chart")
-    c.page.wait_for_selector(".bi-vis tbody tr", timeout=60000)
+    c.page.wait_for_selector('[data-visual="mtm-chart"] canvas', timeout=60000)
     c.page.wait_for_timeout(2500)
     c.page.evaluate("window.scrollTo(0, 0)")
     c.save("15-chart-page.jpg")

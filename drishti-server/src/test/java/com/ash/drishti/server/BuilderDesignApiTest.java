@@ -110,13 +110,13 @@ class BuilderDesignApiTest {
         List<String> kinds = new java.util.ArrayList<>();
         d.path("preview").path("panels").forEach(p -> kinds.add(p.path("kind").asText()));
         assertThat(kinds).contains("line", "candlestick", "waterfall", "histogram", "graph", "timeline", "pivot", "area", "hbar", "status");
-        JsonNode alt = d.path("alternatives").path("pnlhistory");
+        JsonNode alt = d.path("alternatives").path("pnl-history");
         assertThat(alt.size()).isGreaterThanOrEqualTo(1);
         assertThat(alt.get(0).path("kind").asText()).isEqualTo("area");
         assertThat(alt.get(0).path("reason").asText()).isNotBlank();
-        assertThat(alt.get(0).path("options").path("rows").asText()).isEqualTo("$.pnlHistory");
+        assertThat(alt.get(0).path("options").path("rows").asText()).isEqualTo("$.PNL_HISTORY");
         assertThat(alt.get(0).path("area").asText()).isEqualTo("main");
-        assertThat(d.path("reasons").path("pnlhistory").asText()).contains("20 points");
+        assertThat(d.path("reasons").path("pnl-history").asText()).contains("20 points");
     }
 
     @Test
@@ -125,9 +125,9 @@ class BuilderDesignApiTest {
         JsonNode[] docs = new JsonNode[4];
         for (int i = 0; i < docs.length; i++) {
             ObjectNode c = base.deepCopy();
-            c.put("tradeId", "DEMO-BOND-" + (i + 1));
-            c.put("mtm", 1209000 * (i + 1));
-            c.put("pnl1d", -41000 + 9000 * i * i);
+            c.put("TRADE_ID", "DEMO-BOND-" + (i + 1));
+            c.put("MTM", 1209000 * (i + 1));
+            c.put("PNL1D", -41000 + 9000 * i * i);
             docs[i] = c;
         }
         JsonNode d = design(body("trade", docs));
@@ -145,17 +145,17 @@ class BuilderDesignApiTest {
         JsonNode[] docs = new JsonNode[5];
         for (int i = 0; i < docs.length; i++) {
             ObjectNode c = base.deepCopy();
-            c.put("tradeId", "DEMO-BOND-" + (i + 1));
+            c.put("TRADE_ID", "DEMO-BOND-" + (i + 1));
             if (i > 0) {
-                c.remove("pnlHistory");
-                c.remove("ohlc");
+                c.remove("PNL_HISTORY");
+                c.remove("OHLC");
             }
             docs[i] = c;
         }
         JsonNode d = design(body("trade", docs));
         List<String> pruned = d.path("pruned").findValuesAsText("panel");
-        assertThat(pruned).contains("pnlhistory", "ohlc");
-        JsonNode p = d.path("pruned").get(pruned.indexOf("pnlhistory"));
+        assertThat(pruned).contains("pnl-history", "ohlc");
+        JsonNode p = d.path("pruned").get(pruned.indexOf("pnl-history"));
         assertThat(p.path("action").asText()).isIn("dropped", "demoted");
         assertThat(p.path("bad").asInt()).isEqualTo(4);
         assertThat(p.path("of").asInt()).isEqualTo(5);
@@ -188,17 +188,17 @@ class BuilderDesignApiTest {
     @Test
     void suggestRanksPanelKindsForAFieldAndForAPair() throws Exception {
         ObjectNode req = body("trade", example("all-panels-showcase"));
-        req.put("path", "$.ohlc");
+        req.put("path", "$.OHLC");
         JsonNode s = suggest(req);
         assertThat(s.path("suggestions").get(0).path("kind").asText()).isEqualTo("candlestick");
         assertThat(s.path("suggestions").get(0).path("reason").asText()).isNotBlank();
-        assertThat(s.path("suggestions").get(0).path("options").path("rows").asText()).isEqualTo("$.ohlc");
-        req.put("path", "$.positions[].family");
-        req.put("at", "$.positions[].mtm");
+        assertThat(s.path("suggestions").get(0).path("options").path("rows").asText()).isEqualTo("$.OHLC");
+        req.put("path", "$.POSITIONS[].FAMILY");
+        req.put("at", "$.POSITIONS[].MTM");
         s = suggest(req);
         assertThat(s.path("suggestions").get(0).path("kind").asText()).isEqualTo("pivot");
         assertThat(s.path("suggestions").get(0).path("options").has("by")).isTrue();
-        assertThat(s.path("at").asText()).isEqualTo("$.positions[].mtm");
+        assertThat(s.path("at").asText()).isEqualTo("$.POSITIONS[].MTM");
     }
 
     @Test
@@ -207,7 +207,7 @@ class BuilderDesignApiTest {
                 .content(body("trade", example("exposure-profile")).toString())).andExpect(status().isOk()).andReturn();
         ObjectNode req = JSON.createObjectNode();
         req.set("shape", JSON.readTree(shape.getResponse().getContentAsString()));
-        req.put("path", "$.profile");
+        req.put("path", "$.PROFILE");
         assertThat(suggest(req).path("suggestions").get(0).path("kind").asText()).isEqualTo("area");
         req.put("path", "$.nope");
         mvc.perform(post("/api/v1/builder/suggest").header("Authorization", author()).contentType(MediaType.APPLICATION_JSON).content(req.toString()))
@@ -218,7 +218,7 @@ class BuilderDesignApiTest {
     void everySignedInUserMayDesignOrSuggest() throws Exception {
         String viewer = "Bearer " + tokens.mint("vic", List.of("viewer"), 300);
         ObjectNode req = body("trade", example("pnl-explain"));
-        req.put("path", "$.pnlExplain");
+        req.put("path", "$.PNL_EXPLAIN");
         for (String url : new String[] {"/api/v1/builder/design", "/api/v1/builder/suggest"}) {
             mvc.perform(post(url).header("Authorization", viewer).contentType(MediaType.APPLICATION_JSON).content(req.toString()))
                     .andExpect(status().isOk());
