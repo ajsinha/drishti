@@ -192,14 +192,65 @@ Good to know:
 
 ## 4. Start the server (IntelliJ) and the console (PyCharm)
 
-1. **IntelliJ**, top-right drop-down → **Drishti server (demo lakes)** → ▶ (Run).
-   You should see, within about 20 seconds: `Started DrishtiApplication in … seconds` in the Run window.
-   This configuration runs with the seven packs, the lakes as the only data (no built-in samples), a 4 GB heap, and
-   **offline mode** (`DRISHTI_OFFLINE=true`): quotes and news come from the committed snapshot and no website is
-   contacted.
-2. **PyCharm**, top-right drop-down → **Drishti console** → ▶ (Run).
-   You should see: `Uvicorn running on …:17480`.
-3. Browser → `http://localhost:17480` → sign in as `drishti-dev-admin` / `drishti-dev-admin123`.
+### 4.1 The server, in IntelliJ
+
+1. In IntelliJ's toolbar, top right, there is a drop-down with the name of a run configuration, then a green ▶ (Run)
+   and a red ■ (Stop). Click the **drop-down** (not the ▶) → open the folder **Drishti** → choose
+   **Drishti server (demo lakes)**. The drop-down now shows that name.
+2. Click the green ▶ next to it.
+3. The **Run** window opens at the bottom; its tab is named **Drishti server (demo lakes)**. IntelliJ first compiles
+   (a minute the first time), then starts the server.
+
+> **Do not start the server with the ▶ in the margin of `DrishtiApplication.java`.** That makes a configuration named
+> **DrishtiApplication** with **none** of the settings below: no offline mode, the built-in samples on, other packs.
+> If your Run tab says *DrishtiApplication*, stop it (red ■) and do steps 1–2.
+
+What **Drishti server (demo lakes)** sets (Run → Edit Configurations… → Application → Drishti server (demo lakes)):
+
+| Field | Value |
+|---|---|
+| Module (*-cp*) | `drishti-server` |
+| Main class | `com.ash.drishti.server.DrishtiApplication` |
+| VM options | `-Xmx4g` |
+| Working directory | the project folder, `C:\Users\asinh09\IdeaProjects\drishti-orig` |
+| Environment variables | the seven packs, samples off, **offline mode** (`DRISHTI_OFFLINE=true`), port 18480, sign-in on with the `drishti-dev-admin` account |
+
+If the drop-down has no **Drishti** folder (IntelliJ did not pick up `run-configs\`): **Run → Edit Configurations… → + →
+Application**, fill in the table above, and paste this into *Environment variables* (one line):
+
+```
+DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets;DRISHTI_DEMO_ENABLED=false;DRISHTI_OFFLINE=true;DRISHTI_PORT=18480;DRISHTI_SECURITY_ENABLED=true;DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789;DRISHTI_SEED_ADMIN=true;DRISHTI_SEED_USERNAME=drishti-dev-admin;DRISHTI_SEED_PASSWORD=drishti-dev-admin123;DRISHTI_STUDIO_SAVE=true;DRISHTI_EXTERNAL_LIB=C:\Users\asinh09\IdeaProjects\drishti-orig\external_lib
+```
+
+You should see, in the Run window:
+
+- within about 20 seconds: `Started DrishtiApplication in … seconds` — the server answers from now on;
+- then, as the first pages are asked for, one line per large table and date it loads, for example
+  `trade-endur: trade 2026-10-16 loaded, 312,480 ids in 35 files (2104 ms)`;
+- about 15 seconds after the start, the counterparty, portfolio, legal-entity and index pages being built from the trades,
+  with a line every 100,000 trades and a last line `derived pages trade-pages (latest) built in … s: counterparty-trades … pages …`.
+
+A `WARN … has more than 50,000 documents; … built from the first 50,000 only` line means your ENDUR file is larger than
+what these grouped pages read: the trade pages themselves show every trade; the counterparty/portfolio *grouped* pages
+count only the first 50,000.
+
+Quotes and news come from the committed snapshot and no website is contacted.
+
+PowerShell instead (after step 2.3 built the jar), from the project folder:
+
+```powershell
+$env:DRISHTI_PACKS="core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets"; $env:DRISHTI_DEMO_ENABLED="false"; $env:DRISHTI_OFFLINE="true"
+$env:DRISHTI_SECURITY_ENABLED="true"; $env:DRISHTI_TOKEN_SECRET="drishti-dev-only-token-secret-change-me-0123456789"
+$env:DRISHTI_SEED_ADMIN="true"; $env:DRISHTI_SEED_USERNAME="drishti-dev-admin"; $env:DRISHTI_SEED_PASSWORD="drishti-dev-admin123"
+java -Xmx4g -jar drishti-server\target\drishti-server-2.3.0-exec.jar
+```
+
+### 4.2 The console, in PyCharm and the browser
+
+1. **PyCharm**, top-right drop-down → **Drishti console** → ▶ (Run). (It runs `drishti-console\run_drishti_web.py`
+   with sign-in on.)
+   You should see: `Uvicorn running on http://0.0.0.0:17480`.
+2. Browser → `http://localhost:17480` → sign in as `drishti-dev-admin` / `drishti-dev-admin123`.
 
 The console reconnects by itself if you start or restart the server after it.
 
@@ -212,7 +263,8 @@ The console reconnects by itself if you start or restart the server after it.
 
    ![Admin, Lakes: every table with rows, files, size, dates and the Maintain controls](img/qa-windows/01-admin-lakes.png)
 2. **Admin ▾ → Connectors.** You should see `trade-endur`, `trade-calypso`, `trade-murex` and the stores **RUNNING**.
-   Yahoo Finance and news are shown as **off (offline mode)**; their stores serve the snapshot.
+   The live **yfinance** and **news** connectors are shown as **disabled**; the stores `news-store` and `market-store`
+   are **RUNNING** and serve the snapshot.
 
    ![Admin, Connectors: the trade connectors of the three systems RUNNING](img/qa-windows/02-admin-connectors.png)
 3. **Admin ▾ → Health.** You should see everything green (a warning about a field mask of an example pack that is not
@@ -239,7 +291,7 @@ The console reconnects by itself if you start or restart the server after it.
 | 6 | An **equity price** | `/v/listed-company/CO-AAPL` (quote and chart from the snapshot) |
 | 7 | **News** | the news panel of the company page, or `/v/news-topic/TOPIC-FED` |
 | 8 | **Compare** across two dates | on a trade page, set the date picker to one of your dates → **Compare** → the other date |
-| 9 | **BI** by source system | **BI → Reports → Trades overview**; change a slicer; open *How this was answered* |
+| 9 | **BI** by source system | Top bar, the bar-chart icon (**BI**) → **Catalogue** → **Trades overview** → **Open the report**; change a slicer. **Known issue (2026-10-18): on the demo lakes this report shows 0 trades; skip this row until the fix is pushed.** |
 | 10 | How a screen is designed | on a deal page, *How this view was built* → click the Sutra name: the designer opens with the trade as its sample |
 
 ### The pages, as they look
@@ -263,6 +315,8 @@ trades.
 |---|---|
 | `pip` or Maven cannot download | Ask IT for the mirror settings: pip reads `%APPDATA%\pip\pip.ini`; Maven reads `%USERPROFILE%\.m2\settings.xml`. |
 | PyCharm says the interpreter is invalid | Redo step 2.2 point 2. |
+| The Run tab says **DrishtiApplication**, quotes or news try the internet, or sample trades appear | The server was started from the ▶ in `DrishtiApplication.java`: stop it and start **Drishti server (demo lakes)** (section 4.1). |
+| The server log scrolls with thousands of `FilterCompat` or `delta.kernel` INFO lines | An older copy of the project: `git pull` (since 2026-10-18 these libraries log at WARN; Drishti says one line per large table loaded). |
 | `Port 18480 (or 17480) is already in use` | Another copy is running: stop it in IntelliJ / PyCharm (red square), or reboot. |
 | `lake build` says `no id (field 'id' is missing…)` | The parameters lack `--key TRADE_ID`: copy the line of step 3.2 again. |
 | `lake build` says `give --lake DIR (the Delta root the connector reads)` | The parameters lack `--lake data\delta`: copy the line of step 3.2 again (it ends with `--lake data\delta`), and run it from the project folder. |

@@ -54,6 +54,9 @@ public final class DerivedSourcePlugin implements SourcePlugin {
 
     /** Members read as documents at a time (a group key that is an expression): memory holds one batch, not the kind. */
     private static final int READ_BATCH = 500;
+    /** Members read between two progress lines in the log. */
+    private static final int PROGRESS_EVERY = 100_000;
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(DerivedSourcePlugin.class);
 
     /** One computation: every group of every derived kind, for one business date. */
     private record Snapshot(Map<String, Map<String, DataNode>> byKind, Map<String, Integer> scanned, LocalDate dataDate, long generation,
@@ -184,7 +187,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
                         Instant.now())));                                  // one refresh at a time
                 Thread.ofVirtual().name("derived-refresh").start(() -> {
                     try {
-                        next.complete(compute(asOf));
+                        next.complete(compute(asOf, false));
                         synchronized (cache) {
                             cache.put(key, next);
                         }
@@ -206,7 +209,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         }
         if (mine) {
             try {
-                f.complete(compute(asOf));
+                f.complete(compute(asOf, true));
             } catch (RuntimeException e) {
                 health = "DOWN: " + e.getMessage();
                 org.slf4j.LoggerFactory.getLogger(DerivedSourcePlugin.class).warn("derived pages for {} could not be built: {}", asOf, e.toString());
@@ -220,7 +223,9 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         }
     }
 
-    private Snapshot compute(AsOf asOf) {
+    /** Every group of every derived kind for the date; {@code announce}: the first computation of the date says its progress at INFO (a refresh at DEBUG). */
+    private Snapshot compute(AsOf asOf, boolean announce) {
+        long started = System.nanoTime();
         Map<String, Map<String, DataNode>> byKind = new HashMap<>();
         Map<String, Integer> scanned = new HashMap<>();
         LocalDate dataDate = null;
@@ -242,6 +247,13 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         }
         for (Map.Entry<String, List<DerivedKind>> e : byDocs.entrySet()) {
             List<EntityRef> refs = reader.list(e.getKey(), asOf, maxScan);
+            List<String> names = e.getValue().stream().map(DerivedKind::kind).toList();
+            say(announce, "derived pages {} ({}): reading {} {} documents", sourceName, asOf.live() ? "latest" : asOf.businessDate(),
+                    String.format("%,d", refs.size()), e.getKey());
+            if (refs.size() >= maxScan) {
+                LOG.warn("derived pages {}: {} has more than {} documents; {} are built from the first {} only (raise the connector's max-scan setting)",
+                        sourceName, e.getKey(), String.format("%,d", maxScan), names, String.format("%,d", maxScan));
+            }
             Map<DerivedKind, Map<String, Map<String, DataNode>>> groups = new HashMap<>();
             Map<DerivedKind, java.util.Optional<java.util.Set<String>>> keep = new HashMap<>();
             e.getValue().forEach(k -> {
@@ -252,7 +264,10 @@ public final class DerivedSourcePlugin implements SourcePlugin {
             for (int from = 0; from < refs.size(); from += READ_BATCH) {
                 Map<EntityRef, EntityDocument> batch = reader.read(refs.subList(from, Math.min(refs.size(), from + READ_BATCH)), asOf);
                 for (EntityDocument d : batch.values()) {
-                    n++;
+                    if (++n % PROGRESS_EVERY == 0) {
+                        say(announce, "derived pages {}: {} of {} {} documents read", sourceName, String.format("%,d", n),
+                                String.format("%,d", refs.size()), e.getKey());
+                    }
                     for (DerivedKind k : e.getValue()) {
                         String g = k.keyOf(d.data());
                         if (g != null) {
@@ -274,8 +289,18 @@ public final class DerivedSourcePlugin implements SourcePlugin {
             }
         }
         health = "UP";
-        org.slf4j.LoggerFactory.getLogger(DerivedSourcePlugin.class).debug("derived pages {}: {}", asOf, byKind.entrySet().stream()
-                .map(e -> e.getKey() + "=" + e.getValue().size() + " of " + scanned.getOrDefault(e.getKey(), 0)).toList());
+        say(announce, "derived pages {} ({}) built in {} s: {}", sourceName, asOf.live() ? "latest" : asOf.businessDate(),
+                String.format("%.1f", (System.nanoTime() - started) / 1e9), byKind.entrySet().stream()
+                        .map(e -> e.getKey() + " " + e.getValue().size() + " pages from " + String.format("%,d", scanned.getOrDefault(e.getKey(), 0)))
+                        .sorted().collect(Collectors.joining(", ")));
         return new Snapshot(byKind, scanned, asOf.live() ? null : dataDate, generation.incrementAndGet(), Instant.now());
+    }
+
+    private static void say(boolean info, String format, Object... args) {
+        if (info) {
+            LOG.info(format, args);
+        } else {
+            LOG.debug(format, args);
+        }
     }
 }

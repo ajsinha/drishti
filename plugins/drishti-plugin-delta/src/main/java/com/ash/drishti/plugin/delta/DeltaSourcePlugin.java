@@ -79,6 +79,10 @@ public final class DeltaSourcePlugin implements SourcePlugin {
      * A partition of one table version. The version's commit time is part of the key: a table removed and written again (lake demo, a
      * rebuild) starts its versions at 0 again, so the number alone would serve the old table's ids, documents and columns.
      */
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(DeltaSourcePlugin.class);
+    /** A table date with at least this many ids says it was loaded at INFO; smaller ones at DEBUG. */
+    private static final int ANNOUNCE_IDS = 10_000;
+
     private record PartKey(String kind, long version, long at, LocalDate date) {
         PartKey(String kind, DeltaTable.Layout l, LocalDate date) {
             this(kind, l.version(), l.timestamp(), date);
@@ -277,7 +281,14 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     private DeltaTable.IdMap idMap(String kind, DeltaTable.Layout l, LocalDate date) {
-        return join(idMaps.get(new PartKey(kind, l, date), k -> tables.get(kind).ids(l, date)));
+        return join(idMaps.get(new PartKey(kind, l, date), k -> {
+            long started = System.nanoTime();
+            DeltaTable.IdMap m = tables.get(kind).ids(l, date);
+            // one line per large table and date, when it is first read (the rest at DEBUG): the Parquet reader's per-record lines are off (application.yaml)
+            LOG.atLevel(m.ids().length >= ANNOUNCE_IDS ? org.slf4j.event.Level.INFO : org.slf4j.event.Level.DEBUG).log("{}: {} {} loaded, {} ids in {} files ({} ms)", sourceName, kind, date == LocalDate.MIN ? "(no dates)" : date,
+                    String.format("%,d", m.ids().length), l.files().getOrDefault(date, List.of()).size(), (System.nanoTime() - started) / 1_000_000);
+            return m;
+        }));
     }
 
     /** The promoted paths the table really has as columns (a pack may declare more than a writer wrote). */

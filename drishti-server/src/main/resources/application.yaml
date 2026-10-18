@@ -56,6 +56,10 @@ logging:
     io.delta.kernel.internal.snapshot.SnapshotManager: ERROR
     # Hibernate flags a setting Spring Boot itself sets as incubating
     org.hibernate.orm.incubating: ERROR
+    # the Parquet reader and the Delta kernel say one INFO line per file read and per record looked up (thousands at start on
+    # a large lake); Drishti says one line per table and date loaded, and the derived pages' progress every 100,000 records
+    org.apache.parquet: WARN
+    io.delta.kernel: WARN
 
 server:
   port: ${DRISHTI_PORT:18480}
