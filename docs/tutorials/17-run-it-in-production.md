@@ -194,7 +194,7 @@ The ActiveMQ and RabbitMQ connectors' state folders (`data/state/`) are the exce
 
 ```text
 $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" localhost:18480/api/v1/admin/health | python3 -c "import json,sys; print(json.load(sys.stdin)['server'])"
-{'version': '2.2.0', 'uptimeSeconds': 567, 'java': '21.0.12.1', 'heapUsedMb': 637, 'heapMaxMb': 15576, 'threads': 67, 'cpus': 24}
+{'version': '2.3.0', 'uptimeSeconds': 567, 'java': '21.0.12.1', 'heapUsedMb': 637, 'heapMaxMb': 15576, 'threads': 67, 'cpus': 24}
 ```
 
 On this 64 GB machine the ceiling is `15576` MB (a quarter). Set it on purpose in the service's environment, with a collector that suits a server (`-XX:+UseZGC -XX:+ZGenerational`, [OPERATIONS.md section 7](../admin/OPERATIONS.md#7-running-as-services-systemd)):
@@ -205,7 +205,7 @@ Environment=JAVA_TOOL_OPTIONS=-Xmx2g -XX:+UseZGC -XX:+ZGenerational     # in the
 
 ```text
 $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" localhost:18480/api/v1/admin/health | python3 -c "import json,sys; print(json.load(sys.stdin)['server'])"
-{'version': '2.2.0', 'uptimeSeconds': 7, 'java': '21.0.12.1', 'heapUsedMb': 866, 'heapMaxMb': 2048, 'threads': 64, 'cpus': 24}
+{'version': '2.3.0', 'uptimeSeconds': 7, 'java': '21.0.12.1', 'heapUsedMb': 866, 'heapMaxMb': 2048, 'threads': 64, 'cpus': 24}
 ```
 
 You should see `heapMaxMb` at `2048`. How big? Give the server a heap of **8 GB or more** when it serves a big lake or many live streams ([OPERATIONS.md section 11](../admin/OPERATIONS.md#11-the-lake-where-it-lives-and-keeping-it-bounded)), leave the machine memory for the BI engine (`drishti.bi.query.memory-limit`, 768 MB by default, and its threads), and watch **Heap high** in monitoring: `sum(jvm_memory_used_bytes{area="heap"}) / sum(jvm_memory_max_bytes{area="heap"}) > 0.9` for ten minutes means raise it or lower a cache.
@@ -264,7 +264,7 @@ For **monitoring**, Prometheus scrapes `/actuator/prometheus` with `Authorizatio
 
 ```text
 {"status": "DEGRADED", "summary": {"failedToStart": 0, "packsWithProblems": 1, "sourcesDown": 1, "sourcesDegraded": 0, "sources": 16, "packs": 8},
- "server": {"version": "2.2.0", "uptimeSeconds": 1078, "java": "21.0.12.1", "heapUsedMb": 2069, "heapMaxMb": 3072, "threads": 83, "cpus": 24},
+ "server": {"version": "2.3.0", "uptimeSeconds": 1078, "java": "21.0.12.1", "heapUsedMb": 2069, "heapMaxMb": 3072, "threads": 83, "cpus": 24},
  "sutras": {"hotReload": "WATCHING", "problemFiles": 0}, "live": {"streams": 0, "p50Ms": 0.0, "frames": 0, "droppedFrames": 0, "topics": 2000, "p99Ms": 0.0}}
 ```
 
@@ -275,7 +275,7 @@ And the machine itself, in one command, before you start anything:
 ```text
 $ python3 tools/drishti.py doctor --server http://localhost:18480
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.2.0-exec.jar (version 2.2.0)
+GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.3.0-exec.jar (version 2.3.0)
 GREEN  python                  /usr/bin/python3: Python 3.14.4
 GREEN  python pyyaml           installed
 YELLOW python deltalake        not installed (needed for data ingest --store delta)
@@ -287,7 +287,7 @@ GREEN  console venv            ~/drishti/drishti-console/.venv
 GREEN  configured directories  none of DRISHTI_DELTA_ROOT, DRISHTI_FILES_ROOT, DRISHTI_PACKS_INSTALLED is set
 GREEN  port 18480              in use by Drishti: status UP
 GREEN  port 17480              in use by Drishti: answers 404 on /actuator/health, as the Drishti console does
-YELLOW server                  http://localhost:18480: version 2.2.0, java 21.0.12.1, status DEGRADED
+YELLOW server                  http://localhost:18480: version 2.3.0, java 21.0.12.1, status DEGRADED
 GREEN  token                   accepted; this token acts as drishti-dev-admin: scopes bi:write, design:write, loads:write, packs:admin
 doctor: 0 red, 3 yellow
 ```
@@ -310,7 +310,7 @@ You should see the story of step 2, filtered to the development administrator wi
 
 ```text
 $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" localhost:18480/api/v1/admin/health | python3 -c "import json,sys; print(json.load(sys.stdin)['server']['version'])"
-2.2.0
+2.3.0
 $ curl -s localhost:18480/actuator/health/readiness
 {"status":"UP"}
 ```

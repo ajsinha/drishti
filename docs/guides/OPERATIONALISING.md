@@ -102,8 +102,8 @@ The manifest (also inside the archive as `trading/MANIFEST.json`) describes the 
   "title": "Trading",
   "extends": ["core", "market-data"],
   "kinds": ["trade", "counterparty-trades", "portfolio-trades", "legal-entity-trades", "index-trades"],
-  "requiresServer": ">=2.2.0",
-  "generator": { "tool": "drishti.py pack bundle", "python": "3.13.15", "server": "2.2.0" },
+  "requiresServer": ">=2.3.0",
+  "generator": { "tool": "drishti.py pack bundle", "python": "3.13.15", "server": "2.3.0" },
   "data": { "ingest": {}, "connectors": ["trade-calypso", "trade-endur", "trade-murex", "trade-pages", "trading-stream"],
             "note": "the bundle carries the pack only; data (Delta lake, files root) is deployed separately, see OPERATIONALISING.md" },
   "files": [ { "path": "pack.yaml", "sha256": "…", "size": … }, "…" ]

@@ -1538,7 +1538,7 @@ These are the codes an expression can raise:
 | `DRS-9190` | the converter could not keep the meaning of an old expression (it then leaves it as it was) | — | rewrite it by hand |
 | `DRS-9158` | (at query time) a sum across currencies | `sum(trades.NOTIONAL)` by desk, several currencies | group or filter by the currency |
 
-Captured from the server (2.2.0), checking `trades.MTM * 2` as a measure:
+Captured from the server (2.3.0), checking `trades.MTM * 2` as a measure:
 
 ```json
 {"code": "DRS-9127", "level": "error",

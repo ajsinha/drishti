@@ -13,7 +13,40 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 2.2.0 — release notes
+# Drishti 2.3.0 — release notes
+
+*2026-10-17.* **BI that calculates like Power BI and stays live, production-shaped trades from three source systems, and a
+demo you can run from a fresh clone in minutes.** (Wave B of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
+
+- **Calculations with filter context:** `calc`, `share_of`, `parent_of` and `avg_by` change the filter a measure sees;
+  calculation groups, field and numeric parameters (slicers), and % of total built in the UI.
+- **Time and balances:** opening, closing and average balances, period-to-date and same period last year on the model's
+  calendar, currency conversion; daily snapshots over a window take the last date instead of summing.
+- **Live everywhere:** standing queries pushed from the server when data changes (no polling), a time picker (now, as of,
+  window) on every report, and a chip that says when a visual is listening, and why not when it is refused.
+- **Servers compute, the browser only draws:** a tier planner (source, Java server, console backend) with Python nodes,
+  explained per visual in *How this was answered*; work classes, budgets and metrics for scale.
+- **Production-shaped trades:** one UPPER_SNAKE schema (47 attributes, `LEGAL_ENTITY`, `SOURCE_SYSTEM`) for ENDUR, CALYPSO
+  and MUREX, one Delta table and connector each, searched and analysed as one kind; deal pages with legs, cash flows,
+  resets, events and charts; one Sutra per source system and product type built from shared blocks, with a coverage check;
+  Compare across business dates including nested changes.
+- **Seven packs** (core, market-data, trading, counterparty-risk, market-risk, world-economy, news-and-markets), UPPER_SNAKE
+  attribute names everywhere, and samples as one JSON Lines file per kind (12,195 files became 69).
+- **A demo from a fresh clone in minutes:** committed synthetic test data (`data/testdata`, 7 business days) and
+  `drishti.py lake demo` (or the *Build demo lakes* run configuration) builds 64 Delta tables in under a minute.
+- **Lakes:** Admin → Lakes lists every table; **lake maintenance** (retention, compaction, checkpoint, vacuum) runs now or
+  on a schedule from the page or the CLI, only on tables Drishti built; a rebuilt lake is never served from old figures.
+- **Working in the IDE:** run configurations for IntelliJ IDEA and PyCharm, the console reconnects to the server by
+  itself, no hidden files, everything Drishti writes under the data folder.
+- **A page explains itself:** the Sutra and connector named in *How this view was built* and *About this page* open in
+  the designer and on the connector's page, at one click.
+- **Docs verified for this release:** [docs/qa/2.3.0-docs-verification.md](docs/qa/2.3.0-docs-verification.md) lists
+  every guide, tutorial and help page with what was checked and how to re-check it.
+
+Upgrading from 2.2.0: trades and other kinds use UPPER_SNAKE attribute names; Sutras, BI items and forms written against
+the old camelCase names need the new names (the shipped packs and examples are converted). See [CHANGELOG.md](CHANGELOG.md).
+
+# Previous release: Drishti 2.2.0 — release notes
 
 *2026-10-17.* **The BI foundation rebuilt: datasets and data models rooted in packs, a Python-like expression language,
 read-only SQL, one query plan for everything.** (Wave A of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
@@ -61,7 +94,7 @@ Admin → BI settings and on the item's page — `drishti.py bi migrate --dry-ru
 query API answers `410` with the model query to use. The server jar now starts through Spring Boot's properties launcher
 (`java -jar` is unchanged). The two live sample reports stay on their 2.1 datasets until wave B (live models).
 
-# Previous release: Drishti 2.1.0 — release notes
+# Older release: Drishti 2.1.0 — release notes
 
 *2026-10-12.* **The BI long tail closed, a multi-day type-ahead index, and safe install and uninstall in Admin.**
 

@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+## 2.3.0 — BI with filter context, time and live push; production-shaped trades from three source systems; a demo from a fresh clone (2026-10-17)
+
 - **Lake maintenance in Admin → Lakes.** Tick tables, **Dry run** (files and size before → after, dates retention drops, files vacuum
   removes) or **Maintain now** in the background with progress and cancel; settings per table and schedules (day-and-time picker or cron
   text, or after every build; a run missed while down runs once at start) saved in `<data>/lakes/lake-maintenance.yaml`, the file
