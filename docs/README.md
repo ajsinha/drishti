@@ -40,7 +40,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | [connectors/](connectors/) | connecting your data: the Connectors reference, the connector files, TLS and proxy, the developer guide, a design document per store (Delta Lake, PostgreSQL, Aerospike, files …) and demo data |
 | [admin/](admin/) | running Drishti: operations, configuration, users and roles, performance, and the runbooks |
 | [qa/](qa/) | quality assurance runs: each with its activity logs, findings by severity, and the scripts that reproduce them |
-| [architecture/](architecture/) | how Drishti is built: the architecture, design notes (inference, live updates, Rūpaka, Elements, collaboration, the AI layer), the implementation plan and the decision records (ADRs) |
+| [architecture/](architecture/) | how Drishti is built: the architecture, design notes (inference, live updates, Rūpaka, Elements, collaboration, the AI layer), the implementation plan, the [scale strategy](architecture/SCALE_STRATEGY.md) (millions of trades a day, a year of history) and the decision records (ADRs) |
 | [requirements/](requirements/), [publications/](publications/) | the reference mockups and logo; the design-and-evidence presentation |
 
 ## If you want to…
