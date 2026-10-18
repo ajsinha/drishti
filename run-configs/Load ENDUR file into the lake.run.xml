@@ -28,7 +28,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/drishti.py" />
-    <option name="PARAMETERS" value="lake build --from C:\Users\asinh09\drishti-private\endur\2026-10-16.jsonl --as-of 2026-10-16 --pack config/packs/trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates" />
+    <option name="PARAMETERS" value="lake build --from C:\Users\asinh09\drishti-private\endur\2026-10-16.jsonl --as-of 2026-10-16 --pack config/packs/trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates --lake $PROJECT_DIR$/data/delta" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

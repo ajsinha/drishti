@@ -155,7 +155,7 @@ the world economy data.
    the two things that name your file — the path after `--from` and the date after `--as-of` — for example:
 
    ```
-   lake build --from C:\Users\asinh09\drishti-private\endur\2026-10-15.jsonl --as-of 2026-10-15 --pack config/packs/trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates
+   lake build --from C:\Users\asinh09\drishti-private\endur\2026-10-15.jsonl --as-of 2026-10-15 --pack config/packs/trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates --lake data\delta
    ```
 
    → **OK** → ▶ (Run).
@@ -163,13 +163,14 @@ the world economy data.
    PowerShell instead (from the project folder, same line with the script in front):
 
    ```powershell
-   drishti-console\.venv\Scripts\python.exe tools\drishti.py lake build --from C:\Users\asinh09\drishti-private\endur\2026-10-15.jsonl --as-of 2026-10-15 --pack config/packs/trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates
+   drishti-console\.venv\Scripts\python.exe tools\drishti.py lake build --from C:\Users\asinh09\drishti-private\endur\2026-10-15.jsonl --as-of 2026-10-15 --pack config/packs/trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates --lake data\delta
    ```
 
    What the options mean: `--from` your file; `--as-of` its business date; `--pack` the trading pack, whose schema
    checks each trade; `--connector trade-endur` the table it feeds (`data\delta\trading\trade_endur`); `--key TRADE_ID`
    the id field; `--partition-by PRODUCT_TYPE` one folder per product type; `--mode overwrite-dates` replaces that
-   date if it was loaded before.
+   date if it was loaded before; `--lake data\delta` the lake folder the server reads (the project's `data\delta`; the
+   table lands in `data\delta\trading\trade_endur`). Run it from the project folder: `data\delta` is relative to it.
 3. Repeat step 2 for **each** of your files (each with its own path and date).
 
 You should see, for each file, a last line like:
@@ -264,6 +265,7 @@ trades.
 | PyCharm says the interpreter is invalid | Redo step 2.2 point 2. |
 | `Port 18480 (or 17480) is already in use` | Another copy is running: stop it in IntelliJ / PyCharm (red square), or reboot. |
 | `lake build` says `no id (field 'id' is missing…)` | The parameters lack `--key TRADE_ID`: copy the line of step 3.2 again. |
+| `lake build` says `give --lake DIR (the Delta root the connector reads)` | The parameters lack `--lake data\delta`: copy the line of step 3.2 again (it ends with `--lake data\delta`), and run it from the project folder. |
 | PowerShell says `lake` is not recognized | `lake …` is not a command of its own: run it as `drishti-console\.venv\Scripts\python.exe tools\drishti.py lake …` from the project folder, or use the PyCharm configuration (step 2.2, *What these configurations run*). |
 | The run configurations are not in the drop-down | The project was opened at `drishti-console` instead of the project folder: **File → Open** `drishti-orig` itself (step 2.2 point 1). |
 | ENDUR pages still show synthetic trades | Step 3.2 point 1 was skipped: stop the server, delete `data\delta\trading\trade_endur`, load your files again, start the server. |
