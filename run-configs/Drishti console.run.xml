@@ -26,7 +26,7 @@
       <env name="DRISHTI_SESSION_SECRET" value="drishti-dev-only-session-secret-change-me-0123456789" />
       <env name="DRISHTI_SECURE_COOKIE" value="false" />
     </envs>
-    <option name="SDK_HOME" value="$PROJECT_DIR$/drishti-console/.venv/bin/python" />
+    <option name="SDK_HOME" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />

@@ -2727,8 +2727,9 @@ The format is one `<configuration>` element in a `ProjectRunConfigurationManager
   <configuration default="false" name="drishti pack make" type="PythonConfigurationType" factoryName="Python">
     <module name="drishti" />
     <envs><env name="PYTHONUNBUFFERED" value="1" /></envs>
+    <option name="SDK_HOME" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-    <option name="IS_MODULE_SDK" value="true" />
+    <option name="IS_MODULE_SDK" value="false" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/drishti.py" />
     <option name="PARAMETERS" value="pack make data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank --force" />
     <method v="2" />
@@ -2736,9 +2737,9 @@ The format is one `<configuration>` element in a `ProjectRunConfigurationManager
 </component>
 ```
 
-(the real files list every option PyCharm writes). `$PROJECT_DIR$` is the repository root on every machine; `IS_MODULE_SDK` makes
-the configuration use the project's interpreter, so nobody's local path is in the file; the `module` name is the project
-folder name (`drishti`; PyCharm asks you to pick one if yours differs). Put only what is shared in them: no tokens, no home-directory
+(the real files list every option PyCharm writes). `$PROJECT_DIR$` is the repository root on every machine; an empty `SDK_HOME` with `IS_MODULE_SDK`
+false is PyCharm's *Project Default* interpreter, so nobody's local path is in the file and the same file works on Windows
+(`tools/test_run_configs.py` guards it); the `module` name does not decide the interpreter, so a clone in a folder of another name works too. Put only what is shared in them: no tokens, no home-directory
 paths. Edit **Parameters** for your own input folder, or duplicate the configuration for each data set.
 
 ### 14.5 The Java `sutra` tool from IntelliJ IDEA

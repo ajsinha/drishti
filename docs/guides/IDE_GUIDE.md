@@ -167,8 +167,10 @@ PyCharm reads the same `run-configs/` folder of the repository root when you ope
 | **Drishti console** | `--server.port=17480 --backend.url=http://127.0.0.1:18480`, environment `DRISHTI_AUTH_ENABLED=true`, `DRISHTI_TOKEN_SECRET` and `DRISHTI_SESSION_SECRET` (the development values, matching the server's), `DRISHTI_SECURE_COOKIE=false` (plain http on your machine) | the default server |
 | **Drishti console (QA profile)** | `--server.port=17580 --backend.url=http://127.0.0.1:18580`, environment `DRISHTI_LAKE_ROOTS=$PROJECT_DIR$/data/qa/delta` (Admin -> Data loads -> Lakes may write there) and the same sign-in settings | the QA server |
 
-Both run `drishti-console/run_drishti_web.py` from the repository root with the interpreter `drishti-console/.venv/bin/python`
-(the path is stored relative to the project; if PyCharm shows the interpreter as invalid, pick it once as in section 4.2).
+Both run `drishti-console/run_drishti_web.py` from the repository root with the **project interpreter** (*Project Default*). Every
+committed Python run configuration stores no interpreter path (`SDK_HOME` empty, `IS_MODULE_SDK` false; `tools/test_run_configs.py`
+guards it), so once the project interpreter is `drishti-console/.venv` (section 4.2) they all work as they are, on Linux, macOS and
+Windows (`drishti-console\.venv\Scripts\python.exe`); nothing to edit.
 The console reads `drishti-console/config/application.yaml`, then `drishti-console/config/application.local.yaml` if it exists, then
 `DRISHTI_CONSOLE__...` environment variables, then `--key=value` parameters; later wins ([GETTING_STARTED.md](GETTING_STARTED.md)).
 
