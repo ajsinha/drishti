@@ -178,7 +178,7 @@ def inspector(c: Ctx):
 @shot("metric-suggest.jpg")
 def suggest(c: Ctx):
     c.example("metric")
-    f = c.page.locator(".wb-field-row", has_text="var99Yesterday").first
+    f = c.page.locator(".wb-field-row", has_text="VAR99_YESTERDAY").first
     f.scroll_into_view_if_needed()
     s = c.box(f)
     t = c.box(c.panel("books"))

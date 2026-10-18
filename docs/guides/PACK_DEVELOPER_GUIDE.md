@@ -1471,7 +1471,7 @@ data came from and why the layout is what it is: those come from the engine. Wha
 kind is and what its figures mean. That is the pack's `config/about.yaml`, found beside `formats.yaml`,
 `semantics.yaml` and `help.yaml`. The file is optional: without it the drawer still works.
 
-![The drawer on a gene variant, with the genomics pack's text](img/about/04-genomics-variant.jpg)
+![The drawer on an economy, with the world-economy pack's text](img/about/04-economy.jpg)
 
 ### The file
 
