@@ -59,7 +59,7 @@ class YFinanceProxyTest {
     }
 
     private static void read(YFinanceSourcePlugin p, String id) throws Exception {
-        assertThat(p.fetch(EntityRef.of("quote", id)).orElseThrow().data().get("price").asDouble()).isEqualTo(191.5);
+        assertThat(p.fetch(EntityRef.of("quote", id)).orElseThrow().data().get("PRICE").asDouble()).isEqualTo(191.5);
     }
 
     @Test
