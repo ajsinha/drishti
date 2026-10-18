@@ -33,7 +33,7 @@ public class DrishtiApplication {
 
     /**
      * Makes the per-process temp folder before anything else loads: {@code --drishti.tmp-dir=}, the {@code drishti.tmp-dir} property or {@code DRISHTI_TMP_DIR}
-     * name the base (default {@code <data dir>/tmp}, the data folder from {@code --drishti.data.dir=}, {@code DRISHTI_DATA_DIR} or {@code ./data});
+     * name the base (default {@code <data dir>/tmp/server}, the data folder from {@code --drishti.data.dir=}, {@code DRISHTI_DATA_DIR} or {@code ./data});
      * {@code java.io.tmpdir} then points into it so DuckDB, sqlite and the compression libraries unpack there.
      */
     static void startTempFolder(String[] args) {
@@ -47,7 +47,7 @@ public class DrishtiApplication {
             }
         }
         if (base == null && data != null && !data.isBlank() && System.getProperty("drishti.tmp-dir") == null && System.getenv("DRISHTI_TMP_DIR") == null) {
-            base = java.nio.file.Path.of(data, "tmp").toString();
+            base = java.nio.file.Path.of(data, "tmp", "server").toString();
         }
         com.ash.drishti.common.TempFiles.start(base);
     }

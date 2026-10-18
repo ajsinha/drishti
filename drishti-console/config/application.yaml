@@ -18,7 +18,8 @@
 server:
   host: ${DRISHTI_CONSOLE_HOST:0.0.0.0}      # every interface, so other machines (and phones) can open it; 127.0.0.1 = this machine only
   port: ${DRISHTI_CONSOLE_PORT:17480}
-tmp_dir: ${DRISHTI_CONSOLE_TMP_DIR:}      # base of the console's temp folder drishti-console-<pid> (blank: DRISHTI_TMP_DIR, then the system temp folder); removed on exit; left-over ones are listed on Health, never deleted automatically
+  workers: ${DRISHTI_CONSOLE_WORKERS:4}      # processes serving pages (one Python process uses one core: ~40 pages/s measured); 1 = one process
+tmp_dir: ${DRISHTI_CONSOLE_TMP_DIR:}      # base of the console's temp folder drishti-console-<pid> (blank: DRISHTI_TMP_DIR, then <data dir>/tmp/console when started by run_drishti_web.py); removed on exit; left-over ones are listed on Health, never deleted automatically
 external_lib: ${DRISHTI_EXTERNAL_LIB:}   # base of the external library folder (blank: external_lib in the repository root); <base>/python is importable, <base>/java is the server's
 backend:
   url: ${DRISHTI_BACKEND_URL:http://127.0.0.1:18480}
