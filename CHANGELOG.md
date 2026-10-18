@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+## 2.3.0 — BI with filter context, time and live push; production-shaped trades from three source systems; a demo from a fresh clone (2026-10-17)
+
 - **Ids are text; numeric ids in files are read as text.** The generators write `TRADE_ID` (ENDUR digits included), `LEG_ID`, `FLOW_ID`, `RESET_ID` and `EVENT_ID` as strings (data/testdata and the trading and market-risk samples regenerated, same digits). `lake build` reads a numeric id as its exact digits (`1000008`, never `1000008.0`) in the id column, the document and an id/key column it promotes (always STRING now; before, an all-number `TRADE_ID` became a DOUBLE column); `lake demo --with-real` turns a real extract's numeric ids into text; the Delta connector reads an older table's numeric id column (DOUBLE, LONG, INT, DECIMAL) as id text. No id prefix or shape is assumed.
 - **The news-and-markets and world-economy packs work with no internet.** A real market snapshot is committed:
   `data/testdata/news-and-markets/quote/` (the twenty companies' quotes, a year of daily bars) and `news/` (the companies' and the
@@ -36,7 +38,6 @@
 
 - **Shared blocks in the Build designer (step 1).** A Sutra written with shared blocks (`{ use: legs@1, with: {...} }`, the 130 trading Sutras) opens drawn: the preview is the server's own expansion, the canvas no longer says "Add your first panel", and the YAML check knows `use:`/`with:` (the schema's `$defs.use`) and every panel's `when:` (no false problems; a real `DRS-2048` says how to fix it). A Design of a pack Sutra with no sample gets the first record of the pack's `samples/<kind>.jsonl` its match holds for (`POST /builder/designs/{id}/samples {pack: true}`; Samples says "Sample picked from the pack: MX-…; add your own"). The "How this view was built" link carries the page's record (`&kind=&id=`) like About's. Design operations count a use as one written item (adding, moving, removing a written panel lands at its own place; a block's panel is refused with a pointer to the block), new `setBlock` operation sets a use's `with:` or removes it; `GET /builder/designs/{id}/blocks` lists the uses with the panels they bring, `GET /rachana/blocks[/{name}/{version}]` reads blocks. Canvas block groups, Open block and the inspector follow in step 2.
 
-## 2.3.0 — BI with filter context, time and live push; production-shaped trades from three source systems; a demo from a fresh clone (2026-10-17)
 
 - **Lake maintenance in Admin → Lakes.** Tick tables, **Dry run** (files and size before → after, dates retention drops, files vacuum
   removes) or **Maintain now** in the background with progress and cancel; settings per table and schedules (day-and-time picker or cron

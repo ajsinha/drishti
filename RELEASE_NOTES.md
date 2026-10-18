@@ -43,6 +43,21 @@ demo you can run from a fresh clone in minutes.** (Wave B of [BI_DESIGN.md](docs
 - **Docs verified for this release:** [docs/qa/2.3.0-docs-verification.md](docs/qa/2.3.0-docs-verification.md) lists
   every guide, tutorial and help page with what was checked and how to re-check it.
 
+- **Offline demos:** `DRISHTI_OFFLINE=true` (set by the *Drishti server (demo lakes)* run configuration) starts no
+  internet connector; quotes and news come from a committed snapshot (Yahoo Finance and Google News, captured
+  2026-10-18) that `lake demo` builds into the lake. World economy data was already offline.
+- **Ids are text everywhere:** a numeric `TRADE_ID` in a file is read as its exact text; ids may hold letters, dashes and
+  underscores; nothing expects a prefix. Older lakes with numeric id columns still read.
+- **[How to QA in Windows Environment using Custom Data](docs/guides/QA_ON_WINDOWS_WITH_CUSTOM_DATA.md):** an offline
+  Windows demo with your own ENDUR files replacing the synthetic ENDUR trades, with screenshots; a *Load ENDUR file into
+  the lake* run configuration; every Python run configuration uses the project interpreter (works on Windows).
+- **Security fix:** field masks match whatever the case or naming style (a camelCase mask masks the UPPER_SNAKE field);
+  a mask that matches nothing is reported (DRS-6011).
+
+**Known test drift in this release:** the Java build and every Java, tool and documentation test pass. Part of the
+console's browser suite still uses the pre-2.3 field names and ids in its own fixtures (BI report fixtures, embed
+examples); those tests, not the product, are being updated in 2.3.1.
+
 Upgrading from 2.2.0: trades and other kinds use UPPER_SNAKE attribute names; Sutras, BI items and forms written against
 the old camelCase names need the new names (the shipped packs and examples are converted). See [CHANGELOG.md](CHANGELOG.md).
 
