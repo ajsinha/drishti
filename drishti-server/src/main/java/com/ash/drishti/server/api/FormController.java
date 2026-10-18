@@ -196,14 +196,7 @@ public class FormController {
         TreeSet<String> found = new TreeSet<>();
         about.forKind(kind).map(a -> a.glossary().get(f.path())).map(GlossaryEntry::values).ifPresent(v -> found.addAll(v.keySet()));
         if (found.isEmpty() && !entitlements.masked(principal, f.path())) {   // the whole column, every connector of a union
-            columnValues(kind, List.of(f.path()), asOf).ifPresent(c -> {
-                for (int i = 0; i < c.size(); i++) {
-                    Object v = c.value(f.path(), i);
-                    if (v != null && !String.valueOf(v).isBlank()) {
-                        found.add(String.valueOf(v));
-                    }
-                }
-            });
+            found.addAll(distinctOf(kind, f.path(), asOf));
         }
         if (found.isEmpty()) {                                        // a source that is not columnar: the sampled rows
             samples.getOrDefault(f.path(), List.of()).stream().filter(v -> v != null && !String.valueOf(v).isBlank()).forEach(v -> found.add(String.valueOf(v)));
@@ -227,6 +220,26 @@ public class FormController {
      * product types chosen. Empty when the data cannot be read: then every value is offered.
      */
     private Map<String, List<String>> parents(FormField f, String kind, AsOf asOf, Principal principal) {
+        boolean open = !entitlements.masked(principal, f.path()) && !entitlements.masked(principal, f.depends());
+        String version = open ? router.dataVersion(kind, asOf).orElse(null) : null;   // cached per data version for fields the caller sees
+        String key = kind + "|" + f.path() + "<" + f.depends() + "|" + (asOf.live() ? "live" : asOf.businessDate() + "@" + asOf.knownAt()) + "|" + version;
+        if (version != null) {
+            Map<String, List<String>> cached = parentValues.getIfPresent(key);
+            if (cached != null) {
+                return cached;
+            }
+        }
+        Map<String, List<String>> computed = computeParents(f, kind, asOf, principal);
+        if (version != null && !computed.isEmpty()) {
+            parentValues.put(key, computed);
+        }
+        return computed;
+    }
+
+    private final com.github.benmanes.caffeine.cache.Cache<String, Map<String, List<String>>> parentValues = com.github.benmanes.caffeine.cache.Caffeine
+            .newBuilder().maximumSize(2_000).expireAfterAccess(java.time.Duration.ofHours(12)).build();
+
+    private Map<String, List<String>> computeParents(FormField f, String kind, AsOf asOf, Principal principal) {
         Map<String, java.util.TreeSet<String>> by = new java.util.TreeMap<>();
         if (!entitlements.masked(principal, f.path()) && !entitlements.masked(principal, f.depends())) {
             columnValues(kind, List.of(f.path(), f.depends()), asOf).ifPresent(c -> {
@@ -261,6 +274,37 @@ public class FormController {
     }
 
     /** Columns of the kind as the sources hold them (all the rows, every connector of a union); empty when a source is not columnar. */
+    /**
+     * The distinct values of a column of the kind on the date, every connector of a union: read once per data version (a load makes
+     * a new one), not on every form request (a 1.16 million row column took 1.2 s each time). Only for fields the caller may see.
+     */
+    private List<String> distinctOf(String kind, String path, AsOf asOf) {
+        String version = router.dataVersion(kind, asOf).orElse(null);
+        String key = kind + "|" + path + "|" + (asOf.live() ? "live" : asOf.businessDate() + "@" + asOf.knownAt()) + "|" + version;
+        List<String> cached = version == null ? null : distinctValues.getIfPresent(key);
+        if (cached != null) {
+            return cached;
+        }
+        TreeSet<String> found = new TreeSet<>();
+        columnValues(kind, List.of(path), asOf).ifPresent(c -> {
+            for (int i = 0; i < c.size(); i++) {
+                Object v = c.value(path, i);
+                if (v != null && !String.valueOf(v).isBlank()) {
+                    found.add(String.valueOf(v));
+                }
+            }
+        });
+        List<String> out = List.copyOf(found);
+        if (version != null && !out.isEmpty()) {
+            distinctValues.put(key, out);
+        }
+        return out;
+    }
+
+    /** Distinct column values by kind, path, date and data version: see {@link #distinctOf}. */
+    private final com.github.benmanes.caffeine.cache.Cache<String, List<String>> distinctValues = com.github.benmanes.caffeine.cache.Caffeine.newBuilder()
+            .maximumWeight(2_000_000).weigher((String k, List<String> v) -> 1 + v.size()).expireAfterAccess(java.time.Duration.ofHours(12)).build();
+
     private Optional<com.ash.drishti.api.ColumnSet> columnValues(String kind, List<String> paths, AsOf asOf) {
         try {
             return router.columns(kind, paths, asOf, java.time.Duration.ofSeconds(10));
