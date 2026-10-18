@@ -141,13 +141,19 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         zone = java.time.ZoneId.of(context.setting("zone", "America/New_York"));
         retireAfter = org.springframework.boot.convert.DurationStyle.detectAndParse(context.setting("retire-after", "60s"));
         if (onDisk) {
-            // the pages' only folder: <data dir>/derived/<connector>; what a previous run left there is removed
+            // the pages' only folder: <data dir>/derived/<connector>; a previous run's pages are served again when still valid, the rest removed
             storeRoot = java.nio.file.Path.of(context.setting("store-dir", com.ash.drishti.api.DataDir.under("derived/" + sourceName))).toAbsolutePath();
             try {
-                com.ash.drishti.diskcache.SortedStore.deleteFolder(storeRoot);
                 java.nio.file.Files.createDirectories(storeRoot);
-            } catch (java.io.IOException e) {
-                throw new IllegalStateException("derived pages " + sourceName + ": cannot use " + storeRoot + ": " + e.getMessage(), e);
+                restore();
+            } catch (java.io.IOException | RuntimeException e) {
+                LOG.warn("derived pages {}: the pages of the previous run are not used ({}): built again", sourceName, e.toString());
+                try {
+                    com.ash.drishti.diskcache.SortedStore.deleteFolder(storeRoot);
+                    java.nio.file.Files.createDirectories(storeRoot);
+                } catch (java.io.IOException again) {
+                    throw new IllegalStateException("derived pages " + sourceName + ": cannot use " + storeRoot + ": " + again.getMessage(), again);
+                }
             }
         }
         // the first computation after start, so the first reader of a large book finds it ready
@@ -258,6 +264,18 @@ public final class DerivedSourcePlugin implements SourcePlugin {
     @Override
     public String health() {
         return health;
+    }
+
+    /** Closes the pages on disk keeping their folders: the next start serves them again when they are still current. */
+    @Override
+    public void close() {
+        synchronized (cache) {   // pinning-ok: join() is only called on futures that are already done
+            for (CompletableFuture<Snapshot> f : cache.values()) {
+                if (f.isDone() && !f.isCompletedExceptionally() && f.join().pages() instanceof DiskPages d) {
+                    d.closeKeepingFiles();
+                }
+            }
+        }
     }
 
     /**
@@ -497,6 +515,95 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         return new Snapshot(new HeapPages(byKind), scanned, asOf.live() ? null : dataDate, generation.incrementAndGet(), Instant.now(), version);
     }
 
+    /** A group's totals once built: its member count and field values (what the page shows). */
+    record Frozen(long count, Map<String, Object> values) {}
+
+    /** What a folder of pages on disk was built from: the cache key (date), the data version, and the row signatures' names. */
+    record Manifest(String key, String version, String dataDate, Map<String, Integer> scanned, Map<String, String> rowKeys) {}
+
+    private static final String MANIFEST = "pages.json";
+    private static final com.fasterxml.jackson.databind.ObjectMapper JSON = new com.fasterxml.jackson.databind.ObjectMapper();
+
+    private static String cacheKey(AsOf asOf) {
+        return asOf.live() ? "live" : asOf.businessDate() + "@" + asOf.knownAt();
+    }
+
+    /** The row signatures' short names, as a build names them (kinds in their order). */
+    private Map<String, String> rowKeys() {
+        Map<String, String> out = new HashMap<>();
+        kinds.forEach(k -> out.computeIfAbsent(k.signature(), x -> "s" + out.size()));
+        return out;
+    }
+
+    /**
+     * At start (store: disk): the newest pages of each date a previous run left are served again at once, when they were built by
+     * the same definitions; whether their data is still current is then asked as for any computation (a new version rebuilds, the
+     * old pages serving meanwhile). Every other folder goes. Without this, grouped pages time out until the first build ends.
+     */
+    private void restore() throws java.io.IOException {
+        Map<String, java.nio.file.Path> newest = new HashMap<>();
+        Map<String, Manifest> manifests = new HashMap<>();
+        Map<String, String> want = rowKeys();
+        try (var dirs = java.nio.file.Files.list(storeRoot)) {
+            for (java.nio.file.Path d : dirs.filter(java.nio.file.Files::isDirectory).sorted().toList()) {
+                java.nio.file.Path m = d.resolve(MANIFEST);
+                if (!java.nio.file.Files.isRegularFile(m)) {
+                    continue;
+                }
+                try {
+                    Manifest man = JSON.readValue(m.toFile(), Manifest.class);
+                    if (!want.equals(man.rowKeys())) {
+                        continue;                                 // built by other definitions: built again
+                    }
+                    java.nio.file.Path had = newest.get(man.key());
+                    if (had == null || java.nio.file.Files.getLastModifiedTime(m).compareTo(java.nio.file.Files.getLastModifiedTime(had.resolve(MANIFEST))) > 0) {
+                        newest.put(man.key(), d);
+                        manifests.put(man.key(), man);
+                    }
+                } catch (java.io.IOException | RuntimeException e) {
+                    // unreadable: removed below
+                }
+            }
+        }
+        java.util.Set<java.nio.file.Path> keep = new java.util.HashSet<>(newest.values());
+        Map<String, DerivedKind> byName = new HashMap<>();
+        kinds.forEach(k -> byName.put(k.kind(), k));
+        for (Map.Entry<String, java.nio.file.Path> e : newest.entrySet()) {
+            com.ash.drishti.diskcache.SortedStore store = com.ash.drishti.diskcache.SortedStore.open(e.getValue());
+            if (store == null) {
+                keep.remove(e.getValue());
+                continue;
+            }
+            Map<String, Map<String, Frozen>> frozen = new HashMap<>();
+            kinds.forEach(k -> frozen.put(k.kind(), new HashMap<>()));
+            store.scan("t" + SEP, (key, value) -> {
+                String[] parts = key.split(String.valueOf(SEP), 3);
+                try {
+                    Frozen f = JSON.readValue(value, Frozen.class);
+                    Map<String, Object> v = new LinkedHashMap<>();
+                    f.values().forEach((name, x) -> v.put(name, x instanceof Integer i ? Long.valueOf(i) : x));   // as built: whole numbers are long
+                    frozen.computeIfAbsent(parts[1], x -> new HashMap<>()).put(parts[2], new Frozen(f.count(), v));
+                } catch (java.io.IOException ex) {
+                    throw new java.io.UncheckedIOException(ex);
+                }
+                return true;
+            });
+            Manifest man = manifests.get(e.getKey());
+            Snapshot s = new Snapshot(new DiskPages(store, byName, frozen, man.rowKeys()), man.scanned(), man.dataDate() == null ? null : LocalDate.parse(man.dataDate()), generation.incrementAndGet(),
+                    Instant.now(), man.version());
+            synchronized (cache) {
+                cache.put(e.getKey(), CompletableFuture.completedFuture(s));
+            }
+            LOG.info("derived pages {} ({}): {} pages kept from the previous run (data version checked as usual)", sourceName,
+                    e.getKey(), frozen.values().stream().mapToInt(Map::size).sum());
+        }
+        try (var dirs = java.nio.file.Files.list(storeRoot)) {
+            for (java.nio.file.Path d : dirs.filter(d -> !keep.contains(d)).toList()) {
+                com.ash.drishti.diskcache.SortedStore.deleteFolder(d);
+            }
+        }
+    }
+
     private static final byte[] NOTHING = new byte[0];
     private static final char SEP = '\u0001';
 
@@ -527,6 +634,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         });
         Map<String, Integer> scanned = new HashMap<>();
         LocalDate[] dataDate = {null};
+        Map<String, Map<String, Frozen>> frozen;
         try {
             for (Map.Entry<String, List<DerivedKind>> e : kinds.stream().collect(Collectors.groupingBy(DerivedKind::from, java.util.LinkedHashMap::new,
                     Collectors.toList())).entrySet()) {
@@ -566,21 +674,36 @@ public final class DerivedSourcePlugin implements SourcePlugin {
                 }
                 ks.forEach(k -> scanned.put(k.kind(), (int) Math.min(Integer.MAX_VALUE, n[0])));
             }
+            // the totals, frozen (the heap keeps these, not the accumulators) and saved with the pages, so a restart serves them at once
+            frozen = new HashMap<>();
+            for (Map.Entry<String, Map<String, DerivedKind.Totals>> t : totals.entrySet()) {
+                Map<String, Frozen> groups = new HashMap<>();
+                for (Map.Entry<String, DerivedKind.Totals> g : t.getValue().entrySet()) {
+                    Frozen f = new Frozen(g.getValue().count, g.getValue().values());
+                    groups.put(g.getKey(), f);
+                    store.put("t" + SEP + t.getKey() + SEP + g.getKey(), JSON.writeValueAsBytes(f));
+                }
+                frozen.put(t.getKey(), groups);
+            }
             store.finish();
+            JSON.writeValue(dir.resolve(MANIFEST).toFile(), new Manifest(cacheKey(asOf), version, asOf.live() || dataDate[0] == null ? null : dataDate[0].toString(), scanned, rowKeys));
         } catch (IllegalStateException e) {
             store.close();
             LOG.debug("derived pages {}: a source cannot be read in one pass ({}); building in the heap", sourceName, e.getMessage());
             return null;
+        } catch (java.io.IOException e) {
+            store.close();
+            throw new java.io.UncheckedIOException(e);
         } catch (RuntimeException | Error e) {
             store.close();
             throw e;
         }
         health = "UP";
         say(announce, "derived pages {} ({}) built in {} s on disk ({} MB): {}", sourceName, date, String.format("%.1f", (System.nanoTime() - started) / 1e9),
-                store.sizeOnDisk() / (1024 * 1024), totals.entrySet().stream()
+                store.sizeOnDisk() / (1024 * 1024), frozen.entrySet().stream()
                         .map(t -> t.getKey() + " " + t.getValue().size() + " pages from " + String.format("%,d", scanned.getOrDefault(t.getKey(), 0)))
                         .sorted().collect(Collectors.joining(", ")));
-        return new Snapshot(new DiskPages(store, byName, totals, rowKeys), scanned, asOf.live() ? null : dataDate[0], generation.incrementAndGet(),
+        return new Snapshot(new DiskPages(store, byName, frozen, rowKeys), scanned, asOf.live() ? null : dataDate[0], generation.incrementAndGet(),
                 Instant.now(), version);
     }
 
@@ -591,12 +714,12 @@ public final class DerivedSourcePlugin implements SourcePlugin {
     static final class DiskPages implements Pages {
         private final com.ash.drishti.diskcache.SortedStore store;
         private final Map<String, DerivedKind> kinds;
-        private final Map<String, Map<String, DerivedKind.Totals>> totals;
+        private final Map<String, Map<String, Frozen>> totals;
         private final Map<String, String> rowKeys;
         private final com.github.benmanes.caffeine.cache.Cache<String, DataNode> recent =
                 com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(32).build();   // a page asked for again by the same view
 
-        DiskPages(com.ash.drishti.diskcache.SortedStore store, Map<String, DerivedKind> kinds, Map<String, Map<String, DerivedKind.Totals>> totals,
+        DiskPages(com.ash.drishti.diskcache.SortedStore store, Map<String, DerivedKind> kinds, Map<String, Map<String, Frozen>> totals,
                 Map<String, String> rowKeys) {
             this.store = store;
             this.kinds = kinds;
@@ -607,7 +730,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         @Override
         public DataNode page(String kind, String id) {
             DerivedKind k = kinds.get(kind);
-            DerivedKind.Totals t = totals.getOrDefault(kind, Map.of()).get(id);
+            Frozen t = totals.getOrDefault(kind, Map.of()).get(id);
             if (k == null || t == null) {
                 return null;
             }
@@ -619,7 +742,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
                     return listed.size() < k.maxMembers();
                 });
                 String sig = rowKeys.get(k.signature());
-                return k.buildStored(id, t, listed, member -> store.get("r" + SEP + sig + SEP + member));
+                return k.buildStored(id, t.count(), t.values(), listed, member -> store.get("r" + SEP + sig + SEP + member));
             });
         }
 
@@ -630,6 +753,10 @@ public final class DerivedSourcePlugin implements SourcePlugin {
 
         long sizeOnDisk() {
             return store.sizeOnDisk();
+        }
+
+        void closeKeepingFiles() {
+            store.closeKeepingFiles();
         }
 
         @Override

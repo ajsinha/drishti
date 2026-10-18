@@ -84,6 +84,21 @@ public final class SortedStore implements AutoCloseable {
         }
     }
 
+    /** A store written earlier (kept across a restart), or null when {@code dir} holds none that opens. */
+    public static SortedStore open(Path dir) {
+        if (!Files.isDirectory(dir)) {
+            return null;
+        }
+        Options o = new Options().setCreateIfMissing(false).setCompressionType(CompressionType.LZ4_COMPRESSION)
+                .setCompactionStyle(CompactionStyle.LEVEL).setLevelCompactionDynamicLevelBytes(true);
+        try {
+            return new SortedStore(dir, o, RocksDB.open(o, dir.toString()));
+        } catch (RocksDBException e) {
+            o.close();
+            return null;
+        }
+    }
+
     /** Adds one entry (batched: visible to readers after {@link #finish}). */
     public void put(String key, byte[] value) {
         try {
@@ -96,10 +111,13 @@ public final class SortedStore implements AutoCloseable {
         }
     }
 
-    /** Writes what is batched; the store is then ready to read. */
+    /** Writes what is batched and flushes it to files (there is no write-ahead log): the store is ready to read and outlives a restart. */
     public void finish() {
         try {
             flushBatch();
+            try (org.rocksdb.FlushOptions f = new org.rocksdb.FlushOptions().setWaitForFlush(true)) {
+                db.flush(f);
+            }
         } catch (RocksDBException e) {
             throw new UncheckedIOException(new IOException("sorted store " + dir + ": " + e.getMessage(), e));
         }
@@ -201,6 +219,14 @@ public final class SortedStore implements AutoCloseable {
         }
     }
 
+    /** Closes the store and keeps its folder (a server stopping: the next start may serve it again). */
+    public void closeKeepingFiles() {
+        keep = true;
+        close();
+    }
+
+    private volatile boolean keep;
+
     /** Closes the store and deletes its folder, now or when the last running read finishes. */
     @Override
     public void close() {
@@ -219,6 +245,9 @@ public final class SortedStore implements AutoCloseable {
         write.close();
         db.close();
         options.close();
+        if (keep) {
+            return;
+        }
         try {
             deleteFolder(dir);
         } catch (IOException e) {

@@ -84,15 +84,50 @@ final class DeltaTable {
     }
 
     /** One business date's ids, sorted, each with the index of the file that holds it (in the date's file list). */
-    record IdMap(String[] ids, int[] files) {
-        int file(String id) {
-            int i = java.util.Arrays.binarySearch(ids, id);
+    /** A date's ids, sorted, and the file each is in: in the heap ({@link HeapIdMap}) or memory-mapped from a file ({@link MappedIdMap}). */
+    interface IdMap {
+        int size();
+
+        /** The i-th id in order. */
+        String id(int i);
+
+        /** The file index of {@code id}, or -1. */
+        int file(String id);
+
+        /** What it holds in the heap (for the cache's budget). */
+        long bytes();
+
+        /** Every id in order (built for the type-ahead; a mapped map makes the array on each call). */
+        default String[] ids() {
+            String[] out = new String[size()];
+            for (int i = 0; i < out.length; i++) {
+                out[i] = id(i);
+            }
+            return out;
+        }
+    }
+
+    record HeapIdMap(String[] idsInOrder, int[] files) implements IdMap {
+        public int size() {
+            return idsInOrder.length;
+        }
+
+        public String id(int i) {
+            return idsInOrder[i];
+        }
+
+        public int file(String id) {
+            int i = java.util.Arrays.binarySearch(idsInOrder, id);
             return i < 0 ? -1 : files[i];
         }
 
-        long bytes() {
+        public String[] ids() {
+            return idsInOrder;
+        }
+
+        public long bytes() {
             long b = 64L + 4L * files.length;
-            for (String s : ids) {
+            for (String s : idsInOrder) {
                 b += 48L + 2L * s.length();
             }
             return b;
@@ -211,7 +246,7 @@ final class DeltaTable {
             sortedIds[i] = ids.get(order[i]);
             sortedFiles[i] = fileOf.get(order[i]);
         }
-        return new IdMap(sortedIds, sortedFiles);
+        return new HeapIdMap(sortedIds, sortedFiles);
     }
 
     /**

@@ -380,13 +380,13 @@ public final class DerivedKind {
      * The group's page from its totals and its listed members' ids and rows (read from the disk, ids in order): the same
      * document {@link #build} makes.
      */
-    DataNode buildStored(String key, Totals t, List<String> listed, java.util.function.Function<String, byte[]> row) {
+    DataNode buildStored(String key, long count, Map<String, Object> totals, List<String> listed, java.util.function.Function<String, byte[]> row) {
         Map<String, Object> doc = new LinkedHashMap<>();
         doc.put("id", key);
         doc.put(idField, key);
         doc.put("derivedFrom", from);
-        doc.putAll(t.values());
-        doc.put("memberCount", t.count);
+        doc.putAll(totals);
+        doc.put("memberCount", count);
         doc.put(membersField, listed);
         if (!rowColumns.isEmpty()) {
             List<Map<String, Object>> rows = new ArrayList<>(listed.size());

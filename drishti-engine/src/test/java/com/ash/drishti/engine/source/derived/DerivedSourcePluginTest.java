@@ -278,6 +278,22 @@ class DerivedSourcePluginTest {
     }
 
     @Test
+    void pagesOnDiskAreServedAgainAfterARestartWithoutReadingTheSource(@org.junit.jupiter.api.io.TempDir java.nio.file.Path tmp) throws Exception {
+        Map<String, String> s = settings();
+        s.put("store", "disk");
+        s.put("store-dir", tmp.resolve("pages").toString());
+        Stream first = new Stream();
+        DerivedSourcePlugin running = started(s, first);
+        DataNode before = running.fetch(EntityRef.of("book-pnl", "RATES-1")).orElseThrow().data();
+        running.close();                                                               // the server stops: the folder stays
+        Stream again = new Stream();                                                   // a restart: a new plugin, the same folder
+        DerivedSourcePlugin restarted = started(s, again);
+        assertThat(restarted.fetch(EntityRef.of("book-pnl", "RATES-1")).orElseThrow().data().unwrap()).isEqualTo(before.unwrap());
+        assertThat(again.passes.get()).isZero();                                      // served from disk: no pass over the source
+        assertThat(restarted.search("book-pnl", "", 10)).hasSize(1);
+    }
+
+    @Test
     void aNewDataVersionRebuildsAndAnUnchangedOneNeverDoes() throws Exception {
         Stream trades = new Stream();
         Map<String, String> s = settings();

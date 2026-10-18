@@ -116,6 +116,14 @@ plugins:
       - { name: max-concurrent-reads, type: int, desc: "Concurrent reads", group: tuning }
       - { name: cache-mb, type: int, default: "256", desc: "Cache size", group: tuning }
       - { name: doc-cache-mb, type: int, desc: "Document cache size", group: tuning }
+      - { name: doc-disk-cache.enabled, type: bool, default: "true", desc: "Documents already read also kept on disk (RocksDB, one per connector): answered without decompressing Parquet pages, also after a restart", group: tuning }
+      - { name: doc-disk-cache.dir, type: path, default: "<data dir>/cache/<connector>/docs", desc: "Its folder", group: tuning }
+      - { name: doc-disk-cache.max-gb, type: number, default: "1", desc: "Its size cap; the oldest files go first", group: tuning }
+      - { name: doc-disk-cache.ttl, type: duration, default: "12h", desc: "Entries written longer ago go (compacted hourly)", group: tuning }
+      - { name: doc-disk-cache.reset-at, default: "02:00", desc: "Daily clearing time", group: tuning }
+      - { name: doc-disk-cache.zone, default: "America/New_York", desc: "Zone of the daily clearing", group: tuning }
+      - { name: id-map-disk.enabled, type: bool, default: "true", desc: "Each table date id map written once per table version and memory-mapped: no heap per id, kept across restarts", group: tuning }
+      - { name: id-map-disk.dir, type: path, default: "<data dir>/cache/<connector>/idmaps", desc: "Its folder", group: tuning }
       - { name: columns-cache-mb, type: int, desc: "Column cache size", group: tuning }
       - { name: id-map-mb, type: int, desc: "Id map size", group: tuning }
       - { name: lz4-via-native, type: boolean, desc: "Use native LZ4", group: tuning }

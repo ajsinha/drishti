@@ -133,7 +133,9 @@ class DeltaEnginesAgreeTest {
                 DeltaTable.IdMap a = tn.ids(ln, d);
                 DeltaTable.IdMap b = th.ids(lh, d);
                 assertThat(a.ids()).hasSize(40).isEqualTo(b.ids());
-                assertThat(a.files()).isEqualTo(b.files());
+                for (String id : a.ids()) {
+                    assertThat(a.file(id)).as(id).isEqualTo(b.file(id));
+                }
                 assertThat(tn.read(ln, d)).isEqualTo(th.read(lh, d));
             }
             assertThat(n.tables()).isEqualTo(h.tables()).containsExactly("trade");

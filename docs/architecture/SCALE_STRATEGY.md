@@ -316,6 +316,10 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 | | one Parquet version (1.18.0) for every library (root `pom.xml`); the Parquet page index for single reads **on by default** (`drishti.parquet.page-index`): neutral on 256 KB row groups (812 vs 812 reads/s, same trades), it narrows reads of files with larger groups | **done** |
 | | one memory budget for all connector caches (section 5) | next |
 | | separate read slots for all background work | next |
+| **2. Storage and caches** | id maps on disk, memory-mapped (`id-map-disk`): after a restart 3 ms instead of 729 ms per table date, first read of a past date 0.03–0.06 s instead of 0.24–0.34 s; 44 MB per trade connector | **done** (2026-10-18) |
+| | grouped pages kept across restarts (`pages.json` beside the pages): served at once, no rebuild while the data is unchanged; 50 users straight after a restart 151 req/s, 0 failures (before: 395 timeouts) | **done** |
+| | **phase 2 integration test** (extreme lake, 8 GB): two starts; heap 1.3 GB after collection | **passed** (2026-10-18) |
+| | bloom filters on ids: not added (files sorted by id: statistics, the id map and the page index already find a trade); memory-mapped column sets: open (columns stay in the shared heap budget) | decided / open |
 | **0. Measure** | scale benchmark in `drishti-benchmarks`: 3 systems × 300K–600K × 7 → 60 days; every path of section 7; heap and disk; a smaller version in CI against regressions | started (the 2026-10-18 runs, section 4) |
 | **2. Storage and caches** | bloom filters on ids; memory-mapped warm tier for id maps and columns; RocksDB document cache (section 8.1) | planned |
 | **3. Computed at load** | grouped totals and flattened columns written by the load | planned |

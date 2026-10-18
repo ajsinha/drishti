@@ -1828,6 +1828,7 @@ Layout: `<root>/<domain>/<kind>/business_date=yyyy-MM-dd/` holding `(id, doc)` r
 | `doc-cache-mb` | `256` | Single documents read recently. |
 | `doc-disk-cache.enabled` | `true` | One RocksDB per connector (its own folder, files and compactions; compacted hourly, so expired files go without writes; a cache that cannot open is skipped with a WARN). A second tier for single documents, on disk (RocksDB) under `doc-disk-cache.dir` (default `<data dir>/cache/<connector>/docs`): a document read once is answered without decompressing its Parquet pages, also after a restart. Keyed by the table version it was read from, so never stale. Measured on 362,804 ENDUR trades: 17 % less CPU per read for documents already read (2026-10-18). |
 | `doc-disk-cache.max-gb`, `.ttl`, `.reset-at`, `.zone` | `1`, `12h`, `02:00`, `America/New_York` | Its size cap (the oldest files go first), time limit (entries written longer ago go), and daily clearing. |
+| `id-map-disk.enabled`, `id-map-disk.dir` | `true`, `<data dir>/cache/<connector>/idmaps` | Each table date's id map written once per table version and read through a memory map: no heap per id, and after a restart a date's first read needs no scan (3 ms instead of 0.7 s for 362,804 ids, 2026-10-18). Other versions' files go when a new one is written; a purge (Admin → Caches) deletes them. |
 | `columns-cache-mb` | `1024` | A day's promoted columns, read once and kept by size (the newest day is loaded in the background). |
 | `max-concurrent-reads` | `16` | Single-document reads at once (each decodes one row group). |
 | `max-load-rows` | `200000` | A table without columns has a whole day loaded for reverse lookups only up to this many rows. |
@@ -2212,6 +2213,7 @@ Nothing is stored: each document is worked out when asked for (the news about th
 | `store` | `heap` (`disk` in the trading pack's `trade-pages`) | `heap`: every page is built and kept in memory (small books). `disk`: the pages live under `store-dir`, the heap keeps each group's totals only; complete at any number of members (1.16 million trades a day measured in an 8 GB heap, 2026-10-18). |
 | `store-dir` | `<data dir>/derived/<connector>` | The pages' only folder (`store: disk`); emptied at start, one sub-folder per computation, deleted when a newer one replaces it. |
 | `retire-after` | `60s` | How long replaced pages on disk are kept for reads still running. |
+| (restart) | — | With `store: disk`, the pages of the previous run are served again at start when built by the same definitions (`pages.json` in their folder); their data version is then checked as for any build. Without that, grouped pages would wait for the first build after every restart. |
 | `version-check` | `10s` | How often the members' data version is asked; a new version (a load) rebuilds, nothing else does. |
 | `refresh` | `30s` | Rebuild age, used only when a source cannot say its data's version. |
 | `max-stream` | `100000` | `store: heap`: members kept from a one-pass read (a WARN and Admin → Health DEGRADED say when it cuts). Not used with `store: disk`. |
