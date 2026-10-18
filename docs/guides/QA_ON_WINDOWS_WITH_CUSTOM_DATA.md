@@ -51,7 +51,7 @@ Names used below:
 | **JDK 21** (or newer) | PowerShell: `java -version` shows `21` or higher |
 | **Python 3.12 or 3.13** | PowerShell: `py -3.13 --version` (or `py -3.12 --version`) |
 | **IntelliJ IDEA** (for the server) and **PyCharm** (for the console and the tools) | both start |
-| pip and Maven reach your **internal mirror** | if a download fails, see section 8 |
+| pip and Maven reach your **internal mirror** | if a download fails, see section 7 |
 | 8 GB free memory, 2 GB free disk | Task Manager |
 
 ---
@@ -100,12 +100,27 @@ You should see: the last line says `Successfully installed …` (fastapi, uvicor
 You should see: the drop-down at the top right lists the configurations of `run-configs\`, among them **Build demo lakes**,
 **Load ENDUR file into the lake** and **Drishti console**. They all use the interpreter of step 2; nothing to edit.
 
+> **What these configurations run.** Every command in this guide that starts with `lake …` (`lake demo`, `lake build`)
+> is not a program of its own: it is a sub-command of the project's command-line tool **`tools\drishti.py`**. A
+> PyCharm configuration is just "run `tools\drishti.py` with these *Parameters*, from the project folder":
+>
+> | Configuration | Script | Parameters (what you edit) |
+> |---|---|---|
+> | **Build demo lakes** | `tools\drishti.py` | `lake demo …` |
+> | **Load ENDUR file into the lake** | `tools\drishti.py` | `lake build …` |
+> | **Drishti console** | `drishti-console\run_drishti_web.py` | `--server.port=17480 --backend.url=http://127.0.0.1:18480` |
+>
+> So a line like `lake build --from …` below goes into the **Parameters** box, not into a terminal. To run the same
+> thing in PowerShell instead, put `drishti-console\.venv\Scripts\python.exe tools\drishti.py` in front of it, from
+> the project folder. `python tools\drishti.py lake build --help` lists every option.
+
 ### 2.3 IntelliJ IDEA (once)
 
 1. **File → Open** → `C:\Users\asinh09\IdeaProjects\drishti-orig` → **Trust Project**. IntelliJ imports the Maven project
    (bottom-right progress bar; it downloads through your mirror the first time).
 2. **File → Project Structure → Project → SDK** → your **JDK 21** → **OK**.
-3. Top-right drop-down → **Drishti build server jar** → ▶ (Run).
+3. Top-right drop-down → **Drishti build server jar** → ▶ (Run). (This is Maven `package -DskipTests -pl drishti-server -am`
+   on the project's `pom.xml`.)
 
 You should see: in the Run window `BUILD SUCCESS`, and the file `drishti-server\target\drishti-server-2.3.0-exec.jar`
 exists.
@@ -119,8 +134,9 @@ exists.
 The synthetic data has seven business days. Make them **end on the date of your newest ENDUR file**, so the date picker
 shows CALYPSO, MUREX and ENDUR together.
 
-1. PyCharm, top-right drop-down → **Build demo lakes** → **Edit Configurations…** → *Parameters*: change `lake demo` to
-   `lake demo --as-of 2026-10-16` (your newest ENDUR date) → **OK**.
+1. PyCharm, top-right drop-down → **Build demo lakes** → **Edit Configurations…**. The configuration runs the script
+   `tools\drishti.py`; in its *Parameters* box change `lake demo` to `lake demo --as-of 2026-10-16` (your newest ENDUR
+   date) → **OK**.
 2. Press ▶ (Run).
 
 You should see, after about a minute: the Run window ends with what to start next; `data\delta` now holds the folders
@@ -134,7 +150,8 @@ the world economy data.
 1. **Delete the synthetic ENDUR table:** in Windows Explorer delete the folder
    `C:\Users\asinh09\IdeaProjects\drishti-orig\data\delta\trading\trade_endur`. (Only that folder. `trade_calypso` and
    `trade_murex` stay.)
-2. PyCharm, top-right drop-down → **Load ENDUR file into the lake** → **Edit Configurations…** → in *Parameters* change
+2. PyCharm, top-right drop-down → **Load ENDUR file into the lake** → **Edit Configurations…**. The configuration runs
+   the script `tools\drishti.py` (field *Script path*); the line below is what its *Parameters* box holds. Change only
    the two things that name your file — the path after `--from` and the date after `--as-of` — for example:
 
    ```
@@ -142,6 +159,17 @@ the world economy data.
    ```
 
    → **OK** → ▶ (Run).
+
+   PowerShell instead (from the project folder, same line with the script in front):
+
+   ```powershell
+   drishti-console\.venv\Scripts\python.exe tools\drishti.py lake build --from C:\Users\asinh09\drishti-private\endur\2026-10-15.jsonl --as-of 2026-10-15 --pack config/packs/trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates
+   ```
+
+   What the options mean: `--from` your file; `--as-of` its business date; `--pack` the trading pack, whose schema
+   checks each trade; `--connector trade-endur` the table it feeds (`data\delta\trading\trade_endur`); `--key TRADE_ID`
+   the id field; `--partition-by PRODUCT_TYPE` one folder per product type; `--mode overwrite-dates` replaces that
+   date if it was loaded before.
 3. Repeat step 2 for **each** of your files (each with its own path and date).
 
 You should see, for each file, a last line like:
@@ -236,6 +264,8 @@ trades.
 | PyCharm says the interpreter is invalid | Redo step 2.2 point 2. |
 | `Port 18480 (or 17480) is already in use` | Another copy is running: stop it in IntelliJ / PyCharm (red square), or reboot. |
 | `lake build` says `no id (field 'id' is missing…)` | The parameters lack `--key TRADE_ID`: copy the line of step 3.2 again. |
+| PowerShell says `lake` is not recognized | `lake …` is not a command of its own: run it as `drishti-console\.venv\Scripts\python.exe tools\drishti.py lake …` from the project folder, or use the PyCharm configuration (step 2.2, *What these configurations run*). |
+| The run configurations are not in the drop-down | The project was opened at `drishti-console` instead of the project folder: **File → Open** `drishti-orig` itself (step 2.2 point 1). |
 | ENDUR pages still show synthetic trades | Step 3.2 point 1 was skipped: stop the server, delete `data\delta\trading\trade_endur`, load your files again, start the server. |
 | ENDUR and CALYPSO/MUREX never show on the same date | Step 3.1 used another date: run **Build demo lakes** again with `--as-of` = your newest ENDUR date, then step 3.2 again. |
 | A page says *unavailable* for quotes or news | Check **Admin → Connectors**: the snapshot stores must be RUNNING; run **Build demo lakes** again. |
