@@ -66,6 +66,8 @@ public class CacheController {
         entitlements.requireAdmin(p);
         List<CacheInfo> out = new ArrayList<>();
         out.add(new CacheInfo(ENGINE, "Layouts and shape fingerprints", pipeline.cacheStats()));
+        // the one memory budget the Delta connectors share (those that set no cache size of their own): size against cap
+        out.add(new CacheInfo("memory-budget", "Shared by the Delta connectors", com.ash.drishti.plugin.delta.DeltaSourcePlugin.sharedBudget()));
         for (SourcePlugin s : sources.plugins()) {
             Map<String, Object> stats = s.cacheStats();
             if (!stats.isEmpty()) {

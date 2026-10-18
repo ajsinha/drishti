@@ -135,6 +135,22 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 .weigher((String k, String v) -> 2 * (k.length() + v.length()) + 64).build();
     }
 
+    /** The shared memory budget as it stands (Admin -> Caches): each shared cache's size and cap in MB, and the heap. */
+    public static Map<String, Object> sharedBudget() {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("heapMaxMB", Shared.HEAP / (1024 * 1024));
+        out.put("heapUsedMB", (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / (1024 * 1024));
+        out.put("idMapsMB", mb(Shared.ID_MAPS.synchronous()) + " of " + Shared.HEAP / 5 / (1024 * 1024));
+        out.put("columnsMB", mb(Shared.COLUMNS.synchronous()) + " of " + Shared.HEAP / 5 / (1024 * 1024));
+        out.put("documentsMB", mb(Shared.DOCS) + " of " + Shared.HEAP / 20 / (1024 * 1024));
+        out.put("dayLoadsMB", mb(Shared.PARTS.synchronous()) + " of " + Shared.HEAP / 20 / (1024 * 1024));
+        return out;
+    }
+
+    private static long mb(com.github.benmanes.caffeine.cache.Cache<?, ?> c) {
+        return c.policy().eviction().map(e -> e.weightedSize().orElse(0L)).orElse(0L) / (1024 * 1024);
+    }
+
     private static int partWeight(Part v) {
         return (int) Math.min(Integer.MAX_VALUE, 64L + v.docs().values().stream().mapToLong(d -> 2L * d.length() + 64).sum() + 48L * v.refs().size());
     }

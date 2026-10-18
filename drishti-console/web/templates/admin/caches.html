@@ -35,7 +35,7 @@
     <tbody>{% for c in caches %}<tr>
       <td class="mono">{{ c.name }}</td><td>{{ c.type }}</td>
       <td class="mono">{% for k, v in (c.stats or {}).items() %}<span class="cache-stat">{{ k }} <b>{{ v }}</b></span>{% endfor %}</td>
-      <td><button type="button" class="btn-pill btn-ghost" data-purge="{{ c.name }}"><i class="bi bi-trash" aria-hidden="true"></i> Purge</button></td></tr>
+      <td>{% if c.name != 'memory-budget' %}<button type="button" class="btn-pill btn-ghost" data-purge="{{ c.name }}"><i class="bi bi-trash" aria-hidden="true"></i> Purge</button>{% endif %}</td></tr>
     {% else %}<tr><td colspan="4">No caches.</td></tr>{% endfor %}</tbody>
   </table></div>
 </div>

@@ -779,3 +779,25 @@ it is a warm-cache figure; on a cold disk it can be several times slower.
 
 See also [PERFORMANCE.md](PERFORMANCE.md) for the server's own targets and how to measure one installation, and
 [DEMO_DATA.md](../connectors/DEMO_DATA.md) for loading the same book by hand.
+
+## 8. Sizing for millions of trades a day (measured 2026-10-18)
+
+From the runs of [SCALE_STRATEGY.md](../architecture/SCALE_STRATEGY.md) section 4: ENDUR, CALYPSO and MUREX synthetic trades of the
+real shapes (9.7, 6.3 and about 14 KB of JSON each), 313K–492K a day each for 7 days (8.2 million trades, 1.16 million on the
+latest day), 10,000 counterparties and 30,000 netting sets; one machine (24 cores, 60 GB RAM, NVMe disk).
+
+| Resource | Measured | Rule of thumb |
+|---|---|---|
+| Lake on disk | 12.5 GB for 8.2M trades (ENDUR 1.45 KB, CALYPSO 0.9 KB, MUREX 2.2 KB a trade, Parquet) | about 1.5 KB a trade a day; a year at 1.5M a day: about 0.6 TB |
+| Loading a day | 47–69 s per 300K–460K ENDUR or CALYPSO trades, 90–161 s for MUREX's larger documents (`lake build`, one system at a time) | about a minute per 400K trades per system |
+| Server heap | 1.2–1.8 GB used after collection with 1.16M trades on the latest day, several dates open, 50 users; caches capped at half the heap (the shared budget, Admin → Caches) | `-Xmx8g` for 1M+ trades a day; `-Xmx4g` up to about 400K |
+| Grouped pages on disk | 631 MB for 1.16M trades (one date), built in 45–81 s in the background (`data/derived/<connector>`) | about 0.55 KB a trade per cached date |
+| Id maps on disk | 44 MB per trade connector for 7 dates (`data/cache/<connector>/idmaps`) | about 15 bytes a trade per date |
+| Document cache on disk | 49 MB for 22,000 documents read (`data/cache/<connector>/docs`), capped at 1 GB per connector | the cap; it holds what people open |
+| Throughput, server | 140–150 requests/s at 50 users (80 % single trades, grouped pages, netting sets, searches), 0 failures | about 6 requests/s per core |
+| Throughput, console | 4 worker processes: about 70 pages/s at 50 users | one worker process per ~40 pages/s |
+| Single trade | p50 15–30 ms, p95 under 50 ms at 10 users; first read of a past date 0.03–0.06 s (id map on disk) | |
+
+**What to provision for 1.5 million trades a day, a year kept:** 8–16 cores; 32 GB RAM (8 GB heap, the rest for the operating
+system's file cache and the console's workers); about 1 TB of SSD (the lake, plus a few GB of caches and grouped pages); on
+Windows, the data folder excluded from antivirus real-time scanning.
