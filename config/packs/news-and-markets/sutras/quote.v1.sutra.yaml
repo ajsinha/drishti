@@ -58,6 +58,12 @@ panels:
       - { label: Low, bind: "@.LOW", fmt: price2 }
       - { label: Close, bind: "@.CLOSE", fmt: price2 }
       - { label: Volume, bind: "@.VOLUME", fmt: amount0 }
+  - id: snapshot
+    kind: markdown
+    title: "Snapshot"
+    area: right
+    when: "nonblank($.SNAPSHOT)"
+    text: "${$.SNAPSHOT}. Served offline from the demo lake (news-store), not live: the live connector is off or the server runs in offline mode (DRISHTI_OFFLINE=true)."
   - { id: source, kind: kv, title: Data source and terms, area: right, rows: $.PROVENANCE }
   - { id: built, kind: provenance, title: How this view was built }
 keys: { F9: raw }

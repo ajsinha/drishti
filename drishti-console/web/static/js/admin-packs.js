@@ -230,7 +230,7 @@
   var dsBody = dlg.querySelector('[data-ds-body]'), dsMsg = dlg.querySelector('[data-ds-msg]'), dsTitle = dlg.querySelector('[data-ds-title]'), dsIntro = dlg.querySelector('[data-ds-intro]');
   var opener = null;
 
-  var STATE = { RUNNING: ['st st-ok', 'running'], DISABLED: ['st', 'disabled'], FAILED: ['st st-bad', 'failed'], IDLE: ['st st-warn', 'not configured by its plugin'],
+  var STATE = { RUNNING: ['st st-ok', 'running'], DISABLED: ['st', 'disabled'], OFFLINE: ['st', 'off (offline mode)'], FAILED: ['st st-bad', 'failed'], IDLE: ['st st-warn', 'not configured by its plugin'],
     NOT_LOADED: ['st st-warn', 'not started'], NOT_CONFIGURED: ['st st-bad', 'not configured'] };
 
   function build(ds) {

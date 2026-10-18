@@ -67,7 +67,7 @@
   function live(r) {
     var badge = root.querySelector('[data-state]'), health = root.querySelector('[data-health]');
     if (!badge || !r) { return; }
-    badge.textContent = r.label || { RUNNING: 'running', DISABLED: 'disabled', FAILED: 'failed', NOT_LOADED: 'not started' }[r.state] || String(r.state || '').toLowerCase();
+    badge.textContent = r.label || { RUNNING: 'running', DISABLED: 'disabled', OFFLINE: 'off (offline mode)', FAILED: 'failed', NOT_LOADED: 'not started' }[r.state] || String(r.state || '').toLowerCase();
     badge.classList.remove('st-ok', 'st-bad', 'st-warn');
     var cls = { ok: 'st-ok', down: 'st-bad', warn: 'st-warn' }[r.level];
     if (cls) { badge.classList.add(cls); }

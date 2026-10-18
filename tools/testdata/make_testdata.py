@@ -22,7 +22,8 @@
 One folder per dataset: trades/endur, trades/calypso, trades/murex (5,000 trades each, the common 47-attribute UPPER_SNAKE schema),
 then <pack>/<kind> for every kind of core, market-data, counterparty-risk and market-risk (universe.py). Each folder holds the first
 day's snapshot and each later day's changes (history.py). world-economy and news-and-markets are static reference data already in the
-repository (their packs' samples), so the manifest points at them instead of copying them. The manifest, data/testdata/testdata.yaml,
+repository (their packs' samples), so the manifest points at them instead of copying them. The news-and-markets pack's quotes and
+headlines are a real snapshot captured by capture_market.py (data/testdata/news-and-markets/, kept here and listed as they are). The manifest, data/testdata/testdata.yaml,
 says for each dataset its pack, kind, connector, key, partitions, files and counts: `lake demo` reads only it. Never reads a real
 extract (`lake demo --with-real` adds those to a local lake only).
 """
@@ -37,12 +38,19 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
+import capture_market as CM  # noqa: E402
 import history as H  # noqa: E402
 import universe as UV  # noqa: E402
 
 PACKS = ("core", "market-data", "trading", "counterparty-risk", "market-risk", "world-economy", "news-and-markets")
 FROM_SAMPLES = ("world-economy", "news-and-markets")
 SYSTEMS = ("ENDUR", "CALYPSO", "MUREX")
+KEEP = (CM.PACK,)          # captured by capture_market.py (real, dated, needs internet): never regenerated here
+
+
+def has_samples(pack: str, kind: str) -> bool:
+    d = ROOT / "config" / "packs" / pack / "samples"
+    return any(d.glob(f"{kind}.jsonl*")) or (d / kind).is_dir()
 
 
 def delta_connectors(packs_dir: Path) -> dict[str, tuple[str, str]]:
@@ -77,6 +85,7 @@ def main(argv=None) -> int:
     p.add_argument("--days", type=int, default=7, help="business days ending on the samples' date (default 7)")
     p.add_argument("--part-mb", type=float, default=9.0, help="split a file above this many compressed MB (default 9)")
     p.add_argument("--check", action="store_true", help="write into <data>/build/testdata-check and compare with --out; nothing changes")
+    p.add_argument("--captured-from", help="the folder whose captured market snapshot the manifest lists (default --out)")
     a = p.parse_args(argv)
     if a.check:
         return check(a, argv or [])
@@ -87,7 +96,7 @@ def main(argv=None) -> int:
     u = UV.Universe(a.per_system).build()
     print(f"universe: {sum(len(b) for b in u.trades.values()):,} trades, {sum(len(v) for v in u.docs.values()):,} other documents "
           f"({time.monotonic() - started:.0f} s)")
-    for sub in [d for d in out.iterdir() if d.is_dir()] if out.exists() else []:     # the folders are ours; README.md stays
+    for sub in [d for d in out.iterdir() if d.is_dir() and d.name not in KEEP] if out.exists() else []:   # ours; README.md and the snapshot stay
         shutil.rmtree(sub)
     datasets = []
     booked: dict[str, int] = {}
@@ -114,8 +123,9 @@ def main(argv=None) -> int:
         datasets.append({"folder": folder, "pack": pack, "kind": kind, "connector": connector, "key": key, **hist})
     for pack in FROM_SAMPLES:
         for kind, (pk, connector) in sorted(owners.items()):
-            if pk == pack:
+            if pk == pack and has_samples(pack, kind):
                 datasets.append({"samples": f"config/packs/{pack}/samples", "pack": pack, "kind": kind, "connector": connector})
+    datasets += CM.captured_datasets(Path(a.captured_from) if a.captured_from else out)
     write_manifest(out, days.dates, datasets)
     total = sum(f.stat().st_size for f in out.rglob("*.jsonl.gz"))
     biggest = max(out.rglob("*.jsonl.gz"), key=lambda f: f.stat().st_size)
@@ -135,9 +145,10 @@ def check(a, argv: list[str]) -> int:
         if "--out" in rest:
             i = rest.index("--out")
             del rest[i:i + 2]
-        main(rest + ["--out", str(scratch)])
+        main(rest + ["--out", str(scratch), "--captured-from", str(a.out)])
         want, got = Path(a.out), scratch
-        names = sorted({str(f.relative_to(want)) for f in want.rglob("*") if f.is_file() and f.name != "README.md"}
+        names = sorted({str(f.relative_to(want)) for f in want.rglob("*") if f.is_file() and f.name != "README.md"
+                        and f.relative_to(want).parts[0] not in KEEP}
                        | {str(f.relative_to(got)) for f in got.rglob("*") if f.is_file()})
         stale = [n for n in names if not (want / n).is_file() or not (got / n).is_file() or not filecmp.cmp(want / n, got / n, shallow=False)]
     finally:

@@ -78,7 +78,8 @@ public class EngineConfiguration {
 
     @Bean(destroyMethod = "close")
     public SourceRegistry sourceRegistry(SourcesProperties props, JsonCodec codec, org.springframework.core.env.Environment env) {
-        return new SourceRegistry(new PluginDiscovery().discover(props.pluginDir()), props, codec, com.ash.drishti.common.RetryPolicy.of(env::getProperty, "connectors"));
+        return new SourceRegistry(new PluginDiscovery().discover(props.pluginDir()), props, codec, com.ash.drishti.common.RetryPolicy.of(env::getProperty, "connectors"),
+                com.ash.drishti.engine.source.OfflineMode.of(env::getProperty));
     }
 
     @Bean

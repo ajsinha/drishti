@@ -54,6 +54,12 @@ panels:
       - { label: Step, bind: "@.STEP" }
       - { label: Kept, bind: "@.KEPT", fmt: amount0 }
       - { label: Dropped, bind: "@.DROPPED", fmt: amount0 }
+  - id: snapshot
+    kind: markdown
+    title: "Snapshot"
+    area: right
+    when: "nonblank($.SNAPSHOT)"
+    text: "${$.SNAPSHOT}. Served offline from the demo lake (news-store), not live: the live connector is off or the server runs in offline mode (DRISHTI_OFFLINE=true)."
   - { id: source, kind: kv, title: Data source and terms, area: right, rows: $.PROVENANCE }
   - { id: built, kind: provenance, title: How this view was built }
 keys: { F9: raw }

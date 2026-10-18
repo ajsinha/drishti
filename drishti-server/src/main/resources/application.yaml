@@ -98,6 +98,12 @@ drishti:
     owner: Ashutosh Sinha
     copyright: Copyright (c) 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.
     notice: Unauthorised copying, use or distribution is prohibited.
+  offline:
+    # Offline mode, for a machine with no internet (a demonstration laptop): connectors of the plugins below, whose data comes from public
+    # web services, never start, whatever their files say; Admin -> Connectors shows them "off (offline mode)", and their kinds are served
+    # by the other connectors that hold them (news-and-markets: news-store, built from the captured snapshot by `drishti.py lake demo`).
+    enabled: ${DRISHTI_OFFLINE:false}
+    plugins: news,yfinance,feed      # the public-data feed plugin too (US Treasury, ECB, NY Fed, FRED: market-data pack)
   sources:
     # Longest a single source read may take before the view shows the entity as unavailable.
     fetch-timeout: 2s

@@ -126,7 +126,7 @@ public final class ArtifactCatalog {
                 default -> "application";
             };
             boolean fileProblem = connectors.fileProblems().containsKey(name);
-            String state = !on ? "off" : fileProblem || !problems.isEmpty() && !"RUNNING".equals(String.valueOf(c.get("state"))) && !"IDLE".equals(String.valueOf(c.get("state"))) ? "problem" : "on";
+            String state = !on || com.ash.drishti.engine.source.OfflineMode.STATE.equals(String.valueOf(c.get("state"))) ? "off" : fileProblem || !problems.isEmpty() && !"RUNNING".equals(String.valueOf(c.get("state"))) && !"IDLE".equals(String.valueOf(c.get("state"))) ? "problem" : "on";
             Object updated = c.get("updated");
             Map<String, Object> r = row("connector", "", name, title(c), state, origin, "", updated == null ? null : updated.toString(),
                     problems, "/admin/connectors/" + name);

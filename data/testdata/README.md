@@ -29,10 +29,14 @@ data/testdata/
   market-data/<kind>/           curves, vol surfaces and cubes, FX, fixings, indices, equities, commodities, bonds, correlations
   counterparty-risk/<kind>/     agreements, CSAs, netting sets, collateral balances, margin calls, credit limits, exposure, CVA, SA-CCR, SIMM
   market-risk/<kind>/           trade valuations, FRTB sensitivities, VaR, stress scenarios and results, P&L explain
+  news-and-markets/quote/       a REAL snapshot of the twenty companies' quotes (a year of daily bars), Yahoo Finance
+  news-and-markets/news/        a REAL snapshot of the companies' and topics' headlines, Google News
 ```
 
 Written by `tools/testdata/make_testdata.py` (deterministic; `--check` says whether the files are current), guarded by
-`tools/testdata/test_testdata.py`, read by `drishti.py lake demo` (`tools/lake/demo.py`).
+`tools/testdata/test_testdata.py`, read by `drishti.py lake demo` (`tools/lake/demo.py`). The market snapshot under
+`news-and-markets/` is the exception: real data, captured with internet by `tools/testdata/capture_market.py`
+([below](#the-market-snapshot-news-and-markets-offline)), kept as it is by `make_testdata.py`.
 
 ## Quick start: five steps
 
@@ -59,6 +63,11 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
 4. **Start** the server and the console: the run configurations **Drishti server (demo lakes)** (the samples off,
    `DRISHTI_DEMO_ENABLED=false`, so every page reads the lakes; with the samples on, a sample answers before the lake for an id both
    hold) and **Drishti console**. The server reads `data/delta` by default (`DRISHTI_DELTA_ROOT` moves it).
+
+   The same run configuration sets **offline mode** (`DRISHTI_OFFLINE=true`): the server never reaches the internet, the news and
+   yfinance connectors stay **off (offline mode)** in Admin → Connectors, and the news-and-markets pack's quotes and headlines come
+   from the committed snapshot ([below](#the-market-snapshot-news-and-markets-offline)). On a machine with internet, set it to `false`
+   (and enable the live connectors) to see live quotes and headlines instead.
 
    **The demo ticker (tutorial 12, live BI and boards).** The lakes are daily snapshots: they do not tick, so on these servers a live
    visual's chip says **Listening** (following, nothing has changed) rather than **Live**. Tutorial 12's live trades and exposure come
@@ -153,6 +162,7 @@ Built from the packs' samples (static reference data already in the repository, 
 | `world-economy` samples | `macro-store` → `macro/`: `country-group`, `economic-forecast`, `economy`, `fiscal-position`, `labour-market`, `macro-indicator`, `region-economy` |
 | `world-economy` samples | `civic-store` → `civic/`: `election`, `jurisdiction`, `office-holder`, `party`, `region`, `social-indicator` |
 | `news-and-markets` samples | `news-store` → `news/`: `listed-company`, `news-topic` |
+| `news-and-markets/quote`, `news-and-markets/news` (captured) | `news-store` → `news/`: `quote`, `news` (below) |
 
 **Trades.** The common 47-attribute schema of every source system (`SOURCE_SYSTEM`, `TRADE_ID`, `PRODUCT_TYPE`, `COUNTERPARTY`,
 `LEGS[]` with `INDEX` and `CASH_FLOWS[]` → `RESETS[]`, `EVENTS[]`: `tools/packgen/trades/schema.py`). Ids are unique across the
@@ -180,6 +190,49 @@ booking day; a netting set's `TRADE_IDS` lists the trades booked by that day.
 **Files.** One document a line, gzip, sorted by key: `snapshot-<first day>.jsonl.gz`, then `changes-<day>.jsonl.gz` for each later day
 (the documents new or different that day, whole; an empty file when nothing changed). A file that would pass 9 MB is split into
 `.part-001`, `.part-002` … (`--part-mb`). A day's state is the snapshot with every change up to that day applied by key.
+
+## The market snapshot (news-and-markets, offline)
+
+The news-and-markets pack computes its quotes (Yahoo Finance, the `yfinance` connector) and headlines (Google News, the `news`
+connector) when a page opens: with no internet they would be empty. So the repository keeps a **real snapshot**, captured through
+those same connectors, which the pack serves from the demo lake when the live connectors are off or the server runs in offline mode:
+
+| File | Documents | What |
+|---|---|---|
+| `news-and-markets/quote/snapshot-<date>.jsonl.gz` | `QUOTE-<ticker>` of the twenty companies (`QUOTE_ID`) | the quote (price, change, ranges, volume, market cap) and a year of daily bars (`HISTORY`) |
+| `news-and-markets/news/snapshot-<date>.jsonl.gz` | `NEWS-<name>` and `NEWS-<name>~all` of the twenty companies and fifteen topics, and the pack's example `NEWS-Bitcoin` (`NEWS_ID`) | the headlines, the count by source and the steps that chose them |
+
+- **Source and date.** Captured from **Yahoo Finance** (its public chart endpoint) and **Google News** (RSS search) on the UTC date
+  in the file name; every document carries `SNAPSHOT` ("Snapshot captured <date> <time> UTC from …"), `SNAPSHOT_CAPTURED_AT` and
+  `PROVENANCE.SNAPSHOT`, and the quote's `AS_OF` or the headlines' `FETCHED_AT` ends in *(snapshot captured <date>)*, so every page
+  says it is a snapshot. `testdata.yaml` lists both files with their capture time, source, document count and size.
+- **Terms.** The data belongs to its providers: prices to Yahoo Finance and the exchanges, headlines and links to Google News and the
+  publishers. It is committed for demonstrations of Drishti only, never for trading, research or redistribution; Yahoo's endpoint is
+  unofficial and its terms restrict use. Before showing the demo outside the organisation, raise this again.
+- **In the lake.** `lake demo` writes both into `news/quote` and `news/news` (the same snapshot on each of the seven days, never
+  re-dated); the pack's `news-store` connector serves them beside the topics and companies.
+- **Offline mode.** `DRISHTI_OFFLINE=true` (set by the run configuration **Drishti server (demo lakes)**) keeps the `news`, `yfinance`
+  and `feed` connectors from starting, whatever their files say: nothing tries the network, and Admin → Connectors shows them
+  **off (offline mode)** with `news-store` RUNNING ([CONFIGURATION](../../docs/admin/CONFIGURATION.md#drishtioffline--offline-mode-no-internet)).
+  The company page (`/v/listed-company/CO-AAPL`: quote, closing-price chart, headlines), the topic pages (`/v/news-topic/TOPIC-FED`),
+  `QUOTE QUOTE-MSFT`, `NEWS NEWS-Federal_Reserve` and search look as they do live. A name or ticker outside the snapshot (`NEWS-Anything`)
+  is *not found* offline.
+- **world-economy** needs no snapshot: its thirteen kinds are the pack's samples (real World Bank, IMF, Factbook and UNDP figures),
+  already in the repository and built into `macro/` and `civic/`; it has no live connector.
+
+**Refreshing it** (on a machine with internet; the server jar built: run configuration **Drishti build server jar**):
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py testdata capture-market            # about four minutes
+drishti-console/.venv/bin/python tools/drishti.py testdata capture-market --dry-run  # what it would fetch: 20 quotes, 71 news ids
+```
+
+It starts a scratch server from the jar (its own port, 18977 by default, and folders under `<data>/build/capture-market`, removed at
+the end) with only this pack, the two live connectors on (quote history `--range 1y`) and the lake off, then fetches each document
+through the server's raw endpoint, two seconds apart (`--delay`, never less), trying again after 5, 10, 20 and 40 s on a 429 or a
+server error. `--server URL` uses a server you run instead. It replaces the older snapshot, updates `testdata.yaml` and prints the
+sizes; then run `lake demo` and commit `data/testdata`. Exit 0 all captured, 2 some ids missing (the rest written), 1 nothing.
+Guarded by `tools/testdata/test_capture_market.py` (a stub server, never the internet) and `test_testdata.py`.
 
 ## The manual way: one dataset at a time
 
@@ -228,5 +281,5 @@ python3 -m unittest -q tools/testdata/test_testdata.py
 ```
 
 The generator builds on the banking generators (`tools/packgen/banking`, `tools/packgen/trades`): change those, regenerate the
-samples, then the test data. The world-economy and news-and-markets datasets are those packs' samples; the world-economy figures
+samples, then the test data. It never touches `news-and-markets/` (the captured market snapshot; `capture-market` refreshes it). The world-economy and news-and-markets datasets are those packs' samples; the world-economy figures
 include IMF series, so they are for internal demonstrations only.

@@ -85,6 +85,17 @@ exchange, sector, country) is static reference data in `samples/listed-company/`
     Pages that read them also need `drishti.graph.link-budget` above its 40 ms default (for example `2s`), otherwise the first view of a company shows its quote
     and headline panels as pending and the next one shows them.
 
+### Offline: the committed snapshot
+
+With no internet (a demonstration laptop) the pack still works: the repository keeps a real snapshot of every company's quote (a year of
+daily bars) and of the companies' and topics' headlines, captured through these same connectors (`drishti.py testdata capture-market`,
+[data/testdata/README.md](../../../../data/testdata/README.md#the-market-snapshot-news-and-markets-offline)). `drishti.py lake demo`
+builds it into `news/quote` and `news/news`, which `news-store` serves whenever the live connectors are off, and always in **offline
+mode** (`DRISHTI_OFFLINE=true`, set by the run configuration **Drishti server (demo lakes)**): the `news` and `yfinance` connectors then
+never start, and Admin → Connectors shows them *off (offline mode)*. The pages are the same; the quote's *As of* and the headlines'
+*Fetched* end in *(snapshot captured <date>)*, and the quote and headline pages show a **Snapshot** note. The data belongs to Yahoo
+Finance, Google News and the publishers, and is shown for demonstration only.
+
 ### Kinds
 
 | Mnemonic | Opens | Identifiers |

@@ -26,7 +26,8 @@ title: News and markets
 description: >-
   Sample pack: fifteen news topics (central banks, countries, companies, themes) and twenty listed companies, with headlines (Google News) and
   quotes and price history (Yahoo Finance) fetched on demand. Internal demonstration only: Yahoo's endpoint is unofficial and its terms restrict
-  use; names leave the network when the connectors are on. Off until the connectors are enabled.
+  use; names leave the network when the connectors are on. Off until the connectors are enabled; offline (DRISHTI_OFFLINE=true, or the
+  connectors off) the demo lake serves a captured snapshot of the same quotes and headlines.
 kinds: [news-topic, news, listed-company, quote]
 formats: config/formats.yaml
 mnemonics:
@@ -155,11 +156,14 @@ connectors:
       cache-max-symbols: 100
       user-agent: ${drishti.branding.product:Drishti} yfinance connector (sample)
   # the topics and companies with business-date history, from the demo lake (`drishti.py lake demo` builds news/news-topic and
-  # news/listed-company from this pack's samples); without a lake the samples answer as before
+  # news/listed-company from this pack's samples); without a lake the samples answer as before. It also serves the captured market
+  # snapshot (news/quote and news/news from data/testdata/news-and-markets, written by `drishti.py testdata capture-market`): with the
+  # live connectors off, or with DRISHTI_OFFLINE=true (they never start), quotes and headlines come from the snapshot, fully offline;
+  # with them on, the live connector is asked first (routes below) and the snapshot answers what it does not.
   news-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
-    kinds: [news-topic, listed-company]
+    kinds: [news-topic, listed-company, news, quote]
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: news
