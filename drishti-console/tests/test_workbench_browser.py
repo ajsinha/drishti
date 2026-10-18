@@ -140,20 +140,20 @@ def test_the_showcase_is_built_from_its_samples_by_mouse_without_typing_yaml(liv
     # a field dropped on the rim of a panel: ranked suggestions, then the first one is added
     rev = state(page, "rev")
     x, y = first_panel_edge(page)
-    drag(page, page.locator(".wb-field-row", has_text="productName").first, x, y)
+    drag(page, page.locator(".wb-field-row", has_text="PRODUCT_NAME").first, x, y)
     page.locator(".wb-menu").wait_for()
-    assert "Panels for $.productName" in page.locator(".wb-menu").inner_text()
+    assert "Panels for $.PRODUCT_NAME" in page.locator(".wb-menu").inner_text()
     page.keyboard.press("Enter")
     settle(page, rev)
-    assert "$.productName" in state(page, "yaml")
+    assert "$.PRODUCT_NAME" in state(page, "yaml")
     # a field dropped on the middle of a panel binds it
     rev = state(page, "rev")
     kv = page.locator('[data-preview] [data-panel="kv"]')
     kv.scroll_into_view_if_needed()
     b = kv.bounding_box()
-    drag(page, page.locator(".wb-field-row", has_text="currency").first, b["x"] + b["width"] / 2, b["y"] + b["height"] / 2)
+    drag(page, page.locator(".wb-field-row", has_text="CURRENCY").first, b["x"] + b["width"] / 2, b["y"] + b["height"] / 2)
     settle(page, rev)
-    assert "$.currency" in state(page, "yaml")
+    assert "$.CURRENCY" in state(page, "yaml")
     # the inspector: select the gauge, change its max
     rev = state(page, "rev")
     page.locator('[data-preview] [data-panel="gauge"] .pnl-h').scroll_into_view_if_needed()
@@ -195,10 +195,10 @@ def test_the_showcase_is_built_from_its_samples_by_keyboard_alone(live_console, 
     rev = state(page, "rev")
     page.keyboard.press("b")
     page.locator(".wb-menu input").wait_for()
-    page.keyboard.type("currency")
+    page.keyboard.type("CURRENCY")
     page.keyboard.press("Enter")
     settle(page, rev)
-    assert "$.currency" in state(page, "yaml")
+    assert "$.CURRENCY" in state(page, "yaml")
     page.keyboard.press("Enter")                                              # opens the inspector on the selected panel
     assert page.evaluate("!!document.activeElement.closest('[data-inspector]')")
     assert "kv" in page.locator("[data-inspector]").inner_text()
@@ -314,7 +314,7 @@ def test_undo_and_redo_by_buttons_and_keys(live_console, page):
 def test_preview_with_a_file_shows_it_at_once_and_adds_nothing(live_console, page, tmp_path):
     open_design(page, live_console, "file", sutra=showcase_sutra(), files={"showcase.json": showcase_json()})
     doc = json.loads(showcase_json())
-    doc["tradeId"] = "FILE-PREVIEW-7"
+    doc["TRADE_ID"] = "FILE-PREVIEW-7"
     f = tmp_path / "other.json"
     f.write_text(json.dumps(doc))
     assert "FILE-PREVIEW-7" not in page.locator("[data-preview]").inner_text()
