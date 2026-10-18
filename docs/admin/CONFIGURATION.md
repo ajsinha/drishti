@@ -354,6 +354,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 |---|---|---|---|
 | `DRISHTI_CONSOLE_HOST` | `server.host` | `0.0.0.0` | The address the console listens on (every interface; `127.0.0.1` keeps it to this machine). |
 | `DRISHTI_CONSOLE_PORT` | `server.port` | `17480` | The console's port. |
+| `DRISHTI_CONSOLE_WORKERS` | `server.workers` | `4` | Processes serving the console's pages (they share the port; one Python process uses one core). `1` runs a single process. |
 | `DRISHTI_BACKEND_URL` | `backend.url` | `http://127.0.0.1:18480` | Where the server is. |
 | `DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS` | `backend.check_seconds` | `5` | How often the console asks each server if it is there (`0` = never). Pages show a banner and recover by themselves when it returns. |
 | `DRISHTI_CONSOLE_TMP_DIR` | `tmp_dir` | empty | Base of the console's temp folder `drishti-console-<pid>` (empty: `DRISHTI_TMP_DIR`, then the system temp folder), removed on exit; left-over ones of dead processes are listed on Health, never deleted automatically. |
@@ -2334,6 +2335,7 @@ You should see uvicorn report `Uvicorn running on http://127.0.0.1:17481`.
 |---|---|---|
 | `server.host` | `0.0.0.0` (`DRISHTI_CONSOLE_HOST`) | Listening address: every interface, so the console opens from other machines and phones. Use `127.0.0.1` behind a proxy on the same host, or to keep it to this machine. |
 | `server.port` | `17480` (`DRISHTI_CONSOLE_PORT`) | Listening port. |
+| `server.workers` | `4` (`DRISHTI_CONSOLE_WORKERS`) | Worker processes on that port (`run_drishti_web.py`). |
 | `backend.url` | `http://127.0.0.1:18480` (`DRISHTI_BACKEND_URL`) | The Drishti server. |
 | `backend.timeout_seconds` | `5` | Per call to the server. |
 | `backend.name` | the product name (`ui.product`) | The name of the single server when `servers` is not set; the picker and the top bar show it. |
