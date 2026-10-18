@@ -120,8 +120,8 @@ final class ParquetBatches implements CloseableIterator<ColumnarBatch> {
         FOOTERS.invalidateAll();
     }
 
-    /** Whether single-entity reads use the page index (drishti.parquet.page-index, default false: parquet-hadoop and parquet-column must first be one version). */
-    static final boolean PAGE_INDEX = Boolean.parseBoolean(System.getProperty("drishti.parquet.page-index", "false"));
+    /** Whether single-entity reads use the page index (drishti.parquet.page-index, default true; every Parquet library is one version, the root pom). */
+    static final boolean PAGE_INDEX = Boolean.parseBoolean(System.getProperty("drishti.parquet.page-index", "true"));
     /** This read skips the pages the page index rules out. */
     private boolean pageFiltered;
 

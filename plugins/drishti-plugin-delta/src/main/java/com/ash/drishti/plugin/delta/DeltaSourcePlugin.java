@@ -185,14 +185,20 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 .weigher((PartKey k, DeltaTable.IdMap v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes())).buildAsync();
         this.columnSets = Caffeine.newBuilder().executor(loaders).maximumWeight(Long.parseLong(ctx.setting("columns-cache-mb", "1024")) * 1024 * 1024)
                 .weigher((PartKey k, com.ash.drishti.api.ColumnSet v) -> (int) Math.min(Integer.MAX_VALUE, weight(v))).buildAsync();
-        if (Boolean.parseBoolean(ctx.setting("doc-disk-cache.enabled", "false"))) {
-            // documents already read, on disk under <data dir>/cache/<connector>/docs: keyed by the table version they were read
-            // from (never stale), capped by size, a time limit and a daily clearing, kept across restarts
+        if (Boolean.parseBoolean(ctx.setting("doc-disk-cache.enabled", "true"))) {
+            // documents already read, on disk under <data dir>/cache/<connector>/docs (one RocksDB per connector: no shared files or
+            // compactions between connectors): keyed by the table version they were read from (never stale), capped by size, a time
+            // limit and a daily clearing, compacted hourly, kept across restarts. It is a cache: when it cannot open, reads go on without it
             java.nio.file.Path dir = java.nio.file.Path.of(ctx.setting("doc-disk-cache.dir", com.ash.drishti.api.DataDir.under("cache/" + sourceName + "/docs")));
-            this.diskDocs = com.ash.drishti.diskcache.DiskCache.bounded(dir, (long) (Double.parseDouble(ctx.setting("doc-disk-cache.max-gb", "2")) * 1024 * 1024 * 1024),
+            try {
+                this.diskDocs = com.ash.drishti.diskcache.DiskCache.bounded(dir, (long) (Double.parseDouble(ctx.setting("doc-disk-cache.max-gb", "1")) * 1024 * 1024 * 1024),
                     duration(ctx.setting("doc-disk-cache.ttl", "12h")), true,
                     ctx.scheduler() == null ? null : java.time.LocalTime.parse(ctx.setting("doc-disk-cache.reset-at", "02:00")), java.time.ZoneId.of(ctx.setting("doc-disk-cache.zone", "America/New_York")),
                     ctx.scheduler(), java.time.Clock.systemUTC());
+            } catch (IOException | RuntimeException | LinkageError e) {
+                this.diskDocs = null;
+                org.slf4j.LoggerFactory.getLogger(DeltaSourcePlugin.class).warn("{}: documents are not cached on disk ({}): reads go on without it", sourceName, e.toString());
+            }
         }
         this.docs = Caffeine.newBuilder().maximumWeight(Long.parseLong(ctx.setting("doc-cache-mb", "256")) * 1024 * 1024)
                 .weigher((String k, String v) -> 2 * (k.length() + v.length()) + 64).build();

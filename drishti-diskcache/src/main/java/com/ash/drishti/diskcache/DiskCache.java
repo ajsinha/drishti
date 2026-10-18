@@ -256,6 +256,19 @@ public final class DiskCache implements AutoCloseable {
         if (resetAt != null) {
             scheduleReset(resetAt, zone, clock);
         }
+        if (ttl != null && scheduler != null) {
+            // maintenance without writes: a compaction every hour drops the files whose entries are all past the time limit
+            // (RocksDB checks FIFO's time limit when it compacts), so an idle cache shrinks as well as a busy one
+            try {
+                scheduler.scheduleWithFixedDelay(() -> {
+                    if (!closed) {
+                        compact();
+                    }
+                }, 1, 1, TimeUnit.HOURS);
+            } catch (RejectedExecutionException e) {
+                LOG.debug("disk cache {}: scheduler stopped, no hourly maintenance", this.root);
+            }
+        }
     }
 
     private Path newestGeneration() throws IOException {
@@ -276,7 +289,7 @@ public final class DiskCache implements AutoCloseable {
         // a cache drops its oldest files past the budget; a store keeps the latest value of every key, whatever its size
         CompactionOptionsFIFO fifo = persistent ? null : new CompactionOptionsFIFO().setMaxTableFilesSize(maxBytes);
         Options o = new Options().setCreateIfMissing(true).setCompressionType(CompressionType.LZ4_COMPRESSION)
-                .setWriteBufferSize(32L * 1024 * 1024);
+                .setWriteBufferSize(ttl != null ? 8L * 1024 * 1024 : 32L * 1024 * 1024);   // a bounded cache per connector: little native memory each
         if (fifo != null) {
             o.setCompactionStyle(CompactionStyle.FIFO).setCompactionOptionsFIFO(fifo);
             if (ttl != null && !ttl.isZero()) {

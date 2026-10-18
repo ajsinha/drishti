@@ -115,6 +115,15 @@
 
   <dependencyManagement>
     <dependencies>
+      <!-- one Parquet version everywhere: Delta Kernel brings parquet-hadoop 1.16, Iceberg parquet-column 1.18; mixed, the page index fails -->
+      <dependency><groupId>org.apache.parquet</groupId><artifactId>parquet-hadoop</artifactId><version>${parquet.version}</version></dependency>
+      <dependency><groupId>org.apache.parquet</groupId><artifactId>parquet-column</artifactId><version>${parquet.version}</version></dependency>
+      <dependency><groupId>org.apache.parquet</groupId><artifactId>parquet-common</artifactId><version>${parquet.version}</version></dependency>
+      <dependency><groupId>org.apache.parquet</groupId><artifactId>parquet-encoding</artifactId><version>${parquet.version}</version></dependency>
+      <dependency><groupId>org.apache.parquet</groupId><artifactId>parquet-format-structures</artifactId><version>${parquet.version}</version></dependency>
+      <dependency><groupId>org.apache.parquet</groupId><artifactId>parquet-jackson</artifactId><version>${parquet.version}</version></dependency>
+      <dependency><groupId>org.apache.parquet</groupId><artifactId>parquet-avro</artifactId><version>${parquet.version}</version></dependency>
+      <dependency><groupId>org.apache.parquet</groupId><artifactId>parquet-variant</artifactId><version>${parquet.version}</version></dependency>
       <dependency><groupId>org.springframework.ai</groupId><artifactId>spring-ai-bom</artifactId><version>${spring-ai.version}</version><type>pom</type><scope>import</scope></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-ai</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId><version>${project.version}</version></dependency>
