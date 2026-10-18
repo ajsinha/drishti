@@ -167,7 +167,7 @@ builder:                     # Build workbench, New (/build/new); docs/architect
   tools_dir: ../tools        # the repository's tools/ folder (packbundle.py makes the bundle); relative to drishti-console/
   studio_kind: sample        # the kind a new Design and "Open in Studio" preview a brought document as (a pasted document has no kind of its own)
 lakes:                       # Admin -> Data loads -> Lakes (/admin/lakes): a large JSON file into a Delta lake (docs/guides/TOOLS.md)
-  roots: ${DRISHTI_LAKE_ROOTS:../data/delta}   # the lake roots this console may write, comma-separated (the Delta connectors' root)
+  roots: ${DRISHTI_LAKE_ROOTS:}   # the lake roots this console may write, comma-separated (the Delta connectors' root); empty: <data dir>/delta, as the server
   max_upload_mb: 4096        # largest file uploaded (streamed to the console's temporary folder, never held in memory)
   scan_docs: 20000           # documents read to suggest the id, date and classifiers (the build reads them all)
   engine: auto               # auto (Drishti's Java writer when lakes.jar or the server jar is found, else deltalake), drishti, deltalake

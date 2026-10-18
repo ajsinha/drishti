@@ -1,0 +1,104 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}{{ table or 'Table' }} · Lakes · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-lakes.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm lt" data-lake-table-page>
+  {% with tab='lakes' %}{% include "admin/_nav.html" %}{% endwith %}
+  <p class="lk-crumb"><a href="/admin/loads">Data loads</a> <span aria-hidden="true">›</span> <a href="/admin/lakes">Lakes</a> <span aria-hidden="true">›</span> <span class="mono">{{ table }}</span></p>
+  {% if not t %}
+  <h1 class="ws-h mono">{{ table }}</h1>
+  <p class="hl-err" role="alert">No Delta table <span class="mono">{{ table }}</span> under the lake root <span class="mono">{{ root }}</span>.
+    <a href="/admin/lakes">Back to the lakes</a>.</p>
+  {% elif t.error %}
+  <h1 class="ws-h mono">{{ t.table }}</h1>
+  <p class="hl-err" role="alert">This table cannot be read: {{ t.error }}</p>
+  {% else %}
+  <h1 class="ws-h mono">{{ t.table }}</h1>
+  <p class="text-muted-d mono lt-path">{{ t.path }}</p>
+  <div class="lt-stats">
+    <div><b class="mono">{{ '{:,}'.format(t.rows or 0) }}</b><span>rows</span></div>
+    <div><b class="mono">{{ t.dates }}</b><span>business dates{% if t.firstDate %}, {{ t.firstDate }} to {{ t.latestDate }}{% endif %}</span></div>
+    <div><b class="mono">{{ '{:,}'.format(t.files or 0) }}</b><span>files, {{ t.size }}</span></div>
+    <div><b class="mono">{{ t.version }}</b><span>table version, last commit {{ t.lastBuild }}</span></div>
+    <div><b class="mono">{{ t.partitionColumns | join(', ') or 'none' }}</b><span>partitioned by</span></div>
+  </div>
+
+  <h2 class="ws-h">Read by</h2>
+  {% if readers %}<ul class="lt-readers">{% for r in readers %}<li><a class="mono" href="/admin/connectors/{{ r.name | urlencode }}">{{ r.name }}</a>
+    <span class="text-muted-d">kind <span class="mono">{{ r.kind }}</span> · {{ r.state }}{% if r.health %} · {{ r.health }}{% endif %}</span></li>{% endfor %}</ul>
+  {% else %}<p class="text-muted-d">No Delta connector reads this table (none has domain <span class="mono">{{ t.domain }}</span> and a kind whose table is <span class="mono">{{ t.kind }}</span>).</p>{% endif %}
+
+  <h2 class="ws-h">Business dates <small class="text-muted-d">({{ t.byDate | length }}, newest first)</small></h2>
+  {% set maxr = (t.byDate | map(attribute='rows') | max) or 1 %}
+  <div class="tbl-wrap"><table class="tbl" data-lt-dates>
+    <thead><tr><th scope="col">Business date</th><th scope="col" class="num">Rows</th><th scope="col"><span class="visually-hidden">Rows against the largest date</span></th>
+      <th scope="col" class="num">Files</th><th scope="col" class="num">Size</th><th scope="col">Partitions (rows)</th></tr></thead>
+    <tbody>{% for d in t.byDate %}<tr><th scope="row" class="mono">{{ d.date }}</th><td class="num mono">{{ '{:,}'.format(d.rows) }}</td>
+      <td class="lt-bar-cell"><svg class="lt-bar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect x="0" y="0" height="8" width="{{ '%.1f' | format(100 * d.rows / maxr) }}"/></svg></td>
+      <td class="num mono">{{ d.files }}</td><td class="num mono">{{ d.size }}</td>
+      <td class="lt-parts">{% for k, n in d.partitions[:4] %}<span class="mono">{{ k.split('=', 1)[1] if '=' in k and ',' not in k else k }}</span> <small class="text-muted-d">{{ '{:,}'.format(n) }}</small>{{ ' · ' if not loop.last }}{% endfor %}
+        {% if d.partitions | length > 4 %}<details class="lt-more"><summary>{{ d.partitions | length - 4 }} more</summary>{% for k, n in d.partitions[4:] %}<span class="mono">{{ k.split('=', 1)[1] if '=' in k and ',' not in k else k }}</span> <small class="text-muted-d">{{ '{:,}'.format(n) }}</small>{{ ' · ' if not loop.last }}{% endfor %}</details>{% endif %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+
+  <h2 class="ws-h">Columns <small class="text-muted-d">({{ t.columns | length }})</small></h2>
+  <p class="text-muted-d">The table's own columns: <span class="mono">doc</span> holds each whole document; the others are the fields the pack promotes so searches
+    read columns instead of documents.</p>
+  <div class="tbl-wrap"><table class="tbl" data-lt-columns>
+    <thead><tr><th scope="col">Column</th><th scope="col">Type</th><th scope="col">Role</th></tr></thead>
+    <tbody>{% for c in t.columns %}<tr><td class="mono">{{ c.name }}</td><td class="mono">{{ c.type }}</td>
+      <td>{% if c.partition %}partition{% elif c.name == 'doc' %}the whole document{% elif c.name == 'id' %}the entity's id{% else %}promoted field{% endif %}{% if not c.nullable %} · always set{% endif %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+
+  <h2 class="ws-h">Commits <small class="text-muted-d">(newest {{ t.history | length }})</small></h2>
+  <div class="tbl-wrap"><table class="tbl" data-lt-commits>
+    <thead><tr><th scope="col" class="num">Version</th><th scope="col">When</th><th scope="col">Operation</th><th scope="col">Parameters</th><th scope="col">Metrics</th><th scope="col">Writer</th></tr></thead>
+    <tbody>{% for h in t.history %}<tr><td class="num mono">{{ h.version }}</td><td class="mono">{{ h.when }}</td><td>{{ h.operation or '' }}</td>
+      <td class="mono lt-kv">{% for k, v in h.parameters.items() %}{{ k }}={{ v | string | truncate(80) }}{{ '; ' if not loop.last }}{% endfor %}</td>
+      <td class="mono lt-kv">{% for k, v in h.metrics.items() if v not in (0, '0', None) %}{{ k }}={{ v }}{{ '; ' if not loop.last }}{% endfor %}</td>
+      <td class="mono">{{ h.engine or '' }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+
+  <h2 class="ws-h">Loads <small class="text-muted-d">(by lake build, newest first)</small></h2>
+  {% if loads %}<div class="tbl-wrap"><table class="tbl" data-lt-loads>
+    <thead><tr><th scope="col">Started</th><th scope="col">Outcome</th><th scope="col">Mode</th><th scope="col">Dates</th><th scope="col" class="num">Rows</th><th scope="col" class="num">Rejected</th><th scope="col" class="num">Seconds</th><th scope="col">Engine</th></tr></thead>
+    <tbody>{% for r in loads %}<tr><td class="mono">{{ r.startedAt }}</td><td class="{{ 't-neg' if r.status == 'failed' else ('t-warn' if r.status == 'partial' else '') }}">{{ r.status }}{% if r.error %}: {{ r.error | truncate(120) }}{% endif %}</td>
+      <td class="mono">{{ r.mode or '' }}</td><td class="mono">{{ r.dates }}</td><td class="num mono">{{ '{:,}'.format(r.rows) if r.rows is number else '' }}</td>
+      <td class="num mono">{{ r.rejected or 0 }}</td><td class="num mono">{{ r.seconds or '' }}</td><td class="mono">{{ r.engine or '' }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="text-muted-d">No load of this table by lake build is recorded under this lake (another system may write it).</p>{% endif %}
+
+  <h2 class="ws-h">Maintenance</h2>
+  {% if maint and maint.owned %}<p>Kept {% if maint.settings['keep-business-days'] %}<b>{{ maint.settings['keep-business-days'] }}</b> business days{% else %}<b>every</b> business date{% endif %}
+    · files compacted to <b>{{ maint.settings['target-file-mb'] }} MB</b> · checkpoints <b>{{ 'on' if maint.settings.checkpoint else 'off' }}</b>
+    · vacuum after <b>{{ maint.settings['vacuum-hours'] }} h</b>{% if maint.settings.own %} <small class="text-muted-d">(this table's own: {{ maint.settings.own | join(', ') }})</small>{% endif %}.
+    Change them on <a href="/admin/lakes#maintain">Lakes → Maintain</a>.</p>
+  {% else %}<p class="text-muted-d">{{ (maint.reason if maint else none) or 'Not maintained here' }}: lake build did not build this table under this root, so Lakes → Maintain leaves it alone.</p>{% endif %}
+
+  <h2 class="ws-h">Table</h2>
+  <dl class="lt-dl">
+    <dt>Table id</dt><dd class="mono">{{ t.tableId or '' }}</dd>
+    <dt>Created</dt><dd class="mono">{{ t.created or '' }}</dd>
+    <dt>Protocol</dt><dd class="mono">reader {{ t.protocol.minReaderVersion }}, writer {{ t.protocol.minWriterVersion }}</dd>
+    {% for k, v in t.properties.items() %}<dt class="mono">{{ k }}</dt><dd class="mono lt-kv">{{ v }}</dd>{% endfor %}
+  </dl>
+  {% endif %}
+</div>
+{% endblock %}

@@ -75,6 +75,77 @@ async def page(request: Request):
     return render(request, "admin/lakes.html", cfg=lakes.cfg.as_dict(), status=status, runs=lakes.runs(10), tables=figures, maint=maint)
 
 
+@router.get("/lakes/table")
+async def table_page(request: Request, root: str = "", table: str = ""):
+    """One table of a lake in full: its business dates, columns, properties, commits, loads, maintenance and the connectors
+    that read it, all from its Delta log and the lake's own records (no data file is opened)."""
+    me = ident(request)
+    if not me.is_admin:
+        return render(request, "admin/forbidden.html", status_code=403)
+    lakes = _lakes(request)
+    roots = {str(r): r for r in lakes.cfg.roots}
+    parts = table.split("/")
+    path = roots[root] / parts[0] / parts[1] if root in roots and len(parts) == 2 and all(p and p not in (".", "..") for p in parts) else None
+    if path is None or not (path / "_delta_log").is_dir():
+        return render(request, "admin/lake_table.html", t=None, root=root, table=table, status_code=404)
+    from core.lakes import _tool
+    lt = _tool(lakes.cfg.tools_dir, "laketables")
+    t = await asyncio.to_thread(lt.detail, path)
+    t["root"] = root
+    loads = await asyncio.to_thread(_loads_of, roots[root], str(path))
+    maint = None
+    try:
+        from core.lake_maint import maintenance
+        over = await asyncio.to_thread(maintenance(request.app).overview, [t])
+        maint = next((m for m in over["tables"] if m["table"] == table), None)
+    except Exception:                     # noqa: BLE001 - the page opens without maintenance rather than not at all
+        pass
+    readers = await _readers(request, me, parts[0], parts[1])
+    return render(request, "admin/lake_table.html", t=t, root=root, table=table, loads=loads, maint=maint, readers=readers)
+
+
+def _loads_of(root: Path, path: str, limit: int = 20) -> list[dict]:
+    """The newest loads of one table (lake build's run summaries under <root>/_drishti-lake/runs)."""
+    import json
+    runs = root / "_drishti-lake" / "runs"
+    out = []
+    if runs.is_dir():
+        for f in sorted(runs.glob("*.json"), reverse=True):
+            if len(out) >= limit:
+                break
+            try:
+                r = json.loads(f.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            if r.get("table") == path:
+                rows = r.get("rows")
+                out.append({"run": r.get("run"), "startedAt": r.get("startedAt"), "status": r.get("status"), "mode": r.get("mode"),
+                            "dates": ", ".join(sorted(rows)) if isinstance(rows, dict) else (r.get("asOf") or r.get("date") or ""),
+                            "rows": sum(rows.values()) if isinstance(rows, dict) else rows, "rejected": r.get("rejected"),
+                            "seconds": (r.get("timings") or {}).get("totalSeconds"), "engine": r.get("engine"), "error": r.get("error")})
+    return out
+
+
+async def _readers(request: Request, me, domain: str, name: str) -> list[dict]:
+    """The Delta connectors that read this table: their domain is its folder and a kind's table (or the kind) is its name."""
+    out = []
+    try:
+        listed = (await request.app.state.backend.admin("GET", "/connectors", me)).get("connectors", [])
+        for c in listed:
+            if c.get("plugin") != "delta":
+                continue
+            d = await request.app.state.backend.admin("GET", f"/connectors/{c['name']}", me)
+            st = d.get("settings") or {}
+            if st.get("domain") != domain:
+                continue
+            for k in d.get("kinds") or []:
+                if st.get(f"table.{k}", k) == name:
+                    out.append({"name": c["name"], "kind": k, "state": c.get("state"), "health": c.get("health")})
+    except BackendError:
+        pass
+    return out
+
+
 @router.get("/api/lakes/targets")
 async def targets(request: Request):
     """The roots this console may write, the tables under them, the Delta connectors with the packs that use them, recent runs."""

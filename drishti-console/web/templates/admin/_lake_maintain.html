@@ -39,7 +39,7 @@
     {% for t in tables %}{% set m = owners.get(t.root ~ "|" ~ t.table) %}<tr data-lake-table="{{ t.table }}" data-root="{{ t.root }}" data-domain="{{ t.domain }}"{% if m and not m.owned %} class="mt-foreign"{% endif %}>
       {% if maint %}<td class="mt-pick-col">{% if m and m.owned %}<label class="mt-check"><input type="checkbox" data-mt-pick value="{{ t.table }}" data-root="{{ t.root }}" data-domain="{{ t.domain }}"><span class="visually-hidden">Maintain {{ t.table }}</span></label>
         {% else %}<label class="mt-check" title="{{ m.reason if m else 'not readable' }}"><input type="checkbox" disabled aria-describedby="mtWhy{{ loop.index }}"><span class="visually-hidden">{{ t.table }} cannot be maintained here</span></label>{% endif %}</td>{% endif %}
-      <th scope="row"><span class="mono">{{ t.table }}</span><br><small class="text-muted-d">{{ t.root }}</small></th>
+      <th scope="row"><a class="mono" href="/admin/lakes/table?root={{ t.root | urlencode }}&amp;table={{ t.table | urlencode }}" title="Dates, columns, commits and loads of {{ t.table }}">{{ t.table }}</a><br><small class="text-muted-d">{{ t.root }}</small></th>
       {% if t.error %}<td colspan="7" class="text-muted-d">Not readable: {{ t.error }}</td>{% else %}
       <td class="num mono">{{ "{:,}".format(t.rows) if t.rows is not none else "?" }}</td><td class="num mono" data-mt-files>{{ t.files }}</td><td class="num mono" data-mt-size>{{ t.size }}</td>
       <td class="num mono">{{ t.partitions }}{% set by = t.partitionBy | reject("equalto", "business_date") | list %}{% if by %} <small class="text-muted-d">by {{ by | join(", ") }}</small>{% endif %}</td>

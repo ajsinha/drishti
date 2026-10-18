@@ -149,3 +149,41 @@ def test_a_build_binds_the_connector_and_announces_each_date(client, backend, mo
     assert "lake-build partial" in client.get("/admin/lakes").text          # the run log is listed
     t = client.get("/admin/api/lakes/targets").json()
     assert t["tables"] == [{"root": str(lakes.cfg.roots[0]), "domain": "book", "kind": "deal", "partitionBy": ["PRODUCT_TYPE"], "promoted": ["NOTIONAL"]}]
+
+
+def test_a_table_opens_its_own_page_with_dates_columns_commits_loads_and_readers(client, backend, monkeypatch, lakes, tmp_path):
+    import json as _json
+    import subprocess
+    import sys as _sys
+    src = tmp_path / "deals.jsonl"
+    src.write_text("\n".join(_json.dumps(d) for d in book()), encoding="utf-8")
+    root = lakes.cfg.roots[0]
+    r = subprocess.run([_sys.executable, str(REPO / "tools" / "drishti.py"), "lake", "build", "--from", str(src), "--lake", str(root),
+                        "--domain", "book", "--kind", "deal", "--key", "TRADE_ID", "--date", "TRADE_DATE", "--partition-by", "PRODUCT_TYPE",
+                        "--promote", "NOTIONAL", "--engine", "deltalake", "-q"], capture_output=True, text=True)
+    assert r.returncode == 0, r.stdout + r.stderr
+    calls = []
+    fake(backend, monkeypatch, calls, connector={"settings": {"domain": "book", "root": "x"}, "kinds": ["deal"]})
+    lists = client.get("/admin/lakes").text
+    i = lists.find("book/deal")
+    assert "/admin/lakes/table?root=" in lists, lists[i - 400:i + 200] if i >= 0 else "no book/deal on the page"
+    assert "/admin/lakes/table?root=" in lists and "table=book/deal" in lists
+    page = client.get("/admin/lakes/table", params={"root": str(root), "table": "book/deal"})
+    assert page.status_code == 200
+    t = page.text
+    assert "2026-10-01" in t and "2026-10-02" in t and "data-lt-dates" in t          # each business date, newest first
+    dates = t[t.index("data-lt-dates"):]
+    assert dates.index("2026-10-02") < dates.index("2026-10-01")
+    assert ">NOTIONAL<" in t and "promoted field" in t and "the whole document" in t  # columns and their roles
+    assert "data-lt-commits" in t and "WRITE" in t                                   # the log's commits
+    assert "data-lt-loads" in t and "deltalake" in t                                 # lake build's own record of the load
+    assert 'href="/admin/connectors/book-store"' in t                                # the connector that reads it
+    for bad in ({"root": "/etc", "table": "book/deal"}, {"root": str(root), "table": "../x"}, {"root": str(root), "table": "book/nothing"}):
+        assert client.get("/admin/lakes/table", params=bad).status_code == 404
+
+
+def test_the_lake_root_defaults_to_the_data_folder_as_the_server():
+    s = LakeSettings.from_settings({"lakes.data_dir": "/srv/drishti-data"}, REPO / "drishti-console")
+    assert s.roots == [Path("/srv/drishti-data/delta")]
+    s = LakeSettings.from_settings({"lakes.data_dir": "/srv/drishti-data", "lakes.roots": "/a,/b"}, REPO / "drishti-console")
+    assert s.roots == [Path("/a"), Path("/b")]

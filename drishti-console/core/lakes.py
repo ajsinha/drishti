@@ -73,14 +73,15 @@ class LakeSettings:
         def path(p):
             d = Path(str(p)).expanduser()
             return d if d.is_absolute() else (console_dir / d).resolve()
-        roots = s.get("lakes.roots", None) or ["../data/delta"]
+        data_dir = path(s.get("lakes.data_dir", None) or "../data")
+        roots = s.get("lakes.roots", None) or [str(data_dir / "delta")]   # the server's default root: <data dir>/delta
         if isinstance(roots, str):
-            roots = [r for r in roots.split(",") if r.strip()]
+            roots = [r for r in roots.split(",") if r.strip()] or [str(data_dir / "delta")]
         return cls(roots=[path(r) for r in roots], tools_dir=path(s.get("builder.tools_dir", "../tools")),
                    max_upload_mb=int(s.get("lakes.max_upload_mb", 4096)), scan_docs=int(s.get("lakes.scan_docs", 20000)),
                    engine=str(s.get("lakes.engine", "auto") or "auto"), jar=str(s.get("lakes.jar", "") or ""),
                    python=str(s.get("lakes.python", "") or ""), keep_min=int(s.get("lakes.keep_min", 240)), jobs=int(s.get("lakes.jobs", 2)),
-                   data_dir=path(s.get("lakes.data_dir", None) or "../data"),
+                   data_dir=data_dir,
                    schedules=str(s.get("lakes.maintenance_schedules", True)).lower() not in ("false", "0", "off", "no"))
 
     def as_dict(self) -> dict:

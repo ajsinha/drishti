@@ -947,6 +947,21 @@ business dates and one Sutra per type, previews them, and builds a pack bundle t
 Data loads (`/admin/loads`) shows what each pack expects and what landed; its **Load a file into a lake** button opens the Lakes
 page, the browser form of `lake build`. Administrators only.
 
+The lake roots are `lakes.roots` (`DRISHTI_LAKE_ROOTS`); unset, `<data dir>/delta`, the server's own root. Every table under them is
+listed with its rows, files, size, partitions and dates; **click a table's name** for its own page (`/admin/lakes/table`), read
+from its Delta log alone (no data file is opened, so it opens at once on a table of millions of rows):
+
+| Section | What it shows |
+|---|---|
+| Summary | rows, business dates (first to latest), files and size, table version and last commit, partition columns |
+| Read by | the Delta connectors whose domain and kind's table are this table, with their state (each links to Admin → Connectors) |
+| Business dates | newest first: rows (with a bar against the largest date), files, size, and the partitions with their rows |
+| Columns | each column, its type and its role: the id, the whole document (`doc`), a partition, a promoted field |
+| Commits | the newest 30: version, time, operation, its parameters (mode, predicate) and metrics (files and rows added), writer |
+| Loads | the table's runs of `lake build` under this root: outcome, mode, dates, rows, rejected, seconds, engine |
+| Maintenance | retention, target file size, checkpoints, vacuum (Lakes → Maintain changes them), or why it is not maintained here |
+| Table | table id, created, protocol, table properties |
+
 1. **The file.** Choose a `.json` (array), `.jsonl`, `.ndjson` or `.gz` file. It is streamed to the console's temporary folder as
    it uploads (a progress bar; never held in memory; up to `lakes.max_upload_mb`, 4,096 MB).
 2. **Id, business date and classifiers.** The console scans the file as a stream (the first `lakes.scan_docs`, 20,000, documents)

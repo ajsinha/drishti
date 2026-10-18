@@ -109,6 +109,83 @@ def tables(lake: pathlib.Path) -> list[dict]:
     return [summary(log.parent) for log in sorted(lake.glob("*/*/_delta_log"))]
 
 
+def _log_meta(t: pathlib.Path, history: int) -> dict:
+    """From the log alone: the newest metadata (schema, partition columns, properties, created), the protocol, and the newest
+    commits (version, time, operation, its parameters and metrics), newest first. Uses deltalake when the log starts at a checkpoint."""
+    log = t / "_delta_log"
+    commits = sorted(log.glob("*.json"))
+    meta, protocol, hist = None, None, []
+    if commits and commits[0].name.startswith("00000000000000000000"):
+        for f in commits:
+            with open(f, encoding="utf-8") as fh:
+                for line in fh:
+                    a = json.loads(line)
+                    if "metaData" in a:
+                        meta = a["metaData"]
+                    elif "protocol" in a:
+                        protocol = a["protocol"]
+        for f in reversed(commits[-history:]):
+            with open(f, encoding="utf-8") as fh:
+                info = next((json.loads(x)["commitInfo"] for x in fh if '"commitInfo"' in x), {})
+            hist.append({"version": int(f.stem), "timestamp": info.get("timestamp") or int(f.stat().st_mtime * 1000),
+                         "operation": info.get("operation"), "parameters": info.get("operationParameters") or {},
+                         "metrics": info.get("operationMetrics") or {}, "engine": info.get("engineInfo") or info.get("clientVersion")})
+    else:
+        from deltalake import DeltaTable
+        dt = DeltaTable(str(t))
+        m = dt.metadata()
+        meta = {"id": m.id, "name": m.name, "description": m.description, "partitionColumns": list(m.partition_columns),
+                "configuration": dict(m.configuration or {}), "createdTime": m.created_time, "schemaString": dt.schema().to_json()}
+        pr = dt.protocol()
+        protocol = {"minReaderVersion": pr.min_reader_version, "minWriterVersion": pr.min_writer_version}
+        for h in dt.history(history):
+            hist.append({"version": h.get("version"), "timestamp": h.get("timestamp"), "operation": h.get("operation"),
+                         "parameters": h.get("operationParameters") or {}, "metrics": h.get("operationMetrics") or {},
+                         "engine": h.get("engineInfo") or h.get("clientVersion")})
+    return {"meta": meta or {}, "protocol": protocol or {}, "history": hist, "version": int(commits[-1].stem) if commits else None}
+
+
+def _when(ms) -> str | None:
+    return _dt.datetime.fromtimestamp(ms / 1000, _dt.timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ") if ms else None
+
+
+def detail(t: pathlib.Path, history: int = 30) -> dict:
+    """One table in full, from its log (no data file is opened): its figures, each business date (rows, files, size, partitions),
+    its columns and types, partition columns, properties, protocol, and its newest commits."""
+    t = pathlib.Path(t)
+    out = summary(t)
+    if out.get("error"):
+        return out
+    got = _replay(t) or _with_deltalake(t)
+    by_date: dict[str, dict] = {}
+    for rows, size, parts in got["files"].values():
+        d = str(parts.get("business_date") or "(no date)")
+        x = by_date.setdefault(d, {"date": d, "rows": 0, "files": 0, "bytes": 0, "partitions": {}})
+        x["rows"] += rows or 0
+        x["files"] += 1
+        x["bytes"] += size
+        key = ", ".join(f"{k}={v}" for k, v in sorted(parts.items()) if k != "business_date")
+        if key:
+            x["partitions"][key] = x["partitions"].get(key, 0) + (rows or 0)
+    dates = [dict(v, size=human_bytes(v["bytes"]), partitions=sorted(v["partitions"].items(), key=lambda kv: -kv[1]))
+             for _, v in sorted(by_date.items(), reverse=True)]
+    lm = _log_meta(t, history)
+    meta = lm["meta"]
+    try:
+        fields = json.loads(meta.get("schemaString") or "{}").get("fields", [])
+    except ValueError:
+        fields = []
+    columns = [{"name": f.get("name"), "type": f["type"] if isinstance(f.get("type"), str) else (f.get("type") or {}).get("type", "struct"),
+                "nullable": f.get("nullable", True), "partition": f.get("name") in (meta.get("partitionColumns") or [])} for f in fields]
+    for h in lm["history"]:
+        h["when"] = _when(h["timestamp"])
+    out.update(size=human_bytes(out.get("bytes")), byDate=dates, columns=columns, partitionColumns=meta.get("partitionColumns") or [],
+               properties=meta.get("configuration") or {}, tableId=meta.get("id"), created=_when(meta.get("createdTime")),
+               protocol=lm["protocol"], version=lm["version"], history=lm["history"],
+               firstDate=next((d["date"] for d in reversed(dates) if d["date"] != "(no date)"), None))
+    return out
+
+
 def human_bytes(n: int | None) -> str:
     if not n:
         return "0 B"
