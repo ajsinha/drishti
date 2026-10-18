@@ -341,6 +341,9 @@ You should see:
 INFO:     Uvicorn running on http://0.0.0.0:17480 (Press CTRL+C to quit)
 ```
 
+followed by a line for each of the console's four worker processes (`server.workers`, `DRISHTI_CONSOLE_WORKERS`; `1` runs a single
+process).
+
 > **The two must match.** A console started without `DRISHTI_TOKEN_SECRET` against a server with sign-in on cannot read anything:
 > its log says `business date unavailable: DRS-5010 missing bearer token` and pages stay empty. Start both with sign-in, or both
 > without.
@@ -486,6 +489,9 @@ Nothing Drishti writes is hidden (no dot-folders of its own), and everything it 
 | `data/packs/` | the packs overlay `added.yaml` (packs loaded or switched off at run time) and installed pack archives |
 | `data/feeds/` | the file connector's feeds (the SOFR history `lake demo` writes) |
 | `data/loads/`, `data/governance/`, `data/collab/`, `data/reports/` | data-load history, BI governance, collaboration files, report output |
+| `data/cache/` | the Delta connectors' disk caches, one folder per connector: `idmaps/` (id maps, memory-mapped) and `docs/` (documents read before, RocksDB); the Kafka disk caches |
+| `data/derived/` | grouped pages kept on disk (`trade-pages`: counterparty, portfolio, legal entity and index trades), one folder per connector |
+| `data/tmp/` | temporary files: `tmp/server/drishti-<pid>` and `tmp/console/drishti-console-<pid>`, removed when the process stops |
 | `data/qa/`, `data/build/`, `data/drill/` | the QA profile's own data, tool output (`lake demo` staging), the drill's logs |
 
 The repository itself holds code and configuration: `config/` (packs, connector files, BI files), `run-configs/` and `drishti-console/run-configs/` (the IntelliJ and PyCharm run

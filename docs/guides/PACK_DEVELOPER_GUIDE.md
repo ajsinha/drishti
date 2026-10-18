@@ -831,7 +831,7 @@ data from `config/packs/counterparty-risk/pack.yaml`. Every key here is read eit
 | `connectors` | server | `[helpdesk-store]` (names), or `helpdesk-store: { plugin: file, … }` (a mapping: the pack's templates) | The connectors the pack reads through. A list names site connectors; a mapping names them **and** suggests each one's definition | [below](#connectors-the-pack-names-them-the-site-owns-them) |
 | `connector-templates` | server | `helpdesk-store: { plugin: file, … }` | Suggested definitions to go with a list of names; written to `config/connectors/<name>.yaml` at the first start if no such file exists | [below](#connectors-the-pack-names-them-the-site-owns-them) |
 | `routes` | server | `ticket: helpdesk-store` | Which connector answers a kind | [below](#connectors-the-pack-names-them-the-site-owns-them) |
-| `ingest` | tooling | `trade: { key: TRADE_ID, date: BUSINESS_DATE }` | Which field is each kind's id and which its business date, for `drishti.py data ingest --pack` and `pack check`. **Optional and ignored by the server** (a pack loads the same without it) | [below](#generating-a-pack-from-json-lines) |
+| `ingest` | tooling | `trade: { key: TRADE_ID, date: BUSINESS_DATE, flatten: { NOTIONAL: LEGS[0].NOTIONAL } }` | Which field is each kind's id and which its business date, for `drishti.py data ingest --pack`, `lake build --pack` (`--key` is then optional) and `pack check`; `flatten`: values inside lists that `lake build` writes as plain fields and columns ([Large kinds](#large-kinds-the-lake-layout)). **Optional and ignored by the server** (a pack loads the same without it) | [below](#generating-a-pack-from-json-lines) |
 | `alerts` | server | `- { kind: ticket, name: …, when: "$.AGE_HOURS > 24" }` | Suggested alert rules | below |
 | `sutras`, `formats`, `semantics`, `samples`, `about` | server | `sutras: sutras` | Where the pack's folders and files are | below |
 | `console.examples` | console | `- ["TKT TKT-1001", "An open ticket"]` | Example commands on `/t` and the landing page | below |
@@ -1247,6 +1247,22 @@ connectors:
 - **Choose the columns** a desk searches and lists by: the pick-list `columns:` of the kind, its `pivot` and `form` fields, the fields in its
   alerts, impact measures and derived kinds, and the link fields reverse lookups follow (`COUNTERPARTY`, `PORTFOLIO`, `LEGAL_ENTITY`). Each
   column costs little: repeated values (books, currencies, statuses) compress to almost nothing.
+- **Flattened fields.** A value inside a list (the first leg's notional) cannot be a promoted column as it stands. The pack's `ingest`
+  block names such values, and `lake build --pack` writes each as a plain field of the document and a promoted column:
+
+  ```yaml
+  ingest:
+    trade:
+      key: TRADE_ID                    # lake build --pack needs no --key
+      flatten:
+        NOTIONAL: LEGS[0].NOTIONAL
+        INDEX_NAME: LEGS[0].INDEX.NAME
+  ```
+
+  A field the document already has is never replaced, and a path a document lacks adds nothing. Searches, Sutras, grouped pages and BI
+  then read `NOTIONAL` without the document. A table that exists keeps its columns: the flattened columns appear in tables built from
+  scratch (`--mode replace`, or a new lake), so rebuild a table to add them; until every system's table has them, a search over the
+  three systems on that field reads documents. (`layout.<kind>.flatten` on a Delta connector is read the same way.)
 - **Business dates.** Each table is partitioned by `business_date`; `lake build` writes one date per run (`--as-of`) or the dates a
   field of the documents names (`--date`), and a later run for the same date replaces it. The data-load signal tells a server a date landed
   ([DATA_LOADS.md](DATA_LOADS.md)).
@@ -1295,13 +1311,14 @@ connectors:
     plugin: derived
     kinds: [counterparty-trades, portfolio-trades, legal-entity-trades, index-trades]
     settings:
-      refresh: 60s              # recomputed at most this often per business date (default 30s)
+      store: disk               # the pages on disk, the heap keeping each group's totals only (default heap)
+      refresh: 60s              # rebuild age, only when a source cannot say its data's version (default 30s)
       counterparty-trades:
         from: trade             # the kind it is built from (read through the normal routing: here the three systems' union)
         group-by: $.COUNTERPARTY  # Rachana-EL over a member: its group, which is the derived entity's id
         id-field: COUNTERPARTY  # a field holding the key besides `id` (default: id only)
         members: TRADE_IDS      # the members' ids, sorted (default: members)
-        max-members: 20000      # members a group keeps at most
+        max-members: 1000       # members listed (and rows); TRADE_COUNT and the totals count every member
         rows-field: TRADES      # where the per-member rows go (default: rows)
         fields:
           TRADE_COUNT: count
@@ -1310,6 +1327,10 @@ connectors:
           PRODUCT_TYPES: distinct $.PRODUCT_TYPE
           CURRENCIES: distinct $.CURRENCY
           LAST_MATURITY: max $.MATURITY_DATE
+          # the payments ladder over every member: PAY_7D, PAY_30D, PAY_90D and their _EVENTS counts
+          PAY_7D: "sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT')"
+          PAY_7D_EVENTS: "sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7])"
+          # … PAY_30D, PAY_30D_EVENTS, PAY_90D, PAY_90D_EVENTS
         rows:                   # optional: one row per member, for the page's tables
           TRADE_ID: $.TRADE_ID
           SOURCE_SYSTEM: $.SOURCE_SYSTEM
@@ -1334,9 +1355,24 @@ routes:
   members show as links; an `id-field` that is already a link field (`COUNTERPARTY`) links the derived entity to its key's.
 - **Business dates.** A picked date is computed from that date's members, so a derived kind has history wherever its
   members do, and *Data for* says which day.
-- **Cost.** One computation reads every member (up to `max-scan`, 50,000 by default; from the columns where the source keeps them)
-  once per `refresh` per business date, and is shared by every reader and by all the derived kinds of the connector built on the same
-  kind. Health shows `DOWN` with the reason when a computation fails; Admin → Caches → Purge recomputes.
+- **`today()`** in a field's expression is the date the pages are computed for: the business date asked for, or today's calendar
+  date (in `zone`, `America/New_York`) for the latest pages. The payments ladder counts the events from that date on.
+- **Cost.** One computation reads every member once per business date, and is shared by every reader and by all the derived kinds of
+  the connector built on the same kind. It reads from the columns where the source keeps every field it needs; otherwise it reads the
+  day's documents in one pass (a Delta table streams the date file by file), keeping only the values it needs per member. A source that
+  cannot read a day in one pass is read one member at a time, up to `max-scan` (50,000).
+- **When it is rebuilt.** Every `version-check` (10 s) the computation asks the sources for their data's version; a new version (a load)
+  rebuilds it in the background while the old pages serve. Nothing else rebuilds it: `refresh` is used only for a source that cannot say
+  its version.
+- **Where the pages live.** `store: heap` (the default) builds every page in memory: right for small books; `max-stream` (100,000)
+  bounds the members it keeps, and Health says DEGRADED with a WARN when it cuts. `store: disk` (the trading pack's `trade-pages`)
+  writes each member's key and row to a sorted store under `<data dir>/derived/<connector>` and keeps only each group's totals in the
+  heap, so the pages are complete at any number of members (1.16 million trades a day in an 8 GB heap). Pages on disk are kept across
+  restarts (`pages.json` beside them) and served at once while their data is unchanged.
+- **Failures.** Health shows `DOWN` with the reason when a computation fails; a computation that runs out of memory fails cleanly
+  (DEGRADED, the old pages serving, no reader waiting). Admin → Caches → Purge (or `drishti.py server caches purge trade-pages`) drops
+  the pages; with `store: disk` the latest date is rebuilt from the lake at once. Every setting is in
+  [CONFIGURATION.md](../admin/CONFIGURATION.md#derived--kinds-computed-from-other-kinds).
 - **Everything else is a kind like any other.** Give it a mnemonic, a Sutra (or let inference lay it out), roles,
   alerts, a form and pick-list columns as usual. It shows in search (`CTRD TRADE_COUNT > 500`) and the type-ahead.
 - **Mistakes fail the start of the connector.** A missing `group-by`, an unknown aggregate, a field without its expression, an

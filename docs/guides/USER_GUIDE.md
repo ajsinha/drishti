@@ -671,6 +671,11 @@ header with:
 *Events*, *Netted payments by date* (F6), *Payments by month*, *How this view was built* and *Linked entities*; F7 opens the counterparty's
 trades, F8 the impact and F9 the raw JSON.
 
+A page over many trades (`CTRD`, `PTRD`, `LTRD`, `ITRD`: a counterparty's, a portfolio's, a legal entity's, an index's trades) lists at
+most 1,000 of them; the trade count, the notional, the payments in the next 7, 30 and 90 days and every other total cover all of
+its trades, so a portfolio of 20,000 trades opens in well under a second. To work on every trade, search them (`TRD PORTFOLIO=…`) or
+open the pack's BI reports.
+
 Panel kinds you will meet:
 
 | Kind | Looks like | Example |
@@ -1409,7 +1414,7 @@ without `where` opens a single match directly.
 
 ## Search with a form (`FORM <pack>`)
 
-Type `FORM <pack>` (or open **Forms** in the Views menu) to fill in boxes instead of writing a search: the form writes the search, shows it and runs it. The reference is [QUERY_BY_FORM.md](QUERY_BY_FORM.md); the walk-through is [tutorial 3](../tutorials/03-query-by-form.md).
+Type `FORM <pack>` (or open **Forms** in the Views menu) to fill in boxes instead of writing a search: the form writes the search, shows it and runs it. A field with more than 300 values (the counterparties of a large book) shows a box to find them as you type instead of one tick box each. The reference is [QUERY_BY_FORM.md](QUERY_BY_FORM.md); the walk-through is [tutorial 3](../tutorials/03-query-by-form.md).
 
 ## Export, print and share
 

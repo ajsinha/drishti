@@ -217,7 +217,7 @@ Both processes keep **one folder of their own** for everything temporary, so a c
 | Process | Setting | Variable | Default | The folder |
 |---|---|---|---|---|
 | Server | `drishti.tmp-dir` (or `--drishti.tmp-dir=` on the command line) | `DRISHTI_TMP_DIR` | `<data dir>/tmp/server` (`./data/tmp/server`; the console's is `<data dir>/tmp/console`; the system temp folder before 2026-10-18: it can be a small in-memory file system) | `<base>/drishti-<pid>` |
-| Console | `tmp_dir` | `DRISHTI_CONSOLE_TMP_DIR`, then `DRISHTI_TMP_DIR` | the system temp folder | `<base>/drishti-console-<pid>` |
+| Console | `tmp_dir` | `DRISHTI_CONSOLE_TMP_DIR`, then `DRISHTI_TMP_DIR` | `<data dir>/tmp/console` when started by `run_drishti_web.py` (the system temp folder before 2026-10-18) | `<base>/drishti-console-<pid>` |
 
 At start each process (1) **leaves the folders of dead processes alone**: removing them automatically was disabled (2026-10-17) because it is not safe on every machine (a reused process id, or a link inside a folder, could lead a delete outside the folder); they are listed on Admin, Health for a person to remove by hand, (2) makes its own, and (3) points the language's temp setting at it before anything loads: the server sets `java.io.tmpdir` (so DuckDB's spill files, the sqlite, snappy and CatBoost native libraries unpack there), the console sets `tempfile.tempdir` (so uploads, exports, the static-file compression cache, the Python runner's scratch and the new-pack wizard land there). On a clean shutdown the folder is removed. The server reads the setting before Spring starts, so it comes from the command line, the system property or the variable, not from `application.yaml`. Files that are written and then moved over a target (atomic saves) are made in the target's own folder, since a move across disks is not atomic; they are made by the same helper.
 
@@ -357,7 +357,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_CONSOLE_WORKERS` | `server.workers` | `4` | Processes serving the console's pages (they share the port; one Python process uses one core). `1` runs a single process. |
 | `DRISHTI_BACKEND_URL` | `backend.url` | `http://127.0.0.1:18480` | Where the server is. |
 | `DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS` | `backend.check_seconds` | `5` | How often the console asks each server if it is there (`0` = never). Pages show a banner and recover by themselves when it returns. |
-| `DRISHTI_CONSOLE_TMP_DIR` | `tmp_dir` | empty | Base of the console's temp folder `drishti-console-<pid>` (empty: `DRISHTI_TMP_DIR`, then the system temp folder), removed on exit; left-over ones of dead processes are listed on Health, never deleted automatically. |
+| `DRISHTI_CONSOLE_TMP_DIR` | `tmp_dir` | empty | Base of the console's temp folder `drishti-console-<pid>` (empty: `DRISHTI_TMP_DIR`, then `<data dir>/tmp/console` when started by `run_drishti_web.py`), one per worker process, removed on exit; left-over ones of dead processes are listed on Health, never deleted automatically. |
 | `DRISHTI_EXTERNAL_LIB` | `external_lib` | empty | Base of the external library folder (empty: `external_lib` in the repository root); `<base>/python` is importable. The server reads the same variable for `<base>/java`. |
 | `DRISHTI_PRODUCT` | `ui.product` | `Drishti` | The product name shown in pages. |
 | `DRISHTI_USER` | `ui.user` | `ash` | The acting user while sign-in is off. |
@@ -616,7 +616,7 @@ and what it does. "From packs" means the bundled file leaves it empty and the en
 ```yaml
 drishti:
   sources:
-    fetch-timeout: 2s
+    fetch-timeout: 5s
     plugin-dir: /opt/drishti/plugins
     default-route: demo
     routes: { trade: trade-endur }
@@ -633,7 +633,7 @@ drishti:
 
 | Key | Default | Meaning |
 |---|---|---|
-| `fetch-timeout` | `2s` | The longest a single source read may take. Slower reads show the entity as unavailable instead of holding the view. |
+| `fetch-timeout` | `5s` | The longest a single source read may take (`DRS-1004`). Slower reads show the entity as unavailable instead of holding the view. |
 | `plugin-dir` | empty (`DRISHTI_PLUGIN_DIR`) | A directory of extra plugin jars. Each jar gets its own class loader. Plugins on the class path are always found. |
 | `default-route` | `demo` | The plugin or connector tried first for a kind that has no route. |
 | `routes.<kind>` | `{}` plus from packs | Which plugin or connector serves a kind. Packs route their kinds to their connectors (`trade: trade-endur`). |
@@ -1822,14 +1822,15 @@ Layout: `<root>/<domain>/<kind>/business_date=yyyy-MM-dd/` holding `(id, doc)` r
 | `lookback-days` | `10` | How far back a snapshot read looks for the latest partition. |
 | `id-column` / `doc-column` / `date-column` | `id` / `doc` / `business_date` | Column names. |
 | `refresh-seconds` | `10` | How often each table's latest version is checked. |
-| `cache-mb` | `512` | Whole days kept in memory, by size, for small tables that are not laid out. |
+| `cache-mb` | not set: shared, 5 % of the heap | Whole days kept in memory, by size, for small tables that are not laid out. |
 | `layout.<kind>.columns` | none | Document paths stored as columns beside the document (see [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#large-kinds-the-lake-layout)); searches, pick lists, derived kinds and impact read them instead of documents. `layout.<kind>.sort-by`, `file-rows`, `row-group-rows` tell the writers how to lay the table out. |
-| `id-map-mb` | `1024` | Each day's ids and the file each is in, read from the id column alone, kept by size. |
-| `doc-cache-mb` | `256` | Single documents read recently. |
+| `id-map-mb` | not set: shared, 20 % of the heap | Each day's ids and the file each is in, read from the id column alone, kept by size. |
+| `doc-cache-mb` | not set: shared, 5 % of the heap | Single documents read recently. |
 | `doc-disk-cache.enabled` | `true` | One RocksDB per connector (its own folder, files and compactions; compacted hourly, so expired files go without writes; a cache that cannot open is skipped with a WARN). A second tier for single documents, on disk (RocksDB) under `doc-disk-cache.dir` (default `<data dir>/cache/<connector>/docs`): a document read once is answered without decompressing its Parquet pages, also after a restart. Keyed by the table version it was read from, so never stale. Measured on 362,804 ENDUR trades: 17 % less CPU per read for documents already read (2026-10-18). |
 | `doc-disk-cache.max-gb`, `.ttl`, `.reset-at`, `.zone` | `1`, `12h`, `02:00`, `America/New_York` | Its size cap (the oldest files go first), time limit (entries written longer ago go), and daily clearing. |
 | `id-map-disk.enabled`, `id-map-disk.dir` | `true`, `<data dir>/cache/<connector>/idmaps` | Each table date's id map written once per table version and read through a memory map: no heap per id, and after a restart a date's first read needs no scan (3 ms instead of 0.7 s for 362,804 ids, 2026-10-18). Other versions' files go when a new one is written; a purge (Admin → Caches) deletes them. |
-| `columns-cache-mb` | `1024` | A day's promoted columns, read once and kept by size (the newest day is loaded in the background). |
+| `columns-cache-mb` | not set: shared, 20 % of the heap | A day's promoted columns, read once and kept by size (the newest day is loaded in the background). |
+| (memory budget) | — | Delta connectors that do not set `cache-mb`, `id-map-mb`, `columns-cache-mb` or `doc-cache-mb` share one cache of each, sized from `-Xmx` (5 %, 20 %, 20 %, 5 %: half the heap in all, however many connectors run); a connector that sets one keeps a cache of its own of that size. Admin → Caches shows each shared cache's size against its cap. |
 | `max-concurrent-reads` | `16` | Single-document reads at once (each decodes one row group). |
 | `max-load-rows` | `200000` | A table without columns has a whole day loaded for reverse lookups only up to this many rows. |
 | `warm-dates` | `3` | After start, in the background, each table's newest N dates get their id map and one document read, so the first read of a recent past date is not the slow one. `0` turns it off. |
@@ -2210,6 +2211,8 @@ Nothing is stored: each document is worked out when asked for (the news about th
 | `<kind>.members` | `members` | The field listing the members' ids. |
 | `<kind>.fields.<name>` | none | `count`, or `sum`/`avg`/`min`/`max`/`distinct`/`first` followed by an expression. |
 | `<kind>.rows.<column>` | none | One row per member with these columns (field `rows`, or `<kind>.rows-field`). |
+| `<kind>.max-members` | `1000` | Members listed (and rows) on a page; `memberCount` and every aggregate count all of them. |
+| `zone` | `America/New_York` | The zone whose calendar date `today()` is for the latest pages (a picked date's pages use that date). |
 | `store` | `heap` (`disk` in the trading pack's `trade-pages`) | `heap`: every page is built and kept in memory (small books). `disk`: the pages live under `store-dir`, the heap keeps each group's totals only; complete at any number of members (1.16 million trades a day measured in an 8 GB heap, 2026-10-18). |
 | `store-dir` | `<data dir>/derived/<connector>` | The pages' only folder (`store: disk`); emptied at start, one sub-folder per computation, deleted when a newer one replaces it. |
 | `retire-after` | `60s` | How long replaced pages on disk are kept for reads still running. |

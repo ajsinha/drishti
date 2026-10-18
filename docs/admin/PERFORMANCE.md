@@ -69,6 +69,26 @@ Seven years of history (1,800 business days, 7,200 files, a 7.2 MB log with a ch
 files in 84 ms (every `refresh-seconds`), and a trade on a 2019 date opens in 22 ms. Before the layout the same
 book could not be served: every read loaded a whole day (gigabytes of documents) and timed out.
 
+### Millions of trades a day and many users (2026-10-18)
+
+Measured on 8.2 million synthetic trades of the real ENDUR, CALYPSO and MUREX shapes (7 business days, 1.16 million on the latest),
+an 8 GB heap, made and driven by `tools/bench/trades.py` and `tools/bench/users.py`:
+
+| What | Measured |
+|---|---|
+| Single trade over the API, p50 at 10 users | 15–31 ms |
+| First read of a past date (id map memory-mapped from disk) / after a restart | 0.03–0.06 s / 3 ms per table date for its id map |
+| Server API, 50 users (80 % single trades, grouped pages, netting sets, searches) | about 140–150 requests/s, 0 failures |
+| Console pages, 50 users, 4 worker processes | about 70 pages/s, 0 failures |
+| Grouped pages (`trade-pages`, `store: disk`) for 1.16 million trades | built in 45 s in the background; a 20,000-trade portfolio page 0.4 s (486 KB) |
+| Server heap after collection | 1.2–1.8 GB |
+
+What makes it so: the Delta connectors share one memory budget (half the heap), id maps are memory-mapped from disk, documents
+read before come from a RocksDB cache on disk, Parquet footers are parsed once, grouped pages live on disk and are kept across
+restarts, and pack access, recent users and form pick lists are cached. The method and the sizing guide are in
+[SCALE_BENCHMARK.md sections 8 and 9](SCALE_BENCHMARK.md); the design and every result in
+[SCALE_STRATEGY.md](../architecture/SCALE_STRATEGY.md).
+
 The first live implementation delayed every tick by a whole frame (p50 52 ms). Switching to a leading-edge
 throttle (send at once after a quiet frame, coalesce inside a busy one) brought p50 to 2.4 ms.
 
@@ -422,7 +442,7 @@ measure again with the methods above.
 
 | Key | Default | Raise it when | Lower it when |
 |---|---|---|---|
-| `drishti.sources.fetch-timeout` | `2s` | A healthy but slow source makes views fail with `DRS-1004`. | You prefer a fast failure to a slow view. |
+| `drishti.sources.fetch-timeout` | `5s` | A healthy but slow source makes views fail with `DRS-1004`. | You prefer a fast failure to a slow view. |
 | `drishti.graph.link-budget` | `40ms` | Linked entities often show *pending* although their source is fine. Each step adds that much to a view's worst case. | Views must appear faster even if more links are pending. |
 | `drishti.engine.layout-cache-size` | `10000` | `timings.layout` is high on warm views (many data shapes or many Sutra versions). | Memory is tight and you have few shapes. |
 | `drishti.engine.fingerprint-cache-size` | `100000` | Many live entities tick at once (one entry per entity and generation). | Memory is tight. |
@@ -442,7 +462,7 @@ Views of `trade` sometimes fail with `DRS-1004 … timed out` and counterparty l
 # application.local.yaml
 drishti:
   sources:
-    fetch-timeout: 5s
+    fetch-timeout: 10s
   graph:
     link-budget: 100ms
 ```
@@ -466,12 +486,14 @@ settings live under the connector's `settings` and are overridden by the connect
 
 | Connector plugin | Setting | Default | What it holds |
 |---|---|---|---|
-| `delta` | `cache-mb` | `512` | Lake partitions kept in memory, by size. |
+| `delta` | `cache-mb`, `id-map-mb`, `columns-cache-mb`, `doc-cache-mb` | not set: one shared cache of each for every Delta connector, 5 %, 20 %, 20 % and 5 % of the heap | Whole days of small tables, days' id maps, days' promoted columns, recent documents. Set one and the connector keeps its own cache of that size. Admin → Caches shows the shared caches against their caps. |
+| `delta` | `id-map-disk.enabled`, `doc-disk-cache.enabled`, `doc-disk-cache.max-gb` | `true`, `true`, `1` | Id maps memory-mapped from `<data dir>/cache/<connector>/idmaps`; documents read before in a RocksDB under `<data dir>/cache/<connector>/docs`, kept across restarts, 12 h TTL, cleared daily at 02:00. |
+| `derived` | `store`, `max-stream` | `heap` (`disk` in the trading pack), `100000` | Grouped pages: `disk` keeps only each group's totals in the heap; `heap` keeps every page and at most `max-stream` members. |
 | `kafka` | `cache-mb` | `256` | Latest documents in memory; a miss reads the record back from Kafka by offset. |
 | `kafka` | `disk-cache.enabled`, `disk-cache.max-gb` | `false` (the `trading` pack turns it on), `10` | RocksDB disk cache in `./data/cache/<connector>` (root `DRISHTI_CACHE_ROOT`), cleared nightly at `disk-cache.reset-at` (`02:00`). |
 | `s3` | `cache-entries`, `cache-seconds` | `10000`, `30` | Documents read from S3, and for how long. |
 
-For example, give the `trading` pack's lake connector 2 GB:
+For example, give the `trading` pack's ENDUR connector its own 2 GB of columns, outside the shared budget:
 
 ```yaml
 drishti:
@@ -479,7 +501,7 @@ drishti:
     connectors:
       trade-endur:
         settings:
-          cache-mb: 2048
+          columns-cache-mb: 2048
 ```
 
 Site settings override what a pack contributes, key by key.

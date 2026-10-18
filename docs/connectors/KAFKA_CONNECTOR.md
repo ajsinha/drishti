@@ -283,9 +283,9 @@ settings:
 A document read this way is cached only if the index still points at the same offset when it is stored; a newer
 message or a tombstone applied meanwhile drops it, so a stale or deleted document never sticks in the cache.
 
-The engine's whole read is bounded by `drishti.sources.fetch-timeout` (2 s), shorter than the reader's 5 s, so a cold
+The engine's whole read is bounded by `drishti.sources.fetch-timeout` (5 s), the same as the reader's 5 s wait, so a cold
 read while the broker is away ends with `DRS-1004` rather than falling through to the next store. Raising
-`fetch-timeout` above 5 s turns such a read into "not held", and the next store (the lake) answers.
+`fetch-timeout` above 5 s (`7s`) turns such a read into "not held", and the next store (the lake) answers.
 
 ### 6.2 Type-ahead
 
@@ -401,7 +401,7 @@ from starting: it is listed under `failedToStart` with the client's message, and
 mode. A broker that is merely down does not stop the start.
 
 While the broker is away: documents in the memory or disk cache still answer; other reads go to Kafka and miss after
-the 5 s reader wait (`DRS-1004` within the default 2 s `fetch-timeout`); open views stop ticking and resume with the
+the 5 s reader wait (`DRS-1004` at the default 5 s `fetch-timeout`); open views stop ticking and resume with the
 next message after the broker returns.
 
 **Offsets out of range after an outage.** If retention removed messages while the connector was disconnected, the

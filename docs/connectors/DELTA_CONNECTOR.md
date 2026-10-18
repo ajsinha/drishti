@@ -238,6 +238,7 @@ Drishti only reads the lake. Whatever writes it must follow the layout. The repo
 
 | Writer | What it writes |
 |---|---|
+| `drishti.py lake build --from <file> --pack <pack> --connector <name>` | a day of a source system's documents into its table, in the pack's layout ([TOOLS.md](../guides/TOOLS.md)): rows sorted by id, row groups of 256 KB and pages of 64 KB (`DRISHTI_LAKE_ROW_GROUP_KB`, `DRISHTI_LAKE_PAGE_KB`), the pack's `ingest.<kind>.flatten` fields added as plain fields and promoted columns |
 | `tools/packgen/banking/make_data.py --lake data/delta` | the banking packs' 1,791 sample documents, 10 business days, every domain; the trade table in its layout |
 | `tools/samplegen/lake.py --samples <dir> --root data/delta --domain <d> --days 10` | one pack's samples into one domain; it prints `<table>: <n> entities x 10 business days` per table and writes the newest date twice (the second commit restates one document per kind), so *known at* before that commit shows the original; local disk only |
 | `tools/samplegen/bulk_trades.py --trades N --days D` | a large trade book in the layout, replacing the trade table (scale tests) |
@@ -310,7 +311,11 @@ the file); see [section 12](#12-limits-and-trade-offs).
 For each business day it is asked about, the connector builds an **id map**: every id of the day, sorted, each with the
 index of the file it is in. It reads only the `id` column of the day's files (a narrow column of short strings), never a
 document. A million ids take about 75 MB and well under a second to read. Id maps are kept by memory (`id-map-mb`,
-1024), so about a dozen recent days stay; an older day is read again when asked for. A file that carries a deletion
+shared, see [section 9](#9-memory)), so recent days stay; an older day is read again when asked for. With `id-map-disk.enabled`
+(the default) each table date's id map is also written once per table version under `id-map-disk.dir`
+(`<data dir>/cache/<connector>/idmaps`) and read through a memory map: it takes no heap per id, and after a restart a
+date's first read needs no scan of the id column (3 ms instead of 729 ms per table date on 362,804 ids, 2026-10-18). A
+file that carries a deletion
 vector is read through Kernel, which applies it: rows deleted in place are not in the id map, so type-ahead does not
 offer them.
 
@@ -322,7 +327,21 @@ offer them.
 2. The day's id map gives the file holding `MX-20000017` (a binary search).
 3. That file is read with the predicate `id = 'MX-20000017'`. Parquet compares it with each row group's statistics and
    decodes only the one row group (1,000 rows) whose id range can contain it, and only the `id` and `doc` columns.
-4. The document is parsed and kept in the document cache (`doc-cache-mb`, 256). Deletion vectors are honoured.
+4. The document is parsed and kept in the document cache in the heap (`doc-cache-mb`, shared by default) and in the
+   document cache on disk (`doc-disk-cache.*`, below). Deletion vectors are honoured.
+
+Each file's Parquet footer is parsed once and kept (files never change), so a single read does not parse a footer of
+hundreds of row groups again; `-Ddrishti.parquet.footer-cache-groups` (50,000 row groups) bounds them. Within the row
+group, the Parquet page index (`-Ddrishti.parquet.page-index`, `true`) narrows the read to the pages whose id range can
+hold the id; it helps most on files written with large row groups.
+
+**The document cache on disk.** With `doc-disk-cache.enabled` (the default), every connector keeps its own RocksDB under
+`doc-disk-cache.dir` (`<data dir>/cache/<connector>/docs`): a document read once is answered without decompressing its
+Parquet pages, also after a restart (17 % less CPU per read for trades read before, 2026-10-18). Entries are keyed by
+the table version they were read from, so they are never stale. It is bounded by size (`doc-disk-cache.max-gb`, 1), age
+(`doc-disk-cache.ttl`, 12 h; compacted hourly, so expired files go without writes) and a daily clearing
+(`doc-disk-cache.reset-at`, 02:00, in `doc-disk-cache.zone`, `America/New_York`). When it cannot open (a locked folder),
+the connector logs a WARN and reads without it.
 
 At most `max-concurrent-reads` (16) such reads run at once: each decodes about 7 MB of documents, so a burst of
 thousands of reads (an impact analysis, a search falling back to documents) queues instead of exhausting memory.
@@ -359,7 +378,7 @@ A past day restated with no signal is caught by the check every `index.reload-ev
 
 The first search of a business day reads the day's **column set**: the id and every promoted column, nothing else.
 Text values that repeat (a book, a desk, a currency) are shared, so a million rows of 19 columns take about 230 MB.
-Column sets are kept by memory (`columns-cache-mb`, 1024): about four days. After each re-index the newest day's
+Column sets are kept by memory (`columns-cache-mb`, shared by default: [section 9](#9-memory)). After each re-index the newest day's
 column set is loaded in the background, so the day's first search finds it ready.
 
 | | Time |
@@ -413,16 +432,22 @@ when all its expressions are plain paths that are promoted:
 
 1. Rows are grouped by the key column directly (the `PORTFOLIO` value of each row).
 2. Each aggregate runs over the column arrays: a sum over `QUANTITY` is a loop over a `double[]`.
+3. Only the members it lists get a small document, for its rows table: at most `max-members` (1,000 in the trading
+   pack). The aggregates and `memberCount` count every member.
 
-The shipped trade pages also sum `first($.LEGS).NOTIONAL` and list `$.EVENTS` per member, which are not promoted columns, so they are
-computed from the members' documents (at most `max-members`, 20,000); on 15,000 trades a page per portfolio reads thousands of documents
-the first time, which is why it is slower than a page whose fields are all promoted.
-3. Only the members it lists get a small document, for its rows table: at most `max-members` (desk P&L: 250). The
-   aggregates and `memberCount` count every member.
+When an expression is not a plain promoted path (the shipped trade pages list `$.EVENTS` per member and compute the
+payments ladder `PAY_7D`, `PAY_30D`, `PAY_90D` from them), the day is read **in one pass**: the connector streams the
+date's files one at a time and hands each document to the computation, which keeps only the values it needs per member,
+never the documents. With `store: disk` (the trading pack's `trade-pages`) each member's key and row go to a sorted store
+on disk under `<data dir>/derived/<connector>` and the heap keeps each group's totals only, so the pages are complete at
+any number of trades (1.16 million a day built in 45 s in an 8 GB heap, 2026-10-18). The flattened fields of
+`ingest.<kind>.flatten` (`NOTIONAL`, `INDEX_NAME`) are columns, so a page that needs only them reads no document.
 
-The result is kept per business day for `refresh` (60 s in the trading pack); after that the last result is served at
-once and recomputed in the background, so no reader waits for a recomputation. The first computation runs 15 seconds
-after start. Desk P&L of every desk from a million trades: **327 ms** the first time, **48 ms** after.
+The result is kept per business day until the data changes: every `version-check` (10 s) the computation asks the
+sources for their data's version, and a new version (a load) rebuilds it in the background while the old pages serve.
+Pages on disk are kept across restarts (a `pages.json` beside them) and served at once while their data is unchanged.
+Desk P&L of every desk from a million trades: **327 ms** the first time, **48 ms** after. The derived connector's
+settings are in [CONFIGURATION.md](../admin/CONFIGURATION.md#derived--kinds-computed-from-other-kinds).
 
 ### 7.3 Impact (F8)
 
@@ -451,14 +476,21 @@ re-read after expiry **84 ms**; an old day's columns **13 ms**.
 
 | Held in memory | Per million trades | Bounded by | Default |
 |---|---|---|---|
-| id map of a day | about 75 MB | `id-map-mb` | 1024 MB (about a dozen days) |
-| column set of a day (19 columns) | about 230 MB | `columns-cache-mb` | 1024 MB (about four days) |
-| documents read recently | 7 KB each | `doc-cache-mb` | 256 MB (about 35,000 documents) |
+| id map of a day | about 75 MB in the heap; none when memory-mapped from disk (`id-map-disk.enabled`, the default) | `id-map-mb` | 20 % of the heap, shared |
+| column set of a day (19 columns) | about 230 MB | `columns-cache-mb` | 20 % of the heap, shared |
+| documents read recently | 7 KB each | `doc-cache-mb` | 5 % of the heap, shared |
+| documents read before, on disk | — | `doc-disk-cache.max-gb` | 1 GB of disk per connector |
 | type-ahead index (newest day) | about 150 MB | the newest day only | — |
-| whole days of small tables | — | `cache-mb` | 512 MB |
+| whole days of small tables | — | `cache-mb` | 5 % of the heap, shared |
+
+**One memory budget.** Delta connectors that do not set `cache-mb`, `id-map-mb`, `columns-cache-mb` or `doc-cache-mb`
+share one cache of each, sized from the heap (`-Xmx`): 5 %, 20 %, 20 % and 5 %, half the heap in all, however many
+connectors run (the trading pack has three). A connector that sets one of them keeps a cache of its own of that size.
+Admin → Caches shows the budget as a row: each shared cache's size against its cap, and the heap.
 
 Measured server heap in use with a million trades a day: **2–3.5 GB**. Give the server a heap of at least 8 GB
-(`-Xmx8g`) for a million trades a day; raise `columns-cache-mb` if users move between many business days in a session.
+(`-Xmx8g`) for a million trades a day; the sizing guide for millions of trades a day is
+[SCALE_BENCHMARK.md section 8](../admin/SCALE_BENCHMARK.md).
 
 ## 10. Keeping the lake in shape
 
@@ -618,6 +650,11 @@ trade-endur   UP (engine: native; not laid out as the pack declares: trade (12 o
 
 `timeTravel` counts *known at* versions held. `partitions` (whole days loaded) stays at 0 for a laid-out table; `idMaps` and `columnSets` count the days in memory.
 
+**Admin → Caches** (or `drishti.py server caches`) lists the same per connector, and **Purge** (`drishti.py server caches
+purge trade-endur`) drops all of a connector's caches: its entries in the shared heap caches, its document cache on disk,
+its id map files and the parsed Parquet footers. Everything is rebuilt from the lake at the next read. A purge is safe
+at any time; use it after a lake was restored or rewritten in place.
+
 **Was a search answered from columns?** Its JSON says `"scanned": 1000000, "partial": false` (every entity of the day)
 when it was; a document search says `"partial": true` with a smaller `scanned`.
 
@@ -632,7 +669,7 @@ when it was; a document search says `"partial": true` with a smaller `scanned`.
 | an old picked date falls back to the samples | the date is more than `lookback-days` past the newest partition on or before it | load that date, or raise `lookback-days` |
 | *known at* shows the latest data | the lake was copied without keeping file times (Delta resolves instants against `_delta_log` modification times) | copy with `cp -p` / `rsync -t`; for S3, times are upload times |
 | S3: `DOWN: cannot reach s3a://…` | credentials, region or endpoint | try `aws s3 ls s3://<bucket>/<path>/` with the same credentials |
-| `DRS-1004 timed out` on a single read | the read deadline (2 s) passed: very large row groups, or object storage far away | smaller row groups; check `p99Ms` in Health; `drishti.sources.fetch-timeout` |
+| `DRS-1004 timed out` on a single read | the read deadline (`drishti.sources.fetch-timeout`, 5 s) passed: very large row groups, or object storage far away | smaller row groups; check `p99Ms` in Health; `drishti.sources.fetch-timeout` |
 | the log directory grows by megabytes a day | statistics include the document | `maintain.py` sets `delta.dataSkippingStatsColumns`; or set it yourself |
 | Health: `DEGRADED: cannot read trade 2026-09-30: …` | the last read of that table and date failed: pages in a codec the engine does not decompress (BROTLI, LZO), a page that does not decode, a truncated or missing Parquet file, or (`trade log`) a log missing a commit | the reason says which; codecs: [section 16](#16-engines-native-and-hadoop); a damaged file: restore it or rewrite the date. Health turns `UP` once a read of the date succeeds or the table gets a new version |
 | a view fails with `DRS-1003 … failed reading` while other dates open | that date's files cannot be read (see the row above); the view does not fall back to another store's data | as above |
@@ -755,13 +792,16 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 | `union` | `false` | this connector is one slice of its kinds (one source system of several): reads, searches, type-ahead and BI ask every union connector of the kind ([CONNECTORS.md](CONNECTORS.md#several-connectors-for-one-kind-a-union)) |
 | `layout.<kind>.sort-by`, `file-rows`, `row-group-rows` | `id`, `250000`, `10000` (the trading pack: `1000`) | how writers lay the table out |
 | `refresh-seconds` | `10` | how often the table's latest version is checked; the type-ahead index is rebuilt every six |
-| `warm-dates` | `3` | after start, in the background, each table's newest N dates get their id map and one document read, so the first read of a recent past date is not the slow one (cold about 5x a warm read: 40-70 ms against 10 ms on the samples, more on a large day); `0` turns it off |
-| `id-map-mb` | `1024` | memory for days' id maps |
-| `columns-cache-mb` | `1024` | memory for days' column sets |
-| `doc-cache-mb` | `256` | memory for recently read documents |
+| `warm-dates` | `3` | after start, in the background, each table's newest N dates get their id map and one document read, so the first read of a recent past date is not the slow one (cold about 5x a warm read: 40-70 ms against 10 ms on the samples, more on a large day); the warm-up reads take their own read slots, so a page never waits behind them; `0` turns it off |
+| `id-map-mb` | not set: the shared cache, 20 % of the heap | memory for days' id maps; set, a cache of this connector's own |
+| `id-map-disk.enabled`, `id-map-disk.dir` | `true`, `<data dir>/cache/<connector>/idmaps` | id maps written once per table version and date, read through a memory map ([section 6.2](#62-the-id-map-of-a-day)) |
+| `columns-cache-mb` | not set: the shared cache, 20 % of the heap | memory for days' column sets |
+| `doc-cache-mb` | not set: the shared cache, 5 % of the heap | memory for recently read documents |
+| `doc-disk-cache.enabled`, `doc-disk-cache.dir` | `true`, `<data dir>/cache/<connector>/docs` | documents read before, in a RocksDB on disk, kept across restarts ([section 6.3](#63-opening-one-entity)) |
+| `doc-disk-cache.max-gb`, `.ttl`, `.reset-at`, `.zone` | `1`, `12h`, `02:00`, `America/New_York` | its size cap, time limit and daily clearing |
 | `max-concurrent-reads` | `16` | single-document reads at once |
 | `max-load-rows` | `200000` | the largest day loaded whole for reverse lookups when a table has no promoted columns |
-| `cache-mb` | `512` | memory for whole days of small tables |
+| `cache-mb` | not set: the shared cache, 5 % of the heap | memory for whole days of small tables |
 | `id-column`, `doc-column`, `date-column` | `id`, `doc`, `business_date` | column names |
 | `source-name` | the connector's name | the name shown in provenance and Health |
 | `stale-after` | none | warn when no new data arrived for this long |

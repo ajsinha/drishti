@@ -73,9 +73,12 @@ Contents
 | `tools/bench/measure.py` | Times each question (type-ahead, open a trade first time and again, searches, desk P&L, impact) for N repetitions and with N concurrent clients; then a full GC and the live heap (`jcmd GC.run`, `GC.heap_info`) and the process RSS | PERFORMANCE.md, SCALE_BENCHMARK.md |
 | `tools/bench/scale.sh` + `report.py` | One store at one data size: start the store, load it, start a server, measure, clean up; tables with medians, p95, variance and labelled extrapolations | SCALE_BENCHMARK.md |
 | `tools/bench/pinload.py` + `pinning.sh` + `mqpublish.py` | A mixed concurrent read load (views, raw documents, searches, desk P&L, impact, a busy RabbitMQ source) to compare Java 21 and 25 and to provoke virtual-thread pinning (JFR, `-Djdk.tracePinnedThreads`) | PERFORMANCE.md "Java 21 and virtual-thread pinning" |
+| `tools/bench/trades.py` | Synthetic trades of the real ENDUR, CALYPSO and MUREX shapes at scale (N a day per system for D days, counterparties and netting sets), loaded day by day with `lake build` | SCALE_BENCHMARK.md section 9 |
+| `tools/bench/users.py` (first version) | Simultaneous users against the server's API or the console's pages for a fixed time: 80 % single trades, 10 % counterparty pages, 5 % netting sets, 5 % searches; one JSON line with requests a second and p50/p95/p99 and failures per kind of request | SCALE_BENCHMARK.md section 9; results in SCALE_STRATEGY.md |
 | `drishti-benchmarks` (JMH) | Micro-benchmarks of the hot path | PERFORMANCE.md §7 |
 | `/actuator/prometheus` + Grafana dashboard | JVM memory, GC, threads, HTTP timings, live counters | PERFORMANCE.md §3, `deploy/` |
-| Admin → Health | `server.heapUsedMb`, `heapMaxMb`, live streams, sources | the console |
+| Admin → Health | `server.heapUsedMb`, `heapMaxMb`, live streams, sources; **Pages** (per kind, p50/p95/p99 over ten minutes); **Activity** (requests a minute and average response time, last 30 minutes) | the console |
+| Admin → Caches | every cache's entries and sizes; the first row is the shared memory budget of the Delta connectors (each shared cache against its cap, the heap) | the console; `drishti.py server caches` |
 | Limits | `drishti.live.max-streams` (20,000), console `embed.max_streams` (64), rate limits per feature | CONFIGURATION.md |
 
 What is missing: a **many-user** load that holds live streams through the console as browsers do, a **soak** run,
@@ -106,7 +109,12 @@ make the request rate 1,000 people would, not 1,000 tight loops.
 
 One user, warm caches, `measure.py`. Answers Q1. Run on every release candidate; numbers go to PERFORMANCE.md.
 
-### 5.2 Capacity (to build: `tools/bench/users.py`)
+### 5.2 Capacity (`tools/bench/users.py`: a first version exists)
+
+The first version (2026-10-18) holds a fixed number of users for a fixed time against the server's API (`--server`,
+`--token-file`) or the console's pages (`--console`, `--user`, `--password`) on a lake made by `tools/bench/trades.py`, and prints
+one JSON line: requests a second and, per kind of request, p50/p95/p99 and failures (an HTTP error, a timeout, a page saying
+`DRS-1004`). It has no live channel, no steps and no workload file yet. The full version described next is still to build.
 
 `users.py` runs the workload model with **asyncio**: each simulated user is a coroutine with its own cookie jar that
 signs in through the console, opens views with `GET /v/...`, opens the tab's **live channel** (`/api/channel`, server-sent
@@ -154,6 +162,8 @@ To answer Q5, hold everything still and change one thing in steps, with a full G
 | Server: view streams (ViewStream) | open views (per tab, per view) | `drishti.live.*` metrics; histogram | target ≤ 50 KB per open view (layout cached by shape, not per view) |
 | Server: layout and view caches | distinct shapes, entities viewed | Admin → Caches (sizes); histogram | bounded by cache settings; purge returns it |
 | Server: connector caches | entities per connector | Admin → Caches; Kafka state mode memory and RocksDB disk cache | bounded by each connector's `memory` / `disk-cache.max-gb` |
+| Server: Delta caches | days read, documents read | Admin → Caches (the memory-budget row) | one shared budget, half the heap: id maps 20 %, columns 20 %, documents 5 %, whole days 5 %; id maps memory-mapped from disk and the document cache on disk (1 GB per connector) take no heap |
+| Server: grouped pages (`derived`) | groups (`store: disk`), members (`store: heap`) | Admin → Caches; the log line `derived pages … built in … s` | `store: disk`: each group's totals only (1.2 GB of heap for 1.16 million trades a day); `store: heap`: `max-stream` |
 | Server: identity, collaboration, audit | users, comments (JPA, SQLite or PostgreSQL) | database size; Hibernate statistics | small; the database holds it, not the heap |
 | Server: native memory | threads (virtual threads are cheap), direct buffers, RocksDB block cache, Delta Kernel | NMT summary; RSS minus heap | RSS ≤ heap max + 1.5 GB at capacity |
 | Console: live channels and hub | open tabs | console `/healthz`, Python heap (§7.4) | target ≤ 200 KB per open tab |
@@ -276,7 +286,7 @@ in the docs without a run behind it is not allowed.
 
 | Step | What | Size | Done when |
 |---|---|---|---|
-| 1 | `tools/bench/users.py` with the workload model (YAML), personas, think time, sign-in, views, the live channel, searches; capacity steps; JSON lines | M | 50 simulated users against a scratch server give per-action p50/p95/p99 and tick-to-frame |
+| 1 | `tools/bench/users.py` with the workload model (YAML), personas, think time, sign-in, views, the live channel, searches; capacity steps; JSON lines (a first version, fixed users against the API or the console with per-kind p50/p95/p99, exists since 2026-10-18) | M | 50 simulated users against a scratch server give per-action p50/p95/p99 and tick-to-frame |
 | 2 | `memwatch.py`: periodic heap after GC, RSS, NMT, threads, fds, caches, console RSS; histogram diffs | S | a 1-hour local run plots flat lines, and a deliberately leaking test build is flagged |
 | 3 | Stress mode: limits, tick storm, slow source; graceful-refusal checks | S | every refusal carries a code; recovery measured |
 | 4 | Memory steps mode and the budget fit | S | bytes per view, per topic, per pack, per cached entity printed with R² |

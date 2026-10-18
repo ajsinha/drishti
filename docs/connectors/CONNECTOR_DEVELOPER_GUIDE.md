@@ -136,7 +136,7 @@ table it holds cannot be read, a store it has not reached yet so it cannot tell 
 `DRS-1003 <connector> failed reading <kind>/<id>`: Drishti does not silently show you another store's data instead.
 When the connector says what to do (a Delta date in a codec its engine does not read), the error says so too
 (`…: trade 2026-09-30 cannot be read: …; rewrite the date with Snappy or ZSTD …`). The whole read must finish
-within `drishti.sources.fetch-timeout` (2 s) or it ends with `DRS-1004`. If nobody holds the entity the answer is
+within `drishti.sources.fetch-timeout` (5 s) or it ends with `DRS-1004`. If nobody holds the entity the answer is
 `DRS-1001`; if no connector serves the kind at all, `DRS-1002` (rare, because `demo` and `file` serve every kind).
 A read *as known at* an instant (`knownAt`) is only put to connectors that keep earlier versions (Delta Lake,
 Iceberg). A dated connector without them that may hold the date stops the read with `DRS-1007` (400) naming it
@@ -376,8 +376,11 @@ public interface SourcePlugin extends AutoCloseable {
     default Subscription subscribe(EntityRef ref, Consumer<EntityDocument> listener);
     default boolean pushes(EntityRef ref);
     default java.time.Instant lastUpdate();
+    default Optional<String> dataVersion(String kind);
+    default Optional<String> dataVersion(String kind, LocalDate date);
     default java.util.Set<String> columnar(String kind);
     default Optional<ColumnSet> columns(String kind, Collection<String> paths, AsOf asOf) throws Exception;
+    default boolean documents(String kind, AsOf asOf, Consumer<EntityDocument> sink) throws Exception;
     default Optional<ArrowScan> scan(ScanRequest request) throws Exception;
     default Optional<SqlTarget> sqlTarget();
     default List<EntityRef> reverse(EntityRef target, String kind);
@@ -386,6 +389,9 @@ public interface SourcePlugin extends AutoCloseable {
     default List<EntityHit> search(String kind, String text, int limit, AsOf asOf);
     default Optional<String> listingProblem(String kind);
     default Map<String, Object> cacheStats();
+    default Optional<DatedHitIndex> typeAheadIndex();
+    default Optional<PoolStats> poolStats();
+    default boolean dependsOn(String kind);
     default void purgeCaches();
     default Optional<FieldNote> describeField(String kind, String field);
     default Map<LocalDate, Long> inventory(String kind, int maxDates);
@@ -492,6 +498,20 @@ the kind on the date, column by column (`ColumnSet`: `ids`, `numbers`, `texts`, 
 derived kinds and impact analysis read columns instead of documents. Return `Optional.empty()` when you cannot answer
 as columns and documents are read instead. `columns` is only called with paths `columnar` lists. A plugin that does not
 keep columns leaves both as they are.
+
+### `documents(kind, asOf, sink)` and `dataVersion(kind[, date])`: one pass over a day, and when it changed
+
+`documents` hands every document of the kind on the business date to `sink`, in one pass over the store (a Delta table streams
+the date's files one at a time), for connectors built from other kinds: the grouped pages of a `derived` connector read a day
+this way instead of one `fetch` per member, so a million members cost one sequential read. Return `false`, having given
+nothing to `sink`, when you cannot read so (the caller then reads entity by entity, up to its `max-scan`); `true` when you
+read the date, even if it held nothing. Give each document as you read it; do not collect the day first.
+
+`dataVersion` names the kind's data as the store holds it now (a Delta table's version and commit time), and the dated form
+the data of one business date; empty when you cannot tell. It must be cheap: the BI store and the grouped pages ask it often
+(every `version-check`, 10 s) and rebuild what they built from the data only when it changes. A source that cannot say its
+version leaves the grouped pages on their `refresh` timer. `dependsOn(kind)` is true for a connector built from that kind
+(the `derived` one), so a data-load signal for the kind purges it too.
 
 ### Bulk reads for BI: `scan` and `sqlTarget`
 
@@ -1685,14 +1705,14 @@ state that should start empty each day.
 
 ### Timeouts
 
-`drishti.sources.fetch-timeout` (2 s) bounds the **whole** read, across every connector tried in turn, not each one.
+`drishti.sources.fetch-timeout` (5 s) bounds the **whole** read, across every connector tried in turn, not each one.
 If a slow store sits in front of others (a REST service, a remote database), either raise it or move the slow store
 later in the order (a route to the fast one):
 
 ```yaml
 drishti:
   sources:
-    fetch-timeout: 5s
+    fetch-timeout: 10s
 ```
 
 A read that runs over ends with `DRS-1004 timed out reading <kind>/<id>`; the connector's own timeouts

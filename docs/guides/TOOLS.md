@@ -131,7 +131,8 @@ file or a folder of them) **as a stream**, and writes it as a Delta table the De
 * at `<lake>/<domain>/<kind>/`, the folder a Delta connector with `root: <lake>` and `domain: <domain>` reads for that kind.
 
 Memory stays flat: documents are decoded one at a time, staged on disk per business date and partition, and written in batches
-bounded by rows (`--batch-rows`, 50,000) and bytes (`--batch-mb`, 128). Section 12 has the numbers.
+bounded by rows (`--batch-rows`, 50,000) and bytes (`--batch-mb`, 128). The staged rows, and the Java writer's own temporary
+files, go in a folder beside the lake (never the system temp folder), removed when the run ends. Section 12 has the numbers.
 
 ### 4.1 Look first: lake scan
 
@@ -386,8 +387,9 @@ last run: ok (exit 0), summary lake/_drishti-lake/last-run.json
 ### 4.7 A pack, a connector and the data-load signal
 
 With `--pack DIR` the builder takes from the pack's `pack.yaml` what it declares: the domain and the promoted columns of its Delta
-connector (`settings.domain`, `settings.layout.<kind>.columns`), and the key and date fields of its `ingest:` block (written by
-`pack make` and `pack new`). Options on the command line win.
+connector (`settings.domain`, `settings.layout.<kind>.columns`), and the key, date and flattened fields of its `ingest:` block
+(written by `pack make` and `pack new`; the trading pack has `ingest.trade.key: TRADE_ID`, so `--key` may be left out, and
+`ingest.trade.flatten` adds `NOTIONAL` and `INDEX_NAME` from the first leg, [4.5](#45-the-two-engines)). Options on the command line win.
 
 ```yaml
 # config/packs/trading/pack.yaml (the parts lake build reads; one Delta connector per source system)
@@ -920,6 +922,8 @@ of Parquet.
 | `tools/rachana/md_to_yaml.py` | converts Markdown Sutras (before 1.11) into YAML Sutras |
 | `tools/maps/build_regions.py` | builds the vendored region maps from Natural Earth |
 | `tools/packreg/packreg.py` | the signed pack registry behind `pack publish`, `pack keygen` and `pack install` |
+| `tools/bench/trades.py` | synthetic trades of the real ENDUR, CALYPSO and MUREX shapes at scale (`--min`/`--max` a day per system, `--days`, `--counterparties`, with netting sets), loaded day by day through `lake build`; writes only under `--lake` and `--tmp`; `--dry-run` says the days and counts ([SCALE_BENCHMARK.md section 9](../admin/SCALE_BENCHMARK.md)) |
+| `tools/bench/users.py` | simultaneous users against a server's API (`--server`, `--token-file`) or a console's pages (`--console`, `--user`, `--password`) for `--seconds`: a mix of single trades, counterparty pages, netting sets and searches; one JSON line with requests a second and p50/p95/p99 and failures per kind of request |
 | `tools/bench/scale.sh`, `tools/bench/pinning.sh` | the scale benchmark per store and size, and the virtual-thread pinning comparison (Java 21 / 25); they start and stop their own servers by process id |
 | `tools/windows/start-server.ps1`, `tools/windows/start-console.ps1`, `tools/windows/load-delta.ps1` | starting the server and console, and loading the demo lake, on Windows |
 | `tools/smoke.py` | the engine of `drishti.py server smoke` |
@@ -980,7 +984,8 @@ BI settings and governance; after an upgrade it lists the items the expression a
 ### 10.6 Admin → Health (`/admin/health`) and Admin → Packs (`/admin/packs`)
 
 Health is the server's and the console's state on one page (connectors not configured, late data, retries, temporary folders,
-the backend watch); the terminal twins are `drishti.py server health`, `server smoke` and `doctor`. Packs loads, unloads, switches
+the backend watch, **Pages**: per kind of any pack the views and p50/p95/p99 over the last ten minutes, slowest first, and an
+**Activity** chart of requests a minute and the average response time over the last 30 minutes); the terminal twins are `drishti.py server health`, `server smoke` and `doctor`. Packs loads, unloads, switches
 on and off and deploys a pack archive with its connectors (the twins: `drishti.py server packs`, `pack deploy`).
 
 ## 11. Scheduling reference

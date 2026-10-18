@@ -181,6 +181,11 @@ sudo -u drishti drishti-console/.venv/bin/python drishti-console/run_drishti_web
 
 You should see `Uvicorn running on http://127.0.0.1:17480`.
 
+The console runs **4 worker processes** on that port by default (`server.workers`, `DRISHTI_CONSOLE_WORKERS`): one Python process
+uses one core and serves about 40 pages a second, so several share the load (4 workers: trade pages p50 53 ms at 10 users).
+Nothing a request needs lives in one process only. Set `DRISHTI_CONSOLE_WORKERS=1` for a single process (a small machine, or a
+debugger); give it more on a machine with cores to spare and many users.
+
 ### 3.5 Check it works
 
 ```bash
@@ -1227,8 +1232,9 @@ Delta setting.
 **Sizing.** A laid-out trade table takes about 1.7 KB per trade per business day (Parquet, compressed): 1,000,000
 trades a day is about 1.6 GB a day, 35 GB a month, 2.8 TB for seven years. The server's memory does not grow with
 history: it keeps the days in use (their ids and columns, a few hundred MB a day for a million trades) and a document
-cache, all bounded (`id-map-mb`, `columns-cache-mb`, `doc-cache-mb`). Give the server a heap of 8 GB or more for a
-million trades a day.
+cache, all bounded: the Delta connectors share caches sized from the heap (section 12) unless one sets `id-map-mb`,
+`columns-cache-mb` or `doc-cache-mb`. Give the server a heap of 8 GB or more for a million trades a day; the sizing guide for
+millions of trades a day is [SCALE_BENCHMARK.md section 8](SCALE_BENCHMARK.md).
 
 ### 11.2 Maintenance
 
@@ -1305,7 +1311,10 @@ Nothing grows with the day's data without bound. Every cache has a size limit yo
 | Kafka connector | the index of where each entity's latest message is, with each id for type-ahead (about 0.4–0.5 GB per million entities, estimated), and recently read documents | `cache-mb` (256); `mode: ticks` keeps nothing (a store serves entities, the stream only ticks); `search: false` drops the identifier index |
 | Kafka disk cache (per connector) | every live message of the day, on local disk (RocksDB, no write-ahead log, LZ4, oldest files dropped first) | `disk-cache.max-gb` (10); cleared every night at `disk-cache.reset-at` (02:00 New York); its own directory `disk-cache.dir` (default `<disk-cache.root>/<connector>`, root `./data/cache`), so connectors never contend on one store and a busy stream can have its own disk |
 | ActiveMQ / RabbitMQ connectors | recently read documents in memory; the latest document of every entity on disk (RocksDB, LZ4, level compaction: size follows the entities held, not the messages). Writes are kept per `state.durability`: `sync` (default; write-ahead log synced, no acknowledged message lost on a crash or power loss), `wal` or `none`; a message the store cannot keep is not acknowledged and comes again | `cache-mb` (128); `state.max-gb` (10) per connector under `state.dir` (default `./data/state/<connector>`); past it `state.when-full: evict-oldest` (default) removes the entities written longest ago, logged and counted in `evicted`, or `warn` only says so in health |
-| Delta Lake connector | table partitions read recently | `cache-mb` (512) |
+| Delta Lake connectors (heap) | days' id maps, days' promoted columns, recently read documents, whole days of small tables | **one memory budget**: connectors that do not set their own share one cache of each, sized from the heap: `id-map-mb` 20 %, `columns-cache-mb` 20 %, `doc-cache-mb` 5 %, `cache-mb` 5 % (half the heap in all, however many connectors); a connector that sets one keeps its own of that size |
+| Delta Lake connectors (disk) | id maps memory-mapped, one file per table version and date (`<data dir>/cache/<connector>/idmaps`); documents read before, in a RocksDB per connector (`<data dir>/cache/<connector>/docs`), kept across restarts, keyed by table version | `id-map-disk.*` (old versions' files go when a new one is written; about 44 MB per trade connector measured); `doc-disk-cache.max-gb` (1), `.ttl` (12h), compacted hourly, cleared daily at `.reset-at` (02:00 New York) |
+| Delta Lake (Parquet footers) | each file's parsed footer, kept per immutable file | `-Ddrishti.parquet.footer-cache-groups` (50,000 row groups) |
+| Derived connector (grouped pages) | `store: heap`: every page; `store: disk` (the trading pack's `trade-pages`): each group's totals only, the members' keys and rows in a sorted store under `<data dir>/derived/<connector>`, kept across restarts | `store: heap`: `max-stream` (100,000 members); `store: disk`: the disk, one computation per date kept (16 dates) |
 | Aerospike connector | the kinds' dates and the ids (from the index set), and days of promoted bins for searches, impact and reverse lookups; not the days kept | `columns-cache-mb` (1024), kept `columns-seconds` (300) |
 | PostgreSQL (JDBC table mode) | nothing: every read is a query | `pool-size` connections (20; [sizing](#sizing-the-database-connection-pools)) |
 | Engine | layouts, shape fingerprints, compiled expressions | `drishti.engine.layout-cache-size` (10,000), `fingerprint-cache-size` (100,000), `drishti.rachana.expression-cache-size` (10,000) |
@@ -1340,7 +1349,11 @@ curl -s localhost:18480/api/v1/admin/caches
  {"name":"nyfed-sofr-feed","type":"Connector","stats":{"fetchedAt":"2026-10-01T00:03:36.547175473Z","observations":60,"series":1}}, ...]
 ```
 
-A purge is `POST /api/v1/admin/caches/{name}/purge` (or `all`); it is audited as `cache-purged`. A
+The page's first row is the **memory budget**: each shared Delta cache's size against its cap, and the heap in use against its
+maximum. A purge is `POST /api/v1/admin/caches/{name}/purge` (or `all`; `drishti.py server caches purge NAME|all` from the
+terminal); it is audited as `cache-purged`. A Delta connector's purge drops its entries in the shared caches, its document cache on
+disk, its id map files and the parsed Parquet footers; a derived connector's drops its pages, and with `store: disk` the latest date
+is rebuilt from the lake at once while the old pages serve. Everything is rebuilt from the data at the next read. A
 `layoutHitRate` well below 0.99 after warm-up means the data's shapes vary a lot; raise `layout-cache-size`.
 
 Documents of entities nobody is viewing are not held: Kafka messages for them are indexed from their key without
@@ -1348,7 +1361,7 @@ being parsed, and a later view reads that one message back by its offset.
 
 ### 12.1 Temporary folders
 
-The server's temporary files (DuckDB spill, native libraries, atomic-save scratch, Python transform runs) live in `drishti-<pid>` under `DRISHTI_TMP_DIR` (default `<data dir>/tmp/server`; the console's `<data dir>/tmp/console`); the console's (uploads, exports, the static-file cache, Python runner scratch) in `drishti-console-<pid>` under `DRISHTI_CONSOLE_TMP_DIR`. Each is removed on a clean stop, and the next start removes the folders of processes that are no longer running (a `kill -9` or a power cut leaves one). Put the base on a disk with room when DuckDB spills big queries: `DRISHTI_TMP_DIR=/var/tmp/drishti`. Admin, Health lists both with their size, so a growing folder is seen before the disk fills. Details: [CONFIGURATION.md](CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir).
+The server's temporary files (DuckDB spill, native libraries, atomic-save scratch, Python transform runs) live in `drishti-<pid>` under `DRISHTI_TMP_DIR` (default `<data dir>/tmp/server`; the console's `<data dir>/tmp/console`); the console's (uploads, exports, the static-file cache, Python runner scratch) in `drishti-console-<pid>` under `DRISHTI_CONSOLE_TMP_DIR`. Each is removed on a clean stop. A `kill -9` or a power cut leaves one: the next start leaves it alone (removing them automatically is disabled) and Health lists it for you to delete. Put the base on a disk with room when DuckDB spills big queries: `DRISHTI_TMP_DIR=/var/tmp/drishti`. Admin, Health lists both with their size, so a growing folder is seen before the disk fills. Details: [CONFIGURATION.md](CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir).
 
 ### 12.2 Sizing the multi-day type-ahead index
 
@@ -1418,6 +1431,9 @@ read them through the console's **Admin → Health** page, or from monitoring re
 
 The **Admin → Health** page (console `/admin/health`, refreshed automatically) shows the overall status, each
 connector's state, traffic, latency and last error, each pack's connectors and Sutra problems, and the live numbers.
+**Pages** lists, per kind of any pack, the views built on the server in the last ten minutes with their p50, p95 and p99,
+slowest first: the screen to look at when users say a page is slow. **Activity** is a bar chart of requests a minute and their
+average response time over the last 30 minutes (hover a bar for the slowest request and the errors in that minute).
 The data behind it:
 
 ```bash

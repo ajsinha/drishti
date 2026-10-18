@@ -126,7 +126,7 @@ immutable inputs, so they are safe to run concurrently and their results cache w
         │
  ① Command    CommandParser + Mnemonics → EntityRef(kind=trade, id=MX-20000001)               ~µs
  ② Fetch      SourceRouter → EntityDocument (DataNode + Provenance)                       I/O, virtual thread,
-                                                                                          drishti.sources.fetch-timeout (2s)
+                                                                                          drishti.sources.fetch-timeout (5s)
  ③ Match      SutraMatcher → highest-priority Sutra of the kind whose `where` holds (or none)   ~µs
  ④ Shape      ShapeFingerprinter → Fingerprint, cached per (entity, generation, date)     ~µs–ms
  ⑤ Layout     LayoutMerger: cache[(Sutra version, kind, fingerprint)] else Sutra ⊕ inference   cold ms, warm µs
