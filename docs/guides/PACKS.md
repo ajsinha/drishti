@@ -187,9 +187,11 @@ lakes it finds 132 combinations, every one laid out by exactly one Sutra (`GET /
 `combinations: 132, none: 0, several: 0`); the same check is a test (`SutraCoverageTest`, and the generators' `test_trades.py` for every
 product and sub type they book).
 
-**Pages over many trades** (derived kinds, recomputed every minute from the trades of every system by the `trade-pages` connector):
-`CTRD <counterparty>`, `PTRD <book>`, `LTRD <legal entity>`, `ITRD <index>`. Each shows the live trades (with a Pivot tab by product
-and system), payments in the next 7, 30 and 90 days and the upcoming ones listed, notional by product type (a donut), by index, the
+**Pages over many trades** (derived kinds, rebuilt from the trades of every system by the `trade-pages` connector when a load
+changes the data; kept on disk, `store: disk`, so they are complete at any number of trades and served at once after a restart):
+`CTRD <counterparty>`, `PTRD <book>`, `LTRD <legal entity>`, `ITRD <index>`. Each shows the live trades (at most 1,000 listed; the
+count and every total cover all of them; with a Pivot tab by product and system), payments in the next 7, 30 and 90 days (over every
+trade) and the upcoming ones listed, notional by product type (a donut), by index, the
 maturity ladder by year and payments by month. On the demo lakes the pack overview (`TRDS <GO>`) counts 15,000 trades, 24
 counterparties, 30 portfolios, 4 legal entities and 57 indexes.
 

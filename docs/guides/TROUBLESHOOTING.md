@@ -28,6 +28,7 @@ same machine. Replace `localhost` if yours run elsewhere.
 | [Signing in](#signing-in) | no sign-in page, wrong password, locked, signed in but bounced back |
 | [The console and the server](#the-console-and-the-server) | backend unreachable, `/readyz` says 503, the Live button has an amber ring, typing does nothing |
 | [Commands and views](#commands-and-views) | cannot read command, *Nothing matches*, DRS-1001, may not open, no suggestions, No data available, pending links, blank charts |
+| [Large books](#large-books-timeouts-grouped-pages-and-caches) | DRS-1004 on a trade, a counterparty or portfolio page slow or empty, grouped pages out of memory, only 1,000 trades listed, disk caches |
 | [Pick lists and tables](#pick-lists-and-tables) | a pick list instead of the entity, only ids in the list, only 25 rows, keys do nothing |
 | [Live and dates](#live-updates-and-business-dates) | view does not tick, no data held for a date, DRS-4003, known at has no effect, DRS-1007, DRS-1001 naming a store that holds the date |
 | [Search](#search) | DRS-4004, empty results, partial results |
@@ -600,6 +601,63 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Check:** `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:17480/static/vendor/echarts/echarts.min.js`
   should print `200`. The browser's developer console (F12) shows any blocked script.
 - **Fix:** allow the console's own `/static/` path through the proxy or extension; hard-refresh.
+
+## Large books: timeouts, grouped pages and caches
+
+### "DRS-1004 … timed out" opening a trade
+
+- **Cause:** a single read took longer than `drishti.sources.fetch-timeout` (5 s). On a large lake the first read of a date reads
+  that date's ids first; files written with large row groups, a lake on a network share or far object storage, or an antivirus
+  scanning every file read (Windows) make it slower. In the console the same code comes with "the server did not answer in time".
+- **Check:** Admin → Health, the connector's `p99Ms`; Admin → Health → Pages for the kind's p95; the server log for
+  `… loaded, N ids in F files (T ms)`.
+- **Fix:** open it again (the id map is then in memory, and with `id-map-disk.enabled`, the default, on disk for the next start);
+  load the lake with `lake build` (256 KB row groups); keep the data folder on a local SSD, excluded from real-time scanning; or raise
+  `drishti.sources.fetch-timeout` ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
+
+### A counterparty, portfolio, legal entity or index page (`CTRD`, `PTRD`, `LTRD`, `ITRD`) is slow or times out
+
+- **Cause:** its grouped pages are being built: after a load (a new data version) or the first time. With `store: disk` (the trading
+  pack) the old pages serve while new ones are built, and the pages of the previous run are served at once after a restart; with no
+  pages yet (a new data folder, a purge, a changed definition) the first build must end, about 45 s for a million trades.
+- **Check:** the server log: `derived pages trade-pages (…): reading every trade document in one pass, onto disk`, then
+  `… built in N s on disk (M MB)`; Admin → Health, the `trade-pages` row.
+- **Fix:** wait for the `built in` line. If every restart rebuilds, check that `<data dir>/derived/trade-pages` is kept between runs
+  (the log says `pages kept from the previous run` when it is).
+
+### Health: `trade-pages DEGRADED: out of memory building the pages`
+
+- **Cause:** the grouped pages did not fit in the heap. With `store: heap` every page is in memory; the build stops cleanly, the old
+  pages (if any) keep serving, and no reader waits.
+- **Fix:** set `store: disk` on the connector (the trading pack's default: the heap keeps each group's totals only), or lower
+  `max-stream`, or give the server more heap (`-Xmx`). Then **Admin → Caches → Purge** on the connector (or
+  `drishti.py server caches purge trade-pages`) builds again.
+
+### Health: `DEGRADED: partial: … built from the first 100,000 of … documents (max-stream 100,000)`
+
+- **Cause:** `store: heap` keeps at most `max-stream` members from a one-pass read; the pages are built from those only, and a WARN
+  says so in the log.
+- **Fix:** `store: disk` (complete at any number of members), or raise `max-stream` with heap for it.
+
+### A page over many trades lists only 1,000 trades
+
+- **Not a fault.** A grouped page lists at most `max-members` (1,000 in the trading pack) members; its trade count, notional, payments
+  in the next 7, 30 and 90 days and every other total cover all of them. Search for the rest (`TRD COUNTERPARTY=CP-…`) or use the
+  BI reports.
+
+### The log says "documents are not cached on disk (…): reads go on without it"
+
+- **Cause:** a Delta connector's document cache (`<data dir>/cache/<connector>/docs`, RocksDB) could not open: most often a second
+  server running on the same data folder holds its lock.
+- **Fix:** nothing is wrong with the data; reads skip the cache. Give each server its own data folder (`DRISHTI_DATA_DIR`), or set
+  `doc-disk-cache.enabled: false` on the connector.
+
+### A trade or grouped page shows data from before the lake was restored or rewritten
+
+- **Cause:** the caches are keyed by table version, so a normal load never shows stale data; a lake copied back in place with older
+  versions can.
+- **Fix:** **Admin → Caches → Purge** (or `drishti.py server caches purge all`): the shared memory caches, the disk caches, the id map
+  files and the grouped pages are all rebuilt from the lake.
 
 ## Pick lists and tables
 

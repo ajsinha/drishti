@@ -1591,6 +1591,32 @@ The other 14 sources are the seven packs' own, all `UP`; [TOOLS.md section 5.4](
 The exit code is 1 unless the status is `OK` (here two sources are down, so `DEGRADED`). `--json` prints the server's own
 `GET /api/v1/admin/health` document.
 
+**`drishti.py server caches --help`**
+
+```text
+usage: drishti.py server caches [-h] [--server SERVER]
+                                [--token-file TOKEN_FILE] [--user USER]
+                                [--timeout TIMEOUT] [--json]
+                                [{list,purge}] [name]
+
+server caches [purge NAME|all]: list the caches, or drop one (grouped pages on disk are rebuilt at once)
+
+positional arguments:
+  {list,purge}
+  name                  the cache to purge: a connector's name, engine, or all
+```
+
+`server caches` (or `server caches list`) prints one line per cache (the engine's and each connector's) with its type and its
+counts and sizes, the same as **Admin → Caches** (`GET /api/v1/admin/caches`); `--json` prints the server's document. `server caches
+purge NAME` drops one: for a Delta connector its entries in the shared memory caches, its document cache on disk, its id map files
+and the parsed Parquet footers; for a derived connector (`trade-pages`) its grouped pages, the latest date rebuilt from the lake at
+once while the old pages serve. `purge all` drops every cache. Everything purged is rebuilt from the data at the next read, so a
+purge is safe at any time; it needs an administrator and is written to the audit log.
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py server caches purge trade-pages
+```
+
 `server packs list|load|unload|on|off` manage packs. **load** and **unload** edit the overlay file
 (`data/packs/added.yaml`) after the server checks the pack the same way it does at start, then put the pack to use at once, with no restart;
 **on**/**off** switch a loaded pack for users without a restart. Unloading only works for packs an administrator loaded

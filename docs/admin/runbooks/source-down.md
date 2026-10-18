@@ -127,7 +127,7 @@ Connector settings are listed per plugin in [CONFIGURATION.md](../CONFIGURATION.
    {'fetch': 0.11, 'layout': 0.14, 'links': 0.16, 'bind': 0.21, 'total': 0.62} murex-rates
    ```
 
-   A `fetch` close to 2,000 means reads are hitting `drishti.sources.fetch-timeout` (2 s). A `links` close to 40
+   A `fetch` close to 5,000 means reads are hitting `drishti.sources.fetch-timeout` (5 s). A `links` close to 40
    means linked entities are hitting `drishti.graph.link-budget` (40 ms) and show as *pending*.
 
 2. If the view fails instead, the error tells you which:
@@ -170,7 +170,7 @@ without a restart ([CONNECTOR_FILES.md, section 12](../../connectors/CONNECTOR_F
 ```yaml
 drishti:
   sources:
-    fetch-timeout: 5s        # default 2s; views wait at most this long for a read
+    fetch-timeout: 10s       # default 5s; views wait at most this long for a read
   graph:
     link-budget: 100ms       # default 40ms; links slower than this show as pending
 ```

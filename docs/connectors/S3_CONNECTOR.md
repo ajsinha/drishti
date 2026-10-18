@@ -232,7 +232,7 @@ sending one.
 With daily folders and the default `lookback-days` of 10, a miss costs at most about 8 business-day folders plus the
 undated key, so 9 `GET`s; each `GET` is a round trip to the store (a few milliseconds inside the same region, more
 across the internet). The whole read, across every connector tried, must finish within
-`drishti.sources.fetch-timeout` (2 s), so keep the bucket close to the server.
+`drishti.sources.fetch-timeout` (5 s), so keep the bucket close to the server.
 
 A view reads the entity, then the entities it links to (each its own read, the same way). The document is parsed in
 full; there is no partial read of an object.
@@ -405,7 +405,7 @@ even when the store is unreachable.
 |---|---|---|
 | a listing (at start, or a rescan) | the last good listing is kept: date folders, kinds and type-ahead stay as they were (empty if no listing has ever succeeded) | `DOWN: <Exception>: <message> (retrying)` |
 | a `GET` (other than "no such key") | that read fails: the view shows `DRS-1003 <connector> failed reading <kind>/<id>`, and the router does **not** fall through to another store | `DOWN: <Exception>: <message> (retrying)` |
-| a `GET` slower than the fetch timeout | the read ends with `DRS-1004 timed out reading <kind>/<id>` after `fetch-timeout` (2 s); the `GET` itself may run on up to the 20 s socket timeout | unchanged |
+| a `GET` slower than the fetch timeout | the read ends with `DRS-1004 timed out reading <kind>/<id>` after `fetch-timeout` (5 s); the `GET` itself may run on up to the 20 s socket timeout | unchanged |
 | an object that is not valid JSON | that read fails (`DRS-1003`) | unchanged |
 
 `health` is exactly `"UP"` when no error is held, else `"DOWN: " + <exception's simple class name> + ": " +

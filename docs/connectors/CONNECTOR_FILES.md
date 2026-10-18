@@ -159,11 +159,12 @@ kinds:
 - index-trades
 settings:
   refresh: 60s
+  store: disk
   counterparty-trades.from: trade
   counterparty-trades.group-by: $.COUNTERPARTY
   counterparty-trades.id-field: COUNTERPARTY
   counterparty-trades.members: TRADE_IDS
-  counterparty-trades.max-members: 20000
+  counterparty-trades.max-members: 1000
   counterparty-trades.rows-field: TRADES
   counterparty-trades.fields.TRADE_COUNT: count
   counterparty-trades.fields.NOTIONAL: sum first($.LEGS).NOTIONAL

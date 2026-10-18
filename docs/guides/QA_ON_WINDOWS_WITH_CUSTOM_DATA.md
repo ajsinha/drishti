@@ -217,6 +217,10 @@ Good to know:
   may have letters, dashes and underscores; nothing expects an `END` prefix. `SOURCE_SYSTEM` says the trade is ENDUR.
 - Loading the same file again is safe: `--mode overwrite-dates` replaces that date.
 - A file of several hundred thousand trades takes a few minutes.
+- `--key TRADE_ID` may be left out: the trading pack says the same (`ingest.trade.key`). The pack also writes each trade's
+  first-leg `NOTIONAL` and `INDEX_NAME` as plain fields and columns (`ingest.trade.flatten`), so searches and the grouped pages
+  read them without opening the trade. A table that already exists keeps its columns, which is one more reason for step 3.2
+  point 1 (delete `trade_endur` first).
 
 ---
 
@@ -282,7 +286,9 @@ After a `git pull` that changed Java code, build the jar again (step 2.3) before
 - then, as the first pages are asked for, one line per large table and date it loads, for example
   `trade-endur: trade 2026-10-16 loaded, 312,480 ids in 35 files (2104 ms)`;
 - about 15 seconds after the start, the counterparty, portfolio, legal-entity and index pages being built from the trades,
-  with a line every 100,000 trades and a last line `derived pages trade-pages (latest) built in … s: counterparty-trades … pages …`.
+  with a line every 100,000 trades and a last line `derived pages trade-pages (latest) built in … s: counterparty-trades … pages …`;
+  on a later start with the same data, instead, `derived pages trade-pages (…): … pages kept from the previous run` (they are
+  served at once, and built again only when a load changes the data).
 
 The grouped pages (`CTRD` counterparty trades, `PTRD` portfolio trades, `LTRD`, `ITRD`) are kept on disk, in
 `data\derived\trade-pages`, and count **every** trade of the day (1.16 million a day measured in an 8 GB heap). The
@@ -300,10 +306,18 @@ Quotes and news come from the committed snapshot and no website is contacted.
 
 1. **PyCharm**, top-right drop-down → **Drishti console** → ▶ (Run). (It runs `drishti-console\run_drishti_web.py`
    with sign-in on.)
-   You should see: `Uvicorn running on http://0.0.0.0:17480`.
+   You should see: `Uvicorn running on http://0.0.0.0:17480`, then a line for each of its four worker processes.
 2. Browser → `http://localhost:17480` → sign in as `drishti-dev-admin` / `drishti-dev-admin123`.
 
 The console reconnects by itself if you start or restart the server after it.
+
+**Function keys on a laptop.** A view's panels have keys `F2`…`F9` (F7 the counterparty's trades, F8 impact, F9 the raw JSON).
+On most Windows laptops the F-keys are media keys unless `Fn` is held, and Edge keeps `F9` for its Immersive Reader: use
+`Alt`+`Shift`+`2`…`9` (and `0` for `F10`) instead, which always work.
+
+Temporary files of the server and the console go under `data\tmp\server` and `data\tmp\console`; the Delta caches under
+`data\cache\<connector>` and the grouped pages under `data\derived\trade-pages`. All of it can be deleted while both are stopped:
+it is rebuilt from the lake.
 
 ---
 
@@ -380,7 +394,12 @@ trades.
 | ENDUR pages still show synthetic trades | Step 3.2 point 1 was skipped: stop the server, delete `data\delta\trading\trade_endur`, load your files again, start the server. |
 | ENDUR and CALYPSO/MUREX never show on the same date | Step 3.1 used another date: run **Build demo lakes** again with `--as-of` = your newest ENDUR date, then step 3.2 again. |
 | A page says *unavailable* for quotes or news | Check **Admin → Connectors**: the snapshot stores must be RUNNING; run **Build demo lakes** again. |
-| The server stops with `OutOfMemoryError` | Close other programs; the configuration already gives it 4 GB (`-Xmx4g`). |
+| The server stops with `OutOfMemoryError` | Close other programs; the configuration already gives it 4 GB (`-Xmx4g`), enough up to about 400,000 trades a day; for a million or more give it 8 GB (`-Xmx8g`). |
+| Health shows `trade-pages DEGRADED: out of memory building the pages` | The grouped pages were built in memory: delete `config\connectors\trade-pages.yaml` (it comes back with `store: disk`), restart, or give the server more heap. |
+| A trade page says `DRS-1004 … timed out` | The first read of a date on a large table; open it again. If it keeps happening, exclude the project's `data` folder from the antivirus's real-time scanning (ask IT), and check that `data` is on the local disk, not a network share. |
+| The log says `documents are not cached on disk (…): reads go on without it` | A second server is running on the same `data` folder: stop it. Nothing is wrong with the data. |
+| F7, F8 or F9 do nothing, or Edge opens its Immersive Reader | Use `Alt`+`Shift`+`7`, `8`, `9` (section 4.2). |
+| A counterparty or portfolio page lists only 1,000 trades | By design: the count and every total cover all of its trades; search for the rest. |
 
 ---
 

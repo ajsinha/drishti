@@ -115,8 +115,9 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
   `<drishti-panel>`, `<drishti-report>`, `<drishti-about>` and `<drishti-search>` Web Components, without iframes (React, Vue and Angular samples) ([ELEMENTS.md](docs/guides/ELEMENTS.md), [tutorial 16](docs/tutorials/16-embed-drishti.md)).
 - **An AI layer and an MCP client**, both **off by default** (`drishti.ai.enabled`, `drishti.mcp.enabled`): pluggable
   model providers (OpenAI, Anthropic and seventeen more vendor types, each with TLS and a **Test connection** button) and *Ask about this page* ([AI_PROVIDERS.md](docs/architecture/AI_PROVIDERS.md), [MCP_CLIENT.md](docs/architecture/MCP_CLIENT.md)).
-- **Derived kinds**: entities computed from others, declared in a pack, such as each desk's P&L summed from its
-  trades (`DPNL DESK-RATES`), with history wherever their members have it.
+- **Derived kinds**: entities computed from others, declared in a pack, such as a counterparty's trades from every
+  booking system with their totals and payments ladder (`CTRD CP-ALDERSHOT`), with history wherever their members have it;
+  kept on disk, so they are complete at millions of trades a day and rebuilt only when a load changes the data.
 
 **Connect any data**
 - Delta Lake (local or S3, dated, time travel), PostgreSQL and other JDBC databases, Aerospike, Kafka, ActiveMQ,

@@ -339,10 +339,13 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 |---|---|---|---|
 | `refresh-seconds` | Delta connector | 10 | how often the table's log is checked for a new version |
 | `lookback-days` | Delta connector | 10 | how far back a snapshot read looks for the newest partition on or before the date |
-| `id-map-mb` | Delta connector | 1024 | id maps kept in the heap |
-| `columns-cache-mb` | Delta connector | 1024 | columns of dates kept in the heap |
-| `doc-cache-mb` | Delta connector | 256 | documents kept in the heap |
-| `cache-mb`, `max-load-rows` | Delta connector | 512, 200000 | whole days loaded for reverse links (tables without promoted link columns) |
+| `id-map-mb` | Delta connector | not set: shared, 20 % of the heap | id maps kept in the heap |
+| `columns-cache-mb` | Delta connector | not set: shared, 20 % of the heap | columns of dates kept in the heap |
+| `doc-cache-mb` | Delta connector | not set: shared, 5 % of the heap | documents kept in the heap |
+| `cache-mb`, `max-load-rows` | Delta connector | not set: shared, 5 % of the heap; 200000 | whole days loaded for reverse links (tables without promoted link columns) |
+| `id-map-disk.enabled`, `id-map-disk.dir` | Delta connector | true, `<data dir>/cache/<connector>/idmaps` | id maps memory-mapped from disk, one file per table version and date |
+| `doc-disk-cache.enabled`, `.dir`, `.max-gb`, `.ttl`, `.reset-at`, `.zone` | Delta connector | true, `<data dir>/cache/<connector>/docs`, 1, 12h, 02:00, America/New_York | the RocksDB document cache (section 8.1) |
+| `drishti.parquet.page-index`, `drishti.parquet.footer-cache-groups` | server (system properties) | true, 50000 | the page index for single reads; parsed footers kept, by row groups |
 | `max-concurrent-reads` | Delta connector | 16 | single-entity reads at once |
 | `warm-dates` | Delta connector | 3 | newest dates whose id maps load at start |
 | `index.days`, `index.max-memory`, `index.storage`, `index.max-disk` | Delta connector | 1, 600MB, heap, 2GB | the type-ahead index |
@@ -353,9 +356,12 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 | `version-check` | `derived` connector | **10s** | how often the data's version is asked; a new version rebuilds |
 | `refresh` | `derived` connector | 30s (trading pack: 60s) | rebuild age, used only when a source cannot say its version |
 | `max-scan` | `derived` connector | 50000 | members read one at a time, for sources that cannot read a day in one pass |
+| `<kind>.max-members` | `derived` connector | 1000 | members listed on a page; the count and totals cover every member |
 | `drishti.sources.fetch-timeout` | server | **5s** | longest single read (`DRS-1004`) |
-| `DRISHTI_LAKE_ROW_GROUP_MB` | `lake build` (Java writer) | **1** | Parquet row group size |
-| `drishti.tmp-dir` / `DRISHTI_TMP_DIR` | server | **`<data dir>/tmp`** | temporary files |
+| `DRISHTI_LAKE_ROW_GROUP_KB`, `DRISHTI_LAKE_PAGE_KB` | `lake build` (Java writer) | **256**, **64** | Parquet row group and page size (`DRISHTI_LAKE_ROW_GROUP_MB` is still read) |
+| `ingest.<kind>.flatten`, `ingest.<kind>.key` | pack (read by `lake build`) | none | flattened fields written as plain fields and promoted columns; the id field, so `--key` is optional |
+| `drishti.tmp-dir` / `DRISHTI_TMP_DIR` | server | **`<data dir>/tmp/server`** | temporary files (the console's: `<data dir>/tmp/console`) |
+| `server.workers` / `DRISHTI_CONSOLE_WORKERS` | console | **4** | worker processes sharing the console's port |
 | `-Xmx` | server JVM | 4g in the demo configuration | at most 8 GB (section 1) |
 
 ## 14. Operations
@@ -368,7 +374,9 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
   the log lines `… loaded, N ids in F files (T ms)` and `derived pages … built in … s`, and any `WARN … has more than
   … documents`.
 - **Disk**: the lake (about 1–3 GB a day for 3 × 500K, *estimate*), `<data dir>/tmp` (DuckDB spill; capped by the
-  query limits), the BI store, the type-ahead segment files (`index.max-disk`), later RocksDB (`disk-cache.max-gb`).
+  query limits), the BI store, the type-ahead segment files (`index.max-disk`), `<data dir>/cache/<connector>` (id maps,
+  about 44 MB per trade connector for 7 dates; the document cache, at most `doc-disk-cache.max-gb`), `<data dir>/derived/<connector>`
+  (grouped pages, about 0.55 KB a trade per cached date).
 
 ## 15. Risks
 

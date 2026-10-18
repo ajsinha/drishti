@@ -195,7 +195,9 @@ server is not running or `DRISHTI_BACKEND_URL` points at the wrong port.
 ### 4.5 Debug it and change code
 
 **Debug** works as usual; good first breakpoints are the route functions in `drishti-console/core/app.py` and the page routes
-it includes.
+it includes. The console serves pages from four worker processes by default (`server.workers`); for debugging, add
+`DRISHTI_CONSOLE_WORKERS=1` to the run configuration's environment so every request reaches the one process the debugger is in.
+Temporary files go under `data/tmp/console` (the server's under `data/tmp/server`), never the system temp folder.
 
 - **Templates** (`drishti-console/web/templates/**`) and **static files** (`drishti-console/web/static/**`: CSS, JavaScript): reload
   the browser page; no restart.

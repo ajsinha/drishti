@@ -1554,7 +1554,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-1001 | 404 | entity not found | no source holds the entity; also a missing workspace, monitor or alert rule. A store that holds the date and does not list the entity is named (`DRS-1001 recent-files holds trade for 2026-09-29 and does not list trade/MX-30000006`): the stores behind it are not asked |
 | DRS-1002 | 404 | no source for kind | no source serves the kind |
 | DRS-1003 | 502 | source failed | the source answered with an error, could not be reached, or holds the data but cannot read it; `detail` names the connector (`DRS-1003 trade-murex failed reading trade/MX-20000001`) and, when the connector says what to do, why (`…: trade 2026-09-30 cannot be read: the native Delta engine does not decompress BROTLI Parquet pages …`). The next connector is not asked: another store's data is never shown in place of a failing store's |
-| DRS-1004 | 504 | source timeout | the source took longer than `drishti.sources.fetch-timeout` (default 2 s) |
+| DRS-1004 | 504 | source timeout | the source took longer than `drishti.sources.fetch-timeout` (default 5 s) |
 | DRS-1005 | 422 | invalid json | a document (e.g. sample JSON pasted into Studio) is not valid JSON or not an object |
 | DRS-1006 | 500 | plugin load failed | a connector plugin could not be loaded (see `/sources` → `failures`) |
 | DRS-1007 | 400 | no time travel | `knownAt` asked of a dated store that keeps no earlier versions (only Delta Lake and Iceberg do); `detail` names the connector (`DRS-1007 recent-files keeps no earlier versions, so a read 'as known at' an instant cannot be answered from it …`). Today's data is never shown in its place; a structured search names it in `failed` and is `partial` |
