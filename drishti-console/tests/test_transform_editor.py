@@ -254,6 +254,20 @@ def test_the_sandbox_still_refuses_in_a_promoted_cell(made):
     assert r.status_code == 403 and r.json()["code"] == "DRS-9073"
 
 
+def test_analyse_profiles_the_readers_extract(made):
+    client, backend = made
+    spec = {"dataset": "dataset:pack.trading.trade", "fields": ["trade.TRADE_ID", "trade.DESK", "trade.NOTIONAL"]}
+    p = client.post("/bi/explore/profile", json={"extract": spec}).json()
+    cols = {c["name"]: c for c in p["columns"]}
+    assert p["kind"] == "profile" and p["inputRows"] == 3 and cols["TRADE_ID"]["unique"] and cols["NOTIONAL"]["looksLike"] == "decimal"
+    assert ["DESK-FX", 2] in cols["DESK"]["top"]
+    backend.reader = "bob"
+    b = client.post("/bi/explore/profile", json={"extract": spec}).json()
+    assert b["masked"] == ["NOTIONAL"] and {c["name"]: c for c in b["columns"]}["NOTIONAL"]["nullPct"] == 100.0
+    r = client.get("/bi/explore")
+    assert 'data-tab="profile"' in r.text and "bi-explore-profile.js" in r.text and 'href="/pyconsole"' in r.text
+
+
 def test_the_preview_rows_setting_is_read(made):
     client, _ = made
     from routes.transform_routes import EditorSettings

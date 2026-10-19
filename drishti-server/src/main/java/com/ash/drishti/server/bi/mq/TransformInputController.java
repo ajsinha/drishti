@@ -86,12 +86,14 @@ public class TransformInputController {
         MqService.Ran ran = mq.run(a.bound(), q, false, false);
         QueryService.Result r = TransformInputs.bare(ran.shown(), a.alias());
         List<String> masked = r.meta() == null ? List.of() : r.meta().masked();
+        // the business date the rows are of: the last date they came from (a connector's newest day), else the date the query was asked at
+        String asOf = r.meta() != null && !r.meta().dates().isEmpty() ? String.valueOf(r.meta().dates().get(r.meta().dates().size() - 1)) : String.valueOf(ran.compiled().asOf());
         if ("arrow".equalsIgnoreCase(format)) {
             return ResponseEntity.ok().contentType(MediaType.parseMediaType(DatasetController.ARROW))
                     .header("X-Bi-Rows", Integer.toString(r.rows()))
                     .header("X-Bi-Masked", String.join(",", masked))
                     .header("X-Bi-Model", a.ref())
-                    .header("X-Bi-As-Of", String.valueOf(ran.compiled().asOf()))
+                    .header("X-Bi-As-Of", asOf)
                     .header(HttpHeaders.CACHE_CONTROL, "no-store")
                     .body(ArrowIpcWriter.write(r.columns(), r.rows()));
         }
@@ -113,7 +115,7 @@ public class TransformInputController {
         out.put("rows", rows);
         out.put("rowCount", r.rows());
         out.put("masked", masked);
-        out.put("asOf", String.valueOf(ran.compiled().asOf()));
+        out.put("asOf", asOf);
         return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "no-store").body(out);
     }
 }

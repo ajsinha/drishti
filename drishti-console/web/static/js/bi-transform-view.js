@@ -35,7 +35,7 @@
     const m = new Set(masked || []);
     const types = {};
     (view.columns || []).forEach((c) => { types[c.name] = c.type; });
-    host.appendChild(h('table', { class: 'tbl bi-tbl tx-tbl', 'data-tx-table': '' },
+    host.appendChild(h('table', { class: 'tbl bi-tbl tx-tbl', 'data-tx-table': '', 'data-plain': '' },
       h('thead', {}, h('tr', {}, view.head.columns.map((c) => h('th', { scope: 'col', title: (types[c] || '') + (m.has(c) ? ' · masked for you' : '') },
         h('span', { text: c }), h('small', { class: 'tx-type', text: ' ' + (types[c] || '') }))))),
       h('tbody', {}, view.head.rows.map((r) => h('tr', {}, r.map((v) => h('td', { class: typeof v === 'number' ? 'num' : v == null ? 'tx-null' : '', text: v == null ? '—' : cell(v) })))))));
@@ -49,6 +49,7 @@
     const svg = document.createElementNS(SVG, 'svg');
     svg.setAttribute('viewBox', '0 0 100 24');
     svg.setAttribute('class', 'tx-hist');
+    svg.setAttribute('preserveAspectRatio', 'none');
     svg.setAttribute('role', 'img');
     const max = Math.max(1, ...hist.counts);
     const w = 100 / hist.counts.length;
@@ -70,6 +71,7 @@
     const svg = document.createElementNS(SVG, 'svg');
     svg.setAttribute('viewBox', '0 0 100 4');
     svg.setAttribute('class', 'tx-nullbar');
+    svg.setAttribute('preserveAspectRatio', 'none');
     svg.setAttribute('aria-hidden', 'true');
     const bg = document.createElementNS(SVG, 'rect');
     bg.setAttribute('width', '100'); bg.setAttribute('height', '4'); bg.setAttribute('class', 'tx-nullbar-bg');

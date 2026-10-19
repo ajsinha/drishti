@@ -108,7 +108,9 @@ SHOTS = os.environ.get("DRISHTI_DOC_SHOTS")
 def shot(page, name, locator=None):
     if SHOTS:
         Path(SHOTS).mkdir(parents=True, exist_ok=True)
-        (locator or page).screenshot(path=str(Path(SHOTS) / name))
+        page.set_viewport_size({"width": 1500, "height": 1400})                                   # tall enough that the top bar never covers the part shot
+        (locator or page.locator("#biCanvas")).screenshot(path=str(Path(SHOTS) / name))
+        page.set_viewport_size({"width": 1600, "height": 900})
 
 
 @pytest.fixture(scope="module")
@@ -171,9 +173,9 @@ def add_snippet(page, sid, fill):
 
 
 def open_kind_input(page, fields, connector="prep-store", name="trades"):
-    page.wait_for_function("() => document.querySelectorAll('[data-ikind] option').length > 1")
+    page.wait_for_selector("#tx[data-loaded=true]")
     page.select_option("[data-ikind]", "dataset:pack.trading.trade")
-    page.wait_for_selector("[data-ifields] input[name=f]")
+    page.wait_for_selector("#tx[data-fields-for='dataset:pack.trading.trade']")
     page.fill("[data-iconnector]", connector)
     for box in page.locator("[data-ifields] input[name=f]").all():               # the fields this Transform reads
         if (box.get_attribute("value") in fields) != box.is_checked():
@@ -194,10 +196,10 @@ def test_a_transform_reading_a_connector_is_built_step_by_step_without_yaml(stac
     s = state(page)
     got = s["spec"]["inputs"][0]["input"]
     assert {k: v for k, v in got.items() if k != "fields"} == {"kind": "trade", "pack": "trading", "connector": "prep-store"} and sorted(got["fields"]) == sorted(fields)
-    assert s["run"]["complete"] and s["run"]["inputs"][0]["rows"] == 60, s["run"]["inputs"][0]
+    assert s["run"]["complete"] and s["run"]["inputs"][0]["rows"] == 60 and s["run"]["inputs"][0]["asOf"] == DAY, s["run"]["inputs"][0]   # the connector's newest day
     expect(page.locator("[data-step='0'] [data-step-state]")).to_contain_text("60 rows")
     expect(page.locator("[data-prows] table tbody tr")).to_have_count(20)                     # the first 20 rows of the step's frame
-    shot(page, "01-input.png")
+    shot(page, "01-input.png", page.locator(".tx-inputs"))
 
     add_snippet(page, "filter-values", lambda: (page.select_option("[data-param=column]", "PORTFOLIO"), page.fill("[data-param=values]", "BOOK-FX-1")))
     n = ran(page, n)
@@ -208,7 +210,7 @@ def test_a_transform_reading_a_connector_is_built_step_by_step_without_yaml(stac
     expect(book).to_contain_text("×20")
     expect(page.locator("[data-profile-col=QUANTITY] svg.tx-hist")).to_be_visible()           # a histogram of the numbers
     expect(page.locator("[data-profile-col=TRADE_ID] .tx-key")).to_be_visible()               # every row its own value: a key
-    shot(page, "02-profile.png")
+    shot(page, "02-profile.png", page.locator(".tx-work"))
 
     add_snippet(page, "calculated-column", lambda: (page.select_option("[data-param=left]", "QUANTITY"), page.select_option("[data-param=op]", "*"),
                                                     page.select_option("[data-param=right]", "PRICE"), page.fill("[data-param=out]", "VALUE")))
@@ -221,7 +223,7 @@ def test_a_transform_reading_a_connector_is_built_step_by_step_without_yaml(stac
     assert [st["rows"] for st in s["run"]["steps"]] == [60, 20, 20, 2]
     got = {r[0]: r[1] for r in s["run"]["steps"][-1]["head"]["rows"]}
     assert got == pytest.approx(fx_value())                                                   # equal to a computation from the same trades
-    shot(page, "03-steps.png")
+    shot(page, "03-steps.png", page.locator(".tx-work"))
 
     page.click("[data-step='1'] .tx-pick")                                                     # back to a step: its own rows again
     expect(page.locator("[data-prows] table tbody tr")).to_have_count(20)
@@ -265,6 +267,23 @@ def test_a_failing_step_says_where_and_keeps_the_steps_before(stack, browser):
     page.close()
 
 
+def test_analyse_profiles_the_extract_with_the_editors_panel(stack, browser):
+    page = sign_in(browser, "ann", "/bi/explore")                                             # no raw power: PRICE is masked for her
+    page.wait_for_function("() => [...document.querySelectorAll('[data-dataset] option')].some(o => o.value === 'mq:prep-model@1')", timeout=30000)
+    page.select_option("[data-dataset]", "mq:prep-model@1")
+    page.wait_for_selector("[data-fields] input[name=f]")
+    page.check("[data-fields] input[value='trades.PRICE']")                                   # a masked field is not ticked for her: tick it
+    page.click("[data-open-go]")
+    expect(page.locator("[data-info]")).to_contain_text("rows")
+    page.click("[data-tab=profile]")
+    expect(page.locator("[data-profile-col=PORTFOLIO]")).to_contain_text("BOOK-FX-1")
+    expect(page.locator("[data-profile-col=PRICE] .tx-masked")).to_be_visible()
+    expect(page.locator("[data-profile-meta]")).to_contain_text("Masked for you: PRICE")
+    shot(page, "07-analyse-profile.png", page.locator("#bxP-profile"))
+    clean(page)
+    page.close()
+
+
 def open_extract(page, date=None):
     page.wait_for_function("() => [...document.querySelectorAll('[data-dataset] option')].some(o => o.value === 'mq:prep-model@1')")
     page.select_option("[data-dataset]", "mq:prep-model@1")
@@ -304,14 +323,14 @@ def test_the_browser_console_analyses_a_masked_extract_and_a_result_is_promoted(
     browser_rows = page.evaluate("() => window.drishtiPyConsole.browser.table.rows")
     assert {r[0]: r[1] for r in browser_rows} == pytest.approx(fx_quantity())
     assert any("calc-worker.js" in w for w in workers)                                       # Calc's worker ran it, in this tab
-    shot(page, "05-browser-console.png")
+    shot(page, "05-browser-console.png", page.locator("section[aria-labelledby=pcCodeH]"))
 
     page.fill("[data-ptitle]", "Quantity by book, from the browser")
     page.click("[data-promote]")
     page.wait_for_function("() => document.getElementById('pc').getAttribute('data-promoted')", timeout=60000)
     assert page.locator("#pc").get_attribute("data-promoted") == "same"                     # the console backend gave the browser's answer
     expect(page.locator("[data-compare-line]")).to_contain_text("The same answer as in your browser")
-    shot(page, "06-promoted.png")
+    shot(page, "06-promoted.png", page.locator("[data-compare]"))
     href = page.locator("[data-open-notebook]").get_attribute("href")
     assert href.startswith("/bi/explore?item=")
     clean(page)

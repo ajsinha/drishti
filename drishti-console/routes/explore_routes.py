@@ -160,6 +160,22 @@ async def slice_pivot(request: Request):
     return JSONResponse({**out, "inputRows": len(ex.rows), "masked": ex.masked}, headers={"Cache-Control": "no-store"})
 
 
+@router.post("/bi/explore/profile")
+async def profile(request: Request):
+    """Body ``{extract: {...}}``: the profile of the reader's extract (wave C, BI_PARITY_PLAN.md P3: per column its type, what its text looks like, nulls,
+    distinct values, a key hint, min and max, the most common values, a histogram), worked out in the console's sandbox, no author code; the same panel the
+    Transform editor shows. ``{kind: profile, rows, columns, inputRows, masked}``."""
+    body = await json_body(request)
+    try:
+        ex = await extract_for(request, body.get("extract") if isinstance(body.get("extract"), dict) else {})
+        if ex.arrow is None:
+            raise ExploreError("DRS-9074", 503, "the profile needs pyarrow on the console (pip install -r drishti-console/requirements.txt)")
+        out = await request.app.state.pyrunner.profile(ex.arrow)
+    except (BackendError, ExploreError, PyError) as e:
+        return _fail(e)
+    return JSONResponse({**out, "inputRows": len(ex.rows), "masked": ex.masked, "truncatedInput": ex.truncated}, headers={"Cache-Control": "no-store"})
+
+
 @router.post("/bi/explore/dsql")
 async def dsql(request: Request):
     """Body ``{extract: {dataset, ...}, sql}``: one Drishti SQL statement over the model the extract reads (BI_DESIGN.md 3.4), run by the server as the

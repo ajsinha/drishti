@@ -49,13 +49,13 @@
   const kindSel = q('[data-ikind]'), modelSel = q('[data-imodel]'), fieldsBox = q('[data-ifields-box]'), fieldsEl = q('[data-ifields]'), addBtn = q('[data-iadd]');
   let groups = [];
   function mode() { return (qa('[data-isrc]').find((r) => r.checked) || {}).value || 'kind'; }
-  function showMode() {
+  function showMode(reload) {
     const k = mode() === 'kind';
     qa('[data-kind-row]').forEach((e) => { e.hidden = !k; });
     qa('[data-model-row]').forEach((e) => { e.hidden = k; });
-    loadFields(k ? kindSel.value : modelSel.value);
+    if (reload) { loadFields(k ? kindSel.value : modelSel.value); }
   }
-  qa('[data-isrc]').forEach((r) => r.addEventListener('change', showMode));
+  qa('[data-isrc]').forEach((r) => r.addEventListener('change', () => showMode(true)));
   function loadSources() {
     return B.layer.groups().then((gs) => {
       groups = gs;
@@ -78,6 +78,7 @@
           h('input', { type: 'checkbox', name: 'f', value: mode() === 'kind' ? c.name : t.name + '.' + c.name, checked: ti === 0 && i < 12 }), ' ' + c.name + (c.masked ? ' (masked)' : '')))));
       });
       fieldsBox.hidden = false; addBtn.disabled = false;
+      root.setAttribute('data-fields-for', value);
       const nm = q('[data-iname]');
       if (!nm.value) { nm.value = (value.split('.').pop() || 'input').replace(/[^A-Za-z0-9_]/g, '_').replace(/^(\d)/, '_$1') + (/s$/.test(value) ? '' : 's'); }
     }).catch((e) => say(e.message, true));
@@ -410,7 +411,8 @@
   // ---- start ---------------------------------------------------------------------------------------------------------------------------------------
   const params = new URLSearchParams(window.location.search);
   Promise.all([loadSources(), loadSnippets()]).then(() => {
-    showMode();
+    showMode(false);
+    root.setAttribute('data-loaded', 'true');
     const item = params.get('item'), ds = params.get('dataset');
     if (!item) { drawAll(); return null; }
     return Promise.all([B.api('GET', '/items/' + B.id2path(item)), ds ? B.api('GET', '/items/' + B.id2path(ds)) : Promise.resolve(null)]).then((got) => {

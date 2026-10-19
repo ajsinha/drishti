@@ -83,3 +83,13 @@
 .pc-err { color: var(--d-neg); overflow-wrap: anywhere; }
 .pc-where { color: var(--d-muted); font-size: .85rem; }
 .pc-compare { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .5rem .7rem; }
+.tx-keyset legend, .tx-fields legend { font-size: .9rem; font-weight: 600; padding: 0 .3rem; margin: 0; }
+.tx-radios legend { font-size: .85rem; color: var(--d-muted); padding: 0; margin-bottom: .2rem; }
+.bi-form .tx-radio input[type="radio"] { min-width: 0; width: auto; margin: 0; }
+.tx .bx-mini:disabled { opacity: .3; cursor: default; }
+.pc .CodeMirror { height: 14rem; border: 1px solid var(--d-border); border-radius: var(--d-radius); font: .84rem/1.5 var(--d-font-mono); background: var(--d-bg-2); color: var(--d-ink); }
+.pc .CodeMirror-gutters { background: var(--d-bg); border-right: 1px solid var(--d-border); }
+.pc .CodeMirror-linenumber { color: var(--d-faint); }
+.pc .CodeMirror-cursor { border-left-color: var(--d-accent); }
+.pc .CodeMirror-selected, .pc .CodeMirror-focused .CodeMirror-selected { background: var(--d-accent-tint); }
+.pc .CodeMirror-focused { outline: 2px solid var(--d-accent); outline-offset: 1px; }

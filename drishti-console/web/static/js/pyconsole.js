@@ -172,7 +172,7 @@
   function cell(v) { return v == null ? '' : typeof v === 'number' ? v.toLocaleString('en-US', { maximumFractionDigits: 6 }) : String(v); }
   function table(el, item) {
     if (item.title) { el.appendChild(h('h4', { class: 'calc-h', text: item.title })); }
-    el.appendChild(h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl calc-tbl', 'data-pc-table': '' },
+    el.appendChild(h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl calc-tbl', 'data-pc-table': '', 'data-plain': '' },
       h('thead', {}, h('tr', {}, item.columns.map((c, i) => h('th', { class: (item.numeric || [])[i] ? 'num' : '', text: c })))),
       h('tbody', {}, item.rows.map((r) => h('tr', {}, r.map((v) => h('td', { class: 'mono' + (typeof v === 'number' ? ' num' : ''), text: cell(v) }))))))));
     el.appendChild(h('p', { class: 'calc-foot text-muted-d', text: item.total.toLocaleString('en-US') + (item.total === 1 ? ' row' : ' rows') }));
@@ -184,11 +184,15 @@
     if (!window.echarts) { box.textContent = 'Charts need ECharts.'; return; }
     const st = getComputedStyle(document.documentElement), tok = (k) => st.getPropertyValue('--d-' + k).trim();
     const type = item.type === 'hist' ? 'bar' : item.type;
+    const axis = { axisLine: { lineStyle: { color: tok('border') } }, axisLabel: { color: tok('muted'), fontSize: 10 }, splitLine: { lineStyle: { color: tok('border'), opacity: 0.5 } },
+      nameTextStyle: { color: tok('muted') } };                                     // the theme's colours, as Calc draws its charts
     const c = window.echarts.init(box, null, { renderer: 'canvas' });
     c.setOption({ animation: false, color: [tok('link'), tok('accent'), tok('pos'), tok('warn'), tok('neg')], grid: { left: 56, right: 16, top: 24, bottom: 36 },
-      tooltip: { trigger: type === 'scatter' ? 'item' : 'axis' }, legend: item.series.length > 1 ? { top: 0 } : undefined,
-      xAxis: { type: type === 'scatter' ? 'value' : 'category', data: type === 'scatter' ? undefined : item.x, name: item.xLabel || '', nameLocation: 'middle', nameGap: 24 },
-      yAxis: { type: 'value', scale: type === 'line' }, series: item.series.map((s) => ({ name: s.name, type, data: type === 'scatter' ? s.values.map((v, k) => [item.x[k], v]) : s.values })) });
+      tooltip: { trigger: type === 'scatter' ? 'item' : 'axis', backgroundColor: tok('surface'), borderColor: tok('border'), textStyle: { color: tok('ink') } },
+      legend: item.series.length > 1 ? { top: 0, textStyle: { color: tok('muted') } } : undefined,
+      xAxis: Object.assign({ type: type === 'scatter' ? 'value' : 'category', data: type === 'scatter' ? undefined : item.x, name: item.xLabel || '', nameLocation: 'middle', nameGap: 24 }, axis),
+      yAxis: Object.assign({ type: 'value', scale: type === 'line' }, axis),
+      series: item.series.map((s) => ({ name: s.name, type, barMaxWidth: 48, data: type === 'scatter' ? s.values.map((v, k) => [item.x[k], v]) : s.values })) });
     S.charts.push(c);
   }
   function render(el, item) {
