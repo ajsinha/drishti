@@ -148,3 +148,10 @@ def test_the_forms_home_lists_packs_with_a_form_and_what_the_person_may_open(cl,
         raise BackendError(403, "DRS-4030", "no access to any kind of pack")
     be.form = refuse
     assert "None of the packs open to you has a form" in cl.get("/forms").text
+
+
+def test_a_date_without_data_says_so_and_offers_the_newest_date(cl, be):
+    be.no_data = {"businessDate": "2026-08-03", "latestDate": "2026-10-16"}
+    page = cl.get("/form/trading", params=[("kind", "trade"), ("run", "1"), ("op.book", "in"), ("v.book", "BOOK-FI-1")]).text
+    assert "data-no-data" in page and "No trade data is loaded for" in page and "2026-08-03" in page
+    assert 'href="/asof?d=2026-10-16&amp;next=/form/trading%3Fkind%3Dtrade' in page and "Nothing matches" not in page and "Search on 2026-10-16" in page

@@ -66,6 +66,7 @@
       </form>{% endif %}
       {% if data.partial and not data.failed %}<span class="text-muted-d"><i class="bi bi-exclamation-circle" aria-hidden="true"></i> not every source answered in time, or the scan limit was reached: results may be incomplete</span>{% endif %}
     </div>
+    {% include 'terminal/_nodata.html' %}
     {% if data.failed %}<div class="asof-banner srch-failed" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
       Incomplete: {{ data.failed | length }} source{{ 's' if data.failed | length > 1 }} could not be read, so entities they hold are missing from these results.
       <ul class="mono">{% for f in data.failed %}<li><b>{{ f.source }}</b>: {{ f.reason }}</li>{% endfor %}</ul></div>{% endif %}
@@ -80,7 +81,7 @@
           {% for text, number in r.cells %}<td class="{{ 'num ' if number else '' }}mono">{{ text }}</td>{% endfor %}</tr>
       {% endfor %}</tbody></table></div>{% if pv %}</div>
       {{ pivot_host('search', pv, pivot_saved, data.kind, q) }}</div>{% endif %}</div></section>
-    {% else %}
+    {% elif not data.noData %}
       <p class="text-muted-d">Nothing matches.</p>
     {% endif %}
   {% else %}

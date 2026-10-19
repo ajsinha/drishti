@@ -100,6 +100,14 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
+     * The newest business date this source holds the kind for, or empty when it cannot say (or keeps only current data). Must be
+     * cheap (no read of data): a search on a date without data names it, so the person can switch to a date that has some.
+     */
+    default Optional<java.time.LocalDate> latestDate(String kind) {
+        return Optional.empty();
+    }
+
+    /**
      * The version of one business date's data of the kind (a Delta table's files for that date), or the kind's {@link #dataVersion(String)}
      * when the source cannot be more precise: a later day appended leaves an earlier day's stored layer valid.
      */

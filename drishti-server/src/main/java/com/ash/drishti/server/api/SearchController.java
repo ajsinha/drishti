@@ -42,10 +42,15 @@ public class SearchController {
     private final Entitlements entitlements;
     private final Mnemonics mnemonics;
     private final com.ash.drishti.engine.search.SearchPivot pivot;
+    private final com.ash.drishti.engine.source.SourceRouter router;
+    private final com.ash.drishti.engine.time.BusinessDates dates;
 
     public SearchController(StructuredSearch search, Entitlements entitlements, Mnemonics mnemonics,
-            com.ash.drishti.engine.search.SearchPivot pivot) {
+            com.ash.drishti.engine.search.SearchPivot pivot, com.ash.drishti.engine.source.SourceRouter router,
+            com.ash.drishti.engine.time.BusinessDates dates) {
         this.search = search;
+        this.router = router;
+        this.dates = dates;
         this.entitlements = entitlements;
         this.mnemonics = mnemonics;
         this.pivot = pivot;
@@ -76,7 +81,21 @@ public class SearchController {
         out.put("failed", r.failed().entrySet().stream().map(e -> Map.of("source", e.getKey(), "reason", e.getValue())).toList());
         out.put("elapsedMs", r.elapsedMs());
         out.put("pivot", offered(r.kind()));               // the Pivot tab, when the kind's pack opts in (null otherwise)
+        noData(r, asOf).ifPresent(n -> out.put("noData", n));
         return out;
+    }
+
+    /**
+     * When nothing was read because the sources hold no data of the kind on the date (a date not loaded yet, or before the first):
+     * the date and the newest date that has data, so the console can say so and offer that date instead of an empty result.
+     */
+    private java.util.Optional<Map<String, Object>> noData(StructuredSearch.Result r, AsOf asOf) {
+        if (r.scanned() > 0) {
+            return java.util.Optional.empty();
+        }
+        java.time.LocalDate day = dates.resolve(asOf).businessDate();
+        return router.latestDate(r.kind()).filter(latest -> day != null && !latest.equals(day))
+                .map(latest -> Map.of("businessDate", day.toString(), "latestDate", latest.toString()));
     }
 
     /** What the Pivot tab of this kind's results offers; null when its pack does not opt in (or says what cannot be read). */

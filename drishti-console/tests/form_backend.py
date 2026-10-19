@@ -95,6 +95,9 @@ class FormBackend(FakeBackend):
 
     async def search(self, q, ident=None):
         self.asked.append(q)
+        if getattr(self, "no_data", None):          # a date the sources hold nothing for (the server's "noData")
+            return {"kind": "trade", "mnemonic": "TRD", "columns": [], "labels": {}, "rows": [], "scanned": 0, "matched": 0, "partial": True,
+                    "failed": [], "elapsedMs": 1.0, "noData": self.no_data}
         if self.systems:                   # the trades whose system and product type the command names
             rows = [r for r in SYSTEM_ROWS if ("SOURCE_SYSTEM" not in q or f"SOURCE_SYSTEM = '{r[1]}'" in q) and ("PRODUCT_TYPE" not in q or f"PRODUCT_TYPE = '{r[2]}'" in q)]
             return {"kind": "trade", "mnemonic": "TRD", "columns": ["$.SOURCE_SYSTEM", "$.PRODUCT_TYPE"],

@@ -113,6 +113,7 @@
       {% if rows %}<a class="lnk" href="/export/search.csv?q={{ command | urlencode }}" title="Download the results as CSV"><i class="bi bi-download" aria-hidden="true"></i> CSV</a>{% endif %}
       {% if data.partial and not data.failed %}<span class="text-muted-d"><i class="bi bi-exclamation-circle" aria-hidden="true"></i> results may be incomplete</span>{% endif %}
     </div>
+    {% include 'terminal/_nodata.html' %}
     {% if data.failed %}<div class="asof-banner srch-failed" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
       Incomplete: {{ data.failed | length }} source{{ 's' if data.failed | length > 1 }} could not be read.
       <ul class="mono">{% for f in data.failed %}<li><b>{{ f.source }}</b>: {{ f.reason }}</li>{% endfor %}</ul></div>{% endif %}
@@ -139,7 +140,7 @@
       </form>
       <button type="button" class="btn btn-sm btn-outline-secondary" data-qf-share="{{ address }}" title="Copy a link that opens this form with these criteria"><i class="bi bi-link-45deg" aria-hidden="true"></i> Share link</button>
     </div>
-    {% else %}<p class="text-muted-d">Nothing matches.</p>{% endif %}
+    {% elif not data.noData %}<p class="text-muted-d">Nothing matches.</p>{% endif %}
   {% endif %}
   {% if saved %}<h2 class="ws-h">Your saved searches</h2>
   <ul class="qf-saved">{% for s in saved %}<li><a class="lnk" href="{{ s.path }}">{{ s.name }}</a></li>{% endfor %}</ul>{% endif %}

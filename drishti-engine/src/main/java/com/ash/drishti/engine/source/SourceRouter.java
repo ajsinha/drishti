@@ -618,6 +618,22 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         return sets.isEmpty() ? Optional.empty() : Optional.of(com.ash.drishti.api.ColumnSet.concat(sets));
     }
 
+    /** The newest business date any source of the kind holds (empty when none can say). */
+    public Optional<java.time.LocalDate> latestDate(String kind) {
+        Optional<java.time.LocalDate> out = Optional.empty();
+        for (SourcePlugin p : candidates(kind)) {
+            try {
+                Optional<java.time.LocalDate> d = p.latestDate(kind);
+                if (d.isPresent() && (out.isEmpty() || d.get().isAfter(out.get()))) {
+                    out = d;
+                }
+            } catch (RuntimeException e) {
+                // a source that cannot say does not stop the others
+            }
+        }
+        return out;
+    }
+
     /** The paths a source of the kind keeps as columns (the first that keeps any). */
     public java.util.Set<String> columnar(String kind) {
         return candidates(kind).stream().map(p -> p.columnar(kind)).filter(s -> !s.isEmpty()).findFirst().orElse(java.util.Set.of());
