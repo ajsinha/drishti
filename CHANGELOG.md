@@ -108,6 +108,14 @@
   that answers 502/503 about another node (`DRS-5050` to `DRS-5059`): with one node down, every view of its data made the console flap between
   the healthy servers. Tests: `SourceRouterFallbackTest`, `NetForwardTest`, `NetGroupedPagesTest`, `test_cluster_failover.py`,
   `test_view_macros.py`. NET.md sections 7, 8 and 12, USER_GUIDE.
+- **Drishti*net: a console that moves to another server keeps everyone signed in** (found by the soak). Console sign-in sessions lived only in
+  the identity database of the node that opened them, so after a failover (or a session that a console worker pinned to another node) the next
+  server did not know the session and the person was sent to sign in again, and pages outside the sign-in gate (query by form) answered
+  `401 DRS-5010 missing bearer token`. Sessions are now copied with the user's state (`POST /api/v1/net/state`, namespace `sessions`: the SHA-256 of
+  the id, the user and the expiry, never the id); a sign-out or an administrator's ending a user's sessions on one node ends them on all; a node that
+  joins is given the sessions that stand (`SessionStore.Listener`, `adopt`). The console's sign-in gate now covers `/form` and `/forms` (it sent
+  an anonymous request there). `tools/bench/users.py` counts a page that sent the user to sign in as a failure. `NetUserStateTest`. NET.md
+  sections 7 and 8, CONFIGURATION.
 - **Drishti*net soak on real processes** (`tools/bench/net_soak.py`): three servers from one seed (two reading one lake, one its own), a console
   given the first, `tools/bench/users.py` load, a shard holder killed and restarted, then the console's own server, every answer compared with a
   single server holding all the data. Results in NET.md section 13.

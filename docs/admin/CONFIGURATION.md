@@ -540,7 +540,7 @@ The files, each checked against its schema (a refused file keeps the previous se
 | `node.yaml` | `enabled` (`false`), `node-id` (generated once, kept in `<data dir>/net/node-id`), `advertise-url`, `tags` (`[]`), `peer-only-packs` (`[]`), `secret: ${DRISHTI_NET_SECRET}` and `previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}` (environment references only, at least 32 bytes), `tls.*` (mutual TLS) |
 | `peers/<name>.yaml` | `url`, `tags`, `tls.*` (one file per seed) |
 | `gossip.yaml` | `interval` (`1s`), `fanout` (`3`), `suspect-after` (`5s`), `indirect-probes` (`2`), `dead-after` (`30s`), `forget-after` (`24h`), `persist-every` (`10m`) |
-| `routing.yaml` | `forward-timeout` (`5s`), `scatter-budget` (`3s`), `suggest-budget` (`150ms`), `max-hops` (`1`; `0` forwards nothing), `weights.latency` (`1.0`), `user-state` (`replicate` or `off`) |
+| `routing.yaml` | `forward-timeout` (`5s`), `scatter-budget` (`3s`), `suggest-budget` (`150ms`), `max-hops` (`1`; `0` forwards nothing), `weights.latency` (`1.0`), `user-state` (`replicate` or `off`: user state and console sign-in sessions) |
 | `access.yaml` | `roles: { <role>: { nodes: [<node id or tag>, ...] } }` (a role not listed reaches every node) |
 
 `enabled: true` without the key or without `advertise-url` is refused at start and at every reload, as the server refuses a missing token secret

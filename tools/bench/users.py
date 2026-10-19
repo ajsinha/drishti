@@ -16,7 +16,7 @@
 """Simultaneous users against a server (its API) or a console (its pages), on a lake made by tools/bench/trades.py: each user loops for
 the given seconds over a mix of 80 % single trades (a random system and date), 10 % counterparty-trades pages, 5 % netting sets and
 5 % searches of one counterparty's trades, and the result is one JSON line: requests a second and, per kind of request, p50/p95/p99
-and failures (an HTTP error, a timeout, a page saying DRS-1004).
+and failures (an HTTP error, a timeout, a page saying DRS-1004, a page that sent the user to sign in again).
 
     python tools/bench/users.py --server http://127.0.0.1:18480 --token-file token.txt --users 50 --seconds 60
     python tools/bench/users.py --console http://127.0.0.1:17480 --user drishti-dev-admin --password ... --users 50 --seconds 60
@@ -63,7 +63,7 @@ async def user(n: int, client: httpx.AsyncClient, stats: dict, stop: float, a) -
         t = time.time()
         try:
             resp = await client.get(url, headers=headers)
-            ok = resp.status_code == 200 and not any(b in resp.text for b in BAD)
+            ok = resp.status_code == 200 and not any(b in resp.text for b in BAD) and "/login" not in resp.url.path   # signed out is a failure
         except Exception:
             ok = False
         stats.setdefault(label, []).append((time.time() - t, ok))

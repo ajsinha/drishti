@@ -16,6 +16,7 @@
 package com.ash.drishti.server.net;
 
 import com.ash.drishti.identity.PreferenceStore;
+import com.ash.drishti.identity.SessionStore;
 import com.ash.drishti.net.member.Member;
 import com.ash.drishti.net.transport.PeerHttp;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -41,6 +42,9 @@ import org.slf4j.LoggerFactory;
  * waiting (at most 10,000) and gets them when it does; a member that joins gets every such document this node holds, applied there only
  * where it has none. Alerts, monitors and scheduled reports are not copied: they act, and would act once per node. With routing.yaml's
  * {@code user-state: off} (one shared identity database already shares them) nothing is sent.
+ *
+ * <p>Console sign-in sessions are copied the same way (namespace {@code sessions}: the hash of the session id, never the id, with its user
+ * and expiry; an end, or the end of all of a user's sessions), so a console that moves to another server keeps its sign-in.
  */
 public final class StateSync implements AutoCloseable {
 
@@ -57,8 +61,12 @@ public final class StateSync implements AutoCloseable {
     @JsonIgnoreProperties(ignoreUnknown = true)
     record Batch(List<Change> changes) {}
 
+    /** The namespace of console sign-in sessions (a key is the hash of a session id; {@code *} ends all of the user's). */
+    public static final String SESSIONS = "sessions";
+
     private final NetService net;
     private final Supplier<PreferenceStore> store;
+    private final Supplier<SessionStore> sessions;
     private final ForwardLog log;
     private final Map<String, Long> last = new ConcurrentHashMap<>();
     private final Map<String, Deque<Change>> pending = new ConcurrentHashMap<>();
@@ -69,11 +77,49 @@ public final class StateSync implements AutoCloseable {
 
     /** @param store the store itself (not the replicating one): what a peer's change is applied to */
     public StateSync(NetService net, Supplier<PreferenceStore> store, ForwardLog log) {
+        this(net, store, () -> null, log);
+    }
+
+    /** @param sessions the console sign-in sessions (copied too), or a supplier of null */
+    public StateSync(NetService net, Supplier<PreferenceStore> store, Supplier<SessionStore> sessions, ForwardLog log) {
         this.net = net;
         this.store = store;
+        this.sessions = sessions;
         this.log = log;
+        SessionStore ss = sessions.get();
+        if (ss != null) {
+            ss.listen(new SessionStore.Listener() {
+                public void opened(SessionStore.Stored st) {
+                    broadcast(st.user(), st.idHash(), sessionValue(st));
+                }
+
+                public void ended(String idHash) {
+                    broadcast("", idHash, null);
+                }
+
+                public void endedAll(String user) {
+                    broadcast(user, "*", null);
+                }
+            });
+        }
         net.onJoin(this::caughtUp);
         this.loop = Thread.ofVirtual().name("drishti-net-state").start(this::run);
+    }
+
+    private JsonNode sessionValue(SessionStore.Stored st) {
+        var v = net.http().json().createObjectNode();
+        v.put("createdAt", st.createdAt() == null ? 0 : st.createdAt().toEpochMilli());
+        v.put("expiresAt", st.expiresAt().toEpochMilli());
+        return v;
+    }
+
+    /** A session opened or ended here: queued for every routable peer. */
+    private void broadcast(String user, String key, JsonNode value) {
+        if (!active()) {
+            return;
+        }
+        Change c = new Change(user, SESSIONS, key, value, System.currentTimeMillis(), net.nodeId(), false);
+        net.node().ifPresent(n -> n.table().others().stream().map(k -> k.member()).filter(Member::routable).forEach(m -> queue(m.nodeId(), c)));
     }
 
     /** True when changes are copied: the cluster runs and routing.yaml says {@code user-state: replicate}. */
@@ -127,8 +173,15 @@ public final class StateSync implements AutoCloseable {
                 }
             }
         }
+        SessionStore ss = sessions.get();
+        if (ss != null) {
+            for (SessionStore.Stored st : ss.standing()) {
+                queue(peer, new Change(st.user(), SESSIONS, st.idHash(), sessionValue(st), 0, net.nodeId(), true));
+                n++;
+            }
+        }
         if (n > 0) {
-            LOG.info("net: {} user documents queued for {}, which joined", n, peer);
+            LOG.info("net: {} user documents and sessions queued for {}, which joined", n, peer);
         }
     }
 
@@ -137,6 +190,10 @@ public final class StateSync implements AutoCloseable {
         PreferenceStore s = store.get();
         int done = 0;
         for (Change c : changes) {
+            if (c != null && SESSIONS.equals(c.namespace()) && c.key() != null) {
+                done += session(c) ? 1 : 0;
+                continue;
+            }
             if (c == null || c.user() == null || !NAMESPACES.contains(c.namespace()) || c.key() == null) {
                 continue;
             }
@@ -163,6 +220,34 @@ public final class StateSync implements AutoCloseable {
         }
         applied.addAndGet(done);
         return done;
+    }
+
+    /** A session change from a peer: adopted, ended, or all of a user's ended here. */
+    private boolean session(Change c) {
+        SessionStore ss = sessions.get();
+        if (ss == null) {
+            return false;
+        }
+        boolean ended = c.value() == null || c.value().isNull();
+        if ("*".equals(c.key())) {
+            if (!c.catchUp() && c.user() != null && !c.user().isBlank()) {
+                ss.dropAllAdopted(c.user());
+                return true;
+            }
+            return false;
+        }
+        if (ended) {
+            if (!c.catchUp()) {
+                ss.dropAdopted(c.key());
+                return true;
+            }
+            return false;
+        }
+        long created = c.value().path("createdAt").asLong(0);
+        long expires = c.value().path("expiresAt").asLong(0);
+        ss.adopt(new SessionStore.Stored(c.key(), c.user(), created == 0 ? null : java.time.Instant.ofEpochMilli(created),
+                java.time.Instant.ofEpochMilli(expires)));
+        return true;
     }
 
     private void run() {

@@ -92,9 +92,11 @@ public class NetConfiguration {
     }
 
     @Bean(destroyMethod = "close")
-    public StateSync stateSync(NetService net, com.ash.drishti.identity.PreferenceStore prefs, ForwardLog log) {
+    public StateSync stateSync(NetService net, com.ash.drishti.identity.PreferenceStore prefs, ForwardLog log,
+            ObjectProvider<com.ash.drishti.identity.SessionStore> sessions) {
         com.ash.drishti.identity.PreferenceStore raw = prefs instanceof ReplicatedPreferences r ? r.delegate() : prefs;
-        return new StateSync(net, () -> raw, log);
+        com.ash.drishti.identity.SessionStore ss = sessions.getIfAvailable();
+        return new StateSync(net, () -> raw, () -> ss, log);
     }
 
     @Bean

@@ -362,7 +362,11 @@ exactly what A (the lake) answers. A model spanning nodes is not joined across t
 copied to every other node within a second (`POST /api/v1/net/state`, signed, in batches; the newest write wins), so after a failover the user finds
 them on the node the console moved to. A node that was down gets what it missed when it comes back: every node sends a member that joins the user
 documents it holds, applied there only where it has none. Alerts, monitors and scheduled reports are **not** copied: they act, and would act once per
-node; they stay on the node they were made on. With one shared identity database (PostgreSQL, `DRISHTI_IDENTITY_DB_URL`) the nodes already share all
+node; they stay on the node they were made on. **Console sign-in sessions are copied the same way**: when a console opens a session on one
+node, the others learn it (only the SHA-256 of the session id travels, with the user and the expiry, never the id), a sign-out on any node ends it
+on all, and an administrator's disabling or deleting a user ends their sessions everywhere; a node that joins is given the sessions that stand. So
+a console that moves to another server keeps every person signed in. The user must exist on every node (the seeded administrator does; others
+are created on each node, or kept in one shared identity database). With one shared identity database (PostgreSQL, `DRISHTI_IDENTITY_DB_URL`) the nodes already share all
 of it: set `user-state: off` in routing.yaml. Admin → Net → Members says how many changes were sent and applied and what waits for which peer.
 
 **Which node answered, for administrators.** A view's *How this view was built* panel has, for an administrator only, a line **Node**:
@@ -400,7 +404,7 @@ Routing's traffic, and in the metrics `drishti_net_forwarded_total{peer,kind,out
 | `suggest-budget` | `150ms` | The same for type-ahead |
 | `max-hops` | `1` | `0` switches forwarding off (gossip and digests only) |
 | `weights.latency` | `1.0` | How much latency counts when choosing between peers (steps of 10 ms times the weight; `0`: by the entity's hash only) |
-| `user-state` | `replicate` | Saved searches, layouts and pivots copied to the other nodes, or `off` |
+| `user-state` | `replicate` | Saved searches, layouts, pivots and console sign-in sessions copied to the other nodes, or `off` |
 
 ## 8. The console and several servers
 
@@ -427,7 +431,8 @@ backend:
   the next. A 502 or 503 that is the server's own answer about another node (a problem with a code from `DRS-5050` to `DRS-5059`, such as
   `DRS-5052` while the node holding a trade is down) is not a failure of the server: the console stays, and the page shows the answer. A **read** that failed on the way is tried once on another server, so the person sees the page, not an error; a **write** (a layout, a
   search, a pivot) never is: the page says it did not save, and saving again works on the new server.
-- **Nothing to sign in again.** Every node accepts the same tokens (one token secret, or one OIDC issuer), so the session carries over. An open
+- **Nothing to sign in again.** Every node accepts the same tokens (one token secret, or one OIDC issuer), and every node knows the console's
+  sign-in sessions (copied with the user's state, section 7), so the session carries over. An open
   page's live view carries on with no reload: when its stream from the old server breaks, or ends because that server stopped, the console opens it
   again on the next server (up to 12 times in a row, a second apart and growing), and the page is sent the view afresh and keeps ticking. Without
   `backend.urls` a broken stream makes the view *Static*, as before.

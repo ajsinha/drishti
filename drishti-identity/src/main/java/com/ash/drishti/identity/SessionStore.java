@@ -42,6 +42,28 @@ public final class SessionStore {
     /** An open session: its id is known only to the console that opened it (and is in the answer to open only). */
     public record Session(String id, String user, Instant createdAt, Instant expiresAt) {}
 
+    /** A session as stored: the hash of its id, never the id. What Drishti*net copies to the other nodes. */
+    public record Stored(String idHash, String user, Instant createdAt, Instant expiresAt) {}
+
+    /**
+     * Told of every session opened or ended here (Drishti*net copies them to the other nodes, so a console that moves to another server keeps
+     * its sign-in; DRISHTI_NET.md section 11.1). Only the hash of a session id is ever passed.
+     */
+    public interface Listener {
+        void opened(Stored s);
+
+        void ended(String idHash);
+
+        void endedAll(String user);
+    }
+
+    private volatile Listener listener;
+
+    /** Sets the one listener (Drishti*net's state copy), or removes it with null. */
+    public void listen(Listener l) {
+        this.listener = l;
+    }
+
     private static final Duration SHORTEST = Duration.ofMinutes(1);
     private static final Duration LONGEST = Duration.ofDays(7);
     private static final Duration SWEEP_EVERY = Duration.ofHours(1);
@@ -72,6 +94,10 @@ public final class SessionStore {
         e.createdAt = Instant.now();
         e.expiresAt = e.createdAt.plus(ttl);
         tx.executeWithoutResult(s -> sessions.save(e));
+        Listener l = listener;
+        if (l != null) {
+            l.opened(new Stored(e.idHash, user, e.createdAt, e.expiresAt));
+        }
         return new Session(id, user, e.createdAt, e.expiresAt);
     }
 
@@ -98,6 +124,10 @@ public final class SessionStore {
         if (user != null) {
             audit.record(user, "signed-out", user, "");
         }
+        Listener l = listener;
+        if (l != null) {
+            l.ended(key);                                 // another node may hold it although this one did not
+        }
         return user != null;
     }
 
@@ -108,7 +138,50 @@ public final class SessionStore {
         if (ended > 0) {
             audit.record(actor, "sessions-ended", user, ended + " session(s): " + why);
         }
+        Listener l = listener;
+        if (l != null) {
+            l.endedAll(user);
+        }
         return ended;
+    }
+
+    /** A session another node opened (Drishti*net): stored here unless it is here already or has expired; nobody is told. */
+    public void adopt(Stored st) {
+        if (st == null || st.idHash() == null || st.idHash().length() != 64 || st.user() == null || st.expiresAt() == null
+                || !Instant.now().isBefore(st.expiresAt())) {
+            return;
+        }
+        tx.executeWithoutResult(s -> {
+            if (sessions.findById(st.idHash()).isEmpty()) {
+                SessionEntity e = new SessionEntity();
+                e.idHash = st.idHash();
+                e.username = st.user();
+                e.createdAt = st.createdAt() == null ? Instant.now() : st.createdAt();
+                e.expiresAt = st.expiresAt();
+                sessions.save(e);
+            }
+        });
+    }
+
+    /** A session another node ended (a sign-out there): ended here too; nobody is told. */
+    public void dropAdopted(String idHash) {
+        if (idHash != null && idHash.length() == 64) {
+            tx.executeWithoutResult(s -> sessions.findById(idHash).ifPresent(sessions::delete));
+        }
+    }
+
+    /** Every session of a user another node ended (disabled, deleted, password reset there): ended here too; nobody is told. */
+    public void dropAllAdopted(String user) {
+        if (user != null) {
+            tx.executeWithoutResult(s -> sessions.deleteByUsername(user));
+        }
+    }
+
+    /** The sessions that stand here, for a node that joins (its catch-up). */
+    public java.util.List<Stored> standing() {
+        Instant now = Instant.now();
+        return sessions.findAll().stream().filter(e -> now.isBefore(e.expiresAt))
+                .map(e -> new Stored(e.idHash, e.username, e.createdAt, e.expiresAt)).toList();
     }
 
     /** Removes expired rows, at most once an hour (from {@link #open}, so a quiet server does no work). */

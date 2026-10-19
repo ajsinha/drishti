@@ -18,6 +18,7 @@ package com.ash.drishti.server.net;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.identity.PreferenceStore;
+import com.ash.drishti.identity.SessionStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Path;
 import java.util.List;
@@ -76,15 +77,30 @@ class NetUserStateTest {
         onA.delete("rita", "layouts", "trade-view.trade");
         assertThat(NetNodes.await(3_000, () -> onB.get("rita", "layouts", "trade-view.trade").isEmpty())).isTrue();
 
+        // console sign-in sessions follow too (only the hash of the id travels): opened on A, known on B; ended on B, ended on A
+        SessionStore sessA = cluster.node("a").bean(SessionStore.class);
+        SessionStore sessB = cluster.node("b").bean(SessionStore.class);
+        var s1 = sessA.open("rita", java.time.Duration.ofHours(1));
+        var s2 = sessA.open("rita", java.time.Duration.ofHours(1));
+        assertThat(NetNodes.await(3_000, () -> sessB.find(s1.id()).isPresent() && sessB.find(s2.id()).isPresent())).isTrue();
+        assertThat(sessB.find(s1.id()).orElseThrow().user()).isEqualTo("rita");
+        sessB.end(s1.id());
+        assertThat(NetNodes.await(3_000, () -> sessA.find(s1.id()).isEmpty())).as("a sign-out on B ends the session on A").isTrue();
+        assertThat(sessA.find(s2.id())).isPresent();
+
         // a node that joins later is given what it does not have
         cluster.start("c", NetNodes.PORTS[2]);
         PreferenceStore onC = cluster.node("c").bean(PreferenceStore.class);
         assertThat(NetNodes.await(8_000, () -> onC.get("rita", "pivots", "search.trade").isPresent())).isTrue();
+        SessionStore sessC = cluster.node("c").bean(SessionStore.class);
+        assertThat(NetNodes.await(8_000, () -> sessC.find(s2.id()).isPresent())).as("the sessions standing are given to a node that joins").isTrue();
+        assertThat(sessC.find(s1.id())).isEmpty();
 
         // after A stops (the console falls over to B), the user's state is there
         cluster.stop("a");
         var after = cluster.call("GET", cluster.node("b").url() + "/api/v1/me/settings", null, "X-Drishti-User", "rita");
         assertThat(after.body()).contains("Big trades");
+        assertThat(sessB.find(s2.id())).as("the console's sign-in stands on B after A stopped").isPresent();
         assertThat(cluster.node("b").bean(StateSync.class).summary().get("applied")).isNotEqualTo(0L);
     }
 }
