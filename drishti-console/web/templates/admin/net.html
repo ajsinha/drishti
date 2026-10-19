@@ -1,0 +1,162 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Net · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-net.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+{% set node = members.node or {} %}
+<div class="adm" data-net data-tab="{{ tab }}">
+  {% with tab='net' %}{% include "admin/_nav.html" %}{% endwith %}
+  <h1 class="ws-h" id="netTitle">Drishti*net <a class="emb-help" href="/help/net" aria-label="Help: Drishti*net" title="Help: Drishti*net">?</a></h1>
+  <details class="adm-about"><summary>About this page</summary>
+  <p class="text-muted-d">Several {{ PRODUCT }} servers acting as one: each tells the others, by gossip, which packs and data it serves, and a request
+    that one cannot answer is answered by another, so a person connected to any server sees the same pages. This page is the cluster as the server
+    this console is on sees it. Its settings are the files of <span class="mono">{{ node.dir }}</span> (Files tab, or <span class="mono">drishti.py net</span>);
+    what gossip learns is kept in <span class="mono">peers.json</span> under the server's data folder. The cluster key is never shown here, only whether it is set.
+    See the <a href="/help/net">operator's guide</a>.</p>
+  </details>
+  <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
+
+  <div class="net-sum" data-summary>
+    <span class="net-chip {{ 'net-on' if members.running else 'net-off' }}" data-running>{{ 'Cluster on' if members.running else ('Cluster switched on, not running' if members.enabled else 'Cluster off') }}</span>
+    {% if members.self %}<span class="net-chip">This node <b class="mono" data-self>{{ members.self }}</b></span>{% endif %}
+    {% for state, n in (members.counts or {}).items() %}{% if n %}<span class="net-chip net-{{ state }}" data-count="{{ state }}">{{ n }} {{ state }}</span>{% endif %}{% endfor %}
+    <span class="net-chip {{ 'net-on' if node.keySet else 'net-warn' }}">Key {{ 'set' if node.keySet else 'not set' }}{% if node.previousKeySet %}, previous key accepted{% endif %}</span>
+    {% if node.drained %}<span class="net-chip net-warn">Drained</span>{% endif %}
+    {% if console.enabled %}<span class="net-chip" data-console-on>Console on <b class="mono">{{ console.active }}</b></span>{% endif %}
+  </div>
+
+  <div class="net-tabs" role="tablist" aria-label="Drishti*net" data-tabs>
+    <button type="button" role="tab" id="netTabMembers" aria-controls="netPaneMembers" aria-selected="{{ 'true' if tab == 'members' else 'false' }}" {% if tab != 'members' %}tabindex="-1"{% endif %} data-tab="members">Members</button>
+    <button type="button" role="tab" id="netTabFiles" aria-controls="netPaneFiles" aria-selected="{{ 'true' if tab == 'files' else 'false' }}" {% if tab != 'files' %}tabindex="-1"{% endif %} data-tab="files">Files</button>
+  </div>
+
+  <section role="tabpanel" id="netPaneMembers" aria-labelledby="netTabMembers" data-pane="members" {% if tab != 'members' %}hidden{% endif %}>
+    {% if not members.enabled %}
+    <div class="net-empty">
+      <p>Drishti*net is off on this server: it is a single server, exactly as without the cluster. To switch it on, give it
+        <span class="mono">node.yaml</span> with <span class="mono">enabled: true</span>, its address and the cluster key from the environment:</p>
+      <pre class="mono net-pre">enabled: true
+advertise-url: https://this-server:8480
+secret: ${DRISHTI_NET_SECRET}</pre>
+      <p>in the Files tab, or from a terminal: <span class="mono">drishti.py net set node.enabled true</span>. Ready-made files are in
+        <span class="mono">config/net.examples/</span>.</p>
+    </div>
+    {% endif %}
+    <div class="net-node" data-node-card>
+      <h2>This node</h2>
+      <dl class="net-dl">
+        <dt>Node id</dt><dd class="mono" data-node-id>{{ node.nodeId or '-' }}</dd>
+        <dt>Address</dt><dd class="mono">{{ node.advertiseUrl or '-' }}</dd>
+        <dt>Tags</dt><dd>{% for t in node.tags or [] %}<span class="net-tag">{{ t }}</span>{% else %}<span class="text-muted-d">none</span>{% endfor %}</dd>
+        <dt>Peer-only packs</dt><dd>{% for t in node.peerOnlyPacks or [] %}<span class="net-tag">{{ t }}</span>{% else %}<span class="text-muted-d">none</span>{% endfor %}</dd>
+        <dt>Version</dt><dd class="mono">{{ node.version }}</dd>
+        <dt>Gossip</dt><dd>every {{ node.gossip.interval }}, fanout {{ node.gossip.fanout }}, suspect after {{ node.gossip.suspectAfter }}, dead after {{ node.gossip.deadAfter }};
+          <span data-rounds>{{ node.gossip.rounds }}</span> rounds</dd>
+        <dt>peers.json</dt><dd class="mono">{{ members.peersFile.path }}{% if members.peersFile.savedAt %} <span class="text-muted-d">saved {{ when_local(members.peersFile.savedAt) }}</span>{% endif %}</dd>
+      </dl>
+      {% if members.running or node.leaving %}
+      <div class="net-actions">
+        {% if node.drained %}<button type="button" class="btn-pill" data-action="undrain">Undrain</button>
+        {% else %}<button type="button" class="btn-pill" data-action="drain" title="Take no forwarded work (maintenance); this node's own users are served as before">Drain</button>{% endif %}
+        {% if node.leaving %}<button type="button" class="btn-pill btn-accent" data-action="rejoin">Rejoin</button>
+        {% else %}<button type="button" class="btn-pill" data-action="leave" data-confirm="Leave the cluster? Peers drop this node at once and it serves them nothing until it rejoins.">Leave</button>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <form class="net-seed" data-seed-form>
+      <label class="loads-field" for="netSeed">Add a seed (host:port or an address): tried at once and saved as a peer file
+        <input class="studio-in mono" id="netSeed" data-seed autocomplete="off" spellcheck="false" placeholder="drishti-b.internal:8480"></label>
+      <button type="submit" class="btn-pill btn-accent">Add seed</button>
+    </form>
+
+    <div class="tbl-wrap"><table class="tbl adm-tbl net-members" data-members aria-describedby="netTitle">
+      <caption class="visually-hidden">Every member of the cluster as this node knows it</caption>
+      <thead><tr><th scope="col">Node</th><th scope="col">State</th><th scope="col">Address</th><th scope="col">Version</th><th scope="col">Tags</th>
+        <th scope="col">Packs</th><th scope="col">Last heard</th><th scope="col">Latency</th><th scope="col">Incarnation</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody>
+      {% for m in members.members or [] %}
+        <tr data-member="{{ m.nodeId }}" data-state="{{ m.state }}">
+          <th scope="row" class="mono">{{ m.nodeId }}{% if m.self %} <span class="net-tag">this node</span>{% endif %}{% if m.drained %} <span class="net-tag net-warn">drained</span>{% endif %}</th>
+          <td><span class="st {{ {'alive': 'st-ok', 'suspect': 'st-warn', 'dead': 'st-bad', 'left': ''}.get(m.state, '') }}">{{ m.state }}</span></td>
+          <td class="mono">{{ m.url }}</td>
+          <td class="mono">{{ m.version }}{% if m.protocol != 1 %} <span class="t-warn">protocol {{ m.protocol }}</span>{% endif %}</td>
+          <td>{% for t in m.tags %}<span class="net-tag">{{ t }}</span>{% endfor %}</td>
+          <td>{% for p in m.packs or [] %}<span class="net-tag{{ ' net-peer-only' if p.peerOnly }}" title="{{ p.name }} {{ p.version }}{{ ' (peer-only)' if p.peerOnly }}">{{ p.name }}</span>{% endfor %}</td>
+          <td>{{ when_local(m.lastHeard) if m.lastHeard else ('-' if m.self else 'never') }}</td>
+          <td>{{ m.latencyMs ~ ' ms' if m.latencyMs is not none else '-' }}</td>
+          <td class="mono">{{ m.incarnation }}</td>
+          <td>{% if m.state in ('dead', 'left') %}<button type="button" class="btn-pill" data-remove="{{ m.nodeId }}" aria-label="Remove {{ m.nodeId }}">Remove</button>{% endif %}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="10" class="text-muted-d">No members: the cluster is off on this server.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+
+    {% if members.seeds %}
+    <h2 class="net-h2">Seeds</h2>
+    <ul class="net-seeds">{% for s in members.seeds %}<li><span class="mono">{{ s.name }}</span> <span class="mono text-muted-d">{{ s.url }}</span></li>{% endfor %}</ul>
+    {% endif %}
+    {% if console.enabled %}
+    <h2 class="net-h2">This console's servers</h2>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-console-servers>
+      <caption class="visually-hidden">The servers this console may use, the one it is on first</caption>
+      <thead><tr><th scope="col">Server</th><th scope="col">How it is known</th><th scope="col">State</th><th scope="col">Latency</th></tr></thead>
+      <tbody>{% for s in console.servers %}<tr><td class="mono">{{ s.url }}{% if s.url == console.active %} <span class="net-tag">in use</span>{% endif %}</td>
+        <td>{{ s.origin }}</td><td><span class="st {{ 'st-ok' if s.healthy else 'st-bad' }}">{{ 'healthy' if s.healthy else 'set aside' }}</span></td>
+        <td>{{ s.latencyMs ~ ' ms' if s.latencyMs is not none else '-' }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% endif %}
+  </section>
+
+  <section role="tabpanel" id="netPaneFiles" aria-labelledby="netTabFiles" data-pane="files" {% if tab != 'files' %}hidden{% endif %}>
+    <p class="text-muted-d">The folder <span class="mono">{{ files.dir }}</span> ({{ files.watch | lower }}): a file is checked before it is used; a refused file
+      keeps the previous settings in force and shows its error here. Every save keeps the previous text in the history and is audited.</p>
+    <div class="net-files">
+      <ul class="net-file-list" data-file-list>
+        {% for f in files.files or [] %}
+        <li><button type="button" class="net-file" data-file="{{ f.id }}" data-etag="{{ f.etag }}">
+          <span class="mono">{{ f.id }}</span>
+          {% if not f.exists %}<span class="text-muted-d">not there (defaults)</span>{% elif f.refused %}<span class="st st-bad">refused</span>{% elif f.problems %}<span class="st st-warn">warnings</span>{% else %}<span class="st st-ok">in force</span>{% endif %}
+        </button></li>
+        {% endfor %}
+        <li><button type="button" class="btn-pill" data-new-peer>New peer file</button></li>
+      </ul>
+      <div class="net-editor" data-editor hidden>
+        <h2 class="net-h2 mono" data-editing></h2>
+        <label class="visually-hidden" for="netYaml">The file's YAML</label>
+        <textarea class="studio-in mono net-yaml" id="netYaml" data-yaml rows="16" spellcheck="false" autocomplete="off" wrap="off"></textarea>
+        <ul class="net-problems" data-problems aria-live="polite"></ul>
+        <div class="net-actions">
+          <button type="button" class="btn-pill" data-check>Check</button>
+          <button type="button" class="btn-pill btn-accent" data-save>Save</button>
+          <button type="button" class="btn-pill" data-delete>Delete</button>
+        </div>
+        <h3 class="net-h3">History</h3>
+        <ul class="net-history" data-history></ul>
+        <pre class="mono net-diff" data-diff hidden></pre>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-net.js?v={{ ASSET_V }}"></script>{% endblock %}

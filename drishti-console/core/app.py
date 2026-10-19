@@ -208,7 +208,7 @@ def create_app(settings: Settings) -> FastAPI:
                         workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes,
                         ai_routes)
 
-    from routes import artifact_routes, lake_maint_routes, lake_routes
+    from routes import artifact_routes, lake_maint_routes, lake_routes, net_routes
 
     def _lake_schedules(app):
         from core.lake_maint import maintenance
@@ -395,6 +395,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(connector_routes.router)
     app.include_router(artifact_routes.router)
     app.include_router(lake_routes.router)
+    app.include_router(net_routes.router)
     app.include_router(lake_maint_routes.router)
     app.include_router(form_routes.router)
     app.include_router(ai_routes.router)

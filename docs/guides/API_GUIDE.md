@@ -51,6 +51,7 @@ covered in depth in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
    - [Administration: Artifacts (`/api/v1/admin/artifacts`)](#administration-artifacts-apiv1adminartifacts)
    - [Data loads: telling Drishti a batch landed](#data-loads-telling-drishti-a-batch-landed)
    - [Administration: health and caches](#administration-health-and-caches)
+   - [Drishti*net (`/api/v1/net`)](#drishtinet-apiv1net)
    - [Outside /api/v1: OpenAPI and actuator](#outside-apiv1-openapi-and-actuator)
 7. [The ViewModel in detail](#the-viewmodel-in-detail)
 8. [Error code table](#error-code-table)
@@ -1463,6 +1464,41 @@ curl -s -X POST $B/admin/caches/market-store/purge
 
 You should see `{"purged":["market-store"],"elapsedMs":…}`.
 
+### Drishti*net (`/api/v1/net`)
+
+The cluster's endpoints ([NET.md](../admin/NET.md), the design [DRISHTI_NET.md](../architecture/DRISHTI_NET.md) section 15). While the cluster is
+off on a node they answer `404 DRS-5050` (`/members` answers `{"enabled": false, "members": []}`). Two kinds of caller:
+
+- **Another node.** Every call between nodes carries `X-Drishti-Net-Node` (the caller's id), `X-Drishti-Net-Time` (epoch milliseconds) and
+  `X-Drishti-Net-Signature`: an HMAC-SHA256, base64url, with the cluster key over `METHOD\npath?query\ntime\nnode\nsha256(body)`. A call
+  without it, signed with another key or more than 60 s away from the node's clock is refused `401 DRS-5051`. The node-only endpoints below
+  take nothing else.
+- **An administrator** (a session token with the admin power; never a personal API token: `* /api/v1/net/**` is in `token-never`), for Admin → Net.
+
+| Method | Path | Who | Notes |
+|---|---|---|---|
+| `POST` | `/net/gossip` `{"members": [...]}` | node | Push-pull: the caller's member table is merged, this node's is the answer `{"members": [...]}`; the first entry is the node itself. Each member: `nodeId`, `url`, `incarnation`, `heartbeat`, `state` (`alive`, `suspect`, `dead`, `left`), `digestHash`, `version`, `protocol`, `tags`, `since`, `drained` |
+| `GET` | `/net/ping` | node | A direct probe: `{"nodeId", "state"}`. `?target=<a member's url>`: an indirect probe, `{"answered": true}` when this node reached the target (only a member's address is probed: `400 DRS-5056` otherwise) |
+| `GET` | `/net/members` | node, admin, anyone signed in | The member table. A node or an administrator gets every member with what this node knows of it (`lastHeard`, `latencyMs`), this node (`node`: id, address, tags, peer-only packs, whether the key is set, drain, the gossip timings and rounds), the seeds, `peersFile` and the files' `problems`. Anyone else (the console's discovery) gets `{"enabled", "self", "members": [{nodeId, url, state, tags, packs}]}` |
+| `POST` | `/net/seeds` `{"url": "host:port", "name"?}` | admin | Saves `peers/<name>.yaml` (default name from the host and port) and tries it at once: `{"file", "url", "answered"}` |
+| `DELETE` | `/net/members/{id}` | admin | Removes a dead or left member; `400 DRS-5056` for an alive or suspect one |
+| `POST` | `/net/drain`, `/net/undrain` | admin | This node takes no forwarded work (its peers are told), or takes it again |
+| `POST` | `/net/leave`, `/net/rejoin` | admin | Gossips `left` and serves its peers nothing; back alive with a higher incarnation |
+| `GET` | `/net/files` | admin | Every file of the folder: `id`, `exists`, `etag`, `bytes`, `refused`, `problems` (`file`, `level`, `field`, `line`, `message`); `dir`, `watch` |
+| `GET` | `/net/file?id=node.yaml` | admin | One file: `text`, `etag`, `problems`, `history` (`id`, `at`, `bytes`) |
+| `GET` | `/net/file/revision?id=&rev=` | admin | The text of a kept earlier version |
+| `POST` | `/net/file/check?id=` `{"text"}` | admin | What the server would make of the text, without writing it: `{"ok", "problems"}` |
+| `PUT` | `/net/file?id=` `{"text"}` | admin | Writes the file (atomically, the previous text kept in `<data dir>/net/history/`) and applies it. `If-Match: <etag>` (`""` for a new file) refuses a stale edit; a file with an error is not written: `409 DRS-5055` with `problems` |
+| `DELETE` | `/net/file?id=` | admin | Removes the file (`If-Match`); its settings go back to their defaults |
+
+Every management call is audited (`net-seed-added`, `net-member-removed`, `net-drain`, `net-undrain`, `net-leave`, `net-rejoin`, `net-file-saved`,
+`net-file-deleted`) with the node it was made on. A refused file, from the API:
+
+```text
+$ curl -s -X PUT "$B/net/file?id=gossip.yaml" -H 'If-Match: 3a1f0c9e2b7d4c51' -d '{"text":"fanout: lots\n"}'
+{"code":"DRS-5055","detail":"gossip.yaml was not written: gossip.yaml:1 fanout: 'lots' is not a whole number","problems":[{"file":"gossip.yaml","level":"error","field":"fanout","line":1,"message":"'lots' is not a whole number"}]}
+```
+
 ### Outside /api/v1: OpenAPI and actuator
 
 These paths are not under `/api/v1/`, so the token filter does not apply to them. With security on, a
@@ -1610,6 +1646,13 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-5042 | 409 | artifact conflict | a restore or an upload found an artifact of that name already in place; choose *replace* |
 | DRS-5043 | 422 | name not typed | a destructive step (uninstall with dependants, replace, delete an archive for good) needs the artifact's name typed |
 | DRS-5044 | 422 | artifact invalid | does not apply: a connector a pack's template names, a pack named in `drishti.packs.enabled`, a connector with no file, or an uploaded BI file that is not valid |
+| DRS-5050 | 404 | net off | Drishti*net is off on this node, or the node left: the cluster's endpoints and its management are not served |
+| DRS-5051 | 401 | net refused | a call between nodes without a valid cluster credential: no signature, a bad one, outside the 60 s window, or a bad on-behalf-of token |
+| DRS-5052 | 502 | net peer failed | the node a request was forwarded to failed; the next one was tried once |
+| DRS-5053 | 504 | net peer timeout | the node a request was forwarded to did not answer within `forward-timeout` |
+| DRS-5054 | 403 | net not reachable | the caller's roles may not reach the node (`access.yaml`), or the node is drained (then `503`) |
+| DRS-5055 | 409 | net file refused | a `config/net/` file changed since it was read (`If-Match`), or has an error (`problems`) |
+| DRS-5056 | 400 | net bad request | an unknown member, removing one that is alive, a malformed seed, a file that is not one of the folder |
 | DRS-6001 | 404 | user not found | no such user |
 | DRS-6002 | 409 | user exists | a user with that name already exists |
 | DRS-6003 | 422 | weak password | the password does not meet the password rules |

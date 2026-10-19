@@ -343,7 +343,21 @@ public enum ErrorCode {
     /** Standing query: a subscription to a past as-of date, which never changes. */
     SQ_PAST("DRS-9183", 422),
     /** Standing query (wave B scale): the node that owns the model's shard could not be reached to forward the subscription; the caller retries (Retry-After). */
-    SQ_OWNER_UNREACHABLE("DRS-9184", 503);
+    SQ_OWNER_UNREACHABLE("DRS-9184", 503),
+    /** Drishti*net: the cluster is off on this node (no config/net/node.yaml with enabled: true), so its cluster endpoints are not served. */
+    NET_OFF("DRS-5050", 404),
+    /** Drishti*net: a call between nodes without a valid cluster credential (no key, a bad signature, outside the 60 s window, a bad on-behalf-of token). */
+    NET_REFUSED("DRS-5051", 401),
+    /** Drishti*net: the peer a request was forwarded to failed, or answered something that is not an answer; the next peer was tried once. */
+    NET_PEER_FAILED("DRS-5052", 502),
+    /** Drishti*net: the peer a request was forwarded to did not answer within routing.yaml's forward-timeout. */
+    NET_PEER_TIMEOUT("DRS-5053", 504),
+    /** Drishti*net: the caller's roles may not reach the node (access.yaml), or the node takes no forwarded work (drained). */
+    NET_NOT_REACHABLE("DRS-5054", 403),
+    /** Drishti*net: a file of config/net/ was changed since it was read (If-Match), or a setting is refused; nothing was written. */
+    NET_FILE_REFUSED("DRS-5055", 409),
+    /** Drishti*net: a management request that cannot be done (an unknown member, removing a member that is alive, a malformed seed). */
+    NET_BAD_REQUEST("DRS-5056", 400);
 
     private final String code;
     private final int httpStatus;

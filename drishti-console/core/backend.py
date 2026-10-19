@@ -651,6 +651,16 @@ class BackendClient:
             kw["json"] = body
         return await self._send(method, "/admin" + path, ident, **kw)
 
+    async def net(self, method: str, path: str, ident, body: dict | None = None, headers: dict | None = None, **params):
+        """Drishti*net's endpoints (``/api/v1/net/...``): the member list, seeds, drain, leave, the files of config/net/ (Admin -> Net).
+        ``headers`` are sent as given (``If-Match`` carries a file's version)."""
+        kw = {"params": params} if params else {}
+        if headers:
+            kw["headers"] = headers
+        if body is not None:
+            kw["json"] = body
+        return await self._send(method, "/net" + path, ident, **kw)
+
     async def announce_load(self, pack: str, body: dict, ident) -> dict:
         """Tells the server a batch landed (``POST /api/v1/packs/{pack}/loads``), as Admin -> Data loads -> Lakes does after a build."""
         return await self._send("POST", f"/packs/{quote(pack, safe='')}/loads", ident, json=body)

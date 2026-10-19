@@ -17,6 +17,24 @@
 
 ## Unreleased
 
+### 2.5.0 (wave N, Drishti*net): many servers, one Drishti
+
+- **Drishti*net membership (N1).** Several servers act as one cluster, **off by default**: with no `config/net/` folder (or `enabled: false`
+  in its `node.yaml`) a server is a single server exactly as before. Switched on, each node gossips over HTTP (SWIM-style push-pull every
+  second with three random members, direct and indirect probes, `alive`, `suspect` after 5 s, `dead` after 30 s more, `left` when it stops
+  cleanly), saves `<data dir>/net/peers.json` every 10 minutes, on every join or leave and at shutdown, and rejoins from it after a restart with
+  no seed. Every call between nodes is signed with the cluster key (`secret: ${DRISHTI_NET_SECRET}` in `node.yaml`, an environment reference
+  only; HMAC over method, path, time, node and body; a 60 s window); a refused call is `401 DRS-5051` and is listed. The folder is managed like
+  connector files: `node.yaml`, `peers/<name>.yaml`, `gossip.yaml`, `routing.yaml`, `access.yaml`, watched, each checked against its schema (a
+  refused file keeps the previous settings, its problems named by line), written atomically with a history under `<data dir>/net/history/`;
+  ready-made files in `config/net.examples/`. **Admin → Net** (Members: every node's state, version, tags, latency, incarnation; add a seed,
+  remove a gone member, drain, undrain, leave, rejoin; Files: check, save with `If-Match`, delete, history with a diff); `/api/v1/net/gossip`,
+  `/ping`, `/members`, `/seeds`, `/members/{id}`, `/drain`, `/undrain`, `/leave`, `/rejoin`, `/files`, `/file`; `drishti.py net list | check |
+  add-peer | set | members`. New module `drishti-net`; error codes `DRS-5050` to `DRS-5056`. Measured: five nodes from one seed list each other
+  within 5 s and a killed one is dead everywhere within 40 s (fake clock); three real servers in one JVM converge 52 ms after the third starts.
+  [NET.md](docs/admin/NET.md), [DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md) section 19, CONFIGURATION, OPERATIONS, API_GUIDE, CLI_GUIDE,
+  TROUBLESHOOTING, ARCHITECTURE.
+
 ### 2.4.0 (wave C, authoring and analysis): report schema v2, boards as a report layout, BI Studio
 
 - **Report schema v2 (R6).** A visual's `format:` is typed per visual family: one JSON Schema per family, written in YAML in the server

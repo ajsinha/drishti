@@ -2059,6 +2059,67 @@ deleted orders-lake (its text is kept in the connector folder's history/ folder)
 the server's answer unchanged. Errors: `DRS-5031` invalid (422), `DRS-5032` stale version, existing file without `--if-match`, or in use without `--confirm`
 (409), `DRS-5033` no such connector (404); see [API_GUIDE.md](API_GUIDE.md#connectors-apiv1adminconnectors).
 
+### `net`: Drishti*net's config/net/ folder
+
+`drishti.py net list | check | add-peer | set` work on the folder of Drishti*net's files ([NET.md](../admin/NET.md)) on this machine, with no
+server needed: they check every file as the server does (the same rules, the same line numbers) and refuse to write a file the server would
+refuse. `net members` reads the member table of a running server. The folder is `--dir`, else `DRISHTI_NET_DIR`, else `./config/net` (the server's
+`drishti.net.dir`); a write is atomic and keeps the previous text under `<data dir>/net/history/` (`--data-dir`, else `DRISHTI_DATA_DIR`, else
+`./data`), and a running server picks it up by itself. The cluster key is only ever written as a reference; a key in clear is refused.
+
+| Command | What it does |
+|---|---|
+| `net list [--json]` | The files (in force, refused, absent), whether the cluster is on, this node's address, tags and key state, the seeds |
+| `net check [FILE ...] [--json]` | Checks every file (or those named); exit 1 when one would be refused, with each problem's file, line and setting |
+| `net add-peer NAME URL [--tags a,b]` | Writes `peers/NAME.yaml`, a seed (`URL` is `host:port` or an address) |
+| `net set KEY [VALUE]` | Changes one setting: `node.enabled true`, `node.tags region:emea,tier:risk`, `gossip.interval 2s`, `access.roles.risk.nodes n-a,region:emea`, `peers.drishti-a.url http://host:port`; an empty value removes it |
+| `net members` | The member table of a running server (`GET /api/v1/net/members`; an administrator's token) |
+
+Real output, on an empty folder:
+
+```text
+$ drishti.py net list
+config/net at ~/drishti/config/net: Drishti*net is off (a single server, as without the cluster)
+  node.yaml     absent (defaults)
+  gossip.yaml   absent (defaults)
+  routing.yaml  absent (defaults)
+  access.yaml   absent (defaults)
+
+$ drishti.py net set node.enabled true
+  error   node.yaml  secret: enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least 32 bytes)
+  error   node.yaml  advertise-url: enabled: true needs advertise-url: the address peers and consoles call this node at
+drishti: node.yaml was not written: enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least 32 bytes)
+(exit 1)
+
+$ drishti.py net set node.secret '${DRISHTI_NET_SECRET}'
+wrote ~/drishti/config/net/node.yaml
+$ drishti.py net set node.advertise-url http://127.0.0.1:18784
+wrote ~/drishti/config/net/node.yaml
+$ drishti.py net set node.enabled true
+wrote ~/drishti/config/net/node.yaml
+$ drishti.py net add-peer drishti-a 127.0.0.1:18783 --tags region:emea
+wrote ~/drishti/config/net/peers/drishti-a.yaml
+
+$ drishti.py net check
+3 file(s) checked in ~/drishti/config/net: 1 error(s); those files would be refused
+  error   gossip.yaml:2  fanout: 'lots' is not a whole number
+(exit 1)
+```
+
+The file `net set` wrote:
+
+```yaml
+# config/net/node.yaml (Drishti*net, docs/admin/NET.md)
+secret: ${DRISHTI_NET_SECRET}
+advertise-url: http://127.0.0.1:18784
+tags:
+- region:emea
+- tier:risk
+enabled: true
+```
+
+Exit: 0 done, 1 refused or a file has an error, 2 usage (a bad peer name, a key that names no file).
+
 ### `bi`: workspaces and the catalogue (Rupaka)
 
 Business intelligence over REST ([BI_GUIDE.md](BI_GUIDE.md), [API_GUIDE.md](API_GUIDE.md#business-intelligence-rupaka-apiv1bi)), as the token's user sees it: the

@@ -57,6 +57,13 @@ class ArchitectureRulesTest {
             .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.engine..", "com.ash.drishti.server..",
                     "com.ash.drishti.identity..", "com.ash.drishti.rachana..", "com.ash.drishti.packs..");
 
+    /** Drishti*net's core (membership, the cluster key, digests, routing) knows nothing of Spring, the engine or the server: the server wires it in. */
+    @ArchTest
+    static final ArchRule netCoreDependsOneWay = noClasses()
+            .that().resideInAPackage("com.ash.drishti.net..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.engine..", "com.ash.drishti.server..", "org.springframework..",
+                    "com.ash.drishti.identity..", "com.ash.drishti.rachana..", "com.ash.drishti.packs..");
+
     @ArchTest
     static final ArchRule controllersOnlyInServer = noClasses()
             .that().resideOutsideOfPackage("com.ash.drishti.server..")

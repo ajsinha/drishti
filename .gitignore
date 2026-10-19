@@ -26,6 +26,8 @@ docs/qa/2026-10-03/ux/shots/
 
 # site connector files (written by the server and by Admin -> Connectors; examples are in config/connectors.examples/)
 /config/connectors/
+# this site's Drishti*net files (written by the server, Admin -> Net and drishti.py net; examples are in config/net.examples/)
+/config/net/
 
 # the framework builds of the embedding samples: docs/guides/examples/embed/fetch-vendor.sh
 docs/guides/examples/embed/vendor/

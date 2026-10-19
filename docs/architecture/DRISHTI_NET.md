@@ -15,7 +15,7 @@
 -->
 # Drishti*net: many servers, one Drishti
 
-Status: **design, not built.** Planned for **2.5.0**, a release of its own built straight after 2.4.0 and then fully tested (wave N, decided by the
+Status: **being built for 2.5.0** (wave N); what is built, and what changed from the design, is in [section 19](#19-as-built). Planned for **2.5.0**, a release of its own built straight after 2.4.0 and then fully tested (wave N, decided by the
 product owner on 2026-10-18; see
 [BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)). Off by default when built. Names marked **(new)** do not exist
 in the code today; every other class, file or setting named here does.
@@ -28,7 +28,7 @@ in the code today; every other class, file or setting named here does.
 8. [Operations across nodes](#8-operations-across-nodes) · 9. [Identity and security](#9-identity-and-security) ·
 10. [Shared and separate lakes](#10-shared-and-separate-lakes) · 11. [State that belongs to a user](#11-state-that-belongs-to-a-user) ·
 12. [Failure](#12-failure) · 13. [Admin, management and observability](#13-admin-management-and-observability) · 14. [Configuration](#14-configuration) ·
-15. [APIs](#15-apis) · 16. [Build plan](#16-build-plan) · 17. [Tests](#17-tests) · 17A. [Documentation](#17a-documentation-part-of-every-phase-not-after-it) · 18. [Risks and open questions](#18-risks-and-open-questions)
+15. [APIs](#15-apis) · 16. [Build plan](#16-build-plan) · 17. [Tests](#17-tests) · 17A. [Documentation](#17a-documentation-part-of-every-phase-not-after-it) · 18. [Risks and open questions](#18-risks-and-open-questions) · 19. [As built](#19-as-built)
 
 ## 1. The ask
 
@@ -431,3 +431,27 @@ stack, pictures of the real pages), as the product owner asked:
   `knownAt` read bypasses them.
 - **Decided (product owner, 2026-10-18):** (4) a search, type-ahead or forwarded request goes **only to nodes the
   user's role may reach** (section 9).
+
+## 19. As built
+
+Each phase as it was built, with anything that differs from the design above. The operator's guide is [NET.md](../admin/NET.md).
+
+**N1, membership (built).** The core is a module of its own, `drishti-net` (no Spring, no engine: an ArchUnit rule keeps it so): `MemberTable`
+(the merge rule of section 5), `Gossiper` (rounds, push-pull, direct and indirect probes, suspicion, death, forgetting, leave, rejoin, the join
+list of seeds and saved members), `PeersFile`, `NodeIdentity`, `NetFolder` and `NetSchema` (the folder of section 14 with line numbers,
+history and `If-Match`), `ClusterKey`, `OnBehalfOf`, `PeerHttp`. In the server, `NetService` runs the node (a virtual thread per node, a round
+every `interval`), `NetCallFilter` checks the cluster key before the token filter, `NetController` and `NetAdminController` serve section 15's
+membership endpoints and Admin → Net's Members and Files tabs; `drishti.py net` lists, checks and edits the files. Changes from the design:
+
+- The signature covers the calling node's id too (`METHOD\npath?query\ntime\nnode\nsha256(body)`), sent in `X-Drishti-Net-Node`, so a
+  signature cannot be replayed as another node within the window.
+- The on-behalf-of token names the node it is for (`aud`); a token sent to another node is refused.
+- **Key rotation takes three rolling steps, not two:** a node with only the old key cannot verify a call signed with the new one, so every node
+  first accepts the new key (`secret` the old, `previous-secret` the new), then signs with it (`secret` the new, `previous-secret` the old), then
+  drops the old. `previous-secret` therefore means *also accepted*, whichever key it holds.
+- The management endpoints of section 13 are under `/api/v1/net` as designed; the files are `GET/PUT/DELETE /api/v1/net/file?id=<file>` and
+  `POST /api/v1/net/file/check`, `GET /api/v1/net/files`, `GET /api/v1/net/file/revision`.
+- Error codes `DRS-5050` (off) to `DRS-5056`.
+- Measured: five nodes from one seed list each other within 5 rounds and a killed one is dead everywhere within 40 s (fake clock,
+  `MembershipTest`); three real servers in one JVM list each other 52 ms after the third has started (`NetMembershipTest`).
+

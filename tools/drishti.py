@@ -1165,6 +1165,10 @@ def build_parser() -> argparse.ArgumentParser:
     cs = group("connector", "Connectors over REST (Admin -> Connectors): list, get, apply a YAML file, test, enable, delete (administrator; a token needs packs:admin)")
     load_module("serverconnectors", "serverconnectors.py").register(sys.modules[__name__], cs, add, srv)
 
+    # net --------------------------------------------------------------------------------------------------
+    ns = group("net", "Drishti*net's config/net/ folder: list, check, add a peer, set a setting (local files); members of a running server")
+    load_module("servernet", "servernet.py").register(sys.modules[__name__], ns, add, srv, js)
+
     # design -----------------------------------------------------------------------------------------------
     ds = group("design", "Screen Designer designs over REST: create, edit, check, propose, approve, ship (anyone may design; approving needs an approver)")
     for name, what in (("list", "your designs"), ("create", "a new design, from samples and/or a Sutra file"), ("get", "show a design (or its Sutra with --yaml / -o)"),

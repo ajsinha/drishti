@@ -108,6 +108,13 @@ drishti:
     # by the other connectors that hold them (news-and-markets: news-store, built from the captured snapshot by `drishti.py lake demo`).
     enabled: ${DRISHTI_OFFLINE:false}
     plugins: news,yfinance,feed      # the public-data feed plugin too (US Treasury, ECB, NY Fed, FRED: market-data pack)
+  net:
+    # Drishti*net (docs/admin/NET.md): several servers as one. OFF unless <dir>/node.yaml says enabled: true; without the folder
+    # this server is a single server exactly as before. Everything else (this node, its seed peers, gossip timings, routing,
+    # nodes per role) is in the files of that folder, managed like connector files (Admin -> Net, drishti.py net), never here.
+    dir: ${DRISHTI_NET_DIR:./config/net}     # created on first write; ready-made files in config/net.examples/
+    watch: ${DRISHTI_NET_WATCH:auto}         # auto (file events, polling as a fallback) | poll | off
+    poll: 5s
   sources:
     # Longest a single source read may take before the view shows the entity as unavailable (DRS-1004). 5 s: the first read
     # of a business date on a large table loads that date's id index first (300K trades: a few seconds).
@@ -311,6 +318,7 @@ drishti:
       - "* /api/v1/me/**"
       - "* /api/v1/auth/**"
       - "* /api/v1/admin/tokens/**"
+      - "* /api/v1/net/**"                     # Drishti*net: nodes sign their calls with the cluster key; administrators use the console
       - "* /api/v1/embed/**"
       - "* /api/v1/admin/embed/**"
       - "* /api/v1/admin/users/**"

@@ -102,6 +102,7 @@ categories:
 # the help centre at their path slug, so the old addresses keep working.
 moved:
   lake-maintenance: docs-admin-lake-maintenance   # Admin -> Lakes -> Maintain's help link (docs/admin/LAKE_MAINTENANCE.md, in the reference)
+  net: docs-admin-net                 # Admin -> Net's help link (docs/admin/NET.md, the Drishti*net operator's guide, in the reference)
   quickstart: install-and-run
   windows: install-and-run#drishti-on-windows
   ide-guide: docs-guides-ide-guide
