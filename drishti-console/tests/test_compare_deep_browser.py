@@ -95,9 +95,11 @@ def test_two_dates_of_a_deep_trade_side_by_side_with_the_leg_change_marked(page,
     side = page.locator("section.cmp-side")
     assert side.is_visible()
     sections = page.eval_on_selector_all("table.cmp-sbs", "els => els.map(e => e.getAttribute('data-cmp-section'))")
-    assert sections == ["Deal ticket", "Leg 1 · Fixed price FIXED", "Leg 2 · Floating price FLOAT · IDX-ALU-3M"]
-    marked = page.eval_on_selector_all("table.cmp-sbs tr[data-cmp-diff] th", "els => els.map(e => e.innerText.trim())")
+    assert sections == ["Deal ticket", "Leg 1 · Fixed price FIXED", "Leg 2 · Floating price FLOAT · IDX-ALU-3M", "Cash flows, resets and events"]
+    marked = page.eval_on_selector_all('table.cmp-sbs:not([data-cmp-section^="Cash flows"]) tr[data-cmp-diff] th', "els => els.map(e => e.innerText.trim())")
     assert marked == ["Version", "Spread"]                                             # only what moved is marked
+    inside = page.eval_on_selector_all('table.cmp-sbs[data-cmp-section^="Cash flows"] tr[data-cmp-diff] th', "els => els.map(e => e.innerText.trim())")
+    assert inside and all(t.startswith("Leg 2 › Cash flow ") for t in inside), inside   # the changes inside the leg's lists, said where they sit
     leg2 = page.locator('table.cmp-sbs[data-cmp-section^="Leg 2"] tr[data-cmp-diff] td')
     assert leg2.all_inner_texts() == ["0.0000", "0.0025"]
     box_side, box_list = side.bounding_box(), page.locator(".cmp-list").bounding_box()
