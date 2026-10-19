@@ -36,8 +36,10 @@ Contents: [1](#1-principles-and-non-goals) principles · [2](#2-conceptual-model
 W1 vs design and the waves A, B, C · [13](#13-decisions-for-the-product-owner) decisions
 
 **Wave labels.** The build is three waves, each a release (section 12): **A** = 2.2.0 *Foundation and languages*,
-**B** = 2.3.0 *Calculation, live and scale*, **C** = 2.4.0 *Authoring experience, AI and integration*. W1 is the
-already-built first wave of 2.2.0. A component marked (A), (B) or (C) is delivered in that wave.
+**B** = 2.3.0 *Calculation, live and scale*, **C** = 2.4.0 *Authoring and analysis*; then **D** = 2.5.0 *Sharing, AI and
+integration* and **E** = 2.6.0 *QA findings and production readiness* (section 12.2, as agreed on 2026-10-17). W1 is the
+already-built first wave of 2.2.0. A component marked (A), (B) or (C) is delivered in that wave; one marked (C) in the
+sections below that is about AI, integration or governance now arrives in D or E.
 
 ---
 
@@ -1122,67 +1124,82 @@ test); (3) no BI page computes: no Wasm or Pyodide is loaded (test), CSP without
 nodes and two consoles serve one model, and standing queries survive the loss of a node; (5) the 500-viewer load test
 meets 6.8 on a real server; (6) explain shows tiers, layers and times; (7) QA findings fixed before the drill.
 
-#### Wave C — Authoring experience, AI and integration → 2.4.0
+#### Wave C — Authoring and analysis → 2.4.0
+
+Agreed with the product owner on 2026-10-17 (this split replaces the earlier C/D plan: AI, integration and governance moved to
+D and E; Python data prep and the browser Python console moved into C).
 
 **Server lane:**
 
 1. **Report schema v2 (R6) and boards as layouts (R7):** typed `format` per visual family (JSON Schema), `theme` items,
    `interactions` matrix, sync groups, tooltip pages, small multiples, matrix depth, conditional formatting rules;
    `layout: board` replaces the `board` kind (converter).
-2. **AI grounding:** `ai:` metadata in `describe`; golden questions run per provider; AI emits MQ/DSQL only; measures
-   from plain words and reports from intent as YAML drafts through review; MCP tools of section 9.
-3. **Integration:** PostgreSQL-wire read-only endpoint (decision 5); Excel feed; embed tokens bound to envelopes;
-   SDK events.
-4. **Governance:** environment parameter rules in bundles; two-way git sync (decision 8); usage dataset over the audit
-   log; sensitivity labels inherited by exports; comments on visuals with captured state.
+2. **Python data prep** (BI_PARITY_PLAN P1–P10): Transforms reading connectors directly, warm workers, a tested snippets
+   library (as-of joins for prices and FX, unpivot, type fixes), profiling of a Transform's input and output, a step-by-step
+   run (each step's rows and profile) for the editor.
+3. **The browser Python console's server side:** masked extracts of a model for the browser, promotion of a result to run
+   on the console backend.
 
 **Console lane:**
 
-1. **BI Studio as one product:** the shell of 8.1; format pane generated from schemas; themes; conditional formatting;
+1. **BI Studio as one product:** the shell of 8.1; format pane generated from the schemas; themes; conditional formatting;
    interactions editor; tooltip pages; small multiples; the matrix.
-2. **AI UI:** ask, explain a change, design from intent, a measure from words → draft → review.
-3. **Feeds and embedding UI:** per-user connection details for SQL tools, the Excel feed wizard, embed configuration.
-4. **Governance UI:** deployment between environments, usage report, labels, comments.
-5. **Full docs and tutorials pass:** every BI guide rewritten to this design; tutorials with UI, CLI and YAML.
+2. **Transform editor:** step by step with a preview and profile at each step, snippets picker, profiling panel, no YAML.
+3. **The browser Python console:** personal, just-in-time analysis on a masked extract of a model (Pyodide); promoted
+   results run on the console backend.
+4. **Docs and tutorials** for all of the above (UI, CLI and YAML).
 
-**Accepted when:** (1) a Power BI author does the parity task list (BI_PARITY_PLAN §4 items 6–9, 13) without YAML;
-(2) golden questions pass on the mock and one real provider, and an AI answer uses only measures the user may see;
-(3) psql and Excel answers equal the MQ answers per user, masked; (4) a bundle with parameter rules moves a model and
-its reports from dev to test; (5) the docs pass is complete; (6) QA findings fixed before the drill.
+**Accepted when:** (1) a Power BI author does the parity task list (BI_PARITY_PLAN §4 items 6–9, 13) without YAML; (2) a
+Transform reading a connector is built step by step with a preview at each step and no YAML typing; (3) the browser
+console analyses a masked extract and a result is promoted; (4) the docs pass is complete; (5) QA findings fixed before
+the drill.
 
-**Between C and D: the product owner's real-life QA.** After 2.4.0 the product owner runs an isolated, full,
-real-life QA (real users' tasks on real-shaped data, outside the builders' own tests). Its findings are triaged first
-and fixed in wave D before anything else in it.
-
-#### Wave D — Real-life QA findings, data prep and statements → 2.5.0
+#### Wave D — Sharing, AI and integration → 2.5.0
 
 **Server lane:**
 
-1. **Real-life QA findings** (server side), first.
-2. **Python data-prep experience** (BI_PARITY_PLAN P1–P10): Transforms reading connectors directly, warm workers,
-   a tested snippets library (as-of joins for prices and FX, unpivot, type fixes), profiling of a Transform's input and
-   output, AI-written Transforms as reviewed drafts.
+1. **AI grounding:** `ai:` metadata in `describe`; golden questions run per provider; AI emits MQ/DSQL only; measures
+   from plain words, reports from intent and AI-drafted Transforms as drafts through review; MCP tools of section 9.
+2. **Sajha MCP connector.**
 3. **Paginated reports and statements:** page-exact layouts (headers, footers, page breaks, repeated table headers),
    parameters, per-recipient bursting through subscriptions, PDF and Excel output, masked per reader.
-4. **3.0 groundwork:** a second query engine behind the tier planner (connector capability descriptors), and the
-   Excel add-in's API (the add-in itself in 3.0).
-5. **GenUI:** screens an AI agent composes from governed Sutra fragments, bound to live data as the viewer, streamed to
+4. **Send and push:** Send to Outlook and Teams (Teams off until configured), SharePoint push from Forms, connector dump
+   (TEAMS_EMAIL_SHAREPOINT.md).
+5. **Integration:** PostgreSQL-wire read-only endpoint (decision 5); Excel feed; embed tokens bound to envelopes; SDK events.
+6. **GenUI:** screens an AI agent composes from governed Sutra fragments, bound to live data as the viewer, streamed to
    other applications through `<drishti-genui>` ([GENUI.md](GENUI.md)).
 
 **Console lane:**
 
-1. **Real-life QA findings** (console side), first.
-2. **Transform editor:** step-by-step preview (each step's rows and profile), snippets picker, profiling panel.
-3. **Statement designer** for paginated reports, previewed page by page.
-4. **The browser Python console** (personal, just-in-time analytics on a masked extract of a model; promoted results
-   run on the console backend) — only if the real-life QA asks for it.
-5. **Docs and tutorials** for data prep and statements (UI, CLI and YAML).
+1. **AI UI:** ask, explain a change, design from intent, a measure from words → draft → review.
+2. **Statement designer** for paginated reports, previewed page by page.
+3. **Feeds, sending and embedding UI:** per-user connection details for SQL tools, the Excel feed wizard, send dialogs,
+   embed configuration, the GenUI element and its admin page.
+4. **Docs and tutorials** (UI, CLI and YAML).
 
-**Accepted when:** (1) every real-life QA finding is fixed or explicitly deferred by the product owner; (2) a Transform
-is built step by step with a preview at each step and no YAML typing; (3) a monthly statement bursts to ten recipients,
-each masked, page-exact in PDF; (4) QA findings fixed before the drill.
+**Accepted when:** (1) golden questions pass on the mock and one real provider, and an AI answer uses only measures the
+user may see; (2) a monthly statement bursts to ten recipients, each masked, page-exact in PDF; (3) psql and Excel answers
+equal the MQ answers per user, masked; (4) an agent composes a GenUI screen that streams into a host page with live ticks,
+masked for its viewer; (5) QA findings fixed before the drill.
 
-**After D:** 3.0 (the Excel add-in, the second engine in production, scale on real servers).
+**After D: the product owner's real-life QA on 2.5.0.** An isolated, full, real-life QA (real users' tasks on real-shaped
+data, outside the builders' own tests). Its findings are triaged first and fixed in wave E before anything else in it.
+
+#### Wave E — QA findings and production readiness → 2.6.0
+
+1. **Real-life QA findings** first (server and console).
+2. **Governance:** environment parameter rules in bundles and deployment between environments; two-way git sync
+   (decision 8); usage dataset over the audit log and its report; sensitivity labels inherited by exports; comments on
+   visuals with captured state.
+3. **3.0 groundwork:** a second query engine behind the tier planner (connector capability descriptors), and the Excel
+   add-in's API (the add-in itself in 3.0).
+4. **Deferred small items:** designer block groups (Open block, editable `with:`), the netting-set panel title count,
+   icons missing from the bundled set, DRS-6011 start-up noise for masks of packs not loaded.
+
+**Accepted when:** (1) every real-life QA finding is fixed or explicitly deferred by the product owner; (2) a bundle with
+parameter rules moves a model and its reports from dev to test; (3) QA findings fixed before the drill.
+
+**After E:** 3.0 (the Excel add-in, the second engine in production, scale on real servers).
 
 ### 12.3 Risks
 
