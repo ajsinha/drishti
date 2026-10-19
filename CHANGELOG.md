@@ -96,6 +96,9 @@
 - **Offline quote and news pages checked** (`DRISHTI_OFFLINE=true`, the committed snapshot): the topic page's note now says that offline mode shows the
   captured headlines (it said the tables stay empty); the browser test also checks that the company page draws the whole year of closes, ending at the
   quote's own price, with no policy violation or script error.
+- **Model designer (2.4.0):** a dataset's own id column (a trade's `TRADE_ID`, which references `trade`) no longer makes the dataset a dimension, so a
+  model of trades and desks starts with the trades as its fact; on a phone the Measures tab's *Quick calculation* row wraps instead of widening the page.
+  A pack's heading link on Forms and the packs in a pack's detail list are 44 px tap targets.
 - **Analyse: a filter's picker lists its values again (2.4.0).** A field put in *Filters* showed only *(all)*: the values the console sends with the
   pivot redrew the field chips but not the filter zone. The zone is drawn again when they arrive ([ANALYSE.md](docs/guides/ANALYSE.md)).
 - **A trade id in a report table opens the trade again (2.4.0).** A column whose dataset says `references: <kind>` links to that kind in the terminal, as a key

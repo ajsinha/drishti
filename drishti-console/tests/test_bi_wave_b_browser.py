@@ -82,7 +82,7 @@ def browser(stack):
 
 @pytest.fixture(scope="module")
 def made(browser, stack):
-    """A model over trades and desks with Sum of mtm, its % of total made with Quick calculation, a what-if parameter and a shocked measure, published;
+    """A model over trades and desks with Sum of MTM, its % of total made with Quick calculation, a what-if parameter and a shocked measure, published;
     and a report on it (a table by desk). Built in the UI, as a designer would."""
     page = sign_in(browser, "wes")
     ws = fetch(page, "POST", "/bi/api/workspaces", {"name": "Wave B desk", "description": ""})
@@ -91,17 +91,17 @@ def made(browser, stack):
     assert m["status"] == 200, m
     page.goto(CONSOLE_URL + m["body"]["href"])
     expect(page.locator('[data-md-root][data-ready="yes"]')).to_have_count(1, timeout=30000)
-    page.locator('[data-suggestion="trade.desk->desk.id"] [data-accept]').click()
+    page.locator('[data-suggestion="trade.DESK->desk.id"] [data-accept]').click()
     page.click('[data-tab="measures"]')
     page.select_option("[data-nm-alias]", "trade")
-    page.select_option("[data-nm-column]", "mtm")
+    page.select_option("[data-nm-column]", "MTM")
     page.click("[data-nm-add]")
-    expect(page.locator('[data-measure="Sum of mtm"]')).to_be_visible(timeout=15000)
+    expect(page.locator('[data-measure="Sum of MTM"]')).to_be_visible(timeout=15000)
     # % of total, with no formula typed: the Quick calculation writes share_of(..., over=ALL)
     expect(page.locator("[data-quick-measure]")).to_be_visible(timeout=15000)
-    page.select_option("[data-qm-base]", "Sum of mtm")
+    page.select_option("[data-qm-base]", "Sum of MTM")
     page.select_option("[data-qm-calc]", "share-all")
-    expect(page.locator("[data-qm-expr]")).to_have_text("share_of(measure('Sum of mtm'), over=ALL)")
+    expect(page.locator("[data-qm-expr]")).to_have_text("share_of(measure('Sum of MTM'), over=ALL)")
     page.fill("[data-qm-name]", "MTM share")
     shoot(page, "[data-quick-measure]", "quick-calculation")
     page.click("[data-qm-add]")
@@ -121,7 +121,7 @@ def made(browser, stack):
     page.select_option("[data-cal-fy]", "4")
     shoot(page, "[data-calc-pane]", "calculations-tab", 900)
     page.click('[data-tab="measures"]')
-    page.select_option("[data-qm-base]", "Sum of mtm")
+    page.select_option("[data-qm-base]", "Sum of MTM")
     page.select_option("[data-qm-calc]", "whatif")
     page.select_option("[data-qm-what]", "shock")
     page.fill("[data-qm-name]", "MTM shocked")
@@ -132,11 +132,11 @@ def made(browser, stack):
     page.click("[data-publish]")
     expect(page.locator("[data-state]")).to_have_text("Published", timeout=30000)
     doc = page.evaluate("window.drishtiModel.doc")
-    assert doc["measures"]["MTM share"] == {"expr": "share_of(measure('Sum of mtm'), over=ALL)", "format": "share"}
-    assert doc["measures"]["MTM shocked"]["expr"] == "measure('Sum of mtm') * (1 + param.shock)" and doc["parameters"]["shock"]["kind"] == "number"
+    assert doc["measures"]["MTM share"] == {"expr": "share_of(measure('Sum of MTM'), over=ALL)", "format": "share"}
+    assert doc["measures"]["MTM shocked"]["expr"] == "measure('Sum of MTM') * (1 + param.shock)" and doc["parameters"]["shock"]["kind"] == "number"
     name = doc["model"]
     body = ("rachana: 2\nreport: wave-b-desks\nversion: 1\ntitle: Wave B desks\nmodel: " + name + "@1\npages:\n  - id: main\n    title: Main\n    visuals:\n"
-            "      - { id: desks, type: table, title: MTM by desk, at: { x: 0, y: 0, w: 12, h: 6 }, wells: { columns: [trade.desk, Sum of mtm, MTM share, MTM shocked] } }\n")
+            "      - { id: desks, type: table, title: MTM by desk, at: { x: 0, y: 0, w: 12, h: 6 }, wells: { columns: [trade.DESK, Sum of MTM, MTM share, MTM shocked] } }\n")
     r = fetch(page, "POST", "/bi/api/workspaces/" + ws["body"]["id"] + "/items", {"kind": "report", "title": "Wave B desks", "body": body})
     assert r["status"] in (200, 201), r
     rid = r["body"]["id"]
@@ -174,7 +174,7 @@ def test_no_bi_page_loads_a_compute_engine(browser, made):
 
 def test_a_percent_of_total_built_in_the_ui_equals_an_independent_computation(browser, made):
     page = sign_in(browser, "wes")
-    a = fetch(page, "POST", "/bi/api/mq", {"mq": 1, "model": made["model"] + "@1", "select": {"fields": ["trade.desk"], "measures": ["Sum of mtm", "MTM share"]}})
+    a = fetch(page, "POST", "/bi/api/mq", {"mq": 1, "model": made["model"] + "@1", "select": {"fields": ["trade.DESK"], "measures": ["Sum of MTM", "MTM share"]}})
     assert a["status"] == 200, a
     rows = a["body"]["rows"]
     total = sum(r[1] for r in rows)
@@ -216,11 +216,11 @@ def test_a_live_report_follows_pushed_answers_with_its_state_chip(browser, made,
     expect(chip).to_contain_text(re.compile("Listening|Live|Every few seconds"))
     shoot(page, '[data-visual="desks"]', "state-chip")
     # new trades land in the lake and the dataset is refreshed: the server's generation bus pushes the new answer, nothing polls
-    lake = stack.tmp / "lake" / "2026-10-08" / "trade.jsonl"
+    lake = stack.tmp / "lake" / "trade" / "2026-10-08" / "trade.jsonl"                             # the stack's trade-endur (tests/test_w1_model_designer_browser.py)
     with open(lake, "a") as f:
         for i in range(3):
-            f.write(json.dumps({"id": f"BBG-PUSH{i}", "tradeId": f"BBG-PUSH{i}", "desk": "DESK-FX", "book": "BOOK-0", "productType": "FX_FORWARD", "currency": "USD", "status": "Live",
-                                "notional": 1_000_000.0, "mtm": 1_000_000, "pnl1d": 0, "tradeDate": "2026-10-08"}) + "\n")
+            t = dict(w1.trade("2026-10-08", 0), TRADE_ID=f"PUSH{i}", DESK="DESK-FX", PORTFOLIO="BOOK-0", CURRENCY="USD", NOTIONAL=1_000_000.0, MTM=1_000_000, PNL_1D=0)
+            f.write(json.dumps({"id": t["TRADE_ID"], **t}) + "\n")
     pushed0 = int(page.get_attribute("#biCanvas", "data-pushed") or 0)
     note = page.inner_text("[data-asof-note]")
     day = (re.search(r"\d{4}-\d\d-\d\d", note) or [None])[0] or "2026-10-08"
@@ -249,7 +249,7 @@ def test_the_explain_panel_shows_tiers_layers_and_times(browser, made):
     assert panel.locator("[data-explain-op]").count() >= 2
     assert "SecureScan" in panel.locator("[data-explain-text]").text_content() or panel.locator('[data-explain-op="SecureScan"]').count() >= 1
     if os.environ.get("DRISHTI_CAPTURES"):                       # the answer the guide quotes (BI_GUIDE.md section 25.1)
-        a = fetch(page, "POST", "/bi/api/mq", {"mq": 2, "model": made["model"] + "@1", "select": {"fields": ["trade.desk"], "measures": ["MTM shocked"]},
+        a = fetch(page, "POST", "/bi/api/mq", {"mq": 2, "model": made["model"] + "@1", "select": {"fields": ["trade.DESK"], "measures": ["MTM shocked"]},
                                                 "params": {"shock": 0.5}, "options": {"explain": True}})
         with open(os.path.join(os.environ["DRISHTI_CAPTURES"], "wave-b-explain.json"), "w") as f:
             json.dump(a["body"], f, indent=1)

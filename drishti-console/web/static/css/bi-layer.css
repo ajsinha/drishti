@@ -42,6 +42,9 @@
 .bi-md-dsname small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .72rem; }
 .bi-md-used strong::after { content: " ✓"; color: var(--d-ok); }
 .bi-md-pane { min-width: 0; }
+.bi-md-quick .bi-md-row { flex-wrap: wrap; }                       /* a long calculation name never widens the page on a phone */
+.bi-md-quick .bi-md-row > label { min-width: 0; max-width: 100%; }
+.bi-md-quick select, .bi-md-quick input { max-width: 100%; }
 .bi-md-diagram { min-height: 26rem; }
 .bi-md-diagram.bi-drop { border-color: var(--d-accent); }
 .bi-md-box { width: 15rem; padding: 0; }
