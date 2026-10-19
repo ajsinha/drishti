@@ -34,6 +34,15 @@
   within 5 s and a killed one is dead everywhere within 40 s (fake clock); three real servers in one JVM converge 52 ms after the third starts.
   [NET.md](docs/admin/NET.md), [DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md) section 19, CONFIGURATION, OPERATIONS, API_GUIDE, CLI_GUIDE,
   TROUBLESHOOTING, ARCHITECTURE.
+- **Drishti*net capability digests (N2).** Each node publishes what it serves (`GET /api/v1/net/digest`: packs with version and a hash of their
+  files, peer-only packs, kinds with mnemonic and sources, each source's table identity, newest business date and data version, the load, the
+  business calendar, masked fields, nodes per role) and gossips its hash; peers pull a changed digest within a quarter of a second of hearing
+  the hash. From all digests every node builds the capability table: kind to the nodes that render it and the nodes that hold its data, the newest
+  pack version marked, **replicas** (the same table read by several nodes: a search asks one) and **shards** (different tables: a search asks
+  all). A pack switched on at one of three servers is in the others' tables 1.0 s later. New source SPI method `SourcePlugin.tableIdentity(kind)`
+  (the Delta connector: the table's id from its log, else its location). **Admin → Net → Capability map** with a filter and warnings (one version
+  of a pack with different contents, different calendars, different masks); `GET /api/v1/net/capabilities`. NET.md section 5, API_GUIDE,
+  CONNECTOR_DEVELOPER_GUIDE.
 
 ### 2.4.0 (wave C, authoring and analysis): report schema v2, boards as a report layout, BI Studio
 

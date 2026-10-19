@@ -50,9 +50,19 @@ public class NetConfiguration {
         return net;
     }
 
+    @Bean(destroyMethod = "close")
+    public DigestService digestService(NetService net, com.ash.drishti.packs.PackRegistry packs, com.ash.drishti.server.security.PackAccess packAccess,
+            com.ash.drishti.engine.command.Mnemonics mnemonics, com.ash.drishti.engine.source.SourceRegistry sources,
+            com.ash.drishti.engine.time.BusinessDates dates, com.ash.drishti.server.api.RequestActivity activity,
+            com.ash.drishti.server.security.SecurityProperties security) {
+        return new DigestService(net, packs, packAccess, mnemonics, sources, () -> dates.calendar().name(), activity, security);
+    }
+
     @Bean
-    public NetViews netViews(NetService net) {
-        return new NetViews(net);
+    public NetViews netViews(NetService net, DigestService digests) {
+        NetViews v = new NetViews(net, digests);
+        v.digestSummary(id -> NetViews.summary(id.equals(net.nodeId()) && net.running() ? digests.self() : digests.peers().get(id)));
+        return v;
     }
 
     /** After the path guard and the size limit, before the token filter: a node's call is verified here and needs no bearer token. */

@@ -51,6 +51,11 @@
 .net-problems { margin: .4rem 0; padding-left: 1.1rem; font-size: .85rem; }
 .net-history { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .3rem; font-size: .82rem; }
 .net-diff { background: var(--d-surface-2, transparent); padding: .5rem .7rem; border-radius: 6px; overflow: auto; font-size: .8rem; max-height: 24rem; }
+.net-warnings { margin: .3rem 0 .6rem; padding-left: 1.1rem; font-size: .88rem; }
+.net-warnings:empty { display: none; }
+.net-filter { max-width: 28rem; margin: 0 0 .5rem; }
+.net-map td, .net-map th { white-space: normal; vertical-align: top; font-size: .85rem; }
+.net-map td div { margin: 0 0 .15rem; }
 @media (max-width: 760px) {
   .net-files { grid-template-columns: 1fr; }
   .net-dl { grid-template-columns: 1fr; }

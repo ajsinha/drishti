@@ -44,12 +44,14 @@ public class NetController {
 
     private final NetService net;
     private final NetViews views;
+    private final DigestService digests;
     private final Entitlements entitlements;
     private final ObjectMapper json = new ObjectMapper();
 
-    public NetController(NetService net, NetViews views, Entitlements entitlements) {
+    public NetController(NetService net, NetViews views, DigestService digests, Entitlements entitlements) {
         this.net = net;
         this.views = views;
+        this.digests = digests;
         this.entitlements = entitlements;
     }
 
@@ -60,6 +62,23 @@ public class NetController {
         List<Member> theirs = List.of(json.treeToValue(body.path("members"), Member[].class));
         n.table().merge(theirs);
         return Map.of("members", n.table().entries());
+    }
+
+    /** This node's capability digest (section 6), for a peer whose gossip carried a new hash. */
+    @GetMapping("/digest")
+    public com.ash.drishti.net.digest.Digest digest() {
+        net.require();
+        return digests.self();
+    }
+
+    /** Admin → Net → Capability map: kind to the nodes that render it and hold its data, with the warnings (an administrator). */
+    @GetMapping("/capabilities")
+    public Map<String, Object> capabilities(@RequestAttribute(Principal.ATTRIBUTE) Principal p,
+            @RequestAttribute(value = NetCallFilter.PEER, required = false) String peer) {
+        if (peer == null) {
+            entitlements.requireAdmin(p);
+        }
+        return views.capabilities();
     }
 
     /** A direct probe, or ({@code ?target=}) an indirect one: this node probes a member for the caller. */

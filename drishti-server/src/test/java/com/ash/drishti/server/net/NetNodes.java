@@ -78,7 +78,7 @@ final class NetNodes implements AutoCloseable {
         Files.createDirectories(netDir.resolve("peers"));
         Files.writeString(netDir.resolve("node.yaml"), "enabled: true\nadvertise-url: http://127.0.0.1:" + port + "\ntags: " + tags
                 + "\npeer-only-packs: " + peerOnly + "\nsecret: ${DRISHTI_NET_SECRET}\n");
-        Files.writeString(netDir.resolve("gossip.yaml"), "interval: 300ms\nsuspect-after: 2s\ndead-after: 4s\npersist-every: 2s\n");
+        Files.writeString(netDir.resolve("gossip.yaml"), "interval: 1s\nsuspect-after: 3s\ndead-after: 4s\npersist-every: 2s\n");
         for (int s : seeds) {
             Files.writeString(netDir.resolve("peers").resolve("node-" + s + ".yaml"), "url: http://127.0.0.1:" + s + "\n");
         }

@@ -102,6 +102,34 @@ class NetMembershipTest {
         assertThat(member.ping(a)).isTrue();
     }
 
+    private static boolean cHasFinanceIn(String node) {
+        String cid = cluster.node("c").net().nodeId();
+        return cluster.node(node).bean(DigestService.class).table().node(cid).map(n -> n.digest().pack("finance").isPresent()).orElse(false);
+    }
+
+    @Test
+    @Order(2)
+    void aPackSwitchedOnAtOneNodeShowsInEveryNodesTableWithinTwoSeconds() throws Exception {
+        assertThat(NetNodes.await(5_000, () -> cHasFinanceIn("a") && cHasFinanceIn("b"))).isTrue();
+        var packs = cluster.node("c").bean(com.ash.drishti.server.security.PackAccess.class);
+        packs.setEnabled("finance", false, "test");
+        long t0 = System.currentTimeMillis();
+        assertThat(NetNodes.await(2_000, () -> !cHasFinanceIn("a") && !cHasFinanceIn("b"))).isTrue();
+        packs.setEnabled("finance", true, "test");
+        t0 = System.currentTimeMillis();
+        assertThat(NetNodes.await(2_000, () -> cHasFinanceIn("a") && cHasFinanceIn("b"))).isTrue();
+        System.out.println("net: a pack switched on at c was in a's and b's tables " + (System.currentTimeMillis() - t0) + " ms later");
+        // the digest names the pack's kinds with their mnemonics and the sources that hold them, and the map shows them
+        var d = cluster.node("a").bean(DigestService.class).table().node(cluster.node("c").net().nodeId()).orElseThrow().digest();
+        assertThat(d.kind("trade")).hasValueSatisfying(k -> {
+            assertThat(k.mnemonic()).isNotBlank();
+            assertThat(k.sources()).isNotEmpty();
+        });
+        var map = cluster.call("GET", cluster.node("a").url() + "/api/v1/net/capabilities", null);
+        assertThat(map.statusCode()).isEqualTo(200);
+        assertThat(map.body()).contains("\"kind\":\"trade\"").contains("\"renderers\"").contains("\"holders\"");
+    }
+
     @Test
     @Order(3)
     void aDrainSpreadsAndTheFilesAreEditedWithTheirVersion() throws Exception {

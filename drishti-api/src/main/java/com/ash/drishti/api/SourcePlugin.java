@@ -116,6 +116,15 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
+     * Where this source keeps the kind's data, written so that every server reading the same data says the same (a Delta table's id
+     * from its log, else its location), or empty when it cannot say. Drishti*net calls two servers whose sources name the same identity
+     * <em>replicas</em> of the kind (a search asks one of them) and different identities <em>shards</em> (a search asks all). Must be cheap.
+     */
+    default Optional<String> tableIdentity(String kind) {
+        return Optional.empty();
+    }
+
+    /**
      * The document paths this source keeps as columns for the kind (a Delta table's promoted columns), so searches and
      * aggregates can read them without documents; empty when it keeps none.
      */

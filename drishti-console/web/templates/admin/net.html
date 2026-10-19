@@ -44,6 +44,7 @@
 
   <div class="net-tabs" role="tablist" aria-label="Drishti*net" data-tabs>
     <button type="button" role="tab" id="netTabMembers" aria-controls="netPaneMembers" aria-selected="{{ 'true' if tab == 'members' else 'false' }}" {% if tab != 'members' %}tabindex="-1"{% endif %} data-tab="members">Members</button>
+    <button type="button" role="tab" id="netTabMap" aria-controls="netPaneMap" aria-selected="{{ 'true' if tab == 'map' else 'false' }}" {% if tab != 'map' %}tabindex="-1"{% endif %} data-tab="map">Capability map</button>
     <button type="button" role="tab" id="netTabFiles" aria-controls="netPaneFiles" aria-selected="{{ 'true' if tab == 'files' else 'false' }}" {% if tab != 'files' %}tabindex="-1"{% endif %} data-tab="files">Files</button>
   </div>
 
@@ -125,6 +126,34 @@ secret: ${DRISHTI_NET_SECRET}</pre>
         <td>{{ s.latencyMs ~ ' ms' if s.latencyMs is not none else '-' }}</td></tr>{% endfor %}</tbody>
     </table></div>
     {% endif %}
+  </section>
+
+  <section role="tabpanel" id="netPaneMap" aria-labelledby="netTabMap" data-pane="map" {% if tab != 'map' %}hidden{% endif %}>
+    <p class="text-muted-d">Each kind, the nodes that render it (the pack's version there; the newest is the one served) and the nodes that hold its
+      data (the connector, where its table is, and whether another node reads the same table: a <b>replica</b>, which a search asks once; otherwise a
+      <b>shard</b>, which a search always asks). Built from every node's digest; it changes within a second or two of a pack, a connector or a load.</p>
+    <ul class="net-warnings" data-warnings>
+      {% for w in caps.warnings or [] %}<li class="t-warn" data-warning="{{ w.what }}">{{ w.text }}</li>{% endfor %}
+    </ul>
+    <label class="loads-field net-filter" for="netMapFilter">Filter by kind, mnemonic, pack or node
+      <input class="studio-in" id="netMapFilter" data-map-filter autocomplete="off" spellcheck="false" placeholder="trade, TRD, trading, n-a"></label>
+    <div class="tbl-wrap"><table class="tbl adm-tbl net-map" data-map>
+      <caption class="visually-hidden">Kind to the nodes that render it and the nodes that hold its data</caption>
+      <thead><tr><th scope="col">Kind</th><th scope="col">Pack</th><th scope="col">Rendered by</th><th scope="col">Data held by</th><th scope="col">A search asks</th></tr></thead>
+      <tbody>
+      {% for k in caps.kinds or [] %}
+        <tr data-kind="{{ k.kind }}" data-text="{{ (k.kind ~ ' ' ~ (k.mnemonic or '') ~ ' ' ~ k.pack ~ ' ' ~ (k.renderers | map(attribute='nodeId') | join(' ')) ~ ' ' ~ (k.holders | map(attribute='nodeId') | join(' '))) | lower }}">
+          <th scope="row"><span class="mono">{{ k.mnemonic or '' }}</span> {{ k.kind }}</th>
+          <td>{{ k.pack }} <span class="text-muted-d">{{ k.newest }}</span></td>
+          <td>{% for r in k.renderers %}<div><span class="mono">{{ r.nodeId }}</span> {{ r.version }}{% if r.newest %} <span class="net-tag">newest</span>{% else %} <span class="net-tag net-warn">older</span>{% endif %}{% if r.peerOnly %} <span class="net-tag net-peer-only">peer-only</span>{% endif %}{% if not r.routable %} <span class="net-tag net-warn">not routed</span>{% endif %}</div>{% endfor %}</td>
+          <td>{% for h in k.holders %}<div><span class="mono">{{ h.nodeId }}</span> {{ h.connector }} <span class="text-muted-d">({{ h.type }})</span>{% if h.shared %} <span class="net-tag">replica</span>{% else %} <span class="net-tag">shard</span>{% endif %}{% if h.latestDate %} <span class="text-muted-d">to {{ h.latestDate }}</span>{% endif %}</div>{% else %}<span class="text-muted-d">no source</span>{% endfor %}</td>
+          <td>{{ (['this node'] + k.scatter) | join(', ') }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5" class="text-muted-d">Nothing yet: the cluster is off, or the digests are on their way.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
   </section>
 
   <section role="tabpanel" id="netPaneFiles" aria-labelledby="netTabFiles" data-pane="files" {% if tab != 'files' %}hidden{% endif %}>

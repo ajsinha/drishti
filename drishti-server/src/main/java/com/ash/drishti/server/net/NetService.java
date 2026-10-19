@@ -335,6 +335,9 @@ public final class NetService implements AutoCloseable {
         Node n = node;
         if (n != null) {
             n.table.updateSelf(m -> m.withDigestHash(this.digestHash));
+            if (!n.leaving) {
+                announce();                          // the peers hear of the change now, not at the next round
+            }
         }
     }
 

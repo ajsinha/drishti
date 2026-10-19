@@ -455,3 +455,17 @@ membership endpoints and Admin → Net's Members and Files tabs; `drishti.py net
 - Measured: five nodes from one seed list each other within 5 rounds and a killed one is dead everywhere within 40 s (fake clock,
   `MembershipTest`); three real servers in one JVM list each other 52 ms after the third has started (`NetMembershipTest`).
 
+**N2, capability digests (built).** `Digest` and `CapabilityTable` in `drishti-net`; `DigestService` in the server rebuilds this node's digest every
+round from cheap reads, announces a new hash at once (a gossip round out of turn), compares the peers' hashes every 250 ms and pulls a changed
+digest (`GET /api/v1/net/digest`), and swaps the capability table whole. Admin → Net's *Capability map* tab and `GET /api/v1/net/capabilities`.
+Changes from the design:
+
+- The table identity is a new, optional method of the source SPI, `SourcePlugin.tableIdentity(kind)`. The Delta connector gives the table's id
+  from its first commit (`delta:<id>`), else its location, a local path qualified by the machine's name (the same path on another machine is
+  another table). Any other source says nothing and is a shard of its own node: always asked, never wrongly skipped.
+- `load` is the average latency of the last full minute (`RequestActivity` keeps averages and maxima per minute, not percentiles).
+- The digest's hash leaves out the load and the build time, so it changes only when what the node serves changes; a held digest is refreshed
+  once a minute for the load.
+- A digest also carries the node's masked fields, nodes per role and BI report ids, for the warnings and for routing BI (N6).
+- Measured: a pack switched on at one of three servers is in the other two's tables 1.0 s later with the default 1 s round.
+

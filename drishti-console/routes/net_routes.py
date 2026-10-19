@@ -76,8 +76,27 @@ async def page(request: Request):
         status = await request.app.state.backend.admin("GET", "/status", me)
     except BackendError as e:
         return render(request, "admin/forbidden.html", status_code=e.page_status, error=e)
-    return render(request, "admin/net.html", members=members, files=files, status=status, console=_console_servers(request),
+    caps = await _optional(request, "/capabilities")
+    return render(request, "admin/net.html", members=members, files=files, status=status, console=_console_servers(request), caps=caps,
                   tab=request.query_params.get("tab", "members"))
+
+
+async def _optional(request: Request, path: str, **params) -> dict:
+    """A tab's data that the page opens without (a server of an older version, or one where the call fails): empty."""
+    try:
+        return await _net(request, "GET", path, **params)
+    except BackendError:
+        return {}
+
+
+@router.get("/api/capabilities")
+async def api_capabilities(request: Request):
+    if _admin(request) is None:
+        return _forbidden()
+    try:
+        return await _net(request, "GET", "/capabilities")
+    except BackendError as e:
+        return _problem(e)
 
 
 @router.get("/api/members")

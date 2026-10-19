@@ -154,6 +154,56 @@
     });
   }
 
+  // capability map ------------------------------------------------------------------------------------------------
+  NET.opened = NET.opened || {};
+  var mapFilter = $('[data-map-filter]');
+  function filterMap() {
+    var q = (mapFilter && mapFilter.value || '').trim().toLowerCase();
+    $$('[data-map] tbody tr[data-kind]').forEach(function (tr) { tr.hidden = !!q && (tr.getAttribute('data-text') || '').indexOf(q) < 0; });
+  }
+  if (mapFilter) { mapFilter.addEventListener('input', filterMap); }
+  function mapRow(k) {
+    var text = [k.kind, k.mnemonic || '', k.pack].concat((k.renderers || []).map(function (r) { return r.nodeId; }))
+      .concat((k.holders || []).map(function (h) { return h.nodeId; })).join(' ').toLowerCase();
+    var tr = el('tr', { 'data-kind': k.kind, 'data-text': text });
+    var th = el('th', { scope: 'row' }); th.appendChild(el('span', { 'class': 'mono' }, k.mnemonic || '')); th.appendChild(document.createTextNode(' ' + k.kind)); tr.appendChild(th);
+    var pack = el('td', null, k.pack + ' '); pack.appendChild(el('span', { 'class': 'text-muted-d' }, k.newest || '')); tr.appendChild(pack);
+    var rend = el('td');
+    (k.renderers || []).forEach(function (r) {
+      var d = el('div'); d.appendChild(el('span', { 'class': 'mono' }, r.nodeId)); d.appendChild(document.createTextNode(' ' + r.version + ' '));
+      d.appendChild(r.newest ? tag('newest') : tag('older', 'net-warn'));
+      if (r.peerOnly) { d.appendChild(document.createTextNode(' ')); d.appendChild(tag('peer-only', 'net-peer-only')); }
+      if (!r.routable) { d.appendChild(document.createTextNode(' ')); d.appendChild(tag('not routed', 'net-warn')); }
+      rend.appendChild(d);
+    });
+    tr.appendChild(rend);
+    var held = el('td');
+    (k.holders || []).forEach(function (h) {
+      var d = el('div'); d.appendChild(el('span', { 'class': 'mono' }, h.nodeId)); d.appendChild(document.createTextNode(' ' + h.connector + ' '));
+      d.appendChild(el('span', { 'class': 'text-muted-d' }, '(' + h.type + ') ')); d.appendChild(tag(h.shared ? 'replica' : 'shard'));
+      if (h.latestDate) { d.appendChild(el('span', { 'class': 'text-muted-d' }, ' to ' + h.latestDate)); }
+      held.appendChild(d);
+    });
+    if (!(k.holders || []).length) { held.appendChild(el('span', { 'class': 'text-muted-d' }, 'no source')); }
+    tr.appendChild(held);
+    tr.appendChild(el('td', null, ['this node'].concat(k.scatter || []).join(', ')));
+    return tr;
+  }
+  NET.opened.map = function () {
+    api('GET', '/admin/net/api/capabilities').then(function (c) {
+      var body = $('[data-map] tbody');
+      body.textContent = '';
+      (c.kinds || []).forEach(function (k) { body.appendChild(mapRow(k)); });
+      if (!(c.kinds || []).length) {
+        var tr = el('tr'); tr.appendChild(el('td', { colspan: '5', 'class': 'text-muted-d' }, 'Nothing yet: the cluster is off, or the digests are on their way.')); body.appendChild(tr);
+      }
+      var warn = $('[data-warnings]');
+      warn.textContent = '';
+      (c.warnings || []).forEach(function (w) { warn.appendChild(el('li', { 'class': 't-warn', 'data-warning': w.what }, w.text)); });
+      filterMap();
+    }).catch(function (err) { say(err.message, true); });
+  };
+
   // files ---------------------------------------------------------------------------------------------------------
   var editor = $('[data-editor]'), yaml = $('[data-yaml]'), problems = $('[data-problems]'), historyList = $('[data-history]'), diff = $('[data-diff]');
   var current = { id: null, etag: '', text: '' };

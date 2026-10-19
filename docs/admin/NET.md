@@ -27,10 +27,11 @@ exactly as before: no thread gossips, no peer is asked, nothing is forwarded, an
 - [2. A cluster of three](#2-a-cluster-of-three)
 - [3. The files of config/net/](#3-the-files-of-confignet)
 - [4. Membership: how the nodes find each other](#4-membership-how-the-nodes-find-each-other)
-- [5. Admin → Net](#5-admin--net)
-- [6. Drain, maintenance and a node leaving](#6-drain-maintenance-and-a-node-leaving)
-- [7. Sizing](#7-sizing)
-- [8. When something is wrong](#8-when-something-is-wrong)
+- [5. What each node offers: the capability digest](#5-what-each-node-offers-the-capability-digest)
+- [6. Admin → Net](#6-admin--net)
+- [7. Drain, maintenance and a node leaving](#7-drain-maintenance-and-a-node-leaving)
+- [8. Sizing](#8-sizing)
+- [9. When something is wrong](#9-when-something-is-wrong)
 
 ## 1. Before you start
 
@@ -227,7 +228,31 @@ Every call between nodes is signed with the cluster key (an HMAC over the method
 and refused outside a 60 s window: a node without the key cannot join, gossip or read, and each refused call is listed on Admin → Net with the
 address and the reason (`401 DRS-5051`).
 
-## 5. Admin → Net
+## 5. What each node offers: the capability digest
+
+Each node publishes a **digest** of what it serves (`GET /api/v1/net/digest`), and gossips its hash with its member entry; a peer pulls the
+digest again when the hash changes (and once a minute anyway, for the load). The digest holds:
+
+| Part | What it says |
+|---|---|
+| `packs` | every pack switched on: name, code, version, a hash of its files, and whether it is served to peers only |
+| `kinds` | every kind of those packs: its mnemonic, its pack, and its **sources**: connector, plugin, **table identity**, the newest business date it holds, its data version, whether it keeps columns, is dated, is live |
+| `load` | requests a second and the average latency over the last full minute, for choosing between peers |
+| `calendar` | the business calendar (`DRISHTI_CALENDAR`): an as-of date must mean the same day on both nodes |
+| `tags`, `redact`, `access` | the node's tags, the fields it masks and its nodes per role, so Admin → Net can show where nodes differ |
+
+A node rebuilds its digest every gossip round from cheap reads (no data is read) and announces a change at once, so **a pack switched on at one
+node is in every node's table within about a second** (1.0 s measured with the default 1 s round, three servers). From all the digests each node
+builds the **capability table**: for each kind, the nodes that render it and the nodes that hold its data.
+
+**Replicas and shards.** A source names where its data lives, the same on every server that reads the same data: a Delta table by the id in its
+log (or, failing that, its location; a local path counts only on its own machine). Two nodes whose sources name the same table are **replicas** for
+that kind: a search asks one of them. Different tables of the same kind (ENDUR's trades on one node, CALYPSO's on another) are **shards**: a search
+asks every one. A source that cannot say where its data lives is taken as a shard of its node, which is always safe.
+
+**The newest pack is served.** When nodes hold different versions of a pack, the newest is the one served; the map marks it.
+
+## 6. Admin → Net
 
 **Admin → Net** (`/admin/net`, administrators) is the cluster as the node the console is on sees it. Its summary line says whether the cluster is
 on, this node's id, how many members are in each state, whether the key is set (never the key) and whether this node is drained.
@@ -243,6 +268,12 @@ measured to it, its incarnation. The table refreshes every 5 seconds. Actions:
 | **Drain** / **Undrain** | This node takes no forwarded work, and tells its peers; its own users are served as before | `POST /api/v1/net/drain`, `/undrain` | `net-drain`, `net-undrain` |
 | **Leave** / **Rejoin** | Gossips `left` and serves its peers nothing, without switching the cluster off; Rejoin comes back with a higher incarnation | `POST /api/v1/net/leave`, `/rejoin` | `net-leave`, `net-rejoin` |
 
+**Capability map.** For each kind: its mnemonic and pack (with the newest version in the cluster), the nodes that render it (the pack's version on
+each, **newest** or **older**, **peer-only**, **not routed** for a node that is drained or suspect), the nodes that hold its data (connector, plugin,
+**replica** or **shard**, the newest business date), and which nodes a search of it asks. Type in **Filter** to narrow it by kind, mnemonic, pack or
+node. Above the table, the **warnings**: one version of a pack with different contents on different nodes, different business calendars, different
+masked fields. The same at `GET /api/v1/net/capabilities`.
+
 **Files.** Every file of the folder, **in force**, **refused** (with its problems) or **not there (defaults)**. Open one to edit it: **Check**
 says what the server would make of the text without writing it; **Save** writes it with the version you read (`If-Match`), so two administrators
 cannot overwrite each other; **Delete** removes it (its text stays in the history). The history lists the earlier texts; opening one shows a
@@ -250,7 +281,7 @@ line diff against the file. **New peer file** starts `peers/<name>.yaml`.
 
 Every action and every save is in the audit log with the node it was made on.
 
-## 6. Drain, maintenance and a node leaving
+## 7. Drain, maintenance and a node leaving
 
 **Maintenance of one node** (an upgrade, a restart, a new disk): **Drain** it first. It keeps gossiping and keeps serving its own users, but
 its peers stop sending it forwarded work, and a forwarded request that reaches it is answered `503` so the caller tries the next peer. When it
@@ -262,14 +293,14 @@ or **Remove** it from their tables at once.
 
 **A node that crashed** is suspect after `suspect-after` and dead after `dead-after` more; when it restarts it rejoins from its `peers.json`.
 
-## 7. Sizing
+## 8. Sizing
 
 Gossip is small: one round sends the member table (about 300 bytes a member) to `fanout` members, and gets theirs back. With 10 members, the
 defaults cost each node 3 exchanges a second of about 3 KB each way, and the failure detector a probe now and then. Raise `interval` (and
 `suspect-after`, `dead-after` with it) on a large cluster over a slow network; lower `dead-after` to drop a crashed node sooner, at the cost of
 declaring a node that paused (a long garbage collection) dead and having it refute.
 
-## 8. When something is wrong
+## 9. When something is wrong
 
 | Symptom | Look at | Fix |
 |---|---|---|

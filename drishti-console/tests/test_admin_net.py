@@ -43,6 +43,17 @@ FILES = {"dir": "/srv/drishti/config/net", "watch": "WATCHING", "files": [
     {"id": "peers/drishti-b.yaml", "exists": True, "etag": "123", "bytes": 30, "refused": False, "problems": []}]}
 
 
+CAPS = {"running": True, "self": "n-a", "nodes": [], "warnings": [{"what": "calendar", "text": "the nodes use different business calendars"}],
+        "kinds": [{"kind": "trade", "mnemonic": "TRD", "label": "Trade", "pack": "trading", "newest": "2.4.0",
+                   "renderers": [{"nodeId": "n-a", "self": True, "version": "2.3.0", "newest": False, "peerOnly": False, "routable": True},
+                                 {"nodeId": "n-b", "self": False, "version": "2.4.0", "newest": True, "peerOnly": True, "routable": True}],
+                   "holders": [{"nodeId": "n-a", "self": True, "connector": "trade-endur", "type": "delta", "table": "delta:1", "shared": True,
+                                "latestDate": "2026-10-16", "dataVersion": "v1"},
+                               {"nodeId": "n-c", "self": False, "connector": "trade-calypso", "type": "delta", "table": "delta:2", "shared": False,
+                                "latestDate": "2026-10-16", "dataVersion": "v1"}],
+                   "scatter": ["n-c"]}]}
+
+
 def with_net(backend, monkeypatch, calls, fail=None):
     async def net(method, path, ident, body=None, headers=None, **params):
         calls.append((method, path, body, headers, params))
@@ -52,6 +63,8 @@ def with_net(backend, monkeypatch, calls, fail=None):
             return MEMBERS
         if path == "/files":
             return FILES
+        if path == "/capabilities":
+            return CAPS
         if path == "/file" and method == "GET":
             return {"id": params.get("id"), "exists": True, "text": "enabled: true\nsecret: ${DRISHTI_NET_SECRET}\n", "etag": "abc", "problems": [], "history": []}
         return {"ok": True}
@@ -74,6 +87,17 @@ def test_the_page_shows_this_node_every_member_and_the_files(client, backend, mo
     assert KEY not in page
     assert 'aria-current="page"' in page.split('href="/admin/net"')[1][:60]
     assert page.count('href="/admin/net"') >= 2                              # the Admin tabs and the top bar's Admin menu
+
+
+def test_the_capability_map_shows_renderers_holders_replicas_and_warnings(client, backend, monkeypatch):
+    with_net(backend, monkeypatch, [])
+    page = client.get("/admin/net?tab=map").text
+    for text in ('id="netTabMap"', "Capability map", "TRD", "trade", "trading", "newest", "older", "peer-only", "trade-endur", "replica",
+                 "trade-calypso", "shard", "to 2026-10-16", "this node, n-c", "different business calendars", "data-map-filter"):
+        assert text in page, text
+    tab = page.split('id="netTabMap"')[1].split(">")[0]
+    assert 'aria-selected="true"' in tab                                       # ?tab=map opens the map
+    assert client.get("/admin/net/api/capabilities").json()["kinds"][0]["kind"] == "trade"
 
 
 def test_the_page_says_how_to_switch_the_cluster_on_when_it_is_off(client, backend, monkeypatch):

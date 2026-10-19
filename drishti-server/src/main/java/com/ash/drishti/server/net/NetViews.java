@@ -33,10 +33,84 @@ import java.util.function.Function;
 public final class NetViews {
 
     private final NetService net;
+    private final DigestService digests;
     private volatile Function<String, Map<String, Object>> digestSummary = id -> Map.of();
 
-    public NetViews(NetService net) {
+    public NetViews(NetService net, DigestService digests) {
         this.net = net;
+        this.digests = digests;
+    }
+
+    /** A member's packs (name, version, peer-only), how many kinds it serves and its load, from its digest; empty without one. */
+    static Map<String, Object> summary(com.ash.drishti.net.digest.Digest d) {
+        if (d == null) {
+            return Map.of();
+        }
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("packs", d.packs().stream().map(p -> Map.of("name", p.name(), "version", p.version(), "peerOnly", p.peerOnly())).toList());
+        m.put("kinds", d.kinds().size());
+        m.put("load", Map.of("requestsPerSecond", d.load().requestsPerSecond(), "latencyMs", d.load().latencyMs()));
+        m.put("calendar", d.calendar());
+        return m;
+    }
+
+    /**
+     * Admin → Net → Capability map: per kind, the nodes that render it (pack version, the newest marked: it is the one served) and the
+     * nodes that hold its data (connector, table identity, replica or shard, latest date), and the warnings.
+     */
+    public Map<String, Object> capabilities() {
+        var t = digests.table();
+        Map<String, Map<String, Object>> byKind = new java.util.TreeMap<>();
+        for (var n : t.nodes()) {
+            n.digest().kinds().forEach(k -> byKind.computeIfAbsent(k.kind(), x -> {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("kind", k.kind());
+                row.put("mnemonic", k.mnemonic());
+                row.put("label", k.label());
+                row.put("pack", k.pack());
+                return row;
+            }));
+        }
+        for (Map<String, Object> row : byKind.values()) {
+            String kind = (String) row.get("kind");
+            String newest = t.newest((String) row.get("pack")).orElse("");
+            row.put("newest", newest);
+            row.put("renderers", t.renderers(kind).stream().map(r -> {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("nodeId", r.nodeId());
+                m.put("self", r.self());
+                m.put("version", r.packVersion());
+                m.put("newest", r.packVersion().equals(newest));
+                m.put("peerOnly", r.peerOnly());
+                m.put("routable", t.node(r.nodeId()).map(x -> x.routable()).orElse(false));
+                return m;
+            }).toList());
+            Map<String, Long> tables = new java.util.HashMap<>();
+            t.holders(kind).forEach(h -> tables.merge(h.source().table() == null || h.source().table().isBlank() ? "-" + h.nodeId() + h.source().connector()
+                    : h.source().table(), 1L, Long::sum));
+            row.put("holders", t.holders(kind).stream().map(h -> {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("nodeId", h.nodeId());
+                m.put("self", h.self());
+                m.put("connector", h.source().connector());
+                m.put("type", h.source().type());
+                m.put("table", h.source().table());
+                String key = h.source().table() == null || h.source().table().isBlank() ? "-" + h.nodeId() + h.source().connector() : h.source().table();
+                m.put("shared", tables.getOrDefault(key, 1L) > 1);
+                m.put("latestDate", h.source().latestDate());
+                m.put("dataVersion", h.source().dataVersion());
+                return m;
+            }).toList());
+            row.put("scatter", t.scatterTargets(kind));
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("running", net.running());
+        out.put("self", net.nodeId());
+        out.put("nodes", t.nodes().stream().map(n -> Map.of("nodeId", n.id(), "self", n.self(), "routable", n.routable(), "digestHash", n.digest().hash(),
+                "calendar", n.digest().calendar())).toList());
+        out.put("kinds", List.copyOf(byKind.values()));
+        out.put("warnings", t.warnings().stream().map(w -> Map.of("what", w.what(), "text", w.text())).toList());
+        return out;
     }
 
     /** What each member offers in brief (its packs, kinds, load), from its digest; set by the digest service. */
