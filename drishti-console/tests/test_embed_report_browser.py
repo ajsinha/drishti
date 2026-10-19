@@ -74,7 +74,7 @@ def _wait(url, seconds=60):
 def register_host() -> str:
     """The host application and the users it signs in, at the server; returns the client secret (shown once)."""
     for name, role in (("viewer", "viewer"), ("author", "author")):
-        S.admin("POST", "/admin/users", {"username": name, "displayName": name, "roles": [role], "packs": ["trading", "counterparty-risk"],
+        S.admin("POST", "/admin/users", {"username": name, "displayName": name, "roles": [role], "packs": ["trading", "counterparty-risk", "market-risk"],
                                          "password": f"Embed-Demo-Pass-{name}-1!", "mustChangePassword": False})
     enc = lambda h: base64.urlsafe_b64encode(bytes.fromhex(h if len(h) % 2 == 0 else "0" + h)).rstrip(b"=").decode()  # noqa: E731
     jwks = json.dumps({"keys": [{"kty": "RSA", "kid": KEY["kid"], "n": enc(KEY["n"]), "e": enc(KEY["e"])}]})
@@ -186,14 +186,14 @@ def test_a_host_page_under_a_strict_policy_draws_the_report_live_and_masked(stac
     cells = rep.locator('[data-visual="movers"] tbody tr td:nth-child(3)').all_inner_texts()
     assert cells and set(cells) == {"•••"}, cells
     masked = events(page, "masked")
-    assert masked and any("trader" in c for c in masked[-1]["detail"]["columns"])
+    assert masked and any("trader" in c.lower() for c in masked[-1]["detail"]["columns"])          # trade.TRADER_ID (2.3.0 names)
     # the live source ticks: the report redraws by itself and says so
     page.wait_for_function("() => window.__events.filter(e => e.name === 'tick').length >= 2", timeout=30000)
     assert page.evaluate("document.getElementById('rep').getAttribute('data-state')") == "live"
     expect(rep.locator("[data-live-state]")).to_have_attribute("data-live-state", "live")
-    # the page tabs work in the element, and a Perspective page says what the viewer does instead of loading WebAssembly under the host's policy
+    # the page tabs work in the element; a 2.1 Perspective grid is Drishti's own grid of the server's rows (2.3.0), so no WebAssembly under the host's policy
     rep.locator('[data-page="grid"]').click()
-    expect(rep.locator(".bi-vis-note")).to_contain_text("Shown in the report viewer")
+    expect(rep.locator('[data-type="perspective-grid"] table tbody tr').first).to_be_visible(timeout=20000)
     assert any(e["detail"]["page"] == "grid" for e in events(page, "page-changed"))
     page.evaluate("document.getElementById('rep').selectPage('desk')")
     expect(rep.locator('[data-visual="trades"]')).to_be_visible()
@@ -223,14 +223,14 @@ def test_a_click_on_a_bar_filters_the_other_visuals_and_tells_the_host_and_the_h
     page.mouse.click(where["x"], where["y"])
     page.wait_for_function("() => window.__events.some(e => e.name === 'filter-changed' && e.detail.selections && e.detail.selections.length)", timeout=20000)
     mine = [e for e in events(page, "filter-changed") if e["detail"]["selections"]][-1]["detail"]
-    assert mine["selections"][0]["field"] == "trade.desk" and mine["selections"][0]["values"] == [where["category"]] and mine["source"] == "user"
+    assert mine["selections"][0]["field"] == "trade.DESK" and mine["selections"][0]["values"] == [where["category"]] and mine["source"] == "user"
     expect(rep.locator('[data-chip="selection"]')).to_have_count(1)
     page.wait_for_function("([sel, total]) => Number(document.querySelector(sel).shadowRoot.querySelector('[data-visual=\"trades\"] .bi-card-value').getAttribute('data-value')) < total",
                            arg=["#rep", total], timeout=20000)
     # the host clears them, then sets its own through the property: the element does what a click would
     page.evaluate("document.getElementById('rep').clearFilters()")
     expect(rep.locator('[data-chip="selection"]')).to_have_count(0)
-    page.evaluate("(c) => { document.getElementById('rep').filters = { selections: [{ visual: 'by-desk', field: 'trade.desk', values: [c] }] }; }", where["category"])
+    page.evaluate("(c) => { document.getElementById('rep').filters = { selections: [{ visual: 'by-desk', field: 'trade.DESK', values: [c] }] }; }", where["category"])
     expect(rep.locator('[data-chip="selection"]')).to_have_count(1)
     assert page.evaluate("document.getElementById('rep').filters.selections[0].values[0]") == where["category"]
     assert events(page, "filter-changed")[-1]["detail"]["source"] == "api"

@@ -67,7 +67,7 @@ def _wait(url, seconds=60):
 def register_host() -> str:
     """The host application (every scope the samples ask for, every kind) and the users it signs in, at the server; returns the client secret (shown once)."""
     for name, role in (("viewer", "viewer"), ("author", "author")):
-        S.admin("POST", "/admin/users", {"username": name, "displayName": name, "roles": [role], "packs": ["trading", "counterparty-risk"],
+        S.admin("POST", "/admin/users", {"username": name, "displayName": name, "roles": [role], "packs": ["trading", "counterparty-risk", "market-risk"],
                                          "password": f"Embed-Demo-Pass-{name}-1!", "mustChangePassword": False})
     enc = lambda h: base64.urlsafe_b64encode(bytes.fromhex(h if len(h) % 2 == 0 else "0" + h)).rstrip(b"=").decode()  # noqa: E731
     jwks = json.dumps({"keys": [{"kty": "RSA", "kid": KEY["kid"], "n": enc(KEY["n"]), "e": enc(KEY["e"])}]})

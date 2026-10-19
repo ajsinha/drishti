@@ -39,7 +39,7 @@ export class ReportPage {
   get report() { return this.rep.report; }
   page(id) { return this.report.pages.find((p) => p.id === id); }
   get current() { return this.page(this.pageId); }
-  drawn(spec) { return ['static', 'entity', 'slicer', 'perspective'].indexOf(this.group[spec.type]) < 0; }
+  drawn(spec) { return ['static', 'entity', 'slicer'].indexOf(this.group[spec.type]) < 0; }        // a 2.1 Perspective visual is Drishti's grid of the server's rows (2.3.0)
   /** A visual asked of the server: what is drawn, and a slicer (its values), as the console's report page does. */
   asked(spec) { return this.drawn(spec) || this.group[spec.type] === 'slicer'; }
 
