@@ -14,11 +14,11 @@
 
 """Python in a report (docs/guides/PYTHON_BI.md), in Chromium over the real server and console (tests/bi_report_stack.py on ports 18955 and 17955, security on, a small
 file lake: two business days of 60 trades). The shipped sample report "Desk P&L risk (Python)" runs a Python measure (the standard deviation of one-day P&L per desk) and a
-Python histogram on the server (sandboxed worker); the same two visuals run in the browser (Pyodide in Calc's worker) and give the same figures; the report page keeps the
+Python histogram on the server (sandboxed worker); a 2.2 report that asks for the browser runs them on the console too (2.3.0) with the same figures; the report page keeps the
 strict policy (no WebAssembly, no violation) and the designer offers the python visual. Every figure is computed here from the same trades.
 
-Skipped when Playwright, Chromium, the built server jar or pandas and pyarrow are missing, or a scratch port is in use (the browser part also needs Pyodide:
-tools/fetch-pyodide.sh). Never run with pytest -n (the ports are fixed)."""
+Skipped when Playwright, Chromium, the built server jar or pandas and pyarrow are missing, or a scratch port is in use.
+Never run with pytest -n (the ports are fixed)."""
 import os
 import statistics
 
@@ -36,7 +36,6 @@ from bi_report_helpers import clean, open_report, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, ROOT, trade  # noqa: E402
 
 DAY = "2026-10-08"
-PYODIDE = ROOT / "drishti-console/web/static/vendor/pyodide/pyodide.mjs"
 SAMPLE = ROOT / "config/bi/reports/python-desk-risk.report.yaml"
 
 
@@ -136,17 +135,17 @@ def test_the_sample_as_shipped_asks_the_server_first(stack, browser):
     page.close()
 
 
-def test_the_same_visuals_run_in_the_browser_and_the_page_keeps_the_strict_policy(stack, browser):
-    if not PYODIDE.exists():
-        pytest.skip("needs the browser Python: tools/fetch-pyodide.sh")
+def test_a_report_that_asks_for_the_browser_runs_on_the_console_under_the_strict_policy(stack, browser):
+    """2.3.0 (PYTHON_BI.md section 6): `run: browser` of a 2.2 report is read and run by the console's runner, as `server`; the page loads no WebAssembly."""
     page = sign_in(browser, "rita", "/bi")
+    wasm = []
+    page.on("request", lambda r: wasm.append(r.url) if r.url.endswith(".wasm") or "pyodide" in r.url else None)
     open_report(page, "file:report:py-browser")
-    settled(page, timeout=150000)
-    check_figures(page, "browser")
+    settled(page)
+    check_figures(page, "server")
     policy = page.request.get(f"{CONSOLE_URL}/bi/r/file:report:py-browser").headers["content-security-policy"]
     assert "wasm-unsafe-eval" not in policy and "unsafe-eval" not in policy
-    worker = page.request.get(f"{CONSOLE_URL}/static/js/calc-worker.js").headers["content-security-policy"]
-    assert "wasm-unsafe-eval" in worker
+    assert wasm == [], wasm
     clean(page)
     page.close()
 

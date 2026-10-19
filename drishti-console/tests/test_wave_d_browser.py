@@ -71,13 +71,13 @@ mock:
           - id: main
             title: Main
             visuals:
-              - { id: by-desk, type: bar, title: Notional by desk, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trade.desk], values: [Notional] }, alt: Which desks carry the notional }
-              - { id: desk-filter, type: slicer, title: Desk, at: { x: 6, y: 0, w: 3, h: 4 }, wells: { field: [trade.desk] }, alt: Filter the whole page to one desk }
+              - { id: by-desk, type: bar, title: Notional by desk, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trade.DESK], values: [Notional] }, alt: Which desks carry the notional }
+              - { id: desk-filter, type: slicer, title: Desk, at: { x: 6, y: 0, w: 3, h: 4 }, wells: { field: [trade.DESK] }, alt: Filter the whole page to one desk }
               - { id: total-card, type: card, title: Total notional, at: { x: 9, y: 0, w: 3, h: 2 }, wells: { values: [Notional] }, alt: The total at a glance }
     - match: "TASK: explain-checks"
-      reply: '{"items":[{"n":1,"explain":"The bar chart is asked to plot a field the dataset does not have, so it cannot draw.","fix":"Use a field of the dataset such as trade.desk."},{"n":2,"explain":"A measure named here is not in the dataset.","fix":"Pick one of Notional, MTM, Trades or Average MTM per trade."}]}'
+      reply: '{"items":[{"n":1,"explain":"The bar chart is asked to plot a field the dataset does not have, so it cannot draw.","fix":"Use a field of the dataset such as trade.DESK."},{"n":2,"explain":"A measure named here is not in the dataset.","fix":"Pick one of Notional, MTM, Trades or Average MTM per trade."}]}'
     - match: "TASK: dataset-helper"
-      reply: '{"relationships":[{"from":"trade.desk","to":"trade.book","why":"same table"}],"measures":[{"name":"Average notional","expr":"avg(trade.notional)","description":"Mean notional of one trade"},{"name":"Broken","expr":"sum(trade.nothing)","description":"x"}],"columns":[{"field":"trade.book","description":"The book the trade sits in"},{"field":"trade.currency","description":"The currency the trade is in"},{"field":"trade.ghost","description":"not a column"}]}'
+      reply: '{"relationships":[{"from":"trade.DESK","to":"trade.PORTFOLIO","why":"same table"}],"measures":[{"name":"Average notional","expr":"avg(trade.NOTIONAL)","description":"Mean notional of one trade"},{"name":"Broken","expr":"sum(trade.NOTHING)","description":"x"}],"columns":[{"field":"trade.PORTFOLIO","description":"The book the trade sits in"},{"field":"trade.CURRENCY","description":"The currency the trade is in"},{"field":"trade.GHOST","description":"not a column"}]}'
 """ % SUMMARY
 
 
@@ -99,7 +99,7 @@ class Receiver:
             def log_message(self, *a):
                 pass
 
-        self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self.server = ThreadingHTTPServer(("127.0.0.1", int(os.environ.get("DRISHTI_FAKE_HOOKS_PORT") or 0)), Handler)      # a free port, or the fixed scratch one a run names
         self.port = self.server.server_address[1]
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
 
@@ -330,11 +330,11 @@ def test_the_dataset_helper_items_are_accepted_one_by_one_into_the_yaml(stack, b
     page.wait_for_timeout(400)
     shot(page, "guides/img/bi-ai", "dataset-helper.jpg", type="jpeg", quality=85)
     page.locator('[data-ai-accept="measure:Average notional"]').click()
-    page.locator('[data-ai-accept="column:trade.book"]').click()
+    page.locator('[data-ai-accept="column:trade.PORTFOLIO"]').click()
     got = page.evaluate("document.querySelector('.CodeMirror') ? document.querySelector('.CodeMirror').CodeMirror.getValue() : document.querySelector('[data-yaml]').value")
-    assert 'Average notional: { expr: "avg(trade.notional)"' in got
-    assert re.search(r'book:\s*\{ type: string, description: "The book the trade sits in" \}', got)
-    assert "currency" in got and 'description: "The currency the trade is in"' not in got, "an item not accepted is not written"
+    assert 'Average notional: { expr: "avg(trade.NOTIONAL)"' in got
+    assert re.search(r'PORTFOLIO:\s*\{ type: string, description: "The book the trade sits in" \}', got)
+    assert "CURRENCY" in got and 'description: "The currency the trade is in"' not in got, "an item not accepted is not written"
     page.wait_for_timeout(1200)                                         # the draft is validated as it changes
     expect(page.locator("[data-valid]")).to_have_text("Valid", timeout=15000)
     assert page.errors == []

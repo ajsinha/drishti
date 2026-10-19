@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import email
 import email.policy
+import os
 import socketserver
 import threading
 
@@ -70,7 +71,7 @@ class FakeSmtp(socketserver.ThreadingTCPServer):
     daemon_threads = True
 
     def __init__(self) -> None:
-        super().__init__(("127.0.0.1", 0), _Handler)
+        super().__init__(("127.0.0.1", int(os.environ.get("DRISHTI_FAKE_SMTP_PORT") or 0)), _Handler)      # a free port, or the fixed scratch one a run names
         self.port = self.server_address[1]
         self.messages: list[dict] = []
         self._lock = threading.Lock()
