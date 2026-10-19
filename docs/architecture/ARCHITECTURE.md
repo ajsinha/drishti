@@ -86,6 +86,11 @@ it is a retired example pack since 2.3.0):
  ticking)   dated)      bus. date) driver)                                   live)        FRED)
 ```
 
+Two things sit beside this picture. With **Drishti\*net** switched on (section 13a), several such servers gossip with each
+other, each with its own sources, and any of them answers any request; the console is given one server and learns the
+others. And BI's Python (Transforms, python visuals, Analyse's cells) runs in the **console's sandboxed runner**, which the
+server's planner may call (`drishti.bi.transform.console-url`).
+
 **Deployment model — a departure from Pravaha.** The Drishti backend is always a
 **Spring Boot application**; it is never shipped as an embeddable library. The Maven
 modules are internal building blocks of that one application, each contributing its
@@ -544,7 +549,7 @@ The core carries no industry. A **domain pack** (`config/packs/<name>/pack.yaml`
 kinds, Sutras, mnemonics, identifier patterns, reference fields and link badges, roles, semantic hints and formats,
 connectors, starter workspaces, help guides and sample data.
 
-- **Loading.** `drishti.packs.enabled` (`DRISHTI_PACKS`, default `finance`) lists the packs, from
+- **Loading.** `drishti.packs.enabled` (`DRISHTI_PACKS`, default the seven shipped packs) lists the packs, from
   `drishti.packs.dir` (`./config/packs`). Before any bean is built, `PackEnvironmentPostProcessor` loads them and adds
   their content as the **lowest-precedence** property source, so site configuration always wins. No core module
   depends on `drishti-packs`; they only read ordinary properties.
@@ -559,18 +564,20 @@ connectors, starter workspaces, help guides and sample data.
 
   | Pack | `extends` |
   |---|---|
-  | `core`, `genomics`, `economics`, `world-economy`, `finance`, `logistics` | – |
-  | `market-data`, `retail-banking`, `operational-risk` | `core` |
+  | `core`, `world-economy`, `news-and-markets` | – |
+  | `market-data` | `core` |
   | `trading` | `core`, `market-data` |
-  | `market-risk`, `counterparty-risk` | `market-data`, `trading` |
-  | `liquidity-risk`, `climate-risk` | `trading` |
+  | `market-risk` | `market-data`, `trading` |
+  | `counterparty-risk` | `trading` |
+
+  The retired example packs under `examples/packs/` (`finance`, `logistics`, `genomics`, `retail-banking`, `climate-risk`,
+  `operational-risk`, `liquidity-risk`) keep their own `extends` and load with `DRISHTI_PACKS_EXTRA_DIRS=examples/packs`.
 - **Per-user packs.** Installed packs are what the server runs; an admin **assigns** packs to users (default
   `drishti.packs.default-for-users`), and each user chooses which assigned ones are **active**. A kind owned by an
   inactive pack cannot be opened (`PackAccess`).
-- **Shipped packs** (`config/packs/`): `core`, `market-data`, `trading`, `market-risk`, `counterparty-risk`,
-  `liquidity-risk`, `climate-risk`, `operational-risk`, `retail-banking`, `finance` (the reference mockups),
-  `logistics` (shipments, containers, vessels, ports), `genomics`, `world-economy`, `economics` — the
-  non-financial ones prove the core is neutral.
+- **Shipped packs** (`config/packs/`, since 2.3.0): `core`, `market-data`, `trading` (production-shaped UPPER_SNAKE trades
+  from ENDUR, CALYPSO and MUREX), `counterparty-risk`, `market-risk`, `world-economy` (real public data) and the sample
+  `news-and-markets`; the non-financial ones prove the core is neutral. The retired ones (above) are examples and test fixtures.
 
 `GET /api/v1/packs` lists the loaded packs; the console reads their console content from the same folders. See
 [PACKS.md](../guides/PACKS.md) and ADR-010.
@@ -595,6 +602,7 @@ Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.dri
 | `drishti-ai` | The LLM provider layer and MCP client, no Spring: `LlmGateway`, `LlmRegistry`, providers (`openai`, `anthropic`, `mock`), `LlmPolicy` (masking, limits, audit), `McpGateway`, `McpRegistry`; off by default ([AI_PROVIDERS.md](AI_PROVIDERS.md), [MCP_CLIENT.md](MCP_CLIENT.md)) | – |
 | `drishti-diskcache` | `DiskCache`: a size-bounded, daily-cleared RocksDB cache on local disk for live connectors | – |
 | `drishti-messaging` | `MessageStateSource`: the shared half of the ActiveMQ and RabbitMQ connectors (latest document per entity in a persistent RocksDB store plus a memory cache) | – |
+| `drishti-deltalake` | A Delta Kernel engine without Hadoop (local disk, Windows included, and S3), used by the Delta connector | – |
 | `drishti-net` | Drishti*net's core, no Spring ([DRISHTI_NET.md](DRISHTI_NET.md)): the member table and SWIM-style gossip over HTTP (`MemberTable`, `Gossiper`, `PeersFile`), the cluster key and on-behalf-of tokens (`ClusterKey`, `OnBehalfOf`), the `config/net/` folder and its schema (`NetFolder`, `NetSchema`), signed HTTP between nodes (`PeerHttp`) | – |
 | `drishti-server` | **The** Spring Boot application: `DrishtiApplication`, REST controllers, SSE, security (`TokenFilter`, OIDC), governance, alerts, actuator, OpenAPI | controllers, filters |
 | `plugins/drishti-plugin-*` | Source plugins: `demo`, `file`, `rest`, `jdbc`, `delta`, `aerospike`, `redis`, `mongodb`, `iceberg`, `duckdb`, `feeds`, `news`, `yfinance`, `kafka`, `activemq`, `rabbitmq`, `s3` (ServiceLoader; all are on the server's class path, extra jars from `drishti.sources.plugin-dir` get their own class loader) | – |
@@ -687,7 +695,8 @@ The main endpoints; [API_GUIDE.md](../guides/API_GUIDE.md) lists every one with 
 | `POST` | `/packs/{pack}/loads` | the batch-landed signal ([DATA_LOADS.md](../guides/DATA_LOADS.md)) |
 | `GET`/`PUT`/`POST` | `/admin/connectors…` · `/admin/packs…` · `/admin/registry…` | connectors as files, packs, deploy, the signed registry |
 | `GET`/`POST` | `/threads…` · `/shares…` · `/me/inbox…` | discussion and sharing ([COLLABORATION.md](COLLABORATION.md)) |
-| `GET`/`POST`/`PUT` | `/bi/…` | Rūpaka: workspaces, datasets and queries, reports, boards, governance |
+| `GET`/`POST`/`PUT` | `/bi/…` | Rūpaka: workspaces, datasets, models and the model query, Drishti SQL, reports (format schemas, themes; boards are report pages), Python, governance |
+| `GET`/`POST`/`PUT` | `/net/…` | Drishti\*net between nodes (signed with the cluster key: gossip, digest, fetch, search, group, subscribe, state) and for administrators (members, files, capabilities, access, security, explain, traffic) ([NET.md](../admin/NET.md)) |
 | `POST` | `/ai/chat` · `/ai/mcp/{server}/tools/{tool}` | the AI and MCP layers (off by default) |
 | `POST` | `/embed/token` and the `embed:` scopes | embedded views for other web applications ([ELEMENTS.md](ELEMENTS.md)) |
 
@@ -704,7 +713,8 @@ Errors are RFC 7807 `application/problem+json` with a `code` (`DRS-nnnn`) member
 
 Python 3.12, FastAPI + Jinja2: `core/` (app, settings, auth, backend client, business date), `routes/<area>_routes.py`,
 `web/templates/<area>/`, `web/templates/_macros/`, `web/static/{css,js,img,vendor}`. All libraries are **vendored**
-(Bootstrap 5, Bootstrap Icons, ECharts, ECharts GL, CodeMirror; vanilla JS, no build step); no CDN, no inline script
+(Bootstrap 5, Bootstrap Icons, ECharts, ECharts GL, CodeMirror, Vega and Vega-Lite, Graphic Walker, and Pyodide for Calc and the BI
+Python console; vanilla JS, no build step); no CDN, no inline script
 (strict CSP); static assets are fingerprinted.
 
 **Themes** — tokens only in `web/static/css/tokens.css` (gradient chrome in `gradients.css`); seven themes selected by
@@ -734,7 +744,8 @@ bg, bg-2, surface and surface-2, and for `--d-on-accent` on accent fills; ≥ 3:
 | `/build`, `/build/d/{id}`, `/build/new`, `/build/pack/new` | The Build workbench: My designs, one design (Sutra, samples, panels, controls, form, About), New pack from schemas |
 | `/forms`, `/form/{pack}` | Query by form: the forms home and one pack's form |
 | `/reports` | Saved and scheduled reports, and BI reports |
-| `/bi`, `/bi/catalogue`, `/bi/workspaces`, `/bi/d/{id}`, `/bi/r/{id}`, `/bi/b/{id}`, `/bi/designer`, `/bi/m/{dataset}` | Rūpaka: home, catalogue, workspaces, datasets, report viewer, boards, report designer, Model view |
+| `/bi`, `/bi/catalogue`, `/bi/workspaces`, `/bi/models`, `/bi/d/{id}`, `/bi/r/{id}`, `/bi/designer`, `/bi/design/theme/{id}`, `/bi/m/{dataset}` | Rūpaka: home, catalogue, workspaces, models, datasets, report viewer (boards are report pages; `/bi/b/{id}` opens the viewer), BI Studio's report and model designers and the theme designer, Model view |
+| `/bi/explore`, `/bi/transform`, `/pyconsole` | Analyse (Slice, SQL and Python cells, worked out by the servers), the Transform editor (Python data prep step by step), the browser Python console on a masked extract |
 | `/inbox`, `/share/{id}` | The inbox and the page a shared link opens |
 | `/help`, `/help/{slug}`, `/help/search` | Help centre: guides and the repository's docs rendered in-app; F1 opens help for the current screen |
 | `/about` | Version and build, Java, uptime, loaded Sutras, source health, licence and notices |
@@ -742,6 +753,7 @@ bg, bg-2, surface and surface-2, and for `--d-on-accent` on accent fills; ≥ 3:
 | `/admin/users`, `/admin/roles`, `/admin/tokens`, `/admin/audit`, `/admin/access`, `/admin/health`, `/admin/caches` | User administration, roles, API tokens, audit log, who looked at what, health of everything, caches |
 | `/admin/packs`, `/admin/packs/{name}`, `/admin/connectors`, `/admin/connectors/{name}`, `/admin/loads` | Packs (switch, load, deploy, registry), connectors, data loads |
 | `/admin/embedding`, `/admin/collab`, `/admin/ai`, `/admin/bi` | Host applications for embedding, collaboration compliance, AI and MCP, BI settings |
+| `/admin/lakes`, `/admin/artifacts`, `/admin/net` | Delta lakes and their maintenance, installed artifacts (install and uninstall safely), Drishti\*net (members, files, capability map, security, access, routing) |
 | `/api/channel` | The browser's single live channel, shared by its tabs (section 10); `/api/channel/who` the session it carries |
 
 **Phones and tablets.** The console is responsive down to 360 px, with no separate app: views stack into one
