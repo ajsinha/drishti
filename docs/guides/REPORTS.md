@@ -616,7 +616,7 @@ report-level security beyond the catalogue and the dataset's rules.
 Nothing in a report says "live". A report whose dataset has a **live table** ([DATASETS.md](DATASETS.md#71-live-tables-phase-5)) is live: the viewer opens **one stream** for the report (`GET /api/v1/bi/reports/{id}/live`, over the console's one channel per browser,
 [LIVE.md](../architecture/LIVE.md#live-bi-a-reports-live-tables)) and shows a **live indicator** above the pages.
 
-![The Live trading desk: cards, a bar, a rolling line and two tables, redrawn as the trades tick](img/bi-live/live-desk.png)
+![The Live trading desk: cards, a bar, a rolling line and two tables, redrawn as the trade valuations tick](img/bi-live/live-desk.png)
 
 | Part | What it says |
 |---|---|
