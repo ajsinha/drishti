@@ -46,9 +46,9 @@ datasets:
   trade: {{dataset: pack.trading.trade@^1, role: fact}}
   desk: {{dataset: pack.core.desk@^1, role: dimension}}
 relationships:
-  - {{from: trade.desk, to: desk.id}}
+  - {{from: trade.DESK, to: desk.id}}
 measures:
-  MTM: {{expr: sum(trade.mtm)}}
+  MTM: {{expr: sum(trade.MTM)}}
 """
 
 
@@ -123,14 +123,14 @@ def test_a_hidden_measure_names_the_columns_that_still_reach_it(browser):
     page.click('[data-tab="security"]')
     page.fill("[data-hidden-roles]", "desk-head")
     page.check('[data-hidden-pick="MTM"]')
-    expect(page.locator("[data-hidden-pick-warn]")).to_contain_text("trade.mtm")
+    expect(page.locator("[data-hidden-pick-warn]")).to_contain_text("trade.MTM")
     page.click("[data-hidden-add]")
     reach = page.locator('[data-hidden-entry="0"] [data-hidden-reachable]')
-    expect(reach).to_contain_text("trade.mtm", timeout=20000)
+    expect(reach).to_contain_text("trade.MTM", timeout=20000)
     expect(page.locator("[data-hidden-note]")).to_contain_text("not available to their role")
     page.click('[data-hidden-too="0"]')
     expect(page.locator('[data-hidden-entry="0"] [data-hidden-reachable]')).to_have_count(0, timeout=20000)
-    assert "trade.mtm" in yaml_tab(page)
+    assert "trade.MTM" in yaml_tab(page)
     clean(page)
     page.context.close()
 
@@ -147,15 +147,15 @@ def test_the_expression_editor_offers_its_own_fixes_and_the_tabs_take_the_arrow_
     page.click('[data-tab="measures"]')
     page.click("[data-nf] summary")
     expr = page.locator("[data-nf-expr]")
-    expr.fill("sum(trade.mtm")
+    expr.fill("sum(trade.MTM")
     expr.dispatch_event("input")
     fix = page.locator("[data-nf] [data-xe-fix]")
-    expect(fix.first).to_contain_text("sum(trade.mtm)", timeout=20000)
-    expr.fill("sum(trade.mtm, where=trade.status = 'Live')")
+    expect(fix.first).to_contain_text("sum(trade.MTM)", timeout=20000)
+    expr.fill("sum(trade.MTM, where=trade.TRADE_STATUS = 'VALIDATED')")
     expr.dispatch_event("input")
-    expect(page.locator("[data-nf] [data-xe-fix]").first).to_contain_text("trade.status ==", timeout=20000)
+    expect(page.locator("[data-nf] [data-xe-fix]").first).to_contain_text("trade.TRADE_STATUS ==", timeout=20000)
     page.locator("[data-nf] [data-xe-fix]").first.click()
-    assert "trade.status == 'Live'" in expr.input_value()
+    assert "trade.TRADE_STATUS == 'VALIDATED'" in expr.input_value()
     clean(page)
     page.context.close()
 
@@ -166,9 +166,9 @@ def test_a_free_row_rule_and_an_expected_value_are_written_to_the_model(browser)
     page.fill("[data-rule-roles]", "desk-head")
     page.select_option("[data-rule-alias]", "trade")
     page.select_option("[data-rule-kind]", "expr")
-    page.fill("[data-rule-expr]", "trade.desk in user.desks and trade.status == 'Live'")
+    page.fill("[data-rule-expr]", "trade.DESK in user.desks and trade.TRADE_STATUS == 'VALIDATED'")
     page.click("[data-rule-add]")
-    expect(page.locator('[data-rule="trade:0"]')).to_contain_text("trade.status == 'Live'", timeout=20000)
+    expect(page.locator('[data-rule="trade:0"]')).to_contain_text("trade.TRADE_STATUS == 'VALIDATED'", timeout=20000)
     page.fill("[data-test-name]", "Some MTM")
     page.fill("[data-test-sql]", "SELECT MEASURE('MTM') FROM trade")
     page.select_option("[data-test-how]", "min")
@@ -177,7 +177,7 @@ def test_a_free_row_rule_and_an_expected_value_are_written_to_the_model(browser)
     expect(page.locator('[data-model-test="Some MTM"]').first).to_be_visible(timeout=20000)
     page.wait_for_timeout(1500)                                        # the YAML is written by the Check that follows the edit
     text = yaml_tab(page)
-    assert "user.desks and trade.status" in text and "Some MTM" in text and "min: -100000000" in text, text
+    assert "user.desks and trade.TRADE_STATUS" in text and "Some MTM" in text and "min: -100000000" in text, text
     clean(page)
     page.context.close()
 
