@@ -60,15 +60,17 @@ def _powers(request: Request) -> list[str]:
     return list((getattr(request.state, "bi_me", None) or {}).get("powers") or [])
 
 
-async def extract_for(request: Request, spec: dict) -> Extract:
-    """The extract ``spec`` names, built by the server for the signed-in person: ``{dataset, fields, filters?, dates?}`` or ``{report, page, visual, state}``."""
+async def extract_for(request: Request, spec: dict, max_rows: int | None = None) -> Extract:
+    """The extract ``spec`` names, built by the server for the signed-in person: ``{dataset, fields, filters?, dates?}`` or ``{report, page, visual, state}``.
+    ``max_rows`` cuts it instead of ``bi.explore.max_rows`` (the browser Python console's own limit, wave C)."""
     limits, backend, me = _limits(request), request.app.state.backend, ident(request)
     try:
         import pyarrow  # noqa: F401
         arrow = True
     except ImportError:
         arrow = False
-    cap = limits.max_rows if arrow else min(limits.max_rows, 5000)          # without pyarrow the server's JSON answer (json-max-rows) carries it
+    top = max_rows or limits.max_rows
+    cap = top if arrow else min(top, 5000)                                  # without pyarrow the server's JSON answer (json-max-rows) carries it
     if spec.get("report"):
         page, visual = str(spec.get("page", "")), str(spec.get("visual", ""))
         if not page or not visual:

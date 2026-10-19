@@ -219,6 +219,7 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
     network_namespace: auto                                     # auto: also run the worker in a network namespace with no interfaces when the machine allows it (unshare); require; off
     scratch_dir: ""                                             # where each call's scratch folder is made; empty: the system temporary folder
     fork_server: ${DRISHTI_BI_PYTHON_FORK_SERVER:true}          # wave B: one pre-imported parent forks a child per call (no interpreter start per call); false: a new process per call
+    warm: ${DRISHTI_BI_PYTHON_WARM:true}                        # wave C: start the fork-server when the console starts, so the first call (a report, a Transform's step run) is warm too
     cache_entries: 256                                          # the L4 result cache: answers kept by item code, parameters and the exact (masked) input bytes; 0 turns it off
     cache_max_bytes: 64000000
     cache_seconds: 600
@@ -236,3 +237,13 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
     max_cells: 60                                               # most cells in a notebook
     max_extracts: 6                                             # most further extracts in a notebook (extract("name") in a cell), besides the first
     quant_engine: stand-in                                      # the engine behind quant.price(...) in a Python cell (docs/guides/QUANT_SERVICE.md)
+  # Wave C, 2.4.0 (docs/guides/PYTHON_BI.md section 17): the Transform editor at /bi/transform, built step by step with a preview and profile after each step.
+  transform:
+    preview_rows: ${DRISHTI_BI_TRANSFORM_PREVIEW_ROWS:1000}     # rows of each input the step-by-step run starts from (the reader's rows, asked of the server); 10 to 50000
+    timeout_seconds: 20                                         # the step-by-step run's time limit (also capped by bi.python.max_timeout_seconds)
+    memory_mb: 512                                              # its memory (also capped by bi.python.max_memory_mb)
+    snippets_file: ""                                           # more data-prep snippets (a list under snippets:), read after config/prep-snippets.yaml
+  # Wave C, 2.4.0 (docs/guides/ANALYSE.md section 15): the browser Python console at /pyconsole, personal analysis in Pyodide on a masked extract of a model.
+  pyconsole:
+    enabled: ${DRISHTI_BI_PYCONSOLE_ENABLED:true}               # false: no /pyconsole page; it also needs Calc's runtime (tools/fetch-pyodide.sh)
+    max_rows: ${DRISHTI_BI_PYCONSOLE_MAX_ROWS:20000}            # most rows of an extract handed to the browser (the reader's rows, masked, cut here); 10 to 100000

@@ -162,7 +162,7 @@ class ReportStack:
             env["DRISHTI_PACKS"] = "trading"
             lake = self.tmp / "lake"
             write_lake(lake)
-            (work / "config" / "connectors").mkdir(parents=True)
+            (work / "config" / "connectors").mkdir(parents=True, exist_ok=True)
             (work / "config" / "connectors" / "trading-store.yaml").write_text(CONNECTOR.format(root=lake))
         self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
                                                  f"--drishti.bi.query.store-dir={self.tmp / 'store'}", *self.server_args], cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)

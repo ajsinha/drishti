@@ -41,7 +41,7 @@ import time
 from pathlib import Path
 
 WORKER = Path(__file__).with_name("pyrunner_worker.py")
-ENTRIES = {"measure": "compute", "transform": "run", "column": "derive", "visual": "render", "cell": ""}
+ENTRIES = {"measure": "compute", "transform": "run", "column": "derive", "visual": "render", "cell": "", "steps": "run", "profile": ""}
 CODES = {"failed": ("DRS-9071", 422), "sandbox": ("DRS-9073", 403), "limit": ("DRS-9072", 413), "invalid": ("DRS-9070", 422)}
 DEFAULT_PACKAGES = ["pandas", "numpy", "pyarrow", "scipy", "statsmodels"]
 
@@ -266,6 +266,8 @@ class PyRunner:
         self.netns = str(g("network_namespace", "auto")).lower()          # auto: use one when the machine allows; require; off
         self.scratch = str(g("scratch_dir", "")) or None
         self.use_fork = str(g("fork_server", True)).lower() not in ("false", "0", "no", "off")
+        self.warm_on_start = str(g("warm", True)).lower() not in ("false", "0", "no", "off")
+        self.warmed_ms: int | None = None
         self.cache = ResultCache(int(g("cache_entries", 256)), int(g("cache_max_bytes", 64_000_000)), float(g("cache_seconds", 600)))
         self.runner_token = str(g("runner_token", "") or "")
         self._fork: ForkServer | None = None
@@ -286,7 +288,7 @@ class PyRunner:
                 "packages": self.packages, "installed": self.installed(), "calls": self.calls, "failures": self.failures,
                 "isolation": "network namespace + audit hook" if self._netns_ok() else "audit hook",
                 "forkServer": {"on": self.use_fork, "running": bool(self._fork and self._fork.proc and self._fork.proc.returncode is None),
-                               "forks": self._fork.forks if self._fork else 0, "failed": self._fork_failed},
+                               "forks": self._fork.forks if self._fork else 0, "failed": self._fork_failed, "warm": self.warm_on_start, "warmedMs": self.warmed_ms},
                 "cache": self.cache.status(), "pyNode": bool(self.runner_token)}
 
     def _netns_ok(self) -> bool:
@@ -362,6 +364,35 @@ class PyRunner:
             self.running -= 1
             self._sem.release()
 
+    async def run_steps(self, m: dict, arrows: list[bytes], names: list[str], *, params: dict | None = None) -> dict:
+        """The step-by-step run of a Transform (wave C, BI_PARITY_PLAN.md P1): ``run`` on frames (Arrow IPC streams, one per input, already masked for the
+        reader), with the frame each step made described (rows, columns, first rows, profile) and the inputs profiled. Not kept in the result cache: an
+        author runs it as they edit. Answers ``{kind: steps, inputs, keys, steps, planned, complete, failed?, ms}``; raises :class:`PyError` for what is not the
+        code's own failure (a step's error is in ``failed``)."""
+        self._check(m, b"".join(arrows))
+        merged = {**(m.get("params") or {}), **(params or {})}
+        if self._sem is None:
+            self._sem = asyncio.Semaphore(self.workers)
+        try:
+            await asyncio.wait_for(self._sem.acquire(), self.queue_seconds)
+        except asyncio.TimeoutError:
+            raise PyError("DRS-9074", 503, f"all {self.workers} Python workers are busy; try again in a moment") from None
+        self.running += 1
+        self.calls += 1
+        try:
+            return await self._spawn({**m, "interface": "steps"}, list(arrows), None, merged, input_names=list(names))
+        except PyError:
+            self.failures += 1
+            raise
+        finally:
+            self.running -= 1
+            self._sem.release()
+
+    async def profile(self, arrow: bytes) -> dict:
+        """The profile of one frame (P3: nulls, distinct values, a key hint, min and max, top values, a histogram), worked out in the sandbox; no author code."""
+        m = {"name": "profile", "interface": "profile", "source": "", "packages": [], "inputs": [], "timeout": 20, "memory": 512}
+        return await self.run({"manifest": m}, arrow)
+
     def _check(self, m: dict, arrow: bytes) -> None:
         if not self.enabled:
             raise PyError("DRS-9074", 503, "the Python runner is switched off (bi.python.enabled)")
@@ -378,7 +409,8 @@ class PyRunner:
         if len(arrow) > self.max_input:
             raise PyError("DRS-9072", 413, f"the rows handed to Python are {len(arrow):,} bytes; the limit is {self.max_input:,} (bi.python.max_input_bytes)")
 
-    async def _spawn(self, m: dict, arrow, group_by, params: dict, *, dest: str | None = None, max_rows: int = 0, extracts: dict[str, bytes] | None = None) -> dict:
+    async def _spawn(self, m: dict, arrow, group_by, params: dict, *, dest: str | None = None, max_rows: int = 0, extracts: dict[str, bytes] | None = None,
+                     input_names: list[str] | None = None) -> dict:
         timeout = min(int(m.get("timeout") or 10), self.max_timeout)
         memory = min(int(m.get("memory") or 256), self.max_memory)
         tmp = tmpdir.mkdtemp("drishti-py-", dir=self.scratch)
@@ -400,8 +432,8 @@ class PyRunner:
                     (Path(tmp) / written[id(blob)]).write_bytes(blob)
                 more[ename] = written[id(blob)]
             req = {"extracts": more, "interface": m["interface"], "entry": m.get("entry") or ENTRIES.get(m["interface"], "render"),
-                   "source": m["source"], "inputs_files": files, "max_rows": max_rows,
-                   "inputs": [] if m["interface"] == "transform" else list(m.get("inputs") or []), "group_by": group_by, "params": params, "packages": list(m.get("packages") or []),
+                   "source": m["source"], "inputs_files": files, "max_rows": max_rows, "input_names": list(input_names or []),
+                   "inputs": [] if m["interface"] in ("transform", "steps") else list(m.get("inputs") or []), "group_by": group_by, "params": params, "packages": list(m.get("packages") or []),
                    "output": m.get("output") or "echarts", "quant_root": m.get("quant_root"), "quant_engine": m.get("quant_engine"),
                    "table_rows": m.get("table_rows"), "extra_paths": _external_paths(), "timeout": timeout, "memory": memory, "max_output_bytes": self.max_output, "max_groups": self.max_groups}
             (Path(tmp) / "req.json").write_text(json.dumps(req), encoding="utf-8")
@@ -455,6 +487,25 @@ class PyRunner:
             return await self._fork.run(tmp, timeout + 3)
         except asyncio.TimeoutError:
             raise PyError("DRS-9072", 504, f"'{m.get('name')}' ran longer than its {timeout} s limit and was stopped") from None
+
+    async def warm(self) -> bool:
+        """Starts the fork-server now (wave C, BI_PARITY_PLAN.md P6: warm workers), so the first call of the day (a report, a Transform's step run) does not pay
+        for the interpreter and the pandas, numpy and pyarrow imports. Answers whether it is running; the console starts it at start-up (``bi.python.warm``)."""
+        if not (self.enabled and self.use_fork) or self._fork_failed or any(importlib.util.find_spec(x) is None for x in ("pandas", "pyarrow")):
+            return False
+        t0 = time.monotonic()
+        try:
+            if self._fork is None:
+                cmd = [sys.executable, "-I", str(WORKER), "--serve"]
+                if self._netns_ok():
+                    cmd = ["unshare", "--user", "--map-root-user", "--net", "--"] + cmd
+                self._fork = ForkServer(cmd, self._env())
+            await self._fork.start()
+        except (OSError, ValueError, asyncio.TimeoutError) as e:
+            self._fork_failed = f"{type(e).__name__}: {e}"[:200]
+            return False
+        self.warmed_ms = round((time.monotonic() - t0) * 1000)
+        return True
 
     async def close(self) -> None:
         if self._fork is not None:
