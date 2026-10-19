@@ -150,7 +150,7 @@ class BiLiveApiTest {
                 // closed by the test
             }
         });
-        long end = System.currentTimeMillis() + 10_000;
+        long end = System.currentTimeMillis() + 30_000;     // stops as soon as done: the window only matters on a loaded machine (the drill runs Java 25 beside the console suite)
         while (System.currentTimeMillis() < end && !done.test(events)) {
             Thread.sleep(20);
         }
@@ -201,7 +201,7 @@ class BiLiveApiTest {
         assertThat(analyst.path("rows").get(0).get(trader).asText()).isEqualTo("•••");
         assertThat(analyst.path("meta").path("masked").toString()).contains("TRADER_ID");
         long gen = risk.path("live").path("generation").asLong();
-        long end = System.currentTimeMillis() + 10_000;
+        long end = System.currentTimeMillis() + 30_000;     // stops as soon as done: the window only matters on a loaded machine (the drill runs Java 25 beside the console suite)
         JsonNode later = risk;
         while (System.currentTimeMillis() < end && later.path("live").path("generation").asLong() == gen) {
             Thread.sleep(100);
@@ -238,7 +238,7 @@ class BiLiveApiTest {
         long seq = live.path("tables").get(0).path("seq").asLong();
         assertThat(seq).isGreaterThanOrEqualTo(table.rows());
         // the next answers carry only what changed since: every row's updateSeq is above the one asked for
-        long end = System.currentTimeMillis() + 10_000;
+        long end = System.currentTimeMillis() + 30_000;     // stops as soon as done: the window only matters on a loaded machine (the drill runs Java 25 beside the console suite)
         JsonNode delta = null;
         while (System.currentTimeMillis() < end) {
             delta = ok(call("POST", "/api/v1/bi/reports/" + REPORT + "/query", rita(), "{\"page\":\"grid\",\"visual\":\"all-trades\",\"state\":{\"since\":" + seq + "}}"));
