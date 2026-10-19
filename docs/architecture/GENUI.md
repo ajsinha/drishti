@@ -15,7 +15,7 @@
 -->
 # GenUI: screens composed for an AI agent, bound to live data, streamed to another application
 
-Status: **design, not built.** Planned for **2.6.0** (wave D, see [BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)
+Status: **design, not built.** Planned for **2.7.0** (wave I, AI, see [BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)
 and [IMPLEMENTATION_PLAN.md › Roadmap](IMPLEMENTATION_PLAN.md#roadmap)). Off by default when built.
 Names marked **(new)** do not exist in the code today; every other class, file and endpoint named here was checked
 against the repository on 2026-10-18.
@@ -35,7 +35,7 @@ against the repository on 2026-10-18.
 11. [Security and governance](#11-security-and-governance)
 12. [Configuration](#12-configuration)
 13. [APIs, tools and error codes](#13-apis-tools-and-error-codes)
-14. [Build plan for 2.6.0](#14-build-plan-for-260)
+14. [Build plan for 2.7.0](#14-build-plan-for-270)
 15. [Tests](#15-tests)
 16. [Documentation to write or update](#16-documentation-to-write-or-update)
 17. [Risks](#17-risks)
@@ -110,7 +110,7 @@ screen is bound to. Everything after that is Drishti's ordinary machinery.
    from Drishti straight to the viewer's screen.
 6. **Off by default** (`drishti.genui.enabled: false`), like AI and MCP ([AI_PROVIDERS.md](AI_PROVIDERS.md)).
 
-### Non-goals (2.6.0)
+### Non-goals (2.7.0)
 
 | Not in scope | Why |
 |---|---|
@@ -242,7 +242,7 @@ A fragment is always named with its version (`amount-table@1`); the composer ref
 get a different screen because a block moved on). A block marked `deprecated: true` (new) is still composable but not
 listed.
 
-The generic set shipped in 2.6.0 (new, section 14): `kv@1`, `amount-table@1`, `metric@1`, `metric-row@1`, `line@1`,
+The generic set shipped in 2.7.0 (new, section 14): `kv@1`, `amount-table@1`, `metric@1`, `metric-row@1`, `line@1`,
 `bar@1`, `ladder@1`, `tree@1`, `notes@1` (text from the glossary), `search-form@1` and `search-results@1` (section 10).
 
 ### 5.6 Listing
@@ -404,7 +404,7 @@ sample), and the author proposes it as today (`POST /api/v1/builder/designs/{id}
 |---|---|---|---|
 | `entity` (`kind`, `id`) | the entity's document, as every view | `ViewPipeline.preview(sutra, EntityRef.of(kind, id), asOf, redactor, mayOpen, controls)` | G3 |
 | `search` (`q`, a search command; or `form` criteria) | the result rows of `SearchController`'s search | a search document (new `SearchDocument`: `{ROWS: [...], COUNT, QUERY}`) given to `ViewPipeline.builtPreview(Optional.of(sutra), doc, redact, mayOpen)` | G7 |
-| `dataset` (`model`, `mq`) | an MQ result | a model document (new) from `MqController`'s query path as the viewer, under the consumer envelope | G9, may slip to 2.7.0 |
+| `dataset` (`model`, `mq`) | an MQ result | a model document (new) from `MqController`'s query path as the viewer, under the consumer envelope | G9, may slip to 2.8.0 |
 | `compose` (several of the above, named) | one document per name, `$.<name>…` in slots | the bindings resolve in parallel; each panel waits only for its own | G9 |
 
 Bindings name data; they never carry it. An agent cannot inject rows.
@@ -512,7 +512,7 @@ next year" becomes a form with Counterparty, Product type, Status and Maturity, 
   (`/g/{id}?f.COUNTERPARTY=CP-1042`), so a filled form is a link too.
 
 **Write-back is out of scope.** A form fragment only searches. Forms that create or change data (approvals, amendments,
-corrections) need their own design: commands, four-eyes, idempotency, source-system ownership. They are not part of 2.6.0.
+corrections) need their own design: commands, four-eyes, idempotency, source-system ownership. They are not part of 2.7.0.
 
 ## 11. Security and governance
 
@@ -674,7 +674,7 @@ All settings are read without a restart, as every pack-contributed setting is to
 `drishti.py genui fragments [--kind trade]`, `drishti.py genui compose request.json`, `drishti.py genui show <id>`,
 `drishti.py genui promote <id> --name …`, beside the existing `sutra`, `pack` and `view` commands.
 
-## 14. Build plan for 2.6.0
+## 14. Build plan for 2.7.0
 
 Sizes: S up to two days, M up to a week, L more. Each step ends with its tests green and its docs written.
 
@@ -688,12 +688,12 @@ Sizes: S up to two days, M up to a week, L more. Each step ends with its tests g
 | **G6 Tools and MCP** | `list_fragments`, `describe_fields`, `compose_ui`, `get_ui`, `promote_ui` on `BaseMcpTool` (Java) and `BaseMCPTool` (Python); `POST /mcp`; Ask feature `genui` | M | the mock provider (`type: mock`, `rules` with `tool` + `tool-args`) composes a screen end to end with no network; an MCP client (SAJHA) lists and calls the tools |
 | **G7 Forms** | panel kind `form`; `search-form@1`, `search-results@1`; `search` binding with `SearchDocument`; criteria in the URL | M | a composed form pre-filled for a counterparty finds the same trades as `FORM trading` with the same criteria |
 | **G8 Promote and admin** | `promote_ui` → Design → propose; the management UI of 11.8: Admin → GenUI (live screens, policy, hosts, activity), Build → Fragments (slot editor, contract, live preview, *Test with* a role, review), Build → Compose (playground) | M | a promoted screen goes through four-eyes review and then opens as a normal Sutra; an administrator changes the agent allow list and the TTL in the UI and the next composition obeys without a restart; an author makes a fragment from a Sutra's panels, fills its slots and previews it without typing YAML; browser tests for the three pages |
-| **G9 More bindings** (may move to 2.7.0) | `compose` (named bindings, progressive panels), `dataset` (MQ, envelope) | L | three bindings arrive in the order they resolve; a dataset panel equals the MQ answer per user, masked |
+| **G9 More bindings** (may move to 2.8.0) | `compose` (named bindings, progressive panels), `dataset` (MQ, envelope) | L | three bindings arrive in the order they resolve; a dataset panel equals the MQ answer per user, masked |
 | **G10 Docs, tutorials, UX pass** | section 16; one hands-on tutorial with UI, CLI and YAML for every step | M | a new reader composes, embeds and promotes a screen from the tutorial alone |
 
-Order: G1 → G2 → G3 → (G4 ∥ G6) → G5 → G7 → G8 → G9 → G10. G1–G8 are the 2.6.0 commitment; G9 is a stretch.
+Order: G1 → G2 → G3 → (G4 ∥ G6) → G5 → G7 → G8 → G9 → G10. G1–G8 are the 2.7.0 commitment; G9 is a stretch.
 
-**GenUI is accepted for 2.6.0 when:** (1) an agent using only `compose_ui` produces a live screen of a trade from four
+**GenUI is accepted for 2.7.0 when:** (1) an agent using only `compose_ui` produces a live screen of a trade from four
 fragments with renamed fields, in under 200 ms to the answer (p50, 10K trades locally); (2) that screen, embedded with
 `<drishti-genui>` in a host page, shows its skeleton first and ticks live; (3) two viewers with different roles see the
 same screen with their own masks; (4) every composition and view is in the audit; (5) nothing changes for a site that does
@@ -751,7 +751,7 @@ not turn it on.
    screen be `me` or `app` unless promoted?
 3. **Intent in the audit:** keep the masked intent text (useful for review, a privacy risk) or only a hash and title?
 4. **Rebinding** (`?ref=`): on by default for screens bound to one entity, or only when the agent asks?
-5. **Dataset bindings** (G9): in 2.6.0 or 2.7.0, given the consumer-envelope work they depend on?
+5. **Dataset bindings** (G9): in 2.7.0 or 2.8.0, given the consumer-envelope work they depend on?
 6. **The console's Ask as an agent:** should Ask be allowed to compose by default once AI is on, or only with the
    `genui` feature granted per role?
-7. **Write-back forms:** a separate design for 2.6.0 or 3.0?
+7. **Write-back forms:** a separate design for 2.7.0 or 3.0?

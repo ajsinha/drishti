@@ -71,7 +71,7 @@
   202 requests/s, 0 failures, the new version served within a minute. [PERFORMANCE.md](docs/admin/PERFORMANCE.md).
 - **Designs for the next releases:** Drishti*net, several servers acting as one, for 2.5.0
   ([DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md)); GenUI ([GENUI.md](docs/architecture/GENUI.md)) and AI management
-  ([AI_MANAGEMENT.md](docs/architecture/AI_MANAGEMENT.md)) for 2.6.0; the release order in
+  ([AI_MANAGEMENT.md](docs/architecture/AI_MANAGEMENT.md)) for 2.7.0 (AI), sharing and integration with field parameters for 2.6.0; the release order in
   [BI_DESIGN.md §12.2](docs/architecture/BI_DESIGN.md#122-the-three-waves).
 - **Python data prep, step by step (2.4.0, wave C).** A Python Transform's input may be a **pack kind read straight through a connector**, as the
   reader (`{kind, pack?, connector?, fields?, where?, limit?}`: the kind's entitlements, row rules and masks apply; checked on validate, in the lineage),

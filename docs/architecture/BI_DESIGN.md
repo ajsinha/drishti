@@ -37,10 +37,10 @@ W1 vs design and the waves A, B, C · [13](#13-decisions-for-the-product-owner) 
 
 **Wave labels.** The build is three waves, each a release (section 12): **A** = 2.2.0 *Foundation and languages*,
 **B** = 2.3.0 *Calculation, live and scale*, **C** = 2.4.0 *Authoring and analysis*; then **N** = 2.5.0 *Drishti*net*, **D** = 2.6.0
-*Sharing, AI and integration* and **E** = 2.7.0 *QA findings and production readiness* (section 12.2, as agreed on
-2026-10-17 and re-ordered on 2026-10-18). W1 is the
+*Sharing and integration*, **I** = 2.7.0 *AI* and **E** = 2.8.0 *QA findings and production readiness* (section 12.2, as agreed on
+2026-10-17 and re-ordered on 2026-10-18 and 2026-10-19). W1 is the
 already-built first wave of 2.2.0. A component marked (A), (B) or (C) is delivered in that wave; one marked (C) in the
-sections below that is about AI, integration or governance now arrives in D or E.
+sections below that is about integration arrives in D, about AI in I, and about governance in E.
 
 ---
 
@@ -1145,7 +1145,7 @@ D and E; Python data prep and the browser Python console moved into C).
    library (as-of joins for prices and FX, unpivot, type fixes), profiling of a Transform's input and output, a step-by-step
    run (each step's rows and profile) for the editor. **Built (2.4.0):** a pack kind through a connector as an input, as the
    reader (`POST /api/v1/bi/python/input`); the fork-server started with the console; 21 snippets each with an example run in
-   pandas and in the sandbox; the profile of inputs, every step and the output; the step-by-step run. Not built: P4 (wave D, 2.6.0),
+   pandas and in the sandbox; the profile of inputs, every step and the output; the step-by-step run. Not built: P4 (wave I, 2.7.0),
    precompute on refresh (rest of P6), P7 to P10 ([PYTHON_BI.md section 17](../guides/PYTHON_BI.md#17-data-prep-the-transform-editor-240)).
 3. **The browser Python console's server side:** masked extracts of a model for the browser, promotion of a result to run
    on the console backend. **Built (2.4.0):** `POST /pyconsole/extract` (the reader's masked rows, `bi.pyconsole.max_rows`) and
@@ -1161,7 +1161,7 @@ D and E; Python data prep and the browser Python console moved into C).
    at every level (`bi-matrix.js`), board pages in the viewer and the designer (`bi-report-board.js`, `bi-design-v2.js`); the acceptance (1) is
    `drishti-console/tests/test_bi_studio_browser.py` ([BI_GUIDE.md section 26](../guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product-wave-c-240)).
    Not in it: a report visual bound to a field parameter (gap 9: field parameters are in the model and its parameter slicers since 2.3.0, but a report's
-   well cannot name `param.<name>` yet; moved to wave N, 2.5.0, below).
+   well cannot name `param.<name>` yet; moved to wave D, 2.6.0, below).
 2. **Transform editor:** step by step with a preview and profile at each step, snippets picker, profiling panel, no YAML.
    **Built (2.4.0):** `/bi/transform` (inputs, steps from the snippets or by hand, a preview and a profile after each step, the
    YAML written and read back, two drafts saved); Analyse's Profile tab shares the panel.
@@ -1178,17 +1178,14 @@ the drill.
 #### Wave N — Drishti*net → 2.5.0
 
 Decided by the product owner on 2026-10-18: Drishti*net is built straight after 2.4.0, as a release of its own, then
-fully tested; what was planned for 2.5.0 moves to 2.6.0 (wave D) and wave E to 2.7.0.
+fully tested. On 2026-10-19 the rest was split: sharing and integration (with field parameters) is wave D, 2.6.0; AI is
+wave I, 2.7.0; the real-life QA follows 2.7.0 and wave E is 2.8.0.
 
 **Server lane:** N1–N7 of [DRISHTI_NET.md §16](DRISHTI_NET.md#16-build-plan): membership by gossip over HTTP and
 `peers.json`; capability digests; security (cluster key or mutual TLS, key rollover, on-behalf-of tokens, masks on both
 nodes, nodes per role); view and data forwarding with the newest pack served and peer-only packs; scatter-gather search,
 type-ahead and grouped pages; live relay and BI routing; user state across nodes and console failover. Configured like
 connectors, in `config/net/` (section 14 there).
-
-**Also in 2.5.0, field parameters in report wells** (decided 2026-10-19, moved from wave C, gap 9, so that 2.6.0 is about AI):
-a report visual's well names `param.<name>` and the reader's parameter slicer switches the field or measure it draws; checked
-by the report schema (server), offered in the Studio's wells (console), with a browser test and REPORTS.md and BI_GUIDE updated.
 
 **Console lane:** Admin → Net (members, capability map, routing with *Explain*, access, security, files;
 [DRISHTI_NET.md §13](DRISHTI_NET.md#13-admin-management-and-observability)); `backend.urls` failover; docs and a tutorial
@@ -1199,24 +1196,43 @@ path, masks twice, scatter-gather against a single-node answer, browser tests of
 three servers on scratch ports (shared and separate lakes, overlapping packs), one killed and restarted under
 `tools/bench/users.py` load.
 
-**Accepted when:** (0) a report visual switches its field through a field-parameter slicer; (1) three servers started from one seed act as one to a console connected to any of them; (2) a
+**Accepted when:** (1) three servers started from one seed act as one to a console connected to any of them; (2) a
 stopped server makes answers partial and named, never wrong, and a restarted one rejoins from its file; (3) a masked field
 stays masked whichever node holds the data, and a role never reaches a node outside its list; (4) the soak runs with 0
 wrong answers; (5) QA findings fixed before the drill.
 
-#### Wave D — Sharing, AI and integration → 2.6.0
+#### Wave D — Sharing and integration → 2.6.0
+
+**Server lane:**
+
+1. **Paginated reports and statements:** page-exact layouts (headers, footers, page breaks, repeated table headers),
+   parameters, per-recipient bursting through subscriptions, PDF and Excel output, masked per reader.
+2. **Send and push:** Send to Outlook and Teams (Teams off until configured), SharePoint push from Forms, connector dump
+   (TEAMS_EMAIL_SHAREPOINT.md).
+3. **Integration:** PostgreSQL-wire read-only endpoint (decision 5); Excel feed; embed tokens bound to envelopes; SDK events.
+4. **Sajha MCP connector.**
+5. **Field parameters in report wells** (wave C gap 9, decided 2026-10-19): a report visual's well names `param.<name>` and
+   the reader's parameter slicer switches the field or measure it draws; checked by the report schema.
+
+**Console lane:**
+
+1. **Statement designer** for paginated reports, previewed page by page.
+2. **Feeds, sending and embedding UI:** per-user connection details for SQL tools, the Excel feed wizard, send dialogs,
+   embed configuration.
+3. **Field parameters in the Studio's wells**, with a browser test.
+4. **Docs and tutorials** (UI, CLI and YAML; REPORTS.md and BI_GUIDE for field parameters).
+
+**Accepted when:** (1) a monthly statement bursts to ten recipients, each masked, page-exact in PDF; (2) psql and Excel
+answers equal the MQ answers per user, masked; (3) a report visual switches its field through a field-parameter slicer;
+(4) QA findings fixed before the drill.
+
+#### Wave I — AI → 2.7.0
 
 **Server lane:**
 
 1. **AI grounding:** `ai:` metadata in `describe`; golden questions run per provider; AI emits MQ/DSQL only; measures
-   from plain words, reports from intent and AI-drafted Transforms as drafts through review; MCP tools of section 9.
-2. **Sajha MCP connector.**
-3. **Paginated reports and statements:** page-exact layouts (headers, footers, page breaks, repeated table headers),
-   parameters, per-recipient bursting through subscriptions, PDF and Excel output, masked per reader.
-4. **Send and push:** Send to Outlook and Teams (Teams off until configured), SharePoint push from Forms, connector dump
-   (TEAMS_EMAIL_SHAREPOINT.md).
-5. **Integration:** PostgreSQL-wire read-only endpoint (decision 5); Excel feed; embed tokens bound to envelopes; SDK events.
-6. **GenUI:** screens an AI agent composes from governed Sutra fragments, bound to live data as the viewer, streamed to
+   from plain words, reports from intent and AI-drafted Transforms (P4) as drafts through review; MCP tools of section 9.
+2. **GenUI:** screens an AI agent composes from governed Sutra fragments, bound to live data as the viewer, streamed to
    other applications through `<drishti-genui>` ([GENUI.md](GENUI.md)).
 
 **Console lane:**
@@ -1225,21 +1241,18 @@ wrong answers; (5) QA findings fixed before the drill.
 2. **AI management:** Admin → AI rebuilt (providers and models, features, data protection with a masked-prompt preview,
    MCP servers and tools, agents, usage and cost with budgets, golden questions, audit, playground), Review → AI drafts and
    My AI ([AI_MANAGEMENT.md](AI_MANAGEMENT.md)).
-3. **Statement designer** for paginated reports, previewed page by page.
-4. **Feeds, sending and embedding UI:** per-user connection details for SQL tools, the Excel feed wizard, send dialogs,
-   embed configuration, the GenUI element and its management (Admin → GenUI, Build → Fragments, Build → Compose;
+3. **GenUI element and its management** (Admin → GenUI, Build → Fragments, Build → Compose;
    [GENUI.md §11.8](GENUI.md#118-managing-genui-in-the-console-new)).
-5. **Docs and tutorials** (UI, CLI and YAML).
+4. **Docs and tutorials** (UI, CLI and YAML).
 
 **Accepted when:** (1) golden questions pass on the mock and one real provider, and an AI answer uses only measures the
-user may see; (2) a monthly statement bursts to ten recipients, each masked, page-exact in PDF; (3) psql and Excel answers
-equal the MQ answers per user, masked; (4) an agent composes a GenUI screen that streams into a host page with live ticks,
-masked for its viewer; (5) QA findings fixed before the drill.
+user may see; (2) an agent composes a GenUI screen that streams into a host page with live ticks, masked for its viewer;
+(3) QA findings fixed before the drill.
 
-**After D: the product owner's real-life QA on 2.6.0.** An isolated, full, real-life QA (real users' tasks on real-shaped
+**After I: the product owner's real-life QA on 2.7.0.** An isolated, full, real-life QA (real users' tasks on real-shaped
 data, outside the builders' own tests). Its findings are triaged first and fixed in wave E before anything else in it.
 
-#### Wave E — QA findings and production readiness → 2.7.0
+#### Wave E — QA findings and production readiness → 2.8.0
 
 1. **Real-life QA findings** first (server and console).
 2. **Governance:** environment parameter rules in bundles and deployment between environments; two-way git sync

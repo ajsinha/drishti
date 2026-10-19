@@ -289,7 +289,7 @@ What is open today. None blocks normal use; each is a candidate for a future wav
 **Agreed after 2.1.0 (2026-10-12):** the Rūpaka model architecture and waves W1–W16 for 2.2.0 to 3.0 — see
 [BI_MODEL_ARCHITECTURE.md](BI_MODEL_ARCHITECTURE.md); the gap analysis behind it is [BI_PARITY_PLAN.md](BI_PARITY_PLAN.md).
 
-**Next releases (re-ordered 2026-10-18):** 2.5.0 is Drishti*net, built straight after 2.4.0 and fully tested ([DRISHTI_NET.md](DRISHTI_NET.md)); 2.6.0 is wave D, sharing, AI and integration, with GenUI ([GENUI.md](GENUI.md)) and AI management ([AI_MANAGEMENT.md](AI_MANAGEMENT.md)); 2.7.0 is wave E (QA findings and production readiness).
+**Next releases (re-ordered 2026-10-18 and 2026-10-19):** 2.5.0 is Drishti*net, built straight after 2.4.0 and fully tested ([DRISHTI_NET.md](DRISHTI_NET.md)); 2.6.0 is wave D, sharing and integration (paginated reports, send and push, feeds, embed tokens, the Sajha MCP connector, field parameters in report wells); 2.7.0 is wave I, AI, with GenUI ([GENUI.md](GENUI.md)) and AI management ([AI_MANAGEMENT.md](AI_MANAGEMENT.md)); the real-life QA follows 2.7.0; 2.8.0 is wave E (QA findings and production readiness).
 
 Everything planned up to 2.1.0 is built (see the changelog, [What 2.0.0 contains](#what-200-contains) and [What 2.1.0 contains](#what-210-contains)). The roadmap has no dated waves open.
 
