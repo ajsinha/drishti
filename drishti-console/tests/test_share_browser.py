@@ -25,8 +25,8 @@ import pytest
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import BROWSER_WAIT_MS, TOKEN_SECRET, _stack
 
-TRADE = "IRS-48213"
-SECRET = "A. Shah"                       # the trade's trader: a masked field for anyone who is not raw
+TRADE = "1000001"
+SECRET = "TRDR-FROSSI"                   # the trade's TRADER_ID: a masked field for anyone who is not raw
 PASSWORD = "long-enough-pass-1"
 PIN = "2026-09-29"
 
@@ -58,11 +58,11 @@ def api(pg, base, path, body):
 
 @pytest.fixture(scope="module")
 def people(browser, stack):
-    """The administrator makes the cast: ann (author, risk), ravi (trader, masked), rng (risk: his role is changed later)."""
+    """The administrator makes the cast: ann (author, market-risk), ravi (trader, masked), rng (market-risk: his role is changed later)."""
     base = str(stack)
     admin = sign_in(browser, base, "drishti-dev-admin", "drishti-dev-admin123")
-    for name, display, roles in (("ann", "Ann Author", ["risk"]), ("ravi", "Ravi Kumar", ["trader"]), ("rng", "Rachel Ng", ["risk"])):
-        status, out = api(admin, base, "/admin/api/users", {"username": name, "displayName": display, "roles": roles, "packs": ["finance"], "enabled": True,
+    for name, display, roles in (("ann", "Ann Author", ["market-risk"]), ("ravi", "Ravi Kumar", ["trader"]), ("rng", "Rachel Ng", ["market-risk"])):
+        status, out = api(admin, base, "/admin/api/users", {"username": name, "displayName": display, "roles": roles, "packs": ["trading", "counterparty-risk", "market-risk"], "enabled": True,
                                                             "password": PASSWORD, "mustChangePassword": False})
         assert status == 201, out
     yield admin
@@ -94,7 +94,7 @@ def test_a_share_is_sent_received_and_opened_on_the_pinned_date(stack, people, b
     ravi.locator("[data-bell]").wait_for()
     assert ravi.locator("[data-bell-count]").is_hidden()                  # nothing yet
 
-    dlg = share_by_keyboard(ann, "rav", "Can you confirm the curve? A. Shah booked it.")
+    dlg = share_by_keyboard(ann, "rav", "Can you confirm the curve? TRDR-FROSSI booked it.")
     wait(ann, "document.querySelector('[data-shr-result]').textContent.indexOf('Sent to 1') === 0")
     assert PIN in dlg.locator("[data-shr-asof]").inner_text()             # the sender saw which date the link opens on
     ann.keyboard.press("Escape")

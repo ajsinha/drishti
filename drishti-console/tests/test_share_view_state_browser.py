@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """A sent share keeps the sender's view state (RUPAKA.md 8.1, COLLABORATION.md) in a real browser, against a real server with sign-in on:
-the sender filters a table of the IRS view by a column, presses Share, and the recipient who opens the share from the inbox lands on the same
+the sender filters a table of a trade view by a column, presses Share, and the recipient who opens the share from the inbox lands on the same
 view with the same filter on (the funnel is lit and the same rows are left). A share sent from a view with no filters opens unfiltered.
 
 Skipped when Playwright, Chromium, the built server jar or a JDK is missing (wb_live.py). Every wait is wb_live.BROWSER_WAIT_MS."""
@@ -31,13 +31,14 @@ DISCOVER = """() => {
     const panel = t.closest('.pnl'), id = panel && panel.id.replace(/^p-/, ''), heads = [...t.tHead.rows[0].cells];
     const rows = [...t.tBodies[0].rows].filter(r => !r.hidden);
     if (!id || rows.length < 3 || !t.querySelector('.cf-btn')) { continue; }
+    if (rows.length !== t.tBodies[0].rows.length) { continue; }   // a paged table: the filter would count every page, not the first
     for (let c = 0; c < heads.length; c++) {
       const name = (heads[c].dataset.cfName || heads[c].textContent).replace(/\\s+/g, ' ').trim();
       const texts = rows.map(r => r.cells[c] && r.cells[c].textContent.replace(/\\s+/g, ' ').trim());
       const distinct = [...new Set(texts)].filter(x => x && !x.includes('•'));
       if (name && distinct.length >= 2 && distinct.length < texts.length) {
         const keep = distinct[0];
-        return { panel: id, column: name, value: keep, total: rows.length, left: texts.filter(x => x === keep).length };
+        return { panel: id, table: [...panel.querySelectorAll('table')].indexOf(t), column: name, value: keep, total: rows.length, left: texts.filter(x => x === keep).length };
       }
     }
   }
@@ -54,8 +55,8 @@ def stack(tmp_path_factory):
 def people(browser, stack):
     base = str(stack)
     admin = sign_in(browser, base, "drishti-dev-admin", "drishti-dev-admin123")
-    for name, display, roles in (("ann", "Ann Author", ["risk"]), ("ravi", "Ravi Kumar", ["risk"])):
-        status, out = api(admin, base, "/admin/api/users", {"username": name, "displayName": display, "roles": roles, "packs": ["finance"], "enabled": True,
+    for name, display, roles in (("ann", "Ann Author", ["market-risk"]), ("ravi", "Ravi Kumar", ["market-risk"])):
+        status, out = api(admin, base, "/admin/api/users", {"username": name, "displayName": display, "roles": roles, "packs": ["trading", "counterparty-risk", "market-risk"], "enabled": True,
                                                             "password": PASSWORD, "mustChangePassword": False})
         assert status == 201, out
     yield admin
@@ -63,7 +64,8 @@ def people(browser, stack):
 
 
 def shown(pg):
-    return pg.evaluate("(p) => [...document.querySelectorAll('#p-' + p + ' table tbody tr')].filter(r => !r.hidden).length", pg.cf_panel)
+    """The rows left in the filtered table (a panel may hold more than one: a deep trade's legs panel has its legs and its cash flows)."""
+    return pg.evaluate("([p, i]) => [...document.querySelectorAll('#p-' + p + ' table')[i].tBodies[0].rows].filter(r => !r.hidden).length", [pg.cf_panel, pg.cf_table])
 
 
 def test_the_recipient_opens_the_view_with_the_senders_column_filter(stack, people, browser):
@@ -73,8 +75,8 @@ def test_the_recipient_opens_the_view_with_the_senders_column_filter(stack, peop
     ann.locator(".vtitle .vid").wait_for()
     ann.wait_for_selector(".pnl table .cf-btn", state="attached")
     found = ann.evaluate(DISCOVER)
-    assert found, "the IRS view has a table with a column that has repeated values"
-    ann.cf_panel = found["panel"]
+    assert found, "the trade view has a table with a column that has repeated values"
+    ann.cf_panel, ann.cf_table = found["panel"], found["table"]
     spec = "in:" + urllib.parse.quote(found["value"], safe="")
     key = f"f.{found['panel']}.{found['column']}"
     ann.goto(f"{base}/v/trade/{TRADE}?{urllib.parse.quote(key, safe='.')}={urllib.parse.quote(spec, safe='')}")
@@ -83,7 +85,7 @@ def test_the_recipient_opens_the_view_with_the_senders_column_filter(stack, peop
     share_to(ann, "rav", "These rows only, please.")
 
     ravi = sign_in(browser, base, "ravi", PASSWORD)
-    ravi.cf_panel = found["panel"]
+    ravi.cf_panel, ravi.cf_table = found["panel"], found["table"]
     ravi.goto(base + "/inbox")
     ravi.locator(".inbox-row.unread a.inbox-open").first.click()
     ravi.locator("[data-share-banner]").wait_for()

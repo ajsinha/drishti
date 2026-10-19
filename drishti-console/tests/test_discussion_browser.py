@@ -25,8 +25,8 @@ import pytest
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import BROWSER_WAIT_MS, TOKEN_SECRET, _stack
 
-TRADE = "IRS-48213"
-SECRET = "A. Shah"                       # the trade's trader: a masked field for anyone who is not raw
+TRADE = "1000001"
+SECRET = "TRDR-FROSSI"                   # the trade's TRADER_ID: a masked field for anyone who is not raw
 PASSWORD = "long-enough-pass-1"
 PIN = "2026-09-29"
 
@@ -58,11 +58,11 @@ def api(pg, base, path, body):
 
 @pytest.fixture(scope="module")
 def people(browser, stack):
-    """The administrator makes the cast: ann (author, risk), ravi (trader, masked), rng (risk)."""
+    """The administrator makes the cast: ann (author, market-risk), ravi (trader, masked), rng (market-risk)."""
     base = str(stack)
     admin = sign_in(browser, base, "drishti-dev-admin", "drishti-dev-admin123")
-    for name, display, roles in (("ann", "Ann Author", ["risk"]), ("ravi", "Ravi Kumar", ["trader"]), ("rng", "Rachel Ng", ["risk"])):
-        status, out = api(admin, base, "/admin/api/users", {"username": name, "displayName": display, "roles": roles, "packs": ["finance"], "enabled": True,
+    for name, display, roles in (("ann", "Ann Author", ["market-risk"]), ("ravi", "Ravi Kumar", ["trader"]), ("rng", "Rachel Ng", ["market-risk"])):
+        status, out = api(admin, base, "/admin/api/users", {"username": name, "displayName": display, "roles": roles, "packs": ["trading", "counterparty-risk", "market-risk"], "enabled": True,
                                                             "password": PASSWORD, "mustChangePassword": False})
         assert status == 201, out
     yield admin
@@ -106,12 +106,12 @@ def test_two_people_discuss_a_trade_with_a_mention_a_masked_value_and_open_as_it
     assert "Ravi Kumar" in ann.locator("#discOpts").inner_text()
     ann.keyboard.press("Enter")
     assert ann.locator("#discBody").input_value().startswith("@ravi ")
-    ann.keyboard.type(f"did {SECRET} book this? The trader is {{$.trader}} and the MTM is {{")   # a typed secret, a typed quote, the { picker
+    ann.keyboard.type(f"did {SECRET} book this? The trader is {{$.TRADER_ID}} and the quantity is {{")   # a typed secret, a typed quote, the { picker
     ann.locator("#discOpts [role=option]").first.wait_for()
-    ann.keyboard.type("mtm")
+    ann.keyboard.type("QUANTITY")
     ann.locator("#discOpts [role=option]").first.wait_for()
     ann.keyboard.press("Enter")
-    assert "{$.trader}" in ann.locator("#discBody").input_value() and "{$.mtm} " in ann.locator("#discBody").input_value()
+    assert "{$.TRADER_ID}" in ann.locator("#discBody").input_value() and "{$.QUANTITY} " in ann.locator("#discBody").input_value()
     ann.keyboard.press("Control+Enter")
     wait(ann, "document.querySelector('[data-disc-msg]').textContent.indexOf('Posted.') === 0")
     msg = ann.locator("[data-disc-msg]").inner_text()

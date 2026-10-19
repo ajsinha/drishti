@@ -25,7 +25,7 @@ import pytest
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import BROWSER_WAIT_MS, TOKEN_SECRET, _stack
 
-TRADE = "IRS-48213"
+TRADE = "1000001"
 PASSWORD = "long-enough-pass-1"
 LOCAL = re.compile(r"\d{4}-\d\d-\d\d \d\d:\d\d [A-Za-z ]+")
 
@@ -61,8 +61,8 @@ def people(browser, stack):
     admin = sign_in(browser, base, "drishti-dev-admin", "drishti-dev-admin123")
     status, out = api(admin, base, "/admin/api/roles/auditor", {"description": "compliance", "kinds": ["trade"], "collaborate": True, "compliance": True}, "post")
     assert status == 200, out
-    for name, display, roles in (("ann", "Ann Author", ["risk"]), ("ravi", "Ravi Kumar", ["trader"]), ("cmp", "Cora Compliance", ["auditor"])):
-        status, out = api(admin, base, "/admin/api/users", {"username": name, "displayName": display, "roles": roles, "packs": ["finance"], "enabled": True,
+    for name, display, roles in (("ann", "Ann Author", ["market-risk"]), ("ravi", "Ravi Kumar", ["trader"]), ("cmp", "Cora Compliance", ["auditor"])):
+        status, out = api(admin, base, "/admin/api/users", {"username": name, "displayName": display, "roles": roles, "packs": ["trading", "counterparty-risk", "market-risk"], "enabled": True,
                                                             "password": PASSWORD, "mustChangePassword": False})
         assert status == 201, out
     yield admin
