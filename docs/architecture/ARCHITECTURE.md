@@ -513,7 +513,7 @@ the heap and 0.04 ms from a segment file read with positional reads (548 KB on d
 Every read is for a business date. The console keeps the user's choice (**Live**, or a picked date) and sends it
 as `X-Drishti-As-Of` (and `X-Drishti-Known-At` for "as known at"); it never reads data itself. The server's
 `AsOfResolver` and `BusinessDates` resolve it on the configured calendar (`drishti.business-date.calendar`: `USNY`,
-`GBLO`, `EUTA`, `JPTO`, or joint such as `USNY+GBLO`), rolling weekends and holidays back to the previous business
+`GBLO`, `EUTA`, `JPTO`, `CATO` (Toronto), or joint such as `USNY+GBLO`), rolling weekends and holidays back to the previous business
 day, and the `AsOf` value travels through the pipeline, links, impact and suggestions to every plugin. Live streams;
 a picked date is a static snapshot.
 

@@ -56,6 +56,8 @@ class BusinessCalendarTest {
         {"EUTA", "2027", "01-01,03-26,03-29"},
         {"JPTO", "2026", "01-01,01-02,02-11,04-29,05-04,05-05,11-03,11-23,12-31"},
         {"JPTO", "2027", "01-01,02-11,04-29,05-03,05-04,05-05,11-03,11-23,12-31"},
+        {"CATO", "2026", "01-01,02-16,04-03,05-18,07-01,08-03,09-07,09-30,10-12,11-11,12-25,12-28*"},
+        {"CATO", "2027", "01-01,02-15,03-26,05-24,07-01,08-02,09-06,09-30,10-11,11-11,12-27*,12-28*"},
     };
 
     @Test
@@ -76,7 +78,7 @@ class BusinessCalendarTest {
                 .containsEntry(LocalDate.of(2026, 11, 26), "Thanksgiving Day").containsEntry(LocalDate.of(2026, 10, 12), "Columbus Day");
         assertThat(BusinessCalendar.of("GBLO").holidayNames(2026)).containsEntry(LocalDate.of(2026, 12, 28), "Boxing Day (observed)")
                 .containsEntry(LocalDate.of(2026, 4, 3), "Good Friday");
-        for (String c : new String[] {"USNY", "GBLO", "EUTA", "JPTO"}) {
+        for (String c : new String[] {"USNY", "GBLO", "EUTA", "JPTO", "CATO"}) {
             assertThat(BusinessCalendar.of(c).holidayNames(2026).values()).doesNotContain("Public holiday").allMatch(n -> !n.isBlank());
         }
     }

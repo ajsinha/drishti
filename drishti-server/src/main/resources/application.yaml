@@ -170,7 +170,7 @@ drishti:
     # Every read is for a business date. The default is today in `zone`, rolled back to a business day of
     # `calendar` (weekends and holidays roll to the previous business day). Users pick another date in the top
     # bar; dated sources (Delta Lake, dated folders, databases with a date column) then read that date.
-    calendar: ${DRISHTI_CALENDAR:USNY}      # USNY, GBLO, EUTA, JPTO or joint, e.g. USNY+GBLO
+    calendar: ${DRISHTI_CALENDAR:USNY}      # USNY, GBLO, EUTA, JPTO, CATO or joint, e.g. USNY+GBLO
     zone: America/New_York
     history: P5Y                            # how far back users may go
   security:

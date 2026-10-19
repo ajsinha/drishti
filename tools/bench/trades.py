@@ -139,7 +139,7 @@ def main(argv=None) -> int:
     ap.add_argument("--days", type=int, default=7)
     ap.add_argument("--end", default="2026-10-16", help="the last business date")
     ap.add_argument("--calendar", default=os.environ.get("DRISHTI_CALENDAR", "USNY"),
-                    help="the server's business calendar (DRISHTI_CALENDAR; USNY, GBLO, EUTA, JPTO or joint): no dump on its holidays")
+                    help="the server's business calendar (DRISHTI_CALENDAR; USNY, GBLO, EUTA, JPTO, CATO or joint): no dump on its holidays")
     ap.add_argument("--min", type=int, default=300_000, help="fewest trades a day per system")
     ap.add_argument("--max", type=int, default=500_000, help="most trades a day per system")
     ap.add_argument("--systems", default="endur,calypso,murex")

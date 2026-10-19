@@ -48,6 +48,10 @@ def _observed(d):
     return d + timedelta(days=1) if d.weekday() == 6 else d - timedelta(days=1) if d.weekday() == 5 else d
 
 
+def _next_weekday(d):
+    return d + timedelta(days=(7 - d.weekday()) % 7) if d.weekday() >= 5 else d
+
+
 def _boxing_day(y):
     """Boxing Day moves to the next weekday not already taken by Christmas's substitute (as in the Java calendar)."""
     d = date(y, 12, 26)
@@ -83,6 +87,18 @@ def _named(center: str, y: int) -> list[tuple[date, str, date]]:
                 fixed(2, 11, "National Foundation Day"), fixed(4, 29, "Showa Day"), fixed(5, 3, "Constitution Memorial Day"),
                 fixed(5, 4, "Greenery Day"), fixed(5, 5, "Children's Day"), fixed(11, 3, "Culture Day"),
                 fixed(11, 23, "Labour Thanksgiving Day"), fixed(12, 31, "Year-End Bank Holiday")]
+    if center == "CATO":  # Toronto: a weekend holiday is kept the Monday after (as in the Java calendar)
+        mon = lambda m, d, n: (_next_weekday(date(y, m, d)), n, date(y, m, d))  # noqa: E731
+        out = [mon(1, 1, "New Year's Day"), rule(_nth_weekday(y, 2, 0, 3), "Family Day"), rule(e - timedelta(days=2), "Good Friday"),
+               rule(date(y, 5, 24) - timedelta(days=date(y, 5, 24).weekday()), "Victoria Day"), mon(7, 1, "Canada Day"),
+               rule(_nth_weekday(y, 8, 0, 1), "Civic Holiday"), rule(_nth_weekday(y, 9, 0, 1), "Labour Day"),
+               rule(_nth_weekday(y, 10, 0, 2), "Thanksgiving Day"), mon(11, 11, "Remembrance Day")]
+        if y >= 2021:
+            out.append(mon(9, 30, "National Day for Truth and Reconciliation"))
+        christmas = mon(12, 25, "Christmas Day")
+        boxing = _next_weekday(date(y, 12, 26))
+        out += [christmas, (boxing if boxing > christmas[0] else _next_weekday(christmas[0] + timedelta(days=1)), "Boxing Day", date(y, 12, 26))]
+        return out
     return [fixed(1, 1, "New Year's Day"), fixed(12, 25, "Christmas Day")]
 
 

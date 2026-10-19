@@ -27,13 +27,13 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Business-day calendars for financial centres (USNY, GBLO, EUTA, JPTO) and joint calendars such as
+ * Business-day calendars for financial centres (USNY, GBLO, EUTA, JPTO, CATO) and joint calendars such as
  * {@code USNY+GBLO}: weekends plus each centre's public holidays, with weekend observance where the centre
  * observes it. Holiday sets are computed per year and cached; instances are immutable and thread-safe.
  */
 public final class BusinessCalendar {
 
-    private static final Set<String> KNOWN = Set.of("USNY", "GBLO", "EUTA", "JPTO", "WEEKENDS");
+    private static final Set<String> KNOWN = Set.of("USNY", "GBLO", "EUTA", "JPTO", "CATO", "WEEKENDS");
     private final List<String> centers;
     private final Map<Integer, java.util.SortedMap<LocalDate, String>> cache = new ConcurrentHashMap<>();
 
@@ -143,7 +143,42 @@ public final class BusinessCalendar {
                     fixed(y, 1, 3, "Bank Holiday (New Year)"), fixed(y, 2, 11, "National Foundation Day"), fixed(y, 4, 29, "Showa Day"),
                     fixed(y, 5, 3, "Constitution Memorial Day"), fixed(y, 5, 4, "Greenery Day"), fixed(y, 5, 5, "Children's Day"),
                     fixed(y, 11, 3, "Culture Day"), fixed(y, 11, 23, "Labour Thanksgiving Day"), fixed(y, 12, 31, "Year-End Bank Holiday"));
+            case "CATO" -> cato(y, e);
             default -> List.of();
+        };
+    }
+
+    /**
+     * Toronto (Canadian bank holidays as Ontario keeps them): a holiday on a weekend is kept the Monday after, Boxing Day the
+     * weekday after Christmas's; the National Day for Truth and Reconciliation from 2021.
+     */
+    private static List<Holiday> cato(int y, LocalDate e) {
+        List<Holiday> out = new java.util.ArrayList<>(List.of(monday(y, 1, 1, "New Year's Day"), rule(nth(y, Month.FEBRUARY, DayOfWeek.MONDAY, 3), "Family Day"),
+                rule(e.minusDays(2), "Good Friday"),
+                rule(LocalDate.of(y, 5, 24).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)), "Victoria Day"),
+                monday(y, 7, 1, "Canada Day"), rule(nth(y, Month.AUGUST, DayOfWeek.MONDAY, 1), "Civic Holiday"),
+                rule(nth(y, Month.SEPTEMBER, DayOfWeek.MONDAY, 1), "Labour Day"),
+                rule(nth(y, Month.OCTOBER, DayOfWeek.MONDAY, 2), "Thanksgiving Day"), monday(y, 11, 11, "Remembrance Day")));
+        if (y >= 2021) {
+            out.add(monday(y, 9, 30, "National Day for Truth and Reconciliation"));
+        }
+        Holiday christmas = monday(y, 12, 25, "Christmas Day");
+        LocalDate boxing = nextWeekday(LocalDate.of(y, 12, 26));
+        out.add(christmas);
+        out.add(new Holiday(boxing.isAfter(christmas.day()) ? boxing : nextWeekday(christmas.day().plusDays(1)), "Boxing Day", LocalDate.of(y, 12, 26)));
+        return out;
+    }
+
+    private static Holiday monday(int y, int m, int d, String name) {
+        LocalDate n = LocalDate.of(y, m, d);
+        return new Holiday(nextWeekday(n), name, n);
+    }
+
+    private static LocalDate nextWeekday(LocalDate d) {
+        return switch (d.getDayOfWeek()) {
+            case SATURDAY -> d.plusDays(2);
+            case SUNDAY -> d.plusDays(1);
+            default -> d;
         };
     }
 
