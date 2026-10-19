@@ -70,5 +70,5 @@ class AlertsStack(DistStack):
             f.writelines(json.dumps(bi_report_stack.valuation(r)) + "\n" for r in rows)
 
     def announce(self, day: str = "2026-10-08") -> tuple:
-        """The ETL says the trade data of ``day`` (the lake's latest) landed."""
-        return bi_report_stack.admin("POST", "/packs/trading/loads", {"kind": "trade", "businessDate": day, "status": "ready", "rows": 70, "batchId": "alerts-test-" + str(time.time_ns())})
+        """The ETL says the valuations of ``day`` (the lake's latest) landed: the kind the sample model reads (market-risk's trade-valuation, 2.3.0)."""
+        return bi_report_stack.admin("POST", "/packs/market-risk/loads", {"kind": "trade-valuation", "businessDate": day, "status": "ready", "rows": 70, "batchId": "alerts-test-" + str(time.time_ns())})

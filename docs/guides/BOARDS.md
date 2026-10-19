@@ -175,7 +175,8 @@ A board page is a page of the **report viewer**, `/bi/r/<id>/<page>` (from the c
 |---|---|
 | `k` | enter or leave kiosk |
 | `Esc` | leave kiosk |
-| `p` | pause or resume the updates, and the turning of pages |
+| `p` | in kiosk: pause or resume the updates, and the turning of pages |
+| `←` `→` | in kiosk: the previous or next board page |
 
 On a phone the wall is **one column** in reading order, the buttons are 44 px, and kiosk is the same wall without the menus.
 

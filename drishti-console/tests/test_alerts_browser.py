@@ -120,7 +120,7 @@ def test_create_an_alert_fire_it_with_a_load_and_see_it_in_the_inbox(stack, brow
     # the board tile that turned red tells her too, in the same load, and opens the board
     tile = page.locator(".inbox-row", has_text="Desk wall")
     expect(tile).to_contain_text("Mark to market — is now red")
-    expect(tile.locator("a.inbox-open")).to_have_attribute("href", "/bi/b/file:board:desk-alerts")
+    expect(tile.locator("a.inbox-open")).to_have_attribute("href", "/bi/r/file:report:desk-alerts")
 
     # the Alerts page: active now; the history says it was sent to the inbox
     page.goto(CONSOLE_URL + "/alerts")

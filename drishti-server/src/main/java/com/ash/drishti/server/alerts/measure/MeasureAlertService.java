@@ -941,7 +941,7 @@ public final class MeasureAlertService implements AutoCloseable {
             case "dataset" -> "/bi/i/" + enc(s.source().dataset());
             case "model" -> "/bi/i/" + enc(s.source().model());
             case "field" -> "/v/" + enc(s.source().kind()) + "/" + enc(s.source().id());
-            default -> "/bi/b/" + enc(s.board() == null ? s.source().report() : s.board().board());
+            default -> "/bi/r/" + enc(s.board() == null ? s.source().report() : s.board().board());      // a board is a report with board pages (2.4.0)
         };
     }
 

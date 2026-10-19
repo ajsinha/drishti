@@ -45,8 +45,8 @@ SECRET = "bi-live-scratch-secret-0123456789abcdef"
 PASSWORD = "long-enough-pass-1"
 REPORT = "file:report:live-trading-desk"
 EXPOSURE = "file:report:live-exposure"
-BOARD = "file:board:desk-wall"
-LIVE_FILES = {"datasets": ["live-trading", "live-exposure"], "reports": ["live-trading-desk", "live-exposure"], "boards": ["desk-wall"]}
+BOARD = "file:report:desk-wall"                     # 2.4.0: the board is a report with board pages
+LIVE_FILES = {"datasets": ["live-trading", "live-exposure"], "reports": ["live-trading-desk", "live-exposure", "desk-wall"]}
 ROLES = {"live-risk": (["bi"], True), "live-analyst": (["bi"], False), "live-writer": (["bi", "bi-author"], True), "live-none": ([], False)}
 USERS = {"rita": "live-risk", "ann": "live-analyst", "wes": "live-writer", "nobi": "live-none"}
 

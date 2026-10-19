@@ -410,6 +410,7 @@
     const ordered = B.phone.arrange(page, lay);                         // else the keyboard reading order is the picture's
     grid.classList.toggle('bi-board-grid', page.layout === 'board');
     canvas.setAttribute('data-layout', page.layout || 'grid');
+    canvas.setAttribute('data-page-id', page.id);
     grid.setAttribute('data-phone', dl && dl.device === 'phone' ? 'layout' : 'auto');
     grid.setAttribute('data-device', dl ? dl.device : 'desktop');
     ordered.forEach(({ spec, rows }) => {
@@ -562,7 +563,7 @@
     tips = B.tooltips ? B.tooltips({ reportId, page: pageOf, stateFor: tipState, ctxFor: (v) => ctxFor(v) }) : null;
     const boardPages = () => rep.report.pages.filter((p) => p.layout === 'board' && !p.drillthrough && !p.tooltip).map((p) => p.id);
     board = boardPages().length && B.reportBoard ? B.reportBoard({ canvas, rep, tokens, time: () => state.time, pages: boardPages, current: () => pageId, go: (id) => go(id, []),
-      watchPaused: () => !!(watch && watch.paused()) }) : null;
+      watchPaused: () => !!(watch && watch.paused()), togglePause: () => { if (watch) { if (watch.paused()) { watch.resume(); } else { watch.pause(); } if (indicator) { indicator.draw(); } } } }) : null;
     await (board ? board.init() : Promise.resolve());
     if (board) { board.bindKiosk(); }
     go(wanted && pageOf(wanted) ? wanted : first.id, carry, false);
