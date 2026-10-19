@@ -52,10 +52,11 @@ def test_edit_the_about_text_and_the_card_updates_by_keyboard_alone_and_it_expor
             break
     assert page.evaluate("document.activeElement.matches('[data-about-starter]')")
     page.keyboard.press("Enter")                                        # the starter on the empty box
+    # the starter text arrives from the server; Tab before it is in walked through an editor still being filled (one run in six)
+    page.wait_for_function("() => window.drishtiWorkbench.about.value().indexOf('about: 1') === 0", timeout=10000)
     page.keyboard.press("Tab")                                          # (the editor is next; it does not trap Tab)
     page.keyboard.press("Tab")
     assert page.evaluate("!document.activeElement.closest('.CodeMirror')")
-    page.wait_for_function("() => window.drishtiWorkbench.about.value().indexOf('about: 1') === 0", timeout=10000)
     starter = _value(page)
     assert "shipment:" in starter and "facts:" in starter and "carrier:" in starter    # kind, panel and the field shown without an entry
     page.locator("[data-about-card]").get_by_text("Where a shipment is.").wait_for(timeout=10000)      # the Sutra's description, layer 1

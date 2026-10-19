@@ -135,7 +135,9 @@
   `examples/packs`, and had been skipping since (the server did not start): they name the folder and read the gloss term `VAR_99`. Three tests made
   steady: the model designer's report drop waits for the designer to be ready (it failed one run in two), the governance save-twice test counts the
   history once it has loaded and waits for each save's own row, and `test_tree_rows.py` starts Chromium with a short `TMPDIR` (with a long one its
-  process socket path passes the system's limit and Chromium aborts printing nothing, the failure seen in a full run).
+  process socket path passes the system's limit and Chromium aborts printing nothing, the failure seen in a full run). In a second full pass,
+  the About editor's keyboard test failed once in six runs: it now waits for the starter text before tabbing on. Two full passes: 635 and 651
+  tests passed in about an hour each.
 
 ## 2.4.0 — BI Studio, report schema v2 and boards as a report layout, Python data prep, the browser Python console, query by form at scale (2026-10-19)
 
