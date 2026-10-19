@@ -59,12 +59,15 @@ class AlertsStack(DistStack):
 
     def add_trades(self, count: int = 10, mtm: int = -50_000, day: str = "2026-10-08") -> None:
         """More trades on the lake's latest day, each losing ``mtm`` (the sample lake's 60 trades sum to -225,000 a day)."""
-        path = self.tmp / "lake" / day / "trade.jsonl"
-        with open(path, "a") as f:
-            for i in range(count):
-                row = bi_report_stack.trade(day, i)
-                row.update({"id": f"EXTRA-{i:03d}", "tradeId": f"EXTRA-{i:03d}", "mtm": mtm})
-                f.write(json.dumps(row) + "\n")
+        rows = []
+        for i in range(count):
+            row = bi_report_stack.trade(day, i)
+            row.update({"id": f"EXTRA-{i:03d}", "tradeId": f"EXTRA-{i:03d}", "mtm": mtm})
+            rows.append(row)
+        with open(self.tmp / "lake" / "trade" / day / "trade.jsonl", "a") as f:                      # the test's own names
+            f.writelines(json.dumps(r) + "\n" for r in rows)
+        with open(self.tmp / "lake" / "risk" / day / "trade-valuation.jsonl", "a") as f:              # the valuations the samples read (2.3.0)
+            f.writelines(json.dumps(bi_report_stack.valuation(r)) + "\n" for r in rows)
 
     def announce(self, day: str = "2026-10-08") -> tuple:
         """The ETL says the trade data of ``day`` (the lake's latest) landed."""

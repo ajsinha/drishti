@@ -87,7 +87,7 @@ version: 1
 title: New visuals demo
 sample: true
 model: nv-demo@1
-dates: { from: 2026-10-07, to: 2026-10-08 }
+dates: { from: 2026-10-08, to: 2026-10-08 }                     # one business day: the trades are daily snapshots (2.3.0: over a window a snapshot measure answers its last day)
 pages:
   - id: main
     title: Main
@@ -147,7 +147,7 @@ def browser(stack):
 
 
 def rows():
-    return [dict(trade(day, i), country=COUNTRY[trade(day, i)["desk"]]) for day in DAYS for i in range(60)]
+    return [dict(trade(day, i), country=COUNTRY[trade(day, i)["desk"]]) for day in DAYS[-1:] for i in range(60)]          # the report's one day
 
 
 OPTION = """(vis) => { const el = document.querySelector('[data-visual="' + vis + '"] .bi-chart'); if (!el) return null;
@@ -212,7 +212,7 @@ def test_funnel_histogram_box_and_bubble_draw_what_the_data_says(stack, browser)
     mtm = [t["mtm"] for t in data]
     hist = option(page, "spread")
     counts = hist["series"][0]["data"]
-    assert len(counts) == 6 and sum(counts) == len(mtm) == 120
+    assert len(counts) == 6 and sum(counts) == len(mtm) == 60
     lo, hi = min(mtm), max(mtm)
     width = (hi - lo) / 6
     edges = [lo + k * width for k in range(6)]                                                     # the same edges the labels show: a value on an edge is in the bar that starts there
@@ -257,7 +257,8 @@ def test_totals_of_measures_that_do_not_add_up_are_the_engines(stack, browser):
 
 def test_the_year_to_date_card_is_the_time_intelligence_measure(stack, browser):
     page = opened(browser)
-    assert card_value(page, "ytd") == card_value(page, "mtm") == sum(t["mtm"] for t in rows())      # every trade is dated this year, up to the as-of date
+    assert card_value(page, "mtm") == sum(t["mtm"] for t in rows())                                     # the day's snapshot
+    assert card_value(page, "ytd") == card_value(page, "mtm")                                            # every trade is dated this year, within the report's dates
     page.context.close()
 
 

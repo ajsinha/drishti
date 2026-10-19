@@ -20,6 +20,9 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.UserService;
 import com.ash.drishti.identity.bi.BiStore;
+import com.ash.drishti.server.bi.board.BoardConverter;
+import com.ash.drishti.server.bi.board.BoardParser;
+import com.ash.drishti.server.bi.board.ReportBoards;
 import com.ash.drishti.server.bi.gov.ImpactAnalyzer;
 import com.ash.drishti.server.governance.GovernanceProperties;
 import com.ash.drishti.server.security.Entitlements;
@@ -420,7 +423,7 @@ public final class BiService {
         m.put("personal", w.personal());
         m.put("workspaceReviewRequired", w.reviewRequired());
         m.put("kind", i.kind());
-        m.put("board", com.ash.drishti.server.bi.board.ReportBoards.isBoard(i.kind(), i.body()));    // a report with board pages (R7): shown as a board, kiosk-ready
+        m.put("board", ReportBoards.isBoard(i.kind(), i.body()));    // a report with board pages (R7): shown as a board, kiosk-ready
         m.put("title", i.title());
         m.put("description", i.description());
         m.put("owner", i.owner());
@@ -477,20 +480,6 @@ public final class BiService {
         return m;
     }
 
-    /** A board is shown to everyone who may open it, so it may name only reports that are published: a draft report is its author's alone (BOARD_INVALID). */
-    private void requirePublishedReports(BiStore.Item board, String verb) {
-        if (!com.ash.drishti.server.bi.board.ReportBoards.isBoard(board.kind(), board.body())) {
-            return;
-        }
-        List<String> drafts = impact.draftReportsOf(board.body()).stream().map(r -> "'" + r.title() + "'").distinct().toList();
-        if (!drafts.isEmpty()) {
-            boolean one = drafts.size() == 1;
-            throw new DrishtiException(ErrorCode.BOARD_INVALID, "'" + board.title() + "' cannot be " + verb + ": it shows " + (one ? "the report " : "the reports ")
-                    + String.join(", ", drafts) + ", which " + (one ? "is" : "are") + " still " + (one ? "a draft" : "drafts")
-                    + " that only its author can open. Publish " + (one ? "it" : "them") + " first, or choose a published report.");
-        }
-    }
-
     private boolean fourEyes() {
         return governance.fourEyes() && security.enabled();
     }
@@ -520,7 +509,7 @@ public final class BiService {
         Instant now = Instant.now();
         String title = text(body, "title", 200, true);
         String content = com.ash.drishti.server.bi.layer.LayerBodies.onSave(kind, checkedBody(body.get("body")));
-        String asReport = "board".equals(kind) ? com.ash.drishti.server.bi.board.BoardConverter.onCreate(content, title) : null;      // 2.4.0 (R7): a board is a report with board pages
+        String asReport = "board".equals(kind) ? BoardConverter.onCreate(content, title) : null;      // 2.4.0 (R7): a board is a report with board pages
         if (asReport != null) {
             kind = "report";
             content = asReport;
@@ -760,7 +749,7 @@ public final class BiService {
     public List<BiStore.Item> allBoards() {
         List<BiStore.Item> all = new ArrayList<>(store.published());
         all.addAll(folder.items());
-        return all.stream().filter(i -> com.ash.drishti.server.bi.board.ReportBoards.isBoard(i.kind(), i.body())).toList();
+        return all.stream().filter(i -> ReportBoards.isBoard(i.kind(), i.body())).toList();
     }
 
     /** Whether the person has the BI power and may read the item (a board's audience, for notifications). */
@@ -918,7 +907,7 @@ public final class BiService {
         if (i.status().equals("published")) {
             throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + i.title() + "' has no changes since version " + i.publishedVersion());
         }
-        requirePublishedReports(i, "proposed");
+        impact.requirePublishedReports(i, "proposed");
         List<String> forced = undrawable(p, i, force, "proposed");
         store.saveItem(withStatus(i, "proposed", p.user(), Instant.now(), p.user()));
         store.addEvent(id, "request", p.user(), note(note), latestRevision(id), Instant.now());
@@ -1049,14 +1038,12 @@ public final class BiService {
             }
         }
         if ("board".equals(i.kind()) && !i.body().isBlank()) {
-            com.ash.drishti.server.bi.board.BoardParser.Result r = com.ash.drishti.server.bi.board.BoardParser.parse(i.body());
+            BoardParser.Result r = BoardParser.parse(i.body());
             if (!r.ok()) {
                 throw new DrishtiException(ErrorCode.BOARD_INVALID, "'" + i.title() + "' cannot be published: " + r.firstError());
             }
-            requirePublishedReports(i, "published");
-        } else if ("report".equals(i.kind()) && com.ash.drishti.server.bi.board.ReportBoards.isBoard(i.kind(), i.body())) {
-            requirePublishedReports(i, "published");                          // a report's board pages show other reports to its readers: those must be published
         }
+        impact.requirePublishedReports(i, "published");                              // a board, or a report's board pages, shows other reports to its readers: those must be published
         List<String> undrawn = undrawable(p, i, force, "published");
         // the expected values the item declares (docs/guides/REPORTS.md section 14): a failing one stops a publish unless a bi-admin forces it
         List<String> failing = List.of();
@@ -1331,7 +1318,7 @@ public final class BiService {
         long freshSince = q.containsKey("fresh") && !q.get("fresh").isBlank() ? Instant.now().minusSeconds(86_400L * Math.max(1, parse(q.get("fresh")))).toEpochMilli() : Long.MIN_VALUE;
         List<BiStore.Item> hits = seen.stream()
                 .filter(i -> terms.stream().allMatch(t -> haystack(i, workspaceNames.get(i.workspace())).contains(t)))
-                .filter(i -> blank(q, "kind") || i.kind().equals(q.get("kind")) || "board".equals(q.get("kind")) && com.ash.drishti.server.bi.board.ReportBoards.isBoard(i.kind(), i.body()))   // a board: a report with board pages (R7)
+                .filter(i -> blank(q, "kind") || i.kind().equals(q.get("kind")) || "board".equals(q.get("kind")) && ReportBoards.isBoard(i.kind(), i.body()))   // a board: a report with board pages (R7)
                 .filter(i -> blank(q, "workspace") || i.workspace().equals(q.get("workspace")))
                 .filter(i -> blank(q, "owner") || i.owner().equals(q.get("owner")))
                 .filter(i -> blank(q, "endorsement") || i.endorsement().equals(q.get("endorsement")))

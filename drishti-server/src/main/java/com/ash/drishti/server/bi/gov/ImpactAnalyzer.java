@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.server.bi.gov;
 
+import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.bi.BiStore;
 import com.ash.drishti.server.bi.BiFolder;
 import com.ash.drishti.server.bi.dataset.LegacySources;
@@ -181,6 +183,21 @@ public final class ImpactAnalyzer implements AutoCloseable {
             }
         }
         return out;
+    }
+
+    /** A board is shown to everyone who may open it, so it may name only reports that are published: a draft report is its author's alone (BOARD_INVALID).
+     *  Anything that is not a board (a 2.3 board, or a report with board pages) passes. */
+    public void requirePublishedReports(BiStore.Item board, String verb) {
+        if (!com.ash.drishti.server.bi.board.ReportBoards.isBoard(board.kind(), board.body())) {
+            return;
+        }
+        List<String> drafts = draftReportsOf(board.body()).stream().map(r -> "'" + r.title() + "'").distinct().toList();
+        if (!drafts.isEmpty()) {
+            boolean one = drafts.size() == 1;
+            throw new DrishtiException(ErrorCode.BOARD_INVALID, "'" + board.title() + "' cannot be " + verb + ": it shows " + (one ? "the report " : "the reports ")
+                    + String.join(", ", drafts) + ", which " + (one ? "is" : "are") + " still " + (one ? "a draft" : "drafts")
+                    + " that only its author can open. Publish " + (one ? "it" : "them") + " first, or choose a published report.");
+        }
     }
 
     /** The unpublished report items a board body names in its tiles, each once: a tile whose report has a published item of that name is not counted. */

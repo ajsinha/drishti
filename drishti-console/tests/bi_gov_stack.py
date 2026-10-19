@@ -31,7 +31,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from bi_report_stack import CONNECTOR, write_lake
+from bi_report_stack import TRADE_CONNECTOR, write_lake
 from bi_stack import FORBIDDEN, listening, wait
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -157,7 +157,7 @@ class Stack:
         lake = self.tmp / "lake"
         write_lake(lake)
         (work / "config" / "connectors").mkdir(parents=True)
-        (work / "config" / "connectors" / "trading-store.yaml").write_text(CONNECTOR.format(root=lake))
+        (work / "config" / "connectors" / "trading-store.yaml").write_text(TRADE_CONNECTOR.format(root=lake / "trade"))
         env = dict(os.environ, DRISHTI_PACKS="trading", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_SECURITY_ENABLED="true", DRISHTI_TOKEN_SECRET=SECRET,
                    DRISHTI_BI_DIR=str(work / "config" / "bi"), DRISHTI_DATA_DIR=str(work / "data"))
         self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",

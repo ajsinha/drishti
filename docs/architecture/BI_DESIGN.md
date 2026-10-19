@@ -1134,6 +1134,12 @@ D and E; Python data prep and the browser Python console moved into C).
 1. **Report schema v2 (R6) and boards as layouts (R7):** typed `format` per visual family (JSON Schema), `theme` items,
    `interactions` matrix, sync groups, tooltip pages, small multiples, matrix depth, conditional formatting rules;
    `layout: board` replaces the `board` kind (converter).
+   *Built (2.4.0):* the format schemas in YAML (`bi/report/format/`, `FormatSchemas`, `GET /bi/reports/format-schemas`; a bad 2.4 value is `DRS-9032`, a
+   bad 2.3 value a warning), `format.rules` (rule on another measure, colour scales, icons, colour per value), theme items (`ThemeParser`, `ThemeService`,
+   `DRS-9036`, shipped Corporate and Print), `pages[].interactions` (filter, highlight, none; highlight for line, area and combo), `format.syncGroup`,
+   tooltip pages, the `split` well, matrix totals at every level; `layout: board` with `tile` visuals (`ReportBoards`, `BoardConverter`), stored boards
+   converted at start (step `boards`, `BoardUpgrade`), board files read as reports, `POST /bi/boards/convert`, `POST /bi/migrate/boards`,
+   `drishti.py bi migrate --boards` ([REPORTS.md](../guides/REPORTS.md#20-report-schema-v2-in-one-report-240), [BOARDS.md](../guides/BOARDS.md)).
 2. **Python data prep** (BI_PARITY_PLAN P1–P10): Transforms reading connectors directly, warm workers, a tested snippets
    library (as-of joins for prices and FX, unpivot, type fixes), profiling of a Transform's input and output, a step-by-step
    run (each step's rows and profile) for the editor.
@@ -1144,6 +1150,13 @@ D and E; Python data prep and the browser Python console moved into C).
 
 1. **BI Studio as one product:** the shell of 8.1; format pane generated from the schemas; themes; conditional formatting;
    interactions editor; tooltip pages; small multiples; the matrix.
+   *Built (2.4.0):* the Studio shell around the report, model and theme designers (`bi-studio.js`: the Explorer with New, the open items, the dock with
+   Problems and Query), the generated Format pane (`bi-format-pane.js`) and the rules editor (`bi-format-rules.js`), the theme designer
+   (`bi-theme-designer.js`), Edit interactions in Format and on the canvas, tooltip pages (`bi-tooltips.js`), small multiples (`bi-multiples.js`), the matrix
+   at every level (`bi-matrix.js`), board pages in the viewer and the designer (`bi-report-board.js`, `bi-design-v2.js`); the acceptance (1) is
+   `drishti-console/tests/test_bi_studio_browser.py` ([BI_GUIDE.md section 26](../guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product-wave-c-240)).
+   Not in it: a report visual bound to a field parameter (gap 9: field parameters are in the model and its parameter slicers since 2.3.0, but a report's
+   well cannot name `param.<name>` yet).
 2. **Transform editor:** step by step with a preview and profile at each step, snippets picker, profiling panel, no YAML.
 3. **The browser Python console:** personal, just-in-time analysis on a masked extract of a model (Pyodide); promoted
    results run on the console backend.

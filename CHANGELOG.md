@@ -17,6 +17,47 @@
 
 ## Unreleased
 
+### 2.4.0 (wave C, authoring and analysis): report schema v2, boards as a report layout, BI Studio
+
+- **Report schema v2 (R6).** A visual's `format:` is typed per visual family: one JSON Schema per family, written in YAML in the server
+  (`bi/report/format/*.yaml`: chart, other-chart, card, table, matrix, slicer, static, code, and the shared common), checked on every report (a bad
+  value of a key new in 2.4.0 is `DRS-9032`; a bad value of a 2.3 key and an unknown key are warnings, so a stored report never stops opening) and served
+  at `GET /api/v1/bi/reports/format-schemas`. New keys: a subtitle, the title's size, a border, a shadow, a background and padding on every visual; label
+  density and position, 100% stacking, the value axis (min, max, log, gridlines), the category axis (rotation), colours per series; a card's number size and
+  label, a KPI's *better when*; a table's banding, wrapping and text size; a slicer's tile look and **sync group**; a text's alignment.
+  **Conditional formatting rules** (`format.rules`): a rule on the measure or on another one (text and background), 2- and 3-stop colour scales, icons
+  (arrows, traffic lights, signs, flags) and a colour per value of a field, on charts, cards, tables and matrices. **Theme items** (kind `theme`,
+  `DRS-9036`; `GET /api/v1/bi/themes`, `/themes/{name}`, `POST /themes/validate`; shipped *Corporate* and *Print* in `config/bi/themes`): a palette,
+  page and text colours, good and bad colours, a font and the format defaults of each kind of visual; a report names one with `theme: corporate`.
+  The **interactions matrix** per page (`interactions: { source: { target: filter | highlight | none } }`, slicers too), highlight for lines, areas and
+  combos; **sync groups** for slicers across pages; **tooltip pages** (`tooltip: true` on a page, `tooltip: <page>` on a visual); **small multiples**
+  (the `split` well on bar, column, line and area); **matrix depth** (subtotals at every level of the row fields, true totals per level, stepped or tabular,
+  opening at a level, values on rows). [REPORTS.md](docs/guides/REPORTS.md#5-format) sections 5, 6, 8 and 20.
+- **Boards are a report layout (R7).** A page with `layout: board` holds **tiles** (`type: tile`, `from: { report, visual }`, `alert:`) beside the report's
+  own visuals, which take its slicers, cross-filter and drill; a report of tiles needs no model; `board: { rotate, notify }`. The `board` kind is gone:
+  **stored boards become reports at start** (`drishti.bi.migrate.on-start`, step `boards`: the id kept, the text before a saved state, the published text
+  the next version, audited `bi-boards-migrated`, what cannot be converted listed in Admin, BI settings); board files are read as reports until converted
+  (`drishti.py bi migrate --boards FILE... --write`, `POST /api/v1/bi/boards/convert`, `POST /api/v1/bi/migrate/boards`); the samples are
+  `config/bi/reports/desk-wall.report.yaml` and `python-wall.report.yaml`; `/bi/b/<id>` and `/bi/design/board/<id>` open the report viewer and designer; an
+  item created with kind `board` is stored as a report with board pages; tile alerts and their notifications, publishing checks, bundles, consumers and
+  impact work on board pages. [BOARDS.md](docs/guides/BOARDS.md).
+- **BI Studio as one product (console).** The report, model and theme designers share the Studio shell: the **Explorer** of your items (reports, boards,
+  models, datasets, themes, Python) with a search and New, the **open items** as tabs, the designer's properties, and the **dock** with **Problems** (the
+  server's Check of the draft a second after each change, each linked to its visual) and **Query** (the selected visual's model query and SQL). The
+  **Format pane is generated from the format schemas**; the **conditional formatting editor** (rule, colour scale, icons, colour per value, chosen from
+  lists and colour pickers); the **theme picker** and the **theme designer** (`/bi/design/theme/<id>`, a live preview); **Edit interactions** (in Format,
+  and Filter / Highlight / None over each visual on the canvas); **tooltip pages** (New tooltip page; a popover over the hovered mark in the viewer, filtered
+  to it); **small multiples** (one chart per value, one canvas); the **matrix** at every level (Expand all, Collapse all, stepped or tabular, values on
+  rows, banding, data bars, rules); board pages in the report viewer (tiles, alert colours, kiosk and rotation) and designer (the tile editor, a live tile
+  preview); the 2.3 board viewer and designer are removed. Embedded `<drishti-report>` draws the new matrix, rules and themes.
+  [BI_GUIDE.md section 26](docs/guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product-wave-c-240).
+- **Tests.** `ReportSchemaV2Test`, `ThemeParserTest`, `BoardsAsReportsTest` (the 2.3 boards convert to reports that read back to the same boards; the shipped
+  samples are the conversions), `BoardMigrationApiTest` (the start-up conversion); the Wave C acceptance in Chromium, `test_bi_studio_browser.py`: a Power BI
+  author builds a desk pack (a matrix with a colour scale and icons, small multiples, a tooltip page, Edit interactions, slicers in a sync group, a theme) and a
+  theme without the YAML tab, and the viewer draws it. **2.3.1 housekeeping:** the console's BI test stacks serve the market-risk valuations under the
+  2.3.0 UPPER_SNAKE names (a `risk-store` file connector beside the test's own `trading-store`), the BI browser suites use `trade.DESK`, `trade.MTM` ... and the
+  daily-snapshot semantics of 2.3.0 (a report over one business day).
+
 ## 2.3.0 — BI with filter context, time and live push; production-shaped trades from three source systems; a demo from a fresh clone (2026-10-17)
 
 - **Ids are text; numeric ids in files are read as text.** The generators write `TRADE_ID` (ENDUR digits included), `LEG_ID`, `FLOW_ID`, `RESET_ID` and `EVENT_ID` as strings (data/testdata and the trading and market-risk samples regenerated, same digits). `lake build` reads a numeric id as its exact digits (`1000008`, never `1000008.0`) in the id column, the document and an id/key column it promotes (always STRING now; before, an all-number `TRADE_ID` became a DOUBLE column); `lake demo --with-real` turns a real extract's numeric ids into text; the Delta connector reads an older table's numeric id column (DOUBLE, LONG, INT, DECIMAL) as id text. No id prefix or shape is assumed.

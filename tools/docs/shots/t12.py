@@ -20,12 +20,12 @@ from __future__ import annotations
 
 from _bi import open_report
 from _tut import OUT, SERVER_ENV, elem_shot, go, login  # noqa: F401
-from shotlib import Ctx, register
+from shotlib import ROOT, Ctx, register
 
 shot = register("t12", OUT / "t12")
 LIVE_DATASET = "file:dataset:live-trading"
 LIVE_REPORT = "file:report:live-trading-desk"
-BOARD = "file:board:desk-wall"
+BOARD = "file:report:desk-wall"                                # 2.4.0: a board is a report with board pages
 
 
 @shot("01-curve-now.jpg", also=("02-curve-later.jpg",))
@@ -71,8 +71,8 @@ def live_report(c: Ctx):
 def board(c: Ctx):
     login(c, height=900)
     c.page.set_viewport_size({"width": 1280, "height": 900})
-    c.page.goto(c.base + "/bi/b/" + BOARD)
-    c.page.wait_for_selector("[data-ready=yes], [data-board]", timeout=30000)
+    c.page.goto(c.base + "/bi/r/" + BOARD)
+    c.page.wait_for_selector("[data-ready=yes]", timeout=30000)
     c.page.wait_for_timeout(6000)
     c.save("08-board.jpg")
     c.page.get_by_role("tab").nth(1).click()
@@ -86,19 +86,7 @@ def board(c: Ctx):
 
 # ---- wave B: the history of a live table, and the board designer ---------------------------------------------------------------------
 
-DESIGN_BOARD = """rachana: 1
-board: night-desk
-title: Night desk
-rotate: 30s
-pages:
-  - id: desk
-    title: Trading desk
-    tiles:
-      - { id: net-mtm, report: live-trading-desk, visual: mtm, title: Net MTM, at: { x: 0, y: 0, w: 4, h: 3 },
-          alert: { on: MTM, warn: { op: lt, value: 0 }, crit: { op: lt, value: -1000000000 }, hysteresis: 25000000 } }
-      - { id: trades, report: live-trading-desk, visual: trades, at: { x: 4, y: 0, w: 2, h: 3 } }
-      - { id: by-desk, report: live-trading-desk, visual: by-desk, at: { x: 0, y: 3, w: 6, h: 5 } }
-"""
+DESIGN_BOARD = (ROOT / "docs" / "tutorials" / "data" / "night-desk.report.yaml").read_text()        # the tutorial's file: a report with one board page
 
 
 @shot("11-history-line.jpg")
@@ -116,6 +104,7 @@ def history_line(c: Ctx):
 
 @shot("12-board-designer.jpg", also=("13-tile-alert.jpg", "14-board-yaml.jpg"))
 def board_designer(c: Ctx):
+    """The Night desk board in the report designer (BI Studio, 2.4.0): three tiles drawn with the live desk's numbers, the Tile section of Format."""
     import json
 
     login(c, height=900)
@@ -123,21 +112,23 @@ def board_designer(c: Ctx):
     for it in mine if isinstance(mine, list) else mine.get("items", []):
         if it.get("title") == "Night desk":
             c.page.request.delete(c.base + "/bi/api/items/" + it["id"])
-    made = c.page.request.post(c.base + "/bi/api/workspaces/me/items", data=json.dumps({"kind": "board", "title": "Night desk", "body": DESIGN_BOARD}),
+    made = c.page.request.post(c.base + "/bi/api/workspaces/me/items", data=json.dumps({"kind": "report", "title": "Night desk", "body": DESIGN_BOARD}),
                                headers={"Content-Type": "application/json"}).json()
     c.page.set_viewport_size({"width": 1400, "height": 900})
-    c.page.goto(c.base + "/bi/design/board/" + made["id"])
-    c.page.wait_for_selector("[data-board-design-root][data-ready='1']")
-    c.page.wait_for_selector("[data-tile='net-mtm']")
-    c.page.wait_for_timeout(1500)
-    c.page.click("[data-tile='net-mtm'] .bi-btile-title")
-    c.page.wait_for_selector("[data-tile-edit]")
-    c.page.wait_for_timeout(500)
+    c.page.goto(c.base + "/bi/design/" + made["id"])
+    c.page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
+    c.page.wait_for_selector("[data-design-root] [data-visual='net-mtm']")
+    c.page.wait_for_timeout(5000)                                      # the tiles draw the live report's numbers
+    c.page.click("[data-design-root] [data-visual='net-mtm']")
+    c.page.click("[data-ptab='format']")
+    c.page.wait_for_selector("[data-format-section='tile']")
+    c.page.wait_for_timeout(600)
     c.save("12-board-designer.jpg", clip={"x": 0, "y": 56, "width": 1400, "height": 844})
-    c.page.locator("[data-tile-form]").locator("xpath=ancestor::aside").evaluate("e => { e.scrollTop = e.scrollHeight; }")      # down to the hysteresis and the notify choice
+    section = c.page.locator("[data-format-section='tile']")
+    section.scroll_into_view_if_needed()
     c.page.wait_for_timeout(400)
-    pane = c.page.locator("[data-tile-form]").locator("xpath=ancestor::aside").bounding_box()
-    c.save("13-tile-alert.jpg", clip={"x": pane["x"] - 6, "y": max(0, pane["y"] - 6), "width": pane["width"] + 12, "height": min(900 - max(0, pane["y"] - 6), pane["height"] + 12)})
+    box = section.bounding_box()
+    c.save("13-tile-alert.jpg", clip={"x": box["x"] - 6, "y": max(0, box["y"] - 6), "width": box["width"] + 12, "height": min(900 - max(0, box["y"] - 6), box["height"] + 12)})
     c.page.click("[data-tab=yaml]")
     c.page.wait_for_function("() => /Night desk/.test(document.querySelector('[data-view=yaml]').innerText)")
     c.page.wait_for_timeout(800)
@@ -157,7 +148,7 @@ def desk_currency_chart(c: Ctx):
     c.save("15-chart-page.jpg")
 
 
-PYTHON_BOARD = "file:board:python-wall"
+PYTHON_BOARD = "file:report:python-wall"
 
 
 @shot("17-python-wall.jpg")
@@ -165,7 +156,7 @@ def python_wall(c: Ctx):
     """The Python wall: three tiles that are Python visuals, run for the person looking."""
     login(c, height=900)
     c.page.set_viewport_size({"width": 1280, "height": 900})
-    c.page.goto(f"{c.base}/bi/b/{PYTHON_BOARD}")
+    c.page.goto(f"{c.base}/bi/r/{PYTHON_BOARD}")
     c.page.wait_for_function("() => document.querySelectorAll('[data-tile] .bi-py-foot').length === 3", timeout=120000)
     c.page.wait_for_timeout(1500)
     c.page.evaluate("window.scrollTo(0, 0)")

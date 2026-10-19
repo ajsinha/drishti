@@ -29,9 +29,11 @@ config/bi/
                                   the rachana: 1 files stay until the 2.1 reader is removed
   models/     <id>.model.yaml     2.2 data models: datasets as aliases, relationships, measures, hierarchies, rollups (BI_MODEL_SPEC.md section 2); every sample
                                   dataset above converted, under the same name; the reports (except the two live ones, until W3) read them with `model: <name>@1`
-  reports/    <id>.report.yaml    pages of visuals over a dataset: filters, bookmarks, drill-through, theme; drawn since phase 3
+  reports/    <id>.report.yaml    pages of visuals over a model: filters, bookmarks, drill-through, theme, tooltip pages, interactions; drawn since phase 3;
+                                  a page with layout: board is a wall of tiles (2.4.0: the boards desk-wall and python-wall are reports here)
                                   (seven commented samples: trades-overview, counterparty-risk, cashflow-ladder, live-trading-desk, live-exposure, python-desk-risk, and pnl-vs-exposure over two datasets: REPORTS.md section 16)
-  boards/     <id>.board.yaml     a wall of live tiles from several reports, with alerts and kiosk mode; drawn since phase 5 (one commented sample: desk-wall)
+  boards/     <id>.board.yaml     2.3 boards: read as reports with board pages until converted (drishti.py bi migrate --boards config/bi/boards --write)
+  themes/     <id>.theme.yaml     2.4.0 theme items: series colours, good and bad colours, a font, format defaults per kind of visual (samples: corporate, print)
   notebooks/  <id>.notebook.yaml  an analyst notebook: stored, versioned and published like any item, but not run (phase 9; one sample: pnl-vs-exposure-pandas, two extracts joined in pandas)
   python/     <id>.python.yaml    a Python Measure or Visual with its manifest (inputs, packages, target, limits, source); run by the console's sandboxed runner or in the browser, since phase 6
                                   (commented samples: desk-pnl-volatility, pnl-histogram, and the Transform pnl-vs-exposure behind the derived dataset desk-pnl-vs-exposure-py; docs/guides/PYTHON_BI.md)
@@ -51,7 +53,8 @@ Where to read more, in the order a newcomer wants it:
 | a tour of the pages and a walk-through with the samples in this folder | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md) (start here), [docs/tutorials/10-first-bi-report.md](../../docs/tutorials/10-first-bi-report.md) |
 | the dataset format (`datasets/`) | [docs/guides/DATASETS.md](../../docs/guides/DATASETS.md) |
 | the report format (`reports/`): a report names its dataset with `dataset:` (a catalogue id, a file name such as `trades-basic`, or the dataset's name) | [docs/guides/REPORTS.md](../../docs/guides/REPORTS.md) |
-| the board format (`boards/`) | [docs/guides/BOARDS.md](../../docs/guides/BOARDS.md) |
+| boards, report pages of tiles (`layout: board`), and converting a 2.3 board file | [docs/guides/BOARDS.md](../../docs/guides/BOARDS.md) |
+| the theme format (`themes/`) | [docs/guides/REPORTS.md section 5.2](../../docs/guides/REPORTS.md#52-themes) |
 | publishing, review, certification and moving content between servers | [docs/guides/BI_GOVERNANCE.md](../../docs/guides/BI_GOVERNANCE.md) |
 | the design and what each phase built | [docs/architecture/RUPAKA.md](../../docs/architecture/RUPAKA.md) (sections 6, 8 and 13, "Where BI files live", and section 20) |
 

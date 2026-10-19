@@ -242,7 +242,7 @@ The tiles' data comes from the report endpoints (`POST /api/v1/bi/reports/{id}/q
 
 ## 11. Designing a board
 
-A board is designed in the **report designer** (BI Studio, [BI_GUIDE.md section 15](BI_GUIDE.md#15-the-report-designer-phase-3)):
+A board is designed in the **report designer** (BI Studio, [BI_GUIDE.md section 15](BI_GUIDE.md#15-the-designer-phase-3)):
 
 * **Make one.** In the Studio's Explorer, *New: board* (or on the designer's start page, *Boards: Start a board*) makes a report with one empty board page. On any report, Format with no visual selected, *Layout: board* turns the page into a board page.
 * **Add a tile.** Choose **tile** in Visualizations (*Board*). In Format, *Tile*: choose the **report** (the ones you may open, then your own drafts, marked *(draft)*) and one of its **visuals** (slicers and tiles are not offered); the tile's title follows the visual's unless you type one. The canvas draws the tile **with its report's data**, as you. Adding a tile on a grid page turns the page into a board page.

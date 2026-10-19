@@ -101,12 +101,15 @@ def valuation(t: dict) -> dict:
 
 
 def write_lake(root: Path, days=("2026-10-07", "2026-10-08"), rows=60) -> None:
+    """Two folders of one lake: ``risk/`` the valuations the shipped samples read (risk-store), ``trade/`` the same trades under the test's own lower-case names,
+    which the datasets a test writes for itself read (trading-store)."""
     for day in days:
-        folder = root / day
-        folder.mkdir(parents=True, exist_ok=True)
-        with open(folder / "trade-valuation.jsonl", "w") as f:
-            for i in range(rows):
-                f.write(json.dumps(valuation(trade(day, i))) + "\n")
+        for sub, name, row in (("risk", "trade-valuation.jsonl", valuation), ("trade", "trade.jsonl", lambda t: t)):
+            folder = root / sub / day
+            folder.mkdir(parents=True, exist_ok=True)
+            with open(folder / name, "w") as f:
+                for i in range(rows):
+                    f.write(json.dumps(row(trade(day, i))) + "\n")
 
 
 # the market-risk pack's risk-store (a Delta lake) replaced by this file connector of the same name: a site file replaces the pack's template
@@ -118,6 +121,17 @@ settings:
   layout:
     trade-valuation:
       columns: [VALUATION_ID, TRADE_ID, SOURCE_SYSTEM, DESK, PORTFOLIO, PRODUCT_TYPE, CURRENCY, TRADE_STATUS, NOTIONAL, MTM, PNL_1D, TRADE_DATE]
+"""
+
+# the trades under the test's own names, for a dataset a test writes for itself (source: { connector: trading-store, kind: trade })
+TRADE_CONNECTOR = """plugin: file
+kinds: [trade]
+settings:
+  root: {root}
+  rescan-seconds: 3600
+  layout:
+    trade:
+      columns: [tradeId, desk, book, productType, currency, status, notional, mtm, pnl1d, tradeDate]
 """
 
 
@@ -173,7 +187,8 @@ class ReportStack:
             lake = self.tmp / "lake"
             write_lake(lake)
             (work / "config" / "connectors").mkdir(parents=True)
-            (work / "config" / "connectors" / "risk-store.yaml").write_text(CONNECTOR.format(root=lake))
+            (work / "config" / "connectors" / "risk-store.yaml").write_text(CONNECTOR.format(root=lake / "risk"))
+            (work / "config" / "connectors" / "trading-store.yaml").write_text(TRADE_CONNECTOR.format(root=lake / "trade"))
         self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
                                                  f"--drishti.bi.query.store-dir={self.tmp / 'store'}", *self.server_args], cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
         wait(SERVER + "/actuator/health", 150)
