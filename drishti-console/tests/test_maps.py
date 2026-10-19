@@ -19,6 +19,8 @@ import json
 import re
 from pathlib import Path
 
+import yaml
+
 from core import export
 from routes.api_routes import _view_event
 from test_embed import HOST, make_client
@@ -158,9 +160,15 @@ def test_the_workbench_offers_the_map_and_seeds_it_from_the_field_that_names_a_c
 
 
 def test_the_bi_map_has_level_and_drill_in_the_format_pane_and_the_scripts_load_geomap_first():
-    panes = (CONSOLE / "web" / "static" / "js" / "bi-design-panes.js").read_text(encoding="utf-8")
-    assert "data-format-level" in panes and "data-format-drill" in panes
-    for page in ("bi/report.html", "bi/design.html", "bi/board.html"):
+    # 2.4.0: the Format pane is generated from the format schemas; the map's level and drill carry the hooks the schema names
+    schema = yaml.safe_load((CONSOLE.parent / "drishti-server" / "src" / "main" / "resources" / "bi" / "report" / "format" / "other-chart.yaml").read_text(encoding="utf-8"))
+    props = schema["properties"]
+    assert "map" in schema["x-types"]
+    assert props["level"]["x-hook"] == "format-level" and props["level"]["type"] == "string" and props["level"]["x-types"] == ["map"]
+    assert props["drill"]["x-hook"] == "format-drill" and props["drill"]["type"] == "boolean" and props["drill"]["x-types"] == ["map"]
+    pane = (CONSOLE / "web" / "static" / "js" / "bi-format-pane.js").read_text(encoding="utf-8")
+    assert "'data-' + prop['x-hook']" in pane, "the pane gives each control the data attribute its x-hook names"
+    for page in ("bi/report.html", "bi/design.html"):           # a board is a report page since 2.4.0 (no bi/board.html)
         text = (CONSOLE / "web" / "templates" / page).read_text(encoding="utf-8")
         assert text.index("geomap.js") < text.index("bi-visuals.js"), page
     for page in ("terminal/view.html", "build/design.html", "build/shared.html"):
