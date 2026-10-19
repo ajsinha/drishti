@@ -35,6 +35,7 @@ exactly as before: no thread gossips, no peer is asked, nothing is forwarded, an
 - [10. Drain, maintenance and a node leaving](#10-drain-maintenance-and-a-node-leaving)
 - [11. Sizing](#11-sizing)
 - [12. When something is wrong](#12-when-something-is-wrong)
+- [13. Measured: the soak on real processes](#13-measured-the-soak-on-real-processes)
 
 ## 1. Before you start
 
@@ -521,3 +522,28 @@ declaring a node that paused (a long garbage collection) dead and having it refu
 | A view is answered by an older pack | Admin → Net → Capability map: which node has the newest, and whether it is routable | The newest is served only from nodes the caller may reach and that are not drained |
 
 More in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#drishtinet).
+
+## 13. Measured: the soak on real processes
+
+`tools/bench/net_soak.py` (2.5.0, on one 60 GB workstation, JDK 21, each server `-Xmx1536m`): three servers started from one seed, **a** and
+**b** reading one Delta lake (ENDUR and CALYPSO trades: replicas) and **c** its own (MUREX: a shard), with overlapping packs (a: trading and
+counterparty-risk; b: trading; c: trading, counterparty-risk and market-risk); 1,500 trades a day per system over two business days (4,500
+trades); security on. One console given **a** alone (`backend.urls`), 20 users of `tools/bench/users.py` on it for 10 minutes; meanwhile c
+was killed (SIGKILL) at 2 minutes and restarted at 3.5, then a, the console's own server, killed at 5.5 minutes and restarted at 7 with no
+seed of its own. A checker asked a fixed set of 420 requests (trades of each system and day, searches by counterparty, counterparty trade
+pages) of a random running node all along and compared each with the answer of a single server holding all the data.
+
+| Measure | Result |
+|---|---|
+| The console lists all three servers after it starts | 1.5 s |
+| A killed node is suspect or dead on every other node | 2.7 s (c), 3.1 s (a) |
+| The console's next page after its own server was killed | 0.27 s, the same session: 0 sign-ins asked in 476 page checks |
+| A restarted node alive on every node again (from the start command, JVM start included) | 18.9 s (c, its seed file), 20.1 s (a, from its `peers.json` alone) |
+| Answers checked | 9,362: 4,912 + 703 + 362 equal to the single server (trades, searches, pages); 2,416 trades equal but for links still *pending* past `link-budget` (section 12); 509 trades, 165 searches and 84 pages partial and naming the stopped node; 211 asked of the node at the moment it was killed |
+| **Wrong answers** | **0** |
+| Load through the console | 136,187 requests in 600 s (227 a second); p50 74 ms, p95 177 ms, p99 261 ms for a trade; 8,965 trade pages (8 %) said a MUREX trade was unavailable while c was down, as they should |
+
+Found and fixed by this soak (CHANGELOG 2.5.0): a trade held by a node that had just stopped answered *not found* for half a second; a grouped
+page with a node down was marked partial in its document only; the console moved off a healthy server that answered 502 about another node; and
+console sign-in sessions were known only to the node that opened them, so a failover sent people to sign in again. The live view through a
+failover is checked by the browser suite (`test_admin_net_stack_browser.py`: the console moved in 0.8 s and the open page kept ticking).

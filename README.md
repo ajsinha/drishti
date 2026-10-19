@@ -150,7 +150,9 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
   console is given one server, learns the others and moves to another when it stops, with no new sign-in. Signed calls under a cluster
   key that rotates with no downtime, nodes per role, peer-only packs, Admin → Net ([NET.md](docs/admin/NET.md),
   [tutorial 19](docs/tutorials/19-a-cluster-of-three.md)). In-process tests of three servers: they list each other about 50 ms after
-  the third starts; 13,542 signed calls through a key rotation, none refused.
+  the third starts; 13,542 signed calls through a key rotation, none refused. A 10-minute soak on three real servers under 20 users, one
+  node killed and restarted, then the console's own: the console moved in 0.27 s with nobody signed out, and 9,362 answers checked against
+  a single server, 0 wrong ([NET.md section 13](docs/admin/NET.md#13-measured-the-soak-on-real-processes)).
 - Admin → Health, Prometheus metrics, a Grafana dashboard, liveness and readiness checks, Docker images and
   runbooks ([OPERATIONS.md](docs/admin/OPERATIONS.md)).
 - Seven themes (Terminal, Parchment, Blue, Wall Street, Green, Crimson, Crimson dark; the last three crimson, blue and green as in Sajha), one top
