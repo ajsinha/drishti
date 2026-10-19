@@ -119,6 +119,12 @@
 - **Drishti*net soak on real processes** (`tools/bench/net_soak.py`): three servers from one seed (two reading one lake, one its own), a console
   given the first, `tools/bench/users.py` load, a shard holder killed and restarted, then the console's own server, every answer compared with a
   single server holding all the data. Results in NET.md section 13.
+- **Admin → Net → Members: the hash ring.** Beside the member table (above it on a phone) an SVG donut with one arc per member, coloured
+  by state from the theme's tokens, sized by the kinds whose data each node holds (the capability digest; equal when none reports any, as the
+  caption says), this node outlined, the console's server banded; labels with the node id and packs, the kinds held on hover; the centre counts
+  alive / total. Clicking an arc selects its row (and a row its arc); it redraws with the page's 5 s refresh, a member joining grows in and one
+  removed fades out. `/admin/net/api/members` carries `holds`. `test_admin_net.py`, four browser tests in `test_admin_net_browser.py`; NET.md
+  section 9, tutorial 19 picture 1 (taken on the drishti-stack cluster), the deck's Drishti*net slide (drishti-b left).
 - **A ready-made local cluster: `drishti-stack/`.** Three servers and a console on one machine from one file, `stack.yaml` (each node's
   port, heap, packs, lake and the connectors it switches off; adding a node is one entry): `start.sh` starts what is not running (and makes
   what is missing: the secrets, a node's net folder, the synthetic ENDUR, CALYPSO and MUREX lakes with `tools/bench/trades.py`, and

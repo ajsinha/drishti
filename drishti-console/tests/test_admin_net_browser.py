@@ -88,6 +88,15 @@ class NetBackend(FakeBackend):
         return {"ok": True}
 
 
+class Pool:
+    """Stands in for the console's own server list (core/cluster.py): on n-b, the console's current server."""
+
+    def snapshot(self):
+        return {"enabled": True, "active": "http://127.0.0.1:18784", "file": "/srv/console/net/servers.json", "failovers": [], "servers": [
+            {"url": "http://127.0.0.1:18783", "origin": "configured", "nodeId": "n-a", "healthy": True, "latencyMs": 1.0, "fails": 0, "lastError": ""},
+            {"url": "http://127.0.0.1:18784", "origin": "discovered", "nodeId": "n-b", "healthy": True, "latencyMs": 2.0, "fails": 0, "lastError": ""}]}
+
+
 @pytest.fixture(scope="module")
 def net_console():
     import uvicorn
@@ -104,6 +113,7 @@ def net_console():
     while not server.started and time.monotonic() < deadline:
         time.sleep(0.05)
     assert server.started, "the console did not start"
+    app.state.cluster = Pool()                      # after start: only the pages read it (the console's servers, the ring's mark)
     yield f"http://127.0.0.1:{CONSOLE_PORT}", app.state.backend
     server.should_exit = True
     thread.join(10)
@@ -188,4 +198,81 @@ def test_every_tab_fits_a_phone(browser, net_console, tab):
     page = browser.new_page(viewport={"width": 390, "height": 844})
     page.goto(url + "/admin/net?tab=" + tab)
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), tab
+    page.close()
+
+
+def test_the_hash_ring_shows_each_member_by_state_with_this_node_and_the_console_s_server(browser, net_console):
+    url, _ = net_console
+    page = browser.new_page(viewport={"width": 1400, "height": 900})
+    page.goto(url + "/admin/net")
+    page.locator("[data-arc]").first.wait_for(timeout=10000)
+    assert page.locator("[data-arc]").count() == 3
+    states = {g.get_attribute("data-arc"): g.get_attribute("data-state") for g in page.locator("[data-arc]").all()}
+    assert states == {"n-a": "alive", "n-b": "suspect", "n-c": "dead"}
+    fills = page.evaluate("() => [...document.querySelectorAll('[data-arc] .net-arc-fill')].map(p => getComputedStyle(p).fill)")
+    assert len(set(fills)) == 3, fills                                        # one colour per state, from the theme's tokens
+    assert page.locator("[data-arc][data-self]").get_attribute("data-arc") == "n-a"
+    assert page.locator("[data-arc][data-console]").get_attribute("data-arc") == "n-b"
+    assert page.locator("[data-arc='n-b'] .net-arc-console").count() == 1
+    assert page.locator("[data-ring-count]").text_content() == "1 / 3"
+    assert "n-a" in page.locator("[data-arc='n-a'] .net-arc-label").text_content() and "core" in page.locator("[data-arc='n-a'] .net-arc-label").text_content()
+    assert "holds data of: trade" in page.locator("[data-arc='n-a'] title").text_content()
+    assert "sized by the kinds" in page.locator("[data-ring-caption]").inner_text()
+    ring, table = page.locator("[data-ring]").bounding_box(), page.locator("[data-members]").bounding_box()
+    assert ring["x"] > table["x"] + 100, (ring, table)                         # on the right of the table
+    page.close()
+
+
+def click_arc(page, node):
+    """A real click in the middle of the node's arc (its data-at point, in the ring's units, mapped to the screen)."""
+    x, y = page.evaluate("""id => { const g = document.querySelector(`[data-arc='${id}']`), [x, y] = g.getAttribute('data-at').split(',').map(Number);
+        const p = g.ownerSVGElement.createSVGPoint(); p.x = x; p.y = y; const s = p.matrixTransform(g.getScreenCTM()); return [s.x, s.y]; }""", node)
+    page.mouse.click(x, y)
+
+
+def test_clicking_an_arc_selects_its_row_and_a_row_its_arc(browser, net_console):
+    url, _ = net_console
+    page = browser.new_page(viewport={"width": 1400, "height": 900})
+    page.goto(url + "/admin/net")
+    page.locator("[data-arc='n-c']").wait_for(timeout=10000)
+    click_arc(page, "n-c")
+    assert "net-row-sel" in page.locator("tr[data-member='n-c']").get_attribute("class")
+    assert page.locator("tr.net-row-sel").count() == 1
+    assert page.locator("[data-arc='n-c']").get_attribute("aria-pressed") == "true"
+    page.locator("tr[data-member='n-b'] th").click()
+    assert page.locator("[data-arc='n-b']").get_attribute("aria-pressed") == "true"
+    assert page.locator("[data-arc='n-c']").get_attribute("aria-pressed") == "false"
+    page.locator("[data-arc='n-a']").focus()
+    page.keyboard.press("Enter")
+    assert page.locator("tr[data-member='n-a']").get_attribute("data-selected") == "true"
+    page.close()
+
+
+def test_a_member_that_joins_grows_in_and_one_that_goes_fades_out(browser, net_console):
+    url, backend = net_console
+    page = browser.new_page(viewport={"width": 1400, "height": 900})
+    page.goto(url + "/admin/net")
+    page.locator("[data-arc='n-a']").wait_for(timeout=10000)
+    joined = dict(backend.members["members"][0], nodeId="n-d", self=False, url="http://127.0.0.1:18786", state="alive")
+    backend.members["members"].append(joined)
+    try:
+        page.locator("[data-arc='n-d'].net-arc-in").wait_for(timeout=12000)      # the page's own refresh (5 s) draws it, growing in
+        assert page.locator("[data-ring-count]").text_content() == "2 / 4"
+    finally:
+        backend.members["members"].remove(joined)
+    page.locator("[data-arc='n-d'].net-arc-out").wait_for(timeout=12000)          # it fades out where it was
+    page.locator("[data-arc='n-d']").wait_for(state="detached", timeout=5000)
+    assert page.locator("[data-arc]").count() == 3
+    page.close()
+
+
+def test_at_phone_width_the_ring_is_above_the_table_and_nothing_scrolls_sideways(browser, net_console):
+    url, _ = net_console
+    page = browser.new_page(viewport={"width": 390, "height": 844})
+    page.goto(url + "/admin/net")
+    page.locator("[data-arc]").first.wait_for(timeout=10000)
+    ring, table = page.locator("[data-ring]").bounding_box(), page.locator("[data-members]").bounding_box()
+    assert ring["y"] + ring["height"] <= table["y"] + 1, (ring, table)
+    assert ring["width"] <= 390
+    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
     page.close()

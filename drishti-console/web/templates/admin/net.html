@@ -91,6 +91,20 @@ secret: ${DRISHTI_NET_SECRET}</pre>
       <button type="submit" class="btn-pill btn-accent">Add seed</button>
     </form>
 
+    <div class="net-members-ring">
+    <figure class="net-ring" data-ring aria-labelledby="netRingCaption"{% if not members.members %} hidden{% endif %}>
+      <svg viewBox="0 0 440 300" role="group" aria-label="The cluster as a hash ring: one arc per member, coloured by its state" data-ring-svg>
+        <g data-ring-arcs></g>
+        <text class="net-ring-count" x="220" y="152" text-anchor="middle" data-ring-count>{{ (members.counts or {}).alive or 0 }} / {{ (members.members or []) | length }}</text>
+        <text class="net-ring-sub" x="220" y="174" text-anchor="middle">alive</text>
+      </svg>
+      <ul class="net-ring-legend" aria-label="Key">
+        <li><span class="net-sw net-sw-alive"></span>alive</li><li><span class="net-sw net-sw-suspect"></span>suspect</li>
+        <li><span class="net-sw net-sw-dead"></span>dead</li><li><span class="net-sw net-sw-left"></span>left</li>
+        <li><span class="net-sw net-sw-self"></span>this node ●</li><li><span class="net-sw net-sw-console"></span>the console's server</li>
+      </ul>
+      <figcaption id="netRingCaption" class="text-muted-d" data-ring-caption>The cluster as a hash ring: one arc per member, coloured by its state.</figcaption>
+    </figure>
     <div class="tbl-wrap"><table class="tbl adm-tbl net-members" data-members aria-describedby="netTitle">
       <caption class="visually-hidden">Every member of the cluster as this node knows it</caption>
       <thead><tr><th scope="col">Node</th><th scope="col">State</th><th scope="col">Address</th><th scope="col">Version</th><th scope="col">Tags</th>
@@ -114,6 +128,7 @@ secret: ${DRISHTI_NET_SECRET}</pre>
       {% endfor %}
       </tbody>
     </table></div>
+    </div>
 
     {% if members.userState and members.userState.active %}{% set us = members.userState %}
     <p class="text-muted-d" data-user-state>Users' saved searches, layouts, pivots and workspaces are copied to the other nodes:
@@ -303,4 +318,4 @@ secret: ${DRISHTI_NET_SECRET}</pre>
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-net.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-net.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-net-ring.js?v={{ ASSET_V }}"></script>{% endblock %}

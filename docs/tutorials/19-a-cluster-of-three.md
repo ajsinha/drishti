@@ -166,9 +166,11 @@ INFO ... NetService : net: member drishti-c joined
 `false` makes it leave cleanly.
 
 **In the UI:** **Admin → Net → Members** on any node lists the three, each `alive`, with its version, tags, packs, the latency this node
-measured and when it last heard of it; the page refreshes by itself.
+measured and when it last heard of it; the page refreshes by itself. Beside the table the **hash ring** draws one arc per member, green while
+it is alive (amber suspect, red dead, grey left), sized by the kinds whose data it holds; this node is outlined, the console's server has a
+dashed band, and the centre counts the members alive. Hover an arc for the kinds it holds; click it to select its row.
 
-![Admin → Net → Members on node a: drishti-a (this node), drishti-b and drishti-c, each alive, with address, version 2.4.0, tags, the pack each serves, when it was last heard of, latency and incarnation](img/t19/01-members.jpg)
+![Admin → Net → Members (here the ready-made cluster of drishti-stack/: drishti-main, drishti-b and drishti-c): the table with each node's state, address, version and packs, and beside it the hash ring, three green arcs sized by the kinds each holds, drishti-main outlined as this node and banded as the console's server, 3 / 3 alive](img/t19/01-members.jpg)
 
 **From the command line** (an administrator's token in `DRISHTI_TOKEN`, or sign-in off):
 

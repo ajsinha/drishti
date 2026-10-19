@@ -63,7 +63,51 @@
 .net-filter { max-width: 28rem; margin: 0 0 .5rem; }
 .net-map td, .net-map th { white-space: normal; vertical-align: top; font-size: .85rem; }
 .net-map td div { margin: 0 0 .15rem; }
+/* the hash ring beside the member table (admin-net-ring.js): the table on the left, the ring on the right; above the table on a phone */
+.net-members-ring { display: grid; grid-template-columns: minmax(0, 1fr) minmax(20rem, 27rem); gap: .4rem 1.2rem; align-items: start; }
+.net-members-ring > .tbl-wrap { grid-column: 1; grid-row: 1; min-width: 0; }
+.net-ring { grid-column: 2; grid-row: 1; margin: 0; min-width: 0; }
+.net-ring[hidden] { display: none; }
+.net-ring svg { display: block; width: 100%; height: auto; overflow: visible; }
+.net-arc { cursor: pointer; outline: none; transform-origin: 220px 150px; }
+.net-arc-fill { stroke: var(--d-surface, var(--d-bg)); stroke-width: 1.5; transition: opacity .2s; }
+.net-arc[data-state=alive] .net-arc-fill { fill: var(--d-ok); }
+.net-arc[data-state=suspect] .net-arc-fill { fill: var(--d-warn); }
+.net-arc[data-state=dead] .net-arc-fill { fill: var(--d-bad); }
+.net-arc[data-state=left] .net-arc-fill { fill: var(--d-muted); opacity: .55; }
+.net-arc[data-self] .net-arc-fill { stroke: var(--d-ink); stroke-width: 3; }
+.net-arc-console { fill: none; stroke: var(--d-accent); stroke-width: 1.6; stroke-dasharray: 4 3; }
+.net-arc:hover .net-arc-fill, .net-arc:focus-visible .net-arc-fill { opacity: .82; }
+.net-arc:focus-visible .net-arc-fill, .net-arc[aria-pressed=true] .net-arc-fill { stroke: var(--d-accent); stroke-width: 3.5; }
+.net-arc-label { fill: var(--d-ink); font-size: 15px; }
+.net-arc-id { font-family: var(--d-font-mono); font-weight: 600; }
+.net-arc-sum { fill: var(--d-muted); font-size: 13.5px; }
+.net-ring-count { fill: var(--d-ink); font-size: 32px; font-weight: 700; }
+.net-ring-sub { fill: var(--d-muted); font-size: 14px; }
+.net-ring-legend { list-style: none; display: flex; flex-wrap: wrap; gap: .2rem .8rem; margin: .2rem 0 .3rem; padding: 0; font-size: .78rem; color: var(--d-muted); }
+.net-ring-legend li { display: inline-flex; align-items: center; gap: .3rem; }
+.net-sw { display: inline-block; width: .8rem; height: .8rem; border-radius: 3px; }
+.net-sw-alive { background: var(--d-ok); } .net-sw-suspect { background: var(--d-warn); } .net-sw-dead { background: var(--d-bad); }
+.net-sw-left { background: var(--d-muted); opacity: .55; }
+.net-sw-self { border: 2.5px solid var(--d-ink); box-sizing: border-box; }
+.net-sw-console { border: 1.6px dashed var(--d-accent); box-sizing: border-box; }
+.net-ring figcaption { font-size: .8rem; }
+.net-members tr.net-row-sel > * { background: var(--d-highlight); }
+.net-members tr.net-row-sel > th { box-shadow: inset 3px 0 0 var(--d-accent); }
+.net-members tbody tr[data-member] { cursor: pointer; }
+@media (prefers-reduced-motion: no-preference) {
+  .net-arc-in { animation: net-arc-in .6s ease-out; }
+  .net-arc-out { animation: net-arc-out .6s ease-in forwards; pointer-events: none; }
+}
+@keyframes net-arc-in { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: scale(1); } }
+@keyframes net-arc-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(.8); } }
+@media (max-width: 960px) {
+  .net-members-ring { grid-template-columns: minmax(0, 1fr); }
+  .net-ring { grid-column: 1; grid-row: 1; max-width: 19rem; justify-self: center; width: 100%; }
+  .net-members-ring > .tbl-wrap { grid-row: 2; }
+}
 @media (max-width: 760px) {
+  .net-ring { max-width: 100%; }
   .net-files { grid-template-columns: 1fr; }
   .net-dl { grid-template-columns: 1fr; }
   .net-actions .btn-pill, .net-seed .btn-pill, .net-seed input, .net-tabs [role=tab] { min-height: 44px; font-size: 16px; }

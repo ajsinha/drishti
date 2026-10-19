@@ -192,6 +192,32 @@ def test_the_page_says_how_to_switch_the_cluster_on_when_it_is_off(client, backe
     assert "Drain" not in page
 
 
+def test_the_members_tab_has_the_hash_ring_and_its_data_says_what_each_node_holds(client, backend, monkeypatch):
+    from routes.net_routes import holds
+
+    with_net(backend, monkeypatch, [])
+    page = client.get("/admin/net").text
+    for text in ("data-ring", "data-ring-arcs", "data-ring-count", "1 / 3", "admin-net-ring.js", "the console's server", "net-sw-dead"):
+        assert text in page, text
+    body = client.get("/admin/net/api/members").json()
+    assert body["holds"] == {"n-a": ["trade"], "n-c": ["trade"]}                 # the capability map's holders, per node
+    assert holds({"kinds": [{"kind": "b", "holders": [{"nodeId": "x"}, {"nodeId": "x"}]}, {"kind": "a", "holders": [{"nodeId": "x"}]},
+                            {"kind": "c", "holders": []}]}) == {"x": ["a", "b"]}
+    assert holds({}) == {} and holds(None) == {}
+
+
+def test_without_members_the_ring_is_hidden(client, backend, monkeypatch):
+    import copy
+
+    import test_admin_net as me
+    empty = copy.deepcopy(MEMBERS)
+    empty.update(members=[], running=False, counts={})
+    monkeypatch.setattr(me, "MEMBERS", empty)
+    with_net(backend, monkeypatch, [])
+    page = client.get("/admin/net").text
+    assert 'data-ring aria-labelledby="netRingCaption" hidden' in page
+
+
 def test_the_page_is_closed_to_non_admins_and_shows_server_errors(client, backend, monkeypatch):
     with_net(backend, monkeypatch, [], fail=BackendError(403, "DRS-5002", "not an administrator"))
     assert client.get("/admin/net").status_code == 403

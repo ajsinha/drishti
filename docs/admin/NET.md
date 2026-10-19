@@ -455,7 +455,15 @@ on, this node's id, how many members are in each state, whether the key is set (
 
 **Members.** This node (id, address, tags, peer-only packs, version, the gossip timings and how many rounds it has run, where `peers.json` is and
 when it was saved), then every member: state, address, version (and protocol when it differs), tags, packs, when it was last heard, the latency
-measured to it, its incarnation. The table refreshes every 5 seconds. Actions:
+measured to it, its incarnation. The table refreshes every 5 seconds.
+
+Beside the table (above it on a phone) the **hash ring**: one arc per member, coloured by its state (green alive, amber suspect, red dead, grey
+left, from the theme's colours, so it reads in every theme), **this node** outlined and marked ●, the **console's server** with a dashed outer
+band. Each arc is labelled with the node id and its packs; hovering it lists the kinds whose data it holds. The arcs are sized by the number of
+kinds each node holds data for (the capability digest's holders; a node holding none keeps one share), or equal when no node reports any; the
+caption says which. The centre counts the members alive out of all. Clicking an arc (or Enter on it) selects its member's row, and clicking a row
+selects its arc. It redraws with the table every 5 seconds: a member that joins grows in, one that is removed fades out. Its data is
+`/admin/net/api/members` with `holds` (node id to the kinds it holds) added by the console. Actions:
 
 | Action | What it does | API | Audited as |
 |---|---|---|---|

@@ -20,7 +20,7 @@ Run it on its own, with the console's address:
 
     DRISHTI_SHOTS_WORK=~/drishti drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t19 --base http://127.0.0.1:17784
 
-The pictures, in the tutorial's order: Members with the three alive and the console's servers, the Files tab with gossip.yaml open, a trade only
+The pictures, in the tutorial's order: Members with the three alive (the table and the hash ring) and the console's servers, the Files tab with gossip.yaml open, a trade only
 c holds opened through a, Explain naming that route, the capability map, Access, Security, and the console's servers after a is stopped (the
 last picture stops a, so it runs last). The scratch folder's path is shown as ~/drishti, as the tutorial writes it."""
 from __future__ import annotations
@@ -65,8 +65,10 @@ def members(c: Ctx):
     net(c, "members", "[data-members]")
     c.until("document.querySelectorAll('[data-member][data-state=alive]').length === 3", 60)
     c.until("document.querySelectorAll('[data-console-servers] tbody tr').length >= 3", 60)
+    c.until("document.querySelectorAll('[data-arc][data-state=alive]').length === 3", 30)   # the hash ring beside the table
+    c.page.wait_for_timeout(800)                                                             # its arcs have grown in
     tidy(c)
-    elem_shot(c, "01-members.jpg", "#netPaneMembers .tbl-wrap", pad=12)
+    elem_shot(c, "01-members.jpg", "#netPaneMembers .net-members-ring", pad=12)
     c.page.evaluate("document.querySelector('[data-node-card]').scrollIntoView()")
     elem_shot(c, "02-console-servers.jpg", "[data-console-servers]", pad=12)
 

@@ -162,8 +162,20 @@ async def api_capabilities(request: Request):
         return _problem(e)
 
 
+def holds(caps: dict) -> dict:
+    """Node id to the kinds whose data it holds (the capability map's holders), sorted: the hash ring's arc sizes and hover text."""
+    out: dict = {}
+    for k in (caps or {}).get("kinds") or []:
+        for h in k.get("holders") or []:
+            node = h.get("nodeId")
+            if node and k.get("kind") not in out.setdefault(node, []):
+                out[node].append(k.get("kind"))
+    return {n: sorted(v) for n, v in out.items()}
+
+
 @router.get("/api/members")
 async def api_members(request: Request):
+    """The member table, the console's own servers, and what each node holds (``holds``, from the capability map) for the hash ring."""
     if _admin(request) is None:
         return _forbidden()
     try:
@@ -171,6 +183,7 @@ async def api_members(request: Request):
     except BackendError as e:
         return _problem(e)
     out["console"] = _console_servers(request)
+    out["holds"] = holds(await _optional(request, "/capabilities"))
     return out
 
 
