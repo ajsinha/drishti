@@ -105,7 +105,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `design` | `design list`, `design create`, `design get`, `design save`, `design check`, `design propose`, `design approve`, `design reject`, `design proposals`, `design export`, `design import`, `design bind`, `design autodesign`, `design delete` | [5.6](#56-design) |
 | `docs` | `docs shots` | [9](#9-developer-tools) |
 | `doctor` | `drishti.py doctor` | [5.4](#54-server-and-doctor) |
-| `bi` | `bi workspace`, `bi catalogue`, `bi expr`, `bi migrate`, `bi sql`, `bi model`, `bi mq`, `bi item`, `bi dataset` | [5.7](#57-bi) |
+| `bi` | `bi workspace`, `bi catalogue`, `bi expr`, `bi migrate`, `bi sql`, `bi model`, `bi mq`, `bi item`, `bi dataset`, `bi transform` | [5.7](#57-bi) |
 | `view` | `view get`, `view explain` | [5.8](#58-view-and-completion) |
 | `completion` | `drishti.py completion bash` (also `zsh`, `powershell`) | [5.8](#58-view-and-completion) |
 
@@ -779,7 +779,10 @@ problems), `design propose`, `design approve` / `design reject` (an approver), `
 Rupaka (business intelligence) as the token's user: `bi workspace list|get`, `bi catalogue list|get|publish`, `bi expr
 functions|validate|convert` (the expression language), `bi migrate --expressions|--models` (the converter of old expressions and of
 `rachana: 1` datasets to models; `--check` for CI), `bi sql` (Drishti SQL over a model), `bi model list|describe|check|consumers`,
-`bi mq` (a model query), `bi item new|save|tests` and `bi dataset refresh`. A write needs the `bi:write` scope.
+`bi mq` (a model query), `bi item new|save|tests`, `bi dataset refresh` and `bi transform input|snippets|snippet` (Python data prep: a
+Transform's inputs as you see them, masked columns and a profile of each column, and the snippets the Transform editor offers; the commands are in
+`tools/bitransform.py`, loaded by `drishti.py`; [PYTHON_BI.md section 17](PYTHON_BI.md#17-data-prep-the-transform-editor-240)). A write needs the
+`bi:write` scope.
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py bi expr validate "sum(trades.NOTIONAL) / count(trades)" --model trading-risk

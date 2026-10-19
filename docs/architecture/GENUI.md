@@ -35,7 +35,7 @@ against the repository on 2026-10-18.
 11. [Security and governance](#11-security-and-governance)
 12. [Configuration](#12-configuration)
 13. [APIs, tools and error codes](#13-apis-tools-and-error-codes)
-14. [Build plan for 2.6.0](#14-build-plan-for-250)
+14. [Build plan for 2.6.0](#14-build-plan-for-260)
 15. [Tests](#15-tests)
 16. [Documentation to write or update](#16-documentation-to-write-or-update)
 17. [Risks](#17-risks)
