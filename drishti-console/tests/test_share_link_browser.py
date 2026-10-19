@@ -20,7 +20,7 @@ Skipped when Playwright, Chromium, the built server jar or a JDK is missing (wb_
 from test_workbench_browser import browser, page, wait  # noqa: F401 - fixtures and helpers
 from wb_live import live_auth_console  # noqa: F401 - the fixture
 
-LINK = "/v/trade/IRS-48213?asOf=2026-09-29&knownAt=2026-09-29T14:30:00Z&gen=1742"
+LINK = "/v/trade/1000001?asOf=2026-09-29&knownAt=2026-09-29T14:30:00Z&gen=1742"
 
 
 def test_a_pinned_link_survives_sign_in_and_leaves_the_readers_date_alone(live_auth_console, page):
@@ -31,13 +31,13 @@ def test_a_pinned_link_survives_sign_in_and_leaves_the_readers_date_alone(live_a
     page.fill("input[name=user]", "drishti-dev-admin")
     page.fill("input[name=password]", "drishti-dev-admin123")
     page.click("form button[type=submit], form input[type=submit]")
-    page.wait_for_url(lambda u: "/v/trade/IRS-48213" in u)
+    page.wait_for_url(lambda u: "/v/trade/1000001" in u)
     assert "asOf=2026-09-29" in page.url and "knownAt=2026-09-29T14:30:00Z" in page.url
     banner = page.locator(".pin-banner")
     banner.wait_for()
     assert "2026-09-29" in banner.inner_text() and "Go live" in banner.inner_text()
     names = {c["name"] for c in page.context.cookies()}
     assert "drishti_asof" not in names and "drishti_knownat" not in names                           # the pin set nothing saved
-    page.goto(base + "/v/trade/IRS-48213")                                                          # the reader's own page: live
+    page.goto(base + "/v/trade/1000001")                                                          # the reader's own page: live
     page.locator(".vtitle .vid").wait_for()
     assert page.locator(".pin-banner").count() == 0
