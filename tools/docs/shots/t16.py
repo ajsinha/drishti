@@ -219,7 +219,7 @@ def react_sample(c: Ctx):
         c.page.goto(HOST + "/samples/react/index.html")
         c.page.wait_for_function("() => { const e = document.querySelector('#view'); return e && /^(live|static)$/.test(e.getAttribute('data-state') || '') }", timeout=60000)
         c.page.wait_for_function("() => { const e = document.querySelector('#about'); return e && e.getAttribute('data-state') === 'loaded' }", timeout=60000)
-        c.page.locator("drishti-search input").fill("END-1000")
+        c.page.locator("drishti-search input").fill("1000001")         # an ENDUR trade id (production-shaped ids since 2.3.0)
         c.page.locator("drishti-search button.ds-hit").first.wait_for(timeout=30000)
         c.page.wait_for_timeout(1500)
         c.save("11-react-sample.jpg")

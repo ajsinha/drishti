@@ -284,7 +284,7 @@ The repository has the same page as **React, Vue and Angular** samples in `docs/
 
 ![The React sample: a search box, the view, its About body and the report, in one host page](img/t16/11-react-sample.jpg)
 
-You should see the search box above the view; type `END-1000` and pick a result, and the view and the About body follow. The page keeps the strict policy of step 7. [ELEMENTS.md](../guides/ELEMENTS.md#react-angular-and-vue-sample-pages).
+You should see the search box above the view; type `1000001` (an ENDUR trade) and pick a result, and the view and the About body follow. The page keeps the strict policy of step 7. [ELEMENTS.md](../guides/ELEMENTS.md#react-angular-and-vue-sample-pages).
 
 ## Next steps
 
