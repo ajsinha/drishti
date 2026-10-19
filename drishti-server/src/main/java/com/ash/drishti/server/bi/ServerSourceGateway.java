@@ -96,6 +96,48 @@ public final class ServerSourceGateway implements SourceGateway {
     }
 
     @Override
+    public List<EntityRef> ids(List<SourcePlugin> plugins, String kind, LocalDate date, int limit) {
+        if (plugins == null || plugins.isEmpty()) {
+            return ids(kind, date, limit);
+        }
+        AsOf at = asOf(date);
+        java.util.LinkedHashSet<EntityRef> out = new java.util.LinkedHashSet<>();
+        for (SourcePlugin p : plugins) {
+            int left = limit - out.size();
+            if (left <= 0) {
+                break;
+            }
+            List<EntityHit> hits = p.manifest().capabilities().dated() ? p.search(kind, "", left, at) : p.search(kind, "", left);
+            hits.forEach(h -> out.add(h.ref()));
+        }
+        return List.copyOf(out);
+    }
+
+    @Override
+    public Map<EntityRef, EntityDocument> read(List<SourcePlugin> plugins, Collection<EntityRef> refs, LocalDate date) {
+        if (plugins == null || plugins.isEmpty()) {
+            return read(refs, date);
+        }
+        AsOf at = asOf(date);
+        Map<EntityRef, EntityDocument> out = new java.util.LinkedHashMap<>();
+        for (EntityRef r : refs) {
+            for (SourcePlugin p : plugins) {
+                Optional<EntityDocument> d;
+                try {
+                    d = p.manifest().capabilities().dated() ? p.fetch(r, at) : p.fetch(r);
+                } catch (Exception e) {                // this connector does not hold it (or failed): as the router, the row is left out
+                    d = Optional.empty();
+                }
+                if (d.isPresent()) {
+                    out.put(r, d.get());
+                    break;
+                }
+            }
+        }
+        return out;
+    }
+
+    @Override
     public com.ash.drishti.api.Subscription subscribe(String connector, EntityRef ref, java.util.function.Consumer<EntityDocument> listener) {
         if (connector != null && !connector.isBlank()) {
             Optional<SourcePlugin> named = registry.connector(connector);

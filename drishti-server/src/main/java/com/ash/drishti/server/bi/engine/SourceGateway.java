@@ -70,6 +70,19 @@ public interface SourceGateway {
     Map<EntityRef, EntityDocument> read(Collection<EntityRef> refs, LocalDate date);
 
     /**
+     * Ids of the kind that the given connectors hold (a table that names its connector reads that connector only, never another that serves the same
+     * kind); empty {@code plugins}: every connector, as {@link #ids(String, LocalDate, int)}. A gateway with one source (a test lake) need not override it.
+     */
+    default List<EntityRef> ids(List<SourcePlugin> plugins, String kind, LocalDate date, int limit) {
+        return ids(kind, date, limit);
+    }
+
+    /** The documents of these entities from the given connectors only; empty {@code plugins}: from whichever holds each, as {@link #read(Collection, LocalDate)}. */
+    default Map<EntityRef, EntityDocument> read(List<SourcePlugin> plugins, Collection<EntityRef> refs, LocalDate date) {
+        return read(refs, date);
+    }
+
+    /**
      * Follows an entity's live updates: through the named connector when {@code connector} is not blank (a stream that keeps no state but ticks what a store
      * serves), else through whichever live source holds the entity (the router's choice, as a live view makes). {@link Subscription#NONE} when nothing pushes it.
      */

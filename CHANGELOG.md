@@ -117,6 +117,11 @@
   *reconnecting* and repainted. A channel's id now names the worker that holds it, and the others pass the call on to it over a loopback port of
   its own, with a key the launcher makes for its workers (`core/channel_relay.py`; a single-process console has neither)
   ([OPERATIONS.md section 3.4](docs/admin/OPERATIONS.md#34-first-start-by-hand)).
+- **A BI table that names its connector reads that connector only (2.4.0).** When the connector could not scan the table's columns (a column not in
+  its layout) the documents were listed and read through every connector of the kind, so a table over one lake could answer another source's
+  entities (the finance sample trades instead of the lake's own, for the latest date). The slow path now lists and reads the named connector only, for
+  the newest date it holds when the query names none ([DATASETS.md](docs/guides/DATASETS.md)). `ModelAcceptanceTest` promotes every column its model
+  reads, so its standing query sees the reload of its own lake again.
 - **The elements demo host shows live valuations (2.4.0).** Since 2.3.0 a trade is static and the market-risk valuations tick, so
   `tools/elements-demo` shows `TVAL-1000008` (and `TVAL-1000002` in its side column) from the trading, counterparty-risk and market-risk packs; its
   search box knows `TVAL`. The `<drishti-view>` suites (`test_embed_elements_browser.py`, `test_embed_controls_browser.py`) run against it: masks

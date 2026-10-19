@@ -64,7 +64,9 @@ import org.springframework.test.web.servlet.ResultActions;
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.acc-lake.plugin=file", "drishti.sources.connectors.acc-lake.kinds[0]=trade",
         "drishti.sources.connectors.acc-lake.settings.rescan-seconds=3600",
-        "drishti.sources.connectors.acc-lake.settings.layout.trade.columns=desk,book,currency,notional,mtm,tradeDate"})
+        // every column the model reads, its key tradeId too, is promoted: the table is scanned as columns from this lake (a column left out made the
+        // table read documents one by one, which went through every connector of the kind and read the finance pack's sample trades instead)
+        "drishti.sources.connectors.acc-lake.settings.layout.trade.columns=tradeId,desk,book,currency,notional,mtm,tradeDate"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -87,7 +89,7 @@ class ModelAcceptanceTest {
         for (int i = 0; i < 24; i++) {
             String desk = i % 3 == 0 ? "DESK-A" : i % 3 == 1 ? "DESK-B" : "DESK-C";
             lines.add("{\"id\":\"T-" + day.substring(8) + "-" + i + "\",\"tradeId\":\"T-" + day.substring(8) + "-" + i + "\",\"desk\":\"" + desk + "\",\"book\":\"BOOK-" + (i % 3 + 1)
-                    + "\",\"currency\":\"USD\",\"notional\":" + 1000.0 * (i + 1) * scale + ",\"mtm\":" + ((i % 5) - 2) * 100.0 + ",\"tradeDate\":\"" + day + "\"}");
+                    + "\",\"currency\":\"USD\",\"notional\":" + 1000.0 * (i + 1) * scale + ",\"mtm\":" + ((i % 5) - 2) * 100.0 + ",\"tradeDate\":\"" + day + "\",\"trader\":\"TR-" + (i % 4 + 1) + "\"}");
         }
         Path f = root.resolve("lake").resolve(day).resolve("trade.jsonl");
         Files.createDirectories(f.getParent());
@@ -218,6 +220,26 @@ class ModelAcceptanceTest {
                     measures:
                       Book notional: { expr: "sum(books.notional)" }
                       Book trades:   { expr: "sum(books.trades)" }
+                    """);
+            // a table the lake cannot scan as columns (the trader is not in the connector's layout): it is read document by document, from acc-lake only
+            Files.writeString(datasets.resolve("acc-docs.dataset.yaml"), """
+                    rachana: 2
+                    dataset: acc-docs
+                    version: 1.0.0
+                    source: { connector: acc-lake, kind: trade }
+                    grain: { keys: [id] }
+                    columns:
+                      desk:     { type: string }
+                      trader:   { type: string }
+                    """);
+            Files.writeString(models.resolve("acc-docs.model.yaml"), """
+                    rachana: 2
+                    model: acc-docs
+                    version: 1.0.0
+                    datasets:
+                      docs: { dataset: acc-docs, role: fact }
+                    measures:
+                      Trades: { expr: "count(docs)" }
                     """);
             // a cycle: a dataset read from a model that holds that dataset
             Files.writeString(datasets.resolve("loop-a.dataset.yaml"), """
@@ -777,5 +799,16 @@ class ModelAcceptanceTest {
         JsonNode head = ok(call("POST", "/api/v1/bi/models/wes-draft@1/preview-as", reader("wes"), Map.of("role", "desk-head", "query", q)));
         assertThat(head.path("rows")).as("a rule on user.desks with no attributes: no rows").isEmpty();
         call("POST", "/api/v1/bi/models/wes-draft@1/preview-as", reader("rita"), Map.of("role", "bi-risk", "query", q)).andExpect(status().isNotFound());
+    }
+
+    @Test @Order(16)
+    void aTableReadDocumentByDocumentReadsItsOwnConnectorOnly() throws Exception {
+        // the finance pack's sample trades are served by another connector of the same kind: none of them may reach a table that names acc-lake
+        JsonNode a = ok(call("POST", "/api/v1/bi/mq", reader("rita"), Map.of("mq", 1, "model", "acc-docs@1", "select",
+                Map.of("fields", List.of("docs.desk", "docs.trader"), "measures", List.of("Trades")))));       // no date: the newest the lake holds
+        Map<String, Integer> byDesk = new TreeMap<>();
+        a.path("rows").forEach(r -> byDesk.merge(r.get(0).asText(), r.get(2).asInt(), Integer::sum));
+        assertThat(byDesk).as(a.toString()).isEqualTo(Map.of("DESK-A", 8, "DESK-B", 8, "DESK-C", 8));
+        a.path("rows").forEach(r -> assertThat(r.get(1).asText()).startsWith("TR-"));
     }
 }

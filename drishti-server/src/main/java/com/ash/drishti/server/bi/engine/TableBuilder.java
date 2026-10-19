@@ -130,7 +130,9 @@ final class TableBuilder {
                         + ": reading documents one by one (slow for a large table; promote the columns in the connector's layout, or fewer columns)");
                 create(c, stage, cols, cols.stream().map(x -> numeric(x) ? ColumnBatch.Type.NUMBER : ColumnBatch.Type.TEXT).toList(), each);
                 java.util.concurrent.atomic.AtomicReference<LocalDate> seen = new java.util.concurrent.atomic.AtomicReference<>();
-                rows = records(duck, stage, t, cols, date, warnings, seen);
+                // a table that names its connector reads that connector's documents only (never another's of the same kind), for its newest date when none is asked
+                List<SourcePlugin> named = t.connector().isBlank() ? List.of() : plugins;
+                rows = records(duck, stage, t, named, cols, date == null && !named.isEmpty() ? newestDate(plugin, t.kind()) : date, warnings, seen);
                 if (resolved == null) {
                     resolved = seen.get();                        // the business date the source says the documents are for
                 }
@@ -263,9 +265,9 @@ final class TableBuilder {
         }
     }
 
-    private long records(DuckDBConnection duck, String stage, Dataset.Table t, List<Dataset.Column> cols, LocalDate date, List<String> warnings,
+    private long records(DuckDBConnection duck, String stage, Dataset.Table t, List<SourcePlugin> named, List<Dataset.Column> cols, LocalDate date, List<String> warnings,
             java.util.concurrent.atomic.AtomicReference<LocalDate> seen) throws java.sql.SQLException {
-        List<EntityRef> ids = sources.ids(t.kind(), date, props.recordReadMax() + 1);
+        List<EntityRef> ids = sources.ids(named, t.kind(), date, props.recordReadMax() + 1);
         if (ids.size() > props.recordReadMax()) {
             ids = ids.subList(0, props.recordReadMax());
             warnings.add("only the first " + props.recordReadMax() + " " + t.kind() + " entities were read (drishti.bi.query.record-read-max)");
@@ -277,7 +279,7 @@ final class TableBuilder {
         try (DuckDBAppender app = duck.createAppender(DuckDBConnection.DEFAULT_SCHEMA, stage)) {
             for (EntityRef ref : ids) {
                 if (at % READ_BATCH == 0) {                // documents a batch at a time: memory holds one batch, never the kind
-                    docs = sources.read(ids.subList(at, Math.min(ids.size(), at + READ_BATCH)), date);
+                    docs = sources.read(named, ids.subList(at, Math.min(ids.size(), at + READ_BATCH)), date);
                 }
                 at++;
                 EntityDocument d = docs.get(ref);
