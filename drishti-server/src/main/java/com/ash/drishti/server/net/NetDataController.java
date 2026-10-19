@@ -192,6 +192,12 @@ public class NetDataController {
         try {
             d = router.fetch(EntityRef.of(kind, entity), asOf).join();
         } catch (CompletionException e) {
+            if (e.getCause() instanceof DrishtiException de && de.errorCode() == ErrorCode.NET_PEER_FAILED
+                    && !(de instanceof com.ash.drishti.engine.source.SourceFailure)) {
+                // not held here, and this node thinks a holder is down: to the asking node that is "not here" (404); it asks its own
+                // holders and names the one that is down itself (a 502 here would name this node, which is up, as the one that failed)
+                throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no source here holds " + kind + "/" + entity);
+            }
             throw e.getCause() instanceof DrishtiException de ? de : new DrishtiException(ErrorCode.SOURCE_FAILED, String.valueOf(e.getMessage()));
         }
         Map<String, Object> prov = new LinkedHashMap<>();

@@ -99,6 +99,18 @@
   times the failover from the stop, not from the process's exit (a server with a live stream open waits up to 30 s in its graceful shutdown).
   NET.md sections 8 and 10.
 - **Docs reviewed for 2.4.0 and 2.5.0.** The changed flows re-checked deep (README, docs/README, BI_GUIDE, REPORTS, DATASETS, PYTHON_BI, EXPRESSIONS, USER_GUIDE, ARCHITECTURE, IMPLEMENTATION_PLAN, API_GUIDE, TROUBLESHOOTING, GETTING_STARTED, PERFORMANCE, OPERATIONS, tutorials 10, 12, 14 and 17), the rest by name: UPPER_SNAKE fields in the hand-written examples, the seven packs and the retired ones marked, boards as report pages (no board designer, no board kind), Drishti*net built, the release order 2.6.0 to 3.0, every `drishti.py` command in the docs checked against the CLI's own help; a troubleshooting section for BI Studio, themes, Transforms and the Python console; IMPLEMENTATION_PLAN lists 2.2.0 to 2.5.0. The help centre's cards say what 2.4.0 and 2.5.0 added, with short addresses (`/help/bi-studio`, `transforms`, `python-console`, `themes`, `drishti-net`) and F1 on the BI designers, Analyse, Transforms and the Python console opening their own section; Help → About gains BI Studio and Python and loses Perspective. The Design-and-Evidence deck (docs/publications) is current to 2.5.0, with slides for BI, BI Studio, Python data prep, Drishti*net and the 35.7-million-trade run.
+- **Drishti*net: a stopped node gives named answers, never "not found" or a page that looks whole** (found by the three-server soak). For about half
+  a second after a node stops, while it is suspect, a trade only it holds was answered `404 DRS-1001 no source holds` when another node that does not
+  hold it was asked: a read that every asked peer answers "not here" now names the holder that is down (`502 DRS-5052 ... cannot be reached now:
+  drishti-c (suspect)`), and a node asked by a peer for data it does not hold says "not here" (404) instead of a 502 that named itself. A grouped page
+  (a counterparty's trades) gathered with a node down was partial in its document only; the view now carries `provenance.partial` and
+  `provenance.missing` and the page shows a **Partial** banner naming the server, for every reader. The console no longer moves off a server
+  that answers 502/503 about another node (`DRS-5050` to `DRS-5059`): with one node down, every view of its data made the console flap between
+  the healthy servers. Tests: `SourceRouterFallbackTest`, `NetForwardTest`, `NetGroupedPagesTest`, `test_cluster_failover.py`,
+  `test_view_macros.py`. NET.md sections 7, 8 and 12, USER_GUIDE.
+- **Drishti*net soak on real processes** (`tools/bench/net_soak.py`): three servers from one seed (two reading one lake, one its own), a console
+  given the first, `tools/bench/users.py` load, a shard holder killed and restarted, then the console's own server, every answer compared with a
+  single server holding all the data. Results in NET.md section 13.
 
 ## 2.4.0 — BI Studio, report schema v2 and boards as a report layout, Python data prep, the browser Python console, query by form at scale (2026-10-19)
 

@@ -14,7 +14,7 @@
 
 """The hands-on tutorials (docs/tutorials/): every picture exists, every relative link and anchor resolves, and each tutorial has the parts a new reader needs.
 
-The pictures themselves are made by tools/docs/screenshots.py (guides t01 to t18); test_guide_images.py already fails for a picture no document shows or
+The pictures themselves are made by tools/docs/screenshots.py (guides t01 to t19); test_guide_images.py already fails for a picture no document shows or
 one the script cannot make. This file checks the tutorials as documents."""
 import re
 import subprocess
@@ -45,11 +45,11 @@ def anchors(path: Path) -> set:
     return {slug(h) for h in HEADING.findall(text)}
 
 
-def test_there_are_eighteen_written_tutorials_and_the_index_names_every_one():
-    assert [p.name[:2] for p in WRITTEN] == [f"{i:02d}" for i in range(1, 19)]
+def test_there_are_nineteen_written_tutorials_and_the_index_names_every_one():
+    assert [p.name[:2] for p in WRITTEN] == [f"{i:02d}" for i in range(1, 20)]
     index = (TUTORIALS / "README.md").read_text()
     rows = re.findall(r"^\|\s*(\d{1,2})\s*\|", index, re.M)
-    assert [int(r) for r in rows] == list(range(1, 19))
+    assert [int(r) for r in rows] == list(range(1, 20))
     assert "coming" not in index.split("## What you need once")[0].split("## The tutorials")[1]
     for p in WRITTEN:
         assert p.name in index, p.name
@@ -109,16 +109,17 @@ def test_a_tutorial_has_the_parts_a_new_reader_needs(doc):
 @pytest.mark.parametrize("doc", WRITTEN, ids=lambda p: p.name)
 def test_no_tutorial_leaks_the_authors_scratch_folders_or_a_token(doc):
     text = doc.read_text()
-    assert "/tmp/" not in text and "/home/" not in text and "claude" not in text.lower(), doc.name
+    # an absolute scratch path; a relative one the reader's own data folder holds (data/tmp/server) is fine
+    assert not re.search(r"(?<![\w.~-])/tmp/", text) and "/home/" not in text and "claude" not in text.lower(), doc.name
     assert not re.search(r"drk_[A-Za-z0-9_-]{20,}", text), doc.name
 
 
 def test_the_pictures_of_the_later_tutorials_are_made_by_the_script_and_shown_at_a_phone_width_where_it_matters():
-    """Tutorials 10 to 18: every picture is listed by the picture script (guides t10 to t18), and the ones about reports, embedding and governance show a phone."""
+    """Tutorials 10 to 19: every picture is listed by the picture script (guides t10 to t19), and the ones about reports, embedding and governance show a phone."""
     listed = []
-    for guide in (f"t{n}" for n in range(10, 19)):
+    for guide in (f"t{n}" for n in range(10, 20)):
         listed += subprocess.run([sys.executable, str(ROOT / "tools" / "docs" / "screenshots.py"), "--list", "--guide", guide], capture_output=True, text=True, cwd=ROOT).stdout.split()
-    for doc in sorted(TUTORIALS.glob("1[0-8]-*.md")):
+    for doc in sorted(TUTORIALS.glob("1[0-9]-*.md")):
         for rel in IMAGE.findall(doc.read_text()):
             if rel.startswith("img/t1"):
                 assert Path(rel).name in listed, f"{doc.name}: {rel} is not made by tools/docs/screenshots.py"

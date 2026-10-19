@@ -57,6 +57,12 @@
 <p class="asof-banner" role="status"><i class="bi bi-calendar2-week" aria-hidden="true"></i>
   Latest data on or before {{ (business_date or {}).selected }} is from <b class="mono">{{ vm.provenance.businessDate }}</b>.</p>
 {% endif %}
+{% if vm.provenance.partial %}
+{# a page gathered from several servers (Drishti*net) with one that did not answer: never a silently smaller page #}
+<p class="asof-banner partial-banner" role="alert" data-partial><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+  <b>Partial</b>: not every server that holds this page's data answered ({{ vm.provenance.missing | join('; ') }}). The totals and rows
+  leave out what it holds; the page is whole again when it is back.</p>
+{% endif %}
 {% if vm.provenance.stale %}
 <p class="asof-banner stale-banner" role="alert"><i class="bi bi-hourglass-split" aria-hidden="true"></i>
   <b>{{ vm.provenance.source }}</b> is behind: its last new data was <span class="mono" data-age="{{ vm.provenance.updatedAt }}">{{ vm.provenance.updatedAt }}</span>,

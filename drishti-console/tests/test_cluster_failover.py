@@ -56,7 +56,9 @@ class Stand:
         if mode == "hang":
             raise httpx.ReadTimeout("timed out", request=request)
         if mode == "503":
-            return httpx.Response(503, json={"code": "DRS-5054", "detail": "drained"})
+            return httpx.Response(503, json={"code": "DRS-5003", "detail": "service unavailable"})
+        if mode == "peer-down":                       # the server answers: the node that holds the data is down
+            return httpx.Response(502, json={"code": "DRS-5052", "detail": "the node drishti-c that holds trade failed reading trade/MX-1"})
         if request.url.path == "/api/v1/net/members":
             return httpx.Response(200, json={"running": True, "members": self.members})
         if request.url.path.endswith("/stream"):
@@ -106,6 +108,18 @@ def test_a_server_that_hangs_or_answers_503_is_set_aside_too(tmp_path):
     stand.mode[A] = "503"
     assert run(c._get("/search", q="TRD"))["served_by"] == B
     assert p.current() == B
+
+
+def test_a_502_about_another_node_is_the_servers_answer_not_its_failure(tmp_path):
+    stand, p = Stand(), pool(tmp_path, f"{A},{B}")
+    c = client(stand, p)
+    stand.mode[A] = "peer-down"
+    for _ in range(4):                                # every MX trade while the node holding them is down: the console stays on A
+        with pytest.raises(BackendError) as e:
+            run(c._get("/views/trade/MX-1"))
+        assert e.value.status == 502 and "drishti-c" in e.value.detail
+    assert p.entries[A].healthy and p.current() == A and not p.snapshot()["failovers"]
+    assert {b for b, _, _ in stand.calls} == {A}      # never retried elsewhere: another server would say the same
 
 
 def test_sessions_keep_their_server_and_a_recovered_one_is_used_only_by_new_sessions(tmp_path, monkeypatch):

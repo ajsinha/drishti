@@ -197,5 +197,12 @@ class NetForwardTest {
         // B renders trades still (it has the pack), so C forwards there, and B says the data is out of reach
         assertThat(onC.statusCode()).isEqualTo(502);
         assertThat(onC.body()).contains("DRS-5052");
+        // asked by a peer for the data, B says "not here" (404), not "failed" (502): the asking node names the holder that is down itself
+        var c = cluster.node("c").net();
+        String bid = cluster.node("b").net().nodeId();
+        String obo = OnBehalfOf.mint(c.key(), "rita", List.of("risk"), null, c.nodeId(), "r-fetch", bid);
+        PeerHttp.Answer fetched = c.http().send(cluster.node("b").url(), "GET", "/api/v1/net/fetch/trade/~?id=IRS-48213",
+                Map.of(NetHeaders.ON_BEHALF_OF, obo), null, Duration.ofSeconds(10));
+        assertThat(fetched.status()).as(fetched.text()).isEqualTo(404);
     }
 }

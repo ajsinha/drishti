@@ -263,7 +263,12 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             }
         }
         // a peer that failed may hold it: "not found" would be wrong, so its failure is the answer
-        throw failure != null ? failure : first;
+        if (failure != null) {
+            throw failure;
+        }
+        // every peer asked said "not here", but a node that holds the kind is down: "not found" would be wrong too, so say which
+        Optional<DrishtiException> why = fb.unreachable(ref);
+        throw why.isPresent() ? why.get() : first;
     }
 
     /**

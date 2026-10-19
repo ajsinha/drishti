@@ -378,8 +378,9 @@ all its members of the group (a group of up to the connector's `max-members`, 1,
 holding every member would build, and a member two nodes hold counts once. In a larger group each node's totals are combined (counts and sums
 added, extremes compared, distinct values united, an average weighted by member count) and the members listed are the first `max-members` by id;
 a member two nodes hold is then counted on each, so keep overlapping systems on one node or in a shared lake. A node that holds the kind but did
-not answer or is down makes the page partial: the page's document carries `partial: true` and `missing` naming the node, never a smaller page
-that looks whole. A page with members on one node only is that node's page, unchanged.
+not answer or is down makes the page partial: the page's document carries `partial: true` and `missing` naming the node, and the view says so
+to every reader (`provenance.partial` and `provenance.missing` in the view's answer; a **Partial** banner on the page naming the server), never a
+smaller page that looks whole. A page with members on one node only is that node's page, unchanged.
 
 **Roles.** A kind whose pack is here and that the caller's roles may not open is refused here before any call (`403 DRS-5002`). A kind whose pack is
 not here is decided by the node that renders it, which knows the pack's roles.
@@ -423,7 +424,8 @@ backend:
 - **One server per session.** A session (a browser's sign-in) uses the first healthy server, the configured ones first, then the discovered ones,
   nearest first; it stays on it while it answers, so its caches and live views stay put. Each server is checked every `check_every`.
 - **Falling over.** A server that refuses connections, times out or answers 502/503 `fail_after` times in a row is set aside and the session moves to
-  the next. A **read** that failed on the way is tried once on another server, so the person sees the page, not an error; a **write** (a layout, a
+  the next. A 502 or 503 that is the server's own answer about another node (a problem with a code from `DRS-5050` to `DRS-5059`, such as
+  `DRS-5052` while the node holding a trade is down) is not a failure of the server: the console stays, and the page shows the answer. A **read** that failed on the way is tried once on another server, so the person sees the page, not an error; a **write** (a layout, a
   search, a pivot) never is: the page says it did not save, and saving again works on the new server.
 - **Nothing to sign in again.** Every node accepts the same tokens (one token secret, or one OIDC issuer), so the session carries over. An open
   page's live view carries on with no reload: when its stream from the old server breaks, or ends because that server stopped, the console opens it
@@ -509,6 +511,8 @@ declaring a node that paused (a long garbage collection) dead and having it refu
 | `404 DRS-5050 Drishti*net is off on this node` | The node's `node.yaml` | `enabled: true` (and the node is not left: Rejoin) |
 | A page says `502 DRS-5052 ... cannot be reached now: n-a (left)` | Admin → Net → Members: the node that holds the data | Start it (or Rejoin it); the page works again by itself |
 | The console moves between servers often | Admin → Health, *Console servers*, and the console's log (`console moved from ... to ...`) | The server it leaves: its health and latency; raise `backend.fail_after` on a flaky network |
+| Links on a page say *pending* where one server says *not found* | Linked entities are asked of the peers within `drishti.graph.link-budget` (40 ms); a peer's answer takes longer | Raise `link-budget` on the nodes (a page waits that long at most), or keep the linked kinds on every node |
+| A search's *matched* and *scanned* count twice what two nodes share | Admin → Net → Capability map: a node holding the kind through a source with no table (the `file` plugin) is a shard, so two readers of one lake are both asked | Switch off a plugin that holds nothing of the kind on those nodes; the rows are never doubled, only the counts |
 | A view is answered by an older pack | Admin → Net → Capability map: which node has the newest, and whether it is routable | The newest is served only from nodes the caller may reach and that are not drained |
 
 More in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#drishtinet).

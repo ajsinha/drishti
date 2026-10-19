@@ -130,8 +130,8 @@ def test_stopping_a_moves_the_console_to_another_server_and_the_page_live_view_a
     print(f"net: the console moved off a stopped server in {moved:.1f} s; the open page kept ticking without a reload")
     page.reload()
     assert "IRS-48213" in page.content()
-    status, body = get(CONSOLE_URL, "/api/search?q=" + urllib.request.quote("TRD limit 200"))
-    assert status in (200, 404) or "CLY-00001" in body
+    status, body = get(CONSOLE_URL, "/s?q=" + urllib.request.quote("TRD where BOOKING_SYSTEM = 'CALYPSO' limit 200"))
+    assert status == 200 and "CLY-00001" in body and "MX-00003" not in body, body[-600:]           # the next search answers, from b's data
     snap = json.loads(get(CONSOLE_URL, "/admin/net/api/members")[1]).get("console", {})
     assert snap.get("active") != url("a")
     page.close()

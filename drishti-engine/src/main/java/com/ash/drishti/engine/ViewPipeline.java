@@ -469,6 +469,14 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
                         fresh.lastUpdate() == null ? null : fresh.lastUpdate().toString(),
                         fresh.staleAfter() == null ? null : fresh.staleAfter().toString(), fresh.stale() && current,
                         s.version() > 0 ? s.name() : null, hidden.count(), hidden.panels()), timings).withControls(resolved.views(), selects(s));
+        if (doc.data().get("partial").asBoolean()) {               // some of what makes the document did not answer: the page says so
+            List<String> what = new ArrayList<>();
+            DataNode m = doc.data().get("missing");
+            for (int i = 0; i < m.size(); i++) {
+                what.add(m.get(i).asText());
+            }
+            view = view.withProvenance(view.provenance().withPartial(what));
+        }
         return new Built(view, doc, seen, sutra, layout, current,
                 new LinkCounts(linked.size(), pending.size(), denied.size(), graph.linkBudget().toMillis()));
     }

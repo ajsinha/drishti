@@ -85,6 +85,11 @@ def test_provenance_banners_come_from_the_macro_and_the_embed_has_no_console_lin
     dated = {"ref": {"id": "T-1"}, "provenance": {"source": "ledger"}}
     assert "Back to live" in str(parts.provenance_banners(dated, "2026-10-01", {"selected": "2026-10-01"}, False, "/v/x"))
     assert "Back to live" not in str(parts.provenance_banners(dated, "2026-10-01", {"selected": "2026-10-01"}, True))
+    partial = {"ref": {"id": "BOOK-X"}, "provenance": {"source": "trade-pages", "partial": True,
+                                                       "missing": ["node drishti-c (dead): not asked: it cannot be reached now"]}}
+    html = str(parts.provenance_banners(partial, "live", {}, True))          # Drishti*net: a grouped page with a node down says so
+    assert "data-partial" in html and "<b>Partial</b>" in html and "drishti-c (dead)" in html
+    assert "data-partial" not in str(parts.provenance_banners(vm, "live", {}, True))
 
 
 def test_how_this_view_was_built_links_its_sutra_to_the_designer_and_its_source_to_the_connector():

@@ -58,6 +58,11 @@ public record ViewModel(
         this(ref, mnemonic, title, strip, panels, keys, provenance, timings, List.of(), List.of());
     }
 
+    /** The same view with another provenance. */
+    public ViewModel withProvenance(Provenance p) {
+        return new ViewModel(ref, mnemonic, title, strip, panels, keys, p, timings, controls, selects);
+    }
+
     /** The same view with its controls and selects. */
     public ViewModel withControls(List<ControlView> controls, List<SelectView> selects) {
         return new ViewModel(ref, mnemonic, title, strip, panels, keys, provenance, timings, controls, selects);
@@ -169,15 +174,32 @@ public record ViewModel(
      * {@code maskedPanels}: the ids of the panels that hold some, so an embedding page can say "some values are hidden".
      */
     public record Provenance(String layout, String fingerprint, String source, long generation, String fetchedAt, boolean live,
-            String businessDate, String updatedAt, String staleAfter, boolean stale, String sutra, int masked, List<String> maskedPanels) {
+            String businessDate, String updatedAt, String staleAfter, boolean stale, String sutra, int masked, List<String> maskedPanels,
+            @JsonInclude(JsonInclude.Include.NON_DEFAULT) boolean partial, @JsonInclude(JsonInclude.Include.NON_EMPTY) List<String> missing) {
 
         public Provenance {
             maskedPanels = maskedPanels == null ? List.of() : List.copyOf(maskedPanels);
+            missing = missing == null ? List.of() : List.copyOf(missing);
+        }
+
+        public Provenance(String layout, String fingerprint, String source, long generation, String fetchedAt, boolean live,
+                String businessDate, String updatedAt, String staleAfter, boolean stale, String sutra, int masked, List<String> maskedPanels) {
+            this(layout, fingerprint, source, generation, fetchedAt, live, businessDate, updatedAt, staleAfter, stale, sutra, masked, maskedPanels,
+                    false, List.of());
         }
 
         public Provenance(String layout, String fingerprint, String source, long generation, String fetchedAt, boolean live,
                 String businessDate, String updatedAt, String staleAfter, boolean stale, String sutra) {
             this(layout, fingerprint, source, generation, fetchedAt, live, businessDate, updatedAt, staleAfter, stale, sutra, 0, List.of());
+        }
+
+        /**
+         * The same provenance marked partial: the document says some of what makes it did not answer (a grouped page gathered across
+         * Drishti*net with a node down: {@code partial: true} and {@code missing}, one line per node), so the page says so.
+         */
+        public Provenance withPartial(List<String> what) {
+            return new Provenance(layout, fingerprint, source, generation, fetchedAt, live, businessDate, updatedAt, staleAfter, stale, sutra, masked,
+                    maskedPanels, true, what);
         }
 
         public Provenance(String layout, String fingerprint, String source, long generation, String fetchedAt, boolean live, String businessDate) {
@@ -186,7 +208,8 @@ public record ViewModel(
 
         /** The same provenance with the mask counts of a built view. */
         public Provenance withMasked(int count, List<String> panels) {
-            return new Provenance(layout, fingerprint, source, generation, fetchedAt, live, businessDate, updatedAt, staleAfter, stale, sutra, count, panels);
+            return new Provenance(layout, fingerprint, source, generation, fetchedAt, live, businessDate, updatedAt, staleAfter, stale, sutra, count, panels,
+                    partial, missing);
         }
     }
 

@@ -145,4 +145,22 @@ class SourceRouterFallbackTest {
         });
         assertThatThrownBy(() -> r.fetch(EntityRef.of("trade", "T-1"), AsOf.LATEST).join()).cause().hasMessageContaining("n-a (left)");
     }
+
+    @Test
+    void peersThatDoNotHoldItWhileAHolderIsDownSayWhichIsDownNotNotFound() {
+        SourceRouter r = router(new Src("local", Set.of(), false, asked));
+        Src replicaLike = new Src("net:a", Set.of(), false, asked);       // asked (its sources name no table), holds none of these
+        r.fallback(new SourceRouter.Fallback() {
+            public List<SourcePlugin> peers(EntityRef ref, AsOf asOf) {
+                return List.of(replicaLike);                                 // the holder, suspect, is not asked
+            }
+
+            public Optional<DrishtiException> unreachable(EntityRef ref) {
+                return Optional.of(new DrishtiException(ErrorCode.NET_PEER_FAILED, "the nodes that hold trade cannot be reached now: n-c (suspect)"));
+            }
+        });
+        assertThatThrownBy(() -> r.fetch(EntityRef.of("trade", "MX-1"), AsOf.LATEST).join()).cause().hasMessageContaining("n-c (suspect)")
+                .satisfies(e -> assertThat(((DrishtiException) e).errorCode()).isEqualTo(ErrorCode.NET_PEER_FAILED));
+        assertThat(asked).containsExactly("local", "net:a");
+    }
 }

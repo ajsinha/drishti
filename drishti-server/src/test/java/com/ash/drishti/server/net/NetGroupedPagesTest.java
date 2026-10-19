@@ -236,6 +236,12 @@ class NetGroupedPagesTest {
         assertThat(page.path("partial").asBoolean()).as(page.toString()).isTrue();
         assertThat(page.path("missing").toString()).contains(cid);
         assertThat(page.path("memberCount").asLong()).isEqualTo(4 + 3 + 1);
+        // and the view says so to everyone, not only to administrators: never a silently smaller page
+        var view = cluster.call("GET", cluster.node("b").url() + "/api/v1/views/book-pnl/BOOK-X", null, "Authorization", bearer("rita", "risk"));
+        assertThat(view.statusCode()).as(view.body()).isEqualTo(200);
+        JsonNode pv = JSON.readTree(view.body()).path("provenance");
+        assertThat(pv.path("partial").asBoolean()).as(pv.toString()).isTrue();
+        assertThat(pv.path("missing").toString()).contains(cid);
     }
 
     @Test

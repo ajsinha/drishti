@@ -57,6 +57,15 @@ def _error(r: httpx.Response, text: str) -> "BackendError":
     return err
 
 
+def peer_problem(status: int, content_type: str, text: str) -> bool:
+    """A 502/503 that is the server's own answer about another node of its cluster (``DRS-5050`` to ``DRS-5059``: a peer that holds the data
+    is down, a node the role may not reach): the server answered, so it is not counted against it and the console does not move away from it
+    (DRISHTI_NET.md 11.1). A 502/503 from a proxy, or a server's own failure, still counts."""
+    if status not in (502, 503) or "json" not in (content_type or ""):
+        return False
+    return bool(re.search(r'"code"\s*:\s*"DRS-505\d"', text or ""))
+
+
 class BackendError(Exception):
     """The server answered with a problem (RFC 7807) or could not be reached."""
 
@@ -143,7 +152,7 @@ class BackendClient:
             why = ""
             try:
                 r = await self._client.request(method, base + "/api/v1" + path, headers=headers, **kw)
-                if r.status_code not in (502, 503):
+                if r.status_code not in (502, 503) or peer_problem(r.status_code, r.headers.get("content-type", ""), r.text):
                     self._servers.answered(base, (_time.perf_counter() - t0) * 1000)
                     return r
                 why = f"HTTP {r.status_code}"
@@ -628,7 +637,8 @@ class BackendClient:
                 if opened is not None:
                     opened.append(r)
                 if r.status_code >= 400:
-                    if self._servers is not None and r.status_code in (502, 503):
+                    text = (await r.aread()).decode("utf-8", "replace") if r.status_code in (502, 503) else ""
+                    if self._servers is not None and r.status_code in (502, 503) and not peer_problem(r.status_code, r.headers.get("content-type", ""), text):
                         self._servers.failed(base, f"HTTP {r.status_code}")
                     raise BackendError(r.status_code, "DRS-5003", "stream refused")
                 event, data = None, []
