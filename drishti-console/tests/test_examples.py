@@ -79,7 +79,7 @@ def test_names_are_a_whitelist_of_files_present(tmp_path):
 
 def test_example_route_serves_names_and_nothing_else(client):
     ok = client.get("/studio/example/pivot-row-groups")
-    assert ok.status_code == 200 and ok.json()["kind"] == "portfolio" and "by: [desk, book, family]" in ok.json()["yaml"]
+    assert ok.status_code == 200 and ok.json()["kind"] == "portfolio" and "by: [DESK, BOOK, FAMILY]" in ok.json()["yaml"]
     for bad in ("..%2FREADME", "..%2F..%2F..%2Fetc%2Fpasswd", "%2e%2e%2fREADME", "tree-table.json", "nope", "TREE-TABLE"):
         assert client.get(f"/studio/example/{bad}").status_code == 404, bad
     assert client.get("/studio/example/../../etc/passwd").status_code == 404
@@ -122,7 +122,7 @@ def test_the_help_centre_lists_every_example_with_note_yaml_json_and_a_studio_li
     for name in Examples(EXAMPLES).names():
         assert f'id="{name}"' in page.text and f'data-example-copy="{name}"' in page.text, name
         assert f"{name}.sutra.yaml" in page.text and f"{name}.json" in page.text, name
-    assert "<details>" in page.text and "children:" in page.text and "&#34;exposure&#34;" in page.text
+    assert "<details>" in page.text and "children:" in page.text and "&#34;EXPOSURE&#34;" in page.text
     assert "data-unavailable" not in page.text, "dead link in the examples page"
     assert 'href="/help/panels"' in page.text
     assert "/help/examples" in client.get("/help").text
