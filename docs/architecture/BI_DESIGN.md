@@ -1196,6 +1196,11 @@ path, masks twice, scatter-gather against a single-node answer, browser tests of
 three servers on scratch ports (shared and separate lakes, overlapping packs), one killed and restarted under
 `tools/bench/users.py` load.
 
+**Carried from 2.4.0 into the end of 2.5.0** (product owner, 2026-10-19, to release 2.4.0 sooner): a full rehearsal of every
+browser suite (the live and embed suites and a whole-console run over the console's channel relay), the pictures of
+tutorial 14 (25–29, on a demo lake rebuilt with `NOTIONAL`) and of tutorial 16 (11, the React sample after `fetch-vendor.sh`),
+and the two `test_tree_rows.py` browser tests that failed once in a full console run (they pass alone).
+
 **Accepted when:** (1) three servers started from one seed act as one to a console connected to any of them; (2) a
 stopped server makes answers partial and named, never wrong, and a restarted one rejoins from its file; (3) a masked field
 stays masked whichever node holds the data, and a role never reaches a node outside its list; (4) the soak runs with 0
