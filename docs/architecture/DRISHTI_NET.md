@@ -15,7 +15,8 @@
 -->
 # Drishti*net: many servers, one Drishti
 
-Status: **design, not built.** Planned for **2.5.0** (wave D, decided by the product owner on 2026-10-18; see
+Status: **design, not built.** Planned for **2.5.0**, a release of its own built straight after 2.4.0 and then fully tested (wave N, decided by the
+product owner on 2026-10-18; see
 [BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)). Off by default when built. Names marked **(new)** do not exist
 in the code today; every other class, file or setting named here does.
 

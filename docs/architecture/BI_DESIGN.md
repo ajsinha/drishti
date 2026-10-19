@@ -36,8 +36,9 @@ Contents: [1](#1-principles-and-non-goals) principles · [2](#2-conceptual-model
 W1 vs design and the waves A, B, C · [13](#13-decisions-for-the-product-owner) decisions
 
 **Wave labels.** The build is three waves, each a release (section 12): **A** = 2.2.0 *Foundation and languages*,
-**B** = 2.3.0 *Calculation, live and scale*, **C** = 2.4.0 *Authoring and analysis*; then **D** = 2.5.0 *Sharing, AI and
-integration* and **E** = 2.6.0 *QA findings and production readiness* (section 12.2, as agreed on 2026-10-17). W1 is the
+**B** = 2.3.0 *Calculation, live and scale*, **C** = 2.4.0 *Authoring and analysis*; then **N** = 2.5.0 *Drishti*net*, **D** = 2.6.0
+*Sharing, AI and integration* and **E** = 2.7.0 *QA findings and production readiness* (section 12.2, as agreed on
+2026-10-17 and re-ordered on 2026-10-18). W1 is the
 already-built first wave of 2.2.0. A component marked (A), (B) or (C) is delivered in that wave; one marked (C) in the
 sections below that is about AI, integration or governance now arrives in D or E.
 
@@ -1138,7 +1139,7 @@ D and E; Python data prep and the browser Python console moved into C).
    library (as-of joins for prices and FX, unpivot, type fixes), profiling of a Transform's input and output, a step-by-step
    run (each step's rows and profile) for the editor. **Built (2.4.0):** a pack kind through a connector as an input, as the
    reader (`POST /api/v1/bi/python/input`); the fork-server started with the console; 21 snippets each with an example run in
-   pandas and in the sandbox; the profile of inputs, every step and the output; the step-by-step run. Not built: P4 (wave D),
+   pandas and in the sandbox; the profile of inputs, every step and the output; the step-by-step run. Not built: P4 (wave D, 2.6.0),
    precompute on refresh (rest of P6), P7 to P10 ([PYTHON_BI.md section 17](../guides/PYTHON_BI.md#17-data-prep-the-transform-editor-240)).
 3. **The browser Python console's server side:** masked extracts of a model for the browser, promotion of a result to run
    on the console backend. **Built (2.4.0):** `POST /pyconsole/extract` (the reader's masked rows, `bi.pyconsole.max_rows`) and
@@ -1161,7 +1162,32 @@ Transform reading a connector is built step by step with a preview at each step 
 console analyses a masked extract and a result is promoted; (4) the docs pass is complete; (5) QA findings fixed before
 the drill.
 
-#### Wave D — Sharing, AI and integration → 2.5.0
+#### Wave N — Drishti*net → 2.5.0
+
+Decided by the product owner on 2026-10-18: Drishti*net is built straight after 2.4.0, as a release of its own, then
+fully tested; what was planned for 2.5.0 moves to 2.6.0 (wave D) and wave E to 2.7.0.
+
+**Server lane:** N1–N7 of [DRISHTI_NET.md §16](DRISHTI_NET.md#16-build-plan): membership by gossip over HTTP and
+`peers.json`; capability digests; security (cluster key or mutual TLS, key rollover, on-behalf-of tokens, masks on both
+nodes, nodes per role); view and data forwarding with the newest pack served and peer-only packs; scatter-gather search,
+type-ahead and grouped pages; live relay and BI routing; user state across nodes and console failover. Configured like
+connectors, in `config/net/` (section 14 there).
+
+**Console lane:** Admin → Net (members, capability map, routing with *Explain*, access, security, files;
+[DRISHTI_NET.md §13](DRISHTI_NET.md#13-admin-management-and-observability)); `backend.urls` failover; docs and a tutorial
+(UI, CLI and YAML).
+
+**Full testing:** in-process clusters with a fake clock (joins, leaves, crashes, a split and its healing), every routing
+path, masks twice, scatter-gather against a single-node answer, browser tests of Admin → Net, and a soak on real processes:
+three servers on scratch ports (shared and separate lakes, overlapping packs), one killed and restarted under
+`tools/bench/users.py` load.
+
+**Accepted when:** (1) three servers started from one seed act as one to a console connected to any of them; (2) a
+stopped server makes answers partial and named, never wrong, and a restarted one rejoins from its file; (3) a masked field
+stays masked whichever node holds the data, and a role never reaches a node outside its list; (4) the soak runs with 0
+wrong answers; (5) QA findings fixed before the drill.
+
+#### Wave D — Sharing, AI and integration → 2.6.0
 
 **Server lane:**
 
@@ -1175,9 +1201,6 @@ the drill.
 5. **Integration:** PostgreSQL-wire read-only endpoint (decision 5); Excel feed; embed tokens bound to envelopes; SDK events.
 6. **GenUI:** screens an AI agent composes from governed Sutra fragments, bound to live data as the viewer, streamed to
    other applications through `<drishti-genui>` ([GENUI.md](GENUI.md)).
-7. **Drishti*net:** several servers that find each other by gossip over HTTP, publish the packs and kinds they serve and
-   answer any client as one (forwarding, scatter-gather search, one hop, masks on both nodes), configured in its own folder
-   of files like connectors ([DRISHTI_NET.md](DRISHTI_NET.md)).
 
 **Console lane:**
 
@@ -1189,20 +1212,17 @@ the drill.
 4. **Feeds, sending and embedding UI:** per-user connection details for SQL tools, the Excel feed wizard, send dialogs,
    embed configuration, the GenUI element and its management (Admin → GenUI, Build → Fragments, Build → Compose;
    [GENUI.md §11.8](GENUI.md#118-managing-genui-in-the-console-new)).
-5. **Admin → Net:** members, capability map, routing with *Explain*, access, security and the `config/net/` files
-   ([DRISHTI_NET.md §13](DRISHTI_NET.md#13-admin-management-and-observability)).
-6. **Docs and tutorials** (UI, CLI and YAML).
+5. **Docs and tutorials** (UI, CLI and YAML).
 
 **Accepted when:** (1) golden questions pass on the mock and one real provider, and an AI answer uses only measures the
 user may see; (2) a monthly statement bursts to ten recipients, each masked, page-exact in PDF; (3) psql and Excel answers
 equal the MQ answers per user, masked; (4) an agent composes a GenUI screen that streams into a host page with live ticks,
-masked for its viewer; (5) three servers started from one seed act as one to a console connected to any of them, and a
-stopped server makes answers partial and named, never wrong; (6) QA findings fixed before the drill.
+masked for its viewer; (5) QA findings fixed before the drill.
 
-**After D: the product owner's real-life QA on 2.5.0.** An isolated, full, real-life QA (real users' tasks on real-shaped
+**After D: the product owner's real-life QA on 2.6.0.** An isolated, full, real-life QA (real users' tasks on real-shaped
 data, outside the builders' own tests). Its findings are triaged first and fixed in wave E before anything else in it.
 
-#### Wave E — QA findings and production readiness → 2.6.0
+#### Wave E — QA findings and production readiness → 2.7.0
 
 1. **Real-life QA findings** first (server and console).
 2. **Governance:** environment parameter rules in bundles and deployment between environments; two-way git sync

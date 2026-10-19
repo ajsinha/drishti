@@ -15,7 +15,7 @@
 -->
 # AI management: one console for every AI setting, use and review
 
-Status: **design, not built.** Planned for **2.5.0** (wave D, with the AI features it manages; see
+Status: **design, not built.** Planned for **2.6.0** (wave D, with the AI features it manages; see
 [BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)). Asked by the product owner on 2026-10-18: "for AI in general we
 will need an elaborate UI to manage". Names marked **(new)** do not exist today.
 
@@ -82,7 +82,7 @@ prompts only if text is kept), and their drafts waiting for review.
 `POST /api/v1/ai/drafts/{id}/approve|reject|retry` (authors, approvers); `GET /api/v1/me/ai` (signed in). Every write is
 audited, versioned in the overlay and refused when the value comes from the environment.
 
-## 7. Build plan (2.5.0, console lane with its server endpoints)
+## 7. Build plan (2.6.0, console lane with its server endpoints)
 
 | Step | Scope | Accepted when |
 |---|---|---|
