@@ -334,7 +334,12 @@ public final class ModelCatalog {
      * bound to the caller. Like a generated dataset's, its security is the kind's: entitlements, the caller's row rules and masks.
      */
     MqService.Bound bindDataset(Principal p, DatasetDef d) {
-        return bound(p, implicitOf(ResolvedDataset.of(d)));
+        ModelView v = implicitOf(ResolvedDataset.of(d)).view();
+        String salt = d.id() + "|" + d.source().connector() + "|" + d.source().each();
+        MqService.Bound b = bound(p, new Found(new ModelView(v.id(), v.key(), hash(v.hash() + "|" + salt), v.def(), v.flat(), v.datasets(), v.unbuilt(), v.compat()), null));
+        // no generation: its answers are never put in (or served from) the result cache, whose plan key does not name the connector, so the generated
+        // dataset's answer through the routed connectors and this one through another can never be mistaken for each other (the Transform keeps its own)
+        return new MqService.Bound(b.view(), b.runner(), b.context(), b.security(), null, b.envelope(), b.generationAt());
     }
 
     MqService.Bound bound(Principal p, Found f) {

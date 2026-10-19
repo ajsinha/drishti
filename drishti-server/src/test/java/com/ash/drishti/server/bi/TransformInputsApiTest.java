@@ -204,6 +204,8 @@ class TransformInputsApiTest {
 
     @Test @Order(1)
     void aKindInputIsTheReadersRowsThroughTheNamedConnectorNamedWithoutTheAlias() throws Exception {
+        // the kind as the pack routes it first: its answer must not be served again for the same kind through another connector
+        call("POST", "/api/v1/bi/python/input", as("rita", "bi-risk"), Map.of("input", Map.of("kind", "trade", "fields", List.of("desk", "notional")), "asOf", DAY)).andReturn();
         Map<String, Object> in = Map.of("kind", "trade", "connector", "tin-lake", "fields", List.of("desk", "notional"));
         JsonNode rita = ok(call("POST", "/api/v1/bi/python/input", as("rita", "bi-risk"), Map.of("input", in, "asOf", DAY)));
         assertThat(rita.path("kind").asBoolean()).isTrue();

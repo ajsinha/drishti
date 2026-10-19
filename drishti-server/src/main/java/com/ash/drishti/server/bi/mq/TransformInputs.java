@@ -211,9 +211,23 @@ public final class TransformInputs {
         }
         String via = connector.isBlank() ? (g.source().connector() == null ? "" : g.source().connector()) : connector;
         DatasetDef.Source s = DatasetDef.Source.ofKind(g.source().pack(), g.source().kind(), via, each);
-        String id = g.id() + "_via_" + via.replaceAll("[^A-Za-z0-9_]", "_") + (each == null ? "" : "_each_" + each.replaceAll("[^A-Za-z0-9_]", "_"));
+        // only the columns asked (and the grain's keys): the named connector is then scanned for exactly those, which its layout keeps as columns; a column it
+        // does not keep would make the engine read documents through the router, which is not this connector
+        java.util.Set<String> want = new java.util.LinkedHashSet<>();
+        in.path("fields").forEach(f -> want.add(f.asText().contains(".") ? f.asText().substring(f.asText().indexOf('.') + 1) : f.asText()));
+        if (!want.isEmpty()) {
+            in.path("where").forEach(w -> want.add(w.path("field").asText("").replaceFirst("^[^.]*\\.", "")));     // the filters' columns too
+        }
+        java.util.Map<String, DatasetDef.Col> cols = new java.util.LinkedHashMap<>();
+        g.columns().forEach((name, c) -> {
+            if (want.isEmpty() || want.contains(name) || g.grain() != null && g.grain().keys().contains(name)) {
+                cols.put(name, c);
+            }
+        });
+        String id = g.id() + "_via_" + via.replaceAll("[^A-Za-z0-9_]", "_") + (each == null ? "" : "_each_" + each.replaceAll("[^A-Za-z0-9_]", "_"))
+                + (want.isEmpty() ? "" : "_" + Integer.toHexString(String.join(",", cols.keySet()).hashCode()));
         return new DatasetDef(g.name(), g.version(), id, g.title() + " (through " + via + ")", g.description(), g.owner(), g.sample(), g.endorsement(), g.generated(), s,
-                g.grain(), g.columns(), g.time(), g.refresh(), g.security(), g.extendsRef(), g.where(), g.ai(), g.tests(), g.rollups(), g.derivation());
+                g.grain(), cols, g.time(), g.refresh(), g.security(), g.extendsRef(), g.where(), g.ai(), g.tests(), g.rollups(), g.derivation());
     }
 
     /** {@code q} at {@code time} when it names no time of its own. */
