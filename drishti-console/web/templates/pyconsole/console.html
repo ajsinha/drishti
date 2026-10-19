@@ -1,0 +1,62 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Wave C (2.4.0), the browser Python console (docs/guides/ANALYSE.md section 15): personal, just-in-time analysis on a masked extract of a model, run in your
+   browser by Calc's Python (Pyodide, in Calc's Web Worker: the page itself keeps the strict policy and compiles nothing). Not a BI page (BI_DESIGN.md P3):
+   nothing here is shared or kept on the server until you promote a result, which then runs on the console backend as a notebook draft. Drawn by
+   static/js/pyconsole.js. #}
+{% extends "bi/shell.html" %}
+{% block bi_title %}Python console{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-transform.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}">{% endblock %}
+{% block bi_main %}
+<header class="bi-head"><h1>Python console</h1>
+  <p class="text-muted-d">Your own Python, in your browser, on an extract of a model: the rows <em>you</em> may see, masked columns masked. Nothing you do here is kept or shared.
+    When a result is worth keeping, <strong>promote</strong> it: it runs again on the console backend and is saved as a notebook draft in your workspace.</p></header>
+<p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+<div class="pc" id="pc" data-runtime="{{ runtime.base if runtime.installed else '' }}" data-runtime-version="{{ runtime.version or '' }}"
+     data-worker="/static/js/calc-worker.js?v={{ ASSET_V }}" data-module="/static/calc/drishti.py?v={{ ASSET_V }}"
+     data-max-rows="{{ max_rows }}" data-may-promote="{{ 'true' if may_promote else 'false' }}">
+  {% if not runtime.installed %}<p class="bi-msg bi-bad" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ runtime.message }}.
+    An administrator installs it once on the console (tools/fetch-pyodide.sh); no internet is needed afterwards.</p>{% endif %}
+  <form class="bi-form" data-open aria-label="Open an extract">
+    <h2>1. Extract</h2>
+    <label>Model or dataset<select name="dataset" class="studio-select" data-dataset></select></label>
+    <fieldset class="tx-fields" data-fields-box hidden><legend>Fields</legend><div data-fields></div></fieldset>
+    <label>As of <small class="text-muted-d">(empty: the latest business day)</small><input type="date" class="studio-in" data-date aria-label="As of"></label>
+    <div class="bi-actions"><button type="submit" class="btn-pill btn-accent" data-open-go disabled><i class="bi bi-box-arrow-in-down" aria-hidden="true"></i> Open the extract</button></div>
+    <p class="pc-where" data-info role="status" aria-live="polite"></p>
+  </form>
+  <section aria-labelledby="pcCodeH">
+    <h2 id="pcCodeH">2. Python <small class="text-muted-d" data-status role="status" aria-live="polite">{% if runtime.installed %}Python starts when you open an extract{% endif %}</small></h2>
+    <p class="text-muted-d"><code>df</code> is the extract as a pandas table; <code>show(x)</code> draws a table, <code>chart(df, kind="bar", x=..., y=...)</code> a chart; or put the answer in <code>result</code>.
+      Runs in your browser (<kbd>Ctrl</kbd>+<kbd>Enter</kbd>).</p>
+    <div class="calc-editor pc-editor"><textarea class="studio-in mono pc-code" data-code aria-label="Python code" spellcheck="false" rows="10"></textarea></div>
+    <div class="pc-bar">
+      <button type="button" class="btn-pill btn-accent" data-run disabled><i class="bi bi-play-fill" aria-hidden="true"></i> Run in the browser</button>
+      <button type="button" class="btn-pill btn-ghost" data-stop disabled><i class="bi bi-stop-fill" aria-hidden="true"></i> Stop</button>
+      <label class="tx-check">Title <input class="studio-in" data-ptitle autocomplete="off" maxlength="120" placeholder="Desk notional, first look"></label>
+      <button type="button" class="btn-pill btn-ghost" data-promote disabled title="{{ 'Run it on the console backend and keep it as a notebook draft' if may_promote else 'Promoting needs the bi-author power' }}"><i class="bi bi-cloud-upload" aria-hidden="true"></i> Promote to the server</button>
+    </div>
+    <div class="pc-out" data-out tabindex="-1" aria-label="Output"><p class="text-muted-d">The output appears here.</p></div>
+  </section>
+  <section class="pc-compare" data-compare hidden aria-labelledby="pcCmpH">
+    <h2 id="pcCmpH">Promoted: on the console backend</h2>
+    <p data-compare-line role="status" aria-live="polite"></p>
+    <div class="pc-out" data-server-out></div>
+    <p><a class="btn-pill btn-ghost" data-open-notebook href="#">Open the notebook in Analyse</a> <a class="btn-pill btn-ghost" data-open-item href="#">The notebook draft</a></p>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script><script src="/static/vendor/codemirror/mode/python/python.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/pyconsole.js?v={{ ASSET_V }}"></script>{% endblock %}

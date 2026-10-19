@@ -1,0 +1,375 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The data-prep snippets of the Transform editor (docs/guides/PYTHON_BI.md section 17; BI_PARITY_PLAN.md P2), read by core/prep_snippets.py.
+#
+# A snippet is one step of a Transform: pandas that works on `df` (the frame so far) and may read another input by its name. Its parameters are filled
+# in a form; each value is written into the code as a Python literal (a column name is a quoted string, a list a list), never as code, so a value cannot
+# change what the step does. The one exception is an `input` parameter, which must be one of the Transform's own input names, and an `operator`, which
+# must be one of its options. Every snippet carries an `example` that tests/test_prep_snippets.py runs (pandas, and the console's sandbox), so a snippet
+# is correct out of the box.
+#
+# Parameter kinds: column, columns, input, text, number, bool, choice (options), values (a list of text), mapping (text to text), operator (options).
+# More snippets: a file of the same shape named by bi.transform.snippets_file (a list under `snippets:`, added after these).
+snippets:
+
+  # ---- columns ----------------------------------------------------------------------------------------------------------
+  - id: keep-columns
+    group: Columns
+    title: Keep columns
+    description: Keep only the columns you pick, in that order.
+    params:
+      - { name: columns, label: Columns to keep, kind: columns }
+    code: |
+      df = df[${columns}]
+    example:
+      inputs: { df: { columns: [A, B, C], rows: [[1, x, true], [2, y, false]] } }
+      params: { columns: [C, A] }
+      expect: { columns: [C, A], rows: [[true, 1], [false, 2]] }
+
+  - id: rename-column
+    group: Columns
+    title: Rename a column
+    description: Give a column a new name (letters, digits and underscore, so the dataset can use it).
+    params:
+      - { name: column, label: Column, kind: column }
+      - { name: to, label: New name, kind: text }
+    code: |
+      df = df.rename(columns={${column}: ${to}})
+    example:
+      inputs: { df: { columns: [desk, n], rows: [[FX, 1]] } }
+      params: { column: n, to: trades }
+      expect: { columns: [desk, trades], rows: [[FX, 1]] }
+
+  - id: split-column
+    group: Columns
+    title: Split a column
+    description: Split text at the first separator into two new columns (the right one is empty when there is no separator).
+    params:
+      - { name: column, label: Column, kind: column }
+      - { name: sep, label: Separator, kind: text, default: "-" }
+      - { name: left, label: Left part as, kind: text }
+      - { name: right, label: Right part as, kind: text }
+    code: |
+      _parts = df[${column}].astype("string").str.split(${sep}, n=1, expand=True)
+      df[${left}] = _parts[0]
+      df[${right}] = _parts[1] if _parts.shape[1] > 1 else None
+    example:
+      inputs: { df: { columns: [book], rows: [[FX-LDN], [RATES-NYC], [SOLO]] } }
+      params: { column: book, sep: "-", left: desk, right: city }
+      expect: { columns: [book, desk, city], rows: [[FX-LDN, FX, LDN], [RATES-NYC, RATES, NYC], [SOLO, SOLO, null]] }
+
+  - id: calculated-column
+    group: Columns
+    title: Calculated column
+    description: A new column from two columns and an operator (+, -, *, /); a division by zero is empty.
+    params:
+      - { name: left, label: Left column, kind: column }
+      - { name: op, label: Operator, kind: operator, options: ["+", "-", "*", "/"], default: "*" }
+      - { name: right, label: Right column, kind: column }
+      - { name: out, label: New column, kind: text }
+    code: |
+      df[${out}] = (pd.to_numeric(df[${left}], errors="coerce") ${op} pd.to_numeric(df[${right}], errors="coerce")).replace([np.inf, -np.inf], np.nan)
+    example:
+      inputs: { df: { columns: [qty, px], rows: [[2, 10.0], [3, 0.5]] } }
+      params: { left: qty, op: "*", right: px, out: value }
+      expect: { columns: [qty, px, value], rows: [[2, 10.0, 20.0], [3, 0.5, 1.5]] }
+
+  # ---- clean ------------------------------------------------------------------------------------------------------------
+  - id: type-fix-number
+    group: Clean
+    title: "Type fix: text to number"
+    description: Read a text column as numbers (thousands separators and spaces removed); text that is not a number becomes empty.
+    params:
+      - { name: column, label: Column, kind: column }
+      - { name: thousands, label: Thousands separator, kind: text, default: "," }
+    code: |
+      df[${column}] = pd.to_numeric(df[${column}].astype(str).str.replace(${thousands}, "", regex=False).str.strip(), errors="coerce")
+    example:
+      inputs: { df: { columns: [NOTIONAL], rows: [["1,000"], [" 25 "], [n/a], [null]] } }
+      params: { column: NOTIONAL }
+      expect: { columns: [NOTIONAL], rows: [[1000], [25], [null], [null]] }
+
+  - id: type-fix-date
+    group: Clean
+    title: "Type fix: text to date"
+    description: Read a text column as dates in a format (default 2026-10-08); text that is not a date becomes empty.
+    params:
+      - { name: column, label: Column, kind: column }
+      - { name: format, label: Format, kind: text, default: "%Y-%m-%d" }
+    code: |
+      df[${column}] = pd.to_datetime(df[${column}], format=${format}, errors="coerce").dt.date
+    example:
+      inputs: { df: { columns: [d], rows: [["08/10/2026"], [bad]] } }
+      params: { column: d, format: "%d/%m/%Y" }
+      expect: { columns: [d], rows: [["2026-10-08"], [null]] }
+
+  - id: replace-values
+    group: Clean
+    title: Replace values
+    description: Replace values of a column, one for one (other values are kept).
+    params:
+      - { name: column, label: Column, kind: column }
+      - { name: mapping, label: Replace (from -> to), kind: mapping }
+    code: |
+      df[${column}] = df[${column}].replace(${mapping})
+    example:
+      inputs: { df: { columns: [side], rows: [[B], [S], [X]] } }
+      params: { column: side, mapping: { B: BUY, S: SELL } }
+      expect: { columns: [side], rows: [[BUY], [SELL], [X]] }
+
+  - id: fill-down
+    group: Clean
+    title: Fill down
+    description: Fill empty values from the row above, optionally only within groups (a book, a desk).
+    params:
+      - { name: column, label: Column, kind: column }
+      - { name: by, label: Within (optional), kind: columns, default: [] }
+    code: |
+      df[${column}] = df.groupby(${by}, dropna=False)[${column}].ffill() if ${by} else df[${column}].ffill()
+    example:
+      inputs: { df: { columns: [book, rate], rows: [[A, 1.0], [A, null], [B, null], [B, 2.0], [B, null]] } }
+      params: { column: rate, by: [book] }
+      expect: { columns: [book, rate], rows: [[A, 1.0], [A, 1.0], [B, null], [B, 2.0], [B, 2.0]] }
+
+  - id: dedupe
+    group: Clean
+    title: Remove duplicates
+    description: Keep one row per value of the columns you pick (all columns when none), the first or the last seen.
+    params:
+      - { name: columns, label: Columns (optional), kind: columns, default: [] }
+      - { name: keep, label: Keep, kind: choice, options: [first, last], default: first }
+    code: |
+      df = df.drop_duplicates(subset=${columns} or None, keep=${keep}).reset_index(drop=True)
+    example:
+      inputs: { df: { columns: [id, v], rows: [[T1, 1], [T1, 2], [T2, 3]] } }
+      params: { columns: [id], keep: last }
+      expect: { columns: [id, v], rows: [[T1, 2], [T2, 3]] }
+
+  # ---- rows -------------------------------------------------------------------------------------------------------------
+  - id: filter-values
+    group: Rows
+    title: Filter rows by values
+    description: Keep (or drop) the rows whose column is one of the values.
+    params:
+      - { name: column, label: Column, kind: column }
+      - { name: values, label: Values, kind: values }
+      - { name: keep, label: Keep them (untick to drop them), kind: bool, default: true }
+    code: |
+      df = df[df[${column}].isin(${values}) == ${keep}].reset_index(drop=True)
+    example:
+      inputs: { df: { columns: [desk, n], rows: [[FX, 1], [RATES, 2], [EQ, 3]] } }
+      params: { column: desk, values: [FX, EQ], keep: true }
+      expect: { columns: [desk, n], rows: [[FX, 1], [EQ, 3]] }
+
+  - id: drop-empty
+    group: Rows
+    title: Drop rows with an empty value
+    description: Drop the rows where any of the columns you pick is empty.
+    params:
+      - { name: columns, label: Columns, kind: columns }
+    code: |
+      df = df.dropna(subset=${columns}).reset_index(drop=True)
+    example:
+      inputs: { df: { columns: [a, b], rows: [[1, x], [null, y], [3, null]] } }
+      params: { columns: [a] }
+      expect: { columns: [a, b], rows: [[1.0, x], [3.0, null]] }
+
+  - id: sort-rows
+    group: Rows
+    title: Sort rows
+    description: Sort by one or more columns.
+    params:
+      - { name: columns, label: Columns, kind: columns }
+      - { name: ascending, label: Ascending, kind: bool, default: true }
+    code: |
+      df = df.sort_values(${columns}, ascending=${ascending}, kind="stable").reset_index(drop=True)
+    example:
+      inputs: { df: { columns: [n], rows: [[2], [3], [1]] } }
+      params: { columns: [n], ascending: false }
+      expect: { columns: [n], rows: [[3], [2], [1]] }
+
+  # ---- combine ----------------------------------------------------------------------------------------------------------
+  - id: append
+    group: Combine
+    title: Append another input (union)
+    description: Put the rows of another input under these; columns are matched by name (a column only one side has is empty on the other).
+    params:
+      - { name: other, label: Input to append, kind: input }
+    code: |
+      df = pd.concat([df, ${other}], ignore_index=True, sort=False)
+    example:
+      inputs: { df: { columns: [id, v], rows: [[T1, 1]] }, more: { columns: [id, v], rows: [[T2, 2]] } }
+      params: { other: more }
+      expect: { columns: [id, v], rows: [[T1, 1], [T2, 2]] }
+
+  - id: join
+    group: Combine
+    title: Join another input
+    description: Add the columns of another input where the keys match (left keeps every row; inner only the matched ones).
+    params:
+      - { name: other, label: Input to join, kind: input }
+      - { name: left, label: Key here, kind: column }
+      - { name: right, label: Key there, kind: text }
+      - { name: how, label: Join, kind: choice, options: [left, inner, outer], default: left }
+    code: |
+      df = df.merge(${other}, left_on=${left}, right_on=${right}, how=${how}, suffixes=("", "_right"))
+      if ${right} != ${left} and ${right} in df.columns:
+          df = df.drop(columns=[${right}])
+    example:
+      inputs: { df: { columns: [desk, n], rows: [[FX, 1], [EQ, 2]] }, desks: { columns: [code, head], rows: [[FX, Ann]] } }
+      params: { other: desks, left: desk, right: code, how: left }
+      expect: { columns: [desk, n, head], rows: [[FX, 1, Ann], [EQ, 2, null]] }
+
+  - id: asof-prices
+    group: Combine
+    title: As-of join of prices
+    description: For each row, the latest price of its instrument on or before its date (within a number of days), from another input of prices.
+    params:
+      - { name: key, label: Instrument column here, kind: column }
+      - { name: date, label: Date column here, kind: column }
+      - { name: prices, label: Prices input, kind: input }
+      - { name: price_key, label: Instrument column of the prices, kind: text }
+      - { name: price_date, label: Date column of the prices, kind: text }
+      - { name: price, label: Price column, kind: text }
+      - { name: days, label: At most this many days old, kind: number, default: 7 }
+    code: |
+      _l = df.assign(_on=pd.to_datetime(df[${date}], errors="coerce"), _row=range(len(df))).dropna(subset=["_on"]).sort_values("_on")
+      _r = pd.DataFrame({"_k": ${prices}[${price_key}].values, "_on": pd.to_datetime(${prices}[${price_date}], errors="coerce").values,
+                         ${price}: ${prices}[${price}].values, ${price} + "_as_of": pd.to_datetime(${prices}[${price_date}], errors="coerce").dt.date.values})
+      _r = _r.dropna(subset=["_on"]).sort_values("_on")
+      df = pd.merge_asof(_l.assign(_k=_l[${key}]), _r, on="_on", by="_k", direction="backward", tolerance=pd.Timedelta(days=${days}))
+      df = df.sort_values("_row").drop(columns=["_on", "_k", "_row"]).reset_index(drop=True)
+    example:
+      inputs:
+        df: { columns: [isin, day], rows: [[US1, "2026-10-08"], [US2, "2026-10-08"], [US1, "2026-10-01"]] }
+        px: { columns: [isin, day, close], rows: [[US1, "2026-10-07", 101.5], [US1, "2026-10-08", 102.0], [US2, "2026-09-01", 99.0], [US1, "2026-09-30", 100.0]] }
+      params: { key: isin, date: day, prices: px, price_key: isin, price_date: day, price: close, days: 7 }
+      expect: { columns: [isin, day, close, close_as_of], rows: [[US1, "2026-10-08", 102.0, "2026-10-08"], [US2, "2026-10-08", null, null], [US1, "2026-10-01", 100.0, "2026-09-30"]] }
+
+  - id: asof-fx
+    group: Combine
+    title: As-of FX conversion
+    description: Convert an amount to a base currency at the latest rate on or before the row's date (a rate is base units per one unit of the currency).
+    params:
+      - { name: amount, label: Amount column, kind: column }
+      - { name: currency, label: Currency column, kind: column }
+      - { name: date, label: Date column, kind: column }
+      - { name: fx, label: FX rates input, kind: input }
+      - { name: fx_ccy, label: Currency column of the rates, kind: text, default: currency }
+      - { name: fx_date, label: Date column of the rates, kind: text, default: date }
+      - { name: rate, label: Rate column, kind: text, default: rate }
+      - { name: base, label: Base currency, kind: text, default: USD }
+      - { name: out, label: Converted amount as, kind: text, default: amount_base }
+      - { name: days, label: At most this many days old, kind: number, default: 7 }
+    code: |
+      _r = pd.DataFrame({"_ccy": ${fx}[${fx_ccy}].values, "_rate": pd.to_numeric(${fx}[${rate}], errors="coerce").values,
+                         "_on": pd.to_datetime(${fx}[${fx_date}], errors="coerce").values}).dropna(subset=["_on"]).sort_values("_on")
+      _l = df.assign(_on=pd.to_datetime(df[${date}], errors="coerce"), _ccy=df[${currency}], _row=range(len(df))).dropna(subset=["_on"]).sort_values("_on")
+      df = pd.merge_asof(_l, _r, on="_on", by="_ccy", direction="backward", tolerance=pd.Timedelta(days=${days}))
+      df[${out}] = pd.to_numeric(df[${amount}], errors="coerce") * df["_rate"].where(df["_ccy"] != ${base}, 1.0)
+      df = df.sort_values("_row").drop(columns=["_on", "_ccy", "_rate", "_row"]).reset_index(drop=True)
+    example:
+      inputs:
+        df: { columns: [amt, ccy, d], rows: [[100.0, EUR, "2026-10-08"], [50.0, USD, "2026-10-08"], [10.0, GBP, "2026-10-08"]] }
+        rates: { columns: [currency, date, rate], rows: [[EUR, "2026-10-07", 1.10], [EUR, "2026-10-08", 1.20], [GBP, "2026-08-01", 1.30]] }
+      params: { amount: amt, currency: ccy, date: d, fx: rates, out: amt_usd }
+      expect: { columns: [amt, ccy, d, amt_usd], rows: [[100.0, EUR, "2026-10-08", 120.0], [50.0, USD, "2026-10-08", 50.0], [10.0, GBP, "2026-10-08", null]] }
+
+  # ---- reshape ----------------------------------------------------------------------------------------------------------
+  - id: unpivot
+    group: Reshape
+    title: Unpivot (columns to rows)
+    description: Turn value columns into rows of a name and a value (melt); the columns you keep repeat on each row.
+    params:
+      - { name: keep, label: Columns to keep, kind: columns }
+      - { name: columns, label: Columns to unpivot (empty - all the others), kind: columns, default: [] }
+      - { name: name, label: Name column, kind: text, default: attribute }
+      - { name: value, label: Value column, kind: text, default: value }
+    code: |
+      df = df.melt(id_vars=${keep}, value_vars=${columns} or None, var_name=${name}, value_name=${value})
+    example:
+      inputs: { df: { columns: [desk, Q1, Q2], rows: [[FX, 1, 2], [EQ, 3, 4]] } }
+      params: { keep: [desk], name: quarter, value: pnl }
+      expect: { columns: [desk, quarter, pnl], rows: [[FX, Q1, 1], [EQ, Q1, 3], [FX, Q2, 2], [EQ, Q2, 4]] }
+
+  - id: pivot
+    group: Reshape
+    title: Pivot (rows to columns)
+    description: One column per value of a column, the values aggregated; new column names are made usable (letters, digits and underscore).
+    params:
+      - { name: rows, label: Rows, kind: columns }
+      - { name: column, label: Columns from, kind: column }
+      - { name: values, label: Values, kind: column }
+      - { name: agg, label: Aggregate, kind: choice, options: [sum, mean, min, max, count, first], default: sum }
+    code: |
+      df = df.pivot_table(index=${rows}, columns=${column}, values=${values}, aggfunc=${agg}, observed=True).reset_index()
+      df.columns = [re.sub(r"\W", "_", str(c)) for c in df.columns]
+    example:
+      inputs: { df: { columns: [desk, ccy, n], rows: [[FX, USD, 1], [FX, EUR, 2], [EQ, USD, 3], [FX, USD, 4]] } }
+      params: { rows: [desk], column: ccy, values: n, agg: sum }
+      expect: { columns: [desk, EUR, USD], rows: [[EQ, null, 3.0], [FX, 2.0, 5.0]] }
+
+  - id: group-total
+    group: Reshape
+    title: Group and total
+    description: One row per group, with the columns you pick summed (or counted, averaged, the least or the most).
+    params:
+      - { name: by, label: Group by, kind: columns }
+      - { name: columns, label: Columns, kind: columns }
+      - { name: agg, label: Aggregate, kind: choice, options: [sum, mean, min, max, count], default: sum }
+    code: |
+      df = df.groupby(${by}, as_index=False, dropna=False)[${columns}].agg(${agg})
+    example:
+      inputs: { df: { columns: [desk, n], rows: [[FX, 1], [EQ, 2], [FX, 4]] } }
+      params: { by: [desk], columns: [n], agg: sum }
+      expect: { columns: [desk, n], rows: [[EQ, 2], [FX, 5]] }
+
+  # ---- dates and tenors -------------------------------------------------------------------------------------------------
+  - id: business-date
+    group: Dates
+    title: Align to a business day
+    description: Move a date to a business day (the next, the previous, or the next unless it crosses into another month), skipping weekends and the holidays listed (a pack calendar's days).
+    params:
+      - { name: column, label: Date column, kind: column }
+      - { name: roll, label: Roll, kind: choice, options: [following, preceding, modifiedfollowing], default: following }
+      - { name: holidays, label: Holidays (2026-12-25, ...), kind: values, default: [] }
+      - { name: out, label: Business date as, kind: text, default: business_date }
+    code: |
+      _d = pd.to_datetime(df[${column}], errors="coerce")
+      df[${out}] = None
+      df.loc[_d.notna(), ${out}] = pd.to_datetime(np.busday_offset(_d[_d.notna()].values.astype("datetime64[D]"), 0, roll=${roll}, holidays=${holidays})).date
+    example:
+      inputs: { df: { columns: [d], rows: [["2026-10-10"], ["2026-10-12"], [null]] } }
+      params: { column: d, roll: following, holidays: ["2026-10-12"] }
+      expect: { columns: [d, business_date], rows: [["2026-10-10", "2026-10-13"], ["2026-10-12", "2026-10-13"], [null, null]] }
+
+  - id: tenor-bucket
+    group: Dates
+    title: Tenor bucket
+    description: The time from a date to a maturity in years, put in buckets (<1Y, 1-2Y, ..., 30Y+) by the edges you give.
+    params:
+      - { name: maturity, label: Maturity column, kind: column }
+      - { name: as_of, label: From (date column), kind: column }
+      - { name: edges, label: Edges in years, kind: values, default: ["1", "2", "5", "10", "30"] }
+      - { name: out, label: Bucket as, kind: text, default: tenor_bucket }
+    code: |
+      _years = (pd.to_datetime(df[${maturity}], errors="coerce") - pd.to_datetime(df[${as_of}], errors="coerce")).dt.days / 365.25
+      _e = [float(x) for x in ${edges}]
+      _labels = ["<%gY" % _e[0]] + ["%g-%gY" % (a, b) for a, b in zip(_e, _e[1:])] + ["%gY+" % _e[-1]]
+      df[${out}] = pd.cut(_years, bins=[-np.inf] + _e + [np.inf], labels=_labels, right=False).astype(object).where(_years.notna(), None)
+    example:
+      inputs: { df: { columns: [mat, asof], rows: [["2027-04-08", "2026-10-08"], ["2033-10-08", "2026-10-08"], ["2066-10-08", "2026-10-08"], [null, "2026-10-08"]] } }
+      params: { maturity: mat, as_of: asof }
+      expect: { columns: [mat, asof, tenor_bucket], rows: [["2027-04-08", "2026-10-08", "<1Y"], ["2033-10-08", "2026-10-08", 5-10Y], ["2066-10-08", "2026-10-08", 30Y+], [null, "2026-10-08", null]] }

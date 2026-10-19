@@ -248,12 +248,28 @@ def _cell(req: dict, df, ns: dict, quant, others: dict | None = None) -> dict:
             raise KeyError(f"no extract '{name}' in this notebook (extracts: {', '.join(sorted(frames)) or 'none'})")
         return frames[name].copy()
 
-    ns.update(df=df, params=dict(req["params"]), quant=quant, extract=extract)
+    shown: list = []
+
+    def show(obj, title=None):
+        """As the browser Python console's show() (wave C): what a promoted cell shows last is its answer when it sets no ``result``."""
+        shown.append(obj)
+
+    def chart(*args, **kwargs):
+        """The browser console draws charts; on the console backend a chart() call is skipped (put an ECharts option in ``result`` to draw one here)."""
+        return None
+
+    ns.update(df=df, params=dict(req["params"]), quant=quant, extract=extract, show=show, chart=chart)
     out = io.StringIO()
     with contextlib.redirect_stdout(out):
         exec(compile(req["source"], FILE, "exec"), ns)
     text = out.getvalue()[:20000]
     result = ns.get("result")
+    if result is None and shown:
+        result = shown[-1]
+        if hasattr(result, "to_frame") and not hasattr(result, "columns"):
+            result = result.to_frame()
+        if hasattr(result, "reset_index") and type(getattr(result, "index", None)).__name__ != "RangeIndex":
+            result = result.reset_index()                  # as the browser's show() draws a frame: its index as columns
     answer: dict = {"kind": "cell", "stdout": text}
     if result is None:
         return answer
@@ -344,6 +360,268 @@ def _transform(req: dict, frames: list, ns: dict, tmp: str) -> dict:
     return {"kind": "transform", "columns": columns, "rows": int(table.num_rows)}
 
 
+# ---- profiling and the step-by-step run (wave C, 2.4.0: docs/guides/PYTHON_BI.md section 17; BI_PARITY_PLAN.md P1 and P3) -------------------------
+
+HEAD_ROWS = 20
+_STEP = re.compile(r"^\s*#\s*step:\s*(.*?)\s*$")
+
+
+def _jsonable(v):
+    """One cell as JSON: numbers (NaN and infinity as None), text, booleans, dates as ISO text."""
+    if v is None or type(v).__name__ in ("NAType", "NaTType"):        # pandas' missing values
+        return None
+    if hasattr(v, "item") and not isinstance(v, (str, bytes)):
+        try:
+            v = v.item()
+        except (ValueError, TypeError):
+            v = str(v)
+    if isinstance(v, float):
+        return None if math.isnan(v) or math.isinf(v) else v
+    if isinstance(v, (bool, int, str)):
+        return v
+    if hasattr(v, "isoformat"):
+        try:
+            return v.isoformat()
+        except ValueError:
+            return None
+    return str(v)
+
+
+def _series_type(s) -> str:
+    import pandas as pd
+    t = pd.api.types
+    if t.is_bool_dtype(s):
+        return "boolean"
+    if t.is_integer_dtype(s):
+        return "integer"
+    if t.is_float_dtype(s) or t.is_numeric_dtype(s):
+        return "decimal"
+    if t.is_datetime64_any_dtype(s):
+        return "timestamp"
+    sample = s.dropna().head(50)
+    if len(sample) and all(hasattr(v, "isoformat") and not hasattr(v, "hour") for v in sample):
+        return "date"
+    return "string"
+
+
+_ID_NAME = re.compile(r"(^|_)(ID|IDS|CODE|KEY|NUMBER|NO)$", re.I)
+
+
+def _guess(s, kind: str) -> str | None:
+    """What a text column really holds, when nearly all of a sample reads as one type: numbers or dates kept as text (the Type fix snippet fixes it)."""
+    import pandas as pd
+    if kind != "string":
+        return None
+    sample = s.dropna().astype(str).str.strip().head(200)
+    sample = sample[sample != ""]
+    if len(sample) < 3:
+        return None
+    if pd.to_numeric(sample.str.replace(",", "", regex=False), errors="coerce").notna().mean() >= 0.95:
+        return "decimal"
+    if sample.str.fullmatch(r"\d{4}-\d{2}-\d{2}([ T].*)?").mean() >= 0.95:
+        return "date"
+    return None
+
+
+def _profile(df, top: int = 5, bins: int = 10) -> dict:
+    """The profile of a frame (P3): for each column its type, the type its text looks like, nulls (count and %), distinct values, whether it could be a key,
+    min and max, the most common values and, for a number, a histogram. Data only, computed here in the sandbox over the reader's rows."""
+    import numpy as np
+    import pandas as pd
+    n = int(len(df))
+    cols = []
+    for name in df.columns:
+        s = df[name]
+        kind = _series_type(s)
+        nulls = int(s.isna().sum())
+        try:
+            distinct = int(s.nunique(dropna=True))
+        except TypeError:                                          # lists, dicts: counted by their text
+            distinct = int(s.dropna().astype(str).nunique())
+        p = {"name": str(name), "type": kind, "nulls": nulls, "nullPct": round(100.0 * nulls / n, 1) if n else 0.0, "distinct": distinct,
+             "unique": bool(n and nulls == 0 and distinct == n)}
+        guess = _guess(s, kind)
+        if guess == "decimal" and _ID_NAME.search(str(name)):
+            guess = None                                           # an identifier made of digits is text by design (ids are text since 2.3.0)
+        if guess:
+            p["looksLike"] = guess
+        values = s.dropna()
+        if kind in ("integer", "decimal") and len(values):
+            v = pd.to_numeric(values, errors="coerce").dropna().astype(float)
+            v = v[np.isfinite(v)]
+            if len(v):
+                p.update(min=_jsonable(v.min()), max=_jsonable(v.max()), mean=_jsonable(v.mean()))
+                counts, edges = np.histogram(v.to_numpy(), bins=min(bins, max(1, int(v.nunique()))))
+                p["histogram"] = {"edges": [_jsonable(e) for e in edges], "counts": [int(c) for c in counts]}
+        elif kind in ("date", "timestamp") and len(values):
+            p.update(min=_jsonable(values.min()), max=_jsonable(values.max()))
+        elif kind == "string" and len(values):
+            texts = values.astype(str)
+            p.update(min=_jsonable(texts.min()), max=_jsonable(texts.max()))
+        try:
+            vc = values.value_counts().head(top)
+            p["top"] = [[_jsonable(k), int(c)] for k, c in vc.items()]
+        except TypeError:
+            p["top"] = []
+        cols.append(p)
+    return {"rows": n, "columns": cols}
+
+
+def _keys_of(profiles: list[dict], frames: list) -> list[dict]:
+    """"Looks like a key of" hints between the inputs: a column of one whose distinct values are (at least 90%) the values of a unique column of another."""
+    hints = []
+    for i, (pa_, fa) in enumerate(zip(profiles, frames)):
+        for j, (pb, fb) in enumerate(zip(profiles, frames)):
+            if i == j:
+                continue
+            keys = [c["name"] for c in pb["profile"]["columns"] if c["unique"] and c["type"] in ("string", "integer")]
+            for c in pa_["profile"]["columns"]:
+                if c["type"] not in ("string", "integer") or not c["distinct"] or c["distinct"] > 50_000:
+                    continue
+                mine = set(fa[c["name"]].dropna().astype(str).unique())
+                for k in keys:
+                    theirs = set(fb[k].dropna().astype(str).unique())
+                    if mine and len(mine & theirs) >= 0.9 * len(mine):
+                        hints.append({"input": pa_["name"], "column": c["name"], "keyOf": pb["name"], "key": k, "matched": len(mine & theirs), "of": len(mine)})
+    return hints[:20]
+
+
+def _frame_view(frame) -> dict:
+    """A frame as the editor shows it after a step: its rows, its columns with their types, the first rows and its profile."""
+    head = frame.head(HEAD_ROWS)
+    rows = [[_jsonable(v) for v in r] for r in head.astype(object).itertuples(index=False, name=None)]
+    return {"rows": int(len(frame)), "columns": [{"name": str(c), "type": _series_type(frame[c])} for c in frame.columns],
+            "head": {"columns": [str(c) for c in head.columns], "rows": rows}, "profile": _profile(frame)}
+
+
+def _step_groups(fn_node, lines: list[str]) -> list[dict]:
+    """The steps of ``run``: the statements after each ``# step: <label>`` comment in its body, or, with no such comment, each top-level statement. A step is
+    ``{label, first, last, body}`` (lines of the source, one-based) in order; statements before the first comment are the step "Start"."""
+    import ast
+    body = fn_node.body
+    if body and isinstance(body[0], ast.Expr) and isinstance(getattr(body[0], "value", None), ast.Constant) and isinstance(body[0].value.value, str):
+        body = body[1:]                                             # the docstring is no step
+    if not body:
+        return []
+    end = max(getattr(s, "end_lineno", s.lineno) for s in body)
+    marks: list[tuple[int, str]] = []
+    for ln in range(fn_node.lineno + 1, min(end, len(lines)) + 1):
+        m = _STEP.match(lines[ln - 1])
+        if m:
+            marks.append((ln, m.group(1) or f"Step {len(marks) + 1}"))
+    groups: list[dict] = []
+    for stmt in body:
+        last = getattr(stmt, "end_lineno", stmt.lineno)
+        if marks:
+            mark = max((ln for ln, _ in marks if ln <= stmt.lineno), default=None)
+            label = next((lb for ln, lb in marks if ln == mark), "Start")
+        else:
+            mark, label = stmt.lineno, lines[stmt.lineno - 1].strip()[:80]
+        if groups and groups[-1]["mark"] == mark:
+            groups[-1]["body"].append(stmt)
+            groups[-1]["last"] = last
+        else:
+            groups.append({"mark": mark, "label": label, "first": mark or stmt.lineno, "last": last, "body": [stmt]})
+    return groups
+
+
+def _assigned(stmts) -> list[str]:
+    """The names a step's statements assign, in order (the frame a step makes is the last of them that holds a DataFrame)."""
+    import ast
+    out: list[str] = []
+    for s in stmts:
+        for n in ast.walk(s):
+            targets = n.targets if isinstance(n, ast.Assign) else [n.target] if isinstance(n, (ast.AugAssign, ast.AnnAssign)) else []
+            for t in targets:
+                for x in ast.walk(t):
+                    if isinstance(x, ast.Name) and x.id not in out:
+                        out.append(x.id)
+    return out
+
+
+def _steps(req: dict, frames: list, names: list[str], ns: dict) -> dict:
+    """The step-by-step run of a Transform (P1): ``run`` is executed once on the inputs, and after each step the frame that step made (the last DataFrame it
+    assigned, else ``df``; the returned frame after the last) is described with its rows, columns, first rows and profile. A step that fails stops the run
+    there, with its error and line; the steps before it keep their frames."""
+    import ast
+    import pandas as pd
+    source = req["source"]
+    lines = source.splitlines()
+    tree = ast.parse(source, FILE)
+    fn_node = next((n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == req["entry"]), None)
+    inputs = []
+    for name, frame in zip(names, frames):
+        inputs.append({"name": name, **_frame_view(frame)})
+    answer: dict = {"kind": "steps", "inputs": inputs, "keys": _keys_of(inputs, frames), "steps": []}
+    if fn_node is None:
+        raise ValueError(f"the step-by-step run needs a top-level function '{req['entry']}' (a class Transform is run in one step: use Run instead)")
+    groups = _step_groups(fn_node, lines)
+    state = {"t": time.perf_counter(), "done": -1}
+    steps = answer["steps"]
+
+    def record(index: int, frame_locals: dict, value=None, returned: bool = False):
+        g = groups[index]
+        frame = value if returned else None
+        var = "return" if returned else None
+        if frame is None:
+            for name in reversed(_assigned(g["body"])):
+                if isinstance(frame_locals.get(name), pd.DataFrame):
+                    frame, var = frame_locals[name], name
+                    break
+        if frame is None and isinstance(frame_locals.get("df"), pd.DataFrame):
+            frame, var = frame_locals["df"], "df"
+        now = time.perf_counter()
+        step = {"index": index, "label": g["label"], "first": g["first"], "last": g["last"], "ms": round((now - state["t"]) * 1000, 1), "variable": var}
+        if isinstance(frame, pd.Series):
+            frame = frame.to_frame()
+        if isinstance(frame, pd.DataFrame):
+            step.update(_frame_view(frame))
+        else:
+            step["note"] = "this step makes no table" if not returned else f"run returned {type(value).__name__}, not a pandas DataFrame"
+        steps.append(step)
+        state["t"], state["done"] = now, index
+
+    def mark(i: int):                                               # __drishti_step__(i) after a step: the caller's locals, read from its frame
+        record(i, sys._getframe(1).f_locals)
+
+    def mark_return(i: int, value):
+        record(i, sys._getframe(1).f_locals, value, True)
+        return value
+
+    new_body = []
+    for i, g in enumerate(groups):
+        for stmt in g["body"]:
+            if isinstance(stmt, ast.Return) and stmt is g["body"][-1]:
+                call = ast.Call(func=ast.Name(id="__drishti_return__", ctx=ast.Load()), args=[ast.Constant(i), stmt.value or ast.Constant(None)], keywords=[])
+                new_body.append(ast.copy_location(ast.Return(value=call), stmt))
+            else:
+                new_body.append(stmt)
+        if not (g["body"] and isinstance(g["body"][-1], ast.Return)):
+            last = g["body"][-1]
+            new_body.append(ast.copy_location(ast.Expr(ast.Call(func=ast.Name(id="__drishti_step__", ctx=ast.Load()), args=[ast.Constant(i)], keywords=[])), last))
+    fn_node.body = new_body or fn_node.body
+    ast.fix_missing_locations(tree)
+    ns["__drishti_step__"], ns["__drishti_return__"] = mark, mark_return
+    exec(compile(tree, FILE, "exec"), ns)                          # the worker's own compile of the author's code with the step marks added
+    fn = ns.get(req["entry"])
+    params = dict(req["params"])
+    import inspect
+    wants = "params" in inspect.signature(fn).parameters
+    try:
+        result = fn(*[f.copy() for f in frames], params=params) if wants else fn(*[f.copy() for f in frames])
+        answer["complete"] = True
+        answer["returned"] = type(result).__name__
+    except BaseException as e:  # noqa: BLE001 - the step's error is the editor's to show; the steps before keep their frames
+        line = next((fr.lineno for fr in reversed(traceback.extract_tb(e.__traceback__)) if fr.filename == FILE), None)
+        failed = next((i for i, g in enumerate(groups) if line is not None and g["first"] <= line <= g["last"]), state["done"] + 1)
+        answer["complete"] = False
+        answer["failed"] = {"index": failed, "label": groups[failed]["label"] if failed < len(groups) else "", "line": line,
+                            "error": (f"{type(e).__name__}: {e}" if str(e) else type(e).__name__)[:2000],
+                            "traceback": "".join(traceback.format_list([fr for fr in traceback.extract_tb(e.__traceback__) if fr.filename == FILE]))[-3000:]}
+    answer["planned"] = [{"index": i, "label": g["label"], "first": g["first"], "last": g["last"]} for i, g in enumerate(groups)]
+    return answer
+
+
 def _column(req: dict, df, fn, params) -> dict:
     """The ``column`` interface (BI_DESIGN.md 3.5, plan node ``PyColumn``): ``derive(frame, params)`` gets the declared input columns of the dataset (masked as
     the reader sees them) and returns one value per row, vectorised: a pandas Series, a numpy array or a list of the frame's length."""
@@ -403,8 +681,10 @@ def _run(req: dict, tmp: str) -> dict:
     allowed = set(req["packages"]) | SAFE_STDLIB
     for p in req["packages"]:
         __import__(p)                                      # imported before the hook, so a lazy import later has nothing left to load
-    if req["interface"] == "transform":
+    if req["interface"] in ("transform", "steps"):
         import pyarrow.parquet  # noqa: F401 - loaded before the hook
+        import ast  # noqa: F401 - the step-by-step run reads the source's tree
+        import inspect  # noqa: F401
         frames = []
         for name in req["inputs_files"]:
             with open(os.path.join(tmp, name), "rb") as f:
@@ -412,9 +692,17 @@ def _run(req: dict, tmp: str) -> dict:
         _limits(req)
         sys.dont_write_bytecode = True
         _install_hook(tmp)
-        return _transform(req, frames, {"__name__": "python_item", "__builtins__": _builtins(allowed)}, tmp)
+        ns = {"__name__": "python_item", "__builtins__": _builtins(allowed)}
+        if req["interface"] == "steps":
+            names = list(req.get("input_names") or []) or [f"input_{i + 1}" for i in range(len(frames))]
+            return _steps(req, frames, names, ns)
+        return _transform(req, frames, ns, tmp)
     with open(os.path.join(tmp, "in.arrow"), "rb") as f:
         df = pa.ipc.open_stream(f).read_all().to_pandas()
+    if req["interface"] == "profile":                       # a frame's profile (P3), for Analyse and the Transform editor: no author code runs
+        _limits(req)
+        _install_hook(tmp)
+        return {"kind": "profile", **_profile(df.drop(columns=[c for c in ("id",) if c in df.columns]))}
     df = df.drop(columns=[c for c in ("id",) if c in df.columns and c not in req["inputs"] and c not in (req["group_by"] or [])])
     cell = req["interface"] == "cell"
     quant = _load_quant(req) if cell else None             # imported before the hook, like the packages

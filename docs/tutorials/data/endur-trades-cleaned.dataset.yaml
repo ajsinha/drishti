@@ -1,0 +1,33 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Tutorial 14, step 12: the Python dataset the Transform editor wrote: the kind trade read straight through the connector trade-endur, as the reader.
+rachana: 2
+dataset: endur-trades-cleaned
+title: ENDUR trades, cleaned
+version: 1.0.0
+source:
+  python: endur-trades-cleaned
+  inputs:
+    trades:
+      kind: trade
+      pack: trading
+      fields: [CURRENCY, MATURITY_DATE, NOTIONAL, PORTFOLIO, TRADE_DATE, TRADE_ID, TRADE_STATUS]
+      connector: trade-endur
+grain:
+  keys: [PORTFOLIO, tenor_bucket]
+columns:
+  PORTFOLIO: {type: string, role: key}
+  tenor_bucket: {type: string, role: key}
+  NOTIONAL: {type: decimal, aggregate: sum}

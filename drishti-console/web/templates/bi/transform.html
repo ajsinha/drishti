@@ -1,0 +1,114 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Wave C (2.4.0), the Transform editor (docs/guides/PYTHON_BI.md section 17): a Python Transform built step by step, with a preview and a profile after each
+   step, a snippets picker and no YAML to type (the YAML is shown, and may be edited and read back). Drawn by static/js/bi-transform.js; the steps run on the
+   console's sandbox (POST /bi/transform/steps), so this page keeps the strict policy of every BI page. #}
+{% extends "bi/shell.html" %}
+{% block bi_title %}Transform editor{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-transform.css?v={{ ASSET_V }}">{% endblock %}
+{% block bi_main %}
+<header class="bi-head"><h1>Transform editor</h1>
+  <p class="text-muted-d">Build a Python Transform step by step. Add the inputs it reads (a pack kind straight through its connector, or a model), then add steps from the snippets or write your own.
+    After every step you see its rows and a profile of every column, worked out on the rows <em>you</em> may see. Save it as two drafts: the Python item and the dataset that runs it.</p></header>
+<p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+<div class="tx" id="tx" data-preview-rows="{{ preview_rows }}" data-may-python="{{ 'true' if may_python else 'false' }}">
+  {% if not may_python %}<p class="bi-msg bi-bad" role="alert">Running a Transform's steps runs Python, which needs the <strong>bi-author</strong> power. You can still read and edit the steps and the YAML.</p>{% endif %}
+  <form class="bi-form tx-names" data-names aria-label="Name">
+    <label>Title<input class="studio-in" name="title" data-title autocomplete="off" maxlength="120" placeholder="Desk notional, cleaned"></label>
+    <label>Name<input class="studio-in mono" name="name" data-name autocomplete="off" maxlength="64" placeholder="desk-notional-clean" pattern="[a-z0-9][a-z0-9-]*"></label>
+  </form>
+
+  <section class="tx-inputs" aria-labelledby="txInputsH">
+    <h2 id="txInputsH">1. Inputs</h2>
+    <ul class="tx-list" data-inputs role="list"></ul>
+    <details class="tx-add" data-add-input open>
+      <summary>Add an input</summary>
+      <form class="bi-form" data-input-form aria-label="Add an input">
+        <label>Name in the code<input class="studio-in mono" name="iname" data-iname autocomplete="off" maxlength="40" placeholder="trades"></label>
+        <fieldset class="tx-radios"><legend>Read</legend>
+          <label class="tx-radio"><input type="radio" name="isrc" value="kind" checked data-isrc> A pack kind, straight through its connector</label>
+          <label class="tx-radio"><input type="radio" name="isrc" value="model" data-isrc> A model or a dataset (a model query)</label>
+        </fieldset>
+        <label data-kind-row>Kind<select class="studio-select" data-ikind aria-label="Pack kind"></select></label>
+        <label data-kind-row>Connector <small class="text-muted-d">(optional: empty reads whichever serves the kind)</small><input class="studio-in mono" data-iconnector autocomplete="off" maxlength="80" placeholder="trading-store"></label>
+        <label data-model-row hidden>Model or dataset<select class="studio-select" data-imodel aria-label="Model or dataset"></select></label>
+        <fieldset class="tx-fields" data-ifields-box hidden><legend>Fields</legend><div data-ifields></div></fieldset>
+        <div class="bi-actions"><button type="submit" class="btn-pill btn-accent" data-iadd disabled><i class="bi bi-plus-lg" aria-hidden="true"></i> Add the input</button></div>
+      </form>
+    </details>
+  </section>
+
+  <div class="tx-work">
+    <section class="tx-steps" aria-labelledby="txStepsH">
+      <h2 id="txStepsH">2. Steps</h2>
+      <p class="text-muted-d tx-hint">Each step works on <code>df</code>, the table so far. Pick one to see its rows and profile.</p>
+      <ol class="tx-list tx-steplist" data-steps></ol>
+      <div class="bi-actions tx-step-actions">
+        <button type="button" class="btn-pill btn-ghost" data-open-snippets><i class="bi bi-magic" aria-hidden="true"></i> Add a step from the snippets</button>
+        <button type="button" class="btn-pill btn-ghost" data-open-code><i class="bi bi-code-slash" aria-hidden="true"></i> Write a step</button>
+        <button type="button" class="btn-pill btn-ghost" data-undo disabled title="Remove the last step"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Undo the last step</button>
+      </div>
+      <form class="bi-form tx-picker" data-picker hidden aria-label="Add a step from the snippets">
+        <label>Snippet<select class="studio-select" data-snippet aria-label="Snippet"></select></label>
+        <p class="text-muted-d" data-snippet-help></p>
+        <div class="tx-params" data-params></div>
+        <div class="bi-actions"><button type="submit" class="btn-pill btn-accent" data-snippet-add><i class="bi bi-plus-lg" aria-hidden="true"></i> Add the step</button>
+          <button type="button" class="btn-pill btn-ghost" data-picker-close>Cancel</button></div>
+      </form>
+      <form class="bi-form tx-coder" data-coder hidden aria-label="Write a step">
+        <label>What it does<input class="studio-in" data-code-label autocomplete="off" maxlength="120" placeholder="Keep the FX desk"></label>
+        <label>Python (on <code>df</code>)<textarea class="studio-in mono tx-code" data-code rows="6" spellcheck="false" placeholder='df = df[df["DESK"] == "DESK-FX"]'></textarea></label>
+        <div class="bi-actions"><button type="submit" class="btn-pill btn-accent" data-code-add><i class="bi bi-check-lg" aria-hidden="true"></i> <span data-code-verb>Add the step</span></button>
+          <button type="button" class="btn-pill btn-ghost" data-coder-close>Cancel</button></div>
+      </form>
+    </section>
+
+    <section class="tx-preview" aria-labelledby="txPreviewH">
+      <h2 id="txPreviewH">3. Preview</h2>
+      <p class="bi-result-meta" data-run-meta role="status" aria-live="polite">Add an input to start.</p>
+      <div class="tx-tabs" role="tablist" aria-label="Preview">
+        <button type="button" role="tab" class="btn-pill btn-ghost" aria-selected="true" data-ptab="rows">Rows</button>
+        <button type="button" role="tab" class="btn-pill btn-ghost" aria-selected="false" data-ptab="profile">Profile</button>
+      </div>
+      <div class="tx-error" data-step-error role="alert" hidden></div>
+      <div class="tbl-wrap tx-rows" data-prows></div>
+      <div class="tx-profile" data-pprofile hidden></div>
+      <div class="tx-keys" data-keys hidden></div>
+    </section>
+  </div>
+
+  <details class="tx-yaml" data-yaml-box>
+    <summary>YAML: what is saved (no need to type it)</summary>
+    <p class="text-muted-d">The Transform is saved as a Python item (the steps are the lines after each <code># step:</code>) and a Python dataset that runs it as each reader.
+      Edit either here and <strong>Read the YAML back</strong> to see it as steps again.</p>
+    <div class="tx-yaml-grid">
+      <label>Python item<textarea class="studio-in mono tx-yaml-text" rows="16" spellcheck="false" data-yaml-python></textarea></label>
+      <label>Python dataset<textarea class="studio-in mono tx-yaml-text" rows="16" spellcheck="false" data-yaml-dataset></textarea></label>
+    </div>
+    <div class="bi-actions"><button type="button" class="btn-pill btn-ghost" data-yaml-read><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Read the YAML back</button></div>
+  </details>
+
+  <section class="bi-form tx-save" aria-labelledby="txSaveH">
+    <h2 id="txSaveH">4. Save</h2>
+    <fieldset class="tx-keyset" data-keyset hidden><legend>Each row is one</legend><div data-keyopts></div></fieldset>
+    <div class="bi-actions"><button type="button" class="btn-pill btn-accent" data-save disabled><i class="bi bi-save" aria-hidden="true"></i> Save as drafts</button>
+      <a class="btn-pill btn-ghost" data-open-python href="#" hidden>Open the Python item</a>
+      <a class="btn-pill btn-ghost" data-open-dataset href="#" hidden>Open the dataset</a></div>
+    <p class="text-muted-d" data-save-msg role="status" aria-live="polite"></p>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-transform-view.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-transform.js?v={{ ASSET_V }}"></script>{% endblock %}

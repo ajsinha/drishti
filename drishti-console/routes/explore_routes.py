@@ -60,15 +60,17 @@ def _powers(request: Request) -> list[str]:
     return list((getattr(request.state, "bi_me", None) or {}).get("powers") or [])
 
 
-async def extract_for(request: Request, spec: dict) -> Extract:
-    """The extract ``spec`` names, built by the server for the signed-in person: ``{dataset, fields, filters?, dates?}`` or ``{report, page, visual, state}``."""
+async def extract_for(request: Request, spec: dict, max_rows: int | None = None) -> Extract:
+    """The extract ``spec`` names, built by the server for the signed-in person: ``{dataset, fields, filters?, dates?}`` or ``{report, page, visual, state}``.
+    ``max_rows`` cuts it instead of ``bi.explore.max_rows`` (the browser Python console's own limit, wave C)."""
     limits, backend, me = _limits(request), request.app.state.backend, ident(request)
     try:
         import pyarrow  # noqa: F401
         arrow = True
     except ImportError:
         arrow = False
-    cap = limits.max_rows if arrow else min(limits.max_rows, 5000)          # without pyarrow the server's JSON answer (json-max-rows) carries it
+    top = max_rows or limits.max_rows
+    cap = top if arrow else min(top, 5000)                                  # without pyarrow the server's JSON answer (json-max-rows) carries it
     if spec.get("report"):
         page, visual = str(spec.get("page", "")), str(spec.get("visual", ""))
         if not page or not visual:
@@ -156,6 +158,22 @@ async def slice_pivot(request: Request):
     except (BackendError, ExploreError) as e:
         return _fail(e)
     return JSONResponse({**out, "inputRows": len(ex.rows), "masked": ex.masked}, headers={"Cache-Control": "no-store"})
+
+
+@router.post("/bi/explore/profile")
+async def profile(request: Request):
+    """Body ``{extract: {...}}``: the profile of the reader's extract (wave C, BI_PARITY_PLAN.md P3: per column its type, what its text looks like, nulls,
+    distinct values, a key hint, min and max, the most common values, a histogram), worked out in the console's sandbox, no author code; the same panel the
+    Transform editor shows. ``{kind: profile, rows, columns, inputRows, masked}``."""
+    body = await json_body(request)
+    try:
+        ex = await extract_for(request, body.get("extract") if isinstance(body.get("extract"), dict) else {})
+        if ex.arrow is None:
+            raise ExploreError("DRS-9074", 503, "the profile needs pyarrow on the console (pip install -r drishti-console/requirements.txt)")
+        out = await request.app.state.pyrunner.profile(ex.arrow)
+    except (BackendError, ExploreError, PyError) as e:
+        return _fail(e)
+    return JSONResponse({**out, "inputRows": len(ex.rows), "masked": ex.masked, "truncatedInput": ex.truncated}, headers={"Cache-Control": "no-store"})
 
 
 @router.post("/bi/explore/dsql")

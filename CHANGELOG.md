@@ -17,6 +17,30 @@
 
 ## Unreleased
 
+- **Python data prep, step by step (2.4.0, wave C).** A Python Transform's input may be a **pack kind read straight through a connector**, as the
+  reader (`{kind, pack?, connector?, fields?, where?, limit?}`: the kind's entitlements, row rules and masks apply; checked on validate, in the lineage),
+  and `POST /api/v1/bi/python/input` answers one input's rows as the caller. **BI → Transforms** (`/bi/transform`) builds a Transform without typing YAML:
+  inputs, then steps from a **snippets library** of 21 (append, unpivot, pivot, fill down, split, replace, dedupe, type fixes, joins, **as-of joins of
+  prices and FX**, business-day alignment, tenor buckets; each value written as a literal, each snippet with an example run in pandas and in the sandbox)
+  or by hand; after every change the steps run once in the console's sandbox and each step shows its rows, first rows and a **profile** (nulls,
+  distinct, key hint, min and max, top values, histogram, text that looks like numbers or dates with *Fix the type*), the inputs' key hints and a
+  failing step's line; the Python item and the Python dataset are written, read back and saved as drafts. Analyse has a **Profile** tab
+  (`POST /bi/explore/profile`). **Warm workers**: the fork-server starts with the console (`bi.python.warm`). CLI: `drishti.py bi transform input |
+  snippets | snippet`. [PYTHON_BI.md section 17](docs/guides/PYTHON_BI.md#17-data-prep-the-transform-editor-240),
+  [tutorial 14, step 12](docs/tutorials/14-python-and-analyse.md#step-12--prepare-raw-trades-step-by-step-the-transform-editor-240).
+  Tests: `TransformInputsApiTest`, `test_pyrunner_steps.py`, `test_transform_editor.py`, `test_cli_bitransform.py`, and Chromium
+  (`test_data_prep_browser.py`: a Transform reading a connector built step by step with a preview at each step and no YAML typed, equal to a
+  computation from the same trades).
+- **The browser Python console (2.4.0, wave C).** **BI → Python console** (`/pyconsole`, not a BI page: Analyse and every `/bi` page still compute
+  nothing in the browser) runs your own Python in Calc's Pyodide worker on a **masked extract** of a model (`POST /pyconsole/extract`, the reader's rows,
+  `bi.pyconsole.max_rows`); **Promote to the server** runs the same code on the console backend over the extract rebuilt for you, compares the answers
+  and keeps it as a notebook draft (`POST /pyconsole/promote`, bi-author). [ANALYSE.md section 16](docs/guides/ANALYSE.md#16-the-browser-python-console),
+  [tutorial 14, step 13](docs/tutorials/14-python-and-analyse.md#step-13--your-own-python-in-the-browser-the-python-console-240). Chromium: an analyst's
+  extract arrives masked, an author's result is promoted and gives the same answer.
+- **Offline quote and news pages checked** (`DRISHTI_OFFLINE=true`, the committed snapshot): the topic page's note now says that offline mode shows the
+  captured headlines (it said the tables stay empty); the browser test also checks that the company page draws the whole year of closes, ending at the
+  quote's own price, with no policy violation or script error.
+
 ## 2.3.0 — BI with filter context, time and live push; production-shaped trades from three source systems; a demo from a fresh clone (2026-10-17)
 
 - **Ids are text; numeric ids in files are read as text.** The generators write `TRADE_ID` (ENDUR digits included), `LEG_ID`, `FLOW_ID`, `RESET_ID` and `EVENT_ID` as strings (data/testdata and the trading and market-risk samples regenerated, same digits). `lake build` reads a numeric id as its exact digits (`1000008`, never `1000008.0`) in the id column, the document and an id/key column it promotes (always STRING now; before, an all-number `TRADE_ID` became a DOUBLE column); `lake demo --with-real` turns a real extract's numeric ids into text; the Delta connector reads an older table's numeric id column (DOUBLE, LONG, INT, DECIMAL) as id text. No id prefix or shape is assumed.

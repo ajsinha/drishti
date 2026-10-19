@@ -113,6 +113,9 @@ source:
     exposure: { model: counterparty-exposure@1, select: { fields: [counterparties.id, counterparties.sector], measures: [Exposure (EE peak), Exposure (PFE peak)] } }
   params: { floor: 1.0 }
   where: server                 # always the console backend's sandboxed runner (no browser computation, section 12)
+# 2.4.0: an input may instead be a pack kind read straight through a connector, as the reader (its entitlements, row rules and masks):
+#   trades: { kind: trade, pack: trading, connector: trade-endur, fields: [TRADE_ID, PORTFOLIO, NOTIONAL], where: [...], limit: 50000 }
+# (docs/guides/PYTHON_BI.md section 17.1: the kind's pack-generated dataset through its implicit model; a named connector must keep the fields as columns)
 
 # D. Another model's output: one model query, its answer is the table (replaces simple "composed" sources)
 source:
@@ -124,7 +127,7 @@ source:
 |---|---|---|---|---|
 | `pack` | the kind (one entity per business date, or one array element) | the pack (section 7): promoted columns, query-form fields, vocabulary | `live`, `snapshot`, `history` | the kind's entitlements, the dataset's rules and masks |
 | `connector` query | declared `grain.keys` (checked by a uniqueness test) | declared, or read from the query's result types on **Check** | `snapshot`, `history` | the connector's entitlement (the reader may open the connector's packs), the dataset's rules and masks |
-| `python` | declared `grain.keys` | declared `columns:` (a contract; a missing column is `DRS-9075` as today) | `snapshot` (kept per reader and input version, as today) | each input query runs **as the reader**; the dataset's own rules on top |
+| `python` | declared `grain.keys` | declared `columns:` (a contract; a missing column is `DRS-9075` as today) | `snapshot` (kept per reader and input version, as today) | each input (a model query, or since 2.4.0 a pack kind through a connector) runs **as the reader**; the dataset's own rules on top |
 | `model` | the query's `fields` | the query's fields and measures (measures arrive as columns with their additivity carried over) | `snapshot`, `live` (when the source model is live: a standing query, W3) | the inner query runs as the reader; the dataset's own rules on top |
 
 A `connector` query is **text the author writes**, reviewed like any item; its only parameters are the four named

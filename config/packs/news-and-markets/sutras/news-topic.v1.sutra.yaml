@@ -73,7 +73,7 @@ panels:
     kind: markdown
     title: "About these headlines"
     area: right
-    text: "Sample pack. Headlines are fetched when this page opens, by the news connector, from Google News. While the connector is off (its shipped state) the tables above stay empty: enable it in Admin, Connectors (news). Turning it on sends the name of this topic to Google."
+    text: "Sample pack. Headlines are fetched when this page opens, by the news connector, from Google News; turning it on (Admin, Connectors: news) sends the name of this topic to Google. While the connector is off (its shipped state) or the server runs in offline mode (DRISHTI_OFFLINE=true), the demo lake serves a captured snapshot of the same headlines (the news page, F7, says when it was captured), and without a lake the tables above stay empty."
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.NEWS_ID, 'news')", F9: raw }

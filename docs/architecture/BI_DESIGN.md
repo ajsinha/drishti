@@ -1136,17 +1136,24 @@ D and E; Python data prep and the browser Python console moved into C).
    `layout: board` replaces the `board` kind (converter).
 2. **Python data prep** (BI_PARITY_PLAN P1–P10): Transforms reading connectors directly, warm workers, a tested snippets
    library (as-of joins for prices and FX, unpivot, type fixes), profiling of a Transform's input and output, a step-by-step
-   run (each step's rows and profile) for the editor.
+   run (each step's rows and profile) for the editor. **Built (2.4.0):** a pack kind through a connector as an input, as the
+   reader (`POST /api/v1/bi/python/input`); the fork-server started with the console; 21 snippets each with an example run in
+   pandas and in the sandbox; the profile of inputs, every step and the output; the step-by-step run. Not built: P4 (wave D),
+   precompute on refresh (rest of P6), P7 to P10 ([PYTHON_BI.md section 17](../guides/PYTHON_BI.md#17-data-prep-the-transform-editor-240)).
 3. **The browser Python console's server side:** masked extracts of a model for the browser, promotion of a result to run
-   on the console backend.
+   on the console backend. **Built (2.4.0):** `POST /pyconsole/extract` (the reader's masked rows, `bi.pyconsole.max_rows`) and
+   `/pyconsole/promote` (the code run in the console's cell sandbox over the extract rebuilt for the reader, kept as a notebook draft).
 
 **Console lane:**
 
 1. **BI Studio as one product:** the shell of 8.1; format pane generated from the schemas; themes; conditional formatting;
    interactions editor; tooltip pages; small multiples; the matrix.
 2. **Transform editor:** step by step with a preview and profile at each step, snippets picker, profiling panel, no YAML.
+   **Built (2.4.0):** `/bi/transform` (inputs, steps from the snippets or by hand, a preview and a profile after each step, the
+   YAML written and read back, two drafts saved); Analyse's Profile tab shares the panel.
 3. **The browser Python console:** personal, just-in-time analysis on a masked extract of a model (Pyodide); promoted
-   results run on the console backend.
+   results run on the console backend. **Built (2.4.0):** `/pyconsole`, outside `/bi` (not a BI page: P3 holds), Calc's worker,
+   Promote compares the browser's and the backend's answers ([ANALYSE.md section 16](../guides/ANALYSE.md#16-the-browser-python-console)).
 4. **Docs and tutorials** for all of the above (UI, CLI and YAML).
 
 **Accepted when:** (1) a Power BI author does the parity task list (BI_PARITY_PLAN §4 items 6–9, 13) without YAML; (2) a

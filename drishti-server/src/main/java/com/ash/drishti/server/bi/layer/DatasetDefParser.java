@@ -375,7 +375,11 @@ public final class DatasetDefParser {
             Map<String, JsonNode> inputs = new LinkedHashMap<>();
             s.path("inputs").fields().forEachRemaining(e -> {
                 inputs.put(e.getKey(), e.getValue());
-                innerQuery(e.getValue(), "source.inputs." + e.getKey(), y);
+                if (com.ash.drishti.server.bi.mq.TransformInputs.isKind(e.getValue())) {        // 2.4.0: a pack kind read through a connector, as the reader
+                    com.ash.drishti.server.bi.mq.TransformInputs.check(e.getValue()).forEach(x -> y.error("DRS-9108", "source.inputs." + e.getKey() + "." + x[0], x[1]));
+                } else {
+                    innerQuery(e.getValue(), "source.inputs." + e.getKey(), y);
+                }
             });
             String where = LayerYaml.text(s, "where", "server");
             if (!Set.of("server", "browser", "auto").contains(where)) {
@@ -403,7 +407,7 @@ public final class DatasetDefParser {
     private static void innerQuery(JsonNode q, String path, LayerYaml y) {
         com.fasterxml.jackson.databind.node.ObjectNode o = q.isObject() ? ((com.fasterxml.jackson.databind.node.ObjectNode) q).deepCopy() : null;
         if (o == null) {
-            y.error("DRS-9108", path, "an input is a model query: { model, select: { fields, measures }, where, ... }");
+            y.error("DRS-9108", path, "an input is a model query: { model, select: { fields, measures }, where, ... }, or a pack kind: { kind, connector?, fields?, where? }");
             return;
         }
         if (!o.has("mq")) {

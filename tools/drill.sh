@@ -92,6 +92,7 @@ python_tool_tests() {
   python3 -m unittest -q tools/test_cli_extras.py
   python3 -m unittest -q tools/test_pack_deploy.py
   python3 -m unittest -q tools/test_cli_bi.py
+  python3 -m unittest -q tools/test_cli_bitransform.py
   python3 -m unittest -q tools/test_cli_connectors.py
   python3 -m unittest -q tools/test_cli_loads.py
   python3 -m unittest -q tools/test_pack_form.py

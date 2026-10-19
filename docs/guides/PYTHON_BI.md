@@ -43,6 +43,7 @@ Python in the *terminal* (Calc) is a different thing: [PYTHON_CALC.md](PYTHON_CA
 14. [Vega-Lite output](#14-vega-lite-output)
 15. [Tests shipped with an item](#15-tests-shipped-with-an-item)
 16. [Python in alerts and on boards](#16-python-in-alerts-and-on-boards)
+17. [Data prep: the Transform editor (2.4.0)](#17-data-prep-the-transform-editor-240)
 
 ## 1. At a glance
 
@@ -268,6 +269,7 @@ container with the usual limits. `GET /bi/python/status` says which isolation is
 | `max_groups` | `5000` | most groups a measure is called for |
 | `network_namespace` | `auto` | `auto`, `require`, `off` |
 | `scratch_dir` | system temp | where scratch folders are made |
+| `warm` | `true` (`DRISHTI_BI_PYTHON_WARM`) | 2.4.0: start the fork-server when the console starts, so the first call is warm too (section 17.7) |
 
 ## 10. Errors: DRS-9070 to DRS-9077
 
@@ -314,9 +316,14 @@ Built: the Measure and Visual interfaces; Python items as BI items (versions, re
 
 Built with several datasets (section 13): the **Transform** interface, run on the server over the reader's answers and published as a **Python dataset** (2.2: `source.python`, each input a model query; [BI_MODEL_SPEC.md section 1.2](../architecture/BI_MODEL_SPEC.md#12-sources)), kept per reader and version of the inputs; Analyse promotes a join cell to one.
 
-Not built, and not faked: the **Source** interface (RUPAKA.md section 13.1; rows from a Python-only source such as an API); a Python measure **inside** a SQL query or a bar chart's measures (a query that names one is `DRS-9013`);
+Built in 2.4.0 (section 17): a Transform's input may be a **pack kind read straight through a connector**, as the reader; the **Transform editor**
+(step by step, a preview and a profile after each step, a tested snippets library, no YAML to type); the **profile** of a frame (the editor, Analyse); **warm
+workers** (the fork-server starts with the console).
+
+Not built, and not faked: the **Source** interface (RUPAKA.md section 13.1; rows from a Python-only source such as an API: a kind through a connector is
+built, section 17.1, a Python-only source is not); a Python measure **inside** a SQL query or a bar chart's measures (a query that names one is `DRS-9013`);
 Python in **subscriptions** and **embedded** reports (an export of a python visual is the table of rows handed to Python; an embedded report does not draw Vega-Lite or Python visuals); a
-**warm worker pool** and a **separate runner service** (`bi.python.runner-url`: RUPAKA.md section 17); a **kernel-level** sandbox (seccomp, containers: use the platform's); **PygWalker** itself (Calc has its front end, Graphic Walker: [PYTHON_CALC.md](PYTHON_CALC.md#19-the-bi-client-and-graphic-walker)) and notebooks in Calc; **R**; `scikit-learn` and `polars` in the
+**pool of pre-forked children** (the fork-server forks one per call, from a warm parent: section 17.7) and a **separate runner service** (`bi.python.runner-url`: RUPAKA.md section 17); a **kernel-level** sandbox (seccomp, containers: use the platform's); **PygWalker** itself (Calc has its front end, Graphic Walker: [PYTHON_CALC.md](PYTHON_CALC.md#19-the-bi-client-and-graphic-walker)) and notebooks in Calc; **R**; `scikit-learn` and `polars` in the
 allow-list (add them to `bi.python.packages` and the server's `python-packages` when installed).
 
 
@@ -480,3 +487,196 @@ def compute_groups(frame, by, params):
 * **The Py-node endpoint.** The server's planner places Python nodes on the console tier and calls `POST /internal/py/transform`, `/measure` and
   `/column` on the console with `X-Drishti-Runner-Token` ([API_GUIDE.md](API_GUIDE.md); `drishti.bi.transform.console-url` and `console-token` on the
   server, the same `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` on the console). Without it the server runs `transform_cli.py` itself, as before.
+
+## 17. Data prep: the Transform editor (2.4.0)
+
+Wave C ([BI_DESIGN.md section 12.2](../architecture/BI_DESIGN.md#wave-c--authoring-and-analysis--240); BI_PARITY_PLAN.md P1, P2, P3, P5 and P6) makes the
+Python path the data-prep tool a Power Query author expects, without a step language: **raw rows straight from a connector**, a **step-by-step run with a
+preview and a profile after every step**, a **tested snippets library** for the common reshapes, and **warm workers**. The steps are still lines of
+pandas, run in the same sandbox as every Python item (section 7), on the rows the person looking may see.
+
+### 17.1 Inputs straight from a connector
+
+A Python dataset's `source.inputs` (section 13; [BI_MODEL_SPEC.md section 1.2 C](../architecture/BI_MODEL_SPEC.md#12-sources)) takes, besides a model
+query, a **pack kind read through a connector**:
+
+```yaml
+source:
+  python: fx-book-value-cleaned
+  inputs:
+    trades:                                   # the name run() receives it by
+      kind: trade                             # a pack kind
+      pack: trading                           # optional: which pack's definition (default: the first that declares it)
+      connector: prep-store                   # optional: a connector by name (default: whichever the pack routes the kind to)
+      fields: [TRADE_ID, TRADE_DATE, PORTFOLIO, CURRENCY, QUANTITY, PRICE]   # optional: the kind's columns (default: all)
+      where: [{ field: PORTFOLIO, op: in, values: [BOOK-FX-1] }]             # optional: filters, as a model query's
+      limit: 50000                            # optional: at most this many rows
+    rates: { model: fx-rates@1, select: { fields: [rates.currency, rates.date, rates.rate], measures: [] }, shape: rows }   # a model query, as before
+```
+
+A kind input is the rows of the kind's pack-generated dataset (`pack.trading.trade`), asked through its implicit model **as the reader**: the kind's
+entitlements, their row rules and their masks apply exactly as in a report on it, and a masked column arrives masked. A role that may not read the kind
+gets no rows. Naming a connector reads the same kind through that connector instead of the one the pack routes it to; the input then asks only the fields
+it names (and the grain's keys), so **the connector must keep them as columns** (its `layout`), which every lake connector does for the promoted columns.
+Its answers are never put in the result cache (whose plan key does not name the connector); the Transform keeps its own result per reader as before.
+
+The server checks the shape on validate and publish (`DRS-9108` with the path: `source.inputs.trades.colour`), a kind no pack declares is `DRS-9102`,
+a field the kind lacks `DRS-9108` with the kind's columns, a connector that is not running `DRS-9026`. The lineage of the dataset reaches the kind and the
+connector (`pack-kind`, `connector: prep-store`, `input: trades`).
+
+**One input as you.** `POST /api/v1/bi/python/input` with `{input, limit?, asOf?}` answers the rows of one input (either form) as the caller: Arrow with
+`?format=arrow` (headers `X-Bi-Rows`, `X-Bi-Masked`, `X-Bi-Model`, `X-Bi-As-Of`, the day the rows came from) or JSON `{model, kind, columns, rows,
+rowCount, masked, asOf}`; `limit` defaults to 1,000 and never exceeds `drishti.bi.transform.max-input-rows`. It needs the BI power. This is what the
+editor previews, and what `drishti.py bi transform input` prints.
+
+### 17.2 The editor
+
+**BI → Transforms** (`/bi/transform`, the rail's *Transforms*) builds a Transform in four parts, with **no YAML to type**:
+
+1. **Inputs.** Name it as the code will (`trades`), then *A pack kind, straight through its connector* (pick the kind, optionally type the connector, tick
+   the fields) or *A model or a dataset* (a model query of rows). The line under the input says how many rows came, the day they are of and what is masked
+   for you.
+
+   ![The Transform editor: an input, the pack kind trade read through the connector prep-store, 60 rows of 2026-10-08](img/bi-transform/01-input.png)
+
+2. **Steps.** The first is *Start from trades* (`df = trades.copy()`). *Add a step from the snippets* opens a form for the snippet you choose (section
+   17.3): the columns are those of the step before, the inputs are yours. *Write a step* takes a label and a few lines of pandas over `df`. A step is
+   inserted after the one you are looking at; each can be edited (✎), moved (↑ ↓) or removed (×), and *Undo the last step* removes the last.
+3. **Preview.** After every change the console runs the steps (section 17.4) and each step shows its rows and columns; pick one to see its **first 20
+   rows** (*Rows*) or its **profile** (*Profile*, section 17.5). A step that fails turns red, says its error and line, and the steps before it keep their
+   frames.
+
+   ![Step 2 of the sample, Filter rows by values (PORTFOLIO): 20 rows; its profile, one card per column](img/bi-transform/02-profile.png)
+
+   ![Four steps: start, filter, a calculated column VALUE = QUANTITY * PRICE, total VALUE per CURRENCY; the last step's two rows](img/bi-transform/03-steps.png)
+
+4. **Save.** Tick the column(s) that make one row (the grain; a column that was unique in the preview is offered first) and *Save as drafts*: a **Python
+   item** (`interface: transform`) and a **Python dataset** that runs it, both drafts in your workspace. Check and publish the Python item first, then the
+   dataset (section 13). The page's address then names both (`/bi/transform?item=<id>&dataset=<id>`), and opening it again opens the same steps.
+
+The YAML is shown under *YAML: what is saved* and stays in step with the page; edit either text and *Read the YAML back* to see it as steps again (a
+Transform written by hand opens too: its `# step:` comments are the steps, or its whole body is one step).
+
+![The YAML the editor wrote: the Python item with the steps after their # step: comments, and the Python dataset with the kind input](img/bi-transform/04-yaml.png)
+
+What is saved, for the sample above:
+
+```yaml
+rachana: 1
+python: fx-book-value-cleaned
+title: FX book value, cleaned
+interface: transform
+inputs: [trades]
+packages: [pandas, numpy]
+target: server
+timeout: 20
+memory: 512
+params: {}
+source: |
+  import re
+  import numpy as np
+  import pandas as pd
+
+
+  def run(trades, params):
+      # step: Start from trades
+      df = trades.copy()
+      # step: Filter rows by values (PORTFOLIO)
+      df = df[df['PORTFOLIO'].isin(['BOOK-FX-1']) == True].reset_index(drop=True)
+      # step: Calculated column (QUANTITY; PRICE)
+      df['VALUE'] = (pd.to_numeric(df['QUANTITY'], errors="coerce") * pd.to_numeric(df['PRICE'], errors="coerce")).replace([np.inf, -np.inf], np.nan)
+      # step: Group and total (CURRENCY; VALUE)
+      df = df.groupby(['CURRENCY'], as_index=False, dropna=False)[['VALUE']].agg('sum')
+      return df
+```
+
+Running the steps needs the **bi-author** power (it runs Python); without it the page still writes and reads the YAML.
+
+### 17.3 The snippets library
+
+`drishti-console/config/prep-snippets.yaml` holds 21 snippets, each one step over `df` with parameters filled in a form. **A value is always written as a
+Python literal** (`repr`): a column called `x"]; import os` is a column of that odd name, never code; an *input* parameter must be one of the Transform's
+inputs and an *operator* one of its options (`DRS-9070` otherwise). Every snippet carries an **example** (frames in, parameters, the frame expected out)
+that `tests/test_transform_editor.py` runs in plain pandas **and** in the sandbox, so a snippet is correct out of the box.
+
+| Group | Snippets |
+|---|---|
+| Columns | keep columns, rename a column, split a column, calculated column (`+ - * /`) |
+| Clean | type fix: text to number, type fix: text to date, replace values, fill down (optionally within groups), remove duplicates |
+| Rows | filter rows by values, drop rows with an empty value, sort rows |
+| Combine | append another input (union), join another input, **as-of join of prices** (the latest price of the instrument on or before the row's date, within *n* days), **as-of FX conversion** (an amount to a base currency at the latest rate on or before the row's date) |
+| Reshape | unpivot (columns to rows), pivot (rows to columns), group and total |
+| Dates | align to a business day (following, preceding, modified following; weekends and the holidays you list), tenor bucket (`<1Y`, `1-2Y`, ..., `30Y+`) |
+
+More snippets: a file of the same shape named by `bi.transform.snippets_file`. On the command line: `drishti.py bi transform snippets` lists them and
+`drishti.py bi transform snippet asof-fx amount=NOTIONAL currency=CURRENCY date=TRADE_DATE fx=rates --inputs trades,rates` prints the step.
+
+### 17.4 The step-by-step run
+
+`POST /bi/transform/steps` (the console) with the page's spec: each input is asked of the server **as you** (section 17.1, at most
+`bi.transform.preview_rows`, 1,000), then `run` runs **once** in the sandbox (a child of the fork-server, its usual limits) with a mark after each step.
+The steps are the statements after each `# step: <label>` comment of `run`'s body, or each top-level statement when there is none. After each step the
+worker describes the frame that step made (the last DataFrame it assigned, else `df`; after the last step, what `run` returned): its rows, columns and
+types, its first 20 rows and its profile. The answer also profiles each input and gives the key hints between them. A step that raises stops the run:
+`failed` has its index, label, line, error and traceback (the steps before keep their frames). Measured on the sample (60 rows, four steps): the inputs
+asked in about 10 ms, the Python run about 45 to 65 ms in all.
+
+The run is never kept: an author runs it as they edit. The Python dataset itself runs the same `run` as each reader when it is read (section 13).
+
+### 17.5 Profiling
+
+The **profile** of a frame, worked out in the sandbox over the reader's rows, is one card per column: its type; **what its text looks like** (numbers or
+dates kept as text, with *Fix the type*, which adds the right type-fix step; digits in a column named like an identifier, `TRADE_ID` or `..._CODE`, are
+not offered a number type: ids are text by design); empty values (count and %, with a bar); distinct values; **key?** when every
+row has its own value; min and max (and the mean of a number); the five most common values; a histogram of a number. Between inputs, *looks like a key
+of* names a column whose values (90% or more) are the values of another input's unique column, with how many match: the *Join* snippet joins them.
+
+The same panel is Analyse's **Profile** tab ([ANALYSE.md section 15](ANALYSE.md#15-profile)), `POST /bi/explore/profile`. No author code runs to profile.
+
+### 17.6 On the command line
+
+```
+drishti.py bi transform input FILE.dataset.yaml [--as-of 2026-10-08]      # each input as you: rows, masked columns, a profile
+drishti.py bi transform snippets                                          # the library
+drishti.py bi transform snippet filter-values column=PORTFOLIO values=BOOK-FX-1      # one step, its values written as literals
+drishti.py bi item new me FILE.python.yaml                                # the drafts, as the editor's Save makes them
+drishti.py bi item new me FILE.dataset.yaml
+```
+
+Real output of the first on the demo lakes ([tutorial 14, step 12](../tutorials/14-python-and-analyse.md#step-12--prepare-raw-trades-step-by-step-the-transform-editor-240)):
+
+```
+trades: 1,000 rows of dataset:pack.trading.trade as of 2026-10-16
+  CURRENCY                     text      empty     0  distinct      3  CAD .. USD
+  MATURITY_DATE                text      empty     0  distinct     81  2024-11-01 .. 2029-10-31
+  NOTIONAL                     float64   empty     0  distinct    971  2,855.8 .. 2.46923e+08
+  PORTFOLIO                    text      empty     0  distinct      3  BOOK-COMM-1 .. BOOK-COMM-3
+  TRADE_DATE                   text      empty     0  distinct    529  2024-10-10 .. 2026-09-25
+  TRADE_ID                     text      empty     0  distinct   1000  1000005 .. 1005000
+  TRADE_STATUS                 text      empty     0  distinct      5  AMENDED .. VALIDATED
+```
+
+See [CLI_GUIDE.md](CLI_GUIDE.md#bi-transform-a-transforms-inputs-as-you-and-the-snippets).
+
+### 17.7 Warm workers
+
+Since wave B every call is a child of the fork-server, a parent that imported pandas, numpy and pyarrow once. In 2.4.0 the console **starts the
+fork-server when it starts** (`bi.python.warm`, default on), so the first call of the day, a report's python visual or a Transform's step run, does not pay
+for the interpreter and the imports either; `GET /bi/python/status` says `forkServer.warm` and `warmedMs`. Isolation is unchanged: one child per call,
+its own session, limits, audit hook and scratch folder.
+
+### 17.8 Settings
+
+| Setting (console) | Default | Meaning |
+|---|---|---|
+| `bi.transform.preview_rows` | `1000` (`DRISHTI_BI_TRANSFORM_PREVIEW_ROWS`) | rows of each input the step-by-step run starts from (10 to 50,000) |
+| `bi.transform.timeout_seconds`, `memory_mb` | `20`, `512` | the step run's limits (also capped by `bi.python.max_timeout_seconds`, `max_memory_mb`) |
+| `bi.transform.snippets_file` | empty | more snippets, after the shipped library |
+| `bi.python.warm` | `true` | start the fork-server with the console |
+
+The server's `drishti.bi.transform.max-input-rows` (50,000) caps an input, in the editor and in a run.
+
+### 17.9 Not built
+
+AI-written Transforms (P4, wave D); a precomputed run on refresh for configured roles (the rest of P6); parameters bound to a report (P7); an incremental
+mode (P8); promoting several Analyse cells as steps (P9); a drift warning when a Transform's columns change (P10); a Python-only Source (rows from an API).

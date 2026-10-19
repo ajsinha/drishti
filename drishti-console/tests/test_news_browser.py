@@ -123,11 +123,21 @@ def test_offline_mode_serves_the_captured_snapshot_and_never_calls_out(tmp_path_
         assert state["news-store"][0] == "RUNNING", state
         assert not any(c.get("problems") for c in listed if c["name"] in ("news", "yfinance")), listed
         page = browser.new_page(viewport={"width": 1400, "height": 1000})
+        errors = []
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.add_init_script("window.__csp = []; document.addEventListener('securitypolicyviolation', e => window.__csp.push(e.violatedDirective + ' ' + e.blockedURI));")
         page.goto(news_stack.CONSOLE_URL + "/v/listed-company/CO-AAPL")
         expect(page.locator("#p-quote")).to_contain_text("USD")
         expect(page.locator("#p-quote")).to_contain_text("snapshot captured")      # As of ... (snapshot captured <date>)
         expect(page.locator("#p-history")).to_be_visible()
         expect(page.locator("#p-history canvas, #p-history svg").first).to_be_visible()
+        # the whole year of closes is drawn, and it ends at the quote's own price (wave C housekeeping: one snapshot, two panels that agree)
+        drawn = page.evaluate("""() => { const c = [...document.querySelectorAll('#p-history div')].map(d => window.echarts && echarts.getInstanceByDom(d)).find(Boolean);
+            if (!c) return null; const o = c.getOption(); return { x: o.xAxis[0].data.length, y: o.series[0].data.map(v => v && typeof v === 'object' ? v.value : v) }; }""")
+        assert drawn and drawn["x"] >= 200 and len(drawn["y"]) == drawn["x"] and all(v is not None for v in drawn["y"]), drawn and drawn["x"]
+        price = float(page.locator("#p-quote").inner_text().split("Price")[1].split()[0].replace(",", ""))
+        last = drawn["y"][-1][-1] if isinstance(drawn["y"][-1], list) else drawn["y"][-1]
+        assert abs(float(last) - price) < 0.01, (last, price)
         assert page.locator("#p-headlines tbody tr").count() > 0
         expect(page.locator("#p-headlines a.ext").first).to_have_attribute("target", "_blank")
         page.screenshot(path=str(stack.tmp / "company-offline.png"))
@@ -140,10 +150,12 @@ def test_offline_mode_serves_the_captured_snapshot_and_never_calls_out(tmp_path_
         page.goto(news_stack.CONSOLE_URL + "/v/news-topic/TOPIC-FED")
         assert page.locator("#p-headlines tbody tr").count() > 0
         expect(page.locator("#p-bySource")).to_be_visible()
+        expect(page.locator("#p-note")).to_contain_text("captured snapshot")            # the note says what is shown offline, not that the tables are empty
         page.screenshot(path=str(stack.tmp / "topic-offline.png"))
 
         page.goto(news_stack.CONSOLE_URL + "/v/news/NEWS-Federal_Reserve")
         expect(page.locator("#p-snapshot")).to_contain_text("Google News")
+        assert page.evaluate("window.__csp") == [] and errors == [], (page.evaluate("window.__csp"), errors)
         page.close()
         assert news_stack._Fake.requests == [], news_stack._Fake.requests          # nothing tried the network
     finally:

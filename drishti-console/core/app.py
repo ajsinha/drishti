@@ -86,7 +86,7 @@ WALKER_CSP = ("default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 's
 EMBED = "/embed/"                           # embedded views for other web applications: off unless embed.enabled (routes/embed_routes.py)
 
 
-PROTECTED = ("/t", "/bi", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports", "/build", "/share/", "/inbox")
+PROTECTED = ("/t", "/bi", "/pyconsole", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports", "/build", "/share/", "/inbox")
 EXACT = ("/t", "/s")                        # pages whose path is a prefix of public ones (/s of /static)
 # all a user whose password change is due may reach until it is done (besides public pages): QA 2026-10-01 SEC-06
 WHILE_MUST_CHANGE = ("/account", "/account/password", "/logout")
@@ -228,7 +228,11 @@ def create_app(settings: Settings) -> FastAPI:
         watcher = asyncio.create_task(ai.supervise()) if ai is not None and (ai.enabled or ai.mcp_enabled) else None
         backend_task = asyncio.create_task(app.state.backend_watch.run()) if app.state.backend_watch.enabled else None
         maint_task = _lake_schedules(app)                    # Admin -> Lakes -> Maintain: the schedules (core/lake_maint.py)
+        runner = getattr(app.state, "pyrunner", None)
+        warm_task = asyncio.create_task(runner.warm()) if runner is not None and runner.warm_on_start else None   # wave C: warm Python workers
         yield
+        if warm_task is not None and not warm_task.done():
+            warm_task.cancel()
         if maint_task is not None:
             maint_task.cancel()
         if backend_task is not None:
@@ -392,7 +396,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(ai_routes.router)
     if app.state.bi_on:
         from core.explore import Limits
-        from routes import bi_routes, explore_routes, model_routes, pynode_routes, python_routes, wizard_routes
+        from routes import bi_routes, explore_routes, model_routes, pynode_routes, pyconsole_routes, python_routes, transform_routes, wizard_routes
 
         app.state.explore_limits = Limits.from_settings(settings)      # Analyse (docs/guides/ANALYSE.md): extract, SQL and cell limits
         app.include_router(bi_routes.router)
@@ -400,6 +404,8 @@ def create_app(settings: Settings) -> FastAPI:
         app.include_router(model_routes.router)
         app.include_router(python_routes.router)
         app.include_router(explore_routes.router)
+        app.include_router(transform_routes.router)        # wave C: the Transform editor (/bi/transform), step by step
+        app.include_router(pyconsole_routes.router)        # wave C: the browser Python console (/pyconsole) and its masked extracts
         app.include_router(pynode_routes.router)          # the Py-node endpoint the server's planner calls (/internal/py/*: its token only)
     from core.ai import AiRuntime
 

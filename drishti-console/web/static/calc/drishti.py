@@ -483,6 +483,28 @@ def help() -> None:   # noqa: A001 - drishti.help() reads naturally
 
 _namespace: dict = {"__name__": "__main__"}
 
+# The browser Python console (wave C, docs/guides/ANALYSE.md section 15): the page hands the worker a masked extract once ({id, columns, rows, masked});
+# each run gets it as a fresh pandas frame ``df`` (df.attrs["masked"] names the masked columns), as an Analyse cell does on the console.
+_extract: dict = {"id": None, "frame": None}
+
+
+def _extract_frame(ctx: dict):
+    ex = ctx.get("extract")
+    if isinstance(ex, dict) and ex.get("columns") is not None:
+        pd = _pd()
+        cols = [c["name"] for c in ex["columns"]]
+        frame = pd.DataFrame(ex.get("rows") or [], columns=cols)
+        for c in ex["columns"]:
+            if c.get("type") == "date":
+                frame[c["name"]] = pd.to_datetime(frame[c["name"]], errors="coerce").dt.date
+            elif c.get("type") == "timestamp":
+                frame[c["name"]] = pd.to_datetime(frame[c["name"]], errors="coerce")
+        frame.attrs["masked"] = list(ex.get("masked") or [])
+        _extract.update(id=ctx.get("extractId"), frame=frame)
+    elif ctx.get("extractId") != _extract["id"]:
+        _extract.update(id=None, frame=None)
+    return None if _extract["frame"] is None else _extract["frame"].copy()
+
 
 def _flush_figures() -> None:
     plt = sys.modules.get("matplotlib.pyplot")
@@ -524,13 +546,20 @@ async def _run(code: str, context: str) -> str:
     global view
     from pyodide.code import eval_code_async
     _Budget.sent, _Budget.capped = 0, False
-    view = View(json.loads(context))
+    ctx = json.loads(context)
+    view = View(ctx)
     me = sys.modules[__name__]
     _namespace.update({"view": view, "drishti": me, "show": show, "chart": chart})
+    if ctx.get("extractId"):                 # the browser Python console: df is the masked extract, result what the cell answers
+        _namespace["df"] = _extract_frame(ctx)
+        _namespace.pop("result", None)
     try:
+        sent = _Budget.sent
         result = await eval_code_async(code, globals=_namespace, filename="<calc>")
         if inspect.iscoroutine(result):      # a last line of drishti.get_async(...) without await: awaited for you
             result = await result
+        if result is None and ctx.get("extractId") and _namespace.get("result") is not None and _Budget.sent == sent:
+            result = _namespace["result"]    # nothing shown: the cell's result is its answer, as on the console backend
         if result is not None and not type(result).__module__.startswith("matplotlib"):   # figures are shown below
             show(result)
         _flush_figures()
