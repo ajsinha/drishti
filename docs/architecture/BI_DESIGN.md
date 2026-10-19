@@ -1161,7 +1161,7 @@ D and E; Python data prep and the browser Python console moved into C).
    at every level (`bi-matrix.js`), board pages in the viewer and the designer (`bi-report-board.js`, `bi-design-v2.js`); the acceptance (1) is
    `drishti-console/tests/test_bi_studio_browser.py` ([BI_GUIDE.md section 26](../guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product-wave-c-240)).
    Not in it: a report visual bound to a field parameter (gap 9: field parameters are in the model and its parameter slicers since 2.3.0, but a report's
-   well cannot name `param.<name>` yet; moved to wave D, 2.6.0: server lane item 7 below).
+   well cannot name `param.<name>` yet; moved to wave N, 2.5.0, below).
 2. **Transform editor:** step by step with a preview and profile at each step, snippets picker, profiling panel, no YAML.
    **Built (2.4.0):** `/bi/transform` (inputs, steps from the snippets or by hand, a preview and a profile after each step, the
    YAML written and read back, two drafts saved); Analyse's Profile tab shares the panel.
@@ -1186,6 +1186,10 @@ nodes, nodes per role); view and data forwarding with the newest pack served and
 type-ahead and grouped pages; live relay and BI routing; user state across nodes and console failover. Configured like
 connectors, in `config/net/` (section 14 there).
 
+**Also in 2.5.0, field parameters in report wells** (decided 2026-10-19, moved from wave C, gap 9, so that 2.6.0 is about AI):
+a report visual's well names `param.<name>` and the reader's parameter slicer switches the field or measure it draws; checked
+by the report schema (server), offered in the Studio's wells (console), with a browser test and REPORTS.md and BI_GUIDE updated.
+
 **Console lane:** Admin → Net (members, capability map, routing with *Explain*, access, security, files;
 [DRISHTI_NET.md §13](DRISHTI_NET.md#13-admin-management-and-observability)); `backend.urls` failover; docs and a tutorial
 (UI, CLI and YAML).
@@ -1195,7 +1199,7 @@ path, masks twice, scatter-gather against a single-node answer, browser tests of
 three servers on scratch ports (shared and separate lakes, overlapping packs), one killed and restarted under
 `tools/bench/users.py` load.
 
-**Accepted when:** (1) three servers started from one seed act as one to a console connected to any of them; (2) a
+**Accepted when:** (0) a report visual switches its field through a field-parameter slicer; (1) three servers started from one seed act as one to a console connected to any of them; (2) a
 stopped server makes answers partial and named, never wrong, and a restarted one rejoins from its file; (3) a masked field
 stays masked whichever node holds the data, and a role never reaches a node outside its list; (4) the soak runs with 0
 wrong answers; (5) QA findings fixed before the drill.
@@ -1214,8 +1218,6 @@ wrong answers; (5) QA findings fixed before the drill.
 5. **Integration:** PostgreSQL-wire read-only endpoint (decision 5); Excel feed; embed tokens bound to envelopes; SDK events.
 6. **GenUI:** screens an AI agent composes from governed Sutra fragments, bound to live data as the viewer, streamed to
    other applications through `<drishti-genui>` ([GENUI.md](GENUI.md)).
-7. **Field parameters in report wells** (moved from wave C, gap 9): a report visual's well names `param.<name>`, the reader's
-   parameter slicer switches the field or measure it draws; checked by the report schema, and the Studio's wells offer the model's field parameters.
 
 **Console lane:**
 
