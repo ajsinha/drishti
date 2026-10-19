@@ -63,6 +63,12 @@
   another server, a write never), uses a recovered server again for new sessions after a minute, and reports each failover (audited
   `net-console-failover`). Source router: a `Fallback` to the peers after the local sources. NET.md sections 7 and 8, CONFIGURATION, API_GUIDE,
   OPERATIONS, TROUBLESHOOTING, USER_GUIDE.
+- **Drishti*net scatter-gather (N5).** A search is asked of every node that holds other data of the kind (shards; a replica of a node already asked is
+  not), each on its own data (`GET /api/v1/net/search`, one hop, `scatter-budget` 3 s), and merged as one answer: the union with an entity once, ordered
+  and cut as one node would, `scanned` and `matched` summed, a node that failed, was late or is down named in `failed` with `partial: true`, and `nodes`
+  (who answered what) for administrators. A search of a kind whose pack is not on the node is scattered and merged there too. The type-ahead asks every
+  reachable node within `suggest-budget` (150 ms). On trades split three ways (one on two nodes) every node answers the same union. Grouped pages are
+  still built per node. NET.md section 7, API_GUIDE, TROUBLESHOOTING, USER_GUIDE.
 
 ### 2.4.0 (wave C, authoring and analysis): report schema v2, boards as a report layout, BI Studio
 

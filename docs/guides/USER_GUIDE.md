@@ -2110,3 +2110,4 @@ When your administrator runs several Drishti servers as one cluster, nothing cha
 and works the same whichever server holds the data. If the server your console uses stops, the console moves to another by itself; the page you are
 on reloads its data, a live view reconnects, and you do not sign in again. A save made at the very moment a server stops says it did not save: save
 again. When the server that holds what you asked for is down, the page says so (`DRS-5052 ... cannot be reached now`) instead of showing nothing.
+A search covers every server's data; when one of them did not answer, the results say they are partial and name the server they are missing.

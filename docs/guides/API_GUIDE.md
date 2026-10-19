@@ -1483,7 +1483,11 @@ refuses one whose roles may not reach it (`403 DRS-5054`). None of these headers
 
 A request a node's own client makes for a kind another node serves (its pack is not here, is older here, or is served to peers only here) is forwarded
 whole, and the client gets that node's answer unchanged: the same status, body and headers (none of the cluster's). When the node that serves it cannot
-be reached the answer is `502 DRS-5052` or `504 DRS-5053`, naming it. Admin → Health's answer (`GET /api/v1/admin/health`) has a `net` part:
+be reached the answer is `502 DRS-5052` or `504 DRS-5053`, naming it. A search (`GET /api/v1/search`) is asked of every node that holds other data of the kind and merged: its `rows` are the union (an entity once),
+ordered and cut as one node would, `scanned` and `matched` summed, and a node that failed, was late or is down is in `failed`
+(`{"source": "node n-c (left)", "reason": "not asked: it cannot be reached now"}`) with `partial: true`. For administrators the answer has
+`nodes: [{nodeId, scanned, matched, elapsedMs}]` (or `failure`). The type-ahead (`GET /api/v1/command/suggest`) asks every node within
+`suggest-budget`. Admin → Health's answer (`GET /api/v1/admin/health`) has a `net` part:
 `enabled`, `running`, `nodeId`, `members` by state, `drained`, `last10Minutes` (`forwarded`, `failed`).
 
 | Method | Path | Who | Notes |
@@ -1493,6 +1497,7 @@ be reached the answer is `502 DRS-5052` or `504 DRS-5053`, naming it. Admin → 
 | `GET` | `/net/digest` | node | This node's capability digest: `nodeId`, `url`, `version`, `protocol`, `packs` (`name`, `code`, `version`, `hash`, `peerOnly`), `kinds` (`kind`, `mnemonic`, `label`, `pack`, `renders`, `sources`: `connector`, `type`, `table`, `latestDate`, `dataVersion`, `columnar`, `dated`, `live`), `load` (`requestsPerSecond`, `latencyMs`), `calendar`, `tags`, `redact`, `access`, `reports`, `builtAt`. Peers pull it when the `digestHash` in gossip changes |
 | `GET` | `/net/capabilities` | node, admin | The capability table as Admin → Net's map shows it: `kinds` (each with `renderers`: `nodeId`, `version`, `newest`, `peerOnly`, `routable`; `holders`: `nodeId`, `connector`, `type`, `table`, `shared` (a replica), `latestDate`, `dataVersion`; `scatter`: the peers a search asks), `nodes`, `warnings` (`what`: `pack-content`, `calendar`, `redact`, `protocol`; `text`) |
 | `GET` | `/net/fetch/{kind}/{id}` (`~` and `?id=` for an id with a slash) | node, for a user | One entity document as the on-behalf-of user may see it here (masked by this node's rules), read from this node's own sources only, with the request's `X-Drishti-As-Of` and `X-Drishti-Known-At`: `{"kind", "id", "provenance": {source, generation, fetchedAt, live, businessDate}, "data"}`. `404` when not held here. The asking node renders it and masks it again |
+| `GET` | `/net/search?q=` | node, for a user | This node's share of a scattered search: the search run on this node's data only, for the on-behalf-of user, as `GET /api/v1/search` answers it |
 | `GET` | `/net/explain?kind=&id=&q=&role=&dated=` | admin | Where a request would go from this node and why: `route` (`local`, `view`, `none`), `reason`, `forwardTo` (in order), `localPack`, `dataPeers` (where its document would be read from), `scatter` (the peers a search asks), `unreachable` (nodes the role may not reach), `down` |
 | `GET` | `/net/traffic?minutes=60` | admin | What this node sent to its peers: `minutes` (per peer, a row a minute: `ok`, `not-held`, `refused`, `failed`, `timeout`, `avgMs`), `slowest`, `recent` (the latest calls), `totals` (the last ten minutes) |
 | `POST` | `/net/console-event` `{"from", "to", "why", "console"}` | the console, admin | A console that moved from one server to another says so; recorded in the audit log as `net-console-failover` |

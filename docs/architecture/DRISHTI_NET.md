@@ -503,3 +503,16 @@ console's `backend.urls` (`core/cluster.py`): one server per session, health eve
   `backend.data_dir`; a failover is reported to the server it moved to (`POST /api/v1/net/console-event`, audited `net-console-failover`).
 - `routing.yaml` also has `user-state` (N7). Not built in this phase: the administrators' line in *How this view was built* (provenance) naming
   the node that held the data.
+
+**N5, scatter-gather (built).** `SearchScatter` completes a search answered here with the shares of the peers `CapabilityTable.scatterTargets`
+names (shards, never a replica of a node already asked; the fewest nodes that cover every table, fastest first), asked in parallel through
+`GET /api/v1/net/search` within `scatter-budget`, and merges them (rows by kind and id, this node's first; re-sorted by the order-by value or the id;
+cut to the limit; sums; `failed`, `partial`, and `nodes` for administrators). A search of a kind whose pack is not here is scattered by the forwarding
+filter and merged on the asking node. The type-ahead asks every reachable node within `suggest-budget` and interleaves the answers. Measured on trades
+split three ways with one shared: every node answers the same union, the shared trade once, ordered and cut exactly as the sorted union. Changes from
+the design:
+
+- A node that holds data of the kind but is down (suspect, dead, left) is named in `failed` as `not asked: it cannot be reached now`, so a search with
+  a node down is partial rather than silently smaller.
+- A duplicate keeps the first answer (this node's, then the peers' in the order asked), not necessarily the one whose coverage is `HELD`.
+- **Not built:** grouped pages (derived connectors) gathered across nodes; each node builds them from its own data.

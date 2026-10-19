@@ -52,10 +52,24 @@ public class NetDataController {
     private final JsonCodec codec;
     private final ObjectMapper json = new ObjectMapper();
 
-    public NetDataController(SourceRouter router, Entitlements entitlements, JsonCodec codec) {
+    private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.api.SearchController> searches;
+
+    public NetDataController(SourceRouter router, Entitlements entitlements, JsonCodec codec,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.api.SearchController> searches) {
         this.router = router;
         this.entitlements = entitlements;
         this.codec = codec;
+        this.searches = searches;
+    }
+
+    /**
+     * This node's share of a scattered search ({@code GET /api/v1/net/search?q=}): the search run on this node's own data for the
+     * on-behalf-of user, exactly as {@code GET /api/v1/search} answers it here, and asking no other node (one hop).
+     */
+    @GetMapping("/search")
+    public Map<String, Object> search(@RequestParam String q, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p,
+            @RequestAttribute(value = NetCallFilter.CLAIMS, required = false) Object claims) {
+        return searches.getObject().search(q, asOf, forUser(p, claims));
     }
 
     static Principal forUser(Principal p, Object claims) {

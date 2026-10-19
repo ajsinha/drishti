@@ -66,14 +66,16 @@ public final class ViewForwardFilter extends OncePerRequestFilter {
     private final ForwardLog log;
     private final ObjectProvider<AccessLog> access;
     private final ObjectProvider<com.ash.drishti.engine.command.Mnemonics> mnemonics;
+    private final SearchScatter scatter;
 
     public ViewForwardFilter(NetRouting routing, Entitlements entitlements, ForwardLog log, ObjectProvider<AccessLog> access,
-            ObjectProvider<com.ash.drishti.engine.command.Mnemonics> mnemonics) {
+            ObjectProvider<com.ash.drishti.engine.command.Mnemonics> mnemonics, SearchScatter scatter) {
         this.routing = routing;
         this.entitlements = entitlements;
         this.log = log;
         this.access = access;
         this.mnemonics = mnemonics;
+        this.scatter = scatter;
     }
 
     /** What a request names: the area (views, entities, history, search, forms), the kind (or the pack, for forms) and the entity. */
@@ -155,7 +157,63 @@ public final class ViewForwardFilter extends OncePerRequestFilter {
             chain.doFilter(req, res);
             return;
         }
+        if ("search".equals(t.get().area()) && "/api/v1/search".equals(RequestPaths.routed(req)) && scatter != null) {
+            scatterSearch(req, res, t.get(), plan, p);
+            return;
+        }
         forward(req, res, t.get(), plan, p);
+    }
+
+    /**
+     * A search of a kind whose pack is not here: asked of every node that holds data of it (not one forwarded node), each on its own
+     * data, and merged here as one answer (section 8).
+     */
+    private void scatterSearch(HttpServletRequest req, HttpServletResponse res, Target t, NetRouting.Plan plan, Principal p) throws IOException {
+        String q = req.getParameter("q");
+        com.ash.drishti.engine.search.SearchQuery query;
+        try {
+            query = com.ash.drishti.engine.search.SearchQuery.pick(q);
+        } catch (RuntimeException e) {
+            forward(req, res, t, plan, p);                 // a query this node cannot read: the node that renders the kind says why
+            return;
+        }
+        List<String> peers = routing.tableFor(p).scatterTargets(t.kind());
+        if (peers.isEmpty()) {
+            peers = plan.targets();
+        }
+        var shares = new java.util.ArrayList<>(scatter.ask(peers, SearchScatter.sharePath(q), asOf(req), p, scatter.budget(), "search", t.kind()));
+        routing.downHolders(t.kind()).forEach(d -> shares.add(new SearchScatter.Share(d, null, "not asked: it cannot be reached now", 0)));
+        if (shares.stream().allMatch(s -> s.answer() == null)) {
+            NetCallFilter.problem(res, 502, "DRS-5052", "no node that holds " + t.kind() + " answered the search: "
+                    + String.join("; ", shares.stream().map(s -> s.nodeId() + " " + s.failure()).toList()));
+            return;
+        }
+        Map<String, Object> merged = scatter.merge(null, shares, query.descending(), query.limit(), entitlements.isAdmin(p));
+        res.setStatus(200);
+        res.setContentType("application/json");
+        routing.net().http().json().writeValue(res.getOutputStream(), merged);
+        recordAccess(req, t, p, String.join(",", peers), NetCaller.current().map(NetCaller.Caller::requestId).orElse("-"));
+    }
+
+    private static com.ash.drishti.api.AsOf asOf(HttpServletRequest req) {
+        String d = req.getHeader("X-Drishti-As-Of");
+        if (d == null) {
+            d = req.getParameter("asOf");
+        }
+        String k = req.getHeader("X-Drishti-Known-At");
+        java.time.LocalDate date = null;
+        try {
+            date = d == null || d.isBlank() || "live".equalsIgnoreCase(d) ? null : java.time.LocalDate.parse(d.trim());
+        } catch (RuntimeException e) {
+            date = null;
+        }
+        Instant known = null;
+        try {
+            known = k == null || k.isBlank() ? null : Instant.parse(k.trim());
+        } catch (RuntimeException e) {
+            known = null;
+        }
+        return date == null && known == null ? com.ash.drishti.api.AsOf.LATEST : new com.ash.drishti.api.AsOf(date, known, false);
     }
 
     /** A pack's form: forwarded when the pack is not on here (or is peer-only here) and a reachable node has it. */

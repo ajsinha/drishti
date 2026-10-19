@@ -1303,6 +1303,12 @@ The page's kind (or its data) is served by another node of the cluster, and that
 Members (its state) and Routing (*Explain a request* for the kind and id: which node it would go to). **Fix:** start or rejoin that node, or undrain
 it; a slow node: its own Admin → Health. The page works again by itself once the node is back; nothing on this node needs to change.
 
+### A search says it is partial and names a node (`node n-c ...` in *failed*)
+
+That node holds data of the kind and did not answer the search in time (`scatter-budget`, 3 s), failed, or is down (`not asked: it cannot be reached
+now`). The rows of every other node are there. **Check:** Admin → Net → Members (its state) and Routing (its traffic and latency). **Fix:** bring it
+back; a node retired for good: **Remove** it from the member table once it is dead or left, and the searches stop naming it.
+
 ### The console keeps moving between servers
 
 **Check:** Admin → Health, *Console servers*: the server set aside and its last error; the console's log: `server ... set aside after 2 failed requests

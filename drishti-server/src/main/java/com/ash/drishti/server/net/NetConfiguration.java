@@ -84,6 +84,11 @@ public class NetConfiguration {
     }
 
     @Bean
+    public SearchScatter searchScatter(NetRouting routing, ForwardLog log, java.util.concurrent.ExecutorService drishtiVirtualExecutor) {
+        return new SearchScatter(routing, log, drishtiVirtualExecutor);
+    }
+
+    @Bean
     public PeerSources peerSources(NetRouting routing, NetService net, com.ash.drishti.common.JsonCodec codec, ForwardLog log,
             com.ash.drishti.engine.source.SourceRouter router) {
         return new PeerSources(routing, net, codec, log, router);
@@ -101,8 +106,9 @@ public class NetConfiguration {
     /** After the caller is known: a request for a kind another node serves goes there whole (view forwarding). */
     @Bean
     public FilterRegistrationBean<ViewForwardFilter> viewForwardFilter(NetRouting routing, com.ash.drishti.server.security.Entitlements entitlements,
-            ForwardLog log, ObjectProvider<com.ash.drishti.identity.AccessLog> access, ObjectProvider<com.ash.drishti.engine.command.Mnemonics> mnemonics) {
-        FilterRegistrationBean<ViewForwardFilter> r = new FilterRegistrationBean<>(new ViewForwardFilter(routing, entitlements, log, access, mnemonics));
+            ForwardLog log, ObjectProvider<com.ash.drishti.identity.AccessLog> access, ObjectProvider<com.ash.drishti.engine.command.Mnemonics> mnemonics,
+            SearchScatter scatter) {
+        FilterRegistrationBean<ViewForwardFilter> r = new FilterRegistrationBean<>(new ViewForwardFilter(routing, entitlements, log, access, mnemonics, scatter));
         r.addUrlPatterns("/api/*");
         r.setOrder(3);
         return r;

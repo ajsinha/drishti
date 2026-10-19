@@ -137,7 +137,31 @@ public class CommandController {
     @GetMapping("/suggest")
     public List<Suggestion> suggest(@RequestParam(defaultValue = "") String q, @RequestParam(required = false) Integer limit, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
-        return masks.apply(principal, q, entitlements.filter(principal, suggestions.suggest(q, principal.user(), limit, asOf)), asOf);
+        List<Suggestion> local = masks.apply(principal, q, entitlements.filter(principal, suggestions.suggest(q, principal.user(), limit, asOf)), asOf);
+        // Drishti*net: the peers' suggestions too, within the short type-ahead budget; a slow peer is simply left out
+        com.ash.drishti.server.net.SearchScatter sc = scatter == null ? null : scatter.getIfAvailable();
+        if (sc == null || q.isBlank()) {
+            return local;
+        }
+        List<String> peers = sc.suggestTargets(principal);
+        if (peers.isEmpty()) {
+            return local;
+        }
+        String path = "/api/v1/command/suggest?q=" + java.net.URLEncoder.encode(q, java.nio.charset.StandardCharsets.UTF_8) + (limit == null ? "" : "&limit=" + limit);
+        var shares = sc.ask(peers, path, asOf, principal, sc.suggestBudget(), "suggest", null);
+        List<Suggestion> merged = sc.mergeSuggestions(local, shares, limit == null ? Math.max(local.size(), 10) : limit);
+        // this node's masks and kinds again on what the peers suggested, for the kinds whose packs are here (masks twice)
+        return masks.apply(principal, q, merged.stream().filter(s -> s.kind() == null || packAccess == null || packAccess.ownerOf(s.kind()) == null
+                || entitlements.mayOpen(principal, s.kind())).toList(), asOf);
+    }
+
+    private org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.net.SearchScatter> scatter;
+    private com.ash.drishti.server.security.PackAccess packAccess;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void scatter(org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.net.SearchScatter> s, com.ash.drishti.server.security.PackAccess p) {
+        this.scatter = s;
+        this.packAccess = p;
     }
 
     /** The caller's recent commands, newest first (↑ on the command line). */

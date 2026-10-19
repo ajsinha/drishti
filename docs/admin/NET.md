@@ -345,6 +345,20 @@ here (`404 DRS-1002`). A node can so be a pure data or rendering server behind o
 **When the node that serves it is down**, the answer says so: `502 DRS-5052 ... the nodes that hold trade cannot be reached now: n-a (left)`, or
 `... did not answer within 5000 ms` (`504 DRS-5053`), never a wrong page.
 
+**Searches and type-ahead are scattered.** A search (`GET /api/v1/search`, the form, the command line's search) is asked of every node that
+holds data of the kind and is not a replica of a node already asked (section 5), each running it on its own data (`GET /api/v1/net/search`, one hop),
+within `scatter-budget` (3 s). The answers are merged as one: rows by kind and id (a trade two nodes hold is counted once, this node's answer first),
+re-sorted by the search's `order by` (or by id, as one node sorts), cut to its `limit`; `scanned` and `matched` summed. A node that failed, was late
+or is down (it holds the kind but is suspect, dead or left) is named in `failed` and the answer is `partial`: an answer is never silently smaller. A
+search of a kind whose pack is not here is asked of the nodes that hold it and merged here the same way. The answer has `nodes` (each node with what it
+scanned, matched and how long it took) for administrators only. The type-ahead asks every reachable node with `suggest-budget` (150 ms): what a slow
+node would have suggested is simply missing, the list is never late. In the in-process test, trades split three ways (one on two nodes) give the same
+answer on every node: the union, the shared trade once, ordered by notional exactly as the union sorted.
+
+**Grouped pages are built per node.** A page built from many entities by a derived connector (a counterparty's trades, a netting set over several
+systems) is built on each node from that node's own data: it is not yet gathered across nodes. Put the systems a grouped page needs on the nodes
+that build it (a shared lake does that by itself), or open the page on the node that holds them.
+
 **Roles.** A kind whose pack is here and that the caller's roles may not open is refused here before any call (`403 DRS-5002`). A kind whose pack is
 not here is decided by the node that renders it, which knows the pack's roles.
 
