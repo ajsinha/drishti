@@ -29,7 +29,7 @@ import sys
 import time
 from pathlib import Path
 
-from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx, listening, register
+from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx, java_cmd, listening, register
 
 OUT = ROOT / "docs" / "connectors" / "img" / "connector_files"
 DEAD_DB = 59997                              # nothing listens here: the connector below is meant to be DOWN
@@ -76,7 +76,7 @@ def start_servers(work: Path) -> list:
     env = dict(os.environ, DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS="trading,desk-demo", DRISHTI_PACKS_DIR=str(packs), DRISHTI_CONNECTORS_DIR=str(conns),
                DRISHTI_DEMO_ENABLED="false", DRISHTI_LAKE_ENABLED="true", DRISHTI_DELTA_ROOT=str(work / "delta"), LEDGER_DB_PASSWORD="not-a-real-password",
                LEDGER_TRUSTSTORE_PASSWORD="changeit")
-    server = subprocess.Popen([java, "-jar", str(jar)], cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
+    server = subprocess.Popen(java_cmd(java, ["-jar", str(jar)], cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     py = ROOT / "drishti-console" / ".venv" / "bin" / "python"
     py = py if py.exists() else (ROOT / ".venv" / "bin" / "python")
     py = py if py.exists() else Path(sys.executable)

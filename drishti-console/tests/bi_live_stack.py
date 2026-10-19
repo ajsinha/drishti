@@ -31,6 +31,7 @@ import sys
 from pathlib import Path
 
 from bi_stack import FORBIDDEN, listening, wait
+from java_launch import java_cmd
 
 ROOT = Path(__file__).resolve().parents[2]
 CONSOLE = ROOT / "drishti-console"
@@ -123,8 +124,8 @@ class LiveStack:
         wall.write_text(text.replace(*LOSSES_ALERT), encoding="utf-8")
         env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS="trading,counterparty-risk,market-risk", DRISHTI_SECURITY_ENABLED="true",
                    DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_BI_DIR=str(work / "config" / "bi"), DRISHTI_DATA_DIR=str(work / "data"))
-        self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
-                                                 "--drishti.sources.plugins.demo.settings.tick-ms=200", f"--drishti.bi.query.store-dir={self.tmp / 'store'}", *self.extra],
+        self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
+                                                 "--drishti.sources.plugins.demo.settings.tick-ms=200", f"--drishti.bi.query.store-dir={self.tmp / 'store'}", *self.extra], tmp=self.tmp / "jvm-tmp"),
                                                 cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
         wait(SERVER + "/actuator/health", 150)
         seed()

@@ -181,10 +181,11 @@ note "store size ${SIZE} bytes ($SIZE_KIND)"
 guard
 JAR=$(ls -t drishti-server/target/drishti-server-*-exec.jar 2>/dev/null | head -1 || true)
 if [[ -z "$JAR" ]]; then ./mvnw -q -o install -DskipTests -pl drishti-server -am; JAR=$(ls -t drishti-server/target/drishti-server-*-exec.jar | head -1); fi
-mkdir -p "$SRV/identity"
+mkdir -p "$SRV/identity" "$SRV/tmp"
 note "starting the server on :$PORT (heap $HEAP, $JAR)"
 T0=$(date +%s.%N)
-env "${ENV[@]}" "$JAVA_HOME/bin/java" -Xmx"$HEAP" -XX:+UseCompactObjectHeaders -jar "$JAR" > "$LOG/$TAG-server.log" 2>&1 &
+# -Djava.io.tmpdir: the native libraries the server unpacks (DuckDB, RocksDB) go in its own temp base, not /tmp (DRISHTI_TMP_DIR, the same folder)
+env "${ENV[@]}" DRISHTI_TMP_DIR="$SRV/tmp" "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$SRV/tmp" -Xmx"$HEAP" -XX:+UseCompactObjectHeaders -jar "$JAR" > "$LOG/$TAG-server.log" 2>&1 &
 SERVER_PID=$!
 for _ in $(seq 1 600); do
   kill -0 "$SERVER_PID" 2>/dev/null || { note "server exited (see $LOG/$TAG-server.log)"; tail -30 "$LOG/$TAG-server.log" >&2; exit 5; }

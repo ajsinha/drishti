@@ -33,6 +33,7 @@ import urllib.request
 import pytest
 
 from conftest import CONSOLE
+from java_launch import java_cmd
 
 ROOT = CONSOLE.parent
 EXAMPLES = ROOT / "docs" / "guides" / "examples"
@@ -128,7 +129,7 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False):
             else:
                 (work / "config" / sub.name).symlink_to(sub)
     env = {"PATH": os.environ.get("PATH", ""), "HOME": str(work), "DRISHTI_PORT": str(port), **extra_env}
-    proc = subprocess.Popen([str(JAVA), "-Xmx768m", "-jar", str(jar())], cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
+    proc = subprocess.Popen(java_cmd(str(JAVA), ["-Xmx768m", "-jar", str(jar())], tmp=work / "jvm-tmp"), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     try:
         deadline = time.monotonic() + 120
         while time.monotonic() < deadline:

@@ -7,9 +7,13 @@ RUN useradd --system --uid 10001 drishti
 WORKDIR /opt/drishti
 COPY drishti-server/target/drishti-server-*-exec.jar app.jar
 COPY config/packs/ config/packs/
+# the server's temp base (<data dir>/tmp/server), made here so the JVM's temp folder exists from its first start
+RUN mkdir -p /opt/drishti/data/tmp/server && chown -R drishti /opt/drishti/data
 USER drishti
 EXPOSE 18480
-ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC"
+# -Djava.io.tmpdir: DuckDB, RocksDB and CatBoost unpack their native libraries into the JVM's startup temp folder (only the command
+# line moves it); the server removes stale copies from its temp base at start, so a killed container leaves nothing in /tmp
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -Djava.io.tmpdir=/opt/drishti/data/tmp/server"
 HEALTHCHECK --interval=15s --timeout=3s CMD wget -qO- http://localhost:18480/actuator/health/readiness || exit 1
 # -XX:+UseCompactObjectHeaders exists from Java 25 (Java 21 refuses to start with it), so the entrypoint adds it only there
 ENTRYPOINT ["sh", "-c", "v=$(java -XshowSettings:properties -version 2>&1 | sed -n 's/.*java.specification.version = //p'); if [ \"$v\" -ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set --; fi; exec java \"$@\" -jar app.jar"]

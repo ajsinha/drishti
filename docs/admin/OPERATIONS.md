@@ -57,7 +57,7 @@ Drishti is two processes. Users only ever talk to the console; the console talks
 
 | Process | Default port | Health check | Metrics | Started by |
 |---|---|---|---|---|
-| `drishti-server` (Spring Boot, Java 21 or newer, production runs 21) | 18480 | `/actuator/health/liveness`, `/actuator/health/readiness` | `/actuator/prometheus` | `java -jar drishti-server-<version>-exec.jar` |
+| `drishti-server` (Spring Boot, Java 21 or newer, production runs 21) | 18480 | `/actuator/health/liveness`, `/actuator/health/readiness` | `/actuator/prometheus` | `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server-<version>-exec.jar` |
 | `console` (FastAPI on uvicorn, Python) | 17480 | `/healthz` | none | `python drishti-console/run_drishti_web.py` |
 
 Things worth knowing before you plan an installation:
@@ -161,8 +161,9 @@ Open two terminals. In the first:
 
 ```bash
 cd /opt/drishti
+sudo -u drishti mkdir -p data/tmp/server        # the JVM's temp folder (-Djava.io.tmpdir below): native libraries unpack there, not in /tmp
 sudo -u drishti env JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 DRISHTI_PACKS=market-risk,counterparty-risk \
-  /usr/lib/jvm/java-21-openjdk-amd64/bin/java -jar drishti-server.jar   # any JDK 21 or newer; on Java 25 you may add -XX:+UseCompactObjectHeaders (Java-25-only flag, about 10% less heap; Java 21 refuses to start with it)
+  /usr/lib/jvm/java-21-openjdk-amd64/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -jar drishti-server.jar   # any JDK 21 or newer; on Java 25 you may add -XX:+UseCompactObjectHeaders (Java-25-only flag, about 10% less heap; Java 21 refuses to start with it)
 ```
 
 You should see, after a few seconds, a line ending `Started DrishtiApplication in … seconds`, and on the very first
@@ -429,8 +430,8 @@ tools/load-aerospike.sh localhost:3000 test
 Then start the server with the profile for the store:
 
 ```bash
-SPRING_PROFILES_ACTIVE=postgres  DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server.jar
-SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server.jar
+SPRING_PROFILES_ACTIVE=postgres  DRISHTI_PACKS=market-risk,counterparty-risk java -Djava.io.tmpdir=data/tmp/server -jar drishti-server.jar
+SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=market-risk,counterparty-risk java -Djava.io.tmpdir=data/tmp/server -jar drishti-server.jar
 ```
 
 The `postgres` profile (`application-postgres.yaml`, inside the jar) points each `<domain>-store` connector at the
@@ -462,7 +463,7 @@ days of promoted bins in use (section 12). See
 
 ```bash
 uv run --with kafka-python python tools/samplegen/stream.py --rate 5          # 5 trades a second to drishti.trading.trades
-DRISHTI_STREAM_TRADING=true DRISHTI_PACKS=trading java -jar drishti-server.jar
+DRISHTI_STREAM_TRADING=true DRISHTI_PACKS=trading java -Djava.io.tmpdir=data/tmp/server -jar drishti-server.jar
 ```
 
 `stream.py` also takes `--bootstrap` (default `localhost:9092`), `--topic`, `--samples` and `--seconds` (0 runs until
@@ -675,7 +676,7 @@ User=drishti
 WorkingDirectory=/opt/drishti
 EnvironmentFile=/etc/drishti/drishti.env
 Environment=JAVA_TOOL_OPTIONS=-Xmx4g -XX:+UseZGC -XX:+ZGenerational
-ExecStart=/usr/lib/jvm/java-21-openjdk-amd64/bin/java -jar /opt/drishti/drishti-server.jar
+ExecStart=/usr/lib/jvm/java-21-openjdk-amd64/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -jar /opt/drishti/drishti-server.jar
 SuccessExitStatus=143
 TimeoutStopSec=45
 Restart=on-failure
@@ -1209,7 +1210,7 @@ system with only the AWS SDK modules it needs. Dates, time travel, reverse looku
 The simplest switch is one variable for every pack's lake connectors:
 
 ```bash
-DRISHTI_DELTA_ROOT=s3a://risk-lake/banking java -jar drishti-server.jar
+DRISHTI_DELTA_ROOT=s3a://risk-lake/banking java -Djava.io.tmpdir=data/tmp/server -jar drishti-server.jar
 ```
 
 Credentials then come from the AWS default chain (environment variables, profile, instance role). To set the
@@ -1365,7 +1366,7 @@ being parsed, and a later view reads that one message back by its offset.
 
 ### 12.1 Temporary folders
 
-The server's temporary files (DuckDB spill, native libraries, atomic-save scratch, Python transform runs) live in `drishti-<pid>` under `DRISHTI_TMP_DIR` (default `<data dir>/tmp/server`; the console's `<data dir>/tmp/console`); the console's (uploads, exports, the static-file cache, Python runner scratch) in `drishti-console-<pid>` under `DRISHTI_CONSOLE_TMP_DIR`. Each is removed on a clean stop. A `kill -9` or a power cut leaves one: the next start leaves it alone (removing them automatically is disabled) and Health lists it for you to delete. Put the base on a disk with room when DuckDB spills big queries: `DRISHTI_TMP_DIR=/var/tmp/drishti`. Admin, Health lists both with their size, so a growing folder is seen before the disk fills. Details: [CONFIGURATION.md](CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir).
+The server's temporary files (DuckDB spill, native libraries, atomic-save scratch, Python transform runs) live in `drishti-<pid>` under `DRISHTI_TMP_DIR` (default `<data dir>/tmp/server`; the console's `<data dir>/tmp/console`); the console's (uploads, exports, the static-file cache, Python runner scratch) in `drishti-console-<pid>` under `DRISHTI_CONSOLE_TMP_DIR`. Each is removed on a clean stop. A `kill -9` or a power cut leaves one: the next start leaves it alone (removing them automatically is disabled) and Health lists it for you to delete. Put the base on a disk with room when DuckDB spills big queries: `DRISHTI_TMP_DIR=/var/tmp/drishti`. **Start Java with `-Djava.io.tmpdir=<that base>`** (every start command in this guide does; `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=…` works too): since JDK 17 only the command line moves the folder where DuckDB (60 MB), RocksDB and CatBoost unpack their native libraries, so without it every server killed without a clean stop leaves them in `/tmp`, whose quota fills. The server warns in its log and on Admin, Health when the flag is missing, and at start removes stale copies from its own base (never from `/tmp`). Admin, Health lists both with their size, so a growing folder is seen before the disk fills. Details: [CONFIGURATION.md](CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir).
 
 ### 12.2 Sizing the multi-day type-ahead index
 

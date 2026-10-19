@@ -30,6 +30,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"   # production runs Java 21; the console tests start the server on it
+# No JVM of the drill unpacks native code (DuckDB 60 MB, RocksDB, CatBoost, jansi) into /tmp, whose per-user quota a killed fork
+# would fill: ./mvnw starts Maven with -Djava.io.tmpdir=<repo>/data/tmp/maven (in the Java 25 run, the copy's own), the test forks get
+# <module>/target/tmp (the parent pom's argLine), and the console and tool tests start java through tools/javacmd.py.
 
 MODE=auto; PUSH=1
 for a in "$@"; do

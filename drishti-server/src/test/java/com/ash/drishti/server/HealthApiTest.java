@@ -66,6 +66,8 @@ class HealthApiTest {
                 .andExpect(jsonPath("$.packs[?(@.name=='finance')].status").value(hasItem("DEGRADED")))
                 .andExpect(jsonPath("$.status").value("DEGRADED"))
                 .andExpect(jsonPath("$.server.heapMaxMb").value(greaterThan(0)))
+                .andExpect(jsonPath("$.tmp.jvmTmpdirPassed").value(true))           // surefire passes -Djava.io.tmpdir=: no warning on the page
+                .andExpect(jsonPath("$.tmp.jvmTmpdirWarning").value(""))
                 .andExpect(jsonPath("$.live.streams").exists());
         mvc.perform(get("/api/v1/admin/health").header("Authorization", as("trader"))).andExpect(status().isForbidden());
     }

@@ -51,8 +51,9 @@ jobs:
           DRISHTI_PACKS: market-risk
         run: |
           $jar = (Get-ChildItem drishti-server/target/drishti-server-*-exec.jar | Select-Object -First 1).FullName
-          New-Item -ItemType Directory -Force -Path data/logs | Out-Null
-          $server = Start-Process -FilePath java -ArgumentList '-XX:+UseCompactObjectHeaders', '-Xmx1g', '-jar', $jar -PassThru `
+          New-Item -ItemType Directory -Force -Path data/logs, data/tmp/server | Out-Null
+          $tmp = (Resolve-Path data/tmp/server).Path
+          $server = Start-Process -FilePath java -ArgumentList "-Djava.io.tmpdir=$tmp", '-XX:+UseCompactObjectHeaders', '-Xmx1g', '-jar', $jar -PassThru `
             -RedirectStandardOutput data/logs/server.log -RedirectStandardError data/logs/server.err.log
           try {
             $b = 'http://localhost:18480'

@@ -31,7 +31,7 @@ import sys
 import time
 from pathlib import Path
 
-from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx, listening, register
+from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx, java_cmd, listening, register
 
 OUT = ROOT / "docs" / "connectors" / "img" / "connectors"
 EXAMPLE = ROOT / "docs" / "guides" / "examples" / "connector"
@@ -78,7 +78,7 @@ def start_servers(work: Path) -> list:
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-25-openjdk-amd64") + "/bin/java"
     env = dict(os.environ, DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS="counterparty-risk",
                DRISHTI_DEMO_ENABLED="false", DRISHTI_LAKE_ENABLED="false")
-    server = subprocess.Popen([java, "-jar", str(jar)], cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
+    server = subprocess.Popen(java_cmd(java, ["-jar", str(jar)], cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     py = ROOT / "drishti-console" / ".venv" / "bin" / "python"
     py = py if py.exists() else Path(sys.executable)
     cenv = dict(os.environ, DRISHTI_BACKEND_URL=f"http://127.0.0.1:{SERVER_PORT}", DRISHTI_CONSOLE_PORT=str(CONSOLE_PORT))

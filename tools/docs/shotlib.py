@@ -27,6 +27,9 @@ import urllib.error
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT / "tools") not in sys.path:
+    sys.path.append(str(ROOT / "tools"))
+from javacmd import java_cmd  # noqa: E402  (re-exported for the shots: -Djava.io.tmpdir=<work>/data/tmp/server)
 EXAMPLES = ROOT / "docs" / "guides" / "examples"
 PACKS = "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets"
 SERVER_PORT = int(os.environ.get("DRISHTI_SHOTS_SERVER_PORT", 18997))      # the scratch ports; override when another run holds them
@@ -180,7 +183,7 @@ def start_servers(work: Path, extra_env: dict | None = None) -> list:
     (work / "sutras").mkdir(exist_ok=True)
     env = dict(os.environ, DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS=PACKS, DRISHTI_STUDIO_SAVE="true", DRISHTI_BUILDER_FILE_BINDING="true",
                DRISHTI_SUTRAS=str(work / "sutras"), **(extra_env or {}))
-    server = subprocess.Popen([java, "-jar", str(jars[-1])], cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
+    server = subprocess.Popen(java_cmd(java, ["-jar", str(jars[-1])], cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     py = ROOT / "drishti-console" / ".venv" / "bin" / "python"
     py = py if py.exists() else Path(sys.executable)
     cenv = dict(os.environ, DRISHTI_BACKEND_URL=f"http://127.0.0.1:{SERVER_PORT}", DRISHTI_CONSOLE_PORT=str(CONSOLE_PORT), **(extra_env or {}))

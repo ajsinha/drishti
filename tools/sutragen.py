@@ -47,6 +47,9 @@ import sys
 import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+if str(ROOT / "tools") not in sys.path:
+    sys.path.append(str(ROOT / "tools"))
+from javacmd import java_cmd  # noqa: E402
 MISSING = object()
 
 
@@ -376,7 +379,7 @@ def find_java(explicit: str | None) -> str:
 
 
 def sutra_cli(opts, *args: str) -> subprocess.CompletedProcess:
-    cmd = [find_java(opts.java), "-jar", find_jar(opts.jar), "sutra", *args]
+    cmd = java_cmd(find_java(opts.java), ["-jar", find_jar(opts.jar), "sutra", *args], cwd=ROOT)   # -Djava.io.tmpdir=<data dir>/tmp/server
     return subprocess.run(cmd, cwd=ROOT, text=True, capture_output=True)
 
 

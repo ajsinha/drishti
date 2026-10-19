@@ -162,7 +162,7 @@ class PostgresLoaderReplaceTest {
         first.addAll(day("killed", D2, 1000, 1));
         load(first, "--recreate");
         String java = ProcessHandle.current().info().command().orElse("java");
-        Process loader = new ProcessBuilder(java, "-cp", System.getProperty("java.class.path"), PostgresLoader.class.getName(), "-", POSTGRES.getJdbcUrl(),
+        Process loader = new ProcessBuilder(java, "-Djava.io.tmpdir=" + System.getProperty("java.io.tmpdir"), "-cp", System.getProperty("java.class.path"), PostgresLoader.class.getName(), "-", POSTGRES.getJdbcUrl(),
                 "--user", POSTGRES.getUsername(), "--password", POSTGRES.getPassword(), "--writers", "2", "--batch", "100").redirectErrorStream(true)
                 .redirectOutput(ProcessBuilder.Redirect.DISCARD).start();
         try {

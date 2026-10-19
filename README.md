@@ -158,8 +158,10 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta
 
 # 3. Start the server on :18480 with the packs to load (their parents load with them)
+# (-Djava.io.tmpdir: native libraries unpack in the server's own folder, not /tmp; docs/admin/CONFIGURATION.md)
+mkdir -p data/tmp/server
 DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_STUDIO_SAVE=true \
-  java -jar drishti-server/target/drishti-server-2.4.0-exec.jar
+  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.4.0-exec.jar
 
 # 4. In a second terminal: the console on http://localhost:17480
 uv venv drishti-console/.venv && uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt

@@ -60,6 +60,13 @@ def test_the_health_page_shows_connectors_packs_and_live(client, backend, monkey
     assert "data-pool-attention" in page and "every connection is in use" in page
     assert "server /var/tmp/drishti/drishti-4242 · 5.0 MB · 7 files" in flat                    # the temp folders of the two processes (path, size)
     assert "data-tmp-folders" in page and "data-tmp-console" in page and "console " in flat
+    assert "data-tmpdir-warning" not in page                                            # no warning field: none shown
+    data["tmp"].update({"jvmTmpdir": "/tmp", "jvmTmpdirPassed": False, "nativeCopiesRemoved": 3,
+                        "jvmTmpdirWarning": "java.io.tmpdir was not set when Java started ... Start Java with -Djava.io.tmpdir=/var/tmp/drishti"})
+    page = client.get("/admin/health").text
+    flat = " ".join(__import__("re").sub(r"<[^>]+>", "", page).split())
+    assert "data-tmpdir-warning" in page and "Java temp folder java.io.tmpdir was not set" in flat and "-Djava.io.tmpdir=/var/tmp/drishti" in flat
+    assert "3 stale native copies removed at start" in flat
     body = client.get("/admin/health", params={"partial": 1}).text
     assert "<html" not in body and "trading-store" in body
     assert "data-health-body" not in body and "setInterval" in client.get("/static/js/admin.js").text
