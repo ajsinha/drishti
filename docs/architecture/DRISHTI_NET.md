@@ -15,7 +15,7 @@
 -->
 # Drishti*net: many servers, one Drishti
 
-Status: **design, not built.** Proposed for the **3.0** track (after wave E, alongside "scale on real servers"; see
+Status: **design, not built.** Planned for **2.5.0** (wave D, decided by the product owner on 2026-10-18; see
 [BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)). Off by default when built. Names marked **(new)** do not exist
 in the code today; every other class, file or setting named here does.
 
@@ -136,7 +136,7 @@ gossip changes:
 | `load` | requests a second over the last minute (from `RequestActivity`) and p95 latency, for choosing between peers |
 | `calendar` | the business calendar (`DRISHTI_CALENDAR`): the as-of of a forwarded request must mean the same date |
 
-A pack listed in `peer-only-packs` is loaded and served to peers (view and data forwarding, search shares) but hidden from
+A pack listed in `peer-only-packs` (`node.yaml`) is loaded and served to peers (view and data forwarding, search shares) but hidden from
 this node's own users: not in its catalog, forms home, type-ahead or command line, and a direct request for its kinds from
 a client (not a peer) is answered as if the pack were not here, i.e. forwarded or refused. This lets a node be a pure data or
 rendering server behind others. The digest marks such packs `peerOnly: true`.
@@ -186,7 +186,7 @@ a UI that ignores it sees one result, as asked.
 ## 9. Identity and security
 
 - **Cluster membership is authenticated.** Gossip, digest, fetch and forwarded calls need a cluster credential: an HMAC
-  over method, path, timestamp and body with the cluster key (`drishti.net.secret`, from the environment), refused outside
+  over method, path, timestamp and body with the cluster key (`secret` in `config/net/node.yaml`, from the environment), refused outside
   a 60 s window (replay), or mutual TLS with the shared `tls.*` settings. A node without the key cannot join or read.
 - **The user is carried, not trusted blindly.** A forwarded call carries a short-lived on-behalf-of token **(new)**:
   the user, roles, embed app if any, the original node and request id, signed with the cluster key, valid 30 s. The peer
@@ -194,15 +194,15 @@ a UI that ignores it sees one result, as asked.
   makes that true everywhere).
 - **Masks twice.** The peer redacts as it would for that user; the asking node, which renders, applies its own masks again.
   The stricter configuration wins; an administrator sees on Admin → Net when two nodes' `redact` lists differ.
-- **Nodes per role.** A role may name the nodes it may reach (`drishti.security.roles.<role>.nodes`, **new**: node ids or
-  tags such as `region:emea`; empty means every node). The capability table is filtered by the caller's roles before any
+- **Nodes per role.** A role may name the nodes it may reach (`config/net/access.yaml`, **new**: node ids or tags such as
+  `region:emea`; empty means every node). The capability table is filtered by the caller's roles before any
   routing: a scattered search, type-ahead or forwarded request never reaches a node outside them, and the peer refuses
   an on-behalf-of token whose roles do not reach it. A kind held only on unreachable nodes is answered as not held.
 - **Kinds per role and pack visibility** are checked on both nodes; a kind a role may not open on the asking node is
   refused there before any call is made.
 - **Audit.** The audit row of a forwarded request records both nodes and the request id; Admin → Net lists forwarded
   traffic.
-- **Key rotation without downtime.** `drishti.net.secret` signs; `drishti.net.previous-secret` is also accepted while set.
+- **Key rotation without downtime.** `secret` (in `node.yaml`) signs; `previous-secret` is also accepted while set.
   To rotate: give every node the new key as `secret` and the old as `previous-secret` (rolling restarts, the cluster keeps
   working), then remove `previous-secret`. On-behalf-of tokens live 30 s, so none outlives the rollover.
 - **Same login everywhere.** One `DRISHTI_TOKEN_SECRET` (or one OIDC issuer) for the cluster, so a token minted by any
@@ -255,8 +255,10 @@ Asked by the product owner (2026-10-18): the cluster is managed in the console, 
 - **Routing:** *Explain a request*: type a kind and id (or a search) and a role, and see where it would go and why (local,
   view forwarding, data forwarding, scatter list, nodes the role may not reach); the forwarded traffic a minute per peer and
   outcome (an activity chart like Admin → Health's), the slowest peers, recent failures.
-- **Access:** nodes per role (`roles.<role>.nodes`: pick node ids or tags), this node's tags, its peer-only packs, all
-  editable here, audited, applied without a restart and gossiped in the digest.
+- **Access:** nodes per role (pick node ids or tags), this node's tags, its peer-only packs, all editable here (written to
+  `access.yaml` and `node.yaml`, section 14), audited, applied without a restart and gossiped in the digest.
+- **Files:** the folder's files (`node.yaml`, `peers/*.yaml`, `gossip.yaml`, `routing.yaml`, `access.yaml`) with the
+  connector editor's validation, diff, history and audit; a refused file shows its error here.
 - **Security:** the cluster key's state (set, the previous key accepted until removed, the last time each peer signed with
   the old key, so an administrator knows when the rollover is complete), mutual TLS certificates and their expiry, and
   refused join attempts (address, reason).
@@ -273,32 +275,52 @@ APIs behind the page (new, admin token): `GET /api/v1/net/members`, `POST /api/v
 
 ## 14. Configuration
 
+Managed **the way connectors are** ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)), not in `application.yaml`
+(decided by the product owner, 2026-10-18). `application.yaml` holds only where the files are and how they are watched:
+
 ```yaml
 drishti:
   net:
-    enabled: ${DRISHTI_NET_ENABLED:false}
-    node-id: ${DRISHTI_NET_NODE_ID:}            # empty: generated once, kept in <data dir>/net/node-id
-    tags: ${DRISHTI_NET_TAGS:}                  # e.g. region:emea,tier:risk (published in the digest; roles may name them)
-    advertise-url: ${DRISHTI_NET_URL:}          # how peers reach this node, e.g. https://drishti-b:8480
-    seeds: ${DRISHTI_NET_SEEDS:}                # host:port,host:port (optional)
-    secret: ${DRISHTI_NET_SECRET:}              # the cluster key (required when enabled, 32+ bytes)
-    previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET:}   # also accepted during a key rollover (section 9)
-    peer-only-packs: ${DRISHTI_NET_PEER_ONLY_PACKS:}   # packs this node serves to peers only (section 6)
-    gossip-interval: 1s
-    fanout: 3
-    suspect-after: 5s
-    indirect-probes: 2
-    dead-after: 30s
-    forget-after: 24h
-    persist-every: 10m                          # <data dir>/net/peers.json
-    forward-timeout: 5s                         # within the caller's own budget
-    scatter-budget: 3s                          # a search's share per node
-    suggest-budget: 150ms
-    max-hops: 1
+    dir: ${DRISHTI_NET_DIR:./config/net}     # created on first write; ready-made files in config/net.examples/
+    watch: auto                              # auto (file events, polling as a fallback) | poll | off
+    poll: 5s
 ```
 
-Start-up refuses `enabled: true` without a secret and an advertise URL (as the server refuses a missing token secret with
-security on).
+The folder (new):
+
+| File | What it holds | A change |
+|---|---|---|
+| `node.yaml` | this node: `enabled` (false), `node-id` (empty: generated once, kept in `<data dir>/net/node-id`), `advertise-url`, `tags`, `peer-only-packs`, the cluster key as `secret: ${DRISHTI_NET_SECRET}` and `previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}` (environment references only, as connector passwords are), `tls.*` for mutual TLS | applied live; `enabled` false → true joins, true → false leaves cleanly |
+| `peers/<name>.yaml` | one file per seed peer, the file name its logical name: `url`, optional `tags` it is expected to carry, `tls.*` overrides | a new file is contacted at once, a deleted one is no longer a seed (gossip may still know the node) |
+| `gossip.yaml` | the protocol's timings: `interval` (1s), `fanout` (3), `suspect-after` (5s), `indirect-probes` (2), `dead-after` (30s), `forget-after` (24h), `persist-every` (10m) | applied on the next round |
+| `routing.yaml` | `forward-timeout` (5s), `scatter-budget` (3s), `suggest-budget` (150ms), `max-hops` (1), peer choice weights | applied to the next request |
+| `access.yaml` | nodes per role: `roles: { <role>: { nodes: [<node id or tag>, …] } }` (empty: every node) | applied to the next request; gossiped in the digest |
+
+```yaml
+# config/net/node.yaml
+enabled: true
+advertise-url: https://drishti-b.internal:8480
+tags: [region:emea, tier:risk]
+peer-only-packs: [market-risk]
+secret: ${DRISHTI_NET_SECRET}
+```
+
+```yaml
+# config/net/peers/drishti-a.yaml
+url: https://drishti-a.internal:8480
+tags: [region:emea]
+```
+
+As with connector files: the folder is watched; every file is checked against its schema before use and a bad file is
+refused with the reason (the previous settings stay in force, Admin → Net shows the error, the log names the file and line);
+a value written as `${ENV}` is read from the environment and never written back in clear; **Admin → Net writes these
+files** (the same editor, validation, diff and audit as Admin → Connectors; a file can also be edited by hand or shipped
+by deployment tools); `drishti.py net` (new) lists, checks and edits them (`net list`, `net check`, `net add-peer <name>
+<url>`, `net set node.tags region:emea`), like `drishti.py connector`. What gossip learns at run time (the member table)
+is state, not configuration: it is saved to `<data dir>/net/peers.json` (section 5), never into this folder.
+
+Start-up and every reload refuse `enabled: true` without a secret and an advertise URL, as the server refuses a missing
+token secret with security on.
 
 ## 15. APIs
 
@@ -319,7 +341,7 @@ View forwarding reuses the ordinary `/api/v1/**` endpoints with the hop header a
 
 | Phase | What | Accepted when |
 |---|---|---|
-| N1 | Membership: gossip, probes, states, `peers.json`, Admin → Net *Members* (add seed, remove, drain, leave, rejoin) | 5 nodes started from 1 seed all list each other within 5 s; one killed is `dead` everywhere within 40 s; a restarted node rejoins from its file with no seeds |
+| N1 | Membership: gossip, probes, states, `peers.json`, the `config/net/` folder (watched, validated, `drishti.py net`); Admin → Net *Members* (add seed, remove, drain, leave, rejoin) and *Files* | 5 nodes started from 1 seed all list each other within 5 s; one killed is `dead` everywhere within 40 s; a restarted node rejoins from its file with no seeds |
 | N2 | Capability digests and the capability table; Admin → Net *Capability map* | a pack switched on at one node shows in every node's table within 2 s |
 | N3 | Security: cluster key or mTLS, key rollover, on-behalf-of token, masks twice, audit; Admin → Net *Access* and *Security* | a node without the key is refused; a rolling key change drops no request; a role limited to two nodes never reaches a third; a masked field stays masked when the data comes from a peer whose `redact` is looser |
 | N4 | View forwarding and data forwarding (`PeerSource`), newest pack wins, peer-only packs; Admin → Net *Routing* (explain a request, traffic) | the console on B opens a trade only A holds, and a kind only A's pack renders, with no visible difference; with a newer pack on A, B's users see A's version; a peer-only pack is invisible to B's own users but served to peers; a peer down gives a clear error, not a wrong page |
@@ -327,7 +349,7 @@ View forwarding reuses the ordinary `/api/v1/**` endpoints with the hop header a
 | N6 | Live relay; BI queries routed to the model's node | a ticking entity held on A streams to a viewer on B; a BI report on B over A's model answers |
 | N7 | User state across nodes; console `backend.urls` failover | saved searches follow a user to another node; the console survives a node stop |
 
-N1–N5 are the first release; N6–N7 may follow.
+All of N1–N7 are planned for 2.5.0, in this order; N1–N5 come first and are the minimum for the release.
 
 ## 17. Tests
 

@@ -1168,6 +1168,9 @@ the drill.
 5. **Integration:** PostgreSQL-wire read-only endpoint (decision 5); Excel feed; embed tokens bound to envelopes; SDK events.
 6. **GenUI:** screens an AI agent composes from governed Sutra fragments, bound to live data as the viewer, streamed to
    other applications through `<drishti-genui>` ([GENUI.md](GENUI.md)).
+7. **Drishti*net:** several servers that find each other by gossip over HTTP, publish the packs and kinds they serve and
+   answer any client as one (forwarding, scatter-gather search, one hop, masks on both nodes), configured in its own folder
+   of files like connectors ([DRISHTI_NET.md](DRISHTI_NET.md)).
 
 **Console lane:**
 
@@ -1179,12 +1182,15 @@ the drill.
 4. **Feeds, sending and embedding UI:** per-user connection details for SQL tools, the Excel feed wizard, send dialogs,
    embed configuration, the GenUI element and its management (Admin → GenUI, Build → Fragments, Build → Compose;
    [GENUI.md §11.8](GENUI.md#118-managing-genui-in-the-console-new)).
-5. **Docs and tutorials** (UI, CLI and YAML).
+5. **Admin → Net:** members, capability map, routing with *Explain*, access, security and the `config/net/` files
+   ([DRISHTI_NET.md §13](DRISHTI_NET.md#13-admin-management-and-observability)).
+6. **Docs and tutorials** (UI, CLI and YAML).
 
 **Accepted when:** (1) golden questions pass on the mock and one real provider, and an AI answer uses only measures the
 user may see; (2) a monthly statement bursts to ten recipients, each masked, page-exact in PDF; (3) psql and Excel answers
 equal the MQ answers per user, masked; (4) an agent composes a GenUI screen that streams into a host page with live ticks,
-masked for its viewer; (5) QA findings fixed before the drill.
+masked for its viewer; (5) three servers started from one seed act as one to a console connected to any of them, and a
+stopped server makes answers partial and named, never wrong; (6) QA findings fixed before the drill.
 
 **After D: the product owner's real-life QA on 2.5.0.** An isolated, full, real-life QA (real users' tasks on real-shaped
 data, outside the builders' own tests). Its findings are triaged first and fixed in wave E before anything else in it.
@@ -1203,8 +1209,7 @@ data, outside the builders' own tests). Its findings are triaged first and fixed
 **Accepted when:** (1) every real-life QA finding is fixed or explicitly deferred by the product owner; (2) a bundle with
 parameter rules moves a model and its reports from dev to test; (3) QA findings fixed before the drill.
 
-**After E:** 3.0 (the Excel add-in, the second engine in production, scale on real servers, and Drishti*net: several
-servers that gossip and act as one to any client, [DRISHTI_NET.md](DRISHTI_NET.md)).
+**After E:** 3.0 (the Excel add-in, the second engine in production, scale on real servers).
 
 ### 12.3 Risks
 
