@@ -129,6 +129,9 @@
   'VALIDATED')`) and the dataset wizard's row filter and worked-out column examples (`MTM / NOTIONAL * 10000`, `related(desk.NAME)`) were in the
   lowercase 2.2 names; the pictures of EXPRESSIONS, DATASETS, BI_GUIDE, REPORTS and ANALYSE are taken again on the UPPER_SNAKE samples and their
   text follows (*Sum of MTM*, `trade.DESK`).
+- **`sutra lint` and `sutra test` of a pack ignore the site's added packs (2.4.0).** A pack checked from the command line was loaded beside the packs
+  an administrator had added in Admin → Packs (`<data dir>/packs/added.yaml`), so a pack that defines `counterparty` failed beside a site's `core`
+  (`kind counterparty is defined by both pack ...`); `drishti.py pack make` reported its pack check failed for that reason ([CLI_GUIDE.md](docs/guides/CLI_GUIDE.md)).
 - **The elements demo host shows live valuations (2.4.0).** Since 2.3.0 a trade is static and the market-risk valuations tick, so
   `tools/elements-demo` shows `TVAL-1000008` (and `TVAL-1000002` in its side column) from the trading, counterparty-risk and market-risk packs; its
   search box knows `TVAL`. The `<drishti-view>` suites (`test_embed_elements_browser.py`, `test_embed_controls_browser.py`) run against it: masks

@@ -36,6 +36,7 @@ class CliLauncherPacksTest {
         var byFolder = CliLauncher.packProperties(List.of("lint", pack.toString(), "--strict"));
         assertThat(byFolder.get("drishti.packs.enabled")).contains("my-bank");
         assertThat(byFolder).containsEntry("drishti.packs.installed-dir", dir.toAbsolutePath().normalize().toString());
+        assertThat(byFolder.get("DRISHTI_PACKS_OVERLAY")).as("the site's added packs are not loaded beside it").contains("drishti-cli-no-added-packs-");
 
         assertThat(CliLauncher.packProperties(List.of("test", sutra.toString())).get("drishti.packs.enabled")).contains("my-bank");
         assertThat(CliLauncher.packProperties(List.of("design", dir.resolve("samples").toString()))).as("no pack named: nothing changes").isEmpty();

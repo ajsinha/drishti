@@ -321,7 +321,9 @@ examples:
 Unknown options are passed to the Java tool. Exit codes as the Java tool: 0 ok, 1 problems, 2 usage.
 ```
 
-**Lint a pack** (the shipped help-desk example; it prints the Sutra's absolute path, shortened here):
+**Lint a pack** (the shipped help-desk example; it prints the Sutra's absolute path, shortened here). The pack the command line names is loaded with
+the packs `DRISHTI_PACKS` names (and the packs it extends), never with the packs an administrator added to the server in this folder
+(`<data dir>/packs/added.yaml`; set `DRISHTI_PACKS_OVERLAY` to use another list):
 
 ```bash
 python3 tools/drishti.py sutra lint docs/guides/examples/pack/helpdesk

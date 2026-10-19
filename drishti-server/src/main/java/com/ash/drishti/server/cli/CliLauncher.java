@@ -150,6 +150,13 @@ public final class CliLauncher {
         if (outside != null) {
             out.put("drishti.packs.installed-dir", outside.toString());
         }
+        // nor does it load the packs an administrator added to this site (<data dir>/packs/added.yaml): a pack checked on its own
+        // is checked with the packs it names, not with whatever the server in this folder runs (a pack defining counterparty
+        // failed beside the site's core pack)
+        if (System.getProperty("DRISHTI_PACKS_OVERLAY") == null && System.getenv("DRISHTI_PACKS_OVERLAY") == null) {
+            out.put("DRISHTI_PACKS_OVERLAY", java.nio.file.Path.of(System.getProperty("java.io.tmpdir"),
+                    "drishti-cli-no-added-packs-" + ProcessHandle.current().pid() + ".yaml").toString());
+        }
         return out;
     }
 
