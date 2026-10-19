@@ -75,7 +75,7 @@ export class ReportPage {
   }
   restyle() {                                                       // the theme changed: colours are read again from the element
     this.tokens = B().tokens(this.host);
-    this.palette = B().palette((this.report.theme || {}).palette, this.tokens);
+    this.palette = B().theme ? B().theme.palette(this.rep.theme || (this.report.theme || {}), this.tokens) : B().palette((this.report.theme || {}).palette, this.tokens);      // a theme item's palette (2.4.0)
   }
 
   load(spec, quiet) {

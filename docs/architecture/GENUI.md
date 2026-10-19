@@ -133,7 +133,7 @@ screen is bound to. Everything after that is Drishti's ordinary machinery.
 | Time travel | `AsOf(businessDate, knownAt, live)`, `AsOfResolver` | `asOf` and `knownAt` on a GenUI URL | none |
 | Live views | `StreamController` (`GET /api/v1/views/{kind}/{id}/stream`, SSE: `view`, `frame`, `: hb`), `ViewStream`, `TopicHub`, `FrameMailbox`, `LiveStreamSlots` | ticks on a composed screen | `ViewStream` rebuilds with `pipeline.view(ref, …)` or `pipeline.build(main, …)`, i.e. with the *registered* Sutra (`ViewStream.java` line 144): a composed Sutra needs a rebuild that keeps it |
 | Console channel | `drishti-console/core/channel.py` (`view:kind/id?ctl.…` keys), `routes/api_routes.py` `channel()`, `_panel_html` | one connection per page; panels as HTML | only `view:` keys |
-| Elements | `drishti-console/web/embed/element.js`, `panel.js`, `report.js`, `search.js`, `about.js`; `routes/embed_routes.py` (`/embed/v1/views/{kind}/{id}`, `/embed/v1/channel`); library 1.4.1 (`web/elements/package/package.json`) | the host-side renderer, styles (`web/static/css/tokens.css`, `theme.css`, `--d-*` properties), charts, CSP and SRI story | no element for a composed screen |
+| Elements | `drishti-console/web/embed/element.js`, `panel.js`, `report.js`, `search.js`, `about.js`; `routes/embed_routes.py` (`/embed/v1/views/{kind}/{id}`, `/embed/v1/channel`); library 1.4.2 (`web/elements/package/package.json`) | the host-side renderer, styles (`web/static/css/tokens.css`, `theme.css`, `--d-*` properties), charts, CSP and SRI story | no element for a composed screen |
 | Embed tokens | `EmbedTokenService`, `EmbedController` (`POST /api/v1/embed/token`, RFC 8693), `EmbedProperties` (scopes to `METHOD path` patterns), `RateWindows`, `EmbedUsage`; console `core/embed_auth.py`, `core/embed_limits.py` | scoping a host application | no `embed:genui` scope |
 | Query by form | `FormController` (`GET /api/v1/forms/{pack}`, `POST /api/v1/forms/{pack}/{kind}/compile`), `FormSpec`, `FormField`, `FormCompiler`; the pack's `form:` section; console `core/forms.py`, `routes/form_routes.py`, `css/form.css` | form fragments compile to the same search command | the form is a page, not a panel |
 | Search | `SearchController` (`GET /api/v1/search`, `/csv`, `/compare`) | result rows for a search binding | rows are not an `EntityDocument` |
@@ -478,7 +478,7 @@ It is `<drishti-view>` with a different source: same shadow root, same adopted s
 CSS), same hub and channel, same charts, zoom, tables and keyboard. Attributes: `genui`, `ref` (rebind, 7.2), `as-of`,
 `known-at`, `panels`, `header`, `theme`. Events: those of `<drishti-view>` (`drishti:loaded`, `:tick`, `:navigate`,
 `:error`, `:masked`, `:state`) plus `drishti:skeleton` and `drishti:expired` (new). Library version: the next minor after
-1.4.1 (1.5.0), with `integrity.json` and TypeScript declarations as for every element.
+1.4.2 (1.5.0), with `integrity.json` and TypeScript declarations as for every element.
 
 The design tokens (`--d-*`) are the consistency contract: a host restyles every composed screen at once, exactly as it
 restyles its `<drishti-view>`s.

@@ -51,7 +51,7 @@ This is the developer's reference and cookbook. The design and its history are i
 3. **Give your page a token provider** that asks *your own backend* for a token (section 2), and add the one script line and an element:
 
 ```html
-<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.4.1/drishti-elements.js" crossorigin="anonymous"></script>
+<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.4.2/drishti-elements.js" crossorigin="anonymous"></script>
 <script type="module">
   DrishtiElements.configure({
     tokenProvider: async () => {                      // your backend, not Drishti: it holds your client secret
@@ -127,8 +127,8 @@ The console serves the library at an **exact semantic version**, immutably, and 
 
 | URL | What |
 |---|---|
-| `/embed/v1/elements/1.4.1/drishti-elements.js` | the entry (imports `./m/<name>.js`, which are served beside it) |
-| `/embed/v1/elements/1.4.1/integrity.json` | `{"name", "version", "api", "files": {"drishti-elements.js": {"integrity": "sha384-…", "bytes": 2500}, "m/report.js": …}}` |
+| `/embed/v1/elements/1.4.2/drishti-elements.js` | the entry (imports `./m/<name>.js`, which are served beside it) |
+| `/embed/v1/elements/1.4.2/integrity.json` | `{"name", "version", "api", "files": {"drishti-elements.js": {"integrity": "sha384-…", "bytes": 2500}, "m/report.js": …}}` |
 | `/embed/v1/elements/1/…`, `/embed/v1/elements/1.1/…` | `302` to the exact version (for a host that accepts updates; SRI needs the exact one) |
 | `/embed/v1/drishti-elements.js` | the console's current library, revalidated on each load (a host that follows the console) |
 

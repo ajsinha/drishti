@@ -168,7 +168,7 @@ def test_the_library_defines_the_two_new_elements_and_serves_their_modules(backe
         assert r.status_code == 200 and f"class {cls} extends HTMLElement" in r.text and r.headers["access-control-allow-origin"] == HOST
         v = c.get(f"/embed/v1/elements/{dist.VERSION}/m/{name}.js", headers={"Origin": HOST})
         assert v.status_code == 200 and v.headers["cache-control"].endswith("immutable") and v.text == r.text
-    assert dist.VERSION == "1.4.1"
+    assert tuple(int(p) for p in dist.VERSION.split(".")) >= (1, 4, 1)          # the about and search elements are in 1.4.1 and later
 
 
 def test_the_new_elements_draw_text_only_and_never_markup_of_their_own_making():

@@ -49,7 +49,7 @@
   and Filter / Highlight / None over each visual on the canvas); **tooltip pages** (New tooltip page; a popover over the hovered mark in the viewer, filtered
   to it); **small multiples** (one chart per value, one canvas); the **matrix** at every level (Expand all, Collapse all, stepped or tabular, values on
   rows, banding, data bars, rules); board pages in the report viewer (tiles, alert colours, kiosk and rotation) and designer (the tile editor, a live tile
-  preview); the 2.3 board viewer and designer are removed. Embedded `<drishti-report>` draws the new matrix, rules and themes.
+  preview); the 2.3 board viewer and designer are removed. Embedded `<drishti-report>` draws the new matrix, rules and themes (Drishti Elements 1.4.2).
   [BI_GUIDE.md section 26](docs/guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product-wave-c-240).
 - **Tests.** `ReportSchemaV2Test`, `ThemeParserTest`, `BoardsAsReportsTest` (the 2.3 boards convert to reports that read back to the same boards; the shipped
   samples are the conversions), `BoardMigrationApiTest` (the start-up conversion); the Wave C acceptance in Chromium, `test_bi_studio_browser.py`: a Power BI
