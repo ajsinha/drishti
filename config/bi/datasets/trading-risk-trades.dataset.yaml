@@ -33,7 +33,7 @@ source: { connector: risk-store, kind: trade-valuation }
 refresh: { on-load: true }
 columns:
   VALUATION_ID:  { type: string, role: key }
-  TRADE_ID:      { type: string }
+  TRADE_ID:      { type: string, references: trade }      # the trade valued: a table cell opens the trade in the terminal
   SOURCE_SYSTEM: { type: string }
   DESK:          { type: string }
   PORTFOLIO:     { type: string }

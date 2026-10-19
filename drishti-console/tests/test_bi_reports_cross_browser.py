@@ -38,10 +38,30 @@ LADDER = "file:report:cashflow-ladder"
 RISK = "file:dataset:trading-risk-v1"           # the 2.1 sample, kept as a version 1 dataset: the Model view is for those (a model has its designer)
 
 
+# The packs' link graph declares every link between the shipped kinds (2.3.0), so a proposal needs a field it does not know: this stack's margin calls
+# (counterparty-risk's collateral-store, which no sample reads, replaced by a file connector) carry SETTLING_DESK, whose values are desk ids
+CALLS = """plugin: file
+kinds: [margin-call]
+settings:
+  root: {root}
+  rescan-seconds: 3600
+  layout:
+    margin-call:
+      columns: [CALL_ID, SETTLING_DESK, AMOUNT]
+"""
+SETTLING_DESKS = ["DESK-FX", "DESK-FI", "DESK-EQD", "DESK-RATES"]
+
+
 class CrossStack(bi_report_stack.ReportStack):
     def prepare(self, work):
         old = (bi_report_stack.ROOT / "drishti-server/src/test/resources/bi/samples-2.1/datasets/trading-risk.dataset.yaml").read_text(encoding="utf-8")
         (work / "config/bi/datasets/trading-risk-v1.dataset.yaml").write_text(old.replace("dataset: trading-risk", "dataset: trading-risk-v1", 1), encoding="utf-8")
+        calls = self.tmp / "calls" / "2026-10-08"
+        calls.mkdir(parents=True, exist_ok=True)
+        (calls / "margin-call.jsonl").write_text("".join(json.dumps({"id": f"MC-{i:03d}", "CALL_ID": f"MC-{i:03d}", "SETTLING_DESK": SETTLING_DESKS[i % 4],
+                                                                     "AMOUNT": 250_000.0 * (1 + i % 5)}) + "\n" for i in range(20)), encoding="utf-8")
+        (work / "config" / "connectors").mkdir(parents=True, exist_ok=True)
+        (work / "config" / "connectors" / "collateral-store.yaml").write_text(CALLS.format(root=self.tmp / "calls"), encoding="utf-8")
 
 
 @pytest.fixture(scope="module")
@@ -198,7 +218,7 @@ def test_the_ladder_drills_from_year_to_quarter_and_the_legs_matrix_has_totals(s
     settled(page)
     years = chart(page, "by-pay-date")
     assert len(years["categories"]) >= 2 and all(re.fullmatch(r"20\d\d", c) for c in years["categories"])
-    total = engine("rita", ["risk"], {"measures": ["Cashflow amount"], "filters": [{"field": "cashflows.PAYMENT_DATE", "op": "not-null"}]}, "trading-cashflows")["rows"][0][0]
+    total = engine("rita", ["risk"], {"measures": ["Cashflow amount"], "filters": [{"field": "payments.EVENT_DATE", "op": "not-null"}]}, "trading-cashflows")["rows"][0][0]   # the visual's own filter
     assert round(sum(years["series"][0]["values"])) == round(total)
     year = years["categories"][0]
     click_mark(page, "by-pay-date", year)
@@ -303,21 +323,21 @@ PROPOSAL_DEMO = """rachana: 1
 dataset: proposal-demo
 title: Proposal demo
 tables:
-  trades:
-    source: { kind: trade }
+  calls:
+    source: { kind: margin-call }
     mode: cached
-    columns: { DESK: string, MTM: decimal }
-  desk_pnl:
-    source: { kind: desk-pnl }
+    columns: { SETTLING_DESK: string, AMOUNT: decimal }
+  desks:
+    source: { kind: desk }
     mode: cached
-    columns: { DESK: string }
+    columns: { NAME: string }
 measures:
-  MTM: { expr: "sum(trades.MTM)" }
+  Called: { expr: "sum(calls.AMOUNT)" }
 """
 
 
 def test_relationships_proposed_from_the_data_are_accepted_one_by_one(stack, browser):
-    """Two tables with no declared link: the server finds that every value of trades.DESK is an id of desk-pnl (profiling, no AI) and proposes it with the match rate."""
+    """Two tables with no declared link: the server finds that every SETTLING_DESK of the margin calls is the id of a desk (profiling, no AI) and proposes it with the match rate."""
     page = sign_in(browser, "wes")
     page.goto(CONSOLE_URL + "/bi/designer")
     made = page.evaluate("""async (body) => { const r = await fetch('/bi/api/workspaces/me/items', {method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -329,13 +349,13 @@ def test_relationships_proposed_from_the_data_are_accepted_one_by_one(stack, bro
     expect(page.locator("[data-no-rels]")).to_be_visible()
     page.click("[data-infer]")
     page.wait_for_selector("[data-proposals] [data-proposal]", timeout=90000)
-    mine = page.locator("[data-proposals] [data-proposal]").filter(has_text="trades.DESK")
-    assert mine.count() == 1 and "100% of 10 values match" in mine.first.inner_text()                    # the match rate, from the data
+    mine = page.locator("[data-proposals] [data-proposal]").filter(has_text="calls.SETTLING_DESK")
+    assert mine.count() == 1 and "100% of 4 values match" in mine.first.inner_text(), mine.first.inner_text()            # the match rate, from the data
     expect(page.locator("svg.bi-lines g[data-rel]")).to_have_count(0)                                    # proposing changes nothing
     assert "relationships:" not in yaml_text(page)
     mine.first.locator("[data-accept]").click()
     expect(page.locator("svg.bi-lines g[data-rel]")).to_have_count(1)
-    assert "{ from: trades.DESK, to: desk_pnl.id, cardinality: many-to-one }" in yaml_text(page)
+    assert "{ from: calls.SETTLING_DESK, to: desks.id, cardinality: many-to-one }" in yaml_text(page)
     page.wait_for_function("() => document.querySelector('[data-valid]').textContent === 'Valid'")
     page.click("[data-save]")
     expect(page.locator("[data-state]")).to_have_text("Saved")

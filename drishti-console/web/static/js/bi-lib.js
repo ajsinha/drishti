@@ -192,6 +192,15 @@
     return { measures, columns, tables, hierarchies: dataset.hierarchies || {} };
   };
 
+  /** The Drishti kind a column's values open in the terminal, or '': a model table's entity or a 2.1 table's kind for its key, else the kind the
+   *  column `references:` (a TRADE_ID that references trade, in a table keyed by something else). */
+  B.terminalKind = function (col) {
+    if (!col) { return ''; }
+    const own = col.entity || (['fact', 'dimension', 'bridge'].indexOf(col.kind) < 0 ? col.kind : '');
+    if (own && (col.key || col.role === 'key' || col.name === 'id')) { return own; }
+    return col.references && !col.part ? String(col.references) : '';
+  };
+
   /** The column a field name points at; a date part (table.column.month) answers the column with part set. */
   B.column = function (idx, field) {
     if (idx.columns[field]) { return idx.columns[field]; }

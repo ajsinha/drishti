@@ -56,9 +56,8 @@
   }
 
   function terminalLink(ctx, name, v) {
-    const col = ctx.index.columns[name];
-    const kind = col && (col.entity || (['fact', 'dimension', 'bridge'].indexOf(col.kind) < 0 ? col.kind : ''));      // a model's table names its entity; a 2.1 table is one
-    if (!col || !kind || v == null || !(col.key || col.role === 'key' || col.name === 'id')) { return null; }
+    const kind = B.terminalKind(ctx.index.columns[name]);           // a key of an entity's table, or a column that references a kind
+    if (!kind || v == null) { return null; }
     return h('a', { href: '/v/' + encodeURIComponent(kind) + '/' + encodeURIComponent(String(v)), class: 'bi-toterm-link', 'data-open-terminal': kind, title: 'Open in the terminal', text: String(v) });
   }
 
