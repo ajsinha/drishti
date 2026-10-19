@@ -255,6 +255,29 @@ public final class SortedStore implements AutoCloseable {
         }
     }
 
+    /**
+     * Whether another process has the store in {@code dir} open: RocksDB holds a lock on its {@code LOCK} file while open (an fcntl lock,
+     * which {@link java.nio.channels.FileChannel#tryLock} sees on Linux and macOS). A folder without one, or whose lock is free, is not in use.
+     */
+    public static boolean inUse(Path dir) {
+        Path lock = dir.resolve("LOCK");
+        if (!Files.isRegularFile(lock)) {
+            return false;
+        }
+        try (java.nio.channels.FileChannel ch = java.nio.channels.FileChannel.open(lock, java.nio.file.StandardOpenOption.WRITE)) {
+            java.nio.channels.FileLock l = ch.tryLock();
+            if (l == null) {
+                return true;
+            }
+            l.release();
+            return false;
+        } catch (java.nio.channels.OverlappingFileLockException e) {
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
     /** Deletes a store's folder (all of it); nothing when it does not exist. */
     public static void deleteFolder(Path dir) throws IOException {
         if (!Files.exists(dir)) {

@@ -19,6 +19,10 @@
 
 ## 2.5.0 — Drishti*net: many servers, one Drishti; no JVM litters /tmp; the documents, help and deck reviewed (2026-10-19)
 
+- **Fixed: derived pages kept on disk are never removed while another process has them open.** A server's start-up clean-up of
+  `<data dir>/derived/<connector>` deleted every folder it did not keep, including a store another process was writing (two servers
+  sharing a data folder; found by the drill's parallel test forks); it now leaves a store whose lock is held (`SortedStore.inUse`).
+
 - **Drishti*net membership (N1).** Several servers act as one cluster, **off by default**: with no `config/net/` folder (or `enabled: false`
   in its `node.yaml`) a server is a single server exactly as before. Switched on, each node gossips over HTTP (SWIM-style push-pull every
   second with three random members, direct and indirect probes, `alive`, `suspect` after 5 s, `dead` after 30 s more, `left` when it stops

@@ -648,6 +648,9 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         }
         try (var dirs = java.nio.file.Files.list(storeRoot)) {
             for (java.nio.file.Path d : dirs.filter(d -> !keep.contains(d)).toList()) {
+                if (com.ash.drishti.diskcache.SortedStore.inUse(d)) {
+                    continue;                                     // another process (a server sharing the data folder) has it open
+                }
                 com.ash.drishti.diskcache.SortedStore.deleteFolder(d);
             }
         }
