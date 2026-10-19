@@ -102,6 +102,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `lake` | `lake build`, `lake scan`, `lake status`, `lake demo`, `lake maintain` | [4](#4-lake-build-a-large-json-export-into-a-delta-lake) |
 | `server` | `server health`, `server caches`, `server packs`, `server smoke` | [5.4](#54-server-and-doctor) |
 | `connector` | `connector list`, `connector get`, `connector apply`, `connector delete`, `connector test`, `connector plugins`, `connector enable`, `connector disable`, `connector reset`, `connector history` | [5.5](#55-connector) |
+| `net` | `net list`, `net check`, `net add-peer`, `net set`, `net members` | [5.9](#59-net) |
 | `design` | `design list`, `design create`, `design get`, `design save`, `design check`, `design propose`, `design approve`, `design reject`, `design proposals`, `design export`, `design import`, `design bind`, `design autodesign`, `design delete` | [5.6](#56-design) |
 | `docs` | `docs shots` | [9](#9-developer-tools) |
 | `doctor` | `drishti.py doctor` | [5.4](#54-server-and-doctor) |
@@ -113,7 +114,7 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 `tools/dataprofile.py`, `tools/packmake.py`, `tools/packregen.py`, `tools/packdiff.py`, `tools/packcatalogue.py`, `tools/packi18n.py`,
 `tools/packform.py` (the `form:` section a pack check reads), `tools/schemapack.py` (`--schema`), `tools/sutragen.py` (`sutra gen`),
 `tools/ingest_jsonl.py` and `tools/ingest_watch.py` (`data ingest`), `tools/packbundle.py` (`pack bundle|verify|deploy|rollback`),
-`tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
+`tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/servernet.py` (`net`), `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
 `tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
 `tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/demo.py` (`lake demo`) and `tools/lake/laketables.py` (the tables `lake status` lists).
 
@@ -812,6 +813,19 @@ $ drishti-console/.venv/bin/python tools/drishti.py completion bash | head -n 3
 _drishti_complete() {
 ```
 
+### 5.9 net
+
+Drishti\*net's `config/net/` folder from the terminal (2.5.0; [NET.md](../admin/NET.md)): `net list` (the files, in force, refused or absent, and what
+they say), `net check [FILE ...]` (each file checked as the server does; exit `1` when one would be refused), `net add-peer NAME URL [--tags ...]`
+(a seed in `peers/NAME.yaml`), `net set KEY VALUE` (one setting, such as `node.enabled true` or `gossip.interval 2s`; an empty value removes it) and
+`net members` (the member table of a running server). The folder is `--dir`, else `DRISHTI_NET_DIR`, else `./config/net`; a write is atomic and keeps
+the previous text under `<data dir>/net/history`, and the cluster key is only ever written as a reference (`secret: ${DRISHTI_NET_SECRET}`).
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py net check
+drishti-console/.venv/bin/python tools/drishti.py net members --server http://localhost:18480 --token-file ~/.drishti-token
+```
+
 ## 6. Store loaders: `tools/load-*.sh`
 
 Each loader writes the banking packs' demo data (1,791 sample documents x 10 business days, and with `--trades N --days D` a
@@ -940,6 +954,7 @@ of Parquet.
 | `tools/bench/scale.sh`, `tools/bench/pinning.sh` | the scale benchmark per store and size, and the virtual-thread pinning comparison (Java 21 / 25); they start and stop their own servers by process id |
 | `tools/windows/start-server.ps1`, `tools/windows/start-console.ps1`, `tools/windows/load-delta.ps1` | starting the server and console, and loading the demo lake, on Windows |
 | `tools/smoke.py` | the engine of `drishti.py server smoke` |
+| `tools/javacmd.py` | `java_cmd()`: the one helper every Python launcher of a JVM uses, so each java it starts gets `-Djava.io.tmpdir=` (native libraries unpack in Drishti's own temp folder, not `/tmp`); a guard test fails on a tool that starts java without it ([CONFIGURATION.md](../admin/CONFIGURATION.md)) |
 
 ```
 $ python3 tools/license_headers.py
