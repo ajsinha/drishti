@@ -98,17 +98,17 @@ def test_markers_the_pivot_object_and_the_pivot_by_list_have_structured_editors(
     rev = state(page, "rev")
     page.get_by_role("button", name="Add marker").click()
     page.get_by_label("Label 2", exact=True).fill("ES 97.5")
-    page.get_by_label("Value 2", exact=True).fill("-$.var975")
+    page.get_by_label("Value 2", exact=True).fill("-$.VAR975")
     page.get_by_label("Value 2", exact=True).blur()
     settle(page, rev)
     assert [m.get("label") for m in option_value(page, "scenarios", "markers")] == ["VaR 99%", "ES 97.5"]
     pick(page, "grid")
     rev = state(page, "rev")
     page.get_by_role("button", name="Add by").click()
-    page.get_by_role("textbox", name="by 3").fill("currency")
+    page.get_by_role("textbox", name="by 3").fill("CURRENCY")
     page.get_by_role("textbox", name="by 3").blur()
     settle(page, rev)
-    assert option_value(page, "grid", "by") == ["book", "family", "currency"]
+    assert option_value(page, "grid", "by") == ["BOOK", "FAMILY", "CURRENCY"]
     pick(page, "versions")
     rev = state(page, "rev")
     page.get_by_role("switch", name="pivot on").check()
