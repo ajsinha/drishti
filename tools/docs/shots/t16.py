@@ -154,6 +154,8 @@ def host(c: Ctx):
 
         login(c, height=900)
         go(c, "/admin/embedding", height=900, wait="table", settle=1500)
+        c.page.evaluate("document.querySelectorAll('.tbl-wrap').forEach((w) => { w.scrollLeft = w.scrollWidth; })")   # the Usage column, past two kinds and two reports
+        c.page.wait_for_timeout(300)
         c.save("09-usage.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 620})
         print("CSP", urllib.request.urlopen(HOST + "/").headers.get("Content-Security-Policy"))
         print("CSPREPORTS", urllib.request.urlopen(HOST + "/api/csp-reports").read().decode())

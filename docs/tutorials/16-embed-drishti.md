@@ -28,7 +28,7 @@ About 40 minutes.
   on), with the **demo ticker on** as in [tutorial 12](12-live-bi-and-boards.md#before-you-start) (`DRISHTI_DEMO_ENABLED=true`): the live report of
   step 6 and the views of step 5 tick only with it. The host shows two **trade valuations** of the market-risk pack, `TVAL-1000008` and `TVAL-1000002`
   (a valuation's MTM and one-day P&L move with the demo; a trade itself does not tick: it changes when its source books a new version).
-- Embedding is **off by default**. This tutorial turns it on (step 1). It needs a third port for the host application (the sample host uses 17968 by default; the pictures use 17944), and the two demo users `viewer` and `author` in Drishti (step 2).
+- Embedding is **off by default**. This tutorial turns it on (step 1). It needs a third port for the host application (the sample host uses 17968 by default; the commands below use 17944, and the pictures were taken with the host on 17782), and the two demo users `viewer` and `author` in Drishti (step 2).
 - The sample host is [tools/elements-demo](../../tools/elements-demo/README.md): a small Python program with its own sign-in and its own backend. It signs its requests with a **demo key** that ships in the repository: never use it for anything real.
 
 ## What you will learn
@@ -64,7 +64,7 @@ Open **Admin → Embedding**.
 
 You should see the empty list and **New application**. Press it.
 
-![The New host application form: name Harbour CRM, id harbour-crm, origin http://127.0.0.1:17944, signs in with Both, a JWK set, the scopes embed:about, embed:report, embed:view, the kinds trade and trade-valuation and two reports, the rates](img/t16/02-register-form.jpg)
+![The New host application form: name Harbour CRM, id harbour-crm, origin http://127.0.0.1:17782, signs in with Both, a JWK set, the scopes embed:about, embed:report, embed:search, embed:view, the kinds trade and trade-valuation and two reports, the rates](img/t16/02-register-form.jpg)
 
 Fill it in:
 
@@ -84,7 +84,7 @@ Press **Register**.
 
 You should see the client secret, shown **once** (Drishti keeps only a hash of it). Copy it; you give it to the host application's backend (an environment variable or a secret store, never a web page). Press **I have stored it**.
 
-![The Embedding list: Harbour CRM, its origin, "client secret" and "public key", its scopes and kinds, status enabled, usage](img/t16/04-registered.jpg)
+![The Embedding list: Harbour CRM, its origin, "client secret" and "public key", its scopes and kinds, status enabled (the usage column is further right)](img/t16/04-registered.jpg)
 
 You should see the application: its origin, the two ways it signs in, the scopes and kinds, `enabled`, and a usage column (`0 tokens · 0 calls`). Over the API the same registration is `POST /api/v1/admin/embed/apps`; a **rotate** (new secret, with a grace period during which the old one still works), **disable** and **delete** are buttons on the row.
 
@@ -245,11 +245,11 @@ You should see the console's address in exactly three directives (`script-src`, 
 
 Back in **Admin → Embedding**:
 
-![The Embedding list after the host ran: tokens issued, calls made, and refusals counted by code](img/t16/09-usage.jpg)
+![The Embedding list after the host ran, scrolled to its Usage column: 7 tokens, 100 calls, 0 live, 0 refused, last used](img/t16/09-usage.jpg)
 
 You should see the usage of the application: **tokens** issued, **calls** made, how many are **live** (open streams), and **refused** calls counted by code. (Each number counts since the console started.) The limits are the application's: `callsPerMinute` for the whole application and `userCallsPerMinute` for each user. A live report asks again at every tick, so a low limit shows quickly. Here the application was registered again with 5 calls a minute per user:
 
-![The report page on a phone, with the cards saying "DRS-8004 over the embed call rate; retry in 51 s" instead of figures](img/t16/10-rate-limited.jpg)
+![The report page on a phone, with the cards saying "DRS-8004 over the embed call rate; retry in 40 s" instead of figures](img/t16/10-rate-limited.jpg)
 
 You should see `DRS-8004 over the embed call rate; retry in 51 s` in the visuals that were refused, and a **Retry** button: the element retries by itself when the time is up, and tells the host with a `drishti:error` event (`fatal: false`). The ones you will meet:
 
