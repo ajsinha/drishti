@@ -71,6 +71,25 @@
   <build>
     <plugins>
       <plugin>
+        <!-- each test run starts with no connector files in the forks' folders: a file generated from an older pack template is
+             kept as if edited (a pack's newer template never reaches it), so a test that lands in that fork read the old connector -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-clean-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>fresh-fork-connectors</id>
+            <phase>process-test-classes</phase>
+            <goals><goal>clean</goal></goals>
+            <configuration>
+              <excludeDefaultDirectories>true</excludeDefaultDirectories>
+              <filesets>
+                <fileset><directory>${project.build.directory}</directory><includes><include>fork*/connectors/**</include></includes></fileset>
+              </filesets>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>

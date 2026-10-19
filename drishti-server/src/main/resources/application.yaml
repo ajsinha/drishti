@@ -209,6 +209,9 @@ drishti:
       - /api/v1/bi/boards/validate      # checks a board's YAML without storing it
       - /api/v1/bi/reports/format       # writes a report model as YAML
       - /api/v1/bi/boards/format        # writes a board model as YAML, stores nothing
+      - /api/v1/bi/boards/convert       # a 2.3 board converted to the report with board pages it becomes (drishti.py bi migrate --boards FILE), stores nothing
+      - /api/v1/bi/themes/validate      # checks a theme's YAML without storing it
+      - /api/v1/bi/python/input         # one input of a Python Transform as the caller (the Transform editor's preview and profile), masked and row-ruled, stores nothing
       - /api/v1/bi/items/*/tests        # runs the expected values (tests:) of a report or dataset as the caller or a role they hold: queries only, stores nothing
       - /api/v1/export/*                # Rupaka phase 7: a report, visual or view rendered as PDF, PNG, Excel or CSV for the caller (masked), stores nothing
       - /api/v1/subscriptions/preview   # renders what a subscription would send, for the caller, stores nothing
@@ -303,6 +306,7 @@ drishti:
       - POST /api/v1/bi/migrate/models/convert   # migration: an administrator in the console, never a token
       - POST /api/v1/bi/migrate/models
       - POST /api/v1/bi/migrate/expressions
+      - POST /api/v1/bi/migrate/boards           # the stored 2.3 boards converted into reports: an administrator in the console
       - POST /api/v1/bi/models/*/preview-as     # previews another role's answers: audited, in the console only
       - "* /api/v1/me/**"
       - "* /api/v1/auth/**"
