@@ -299,11 +299,14 @@ public final class VisualQueries {
         for (var e : state.slicers().entrySet()) {
             Report.Visual s = null;
             boolean onThisPage = false;
-            for (Report.Page p : report.pages()) {
+            List<Report.Page> pages = new ArrayList<>(report.pages());                  // ids are unique per page: a slicer of this page first
+            pages.remove(page);
+            pages.add(0, page);
+            for (Report.Page p : pages) {
                 Report.Visual x = p.visual(e.getKey());
                 if (x != null && "slicer".equals(x.type())) {
                     s = x;
-                    onThisPage = p.id().equals(page.id());
+                    onThisPage = p.id().equals(page.id()) || page.tooltip();        // a tooltip page takes the choices of the page it is drawn over (the viewer sends those)
                     break;
                 }
             }

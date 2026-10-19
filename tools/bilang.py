@@ -22,6 +22,8 @@ over REST, as the token's user. Loaded by drishti.py; every command talks to the
   bi migrate --expressions [--dry-run]                 the same for the server's STORED items (bi-admin): audited, the text before kept in each item's history
   bi migrate --models DIR [--dry-run] [--out D] [--keep-old] [--report F]   rachana: 1 datasets of a BI folder to datasets and models, reports rebound
   bi migrate --models [--dry-run]                      the same for the server's stored items (bi-admin)
+  bi migrate --boards FILE... [--write] [--keep-old]   2.3 boards to reports with board pages (2.4.0, R7); --write writes <name>.report.yaml beside reports/
+  bi migrate --boards [--dry-run]                      the same for the server's stored boards (bi-admin; the server also does it at start)
   bi sql "SELECT ..." --model M [--explain] [--format json|csv]   run Drishti SQL over a model (wave A)
 """
 import argparse
@@ -66,16 +68,19 @@ def register(bi, srv, ctx) -> None:
                              "  drishti.py bi migrate --expressions                      # ... and convert them (bi-admin)\n"
                              "  drishti.py bi migrate --models config/bi --dry-run --report /tmp/plan.md   # datasets to models: the plan\n"
                              "  drishti.py bi migrate --models config/bi                  # write it (old dataset files removed; --keep-old keeps them)\n"
-                             "  drishti.py bi migrate --models --dry-run                  # the server's stored items")
+                             "  drishti.py bi migrate --models --dry-run                  # the server's stored items\n"
+                             "  drishti.py bi migrate --boards config/bi/boards --write   # 2.3 boards to reports with board pages (2.4.0)\n"
+                             "  drishti.py bi migrate --boards --dry-run                  # the server's stored boards")
     m.add_argument("files", nargs="*", metavar="FILE", help="item files or folders (searched for *.dataset|model|report|board|notebook.yaml); none: the stored items")
     what = m.add_mutually_exclusive_group(required=True)
     what.add_argument("--expressions", action="store_true", help="convert the expressions to DEL v2")
     what.add_argument("--models", action="store_true", help="convert rachana: 1 datasets to datasets and models, and rebind their reports (BI_MODEL_SPEC.md 8.3)")
+    what.add_argument("--boards", action="store_true", help="convert 2.3 boards to reports whose pages have layout: board (2.4.0, docs/guides/BOARDS.md)")
     m.add_argument("--write", action="store_true", help="FILEs: write the converted files")
     m.add_argument("--check", action="store_true", help="FILEs: change nothing; exit 1 when a file would change or cannot be converted")
     m.add_argument("--dry-run", action="store_true", help="change nothing, show what would change (stored items, and --models; for --expressions FILEs it is the default)")
     m.add_argument("--out", metavar="DIR", help="--models: write the converted files under DIR instead of in place (the old files are then left alone)")
-    m.add_argument("--keep-old", action="store_true", help="--models in place: keep the old dataset files (they are removed by default)")
+    m.add_argument("--keep-old", action="store_true", help="--models in place: keep the old dataset files (they are removed by default); --boards: keep the board files")
     m.add_argument("--report", metavar="FILE", help="--models: write the plan report (Markdown) to FILE")
     m.set_defaults(func=lambda a, extra: migrate(a, ctx))
 
@@ -169,6 +174,8 @@ def migrate(a, ctx) -> int:
     api = ctx["Api"].from_args(a)
     if a.models:
         return migrate_models(a, api, ctx)
+    if a.boards:
+        return migrate_boards(a, api, ctx)
     if not a.files:
         return migrate_stored(a, api, ctx)
     if a.dry_run:
@@ -262,6 +269,52 @@ def migrate_models(a, api, ctx) -> int:
     print(f"{len(files)} file(s) read, {r.get('converted', 0)} converted, {r.get('problems', 0)} refused; {verb} {len(r.get('writes', {}))} file(s)"
           + (f", removed {removed} old dataset file(s)" if removed else "") + (f"; the report is {a.report}" if a.report else ""))
     return 1 if r.get("problems") else 0
+
+
+def migrate_boards(a, api, ctx) -> int:
+    """--boards (2.4.0, R7): board FILEs (or folders of *.board.yaml) converted by the server's converter into reports with board pages, written as
+    <name>.report.yaml in the BI folder's reports/ (beside the file when it is not in a boards/ folder) with --write; without FILEs the server's stored boards."""
+    if a.check:
+        raise ctx["CliError"]("--check is for --expressions; --boards prints what it would write unless --write", 2)
+    if not a.files:
+        r = api.json("POST", "/api/v1/bi/migrate/boards", {"dryRun": bool(a.dry_run)})
+        if a.json:
+            ctx["say_json"](r)
+            return 1 if r.get("problems") else 0
+        for i in r.get("items", []):
+            print(f"board '{i['title']}' ({i['id']}, {i['status']}): {i['state']}" + (f"; the text before is saved state {i['before']}" if i.get("before") else ""))
+        done = r.get("wouldConvert" if a.dry_run else "converted", 0)
+        print(f"{r.get('scanned', 0)} stored board(s), {done} " + ("would become reports" if a.dry_run else "became reports")
+              + (f", {r['problems']} cannot be converted (they keep their text; Admin, BI settings lists them)" if r.get("problems") else ""))
+        return 1 if r.get("problems") else 0
+    files = []
+    for f in a.files:
+        p = pathlib.Path(f)
+        files.extend(sorted(p.glob("*.board.yaml")) if p.is_dir() else [p])
+    failed = 0
+    report = []
+    for f in files:
+        r = api.json("POST", "/api/v1/bi/boards/convert", {"yaml": f.read_text(encoding="utf-8")})
+        name = f.name[: -len(".board.yaml")] if f.name.endswith(".board.yaml") else f.stem
+        target = (f.parent.parent / "reports" if f.parent.name == "boards" else f.parent) / (name + ".report.yaml")
+        report.append({"file": str(f), "converted": r.get("converted"), "to": str(target), "problems": r.get("problems", [])})
+        if not r.get("converted"):
+            failed += 1
+            if not a.json:
+                print(f"{f}: NOT CONVERTED: " + "; ".join(p["path"] + ": " + p["message"] for p in r.get("problems", []) if p.get("level") == "error"))
+            continue
+        if a.write:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(r["yaml"], encoding="utf-8")
+            if not a.keep_old:
+                f.unlink()
+        if not a.json:
+            print(f"{f}: {'wrote' if a.write else 'would write'} {target}")
+    if a.json:
+        ctx["say_json"]({"files": report, "failed": failed, "written": bool(a.write)})
+    else:
+        print(f"{len(files)} board file(s), {len(files) - failed} converted" + (", written" if a.write else " (add --write to write them)") + (f", {failed} with problems" if failed else ""))
+    return 1 if failed else 0
 
 
 def migrate_stored(a, api, ctx) -> int:

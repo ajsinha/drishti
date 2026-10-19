@@ -72,7 +72,7 @@ def test_the_report_designer_is_in_the_studio_and_edits_tiles(client):
     for script in ("bi-studio.js", "bi-format-pane.js", "bi-format-rules.js", "bi-design-v2.js", "bi-matrix.js", "bi-multiples.js", "bi-visuals-format.js"):
         assert "/static/js/" + script in page.text, script
     v2 = (STATIC / "js" / "bi-design-v2.js").read_text(encoding="utf-8")
-    for hook in ("data-tile-report", "data-tile-visual", "'data-tile-' + name + '-op'", "data-page-layout", "data-page-tooltip", "data-interaction", "data-theme", "data-board-rotate"):
+    for hook in ("data-tile-report", "data-tile-visual", "'data-tile-' + name + '-op'", "data-page-layout", "data-page-tooltip", "data-interaction", "data-report-theme", "data-board-rotate"):
         assert hook in v2, hook
 
 

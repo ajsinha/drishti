@@ -154,6 +154,17 @@ class ReportSchemaV2Test {
     }
 
     @Test
+    void aSlicerIdOfThisPageWinsOverTheSameIdOnAnotherPageAndATooltipPageTakesTheChoicesItIsSent() throws IOException {
+        String yaml = "report: v2\ndataset: trades-basic\npages:\n"
+                + "  - id: p\n    title: P\n    visuals:\n      - { id: slicer-1, type: slicer, at: { x: 0, y: 0, w: 3, h: 4 }, wells: { field: [trade.DESK] } }\n"
+                + "  - id: q\n    title: Q\n    visuals:\n      - { id: slicer-1, type: slicer, at: { x: 0, y: 0, w: 3, h: 4 }, wells: { field: [trade.CURRENCY] } }\n"
+                + "      - { id: c, type: card, at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [MTM] } }\n"
+                + "  - id: tip\n    title: Tip\n    tooltip: true\n    visuals:\n      - { id: t, type: card, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [MTM] } }\n";
+        assertThat(query(yaml, "q", "c", "{\"slicers\": {\"slicer-1\": [\"USD\"]}}").filters()).containsExactly(new QueryRequest.Filter("trade.CURRENCY", "in", List.of("USD")));
+        assertThat(query(yaml, "tip", "t", "{\"slicers\": {\"slicer-1\": [\"USD\"]}}").filters()).hasSize(1);
+    }
+
+    @Test
     void theInteractionsMatrixNamesVisualsOfItsPage() throws IOException {
         List<Problem> p = all(TWO.replace("bars: { trend: highlight, total: none }", "bars: { trend: glow, nope: none }\n      ghost: { bars: none }"));
         assertThat(p.stream().filter(Problem::error).map(Problem::path).toList()).contains("pages[0].interactions.bars.trend", "pages[0].interactions.bars.nope", "pages[0].interactions.ghost");

@@ -183,6 +183,7 @@
       if (!e || !v) { return; }
       const group = (D.catalogue.visuals[v.type] || {}).group;
       const spec = B.theme.spec(Object.assign({}, v, { title: v.title || '' }), D.theme, D.families);          // the theme's visual defaults under the visual's own format (2.4.0)
+      B.visuals.frameFormat(e.frame, spec);                                                                    // the frame of the format (subtitle, border ...) follows each change
       if (group === 'board') { D.tilePreview(e.frame, v); return; }                                            // a tile (R7): its report's visual, asked as the author
       if (group === 'static' || group === 'entity') { e.frame.result(null, (host) => B.visuals.draw(host, spec, ctxFor(v), null)); return; }
       if (group === 'python') {                                           // Python runs when the report is viewed (server or browser), never while designing

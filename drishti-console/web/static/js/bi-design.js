@@ -246,7 +246,7 @@
   D.resolveTheme = function () {
     const t = (D.model && D.model.theme) || {};
     themeKey = JSON.stringify(t);
-    const got = t.use ? B.api('GET', '/themes/' + encodeURIComponent(t.use)).then((x) => Object.assign({}, x, t.palette ? { palette: t.palette } : {}, t.background ? { background: t.background } : {}),
+    const got = t.use ? B.api('GET', '/themes/' + encodeURIComponent(t.use)).then((x) => Object.assign({}, x, { name: x.theme || t.use }, t.palette ? { palette: t.palette } : {}, t.background ? { background: t.background } : {}),
       () => ({ palette: t.palette || 'default', missing: t.use })) : Promise.resolve({ palette: t.palette || 'default', background: t.background });
     return got.then((th) => {
       D.theme = th;

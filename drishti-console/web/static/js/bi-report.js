@@ -557,7 +557,9 @@
     const wanted = parts ? decodeURIComponent(parts.replace(/^\//, '')) : '';
     const first = rep.report.pages.find((p) => !p.drillthrough && !p.tooltip) || rep.report.pages[0];
     const carry = readCarry();
-    tips = B.tooltips ? B.tooltips({ reportId, page: pageOf, stateFor, ctxFor: (v) => ctxFor(v) }) : null;
+    // a tooltip page is asked under the choices of the page it is drawn over: that page's slicers and the report-wide ones, not another page's
+    const tipState = (spec) => { const st = stateFor(spec), here = pageOf(pageId), own = {}; Object.keys(st.slicers || {}).forEach((k) => { const sl = rep.report.pages.map((p) => p.visuals.find((x) => x.id === k && x.type === 'slicer')).find(Boolean); if (here.visuals.some((x) => x.id === k) || (sl && (sl.format || {}).scope === 'report')) { own[k] = st.slicers[k]; } }); return Object.assign(st, { slicers: own }); };
+    tips = B.tooltips ? B.tooltips({ reportId, page: pageOf, stateFor: tipState, ctxFor: (v) => ctxFor(v) }) : null;
     const boardPages = () => rep.report.pages.filter((p) => p.layout === 'board' && !p.drillthrough && !p.tooltip).map((p) => p.id);
     board = boardPages().length && B.reportBoard ? B.reportBoard({ canvas, rep, tokens, time: () => state.time, pages: boardPages, current: () => pageId, go: (id) => go(id, []),
       watchPaused: () => !!(watch && watch.paused()) }) : null;

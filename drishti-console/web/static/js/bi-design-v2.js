@@ -110,7 +110,7 @@
 
   /** Format with no visual selected, the report: its theme (a theme item, or a palette) and, with board pages, the kiosk rotation. */
   D.reportV2 = function (fmt, m) {
-    const sel = h('select', { class: 'studio-select', 'data-theme': '', 'aria-label': 'Theme' }, h('option', { value: '', text: 'none (the palette below)' }));
+    const sel = h('select', { class: 'studio-select', 'data-report-theme': '', 'aria-label': 'Theme' }, h('option', { value: '', text: 'none (the palette below)' }));
     const cur = (m.theme || {}).use || '';
     sel.value = cur;
     themesP = themesP || B.api('GET', '/themes').catch(() => []);

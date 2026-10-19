@@ -72,7 +72,9 @@
     const option = V.baseOption(spec, ctx, { legend: legendShown, extra: { grid: grids, xAxis: xAxes, yAxis: yAxes, title: titles, series,
       tooltip: Object.assign(V.baseOption(spec, ctx, {}).tooltip, { trigger: 'axis', axisPointer: { type: 'shadow' } }) } });
     const first = parts[0];
-    const marks = V.marksFor(first.axis, first, ctx, spec);
+    const rawOf = new Map();                                              // the marks are the categories of every small chart (a click or a hover on any of them)
+    parts.forEach((s) => s.labels.forEach((l, j) => { if (!rawOf.has(l)) { rawOf.set(l, s.cats[j]); } }));
+    const marks = V.marksFor(first.axis, { tb, axis: first.axis, cats: allCats.map((l) => rawOf.get(l)), labels: allCats, series: [] }, ctx, spec);
     const handle = V.mount(host, option, Object.assign({}, spec, { alt: spec.alt || (spec.title || spec.type) + ': ' + keys.length + ' small charts, one per ' + B.label(split) }), ctx, marks);
     const box = B.q('.bi-chart', host);
     if (box) {

@@ -112,7 +112,7 @@
     const pal = (model.palette || []).length ? model.palette : B.palette('default');
     box.appendChild(h('div', { class: 'bi-swatches', 'aria-label': 'The series colours' }, pal.map((c) => { const s = h('span', { class: 'bi-swatch', title: c }); s.style.background = c; return s; })));
     const cats = ['North', 'South', 'East', 'West'];
-    const res = { columns: [{ name: 'sample.REGION' }, { name: 'Sales' }, { name: 'Margin' }], rows: cats.map((c, i) => [c, [42, 31, 27, 19][i] * 1e6, [12, -4, 7, 3][i] * 1e5]), meta: { masked: [] } };
+    const res = { columns: [{ name: 'sample.REGION' }, { name: 'Sales' }, { name: 'Margin' }], rows: cats.map((c, i) => [c, [42, 31, 27, 19][i] * 1e6, [12, -4, 7, 3][i] * 1e5]) };          // no meta: a sample has no query line
     const ctx = { index: { measures: { Sales: { name: 'Sales', expr: 'sum(x)' }, Margin: { name: 'Margin', expr: 'sum(y)' } }, columns: { 'sample.REGION': { type: 'string' } }, hierarchies: {} },
       palette: pal, t: B.tokens(), interactive: false, theme: model };
     const fams = { column: 'chart', table: 'table', card: 'card' };
@@ -123,14 +123,14 @@
         frame.el.classList.add('bi-theme-sample');
         frame.el.setAttribute('data-theme-sample', type);
         box.appendChild(frame.el);
-        frame.result(Object.assign({ rowCount: res.rows.length }, type === 'card' ? { columns: [{ name: 'Sales' }], rows: [[119e6]], meta: { masked: [] } } : res), (host, r) => B.visuals.draw(host, spec, ctx, r));
+        frame.result(Object.assign({ rowCount: res.rows.length }, type === 'card' ? { columns: [{ name: 'Sales' }], rows: [[119e6]] } : res), (host, r) => B.visuals.draw(host, spec, ctx, r));
       });
   }
 
   function draw() {
     const ed = B.clear(q('[data-theme-editor]'));
     ed.appendChild(P.row('Title', P.text(model.title, (x) => change((m) => { m.title = x.trim() || m.title; }), { 'data-theme-title': '' })));
-    ed.appendChild(P.row('Name', P.text(model.theme, (x) => change((m) => { m.theme = B.slug(x) || m.theme; }), { 'data-theme-name': '' }), 'What a report writes: theme: ' + model.theme));
+    ed.appendChild(P.row('Name', P.text(model.theme, (x) => change((m) => { m.theme = B.slug(x) || m.theme; }), { 'data-theme-key': '' }), 'What a report writes: theme: ' + model.theme));
     ed.appendChild(P.row('Description', P.text(model.description, (x) => change((m) => { if (x.trim()) { m.description = x.trim(); } else { delete m.description; } }))));
     drawPalette(ed);
     drawColours(ed);
@@ -165,7 +165,11 @@
     q('[data-save]').addEventListener('click', save);
     q('[data-publish]').addEventListener('click', () => {
       const btn = q('[data-publish]');
-      const go = () => B.api('POST', '/items/' + B.id2path(itemId) + '/' + (item && item.workspaceReviewRequired ? 'propose' : 'publish'), {}).then((it) => { item = it; B.near(btn, 'Published: reports that name ' + model.theme + ' draw with it.', false); });
+      if (item && item.personal && !item.shipped) {                         // a private workspace cannot publish: say what to do, as the report designer does
+        B.near(btn, 'This theme is in your private workspace, which cannot publish; you can use it in your own reports already. Move it to a shared workspace (Move on its item page), then publish it there.', true);
+        return;
+      }
+      const go = () => B.api('POST', '/items/' + B.id2path(itemId) + '/' + (item && item.workspaceReviewRequired ? 'propose' : 'publish'), {}).then((it) => { const proposed = item && item.workspaceReviewRequired; item = it; B.near(btn, proposed ? 'Proposed for review: once approved, reports that name ' + model.theme + ' draw with it.' : 'Published: reports that name ' + model.theme + ' draw with it.', false); });
       B.busy(btn, () => (dirty ? save().then(go) : go())).catch((e) => B.near(btn, e.message, true));
     });
     const ta = q('[data-theme-yaml]');
@@ -177,7 +181,7 @@
 
   if (itemId === 'new') {                                                  // a new theme in your private workspace, starting from the shipped Corporate theme
     B.api('GET', '/themes/corporate').then((t) => Object.assign({}, t, { theme: 'my-theme', title: 'My theme', sample: undefined, tags: undefined, description: 'Made from Corporate.' }), () => null)
-      .then((t) => B.api('POST', '/workspaces/me/items', { kind: 'theme', title: 'My theme', description: '', body: t ? yamlOf(t) : STARTER }))
+      .then((t) => B.writable().then((wss) => { const shared = wss.find((w) => !w.personal); return B.api('POST', '/workspaces/' + encodeURIComponent(shared ? shared.id : 'me') + '/items', { kind: 'theme', title: 'My theme', description: '', body: t ? yamlOf(t) : STARTER }); }))      // a shared workspace when you have one: a theme is published for others
       .then((it) => { window.location.replace('/bi/design/theme/' + B.id2path(it.id)); })
       .catch((e) => say(e.message, true));
     return;
