@@ -135,6 +135,9 @@
 - **A new board from the workspace says where it opens (2.4.0).** The New item form still said a board *is laid out in the board designer* and
   offered *Create and open in the board designer*; a board is a report with board pages, so the hint and the button now say it opens in the report
   designer, no model needed ([BI_GUIDE.md](docs/guides/BI_GUIDE.md)).
+- **The workbench completes UPPER_SNAKE paths typed in lower case (2.4.0).** The inspector's expression fields matched a `$` or `@` prefix
+  case by case, so `$.sch` offered nothing on a document whose fields are UPPER_SNAKE (the convention since 2.3.0); a prefix now matches in any
+  case and the path is written as the document has it (`$.SCHEDULE`), as function names already were ([PANELS.md](docs/guides/PANELS.md)).
 - **The elements demo host shows live valuations (2.4.0).** Since 2.3.0 a trade is static and the market-risk valuations tick, so
   `tools/elements-demo` shows `TVAL-1000008` (and `TVAL-1000002` in its side column) from the trading, counterparty-risk and market-risk packs; its
   search box knows `TVAL`. The `<drishti-view>` suites (`test_embed_elements_browser.py`, `test_embed_controls_browser.py`) run against it: masks

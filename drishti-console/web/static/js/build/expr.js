@@ -13,9 +13,9 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Autocomplete for Rachana-EL expressions in the inspector's text fields: after "$" the paths of the shape ("$.legs", "$.book.name"),
- * after "@" the fields of the rows of the panel (when the panel's rows are "$.legs", "@.notional"), and a word becomes a function
- * name with its argument hints. The field keeps focus (an ARIA combobox: Up and Down choose, Enter or Tab take, Escape closes).
+/* Autocomplete for Rachana-EL expressions in the inspector's text fields: after "$" the paths of the shape ("$.LEGS", "$.BOOK.NAME"),
+ * after "@" the fields of the rows of the panel (when the panel's rows are "$.LEGS", "@.NOTIONAL"), and a word becomes a function
+ * name with its argument hints; a prefix matches in any case ("$.legs" offers "$.LEGS") and the path is written in its own case. The field keeps focus (an ARIA combobox: Up and Down choose, Enter or Tab take, Escape closes).
  * The server's parser is the judge of an expression; this only saves typing and typos.
  *
  *   WB.expr.attach(input, {paths: function () -> [{path, type}], rows: function () -> '$.legs' | '', functions: {name: {min, max}}}) */
@@ -30,24 +30,24 @@
     return { from: i, to: pos, text: v.slice(i, pos) };
   }
   function candidates(t, src) {
-    var out = [], q = t.text;
+    var out = [], q = t.text, lq = q.toLowerCase();                 // paths match in any case: $.sch offers $.SCHEDULE (UPPER_SNAKE since 2.3.0)
     if (q[0] === '$') {
       var seen = {};
       src.paths().forEach(function (p) {
         var plain = p.path.replace(/\[\]/g, '');
-        if (plain !== '$' && plain.indexOf(q) === 0 && !seen[plain]) { seen[plain] = 1; out.push({ text: plain, hint: p.type }); }
+        if (plain !== '$' && plain.toLowerCase().indexOf(lq) === 0 && !seen[plain]) { seen[plain] = 1; out.push({ text: plain, hint: p.type }); }
       });
     } else if (q[0] === '@') {
       var rows = (src.rows() || '').replace(/\[\]$/, '');
       if (rows) {
         var prefix = rows + '[].';
         src.paths().forEach(function (p) {
-          if (p.path.indexOf(prefix) === 0) { var rest = '@.' + p.path.slice(prefix.length); if (rest.indexOf(q) === 0) { out.push({ text: rest.replace(/\[\]/g, ''), hint: p.type }); } }
+          if (p.path.indexOf(prefix) === 0) { var rest = '@.' + p.path.slice(prefix.length); if (rest.toLowerCase().indexOf(lq) === 0) { out.push({ text: rest.replace(/\[\]/g, ''), hint: p.type }); } }
         });
       }
     } else if (/^[a-z]/i.test(q)) {
       Object.keys(src.functions || {}).sort().forEach(function (f) {
-        if (f.toLowerCase().indexOf(q.toLowerCase()) === 0 && f !== q) {
+        if (f.toLowerCase().indexOf(lq) === 0 && f !== q) {
           var s = src.functions[f];
           out.push({ text: f + '(', hint: s.min + (s.max !== s.min ? '-' + s.max : '') + ' argument' + (s.max === 1 ? '' : 's') });
         }

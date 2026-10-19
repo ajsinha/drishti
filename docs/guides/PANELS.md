@@ -1343,7 +1343,7 @@ If your kind's required options are not rows/text/number-per-row, say here what 
 
 The inspector's form is generated from the schema ([5.4](#54-rachanaschema-the-editor-schema-is-not-automatic)): one
 labelled editor per option, a select for `fmt` and `tone` and for any enum, an expression field with autocomplete for
-the options in `EL_OPTIONS`. The "About metric" link in its header opens `/help/panels#metric`, which is why the
+the options in `EL_OPTIONS` (a path prefix matches in any case: `$.sch` offers `$.SCHEDULE`, written in the document's own case). The "About metric" link in its header opens `/help/panels#metric`, which is why the
 catalogue's heading must be exactly `### metric`.
 
 #### 12.4 Dropping a field: `Bind.BINDABLE`

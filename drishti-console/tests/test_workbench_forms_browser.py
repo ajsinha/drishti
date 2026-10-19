@@ -44,11 +44,11 @@ def test_the_inspector_edits_options_the_title_and_lists_and_completes_expressio
     # an expression field completes shape paths
     page.locator('[data-preview] [data-panel="coupons"] .pnl-h').click()
     rows = page.get_by_label("rows *")
-    rows.fill("$.cou")
+    rows.fill("$.sch")                                                             # typed in lower case: the UPPER_SNAKE path is offered
     page.locator(".wb-expr .wb-menu-i").first.wait_for()
-    assert page.locator(".wb-expr .wb-menu-i").first.inner_text().startswith("$.cou")
+    assert page.locator(".wb-expr .wb-menu-i").first.inner_text().startswith("$.SCHEDULE")
     page.keyboard.press("Enter")
-    assert page.get_by_label("rows *").input_value().startswith("$.cou")
+    assert page.get_by_label("rows *").input_value().startswith("$.SCHEDULE")
     # the title region has its own form
     page.locator("[data-preview] .vtitle").click()
     pill = page.get_by_label("Pill (text, may hold ${…})")
