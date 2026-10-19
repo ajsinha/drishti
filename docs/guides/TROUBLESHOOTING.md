@@ -1196,7 +1196,7 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 
 ### A Vega-Lite visual is empty, says it could not draw, or a Python visual's Vega-Lite is refused
 
-* **"Vega-Lite could not draw this: ..."** The text is Vega's: an invalid specification (a field that is not in the rows: the rows are keyed by the text after the table's dot, `desk` not `trade.desk`, and a measure by its name; Check warns about a field no well supplies). Open the visual's YAML and the **Show the rows** button together to compare the names.
+* **"Vega-Lite could not draw this: ..."** The text is Vega's: an invalid specification (a field that is not in the rows: the rows are keyed by the text after the table's dot, `DESK` not `trade.DESK`, and a measure by its name; Check warns about a field no well supplies). Open the visual's YAML and the **Show the rows** button together to compare the names.
 * **"may not load anything from a URL or name a loader".** `data.url`, `url` or `loader` in a specification: remove it; the data is the rows of the wells, or `data.values` for a Python visual. A Python visual that returns one is `DRS-9073` from the sandbox.
 * **Nothing is drawn and the console shows no error.** The four scripts under `/static/vendor/vega/6.4.0/` load on first use; a proxy that blocks them (or a stale cache after an upgrade) leaves the frame empty. Reload with the cache off.
 * **The page reports a policy violation naming `style-src`.** Not from Vega: vega-embed is called with `defaultStyle: false`. A violation from an `unsafe-eval` means a different Vega build was vendored: it must be the bundle with `vega-interpreter` ([VENDOR.md](../../drishti-console/web/static/vendor/VENDOR.md)).

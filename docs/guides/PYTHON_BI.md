@@ -168,8 +168,8 @@ names the item, as it is what names the dataset.
 measures:
   Desk P&L volatility:
     python: desk-pnl-volatility      # the item
-    inputs: [trade.pnl1d]            # columns of ONE table
-    by: [trade.desk]                 # one number per desk
+    inputs: [trade.PNL_1D]            # columns of ONE table
+    by: [trade.DESK]                 # one number per desk
 ```
 
 The model checks the item is named, `inputs` is not empty, every name is a column, and all of them are of one table (`DRS-9012`); it also warns (`DRS-9013`) that **a query that names the measure is
@@ -186,7 +186,7 @@ refused**: the SQL engine cannot run Python, so the measure is shown by a python
 
 - id: histogram
   type: python
-  wells: { columns: [trade.desk, trade.pnl1d] }   # the rows handed to Python
+  wells: { columns: [trade.DESK, trade.PNL_1D] }   # the rows handed to Python
   format: { python: pnl-histogram, params: { bins: 24 }, run: auto }
 ```
 
@@ -415,7 +415,7 @@ tests:
     tolerance: 0.000001
 ```
 
-A test may read rows of a dataset instead of a frame it carries: `sample: { dataset: trades-basic, fields: [trade.desk, trade.pnl1d], limit: 200 }`.
+A test may read rows of a dataset instead of a frame it carries: `sample: { dataset: trades-basic, fields: [trade.DESK, trade.PNL_1D], limit: 200 }`.
 
 | Key | Meaning |
 |---|---|

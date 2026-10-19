@@ -48,7 +48,7 @@ Where an expression is written decides what it may name. The server checks the *
 
 | Scope | Where | May name | Aggregates? | Result |
 |---|---|---|---|---|
-| **row** | a dataset's `derive.*.expr` and `columns.*.expr`, its `where:`, MQ and SQL row filters | the columns of its own dataset (`notional`, or `trades.NOTIONAL`); `related(desk.name)` one hop | no — an aggregate belongs in a measure | one value per row |
+| **row** | a dataset's `derive.*.expr` and `columns.*.expr`, its `where:`, MQ and SQL row filters | the columns of its own dataset (`NOTIONAL`, or `trades.NOTIONAL`); `related(desk.NAME)` one hop | no — an aggregate belongs in a measure | one value per row |
 | **rule** | `security.rows[].where` | the dataset's own columns and `user.<attribute>` (`user.desks`, `user.name`) | no | `True` or `False` per row; no function can remove it |
 | **aggregate** | `measures.*.expr`, MQ `define`, report local measures | `alias.column` **inside an aggregate**, `measure('name')` | yes — a bare column outside an aggregate is refused: *wrap it: `sum(trades.MTM)`* | one value per group of the answer |
 | **context** *(wave B)* | the first argument of `calc`, `share_of`, `parent_of`, `as_of` | as aggregate | yes | one value per group, in an edited filter context |
@@ -725,7 +725,7 @@ A column of the one row a many-to-one pack reference points at: one hop, in a da
 
 | Example | What it says |
 |---|---|
-| `related(desk.name)` | the desk's name next to each trade |
+| `related(desk.NAME)` | the desk's name next to each trade |
 | `related(counterparty.sector)` | the counterparty's sector as a column of the trade dataset |
 
 * **None:** None when the reference is empty or points at nothing.
@@ -1652,7 +1652,7 @@ dataset (its implicit model and alias):
 | `CALCULATE([MTM], SAMEPERIODLASTYEAR(Dates[Date]))` | `same_period_last_year(sum(trades.MTM), trades.TRADE_DATE)` |
 | `RANKX(ALL(Desks), [MTM])` | `rank(measure('MTM'))` (over the answer's rows) |
 | `PERCENTILE.INC(Trades[MTM], 0.5)` | `percentile(trades.MTM, 0.5)` |
-| `RELATED(Desks[Name])` (calculated column) | `related(desk.name)` in a dataset's `derive` |
+| `RELATED(Desks[Name])` (calculated column) | `related(desk.NAME)` in a dataset's `derive` |
 | `CALCULATE([MTM], ALL(Desks[Name]))` | `calc(measure('MTM'), ignore=[desks.NAME])` *(wave B)* |
 | `DIVIDE([MTM], CALCULATE([MTM], ALL(Trades)))` | `share_of(measure('MTM'), over=ALL)` *(wave B)* — of what *you* may see |
 | `CALCULATE([MTM], USERELATIONSHIP(...))` | `calc(measure('MTM'), via='r_5')` *(wave B)* |

@@ -80,7 +80,7 @@ pages:
         wells: { values: [MTM] }
         format: { conditional: [{ measure: MTM, op: lt, value: 0, colour: "#b3261e" }] }
 bookmarks:
-  - { name: FX desk only, page: overview, filters: [{ field: trade.desk, op: in, values: [DESK-FX] }] }
+  - { name: FX desk only, page: overview, filters: [{ field: trade.DESK, op: in, values: [DESK-FX] }] }
 layouts:                       # optional: how a page is arranged on a phone and on a tablet (section 14)
   phone:
     overview: { order: [mtm], span: { mtm: 2 } }
@@ -175,7 +175,7 @@ or with a latitude without a longitude, or with a latitude that is not a number,
 
 ```yaml
 - { id: volatility, type: python, wells: { values: [Desk P&L volatility] }, format: { run: auto } }       # a Python measure of the dataset
-- { id: histogram,  type: python, wells: { columns: [trade.desk, trade.pnl1d] }, format: { python: pnl-histogram, params: { bins: 24 }, run: auto } }
+- { id: histogram,  type: python, wells: { columns: [trade.DESK, trade.PNL_1D] }, format: { python: pnl-histogram, params: { bins: 24 }, run: auto } }
 ```
 
 The visual hands the rows of its wells (the table's own rows, under the page's filters, at most `python-rows`) to a **Python item** and draws what comes back. `format.python` names the item (catalogue id,
@@ -194,7 +194,7 @@ visual that says `•••`, a masked field is one bar or box. Real pictures fr
 **Map.** `wells: { location: [counterparties.COUNTRY], values: [Exposure (EE peak)] }` shades each country by the measure. `location` holds **ISO 3166-1 codes** (alpha-2 `US` or alpha-3 `USA`) or the English name, or, below the country, **ISO 3166-2 region codes** (`AU-NSW`); it is matched against vendored Natural Earth shapes: the countries at 1:110m
 (`static/vendor/echarts/maps/world-countries.json`, 177 shapes) and, for a country the map opens, its regions at 1:10m (`static/vendor/echarts/maps/regions/<ISO3>.json`, one small file per country, loaded when the map first opens that country; [the files](#the-map-shapes)). No tiles, no map service, no CDN: nothing leaves the network.
 A country too small for the world shapes (the Cayman Islands, Bermuda ...) is a **clickable dot**, so it is on the map. A value no shape knows is **named under the map** (`Not on the map: CHI, XKX (a country or region code is expected).`) and never dropped silently. A click on a country filters the other visuals by its code, as ever.
-**Points:** `wells: { latitude: [trade.lat], longitude: [trade.lon], details: [trade.desk], values: [Trades] }` puts a point at each position, as large as the measure; `details` names it. The two modes are not mixed.
+**Points:** `wells: { latitude: [trade.LATITUDE], longitude: [trade.LONGITUDE], details: [trade.DESK], values: [Trades] }` puts a point at each position, as large as the measure; `details` names it. The two modes are not mixed.
 
 **Drilling.** A map opens at the world. A click on a country **selects it** (the cross-filter) **and opens its regions**: the shapes of its states, provinces or counties, shaded by the rows whose `location` is a region code of that country, with the breadcrumb **World › Australia** above it (the *World* button goes back; the selection stays). A click on a region selects it in turn.
 Rows that name only countries leave the regions blank, and the map says so under it (*No figures at region level for Australia*); rows that name only regions shade their country at the world level with the **sum** of their regions (the tooltip says *all regions*), so use a field with both, or an additive measure, when that matters. A country the files have no regions for stays at the world with a note. In the designer's **Format** pane a map has two settings:
@@ -217,7 +217,7 @@ sample's *Exposure by country* is the same visual over counterparties.
 
 **Histogram.** `wells: { axis: [trades.tradeId], values: [MTM] }, format: { bins: 12 }`: the engine is asked for the measure of every member of `axis` (up to `drishti.bi.report.distribution-rows`, 20,000), as the reader (their rows and masks), and the **server** bins it
 into equal-width bands between the smallest and the largest value (default 10, 2 to 100); a value on the edge between two bands belongs to the band that starts there. The answer is four columns, `bin`, `count`, `from`, `to`, so the screen, an export and a subscription show the same bars.
-**Box plot.** `wells: { axis: [trade.desk], details: [trade.tradeId], values: [MTM] }`: the measure of every member of `details`, summarised per value of `axis` (one box without it): first quartile, median and third quartile (**linear interpolation**, as the engine's `percentile`),
+**Box plot.** `wells: { axis: [trade.DESK], details: [trade.TRADE_ID], values: [MTM] }`: the measure of every member of `details`, summarised per value of `axis` (one box without it): first quartile, median and third quartile (**linear interpolation**, as the engine's `percentile`),
 **whiskers** at the lowest and highest value within 1.5 interquartile ranges of the box, and the members beyond them as outliers (at most 25 listed). The answer's columns are the category, `min` (the lower whisker), `q1`, `median`, `q3`, `max` (the upper whisker), `count` and `outliers`.
 
 ![A histogram](img/bi-visuals/report-histogram.png) ![A box plot](img/bi-visuals/report-box.png)
@@ -263,7 +263,7 @@ A `vega-lite` visual draws a [Vega-Lite](https://vega.github.io/vega-lite/) spec
   type: vega-lite
   title: Net MTM by desk (Vega-Lite)
   at: { x: 0, y: 0, w: 8, h: 7 }
-  wells: { axis: [trade.desk], values: [MTM, Trades] }
+  wells: { axis: [trade.DESK], values: [MTM, Trades] }
   format:
     spec:
       mark: { type: bar, cornerRadiusEnd: 3 }
@@ -277,7 +277,7 @@ A `vega-lite` visual draws a [Vega-Lite](https://vega.github.io/vega-lite/) spec
 
 ![The sample vega-lite visual: net MTM by desk, red where negative, drawn from the specification in the report](../tutorials/img/t14/16-vega-lite.jpg)
 
-* **Field names.** A row is an object keyed by the well's item: a field by the text after the table's dot (`trade.desk` is `desk`), the table put back with an underscore when two fields share a name (`trade_desk`, `desks_desk`); a measure by its name (`MTM`, `Exposure (EE peak)`). Check warns about a field the specification names that no well supplies, unless the specification has a `transform` (which can make fields of its own).
+* **Field names.** A row is an object keyed by the well's item: a field by the text after the table's dot (`trade.DESK` is `DESK`), the table put back with an underscore when two fields share a name (`trade_DESK`, `desks_DESK`); a measure by its name (`MTM`, `Exposure (EE peak)`). Check warns about a field the specification names that no well supplies, unless the specification has a `transform` (which can make fields of its own).
 * **Nothing is loaded.** `data.url` and `url` or `loader` as a plain value anywhere in the specification are refused (`DRS-9032`, with the path); the page's loader refuses every URL too. The specification is limited to 200,000 characters.
 * **No `eval`.** The page draws it with the vendored Vega, Vega-Lite and vega-embed and the **vega-interpreter**: vega-embed builds the expression tree and the interpreter walks it, so `test: "datum.MTM < 0"`, `calculate`, `filter` and the like run without `eval`, and the page keeps the **strict content security policy** (a Chromium test asserts the header has no `unsafe-eval` and no violation is reported). The libraries (about 0.9 MB) load the first time a page draws one. vega-embed is told not to write its own `<style>`, to draw on a canvas, to show no actions menu and no tooltip plug-in.
 * The theme's colours and the report's palette go underneath the specification's own `config`; `width` and `height` default to `container`, so the chart fills its frame. A Vega-Lite visual has the chart buttons (alert, show the rows, as a table) but no marks to click: a selection does not filter the page.
@@ -545,7 +545,7 @@ YAML tab and Check button, and the viewer when a report cannot be drawn).
 |---|---|---|
 | `DRS-9030` | the structure is wrong: not YAML, an unknown visual type, a bad `at`, a duplicate id, an operator that is not one, an image from another address | `pages[0].visuals[1].at: x is 0 to 11 and w is 1 to 12, and x + w is at most 12 ... this is x=8, w=6` |
 | `DRS-9031` | a name the dataset or the report lacks: a field, a measure, a hierarchy, a page, a bookmark, a slicer | `pages[0].visuals[0].wells.axis: table 'trade' has no column 'nope' (it has id, tradeId, desk, ...)` |
-| `DRS-9032` | a visual built wrongly: a measure in a field well, a field in a measure well, an unknown well, a required well empty, too many items | `...wells.values: 'trade.mtm' is a field; the values well takes measures (Notional, MTM, ...)` |
+| `DRS-9032` | a visual built wrongly: a measure in a field well, a field in a measure well, an unknown well, a required well empty, too many items | `...wells.values: 'trade.MTM' is a field; the values well takes measures (Notional, MTM, ...)` |
 | `DRS-9033` | reserved, not built: a visual type (`shape`) | `...type: the visual 'shape' is reserved and not built yet` |
 | `DRS-9034` | the dataset cannot be found or has errors, so the report cannot be drawn | `no dataset 'x' (a catalogue id, a file name such as trades-basic, or the dataset's name)` |
 | `DRS-9035` | a visual query names a page, a visual or a slicer the report lacks, or its state is not valid (a drill path past the last level, dates that are not dates) | `the hierarchy 'Desk and book' has 2 levels; there is nothing below trade.PORTFOLIO` |
@@ -665,10 +665,10 @@ YAML) to a `matrix` (the server groups and totals) or a chart. The live desk sam
 ```yaml
 - id: desk-currency
   type: matrix                    # was perspective-pivot
-  wells: { rows: [trade.desk], columns: [trade.currency], values: [MTM, Notional] }
+  wells: { rows: [trade.DESK], columns: [trade.CURRENCY], values: [MTM, Notional] }
 - id: mtm-chart
   type: column                    # was perspective-chart
-  wells: { axis: [trade.desk], legend: [trade.currency], values: [MTM] }
+  wells: { axis: [trade.DESK], legend: [trade.CURRENCY], values: [MTM] }
   format: { stacked: true, labels: false }
 ```
 
@@ -786,8 +786,8 @@ A report (or a dataset: [DATASETS.md section 8.1](DATASETS.md#81-expected-values
 ```yaml
 tests:
   - { name: The card shows every trade, visual: trades, expect: 750 }                      # what a visual shows: its first measure, one row
-  - { name: Rates desk MTM, measure: MTM, by: [trade.desk], row: { trade.desk: DESK-RATES }, expect: 161766771, tolerance: 0.5% }
-  - { name: A bad day, measure: Trades, filters: [{ field: trade.desk, op: eq, values: [DESK-FX] }], date: 2026-10-09, expect: { min: 10, max: 90 }, role: desk-head }
+  - { name: Rates desk MTM, measure: MTM, by: [trade.DESK], row: { trade.DESK: DESK-RATES }, expect: 161766771, tolerance: 0.5% }
+  - { name: A bad day, measure: Trades, filters: [{ field: trade.DESK, op: eq, values: [DESK-FX] }], date: 2026-10-09, expect: { min: 10, max: 90 }, role: desk-head }
 ```
 
 | Key | Meaning |
@@ -894,7 +894,7 @@ a model query and live subscriptions, as far as the caller may read them (`hidde
 Wave A ([BI_GUIDE.md section 24](BI_GUIDE.md#24-the-languages-in-the-console-wave-a-220)) adds four things to a report on a model.
 
 **The Fields pane inherits the model.** It is built from the model's description as you see it (`GET /api/v1/bi/models/{ref}/describe`), with the
-properties the model gives each field: its **display name** (*Trading desk* for `trade.desk`; every visual's labels use it too), its **description**
+properties the model gives each field: its **display name** (*Trading desk* for `trade.DESK`; every visual's labels use it too), its **description**
 (the tooltip), its **format**, its **folder** (a collapsible group inside the dataset), and **hidden** fields left out. A report never re-declares them:
 a change in the model reaches every report on it. When the model has **perspectives**, the header offers **Perspective**: the pane then shows only that
 perspective's fields and measures (the report's own measures always show), and the report keeps the choice:

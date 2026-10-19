@@ -14,7 +14,7 @@ before the consolidation (for example `/help/quickstart` or `/help/connector-kaf
 ## New here? Read these, in order
 
 1. **[GETTING_STARTED.md](guides/GETTING_STARTED.md)** (*Install and run*): prerequisites, build, start the server and the console, sign-in, Docker, other ways to build, and Windows.
-2. **[tutorials/](tutorials/README.md)**: eighteen hands-on tutorials on the shipped demo data, with the exact commands, real output and real screenshots. Start with [your first 15 minutes](tutorials/01-first-15-minutes.md).
+2. **[tutorials/](tutorials/README.md)**: nineteen hands-on tutorials on the shipped demo data, with the exact commands, real output and real screenshots. Start with [your first 15 minutes](tutorials/01-first-15-minutes.md).
 3. **[USER_GUIDE.md](guides/USER_GUIDE.md)**: every feature of the console, as a reference. **[PACKS.md](guides/PACKS.md)**: which industries are available and how to load them; building your own is [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md).
 
 If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md).
@@ -35,7 +35,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 
 | Folder | What is in it |
 |---|---|
-| [tutorials/](tutorials/README.md) | the eighteen hands-on tutorials: a worked example each, on the demo data, with commands, real output and screenshots |
+| [tutorials/](tutorials/README.md) | the nineteen hands-on tutorials: a worked example each, on the demo data, with commands, real output and screenshots |
 | [guides/](guides/) | install and run, the user guide, business intelligence (Rūpaka), packs and the command line, the Sutra and Rachana guides, panels, clients, API and troubleshooting; `examples/` holds working Sutras |
 | [connectors/](connectors/) | connecting your data: the Connectors reference, the connector files, TLS and proxy, the developer guide, a design document per store (Delta Lake, PostgreSQL, Aerospike, files …) and demo data |
 | [admin/](admin/) | running Drishti: operations, configuration, users and roles, performance, and the runbooks |
@@ -53,12 +53,16 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Learn it by doing, from your first 15 minutes | [tutorials/](tutorials/README.md) |
 | Tell Drishti a batch of data has landed (API, CLI, Airflow, cron, DishtaYantra), flag late data | [DATA_LOADS.md](guides/DATA_LOADS.md) |
 | Open business intelligence: `RUPAKA <GO>`, the catalogue, workspaces, publish and review, certify | [BI_GUIDE.md](guides/BI_GUIDE.md) |
-| Learn BI by building a report, then making it run itself, live, governed, in Python and with AI | [tutorials 10 to 15](tutorials/README.md) |
+| Learn BI by building a report, then making it run itself, live, governed, in Python and with AI | [tutorials 10 to 15 and 18](tutorials/README.md) |
+| Author in **BI Studio**: the Explorer, open items as tabs, the Problems and Query dock, the generated Format pane, conditional formatting, themes and the theme designer, Edit interactions, tooltip pages, small multiples, the matrix | [BI_GUIDE.md › BI Studio](guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product-wave-c-240), [REPORTS.md › Format](guides/REPORTS.md#5-format) |
+| Prepare data in Python step by step (**BI → Transforms**: inputs through a pack's connector, a snippets library, a preview and a profile after every step) | [PYTHON_BI.md › Data prep](guides/PYTHON_BI.md#17-data-prep-the-transform-editor-240), [tutorial 14, step 12](tutorials/14-python-and-analyse.md#step-12--prepare-raw-trades-step-by-step-the-transform-editor-240) |
+| Run your own Python in the browser on a masked extract, and promote it to the server (**BI → Python console**, `/pyconsole`) | [ANALYSE.md › The browser Python console](guides/ANALYSE.md#16-the-browser-python-console) |
+| Write a measure, a derived column, a filter or a row rule in the Python-like expression language, or query a model in SQL | [EXPRESSIONS.md](guides/EXPRESSIONS.md), [SQL.md](guides/SQL.md) |
 | Read a dataset model, query it, see row rules and masks at work with four people, start a model from the packs | [BI_RECIPES.md](guides/BI_RECIPES.md) |
 | Write or read a report: pages, visuals, wells, filters, slicers, drill-down and drill-through, the viewer, how a visual becomes a query, DRS-9030 to 9035 | [REPORTS.md](guides/REPORTS.md) |
 | Publish BI safely: versions and diffs, review, certification, lineage, impact of a dataset change, bundles between environments, DRS-9040 to 9042 | [BI_GOVERNANCE.md](guides/BI_GOVERNANCE.md) |
 | Export a report or view as PDF, PNG, Excel or CSV; subscribe people by email, each with their own masks, DRS-9060 and 9061 | [DISTRIBUTION.md](guides/DISTRIBUTION.md) |
-| Build live BI: boards (a wall of live tiles, kiosk, tile alerts), live tables, live visuals, DRS-9050 to 9053 | [BOARDS.md](guides/BOARDS.md) |
+| Build live BI: boards (report pages of live tiles beside the report's own visuals, kiosk, tile alerts), live tables, live visuals, DRS-9050 to 9053 | [BOARDS.md](guides/BOARDS.md) |
 | Write or read a dataset: tables, relationships, measures, the expression language, row rules, masks, layers | [DATASETS.md](guides/DATASETS.md) |
 | Ship packs, Sutras and data to servers by copying: bundle, verify, deploy, promote, roll back | [OPERATIONALISING.md](guides/OPERATIONALISING.md) |
 | Install and run it on Windows (PowerShell, no Hadoop) | [GETTING_STARTED.md: Windows](guides/GETTING_STARTED.md#drishti-on-windows) |
@@ -70,11 +74,11 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Read Drishti from a script, a notebook or Excel with a personal API token | [CLIENTS.md](guides/CLIENTS.md) |
 | Run Python on the view you are looking at (`Alt+C`): re-price, recompute, pivot, chart | [PYTHON_CALC.md](guides/PYTHON_CALC.md) |
 | Open a view, and learn the command line and keys | [USER_GUIDE.md › The command line](guides/USER_GUIDE.md#the-command-line), [Keyboard](guides/USER_GUIDE.md#keyboard) |
-| List entities to pick from (`TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`) | [USER_GUIDE.md › Pick lists](guides/USER_GUIDE.md#pick-lists-when-a-command-names-several-entities) |
+| List entities to pick from (`TRD MX-200000`, `CPTY north`, `TRD PRODUCT_TYPE=FX_QUANTO`) | [USER_GUIDE.md › Pick lists](guides/USER_GUIDE.md#pick-lists-when-a-command-names-several-entities) |
 | Page through a table, or walk it with the keyboard | [USER_GUIDE.md › Tables](guides/USER_GUIDE.md#tables-sorting-filtering-paging-and-the-keyboard) |
 | Filter a table like Excel: tick values, conditions, dates, top 10 | [USER_GUIDE.md › Filter a table like Excel](guides/USER_GUIDE.md#filter-a-table-like-excel) |
 | Understand what a view is showing you | [USER_GUIDE.md › Reading a view](guides/USER_GUIDE.md#reading-a-view) |
-| Find entities by value (`TRD where mtm > 1m …`) | [USER_GUIDE.md › Search by value](guides/USER_GUIDE.md#search-by-value) |
+| Find entities by value (`TRD where QUANTITY > 200m …`) | [USER_GUIDE.md › Search by value](guides/USER_GUIDE.md#search-by-value) |
 | Fill in a form instead of writing a search (`FORM trading <GO>`, Forms in the Views menu) | [QUERY_BY_FORM.md](guides/QUERY_BY_FORM.md) |
 | Choose what a panel shows with dropdowns, toggles and sliders; read a trade down to its fixings | [USER_GUIDE.md › Controls](guides/USER_GUIDE.md#controls-on-a-screen-choose-what-a-panel-shows), [A deep trade](guides/USER_GUIDE.md#a-deep-trade-legs-cashflows-and-fixings) |
 | Read what is in the world-economy pack, where it comes from and under what licence (IMF data: internal demonstrations only) | [REAL_DATA.md](guides/REAL_DATA.md) |
@@ -142,11 +146,14 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Define roles, or switch a pack off for everyone | [USER_GUIDE.md › Administration](guides/USER_GUIDE.md#administration) |
 | Look up any setting and its environment variable | [CONFIGURATION.md](admin/CONFIGURATION.md) |
 | Install Calc's Python runtime, offline too, and decide who may use it | [PYTHON_CALC.md › Installing](guides/PYTHON_CALC.md#12-installing-the-python-runtime), [Roles](guides/PYTHON_CALC.md#9-roles-who-may-use-calc) |
-| Deploy, secure and monitor it; keep the lake bounded | [OPERATIONS.md](admin/OPERATIONS.md) |
+| Deploy, secure and monitor it; keep the lake bounded | [OPERATIONS.md](admin/OPERATIONS.md), [LAKE_MAINTENANCE.md](admin/LAKE_MAINTENANCE.md) |
+| Run several servers as one cluster (Drishti\*net): `config/net/`, Admin → Net, the cluster key, routing, the console's failover | [NET.md](admin/NET.md), [tutorial 19](tutorials/19-a-cluster-of-three.md) |
 | Fix something that is not working | [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md), then the runbooks below |
 | Know how fast it is, and how that is measured | [PERFORMANCE.md](admin/PERFORMANCE.md) |
 | Know how many users a server holds, whether memory stays flat over a day, and how to load-test it | [LOAD_AND_MEMORY.md](admin/LOAD_AND_MEMORY.md) |
-| Compare the stores at several sizes, see how each scales, and run the scale benchmark yourself | [SCALE_BENCHMARK.md](admin/SCALE_BENCHMARK.md) |
+| Compare the stores at several sizes, see how each scales, and run the scale benchmark yourself | [NET.md](admin/NET.md) | you run several servers as one cluster (Drishti\*net, 2.5.0): a cluster of three, the files of `config/net/`, membership, capability digests, security, routing, the console and several servers, Admin → Net, drain, sizing, troubleshooting |
+| [LAKE_MAINTENANCE.md](admin/LAKE_MAINTENANCE.md) | you keep Delta tables bounded and fast: retention, compaction, checkpoints and vacuum from Admin → Lakes or `lake maintain`, schedules, history |
+| [SCALE_BENCHMARK.md](admin/SCALE_BENCHMARK.md) |
 | Serve millions of entities a day for years from Delta Lake | [DELTA_CONNECTOR.md](connectors/DELTA_CONNECTOR.md) |
 | Run the server on Windows, or choose the Delta engine (native or Hadoop) | [GETTING_STARTED.md: Windows](guides/GETTING_STARTED.md#drishti-on-windows), [DELTA_CONNECTOR.md › Engines](connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop) |
 | Serve millions of entities a day from Aerospike, with recent history there and years in Delta Lake | [AEROSPIKE_CONNECTOR.md](connectors/AEROSPIKE_CONNECTOR.md) |
@@ -211,10 +218,12 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [REAL_DATA.md](guides/REAL_DATA.md) | you use or refresh the real public data in the world-economy pack: sources, licences (IMF data: internal demonstrations only), the pipeline that regenerates them |
 | [BI_GUIDE.md](guides/BI_GUIDE.md) | what BI is and is not built, the BI menu and keyword, the four powers, workspace roles, items and versions, audiences, shipped files, BI settings, the CLI |
 | [tutorial 10](tutorials/10-first-bi-report.md) | build a report from scratch in the designer (cards, a map, a bar, a slicer), view, click and drill, publish, filter like Power BI, slicers across packs, a phone, two datasets in one report, relative dates, a tablet and the entity view |
+| [EXPRESSIONS.md](guides/EXPRESSIONS.md) | the Python-like expression language (DEL) of measures, derived columns, filters and row rules: grammar, every function, problems and fixes, recipes |
+| [SQL.md](guides/SQL.md) | read-only Drishti SQL over one model: `MEASURE('name')`, joins along relationships, `AS OF`, `EXPLAIN`, SQL view datasets |
 | [DATASETS.md](guides/DATASETS.md) | the YAML reference, aggregates and functions, security, modes, layers and rollups, the query, DRS-9010 to 9027, what is not built |
-| [REPORTS.md](guides/REPORTS.md) | the YAML reference, the 30 visuals and their wells (Vega-Lite included; the three 2.1 Perspective types drawn as Drishti's grid since 2.3.0), filters and top-N, format, how the page's state becomes a dataset query, what people can do, checking, security, what is not built |
+| [REPORTS.md](guides/REPORTS.md) | the YAML reference, the 30 visuals and their wells (Vega-Lite included; the three 2.1 Perspective types drawn as Drishti's grid since 2.3.0), filters and top-N, format (schema v2: typed per visual family, conditional formatting, themes), interactions, tooltip pages, small multiples, the matrix, how the page's state becomes a dataset query, what people can do, checking, security, what is not built |
 | [BI_GOVERNANCE.md](guides/BI_GOVERNANCE.md) | saved states and published versions, the diff, who reviews and what they see, when certification falls, what impact analysis compares, the bundle and its dry run, the audit actions, what is not built |
-| [BOARDS.md](guides/BOARDS.md) | the board file and its tiles, alerts, the viewer and kiosk, who sees what, the checks and their codes, settings, the API, what is not built (live tables: [DATASETS.md](guides/DATASETS.md#71-live-tables-phase-5); live visuals and Perspective: [REPORTS.md](guides/REPORTS.md#13-live-visuals-and-perspective-phase-5)) |
+| [BOARDS.md](guides/BOARDS.md) | board pages of a report (`layout: board`) and their tiles, how 2.3 boards were converted, alerts, the viewer and kiosk, who sees what, the checks and their codes, settings, the API, what is not built (live tables: [DATASETS.md](guides/DATASETS.md#71-live-tables-phase-5); live visuals and Perspective: [REPORTS.md](guides/REPORTS.md#13-live-visuals-and-perspective-phase-5)) |
 | [tutorial 6](tutorials/06-design-a-screen.md) | you are new to the Build workbench: four complete projects with a picture of each step |
 | [SCREEN_DESIGNER.md](guides/SCREEN_DESIGNER.md) | you design or edit a Sutra in the browser, save it and submit it for review |
 | [SUTRA_DEVELOPER_GUIDE.md](guides/SUTRA_DEVELOPER_GUIDE.md) | you are learning to write Sutras: anatomy, matching, labels, paths, source, row groups, testing and CI, the checklist |
@@ -246,16 +255,16 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [COLLABORATION.md](architecture/COLLABORATION.md) | you want to know how *share with a note* and comment threads work and why: pins to the business date and generation, recipients' own rights, masks on user text, the inbox and email outbox, retention, legal hold, export, with a note on what was built differently from the design (steps 1 to 7 built; chat bridges and snapshots, phase 2, are not) |
 | [RUPAKA.md](architecture/RUPAKA.md) | you want the design of Drishti Rūpaka, BI inside Drishti benchmarked against Power BI: the BI page (`RUPAKA <GO>`), datasets, the query engine, reports, the designer, workspaces and catalogue, streaming BI, Python interfaces, AI hooks off by default, build plan (design) |
 | [BI_MODEL_ARCHITECTURE.md](architecture/BI_MODEL_ARCHITECTURE.md) | you want the agreed BI architecture after 2.1.0 (datasets, data models, one model per report, time modes, one model query language, AI through the model); its waves are replaced by BI_DESIGN.md |
-| [BI_DESIGN.md](architecture/BI_DESIGN.md) | you want the single authoritative BI target design: principles and non-goals, the Python-like expression language, Drishti SQL, Python and MQ meeting in one logical plan, query architecture, security at every tier, caching and scale, governance, the designers, AI, APIs, the Power BI gap check, W1 as built and the waves A (2.2.0), B (2.3.0), C (2.4.0) |
+| [BI_DESIGN.md](architecture/BI_DESIGN.md) | you want the single authoritative BI target design: principles and non-goals, the Python-like expression language, Drishti SQL, Python and MQ meeting in one logical plan, query architecture, security at every tier, caching and scale, governance, the designers, AI, APIs, the Power BI gap check, W1 as built, the waves A (2.2.0), B (2.3.0), C (2.4.0) and the release order after them: N (2.5.0, Drishti\*net), D (2.6.0, sharing and integration), I (2.7.0, AI), E (2.8.0, QA findings and production readiness) |
 | [BI_MODEL_SPEC.md](architecture/BI_MODEL_SPEC.md) | you want the design specification of wave W1: the dataset and data model YAML, implicit models, how consumers bind to one model, the model query language v1 (validation, compilation, standing queries, ten worked examples), pack-generated datasets, the migration of every sample, the UX flows and the W1 build plan (design, not built) |
-| [BI_PARITY_PLAN.md](architecture/BI_PARITY_PLAN.md) | you want the proposed plan to bring Rūpaka to Power BI's feature depth: what Drishti already does better, the gaps ranked by value and effort, the redesigns and the phases 2.2 to 3.0 (a proposal, not yet scheduled) |
+| [BI_PARITY_PLAN.md](architecture/BI_PARITY_PLAN.md) | you want the proposed plan to bring Rūpaka to Power BI's feature depth: what Drishti already does better, the gaps ranked by value and effort, the redesigns and the phases 2.2 to 3.0 (its items are scheduled by BI_DESIGN.md section 12.2; R6 and R7 shipped in 2.4.0) |
 | [RUPAKA_POC.md](architecture/RUPAKA_POC.md) | you want what the Rūpaka phase 0 proof of concept built and measured (Perspective live grid, masked Arrow out of DuckDB, DuckDB-Wasm in the browser, CSP with WebAssembly, JSON vs typed vs rollup) and the go / adjust verdict for phase 1 (off by default); history: 2.3.0 took Perspective and the browser's engines out of BI |
 | [LIVE_BI.md](architecture/LIVE_BI.md) | you want Drishti as the live front end of a streaming BI producer: the result-stream contract, Kafka with no code, a `bi` plugin, boards, drill-down, consistency (design note) |
 | [ELEMENTS.md](architecture/ELEMENTS.md) | you want the design of Drishti Elements: live views and BI reports inside other web applications as Web Components, no iframes; the embed API, token exchange, host registration, `<drishti-report>`, and which build steps are done |
 | [guides/ELEMENTS.md](guides/ELEMENTS.md) | you are embedding Drishti in your own application: a five-minute start, the token exchange (Node, Java, Python), versions, SRI and npm, the element reference, a cookbook, troubleshooting by code |
 | [GENUI.md](architecture/GENUI.md) | you want the design of GenUI (2.7.0, not built): an AI agent composes a screen from governed Sutra fragments with typed slots, Drishti binds it to live data as the viewer and streams it to another application through `<drishti-genui>` |
 | [AI_MANAGEMENT.md](architecture/AI_MANAGEMENT.md) | you want the design of AI management (2.7.0, not built): every AI setting, use and review in the console (providers, features, data protection, MCP tools, usage and cost, golden questions, audit, playground, AI drafts) |
-| [DRISHTI_NET.md](architecture/DRISHTI_NET.md) | you want the design of Drishti*net (2.5.0, not built): several servers that find each other by gossip over HTTP, tell each other the packs and kinds they serve, and answer any client as one, forwarding what they cannot serve themselves |
+| [DRISHTI_NET.md](architecture/DRISHTI_NET.md) | you want the design of Drishti*net (built in 2.5.0; the operator's guide is [NET.md](admin/NET.md), section 19 says what was built): several servers that find each other by gossip over HTTP, tell each other the packs and kinds they serve, and answer any client as one, forwarding what they cannot serve themselves |
 | [AI_PROVIDERS.md](architecture/AI_PROVIDERS.md) | you configure or build on the model providers: one interface, one file per provider in `config/ai/`, off by default, the admin page and the API |
 | [MCP_CLIENT.md](architecture/MCP_CLIENT.md) | you connect MCP servers (their tools, resources and prompts) behind Drishti's policy: one file per server in `config/mcp/`, off by default |
 | [QUANT_SERVICE.md](architecture/QUANT_SERVICE.md) | you want the design of server-side pricing (QuantLib) and how it would reach the screen (proposed, not built; ADR-019) |
