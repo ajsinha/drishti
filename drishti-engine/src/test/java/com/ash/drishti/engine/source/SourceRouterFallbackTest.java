@@ -163,4 +163,75 @@ class SourceRouterFallbackTest {
                 .satisfies(e -> assertThat(((DrishtiException) e).errorCode()).isEqualTo(ErrorCode.NET_PEER_FAILED));
         assertThat(asked).containsExactly("local", "net:a");
     }
+
+    /** A peer that answers after {@code ms}, as a call between servers does. */
+    record Slow(String name, Set<String> ids, long ms) implements SourcePlugin {
+        public PluginManifest manifest() {
+            return new PluginManifest(name, "t", Set.of("trade"), new SourceCapabilities(false, false, false));
+        }
+
+        public void start(SourceContext c) {}
+
+        public Optional<EntityDocument> fetch(EntityRef ref) throws InterruptedException {
+            Thread.sleep(ms);
+            return ids.contains(ref.id())
+                    ? Optional.of(new EntityDocument(ref, DataNode.of(Map.of("from", name)), new Provenance(name, 1, Instant.now(), false)))
+                    : Optional.empty();
+        }
+    }
+
+    @Test
+    void aLinkAPeerHoldsWaitsThePeerBudgetAndOneHeldHereTheLocalOne() {
+        SourceRouter r = router(new Src("local", Set.of("T-1"), false, asked));
+        Slow peer = new Slow("net:c", Set.of("T-9"), 150);
+        List<EntityRef> budgeted = new ArrayList<>();
+        SourceRouter.Fallback fb = new SourceRouter.Fallback() {
+            public List<SourcePlugin> peers(EntityRef ref, AsOf asOf) {
+                return List.of(peer);
+            }
+
+            public Duration budget(EntityRef ref, AsOf asOf, Duration local) {
+                budgeted.add(ref);
+                return Duration.ofSeconds(2);
+            }
+        };
+        var links = List.of(EntityRef.of("trade", "T-1"), EntityRef.of("trade", "T-9"), EntityRef.of("trade", "T-404"));
+        // with the local budget only (40 ms), the peer's entity is still on its way: pending
+        r.fallback(new SourceRouter.Fallback() {
+            public List<SourcePlugin> peers(EntityRef ref, AsOf asOf) {
+                return List.of(peer);
+            }
+        });
+        var missing = new java.util.HashSet<EntityRef>();
+        var got = r.fetchAll(links, Duration.ofMillis(40), AsOf.LATEST, new SourceFailures(), missing);
+        assertThat(got.keySet()).containsExactly(EntityRef.of("trade", "T-1"));
+        // with the peer budget, the peer's answer is there, and what nobody holds is "not found", not pending
+        r.fallback(fb);
+        missing.clear();
+        long t0 = System.nanoTime();
+        got = r.fetchAll(links, Duration.ofMillis(40), AsOf.LATEST, new SourceFailures(), missing);
+        assertThat(got.keySet()).containsExactlyInAnyOrder(EntityRef.of("trade", "T-1"), EntityRef.of("trade", "T-9"));
+        assertThat(got.get(EntityRef.of("trade", "T-9")).data().get("from").asText()).isEqualTo("net:c");
+        assertThat(missing).containsExactly(EntityRef.of("trade", "T-404"));
+        assertThat((System.nanoTime() - t0) / 1_000_000).as("the reads run side by side: one peer call's wait, not three").isLessThan(1_000);
+        assertThat(budgeted).as("asked once per kind").hasSize(1);
+        budgeted.clear();
+        // a slow local source keeps the local budget: only a read that went on to the peers waits longer
+        SourceRouter slowHere = router(new Slow("local", Set.of("T-5"), 300));
+        slowHere.fallback(fb);
+        assertThat(slowHere.fetchAll(List.of(EntityRef.of("trade", "T-5")), Duration.ofMillis(40), AsOf.LATEST)).isEmpty();
+        // a budget shorter than the local one never shortens it; without a fallback nothing changes
+        r.fallback(new SourceRouter.Fallback() {
+            public List<SourcePlugin> peers(EntityRef ref, AsOf asOf) {
+                return List.of();
+            }
+
+            public Duration budget(EntityRef ref, AsOf asOf, Duration local) {
+                return Duration.ofMillis(1);
+            }
+        });
+        assertThat(r.fetchAll(List.of(EntityRef.of("trade", "T-1")), Duration.ofMillis(500), AsOf.LATEST)).hasSize(1);
+        r.fallback(null);
+        assertThat(r.fetchAll(links, Duration.ofMillis(40), AsOf.LATEST).keySet()).containsExactly(EntityRef.of("trade", "T-1"));
+    }
 }

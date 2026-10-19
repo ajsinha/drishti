@@ -42,7 +42,7 @@ TAG = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*(:[A-Za-z0-9._-]+)?")
 KNOWN = {
     "node.yaml": {"enabled", "node-id", "advertise-url", "tags", "peer-only-packs", "secret", "previous-secret", "tls"},
     "gossip.yaml": {"interval", "fanout", "suspect-after", "indirect-probes", "dead-after", "forget-after", "persist-every"},
-    "routing.yaml": {"forward-timeout", "scatter-budget", "suggest-budget", "max-hops", "weights", "user-state"},
+    "routing.yaml": {"forward-timeout", "scatter-budget", "suggest-budget", "link-budget", "max-hops", "weights", "user-state"},
     "access.yaml": {"roles"},
     "peer": {"url", "tags", "tls"},
 }
@@ -168,6 +168,7 @@ def check_text(cli, fid: str, text: str) -> list[dict]:
         dur("forward-timeout", 50, 300_000)
         dur("scatter-budget", 50, 300_000)
         dur("suggest-budget", 10, 10_000)
+        dur("link-budget", 10, 30_000)
         integer("max-hops", 0, 1)
         if "user-state" in m and str(m["user-state"]) not in ("replicate", "off"):
             err("user-state", f"'{m['user-state']}' is not replicate or off")

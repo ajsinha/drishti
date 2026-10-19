@@ -145,6 +145,15 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      * is for; undated ones answer with what they hold and their documents carry no date, so the view can say so.
      */
     public CompletableFuture<EntityDocument> fetch(EntityRef ref, Duration timeout, AsOf asOf) {
+        return fetch(ref, timeout, asOf, timeout);
+    }
+
+    /**
+     * As {@link #fetch(EntityRef, Duration, AsOf)}, and a read that has gone on to the peers (Drishti*net: no local source holds the
+     * entity, or a grouped page is gathered) may take {@code peerTimeout} from its start instead: a call between servers takes longer
+     * than a read of this node's own data, which keeps {@code timeout}.
+     */
+    CompletableFuture<EntityDocument> fetch(EntityRef ref, Duration timeout, AsOf asOf, Duration peerTimeout) {
         List<SourcePlugin> candidates = candidates(ref.kind());
         Fallback fb = fallback;
         if (candidates.isEmpty() && fb == null) {
@@ -152,9 +161,21 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         }
         readOrder(candidates, asOf);
         AtomicReference<String> asking = new AtomicReference<>();
-        return CompletableFuture.supplyAsync(() -> fb == null ? readFirst(ref, candidates, asOf, asking) : readWithPeers(ref, candidates, asOf, asking, fb), executor)
-                .orTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
-                .exceptionallyCompose(e -> CompletableFuture.failedFuture(translate(ref, e, asking.get(), timeout)));
+        java.util.concurrent.atomic.AtomicBoolean peers = new java.util.concurrent.atomic.AtomicBoolean();
+        CompletableFuture<EntityDocument> read = CompletableFuture.supplyAsync(
+                () -> fb == null ? readFirst(ref, candidates, asOf, asking) : readWithPeers(ref, candidates, asOf, asking, fb, peers), executor);
+        if (fb == null || peerTimeout.compareTo(timeout) <= 0) {
+            read.orTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS);
+        } else {
+            // the local budget for this node's own sources; the read that went on to the peers by then waits up to the peer budget
+            CompletableFuture.delayedExecutor(timeout.toMillis(), TimeUnit.MILLISECONDS).execute(() -> {
+                if (!peers.get()) {
+                    read.completeExceptionally(new TimeoutException());
+                }
+            });
+            read.orTimeout(peerTimeout.toMillis(), TimeUnit.MILLISECONDS);
+        }
+        return read.exceptionallyCompose(e -> CompletableFuture.failedFuture(translate(ref, e, asking.get(), peers.get() ? peerTimeout : timeout)));
     }
 
     /**
@@ -180,6 +201,16 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
          */
         default Optional<EntityDocument> gather(EntityRef ref, AsOf asOf, EntityDocument local) {
             return Optional.empty();
+        }
+
+        /**
+         * How long {@link #fetchAll} waits for {@code ref} once its read has gone on to the peers, when {@code local} is its budget on a
+         * single server (a view's linked entities, {@code drishti.graph.link-budget}): longer, since a call between servers takes more than
+         * a read of this node's own data, so a linked entity a peer holds shows as itself and not as pending. The local sources keep
+         * {@code local}. Asked once per kind of a {@link #fetchAll}.
+         */
+        default Duration budget(EntityRef ref, AsOf asOf, Duration local) {
+            return local;
         }
     }
 
@@ -210,13 +241,15 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      * after two failures (a read is tried once more on the next peer, never more). A local source that failed is never replaced by a
      * peer's data: its failure is the answer, as with two local sources.
      */
-    private EntityDocument readWithPeers(EntityRef ref, List<SourcePlugin> candidates, AsOf asOf, AtomicReference<String> asking, Fallback fb) {
+    private EntityDocument readWithPeers(EntityRef ref, List<SourcePlugin> candidates, AsOf asOf, AtomicReference<String> asking, Fallback fb,
+            java.util.concurrent.atomic.AtomicBoolean toPeers) {
         DrishtiException first;
         if (candidates.isEmpty()) {
             first = noSource(ref.kind());
         } else {
             try {
                 EntityDocument d = readFirst(ref, candidates, asOf, asking);
+                toPeers.set(true);                                                // what is left is the peers' (a grouped page)
                 return fb.gather(ref, asOf, d).orElse(d);
             } catch (SourceFailure e) {
                 throw e;
@@ -228,6 +261,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
                 first = e;
             }
         }
+        toPeers.set(true);                                                        // none here holds it: the peers are asked
         if (!candidates.isEmpty()) {
             Optional<EntityDocument> gathered = fb.gather(ref, asOf, null);          // a group with no member here, members elsewhere
             if (gathered.isPresent()) {
@@ -433,7 +467,10 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
     public Map<EntityRef, EntityDocument> fetchAll(Collection<EntityRef> refs, Duration budget, AsOf asOf, SourceFailures failures,
             java.util.Set<EntityRef> missing) {
         Map<EntityRef, CompletableFuture<EntityDocument>> futures = new LinkedHashMap<>();
-        refs.forEach(r -> futures.put(r, fetch(r, budget, asOf)));
+        Fallback fb = fallback;
+        Map<String, Duration> byKind = new java.util.HashMap<>();          // the peers' budget, asked once per kind
+        refs.forEach(r -> futures.put(r, fetch(r, budget, asOf,
+                fb == null ? budget : byKind.computeIfAbsent(r.kind(), k -> peerBudget(fb, r, asOf, budget)))));
         Map<EntityRef, EntityDocument> out = new LinkedHashMap<>();
         futures.forEach((r, f) -> {
             try {
@@ -449,6 +486,19 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             }
         });
         return out;
+    }
+
+    /**
+     * How long one read of {@link #fetchAll} may take once it has gone on to the peers: the fallback's budget, never shorter than the local
+     * one. The local sources keep the local budget: an entity held here, or a slow local source, is not waited for any longer.
+     */
+    private Duration peerBudget(Fallback fb, EntityRef ref, AsOf asOf, Duration budget) {
+        try {
+            Duration d = fb.budget(ref, asOf, budget);
+            return d == null || d.compareTo(budget) < 0 ? budget : d;
+        } catch (RuntimeException e) {
+            return budget;
+        }
     }
 
     /** What a search across sources found, and the sources that could not answer (source name to why). */

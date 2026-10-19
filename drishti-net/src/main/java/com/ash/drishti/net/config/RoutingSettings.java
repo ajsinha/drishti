@@ -24,20 +24,28 @@ import java.util.Map;
  * @param forwardTimeout longest a forwarded view or a peer fetch may take (5 s)
  * @param scatterBudget longest a peer's share of a scattered search may take before the answer is partial without it (3 s)
  * @param suggestBudget the same for type-ahead (150 ms)
+ * @param linkBudget longest a view waits for a linked entity that only a peer holds (1 s); the linked entities this node's own
+ *     sources hold wait {@code drishti.graph.link-budget} (40 ms) as on a single server
  * @param maxHops 1: a forwarded request is never forwarded again; 0 switches forwarding off (gossip and digests only)
  * @param weights peer choice weights: {@code latency} (how much a peer's latency counts against the stable choice by entity id)
  * @param userState {@code replicate} (saved searches, layouts and pivots written on one node are copied to the others) or {@code off}
  *     (state stays on the node it was written on, as with one shared identity database)
  */
 public record RoutingSettings(Duration forwardTimeout, Duration scatterBudget, Duration suggestBudget, int maxHops, Map<String, Double> weights,
-        String userState) {
+        String userState, Duration linkBudget) {
 
     public static final RoutingSettings DEFAULTS = new RoutingSettings(Duration.ofSeconds(5), Duration.ofSeconds(3), Duration.ofMillis(150), 1,
-            Map.of("latency", 1.0), "replicate");
+            Map.of("latency", 1.0), "replicate", Duration.ofSeconds(1));
 
     public RoutingSettings {
         weights = weights == null ? Map.of() : Map.copyOf(weights);
         userState = userState == null || userState.isBlank() ? "replicate" : userState;
+        linkBudget = linkBudget == null ? Duration.ofSeconds(1) : linkBudget;
+    }
+
+    public RoutingSettings(Duration forwardTimeout, Duration scatterBudget, Duration suggestBudget, int maxHops, Map<String, Double> weights,
+            String userState) {
+        this(forwardTimeout, scatterBudget, suggestBudget, maxHops, weights, userState, null);
     }
 
     public boolean forwarding() {

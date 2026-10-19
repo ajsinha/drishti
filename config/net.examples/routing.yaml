@@ -15,6 +15,7 @@
 forward-timeout: 5s                  # a forwarded view or a peer fetch
 scatter-budget: 3s                   # a peer's share of a scattered search; later, the answer is partial and names the peer
 suggest-budget: 150ms                # the same for type-ahead
+link-budget: 1s                      # a view's linked entity that only a peer holds (the local ones: drishti.graph.link-budget, 40ms)
 max-hops: 1                          # a forwarded request is never forwarded again; 0 switches forwarding off
 weights:
   latency: 1.0                       # how much a peer's latency counts when choosing between peers that can answer

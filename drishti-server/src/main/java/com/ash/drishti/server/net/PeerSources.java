@@ -84,6 +84,21 @@ public final class PeerSources implements SourceRouter.Fallback {
         return out;
     }
 
+    /**
+     * A read that has gone on to the peers (no source here holds the entity) waits routing.yaml's {@code link-budget} (1 s) when it is one
+     * of several a view reads at once (its linked entities): a call between servers takes longer than {@code drishti.graph.link-budget}
+     * (40 ms), the wait for this node's own sources, which is unchanged. Answered by whichever node holds it, the link shows as itself,
+     * never as pending. A forwarded request asks no peer, so its reads keep the local budget.
+     */
+    @Override
+    public java.time.Duration budget(EntityRef ref, AsOf asOf, java.time.Duration local) {
+        if (!routing.forwarding() || NetCaller.fromPeer()) {
+            return local;
+        }
+        java.time.Duration peer = net.config().routing().linkBudget();
+        return peer.compareTo(local) > 0 ? peer : local;
+    }
+
     @Override
     public Optional<DrishtiException> unreachable(EntityRef ref) {
         if (!routing.forwarding()) {

@@ -35,12 +35,21 @@ import org.springframework.context.ConfigurableApplicationContext;
 /**
  * Several Drishti servers in one test JVM (DRISHTI_NET.md section 17): each a full Spring Boot context on its own port with its
  * own data folder, identity database and {@code config/net/} folder, talking to the others over real HTTP. Ports are the scratch
- * ports 18783 to 18785 only; one cluster at a time.
+ * ports 18783 to 18785, or the three named by the system property {@code drishti.net.it.ports} (comma-separated, for a builder whose
+ * scratch ports are others); one cluster at a time.
  */
 final class NetNodes implements AutoCloseable {
 
     static final String KEY = "a-test-cluster-key-of-at-least-32-bytes";
-    static final int[] PORTS = {18783, 18784, 18785};
+    static final int[] PORTS = ports(System.getProperty("drishti.net.it.ports", "18783,18784,18785"));
+
+    private static int[] ports(String list) {
+        int[] p = java.util.Arrays.stream(list.split(",")).map(String::trim).filter(x -> !x.isEmpty()).mapToInt(Integer::parseInt).toArray();
+        if (p.length < 3) {
+            throw new IllegalArgumentException("drishti.net.it.ports names " + p.length + " ports; a cluster needs three");
+        }
+        return p;
+    }
 
     /** One node: its context, port and folders. */
     record Node(String name, int port, Path root, ConfigurableApplicationContext ctx) {
