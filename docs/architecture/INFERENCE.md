@@ -626,8 +626,8 @@ The same file sets:
 
 | Pack | Adds |
 |---|---|
-| `finance` | roles for `mtm`, `pv`, `dv01` (signed money), `notional`, `exposure`, `pfe` (money), rates, prices, pips, discount factors; contract-month tenors; `tradeId` as an identifier; finance acronyms |
-| `logistics` | roles for delays (hours), weights, temperatures, speed in knots, TEU capacity, ETAs; `shipmentId`, `containerId`, `vesselId`, `portId` as identifiers |
+| `finance` (retired example, `examples/packs`) | roles for `mtm`, `pv`, `dv01` (signed money), `notional`, `exposure`, `pfe` (money), rates, prices, pips, discount factors; contract-month tenors; `tradeId` as an identifier; finance acronyms |
+| `logistics` (retired example) | roles for delays (hours), weights, temperatures, speed in knots, TEU capacity, ETAs; `shipmentId`, `containerId`, `vesselId`, `portId` as identifiers |
 | `core` (and every banking pack through it) | acronyms (`MTM`, `DV01`, `CVA`, `ISDA`, `LEI`, …) and explicit labels (`mtm` → **MTM (USD)**); no roles |
 
 So with the banking packs but not `finance`, a field named `mtm` is a plain *number* to inference. That is

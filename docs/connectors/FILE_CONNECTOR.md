@@ -618,5 +618,5 @@ time. An id containing `..` or a path separator that would leave the root is ref
 **Try it.** `data/feeds/fixing/SOFR-HISTORY.csv` ships with the repository; add your own files and wait for the
 next rescan (search only; reads find new files at once).
 
-**What the user sees.** `FIX SOFR-HISTORY <GO>` with the finance pack (its `FIX` mnemonic is kind `fixing`); laid
+**What the user sees.** `FIX SOFR-HISTORY <GO>` with the retired example pack `finance` loaded (its `FIX` mnemonic is kind `fixing`); laid
 out by inference. Health: `UP`, or `DOWN: no directory <root>`.

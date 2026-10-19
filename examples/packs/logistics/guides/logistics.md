@@ -68,4 +68,4 @@ Containers, vessels and ports have no Sutra and are always inferred.
 Role `ops`: the pack's kinds (shipments, containers, vessels and ports).
 
 !!! note "Turning the pack on or off"
-    `DRISHTI_PACKS=finance,logistics` (the default is `finance`). See [Domain packs](../../../../docs/guides/PACKS.md).
+    `DRISHTI_PACKS_EXTRA_DIRS=examples/packs DRISHTI_PACKS=finance,logistics` (a retired example pack: the default is the seven shipped packs). See [Domain packs](../../../../docs/guides/PACKS.md).

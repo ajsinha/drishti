@@ -543,7 +543,7 @@ off; `X-Drishti-User` says whose monitor it is (with security on, your token doe
    shows the same. Delete the rule with `curl -s -X DELETE -H 'X-Drishti-User: ash' http://localhost:18480/api/v1/me/alerts/rules/mtm-above-2-1m`.
 
 Packs can suggest rules for a kind (`alerts:` in `pack.yaml`), which the console offers when you create one:
-`GET /api/v1/me/alerts/suggestions/netting-set` returns, with the finance pack enabled,
+`GET /api/v1/me/alerts/suggestions/netting-set` returns, with the retired example pack `finance` enabled,
 `{"kind": "netting-set", "name": "PFE near limit", "when": "$.utilisation > 0.8", "severity": "warn", …}`. With the
 banking packs enabled, no pack suggests rules for `trade`, so `GET /api/v1/me/alerts/suggestions/trade` returns `[]`.
 
