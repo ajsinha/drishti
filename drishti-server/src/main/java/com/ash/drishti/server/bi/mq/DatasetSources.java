@@ -60,6 +60,7 @@ final class DatasetSources implements StagedTables {
     private final ModelView view;
     private final QueryRequest outer;
     private final Map<String, MqService.Bound> bound = new LinkedHashMap<>();
+    private final Map<String, TransformInputs.Asked> askedInputs = new LinkedHashMap<>();
     private String fingerprint;
 
     DatasetSources(ModelCatalog catalog, Principal reader, ModelView view, QueryRequest outer) {
@@ -116,7 +117,10 @@ final class DatasetSources implements StagedTables {
                     case DatasetDef.Source.SQL -> b.append(innerKey(inner(alias, s.model()))).append('#').append(ModelCatalog.hash(s.query()));
                     case DatasetDef.Source.PYTHON -> {
                         b.append(s.python()).append(s.pythonParams());
-                        s.inputs().forEach((name, q) -> b.append(',').append(name).append(':').append(innerKey(inner(alias + "/" + name, modelOf(q)))));
+                        s.inputs().forEach((name, q) -> {
+                            TransformInputs.Asked a = asked(alias + "/" + name, q);
+                            b.append(',').append(name).append(':').append(innerKey(a.bound())).append(a.kind() ? "#" + ModelCatalog.hash(q.toString()) : "");
+                        });
                     }
                     default -> b.append(s.connector()).append('#').append(ModelCatalog.hash(s.query() + s.params()));
                 }
@@ -190,17 +194,31 @@ final class DatasetSources implements StagedTables {
         Map<String, QueryService.Result> inputs = new LinkedHashMap<>();
         java.time.LocalDate[] asOf = {null};
         for (Map.Entry<String, JsonNode> e : s.inputs().entrySet()) {
-            MqService.Bound inner = inner(table + "/" + e.getKey(), modelOf(e.getValue()));
-            inputs.put(e.getKey(), guarded(d, inner, () -> {
-                MqService.Ran ran = catalog.mq().run(inner, query(e.getValue(), modelOf(e.getValue())), false, false);
+            TransformInputs.Asked a = asked(table + "/" + e.getKey(), e.getValue());
+            inputs.put(e.getKey(), guarded(d, a.bound(), () -> {
+                MqService.Ran ran = catalog.mq().run(a.bound(), a.query(), false, false);
                 asOf[0] = later(asOf[0], asOfOf(ran));
-                return ran.shown();
+                return TransformInputs.bare(ran.shown(), a.alias());
             }));
         }
         Map<String, String> declared = new LinkedHashMap<>();
         d.columns().values().forEach(c -> declared.put(c.name(), c.type()));
         QueryService.Result r = catalog.datasets().transform(reader, view.key() + "/" + table, d.name(), s.python(), inputs, s.pythonParams(), declared, fingerprint());
         return new Answer(r, columns(table, d, r, "the Transform"), asOf[0] != null ? asOf[0] : outerDate());   // one as-of rule: the date its inputs were asked at
+    }
+
+    /**
+     * An input of a Transform bound for the reader (TransformInputs): a model query as the dataset states it, or a pack kind read through a connector (2.4.0,
+     * BI_PARITY_PLAN.md P5), asked as the reader at the outer query's date. Kept per key, as the inner models are, so the fingerprint and the run agree.
+     */
+    private TransformInputs.Asked asked(String key, JsonNode in) {
+        TransformInputs.Asked a = askedInputs.get(key);
+        if (a == null) {
+            a = TransformInputs.isKind(in) ? TransformInputs.ask(catalog, reader, in, timeOf(), catalog.datasets().maxRows())
+                    : new TransformInputs.Asked(inner(key, modelOf(in)), query(in, modelOf(in)), null, false, modelOf(in));
+            askedInputs.put(key, a);
+        }
+        return a;
     }
 
     /** The date an inner answer is as of, by the rule a model's own answer uses (MqService meta.asOf): the last date its rows came from, else the asked date. */

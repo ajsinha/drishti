@@ -155,7 +155,20 @@ public final class Derivations {
                 out.add(m);
             }
             case DatasetDef.Source.CONNECTOR -> out.add(Map.of("kind", "connector-query", "name", s.connector()));
-            case DatasetDef.Source.PYTHON -> out.add(Map.of("kind", "python", "name", s.python(), "inputs", s.inputs().keySet()));
+            case DatasetDef.Source.PYTHON -> {
+                out.add(Map.of("kind", "python", "name", s.python(), "inputs", s.inputs().keySet()));
+                s.inputs().forEach((name, in) -> {                                // 2.4.0: an input that reads a pack kind through a connector is a root too
+                    if (com.ash.drishti.server.bi.mq.TransformInputs.isKind(in)) {
+                        Map<String, Object> m = new LinkedHashMap<>();
+                        m.put("kind", "pack-kind");
+                        m.put("name", in.path("kind").asText());
+                        m.put("pack", in.path("pack").asText(packs == null ? "" : packs.ofKind(in.path("kind").asText()).map(g -> g.generated() == null ? "" : g.generated().pack()).orElse("")));
+                        m.put("connector", in.path("connector").asText("").isBlank() ? "(whichever serves the kind)" : in.path("connector").asText());
+                        m.put("input", name);
+                        out.add(m);
+                    }
+                });
+            }
             case DatasetDef.Source.MODEL -> out.add(Map.of("kind", "model", "name", s.model()));
             case DatasetDef.Source.SQL -> out.add(Map.of("kind", "sql-view", "name", s.model()));
             default -> problems.add(error("DRS-9110", "source", "the root of '" + r.def().name() + "' cannot be traced: an unknown source '" + s.type() + "'"));

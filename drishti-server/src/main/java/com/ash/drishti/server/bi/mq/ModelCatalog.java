@@ -329,6 +329,14 @@ public final class ModelCatalog {
         return bound(p, implicitOf(d));
     }
 
+    /**
+     * The implicit model of a pack-kind dataset made for one question (a Transform's kind input that names its own connector or {@code each}: TransformInputs),
+     * bound to the caller. Like a generated dataset's, its security is the kind's: entitlements, the caller's row rules and masks.
+     */
+    MqService.Bound bindDataset(Principal p, DatasetDef d) {
+        return bound(p, implicitOf(ResolvedDataset.of(d)));
+    }
+
     MqService.Bound bound(Principal p, Found f) {
         ModelView v = f.view();
         QueryService.Caller who = datasets.caller(p, v.flat());
