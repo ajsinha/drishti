@@ -126,6 +126,8 @@
   Windows QA guide's Drishti*net section says what the tester should see. The tutorials test counts nineteen.
 - **The Design-and-Evidence deck's Drishti*net slide** shows Admin → Net after a failover (a node left, the console on another server), its four
   measures in a 2×2 beside it.
+- **Tutorial 14 pictures 25 to 29 remade** on a demo lake with `NOTIONAL` (`drishti.py lake demo --as-of 2026-10-16`, outside the repository,
+  then removed): the Transform input, profile and steps, the Python console and its promoted run (12,751 live trades of 15,000) match the text.
 
 ## 2.4.0 — BI Studio, report schema v2 and boards as a report layout, Python data prep, the browser Python console, query by form at scale (2026-10-19)
 
