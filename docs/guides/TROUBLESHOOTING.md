@@ -1440,7 +1440,7 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 | `DRS-9030` | a report's YAML or a structure in it is not valid (HTTP 422): not YAML, an unknown visual type, a grid position that does not fit the 12 columns, a duplicate id, an operator that is not one, an image from another address. The problem names the path of the key; check it in the designer's YAML tab or with `POST /api/v1/bi/reports/validate`; publishing such a report is refused with this code |
 | `DRS-9031` | a report names a field, measure, hierarchy, page, bookmark or slicer that its dataset or the report does not have (HTTP 422); the message lists what exists. A dataset that changed under a report is the usual cause |
 | `DRS-9032` | a visual is built wrongly (HTTP 422): a measure in a field well or a field in a measure well, a well the visual does not have, a required well left empty, more items than the well takes |
-| `DRS-9033` | the report uses a visual type (`map`, `bubble`, `funnel`, `histogram`, `box`, `python`, `entity-view`, `shape`) or the relative-date slicer: reserved, **not built** (HTTP 501) |
+| `DRS-9033` | the report uses a visual type the grammar reserves and this server does not build (today only `shape`; the message lists the types that are built) (HTTP 501) |
 | `DRS-9034` | a report's dataset cannot be found (a catalogue id, a file name such as `trades-basic`, or the dataset's name) or has errors, so the report cannot be drawn (HTTP 422). Open the dataset's page to see its problems |
 | `DRS-9035` | a visual query names a page, visual or slicer the report lacks, or its state is not valid: a drill path past the last level of the hierarchy, a selection from a visual that is not on the page, dates that are not `yyyy-mm-dd` (HTTP 422) |
 | `DRS-9036` | (2.4.0) a theme item is not valid: its palette is not 3 to 12 `#rrggbb` colours, a colour is not `#rrggbb`, its font family is not one of `sans`, `serif`, `mono`, `system` (nothing is fetched), its size is not 10 to 18, or one of its `visuals:` defaults is a format key the visual family does not take or a value out of range (the format schemas, REPORTS.md section 5); on a report, a warning that the theme it names cannot be found: it draws with the default colours (HTTP 422) |
@@ -1550,7 +1550,7 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 * **No "Suggest visuals" or "Ask the AI helper" button:** the AI layer is off, or you do not have the `bi-author` power (`GET /bi/api/ai/status` says `assist: false`). **`DRS-4018`** after pressing it: the policy does not open `bi-suggest`, `bi-explain-checks` or `bi-helper` to your role. **`DRS-4020`**: the model's suggestion did not pass the report check twice, so nothing is shown; describe the goal in other words or use *Describe a report*.
 * **The dataset helper says "Place it by hand":** the column's line in the YAML is written in a form it does not recognise; copy the YAML shown under the item into the dataset.
 
-## Totals that were too big, history, imports and the board designer (BI wave B)
+## Totals that were too big, history, imports and board tiles (BI wave B)
 
 | Symptom | Cause | Check and fix |
 |---|---|---|
@@ -1563,10 +1563,25 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 | No import appears under *Imports you can roll back* | the list is the newest `imports-keep` (20), or the files in `imports-dir` are gone | `drishti.bi.governance.imports-dir`; back it up with the identity database |
 | A deployed pack's BI items did not appear | the import was held back (the deploy answer has `bi.loaded: false` and the reason; the audit log has `pack-bi-held`), or the files are not named `<name>.<kind>.yaml` under `config/bi/<kinds>/` of the pack | fix the file or confirm the deploy with `acceptBreaking` (bi-admin); the items are in the workspace `packs` |
 | Lineage shows the connector but dots for its table or path | lineage past the connector is masked for people who are not administrators | by design |
-| The board designer says a tile "names a report or visual you cannot open" | the report is not one you may read, was renamed, or lost the visual | pick the tile's report and visual again (Add a tile), or fix the YAML |
+| The report designer says a board tile "names a report or visual you cannot open" | the report is not one you may read, was renamed, or lost the visual | pick the tile's report and visual again (Add a tile), or fix the YAML |
 | A tile with a hysteresis stays red after the number is normal | it drops only when the number is back inside the threshold by the hysteresis | lower `hysteresis`, or wait for the number to move further |
 | A temp folder `drishti-<pid>` or `drishti-console-<pid>` is left in the temp base (`<data dir>/tmp` for the server) | the process was killed (`kill -9`, a power cut) | it is kept (never deleted automatically) and listed on Admin, Health: delete it by hand when no such process runs ([CONFIGURATION.md](../admin/CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir)) |
 | The temp base (`<data dir>/tmp`, or `/tmp` with an older server) fills up while DuckDB works on a big query | its spill files are in the server's temp folder | point `DRISHTI_TMP_DIR` at a disk with room and restart; Admin, Health shows the folder's size |
+
+## BI Studio, boards as report pages, data prep and the Python console (BI wave C, 2.4.0)
+
+| Symptom | Cause | Check and fix |
+|---|---|---|
+| A report that opened in 2.3 now shows warnings under **Problems** | a 2.3 `format:` key with a value the 2.4.0 schema does not take, or a key no schema knows: a warning, so a stored report never stops opening | fix the value in the Format pane (it offers only what the server accepts), or remove the key; a bad value of a key **new** in 2.4.0 is `DRS-9032` ([REPORTS.md section 5](REPORTS.md#5-format)) |
+| A theme cannot be saved or published (`DRS-9036`) | its palette is not 3 to 12 `#rrggbb` colours, a font family is not `sans`, `serif`, `mono` or `system`, or a visual default is not a format key of that family | the theme designer names the path; `POST /api/v1/bi/themes/validate` checks a file |
+| A 2.3 board is missing after the upgrade, or `/bi/b/<id>` opens the report viewer | stored boards became reports with board pages at the first start (`drishti.bi.migrate.on-start`, step `boards`; audited `bi-boards-migrated`), keeping their ids | Admin, BI settings lists what could not be converted; a board file still in a folder is read as a report until you run `drishti.py bi migrate --boards FILE... --write` ([BOARDS.md section 12](BOARDS.md#12-from-a-23-board-to-a-board-page)) |
+| A Transform's input is refused on validate (`DRS-9102` or `DRS-9108`) | a kind no pack declares, a field the kind lacks (the message lists its columns), or a misspelt key | pick the kind and fields from the editor's lists; a connector named on the input that is not running is `DRS-9026` ([PYTHON_BI.md section 17.1](PYTHON_BI.md#171-inputs-straight-from-a-connector)) |
+| A Transform's input has no rows, or a column reads `•••` | the input is read **as you**: a role that may not read the kind gets no rows, and a masked column arrives masked | by design; preview as a role that may read it, or ask for the entitlement |
+| The Transform editor's step preview stops at a step | that step raised: the editor shows the step's line and the error; a run past `bi.transform.timeout_seconds` (20) or `memory_mb` (512) is stopped | fix the step (the snippet's example shows its expected input), or lower `bi.transform.preview_rows` |
+| **BI → Python console** says the Python runtime is not installed | the console uses Calc's Pyodide worker, which is not in the repository | run `tools/fetch-pyodide.sh` once on the console host ([PYTHON_CALC.md section 12](PYTHON_CALC.md#12-installing-the-python-runtime)) |
+| The Python console's extract is cut short | it holds at most `bi.pyconsole.max_rows` (20,000) rows | filter the extract, or raise the setting (up to 100,000) |
+| *Promote to the server* is not offered, or the result is not kept | promoting needs **bi-author**; code that fails on the console backend is not kept | ask for the power; run the same code in Analyse to see the backend's error ([ANALYSE.md section 16](ANALYSE.md#16-the-browser-python-console)) |
+| A form search says no data is loaded for the date | no source holds the kind on that business date (`noData`) | press **Search on** the newest date it names, or load the day ([QUERY_BY_FORM.md](QUERY_BY_FORM.md)) |
 
 ## BI migrations (2.2 wave A)
 
