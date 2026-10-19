@@ -416,6 +416,60 @@ public final class DerivedKind {
         return signature == null ? kind : signature;
     }
 
+    // ---- what Drishti*net's gathering of a group across nodes reads (GroupShares) ------------------------------------------
+
+    /** The number of fields (aggregates) a page has, in their order. */
+    int fieldCount() {
+        return fields.size();
+    }
+
+    /** The name of field {@code i}. */
+    String fieldName(int i) {
+        return fields.get(i).name();
+    }
+
+    /** The aggregate of field {@code i}: count, sum, avg, min, max, distinct or first. */
+    String fieldOp(int i) {
+        return fields.get(i).op().name().toLowerCase(Locale.ROOT);
+    }
+
+    /** True when field {@code i} reads a value of each member (every aggregate but count). */
+    boolean fieldReads(int i) {
+        return fields.get(i).expr() != null;
+    }
+
+    /** The row columns, in their order. */
+    Set<String> rowColumnNames() {
+        return rowColumns.keySet();
+    }
+
+    String membersField() {
+        return membersField;
+    }
+
+    String rowsField() {
+        return rowsField;
+    }
+
+    String idField() {
+        return idField;
+    }
+
+    /** The key a {@link #compact} member holds field {@code i}'s value under. */
+    static String fieldKey(int i) {
+        return FIELD + i;
+    }
+
+    /** The key a {@link #compact} member holds row column {@code col} under. */
+    static String rowKey(String col) {
+        return ROW + col;
+    }
+
+    /** {@link #buildCompact} as a map (Drishti*net marks masked aggregates in it). */
+    Map<String, Object> buildCompactMap(String key, Map<String, DataNode> members) {
+        return new LinkedHashMap<>(((DataNode.Obj) buildCompact(key, members)).fields());
+    }
+
     /** {@link #build} over members made by {@link #compact}: the same document. */
     DataNode buildCompact(String key, Map<String, DataNode> members) {
         List<String> ids = new ArrayList<>(members.keySet());

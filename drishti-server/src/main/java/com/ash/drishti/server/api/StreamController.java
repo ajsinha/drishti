@@ -104,13 +104,17 @@ public class StreamController {
             slot.release();
             throw e;
         }
+        // Drishti*net: the node that answered, in "How this view was built", for administrators only (null for anyone else)
+        com.ash.drishti.server.net.NetServedBy sb = servedBy == null ? null : servedBy.getIfAvailable();
+        String served = sb == null ? null : sb.lineFor(principal);
+        ViewModel shown = com.ash.drishti.server.net.NetServedBy.annotate(initial, served);
         SseEmitter emitter = new SseEmitter(0L);
         if (!initial.provenance().live()) {
             // a past business date, or a static source: one view, no ticks, no slot held
             slot.release();
             executor.execute(() -> {
                 try {
-                    emitter.send(SseEmitter.event().name("view").id("0").data(initial, MediaType.APPLICATION_JSON));
+                    emitter.send(SseEmitter.event().name("view").id("0").data(shown, MediaType.APPLICATION_JSON));
                     emitter.complete();
                 } catch (IOException | IllegalStateException e) {
                     emitter.completeWithError(e);
@@ -142,8 +146,16 @@ public class StreamController {
                 embedUsage.streamClosed(embedApp);
             }
         };
-        executor.execute(() -> write(emitter, initial, box, closeAll));
+        executor.execute(() -> write(emitter, shown, box, closeAll, served));
         return emitter;
+    }
+
+    /** Drishti*net's line naming the node that answered (absent in a test that makes the controller itself). */
+    private org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.net.NetServedBy> servedBy;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void servedBy(org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.net.NetServedBy> s) {
+        this.servedBy = s;
     }
 
     /** Entities whose changes also change this view: the sources of its charts. */
@@ -157,7 +169,7 @@ public class StreamController {
         return out;
     }
 
-    private void write(SseEmitter emitter, ViewModel initial, FrameMailbox box, Runnable closeAll) {
+    private void write(SseEmitter emitter, ViewModel initial, FrameMailbox box, Runnable closeAll, String served) {
         try {
             emitter.send(SseEmitter.event().name("view").id("0").data(initial, MediaType.APPLICATION_JSON));
             long heartbeat = props.heartbeat().toMillis();
@@ -166,7 +178,8 @@ public class StreamController {
                 if (f == null) {
                     emitter.send(SseEmitter.event().comment("hb"));
                 } else {
-                    emitter.send(SseEmitter.event().name("frame").id(Long.toString(f.seq())).data(f, MediaType.APPLICATION_JSON));
+                    emitter.send(SseEmitter.event().name("frame").id(Long.toString(f.seq()))
+                            .data(com.ash.drishti.server.net.NetServedBy.annotate(f, served), MediaType.APPLICATION_JSON));
                 }
             }
         } catch (IOException | IllegalStateException e) {

@@ -35,7 +35,7 @@ when other people will use the installation.
 9. [Production checklist](#9-production-checklist) · [The token secret is a master key](#9a-1-the-token-secret-is-a-master-key) · [Scheduled reports](#9a-scheduled-reports) · [Collaboration email](#9a-2-collaboration-email-and-the-outbox) · [Retention, holds and export](#9a-3-collaboration-retention-legal-holds-and-the-compliance-export) · [Watermarked snapshots](#9a-3b-watermarked-snapshots-privacy-note) · [Chat bridges](#9a-4-chat-bridges-teams-slack-webhooks) · [The access log](#9b-the-access-log) · [Pack registry keys](#9c-pack-registry-keys)
 10. [Backups and restore](#10-backups-and-restore)
 11. [The lake: where it lives and keeping it bounded](#11-the-lake-where-it-lives-and-keeping-it-bounded)
-12. [Memory and caches](#12-memory-and-caches)
+12. [Memory and caches](#12-memory-and-caches) · [Several servers as one (Drishti*net)](#12a-several-servers-as-one-drishtinet)
 13. [Monitoring](#13-monitoring)
 14. [Logs](#14-logs)
 15. [Upgrades and rollback](#15-upgrades-and-rollback)
@@ -512,6 +512,10 @@ Defined in `drishti-server/src/main/resources/application.yaml`.
 | `DRISHTI_SUTRA_FOUR_EYES` | `true` | `drishti.governance.four-eyes` | nobody approves their own proposal (with security on) |
 | `DRISHTI_GOVERNANCE_DIR` | `./data/governance` | `drishti.governance.dir` | proposals and their history; back it up |
 | `DRISHTI_PLUGIN_DIR` | empty | `drishti.sources.plugin-dir` | a directory of extra plugin jars, each loaded in its own class loader |
+| `DRISHTI_NET_DIR` | `./config/net` | `drishti.net.dir` | Drishti*net's folder ([NET.md](NET.md)); without it the server is a single server |
+| `DRISHTI_NET_WATCH` | `auto` | `drishti.net.watch` | how that folder is watched: `auto`, `poll`, `off` |
+| `DRISHTI_NET_SECRET` | none | `secret` in `config/net/node.yaml` | the cluster key, the same on every node, at least 32 bytes; only ever named in node.yaml (`${DRISHTI_NET_SECRET}`), never written there in clear |
+| `DRISHTI_NET_PREVIOUS_SECRET` | none | `previous-secret` in `config/net/node.yaml` | a second key also accepted while the key is rotated ([NET.md](NET.md)) |
 
 ### 6.2 Server: users
 
@@ -1146,6 +1150,8 @@ working directory unless you changed them.
 | `config/connectors/` (`DRISHTI_CONNECTORS_DIR`) | one YAML file per connector: which plugin, where it connects, which kinds it serves. No secret is written in a file (credentials are `${ENV_NAME}` references). `<data dir>/connectors/history/` holds earlier texts, a convenience and not a backup | **yes**, preferably in version control | commit the folder, or copy it (files are written atomically) |
 | `data/packs/settings/migrated/` | the original data-source override files that were moved into connector files at the upgrade | once, then optional | copy; they are kept only as a record |
 | `data/connectors/history/` | every earlier text of every connector file (Admin -> Connectors -> Restore); written before each change | yes, with `config/connectors/` | copy; moved there from `config/connectors/.history/` on first start, nothing lost |
+| `config/net/` (`DRISHTI_NET_DIR`) | Drishti*net's files: this node, its seeds, gossip timings, routing, nodes per role; no key in clear. `<data dir>/net/history/` holds earlier texts | **yes**, with the connector files | copy, or version control |
+| `data/net/` | `node-id` (this node's id, generated once: keep it, or the node rejoins as a new member), `peers.json` (the member table, saved every 10 minutes, on joins and leaves and at shutdown) | `node-id` yes; `peers.json` optional | copy; without `peers.json` a node rejoins from its seeds |
 | `data/connectors/generated/` | markers that say which connector files were written from a pack template and whether they were edited | no | rebuilt from the packs |
 | `data/cache/<connector>/` | the Kafka connectors' disk cache | no | rebuilt from the topic; cleared every night anyway |
 | `data/delta/` (`DRISHTI_DELTA_ROOT`) | the lake | by its owner | Drishti only reads it; back it up with your data platform's policy |
@@ -1411,6 +1417,25 @@ check: last check, next check, last change found.
 $ curl -s -X POST $B/admin/connectors/trading-lake/index/reload -H 'Content-Type: application/json' -d '{"kind":"trade","date":"2026-10-05"}' | jq -c '{queued, reload}'
 {"queued":1,"reload":{"running":true,"trigger":"manual","total":1,"done":0,"current":"trade 2026-10-05"}}
 ```
+
+## 12a. Several servers as one (Drishti*net)
+
+Off by default. With `config/net/node.yaml` saying `enabled: true` the server is a node of a Drishti*net cluster: it gossips with its peers over
+HTTP and answers requests for packs and data the others hold ([NET.md](NET.md), the operator's guide).
+
+- **Ports and firewalls.** Each node calls the others at the address it advertises (`advertise-url`, the server's own port): open that port
+  between the nodes. Nothing else is needed; there is no separate gossip port.
+- **The key.** `DRISHTI_NET_SECRET`, the same on every node, in the environment only; every call between nodes is signed with it and refused
+  outside a 60 s window, so keep the clocks in step (NTP).
+- **What it writes.** `<data dir>/net/node-id`, `<data dir>/net/peers.json` (atomically), `<data dir>/net/history/` (earlier texts of the
+  files). Nothing outside the data folder.
+- **Health.** Admin → Net lists every member with its state, latency and version; Admin → Health has a Drishti*net line (members alive and
+  suspect, requests forwarded and failed over ten minutes); the log names every join, departure, suspicion and refused call (`net: ...`).
+- **Metrics.** `drishti_net_members{state}`, `drishti_net_gossip_rounds_total`, `drishti_net_forwarded_total{peer,kind,outcome}` and
+  `drishti_net_peer_latency_seconds{peer}` (a histogram) at `/actuator/prometheus`. Alert on `drishti_net_members{state="suspect"} > 0` for five
+  minutes, and on the share of `outcome!="ok"` among the forwarded requests.
+- **The console.** With `backend.urls` the console keeps `<console data dir>/net/servers.json` (the servers it learnt, saved atomically): nothing to
+  back up, it is rebuilt from the cluster within a minute; keep it if the console may restart while its configured servers are down.
 
 ## 13. Monitoring
 

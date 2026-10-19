@@ -15,7 +15,7 @@
 -->
 # Drishti*net: many servers, one Drishti
 
-Status: **design, not built.** Planned for **2.5.0**, a release of its own built straight after 2.4.0 and then fully tested (wave N, decided by the
+Status: **being built for 2.5.0** (wave N); what is built, and what changed from the design, is in [section 19](#19-as-built). Planned for **2.5.0**, a release of its own built straight after 2.4.0 and then fully tested (wave N, decided by the
 product owner on 2026-10-18; see
 [BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)). Off by default when built. Names marked **(new)** do not exist
 in the code today; every other class, file or setting named here does.
@@ -28,7 +28,7 @@ in the code today; every other class, file or setting named here does.
 8. [Operations across nodes](#8-operations-across-nodes) · 9. [Identity and security](#9-identity-and-security) ·
 10. [Shared and separate lakes](#10-shared-and-separate-lakes) · 11. [State that belongs to a user](#11-state-that-belongs-to-a-user) ·
 12. [Failure](#12-failure) · 13. [Admin, management and observability](#13-admin-management-and-observability) · 14. [Configuration](#14-configuration) ·
-15. [APIs](#15-apis) · 16. [Build plan](#16-build-plan) · 17. [Tests](#17-tests) · 17A. [Documentation](#17a-documentation-part-of-every-phase-not-after-it) · 18. [Risks and open questions](#18-risks-and-open-questions)
+15. [APIs](#15-apis) · 16. [Build plan](#16-build-plan) · 17. [Tests](#17-tests) · 17A. [Documentation](#17a-documentation-part-of-every-phase-not-after-it) · 18. [Risks and open questions](#18-risks-and-open-questions) · 19. [As built](#19-as-built)
 
 ## 1. The ask
 
@@ -431,3 +431,135 @@ stack, pictures of the real pages), as the product owner asked:
   `knownAt` read bypasses them.
 - **Decided (product owner, 2026-10-18):** (4) a search, type-ahead or forwarded request goes **only to nodes the
   user's role may reach** (section 9).
+
+## 19. As built
+
+Each phase as it was built, with anything that differs from the design above. The operator's guide is [NET.md](../admin/NET.md).
+
+**N1, membership (built).** The core is a module of its own, `drishti-net` (no Spring, no engine: an ArchUnit rule keeps it so): `MemberTable`
+(the merge rule of section 5), `Gossiper` (rounds, push-pull, direct and indirect probes, suspicion, death, forgetting, leave, rejoin, the join
+list of seeds and saved members), `PeersFile`, `NodeIdentity`, `NetFolder` and `NetSchema` (the folder of section 14 with line numbers,
+history and `If-Match`), `ClusterKey`, `OnBehalfOf`, `PeerHttp`. In the server, `NetService` runs the node (a virtual thread per node, a round
+every `interval`), `NetCallFilter` checks the cluster key before the token filter, `NetController` and `NetAdminController` serve section 15's
+membership endpoints and Admin → Net's Members and Files tabs; `drishti.py net` lists, checks and edits the files. Changes from the design:
+
+- The signature covers the calling node's id too (`METHOD\npath?query\ntime\nnode\nsha256(body)`), sent in `X-Drishti-Net-Node`, so a
+  signature cannot be replayed as another node within the window.
+- The on-behalf-of token names the node it is for (`aud`); a token sent to another node is refused.
+- **Key rotation takes three rolling steps, not two:** a node with only the old key cannot verify a call signed with the new one, so every node
+  first accepts the new key (`secret` the old, `previous-secret` the new), then signs with it (`secret` the new, `previous-secret` the old), then
+  drops the old. `previous-secret` therefore means *also accepted*, whichever key it holds.
+- The management endpoints of section 13 are under `/api/v1/net` as designed; the files are `GET/PUT/DELETE /api/v1/net/file?id=<file>` and
+  `POST /api/v1/net/file/check`, `GET /api/v1/net/files`, `GET /api/v1/net/file/revision`.
+- Error codes `DRS-5050` (off) to `DRS-5056`.
+- Measured: five nodes from one seed list each other within 5 rounds and a killed one is dead everywhere within 40 s (fake clock,
+  `MembershipTest`); three real servers in one JVM list each other 52 ms after the third has started (`NetMembershipTest`).
+
+**N2, capability digests (built).** `Digest` and `CapabilityTable` in `drishti-net`; `DigestService` in the server rebuilds this node's digest every
+round from cheap reads, announces a new hash at once (a gossip round out of turn), compares the peers' hashes every 250 ms and pulls a changed
+digest (`GET /api/v1/net/digest`), and swaps the capability table whole. Admin → Net's *Capability map* tab and `GET /api/v1/net/capabilities`.
+Changes from the design:
+
+- The table identity is a new, optional method of the source SPI, `SourcePlugin.tableIdentity(kind)`. The Delta connector gives the table's id
+  from its first commit (`delta:<id>`), else its location, a local path qualified by the machine's name (the same path on another machine is
+  another table). Any other source says nothing and is a shard of its own node: always asked, never wrongly skipped.
+- `load` is the average latency of the last full minute (`RequestActivity` keeps averages and maxima per minute, not percentiles).
+- The digest's hash leaves out the load and the build time, so it changes only when what the node serves changes; a held digest is refreshed
+  once a minute for the load.
+- A digest also carries the node's masked fields, nodes per role and BI report ids, for the warnings and for routing BI (N6).
+- Measured: a pack switched on at one of three servers is in the other two's tables 1.0 s later with the default 1 s round.
+
+**N3, security (built).** The cluster key and the on-behalf-of token of N1, checked by `NetCallFilter`; `NetSecurityController` serves Admin →
+Net's *Access* (`GET/PUT /api/v1/net/access`, written to access.yaml and node.yaml, applied live, gossiped in the digest) and *Security*
+(`GET /api/v1/net/security`: the key's state, the previous key's last use per peer, mutual TLS and its certificates' expiry, refused calls). A
+forwarded request is recorded in the receiving node's access log as `net:from <node> request <id>`. Changes from the design:
+
+- **Mutual TLS comes on top of the cluster key, not in its place**: the HMAC is always required (it binds the call to its body, path, time and
+  node, which a TLS session does not), and mutual TLS is the transport: `server.ssl.*` inbound, node.yaml's `tls.*` outbound.
+- The key's rotation is the three steps of N1's note, measured: 13,542 signed calls among three servers through the three steps, none refused.
+- The receiving node refuses an on-behalf-of token whose roles do not reach it with `403 DRS-5054`; a drained node refuses forwarded work with
+  `503 DRS-5054`, so the caller tries the next peer.
+- Masks twice is enforced where data crosses nodes (N4's fetch, the scattered search of N5): the reading node masks for the token's user, the
+  showing node masks again.
+
+**N4, routing (built).** `NetRouting` answers the three questions of section 7 from the capability table cut to the caller's roles and to the
+member table's newest word; `ViewForwardFilter` (after the token filter) forwards a whole request (views and their sub-paths, raw documents, history,
+searches, forms) to a node that renders the kind, signed, with the hop header and an on-behalf-of token, and streams the answer back unchanged;
+`PeerSources` is the source router's new `Fallback`: after the local sources, the peers that hold the kind are asked through `PeerSource`
+(`GET /api/v1/net/fetch/{kind}/{id}`), and the asking node renders and masks again. Peer-only packs are hidden through a predicate on `PackAccess`.
+`ForwardLog` keeps the traffic and the meters; `NetHealth` the Health line and member meters; Admin → Net → *Routing* (explain, traffic). The
+console's `backend.urls` (`core/cluster.py`): one server per session, health every `check_every`, discovery every `discover_every`,
+`servers.json`, failover with a read retried once and a write never, recovery for new sessions after a minute. Changes from the design:
+
+- A `PeerSource` is not registered with the source registry, so nothing that lists or scans every source (BI, caches, Health) sees a peer: the router
+  asks the peers only after its local sources, through its fallback, while the cluster runs.
+- Which node holds an entity cannot always be told from the digests (a store that serves every kind may hold nothing of it), so a forwarded read
+  that a node answers `404` goes to the next renderer (at most three). Renderers whose sources say they hold data (a newest date, a data version, a
+  live stream) are tried first.
+- A kind whose pack is not on the asking node is not refused there by role: the node that renders it knows the pack's roles and decides.
+- A digest of a member that left or died is kept (never routed to) until the member is forgotten, so an answer can name the node that holds the
+  data and is down (`502 DRS-5052`).
+- The console's settings are `backend.urls`, `discover`, `discover_every`, `check_every`, `fail_after` (the console's own style, with underscores) and
+  `backend.data_dir`; a failover is reported to the server it moved to (`POST /api/v1/net/console-event`, audited `net-console-failover`).
+- `routing.yaml` also has `user-state` (N7). The administrators' line in *How this view was built* naming the node is built since the
+  follow-up below (*The node that answered*).
+
+**N5, scatter-gather (built).** `SearchScatter` completes a search answered here with the shares of the peers `CapabilityTable.scatterTargets`
+names (shards, never a replica of a node already asked; the fewest nodes that cover every table, fastest first), asked in parallel through
+`GET /api/v1/net/search` within `scatter-budget`, and merges them (rows by kind and id, this node's first; re-sorted by the order-by value or the id;
+cut to the limit; sums; `failed`, `partial`, and `nodes` for administrators). A search of a kind whose pack is not here is scattered by the forwarding
+filter and merged on the asking node. The type-ahead asks every reachable node within `suggest-budget` and interleaves the answers. Measured on trades
+split three ways with one shared: every node answers the same union, the shared trade once, ordered and cut exactly as the sorted union. Changes from
+the design:
+
+- A node that holds data of the kind but is down (suspect, dead, left) is named in `failed` as `not asked: it cannot be reached now`, so a search with
+  a node down is partial rather than silently smaller.
+- A duplicate keeps the first answer (this node's, then the peers' in the order asked), not necessarily the one whose coverage is `HELD`.
+- Grouped pages are gathered across nodes since the follow-up below (*Grouped pages across nodes*).
+
+**N6, live relay and BI (built).** `PeerSource.subscribe` opens one stream from the peer that holds the entity
+(`GET /api/v1/net/subscribe/{kind}/{id}`: the peer's own topic, masked for the token's user) and feeds this node's topic; the router asks its fallback
+for a live peer when no local source holds or pushes the entity. BI: `ViewForwardFilter` routes `/api/v1/bi/reports/{id}/**` with
+`NetRouting.report`: answered here when the report's datasets' kinds (`BiReportService.kinds`) are held here, else forwarded to a node that lists the
+report in its digest (its shipped reports) and holds them. Changes from the design:
+
+- **The topic hub is partitioned by the subscriber's roles while the cluster runs** (one upstream per entity and role set, not per entity): an upstream
+  from a peer is masked there for the user it was opened for, and sharing it with viewers of other roles could show one of them what the peer would
+  mask for them. Viewers with the same roles still share one upstream.
+- A relayed stream checks its on-behalf-of token when it opens; it is opened again (with a fresh token) when it breaks.
+- A BI report goes to the node that holds every kind its datasets read; a model spanning nodes is not joined across them.
+
+**N7, user state (built).** `ReplicatedPreferences` (the per-user store, decorated by a bean post-processor) tells `StateSync` of every write and
+delete in the namespaces `settings` (saved searches among them), `layouts`, `pivots` and `workspaces`; `StateSync` sends them to every routable peer
+(`POST /api/v1/net/state`, batches of 200, a quarter of a second, up to 10,000 waiting per peer), applies a peer's changes to the store underneath (the
+newest write wins), and on a member's join queues every such document it holds as a catch-up (applied only where absent). Changes from the design:
+
+- Replication is built in this release (the design put it in phase 7 after a first release with home nodes only); `user-state: off` keeps state
+  where it was written, for a cluster with one shared identity database.
+- Alerts, monitors, scheduled reports and measure alerts are not copied: they act, and each node would act on its copy.
+- The last-writer-wins clock is each node's wall clock (the nodes are within 60 s of each other, since the cluster key refuses more); the times of
+  writes are kept in memory, so a catch-up after a restart fills only what is absent and never overwrites.
+- A user deleted on one node is not deleted on the others (a shared identity database does that).
+
+**Grouped pages across nodes (built, after N7).** A page of a derived kind is gathered with the scatter-gather of a search: the router's
+fallback (`SourceRouter.Fallback.gather`) hands the local page, or none, to `GroupGather`, which asks the search's targets for the kind the page
+groups (`SearchScatter.targets`: the nodes the caller's roles reach, no replica of a node already asked) for their share
+(`GET /api/v1/net/group/{kind}/{id}`, `DerivedSourcePlugin.share`: the node's page and, when it lists every member, each member's values by field
+name, masked there by name), and merges the shares with this node's own (`GroupShares`). Measured on three real servers in one JVM with a book's
+trades split three ways and one trade on two nodes: every aggregate (count, sum, min, max, avg, distinct, first), the members and the rows equal
+what one server holding every trade builds; a field C masks is masked on B, a field B masks is masked there; a role limited to two nodes gathers
+from those two; with C stopped the page is partial and names C. Changes from the design:
+
+- Not "concatenated in the page's order": a page carries aggregates, so the shares are merged as one node would aggregate; exact (members united
+  by id) when every node lists all its members of the group (up to `max-members`), combined from each node's totals otherwise (a member two
+  nodes hold is then counted on each; documented in NET.md).
+- A partial page says so in its document (`partial`, `missing` naming the node), as a search does in its answer.
+
+**The node that answered (built, after N7).** For an administrator, a view's *How this view was built* panel has a line **Node** naming the node
+that built the view and how: `local`, `built here, data from <node>` (a document a peer read, N4), `forwarded from <node>` (the whole request
+forwarded here, said by the node that rendered it) or `scatter-gather from <nodes>` with the nodes missing (a grouped page). `NetServedBy` adds
+it to the view (`GET /api/v1/views/...`) and to the frames of its live stream; what the request asked of other nodes is noted on the request's
+caller (`NetCaller.Served`) by the peer sources and the gathering of a grouped page. Everyone else's view is unchanged, so a user still cannot
+tell which server answered; with Drishti*net off nothing is added. Tested on three real servers: forwarded, local, data and scatter-gather
+lines for an administrator, none for a user. The finance pack's book P&L Sutra gained its *How this view was built* panel.
+

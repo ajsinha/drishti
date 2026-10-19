@@ -1,0 +1,306 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Net · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-detail.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-net.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+{% set node = members.node or {} %}
+<div class="adm" data-net data-tab="{{ tab }}">
+  {% with tab='net' %}{% include "admin/_nav.html" %}{% endwith %}
+  <h1 class="ws-h" id="netTitle">Drishti*net <a class="emb-help" href="/help/net" aria-label="Help: Drishti*net" title="Help: Drishti*net">?</a></h1>
+  <details class="adm-about"><summary>About this page</summary>
+  <p class="text-muted-d">Several {{ PRODUCT }} servers acting as one: each tells the others, by gossip, which packs and data it serves, and a request
+    that one cannot answer is answered by another, so a person connected to any server sees the same pages. This page is the cluster as the server
+    this console is on sees it. Its settings are the files of <span class="mono">{{ node.dir }}</span> (Files tab, or <span class="mono">drishti.py net</span>);
+    what gossip learns is kept in <span class="mono">peers.json</span> under the server's data folder. The cluster key is never shown here, only whether it is set.
+    See the <a href="/help/net">operator's guide</a>.</p>
+  </details>
+  <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
+
+  <div class="net-sum" data-summary>
+    <span class="net-chip {{ 'net-on' if members.running else 'net-off' }}" data-running>{{ 'Cluster on' if members.running else ('Cluster switched on, not running' if members.enabled else 'Cluster off') }}</span>
+    {% if members.self %}<span class="net-chip">This node <b class="mono" data-self>{{ members.self }}</b></span>{% endif %}
+    {% for state, n in (members.counts or {}).items() %}{% if n %}<span class="net-chip net-{{ state }}" data-count="{{ state }}">{{ n }} {{ state }}</span>{% endif %}{% endfor %}
+    <span class="net-chip {{ 'net-on' if node.keySet else 'net-warn' }}">Key {{ 'set' if node.keySet else 'not set' }}{% if node.previousKeySet %}, previous key accepted{% endif %}</span>
+    {% if node.drained %}<span class="net-chip net-warn">Drained</span>{% endif %}
+    {% if console.enabled %}<span class="net-chip" data-console-on>Console on <b class="mono">{{ console.active }}</b></span>{% endif %}
+  </div>
+
+  <div class="net-tabs" role="tablist" aria-label="Drishti*net" data-tabs>
+    <button type="button" role="tab" id="netTabMembers" aria-controls="netPaneMembers" aria-selected="{{ 'true' if tab == 'members' else 'false' }}" {% if tab != 'members' %}tabindex="-1"{% endif %} data-tab="members">Members</button>
+    <button type="button" role="tab" id="netTabMap" aria-controls="netPaneMap" aria-selected="{{ 'true' if tab == 'map' else 'false' }}" {% if tab != 'map' %}tabindex="-1"{% endif %} data-tab="map">Capability map</button>
+    <button type="button" role="tab" id="netTabRouting" aria-controls="netPaneRouting" aria-selected="{{ 'true' if tab == 'routing' else 'false' }}" {% if tab != 'routing' %}tabindex="-1"{% endif %} data-tab="routing">Routing</button>
+    <button type="button" role="tab" id="netTabAccess" aria-controls="netPaneAccess" aria-selected="{{ 'true' if tab == 'access' else 'false' }}" {% if tab != 'access' %}tabindex="-1"{% endif %} data-tab="access">Access</button>
+    <button type="button" role="tab" id="netTabFiles" aria-controls="netPaneFiles" aria-selected="{{ 'true' if tab == 'files' else 'false' }}" {% if tab != 'files' %}tabindex="-1"{% endif %} data-tab="files">Files</button>
+    <button type="button" role="tab" id="netTabSecurity" aria-controls="netPaneSecurity" aria-selected="{{ 'true' if tab == 'security' else 'false' }}" {% if tab != 'security' %}tabindex="-1"{% endif %} data-tab="security">Security</button>
+  </div>
+
+  <section role="tabpanel" id="netPaneMembers" aria-labelledby="netTabMembers" data-pane="members" {% if tab != 'members' %}hidden{% endif %}>
+    {% if not members.enabled %}
+    <div class="net-empty">
+      <p>Drishti*net is off on this server: it is a single server, exactly as without the cluster. To switch it on, give it
+        <span class="mono">node.yaml</span> with <span class="mono">enabled: true</span>, its address and the cluster key from the environment:</p>
+      <pre class="mono net-pre">enabled: true
+advertise-url: https://this-server:8480
+secret: ${DRISHTI_NET_SECRET}</pre>
+      <p>in the Files tab, or from a terminal: <span class="mono">drishti.py net set node.enabled true</span>. Ready-made files are in
+        <span class="mono">config/net.examples/</span>.</p>
+    </div>
+    {% endif %}
+    <div class="net-node" data-node-card>
+      <h2>This node</h2>
+      <dl class="net-dl">
+        <dt>Node id</dt><dd class="mono" data-node-id>{{ node.nodeId or '-' }}</dd>
+        <dt>Address</dt><dd class="mono">{{ node.advertiseUrl or '-' }}</dd>
+        <dt>Tags</dt><dd>{% for t in node.tags or [] %}<span class="net-tag">{{ t }}</span>{% else %}<span class="text-muted-d">none</span>{% endfor %}</dd>
+        <dt>Peer-only packs</dt><dd>{% for t in node.peerOnlyPacks or [] %}<span class="net-tag">{{ t }}</span>{% else %}<span class="text-muted-d">none</span>{% endfor %}</dd>
+        <dt>Version</dt><dd class="mono">{{ node.version }}</dd>
+        <dt>Gossip</dt><dd>every {{ node.gossip.interval }}, fanout {{ node.gossip.fanout }}, suspect after {{ node.gossip.suspectAfter }}, dead after {{ node.gossip.deadAfter }};
+          <span data-rounds>{{ node.gossip.rounds }}</span> rounds</dd>
+        <dt>peers.json</dt><dd class="mono">{{ members.peersFile.path }}{% if members.peersFile.savedAt %} <span class="text-muted-d">saved {{ when_local(members.peersFile.savedAt) }}</span>{% endif %}</dd>
+      </dl>
+      {% if members.running or node.leaving %}
+      <div class="net-actions">
+        {% if node.drained %}<button type="button" class="btn-pill" data-action="undrain">Undrain</button>
+        {% else %}<button type="button" class="btn-pill" data-action="drain" title="Take no forwarded work (maintenance); this node's own users are served as before">Drain</button>{% endif %}
+        {% if node.leaving %}<button type="button" class="btn-pill btn-accent" data-action="rejoin">Rejoin</button>
+        {% else %}<button type="button" class="btn-pill" data-action="leave" data-confirm="Leave the cluster? Peers drop this node at once and it serves them nothing until it rejoins.">Leave</button>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <form class="net-seed" data-seed-form>
+      <label class="loads-field" for="netSeed">Add a seed (host:port or an address): tried at once and saved as a peer file
+        <input class="studio-in mono" id="netSeed" data-seed autocomplete="off" spellcheck="false" placeholder="drishti-b.internal:8480"></label>
+      <button type="submit" class="btn-pill btn-accent">Add seed</button>
+    </form>
+
+    <div class="tbl-wrap"><table class="tbl adm-tbl net-members" data-members aria-describedby="netTitle">
+      <caption class="visually-hidden">Every member of the cluster as this node knows it</caption>
+      <thead><tr><th scope="col">Node</th><th scope="col">State</th><th scope="col">Address</th><th scope="col">Version</th><th scope="col">Tags</th>
+        <th scope="col">Packs</th><th scope="col">Last heard</th><th scope="col">Latency</th><th scope="col">Incarnation</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody>
+      {% for m in members.members or [] %}
+        <tr data-member="{{ m.nodeId }}" data-state="{{ m.state }}">
+          <th scope="row" class="mono">{{ m.nodeId }}{% if m.self %} <span class="net-tag">this node</span>{% endif %}{% if m.drained %} <span class="net-tag net-warn">drained</span>{% endif %}</th>
+          <td><span class="st {{ {'alive': 'st-ok', 'suspect': 'st-warn', 'dead': 'st-bad', 'left': ''}.get(m.state, '') }}">{{ m.state }}</span></td>
+          <td class="mono">{{ m.url }}</td>
+          <td class="mono">{{ m.version }}{% if m.protocol != 1 %} <span class="t-warn">protocol {{ m.protocol }}</span>{% endif %}</td>
+          <td>{% for t in m.tags %}<span class="net-tag">{{ t }}</span>{% endfor %}</td>
+          <td>{% for p in m.packs or [] %}<span class="net-tag{{ ' net-peer-only' if p.peerOnly }}" title="{{ p.name }} {{ p.version }}{{ ' (peer-only)' if p.peerOnly }}">{{ p.name }}</span>{% endfor %}</td>
+          <td>{{ when_local(m.lastHeard) if m.lastHeard else ('-' if m.self else 'never') }}</td>
+          <td>{{ m.latencyMs ~ ' ms' if m.latencyMs is not none else '-' }}</td>
+          <td class="mono">{{ m.incarnation }}</td>
+          <td>{% if m.state in ('dead', 'left') %}<button type="button" class="btn-pill" data-remove="{{ m.nodeId }}" aria-label="Remove {{ m.nodeId }}">Remove</button>{% endif %}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="10" class="text-muted-d">No members: the cluster is off on this server.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+
+    {% if members.userState and members.userState.active %}{% set us = members.userState %}
+    <p class="text-muted-d" data-user-state>Users' saved searches, layouts, pivots and workspaces are copied to the other nodes:
+      <b class="mono">{{ us.sent }}</b> changes sent, <b class="mono">{{ us.applied }}</b> applied here since this node started{% for p, n in (us.waiting or {}).items() %}{% if n %}; <span class="mono">{{ n }}</span> waiting for <span class="mono">{{ p }}</span>{% endif %}{% endfor %}.</p>
+    {% endif %}
+    {% if members.seeds %}
+    <h2 class="net-h2">Seeds</h2>
+    <ul class="net-seeds">{% for s in members.seeds %}<li><span class="mono">{{ s.name }}</span> <span class="mono text-muted-d">{{ s.url }}</span></li>{% endfor %}</ul>
+    {% endif %}
+    {% if console.enabled %}
+    <h2 class="net-h2">This console's servers</h2>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-console-servers>
+      <caption class="visually-hidden">The servers this console may use, the one it is on first</caption>
+      <thead><tr><th scope="col">Server</th><th scope="col">How it is known</th><th scope="col">State</th><th scope="col">Latency</th></tr></thead>
+      <tbody>{% for s in console.servers %}<tr><td class="mono">{{ s.url }}{% if s.url == console.active %} <span class="net-tag">in use</span>{% endif %}</td>
+        <td>{{ s.origin }}</td><td><span class="st {{ 'st-ok' if s.healthy else 'st-bad' }}">{{ 'healthy' if s.healthy else 'set aside' }}</span></td>
+        <td>{{ s.latencyMs ~ ' ms' if s.latencyMs is not none else '-' }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% endif %}
+  </section>
+
+  <section role="tabpanel" id="netPaneMap" aria-labelledby="netTabMap" data-pane="map" {% if tab != 'map' %}hidden{% endif %}>
+    <p class="text-muted-d">Each kind, the nodes that render it (the pack's version there; the newest is the one served) and the nodes that hold its
+      data (the connector, where its table is, and whether another node reads the same table: a <b>replica</b>, which a search asks once; otherwise a
+      <b>shard</b>, which a search always asks). Built from every node's digest; it changes within a second or two of a pack, a connector or a load.</p>
+    <ul class="net-warnings" data-warnings>
+      {% for w in caps.warnings or [] %}<li class="t-warn" data-warning="{{ w.what }}">{{ w.text }}</li>{% endfor %}
+    </ul>
+    <label class="loads-field net-filter" for="netMapFilter">Filter by kind, mnemonic, pack or node
+      <input class="studio-in" id="netMapFilter" data-map-filter autocomplete="off" spellcheck="false" placeholder="trade, TRD, trading, n-a"></label>
+    <div class="tbl-wrap"><table class="tbl adm-tbl net-map" data-map>
+      <caption class="visually-hidden">Kind to the nodes that render it and the nodes that hold its data</caption>
+      <thead><tr><th scope="col">Kind</th><th scope="col">Pack</th><th scope="col">Rendered by</th><th scope="col">Data held by</th><th scope="col">A search asks</th></tr></thead>
+      <tbody>
+      {% for k in caps.kinds or [] %}
+        <tr data-kind="{{ k.kind }}" data-text="{{ (k.kind ~ ' ' ~ (k.mnemonic or '') ~ ' ' ~ k.pack ~ ' ' ~ (k.renderers | map(attribute='nodeId') | join(' ')) ~ ' ' ~ (k.holders | map(attribute='nodeId') | join(' '))) | lower }}">
+          <th scope="row"><span class="mono">{{ k.mnemonic or '' }}</span> {{ k.kind }}</th>
+          <td>{{ k.pack }} <span class="text-muted-d">{{ k.newest }}</span></td>
+          <td>{% for r in k.renderers %}<div><span class="mono">{{ r.nodeId }}</span> {{ r.version }}{% if r.newest %} <span class="net-tag">newest</span>{% else %} <span class="net-tag net-warn">older</span>{% endif %}{% if r.peerOnly %} <span class="net-tag net-peer-only">peer-only</span>{% endif %}{% if not r.routable %} <span class="net-tag net-warn">not routed</span>{% endif %}</div>{% endfor %}</td>
+          <td>{% for h in k.holders %}<div><span class="mono">{{ h.nodeId }}</span> {{ h.connector }} <span class="text-muted-d">({{ h.type }})</span>{% if h.shared %} <span class="net-tag">replica</span>{% else %} <span class="net-tag">shard</span>{% endif %}{% if h.latestDate %} <span class="text-muted-d">to {{ h.latestDate }}</span>{% endif %}</div>{% else %}<span class="text-muted-d">no source</span>{% endfor %}</td>
+          <td>{{ (['this node'] + k.scatter) | join(', ') }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5" class="text-muted-d">Nothing yet: the cluster is off, or the digests are on their way.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+  </section>
+
+  <section role="tabpanel" id="netPaneRouting" aria-labelledby="netTabRouting" data-pane="routing" {% if tab != 'routing' %}hidden{% endif %}>
+    <h2 class="net-h2">Explain a request</h2>
+    <p class="text-muted-d">Where a request would go from this node, and why: answered here; forwarded whole to a node that renders the kind (its pack is
+      not here, older here, or served to peers only here); or answered here with the document read from a peer (the data is elsewhere). For a role:
+      only the nodes it may reach are considered.</p>
+    <form class="net-explain" data-explain-form>
+      <label class="loads-field" for="netExKind">Kind<input class="studio-in mono" id="netExKind" data-ex-kind autocomplete="off" spellcheck="false" placeholder="trade"></label>
+      <label class="loads-field" for="netExId">Id (optional)<input class="studio-in mono" id="netExId" data-ex-id autocomplete="off" spellcheck="false" placeholder="IRS-48213"></label>
+      <label class="loads-field" for="netExQ">or a search<input class="studio-in mono" id="netExQ" data-ex-q autocomplete="off" spellcheck="false" placeholder="TRD where mtm > 1m"></label>
+      <label class="loads-field" for="netExRole">As the role<select class="studio-in" id="netExRole" data-ex-role><option value="">mine</option>
+        {% for r in access.byRole or [] %}<option value="{{ r.role }}">{{ r.role }}</option>{% endfor %}</select></label>
+      <label class="loads-check"><input type="checkbox" data-ex-dated> A past business date (a peer with another calendar is left out)</label>
+      <button type="submit" class="btn-pill btn-accent">Explain</button>
+    </form>
+    <div class="net-explained" data-explained aria-live="polite" hidden>
+      <p><span class="st" data-ex-route></span> <span data-ex-reason></span></p>
+      <dl class="net-dl">
+        <dt>Forwarded to</dt><dd class="mono" data-ex-forward>-</dd>
+        <dt>Data read from</dt><dd class="mono" data-ex-data>-</dd>
+        <dt>A search asks</dt><dd class="mono" data-ex-scatter>-</dd>
+        <dt>Not reachable for the role</dt><dd class="mono" data-ex-unreachable>-</dd>
+        <dt>Down now</dt><dd class="mono" data-ex-down>-</dd>
+      </dl>
+    </div>
+
+    <h2 class="net-h2">Forwarded traffic</h2>
+    {% set tr = traffic or {} %}
+    <p class="text-muted-d">Requests this node sent to its peers (whole views, documents, search shares, live relays), a minute at a time for the last hour.
+      Last ten minutes: <b class="mono" data-traffic-total>{{ (tr.totals or {}).forwarded or 0 }}</b> sent, <b class="mono {{ 't-neg' if (tr.totals or {}).failed }}">{{ (tr.totals or {}).failed or 0 }}</b> failed.
+      <button type="button" class="btn-pill" data-traffic-refresh>Refresh</button></p>
+    {% for peer, rows in (tr.minutes or {}).items() %}{% set maxr = (rows | map(attribute='ok') | max) + (rows | map(attribute='failed') | max) + (rows | map(attribute='timeout') | max) + (rows | map(attribute='not-held') | max) or 1 %}{% set bw = 600 / (rows | length) %}
+    <h3 class="net-h3 mono">{{ peer }}</h3>
+    <svg class="act-chart" viewBox="0 0 600 120" role="img" aria-label="Requests sent to {{ peer }} a minute, last hour" data-traffic="{{ peer }}">
+      {% for m in rows %}{% set bad = m.failed + m.timeout + m.refused %}{% set good = m.ok + m['not-held'] %}
+      <rect class="act-bar" x="{{ '%.1f' | format(loop.index0 * bw + 1) }}" width="{{ '%.1f' | format(bw - 2) }}" y="{{ '%.1f' | format(110 - 100 * good / maxr) }}" height="{{ '%.1f' | format(100 * good / maxr) }}"><title>{{ m.minute[11:16] }} UTC: {{ good }} answered, {{ bad }} failed, average {{ m.avgMs }} ms</title></rect>
+      {% if bad %}<rect class="act-bar act-err" x="{{ '%.1f' | format(loop.index0 * bw + 1) }}" width="{{ '%.1f' | format(bw - 2) }}" y="{{ '%.1f' | format(110 - 100 * (good + bad) / maxr) }}" height="{{ '%.1f' | format(100 * bad / maxr) }}"/>{% endif %}{% endfor %}
+      <text class="act-axis" x="2" y="118">{{ rows[0].minute[11:16] }} UTC</text><text class="act-axis" x="598" y="118" text-anchor="end">now</text>
+    </svg>
+    {% else %}<p class="text-muted-d">Nothing forwarded in the last hour.</p>{% endfor %}
+    {% if tr.slowest %}
+    <h3 class="net-h3">Slowest peers, last ten minutes</h3>
+    <ul class="net-seeds">{% for s in tr.slowest %}<li><span class="mono">{{ s.peer }}</span> average {{ s.avgMs }} ms over {{ s.calls }} calls</li>{% endfor %}</ul>
+    {% endif %}
+    <h3 class="net-h3">Latest calls</h3>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-recent>
+      <caption class="visually-hidden">The latest requests sent to peers, newest first</caption>
+      <thead><tr><th scope="col">When</th><th scope="col">Peer</th><th scope="col">What</th><th scope="col">Kind</th><th scope="col">Outcome</th><th scope="col" class="num">ms</th></tr></thead>
+      <tbody>{% for c in tr.recent or [] %}<tr><td>{{ when_local(c.at) }}</td><td class="mono">{{ c.peer }}</td><td>{{ c.what }}</td><td>{{ c.kind }}</td>
+        <td><span class="st {{ 'st-ok' if c.outcome in ('ok', 'not-held') else 'st-bad' }}">{{ c.outcome }}</span></td><td class="num mono">{{ c.ms }}</td></tr>
+      {% else %}<tr><td colspan="6" class="text-muted-d">None yet.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+
+  <section role="tabpanel" id="netPaneAccess" aria-labelledby="netTabAccess" data-pane="access" {% if tab != 'access' %}hidden{% endif %}>
+    <p class="text-muted-d">The nodes each role may reach: node ids or tags (<span class="mono">region:emea</span>). A role with none reaches every node. A
+      search, a type-ahead or a forwarded request never reaches a node outside its role's list, and a node refuses a forwarded request whose roles may
+      not reach it. Saved to <span class="mono">access.yaml</span> and <span class="mono">node.yaml</span> (checked first, the previous text kept),
+      applied at once, and told to the other nodes in this node's digest.</p>
+    <datalist id="netChoices">{% for c in access.choices or [] %}<option value="{{ c }}">{% endfor %}</datalist>
+    <form data-access-form>
+      <div class="tbl-wrap"><table class="tbl adm-tbl net-access" data-access>
+        <caption class="visually-hidden">Nodes per role</caption>
+        <thead><tr><th scope="col">Role</th><th scope="col">May reach (node ids or tags, comma-separated; empty: every node)</th><th scope="col">Reaches now</th></tr></thead>
+        <tbody>
+        {% for r in access.byRole or [] %}
+          <tr data-role="{{ r.role }}"><th scope="row" class="mono">{{ r.role }}</th>
+            <td><label class="visually-hidden" for="netRole-{{ loop.index }}">Nodes {{ r.role }} may reach</label>
+              <input class="studio-in mono" id="netRole-{{ loop.index }}" data-role-nodes="{{ r.role }}" value="{{ r.nodes | join(', ') }}" list="netChoices" autocomplete="off" spellcheck="false" placeholder="every node"></td>
+            <td>{% for n in r.reaches %}<span class="net-tag mono">{{ n }}</span>{% else %}<span class="t-warn">no node</span>{% endfor %}</td></tr>
+        {% else %}
+          <tr><td colspan="3" class="text-muted-d">No roles to show.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+      <div class="lk-grid net-node-fields">
+        <label class="loads-field" for="netTags">This node's tags (comma-separated)
+          <input class="studio-in mono" id="netTags" data-node-tags value="{{ (access.tags or []) | join(', ') }}" autocomplete="off" spellcheck="false" placeholder="region:emea, tier:risk"></label>
+        <label class="loads-field" for="netPeerOnly">Packs served to peers only (comma-separated)
+          <input class="studio-in mono" id="netPeerOnly" data-node-peer-only value="{{ (access.peerOnlyPacks or []) | join(', ') }}" autocomplete="off" spellcheck="false" placeholder="market-risk"></label>
+      </div>
+      <p><button type="submit" class="btn-pill btn-accent">Save access</button></p>
+    </form>
+  </section>
+
+  <section role="tabpanel" id="netPaneSecurity" aria-labelledby="netTabSecurity" data-pane="security" {% if tab != 'security' %}hidden{% endif %}>
+    <p class="text-muted-d">Every call between nodes is signed with the cluster key (<span class="mono">DRISHTI_NET_SECRET</span>) and refused outside a 60 s window.
+      The key is never shown here, only its state. To rotate it with no downtime, three rolling steps: every node accepts the new key
+      (<span class="mono">previous-secret</span>), then signs with it (<span class="mono">secret</span>, the old one as <span class="mono">previous-secret</span>), then drops
+      the old one; see the <a href="/help/net">operator's guide</a>.</p>
+    <dl class="net-dl" data-security>
+      <dt>Cluster key</dt><dd>{% if security.keySet %}<span class="st st-ok">set</span>{% else %}<span class="st st-bad">not set</span>{% endif %}</dd>
+      <dt>Previous key</dt><dd>{% if security.previousKeySet %}<span class="st st-warn">accepted</span>{% else %}<span class="text-muted-d">none</span>{% endif %}</dd>
+      <dt>Rollover</dt><dd data-rollover>{{ security.rollover or '-' }}</dd>
+      <dt>Mutual TLS</dt><dd>{% if security.tls %}{{ 'on' if security.tls.enabled else 'off' }}{% for c in security.tls.certificates or [] %}<div class="mono">{{ c.subject }}: {{ c.source }}, expires {{ c.notAfter }}{% if c.expired %} <span class="t-bad">expired</span>{% elif c.daysLeft is not none and c.daysLeft < 30 %} <span class="t-warn">{{ c.daysLeft }} days left</span>{% endif %}</div>{% endfor %}{% for w in security.tls.warnings or [] %}<div class="t-warn">{{ w }}</div>{% endfor %}{% if security.tls.error %}<div class="t-bad">{{ security.tls.error }}</div>{% endif %}{% else %}<span class="text-muted-d">none: plain HTTP between nodes, or TLS without a client certificate (node.yaml tls.*)</span>{% endif %}</dd>
+    </dl>
+    {% if security.previousUses %}
+    <h2 class="net-h2">Peers that signed with the previous key</h2>
+    <ul class="net-seeds">{% for u in security.previousUses %}<li><span class="mono">{{ u.node }}</span> {{ when_local(u.at) }}</li>{% endfor %}</ul>
+    {% endif %}
+    <h2 class="net-h2">Refused calls</h2>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-refusals>
+      <caption class="visually-hidden">Calls from other nodes that this node refused, newest first</caption>
+      <thead><tr><th scope="col">When</th><th scope="col">Address</th><th scope="col">Node</th><th scope="col">Why</th></tr></thead>
+      <tbody>{% for r in security.refusals or [] %}<tr><td>{{ when_local(r.at) }}</td><td class="mono">{{ r.address }}</td><td class="mono">{{ r.node or '-' }}</td><td>{{ r.reason }}</td></tr>
+      {% else %}<tr><td colspan="4" class="text-muted-d">None since this node started.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+
+  <section role="tabpanel" id="netPaneFiles" aria-labelledby="netTabFiles" data-pane="files" {% if tab != 'files' %}hidden{% endif %}>
+    <p class="text-muted-d">The folder <span class="mono">{{ files.dir }}</span> ({{ files.watch | lower }}): a file is checked before it is used; a refused file
+      keeps the previous settings in force and shows its error here. Every save keeps the previous text in the history and is audited.</p>
+    <div class="net-files">
+      <ul class="net-file-list" data-file-list>
+        {% for f in files.files or [] %}
+        <li><button type="button" class="net-file" data-file="{{ f.id }}" data-etag="{{ f.etag }}">
+          <span class="mono">{{ f.id }}</span>
+          {% if not f.exists %}<span class="text-muted-d">not there (defaults)</span>{% elif f.refused %}<span class="st st-bad">refused</span>{% elif f.problems %}<span class="st st-warn">warnings</span>{% else %}<span class="st st-ok">in force</span>{% endif %}
+        </button></li>
+        {% endfor %}
+        <li><button type="button" class="btn-pill" data-new-peer>New peer file</button></li>
+      </ul>
+      <div class="net-editor" data-editor hidden>
+        <h2 class="net-h2 mono" data-editing></h2>
+        <label class="visually-hidden" for="netYaml">The file's YAML</label>
+        <textarea class="studio-in mono net-yaml" id="netYaml" data-yaml rows="16" spellcheck="false" autocomplete="off" wrap="off"></textarea>
+        <ul class="net-problems" data-problems aria-live="polite"></ul>
+        <div class="net-actions">
+          <button type="button" class="btn-pill" data-check>Check</button>
+          <button type="button" class="btn-pill btn-accent" data-save>Save</button>
+          <button type="button" class="btn-pill" data-delete>Delete</button>
+        </div>
+        <h3 class="net-h3">History</h3>
+        <ul class="net-history" data-history></ul>
+        <pre class="mono net-diff" data-diff hidden></pre>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-net.js?v={{ ASSET_V }}"></script>{% endblock %}

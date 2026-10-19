@@ -1,0 +1,28 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+# Example: copy to config/net/node.yaml (the server's drishti.net.dir) to make this server a member of a Drishti*net cluster
+# (docs/admin/NET.md). Applied live: enabled false -> true joins, true -> false leaves cleanly. Without this file the server is a
+# single server exactly as before.
+enabled: true
+# node-id: drishti-b                 # empty: generated once and kept in <data dir>/net/node-id
+advertise-url: https://drishti-b.internal:8480   # the address peers and consoles call this node at
+tags: [region:emea, tier:risk]       # for nodes per role (access.yaml)
+peer-only-packs: []                  # packs served to peers only, hidden from this node's own users
+secret: ${DRISHTI_NET_SECRET}        # the cluster key: an environment reference only, at least 32 bytes, the same on every node
+# previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}   # also accepted during a key rollover (NET.md, "Rotating the key")
+# tls:                               # mutual TLS between nodes, the shared tls settings (docs/connectors/TLS.md)
+#   keystore: /etc/drishti/net/node.p12
+#   keystore-password: ${DRISHTI_NET_KEYSTORE_PASSWORD}
+#   truststore: /etc/drishti/net/cluster-ca.p12
+#   truststore-password: ${DRISHTI_NET_TRUSTSTORE_PASSWORD}

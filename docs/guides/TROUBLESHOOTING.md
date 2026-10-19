@@ -37,6 +37,7 @@ same machine. Replace `localhost` if yours run elsewhere.
 | [Connectors](#connectors) | a connector is idle, a connector failed to start, a bad connector file, TLS errors and certificate expiry, proxy errors (407, CONNECT refused, DNS), schema-registry messages skipped |
 | [Monitoring endpoints](#monitoring-endpoints) | `/actuator/prometheus` answers 401 or 403, `/api/docs` answers 401 |
 | [Alerts](#alerts-and-monitors) | an alert never fires |
+| [Drishti*net](#drishtinet) | a node will not join, a refused key, clocks apart, a page whose node is down, a console that keeps moving between servers, a member that flaps |
 | [Development](#development) | licence header test fails |
 
 ## First checks (run these first)
@@ -1273,6 +1274,53 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 * **A derived dataset says "the columns of the result are not known yet" and no field resolves.** It declares no `columns:` and has never run: press **Run the Transform now** on its page (or `POST /datasets/{id}/transform/run`); the columns of that result are kept, and the page checks again.
 * **The Transform runs again for every person.** Its result is kept per reader and version of the inputs (`drishti.bi.transform.cache-ttl`, `cache-entries`): a different person has different rows and masks, so a different frame. After a data load the inputs' version changes and the next reader runs it again.
 
+## Drishti*net
+
+Several servers as one ([NET.md](../admin/NET.md)). Each node's log names what the cluster does (`net: node ... joined`, `member ... joined`,
+`... is suspect`, `... is dead`, `refused a call from ...`), and **Admin → Net** shows the member table, the files and the refused calls.
+
+### A node will not join (it lists no members)
+
+**Check.** Admin → Net on the node: is the summary *Cluster on*? Is `node.yaml` **refused** in the Files tab (its problem says why)? The log at
+start: `net: node n-... joined Drishti*net at <address> (incarnation 1, seeds [...], 0 saved members)` lists the seeds it tries. From the node's
+machine, `curl -s <seed>/api/v1/net/ping` must answer `401 DRS-5051` (the seed is there and wants a cluster credential), not a connection error.
+
+**Fix.** `enabled: true` needs `secret: ${DRISHTI_NET_SECRET}` with the variable set in the server's environment and `advertise-url`; the seed's
+address and port must be reachable (firewall); the seed must itself be enabled. One seed is enough; a node with none and no `peers.json` stays alone.
+
+### The log says `refused a call from ... bad signature` (or a node is listed as refused on Admin → Net)
+
+The two nodes do not have the same cluster key. **Fix:** the same `DRISHTI_NET_SECRET` on every node; during a key rotation, follow the three
+steps of [NET.md](../admin/NET.md) so every node accepts both keys before any signs with the new one.
+
+### The log says `signed 75 s away from this node's clock`
+
+A call is refused outside a 60 s window. **Fix:** keep the clocks in step (NTP on every node).
+
+### A page says `DRS-5052 ... cannot be reached now` or `DRS-5053 ... did not answer`
+
+The page's kind (or its data) is served by another node of the cluster, and that node is down, left, drained or slow. **Check:** Admin → Net →
+Members (its state) and Routing (*Explain a request* for the kind and id: which node it would go to). **Fix:** start or rejoin that node, or undrain
+it; a slow node: its own Admin → Health. The page works again by itself once the node is back; nothing on this node needs to change.
+
+### A search says it is partial and names a node (`node n-c ...` in *failed*)
+
+That node holds data of the kind and did not answer the search in time (`scatter-budget`, 3 s), failed, or is down (`not asked: it cannot be reached
+now`). The rows of every other node are there. **Check:** Admin → Net → Members (its state) and Routing (its traffic and latency). **Fix:** bring it
+back; a node retired for good: **Remove** it from the member table once it is dead or left, and the searches stop naming it.
+
+### The console keeps moving between servers
+
+**Check:** Admin → Health, *Console servers*: the server set aside and its last error; the console's log: `server ... set aside after 2 failed requests
+in a row: ...` and `console moved from ... to ...`. **Fix:** the server it leaves (its health, its network); on a flaky network raise
+`backend.fail_after`. A set-aside server is used again, for new sessions, a minute after it answers again.
+
+### A member flaps between alive and suspect
+
+Its heartbeat stops rising for `suspect-after` (5 s) now and then: a slow network, or long pauses on that node (garbage collection, a swap).
+**Check:** the latency on Admin → Net, and the flapping node's log. **Fix:** raise `suspect-after` (and `dead-after`) in `gossip.yaml`, or fix the
+pauses. A suspected node refutes the suspicion by itself as soon as it hears of it.
+
 ## Error codes
 
 | Code | Meaning |
@@ -1329,6 +1377,13 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 | `DRS-5042` | a restore or a BI upload found an artifact of that name already there (HTTP 409): open it to compare, then choose *replace* (the one in the way is archived first) |
 | `DRS-5043` | a destructive step needs the artifact's name typed (HTTP 422): uninstall with dependants, replace, delete an archive for good |
 | `DRS-5044` | the action does not apply (HTTP 422): a connector a pack's template names (disable or reset it), a pack named in `drishti.packs.enabled` (take it out of the setting, or disable it), a connector with no file (it comes from `application.yaml`), or an uploaded BI file that is not valid (the problems are listed) |
+| `DRS-5050` | Drishti*net is off on this node (HTTP 404): its `config/net/node.yaml` does not say `enabled: true`, or the node left (Admin → Net → Rejoin). See [Drishti*net](#drishtinet) |
+| `DRS-5051` | a call between nodes was refused (HTTP 401): no cluster credential, a bad signature (another key), signed more than 60 s away from this node's clock, or an on-behalf-of token that is expired, for another node or not signed with the key. Admin → Net lists each refusal with the address and the reason |
+| `DRS-5052` | the node a request was forwarded to failed or answered something that is not an answer (HTTP 502); the next node was tried once |
+| `DRS-5053` | the node a request was forwarded to did not answer within `routing.yaml`'s `forward-timeout` (HTTP 504) |
+| `DRS-5054` | the caller's roles may not reach that node (`access.yaml`), or the node is drained and takes no forwarded work (HTTP 403 or 503) |
+| `DRS-5055` | a file of `config/net/` was not written (HTTP 409): it changed since you read it (read it again), or it has an error (the problems are listed, with their lines) |
+| `DRS-5056` | a Drishti*net management request that cannot be done (HTTP 400): an unknown member, removing a member that is alive or suspect, a seed that is not `host:port` or an address, a file that is not one of `config/net/` |
 | `DRS-6001`–`DRS-6010` | user management (see [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)); `DRS-6005` is a locked account |
 | `DRS-6011` | a start-up warning in the server log, not an answer: a `drishti.security.redact` entry names no field of the loaded packs' samples, so it masks nothing. Write the field as the data spells it (masks match in any case and convention) or remove the entry; Admin → Health lists such entries under `masksMatchingNothing` |
 | `DRS-7001` | a share link that is not yours, or does not exist (HTTP 404; the two look the same on purpose). Ask the sender to share it with you again |

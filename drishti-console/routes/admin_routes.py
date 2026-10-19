@@ -480,7 +480,8 @@ async def health(request: Request, partial: int = 0):
     from core import external_lib, tmpdir
 
     return render(request, "admin/_health_body.html" if partial else "admin/health.html", h=data, connectors=connectors, console_tmp=tmpdir.info(), console_ext=external_lib.info(),
-                  watch=request.app.state.backend_watch.snapshot())
+                  watch=request.app.state.backend_watch.snapshot(),
+                  console_cluster=(request.app.state.cluster.snapshot() if getattr(request.app.state, "cluster", None) is not None else None))
 
 
 @router.get("/caches")

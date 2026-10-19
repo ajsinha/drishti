@@ -171,6 +171,36 @@ public final class BiReportService {
         return new Loaded(item, parsed, dsItem, ds, problems, sets);
     }
 
+    /**
+     * The kinds the report's datasets read, for Drishti*net's routing of a report to the node that holds them (DRISHTI_NET.md section 8);
+     * empty when the report is not here or cannot be read.
+     */
+    public java.util.Set<String> kinds(Principal p, String id) {
+        try {
+            Loaded l = loadItem(p, id);
+            java.util.Set<String> out = new java.util.TreeSet<>();
+            java.util.List<Dataset> sets = new ArrayList<>();
+            if (l.dataset() != null) {
+                sets.add(l.dataset());
+            }
+            if (l.sets() != null) {
+                l.sets().all().values().forEach(e -> {
+                    if (e.dataset() != null) {
+                        sets.add(e.dataset());
+                    }
+                });
+            }
+            sets.forEach(d -> d.tables().values().forEach(t -> {
+                if (t.kind() != null && !t.kind().isBlank()) {
+                    out.add(t.kind());
+                }
+            }));
+            return out;
+        } catch (RuntimeException e) {
+            return java.util.Set.of();
+        }
+    }
+
     private Loaded loadItem(Principal p, String id) {
         BiStore.Item item = reportItem(p, id);
         String body = bi.bodyFor(p, item);

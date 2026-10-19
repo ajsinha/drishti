@@ -186,6 +186,16 @@ class DeltaSourcePluginTest extends DatedSourceContract {
         }
     }
 
+    /** Drishti*net's replicas: every server that reads this table names it the same, by the id in its log. */
+    @Test
+    void theTableIsNamedByTheIdInItsLog() throws Exception {
+        var p = plugin();
+        String id = p.tableIdentity("trade").orElseThrow();
+        assertThat(id).startsWith("delta:").hasSizeGreaterThan(10);
+        assertThat(plugin().tableIdentity("trade")).contains(id);               // another reader of the same table
+        assertThat(p.tableIdentity("no-such-kind")).isEmpty();
+    }
+
     @Test
     void healthAndCacheStatsNameTheEngine() throws Exception {
         assertThat(plugin().health()).isEqualTo("UP (engine: " + engine() + ")");

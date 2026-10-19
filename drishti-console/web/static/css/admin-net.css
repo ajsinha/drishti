@@ -1,0 +1,70 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Admin -> Net: the summary chips, the tabs, this node's card, the member table, the files and their editor (admin-net.js). */
+.net-sum { display: flex; flex-wrap: wrap; gap: .4rem; margin: .5rem 0 .8rem; }
+.net-chip { border: 1px solid var(--d-border); border-radius: 999px; padding: .15rem .7rem; font-size: .82rem; color: var(--d-muted); }
+.net-chip b { color: var(--d-fg, inherit); font-weight: 600; }
+.net-on, .net-alive { border-color: var(--d-ok); color: var(--d-ok); }
+.net-off, .net-left { color: var(--d-muted); }
+.net-warn, .net-suspect { border-color: var(--d-warn); color: var(--d-warn); }
+.net-dead { border-color: var(--d-bad); color: var(--d-bad); }
+.net-tabs { display: flex; flex-wrap: wrap; gap: .2rem; border-bottom: 1px solid var(--d-border); margin: .4rem 0 .8rem; }
+.net-tabs [role=tab] { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--d-muted); padding: .45rem .9rem; min-height: 40px;
+  cursor: pointer; font: inherit; }
+.net-tabs [role=tab][aria-selected=true] { color: var(--d-fg, inherit); border-bottom-color: var(--d-accent); font-weight: 600; }
+.net-tabs [role=tab]:focus-visible { outline: 2px solid var(--d-accent); outline-offset: -2px; }
+.net-empty { border: 1px dashed var(--d-border); border-radius: 8px; padding: .4rem .9rem; margin: 0 0 .8rem; }
+.net-pre { background: var(--d-surface-2, transparent); padding: .5rem .7rem; border-radius: 6px; overflow: auto; font-size: .82rem; }
+.net-node { border: 1px solid var(--d-border); border-radius: 8px; padding: .2rem .9rem .7rem; margin: 0 0 .8rem; }
+.net-node h2, .net-h2 { font-size: 1.02rem; margin: .7rem 0 .4rem; }
+.net-h3 { font-size: .95rem; margin: .8rem 0 .3rem; }
+.net-dl { display: grid; grid-template-columns: max-content 1fr; gap: .25rem 1rem; margin: 0; font-size: .88rem; }
+.net-dl dt { color: var(--d-muted); }
+.net-dl dd { margin: 0; overflow-wrap: anywhere; }
+.net-tag { display: inline-block; border: 1px solid var(--d-border); border-radius: 4px; padding: 0 .35rem; margin: 0 .2rem .15rem 0; font-size: .76rem; white-space: nowrap; }
+.net-peer-only { border-style: dashed; color: var(--d-muted); }
+.net-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin: .6rem 0 .2rem; }
+.net-seed { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem 1rem; margin: 0 0 .8rem; }
+.net-seed .loads-field { margin: 0; min-width: min(28rem, 100%); }
+.net-members td, .net-members th { white-space: nowrap; font-size: .85rem; }
+.net-members td:nth-child(5), .net-members td:nth-child(6) { white-space: normal; min-width: 8rem; }
+.net-seeds { margin: 0; padding-left: 1.1rem; font-size: .88rem; }
+.net-files { display: grid; grid-template-columns: minmax(14rem, 18rem) 1fr; gap: 1rem; align-items: start; }
+.net-file-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .3rem; }
+.net-file { display: flex; justify-content: space-between; align-items: center; gap: .5rem; width: 100%; text-align: left; background: none;
+  border: 1px solid var(--d-border); border-radius: 6px; padding: .45rem .6rem; color: inherit; font: inherit; cursor: pointer; min-height: 44px; }
+.net-file[aria-current=true] { border-color: var(--d-accent); }
+.net-yaml { width: 100%; box-sizing: border-box; min-height: 18rem; font-size: .85rem; }
+.net-problems { margin: .4rem 0; padding-left: 1.1rem; font-size: .85rem; }
+.net-history { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .3rem; font-size: .82rem; }
+.net-diff { background: var(--d-surface-2, transparent); padding: .5rem .7rem; border-radius: 6px; overflow: auto; font-size: .8rem; max-height: 24rem; }
+.net-explain { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem 1rem; margin: 0 0 .6rem; }
+.net-explain .loads-field { margin: 0; min-width: 10rem; }
+.net-explained { border: 1px solid var(--d-border); border-radius: 8px; padding: .3rem .9rem .6rem; margin: 0 0 .8rem; }
+.net-access td { white-space: normal; }
+.net-access input { width: 100%; min-width: 14rem; box-sizing: border-box; }
+.net-node-fields { margin: .6rem 0; }
+.net-node-fields input { width: 100%; box-sizing: border-box; }
+.net-warnings { margin: .3rem 0 .6rem; padding-left: 1.1rem; font-size: .88rem; }
+.net-warnings:empty { display: none; }
+.net-filter { max-width: 28rem; margin: 0 0 .5rem; }
+.net-map td, .net-map th { white-space: normal; vertical-align: top; font-size: .85rem; }
+.net-map td div { margin: 0 0 .15rem; }
+@media (max-width: 760px) {
+  .net-files { grid-template-columns: 1fr; }
+  .net-dl { grid-template-columns: 1fr; }
+  .net-actions .btn-pill, .net-seed .btn-pill, .net-seed input, .net-tabs [role=tab] { min-height: 44px; font-size: 16px; }
+}

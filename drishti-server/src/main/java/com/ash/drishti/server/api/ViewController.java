@@ -65,7 +65,16 @@ public class ViewController {
         String subtitle = v.title().pill() == null ? kind : v.title().pill().replace("Trade · ", "")
                 + (v.title().with() == null ? "" : " · " + v.title().with().text());
         recents.touch(principal.user(), new EntityHit(ref, v.title().id(), subtitle));
-        return v;
+        com.ash.drishti.server.net.NetServedBy sb = servedBy == null ? null : servedBy.getIfAvailable();
+        return sb == null ? v : sb.annotate(principal, v);       // Drishti*net: the node that answered, for administrators only
+    }
+
+    /** Drishti*net's line naming the node that answered (absent in a test that makes the controller itself). */
+    private org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.net.NetServedBy> servedBy;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void servedBy(org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.net.NetServedBy> s) {
+        this.servedBy = s;
     }
 
     /**

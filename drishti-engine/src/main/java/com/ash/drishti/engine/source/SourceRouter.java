@@ -146,14 +146,124 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      */
     public CompletableFuture<EntityDocument> fetch(EntityRef ref, Duration timeout, AsOf asOf) {
         List<SourcePlugin> candidates = candidates(ref.kind());
-        if (candidates.isEmpty()) {
+        Fallback fb = fallback;
+        if (candidates.isEmpty() && fb == null) {
             return CompletableFuture.failedFuture(noSource(ref.kind()));
         }
         readOrder(candidates, asOf);
         AtomicReference<String> asking = new AtomicReference<>();
-        return CompletableFuture.supplyAsync(() -> readFirst(ref, candidates, asOf, asking), executor)
+        return CompletableFuture.supplyAsync(() -> fb == null ? readFirst(ref, candidates, asOf, asking) : readWithPeers(ref, candidates, asOf, asking, fb), executor)
                 .orTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
                 .exceptionallyCompose(e -> CompletableFuture.failedFuture(translate(ref, e, asking.get(), timeout)));
+    }
+
+    /**
+     * Sources outside this server that a read falls back to when no local source holds the entity: Drishti*net's peers
+     * (DRISHTI_NET.md section 7, data forwarding). Not set while the cluster is off, so a single server reads exactly as before.
+     */
+    public interface Fallback {
+        /**
+         * The peers to ask for {@code ref}, best first: none when the cluster is off, when the request was itself forwarded (one hop),
+         * or when no peer the caller may reach holds the kind. A peer that reads the same table as a local source is never listed.
+         */
+        List<SourcePlugin> peers(EntityRef ref, AsOf asOf);
+
+        /** Why the entity cannot be read although a peer holds the kind (that peer is down or suspect), or empty. */
+        default Optional<DrishtiException> unreachable(EntityRef ref) {
+            return Optional.empty();
+        }
+
+        /**
+         * A grouped page (a derived kind) gathered from every node that holds members of the kind it groups, replacing {@code local} (this
+         * node's page, or null when no member is here); empty when there is nothing to gather (not a derived kind, no other node holds
+         * members, a forwarded request). DRISHTI_NET.md section 8.
+         */
+        default Optional<EntityDocument> gather(EntityRef ref, AsOf asOf, EntityDocument local) {
+            return Optional.empty();
+        }
+    }
+
+    /** A derived source that serves a kind here, by its connector name: Drishti*net gathers its groups across nodes. */
+    public record Derived(String source, com.ash.drishti.engine.source.derived.DerivedSourcePlugin plugin) {}
+
+    /** The derived source (plugin {@code derived}) that serves {@code kind} here, if one does. */
+    public Optional<Derived> derivedOf(String kind) {
+        for (SourcePlugin p : candidates(kind)) {
+            SourcePlugin d = p instanceof ConnectorInstance c ? c.delegate() : p;
+            if (d instanceof com.ash.drishti.engine.source.derived.DerivedSourcePlugin x && x.groupedFrom(kind).isPresent()) {
+                return Optional.of(new Derived(p.manifest().name(), x));
+            }
+        }
+        return Optional.empty();
+    }
+
+    private volatile Fallback fallback;
+
+    /** Sets (or, with null, removes) the sources a read falls back to after the local ones. */
+    public void fallback(Fallback f) {
+        this.fallback = f;
+    }
+
+    /**
+     * The local sources first, as {@link #readFirst}; when none holds the entity (not found, or no source of the kind here), the peers
+     * the fallback names, in its order. A peer that does not hold it passes to the next; one that fails is counted, and the read gives up
+     * after two failures (a read is tried once more on the next peer, never more). A local source that failed is never replaced by a
+     * peer's data: its failure is the answer, as with two local sources.
+     */
+    private EntityDocument readWithPeers(EntityRef ref, List<SourcePlugin> candidates, AsOf asOf, AtomicReference<String> asking, Fallback fb) {
+        DrishtiException first;
+        if (candidates.isEmpty()) {
+            first = noSource(ref.kind());
+        } else {
+            try {
+                EntityDocument d = readFirst(ref, candidates, asOf, asking);
+                return fb.gather(ref, asOf, d).orElse(d);
+            } catch (SourceFailure e) {
+                throw e;
+            } catch (DrishtiException e) {
+                ErrorCode c = e.errorCode();
+                if (c != ErrorCode.ENTITY_NOT_FOUND && c != ErrorCode.NO_SOURCE_FOR_KIND && c != ErrorCode.CONNECTOR_NOT_CONFIGURED) {
+                    throw e;
+                }
+                first = e;
+            }
+        }
+        if (!candidates.isEmpty()) {
+            Optional<EntityDocument> gathered = fb.gather(ref, asOf, null);          // a group with no member here, members elsewhere
+            if (gathered.isPresent()) {
+                return gathered.get();
+            }
+        }
+        List<SourcePlugin> peers = fb.peers(ref, asOf);
+        if (peers.isEmpty()) {
+            Optional<DrishtiException> why = fb.unreachable(ref);
+            throw why.isPresent() ? why.get() : first;
+        }
+        int failed = 0;
+        SourceFailure failure = null;
+        for (SourcePlugin p : peers) {
+            String name = p.manifest().name();
+            asking.set(name);
+            long t0 = System.nanoTime();
+            try {
+                Optional<EntityDocument> d = p.fetch(ref, asOf);
+                if (d.isPresent()) {
+                    stats.found(name, System.nanoTime() - t0);
+                    return d.get();
+                }
+                stats.notHeld(name, System.nanoTime() - t0);
+            } catch (Exception e) {
+                stats.failed(name, System.nanoTime() - t0, e);
+                failure = new SourceFailure(ErrorCode.NET_PEER_FAILED, name, SourceFailure.reason(e, props.fetchTimeout()),
+                        "the node " + name.replaceFirst("^net:", "") + " that holds " + ref.kind() + " failed reading " + ref
+                                + (e.getMessage() == null ? "" : ": " + e.getMessage()), e);
+                if (++failed >= 2) {
+                    break;
+                }
+            }
+        }
+        // a peer that failed may hold it: "not found" would be wrong, so its failure is the answer
+        throw failure != null ? failure : first;
     }
 
     /**
@@ -424,6 +534,17 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
                 Subscription s = p.subscribe(ref, listener);
                 if (s != Subscription.NONE) {
                     return s;
+                }
+            }
+        }
+        Fallback fb = fallback;
+        if (fb != null) {                              // Drishti*net: held by no local source, so the peer that holds it streams it
+            for (SourcePlugin p : fb.peers(ref, AsOf.LATEST)) {
+                if (p.manifest().capabilities().live()) {
+                    Subscription s = p.subscribe(ref, listener);
+                    if (s != Subscription.NONE) {
+                        return s;
+                    }
                 }
             }
         }

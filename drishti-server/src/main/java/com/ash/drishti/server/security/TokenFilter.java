@@ -75,9 +75,28 @@ public final class TokenFilter extends OncePerRequestFilter {
         return this;
     }
 
+    /**
+     * Request attribute set by Drishti*net's call filter on a call whose cluster credential it verified: the calling node's id.
+     * Such a call carries no bearer token; it runs as the user of its on-behalf-of token, or as the node itself (no roles).
+     */
+    public static final String NET_PEER_ATTRIBUTE = "drishti.net.peer";
+
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
             throws ServletException, IOException {
+        if (req.getAttribute(NET_PEER_ATTRIBUTE) instanceof String peer) {
+            if (!(req.getAttribute(Principal.ATTRIBUTE) instanceof Principal carried)) {
+                req.setAttribute(Principal.ATTRIBUTE, new Principal("node:" + peer, java.util.List.of()));
+            } else if (props.enabled() && !account.test(carried)) {
+                // the user is carried, not trusted blindly: with registered-users-only the account must exist and be enabled here too
+                res.setStatus(401);
+                res.setContentType("application/problem+json");
+                res.getWriter().write("{\"title\":\"unauthenticated\",\"status\":401,\"code\":\"DRS-5051\",\"detail\":\"the user of this forwarded call does not exist or is disabled on this node\"}");
+                return;
+            }
+            chain.doFilter(req, res);
+            return;
+        }
         if (!props.enabled()) {
             req.setAttribute(Principal.ATTRIBUTE, Principal.anonymous(req.getHeader("X-Drishti-User")));
             chain.doFilter(req, res);

@@ -51,6 +51,7 @@ covered in depth in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
    - [Administration: Artifacts (`/api/v1/admin/artifacts`)](#administration-artifacts-apiv1adminartifacts)
    - [Data loads: telling Drishti a batch landed](#data-loads-telling-drishti-a-batch-landed)
    - [Administration: health and caches](#administration-health-and-caches)
+   - [Drishti*net (`/api/v1/net`)](#drishtinet-apiv1net)
    - [Outside /api/v1: OpenAPI and actuator](#outside-apiv1-openapi-and-actuator)
 7. [The ViewModel in detail](#the-viewmodel-in-detail)
 8. [Error code table](#error-code-table)
@@ -1463,6 +1464,69 @@ curl -s -X POST $B/admin/caches/market-store/purge
 
 You should see `{"purged":["market-store"],"elapsedMs":…}`.
 
+### Drishti*net (`/api/v1/net`)
+
+The cluster's endpoints ([NET.md](../admin/NET.md), the design [DRISHTI_NET.md](../architecture/DRISHTI_NET.md) section 15). While the cluster is
+off on a node they answer `404 DRS-5050` (`/members` answers `{"enabled": false, "members": []}`). Two kinds of caller:
+
+- **Another node.** Every call between nodes carries `X-Drishti-Net-Node` (the caller's id), `X-Drishti-Net-Time` (epoch milliseconds) and
+  `X-Drishti-Net-Signature`: an HMAC-SHA256, base64url, with the cluster key over `METHOD\npath?query\ntime\nnode\nsha256(body)`. A call
+  without it, signed with another key or more than 60 s away from the node's clock is refused `401 DRS-5051`. The node-only endpoints below
+  take nothing else.
+- **An administrator** (a session token with the admin power; never a personal API token: `* /api/v1/net/**` is in `token-never`), for Admin → Net.
+
+A request one node forwards to another for a person (an ordinary `/api/v1/**` request) is signed the same way and carries two more headers:
+`X-Drishti-Net-Hop: 1` (the receiving node answers only from itself: one hop at most) and `X-Drishti-Net-On-Behalf-Of`, a token signed with the
+cluster key that names the user, the roles, the embed application, the forwarding node (`origin`), the request id, the node it is for (`aud`) and
+its expiry (30 s). The receiving node serves the request as that user, refuses a token for another node or an expired one (`401 DRS-5051`), and
+refuses one whose roles may not reach it (`403 DRS-5054`). None of these headers ever reaches a browser.
+
+A request a node's own client makes for a kind another node serves (its pack is not here, is older here, or is served to peers only here) is forwarded
+whole, and the client gets that node's answer unchanged: the same status, body and headers (none of the cluster's). When the node that serves it cannot
+be reached the answer is `502 DRS-5052` or `504 DRS-5053`, naming it. A search (`GET /api/v1/search`) is asked of every node that holds other data of the kind and merged: its `rows` are the union (an entity once),
+ordered and cut as one node would, `scanned` and `matched` summed, and a node that failed, was late or is down is in `failed`
+(`{"source": "node n-c (left)", "reason": "not asked: it cannot be reached now"}`) with `partial: true`. For administrators the answer has
+`nodes: [{nodeId, scanned, matched, elapsedMs}]` (or `failure`). The type-ahead (`GET /api/v1/command/suggest`) asks every node within
+`suggest-budget`. Admin → Health's answer (`GET /api/v1/admin/health`) has a `net` part:
+`enabled`, `running`, `nodeId`, `members` by state, `drained`, `last10Minutes` (`forwarded`, `failed`).
+
+| Method | Path | Who | Notes |
+|---|---|---|---|
+| `POST` | `/net/gossip` `{"members": [...]}` | node | Push-pull: the caller's member table is merged, this node's is the answer `{"members": [...]}`; the first entry is the node itself. Each member: `nodeId`, `url`, `incarnation`, `heartbeat`, `state` (`alive`, `suspect`, `dead`, `left`), `digestHash`, `version`, `protocol`, `tags`, `since`, `drained` |
+| `GET` | `/net/ping` | node | A direct probe: `{"nodeId", "state"}`. `?target=<a member's url>`: an indirect probe, `{"answered": true}` when this node reached the target (only a member's address is probed: `400 DRS-5056` otherwise) |
+| `GET` | `/net/digest` | node | This node's capability digest: `nodeId`, `url`, `version`, `protocol`, `packs` (`name`, `code`, `version`, `hash`, `peerOnly`), `kinds` (`kind`, `mnemonic`, `label`, `pack`, `renders`, `sources`: `connector`, `type`, `table`, `latestDate`, `dataVersion`, `columnar`, `dated`, `live`), `load` (`requestsPerSecond`, `latencyMs`), `calendar`, `tags`, `redact`, `access`, `reports`, `builtAt`. Peers pull it when the `digestHash` in gossip changes |
+| `GET` | `/net/capabilities` | node, admin | The capability table as Admin → Net's map shows it: `kinds` (each with `renderers`: `nodeId`, `version`, `newest`, `peerOnly`, `routable`; `holders`: `nodeId`, `connector`, `type`, `table`, `shared` (a replica), `latestDate`, `dataVersion`; `scatter`: the peers a search asks), `nodes`, `warnings` (`what`: `pack-content`, `calendar`, `redact`, `protocol`; `text`) |
+| `GET` | `/net/fetch/{kind}/{id}` (`~` and `?id=` for an id with a slash) | node, for a user | One entity document as the on-behalf-of user may see it here (masked by this node's rules), read from this node's own sources only, with the request's `X-Drishti-As-Of` and `X-Drishti-Known-At`: `{"kind", "id", "provenance": {source, generation, fetchedAt, live, businessDate}, "data"}`. `404` when not held here. The asking node renders it and masks it again |
+| `GET` | `/net/subscribe/{kind}/{id}` | node, for a user | The live relay's upstream: server-sent events, one `doc` event per new generation of the entity (`{"provenance", "deleted", "data"}`, masked for the user here), a comment every 10 s; open until the calling node closes it |
+| `POST` | `/net/state` `{"changes": [{user, namespace, key, value, at, origin, catchUp}]}` | node | Users' state from a peer (namespaces `settings`, `layouts`, `pivots`, `workspaces`; `value` null for a delete): applied here, the newest `at` winning; a `catchUp` change only where the key is absent. `{"applied": n}` |
+| `GET` | `/net/group/{kind}/{id}` (or `/~?id=`) | node, for a user | This node's share of a grouped page (a derived kind): `{"share": {memberCount, complete, members: {id: {fields, row}}, page}}`, masked here for the on-behalf-of user; `{"share": null}` when no member is here |
+| `GET` | `/net/search?q=` | node, for a user | This node's share of a scattered search: the search run on this node's data only, for the on-behalf-of user, as `GET /api/v1/search` answers it |
+| `GET` | `/net/explain?kind=&id=&q=&role=&dated=` | admin | Where a request would go from this node and why: `route` (`local`, `view`, `none`), `reason`, `forwardTo` (in order), `localPack`, `dataPeers` (where its document would be read from), `scatter` (the peers a search asks), `unreachable` (nodes the role may not reach), `down` |
+| `GET` | `/net/traffic?minutes=60` | admin | What this node sent to its peers: `minutes` (per peer, a row a minute: `ok`, `not-held`, `refused`, `failed`, `timeout`, `avgMs`), `slowest`, `recent` (the latest calls), `totals` (the last ten minutes) |
+| `POST` | `/net/console-event` `{"from", "to", "why", "console"}` | the console, admin | A console that moved from one server to another says so; recorded in the audit log as `net-console-failover` |
+| `GET` | `/net/members` | node, admin, anyone signed in | The member table. A node or an administrator gets every member with what this node knows of it (`lastHeard`, `latencyMs`), this node (`node`: id, address, tags, peer-only packs, whether the key is set, drain, the gossip timings and rounds), the seeds, `peersFile` and the files' `problems`. Anyone else (the console's discovery) gets `{"enabled", "self", "members": [{nodeId, url, state, tags, packs}]}` |
+| `POST` | `/net/seeds` `{"url": "host:port", "name"?}` | admin | Saves `peers/<name>.yaml` (default name from the host and port) and tries it at once: `{"file", "url", "answered"}` |
+| `DELETE` | `/net/members/{id}` | admin | Removes a dead or left member; `400 DRS-5056` for an alive or suspect one |
+| `POST` | `/net/drain`, `/net/undrain` | admin | This node takes no forwarded work (its peers are told), or takes it again |
+| `POST` | `/net/leave`, `/net/rejoin` | admin | Gossips `left` and serves its peers nothing; back alive with a higher incarnation |
+| `GET` | `/net/access` | admin | Nodes per role: `roles` (as access.yaml says), `byRole` (each role with its `nodes`, `limited`, and the members it `reaches` now), this node's `tags` and `peerOnlyPacks`, `choices` (the members' ids and tags), the two files' `etags` |
+| `PUT` | `/net/access` `{"roles": {role: [ids or tags]}, "tags": [...], "peerOnlyPacks": [...]}` | admin | Writes access.yaml (whole) and node.yaml's two settings (the rest kept), checked first (`409 DRS-5055` and nothing written when one is refused), applied at once; answers as `GET`. Audited `net-access-saved` |
+| `GET` | `/net/security` | admin | `keySet`, `previousKeySet`, `previousUses` (each peer that signed with the previous key, and when), `rollover` (in words), `tls` (mutual TLS: `enabled`, `certificates` with `subject`, `source`, `notAfter`, `daysLeft`, `expired`; `warnings`), `refusals` (`at`, `address`, `node`, `reason`). Never a key |
+| `GET` | `/net/files` | admin | Every file of the folder: `id`, `exists`, `etag`, `bytes`, `refused`, `problems` (`file`, `level`, `field`, `line`, `message`); `dir`, `watch` |
+| `GET` | `/net/file?id=node.yaml` | admin | One file: `text`, `etag`, `problems`, `history` (`id`, `at`, `bytes`) |
+| `GET` | `/net/file/revision?id=&rev=` | admin | The text of a kept earlier version |
+| `POST` | `/net/file/check?id=` `{"text"}` | admin | What the server would make of the text, without writing it: `{"ok", "problems"}` |
+| `PUT` | `/net/file?id=` `{"text"}` | admin | Writes the file (atomically, the previous text kept in `<data dir>/net/history/`) and applies it. `If-Match: <etag>` (`""` for a new file) refuses a stale edit; a file with an error is not written: `409 DRS-5055` with `problems` |
+| `DELETE` | `/net/file?id=` | admin | Removes the file (`If-Match`); its settings go back to their defaults |
+
+Every management call is audited (`net-seed-added`, `net-member-removed`, `net-drain`, `net-undrain`, `net-leave`, `net-rejoin`, `net-file-saved`,
+`net-file-deleted`) with the node it was made on. A refused file, from the API:
+
+```text
+$ curl -s -X PUT "$B/net/file?id=gossip.yaml" -H 'If-Match: 3a1f0c9e2b7d4c51' -d '{"text":"fanout: lots\n"}'
+{"code":"DRS-5055","detail":"gossip.yaml was not written: gossip.yaml:1 fanout: 'lots' is not a whole number","problems":[{"file":"gossip.yaml","level":"error","field":"fanout","line":1,"message":"'lots' is not a whole number"}]}
+```
+
 ### Outside /api/v1: OpenAPI and actuator
 
 These paths are not under `/api/v1/`, so the token filter does not apply to them. With security on, a
@@ -1610,6 +1674,13 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-5042 | 409 | artifact conflict | a restore or an upload found an artifact of that name already in place; choose *replace* |
 | DRS-5043 | 422 | name not typed | a destructive step (uninstall with dependants, replace, delete an archive for good) needs the artifact's name typed |
 | DRS-5044 | 422 | artifact invalid | does not apply: a connector a pack's template names, a pack named in `drishti.packs.enabled`, a connector with no file, or an uploaded BI file that is not valid |
+| DRS-5050 | 404 | net off | Drishti*net is off on this node, or the node left: the cluster's endpoints and its management are not served |
+| DRS-5051 | 401 | net refused | a call between nodes without a valid cluster credential: no signature, a bad one, outside the 60 s window, or a bad on-behalf-of token |
+| DRS-5052 | 502 | net peer failed | the node a request was forwarded to failed; the next one was tried once |
+| DRS-5053 | 504 | net peer timeout | the node a request was forwarded to did not answer within `forward-timeout` |
+| DRS-5054 | 403 | net not reachable | the caller's roles may not reach the node (`access.yaml`), or the node is drained (then `503`) |
+| DRS-5055 | 409 | net file refused | a `config/net/` file changed since it was read (`If-Match`), or has an error (`problems`) |
+| DRS-5056 | 400 | net bad request | an unknown member, removing one that is alive, a malformed seed, a file that is not one of the folder |
 | DRS-6001 | 404 | user not found | no such user |
 | DRS-6002 | 409 | user exists | a user with that name already exists |
 | DRS-6003 | 422 | weak password | the password does not meet the password rules |

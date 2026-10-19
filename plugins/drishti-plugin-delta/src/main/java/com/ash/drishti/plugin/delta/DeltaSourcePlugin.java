@@ -703,6 +703,13 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         }
     }
 
+    /** The table's id from its Delta log, else its location: the same on every server that reads this table (Drishti*net's replicas). */
+    @Override
+    public Optional<String> tableIdentity(String kind) {
+        DeltaTable t = tables.get(kind);
+        return t == null ? Optional.empty() : Optional.of(t.identity());
+    }
+
     @Override
     public java.time.Instant lastUpdate() {
         return lastUpdate;

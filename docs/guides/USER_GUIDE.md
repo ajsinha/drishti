@@ -721,6 +721,7 @@ The *How this view was built* panel answers "where did this come from?":
 | Layout | `Sutra irs-fixfloat v1 + inference` | A Sutra (a written layout) drew the screen; inference filled gaps. `inference only` means no Sutra matched |
 | Fingerprint | `b7df…1372` | The shape of the data, used to cache the layout |
 | Source | `murex-rates`, generation `1674` | Which system the document came from, and its version counter |
+| Node | `drishti-b · forwarded from drishti-a` | Administrators only, when several servers work as one (Drishti*net): the server that built the view and how: `local`, `built here, data from <server>`, `forwarded from <server>`, or `scatter-gather from <servers>` (and any that were missing) for a page that groups records of several servers. Nobody else sees it |
 
 The footer repeats the source and generation, and the business date when one is picked
 (`trade-endur · gen 7 · as of 2026-09-29`).
@@ -2103,3 +2104,15 @@ full-screen at the terminal.
 - **Help:** screenshots fit the screen; tap one to open it full size.
 - **Live values** keep ticking.
 - The **workbench** is left out on phones; everything else, including help and administration, works.
+
+## Several servers (Drishti*net)
+
+When your administrator runs several Drishti servers as one cluster, nothing changes for you: you sign in once, and every page and live view looks
+and works the same whichever server holds the data. If the server your console uses stops, the console moves to another by itself; the page you are
+on reloads its data, a live view reconnects, and you do not sign in again. A save made at the very moment a server stops says it did not save: save
+again. When the server that holds what you asked for is down, the page says so (`DRS-5052 ... cannot be reached now`) instead of showing nothing.
+A search covers every server's data; when one of them did not answer, the results say they are partial and name the server they are missing.
+A page that groups many records (a counterparty's trades, a book's P&L) counts the records of every server; if one did not answer, the page
+says it is partial and names the server.
+Your saved searches, layouts, pivots and workspaces follow you to whichever server you are on. Alerts and scheduled reports stay on the server they
+were made on (they act, and would act once per server).

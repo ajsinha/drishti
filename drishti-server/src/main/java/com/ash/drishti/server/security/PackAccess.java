@@ -92,6 +92,22 @@ public final class PackAccess {
         return o.byKind();
     }
 
+    /** Packs hidden from this server's own users at the moment of asking (Drishti*net's peer-only packs, served to peers only). */
+    private volatile java.util.function.Predicate<String> hidden = p -> false;
+
+    /**
+     * Sets which packs are hidden from this server's own users: not in their catalog, forms home, type-ahead or command line, their kinds
+     * not opened. The test is asked on every call (it depends on whether the request being served came from a peer), never cached.
+     */
+    public void hiddenFromUsers(java.util.function.Predicate<String> h) {
+        this.hidden = h == null ? p -> false : h;
+    }
+
+    /** True when the pack is hidden from the user of the request being served. */
+    public boolean hidden(String pack) {
+        return hidden.test(pack);
+    }
+
     /** Sets who sees sample packs and who counts as a developer (the author or admin power). */
     public void samples(com.ash.drishti.packs.SamplePolicy policy, java.util.function.Predicate<String> developer) {
         this.samples = policy;
@@ -149,6 +165,7 @@ public final class PackAccess {
     private java.util.Optional<String> byCodeOrName(String user, String text, boolean forUser) {
         String t = text == null ? "" : text.trim();
         return registry.packs().stream().filter(p -> states.enabled(p.name())).filter(p -> !forUser || sampleVisible(user, p.name()))
+                .filter(p -> !forUser || !hidden.test(p.name()))
                 .filter(p -> p.name().equalsIgnoreCase(t) || (!p.code().isEmpty() && p.code().equalsIgnoreCase(t))).map(Pack::name).findFirst();
     }
 
@@ -204,16 +221,25 @@ public final class PackAccess {
         return out;
     }
 
-    /** Packs an admin made available to the user, limited to what is installed and enabled. */
+    /** Packs an admin made available to the user, limited to what is installed and enabled (and not hidden from them now). */
     public List<String> assigned(String user) {
+        return assignedAll(user).stream().filter(p -> !hidden.test(p)).toList();
+    }
+
+    private List<String> assignedAll(String user) {
         Set<String> chosen = users.find(user).map(User::packs).orElse(null);
         List<String> base = chosen == null ? defaults() : List.copyOf(chosen);
         return enabled().stream().filter(base::contains).filter(p -> sampleVisible(user, p)).toList();
     }
 
-    /** Packs the user chose to see: the saved choice within what is assigned, or everything assigned. */
+    /** Packs the user chose to see: the saved choice within what is assigned, or everything assigned (none hidden from them now). */
     public List<String> active(String user) {
-        List<String> assigned = assigned(user);
+        return activeAll(user).stream().filter(p -> !hidden.test(p)).toList();
+    }
+
+    /** As {@link #active}, with no pack hidden: what the cached set of effective packs is built from, the same whoever asks. */
+    private List<String> activeAll(String user) {
+        List<String> assigned = assignedAll(user);
         return prefs.get(user, NS, KEY).map(n -> {
             List<String> out = new ArrayList<>();
             n.path("active").forEach(x -> {
@@ -262,7 +288,7 @@ public final class PackAccess {
         Map<String, Pack> byName = new HashMap<>();
         registry.packs().forEach(p -> byName.put(p.name(), p));
         Set<String> out = new LinkedHashSet<>();
-        java.util.ArrayDeque<String> todo = new java.util.ArrayDeque<>(active(user));
+        java.util.ArrayDeque<String> todo = new java.util.ArrayDeque<>(activeAll(user));
         while (!todo.isEmpty()) {
             String n = todo.pop();
             if (out.add(n) && byName.containsKey(n)) {
@@ -278,7 +304,7 @@ public final class PackAccess {
      */
     public boolean kindAllowed(String user, String kind) {
         String owner = kindOwner().get(kind);
-        return owner == null || (states.enabled(owner) && effective(user).contains(owner));
+        return owner == null || (states.enabled(owner) && !hidden.test(owner) && effective(user).contains(owner));
     }
 
     /** The pack that owned the kind until it was unloaded while the server ran, or null. */
@@ -300,7 +326,7 @@ public final class PackAccess {
         if (owner == null) {
             return true;
         }
-        if (!states.enabled(owner)) {
+        if (!states.enabled(owner) || hidden.test(owner)) {
             return false;
         }
         for (String a : assigned(user)) {

@@ -17,6 +17,79 @@
 
 ## Unreleased
 
+### 2.5.0 (wave N, Drishti*net): many servers, one Drishti
+
+- **Drishti*net membership (N1).** Several servers act as one cluster, **off by default**: with no `config/net/` folder (or `enabled: false`
+  in its `node.yaml`) a server is a single server exactly as before. Switched on, each node gossips over HTTP (SWIM-style push-pull every
+  second with three random members, direct and indirect probes, `alive`, `suspect` after 5 s, `dead` after 30 s more, `left` when it stops
+  cleanly), saves `<data dir>/net/peers.json` every 10 minutes, on every join or leave and at shutdown, and rejoins from it after a restart with
+  no seed. Every call between nodes is signed with the cluster key (`secret: ${DRISHTI_NET_SECRET}` in `node.yaml`, an environment reference
+  only; HMAC over method, path, time, node and body; a 60 s window); a refused call is `401 DRS-5051` and is listed. The folder is managed like
+  connector files: `node.yaml`, `peers/<name>.yaml`, `gossip.yaml`, `routing.yaml`, `access.yaml`, watched, each checked against its schema (a
+  refused file keeps the previous settings, its problems named by line), written atomically with a history under `<data dir>/net/history/`;
+  ready-made files in `config/net.examples/`. **Admin → Net** (Members: every node's state, version, tags, latency, incarnation; add a seed,
+  remove a gone member, drain, undrain, leave, rejoin; Files: check, save with `If-Match`, delete, history with a diff); `/api/v1/net/gossip`,
+  `/ping`, `/members`, `/seeds`, `/members/{id}`, `/drain`, `/undrain`, `/leave`, `/rejoin`, `/files`, `/file`; `drishti.py net list | check |
+  add-peer | set | members`. New module `drishti-net`; error codes `DRS-5050` to `DRS-5056`. Measured: five nodes from one seed list each other
+  within 5 s and a killed one is dead everywhere within 40 s (fake clock); three real servers in one JVM converge 52 ms after the third starts.
+  [NET.md](docs/admin/NET.md), [DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md) section 19, CONFIGURATION, OPERATIONS, API_GUIDE, CLI_GUIDE,
+  TROUBLESHOOTING, ARCHITECTURE.
+- **Drishti*net capability digests (N2).** Each node publishes what it serves (`GET /api/v1/net/digest`: packs with version and a hash of their
+  files, peer-only packs, kinds with mnemonic and sources, each source's table identity, newest business date and data version, the load, the
+  business calendar, masked fields, nodes per role) and gossips its hash; peers pull a changed digest within a quarter of a second of hearing
+  the hash. From all digests every node builds the capability table: kind to the nodes that render it and the nodes that hold its data, the newest
+  pack version marked, **replicas** (the same table read by several nodes: a search asks one) and **shards** (different tables: a search asks
+  all). A pack switched on at one of three servers is in the others' tables 1.0 s later. New source SPI method `SourcePlugin.tableIdentity(kind)`
+  (the Delta connector: the table's id from its log, else its location). **Admin → Net → Capability map** with a filter and warnings (one version
+  of a pack with different contents, different calendars, different masks); `GET /api/v1/net/capabilities`. NET.md section 5, API_GUIDE,
+  CONNECTOR_DEVELOPER_GUIDE.
+- **Drishti*net security (N3).** The cluster key rotates with no downtime in three rolling steps (accept the new key, sign with it, drop the old):
+  13,542 signed calls among three servers through the rollover, none refused; Admin → Net → Security shows the key's state (never the key), which
+  peers still sign with the previous key, mutual TLS and its certificates' expiry, and every refused call. Forwarded requests carry a 30 s
+  on-behalf-of token for one node; a node refuses one whose roles may not reach it (`403 DRS-5054`, nodes per role in `access.yaml`) and records
+  the request as `net:from <node> request <id>` in its access log. **Admin → Net → Access**: nodes per role (ids or tags) with the members each
+  reaches now, this node's tags and peer-only packs, written to access.yaml and node.yaml, applied live; `GET/PUT /api/v1/net/access`,
+  `GET /api/v1/net/security`. NET.md section 6 (the key, its rotation, mutual TLS, on-behalf-of, masks twice, nodes per role, audit), API_GUIDE.
+- **Drishti*net routing and the console's failover (N4).** A request for a kind whose pack is not on a node, is older there or is served to peers only
+  there is **forwarded whole** to a node that renders it (signed, one hop, an on-behalf-of token; the answer passed back unchanged and streamed, a live
+  view too): the console cannot tell. A view whose pack is here but whose data is not is built here from the document a peer reads for the caller
+  (`GET /api/v1/net/fetch/{kind}/{id}`), masked there and again here: a field this node masks stays masked when the peer masks less. The **newest pack
+  version is served**; **peer-only packs** are hidden from a node's own users and served to its peers. A node that is down makes a clear
+  `502 DRS-5052` naming it, never a wrong page. Admin → Net → **Routing** (explain a request as a role; forwarded traffic per peer a minute, slowest
+  peers, latest calls), Admin → Health's Drishti*net line, metrics `drishti_net_members`, `drishti_net_forwarded_total`, `drishti_net_gossip_rounds_total`,
+  `drishti_net_peer_latency_seconds`; `GET /api/v1/net/explain`, `/traffic`; the access log of both nodes names the other and the request. **The console
+  takes several servers** (`backend.urls`; `discover`, `discover_every` 60 s, `check_every` 5 s, `fail_after` 2): it learns the cluster from the server it
+  uses, keeps the list in `<console data dir>/net/servers.json`, keeps each session on one server, falls over when it fails (a read retried once on
+  another server, a write never), uses a recovered server again for new sessions after a minute, and reports each failover (audited
+  `net-console-failover`). Source router: a `Fallback` to the peers after the local sources. NET.md sections 7 and 8, CONFIGURATION, API_GUIDE,
+  OPERATIONS, TROUBLESHOOTING, USER_GUIDE.
+- **Drishti*net scatter-gather (N5).** A search is asked of every node that holds other data of the kind (shards; a replica of a node already asked is
+  not), each on its own data (`GET /api/v1/net/search`, one hop, `scatter-budget` 3 s), and merged as one answer: the union with an entity once, ordered
+  and cut as one node would, `scanned` and `matched` summed, a node that failed, was late or is down named in `failed` with `partial: true`, and `nodes`
+  (who answered what) for administrators. A search of a kind whose pack is not on the node is scattered and merged there too. The type-ahead asks every
+  reachable node within `suggest-budget` (150 ms). On trades split three ways (one on two nodes) every node answers the same union (grouped pages:
+  below). NET.md section 7, API_GUIDE, TROUBLESHOOTING, USER_GUIDE.
+- **Drishti*net live relay and BI (N6).** A live view of an entity held on a peer ticks on the node that shows it: one stream from the peer
+  (`GET /api/v1/net/subscribe/{kind}/{id}`, masked there for the user) feeds the viewers of the same roles, opened again when it breaks; the topic hub
+  keeps an upstream per entity and role set while the cluster runs. A BI report's requests go to the node that holds the kinds its datasets read (the
+  report listed in that node's digest): the same report on a node with no data answers what the node with the lake answers. Source SPI unchanged;
+  `TopicHub.partition`. NET.md section 7, API_GUIDE.
+- **Drishti*net user state (N7).** A user's saved searches, layouts, pivots, workspaces and settings written on one node are copied to every other
+  node within a second (`POST /api/v1/net/state`, the newest write winning), so they follow the user after a failover; a node that joins or comes
+  back is given what it lacks. Alerts, monitors and scheduled reports stay where they were made (they act). `user-state: off` in routing.yaml for a
+  cluster with one shared identity database. Admin → Net → Members shows what was sent, applied and waits. Pushed gossip now tells the node of joins
+  and departures as its own exchanges do. NET.md section 7, API_GUIDE, USER_GUIDE.
+- **Drishti*net grouped pages across nodes.** A page a derived connector builds (a counterparty's trades, a book's P&L) is gathered from every
+  node that holds the kind it groups, with the scatter-gather of a search: only nodes the caller's roles reach, no replica asked twice, each
+  node's share masked there and the page masked again where it is shown (`GET /api/v1/net/group/{kind}/{id}`). Exact, with a member two nodes
+  hold counted once, for groups up to `max-members`; larger groups combine each node's totals. A node that did not answer makes the page
+  partial (`partial`, `missing`). NET.md section 7, API_GUIDE, USER_GUIDE.
+- **Drishti*net: the node that answered, for administrators.** *How this view was built* has a line **Node** for an administrator naming the
+  node that built the view and how (local, data from a peer, forwarded from a node, scatter-gather from several), on the view and every frame
+  of its live stream; nobody else sees it, so a user cannot tell which server answered. The finance pack's book P&L Sutra gained the panel.
+  NET.md, USER_GUIDE (How this view was built).
+- **Drishti*net docs.** Tutorial 19, a cluster of three (UI, CLI and YAML; failover); the Windows QA guide's optional second server; README and
+  Help → About. NET.md's command outputs are the CLI's real ones.
 - **No JVM leaves native libraries in `/tmp`.** Since JDK 17 `Files.createTempFile` uses the `java.io.tmpdir` the JVM started with, so the server setting the property at start never moved DuckDB (60 MB a copy), RocksDB, CatBoost or Maven's jansi: every JVM killed without a clean exit left its copy in `/tmp` (about 590 files, 22 GB, once; the per-user quota filled and Chromium crashed). Every JVM Drishti or its build starts now gets `-Djava.io.tmpdir=` on its command line: the test forks `<module>/target/tmp` (the parent pom's surefire `argLine`; `mvn clean` removes it), Maven itself `<repository>/data/tmp/maven` (`./mvnw`; `DRISHTI_MAVEN_TMP`), the console test stacks a folder under their own `tmp_path`, and the tools, run configurations, `tools/windows/start-server.ps1`, the scripts `tools/packmake.py` writes, the loaders, the benchmarks and `deploy/server.Dockerfile` (in `JAVA_TOOL_OPTIONS`) the server's temp base `<data dir>/tmp/server`. The Python launchers share one helper, `tools/javacmd.py` (`java_cmd`); a guard test fails on a test or tool that starts java without it. At start the server warns, in its log and on Admin, Health, when the flag was not passed (with the exact flag to add), and removes stale native-library copies from its own temp base (never `/tmp`; skipped quietly on Windows when held). The documented start commands carry the flag (README, GETTING_STARTED, OPERATIONS, CONFIGURATION, TROUBLESHOOTING, the Windows QA guide, tutorial 1); CONFIGURATION, *Pass `-Djava.io.tmpdir=` to Java*, says why.
 
 ## 2.4.0 — BI Studio, report schema v2 and boards as a report layout, Python data prep, the browser Python console, query by form at scale (2026-10-19)

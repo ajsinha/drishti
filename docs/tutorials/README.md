@@ -46,6 +46,7 @@ the tutorials say what to do first.
 | 16 | [Embed Drishti](16-embed-drishti.md) | register a host application, show a view and a report in its page under a strict CSP, tokens, limits; search and About elements, React, Vue and Angular samples | 40 min | written |
 | 17 | [Run it in production](17-run-it-in-production.md) | security on, your own administrator, roles and BI powers, tokens, backups, heap and connection pools, health, the type-ahead index and its reload, temp folders, upgrades, taking a pack, connector or BI file out safely | 60 min | written |
 | 18 | [Several datasets in one report](18-several-datasets-in-one-report.md) | one model with two facts (trade valuations and netting sets) built in the model designer, MTM and exposure in one visual, why rows are never joined across facts (the inflated total) and what the model refuses, a measure over both facts, the same as a Python Transform, two readers with different rules, the join in Analyse, and a Power BI comparison | 60 min | written |
+| 19 | [A cluster of three (Drishti\*net)](19-a-cluster-of-three.md) | write `config/net/` with the CLI and the UI, start three servers from one seed, open a trade only one holds through another, Explain the route, nodes per role, a console with several servers, drain a node, stop one and carry on, saved searches that follow you | 45 min | written |
 
 ## What you need once
 

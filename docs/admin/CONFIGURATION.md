@@ -277,6 +277,8 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_HTTP_PROXY_PASSWORD` | `drishti.http.proxy.password` | empty | The proxy's password: an environment variable, never a literal in a file. |
 | `DRISHTI_DEMO_ENABLED` | `drishti.sources.plugins.demo.enabled` | `true` | Run the demo source (the packs' sample data). |
 | `DRISHTI_OFFLINE` | `drishti.offline.enabled` | `false` | Offline mode, for a machine with no internet: connectors of the internet plugins (`drishti.offline.plugins`: `news`, `yfinance`, `feed`) never start, whatever their files say; Admin → Connectors shows them *off (offline mode)*. See [`drishti.offline`](#drishtioffline--offline-mode-no-internet). |
+| `DRISHTI_NET_DIR` | `drishti.net.dir` | `./config/net` | Drishti*net's folder (`node.yaml`, `peers/*.yaml`, `gossip.yaml`, `routing.yaml`, `access.yaml`); without it, or with `enabled: false` in its `node.yaml`, the server is a single server. See [`drishti.net`](#drishtinet--drishtinet-the-cluster-folder) and [NET.md](NET.md). |
+| `DRISHTI_NET_WATCH` | `drishti.net.watch` | `auto` | How the folder is watched: `auto` (file events, polling as a fallback), `poll` or `off` (read at start only). |
 | `DRISHTI_FEEDS` | `drishti.sources.plugins.file.settings.root` | `./data/feeds` | The folder the bundled `file` source reads. |
 | `DRISHTI_REST_ENABLED` | `drishti.sources.plugins.rest.enabled` | `false` | Run the `rest` source. |
 | `DRISHTI_REST_URL` | `drishti.sources.plugins.rest.settings.base-url` | `http://localhost:9000/api` | The REST source's base URL. |
@@ -375,6 +377,9 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_CONSOLE_WORKERS` | `server.workers` | `4` | Processes serving the console's pages (they share the port; one Python process uses one core). `1` runs a single process. |
 | `DRISHTI_CONSOLE_SHUTDOWN_SECONDS` | `server.shutdown_seconds` | `5` | On a stop, how long open streams (the live channel of reports, boards and views) may stay before they are closed; the browser says *Disconnected* and reconnects to the next console. |
 | `DRISHTI_BACKEND_URL` | `backend.url` | `http://127.0.0.1:18480` | Where the server is. |
+| `DRISHTI_BACKEND_URLS` | `backend.urls` | empty | Several servers of one Drishti*net cluster, comma-separated; one is enough (the console learns the rest). Empty: `backend.url` alone, as before. See [The console and several servers](#the-console-and-several-servers-drishtinet). |
+| `DRISHTI_BACKEND_DISCOVER` | `backend.discover` | `true` | With `backend.urls`: pull the member list from the server in use every `discover_every` and keep it. |
+| `DRISHTI_CONSOLE_DATA_DIR` | `backend.data_dir` | empty | What the console keeps between runs (`net/servers.json`); empty: `<data dir>/console`. |
 | `DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS` | `backend.check_seconds` | `5` | How often the console asks each server if it is there (`0` = never). Pages show a banner and recover by themselves when it returns. |
 | `DRISHTI_CONSOLE_TMP_DIR` | `tmp_dir` | empty | Base of the console's temp folder `drishti-console-<pid>` (empty: `DRISHTI_TMP_DIR`, then `<data dir>/tmp/console` when started by `run_drishti_web.py`), one per worker process, removed on exit; left-over ones of dead processes are listed on Health, never deleted automatically. |
 | `DRISHTI_EXTERNAL_LIB` | `external_lib` | empty | Base of the external library folder (empty: `external_lib` in the repository root); `<base>/python` is importable. The server reads the same variable for `<base>/java`. |
@@ -515,6 +520,53 @@ start: a connector file saved in Admin while the server runs cannot start an int
 |---|---|---|
 | `drishti.offline.enabled` | `false` (`DRISHTI_OFFLINE`) | `true`, `on`, `yes` or `1` turns offline mode on. |
 | `drishti.offline.plugins` | `news,yfinance,feed` | The plugins whose connectors reach the internet (comma-separated, by plugin name, not connector name): Google News, Yahoo Finance, and the public-data feeds (US Treasury, ECB, NY Fed, FRED). Add `rest` or another plugin when a site's connectors of it reach the internet too. |
+
+### `drishti.net` — Drishti*net, the cluster folder
+
+Several servers acting as one ([NET.md](NET.md), the design [DRISHTI_NET.md](../architecture/DRISHTI_NET.md)). Like connectors, Drishti*net is
+configured in a folder of small YAML files, never in `application.yaml`, which says only where the folder is and how it is watched. Without the
+folder, or while its `node.yaml` does not say `enabled: true`, the server is a single server exactly as before.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `drishti.net.dir` | `./config/net` (`DRISHTI_NET_DIR`) | The folder; created on the first write (Admin → Net, `drishti.py net`). Ready-made files are in `config/net.examples/`. |
+| `drishti.net.watch` | `auto` (`DRISHTI_NET_WATCH`) | `auto`: file events, polling as a fallback; `poll`: polling only; `off`: read at start only. |
+| `drishti.net.poll` | `5s` | How often the folder is looked at when polling (and, with events, at least this often anyway). |
+
+The files, each checked against its schema (a refused file keeps the previous settings in force and shows its error in Admin → Net):
+
+| File | Settings (default) |
+|---|---|
+| `node.yaml` | `enabled` (`false`), `node-id` (generated once, kept in `<data dir>/net/node-id`), `advertise-url`, `tags` (`[]`), `peer-only-packs` (`[]`), `secret: ${DRISHTI_NET_SECRET}` and `previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}` (environment references only, at least 32 bytes), `tls.*` (mutual TLS) |
+| `peers/<name>.yaml` | `url`, `tags`, `tls.*` (one file per seed) |
+| `gossip.yaml` | `interval` (`1s`), `fanout` (`3`), `suspect-after` (`5s`), `indirect-probes` (`2`), `dead-after` (`30s`), `forget-after` (`24h`), `persist-every` (`10m`) |
+| `routing.yaml` | `forward-timeout` (`5s`), `scatter-budget` (`3s`), `suggest-budget` (`150ms`), `max-hops` (`1`; `0` forwards nothing), `weights.latency` (`1.0`), `user-state` (`replicate` or `off`) |
+| `access.yaml` | `roles: { <role>: { nodes: [<node id or tag>, ...] } }` (a role not listed reaches every node) |
+
+`enabled: true` without the key or without `advertise-url` is refused at start and at every reload, as the server refuses a missing token secret
+with security on. What gossip learns (the member table) is state, kept in `<data dir>/net/peers.json`, never in this folder. Every file in
+[NET.md section 3](NET.md#3-the-files-of-confignet).
+
+### The console and several servers (Drishti*net)
+
+With Drishti*net on ([NET.md](NET.md)), the console takes several servers instead of one, so it always has one to fall back to:
+
+```yaml
+# drishti-console/config/application.yaml
+backend:
+  urls: ${DRISHTI_BACKEND_URLS:}       # e.g. https://drishti-a:8480 (one is enough; empty: backend.url, as before)
+  discover: true                       # pull the cluster's member list from the server in use and keep it
+  discover_every: 60s
+  check_every: 5s
+  fail_after: 2
+```
+
+Each session (a browser's sign-in) keeps to one server while it answers: the configured ones first, then the discovered ones nearest first. A server
+that refuses connections, times out or answers 502/503 `fail_after` times in a row (requests or health checks) is set aside and the session moves to
+the next; a read that failed on the way is tried once on another server, a write never is (the page says it did not save). The list is saved to
+`<console data dir>/net/servers.json`; a member the cluster reports dead or left is dropped from it, the configured `urls` never are. A set-aside
+server that answers again is used for new sessions after a minute. Every server needs the same token secret (or OIDC issuer), so the session
+carries over. Without Drishti*net, `backend.urls` still works as a list of identical servers.
 
 ### AI and MCP policy settings
 
@@ -2370,6 +2422,12 @@ You should see uvicorn report `Uvicorn running on http://127.0.0.1:17481`.
 | `backend.timeout_seconds` | `5` | Per call to the server. |
 | `backend.name` | the product name (`ui.product`) | The name of the single server when `servers` is not set; the picker and the top bar show it. |
 | `backend.check_seconds` | `5` (`DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS`) | How often the console's background watch asks each server (the default and every one of `servers`) whether it is reachable, with a 2 s timeout. It keeps reachable / since / last error / version, logs each change once, and answers `GET /healthz/backend`, which every page's banner polls. Shown on Admin > Health (Console watch). `0` turns the watch off. |
+| `backend.urls` | empty (`DRISHTI_BACKEND_URLS`) | Several servers of one Drishti*net cluster ([The console and several servers](#the-console-and-several-servers-drishtinet)). |
+| `backend.discover` | `true` (`DRISHTI_BACKEND_DISCOVER`) | Pull the cluster's member list from the server in use and keep it. |
+| `backend.discover_every` | `60s` | How often the member list is pulled again. |
+| `backend.check_every` | `5s` | How often each server of the list is checked (`GET /public/about`). |
+| `backend.fail_after` | `2` | Failed requests or checks in a row before a server is set aside. |
+| `backend.data_dir` | empty (`DRISHTI_CONSOLE_DATA_DIR`) | The console's own folder (`net/servers.json`); empty: `<data dir>/console`. |
 | `backend.pool_size` | `64` | Pooled HTTP connections to the server (per server, when there are several). |
 | `collab.bridge_test_timeout_seconds` | `30` | How long Admin > Collaboration waits for a bridge **Test** (the server waits for the bridge's own `drishti.collab.bridges.timeout`, default 10 s, so keep this longer). When it runs out the page says `DRS-7013` and names `drishti.collab.bridges.timeout`. |
 

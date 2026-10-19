@@ -1,0 +1,21 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+# Example: copy to config/net/gossip.yaml to change the gossip protocol's timings (these are the defaults). Applied on the next round.
+interval: 1s                         # a round: a push-pull exchange with `fanout` random members
+fanout: 3
+suspect-after: 5s                    # a member whose heartbeat has not risen this long is probed
+indirect-probes: 2                   # ... directly and through this many other members
+dead-after: 30s                      # suspect this long: dead
+forget-after: 24h                    # dead or left members are remembered this long, so a stale table cannot bring them back
+persist-every: 10m                   # how often <data dir>/net/peers.json is saved (also on every join or leave and at shutdown)

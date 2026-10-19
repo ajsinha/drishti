@@ -152,6 +152,46 @@ final class DeltaTable {
         return path;
     }
 
+    private volatile String identity;
+
+    private static String host() {
+        try {
+            return java.net.InetAddress.getLocalHost().getHostName();
+        } catch (java.io.IOException e) {
+            return "localhost";
+        }
+    }
+    private static final java.util.regex.Pattern META_ID = java.util.regex.Pattern.compile("\"metaData\"\\s*:\\s*\\{[^}]*?\"id\"\\s*:\\s*\"([^\"]+)\"");
+
+    /**
+     * The same for every server that reads this table (Drishti*net's replicas): the table's id from the {@code metaData} of its first
+     * commit when the log is on a local disk and still holds it, else its location. Read once.
+     */
+    String identity() {
+        String id = identity;
+        if (id != null) {
+            return id;
+        }
+        // an object store's address names the data wherever it is read from; a local path only on this machine (the same path on
+        // another machine is another table), so it carries the host: two servers are taken for replicas only when they surely are
+        boolean remote = path.matches("^[a-zA-Z][a-zA-Z0-9+.-]*://.*") && !path.startsWith("file:");
+        id = "location:" + (remote ? "" : host() + ":") + path.replaceAll("/+$", "");
+        try {
+            java.nio.file.Path root = path.startsWith("file:") ? java.nio.file.Path.of(java.net.URI.create(path)) : java.nio.file.Path.of(path);
+            java.nio.file.Path first = root.resolve("_delta_log").resolve("00000000000000000000.json");
+            if (java.nio.file.Files.isRegularFile(first)) {
+                var m = META_ID.matcher(java.nio.file.Files.readString(first));
+                if (m.find()) {
+                    id = "delta:" + m.group(1);
+                }
+            }
+        } catch (java.io.IOException | RuntimeException e) {
+            // an object store or an unreadable log: the location says it
+        }
+        identity = id;
+        return id;
+    }
+
     /**
      * The snapshot as known at {@code knownAt}: null when the table did not exist yet (nothing was known then), and
      * the latest snapshot when the time is after the latest commit (what is known now was known then too).

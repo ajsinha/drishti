@@ -27,6 +27,14 @@ backend:
   timeout_seconds: 5
   pool_size: 64
   check_seconds: ${DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS:5}   # how often the console asks each server if it is there (0 = never); pages show a banner and recover when it returns
+  # Several servers of one Drishti*net cluster (docs/admin/NET.md, "The console and several servers"): one is enough, the console learns the
+  # rest. Empty: backend.url, as before. Each session keeps to one server while it answers and falls over to the next when it does not.
+  urls: ${DRISHTI_BACKEND_URLS:}             # e.g. https://drishti-a:8480,https://drishti-b:8480
+  discover: ${DRISHTI_BACKEND_DISCOVER:true} # pull the cluster's member list from the server in use, and keep it (<console data dir>/net/servers.json)
+  discover_every: 60s                        # how often the list is pulled again
+  check_every: 5s                            # how often each listed server's health is looked at
+  fail_after: 2                              # failed requests (or health checks) in a row before a server is set aside
+  data_dir: ${DRISHTI_CONSOLE_DATA_DIR:}     # what the console keeps between runs (net/servers.json); blank: <data dir>/console
 ai:                                  # LLM provider layer (docs/architecture/AI_PROVIDERS.md): OFF by default; no file is read and no model is called while off
   enabled: ${DRISHTI_AI_ENABLED:false}
   dir: ${DRISHTI_AI_DIR:./config/ai}          # one YAML per provider; the recommended console provider is type: server (keys stay on the server)

@@ -83,6 +83,29 @@ class TopicHubTest {
         return new TopicHub(router, Executors.newScheduledThreadPool(2), new LiveProperties(Duration.ofMillis(30), null, null, null));
     }
 
+    /** Drishti*net: with a partition, subscribers share an upstream only within their partition (their roles). */
+    @Test
+    void aPartitionGivesEachKeyItsOwnUpstream() throws Exception {
+        Manual m = new Manual();
+        try (TopicHub hub = hub(m)) {
+            EntityRef ref = EntityRef.of("trade", "T1");
+            String[] who = {"risk"};
+            hub.partition(() -> who[0]);
+            Subscription a = hub.subscribe(ref, d -> { });
+            Subscription b = hub.subscribe(ref, d -> { });
+            assertThat(m.opened).hasValue(1);                   // the same roles: one upstream
+            who[0] = "trader";
+            Subscription c = hub.subscribe(ref, d -> { });
+            assertThat(m.opened).hasValue(2);                   // other roles: their own
+            assertThat(hub.topicCount()).isEqualTo(2);
+            a.close();
+            b.close();
+            assertThat(hub.topicCount()).isEqualTo(1);
+            c.close();
+            assertThat(m.subs).isEmpty();
+        }
+    }
+
     @Test
     void ticksWithinAFrameCoalesceAndTopicsShareOneSourceSubscription() throws Exception {
         Manual m = new Manual();

@@ -82,7 +82,17 @@ public class SearchController {
         out.put("elapsedMs", r.elapsedMs());
         out.put("pivot", offered(r.kind()));               // the Pivot tab, when the kind's pack opts in (null otherwise)
         noData(r, asOf).ifPresent(n -> out.put("noData", n));
-        return out;
+        // Drishti*net: the same search on every peer that holds other data of the kind (shards, not replicas), merged as one answer
+        com.ash.drishti.server.net.SearchScatter sc = scatter == null ? null : scatter.getIfAvailable();
+        return sc == null ? out : sc.complete(out, r.kind(), q, asOf, principal, query.descending(), query.limit(), entitlements.isAdmin(principal));
+    }
+
+    /** Drishti*net's scatter-gather (absent in a test that makes the controller itself). */
+    private org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.net.SearchScatter> scatter;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void scatter(org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.net.SearchScatter> s) {
+        this.scatter = s;
     }
 
     /**

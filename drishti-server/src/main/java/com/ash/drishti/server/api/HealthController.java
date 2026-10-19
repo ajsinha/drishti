@@ -202,7 +202,18 @@ public class HealthController {
                 .map(x -> Map.of("file", x.file(), "message", x.message(), "keptLastGood", x.keptLastGood())).toList()));
         out.put("live", Map.of("streams", slots.open(), "topics", hub.topicCount(), "frames", live.frames(), "droppedFrames", live.droppedFrames(),
                 "p50Ms", live.percentile(50), "p99Ms", live.percentile(99)));
+        if (net != null) {
+            out.put("net", net.get());                         // Drishti*net: members alive and suspect, forwarded requests and failures
+        }
         return out;
+    }
+
+    /** Drishti*net's part of the page (set by Spring; absent in a test that makes the controller itself). */
+    private java.util.function.Supplier<Map<String, Object>> net;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void net(com.ash.drishti.server.net.NetHealth health) {
+        this.net = health::summary;
     }
 
     private List<Map<String, Object>> packs(List<Map<String, Object>> sources) {

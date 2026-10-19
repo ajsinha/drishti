@@ -378,6 +378,7 @@ public interface SourcePlugin extends AutoCloseable {
     default java.time.Instant lastUpdate();
     default Optional<String> dataVersion(String kind);
     default Optional<String> dataVersion(String kind, LocalDate date);
+    default Optional<String> tableIdentity(String kind);
     default java.util.Set<String> columnar(String kind);
     default Optional<ColumnSet> columns(String kind, Collection<String> paths, AsOf asOf) throws Exception;
     default boolean documents(String kind, AsOf asOf, Consumer<EntityDocument> sink) throws Exception;
@@ -512,6 +513,15 @@ the data of one business date; empty when you cannot tell. It must be cheap: the
 (every `version-check`, 10 s) and rebuild what they built from the data only when it changes. A source that cannot say its
 version leaves the grouped pages on their `refresh` timer. `dependsOn(kind)` is true for a connector built from that kind
 (the `derived` one), so a data-load signal for the kind purges it too.
+
+### `tableIdentity(kind)`: the same data on several servers
+
+With Drishti*net ([NET.md](../admin/NET.md)) several servers may read the same table. `tableIdentity` names where the kind's data lives so that every
+server reading the same data says the same: the Delta connector gives the table's id from its log (`delta:<id>`), else its location (an object
+store's address, or a local path with the machine's name, since the same path on another machine is another table). Two servers whose sources
+name the same identity are *replicas* of the kind and a search asks only one; different identities are *shards* and a search asks all. Return
+empty (the default) when you cannot be sure: the source is then taken as unique to its server, which is always safe (asked, and duplicates
+removed by id). It must be cheap.
 
 ### Bulk reads for BI: `scan` and `sqlTarget`
 

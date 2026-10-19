@@ -137,6 +137,13 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
 - Users, roles, packs per user, notes, reports and audit in one identity database: SQLite by default, PostgreSQL
   for production.
 - **One console, many servers**: list several servers and people pick one, signing in to each separately.
+- **Drishti\*net** (off by default): several servers join into one cluster by gossip; each keeps its own packs, connectors and data,
+  and any of them answers any request, forwarding it to the node that holds the data with the caller's masks applied on both. A search
+  covers every node's data, a live view ticks from the node that holds it, a user's saved searches and layouts follow them, and the
+  console is given one server, learns the others and moves to another when it stops, with no new sign-in. Signed calls under a cluster
+  key that rotates with no downtime, nodes per role, peer-only packs, Admin → Net ([NET.md](docs/admin/NET.md),
+  [tutorial 19](docs/tutorials/19-a-cluster-of-three.md)). In-process tests of three servers: they list each other about 50 ms after
+  the third starts; 13,542 signed calls through a key rotation, none refused.
 - Admin → Health, Prometheus metrics, a Grafana dashboard, liveness and readiness checks, Docker images and
   runbooks ([OPERATIONS.md](docs/admin/OPERATIONS.md)).
 - Seven themes (Terminal, Parchment, Blue, Wall Street, Green, Crimson, Crimson dark; the last three crimson, blue and green as in Sajha), one top
@@ -223,6 +230,7 @@ drishti/
 ├── drishti-diskcache/           the connectors' RocksDB disk cache
 ├── drishti-messaging/           shared support for message-queue connectors
 ├── drishti-deltalake/           a Delta Kernel engine without Hadoop (local disk, Windows included, and S3)
+├── drishti-net/                 Drishti*net: membership by gossip, the cluster key, capability digests (no Spring)
 ├── drishti-server/              the Spring Boot application: API, security, alerts, reports, pack registry
 ├── drishti-testkit/ drishti-it/ test fixtures; architecture, licence-header and file-size gates
 ├── drishti-benchmarks/          JMH hot-path benchmarks
@@ -233,7 +241,7 @@ drishti/
 ├── deploy/                      Dockerfiles, compose, Grafana dashboard
 ├── tools/                       packgen/ samplegen/ lake/ (pack data and lakes), rachana/, packreg/ (signed packs),
 │                                drill.sh, license_headers.py
-└── docs/                        tutorials (17), guides, references, runbooks, plan, ADRs
+└── docs/                        tutorials (19), guides, references, runbooks, plan, ADRs
 ```
 
 ## Documentation

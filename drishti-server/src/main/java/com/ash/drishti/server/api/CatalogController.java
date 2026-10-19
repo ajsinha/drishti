@@ -109,7 +109,7 @@ public class CatalogController {
     public List<Map<String, Object>> packs(@RequestAttribute(value = Principal.ATTRIBUTE, required = false) Principal who) {
         List<String> assigned = who == null ? packAccess.installed() : packAccess.assigned(who.user());
         List<String> active = who == null ? packAccess.installed() : packAccess.active(who.user());
-        return packRegistry.packs().stream().filter(p -> packAccess.isEnabled(p.name()))
+        return packRegistry.packs().stream().filter(p -> packAccess.isEnabled(p.name())).filter(p -> !packAccess.hidden(p.name()))
                 .filter(p -> packAccess.sampleVisible(who == null ? null : who.user(), p.name())).map(p -> {
             Map<String, Object> m = new java.util.LinkedHashMap<>();
             m.put("name", p.name());
