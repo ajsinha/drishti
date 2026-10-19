@@ -1813,8 +1813,9 @@ and standing queries) has one owner, chosen by rendezvous hashing of the model o
 leaves moves only its own shards. A subscription asked of another node is held on the owner under the same id and is held again where the shard moved
 when the owner is lost (its stream goes on). The generation bus carries loads and refreshes between nodes; each node's live tables hear their connectors
 themselves. *As built in 2.3.0:* the directory, the forwarding and the failover are in the server and proven with two nodes in one process
-(`TwoNodesTest`); the HTTP transport between Java nodes (the peers and the bus bridge over the network) is not built yet, so a production site runs one
-Java node behind any number of consoles.
+(`TwoNodesTest`); the HTTP transport for one model's shards between Java nodes (the peers and the bus bridge over the network) is not built yet.
+Since 2.5.0 several servers can still serve BI together through **Drishti*net**: a report's requests go to the node that holds the kinds its datasets
+read, and its answer comes back unchanged ([NET.md](NET.md), section 7).
 
 **The console's Python runner** (the console tier of the plan: `PyTransform`, `PyAggregate`, `PyColumn`, Analyse's cells, python visuals). Each console
 runs a **fork-server** (`bi.python.fork_server`, on by default): one parent process that has imported pandas, numpy and pyarrow, and forks one child per

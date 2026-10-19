@@ -24,12 +24,12 @@ from whichever system holds it. Nobody codes a screen per product:
 ```
 TRD MX-20000001 <GO>                          →  the trade: terms, legs, cashflows, curve, DV01 ladder, links
 NSET NS-SUMMIT-NY <GO>                    →  exposure profile, member trades, CSA, collateral
-TRD where mtm < -10m order by mtm         →  every trade losing more than 10m, worst first
-live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti shows the search it makes
+TRD where QUANTITY > 200m order by QUANTITY desc   →  every trade over 200m, largest first
+amended trades over 5m in BOOK-RATES-3, biggest first   →  plain words: Drishti shows the search it makes
 ```
 
 **Current release: 2.4.0** ([release notes](RELEASE_NOTES.md) · [changelog](CHANGELOG.md) ·
-[what shipped when](docs/architecture/IMPLEMENTATION_PLAN.md)). **Learn it by doing:** [eighteen tutorials](docs/tutorials/README.md), from your first 15 minutes to BI, AI, embedding and
+[what shipped when](docs/architecture/IMPLEMENTATION_PLAN.md)). **Learn it by doing:** [nineteen tutorials](docs/tutorials/README.md), from your first 15 minutes to BI, AI, embedding and
 production, each with real screenshots; the [guides](docs/README.md) are the reference.
 
 ## What you can do
@@ -37,19 +37,20 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
 **Look things up**
 - A command line with type-ahead, as on a Bloomberg terminal: mnemonics, recent entities and matches from every
   source as you type. One match opens; several give a **pick list** with each kind's key fields
-  (`TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`). The index behind it keeps several business days, can sit on disk (`DRISHTI_INDEX_DIR`) and reloads by itself or from Admin.
+  (`TRD MX-200000`, `CPTY north`, `TRD PRODUCT_TYPE=FX_QUANTO`). The index behind it keeps several business days, can sit on disk (`DRISHTI_INDEX_DIR`) and reloads by itself or from Admin.
 - **Views** of any entity: a header strip, panels (tables, curves, ladders, surfaces, maps, key-value, links), function
   keys, linked entities with badges, and the raw document (F9). Every table sorts, filters, pages and walks with
   the keyboard; id columns link to their entities.
 - **The Pivot tab**, where a Sutra or pack offers it: an Excel-style pivot of a table or of a search's results (drag
   fields, or use the keys, into rows, columns, values and filters), with totals, drill-down, a chart, CSV and Excel;
   a search pivots every match of the day on the server, from its columns. Saved per user; authors promote it.
-- **Structured search** (`TRD where notional >= 250m and assetClass = 'Rates' order by mtm desc limit 20`), or
-  **plain words** (`usd trades maturing before 2028 with negative mtm`): a deterministic parser shows the search
+- **Structured search** (`TRD where QUANTITY >= 250m and PRODUCT_GROUP = 'Rates' order by QUANTITY desc limit 20`), or
+  **plain words** (`amended trades over 5m in BOOK-RATES-3, biggest first`): a deterministic parser shows the search
   it makes, part by part, before anything runs. No AI service is involved.
 - **Query by form** (`FORM <pack> <GO>`, **Forms** in the **Views** menu, `/forms`): typed inputs for a kind (text, amounts, dates, multi-select
   dropdowns, pasted lists of ids) that write the search for you, which you can name, watch, schedule or send
-  ([USER_GUIDE.md](docs/guides/QUERY_BY_FORM.md)).
+  ([QUERY_BY_FORM.md](docs/guides/QUERY_BY_FORM.md)); kept per data version, so a form search over 35.7 million trades answers in about 0.2 s,
+  and a date with no data says so and offers the newest date that has some.
 - **Impact (F8)**: what depends on an entity, what it rolls into, and the amount at stake.
 - **Controls and deep documents**: a screen can offer dropdowns, toggles, date ranges and sliders that choose what a
   panel shows, and a trade shows its legs, cashflows and fixings on one screen (tabs that hold panels), with Excel-style
@@ -86,15 +87,21 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
 - The **BI** menu and the `BI <GO>` keyword (`RUPAKA` still works): a catalogue and workspaces with roles, **datasets** (tables from pack
   kinds, relationships, measures, row rules and masks) on an embedded query engine, and **several datasets in one report** (composed
   datasets that join others as the reader, derived ones, a Transform in Python); **reports** with a designer, a Model view, a **map** you
-  drill from the world to a country and its regions, **dropdown slicers**, cross-filtering, drill-through, a relative-date slicer, **window functions** and measures that stay correct across several fact tables, **Vega-Lite** and Perspective charts, expected-value tests that stop a bad publish, and a phone and a tablet layout of their own
+  drill from the world to a country and its regions, **dropdown slicers**, cross-filtering, drill-through, a relative-date slicer, **window functions** and measures that stay correct across several fact tables, **Vega-Lite** charts, expected-value tests that stop a bad publish, and a phone and a tablet layout of their own
   ([BI_GUIDE.md](docs/guides/BI_GUIDE.md), [tutorial 10](docs/tutorials/10-first-bi-report.md), [REPORTS.md](docs/guides/REPORTS.md)).
+- **BI Studio** (2.4.0): the report, model and theme designers in one shell, with an Explorer of your items, open items as tabs and a dock of
+  **Problems** and **Query**; a typed `format:` per visual drives a generated Format pane; **conditional formatting** (rules, colour scales,
+  icons), **themes** (Corporate and Print shipped, a theme designer), an **interactions matrix**, slicer **sync groups**, **tooltip pages**,
+  **small multiples** and the **matrix at every level** ([BI_GUIDE.md section 26](docs/guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product-wave-c-240)).
 - **Live BI**: live tables, data that moves together (**coherent walks**), reports that follow the ticks with pause and resume,
-  incremental live measures and a history of a live table, Perspective grids and **boards** of live tiles in kiosk mode, built in a **board designer** ([BOARDS.md](docs/guides/BOARDS.md), [tutorial 12](docs/tutorials/12-live-bi-and-boards.md)).
+  incremental live measures and a history of a live table, and **boards**: report pages of live tiles (with the report's own visuals beside them) in kiosk mode, built in the report designer ([BOARDS.md](docs/guides/BOARDS.md), [tutorial 12](docs/tutorials/12-live-bi-and-boards.md)).
 - **Distribution**: export a report, page or visual as PDF, PNG, Excel or CSV; **subscriptions** by email; **alerts** on a number, each person on
   their own masks, with **charts in Excel**, retries and **webhook and text** channels, and **narrative summaries**; a report **embedded** in another application ([DISTRIBUTION.md](docs/guides/DISTRIBUTION.md), [tutorial 11](docs/tutorials/11-bi-that-runs-itself.md)).
 - **Govern it**: versions and diffs, review with four eyes, certification, lineage past the connector, impact of a change (renames, types), bundles between environments and inside pack archives, with rollback of an import
   ([BI_GOVERNANCE.md](docs/guides/BI_GOVERNANCE.md), [tutorial 13](docs/tutorials/13-govern-bi.md)). **Python** measures, visuals and tests, on boards and in alerts, and
-  **Analyse** (slice, SQL in the browser and Python on your masked extract, promoted to a visual); Calc's `drishti_bi` with Graphic Walker ([tutorial 14](docs/tutorials/14-python-and-analyse.md)). **AI in BI** (report from words, ask the data, explain a number, a designer copilot, a dataset helper)
+  **Analyse** (slice, Drishti SQL and Python on your masked extract, worked out by the servers and promoted to a visual), **data prep step by step**
+  (BI → Transforms: inputs read through a pack's connector, 21 tested snippets, a preview and a profile after every step), the browser **Python
+  console** (`/pyconsole`: your own Python on a masked extract, promoted to the server); Calc's `drishti_bi` with Graphic Walker ([tutorial 14](docs/tutorials/14-python-and-analyse.md)). **AI in BI** (report from words, ask the data, explain a number, a designer copilot, a dataset helper)
   ([BI_AI.md](docs/guides/BI_AI.md), [tutorial 15](docs/tutorials/15-ai-in-drishti.md)).
 
 **Shape it**
@@ -161,22 +168,24 @@ from the repository root (Java 21 or newer, production runs 21; Python 3.11 or n
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ./mvnw -q package -DskipTests                 # or: ./mvnw -q verify  (also runs every test)
 
-# 2. Optional: business-day history for the banking packs, so past dates, Compare and field history work
-uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta
+# 2. The console's Python environment (also runs tools/drishti.py)
+uv venv drishti-console/.venv && uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
 
-# 3. Start the server on :18480 with the packs to load (their parents load with them)
+# 3. The demo lakes the seven packs read: seven business days from the committed test data (about 50 s)
+drishti-console/.venv/bin/python tools/drishti.py lake demo
+
+# 4. Start the server on :18480 with the packs to load (their parents load with them)
 # (-Djava.io.tmpdir: native libraries unpack in the server's own folder, not /tmp; docs/admin/CONFIGURATION.md)
 mkdir -p data/tmp/server
 DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_STUDIO_SAVE=true \
   java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.4.0-exec.jar
 
-# 4. In a second terminal: the console on http://localhost:17480
-uv venv drishti-console/.venv && uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
+# 5. In a second terminal: the console on http://localhost:17480
 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
-Open http://localhost:17480/t, type `TRD MX-20000001` and press Enter. Then try `DPNL DESK-RATES`, a past date in the
-top bar, or `live trades over 5m, biggest first`. Without `DRISHTI_PACKS` the server loads the same seven
+Open http://localhost:17480/t, type `TRD MX-20000001` and press Enter. Then try `TVAL TVAL-1000008` (a trade's valuation, which
+ticks), a past date in the top bar, or `amended trades over 5m, biggest first`. Without `DRISHTI_PACKS` the server loads the same seven
 packs; `CPTY CP-NORTHBRIDGE` then opens a counterparty with links to its agreement and its country's economy.
 
 Sign-in is off for local development (you act as a user with every role). To turn it on and sign in as the
@@ -237,7 +246,7 @@ drishti/
 ├── plugins/drishti-plugin-*/     demo, file, rest, jdbc, delta, aerospike, redis, mongodb, iceberg, duckdb, feeds, news, yfinance, kafka, activemq, rabbitmq, s3
 ├── drishti-console/                     the web console (routes/, core/, web/templates, web/static, tests/)
 ├── clients/python/              drishti_client.py: the standard-library Python client
-├── config/packs/<name>/                the 16 domain packs: pack.yaml, Sutras, vocabulary, samples, guides
+├── config/packs/<name>/                the seven domain packs: pack.yaml, Sutras, vocabulary, samples, guides (retired ones in examples/packs/)
 ├── deploy/                      Dockerfiles, compose, Grafana dashboard
 ├── tools/                       packgen/ samplegen/ lake/ (pack data and lakes), rachana/, packreg/ (signed packs),
 │                                drill.sh, license_headers.py
@@ -251,14 +260,14 @@ Start with **[Install and run](docs/guides/GETTING_STARTED.md)**, then the **[tu
 
 | Read this when… | Document |
 |---|---|
-| you want to learn by doing | [the eighteen tutorials](docs/tutorials/README.md) |
+| you want to learn by doing | [the nineteen tutorials](docs/tutorials/README.md) |
 | you want it installed and running | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) |
 | you run the server in IntelliJ IDEA and the console (UX) in PyCharm | [IDE_GUIDE.md](docs/guides/IDE_GUIDE.md) |
 | you build, check, load and ship packs and Sutras from a terminal or a pipeline (`tools/drishti.py`) | [CLI_GUIDE.md](docs/guides/CLI_GUIDE.md) |
 | your ETL has loaded a batch and Drishti should refresh, verify, check alerts, tell people and flag late data | [DATA_LOADS.md](docs/guides/DATA_LOADS.md) |
 | you ship what you built to servers by copying: bundles, checksums, promotion, rollback (no API) | [OPERATIONALISING.md](docs/guides/OPERATIONALISING.md) |
 | you use the console | [USER_GUIDE.md](docs/guides/USER_GUIDE.md) |
-| you use or build business intelligence (Rūpaka) | [BI_GUIDE.md](docs/guides/BI_GUIDE.md), [tutorial 10](docs/tutorials/10-first-bi-report.md), [DATASETS.md](docs/guides/DATASETS.md), [REPORTS.md](docs/guides/REPORTS.md), [PYTHON_BI.md](docs/guides/PYTHON_BI.md), [BI_AI.md](docs/guides/BI_AI.md), [BI_GOVERNANCE.md](docs/guides/BI_GOVERNANCE.md), [BOARDS.md](docs/guides/BOARDS.md) |
+| you use or build business intelligence (Rūpaka) | [BI_GUIDE.md](docs/guides/BI_GUIDE.md), [tutorial 10](docs/tutorials/10-first-bi-report.md), [DATASETS.md](docs/guides/DATASETS.md), [REPORTS.md](docs/guides/REPORTS.md), [PYTHON_BI.md](docs/guides/PYTHON_BI.md), [ANALYSE.md](docs/guides/ANALYSE.md), [BI_AI.md](docs/guides/BI_AI.md), [BI_GOVERNANCE.md](docs/guides/BI_GOVERNANCE.md), [BOARDS.md](docs/guides/BOARDS.md) |
 | you run on Windows, or read from a script or Excel | [Install and run: Windows](docs/guides/GETTING_STARTED.md#drishti-on-windows), [CLIENTS.md](docs/guides/CLIENTS.md) |
 | you use or refresh the real public data (world-economy) | [REAL_DATA.md](docs/guides/REAL_DATA.md) |
 | you define connectors as files, with TLS or a proxy | [CONNECTOR_FILES.md](docs/connectors/CONNECTOR_FILES.md), [TLS.md](docs/connectors/TLS.md), [the proxy](docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) |
@@ -274,6 +283,7 @@ Start with **[Install and run](docs/guides/GETTING_STARTED.md)**, then the **[tu
 | you manage users, roles, single sign-on, tokens or the access log | [USER_MANAGEMENT.md](docs/admin/USER_MANAGEMENT.md) |
 | you script against it, from Python, Excel or curl | [CLIENTS.md](docs/guides/CLIENTS.md), [API_GUIDE.md](docs/guides/API_GUIDE.md) |
 | you run it in production | [OPERATIONS.md](docs/admin/OPERATIONS.md), [PERFORMANCE.md](docs/admin/PERFORMANCE.md), [LIVE.md](docs/architecture/LIVE.md) |
+| you run several servers as one cluster (Drishti\*net) | [NET.md](docs/admin/NET.md), [tutorial 19](docs/tutorials/19-a-cluster-of-three.md), [DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md) |
 | you serve millions of entities a day for years | [DELTA_CONNECTOR.md](docs/connectors/DELTA_CONNECTOR.md), [POSTGRES_CONNECTOR.md](docs/connectors/POSTGRES_CONNECTOR.md), [AEROSPIKE_CONNECTOR.md](docs/connectors/AEROSPIKE_CONNECTOR.md) |
 | you need demo data, small or large | [DEMO_DATA.md](docs/connectors/DEMO_DATA.md) |
 | something is not working | [TROUBLESHOOTING.md](docs/guides/TROUBLESHOOTING.md), [runbooks](docs/admin/runbooks/) |

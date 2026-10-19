@@ -2360,9 +2360,9 @@ POST /bi/python/run   {"report": "file:report:python-desk-risk", "page": "risk",
   {"kind": "measure", "by": ["desk"], "rows": [["DESK-EQD", 5803.810000880093], ["DESK-FI", 5803.810000880093], ["DESK-FX", 5803.810000880093]], "ms": 283, "measure": "Desk P&L volatility", "target": "server", "inputRows": 60, ...}
 ```
 
-## Boards: `/api/v1/bi/boards` (phase 5)
+## Boards: `/api/v1/bi/boards` (2.3 board files and the converter)
 
-Phase 5 of Rūpaka ([BOARDS.md](BOARDS.md) is the reference). A board is a BI item of kind `board` (id `bi-<hex>`, or `file:board:<name>` for a shipped file); who may read it is decided as for any item. A board holds no data: each tile names a report and a visual, and its data and its live stream are the
+[BOARDS.md](BOARDS.md) is the reference. **Since 2.4.0 a board is a report**: a page with `layout: board` holds tiles beside the report's own visuals, and it is read, saved, published and queried as a report (`/bi/items/...`, `/bi/reports/...`); the `board` kind is gone and stored boards became reports at the first start (`POST /bi/migrate/boards`, below). These endpoints remain for a 2.3 board file read until it is converted (`file:board:<name>`) and for converting one. A board holds no data: each tile names a report and a visual, and its data and its live stream are that
 report's (`POST /bi/reports/{id}/query`, `GET /bi/reports/{id}/live`).
 
 | Method | Path | What it does |
@@ -2373,13 +2373,12 @@ report's (`POST /bi/reports/{id}/query`, `GET /bi/reports/{id}/live`).
 | `POST` | `/bi/boards/convert` | (2.4.0) `{yaml}` of a 2.3 board (needs `bi-author`): `{converted: true, yaml}`, the report with board pages it becomes (nothing is stored), or `{converted: false, problems}` |
 | `POST` | `/bi/boards/format` | `{board}` (the model, as `board` in the answers above): `{yaml}`, the board written the way a person writes it, one tile to a line; read back by `validate` to the same board. A tile's `alert` may carry `hysteresis` (a number of 0 or more): how far back inside a threshold the value must be before the tile drops a level ([BOARDS.md section 4](BOARDS.md#4-alerts-a-tile-changes-colour)) |
 
-Captured from a real server, validating a board with a tile off the grid, a reserved key, a visual that does not exist and a report that does not exist:
+Captured from a real server, validating a board with a tile off the grid, a visual that does not exist and a report that does not exist:
 
 ```
-POST /api/v1/bi/boards/validate   {"yaml": "board: bad\npages:\n  - id: p\n    tiles:\n      - { report: live-trading-desk, visual: nope, at: { x: 0, y: 0, w: 13, h: 3 } }\n      - { report: no-such, visual: v, at: { x: 0, y: 3, w: 4, h: 3 }, alert: { warn: { op: lt, value: 0 }, notify: { email: a@b.c } } }\n"}
+POST /api/v1/bi/boards/validate   {"yaml": "board: bad\npages:\n  - id: p\n    tiles:\n      - { report: live-trading-desk, visual: nope, at: { x: 0, y: 0, w: 13, h: 3 } }\n      - { report: no-such, visual: v, at: { x: 0, y: 3, w: 4, h: 3 }, alert: { warn: { op: lt, value: 0 } } }\n"}
 200  {"valid": false, "problems": [
        {"level": "error", "code": "DRS-9052", "path": "pages[0].tiles[0].at", "message": "x is 0 to 11 and w is 1 to 12, and x + w is at most 12 (the grid has 12 columns); this is x=0, w=13"},
-       {"level": "error", "code": "DRS-9053", "path": "pages[0].tiles[1].alert.notify", "message": "'notify' is reserved and not built yet: a tile only changes colour; notifications arrive with distribution (phase 7)"},
        {"level": "error", "code": "DRS-9052", "path": "pages[0].tiles[0].visual", "message": "report 'Live trading desk' has no visual 'nope'"},
        {"level": "error", "code": "DRS-9052", "path": "pages[0].tiles[1].report", "message": "no report 'no-such' that you can open (a catalogue id, a file name such as live-trading-desk, or the report's name)"}]}
 ```

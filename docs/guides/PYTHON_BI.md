@@ -306,7 +306,7 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 ## 11. Measured
 
 On the development machine (a laptop, Python 3.14, pandas 3, 60 rows): a **server call takes about 220 to 320 ms** (a process start and the `pandas` import dominate; the first is the slowest), 214 to 250 ms warm. The design target was
-under 50 ms: **not met**, because each call starts a worker; a warm pool is the way to get there and is not built (section 12). (Until 2.2 a browser run took about 3.3 s on its first load, the interpreter, numpy and pandas; since 2.3.0 there is no browser run, and wave B's
+under 50 ms: **not met** by these figures, taken when each call started a worker. Wave B's fork-server and 2.4.0's warm workers take the start off each call (section 17.7). (Until 2.2 a browser run took about 3.3 s on its first load, the interpreter, numpy and pandas; since 2.3.0 there is no browser run, and wave B's
 fork-server takes the worker start off each call: see the end of this guide.) The Chromium test ([test_bi_python_browser.py](../../drishti-console/tests/test_bi_python_browser.py)) checks the sample report's figures against a computation from the same trades.
 
 ## 12. Built and not built
@@ -678,5 +678,5 @@ The server's `drishti.bi.transform.max-input-rows` (50,000) caps an input, in th
 
 ### 17.9 Not built
 
-AI-written Transforms (P4, wave D); a precomputed run on refresh for configured roles (the rest of P6); parameters bound to a report (P7); an incremental
+AI-written Transforms (P4, the AI release 2.7.0); a precomputed run on refresh for configured roles (the rest of P6); parameters bound to a report (P7); an incremental
 mode (P8); promoting several Analyse cells as steps (P9); a drift warning when a Transform's columns change (P10); a Python-only Source (rows from an API).
