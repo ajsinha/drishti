@@ -608,8 +608,12 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
                 || !offline.reachesInternet(c.plugin()) || c.kinds() == null) {
             return List.of();
         }
-        return plugins.values().stream().filter(p -> !p.manifest().name().equals(name) && c.kinds().stream().anyMatch(k -> p.manifest().serves(k)))
-                .map(p -> p.manifest().name()).sorted().toList();
+        // named connectors that run and list one of its kinds in their files (a plugin running as itself, such as demo, is not counted)
+        return plugins.keySet().stream().filter(other -> !other.equals(name) && applied.containsKey(other)).filter(other -> {
+            List<String> theirs = applied.get(other).kinds();
+            SourcePlugin p = plugins.get(other);
+            return c.kinds().stream().anyMatch(k -> theirs == null || theirs.isEmpty() ? p != null && p.manifest().serves(k) : theirs.contains(k));
+        }).sorted().toList();
     }
 
     /** Offline mode as the server started with it. */

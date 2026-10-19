@@ -164,6 +164,17 @@ class OfflineModeTest {
     }
 
     @Test
+    void aPluginRunningAsItselfIsNoStandIn() throws Exception {
+        var m = both();
+        m.put("yfinance", new SourcesProperties.ConnectorSettings("web", false, List.of("quote"), Map.of()));
+        var plain = Map.of("web", new SourcesProperties.PluginSettings(false, Map.of()), "store", new SourcesProperties.PluginSettings(true, Map.of()));
+        try (SourceRegistry r = registry(new OfflineMode(false, Set.of("web")), plain, m)) {
+            assertThat(r.plugin("store")).as("the store also runs as itself, as demo does").isPresent();
+            assertThat(r.standIns("yfinance")).containsExactly("quote-store");
+        }
+    }
+
+    @Test
     void aSwitchedOffConnectorOfAnOrdinaryPluginHasNoStandIns() throws Exception {
         var m = both();
         m.put("yfinance", new SourcesProperties.ConnectorSettings("web", false, List.of("quote"), Map.of()));
