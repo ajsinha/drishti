@@ -19,6 +19,8 @@
 
 ## 2.5.0 — Drishti*net: many servers, one Drishti; no JVM litters /tmp; the documents, help and deck reviewed (2026-10-19)
 
+- **Fixed: `pytest` from the repo root collects every test.** `tools/bench/test_trades.py` and `tools/packgen/trades/test_trades.py`
+  shared a module name, so collection stopped with an import-file-mismatch error; the benchmark's test is now `tools/bench/test_bench_trades.py`.
 - **Fixed: derived pages kept on disk are never removed while another process has them open.** A server's start-up clean-up of
   `<data dir>/derived/<connector>` deleted every folder it did not keep, including a store another process was writing (two servers
   sharing a data folder; found by the drill's parallel test forks); it now leaves a store whose lock is held (`SortedStore.inUse`).

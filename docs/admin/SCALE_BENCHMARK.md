@@ -830,5 +830,5 @@ drishti-console/.venv/bin/python tools/bench/trades.py --lake <data dir>/delta -
 Run it while the server and console are up to watch Drishti as Delta versions move under it: each load is picked up within the
 connector's `refresh-seconds`, grouped pages rebuild after it, and Admin → Health → Activity shows the requests a minute meanwhile.
 `users.py` prints one JSON line: requests a second and, for single trades, counterparty-trades pages, netting sets and searches,
-p50/p95/p99 and failures. `tools/bench/test_trades.py` runs a small version (two systems, two days, a few hundred trades) with the
+p50/p95/p99 and failures. `tools/bench/test_bench_trades.py` runs a small version (two systems, two days, a few hundred trades) with the
 tool tests. Admin → Health → Pages shows the same per-kind times from inside the server while a run goes on.
