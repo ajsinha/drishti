@@ -19,9 +19,10 @@ The proof of concept of [Drishti Elements](../../docs/architecture/ELEMENTS.md) 
 application on **its own origin** that shows live Drishti views in a Shadow DOM, without an iframe.
 
 It has its own sign-in (a demo cookie), its own backend endpoint that asks Drishti for a token **server to server** (the
-app secret never reaches the browser), its own **search box** (type `TRD MX-20000001`), a **recent entities** list, an
-**as-of** date picker, a main `<drishti-view>` and a second, smaller one that shares its connection. Clicking a linked
-entity inside the view (the counterparty) raises `drishti:navigate`; the host takes it over into its search box. The page
+app secret never reaches the browser), its own **search box** (type `TVAL TVAL-1000001`, or `TRD MX-20000001` for a trade), a **recent entities** list, an
+**as-of** date picker, a main `<drishti-view>` and a second, smaller one that shares its connection. Both show **trade valuations** of the
+market-risk pack (`TVAL-1000008`, `TVAL-1000002`): since 2.3.0 a trade is static (it changes when its source books a new version) and the
+valuations are what ticks. Clicking a linked entity inside the view (the trade it values) raises `drishti:navigate`; the host takes it over into its search box. The page
 is served with the strict CSP a careful host would have (no `'unsafe-inline'`, no `frame-src`); anything it blocks is
 listed at `/api/csp-reports`.
 
@@ -37,10 +38,10 @@ Three processes, on ports that are free. The commands are from the repository ro
 (`uv venv drishti-console/.venv && uv pip install -p drishti-console/.venv/bin/python -r drishti-console/requirements.txt`).
 
 ```bash
-# 1. the Drishti server: security on, embedding on, the trading pack, a scratch folder for ./data
+# 1. the Drishti server: security on, embedding on, the trading, counterparty-risk and market-risk packs, a scratch folder for ./data
 ./mvnw -o -q package -DskipTests -pl drishti-server -am
 mkdir -p /tmp/drishti-elements && cd /tmp/drishti-elements
-DRISHTI_PACKS=trading DRISHTI_PACKS_DIR=<repo>/packs DRISHTI_SECURITY_ENABLED=true \
+DRISHTI_PACKS=trading,counterparty-risk,market-risk DRISHTI_PACKS_DIR=<repo>/config/packs DRISHTI_SECURITY_ENABLED=true \
 DRISHTI_TOKEN_SECRET=poc-scratch-secret-0123456789abcdef0123 DRISHTI_EMBED_ENABLED=true \
 DRISHTI_PUBLIC_URL=http://127.0.0.1:18969 DRISHTI_CONSOLE_URL=http://127.0.0.1:17969 \
   java -jar <repo>/drishti-server/target/drishti-server-*-exec.jar --server.port=18969 --drishti.security.registered-users-only=false &
@@ -60,15 +61,16 @@ cd <repo>
 python3 tools/elements-demo/server.py --port 17968 --console http://127.0.0.1:17969 --server http://127.0.0.1:18969 --secret <the client secret>
 ```
 
-Open <http://127.0.0.1:17968/>, press **viewer** or **author** (the host's two demo users), and the trade
-`1000008` appears with its MTM ticking. Both users see masked fields (`•••`) even though `author` holds the `raw` role: embedded views always mask. Open the
+Open <http://127.0.0.1:17968/>, press **viewer** or **author** (the host's two demo users), and the valuation
+`TVAL-1000008` appears with its MTM and one-day P&L ticking (the demo ticker is on by default). Open its trade (`1000008`, the link in the
+strip): both users see masked fields (`•••`, the trader) even though `author` holds the `raw` role: embedded views always mask. Open the
 console's own page (`http://127.0.0.1:17969/v/trade/1000008`) beside it to see the same trade unmasked.
 
 ## What to try
 
-- Type `TRD MX-20000001` in the search box and press Enter; pick entries from **Recent**.
+- Type `TVAL TVAL-1000001` in the search box and press Enter (or `TRD MX-20000001`: a trade, which holds still); pick entries from **Recent**.
 - Pick a past date: the view becomes a still snapshot; **Live** resubscribes.
-- Click *Harbor Point Bank* in the title: the host's search box takes `CPTY CP-HARBORPT` and the view switches.
+- Click the trade `1000008` in the strip: the host's search box takes `TRD 1000008` and the view switches.
 - Stop and restart the console: the element shows `reconnecting` (the host's status line), then repaints and ticks again.
 
 ## The acceptance tests

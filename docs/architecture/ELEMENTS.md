@@ -1317,6 +1317,13 @@ the shadow root, no style leak either way.
 expiry and renewal, a console restart, the sanitiser, Trusted Types, slots. New in this step: the **small load test** (`test_twenty_elements_on_ten_entities_cost_the_page_one_connection`: 20 elements, 10 entities, one channel stream, every element live, frame latency recorded) and the host page of `<drishti-report>`
 (`tools/elements-demo/static/report.html`, `test_embed_report_browser.py`). The frameworks smoke test was first not built (the builds were not vendored); it is built now as the React 18, Vue 3 and Angular 18 sample pages with `test_embed_frameworks_browser.py` (builds fetched by `fetch-vendor.sh`, never committed: [guides/ELEMENTS.md](../guides/ELEMENTS.md#react-angular-and-vue-sample-pages)).
 
+*Since 2.4.0* the demo host's two elements show **trade valuations** (`TVAL-1000008`, `TVAL-1000002`, the market-risk pack): since 2.3.0 a trade is
+static (it changes when its source books a new version) and the valuations tick. The suites follow: the masks are checked on the trade the
+valuation values, the tables, pivot and a live subscription built with control values on a netting set, the controls of a trade on its *Events*
+panel, `drishti:navigate` from the trade linked in the strip. With the console's several workers (`server.workers`) the channel's id names the
+worker that holds the stream, and a change or a fresh token that reaches another worker is passed on to it (`core/channel_relay.py`), so the
+page keeps its one connection.
+
 **Step 12, distribution.** `core/element_dist.py` holds the library's **semantic version** (`VERSION`, `1.3.0`; the entry reports it as `DrishtiElements.version`). The console serves it **exactly and immutably** at `/embed/v1/elements/1.3.0/drishti-elements.js` and `.../m/<name>.js`
 (`Cache-Control: public, max-age=31536000, immutable`, `ETag` = the file's SRI value) with `.../integrity.json` (`{"name", "version", "api", "files": {<path>: {"integrity": "sha384-…", "bytes"}}}`); a partial version (`/embed/v1/elements/1/…`, `/1.1/…`) answers `302` to the exact one (`max-age=60`, with CORS, so a module graph follows it);
 a version this console does not hold is `410 DRS-8006` (it says which one it serves), a malformed one `404`. `web/elements/integrity.json` is the committed record and `tests/test_element_package.py` fails when a module changed and `VERSION` did not, so **a version names the same bytes for ever**. The unversioned

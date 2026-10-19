@@ -17,8 +17,8 @@
 const D = window.DrishtiElements;
 const $ = (s) => document.querySelector(s);
 const main = $('#main'), side = $('#side'), q = $('#q'), recent = $('#recent');
-const MNEMONIC = { trade: 'TRD', counterparty: 'CPTY' };       // the host's own habit: how it writes an entity in its search box
-let recents = [{ kind: 'trade', id: '1000008' }];
+const MNEMONIC = { trade: 'TRD', 'trade-valuation': 'TVAL', counterparty: 'CPTY' };       // the host's own habit: how it writes an entity in its search box
+let recents = [{ kind: 'trade-valuation', id: 'TVAL-1000008' }];   // a valuation: it ticks (a trade is static since 2.3.0)
 
 // the host's token provider: its own backend asks Drishti for a token for the signed-in user (server to server)
 D.configure({
@@ -66,7 +66,7 @@ $('#live').addEventListener('click', () => { $('#asof').value = ''; main.removeA
 
 const status = $('#status');
 for (const el of [main, side]) {
-  el.addEventListener('drishti:state', (e) => { el.dataset.hostState = e.detail.state; status.textContent = 'main: ' + (main.dataset.hostState || '') + ' · counterparty: ' + (side.dataset.hostState || ''); });
+  el.addEventListener('drishti:state', (e) => { el.dataset.hostState = e.detail.state; status.textContent = 'main: ' + (main.dataset.hostState || '') + ' · watched: ' + (side.dataset.hostState || ''); });
 }
 
 async function who() { const b = await (await fetch('/api/me')).json(); $('#who').textContent = b.user || 'nobody'; return b.user; }

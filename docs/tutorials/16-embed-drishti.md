@@ -26,9 +26,8 @@ About 40 minutes.
 
 - The quick-start environment of [tutorial 10](10-first-bi-report.md#before-you-start) (the demo lakes, **Drishti server (demo lakes)** with sign-in
   on), with the **demo ticker on** as in [tutorial 12](12-live-bi-and-boards.md#before-you-start) (`DRISHTI_DEMO_ENABLED=true`): the live report of
-  step 6 ticks only with it. The trades the host shows, `1000001` (an ENDUR commodity swap with Harbor Point Bank) and `1000002`, are in the trading
-  pack's samples and in the ENDUR lake, so they open with the ticker on or off (trades themselves do not tick: the demo moves valuations, curves and
-  netting sets).
+  step 6 and the views of step 5 tick only with it. The host shows two **trade valuations** of the market-risk pack, `TVAL-1000008` and `TVAL-1000002`
+  (a valuation's MTM and one-day P&L move with the demo; a trade itself does not tick: it changes when its source books a new version).
 - Embedding is **off by default**. This tutorial turns it on (step 1). It needs a third port for the host application (the sample host uses 17968 by default; the pictures use 17944), and the two demo users `viewer` and `author` in Drishti (step 2).
 - The sample host is [tools/elements-demo](../../tools/elements-demo/README.md): a small Python program with its own sign-in and its own backend. It signs its requests with a **demo key** that ships in the repository: never use it for anything real.
 
@@ -65,7 +64,7 @@ Open **Admin → Embedding**.
 
 You should see the empty list and **New application**. Press it.
 
-![The New host application form: name Harbour CRM, id harbour-crm, origin http://127.0.0.1:17944, signs in with Both, a JWK set, the scopes embed:about, embed:report, embed:view, the kinds trade and two reports, the rates](img/t16/02-register-form.jpg)
+![The New host application form: name Harbour CRM, id harbour-crm, origin http://127.0.0.1:17944, signs in with Both, a JWK set, the scopes embed:about, embed:report, embed:view, the kinds trade and trade-valuation and two reports, the rates](img/t16/02-register-form.jpg)
 
 Fill it in:
 
@@ -75,7 +74,7 @@ Fill it in:
 | Origins | `http://127.0.0.1:17944` | the **exact** origin of the host's pages (scheme, host, port, no path). A page on any other origin is refused (`DRS-8002`); `null` and wildcards are refused |
 | How it signs in | **Both** | a **client secret** (shown once) and a **public key** (a JWK set): the host's backend authenticates with the secret and signs a short assertion about its user with its private key. For the sample host paste the JWK set made from `tools/elements-demo/demo-host-key.json` (its public half: `n`, `e`, `kid`) |
 | Scopes | `embed:view`, `embed:about`, `embed:report`, `embed:search` | what the host may ask a token for: views, the About text, BI reports, and the search box of step 10 |
-| Kinds and reports | `trade, report:file:report:live-trading-desk, report:file:report:trades-overview` | an allow-list: **the kind `trade`** and **two reports**: the live desk report (step 6) and a report on a model (step 6, last part). Every report is `report:*`; empty means everything the user's roles open |
+| Kinds and reports | `trade, trade-valuation, report:file:report:live-trading-desk, report:file:report:trades-overview` | an allow-list: **the kinds `trade` and `trade-valuation`** and **two reports**: the live desk report (step 6) and a report on a model (step 6, last part). Every report is `report:*`; empty means everything the user's roles open |
 | Calls per minute, per user per minute | `6000`, `600` | the defaults (600 and 60) are for a quiet page; a live report asks again at every tick |
 | Token life | `300` seconds | the lifetime of a token; never more than the server's `drishti.embed.token-max-seconds` |
 
@@ -103,7 +102,7 @@ You should see `host app on http://127.0.0.1:17944  (Drishti console http://127.
 ```html
 <script type="module" src="http://127.0.0.1:17480/embed/v1/drishti-elements.js" crossorigin="anonymous"></script>
 ...
-<drishti-view id="main" kind="trade" entity="1000001" theme="light"></drishti-view>
+<drishti-view id="main" kind="trade-valuation" entity="TVAL-1000008" theme="light"></drishti-view>
 ```
 
 ```javascript
@@ -149,12 +148,11 @@ What to notice: **five minutes** (`exp - iat = 300`), the application (`azp`), t
 
 Open `http://127.0.0.1:17944/` and press **author**.
 
-![The host page, "Harbour CRM": its own search box, recent list and as-of date on the left; a watched trade; and a live Drishti trade view with its title, strip, Terms and P&L explain panels](img/t16/05-host-view.jpg)
+![The host page, "Harbour CRM": its own search box, recent list and as-of date on the left; a watched valuation; and a live Drishti view of the valuation TVAL-1000008 with its title, strip (trade, source, MTM, P&L 1D, DV01, notional) and Valuation panel](img/t16/05-host-view.jpg)
 
-You should see **the host's** page chrome (a blue bar, its own search box *Find an entity*, **Recent**, an **As of** date) around **Drishti's** view: the trade `1000001` (*Commodity · Commodity swap*, with `CP-HARBORPT`) with its title, key figures and panels, and a second, smaller `<drishti-view>` in the side column (`header="strip" panels="none"`) that **shares the first one's connection**. Both are subscribed (their footers say `live`): a trade changes when its source books a new version, which the demo ticker does not do, so here
-they hold still; a live kind (a curve, a netting set) would move in place. Type `TRD MX-20000001` in the host's search box: the page changes the element's `entity` attribute and the view switches in place. Click the counterparty (*Harbor Point Bank*): the element raises `drishti:navigate`, and the host decides what to do (the sample puts it in its own search box).
+You should see **the host's** page chrome (a blue bar, its own search box *Find an entity*, **Recent**, an **As of** date) around **Drishti's** view: the valuation `TVAL-1000008` (*Market risk · Trade valuation*) with its title, key figures and panels, and a second, smaller `<drishti-view>` in the side column (`header="strip" panels="none"`, `TVAL-1000002`) that **shares the first one's connection**. Both are subscribed (their footers say `live`): the MTM and P&L cells move in place at every tick of the demo, with no repaint. Type `TVAL TVAL-1000001` in the host's search box: the page changes the element's `entity` attribute and the view switches in place (`TRD MX-20000001` shows a trade, which holds still: a trade changes when its source books a new version). Click the trade in the strip (`1000008`): the element raises `drishti:navigate`, and the host decides what to do (the sample puts `TRD 1000008` in its own search box and shows the trade).
 
-Embedded views **always mask**: the `author` role holds the `raw` power in the console, but through an embed token every masked field reads `•••`. Open the same trade in the console beside it to compare.
+Embedded views **always mask**: the `author` role holds the `raw` power in the console, but through an embed token every masked field reads `•••` (the trade's *Trader*, for one). Open the same trade in the console beside it to compare.
 
 ## Step 6 · A report in a card
 

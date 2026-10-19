@@ -84,7 +84,7 @@ def registering(c: Ctx):
     d.locator("input[name=scope][value='embed:view']").check()
     d.locator("input[name=scope][value='embed:report']").check()
     d.locator("input[name=scope][value='embed:search']").check()         # <drishti-search> of the sample pages
-    d.locator("input[name=kinds]").fill(f"trade, {REPORT}, {MODEL_REPORT}")
+    d.locator("input[name=kinds]").fill(f"trade, trade-valuation, {REPORT}, {MODEL_REPORT}")
     d.locator("input[name=callsPerMinute]").fill("6000")                 # a live report asks again at every tick: the defaults (600 and 60 a minute) are for a quiet page
     d.locator("input[name=userCallsPerMinute]").fill("600")
     d.locator("input[name=contact]").fill("crm-team@harbour.example")
@@ -166,7 +166,7 @@ def reregister(c: Ctx, per_user: int) -> None:
     """Registers the host again (a new secret, written to the secret file) with a per-user call limit."""
     login(c)
     call(c, "DELETE", f"/admin/embedding/api/apps/{APP}")
-    made = call(c, "POST", "/admin/embedding/api/apps", {"id": APP, "name": "Harbour CRM", "origins": [HOST], "kinds": ["trade", REPORT, MODEL_REPORT], "scopes": ["embed:view", "embed:about", "embed:report", "embed:search"],
+    made = call(c, "POST", "/admin/embedding/api/apps", {"id": APP, "name": "Harbour CRM", "origins": [HOST], "kinds": ["trade", "trade-valuation", REPORT, MODEL_REPORT], "scopes": ["embed:view", "embed:about", "embed:report", "embed:search"],
                                                        "secret": True, "jwks": jwks(), "callsPerMinute": 6000, "userCallsPerMinute": per_user, "tokenSeconds": 300})
     SECRET_FILE.write_text(made["secret"])
 

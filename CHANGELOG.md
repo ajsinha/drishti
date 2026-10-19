@@ -111,6 +111,17 @@
   open live stream, which never ends by itself: the worker stayed alive serving a silent stream, and the open reports and boards still said *Live*. A stop
   now closes the streams after `server.shutdown_seconds` (`DRISHTI_CONSOLE_SHUTDOWN_SECONDS`, 5 s); the pages say *Disconnected* and reconnect when the
   console is back ([OPERATIONS.md section 3.4](docs/admin/OPERATIONS.md#34-first-start-by-hand)).
+- **A live channel stays one connection with several console workers (2.4.0).** A page's later calls on its open live channel (a view added or
+  removed, `POST /api/channel/{cid}`; an embedded element's `POST /embed/v1/channel/{cid}` and its fresh token) reached whichever worker the
+  connection landed on, and three in four found no such channel: the page reopened its channel, and an embedded `<drishti-view>` said
+  *reconnecting* and repainted. A channel's id now names the worker that holds it, and the others pass the call on to it over a loopback port of
+  its own, with a key the launcher makes for its workers (`core/channel_relay.py`; a single-process console has neither)
+  ([OPERATIONS.md section 3.4](docs/admin/OPERATIONS.md#34-first-start-by-hand)).
+- **The elements demo host shows live valuations (2.4.0).** Since 2.3.0 a trade is static and the market-risk valuations tick, so
+  `tools/elements-demo` shows `TVAL-1000008` (and `TVAL-1000002` in its side column) from the trading, counterparty-risk and market-risk packs; its
+  search box knows `TVAL`. The `<drishti-view>` suites (`test_embed_elements_browser.py`, `test_embed_controls_browser.py`) run against it: masks
+  on the trade the valuation values, tables, pivot and a live subscription built with control values on a netting set, the controls of a trade on
+  its *Events* panel ([tools/elements-demo/README.md](tools/elements-demo/README.md), [tutorial 16](docs/tutorials/16-embed-drishti.md)).
 
 ## 2.3.0 — BI with filter context, time and live push; production-shaped trades from three source systems; a demo from a fresh clone (2026-10-17)
 
