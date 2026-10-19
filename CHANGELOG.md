@@ -119,6 +119,11 @@
 - **Drishti*net soak on real processes** (`tools/bench/net_soak.py`): three servers from one seed (two reading one lake, one its own), a console
   given the first, `tools/bench/users.py` load, a shard holder killed and restarted, then the console's own server, every answer compared with a
   single server holding all the data. Results in NET.md section 13.
+- **Tutorial 19 with real captures.** Ten pictures of Admin → Net on three real servers made by the picture script (`tools/docs/shots/t19.py`,
+  the console tests' own cluster: members, the console's servers, Files, a trade only c holds opened through a, Explain, the capability map,
+  Access, Security, the cluster after a stopped, the page at 390 px), the real output of `drishti.py net members`, the servers' and the
+  console's log lines, the explain answer, and a *You should see* in every step; NET.md section 9 shows the members after a failover; the
+  Windows QA guide's Drishti*net section says what the tester should see. The tutorials test counts nineteen.
 
 ## 2.4.0 — BI Studio, report schema v2 and boards as a report layout, Python data prep, the browser Python console, query by form at scale (2026-10-19)
 

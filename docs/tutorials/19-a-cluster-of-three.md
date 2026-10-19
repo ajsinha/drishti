@@ -91,7 +91,9 @@ under `<data dir>/net/history/` (`node.20261019T125447821.yaml`, ...), as the se
 **In the UI** (once a server runs): **Admin → Net → Files**, open `node.yaml`, edit, **Check** (the problems with their line), **Save**. A save
 carries the version you read; if someone saved in between, it is refused and the page says so.
 
-**What you should see:** a key in clear (`secret: abc...`) is refused by the CLI, the UI and the server alike; the key never appears in a file,
+![Admin → Net → Files on node a: node.yaml and gossip.yaml in force, routing.yaml and access.yaml not there (their defaults apply), gossip.yaml open in the editor with Check, Save, Delete and its history](img/t19/03-files-gossip.jpg)
+
+**You should see:** a key in clear (`secret: abc...`) is refused by the CLI, the UI and the server alike; the key never appears in a file,
 a page, an answer or a log.
 
 ## Step 2 · One seed
@@ -135,6 +137,9 @@ drishti: gossip.yaml was not written: 'lots' is not a duration (150ms, 5s, 10m, 
 
 **In the UI:** **Admin → Net → Members**, **Add a seed**, type `127.0.0.1:18783`, **Add seed**: it is saved as a peer file and tried at once.
 
+**You should see:** `drishti.py net list` on b naming its seed `drishti-a` and `peers/drishti-a.yaml in force`; with the key unset, `net check`
+exits 1 and names `node.yaml:3`.
+
 ## Step 3 · Start the three and watch them meet
 
 Start each server with its own data folder and its own `config/net/` folder, and the key in its environment:
@@ -144,17 +149,42 @@ DRISHTI_NET_SECRET=$KEY DRISHTI_NET_DIR=~/drishti/b/net DRISHTI_DATA_DIR=~/drish
   java -jar drishti-server/target/drishti-server-*-exec.jar --server.port=18784
 ```
 
-Each logs its join (`net: node drishti-b joined Drishti*net at http://127.0.0.1:18784 ...`) and each member it learns (`net: member drishti-c
-joined`). A server already running picks a change of its folder up within `drishti.net.poll` (5 s): saving `enabled: true` joins it, saving
+Each logs its join and each member it learns. Node b's log, as captured:
+
+```text
+INFO ... NetService : net: node drishti-b joined Drishti*net at http://127.0.0.1:18784 (incarnation 1, seeds [http://127.0.0.1:18783], 0 saved members)
+INFO ... NetService : net: member drishti-a joined
+INFO ... NetService : net: member drishti-c joined
+```
+ A server already running picks a change of its folder up within `drishti.net.poll` (5 s): saving `enabled: true` joins it, saving
 `false` makes it leave cleanly.
 
-**In the UI:** **Admin → Net → Members** on any node lists the three, each `alive`, with its version, tags, the latency this node measured and
-when it last heard of it; the page refreshes by itself. **From the command line:** `drishti.py net members --server http://127.0.0.1:18784`
-prints the same table.
+**In the UI:** **Admin → Net → Members** on any node lists the three, each `alive`, with its version, tags, packs, the latency this node
+measured and when it last heard of it; the page refreshes by itself.
 
-**What you should see:** the three `alive` on every node within a few gossip rounds (rounds of 1 s). In the in-process test of three servers
-(`NetMembershipTest`), they listed each other about 50 ms after the third started; a node killed is `suspect` after 5 s and `dead` after 30 s
-(gossip.yaml), and its data is then asked of the other holders.
+![Admin → Net → Members on node a: drishti-a (this node), drishti-b and drishti-c, each alive, with address, version 2.4.0, tags, the pack each serves, when it was last heard of, latency and incarnation](img/t19/01-members.jpg)
+
+**From the command line** (an administrator's token in `DRISHTI_TOKEN`, or sign-in off):
+
+```text
+$ drishti.py net members --server http://127.0.0.1:18784
+3 member(s); this node drishti-b
+  node                   state  address                 version  tags                   latency  incarnation
+  drishti-b (this node)  alive  http://127.0.0.1:18784  2.4.0    region:emea            -        1
+  drishti-a              alive  http://127.0.0.1:18783  2.4.0    region:emea,tier:risk  6.4 ms   1
+  drishti-c              alive  http://127.0.0.1:18785  2.4.0    region:apac            8.8 ms   1
+```
+
+**You should see:** the three `alive` on every node within a few gossip rounds (rounds of 1 s). In the in-process test of three servers
+(`NetMembershipTest`), they listed each other about 50 ms after the third started; on three real servers the console listed all three 1.5 s
+after it started ([NET.md section 13](../admin/NET.md#13-measured-the-soak-on-real-processes)). A node killed is `suspect` after `suspect-after`
+and `dead` after `dead-after` more (gossip.yaml; with the 3 s and 10 s used here every node saw it in about 3 s), and its data is then asked of
+the other holders.
+
+**The capability map** (**Admin → Net → Capability map**) shows, for each kind, the nodes that render it with their pack's version, and the
+nodes that hold its data with the connector and the table it reads:
+
+![Admin → Net → Capability map filtered to trade: the renderers with the finance pack's version, the newest marked, and the holders of trade data on each node with their connector and table](img/t19/06-capability-map.jpg)
 
 ## Step 4 · A trade only one node holds
 
@@ -164,9 +194,13 @@ role on a, and renders it; c has masked it as your role already. If the pack of 
 node that renders it and passes the answer back unchanged. Either way the page is the one c would give, and the UI never says which server
 answered.
 
+![The trade MX-00003, held on c only, opened through the console on a: the deal fields of MUREX and, for an administrator only, the line Node: drishti-a · built here, data from drishti-c](img/t19/04-trade-on-c-through-a.jpg)
+
 **In the UI:** **Admin → Net → Routing**, **Explain a request**: kind `trade`, id `MX-00003`, a role. It names the route the server takes
 (answered here, with the data fetched from drishti-c; or forwarded, to which nodes in which order; which nodes the role may not reach; which
 are down) and the reason. Below it: forwarded calls per peer and minute, the slowest peers and the latest calls.
+
+![Explain on node a: answered here (the pack is here and is the newest), data read from drishti-b and drishti-c, a search asks both; below, the forwarded traffic per peer, the slowest peers and the latest calls: c answered ok, b said not-held](img/t19/05-explain.jpg)
 
 **From the command line:**
 
@@ -174,8 +208,18 @@ are down) and the reason. Below it: forwarded calls per peer and minute, the slo
 curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "http://127.0.0.1:18783/api/v1/net/explain?kind=trade&id=MX-00003&role=trader"
 ```
 
+The answer, as captured on a:
+
+```json
+{"kind":"trade","id":"MX-00003","roles":["*"],"route":"local","reason":"the pack finance 1.0.0 is here and is the newest the caller may reach",
+ "forwardTo":[],"localPack":"finance 1.0.0","dataPeers":["drishti-b","drishti-c"],"scatter":["drishti-b","drishti-c"],"unreachable":[],"down":[]}
+```
+
 A search is asked of every node that holds other data of the kind (never a replica of a node already asked) and merged into one answer; if a
 node is late or down, the answer is marked partial and names it.
+
+**You should see:** the trade's page through a exactly as c shows it, and Explain naming `drishti-c` among the nodes the data is read from; the
+latest calls list `data trade ok` for drishti-c.
 
 ## Step 5 · The console with several servers
 
@@ -194,6 +238,11 @@ backend:
 **In the UI:** **Admin → Net → Members**, the box **This console's servers**: every server it knows, configured or discovered, and whether it
 is healthy. **Admin → Health** shows the same list and the failovers.
 
+![This console's servers: 18783 configured and in use, 18784 and 18785 discovered, all healthy](img/t19/02-console-servers.jpg)
+
+**You should see:** the server you configured marked *configured* and *in use*, the other two *discovered* within `discover_every`, all
+*healthy*; `<console data dir>/net/servers.json` lists the three.
+
 ## Step 6 · Who may reach which node
 
 `access.yaml` lists, per role, the nodes (by id or tag) its users' requests may reach; a role not listed reaches every node:
@@ -204,10 +253,17 @@ roles:
     nodes: [region:emea]
 ```
 
-**In the UI:** **Admin → Net → Access** edits it and shows the members each role reaches now. A forwarded request whose roles may not reach a
+**In the UI:** **Admin → Net → Access** edits it and shows the members each role reaches now.
+
+![Admin → Net → Access: the roles and the nodes each may reach, this node's tags and peer-only packs](img/t19/07-access.jpg) A forwarded request whose roles may not reach a
 node is refused there (`403 DRS-5054`), whatever the forwarding node thought. A pack listed in `peer-only-packs` in node.yaml is served to the
 other nodes but hidden from the node's own users. **Admin → Net → Security** shows the key's state (never the key), the previous key during a
 rotation and refused calls; the key rotates in three steps with no downtime ([NET.md section 6](../admin/NET.md#6-security-the-key-mutual-tls-nodes-per-role)).
+
+![Admin → Net → Security: the cluster key set (never shown), no previous key, mutual TLS off, and no refused calls](img/t19/08-security.jpg)
+
+**You should see:** a role limited to `region:emea` reaching drishti-a and drishti-b only; the Security tab saying the key is set and listing
+no refused calls.
 
 ## Step 7 · Drain a node, then stop one
 
@@ -217,11 +273,34 @@ maintenance; then stop it, and it leaves the cluster cleanly.
 
 Now stop node a, the one the console was given. Within `fail_after` failed requests or health checks the console sets a aside and moves your
 session to another server: a read that failed is retried once there, a write is never repeated (it fails with an error naming the server, and you check and make it again). The
-open page reloads its data, a live view reconnects, and you stay signed in (the session is the console's). When a comes back it is used again
-for new sessions after a minute.
+open page carries on, its live view ticking on through the new server with no reload, and you stay signed in (your sign-in session is copied
+to every node). When a comes back it is used again for new sessions after a minute.
 
-**What you should see:** the next page loads from b or c within seconds; **Admin → Health** counts the failover, and the server is told of it
-(audited).
+The logs, as captured: node a leaves, b and c see it go, the console moves.
+
+```text
+a:       net: node drishti-a left Drishti*net (the server is stopping)
+b:       net: member drishti-a is gone
+console: console moved from http://127.0.0.1:18783 to http://127.0.0.1:18785: ConnectError
+```
+
+```text
+$ drishti.py net members --server http://127.0.0.1:18784
+3 member(s); this node drishti-b
+  node                   state  address                 version  tags                   latency  incarnation
+  drishti-b (this node)  alive  http://127.0.0.1:18784  2.4.0    region:emea            -        1
+  drishti-a              left   http://127.0.0.1:18783  2.4.0    region:emea,tier:risk  6.1 ms   1
+  drishti-c              alive  http://127.0.0.1:18785  2.4.0    region:apac            6.7 ms   1
+```
+
+![Admin → Net → Members on c after a stopped: drishti-a left, b and c alive; this console's servers: 18783 set aside, 18785 in use](img/t19/09-after-a-stopped.jpg)
+
+At a phone's width (390 px) the page keeps its tabs and its summary: the cluster on, this node, three alive, the server the console is on.
+
+![Admin → Net at 390 px: the summary chips (cluster on, this node drishti-c, 3 alive, key set, console on 18785) and the six tabs](img/t19/10-members-phone.jpg)
+
+**You should see:** the next page within a second (0.8 s in the browser suite, 0.27 s in the soak with a killed server), no sign-in page, an
+open live view still ticking; **Admin → Health** counts the failover, and the server is told of it (audited).
 
 ## Step 8 · What follows you
 
@@ -229,6 +308,9 @@ Save a search on a, make a layout or a pivot: they are on b and c within a secon
 the failover of Step 7 they are where you are. A node that was down is given what it lacks when it comes back. Alerts, monitors and scheduled
 reports stay on the node they were made on: they act, and would act once per node. With one shared identity database, set `user-state: off` in
 routing.yaml.
+
+**You should see:** Admin → Net → Members on b counting the changes applied from a (*Users' saved searches, layouts, pivots and workspaces are
+copied ...: N changes sent, M applied here*), and your saved search in the list on b after the failover.
 
 ## Next steps
 

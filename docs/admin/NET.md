@@ -446,6 +446,8 @@ backend:
 **Admin → Net** (`/admin/net`, administrators) is the cluster as the node the console is on sees it. Its summary line says whether the cluster is
 on, this node's id, how many members are in each state, whether the key is set (never the key) and whether this node is drained.
 
+![Admin → Net → Members on node c after node a stopped: a left, b and c alive; below, this console's servers: the configured one set aside, a discovered one in use](../tutorials/img/t19/09-after-a-stopped.jpg)
+
 **Members.** This node (id, address, tags, peer-only packs, version, the gossip timings and how many rounds it has run, where `peers.json` is and
 when it was saved), then every member: state, address, version (and protocol when it differs), tags, packs, when it was last heard, the latency
 measured to it, its incarnation. The table refreshes every 5 seconds. Actions:

@@ -395,11 +395,16 @@ single server of section 4: without a `config\net` folder Drishti*net is off.
 3. For the second server, a copy of the project's `config` in another folder with its own `data` folder, the same three settings with port
    18490 (`--dir <that folder>\config\net`), and its seed: `net add-peer first 127.0.0.1:18480 --dir <that folder>\config\net`.
 4. Start the first server as in section 4.1 with `DRISHTI_NET_SECRET` in the run configuration's environment; start the second from a
-   PowerShell window in its folder: `java -jar <project>\drishti-server\target\drishti-server-<version>-exec.jar --server.port=18490`.
-5. Check: **Admin → Net → Members** lists both `alive`. Open a trade only the second holds through the console: the same page as on the
-   second. **Admin → Net → Routing → Explain a request** names the route.
+   PowerShell window in its folder: `java -Djava.io.tmpdir=data\tmp\server -jar <project>\drishti-server\target\drishti-server-<version>-exec.jar --server.port=18490`
+   (make `data\tmp\server` first). Each server logs `net: node ... joined Drishti*net at ...` and then `net: member ... joined` for the other.
+5. Check: **Admin → Net → Members** lists both `alive` within a few seconds, with the latency each measured (a few milliseconds on one
+   machine). Open a trade only the second holds through the console: the same page as on the second; as an administrator, *How this view was
+   built* says `Node: <first> · built here, data from <second>`. **Admin → Net → Routing → Explain a request** names the route and lists the
+   second under *Data read from*. The members table looks like [tutorial 19's picture](../tutorials/img/t19/01-members.jpg).
 6. To show failover, set the console's `DRISHTI_BACKEND_URLS=http://127.0.0.1:18480` before starting it, stop the first server: the next page
-   comes from the second, still signed in.
+   comes from the second within a second, still signed in (sign-in sessions are copied to every server), and an open trade page keeps ticking.
+   **Admin → Net → Members** on the second says the first `left`, and *This console's servers* shows 18480 *set aside* and 18490 *in use*
+   ([picture](../tutorials/img/t19/09-after-a-stopped.jpg)). A user other than `drishti-dev-admin` must exist on both servers to stay signed in.
 
 If `net set node.enabled true` says *needs the cluster key*, the variable of point 1 is not set in that PowerShell window.
 
