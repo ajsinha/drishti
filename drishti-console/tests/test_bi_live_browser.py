@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Rupaka phase 5 (streaming BI) in Chromium, over the real server and console (tests/bi_live_stack.py: ports 18995 and 17995, security on, the trading and
-counterparty-risk packs, the demo source ticking every 200 ms: 750 trades, 360 of them live, and 66 netting sets; never more): the sample report "Live trading desk" opens and
+counterparty-risk packs, the demo source ticking every 200 ms: the market-risk pack's 765 trade valuations, and 66 netting sets; never more): the sample report "Live trading desk" opens and
 redraws in place as the trades tick (the same chart, new numbers), says when the last update arrived, pauses and resumes, says when the connection drops and recovers;
 the 2.1 Perspective grid and pivot visuals are Drishti's own grid of the server's answer under the strict policy (wave B: no WebAssembly on a BI page); the mask reads the same in every visual for a reader without raw; the sample board "Desk wall" colours tiles by threshold, fills the screen in kiosk
 mode and turns its pages by itself; and a phone (390 px) shows reports and boards with finger-sized controls.
@@ -27,7 +27,7 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 import bi_live_stack as S  # noqa: E402
-from bi_live_stack import BOARD, CONSOLE_URL, EXPOSURE, PASSWORD, REPORT  # noqa: E402
+from bi_live_stack import BOARD, CONSOLE_URL, EXPOSURE, PASSWORD, REPORT, TRADE_IDS, TRADES  # noqa: E402
 
 VIOLATIONS = "window.__csp = []; document.addEventListener('securitypolicyviolation', e => window.__csp.push(e.violatedDirective + ' ' + e.blockedURI));"
 ROUND = "() => Number(document.getElementById('biCanvas').getAttribute('data-live-round') || 0)"
@@ -106,7 +106,7 @@ def test_the_live_report_redraws_in_place_as_the_trades_tick_and_says_when(stack
     open_report(page)
     wait_state(page, "live")
     page.wait_for_selector('[data-visual="by-desk"] .bi-chart')
-    assert card(page, "trades") == 750
+    assert card(page, "trades") == TRADES
     assert re.search(r"· live( \(\w+\))?$", page.inner_text('[data-visual="trades"] .bi-vis-foot').strip())                 # the layer that answered
     mtm = card(page, "mtm")
     page.evaluate("document.querySelector('[data-visual=\"by-desk\"] .bi-chart').setAttribute('data-mark', 'same-element')")
@@ -120,7 +120,7 @@ def test_the_live_report_redraws_in_place_as_the_trades_tick_and_says_when(stack
     # the rolling line collects one point for each update
     points = page.evaluate("echarts.getInstanceByDom(document.querySelector('[data-visual=\"rolling\"] .bi-chart')).getOption().series[0].data.length")
     assert points >= 3
-    assert page.inner_text('[data-visual="latest"] tbody tr:first-child td:first-child').startswith(("MX-", "CLY-", "END-", "IMG-", "BBG-", "WSS-"))
+    assert page.inner_text('[data-visual="latest"] tbody tr:first-child td:first-child').strip() in TRADE_IDS          # a trade the feed pushed
     clean(page)
 
 
@@ -171,7 +171,7 @@ def test_a_dropped_connection_is_said_and_a_new_one_redraws_everything(stack, br
     start = page.evaluate(ROUND)
     rounds(page, 1)
     assert page.evaluate(ROUND) > start
-    assert card(page, "trades") == 750
+    assert card(page, "trades") == TRADES
     page.context.close()
 
 
@@ -273,12 +273,16 @@ def test_the_desk_wall_colours_tiles_fills_the_screen_and_turns_its_pages(stack,
     page.wait_for_function("() => document.querySelectorAll('.bi-vis').length === 7 && !document.querySelector('.bi-vis-busy')", timeout=30000)
     assert page.inner_text("[data-title]") == "Desk wall" and page.locator("[data-pages] a").all_inner_texts() == ["Trading desk", "Counterparty exposure"]
     tile = lambda t: page.get_attribute(f'[data-tile="{t}"]', "data-alert")                   # noqa: E731
-    assert tile("net-mtm") == "warn" and tile("losses") == "warn" and tile("trades") == ""
-    assert "warning" in page.inner_text('[data-tile="net-mtm"] .bi-vis-foot')                 # in words, not only in colour
-    assert page.evaluate("getComputedStyle(document.querySelector('[data-tile=\"net-mtm\"]')).boxShadow") != "none"
+    # the net MTM tile follows the sample's thresholds (warn below 0, crit below -1 bn, 25 m of hysteresis); the stack's losses alert warns from the first loss
+    net = float(page.get_attribute('[data-tile="net-mtm"] .bi-card-value', "data-value"))
+    if abs(net) > 25e6:
+        assert tile("net-mtm") == ("crit" if net < -1e9 else "warn" if net < 0 else ""), net
+    assert tile("losses") == "warn" and tile("trades") == ""
+    assert "warning" in page.inner_text('[data-tile="losses"] .bi-vis-foot')                  # in words, not only in colour
+    assert page.evaluate("getComputedStyle(document.querySelector('[data-tile=\"losses\"]')).boxShadow") != "none"
     wait_state(page, "live")
     rounds(page, 2)
-    assert float(page.get_attribute('[data-tile="trades"] .bi-card-value', "data-value")) == 750
+    assert float(page.get_attribute('[data-tile="trades"] .bi-card-value', "data-value")) == TRADES
     # kiosk: the menus go, the wall fills the screen, the pages turn by themselves
     page.click("[data-kiosk]")
     assert page.evaluate("document.body.classList.contains('bi-kiosk')")

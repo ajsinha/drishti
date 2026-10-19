@@ -56,17 +56,19 @@ def main() -> None:
     settings = load_settings(HERE / "config", sys.argv[1:])
     temp_under_data(settings)
     workers = max(1, int(settings.get("server.workers") or 1))
+    # a stop closes the live streams after this long: a worker waits for its open connections, and a live page's stream never ends by itself
+    grace = max(1, int(settings.get("server.shutdown_seconds") or 5))
     if workers > 1:
         # several processes share the port: one Python process uses one core (about 40 pages a second measured); nothing a
         # request needs lives in one process only (sessions are checked with the server, CSRF reads the Origin header)
         os.environ[ARGV] = json.dumps(sys.argv[1:])
         uvicorn.run("run_drishti_web:factory", factory=True, workers=workers, app_dir=str(HERE), host=settings.get("server.host"),
-                    port=int(settings.get("server.port")), log_level="info", access_log=False)
+                    port=int(settings.get("server.port")), log_level="info", access_log=False, timeout_graceful_shutdown=grace)
         return
     app = create_app(settings)
     app.state.tmp_owner = True                    # this process removes its temp folder when the server stops (core/tmpdir.py)
     uvicorn.run(app, host=settings.get("server.host"), port=int(settings.get("server.port")),
-                log_level="info", access_log=False)
+                log_level="info", access_log=False, timeout_graceful_shutdown=grace)
 
 
 if __name__ == "__main__":

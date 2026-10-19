@@ -96,6 +96,10 @@
 - **Offline quote and news pages checked** (`DRISHTI_OFFLINE=true`, the committed snapshot): the topic page's note now says that offline mode shows the
   captured headlines (it said the tables stay empty); the browser test also checks that the company page draws the whole year of closes, ending at the
   quote's own price, with no policy violation or script error.
+- **A console with live pages open stops promptly (2.4.0).** With several worker processes (`server.workers`, 4 by default) a stop waited for every
+  open live stream, which never ends by itself: the worker stayed alive serving a silent stream, and the open reports and boards still said *Live*. A stop
+  now closes the streams after `server.shutdown_seconds` (`DRISHTI_CONSOLE_SHUTDOWN_SECONDS`, 5 s); the pages say *Disconnected* and reconnect when the
+  console is back ([OPERATIONS.md section 3.4](docs/admin/OPERATIONS.md#34-first-start-by-hand)).
 
 ## 2.3.0 — BI with filter context, time and live push; production-shaped trades from three source systems; a demo from a fresh clone (2026-10-17)
 

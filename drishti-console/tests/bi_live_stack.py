@@ -46,6 +46,14 @@ PASSWORD = "long-enough-pass-1"
 REPORT = "file:report:live-trading-desk"
 EXPOSURE = "file:report:live-exposure"
 BOARD = "file:report:desk-wall"                     # 2.4.0: the board is a report with board pages
+# the demo source serves the market-risk pack's trade valuations, one a line (765 since 2.3.0); the live table holds all of them
+_VALUATIONS = [json.loads(line) for line in (ROOT / "config" / "packs" / "market-risk" / "samples" / "trade-valuation.jsonl").open(encoding="utf-8") if line.strip()]
+TRADES = len(_VALUATIONS)
+TRADE_IDS = {v["TRADE_ID"] for v in _VALUATIONS}          # ids are text with no assumed prefix (2.3.0): ENDUR's are digits
+# The shipped Desk wall warns when the net MTM is negative; the 2.3.0 valuations sum to a positive net MTM, so this stack's copy also warns on the
+# losses tile from the first loss (the sample warns below -1.5 bn): a tile the data always trips, to see the colours, the words and the shadow
+LOSSES_ALERT = ("alert: { on: Losses, warn: { op: lt, value: -1500000000 }, crit: { op: lt, value: -2500000000 } }",
+                "alert: { on: Losses, warn: { op: lt, value: 0 }, crit: { op: lt, value: -1000000000000000 } }")
 LIVE_FILES = {"datasets": ["live-trading", "live-exposure"], "reports": ["live-trading-desk", "live-exposure", "desk-wall"]}
 ROLES = {"live-risk": (["bi"], True), "live-analyst": (["bi"], False), "live-writer": (["bi", "bi-author"], True), "live-none": ([], False)}
 USERS = {"rita": "live-risk", "ann": "live-analyst", "wes": "live-writer", "nobi": "live-none"}
@@ -109,6 +117,10 @@ class LiveStack:
             for name in names:
                 suffix = {"datasets": "dataset", "reports": "report", "boards": "board"}[kind]
                 shutil.copy(ROOT / "config" / "bi" / kind / f"{name}.{suffix}.yaml", folder)
+        wall = work / "config" / "bi" / "reports" / "desk-wall.report.yaml"
+        text = wall.read_text(encoding="utf-8")
+        assert LOSSES_ALERT[0] in text, "the shipped Desk wall's losses alert changed: update LOSSES_ALERT"
+        wall.write_text(text.replace(*LOSSES_ALERT), encoding="utf-8")
         env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS="trading,counterparty-risk,market-risk", DRISHTI_SECURITY_ENABLED="true",
                    DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_BI_DIR=str(work / "config" / "bi"), DRISHTI_DATA_DIR=str(work / "data"))
         self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
