@@ -16,7 +16,7 @@
 operations; the real one is what makes "the YAML changes and the comments stay" a true statement).
 
 Not collected as tests (the name does not start with ``test_``); ``test_workbench_browser.py`` imports the fixtures. The server is
-the repackaged jar under ``drishti-server/target`` run on a free port in a scratch directory; when the jar or a JDK is missing the
+the repackaged jar under ``drishti-server/target`` run on a free port (or DRISHTI_WB_SERVER_PORT / DRISHTI_WB_CONSOLE_PORT) in a scratch directory; when the jar or a JDK is missing the
 tests that need it are skipped, never failed."""
 import json
 import os
@@ -76,7 +76,11 @@ def should_reload(network, reloaded: bool) -> bool:
     return (not reloaded) and any(NETWORK_CHANGED in str(n) for n in (network or []))
 
 
-def free_port() -> int:
+def free_port(env: str = "") -> int:
+    """A free port, or the one the environment variable ``env`` names (a run that must stay on fixed scratch ports sets DRISHTI_WB_SERVER_PORT and
+    DRISHTI_WB_CONSOLE_PORT; only one such stack may then be up at a time)."""
+    if env and os.environ.get(env):
+        return int(os.environ[env])
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
         return s.getsockname()[1]
@@ -114,7 +118,7 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False):
     from core.app import create_app
     from core.config import Settings, load_settings
 
-    port = free_port()
+    port = free_port("DRISHTI_WB_SERVER_PORT")
     work = work or tmp_path_factory.mktemp("wb-server")
     if (ROOT / "config").exists():                 # the server reads config beside where it runs; its data stays in the scratch directory
         (work / "config").mkdir()
@@ -144,7 +148,7 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False):
         if auth:
             data["auth"] = {**data.get("auth", {}), "enabled": True, "session_secret": "s" * 40, "token_secret": TOKEN_SECRET, "secure_cookie": False}
         app = create_app(Settings(data))
-        cport = free_port()
+        cport = free_port("DRISHTI_WB_CONSOLE_PORT")
         server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=cport, log_level="warning", timeout_graceful_shutdown=2))
         thread = threading.Thread(target=server.run, daemon=True)
         thread.start()

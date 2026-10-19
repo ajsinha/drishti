@@ -60,6 +60,8 @@ class TickingBackend(FakeBackend):
 
 
 def _free_port() -> int:
+    if os.environ.get("DRISHTI_LIVE_TABS_PORT"):             # a run on fixed scratch ports names the stand-in console's
+        return int(os.environ["DRISHTI_LIVE_TABS_PORT"])
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
         return s.getsockname()[1]
