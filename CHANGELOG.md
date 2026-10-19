@@ -28,6 +28,10 @@
   deletion is a new user; of two users of one name made apart the older stands (a new node's seeded administrator never replaces the cluster's).
   Every change applied is audited on the receiving node with `net:<node>`. `user-state: off` (one shared database) copies nothing, as before.
   `NetIdentityTest` (three servers in one JVM, security on). NET.md section 7, DRISHTI_NET.md sections 9, 11 and 19, tutorial 19 step 8.
+- **Fixed: a Delta connector's on-disk document cache keeps what was read before a restart.** A document read by the start-up warm-up went
+  into the memory tier before the disk tier, so a page answered from memory at that moment never wrote it to disk, and a close dropped the
+  warm-up's late write; a background read still inside the cache also kept it locked after the close. The disk tier is now written first, and
+  closing waits up to 5 s for background reads to leave (found as a flaky `DeltaDocDiskCacheTest` under the drill's load).
 - **Fixed: `pytest` from the repo root collects every test.** `tools/bench/test_trades.py` and `tools/packgen/trades/test_trades.py`
   shared a module name, so collection stopped with an import-file-mismatch error; the benchmark's test is now `tools/bench/test_bench_trades.py`.
 - **Fixed: derived pages kept on disk are never removed while another process has them open.** A server's start-up clean-up of

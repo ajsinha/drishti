@@ -84,11 +84,16 @@ class HitIndexTest {
             index.remove(EntityRef.of("trade", "MX-" + (30_000_000 + i)));
         }
         long ms = (System.nanoTime() - t0) / 1_000_000;
+        // the work, not the clock: a removal only marks the entity, and the million-entry array is rewritten once per 4,096 removals
+        // (a rewrite per removal would be 10,000 rewrites of a million entries)
+        assertThat(index.folds()).isEqualTo(2);
         assertThat(index.size()).isEqualTo(990_000);
         assertThat(index.search("trade", "mx-300", 3)).extracting(h -> h.ref().id())
                 .containsExactly("MX-30010000", "MX-30010001", "MX-30010002");
         assertThat(index.search("trade", "MX-30009999", 3)).isEmpty();
-        assertThat(ms).isLessThan(5_000);
+        // and a generous clock bound for a loaded machine (the drill runs the console suite beside it; about 0.3 s when quiet): only a
+        // rewrite per removal would come near it
+        assertThat(ms).isLessThan(60_000);
     }
 
     private static EntityHit hit(String kind, String id) {

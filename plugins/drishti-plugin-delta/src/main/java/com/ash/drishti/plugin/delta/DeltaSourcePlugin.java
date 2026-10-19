@@ -600,10 +600,12 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 slots.release();
             }
             if (json != null) {
-                docs.put(heapKey, json);
+                // the disk first: a document in the heap tier is already on disk, so a reader the heap answers never leaves the disk
+                // without it (the start-up warm-up and a page reading one document at once; a close dropping the warm-up's late write)
                 if (diskDocs != null) {
                     diskDocs.put(key, json.getBytes(StandardCharsets.UTF_8));
                 }
+                docs.put(heapKey, json);
             }
         }
         return json;
@@ -948,6 +950,13 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     @Override
     public void close() {
         loaders.shutdownNow();               // loads in flight are abandoned; their callers get an error, not a hang
+        try {
+            // a background read still inside the disk cache keeps its store open (and locked) after the close below, until it leaves:
+            // a moment for it to leave, so a restart in the same folder finds the cache free and holding what was read
+            loaders.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         if (diskDocsRetry != null) {
             diskDocsRetry.cancel(false);
         }
