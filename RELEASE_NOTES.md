@@ -13,7 +13,39 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 2.4.0 — release notes
+# Drishti 2.5.0 — release notes
+
+*2026-10-19.* **Drishti*net: several servers act as one Drishti, and the console carries on when one stops.** (Wave N of
+[BI_DESIGN.md](docs/architecture/BI_DESIGN.md); operator's guide [NET.md](docs/admin/NET.md), tutorial 19.)
+
+- **One cluster, off by default:** servers find each other by gossip over HTTP from one seed, keep the member list in
+  `<data dir>/net/peers.json`, and publish what they serve (packs with versions, kinds, the tables they read). Configured
+  like connectors, in its own folder `config/net/` (node, peers, gossip, routing, access), from the UI, the CLI
+  (`drishti.py net`) or YAML.
+- **The UI cannot tell which server answered:** a page for data held on another node is built here with the data fetched
+  (masked on both nodes) or forwarded to a node that renders it; the newest version of a pack is served; a pack can be
+  offered to peers only. Searches and grouped pages are gathered from every node a role may reach, replicas asked once,
+  each entity counted once; a node that is down is named in a partial answer, never a wrong one. Live views and BI
+  reports work across nodes; saved searches, layouts, pivots and sign-in sessions follow a user.
+- **Security:** a cluster key (rotated with no downtime), short-lived on-behalf-of tokens, nodes per role, audit.
+- **The console with several servers:** give it one, it learns the rest every minute and keeps the list; if its server
+  stops it moves to another within seconds and the open page, live stream and sign-in carry on.
+- **Admin → Net:** members with a hash ring of the cluster, the capability map, routing with *Explain*, access, security,
+  the configuration files.
+- **Measured on real processes:** three servers, 20 users for 10 minutes with servers killed and restarted: 0 wrong answers
+  of 9,362 checked, the console moved in 0.27 s, nobody signed out ([NET.md section 13](docs/admin/NET.md)).
+- **A ready-made local cluster:** `drishti-stack/` (start, stop, status; secrets stay local and are never committed).
+- **No JVM fills `/tmp`:** every Java process Drishti and its build start gets its own temporary folder at launch; the
+  server warns in Admin → Health when it was started without one.
+- **News without the internet connector:** a switched-off news, quote or public-data connector's kinds are served from
+  the committed snapshot ("off (served from the snapshot)").
+- **Documents, help and the deck reviewed** for 2.3–2.5 (names, commands checked against the CLI, release order); the
+  design-and-evidence deck brought up to date (48 slides).
+
+Upgrading from 2.4.0: nothing to do for a single server (Drishti*net is off without `config/net/`); start the server with
+`-Djava.io.tmpdir=<data dir>/tmp/server` (README); see [CHANGELOG.md](CHANGELOG.md).
+
+# Previous release: Drishti 2.4.0 — release notes
 
 *2026-10-19.* **BI Studio: authoring and analysis as one product, Python data prep step by step, and query by form at
 scale.** (Wave C of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)

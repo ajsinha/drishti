@@ -17,7 +17,7 @@
 
 ## Unreleased
 
-### 2.5.0 (wave N, Drishti*net): many servers, one Drishti
+## 2.5.0 — Drishti*net: many servers, one Drishti; no JVM litters /tmp; the documents, help and deck reviewed (2026-10-19)
 
 - **Drishti*net membership (N1).** Several servers act as one cluster, **off by default**: with no `config/net/` folder (or `enabled: false`
   in its `node.yaml`) a server is a single server exactly as before. Switched on, each node gossips over HTTP (SWIM-style push-pull every
