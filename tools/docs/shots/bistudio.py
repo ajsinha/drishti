@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of BI Studio (BI_GUIDE.md section 26, wave C, 2.4.0), written to docs/guides/img/bi-studio/.
+"""The pictures of BI Studio (BI_GUIDE.md section 26, wave C, 2.4.0), written to docs/guides/img/bistudio/.
 
 They are made on the report browser tests' scratch stack (drishti-console/tests/bi_report_stack.py: the built server jar, the trading and market-risk
 packs, the model trades-basic over a small synthetic lake). Its ports come from DRISHTI_BI_REPORT_SERVER_PORT and DRISHTI_BI_REPORT_CONSOLE_PORT, so run:
@@ -29,7 +29,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "drishti-console" / "tests"))
 from shotlib import ROOT, Ctx, register  # noqa: E402
 
-shot = register("bistudio", ROOT / "docs" / "guides" / "img" / "bi-studio")
+shot = register("bistudio", ROOT / "docs" / "guides" / "img" / "bistudio")
 STACK = {}
 PASSWORD = "long-enough-pass-1"
 

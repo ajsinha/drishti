@@ -16,7 +16,8 @@
 
 A Python measure and a Python visual in a report (the shipped ones, then one of your own); then Analyse on a model (2.2): an extract, a slice, a SQL cell in Drishti
 SQL on the server, a Python cell that draws a chart, a saved notebook, the promotion of a cell to a visual and of a slice to a report draft; the Python dataset
-of the sample (a Transform over two model queries); a SQL cell promoted into an existing report draft."""
+of the sample (a Transform over two model queries); a SQL cell promoted into an existing report draft; the Transform editor over the ENDUR trades read
+through trade-endur (2.4.0) and the browser Python console, its cell promoted to the console backend."""
 from __future__ import annotations
 
 from _bi import bi, clean_items, quiet_inbox
@@ -298,3 +299,98 @@ def python_starter(c: Ctx):
     p.wait_for_timeout(500)
     c.save("24-python-starter-editor.jpg", locator="[data-edit] label:has(textarea)")
     clean_items(c, STARTER)
+
+
+PREP = "ENDUR trades, cleaned"
+PREP_FIELDS = ["TRADE_ID", "TRADE_STATUS", "PORTFOLIO", "CURRENCY", "NOTIONAL", "TRADE_DATE", "MATURITY_DATE"]
+
+
+def tx_ran(c: Ctx, before: int) -> int:
+    """Waits for the Transform editor's next run (the step frames and profiles come back from the console's sandbox)."""
+    c.page.wait_for_function(f"() => Number(document.getElementById('tx').getAttribute('data-ran') || 0) > {before} && "
+                             "document.getElementById('tx').getAttribute('data-running') === 'false'", timeout=120000)
+    return int(c.page.locator("#tx").get_attribute("data-ran"))
+
+
+def tx_snippet(c: Ctx, sid: str, fill):
+    p = c.page
+    p.click("[data-open-snippets]")
+    p.select_option("[data-snippet]", sid)
+    fill(p)
+    p.click("[data-snippet-add]")
+
+
+@shot("25-transform-input.jpg", also=("26-transform-profile.jpg", "27-transform-steps.jpg"))
+def transform_editor(c: Ctx):
+    """Step 12: the Transform editor over the ENDUR trades read straight through trade-endur: the input, step 2's profile, then five steps and their rows."""
+    login(c, height=900)
+    quiet_inbox(c)
+    clean_items(c, PREP)
+    p = c.page
+    go(c, "/bi/transform", height=1400, wait="#tx[data-loaded=true]", settle=500)
+    p.fill("[data-title]", PREP)
+    p.select_option("[data-ikind]", "dataset:pack.trading.trade")
+    p.wait_for_selector("#tx[data-fields-for='dataset:pack.trading.trade']")
+    p.fill("[data-iconnector]", "trade-endur")
+    for box in p.locator("[data-ifields] input[name=f]").all():
+        if (box.get_attribute("value") in PREP_FIELDS) != box.is_checked():
+            box.click()
+    p.fill("[data-iname]", "trades")
+    p.click("[data-iadd]")
+    n = tx_ran(c, 0)
+    c.save("25-transform-input.jpg", ".tx-inputs")
+    tx_snippet(c, "filter-values", lambda q: (q.select_option("[data-param=column]", "TRADE_STATUS"), q.fill("[data-param=values]", "MATURED"),
+                                              q.uncheck("[data-param=keep]")))
+    n = tx_ran(c, n)
+    p.click("[data-ptab=profile]")
+    p.locator("[data-profile-col=TRADE_STATUS]").wait_for(timeout=30000)
+    p.wait_for_timeout(500)
+    c.save("26-transform-profile.jpg", ".tx-work")
+    p.click("[data-profile-col=TRADE_DATE] [data-fix]")
+    n = tx_ran(c, n)
+    tx_snippet(c, "tenor-bucket", lambda q: (q.select_option("[data-param=maturity]", "MATURITY_DATE"), q.select_option("[data-param=as_of]", "TRADE_DATE")))
+    n = tx_ran(c, n)
+    tx_snippet(c, "group-total", lambda q: (q.click("[data-param=by] input[value=PORTFOLIO]"), q.click("[data-param=by] input[value=tenor_bucket]"),
+                                            q.click("[data-param=columns] input[value=NOTIONAL]")))
+    n = tx_ran(c, n)
+    p.click("[data-ptab=rows]")
+    p.wait_for_timeout(500)
+    c.save("27-transform-steps.jpg", ".tx-work")
+
+
+CONSOLE_CODE = ('live = df[df["TRADE_STATUS"] != "MATURED"]\n'
+                'by_book = live.groupby("PORTFOLIO", as_index=False)["NOTIONAL"].sum().nlargest(8, "NOTIONAL").reset_index(drop=True)\n'
+                'print(len(live), "live trades of", len(df))\n'
+                'show(by_book, "Live notional by book, top 8")\n'
+                'chart(by_book, kind="bar", x="PORTFOLIO", y="NOTIONAL")\n')
+NOTEBOOK = "Live notional by book"
+
+
+@shot("28-pyconsole.jpg", also=("29-pyconsole-promoted.jpg",))
+def pyconsole(c: Ctx):
+    """Step 13: the browser Python console on the trading pack's trades (Pyodide in the page), then the same cell promoted to the console backend."""
+    login(c, height=900)
+    quiet_inbox(c)
+    clean_items(c, NOTEBOOK)
+    p = c.page
+    go(c, "/pyconsole", height=1400, wait="[data-dataset]", settle=500)
+    p.wait_for_function("() => [...document.querySelectorAll('[data-dataset] option')].some(o => o.value === 'dataset:pack.trading.trade')", timeout=30000)
+    p.select_option("[data-dataset]", "dataset:pack.trading.trade")
+    p.wait_for_selector("[data-fields] input[name=f]")
+    for box in p.locator("[data-fields] input[name=f]").all():
+        if (box.get_attribute("value").split(".")[-1] in ("TRADE_ID", "TRADE_STATUS", "PORTFOLIO", "CURRENCY", "NOTIONAL")) != box.is_checked():
+            box.click()
+    p.click("[data-open-go]")
+    p.wait_for_function("() => window.drishtiPyConsole && window.drishtiPyConsole.ex", timeout=60000)
+    p.wait_for_function("() => document.getElementById('pc').getAttribute('data-ready') === 'true'", timeout=180000)
+    p.evaluate("(code) => window.drishtiPyConsole.setCode(code)", CONSOLE_CODE)
+    p.click("[data-run]")
+    p.wait_for_function("() => document.getElementById('pc').getAttribute('data-ran') && document.getElementById('pc').getAttribute('data-running') === 'false'", timeout=180000)
+    p.locator("[data-out] [data-pc-chart] canvas").wait_for(timeout=30000)
+    p.wait_for_timeout(800)
+    c.save("28-pyconsole.jpg", "section[aria-labelledby=pcCodeH]")
+    p.fill("[data-ptitle]", NOTEBOOK)
+    p.click("[data-promote]")
+    p.wait_for_function("() => document.getElementById('pc').getAttribute('data-promoted')", timeout=120000)
+    p.wait_for_timeout(500)
+    c.save("29-pyconsole-promoted.jpg", "[data-compare]")
