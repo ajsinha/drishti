@@ -32,6 +32,10 @@
   into the memory tier before the disk tier, so a page answered from memory at that moment never wrote it to disk, and a close dropped the
   warm-up's late write; a background read still inside the cache also kept it locked after the close. The disk tier is now written first, and
   closing waits up to 5 s for background reads to leave (found as a flaky `DeltaDocDiskCacheTest` under the drill's load).
+- **Fixed: a live view's tick no longer closes an open panel help popover.** A tick that replaced a panel with tabs selected the reader's tab
+  again by clicking it, and that click reached the page's own listeners: the panel `?` popover (and a pinned tip, a menu) closed about once a
+  second on a ticking view, in the console and in `<drishti-view>`. The tab is now selected by a click that does not bubble (live.js,
+  controls.js and Drishti Elements **1.4.3**). Found as a flaky `test_trusted_types_enforced_host_still_works`.
 - **Fixed: `pytest` from the repo root collects every test.** `tools/bench/test_trades.py` and `tools/packgen/trades/test_trades.py`
   shared a module name, so collection stopped with an import-file-mismatch error; the benchmark's test is now `tools/bench/test_bench_trades.py`.
 - **Fixed: derived pages kept on disk are never removed while another process has them open.** A server's start-up clean-up of
