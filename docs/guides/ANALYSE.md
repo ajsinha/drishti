@@ -19,7 +19,8 @@
 apply), and work on it three ways: **Slice** (a drag-and-drop pivot), **SQL** (cells over the extract) and **Python** (pandas cells, with charts). You save the work as a **notebook**
 (a BI item with versions and review like any other) and **promote** what is good: a Python cell becomes a Python Measure or Visual draft, a slice or a SQL cell becomes a **visual in a new or an existing report draft**.
 **Nothing runs in your browser** (wave B, 2.3.0): the Slice is worked out by the console, SQL is Drishti SQL run by the server over the model, Python runs in
-the console's sandbox ([section 13](#13-in-the-browser-duckdb-wasm)). The page asks and draws.
+the console's sandbox ([section 13](#13-in-the-browser-duckdb-wasm)). The page asks and draws. A **Profile** tab (2.4.0, [section 15](#15-profile)) shows
+every column of the extract; your own Python **in the browser** is the [Python console](#16-the-browser-python-console) (2.4.0), which is not a BI page.
 
 This is the reference. A walk-through is [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [RUPAKA.md](../architecture/RUPAKA.md) section 20.9; the quant engine behind
 `quant.price(...)` is [QUANT_SERVICE.md](../architecture/QUANT_SERVICE.md#16-the-consoles-quantengine-slot-built-lean).
@@ -40,6 +41,8 @@ This is the reference. A walk-through is [tutorial 14](../tutorials/14-python-an
 12. [Built and not built](#12-built-and-not-built)
 13. [In the browser: DuckDB-Wasm](#13-in-the-browser-duckdb-wasm)
 14. [Promote to a report visual](#14-promote-to-a-report-visual)
+15. [Profile](#15-profile)
+16. [The browser Python console](#16-the-browser-python-console)
 
 ## 1. At a glance
 
@@ -250,7 +253,8 @@ The server's own refusals (`DRS-9001` no such dataset, `DRS-9020` series, a deni
 ## 11. The routes
 
 All are the console's own, JSON from its pages only (same-origin, `application/json`, the session cookie; no personal token): `GET /bi/explore`, `GET /bi/explore/status`, `POST /bi/explore/extract`,
-`POST /bi/explore/sql`, `POST /bi/explore/python`, `POST /bi/explore/notebook/check`, `POST /bi/explore/promote`. Tables: [API_GUIDE.md](API_GUIDE.md) (console routes of Python in BI). Saving
+`POST /bi/explore/sql`, `POST /bi/explore/python`, `POST /bi/explore/profile` (2.4.0), `POST /bi/explore/notebook/check`, `POST /bi/explore/promote`; and the
+Python console's `GET /pyconsole`, `POST /pyconsole/extract`, `POST /pyconsole/promote` (2.4.0). Tables: [API_GUIDE.md](API_GUIDE.md) (console routes of Python in BI). Saving
 uses the existing `POST /api/v1/bi/workspaces/me/items` and `PUT /api/v1/bi/items/{id}`.
 
 ## 12. Built and not built
@@ -272,7 +276,8 @@ uses the existing `POST /api/v1/bi/workspaces/me/items` and `PUT /api/v1/bi/item
 *Removed in 2.3.0.* Wave B made the servers compute every number and the browser draw ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3): DuckDB-Wasm
 and the browser's Python (Pyodide) are no longer loaded by Analyse or any BI page, `bi.explore.browser_engine` and `browser_start_seconds` are gone (a
 setting left in a configuration is ignored), and `tools/fetch-duckdb-wasm.sh` is gone. The Slice is the console's, SQL the server's (or the console's
-for a cell over `extract`), Python the console's sandbox. Calc (the terminal's Python) still uses Pyodide in its own worker.
+for a cell over `extract`), Python the console's sandbox. Calc (the terminal's Python) still uses Pyodide in its own worker, and so does the
+browser Python console of 2.4.0 ([section 16](#16-the-browser-python-console)), which is not a BI page.
 
 ## 14. Promote to a report visual
 
@@ -292,3 +297,45 @@ for a cell over `extract`), Python the console's sandbox. Calc (the terminal's P
 * In both cases the draft is yours to finish in the designer, then check and publish like any report.
 
 The route is the console's `POST /bi/explore/promote` with `{to: report, name, dataset, slice, filters}` or `{to: report, name, dataset, sql}`, plus `columns` and `qualified` (the extract's names and the dataset's), and `target` and `page` for an existing report; it answers `{kind: report, title, yaml, notes, target, visual}`.
+
+## 15. Profile
+
+*2.4.0.* The **Profile** tab shows every column of the extract: its type, what its text looks like (numbers or dates kept as text), empty values (count
+and %), distinct values, whether it could be a key (every row its own value), min and max (and the mean of a number), the five most common values and a
+histogram of a number. It is worked out by the console in its sandbox over the rows you may see (`POST /bi/explore/profile` with `{extract}`; no code of
+yours runs), and drawn by the same panel as the [Transform editor](PYTHON_BI.md#175-profiling)'s. A column masked for you says so and profiles as empty.
+
+![Analyse, Profile tab: the extract of the model prep-model as the analyst ann sees it, PRICE masked for her](img/bi-transform/07-analyse-profile.png)
+
+## 16. The browser Python console
+
+*2.4.0* ([BI_DESIGN.md section 12.2, wave C](../architecture/BI_DESIGN.md#wave-c--authoring-and-analysis--240)). **BI → Python console** (`/pyconsole`)
+is personal, just-in-time analysis: **your own Python, in your browser**, on a masked extract of a model, with nothing kept or shared until you promote a
+result. It is deliberately **not a BI page** (principle P3: no BI page computes): Analyse and every `/bi` page still load no WebAssembly; the console is to a
+model what Calc is to a terminal view, and runs your code in **Calc's Web Worker** (Pyodide, the one script allowed to compile WebAssembly; the page keeps
+the strict policy).
+
+1. **Extract.** Choose a model or a dataset, tick the fields, optionally a date, and *Open the extract*. The console asks the server for the rows **as
+   you** (a model query of rows: your row rules; a masked column arrives masked and is named), at most `bi.pyconsole.max_rows` (20,000), and hands them to
+   the page (`POST /pyconsole/extract`). The worker gets them once; it never fetches data and holds no credential.
+2. **Python.** `df` is the extract as a pandas frame (fresh on every run; `df.attrs["masked"]` names the masked columns). `show(x, title)` draws a table,
+   `chart(df, kind="bar", x=..., y=...)` a chart (line, bar, scatter, hist), `print` prints, and a value in `result` is shown when nothing else is.
+   *Run in the browser* (Ctrl+Enter); *Stop* ends the worker. numpy, pandas, scipy, statsmodels and matplotlib load on first use.
+
+   ![The browser Python console: an extract of 60 rows, a cell that totals QUANTITY by book, its table and chart, run in the browser](img/bi-transform/05-browser-console.png)
+
+3. **Promote to the server.** When a result is worth keeping, give it a title and *Promote to the server* (bi-author): the console rebuilds the extract
+   **for you** on the server side and runs the **same code on the console backend**, in the Analyse cell sandbox ([section 5](#5-python); `show()` is the
+   cell's answer when it sets no `result`, `chart()` is skipped there), then compares the two answers (*The same answer as in your browser*, or not) and
+   keeps the code as a **notebook draft** in your workspace (`POST /pyconsole/promote`). Open it in Analyse, share it, review and publish it like any
+   notebook: whoever opens it gets **their own** rows. Code that fails on the backend is not kept.
+
+   ![Promoted: run on the console backend over the 60 rows rebuilt for you, the same answer as in the browser, saved as a notebook draft](img/bi-transform/06-promoted.png)
+
+| Setting (console) | Default | Meaning |
+|---|---|---|
+| `bi.pyconsole.enabled` | `true` (`DRISHTI_BI_PYCONSOLE_ENABLED`) | false: no `/pyconsole` |
+| `bi.pyconsole.max_rows` | `20000` (`DRISHTI_BI_PYCONSOLE_MAX_ROWS`) | most rows of an extract handed to the browser (10 to 100,000) |
+
+It needs the BI power and Calc's runtime installed on the console (`tools/fetch-pyodide.sh`; no internet afterwards); promoting needs **bi-author**. What
+the browser computes stays in that tab: a number shown to someone else always comes from the server or the console backend.

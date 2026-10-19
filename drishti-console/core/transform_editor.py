@@ -108,7 +108,7 @@ def python_yaml(spec: dict, timeout: int = 20, memory: int = 512) -> str:
     s = check(spec)
     doc = {"rachana": 1, "python": s["name"], "title": s["title"], "interface": "transform", "inputs": [i["name"] for i in s["inputs"]],
            "packages": ["pandas", "numpy"], "target": "server", "timeout": int(timeout), "memory": int(memory), "params": s["params"], "source": source(spec)}
-    return _dump(doc)
+    return dump_yaml(doc)
 
 
 def dataset_yaml(spec: dict) -> str:
@@ -128,10 +128,11 @@ def dataset_yaml(spec: dict) -> str:
     doc = {"rachana": 2, "dataset": s["name"], "title": s["title"], "version": "1.0.0",
            "source": {"python": s["name"], "inputs": {i["name"]: i["input"] for i in s["inputs"]}, **({"params": s["params"]} if s["params"] else {})},
            "grain": {"keys": keys}, "columns": columns}
-    return _dump(doc)
+    return dump_yaml(doc)
 
 
-def _dump(doc: dict) -> str:
+def dump_yaml(doc: dict) -> str:
+    """YAML as people write it: block style for text of several lines (the source), flow style for short lists and mappings."""
     class Block(yaml.SafeDumper):
         pass
 

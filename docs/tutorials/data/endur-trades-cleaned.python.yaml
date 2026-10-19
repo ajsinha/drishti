@@ -1,0 +1,46 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Tutorial 14, step 12: the Python item the Transform editor wrote for ENDUR trades, cleaned (each step after its # step: comment).
+rachana: 1
+python: endur-trades-cleaned
+title: ENDUR trades, cleaned
+interface: transform
+inputs: [trades]
+packages: [pandas, numpy]
+target: server
+timeout: 20
+memory: 512
+params: {}
+source: |
+  import re
+  import numpy as np
+  import pandas as pd
+
+
+  def run(trades, params):
+      # step: Start from trades
+      df = trades.copy()
+      # step: Filter rows by values (TRADE_STATUS)
+      df = df[df['TRADE_STATUS'].isin(['MATURED']) == False].reset_index(drop=True)
+      # step: Type fix: text to date (TRADE_DATE)
+      df['TRADE_DATE'] = pd.to_datetime(df['TRADE_DATE'], format='%Y-%m-%d', errors="coerce").dt.date
+      # step: Tenor bucket (MATURITY_DATE; TRADE_DATE)
+      _years = (pd.to_datetime(df['MATURITY_DATE'], errors="coerce") - pd.to_datetime(df['TRADE_DATE'], errors="coerce")).dt.days / 365.25
+      _e = [float(x) for x in ['1', '2', '5', '10', '30']]
+      _labels = ["<%gY" % _e[0]] + ["%g-%gY" % (a, b) for a, b in zip(_e, _e[1:])] + ["%gY+" % _e[-1]]
+      df['tenor_bucket'] = pd.cut(_years, bins=[-np.inf] + _e + [np.inf], labels=_labels, right=False).astype(object).where(_years.notna(), None)
+      # step: Group and total (PORTFOLIO, tenor_bucket; NOTIONAL)
+      df = df.groupby(['PORTFOLIO', 'tenor_bucket'], as_index=False, dropna=False)[['NOTIONAL']].agg('sum')
+      return df

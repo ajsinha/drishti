@@ -130,6 +130,12 @@ def test_the_sandbox_still_refuses_in_a_step(runner):
     assert e.value.code in ("DRS-9073", "DRS-9071")
 
 
+def test_an_identifier_of_digits_is_not_offered_a_number_type(runner):
+    p = asyncio.run(runner.profile(arrow(TRADE_ID=["1001", "1002", "1003"], AMOUNT=["1", "2", "3"])))
+    cols = {c["name"]: c for c in p["columns"]}
+    assert "looksLike" not in cols["TRADE_ID"] and cols["AMOUNT"]["looksLike"] == "decimal"      # ids are text by design
+
+
 def test_a_frame_is_profiled_without_author_code(runner):
     p = asyncio.run(runner.profile(arrow(id=["a", "b", "c"], AMOUNT=[1.0, None, 3.0], WHEN=pa.array([None, None, None], pa.date32()))))
     assert p["kind"] == "profile" and p["rows"] == 3

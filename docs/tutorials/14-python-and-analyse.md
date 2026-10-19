@@ -21,7 +21,7 @@ model `trades-basic@1` (2.2: every sample is a model over datasets). Every step 
 
 ## Time to complete
 
-About 55 minutes.
+About 70 minutes (steps 12 and 13: 15 minutes).
 
 ## Before you start
 
@@ -42,6 +42,9 @@ About 55 minutes.
 - **Analyse**: the extract of a model, **Slice**, **SQL** (Drishti SQL on the server over the model, or one read-only SELECT over the extract until wave B), a **Python** cell that draws a chart, saving a **notebook**, and **promoting** work into BI items.
 - **Python across models**: a **Transform** that turns the answers of two model queries into a table (a **Python dataset**, 2.2), and an Analyse notebook that joins two extracts in pandas and promotes the join to a Transform;
 - **Vega-Lite** charts (written in a report, or returned by Python), the **tests** a Python item carries, the **engines** of a SQL cell and promoting into an **existing** report, **Calc's BI client** with Graphic Walker (steps 9 to 11).
+- **Data prep** (2.4.0): a Transform built step by step in the **Transform editor** from raw trades read straight through a connector, with a preview
+  and a profile after every step and no YAML to type (step 12), and the **browser Python console** on a masked extract, with a result promoted to the
+  console backend (step 13).
 
 ## Step 1 · Python in a report: the shipped sample
 
@@ -545,10 +548,154 @@ POST /api/v1/me/measure-alerts/Desk%20volatility%20ceiling/check
 
 `reduce: max` watches the largest of the desks' figures; `first` or a filter on one desk watches one.
 
+## Step 12 · Prepare raw trades step by step: the Transform editor (2.4.0)
+
+Step 8 made a Transform from two **models**. Before a model exists you often want to clean the **raw rows** first: drop matured trades, fix a type,
+bucket a tenor, total. The **Transform editor** does that step by step, with the rows and a profile after every step, and you never type YAML.
+
+**In the UI.** Open **BI → Transforms** (the rail). Type the title `ENDUR trades, cleaned`. Under **1. Inputs**, name the input `trades`, keep *A pack
+kind, straight through its connector*, choose the kind **Trade (trading.trade)**, type the connector `trade-endur` (the ENDUR trades of the demo lake),
+tick `TRADE_ID`, `TRADE_STATUS`, `PORTFOLIO`, `CURRENCY`, `NOTIONAL`, `TRADE_DATE` and `MATURITY_DATE`, and press **Add the input**.
+
+![The input: the kind trade read through the connector trade-endur, 1,000 rows of 2026-10-16 (the preview's first thousand)](img/t14/25-transform-input.jpg)
+
+You should see the line `trades the kind trade (pack trading) through trade-endur · 7 fields 1,000 rows (the first 1,000) · as of 2026-10-16` and a first
+step, **Start from trades**, with `1,000 rows · 7 cols`. The editor previews the first `bi.transform.preview_rows` rows (1,000) **as you**: your row
+rules and masks apply, as when the dataset is read.
+
+Now **Add a step from the snippets**: choose **Filter rows by values**, the column `TRADE_STATUS`, the value `MATURED`, untick *Keep them* (drop them), and
+**Add the step**. Step 2 says `510 rows · 7 cols`. Press **Profile**:
+
+![Step 2's profile: one card per column; TRADE_DATE and MATURITY_DATE are text that looks like dates, with Fix the type; TRADE_ID could be a key](img/t14/26-transform-profile.jpg)
+
+You should see `TRADE_STATUS` with four values left (`VALIDATED ×336`, `AMENDED ×64`, `NEW ×62`, `CANCELLED ×48`), `TRADE_ID` marked **key?** (every row
+its own value), and *Text that looks like dates* under `TRADE_DATE` and `MATURITY_DATE`. Press **Fix the type** under `TRADE_DATE`: a step
+**Type fix: text to date (TRADE_DATE)** is added. Then two more snippets: **Tenor bucket** (maturity `MATURITY_DATE`, from `TRADE_DATE`) and **Group and
+total** (group by `PORTFOLIO` and `tenor_bucket`, the column `NOTIONAL`, `sum`). Press **Rows**:
+
+![Five steps, each with its rows; the last, Group and total, nine rows: the notional of each book per tenor bucket](img/t14/27-transform-steps.jpg)
+
+You should see `Ran 5 steps on trades 1,000 rows` and nine rows, `BOOK-COMM-1 1-2Y 90,937,298.74` first. Pick any step to see its own rows again; ✎ edits
+a step, ↑ ↓ move it, × removes it. Under **4. Save**, tick `PORTFOLIO` and `tenor_bucket` (*Each row is one*) and **Save as drafts**: you should see
+*Saved as two drafts in your workspace: the Python item and the dataset*. Check and publish the Python item, then the dataset ([PYTHON_BI.md
+section 13](../guides/PYTHON_BI.md#13-transforms-a-table-in-a-table-out)).
+
+**The YAML** was written for you; open *YAML: what is saved* to read it (and edit it, then **Read the YAML back**, if you like). The Python item
+([data/endur-trades-cleaned.python.yaml](data/endur-trades-cleaned.python.yaml)) holds the steps after their `# step:` comments:
+
+```python
+def run(trades, params):
+    # step: Start from trades
+    df = trades.copy()
+    # step: Filter rows by values (TRADE_STATUS)
+    df = df[df['TRADE_STATUS'].isin(['MATURED']) == False].reset_index(drop=True)
+    # step: Type fix: text to date (TRADE_DATE)
+    df['TRADE_DATE'] = pd.to_datetime(df['TRADE_DATE'], format='%Y-%m-%d', errors="coerce").dt.date
+    # step: Tenor bucket (MATURITY_DATE; TRADE_DATE)
+    ...
+    # step: Group and total (PORTFOLIO, tenor_bucket; NOTIONAL)
+    df = df.groupby(['PORTFOLIO', 'tenor_bucket'], as_index=False, dropna=False)[['NOTIONAL']].agg('sum')
+    return df
+```
+
+and the Python dataset ([data/endur-trades-cleaned.dataset.yaml](data/endur-trades-cleaned.dataset.yaml)) reads the kind straight through the connector:
+
+```yaml
+source:
+  python: endur-trades-cleaned
+  inputs:
+    trades:
+      kind: trade
+      pack: trading
+      fields: [CURRENCY, MATURITY_DATE, NOTIONAL, PORTFOLIO, TRADE_DATE, TRADE_ID, TRADE_STATUS]
+      connector: trade-endur
+grain:
+  keys: [PORTFOLIO, tenor_bucket]
+```
+
+**On the command line** the input is asked as you and profiled, the snippets are listed and written, and the drafts are saved from the files:
+
+```text
+$ python3 tools/drishti.py bi transform input docs/tutorials/data/endur-trades-cleaned.dataset.yaml --rows 2
+trades: 1,000 rows of dataset:pack.trading.trade as of 2026-10-16
+  CURRENCY                     text      empty     0  distinct      3  CAD .. USD
+  MATURITY_DATE                text      empty     0  distinct     81  2024-11-01 .. 2029-10-31
+  NOTIONAL                     float64   empty     0  distinct    971  2,855.8 .. 2.46923e+08
+  PORTFOLIO                    text      empty     0  distinct      3  BOOK-COMM-1 .. BOOK-COMM-3
+  TRADE_DATE                   text      empty     0  distinct    529  2024-10-10 .. 2026-09-25
+  TRADE_ID                     text      empty     0  distinct   1000  1000005 .. 1005000
+  TRADE_STATUS                 text      empty     0  distinct      5  AMENDED .. VALIDATED
+    CAD | 2025-04-30 | 1000000.0 | BOOK-COMM-3 | 2025-03-01 | 1002153 | MATURED
+    CAD | 2026-04-30 | 20000000.0 | BOOK-COMM-1 | 2025-02-06 | 1003026 | MATURED
+$ python3 tools/drishti.py bi transform snippet filter-values column=TRADE_STATUS values=MATURED keep=false
+# step: Filter rows by values (TRADE_STATUS)
+df = df[df['TRADE_STATUS'].isin(['MATURED']) == False].reset_index(drop=True)
+$ python3 tools/drishti.py bi item new me docs/tutorials/data/endur-trades-cleaned.python.yaml
+bi-90b5ada37c  python  ENDUR trades, cleaned  draft in My workspace
+$ python3 tools/drishti.py bi item new me docs/tutorials/data/endur-trades-cleaned.dataset.yaml
+bi-04b126d3c4  dataset  ENDUR trades, cleaned  draft in My workspace
+```
+
+The steps run where every Python item runs, in the console's sandbox; the snippets write each value as a literal, never as code. The reference is
+[PYTHON_BI.md section 17](../guides/PYTHON_BI.md#17-data-prep-the-transform-editor-240).
+
+## Step 13 · Your own Python in the browser: the Python console (2.4.0)
+
+Analyse runs everything on the console. When you want to poke at the data **yourself, in your browser**, open **BI → Python console** (`/pyconsole`).
+It runs Calc's Python (Pyodide) on a **masked extract** of a model: the rows you may see, with masked columns masked. Nothing you do there is kept or
+shared until you **promote** it.
+
+**In the UI.** Choose the dataset **Trade** (`dataset:pack.trading.trade`, the trading pack's), tick `TRADE_ID`, `TRADE_STATUS`, `PORTFOLIO`, `CURRENCY`
+and `NOTIONAL`, and **Open the extract**: you should see `15,000 rows, 5 columns, in your browser.` (an extract is at most `bi.pyconsole.max_rows`,
+20,000). Python starts in the page (`Python ready · Pyodide ...`). Type, and **Run in the browser** (Ctrl+Enter):
+
+```python
+live = df[df["TRADE_STATUS"] != "MATURED"]
+by_book = live.groupby("PORTFOLIO", as_index=False)["NOTIONAL"].sum().nlargest(8, "NOTIONAL").reset_index(drop=True)
+print(len(live), "live trades of", len(df))
+show(by_book, "Live notional by book, top 8")
+chart(by_book, kind="bar", x="PORTFOLIO", y="NOTIONAL")
+```
+
+![The Python console: the cell, 12751 live trades of 15000, the top eight books by live notional as a table and a bar chart, run in the browser](img/t14/28-pyconsole.jpg)
+
+You should see `12751 live trades of 15000`, then eight books, `BOOK-COMM-1 262,249,672,445.02` first, and the bars. The status says `Done in your browser`.
+Now give it the title `Live notional by book` and press **Promote to the server**:
+
+![Promoted: the same code run on the console backend over the 15,000 rows rebuilt for you: the same answer as in your browser, saved as a notebook draft](img/t14/29-pyconsole-promoted.jpg)
+
+You should see *Ran on the console backend in 45 ms over 15,000 rows rebuilt for you. The same answer as in your browser. Saved as the notebook draft "Live
+notional by book".* **Open the notebook in Analyse** runs it there, on the console, for whoever opens it (each with their own rows). Promoting needs
+`bi-author`.
+
+**On the command line** there is no browser to run Python in; the promoted notebook is an item like any other, and
+`python3 tools/drishti.py bi catalogue get <its id> --body` prints it. **As YAML**, the notebook draft is:
+
+```yaml
+rachana: 1
+notebook: live-notional-by-book
+title: Live notional by book
+dataset: dataset:pack.trading.trade
+fields: [trade.CURRENCY, trade.NOTIONAL, trade.PORTFOLIO, trade.TRADE_ID, trade.TRADE_STATUS]
+cells:
+- type: python
+  source: |
+    live = df[df["TRADE_STATUS"] != "MATURED"]
+    by_book = live.groupby("PORTFOLIO", as_index=False)["NOTIONAL"].sum().nlargest(8, "NOTIONAL").reset_index(drop=True)
+    print(len(live), "live trades of", len(df))
+    show(by_book, "Live notional by book, top 8")
+    chart(by_book, kind="bar", x="PORTFOLIO", y="NOTIONAL")
+  target: server
+```
+
+The console is not a BI page: Analyse and the reports still compute nothing in the browser. The reference is
+[ANALYSE.md section 16](../guides/ANALYSE.md#16-the-browser-python-console).
+
 ## Next steps
 
 - [Tutorial 15](15-ai-in-drishti.md): ask the data in words.
-- [PYTHON_BI.md](../guides/PYTHON_BI.md): the manifest, where Python runs, the sandbox in full, `DRS-9070` to `9075`, and section 13 for the Transform. [ANALYSE.md](../guides/ANALYSE.md): the page, limits and notebooks. [PYTHON_CALC.md](../guides/PYTHON_CALC.md) is Calc, the Python panel inside a screen.
+- [PYTHON_BI.md](../guides/PYTHON_BI.md): the manifest, where Python runs, the sandbox in full, `DRS-9070` to `9075`, section 13 for the Transform and
+  section 17 for the Transform editor and the snippets. [ANALYSE.md](../guides/ANALYSE.md): the page, limits and notebooks. [PYTHON_CALC.md](../guides/PYTHON_CALC.md) is Calc, the Python panel inside a screen.
 
 ## If something goes wrong
 
@@ -562,3 +709,7 @@ POST /api/v1/me/measure-alerts/Desk%20volatility%20ceiling/check
 | `DRS-9074` | the runner is busy or not installed (`bi.python.workers`, the pandas environment) |
 | the Python tab will not run | you lack the `bi-author` power |
 | a column is empty in the extract | it is masked for your role; the line under the form names it |
+| the Transform editor's steps do not run | running them needs `bi-author`; the page still writes the YAML |
+| `DRS-9108 the kind 'trade' has no column [X]` | a field the kind does not have; the message lists the kind's columns |
+| `DRS-9026 connector 'x' is not running` | the input names a connector that is off; leave it empty to read whichever serves the kind |
+| the Python console says *Python runtime not installed* | Calc's runtime is not on the console: `tools/fetch-pyodide.sh` |

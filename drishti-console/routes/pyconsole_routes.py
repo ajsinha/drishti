@@ -29,7 +29,6 @@ from __future__ import annotations
 import datetime as dt
 import re
 
-import yaml
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
@@ -37,6 +36,7 @@ from core.backend import BackendError
 from core.csrf import json_body
 from core.explore import ExploreError, parse_notebook
 from core.pyrunner import PyError
+from core.transform_editor import dump_yaml
 from routes.bi_routes import _page
 from routes.common import ident
 from routes.explore_routes import CONSOLE, _fail, _limits, _powers, cell_packages, extract_for
@@ -125,7 +125,7 @@ async def promote(request: Request):
         doc = {"rachana": 1, "notebook": re.sub(r"[^a-z0-9-]+", "-", title.lower()).strip("-")[:64] or "from-the-browser-console", "title": title,
                "dataset": str(spec.get("dataset") or ("mq:" + str(spec.get("model")) if spec.get("model") else "")), "fields": list(spec.get("fields") or []),
                "cells": [{"type": "python", "source": code if code.endswith("\n") else code + "\n", "target": "server"}]}
-        text = yaml.safe_dump(doc, sort_keys=False, default_flow_style=None, width=200, allow_unicode=True)
+        text = dump_yaml(doc)
         parse_notebook(text, limits)
         item = await request.app.state.backend.bi("POST", "/workspaces/me/items", ident(request),
                                                   {"kind": "notebook", "title": title, "description": "Promoted from the browser Python console: runs on the console backend.",

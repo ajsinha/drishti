@@ -2172,6 +2172,35 @@ only, in DEL (`--define "Live MTM=sum(trades.MTM, where=trades.TRADE_STATUS != '
 sorts by a field or measure, `--sort=-BY` descending (the `=` keeps the minus from reading as an option), repeatable: `--sort=-MTM --limit 3` is the top three. The answer is
 a table with its plan, its as-of date and the columns masked for you; `--json` prints the server's answer as it is.
 
+### `bi transform`: a Transform's inputs as you, and the snippets
+
+(2.4.0) What the Transform editor's inputs and snippets picker do ([PYTHON_BI.md section 17](PYTHON_BI.md#17-data-prep-the-transform-editor-240)). `input`
+asks the server, as the token's user, for each input of a Python dataset (`POST /api/v1/bi/python/input`: a model query, or a pack kind read through a
+connector) and prints its rows, what is masked for you and a short profile of every column; `snippets` and `snippet` read the console's library
+(`drishti-console/config/prep-snippets.yaml`, no server) and print the step a snippet makes, each value written as a literal.
+
+```
+drishti.py bi transform input FILE [--input NAME] [--limit N] [--as-of DATE] [--rows N] [--json]   each input of FILE.dataset.yaml as you
+drishti.py bi transform snippets [--json]                                                     the data-prep snippets
+drishti.py bi transform snippet ID [NAME=VALUE ...] [--inputs a,b]                              one step (a list: a,b; a mapping: from:to,from:to)
+```
+
+Captured, the steps of [tutorial 14, step 12](../tutorials/14-python-and-analyse.md#step-12--prepare-raw-trades-step-by-step-the-transform-editor-240):
+
+```text
+$ python3 tools/drishti.py bi transform input docs/tutorials/data/endur-trades-cleaned.dataset.yaml --rows 2
+trades: 1,000 rows of dataset:pack.trading.trade as of 2026-10-16
+  CURRENCY                     text      empty     0  distinct      3  CAD .. USD
+  MATURITY_DATE                text      empty     0  distinct     81  2024-11-01 .. 2029-10-31
+  NOTIONAL                     float64   empty     0  distinct    971  2,855.8 .. 2.46923e+08
+  ...
+$ python3 tools/drishti.py bi transform snippet filter-values column=TRADE_STATUS values=MATURED keep=false
+# step: Filter rows by values (TRADE_STATUS)
+df = df[df['TRADE_STATUS'].isin(['MATURED']) == False].reset_index(drop=True)
+```
+
+The steps themselves run in the console's sandbox (the editor), or on the server when the dataset is read; save the drafts with `bi item new`.
+
 ### `bi item`, `bi dataset`: items from files, tests and refresh
 
 What My workspace's **New item**, the item page's **Edit**, **Check**'s expected values and a dataset page's **Refresh now** do, over REST as the token's

@@ -404,6 +404,9 @@ def _series_type(s) -> str:
     return "string"
 
 
+_ID_NAME = re.compile(r"(^|_)(ID|IDS|CODE|KEY|NUMBER|NO)$", re.I)
+
+
 def _guess(s, kind: str) -> str | None:
     """What a text column really holds, when nearly all of a sample reads as one type: numbers or dates kept as text (the Type fix snippet fixes it)."""
     import pandas as pd
@@ -438,6 +441,8 @@ def _profile(df, top: int = 5, bins: int = 10) -> dict:
         p = {"name": str(name), "type": kind, "nulls": nulls, "nullPct": round(100.0 * nulls / n, 1) if n else 0.0, "distinct": distinct,
              "unique": bool(n and nulls == 0 and distinct == n)}
         guess = _guess(s, kind)
+        if guess == "decimal" and _ID_NAME.search(str(name)):
+            guess = None                                           # an identifier made of digits is text by design (ids are text since 2.3.0)
         if guess:
             p["looksLike"] = guess
         values = s.dropna()

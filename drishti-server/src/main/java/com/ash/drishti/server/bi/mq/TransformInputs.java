@@ -135,6 +135,18 @@ public final class TransformInputs {
         if (!problems.isEmpty()) {
             throw new MqException(MqException.Problem.of("DRS-9108", "input." + problems.get(0)[0], problems.get(0)[1]));
         }
+        DatasetDef gen = generated(catalog, in);
+        List<String> lacking = new ArrayList<>();
+        in.path("fields").forEach(f -> {
+            String n = f.asText().contains(".") ? f.asText().substring(f.asText().indexOf('.') + 1) : f.asText();
+            if (!gen.columns().containsKey(n)) {
+                lacking.add(n);
+            }
+        });
+        if (!lacking.isEmpty()) {                                      // named against the kind's own columns, whichever connector is asked
+            throw new MqException(new MqException.Problem("DRS-9108", "input.fields", "the kind '" + gen.source().kind() + "' has no column " + lacking + " (it has "
+                    + gen.columns().keySet() + ")", java.util.Map.of("columns", new ArrayList<>(gen.columns().keySet()))));
+        }
         DatasetDef def = kindDataset(catalog, in);
         String ref = com.ash.drishti.server.bi.layer.ImplicitModels.QUERY_PREFIX + def.name();
         boolean other = !java.util.Objects.equals(def.source().connector(), generated(catalog, in).source().connector()) || def.source().each() != null;
