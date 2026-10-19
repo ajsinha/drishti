@@ -31,4 +31,11 @@ def worker_port(base) -> int:
 
 
 def worker_ports(*bases) -> tuple:
+    """The ports for these bases; DRISHTI_SCRATCH_PORTS (comma-separated, e.g. 18781,17781,18782) replaces them, in order, for a run that must stay on
+    fixed scratch ports (one file at a time then: every file gets the same ones)."""
+    fixed = [int(x) for x in os.environ.get("DRISHTI_SCRATCH_PORTS", "").replace(" ", "").split(",") if x]
+    if fixed:
+        if len(fixed) < len(bases):
+            raise ValueError(f"DRISHTI_SCRATCH_PORTS names {len(fixed)} ports; this file needs {len(bases)}")
+        return tuple(fixed[:len(bases)])
     return tuple(worker_port(b) for b in bases)

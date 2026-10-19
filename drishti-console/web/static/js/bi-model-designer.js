@@ -157,7 +157,7 @@
     return B.layer.get('dataset?name=' + encodeURIComponent(ref)).then((d) => {
       const i = d.info;
       const kinds = Object.values(M.infos).map((x) => x);
-      const referenced = kinds.some((x) => x.columns.some((c) => c.references && c.references === i.source.kind));
+      const referenced = kinds.some((x) => (x.source || {}).kind !== i.source.kind && x.columns.some((c) => c.references && c.references === i.source.kind));   // its own id column is no other dataset's reference
       let alias = i.alias, n = 2;
       while ((M.doc.datasets || {})[alias]) { alias = i.alias + '_' + n++; }
       const role = referenced ? 'dimension' : i.role;

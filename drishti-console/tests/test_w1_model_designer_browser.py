@@ -54,16 +54,36 @@ def use_ports(ports) -> None:
 SECRET = "w1-model-scratch-secret-0123456789abcdef"
 PASSWORD = "long-enough-pass-1"
 DESKS = [("DESK-FX", "Foreign exchange"), ("DESK-FI", "Fixed income"), ("DESK-EQD", "Equity derivatives")]
-CONNECTOR = """plugin: file
-kinds: [trade, desk]
+# The packs' own routes replaced by file connectors of the same names over this stack's synthetic data, in the 2.3.0 UPPER_SNAKE names: the trading
+# pack's trade-endur (kind trade) and the core pack's reference-store (kind desk). The test's trades also carry DESK and MTM (as the market-risk valuation
+# does) so one fact answers every question; DESK is a pack reference to the desk kind, which the model designer suggests.
+TRADES = """plugin: file
+kinds: [trade]
 settings:
   root: {root}
   rescan-seconds: 3600
   layout:
     trade:
-      columns: [tradeId, desk, book, productType, currency, status, notional, mtm, pnl1d, tradeDate]
+      columns: [TRADE_ID, SOURCE_SYSTEM, DESK, PORTFOLIO, PRODUCT_TYPE, CURRENCY, TRADE_STATUS, NOTIONAL, MTM, PNL_1D, TRADE_DATE]
+"""
+DESKS_CONNECTOR = """plugin: file
+kinds: [desk]
+settings:
+  root: {root}
+  rescan-seconds: 3600
+  layout:
     desk:
-      columns: [deskId, name, head]
+      columns: [DESK_ID, NAME, HEAD]
+"""
+# the market-risk valuations the shipped sample model trades-basic reads (risk-store), the same rows
+VALUATIONS = """plugin: file
+kinds: [trade-valuation]
+settings:
+  root: {root}
+  rescan-seconds: 3600
+  layout:
+    trade-valuation:
+      columns: [VALUATION_ID, TRADE_ID, SOURCE_SYSTEM, DESK, PORTFOLIO, PRODUCT_TYPE, CURRENCY, TRADE_STATUS, NOTIONAL, MTM, PNL_1D, TRADE_DATE]
 """
 
 
@@ -86,19 +106,27 @@ def admin(method, path, body=None):
     return api(method, path, "drishti-dev-admin", ["admin"], body)
 
 
+def trade(day: str, i: int) -> dict:
+    """One synthetic trade (ids are text with no assumed prefix, as ENDUR's digits)."""
+    tid = f"{day.replace('-', '')[4:]}{i:03d}"
+    return {"TRADE_ID": tid, "SOURCE_SYSTEM": "ENDUR", "DESK": DESKS[i % 3][0], "PORTFOLIO": f"BOOK-{i % 3}", "PRODUCT_TYPE": ["FX_FORWARD", "GOVT_BOND", "EQ_OPTION"][i % 3],
+            "CURRENCY": ["USD", "EUR", "GBP"][i % 3], "TRADE_STATUS": "VALIDATED", "NOTIONAL": 1_000_000.0 * (1 + i % 7), "MTM": ((i % 9) - 4) * 25_000,
+            "PNL_1D": ((i % 5) - 2) * 4_000, "TRADE_DATE": day}
+
+
 def write_lake(root: Path, days=("2026-10-07", "2026-10-08"), rows=60) -> None:
+    """Three folders: trade/ (trade-endur), risk/ (risk-store: the same trades as valuations) and ref/ (reference-store: the desks)."""
     for day in days:
-        folder = root / day
-        folder.mkdir(parents=True, exist_ok=True)
-        with open(folder / "trade.jsonl", "w") as f:
+        for sub in ("trade", "risk", "ref"):
+            (root / sub / day).mkdir(parents=True, exist_ok=True)
+        with open(root / "trade" / day / "trade.jsonl", "w") as f, open(root / "risk" / day / "trade-valuation.jsonl", "w") as v:
             for i in range(rows):
-                tid = f"BBG-{day.replace('-', '')[4:]}{i:03d}"
-                f.write(json.dumps({"id": tid, "tradeId": tid, "desk": DESKS[i % 3][0], "book": f"BOOK-{i % 3}", "productType": ["FX_FORWARD", "GOVT_BOND", "EQ_OPTION"][i % 3],
-                                    "currency": ["USD", "EUR", "GBP"][i % 3], "status": "Live", "notional": 1_000_000.0 * (1 + i % 7), "mtm": ((i % 9) - 4) * 25_000,
-                                    "pnl1d": ((i % 5) - 2) * 4_000, "tradeDate": day}) + "\n")
-        with open(folder / "desk.jsonl", "w") as f:
+                t = trade(day, i)
+                f.write(json.dumps({"id": t["TRADE_ID"], **t}) + "\n")
+                v.write(json.dumps({"id": "TVAL-" + t["TRADE_ID"], "VALUATION_ID": "TVAL-" + t["TRADE_ID"], **t}) + "\n")
+        with open(root / "ref" / day / "desk.jsonl", "w") as f:
             for desk, name in DESKS:
-                f.write(json.dumps({"id": desk, "deskId": desk, "name": name, "head": "H. " + name.split()[0]}) + "\n")
+                f.write(json.dumps({"id": desk, "DESK_ID": desk, "NAME": name, "HEAD": "H. " + name.split()[0]}) + "\n")
 
 
 class Stack:
@@ -119,8 +147,11 @@ class Stack:
             lake = self.tmp / "lake"
             write_lake(lake)
             (work / "config" / "connectors").mkdir(parents=True)
-            (work / "config" / "connectors" / "trading-store.yaml").write_text(CONNECTOR.format(root=lake))
-            env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS="trading,core", DRISHTI_SECURITY_ENABLED="true",
+            (work / "config" / "connectors" / "trade-endur.yaml").write_text(TRADES.format(root=lake / "trade"))
+            (work / "config" / "connectors" / "reference-store.yaml").write_text(DESKS_CONNECTOR.format(root=lake / "ref"))
+            (work / "config" / "connectors" / "risk-store.yaml").write_text(VALUATIONS.format(root=lake / "risk"))
+            env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS="trading,core,market-risk", DRISHTI_LAKE_ENABLED="false",   # the packs' lakes off (the empty Calypso and Murex lakes would make every trade column text)
+                       DRISHTI_SECURITY_ENABLED="true",
                        DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_BI_DIR=str(work / "config" / "bi"), DRISHTI_DATA_DIR=str(work / "data"))
             self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
                                                      f"--drishti.bi.query.store-dir={self.tmp / 'store'}"], cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"),
@@ -131,7 +162,7 @@ class Stack:
                 assert s == 200, r
             for user, role, desk in [("wes", "bi-writer", ""), ("hana", "desk-head", "DESK-FX")]:
                 s, r = admin("POST", "/admin/users", {"username": user, "displayName": user.capitalize(), "email": f"{user}@desk.test", "desk": desk, "roles": [role],
-                                                    "packs": ["trading", "core"], "password": PASSWORD, "mustChangePassword": False})
+                                                    "packs": ["trading", "core", "market-risk"], "password": PASSWORD, "mustChangePassword": False})
                 assert s in (200, 201, 409), r
             cenv = dict(os.environ, DRISHTI_AUTH_ENABLED="true", DRISHTI_SESSION_SECRET="s" * 40, DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_SECURE_COOKIE="false",
                         DRISHTI_SESSION_RECHECK_SECONDS="1")
@@ -223,8 +254,8 @@ def test_pack_dataset_to_model_to_report(browser):
     expect(page.locator('[data-fact="grain"]')).to_contain_text("One row per trade per business date")
     expect(page.locator('[data-fact="keys"]')).to_contain_text("id")
     expect(page.locator('[data-fact="time"]')).to_contain_text("snapshot")
-    expect(page.locator('[data-column="desk"]')).to_contain_text("desk →")
-    expect(page.locator('[data-column="notional"]')).to_contain_text("notional")
+    expect(page.locator('[data-column="DESK"]')).to_contain_text("desk →")
+    expect(page.locator('[data-column="NOTIONAL"]')).to_contain_text("NOTIONAL")
     expect(page.locator("[data-yaml]")).to_contain_text("dataset: pack.trading.trade")
     clean(page)
 
@@ -242,29 +273,29 @@ def test_pack_dataset_to_model_to_report(browser):
     expect(page.locator('[data-role-of="trade"]')).to_have_value("fact")
 
     # 3. the pack reference is suggested; one click accepts it
-    sugg = page.locator('[data-suggestion="trade.desk->desk.id"]')
+    sugg = page.locator('[data-suggestion="trade.DESK->desk.id"]')
     expect(sugg).to_be_visible(timeout=15000)
     sugg.locator("[data-accept]").click()
-    expect(page.locator('[data-rel="trade.desk → desk.id"]')).to_be_visible(timeout=15000)
-    expect(page.locator('[data-suggestion="trade.desk->desk.id"]')).to_have_count(0)
+    expect(page.locator('[data-rel="trade.DESK → desk.id"]')).to_be_visible(timeout=15000)
+    expect(page.locator('[data-suggestion="trade.DESK->desk.id"]')).to_have_count(0)
     page.click('[data-rel-open="0"]')
     expect(page.locator("[data-insp-card]")).to_have_value("many-to-one")
 
     # 4. a measure from a column gets its default (sum, additive) from the dataset
     page.click('[data-tab="measures"]')
     page.select_option("[data-nm-alias]", "trade")
-    page.select_option("[data-nm-column]", "mtm")
+    page.select_option("[data-nm-column]", "MTM")
     page.click("[data-nm-add]")
-    row = page.locator('[data-measure="Sum of mtm"]')
+    row = page.locator('[data-measure="Sum of MTM"]')
     expect(row).to_be_visible(timeout=15000)
-    expect(row.locator('[data-m-expr="Sum of mtm"]')).to_have_value("sum(trade.mtm)")
-    expect(row.locator('[data-m-additive="Sum of mtm"]')).to_have_value("yes")
+    expect(row.locator('[data-m-expr="Sum of MTM"]')).to_have_value("sum(trade.MTM)")
+    expect(row.locator('[data-m-additive="Sum of MTM"]')).to_have_value("yes")
 
     # 5. security: a desk-head rule on trades raises the safeguard on desks; one click resolves it
     page.click('[data-tab="security"]')
     page.select_option("[data-rule-alias]", "trade")
     page.fill("[data-rule-roles]", "desk-head")
-    page.select_option("[data-rule-field]", "trade.desk")
+    page.select_option("[data-rule-field]", "trade.DESK")
     page.click("[data-rule-add]")
     expect(page.locator('[data-exposure="desk:desk-head"]')).to_be_visible(timeout=15000)
     expect(page.locator("[data-count-security]")).to_be_visible()
@@ -277,7 +308,7 @@ def test_pack_dataset_to_model_to_report(browser):
     expect(page.locator('[data-rule="trade:1"]')).to_contain_text("True", timeout=15000)
     expect(page.locator("[data-safeguard-clear]")).to_be_visible(timeout=15000)
     text = yaml_tab(page)                                             # the designer wrote the YAML; nobody typed it
-    assert "trade.desk in user.desks" in text and "may-see-all:" in text and "suggested: {from: pack-reference}" in text, text
+    assert "trade.DESK in user.desks" in text and "may-see-all:" in text and "suggested: {from: pack-reference}" in text, text
 
     # 6. save (checked clean), then start a report on the model: its Fields pane reads the model, its visuals ask the model
     page.click("[data-save]")
@@ -289,20 +320,20 @@ def test_pack_dataset_to_model_to_report(browser):
     page.click("[data-ask-go]")
     page.wait_for_url("**/bi/design/**", timeout=20000)
     expect(page.locator('[data-model-header="model"]')).to_be_visible(timeout=30000)
-    expect(page.locator('[data-field="Sum of mtm"]')).to_be_visible()
-    expect(page.locator('[data-field="desk.name"]')).to_be_visible()
-    page.drag_and_drop('[data-field="Sum of mtm"]', "[data-canvas-grid]", target_position={"x": 80, "y": 40})
-    page.drag_and_drop('[data-field="trade.desk"]', ".bi-dvis")
+    expect(page.locator('[data-field="Sum of MTM"]')).to_be_visible()
+    expect(page.locator('[data-field="desk.NAME"]')).to_be_visible()
+    page.drag_and_drop('[data-field="Sum of MTM"]', "[data-canvas-grid]", target_position={"x": 80, "y": 40})
+    page.drag_and_drop('[data-field="trade.DESK"]', ".bi-dvis")
     page.locator(".bi-dvis").first.click()
-    expect(page.locator("[data-visual-query-text]")).to_contain_text(f"model: {name}@1", timeout=15000)
+    expect(page.locator("[data-visual-query-text]").first).to_contain_text(f"model: {name}@1", timeout=15000)
     expect(page.locator(".bi-dvis").first).to_contain_text("3 rows", timeout=15000)           # three desks, drawn from the model query
 
     # 7. the model query's answer equals the shipped sample model's over the same rows; the 2.1 dataset query is gone (410, naming the model query to send)
-    new = fetch(page, "POST", "/bi/api/mq", {"mq": 1, "model": f"{name}@1", "select": {"fields": ["trade.desk"], "measures": ["Sum of mtm"]}})
-    sample = fetch(page, "POST", "/bi/api/mq", {"mq": 1, "model": "trades-basic@1", "select": {"fields": ["trade.desk"], "measures": ["MTM"]}})
+    new = fetch(page, "POST", "/bi/api/mq", {"mq": 1, "model": f"{name}@1", "select": {"fields": ["trade.DESK"], "measures": ["Sum of MTM"]}})
+    sample = fetch(page, "POST", "/bi/api/mq", {"mq": 1, "model": "trades-basic@1", "select": {"fields": ["trade.DESK"], "measures": ["MTM"]}})
     assert new["status"] == 200 and sample["status"] == 200, (new, sample)
     assert sorted(map(tuple, new["body"]["rows"])) == sorted(map(tuple, sample["body"]["rows"]))
-    old = fetch(page, "POST", "/bi/api/datasets/file:dataset:trades-basic/query", {"fields": ["trade.desk"], "measures": ["MTM"]})
+    old = fetch(page, "POST", "/bi/api/datasets/file:dataset:trades-basic/query", {"fields": ["trade.DESK"], "measures": ["MTM"]})
     assert old["status"] == 410 and old["body"]["mq"]["model"] == "trades-basic@1", old
     clean(page)
     page.context.close()
@@ -317,9 +348,9 @@ def test_a_report_straight_from_a_dataset_reads_its_implicit_model_in_the_design
     page.wait_for_url("**/bi/design/**", timeout=20000)
     expect(page.locator('[data-model-header="implicit"]')).to_contain_text("Implicit model of Trade", timeout=30000)
     expect(page.locator("[data-make-model]")).to_be_visible()
-    expect(page.locator('[data-field="desk.name"]')).to_be_visible()                  # the pack dimension came along, one hop
-    page.drag_and_drop('[data-field="Sum of mtm"]', "[data-canvas-grid]", target_position={"x": 80, "y": 40})
-    page.drag_and_drop('[data-field="desk.name"]', ".bi-dvis")
+    expect(page.locator('[data-field="desk.NAME"]')).to_be_visible()                  # the pack dimension came along, one hop
+    page.drag_and_drop('[data-field="Sum of MTM"]', "[data-canvas-grid]", target_position={"x": 80, "y": 40})
+    page.drag_and_drop('[data-field="desk.NAME"]', ".bi-dvis")
     expect(page.locator(".bi-dvis").first).to_contain_text("3 rows", timeout=15000)
     page.click("[data-save]")
     expect(page.locator(".bi-near").first).to_contain_text("Saved", timeout=15000)

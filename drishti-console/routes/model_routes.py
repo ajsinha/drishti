@@ -266,7 +266,8 @@ async def new_model(request: Request):
         else:
             doc = ml.new_doc(await _free_name(request, ml.slug(title)), title)
             infos = [await _dataset_info(request, str(name)) for name in body.get("datasets") or []]
-            referenced = {c["references"] for i in infos for c in i["columns"] if c.get("references")}
+            # a dataset's own id column (a trade's TRADE_ID references trade) is no other dataset referencing it
+            referenced = {c["references"] for i in infos for c in i["columns"] if c.get("references") and c["references"] != ml.kind_of(i)}
             for info in infos:                                  # a dataset another one references is a dimension (spec 2.2), whatever amounts it carries
                 alias = info["alias"] if info["alias"] not in doc["datasets"] else info["alias"] + "_2"
                 role = "dimension" if ml.kind_of(info) in referenced else info["role"]
