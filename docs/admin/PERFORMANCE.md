@@ -92,12 +92,22 @@ for the latest date (1.3 million trades) built in 113 s, 704 MB on disk. 50 user
 | Target | Requests/s | Failures | p50 / p95 / p99 |
 |---|---|---|---|
 | Server API | 179 | 0 | trade 0.16 / 0.73 / 1.15 s; grouped page 0.17 / 0.73 / 1.10 s; netting set 0.18 / 0.72 / 1.07 s; search 0.85 / 1.47 / 1.68 s |
-| Console pages | 56 | 24 of 3,521 (form searches over the console's 5 s limit) | trade 0.44 / 1.49 / 3.69 s; form search 5.2 / 7.0 / 8.1 s (open) |
+| Console pages | 56 | 24 of 3,521 (form searches over the console's 5 s limit) | trade 0.44 / 1.49 / 3.69 s; form search 5.2 / 7.0 / 8.1 s |
+| Console pages, after the fix below | 182 | 0 | trade 0.18 / 0.78 / 1.28 s; form search 0.21 / 0.85 / 1.58 s |
 
 Heap 3.7 GB of 8 GB after the run. Two things the run found and fixed: a server restarted while the previous process was still
 stopping (34 s here) ran without its RocksDB document cache (heap 6.7 GB, 133 requests/s): it now retries every 30 s for 10 minutes;
 and dumps dated on a holiday of the server's calendar (`DRISHTI_CALENDAR`, USNY: Labor Day, Columbus Day) are never served, since a
-holiday is answered from the business day before: `trades.py` now follows the calendar.
+holiday is answered from the business day before: `trades.py` now follows the calendar. A third, found later the same day: each
+console form search asked the server for the form twice (the form, then its criteria compiled), and the server built it each time
+from a thousand rows read (0.45 s, more under load); it is now kept per data version and masking, so form searches went from p50
+5.8 s to 0.21 s and the console from 56 to 182 pages/s.
+
+**A day restated while serving (2026-10-18).** ENDUR's latest day (400,000 trades) re-dumped with 10 % of trades amended (a new
+version), 0.5 % cancelled and 2,000 new, and loaded with `lake build --mode overwrite-dates` while 30 users read the server: the load
+took 2 min 54 s, the users ran at 202 requests/s with 0 failures (trade p50 0.08 s), and within a minute of the commit the amended
+trades showed their new version and the new trades opened. A search on a date no source holds now says so and names the newest
+date that has data (the search's `noData`), instead of an empty result.
 
 What makes it so: the Delta connectors share one memory budget (half the heap), id maps are memory-mapped from disk, documents
 read before come from a RocksDB cache on disk, Parquet footers are parsed once, grouped pages live on disk and are kept across

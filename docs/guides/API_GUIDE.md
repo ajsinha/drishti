@@ -643,6 +643,14 @@ looks like "nothing matched":
 The reason is the connector's own when it says what to do (an unsupported codec, a day with unreadable lines);
 otherwise only the kind of failure (`failed (SQLException; the server log and Admin → Health say more)`), since
 driver and I/O messages can carry host names and paths; `did not answer within 3000 ms` for a timeout.
+When nothing was read because no source holds the kind on the business date (a date not loaded yet, or before the
+first), the answer adds `noData` with that date and the newest date a source holds, so a caller can offer it:
+
+```json
+"scanned":0,"matched":0,"partial":true,"failed":[],
+"noData":{"businessDate":"2026-08-03","latestDate":"2026-10-16"}
+```
+
 `/search/compare` is partial when either date is, with both dates' `failed`. A condition that does not parse:
 
 ```bash

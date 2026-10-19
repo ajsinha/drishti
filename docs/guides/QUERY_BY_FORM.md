@@ -54,7 +54,8 @@ In the top bar the **Forms** icon is lit on `/forms` and on any form. The old ad
 | yes or no | Any, Yes, No | is |
 
 The values of every list are kept by the server per field, business date and data version, so a form opens without reading the
-data again; a load refreshes them, and a masked field's values are never kept.
+data again; a load refreshes them, and a masked field's values are never kept. The form itself is kept the same way (per data
+version, and per whether you see masked fields), so a search does not wait for it to be built.
 
 Leave a field empty and it takes no part. A field marked **slower: not indexed** is not kept by the source as a column, so the documents are read to answer it:
 fine for a few thousand, slow for a million. Below the fields choose how to **sort** and how many results to **show**.
@@ -71,6 +72,10 @@ TRD where (CURRENCY = 'EUR' or CURRENCY = 'USD') and QUANTITY >= 100m limit 100
 ```
 
 It matches 3,415 of the 15,000 trades of the three source systems; the table shows the first 100 (**Show** below the fields).
+
+On a business date the sources hold no data for (a date not loaded yet, or before the first), the page does not just say "Nothing
+matches": it says no trade data is loaded for that date, names the newest date that has data, and **Search on** that date runs the
+same search there (the business date changes for the session, as in the top bar). The same note shows on the search page.
 
 **Copy** puts it on the clipboard (paste it into the command line or the search box); **Edit as text** opens it in the search box. The table is the
 console's table: sort by a heading, filter each column with its funnel ([Filter a table like Excel](USER_GUIDE.md#filter-a-table-like-excel)), page and walk it by keyboard. The key
