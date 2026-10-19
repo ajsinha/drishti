@@ -43,6 +43,13 @@
   (the Delta connector: the table's id from its log, else its location). **Admin → Net → Capability map** with a filter and warnings (one version
   of a pack with different contents, different calendars, different masks); `GET /api/v1/net/capabilities`. NET.md section 5, API_GUIDE,
   CONNECTOR_DEVELOPER_GUIDE.
+- **Drishti*net security (N3).** The cluster key rotates with no downtime in three rolling steps (accept the new key, sign with it, drop the old):
+  13,542 signed calls among three servers through the rollover, none refused; Admin → Net → Security shows the key's state (never the key), which
+  peers still sign with the previous key, mutual TLS and its certificates' expiry, and every refused call. Forwarded requests carry a 30 s
+  on-behalf-of token for one node; a node refuses one whose roles may not reach it (`403 DRS-5054`, nodes per role in `access.yaml`) and records
+  the request as `net:from <node> request <id>` in its access log. **Admin → Net → Access**: nodes per role (ids or tags) with the members each
+  reaches now, this node's tags and peer-only packs, written to access.yaml and node.yaml, applied live; `GET/PUT /api/v1/net/access`,
+  `GET /api/v1/net/security`. NET.md section 6 (the key, its rotation, mutual TLS, on-behalf-of, masks twice, nodes per role, audit), API_GUIDE.
 
 ### 2.4.0 (wave C, authoring and analysis): report schema v2, boards as a report layout, BI Studio
 

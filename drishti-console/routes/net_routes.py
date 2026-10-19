@@ -77,8 +77,10 @@ async def page(request: Request):
     except BackendError as e:
         return render(request, "admin/forbidden.html", status_code=e.page_status, error=e)
     caps = await _optional(request, "/capabilities")
+    access = await _optional(request, "/access")
+    security = await _optional(request, "/security")
     return render(request, "admin/net.html", members=members, files=files, status=status, console=_console_servers(request), caps=caps,
-                  tab=request.query_params.get("tab", "members"))
+                  access=access, security=security, tab=request.query_params.get("tab", "members"))
 
 
 async def _optional(request: Request, path: str, **params) -> dict:
@@ -87,6 +89,44 @@ async def _optional(request: Request, path: str, **params) -> dict:
         return await _net(request, "GET", path, **params)
     except BackendError:
         return {}
+
+
+@router.get("/api/access")
+async def api_access(request: Request):
+    if _admin(request) is None:
+        return _forbidden()
+    try:
+        return await _net(request, "GET", "/access")
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.put("/api/access")
+async def api_save_access(request: Request):
+    """Nodes per role, this node's tags and its peer-only packs; only those three parts are passed on."""
+    if _admin(request) is None:
+        return _forbidden()
+    body = await json_body(request)
+    pick = {}
+    if isinstance(body.get("roles"), dict):
+        pick["roles"] = {str(r): [str(n) for n in (v or []) if str(n).strip()] for r, v in body["roles"].items()}
+    for key in ("tags", "peerOnlyPacks"):
+        if isinstance(body.get(key), list):
+            pick[key] = [str(x) for x in body[key] if str(x).strip()]
+    try:
+        return await _net(request, "PUT", "/access", pick)
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.get("/api/security")
+async def api_security(request: Request):
+    if _admin(request) is None:
+        return _forbidden()
+    try:
+        return await _net(request, "GET", "/security")
+    except BackendError as e:
+        return _problem(e)
 
 
 @router.get("/api/capabilities")

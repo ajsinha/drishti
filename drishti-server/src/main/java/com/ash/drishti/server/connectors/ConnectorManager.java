@@ -658,7 +658,7 @@ public final class ConnectorManager {
     }
 
     /** The TLS the settings ask for and when each configured certificate expires; {@code null} when no {@code tls.*} setting is given. */
-    static Map<String, Object> tlsSummary(Map<String, String> settings) {
+    public static Map<String, Object> tlsSummary(Map<String, String> settings) {
         if (!com.ash.drishti.api.tls.TlsSettings.anyGiven(settings, "tls.")) {
             return null;
         }

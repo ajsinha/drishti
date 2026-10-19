@@ -28,10 +28,11 @@ exactly as before: no thread gossips, no peer is asked, nothing is forwarded, an
 - [3. The files of config/net/](#3-the-files-of-confignet)
 - [4. Membership: how the nodes find each other](#4-membership-how-the-nodes-find-each-other)
 - [5. What each node offers: the capability digest](#5-what-each-node-offers-the-capability-digest)
-- [6. Admin → Net](#6-admin--net)
-- [7. Drain, maintenance and a node leaving](#7-drain-maintenance-and-a-node-leaving)
-- [8. Sizing](#8-sizing)
-- [9. When something is wrong](#9-when-something-is-wrong)
+- [6. Security: the key, mutual TLS, nodes per role](#6-security-the-key-mutual-tls-nodes-per-role)
+- [7. Admin → Net](#7-admin--net)
+- [8. Drain, maintenance and a node leaving](#8-drain-maintenance-and-a-node-leaving)
+- [9. Sizing](#9-sizing)
+- [10. When something is wrong](#10-when-something-is-wrong)
 
 ## 1. Before you start
 
@@ -199,10 +200,18 @@ no longer a seed, but gossip may still know the node.
 
 Applied on the next round.
 
-### routing.yaml and access.yaml
+### access.yaml: nodes per role
 
-`routing.yaml` (forward and scatter budgets, the hop limit, the peer choice weights, user state) and `access.yaml` (the nodes each role may
-reach) are read and checked from the start; what they change is described with routing and access (sections to come with them).
+| Setting | Default | What it does |
+|---|---|---|
+| `roles.<role>.nodes` | none (every node) | The node ids and tags the role may reach ([section 6](#6-security-the-key-mutual-tls-nodes-per-role)) |
+
+Applied to the next request, and told to the other nodes in the digest.
+
+### routing.yaml
+
+`routing.yaml` (forward and scatter budgets, the hop limit, the peer choice weights, user state) is read and checked from the start; what it
+changes is described with routing.
 
 ## 4. Membership: how the nodes find each other
 
@@ -252,7 +261,60 @@ asks every one. A source that cannot say where its data lives is taken as a shar
 
 **The newest pack is served.** When nodes hold different versions of a pack, the newest is the one served; the map marks it.
 
-## 6. Admin → Net
+## 6. Security: the key, mutual TLS, nodes per role
+
+**The cluster key.** Every call between nodes carries the calling node's id, the time and an HMAC-SHA256 of the method, the path and query, the
+time, the node and the body, made with the cluster key. A call is refused (`401 DRS-5051`, listed on Admin → Net → Security with the address
+and the reason) when it has no signature, when another key made it, or when it was signed more than 60 seconds away from this node's clock
+(a replay). A node without the key cannot gossip, read a digest or ask for data.
+
+**Rotating the key with no downtime.** A node with only the old key cannot check a call signed with the new one, so a rotation is three rolling
+steps; in each, restart (or reload) the nodes one by one, and the cluster keeps working throughout:
+
+| Step | node.yaml on every node | The environment | What it does |
+|---|---|---|---|
+| 1 | `secret: ${DRISHTI_NET_SECRET}` and `previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}` | `DRISHTI_NET_SECRET` = old, `DRISHTI_NET_PREVIOUS_SECRET` = **new** | every node also accepts the new key |
+| 2 | the same | `DRISHTI_NET_SECRET` = **new**, `DRISHTI_NET_PREVIOUS_SECRET` = old | every node signs with the new key and still accepts the old |
+| 3 | remove `previous-secret` | `DRISHTI_NET_SECRET` = new | the old key is refused everywhere |
+
+`previous-secret` is never used to sign; it is only also accepted. Admin → Net → Security shows, for each peer, when it last signed with the
+previous key: when no peer has for a while (every node is at step 2), do step 3. On-behalf-of tokens live 30 seconds, so none outlives a
+rollover. In the in-process test of three servers, 13,542 signed calls made through the three steps were all taken.
+
+**Mutual TLS.** Between nodes on an untrusted network, give each node a certificate: inbound, the server's own TLS with client certificates
+(`server.ssl.*`, `server.ssl.client-auth: need`), outbound, `tls.*` in node.yaml (the shared TLS settings of [TLS.md](../connectors/TLS.md):
+`keystore`, `truststore`, their passwords as `${ENV}` references), with `https://` addresses. Mutual TLS comes on top of the cluster key, never in
+its place. Admin → Net → Security lists the configured certificates and when each expires.
+
+**The user is carried, not trusted blindly.** A request forwarded for a person carries an **on-behalf-of token**: the user, the roles, the embed
+application if any, the node that forwarded it and the request id, the node it is for, signed with the cluster key and valid 30 seconds. The
+receiving node checks the token as it checks the call, and serves the request as that person: their masks, their kinds, their packs. With
+`drishti.security.registered-users-only` on (the default), the user must exist and be enabled on the receiving node too: give the nodes one
+identity database (PostgreSQL, `DRISHTI_IDENTITY_DB_URL`) so that is true everywhere. A token for another node, or older than 30 s, is refused.
+
+**Masks twice.** The node that reads the data masks it as it would for that person; the node that shows the page applies its own masks again. The
+stricter configuration wins; Admin → Net → Capability map warns when two nodes mask different fields.
+
+**Nodes per role** (`access.yaml`, or Admin → Net → Access). A role may name the nodes it may reach, by node id or tag; a role not listed, or with no
+nodes, reaches every node; a person reaches a node when any of their roles does.
+
+```yaml
+# config/net/access.yaml
+roles:
+  trader:
+    nodes: [region:emea]        # the EMEA nodes only
+  risk:
+    nodes: []                   # every node
+```
+
+Before any request leaves a node, the capability table is cut to the nodes the caller's roles reach: a search, a type-ahead or a forwarded request
+never reaches another node, and a kind held only on nodes outside the list is answered as not held. The receiving node checks again: a forwarded
+request whose roles do not reach it is refused `403 DRS-5054`. The person's own node always answers them (they are connected to it).
+
+**Audit.** A forwarded request is in the access log of both nodes: the forwarding node's row names the node it went to and the request id, the
+receiving node's row says `net:from <node> request <id>`. Every management action is in the audit log with the node it was made on.
+
+## 7. Admin → Net
 
 **Admin → Net** (`/admin/net`, administrators) is the cluster as the node the console is on sees it. Its summary line says whether the cluster is
 on, this node's id, how many members are in each state, whether the key is set (never the key) and whether this node is drained.
@@ -274,6 +336,14 @@ each, **newest** or **older**, **peer-only**, **not routed** for a node that is 
 node. Above the table, the **warnings**: one version of a pack with different contents on different nodes, different business calendars, different
 masked fields. The same at `GET /api/v1/net/capabilities`.
 
+**Access.** Each role (those of Admin → Roles and those `access.yaml` names) with the nodes it may reach (node ids or tags, chosen from the
+members' ids and tags) and the nodes it reaches now; this node's tags and its peer-only packs. **Save access** checks and writes `access.yaml` and
+the two settings of `node.yaml` (the rest of it kept), applies them at once and audits `net-access-saved`; the other nodes learn of them with this
+node's digest. API: `GET` and `PUT /api/v1/net/access`.
+
+**Security.** Whether the cluster key is set (never the key), whether a previous key is accepted and which peers last signed with it, mutual TLS and
+its certificates' expiry, and the calls this node refused (when, from which address and node, why). API: `GET /api/v1/net/security`.
+
 **Files.** Every file of the folder, **in force**, **refused** (with its problems) or **not there (defaults)**. Open one to edit it: **Check**
 says what the server would make of the text without writing it; **Save** writes it with the version you read (`If-Match`), so two administrators
 cannot overwrite each other; **Delete** removes it (its text stays in the history). The history lists the earlier texts; opening one shows a
@@ -281,7 +351,7 @@ line diff against the file. **New peer file** starts `peers/<name>.yaml`.
 
 Every action and every save is in the audit log with the node it was made on.
 
-## 7. Drain, maintenance and a node leaving
+## 8. Drain, maintenance and a node leaving
 
 **Maintenance of one node** (an upgrade, a restart, a new disk): **Drain** it first. It keeps gossiping and keeps serving its own users, but
 its peers stop sending it forwarded work, and a forwarded request that reaches it is answered `503` so the caller tries the next peer. When it
@@ -293,19 +363,19 @@ or **Remove** it from their tables at once.
 
 **A node that crashed** is suspect after `suspect-after` and dead after `dead-after` more; when it restarts it rejoins from its `peers.json`.
 
-## 8. Sizing
+## 9. Sizing
 
 Gossip is small: one round sends the member table (about 300 bytes a member) to `fanout` members, and gets theirs back. With 10 members, the
 defaults cost each node 3 exchanges a second of about 3 KB each way, and the failure detector a probe now and then. Raise `interval` (and
 `suspect-after`, `dead-after` with it) on a large cluster over a slow network; lower `dead-after` to drop a crashed node sooner, at the cost of
 declaring a node that paused (a long garbage collection) dead and having it refute.
 
-## 9. When something is wrong
+## 10. When something is wrong
 
 | Symptom | Look at | Fix |
 |---|---|---|
 | A node lists no members | Its log: `net: node ... joined ... seeds [...]`; Admin → Net → Files: is `node.yaml` **refused**? | The seed's address and port, the firewall, `enabled: true` with the key and the address |
-| `401 DRS-5051 cluster credential refused: bad signature` in a node's log, the caller listed on Admin → Net | The two nodes' `DRISHTI_NET_SECRET` | The same key on every node (during a rollover, see the key's rotation) |
+| `401 DRS-5051 cluster credential refused: bad signature` in a node's log, the caller listed on Admin → Net | The two nodes' `DRISHTI_NET_SECRET` | The same key on every node (during a rollover, the three steps of [section 6](#6-security-the-key-mutual-tls-nodes-per-role)) |
 | `... signed 75 s away from this node's clock` | The two machines' clocks | NTP on every node |
 | A member flaps between `alive` and `suspect` | The latency on Admin → Net, the log of the flapping node (long pauses) | Raise `suspect-after`, or fix the network or the pauses |
 | `404 DRS-5050 Drishti*net is off on this node` | The node's `node.yaml` | `enabled: true` (and the node is not left: Rejoin) |

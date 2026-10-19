@@ -469,3 +469,16 @@ Changes from the design:
 - A digest also carries the node's masked fields, nodes per role and BI report ids, for the warnings and for routing BI (N6).
 - Measured: a pack switched on at one of three servers is in the other two's tables 1.0 s later with the default 1 s round.
 
+**N3, security (built).** The cluster key and the on-behalf-of token of N1, checked by `NetCallFilter`; `NetSecurityController` serves Admin →
+Net's *Access* (`GET/PUT /api/v1/net/access`, written to access.yaml and node.yaml, applied live, gossiped in the digest) and *Security*
+(`GET /api/v1/net/security`: the key's state, the previous key's last use per peer, mutual TLS and its certificates' expiry, refused calls). A
+forwarded request is recorded in the receiving node's access log as `net:from <node> request <id>`. Changes from the design:
+
+- **Mutual TLS comes on top of the cluster key, not in its place**: the HMAC is always required (it binds the call to its body, path, time and
+  node, which a TLS session does not), and mutual TLS is the transport: `server.ssl.*` inbound, node.yaml's `tls.*` outbound.
+- The key's rotation is the three steps of N1's note, measured: 13,542 signed calls among three servers through the three steps, none refused.
+- The receiving node refuses an on-behalf-of token whose roles do not reach it with `403 DRS-5054`; a drained node refuses forwarded work with
+  `503 DRS-5054`, so the caller tries the next peer.
+- Masks twice is enforced where data crosses nodes (N4's fetch, the scattered search of N5): the reading node masks for the token's user, the
+  showing node masks again.
+

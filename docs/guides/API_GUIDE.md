@@ -1475,6 +1475,12 @@ off on a node they answer `404 DRS-5050` (`/members` answers `{"enabled": false,
   take nothing else.
 - **An administrator** (a session token with the admin power; never a personal API token: `* /api/v1/net/**` is in `token-never`), for Admin → Net.
 
+A request one node forwards to another for a person (an ordinary `/api/v1/**` request) is signed the same way and carries two more headers:
+`X-Drishti-Net-Hop: 1` (the receiving node answers only from itself: one hop at most) and `X-Drishti-Net-On-Behalf-Of`, a token signed with the
+cluster key that names the user, the roles, the embed application, the forwarding node (`origin`), the request id, the node it is for (`aud`) and
+its expiry (30 s). The receiving node serves the request as that user, refuses a token for another node or an expired one (`401 DRS-5051`), and
+refuses one whose roles may not reach it (`403 DRS-5054`). None of these headers ever reaches a browser.
+
 | Method | Path | Who | Notes |
 |---|---|---|---|
 | `POST` | `/net/gossip` `{"members": [...]}` | node | Push-pull: the caller's member table is merged, this node's is the answer `{"members": [...]}`; the first entry is the node itself. Each member: `nodeId`, `url`, `incarnation`, `heartbeat`, `state` (`alive`, `suspect`, `dead`, `left`), `digestHash`, `version`, `protocol`, `tags`, `since`, `drained` |
@@ -1486,6 +1492,9 @@ off on a node they answer `404 DRS-5050` (`/members` answers `{"enabled": false,
 | `DELETE` | `/net/members/{id}` | admin | Removes a dead or left member; `400 DRS-5056` for an alive or suspect one |
 | `POST` | `/net/drain`, `/net/undrain` | admin | This node takes no forwarded work (its peers are told), or takes it again |
 | `POST` | `/net/leave`, `/net/rejoin` | admin | Gossips `left` and serves its peers nothing; back alive with a higher incarnation |
+| `GET` | `/net/access` | admin | Nodes per role: `roles` (as access.yaml says), `byRole` (each role with its `nodes`, `limited`, and the members it `reaches` now), this node's `tags` and `peerOnlyPacks`, `choices` (the members' ids and tags), the two files' `etags` |
+| `PUT` | `/net/access` `{"roles": {role: [ids or tags]}, "tags": [...], "peerOnlyPacks": [...]}` | admin | Writes access.yaml (whole) and node.yaml's two settings (the rest kept), checked first (`409 DRS-5055` and nothing written when one is refused), applied at once; answers as `GET`. Audited `net-access-saved` |
+| `GET` | `/net/security` | admin | `keySet`, `previousKeySet`, `previousUses` (each peer that signed with the previous key, and when), `rollover` (in words), `tls` (mutual TLS: `enabled`, `certificates` with `subject`, `source`, `notAfter`, `daysLeft`, `expired`; `warnings`), `refusals` (`at`, `address`, `node`, `reason`). Never a key |
 | `GET` | `/net/files` | admin | Every file of the folder: `id`, `exists`, `etag`, `bytes`, `refused`, `problems` (`file`, `level`, `field`, `line`, `message`); `dir`, `watch` |
 | `GET` | `/net/file?id=node.yaml` | admin | One file: `text`, `etag`, `problems`, `history` (`id`, `at`, `bytes`) |
 | `GET` | `/net/file/revision?id=&rev=` | admin | The text of a kept earlier version |

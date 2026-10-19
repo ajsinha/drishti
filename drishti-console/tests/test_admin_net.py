@@ -54,6 +54,17 @@ CAPS = {"running": True, "self": "n-a", "nodes": [], "warnings": [{"what": "cale
                    "scatter": ["n-c"]}]}
 
 
+ACCESS = {"roles": {"trader": ["region:emea"]}, "tags": ["region:emea"], "peerOnlyPacks": ["market-risk"], "choices": ["n-a", "n-b", "region:apac", "region:emea"],
+          "byRole": [{"role": "risk", "nodes": [], "limited": False, "reaches": ["n-a", "n-b", "n-c"]},
+                     {"role": "trader", "nodes": ["region:emea"], "limited": True, "reaches": ["n-a"]}],
+          "etags": {"access.yaml": "a1", "node.yaml": "n1"}}
+SECURITY = {"keySet": True, "previousKeySet": True, "previousUses": [{"node": "n-b", "at": "2026-10-19T10:00:00Z"}],
+            "rollover": "a previous key is accepted and still used by [n-b]",
+            "tls": {"enabled": True, "certificates": [{"source": "tls.keystore", "subject": "CN=drishti-a", "notAfter": "2026-11-01T00:00:00Z",
+                                                        "daysLeft": 12, "expired": False}], "warnings": []},
+            "refusals": [{"at": "2026-10-19T10:01:00Z", "address": "10.0.0.9", "node": "n-x", "reason": "bad signature: the caller does not have this cluster's key"}]}
+
+
 def with_net(backend, monkeypatch, calls, fail=None):
     async def net(method, path, ident, body=None, headers=None, **params):
         calls.append((method, path, body, headers, params))
@@ -65,6 +76,10 @@ def with_net(backend, monkeypatch, calls, fail=None):
             return FILES
         if path == "/capabilities":
             return CAPS
+        if path == "/access":
+            return ACCESS
+        if path == "/security":
+            return SECURITY
         if path == "/file" and method == "GET":
             return {"id": params.get("id"), "exists": True, "text": "enabled: true\nsecret: ${DRISHTI_NET_SECRET}\n", "etag": "abc", "problems": [], "history": []}
         return {"ok": True}
@@ -98,6 +113,29 @@ def test_the_capability_map_shows_renderers_holders_replicas_and_warnings(client
     tab = page.split('id="netTabMap"')[1].split(">")[0]
     assert 'aria-selected="true"' in tab                                       # ?tab=map opens the map
     assert client.get("/admin/net/api/capabilities").json()["kinds"][0]["kind"] == "trade"
+
+
+def test_access_shows_nodes_per_role_and_saves_only_its_three_parts(client, backend, monkeypatch):
+    calls = []
+    with_net(backend, monkeypatch, calls)
+    page = client.get("/admin/net?tab=access").text
+    for text in ('id="netTabAccess"', 'data-role-nodes="trader"', 'value="region:emea"', 'data-role-nodes="risk"', "every node", "market-risk",
+                 'list="netChoices"', '<option value="region:apac">', "Save access", "n-c"):
+        assert text in page, text
+    body = {"roles": {"trader": ["region:emea", ""], "risk": []}, "tags": ["region:emea", "tier:risk"], "peerOnlyPacks": [], "secret": "x", "junk": 1}
+    assert client.put("/admin/net/api/access", json=body).status_code == 200
+    put = next(c for c in calls if c[0] == "PUT" and c[1] == "/access")
+    assert put[2] == {"roles": {"trader": ["region:emea"], "risk": []}, "tags": ["region:emea", "tier:risk"], "peerOnlyPacks": []}
+
+
+def test_security_shows_the_key_state_previous_uses_tls_and_refusals_never_a_key(client, backend, monkeypatch):
+    with_net(backend, monkeypatch, [])
+    page = client.get("/admin/net?tab=security").text
+    for text in ('id="netTabSecurity"', "Cluster key", "set", "accepted", "still used by [n-b]", "n-b", "CN=drishti-a", "12 days left",
+                 "10.0.0.9", "n-x", "bad signature", "three rolling steps"):
+        assert text in page, text
+    assert KEY not in page
+    assert client.get("/admin/net/api/security").json()["keySet"] is True
 
 
 def test_the_page_says_how_to_switch_the_cluster_on_when_it_is_off(client, backend, monkeypatch):

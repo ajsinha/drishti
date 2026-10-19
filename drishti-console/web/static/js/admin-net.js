@@ -204,6 +204,31 @@
     }).catch(function (err) { say(err.message, true); });
   };
 
+  // access --------------------------------------------------------------------------------------------------------
+  function words(v) { return (v || '').split(',').map(function (x) { return x.trim(); }).filter(function (x) { return x; }); }
+  var accessForm = $('[data-access-form]');
+  if (accessForm) {
+    accessForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var roles = {};
+      $$('[data-role-nodes]', accessForm).forEach(function (i) {
+        var nodes = words(i.value);
+        if (nodes.length) { roles[i.getAttribute('data-role-nodes')] = nodes; }
+      });
+      var body = { roles: roles, tags: words($('[data-node-tags]').value), peerOnlyPacks: words($('[data-node-peer-only]').value) };
+      api('PUT', '/admin/net/api/access', body).then(function (r) {
+        say('Saved: applied on this node at once, and told to the others with its digest.');
+        (r.byRole || []).forEach(function (x) {
+          var row = $('[data-access] tr[data-role="' + x.role + '"] td:last-child');
+          if (!row) { return; }
+          row.textContent = '';
+          (x.reaches || []).forEach(function (n) { row.appendChild(tag(n)); });
+          if (!(x.reaches || []).length) { row.appendChild(el('span', { 'class': 't-warn' }, 'no node')); }
+        });
+      }).catch(function (err) { say(err.message, true); });
+    });
+  }
+
   // files ---------------------------------------------------------------------------------------------------------
   var editor = $('[data-editor]'), yaml = $('[data-yaml]'), problems = $('[data-problems]'), historyList = $('[data-history]'), diff = $('[data-diff]');
   var current = { id: null, etag: '', text: '' };

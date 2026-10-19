@@ -45,7 +45,9 @@
   <div class="net-tabs" role="tablist" aria-label="Drishti*net" data-tabs>
     <button type="button" role="tab" id="netTabMembers" aria-controls="netPaneMembers" aria-selected="{{ 'true' if tab == 'members' else 'false' }}" {% if tab != 'members' %}tabindex="-1"{% endif %} data-tab="members">Members</button>
     <button type="button" role="tab" id="netTabMap" aria-controls="netPaneMap" aria-selected="{{ 'true' if tab == 'map' else 'false' }}" {% if tab != 'map' %}tabindex="-1"{% endif %} data-tab="map">Capability map</button>
+    <button type="button" role="tab" id="netTabAccess" aria-controls="netPaneAccess" aria-selected="{{ 'true' if tab == 'access' else 'false' }}" {% if tab != 'access' %}tabindex="-1"{% endif %} data-tab="access">Access</button>
     <button type="button" role="tab" id="netTabFiles" aria-controls="netPaneFiles" aria-selected="{{ 'true' if tab == 'files' else 'false' }}" {% if tab != 'files' %}tabindex="-1"{% endif %} data-tab="files">Files</button>
+    <button type="button" role="tab" id="netTabSecurity" aria-controls="netPaneSecurity" aria-selected="{{ 'true' if tab == 'security' else 'false' }}" {% if tab != 'security' %}tabindex="-1"{% endif %} data-tab="security">Security</button>
   </div>
 
   <section role="tabpanel" id="netPaneMembers" aria-labelledby="netTabMembers" data-pane="members" {% if tab != 'members' %}hidden{% endif %}>
@@ -153,6 +155,61 @@ secret: ${DRISHTI_NET_SECRET}</pre>
         <tr><td colspan="5" class="text-muted-d">Nothing yet: the cluster is off, or the digests are on their way.</td></tr>
       {% endfor %}
       </tbody>
+    </table></div>
+  </section>
+
+  <section role="tabpanel" id="netPaneAccess" aria-labelledby="netTabAccess" data-pane="access" {% if tab != 'access' %}hidden{% endif %}>
+    <p class="text-muted-d">The nodes each role may reach: node ids or tags (<span class="mono">region:emea</span>). A role with none reaches every node. A
+      search, a type-ahead or a forwarded request never reaches a node outside its role's list, and a node refuses a forwarded request whose roles may
+      not reach it. Saved to <span class="mono">access.yaml</span> and <span class="mono">node.yaml</span> (checked first, the previous text kept),
+      applied at once, and told to the other nodes in this node's digest.</p>
+    <datalist id="netChoices">{% for c in access.choices or [] %}<option value="{{ c }}">{% endfor %}</datalist>
+    <form data-access-form>
+      <div class="tbl-wrap"><table class="tbl adm-tbl net-access" data-access>
+        <caption class="visually-hidden">Nodes per role</caption>
+        <thead><tr><th scope="col">Role</th><th scope="col">May reach (node ids or tags, comma-separated; empty: every node)</th><th scope="col">Reaches now</th></tr></thead>
+        <tbody>
+        {% for r in access.byRole or [] %}
+          <tr data-role="{{ r.role }}"><th scope="row" class="mono">{{ r.role }}</th>
+            <td><label class="visually-hidden" for="netRole-{{ loop.index }}">Nodes {{ r.role }} may reach</label>
+              <input class="studio-in mono" id="netRole-{{ loop.index }}" data-role-nodes="{{ r.role }}" value="{{ r.nodes | join(', ') }}" list="netChoices" autocomplete="off" spellcheck="false" placeholder="every node"></td>
+            <td>{% for n in r.reaches %}<span class="net-tag mono">{{ n }}</span>{% else %}<span class="t-warn">no node</span>{% endfor %}</td></tr>
+        {% else %}
+          <tr><td colspan="3" class="text-muted-d">No roles to show.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+      <div class="lk-grid net-node-fields">
+        <label class="loads-field" for="netTags">This node's tags (comma-separated)
+          <input class="studio-in mono" id="netTags" data-node-tags value="{{ (access.tags or []) | join(', ') }}" autocomplete="off" spellcheck="false" placeholder="region:emea, tier:risk"></label>
+        <label class="loads-field" for="netPeerOnly">Packs served to peers only (comma-separated)
+          <input class="studio-in mono" id="netPeerOnly" data-node-peer-only value="{{ (access.peerOnlyPacks or []) | join(', ') }}" autocomplete="off" spellcheck="false" placeholder="market-risk"></label>
+      </div>
+      <p><button type="submit" class="btn-pill btn-accent">Save access</button></p>
+    </form>
+  </section>
+
+  <section role="tabpanel" id="netPaneSecurity" aria-labelledby="netTabSecurity" data-pane="security" {% if tab != 'security' %}hidden{% endif %}>
+    <p class="text-muted-d">Every call between nodes is signed with the cluster key (<span class="mono">DRISHTI_NET_SECRET</span>) and refused outside a 60 s window.
+      The key is never shown here, only its state. To rotate it with no downtime, three rolling steps: every node accepts the new key
+      (<span class="mono">previous-secret</span>), then signs with it (<span class="mono">secret</span>, the old one as <span class="mono">previous-secret</span>), then drops
+      the old one; see the <a href="/help/net">operator's guide</a>.</p>
+    <dl class="net-dl" data-security>
+      <dt>Cluster key</dt><dd>{% if security.keySet %}<span class="st st-ok">set</span>{% else %}<span class="st st-bad">not set</span>{% endif %}</dd>
+      <dt>Previous key</dt><dd>{% if security.previousKeySet %}<span class="st st-warn">accepted</span>{% else %}<span class="text-muted-d">none</span>{% endif %}</dd>
+      <dt>Rollover</dt><dd data-rollover>{{ security.rollover or '-' }}</dd>
+      <dt>Mutual TLS</dt><dd>{% if security.tls %}{{ 'on' if security.tls.enabled else 'off' }}{% for c in security.tls.certificates or [] %}<div class="mono">{{ c.subject }}: {{ c.source }}, expires {{ c.notAfter }}{% if c.expired %} <span class="t-bad">expired</span>{% elif c.daysLeft is not none and c.daysLeft < 30 %} <span class="t-warn">{{ c.daysLeft }} days left</span>{% endif %}</div>{% endfor %}{% for w in security.tls.warnings or [] %}<div class="t-warn">{{ w }}</div>{% endfor %}{% if security.tls.error %}<div class="t-bad">{{ security.tls.error }}</div>{% endif %}{% else %}<span class="text-muted-d">none: plain HTTP between nodes, or TLS without a client certificate (node.yaml tls.*)</span>{% endif %}</dd>
+    </dl>
+    {% if security.previousUses %}
+    <h2 class="net-h2">Peers that signed with the previous key</h2>
+    <ul class="net-seeds">{% for u in security.previousUses %}<li><span class="mono">{{ u.node }}</span> {{ when_local(u.at) }}</li>{% endfor %}</ul>
+    {% endif %}
+    <h2 class="net-h2">Refused calls</h2>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-refusals>
+      <caption class="visually-hidden">Calls from other nodes that this node refused, newest first</caption>
+      <thead><tr><th scope="col">When</th><th scope="col">Address</th><th scope="col">Node</th><th scope="col">Why</th></tr></thead>
+      <tbody>{% for r in security.refusals or [] %}<tr><td>{{ when_local(r.at) }}</td><td class="mono">{{ r.address }}</td><td class="mono">{{ r.node or '-' }}</td><td>{{ r.reason }}</td></tr>
+      {% else %}<tr><td colspan="4" class="text-muted-d">None since this node started.</td></tr>{% endfor %}</tbody>
     </table></div>
   </section>
 

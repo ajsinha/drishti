@@ -109,6 +109,10 @@ public class AccessRecorder implements WebMvcConfigurer, HandlerInterceptor {
         if (kind == null && detail != null) {                    // a search: its mnemonic or kind is the first word
             kind = detail.trim().split("\\s+", 2)[0];
         }
+        if (request.getAttribute("drishti.net.claims") instanceof com.ash.drishti.net.security.OnBehalfOf.Claims c) {
+            // Drishti*net: a request another node forwarded for its user: both nodes and the request id, as the forwarding node records it
+            detail = (detail == null ? "" : detail + " ") + "net:from " + c.origin() + " request " + c.request();
+        }
         sink.record(new AccessLog.Event(Instant.now(), who.user(), action, kind, id, detail, date == null || date.isBlank() ? null : date));
     }
 }

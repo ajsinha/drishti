@@ -371,11 +371,16 @@ public final class NetFolder {
      * role's nodes in access.yaml as {@code roles.risk.nodes}): the file is read as YAML, the setting set (a comma-separated value
      * of a list setting becomes a list, an empty value removes the setting) and the whole written back. Comments are not kept.
      */
-    @SuppressWarnings("unchecked")
     public String withSetting(String id, String dotted, String value) {
+        return withSetting(text(id).orElse(""), id, dotted, value);
+    }
+
+    /** As {@link #withSetting(String, String, String)}, on a given text of the file rather than the one on disk. */
+    @SuppressWarnings("unchecked")
+    public String withSetting(String text, String id, String dotted, String value) {
         Map<String, Object> m;
         try {
-            m = map(text(id).orElse(""));
+            m = map(text);
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException(id + " is not YAML: " + e.getOriginalMessage(), e);
         }
