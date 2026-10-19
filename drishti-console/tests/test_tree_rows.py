@@ -22,6 +22,7 @@ import os
 import re
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -113,8 +114,15 @@ def _run(chrome, tmp_path, body, script):
     scripts = "".join(f'<script src="{(STATIC / js).as_uri()}"></script>' for js in ("pivot-engine.js", "pivot-grid.js", "tree-rows.js"))
     page.write_text(f'<!doctype html><html><body>{body}{scripts}<script>var out = {{}};{script}'
                     'document.body.insertAdjacentHTML("beforeend", "<pre id=result>" + JSON.stringify(out) + "</pre>");</script></body></html>')
+    # Chromium puts its process-singleton socket in a throwaway profile under TMPDIR; a socket path longer than the system's limit (108
+    # bytes) makes it abort at start ("Socket path too long") and print nothing, which is how these tests failed in a full run whose TMPDIR
+    # was a long scratch folder. A long TMPDIR is replaced by /tmp for Chromium alone (the profile is removed when it exits); 120 s for a
+    # loaded machine.
+    env = dict(os.environ)
+    if len(tempfile.gettempdir()) > 60:
+        env["TMPDIR"] = "/tmp"
     done = subprocess.run([chrome, "--headless", "--no-sandbox", "--disable-gpu", "--allow-file-access-from-files",
-                           "--virtual-time-budget=3000", "--dump-dom", page.as_uri()], capture_output=True, text=True, timeout=60)
+                           "--virtual-time-budget=3000", "--dump-dom", page.as_uri()], capture_output=True, text=True, timeout=120, env=env)
     m = re.search(r'<pre id="result">(.*?)</pre>', done.stdout, re.S)
     assert m, done.stderr[-500:]
     return json.loads(m.group(1).replace("&quot;", '"').replace("&amp;", "&"))

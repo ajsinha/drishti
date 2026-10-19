@@ -86,7 +86,8 @@ def open_item(page, item_id, wait="[data-meta]"):
 def edit_body(page, change, message):
     """Opens the Edit form, rewrites the body with ``change(text)`` and saves the draft with a message."""
     rows = page.locator("[data-history] tbody tr")
-    before = rows.count()
+    expect(rows.first).to_be_visible(timeout=15000)                      # the history has loaded (the item's first cut at least): count it then,
+    before = rows.count()                                                 # not while it is still drawing (counted early, a save went unnoticed)
     page.get_by_role("button", name="Edit", exact=True).click()
     box = page.locator("[data-edit] textarea[name=body]")
     box.fill(change(box.input_value()))
@@ -94,6 +95,7 @@ def edit_body(page, change, message):
     page.click("[data-edit] button[type=submit]")
     expect(page.locator("[data-msg]")).to_contain_text("Draft saved")
     expect(rows).to_have_count(before + 1, timeout=15000)                # this save's revision is listed (the message may still be the last save's)
+    expect(rows.first).to_contain_text(message, timeout=15000)           # and it is this save, newest first
 
 
 def test_an_author_saves_twice_compares_and_restores(stack, browser):

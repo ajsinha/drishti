@@ -130,6 +130,12 @@
   then removed): the Transform input, profile and steps, the Python console and its promoted run (12,751 live trades of 15,000) match the text.
 - **Tutorial 16 picture 11 remade** (the React sample, after `fetch-vendor.sh --only react`, whose builds stay git-ignored): the search types
   `1000001`, an ENDUR trade id of the production-shaped data (it typed `END-1000`, an id of the data before 2.3.0, and found nothing).
+- **The full browser rehearsal (2.5.0)**, every console browser file one at a time: a long folder path on Admin → Lakes (the lake roots, the
+  settings and history files) widened the page at phone width; it now breaks anywhere. The About tests ran on the genomics pack, which moved to
+  `examples/packs`, and had been skipping since (the server did not start): they name the folder and read the gloss term `VAR_99`. Three tests made
+  steady: the model designer's report drop waits for the designer to be ready (it failed one run in two), the governance save-twice test counts the
+  history once it has loaded and waits for each save's own row, and `test_tree_rows.py` starts Chromium with a short `TMPDIR` (with a long one its
+  process socket path passes the system's limit and Chromium aborts printing nothing, the failure seen in a full run).
 
 ## 2.4.0 — BI Studio, report schema v2 and boards as a report layout, Python data prep, the browser Python console, query by form at scale (2026-10-19)
 

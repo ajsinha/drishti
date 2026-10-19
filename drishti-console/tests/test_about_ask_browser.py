@@ -25,7 +25,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import pytest
 
 from test_workbench_browser import browser, page, wait  # noqa: F401 - fixtures and helpers
-from wb_live import BROWSER_WAIT_MS, _stack
+from wb_live import BROWSER_WAIT_MS, ROOT, _stack
 
 VIEW = "/v/var/VAR-COMM"
 OFF_VIEW = "/v/variant/VRNT-APOE-E4"                                                 # genomics: a pack that did not opt in
@@ -86,7 +86,7 @@ def model():
 
 @pytest.fixture(scope="module")
 def live_console(tmp_path_factory, model):
-    yield from _stack(tmp_path_factory, {"DRISHTI_PACKS": "market-risk,genomics", "DRISHTI_ASK_ENABLED": "true", "DRISHTI_ASK_ENDPOINT": model.url,
+    yield from _stack(tmp_path_factory, {"DRISHTI_PACKS": "market-risk,genomics", "DRISHTI_PACKS_EXTRA_DIRS": str(ROOT / "examples" / "packs"), "DRISHTI_ASK_ENABLED": "true", "DRISHTI_ASK_ENDPOINT": model.url,
                                          "DRISHTI_ASK_MODEL": "fake", "DRISHTI_EXPLAIN_ASK_PACKS": "market-risk"})
 
 

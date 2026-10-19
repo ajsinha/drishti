@@ -21,13 +21,13 @@ Skipped when Playwright, Chromium, the built server jar or a JDK is missing (wb_
 import pytest
 
 from test_workbench_browser import browser, page, wait  # noqa: F401 - fixtures and helpers
-from wb_live import _stack
+from wb_live import ROOT, _stack
 
 
 @pytest.fixture(scope="module")
 def live_console(tmp_path_factory):
     """The console in front of a real server with the packs whose about text this tests (the default stack enables others)."""
-    yield from _stack(tmp_path_factory, {"DRISHTI_PACKS": "market-risk,genomics"})
+    yield from _stack(tmp_path_factory, {"DRISHTI_PACKS": "market-risk,genomics", "DRISHTI_PACKS_EXTRA_DIRS": str(ROOT / "examples" / "packs")})
 
 VIEW = "/v/var/VAR-COMM"
 VAR_LABEL = "VaR 99% 1D"
@@ -46,7 +46,7 @@ def strip_term(page, label):
 def test_a_strip_label_with_an_entry_is_underlined_focusable_and_explained_on_focus(live_console, page):
     open_view(page, live_console)
     dt = strip_term(page, VAR_LABEL)
-    assert dt.get_attribute("tabindex") == "0" and dt.get_attribute("data-gloss") == "var99"
+    assert dt.get_attribute("tabindex") == "0" and dt.get_attribute("data-gloss") == "VAR_99"
     assert "dotted" in dt.evaluate("e => getComputedStyle(e).textDecorationLine + ' ' + getComputedStyle(e).textDecorationStyle")
     dt.focus()                                                                    # keyboard: focus alone shows it
     tip = page.locator("#aboutTip")
@@ -57,7 +57,7 @@ def test_a_strip_label_with_an_entry_is_underlined_focusable_and_explained_on_fo
     for value in ("10.95", "10,95", "10.9m"):                                      # a field's meaning never carries the value on the page
         assert value not in text, text
     page.keyboard.press("Escape")
-    assert tip.is_hidden() and page.evaluate("document.activeElement.getAttribute('data-gloss')") == "var99"
+    assert tip.is_hidden() and page.evaluate("document.activeElement.getAttribute('data-gloss')") == "VAR_99"
 
 
 def test_hover_shows_the_tooltip_after_a_short_delay_and_leaving_hides_it(live_console, page):
@@ -76,8 +76,8 @@ def test_enter_on_a_labelled_field_opens_the_drawer_at_its_entry(live_console, p
     strip_term(page, VAR_LABEL).focus()
     page.keyboard.press("Enter")
     page.locator("#aboutDrawer").wait_for()
-    wait(page, "!!document.querySelector('#aboutDrawer [data-term=\"var99\"]')")
-    wait(page, "document.activeElement && document.activeElement.getAttribute('data-term') === 'var99'")
+    wait(page, "!!document.querySelector('#aboutDrawer [data-term=\"VAR_99\"]')")
+    wait(page, "document.activeElement && document.activeElement.getAttribute('data-term') === 'VAR_99'")
     layer = page.locator("#aboutDrawer [data-layer=\"glossary\"]")
     assert layer.get_attribute("open") is not None
     assert "What each number means" in layer.inner_text() and "Value at risk, 99%, 1 day" in layer.inner_text()
