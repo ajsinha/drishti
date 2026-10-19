@@ -132,6 +132,9 @@
 - **`sutra lint` and `sutra test` of a pack ignore the site's added packs (2.4.0).** A pack checked from the command line was loaded beside the packs
   an administrator had added in Admin → Packs (`<data dir>/packs/added.yaml`), so a pack that defines `counterparty` failed beside a site's `core`
   (`kind counterparty is defined by both pack ...`); `drishti.py pack make` reported its pack check failed for that reason ([CLI_GUIDE.md](docs/guides/CLI_GUIDE.md)).
+- **A new board from the workspace says where it opens (2.4.0).** The New item form still said a board *is laid out in the board designer* and
+  offered *Create and open in the board designer*; a board is a report with board pages, so the hint and the button now say it opens in the report
+  designer, no model needed ([BI_GUIDE.md](docs/guides/BI_GUIDE.md)).
 - **The elements demo host shows live valuations (2.4.0).** Since 2.3.0 a trade is static and the market-risk valuations tick, so
   `tools/elements-demo` shows `TVAL-1000008` (and `TVAL-1000002` in its side column) from the trading, counterparty-risk and market-risk packs; its
   search box knows `TVAL`. The `<drishti-view>` suites (`test_embed_elements_browser.py`, `test_embed_controls_browser.py`) run against it: masks

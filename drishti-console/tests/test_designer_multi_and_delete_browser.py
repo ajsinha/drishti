@@ -159,10 +159,14 @@ def test_a_new_report_from_the_workspace_asks_for_its_dataset_and_a_new_title_is
     page.wait_for_url("**/bi/design/**")
     page.wait_for_selector("[data-design-root][data-ready=yes]")
     assert re.fullmatch(r"Report \d{4}-\d\d-\d\d \d\d:\d\d", page.inner_text("[data-title]")), page.inner_text("[data-title]")
-    page.goto(CONSOLE_URL + "/bi/w/me")                                                                 # a board opens the board designer, a notebook goes to Analyse
+    page.goto(CONSOLE_URL + "/bi/w/me")                                                                 # a board is a report with board pages (2.4.0), a notebook goes to Analyse
     page.select_option("[data-new-item] [name=kind]", "board")
+    assert "report designer" in page.inner_text("[data-kind-hint]")
     page.click("[data-create]")
-    page.wait_for_url("**/bi/design/board/**")
+    page.wait_for_url(re.compile(r"/bi/design/(?!board/)[^/?]+$"))
+    page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
+    item = page.evaluate("(id) => window.drishtiBi.api('GET', '/items/' + id)", page.url.rsplit("/", 1)[1])
+    assert item["kind"] == "report" and "layout: board" in item["body"], item
     page.goto(CONSOLE_URL + "/bi/w/me")
     page.select_option("[data-new-item] [name=kind]", "notebook")
     page.click("[data-create]")
@@ -198,7 +202,7 @@ def test_the_dataset_page_starts_a_report_on_it(stack, browser):
 def test_an_incomplete_visual_does_not_blank_the_others_and_the_check_names_it(stack, browser):
     visuals = ("      - { id: trades, type: card, wells: { values: [Trades] }, at: { x: 0, y: 0, w: 3, h: 2 } }\n"
                "      - { id: empty-bar, type: bar, title: Empty bar, wells: {}, at: { x: 3, y: 0, w: 4, h: 3 } }\n"
-               "      - { id: desks, type: table, wells: { columns: [trade.desk] }, at: { x: 0, y: 3, w: 6, h: 4 } }\n")
+               "      - { id: desks, type: table, wells: { columns: [trade.DESK] }, at: { x: 0, y: 3, w: 6, h: 4 } }\n")
     item = make("report", "One incomplete", report("one-incomplete", visuals))
     page = sign_in(browser, "wes", "/bi/w/me")
     open_designer(page, item)
@@ -214,19 +218,19 @@ def test_an_incomplete_visual_does_not_blank_the_others_and_the_check_names_it(s
 
 
 def test_a_text_field_dropped_on_a_table_joins_its_columns_and_says_where_when_it_cannot(stack, browser):
-    visuals = "      - { id: books, type: table, wells: { columns: [trade.book] }, at: { x: 0, y: 0, w: 4, h: 4 } }\n"
+    visuals = "      - { id: books, type: table, wells: { columns: [trade.PORTFOLIO] }, at: { x: 0, y: 0, w: 4, h: 4 } }\n"
     item = make("report", "Drop a text field", report("drop-text", visuals))
     page = sign_in(browser, "wes", "/bi/w/me")
     open_designer(page, item)
     page.wait_for_selector('[data-visual="books"]')
-    page.drag_and_drop('[data-field="trade.desk"]', '[data-visual="books"]')
+    page.drag_and_drop('[data-field="trade.DESK"]', '[data-visual="books"]')
     page.click('[data-visual="books"] .bi-dhandle')
-    page.wait_for_selector('[data-well="columns"] [data-item="trade.desk"]')                             # the text field is a column of the table
+    page.wait_for_selector('[data-well="columns"] [data-item="trade.DESK"]')                             # the text field is a column of the table
     assert "does not fit" not in page.inner_text("[data-msg]")
-    page.drag_and_drop('[data-field="trade.desk"]', '[data-visual="books"]')                              # again: already there, which is not a misfit
+    page.drag_and_drop('[data-field="trade.DESK"]', '[data-visual="books"]')                              # again: already there, which is not a misfit
     page.wait_for_function("() => /already in/.test(document.querySelector('[data-msg]').textContent)")
     n = page.locator(".bi-dvis").count()
-    page.drag_and_drop('[data-field="trade.currency"]', "[data-canvas-grid]", target_position={"x": 560, "y": 40})      # between visuals: a suggested visual
+    page.drag_and_drop('[data-field="trade.CURRENCY"]', "[data-canvas-grid]", target_position={"x": 560, "y": 40})      # between visuals: a suggested visual
     page.wait_for_function(f"() => document.querySelectorAll('.bi-dvis').length === {n + 1}")
     clean(page)
 
@@ -235,7 +239,7 @@ def test_a_text_field_dropped_on_a_table_joins_its_columns_and_says_where_when_i
 
 def test_several_datasets_in_the_designer_with_a_link_and_a_slicer_that_filters_both(stack, browser):
     visuals = ("      - { id: main-n, type: card, title: Main trades, wells: { values: [Trades] }, at: { x: 0, y: 0, w: 3, h: 2 } }\n"
-               "      - { id: desk, type: slicer, wells: { field: [trade.desk] }, format: { mode: list, scope: report }, at: { x: 9, y: 0, w: 3, h: 5 } }\n")
+               "      - { id: desk, type: slicer, wells: { field: [trade.DESK] }, format: { mode: list, scope: report }, at: { x: 9, y: 0, w: 3, h: 5 } }\n")
     item = make("report", "Two datasets", report("two-datasets", visuals))
     page = sign_in(browser, "wes", "/bi/w/me")
     open_designer(page, item)
@@ -255,21 +259,21 @@ def test_several_datasets_in_the_designer_with_a_link_and_a_slicer_that_filters_
     expect(tree(page, "trades-second").locator("[data-remove-dataset]")).to_be_disabled()                 # a visual reads it now
     second = page.locator(".bi-dvis:has([data-dataset-tag])").get_attribute("data-visual")
     # a field of the second dataset on the main card, which already reads the main dataset: refused, with the hint
-    page.drag_and_drop('[data-dataset-tree="file:dataset:trades-second"] [data-field="trade.desk"]', '[data-visual="main-n"]')
+    page.drag_and_drop('[data-dataset-tree="file:dataset:trades-second"] [data-field="trade.DESK"]', '[data-visual="main-n"]')
     page.wait_for_function("() => /reads/.test(document.querySelector('[data-msg]').textContent)")
     msg = page.inner_text("[data-msg]")
     assert "another visual, or make a composed dataset" in msg and "Trades, the basics" in msg and "Trades, second copy" in msg
     assert page.locator('[data-visual="main-n"] [data-dataset-tag]').count() == 0
     # the links panel suggests desk = desk (same name and type); ticking writes links: into the report
     expect(page.locator("[data-links-panel]")).to_be_visible()
-    tick = page.locator('[data-link-tick="trade.desk = trade.desk"]')
+    tick = page.locator('[data-link-tick="trade.DESK = trade.DESK"]')
     expect(tick).to_have_count(1)
     tick.check()
     expect(page.locator("[data-links-current] li")).to_have_count(1)
     page.click("[data-tab=yaml]")
     page.wait_for_function("() => /links:/.test(document.querySelector('.CodeMirror') ? document.querySelector('.CodeMirror').CodeMirror.getValue() : document.querySelector('[data-yaml]').value)")
     yaml = page.evaluate("document.querySelector('.CodeMirror') ? document.querySelector('.CodeMirror').CodeMirror.getValue() : document.querySelector('[data-yaml]').value")
-    assert "trade.desk" in yaml and f"dataset: trades-second" in yaml
+    assert "trade.DESK" in yaml and f"dataset: trades-second" in yaml
     page.click("[data-tab=canvas]")
     # a composed dataset is offered as text to review, not created
     page.click("[data-make-composed]")

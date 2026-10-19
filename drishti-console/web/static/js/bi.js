@@ -298,11 +298,11 @@
       q('[data-add-member]').hidden = !admin;
       q('[data-review]').checked = !!ws.reviewRequired;
     }
-    // What each kind needs before it is useful: a report needs a dataset (then opens in the designer), a board opens the board designer; datasets, notebooks and
+    // What each kind needs before it is useful: a report needs a dataset (then opens in the designer), a board is a report with board pages (2.4.0) and opens in the designer too; datasets, notebooks and
     // Python items start where they are authored (the Datasets page and Analyse), so this form sends you there rather than create an empty item.
     var START = {
       report: { hint: 'A report reads one model: choose a model (or a dataset, which reads as its own small model), and the report opens in the designer.', go: 'Create and open in the designer' },
-      board: { hint: 'A board is laid out in the board designer: it opens there.', go: 'Create and open in the board designer' },
+      board: { hint: 'A board is a report with board pages: tiles from other reports beside visuals of its own. It opens in the report designer, no model needed.', go: 'Create and open in the designer' },
       dataset: { hint: 'A dataset is built in the wizard: pick a source, tick columns, add measures. It opens there, and is saved as a draft in this workspace. Or paste a dataset YAML document you already have.', go: 'New dataset', href: '/bi/datasets/new-layer?workspace=' },
       model: { hint: 'A model puts datasets in a star with relationships, measures and security. It is made on the Models page (New model) and edited in the model designer.', go: 'Go to Models', href: '/bi/models' },
       notebook: { hint: 'A notebook is started in Analyse (SQL and Python cells); Analyse saves it here with Save as a notebook.', go: 'Go to Analyse', href: '/bi/explore' },
