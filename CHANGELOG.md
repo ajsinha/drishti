@@ -17,11 +17,11 @@
 
 ## Unreleased
 
+## 2.4.0 — BI Studio, report schema v2 and boards as a report layout, Python data prep, the browser Python console, query by form at scale (2026-10-19)
+
 - **Drill:** the failed console tests are re-run from the run's own summary (the pytest cache is off, so `--last-failed` re-ran the
   whole suite), one file at a time under a 20-minute limit; the Java 25 run re-runs a failed test once and reports it as a flake.
   [DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md).
-
-## 2.4.0 — BI Studio, report schema v2 and boards as a report layout, Python data prep, the browser Python console, query by form at scale (2026-10-19)
 
 - **Report schema v2 (R6).** A visual's `format:` is typed per visual family: one JSON Schema per family, written in YAML in the server
   (`bi/report/format/*.yaml`: chart, other-chart, card, table, matrix, slicer, static, code, and the shared common), checked on every report (a bad
