@@ -325,10 +325,12 @@
     }).catch(function (err) { say(err.message, true); });
   });
   $('[data-save]').addEventListener('click', function () {
-    api('PUT', '/admin/net/api/file?id=' + encodeURIComponent(current.id), { text: yaml.value }, { 'If-Match': current.etag }).then(function (r) {
-      say('Saved ' + current.id + ' (version ' + r.etag + '). The server applied it.');
-      showProblems(r.problems);
-      return open(current.id);
+    var id = current.id;
+    api('PUT', '/admin/net/api/file?id=' + encodeURIComponent(id), { text: yaml.value }, { 'If-Match': current.etag }).then(function (r) {
+      return open(id).then(function () {
+        say('Saved ' + id + ' (version ' + r.etag + '). The server applied it.');
+        showProblems(r.problems);
+      });
     }).catch(function (err) { showProblems(err.body && err.body.problems); say(err.message, true); });
   });
   $('[data-delete]').addEventListener('click', function () {
