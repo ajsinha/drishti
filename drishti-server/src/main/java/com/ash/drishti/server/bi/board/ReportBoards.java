@@ -18,7 +18,6 @@ package com.ash.drishti.server.bi.board;
 import com.ash.drishti.server.bi.report.Report;
 import com.ash.drishti.server.bi.report.ReportParser;
 import com.ash.drishti.server.bi.report.ReportParser.Problem;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
