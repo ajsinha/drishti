@@ -84,6 +84,10 @@
   node's share masked there and the page masked again where it is shown (`GET /api/v1/net/group/{kind}/{id}`). Exact, with a member two nodes
   hold counted once, for groups up to `max-members`; larger groups combine each node's totals. A node that did not answer makes the page
   partial (`partial`, `missing`). NET.md section 7, API_GUIDE, USER_GUIDE.
+- **Drishti*net: the node that answered, for administrators.** *How this view was built* has a line **Node** for an administrator naming the
+  node that built the view and how (local, data from a peer, forwarded from a node, scatter-gather from several), on the view and every frame
+  of its live stream; nobody else sees it, so a user cannot tell which server answered. The finance pack's book P&L Sutra gained the panel.
+  NET.md, USER_GUIDE (How this view was built).
 - **Drishti*net docs.** Tutorial 19, a cluster of three (UI, CLI and YAML; failover); the Windows QA guide's optional second server; README and
   Help → About. NET.md's command outputs are the CLI's real ones.
 

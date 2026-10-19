@@ -104,6 +104,21 @@ class NetForwardTest {
         return ids;
     }
 
+    /** The "Node" line of the view's "How this view was built" panel, or null when it has none. */
+    static String nodeLine(String json) throws Exception {
+        var tree = new com.fasterxml.jackson.databind.ObjectMapper().readTree(json);
+        for (var p : tree.path("panels")) {
+            if (p.path("kind").asText().equals("provenance")) {
+                for (var f : p.path("data").path("fields")) {
+                    if (f.path("label").asText().equals(NetServedBy.LABEL)) {
+                        return f.path("text").asText();
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     @Test
     @Order(2)
     void aFieldBMasksStaysMaskedThoughAMasksLess() throws Exception {
@@ -126,6 +141,13 @@ class NetForwardTest {
         var onA = cluster.call("GET", cluster.node("a").url() + "/api/v1/views/trade/IRS-48213", null, "Authorization", bearer("rita", "risk"));
         assertThat(panels(onC.body())).isEqualTo(panels(onA.body()));
         assertThat(forwarded("c", "view")).isEqualTo(before + 1);
+        // "How this view was built" names the node that answered for an administrator only: forwarded from C; local on A
+        assertThat(nodeLine(onC.body())).as("a user cannot tell which server answered").isNull();
+        String cId = cluster.node("c").net().nodeId();
+        var adminOnC = cluster.call("GET", cluster.node("c").url() + "/api/v1/views/trade/IRS-48213", null, "Authorization", bearer("ada", "admin"));
+        assertThat(nodeLine(adminOnC.body())).as(adminOnC.body()).endsWith(" · forwarded from " + cId).doesNotStartWith(cId);
+        var adminOnA = cluster.call("GET", cluster.node("a").url() + "/api/v1/views/trade/IRS-48213", null, "Authorization", bearer("ada", "admin"));
+        assertThat(nodeLine(adminOnA.body())).isEqualTo(cluster.node("a").net().nodeId() + " · local");
         // a search and the raw document of the kind go there too
         var search = cluster.call("GET", cluster.node("c").url() + "/api/v1/search?q=" + java.net.URLEncoder.encode("TRD IRS-48213", "UTF-8"), null,
                 "Authorization", bearer("rita", "risk"));

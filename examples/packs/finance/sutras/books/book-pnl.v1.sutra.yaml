@@ -41,4 +41,5 @@ panels:
       - { label: Notional, bind: "@.notional", fmt: amount0 }
       - { label: MTM (USD), bind: "@.mtm", fmt: signed0, tone: sign, total: true }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { id: built, kind: provenance, title: How this view was built, area: right }
 keys: { F7: "link($.book, 'book')", F9: raw }

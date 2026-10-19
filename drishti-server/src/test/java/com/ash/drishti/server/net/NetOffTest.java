@@ -55,6 +55,8 @@ class NetOffTest {
                 .andExpect(jsonPath("$.members").isEmpty());
         mvc.perform(post("/api/v1/net/drain")).andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("DRS-5050"));
         // an ordinary request is served as always
-        mvc.perform(get("/api/v1/views/trade/IRS-48213")).andExpect(status().isOk());
+        String view = mvc.perform(get("/api/v1/views/trade/IRS-48213")).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertThat(view).as("no node is named in How this view was built, even to an administrator").contains("How this view was built")
+                .doesNotContain("\"label\":\"" + NetServedBy.LABEL + "\"");
     }
 }

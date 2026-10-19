@@ -365,6 +365,11 @@ documents it holds, applied there only where it has none. Alerts, monitors and s
 node; they stay on the node they were made on. With one shared identity database (PostgreSQL, `DRISHTI_IDENTITY_DB_URL`) the nodes already share all
 of it: set `user-state: off` in routing.yaml. Admin → Net → Members says how many changes were sent and applied and what waits for which peer.
 
+**Which node answered, for administrators.** A view's *How this view was built* panel has, for an administrator only, a line **Node**:
+`drishti-a · local`, `drishti-a · built here, data from drishti-c`, `drishti-b · forwarded from drishti-a`, or
+`drishti-b · scatter-gather from drishti-a, drishti-b, drishti-c` (with the nodes missing, for a partial grouped page). A live view keeps it on
+every frame. Everyone else sees the panel as on a single server.
+
 **Grouped pages are gathered across the nodes.** A page a derived connector builds from many entities (a counterparty's trades, a book's P&L,
 a netting set over several systems) is built from the members on every node that holds the kind it groups, as a search is: the nodes asked are
 the ones the caller's roles reach, never a replica of a node already asked (`GET /api/v1/net/group/{kind}/{id}`, within `scatter-budget`). Each

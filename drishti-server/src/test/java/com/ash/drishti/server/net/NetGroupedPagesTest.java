@@ -176,6 +176,27 @@ class NetGroupedPagesTest {
 
     @Test
     @Order(2)
+    void howThisViewWasBuiltNamesTheNodesForAnAdministratorOnly() throws Exception {
+        String a = cluster.node("a").net().nodeId();
+        String b = cluster.node("b").net().nodeId();
+        String c = cluster.node("c").net().nodeId();
+        var admin = cluster.call("GET", cluster.node("b").url() + "/api/v1/views/book-pnl/BOOK-X", null, "Authorization", bearer("ada", "admin"));
+        assertThat(admin.statusCode()).as(admin.body()).isEqualTo(200);
+        String line = NetForwardTest.nodeLine(admin.body());
+        assertThat(line).as(admin.body()).startsWith(b + " · scatter-gather from ").contains(a).contains(b).contains(c).doesNotContain("missing");
+        var user = cluster.call("GET", cluster.node("b").url() + "/api/v1/views/book-pnl/BOOK-X", null, "Authorization", bearer("rita", "risk"));
+        assertThat(NetForwardTest.nodeLine(user.body())).as("a user cannot tell which servers answered").isNull();
+        assertThat(user.body()).doesNotContain(a).doesNotContain(c);
+        // a trade only C holds, opened on B: built on B from C's document
+        var trade = cluster.call("GET", cluster.node("b").url() + "/api/v1/views/trade/T-C-1", null, "Authorization", bearer("ada", "admin"));
+        assertThat(trade.statusCode()).as(trade.body()).isEqualTo(200);
+        assertThat(NetForwardTest.nodeLine(trade.body())).isEqualTo(b + " · built here, data from " + c);
+        var tradeUser = cluster.call("GET", cluster.node("b").url() + "/api/v1/views/trade/T-C-1", null, "Authorization", bearer("rita", "risk"));
+        assertThat(NetForwardTest.nodeLine(tradeUser.body())).isNull();
+    }
+
+    @Test
+    @Order(2)
     void aFieldCMasksStaysMaskedOnBAndAFieldBMasksIsMaskedThere() throws Exception {
         JsonNode tina = raw("b", "BOOK-X", "tina", "trader");
         assertThat(tina.path("MTM").asText()).as("masked on C, so masked in the page B gathers").isEqualTo("•••");

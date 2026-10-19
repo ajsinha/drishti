@@ -501,8 +501,8 @@ console's `backend.urls` (`core/cluster.py`): one server per session, health eve
   data and is down (`502 DRS-5052`).
 - The console's settings are `backend.urls`, `discover`, `discover_every`, `check_every`, `fail_after` (the console's own style, with underscores) and
   `backend.data_dir`; a failover is reported to the server it moved to (`POST /api/v1/net/console-event`, audited `net-console-failover`).
-- `routing.yaml` also has `user-state` (N7). Not built in this phase: the administrators' line in *How this view was built* (provenance) naming
-  the node that held the data.
+- `routing.yaml` also has `user-state` (N7). The administrators' line in *How this view was built* naming the node is built since the
+  follow-up below (*The node that answered*).
 
 **N5, scatter-gather (built).** `SearchScatter` completes a search answered here with the shares of the peers `CapabilityTable.scatterTargets`
 names (shards, never a replica of a node already asked; the fewest nodes that cover every table, fastest first), asked in parallel through
@@ -554,4 +554,12 @@ from those two; with C stopped the page is partial and names C. Changes from the
   by id) when every node lists all its members of the group (up to `max-members`), combined from each node's totals otherwise (a member two
   nodes hold is then counted on each; documented in NET.md).
 - A partial page says so in its document (`partial`, `missing` naming the node), as a search does in its answer.
+
+**The node that answered (built, after N7).** For an administrator, a view's *How this view was built* panel has a line **Node** naming the node
+that built the view and how: `local`, `built here, data from <node>` (a document a peer read, N4), `forwarded from <node>` (the whole request
+forwarded here, said by the node that rendered it) or `scatter-gather from <nodes>` with the nodes missing (a grouped page). `NetServedBy` adds
+it to the view (`GET /api/v1/views/...`) and to the frames of its live stream; what the request asked of other nodes is noted on the request's
+caller (`NetCaller.Served`) by the peer sources and the gathering of a grouped page. Everyone else's view is unchanged, so a user still cannot
+tell which server answered; with Drishti*net off nothing is added. Tested on three real servers: forwarded, local, data and scatter-gather
+lines for an administrator, none for a user. The finance pack's book P&L Sutra gained its *How this view was built* panel.
 

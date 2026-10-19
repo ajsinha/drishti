@@ -115,6 +115,12 @@ public class NetConfiguration {
         return new SearchScatter(routing, log, drishtiVirtualExecutor);
     }
 
+    /** The node that answered a view, named to administrators in "How this view was built". */
+    @Bean
+    public NetServedBy netServedBy(NetService net, com.ash.drishti.server.security.Entitlements entitlements) {
+        return new NetServedBy(net, entitlements);
+    }
+
     @Bean
     public PeerSources peerSources(NetRouting routing, NetService net, com.ash.drishti.common.JsonCodec codec, ForwardLog log,
             com.ash.drishti.engine.source.SourceRouter router, com.ash.drishti.engine.live.TopicHub hub, SearchScatter scatter) {

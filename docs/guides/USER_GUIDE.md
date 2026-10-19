@@ -721,6 +721,7 @@ The *How this view was built* panel answers "where did this come from?":
 | Layout | `Sutra irs-fixfloat v1 + inference` | A Sutra (a written layout) drew the screen; inference filled gaps. `inference only` means no Sutra matched |
 | Fingerprint | `b7df…1372` | The shape of the data, used to cache the layout |
 | Source | `murex-rates`, generation `1674` | Which system the document came from, and its version counter |
+| Node | `drishti-b · forwarded from drishti-a` | Administrators only, when several servers work as one (Drishti*net): the server that built the view and how: `local`, `built here, data from <server>`, `forwarded from <server>`, or `scatter-gather from <servers>` (and any that were missing) for a page that groups records of several servers. Nobody else sees it |
 
 The footer repeats the source and generation, and the business date when one is picked
 (`trade-endur · gen 7 · as of 2026-09-29`).
