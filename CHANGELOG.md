@@ -160,6 +160,21 @@
   process socket path passes the system's limit and Chromium aborts printing nothing, the failure seen in a full run). In a second full pass,
   the About editor's keyboard test failed once in six runs: it now waits for the starter text before tabbing on. Two full passes: 635 and 651
   tests passed in about an hour each.
+- **Drishti*net: a view's linked entities held on a peer show as themselves, not *pending*.** The 40 ms `drishti.graph.link-budget` is
+  the wait for this node's own sources; a linked entity none of them holds is asked of the peers and waits routing.yaml's new
+  `link-budget` (1 s, from the read's start), so its badge and a panel that reads it (`source:`) are there on the first view, exactly as on
+  the node that holds it. A slow local source still keeps 40 ms, a forwarded request asks no peer, and with Drishti*net off nothing changes
+  (`SourceRouter.Fallback.budget`). The page still does not say which server answered, except to an administrator. `NetLinksTest` (three
+  servers in one JVM; with the old budget every link of the trade was *pending* on the nodes without the data), `SourceRouterFallbackTest`.
+- **Drishti*net: a search counts every entity once, from any node.** The `file` connector names its table (`file:<folder>#<fingerprint>`, the
+  fingerprint a SHA-256 of the kind's files with their sizes and times, taken at each rescan), as Delta does, so two servers reading one folder
+  are replicas and a search asks one of them; a source that holds nothing of a kind (a Delta connector with no table for it, a folder with no
+  file of it: `SourcePlugin.holdsNone`) is left out of the capability digest, so it no longer makes a node a holder. And whatever the
+  connectors, the merge counts an entity two nodes matched once: each node's share lists its matches' ids (up to 20,000; above that the
+  overlap is taken from the rows both returned), so `matched` and `scanned` are no longer summed twice; the ids never reach the client.
+  `NetSharedLakeTest` (two readers of one lake asked once; every count equal to the union on every node), `NetScatterTest` (the trade two
+  nodes hold now counts once in `matched` and `scanned`), `FileTableIdentityTest`. NET.md sections 7 and 12 (both limitations removed),
+  DRISHTI_NET.md sections 7, 8 and 10, CONFIGURATION, FILE_CONNECTOR, TROUBLESHOOTING.
 
 ## 2.4.0 — BI Studio, report schema v2 and boards as a report layout, Python data prep, the browser Python console, query by form at scale (2026-10-19)
 

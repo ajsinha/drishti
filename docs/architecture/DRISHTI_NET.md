@@ -162,6 +162,7 @@ Every API request goes through the same three questions, in order. A forwarded r
    asked.) **Data forwarding:** a `PeerSource` **(new)** `SourcePlugin`, one per peer, registered after the local
    sources, fetches the document (`GET /api/v1/net/fetch/{kind}/{id}` **(new)**, the raw entity document as the caller may
    see it) and this node renders it with its own Sutra, so the screen looks the same whichever node holds the data.
+   The view's linked entities are read so too, within routing.yaml's `link-budget` (1 s) when they are on a peer.
 
 **Choosing among peers** that can answer: alive (not suspect) → holds the date asked (its `latestDate` and coverage) →
 freshest data version → lowest recent latency → for a tie, a stable hash of the entity id (so the same entity goes to the
@@ -173,7 +174,7 @@ caller's time budget.
 | Operation | How it runs | Merge |
 |---|---|---|
 | Entity view, history, explain, panel records | one owner (section 7) | none |
-| Search (`/api/v1/search`, query by form) | scatter to every node that holds data of the kind and is not a replica of one already asked; each runs it on its own data | rows merged by `(kind, id)` (the node whose coverage is `HELD` wins a duplicate), re-sorted by `order by`, cut to `limit`; `scanned` and `matched` summed; a failed or late node in `failed` |
+| Search (`/api/v1/search`, query by form) | scatter to every node that holds data of the kind and is not a replica of one already asked; each runs it on its own data | rows merged by `(kind, id)` (the node whose coverage is `HELD` wins a duplicate), re-sorted by `order by`, cut to `limit`; `scanned` and `matched` summed, an entity two nodes matched counted once; a failed or late node in `failed` |
 | Type-ahead and suggestions | scatter with a short budget (150 ms) | merged, ranked as today, de-duplicated |
 | Grouped pages (counterparty trades, netting sets over several systems) | scatter per contributing kind or source | concatenated in the page's order |
 | Live stream of an entity | this node subscribes once to the owner's stream and re-emits to its viewers | none; one upstream subscription per entity per node |
@@ -211,7 +212,8 @@ a UI that ignores it sees one result, as asked.
 
 ## 10. Shared and separate lakes
 
-A Delta table is identified by its table id and location. Two nodes whose digests name the same table identity read the
+A Delta table is identified by its table id and location, a `file` connector's kind by its folder and the fingerprint of its
+files. Two nodes whose digests name the same table identity read the
 **same data**: they are *replicas* for that kind, and a search asks only one of them. Different tables of the same kind
 (ENDUR's trades on A, CALYPSO's on C) are *shards*: a search asks all. A shared lake therefore needs no forwarding at all
 for nodes that both read it; separate lakes are joined by data forwarding and scatter-gather. Each node keeps its own
@@ -462,7 +464,10 @@ Changes from the design:
 
 - The table identity is a new, optional method of the source SPI, `SourcePlugin.tableIdentity(kind)`. The Delta connector gives the table's id
   from its first commit (`delta:<id>`), else its location, a local path qualified by the machine's name (the same path on another machine is
-  another table). Any other source says nothing and is a shard of its own node: always asked, never wrongly skipped.
+  another table). The `file` connector gives its folder and a SHA-256 fingerprint of the kind's files (path, size, time; `file:<folder>#<hex>`,
+  taken at each rescan). Any other source says nothing and is a shard of its own node: always asked, never wrongly skipped.
+- `SourcePlugin.holdsNone(kind)`: a source that surely holds nothing of the kind (Delta with no table for it, a folder with no file of it) is left
+  out of the digest's sources, so it makes no node a holder (before, an empty `file` connector serving every kind made every node a shard).
 - `load` is the average latency of the last full minute (`RequestActivity` keeps averages and maxima per minute, not percentiles).
 - The digest's hash leaves out the load and the build time, so it changes only when what the node serves changes; a held digest is refreshed
   once a minute for the load.
@@ -503,6 +508,10 @@ console's `backend.urls` (`core/cluster.py`): one server per session, health eve
   `backend.data_dir`; a failover is reported to the server it moved to (`POST /api/v1/net/console-event`, audited `net-console-failover`).
 - `routing.yaml` also has `user-state` (N7). The administrators' line in *How this view was built* naming the node is built since the
   follow-up below (*The node that answered*).
+- A view's linked entities have two budgets (after the soak, where links held on a peer showed *pending*): `drishti.graph.link-budget` (40 ms)
+  for this node's own sources, and routing.yaml's `link-budget` (1 s from the read's start) once the read has gone on to the peers
+  (`SourceRouter.Fallback.budget`, asked once per kind of a `fetchAll`; a read that has not reached the peers by the local budget is still cut
+  there). The digests alone could say only "held on C" without the entity's badge or a panel's data, so the peers are asked, all links side by side.
 
 **N5, scatter-gather (built).** `SearchScatter` completes a search answered here with the shares of the peers `CapabilityTable.scatterTargets`
 names (shards, never a replica of a node already asked; the fewest nodes that cover every table, fastest first), asked in parallel through
@@ -515,6 +524,8 @@ the design:
 - A node that holds data of the kind but is down (suspect, dead, left) is named in `failed` as `not asked: it cannot be reached now`, so a search with
   a node down is partial rather than silently smaller.
 - A duplicate keeps the first answer (this node's, then the peers' in the order asked), not necessarily the one whose coverage is `HELD`.
+- `matched` and `scanned` count an entity two nodes matched once: each share lists its matches' ids (`matchedIds`, up to 20,000; above that the
+  overlap is the rows both returned), removed from the answer the client gets.
 - Grouped pages are gathered across nodes since the follow-up below (*Grouped pages across nodes*).
 
 **N6, live relay and BI (built).** `PeerSource.subscribe` opens one stream from the peer that holds the entity

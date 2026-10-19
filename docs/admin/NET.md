@@ -255,9 +255,13 @@ node is in every node's table within about a second** (1.0 s measured with the d
 builds the **capability table**: for each kind, the nodes that render it and the nodes that hold its data.
 
 **Replicas and shards.** A source names where its data lives, the same on every server that reads the same data: a Delta table by the id in its
-log (or, failing that, its location; a local path counts only on its own machine). Two nodes whose sources name the same table are **replicas** for
-that kind: a search asks one of them. Different tables of the same kind (ENDUR's trades on one node, CALYPSO's on another) are **shards**: a search
-asks every one. A source that cannot say where its data lives is taken as a shard of its node, which is always safe.
+log (or, failing that, its location; a local path counts only on its own machine); a `file` connector by its folder and a fingerprint of the
+kind's files (`file:<folder>#<fingerprint>`: each file's path, size and time, taken at each rescan, so two servers reading one folder say the same).
+Two nodes whose sources name the same table are **replicas** for that kind: a search asks one of them. Different tables of the same kind (ENDUR's
+trades on one node, CALYPSO's on another) are **shards**: a search asks every one. A source that cannot say where its data lives is taken as a
+shard of its node, which is always safe. A source that holds nothing of a kind (a Delta connector with no table for it, a folder with no file of
+it) is left out of the kind's sources, so it never makes its node a holder of the kind; a table or file that appears is in the digest by the next
+round (a `file` folder: by its next rescan, `rescan-seconds`).
 
 **The newest pack is served.** When nodes hold different versions of a pack, the newest is the one served; the map marks it.
 
@@ -332,7 +336,10 @@ answered by the receiving node from itself only (one hop at most, `X-Drishti-Net
    `GET /api/v1/net/fetch/{kind}/{id}`, the document as the caller may see it there, masked by that node), and masked again here. A peer whose
    sources all read tables this node reads too (a replica) is never asked: it would answer as this node did. Peers that hold the date asked come
    first. A local source that **failed** is never replaced by a peer's data (its failure is the answer); a peer that failed makes the read fail with
-   `502 DRS-5052` naming it, never a wrong "not found".
+   `502 DRS-5052` naming it, never a wrong "not found". A view's **linked entities** are read the same way, side by side: this node's own sources
+   within `drishti.graph.link-budget` (40 ms), and one that none of them holds from the peers within routing.yaml's `link-budget` (1 s from the
+   read's start), so a linked entity a peer holds shows with its badge, and a panel that reads it (`source:`) is drawn, exactly as on the node
+   that holds it; only a peer slower than that leaves it *pending*.
 
 **The newest pack is served.** When nodes hold different versions of a pack, a request for its kinds goes to a node with the newest, even when this
 node could answer with its older one (in the in-process test, B with the shipped finance pack forwards to A, which has 9.9.9).
@@ -347,7 +354,8 @@ here (`404 DRS-1002`). A node can so be a pure data or rendering server behind o
 **Searches and type-ahead are scattered.** A search (`GET /api/v1/search`, the form, the command line's search) is asked of every node that
 holds data of the kind and is not a replica of a node already asked (section 5), each running it on its own data (`GET /api/v1/net/search`, one hop),
 within `scatter-budget` (3 s). The answers are merged as one: rows by kind and id (a trade two nodes hold is counted once, this node's answer first),
-re-sorted by the search's `order by` (or by id, as one node sorts), cut to its `limit`; `scanned` and `matched` summed. A node that failed, was late
+re-sorted by the search's `order by` (or by id, as one node sorts), cut to its `limit`; `scanned` and `matched` summed, an entity two nodes matched
+counted once (each node's share lists its matches' ids, up to 20,000; above that the overlap is taken from the rows both returned). A node that failed, was late
 or is down (it holds the kind but is suspect, dead or left) is named in `failed` and the answer is `partial`: an answer is never silently smaller. A
 search of a kind whose pack is not here is asked of the nodes that hold it and merged here the same way. The answer has `nodes` (each node with what it
 scanned, matched and how long it took) for administrators only. The type-ahead asks every reachable node with `suggest-budget` (150 ms): what a slow
@@ -408,6 +416,7 @@ Routing's traffic, and in the metrics `drishti_net_forwarded_total{peer,kind,out
 | `forward-timeout` | `5s` | Longest a forwarded view or a peer's document may take |
 | `scatter-budget` | `3s` | Longest a peer's share of a scattered search may take |
 | `suggest-budget` | `150ms` | The same for type-ahead |
+| `link-budget` | `1s` | Longest a view waits for a linked entity that only a peer holds (this node's own sources: `drishti.graph.link-budget`, 40 ms) |
 | `max-hops` | `1` | `0` switches forwarding off (gossip and digests only) |
 | `weights.latency` | `1.0` | How much latency counts when choosing between peers (steps of 10 ms times the weight; `0`: by the entity's hash only) |
 | `user-state` | `replicate` | Saved searches, layouts, pivots and console sign-in sessions copied to the other nodes, or `off` |
@@ -532,8 +541,7 @@ declaring a node that paused (a long garbage collection) dead and having it refu
 | `404 DRS-5050 Drishti*net is off on this node` | The node's `node.yaml` | `enabled: true` (and the node is not left: Rejoin) |
 | A page says `502 DRS-5052 ... cannot be reached now: n-a (left)` | Admin → Net → Members: the node that holds the data | Start it (or Rejoin it); the page works again by itself |
 | The console moves between servers often | Admin → Health, *Console servers*, and the console's log (`console moved from ... to ...`) | The server it leaves: its health and latency; raise `backend.fail_after` on a flaky network |
-| Links on a page say *pending* where one server says *not found* | Linked entities are asked of the peers within `drishti.graph.link-budget` (40 ms); a peer's answer takes longer | Raise `link-budget` on the nodes (a page waits that long at most), or keep the linked kinds on every node |
-| A search's *matched* and *scanned* count twice what two nodes share | Admin → Net → Capability map: a node holding the kind through a source with no table (the `file` plugin) is a shard, so two readers of one lake are both asked | Switch off a plugin that holds nothing of the kind on those nodes; the rows are never doubled, only the counts |
+| Links on a page say *pending* on one node and not on another | The peer that holds them answers slower than routing.yaml's `link-budget` (1 s): its latency on Admin → Net | The peer's health and latency; raise `link-budget` (a page waits that long at most) |
 | A view is answered by an older pack | Admin → Net → Capability map: which node has the newest, and whether it is routable | The newest is served only from nodes the caller may reach and that are not drained |
 
 More in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#drishtinet).
@@ -554,7 +562,7 @@ pages) of a random running node all along and compared each with the answer of a
 | A killed node is suspect or dead on every other node | 2.7 s (c), 3.1 s (a) |
 | The console's next page after its own server was killed | 0.27 s, the same session: 0 sign-ins asked in 476 page checks |
 | A restarted node alive on every node again (from the start command, JVM start included) | 18.9 s (c, its seed file), 20.1 s (a, from its `peers.json` alone) |
-| Answers checked | 9,362: 4,912 + 703 + 362 equal to the single server (trades, searches, pages); 2,416 trades equal but for links still *pending* past `link-budget` (section 12); 509 trades, 165 searches and 84 pages partial and naming the stopped node; 211 asked of the node at the moment it was killed |
+| Answers checked | 9,362: 4,912 + 703 + 362 equal to the single server (trades, searches, pages); 2,416 trades equal but for links still *pending* past `link-budget` (fixed since: routing.yaml's `link-budget`, section 7); 509 trades, 165 searches and 84 pages partial and naming the stopped node; 211 asked of the node at the moment it was killed |
 | **Wrong answers** | **0** |
 | Load through the console | 136,187 requests in 600 s (227 a second); p50 74 ms, p95 177 ms, p99 261 ms for a trade; 8,965 trade pages (8 %) said a MUREX trade was unavailable while c was down, as they should |
 

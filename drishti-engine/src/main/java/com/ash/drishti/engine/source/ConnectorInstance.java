@@ -197,6 +197,11 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public boolean holdsNone(String kind) {
+        return delegate.holdsNone(kind);
+    }
+
+    @Override
     public java.util.Optional<String> dataVersion(String kind) {
         return delegate.dataVersion(kind);
     }

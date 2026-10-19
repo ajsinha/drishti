@@ -27,11 +27,11 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 
 from conftest import CONSOLE, FakeBackend  # noqa: E402
 from core.backend import BackendError  # noqa: E402
-from scratch_ports import worker_port  # noqa: E402
+from scratch_ports import worker_ports  # noqa: E402
 from test_admin_net import ACCESS, CAPS, FILES, MEMBERS, SECURITY, TRAFFIC  # noqa: E402
 from test_live_tabs_browser import browser  # noqa: E402,F401 - the shared browser fixture
 
-CONSOLE_PORT = worker_port(17785)
+CONSOLE_PORT = worker_ports(17785)[0]      # DRISHTI_SCRATCH_PORTS replaces it for a run on fixed scratch ports
 
 
 class NetBackend(FakeBackend):

@@ -546,7 +546,7 @@ The files, each checked against its schema (a refused file keeps the previous se
 | `node.yaml` | `enabled` (`false`), `node-id` (generated once, kept in `<data dir>/net/node-id`), `advertise-url`, `tags` (`[]`), `peer-only-packs` (`[]`), `secret: ${DRISHTI_NET_SECRET}` and `previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}` (environment references only, at least 32 bytes), `tls.*` (mutual TLS) |
 | `peers/<name>.yaml` | `url`, `tags`, `tls.*` (one file per seed) |
 | `gossip.yaml` | `interval` (`1s`), `fanout` (`3`), `suspect-after` (`5s`), `indirect-probes` (`2`), `dead-after` (`30s`), `forget-after` (`24h`), `persist-every` (`10m`) |
-| `routing.yaml` | `forward-timeout` (`5s`), `scatter-budget` (`3s`), `suggest-budget` (`150ms`), `max-hops` (`1`; `0` forwards nothing), `weights.latency` (`1.0`), `user-state` (`replicate` or `off`: user state and console sign-in sessions) |
+| `routing.yaml` | `forward-timeout` (`5s`), `scatter-budget` (`3s`), `suggest-budget` (`150ms`), `link-budget` (`1s`: a view's linked entity that only a peer holds), `max-hops` (`1`; `0` forwards nothing), `weights.latency` (`1.0`), `user-state` (`replicate` or `off`: user state and console sign-in sessions) |
 | `access.yaml` | `roles: { <role>: { nodes: [<node id or tag>, ...] } }` (a role not listed reaches every node) |
 
 `enabled: true` without the key or without `advertise-url` is refused at start and at every reload, as the server refuses a missing token secret
@@ -1842,7 +1842,7 @@ See [LIVE.md](../architecture/LIVE.md).
 | `id-patterns[]` (`pattern`, `kind`) | from packs | Identifier regex to kind, tried in order, for values whose kind is not stated. A site list replaces the packs' list. |
 | `fields.<field>` (`kind`, `label`) | from packs | A document field that references another entity. |
 | `badges.<kind>` | from packs | Rachana-EL over the linked document, shown beside the link (`EE 4.1m`). |
-| `link-budget` | `40ms` | Linked entities slower than this show as *pending* and fill in later. |
+| `link-budget` | `40ms` | Linked entities slower than this show as *pending* and fill in later. With Drishti*net, a linked entity that only a peer holds waits routing.yaml's `link-budget` (`1s`) instead. |
 | `impact.follow` | from packs | Reference fields followed upward to find what dependents roll into (impact analysis). |
 | `impact.measures.<kind>` | from packs | Rachana-EL summed per group (`$.mtm`). |
 | `impact.formats.<kind>` | from packs | The format for that measure. |

@@ -555,6 +555,27 @@ public final class FileSourcePlugin implements SourcePlugin {
         return lastUpdate;
     }
 
+    /** Each kind's table identity: the folder and the fingerprint of the kind's files at the last rescan ({@link FileSet}). */
+    private volatile java.util.Map<String, String> identities = java.util.Map.of();
+    /** True once a rescan has listed the folder's files. */
+    private volatile boolean scanned;
+
+    /**
+     * The folder this connector reads and a fingerprint of the kind's files in it (each file's path under the folder, size and
+     * modification time), as of the last rescan: two servers that read the same files say the same, so Drishti*net asks one of them
+     * (replicas); empty while the kind has no file here. Cheap: computed by the rescan.
+     */
+    @Override
+    public Optional<String> tableIdentity(String kind) {
+        return Optional.ofNullable(identities.get(kind));
+    }
+
+    /** No file of the kind in the folder at the last rescan (Drishti*net leaves this source out of the digest for it). */
+    @Override
+    public boolean holdsNone(String kind) {
+        return scanned && !identities.containsKey(kind);
+    }
+
     /** The multi-day index (tests). */
     com.ash.drishti.api.DatedHitIndex datedIndexForTest() {
         return datedIdx.index();
@@ -562,16 +583,27 @@ public final class FileSourcePlugin implements SourcePlugin {
 
     void rescan() {
         if (!Files.isDirectory(root)) {
+            identities = java.util.Map.of();
+            scanned = true;                                    // no folder: no file of any kind
             return;
         }
+        FileSet fileSet = new FileSet(root);
         try (Stream<Path> all = Files.walk(root)) {
-            all.filter(Files::isRegularFile).map(f -> {
+            all.forEach(f -> {
                 try {
-                    return Files.getLastModifiedTime(f).toInstant();
+                    var a = Files.readAttributes(f, java.nio.file.attribute.BasicFileAttributes.class);
+                    if (a.isRegularFile()) {
+                        fileSet.add(f, a.size(), a.lastModifiedTime().toMillis());
+                    }
                 } catch (IOException e) {
-                    return null;
+                    // a file that vanished mid-walk is seen next time
                 }
-            }).filter(java.util.Objects::nonNull).max(java.util.Comparator.naturalOrder()).ifPresent(t -> lastUpdate = t);
+            });
+            if (fileSet.newest() != null) {
+                lastUpdate = fileSet.newest();
+            }
+            identities = fileSet.identities();
+            scanned = true;
         } catch (IOException | java.io.UncheckedIOException e) {
             // the next rescan tries again
         }

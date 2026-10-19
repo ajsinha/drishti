@@ -37,8 +37,8 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 /**
  * Phase N5 on three real servers in one JVM: trades split three ways (each node's own files, one trade on two nodes), a search on B across
- * them equals the union with the duplicate counted once, ordered and cut as one node would; type-ahead finds every node's trades; with C
- * stopped the answer is partial and names C.
+ * them equals the union with the duplicate counted once (in the rows, matched and scanned), ordered and cut as one node would; type-ahead
+ * finds every node's trades; with C stopped the answer is partial and names C.
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class NetScatterTest {
@@ -119,7 +119,10 @@ class NetScatterTest {
         List<String> expected = ALL.entrySet().stream().sorted(Map.Entry.<String, Long>comparingByValue(Comparator.reverseOrder())
                 .thenComparing(Map.Entry.comparingByKey())).limit(5).map(Map.Entry::getKey).toList();
         assertThat(ids(top)).containsExactlyElementsOf(expected);
-        assertThat(top.path("matched").asLong()).isEqualTo(ALL.size() + 1);    // SHARED-1 matched on A and on C
+        assertThat(top.path("matched").asLong()).as("SHARED-1, matched on A and on C, counts once").isEqualTo(ALL.size());
+        assertThat(all.path("matched").asLong()).isEqualTo(ALL.size());
+        assertThat(all.path("scanned").asLong()).as("read on A and on C, one trade").isEqualTo(ALL.size());
+        assertThat(all.has("matchedIds")).as("the ids are for the merge only").isFalse();
     }
 
     @Test

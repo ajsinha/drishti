@@ -245,8 +245,8 @@ public final class DigestService implements AutoCloseable {
     private List<Digest.SourceEntry> sourcesOf(String kind) {
         List<Digest.SourceEntry> out = new ArrayList<>();
         for (SourcePlugin p : sources.plugins()) {
-            if (!p.manifest().serves(kind)) {
-                continue;
+            if (!p.manifest().serves(kind) || holdsNone(p, kind)) {
+                continue;                                      // a source with nothing of the kind makes no node a holder of it
             }
             String name = p.manifest().name();
             String type = sources.applied(name).map(c -> c.plugin()).orElse(name);
@@ -259,6 +259,14 @@ public final class DigestService implements AutoCloseable {
         }
         out.sort(Comparator.comparing(Digest.SourceEntry::connector));
         return out;
+    }
+
+    private static boolean holdsNone(SourcePlugin p, String kind) {
+        try {
+            return p.holdsNone(kind);
+        } catch (RuntimeException e) {
+            return false;
+        }
     }
 
     private static String safe(Supplier<String> s) {

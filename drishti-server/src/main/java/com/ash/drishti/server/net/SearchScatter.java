@@ -44,10 +44,16 @@ import java.util.concurrent.TimeUnit;
  * Scatter-gather (DRISHTI_NET.md section 8): a search, and the type-ahead, asked of every peer that holds data of the kind and is not a
  * replica of a node already asked, each running it on its own data (one hop: it asks no one else), within the budget of routing.yaml.
  * The answers are merged as one: rows by kind and id (the first answer wins a duplicate, this node's first), re-sorted by the search's
- * order (or by id, as one node sorts), cut to its limit; scanned and matched summed; a peer that failed or was late named in
- * {@code failed} and the answer {@code partial}, never silently smaller. Who answered what is in {@code nodes}, shown to administrators only.
+ * order (or by id, as one node sorts), cut to its limit; scanned and matched summed, an entity two nodes matched counted once; a peer that
+ * failed or was late named in {@code failed} and the answer {@code partial}, never silently smaller. Who answered what is in {@code nodes},
+ * shown to administrators only.
  */
 public final class SearchScatter {
+
+    /**
+     * The key of the ids of every match in a node's answer (when it lists them): used for the merge, never in an answer to a client.
+     */
+    public static final String MATCHED_IDS = "matchedIds";
 
     /** One peer's share: its answer, or why it has none, and how long it took. */
     public record Share(String nodeId, JsonNode answer, String failure, long ms) {}
@@ -136,11 +142,13 @@ public final class SearchScatter {
     public Map<String, Object> complete(Map<String, Object> local, String kind, String q, AsOf asOf, Principal p, boolean descending, int limit,
             boolean admin) {
         if (!routing.forwarding() || NetCaller.fromPeer() || p == null) {
+            local.remove(MATCHED_IDS);
             return local;
         }
         List<String> peers = targets(kind, p);
         List<String> down = routing.downHolders(kind);
         if (peers.isEmpty() && down.isEmpty()) {
+            local.remove(MATCHED_IDS);
             return local;
         }
         List<Share> shares = new ArrayList<>(peers.isEmpty() ? List.of() : ask(peers, sharePath(q), asOf, p, budget(), "search", kind));
@@ -154,7 +162,9 @@ public final class SearchScatter {
     }
 
     /**
-     * Merges this node's answer (null when the kind's pack is not here and only peers answered) with the peers' shares.
+     * Merges this node's answer (null when the kind's pack is not here and only peers answered) with the peers' shares. An entity two
+     * nodes matched counts once in {@code matched}: exactly when every answer lists its matches' ids ({@link #MATCHED_IDS}), else by the
+     * rows two answers both returned; {@code scanned} leaves out the same duplicates (an entity two nodes read is one entity).
      *
      * @param admin whether the caller may see {@code nodes} (which node answered what)
      */
@@ -168,12 +178,23 @@ public final class SearchScatter {
         long scanned = 0;
         long matched = 0;
         boolean partial = false;
+        Set<String> matchedIds = new java.util.HashSet<>();
+        boolean listed = true;                                     // every answer listed its matches' ids
+        long dupRows = 0;                                          // rows two answers both returned
         if (local != null) {
             out = new LinkedHashMap<>(local);
+            out.remove(MATCHED_IDS);
             for (StructuredSearch.Row r : (List<StructuredSearch.Row>) local.get("rows")) {
                 if (seen.add(r.ref())) {
                     rows.add(r);
+                } else {
+                    dupRows++;
                 }
+            }
+            if (local.get(MATCHED_IDS) instanceof List<?> ids && ids.size() == ((Number) local.getOrDefault("matched", 0)).longValue()) {
+                ids.forEach(i -> matchedIds.add(String.valueOf(i)));
+            } else {
+                listed = false;
             }
             scanned += ((Number) local.getOrDefault("scanned", 0)).longValue();
             matched += ((Number) local.getOrDefault("matched", 0)).longValue();
@@ -194,13 +215,22 @@ public final class SearchScatter {
             JsonNode a = s.answer();
             if (out == null) {
                 out = routing.net().http().json().convertValue(a, new TypeReference<LinkedHashMap<String, Object>>() {});
+                out.remove(MATCHED_IDS);
             }
             for (JsonNode r : a.path("rows")) {
                 EntityRef ref = EntityRef.of(r.path("ref").path("kind").asText(), r.path("ref").path("id").asText());
                 if (seen.add(ref)) {
                     Map<String, Object> values = routing.net().http().json().convertValue(r.path("values"), new TypeReference<LinkedHashMap<String, Object>>() {});
                     rows.add(new StructuredSearch.Row(ref, r.path("title").asText(null), values));
+                } else {
+                    dupRows++;
                 }
+            }
+            JsonNode ids = a.path(MATCHED_IDS);
+            if (ids.isArray() && ids.size() == a.path("matched").asLong(0)) {
+                ids.forEach(i -> matchedIds.add(i.asText()));
+            } else {
+                listed = false;
             }
             scanned += a.path("scanned").asLong(0);
             matched += a.path("matched").asLong(0);
@@ -213,9 +243,11 @@ public final class SearchScatter {
         }
         String orderBy = out.get("orderBy") instanceof String o && !o.isBlank() ? o : null;
         rows.sort(order(orderBy, descending));
+        // an entity two nodes matched once: exactly by the ids when every answer listed them, else by the rows both returned
+        long twice = listed ? matched - matchedIds.size() : dupRows;
         out.put("rows", List.copyOf(rows.subList(0, Math.min(rows.size(), Math.max(limit, 0)))));
-        out.put("scanned", scanned);
-        out.put("matched", matched);
+        out.put("scanned", Math.max(0, scanned - twice));
+        out.put("matched", Math.max(0, matched - twice));
         out.put("partial", partial);
         out.put("failed", failed);
         if (!rows.isEmpty()) {

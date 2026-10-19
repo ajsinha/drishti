@@ -710,6 +710,19 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return t == null ? Optional.empty() : Optional.of(t.identity());
     }
 
+    /** No table for the kind, or a table not created yet: nothing of it is here (Drishti*net leaves this source out of the digest). */
+    @Override
+    public boolean holdsNone(String kind) {
+        if (tables.get(kind) == null) {
+            return true;
+        }
+        try {
+            return layout(kind, null).isEmpty();
+        } catch (RuntimeException e) {
+            return false;                                      // the log cannot be read now: it may hold some
+        }
+    }
+
     @Override
     public java.time.Instant lastUpdate() {
         return lastUpdate;

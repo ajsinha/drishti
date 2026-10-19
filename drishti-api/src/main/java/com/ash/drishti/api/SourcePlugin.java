@@ -125,6 +125,15 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
+     * True when this source surely holds nothing of the kind now: a Delta connector with no table for it, a folder with no file of it.
+     * Drishti*net leaves such a source out of the node's capability digest, so a node is never taken for a holder of what it cannot have
+     * (never asked for a document, a search or a grouped page of it). False when it cannot say, the default. Must be cheap.
+     */
+    default boolean holdsNone(String kind) {
+        return false;
+    }
+
+    /**
      * The document paths this source keeps as columns for the kind (a Delta table's promoted columns), so searches and
      * aggregates can read them without documents; empty when it keeps none.
      */

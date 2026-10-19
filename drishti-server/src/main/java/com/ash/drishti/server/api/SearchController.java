@@ -58,6 +58,23 @@ public class SearchController {
 
     @GetMapping
     public Map<String, Object> search(@RequestParam String q, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        SearchQuery query = SearchQuery.pick(q);
+        Map<String, Object> out = share(q, asOf, principal);
+        // Drishti*net: the same search on every peer that holds other data of the kind (shards, not replicas), merged as one answer
+        com.ash.drishti.server.net.SearchScatter sc = scatter == null ? null : scatter.getIfAvailable();
+        if (sc == null) {
+            out.remove(com.ash.drishti.server.net.SearchScatter.MATCHED_IDS);
+            return out;
+        }
+        return sc.complete(out, (String) out.get("kind"), q, asOf, principal, query.descending(), query.limit(), entitlements.isAdmin(principal));
+    }
+
+    /**
+     * The search answered from this node's own data, as {@link #search} answers it without the cluster, with the ids of every match
+     * ({@code matchedIds}, up to {@link StructuredSearch#MATCHED_IDS}; absent when there are more) so that a merge across nodes counts
+     * an entity two nodes matched once. A peer's share of a scattered search ({@code GET /api/v1/net/search}).
+     */
+    public Map<String, Object> share(String q, AsOf asOf, Principal principal) {
         SearchQuery query = SearchQuery.pick(q);           // TRD where …, TRD MX-200000, TRD productType=Revolver, TRD
         String kind = search.kindOf(query);
         entitlements.requireOpen(principal, kind);
@@ -82,9 +99,10 @@ public class SearchController {
         out.put("elapsedMs", r.elapsedMs());
         out.put("pivot", offered(r.kind()));               // the Pivot tab, when the kind's pack opts in (null otherwise)
         noData(r, asOf).ifPresent(n -> out.put("noData", n));
-        // Drishti*net: the same search on every peer that holds other data of the kind (shards, not replicas), merged as one answer
-        com.ash.drishti.server.net.SearchScatter sc = scatter == null ? null : scatter.getIfAvailable();
-        return sc == null ? out : sc.complete(out, r.kind(), q, asOf, principal, query.descending(), query.limit(), entitlements.isAdmin(principal));
+        if (r.listsMatches()) {
+            out.put(com.ash.drishti.server.net.SearchScatter.MATCHED_IDS, r.matchedIds());
+        }
+        return out;
     }
 
     /** Drishti*net's scatter-gather (absent in a test that makes the controller itself). */

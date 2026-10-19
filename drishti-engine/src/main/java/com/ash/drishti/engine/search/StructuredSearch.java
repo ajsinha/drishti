@@ -64,13 +64,33 @@ public final class StructuredSearch {
      * @param matched entities for which the condition held (before the limit)
      * @param partial true when the scan limit, the budget or a failing source may have left entities out
      * @param failed the sources that failed or did not answer in time, with why (source name to reason); never null
+     * @param matchedIds the ids of every match, in the result's order, when there are at most {@link #MATCHED_IDS} of them (else
+     *     empty): Drishti*net counts an entity two nodes matched once
      */
     public record Result(String kind, String condition, String orderBy, List<String> columns, List<Row> rows, int scanned, int matched,
-            boolean partial, double elapsedMs, Map<String, String> failed) {
+            boolean partial, double elapsedMs, Map<String, String> failed, List<String> matchedIds) {
 
         public Result {
             failed = failed == null ? Map.of() : Map.copyOf(failed);
+            matchedIds = matchedIds == null ? List.of() : List.copyOf(matchedIds);
         }
+
+        public Result(String kind, String condition, String orderBy, List<String> columns, List<Row> rows, int scanned, int matched,
+                boolean partial, double elapsedMs, Map<String, String> failed) {
+            this(kind, condition, orderBy, columns, rows, scanned, matched, partial, elapsedMs, failed, List.of());
+        }
+
+        /** True when {@link #matchedIds} lists every match. */
+        public boolean listsMatches() {
+            return matchedIds.size() == matched;
+        }
+    }
+
+    /** The most matches whose ids a result lists ({@link Result#matchedIds}). */
+    public static final int MATCHED_IDS = 20_000;
+
+    private static List<String> ids(List<Match> matches) {
+        return matches.size() > MATCHED_IDS ? List.of() : matches.stream().map(m -> m.row().ref().id()).toList();
     }
 
     /** A matching entity and its sort value. */
@@ -197,7 +217,7 @@ public final class StructuredSearch {
         matches.sort(ordering(order != null, q.descending()));
         List<Row> rows = matches.stream().limit(q.limit()).map(Match::row).toList();
         return new Result(kind, q.condition(), q.orderBy(), paths, rows, docs.size(), matches.size(), partial,
-                Math.round((System.nanoTime() - t0) / 1e4) / 100.0, failures.asMap());
+                Math.round((System.nanoTime() - t0) / 1e4) / 100.0, failures.asMap(), ids(matches));
     }
 
     /**
@@ -273,7 +293,7 @@ public final class StructuredSearch {
             rows.add(new Row(m.row().ref(), m.row().title(), values));
         }
         return Optional.of(new Result(kind, q.condition(), q.orderBy(), shown, rows, c.size(), matches.size(), !failures.isEmpty(),
-                Math.round((System.nanoTime() - t0) / 1e4) / 100.0, failures.asMap()));
+                Math.round((System.nanoTime() - t0) / 1e4) / 100.0, failures.asMap(), ids(matches)));
     }
 
     /** A whole number read from a float64 column shows as one (1875863, not 1875863.0). */

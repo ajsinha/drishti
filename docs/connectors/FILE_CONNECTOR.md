@@ -242,6 +242,15 @@ the date, as a read shows it: the days on or before the date are read newest fir
 line, at most `max-load-rows` lines in all. Impact (F8) on a netting set therefore lists its counterparty and
 credit-limit groups from files as from any other store.
 
+### 6.7 In a cluster (Drishti*net)
+
+Each kind's files name the table the connector reads: `file:<folder>#<fingerprint>`, the folder and a SHA-256 of the kind's files (each
+one's path under the folder, size and modification time), taken at each rescan (`rescan-seconds`). Two servers that read the same folder
+say the same, so Drishti*net takes them for replicas and a search asks one of them ([NET.md section 5](../admin/NET.md#5-what-each-node-offers-the-capability-digest)).
+Files that differ make them shards, never wrongly replicas; a file one of them has not rescanned yet makes them shards until it has (the
+counts stay right: a search counts an entity two nodes matched once). A kind with no file in the folder is not listed in the server's
+capability digest, so a connector with nothing of a kind never makes its server a holder of it.
+
 ## 7. Dates: snapshot and effective kinds
 
 | `mode.<kind>` | Meaning | A read on a date |

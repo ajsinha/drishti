@@ -590,8 +590,8 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
 ### A linked entity shows `pending` or `missing` instead of a badge
 
-- **Cause:** `pending`: the linked entity did not arrive within the 40 ms link budget (`drishti.graph.link-budget`).
-  `missing`: no source has it.
+- **Cause:** `pending`: the linked entity did not arrive within the 40 ms link budget (`drishti.graph.link-budget`); with
+  Drishti*net, one that only a peer holds within routing.yaml's `link-budget` (1 s). `missing`: no source has it.
 - **Check:** `curl -s http://localhost:18480/api/v1/sources` for a source whose `health` is not `UP`.
 - **Fix:** a slow source: see [runbooks/source-down.md](../admin/runbooks/source-down.md). Open the link itself to see the
   real error.
