@@ -976,7 +976,7 @@ The designers share one shell, **BI Studio** (BI_DESIGN.md section 8.1): the rep
 * **The dock** (bottom): **Problems**, what the server's Check says about the draft a second after each change (errors and warnings, each linked to its visual; the count is on the tab), and **Query**, the selected visual's
   model query and its SQL (*Run as SQL* asks the server; the plan says whether it is the same question).
 
-![BI Studio: the Explorer, the open items, the designer and the dock](img/bi-studio/studio.jpg)
+![BI Studio: the Explorer of your items on the left, the open item as a tab, and the report designer with the desk pack (a matrix with a colour scale and icons, small multiples, a card and a slicer); the dock with Problems and Query is under the canvas](img/bi-studio/studio.jpg)
 
 **The Format pane is generated** from the format schemas (`GET /api/v1/bi/reports/format-schemas`, [REPORTS.md section 5](REPORTS.md#5-format)): a section per group in the family's order (Title, Frame, Data labels,
 Axes, Legend, Colours, Small multiples, Values, Conditional formatting; for a matrix Layout and Subtotals; for a slicer Slicer), a checkbox for a yes or no, a choice for a closed list, a number with its range, a colour

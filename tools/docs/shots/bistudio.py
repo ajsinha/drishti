@@ -99,13 +99,14 @@ def item(c: Ctx, kind: str, title: str, body: str) -> str:
 def studio(c: Ctx):
     """The report designer in the Studio shell: the Explorer, the open items, the canvas with the desk pack, Format of the selected matrix, the dock."""
     sign_in(c)
-    c.page.set_viewport_size({"width": 1600, "height": 1000})
+    c.page.set_viewport_size({"width": 1600, "height": 1180})
     rid = item(c, "report", "Desk pack", DESK_PACK)
     c.page.goto(c.base + "/bi/design/" + rid)
     c.page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
     c.page.wait_for_function("() => !document.querySelector('.bi-dvis.bi-vis-busy') && document.querySelectorAll('.bi-dvis .bi-vis-ms').length >= 3", timeout=30000)
     c.page.click("[data-design-root] [data-visual='matrix-1']")
     c.page.click("[data-ptab='format']")
+    c.page.evaluate("window.scrollTo(0, 0)")
     c.page.wait_for_timeout(1500)                                         # the dock's Problems answer a second after the last change
     c.save("studio.jpg")
 
@@ -115,7 +116,8 @@ def theme_designer(c: Ctx):
     """The theme designer on a copy of the shipped Corporate theme: the palette, the format defaults and the live preview."""
     sign_in(c)
     c.page.set_viewport_size({"width": 1600, "height": 1000})
-    body = (ROOT / "config" / "bi" / "themes" / "corporate.theme.yaml").read_text().replace("theme: corporate", "theme: desk-dark", 1)
+    import re
+    body = re.sub(r"(?m)^theme: corporate\b", "theme: desk-theme", (ROOT / "config" / "bi" / "themes" / "corporate.theme.yaml").read_text(), count=1)
     tid = item(c, "theme", "Desk theme", body)
     c.page.goto(c.base + "/bi/design/theme/" + tid)
     c.page.wait_for_selector("[data-theme-root][data-ready=yes]", timeout=30000)

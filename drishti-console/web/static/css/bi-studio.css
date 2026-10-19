@@ -57,11 +57,11 @@
 .bi-theme-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
 .bi-theme-palette { display: flex; flex-direction: column; gap: .2rem; padding-left: 1.4rem; }
 .bi-theme-palette li { display: flex; align-items: center; gap: .3rem; }
-.bi-theme-preview { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: .5rem; }
+.bi-theme-preview.bi-rgrid { grid-template-columns: repeat(12, minmax(0, 1fr)); grid-auto-rows: auto; gap: .5rem; }      /* rows as tall as each sample: no overlap */
 .bi-theme-preview .bi-swatches { grid-column: 1 / -1; }
 .bi-theme-sample[data-theme-sample="column"] { grid-column: span 12; height: 16rem; }
-.bi-theme-sample[data-theme-sample="table"] { grid-column: span 8; }
-.bi-theme-sample[data-theme-sample="card"] { grid-column: span 4; }
+.bi-theme-sample[data-theme-sample="table"] { grid-column: span 8; min-height: 11rem; }
+.bi-theme-sample[data-theme-sample="card"] { grid-column: span 4; min-height: 11rem; }
 
 @media (max-width: 900px) {
   .bi-studio { grid-template-columns: minmax(0, 1fr); }
