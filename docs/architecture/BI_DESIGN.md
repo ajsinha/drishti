@@ -1166,6 +1166,8 @@ and fixed in wave D before anything else in it.
    parameters, per-recipient bursting through subscriptions, PDF and Excel output, masked per reader.
 4. **3.0 groundwork:** a second query engine behind the tier planner (connector capability descriptors), and the
    Excel add-in's API (the add-in itself in 3.0).
+5. **GenUI:** screens an AI agent composes from governed Sutra fragments, bound to live data as the viewer, streamed to
+   other applications through `<drishti-genui>` ([GENUI.md](GENUI.md)).
 
 **Console lane:**
 
