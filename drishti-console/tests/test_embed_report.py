@@ -108,7 +108,7 @@ def test_the_report_code_and_sheet_are_served_with_cors_and_the_channel_carries_
         assert r.status_code == 200 and r.headers["access-control-allow-origin"] == HOST, name
     entry = embed.get("/embed/v1/drishti-elements.js", headers={"Origin": HOST})
     assert "./m/report.js" in entry.text
-    for name in ("bi-lib", "bi-phone", "bi-visuals", "bi-grids", "bi-frame", "bi-live"):
+    for name in ("bi-lib", "bi-phone", "bi-visuals", "bi-visuals-format", "bi-grids", "bi-matrix", "bi-multiples", "bi-frame", "bi-live"):
         r = embed.get(f"/embed/v1/js/{name}.js", headers={"Origin": HOST})
         assert r.status_code == 200 and "javascript" in r.headers["content-type"], name
     css = embed.get("/embed/v1/drishti-report.css", headers={"Origin": HOST})

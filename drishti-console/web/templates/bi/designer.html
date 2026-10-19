@@ -37,7 +37,7 @@
     <ul class="bi-warn" data-drafts></ul>
     <p class="bi-empty" data-no-drafts hidden>No report drafts in your workspace yet. Use <strong>Copy and design</strong> on a sample below, or start a new report above.</p></section>
   <section class="bi-sec" data-board-start aria-labelledby="dBoard"><h2 id="dBoard">Boards</h2>
-    <p class="text-muted-d">A board is a wall of tiles from your reports, page by page, for a screen. Lay it out here: tiles, pages, the kiosk rotation and a threshold alert for each tile.</p>
+    <p class="text-muted-d">A board is a report whose pages are walls of tiles (visuals of your reports, with alert colours) for a screen: kiosk, rotation and live updates. It opens in the report designer, where a page's layout is grid or board.</p>
     <form class="bi-form" data-new-board autocomplete="off">
       <label>Title<input class="studio-in" data-new-board-title maxlength="200" value="My board"></label>
       <label>Workspace<select class="studio-select" data-new-board-workspace aria-label="Save the board draft in this workspace"></select></label>
@@ -46,10 +46,12 @@
     <h3>Your board drafts</h3>
     <ul class="bi-warn" data-board-drafts></ul>
     <p class="bi-empty" data-no-board-drafts hidden>No board drafts in your workspace yet.</p></section>
+  <section class="bi-sec" aria-labelledby="dTheme"><h2 id="dTheme">Themes</h2>
+    <p class="text-muted-d">A theme holds the colours, type and format defaults a report takes by naming it. <a class="btn-pill btn-ghost" href="/bi/design/theme/new" data-new-theme-start>Make a theme</a> (from the shipped Corporate one), or pick one under Format, Report, Theme.</p></section>
   <section class="bi-sec" aria-labelledby="dSamples"><h2 id="dSamples">Samples to start from</h2>
     <p class="text-muted-d">Reports and boards that ship with the site. <strong>Copy and design</strong> makes a draft of your own in the workspace you choose and opens it here; the original is not touched. <a href="/bi/catalogue?kind=report">The catalogue of reports</a> lists the published ones.</p>
     <ul class="bi-warn" data-samples></ul>
     <p class="bi-empty" data-no-samples hidden>No shipped reports or boards on this site.</p></section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-board.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design.js?v={{ ASSET_V }}"></script>{% endblock %}

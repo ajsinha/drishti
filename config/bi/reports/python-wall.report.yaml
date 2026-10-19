@@ -1,0 +1,51 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# SAMPLE BOARD (Python tiles): "Python wall". Tiles may be Python visuals: each runs for the person looking, on the rows they may see, in the console's sandbox
+# (or in their browser), and is drawn like any other tile. A Python measure tile shows its number for each group as bars; a Python visual tile shows its chart or its
+# Vega-Lite specification. A tile that draws Python has no threshold alert of its own; to be told when a Python measure crosses a limit, make an alert on it (it is
+# read for you in the sandbox on its schedule or after a load: docs/guides/DISTRIBUTION.md, "Python measures in alerts").
+# Reference: docs/guides/BOARDS.md ("Python tiles"). The report it reads: config/bi/reports/python-desk-risk.report.yaml.
+
+# CONVERTED from the board boards/python-wall.board.yaml by Drishti 2.4.0: a board is a report whose pages have layout: board
+# (docs/guides/BOARDS.md). Each tile is a visual of type tile showing a visual of another report (from:); rotate and notify are under board:.
+
+rachana: 1
+report: python-wall
+version: 1
+title: Python wall
+description: "Python on a wall. Desk P&L volatility (a Python measure), the one-day P&L histogram (a Python visual) and the P&L of each desk as dots (a Python visual that returns Vega-Lite)."
+sample: true
+tags: [sample, trading, python, vega-lite]
+endorsement: none
+pages:
+  - id: risk
+    title: Desk risk
+    layout: board
+    visuals:
+      - id: vol
+        type: tile
+        title: Desk P&L volatility
+        from: { report: python-desk-risk, visual: volatility }
+        at: { x: 0, y: 0, w: 6, h: 6 }
+      - id: hist
+        type: tile
+        title: One-day P&L
+        from: { report: python-desk-risk, visual: histogram }
+        at: { x: 6, y: 0, w: 6, h: 6 }
+      - id: strip
+        type: tile
+        title: P&L by desk
+        from: { report: python-desk-risk, visual: strip }
+        at: { x: 0, y: 6, w: 12, h: 6 }

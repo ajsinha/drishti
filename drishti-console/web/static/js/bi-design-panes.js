@@ -27,12 +27,12 @@
 
   const ICONS = { bar: 'bar-chart-steps', column: 'bar-chart-line', line: 'graph-up', area: 'graph-up-arrow', combo: 'bar-chart', scatter: 'diagram-3', pie: 'pie-chart', donut: 'pie-chart-fill',
     waterfall: 'reception-4', treemap: 'grid-1x2', heatmap: 'grid-3x3', card: 'card-heading', 'multirow-card': 'list-columns', kpi: 'speedometer2', gauge: 'speedometer', table: 'table',
-    matrix: 'grid-3x3-gap', bubble: 'record-circle', funnel: 'filter-circle', histogram: 'bar-chart-fill', box: 'distribute-vertical', map: 'globe2', slicer: 'funnel', python: 'filetype-py', 'vega-lite': 'bezier2', text: 'fonts', image: 'image', button: 'hand-index' };
+    matrix: 'grid-3x3-gap', bubble: 'record-circle', funnel: 'filter-circle', histogram: 'bar-chart-fill', box: 'distribute-vertical', map: 'globe2', slicer: 'funnel', python: 'filetype-py', 'vega-lite': 'bezier2', text: 'fonts', image: 'image', button: 'hand-index',
+    tile: 'window-stack' };
   const GROUPS = [['Charts', ['bar', 'column', 'line', 'area', 'combo', 'scatter', 'bubble', 'pie', 'donut', 'funnel', 'waterfall', 'treemap', 'heatmap', 'histogram', 'box', 'map', 'vega-lite']], ['Cards', ['card', 'multirow-card', 'kpi', 'gauge']],
-    ['Tables', ['table', 'matrix']], ['Python', ['python']], ['Filter and other', ['slicer', 'text', 'image', 'button']]];
+    ['Tables', ['table', 'matrix']], ['Python', ['python']], ['Filter and other', ['slicer', 'text', 'image', 'button']], ['Board', ['tile']]];
   const TYPE_ICON = { string: 'fonts', integer: '123', decimal: '123', boolean: 'check2-square', date: 'calendar3', timestamp: 'clock' };
   const PARTS = ['year', 'quarter', 'month', 'week', 'day'];
-  const NUMBER_FORMATS = ['', 'amount0', 'signed0', 'signed2', 'compact', 'pct'];
   const OPS = { eq: 'is', ne: 'is not', lt: 'is less than', le: 'is at most', gt: 'is greater than', ge: 'is at least', between: 'is between', contains: 'contains', 'starts-with': 'starts with', 'is-null': 'is empty', 'not-null': 'is not empty' };
 
   D.modules.push(function () {
@@ -344,22 +344,9 @@
       s.addEventListener('change', () => onChange(s.value));
       return s;
     }
-    /** The relative-date slicer's default window and the windows it offers (REPORTS.md 6.1): a choice of named windows, none typed. */
-    function relativeEditor(v, f) {
-      const all = B.visuals.RELATIVE, now = f.options && f.options.length ? f.options : all;
-      fmt.appendChild(frow('Starts as', selectInput([['', 'no default (all dates)']].concat(now.map((o) => [o, B.visuals.relativeLabel(o)])), f.default || '', (x) => setFmt(v, 'default', x), { 'data-format-default': '' })));
-      const set = h('fieldset', { class: 'bi-fieldset', 'data-format-options': '' }, h('legend', { text: 'Windows it offers' }));
-      all.forEach((o) => {
-        set.appendChild(checkbox(B.visuals.relativeLabel(o), now.indexOf(o) >= 0, (on) => {
-          const cur = (f.options && f.options.length ? f.options : all).filter((x) => x !== o).concat(on ? [o] : []);
-          const ordered = all.filter((x) => cur.indexOf(x) >= 0);
-          setFmt(v, 'options', ordered.length === all.length ? '' : ordered);
-          if (f.default && ordered.length && ordered.indexOf(f.default) < 0) { setFmt(v, 'default', ''); }
-        }, { 'data-option': o }));
-      });
-      fmt.appendChild(set);
-    }
-    const setFmt = (v, key, val) => D.change('Format ' + key, () => { v.format = v.format || {}; if (val === '' || val === false || val == null) { delete v.format[key]; } else { v.format[key] = val; } if (!Object.keys(v.format).length) { delete v.format; } });
+    // a format key with '' or null is removed; `false` is kept (a setting whose default is on, such as a matrix's stepped layout, is turned off by it)
+    const setFmt = (v, key, val) => D.change('Format ' + key, () => { v.format = v.format || {}; if (val === '' || val == null) { delete v.format[key]; } else { v.format[key] = val; } if (!Object.keys(v.format).length) { delete v.format; } });
+    const openSections = {};                                   // section name -> open, kept while the designer is open (the pane is drawn again after every change)
     const setTop = (v, key, val) => D.change('Set ' + key, () => { if (val === '' || val == null) { delete v[key]; } else { v[key] = val; } });
 
     function drawFormat() {
@@ -370,86 +357,16 @@
       const f = v.format || {};
       fmt.appendChild(frow('Title', textInput(v.title, (x) => setTop(v, 'title', x.trim()), { 'data-format-title': '' })));
       fmt.appendChild(frow('Alt text', textInput(v.alt, (x) => setTop(v, 'alt', x.trim()), { 'data-format-alt': '' }), 'What a screen reader says about it.'));
-      if (group !== 'static') {                                                                    // a visual may read a dataset of its own (RUPAKA.md section 20.10)
+      if (group !== 'static' && group !== 'board') {                                              // a visual may read a dataset of its own (RUPAKA.md section 20.10)
         fmt.appendChild(frow('Dataset', textInput(v.dataset, (x) => setTop(v, 'dataset', x.trim()), { 'data-format-dataset': '', list: 'biDatasetNames', placeholder: D.model.dataset }),
           'Blank: the report\'s dataset (' + (D.dataset && D.dataset.title ? D.dataset.title + ', ' : '') + D.model.dataset + '). Another dataset: its fields are written in the wells in the YAML tab, and a link (Report, below the page) connects its slicers to the others.'));
       }
-      if (group === 'python') {
-        fmt.appendChild(frow('Python item', textInput(f.python, (x) => setFmt(v, 'python', x.trim()), { 'data-format-python': '', placeholder: 'pnl-histogram' }), 'The Python item (catalogue id, file name or title) that draws this from the columns. Leave it empty when the values well holds a Python measure of the dataset.'));
-        fmt.appendChild(frow('Parameters (JSON)', textInput(f.params ? JSON.stringify(f.params) : '', (x) => {
-          if (x.trim() === '') { setFmt(v, 'params', ''); return; }
-          try { const o = JSON.parse(x); if (o && typeof o === 'object' && !Array.isArray(o)) { setFmt(v, 'params', o); } } catch (e) { /* keep what was there until it parses */ }
-        }, { 'data-format-params': '', placeholder: '{"bins": 24}' }), 'Handed to the function as its params; they override the item\'s defaults.'));
-      }
-      if (v.type === 'vega-lite') {
-        const box = h('textarea', { class: 'studio-in bi-vega-spec', rows: '10', spellcheck: 'false', 'data-format-vega-spec': '', 'aria-label': 'Vega-Lite specification (JSON)' });
-        box.value = f.spec ? JSON.stringify(f.spec, null, 2) : '';
-        const note = h('small', { class: 'text-muted-d', 'data-vega-note': '', text: 'The data is the rows of the wells: put no data in it. Refer to fields by the name after the table (desk, not trades.desk) and to measures by their name.' });
-        box.addEventListener('change', () => {
-          if (box.value.trim() === '') { setFmt(v, 'spec', ''); note.textContent = ''; return; }
-          try {
-            const o = JSON.parse(box.value);
-            if (!o || typeof o !== 'object' || Array.isArray(o)) { throw new Error('not an object'); }
-            setFmt(v, 'spec', o);
-            note.textContent = 'Saved in the report.';
-          } catch (e) { note.textContent = 'Not valid JSON yet (' + e.message + '); the last good specification is kept.'; }
-        });
-        fmt.appendChild(h('label', { class: 'bi-frow' }, h('span', { text: 'Vega-Lite specification (JSON)' }), box, note));
-      }
-      if (group === 'chart' && v.type !== 'vega-lite') {
-        fmt.appendChild(checkbox('Data labels', f.labels, (x) => setFmt(v, 'labels', x), { 'data-format-labels': '' }));
-        if (['bar', 'column', 'area'].indexOf(v.type) >= 0) { fmt.appendChild(checkbox('Stacked', f.stacked, (x) => setFmt(v, 'stacked', x), { 'data-format-stacked': '' })); }
-        if (['line', 'area', 'combo'].indexOf(v.type) >= 0) { fmt.appendChild(checkbox('Smooth lines', f.smooth, (x) => setFmt(v, 'smooth', x))); }
-        if (v.type === 'histogram') {
-          fmt.appendChild(frow('Bars', textInput(f.bins, (x) => setFmt(v, 'bins', x === '' ? '' : Number(x)), { type: 'number', min: '2', max: '100', 'data-format-bins': '' }), 'Equal-width bands between the smallest and the largest value (2 to 100, default 10).'));
-        }
-        if (v.type === 'map') {
-          fmt.appendChild(h('p', { class: 'bi-vis-note', text: (v.wells.location || []).length ? 'Shades countries by the code in the location well (ISO alpha-2 or alpha-3, or the English name) and regions by an ISO 3166-2 code such as AU-NSW.' : 'Marks points at the latitude and longitude of the rows.' }));
-          if ((v.wells.location || []).length) {
-            fmt.appendChild(frow('Level', textInput(f.level, (x) => setFmt(v, 'level', x.trim() === 'world' ? '' : x.trim()), { 'data-format-level': '', placeholder: 'world' }), 'World (the default), or the country the map opens at: an ISO code such as AUS or its English name.'));
-            fmt.appendChild(checkbox('Drill into countries', f.drill !== false, (x) => setFmt(v, 'drill', x ? '' : false), { 'data-format-drill': '' }));
-          }
-        }
-        if (['map', 'histogram', 'box', 'funnel', 'bubble'].indexOf(v.type) < 0) fmt.appendChild(frow('Legend', selectInput([['', 'default'], ['bottom', 'bottom'], ['top', 'top'], ['right', 'right'], ['none', 'none']], f.legend, (x) => setFmt(v, 'legend', x))));
-        if (['bar', 'column', 'line', 'area', 'combo'].indexOf(v.type) >= 0) {
-          const at = f.axisTitles || {};
-          fmt.appendChild(frow('Category axis title', textInput(at.x, (x) => setFmt(v, 'axisTitles', Object.assign({}, at, { x }))), null));
-          fmt.appendChild(frow('Value axis title', textInput(at.y, (x) => setFmt(v, 'axisTitles', Object.assign({}, at, { y: x })))));
-        }
-        colourRow(v, f);
-      }
-      if (group === 'chart' || group === 'card' || group === 'table') {
-        fmt.appendChild(frow('Number format', selectInput(NUMBER_FORMATS.map((n) => [n, n || 'from the dataset']), f.numberFormat, (x) => setFmt(v, 'numberFormat', x), { 'data-format-number': '' })));
-      }
-      if (v.type === 'gauge') {
-        fmt.appendChild(frow('Minimum', textInput(f.min, (x) => setFmt(v, 'min', x === '' ? '' : Number(x)), { type: 'number' })));
-        fmt.appendChild(frow('Maximum', textInput(f.max, (x) => setFmt(v, 'max', x === '' ? '' : Number(x)), { type: 'number' })));
-      }
-      if (v.type === 'table' || v.type === 'matrix') {
-        const ms = Object.keys(v.wells).reduce((a, k) => a.concat(v.wells[k]), []).filter((x) => D.kindOf(x) === 'measure');
-        if (ms.length) {
-          const box = h('fieldset', { class: 'bi-fieldset' }, h('legend', { text: 'Data bars' }));
-          ms.forEach((m) => box.appendChild(checkbox(m, (f.dataBars || []).indexOf(m) >= 0, (on) => {
-            const cur = (f.dataBars || []).filter((x) => x !== m).concat(on ? [m] : []);
-            setFmt(v, 'dataBars', cur.length ? cur : '');
-          }, { 'data-databar': m })));
-          fmt.appendChild(box);
-        }
-      }
-      if (v.type === 'matrix') { fmt.appendChild(checkbox('Subtotals and totals', f.subtotals, (x) => setFmt(v, 'subtotals', x), { 'data-format-subtotals': '' })); }
-      if (v.type === 'table') { fmt.appendChild(checkbox('Total row (worked out over all the rows)', f.totals, (x) => setFmt(v, 'totals', x), { 'data-format-totals': '' })); }
-      if (['card', 'kpi', 'gauge', 'table', 'matrix', 'bar', 'column', 'multirow-card'].indexOf(v.type) >= 0) { conditionalEditor(v, f); }
-      if (v.type === 'slicer') {
-        fmt.appendChild(frow('Mode', selectInput([['list', 'list'], ['dropdown', 'dropdown'], ['range', 'range (numbers and dates)'], ['relative-date', 'relative date (a date field)']], f.mode || 'list', (x) => { setFmt(v, 'mode', x); if (x !== 'relative-date') { setFmt(v, 'default', ''); setFmt(v, 'options', ''); } if (x !== 'list' && v.at.h > 2) { D.change('Resize a slicer', () => { v.at.h = 2; }); } }, { 'data-format-mode': '' })));
-        if (f.mode === 'relative-date') { relativeEditor(v, f); }
-        fmt.appendChild(frow('Filters', selectInput([['page', 'this page'], ['report', 'every page']], f.scope || 'page', (x) => setFmt(v, 'scope', x), { 'data-format-scope': '' })));
-      }
+      if (v.type === 'tile') { D.tileEditor(fmt, v); }
       if (v.type === 'text') {
         const ta = h('textarea', { class: 'studio-in', rows: '3', 'data-format-text': '' });
         ta.value = v.text || '';
         ta.addEventListener('change', () => setTop(v, 'text', ta.value));
         fmt.appendChild(frow('Text', ta));
-        fmt.appendChild(frow('Size', selectInput([['', 'body'], ['heading', 'heading']], f.size, (x) => setFmt(v, 'size', x))));
       }
       if (v.type === 'image') { fmt.appendChild(frow('Image', textInput(v.src, (x) => setTop(v, 'src', x.trim()), { placeholder: '/static/... or a data:image/ URI' }))); }
       if (v.type === 'button') {
@@ -460,7 +377,20 @@
         const bms = [['', 'none']].concat((D.model.bookmarks || []).map((b) => [b.name, b.name]));
         fmt.appendChild(frow('or apply bookmark', selectInput(bms, act.bookmark || '', (x) => D.change('Set the button', () => { v.action = x ? { bookmark: x } : {}; }))));
       }
-      if (group !== 'static') {
+      // the typed format of the visual's family (report schema v2): generated from GET /reports/format-schemas
+      const gen = h('div', { class: 'bi-fgen', 'data-format-generated': v.type });
+      fmt.appendChild(gen);
+      const inWells = Object.keys(v.wells).reduce((a, k) => a.concat(v.wells[k]), []);
+      const ms = inWells.filter((x) => D.kindOf(x) === 'measure'), fs = inWells.filter((x) => D.kindOf(x) === 'field');
+      B.formatPane.draw(gen, {
+        type: v.type, format: f, setFmt: (k, x) => setFmt(v, k, x), palette: D.palette, measures: ms, fields: fs, series: ms, theme: D.theme, tokens: D.tokens,
+        modelMeasures: (D.dsOf(v).dataset.measures || []).map((m) => m.name),
+        slicerMode: (x) => { setFmt(v, 'mode', x); if (x !== 'relative-date') { setFmt(v, 'default', ''); setFmt(v, 'options', ''); } if (x !== 'list' && v.at.h > 2) { D.change('Resize a slicer', () => { v.at.h = 2; }); } },
+        open: (g) => openSections[g] !== false, toggled: (g, open) => { openSections[g] = open; }
+      });
+      if (group !== 'static' && group !== 'board') {
+        if (group !== 'slicer') { D.tooltipPicker(fmt, v); }
+        D.interactionsEditor(fmt, v);
         fmt.appendChild(checkbox('Other visuals filter this one', v.interacts !== false, (x) => setTop(v, 'interacts', x ? '' : false), { 'data-format-interacts': '' }));
         if (group !== 'slicer') {
           fmt.appendChild(frow('Most rows', textInput(v.limit, (x) => setTop(v, 'limit', x === '' ? '' : Math.max(1, parseInt(x, 10) || 1)), { type: 'number', min: '1' })));
@@ -471,48 +401,6 @@
           }
         }
       }
-    }
-
-    function colourRow(v, f) {
-      const row = h('div', { class: 'bi-frow' }, h('span', { text: 'Colour' }));
-      const sw = h('div', { class: 'bi-swatches', role: 'group', 'aria-label': 'Theme colours' });
-      D.palette.forEach((c, i) => {
-        const b = h('button', { type: 'button', class: 'bi-swatch', 'aria-label': 'Theme colour ' + (i + 1), title: c, 'aria-pressed': f.colour === c ? 'true' : 'false', 'data-colour': c });
-        b.style.background = c;
-        b.addEventListener('click', () => setFmt(v, 'colour', hex(c)));
-        sw.appendChild(b);
-      });
-      const none = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', text: 'Theme default' });
-      none.addEventListener('click', () => setFmt(v, 'colour', ''));
-      row.appendChild(sw);
-      row.appendChild(none);
-      fmt.appendChild(row);
-    }
-    function hex(c) {
-      if (/^#[0-9a-f]{6}$/i.test(c)) { return c; }
-      const m = /rgba?\((\d+)[ ,]+(\d+)[ ,]+(\d+)/.exec(c);
-      return m ? '#' + [m[1], m[2], m[3]].map((n) => ('0' + (+n).toString(16)).slice(-2)).join('') : c;
-    }
-
-    function conditionalEditor(v, f) {
-      const ms = Object.keys(v.wells).reduce((a, k) => a.concat(v.wells[k]), []).filter((x) => D.kindOf(x) === 'measure');
-      if (!ms.length) { return; }
-      const box = h('fieldset', { class: 'bi-fieldset', 'data-conditional': '' }, h('legend', { text: 'Conditional colours' }));
-      (f.conditional || []).forEach((c, i) => {
-        const row = h('div', { class: 'bi-cond' },
-          selectInput(ms.map((m) => [m, m]), c.measure, (x) => D.change('Conditional format', () => { v.format.conditional[i].measure = x; }), { 'aria-label': 'Measure' }),
-          selectInput(['lt', 'le', 'gt', 'ge', 'eq', 'ne'].map((o) => [o, { lt: '<', le: '≤', gt: '>', ge: '≥', eq: '=', ne: '≠' }[o]]), c.op, (x) => D.change('Conditional format', () => { v.format.conditional[i].op = x; }), { 'aria-label': 'Comparison' }),
-          textInput(c.value, (x) => D.change('Conditional format', () => { v.format.conditional[i].value = Number(x); }), { type: 'number', 'aria-label': 'Value' }),
-          textInput(c.colour || '#b3261e', (x) => D.change('Conditional format', () => { v.format.conditional[i].colour = x; }), { type: 'color', 'aria-label': 'Colour' }));
-        const del = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Remove this conditional colour' }, B.icon('x-lg'));
-        del.addEventListener('click', () => D.change('Conditional format', () => { v.format.conditional.splice(i, 1); if (!v.format.conditional.length) { delete v.format.conditional; } }));
-        row.appendChild(del);
-        box.appendChild(row);
-      });
-      const add = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-add-conditional': '', text: 'Add a rule' });
-      add.addEventListener('click', () => D.change('Conditional format', () => { v.format = v.format || {}; (v.format.conditional = v.format.conditional || []).push({ measure: ms[0], op: 'lt', value: 0, colour: '#b3261e' }); }));
-      box.appendChild(add);
-      fmt.appendChild(box);
     }
 
     function drawPageFormat() {
@@ -537,9 +425,11 @@
       const ul = h('ul', { class: 'bi-chiplist' });
       dt.forEach((x) => { const li = h('li', { class: 'bi-wchip' }, h('span', { text: x })); const b = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Remove ' + x }, B.icon('x-lg')); b.addEventListener('click', () => D.change('Drill-through page', () => { const l = dt.filter((y) => y !== x); if (l.length) { p.drillthrough = { fields: l }; } else { delete p.drillthrough; } })); li.appendChild(b); ul.appendChild(li); });
       fmt.appendChild(h('fieldset', { class: 'bi-fieldset' }, h('legend', { text: 'This page is a drill-through target for' }), ul, fieldSel));
+      D.pageV2(fmt, p);
       fmt.appendChild(h('h4', { class: 'bi-fhead', text: 'Report' }));
       fmt.appendChild(frow('Report title', textInput(m.title, (x) => D.change('Rename the report', () => { m.title = x.trim() || m.title; }), { 'data-report-title': '' })));
       fmt.appendChild(frow('Description', textInput(m.description, (x) => D.change('Describe the report', () => { if (x.trim()) { m.description = x.trim(); } else { delete m.description; } }))));
+      D.reportV2(fmt, m);
       fmt.appendChild(frow('Colours', selectInput(B.PALETTES.map((n) => [n, n]), (m.theme || {}).palette || 'default', (x) => D.change('Theme', () => { m.theme = Object.assign({}, m.theme, { palette: x }); }), { 'data-theme-palette': '' }), 'default follows the console theme; colour-blind is Okabe-Ito.'));
       const dates = m.dates || {};
       fmt.appendChild(frow('Business date from', textInput(dates.from, (x) => setDates({ from: x }), { type: 'date' })));

@@ -1,0 +1,100 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# SAMPLE BOARD: "Desk wall". A wall of live tiles from two reports over two live datasets, for a screen on the wall: open it, press the kiosk button (or add
+# ?kiosk=1 to the address) and it fills the screen, hides the menus and turns its pages every 20 seconds. A tile changes colour when its number crosses a
+# threshold; nothing is sent anywhere (notifications arrive with distribution, phase 7).
+# Reference: docs/guides/BOARDS.md. Tutorial: docs/tutorials/10-first-bi-report.md "A wall for the desk".
+#
+# A board holds no data and no query: each tile names a report and one of its visuals, and the board asks that report for the data, as the person looking.
+
+# CONVERTED from the board boards/desk-wall.board.yaml by Drishti 2.4.0: a board is a report whose pages have layout: board
+# (docs/guides/BOARDS.md). Each tile is a visual of type tile showing a visual of another report (from:); rotate and notify are under board:.
+
+rachana: 1
+report: desk-wall
+board: { rotate: "20s" }
+version: 1
+title: Desk wall
+description: The trading desk and the counterparty exposure on one live wall. Tiles turn amber and red as the numbers cross their thresholds.
+sample: true
+tags: [sample, trading, counterparty-risk, live, streaming, tutorial]
+endorsement: promoted
+pages:
+  - id: desk
+    title: Trading desk
+    layout: board
+    visuals:
+      - id: net-mtm
+        type: tile
+        title: Net MTM
+        from: { report: live-trading-desk, visual: mtm }
+        at: { x: 0, y: 0, w: 3, h: 3 }
+        alert: { on: MTM, warn: { op: lt, value: 0 }, crit: { op: lt, value: -1000000000 }, hysteresis: 25000000 }
+      - id: losses
+        type: tile
+        title: Losses
+        from: { report: live-trading-desk, visual: losses }
+        at: { x: 3, y: 0, w: 3, h: 3 }
+        alert: { on: Losses, warn: { op: lt, value: -1500000000 }, crit: { op: lt, value: -2500000000 } }
+      - id: trades
+        type: tile
+        title: Trades
+        from: { report: live-trading-desk, visual: trades }
+        at: { x: 6, y: 0, w: 2, h: 3 }
+      - id: rolling
+        type: tile
+        from: { report: live-trading-desk, visual: rolling }
+        at: { x: 8, y: 0, w: 4, h: 6 }
+      - id: by-desk
+        type: tile
+        from: { report: live-trading-desk, visual: by-desk }
+        at: { x: 0, y: 3, w: 8, h: 6 }
+      - id: movers
+        type: tile
+        from: { report: live-trading-desk, visual: movers }
+        at: { x: 8, y: 6, w: 4, h: 6 }
+      - id: latest
+        type: tile
+        from: { report: live-trading-desk, visual: latest }
+        at: { x: 0, y: 9, w: 8, h: 4 }
+  - id: exposure
+    title: Counterparty exposure
+    layout: board
+    visuals:
+      - id: sets
+        type: tile
+        from: { report: live-exposure, visual: sets }
+        at: { x: 0, y: 0, w: 3, h: 3 }
+      - id: netmtm
+        type: tile
+        from: { report: live-exposure, visual: netmtm }
+        at: { x: 3, y: 0, w: 3, h: 3 }
+        alert: { on: Net MTM, warn: { op: lt, value: 0 }, crit: { op: lt, value: -300000000 } }
+      - id: ee
+        type: tile
+        from: { report: live-exposure, visual: ee }
+        at: { x: 6, y: 0, w: 3, h: 3 }
+      - id: pfe
+        type: tile
+        from: { report: live-exposure, visual: pfe }
+        at: { x: 9, y: 0, w: 3, h: 3 }
+      - id: worst
+        type: tile
+        from: { report: live-exposure, visual: worst }
+        at: { x: 0, y: 3, w: 6, h: 7 }
+      - id: limits
+        type: tile
+        from: { report: live-exposure, visual: limits }
+        at: { x: 6, y: 3, w: 6, h: 7 }

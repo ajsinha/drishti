@@ -33,7 +33,7 @@ import org.yaml.snakeyaml.Yaml;
 public final class ArtifactPaths {
 
     /** BI file kinds and the folder each lives in under {@code drishti.bi.dir}. */
-    public static final Map<String, String> BI_FOLDERS = Map.of("dataset", "datasets", "report", "reports", "board", "boards", "notebook", "notebooks", "python", "python");
+    public static final Map<String, String> BI_FOLDERS = Map.of("dataset", "datasets", "report", "reports", "board", "boards", "notebook", "notebooks", "python", "python", "theme", "themes");
     /** A BI file's name: what the file name and the item's own key agree on. */
     public static final Pattern BI_NAME = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_-]{0,80}");
 

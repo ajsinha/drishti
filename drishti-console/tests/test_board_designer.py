@@ -11,10 +11,10 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""The board designer (docs/guides/BOARDS.md, "Designing a board"): its page and its start, the calls its script makes pass through the BI proxy, the links to it
-from the board and the item, and the script carries no CDN address, inline code or markup string. The behaviour in a browser is in test_board_designer_browser.py."""
+
+"""Boards as a report layout (R7, 2.4.0) in the console: the 2.3 board addresses send people to the report viewer and the report designer, a board is made on the
+designer's start page as a report with a board page, the report designer has the tile editor and the Studio shell, and the scripts keep the page policy."""
 import re
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -25,68 +25,67 @@ from core.app import CSP, create_app
 from core.config import load_settings
 
 STATIC = CONSOLE / "web" / "static"
-
-
-class Backend(BiBackend):
-    def __init__(self):
-        super().__init__()
-        self.calls = []
-
-    async def bi(self, method, path, ident, body=None, **params):
-        self.calls.append((method, path, body))
-        if path == "/boards/validate":
-            return {"valid": True, "problems": [], "board": {"rachana": 1, "board": "b", "title": "B", "pages": [{"id": "p", "title": "P", "tiles": []}]}, "tiles": {}}
-        if path == "/boards/format":
-            return {"yaml": "rachana: 1\nboard: b\n"}
-        return await super().bi(method, path, ident, body, **params)
+TEMPLATES = CONSOLE / "web" / "templates" / "bi"
 
 
 @pytest.fixture()
 def client():
     app = create_app(load_settings(CONSOLE / "config"))
-    app.state.backend = Backend()
+    app.state.backend = BiBackend()
     return TestClient(app)
 
 
-def test_the_designer_page_is_a_shell_the_script_draws(client):
-    page = client.get("/bi/design/board/file:board:desk-wall")
+def test_a_two_three_board_address_opens_the_report_viewer_and_the_report_designer(client):
+    view = client.get("/bi/b/file:board:desk-wall?kiosk=1", follow_redirects=False)
+    assert view.status_code == 307 and view.headers["location"] == "/bi/r/file:report:desk-wall?kiosk=1"
+    stored = client.get("/bi/b/bi-1234", follow_redirects=False)
+    assert stored.headers["location"] == "/bi/r/bi-1234"
+    design = client.get("/bi/design/board/file:board:desk-wall", follow_redirects=False)
+    assert design.status_code == 307 and design.headers["location"] == "/bi/design/file:report:desk-wall"
+    for gone in ("board.html", "design_board.html"):
+        assert not (TEMPLATES / gone).exists(), gone
+    for gone in ("js/bi-board.js", "js/bi-design-board.js", "css/bi-design-board.css"):
+        assert not (STATIC / gone).exists(), gone
+
+
+def test_the_report_viewer_draws_board_pages_with_a_kiosk(client):
+    page = client.get("/bi/r/file:report:desk-wall")
     assert page.status_code == 200 and page.headers["content-security-policy"] == CSP
-    for marker in ("data-board-design-root", "data-board-grid", 'data-tab="yaml"', "data-add-form", "data-tile-form", "data-b-rotate", "data-save", "data-item-link"):
-        assert marker in page.text, marker
-    assert 'data-item="file:board:desk-wall"' in page.text
-    assert "/static/js/bi-design-board.js" in page.text and "/static/css/bi-design-board.css" in page.text
-    assert "/static/js/bi-design.js" not in page.text, "the report designer's script is not loaded on a board"
+    assert "data-kiosk" in page.text and "data-rotate-note" in page.text and "/static/js/bi-report-board.js" in page.text and "/static/js/bi-tooltips.js" in page.text
+    viewer = (STATIC / "js" / "bi-report.js").read_text(encoding="utf-8")
+    assert "B.reportBoard(" in viewer and "board.load(" in viewer and "bindKiosk" in viewer
 
 
-def test_the_start_page_lists_boards_and_makes_a_new_one(client):
+def test_the_start_page_makes_a_board_as_a_report_with_a_board_page(client):
     page = client.get("/bi/designer")
     assert page.status_code == 200
-    assert "data-board-start" in page.text and "data-new-board" in page.text and "data-board-drafts" in page.text and "/static/js/bi-design-board.js" in page.text
+    assert "data-board-start" in page.text and "data-new-board" in page.text and "data-board-drafts" in page.text and "/bi/design/theme/new" in page.text
+    js = (STATIC / "js" / "bi-design.js").read_text(encoding="utf-8")
+    assert "layout: board" in js and "data-new-board" in js and "i.board" in js
 
 
-def test_the_script_reaches_the_board_calls_through_the_proxy(client):
-    ok = client.post("/bi/api/boards/validate", json={"yaml": "board: b\n"})
-    assert ok.status_code == 200 and ok.json()["valid"] is True
-    fmt = client.post("/bi/api/boards/format", json={"board": {"board": "b"}})
-    assert fmt.status_code == 200 and fmt.json()["yaml"].startswith("rachana: 1")
-    sent = [c for c in client.app.state.backend.calls if c[1] in ("/boards/validate", "/boards/format")]
-    assert [c[1] for c in sent] == ["/boards/validate", "/boards/format"] and sent[1][2] == {"board": {"board": "b"}}
+def test_the_report_designer_is_in_the_studio_and_edits_tiles(client):
+    page = client.get("/bi/design/bi-1")
+    assert page.status_code == 200 and page.headers["content-security-policy"] == CSP
+    for marker in ("data-studio", "data-studio-rail", "data-studio-tabs", "data-studio-dock", 'data-dock-tab="problems"', 'data-dock-tab="query"'):
+        assert marker in page.text, marker
+    for script in ("bi-studio.js", "bi-format-pane.js", "bi-format-rules.js", "bi-design-v2.js", "bi-matrix.js", "bi-multiples.js", "bi-visuals-format.js"):
+        assert "/static/js/" + script in page.text, script
+    v2 = (STATIC / "js" / "bi-design-v2.js").read_text(encoding="utf-8")
+    for hook in ("data-tile-report", "data-tile-visual", "'data-tile-' + name + '-op'", "data-page-layout", "data-page-tooltip", "data-interaction", "data-report-theme", "data-board-rotate"):
+        assert hook in v2, hook
 
 
-def test_the_board_and_the_item_link_to_the_designer(client):
-    assert "data-design" in client.get("/bi/b/file:board:desk-wall").text
-    bi_js = (STATIC / "js" / "bi.js").read_text(encoding="utf-8")
-    assert "'/bi/design/board/'" in bi_js
-    assert "'/bi/design/board/'" in (STATIC / "js" / "bi-board.js").read_text(encoding="utf-8")
-
-
-def test_the_script_has_no_cdn_inline_code_or_markup_string():
-    text = (STATIC / "js" / "bi-design-board.js").read_text(encoding="utf-8")
-    assert "http://" not in text and "https://" not in text and "innerHTML" not in text and "insertAdjacentHTML" not in text and "eval(" not in text
-    assert not re.search(r"\bon[a-z]+\s*=\s*['\"]", text), "no inline handler"
-    for tmpl in ("design_board.html", "designer.html"):
-        html = (CONSOLE / "web" / "templates" / "bi" / tmpl).read_text(encoding="utf-8")
+def test_the_new_scripts_have_no_cdn_inline_code_or_markup_string():
+    for name in ("bi-studio.js", "bi-format-pane.js", "bi-format-rules.js", "bi-design-v2.js", "bi-matrix.js", "bi-multiples.js", "bi-visuals-format.js", "bi-tooltips.js",
+                 "bi-report-board.js", "bi-theme-designer.js"):
+        text = (STATIC / "js" / name).read_text(encoding="utf-8")
+        assert "http://" not in text and "https://" not in text and "innerHTML" not in text and "insertAdjacentHTML" not in text and "eval(" not in text, name
+        assert not re.search(r"\bon[a-z]+\s*=\s*['\"]", text), name
+        assert len(text.splitlines()) < 1500, name
+        assert text.startswith("/*\n * Project Drishti"), name
+    for tmpl in ("design.html", "designer.html", "design_theme.html", "_studio.html", "report.html"):
+        html = (TEMPLATES / tmpl).read_text(encoding="utf-8")
         assert "<script>" not in html and " style=" not in html and not re.search(r"\sonclick=", html), tmpl
-    css = (STATIC / "css" / "bi-design-board.css").read_text(encoding="utf-8")
+    css = (STATIC / "css" / "bi-studio.css").read_text(encoding="utf-8")
     assert "min-height: 44px" in css and "@media" in css and "http" not in css
-    assert len(text.splitlines()) < 1500

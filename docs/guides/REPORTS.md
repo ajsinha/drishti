@@ -33,7 +33,7 @@ Three sample reports ship in `config/bi/reports/` (and a fourth for Python, **De
 6. [Slicers](#6-slicers)
 7. [How a visual becomes a query](#7-how-a-visual-becomes-a-query)
 8. [What people can do with a report](#8-what-people-can-do-with-a-report)
-9. [Checking a report: DRS-9030 to DRS-9035](#9-checking-a-report-drs-9030-to-drs-9035)
+9. [Checking a report: DRS-9030 to DRS-9036](#9-checking-a-report-drs-9030-to-drs-9036)
 10. [Security](#10-security)
 11. [Settings](#11-settings)
 12. [Built and not built](#12-built-and-not-built)
@@ -44,6 +44,7 @@ Three sample reports ship in `config/bi/reports/` (and a fourth for Python, **De
 17. [Expected values: `tests:`](#17-expected-values-tests)
 18. [A report on a model (wave W1)](#18-a-report-on-a-model-wave-w1)
 19. [Languages in the report designer (wave A)](#19-languages-in-the-report-designer-wave-a)
+20. [Report schema v2 in one report (2.4.0)](#20-report-schema-v2-in-one-report-240)
 
 ## 1. Where a report lives
 
@@ -94,14 +95,16 @@ tests:                         # optional: what a number should be (section 17)
 | `version`, `title`, `description` | your own version number; the catalogue's title and description |
 | `sample` | `true`: sample content, hidden from people who may not see samples (like sample packs) |
 | `dataset` | the dataset it reads. Found by catalogue id, by file name (`trades-basic` is `file:dataset:trades-basic`), by the dataset's own name or by its title; a draft dataset of your own works too. Not found: `DRS-9034` |
-| `theme` | `palette`: `default` (the console's colours, following light, dark and high contrast), `colour-blind` (Okabe-Ito) or `mono`; optional `background` (a `#rrggbb`, used by the contrast check) |
+| `theme` | a **theme item**'s name (`theme: corporate`, or `{ use: corporate }`; section 5.2), or a palette: `default` (the console's colours, following light, dark and high contrast), `colour-blind` (Okabe-Ito) or `mono`; optional `palette` and `background` (a `#rrggbb`, used by the contrast check) over the theme's |
+| `board` | the settings of the report's **board pages** (2.4.0): `rotate` (kiosk rotation) and `notify` (the tiles' notification defaults); [BOARDS.md](BOARDS.md) |
 | `dates` | `from` and `to` (`yyyy-mm-dd`, inclusive) for every query; a person can pick a business date in the viewer's toolbar instead |
 | `filters`, `bookmarks`, `pages` | sections 4, 8 and below |
 | `layouts` | `phone: { <page id>: { order, hide, span } }` (640 px and narrower) and `tablet: { <page id>: { order, hide, span, wide } }` (1024 px and narrower): how a page is arranged. Without them a phone stacks the grid in reading order and a tablet keeps the grid (section 14) |
 | `tests` | expected values Check and publishing run (section 17) |
 
 A **page** has `id` (letters, digits, hyphen, underscore, up to 40; made from the title when missing), `title`, `filters`, `visuals`, and optionally `drillthrough: { fields: [table.column] }`, which makes it a
-**drill-through target** (section 8): it is left out of the page tabs and opened from a visual. At most 30 pages, 60 visuals a page.
+**drill-through target** (section 8): it is left out of the page tabs and opened from a visual. At most 30 pages, 60 visuals a page. Since 2.4.0 a page may also have `layout: board` (a wall of tiles, [BOARDS.md](BOARDS.md)),
+`tooltip: true` (a **tooltip page**, drawn over a hovered mark: section 8) and `interactions:` (how a selection on one visual acts on the others: section 8).
 
 A **visual**:
 
@@ -117,6 +120,8 @@ A **visual**:
 | `drillthrough` | `{ page, field }`: a click on a mark of `field` may open that page carrying the mark's value; the page must list the field under its own `drillthrough: fields` |
 | `format` | display settings, section 5 |
 | `text`, `src`, `alt`, `interacts`, `action` | the words of a text visual or button; an image's address (this site's `/static/...` or a `data:image/` URI, never another address) and its alt text (also a text alternative for any visual); `interacts: false` stops other visuals' selections from filtering this one; a button's `action: { navigate: <page> }` or `{ bookmark: <name> }` |
+| `tooltip` | (2.4.0) the id of a tooltip page drawn over this visual's hovered marks, filtered to the mark (section 8) |
+| `from`, `alert` | (2.4.0) a **tile**'s report and visual, and its colour rule ([BOARDS.md](BOARDS.md)) |
 
 The viewer's keyboard order is the picture's: visuals are read top to bottom, then left to right.
 
@@ -127,8 +132,8 @@ A **well** holds fields (`table.column`, or `table.column.year|quarter|month|wee
 
 | Type | Group | Wells (kind, how many) | What it draws |
 |---|---|---|---|
-| `bar` | chart | `axis` field (1, required), `legend` field (1), `values` measures (required) | horizontal bars, ranked by the first measure; one series per measure, or per legend value |
-| `column` | chart | as `bar` | vertical columns; `format: { stacked: true }` stacks them |
+| `bar` | chart | `axis` field (1, required), `legend` field (1), `values` measures (required), `split` field (1) | horizontal bars, ranked by the first measure; one series per measure, or per legend value; with a `split` field, **small multiples**: one small chart per value of it (section 5.4) |
+| `column` | chart | as `bar` | vertical columns; `format: { stacked: true }` stacks them, `percent: true` to 100% |
 | `line` | chart | as `bar` | lines in axis order (a date axis in date order) |
 | `area` | chart | as `bar` | filled lines |
 | `combo` | chart | `axis` (1, required), `values` (required), `secondary` measures | columns for `values`, lines for `secondary` on a second axis |
@@ -147,7 +152,7 @@ A **well** holds fields (`table.column`, or `table.column.year|quarter|month|wee
 | `kpi` | card | `values` measure (1, required), `target` measure (1), `axis` field (1) | the value, how it stands against the target, a sparkline over `axis` |
 | `gauge` | card | `values` measure (1, required), `target` measure (1) | a dial; `format: { min, max }` sets the range |
 | `table` | table | `columns` fields and measures (required) | the fields grouped, the measures added up; click a column title to sort; data bars and conditional colours; a key column of a table whose kind is a Drishti kind links to the entity in the terminal; `format: { totals: true }` ends with a **total row** the engine works out over all the rows (not only the rows shown) |
-| `matrix` | table | `rows` fields (required), `columns` field (1), `values` measures (required) | rows by columns; `format: { subtotals: true }` adds a subtotal per group of the first row field (collapsible), a total per row and a grand total, **true totals** for every measure (below) |
+| `matrix` | table | `rows` fields (required, any number), `columns` field (1), `values` measures (required) | rows by columns; `format: { subtotals: true }` adds a subtotal for each group **at every level** of the row fields (each opens and closes; *Expand all* and *Collapse all*), a total per row and a grand total, **true totals** for every measure (below); `stepped`, `expandTo`, `valuesOn`, `rowSubtotals`, `columnSubtotals` (section 5.5) |
 | `slicer` | slicer | `field` (1, required) | section 6 |
 | `text`, `image`, `button` | static | none | `text`; `src` and `alt`; `text` and `action` |
 | `live-chart` | live | `values` measures (1 to 4, required) | a **rolling line**: each update of the live table adds a point per measure; `format: { window: 120 }` keeps the latest 5 to 1,000 points (section 13). The points live in the browser from the moment the page opened; for a line that is there when the page opens, chart the table's **history** instead: a `line` with `axis: [history.ts]` and `values: [MTM history]` ([DATASETS.md section 7.1](DATASETS.md#71-live-tables-phase-5), the sample *Live trading desk* has one, *Net MTM and losses, last hour*) |
@@ -159,6 +164,7 @@ A **well** holds fields (`table.column`, or `table.column.year|quarter|month|wee
 
 
 | `entity-view` | entity | `key` (1, required): a field holding an entity's id | the Drishti view of the entity whose key is selected on the page (section 3.4) |
+| `tile` | board | none: `from: { report, visual, page }` | (2.4.0) a visual of another report on a board page, with its `alert:` colours ([BOARDS.md](BOARDS.md)) |
 
 Reserved and **refused with `DRS-9033`** (not built): `shape`.
 
@@ -321,22 +327,127 @@ Rank by a column that is not masked (`counterparties.id`, not the masked name): 
 
 ## 5. Format
 
-`format` is a map of plain settings; a key a visual does not use is ignored.
+`format` is **typed per visual family** (report schema v2, 2.4.0): one JSON Schema per family, written in YAML in the server
+(`drishti-server/src/main/resources/bi/report/format/`: `chart` for bar, column, line, area and combo; `other-chart`; `card` for cards, KPIs and gauges; `table`; `matrix`;
+`slicer`; `static` for text, image, button and tile; `code` for python, vega-lite and the live and 2.1 types; `common` for what they share). The server checks every
+visual's format against its family: a wrong type or value of a key **new in 2.4.0** is `DRS-9032`, a wrong value of a key a 2.3 report could already hold is a
+**warning** (the viewer ignores it, so a stored report never stops opening), and an unknown key, or a key of the family this type does not use, is a warning.
+`GET /api/v1/bi/reports/format-schemas` gives the schemas, resolved per family; the designer's **Format pane is generated from them** (a section per group,
+the right control for each key, its range and its hint), so whatever the pane offers the server accepts.
 
 | Key | For | Meaning |
 |---|---|---|
-| `labels` | charts | data labels |
-| `stacked`, `smooth` | bar, column, area; line, area, combo | stack the series; smooth the line |
+| `subtitle`, `titleSize` | every visual | a line under the title; the title's size (10 to 32 px) |
+| `border`, `shadow`, `background`, `padding` | every visual | the frame: a border, a shadow, a `#rrggbb` background, padding (0 to 32 px) |
+| `labels`, `labelDensity`, `labelPosition` | charts | data labels; the share of points labelled (1 to 100 %); outside, inside or centre |
+| `stacked`, `percent`, `smooth` | bar, column, area; bar, column, area; line, area, combo | stack the series; 100% stacked; smooth the line |
+| `valueAxis` | category charts | `{ min, max, log, gridlines, show }` |
+| `categoryAxis` | category charts | `{ rotate (-90 to 90), show }` |
+| `axisTitles` | bar, column, line, area, combo, scatter, bubble, waterfall, histogram, box | `{ x, y }` |
 | `legend` | charts | `bottom`, `top`, `right`, `none` |
-| `axisTitles` | bar, column, line, area, combo | `{ x, y }` |
-| `colour` | charts with one series | a `#rrggbb`; the designer offers the theme's colours |
+| `colour`, `seriesColours` | charts | one `#rrggbb` for a chart with one series (the designer offers the theme's colours); a colour per series (a measure's name or a legend value) or, for a pie, per category |
+| `multiples` | bar, column, line, area with a `split` field | `{ columns (1 to 6), max (2 to 24), sharedAxis }` (section 5.4) |
+| `period` | charts on a date axis | `auto`, `day`, `week`, `month`, `quarter`, `year` |
 | `numberFormat` | charts, cards, tables | `amount0`, `signed0`, `signed2`, `compact`, `pct` (a value of at most 1 is a fraction, a larger one already a percent), `share` (always a fraction of 1: `share_of` measures, 2.3.0); else the measure's own format from the dataset |
-| `conditional` | cards, kpis, gauges, tables, matrices, bar, column | `[{ measure, op: lt, le, gt, ge, eq or ne, value, colour }]` |
+| `rules` | cards, kpis, gauges, tables, matrices, bar, column | conditional formatting (section 5.1) |
+| `conditional` | as `rules` | the 2.1 short form: `[{ measure, op: lt, le, gt, ge, eq or ne, value, colour }]` (the text colour) |
 | `dataBars` | table, matrix | measures to draw as bars in the cell |
-| `subtotals` | matrix | subtotals and totals |
+| `calloutSize`, `showLabel`, `goodWhen` | card, kpi; card; kpi | the number's size; show the measure's name; better when `higher` (the default) or `lower` than the target, in the theme's good and bad colours |
 | `min`, `max` | gauge | the dial's range |
-| `mode`, `scope` | slicer | section 6 |
-| `size` | text | `heading` |
+| `totals`, `rowBanding`, `wrap`, `fontSize` | table | a total row; banded rows; wrap long text; text size |
+| `subtotals`, `rowSubtotals`, `columnSubtotals`, `stepped`, `expandTo`, `valuesOn` | matrix | section 5.5 |
+| `mode`, `style`, `scope`, `syncGroup`, `default`, `options` | slicer | section 6 |
+| `size`, `align` | text, button | `heading`; left, centre, right |
+| `bins`, `mode`, `level`, `drill` | histogram; map | section 3.1 |
+
+A theme's visual defaults (section 5.2) are applied under a visual's own format: what the visual says wins.
+
+### 5.1 Conditional formatting
+
+`format.rules` is a list; each rule names what it colours (`apply`: a measure the visual shows, or a field for `values`) and its `type`:
+
+```yaml
+format:
+  rules:
+    - { type: gradient, apply: MTM, min: "#c62828", mid: "#ffffff", max: "#2e7d32" }       # a colour scale (mid optional), over the visual's own values
+    - { type: rule, apply: MTM, on: Trades, op: gt, value: 10, colour: "#b3261e" }         # a rule on ANOTHER measure; background: also takes a colour
+    - { type: icons, apply: Notional, icons: arrows, thresholds: [0, 1000000] }             # arrows, traffic, signs or flags: low, middle, high
+    - { type: values, apply: trade.DESK, colours: { DESK-FX: "#1565c0" }, target: background } # a colour per value of a field
+```
+
+| Type | Keys |
+|---|---|
+| `rule` | `on` (a measure of the model; else the one coloured), `op` (`lt le gt ge eq ne between`), `value`, `to` (for `between`), `colour` (text), `background` |
+| `gradient` | `min`, `max`, optional `mid` (colours); `minValue`, `midValue`, `maxValue` (fixed; else the lowest, the middle and the highest the visual shows); `target`: `background` (the default) or `font` |
+| `icons` | `icons` (`arrows`, `traffic`, `signs`, `flags`), `thresholds` (one or two numbers: below the first is low, from the second high, between them middle), `reverse` (low is good), `on` |
+| `values` | `colours` (a value of the field to a colour), `target` (`font` or `background`) |
+
+A rule on another measure makes the visual ask for that measure too (it is not shown). A cell with a background takes black or white text, whichever reads; an icon is said in
+words to a screen reader (*low*, *middle*, *high*). Charts (bar, column) colour their marks by the rule; tables and matrices their cells; cards their number.
+`apply` that is not shown by the visual is `DRS-9031`; a `values` rule on a measure, or another rule on a field, is `DRS-9032`; an `on` the model lacks is `DRS-9031`.
+
+**In the designer:** Format, *Conditional formatting*: choose the kind (*Rule*, *Colour scale*, *Icons*, *Colour per value*) and **Add a rule**; each rule has its own choices,
+colour pickers and numbers; nothing is typed but the numbers.
+
+### 5.2 Themes
+
+A **theme** is a BI item of kind `theme` (shipped in `config/bi/themes`, or stored, versioned, reviewed and published like a report), which a report names with `theme: corporate`:
+
+```yaml
+rachana: 1
+theme: corporate
+title: Corporate
+palette: ["#1f4e79", "#2e75b6", "#9dc3e6", "#c55a11", "#70ad47", "#7f7f7f", "#ffc000", "#5b9bd5"]   # 3 to 12 series colours, in order
+good: "#2e7d32"                         # a KPI above target, a colour scale's high end
+bad: "#c62828"
+background: "#ffffff"                   # optional: the visuals' background and text
+foreground: "#1b1b1b"
+font: { family: sans, size: 12 }        # sans, serif, mono or system (nothing is fetched); 10 to 18 px
+visuals:                                # format defaults by family (chart, other-chart, card, table, matrix, slicer, static, code) or type
+  chart: { labels: true, legend: bottom, valueAxis: { gridlines: true } }
+  matrix: { rowBanding: true, stepped: true }
+```
+
+The shipped themes are **Corporate** and **Print**. A report's own `palette` and `background` win over the theme's; a theme that cannot be found is a warning
+(`DRS-9036`) and the report draws with the default colours. A theme is checked like a report (`POST /api/v1/bi/themes/validate`): a palette that is not 3 to 12
+colours, a colour that is not `#rrggbb`, a font that is not one of the four, or a visual default the format schemas refuse is `DRS-9036`; text on its
+background under a contrast of 4.5 is an `A11Y` warning. `GET /api/v1/bi/themes` lists the themes you may use; `GET /api/v1/bi/themes/{name}` reads one.
+
+**In the console:** a report picks its theme in Format with no visual selected (*Report*, *Theme*); **Make a theme** (also *New: theme* in BI Studio's Explorer) opens
+the **theme designer** (`/bi/design/theme/<id>`, `/bi/design/theme/new` starts from Corporate in your private workspace): the series colours (add, remove, move),
+the page, text, good and bad colours, the type, and the format defaults of each kind of visual, drawn by the same generated Format pane, with a live preview of a chart,
+a table and a card; Save, then Publish so that reports read it.
+
+### 5.3 Number formats
+
+`numberFormat` (table above) or the measure's own format; a calculation group item's format wins in a visual that shows it (a share reads as a percent).
+
+### 5.4 Small multiples
+
+A bar, column, line or area chart with a field in its **Small multiples** well (`split`) is drawn as one small chart per value of that field, side by side in rows,
+from the one answer the server gave (grouped by the axis, the legend and the split field):
+
+```yaml
+- { id: mtm-by-ccy, type: column, at: { x: 0, y: 0, w: 12, h: 7 }, wells: { axis: [trade.DESK], values: [MTM], split: [trade.CURRENCY] },
+    format: { multiples: { columns: 3, max: 12, sharedAxis: true } } }
+```
+
+`columns` is the charts per row (default up to 3), `max` the most charts (default 12; the rest are named under the chart), `sharedAxis` one value axis for all (the
+default). A click on a mark selects its axis value, as on any chart.
+
+### 5.5 The matrix
+
+| Key | Default | Meaning |
+|---|---|---|
+| `subtotals` | off | subtotals and totals: a subtotal for each group at every level of the row fields, a total per row (across the columns) and a grand total |
+| `rowSubtotals` | on | off keeps the grand total and the levels but drops the subtotal figures of the groups |
+| `columnSubtotals` | on | the *Total* column of each row |
+| `stepped` | on | one indented column for the row fields (Power BI's stepped layout); off: a column per row field, with a total line after each group |
+| `expandTo` | every level | the level the matrix opens at: `0` the first row field only, `1` the first two, ...; each group opens and closes, and *Expand all* and *Collapse all* above the matrix open or close every level |
+| `valuesOn` | `columns` | `rows` lists the measures down the rows, under each row, with the column field across |
+
+A total of a measure that adds up (`sum`, `count`) is the sum of the figures shown; one that does not is the engine's, worked out over the rows of the group (section 3.2):
+the server asks for one level per prefix of the row fields. A click on a row's name selects its value, which filters the other visuals like any mark.
 
 ## 6. Slicers
 
@@ -344,6 +455,8 @@ A `slicer` visual lists the values of its field (from the dataset, under the rea
 
 * `format.mode: list` (the default: a checkbox list with a search box), `dropdown` (the shared multi-select) or `range` (two inputs, **From** and **To**, side by side, for a number or a date field; it fits a slicer two grid rows high, and a From after To shows a hint instead of asking for nothing). `relative-date` is a choice of **dates relative to the report's date** (section 6.1).
 * `format.scope: page` (the default) filters this page; `report` filters every page, so a choice made on one page holds on the others.
+* `format.syncGroup: <name>` (2.4.0, Power BI's sync slicers): the slicers of one group, on any pages, share **one choice**. Choosing on one sets the others; each filters its own page. The slicers of a group slice one field (else `DRS-9032`). A slicer of the group never narrows its own list by the group's choice.
+* `format.style: tiles` (2.4.0) draws a list slicer as buttons, pressed when chosen (a tile slicer).
 * A slicer never filters itself, and other slicers filter it. A visual a slicer cannot reach through the dataset's relationships answers `DRS-9020` and says so.
 
 ## 7. How a visual becomes a query
@@ -371,8 +484,14 @@ A visual whose query is refused shows the server's code and words in its frame, 
 **The viewer** (`/bi/r/<id>` and `/bi/r/<id>/<page>`; `BI <report> <GO>` opens it). Pages are tabs; a toolbar holds the business date, bookmarks, *Click a mark to filter the page or highlight* and Reset;
 the filters in force are chips under it.
 
-* **Cross-filter and highlight.** Click a mark (or focus a chart, move with the arrows and press Enter) and the other visuals filter to it (or, for bar and column charts, draw the highlighted share over the
-  whole). Click it again, press Esc or use the visual's clear button to let go. Ctrl or Shift adds to the selection.
+* **Cross-filter and highlight.** Click a mark (or focus a chart, move with the arrows and press Enter) and the other visuals filter to it (or, for bar, column, line, area and combo charts, draw the highlighted
+  part over the faded whole). Click it again, press Esc or use the visual's clear button to let go. Ctrl or Shift adds to the selection.
+* **Edit interactions** (2.4.0). A page's `interactions: { <source visual>: { <target visual>: filter | highlight | none } }` says, pair by pair, how a selection (or a slicer's choice) on one visual acts on another:
+  `none` leaves the target alone, `highlight` highlights it where it can (else filters), `filter` filters it; a pair not listed follows the viewer's *Click a mark to* choice. In the designer: select the source visual,
+  then Format, *Interactions* (a choice for each other visual), or **Edit on the canvas** (Filter, Highlight and None over each other visual, as in Power BI).
+* **Tooltip pages** (2.4.0). A page with `tooltip: true` is left out of the tabs; a visual with `tooltip: <page id>` opens it in a popover when the pointer rests on one of its marks (or rows), each of its visuals
+  asked under the page's state with the mark's value carried (as a drill-through carries it). It closes when the pointer leaves, and on Esc. In the designer: Format, *Tooltip*, **New tooltip page**, then put a few cards
+  or a small chart on it.
 * **Drill down and up** along the visual's `hierarchy`: select a mark, press the drill-down button (or `d`); `u` goes up. The title shows the path.
 * **Drill through.** With a mark selected, a visual offers *Drill through to <page>* for each page whose `drillthrough: fields` lists the mark's field. The page opens with the value carried as a chip, in the
   URL (`?carry=...`, so it can be shared), and a Back button.
@@ -411,7 +530,7 @@ N is 1 to 3,660. `default` applies until the person chooses (and in exports and 
 
 **The designer** (`/bi/design/<draft>`) and the **Model view** (`/bi/m/<dataset>`) are described in [BI_GUIDE.md](BI_GUIDE.md) sections 15 and 16.
 
-## 9. Checking a report: DRS-9030 to DRS-9035
+## 9. Checking a report: DRS-9030 to DRS-9036
 
 **One bad visual is one error card.** A visual whose own wells, filters or dataset have an error answers `422 DRS-9034` for itself; every other visual of the report is still queried and drawn, in the viewer as in the designer. A draft with errors can be saved; **Propose, Approve and Publish** refuse it with the errors listed (a bi-admin may force it, audited). **Check** in the designer lists the errors with a link to each visual.
 
@@ -427,7 +546,12 @@ YAML tab and Check button, and the viewer when a report cannot be drawn).
 | `DRS-9032` | a visual built wrongly: a measure in a field well, a field in a measure well, an unknown well, a required well empty, too many items | `...wells.values: 'trade.mtm' is a field; the values well takes measures (Notional, MTM, ...)` |
 | `DRS-9033` | reserved, not built: a visual type (`shape`) | `...type: the visual 'shape' is reserved and not built yet` |
 | `DRS-9034` | the dataset cannot be found or has errors, so the report cannot be drawn | `no dataset 'x' (a catalogue id, a file name such as trades-basic, or the dataset's name)` |
-| `DRS-9035` | a visual query names a page, a visual or a slicer the report lacks, or its state is not valid (a drill path past the last level, dates that are not dates) | `the hierarchy 'Desk and book' has 2 levels; there is nothing below trade.book` |
+| `DRS-9035` | a visual query names a page, a visual or a slicer the report lacks, or its state is not valid (a drill path past the last level, dates that are not dates) | `the hierarchy 'Desk and book' has 2 levels; there is nothing below trade.PORTFOLIO` |
+| `DRS-9036` | (2.4.0) a theme item is not valid, or (a warning) the report names a theme that cannot be found | `palette[1]: 'red' is not a colour (#rrggbb)` |
+
+Report schema v2 adds, among others: `pages[0].visuals[1].format.valueAxis.min: is a number, not 'low'` (`DRS-9032`), `pages[0].visuals[0].format.rules[2].apply: 'Notional' is not shown by this visual` (`DRS-9031`),
+`pages[1].visuals[0].format.syncGroup: the slicers of sync group 'ccy' share one choice, so they slice one field (trade.CURRENCY), not trade.DESK` (`DRS-9032`),
+`pages[0].visuals[0].tooltip: 'q' is not a tooltip page of this report` (`DRS-9031`) and `pages[0].interactions.bars.trend: 'glow' is not an interaction: filter, highlight or none` (`DRS-9030`).
 
 **Check** (the designer's button, `quality: true` on validate) adds warnings that stop nothing: `A11Y` (a chart, table, card or image with neither title nor alt text; an image without alt text; a chosen
 colour with a contrast ratio under 3 against the theme's background), `LAYOUT` (two visuals overlap: the picture and the keyboard order disagree) and `PERF` (a visual whose last preview took over a second).
@@ -473,8 +597,11 @@ Built in phase 5 (section 13): visuals over live tables redraw in place with a l
 
 Built later: Vega-Lite visuals (3.5), the relative-date slicer (6.1), tablet layouts (14.1), expected values (17), the entity view (3.4) and *promote to visual* from Analyse ([ANALYSE.md](ANALYSE.md#14-promote-to-a-report-visual)).
 
+Built in 2.4.0 (report schema v2, section 20): the typed format per family with the generated Format pane (5), conditional formatting rules (5.1), theme items and the theme designer (5.2), small multiples (5.4),
+the matrix at every level (5.5), sync groups and tile slicers (6), the interactions matrix and highlight for lines, areas and combos, tooltip pages (8), board pages ([BOARDS.md](BOARDS.md)).
+
 Not built, and not faked: a `perspective-*` visual over **several tables**; pivoting or charting in the browser (no BI page computes: use a `matrix` or a chart); a `shape` visual; the **entity view in the designer's canvas and in an embedded element** (it shows a note; the viewer shows the view); a python visual in a **subscription** (section 3.3; [PYTHON_BI.md](PYTHON_BI.md) section 12; boards and alerts are built: [PYTHON_BI.md section 16](PYTHON_BI.md#16-python-in-alerts-and-on-boards)); a **tile** map or a map service (nothing is fetched from outside; the shapes are the vendored files), regions **below the first level** (counties inside a state), a
-shape-file import, a **choropleth by a field that is not a country code or name**; a histogram with bands of your own (equal-width only), a box plot of **summary** data you already have (it summarises the members the query returns); true totals for a **table's subtotals by group** (a table has one total row); highlight for charts other than bar and column; capturing a bookmark's slicer choices from the page (they are
+shape-file import, a **choropleth by a field that is not a country code or name**; a histogram with bands of your own (equal-width only), a box plot of **summary** data you already have (it summarises the members the query returns); true totals for a **table's subtotals by group** (a table has one total row); highlight for the charts other than bar, column, line, area and combo, and for tables and matrices (they are filtered); a matrix with **more than one column field**; capturing a bookmark's slicer choices from the page (they are
 written in the YAML); per-device layouts for a **large screen** (a phone and a tablet are built: section 14); embedding is built for the report's visuals but not for its drill, alert and export chrome (section 15; export, subscriptions and alerts: [DISTRIBUTION.md](DISTRIBUTION.md)); Vega-Lite and Python visuals in the embedded `<drishti-report>`;
 report-level security beyond the catalogue and the dataset's rules.
 
@@ -829,3 +956,54 @@ checks it).
 
 **Expressions are DEL v2.** Every formula the designer writes uses the Python-like syntax ([EXPRESSIONS.md](EXPRESSIONS.md)); a report saved before
 2.2.0 with the older syntax is refused (`DRS-9100`, with the DEL v2 text as the fix; stored items are converted when the server starts, and `drishti.py bi migrate --expressions` converts files).
+
+## 20. Report schema v2 in one report (2.4.0)
+
+The parity tasks of a Power BI author (BI_PARITY_PLAN section 4, items 6 to 8 and 13) in one report on `trades-basic`, every part made in the designer (BI Studio) without
+the YAML tab; the YAML is what the designer writes:
+
+```yaml
+rachana: 1
+report: desk-pack
+title: Desk pack
+model: trades-basic@1
+theme: { use: corporate }                                    # Format, Report, Theme
+pages:
+  - id: page1
+    title: Page 1
+    interactions:                                            # Format, Interactions (or Edit on the canvas)
+      column-1: { matrix-1: none }
+    visuals:
+      - id: matrix-1
+        type: matrix
+        at: { x: 0, y: 0, w: 6, h: 5 }
+        wells: { rows: [trade.DESK, trade.PORTFOLIO], columns: [trade.CURRENCY], values: [MTM, Notional] }
+        format:                                              # Format, Subtotals, Layout, Conditional formatting
+          subtotals: true
+          expandTo: 0
+          rules:
+            - { type: gradient, apply: MTM, min: "#c62828", mid: "#ffffff", max: "#2e7d32" }
+            - { type: icons, apply: Notional, icons: arrows, thresholds: [0, 1000000] }
+      - id: column-1
+        type: column
+        at: { x: 6, y: 0, w: 6, h: 5 }
+        wells: { axis: [trade.DESK], values: [MTM], split: [trade.CURRENCY] }        # Build, the Small multiples well
+        tooltip: tip1                                        # Format, Tooltip, New tooltip page
+        format: { subtitle: "By desk, one chart per currency", border: true, valueAxis: { gridlines: false }, multiples: { columns: 3 } }
+      - { id: card-1, type: card, at: { x: 0, y: 5, w: 3, h: 2 }, wells: { values: [Trades] } }
+      - { id: slicer-1, type: slicer, at: { x: 3, y: 5, w: 3, h: 5 }, wells: { field: [trade.CURRENCY] }, format: { syncGroup: ccy } }
+  - id: tip1
+    title: Tooltip 1
+    tooltip: true                                            # Format with no visual selected: Use as a tooltip page
+    visuals:
+      - { id: card-1, type: card, at: { x: 0, y: 0, w: 6, h: 2 }, wells: { values: [Trades] } }
+  - id: page3
+    title: Page 3
+    visuals:
+      - { id: slicer-1, type: slicer, at: { x: 0, y: 0, w: 3, h: 5 }, wells: { field: [trade.CURRENCY] }, format: { syncGroup: ccy } }
+      - { id: card-1, type: card, at: { x: 3, y: 0, w: 6, h: 2 }, wells: { values: [MTM] } }
+```
+
+The browser test `drishti-console/tests/test_bi_studio_browser.py` builds this report through the UI, then views it: the matrix opens at the desks and expands and collapses,
+coloured and with icons; the small multiples draw a chart per currency; a selection on the chart filters the card and not the matrix; the tooltip page opens over a bar,
+filtered to it; a currency chosen on page 1 holds on page 3.

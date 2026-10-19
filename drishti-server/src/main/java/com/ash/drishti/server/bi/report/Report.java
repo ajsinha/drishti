@@ -34,10 +34,12 @@ import java.util.Map;
  *        one column on a phone and the grid on a tablet
  * @param tests expected values Check and publishing run ({@link com.ash.drishti.server.bi.dataset.ExpectedValue}); empty when the report declares none
  * @param links which fields of different datasets mean the same thing, so a slicer or a selection on one filters the visuals of the others (RUPAKA.md section 20.10)
+ * @param board the settings of the report's board pages ({@code layout: board}, R7): {@code rotate} (kiosk rotation, "20s") and {@code notify} (the tile alerts'
+ *        default notification), as written; empty when the report has none
  */
 public record Report(String name, int version, String title, String description, boolean sample, String dataset, Map<String, String> theme, Dates dates, List<Filter> filters,
         List<Page> pages, List<Bookmark> bookmarks, Map<String, Map<String, PhonePage>> layouts, List<Link> links, List<com.ash.drishti.server.bi.dataset.ExpectedValue> tests,
-        Map<String, LocalMeasure> measures, String perspective) {
+        Map<String, LocalMeasure> measures, String perspective, Map<String, Object> board) {
 
     /**
      * A report's own measure (docs/architecture/BI_MODEL_SPEC.md section 4.2): a DEL aggregate over the model's fields and measures, used by this report only,
@@ -48,7 +50,20 @@ public record Report(String name, int version, String title, String description,
     public Report {
         measures = measures == null ? Map.of() : java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(measures));
         perspective = perspective == null || perspective.isBlank() ? null : perspective;
+        board = board == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(board));
     }
+
+    /** Compatibility: a report without board settings. */
+    public Report(String name, int version, String title, String description, boolean sample, String dataset, Map<String, String> theme, Dates dates, List<Filter> filters,
+            List<Page> pages, List<Bookmark> bookmarks, Map<String, Map<String, PhonePage>> layouts, List<Link> links, List<com.ash.drishti.server.bi.dataset.ExpectedValue> tests,
+            Map<String, LocalMeasure> measures, String perspective) {
+        this(name, version, title, description, sample, dataset, theme, dates, filters, pages, bookmarks, layouts, links, tests, measures, perspective, Map.of());
+    }
+
+    /** The palettes the console draws with; a {@code theme:} that names something else names a theme item ({@code theme: { use: corporate }}). */
+    public static final java.util.Set<String> PALETTES = java.util.Set.of("default", "colour-blind", "mono");
+    /** How a selection on one visual acts on another ({@code interactions:} of a page, Power BI's Edit interactions). */
+    public static final java.util.Set<String> INTERACTIONS = java.util.Set.of("filter", "highlight", "none");
 
     /** Compatibility: a report without local measures or perspective. */
     public Report(String name, int version, String title, String description, boolean sample, String dataset, Map<String, String> theme, Dates dates, List<Filter> filters,
@@ -130,9 +145,23 @@ public record Report(String name, int version, String title, String description,
      * @param interacts false: other visuals' selections do not filter or highlight this one
      * @param alt a text alternative for people who cannot see the visual
      * @param dataset the dataset this visual reads, when it is not the report's (null: the report's); a catalogue id, a file name or the dataset's name
+     * @param tooltip the id of the tooltip page drawn over a hovered mark (a page with {@code tooltip: true}), or null
+     * @param from what a {@code tile} shows (R7): a visual of another report, answered by that report as the person looking; null for any other type
+     * @param alert a tile's colour rule ({@code on, warn, crit, hysteresis, notify}), as written; empty when it has none
      */
     public record Visual(String id, String type, String title, Grid at, Map<String, List<String>> wells, List<Filter> filters, Sort sort, Integer limit, String hierarchy,
-            DrillThrough drillThrough, Map<String, Object> format, String text, String src, String alt, boolean interacts, Map<String, Object> action, String dataset) {
+            DrillThrough drillThrough, Map<String, Object> format, String text, String src, String alt, boolean interacts, Map<String, Object> action, String dataset,
+            String tooltip, TileRef from, Map<String, Object> alert) {
+
+        public Visual {
+            alert = alert == null ? Map.of() : alert;
+        }
+
+        /** Compatibility: a visual with no tooltip page and that is no tile. */
+        public Visual(String id, String type, String title, Grid at, Map<String, List<String>> wells, List<Filter> filters, Sort sort, Integer limit, String hierarchy,
+                DrillThrough drillThrough, Map<String, Object> format, String text, String src, String alt, boolean interacts, Map<String, Object> action, String dataset) {
+            this(id, type, title, at, wells, filters, sort, limit, hierarchy, drillThrough, format, text, src, alt, interacts, action, dataset, null, null, Map.of());
+        }
 
         /** Compatibility: a visual that reads the report's own dataset. */
         public Visual(String id, String type, String title, Grid at, Map<String, List<String>> wells, List<Filter> filters, Sort sort, Integer limit, String hierarchy,
@@ -148,14 +177,70 @@ public record Report(String name, int version, String title, String description,
     /** A click on a mark of the visual opens {@code page} with the mark's value of {@code field} carried as a filter. */
     public record DrillThrough(String page, String field) {}
 
+    /** What a tile shows: the visual {@code visual} of the report {@code report} (a catalogue id, a file name or its title), on {@code page} (empty: the page that holds it). */
+    public record TileRef(String report, String page, String visual) {
+
+        public Map<String, Object> toMap() {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("report", report);
+            if (page != null && !page.isBlank()) {
+                m.put("page", page);
+            }
+            m.put("visual", visual);
+            return m;
+        }
+    }
+
     /** A page that is a drill-through target takes values of these fields as filters. */
     public record PageDrill(List<String> fields) {}
 
-    public record Page(String id, String title, List<Filter> filters, PageDrill drillThrough, List<Visual> visuals) {
+    /**
+     * A page.
+     *
+     * @param layout {@code grid} (the default) or {@code board} (R7: a wall of tiles and visuals with kiosk, rotation and tile alerts)
+     * @param tooltip true for a tooltip page: left out of the tabs, drawn in a popover over a hovered mark of a visual that names it, filtered to that mark
+     * @param interactions by source visual id, by target visual id: {@code filter}, {@code highlight} or {@code none} (Power BI's Edit interactions); a pair
+     *        not listed keeps the default (the viewer's Filter or Highlight choice)
+     */
+    public record Page(String id, String title, List<Filter> filters, PageDrill drillThrough, List<Visual> visuals, String layout, boolean tooltip,
+            Map<String, Map<String, String>> interactions) {
+
+        public Page {
+            layout = layout == null || layout.isBlank() ? "grid" : layout;
+            interactions = interactions == null ? Map.of() : interactions;
+        }
+
+        /** Compatibility: a grid page with the default interactions. */
+        public Page(String id, String title, List<Filter> filters, PageDrill drillThrough, List<Visual> visuals) {
+            this(id, title, filters, drillThrough, visuals, "grid", false, Map.of());
+        }
 
         public Visual visual(String id) {
             return visuals.stream().filter(v -> v.id().equals(id)).findFirst().orElse(null);
         }
+
+        public boolean board() {
+            return "board".equals(layout);
+        }
+
+        /** How a selection on {@code source} acts on {@code target}: {@code filter}, {@code highlight}, {@code none}, or null when the page does not say. */
+        public String interaction(String source, String target) {
+            Map<String, String> row = interactions.get(source);
+            return row == null ? null : row.get(target);
+        }
+    }
+
+    /** True when some page is a board ({@code layout: board}). */
+    public boolean hasBoard() {
+        return pages.stream().anyMatch(Page::board);
+    }
+
+    /** True when the report reads no data of its own: every visual of every page is a tile or static, so it needs no {@code model:} or {@code dataset:}. */
+    public boolean tilesOnly() {
+        return pages.stream().flatMap(p -> p.visuals().stream()).allMatch(v -> {
+            VisualCatalogue.Type t = VisualCatalogue.type(v.type());
+            return t != null && ("board".equals(t.group()) || "static".equals(t.group()));
+        });
     }
 
     /**
@@ -206,8 +291,15 @@ public record Report(String name, int version, String title, String description,
     /** Every dataset the report reads, the report's own first. */
     public List<String> datasets() {
         java.util.LinkedHashSet<String> all = new java.util.LinkedHashSet<>();
-        all.add(dataset);
-        pages.forEach(p -> p.visuals().forEach(v -> all.add(datasetOf(v))));
+        if (dataset != null && !dataset.isBlank()) {
+            all.add(dataset);
+        }
+        pages.forEach(p -> p.visuals().stream().filter(v -> !"tile".equals(v.type())).forEach(v -> {
+            String d = datasetOf(v);
+            if (d != null && !d.isBlank()) {
+                all.add(d);
+            }
+        }));
         return new ArrayList<>(all);
     }
 
@@ -248,8 +340,11 @@ public record Report(String name, int version, String title, String description,
                 });
                 m.put("measures", lm);
             }
-        } else {
+        } else if (dataset != null && !dataset.isBlank()) {
             m.put("dataset", dataset);
+        }
+        if (!board.isEmpty()) {
+            m.put("board", board);
         }
         if (!theme.isEmpty()) {
             m.put("theme", theme);
@@ -301,11 +396,20 @@ public record Report(String name, int version, String title, String description,
             Map<String, Object> x = new LinkedHashMap<>();
             x.put("id", p.id());
             x.put("title", p.title());
+            if (p.board()) {
+                x.put("layout", "board");
+            }
+            if (p.tooltip()) {
+                x.put("tooltip", true);
+            }
             if (p.drillThrough() != null) {
                 x.put("drillthrough", Map.of("fields", p.drillThrough().fields()));
             }
             if (!p.filters().isEmpty()) {
                 x.put("filters", p.filters().stream().map(Filter::toMap).toList());
+            }
+            if (!p.interactions().isEmpty()) {
+                x.put("interactions", p.interactions());
             }
             x.put("visuals", p.visuals().stream().map(Report::visualMap).toList());
             ps.add(x);
@@ -366,6 +470,15 @@ public record Report(String name, int version, String title, String description,
         }
         if (v.action() != null && !v.action().isEmpty()) {
             x.put("action", v.action());
+        }
+        if (v.tooltip() != null && !v.tooltip().isBlank()) {
+            x.put("tooltip", v.tooltip());
+        }
+        if (v.from() != null) {
+            x.put("from", v.from().toMap());
+        }
+        if (!v.alert().isEmpty()) {
+            x.put("alert", v.alert());
         }
         return x;
     }

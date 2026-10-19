@@ -1,0 +1,92 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The format of the other charts: scatter, bubble, pie, donut, funnel, waterfall, treemap, heatmap, histogram, box and map. See common.yaml.
+
+$id: other-chart
+x-types: [scatter, bubble, pie, donut, funnel, waterfall, treemap, heatmap, histogram, box, map]
+x-order: [Title, Data labels, Legend, Colours, Values, Map, Frame]
+allOf:
+  - $ref: "common#/$defs/frame"
+type: object
+additionalProperties: false
+properties:
+  labels:
+    type: boolean
+    x-label: Data labels
+    x-hook: format-labels
+    x-group: Data labels
+  labelStyle:
+    type: string
+    enum: [percent, value, name, name-percent]
+    x-label: Label shows
+    x-group: Data labels
+    x-types: [pie, donut, funnel, treemap]
+  legend:
+    $ref: "common#/$defs/legend"
+    x-types: [scatter, pie, donut, waterfall, treemap, heatmap]
+  colour:
+    $ref: "common#/$defs/colour"
+    x-label: Colour
+    x-control: swatches
+    x-group: Colours
+  seriesColours:
+    type: object
+    x-label: Colour per category
+    x-control: series-colours
+    x-group: Colours
+    additionalProperties: { $ref: "common#/$defs/colour" }
+    x-types: [pie, donut, funnel, treemap]
+  axisTitles:
+    type: object
+    x-label: Axis titles
+    x-control: axis-titles
+    x-group: Values
+    properties:
+      x: { type: string, maxLength: 80 }
+      "y": { type: string, maxLength: 80 }
+    additionalProperties: false
+    x-types: [scatter, bubble, waterfall, histogram, box]
+  bins:
+    type: integer
+    minimum: 2
+    maximum: 100
+    x-label: Bars
+    x-hint: Equal-width bands between the smallest and the largest value (2 to 100, default 10).
+    x-hook: format-bins
+    x-group: Values
+    x-types: [histogram]
+  mode:
+    type: string
+    enum: [countries, points]
+    x-label: Map mode
+    x-group: Map
+    x-types: [map]
+  level:
+    type: string
+    maxLength: 60
+    x-label: Level
+    x-hint: World (the default), or the country the map opens at (an ISO code such as AUS or its English name).
+    x-hook: format-level
+    x-group: Map
+    x-types: [map]
+  drill:
+    type: boolean
+    default: true
+    x-label: Drill into countries
+    x-hook: format-drill
+    x-group: Map
+    x-types: [map]
+  numberFormat:
+    $ref: "common#/$defs/numberFormat"

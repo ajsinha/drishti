@@ -47,7 +47,7 @@ public final class PackBi {
 
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
     private static final Map<String, String> FOLDERS = Map.of("datasets", "dataset", "models", "model", "reports", "report", "boards", "board", "notebooks", "notebook",
-            "python", "python");
+            "python", "python", "themes", "theme");
 
     private final BiBundles bundles;
     private final BiStore store;

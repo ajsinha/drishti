@@ -28,7 +28,7 @@ class BoardFormatTest {
 
     @Test
     void everyShippedBoardSurvivesAWriteAndARead() throws IOException {
-        Path folder = Path.of("../config/bi/boards");
+        Path folder = Path.of("src/test/resources/bi/boards-2.3");                         // the 2.3 boards (config/bi has them as reports with board pages)
         try (var files = Files.list(folder)) {
             for (Path f : files.filter(p -> p.getFileName().toString().endsWith(".board.yaml")).toList()) {
                 BoardParser.Result first = BoardParser.parse(Files.readString(f));

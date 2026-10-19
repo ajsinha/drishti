@@ -317,37 +317,45 @@ its own type, and nothing says "live" because the dataset does:
 
 ## Step 4 · A wall for the desk: a board
 
-A **board** puts the visuals of several reports on one screen. Open **Catalogue → Desk wall** (`/bi/b/file:board:desk-wall`).
+A **board** puts the visuals of several reports on one screen. Since 2.4.0 a board is a **report whose pages have `layout: board`**: its tiles are visuals of other
+reports, and it may hold its own visuals too ([BOARDS.md](../guides/BOARDS.md)). Open **Catalogue → Desk wall** (`/bi/r/file:report:desk-wall`; the 2.3 address
+`/bi/b/file:board:desk-wall` opens it too).
 
 ![The Desk wall: tiles from the trading desk report, two of them outlined amber](img/t12/08-board.jpg)
 
-You should see tiles of different sizes: the cards and charts of the Live trading desk, and two tiles outlined in **amber**, *Net MTM* (`-311,235,202` when this was captured; it ticks) and *Losses* (`-1,792,303,610`), whose footers say `warning`. The colour comes from **alert rules in the board's file**, not from the report:
+You should see tiles of different sizes: the cards and charts of the Live trading desk, and two tiles outlined in **amber**, *Net MTM* (`-311,235,202` when this was captured; it ticks) and *Losses* (`-1,792,303,610`), whose footers say `warning`. The colour comes from **alert rules of the tiles**, not from the report they show:
 
 ```yaml
 pages:
   - id: desk
     title: Trading desk
-    tiles:
-      - { id: net-mtm, report: live-trading-desk, visual: mtm, title: Net MTM, at: { x: 0, y: 0, w: 3, h: 3 },
-          alert: { on: MTM, warn: { op: lt, value: 0 }, crit: { op: lt, value: -1000000000 }, hysteresis: 25000000 } }
+    layout: board
+    visuals:
+      - id: net-mtm
+        type: tile
+        title: Net MTM
+        from: { report: live-trading-desk, visual: mtm }
+        at: { x: 0, y: 0, w: 3, h: 3 }
+        alert: { on: MTM, warn: { op: lt, value: 0 }, crit: { op: lt, value: -1000000000 }, hysteresis: 25000000 }
 ```
 
 A tile is a visual of a report (the report supplies the data, **as the person looking**) placed on a 12-column grid, with an optional `alert`: amber when the `warn` condition holds, red when `crit` does, and the footer says the word as well, so colour is never the only signal. Net MTM below 0 is a warning, below -1 billion critical (Losses: below -1.5 billion, below -2.5 billion);
-the live net MTM here (`-311,235,202`) is below 0 but above -1 billion, hence amber, and Losses (`-1,792,303,610`) likewise. A tile that turns red can also **tell people** (`notify:`, in the board's YAML; [BOARDS.md](../guides/BOARDS.md) section 4). The second page is another report over another live dataset:
+the live net MTM here (`-311,235,202`) is below 0 but above -1 billion, hence amber, and Losses (`-1,792,303,610`) likewise. A tile that turns red can also **tell people** (`notify:` on its alert; [BOARDS.md](../guides/BOARDS.md) section 4). The second page is another report over another live dataset:
 
 ![The second page: Counterparty exposure tiles](img/t12/09-board-exposure.jpg)
 
 You should see the tab **Counterparty exposure** with exposure tiles from the report *Live exposure*. Pages are tabs; a board can hold as many as you like.
-**On the command line** the board is an item of the catalogue like any other:
+**On the command line** the board is a report of the catalogue like any other:
 
 ```text
-$ python3 tools/drishti.py bi catalogue get file:board:desk-wall
-file:board:desk-wall board    promoted  published v1   Desk wall  (Shipped content, shipped)
+$ python3 tools/drishti.py bi catalogue get file:report:desk-wall
+file:report:desk-wall report    promoted  published v1   Desk wall  (Shipped content, shipped)
   The trading desk and the counterparty exposure on one live wall. Tiles turn amber and red as the numbers cross their thresholds.
   tags: sample, trading, counterparty-risk, live, streaming, tutorial   views: 0   audience: {'roles': [], 'users': [], 'packs': []}
 ```
 
-(`--body` prints its YAML.)
+(`--body` prints its YAML: [config/bi/reports/desk-wall.report.yaml](../../config/bi/reports/desk-wall.report.yaml).) A board file of 2.3 (`board:` with `tiles:`) is read as such a report until you convert it:
+`python3 tools/drishti.py bi migrate --boards config/bi/boards --write` writes `config/bi/reports/<name>.report.yaml` ([BOARDS.md section 12](../guides/BOARDS.md#12-from-a-23-board-to-a-board-page)).
 
 ## Step 5 · Kiosk mode
 
@@ -356,15 +364,15 @@ Go back to the first page and press **Kiosk** (or press `k`, or add `?kiosk=1` t
 ![Kiosk mode: no menus, the wall filling the screen, a note "Next page every 20 s" and a Leave kiosk button](img/t12/10-kiosk.jpg)
 
 You should see the menus gone and the wall filling the screen: the Net MTM and Losses tiles large, the amber outline and the word `warning` under each, the rolling line, the worst trades and the latest changes, `Live · Last update` and **Next page every 20 s**. The pages turn by themselves
-(the board's `rotate:` setting). Keys: `Esc` leaves kiosk, `p` pauses the turning, the arrow keys change page. A phone or a TV browser showing `?kiosk=1` is a desk display.
-**The YAML** is one line at the top of the board, `rotate: 20s` (3 seconds to an hour; without it the console's `bi.board.rotate_seconds`, 30). There is no command line for kiosk mode: it is how a
-browser shows a board, and the address `/bi/b/file:board:desk-wall?kiosk=1` is what a wall display is told to open.
+(the report's `board: { rotate }`). Keys: `Esc` leaves kiosk, `p` pauses the live updates (and so the turning), the arrow keys change page. A phone or a TV browser showing `?kiosk=1` is a desk display.
+**The YAML** is one line at the top of the report, `board: { rotate: 20s }` (3 seconds to an hour; without it the console's `bi.board.rotate_seconds`, 30); in the designer it is Format with no visual selected, *Kiosk: next page every (seconds)*. There is no command line for kiosk mode: it is how a
+browser shows a board, and the address `/bi/r/file:report:desk-wall?kiosk=1` is what a wall display is told to open.
 
 ## Step 6 · What a wall screen needs
 
 - **A user for the screen.** The wall shows the data of whoever is signed in. Make a user for it (tutorial 17: users and roles) with the roles you want it to see, and sign the screen in once; a masked field stays masked.
 - **The server's clock and calendar.** Dates on the wall are business dates of the server's calendar.
-- **A board with a mistake** says what and where: `POST /api/v1/bi/boards/validate` answers `DRS-9052` (a tile that does not fit the grid, or names a report or visual that does not exist) and `DRS-9053` (a setting that is reserved). A board whose one tile is off the grid and names a visual the report does not have (captured):
+- **A board with a mistake** says what and where: the report's Check (the designer's **Check**, the Studio's **Problems**, `POST /api/v1/bi/reports/validate`) answers `DRS-9052` for a tile that names a report or visual that does not exist or an alert that cannot work, `DRS-9030` for a tile off the grid. A 2.3 board file is checked the old way, `POST /api/v1/bi/boards/validate`; one whose one tile is off the grid and names a visual the report does not have (captured):
 
 ```text
 $ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
@@ -410,46 +418,59 @@ last-hour line stays on the dataset until wave W3 moves the live samples.
 
 ## Step 8 · Lay out your own board
 
-So far the board was a file. **Designer** in the BI rail starts one too: type a title under **Boards** and press **Start a board**, then pick a report and one of its visuals and press **Add tile**. Here is a board of three tiles from the live desk, with the *Net MTM* tile selected.
+So far the board was a file. It is designed like any report, in **BI Studio**: in the Explorer, **New: board** (or **Designer → Boards → Start a board**) makes a report with one empty board page and opens it in the report designer. Choose **tile** in Visualizations (*Board*); in **Format → Tile** pick the report *Live trading desk* and its visual *Net MTM*: the canvas draws the tile **with the report's live numbers**, as you. Two more tiles (*Trades*, *By desk*) and the page is the board below.
 
-![The board designer: a 12-column grid of tiles, the page tabs, the board settings and the selected tile on the right](img/t12/12-board-designer.jpg)
+![The report designer on a board page: three tiles of the live desk, the Tile section of Format with the report, the visual and the alert](img/t12/12-board-designer.jpg)
 
-You should see the grid with the three tiles (each says which report and visual it shows), the tabs of the pages above it, **Board** settings on the right (title, the seconds between page turns in kiosk mode) and the **Tile** pane. Drag a tile by its header to move it, drag its corner to resize it, or focus it and use the arrow keys (with Shift to resize).
+You should see the canvas with the three tiles, drawn with data, the page tabs above it, and on the right **Format → Tile**: the **report** and **visual** the selected tile shows and its **alert**. Drag a tile by its header to move it, drag its corner to resize it, or focus it and use the arrow keys (with Shift to resize). A page becomes a board page by itself when you add a tile; Format with no visual selected shows *Layout: board* and, under *Report*, *Kiosk: next page every (seconds)* (30 here).
 
-The selected tile's pane holds its alert:
+The alert of the selected tile:
 
-![The tile pane: the number it watches, amber and red thresholds, the hysteresis and whether to tell the readers](img/t12/13-tile-alert.jpg)
+![The Tile section: Alert on MTM, a warning below 0, critical below -1 billion, a hysteresis of 25 million and Notify](img/t12/13-tile-alert.jpg)
 
-*Net MTM* turns amber below 0 and red below -1 billion (the demo lakes' book is billions: a net MTM of a few hundred million either way is ordinary). The **hysteresis** of 25 million means a red tile stays red until the number is 25 million back above -1 billion, so a number hovering at the edge does not flip the colour (and does not send a message each time). Press **Apply to the tile**.
+*Net MTM* turns amber below 0 and red below -1 billion (the demo lakes' book is billions: a net MTM of a few hundred million either way is ordinary). The **hysteresis** of 25 million means a red tile stays red until the number is 25 million back above -1 billion, so a number hovering at the edge does not flip the colour (and does not send a message each time). Each change is applied as you make it (Undo steps it back).
 
-The **YAML** tab shows the same board as text; edit either and the other follows.
+The **YAML** tab shows the same report as text; edit either and the other follows.
 
-![The YAML tab: the board written the way you would write it, one tile to a line](img/t12/14-board-yaml.jpg)
+![The YAML tab: the board page and its tiles, the way you would write them](img/t12/14-board-yaml.jpg)
 
-**Save** stores a draft (nothing is published by saving); **View** opens it as a wall; **Publish...** goes to the board's page, where publishing is reviewed like any other item (tutorial 13).
-**From the command line** the same board is the file [data/night-desk.board.yaml](data/night-desk.board.yaml), the YAML tab's text:
+**Save** stores a draft (nothing is published by saving); **View** opens it, Kiosk and all; **Publish** publishes it like any report (tutorial 13); a board whose tile shows a draft report cannot be published until that report is.
+
+| You do | It writes |
+|---|---|
+| *New: board* | `pages: [{ id: page1, title: Page 1, layout: board, visuals: [] }]` |
+| a **tile**, its *Report* and *Visual* | `{ id: net-mtm, type: tile, from: { report: live-trading-desk, visual: mtm }, at: {...} }` |
+| *Warning: < 0*, *Critical: < -1000000000*, *Hysteresis: 25000000* | `alert: { on: MTM, warn: { op: lt, value: 0 }, crit: { op: lt, value: -1000000000 }, hysteresis: 25000000 }` |
+| *Kiosk: next page every 30* | `board: { rotate: "30s" }` |
+
+**From the command line** the same board is the file [data/night-desk.report.yaml](data/night-desk.report.yaml), the YAML tab's text:
 
 ```yaml
 rachana: 1
-board: night-desk
+report: night-desk
+board: { rotate: "30s" }
 title: Night desk
-rotate: 30s
 pages:
   - id: desk
     title: Trading desk
-    tiles:
-      - { id: net-mtm, report: live-trading-desk, visual: mtm, title: Net MTM, at: { x: 0, y: 0, w: 4, h: 3 },
-          alert: { on: MTM, warn: { op: lt, value: 0 }, crit: { op: lt, value: -1000000000 }, hysteresis: 25000000 } }
-      - { id: trades, report: live-trading-desk, visual: trades, at: { x: 4, y: 0, w: 2, h: 3 } }
-      - { id: by-desk, report: live-trading-desk, visual: by-desk, at: { x: 0, y: 3, w: 6, h: 5 } }
+    layout: board
+    visuals:
+      - id: net-mtm
+        type: tile
+        title: Net MTM
+        from: { report: live-trading-desk, visual: mtm }
+        at: { x: 0, y: 0, w: 4, h: 3 }
+        alert: { on: MTM, warn: { op: lt, value: 0 }, crit: { op: lt, value: -1000000000 }, hysteresis: 25000000 }
+      - { id: trades, type: tile, from: { report: live-trading-desk, visual: trades }, at: { x: 4, y: 0, w: 2, h: 3 } }
+      - { id: by-desk, type: tile, from: { report: live-trading-desk, visual: by-desk }, at: { x: 0, y: 3, w: 6, h: 5 } }
 ```
 
 ```text
-$ python3 tools/drishti.py bi item new me docs/tutorials/data/night-desk.board.yaml
-bi-a57e4089af  board  Night desk  draft in My workspace
+$ python3 tools/drishti.py bi item new me docs/tutorials/data/night-desk.report.yaml
+bi-a57e4089af  report  Night desk  draft in My workspace
 ```
 
-It opens in the board designer at `/bi/design/board/<id>`; `bi catalogue publish <id>` publishes it once it is in a shared workspace.
+It opens in the report designer at `/bi/design/<id>`; `bi catalogue publish <id>` publishes it once it is in a shared workspace.
 
 ## Step 9 · A chart of the desk by currency, and a wall of Python
 
@@ -485,7 +506,7 @@ $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: applicatio
  "rowCount": 58, "meta": {"layer": "live", "rows": 58, "cached": false, "masked": [], ...}, ...}
 ```
 
-A board tile can be a **Python visual** too. Open the sample board **Python wall** from the catalogue.
+A board tile can show a **Python visual** too. Open the sample board **Python wall** from the catalogue (`/bi/r/file:report:python-wall`).
 
 ![The Python wall: a Python measure (volatility by desk), a Python histogram and a Python visual drawn with Vega-Lite, as tiles](img/t12/17-python-wall.jpg)
 
@@ -496,7 +517,7 @@ measure of the model (`Desk P&L volatility: { python: desk-pnl-volatility, input
 
 ### Note: boards and saving (2.1.0)
 
-- **UI.** The board designer saves from the state it opened: when someone else saved the board first you get **Reload theirs / Save mine as a copy / Overwrite with mine**, and a proposed board opens read-only with a banner. **CLI.** `drishti.py bi catalogue get <id>` shows the board's `etag`; `drishti.py bi item save <id> FILE` writes a new saved state. **YAML.** Unchanged (BOARDS.md).
+- **UI.** The report designer (where boards are designed since 2.4.0) saves from the state it opened: when someone else saved the board first you get **Reload theirs / Save mine as a copy / Overwrite with mine**, and a proposed board opens read-only with a banner. **CLI.** `drishti.py bi catalogue get <id>` shows the item's `etag`; `drishti.py bi item save <id> FILE` writes a new saved state. **YAML.** A report with board pages (BOARDS.md).
 
 ## Next steps
 

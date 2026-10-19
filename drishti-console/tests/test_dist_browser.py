@@ -101,7 +101,7 @@ def test_export_subscribe_run_now_and_the_list(stack, browser, smtp, tmp_path):
     csv = tmp_path / "one.csv"
     d.value.save_as(csv)
     text = csv.read_text(encoding="utf-8-sig")
-    assert text.startswith("desk,MTM") and "DESK-FX" in text and "Trades overview" not in text.splitlines()[0]
+    assert text.startswith("DESK,MTM") and "DESK-FX" in text and "Trades overview" not in text.splitlines()[0]
     clean(page)
 
     # -- subscribe from the report, with the screen's state (the whole page)

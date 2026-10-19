@@ -364,8 +364,9 @@
         body = py(f.elements.pyinterface.value, name, title, f.elements.pyinputs.value);
         to = '/bi/i/';
       } else {
-        body = 'rachana: 1\nboard: ' + name + '\ntitle: ' + JSON.stringify(title) + '\npages:\n  - id: page1\n    title: Page 1\n    tiles: []\n';
-        to = '/bi/design/board/';
+        body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify(title) + '\npages:\n  - id: page1\n    title: Page 1\n    layout: board\n    visuals: []\n';      // a board is a report with board pages (2.4.0)
+        kind = 'report';
+        to = '/bi/design/';
       }
       api('POST', '/workspaces/' + encodeURIComponent(id) + '/items', { kind: kind, title: title, description: f.elements.description.value, body: body })
         .then(function (it) { window.location.href = to + encodeURIComponent(it.id).replace(/%3A/g, ':') + (kind === 'python' ? '?edit=1' : also.length ? '?also=' + encodeURIComponent(also.join(',')) : ''); }).catch(fail);
@@ -429,8 +430,8 @@
       var ana = q('[data-open-analyse]');
       if (ana) { ana.hidden = it.kind !== 'notebook'; ana.href = '/bi/explore?item=' + encodeURIComponent(it.id); }
       var brd = q('[data-open-board]');
-      if (brd) { brd.hidden = it.kind !== 'board'; brd.href = '/bi/b/' + enc; }
-      if (des) { const designable = it.kind === 'report' || it.kind === 'board'; des.hidden = !(designable && it.can && it.can.edit) && !(designable && it.shipped); des.href = (it.kind === 'board' ? '/bi/design/board/' : '/bi/design/') + enc; des.lastChild.textContent = it.shipped ? ' Open a copy in the designer' : ' Open in the designer'; }
+      if (brd) { brd.hidden = !it.board; brd.href = '/bi/r/' + enc + '?kiosk=1'; }                 // a report with board pages (2.4.0): its kiosk
+      if (des) { const designable = it.kind === 'report'; des.hidden = !(designable && it.can && it.can.edit) && !(designable && it.shipped); des.href = '/bi/design/' + enc; des.lastChild.textContent = it.shipped ? ' Open a copy in the designer' : ' Open in the designer'; }
       var wiz = q('[data-open-wizard]');
       if (wiz) { wiz.hidden = !(it.kind === 'dataset' && it.can && it.can.edit && it.status !== 'proposed'); wiz.href = '/bi/datasets/new?edit=' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }
       if (mod) { mod.hidden = !(it.kind === 'dataset' && ((it.can && it.can.edit) || it.shipped)); mod.href = '/bi/m/' + enc; }

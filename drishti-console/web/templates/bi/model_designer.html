@@ -18,6 +18,7 @@
    Save (and the server autosave 2 s after each change, a stale save opening the merge view), Publish or Propose, undo and redo, and the YAML for experts. Drawn by static/js/bi-model-designer.js and bi-model-tabs.js
    from /bi/api/items/<id> and /bi/model-api/compose. #}
 {% extends "bi/shell.html" %}
+{% import "bi/_studio.html" as studio %}
 {% block bi_title %}Model designer{% endblock %}
 {% block bi_keys %}
     <dt><kbd>Ctrl</kbd> <kbd>S</kbd></dt><dd>Save</dd>
@@ -25,8 +26,12 @@
     <dt><kbd>Arrows</kbd></dt><dd>On a dataset box: move it</dd>
     <dt><kbd>Enter</kbd></dt><dd>On a dataset box or a relationship: open it in the inspector</dd>
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-expr.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-design.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-layer.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-ai.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-expr.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-design.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-layer.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-ai.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-studio.css?v={{ ASSET_V }}">{% endblock %}
 {% block bi_main %}
+<div class="bi-studio" data-studio data-studio-kind="model">
+{{ studio.rail() }}
+<div class="bi-studio-main">
+{{ studio.tabs() }}
 <div class="bi-md" data-md-root data-ready="">
   <header class="bi-dbar">
     <div class="bi-dtitle"><a class="bi-dback" href="/bi/models" aria-label="Back to models and datasets"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
@@ -94,5 +99,8 @@
     <aside class="bi-md-inspector" data-inspector aria-label="Inspector"><h2>Inspector</h2><div data-inspect><p class="text-muted-d">Choose a dataset box or a relationship.</p></div></aside>
   </div>
 </div>
+{{ studio.dock() }}
+</div>
+</div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script><script src="/static/js/cm-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-expr-editor.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-designer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-tabs.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-fields.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-calc.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-ai.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script><script src="/static/js/cm-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-studio.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-expr-editor.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-designer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-tabs.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-fields.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-calc.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-ai.js?v={{ ASSET_V }}"></script>{% endblock %}

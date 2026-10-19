@@ -108,9 +108,11 @@ public final class ModelConsumers {
             if (i.id().equals(self)) {
                 continue;
             }
-            if ("board".equals(i.kind())) {
-                boards.add(i);
-                continue;
+            if (com.ash.drishti.server.bi.board.ReportBoards.isBoard(i.kind(), i.body())) {
+                boards.add(i);                                                  // a 2.3 board, or a report whose board pages show other reports (R7)
+                if ("board".equals(i.kind())) {
+                    continue;
+                }
             }
             if (!Set.of("report", "notebook", "dataset").contains(i.kind())) {
                 continue;

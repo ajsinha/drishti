@@ -62,7 +62,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 class BiLiveApiTest {
 
     static final String REPORT = "file:report:live-trading-desk";
-    static final String BOARD = "file:board:desk-wall";
+    static final String BOARD = "file:report:desk-wall";
 
     @LocalServerPort int port;
     @Autowired TokenVerifier tokens;
@@ -71,7 +71,7 @@ class BiLiveApiTest {
 
     static {
         try {
-            for (String kind : List.of("datasets", "models", "reports", "boards")) {
+            for (String kind : List.of("datasets", "models", "reports")) {                       // a board is a report with board pages since 2.4.0 (R7)
                 Path to = Path.of("target/bi-live-folder/" + kind);
                 Files.createDirectories(to);
                 try (var files = Files.list(Path.of("../config/bi/" + kind))) {

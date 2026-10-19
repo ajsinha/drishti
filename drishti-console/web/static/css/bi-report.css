@@ -160,3 +160,33 @@ h3.bi-text { font-size: 1.1rem; }
 /* Wave 1 QA: a wide matrix scrolls inside its visual instead of being squeezed or clipped; touch targets at phone width */
 .bi-matrix { width: max-content; min-width: 100%; }
 @media (max-width: 480px) { .bi-vis-btn, .bi-vis-head .btn-pill, .bi-chipbtn { min-height: 44px; min-width: 44px; } }
+
+/* 2.4.0 report schema v2: the frame of the typed format, the theme, conditional formatting, the matrix's levels, tile slicers, tooltip pages */
+.bi-vis-border { border: 1px solid var(--d-border-strong, var(--d-border)); }
+.bi-vis-shadow { box-shadow: 0 2px 10px rgba(0, 0, 0, .18); }
+.bi-vis-subtitle { margin: -.15rem .7rem .15rem; font-size: .75rem; color: var(--d-muted); }
+.bi-themed .bi-vis { background: var(--bi-theme-bg, var(--d-surface)); color: var(--bi-theme-fg, var(--d-ink)); font-family: var(--bi-theme-font, inherit); }
+.bi-themed .bi-vis-table { font-size: var(--bi-theme-size, .8rem); }
+.bi-band > td, .bi-band > th { background: var(--d-surface-2); }
+.bi-wrap td, .bi-wrap th { white-space: normal; overflow-wrap: anywhere; }
+.bi-cf-icon { margin-right: .3rem; font-size: .9em; }
+.bi-card-filled { padding: .1rem .6rem; border-radius: 6px; }
+.bi-mx-tools { display: flex; justify-content: flex-end; gap: .25rem; padding: 0 .2rem .2rem; }
+.bi-mx-btn .bi-lbl { font-size: .75rem; }
+.bi-mx-stepped th[scope="row"] { white-space: nowrap; }
+.bi-mx-pick { cursor: pointer; }
+.bi-mx-pick:hover .bi-mx-label, .bi-mx-pick:focus-visible .bi-mx-label { text-decoration: underline; }
+.bi-mx-pick:focus-visible { outline: 2px solid var(--d-link); outline-offset: -2px; }
+.bi-mx-measure { font-weight: 400; color: var(--d-muted); }
+.bi-mx-cont { border-top: 0; }
+.bi-mx-group > th { font-weight: 600; }
+.bi-slicer-tiles { display: flex; flex-wrap: wrap; gap: .3rem; padding: .3rem; }
+.bi-slicer-tile { min-height: 2.2rem; padding: .25rem .75rem; border: 1px solid var(--d-border); border-radius: 6px; background: var(--d-surface); color: var(--d-ink); font: inherit; cursor: pointer; }
+.bi-slicer-tile[aria-pressed="true"] { background: var(--d-accent); border-color: var(--d-accent); color: var(--d-on-accent); }
+.bi-slicer-tile:focus-visible { outline: 2px solid var(--d-link); outline-offset: 2px; }
+.bi-tip-pop { position: fixed; z-index: 2000; width: 380px; max-width: calc(100vw - 16px); background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 8px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .25); padding: .45rem; }
+.bi-tip-head { margin: 0 0 .35rem; font-size: .8rem; }
+.bi-tip-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; }
+.bi-tip-grid .bi-vis { min-height: 0; overflow: hidden; }
+@media (pointer: coarse) { .bi-slicer-tile, .bi-mx-btn { min-height: 44px; min-width: 44px; } }

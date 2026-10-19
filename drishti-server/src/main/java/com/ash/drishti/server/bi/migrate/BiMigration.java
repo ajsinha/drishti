@@ -38,6 +38,7 @@ public final class BiMigration {
     private final MigrationProblems problems = new MigrationProblems();
     private final ExpressionUpgrade expressions;
     private final ModelUpgrade models;
+    private final BoardUpgrade boards;
     private final AuditLog audit;
     private final Object running = new Object();
 
@@ -47,6 +48,7 @@ public final class BiMigration {
         StoredRewrite rewrite = new StoredRewrite(store, audit, versionsKeep, revisionsKeep);
         this.expressions = new ExpressionUpgrade(store, rewrite, problems);
         this.models = new ModelUpgrade(store, rewrite, problems, audit, versionsKeep, revisionsKeep);
+        this.boards = new BoardUpgrade(store, rewrite, problems);
         bi.migrationProblems(item -> item == null ? problems.view() : problems.of(item).stream().map(MigrationProblems.Problem::toMap).toList());
     }
 
@@ -65,6 +67,23 @@ public final class BiMigration {
             models(props.actor(), false);                                          // after the expressions: the converter reads DEL v2
         } catch (RuntimeException e) {
             LOG.error("BI model migration at start-up failed; stored items are unchanged where it stopped: {}", e.toString(), e);
+        }
+        try {
+            boards(props.actor(), false);                                          // 2.4.0 (R7): boards become reports with board pages
+        } catch (RuntimeException e) {
+            LOG.error("BI board migration at start-up failed; stored boards are unchanged where it stopped: {}", e.toString(), e);
+        }
+    }
+
+    /** Converts (or, with {@code dryRun}, lists) the stored 2.3 boards into reports whose pages have {@code layout: board}. */
+    public Map<String, Object> boards(String actor, boolean dryRun) {
+        synchronized (running) {
+            Map<String, Object> r = boards.run(actor, dryRun);
+            if (!dryRun) {
+                audit.record(actor, "bi-migration-run", BoardUpgrade.STEP, r.get("converted") + " converted, " + r.get("problems") + " with problems, " + r.get("scanned")
+                        + " scanned");
+            }
+            return r;
         }
     }
 

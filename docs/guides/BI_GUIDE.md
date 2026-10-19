@@ -65,6 +65,7 @@ A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), t
 23. [Models and pack datasets: the model layer (wave W1)](#23-models-and-pack-datasets-the-model-layer-wave-w1)
 24. [The languages in the console (wave A, 2.2.0)](#24-the-languages-in-the-console-wave-a-220)
 25. [Live answers and standing queries (wave B, 2.3.0)](#25-live-answers-and-standing-queries-wave-b-230)
+26. [BI Studio: authoring as one product (wave C, 2.4.0)](#26-bi-studio-authoring-as-one-product-wave-c-240)
 
 ## 1. What BI is, and is not
 
@@ -386,7 +387,7 @@ The codes of the later phases are described once, in the reference that raises t
 |---|---|---|
 | `DRS-9010` to `9013` | a dataset: structure, expression, reference, a reserved feature | [DATASETS.md section 9](DATASETS.md#9-problems-and-drs-codes) |
 | `DRS-9020` to `9027` | a dataset query: refused, masked, too large, too slow, too many at once, source or engine failure | [DATASETS.md section 9](DATASETS.md#9-problems-and-drs-codes) |
-| `DRS-9030` to `9035` | a report: structure, a name it lacks, a visual built wrongly, a reserved visual, its dataset, a visual query's state | [REPORTS.md section 9](REPORTS.md#9-checking-a-report-drs-9030-to-drs-9035) |
+| `DRS-9030` to `9036` | a report: structure, a name it lacks, a visual built wrongly, a reserved visual, its dataset, a visual query's state; a theme (9036) | [REPORTS.md section 9](REPORTS.md#9-checking-a-report-drs-9030-to-drs-9036) |
 | `DRS-9040` to `9042` | publishing and bundles: a change that would break published reports, a bad bundle, an import that conflicts | [BI_GOVERNANCE.md section 9](BI_GOVERNANCE.md#9-api) |
 | `DRS-9050`, `9051` | live tables and streams: a table that cannot be kept live, too many streams | [DATASETS.md sections 7.1 and 9](DATASETS.md#71-live-tables-phase-5) |
 | `DRS-9052`, `9053` | a board: malformed, or using a reserved, unbuilt setting | [BOARDS.md section 7](BOARDS.md#7-checking-a-board-drs-9052-and-drs-9053) |
@@ -492,9 +493,10 @@ authors expect them: the canvas on the left, then **Filters**, **Visualizations*
   visual for it appears: a measure is a card, a column is a table; **drag another onto that visual** and it improves: a category with a measure becomes a bar, a date with a measure a line, two categories with a
   measure a matrix. Without a mouse, the field's button adds it to the selected visual (or makes a new one). A hierarchy added to a chart makes it drillable.
 * **Visualizations.** The 26 types the designer offers (`bar` to `button`; the rolling chart, the three 2.1 `perspective-*` types and the entity view are written in the YAML tab and `vega-lite` has a box for its specification: [REPORTS.md section 3](REPORTS.md#3-the-visuals-and-their-wells)); choosing one changes the selected visual (its fields follow where they fit) or adds a new one. **Build** shows the wells of the selected visual: each takes fields or measures, with
-  chips you can remove or reorder and a select that adds without dragging; drill down along a hierarchy and drill through to a page are set here too. **Format**: title and alt text, data labels, stacking, legend,
-  axis titles, **colours from the theme** (swatches of the report's palette), number format, conditional colours, data bars, subtotals, gauge range, slicer mode and scope, whether other visuals filter it, most rows,
-  sort. With no visual selected, Format is the **page** (title, move, delete, the fields it takes as a drill-through target) and the **report** (title, description, palette, business dates, bookmarks).
+  chips you can remove or reorder and a select that adds without dragging; drill down along a hierarchy and drill through to a page are set here too. **Format** (since 2.4.0 generated from the format schemas,
+  section 26): title and alt text, then the sections of the visual's family (title, frame, data labels, axes, legend, colours, small multiples, values, conditional formatting, matrix layout and subtotals, slicer), then
+  its tooltip page, its interactions, whether other visuals filter it, most rows and sort. With no visual selected, Format is the **page** (title, move, delete, the fields it takes as a drill-through target, its
+  layout and whether it is a tooltip page) and the **report** (title, description, theme, palette, business dates, links, bookmarks, the kiosk rotation of its board pages).
 * **Filters.** *On all pages*, *On this page*, *On this visual*. **Basic** picks values (type them, or *Pick from the data* to tick them), **Advanced** is a condition (is, is not, less than, between, contains, starts with,
   is empty ...), **Top N** keeps the N values with the highest (or lowest) measure.
 
@@ -576,10 +578,10 @@ a connection of its own: the page uses the one channel the whole browser shares 
 **Pages of the sample:** *Desk* (cards, net MTM by desk, a rolling line, the worst trades, the latest changes), *Every trade* (a grid of all trades: Drishti's own grid of the server's answer), *Pivot* (a matrix by desk and currency, grouped and totalled by the server), *Chart* (a stacked column per desk, one series per currency). In a grid you can sort and scroll; the matrix and the chart are asked again on each
 tick, as every visual is. For a reader without the `raw` power the `TRADER_ID` column reads `•••`, in the cards, the tables and the grid alike.
 
-**A board.** Open **Desk wall** (`/bi/b/file:board:desk-wall`; from its item page: *Open the board*). Tabs switch its pages; tiles over live tables change in place; a tile whose number crosses a threshold gets an amber or red border and says "warning" or "critical" in the line
-under it. **Kiosk** (button, `k`, or `?kiosk=1`) hides the menus, fills the screen and turns the pages by itself; `Esc` leaves. Keys: `k` kiosk, `Left` and `Right` pages, `p` pause. A phone shows the wall as one column.
+**A board.** Since 2.4.0 a board is a report whose pages have `layout: board` ([BOARDS.md](BOARDS.md)). Open **Desk wall** (`/bi/r/file:report:desk-wall`; the old `/bi/b/file:board:desk-wall` opens it too; from its item page: *Open the board*, which opens it in kiosk). Tabs switch its pages; tiles over live tables change in place; a tile whose number crosses a threshold gets an amber or red border and says "warning" or "critical" in the line
+under it. **Kiosk** (button, `k`, or `?kiosk=1`) hides the menus, fills the screen and turns the board pages by itself; `Esc` leaves. Keys: `k` kiosk, `p` pause. A phone shows the wall as one column.
 
-**Who may do what.** Opening needs the `bi` power and the right to read the report or board; each tile is the report's answer **to you** (your rows, your masks). A board is edited as YAML (the item's Edit form, or its file); publishing checks its structure.
+**Who may do what.** Opening needs the `bi` power and the right to read the report; each tile is its report's answer **to you** (your rows, your masks). A board is designed in the report designer (a page's *Layout: board*, the *tile* visual); publishing checks its tiles.
 
 **Admin.** *Admin, BI settings* is unchanged; the engine page counts live tables and rows (`GET /api/v1/bi/engine`); a dataset's page says how each live table is doing (state, rows, entities that push, last change). Settings: the server's `drishti.bi.live.*` and the console's `bi.live.*`, `bi.board.rotate_seconds`
 ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
@@ -962,3 +964,46 @@ timings: {engineMillis=4.9, layer=columns, sourceOrJavaMillis=1.78}
     - Aggregate trade by [trade.desk]: [MTM shocked]   tier: java
       - SecureScan trade (pack.trading.trade@1.0.0)  rules: none  columns: [desk, mtm]   tier: java   layer: columns
 ```
+
+## 26. BI Studio: authoring as one product (wave C, 2.4.0)
+
+The designers share one shell, **BI Studio** (BI_DESIGN.md section 8.1): the report designer (and so the board designer, a report with board pages), the model designer and the theme designer.
+
+* **The Explorer** (left): the items of every workspace where you may add items, by kind (reports, boards, models, datasets, themes, Python), with a search and **New** (report, board, theme, dataset, model).
+  The button at its top folds it away (remembered for the session; under 900 px it starts folded).
+* **The open items** (top): every item you open in the Studio joins the tabs (the last eight, for the session of this browser tab); a tab opens it, its cross closes it. The work itself is saved on the server: the tabs are only a convenience.
+* **The properties** (right): the designer's own panes (Filters, Visualizations with Build and Format, Fields).
+* **The dock** (bottom): **Problems**, what the server's Check says about the draft a second after each change (errors and warnings, each linked to its visual; the count is on the tab), and **Query**, the selected visual's
+  model query and its SQL (*Run as SQL* asks the server; the plan says whether it is the same question).
+
+![BI Studio: the Explorer of your items on the left, the open item as a tab, and the report designer with the desk pack (a matrix with a colour scale and icons, small multiples, a card and a slicer); the dock with Problems and Query is under the canvas](img/bi-studio/studio.jpg)
+
+**The Format pane is generated** from the format schemas (`GET /api/v1/bi/reports/format-schemas`, [REPORTS.md section 5](REPORTS.md#5-format)): a section per group in the family's order (Title, Frame, Data labels,
+Axes, Legend, Colours, Small multiples, Values, Conditional formatting; for a matrix Layout and Subtotals; for a slicer Slicer), a checkbox for a yes or no, a choice for a closed list, a number with its range, a colour
+picker that can be cleared, a group for an object (the value axis, small multiples) and the custom controls (the palette's swatches, a colour per series, data bars, a slicer's windows, the rules). A setting a visual's
+type does not use is not shown; whatever the pane offers the server accepts.
+
+| In Power BI | In BI Studio | YAML |
+|---|---|---|
+| Format, Visual, Values axis (min, max, log, gridlines) | Format, *Axes*, *Value axis* | `format: { valueAxis: { min, max, log, gridlines } }` |
+| Format, General, Title, Subtitle; Effects, Border, Shadow | Format, *Title*, *Subtitle*; *Frame*, *Border*, *Shadow* | `format: { subtitle, border: true, shadow: true }` |
+| Conditional formatting, Background colour, Gradient | Format, *Conditional formatting*, *Colour scale*, **Add a rule** | `rules: [{ type: gradient, apply: MTM, min, mid, max }]` |
+| Conditional formatting, Icons | *Icons*, **Add a rule** | `rules: [{ type: icons, apply: Notional, icons: arrows, thresholds: [0, 1000000] }]` |
+| Conditional formatting, Rules, based on another field | *Rule*, *When*: another measure | `rules: [{ type: rule, apply: MTM, on: Trades, op: gt, value: 10, colour }]` |
+| Matrix, Row subtotals, Stepped layout, Expand all | Format, *Subtotals*, *Layout* (stepped, opens at level, values on rows); *Expand all* above the matrix | `format: { subtotals: true, stepped: true, expandTo: 0 }` |
+| Small multiples well | Build, the **split** well | `wells: { split: [trade.CURRENCY] }`, `format: { multiples: { columns: 3 } }` |
+| Edit interactions | Format, *Interactions*, or **Edit on the canvas** | `interactions: { column-1: { matrix-1: none } }` |
+| Page information, Allow use as tooltip; Format, Tooltip, Page | Page: *Use as a tooltip page*; visual: Format, *Tooltip*, **New tooltip page** | `tooltip: true` (page), `tooltip: tip1` (visual) |
+| Sync slicers | Format, *Slicer*, *Sync group* | `format: { syncGroup: ccy }` |
+| View, Themes, Customize current theme | Format, *Report*, *Theme*; **Make a theme** (the theme designer) | `theme: corporate`; a `theme` item ([REPORTS.md section 5.2](REPORTS.md#52-themes)) |
+
+**The theme designer** (`/bi/design/theme/<id>`; *New: theme* in the Explorer, or **Make a theme** in Format) edits a theme item: its series colours (add, remove, move), page, text, good and bad colours, type, and the
+format defaults of each kind of visual, drawn by the same generated pane, with a preview of a chart, a table and a card in the theme. Save keeps the draft; Publish makes it what reports read.
+
+![The theme designer: series colours, the format defaults of matrices, and the preview](img/bi-studio/theme-designer.jpg)
+
+**Boards** are designed here too: a page's *Layout: board*, the *tile* visual and its report, visual and alert ([BOARDS.md section 11](BOARDS.md#11-designing-a-board)).
+
+From the command line a theme and a report are items like any other (`drishti.py bi item save`, [CLI_GUIDE.md](CLI_GUIDE.md)); `drishti.py bi migrate --boards` converts 2.3 board files and the stored boards
+([BOARDS.md section 12](BOARDS.md#12-from-a-23-board-to-a-board-page)). The acceptance of the wave, a Power BI author's desk pack made without the YAML tab, is the browser test
+`drishti-console/tests/test_bi_studio_browser.py` and [REPORTS.md section 20](REPORTS.md#20-report-schema-v2-in-one-report-240).

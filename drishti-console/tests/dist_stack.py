@@ -24,9 +24,9 @@ REPORT = "file:report:trades-overview"
 SECURITY = """
 security:
   rows:
-    - { role: desk-head, where: "desk in user.desks" }
+    - { role: desk-head, where: "DESK in user.desks" }
     - { role: [risk, analyst, bi-writer, admin], where: "True" }
-  masked: [mtm]
+  masked: [MTM]
 """
 
 

@@ -17,7 +17,8 @@
    data table every visual can be shown as. A table sorts by a column header and can open a row's entity in the terminal; a matrix groups its rows by the row
    fields, spreads one field across its columns, and adds subtotals (collapsible) and totals. A total of a measure that adds up (sum, count) is the sum of the
    figures shown; a total of one that does not (ratio, average, distinct count, percentile, min, max) is the engine's own, worked out over the rows of the whole
-   group and sent with the answer (`totals`); a table with `format.totals` ends with such a row too. Slicers: a list, a dropdown (the shared multi-select) or a range. */
+   group and sent with the answer (`totals`); a table with `format.totals` ends with such a row too. Slicers: a list, a dropdown (the shared multi-select), a range, or tiles.
+   The matrix itself is in bi-matrix.js. */
 (function () {
   'use strict';
   const B = window.drishtiBi;
@@ -83,9 +84,11 @@
       return h('th', { scope: 'col', class: isNum ? 'num' : '', 'aria-sort': sort.by === n ? (sort.desc ? 'descending' : 'ascending') : 'none' }, btn);
     }));
     const firstField = names.find((n) => !ctx.index.measures[n]);
+    const styler = all ? null : V.styler(spec, tb, ctx);
+    const f = spec.format || {};
     const body = h('tbody', {});
-    rows.forEach((r) => {
-      const tr = h('tr', { 'data-row': '' });
+    rows.forEach((r, ri) => {
+      const tr = h('tr', { 'data-row': '', class: f.rowBanding && ri % 2 === 1 ? 'bi-band' : '' });
       names.forEach((n) => {
         const i = tb.at(n), v = r[i], isMeasure = !!ctx.index.measures[n];
         const td = h('td', { class: isMeasure || typeof v === 'number' ? 'num' : '' });
@@ -95,8 +98,7 @@
           w.style.width = Math.round(100 * Math.abs(v) / max[n]) + '%';
           td.appendChild(h('span', { class: 'bi-barcell' }, w, h('span', { class: 'bi-bartext', text: cellText(v, spec, ctx, n, tb.isMasked(n)) })));
         } else { td.textContent = cellText(v, spec, ctx, n, tb.isMasked(n)); }
-        const colour = isMeasure ? V.conditional(spec, n, v) : null;
-        if (colour) { td.style.color = colour; td.style.fontWeight = '600'; }
+        if (styler) { V.paintCell(td, styler.cell(n, v, r)); }                // conditional formatting (2.4.0): a rule, a colour scale, icons, a colour per value
         tr.appendChild(td);
       });
       if (ctx.interactive && firstField && ctx.onMark && !all) {
@@ -120,95 +122,14 @@
         return td;
       })));
     }
-    const table = h('table', { class: 'tbl bi-tbl bi-vgrid bi-vis-table', 'data-plain': true }, h('caption', { class: 'visually-hidden', text: spec.title || 'Table' }), h('thead', {}, head), body, foot);
+    const table = h('table', { class: 'tbl bi-tbl bi-vgrid bi-vis-table' + (f.wrap ? ' bi-wrap' : ''), 'data-plain': true }, h('caption', { class: 'visually-hidden', text: spec.title || 'Table' }), h('thead', {}, head), body, foot);
+    if (typeof f.fontSize === 'number') { table.style.fontSize = f.fontSize + 'px'; }
     B.clear(host).appendChild(h('div', { class: 'tbl-wrap bi-vis-scroll' }, table));
     if (!rows.length) { host.appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'No rows for this selection.' })); }
     return NONE;
   };
 
-  // ---- matrix --------------------------------------------------------------------------------------------------------
-
-  V.matrix = function (host, spec, ctx, res) {
-    const tb = V.table(res);
-    const rowFields = spec.wells.rows || [], colField = (spec.wells.columns || [])[0], measures = spec.wells.values || [];
-    const subtotals = !!(spec.format && spec.format.subtotals);
-    const collapsed = host.__collapsed || (host.__collapsed = new Set());
-    const ri = rowFields.map((f) => tb.at(f)), ci = colField ? tb.at(colField) : -1;
-    const colVals = [];
-    if (ci >= 0) { tb.rows.forEach((r) => { if (colVals.indexOf(String(r[ci])) < 0) { colVals.push(String(r[ci])); } }); colVals.sort(); }
-    const colKeys = ci >= 0 ? colVals : [''];
-    const SEP = '\u0001', PART = '\u0002';
-    const cells = new Map();                                 // path, column and measure -> value
-    const paths = new Map();                                 // row path -> array of values
-    tb.rows.forEach((r) => {
-      const vals = ri.map((i) => (r[i] == null ? '\u2013' : String(r[i])));
-      paths.set(vals.join(SEP), vals);
-      measures.forEach((m) => cells.set([vals.join(SEP), ci >= 0 ? String(r[ci]) : '', m].join(PART), r[tb.at(m)]));
-    });
-    const sortedPaths = [...paths.values()].sort((a, b) => { for (let i = 0; i < a.length; i++) { const c = a[i].localeCompare(b[i]); if (c) { return c; } } return 0; });
-    const startsWith = (pp, p) => !p || p.every((x, i) => pp[i] === x);
-    const tt = V.trueTotals(res);
-    /** The engine's figure for a measure that does not add up: over all the rows of the group at path p (null: everything) and column c (null: every column). */
-    const trueTotal = (m, p, c) => {
-      const depth = p === null ? 0 : p.length;
-      const by = rowFields.slice(0, depth).concat(c !== null && colField ? [colField] : []);
-      const values = (p === null ? [] : p).concat(c !== null && colField ? [c] : []);
-      return tt.find(by, values, m);
-    };
-    /** The total of a measure over the rows under path p (null: all) and column c (null: all): the sum of the figures shown when the measure adds up, else the engine's. */
-    const total = (m, p, c) => {
-      if (!V.additive(ctx, m)) { return trueTotal(m, p, c); }
-      let t = 0, any = false;
-      cells.forEach((v, k) => { const [pk, cc, mm] = k.split(PART); if (mm === m && (c === null || cc === c) && startsWith(pk.split(SEP), p) && typeof v === 'number') { t += v; any = true; } });
-      return any ? t : null;
-    };
-    const headRows = [];
-    if (colField && measures.length > 1) {
-      headRows.push(h('tr', {}, h('th', { scope: 'col', rowspan: '2', text: rowFields.map(B.label).join(' / ') }), colKeys.map((c) => h('th', { scope: 'colgroup', colspan: String(measures.length), class: 'num', text: c })),
-        subtotals ? h('th', { scope: 'colgroup', colspan: String(measures.length), class: 'num', text: 'Total' }) : null));
-      headRows.push(h('tr', {}, colKeys.map(() => measures.map((m) => h('th', { scope: 'col', class: 'num', text: m }))), subtotals ? measures.map((m) => h('th', { scope: 'col', class: 'num', text: m })) : null));
-    } else {
-      headRows.push(h('tr', {}, h('th', { scope: 'col', text: rowFields.map(B.label).join(' / ') }),
-        colField ? colKeys.map((c) => h('th', { scope: 'col', class: 'num', text: measures.length === 1 ? c : c })) : measures.map((m) => h('th', { scope: 'col', class: 'num', text: m })),
-        colField && subtotals ? h('th', { scope: 'col', class: 'num', text: 'Total' }) : null));
-    }
-    const cellFor = (m, v, bold, totalOfNonAdditive) => {
-      const td = h('td', { class: 'num' + (bold ? ' bi-total' : ''), 'data-measure': m });
-      td.textContent = tb.isMasked(m) ? '•••' : totalOfNonAdditive ? '–' : B.fmt(v, V.numFmt(spec, ctx, m), false);          // a masked measure reads ••• in every cell, the empty ones too
-      if (totalOfNonAdditive) { td.title = m + ' does not add up and the engine gave no total for it'; }
-      else if (bold && !V.additive(ctx, m)) { td.setAttribute('data-true-total', ''); td.title = 'Worked out over all the rows of the group, not added up from the figures shown'; }
-      const colour = V.conditional(spec, m, v);
-      if (colour) { td.style.color = colour; }
-      return td;
-    };
-    const valueCells = (p, bold) => {
-      const out = [];
-      colKeys.forEach((c) => measures.forEach((m) => {
-        if (bold) { const t = total(m, p, c); out.push(cellFor(m, t, true, t === undefined)); } else { out.push(cellFor(m, cells.get([p.join(SEP), c, m].join(PART)), false, false)); }
-      }));
-      if (colField && subtotals) { measures.forEach((m) => { const t = total(m, p, null); out.push(cellFor(m, t, true, t === undefined)); }); }
-      return out;
-    };
-    const body = h('tbody', {});
-    const multi = rowFields.length > 1 && subtotals;
-    let last = null;
-    const emitGroup = (key, count) => {
-      const open = !collapsed.has(key);
-      const btn = h('button', { type: 'button', class: 'bi-twist', 'aria-expanded': open ? 'true' : 'false', 'aria-label': (open ? 'Collapse ' : 'Expand ') + key, 'data-group': key }, h('i', { class: 'bi bi-' + (open ? 'dash-square' : 'plus-square'), 'aria-hidden': 'true' }));
-      btn.addEventListener('click', () => { if (collapsed.has(key)) { collapsed.delete(key); } else { collapsed.add(key); } V.matrix(host, spec, ctx, res); });
-      body.appendChild(h('tr', { class: 'bi-subtotal', 'data-subtotal': key }, h('th', { scope: 'row' }, btn, ' ', key, h('small', { class: 'text-muted-d', text: ' (' + count + ')' })), valueCells([key], true)));
-    };
-    sortedPaths.forEach((p) => {
-      if (multi && (last === null || last !== p[0])) { emitGroup(p[0], sortedPaths.filter((x) => x[0] === p[0]).length); last = p[0]; }
-      if (multi && collapsed.has(p[0])) { return; }
-      body.appendChild(h('tr', { 'data-row': p.join(' / ') }, h('th', { scope: 'row', class: multi ? 'bi-indent' : '', text: multi ? p.slice(1).join(' / ') : p.join(' / ') }), valueCells(p, false)));
-    });
-    if (subtotals && sortedPaths.length) { body.appendChild(h('tr', { class: 'bi-grandtotal', 'data-grandtotal': '' }, h('th', { scope: 'row', text: 'Total' }), valueCells(null, true))); }
-    const table = h('table', { class: 'tbl bi-tbl bi-vgrid bi-vis-table bi-matrix', 'data-plain': true }, h('caption', { class: 'visually-hidden', text: spec.title || 'Matrix' }), h('thead', {}, headRows), body);
-    B.clear(host).appendChild(h('div', { class: 'tbl-wrap bi-vis-scroll' }, table));
-    if (!sortedPaths.length) { host.appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'No rows for this selection.' })); }
-    return NONE;
-  };
+  // the matrix is bi-matrix.js (2.4.0: every level of the rows, stepped or tabular, values on rows, Expand all and Collapse all)
 
   // ---- slicer --------------------------------------------------------------------------------------------------------
 
@@ -290,6 +211,18 @@
       details.appendChild(list);
       const ms = window.drishtiModules && window.drishtiModules.multiselect;
       if (ms) { ms.decorate(details, { label: spec.title || field, boxes, onChange: emit }); } else { boxes.forEach((b) => b.addEventListener('change', emit)); }
+      return NONE;
+    }
+    if ((spec.format || {}).style === 'tiles') {                                  // a tile slicer (2.4.0): the values as buttons, pressed when chosen
+      const row = h('div', { class: 'bi-slicer-tiles', role: 'group', 'aria-label': spec.title || field });
+      values.forEach((v, i) => {
+        const b = h('button', { type: 'button', class: 'bi-slicer-tile', 'aria-pressed': chosen.has(String(v)) ? 'true' : 'false', 'data-slicer-tile': String(v), text: tb.isMasked(field) ? '•••' : String(v) });
+        b.addEventListener('click', () => { boxes[i].checked = !boxes[i].checked; emit(); });
+        row.appendChild(b);
+      });
+      wrap.setAttribute('data-style', 'tiles');
+      wrap.appendChild(row);
+      B.clear(host).appendChild(wrap);
       return NONE;
     }
     const q = h('input', { type: 'search', class: 'studio-in', placeholder: 'Search', 'aria-label': 'Search ' + (spec.title || field) });

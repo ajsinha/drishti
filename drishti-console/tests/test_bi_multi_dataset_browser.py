@@ -131,8 +131,8 @@ def test_each_input_is_asked_as_the_reader(stack):
     mine = ask(*HEAD, MODEL, {"fields": ["counterparties.id"], "measures": ["P&L 1d", "Trades"]})["rows"]
     assert 0 < len([r for r in mine if r[2]]) < len([r for r in everyone if r[2]])                       # the desk head's row rule cut the trades
     assert len(py_rows(HEAD)) < len(py_rows(RISK))                                                        # and the Python table is made from her own answers
-    masked = ask(*ANALYST, MODEL, {"fields": ["counterparties.id", "counterparties.name"], "measures": ["P&L 1d"]})
-    assert {r[1] for r in masked["rows"]} == {"•••"} and "counterparties.name" in masked["meta"]["masked"]
+    masked = ask(*ANALYST, MODEL, {"fields": ["counterparties.id", "counterparties.NAME"], "measures": ["P&L 1d"]})
+    assert {r[1] for r in masked["rows"]} == {"•••"} and "counterparties.NAME" in masked["meta"]["masked"]
     assert {r[0] for r in masked["rows"]} == {r[0] for r in everyone}                                     # the key (the counterparty id) is not masked: same rows
 
 
@@ -148,7 +148,7 @@ def test_the_sample_report_answers_as_the_model_and_its_slicer_filters_every_vis
     page.click('[data-visual="sector"] summary')
     page.check(f'[data-visual="sector"] [data-slicer-value="{sector}"]')
     settled(page)
-    want = ask(*RISK, MODEL, {"measures": ["P&L 1d", "Exposure (EE peak)"]}, where=[{"field": "counterparties.sector", "op": "in", "values": [sector]}])["rows"][0]
+    want = ask(*RISK, MODEL, {"measures": ["P&L 1d", "Exposure (EE peak)"]}, where=[{"field": "counterparties.SECTOR", "op": "in", "values": [sector]}])["rows"][0]
     assert card_value(page, "pnl") == int(want[0]) and card_value(page, "ee") == int(round(want[1]))       # one choice reached both facts, through the counterparty
     assert round(sum(chart(page, "exposure-by-sector")["series"][0]["values"])) == int(round(want[1]))
     rows = page.locator('[data-visual="table"] tbody tr')
@@ -179,7 +179,7 @@ def test_a_click_on_the_donut_cross_filters_the_other_fact(stack, browser):
     page.mouse.click(at["x"], at["y"])                                                                    # a click on the slice, as a person makes it
     settled(page)
     expect(page.locator('[data-chip="selection"]')).to_contain_text(sector)
-    want = ask(*RISK, MODEL, {"measures": ["P&L 1d", "Exposure (EE peak)"]}, where=[{"field": "counterparties.sector", "op": "in", "values": [sector]}])["rows"][0]
+    want = ask(*RISK, MODEL, {"measures": ["P&L 1d", "Exposure (EE peak)"]}, where=[{"field": "counterparties.SECTOR", "op": "in", "values": [sector]}])["rows"][0]
     assert card_value(page, "pnl") == int(want[0]) and card_value(page, "ee") == int(round(want[1]))       # the click on an exposure mark reached the trades' card
     bars = chart(page, "by-counterparty")
     assert 0 < len(bars["categories"]) <= 10

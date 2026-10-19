@@ -31,7 +31,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from bi_report_stack import CONNECTOR, write_lake
+from bi_report_stack import CONNECTOR, TRADE_CONNECTOR, write_lake
 from bi_stack import FORBIDDEN, listening, wait
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -72,8 +72,8 @@ pages:
     title: Overview
     visuals:
       - { id: notional, type: card, title: Notional, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }
-      - { id: by-desk, type: bar, title: Notional by desk, at: { x: 3, y: 0, w: 5, h: 4 }, wells: { axis: [trade.desk], values: [Notional] }, alt: Bars of notional by desk }
-      - { id: rows, type: table, title: Desk and book, at: { x: 0, y: 4, w: 8, h: 4 }, wells: { columns: [trade.desk, trade.book, MTM] } }
+      - { id: by-desk, type: bar, title: Notional by desk, at: { x: 3, y: 0, w: 5, h: 4 }, wells: { axis: [trade.DESK], values: [Notional] }, alt: Bars of notional by desk }
+      - { id: rows, type: table, title: Desk and book, at: { x: 0, y: 4, w: 8, h: 4 }, wells: { columns: [trade.DESK, trade.PORTFOLIO, MTM] } }
 """
 
 
@@ -111,7 +111,7 @@ def seed() -> dict:
         s, r = admin("PUT", f"/admin/role-definitions/{role}", {"kinds": ["*"], "raw": True, "approve": approve, "bi": bi})
         assert s == 200, r
     for user, role in USERS.items():
-        s, r = admin("POST", "/admin/users", {"username": user, "displayName": user.capitalize(), "email": f"{user}@desk.test", "roles": [role], "packs": ["trading"], "password": PASSWORD,
+        s, r = admin("POST", "/admin/users", {"username": user, "displayName": user.capitalize(), "email": f"{user}@desk.test", "roles": [role], "packs": ["trading", "market-risk"], "password": PASSWORD,
                                             "mustChangePassword": False})
         assert s in (200, 201, 409), r                                # 409: already seeded (a server the previous file left running)
     ann = lambda m, p, b=None: call(m, p, "ann", ["bi-writer"], b)          # noqa: E731
@@ -157,8 +157,9 @@ class Stack:
         lake = self.tmp / "lake"
         write_lake(lake)
         (work / "config" / "connectors").mkdir(parents=True)
-        (work / "config" / "connectors" / "trading-store.yaml").write_text(CONNECTOR.format(root=lake))
-        env = dict(os.environ, DRISHTI_PACKS="trading", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_SECURITY_ENABLED="true", DRISHTI_TOKEN_SECRET=SECRET,
+        (work / "config" / "connectors" / "trading-store.yaml").write_text(TRADE_CONNECTOR.format(root=lake / "trade"))
+        (work / "config" / "connectors" / "risk-store.yaml").write_text(CONNECTOR.format(root=lake / "risk"))          # the valuations the 2.1 sample reads (2.3.0)
+        env = dict(os.environ, DRISHTI_PACKS="trading,market-risk", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_SECURITY_ENABLED="true", DRISHTI_TOKEN_SECRET=SECRET,
                    DRISHTI_BI_DIR=str(work / "config" / "bi"), DRISHTI_DATA_DIR=str(work / "data"))
         self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
                                                  f"--drishti.bi.query.store-dir={self.tmp / 'store'}"], cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)

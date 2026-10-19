@@ -45,8 +45,9 @@ public final class Totals {
     }
 
     /**
-     * The levels a matrix with subtotals needs for its measures that do not add up: the grand total, the total of each value of the first row field, and
-     * (with a column field) the total of each row across the columns, each also per column where there is one.
+     * The levels a matrix with subtotals needs for its measures that do not add up: the grand total, the total of each group at every level of the row
+     * fields (the first field, the first two, ... all but the last: 2.4 matrix depth), and (with a column field) the total of each row across the columns,
+     * each also per column where there is one.
      */
     public static List<Level> matrix(Dataset ds, Report.Visual v, QueryRequest base, int maxRows) {
         List<String> measures = v.well("values").stream().filter(m -> !adds(ds, m)).toList();
@@ -58,8 +59,8 @@ public final class Totals {
         List<String> cols = v.well("columns");
         List<List<String>> by = new ArrayList<>();
         by.add(List.of());
-        if (rows.size() > 1) {
-            by.add(rows.subList(0, 1));
+        for (int depth = 1; depth < rows.size(); depth++) {
+            by.add(rows.subList(0, depth));
         }
         List<List<String>> withCol = new ArrayList<>();
         for (List<String> b : by) {

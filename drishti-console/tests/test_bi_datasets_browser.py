@@ -100,14 +100,14 @@ def test_the_list_shows_the_sample_and_its_page_shows_the_dataset(stack, browser
     page.wait_for_url("**/bi/ds/**")                              # a model-layer dataset has its own page since 2.2 (the old link is sent there)
     expect(page.locator("main h1")).to_contain_text("Trades, the basics: trade")
     expect(page.locator("main")).to_contain_text("snapshot")
-    for col in ("tradeId", "desk", "notional", "mtm"):
+    for col in ("TRADE_ID", "DESK", "NOTIONAL", "MTM"):
         expect(page.locator("main table").first).to_contain_text(col)
     clean(page)
 
 
 def test_a_model_query_runs_on_the_engine_and_adds_up(stack, browser):
     page = sign_in(browser, "rita")
-    q = {"mq": 1, "model": MODEL, "select": {"fields": ["trade.desk"], "measures": ["MTM", "Trades"]}}
+    q = {"mq": 1, "model": MODEL, "select": {"fields": ["trade.DESK"], "measures": ["MTM", "Trades"]}}
     a = ask(page, q)
     assert a["status"] == 200, a
     got = {r[0]: int(r[1]) for r in a["body"]["rows"]}
@@ -119,8 +119,8 @@ def test_a_model_query_runs_on_the_engine_and_adds_up(stack, browser):
 
 def test_a_filter_and_a_refusal_are_answered_with_their_code(stack, browser):
     page = sign_in(browser, "rita")
-    one = ask(page, {"mq": 1, "model": MODEL, "select": {"fields": ["trade.currency"], "measures": ["Trades"]},
-                     "where": [{"field": "trade.desk", "op": "in", "values": ["DESK-FX"]}]})
+    one = ask(page, {"mq": 1, "model": MODEL, "select": {"fields": ["trade.CURRENCY"], "measures": ["Trades"]},
+                     "where": [{"field": "trade.DESK", "op": "in", "values": ["DESK-FX"]}]})
     assert one["status"] == 200 and one["body"]["rowCount"] >= 1, one
     bad = ask(page, {"mq": 1, "model": MODEL, "select": {"fields": ["trade.nothing"], "measures": []}})
     assert bad["status"] == 422 and bad["body"]["code"].startswith("DRS-91"), bad
@@ -134,7 +134,7 @@ def test_a_phone_has_no_sideways_scroll_and_finger_sized_targets(stack, browser)
     page = sign_in(browser, "rita", viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True)
     page.goto(CONSOLE_URL + "/bi/d/" + DATASET)
     page.wait_for_url("**/bi/ds/**")
-    expect(page.locator("main table").first).to_contain_text("tradeId")
+    expect(page.locator("main table").first).to_contain_text("TRADE_ID")
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "the page scrolls sideways"
     for b in page.locator("main .btn-pill:visible, main a.btn-pill:visible").all():
         box = b.bounding_box()

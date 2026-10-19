@@ -88,7 +88,7 @@ def test_the_counterparty_report_shows_what_the_engine_answers(stack, browser):
     settled(page)
     ee = engine("rita", ["risk"], {"measures": ["Exposure (EE peak)", "Exposure (PFE peak)", "Netting sets"]})["rows"][0]
     assert card_value(page, "ee") == int(ee[0]) and card_value(page, "pfe") == int(ee[1]) and card_value(page, "sets") == int(ee[2])
-    top = engine("rita", ["risk"], {"fields": ["counterparties.name"], "measures": ["Exposure (EE peak)"], "orderBy": [{"by": "Exposure (EE peak)", "desc": True}], "limit": 10})["rows"]
+    top = engine("rita", ["risk"], {"fields": ["counterparties.NAME"], "measures": ["Exposure (EE peak)"], "orderBy": [{"by": "Exposure (EE peak)", "desc": True}], "limit": 10})["rows"]
     bar = chart(page, "by-counterparty")
     assert len(bar["categories"]) == 10 and set(bar["categories"]) == {r[0] for r in top}              # the top-10 filter kept the ten largest
     assert [s["name"] for s in bar["series"]] == ["Exposure (EE peak)", "Exposure (PFE peak)"]
@@ -105,7 +105,7 @@ def test_a_report_scope_slicer_filters_every_visual_through_the_relationships(st
     page.click('[data-visual="sector"] summary')
     page.check('[data-visual="sector"] [data-slicer-value="Banking"]')
     settled(page)
-    want = engine("rita", ["risk"], {"measures": ["Exposure (EE peak)"], "filters": [{"field": "counterparties.sector", "op": "in", "values": ["Banking"]}]})["rows"][0][0]
+    want = engine("rita", ["risk"], {"measures": ["Exposure (EE peak)"], "filters": [{"field": "counterparties.SECTOR", "op": "in", "values": ["Banking"]}]})["rows"][0][0]
     assert card_value(page, "ee") == int(want)
     mtm_sectors = [r.inner_text().split("\t")[0] for r in page.locator('[data-visual="mtm-by-counterparty"] tbody tr').all()]
     assert mtm_sectors == ["Banking"]                                                                   # the trades table was filtered by the counterparties' sector too
@@ -123,8 +123,8 @@ def test_drill_through_carries_the_counterparty_to_its_own_page_and_back(stack, 
     page.wait_for_url("**/counterparty?carry=**")
     settled(page)
     expect(page.locator('[data-chip="carry"]')).to_contain_text(name)
-    assert json.loads(urllib.parse.unquote(page.url.split("carry=")[1]))[0]["field"] == "counterparties.name"
-    one = [{"field": "counterparties.name", "op": "eq", "values": [name]}]
+    assert json.loads(urllib.parse.unquote(page.url.split("carry=")[1]))[0]["field"] == "counterparties.NAME"
+    one = [{"field": "counterparties.NAME", "op": "eq", "values": [name]}]
     trades = engine("rita", ["risk"], {"measures": ["Trades"], "filters": one})["rows"][0][0]
     ee = engine("rita", ["risk"], {"measures": ["Exposure (EE peak)"], "filters": one})["rows"][0][0]
     assert card_value(page, "c-trades") == int(trades) and card_value(page, "c-ee") == int(ee)
@@ -145,20 +145,20 @@ def carry(field, *values):
 
 def test_a_trade_row_opens_in_the_terminal_and_an_unknown_counterparty_is_an_empty_page_not_an_error(stack, browser):
     page = sign_in(browser, "rita")
-    open_report(page, COUNTERPARTY, "/counterparty" + carry("counterparties.name", "No such counterparty plc"))
+    open_report(page, COUNTERPARTY, "/counterparty" + carry("counterparties.NAME", "No such counterparty plc"))
     settled(page)
     expect(page.locator('[data-visual="c-trades-table"] .bi-vis-empty')).to_be_visible()
     assert card_value(page, "c-trades") == 0
     open_report(page, COUNTERPARTY)
     settled(page)
     name = chart(page, "by-counterparty")["categories"][0]
-    open_report(page, COUNTERPARTY, "/counterparty" + carry("counterparties.name", name))
+    open_report(page, COUNTERPARTY, "/counterparty" + carry("counterparties.NAME", name))
     settled(page)
     first = page.locator('[data-visual="c-trades-table"] tbody tr').first
     trade_id = first.locator("a[data-open-terminal]").inner_text()
     first.focus()
     page.keyboard.press("Enter")                                                                         # a table row is selectable from the keyboard
-    expect(page.locator('[data-chip="selection"]')).to_contain_text("trades.tradeId")
+    expect(page.locator('[data-chip="selection"]')).to_contain_text("trades.TRADE_ID")
     page.locator('[data-visual="c-trades-table"] [data-act="open-terminal"]').click()
     page.wait_for_url(f"**/v/trade/{trade_id}")
     clean(page)
@@ -198,7 +198,7 @@ def test_the_ladder_drills_from_year_to_quarter_and_the_legs_matrix_has_totals(s
     settled(page)
     years = chart(page, "by-pay-date")
     assert len(years["categories"]) >= 2 and all(re.fullmatch(r"20\d\d", c) for c in years["categories"])
-    total = engine("rita", ["risk"], {"measures": ["Cashflow amount"], "filters": [{"field": "cashflows.payDate", "op": "not-null"}]}, "trading-cashflows")["rows"][0][0]
+    total = engine("rita", ["risk"], {"measures": ["Cashflow amount"], "filters": [{"field": "cashflows.PAYMENT_DATE", "op": "not-null"}]}, "trading-cashflows")["rows"][0][0]
     assert round(sum(years["series"][0]["values"])) == round(total)
     year = years["categories"][0]
     click_mark(page, "by-pay-date", year)
@@ -252,24 +252,24 @@ def test_the_model_view_draws_five_boxes_and_five_lines_and_edits_the_yaml_both_
     page.wait_for_selector("[data-model-root][data-ready=yes]")
     expect(page.locator("[data-readonly]")).to_be_hidden()
     base = yaml_text(page)
-    assert "from: trades.book" in base
+    assert "from: trades.PORTFOLIO" in base
     # remove one relationship in the list: the YAML loses exactly that line
-    page.locator('[data-rel-row]').filter(has_text="trades.book").locator("[data-remove-rel]").click()
+    page.locator('[data-rel-row]').filter(has_text="trades.PORTFOLIO").locator("[data-remove-rel]").click()
     expect(page.locator("svg.bi-lines g[data-rel]")).to_have_count(4)
     after = yaml_text(page)
-    assert "trades.book" not in after.split("relationships:")[1].split("measures:")[0] and after.count("cardinality:") == base.count("cardinality:") - 1
+    assert "trades.PORTFOLIO" not in after.split("relationships:")[1].split("measures:")[0] and after.count("cardinality:") == base.count("cardinality:") - 1
     assert "# STORED SAMPLE 2 of 3" in after and "rollups:" in after                                           # the rest of the file, comments included, is as it was
-    # drag trades.book onto books.id: the form is filled in with a many-to-one, and Add writes it
-    page.drag_and_drop('[data-column="trades.book"]', '[data-column="books.id"]')
-    assert page.input_value("[data-nr-from-t]") == "trades" and page.input_value("[data-nr-from-c]") == "book"
+    # drag trades.PORTFOLIO onto books.id: the form is filled in with a many-to-one, and Add writes it
+    page.drag_and_drop('[data-column="trades.PORTFOLIO"]', '[data-column="books.id"]')
+    assert page.input_value("[data-nr-from-t]") == "trades" and page.input_value("[data-nr-from-c]") == "PORTFOLIO"
     assert page.input_value("[data-nr-to-t]") == "books" and page.input_value("[data-nr-to-c]") == "id"
     assert page.input_value("[data-nr-card]") == "many-to-one"
     page.click("[data-nr-add]")
     expect(page.locator("svg.bi-lines g[data-rel]")).to_have_count(5)
-    assert "{ from: trades.book, to: books.id, cardinality: many-to-one }" in yaml_text(page)
+    assert "{ from: trades.PORTFOLIO, to: books.id, cardinality: many-to-one }" in yaml_text(page)
     page.wait_for_function("() => document.querySelector('[data-valid]').textContent === 'Valid'")
     # change the cardinality on the list and the direction: both go to the YAML
-    page.locator('[data-rel-row]').filter(has_text="trades.book").locator("[data-direction]").select_option("both")
+    page.locator('[data-rel-row]').filter(has_text="trades.PORTFOLIO").locator("[data-direction]").select_option("both")
     assert "direction: both" in yaml_text(page)
     page.click("[data-save]")
     expect(page.locator("[data-state]")).to_have_text("Saved")
@@ -306,18 +306,18 @@ tables:
   trades:
     source: { kind: trade }
     mode: cached
-    columns: { desk: string, mtm: decimal }
+    columns: { DESK: string, MTM: decimal }
   desk_pnl:
     source: { kind: desk-pnl }
     mode: cached
-    columns: { desk: string }
+    columns: { DESK: string }
 measures:
-  MTM: { expr: "sum(trades.mtm)" }
+  MTM: { expr: "sum(trades.MTM)" }
 """
 
 
 def test_relationships_proposed_from_the_data_are_accepted_one_by_one(stack, browser):
-    """Two tables with no declared link: the server finds that every value of trade.desk is an id of desk-pnl (profiling, no AI) and proposes it with the match rate."""
+    """Two tables with no declared link: the server finds that every value of trades.DESK is an id of desk-pnl (profiling, no AI) and proposes it with the match rate."""
     page = sign_in(browser, "wes")
     page.goto(CONSOLE_URL + "/bi/designer")
     made = page.evaluate("""async (body) => { const r = await fetch('/bi/api/workspaces/me/items', {method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -329,13 +329,13 @@ def test_relationships_proposed_from_the_data_are_accepted_one_by_one(stack, bro
     expect(page.locator("[data-no-rels]")).to_be_visible()
     page.click("[data-infer]")
     page.wait_for_selector("[data-proposals] [data-proposal]", timeout=90000)
-    mine = page.locator("[data-proposals] [data-proposal]").filter(has_text="trades.desk")
+    mine = page.locator("[data-proposals] [data-proposal]").filter(has_text="trades.DESK")
     assert mine.count() == 1 and "100% of 10 values match" in mine.first.inner_text()                    # the match rate, from the data
     expect(page.locator("svg.bi-lines g[data-rel]")).to_have_count(0)                                    # proposing changes nothing
     assert "relationships:" not in yaml_text(page)
     mine.first.locator("[data-accept]").click()
     expect(page.locator("svg.bi-lines g[data-rel]")).to_have_count(1)
-    assert "{ from: trades.desk, to: desk_pnl.id, cardinality: many-to-one }" in yaml_text(page)
+    assert "{ from: trades.DESK, to: desk_pnl.id, cardinality: many-to-one }" in yaml_text(page)
     page.wait_for_function("() => document.querySelector('[data-valid]').textContent === 'Valid'")
     page.click("[data-save]")
     expect(page.locator("[data-state]")).to_have_text("Saved")

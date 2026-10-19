@@ -24,7 +24,7 @@ import argparse
 import pathlib
 import time
 
-KINDS = ("model", "dataset", "report", "board", "notebook", "python", "alert")
+KINDS = ("model", "dataset", "report", "board", "notebook", "python", "alert", "theme")      # a board is stored as a report with board pages (2.4.0)
 
 
 def register(bi, srv, ctx) -> None:

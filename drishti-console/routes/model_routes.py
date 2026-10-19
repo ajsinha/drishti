@@ -447,7 +447,7 @@ async def consumers(request: Request):
     for c in rows or []:
         if isinstance(c, dict):
             kind, cid = str(c.get("kind") or c.get("type") or "item"), str(c.get("id") or "")
-            href = {"report": "/bi/r/", "board": "/bi/b/", "notebook": "/bi/i/", "alert": "/alerts/measure/", "subscription": "/reports"}.get(kind, "/bi/i/")
+            href = {"report": "/bi/r/", "board": "/bi/r/", "notebook": "/bi/i/", "alert": "/alerts/measure/", "subscription": "/reports"}.get(kind, "/bi/i/")      # a board is a report (2.4.0)
             out.append({"kind": kind, "id": cid, "title": str(c.get("title") or c.get("name") or cid), "href": href + (quote(cid, safe=":") if kind != "subscription" else "")})
     return _ok({"known": True, "consumers": out})
 

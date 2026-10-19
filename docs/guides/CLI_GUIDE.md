@@ -2114,6 +2114,8 @@ drishti.py bi migrate --expressions FILE|DIR... [--write] [--check]      convert
 drishti.py bi migrate --expressions [--dry-run]                          the same for the server's STORED items (bi-admin; audited, history kept)
 drishti.py bi migrate --models DIR [--dry-run] [--out D] [--keep-old] [--report F]   rachana: 1 datasets of a BI folder to datasets and models, reports rebound
 drishti.py bi migrate --models [--dry-run] [--report F]                  the same for the server's stored items (bi-admin)
+drishti.py bi migrate --boards FILE|DIR... [--write] [--keep-old]          2.3 boards to reports with board pages (2.4.0): writes reports/<name>.report.yaml, removes the board file
+drishti.py bi migrate --boards [--dry-run]                              the same for the server's stored boards (bi-admin; the server does it at start too)
 drishti.py bi sql "SELECT ..." --model M [--explain] [--format table|json|csv] [--file F]   Drishti SQL over a model
 ```
 

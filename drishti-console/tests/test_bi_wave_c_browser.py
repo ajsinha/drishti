@@ -51,8 +51,8 @@ pages:
         type: perspective-chart
         title: Net MTM by desk and currency
         at: {{ x: 0, y: 0, w: 12, h: 10 }}
-        wells: {{ rows: [trade.desk], columns: [trade.currency], values: [trade.mtm] }}
-        format: {{ plugin: Y Bar, aggregates: {{ trade.mtm: sum }} }}
+        wells: {{ rows: [trade.DESK], columns: [trade.CURRENCY], values: [trade.MTM] }}
+        format: {{ plugin: Y Bar, aggregates: {{ trade.MTM: sum }} }}
         alt: Bars of net mark to market for each desk, split by currency
 """
 
@@ -65,9 +65,7 @@ class Stack(bi_report_stack.ReportStack):
             (python / f.name).write_text(f.read_text(encoding="utf-8"))
         reports = work / "config/bi/reports"
         reports.joinpath("python-desk-risk.report.yaml").write_text((ROOT / "config/bi/reports/python-desk-risk.report.yaml").read_text(encoding="utf-8"))
-        boards = work / "config/bi/boards"
-        boards.mkdir(parents=True)
-        boards.joinpath("python-wall.board.yaml").write_text((ROOT / "config/bi/boards/python-wall.board.yaml").read_text(encoding="utf-8"))
+        reports.joinpath("python-wall.report.yaml").write_text((ROOT / "config/bi/reports/python-wall.report.yaml").read_text(encoding="utf-8"))     # a board: a report with board pages (2.4.0)
 
 
 @pytest.fixture(scope="module")
@@ -137,7 +135,7 @@ def test_vega_lite_is_drawn_under_the_strict_policy_by_the_interpreter(stack, br
 def test_a_specification_that_loads_a_url_is_not_drawn(stack, browser):
     page = sign_in(browser, "wes", "/bi")
     body = open(ROOT / "config/bi/reports/python-desk-risk.report.yaml", encoding="utf-8").read().replace("report: python-desk-risk", "report: vega-url").replace("sample: true", "sample: false")
-    body = body.replace("        wells: { axis: [trade.desk], values: [MTM, Trades] }\n        format:\n          spec:\n", "        wells: { axis: [trade.desk], values: [MTM, Trades] }\n        format:\n          spec:\n            data: { url: 'http://127.0.0.1:1/x.json' }\n")
+    body = body.replace("        wells: { axis: [trade.DESK], values: [MTM, Trades] }\n        format:\n          spec:\n", "        wells: { axis: [trade.DESK], values: [MTM, Trades] }\n        format:\n          spec:\n            data: { url: 'http://127.0.0.1:1/x.json' }\n")
     s, item = api(page, "POST", "/workspaces/me/items", {"kind": "report", "title": "Vega url", "body": body})
     assert s in (200, 201), item
     s, checked = api(page, "POST", "/reports/validate", {"yaml": body})
@@ -149,7 +147,7 @@ def test_a_specification_that_loads_a_url_is_not_drawn(stack, browser):
 # ---- boards ----------------------------------------------------------------------------------------------------------------------------
 def test_a_board_of_python_tiles_runs_them_for_the_person_looking(stack, browser):
     page = sign_in(browser, "wes", "/bi")
-    page.goto(CONSOLE_URL + "/bi/b/file:board:python-wall")
+    page.goto(CONSOLE_URL + "/bi/r/file:report:python-wall")
     page.wait_for_function("() => document.querySelectorAll('[data-tile] .bi-py-foot').length === 3", timeout=120000)
     assert page.locator('[data-tile="vol"] .bi-py-chart').count() == 1 and page.locator('[data-tile="hist"] .bi-py-chart').count() == 1
     page.wait_for_selector('[data-tile="strip"] .bi-vega[data-ready="1"] canvas', timeout=30000)                   # Vega-Lite draws after the footer shows: wait for its ready mark
@@ -178,7 +176,7 @@ def open_extract(page):
     page.select_option("[data-dataset]", "mq:trades-basic@1")
     page.wait_for_selector("[data-fields] input[name=f]", timeout=30000)
     page.click("[data-open-go]")
-    page.wait_for_function("() => /rows,/.test(document.querySelector('[data-info]').textContent)", timeout=60000)
+    page.wait_for_function("() => /rows,/.test((document.querySelector('[data-info]') || {}).textContent || '')", timeout=60000)
 
 
 def grid(page, selector):
@@ -193,17 +191,17 @@ def test_the_slice_and_sql_over_the_extract_run_on_the_console(stack, browser):
     csp = resp.headers["content-security-policy"]
     assert "unsafe-eval" not in csp and "unsafe-inline" not in csp and "wasm" not in csp
     open_extract(page)
-    page.click('.bx-chip[data-field="desk"] [data-to="rows"]')
-    page.click('.bx-chip[data-field="currency"] [data-to="columns"]')
-    page.click('.bx-chip[data-field="notional"] [data-to="values"]')
+    page.click('.bx-chip[data-field="DESK"] [data-to="rows"]')
+    page.click('.bx-chip[data-field="CURRENCY"] [data-to="columns"]')
+    page.click('.bx-chip[data-field="NOTIONAL"] [data-to="values"]')
     page.wait_for_function("() => document.querySelector('[data-pivot-meta]').dataset.engine === 'console' && /rows used/.test(document.querySelector('[data-pivot-meta]').textContent)", timeout=60000)
     assert len(grid(page, "[data-pivot]")) >= 2
-    page.click('.bx-chip[data-field="desk"] [data-to="filters"]')
+    page.click('.bx-chip[data-field="DESK"] [data-to="filters"]')
     page.wait_for_function("() => document.querySelectorAll('[data-zone=\"filters\"] select option').length > 1", timeout=30000)
     page.select_option('[data-zone="filters"] select', "DESK-FX")
     page.wait_for_function("() => /rows used/.test(document.querySelector('[data-pivot-meta]').textContent)")
     page.click("#bxT-sql")
-    page.fill("[data-cells=sql] textarea", "SELECT desk, SUM(notional) AS n FROM extract GROUP BY desk ORDER BY desk")
+    page.fill("[data-cells=sql] textarea", "SELECT DESK, SUM(NOTIONAL) AS n FROM extract GROUP BY DESK ORDER BY DESK")
     page.click("[data-cells=sql] [data-run]")
     page.wait_for_selector('[data-cells=sql] [data-engine="server"]', timeout=60000)
     assert len(grid(page, "[data-cells=sql]")) >= 2
@@ -223,9 +221,9 @@ def test_a_slice_and_a_sql_cell_become_visuals_in_a_new_and_an_existing_report(s
     s, mine = api(page, "POST", "/workspaces/me/items", {"kind": "report", "title": "Mine", "body": CHART_REPORT.format(name="mine")})
     assert s in (200, 201), mine
     open_extract(page)
-    page.click('.bx-chip[data-field="desk"] [data-to="rows"]')
-    page.click('.bx-chip[data-field="mtm"] [data-to="values"]')
-    page.click('.bx-chip[data-field="currency"] [data-to="filters"]')
+    page.click('.bx-chip[data-field="DESK"] [data-to="rows"]')
+    page.click('.bx-chip[data-field="MTM"] [data-to="values"]')
+    page.click('.bx-chip[data-field="CURRENCY"] [data-to="filters"]')
     page.select_option('[data-zone="filters"] select', "USD")
     page.wait_for_selector("[data-pivot] table")
     # a new report draft
@@ -234,14 +232,14 @@ def test_a_slice_and_a_sql_cell_become_visuals_in_a_new_and_an_existing_report(s
     page.wait_for_function("() => /Report draft saved/.test(document.querySelector('[data-promote-slice] + .bi-near').textContent)")
     href = page.get_attribute("[data-promoted-link]", "href")
     s, made = api(page, "GET", "/items/" + href.split("/bi/i/")[1].replace("%3A", ":"))
-    assert "type: matrix" in made["body"] and "trade.currency" in made["body"] and "USD" in made["body"] and "MTM" in made["body"]
+    assert "type: matrix" in made["body"] and "trade.CURRENCY" in made["body"] and "USD" in made["body"] and "MTM" in made["body"]
     # an existing one, from a SQL cell
     page.reload()
     open_extract(page)
     page.wait_for_function("() => document.querySelectorAll('[data-promote-target] option').length > 1", timeout=30000)
     page.select_option("[data-promote-target]", mine["id"])
     page.click("#bxT-sql")
-    page.fill("[data-cells=sql] textarea", "SELECT desk, SUM(mtm) FROM extract WHERE currency = 'EUR' GROUP BY desk")
+    page.fill("[data-cells=sql] textarea", "SELECT DESK, SUM(MTM) FROM extract WHERE CURRENCY = 'EUR' GROUP BY DESK")
     page.click("[data-promote-report]")
     page.wait_for_function("() => /added to the report draft/.test(document.querySelector('[data-promote-report] + .bi-near').textContent)", timeout=30000)
     s, edited = api(page, "GET", "/items/" + mine["id"])

@@ -174,7 +174,7 @@
     }
 
     function ctxFor(v) {
-      return { index: D.idxOf(v), palette: D.palette, t: D.tokens, interactive: false, selected: null, slicer: null, onMark: null, navigate: null };
+      return { index: D.idxOf(v), palette: D.palette, t: D.tokens, interactive: false, selected: null, slicer: null, onMark: null, navigate: null, theme: D.theme };
     }
 
     function drawEntry(id) {
@@ -182,7 +182,9 @@
       const v = D.visual(id);
       if (!e || !v) { return; }
       const group = (D.catalogue.visuals[v.type] || {}).group;
-      const spec = Object.assign({}, v, { title: v.title || '' });
+      const spec = B.theme.spec(Object.assign({}, v, { title: v.title || '' }), D.theme, D.families);          // the theme's visual defaults under the visual's own format (2.4.0)
+      B.visuals.frameFormat(e.frame, spec);                                                                    // the frame of the format (subtitle, border ...) follows each change
+      if (group === 'board') { D.tilePreview(e.frame, v); return; }                                            // a tile (R7): its report's visual, asked as the author
       if (group === 'static' || group === 'entity') { e.frame.result(null, (host) => B.visuals.draw(host, spec, ctxFor(v), null)); return; }
       if (group === 'python') {                                           // Python runs when the report is viewed (server or browser), never while designing
         const item = (v.format && v.format.python) || ((v.wells.values || [])[0] ? 'the measure ' + v.wells.values[0] : '');
@@ -216,6 +218,7 @@
       B.enqueue(() => previewQuery(id)).then((res) => {
         if (token !== e.token) { return; }
         D.timings.set(id, res.meta.millis);
+        (D.lastMq = D.lastMq || new Map()).set(id, res.mq || null);                       // what the Studio's Query pane shows for the selected visual
         e.frame.result(res, (host) => B.visuals.draw(host, spec, ctxFor(v), res));
       }, (err) => { if (token === e.token) { e.frame.error(err); } });
     }

@@ -67,8 +67,8 @@ def test_the_page_script_draws_with_the_interpreter_and_a_loader_that_refuses_ur
     assert not re.search(r"\beval\(|new Function", js)
 
 
-def test_the_report_board_and_designer_pages_load_the_vega_script_but_not_the_libraries():
-    for page in ("report", "board", "design"):
+def test_the_report_and_designer_pages_load_the_vega_script_but_not_the_libraries():
+    for page in ("report", "design"):                    # a board is a report layout (2.4.0): it opens in report.html
         html = (CONSOLE / f"web/templates/bi/{page}.html").read_text(encoding="utf-8")
         assert "/static/js/bi-vega.js" in html, page
         assert "vendor/vega/" not in html, page      # the libraries load the first time a vega-lite visual is drawn

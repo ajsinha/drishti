@@ -86,7 +86,7 @@ def test_the_designer_start_lets_the_author_choose_where_drafts_go_and_lists_sam
         assert hook in page
     script = (WEB / "static/js/bi-design.js").read_text()
     assert "data-sample-copy" in script and "askWorkspace" in script           # Copy and design, and Save a copy ask for the workspace
-    assert "askWorkspace" in (WEB / "static/js/bi-design-board.js").read_text()
+    assert "B.fillWorkspaces(bws)" in script                                     # a board (a report with board pages, 2.4.0) is made here too
 
 
 def test_the_workspace_page_offers_a_python_starter_and_known_people():

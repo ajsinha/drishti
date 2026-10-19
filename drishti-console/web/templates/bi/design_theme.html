@@ -1,0 +1,53 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The theme designer (report schema v2, 2.4.0; docs/guides/REPORTS.md section 5.2), inside BI Studio: a theme item's colours, type and format defaults per kind of
+   visual, with a preview, drawn by static/js/bi-theme-designer.js from /bi/api/items/<id>; /bi/design/theme/new makes one. #}
+{% extends "bi/shell.html" %}
+{% import "bi/_studio.html" as studio %}
+{% block bi_title %}Theme{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-report.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-design.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-studio.css?v={{ ASSET_V }}">{% endblock %}
+{% block bi_main %}
+<div class="bi-studio" data-studio data-studio-kind="theme">
+{{ studio.rail() }}
+<div class="bi-studio-main">
+{{ studio.tabs() }}
+<div class="bi-design bi-theme-design" data-theme-root data-ready="">
+  <header class="bi-dbar">
+    <div class="bi-dtitle"><a class="bi-dback" href="/bi/designer" aria-label="Back to the designer start"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+      <h1 data-title>Theme</h1><span class="bi-badge" data-state>Loading</span></div>
+    <div class="bi-dactions" role="toolbar" aria-label="Theme actions">
+      <button type="button" class="btn-pill btn-ghost" data-publish><i class="bi bi-send" aria-hidden="true"></i> <span class="bi-lbl">Publish</span></button>
+      <button type="button" class="btn-pill btn-accent" data-save><i class="bi bi-floppy" aria-hidden="true"></i> <span class="bi-lbl">Save</span></button>
+    </div>
+  </header>
+  <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+  <div class="bi-theme-main">
+    <section class="bi-theme-edit" aria-labelledby="thE"><h2 id="thE">Theme</h2><div data-theme-editor></div></section>
+    <section class="bi-theme-side" aria-labelledby="thP"><h2 id="thP">Preview</h2>
+      <p class="text-muted-d">Sample figures, drawn as a report in this theme draws them.</p>
+      <div class="bi-theme-preview bi-rgrid" data-theme-preview></div>
+      <p data-theme-valid role="status" aria-live="polite"></p><ul class="bi-warn" data-theme-problems></ul>
+      <details class="bi-fsection"><summary>YAML</summary>
+        <p class="text-muted-d">The same theme as text: edit it here and leave the box to apply it.</p>
+        <textarea class="studio-in mono" rows="14" spellcheck="false" data-theme-yaml aria-label="Theme YAML"></textarea></details>
+    </section>
+  </div>
+</div>
+{{ studio.dock() }}
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/multiselect.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-visuals.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-visuals-format.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-grids.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-matrix.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-frame.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-studio.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-format-pane.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-format-rules.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-theme-designer.js?v={{ ASSET_V }}"></script>{% endblock %}

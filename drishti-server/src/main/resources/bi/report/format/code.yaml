@@ -1,0 +1,78 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The format of the visuals that run code or keep a library's own settings: python, vega-lite, the live chart, the 2.1 Perspective types and the
+# entity view. ReportValidator checks their content further (the specification, the Python item, the window). See common.yaml.
+
+$id: code
+x-types: [python, vega-lite, live-chart, perspective-grid, perspective-pivot, perspective-chart, entity-view]
+x-order: [Title, Code, Frame]
+allOf:
+  - $ref: "common#/$defs/frame"
+type: object
+additionalProperties: false
+properties:
+  python:
+    type: string
+    x-label: Python item
+    x-hint: The Python item (catalogue id, file name or title) that draws this from the columns; empty when the values well holds a Python measure.
+    x-hook: format-python
+    x-group: Code
+    x-types: [python]
+  params:
+    type: object
+    x-label: Parameters (JSON)
+    x-hint: Handed to the function as its params; they override the item's defaults.
+    x-control: json
+    x-hook: format-params
+    x-group: Code
+    x-types: [python]
+  run:
+    type: string
+    enum: [server, browser, auto]
+    x-label: Runs on
+    x-group: Code
+    x-types: [python]
+  spec:
+    type: object
+    x-label: Vega-Lite specification (JSON)
+    x-control: vega-spec
+    x-group: Code
+    x-types: [vega-lite]
+  window:
+    type: integer
+    minimum: 5
+    maximum: 1000
+    x-label: Points kept
+    x-group: Code
+    x-types: [live-chart]
+  plugin:
+    type: string
+    x-label: Chart plugin (2.1)
+    x-group: Code
+    x-types: [perspective-chart]
+  view:
+    type: object
+    x-control: json
+    x-label: Saved view (2.1)
+    x-group: Code
+    x-types: [perspective-grid, perspective-pivot, perspective-chart]
+  aggregates:
+    type: object
+    x-control: json
+    x-label: Aggregates (2.1)
+    x-group: Code
+    x-types: [perspective-pivot, perspective-chart]
+  numberFormat:
+    $ref: "common#/$defs/numberFormat"

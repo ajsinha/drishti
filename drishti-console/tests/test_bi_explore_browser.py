@@ -68,7 +68,7 @@ def open_extract(page):
     page.select_option("[data-dataset]", "mq:trades-basic@1")                     # the shipped sample model (2.2)
     page.wait_for_selector("[data-fields] input[name=f]", timeout=30000)
     page.click("[data-open-go]")
-    page.wait_for_function("() => /rows,/.test(document.querySelector('[data-info]').textContent)", timeout=60000)
+    page.wait_for_function("() => /rows,/.test((document.querySelector('[data-info]') || {}).textContent || '')", timeout=60000)            # the line is drawn once the extract is in
 
 
 def test_slice_sql_and_python_agree_and_the_notebook_saves(stack, browser):
@@ -78,31 +78,31 @@ def test_slice_sql_and_python_agree_and_the_notebook_saves(stack, browser):
     assert rows > 0
 
     # SLICE: desk in rows, notional summed in values
-    page.click('.bx-chip[data-field="desk"] [data-to="rows"]')
-    page.click('.bx-chip[data-field="notional"] [data-to="values"]')
+    page.click('.bx-chip[data-field="DESK"] [data-to="rows"]')
+    page.click('.bx-chip[data-field="NOTIONAL"] [data-to="values"]')
     page.wait_for_selector("[data-pivot] table")
     pivot = {r[0]: float(r[1]) for r in grid(page, "[data-pivot]")}
     assert len(pivot) >= 2 and sum(pivot.values()) > 0
 
     # SQL: the same sums from the extract
     page.click("#bxT-sql")
-    page.fill('[data-cells=sql] textarea', "SELECT desk, SUM(notional) AS n FROM extract GROUP BY desk ORDER BY desk")
+    page.fill('[data-cells=sql] textarea', "SELECT DESK, SUM(NOTIONAL) AS n FROM extract GROUP BY DESK ORDER BY DESK")
     page.click('[data-cells=sql] [data-run]')
     page.wait_for_selector("[data-cells=sql] table")
     sql = {r[0]: float(r[1]) for r in grid(page, "[data-cells=sql]")}
     assert sql == pytest.approx(pivot)
     # promoting a query with implicit aliases (no AS) works, and the message links the draft
-    page.fill('[data-cells=sql] textarea', "SELECT desk d, SUM(notional) n FROM extract GROUP BY desk")
+    page.fill('[data-cells=sql] textarea', "SELECT DESK d, SUM(NOTIONAL) n FROM extract GROUP BY DESK")
     page.click('[data-cells=sql] [data-promote-report]')
     expect(page.locator("[data-promoted-link]")).to_be_visible(timeout=30000)
     said = page.inner_text('[data-cells=sql] [data-promote-report] + .bi-near')                     # the answer is beside the button
     assert "not read" not in said and "left out" not in said.replace("ORDER BY and LIMIT were left out", "")
-    page.fill('[data-cells=sql] textarea', "SELECT desk, SUM(notional) AS n FROM extract GROUP BY desk ORDER BY desk")
+    page.fill('[data-cells=sql] textarea', "SELECT DESK, SUM(NOTIONAL) AS n FROM extract GROUP BY DESK ORDER BY DESK")
 
     # PYTHON on the server: pandas over df, quant through the stand-in engine
     page.click("#bxT-python")
     page.fill('[data-cells=python] textarea',
-              "print(round(quant.price('black_scholes', spot=100, strike=100, rate=0.05, vol=0.2, years=1), 4))\nresult = df.groupby('desk')['notional'].sum().reset_index()")
+              "print(round(quant.price('black_scholes', spot=100, strike=100, rate=0.05, vol=0.2, years=1), 4))\nresult = df.groupby('DESK')['NOTIONAL'].sum().reset_index()")
     page.click('[data-cells=python] [data-run]')
     page.wait_for_selector("[data-cells=python] table", timeout=60000)
     assert page.inner_text("[data-cells=python] [data-stdout]").strip() == "10.4506"
@@ -117,10 +117,10 @@ def test_slice_sql_and_python_agree_and_the_notebook_saves(stack, browser):
     page.click("[data-saved]")
     page.wait_for_selector("[data-open-analyse]:not([hidden])", timeout=30000)
     page.click("[data-open-analyse]")
-    page.wait_for_function("() => /rows,/.test(document.querySelector('[data-info]').textContent)", timeout=60000)
+    page.wait_for_function("() => /rows,/.test((document.querySelector('[data-info]') || {}).textContent || '')", timeout=60000)            # the line is drawn once the extract is in
     page.wait_for_selector("[data-pivot] table")
     assert {r[0]: float(r[1]) for r in grid(page, "[data-pivot]")} == pytest.approx(pivot)
-    assert page.locator("[data-cells=sql] textarea").input_value().startswith("SELECT desk")
+    assert page.locator("[data-cells=sql] textarea").input_value().startswith("SELECT DESK")
     clean(page)
     page.close()
 
@@ -128,7 +128,7 @@ def test_slice_sql_and_python_agree_and_the_notebook_saves(stack, browser):
 def test_the_page_fits_a_phone(stack, browser):
     page = sign_in(browser, "wes", "/bi", viewport={"width": 390, "height": 844})
     open_extract(page)
-    page.click('.bx-chip[data-field="desk"] [data-to="rows"]')
+    page.click('.bx-chip[data-field="DESK"] [data-to="rows"]')
     page.wait_for_selector("[data-pivot] table")
     for tab in ("sql", "python", "slice"):
         page.click(f"#bxT-{tab}")

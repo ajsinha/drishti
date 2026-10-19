@@ -266,7 +266,8 @@ def test_the_mask_reads_the_same_in_the_grid_and_the_cards_for_a_reader_without_
 def test_the_desk_wall_colours_tiles_fills_the_screen_and_turns_its_pages(stack, browser):
     page = sign_in(browser)
     page.clock.install()
-    resp = page.goto(f"{CONSOLE_URL}/bi/b/{BOARD}")
+    resp = page.goto(f"{CONSOLE_URL}/bi/b/file:board:desk-wall")                         # the 2.3 address opens the report viewer (2.4.0)
+    assert "/bi/r/" + BOARD in page.url
     assert resp.headers["content-security-policy"].count("wasm") == 0                      # no Perspective tile: the strict policy
     page.wait_for_selector("[data-ready=yes]", state="attached", timeout=30000)
     page.wait_for_function("() => document.querySelectorAll('.bi-vis').length === 7 && !document.querySelector('.bi-vis-busy')", timeout=30000)
@@ -303,7 +304,7 @@ def card_text(page, tile):
 
 def test_a_tile_the_reader_cannot_open_says_so_and_the_rest_still_draw(stack, browser):
     page = sign_in(browser, "nobi")
-    page.goto(f"{CONSOLE_URL}/bi/b/{BOARD}")
+    page.goto(f"{CONSOLE_URL}/bi/r/{BOARD}")
     expect(page.locator("body")).to_contain_text("BI")                                      # nobi holds no BI power: the page is the refusal, not the wall
     assert page.query_selector("[data-tile]") is None
     page.context.close()
@@ -313,7 +314,7 @@ def test_the_report_and_the_board_open_from_the_catalogue_item_page(stack, brows
     page = sign_in(browser)
     page.goto(f"{CONSOLE_URL}/bi/i/{BOARD}")
     page.wait_for_selector("[data-open-board]:not([hidden])", timeout=20000)
-    assert page.get_attribute("[data-open-board]", "href") == f"/bi/b/{BOARD}"
+    assert page.get_attribute("[data-open-board]", "href") == f"/bi/r/{BOARD}?kiosk=1"                     # Open the board: the report viewer in kiosk
     page.click("[data-open-board]")
     page.wait_for_selector("[data-ready=yes]", state="attached", timeout=30000)
     page.context.close()
@@ -332,7 +333,7 @@ PHONE = """() => {
 
 def test_a_phone_shows_the_live_report_and_the_board_with_finger_sized_controls(stack, browser):
     page = sign_in(browser, viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
-    for path in (f"/bi/r/{REPORT}", f"/bi/r/{REPORT}/grid", f"/bi/r/{EXPOSURE}", f"/bi/b/{BOARD}"):
+    for path in (f"/bi/r/{REPORT}", f"/bi/r/{REPORT}/grid", f"/bi/r/{EXPOSURE}", f"/bi/r/{BOARD}"):
         page.goto(CONSOLE_URL + path)
         page.wait_for_selector("[data-ready=yes]", state="attached", timeout=30000)
         page.wait_for_function("() => !document.querySelector('.bi-vis-busy')", timeout=30000)

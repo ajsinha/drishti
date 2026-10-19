@@ -106,7 +106,7 @@ public final class BiBundles {
         }
         if (withDependencies) {
             for (BiStore.Item i : new ArrayList<>(chosen.values())) {
-                if ("board".equals(i.kind())) {
+                if (com.ash.drishti.server.bi.board.ReportBoards.isBoard(i.kind(), i.body())) {
                     for (BiStore.Item rep : impact.reportsOf(i.body())) {
                         if (!chosen.containsKey(rep.id())) {
                             take(p, rep.id(), chosen, skipped, "a report on the board '" + i.title() + "'");
@@ -461,7 +461,7 @@ public final class BiBundles {
             }
         }
         // a board's reports
-        if ("board".equals(kind)) {
+        if (com.ash.drishti.server.bi.board.ReportBoards.isBoard(kind, body)) {
             for (com.ash.drishti.server.bi.board.Board.Page pg : boardPages(body)) {
                 for (com.ash.drishti.server.bi.board.Board.Tile t : pg.tiles()) {
                     if (!t.report().isBlank() && !reportKnown(t.report(), all)) {
@@ -484,7 +484,7 @@ public final class BiBundles {
     }
 
     private static List<com.ash.drishti.server.bi.board.Board.Page> boardPages(String body) {
-        com.ash.drishti.server.bi.board.Board b = com.ash.drishti.server.bi.board.BoardParser.parse(body).board();
+        com.ash.drishti.server.bi.board.Board b = com.ash.drishti.server.bi.board.ReportBoards.boardOfText(body);
         return b == null ? List.of() : b.pages();
     }
 

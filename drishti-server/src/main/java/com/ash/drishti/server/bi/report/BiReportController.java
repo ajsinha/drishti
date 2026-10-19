@@ -65,6 +65,12 @@ public class BiReportController {
     }
 
     /** The visuals a report may hold, their wells, and the types reserved for later. */
+    /** The typed format of each visual family (report schema v2): what the designer's Format pane is generated from. */
+    @GetMapping("/format-schemas")
+    public Map<String, Object> formatSchemas(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return reports.formatSchemas(p);
+    }
+
     @GetMapping("/catalogue")
     public Map<String, Object> catalogue(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         return reports.catalogue(p);

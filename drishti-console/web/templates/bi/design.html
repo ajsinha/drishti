@@ -13,10 +13,12 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# Rupaka phase 3: the report designer (RUPAKA.md section 9). The canvas on the 12-column grid, the YAML tab, and three panes: Filters, Visualizations (with Build and
-   Format) and Fields. Drawn by static/js/bi-design*.js from /bi/api/items/<id> and /bi/api/reports/...; every action also has a button or a select, so nothing
+{# Rupaka phase 3: the report designer (RUPAKA.md section 9), inside BI Studio (2.4.0: the Explorer on the left, the open items on top, Problems and Query in the
+   dock below). The canvas on the 12-column grid, the YAML tab, and three panes: Filters, Visualizations (with Build and
+   Format, generated from the format schemas) and Fields. Drawn by static/js/bi-design*.js from /bi/api/items/<id> and /bi/api/reports/...; every action also has a button or a select, so nothing
    needs the mouse. #}
 {% extends "bi/shell.html" %}
+{% import "bi/_studio.html" as studio %}
 {% block bi_title %}Designer{% endblock %}
 {% block bi_keys %}
     <dt><kbd>Tab</kbd></dt><dd>Walk the panes and the visuals</dd>
@@ -26,8 +28,12 @@
     <dt><kbd>Ctrl</kbd>+<kbd>Z</kbd> <kbd>Ctrl</kbd>+<kbd>Y</kbd></dt><dd>Undo; redo</dd>
     <dt><kbd>Ctrl</kbd>+<kbd>S</kbd></dt><dd>Save the draft</dd>
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-expr.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-report.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-ai.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-design.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-layer.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-expr.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-report.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-ai.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-design.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-layer.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-board.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-studio.css?v={{ ASSET_V }}">{% endblock %}
 {% block bi_main %}
+<div class="bi-studio" data-studio data-studio-kind="report">
+{{ studio.rail() }}
+<div class="bi-studio-main">
+{{ studio.tabs() }}
 <div class="bi-design" data-design-root data-ready="">
   <header class="bi-dbar">
     <div class="bi-dtitle"><a class="bi-dback" href="/bi/designer" aria-label="Back to the designer start"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
@@ -124,5 +130,8 @@
       <p><a data-model-link href="/bi/datasets"><i class="bi bi-diagram-2" aria-hidden="true"></i> Model view</a></p></aside>
   </div>
 </div>
+{{ studio.dock() }}
+</div>
+</div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script><script src="/static/js/cm-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/multiselect.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-expr-editor.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-phone.js?v={{ ASSET_V }}"></script><script src="/static/js/geomap.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-visuals.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-grids.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-vega.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-frame.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-query-panel.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-model.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-canvas.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-panes.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-datasets.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-phone.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-ai.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-copilot.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script><script src="/static/js/cm-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/multiselect.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-expr-editor.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-phone.js?v={{ ASSET_V }}"></script><script src="/static/js/geomap.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-visuals.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-visuals-format.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-grids.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-matrix.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-multiples.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-vega.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-frame.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-query-panel.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-model.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-studio.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-format-pane.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-format-rules.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-v2.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-canvas.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-panes.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-datasets.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-phone.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-ai.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-copilot.js?v={{ ASSET_V }}"></script>{% endblock %}

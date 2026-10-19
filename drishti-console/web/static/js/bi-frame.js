@@ -121,6 +121,7 @@
       resize() { if (handle) { handle.resize(); } },
       dispose() { drop(); }
     };
+    if (B.visuals && B.visuals.frameFormat) { B.visuals.frameFormat(api, spec); }          // the frame of the typed format (2.4.0): subtitle, border, shadow, background, padding
     return api;
   };
 })();

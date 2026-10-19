@@ -193,8 +193,16 @@ public final class BiReportService {
         m.put("status", l.item().status());
         m.put("shipped", com.ash.drishti.server.bi.BiFolder.isShipped(l.item().id()));
         m.put("sample", l.item().tags().contains(com.ash.drishti.server.bi.BiFolder.SAMPLE_TAG));
-        m.put("valid", ok(l.problems()));
-        m.put("problems", l.problems().stream().map(ReportParser.Problem::toMap).toList());
+        List<ReportParser.Problem> all = new ArrayList<>(l.problems());
+        TileCheck tc = tiles == null || l.parsed().report() == null || !l.parsed().report().hasBoard() ? null : tiles.apply(p, l.parsed().report());
+        if (tc != null) {
+            all.addAll(tc.problems());                                       // board pages (R7): what each tile names, checked for this caller
+        }
+        if (themes != null && l.parsed().report() != null) {
+            all.addAll(themes.problems(p, l.parsed().report()));
+        }
+        m.put("valid", ok(all));
+        m.put("problems", all.stream().map(ReportParser.Problem::toMap).toList());
         if (l.parsed().report() != null) {
             m.put("report", l.parsed().report().toMap());
         }
@@ -210,8 +218,27 @@ public final class BiReportService {
                 m.put("datasets", others);
             }
         }
+        if (tc != null && !tc.resolved().isEmpty()) {
+            m.put("tiles", tc.resolved());                                       // by page/tile: the report item and page each tile's visual is on, its type, live
+        }
+        m.put("theme", themes == null ? null : themes.resolve(p, l.parsed().report() == null ? Map.of() : l.parsed().report().theme()));
         m.put("mayEdit", bi.mayAuthor(p));
         return m;
+    }
+
+    /** What the tiles of a report's board pages name, for one caller: by {@code <page>/<tile>} the report and page they resolve to, and the problems (report paths). */
+    public record TileCheck(Map<String, Object> resolved, List<ReportParser.Problem> problems) {}
+
+    /** Resolves the tiles of a report's board pages for a caller ({@link com.ash.drishti.server.bi.board.BiBoardService} registers it). */
+    private java.util.function.BiFunction<Principal, Report, TileCheck> tiles;
+    private com.ash.drishti.server.bi.theme.ThemeService themes;
+
+    public void tileResolver(java.util.function.BiFunction<Principal, Report, TileCheck> resolver) {
+        this.tiles = resolver;
+    }
+
+    public void themes(com.ash.drishti.server.bi.theme.ThemeService themes) {
+        this.themes = themes;
     }
 
     /** A report the caller may read, parsed, for the export and subscription code that asks each visual itself; refused as {@code DRS-9031} when it cannot be read. */
@@ -303,6 +330,12 @@ public final class BiReportService {
         if (quality && l.parsed().report() != null) {
             problems.addAll(ReportValidator.accessibility(l.parsed().report()));
         }
+        if (tiles != null && l.parsed().report() != null && l.parsed().report().hasBoard()) {
+            problems.addAll(tiles.apply(p, l.parsed().report()).problems());
+        }
+        if (themes != null && l.parsed().report() != null) {
+            problems.addAll(themes.problems(p, l.parsed().report()));
+        }
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("valid", ok(problems));
         m.put("problems", problems.stream().map(ReportParser.Problem::toMap).toList());
@@ -333,10 +366,17 @@ public final class BiReportService {
         return Map.of("yaml", ReportYaml.write(m));
     }
 
+    /** The format schemas per visual family (FormatSchemas): types, families, their sections and properties. */
+    public Map<String, Object> formatSchemas(Principal p) {
+        bi.requirePower(p, BiAccess.BI);
+        return FormatSchemas.get().toMap();
+    }
+
     /** The visual catalogue: types, their groups and wells. */
     public Map<String, Object> catalogue(Principal p) {
         bi.requirePower(p, BiAccess.BI);
-        return Map.of("visuals", VisualCatalogue.toMap(), "reserved", VisualCatalogue.RESERVED.stream().sorted().toList(), "slicerModes", VisualCatalogue.SLICER_MODES.stream().sorted().toList());
+        return Map.of("visuals", VisualCatalogue.toMap(), "reserved", VisualCatalogue.RESERVED.stream().sorted().toList(), "slicerModes", VisualCatalogue.SLICER_MODES.stream().sorted().toList(),
+                "families", FormatSchemas.get().families());                    // a type's format family: what a theme's visual defaults are keyed by
     }
 
     /**

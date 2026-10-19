@@ -1,0 +1,42 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# BI Studio (BI_DESIGN.md section 8.1, 2.4.0): the macros a designer page puts around itself. `rail()` is the Explorer on the left (the items you may edit,
+   a search, New), `tabs()` the items open in this browser tab, `dock()` the bottom dock (Problems, Query). static/js/bi-studio.js draws them; the page's
+   root carries data-studio. #}
+{% macro rail() -%}
+<aside class="bi-studio-rail" data-studio-rail aria-labelledby="studioH">
+  <div class="bi-studio-railhead"><h2 id="studioH"><i class="bi bi-grid-1x2" aria-hidden="true"></i> Studio</h2>
+    <button type="button" class="bi-chipbtn" data-studio-collapse aria-expanded="true" aria-label="Hide the Explorer"><i class="bi bi-layout-sidebar-inset" aria-hidden="true"></i></button></div>
+  <label class="bi-studio-new">New <select class="studio-select" data-studio-new aria-label="Make a new item">
+    <option value="">choose…</option><option value="report">report</option><option value="board">board</option><option value="theme">theme</option>
+    <option value="dataset">dataset</option><option value="model">model</option></select></label>
+  <input type="search" class="studio-in" data-studio-search placeholder="Find an item" aria-label="Find an item">
+  <nav class="bi-studio-tree" data-studio-tree aria-label="Your items"></nav>
+</aside>
+{%- endmacro %}
+{% macro tabs() -%}
+<nav class="bi-studio-tabs" data-studio-tabs role="tablist" aria-label="Open items"></nav>
+{%- endmacro %}
+{% macro dock() -%}
+<section class="bi-studio-dock" data-studio-dock aria-label="Problems and query">
+  <div class="bi-studio-docktabs" role="tablist" aria-label="Dock">
+    <button type="button" class="bi-tab" role="tab" data-dock-tab="problems" aria-selected="false">Problems <span class="bi-badge" data-dock-count="problems"></span></button>
+    <button type="button" class="bi-tab" role="tab" data-dock-tab="query" aria-selected="false">Query</button>
+  </div>
+  <div class="bi-studio-dockbody" data-dock-pane="problems" role="tabpanel" hidden></div>
+  <div class="bi-studio-dockbody" data-dock-pane="query" role="tabpanel" hidden></div>
+</section>
+{%- endmacro %}

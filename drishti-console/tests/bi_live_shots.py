@@ -116,7 +116,7 @@ def main(out: Path, captures: Path) -> None:
 
                 # ---- the board ---------------------------------------------------------------------------------------------------
                 wall = sign_in(browser, "rita")
-                ready(wall, f"/bi/b/{BOARD}")
+                ready(wall, f"/bi/r/{BOARD}")
                 wall.screenshot(path=str(out / "board-wall.png"))
                 wall.click("[data-pages] a:nth-child(2)")
                 wall.wait_for_function("() => document.getElementById('biCanvas').getAttribute('data-page-id') === 'exposure' && !document.querySelector('.bi-vis-busy')", timeout=30000)
@@ -132,7 +132,7 @@ def main(out: Path, captures: Path) -> None:
                 phone = sign_in(browser, "rita", viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, device_scale_factor=2)
                 ready(phone, f"/bi/r/{REPORT}")
                 phone.screenshot(path=str(out / "phone-live-390.png"))
-                ready(phone, f"/bi/b/{BOARD}")
+                ready(phone, f"/bi/r/{BOARD}")
                 phone.screenshot(path=str(out / "phone-board-390.png"))
                 browser.close()
 

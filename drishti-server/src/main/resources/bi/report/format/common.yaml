@@ -1,0 +1,154 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The typed `format:` of a report visual (report schema v2, docs/architecture/BI_PARITY_PLAN.md R6; docs/guides/REPORTS.md section 5): the parts every
+# visual family shares. Each family file (chart.yaml, card.yaml, table.yaml, ...) is a JSON Schema written in YAML whose `allOf` starts with
+# `common#/$defs/frame`. The server checks every visual's format against its family (FormatSchemas: a wrong type or range is DRS-9032, an unknown key
+# a warning) and serves the schemas at GET /api/v1/bi/reports/format-schemas; the designer's Format pane is generated from them (bi-format-pane.js).
+#
+# The keywords used are a subset of JSON Schema 2020-12: type, enum, const, minimum, maximum, maxLength, pattern, properties, additionalProperties,
+# items, minItems, maxItems, required, oneOf (with x-discriminator), allOf and $ref (to $defs in this file or another family file). The x- keys are
+# for the generated pane: x-label (the control's name), x-hint (a line under it), x-group (the section it is in), x-hook (the data- attribute the
+# control carries, kept from the hand-made pane so tests and tutorials keep working), x-control (a custom control: colour, measure, measures,
+# field, page, rules, ...), x-order (the section order) and x-types (the visual types a family covers).
+
+$id: common
+$defs:
+  colour:
+    type: string
+    pattern: "^#[0-9a-fA-F]{6}$"
+    x-control: colour
+  numberFormat:
+    type: string
+    enum: [amount0, signed0, signed2, compact, pct, share]
+    x-label: Number format
+    x-hint: "Else the measure's own format from the model."
+    x-hook: format-number
+    x-group: Values
+  frame:
+    type: object
+    properties:
+      subtitle:
+        type: string
+        maxLength: 200
+        x-label: Subtitle
+        x-hint: A line under the title.
+        x-group: Title
+      titleSize:
+        type: integer
+        minimum: 10
+        maximum: 32
+        x-label: Title size (px)
+        x-group: Title
+      border:
+        type: boolean
+        x-label: Border
+        x-group: Frame
+      shadow:
+        type: boolean
+        x-label: Shadow
+        x-group: Frame
+      background:
+        $ref: "#/$defs/colour"
+        x-label: Background
+        x-group: Frame
+      padding:
+        type: integer
+        minimum: 0
+        maximum: 32
+        x-label: Padding (px)
+        x-group: Frame
+  legacyConditional:
+    type: array
+    maxItems: 20
+    x-label: Conditional colours (short form)
+    x-hint: "The 2.1 form; Conditional formatting below holds every kind of rule."
+    x-control: conditional
+    x-group: Conditional formatting
+    items:
+      type: object
+      required: [measure, op, value]
+      properties:
+        measure: { type: string }
+        op: { type: string, enum: [lt, le, gt, ge, eq, ne] }
+        value: { type: number }
+        colour: { $ref: "#/$defs/colour" }
+  dataBars:
+    type: array
+    items: { type: string }
+    x-label: Data bars
+    x-hint: The measures drawn as a bar in their cells.
+    x-control: measures
+    x-group: Conditional formatting
+  rules:
+    type: array
+    maxItems: 30
+    x-label: Conditional formatting
+    x-hint: "Colour a measure (or a field's values) by a rule, a colour scale, icons or a colour per value."
+    x-control: rules
+    x-group: Conditional formatting
+    items:
+      type: object
+      x-discriminator: type
+      oneOf:
+        - type: object
+          required: [type, apply, op, value]
+          properties:
+            type: { const: rule }
+            apply: { type: string, x-label: Format }
+            "on": { type: string, x-label: "When (a measure; else the one formatted)" }
+            op: { type: string, enum: [lt, le, gt, ge, eq, ne, between] }
+            value: { type: number }
+            to: { type: number }
+            colour: { $ref: "#/$defs/colour" }
+            background: { $ref: "#/$defs/colour" }
+          additionalProperties: false
+        - type: object
+          required: [type, apply, min, max]
+          properties:
+            type: { const: gradient }
+            apply: { type: string }
+            min: { $ref: "#/$defs/colour" }
+            mid: { $ref: "#/$defs/colour" }
+            max: { $ref: "#/$defs/colour" }
+            minValue: { type: number }
+            midValue: { type: number }
+            maxValue: { type: number }
+            target: { type: string, enum: [background, font] }
+          additionalProperties: false
+        - type: object
+          required: [type, apply, thresholds]
+          properties:
+            type: { const: icons }
+            apply: { type: string }
+            "on": { type: string }
+            icons: { type: string, enum: [arrows, traffic, signs, flags] }
+            thresholds: { type: array, items: { type: number }, minItems: 1, maxItems: 2 }
+            reverse: { type: boolean }
+          additionalProperties: false
+        - type: object
+          required: [type, apply, colours]
+          properties:
+            type: { const: values }
+            apply: { type: string }
+            colours:
+              type: object
+              additionalProperties: { $ref: "#/$defs/colour" }
+            target: { type: string, enum: [background, font] }
+          additionalProperties: false
+  legend:
+    type: string
+    enum: [bottom, top, right, none]
+    x-label: Legend
+    x-group: Legend

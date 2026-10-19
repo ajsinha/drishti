@@ -106,6 +106,15 @@
     const live = h('span', { class: 'visually-hidden', role: 'status', 'aria-live': 'polite' });
     host.appendChild(live);
     const openMark = (m, x, y) => { if (ctx.interactive && ctx.onMark && m) { ctx.onMark({ visual: spec.id, field: state.marks.field, value: m.value, label: m.label }, { x, y, el: box }); } };
+    if (ctx.onHover) {                                                                // a tooltip page (2.4.0): the hovered mark, after a short pause
+      chart.on('mouseover', (p) => {
+        const m = (p.name ? state.marks.byName(p.name) : null) || state.marks.items[p.seriesType === 'heatmap' || p.seriesType === 'custom' ? (p.value || [])[0] : p.dataIndex];
+        const ev = p.event && p.event.event;
+        if (m) { ctx.onHover({ visual: spec.id, field: state.marks.field, value: m.value, label: m.label }, { x: ev ? ev.clientX : 0, y: ev ? ev.clientY : 0, el: box }); }
+      });
+      chart.on('mouseout', () => { if (ctx.onHoverEnd) { ctx.onHoverEnd(); } });
+      chart.on('globalout', () => { if (ctx.onHoverEnd) { ctx.onHoverEnd(); } });
+    }
     chart.on('click', (p) => {
       let m = p.name ? state.marks.byName(p.name) : null;
       if (!m) { m = state.marks.items[p.seriesType === 'heatmap' || p.seriesType === 'custom' ? p.value[0] : p.dataIndex]; }
@@ -200,44 +209,61 @@
     const t = ctx.t;
     const type = spec.type;
     const horizontal = type === 'bar';
-    const s = seriesOf(spec, ctx, res, type === 'combo' ? spec.wells.secondary || [] : []);
+    let s = seriesOf(spec, ctx, res, type === 'combo' ? spec.wells.secondary || [] : []);
     if (!s.cats.length) { return emptyNote(host, NO_DATA); }
+    const percent = !!f.percent && ['bar', 'column', 'area'].indexOf(type) >= 0;
+    if (percent) { s = Object.assign({}, s, { series: V.percentOf(s.series, s.cats.length) }); }
     const sel = selectedSet(ctx, spec);
     const hl = res.highlight ? seriesOf(spec, ctx, res.highlight, []) : null;
-    const dimmed = !!(sel || hl);
     const fixed = typeof f.colour === 'string' && /^#[0-9a-fA-F]{6}$/.test(f.colour) ? f.colour : null;
     const count = s.series.length;
     const secondary = type === 'combo' ? new Set(spec.wells.secondary || []) : new Set();
+    const styler = percent ? null : V.styler(spec, s.tb, ctx);
+    const axisField = s.axis;
+    const every = V.labelEvery(f, s.cats.length);
     const series = [];
     s.series.forEach((sr, si) => {
       const isLine = type === 'line' || type === 'area' || secondary.has(sr.measure);
-      const base = fixed && count === 1 ? fixed : ctx.palette[si % ctx.palette.length];
+      const base = V.seriesColour(f, sr.name, sr.measure) || (fixed && count === 1 ? fixed : ctx.palette[si % ctx.palette.length]);
+      const rows = s.tb.rows;
       const data = sr.values.map((v, i) => {
-        const cond = V.conditional(spec, sr.measure, v);
-        const faded = (sel && !sel.has(String(s.cats[i]))) || (hl && !isLine);
+        const row = rows.find((r) => String(r[s.tb.at(axisField)]) === String(s.cats[i])) || null;
+        const cond = styler ? styler.point(sr.measure, v, row) || styler.point(axisField, s.cats[i], row) : null;
+        const faded = (sel && !sel.has(String(s.cats[i]))) || !!hl;
         return { value: v, itemStyle: { color: cond || base, opacity: faded ? 0.35 : 1 } };
       });
       series.push({
         name: sr.name, type: isLine ? 'line' : 'bar', data, yAxisIndex: secondary.has(sr.measure) ? 1 : 0, smooth: !!f.smooth, symbol: 'circle', symbolSize: 5,
-        areaStyle: type === 'area' ? { opacity: 0.25 } : undefined, stack: f.stacked && !isLine ? 'total' : undefined, lineStyle: { color: base, width: 2 }, emphasis: { focus: 'none' },
-        label: { show: !!f.labels, position: horizontal ? 'right' : isLine ? 'top' : 'top', color: t.ink, fontSize: 10, formatter: (p) => B.compact(p.value) },
+        areaStyle: type === 'area' ? { opacity: hl ? 0.1 : 0.25 } : undefined, stack: (f.stacked || percent) && !isLine || percent && type === 'area' ? 'total' : undefined,
+        lineStyle: { color: base, width: 2, opacity: hl && isLine ? 0.35 : 1 }, emphasis: { focus: 'none' },
+        label: { show: !!f.labels, position: V.labelPosition(f, horizontal, isLine), color: t.ink, fontSize: 10, formatter: (p) => (p.dataIndex % every ? '' : percent ? Math.round(p.value * 100) + '%' : B.compact(p.value)) },
         barMaxWidth: 36
       });
-      if (hl && !isLine) {
+      if (hl) {                                                                       // the highlighted part over the faded whole (bars since 2.1, lines and areas since 2.4)
         const hs = hl.series[si] || { values: [] };
         const vals = s.cats.map((c) => { const i = hl.seen.get(String(c)); return i == null || !hs.values ? null : hs.values[i]; });
-        series.push({ name: '__highlight', type: 'bar', data: vals.map((v) => ({ value: v, itemStyle: { color: base } })), barGap: '-100%', barMaxWidth: 36, silent: true, z: 5, tooltip: { show: false } });
+        series.push(isLine ? { name: '__highlight', type: 'line', data: vals, smooth: !!f.smooth, symbol: 'circle', symbolSize: 6, lineStyle: { color: base, width: 3 }, itemStyle: { color: base },
+          areaStyle: type === 'area' ? { opacity: 0.3, color: base } : undefined, silent: true, z: 5, tooltip: { show: false }, yAxisIndex: secondary.has(sr.measure) ? 1 : 0 }
+          : { name: '__highlight', type: 'bar', data: vals.map((v) => ({ value: v, itemStyle: { color: base } })), barGap: '-100%', barMaxWidth: 36, silent: true, z: 5, tooltip: { show: false } });
       }
     });
-    const cat = Object.assign({ type: 'category', data: s.labels, inverse: horizontal, name: (f.axisTitles && f.axisTitles.x) || '' }, axisStyle(t));
-    const val = valueAxis(spec, ctx, t, s.series[0].measure);
-    const axes = horizontal ? { xAxis: val, yAxis: cat } : { xAxis: cat, yAxis: type === 'combo' && secondary.size ? [val, valueAxis(spec, ctx, t, [...secondary][0])] : val };
+    const cat = V.categoryAxisFormat(Object.assign({ type: 'category', data: s.labels, inverse: horizontal, name: (f.axisTitles && f.axisTitles.x) || '' }, axisStyle(t)), f);
+    const val = V.valueAxisFormat(valueAxis(spec, ctx, t, s.series[0].measure), f);
+    if (percent) { val.max = 1; val.axisLabel = Object.assign({}, val.axisLabel, { formatter: (v) => Math.round(v * 100) + '%' }); }
+    const axes = horizontal ? { xAxis: val, yAxis: cat } : { xAxis: cat, yAxis: type === 'combo' && secondary.size ? [val, V.valueAxisFormat(valueAxis(spec, ctx, t, [...secondary][0]), {})] : val };
     const legendShown = !!(count > 1 || (spec.wells.legend || []).length) && f.legend !== 'none' && f.legend !== false;
     const option = baseOption(spec, ctx, { horizontal, legend: legendShown, extra: Object.assign(axes, { series, tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: tip(spec, ctx, s) }) }) });
     if (legendShown) { option.legend = Object.assign({}, option.legend, f.legend === 'right' ? { right: 0, top: 'middle', orient: 'vertical', bottom: undefined } : f.legend === 'top' ? { top: 0, bottom: undefined } : {}); if (f.legend === 'top') { option.grid.top = 28; option.grid.bottom = 8; } }
     const marks = marksFor(s.axis, s, ctx, spec);
     return mount(host, option, spec, ctx, marks);
   }
+  V.categoryChart = categoryChart;
+  V.mount = (host, option, spec, ctx, marks) => mount(host, option, spec, ctx, marks);
+  V.baseOption = (spec, ctx, o) => baseOption(spec, ctx, o);
+  V.axisStyle = (t) => axisStyle(t);
+  V.valueAxis = (spec, ctx, t, m) => valueAxis(spec, ctx, t, m);
+  V.seriesOf = (spec, ctx, res, other) => seriesOf(spec, ctx, res, other);
+  V.marksFor = (field, s, ctx, spec) => marksFor(field, s, ctx, spec);
 
   function pieChart(host, spec, ctx, res) {
     const f = spec.format || {};
@@ -246,11 +272,12 @@
     const sel = selectedSet(ctx, spec);
     const sr = s.series[0];
     const total = sr.values.reduce((a, v) => a + (typeof v === 'number' ? Math.max(v, 0) : 0), 0);
-    const data = s.labels.map((l, i) => ({ name: l, value: sr.values[i], itemStyle: { opacity: sel && !sel.has(String(s.cats[i])) ? 0.35 : 1 } }));
+    const data = s.labels.map((l, i) => ({ name: l, value: sr.values[i], itemStyle: Object.assign({ opacity: sel && !sel.has(String(s.cats[i])) ? 0.35 : 1 }, V.seriesColour(f, l, l) ? { color: V.seriesColour(f, l, l) } : {}) }));
+    const lab = { percent: '{d}%', value: (p) => B.compact(p.value), name: '{b}', 'name-percent': '{b}: {d}%' }[f.labelStyle || 'name-percent'];
     const option = baseOption(spec, ctx, {
       legend: f.legend !== 'none', extra: {
         tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { trigger: 'item', formatter: (p) => p.name + ': ' + B.fmt(p.value, V.numFmt(spec, ctx, sr.measure), s.tb.isMasked(sr.measure)) + ' (' + (total ? Math.round(100 * p.value / total) : 0) + '%)' }),
-        series: [{ type: 'pie', radius: spec.type === 'donut' ? ['45%', '70%'] : [0, '70%'], center: ['50%', '45%'], data, label: { show: !!f.labels, color: ctx.t.ink, fontSize: 10, formatter: '{b}: {d}%' }, itemStyle: { borderColor: ctx.t.surface, borderWidth: 1 } }]
+        series: [{ type: 'pie', radius: spec.type === 'donut' ? ['45%', '70%'] : [0, '70%'], center: ['50%', '45%'], data, label: { show: !!f.labels, color: ctx.t.ink, fontSize: 10, formatter: lab }, itemStyle: { borderColor: ctx.t.surface, borderWidth: 1 } }]
       }
     });
     return mount(host, option, spec, ctx, marksFor(s.axis, s, ctx, spec));
@@ -388,12 +415,24 @@
     const tb = V.table(res);
     const m = spec.wells.values[0];
     const v = tb.rows.length ? tb.rows[0][tb.at(m)] : null;
-    const colour = V.conditional(spec, m, v);
+    const f = spec.format || {};
     const big = h('div', { class: 'bi-card-value', 'data-value': v == null ? '' : String(v), text: B.fmt(v, V.numFmt(spec, ctx, m), tb.isMasked(m)) });
-    if (colour) { big.style.color = colour; }
+    cardStyle(big, spec, tb, ctx, m, v, tb.rows[0] || null);
     V.flashIfChanged(host, big, ctx);
-    B.clear(host).appendChild(h('div', { class: 'bi-card-body' }, big, spec.title ? null : h('div', { class: 'bi-card-label', text: m })));
+    B.clear(host).appendChild(h('div', { class: 'bi-card-body' }, big, (spec.title && f.showLabel !== true) || f.showLabel === false ? null : h('div', { class: 'bi-card-label', text: m })));
     return { dispose() {}, resize() {} };
+  }
+
+  /** A card's number as its format says: its size, and the colour (or background and icon) of its conditional formatting. */
+  function cardStyle(el, spec, tb, ctx, m, v, row) {
+    const f = spec.format || {};
+    if (typeof f.calloutSize === 'number') { el.style.fontSize = f.calloutSize + 'px'; }
+    const st = V.styler(spec, tb, ctx);
+    const c = st ? st.cell(m, v, row) : null;
+    if (c && c.colour && !c.background) { el.style.color = c.colour; }
+    if (c && c.background) { el.style.backgroundColor = c.background; el.style.color = c.colour; el.classList.add('bi-card-filled'); }
+    if (c && c.icon) { V.paintCell(el, { icon: c.icon }); }
+    if (c) { el.setAttribute('data-cf', c.background || c.colour || (c.icon && c.icon.words) || ''); }
   }
 
   function multirow(host, spec, ctx, res) {
@@ -422,14 +461,16 @@
     const nf = V.numFmt(spec, ctx, m);
     const body = h('div', { class: 'bi-card-body' });
     const value = h('div', { class: 'bi-card-value', 'data-value': v == null ? '' : String(v), text: B.fmt(v, nf, tb.isMasked(m)) });
-    const colour = V.conditional(spec, m, v);
-    if (colour) { value.style.color = colour; }
+    cardStyle(value, spec, tb, ctx, m, v, last);
     V.flashIfChanged(host, value, ctx);
     body.appendChild(value);
     if (!spec.title) { body.appendChild(h('div', { class: 'bi-card-label', text: m })); }
     if (typeof v === 'number' && typeof target === 'number' && target !== 0) {
       const pct = (v - target) / Math.abs(target);
-      body.appendChild(h('div', { class: 'bi-kpi-target ' + (pct >= 0 ? 'bi-up' : 'bi-down'), text: (pct >= 0 ? '▲ ' : '▼ ') + Math.abs(Math.round(pct * 1000) / 10) + '% vs target ' + B.fmt(target, nf) }));
+      const good = (spec.format || {}).goodWhen === 'lower' ? pct <= 0 : pct >= 0;          // better when higher (the default) or lower, in the theme's good and bad colours
+      const line = h('div', { class: 'bi-kpi-target ' + (pct >= 0 ? 'bi-up' : 'bi-down'), 'data-good': good ? 'yes' : 'no', text: (pct >= 0 ? '▲ ' : '▼ ') + Math.abs(Math.round(pct * 1000) / 10) + '% vs target ' + B.fmt(target, nf) });
+      if (ctx.theme && (ctx.theme.good || ctx.theme.bad)) { const gb = B.theme.goodBad(ctx); line.style.color = good ? gb.good : gb.bad; }
+      body.appendChild(line);
     }
     B.clear(host).appendChild(body);
     let handle = { dispose() {}, resize() {} };
@@ -725,7 +766,8 @@
     return { dispose() { dead = true; inner.dispose(); }, resize() { inner.resize(); } };
   }
 
-  const CHARTS = { 'live-chart': liveChart, bar: categoryChart, column: categoryChart, line: categoryChart, area: categoryChart, combo: categoryChart, pie: pieChart, donut: pieChart, waterfall, treemap, heatmap, scatter,
+  const splitOr = (host, spec, ctx, res) => ((spec.wells.split || []).length && V.multiples ? V.multiples(host, spec, ctx, res) : categoryChart(host, spec, ctx, res));      // small multiples (2.4.0)
+  const CHARTS = { 'live-chart': liveChart, bar: splitOr, column: splitOr, line: splitOr, area: splitOr, combo: categoryChart, pie: pieChart, donut: pieChart, waterfall, treemap, heatmap, scatter,
     bubble: scatter, funnel, histogram, box, map, gauge };
   const CARDS = { card, 'multirow-card': multirow, kpi };
 

@@ -287,9 +287,11 @@ class BiApiTest {
     void catalogueSearchesFiltersAndSorts() throws Exception {
         assertThat(ok(call("GET", "/api/v1/bi/catalogue?q=daily%20p%26l", cat(), null)).path("total").asInt()).isEqualTo(1);
         assertThat(ok(call("GET", "/api/v1/bi/catalogue?q=pnl", cat(), null)).path("total").asInt()).isEqualTo(2);       // tag on both the item and the shipped file
-        assertThat(ok(call("GET", "/api/v1/bi/catalogue?kind=board", cat(), null)).path("total").asInt()).isEqualTo(1);
+        JsonNode boards = ok(call("GET", "/api/v1/bi/catalogue?kind=board", cat(), null));
+        assertThat(boards.path("total").asInt()).as(boards.toString()).isEqualTo(1);           // a report with board pages (2.4.0)
+        assertThat(ok(call("GET", "/api/v1/bi/catalogue?kind=board", cat(), null)).path("items").get(0).path("kind").asText()).isEqualTo("report");
         assertThat(ok(call("GET", "/api/v1/bi/catalogue?endorsement=certified", cat(), null)).path("total").asInt()).isEqualTo(2);
-        assertThat(ok(call("GET", "/api/v1/bi/catalogue?owner=ann&kind=report", cat(), null)).path("total").asInt()).isEqualTo(1);
+        assertThat(ok(call("GET", "/api/v1/bi/catalogue?owner=ann&kind=report", cat(), null)).path("total").asInt()).isEqualTo(2);        // Desk P&L and the board (a report since 2.4.0)
         assertThat(ok(call("GET", "/api/v1/bi/catalogue?tag=daily", cat(), null)).path("total").asInt()).isEqualTo(1);
         assertThat(ok(call("GET", "/api/v1/bi/catalogue?fresh=1", cat(), null)).path("total").asInt()).isGreaterThanOrEqualTo(2);
         JsonNode byTitle = ok(call("GET", "/api/v1/bi/catalogue?sort=title", cat(), null)).path("items");

@@ -185,7 +185,7 @@ def test_show_the_rows_and_show_as_a_table(stack, browser):
     page.wait_for_selector('[data-visual="by-desk"] table tbody tr')
     expect(page.locator('[data-visual="by-desk"] table tbody tr')).to_have_count(20)                     # the 20 trades of that desk, every column of the table
     head = page.locator('[data-visual="by-desk"] thead th').all_inner_texts()
-    assert "tradeId" in " ".join(head) and "desk" in " ".join(head) and "mtmInMillions" in " ".join(head)
+    assert "TRADE_ID" in " ".join(head) and "DESK" in " ".join(head) and "MTM_IN_MILLIONS" in " ".join(head)
     page.click('[data-visual="by-desk"] [data-act="rows"]')
     page.wait_for_selector('[data-visual="by-desk"] .bi-chart')
     page.click('[data-visual="by-date"] [data-act="as-table"]')
@@ -291,13 +291,13 @@ def test_designer_drag_a_field_makes_the_best_visual_and_another_field_improves_
     page.wait_for_selector('.bi-dvis .bi-card-value')
     assert card_value(page, "card-1") == sum(t["mtm"] for t in day_trades())                              # real data while designing
     expect(page.locator("[data-canvas-empty]")).to_be_hidden()
-    page.drag_and_drop('[data-field="trade.desk"]', ".bi-dvis")                                           # a category with the measure: a bar
+    page.drag_and_drop('[data-field="trade.DESK"]', ".bi-dvis")                                           # a category with the measure: a bar
     page.wait_for_selector('.bi-dvis[data-type="bar"]')
     settled_design(page)
     bar = page.evaluate("(() => { const c = echarts.getInstanceByDom(document.querySelector('.bi-dvis .bi-chart')); return c.getOption().yAxis[0].data; })()")
     assert sorted(bar) == ["DESK-EQD", "DESK-FI", "DESK-FX"]
     assert re.search(r"\d+ ms|from the cache", page.locator(".bi-dvis .bi-vis-foot").inner_text())         # the query time is shown on the visual
-    assert model(page)["pages"][0]["visuals"][0]["wells"] == {"axis": ["trade.desk"], "values": ["MTM"]}
+    assert model(page)["pages"][0]["visuals"][0]["wells"] == {"axis": ["trade.DESK"], "values": ["MTM"]}
     clean(page)
 
 
@@ -308,7 +308,7 @@ def settled_design(page):
 def test_designer_change_a_well_set_a_filter_check_save_and_reload(stack, browser):
     page = sign_in(browser, "wes")
     draft = new_draft(page)
-    page.drag_and_drop('[data-field="trade.desk"]', "[data-canvas-grid]", target_position={"x": 60, "y": 40})
+    page.drag_and_drop('[data-field="trade.DESK"]', "[data-canvas-grid]", target_position={"x": 60, "y": 40})
     page.wait_for_selector('.bi-dvis[data-type="table"]')
     page.click('.bi-vtype[data-type="bar"]')                                                              # change the visual's type: the fields follow
     settled_design(page)
@@ -322,11 +322,11 @@ def test_designer_change_a_well_set_a_filter_check_save_and_reload(stack, browse
     assert model(page)["pages"][0]["visuals"][0]["wells"]["values"] == ["Notional"]
     # a page filter: currency is one of USD
     page.click('[data-scope="page"] [data-add-filter]')
-    page.select_option('[data-filter-editor] [name="field"]', "trade.currency")
+    page.select_option('[data-filter-editor] [name="field"]', "trade.CURRENCY")
     page.fill('[data-filter-editor] [name="values"]', "USD")
     page.click('[data-filter-editor] button[type=submit]')
     settled_design(page)
-    assert model(page)["pages"][0]["filters"] == [{"field": "trade.currency", "op": "in", "values": ["USD"]}]
+    assert model(page)["pages"][0]["filters"] == [{"field": "trade.CURRENCY", "op": "in", "values": ["USD"]}]
     usd = [t for t in day_trades() if t["currency"] == "USD"]
     bar = page.evaluate("(() => { const c = echarts.getInstanceByDom(document.querySelector('.bi-dvis .bi-chart')); return [c.getOption().yAxis[0].data, c.getOption().series[0].data.map(d => d.value)]; })()")
     assert dict(zip(*bar)) == by("desk", "notional", usd)                                                  # the filter reached the data
@@ -444,9 +444,9 @@ def test_designer_pages_the_report_settings_and_a_drillthrough_target(stack, bro
     page.click("[data-ptab='format']")
     page.fill("input[data-page-title]", "Detail")
     page.press("input[data-page-title]", "Enter")
-    page.select_option("[data-page-drill]", "trade.desk")
+    page.select_option("[data-page-drill]", "trade.DESK")
     m = model(page)
-    assert m["pages"][1]["title"] == "Detail" and m["pages"][1]["drillthrough"] == {"fields": ["trade.desk"]}
+    assert m["pages"][1]["title"] == "Detail" and m["pages"][1]["drillthrough"] == {"fields": ["trade.DESK"]}
     page.select_option("[data-theme-palette]", "colour-blind")
     assert model(page)["theme"] == {"palette": "colour-blind"}
     page.fill("[data-bookmark-name]", "Start")
@@ -483,26 +483,26 @@ pages:
   - id: all
     title: Every visual
     visuals:
-      - { id: bar, type: bar, title: Bar, at: { x: 0, y: 0, w: 4, h: 4 }, wells: { axis: [trade.desk], values: [MTM] } }
-      - { id: column, type: column, title: Column, at: { x: 4, y: 0, w: 4, h: 4 }, wells: { axis: [trade.desk], legend: [trade.currency], values: [Notional] }, format: { stacked: true, labels: true } }
-      - { id: line, type: line, title: Line, at: { x: 8, y: 0, w: 4, h: 4 }, wells: { axis: [trade.tradeDate], values: [Notional] } }
-      - { id: area, type: area, title: Area, at: { x: 0, y: 4, w: 4, h: 4 }, wells: { axis: [trade.tradeDate], values: [Notional] } }
-      - { id: combo, type: combo, title: Combo, at: { x: 4, y: 4, w: 4, h: 4 }, wells: { axis: [trade.desk], values: [Notional], secondary: [MTM] } }
-      - { id: scatter, type: scatter, title: Scatter, at: { x: 8, y: 4, w: 4, h: 4 }, wells: { details: [trade.book], x: [Notional], y: [MTM], size: [Trades] } }
-      - { id: pie, type: pie, title: Pie, at: { x: 0, y: 8, w: 3, h: 4 }, wells: { axis: [trade.productType], values: [Notional] } }
-      - { id: donut, type: donut, title: Donut, at: { x: 3, y: 8, w: 3, h: 4 }, wells: { axis: [trade.productType], values: [Notional] } }
-      - { id: waterfall, type: waterfall, title: Waterfall, at: { x: 6, y: 8, w: 3, h: 4 }, wells: { axis: [trade.desk], values: [MTM] } }
-      - { id: treemap, type: treemap, title: Treemap, at: { x: 9, y: 8, w: 3, h: 4 }, wells: { axis: [trade.desk, trade.book], values: [Notional] } }
-      - { id: heatmap, type: heatmap, title: Heatmap, at: { x: 0, y: 12, w: 4, h: 4 }, wells: { axis: [trade.desk], legend: [trade.currency], values: [Trades] } }
+      - { id: bar, type: bar, title: Bar, at: { x: 0, y: 0, w: 4, h: 4 }, wells: { axis: [trade.DESK], values: [MTM] } }
+      - { id: column, type: column, title: Column, at: { x: 4, y: 0, w: 4, h: 4 }, wells: { axis: [trade.DESK], legend: [trade.CURRENCY], values: [Notional] }, format: { stacked: true, labels: true } }
+      - { id: line, type: line, title: Line, at: { x: 8, y: 0, w: 4, h: 4 }, wells: { axis: [trade.TRADE_DATE], values: [Notional] } }
+      - { id: area, type: area, title: Area, at: { x: 0, y: 4, w: 4, h: 4 }, wells: { axis: [trade.TRADE_DATE], values: [Notional] } }
+      - { id: combo, type: combo, title: Combo, at: { x: 4, y: 4, w: 4, h: 4 }, wells: { axis: [trade.DESK], values: [Notional], secondary: [MTM] } }
+      - { id: scatter, type: scatter, title: Scatter, at: { x: 8, y: 4, w: 4, h: 4 }, wells: { details: [trade.PORTFOLIO], x: [Notional], y: [MTM], size: [Trades] } }
+      - { id: pie, type: pie, title: Pie, at: { x: 0, y: 8, w: 3, h: 4 }, wells: { axis: [trade.PRODUCT_TYPE], values: [Notional] } }
+      - { id: donut, type: donut, title: Donut, at: { x: 3, y: 8, w: 3, h: 4 }, wells: { axis: [trade.PRODUCT_TYPE], values: [Notional] } }
+      - { id: waterfall, type: waterfall, title: Waterfall, at: { x: 6, y: 8, w: 3, h: 4 }, wells: { axis: [trade.DESK], values: [MTM] } }
+      - { id: treemap, type: treemap, title: Treemap, at: { x: 9, y: 8, w: 3, h: 4 }, wells: { axis: [trade.DESK, trade.PORTFOLIO], values: [Notional] } }
+      - { id: heatmap, type: heatmap, title: Heatmap, at: { x: 0, y: 12, w: 4, h: 4 }, wells: { axis: [trade.DESK], legend: [trade.CURRENCY], values: [Trades] } }
       - { id: card, type: card, title: Card, at: { x: 4, y: 12, w: 2, h: 2 }, wells: { values: [MTM] } }
-      - { id: multi, type: multirow-card, title: Multi-row card, at: { x: 6, y: 12, w: 3, h: 3 }, wells: { axis: [trade.desk], values: [Trades, MTM] } }
+      - { id: multi, type: multirow-card, title: Multi-row card, at: { x: 6, y: 12, w: 3, h: 3 }, wells: { axis: [trade.DESK], values: [Trades, MTM] } }
       - { id: kpi, type: kpi, title: KPI, at: { x: 9, y: 12, w: 3, h: 3 }, wells: { values: [MTM], target: [Notional] } }
       - { id: gauge, type: gauge, title: Gauge, at: { x: 4, y: 14, w: 2, h: 3 }, wells: { values: [Trades] }, format: { max: 100 } }
-      - { id: table, type: table, title: Table, at: { x: 0, y: 16, w: 4, h: 4 }, wells: { columns: [trade.tradeId, trade.desk, MTM] }, limit: 5 }
-      - { id: matrix, type: matrix, title: Matrix, at: { x: 4, y: 17, w: 4, h: 4 }, wells: { rows: [trade.desk, trade.book], columns: [trade.currency], values: [Trades] }, format: { subtotals: true } }
-      - { id: s-list, type: slicer, title: List slicer, at: { x: 8, y: 15, w: 2, h: 4 }, wells: { field: [trade.currency] } }
-      - { id: s-drop, type: slicer, title: Dropdown slicer, at: { x: 10, y: 15, w: 2, h: 2 }, wells: { field: [trade.desk] }, format: { mode: dropdown } }
-      - { id: s-range, type: slicer, title: Range slicer, at: { x: 10, y: 17, w: 2, h: 2 }, wells: { field: [trade.notional] }, format: { mode: range } }
+      - { id: table, type: table, title: Table, at: { x: 0, y: 16, w: 4, h: 4 }, wells: { columns: [trade.TRADE_ID, trade.DESK, MTM] }, limit: 5 }
+      - { id: matrix, type: matrix, title: Matrix, at: { x: 4, y: 17, w: 4, h: 4 }, wells: { rows: [trade.DESK, trade.PORTFOLIO], columns: [trade.CURRENCY], values: [Trades] }, format: { subtotals: true } }
+      - { id: s-list, type: slicer, title: List slicer, at: { x: 8, y: 15, w: 2, h: 4 }, wells: { field: [trade.CURRENCY] } }
+      - { id: s-drop, type: slicer, title: Dropdown slicer, at: { x: 10, y: 15, w: 2, h: 2 }, wells: { field: [trade.DESK] }, format: { mode: dropdown } }
+      - { id: s-range, type: slicer, title: Range slicer, at: { x: 10, y: 17, w: 2, h: 2 }, wells: { field: [trade.NOTIONAL] }, format: { mode: range } }
       - { id: text, type: text, at: { x: 0, y: 20, w: 4, h: 1 }, text: A text visual, format: { size: heading } }
       - { id: image, type: image, at: { x: 4, y: 21, w: 2, h: 2 }, src: /static/img/drishti-icon.png, alt: The Drishti eye }
       - { id: button, type: button, at: { x: 6, y: 21, w: 3, h: 1 }, text: Go to the first page, action: { navigate: all } }
@@ -557,26 +557,26 @@ def test_every_visual_type_draws_with_data(stack, browser):
 def test_designer_filters_advanced_and_top_n_the_suggestions_and_conditional_colours(stack, browser):
     page = sign_in(browser, "wes")
     new_draft(page)
-    page.drag_and_drop('[data-field="trade.desk"]', "[data-canvas-grid]", target_position={"x": 60, "y": 40})
+    page.drag_and_drop('[data-field="trade.DESK"]', "[data-canvas-grid]", target_position={"x": 60, "y": 40})
     page.wait_for_selector('.bi-dvis[data-type="table"]')
     page.drag_and_drop('[data-field="MTM"]', ".bi-dvis")
     page.wait_for_selector('.bi-dvis[data-type="bar"]')
     settled_design(page)
     # an advanced filter on the visual: notional at least 3,000,000
     page.click('[data-scope="visual"] [data-add-filter]')
-    page.select_option('[data-filter-editor] [name="field"]', "trade.notional")
+    page.select_option('[data-filter-editor] [name="field"]', "trade.NOTIONAL")
     page.select_option('[data-filter-editor] [name="mode"]', "advanced")
     page.select_option('[data-filter-editor] [name="op"]', "ge")
     page.fill('[data-filter-editor] [name="v1"]', "3000000")
     page.click('[data-filter-editor] button[type=submit]')
     settled_design(page)
-    assert model(page)["pages"][0]["visuals"][0]["filters"] == [{"field": "trade.notional", "op": "ge", "values": [3000000]}]
+    assert model(page)["pages"][0]["visuals"][0]["filters"] == [{"field": "trade.NOTIONAL", "op": "ge", "values": [3000000]}]
     big = [t for t in day_trades() if t["notional"] >= 3000000]
     got = page.evaluate("(() => { const o = echarts.getInstanceByDom(document.querySelector('.bi-dvis .bi-chart')).getOption(); return [o.yAxis[0].data, o.series[0].data.map(d => d.value)]; })()")
     assert dict(zip(*got)) == by("desk", "mtm", big)
     # top 2 desks by notional, on the report: the pick-from-the-data list is there too
     page.click('[data-scope="report"] [data-add-filter]')
-    page.select_option('[data-filter-editor] [name="field"]', "trade.desk")
+    page.select_option('[data-filter-editor] [name="field"]', "trade.DESK")
     page.click("[data-load-values]")
     page.wait_for_selector("[data-pick-value]")
     assert page.locator("[data-pick-value]").count() == 3
@@ -584,17 +584,19 @@ def test_designer_filters_advanced_and_top_n_the_suggestions_and_conditional_col
     page.fill('[data-filter-editor] [name="n"]', "2")
     page.click('[data-filter-editor] button[type=submit]')
     settled_design(page)
-    assert model(page)["filters"] == [{"field": "trade.desk", "op": "top", "n": 2, "by": "Notional", "dir": "desc"}]
+    assert model(page)["filters"] == [{"field": "trade.DESK", "op": "top", "n": 2, "by": "Notional", "dir": "desc"}]
     got = page.evaluate("(() => { const o = echarts.getInstanceByDom(document.querySelector('.bi-dvis .bi-chart')).getOption(); return o.yAxis[0].data; })()")
     top2 = sorted(by("desk", "notional").items(), key=lambda kv: -kv[1])[:2]
     assert sorted(got) == sorted(k for k, _ in top2) or sorted(got) == sorted({t["desk"] for t in big} & {k for k, _ in top2})
     # the filter is edited and removed again
     page.click('[data-scope="report"] [data-remove-filter]')
     assert "filters" not in model(page)
-    # conditional colour on the measure
+    # conditional formatting on the measure (2.4.0: the rules editor of the generated Format pane)
     page.click("[data-ptab='format']")
-    page.click("[data-add-conditional]")
-    assert model(page)["pages"][0]["visuals"][0]["format"]["conditional"][0]["measure"] == "MTM"
+    page.select_option("[data-add-rule-kind]", "rule")
+    page.click("[data-add-rule]")
+    rule = model(page)["pages"][0]["visuals"][0]["format"]["rules"][0]
+    assert rule["type"] == "rule" and rule["apply"] == "MTM" and rule["op"] == "lt"
     # the YAML tab offers what fits the cursor
     page.click('[data-tab="yaml"]')
     page.evaluate("""() => { const cm = document.querySelector('.CodeMirror').CodeMirror; cm.focus(); const n = cm.lineCount(); cm.setCursor({line: n - 1, ch: 0}); cm.replaceRange('      - { type: ', {line: n - 1, ch: cm.getLine(n - 1).length}); cm.setCursor({line: cm.lineCount() - 1, ch: 100}); }""")
