@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}Net · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-net.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-detail.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-net.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -45,6 +45,7 @@
   <div class="net-tabs" role="tablist" aria-label="Drishti*net" data-tabs>
     <button type="button" role="tab" id="netTabMembers" aria-controls="netPaneMembers" aria-selected="{{ 'true' if tab == 'members' else 'false' }}" {% if tab != 'members' %}tabindex="-1"{% endif %} data-tab="members">Members</button>
     <button type="button" role="tab" id="netTabMap" aria-controls="netPaneMap" aria-selected="{{ 'true' if tab == 'map' else 'false' }}" {% if tab != 'map' %}tabindex="-1"{% endif %} data-tab="map">Capability map</button>
+    <button type="button" role="tab" id="netTabRouting" aria-controls="netPaneRouting" aria-selected="{{ 'true' if tab == 'routing' else 'false' }}" {% if tab != 'routing' %}tabindex="-1"{% endif %} data-tab="routing">Routing</button>
     <button type="button" role="tab" id="netTabAccess" aria-controls="netPaneAccess" aria-selected="{{ 'true' if tab == 'access' else 'false' }}" {% if tab != 'access' %}tabindex="-1"{% endif %} data-tab="access">Access</button>
     <button type="button" role="tab" id="netTabFiles" aria-controls="netPaneFiles" aria-selected="{{ 'true' if tab == 'files' else 'false' }}" {% if tab != 'files' %}tabindex="-1"{% endif %} data-tab="files">Files</button>
     <button type="button" role="tab" id="netTabSecurity" aria-controls="netPaneSecurity" aria-selected="{{ 'true' if tab == 'security' else 'false' }}" {% if tab != 'security' %}tabindex="-1"{% endif %} data-tab="security">Security</button>
@@ -155,6 +156,59 @@ secret: ${DRISHTI_NET_SECRET}</pre>
         <tr><td colspan="5" class="text-muted-d">Nothing yet: the cluster is off, or the digests are on their way.</td></tr>
       {% endfor %}
       </tbody>
+    </table></div>
+  </section>
+
+  <section role="tabpanel" id="netPaneRouting" aria-labelledby="netTabRouting" data-pane="routing" {% if tab != 'routing' %}hidden{% endif %}>
+    <h2 class="net-h2">Explain a request</h2>
+    <p class="text-muted-d">Where a request would go from this node, and why: answered here; forwarded whole to a node that renders the kind (its pack is
+      not here, older here, or served to peers only here); or answered here with the document read from a peer (the data is elsewhere). For a role:
+      only the nodes it may reach are considered.</p>
+    <form class="net-explain" data-explain-form>
+      <label class="loads-field" for="netExKind">Kind<input class="studio-in mono" id="netExKind" data-ex-kind autocomplete="off" spellcheck="false" placeholder="trade"></label>
+      <label class="loads-field" for="netExId">Id (optional)<input class="studio-in mono" id="netExId" data-ex-id autocomplete="off" spellcheck="false" placeholder="IRS-48213"></label>
+      <label class="loads-field" for="netExQ">or a search<input class="studio-in mono" id="netExQ" data-ex-q autocomplete="off" spellcheck="false" placeholder="TRD where mtm > 1m"></label>
+      <label class="loads-field" for="netExRole">As the role<select class="studio-in" id="netExRole" data-ex-role><option value="">mine</option>
+        {% for r in access.byRole or [] %}<option value="{{ r.role }}">{{ r.role }}</option>{% endfor %}</select></label>
+      <label class="loads-check"><input type="checkbox" data-ex-dated> A past business date (a peer with another calendar is left out)</label>
+      <button type="submit" class="btn-pill btn-accent">Explain</button>
+    </form>
+    <div class="net-explained" data-explained aria-live="polite" hidden>
+      <p><span class="st" data-ex-route></span> <span data-ex-reason></span></p>
+      <dl class="net-dl">
+        <dt>Forwarded to</dt><dd class="mono" data-ex-forward>-</dd>
+        <dt>Data read from</dt><dd class="mono" data-ex-data>-</dd>
+        <dt>A search asks</dt><dd class="mono" data-ex-scatter>-</dd>
+        <dt>Not reachable for the role</dt><dd class="mono" data-ex-unreachable>-</dd>
+        <dt>Down now</dt><dd class="mono" data-ex-down>-</dd>
+      </dl>
+    </div>
+
+    <h2 class="net-h2">Forwarded traffic</h2>
+    {% set tr = traffic or {} %}
+    <p class="text-muted-d">Requests this node sent to its peers (whole views, documents, search shares, live relays), a minute at a time for the last hour.
+      Last ten minutes: <b class="mono" data-traffic-total>{{ (tr.totals or {}).forwarded or 0 }}</b> sent, <b class="mono {{ 't-neg' if (tr.totals or {}).failed }}">{{ (tr.totals or {}).failed or 0 }}</b> failed.
+      <button type="button" class="btn-pill" data-traffic-refresh>Refresh</button></p>
+    {% for peer, rows in (tr.minutes or {}).items() %}{% set maxr = (rows | map(attribute='ok') | max) + (rows | map(attribute='failed') | max) + (rows | map(attribute='timeout') | max) + (rows | map(attribute='not-held') | max) or 1 %}{% set bw = 600 / (rows | length) %}
+    <h3 class="net-h3 mono">{{ peer }}</h3>
+    <svg class="act-chart" viewBox="0 0 600 120" role="img" aria-label="Requests sent to {{ peer }} a minute, last hour" data-traffic="{{ peer }}">
+      {% for m in rows %}{% set bad = m.failed + m.timeout + m.refused %}{% set good = m.ok + m['not-held'] %}
+      <rect class="act-bar" x="{{ '%.1f' | format(loop.index0 * bw + 1) }}" width="{{ '%.1f' | format(bw - 2) }}" y="{{ '%.1f' | format(110 - 100 * good / maxr) }}" height="{{ '%.1f' | format(100 * good / maxr) }}"><title>{{ m.minute[11:16] }} UTC: {{ good }} answered, {{ bad }} failed, average {{ m.avgMs }} ms</title></rect>
+      {% if bad %}<rect class="act-bar act-err" x="{{ '%.1f' | format(loop.index0 * bw + 1) }}" width="{{ '%.1f' | format(bw - 2) }}" y="{{ '%.1f' | format(110 - 100 * (good + bad) / maxr) }}" height="{{ '%.1f' | format(100 * bad / maxr) }}"/>{% endif %}{% endfor %}
+      <text class="act-axis" x="2" y="118">{{ rows[0].minute[11:16] }} UTC</text><text class="act-axis" x="598" y="118" text-anchor="end">now</text>
+    </svg>
+    {% else %}<p class="text-muted-d">Nothing forwarded in the last hour.</p>{% endfor %}
+    {% if tr.slowest %}
+    <h3 class="net-h3">Slowest peers, last ten minutes</h3>
+    <ul class="net-seeds">{% for s in tr.slowest %}<li><span class="mono">{{ s.peer }}</span> average {{ s.avgMs }} ms over {{ s.calls }} calls</li>{% endfor %}</ul>
+    {% endif %}
+    <h3 class="net-h3">Latest calls</h3>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-recent>
+      <caption class="visually-hidden">The latest requests sent to peers, newest first</caption>
+      <thead><tr><th scope="col">When</th><th scope="col">Peer</th><th scope="col">What</th><th scope="col">Kind</th><th scope="col">Outcome</th><th scope="col" class="num">ms</th></tr></thead>
+      <tbody>{% for c in tr.recent or [] %}<tr><td>{{ when_local(c.at) }}</td><td class="mono">{{ c.peer }}</td><td>{{ c.what }}</td><td>{{ c.kind }}</td>
+        <td><span class="st {{ 'st-ok' if c.outcome in ('ok', 'not-held') else 'st-bad' }}">{{ c.outcome }}</span></td><td class="num mono">{{ c.ms }}</td></tr>
+      {% else %}<tr><td colspan="6" class="text-muted-d">None yet.</td></tr>{% endfor %}</tbody>
     </table></div>
   </section>
 

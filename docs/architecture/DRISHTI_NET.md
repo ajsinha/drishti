@@ -482,3 +482,24 @@ forwarded request is recorded in the receiving node's access log as `net:from <n
 - Masks twice is enforced where data crosses nodes (N4's fetch, the scattered search of N5): the reading node masks for the token's user, the
   showing node masks again.
 
+**N4, routing (built).** `NetRouting` answers the three questions of section 7 from the capability table cut to the caller's roles and to the
+member table's newest word; `ViewForwardFilter` (after the token filter) forwards a whole request (views and their sub-paths, raw documents, history,
+searches, forms) to a node that renders the kind, signed, with the hop header and an on-behalf-of token, and streams the answer back unchanged;
+`PeerSources` is the source router's new `Fallback`: after the local sources, the peers that hold the kind are asked through `PeerSource`
+(`GET /api/v1/net/fetch/{kind}/{id}`), and the asking node renders and masks again. Peer-only packs are hidden through a predicate on `PackAccess`.
+`ForwardLog` keeps the traffic and the meters; `NetHealth` the Health line and member meters; Admin → Net → *Routing* (explain, traffic). The
+console's `backend.urls` (`core/cluster.py`): one server per session, health every `check_every`, discovery every `discover_every`,
+`servers.json`, failover with a read retried once and a write never, recovery for new sessions after a minute. Changes from the design:
+
+- A `PeerSource` is not registered with the source registry, so nothing that lists or scans every source (BI, caches, Health) sees a peer: the router
+  asks the peers only after its local sources, through its fallback, while the cluster runs.
+- Which node holds an entity cannot always be told from the digests (a store that serves every kind may hold nothing of it), so a forwarded read
+  that a node answers `404` goes to the next renderer (at most three). Renderers whose sources say they hold data (a newest date, a data version, a
+  live stream) are tried first.
+- A kind whose pack is not on the asking node is not refused there by role: the node that renders it knows the pack's roles and decides.
+- A digest of a member that left or died is kept (never routed to) until the member is forgotten, so an answer can name the node that holds the
+  data and is down (`502 DRS-5052`).
+- The console's settings are `backend.urls`, `discover`, `discover_every`, `check_every`, `fail_after` (the console's own style, with underscores) and
+  `backend.data_dir`; a failover is reported to the server it moved to (`POST /api/v1/net/console-event`, audited `net-console-failover`).
+- `routing.yaml` also has `user-state` (N7). Not built in this phase: the administrators' line in *How this view was built* (provenance) naming
+  the node that held the data.

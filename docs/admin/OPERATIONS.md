@@ -1428,8 +1428,13 @@ HTTP and answers requests for packs and data the others hold ([NET.md](NET.md), 
   outside a 60 s window, so keep the clocks in step (NTP).
 - **What it writes.** `<data dir>/net/node-id`, `<data dir>/net/peers.json` (atomically), `<data dir>/net/history/` (earlier texts of the
   files). Nothing outside the data folder.
-- **Health.** Admin → Net lists every member with its state, latency and version; the log names every join, departure, suspicion and refused call
-  (`net: ...`).
+- **Health.** Admin → Net lists every member with its state, latency and version; Admin → Health has a Drishti*net line (members alive and
+  suspect, requests forwarded and failed over ten minutes); the log names every join, departure, suspicion and refused call (`net: ...`).
+- **Metrics.** `drishti_net_members{state}`, `drishti_net_gossip_rounds_total`, `drishti_net_forwarded_total{peer,kind,outcome}` and
+  `drishti_net_peer_latency_seconds{peer}` (a histogram) at `/actuator/prometheus`. Alert on `drishti_net_members{state="suspect"} > 0` for five
+  minutes, and on the share of `outcome!="ok"` among the forwarded requests.
+- **The console.** With `backend.urls` the console keeps `<console data dir>/net/servers.json` (the servers it learnt, saved atomically): nothing to
+  back up, it is rebuilt from the cluster within a minute; keep it if the console may restart while its configured servers are down.
 
 ## 13. Monitoring
 

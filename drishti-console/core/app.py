@@ -46,6 +46,17 @@ def _bounded(value, low: int, high: int, default: int) -> int:
         return default
 
 
+def _console_data_dir(settings) -> Path:
+    """The console's own folder under the data folder: ``backend.data_dir`` (``DRISHTI_CONSOLE_DATA_DIR``), else ``<data dir>/console``
+    (``DRISHTI_DATA_DIR``, else the repository's ``data``). It holds what the console keeps between runs (``net/servers.json``)."""
+    import os
+
+    own = str(settings.get("backend.data_dir") or "").strip()
+    if own:
+        return Path(own)
+    return Path(os.environ.get("DRISHTI_DATA_DIR") or (WEB.parent.parent / "data")) / "console"
+
+
 def _seconds(value) -> float:
     """``backend.check_seconds``: how often the console asks its server if it is there; 0 turns the watch off."""
     try:
@@ -109,6 +120,13 @@ class AuthGate(BaseHTTPMiddleware):
         request.state.server = catalogue.get(servers.current())
         request.state.servers = catalogue
         auth = request.app.state.auth
+        if getattr(request.app.state, "cluster", None) is not None:
+            # several servers (backend.urls): each session keeps to its server while that answers (core/cluster.py)
+            import hashlib
+
+            from core import cluster
+            session = request.cookies.get(getattr(auth, "cookie", "")) or ""
+            cluster.SESSION.set(hashlib.sha256(session.encode()).hexdigest()[:16] if session else "")
         # the session as the server knows it now (enabled, roles, password change due), not as the cookie remembers it
         path = request.url.path
         request.state.identity = (None if path.startswith(("/static/", PYODIDE, EMBED))   # /embed/: a bearer token, never the cookie (core/embed.py)
@@ -220,10 +238,31 @@ def create_app(settings: Settings) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
+        pool = getattr(app.state, "cluster", None)
         if getattr(app.state, "backend", None) is None:      # one pooled client per server (tests bring their own)
             app.state.backend = Switch({s.id: BackendClient(s.url, float(settings.get("backend.timeout_seconds", 5)),
-                                                            int(settings.get("backend.pool_size", 64))) for s in catalogue.all()},
+                                                            int(settings.get("backend.pool_size", 64)),
+                                                            servers=pool if s.id == catalogue.default else None) for s in catalogue.all()},
                                        catalogue.default)
+        # several servers (backend.urls, Drishti*net): health every check_every, the member list every discover_every (core/cluster.py)
+        cluster_task = (asyncio.create_task(pool.run(lambda: app.state.auth.service().headers()))
+                        if pool is not None and pool.enabled else None)
+        if pool is not None:
+            import socket
+
+            async def _report(event):
+                try:
+                    await app.state.backend.net("POST", "/console-event", app.state.auth.service(),
+                                                {"from": event["from"], "to": event["to"], "why": event["why"], "console": socket.gethostname()})
+                except Exception:  # noqa: BLE001 - best effort: the console's log has the line anyway
+                    pass
+
+            def _on_failover(event):
+                try:
+                    asyncio.get_running_loop().create_task(_report(event))
+                except RuntimeError:
+                    pass
+            pool.on_failover = _on_failover
         ai = getattr(app.state, "ai", None)
         watcher = asyncio.create_task(ai.supervise()) if ai is not None and (ai.enabled or ai.mcp_enabled) else None
         backend_task = asyncio.create_task(app.state.backend_watch.run()) if app.state.backend_watch.enabled else None
@@ -241,6 +280,9 @@ def create_app(settings: Settings) -> FastAPI:
             maint_task.cancel()
         if backend_task is not None:
             backend_task.cancel()
+        if cluster_task is not None:
+            cluster_task.cancel()
+            pool.save()                                      # servers.json at shutdown too
         runner = getattr(app.state, "pyrunner", None)
         if runner is not None:
             await runner.close()                              # the fork-server ends with the console
@@ -298,7 +340,13 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.servers = catalogue
     from core.backend_watch import BackendWatch
 
-    app.state.backend_watch = BackendWatch(catalogue, _seconds(settings.get("backend.check_seconds", 5)))      # started by the lifespan
+    from core.cluster import ServerPool
+
+    # several servers (backend.urls): the pool of core/cluster.py; None when only backend.url is configured (as before)
+    pool = ServerPool(settings, _console_data_dir(settings))
+    app.state.cluster = pool if pool.enabled else None
+    app.state.backend_watch = BackendWatch(catalogue, _seconds(settings.get("backend.check_seconds", 5)),
+                                           url_of=(lambda s: pool.current() if s.id == catalogue.default else s.url) if pool.enabled else None)
     app.state.auth = (Auth(settings) if len(catalogue) == 1 and catalogue.default == "default"
                       else Switch({s.id: Auth(settings, s) for s in catalogue.all()}, catalogue.default))
     from core.oidc import Oidc

@@ -38,11 +38,14 @@ def _brief(e: Exception) -> str:
 class BackendWatch:
     """Reachability of each server, kept fresh by :meth:`run`; :meth:`check` is one probe (tests replace :meth:`probe`)."""
 
-    def __init__(self, servers, seconds: float = 5.0, timeout: float = 2.0):
+    def __init__(self, servers, seconds: float = 5.0, timeout: float = 2.0, url_of=None):
+        """``url_of``: where a server of the catalogue is reached now (with several servers in ``backend.urls``, the one the console uses:
+        a failover is not an outage); None for each server's own URL."""
         self._servers = servers
         self.seconds = float(seconds)
         self.timeout = float(timeout)
         self._state: dict[str, dict] = {}
+        self._url_of = url_of or (lambda s: s.url)
 
     @property
     def enabled(self) -> bool:
@@ -63,16 +66,16 @@ class BackendWatch:
         now = time.time()
         old = self._state.get(server.id)
         try:
-            about = await self.probe(server.url)
+            about = await self.probe(self._url_of(server))
             up, error, version = True, "", str(about.get("version") or "")
         except Exception as e:  # noqa: BLE001 - any failure means not reachable
             up, error, version = False, _brief(e), (old or {}).get("version", "")
         if old is None or old["reachable"] != up:
             since = now
             if old is not None and up:
-                LOG.warning("server %s reachable again after %d s", server.url, round(now - old["since"]))
+                LOG.warning("server %s reachable again after %d s", self._url_of(server), round(now - old["since"]))
             elif not up:
-                LOG.warning("server %s unreachable: %s", server.url, error)
+                LOG.warning("server %s unreachable: %s", self._url_of(server), error)
         else:
             since = old["since"]
         self._state[server.id] = {"reachable": up, "since": since, "lastError": error, "version": version, "checked": now}

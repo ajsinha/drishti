@@ -37,7 +37,7 @@ same machine. Replace `localhost` if yours run elsewhere.
 | [Connectors](#connectors) | a connector is idle, a connector failed to start, a bad connector file, TLS errors and certificate expiry, proxy errors (407, CONNECT refused, DNS), schema-registry messages skipped |
 | [Monitoring endpoints](#monitoring-endpoints) | `/actuator/prometheus` answers 401 or 403, `/api/docs` answers 401 |
 | [Alerts](#alerts-and-monitors) | an alert never fires |
-| [Drishti*net](#drishtinet) | a node will not join, a refused key, clocks apart, a member that flaps |
+| [Drishti*net](#drishtinet) | a node will not join, a refused key, clocks apart, a page whose node is down, a console that keeps moving between servers, a member that flaps |
 | [Development](#development) | licence header test fails |
 
 ## First checks (run these first)
@@ -1296,6 +1296,18 @@ steps of [NET.md](../admin/NET.md) so every node accepts both keys before any si
 ### The log says `signed 75 s away from this node's clock`
 
 A call is refused outside a 60 s window. **Fix:** keep the clocks in step (NTP on every node).
+
+### A page says `DRS-5052 ... cannot be reached now` or `DRS-5053 ... did not answer`
+
+The page's kind (or its data) is served by another node of the cluster, and that node is down, left, drained or slow. **Check:** Admin → Net →
+Members (its state) and Routing (*Explain a request* for the kind and id: which node it would go to). **Fix:** start or rejoin that node, or undrain
+it; a slow node: its own Admin → Health. The page works again by itself once the node is back; nothing on this node needs to change.
+
+### The console keeps moving between servers
+
+**Check:** Admin → Health, *Console servers*: the server set aside and its last error; the console's log: `server ... set aside after 2 failed requests
+in a row: ...` and `console moved from ... to ...`. **Fix:** the server it leaves (its health, its network); on a flaky network raise
+`backend.fail_after`. A set-aside server is used again, for new sessions, a minute after it answers again.
 
 ### A member flaps between alive and suspect
 

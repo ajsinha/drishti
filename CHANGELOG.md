@@ -50,6 +50,19 @@
   the request as `net:from <node> request <id>` in its access log. **Admin → Net → Access**: nodes per role (ids or tags) with the members each
   reaches now, this node's tags and peer-only packs, written to access.yaml and node.yaml, applied live; `GET/PUT /api/v1/net/access`,
   `GET /api/v1/net/security`. NET.md section 6 (the key, its rotation, mutual TLS, on-behalf-of, masks twice, nodes per role, audit), API_GUIDE.
+- **Drishti*net routing and the console's failover (N4).** A request for a kind whose pack is not on a node, is older there or is served to peers only
+  there is **forwarded whole** to a node that renders it (signed, one hop, an on-behalf-of token; the answer passed back unchanged and streamed, a live
+  view too): the console cannot tell. A view whose pack is here but whose data is not is built here from the document a peer reads for the caller
+  (`GET /api/v1/net/fetch/{kind}/{id}`), masked there and again here: a field this node masks stays masked when the peer masks less. The **newest pack
+  version is served**; **peer-only packs** are hidden from a node's own users and served to its peers. A node that is down makes a clear
+  `502 DRS-5052` naming it, never a wrong page. Admin → Net → **Routing** (explain a request as a role; forwarded traffic per peer a minute, slowest
+  peers, latest calls), Admin → Health's Drishti*net line, metrics `drishti_net_members`, `drishti_net_forwarded_total`, `drishti_net_gossip_rounds_total`,
+  `drishti_net_peer_latency_seconds`; `GET /api/v1/net/explain`, `/traffic`; the access log of both nodes names the other and the request. **The console
+  takes several servers** (`backend.urls`; `discover`, `discover_every` 60 s, `check_every` 5 s, `fail_after` 2): it learns the cluster from the server it
+  uses, keeps the list in `<console data dir>/net/servers.json`, keeps each session on one server, falls over when it fails (a read retried once on
+  another server, a write never), uses a recovered server again for new sessions after a minute, and reports each failover (audited
+  `net-console-failover`). Source router: a `Fallback` to the peers after the local sources. NET.md sections 7 and 8, CONFIGURATION, API_GUIDE,
+  OPERATIONS, TROUBLESHOOTING, USER_GUIDE.
 
 ### 2.4.0 (wave C, authoring and analysis): report schema v2, boards as a report layout, BI Studio
 

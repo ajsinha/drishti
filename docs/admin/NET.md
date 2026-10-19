@@ -29,10 +29,12 @@ exactly as before: no thread gossips, no peer is asked, nothing is forwarded, an
 - [4. Membership: how the nodes find each other](#4-membership-how-the-nodes-find-each-other)
 - [5. What each node offers: the capability digest](#5-what-each-node-offers-the-capability-digest)
 - [6. Security: the key, mutual TLS, nodes per role](#6-security-the-key-mutual-tls-nodes-per-role)
-- [7. Admin → Net](#7-admin--net)
-- [8. Drain, maintenance and a node leaving](#8-drain-maintenance-and-a-node-leaving)
-- [9. Sizing](#9-sizing)
-- [10. When something is wrong](#10-when-something-is-wrong)
+- [7. Routing: where a request goes](#7-routing-where-a-request-goes)
+- [8. The console and several servers](#8-the-console-and-several-servers)
+- [9. Admin → Net](#9-admin--net)
+- [10. Drain, maintenance and a node leaving](#10-drain-maintenance-and-a-node-leaving)
+- [11. Sizing](#11-sizing)
+- [12. When something is wrong](#12-when-something-is-wrong)
 
 ## 1. Before you start
 
@@ -210,8 +212,7 @@ Applied to the next request, and told to the other nodes in the digest.
 
 ### routing.yaml
 
-`routing.yaml` (forward and scatter budgets, the hop limit, the peer choice weights, user state) is read and checked from the start; what it
-changes is described with routing.
+Budgets, the hop limit, the peer choice weights and user state: in [section 7](#7-routing-where-a-request-goes).
 
 ## 4. Membership: how the nodes find each other
 
@@ -314,7 +315,87 @@ request whose roles do not reach it is refused `403 DRS-5054`. The person's own 
 **Audit.** A forwarded request is in the access log of both nodes: the forwarding node's row names the node it went to and the request id, the
 receiving node's row says `net:from <node> request <id>`. Every management action is in the audit log with the node it was made on.
 
-## 7. Admin → Net
+## 7. Routing: where a request goes
+
+Every request a node's own clients make (a view, its panels' rows, About this page, the raw document, history, a live view, a search, a form)
+goes through three questions, in order. Only nodes the caller's roles may reach are ever considered, and a request another node forwarded is
+answered by the receiving node from itself only (one hop at most, `X-Drishti-Net-Hop: 1`).
+
+1. **Can this node answer it?** The kind's pack is on here, it is the newest version of that pack among the nodes the caller may reach, and it is
+   not served to peers only here. Then it is answered here, as without the cluster.
+2. **Is the kind's pack missing here, older here, or peer-only here?** Then the **whole request is forwarded** (view forwarding) to a node that
+   renders the kind: the path, the query, the body, the business date and "known at", signed, with an on-behalf-of token for the caller. That
+   node's answer is passed back unchanged (a live view's events streamed as they come), so the page, its help and its links are that node's: the
+   console cannot tell. Among the nodes that render it, those whose sources hold the kind's data come first, then the lowest latency, then a
+   stable hash of the entity id (the same entity goes to the same node, whose caches stay warm). A node that does not hold the entity (`404`) or
+   fails passes the read to the next (at most three; after a failure, once); a write goes to one node and is never repeated.
+3. **Is the pack here but not the data?** Then the view is built here, and the document is read from a peer that holds it (data forwarding:
+   `GET /api/v1/net/fetch/{kind}/{id}`, the document as the caller may see it there, masked by that node), and masked again here. A peer whose
+   sources all read tables this node reads too (a replica) is never asked: it would answer as this node did. Peers that hold the date asked come
+   first. A local source that **failed** is never replaced by a peer's data (its failure is the answer); a peer that failed makes the read fail with
+   `502 DRS-5052` naming it, never a wrong "not found".
+
+**The newest pack is served.** When nodes hold different versions of a pack, a request for its kinds goes to a node with the newest, even when this
+node could answer with its older one (in the in-process test, B with the shipped finance pack forwards to A, which has 9.9.9).
+
+**Peer-only packs** (`peer-only-packs` in node.yaml) are loaded and served to peers, but hidden from this node's own users: not in their packs, forms,
+type-ahead or command line; a request of theirs for such a kind is forwarded to another node that renders it, or answered as if the pack were not
+here (`404 DRS-1002`). A node can so be a pure data or rendering server behind others.
+
+**When the node that serves it is down**, the answer says so: `502 DRS-5052 ... the nodes that hold trade cannot be reached now: n-a (left)`, or
+`... did not answer within 5000 ms` (`504 DRS-5053`), never a wrong page.
+
+**Roles.** A kind whose pack is here and that the caller's roles may not open is refused here before any call (`403 DRS-5002`). A kind whose pack is
+not here is decided by the node that renders it, which knows the pack's roles.
+
+**Business calendars.** A peer whose business calendar differs from this node's is used only for live reads: for a past business date its "date" could
+mean another day.
+
+Each forwarded request is in the access log of both nodes (`net:to <node> request <id>` here, `net:from <node> request <id>` there), in Admin → Net →
+Routing's traffic, and in the metrics `drishti_net_forwarded_total{peer,kind,outcome}` and `drishti_net_peer_latency_seconds{peer}`.
+
+`routing.yaml`:
+
+| Setting | Default | What it does |
+|---|---|---|
+| `forward-timeout` | `5s` | Longest a forwarded view or a peer's document may take |
+| `scatter-budget` | `3s` | Longest a peer's share of a scattered search may take |
+| `suggest-budget` | `150ms` | The same for type-ahead |
+| `max-hops` | `1` | `0` switches forwarding off (gossip and digests only) |
+| `weights.latency` | `1.0` | How much latency counts when choosing between peers (steps of 10 ms times the weight; `0`: by the entity's hash only) |
+| `user-state` | `replicate` | Saved searches, layouts and pivots copied to the other nodes, or `off` |
+
+## 8. The console and several servers
+
+With the cluster on, give the console several servers instead of one, so it always has one to fall back to
+([CONFIGURATION.md](CONFIGURATION.md#the-console-and-several-servers-drishtinet)):
+
+```yaml
+# drishti-console/config/application.yaml
+backend:
+  urls: ${DRISHTI_BACKEND_URLS:}       # http://127.0.0.1:18783 (one is enough; empty: backend.url, as before)
+  discover: true
+  discover_every: 60s
+  check_every: 5s
+  fail_after: 2
+```
+
+- **It learns the cluster.** Every minute it asks the server it uses for the member list (`GET /api/v1/net/members`) and keeps it, so one configured
+  server is enough: it learns every other member, and new members and departures within a minute. The list is saved to
+  `<console data dir>/net/servers.json` (atomically, and at shutdown), so a console restarted while its configured server is down still knows where
+  else to go. A member the cluster reports dead or left is dropped; the configured `urls` never are.
+- **One server per session.** A session (a browser's sign-in) uses the first healthy server, the configured ones first, then the discovered ones,
+  nearest first; it stays on it while it answers, so its caches and live views stay put. Each server is checked every `check_every`.
+- **Falling over.** A server that refuses connections, times out or answers 502/503 `fail_after` times in a row is set aside and the session moves to
+  the next. A **read** that failed on the way is tried once on another server, so the person sees the page, not an error; a **write** (a layout, a
+  search, a pivot) never is: the page says it did not save, and saving again works on the new server.
+- **Nothing to sign in again.** Every node accepts the same tokens (one token secret, or one OIDC issuer), so the session carries over. A live view
+  reconnects by itself and resubscribes on the new server.
+- **Coming back.** A set-aside server that answers again is used for new sessions after a minute of health, never moved under a running session.
+- **Visible to administrators.** Admin → Net and Admin → Health show the server the console is on, its list with each server's state, and the
+  failovers of the last hour; each failover is a line in the console's log and an audit row on the server it moved to (`net-console-failover`).
+
+## 9. Admin → Net
 
 **Admin → Net** (`/admin/net`, administrators) is the cluster as the node the console is on sees it. Its summary line says whether the cluster is
 on, this node's id, how many members are in each state, whether the key is set (never the key) and whether this node is drained.
@@ -336,6 +417,12 @@ each, **newest** or **older**, **peer-only**, **not routed** for a node that is 
 node. Above the table, the **warnings**: one version of a pack with different contents on different nodes, different business calendars, different
 masked fields. The same at `GET /api/v1/net/capabilities`.
 
+**Routing.** **Explain a request**: type a kind and an id (or a search) and pick a role, and the page says where the request would go from this
+node and why (answered here; forwarded, to which nodes in order; the peers its document would be read from; the peers a search asks; the nodes the
+role may not reach; the nodes that would serve it but are down). Below, the **forwarded traffic**: for each peer, the requests sent to it a minute at
+a time for the last hour (answered, and failed in red), the slowest peers over ten minutes and the latest calls with their outcome and time. API:
+`GET /api/v1/net/explain?kind=&id=&q=&role=&dated=`, `GET /api/v1/net/traffic`.
+
 **Access.** Each role (those of Admin → Roles and those `access.yaml` names) with the nodes it may reach (node ids or tags, chosen from the
 members' ids and tags) and the nodes it reaches now; this node's tags and its peer-only packs. **Save access** checks and writes `access.yaml` and
 the two settings of `node.yaml` (the rest of it kept), applies them at once and audits `net-access-saved`; the other nodes learn of them with this
@@ -351,7 +438,7 @@ line diff against the file. **New peer file** starts `peers/<name>.yaml`.
 
 Every action and every save is in the audit log with the node it was made on.
 
-## 8. Drain, maintenance and a node leaving
+## 10. Drain, maintenance and a node leaving
 
 **Maintenance of one node** (an upgrade, a restart, a new disk): **Drain** it first. It keeps gossiping and keeps serving its own users, but
 its peers stop sending it forwarded work, and a forwarded request that reaches it is answered `503` so the caller tries the next peer. When it
@@ -363,14 +450,14 @@ or **Remove** it from their tables at once.
 
 **A node that crashed** is suspect after `suspect-after` and dead after `dead-after` more; when it restarts it rejoins from its `peers.json`.
 
-## 9. Sizing
+## 11. Sizing
 
 Gossip is small: one round sends the member table (about 300 bytes a member) to `fanout` members, and gets theirs back. With 10 members, the
 defaults cost each node 3 exchanges a second of about 3 KB each way, and the failure detector a probe now and then. Raise `interval` (and
 `suspect-after`, `dead-after` with it) on a large cluster over a slow network; lower `dead-after` to drop a crashed node sooner, at the cost of
 declaring a node that paused (a long garbage collection) dead and having it refute.
 
-## 10. When something is wrong
+## 12. When something is wrong
 
 | Symptom | Look at | Fix |
 |---|---|---|
@@ -379,5 +466,8 @@ declaring a node that paused (a long garbage collection) dead and having it refu
 | `... signed 75 s away from this node's clock` | The two machines' clocks | NTP on every node |
 | A member flaps between `alive` and `suspect` | The latency on Admin → Net, the log of the flapping node (long pauses) | Raise `suspect-after`, or fix the network or the pauses |
 | `404 DRS-5050 Drishti*net is off on this node` | The node's `node.yaml` | `enabled: true` (and the node is not left: Rejoin) |
+| A page says `502 DRS-5052 ... cannot be reached now: n-a (left)` | Admin → Net → Members: the node that holds the data | Start it (or Rejoin it); the page works again by itself |
+| The console moves between servers often | Admin → Health, *Console servers*, and the console's log (`console moved from ... to ...`) | The server it leaves: its health and latency; raise `backend.fail_after` on a flaky network |
+| A view is answered by an older pack | Admin → Net → Capability map: which node has the newest, and whether it is routable | The newest is served only from nodes the caller may reach and that are not drained |
 
 More in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#drishtinet).

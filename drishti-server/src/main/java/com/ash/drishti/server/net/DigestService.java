@@ -158,8 +158,7 @@ public final class DigestService implements AutoCloseable {
             Member m = k.member();
             latency.put(m.nodeId(), k.latencyMs());
             if (m.state().gone()) {
-                changed |= peers.remove(m.nodeId()) != null;
-                continue;
+                continue;                                  // its last digest is kept (not routed to) until the member is forgotten: a read says who holds the data
             }
             Digest held = peers.get(m.nodeId());
             boolean stale = held == null || !held.hash().equals(m.digestHash()) || now - pulledAt.getOrDefault(m.nodeId(), 0L) > REFRESH_MS;

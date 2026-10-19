@@ -75,7 +75,15 @@ public record Digest(String nodeId, String url, String version, int protocol, Li
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record SourceEntry(String connector, String type, String table, String latestDate, String dataVersion, boolean columnar, boolean dated,
-            boolean live) {}
+            boolean live) {
+        public SourceEntry {
+            connector = connector == null ? "" : connector;
+            type = type == null ? "" : type;
+            table = table == null ? "" : table;
+            latestDate = latestDate == null ? "" : latestDate;
+            dataVersion = dataVersion == null ? "" : dataVersion;
+        }
+    }
 
     /** Requests a second and the average latency over the last full minute. */
     @JsonIgnoreProperties(ignoreUnknown = true)

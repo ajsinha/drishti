@@ -65,6 +65,13 @@ SECURITY = {"keySet": True, "previousKeySet": True, "previousUses": [{"node": "n
             "refusals": [{"at": "2026-10-19T10:01:00Z", "address": "10.0.0.9", "node": "n-x", "reason": "bad signature: the caller does not have this cluster's key"}]}
 
 
+TRAFFIC = {"minutes": {"n-b": [{"minute": "2026-10-19T10:00:00Z", "ok": 4, "not-held": 1, "refused": 0, "failed": 1, "timeout": 0, "avgMs": 12.5},
+                                {"minute": "2026-10-19T10:01:00Z", "ok": 2, "not-held": 0, "refused": 0, "failed": 0, "timeout": 0, "avgMs": 9.0}]},
+           "slowest": [{"peer": "n-b", "calls": 8, "avgMs": 11.4}],
+           "recent": [{"at": "2026-10-19T10:01:30Z", "peer": "n-b", "kind": "trade", "what": "view", "outcome": "ok", "ms": 9, "detail": "/api/v1/views/trade/X"}],
+           "totals": {"forwarded": 8, "failed": 1}}
+
+
 def with_net(backend, monkeypatch, calls, fail=None):
     async def net(method, path, ident, body=None, headers=None, **params):
         calls.append((method, path, body, headers, params))
@@ -80,6 +87,11 @@ def with_net(backend, monkeypatch, calls, fail=None):
             return ACCESS
         if path == "/security":
             return SECURITY
+        if path == "/traffic":
+            return TRAFFIC
+        if path == "/explain":
+            return {"kind": "trade", "route": "view", "reason": "the pack finance is not on this node", "forwardTo": ["n-b"], "dataPeers": [],
+                    "scatter": ["n-b"], "unreachable": [], "down": []}
         if path == "/file" and method == "GET":
             return {"id": params.get("id"), "exists": True, "text": "enabled: true\nsecret: ${DRISHTI_NET_SECRET}\n", "etag": "abc", "problems": [], "history": []}
         return {"ok": True}
@@ -136,6 +148,34 @@ def test_security_shows_the_key_state_previous_uses_tls_and_refusals_never_a_key
         assert text in page, text
     assert KEY not in page
     assert client.get("/admin/net/api/security").json()["keySet"] is True
+
+
+def test_routing_explains_a_request_and_shows_the_forwarded_traffic(client, backend, monkeypatch):
+    calls = []
+    with_net(backend, monkeypatch, calls)
+    page = client.get("/admin/net?tab=routing").text
+    for text in ('id="netTabRouting"', "Explain a request", "data-explain-form", 'data-traffic="n-b"', "act-chart", "Slowest peers",
+                 "average 11.4 ms over 8 calls", "Latest calls", "admin-detail.css"):
+        assert text in page, text
+    r = client.get("/admin/net/api/explain?kind=trade&id=X&role=risk&junk=1").json()
+    assert r["route"] == "view"
+    ex = next(c for c in calls if c[1] == "/explain")
+    assert ex[4] == {"kind": "trade", "id": "X", "role": "risk"}
+    assert client.get("/admin/net/api/traffic").json()["totals"]["failed"] == 1
+
+
+def test_the_console_s_own_servers_are_shown_when_it_has_several(client, backend, monkeypatch):
+    with_net(backend, monkeypatch, [])
+
+    class Pool:
+        def snapshot(self):
+            return {"enabled": True, "active": "http://127.0.0.1:18784", "servers": [
+                {"url": "http://127.0.0.1:18783", "origin": "configured", "healthy": False, "latencyMs": None},
+                {"url": "http://127.0.0.1:18784", "origin": "discovered", "healthy": True, "latencyMs": 2.1}], "failovers": []}
+    monkeypatch.setattr(client.app.state, "cluster", Pool(), raising=False)
+    page = client.get("/admin/net").text
+    for text in ("This console's servers", "Console on", "set aside", "discovered", "in use", "2.1 ms"):
+        assert text in page, text
 
 
 def test_the_page_says_how_to_switch_the_cluster_on_when_it_is_off(client, backend, monkeypatch):

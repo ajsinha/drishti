@@ -204,6 +204,38 @@
     }).catch(function (err) { say(err.message, true); });
   };
 
+  // routing: explain a request, refresh the traffic ---------------------------------------------------------------
+  var exForm = $('[data-explain-form]');
+  if (exForm) {
+    exForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var q = [];
+      [['kind', '[data-ex-kind]'], ['id', '[data-ex-id]'], ['q', '[data-ex-q]'], ['role', '[data-ex-role]']].forEach(function (x) {
+        var v = ($(x[1]).value || '').trim();
+        if (v) { q.push(x[0] + '=' + encodeURIComponent(v)); }
+      });
+      if ($('[data-ex-dated]').checked) { q.push('dated=true'); }
+      api('GET', '/admin/net/api/explain?' + q.join('&')).then(function (r) {
+        var box = $('[data-explained]');
+        box.hidden = false;
+        var route = $('[data-ex-route]');
+        route.textContent = r.route === 'view' ? 'forwarded' : r.route === 'local' ? 'answered here' : 'not served';
+        route.className = 'st ' + (r.route === 'none' ? 'st-bad' : 'st-ok');
+        $('[data-ex-reason]').textContent = r.reason;
+        function list(sel, xs) { $(sel).textContent = (xs || []).length ? xs.join(', ') : '-'; }
+        list('[data-ex-forward]', r.forwardTo);
+        list('[data-ex-data]', r.dataPeers);
+        list('[data-ex-scatter]', r.scatter);
+        list('[data-ex-unreachable]', r.unreachable);
+        list('[data-ex-down]', r.down);
+      }).catch(function (err) { say(err.message, true); });
+    });
+  }
+  var trafficRefresh = $('[data-traffic-refresh]');
+  if (trafficRefresh) {
+    trafficRefresh.addEventListener('click', function () { window.location.assign('/admin/net?tab=routing'); });
+  }
+
   // access --------------------------------------------------------------------------------------------------------
   function words(v) { return (v || '').split(',').map(function (x) { return x.trim(); }).filter(function (x) { return x; }); }
   var accessForm = $('[data-access-form]');

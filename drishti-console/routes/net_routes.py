@@ -79,8 +79,31 @@ async def page(request: Request):
     caps = await _optional(request, "/capabilities")
     access = await _optional(request, "/access")
     security = await _optional(request, "/security")
+    traffic = await _optional(request, "/traffic")
     return render(request, "admin/net.html", members=members, files=files, status=status, console=_console_servers(request), caps=caps,
-                  access=access, security=security, tab=request.query_params.get("tab", "members"))
+                  access=access, security=security, traffic=traffic, tab=request.query_params.get("tab", "members"))
+
+
+@router.get("/api/explain")
+async def api_explain(request: Request):
+    """Where a request would go and why (kind and id, or a search, as a role); only those parameters are passed on."""
+    if _admin(request) is None:
+        return _forbidden()
+    q = {k: request.query_params[k] for k in ("kind", "id", "q", "role", "dated") if request.query_params.get(k)}
+    try:
+        return await _net(request, "GET", "/explain", **q)
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.get("/api/traffic")
+async def api_traffic(request: Request):
+    if _admin(request) is None:
+        return _forbidden()
+    try:
+        return await _net(request, "GET", "/traffic")
+    except BackendError as e:
+        return _problem(e)
 
 
 async def _optional(request: Request, path: str, **params) -> dict:

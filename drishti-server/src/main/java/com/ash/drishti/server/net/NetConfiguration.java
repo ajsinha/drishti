@@ -65,6 +65,49 @@ public class NetConfiguration {
         return v;
     }
 
+    @Bean
+    public ForwardLog forwardLog(io.micrometer.core.instrument.MeterRegistry meters) {
+        return new ForwardLog(meters);
+    }
+
+    @Bean
+    public NetHealth netHealth(NetService net, ForwardLog log, io.micrometer.core.instrument.MeterRegistry meters) {
+        return new NetHealth(net, log, meters);
+    }
+
+    @Bean
+    public NetRouting netRouting(NetService net, DigestService digests, com.ash.drishti.packs.PackRegistry packs,
+            com.ash.drishti.server.security.PackAccess packAccess) {
+        // a peer-only pack is hidden from this node's own users and served to peers (DRISHTI_NET.md section 6)
+        packAccess.hiddenFromUsers(pack -> net.running() && net.config().node().peerOnlyPacks().contains(pack) && !NetCaller.fromPeer());
+        return new NetRouting(net, digests, packs, packAccess);
+    }
+
+    @Bean
+    public PeerSources peerSources(NetRouting routing, NetService net, com.ash.drishti.common.JsonCodec codec, ForwardLog log,
+            com.ash.drishti.engine.source.SourceRouter router) {
+        return new PeerSources(routing, net, codec, log, router);
+    }
+
+    /** After the token filter (the caller is known): who the request is for, for the router and the peer sources. */
+    @Bean
+    public FilterRegistrationBean<NetCaller.Filter> netCallerFilter() {
+        FilterRegistrationBean<NetCaller.Filter> r = new FilterRegistrationBean<>(new NetCaller.Filter());
+        r.addUrlPatterns("/api/*");
+        r.setOrder(2);
+        return r;
+    }
+
+    /** After the caller is known: a request for a kind another node serves goes there whole (view forwarding). */
+    @Bean
+    public FilterRegistrationBean<ViewForwardFilter> viewForwardFilter(NetRouting routing, com.ash.drishti.server.security.Entitlements entitlements,
+            ForwardLog log, ObjectProvider<com.ash.drishti.identity.AccessLog> access, ObjectProvider<com.ash.drishti.engine.command.Mnemonics> mnemonics) {
+        FilterRegistrationBean<ViewForwardFilter> r = new FilterRegistrationBean<>(new ViewForwardFilter(routing, entitlements, log, access, mnemonics));
+        r.addUrlPatterns("/api/*");
+        r.setOrder(3);
+        return r;
+    }
+
     /** After the path guard and the size limit, before the token filter: a node's call is verified here and needs no bearer token. */
     @Bean
     public FilterRegistrationBean<NetCallFilter> netCallFilter(NetService net) {

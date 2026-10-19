@@ -143,6 +143,22 @@ public class NetAdminController {
         return Map.of("left", false);
     }
 
+    /**
+     * A console that moved from one server of the cluster to another tells the one it moved to (body {@code {from, to, why, console}}), so
+     * each failover is an audit row as well as a line in the console's log. The console's service identity or an administrator.
+     */
+    @PostMapping("/console-event")
+    public Map<String, Object> consoleEvent(@RequestBody JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (!p.roles().contains(Entitlements.SERVICE)) {
+            entitlements.requireAdmin(p);
+        }
+        String from = body.path("from").asText("");
+        String to = body.path("to").asText("");
+        audit.record("console", "net-console-failover", to, "console " + body.path("console").asText("?") + " moved from " + from + " to " + to
+                + (body.path("why").asText("").isBlank() ? "" : ": " + body.path("why").asText()) + " (recorded on node " + net.nodeId() + ")");
+        return Map.of("recorded", true);
+    }
+
     // -- files --------------------------------------------------------------------------------------------------------
 
     /** Every file of the folder with its version and problems, and where the folder is. */

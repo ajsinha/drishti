@@ -92,10 +92,17 @@ def entity_path(kind: str, id_: str) -> tuple[str, dict]:
 class BackendClient:
     """Thin, typed-by-convention wrapper over ``/api/v1``. Safe to share across requests."""
 
-    def __init__(self, base_url: str, timeout: float = 5.0, pool: int = 64):
+    def __init__(self, base_url: str, timeout: float = 5.0, pool: int = 64, servers=None):
+        """``servers``: a :class:`core.cluster.ServerPool` when ``backend.urls`` names several servers (Drishti*net): every call then goes
+        to the server the session uses, and a read that fails there is tried once on another; None for the one ``base_url``."""
         self._client = httpx.AsyncClient(
             base_url=base_url.rstrip("/"), timeout=timeout,
             limits=httpx.Limits(max_connections=pool, max_keepalive_connections=pool))
+        self._servers = servers
+
+    def _base(self) -> str:
+        """The server a call goes to: the session's in the pool, else the client's own base (a relative path)."""
+        return self._servers.current() if self._servers is not None else ""
 
     async def _get(self, url: str, ident=None, **params: Any) -> Any:
         return await self._send("GET", url, ident, params=params)
@@ -107,13 +114,16 @@ class BackendClient:
         headers.update(kw.pop("headers", {}))
         raw = kw.pop("raw", False)
         with_headers = kw.pop("with_headers", False)
-        try:
-            r = await self._client.request(method, "/api/v1" + path, headers=headers, **kw)
-        except httpx.TimeoutException as e:
-            raise BackendError(504, "DRS-1004", f"the server did not answer in time ({type(e).__name__}); try again, "
-                                                 "or raise the server's drishti.sources.fetch-timeout") from e
-        except httpx.HTTPError as e:
-            raise BackendError(503, "DRS-5003", f"backend unreachable: {e}") from e
+        if self._servers is not None:
+            r = await self._send_pooled(method, path, headers, kw)
+        else:
+            try:
+                r = await self._client.request(method, "/api/v1" + path, headers=headers, **kw)
+            except httpx.TimeoutException as e:
+                raise BackendError(504, "DRS-1004", f"the server did not answer in time ({type(e).__name__}); try again, "
+                                                     "or raise the server's drishti.sources.fetch-timeout") from e
+            except httpx.HTTPError as e:
+                raise BackendError(503, "DRS-5003", f"backend unreachable: {e}") from e
         if r.status_code >= 400:
             raise _error(r, r.text)
         if r.status_code == 204:
@@ -122,13 +132,48 @@ class BackendClient:
             return (r.content, r.headers) if with_headers else r.content
         return r.json() if "json" in r.headers.get("content-type", "") else r.text
 
+    async def _send_pooled(self, method: str, path: str, headers: dict, kw: dict) -> httpx.Response:
+        """One call through the server pool: refused, timed out or 502/503 counts against the server (``fail_after`` in a row set it
+        aside), and a read is tried once more on another server; a write never is, and says it did not save."""
+        import time as _time
+        read = method in ("GET", "HEAD")
+        base = self._servers.current()
+        for attempt in (0, 1):
+            t0 = _time.perf_counter()
+            why = ""
+            try:
+                r = await self._client.request(method, base + "/api/v1" + path, headers=headers, **kw)
+                if r.status_code not in (502, 503):
+                    self._servers.answered(base, (_time.perf_counter() - t0) * 1000)
+                    return r
+                why = f"HTTP {r.status_code}"
+                err = r
+            except httpx.TimeoutException as e:
+                why, err = f"no answer in time ({type(e).__name__})", BackendError(504, "DRS-1004", f"the server did not answer in time ({type(e).__name__}); try again")
+            except httpx.HTTPError as e:
+                why, err = f"unreachable ({type(e).__name__})", BackendError(503, "DRS-5003", f"backend unreachable: {e}")
+            set_aside = self._servers.failed(base, why)
+            other = self._servers.current() if set_aside else self._servers.another(base)
+            if not read:
+                if isinstance(err, httpx.Response):
+                    return err
+                err.detail = f"{err.detail}. It did not save: try again in a moment"
+                raise err
+            if attempt == 0 and other and other != base:
+                base = other                                  # a read is tried once more, on another server
+                continue
+            if isinstance(err, httpx.Response):
+                return err
+            raise err
+        raise BackendError(503, "DRS-5003", "backend unreachable")
+
     async def open_download(self, path: str, ident) -> httpx.Response:
         """A large answer opened for streaming (the compliance export's zip): the server's refusal is raised before a byte is read; the caller
         iterates ``aiter_bytes()`` and closes the response, so the body is never held whole in the console."""
         headers = dict(ident.headers()) if ident is not None else {}
         headers.update(asof.headers())
         try:
-            r = await self._client.send(self._client.build_request("GET", "/api/v1" + path, headers=headers), stream=True)
+            r = await self._client.send(self._client.build_request("GET", self._base() + "/api/v1" + path, headers=headers), stream=True)
         except httpx.TimeoutException as e:
             raise BackendError(504, "DRS-1004", f"the server did not answer in time ({type(e).__name__})") from e
         except httpx.HTTPError as e:
@@ -571,20 +616,35 @@ class BackendClient:
         """Yields ``(event, data)`` from any server SSE endpoint under /api/v1. The open response is appended to
         ``opened`` when given, so a caller can close it from another task to end the stream."""
         headers = {"Accept": "text/event-stream", **(ident.headers() if ident is not None else {}), **asof.headers()}
-        async with self._client.stream("GET", "/api/v1" + path, timeout=None, headers=headers) as r:
-            if opened is not None:
-                opened.append(r)
-            if r.status_code >= 400:
-                raise BackendError(r.status_code, "DRS-5003", "stream refused")
-            event, data = None, []
-            async for line in r.aiter_lines():
-                if line.startswith("event:"):
-                    event = line[6:].strip()
-                elif line.startswith("data:"):
-                    data.append(line[5:])
-                elif line == "" and event:
-                    yield event, "\n".join(data)
-                    event, data = None, []
+        async for pair in self._events("/api/v1" + path, None, headers, opened):
+            yield pair
+
+    async def _events(self, path: str, params: dict | None, headers: dict, opened: list | None):
+        """An SSE stream's ``(event, data)`` pairs. Through the server pool a stream that cannot open, or breaks, counts against its server, so
+        the browser's reconnect (it reconnects by itself) opens the stream on the next server once that one is set aside."""
+        base = self._base()
+        try:
+            async with self._client.stream("GET", base + path, params=params, timeout=None, headers=headers) as r:
+                if opened is not None:
+                    opened.append(r)
+                if r.status_code >= 400:
+                    if self._servers is not None and r.status_code in (502, 503):
+                        self._servers.failed(base, f"HTTP {r.status_code}")
+                    raise BackendError(r.status_code, "DRS-5003", "stream refused")
+                event, data = None, []
+                async for line in r.aiter_lines():
+                    if line.startswith("event:"):
+                        event = line[6:].strip()
+                    elif line.startswith("data:"):
+                        data.append(line[5:])
+                    elif line == "" and event:
+                        yield event, "\n".join(data)
+                        event, data = None, []
+        except httpx.TransportError as e:
+            if self._servers is None:
+                raise
+            self._servers.failed(base, f"stream broke ({type(e).__name__})")
+            raise BackendError(503, "DRS-5003", f"backend unreachable: {e}") from e
 
     # -- Rupaka phase 1: the BI shell and catalogue (docs/architecture/RUPAKA.md) ---------------------------------------------
     async def bi(self, method: str, path: str, ident, body: dict | None = None, **params):
@@ -680,20 +740,8 @@ class BackendClient:
         headers = {"Accept": "text/event-stream", **(ident.headers() if ident is not None else {}), **asof.headers()}
         where, q = entity_path(kind, id_)
         q = {**q, **(controls or {})}
-        async with self._client.stream("GET", f"/api/v1/views/{where}/stream", params=q, timeout=None, headers=headers) as r:
-            if opened is not None:
-                opened.append(r)
-            if r.status_code >= 400:
-                raise BackendError(r.status_code, "DRS-5003", "stream refused")
-            event, data = None, []
-            async for line in r.aiter_lines():
-                if line.startswith("event:"):
-                    event = line[6:].strip()
-                elif line.startswith("data:"):
-                    data.append(line[5:])
-                elif line == "" and event:
-                    yield event, "\n".join(data)
-                    event, data = None, []
+        async for pair in self._events(f"/api/v1/views/{where}/stream", q, headers, opened):
+            yield pair
 
     async def aclose(self) -> None:
         await self._client.aclose()

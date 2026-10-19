@@ -40,6 +40,14 @@
   <span><b>Console watch</b></span>
   {% for w in (watch or []) %}<span class="mono" data-watch-server="{{ w.id }}" title="The console asks each server every backend.check_seconds (DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS)">{{ w.name }}: {% if w.reachable is none %}not checked yet{% elif w.reachable %}reachable{% if w.version %} · v{{ w.version }}{% endif %}{% else %}<span class="t-neg">unreachable</span> · {{ w.lastError }}{% endif %}</span>{% endfor %}
 </div>
+{% if console_cluster and console_cluster.enabled %}
+<div class="hl-sum" data-console-servers aria-label="The console's servers">
+  <span><b>Console servers</b> (backend.urls)</span>
+  <span class="mono">on {{ console_cluster.active }}</span>
+  {% for s in console_cluster.servers %}<span class="mono">{{ s.url }} {{ s.origin }}: {% if s.healthy %}healthy{% if s.latencyMs is not none %} · {{ s.latencyMs }} ms{% endif %}{% else %}<span class="t-neg">set aside</span>{% if s.lastError %} · {{ s.lastError }}{% endif %}{% endif %}</span>{% endfor %}
+  <span>{{ console_cluster.failovers | length }} failover{{ 's' if console_cluster.failovers | length != 1 }} in the last hour{% for f in console_cluster.failovers[-3:] %} · <span class="mono">{{ f['from'] }} → {{ f.to }}</span>{% endfor %}</span>
+</div>
+{% endif %}
 <div class="hl-sum" data-tmp-folders aria-label="Temporary folders">
   <span><b>Temp folders</b></span>
   <span class="mono" data-tmp-server title="The server's folder drishti-&lt;pid&gt; (drishti.tmp-dir / DRISHTI_TMP_DIR): removed on shutdown; left-over ones are listed, never deleted automatically">server {{ (h.tmp or {}).get('path') or '—' }} · {{ (((h.tmp or {}).get('bytes') or 0) / 1048576) | round(1) }} MB · {{ (h.tmp or {}).get('files') or 0 }} files</span>
@@ -68,6 +76,15 @@
   <polyline class="act-line" points="{% for m in act %}{{ '%.1f' | format(loop.index0 * bw + bw / 2) }},{{ '%.1f' | format(110 - 100 * m.avgMs / maxms) }} {% endfor %}"/>
   <text class="act-axis" x="2" y="126">{{ act[0].minute[11:16] }} UTC</text><text class="act-axis" x="598" y="126" text-anchor="end">now</text>
 </svg>
+{% endif %}
+{% if h.net and h.net.enabled %}{% set nm = h.net.members %}{% set nt = h.net.last10Minutes or {} %}
+<h2 class="ws-h">Drishti*net</h2>
+<section class="pnl" aria-label="Drishti*net" data-net-health><div class="pnl-b"><p>
+  {% if h.net.running %}This server is node <b class="mono">{{ h.net.nodeId }}</b>{% if h.net.drained %} (drained){% endif %}: <b>{{ nm.alive }}</b> alive,
+  <b class="{{ 't-warn' if nm.suspect }}">{{ nm.suspect }}</b> suspect, {{ nm.dead }} dead, {{ nm.left }} left.
+  Last ten minutes: <b class="mono">{{ nt.forwarded or 0 }}</b> requests sent to peers, <b class="mono {{ 't-neg' if nt.failed }}">{{ nt.failed or 0 }}</b> failed.
+  {% else %}The cluster is switched on but this node is not running in it (left, or its files are refused).{% endif %}
+  <a href="/admin/net">Admin → Net</a></p></div></section>
 {% endif %}
 <h2 class="ws-h">Connectors</h2>
 <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl hl-tbl">
