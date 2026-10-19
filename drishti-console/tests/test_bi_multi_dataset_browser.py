@@ -69,8 +69,8 @@ def stack(tmp_path_factory):
     except FileNotFoundError as e:
         pytest.skip(str(e))
     st, r = bi_report_stack.admin("POST", "/admin/users", {"username": "rex", "displayName": "Rex", "email": "rex@desk.test", "desk": "", "roles": ["risk", "bi-writer"],
-                                                           "packs": ["trading", "counterparty-risk"], "password": bi_report_stack.PASSWORD, "mustChangePassword": False})
-    assert st in (200, 201), r                                                                              # rex reads every row (risk) and may run Python cells (bi-author)
+                                                           "packs": ["trading", "counterparty-risk", "market-risk"], "password": bi_report_stack.PASSWORD, "mustChangePassword": False})
+    assert st in (200, 201), r      # rex reads every row (risk; the valuations are market-risk's kind since 2.3.0) and may run Python cells (bi-author)
     yield s
     s.close()
 
