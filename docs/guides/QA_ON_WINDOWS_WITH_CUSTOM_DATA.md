@@ -378,6 +378,28 @@ trades.
 
 ---
 
+## 6a. Optional: a second server with Drishti*net (15 minutes)
+
+Only if the demo should show two servers acting as one ([tutorial 19](../tutorials/19-a-cluster-of-three.md)). Nothing here changes the
+single server of section 4: without a `config\net` folder Drishti*net is off.
+
+1. In PowerShell, make a key once and keep it for both servers: `$env:DRISHTI_NET_SECRET = [guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N')`.
+2. For the first server (the one of section 4.1):
+   `C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\drishti.py net set node.advertise-url http://127.0.0.1:18480`,
+   then the same with `node.secret '${DRISHTI_NET_SECRET}'` and last `node.enabled true`. `net list` must say **Drishti*net is ON** and `key set`.
+3. For the second server, a copy of the project's `config` in another folder with its own `data` folder, the same three settings with port
+   18490 (`--dir <that folder>\config\net`), and its seed: `net add-peer first 127.0.0.1:18480 --dir <that folder>\config\net`.
+4. Start the first server as in section 4.1 with `DRISHTI_NET_SECRET` in the run configuration's environment; start the second from a
+   PowerShell window in its folder: `java -jar <project>\drishti-server\target\drishti-server-<version>-exec.jar --server.port=18490`.
+5. Check: **Admin → Net → Members** lists both `alive`. Open a trade only the second holds through the console: the same page as on the
+   second. **Admin → Net → Routing → Explain a request** names the route.
+6. To show failover, set the console's `DRISHTI_BACKEND_URLS=http://127.0.0.1:18480` before starting it, stop the first server: the next page
+   comes from the second, still signed in.
+
+If `net set node.enabled true` says *needs the cluster key*, the variable of point 1 is not set in that PowerShell window.
+
+---
+
 ## 7. If something goes wrong
 
 | What you see | Do this |

@@ -79,6 +79,8 @@
   back is given what it lacks. Alerts, monitors and scheduled reports stay where they were made (they act). `user-state: off` in routing.yaml for a
   cluster with one shared identity database. Admin → Net → Members shows what was sent, applied and waits. Pushed gossip now tells the node of joins
   and departures as its own exchanges do. NET.md section 7, API_GUIDE, USER_GUIDE.
+- **Drishti*net docs.** Tutorial 19, a cluster of three (UI, CLI and YAML; failover); the Windows QA guide's optional second server; README and
+  Help → About. NET.md's command outputs are the CLI's real ones.
 
 ### 2.4.0 (wave C, authoring and analysis): report schema v2, boards as a report layout, BI Studio
 

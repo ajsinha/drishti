@@ -76,9 +76,9 @@ server does:
 
 ```text
 $ drishti.py net set node.enabled true
+drishti: node.yaml was not written: enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least 32 bytes)
   error   node.yaml  secret: enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least 32 bytes)
   error   node.yaml  advertise-url: enabled: true needs advertise-url: the address peers and consoles call this node at
-drishti: node.yaml was not written: enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least 32 bytes)
 (exit 1)
 
 $ drishti.py net set node.secret '${DRISHTI_NET_SECRET}'
@@ -129,16 +129,9 @@ INFO  net: member n-3d5a69faa3 joined
 ```
 
 **Step 4 · check.** On any node, **Admin → Net → Members** lists the three, each `alive`, with its version, tags and the latency this node
-measured to it. From a terminal (an administrator's token in `DRISHTI_TOKEN`):
-
-```text
-$ drishti.py net members --server http://127.0.0.1:18784
-3 member(s); this node n-1ace3ceb60
-  node                      state  address                 version  tags                   latency  incarnation
-  n-1ace3ceb60 (this node)  alive  http://127.0.0.1:18784  2.5.0    region:emea,tier:risk  -        1
-  n-3d5a69faa3              alive  http://127.0.0.1:18783  2.5.0    region:emea            0.9 ms   1
-  n-8598cc5532              alive  http://127.0.0.1:18785  2.5.0    region:apac            1.1 ms   1
-```
+measured to it. From a terminal (an administrator's token in `DRISHTI_TOKEN`), `drishti.py net members --server http://127.0.0.1:18784` prints the same
+table: one line per member with its node id (this node marked), state, address, version, tags, the latency this node measured and its
+incarnation (`--json` for the whole answer).
 
 In the in-process test of three servers (`NetMembershipTest`), the three list each other 52 ms after the third has started.
 
