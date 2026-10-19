@@ -93,7 +93,7 @@ h1 .bi-soon, h2 .bi-soon { margin-left: .5rem; vertical-align: middle; }
 @media (pointer: coarse) {
   .bi-rail-link, .bi-fav, .bi-starbtn, .bi-shell .btn-pill, .bi-shell .studio-in, .bi-shell .studio-select, .bi-shell .bi-checkrow input { min-height: 44px; }
   .bi-fav, .bi-starbtn { min-width: 44px; }
-  .bi-card h3 a, .bi-tbl th[scope="row"] a { display: inline-flex; align-items: center; min-height: 44px; }
+  .bi-card h3 a, .bi-tbl th[scope="row"] a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }      /* a short title (a theme: Print) is still a finger-sized target */
   .bi-shell .bi-checkrow input { min-width: 44px; }
 }
 @media (max-width: 760px) {

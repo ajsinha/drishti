@@ -174,14 +174,14 @@ def test_lineage_shows_where_a_dataset_comes_from_and_who_reads_it(stack, browse
     lin = page.locator("[data-sec-lineage]")
     expect(lin).to_be_visible()
     expect(lin.locator("[data-upstream]")).to_contain_text("trade")
-    expect(lin.locator("[data-upstream]")).to_contain_text("trading-store")
-    expect(lin.locator("[data-upstream]")).to_contain_text("trading")
+    expect(lin.locator("[data-upstream]")).to_contain_text("risk-store")                          # the valuations (2.3.0): market-risk's kind trade-valuation
+    expect(lin.locator("[data-upstream]")).to_contain_text("market-risk")
     expect(lin.locator("[data-downstream] a")).to_have_text("Trades report")
     lin.locator("[data-downstream] a").click()
     page.wait_for_url("**/bi/i/*")
     lin = page.locator("[data-sec-lineage]")
     expect(lin.locator("[data-dataset]")).to_contain_text("Trades model")
-    expect(lin.locator("[data-uses]")).to_contain_text("trade.desk")
+    expect(lin.locator("[data-uses]")).to_contain_text("trade.DESK")
     expect(lin.locator("[data-uses]")).to_contain_text("Notional")
     clean(page)
 
@@ -191,7 +191,7 @@ def test_a_dataset_change_that_breaks_a_report_is_refused_and_an_admin_can_force
     open_item(ann, stack.ids["model"])
 
     def drop_book(t):
-        return re.sub(r"^      book: .*\n", "", t, flags=re.M).replace("Desk and book: [trade.desk, trade.book]", "Desk: [trade.desk]")
+        return re.sub(r"^      PORTFOLIO: .*\n", "", t, flags=re.M).replace("Desk and book: [trade.DESK, trade.PORTFOLIO]", "Desk: [trade.DESK]")
 
     edit_body(ann, drop_book, "drop the book column")
     imp = ann.locator("[data-impact-draft]")
@@ -203,7 +203,7 @@ def test_a_dataset_change_that_breaks_a_report_is_refused_and_an_admin_can_force
     expect(force).to_contain_text("DRS-9040")
     expect(force).to_contain_text("Trades report")
     expect(force.get_by_role("button", name="Publish anyway (bi-admin)")).to_have_count(0)      # ann may not force it
-    ann.fill("[data-sec-impact] [name=remove]", "trade.desk, Notional")
+    ann.fill("[data-sec-impact] [name=remove]", "trade.DESK, Notional")
     ann.click("[data-impact-form] button[type=submit]")
     expect(ann.locator("[data-impact-what]")).to_contain_text("Trades report")
     admin = sign_in(browser, "root")

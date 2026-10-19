@@ -387,7 +387,7 @@ The codes of the later phases are described once, in the reference that raises t
 |---|---|---|
 | `DRS-9010` to `9013` | a dataset: structure, expression, reference, a reserved feature | [DATASETS.md section 9](DATASETS.md#9-problems-and-drs-codes) |
 | `DRS-9020` to `9027` | a dataset query: refused, masked, too large, too slow, too many at once, source or engine failure | [DATASETS.md section 9](DATASETS.md#9-problems-and-drs-codes) |
-| `DRS-9030` to `9035` | a report: structure, a name it lacks, a visual built wrongly, a reserved visual, its dataset, a visual query's state | [REPORTS.md section 9](REPORTS.md#9-checking-a-report-drs-9030-to-drs-9035) |
+| `DRS-9030` to `9036` | a report: structure, a name it lacks, a visual built wrongly, a reserved visual, its dataset, a visual query's state; a theme (9036) | [REPORTS.md section 9](REPORTS.md#9-checking-a-report-drs-9030-to-drs-9036) |
 | `DRS-9040` to `9042` | publishing and bundles: a change that would break published reports, a bad bundle, an import that conflicts | [BI_GOVERNANCE.md section 9](BI_GOVERNANCE.md#9-api) |
 | `DRS-9050`, `9051` | live tables and streams: a table that cannot be kept live, too many streams | [DATASETS.md sections 7.1 and 9](DATASETS.md#71-live-tables-phase-5) |
 | `DRS-9052`, `9053` | a board: malformed, or using a reserved, unbuilt setting | [BOARDS.md section 7](BOARDS.md#7-checking-a-board-drs-9052-and-drs-9053) |

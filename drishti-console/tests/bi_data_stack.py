@@ -79,12 +79,15 @@ def trade(day: str, i: int) -> dict:
 
 
 def write_lake(root: Path, days=("2026-10-07", "2026-10-08"), rows=60) -> None:
+    """As tests/bi_report_stack.py: ``risk/`` the valuations the shipped samples read (2.3.0 UPPER_SNAKE names), ``trade/`` the same trades under the test's own names."""
+    from bi_report_stack import valuation
     for day in days:
-        folder = root / day
-        folder.mkdir(parents=True, exist_ok=True)
-        with open(folder / "trade.jsonl", "w") as f:
-            for i in range(rows):
-                f.write(json.dumps(trade(day, i)) + "\n")
+        for sub, name, row in (("risk", "trade-valuation.jsonl", valuation), ("trade", "trade.jsonl", lambda t: t)):
+            folder = root / sub / day
+            folder.mkdir(parents=True, exist_ok=True)
+            with open(folder / name, "w") as f:
+                for i in range(rows):
+                    f.write(json.dumps(row(trade(day, i))) + "\n")
 
 
 CONNECTOR = """plugin: file
@@ -137,15 +140,17 @@ class DataStack:
             env["DRISHTI_PACKS"] = "trading,counterparty-risk,market-risk"
             env["DRISHTI_DELTA_ROOT"] = self.delta_root
         else:
-            env["DRISHTI_PACKS"] = "trading"
+            env["DRISHTI_PACKS"] = "trading,market-risk"                    # the valuations are market-risk's kind (2.3.0)
             lake = self.tmp / "lake"
             write_lake(lake)
+            from bi_report_stack import CONNECTOR as RISK_CONNECTOR
             (work / "config" / "connectors").mkdir(parents=True)
-            (work / "config" / "connectors" / "trading-store.yaml").write_text(CONNECTOR.format(root=lake))
+            (work / "config" / "connectors" / "trading-store.yaml").write_text(CONNECTOR.format(root=lake / "trade"))
+            (work / "config" / "connectors" / "risk-store.yaml").write_text(RISK_CONNECTOR.format(root=lake / "risk"))
         self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
                                                  f"--drishti.bi.query.store-dir={self.tmp / 'store'}"], cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
         wait(SERVER + "/actuator/health", 150)
-        seed(['trading', 'counterparty-risk', 'market-risk'] if self.delta_root else ['trading'])
+        seed(['trading', 'counterparty-risk', 'market-risk'] if self.delta_root else ['trading', 'market-risk'])
         cenv = dict(os.environ, DRISHTI_AUTH_ENABLED="true", DRISHTI_SESSION_SECRET="s" * 40, DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_SECURE_COOKIE="false",
                     DRISHTI_SESSION_RECHECK_SECONDS="1")
         self.procs["console"] = subprocess.Popen([sys.executable, str(CONSOLE / "run_drishti_web.py"), f"--server.port={CONSOLE_PORT}", f"--backend.url={SERVER}"], env=cenv,
