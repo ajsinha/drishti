@@ -64,6 +64,70 @@ public final class ApiTokenStore {
     private final Map<String, Cached> cache = new ConcurrentHashMap<>();
     private final Map<String, Instant> lastWritten = new ConcurrentHashMap<>();
 
+    /**
+     * A token as it is kept (its secret's SHA-256, never the secret), for Drishti*net, which copies tokens to the other nodes of a cluster
+     * (DRISHTI_NET.md section 11): a script's token then works on every node. {@code scopes} as stored (null: read).
+     */
+    public record Stored(String id, String user, String name, String secretHash, Instant createdAt, Instant expiresAt, Instant revokedAt,
+            String scopes) {}
+
+    /** Told of every token created or revoked here. */
+    public interface Listener {
+        void written(Stored token);
+    }
+
+    private final List<Listener> listeners = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    public void listen(Listener l) {
+        listeners.add(l);
+    }
+
+    private static Stored stored(ApiTokenEntity e) {
+        return new Stored(e.id, e.username, e.name, e.secretHash, e.createdAt, e.expiresAt, e.revokedAt, e.scopes);
+    }
+
+    /** Every token kept here (what a node that joins the cluster is given). */
+    public List<Stored> stored() {
+        return tokens.findAllByOrderByCreatedAtDesc().stream().map(ApiTokenStore::stored).toList();
+    }
+
+    /**
+     * A token another node created or revoked: added when it is not here, revoked here when it was there (a revocation is never undone).
+     * Audited as {@code actor}; no listener is told, so it is not sent back. True when something changed.
+     */
+    public boolean adopt(Stored t, String actor) {
+        if (t == null || t.id() == null || t.user() == null || t.secretHash() == null || t.createdAt() == null) {
+            return false;
+        }
+        String change = tx.execute(s -> {
+            ApiTokenEntity e = tokens.findById(t.id()).orElse(null);
+            if (e == null) {
+                e = new ApiTokenEntity();
+                e.id = t.id();
+                e.username = t.user();
+                e.name = t.name() == null ? "" : t.name();
+                e.secretHash = t.secretHash();
+                e.createdAt = t.createdAt();
+                e.expiresAt = t.expiresAt();
+                e.revokedAt = t.revokedAt();
+                e.scopes = t.scopes();
+                tokens.save(e);
+                return "token-copied";
+            }
+            if (t.revokedAt() != null && e.revokedAt == null) {
+                e.revokedAt = t.revokedAt();
+                tokens.save(e);
+                return "token-revoked";
+            }
+            return null;
+        });
+        cache.remove(t.id());
+        if (change != null) {
+            audit.record(actor, change, t.user(), t.id());
+        }
+        return change != null;
+    }
+
     private record Cached(String user, String hash, Instant expiresAt, Instant until, List<String> scopes) {}
 
     public ApiTokenStore(IdentityRepositories.ApiTokens tokens, TransactionTemplate tx, AuditLog audit) {
@@ -103,6 +167,7 @@ public final class ApiTokenStore {
         e.expiresAt = days == null ? null : e.createdAt.plus(Duration.ofDays(days));
         e.scopes = scopes == null || scopes.isEmpty() ? null : String.join(",", scopes);
         tx.executeWithoutResult(s -> tokens.save(e));
+        listeners.forEach(l -> l.written(stored(e)));
         audit.record(user, "token-created", user, id + " " + n + (days == null ? "" : " for " + days + " days") + " scopes " + scopesOf(e.scopes));
         return new Created(view(e), "drk_" + id + "_" + secret);
     }
@@ -162,16 +227,18 @@ public final class ApiTokenStore {
 
     /** Revokes a token; {@code owner} null lets an administrator revoke anyone's. */
     public boolean revoke(String id, String owner, String actor) {
-        boolean done = Boolean.TRUE.equals(tx.execute(s -> tokens.findById(id)
+        Stored revoked = tx.execute(s -> tokens.findById(id)
                 .filter(e -> owner == null || e.username.equals(owner))
                 .filter(e -> e.revokedAt == null)
                 .map(e -> {
                     e.revokedAt = Instant.now();
                     tokens.save(e);
-                    return true;
-                }).orElse(false)));
+                    return stored(e);
+                }).orElse(null));
+        boolean done = revoked != null;
         cache.remove(id);
         if (done) {
+            listeners.forEach(l -> l.written(revoked));
             audit.record(actor, "token-revoked", owner == null ? "" : owner, id);
         }
         return done;

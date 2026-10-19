@@ -57,6 +57,19 @@ public final class RoleStore {
     private final ReentrantLock writes = new ReentrantLock();
     private volatile Map<String, RoleDefinition> snapshot;
 
+    /** Told of every role saved or deleted here by an administrator (Drishti*net copies them to the other nodes). */
+    public interface Listener {
+        void saved(RoleDefinition role);
+
+        void deleted(String name, Instant at);
+    }
+
+    private final List<Listener> listeners = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    public void listen(Listener l) {
+        listeners.add(l);
+    }
+
     public RoleStore(IdentityRepositories.Roles roles, TransactionTemplate tx, AuditLog audit) {
         this.roles = roles;
         this.tx = tx;
@@ -102,16 +115,32 @@ public final class RoleStore {
         if (role.kinds().isEmpty()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "a role opens at least one kind (or * for all)");
         }
+        RoleDefinition saved = write(role, actor, Instant.now(), actor);
+        listeners.forEach(l -> l.saved(saved));
+        return saved;
+    }
+
+    /**
+     * A role as another node of the cluster saved it (Drishti*net copies roles, DRISHTI_NET.md section 11): written with its own time
+     * and author, audited here as {@code actor} (the node it came from), and no listener is told, so it is not sent back.
+     */
+    public RoleDefinition adopt(RoleDefinition role, String actor) {
+        if (role.name() == null || !NAME.matcher(role.name()).matches() || role.kinds().isEmpty()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "not a role that can be saved: " + role.name());
+        }
+        return write(role, actor, role.updatedAt() == null ? Instant.now() : role.updatedAt(), role.updatedBy());
+    }
+
+    private RoleDefinition write(RoleDefinition role, String actor, Instant at, String by) {
         writes.lock();
         try {
             boolean created = tx.execute(s -> {
                 RoleEntity e = roles.findById(role.name()).orElse(null);
                 boolean isNew = e == null;
-                Instant now = Instant.now();
                 if (isNew) {
                     e = new RoleEntity();
                     e.name = role.name();
-                    e.createdAt = now;
+                    e.createdAt = at;
                 }
                 e.description = role.description();
                 e.raw = role.raw();
@@ -136,8 +165,8 @@ public final class RoleStore {
                         e.powers.add(BI_PREFIX + b);
                     }
                 }
-                e.updatedAt = now;
-                e.updatedBy = actor;
+                e.updatedAt = at;
+                e.updatedBy = by;
                 e.kinds.clear();
                 e.kinds.addAll(new TreeSet<>(role.kinds()));
                 roles.save(e);
@@ -152,6 +181,20 @@ public final class RoleStore {
     }
 
     public boolean delete(String name, String actor) {
+        boolean gone = remove(name, actor);
+        if (gone) {
+            Instant at = Instant.now();
+            listeners.forEach(l -> l.deleted(name, at));
+        }
+        return gone;
+    }
+
+    /** A role another node of the cluster deleted: removed here, audited as {@code actor}, not sent back. */
+    public boolean adoptDelete(String name, String actor) {
+        return remove(name, actor);
+    }
+
+    private boolean remove(String name, String actor) {
         writes.lock();
         try {
             boolean gone = Boolean.TRUE.equals(tx.execute(s -> {

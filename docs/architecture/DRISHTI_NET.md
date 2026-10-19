@@ -192,8 +192,8 @@ a UI that ignores it sees one result, as asked.
   a 60 s window (replay), or mutual TLS with the shared `tls.*` settings. A node without the key cannot join or read.
 - **The user is carried, not trusted blindly.** A forwarded call carries a short-lived on-behalf-of token **(new)**:
   the user, roles, embed app if any, the original node and request id, signed with the cluster key, valid 30 s. The peer
-  checks it, and also checks the user exists and is enabled when `registered-users-only` is on (a shared identity database
-  makes that true everywhere).
+  checks it, and also checks the user exists and is enabled when `registered-users-only` is on (the nodes copy users, roles
+  and API tokens to each other, section 19 *Identity across nodes*, or share one identity database, so that is true everywhere).
 - **Masks twice.** The peer redacts as it would for that user; the asking node, which renders, applies its own masks again.
   The stricter configuration wins; an administrator sees on Admin → Net when two nodes' `redact` lists differ.
 - **Nodes per role.** A role may name the nodes it may reach (`config/net/access.yaml`, **new**: node ids or tags such as
@@ -226,7 +226,8 @@ Saved searches, pivots, layouts, workspaces, alerts and API tokens live today in
 database. Phase 1: the node a console is connected to is the user's **home node**; their state is read and written there,
 and a forwarded view applies the user's layout because the asking node renders it (data forwarding) or passes the layout id
 (view forwarding, phase 3). With the identity database on PostgreSQL, users, roles and tokens are shared by every node at
-once. Replicating the rest (or moving it into the shared database) is phase 7.
+once. Replicating the rest (or moving it into the shared database) is phase 7. As built (section 19, N7), the user's documents, sessions and
+identity (users, roles, API tokens) are all copied between nodes, so there is no home node to lose.
 
 ### 11.1 The console and several servers (new)
 
@@ -550,7 +551,31 @@ newest write wins), and on a member's join queues every such document it holds a
 - Alerts, monitors, scheduled reports and measure alerts are not copied: they act, and each node would act on its copy.
 - The last-writer-wins clock is each node's wall clock (the nodes are within 60 s of each other, since the cluster key refuses more); the times of
   writes are kept in memory, so a catch-up after a restart fills only what is absent and never overwrites.
-- A user deleted on one node is not deleted on the others (a shared identity database does that).
+- A user deleted on one node is deleted on the others (with their tokens, settings and sessions), by the identity copy below.
+
+**Identity across nodes (built, after N7).** A user known to one node used to be refused by the others (`registered-users-only`), so a console
+that fell over from the node where the user was created signed them out. `IdentitySync`, a `StateSync.Part`, copies the identity over the same
+signed batches, in the namespaces `identity-users` (the `User` record with its password hash; `JpaUserStore` tells it of every write and delete),
+`identity-roles` (the roles of `RoleStore`, written on the peer with their own time and author by `RoleStore.adopt`) and `identity-tokens` (the
+`ApiTokenStore.Stored` record: the secret's SHA-256, never the secret; a revocation is never undone). A change applied from a peer is written under
+a thread-local flag, so the stores' listeners do not send it back. Rules:
+
+- One user (same creation time): the newer change wins (a catch-up: the record with the later times: updated, signed in, password changed).
+- Two users of one name made apart (different creation times): the older stands, so a new node's seeded administrator (made at its first start)
+  never replaces the cluster's administrator and its default password.
+- A deletion at T is a tombstone (`<data dir>/net/identity-deleted.json`, kept 90 days, sent first in a catch-up): every record of that name
+  created at or before T is refused everywhere (a node that had not heard of it may send one, even with a later sign-in), a user created after T
+  is a new user. Applying a user's deletion forgets their pack cache, settings, tokens, sessions, designs, alerts and inbox, as a deletion on the
+  node itself does.
+- Applied changes are audited with `net:<origin node>` as the actor; a sign-in time alone is copied but not audited.
+- The last-enabled-administrator rule is checked on the node where a change is made, not where it is applied: two administrators disabling the
+  last two other administrators on two nodes at the same second could leave none enabled (an administrator re-enables one from the console of any
+  node, or with `drishti.identity.seed-admin` on an empty store).
+
+`NetIdentityTest` (three servers in one JVM, security on): a user and a role made on A, the user signed in through the console's calls on A, A
+stopped: the console's session check and the user's token and API token are accepted on B; a user disabled and another deleted on B while A was
+down are disabled and deleted on A when it comes back, and A's stale copies bring neither back on B; a node joining later gets the users, the role
+and the deletion, and the cluster's administrator stands over its seeded one.
 
 **Grouped pages across nodes (built, after N7).** A page of a derived kind is gathered with the scatter-gather of a search: the router's
 fallback (`SourceRouter.Fallback.gather`) hands the local page, or none, to `GroupGather`, which asks the search's targets for the kind the page

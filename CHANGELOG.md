@@ -19,6 +19,15 @@
 
 ## 2.5.0 — Drishti*net: many servers, one Drishti; no JVM litters /tmp; the documents, help and deck reviewed (2026-10-19)
 
+- **Fixed: Drishti*net: a user known to one node stays signed in after the console falls over.** The other nodes refused a user they did not
+  hold (`registered-users-only`), so a console moving from the node where the user was made signed them out, unless every node shared one
+  identity database. The nodes now copy their identity to each other over the signed user-state batches: users (roles, packs, enabled, the
+  password hash, never a password), the roles of Admin → Roles and personal API tokens (the secret's SHA-256), the newest change winning. Disabling
+  and deleting a user travel too: a deletion leaves a tombstone (`<data dir>/net/identity-deleted.json`, 90 days), so a node that was down deletes
+  the user (with their tokens, settings and sessions) when it comes back and its stale copy never brings them back; a user made again after a
+  deletion is a new user; of two users of one name made apart the older stands (a new node's seeded administrator never replaces the cluster's).
+  Every change applied is audited on the receiving node with `net:<node>`. `user-state: off` (one shared database) copies nothing, as before.
+  `NetIdentityTest` (three servers in one JVM, security on). NET.md section 7, DRISHTI_NET.md sections 9, 11 and 19, tutorial 19 step 8.
 - **Fixed: `pytest` from the repo root collects every test.** `tools/bench/test_trades.py` and `tools/packgen/trades/test_trades.py`
   shared a module name, so collection stopped with an import-file-mismatch error; the benchmark's test is now `tools/bench/test_bench_trades.py`.
 - **Fixed: derived pages kept on disk are never removed while another process has them open.** A server's start-up clean-up of

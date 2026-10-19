@@ -44,7 +44,8 @@ import org.slf4j.LoggerFactory;
  * {@code user-state: off} (one shared identity database already shares them) nothing is sent.
  *
  * <p>Console sign-in sessions are copied the same way (namespace {@code sessions}: the hash of the session id, never the id, with its user
- * and expiry; an end, or the end of all of a user's sessions), so a console that moves to another server keeps its sign-in.
+ * and expiry; an end, or the end of all of a user's sessions), so a console that moves to another server keeps its sign-in. Other state is
+ * copied by a {@link Part} (the identity: users, roles and API tokens, {@link IdentitySync}) over the same batches.
  */
 public final class StateSync implements AutoCloseable {
 
@@ -63,6 +64,27 @@ public final class StateSync implements AutoCloseable {
 
     /** The namespace of console sign-in sessions (a key is the hash of a session id; {@code *} ends all of the user's). */
     public static final String SESSIONS = "sessions";
+
+    /**
+     * More state copied over the same batches, in its own namespaces: it tells {@link #publish} of a change made here, applies a peer's,
+     * and says what a member that joins is given (before the user documents and sessions, so a user arrives before their sessions).
+     */
+    public interface Part {
+        Set<String> namespaces();
+
+        /** A peer's change (a catch-up one included); true when it changed something here. */
+        boolean apply(Change c);
+
+        /** What a member that joins is given ({@code catchUp} changes). */
+        List<Change> catchUp();
+    }
+
+    private final List<Part> parts = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    /** Adds a part: its namespaces are copied from now on. */
+    public void part(Part p) {
+        parts.add(p);
+    }
 
     private final NetService net;
     private final Supplier<PreferenceStore> store;
@@ -122,6 +144,19 @@ public final class StateSync implements AutoCloseable {
         net.node().ifPresent(n -> n.table().others().stream().map(k -> k.member()).filter(Member::routable).forEach(m -> queue(m.nodeId(), c)));
     }
 
+    /** A part's change made here: queued for every routable peer (nothing while the cluster is off or user-state is off). */
+    public void publish(Change c) {
+        if (!active()) {
+            return;
+        }
+        net.node().ifPresent(n -> n.table().others().stream().map(k -> k.member()).filter(Member::routable).forEach(m -> queue(m.nodeId(), c)));
+    }
+
+    /** This node's id (the origin of the changes it makes). */
+    public String nodeId() {
+        return net.nodeId();
+    }
+
     /** True when changes are copied: the cluster runs and routing.yaml says {@code user-state: replicate}. */
     public boolean active() {
         return net.running() && net.config().routing().replicateUserState();
@@ -160,8 +195,14 @@ public final class StateSync implements AutoCloseable {
         if (!active()) {
             return;
         }
-        PreferenceStore s = store.get();
         int n = 0;
+        for (Part p : parts) {
+            for (Change c : p.catchUp()) {
+                queue(peer, c);
+                n++;
+            }
+        }
+        PreferenceStore s = store.get();
         for (String user : s.users()) {
             for (String ns : NAMESPACES) {
                 for (String k : s.keys(user, ns)) {
@@ -190,6 +231,15 @@ public final class StateSync implements AutoCloseable {
         PreferenceStore s = store.get();
         int done = 0;
         for (Change c : changes) {
+            Part part = c == null || c.key() == null ? null : partOf(c.namespace());
+            if (part != null) {
+                try {
+                    done += part.apply(c) ? 1 : 0;
+                } catch (RuntimeException e) {
+                    LOG.warn("net: a {} change from {} was not applied: {}", c.namespace(), c.origin(), e.toString());
+                }
+                continue;
+            }
             if (c != null && SESSIONS.equals(c.namespace()) && c.key() != null) {
                 done += session(c) ? 1 : 0;
                 continue;
@@ -220,6 +270,15 @@ public final class StateSync implements AutoCloseable {
         }
         applied.addAndGet(done);
         return done;
+    }
+
+    private Part partOf(String namespace) {
+        for (Part p : parts) {
+            if (p.namespaces().contains(namespace)) {
+                return p;
+            }
+        }
+        return null;
     }
 
     /** A session change from a peer: adopted, ended, or all of a user's ended here. */
@@ -331,7 +390,10 @@ public final class StateSync implements AutoCloseable {
         } finally {
             lock.unlock();
         }
-        return Map.of("active", active(), "namespaces", new java.util.TreeSet<>(NAMESPACES), "sent", sent.get(), "applied", applied.get(), "waiting", waiting);
+        java.util.TreeSet<String> all = new java.util.TreeSet<>(NAMESPACES);
+        all.add(SESSIONS);
+        parts.forEach(p -> all.addAll(p.namespaces()));
+        return Map.of("active", active(), "namespaces", all, "sent", sent.get(), "applied", applied.get(), "waiting", waiting);
     }
 
     @Override
