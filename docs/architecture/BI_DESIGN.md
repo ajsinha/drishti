@@ -1199,7 +1199,8 @@ data, outside the builders' own tests). Its findings are triaged first and fixed
 **Accepted when:** (1) every real-life QA finding is fixed or explicitly deferred by the product owner; (2) a bundle with
 parameter rules moves a model and its reports from dev to test; (3) QA findings fixed before the drill.
 
-**After E:** 3.0 (the Excel add-in, the second engine in production, scale on real servers).
+**After E:** 3.0 (the Excel add-in, the second engine in production, scale on real servers, and Drishti*net: several
+servers that gossip and act as one to any client, [DRISHTI_NET.md](DRISHTI_NET.md)).
 
 ### 12.3 Risks
 
