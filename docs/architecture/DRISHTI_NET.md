@@ -194,6 +194,10 @@ a UI that ignores it sees one result, as asked.
   makes that true everywhere).
 - **Masks twice.** The peer redacts as it would for that user; the asking node, which renders, applies its own masks again.
   The stricter configuration wins; an administrator sees on Admin → Net when two nodes' `redact` lists differ.
+- **Nodes per role.** A role may name the nodes it may reach (`drishti.security.roles.<role>.nodes`, **new**: node ids or
+  tags such as `region:emea`; empty means every node). The capability table is filtered by the caller's roles before any
+  routing: a scattered search, type-ahead or forwarded request never reaches a node outside them, and the peer refuses
+  an on-behalf-of token whose roles do not reach it. A kind held only on unreachable nodes is answered as not held.
 - **Kinds per role and pack visibility** are checked on both nodes; a kind a role may not open on the asking node is
   refused there before any call is made.
 - **Audit.** The audit row of a forwarded request records both nodes and the request id; Admin → Net lists forwarded
@@ -252,6 +256,7 @@ drishti:
   net:
     enabled: ${DRISHTI_NET_ENABLED:false}
     node-id: ${DRISHTI_NET_NODE_ID:}            # empty: generated once, kept in <data dir>/net/node-id
+    tags: ${DRISHTI_NET_TAGS:}                  # e.g. region:emea,tier:risk (published in the digest; roles may name them)
     advertise-url: ${DRISHTI_NET_URL:}          # how peers reach this node, e.g. https://drishti-b:8480
     seeds: ${DRISHTI_NET_SEEDS:}                # host:port,host:port (optional)
     secret: ${DRISHTI_NET_SECRET:}              # the cluster key (required when enabled, 32+ bytes)
@@ -294,7 +299,7 @@ View forwarding reuses the ordinary `/api/v1/**` endpoints with the hop header a
 |---|---|---|
 | N1 | Membership: gossip, probes, states, `peers.json`, Admin → Net members | 5 nodes started from 1 seed all list each other within 5 s; one killed is `dead` everywhere within 40 s; a restarted node rejoins from its file with no seeds |
 | N2 | Capability digests and the capability table | a pack switched on at one node shows in every node's table within 2 s |
-| N3 | Security: cluster key or mTLS, key rollover, on-behalf-of token, masks twice, audit | a node without the key is refused; a rolling key change drops no request; a masked field stays masked when the data comes from a peer whose `redact` is looser |
+| N3 | Security: cluster key or mTLS, key rollover, on-behalf-of token, masks twice, audit | a node without the key is refused; a rolling key change drops no request; a role limited to two nodes never reaches a third; a masked field stays masked when the data comes from a peer whose `redact` is looser |
 | N4 | View forwarding and data forwarding (`PeerSource`), newest pack wins, peer-only packs | the console on B opens a trade only A holds, and a kind only A's pack renders, with no visible difference; with a newer pack on A, B's users see A's version; a peer-only pack is invisible to B's own users but served to peers; a peer down gives a clear error, not a wrong page |
 | N5 | Scatter-gather search, type-ahead and grouped pages; replicas versus shards | a search on B across trades held on A and C equals the union, with duplicates removed and `failed` naming a stopped node |
 | N6 | Live relay; BI queries routed to the model's node | a ticking entity held on A streams to a viewer on B; a BI report on B over A's model answers |
@@ -321,4 +326,5 @@ N1–N5 are the first release; N6–N7 may follow.
 - **Latency of scatter-gather** grows with the slowest node; budgets and partial answers bound it.
 - **Cache coherence:** each node caches what it fetched from peers; data versions in the digest invalidate them, a
   `knownAt` read bypasses them.
-- **Open:** should search scatter be limited to nodes a role may reach?
+- **Decided (product owner, 2026-10-18):** (4) a search, type-ahead or forwarded request goes **only to nodes the
+  user's role may reach** (section 9).
