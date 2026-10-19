@@ -46,6 +46,18 @@ REPORT = BASE + "/bi/r/file:report:world-economics"
 JAVA = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
 
 
+MACRO_STORE = """plugin: file
+kinds: [economy]
+settings:
+  root: {root}
+  id-field: ECONOMY_ID
+  rescan-seconds: 3600
+  layout:
+    economy:
+      columns: [ECONOMY_ID, NAME, ISO3, REGION_NAME, INCOME_NAME, GDP_USD_BN, GDP_PER_CAPITA, GROWTH, INFLATION, UNEMPLOYMENT, POPULATION_M]
+"""
+
+
 def listening(port: int) -> bool:
     with socket.socket() as s:
         s.settimeout(0.3)
@@ -79,6 +91,13 @@ def stack(tmp_path_factory):
     from bi_samples import copy_samples
     copy_samples(work / "config/bi", ["world-economics"])               # the model and the dataset it reads
     shutil.copy(ROOT / "config/bi/reports/world-economics.report.yaml", work / "config/bi/reports")
+    # the dataset reads its own connector only (2.4.0), the pack's macro-store lake, which a scratch server has not built: a site file of that name
+    # replaces the template with a file connector over the pack's sample economies, as one business date
+    day = tmp / "macro" / "2026-10-07"
+    day.mkdir(parents=True)
+    shutil.copy(ROOT / "config/packs/world-economy/samples/economy.jsonl", day / "economy.jsonl")
+    (work / "config" / "connectors").mkdir(parents=True)
+    (work / "config" / "connectors" / "macro-store.yaml").write_text(MACRO_STORE.format(root=tmp / "macro"))
     env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config/packs"), DRISHTI_PACKS="world-economy", DRISHTI_BI_DIR=str(work / "config/bi"),
                DRISHTI_DATA_DIR=str(work / "data"))
     procs = []
