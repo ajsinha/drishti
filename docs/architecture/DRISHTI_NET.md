@@ -528,3 +528,15 @@ report in its digest (its shipped reports) and holds them. Changes from the desi
   mask for them. Viewers with the same roles still share one upstream.
 - A relayed stream checks its on-behalf-of token when it opens; it is opened again (with a fresh token) when it breaks.
 - A BI report goes to the node that holds every kind its datasets read; a model spanning nodes is not joined across them.
+
+**N7, user state (built).** `ReplicatedPreferences` (the per-user store, decorated by a bean post-processor) tells `StateSync` of every write and
+delete in the namespaces `settings` (saved searches among them), `layouts`, `pivots` and `workspaces`; `StateSync` sends them to every routable peer
+(`POST /api/v1/net/state`, batches of 200, a quarter of a second, up to 10,000 waiting per peer), applies a peer's changes to the store underneath (the
+newest write wins), and on a member's join queues every such document it holds as a catch-up (applied only where absent). Changes from the design:
+
+- Replication is built in this release (the design put it in phase 7 after a first release with home nodes only); `user-state: off` keeps state
+  where it was written, for a cluster with one shared identity database.
+- Alerts, monitors, scheduled reports and measure alerts are not copied: they act, and each node would act on its copy.
+- The last-writer-wins clock is each node's wall clock (the nodes are within 60 s of each other, since the cluster key refuses more); the times of
+  writes are kept in memory, so a catch-up after a restart fills only what is absent and never overwrites.
+- A user deleted on one node is not deleted on the others (a shared identity database does that).

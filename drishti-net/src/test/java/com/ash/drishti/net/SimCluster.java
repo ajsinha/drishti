@@ -125,7 +125,7 @@ final class SimCluster {
         @Override
         public List<Member> exchange(String url, List<Member> mine) throws Exception {
             Node n = reach(from, url);
-            n.table.merge(mine);
+            n.gossiper.accept(mine);
             return n.table.entries();
         }
 

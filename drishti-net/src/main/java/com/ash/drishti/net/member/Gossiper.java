@@ -290,6 +290,22 @@ public final class Gossiper {
         return false;
     }
 
+    /**
+     * A peer's table pushed to this node (its push-pull exchange, the other side of {@link #round()}): merged, and the listener told of the
+     * members that joined or left this way, as for an exchange this node made.
+     */
+    public MemberTable.Changes accept(java.util.Collection<Member> theirs) {
+        MemberTable.Changes c = table.merge(theirs);
+        if (c.changed() && (!c.joined().isEmpty() || !c.gone().isEmpty())) {
+            try {
+                listener.changed(c);
+            } catch (RuntimeException e) {
+                LOG.warn("net: member listener failed: {}", e.toString());
+            }
+        }
+        return c;
+    }
+
     /** An administrator added a seed: one exchange now. True when it answered (its whole table is merged). */
     public boolean contact(String url) {
         List<MemberTable.Changes> changes = Collections.synchronizedList(new ArrayList<>());

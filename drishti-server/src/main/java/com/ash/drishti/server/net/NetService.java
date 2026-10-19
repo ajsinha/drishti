@@ -191,6 +191,13 @@ public final class NetService implements AutoCloseable {
         g.listener(ch -> {
             if (!ch.joined().isEmpty() || !ch.gone().isEmpty()) {
                 ch.joined().forEach(j -> LOG.info("net: member {} joined", j));
+                ch.joined().forEach(j -> joinListeners.forEach(x -> {
+                    try {
+                        x.accept(j);
+                    } catch (RuntimeException e) {
+                        LOG.warn("net: join listener failed: {}", e.toString());
+                    }
+                }));
                 ch.gone().forEach(j -> LOG.info("net: member {} is gone", j));
                 save();
             }
@@ -271,6 +278,13 @@ public final class NetService implements AutoCloseable {
     /** Told after every reload and every membership change (the digest service, the peer sources). */
     public void onChange(Consumer<NetService> l) {
         listeners.add(l);
+    }
+
+    private final List<Consumer<String>> joinListeners = new CopyOnWriteArrayList<>();
+
+    /** Told the id of each member that joins or comes back (the user state's catch-up). */
+    public void onJoin(Consumer<String> l) {
+        joinListeners.add(l);
     }
 
     public NetConfig config() {

@@ -140,7 +140,15 @@ public final class NetViews {
         out.put("seeds", net.config().peers().stream().map(p -> Map.of("name", p.name(), "url", p.url(), "tags", p.tags())).toList());
         out.put("peersFile", Map.of("path", net.peersFile().toString(), "savedAt", net.lastSaved() == 0 ? "" : Instant.ofEpochMilli(net.lastSaved()).toString()));
         out.put("problems", net.loaded().all().stream().map(NetViews::problem).toList());
+        out.put("userState", userState.get());
         return out;
+    }
+
+    private volatile java.util.function.Supplier<Map<String, Object>> userState = Map::of;
+
+    /** What the copying of users' state did (set by the configuration). */
+    public void userState(java.util.function.Supplier<Map<String, Object>> s) {
+        this.userState = s == null ? Map::of : s;
     }
 
     /** This node: its id, address, tags, peer-only packs, drain, and whether the key is set (never the key). */

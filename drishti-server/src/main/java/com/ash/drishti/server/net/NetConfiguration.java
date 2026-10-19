@@ -59,15 +59,42 @@ public class NetConfiguration {
     }
 
     @Bean
-    public NetViews netViews(NetService net, DigestService digests) {
+    public NetViews netViews(NetService net, DigestService digests, ObjectProvider<StateSync> state) {
         NetViews v = new NetViews(net, digests);
         v.digestSummary(id -> NetViews.summary(id.equals(net.nodeId()) && net.running() ? digests.self() : digests.peers().get(id)));
+        v.userState(() -> {
+            StateSync s = state.getIfAvailable();
+            return s == null ? java.util.Map.of() : s.summary();
+        });
         return v;
     }
 
     @Bean
     public ForwardLog forwardLog(io.micrometer.core.instrument.MeterRegistry meters) {
         return new ForwardLog(meters);
+    }
+
+    /**
+     * The per-user store tells Drishti*net of every change, so a user's settings, layouts, pivots and workspaces follow them to another node
+     * (N7). A plain store while the cluster is off.
+     */
+    @Bean
+    public static org.springframework.beans.factory.config.BeanPostProcessor netReplicatedPreferences(ObjectProvider<StateSync> sync) {
+        return new org.springframework.beans.factory.config.BeanPostProcessor() {
+            @Override
+            public Object postProcessAfterInitialization(Object bean, String name) {
+                if (bean instanceof com.ash.drishti.identity.PreferenceStore p && !(bean instanceof ReplicatedPreferences)) {
+                    return new ReplicatedPreferences(p, sync::getIfAvailable);
+                }
+                return bean;
+            }
+        };
+    }
+
+    @Bean(destroyMethod = "close")
+    public StateSync stateSync(NetService net, com.ash.drishti.identity.PreferenceStore prefs, ForwardLog log) {
+        com.ash.drishti.identity.PreferenceStore raw = prefs instanceof ReplicatedPreferences r ? r.delegate() : prefs;
+        return new StateSync(net, () -> raw, log);
     }
 
     @Bean

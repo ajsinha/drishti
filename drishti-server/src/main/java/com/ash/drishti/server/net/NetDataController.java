@@ -55,11 +55,13 @@ public class NetDataController {
     private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.api.SearchController> searches;
     private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.engine.live.TopicHub> hub;
     private final java.util.concurrent.ExecutorService executor;
+    private final org.springframework.beans.factory.ObjectProvider<StateSync> stateSync;
 
     public NetDataController(SourceRouter router, Entitlements entitlements, JsonCodec codec,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.api.SearchController> searches,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.engine.live.TopicHub> hub,
-            java.util.concurrent.ExecutorService drishtiVirtualExecutor) {
+            java.util.concurrent.ExecutorService drishtiVirtualExecutor, org.springframework.beans.factory.ObjectProvider<StateSync> stateSync) {
+        this.stateSync = stateSync;
         this.router = router;
         this.entitlements = entitlements;
         this.codec = codec;
@@ -128,6 +130,20 @@ public class NetDataController {
         }
         String data = d.deleted() ? "null" : codec.toJson(entitlements.redact(user, d.data()));
         return "{\"provenance\":" + json.writeValueAsString(prov) + ",\"deleted\":" + d.deleted() + ",\"data\":" + data + "}";
+    }
+
+    /**
+     * Users' state from a peer ({@code POST /api/v1/net/state}, body {@code {changes: [...]}}): applied here, the newest write winning. Only a
+     * node calls it (the call filter checks the cluster key); it acts for no user.
+     */
+    @org.springframework.web.bind.annotation.PostMapping("/state")
+    public Map<String, Object> state(@org.springframework.web.bind.annotation.RequestBody com.fasterxml.jackson.databind.JsonNode body,
+            @RequestAttribute(value = NetCallFilter.PEER, required = false) String peer) throws java.io.IOException {
+        if (peer == null) {
+            throw new DrishtiException(ErrorCode.NET_REFUSED, "only a node of the cluster sends user state");
+        }
+        java.util.List<StateSync.Change> changes = java.util.Arrays.asList(json.treeToValue(body.path("changes"), StateSync.Change[].class));
+        return Map.of("applied", stateSync.getObject().receive(changes));
     }
 
     /**

@@ -60,7 +60,7 @@ public class NetController {
     public Map<String, Object> gossip(@RequestBody JsonNode body) throws Exception {
         NetService.Node n = net.require();
         List<Member> theirs = List.of(json.treeToValue(body.path("members"), Member[].class));
-        n.table().merge(theirs);
+        n.gossiper().accept(theirs);                       // merged, and joins or departures told as for an exchange of this node
         return Map.of("members", n.table().entries());
     }
 

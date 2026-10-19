@@ -365,6 +365,13 @@ answered here when this node has the report and its sources hold every kind the 
 the report and that holds those kinds, and its answer comes back unchanged. In the in-process test the same report asked of B (no data) answers
 exactly what A (the lake) answers. A model spanning nodes is not joined across them.
 
+**A user's state follows them.** Saved searches (they are in the user's settings), layouts, pivots, workspaces and settings written on one node are
+copied to every other node within a second (`POST /api/v1/net/state`, signed, in batches; the newest write wins), so after a failover the user finds
+them on the node the console moved to. A node that was down gets what it missed when it comes back: every node sends a member that joins the user
+documents it holds, applied there only where it has none. Alerts, monitors and scheduled reports are **not** copied: they act, and would act once per
+node; they stay on the node they were made on. With one shared identity database (PostgreSQL, `DRISHTI_IDENTITY_DB_URL`) the nodes already share all
+of it: set `user-state: off` in routing.yaml. Admin → Net → Members says how many changes were sent and applied and what waits for which peer.
+
 **Grouped pages are built per node.** A page built from many entities by a derived connector (a counterparty's trades, a netting set over several
 systems) is built on each node from that node's own data: it is not yet gathered across nodes. Put the systems a grouped page needs on the nodes
 that build it (a shared lake does that by itself), or open the page on the node that holds them.

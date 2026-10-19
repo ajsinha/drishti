@@ -115,6 +115,10 @@ secret: ${DRISHTI_NET_SECRET}</pre>
       </tbody>
     </table></div>
 
+    {% if members.userState and members.userState.active %}{% set us = members.userState %}
+    <p class="text-muted-d" data-user-state>Users' saved searches, layouts, pivots and workspaces are copied to the other nodes:
+      <b class="mono">{{ us.sent }}</b> changes sent, <b class="mono">{{ us.applied }}</b> applied here since this node started{% for p, n in (us.waiting or {}).items() %}{% if n %}; <span class="mono">{{ n }}</span> waiting for <span class="mono">{{ p }}</span>{% endif %}{% endfor %}.</p>
+    {% endif %}
     {% if members.seeds %}
     <h2 class="net-h2">Seeds</h2>
     <ul class="net-seeds">{% for s in members.seeds %}<li><span class="mono">{{ s.name }}</span> <span class="mono text-muted-d">{{ s.url }}</span></li>{% endfor %}</ul>
