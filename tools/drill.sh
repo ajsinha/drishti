@@ -117,25 +117,30 @@ python_tool_tests() {
 # browser fixtures; every live server picks its own free port and its own scratch directory (wb_live.py, tmp_path_factory).
 console_tests() {
   local targets=("$@"); [[ ${#targets[@]} -gt 0 ]] || targets=(drishti-console/tests)
-  if ! $PY -m pytest -q -n "$workers" --dist loadfile "${targets[@]}"; then
-    mkdir -p target
+  local first="$LOGS/console-first.txt"
+  # the failed tests come from this run's own summary (-rfE): pytest.ini turns the cache off, so --last-failed knows nothing
+  local rc=0
+  $PY -m pytest -q -rfE -n "$workers" --dist loadfile "${targets[@]}" | tee "$first" || rc=${PIPESTATUS[0]}
+  if (( rc != 0 )); then
     local failed
-    failed=$($PY -m pytest -q --co --last-failed -p no:xdist "${targets[@]}" 2>/dev/null | grep '::' || true)
+    failed=$(sed -nE 's/^(FAILED|ERROR) ([^ ]+::[^ ]+( [^-][^ ]*)*)( - .*)?$/\2/p' "$first" | sort -u)
     [[ -n "$failed" ]] || { echo "drill: the console suite failed with no failed test to re-run (a collection error?)" >&2; return 1; }
     echo "drill: re-running the failed console tests once:" >&2; echo "$failed" >&2
     # one file at a time, each under a time limit: a browser that dies mid-test leaves Playwright waiting for ever, and a hung
     # re-run must fail the drill, not block it (a file's browser tests take a few minutes; 20 minutes is a hang)
-    local file
-    for file in $(echo "$failed" | sed 's/::.*//' | sort -u); do
-      # shellcheck disable=SC2046
-      timeout --kill-after=30 1200 $PY -m pytest -q -p no:xdist $(echo "$failed" | grep "^$file::") || {
+    local file ids
+    while IFS= read -r file; do
+      mapfile -t ids < <(grep -F "$file::" <<< "$failed")
+      timeout --kill-after=30 1200 $PY -m pytest -q -p no:xdist "${ids[@]}" || {
         echo "drill: $file failed again (exit $?: 124 is the time limit)" >&2; return 1; }
-    done
+    done < <(sed 's/::.*//' <<< "$failed" | sort -u)
     { echo "$(date -Iseconds) $(git log --oneline -1)"; echo "$failed"; } >> $LOGS/flakes.log
     echo "drill: FLAKY (failed once, passed again), kept in $LOGS/flakes.log" >&2
   fi
 }
 
+# Java 25 runs at the same time as the console tests, so a timing test may fail under that load: a failed test runs once more
+# (surefire's rerunFailingTestsCount) and one that passes the second time is reported as a flake in the log, not hidden.
 # Java 25 runs on a copy of the committed tree: its own target/ directories, so it can neither clean nor replace the jar the
 # console tests run from the working tree. Docker is hidden from this run: the container tests (PostgreSQL, Kafka, S3 ...
 # through Testcontainers) ran on 21 and test the brokers, not the JVM.
@@ -145,7 +150,7 @@ java25_verify() {
   trap "rm -rf '$copy'" EXIT
   git archive HEAD | tar -x -C "$copy"
   cd "$copy"
-  DOCKER_HOST=unix:///nonexistent/drill-java25 TESTCONTAINERS_RYUK_DISABLED=true JAVA_HOME="$JAVA25_HOME" ./mvnw -q -o verify -Ddrishti.test.forks=2 ${DRILL_MVN_ARGS:-}
+  DOCKER_HOST=unix:///nonexistent/drill-java25 TESTCONTAINERS_RYUK_DISABLED=true JAVA_HOME="$JAVA25_HOME" ./mvnw -q -o verify -Ddrishti.test.forks=2 -Dsurefire.rerunFailingTestsCount=1 ${DRILL_MVN_ARGS:-}
 }
 
 # Every run cleans up after itself, passed or failed: the temporary folders the tests made under /tmp during this run

@@ -352,9 +352,12 @@ refused, with the files that are not documentation listed.
    - **The console suite**, `pytest -n <min(4, cpus/2)> --dist loadfile drishti-console/tests`: pytest-xdist workers each take whole
      test files, so a browser file keeps its module and session fixtures. Every live server and console in the tests starts on ports
      offset by the worker, in the worker's own scratch directory; the stand-in server object's state is put back after each test
-     (`conftest.py`). If it fails, the failed tests (and only those) run once more, serially: a test that passes the second time is
-     printed as `FLAKY` and appended to `<data dir>/drill/flakes.log` with the commit; a test that fails twice, or a run that failed
-     without a failed test to re-run (a collection error), stops the drill.
+     (`conftest.py`). If it fails, the failed tests (and only those, read from the run's own `FAILED`/`ERROR` summary, since
+     `pytest.ini` turns the pytest cache off) run once more, serially, one file at a time and each file under a 20-minute limit (a
+     browser that dies mid-test cannot block the drill): a test that passes the second time is printed as `FLAKY` and appended to
+     `<data dir>/drill/flakes.log` with the commit; a test that fails twice, a file that hits the limit, or a run that failed without a
+     failed test to re-run (a collection error), stops the drill. The Java 25 run re-runs a failed test once too
+     (`-Dsurefire.rerunFailingTestsCount=1`): it shares the machine with the console suite, and surefire reports such a test as a flake.
    - **The Python tool tests**: every generator that supports `--check` (generated pack content must match what the generator writes
      now), the `unittest` suites of `tools/` (`samplegen`, `packreg`, `test_sutragen`, `test_ingest_jsonl`, `test_drishti_cli`,
      `test_pack_bundle`, `test_no_hidden_names`, `test_packmake`, `test_pack_authoring`, `test_cli_extras`, `test_pack_deploy`,
