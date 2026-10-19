@@ -55,7 +55,7 @@ the server and console started with sign-in on: the quick-start environment of [
 personal API token (tutorial 1, Step 9) in `DRISHTI_TOKEN`.
 
 Run commands from the repository root with the console's Python (`drishti-console/.venv/bin/python tools/drishti.py ...`). Where a tutorial shows output, it was captured from
-a fresh clone of this version (2.3.0) on the demo lakes, built on Saturday 17 October 2026: the seven business days run from **2026-10-07 to 2026-10-16**. `lake demo` moves
+a fresh clone of this version (2.4.0) on the demo lakes, built on Saturday 17 October 2026: the seven business days run from **2026-10-07 to 2026-10-16**. `lake demo` moves
 the days to end on *your* today's business date, so your dates differ; the counts (15,000 trades a day, 5,000 per booking system) and ids (`MX-20000001`, `1000001`,
 `CLY-3000157`, `CP-NORTHPLAINS`) are the same on every machine.
 

@@ -294,7 +294,7 @@ directory):
 ```bash
 ./mvnw -q package -DskipTests -pl drishti-server -am
 DRISHTI_DEMO_ENABLED=false DRISHTI_STUDIO_SAVE=true \
-  java -jar drishti-server/target/drishti-server-2.3.0-exec.jar
+  java -jar drishti-server/target/drishti-server-2.4.0-exec.jar
 ```
 
 Server settings follow the same precedence as the console: `drishti-server/src/main/resources/application.yaml`, then
@@ -1525,7 +1525,7 @@ while it was stopped (`The lake was rebuilt while the server was stopped …`), 
 level for Drishti's packages with Spring's usual environment form:
 
 ```bash
-LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-2.3.0-exec.jar
+LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-2.4.0-exec.jar
 ```
 
 The console runs Uvicorn with access logs off (`access_log=False` in `run_drishti_web.py`). The run configuration **Drishti server
@@ -1635,7 +1635,7 @@ Releases are numbered `MAJOR.MINOR.PATCH` and tagged `vX.Y.Z` on `main` (`git ta
 2. **Bump the version** everywhere it is written. Find the old version first:
 
    ```bash
-   git grep -n -F '2.3.0' -- '*pom.xml' drishti-console/core/app.py deploy README.md docs
+   git grep -n -F '2.4.0' -- '*pom.xml' drishti-console/core/app.py deploy README.md docs
    ```
 
    | File | What changes |
@@ -1652,7 +1652,7 @@ Releases are numbered `MAJOR.MINOR.PATCH` and tagged `vX.Y.Z` on `main` (`git ta
    configuration keys, on-disk formats or pack attribute names change.
 4. **Verify locally on a fresh clone.** Clone, build the jar, `lake demo`, start the server and the console as
    [GETTING_STARTED.md](GETTING_STARTED.md) says, and follow the tutorials; `curl -s localhost:18480/api/v1/about` reports the
-   `version` (on this release: `"version":"2.3.0"`).
+   `version` (on this release: `"version":"2.4.0"`).
 5. **Commit** as `Release X.Y.Z` on `develop`.
 6. **Drill:** `tools/drill.sh`. Nothing reaches `main` unless the whole build, every test, the console tests, the header check and the
    generator checks pass.

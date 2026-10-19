@@ -13,7 +13,41 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 2.3.0 — release notes
+# Drishti 2.4.0 — release notes
+
+*2026-10-19.* **BI Studio: authoring and analysis as one product, Python data prep step by step, and query by form at
+scale.** (Wave C of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
+
+- **BI Studio:** the report, model and theme designers share one shell: an Explorer of your items, open items as tabs,
+  and a dock with **Problems** (the server's check of the draft, linked to each visual) and **Query** (the visual's model
+  query and SQL).
+- **Report schema v2:** a typed `format:` per visual family, checked by the server, drives a generated **Format pane**;
+  **conditional formatting** (rules, colour scales, icons, colour per value), **themes** (Corporate and Print shipped, a
+  theme designer), an **interactions matrix** (filter, highlight, none), slicer **sync groups**, **tooltip pages**,
+  **small multiples** and the **matrix at every level**.
+- **Boards are a report layout:** tiles live on board pages of a report, beside its own visuals; stored boards are
+  converted at start (audited), and board files are still read until converted.
+- **Python data prep:** **BI → Transforms** builds a Transform without YAML: inputs read straight from a pack kind
+  through its connector (as the reader, masked), steps from a library of 21 tested snippets (as-of joins of prices and
+  FX, pivots, tenor buckets…), a preview and a profile after every step; warm workers.
+- **Browser Python console** (`/pyconsole`): your own Python on a masked extract, in the browser; **Promote** runs the
+  same code on the server and keeps it as a notebook draft.
+- **Query by form at scale:** a kind's form is kept per data version and per mask view: on 35.7 million trades with 50
+  users, form search p50 went from 5.8 s to 0.21 s. A search on a date with no data says so and offers the newest date.
+- **Toronto business calendar `CATO`.** A restated day reloaded while serving: 0 failed requests.
+- **Live pages with several console workers:** a live channel's calls reach the worker that holds its stream, and a
+  console stop closes open streams. Elements 1.4.2; the elements demo shows live valuations.
+- **Fixes:** Analyse's filter picker lists its values again; a BI table that names its connector reads only that
+  connector; the model designer no longer makes a dataset's own id a dimension; board tile alert settings are kept;
+  44 px tap targets on phone.
+
+**Not in this release:** field parameters in report wells (2.6.0). A full browser rehearsal and the tutorial 14 and 16
+pictures still to retake are carried to the end of 2.5.0; the release drill's tests pass.
+
+Upgrading from 2.3.0: stored boards become reports at the first start (`/bi/b/<id>` keeps working); see
+[CHANGELOG.md](CHANGELOG.md).
+
+# Previous release: Drishti 2.3.0 — release notes
 
 *2026-10-17.* **BI that calculates like Power BI and stays live, production-shaped trades from three source systems, and a
 demo you can run from a fresh clone in minutes.** (Wave B of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)

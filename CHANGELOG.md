@@ -17,7 +17,7 @@
 
 ## Unreleased
 
-### 2.4.0 (wave C, authoring and analysis): report schema v2, boards as a report layout, BI Studio
+## 2.4.0 — BI Studio, report schema v2 and boards as a report layout, Python data prep, the browser Python console, query by form at scale (2026-10-19)
 
 - **Report schema v2 (R6).** A visual's `format:` is typed per visual family: one JSON Schema per family, written in YAML in the server
   (`bi/report/format/*.yaml`: chart, other-chart, card, table, matrix, slicer, static, code, and the shared common), checked on every report (a bad
