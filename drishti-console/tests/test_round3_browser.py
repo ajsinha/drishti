@@ -12,8 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""QA round 3 in Chromium (the stack of test_bi_explore_browser.py, ports 18956 and 17956): Publish on an item in a private workspace explains itself (item page and both
-designers); one title for a notebook whether the item or its YAML is renamed; Ctrl+S saves from the YAML editors; Analyse fits 390 px with long titles, promotes a cell once
+"""QA round 3 in Chromium (the stack of test_bi_explore_browser.py, ports 18956 and 17956): Publish on an item in a private workspace explains itself (item page and the
+designer, a board too); one title for a notebook whether the item or its YAML is renamed; Ctrl+S saves from the YAML editors; Analyse fits 390 px with long titles, promotes a cell once
 (a second press offers to update that draft) and disables Promote to a Transform until there is a second extract; a dataset can be pasted as YAML; an item nobody may see shows
 only the not-found message; a value that rounds to zero is never signed.
 
@@ -48,14 +48,15 @@ def test_publish_in_a_private_workspace_explains_and_ctrl_s_saves_the_yaml(stack
     page.click(".CodeMirror")
     page.keyboard.press("Control+s")                                               # the page's own save, never the browser's dialog
     expect(page.locator("[data-save] + .bi-near")).to_contain_text("Saved", timeout=15000)
-    page.goto(f"{CONSOLE_URL}/bi/design/board/{bid}")
-    page.wait_for_selector("[data-board-design-root][data-ready='1']", timeout=30000)
-    page.click("[data-item-link]")
-    expect(page.locator("[data-item-link] + .bi-near")).to_contain_text("private workspace")
+    page.goto(f"{CONSOLE_URL}/bi/design/board/{bid}")                             # a 2.3 board address: the report designer, a report with board pages (R7)
+    page.wait_for_url(f"**/bi/design/{bid}")
+    page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
+    page.click("[data-publish]")
+    expect(page.locator("[data-publish] + .bi-near")).to_contain_text("private workspace")
     page.click("[data-tab=yaml]")
     page.click(".CodeMirror")
     page.keyboard.press("Control+s")
-    expect(page.locator("[data-save] + .bi-near")).to_contain_text("Saved as a draft", timeout=15000)
+    expect(page.locator("[data-save] + .bi-near")).to_contain_text("Saved", timeout=15000)
     assert page.inner_text("[data-msg]").strip() == ""                              # one message, beside the button
     page.goto(f"{CONSOLE_URL}/bi/i/bi-nothing-here")
     page.wait_for_function("() => /may not see it/.test(document.getElementById('biCanvas').innerText)", timeout=15000)
@@ -65,7 +66,7 @@ def test_publish_in_a_private_workspace_explains_and_ctrl_s_saves_the_yaml(stack
 def test_a_notebook_has_one_title_and_analyse_promotes_once_and_fits_a_phone(stack, browser):
     page = sign_in(browser, "wes", "/bi/explore")
     open_extract(page)
-    assert "trade.pnl1d" in page.eval_on_selector_all("[data-fields] input:checked", "xs => xs.map(x => x.value)")      # the numeric columns are ticked, not only the first eight
+    assert "trade.PNL_1D" in page.eval_on_selector_all("[data-fields] input:checked", "xs => xs.map(x => x.value)")      # the numeric columns are ticked, not only the first eight
     page.click("[data-tab=sql]")
     page.click("[data-cells=sql] [data-promote-report]")
     expect(page.locator("[data-cells=sql] [data-promote-report] + .bi-near")).to_contain_text("Trades, the basics SQL", timeout=30000)
