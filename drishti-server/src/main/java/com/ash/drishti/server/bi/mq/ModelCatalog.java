@@ -1073,7 +1073,8 @@ public final class ModelCatalog {
                     cm.put("type", c.type());
                     cm.put("role", def == null ? null : def.role());
                     cm.put("meaning", def == null ? null : def.meaning());
-                    cm.put("references", def == null ? null : def.references());
+                    // a column its dataset does not declare a reference for still names a kind when the packs' link graph knows it (a valuation's TRADE_ID)
+                    cm.put("references", def != null && def.references() != null ? def.references() : t.kind() == null || packs == null ? null : packs.referenceOf(t.kind(), c.name()).orElse(null));
                     cm.put("unit", def == null || def.unitCurrency() == null ? null : Map.of("currency", def.unitCurrency()));
                     cm.put("format", c.format());
                     cm.put("masked", who.masks().masked(u.alias(), c.name()));

@@ -104,9 +104,9 @@
   A pack's heading link on Forms and the packs in a pack's detail list are 44 px tap targets.
 - **Analyse: a filter's picker lists its values again (2.4.0).** A field put in *Filters* showed only *(all)*: the values the console sends with the
   pivot redrew the field chips but not the filter zone. The zone is drawn again when they arrive ([ANALYSE.md](docs/guides/ANALYSE.md)).
-- **A trade id in a report table opens the trade again (2.4.0).** A column whose dataset says `references: <kind>` links to that kind in the terminal, as a key
-  column does: the sample valuations (`trading-risk-trades`, keyed by `VALUATION_ID` since 2.3.0) declare `TRADE_ID: { references: trade }`, so the
-  counterparty page's trades open in the terminal again ([REPORTS.md](docs/guides/REPORTS.md)).
+- **A trade id in a report table opens the trade again (2.4.0).** A column that references a kind links to it in the terminal, as a key column does: the
+  model's description names the kind from the dataset's `references:` or, for a table over a pack kind, from the packs' link graph, so the sample
+  valuations (`trading-risk-trades`, keyed by `VALUATION_ID` since 2.3.0) open their `TRADE_ID` as the trade again ([REPORTS.md](docs/guides/REPORTS.md)).
 - **A console with live pages open stops promptly (2.4.0).** With several worker processes (`server.workers`, 4 by default) a stop waited for every
   open live stream, which never ends by itself: the worker stayed alive serving a silent stream, and the open reports and boards still said *Live*. A stop
   now closes the streams after `server.shutdown_seconds` (`DRISHTI_CONSOLE_SHUTDOWN_SECONDS`, 5 s); the pages say *Disconnected* and reconnect when the

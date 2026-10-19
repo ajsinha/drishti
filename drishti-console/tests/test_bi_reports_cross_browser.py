@@ -175,7 +175,7 @@ def test_a_trade_row_opens_in_the_terminal_and_an_unknown_counterparty_is_an_emp
     open_report(page, COUNTERPARTY, "/counterparty" + carry("counterparties.NAME", name))
     settled(page)
     first = page.locator('[data-visual="c-trades-table"] tbody tr').first
-    trade_id = first.locator("a[data-open-terminal]").inner_text()
+    trade_id = first.locator("a[data-open-terminal=trade]").inner_text()                                # the desk opens too, as a desk
     first.focus()
     page.keyboard.press("Enter")                                                                         # a table row is selectable from the keyboard
     expect(page.locator('[data-chip="selection"]')).to_contain_text("trades.TRADE_ID")

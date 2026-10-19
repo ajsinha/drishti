@@ -88,6 +88,17 @@ public final class PackDatasets {
     }
 
     /** Every generated dataset, by name. */
+    /**
+     * The kind a column of a table of {@code kind} holds the ids of, by the packs' link graph ({@code DESK} is a desk, {@code TRADE_ID} a trade), never the
+     * table's own kind; empty when the graph does not know the name. What a pack dataset's column {@code references}, for any dataset over a pack kind.
+     */
+    public Optional<String> referenceOf(String kind, String column) {
+        if (kind == null || kind.isBlank() || column == null) {
+            return Optional.empty();
+        }
+        return kindOfField.apply(column).filter(k -> !k.equals(kind));
+    }
+
     public Map<String, DatasetDef> all() {
         refresh();
         return Map.copyOf(byName);
