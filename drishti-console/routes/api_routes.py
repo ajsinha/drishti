@@ -23,7 +23,7 @@ from fastapi import APIRouter, Query, Request
 
 from fastapi.responses import JSONResponse, StreamingResponse
 
-from core import controls
+from core import channel_relay, controls
 from core.csrf import json_body
 from core.backend import BackendError
 from core.channel import ChannelSession
@@ -335,12 +335,33 @@ async def channel_change(request: Request, cid: str):
     by one, and reconnecting for each would make every view on the page think it had lost its connection."""
     ch = CHANNELS.get(cid)
     me = ident(request)
-    if ch is None or ch["user"] != (me.user if me is not None else "") or ch.get("app", ""):
-        return JSONResponse({"code": "DRS-5001", "detail": "no such channel: open a new one"}, status_code=404)
-    body = await json_body(request)
-    limit = max_subscriptions(request)
+    user = me.user if me is not None else ""
+    gone = JSONResponse({"code": "DRS-5001", "detail": "no such channel: open a new one"}, status_code=404)
+    if ch is None and channel_relay.owner_port(cid) is not None:          # held by another worker of this console: passed on to it
+        body = await json_body(request)
+        got = await channel_relay.forward(cid, "console-change", {"user": user, "add": body.get("add") or [], "remove": body.get("remove") or [],
+                                                                  "limit": max_subscriptions(request)})
+        return JSONResponse({"ok": True}) if got and got.get("ok") else gone
+    if ch is None or ch["user"] != user or ch.get("app", ""):
+        return gone
+    _change(ch, await json_body(request), max_subscriptions(request))
+    return JSONResponse({"ok": True})
+
+
+def _change(ch: dict, body: dict, limit: int) -> None:
     for sub in (body.get("remove") or [])[:limit]:
         ch["remove"](str(sub))
     for sub in (body.get("add") or [])[:limit * 2]:
         ch["add"](str(sub))
-    return JSONResponse({"ok": True})
+
+
+def _relayed_change(app, cid: str, payload: dict) -> dict:
+    """A change another worker received for a channel this one holds (core/channel_relay.py); that worker checked the caller."""
+    ch = CHANNELS.get(cid)
+    if ch is None or ch["user"] != str(payload.get("user", "")) or ch.get("app", ""):
+        return {"ok": False}
+    _change(ch, payload, int(payload.get("limit") or MAX_CHANNEL_SUBSCRIPTIONS))
+    return {"ok": True}
+
+
+channel_relay.HANDLERS["console-change"] = _relayed_change

@@ -21,6 +21,7 @@ the element's script and sheet are served here, with CORS, because a module scri
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import json
 import re
 import time
@@ -32,10 +33,11 @@ from fastapi.responses import JSONResponse, RedirectResponse, Response, Streamin
 from core.backend import BackendError
 from core import element_dist as dist
 from core import element_sheet as es
+from core import channel_relay
 from core.channel import ChannelSession
 from core.element_sheet import shadow_css  # noqa: F401 - kept importable from here
 from core.csrf import BodyError, json_body
-from core.embed import EmbedError
+from core.embed import EmbedError, EmbedIdentity
 from core.embed_stream import StreamGuard
 from core.embed_wire import compress
 from core import controls
@@ -416,20 +418,64 @@ async def channel_change(request: Request, cid: str):
     except EmbedError as e:
         return await refuse(request, e.status, e.code, e.detail, e.retry_after)
     ch = _owned(request, cid, me, claims)
-    if ch is None:
+    remote = api_routes.CHANNELS.get(cid) is None and channel_relay.owner_port(cid) is not None    # held by another worker of this console
+    if ch is None and not remote:
         return await refuse(request, 404, "DRS-5001", "no such channel: open a new one")
     try:
         body = await json_body(request, limit=16_384)
     except (BodyError, ValueError):
         return await refuse(request, 400, "DRS-5001", "a JSON body {add, remove}")
     limit = api_routes.max_subscriptions(request)
+    if remote:
+        got = await channel_relay.forward(cid, "embed-change", {"user": me.user, "app": claims["azp"], "add": body.get("add") or [],
+                                                                "remove": body.get("remove") or [], "limit": limit})
+        if not got or not got.get("ok"):
+            return await refuse(request, 404, "DRS-5001", "no such channel: open a new one")
+    else:
+        _change(hosts, ch, body, limit)
+    return await cors(request, JSONResponse({"ok": True}, headers={"Cache-Control": "no-store"}))
+
+
+def _change(hosts, ch: dict, body: dict, limit: int) -> None:
     session = ch["session"]
     for sub in (body.get("remove") or [])[:limit]:
         ch["remove"](str(sub))
     session.limit = min(limit, len(session.tasks) + hosts.limits.room(hosts.guards))        # embed.max_streams, across all channels
     for sub in [x for x in (body.get("add") or []) if str(x).startswith(LIVE_KEYS)][:limit * 2]:
         ch["add"](str(sub))
-    return await cors(request, JSONResponse({"ok": True}, headers={"Cache-Control": "no-store"}))
+
+
+def _relayed_owner(cid: str, payload: dict):
+    ch = api_routes.CHANNELS.get(cid)
+    return ch if ch is not None and ch["user"] == str(payload.get("user", "")) and ch.get("app", "") == str(payload.get("app", "")) else None
+
+
+def _relayed_change(app, cid: str, payload: dict) -> dict:
+    """A change another worker received, and checked the caller of, for a channel this worker holds (core/channel_relay.py)."""
+    ch = _relayed_owner(cid, payload)
+    if ch is None:
+        return {"ok": False}
+    _change(app.state.embed, ch, payload, int(payload.get("limit") or api_routes.MAX_CHANNEL_SUBSCRIPTIONS))
+    return {"ok": True}
+
+
+def _relayed_token(app, cid: str, payload: dict) -> dict:
+    """A fresh token another worker verified, for a stream this worker holds."""
+    claims = payload.get("claims") or {}
+    guard = app.state.embed.guards.get(cid)
+    if guard is None or _relayed_owner(cid, {"user": claims.get("sub", ""), "app": claims.get("azp", "")}) is None:
+        return {"ok": False, "status": 404, "code": "DRS-5001", "detail": "no such channel: open a new one"}
+    who = dict(payload.get("identity") or {})
+    who["roles"] = tuple(who.get("roles") or ("viewer",))
+    try:
+        guard.refresh(EmbedIdentity(**who), claims)
+    except EmbedError as e:
+        return {"ok": False, "status": e.status, "code": e.code, "detail": e.detail}
+    return {"ok": True}
+
+
+channel_relay.HANDLERS["embed-change"] = _relayed_change
+channel_relay.HANDLERS["embed-token"] = _relayed_token
 
 
 @router.post("/channel/{cid}/token")
@@ -439,9 +485,14 @@ async def channel_token(request: Request, cid: str):
     try:
         me, claims = await identity(request)
         guard = hosts.guards.get(cid)
-        if guard is None or _owned(request, cid, me, claims) is None:
-            raise EmbedError(404, "DRS-5001", "no such channel: open a new one")
-        guard.refresh(me, claims)
+        if guard is None and api_routes.CHANNELS.get(cid) is None and channel_relay.owner_port(cid) is not None:     # another worker's stream
+            got = await channel_relay.forward(cid, "embed-token", {"identity": dataclasses.asdict(me), "claims": claims}) or {}
+            if not got.get("ok"):
+                raise EmbedError(int(got.get("status") or 404), str(got.get("code") or "DRS-5001"), str(got.get("detail") or "no such channel: open a new one"))
+        else:
+            if guard is None or _owned(request, cid, me, claims) is None:
+                raise EmbedError(404, "DRS-5001", "no such channel: open a new one")
+            guard.refresh(me, claims)
     except EmbedError as e:
         return await refuse(request, e.status, e.code, e.detail, e.retry_after)
     return await cors(request, JSONResponse({"ok": True, "expiresAt": int(claims["exp"])}, headers={"Cache-Control": "no-store"}))

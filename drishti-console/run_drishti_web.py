@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import json
+import secrets
 import os
 import sys
 from pathlib import Path
@@ -62,6 +63,7 @@ def main() -> None:
         # several processes share the port: one Python process uses one core (about 40 pages a second measured); nothing a
         # request needs lives in one process only (sessions are checked with the server, CSRF reads the Origin header)
         os.environ[ARGV] = json.dumps(sys.argv[1:])
+        os.environ.setdefault("DRISHTI_CONSOLE_RELAY_KEY", secrets.token_urlsafe(24))   # the workers pass live-channel calls to each other (core/channel_relay.py)
         uvicorn.run("run_drishti_web:factory", factory=True, workers=workers, app_dir=str(HERE), host=settings.get("server.host"),
                     port=int(settings.get("server.port")), log_level="info", access_log=False, timeout_graceful_shutdown=grace)
         return

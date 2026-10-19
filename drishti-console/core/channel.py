@@ -30,7 +30,7 @@ import time
 from typing import AsyncIterator, Awaitable, Callable
 from urllib.parse import quote
 
-from core import asof, controls
+from core import asof, channel_relay, controls
 from core.backend import BackendError
 
 Render = Callable[[str, str], str]      # (event, data) -> data as the caller wants it (panel patches as HTML)
@@ -44,7 +44,7 @@ class ChannelSession:
         self.backend, self.me, self.render = backend, identity, render
         self.limit, self.who, self.app = limit, who, app
         self.registry = registry if registry is not None else {}
-        self.cid = secrets.token_urlsafe(12)
+        self.cid = secrets.token_urlsafe(12) + channel_relay.suffix()      # names the worker that holds it (core/channel_relay.py)
         self.user = identity.user if identity is not None else ""
         self.queue: asyncio.Queue = asyncio.Queue(maxsize=queue_size)
         self.tasks: dict[str, asyncio.Task] = {}

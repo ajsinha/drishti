@@ -183,7 +183,9 @@ You should see `Uvicorn running on http://127.0.0.1:17480`.
 
 The console runs **4 worker processes** on that port by default (`server.workers`, `DRISHTI_CONSOLE_WORKERS`): one Python process
 uses one core and serves about 40 pages a second, so several share the load (4 workers: trade pages p50 53 ms at 10 users).
-Nothing a request needs lives in one process only. Set `DRISHTI_CONSOLE_WORKERS=1` for a single process (a small machine, or a
+Nothing a request needs lives in one process only: a live page's stream is held by one worker, and its later calls on that
+stream (a view added or removed, an embedded element's fresh token) are passed to that worker by whichever one receives them, over a
+loopback port each worker opens for the others (with a key the launcher makes for them). Set `DRISHTI_CONSOLE_WORKERS=1` for a single process (a small machine, or a
 debugger); give it more on a machine with cores to spare and many users. A stop closes the open live streams after
 `server.shutdown_seconds` (`DRISHTI_CONSOLE_SHUTDOWN_SECONDS`, 5 s), so a console with live pages open still stops promptly; the pages say
 *Disconnected* and reconnect by themselves when it is back.

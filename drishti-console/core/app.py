@@ -230,7 +230,11 @@ def create_app(settings: Settings) -> FastAPI:
         maint_task = _lake_schedules(app)                    # Admin -> Lakes -> Maintain: the schedules (core/lake_maint.py)
         runner = getattr(app.state, "pyrunner", None)
         warm_task = asyncio.create_task(runner.warm()) if runner is not None and runner.warm_on_start else None   # wave C: warm Python workers
+        from core import channel_relay
+
+        await channel_relay.start(app)                      # several workers: live-channel calls reach the worker holding the stream
         yield
+        await channel_relay.stop()
         if warm_task is not None and not warm_task.done():
             warm_task.cancel()
         if maint_task is not None:
