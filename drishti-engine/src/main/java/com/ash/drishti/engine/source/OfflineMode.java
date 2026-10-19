@@ -27,7 +27,9 @@ import java.util.stream.Collectors;
  * news, yfinance and feed plugins, whose data comes from public web services), whatever its file says: the connector is reported as
  * {@code OFFLINE} ("off (offline mode)" in Admin, Connectors), never tries the network, never times out and never turns health red. Its
  * kinds are then served by the other connectors that hold them, such as a Delta store built from a captured snapshot (the
- * news-and-markets pack's {@code news-store}).
+ * news-and-markets pack's {@code news-store}). The same holds with offline mode off for such a connector whose file switches it off (its
+ * shipped state, such as {@code DRISHTI_NEWS_ENABLED} unset): Admin, Connectors says "off (served from the snapshot)" when another
+ * running connector serves its kinds ({@link SourceRegistry#standIns}).
  *
  * @param enabled whether offline mode is on
  * @param plugins the plugins whose connectors reach the internet (lower case)
@@ -60,6 +62,15 @@ public record OfflineMode(boolean enabled, Set<String> plugins) {
     /** True when offline mode keeps a connector of {@code plugin} from starting. */
     public boolean blocks(String plugin) {
         return enabled && plugin != null && plugins.contains(plugin.toLowerCase(Locale.ROOT));
+    }
+
+    /**
+     * True when {@code plugin} reaches the internet (it is in {@code drishti.offline.plugins}), whether or not offline mode is on: such a
+     * connector that is switched off has its kinds served by the other connectors that hold them, exactly as in offline mode
+     * ({@link SourceRegistry#standIns}).
+     */
+    public boolean reachesInternet(String plugin) {
+        return plugin != null && plugins.contains(plugin.toLowerCase(Locale.ROOT));
     }
 
     /** Why the connector is not running, as Admin and the logs say it. */

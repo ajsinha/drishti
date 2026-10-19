@@ -516,6 +516,12 @@ the other connectors that hold them. The shipped packs keep a snapshot for exact
 `market-store` serves the kinds of its public-data feeds. The run configuration **Drishti server (demo lakes)** sets it. Read once at
 start: a connector file saved in Admin while the server runs cannot start an internet connector either; restart without it to go live.
 
+The same holds with offline mode **off** for a connector of an internet plugin whose file switches it off (its shipped state, such as
+`DRISHTI_NEWS_ENABLED` unset): its kinds are read from the other connectors that serve them, exactly as in offline mode, and Admin →
+Connectors shows it as **off (served from the snapshot)** with those connectors in `servedBy` (`GET /api/v1/admin/connectors`). An entity
+none of them holds is `DRS-1001` naming them (and saying so when they have no table for the kind yet), not `DRS-1002` "connector news is
+disabled".
+
 | Setting | Default | Meaning |
 |---|---|---|
 | `drishti.offline.enabled` | `false` (`DRISHTI_OFFLINE`) | `true`, `on`, `yes` or `1` turns offline mode on. |

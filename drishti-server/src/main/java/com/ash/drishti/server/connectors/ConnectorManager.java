@@ -533,7 +533,10 @@ public final class ConnectorManager {
         m.put("problems", problemsOf(name, status));
         Object retry = registry.retryStatus(name).map(s -> com.ash.drishti.common.RetryBoard.describe(s, Instant.now())).orElse(null);
         m.put("retry", retry);
-        String[] shown = shown((String) m.get("state"), health, retry != null);
+        // an internet connector that is off has its kinds served by the other connectors that hold them (the captured snapshot's store)
+        List<String> standIns = registry.standIns(name);
+        String[] shown = shown((String) m.get("state"), health, retry != null, standIns);
+        m.put("servedBy", standIns);
         m.put("level", shown[0]);
         m.put("label", shown[1]);
         m.put("usedBy", usedBy(name));
@@ -548,7 +551,18 @@ public final class ConnectorManager {
      * ok, warn, down or off. A connector that runs but reports DOWN (or is being retried) is "down, retrying"; one whose health carries a
      * warning (unreadable lines, nothing served for the day) is "running, with a warning".
      */
+    /** The badge of an internet connector switched off whose kinds other connectors serve ({@code servedBy}): offline mode in all but name. */
+    static final String SERVED_FROM_SNAPSHOT = "off (served from the snapshot)";
+
     static String[] shown(String state, String health, boolean retrying) {
+        return shown(state, health, retrying, List.of());
+    }
+
+    /** As above; {@code servedBy}: the connectors that serve the kinds of a switched-off internet connector ({@code SourceRegistry.standIns}). */
+    static String[] shown(String state, String health, boolean retrying, List<String> servedBy) {
+        if ("DISABLED".equals(state) && servedBy != null && !servedBy.isEmpty()) {
+            return new String[] {"off", SERVED_FROM_SNAPSHOT};
+        }
         if ("DISABLED".equals(state)) {
             return new String[] {"off", "disabled"};
         }

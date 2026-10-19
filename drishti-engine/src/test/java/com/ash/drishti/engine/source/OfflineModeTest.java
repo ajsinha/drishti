@@ -70,6 +70,9 @@ class OfflineModeTest {
         public void start(SourceContext c) {}
 
         public Optional<EntityDocument> fetch(EntityRef ref) {
+            if (ref.id().equals("QUOTE-NONE")) {
+                return Optional.empty();
+            }
             return Optional.of(new EntityDocument(ref, codec.read("{\"QUOTE_ID\":\"" + ref.id() + "\",\"PRICE\":1.5}"),
                     new com.ash.drishti.api.Provenance("store", 1, java.time.Instant.now(), false)));
         }
@@ -136,12 +139,47 @@ class OfflineModeTest {
     }
 
     @Test
+    void withOfflineModeOffAnInternetConnectorSwitchedOffIsServedByTheStoreAsInOfflineMode() throws Exception {
+        var m = both();
+        m.put("yfinance", new SourcesProperties.ConnectorSettings("web", false, List.of("quote"), Map.of()));   // its shipped state
+        try (SourceRegistry r = registry(new OfflineMode(false, Set.of("web")), viaConnectorsOnly(), m)) {
+            assertThat(Web.STARTS.get()).isZero();
+            assertThat(r.connectorStatuses().get("yfinance").state()).isEqualTo("DISABLED");
+            assertThat(r.standIns("yfinance")).containsExactly("quote-store");
+            assertThat(r.standIns("quote-store")).as("a running store stands in for nobody").isEmpty();
+            var props = new SourcesProperties(Map.of("quote", "yfinance"), null, Map.of(), Duration.ofSeconds(1), null, Map.of());
+            try (var exec = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
+                SourceRouter router = new SourceRouter(r, props, exec);
+                assertThat(router.fetch(new EntityRef("quote", "QUOTE-AAPL")).get().provenance().source()).isEqualTo("store");
+                // what the store does not hold is "not found, the store was asked", not "the connector is disabled"
+                assertThat(router.fetch(new EntityRef("quote", "QUOTE-NONE"))).failsWithin(Duration.ofSeconds(5))
+                        .withThrowableOfType(java.util.concurrent.ExecutionException.class).havingCause()
+                        .isInstanceOfSatisfying(com.ash.drishti.common.DrishtiException.class, e -> {
+                            assertThat(e.errorCode()).isEqualTo(com.ash.drishti.common.ErrorCode.ENTITY_NOT_FOUND);
+                            assertThat(e.getMessage()).contains("connector yfinance reaches the internet and is off").contains("served by quote-store");
+                        });
+            }
+            assertThat(Web.CALLS.get()).isZero();
+        }
+    }
+
+    @Test
+    void aSwitchedOffConnectorOfAnOrdinaryPluginHasNoStandIns() throws Exception {
+        var m = both();
+        m.put("yfinance", new SourcesProperties.ConnectorSettings("web", false, List.of("quote"), Map.of()));
+        try (SourceRegistry r = registry(new OfflineMode(false, Set.of("news")), viaConnectorsOnly(), m)) {
+            assertThat(r.standIns("yfinance")).isEmpty();
+        }
+    }
+
+    @Test
     void readFromTheConfiguration() {
         OfflineMode m = OfflineMode.of(Map.of("drishti.offline.enabled", "true")::get);
         assertThat(m.enabled()).isTrue();
         assertThat(m.plugins()).containsExactlyInAnyOrder("news", "yfinance", "feed");
         assertThat(m.blocks("YFinance")).isTrue();
         assertThat(m.blocks("delta")).isFalse();
+        assertThat(OfflineMode.of(Map.<String, String>of()::get).reachesInternet("News")).as("known with offline mode off too").isTrue();
         assertThat(OfflineMode.of(Map.of("drishti.offline.enabled", "false")::get).blocks("news")).isFalse();
         assertThat(OfflineMode.of(Map.<String, String>of()::get).enabled()).isFalse();
         assertThat(OfflineMode.of(Map.of("drishti.offline.enabled", "on", "drishti.offline.plugins", "rest, news")::get).plugins())

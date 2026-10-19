@@ -92,7 +92,11 @@ daily bars) and of the companies' and topics' headlines, captured through these 
 [data/testdata/README.md](../../../../data/testdata/README.md#the-market-snapshot-news-and-markets-offline)). `drishti.py lake demo`
 builds it into `news/quote` and `news/news`, which `news-store` serves whenever the live connectors are off, and always in **offline
 mode** (`DRISHTI_OFFLINE=true`, set by the run configuration **Drishti server (demo lakes)**): the `news` and `yfinance` connectors then
-never start, and Admin → Connectors shows them *off (offline mode)*. The pages are the same; the quote's *As of* and the headlines'
+never start, and Admin → Connectors shows them *off (offline mode)*. With offline mode off and the live connectors switched off (as
+shipped: `DRISHTI_NEWS_ENABLED` and `DRISHTI_YFINANCE_ENABLED` unset) it is the same: their kinds are read from `news-store`, and Admin →
+Connectors shows them *off (served from the snapshot)*. A lake built before the snapshot was committed has no `news/news` or `news/quote`
+table: the topic and company pages then have no headlines and a headline page says *news-store has no table for it yet*; build it again
+with `drishti.py lake demo --only news-and-markets`. The pages are the same; the quote's *As of* and the headlines'
 *Fetched* end in *(snapshot captured <date>)*, and the quote and headline pages show a **Snapshot** note. The data belongs to Yahoo
 Finance, Google News and the publishers, and is shown for demonstration only.
 

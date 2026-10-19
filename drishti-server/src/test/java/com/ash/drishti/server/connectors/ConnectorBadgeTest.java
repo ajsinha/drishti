@@ -40,4 +40,11 @@ class ConnectorBadgeTest {
         assertThat(ConnectorManager.shown("NOT_LOADED", null, false)).containsExactly("warn", "not started");
         assertThat(ConnectorManager.shown("IDLE", null, false)).containsExactly("warn", "idle");
     }
+
+    @Test
+    void anInternetConnectorSwitchedOffWhoseKindsAStoreServesSaysSo() {
+        assertThat(ConnectorManager.shown("DISABLED", null, false, java.util.List.of("news-store"))).containsExactly("off", "off (served from the snapshot)");
+        assertThat(ConnectorManager.shown("DISABLED", null, false, java.util.List.of())).containsExactly("off", "disabled");
+        assertThat(ConnectorManager.shown("OFFLINE", null, false, java.util.List.of("news-store"))).containsExactly("off", "off (offline mode)");
+    }
 }

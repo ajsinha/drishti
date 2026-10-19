@@ -15,8 +15,9 @@
 """The news-and-markets sample packs in Chromium, over the real server and console (tests/news_stack.py: ports 18993 and 17993). The two
 on-demand connectors (news, yfinance) are switched on and pointed at local fakes that serve canned Google News RSS and Yahoo chart JSON: nothing reaches
 Google or Yahoo. A company page shows its quote, its price chart and its headlines with links that open the article in a new tab; a topic page shows the
-headlines, the count by source and the steps that chose them. With the connectors off (their shipped state) the same pages still open and say what is
-missing. In offline mode (DRISHTI_OFFLINE=true, over a demo lake built from the committed snapshot) the live connectors never start, the fakes get no
+headlines, the count by source and the steps that chose them. With the connectors off (their shipped state) and no lake the same pages still open and say
+what is missing; over the demo lake with offline mode off, their kinds are read from the snapshot store as in offline mode (Admin: "off (served from the
+snapshot)"). In offline mode (DRISHTI_OFFLINE=true, over a demo lake built from the committed snapshot) the live connectors never start, the fakes get no
 request at all, and the same pages show the captured quotes and headlines with a snapshot note. Skipped when Playwright, Chromium or the built server jar is missing, or a scratch port is in use. Never run with pytest -n (the ports are fixed)."""
 import pytest
 
@@ -26,14 +27,14 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import news_stack  # noqa: E402
 
 
-def _stack(tmp_path_factory, on, offline=False):
+def _stack(tmp_path_factory, on, offline=False, lake=False):
     for port in (news_stack.SERVER_PORT, news_stack.CONSOLE_PORT):
         if news_stack.listening(port):
             pytest.skip(f"port {port} is in use: stop whatever listens there")
-    if offline:
+    if offline or lake:
         pytest.importorskip("deltalake", reason="lake demo needs deltalake and pyarrow")
     try:
-        return news_stack.Stack(tmp_path_factory.mktemp("newsstack"), connectors_on=on, offline=offline).start()
+        return news_stack.Stack(tmp_path_factory.mktemp("newsstack"), connectors_on=on, offline=offline, lake=lake).start()
     except FileNotFoundError as e:
         pytest.skip(str(e))
 
@@ -103,6 +104,36 @@ def test_with_the_connectors_off_the_pages_open_and_say_what_is_missing(tmp_path
         expect(page.locator("#p-quote")).not_to_contain_text("204.30")
         expect(page.locator("#p-headlines tbody tr")).to_have_count(0)
         page.close()
+    finally:
+        stack.close()
+
+
+def test_with_the_live_connectors_off_and_offline_mode_off_the_snapshot_serves_the_headlines(tmp_path_factory, browser):
+    """The shipped state (DRISHTI_NEWS_ENABLED and DRISHTI_OFFLINE unset) over the demo lake: the switched-off internet connectors' kinds are
+    read from news-store, exactly as in offline mode, and Admin, Connectors says so."""
+    import json
+    import urllib.request
+
+    if not list((news_stack.ROOT / "data" / "testdata" / "news-and-markets" / "news").glob("snapshot-*.jsonl.gz")):
+        pytest.skip("no captured market snapshot in data/testdata (tools/testdata/capture_market.py)")
+    stack = _stack(tmp_path_factory, False, lake=True)
+    try:
+        listed = json.load(urllib.request.urlopen(news_stack.SERVER + "/api/v1/admin/connectors", timeout=10))["connectors"]
+        state = {c["name"]: (c["state"], c.get("label"), c.get("servedBy")) for c in listed}
+        assert state["news"] == ("DISABLED", "off (served from the snapshot)", ["news-store"]), state
+        assert state["yfinance"] == ("DISABLED", "off (served from the snapshot)", ["news-store"]), state
+        view = json.load(urllib.request.urlopen(news_stack.SERVER + "/api/v1/views/news/NEWS-Federal_Reserve", timeout=20))
+        assert view["ref"]["id"] == "NEWS-Federal_Reserve"
+        page = browser.new_page(viewport={"width": 1400, "height": 1000})
+        page.goto(news_stack.CONSOLE_URL + "/v/news-topic/TOPIC-FED")
+        expect(page.locator("#p-headlines tbody tr").first).to_be_visible(timeout=20000)
+        assert page.locator("#p-headlines tbody tr").count() > 0
+        expect(page.locator("#p-bySource")).to_be_visible()
+        page.goto(news_stack.CONSOLE_URL + "/v/listed-company/CO-AAPL")
+        expect(page.locator("#p-quote")).to_contain_text("USD")
+        assert page.locator("#p-headlines tbody tr").count() > 0
+        page.close()
+        assert news_stack._Fake.requests == [], news_stack._Fake.requests          # the live connectors are off: nothing tried the network
     finally:
         stack.close()
 

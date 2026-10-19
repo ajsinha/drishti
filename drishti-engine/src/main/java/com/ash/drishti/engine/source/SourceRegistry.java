@@ -596,7 +596,22 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         return Optional.ofNullable(applied.get(name));
     }
 
-    /** State of every named connector the registry knows. */
+    /**
+     * The running connectors that serve the kinds of the named connector in its place: non-empty only when that connector is of an
+     * internet plugin ({@link OfflineMode#reachesInternet}) and is off (switched off in its file, or offline mode), so its kinds are read
+     * from these, such as the news-and-markets pack's {@code news-store} built from the captured snapshot. Sorted by name.
+     */
+    public List<String> standIns(String name) {
+        SourcesProperties.ConnectorSettings c = applied.get(name);
+        ConnectorStatus st = statuses.get(name);
+        if (c == null || st == null || plugins.containsKey(name) || !("DISABLED".equals(st.state()) || OfflineMode.STATE.equals(st.state()))
+                || !offline.reachesInternet(c.plugin()) || c.kinds() == null) {
+            return List.of();
+        }
+        return plugins.values().stream().filter(p -> !p.manifest().name().equals(name) && c.kinds().stream().anyMatch(k -> p.manifest().serves(k)))
+                .map(p -> p.manifest().name()).sorted().toList();
+    }
+
     /** Offline mode as the server started with it. */
     public OfflineMode offline() {
         return offline;

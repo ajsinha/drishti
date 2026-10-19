@@ -361,9 +361,35 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         }
         String routed = routes.get(ref.kind());
         if (routed != null && registry.plugin(routed).isEmpty()) {
+            List<String> standIns = registry.standIns(routed);
+            if (!standIns.isEmpty()) {
+                throw servedInstead(ref, routed, candidates);   // an internet connector that is off: its stand-ins were asked and do not hold it
+            }
             throw noSource(ref.kind());                 // the connector the pack routes this kind to is not there: say that, not just "nothing holds it"
         }
         throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no source holds " + ref);
+    }
+
+    /**
+     * Not found, when the kind's routed connector reaches the internet and is off (disabled, or offline mode) and the other connectors
+     * that serve the kind (such as a store built from a captured snapshot) were asked instead: that is where the data comes from, so the
+     * answer is "they do not hold it", naming them, and when none of them has a table for the kind yet, saying so.
+     */
+    private DrishtiException servedInstead(EntityRef ref, String routed, List<SourcePlugin> asked) {
+        String names = String.join(", ", asked.stream().map(p -> p.manifest().name()).toList());
+        boolean noTable = asked.stream().allMatch(p -> {
+            try {
+                return p.manifest().capabilities().dated() && p.tableIdentity(ref.kind()).isEmpty();
+            } catch (RuntimeException e) {
+                return false;
+            }
+        });
+        var status = registry.connectorStatuses().get(routed);
+        String off = status != null && OfflineMode.STATE.equals(status.state()) ? "off (offline mode)" : "off";
+        return new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no source holds " + ref + ": connector " + routed + " reaches the internet and is "
+                + off + ", so kind '" + ref.kind() + "' is served by " + names + (noTable
+                        ? ", which has no table for it yet (build it, for a pack's demo data with drishti.py lake demo)"
+                        : ", which does not hold it"));
     }
 
     /** A document whose connector gave it no source name carries the connector's name, so a view never says "Source: , gen 0". */

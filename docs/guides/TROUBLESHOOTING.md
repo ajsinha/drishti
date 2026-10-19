@@ -1326,7 +1326,7 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 | Code | Meaning |
 |---|---|
 | `DRS-1001` | no source holds that entity |
-| `DRS-1002` | no source serves that kind |
+| `DRS-1002` | no source serves that kind. "connector news is disabled (kind 'news' is routed to it)": nothing else serves the kind on this server. For the news-and-markets pack, build the snapshot store (`drishti.py lake demo --only news-and-markets`): a switched-off internet connector's kinds are then read from `news-store` (Admin → Connectors: *off (served from the snapshot)*), and what it lacks is `DRS-1001` naming it. Or switch the live connector on (`DRISHTI_NEWS_ENABLED=true`) |
 | `DRS-1005` / `DRS-1006` / `DRS-1007` | pasted document is not a JSON object / a connector plugin could not be loaded (`/sources` lists why) / `knownAt` asked of a store with no earlier versions |
 | `DRS-1011` | a kind is routed to a connector that has no file in `config/connectors/` (HTTP 404). Cause: the pack names a connector nobody defined, or its file was deleted. Fix: create it in Admin → Connectors (the Create link on Admin → Packs → Data source pre-fills it from the pack's template) or `drishti.py connector apply NAME.yaml`; the pack itself loads and Admin → Health shows `connectorsNotConfigured` |
 | `DRS-1003` / `DRS-1004` | a source failed / timed out (a console page answers 504 for a timeout, 502 for a failed source) |
