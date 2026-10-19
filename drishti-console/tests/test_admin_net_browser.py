@@ -176,7 +176,7 @@ def test_a_file_is_saved_with_its_version_and_a_bad_one_shows_its_line(browser, 
     assert "line 2: fanout: 'lots' is not a whole number" in page.locator("[data-problems]").inner_text()
     page.locator("[data-yaml]").fill("interval: 2s\nfanout: 3\n")
     page.locator("[data-save]").click()
-    page.wait_for_function("document.querySelector('[data-msg]').textContent.includes('Saved gossip.yaml')", timeout=10000)
+    page.wait_for_function("() => document.querySelector('[data-msg]').textContent.includes('Saved gossip.yaml')", timeout=10000)
     put = [c for c in backend.net_calls if c[0] == "PUT"]
     assert put[-1][3] == {"If-Match": "abc"}
     page.close()

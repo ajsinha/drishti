@@ -26,6 +26,7 @@ import pytest
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 
 from net_stack import CONSOLE_URL, NetStack, get, url  # noqa: E402
+from test_live_tabs_browser import COUNT_TICKS  # noqa: E402
 from test_live_tabs_browser import browser  # noqa: E402,F401 - the shared browser fixture
 
 
@@ -96,17 +97,37 @@ def test_stopping_a_moves_the_console_to_another_server_and_the_page_live_view_a
     page = browser.new_page()
     page.goto(CONSOLE_URL + "/v/trade/IRS-48213")                # held on b, which ticks; the console is on a
     page.wait_for_timeout(1500)
+    before = page.evaluate(COUNT_TICKS)
+    deadline = time.time() + 20
+    while page.evaluate(COUNT_TICKS) <= before and time.time() < deadline:
+        page.wait_for_timeout(250)
+    assert page.evaluate(COUNT_TICKS) > before, "the live view did not tick before the stop"
     t0 = time.time()
-    cluster.stop("a")
-    moved = None
+    stopping = cluster.stop("a", wait=False)                    # timed from the stop, not from the process's exit (see NetStack.stop)
+    moved, status, body = None, 0, ""
+    time.sleep(0.5)                                             # the stop signal reaches a; an answer a gave before it does not count
     while time.time() - t0 < 30:
-        status, body = get(CONSOLE_URL, "/v/trade/CLY-00001", timeout=3)
+        try:
+            status, body = get(CONSOLE_URL, "/v/trade/CLY-00001", timeout=3)
+        except OSError as e:                                     # a read timed out while the console was still on a
+            status, body = 0, repr(e)
         if status == 200 and "CLY-00001" in body:
             moved = time.time() - t0
             break
         time.sleep(0.2)
-    assert moved is not None and moved < 10, f"the console took {moved} s to move"
-    print(f"net: the console moved off a stopped server in {moved:.1f} s")
+    at_move = page.evaluate(COUNT_TICKS)
+    deadline = time.time() + 45                                 # the old stream breaks when a's graceful shutdown ends (30 s at most); it reconnects
+    while page.evaluate(COUNT_TICKS) <= at_move + 2 and time.time() < deadline:
+        page.wait_for_timeout(250)
+    ticking = page.evaluate(COUNT_TICKS) > at_move + 2
+    cluster.reap(stopping)
+    after_exit = page.evaluate(COUNT_TICKS)
+    deadline = time.time() + 20
+    while page.evaluate(COUNT_TICKS) <= after_exit + 2 and time.time() < deadline:
+        page.wait_for_timeout(250)
+    assert ticking and page.evaluate(COUNT_TICKS) > after_exit + 2, "the open page's live view stopped ticking after the move"
+    assert moved is not None and moved < 10, f"the console took {moved} s to move; last answer {status}: {body[-600:]}"
+    print(f"net: the console moved off a stopped server in {moved:.1f} s; the open page kept ticking without a reload")
     page.reload()
     assert "IRS-48213" in page.content()
     status, body = get(CONSOLE_URL, "/api/search?q=" + urllib.request.quote("TRD limit 200"))

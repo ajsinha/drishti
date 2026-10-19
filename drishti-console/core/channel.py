@@ -34,6 +34,8 @@ from core import asof, channel_relay, controls
 from core.backend import BackendError
 
 Render = Callable[[str, str], str]      # (event, data) -> data as the caller wants it (panel patches as HTML)
+RESUME_TRIES = 12                       # with several servers: how many times in a row a broken upstream is opened again
+RESUME_BACKOFF = 1.0                    # seconds before the first try, growing by this much per try (at most 5 s)
 
 
 class ChannelSession:
@@ -86,31 +88,71 @@ class ChannelSession:
             self.ended = True
             self._detached(self._stop())
 
-    async def _pump(self, sub: str) -> None:
-        responses = self.opened.setdefault(sub, [])
+    def _open(self, sub: str, responses: list):
+        """The upstream stream of one subscription and whether it is a view (its events are rendered); ``(None, False)`` for an unknown one."""
         if sub.startswith("view:") and "/" in sub:
             base, ctl = controls.split_subscription(sub)       # view:kind/id?ctl.leg=L2: the stream is built with the reader's controls
             kind, _, id_ = base[5:].partition("/")
             more = {"controls": ctl} if ctl else {}
-            upstream, is_view = self.backend.stream(kind, id_, self.me, opened=responses, **more), True
-        elif sub == "alerts":
-            upstream, is_view = self.backend.sse("/me/alerts/stream", self.me, opened=responses), False
-        elif sub.startswith("bilive:"):                      # Rupaka phase 5: a report's live tables changed (tick), how they are doing (status); no data
-            upstream, is_view = self.backend.sse(f"/bi/reports/{quote(sub[7:], safe='')}/live", self.me, opened=responses), False
-        elif sub.startswith("mq:") and len(sub) > 3:              # wave B: a standing query's pushed answers (answer) and its state (status)
-            upstream, is_view = self.backend.sse(f"/bi/mq/stream?ids={quote(sub[3:], safe='')}", self.me, opened=responses), False
-        elif sub.startswith("monitor:"):
-            upstream, is_view = self.backend.sse(f"/me/monitors/{quote(sub[8:])}/stream", self.me, opened=responses), False
-        else:
-            return
+            return self.backend.stream(kind, id_, self.me, opened=responses, **more), True
+        if sub == "alerts":
+            return self.backend.sse("/me/alerts/stream", self.me, opened=responses), False
+        if sub.startswith("bilive:"):                        # Rupaka phase 5: a report's live tables changed (tick), how they are doing (status); no data
+            return self.backend.sse(f"/bi/reports/{quote(sub[7:], safe='')}/live", self.me, opened=responses), False
+        if sub.startswith("mq:") and len(sub) > 3:              # wave B: a standing query's pushed answers (answer) and its state (status)
+            return self.backend.sse(f"/bi/mq/stream?ids={quote(sub[3:], safe='')}", self.me, opened=responses), False
+        if sub.startswith("monitor:"):
+            return self.backend.sse(f"/me/monitors/{quote(sub[8:])}/stream", self.me, opened=responses), False
+        return None, False
+
+    def _pool(self):
+        """The console's server pool when it has several servers (``backend.urls``), else None."""
+        pool = getattr(self.backend, "_servers", None)
+        return pool if pool is not None and getattr(pool, "enabled", False) else None
+
+    def _live(self, sub: str) -> bool:
+        return not self.stopping.is_set() and not self.ended and sub in self.tasks
+
+    async def _server_gone(self, responses: list) -> bool:
+        """True when the server the last upstream response came from no longer answers its health check (it was stopped)."""
+        pool = self._pool()
+        if pool is None or not responses:
+            return False
         try:
-            async for event, data in upstream:
-                await self.queue.put((sub, event, self.render(event, data) if is_view else data))
-        except BackendError as e:
-            await self.queue.put((sub, "gone", json.dumps({"code": e.code, "detail": e.detail})))
-        except Exception as e:  # noqa: BLE001 - one broken subscription must not end the others (nor a closed channel)
-            if not self.stopping.is_set() and sub in self.tasks:
-                await self.queue.put((sub, "gone", json.dumps({"code": "DRS-5003", "detail": str(e)})))
+            u = responses[-1].request.url
+            await pool.probe(f"{u.scheme}://{u.netloc.decode()}")
+            return False
+        except Exception:  # noqa: BLE001 - any failure: the server is gone
+            return True
+
+    async def _pump(self, sub: str) -> None:
+        """Pumps one subscription. With several servers (DRISHTI_NET.md 11.1) an upstream that breaks or ends because its server stopped is
+        opened again on the next server (the pool has set the stopped one aside by then), up to RESUME_TRIES times in a row, so an open page
+        keeps ticking through a failover; without a pool, or after that, the browser is told the stream is gone."""
+        responses = self.opened.setdefault(sub, [])
+        tries = 0
+        while True:
+            upstream, is_view = self._open(sub, responses)
+            if upstream is None:
+                return
+            try:
+                async for event, data in upstream:
+                    tries = 0
+                    await self.queue.put((sub, event, self.render(event, data) if is_view else data))
+                if not (self._live(sub) and tries < RESUME_TRIES and await self._server_gone(responses)):
+                    return                                         # ended by the server (nothing more to stream) or by us
+            except BackendError as e:
+                if not (self._pool() is not None and e.status in (502, 503) and self._live(sub) and tries < RESUME_TRIES):
+                    await self.queue.put((sub, "gone", json.dumps({"code": e.code, "detail": e.detail})))
+                    return
+            except Exception as e:  # noqa: BLE001 - one broken subscription must not end the others (nor a closed channel)
+                if not self.stopping.is_set() and sub in self.tasks:
+                    await self.queue.put((sub, "gone", json.dumps({"code": "DRS-5003", "detail": str(e)})))
+                return
+            tries += 1
+            await asyncio.sleep(min(RESUME_BACKOFF * tries, 5.0))   # the pool's health check sets the stopped server aside meanwhile
+            if not self._live(sub):
+                return
 
     async def _close_sub(self, sub: str, task) -> None:
         for r in list(self.opened.pop(sub, [])):

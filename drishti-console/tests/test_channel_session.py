@@ -109,3 +109,45 @@ def test_change_adds_and_removes_within_the_limit():
         await asyncio.sleep(0.8)
         return keys
     assert asyncio.run(go()) == ["view:trade/B", "view:trade/C"]
+
+
+class FailingOver:
+    """A live view whose first server breaks after one frame (it was stopped); the next open reaches another server and ticks on."""
+
+    def __init__(self, pool: bool):
+        self._servers = SimpleNamespace(enabled=True) if pool else None
+        self.opens = 0
+
+    async def stream(self, kind, id_, me, opened=None):
+        from core.backend import BackendError
+        self.opens += 1
+        n = self.opens
+        yield "frame", json.dumps({"server": n})
+        if n == 1:
+            raise BackendError(503, "DRS-5003", "backend unreachable: stream broke")
+        await asyncio.sleep(30)
+
+
+def test_with_several_servers_a_broken_stream_is_opened_again_on_the_next_and_without_them_the_browser_is_told(monkeypatch):
+    import core.channel as channel
+    monkeypatch.setattr(channel, "RESUME_BACKOFF", 0.01)
+
+    async def go(pool):
+        backend = FailingOver(pool)
+        out = await read(make(backend, "alice"), ["view:trade/T-1"], 3)
+        return [json.loads(c.split("data: ")[1]) for c in out[1:]], backend.opens
+
+    got, opens = asyncio.run(go(True))
+    assert [g["d"] for g in got] == [{"server": 1}, {"server": 2}] and opens == 2          # no "gone": the page keeps ticking
+
+    async def single():
+        out = []
+        agen = make(FailingOver(False), "bob").events(["view:trade/T-1"], never)
+        async for chunk in agen:
+            out.append(chunk)
+            if "gone" in chunk:
+                break
+        await agen.aclose()
+        return out
+    out = asyncio.run(single())
+    assert out[-1].startswith("event: gone") and "DRS-5003" in out[-1]

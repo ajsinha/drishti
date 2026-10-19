@@ -425,8 +425,10 @@ backend:
 - **Falling over.** A server that refuses connections, times out or answers 502/503 `fail_after` times in a row is set aside and the session moves to
   the next. A **read** that failed on the way is tried once on another server, so the person sees the page, not an error; a **write** (a layout, a
   search, a pivot) never is: the page says it did not save, and saving again works on the new server.
-- **Nothing to sign in again.** Every node accepts the same tokens (one token secret, or one OIDC issuer), so the session carries over. A live view
-  reconnects by itself and resubscribes on the new server.
+- **Nothing to sign in again.** Every node accepts the same tokens (one token secret, or one OIDC issuer), so the session carries over. An open
+  page's live view carries on with no reload: when its stream from the old server breaks, or ends because that server stopped, the console opens it
+  again on the next server (up to 12 times in a row, a second apart and growing), and the page is sent the view afresh and keeps ticking. Without
+  `backend.urls` a broken stream makes the view *Static*, as before.
 - **Coming back.** A set-aside server that answers again is used for new sessions after a minute of health, never moved under a running session.
 - **Visible to administrators.** Admin → Net and Admin → Health show the server the console is on, its list with each server's state, and the
   failovers of the last hour; each failover is a line in the console's log and an audit row on the server it moved to (`net-console-failover`).
@@ -485,6 +487,9 @@ for good, set `enabled: false` in its node.yaml (it leaves cleanly) or stop the 
 or **Remove** it from their tables at once.
 
 **A node that crashed** is suspect after `suspect-after` and dead after `dead-after` more; when it restarts it rejoins from its `peers.json`.
+
+**A clean stop with live views open** takes up to 30 seconds: the server's graceful shutdown waits that long for its open streams. It takes no
+new requests meanwhile, so the console moves to another server at once, and the open streams move when the stop ends them.
 
 ## 11. Sizing
 

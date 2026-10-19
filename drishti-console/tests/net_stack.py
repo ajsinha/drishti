@@ -37,6 +37,7 @@ import urllib.request
 from pathlib import Path
 
 from bi_stack import FORBIDDEN, listening, wait
+from java_launch import java_cmd
 from scratch_ports import worker_port, worker_ports
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -105,12 +106,13 @@ class NetStack:
         env = dict(os.environ, DRISHTI_NET_SECRET=KEY, DRISHTI_TOKEN_SECRET=TOKEN_SECRET, DRISHTI_SECURITY_ENABLED="false",
                    DRISHTI_DATA_DIR=str(work / "data"), DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS="finance",
                    DRISHTI_PACKS_EXTRA_DIRS=str(ROOT / "examples" / "packs"), DRISHTI_NET_DIR=str(work / "net"))
-        args = [java, self.heap, "-jar", jar, f"--server.port={port}", f"--drishti.net.dir={work / 'net'}", "--drishti.net.poll=1s",
+        args = [self.heap, "-jar", jar, f"--server.port={port}", f"--drishti.net.dir={work / 'net'}", "--drishti.net.poll=1s",
                 f"--drishti.sources.plugins.file.settings.root={work / 'feeds'}", "--drishti.sources.plugins.file.settings.id-field=TRADE_ID",
                 f"--drishti.sources.connectors-dir={work / 'connectors'}", "--drishti.sources.connectors.finance-lake.enabled=false"]
         if name != "b":
             args.append("--drishti.sources.plugins.demo.enabled=false")       # the demo's trades (and their ticks) are on b only
-        self.procs[name] = subprocess.Popen(args, cwd=work, env=env, stdout=open(self.tmp / f"server-{name}.log", "ab"), stderr=subprocess.STDOUT)
+        cmd = java_cmd(java, args, tmp=work / "jtmp")                     # its native libraries unpack in its own folder, not /tmp
+        self.procs[name] = subprocess.Popen(cmd, cwd=work, env=env, stdout=open(self.tmp / f"server-{name}.log", "ab"), stderr=subprocess.STDOUT)
         wait(url(name) + "/actuator/health", 180)
 
     def start_console(self, urls: str | None = None) -> None:
@@ -162,14 +164,23 @@ class NetStack:
         os.kill(p.pid, signal.SIGKILL)
         p.wait(20)
 
-    def stop(self, name: str) -> None:
-        """A clean stop by PID: the server leaves the cluster first."""
+    def stop(self, name: str, wait: bool = True) -> subprocess.Popen:
+        """A clean stop by PID: the server leaves the cluster first. A server with a live stream open waits up to 30 s for it in its
+        graceful shutdown (it takes no new requests meanwhile), so a test timing the console's move passes ``wait=False`` and calls
+        ``reap`` on the returned process afterwards."""
         p = self.procs.pop(name)
         p.terminate()
+        if wait:
+            self.reap(p)
+        return p
+
+    @staticmethod
+    def reap(p: subprocess.Popen) -> None:
         try:
             p.wait(60)
         except subprocess.TimeoutExpired:
             p.kill()
+            p.wait(20)
 
     def close(self) -> None:
         for name in list(self.procs):
