@@ -172,6 +172,29 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         default Optional<DrishtiException> unreachable(EntityRef ref) {
             return Optional.empty();
         }
+
+        /**
+         * A grouped page (a derived kind) gathered from every node that holds members of the kind it groups, replacing {@code local} (this
+         * node's page, or null when no member is here); empty when there is nothing to gather (not a derived kind, no other node holds
+         * members, a forwarded request). DRISHTI_NET.md section 8.
+         */
+        default Optional<EntityDocument> gather(EntityRef ref, AsOf asOf, EntityDocument local) {
+            return Optional.empty();
+        }
+    }
+
+    /** A derived source that serves a kind here, by its connector name: Drishti*net gathers its groups across nodes. */
+    public record Derived(String source, com.ash.drishti.engine.source.derived.DerivedSourcePlugin plugin) {}
+
+    /** The derived source (plugin {@code derived}) that serves {@code kind} here, if one does. */
+    public Optional<Derived> derivedOf(String kind) {
+        for (SourcePlugin p : candidates(kind)) {
+            SourcePlugin d = p instanceof ConnectorInstance c ? c.delegate() : p;
+            if (d instanceof com.ash.drishti.engine.source.derived.DerivedSourcePlugin x && x.groupedFrom(kind).isPresent()) {
+                return Optional.of(new Derived(p.manifest().name(), x));
+            }
+        }
+        return Optional.empty();
     }
 
     private volatile Fallback fallback;
@@ -193,7 +216,8 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             first = noSource(ref.kind());
         } else {
             try {
-                return readFirst(ref, candidates, asOf, asking);
+                EntityDocument d = readFirst(ref, candidates, asOf, asking);
+                return fb.gather(ref, asOf, d).orElse(d);
             } catch (SourceFailure e) {
                 throw e;
             } catch (DrishtiException e) {
@@ -202,6 +226,12 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
                     throw e;
                 }
                 first = e;
+            }
+        }
+        if (!candidates.isEmpty()) {
+            Optional<EntityDocument> gathered = fb.gather(ref, asOf, null);          // a group with no member here, members elsewhere
+            if (gathered.isPresent()) {
+                return gathered.get();
             }
         }
         List<SourcePlugin> peers = fb.peers(ref, asOf);

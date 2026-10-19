@@ -365,9 +365,16 @@ documents it holds, applied there only where it has none. Alerts, monitors and s
 node; they stay on the node they were made on. With one shared identity database (PostgreSQL, `DRISHTI_IDENTITY_DB_URL`) the nodes already share all
 of it: set `user-state: off` in routing.yaml. Admin → Net → Members says how many changes were sent and applied and what waits for which peer.
 
-**Grouped pages are built per node.** A page built from many entities by a derived connector (a counterparty's trades, a netting set over several
-systems) is built on each node from that node's own data: it is not yet gathered across nodes. Put the systems a grouped page needs on the nodes
-that build it (a shared lake does that by itself), or open the page on the node that holds them.
+**Grouped pages are gathered across the nodes.** A page a derived connector builds from many entities (a counterparty's trades, a book's P&L,
+a netting set over several systems) is built from the members on every node that holds the kind it groups, as a search is: the nodes asked are
+the ones the caller's roles reach, never a replica of a node already asked (`GET /api/v1/net/group/{kind}/{id}`, within `scatter-budget`). Each
+node sends its share of the group masked as it masks for the caller; the page is masked again on the node that shows it. When every node lists
+all its members of the group (a group of up to the connector's `max-members`, 1,000 by default), the page is exactly the one a single node
+holding every member would build, and a member two nodes hold counts once. In a larger group each node's totals are combined (counts and sums
+added, extremes compared, distinct values united, an average weighted by member count) and the members listed are the first `max-members` by id;
+a member two nodes hold is then counted on each, so keep overlapping systems on one node or in a shared lake. A node that holds the kind but did
+not answer or is down makes the page partial: the page's document carries `partial: true` and `missing` naming the node, never a smaller page
+that looks whole. A page with members on one node only is that node's page, unchanged.
 
 **Roles.** A kind whose pack is here and that the caller's roles may not open is refused here before any call (`403 DRS-5002`). A kind whose pack is
 not here is decided by the node that renders it, which knows the pack's roles.

@@ -163,6 +163,23 @@ public class NetDataController {
         return p;
     }
 
+    /**
+     * This node's share of a grouped page ({@code GET /api/v1/net/group/{kind}/{id}}, DRISHTI_NET.md section 8): {@code {"share": ...}}, the
+     * group's page and members as read from this node's own data, masked for the on-behalf-of user as here; {@code {"share": null}} when no
+     * member of the group is here or no derived source here serves the kind.
+     */
+    @GetMapping("/group/{kind}/{id}")
+    public ResponseEntity<String> group(@PathVariable String kind, @PathVariable String id, @RequestParam(value = "id", required = false) String idParam,
+            AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p,
+            @RequestAttribute(value = NetCallFilter.CLAIMS, required = false) Object claims) {
+        Principal user = forUser(p, claims);
+        entitlements.requireOpen(user, kind);
+        String entity = "~".equals(id) && idParam != null ? idParam : id;
+        String share = router.derivedOf(kind).flatMap(d -> d.plugin().share(EntityRef.of(kind, entity), asOf))
+                .map(s -> codec.toJson(entitlements.redact(user, s))).orElse("null");
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body("{\"share\":" + share + "}");
+    }
+
     /** {@code id} in the path, or {@code ~} in the path and the id as {@code ?id=} (an id with a slash, as every view endpoint takes it). */
     @GetMapping("/fetch/{kind}/{id}")
     public ResponseEntity<String> fetch(@PathVariable String kind, @PathVariable String id, @RequestParam(value = "id", required = false) String idParam,

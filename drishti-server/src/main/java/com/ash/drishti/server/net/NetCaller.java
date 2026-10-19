@@ -33,11 +33,60 @@ import org.springframework.web.filter.OncePerRequestFilter;
  */
 public final class NetCaller {
 
-    /** One request's caller. {@code fromPeer} is the forwarding node's id, or null for a request of this node's own client. */
-    public record Caller(Principal principal, String fromPeer, String requestId) {
+    /**
+     * One request's caller. {@code fromPeer} is the forwarding node's id, or null for a request of this node's own client; {@code served}
+     * what the request's reads asked of other nodes (for an administrator's "How this view was built").
+     */
+    public record Caller(Principal principal, String fromPeer, String requestId, Served served) {
+        public Caller(Principal principal, String fromPeer, String requestId) {
+            this(principal, fromPeer, requestId, new Served());
+        }
+
         public boolean forwarded() {
             return fromPeer != null;
         }
+    }
+
+    /**
+     * What a request's reads asked of other nodes, written by the threads it starts (the peer sources, the gathering of a grouped page): the
+     * nodes whose documents were read, and for a grouped page the nodes it was gathered from and those that did not answer.
+     */
+    public static final class Served {
+        private final java.util.Set<String> data = java.util.concurrent.ConcurrentHashMap.newKeySet();
+        private final java.util.Set<String> gathered = java.util.Collections.synchronizedSet(new java.util.LinkedHashSet<>());
+        private final java.util.Set<String> missing = java.util.Collections.synchronizedSet(new java.util.LinkedHashSet<>());
+
+        /** A document of the request was read from {@code node}. */
+        public void data(String node) {
+            data.add(node);
+        }
+
+        /** A grouped page of the request was gathered from {@code nodes}; {@code absent} did not answer. */
+        public void gathered(java.util.Collection<String> nodes, java.util.Collection<String> absent) {
+            gathered.addAll(nodes);
+            missing.addAll(absent);
+        }
+
+        public java.util.List<String> dataFrom() {
+            return data.stream().sorted().toList();
+        }
+
+        public java.util.List<String> gatheredFrom() {
+            synchronized (gathered) {
+                return java.util.List.copyOf(gathered);
+            }
+        }
+
+        public java.util.List<String> missing() {
+            synchronized (missing) {
+                return java.util.List.copyOf(missing);
+            }
+        }
+    }
+
+    /** The current request's {@link Served}, or empty outside a request. */
+    public static Optional<Served> served() {
+        return current().map(Caller::served);
     }
 
     private static final InheritableThreadLocal<Caller> CURRENT = new InheritableThreadLocal<>();

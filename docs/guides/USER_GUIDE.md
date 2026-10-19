@@ -2111,5 +2111,7 @@ and works the same whichever server holds the data. If the server your console u
 on reloads its data, a live view reconnects, and you do not sign in again. A save made at the very moment a server stops says it did not save: save
 again. When the server that holds what you asked for is down, the page says so (`DRS-5052 ... cannot be reached now`) instead of showing nothing.
 A search covers every server's data; when one of them did not answer, the results say they are partial and name the server they are missing.
+A page that groups many records (a counterparty's trades, a book's P&L) counts the records of every server; if one did not answer, the page
+says it is partial and names the server.
 Your saved searches, layouts, pivots and workspaces follow you to whichever server you are on. Alerts and scheduled reports stay on the server they
 were made on (they act, and would act once per server).

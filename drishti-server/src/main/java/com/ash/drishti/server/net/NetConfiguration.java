@@ -117,12 +117,14 @@ public class NetConfiguration {
 
     @Bean
     public PeerSources peerSources(NetRouting routing, NetService net, com.ash.drishti.common.JsonCodec codec, ForwardLog log,
-            com.ash.drishti.engine.source.SourceRouter router, com.ash.drishti.engine.live.TopicHub hub) {
+            com.ash.drishti.engine.source.SourceRouter router, com.ash.drishti.engine.live.TopicHub hub, SearchScatter scatter) {
         // a live relay from a peer is masked there for the user it was opened for: while the cluster runs, viewers share an upstream only
         // with viewers of the same roles (DRISHTI_NET.md section 8, as built)
         hub.partition(() -> !net.running() ? "" : NetCaller.current().map(NetCaller.Caller::principal)
                 .map(p -> String.join(",", new java.util.TreeSet<>(p.roles())) + "|" + (p.embedApp() == null ? "" : p.embedApp())).orElse(""));
-        return new PeerSources(routing, net, codec, log, router);
+        PeerSources sources = new PeerSources(routing, net, codec, log, router);
+        sources.groups(new GroupGather(router, routing, scatter, codec));   // grouped pages gathered across the nodes (section 8)
+        return sources;
     }
 
     /** After the token filter (the caller is known): who the request is for, for the router and the peer sources. */

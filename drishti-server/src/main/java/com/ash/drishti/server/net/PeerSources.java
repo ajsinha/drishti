@@ -40,6 +40,7 @@ public final class PeerSources implements SourceRouter.Fallback {
     private final JsonCodec codec;
     private final ForwardLog log;
     private final Map<String, PeerSource> byNode = new ConcurrentHashMap<>();
+    private volatile GroupGather groups;
 
     public PeerSources(NetRouting routing, NetService net, JsonCodec codec, ForwardLog log, SourceRouter router) {
         this.routing = routing;
@@ -49,6 +50,17 @@ public final class PeerSources implements SourceRouter.Fallback {
         Runnable apply = () -> router.fallback(net.running() ? this : null);
         net.onChange(n -> apply.run());
         apply.run();
+    }
+
+    /** Sets what gathers grouped pages across the nodes (the configuration does). */
+    public void groups(GroupGather g) {
+        this.groups = g;
+    }
+
+    @Override
+    public Optional<com.ash.drishti.api.EntityDocument> gather(EntityRef ref, AsOf asOf, com.ash.drishti.api.EntityDocument local) {
+        GroupGather g = groups;
+        return g == null ? Optional.empty() : g.gather(ref, asOf, local);
     }
 
     private PeerSource source(String nodeId) {

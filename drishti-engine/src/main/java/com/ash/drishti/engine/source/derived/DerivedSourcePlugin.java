@@ -261,6 +261,55 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         }
     }
 
+    // ---- Drishti*net: a group gathered across nodes (GroupShares) ----------------------------------------------------------
+
+    /** The kind the derived kind {@code kind} groups, or empty when this source does not derive it. */
+    public Optional<String> groupedFrom(String kind) {
+        return kinds.stream().filter(d -> d.kind().equals(kind)).findFirst().map(DerivedKind::from);
+    }
+
+    /**
+     * This node's share of one group, for the node gathering it (DRISHTI_NET.md section 8): its page and, when the page lists every member,
+     * each member's values read from this node's own sources. Empty when no member of the group is here.
+     */
+    public Optional<DataNode> share(EntityRef ref, AsOf asOf) {
+        DerivedKind k = kinds.stream().filter(d -> d.kind().equals(ref.kind())).findFirst().orElse(null);
+        Optional<EntityDocument> page = k == null ? Optional.empty() : fetch(ref, asOf);
+        if (page.isEmpty()) {
+            return Optional.empty();
+        }
+        DataNode doc = page.get().data();
+        DataNode listed = doc.get(k.membersField());
+        long count = (long) doc.get("memberCount").asDouble();
+        Map<String, DataNode> compacts = null;
+        if (listed.size() == count) {
+            List<EntityRef> refs = new ArrayList<>(listed.size());
+            for (int i = 0; i < listed.size(); i++) {
+                refs.add(EntityRef.of(k.from(), listed.get(i).asText()));
+            }
+            Map<EntityRef, EntityDocument> read = refs.isEmpty() ? Map.of() : reader.read(refs, asOf);
+            if (read.size() == refs.size()) {
+                LocalDate today = page.get().provenance() != null && page.get().provenance().businessDate() != null
+                        ? page.get().provenance().businessDate() : LocalDate.now(zone);
+                compacts = new LinkedHashMap<>();
+                for (EntityRef r : refs) {
+                    compacts.put(r.id(), k.compact(read.get(r).data(), today));
+                }
+            }
+        }
+        return Optional.of(GroupShares.document(k, doc, compacts));
+    }
+
+    /** A share as a node sent it ({@link #share}), read for {@link #gather}; empty when this source does not derive the kind. */
+    public Optional<GroupShares.Share> readShare(String kind, String node, DataNode doc) {
+        return kinds.stream().filter(d -> d.kind().equals(kind)).findFirst().map(k -> GroupShares.read(k, node, doc));
+    }
+
+    /** The group's page from every node's share, this node's first ({@link GroupShares}); empty when this source does not derive the kind. */
+    public Optional<DataNode> gather(EntityRef ref, List<GroupShares.Share> shares) {
+        return kinds.stream().filter(d -> d.kind().equals(ref.kind())).findFirst().map(k -> GroupShares.merge(k, ref.id(), shares));
+    }
+
     @Override
     public String health() {
         return health;

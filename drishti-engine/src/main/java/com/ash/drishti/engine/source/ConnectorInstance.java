@@ -39,6 +39,11 @@ final class ConnectorInstance implements SourcePlugin {
     private final Set<String> kinds;
     private final SourcePlugin delegate;
 
+    /** The plugin instance this connector runs. */
+    SourcePlugin delegate() {
+        return delegate;
+    }
+
     ConnectorInstance(String name, Set<String> kinds, SourcePlugin delegate) {
         this.name = name;
         this.kinds = Set.copyOf(kinds);

@@ -515,7 +515,7 @@ the design:
 - A node that holds data of the kind but is down (suspect, dead, left) is named in `failed` as `not asked: it cannot be reached now`, so a search with
   a node down is partial rather than silently smaller.
 - A duplicate keeps the first answer (this node's, then the peers' in the order asked), not necessarily the one whose coverage is `HELD`.
-- **Not built:** grouped pages (derived connectors) gathered across nodes; each node builds them from its own data.
+- Grouped pages are gathered across nodes since the follow-up below (*Grouped pages across nodes*).
 
 **N6, live relay and BI (built).** `PeerSource.subscribe` opens one stream from the peer that holds the entity
 (`GET /api/v1/net/subscribe/{kind}/{id}`: the peer's own topic, masked for the token's user) and feeds this node's topic; the router asks its fallback
@@ -540,3 +540,18 @@ newest write wins), and on a member's join queues every such document it holds a
 - The last-writer-wins clock is each node's wall clock (the nodes are within 60 s of each other, since the cluster key refuses more); the times of
   writes are kept in memory, so a catch-up after a restart fills only what is absent and never overwrites.
 - A user deleted on one node is not deleted on the others (a shared identity database does that).
+
+**Grouped pages across nodes (built, after N7).** A page of a derived kind is gathered with the scatter-gather of a search: the router's
+fallback (`SourceRouter.Fallback.gather`) hands the local page, or none, to `GroupGather`, which asks the search's targets for the kind the page
+groups (`SearchScatter.targets`: the nodes the caller's roles reach, no replica of a node already asked) for their share
+(`GET /api/v1/net/group/{kind}/{id}`, `DerivedSourcePlugin.share`: the node's page and, when it lists every member, each member's values by field
+name, masked there by name), and merges the shares with this node's own (`GroupShares`). Measured on three real servers in one JVM with a book's
+trades split three ways and one trade on two nodes: every aggregate (count, sum, min, max, avg, distinct, first), the members and the rows equal
+what one server holding every trade builds; a field C masks is masked on B, a field B masks is masked there; a role limited to two nodes gathers
+from those two; with C stopped the page is partial and names C. Changes from the design:
+
+- Not "concatenated in the page's order": a page carries aggregates, so the shares are merged as one node would aggregate; exact (members united
+  by id) when every node lists all its members of the group (up to `max-members`), combined from each node's totals otherwise (a member two
+  nodes hold is then counted on each; documented in NET.md).
+- A partial page says so in its document (`partial`, `missing` naming the node), as a search does in its answer.
+

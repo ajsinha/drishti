@@ -126,6 +126,7 @@ public final class PeerSource implements SourcePlugin {
         if (a.status() != 200) {
             throw new IOException("HTTP " + a.status() + " " + PeerHttp.brief(a.text()));
         }
+        c.served().data(nodeId);
         return Optional.of(document(ref, net.http().json().readTree(a.body())));
     }
 

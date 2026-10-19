@@ -67,8 +67,8 @@
   not), each on its own data (`GET /api/v1/net/search`, one hop, `scatter-budget` 3 s), and merged as one answer: the union with an entity once, ordered
   and cut as one node would, `scanned` and `matched` summed, a node that failed, was late or is down named in `failed` with `partial: true`, and `nodes`
   (who answered what) for administrators. A search of a kind whose pack is not on the node is scattered and merged there too. The type-ahead asks every
-  reachable node within `suggest-budget` (150 ms). On trades split three ways (one on two nodes) every node answers the same union. Grouped pages are
-  still built per node. NET.md section 7, API_GUIDE, TROUBLESHOOTING, USER_GUIDE.
+  reachable node within `suggest-budget` (150 ms). On trades split three ways (one on two nodes) every node answers the same union (grouped pages:
+  below). NET.md section 7, API_GUIDE, TROUBLESHOOTING, USER_GUIDE.
 - **Drishti*net live relay and BI (N6).** A live view of an entity held on a peer ticks on the node that shows it: one stream from the peer
   (`GET /api/v1/net/subscribe/{kind}/{id}`, masked there for the user) feeds the viewers of the same roles, opened again when it breaks; the topic hub
   keeps an upstream per entity and role set while the cluster runs. A BI report's requests go to the node that holds the kinds its datasets read (the
@@ -79,6 +79,11 @@
   back is given what it lacks. Alerts, monitors and scheduled reports stay where they were made (they act). `user-state: off` in routing.yaml for a
   cluster with one shared identity database. Admin → Net → Members shows what was sent, applied and waits. Pushed gossip now tells the node of joins
   and departures as its own exchanges do. NET.md section 7, API_GUIDE, USER_GUIDE.
+- **Drishti*net grouped pages across nodes.** A page a derived connector builds (a counterparty's trades, a book's P&L) is gathered from every
+  node that holds the kind it groups, with the scatter-gather of a search: only nodes the caller's roles reach, no replica asked twice, each
+  node's share masked there and the page masked again where it is shown (`GET /api/v1/net/group/{kind}/{id}`). Exact, with a member two nodes
+  hold counted once, for groups up to `max-members`; larger groups combine each node's totals. A node that did not answer makes the page
+  partial (`partial`, `missing`). NET.md section 7, API_GUIDE, USER_GUIDE.
 - **Drishti*net docs.** Tutorial 19, a cluster of three (UI, CLI and YAML; failover); the Windows QA guide's optional second server; README and
   Help → About. NET.md's command outputs are the CLI's real ones.
 
