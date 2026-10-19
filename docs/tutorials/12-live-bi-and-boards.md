@@ -46,7 +46,7 @@ About 30 minutes.
 - the `mode: live` table of a dataset and how to see how it is doing;
 - the live indicator of a report, **Pause** and **Resume**, and what redraws;
 - a **board**: tiles from several reports, amber and red tiles from their alert rules, pages that turn on their own, and **kiosk mode**;
-- the **history** of a live table (a line that is there when the page opens) and the **board designer**, with a tile alert that does not flicker (hysteresis);
+- the **history** of a live table (a line that is there when the page opens) and **your own board** laid out in the report designer (BI Studio), with a tile alert that does not flicker (hysteresis);
 - a **chart of the desk by currency** (the server groups, the browser draws) and a **wall of Python** tiles.
 
 ## Step 1 · Live data moves together

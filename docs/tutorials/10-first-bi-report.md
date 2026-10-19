@@ -108,6 +108,14 @@ You should see the dataset chooser (every dataset you may open), the title box a
 
 You land in the designer: a canvas on a 12-column grid, a **Filters** pane, **Visualizations** (every kind of visual) and **Fields** (the dataset's columns and measures). The report is a draft in **My workspace**, which only you see.
 
+Since 2.4.0 the designer sits in **BI Studio**, the shell the report, model and theme designers share: the **Explorer** of your items on the left (with
+**New**), the items you opened as **tabs** above the canvas, and under it a **dock** with **Problems** (the server's check of your draft a second after each
+change, each problem linked to its visual) and **Query** (the selected visual's model query and its SQL). The steps below work the same in it;
+[BI_GUIDE.md section 26](../guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product-wave-c-240) is the tour, and
+[REPORTS.md section 5](../guides/REPORTS.md#5-format) the Format pane, conditional formatting and themes.
+
+![BI Studio: the Explorer of your items on the left, the open item as a tab, the report designer, and the dock with Problems and Query under the canvas](../guides/img/bistudio/studio.jpg)
+
 ## Step 3 · Two cards
 
 Drag the measure `GDP (USD bn)` from **Fields** onto the canvas, then `Population (m)` beside it. (Dragging with the keyboard also works: focus a field and press Enter.)
