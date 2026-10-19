@@ -1161,7 +1161,7 @@ D and E; Python data prep and the browser Python console moved into C).
    at every level (`bi-matrix.js`), board pages in the viewer and the designer (`bi-report-board.js`, `bi-design-v2.js`); the acceptance (1) is
    `drishti-console/tests/test_bi_studio_browser.py` ([BI_GUIDE.md section 26](../guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product-wave-c-240)).
    Not in it: a report visual bound to a field parameter (gap 9: field parameters are in the model and its parameter slicers since 2.3.0, but a report's
-   well cannot name `param.<name>` yet).
+   well cannot name `param.<name>` yet; moved to wave D, 2.6.0: server lane item 7 below).
 2. **Transform editor:** step by step with a preview and profile at each step, snippets picker, profiling panel, no YAML.
    **Built (2.4.0):** `/bi/transform` (inputs, steps from the snippets or by hand, a preview and a profile after each step, the
    YAML written and read back, two drafts saved); Analyse's Profile tab shares the panel.
@@ -1214,6 +1214,8 @@ wrong answers; (5) QA findings fixed before the drill.
 5. **Integration:** PostgreSQL-wire read-only endpoint (decision 5); Excel feed; embed tokens bound to envelopes; SDK events.
 6. **GenUI:** screens an AI agent composes from governed Sutra fragments, bound to live data as the viewer, streamed to
    other applications through `<drishti-genui>` ([GENUI.md](GENUI.md)).
+7. **Field parameters in report wells** (moved from wave C, gap 9): a report visual's well names `param.<name>`, the reader's
+   parameter slicer switches the field or measure it draws; checked by the report schema, and the Studio's wells offer the model's field parameters.
 
 **Console lane:**
 
