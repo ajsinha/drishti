@@ -233,15 +233,22 @@ Once Drishti*net is on, the console is given **several servers** instead of one,
 ```yaml
 # drishti-console/config/application.yaml
 backend:
-  urls: ${DRISHTI_BACKEND_URLS:}       # e.g. https://drishti-a:8480,https://drishti-b:8480 (empty: backend.url, as today)
-  discover: true                       # also learn the cluster's other members from the server (GET /api/v1/net/members)
+  urls: ${DRISHTI_BACKEND_URLS:}       # e.g. https://drishti-a:8480 (one is enough; empty: backend.url, as today)
+  discover: true                       # pull the cluster's member list from the server it is connected to and keep it
+  discover-every: 60s                  # how often the list is pulled again
   check-every: 5s                      # how often each listed server's health is looked at
   fail-after: 2                        # failed requests in a row before a server is set aside
 ```
 
-- **One active server, the rest standing by.** The console sends its requests to the first healthy server of the list (its
-  user's *home node*, section 11). Each listed server is health-checked every `check-every`; with `discover` the console
-  also learns the cluster's other members from the active server and adds them behind the configured ones.
+- **The console keeps the whole cluster's list.** Every `discover-every` (60 s) it pulls the member list from the server it is
+  connected to (`GET /api/v1/net/members`: alive members with their advertised URLs, tags and packs) and keeps the whole
+  list itself, so one configured server is enough: it learns every other member, and new members and departures within a
+  minute. The list is saved to `<console data dir>/net/servers.json` (atomically, and at shutdown), so a console restarted
+  while its configured server is down still knows where else to go. A member the cluster reports `dead` or `left` is
+  dropped from the list; the configured `urls` are never dropped.
+- **One active server, the rest standing by.** The console sends its requests to the first healthy server (its user's
+  *home node*, section 11): the configured ones first, then the discovered ones, nearest first by measured latency. Each
+  server in the list is health-checked every `check-every`.
 - **Falling over.** A server that refuses connections, times out or answers 502/503 `fail-after` times in a row is set
   aside, and the console moves to the next healthy one. A **read** that failed on the way is retried once on the new
   server, so the person sees the page, not an error; a **write** (save a layout, a search, a pivot) is never retried
@@ -371,7 +378,7 @@ View forwarding reuses the ordinary `/api/v1/**` endpoints with the hop header a
 | N1 | Membership: gossip, probes, states, `peers.json`, the `config/net/` folder (watched, validated, `drishti.py net`); Admin → Net *Members* (add seed, remove, drain, leave, rejoin) and *Files* | 5 nodes started from 1 seed all list each other within 5 s; one killed is `dead` everywhere within 40 s; a restarted node rejoins from its file with no seeds |
 | N2 | Capability digests and the capability table; Admin → Net *Capability map* | a pack switched on at one node shows in every node's table within 2 s |
 | N3 | Security: cluster key or mTLS, key rollover, on-behalf-of token, masks twice, audit; Admin → Net *Access* and *Security* | a node without the key is refused; a rolling key change drops no request; a role limited to two nodes never reaches a third; a masked field stays masked when the data comes from a peer whose `redact` is looser |
-| N4 | View forwarding and data forwarding (`PeerSource`), newest pack wins, peer-only packs; the console's `backend.urls` with health checks, discovery and fail-over (11.1); Admin → Net *Routing* (explain a request, traffic) | the console on B opens a trade only A holds, and a kind only A's pack renders, with no visible difference; with a newer pack on A, B's users see A's version; a peer-only pack is invisible to B's own users but served to peers; a peer down gives a clear error, not a wrong page; with the console on A, stopping A moves it to B within 10 s and the open page, a live stream and the next search carry on without signing in again |
+| N4 | View forwarding and data forwarding (`PeerSource`), newest pack wins, peer-only packs; the console's `backend.urls` with health checks, discovery and fail-over (11.1); Admin → Net *Routing* (explain a request, traffic) | the console on B opens a trade only A holds, and a kind only A's pack renders, with no visible difference; with a newer pack on A, B's users see A's version; a peer-only pack is invisible to B's own users but served to peers; a peer down gives a clear error, not a wrong page; with the console configured with A alone, it learns B and C within a minute, and stopping A moves it to B within 10 s and the open page, a live stream and the next search carry on without signing in again |
 | N5 | Scatter-gather search, type-ahead and grouped pages; replicas versus shards | a search on B across trades held on A and C equals the union, with duplicates removed and `failed` naming a stopped node |
 | N6 | Live relay; BI queries routed to the model's node | a ticking entity held on A streams to a viewer on B; a BI report on B over A's model answers |
 | N7 | User state across nodes | saved searches, layouts and pivots follow a user to another node after a fail-over |
@@ -388,7 +395,8 @@ All of N1–N7 are planned for 2.5.0, in this order; N1–N5 come first and are 
 - **Persistence:** `peers.json` written atomically, read at start, a corrupt file ignored with a warning.
 - **Browser tests** for the five tabs of Admin → Net (in the style of the console's `*_browser.py` suites), including a drain
   that moves traffic to another node and an *Explain* that matches the route actually taken.
-- **Console fail-over:** a stand-in server that stops, hangs or answers 503; reads retried once, writes never; the
+- **Console fail-over:** the member list pulled, kept, saved and reloaded after a console restart with its configured server
+  down; a stand-in server that stops, hangs or answers 503; reads retried once, writes never; the
   stream reconnects; a recovered server is used again only for new sessions.
 - **A soak on real processes:** three servers on scratch ports, one killed and restarted under `tools/bench/users.py` load.
 
