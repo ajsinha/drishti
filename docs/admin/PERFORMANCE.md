@@ -553,7 +553,15 @@ sessions and users live in the identity database, so servers behind one load bal
 `DRISHTI_IDENTITY_DB_URL`), or a session opened on one is unknown to the next. Live
 streams stay on the server that opened them, and the browser's reconnect may land on another server, which
 simply starts with a fresh `view` event. The console keeps each tab's live channel in its own memory, so
-when you run several console processes, make sessions sticky (see [LIVE.md](../architecture/LIVE.md#one-connection-per-browser)).
+when you run several console processes, make sessions sticky (see [LIVE.md](../architecture/LIVE.md#one-connection-per-browser)); the
+worker processes of one console pass a channel's calls to the worker that holds it (2.4.0), so one console with `server.workers` needs no stickiness.
+
+**Servers with different data: Drishti\*net (2.5.0).** When each server holds its own packs, connectors and data, Drishti\*net makes
+them one cluster that forwards a request to the node that holds it, scatters a search over every node that holds other data of the kind,
+and moves the console to another server when one stops ([NET.md](NET.md)). Measured (CHANGELOG, 2.5.0): five nodes from one seed list each
+other within 5 s and a killed one is dead everywhere within 40 s (a fake clock); three real servers in one JVM converge 52 ms after the third
+starts; a pack switched on at one of three servers is in the others' capability tables 1.0 s later; 13,542 signed calls among three servers
+through a key rotation, none refused.
 
 ## About this page and its cost
 
