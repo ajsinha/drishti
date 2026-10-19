@@ -135,4 +135,13 @@ class FormApiTest {
         mvc.perform(get("/api/v1/search").param("q", "TRD where matches(TRADER_ID, '^TRDR-')").header("Authorization", as("masked")))
                 .andExpect(jsonPath("$.matched").value(0));
     }
+
+    @Test
+    void aFormKeptForOneCallerIsNotServedToACallerWithMasks() throws Exception {
+        // the form is kept per data version; a caller who sees TRADER_ID masked must not get the dropdown built for one who does not
+        mvc.perform(get("/api/v1/forms/trading").header("Authorization", as("searcher")))
+                .andExpect(jsonPath("$.form.fields[?(@.path=='TRADER_ID')].values[*]", hasItem(org.hamcrest.Matchers.startsWith("TRDR-"))));
+        mvc.perform(get("/api/v1/forms/trading").header("Authorization", as("masked")))
+                .andExpect(jsonPath("$.form.fields[?(@.path=='TRADER_ID')].values[*]", org.hamcrest.Matchers.not(hasItem(org.hamcrest.Matchers.startsWith("TRDR-")))));
+    }
 }

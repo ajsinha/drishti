@@ -180,8 +180,26 @@ public class FormController {
                 .orElseThrow(() -> new DrishtiException(ErrorCode.BAD_REQUEST, "no pack '" + text + "' is switched on for you"));
     }
 
-    /** The pack's declared form, else one inferred; enum fields without values get the values found in the data. */
+    /**
+     * The pack's declared form, else one inferred; enum fields without values get the values found in the data. Kept per data version
+     * (a load makes a new one) and per whether the caller sees masks: building it reads a thousand rows, 0.45 s on a million trades a
+     * day, and the console asks twice a search (the form, then its criteria compiled), so 50 users searching waited 5 s.
+     */
     private FormSpec specOf(Pack p, String kind, AsOf asOf, Principal principal) {
+        String version = router.dataVersion(kind, asOf).orElse(null);
+        if (version == null) {
+            return buildSpec(p, kind, asOf, principal);
+        }
+        String key = p.name() + "|" + kind + "|" + (asOf.live() ? "live" : asOf.businessDate() + "@" + asOf.knownAt()) + "|" + version + "|"
+                + entitlements.masks(principal);
+        return specs.get(key, k -> buildSpec(p, kind, asOf, principal));
+    }
+
+    /** Forms by pack, kind, date, data version and masking: see {@link #specOf}. */
+    private final com.github.benmanes.caffeine.cache.Cache<String, FormSpec> specs = com.github.benmanes.caffeine.cache.Caffeine.newBuilder()
+            .maximumSize(500).expireAfterAccess(java.time.Duration.ofHours(12)).build();
+
+    private FormSpec buildSpec(Pack p, String kind, AsOf asOf, Principal principal) {
         Optional<FormSpec> declared = definitions.declared(p, kind);
         Map<String, List<Object>> samples = sample(kind, asOf, principal);
         FormSpec spec = declared.orElseGet(() -> infer(kind, samples));
