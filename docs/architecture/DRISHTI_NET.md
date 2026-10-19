@@ -63,8 +63,8 @@ The product owner, 2026-10-18:
 
 - **The router is the seam.** A peer is one more source (and, for a pack this node lacks, one more view server). Nothing
   above the router (Rachana, search, BI, the console) learns about the cluster.
-- **Local first, always.** A node never asks a peer for what it can answer itself; a node with no peers behaves exactly as
-  today.
+- **Local first, unless a peer has a newer pack.** A node never asks a peer for what it can answer itself with the newest
+  version of the kind's pack in the cluster; a node with no peers behaves exactly as today.
 - **The answering node applies its own rules, and the asking node applies its own again.** Masks, kinds per role and pack
   visibility are enforced where the data is read *and* where it is shown: the stricter wins.
 - **One hop.** A forwarded request is never forwarded again (no loops, bounded latency).
@@ -136,6 +136,11 @@ gossip changes:
 | `load` | requests a second over the last minute (from `RequestActivity`) and p95 latency, for choosing between peers |
 | `calendar` | the business calendar (`DRISHTI_CALENDAR`): the as-of of a forwarded request must mean the same date |
 
+A pack listed in `peer-only-packs` is loaded and served to peers (view and data forwarding, search shares) but hidden from
+this node's own users: not in its catalog, forms home, type-ahead or command line, and a direct request for its kinds from
+a client (not a peer) is answered as if the pack were not here, i.e. forwarded or refused. This lets a node be a pure data or
+rendering server behind others. The digest marks such packs `peerOnly: true`.
+
 A node recomputes its digest when packs reload, a connector changes or a load makes a new data version, and raises
 `digestHash`; peers pull it within one gossip round. From all digests every node builds a **capability table**
 **(new)**: kind → the nodes that render it and the nodes that hold its data, with their dates.
@@ -145,9 +150,11 @@ A node recomputes its digest when packs reload, a connector changes or a load ma
 Every API request goes through the same three questions, in order. A forwarded request carries
 `X-Drishti-Net-Hop: 1` **(new)**, and a node receiving it answers only from itself.
 
-1. **Can I answer it here?** The kind's pack is on, and a local source holds the entity on the date (`coverage` `HELD`, or
-   the fetch finds it): answer as today. This is the only path when the cluster is off.
-2. **Is the kind's pack missing here?** (`TRD` asked of a node with only `core`.) **View forwarding:** the whole request
+1. **Can I answer it here?** The kind's pack is on, it is the newest version of that pack in the cluster, and a local source
+   holds the entity on the date (`coverage` `HELD`, or the fetch finds it): answer as today. This is the only path when the
+   cluster is off.
+2. **Is the kind's pack missing here, or older here than on a peer?** (`TRD` asked of a node with only `core`, or of a node
+   with `trading` 2.3.0 while a peer has 2.4.0.) **View forwarding:** the whole request
    (path, query, `X-Drishti-As-Of`, `X-Drishti-Known-At`, the identity of section 9) goes to a node that renders the kind,
    and its answer is passed back unchanged, so the Sutra, help and links are the owner's. The console cannot tell.
 3. **Is the pack here but not the data?** (Both nodes have `trading`; only C holds CALYPSO's trades, or holds the date
@@ -191,6 +198,9 @@ a UI that ignores it sees one result, as asked.
   refused there before any call is made.
 - **Audit.** The audit row of a forwarded request records both nodes and the request id; Admin → Net lists forwarded
   traffic.
+- **Key rotation without downtime.** `drishti.net.secret` signs; `drishti.net.previous-secret` is also accepted while set.
+  To rotate: give every node the new key as `secret` and the old as `previous-secret` (rolling restarts, the cluster keeps
+  working), then remove `previous-secret`. On-behalf-of tokens live 30 s, so none outlives the rollover.
 - **Same login everywhere.** One `DRISHTI_TOKEN_SECRET` (or one OIDC issuer) for the cluster, so a token minted by any
   node is valid on every node.
 
@@ -245,6 +255,8 @@ drishti:
     advertise-url: ${DRISHTI_NET_URL:}          # how peers reach this node, e.g. https://drishti-b:8480
     seeds: ${DRISHTI_NET_SEEDS:}                # host:port,host:port (optional)
     secret: ${DRISHTI_NET_SECRET:}              # the cluster key (required when enabled, 32+ bytes)
+    previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET:}   # also accepted during a key rollover (section 9)
+    peer-only-packs: ${DRISHTI_NET_PEER_ONLY_PACKS:}   # packs this node serves to peers only (section 6)
     gossip-interval: 1s
     fanout: 3
     suspect-after: 5s
@@ -282,8 +294,8 @@ View forwarding reuses the ordinary `/api/v1/**` endpoints with the hop header a
 |---|---|---|
 | N1 | Membership: gossip, probes, states, `peers.json`, Admin → Net members | 5 nodes started from 1 seed all list each other within 5 s; one killed is `dead` everywhere within 40 s; a restarted node rejoins from its file with no seeds |
 | N2 | Capability digests and the capability table | a pack switched on at one node shows in every node's table within 2 s |
-| N3 | Security: cluster key or mTLS, on-behalf-of token, masks twice, audit | a node without the key is refused; a masked field stays masked when the data comes from a peer whose `redact` is looser |
-| N4 | View forwarding and data forwarding (`PeerSource`) | the console on B opens a trade only A holds, and a kind only A's pack renders, with no visible difference; a peer down gives a clear error, not a wrong page |
+| N3 | Security: cluster key or mTLS, key rollover, on-behalf-of token, masks twice, audit | a node without the key is refused; a rolling key change drops no request; a masked field stays masked when the data comes from a peer whose `redact` is looser |
+| N4 | View forwarding and data forwarding (`PeerSource`), newest pack wins, peer-only packs | the console on B opens a trade only A holds, and a kind only A's pack renders, with no visible difference; with a newer pack on A, B's users see A's version; a peer-only pack is invisible to B's own users but served to peers; a peer down gives a clear error, not a wrong page |
 | N5 | Scatter-gather search, type-ahead and grouped pages; replicas versus shards | a search on B across trades held on A and C equals the union, with duplicates removed and `failed` naming a stopped node |
 | N6 | Live relay; BI queries routed to the model's node | a ticking entity held on A streams to a viewer on B; a BI report on B over A's model answers |
 | N7 | User state across nodes; console `backend.urls` failover | saved searches follow a user to another node; the console survives a node stop |
@@ -302,10 +314,11 @@ N1–N5 are the first release; N6–N7 may follow.
 
 ## 18. Risks and open questions
 
-- **Different pack versions on two nodes.** Proposed: a kind is routed only to nodes whose pack content hash matches the
-  asking node's, or (view forwarding) to the newest; to confirm.
+- **Decided (product owner, 2026-10-18):** (1) when nodes hold different versions of a pack, the **newest version is served**
+  (view forwarding to a node that has it, even when this node could answer with its older version; equal versions with
+  different content hashes are flagged on Admin → Net); (2) the cluster key **rotates without downtime** (two keys accepted
+  during a rollover, section 9); (3) a node **may host a pack only for its peers** (`peer-only-packs`, section 6).
 - **Latency of scatter-gather** grows with the slowest node; budgets and partial answers bound it.
 - **Cache coherence:** each node caches what it fetched from peers; data versions in the digest invalidate them, a
   `knownAt` read bypasses them.
-- **Open:** should a node be able to *host* a pack only for its peers (no local UI)? Should the cluster key rotate without
-  downtime (two keys accepted during a rollover)? Should search scatter be limited to nodes a role may reach?
+- **Open:** should search scatter be limited to nodes a role may reach?
