@@ -115,7 +115,7 @@ A published BI report, or one page or visual of it, with its slicers, cross-filt
 | `report` | `string` | the id of a **published** report, e.g. `file:report:trades-overview`; required. The host application's `kinds` must list `report:<id>` or `report:*` |
 | `page` | `string` | the page to show first (default: the first page that is not a drill-through target) |
 | `visual` | `string` | show only this visual (its page is found for you): a card, a chart or a table in a card of the host's own |
-| `filters` | `string` | initial filters as JSON: `{"slicers": {"<slicer id>": ["FX"]}, "dates": "2026-10-09", "selections": [{"visual": "by-desk", "field": "trade.desk", "values": ["FX"]}], "mode": "highlight"}` |
+| `filters` | `string` | initial filters as JSON: `{"slicers": {"<slicer id>": ["FX"]}, "dates": "2026-10-09", "selections": [{"visual": "by-desk", "field": "trade.DESK", "values": ["FX"]}], "mode": "highlight"}` |
 | `chrome` | `'full' | 'bare'` | `full` (default): title, page tabs, business date, bookmarks, filter chips, live bar. `bare`: the visuals only (the default when `visual` is set) |
 | `theme` | `string` | as `<drishti-view>` |
 | `live` | `'auto' | 'off'` | `off` draws once and never follows the report's live tables |

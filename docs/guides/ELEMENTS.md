@@ -234,7 +234,7 @@ A published BI report, or one page or visual of it, with its slicers, cross-filt
 | `report` | `string` | the id of a **published** report, e.g. `file:report:trades-overview`; required. The host application's `kinds` must list `report:<id>` or `report:*` |
 | `page` | `string` | the page to show first (default: the first page that is not a drill-through target) |
 | `visual` | `string` | show only this visual (its page is found for you): a card, a chart or a table in a card of the host's own |
-| `filters` | `string` | initial filters as JSON: `{"slicers": {"<slicer id>": ["FX"]}, "dates": "2026-10-09", "selections": [{"visual": "by-desk", "field": "trade.desk", "values": ["FX"]}], "mode": "highlight"}` |
+| `filters` | `string` | initial filters as JSON: `{"slicers": {"<slicer id>": ["FX"]}, "dates": "2026-10-09", "selections": [{"visual": "by-desk", "field": "trade.DESK", "values": ["FX"]}], "mode": "highlight"}` |
 | `chrome` | `'full' | 'bare'` | `full` (default): title, page tabs, business date, bookmarks, filter chips, live bar. `bare`: the visuals only (the default when `visual` is set) |
 | `theme` | `string` | as `<drishti-view>` |
 | `live` | `'auto' | 'off'` | `off` draws once and never follows the report's live tables |
@@ -361,7 +361,7 @@ The design is [ELEMENTS.md section 18](../architecture/ELEMENTS.md#18-drishti-re
 page-changed rep  {"page":"desk","title":"Desk","visuals":["trades","notional","mtm","losses","pnl","by-desk","rolling","movers","latest"],"phone":false}
 loaded       rep  {"title":"Live trading desk","page":"desk"}
 masked       rep  {"columns":["trade.trader"]}
-filter-changed rep {"page":"desk","slicers":{},"dates":null,"selections":[{"visual":"by-desk","field":"trade.desk","values":["DESK-RATES"]}],"carry":[],"mode":"filter","source":"user"}
+filter-changed rep {"page":"desk","slicers":{},"dates":null,"selections":[{"visual":"by-desk","field":"trade.DESK","values":["DESK-RATES"]}],"carry":[],"mode":"filter","source":"user"}
 ```
 
 **Masks.** An embedded report **always masks**: `drishti.security.redact` fields and the dataset's masked columns read `•••` whatever the user's roles, so a user with the raw power sees real names in the console and `•••` in your page. `drishti:masked` lists the columns.
