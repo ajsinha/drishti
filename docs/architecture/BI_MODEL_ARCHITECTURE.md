@@ -155,7 +155,8 @@ connectors) plus a usability review against these rules, and its findings are fi
 ## 4. Waves
 
 > **Replaced** by [BI_DESIGN.md section 12](BI_DESIGN.md#12-w1-as-built-against-this-design-and-the-revised-wave-plan).
-> Kept below for the record only.
+> Kept below for the record only: the release numbers below are the old plan's. The order now is 2.5.0 Drishti\*net, 2.6.0 sharing and
+> integration (with field parameters), 2.7.0 AI (GenUI, AI management), 2.8.0 QA findings and production readiness, then 3.0 ([section 12.2](BI_DESIGN.md#122-the-three-waves)).
 
 Each release: builders (at most two at once) → adversarial QA by power users → fixes → one drill → tag. Every wave
 updates its docs and tutorials with UI, CLI and YAML (never thinner) and migrates the shipped samples.
