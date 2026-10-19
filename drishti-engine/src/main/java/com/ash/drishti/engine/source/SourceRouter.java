@@ -420,10 +420,20 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         });
         var status = registry.connectorStatuses().get(routed);
         String off = status != null && OfflineMode.STATE.equals(status.state()) ? "off (offline mode)" : "off";
-        return new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no source holds " + ref + ": connector " + routed + " reaches the internet and is "
+        return new StandInNotHeld("no source holds " + ref + ": connector " + routed + " reaches the internet and is "
                 + off + ", so kind '" + ref.kind() + "' is served by " + names + (noTable
                         ? ", which has no table for it yet (build it, for a pack's demo data with drishti.py lake demo)"
                         : ", which does not hold it"));
+    }
+
+    /**
+     * Not found by the stand-ins of an internet connector that is off: the entity may well exist (a snapshot holds a few), so a link to it
+     * is not "missing" (fetchAll leaves it out of the missing set), while a view of it still answers DRS-1001 naming the stand-ins.
+     */
+    static final class StandInNotHeld extends DrishtiException {
+        StandInNotHeld(String message) {
+            super(ErrorCode.ENTITY_NOT_FOUND, message);
+        }
     }
 
     /** A document whose connector gave it no source name carries the connector's name, so a view never says "Source: , gen 0". */
@@ -480,7 +490,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
                 Throwable t = e instanceof CompletionException && e.getCause() != null ? e.getCause() : e;
                 if (t instanceof SourceFailure sf) {
                     failures.add(sf.source(), sf.reason());
-                } else if (t instanceof DrishtiException de && de.errorCode() == ErrorCode.ENTITY_NOT_FOUND) {
+                } else if (t instanceof DrishtiException de && de.errorCode() == ErrorCode.ENTITY_NOT_FOUND && !(t instanceof StandInNotHeld)) {
                     missing.add(r);
                 }
             }
