@@ -124,6 +124,8 @@
   Access, Security, the cluster after a stopped, the page at 390 px), the real output of `drishti.py net members`, the servers' and the
   console's log lines, the explain answer, and a *You should see* in every step; NET.md section 9 shows the members after a failover; the
   Windows QA guide's Drishti*net section says what the tester should see. The tutorials test counts nineteen.
+- **The Design-and-Evidence deck's Drishti*net slide** shows Admin → Net after a failover (a node left, the console on another server), its four
+  measures in a 2×2 beside it.
 
 ## 2.4.0 — BI Studio, report schema v2 and boards as a report layout, Python data prep, the browser Python console, query by form at scale (2026-10-19)
 
