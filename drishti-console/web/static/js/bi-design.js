@@ -62,16 +62,32 @@
       return shipped ? B.api('GET', '/workspaces/' + encodeURIComponent(shipped.id) + '/items') : [];
     }).then((items) => {
       const box = q('[data-samples]');
-      items.filter((i) => i.kind === 'report' || i.kind === 'board').forEach((i) => {
-        const board = i.kind === 'board', open = board ? '/bi/design/board/' : '/bi/design/';
+      items.filter((i) => i.kind === 'report').forEach((i) => {
+        const board = !!i.board, open = '/bi/design/';                          // a board is a report with board pages (2.4.0)
         const copy = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-sample-copy': i.id, 'aria-label': 'Copy and design ' + i.title, text: 'Copy and design' });
         copy.addEventListener('click', () => B.askWorkspace(copy, 'Copy and open', 'Copy ' + i.title + ' into').then((to) => B.api('GET', '/items/' + B.id2path(i.id)).then((full) =>
           B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: i.kind, title: i.title, description: i.description || '', body: B.copyBody(full.body) })))
           .then((it) => { window.location.href = open + B.id2path(it.id); }).catch((e) => { if (!e.cancelled) { say(e.message, true); } }));
-        box.appendChild(h('li', { 'data-sample': i.id }, h('a', { href: (board ? '/bi/b/' : '/bi/r/') + B.id2path(i.id), text: i.title }), ' ', h('span', { class: 'text-muted-d', text: (board ? 'Board. ' : '') + (i.description || '') }), ' ', copy));
+        box.appendChild(h('li', { 'data-sample': i.id }, h('a', { href: '/bi/r/' + B.id2path(i.id), text: i.title }), ' ', h('span', { class: 'text-muted-d', text: (board ? 'Board. ' : '') + (i.description || '') }), ' ', copy));
       });
       q('[data-no-samples]').hidden = box.children.length > 0;
     }).catch(() => { q('[data-no-samples]').hidden = false; });
+    // boards (R7, 2.4.0): a board is a report with board pages, made here and designed in the report designer
+    const bws = q('[data-new-board-workspace]'), bdrafts = q('[data-board-drafts]');
+    if (bws) {
+      B.fillWorkspaces(bws).then((wss) => Promise.all(wss.map((w) => B.api('GET', '/workspaces/' + encodeURIComponent(w.personal ? 'me' : w.id) + '/items').then((items) => items.filter((i) => i.kind === 'report' && i.board).map((i) => ({ i, w }))))))
+        .then((groups) => {
+          [].concat.apply([], groups).forEach(({ i, w }) => bdrafts.appendChild(h('li', { 'data-id': i.id }, h('a', { href: '/bi/design/' + B.id2path(i.id), text: i.title }), ' ', h('span', { class: 'text-muted-d', text: i.status + ' · ' + w.name }))));
+          q('[data-no-board-drafts]').hidden = bdrafts.children.length > 0;
+        }).catch((err) => say(err.message, true));
+      q('[data-new-board]').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const title = q('[data-new-board-title]').value.trim() || 'My board';
+        const body = 'rachana: 1\nreport: ' + (B.slug(title) || 'my-board') + '\ntitle: ' + JSON.stringify(title) + '\npages:\n  - id: page1\n    title: Page 1\n    layout: board\n    visuals: []\n';
+        const go = q('[data-new-board] [type=submit]');
+        B.busy(go, () => B.api('POST', '/workspaces/' + encodeURIComponent(bws.value || 'me') + '/items', { kind: 'report', title, description: '', body }).then((it) => { window.location.href = '/bi/design/' + B.id2path(it.id); }).catch((err) => B.near(go, err.message, true)));
+      });
+    }
     q('[data-new]').addEventListener('submit', (e) => {
       e.preventDefault();
       const ref = q('[data-new-dataset]').value, title = q('[data-new-title]').value.trim() || defaultTitle();
@@ -203,7 +219,7 @@
   D.firstFreeY = (page) => page.visuals.reduce((m, v) => Math.max(m, v.at.y + v.at.h), 0);
 
   /** The size a new visual of a type starts at. */
-  D.defaultSize = (type) => ({ card: [3, 2], kpi: [3, 2], gauge: [3, 3], slicer: [3, 5], text: [4, 2], image: [3, 3], button: [3, 1], 'multirow-card': [4, 3], table: [6, 5], matrix: [6, 5] }[type] || [6, 5]);
+  D.defaultSize = (type) => ({ tile: [4, 3], card: [3, 2], kpi: [3, 2], gauge: [3, 3], slicer: [3, 5], text: [4, 2], image: [3, 3], button: [3, 1], 'multirow-card': [4, 3], table: [6, 5], matrix: [6, 5] }[type] || [6, 5]);
 
   D.addVisual = function (type, x, y, wells, label) {
     let made = null;
@@ -214,12 +230,33 @@
       made = { id: D.newVisualId(type), type, at, wells: wells || {} };
       if (type === 'text') { made.text = 'Text'; }
       if (type === 'button') { made.text = 'Go'; made.action = {}; }
+      if (type === 'tile' && page.layout !== 'board') { page.layout = 'board'; delete page.tooltip; }          // a tile lives on a board page (R7): the page becomes one
       page.visuals.push(made);
       D.settle(page, made);
     });
     if (made) { D.select(made.id); }
     return made;
   };
+
+  /**
+   * The report's theme as the canvas draws it (2.4.0): a theme item's colours, type and visual defaults (GET /themes/<name>), under the report's own palette and
+   * background; a name that is not found draws with the default palette. Asked again when the theme changes.
+   */
+  let themeKey = null;
+  D.resolveTheme = function () {
+    const t = (D.model && D.model.theme) || {};
+    themeKey = JSON.stringify(t);
+    const got = t.use ? B.api('GET', '/themes/' + encodeURIComponent(t.use)).then((x) => Object.assign({}, x, t.palette ? { palette: t.palette } : {}, t.background ? { background: t.background } : {}),
+      () => ({ palette: t.palette || 'default', missing: t.use })) : Promise.resolve({ palette: t.palette || 'default', background: t.background });
+    return got.then((th) => {
+      D.theme = th;
+      D.palette = B.theme.palette(th, D.tokens);
+      B.theme.apply(q('[data-canvas-grid]'), th);
+    });
+  };
+  D.on('model', () => {
+    if (D.model && JSON.stringify(D.model.theme || {}) !== themeKey) { D.resolveTheme().then(() => D.emit('preview', D.preview)); }
+  });
 
   // ---- wiring: the modules --------------------------------------------------------------------------------------------
   function updateButtons() {
@@ -290,10 +327,20 @@
   function refreshYaml() {
     return B.api('POST', '/reports/format', { report: D.model }).then((r) => {
       if (yamlStale) { setYamlText(r.yaml); yamlStale = false; D.lastYaml = r.yaml; showProblems([]); }
+      dockProblems(r.yaml);
       return r.yaml;
     }).catch((e) => { say(e.message, true); return D.yamlText(); });
   }
   D.flushYaml = () => (yamlStale ? (clearTimeout(yamlTimer), refreshYaml()) : Promise.resolve(D.yamlText()));
+
+  /** BI Studio's Problems (2.4.0): what the server's Check says of the draft after each change, a second after the last one, each linked to its visual. */
+  let dockTimer = 0;
+  function dockProblems(yaml) {
+    if (!B.studio || !B.studio.problems) { return; }
+    clearTimeout(dockTimer);
+    dockTimer = setTimeout(() => B.api('POST', '/reports/validate', { yaml, quality: true }).then((r) => B.studio.problems(r.problems || [], (list, ul) => showProblems(list, ul))).catch(() => {}), 1000);
+  }
+  D.dockProblems = dockProblems;
 
   /** Puts YAML in the tab as if typed (the Describe a report draft): the draft model follows it once it checks. */
   D.loadYaml = (text) => { setYamlText(text); onYamlEdit(); showTab('yaml'); };
@@ -541,6 +588,7 @@
   /** A report draft that names no dataset has nothing to draw: ask for one (the datasets the person may read) and write `dataset:` into the draft. */
   function ensureDataset(item) {
     if (/^(dataset|model):\s*\S/m.test(item.body || '')) { return Promise.resolve(); }      // a report on a model (bi-design-model.js) reads the model
+    if (/^\s*layout:\s*board\b/m.test(item.body || '')) { return Promise.resolve(); }      // a board of tiles (R7) needs none; its own visuals do (add a model then)
     return B.api('GET', '/datasets').then((r) => new Promise((resolve) => {
       const sel = h('select', { class: 'studio-select', 'data-pick-dataset': '', 'aria-label': 'Dataset for this report' }, h('option', { value: '', text: 'Choose a dataset' }));
       (r.datasets || []).filter((d) => d.valid).forEach((d) => sel.appendChild(h('option', { value: d.id.replace(/^file:dataset:/, ''), text: d.title })));
@@ -600,11 +648,15 @@
     D.model = D.normalize(r.report);
     D.pageId = D.model.pages[0].id;
     D.lastYaml = D.item.body;
-    return B.api('GET', '/reports/dataset?ref=' + encodeURIComponent(D.model.dataset)).then((ds) => {
+    const noData = !D.model.dataset && !D.model.model;                          // a wall of tiles (R7) reads no data of its own: the Fields pane is empty
+    return (noData ? Promise.resolve({ id: '', title: 'No model (a board of tiles)', measures: [], tables: [], hierarchies: {} }) : B.api('GET', '/reports/dataset?ref=' + encodeURIComponent(D.model.dataset))).then((ds) => {
       D.dataset = ds;
       D.idx = B.index(ds);
       D.tokens = B.tokens();
       D.palette = B.palette((D.model.theme || {}).palette, D.tokens);
+      D.families = (D.catalogue && D.catalogue.families) || {};
+      return D.resolveTheme();
+    }).then(() => {
       D.modules.forEach((fn) => fn(D));
       setYamlText(D.item.body);
       renderTabs();
@@ -614,6 +666,12 @@
       const bad = (r.problems || []).filter((p) => p.level === 'error');
       if (bad.length) { say(bad.length + ' problem' + (bad.length === 1 ? '' : 's') + ' in the draft; see Check.', true); }
       if (D.pickedDataset) { D.dirty = true; updateButtons(); }
+      if (B.studio && B.studio.attach) {                              // BI Studio (2.4.0): this item joins the open tabs; the dock shows its problems and the selected visual's query
+        B.studio.attach(D.item);
+        dockProblems(D.item.body);
+        const qh = B.studio.queryHost();
+        if (qh && B.queryPanel) { B.queryPanel(qh, { ref: D.model.model || D.model.dataset, current: () => (D.lastMq && D.selected ? D.lastMq.get(D.selected) : null) || null, fields: () => D.dataset, on: D.on }); }
+      }
       root.setAttribute('data-ready', 'yes');
     });
   }).catch((e) => {

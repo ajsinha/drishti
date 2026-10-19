@@ -31,15 +31,18 @@ properties:
     x-group: Subtotals
   rowSubtotals:
     type: boolean
+    default: true
     x-label: Row subtotals
     x-hint: Off keeps the grand total but drops the subtotal rows.
     x-group: Subtotals
   columnSubtotals:
     type: boolean
+    default: true
     x-label: Column totals
     x-group: Subtotals
   stepped:
     type: boolean
+    default: true
     x-label: Stepped layout
     x-hint: "On (the default): one indented column for the row fields. Off: a column per row field."
     x-group: Layout

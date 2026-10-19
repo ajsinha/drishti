@@ -74,8 +74,8 @@ properties:
       min: { type: number, x-label: Minimum }
       max: { type: number, x-label: Maximum }
       log: { type: boolean, x-label: Logarithmic }
-      gridlines: { type: boolean, x-label: Gridlines }
-      show: { type: boolean, x-label: Show the axis }
+      gridlines: { type: boolean, default: true, x-label: Gridlines }
+      show: { type: boolean, default: true, x-label: Show the axis }
     additionalProperties: false
   categoryAxis:
     type: object
@@ -83,7 +83,7 @@ properties:
     x-group: Axes
     properties:
       rotate: { type: integer, minimum: -90, maximum: 90, x-label: Label rotation (degrees) }
-      show: { type: boolean, x-label: Show the axis }
+      show: { type: boolean, default: true, x-label: Show the axis }
     additionalProperties: false
   legend:
     $ref: "common#/$defs/legend"

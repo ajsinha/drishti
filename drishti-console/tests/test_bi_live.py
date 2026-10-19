@@ -102,16 +102,11 @@ def test_every_bi_page_has_the_strict_policy_even_with_a_2_1_perspective_visual(
     assert "/static/js/bi-live.js" in live.get(f"/bi/r/{LIVE}").text
 
 
-def test_a_board_with_a_perspective_tile_keeps_the_strict_policy(live):
-    wall = dict(BOARD_MODEL, tiles={"p/t1": {"report": LIVE, "type": "perspective-grid", "live": True}})
-    orig = live.app.state.backend.bi
-
-    async def with_perspective(method, path, ident, body=None, **params):
-        return wall if path == "/boards/" + BOARD else await orig(method, path, ident, body, **params)
-
-    live.app.state.backend.bi = with_perspective
-    page = live.get(f"/bi/b/{BOARD}")
-    assert page.headers["content-security-policy"] == CSP and 'data-bi-page="board"' in page.text and "/static/js/bi-board.js" in page.text
+def test_a_board_is_a_report_with_board_pages_and_keeps_the_strict_policy(live):
+    moved = live.get(f"/bi/b/{BOARD}", follow_redirects=False)                       # 2.4.0 (R7): the report viewer draws board pages
+    assert moved.status_code == 307 and moved.headers["location"].startswith("/bi/r/")
+    page = live.get(moved.headers["location"])
+    assert page.headers["content-security-policy"] == CSP and 'data-bi-page="report"' in page.text and "/static/js/bi-report-board.js" in page.text
 
 
 def test_the_board_and_the_report_open_from_the_item_page(live):
@@ -202,7 +197,7 @@ def test_the_live_settings_reach_the_page_and_are_bounded(live):
 
 def test_the_new_scripts_open_no_stream_no_blob_and_no_markup_of_their_own():
     js = CONSOLE / "web/static/js"
-    for name in ("bi-live.js", "bi-board.js"):
+    for name in ("bi-live.js", "bi-report-board.js"):
         text = (js / name).read_text(encoding="utf-8")
         assert "EventSource(" not in text and "createObjectURL" not in text and "new Blob" not in text and "innerHTML" not in text and "eval(" not in text, name
         assert "http://" not in text and "https://" not in text, name                                         # nothing from outside

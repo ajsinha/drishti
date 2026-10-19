@@ -22,7 +22,7 @@ from __future__ import annotations
 from urllib.parse import quote
 
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 
 from core.backend import BackendError
 from core.csrf import json_body
@@ -112,11 +112,16 @@ async def report(request: Request, item: str, page: str = ""):
     return _page(request, "bi/report.html", "report", item=item, report_page=page)
 
 
+def _board_as_report(item: str) -> str:
+    """Since 2.4.0 a board is a report with board pages (R7): a shipped board file is the report of its name, a stored board keeps its id."""
+    return "file:report:" + item[len("file:board:"):] if item.startswith("file:board:") else item
+
+
 @router.get("/bi/b/{item}")
 async def board(request: Request, item: str):
-    """A board, drawn by ``bi-board.js``: a wall of live tiles from several reports, page by page; ``?kiosk=1`` (or the button) fills the screen and turns the
-    pages by itself (phase 5). The strict policy, no WebAssembly (wave B)."""
-    return _page(request, "bi/board.html", "board", item=item)
+    """A 2.3 board's address: the report viewer draws its board pages (tiles, kiosk, rotation), so this sends people there, ``?kiosk=1`` and the page kept."""
+    query = ("?" + request.url.query) if request.url.query else ""
+    return RedirectResponse("/bi/r/" + quote(_board_as_report(item), safe=":") + query, status_code=307)
 
 
 @router.get("/bi/designer")
@@ -127,8 +132,14 @@ async def designer(request: Request):
 
 @router.get("/bi/design/board/{draft:path}")
 async def design_board(request: Request, draft: str):
-    """The board designer on one draft (a board item you may edit): the grid of tiles, pages, kiosk rotation, a threshold alert for each tile, and the YAML."""
-    return _page(request, "bi/design_board.html", "designer", item=draft)
+    """A 2.3 board designer's address: a board is designed as a report with board pages (2.4.0), in the report designer."""
+    return RedirectResponse("/bi/design/" + quote(_board_as_report(draft), safe=":"), status_code=307)
+
+
+@router.get("/bi/design/theme/{draft:path}")
+async def design_theme(request: Request, draft: str):
+    """The theme designer in BI Studio (2.4.0): a theme item's colours, type and format defaults per kind of visual, with a preview; ``new`` makes one."""
+    return _page(request, "bi/design_theme.html", "theme-designer", item=draft)
 
 
 @router.get("/bi/design/{draft}")

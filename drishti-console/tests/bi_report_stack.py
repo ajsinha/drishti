@@ -15,7 +15,8 @@
 """A real scratch stack for the report browser tests and the documentation pictures (Rupaka phase 3): the built server jar (security on, the trading and
 counterparty-risk packs) on :18990, the console on :17990 with sign-in, and the three sample datasets and the three sample reports of ``config/bi``. The data is
 a Delta lake made by ``tools/packgen/banking/make_data.py --lake`` (``DRISHTI_BI_DELTA_ROOT``; a few thousand rows, never millions), or, without one, a small
-lake of JSON-lines files read through a file connector named ``trading-store`` that serves the first sample (``trades-overview``) alone. Everything lives in a
+lake of JSON-lines files read through a file connector named ``risk-store`` (replacing the market-risk pack's Delta one of that name) that serves the first
+sample (``trades-overview``) alone: trade valuations with the UPPER_SNAKE names the samples read since 2.3.0 (``valuation()``; ``trade()`` is the tests' own view). Everything lives in a
 scratch directory; ports in use are never touched (the stack refuses to start).
 
 Users (password ``long-enough-pass-1``): wes writes (bi, bi-author), rita is risk (bi, raw), hana is a desk head (bi, raw, desk DESK-FX), ann is an analyst
@@ -92,23 +93,31 @@ def trade(day: str, i: int) -> dict:
             "mtm": ((i % 9) - 4) * 25_000, "pnl1d": ((i % 5) - 2) * 4_000, "tradeDate": day, "n": n}
 
 
+def valuation(t: dict) -> dict:
+    """One trade as the risk engine's valuation the samples read (market-risk kind trade-valuation, TVAL-<trade id>), with the UPPER_SNAKE names of 2.3.0."""
+    return {"id": "TVAL-" + t["tradeId"], "VALUATION_ID": "TVAL-" + t["tradeId"], "TRADE_ID": t["tradeId"], "SOURCE_SYSTEM": "ENDUR", "DESK": t["desk"], "PORTFOLIO": t["book"],
+            "PRODUCT_TYPE": t["productType"], "CURRENCY": t["currency"], "TRADE_STATUS": t["status"], "NOTIONAL": t["notional"], "MTM": t["mtm"], "PNL_1D": t["pnl1d"],
+            "TRADE_DATE": t["tradeDate"]}
+
+
 def write_lake(root: Path, days=("2026-10-07", "2026-10-08"), rows=60) -> None:
     for day in days:
         folder = root / day
         folder.mkdir(parents=True, exist_ok=True)
-        with open(folder / "trade.jsonl", "w") as f:
+        with open(folder / "trade-valuation.jsonl", "w") as f:
             for i in range(rows):
-                f.write(json.dumps(trade(day, i)) + "\n")
+                f.write(json.dumps(valuation(trade(day, i))) + "\n")
 
 
+# the market-risk pack's risk-store (a Delta lake) replaced by this file connector of the same name: a site file replaces the pack's template
 CONNECTOR = """plugin: file
-kinds: [trade]
+kinds: [trade-valuation]
 settings:
   root: {root}
   rescan-seconds: 3600
   layout:
-    trade:
-      columns: [tradeId, desk, book, productType, currency, status, notional, mtm, pnl1d, tradeDate]
+    trade-valuation:
+      columns: [VALUATION_ID, TRADE_ID, SOURCE_SYSTEM, DESK, PORTFOLIO, PRODUCT_TYPE, CURRENCY, TRADE_STATUS, NOTIONAL, MTM, PNL_1D, TRADE_DATE]
 """
 
 
@@ -159,15 +168,15 @@ class ReportStack:
             env["DRISHTI_PACKS"] = "trading,counterparty-risk,market-risk"
             env["DRISHTI_DELTA_ROOT"] = self.delta_root
         else:
-            env["DRISHTI_PACKS"] = "trading"
+            env["DRISHTI_PACKS"] = "trading,market-risk"                    # the valuations are market-risk's kind (2.3.0)
             lake = self.tmp / "lake"
             write_lake(lake)
             (work / "config" / "connectors").mkdir(parents=True)
-            (work / "config" / "connectors" / "trading-store.yaml").write_text(CONNECTOR.format(root=lake))
+            (work / "config" / "connectors" / "risk-store.yaml").write_text(CONNECTOR.format(root=lake))
         self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
                                                  f"--drishti.bi.query.store-dir={self.tmp / 'store'}", *self.server_args], cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
         wait(SERVER + "/actuator/health", 150)
-        seed(['trading', 'counterparty-risk', 'market-risk'] if self.delta_root else ['trading'])
+        seed(['trading', 'counterparty-risk', 'market-risk'] if self.delta_root else ['trading', 'market-risk'])
         cenv = dict(os.environ, DRISHTI_AUTH_ENABLED="true", DRISHTI_SESSION_SECRET="s" * 40, DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_SECURE_COOKIE="false",
                     DRISHTI_SESSION_RECHECK_SECONDS="1")
         self.procs["console"] = subprocess.Popen([sys.executable, str(CONSOLE / "run_drishti_web.py"), f"--server.port={CONSOLE_PORT}", f"--backend.url={SERVER}"], env=cenv,

@@ -375,7 +375,8 @@ public final class BiReportService {
     /** The visual catalogue: types, their groups and wells. */
     public Map<String, Object> catalogue(Principal p) {
         bi.requirePower(p, BiAccess.BI);
-        return Map.of("visuals", VisualCatalogue.toMap(), "reserved", VisualCatalogue.RESERVED.stream().sorted().toList(), "slicerModes", VisualCatalogue.SLICER_MODES.stream().sorted().toList());
+        return Map.of("visuals", VisualCatalogue.toMap(), "reserved", VisualCatalogue.RESERVED.stream().sorted().toList(), "slicerModes", VisualCatalogue.SLICER_MODES.stream().sorted().toList(),
+                "families", FormatSchemas.get().families());                    // a type's format family: what a theme's visual defaults are keyed by
     }
 
     /**

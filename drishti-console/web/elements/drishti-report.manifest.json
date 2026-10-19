@@ -1,14 +1,21 @@
 {
   "after": "drishti-view.css",
-  "bytes": 32061,
-  "gzip": 6551,
+  "bytes": 34805,
+  "gzip": 7035,
   "icons": [
+    "arrow-down-circle-fill",
     "arrow-left",
+    "arrow-right-circle-fill",
+    "arrow-up-circle-fill",
     "caret-down-fill",
     "caret-up-fill",
+    "check-circle-fill",
+    "circle-fill",
     "cursor",
     "dash-square",
+    "exclamation-circle-fill",
     "eye-slash",
+    "flag-fill",
     "funnel",
     "pause-fill",
     "play-fill",
@@ -16,14 +23,15 @@
     "shield-lock",
     "sliders",
     "table",
-    "x-circle"
+    "x-circle",
+    "x-circle-fill"
   ],
-  "sha256": "28d467377c1b8e20537c8575a08022a6c44c95b83fcdae4c458fa3bbdcdc061e",
+  "sha256": "1c4938c8411a83cfe6a468d5f9e4a306b70f9364f1499273af626735b6108289",
   "sources": [
     "css/bi.css",
     "css/bi-report.css",
     "css/bi-board.css",
     "vendor/bootstrap-icons/bootstrap-icons.css"
   ],
-  "version": "10a385216ddd"
+  "version": "28ef23ce2ae9"
 }

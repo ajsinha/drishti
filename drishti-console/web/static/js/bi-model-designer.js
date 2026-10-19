@@ -618,9 +618,9 @@
     const ref = M.doc.model + '@' + String(M.doc.version || '1').split('.')[0];
     const go = () => B.askWorkspace(btn, 'Start the board', 'Start the board in').then((ws) => {
       const name = B.slug((M.doc.title || M.doc.model) + ' board') || 'board';
-      const body = 'rachana: 1\nboard: ' + name + '\ntitle: ' + JSON.stringify((M.doc.title || M.doc.model) + ' board') + '\nmodel: ' + ref + '\npages:\n  - id: page1\n    title: Page 1\n    tiles: []\n';
-      return B.api('POST', '/workspaces/' + encodeURIComponent(ws) + '/items', { kind: 'board', title: (M.doc.title || M.doc.model) + ' board', description: '', body });
-    }).then((it) => { window.location.href = '/bi/design/board/' + B.id2path(it.id); }).catch((e) => { if (!e.cancelled) { B.near(btn, e.message, true); } });
+      const body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify((M.doc.title || M.doc.model) + ' board') + '\nmodel: ' + ref + '\npages:\n  - id: page1\n    title: Page 1\n    layout: board\n    visuals: []\n';
+      return B.api('POST', '/workspaces/' + encodeURIComponent(ws) + '/items', { kind: 'report', title: (M.doc.title || M.doc.model) + ' board', description: '', body });      // a board is a report with board pages (2.4.0)
+    }).then((it) => { window.location.href = '/bi/design/' + B.id2path(it.id); }).catch((e) => { if (!e.cancelled) { B.near(btn, e.message, true); } });
     if (M.dirty) { return B.confirm(btn, 'A board reads the saved model. Save first?', 'Save and start').then((yes) => (yes ? save().then(() => (M.dirty ? null : go())) : null)); }
     return go();
   }
@@ -723,6 +723,7 @@
       showTab('measures');
       M.say('Proposed from a report: ' + want.get('measure') + ' is added to this draft. Check it, Save, and publish the model so every report can use it.');
     }
+    if (B.studio && B.studio.attach && M.item) { B.studio.attach(M.item); }          // BI Studio (2.4.0): the model joins the open items
     root.setAttribute('data-ready', 'yes');
   }).catch((e) => { M.say(e.message, true); root.setAttribute('data-ready', 'error'); });
 })();

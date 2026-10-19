@@ -69,7 +69,7 @@ def test_the_save_helpers_name_the_stale_code_and_the_three_choices():
     for choice in ("data-stale-reload", "data-stale-copy", "data-stale-overwrite"):
         assert choice in lib, choice
     # every editor saves through the guarded helper, none sends a bare PUT of its body
-    for name in ("bi-design.js", "bi-design-board.js", "bi-model.js", "bi-wizard-steps.js"):
+    for name in ("bi-design.js", "bi-theme-designer.js", "bi-model.js", "bi-wizard-steps.js"):
         assert "B.saveItem(" in (STATIC / "js" / name).read_text(encoding="utf-8"), name
 
 

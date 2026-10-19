@@ -83,6 +83,7 @@ properties:
     x-types: [map]
   drill:
     type: boolean
+    default: true
     x-label: Drill into countries
     x-hook: format-drill
     x-group: Map

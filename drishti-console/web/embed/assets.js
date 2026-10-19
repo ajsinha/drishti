@@ -67,7 +67,7 @@ export const chartLibs = (server) => memo('charts:' + server, async () => {
 });
 
 /** What <drishti-report> draws with: ECharts, then the console's report code (window.drishtiBi), in order. */
-export const REPORT_LIBS = ['geomap'].concat(['lib', 'phone', 'visuals', 'grids', 'frame', 'live'].map((n) => 'bi-' + n));
+export const REPORT_LIBS = ['geomap'].concat(['lib', 'phone', 'visuals', 'visuals-format', 'grids', 'matrix', 'multiples', 'frame', 'live'].map((n) => 'bi-' + n));
 export const reportLibs = (server) => memo('rlibs:' + server, async () => {
   await script(server + API + '/echarts.js');
   quietDispose();

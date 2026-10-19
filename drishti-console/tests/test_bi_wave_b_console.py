@@ -124,7 +124,7 @@ def test_every_consumer_has_the_time_picker_the_chip_and_follows_pushed_answers(
     assert "'/mq/subscribe'" in consume and "'mq:' + sq" in consume and "EventSource" not in consume and "innerHTML" not in consume
     for word in ("Live", "Throttled", "Stale", "Every few seconds"):
         assert word in consume, word
-    for name in ("bi-report.js", "bi-board.js", "alerts-live.js"):
+    for name in ("bi-report.js", "bi-report-board.js", "alerts-live.js"):
         assert "B.consume.follow(" in (JS / name).read_text(encoding="utf-8"), name
 
 

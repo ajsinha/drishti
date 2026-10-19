@@ -240,7 +240,7 @@ async def echarts_js(request: Request):
 # The console's own enhancer scripts, root-scoped (static/js; ELEMENTS.md section 12): the element loads these, with
 # data-manual so they do not start by themselves, and calls init(shadowRoot, options) on each.
 ENHANCERS = ("view", "geomap", "charts", "colfilter", "tables", "tree-rows", "pivot", "pivot-engine", "pivot-grid", "about", "about-hints", "zoom", "multiselect", "controls",
-             "bi-lib", "bi-visuals", "bi-grids", "bi-frame", "bi-live", "bi-phone")
+             "bi-lib", "bi-visuals", "bi-visuals-format", "bi-grids", "bi-matrix", "bi-multiples", "bi-frame", "bi-live", "bi-phone")
 
 
 @router.get("/js/{name}.js")

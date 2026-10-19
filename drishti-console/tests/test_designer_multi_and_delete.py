@@ -63,7 +63,7 @@ def test_a_new_report_has_a_distinct_default_title_not_my_report():
 
 def test_the_new_item_form_asks_a_report_for_its_dataset_and_opens_the_designer():
     js = read(JS / "bi.js")
-    assert "'/bi/design/'" in js and "'/bi/design/board/'" in js and "'/bi/datasets/new-layer?workspace='" in js and "'/bi/explore'" in js
+    assert "'/bi/design/'" in js and "layout: board" in js and "'/bi/datasets/new-layer?workspace='" in js and "'/bi/explore'" in js
     assert "sourceLine(f.elements.dataset.value)" in js
 
 

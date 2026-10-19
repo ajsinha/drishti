@@ -1,0 +1,73 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* BI Studio (BI_DESIGN.md section 8.1, 2.4.0): the Explorer on the left, the open items on top, the designer in the middle, Problems and Query in the dock below;
+   the generated Format pane (sections), conditional formatting rules, Edit interactions on the canvas, and the theme designer. Colours are theme tokens;
+   touch targets are 44 px on a coarse pointer; under 900 px the Explorer folds away. */
+.bi-studio { display: grid; grid-template-columns: 14rem minmax(0, 1fr); gap: .75rem; align-items: start; min-width: 0; }
+.bi-studio.bi-studio-railless { grid-template-columns: 2.6rem minmax(0, 1fr); }
+.bi-studio-main { display: flex; flex-direction: column; gap: .5rem; min-width: 0; }
+.bi-studio-rail { position: sticky; top: 4.5rem; display: flex; flex-direction: column; gap: .45rem; max-height: calc(100vh - 5.5rem); overflow: auto; border-right: 1px solid var(--d-border); padding-right: .5rem; }
+.bi-studio-railless .bi-studio-rail > :not(.bi-studio-railhead), .bi-studio-railless .bi-studio-railhead h2 { display: none; }
+.bi-studio-railhead { display: flex; align-items: center; justify-content: space-between; gap: .3rem; }
+.bi-studio-railhead h2 { font-size: .95rem; margin: 0; }
+.bi-studio-new { display: flex; align-items: center; gap: .4rem; font-size: .85rem; }
+.bi-studio-tree details { margin: .2rem 0; }
+.bi-studio-tree summary { cursor: pointer; font-size: .8rem; font-weight: 600; color: var(--d-muted); text-transform: uppercase; letter-spacing: .03em; }
+.bi-studio-list { list-style: none; margin: .1rem 0 .3rem; padding: 0; }
+.bi-studio-item { display: flex; align-items: center; gap: .2rem; padding: .25rem .35rem; border-radius: 6px; color: var(--d-ink); text-decoration: none; font-size: .85rem; overflow-wrap: anywhere; }
+.bi-studio-item:hover { background: var(--d-highlight); }
+.bi-studio-item[aria-current="page"] { background: var(--d-accent-tint); color: var(--d-accent-strong); font-weight: 600; }
+.bi-studio-tabs { display: flex; flex-wrap: wrap; gap: .25rem; border-bottom: 1px solid var(--d-border); min-height: 2rem; }
+.bi-studio-tabwrap { display: inline-flex; align-items: center; }
+.bi-studio-tab { text-decoration: none; }
+.bi-studio-dock { border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); }
+.bi-studio-docktabs { display: flex; gap: .25rem; padding: .2rem .4rem; }
+.bi-studio-dockbody { padding: .4rem .8rem .6rem; max-height: 16rem; overflow: auto; }
+.bi-studio-dock.bi-dock-closed .bi-studio-dockbody { display: none; }
+.bi-dock-list li { cursor: default; }
+
+/* the generated Format pane */
+.bi-fsection { border-top: 1px solid var(--d-border); padding: .3rem 0; }
+.bi-fsection > summary { cursor: pointer; font-weight: 600; font-size: .85rem; padding: .2rem 0; }
+.bi-colourpick { display: inline-flex; align-items: center; gap: .25rem; }
+.bi-colour[data-unset] { opacity: .45; }
+.bi-rules .bi-rule { border: 1px dashed var(--d-border); border-radius: 6px; padding: .35rem; margin: .3rem 0; }
+
+/* Edit interactions on the canvas: a Filter / Highlight / None choice over each other visual */
+.bi-editing-interactions .bi-dvis { outline: 1px dashed var(--d-link); }
+.bi-ix-bar { position: absolute; top: .25rem; right: .25rem; z-index: 3; display: flex; gap: 2px; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 6px; padding: 2px; }
+.bi-ix-btn { border: 0; background: none; color: var(--d-muted); padding: .2rem .35rem; border-radius: 4px; cursor: pointer; }
+.bi-ix-btn[aria-pressed="true"] { background: var(--d-accent); color: var(--d-on-accent); }
+.bi-dvis { position: relative; }
+
+/* the theme designer */
+.bi-theme-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+.bi-theme-palette { display: flex; flex-direction: column; gap: .2rem; padding-left: 1.4rem; }
+.bi-theme-palette li { display: flex; align-items: center; gap: .3rem; }
+.bi-theme-preview { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: .5rem; }
+.bi-theme-preview .bi-swatches { grid-column: 1 / -1; }
+.bi-theme-sample[data-theme-sample="column"] { grid-column: span 12; height: 16rem; }
+.bi-theme-sample[data-theme-sample="table"] { grid-column: span 8; }
+.bi-theme-sample[data-theme-sample="card"] { grid-column: span 4; }
+
+@media (max-width: 900px) {
+  .bi-studio { grid-template-columns: minmax(0, 1fr); }
+  .bi-studio-rail { position: static; max-height: none; border-right: 0; border-bottom: 1px solid var(--d-border); padding: 0 0 .5rem; }
+  .bi-theme-main { grid-template-columns: minmax(0, 1fr); }
+}
+@media (pointer: coarse) {
+  .bi-ix-btn, .bi-studio-item, .bi-studio-close { min-height: 44px; min-width: 44px; }
+}

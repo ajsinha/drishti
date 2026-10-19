@@ -1674,6 +1674,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9033 | 501 | Report not built | The report uses a visual type, slicer mode or setting the grammar reserves and this server does not build yet |
 | DRS-9034 | 422 | Report dataset | The report's dataset cannot be found or has errors, so the report cannot be drawn |
 | DRS-9035 | 422 | Report state | A visual query names a page, visual or slicer the report lacks, or its state (slicers, selections, drill path, carried values, dates) is not valid |
+| DRS-9036 | 422 | Theme | (2.4.0) A theme item is not valid (its palette, a colour, its font or a visual default the format schemas refuse), or a report names a theme that does not exist (a warning there: the report draws with the default colours) |
 | DRS-9040 | 409 | Breaks reports | Publishing a dataset would break published reports (a field, measure or hierarchy they use is removed or renamed); a `bi-admin` may force it |
 | DRS-9041 | 422 | Bundle invalid | A BI bundle is not readable, fails its checksums, is too large or holds an invalid item |
 | DRS-9043 | 409 | Failing tests | A report or dataset declares expected values (`tests:`) and one fails or cannot run, so publishing is refused; a `bi-admin` may publish with `force` |

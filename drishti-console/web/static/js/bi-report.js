@@ -31,6 +31,8 @@
   const MAX_FOLLOW = 12;                    // standing queries one page holds (the server allows drishti.bi.mq.max-subscriptions-per-user for a person)
   let pbar = null, picker = null;           // wave B: the parameter slicers and Show as (bi-consume.js), the time picker
   let rep = null, idx = null, pageId = null, palette = null, tokens = null;
+  let theme = null, families = {}, board = null, tips = null;        // 2.4.0: the report's theme, the format family of each type, its board pages, its tooltip pages
+  const themed = (spec) => B.theme.spec(spec, theme, families);
   const frames = new Map();                 // visual id -> {frame, spec, token, res, mq, follow, chip}
   const rolling = {};                       // visual id -> the points a rolling chart has collected since the page opened
   let watch = null, indicator = null, refresher = null, seenGeneration = 0, wasOff = false;
@@ -77,10 +79,19 @@
   function ctxFor(spec) {
     const sel = state.selections.find((s) => s.visual === spec.id);
     return {
-      index: idxOf(spec), palette, t: tokens, interactive: true, selected: sel || null, rolling, entity: true, selections: state.selections,
+      index: idxOf(spec), palette, t: tokens, interactive: true, selected: sel || null, rolling, entity: true, selections: state.selections, theme,
       onMark: (mark) => selectMark(spec, mark), navigate: (a) => navigate(a),
-      slicer: spec.type === 'slicer' ? { value: state.slicers[spec.id] == null ? null : state.slicers[spec.id], onChange: (v) => { state.slicers[spec.id] = v; refreshAll(spec.id); } } : null
+      onHover: spec.tooltip && tips ? (mark, at) => tips.hover(spec, mark, at) : null, onHoverEnd: spec.tooltip && tips ? () => tips.end() : null,
+      slicer: spec.type === 'slicer' ? { value: state.slicers[spec.id] == null ? null : state.slicers[spec.id], onChange: (v) => { setSlicer(spec, v); refreshAll(spec.id); } } : null
     };
+  }
+
+  /** A slicer's choice; the slicers of its sync group (on any page) take the same choice (Power BI's sync slicers, 2.4.0). */
+  function setSlicer(spec, v) {
+    state.slicers[spec.id] = v;
+    const group = (spec.format || {}).syncGroup;
+    if (!group) { return; }
+    rep.report.pages.forEach((p) => p.visuals.forEach((x) => { if (x.id !== spec.id && x.type === 'slicer' && (x.format || {}).syncGroup === group) { state.slicers[x.id] = v; } }));
   }
 
   function buttons(spec) {
@@ -91,7 +102,7 @@
       return b;
     };
     const group = VGROUP[spec.type];
-    if (group === 'static' || group === 'entity' || spec.type === 'slicer') { return out; }
+    if (group === 'static' || group === 'entity' || group === 'board' || spec.type === 'slicer') { return out; }
     if (group === 'python') { return out; }                                        // a Python result is drawn from rows Python was handed: no alert, drill or marks
     if (B.ai && group !== 'python') { out.push(B.ai.explainButton(spec, mk)); }                                  // Explain this number: hidden unless the server's AI layer is on
     const known = frames.get(spec.id);
@@ -148,7 +159,7 @@
   }
 
   function buildFrame(spec) {
-    const f = B.frame(spec, { buttons: buttons(spec), onRetry: () => load(spec), onShowAll: () => { state.all[spec.id] = true; load(spec); } });
+    const f = B.frame(themed(spec), { buttons: buttons(spec), onRetry: () => load(spec), onShowAll: () => { state.all[spec.id] = true; load(spec); } });
     f.el.style.gridColumn = (spec.at.x + 1) + ' / span ' + spec.at.w;
     f.el.style.gridRow = (spec.at.y + 1) + ' / span ' + spec.at.h;
     f.el.tabIndex = 0;
@@ -162,7 +173,8 @@
     const entry = frames.get(spec.id);
     if (!entry) { return Promise.resolve(); }
     const token = ++entry.token;
-    if (VGROUP[spec.type] === 'static' || VGROUP[spec.type] === 'entity') { entry.frame.result(null, (host) => B.visuals.draw(host, spec, ctxFor(spec), null)); return Promise.resolve(); }
+    if (VGROUP[spec.type] === 'board') { return board ? board.load(entry, pageId, spec, quiet) : Promise.resolve(); }          // a tile (R7): asked of the report it shows
+    if (VGROUP[spec.type] === 'static' || VGROUP[spec.type] === 'entity') { entry.frame.result(null, (host) => B.visuals.draw(host, themed(spec), ctxFor(spec), null)); return Promise.resolve(); }
     if (VGROUP[spec.type] === 'python') { return loadPython(spec, entry, token, quiet); }
     if (!quiet) { entry.frame.busy(); }
     return B.enqueue(() => B.api('POST', '/reports/' + B.id2path(reportId) + '/query', { page: pageId, visual: spec.id, state: stateFor(spec) })).then((res) => {
@@ -262,7 +274,7 @@
     const entry = frames.get(id);
     if (!entry || !entry.res) { return; }
     const spec = entry.spec;
-    const ds = drawSpec(spec);
+    const ds = themed(drawSpec(spec));
     const res = entry.res;
     entry.frame.result(res, (host) => {
       const c = ctxFor(ds);
@@ -298,10 +310,12 @@
   }
 
   function startLive() {
-    if (!(rep.dataset.tables || []).some((t) => t.mode === 'live')) { return; }
+    const ids = (rep.dataset && (rep.dataset.tables || []).some((t) => t.mode === 'live')) ? [reportId] : [];
+    if (board) { board.liveIds().forEach((id) => { if (ids.indexOf(id) < 0) { ids.push(id); } }); }          // the reports a board page's tiles show
+    if (!ids.length) { return; }
     const min = Number(canvas.getAttribute('data-live-min')) || 250;
     refresher = B.live.coalesce(refreshLive, min);
-    watch = B.live.watch([reportId], {
+    watch = B.live.watch(ids, {
       staleSeconds: Number(canvas.getAttribute('data-live-stale')) || 30,
       onHello: (id, d) => { if (wasOff || Number(d.generation) > seenGeneration) { refresher.request(); } wasOff = false; },
       onTick: (id, d) => { if ((d && d.resumed) || !Array.from(frames.values()).some((e) => e.follow)) { refresher.request(); } },          // pushed answers redraw the followed visuals; Resume catches up
@@ -366,7 +380,7 @@
   }
 
   // ---- the page, the tabs, the bar -----------------------------------------------------------------------------------
-  function visiblePages() { return rep.report.pages.filter((p) => !p.drillthrough || p.id === pageId); }
+  function visiblePages() { return rep.report.pages.filter((p) => (!p.drillthrough && !p.tooltip) || p.id === pageId); }          // drill-through and tooltip pages are opened from a visual
 
   function drawTabs() {
     const nav = B.clear(q('[data-pages]'));
@@ -394,6 +408,8 @@
     const page = pageOf(pageId);
     const dl = deviceLayout(), lay = dl && dl.lay;                      // on a phone or tablet, the report's own arrangement (order, hidden, width, heights) when it has one
     const ordered = B.phone.arrange(page, lay);                         // else the keyboard reading order is the picture's
+    grid.classList.toggle('bi-board-grid', page.layout === 'board');
+    canvas.setAttribute('data-layout', page.layout || 'grid');
     grid.setAttribute('data-phone', dl && dl.device === 'phone' ? 'layout' : 'auto');
     grid.setAttribute('data-device', dl ? dl.device : 'desktop');
     ordered.forEach(({ spec, rows }) => {
@@ -412,6 +428,7 @@
   }
 
   function go(page, carry, push) {
+    if (tips) { tips.close(); }
     pageId = page;
     state.carry = carry || [];
     state.selections = [];
@@ -509,7 +526,7 @@
   }
 
   // ---- start ---------------------------------------------------------------------------------------------------------
-  Promise.all([B.api('GET', '/reports/' + B.id2path(reportId)), B.api('GET', '/reports/catalogue')]).then(([r, cat]) => {
+  Promise.all([B.api('GET', '/reports/' + B.id2path(reportId)), B.api('GET', '/reports/catalogue')]).then(async ([r, cat]) => {
     rep = r;
     setGroups(cat);
     q('[data-title]').textContent = r.title;
@@ -518,30 +535,40 @@
     if (r.sample) { badges.appendChild(h('span', { class: 'bi-badge' }, B.icon('mortarboard'), ' sample')); }
     if (r.shipped) { badges.appendChild(h('span', { class: 'bi-badge' }, B.icon('lock'), ' shipped, read-only')); }
     const errors = (r.problems || []).filter((p) => p.level === 'error');
+    const tilesOnly = !!(r.report && r.report.pages.some((p) => p.layout === 'board') && !r.report.model && !r.report.dataset);      // a wall of tiles (R7) reads no data of its own
     if (errors.length || !r.report) {
       const box = q('[data-problems]');
       box.hidden = false;
       const ul = q('ul', box);
       errors.forEach((p) => ul.appendChild(h('li', {}, h('strong', { text: p.code + ' ' }), h('code', { text: p.path }), ': ' + p.message)));
-      if (!r.report || !r.dataset) { q('[data-report]').hidden = true; return; }
+      if (!r.report || (!r.dataset && !tilesOnly)) { q('[data-report]').hidden = true; return; }
     }
     B.publishedBanner(reportId, document.getElementById('biCanvas'));
     B.api('POST', '/items/' + B.id2path(reportId) + '/open', {}).catch(() => {});             // a view is counted, and the report goes under Recent
-    idx = B.index(r.dataset);
+    idx = B.index(r.dataset || { measures: [], tables: [], hierarchies: {} });
     tokens = B.tokens();
-    palette = B.palette((r.report.theme || {}).palette, tokens);
+    theme = r.theme || { palette: (r.report.theme || {}).palette || 'default' };
+    families = cat.families || {};
+    palette = B.theme.palette(theme, tokens);
+    B.theme.apply(q('[data-report]'), theme);
     if (!(r.mayEdit)) { q('[data-design]').hidden = true; }
     bar();
     const parts = window.location.pathname.split('/bi/r/' + B.id2path(reportId))[1];
     const wanted = parts ? decodeURIComponent(parts.replace(/^\//, '')) : '';
-    const first = rep.report.pages.find((p) => !p.drillthrough) || rep.report.pages[0];
+    const first = rep.report.pages.find((p) => !p.drillthrough && !p.tooltip) || rep.report.pages[0];
     const carry = readCarry();
+    tips = B.tooltips ? B.tooltips({ reportId, page: pageOf, stateFor, ctxFor: (v) => ctxFor(v) }) : null;
+    const boardPages = () => rep.report.pages.filter((p) => p.layout === 'board' && !p.drillthrough && !p.tooltip).map((p) => p.id);
+    board = boardPages().length && B.reportBoard ? B.reportBoard({ canvas, rep, tokens, time: () => state.time, pages: boardPages, current: () => pageId, go: (id) => go(id, []),
+      watchPaused: () => !!(watch && watch.paused()) }) : null;
+    await (board ? board.init() : Promise.resolve());
+    if (board) { board.bindKiosk(); }
     go(wanted && pageOf(wanted) ? wanted : first.id, carry, false);
     window.history.replaceState({ page: pageId, carry }, '', window.location.pathname + window.location.search);
     startLive();
     paramBar(r);
     // what the export and subscribe controls (bi-export.js) need: the report, the page being shown, the state of the screen and the visuals that hold data
-    B.reportView = { id: reportId, title: r.title, page: () => pageId, state: () => stateFor({ id: '' }), visuals: () => pageOf(pageId).visuals.filter((v) => ['static', 'entity', 'slicer'].indexOf(VGROUP[v.type]) < 0) };
+    B.reportView = { id: reportId, title: r.title, page: () => pageId, state: () => stateFor({ id: '' }), visuals: () => pageOf(pageId).visuals.filter((v) => ['static', 'entity', 'slicer', 'board'].indexOf(VGROUP[v.type]) < 0) };
     document.dispatchEvent(new CustomEvent('drishti:report-ready'));
     q('[data-ready]').setAttribute('data-ready', 'yes');
   }).catch((e) => { say(e.message, true); });
