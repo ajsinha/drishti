@@ -332,6 +332,7 @@ public final class ReportValidator {
                 err(ReportParser.VISUAL, p + ".format.window", "window is the number of points a live chart keeps, 5 to 1000");
             }
         }
+        rules(v, p);
         filters(v.filters(), p + ".filters");
         if (v.sort() != null && !v.wells().values().stream().anyMatch(l -> l.contains(v.sort().by()))) {
             err(ReportParser.REFERENCE, p + ".sort.by", "'" + v.sort().by() + "' is not a field or measure of this visual");
@@ -380,6 +381,38 @@ public final class ReportValidator {
             if (type != null && !Set.of("integer", "decimal", "date", "timestamp").contains(type)) {
                 err(ReportParser.VISUAL, p + ".format.mode", "a range slicer needs a number or date field; " + v.well("field").get(0) + " is " + type);
             }
+        }
+    }
+
+    /**
+     * Conditional formatting rules (R6) name what they colour ({@code apply}: a measure or field of the visual's wells) and what they test ({@code on}: a measure of the
+     * dataset, else the one coloured); a colour per value ({@code values}) colours a field; data bars name measures of the visual.
+     */
+    private void rules(Report.Visual v, String p) {
+        java.util.Set<String> shown = new java.util.HashSet<>();
+        v.wells().values().forEach(shown::addAll);
+        if (v.format().get("rules") instanceof List<?> rules) {
+            for (int i = 0; i < rules.size(); i++) {
+                if (!(rules.get(i) instanceof Map<?, ?> r)) {
+                    continue;                                            // the format schema said so
+                }
+                String rp = p + ".format.rules[" + i + "]";
+                Object apply = r.get("apply");
+                if (apply instanceof String a && !shown.contains(a)) {
+                    err(ReportParser.REFERENCE, rp + ".apply", "'" + a + "' is not shown by this visual; a rule colours one of its fields or measures (" + String.join(", ", shown) + ")");
+                }
+                boolean byValue = "values".equals(r.get("type"));
+                if (apply instanceof String a && shown.contains(a) && byValue == ds.measures().containsKey(a)) {
+                    err(ReportParser.VISUAL, rp + ".apply", byValue ? "a colour per value colours a field's values, and '" + a + "' is a measure" : "a " + r.get("type") + " rule colours a measure, and '" + a + "' is a field (use a colour per value)");
+                }
+                if (r.get("on") instanceof String on && !ds.measures().containsKey(on)) {
+                    err(ReportParser.REFERENCE, rp + ".on", "the dataset has no measure '" + on + "' (measures: " + measureNames() + ")");
+                }
+            }
+        }
+        if (v.format().get("dataBars") instanceof List<?> bars) {
+            bars.stream().map(String::valueOf).filter(b -> !shown.contains(b))
+                    .forEach(b -> out.add(new Problem("warning", ReportParser.REFERENCE, p + ".format.dataBars", "'" + b + "' is not a measure of this visual; no bar is drawn for it")));
         }
     }
 

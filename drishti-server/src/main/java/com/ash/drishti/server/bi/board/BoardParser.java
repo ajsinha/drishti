@@ -79,6 +79,15 @@ public final class BoardParser {
             out.add(error("", "a board is a YAML mapping (key: value) with at least `board:` and `pages:`"));
             return new Result(null, out);
         }
+        return parse(root, out);
+    }
+
+    /** A board already read into a tree: the board pages of a report are checked this way ({@link ReportBoards}). */
+    public static Result parse(JsonNode root) {
+        return parse(root, new ArrayList<>());
+    }
+
+    private static Result parse(JsonNode root, List<Problem> out) {
         root.fieldNames().forEachRemaining(k -> {
             if (RESERVED_TOP.contains(k)) {
                 out.add(new Problem("error", NOT_BUILT, k, "'" + k + "' is reserved and not built: a board notifies through `notify:` on a tile's alert (and defaults in a top-level `notify:`)"));

@@ -147,6 +147,13 @@ public class BiQueryConfiguration {
     }
 
     @Bean
+    public com.ash.drishti.server.bi.theme.ThemeService biThemeService(BiService bi, BiReportService reports) {
+        com.ash.drishti.server.bi.theme.ThemeService themes = new com.ash.drishti.server.bi.theme.ThemeService(bi);
+        reports.themes(themes);                                                  // a report's theme item, resolved for its viewer (R6)
+        return themes;                                                           // its controller (ThemeController) is a scanned @RestController
+    }
+
+    @Bean
     public com.ash.drishti.server.bi.board.BiBoardController biBoardController(com.ash.drishti.server.bi.board.BiBoardService boards) {
         return new com.ash.drishti.server.bi.board.BiBoardController(boards);
     }

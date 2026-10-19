@@ -214,6 +214,8 @@ public enum ErrorCode {
     REPORT_DATASET("DRS-9034", 422),
     /** Reports: a visual query names a page or visual the report lacks, or its interaction state (slicers, selection, drill path) is not valid. */
     REPORT_STATE("DRS-9035", 422),
+    /** Reports (2.4.0): a theme item is not valid (its palette, colours, font or visual defaults), or a report names a theme that does not exist. */
+    THEME_INVALID("DRS-9036", 422),
     /** Governance: publishing the dataset change would break published reports (a field, measure or hierarchy they use is removed or renamed); a bi-admin may force it. */
     BI_IMPACT("DRS-9040", 409),
     /** Governance: a BI bundle is not readable, fails its checksums, is too large or is not a bundle of this format. */

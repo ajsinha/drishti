@@ -46,6 +46,13 @@ public class BiMigrateController {
         this.migration = migration;
     }
 
+    /** Converts the stored 2.3 boards into reports with board pages (R7, 2.4.0); {@code {"dryRun": true}} lists them and changes nothing. */
+    @PostMapping("/boards")
+    public Map<String, Object> boards(@RequestBody(required = false) Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        bi.requirePower(p, BiAccess.ADMIN);
+        return migration.boards(p.user(), dryRun(body));
+    }
+
     @PostMapping("/expressions")
     public Map<String, Object> expressions(@RequestBody(required = false) Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.ADMIN);

@@ -48,8 +48,8 @@ public final class VisualQueries {
         List<Object> top(String field, int n, String by, boolean desc, List<QueryRequest.Filter> context, LocalDate from, LocalDate to);
     }
 
-    /** Visual types that can draw a highlight over their own bars (the others are filtered instead). */
-    static final Set<String> HIGHLIGHTS = Set.of("bar", "column");
+    /** Visual types that can draw a highlight over their own marks (the others are filtered instead): bars and columns, and since 2.4 lines, areas and combos. */
+    static final Set<String> HIGHLIGHTS = Set.of("bar", "column", "line", "area", "combo");
 
     private final Report report;
     private final Report.Page page;
@@ -98,7 +98,7 @@ public final class VisualQueries {
 
     private Built build() {
         VisualCatalogue.Type spec = VisualCatalogue.type(visual.type());
-        if (spec == null || "static".equals(spec.group()) || "entity".equals(spec.group())) {
+        if (spec == null || "static".equals(spec.group()) || "entity".equals(spec.group()) || "board".equals(spec.group())) {
             throw new DrishtiException(ErrorCode.REPORT_STATE, "the " + visual.type() + " visual draws no data");
         }
         LocalDate from = date(state.from() != null ? state.from() : report.dates() == null ? null : report.dates().from());
@@ -124,11 +124,16 @@ public final class VisualQueries {
                 if (from0 == null) {
                     throw new DrishtiException(ErrorCode.REPORT_STATE, "the page has no visual '" + s.visual() + "' to take a selection from");
                 }
+                String how = page.interaction(s.visual(), visual.id());          // the page's interactions matrix wins over the viewer's Filter / Highlight choice
+                if ("none".equals(how)) {
+                    continue;
+                }
                 String field = tr(s.field(), report.datasetOf(from0));
                 if (field == null) {
                     continue;                                   // a mark of another dataset that no link connects to this one
                 }
-                if (s.highlight() && HIGHLIGHTS.contains(visual.type()) && state.rows() == null) {
+                boolean wantsHighlight = how == null ? s.highlight() : "highlight".equals(how);
+                if (wantsHighlight && HIGHLIGHTS.contains(visual.type()) && state.rows() == null) {
                     highlight = true;
                     marks.add(new QueryRequest.Filter(field, "in", s.values()));
                 } else {
@@ -189,6 +194,7 @@ public final class VisualQueries {
             default -> {
                 f.addAll(visual.well("axis"));
                 f.addAll(visual.well("legend"));
+                f.addAll(visual.well("split"));                          // small multiples: one chart per value, drawn from one answer
             }
         }
         return new ArrayList<>(f);
@@ -253,7 +259,24 @@ public final class VisualQueries {
                 m.addAll(visual.well("target"));
             }
         }
+        if (!m.isEmpty()) {
+            m.addAll(ruleMeasures());                                   // a rule on another measure ("colour MTM when Notional > 100m") asks for that one too
+        }
         return new ArrayList<>(m);
+    }
+
+    /** The measures conditional formatting rules test that the visual does not show: their {@code on}, when it is a measure of the dataset. */
+    private List<String> ruleMeasures() {
+        List<String> out = new ArrayList<>();
+        if (!(visual.format().get("rules") instanceof List<?> rules)) {
+            return out;
+        }
+        for (Object r : rules) {
+            if (r instanceof java.util.Map<?, ?> rule && rule.get("on") instanceof String on && ds.measures().containsKey(on)) {
+                out.add(on);
+            }
+        }
+        return out;
     }
 
     private void add(List<QueryRequest.Filter> base, List<Report.Filter> tops, List<Report.Filter> list, String originRef) {
@@ -287,8 +310,11 @@ public final class VisualQueries {
             if (s == null) {
                 throw new DrishtiException(ErrorCode.REPORT_STATE, "the report has no slicer '" + e.getKey() + "'");
             }
-            if (s.id().equals(visual.id()) || s.well("field").isEmpty() || !(onThisPage || "report".equals(s.format().get("scope")))) {
+            if (s.id().equals(visual.id()) || s.well("field").isEmpty() || !(onThisPage || "report".equals(s.format().get("scope")) || synced(s))) {
                 continue;
+            }
+            if (onThisPage && "none".equals(page.interaction(s.id(), visual.id()))) {
+                continue;                                       // Edit interactions: this slicer does not filter this visual
             }
             String field = tr(s.well("field").get(0), report.datasetOf(s));
             if (field == null) {
@@ -310,6 +336,23 @@ public final class VisualQueries {
                 }
             }
         }
+    }
+
+    /**
+     * A slicer of another page reaches this one through its sync group (Power BI's sync slicers): this page has a slicer of the same group (the viewer gives
+     * them all the same choice) and that one holds no choice of its own in the state. A slicer filters its own page only otherwise.
+     */
+    private boolean synced(Report.Visual s) {
+        Object group = s.format().get("syncGroup");
+        if (group == null || "slicer".equals(visual.type()) && group.equals(visual.format().get("syncGroup"))) {
+            return false;                                       // a slicer of the group never narrows its own list by the group's choice
+        }
+        for (Report.Visual here : page.visuals()) {
+            if ("slicer".equals(here.type()) && group.equals(here.format().get("syncGroup")) && !here.id().equals(s.id())) {
+                return !state.slicers().containsKey(here.id()) || state.slicers().get(here.id()).isNull();
+            }
+        }
+        return false;
     }
 
     private void carried(List<QueryRequest.Filter> base) {

@@ -58,7 +58,15 @@ final class StoredRewrite {
      * @param note what changed, for the history, the event and the audit record
      */
     Done apply(BiStore.Item item, UnaryOperator<String> convert, String actor, String origin, String action, String note) {
-        BiStore.Item i = store.item(item.id()).orElse(item);
+        return apply(item, convert, actor, origin, action, note, null);
+    }
+
+    /** As above; {@code kind}, when given, is the item's kind after the rewrite (a 2.3 board becomes a report with board pages, R7). */
+    Done apply(BiStore.Item item, UnaryOperator<String> convert, String actor, String origin, String action, String note, String kind) {
+        BiStore.Item i0 = store.item(item.id()).orElse(item);
+        BiStore.Item i = kind == null ? i0 : new BiStore.Item(i0.id(), i0.workspace(), kind, i0.title(), i0.description(), i0.owner(), i0.tags(), i0.body(), i0.status(),
+                i0.publishedVersion(), i0.endorsement(), i0.endorsedBy(), i0.audienceRoles(), i0.audienceUsers(), i0.audiencePacks(), i0.proposedBy(), i0.proposedAt(), i0.createdAt(),
+                i0.updatedAt(), i0.updatedBy(), i0.publishedAt(), i0.publishedBy());
         String draft = i.body() == null ? "" : i.body();
         Optional<String> pub = published(i);
         String draftNew = draft.isBlank() ? draft : convert.apply(draft);

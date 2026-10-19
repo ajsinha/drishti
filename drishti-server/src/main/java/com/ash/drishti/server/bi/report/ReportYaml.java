@@ -31,10 +31,13 @@ import java.util.regex.Pattern;
  */
 public final class ReportYaml {
 
-    private static final List<String> TOP = List.of("rachana", "report", "board", "version", "title", "description", "sample", "dataset", "theme", "dates", "filters", "bookmarks", "layouts", "links", "tests", "rotate", "notify", "pages");
-    private static final List<String> PAGE = List.of("id", "title", "drillthrough", "filters", "visuals");
-    private static final List<String> VISUAL = List.of("id", "type", "title", "dataset", "at", "wells", "filters", "sort", "limit", "hierarchy", "drillthrough", "format", "text", "src", "alt",
-            "interacts", "action");
+    private static final List<String> TOP = List.of("rachana", "report", "board", "version", "title", "description", "sample", "owner", "tags", "endorsement", "endorsedBy",
+            "audience", "dataset", "theme", "dates", "filters", "bookmarks", "layouts", "links", "tests", "rotate", "notify", "pages");
+    private static final List<String> PAGE = List.of("id", "title", "layout", "tooltip", "drillthrough", "filters", "interactions", "visuals");
+    private static final List<String> VISUAL = List.of("id", "type", "title", "dataset", "from", "at", "wells", "filters", "sort", "limit", "hierarchy", "drillthrough", "tooltip", "format", "alert",
+            "text", "src", "alt", "interacts", "action");
+    /** A visual's format longer than this on one line is written as a block, one key a line (conditional formatting rules, a Vega-Lite specification). */
+    private static final int FLOW_MAX = 110;
     private static final Pattern PLAIN = Pattern.compile("[A-Za-z_][A-Za-z0-9_ ./()&%+\\-]*");
     private static final Pattern NUMBER = Pattern.compile("[-+]?(\\d+\\.?\\d*|\\.\\d+)([eE][-+]?\\d+)?");
     private static final Set<String> WORDS = Set.of("true", "false", "null", "yes", "no", "on", "off", "y", "n", "~");
@@ -79,6 +82,9 @@ public final class ReportYaml {
                     line(indent + 2, key(String.valueOf(device)) + ":");
                     ((Map<?, ?>) byPage).forEach((page, lay) -> line(indent + 4, key(String.valueOf(page)) + ": " + flow(lay)));
                 });
+            } else if (v instanceof Map<?, ?> fm && ("format".equals(e.getKey()) || "interactions".equals(e.getKey())) && depth >= 1 && flow(fm).length() > FLOW_MAX) {
+                line(indent, key + ":");
+                map((Map<String, ?>) fm, indent + 2, List.of(), depth + 2);
             } else if (v instanceof List<?> l && !l.isEmpty() && l.get(0) instanceof Map) {
                 line(indent, key + ":");
                 for (Object x : l) {

@@ -1,0 +1,62 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The format of a slicer: list, dropdown, range or relative date; tiles (buttons); its scope and its sync group (one choice shared by the slicers of a
+# group on every page). See common.yaml.
+
+$id: slicer
+x-types: [slicer]
+x-order: [Title, Slicer, Frame]
+allOf:
+  - $ref: "common#/$defs/frame"
+type: object
+additionalProperties: false
+properties:
+  mode:
+    type: string
+    enum: [list, dropdown, range, relative-date]
+    x-label: Mode
+    x-control: slicer-mode
+    x-hook: format-mode
+    x-group: Slicer
+  style:
+    type: string
+    enum: [list, tiles]
+    x-label: Look
+    x-hint: tiles draws a list slicer as buttons (a tile slicer).
+    x-group: Slicer
+  scope:
+    type: string
+    enum: [page, report]
+    x-label: Filters
+    x-hook: format-scope
+    x-group: Slicer
+  syncGroup:
+    type: string
+    pattern: "^[A-Za-z0-9][A-Za-z0-9_-]{0,39}$"
+    x-label: Sync group
+    x-hint: Slicers with the same group name, on any page, share one choice (Power BI's sync slicers).
+    x-hook: format-sync-group
+    x-group: Slicer
+  default:
+    type: string
+    x-label: Starts as
+    x-control: relative-default
+    x-group: Slicer
+  options:
+    type: array
+    items: { type: string }
+    x-label: Windows it offers
+    x-control: relative-options
+    x-group: Slicer

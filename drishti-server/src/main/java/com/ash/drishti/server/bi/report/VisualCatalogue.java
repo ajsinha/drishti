@@ -52,7 +52,7 @@ public final class VisualCatalogue {
         Well legend = new Well(Kind.FIELD, false, 1);
         Well values = new Well(Kind.MEASURE, true, 0);
         for (String t : List.of("bar", "column", "line", "area")) {
-            put(t, "chart", "axis", axis, "legend", legend, "values", values);
+            put(t, "chart", "axis", axis, "legend", legend, "values", values, "split", new Well(Kind.FIELD, false, 1));        // split: small multiples (one chart per value)
         }
         put("combo", "chart", "axis", axis, "values", values, "secondary", new Well(Kind.MEASURE, false, 0));
         put("scatter", "chart", "details", new Well(Kind.FIELD, true, 1), "x", new Well(Kind.MEASURE, true, 1), "y", new Well(Kind.MEASURE, true, 1), "size",
@@ -88,6 +88,8 @@ public final class VisualCatalogue {
         put("live-chart", "live", "values", new Well(Kind.MEASURE, true, 4));
         // an entity view (RUPAKA.md section 20.3): draws no query of its own; it shows the Drishti view of the entity whose key is selected on the page
         put("entity-view", "entity", "key", new Well(Kind.FIELD, true, 1));
+        // a board tile (R7): a visual of another report shown on a page with layout: board, answered by that report as the person looking (its `from:`)
+        put("tile", "board");
         put("text", "static");
         put("image", "static");
         put("button", "static");

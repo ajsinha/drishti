@@ -47,6 +47,12 @@ public class BiBoardController {
         return boards.validate(p, String.valueOf(body.getOrDefault("yaml", "")));
     }
 
+    /** Body {@code {yaml}}: a 2.3 board converted into the report with board pages it becomes (R7, 2.4.0); nothing is stored. */
+    @PostMapping("/convert")
+    public Map<String, Object> convert(@RequestBody Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return boards.convert(p, String.valueOf(body.getOrDefault("yaml", "")));
+    }
+
     /** Body {@code {board}}: the board model written as YAML, the way the designer's YAML tab shows it. */
     @PostMapping("/format")
     public Map<String, Object> format(@RequestBody com.fasterxml.jackson.databind.JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {

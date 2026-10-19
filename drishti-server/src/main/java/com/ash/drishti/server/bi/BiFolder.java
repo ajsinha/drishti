@@ -58,7 +58,8 @@ public final class BiFolder implements AutoCloseable {
     /** The tag a shipped file with {@code sample: true} carries; the sample-visibility setting hides tagged items from those who may not see samples. */
     public static final String SAMPLE_TAG = "sample";
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
-    private static final Map<String, String> KINDS = Map.of("datasets", "dataset", "models", "model", "reports", "report", "boards", "board", "notebooks", "notebook", "python", "python");
+    private static final Map<String, String> KINDS = Map.of("datasets", "dataset", "models", "model", "reports", "report", "boards", "board", "notebooks", "notebook", "python", "python",
+            "themes", "theme");
 
     /** One file as last read: its stamp, the last good item (null until one parses) and the problem with the latest content, if any. */
     private record Entry(long modified, long size, BiStore.Item item, String problem, Instant problemSince) {}
@@ -181,7 +182,20 @@ public final class BiFolder implements AutoCloseable {
             }
             entries.keySet().stream().filter(x -> !next.containsKey(x)).forEach(x -> LOG.info("BI folder: {} removed", x));
             entries = Map.copyOf(next);
-            everything = next.values().stream().map(Entry::item).filter(Objects::nonNull).toList();
+            Map<String, BiStore.Item> byId = new java.util.LinkedHashMap<>();
+            next.forEach((key, e) -> {
+                if (e.item() == null) {
+                    return;
+                }
+                if (key.startsWith("boards/") && byId.containsKey(e.item().id())) {
+                    return;
+                }
+                if (byId.containsKey(e.item().id()) && !key.startsWith("boards/")) {
+                    LOG.warn("BI folder: {} and a board file of the same name: the report file is used, the board file is left out", key);
+                }
+                byId.put(e.item().id(), e.item());                             // a 2.3 board file read as a report (R7) gives way to a report file of its name
+            });
+            everything = List.copyOf(byId.values());
             items = visible(everything, hidden);
             loadedAt = System.nanoTime();
         } finally {
@@ -226,6 +240,16 @@ public final class BiFolder implements AutoCloseable {
         }
         String name = file.getFileName().toString();
         name = name.substring(0, name.length() - ("." + kind + ".yaml").length());
+        if ("board".equals(kind)) {                                       // 2.4.0 (R7): a board is a report with board pages; a 2.3 board file is read as one
+            String converted = com.ash.drishti.server.bi.board.BoardConverter.toReport(text, "boards/" + file.getFileName());
+            if (converted == null) {
+                LOG.warn("BI folder: {} is a 2.3 board that does not parse, so it is not read as a report with board pages; its problems show on its item page", file.getFileName());
+            } else {
+                LOG.info("BI folder: {} is a 2.3 board, read as the report file:report:{} (convert the file with drishti.py bi migrate --boards {})", file.getFileName(), name, file);
+                kind = "report";
+                text = converted;
+            }
+        }
         String endorsement = root.path("endorsement").asText("none");
         List<String> tags = strings(root.path("tags"));
         if (root.path("sample").asBoolean(false) && !tags.contains(SAMPLE_TAG)) {

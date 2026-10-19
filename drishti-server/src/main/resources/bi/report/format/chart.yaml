@@ -1,0 +1,126 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The format of the category charts (bar, column, line, area, combo): data labels, axes (min, max, log, gridlines, label rotation), legend, colours
+# per series, stacking, small multiples and conditional formatting. See common.yaml for the keywords.
+
+$id: chart
+x-types: [bar, column, line, area, combo]
+x-order: [Title, Data labels, Axes, Legend, Colours, Small multiples, Values, Conditional formatting, Frame]
+allOf:
+  - $ref: "common#/$defs/frame"
+type: object
+additionalProperties: false
+properties:
+  labels:
+    type: boolean
+    x-label: Data labels
+    x-hook: format-labels
+    x-group: Data labels
+  labelDensity:
+    type: integer
+    minimum: 1
+    maximum: 100
+    x-label: Label density (%)
+    x-hint: "The share of points labelled when there are many: 100 labels every point."
+    x-group: Data labels
+  labelPosition:
+    type: string
+    enum: [outside, inside, centre]
+    x-label: Label position
+    x-group: Data labels
+  stacked:
+    type: boolean
+    x-label: Stacked
+    x-hook: format-stacked
+    x-group: Values
+    x-types: [bar, column, area]
+  percent:
+    type: boolean
+    x-label: 100% stacked
+    x-hint: Each category adds up to 100%.
+    x-group: Values
+    x-types: [bar, column, area]
+  smooth:
+    type: boolean
+    x-label: Smooth lines
+    x-group: Values
+    x-types: [line, area, combo]
+  axisTitles:
+    type: object
+    x-label: Axis titles
+    x-control: axis-titles
+    x-group: Axes
+    properties:
+      x: { type: string, maxLength: 80 }
+      "y": { type: string, maxLength: 80 }
+    additionalProperties: false
+  valueAxis:
+    type: object
+    x-label: Value axis
+    x-group: Axes
+    properties:
+      min: { type: number, x-label: Minimum }
+      max: { type: number, x-label: Maximum }
+      log: { type: boolean, x-label: Logarithmic }
+      gridlines: { type: boolean, x-label: Gridlines }
+      show: { type: boolean, x-label: Show the axis }
+    additionalProperties: false
+  categoryAxis:
+    type: object
+    x-label: Category axis
+    x-group: Axes
+    properties:
+      rotate: { type: integer, minimum: -90, maximum: 90, x-label: Label rotation (degrees) }
+      show: { type: boolean, x-label: Show the axis }
+    additionalProperties: false
+  legend:
+    $ref: "common#/$defs/legend"
+  colour:
+    $ref: "common#/$defs/colour"
+    x-label: Colour
+    x-hint: One colour for a chart with one series.
+    x-control: swatches
+    x-group: Colours
+  seriesColours:
+    type: object
+    x-label: Colour per series
+    x-hint: "A measure's name, or a value of the legend field, and its colour."
+    x-control: series-colours
+    x-group: Colours
+    additionalProperties: { $ref: "common#/$defs/colour" }
+  multiples:
+    type: object
+    x-label: Small multiples
+    x-hint: "With a field in the Small multiples well: one small chart per value."
+    x-group: Small multiples
+    properties:
+      columns: { type: integer, minimum: 1, maximum: 6, x-label: Charts per row }
+      max: { type: integer, minimum: 2, maximum: 24, x-label: Most charts }
+      sharedAxis: { type: boolean, x-label: One value axis for all }
+    additionalProperties: false
+  period:
+    type: string
+    enum: [auto, day, week, month, quarter, year]
+    x-label: Period of a date axis
+    x-hint: "auto puts a long series into weeks or months; day never does."
+    x-group: Axes
+  numberFormat:
+    $ref: "common#/$defs/numberFormat"
+  conditional:
+    $ref: "common#/$defs/legacyConditional"
+    x-types: [bar, column]
+  rules:
+    $ref: "common#/$defs/rules"
+    x-types: [bar, column]

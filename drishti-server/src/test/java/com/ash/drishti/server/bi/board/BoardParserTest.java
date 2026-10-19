@@ -39,7 +39,7 @@ class BoardParserTest {
 
     @Test
     void theSampleBoardIsCleanAndKeepsItsModel() throws IOException {
-        BoardParser.Result r = BoardParser.parse(Files.readString(Path.of("../config/bi/boards/desk-wall.board.yaml")));
+        BoardParser.Result r = BoardParser.parse(Files.readString(Path.of("src/test/resources/bi/boards-2.3/desk-wall.board.yaml")));
         assertThat(r.ok()).as(r.firstError()).isTrue();
         Board b = r.board();
         assertThat(b.name()).isEqualTo("desk-wall");

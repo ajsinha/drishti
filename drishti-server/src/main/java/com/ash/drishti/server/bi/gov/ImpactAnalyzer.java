@@ -137,11 +137,11 @@ public final class ImpactAnalyzer implements AutoCloseable {
         return all;
     }
 
-    /** Every board item, stored and shipped. */
+    /** Every item that shows tiles, stored and shipped: a report with board pages (2.4.0, R7), or a 2.3 board not migrated yet. */
     public List<BiStore.Item> boards() {
         List<BiStore.Item> all = new ArrayList<>();
-        store.items().stream().filter(i -> "board".equals(i.kind())).forEach(all::add);
-        folder.items().stream().filter(i -> "board".equals(i.kind())).forEach(all::add);
+        store.items().stream().filter(i -> com.ash.drishti.server.bi.board.ReportBoards.isBoard(i.kind(), i.body())).forEach(all::add);
+        folder.items().stream().filter(i -> com.ash.drishti.server.bi.board.ReportBoards.isBoard(i.kind(), i.body())).forEach(all::add);
         return all;
     }
 
@@ -169,7 +169,7 @@ public final class ImpactAnalyzer implements AutoCloseable {
 
     /** The report items (stored or shipped) a board body names in its tiles, each once; empty when the board does not parse. */
     public List<BiStore.Item> reportsOf(String boardBody) {
-        com.ash.drishti.server.bi.board.Board b = com.ash.drishti.server.bi.board.BoardParser.parse(boardBody).board();
+        com.ash.drishti.server.bi.board.Board b = com.ash.drishti.server.bi.board.ReportBoards.boardOfText(boardBody);
         List<BiStore.Item> out = new ArrayList<>();
         if (b == null) {
             return out;
@@ -185,7 +185,7 @@ public final class ImpactAnalyzer implements AutoCloseable {
 
     /** The unpublished report items a board body names in its tiles, each once: a tile whose report has a published item of that name is not counted. */
     public List<BiStore.Item> draftReportsOf(String boardBody) {
-        com.ash.drishti.server.bi.board.Board b = com.ash.drishti.server.bi.board.BoardParser.parse(boardBody).board();
+        com.ash.drishti.server.bi.board.Board b = com.ash.drishti.server.bi.board.ReportBoards.boardOfText(boardBody);
         List<BiStore.Item> out = new ArrayList<>();
         if (b == null) {
             return out;

@@ -21,6 +21,7 @@ import com.ash.drishti.identity.bi.BiStore;
 import com.ash.drishti.server.bi.BiService;
 import com.ash.drishti.server.bi.board.Board;
 import com.ash.drishti.server.bi.board.BoardParser;
+import com.ash.drishti.server.bi.board.ReportBoards;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.collab.Principals;
 import com.ash.drishti.server.dist.SubscriptionService.Person;
@@ -62,14 +63,18 @@ public final class BoardAlertSource implements AlertEnvironment.Boards {
     public List<AlertSpec> specs() {
         List<AlertSpec> out = new ArrayList<>();
         for (BiStore.Item item : bi.allBoards()) {
-            BoardParser.Result parsed = BoardParser.parse(bi.publishedBody(item));
-            if (parsed.board() == null || !parsed.ok()) {
+            String body = bi.publishedBody(item);
+            if ("board".equals(item.kind()) && !BoardParser.parse(body).ok()) {
                 continue;
             }
-            for (Board.Page page : parsed.board().pages()) {
+            Board board = ReportBoards.boardOf(item.kind(), body);            // a report's board pages (2.4.0, R7) or a 2.3 board not migrated yet
+            if (board == null) {
+                continue;
+            }
+            for (Board.Page page : board.pages()) {
                 for (Board.Tile tile : page.tiles()) {
                     if (tile.alert() != null && tile.alert().tell() != null) {
-                        out.add(spec(item, parsed.board(), page, tile));
+                        out.add(spec(item, board, page, tile));
                     }
                 }
             }

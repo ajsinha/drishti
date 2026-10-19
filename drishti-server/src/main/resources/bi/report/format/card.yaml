@@ -1,0 +1,59 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The format of the cards: card, multi-row card, KPI and gauge. See common.yaml.
+
+$id: card
+x-types: [card, multirow-card, kpi, gauge]
+x-order: [Title, Values, Callout, Target, Conditional formatting, Frame]
+allOf:
+  - $ref: "common#/$defs/frame"
+type: object
+additionalProperties: false
+properties:
+  numberFormat:
+    $ref: "common#/$defs/numberFormat"
+  calloutSize:
+    type: integer
+    minimum: 12
+    maximum: 72
+    x-label: Number size (px)
+    x-group: Callout
+    x-types: [card, kpi]
+  showLabel:
+    type: boolean
+    x-label: Show the measure's name
+    x-group: Callout
+    x-types: [card]
+  goodWhen:
+    type: string
+    enum: [higher, lower]
+    x-label: Better when
+    x-hint: Whether above the target is good (higher) or bad (lower).
+    x-group: Target
+    x-types: [kpi]
+  min:
+    type: number
+    x-label: Minimum
+    x-group: Target
+    x-types: [gauge]
+  max:
+    type: number
+    x-label: Maximum
+    x-group: Target
+    x-types: [gauge]
+  conditional:
+    $ref: "common#/$defs/legacyConditional"
+  rules:
+    $ref: "common#/$defs/rules"

@@ -1,0 +1,34 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# SAMPLE THEME: "Corporate". A report takes it with `theme: corporate` (or picks it under Format, Report, Theme in the designer): its series colours, its
+# good and bad colours (a KPI against its target, a gradient's ends) and the format defaults of each visual family. A visual's own format wins over them.
+# Reference: docs/guides/REPORTS.md section 5.2. A theme is an item like any other: copy it into a workspace to make your own, review and publish it.
+
+rachana: 1
+theme: corporate
+version: 1
+title: Corporate
+description: Navy and slate series colours, green and red for good and bad, labelled charts and banded tables, for desk packs and client decks.
+sample: true
+tags: [sample, theme]
+palette: ["#1f4e79", "#2e75b6", "#9dc3e6", "#c55a11", "#70ad47", "#7f7f7f", "#ffc000", "#5b9bd5"]
+good: "#2e7d32"
+bad: "#c62828"
+font: { family: sans, size: 12 }
+visuals:
+  chart: { labels: true, legend: bottom, valueAxis: { gridlines: true } }
+  table: { rowBanding: true }
+  matrix: { rowBanding: true, stepped: true }
+  card: { calloutSize: 30 }

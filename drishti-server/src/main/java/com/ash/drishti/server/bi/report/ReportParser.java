@@ -73,10 +73,12 @@ public final class ReportParser {
     private static final Pattern ID = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_-]{0,39}");
     private static final Pattern DAY = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
     private static final Set<String> TOP = Set.of("rachana", "report", "version", "title", "description", "sample", "dataset", "model", "perspective", "measures", "theme", "dates", "filters", "bookmarks", "layouts", "links", "tests", "pages",
-            "owner", "tags", "endorsement", "endorsedBy", "audience");
-    private static final Set<String> PAGE = Set.of("id", "title", "filters", "drillthrough", "visuals");
+            "owner", "tags", "endorsement", "endorsedBy", "audience", "board");
+    private static final Set<String> PAGE = Set.of("id", "title", "filters", "drillthrough", "visuals", "layout", "tooltip", "interactions");
     private static final Set<String> VISUAL_KEYS = Set.of("id", "type", "title", "at", "wells", "filters", "sort", "limit", "hierarchy", "drillthrough", "format", "text", "src", "alt",
-            "interacts", "action", "dataset");
+            "interacts", "action", "dataset", "tooltip", "from", "alert");
+    private static final Set<String> THEME_KEYS = Set.of("palette", "background", "use");
+    private static final Set<String> BOARD_KEYS = Set.of("rotate", "notify");
     private static final Set<String> FILTER = Set.of("field", "op", "values", "value", "n", "by", "dir");
     /** Limits that keep one report a sensible size. */
     public static final int MAX_PAGES = 30;
@@ -116,17 +118,24 @@ public final class ReportParser {
         }
         String dataset = text(root, "dataset", "");
         String model = text(root, "model", "");
-        if (!model.isBlank() && !dataset.isBlank()) {
-            out.add(error("DRS-9140", "model", "a report reads one model: `model:` or `dataset:`, not both (docs/architecture/BI_MODEL_SPEC.md section 4.1)"));
-        } else if (!model.isBlank()) {
-            dataset = Report.MODEL_PREFIX + model;                              // a report bound to a model (wave W1): Report.model() names it
-        } else if (dataset.isBlank()) {
-            out.add(error(INVALID, "dataset", "`dataset:` names the dataset the report reads (its catalogue id, file name or name), or `model:` the model"));
-        }
         Map<String, String> theme = theme(root.path("theme"), out);
         Report.Dates dates = dates(root.path("dates"), "dates", out);
         List<Report.Filter> filters = filters(root.path("filters"), "filters", out);
         List<Report.Page> pages = pages(root.path("pages"), out);
+        boolean tilesOnly = !pages.isEmpty() && pages.stream().anyMatch(Report.Page::board) && pages.stream().flatMap(x -> x.visuals().stream())
+                .allMatch(x -> "tile".equals(x.type()) || "static".equals(VisualCatalogue.type(x.type()).group()));
+        if (!model.isBlank() && !dataset.isBlank()) {
+            out.add(error("DRS-9140", "model", "a report reads one model: `model:` or `dataset:`, not both (docs/architecture/BI_MODEL_SPEC.md section 4.1)"));
+        } else if (!model.isBlank()) {
+            dataset = Report.MODEL_PREFIX + model;                              // a report bound to a model (wave W1): Report.model() names it
+        } else if (dataset.isBlank() && !tilesOnly) {                         // a wall of tiles reads no data of its own (R7): each tile is answered by its report
+            out.add(error(INVALID, "dataset", "`dataset:` names the dataset the report reads (its catalogue id, file name or name), or `model:` the model"));
+        }
+        Map<String, Object> board = map(root.path("board"), "board", out);
+        board.keySet().stream().filter(k -> !BOARD_KEYS.contains(k)).forEach(k -> out.add(new Problem("warning", INVALID, "board." + k, "unknown board key '" + k + "' is ignored (rotate, notify)")));
+        if (!board.isEmpty() && pages.stream().noneMatch(Report.Page::board)) {
+            out.add(new Problem("warning", INVALID, "board", "`board:` sets the board pages (rotation, notifications), and no page has layout: board"));
+        }
         List<Report.Bookmark> bookmarks = bookmarks(root.path("bookmarks"), out);
         List<com.ash.drishti.server.bi.dataset.ExpectedValue.Problem> testProblems = new ArrayList<>();
         List<com.ash.drishti.server.bi.dataset.ExpectedValue> tests = com.ash.drishti.server.bi.dataset.ExpectedValue.parse(root.path("tests"), "tests", true, testProblems);
@@ -136,9 +145,48 @@ public final class ReportParser {
         if ((!local.isEmpty() || !perspective.isBlank()) && model.isBlank()) {
             out.add(error("DRS-9140", local.isEmpty() ? "perspective" : "measures", "a report's own measures and its perspective belong to a report on a model (`model:`)"));
         }
-        Report r = new Report(name, root.path("version").asInt(1), text(root, "title", name), text(root, "description", ""), root.path("sample").asBoolean(false), dataset, theme, dates,
-                filters, pages, bookmarks, layouts(root.path("layouts"), out), links(root.path("links"), out), tests, local, perspective);
+        Report r = new Report(name, root.path("version").asInt(1), text(root, "title", name), text(root, "description", ""), root.path("sample").asBoolean(false), dataset,
+                theme, dates, filters, pages, bookmarks, layouts(root.path("layouts"), out), links(root.path("links"), out), tests, local, perspective, board);
+        out.addAll(com.ash.drishti.server.bi.board.ReportBoards.check(r));
+        pageReferences(r, out);
         return new Result(r, out);
+    }
+
+    /** What pages and visuals point at inside the report: tooltip pages, the interactions matrix, sync groups (the dataset is the validator's). */
+    private static void pageReferences(Report r, List<Problem> out) {
+        Map<String, String> syncField = new LinkedHashMap<>();
+        for (int pi = 0; pi < r.pages().size(); pi++) {
+            Report.Page page = r.pages().get(pi);
+            String pp = "pages[" + pi + "]";
+            if (page.tooltip() && page.board()) {
+                out.add(error(INVALID, pp + ".tooltip", "a tooltip page is a grid page: a board cannot be drawn in a popover"));
+            }
+            page.interactions().forEach((src, row) -> {
+                if (page.visual(src) == null) {
+                    out.add(error(REFERENCE, pp + ".interactions." + src, "the page has no visual '" + src + "' to take a selection from"));
+                }
+                row.keySet().stream().filter(t -> page.visual(t) == null).forEach(t -> out.add(error(REFERENCE, pp + ".interactions." + src + "." + t, "the page has no visual '" + t + "'")));
+            });
+            for (int vi = 0; vi < page.visuals().size(); vi++) {
+                Report.Visual v = page.visuals().get(vi);
+                String vp = pp + ".visuals[" + vi + "]";
+                if (v.tooltip() != null) {
+                    Report.Page tip = r.page(v.tooltip());
+                    if (tip == null || !tip.tooltip()) {
+                        out.add(error(REFERENCE, vp + ".tooltip", "'" + v.tooltip() + "' is not a tooltip page of this report (a page with tooltip: true)" + (tip == null ? "" : "; mark it as one in its properties")));
+                    } else if (page.tooltip()) {
+                        out.add(error(INVALID, vp + ".tooltip", "a visual on a tooltip page cannot open another tooltip page"));
+                    }
+                }
+                Object group = v.format().get("syncGroup");
+                if ("slicer".equals(v.type()) && group != null && !v.well("field").isEmpty()) {
+                    String was = syncField.putIfAbsent(String.valueOf(group), v.well("field").get(0));
+                    if (was != null && !was.equals(v.well("field").get(0))) {
+                        out.add(error(VISUAL, vp + ".format.syncGroup", "the slicers of sync group '" + group + "' share one choice, so they slice one field (" + was + "), not " + v.well("field").get(0)));
+                    }
+                }
+            }
+        }
     }
 
     // ---- sections ----------------------------------------------------------------------------------------------------
@@ -172,17 +220,20 @@ public final class ReportParser {
             return theme;
         }
         if (n.isTextual()) {
-            theme.put("palette", n.asText());
+            theme.put(Report.PALETTES.contains(n.asText()) ? "palette" : "use", n.asText());      // a name that is no palette names a theme item (R6)
         } else if (n.isObject()) {
             n.fields().forEachRemaining(e -> {
-                if (!Set.of("palette", "background").contains(e.getKey())) {
-                    out.add(new Problem("warning", INVALID, "theme." + e.getKey(), "unknown theme key '" + e.getKey() + "' is ignored (palette, background)"));
+                if (!THEME_KEYS.contains(e.getKey())) {
+                    out.add(new Problem("warning", INVALID, "theme." + e.getKey(), "unknown theme key '" + e.getKey() + "' is ignored (use, palette, background)"));
                 } else {
                     theme.put(e.getKey(), e.getValue().asText());
                 }
             });
         } else {
-            out.add(error(INVALID, "theme", "theme is a palette name, or { palette, background }"));
+            out.add(error(INVALID, "theme", "theme is a palette name, a theme item's name, or { use: <theme>, palette, background }"));
+        }
+        if (theme.containsKey("background") && !theme.get("background").matches("#[0-9a-fA-F]{6}")) {
+            out.add(new Problem("warning", INVALID, "theme.background", "background is a colour (#rrggbb); it is ignored"));
         }
         return theme;
     }
@@ -332,7 +383,17 @@ public final class ReportParser {
                 }
             }
             List<Report.Visual> visuals = visuals(p.path("visuals"), path + ".visuals", out);
-            pages.add(new Report.Page(id, title.isBlank() ? id : title, filters(p.path("filters"), path + ".filters", out), drill, visuals));
+            String layout = text(p, "layout", "grid");
+            if (!layout.equals("grid") && !layout.equals("board")) {
+                out.add(error(INVALID, path + ".layout", "layout is grid (the default) or board (a wall of tiles with kiosk, rotation and tile alerts)"));
+                layout = "grid";
+            }
+            JsonNode tip = p.path("tooltip");
+            if (!tip.isMissingNode() && !tip.isNull() && !tip.isBoolean()) {
+                out.add(error(INVALID, path + ".tooltip", "tooltip is true (this page is drawn over a hovered mark) or false"));
+            }
+            pages.add(new Report.Page(id, title.isBlank() ? id : title, filters(p.path("filters"), path + ".filters", out), drill, visuals, layout, tip.asBoolean(false),
+                    interactions(p.path("interactions"), path + ".interactions", out)));
         }
         return pages;
     }
@@ -434,6 +495,27 @@ public final class ReportParser {
         Map<String, Object> format = map(v.path("format"), p + ".format", out);
         Map<String, Object> action = map(v.path("action"), p + ".action", out);
         checkSlicerMode(type, format, p, out);
+        out.addAll(FormatSchemas.get().check(type, format, p));                 // the typed format of the visual's family (R6)
+        String tooltip = text(v, "tooltip", "");
+        if (!tooltip.isEmpty() && !ID.matcher(tooltip).matches()) {
+            out.add(error(INVALID, p + ".tooltip", "tooltip names a tooltip page of this report by its id"));
+            tooltip = "";
+        }
+        Report.TileRef from = null;
+        JsonNode fr = v.path("from");
+        if (fr.isObject()) {
+            from = new Report.TileRef(text(fr, "report", ""), text(fr, "page", ""), text(fr, "visual", ""));
+            if (from.report().isBlank() || from.visual().isBlank()) {
+                out.add(error(INVALID, p + ".from", "from is { report: <report>, visual: <visual id>, page: <page id, optional> }"));
+            }
+        } else if (!fr.isMissingNode() && !fr.isNull()) {
+            out.add(error(INVALID, p + ".from", "from is { report: <report>, visual: <visual id> }"));
+        }
+        if (from != null && !"tile".equals(type)) {
+            out.add(new Problem("warning", INVALID, p + ".from", "only a tile shows a visual of another report; `from` is ignored"));
+            from = null;
+        }
+        Map<String, Object> alert = map(v.path("alert"), p + ".alert", out);
         String src = text(v, "src", "");
         if (!src.isEmpty() && !(src.startsWith("/static/") || src.startsWith("data:image/")) || src.contains("..")) {
             out.add(error(INVALID, p + ".src", "an image comes from this site (/static/...) or is a data:image/ URI, never another address"));
@@ -441,7 +523,7 @@ public final class ReportParser {
         }
         return new Report.Visual(id, type, text(v, "title", ""), at, wells, filters(v.path("filters"), p + ".filters", out), sort, limit, v.path("hierarchy").isTextual()
                 ? v.path("hierarchy").asText() : null, dt, format, text(v, "text", ""), src, text(v, "alt", ""), v.path("interacts").asBoolean(true), action,
-                text(v, "dataset", "").isBlank() ? null : text(v, "dataset", ""));
+                text(v, "dataset", "").isBlank() ? null : text(v, "dataset", ""), tooltip.isEmpty() ? null : tooltip, from, alert);
     }
 
     private static void checkSlicerMode(String type, Map<String, Object> format, String p, List<Problem> out) {
@@ -525,6 +607,39 @@ public final class ReportParser {
             list.add(new Report.Bookmark(name, b.path("page").asText(), slicers, filters(b.path("filters"), p + ".filters", out)));
         }
         return list;
+    }
+
+    /** {@code interactions: { <source visual>: { <target visual>: filter | highlight | none } }}: Power BI's Edit interactions, per page; references are checked after the page. */
+    private static Map<String, Map<String, String>> interactions(JsonNode n, String path, List<Problem> out) {
+        Map<String, Map<String, String>> all = new LinkedHashMap<>();
+        if (n.isMissingNode() || n.isNull()) {
+            return all;
+        }
+        if (!n.isObject()) {
+            out.add(error(INVALID, path, "interactions maps a visual to how its selection acts on the others: { by-desk: { trend: highlight, kpis: none } }"));
+            return all;
+        }
+        n.fields().forEachRemaining(src -> {
+            if (!src.getValue().isObject()) {
+                out.add(error(INVALID, path + "." + src.getKey(), "maps each other visual to filter, highlight or none"));
+                return;
+            }
+            Map<String, String> row = new LinkedHashMap<>();
+            src.getValue().fields().forEachRemaining(t -> {
+                String how = t.getValue().asText("").toLowerCase(Locale.ROOT);
+                if (!Report.INTERACTIONS.contains(how)) {
+                    out.add(error(INVALID, path + "." + src.getKey() + "." + t.getKey(), "'" + t.getValue().asText() + "' is not an interaction: filter, highlight or none"));
+                } else if (t.getKey().equals(src.getKey())) {
+                    out.add(new Problem("warning", INVALID, path + "." + src.getKey() + "." + t.getKey(), "a visual's selection never filters itself; this entry is ignored"));
+                } else {
+                    row.put(t.getKey(), how);
+                }
+            });
+            if (!row.isEmpty()) {
+                all.put(src.getKey(), row);
+            }
+        });
+        return all;
     }
 
     /** {@code links: [ { fields: [a.counterparty, b.counterparty] } ]}: fields of different datasets that mean the same thing; each field is table.column. */

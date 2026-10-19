@@ -146,8 +146,12 @@ class VisualQueriesTest {
         assertThat(b.query().filters()).isEmpty();
         assertThat(b.highlight().filters()).containsExactly(new QueryRequest.Filter("trade.DESK", "in", List.of("DESK-FX")));
         VisualQueries.Built line = build(r, "p", "c", s, "trades-basic");
-        assertThat(line.highlight()).as("a line cannot draw a highlight, so it is filtered").isNull();
-        assertThat(line.query().filters()).hasSize(1);
+        assertThat(line.highlight()).as("since 2.4.0 a line draws a highlight too").isNotNull();
+        assertThat(line.query().filters()).isEmpty();
+        Report asTable = ReportParser.parse(ReportYaml.write(r.toMap()).replace("type: line", "type: table").replace("axis: [trade.TRADE_DATE], values: [MTM]", "columns: [trade.TRADE_DATE, MTM]")).report();
+        VisualQueries.Built table = build(asTable, "p", "c", s, "trades-basic");
+        assertThat(table.highlight()).as("a table cannot draw a highlight, so it is filtered").isNull();
+        assertThat(table.query().filters()).hasSize(1);
         VisualQueries.Built off = build(r, "p", "d", s, "trades-basic");
         assertThat(off.query().filters()).as("interacts: false").isEmpty();
         assertThat(off.highlight()).isNull();
