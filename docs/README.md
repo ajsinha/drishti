@@ -422,7 +422,7 @@ Each run has a README (what was tested, findings by severity, how each was fixed
 | **Strip** | The row of key figures under a view's title |
 | **Panel** | One box in a view: a table, a chart, label/value pairs |
 | **Sutra** | A layout for one kind of entity: one YAML file, `<name>.v<N>.sutra.yaml`, starting with `rachana: 1` |
-| **Rachana** | The grammar Sutras are written in; **Rachana-EL** is its expression language (`$.mtm > 0`) |
+| **Rachana** | The grammar Sutras are written in; **Rachana-EL** is its expression language (`$.QUANTITY > 0`) |
 | **Inference** | Drishti laying out a view by itself from the shape of the data |
 | **Pack** | An industry's commands, layouts, links, roles and sample data, in `config/packs/<name>/` |
 | **Source / connector** | Where documents come from: the demo samples, Delta Lake, PostgreSQL, Kafka, … A connector is one YAML file in `config/connectors` |

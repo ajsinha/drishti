@@ -72,11 +72,12 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | Workspaces | `/w` | Several live views on one screen |
 | Inbox | `/inbox` | Views and comments sent to you ([Your inbox](#your-inbox)) |
 | Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](SCHEDULED_REPORTS.md#export-and-subscriptions)) |
-| BI | `/bi`, `/bi/catalogue`, `/bi/w/me`, `/bi/r/<id>`, `/bi/b/<id>`, `/bi/datasets`, `/bi/designer` | Rūpaka business intelligence, for people with the `bi` power ([BI_GUIDE.md](BI_GUIDE.md)) |
+| BI | `/bi`, `/bi/catalogue`, `/bi/w/me`, `/bi/r/<id>`, `/bi/models`, `/bi/datasets`, `/bi/designer`, `/bi/explore`, `/bi/transform` | Rūpaka business intelligence, for people with the `bi` power: reports (a board is a report page; `/bi/b/<id>` opens it), BI Studio's designers, Analyse and the Transform editor ([BI_GUIDE.md](BI_GUIDE.md)) |
+| Python console | `/pyconsole` | Your own Python in the browser on a masked extract of a BI model; promote it to the server (BI rail, *Python console*; [ANALYSE.md](ANALYSE.md#16-the-browser-python-console)) |
 | Build | `/build`, `/build/new`, `/build/pack/new`, `/build/reviews` | Design layouts (Sutras) in the workbench, make a pack from schemas, approve proposed Sutras |
 | My account | `/account` | Your profile, settings and password |
 | Servers | `/servers` | The Drishti servers this console may talk to ([Working with several servers](#working-with-several-servers)) |
-| Admin | `/admin/users`, `/admin/roles`, `/admin/audit`, `/admin/packs`, `/admin/connectors`, `/admin/loads`, `/admin/collab`, `/admin/embedding`, `/admin/health`, `/admin/caches` (and `/admin/ai`, `/admin/bi`, `/admin/tokens`, `/admin/access` where those features are on) | Users, roles, audit log, packs, connectors, data loads, collaboration moderation, embedding, health and caches (admins only) |
+| Admin | `/admin/users`, `/admin/roles`, `/admin/audit`, `/admin/packs`, `/admin/connectors`, `/admin/artifacts`, `/admin/loads`, `/admin/lakes`, `/admin/collab`, `/admin/embedding`, `/admin/net`, `/admin/health`, `/admin/caches` (and `/admin/ai`, `/admin/bi`, `/admin/tokens`, `/admin/access` where those features are on) | Users, roles, audit log, packs, connectors, installed artifacts, data loads, Delta lakes, collaboration moderation, embedding, Drishti\*net, health and caches (admins only) |
 | Help | `/help` | Tutorials, guides and every reference |
 | About | `/about` | The product page: features, measured performance, competitive analysis, technology, licence (system details for admins: `/admin/health`) |
 
@@ -110,7 +111,7 @@ you are on is highlighted.
 | | Govern | *Reviews* (`/build/reviews`, with the number waiting) |
 | | Learn | *Tutorials*, *Schema to pack*, *Screen designer guide*, *Sutra developer guide*, *Panel kinds*, *Rachana reference*, *Pack developer guide* |
 | **Admin** (admins only) | People & access | *Users*, *Roles*, *Audit log* |
-| | Operations | *Packs*, *Connectors*, *Data loads*, *Collaboration*, *Embedding*, *Health*, *Caches* |
+| | Operations | *Packs*, *Connectors*, *Artifacts*, *Data loads*, *Lakes*, *Collaboration*, *Embedding*, *Net* (Drishti\*net: [NET.md](../admin/NET.md)), *Health*, *Caches* |
 | **Help** | Learn | *Help centre* (`/help`, also `F1`), *Install and run*, *About* |
 
 **BI and the `BI` keyword (alias `RUPAKA`).** Where your roles hold the `bi` power, a **BI** menu sits between **Views** and **Forms**, and the reserved command
@@ -118,7 +119,7 @@ word `BI` goes there from the command line, in any case: `BI <GO>` the BI home, 
 catalogue, `BI SETTINGS <GO>` the BI settings (administrators with `bi-admin`), `BI <report-or-board> <GO>` a published item by id or title (a **report opens drawn**, with its slicers, drill-down and drill-through; type-ahead completes after `BI `; `RUPAKA` still works as an alias). Without the power the menu is not there and `BI <GO>`
 says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA` or `FORM`. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
 [BI_GUIDE.md](BI_GUIDE.md). **Using a report:** click a bar and the page filters to it, the buttons in a visual's header drill down, drill through to another page, show the rows behind it or open a trade in the terminal, and a slicer filters
-what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas ([BI_GUIDE.md](BI_GUIDE.md) section 15, [tutorial 10](../tutorials/10-first-bi-report.md)); the YAML reference is [REPORTS.md](REPORTS.md).
+what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([BI_GUIDE.md](BI_GUIDE.md) sections 15 and 26, [tutorial 10](../tutorials/10-first-bi-report.md)); the YAML reference is [REPORTS.md](REPORTS.md). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
 
 **On the right:** round tools, from left to right.
 
@@ -1722,6 +1723,9 @@ server: the browser's cookie, or a copy of it, no longer signs anyone in. (Openi
 the server it was made on (it carries `?srv=…`). A server not shown in the list can still be reached with the link
 `/connect/<its id>` if you were given one.
 
+Servers that act as **one cluster** (Drishti\*net) are different: you sign in once and the console moves between them by itself; see
+[Several servers (Drishti\*net)](#several-servers-drishtinet).
+
 ## Your settings
 
 *My account* (`/account`) shows your profile and roles, your settings, and a form to change your password.
@@ -1775,6 +1779,9 @@ otherwise the browser remembers it.
 
 Every theme meets WCAG AA contrast: all text, including faint notes, the footer and placeholders, reads at
 4.5:1 or more on its background, and buttons in the accent colour carry a label that reads on them.
+
+These are the console's themes. A BI report has a theme of its own (the shipped *Corporate* and *Print*, or one made in the
+theme designer), chosen by its author in BI Studio: [REPORTS.md section 5.2](REPORTS.md#52-themes).
 
 ## Domain packs: choosing what you see
 
