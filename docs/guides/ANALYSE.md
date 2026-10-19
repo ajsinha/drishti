@@ -105,20 +105,20 @@ the cell's engine choice says *Server: Drishti SQL over the model*, and the stat
 dataset's implicit model), not over the extract. Its tables are the model's aliases, a measure is `MEASURE('name')`, `JOIN` needs no `ON` (the model's
 relationships are used), and the server answers **as you**, with your row rules and masks, through the same plan as the model query it equals. A new
 cell starts with a statement written from the model (the first text field you ticked and the model's first measure). Captured for an extract of the
-model *SQL model* (trades and desks, one measure *Sum of mtm*):
+model *SQL model* (trades and desks, one measure *Sum of MTM*):
 
 ```sql
-SELECT trade.PORTFOLIO,
-       MEASURE('Sum of mtm') AS "Sum of mtm"
+SELECT trade.CURRENCY,
+       MEASURE('Sum of MTM') AS "Sum of MTM"
 FROM   trade
-GROUP  BY trade.PORTFOLIO
+GROUP  BY trade.CURRENCY
 LIMIT  20
 ```
 
-The cell's footer says *3 rows in 16 ms · Drishti SQL, run by the server over sql-model@1 as you · plan p_a02f4d0f6d*, with the masked columns when
+The cell's footer says *3 rows in 4 ms · Drishti SQL, run by the server over sql-model@1 as you · plan p_825d3a8857*, with the masked columns when
 there are any:
 
-![A SQL cell: the statement above, Run, the engine Server: Drishti SQL over the model, and three books with their Sum of mtm](img/bi-languages/analyse-dsql-cell.jpg) The console sends the cell to
+![A SQL cell: the statement above, Run (Drishti SQL, run by the server over the model), and three currencies with their Sum of MTM: EUR -75000, GBP 425000, USD -575000](img/bi-languages/analyse-dsql-cell.jpg) The console sends the cell to
 `POST /bi/explore/dsql` (`{extract, sql}`), which asks the server's `POST /api/v1/bi/sql` with the model and the cell's row limit
 (`bi.explore.sql_max_rows`, one more to say when it was cut); it never reads the SQL itself. Every source has a model since 2.2: a notebook saved
 earlier that names a 2.1 dataset (`file:dataset:trades-basic`) reads the model the converter made of it (`trades-basic@1`), and so does its extract,

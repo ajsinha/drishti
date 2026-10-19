@@ -51,7 +51,7 @@
   <label>Refresh <select class="studio-select" data-refresh><option value="on-load">when new data loads</option><option value="business-days 06:30">business days at 06:30</option><option value="">never by itself</option></select></label></div>
   <ul class="bi-warn" data-problems-columns></ul></section>
 <section class="bi-sec bi-form bi-layer-form" data-step="filter" hidden aria-labelledby="lwFilter"><h2 id="lwFilter">Only some rows</h2>
-  <p class="text-muted-d bi-small-note">A condition on each row (a filter of the table, not a security rule: row rules are set on the model). Leave it empty to keep every row. Example: <code>status == 'LIVE' and notional &gt; 1_000_000</code>.</p>
+  <p class="text-muted-d bi-small-note">A condition on each row (a filter of the table, not a security rule: row rules are set on the model). Leave it empty to keep every row. Example: <code>TRADE_STATUS == 'VALIDATED' and NOTIONAL &gt; 1_000_000</code>.</p>
   <div class="bi-frow" data-where-host><span>Keep the rows where</span><input class="studio-in mono" data-where aria-label="Keep the rows where"></div>
   <ul class="bi-warn" data-problems-filter></ul></section>
 <section class="bi-sec bi-form bi-layer-form" data-step="grain" hidden aria-labelledby="lwGrain"><h2 id="lwGrain">What one row is</h2>
@@ -64,7 +64,7 @@
     <p class="text-muted-d bi-small-note">Never a silent distinct: which duplicate wins is said here and written in the YAML (<code>grain: {one-row-per, keep}</code>).</p></fieldset>
   <ul class="bi-warn" data-problems-grain></ul></section>
 <section class="bi-sec bi-form bi-layer-form" data-step="derive" hidden aria-labelledby="lwDerive"><h2 id="lwDerive">Columns worked out from others</h2>
-  <p class="text-muted-d bi-small-note">A formula over this table's columns (row by row: <code>mtm / notional * 10000</code>, <code>'Long' if notional &gt; 0 else 'Short'</code>, <code>related(desk.name)</code>), or a Python column item. Each has a type and a meaning, like any column.</p>
+  <p class="text-muted-d bi-small-note">A formula over this table's columns (row by row: <code>MTM / NOTIONAL * 10000</code>, <code>'Long' if NOTIONAL &gt; 0 else 'Short'</code>, <code>related(desk.NAME)</code>), or a Python column item. Each has a type and a meaning, like any column.</p>
   <div data-derive></div>
   <p class="bi-actions"><button type="button" class="btn-pill btn-ghost bi-small" data-derive-add="expr"><i class="bi bi-plus-lg" aria-hidden="true"></i> A formula column</button> <button type="button" class="btn-pill btn-ghost bi-small" data-derive-add="python"><i class="bi bi-filetype-py" aria-hidden="true"></i> A Python column</button></p>
   <ul class="bi-warn" data-problems-derive></ul></section>

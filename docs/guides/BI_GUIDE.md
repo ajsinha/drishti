@@ -699,13 +699,13 @@ datasets:
   trade: {dataset: pack.trading.trade@^1, role: fact}
   desk: {dataset: pack.core.desk@^1, role: dimension}
 relationships:
-  - {from: trade.desk, to: desk.id, suggested: {from: pack-reference}}
+  - {from: trade.DESK, to: desk.id, suggested: {from: pack-reference}}
 measures:
-  Sum of mtm: {expr: sum(trade.mtm)}
+  Sum of MTM: {expr: sum(trade.MTM)}
 security:
   rows:
     trade:
-      - {role: desk-head, where: trade.desk in user.desks}
+      - {role: desk-head, where: trade.DESK in user.desks}
       - {role: bi-writer, where: 'True'}
   may-see-all:
     desk: [desk-head]
@@ -806,35 +806,36 @@ wins, add columns worked out from others (a formula or a Python column item), gr
 The **state badge** follows the item: *Saved draft*, *Published*, *Proposed*, and *Draft changes (v1 published)* after a save on a published model, when
 **Publish** is offered again.
 
-![The Fields tab: a row per field with its display name, description, format, folder, hidden, sort by, category and summarisation; the perspective Desk view below](img/bi-languages/model-fields-tab.jpg)
+![The Fields tab: the perspective Desk view (Sum of MTM and trade.DESK ticked) above, then a row per field (trade.CURRENCY, trade.DESK, trade.MTM in the folder Risk, ...) with its display name, description, format, folder, hidden, sort by and category](img/bi-languages/model-fields-tab.jpg)
 
 What the designer wrote for a model of trades and desks with a formula measure, two field properties, a hidden field and a perspective (captured):
 
 ```yaml
 rachana: 2
+expressions: 2
 model: languages-model
 version: 1.0.0
-id: md_8cec9e2f
+id: md_902e5c84
 title: Languages model
 datasets:
   trade: {dataset: pack.trading.trade@^1, role: fact}
   desk: {dataset: pack.core.desk@^1, role: dimension}
 relationships:
-  - {from: trade.desk, to: desk.id, suggested: {from: pack-reference}}
+  - {from: trade.DESK, to: desk.id, suggested: {from: pack-reference}}
 measures:
-  Sum of mtm: {expr: sum(trade.mtm)}
-  MTM per trade: {expr: measure('Sum of mtm') / count(trade.tradeId)}
+  Sum of MTM: {expr: sum(trade.MTM)}
+  MTM per trade: {expr: measure('Sum of MTM') / count(trade.TRADE_ID)}
 fields:
-  trade.mtm: {description: 'Mark to market, in the trade''s currency', folder: Risk}
-  trade.book: {hidden: true}
+  trade.MTM: {description: 'Mark to market, in the trade''s currency', folder: Risk}
+  trade.PORTFOLIO: {hidden: true}
 perspectives:
-  desk-view: {title: Desk view, fields: [trade.desk], measures: [Sum of mtm]}
+  desk-view: {title: Desk view, fields: [trade.DESK], measures: [Sum of MTM]}
 ```
 
-After publishing it, redefining *Sum of mtm* as `sum(trade.pnl1d)` and saving: the badge reads *Draft changes (v1 published)*, Publish is back, and the
+After publishing it, redefining *Sum of MTM* as `sum(trade.PNL_1D)` and saving: the badge reads *Draft changes (v1 published)*, Publish is back, and the
 Contract tab says what that change means:
 
-![Changes since the published version: major, changes what Sum of mtm computes; These changes need a new major version: the draft's version 2.0.0 is right](img/bi-languages/model-contract-diff.jpg)
+![Changes since the published version: major, changes what Sum of MTM computes (sum(trade.MTM) → sum(trade.PNL_1D)); These changes need a new major version: what reads contract-model@1 has to move to it. The draft's version 2.0.0 is right](img/bi-languages/model-contract-diff.jpg)
 
 **4. Reports on a model.** The Fields pane shows the model's **display names**, its **folders**, leaves **hidden** fields out, and offers the model's
 **perspectives** (the report keeps its choice as `perspective:`); every visual's labels use the display names. **New measure for this report** writes a
@@ -919,7 +920,7 @@ report on a 2.1 dataset (no model query) keeps the report stream of earlier rele
 | **2026-10-01 to 2026-10-09** | a window, followed |
 | **Asked once** | the page follows its maximum already |
 
-![A table on a model: the Live chip under it](img/bi-wave-b/state-chip.jpg)
+![A table on a model, MTM by desk: the chip Listening under it (the model follows its data; nothing has changed yet)](img/bi-wave-b/state-chip.jpg)
 
 **The time picker** (*Time* in the report's bar, the board's bar and Analyse's extract) asks the same question **now** (live), **as of a date** or over **a
 window** of dates: one plan answers all three (§4.5 of the design). *As of* a past date is asked once; *now* and a window are followed.
@@ -928,7 +929,7 @@ window** of dates: one plan answers all three (§4.5 of the design). *As of* a p
 (its min, max and step), a field parameter as a choice of fields, text, dates, yes or no, and each calculation group as *Show as*. A value other than the
 default is a chip in the filter line; the visuals are asked again with the values (`mq: 2`, `params`, `calc`), and so are their standing queries.
 
-![The shock slider at 0.5: MTM shocked is MTM times 1.5](img/bi-wave-b/parameter-slicer.jpg)
+![The shock slider at 0.5 and the chip shock: 0.5: MTM shocked is Sum of MTM times 1.5 (DESK-EQD 425,000 to 637,500)](img/bi-wave-b/parameter-slicer.jpg)
 
 **Explain.** The diagram button of a visual opens *How this was answered* over it: the steps per tier (the data store, the Java server, the console's
 Python), each scan's layer (`columns`, `live`, `history`, `direct`, a rollup), the plan hash, whether the cache answered, the engine's and Python's times,

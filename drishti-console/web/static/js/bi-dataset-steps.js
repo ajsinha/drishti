@@ -257,7 +257,7 @@
           how = h('div', {}, h('label', { class: 'bi-frow' }, h('span', { text: 'Python item' }), item), h('p', { class: 'text-muted-d bi-small-note' }, 'A Python column item takes the input columns below and returns one value per row. None yet? ', write, ' (it opens in a new tab), then ', again, '.'),
             h('fieldset', {}, h('legend', { text: 'Its inputs (the columns it reads, masked as the reader)' }), ins));
         } else {
-          const ex = h('input', { class: 'studio-in mono', value: d.expr || '', 'data-derive-expr': i, placeholder: 'mtm / notional * 10000' });
+          const ex = h('input', { class: 'studio-in mono', value: d.expr || '', 'data-derive-expr': i, placeholder: 'MTM / NOTIONAL * 10000' });
           how = h('div', { class: 'bi-frow' }, h('span', { text: 'Formula (row by row)' }), ex);
           window.setTimeout(() => B.exprEditor(ex, { checkAtStart: true, scope: 'row', label: 'Formula of ' + (d.name || 'the column'), fields: colFields, measures: [], target, onCommit: (v) => { d.expr = v; L.keep(); L.check('derive').catch(() => {}); } }), 0);
           ex.addEventListener('input', () => { d.expr = ex.value; L.keep(); });

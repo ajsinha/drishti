@@ -827,14 +827,14 @@ pages:
   - id: main
     title: Main
     visuals:
-      - { id: bar-1, type: bar, at: { x: 2, y: 1, w: 6, h: 5 }, wells: { axis: [trade.desk], values: [Sum of mtm] } }
+      - { id: bar-1, type: bar, at: { x: 2, y: 1, w: 6, h: 5 }, wells: { axis: [trade.DESK], values: [Sum of MTM] } }
 ```
 
 **Start one** from *Models* (**Use** on a dataset or a model), from a dataset's page (**Start a report on it**), or from the model designer (**Start a
 report**): the draft opens in the designer. Everything of sections 2 to 8 applies; what differs:
 
 * **Fields** is the model as you see it: one group per dataset alias (`trade`, `desk`), its measures (the model's and the default ones such as
-  `Sum of notional`, `Count of trade`), masked fields marked. The header names the model: *Implicit model of Trade* with **Make it a model**, or
+  `Sum of NOTIONAL`, `Count of trade`), masked fields marked. The header names the model: *Implicit model of Trade* with **Make it a model**, or
   *Model Trades and desks* with **Open the model**. There is no *Add dataset*: a report reads one model, and another dataset is added to the model.
 * **Every visual's data is one model query** (`POST /api/v1/bi/mq`) built from its wells (fields and measures, in order), the report's, page's and
   visual's filters (a filter on a measure becomes `having`), its sort and limit, and, in the viewer, the slicers and the other visuals' selections.
@@ -844,8 +844,8 @@ report**): the draft opens in the designer. Everything of sections 2 to 8 applie
   mq: 1
   model: trades-and-desks@1
   select:
-    fields: [trade.desk]
-    measures: [Sum of mtm]
+    fields: [trade.DESK]
+    measures: [Sum of MTM]
   ```
 * A filter's value picker lists the field's values from the model, as you.
 * **Make it a model** (implicit models only: `model: dataset:<name>`, quoted or not, as the designer saves it) writes a draft model item in the report's
@@ -867,11 +867,11 @@ report**): the draft opens in the designer. Everything of sections 2 to 8 applie
 on the browser test's lake (two days of 60 trades), the model query
 
 ```json
-{"mq": 1, "model": "trades-and-desks@1", "select": {"fields": ["desk.name"], "measures": ["Sum of mtm"]}, "sort": [{"by": "Sum of mtm", "desc": true}]}
+{"mq": 1, "model": "trades-and-desks@1", "select": {"fields": ["desk.NAME"], "measures": ["Sum of MTM"]}, "sort": [{"by": "Sum of MTM", "desc": true}]}
 ```
 
-answers `["Equity derivatives", 425000], ["Bonds and securitised", -75000], ["G10 and EM FX", -575000]`, and the version-1 query
-`{"fields": ["trade.desk"], "measures": ["MTM"]}` on `trades-basic` answers `["DESK-EQD", 425000], ["DESK-FI", -75000], ["DESK-FX", -575000]`.
+answers `["Equity derivatives", 425000], ["Fixed income", -75000], ["Foreign exchange", -575000]`, and the version-1 query
+`{"fields": ["trade.DESK"], "measures": ["MTM"]}` on `trades-basic` answers `["DESK-EQD", 425000], ["DESK-FI", -75000], ["DESK-FX", -575000]`.
 
 **On the server.** The report endpoints read `model:` as they read `dataset:`: Check (`POST /bi/reports/validate`), the report query (its answer's `mq`
 names the model), exports, subscriptions, board tiles and embeds ask each visual as one model query on the model, as the reader. A report names `model:` or
@@ -907,7 +907,7 @@ perspective: "desk-view"
 pages: [...]
 ```
 
-![The Fields pane of a report on Inherit model: the perspective Desk view chosen, Measures with Sum of mtm, the trade group with Trading desk only](img/bi-languages/report-fields-perspective.jpg)
+![The Fields pane of a report on Inherit model: the perspective Desk view chosen, Measures with Sum of MTM, the trade group with Trading desk only](img/bi-languages/report-fields-perspective.jpg)
 
 A perspective is a convenience, not security: what a reader may not see the model hides from them (`hidden-for`), and the server leaves it out of
 `describe`, SQL and AI.
@@ -918,17 +918,17 @@ the model's measures and fields; **Try it** asks the model. The measure is writt
 
 ```yaml
 measures:
-  "MTM in thousands": { expr: "measure('Sum of mtm') / 1000" }
+  "MTM in thousands": { expr: "measure('Sum of MTM') / 1000" }
 ```
 
 ```yaml
 mq: 1
 model: query-model@1
 select:
-  fields: [trade.desk]
+  fields: [trade.DESK]
   measures: [MTM in thousands]
 define:
-  MTM in thousands: "measure('Sum of mtm') / 1000"
+  MTM in thousands: "measure('Sum of MTM') / 1000"
 ```
 
 In the Fields pane it is marked *this report only*, with **Move to the model** (the model designer opens with the measure added to its draft). A name the
@@ -943,18 +943,20 @@ is `MEASURE('x')`, `sum` is `SUM`, `distinct(x)` is `COUNT(DISTINCT x)`); one wi
 `MEASURE('…')` with its DEL in a comment above. Captured for the bar above (a desk axis and the report's own measure):
 
 ```sql
-SELECT trade.desk,
-       MEASURE('Sum of mtm') / 1000 AS "MTM in thousands"
+SELECT trade.DESK,
+       MEASURE('Sum of MTM') / 1000 AS "MTM in thousands"
 FROM   trade
-GROUP  BY trade.desk
+GROUP  BY trade.DESK
+ORDER  BY "MTM in thousands" DESC
+LIMIT  500
 ```
 
-**Run as SQL** answered *3 rows from the server in 6.9 ms. Plan p_c1e3fa03bc: the same plan as the visual's query.* The same holds outside the
-designer: on that model, the model query `{select: {fields: [trade.desk], measures: [Sum of mtm]}}` and the statement
-`SELECT trade.desk, MEASURE('Sum of mtm') AS "Sum of mtm" FROM trade GROUP BY trade.desk` answer the same rows with the same `meta.plan` (a browser test
+**Run as SQL** answered *3 rows from the server in 9.6 ms. Plan p_17ee524ffb* (the same plan as the visual's query). The same holds outside the
+designer: on that model, the model query `{select: {fields: [trade.DESK], measures: [Sum of MTM]}}` and the statement
+`SELECT trade.DESK, MEASURE('Sum of MTM') AS "Sum of MTM" FROM trade GROUP BY trade.DESK` answer the same rows with the same `meta.plan` (a browser test
 checks it).
 
-![The query panel with SQL chosen: the statement above, Run as SQL, and the line 3 rows from the server ... the same plan as the visual's query](img/bi-languages/query-panel-sql.jpg)
+![The query panel of the selected visual with SQL chosen: the statement above (SELECT trade.DESK, MEASURE('Sum of MTM') ...) and Run as SQL](img/bi-languages/query-panel-sql.jpg)
 
 **Expressions are DEL v2.** Every formula the designer writes uses the Python-like syntax ([EXPRESSIONS.md](EXPRESSIONS.md)); a report saved before
 2.2.0 with the older syntax is refused (`DRS-9100`, with the DEL v2 text as the fix; stored items are converted when the server starts, and `drishti.py bi migrate --expressions` converts files).

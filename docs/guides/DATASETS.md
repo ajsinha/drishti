@@ -1022,42 +1022,43 @@ you have seen, Back and Next move one step, and the unfinished dataset is kept i
 
 Never a silent distinct: a dataset whose rows repeat a key says which one wins, and the YAML says it too.
 
-![The Rows step: Keep the rows where, the editor offering the column status and the function startswith](img/bi-languages/wizard-filter-completion.jpg)
+![The Rows step: Keep the rows where TRADE_ST typed, and the editor offering the column TRADE_STATUS (string)](img/bi-languages/wizard-filter-completion.jpg)
 
-![One row is: the key chips, and Keep the latest row of each key by tradeDate chosen](img/bi-languages/wizard-grain.jpg)
+![One row is: the key chips, One row per trade per business date, and Keep the latest row of each key by TRADE_DATE chosen](img/bi-languages/wizard-grain.jpg)
 
-![Worked-out columns: a formula column notionalM, decimal, notional / 1000000 checked by the server](img/bi-languages/wizard-derive.jpg)
+![Worked-out columns: a formula column notionalM, decimal, NOTIONAL / 1000000, and This step checks clean](img/bi-languages/wizard-derive.jpg)
 
-![Group: one row per desk, mtm, notional, pnl1d and notionalM summed, a count of the rows as trades](img/bi-languages/wizard-group.jpg)
+![Group: one row per DESK; MTM, NOTIONAL, PNL_1D and notionalM summed, the other columns left out, a count of the rows as trades](img/bi-languages/wizard-group.jpg)
 
 **Preview** asks, then saves the draft (under a name nobody you can see uses yet: `trade-narrowed`, else `trade-narrowed-2`) and shows its first rows, answered
-by the server as you. The trade pack dataset with `notionalM` worked out and grouped by desk:
+by the server as you. The trade pack dataset with `notionalM` worked out and grouped by `DESK` (a draft named `trade-narrowed` was already there):
 
-![The preview: the first 3 rows of the draft trade-narrowed, as of 2026-10-08; DESK-EQD, DESK-FI and DESK-FX with mtm, notional, pnl1d and notionalM summed (77, 78, 79); Checks clean](img/bi-languages/wizard-preview-grouped.jpg)
+![The preview: the first 3 rows of the draft trade-narrowed-2, as of 2026-10-08; DESK-EQD, DESK-FI and DESK-FX with MTM, NOTIONAL, PNL_1D and notionalM summed (77, 78, 79); Checks clean](img/bi-languages/wizard-preview-grouped.jpg)
 
-What the wizard wrote for *Live trades by desk*: the trade pack dataset without `book`, the live rows, the latest row of each trade, a notional in
-millions, grouped by desk (captured from the Save step):
+What the wizard wrote for *Live trades by desk*: the trade pack dataset without `PORTFOLIO`, the validated rows, the latest row of each trade, a
+notional in millions, grouped by desk (captured from the Save step):
 
 ```yaml
 rachana: 2
+expressions: 2
 dataset: live-trades-by-desk
 version: 1.0.0
 title: Live trades by desk
-extends: pack.market-risk.trade-valuation@^1
-columns: [CURRENCY, DESK, MTM, NOTIONAL, PNL_1D, PRODUCT_TYPE, TRADE_STATUS, TRADE_DATE, TRADE_ID]
-where: TRADE_STATUS != 'MATURED'
+extends: pack.trading.trade@^1
+columns: [CURRENCY, DESK, MTM, NOTIONAL, PNL_1D, PRODUCT_TYPE, SOURCE_SYSTEM, TRADE_DATE, TRADE_ID, TRADE_STATUS]
+where: TRADE_STATUS == 'VALIDATED'
 grain: {one-row-per: id, keep: latest by TRADE_DATE, says: One row per trade per business date}
 derive:
-  NOTIONAL_M: {expr: NOTIONAL / 1000000, type: decimal}
+  notionalM: {expr: NOTIONAL / 1000000, type: decimal}
 group:
   by: [DESK]
-  columns: {MTM: sum, NOTIONAL: sum, PNL_1D: sum, NOTIONAL_M: sum, TRADES: count}
+  columns: {MTM: sum, NOTIONAL: sum, PNL_1D: sum, notionalM: sum, trades: count}
   grain:
-    says: One row per desk
+    says: One row per DESK
     keys: [DESK]
 ```
 
-![The Save step: title Live trades by desk, the name live-trades-by-desk, the workspace, masked columns and the YAML](img/bi-languages/wizard-save.jpg)
+![The Save step: title Live trades by desk, the name live-trades-by-desk, My workspace, the masked columns DESK, MTM, NOTIONAL, PNL_1D and notionalM to tick, and the YAML above](img/bi-languages/wizard-save.jpg)
 
 The keys are written in the order they apply: `columns`, `where`, `grain`, `derive`, `group`. The dataset's page and the model designer read the result:
 the worked-out columns after the kept ones, and for a grouped dataset the `by` columns then the grouped ones (`desk`, `currency`, `notionalUsd`, `mtm`,
@@ -1077,22 +1078,20 @@ and save the YAML as a draft with the API (`POST /api/v1/bi/workspaces/<id>/item
 (in the expression editor: the model's fields, its tables and `MEASURE('…')` completed as you type, and the server's check under it),
 **Check the SQL** (the server says what it answers, or what is wrong with the fix), **Preview** (its first rows, as you), **Save**:
 
-![The source step with An SQL view over a model chosen: the model SQL model, the statement, and The SQL checks: desk (string), mtm (decimal)](img/bi-languages/wizard-sql-view.jpg)
+![The source step with An SQL view over a model chosen: the model SQL model (sql-model@1), the statement over trade JOIN desk with MEASURE('Sum of MTM'), and The SQL checks: desk (string), mtm (decimal)](img/bi-languages/wizard-sql-view.jpg)
 
-![The preview: 3 rows, as you; Bonds and securitised -75,000, Equity derivatives 425,000, G10 and EM FX -575,000](img/bi-languages/wizard-sql-preview.jpg)
+![The preview: 3 rows, as you; Equity derivatives 425,000, Fixed income -75,000, Foreign exchange -575,000](img/bi-languages/wizard-sql-preview.jpg)
 
-What it wrote (captured):
+What it wrote (captured; the columns step adds each column's type and role, `columns: {desk: {type: string, role: dimension}, mtm: {...}}`, and the
+grain `{says: One row per desk, keys: [desk]}` when you set them):
 
 ```yaml
 rachana: 2
+expressions: 2
 dataset: desk-mtm
 version: 1.0.0
 title: Desk MTM
-source: {sql: 'SELECT desk.NAME AS desk, MEASURE(''Sum of MTM'') AS mtm FROM trade_valuation JOIN desk GROUP BY desk.NAME', model: 'dataset:pack.market-risk.trade-valuation'}
-grain: {says: One row per desk, keys: [desk]}
-columns:
-  desk: {type: string, role: dimension}
-  mtm: {type: decimal, role: amount}
+source: {sql: 'SELECT desk.NAME AS desk, MEASURE(''Sum of MTM'') AS mtm FROM trade JOIN desk GROUP BY desk.NAME', model: sql-model@1}
 ```
 
 The same statement from the command line, as you (captured on the demo lakes, first rows):

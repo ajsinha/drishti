@@ -125,6 +125,10 @@
 - **Personal API tokens and the 2.4.0 BI endpoints.** `POST /api/v1/bi/boards/convert`, `/bi/themes/validate` and `/bi/python/input` store nothing
   and are open to a token as reads (so `drishti.py bi migrate --boards FILE` converts files with a token); `POST /api/v1/bi/migrate/boards` is never a
   token's, as the other stored-item migrations.
+- **The BI editors' examples use the 2.3.0 names (2.4.0).** The formula hint of the model designer (`sum(trade.MTM, where=trade.TRADE_STATUS ==
+  'VALIDATED')`) and the dataset wizard's row filter and worked-out column examples (`MTM / NOTIONAL * 10000`, `related(desk.NAME)`) were in the
+  lowercase 2.2 names; the pictures of EXPRESSIONS, DATASETS, BI_GUIDE, REPORTS and ANALYSE are taken again on the UPPER_SNAKE samples and their
+  text follows (*Sum of MTM*, `trade.DESK`).
 - **The elements demo host shows live valuations (2.4.0).** Since 2.3.0 a trade is static and the market-risk valuations tick, so
   `tools/elements-demo` shows `TVAL-1000008` (and `TVAL-1000002` in its side column) from the trading, counterparty-risk and market-risk packs; its
   search box knows `TVAL`. The `<drishti-view>` suites (`test_embed_elements_browser.py`, `test_embed_controls_browser.py`) run against it: masks

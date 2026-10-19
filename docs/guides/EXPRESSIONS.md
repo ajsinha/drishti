@@ -270,7 +270,7 @@ like any other. The calculations offered are the ones the server's catalogue has
 | As of the business day before | `as_of(measure('MTM'), shift_date(asof(), -1))` |
 | What-if: shocked by a parameter | `measure('MTM') * (1 + param.shock)` |
 
-![Quick calculation: Sum of mtm, % of total, the formula written for you](img/bi-wave-b/quick-calculation.jpg)
+![Quick calculation: the measure Sum of MTM, % of total, the name MTM share, and the formula written for you: share_of(measure('Sum of MTM'), over=ALL)](img/bi-wave-b/quick-calculation.jpg)
 
 The formula can then be edited in the measures table, in the ExpressionEditor, which completes `param.<name>` (the model's parameters), the
 relationship ids after `via=` and `ALL` after `over=` or `ignore=`. A measure's **Via** column picks the relationship it follows (`via:` in the YAML).
@@ -285,9 +285,9 @@ What it writes (the YAML tab, unchanged by hand):
 
 ```yaml
 measures:
-  Sum of mtm:  { expr: "sum(trade.mtm)", format: signed0 }
-  MTM share:   { expr: "share_of(measure('Sum of mtm'), over=ALL)", format: share }
-  MTM shocked: { expr: "measure('Sum of mtm') * (1 + param.shock)" }
+  Sum of MTM:  { expr: "sum(trade.MTM)", format: signed0 }
+  MTM share:   { expr: "share_of(measure('Sum of MTM'), over=ALL)", format: share }
+  MTM shocked: { expr: "measure('Sum of MTM') * (1 + param.shock)" }
 calc-groups:
   Time:
     precedence: 10
@@ -1584,39 +1584,39 @@ functions that work now), and every check is the server's (`POST /api/v1/bi/expr
 | type part of a name | lists the fields (with type, meaning and format), the measures and the functions that match; ↑ ↓ choose, Enter or Tab take one, Esc closes, Ctrl+Space opens the list anywhere. The order: a field whose whole name starts with what you typed (`status` for `sta`), then the functions (`sum` for `su`), then the fields matched by their column (`trade.summary`) |
 | type inside `count(` | the model's datasets (aliases) first: `count(trade)` counts its rows |
 | type inside `sum(`, `avg(`, `min(`, `max(` | the numeric fields first, text last |
-| pick a measure | writes `measure('Sum of mtm')` (a name with spaces or symbols needs nothing more); a word starting with a capital lists measures first |
+| pick a measure | writes `measure('Sum of MTM')` (a name with spaces or symbols needs nothing more); a word starting with a capital lists measures first |
 | pick a function | writes `sum(` and shows its **card**: the signature, one line, one example, *More in the guide* (this page, at the function) |
 | type inside a call | the card stays; after `,` the call's keyword arguments are offered (`where=`, `by=`, `desc=`) |
 | stop typing | the server's check: *Checks clean: gives decimal*, or each problem with its code, its message and the fix as a button (**Use …**) |
 | press **Try it** | the server's answer for the formula on the saved model, as you, by a suggested field (a table under the editor) |
 | look below the input | the measures the formula uses, as chips; a chip that names no measure is red; clicking one selects it in the text |
 
-A measure picked from the list is written `measure('Sum of mtm')`, and the measures a formula uses show as chips under it:
+A measure picked from the list is written `measure('Sum of MTM')`, and the measures a formula uses show as chips under it:
 
-![MTM per trade: measure('Sum of mtm') / count(trade.tradeId), and the chip Sum of mtm under Measures used](img/bi-languages/expr-editor-measure.jpg)
+![MTM per trade: measure('Sum of MTM') / count(trade.TRADE_ID), and the chip Sum of MTM under Measures used](img/bi-languages/expr-editor-measure.jpg)
 
-![A formula being written: sum(trade.mtm, wh typed, the keyword where= offered, and the card of sum below it](img/bi-languages/expr-editor-keyword.jpg)
+![A formula being written: sum(trade.MTM, wh typed, the keyword where= offered, and the card of sum below it](img/bi-languages/expr-editor-keyword.jpg)
 
-![The same formula complete: sum(trade.mtm, where=trade.status == 'Live') and the line Checks clean](img/bi-languages/expr-editor-clean.jpg)
+![The same formula complete: sum(trade.MTM, where=trade.TRADE_STATUS == 'VALIDATED') and the line Checks clean: gives decimal](img/bi-languages/expr-editor-clean.jpg)
 
-A bare column in a measure is the most common slip. The server answers `DRS-9127` *the column trade.mtm is outside an aggregate* with the fix
-*wrap it: sum(trade.mtm)*; the button puts the fix in place of the column (the problem's `at` span), so `trade.mtm * 2` becomes `sum(trade.mtm) * 2`:
+A bare column in a measure is the most common slip. The server answers `DRS-9127` *the column trade.MTM is outside an aggregate* with the fix
+*wrap it: sum(trade.MTM)*; the button puts the fix in place of the column (the problem's `at` span), so `trade.MTM * 2` becomes `sum(trade.MTM) * 2`:
 
-![trade.mtm * 2 in the editor, the problem DRS-9127 under it and a button Use sum(trade.mtm) * 2](img/bi-languages/expr-editor-problem.jpg)
+![trade.MTM * 2 in the editor, the problem DRS-9127 the column trade.MTM is outside an aggregate under it, and a button Use sum(trade.MTM) * 2](img/bi-languages/expr-editor-problem.jpg)
 
 When the server's problem carries no replacement, the editor offers its own fix, always as a button and always checked again by the server:
 
 | The problem | The button |
 |---|---|
-| a bracket left open (`sum(trade.mtm`) | **Use** `sum(trade.mtm)`: the missing `)` added |
-| `=` written for a comparison (`where=trade.status = 'Live'`) | **Use** `… trade.status == 'Live'` (a keyword argument such as `where=` is left alone) |
-| a name the model does not have (`DRS-9152`, `sum(trade.mtmm)`) | the server's *did you mean*, else the nearest field or measure: **Use** `sum(trade.mtm)` |
-| any fix that would sum, average or range over a text column | never offered (a sum of `trade.status` is no fix) |
+| a bracket left open (`sum(trade.MTM`) | **Use** `sum(trade.MTM)`: the missing `)` added |
+| `=` written for a comparison (`where=trade.TRADE_STATUS = 'VALIDATED'`) | **Use** `… trade.TRADE_STATUS == 'VALIDATED'` (a keyword argument such as `where=` is left alone) |
+| a name the model does not have (`DRS-9152`, `sum(trade.MTMM)`) | the server's *did you mean*, else the nearest field or measure: **Use** `sum(trade.MTM)` |
+| any fix that would sum, average or range over a text column | never offered (a sum of `trade.TRADE_STATUS` is no fix) |
 
-The old syntax is refused with `DRS-9100` (a warning only where a site sets `legacy: warn`); its fix button writes the converter's text (`[Sum of mtm] * 2` becomes
-`measure('Sum of mtm') * 2`). **Try it** then asks the server, as you, on the saved draft:
+The old syntax is refused with `DRS-9100` (a warning only where a site sets `legacy: warn`); its fix button writes the converter's text (`[Sum of MTM] * 2` becomes
+`measure('Sum of MTM') * 2`). **Try it** then asks the server, as you, on the saved draft:
 
-![measure('Sum of mtm') * 2 with the chip Sum of mtm, Checks clean, and the Try it table: Bonds and securitised -150,000, Equity derivatives 850,000, G10 and EM FX -1,150,000](img/bi-languages/expr-editor-try.jpg)
+![measure('Sum of MTM') * 2 with the chip Sum of MTM, Checks clean, and the Try it table by desk.DESK_ID: DESK-EQD 850,000, DESK-FI -150,000, DESK-FX -1,150,000](img/bi-languages/expr-editor-try.jpg)
 
 In the dataset wizard the editor is in **row** scope: it completes the table's columns and the row functions, and the server checks against the base
 dataset (its implicit model and alias):

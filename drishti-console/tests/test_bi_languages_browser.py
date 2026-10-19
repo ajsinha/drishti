@@ -267,6 +267,7 @@ def test_the_editor_offers_functions_and_keywords_and_fixes_what_the_server_find
     expect(page.locator('[data-xe-problem="DRS-9100"]')).to_be_visible(timeout=10000)
     page.locator('[data-xe-problem="DRS-9100"] [data-xe-fix]').click()
     assert ed.input_value() == "measure('Sum of MTM') * 2", ed.input_value()
+    expect(page.locator("[data-xe-ok]")).to_be_visible(timeout=10000)                          # the fix is checked again: clean
     # Try it: the server's answer on the saved draft, by a suggested field
     page.click("[data-nf] [data-xe-try]")
     expect(page.locator("[data-nf] [data-xe-tried]")).to_be_visible(timeout=15000)

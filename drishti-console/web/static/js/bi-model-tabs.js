@@ -149,7 +149,7 @@
       h('p', { class: 'text-muted-d bi-small-note', text: 'The aggregation, format, additivity and currency come from the dataset: amounts sum, ratios average and never add up, a balance takes its last value over time.' }),
       h('div', { class: 'bi-md-row' }, h('label', {}, 'Dataset ', dsSel), h('label', {}, 'Column ', colSel), h('label', {}, 'Aggregation ', aggSel), add)),
       h('details', { class: 'bi-sec', 'data-keep': '', 'data-nf': '', open: formulaOpen || null }, h('summary', { text: 'Write a formula' }),
-        h('p', { class: 'text-muted-d bi-small-note', text: 'Python-like: sum(trade.mtm, where=trade.status == \'LIVE\'), measure(\'MTM\') / measure(\'Notional\'), a if c else b. Type to see the fields, the measures and the functions; Ctrl+Space lists them.' }),
+        h('p', { class: 'text-muted-d bi-small-note', text: 'Python-like: sum(trade.MTM, where=trade.TRADE_STATUS == \'VALIDATED\'), measure(\'MTM\') / measure(\'Notional\'), a if c else b. Type to see the fields, the measures and the functions; Ctrl+Space lists them.' }),
         h('div', { class: 'bi-md-row' }, h('label', {}, 'Name ', fName), h('div', { class: 'bi-md-grow' }, fExpr), fAdd)));
     if (!M.readOnly) { M.exprEditor(fExpr, null); }
     if (M.quickMeasure) { pane.appendChild(M.quickMeasure()); }
