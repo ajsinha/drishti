@@ -123,7 +123,14 @@ console_tests() {
     failed=$($PY -m pytest -q --co --last-failed -p no:xdist "${targets[@]}" 2>/dev/null | grep '::' || true)
     [[ -n "$failed" ]] || { echo "drill: the console suite failed with no failed test to re-run (a collection error?)" >&2; return 1; }
     echo "drill: re-running the failed console tests once:" >&2; echo "$failed" >&2
-    $PY -m pytest -q -p no:xdist --last-failed --last-failed-no-failures none "${targets[@]}" || return 1
+    # one file at a time, each under a time limit: a browser that dies mid-test leaves Playwright waiting for ever, and a hung
+    # re-run must fail the drill, not block it (a file's browser tests take a few minutes; 20 minutes is a hang)
+    local file
+    for file in $(echo "$failed" | sed 's/::.*//' | sort -u); do
+      # shellcheck disable=SC2046
+      timeout --kill-after=30 1200 $PY -m pytest -q -p no:xdist $(echo "$failed" | grep "^$file::") || {
+        echo "drill: $file failed again (exit $?: 124 is the time limit)" >&2; return 1; }
+    done
     { echo "$(date -Iseconds) $(git log --oneline -1)"; echo "$failed"; } >> $LOGS/flakes.log
     echo "drill: FLAKY (failed once, passed again), kept in $LOGS/flakes.log" >&2
   fi
