@@ -409,7 +409,7 @@ Each run has a README (what was tested, findings by severity, how each was fixed
 | Folder | Read this when… |
 |---|---|
 | [requirements/](requirements/) | you want the four reference mockups the first views reproduced, and the logo and icon |
-| [publications/](publications/) | you want the design-and-evidence presentation (`Drishti-Design-and-Evidence.pptx`) |
+| [publications/](publications/) | you want the design-and-evidence presentation (`Drishti-Design-and-Evidence.pptx`, 48 slides, current to 2.5.0: the idea, the product with BI Studio, Python data prep and Drishti\*net, security, the evidence with the 35.7-million-trade run, and the release order to 3.0; each slide's notes name their sources) |
 
 ## Words you will meet
 
