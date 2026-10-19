@@ -165,7 +165,7 @@
     drawSlice();
   }
 
-  function drawSlice() {
+  function drawSlice(zonesOnly) {
     var s = X.slice;
     qa('[data-zone]', root).forEach(function (z) {
       var name = z.getAttribute('data-zone'), body = clear(q('[data-zone-body]', z));
@@ -186,7 +186,7 @@
         body.appendChild(row);
       });
     });
-    drawPivot();                                   // the console works the slice out again (a field added, moved or removed)
+    if (!zonesOnly) { drawPivot(); }               // the console works the slice out again (a field added, moved or removed)
   }
   /** A filter's values, as the console's last pivot listed them (the browser does not go through the rows). */
   X.distinct = {};
@@ -205,7 +205,7 @@
       var fresh = Object.keys(p.distinct || {}).some(function (k) { return !X.distinct[k]; });
       Object.keys(p.distinct || {}).forEach(function (k) { X.distinct[k] = p.distinct[k]; });
       showPivot(host, meta, s, p, p.engine || 'console');
-      if (fresh) { drawChipsOnly(); }
+      if (fresh) { drawSlice(true); }                             // a filter's picker lists the values the console just sent
     }, function (e) { if (run === pivotRun) { meta.textContent = e.message; } });
   }
 

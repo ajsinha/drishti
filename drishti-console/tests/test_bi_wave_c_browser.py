@@ -205,11 +205,12 @@ def test_the_slice_and_sql_over_the_extract_run_on_the_console(stack, browser):
     page.click("[data-cells=sql] [data-run]")
     page.wait_for_selector('[data-cells=sql] [data-engine="server"]', timeout=60000)
     assert len(grid(page, "[data-cells=sql]")) >= 2
-    for bad in ("SELECT 1; SELECT 2", "ATTACH 'x.db'"):
+    # a cell over the table extract runs on the console (two statements: DRS-9070); any other is Drishti SQL on the server, which refuses both (DRS-9170)
+    for bad, code in (("SELECT DESK FROM extract; SELECT 2", r"DRS-9070"), ("SELECT 1; SELECT 2", r"DRS-9170"), ("ATTACH 'x.db'", r"DRS-9170")):
         page.fill("[data-cells=sql] textarea", bad)
         page.click("[data-cells=sql] [data-run]")
         page.wait_for_selector("[data-cells=sql] .bi-bad", timeout=30000)
-        assert re.search(r"DRS-907[03]", page.inner_text("[data-cells=sql] .bi-bad"))
+        assert re.search(code, page.inner_text("[data-cells=sql] .bi-bad")), (bad, page.inner_text("[data-cells=sql] .bi-bad"))
     assert wasm == [], wasm
     quiet(page)
     clean(page)
@@ -241,6 +242,7 @@ def test_a_slice_and_a_sql_cell_become_visuals_in_a_new_and_an_existing_report(s
     page.click("#bxT-sql")
     page.fill("[data-cells=sql] textarea", "SELECT DESK, SUM(MTM) FROM extract WHERE CURRENCY = 'EUR' GROUP BY DESK")
     page.click("[data-promote-report]")
+    page.wait_for_selector("[data-promote-report] + .bi-near", timeout=30000)
     page.wait_for_function("() => /added to the report draft/.test(document.querySelector('[data-promote-report] + .bi-near').textContent)", timeout=30000)
     s, edited = api(page, "GET", "/items/" + mine["id"])
     assert s == 200 and edited["body"].count("- id:") >= 3 and "type: matrix" in edited["body"] and "EUR" in edited["body"] and "mtm-chart" in edited["body"], edited["body"]
