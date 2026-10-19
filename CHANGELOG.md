@@ -96,6 +96,8 @@
 - **Offline quote and news pages checked** (`DRISHTI_OFFLINE=true`, the committed snapshot): the topic page's note now says that offline mode shows the
   captured headlines (it said the tables stay empty); the browser test also checks that the company page draws the whole year of closes, ending at the
   quote's own price, with no policy violation or script error.
+- **A board tile's *Alert on* is kept when it is set first (2.4.0).** In the tile editor, *Alert on*, the hysteresis and *Notify* set before a
+  threshold were dropped (an alert is written only once it has a threshold); they now wait for it ([BOARDS.md](docs/guides/BOARDS.md)).
 - **Model designer (2.4.0):** a dataset's own id column (a trade's `TRADE_ID`, which references `trade`) no longer makes the dataset a dimension, so a
   model of trades and desks starts with the trades as its fact; on a phone the Measures tab's *Quick calculation* row wraps instead of widening the page.
   A pack's heading link on Forms and the packs in a pack's detail list are 44 px tap targets.

@@ -164,11 +164,13 @@
     }));
     box.appendChild(P.row('Report', rep));
     box.appendChild(P.row('Visual', vis));
-    const al = v.alert || {};
+    // an alert is written once it has a threshold; what is set before that (Alert on, the hysteresis, notify) waits here, per tile, so it is not lost
+    const drafts = (D.tileAlertDrafts = D.tileAlertDrafts || {});
+    const al = v.alert || drafts[v.id] || {};
     const put = (patch) => D.change('Tile alert', () => {
-      const a = Object.assign({}, v.alert || {}, patch);
+      const a = Object.assign({}, v.alert || drafts[v.id] || {}, patch);
       Object.keys(a).forEach((k) => { if (a[k] === undefined || a[k] === '') { delete a[k]; } });
-      if (a.warn || a.crit) { v.alert = a; } else { delete v.alert; }
+      if (a.warn || a.crit) { v.alert = a; delete drafts[v.id]; } else { delete v.alert; drafts[v.id] = a; }
     });
     const level = (name, label) => {
       const r = al[name] || {};

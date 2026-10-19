@@ -11,9 +11,10 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""BI wave B in Chromium, over the real server and console (tests/bi_live_stack.py: security on, the demo ticker, 750 trades; ports 18995 and 17995 unless
-DRISHTI_BI_LIVE_SERVER_PORT and DRISHTI_BI_LIVE_CONSOLE_PORT move them): the board designer (a new board, a tile from a report, its alert with a hysteresis, a key to
-move it, the YAML as the same draft, Save, and the board in the viewer), its finger-sized controls on a phone, the history line of the live desk, the temp folders on
+"""BI wave B in Chromium, over the real server and console (tests/bi_live_stack.py: security on, the demo ticker, the market-risk pack's 765 valuations; ports 18995 and 17995 unless
+DRISHTI_BI_LIVE_SERVER_PORT and DRISHTI_BI_LIVE_CONSOLE_PORT move them): a board page in the report designer (2.4.0: a tile from a report, its alert with a
+hysteresis and notify,
+the YAML it writes, Save and the draft reopened), its finger-sized controls on a phone, the history line of the live desk, the temp folders on
 Admin Health, and an import rolled back from Environments.
 
 Skipped when Playwright, Chromium or the built server jar is missing, or a scratch port is in use. Never run with pytest -n (the ports are fixed)."""
@@ -31,77 +32,88 @@ from test_bi_live_browser import browser, clean, sign_in, stack  # noqa: E402,F4
 BOARD_REPORT = "file:report:live-trading-desk"
 
 
+EMPTY_BOARD = "rachana: 1\nboard: {name}\ntitle: {title}\npages:\n  - id: page1\n    title: Page 1\n    tiles: []\n"
+
+
+def fetch(page, method, path, body=None):
+    return page.evaluate("""([m, p, b]) => fetch(p, {method: m, credentials: 'same-origin', headers: {'Content-Type': 'application/json', Accept: 'application/json'},
+                              body: b === null ? undefined : JSON.stringify(b)}).then(r => r.json().then(j => ({status: r.status, body: j})))""", [method, path, body])
+
+
 def design_board(page, title="Wave B wall"):
-    page.goto(CONSOLE_URL + "/bi/designer")
-    page.wait_for_selector("[data-new-board]")
-    page.fill("[data-new-board-title]", title)
-    page.click("[data-new-board] button[type=submit]")
-    page.wait_for_url("**/bi/design/board/**")
-    page.wait_for_selector("[data-board-design-root][data-ready='1']")
+    """2.4.0: a board is a report with board pages, designed in the report designer; an item made as a board is stored as one."""
+    made = fetch(page, "POST", "/bi/api/workspaces/me/items", {"kind": "board", "title": title, "description": "",
+                                                               "body": EMPTY_BOARD.format(name=title.lower().replace(" ", "-"), title=title)})
+    assert made["status"] in (200, 201), made
+    page.goto(f"{CONSOLE_URL}/bi/design/{made['body']['id']}")
+    page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
+    return made["body"]["id"]
 
 
 def add_tile(page, visual="desk/mtm"):
-    page.select_option("[data-add-report]", BOARD_REPORT)
-    page.wait_for_function("() => document.querySelector('[data-add-visual]').options.length > 0")
-    page.select_option("[data-add-visual]", value=visual)
-    page.click("[data-add-btn]")
-    page.wait_for_selector("[data-tile]")
+    page.click("[data-design-root] [data-title]")
+    page.keyboard.press("Escape")
+    page.click('.bi-vtype[data-type="tile"]')
+    page.wait_for_function("() => { const v = window.drishtiBi.design.sel(); return v && v.type === 'tile'; }")
+    tile = page.evaluate("window.drishtiBi.design.sel().id")
+    page.click("[data-ptab='format']")
+    page.wait_for_selector(f'[data-tile-report] option[value="{BOARD_REPORT}"]', state="attached", timeout=15000)
+    page.select_option("[data-tile-report]", BOARD_REPORT)
+    page.wait_for_function("() => document.querySelectorAll('[data-tile-visual] option').length > 1")
+    page.select_option("[data-tile-visual]", visual)
+    return tile
+
+
+def yaml_of(page) -> str:
+    page.click('[data-tab="yaml"]')
+    return page.evaluate("document.querySelector('.CodeMirror') ? document.querySelector('.CodeMirror').CodeMirror.getValue() : document.querySelector('[data-yaml]').value")
+
+
+def set_field(page, selector, value):
+    page.fill(selector, value)
+    page.locator(selector).press("Tab")
 
 
 def test_the_board_designer_builds_a_board_with_an_alert_and_a_hysteresis(stack, browser):
     page = sign_in(browser, "wes")
-    design_board(page)
-    assert page.inner_text("[data-title]") == "Wave B wall"
-    add_tile(page)
-    page.wait_for_function("() => document.querySelector('[data-tile]').innerText.includes('Live trading desk')", timeout=15000)       # the server resolves what the tile names
-    # the tile's form: title, place, the alert with its hysteresis, tell the readers
-    page.wait_for_selector("[data-tile-edit]")
-    page.fill("[data-tile-edit] [name=title]", "Net MTM")
-    page.select_option("[data-tile-edit] [name=warn_op]", "lt")
-    page.fill("[data-tile-edit] [name=warn_value]", "150000000")
-    page.select_option("[data-tile-edit] [name=crit_op]", "lt")
-    page.fill("[data-tile-edit] [name=crit_value]", "100000000")
-    page.fill("[data-tile-edit] [name=hysteresis]", "5000000")
-    page.fill("[data-tile-edit] [name=on]", "MTM")
-    page.check("[data-tile-edit] [name=notify]")
-    page.click("[data-tile-edit] button[type=submit]")
-    page.wait_for_function("() => document.querySelector('[data-tile] .bi-btile-alert') !== null")
-    assert "hysteresis 5000000" in page.inner_text("[data-tile] .bi-btile-alert")
-    # a key moves the focused tile one column; the YAML shows the same draft
-    page.locator("[data-tile]").first.focus()
-    page.keyboard.press("ArrowRight")
-    page.click("[data-tab=yaml]")
-    page.wait_for_function("() => /hysteresis: 5000000/.test(document.querySelector('[data-view=yaml]').innerText)")
-    yaml = page.evaluate("document.querySelector('.CodeMirror') ? document.querySelector('.CodeMirror').CodeMirror.getValue() : document.querySelector('[data-yaml]').value")
-    assert 'report: "file:report:live-trading-desk"' in yaml and "x: 1" in yaml and "notify:" in yaml and "title: Net MTM" in yaml
-    # an edit in the YAML shows on the grid
-    page.evaluate("(t) => { const cm = document.querySelector('.CodeMirror'); if (cm) { cm.CodeMirror.setValue(t); } else { const ta = document.querySelector('[data-yaml]'); ta.value = t; ta.dispatchEvent(new Event('input')); } }",
-                  yaml.replace("title: Net MTM", "title: Renamed in YAML"))
-    page.click("[data-tab=canvas]")
-    page.wait_for_function("() => document.querySelector('[data-tile] .bi-btile-title').textContent === 'Renamed in YAML'", timeout=10000)
-    # save, then the draft is what the board's page shows
+    item = design_board(page)
+    tile = add_tile(page)
+    expect(page.locator(f'[data-design-root] [data-visual="{tile}"] .bi-card-value')).to_have_count(1, timeout=20000)        # drawn with the report's numbers, as the author
+    # the tile's alert: thresholds, the hysteresis, tell the readers
+    set_field(page, "[data-tile-alert-on]", "MTM")
+    page.select_option("[data-tile-warn-op]", "lt")
+    set_field(page, "[data-tile-warn-value]", "150000000")
+    page.select_option("[data-tile-crit-op]", "lt")
+    set_field(page, "[data-tile-crit-value]", "100000000")
+    set_field(page, "[data-tile-hysteresis]", "5000000")
+    page.check("[data-tile-notify]")
+    yaml = yaml_of(page)                                                                       # the designer wrote the YAML; nobody typed it
+    for line in ("layout: board", "type: tile", "report: live-trading-desk", "visual: mtm", "hysteresis: 5000000", "notify: true", "on: MTM"):
+        assert line in yaml, (line, yaml)
+    page.click('[data-tab="canvas"]')
     page.click("[data-save]")
-    expect(page.locator("[data-save] + .bi-near")).to_contain_text("Saved as a draft")
-    assert page.inner_text("[data-msg]").strip() == ""                                    # one message, beside the button
-    item = page.get_attribute("#biCanvas", "data-item")
-    page.reload()
-    page.wait_for_selector("[data-board-design-root][data-ready='1']")
-    assert page.inner_text("[data-tile] .bi-btile-title") == "Renamed in YAML"
-    page.click("[data-check]")
-    page.wait_for_function("() => document.querySelector('[data-check-sum]').textContent.length > 0")
-    assert "No problems" in page.inner_text("[data-check-sum]")
-    assert page.get_attribute("[data-view-link]", "href").endswith("/bi/b/" + item.replace("%3A", ":"))
-    assert page.get_attribute("[data-item-link]", "href").endswith("/bi/i/" + item.replace("%3A", ":"))
+    page.wait_for_function("() => /^Saved/.test((document.querySelector('[data-save] + .bi-near') || {}).textContent || '')", timeout=20000)
+    body = fetch(page, "GET", f"/bi/api/items/{item}")["body"]
+    assert body["kind"] == "report" and "hysteresis: 5000000" in body["body"] and "from: { report: " in body["body"], body["body"]
+    page.reload()                                                                              # the saved draft opens as it was left
+    page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
+    expect(page.locator(f'[data-design-root] [data-visual="{tile}"]')).to_have_count(1)
     clean(page)
 
 
 def test_the_designer_controls_are_finger_sized_on_a_phone(stack, browser):
-    page = sign_in(browser, "wes", viewport={"width": 390, "height": 844}, has_touch=True)
+    page = sign_in(browser, "wes", has_touch=True)                                           # a touch screen (pointer: coarse), the tile added at desk width
     design_board(page, "Phone wall")
     add_tile(page)
-    for sel in ("[data-save]", "[data-add-btn]", "[data-undo]", "[data-check]", "[data-tab=yaml]", "[data-tile] [data-act=delete]", "[data-b-title]", "[data-p-delete]"):
-        box = page.locator(sel).first.bounding_box()
-        assert box["height"] >= 43.5 and box["width"] >= 43.5, (sel, box)
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.wait_for_timeout(500)
+    box = page.locator("[data-save]").bounding_box()
+    assert box and box["height"] >= 43.5 and box["width"] >= 43.5, box
+    small = page.evaluate("""() => [...document.querySelectorAll('[data-design-root] button, [data-design-root] select, [data-design-root] [role=tab],'
+        + ' [data-design-root] input:not([type=checkbox]):not([type=radio]):not([type=hidden])')].filter(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0
+        && getComputedStyle(e).visibility !== 'hidden' && (r.height < 43.5 || r.width < 43.5); }).map(e => e.outerHTML.slice(0, 90) + ' ' + Math.round(e.getBoundingClientRect().width) + 'x' + Math.round(e.getBoundingClientRect().height))""")
+    assert small == [], small                                                                  # every control the author can reach on the phone
+    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
     clean(page)
 
 
