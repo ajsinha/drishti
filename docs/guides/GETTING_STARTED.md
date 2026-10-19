@@ -493,7 +493,8 @@ Nothing Drishti writes is hidden (no dot-folders of its own), and everything it 
 | `data/loads/`, `data/governance/`, `data/collab/`, `data/reports/` | data-load history, BI governance, collaboration files, report output |
 | `data/cache/` | the Delta connectors' disk caches, one folder per connector: `idmaps/` (id maps, memory-mapped) and `docs/` (documents read before, RocksDB); the Kafka disk caches |
 | `data/derived/` | grouped pages kept on disk (`trade-pages`: counterparty, portfolio, legal entity and index trades), one folder per connector |
-| `data/tmp/` | temporary files: `tmp/server/drishti-<pid>` and `tmp/console/drishti-console-<pid>`, removed when the process stops |
+| `data/tmp/` | temporary files: `tmp/server/drishti-<pid>` and `tmp/console/drishti-console-<pid>`, removed when the process stops; `tmp/server` is also the JVM's `-Djava.io.tmpdir` (native libraries unpack there, not in `/tmp`), and `tmp/maven` is Maven's (`./mvnw`) |
+| `data/net/` | Drishti\*net, when it is on: `peers.json` (the members it knew, to rejoin after a restart), `history/` (earlier text of the files in `config/net/`); the console keeps the servers it learned in its own data folder's `net/servers.json` |
 | `data/qa/`, `data/build/`, `data/drill/` | the QA profile's own data, tool output (`lake demo` staging), the drill's logs |
 
 The repository itself holds code and configuration: `config/` (packs, connector files, BI files), `run-configs/` and `drishti-console/run-configs/` (the IntelliJ and PyCharm run
@@ -847,6 +848,8 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 |---|---|
 | Learn by doing | [the tutorials](../tutorials/README.md) |
 | Learn every feature of the console | [USER_GUIDE.md](USER_GUIDE.md) |
+| Build reports, models and boards in BI Studio | [BI_GUIDE.md](BI_GUIDE.md), [tutorial 10](../tutorials/10-first-bi-report.md) |
+| Run several servers as one cluster (Drishti\*net) | [NET.md](../admin/NET.md), [tutorial 19](../tutorials/19-a-cluster-of-three.md) |
 | Know which packs exist and what commands they offer | [PACKS.md](PACKS.md) |
 | Change how a screen looks | [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md), [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
 | Add users and roles | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
