@@ -575,6 +575,45 @@ token's envelope.
 uses GenUI only with `drishti.ai.enabled` and the `genui` feature allowed. The outbound proxy and TLS settings of the AI
 layer apply to any provider call; GenUI itself makes no outbound call.
 
+### 11.8 Managing GenUI in the console (new)
+
+Asked by the product owner (2026-10-18): everything GenUI keeps or allows is managed in the console, never only in files.
+Three places, each with the usual roles (administrators manage; authors edit fragments; everyone sees their own screens):
+
+**Build → Fragments** (authors; the Build workbench's review applies):
+
+- The catalogue as a searchable list: block, version, kinds it fits (its contract), slots, whether agents may use it, where
+  it is used (Sutras and live screens).
+- A fragment's page: its slots as a form (name, type, field picker over the kind's fields, format, label, default), the
+  contract (kinds and required fields), a **live preview** on a chosen entity and date, the YAML side by side (round trip,
+  comments kept), and *Test with* any role (what that role would see, masked).
+- New fragment from an existing Sutra's panels ("Make a fragment of these panels"), new version, deprecate, retire; every
+  change goes through propose → four-eyes approve, as Sutras do.
+
+**Admin → GenUI** (administrators):
+
+- **Live screens:** each composed screen with its owner (agent and user), intent, fragments, binding, created, expires,
+  views, the last viewers; open it, copy its URL, extend or **expire now**, **promote** (to the review of 7.4), or see the
+  exact request and the YAML it made.
+- **Policy:** the switch (`drishti.genui.enabled`), which fragments agents may use (allow list, deny list, per role), the
+  limits (screens per user and minute, TTL default and maximum, panels per screen), the AI providers and MCP clients
+  allowed to call `compose_ui`; changes are audited and take effect without a restart.
+- **Hosts:** the embed applications allowed to show GenUI (origins, `embed:genui` scope, token lifetime), with a snippet
+  to paste (`<drishti-genui>` and its script tag, integrity hash included).
+- **Activity:** compositions and views a minute (the Admin → Health activity chart, filtered to GenUI), refusals by code
+  (`DRS-2049`…), slowest screens, audit search by user, agent or fragment.
+
+**Build → Compose** (authors and administrators; a playground):
+
+- Pick fragments, fill their slots from field pickers, choose a binding, and see the screen build live: the same
+  `POST /api/v1/genui` an agent sends, shown as the request, the screen and the stream's events. Used to try fragments, to
+  reproduce what an agent did (open any audited composition here), and to write the golden examples the agent tools are
+  tested with.
+
+APIs behind them (all new): `GET/PUT /api/v1/admin/genui/policy`, `GET /api/v1/admin/genui/screens`,
+`POST /api/v1/admin/genui/screens/{id}/expire|extend|promote`, `GET /api/v1/admin/genui/activity`, and the Build workbench's
+existing design endpoints for fragments.
+
 ## 12. Configuration
 
 ```yaml
@@ -648,7 +687,7 @@ Sizes: S up to two days, M up to a week, L more. Each step ends with its tests g
 | **G5 `<drishti-genui>`** | the element in `web/embed/`, library 1.5.0, `integrity.json`, TypeScript declarations, React/Vue/Angular samples | M | Chromium, Firefox and WebKit draw a composed screen under the strict host CSP of the Elements spike; host tokens restyle it; no inline script or style |
 | **G6 Tools and MCP** | `list_fragments`, `describe_fields`, `compose_ui`, `get_ui`, `promote_ui` on `BaseMcpTool` (Java) and `BaseMCPTool` (Python); `POST /mcp`; Ask feature `genui` | M | the mock provider (`type: mock`, `rules` with `tool` + `tool-args`) composes a screen end to end with no network; an MCP client (SAJHA) lists and calls the tools |
 | **G7 Forms** | panel kind `form`; `search-form@1`, `search-results@1`; `search` binding with `SearchDocument`; criteria in the URL | M | a composed form pre-filled for a counterparty finds the same trades as `FORM trading` with the same criteria |
-| **G8 Promote and admin** | `promote_ui` → Design → propose; Admin → GenUI page | S | a promoted screen goes through four-eyes review and then opens as a normal Sutra |
+| **G8 Promote and admin** | `promote_ui` → Design → propose; the management UI of 11.8: Admin → GenUI (live screens, policy, hosts, activity), Build → Fragments (slot editor, contract, live preview, *Test with* a role, review), Build → Compose (playground) | M | a promoted screen goes through four-eyes review and then opens as a normal Sutra; an administrator changes the agent allow list and the TTL in the UI and the next composition obeys without a restart; an author makes a fragment from a Sutra's panels, fills its slots and previews it without typing YAML; browser tests for the three pages |
 | **G9 More bindings** (may move to 2.6.0) | `compose` (named bindings, progressive panels), `dataset` (MQ, envelope) | L | three bindings arrive in the order they resolve; a dataset panel equals the MQ answer per user, masked |
 | **G10 Docs, tutorials, UX pass** | section 16; one hands-on tutorial with UI, CLI and YAML for every step | M | a new reader composes, embeds and promotes a screen from the tutorial alone |
 

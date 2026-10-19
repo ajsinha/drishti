@@ -26,7 +26,7 @@ in the code today; every other class, file or setting named here does.
 6. [What a node offers](#6-what-a-node-offers-the-capability-digest) · 7. [Routing a request](#7-routing-a-request) ·
 8. [Operations across nodes](#8-operations-across-nodes) · 9. [Identity and security](#9-identity-and-security) ·
 10. [Shared and separate lakes](#10-shared-and-separate-lakes) · 11. [State that belongs to a user](#11-state-that-belongs-to-a-user) ·
-12. [Failure](#12-failure) · 13. [Admin and observability](#13-admin-and-observability) · 14. [Configuration](#14-configuration) ·
+12. [Failure](#12-failure) · 13. [Admin, management and observability](#13-admin-management-and-observability) · 14. [Configuration](#14-configuration) ·
 15. [APIs](#15-apis) · 16. [Build plan](#16-build-plan) · 17. [Tests](#17-tests) · 18. [Risks and open questions](#18-risks-and-open-questions)
 
 ## 1. The ask
@@ -240,14 +240,36 @@ one stops, which the cluster makes safe because any node answers.
 | A node restarts | reads `peers.json`, rejoins in one round, republishes its digest |
 | Mixed versions | the `protocol` number gates gossip; an older node is listed but not routed to for features it lacks |
 
-## 13. Admin and observability
+## 13. Admin, management and observability
 
-- **Admin → Net (new):** members with state, incarnation, version, last heard, latency, packs and kinds; the capability
-  table (kind → nodes, dates, replicas or shards); forwarded requests a minute; differences in masks or calendars.
-- **Admin → Health:** a `net` section (members alive and suspect, forwarded requests and failures over 10 minutes).
-- **Metrics:** `drishti_net_members{state}`, `drishti_net_forwarded_total{peer,kind,outcome}`, `drishti_net_gossip_rounds_total`,
-  peer latency histograms.
-- **A view's provenance** (*How this view was built*) names the node that held the data, for administrators.
+Asked by the product owner (2026-10-18): the cluster is managed in the console, not only through settings. **Admin → Net**
+(new; administrators) has five tabs:
+
+- **Members:** every node with state (`alive`, `suspect`, `dead`, `left`), incarnation, version and protocol, tags, last
+  heard, latency, load, packs (peer-only marked) and kinds; open a node for its digest. Actions: **add a seed** (host:port,
+  tried at once, saved), **remove** a dead or left node from the table, **drain** this node (it stops taking forwarded work and
+  tells its peers, for maintenance) and **undrain**, **leave** (gossip `left`, then stop serving peers), **rejoin**.
+- **Capability map:** kind → the nodes that render it and the nodes that hold its data, with pack versions (the newest
+  marked: it is the one served), table identity (replicas or shards), latest dates; warnings for equal pack versions with
+  different contents, different calendars and different mask lists.
+- **Routing:** *Explain a request*: type a kind and id (or a search) and a role, and see where it would go and why (local,
+  view forwarding, data forwarding, scatter list, nodes the role may not reach); the forwarded traffic a minute per peer and
+  outcome (an activity chart like Admin → Health's), the slowest peers, recent failures.
+- **Access:** nodes per role (`roles.<role>.nodes`: pick node ids or tags), this node's tags, its peer-only packs, all
+  editable here, audited, applied without a restart and gossiped in the digest.
+- **Security:** the cluster key's state (set, the previous key accepted until removed, the last time each peer signed with
+  the old key, so an administrator knows when the rollover is complete), mutual TLS certificates and their expiry, and
+  refused join attempts (address, reason).
+
+Also: **Admin → Health** gets a `net` section (members alive and suspect, forwarded requests and failures over 10 minutes);
+**metrics** `drishti_net_members{state}`, `drishti_net_forwarded_total{peer,kind,outcome}`, `drishti_net_gossip_rounds_total`
+and peer latency histograms; a view's provenance (*How this view was built*) names the node that held the data, for
+administrators. Every management action is in the audit log with the node it was made on. The secret itself is never shown
+or set in the UI (it comes from the environment), only its state.
+
+APIs behind the page (new, admin token): `GET /api/v1/net/members`, `POST /api/v1/net/seeds`, `DELETE /api/v1/net/members/{id}`,
+`POST /api/v1/net/drain|undrain|leave|rejoin`, `GET /api/v1/net/explain?kind=&id=&q=&role=`, `GET/PUT /api/v1/net/access`,
+`GET /api/v1/net/security`.
 
 ## 14. Configuration
 
@@ -297,10 +319,10 @@ View forwarding reuses the ordinary `/api/v1/**` endpoints with the hop header a
 
 | Phase | What | Accepted when |
 |---|---|---|
-| N1 | Membership: gossip, probes, states, `peers.json`, Admin → Net members | 5 nodes started from 1 seed all list each other within 5 s; one killed is `dead` everywhere within 40 s; a restarted node rejoins from its file with no seeds |
-| N2 | Capability digests and the capability table | a pack switched on at one node shows in every node's table within 2 s |
-| N3 | Security: cluster key or mTLS, key rollover, on-behalf-of token, masks twice, audit | a node without the key is refused; a rolling key change drops no request; a role limited to two nodes never reaches a third; a masked field stays masked when the data comes from a peer whose `redact` is looser |
-| N4 | View forwarding and data forwarding (`PeerSource`), newest pack wins, peer-only packs | the console on B opens a trade only A holds, and a kind only A's pack renders, with no visible difference; with a newer pack on A, B's users see A's version; a peer-only pack is invisible to B's own users but served to peers; a peer down gives a clear error, not a wrong page |
+| N1 | Membership: gossip, probes, states, `peers.json`, Admin → Net *Members* (add seed, remove, drain, leave, rejoin) | 5 nodes started from 1 seed all list each other within 5 s; one killed is `dead` everywhere within 40 s; a restarted node rejoins from its file with no seeds |
+| N2 | Capability digests and the capability table; Admin → Net *Capability map* | a pack switched on at one node shows in every node's table within 2 s |
+| N3 | Security: cluster key or mTLS, key rollover, on-behalf-of token, masks twice, audit; Admin → Net *Access* and *Security* | a node without the key is refused; a rolling key change drops no request; a role limited to two nodes never reaches a third; a masked field stays masked when the data comes from a peer whose `redact` is looser |
+| N4 | View forwarding and data forwarding (`PeerSource`), newest pack wins, peer-only packs; Admin → Net *Routing* (explain a request, traffic) | the console on B opens a trade only A holds, and a kind only A's pack renders, with no visible difference; with a newer pack on A, B's users see A's version; a peer-only pack is invisible to B's own users but served to peers; a peer down gives a clear error, not a wrong page |
 | N5 | Scatter-gather search, type-ahead and grouped pages; replicas versus shards | a search on B across trades held on A and C equals the union, with duplicates removed and `failed` naming a stopped node |
 | N6 | Live relay; BI queries routed to the model's node | a ticking entity held on A streams to a viewer on B; a BI report on B over A's model answers |
 | N7 | User state across nodes; console `backend.urls` failover | saved searches follow a user to another node; the console survives a node stop |
@@ -315,6 +337,8 @@ N1–N5 are the first release; N6–N7 may follow.
   twice; a peer that answers slowly or wrongly.
 - **Scatter-gather:** merges against a single-node answer over the same data split three ways.
 - **Persistence:** `peers.json` written atomically, read at start, a corrupt file ignored with a warning.
+- **Browser tests** for the five tabs of Admin → Net (in the style of the console's `*_browser.py` suites), including a drain
+  that moves traffic to another node and an *Explain* that matches the route actually taken.
 - **A soak on real processes:** three servers on scratch ports, one killed and restarted under `tools/bench/users.py` load.
 
 ## 18. Risks and open questions

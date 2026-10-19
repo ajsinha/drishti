@@ -1172,10 +1172,14 @@ the drill.
 **Console lane:**
 
 1. **AI UI:** ask, explain a change, design from intent, a measure from words → draft → review.
-2. **Statement designer** for paginated reports, previewed page by page.
-3. **Feeds, sending and embedding UI:** per-user connection details for SQL tools, the Excel feed wizard, send dialogs,
-   embed configuration, the GenUI element and its admin page.
-4. **Docs and tutorials** (UI, CLI and YAML).
+2. **AI management:** Admin → AI rebuilt (providers and models, features, data protection with a masked-prompt preview,
+   MCP servers and tools, agents, usage and cost with budgets, golden questions, audit, playground), Review → AI drafts and
+   My AI ([AI_MANAGEMENT.md](AI_MANAGEMENT.md)).
+3. **Statement designer** for paginated reports, previewed page by page.
+4. **Feeds, sending and embedding UI:** per-user connection details for SQL tools, the Excel feed wizard, send dialogs,
+   embed configuration, the GenUI element and its management (Admin → GenUI, Build → Fragments, Build → Compose;
+   [GENUI.md §11.8](GENUI.md#118-managing-genui-in-the-console-new)).
+5. **Docs and tutorials** (UI, CLI and YAML).
 
 **Accepted when:** (1) golden questions pass on the mock and one real provider, and an AI answer uses only measures the
 user may see; (2) a monthly statement bursts to ten recipients, each masked, page-exact in PDF; (3) psql and Excel answers
