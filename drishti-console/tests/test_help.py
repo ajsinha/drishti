@@ -52,6 +52,25 @@ def test_search_and_missing_guides(client):
     assert missing.status_code == 404 and "There is no guide" in missing.text
 
 
+def test_f1_and_the_short_addresses_of_the_240_and_250_pages_open_their_sections(client):
+    """BI Studio, the theme designer, Analyse, Transforms and the Python console have their own F1 target, and the new pages a short help address."""
+    for screen, page, anchor in (("bi-designer", "bi-guide", "26-bi-studio-authoring-as-one-product-wave-c-240"),
+                                 ("bi-theme-designer", "reports", "52-themes"),
+                                 ("bi-transform", "python-bi", "17-data-prep-the-transform-editor-240"),
+                                 ("bi-pyconsole", "analyse", "16-the-browser-python-console"),
+                                 ("bi-explore", "analyse", "")):
+        target = client.get(f"/help/context/{screen}", follow_redirects=False).headers["location"]
+        assert target == f"/help/{page}" + (f"#{anchor}" if anchor else ""), (screen, target)
+        if anchor:
+            assert f'id="{anchor}"' in client.get(f"/help/{page}").text, (screen, anchor)
+    for slug in ("bi-studio", "transforms", "python-console", "themes", "drishti-net"):
+        r = client.get(f"/help/{slug}", follow_redirects=False)
+        assert r.status_code == 301, slug
+        page, _, anchor = r.headers["location"].removeprefix("/help/").partition("#")
+        final = client.get(f"/help/{page}")
+        assert final.status_code == 200 and (not anchor or f'id="{anchor}"' in final.text), slug
+
+
 def test_f1_context_and_panel_help(client):
     assert client.get("/help/context/view", follow_redirects=False).headers["location"] == "/help/user-guide"
     assert client.get("/help/context/studio", follow_redirects=False).headers["location"] == "/help/screen-designer"

@@ -58,7 +58,7 @@ covered in depth in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 9. [Business intelligence (Rupaka): `/api/v1/bi`](#business-intelligence-rupaka-apiv1bi)
 10. [Datasets and the query engine: `/api/v1/bi` (phase 2)](#datasets-and-the-query-engine-apiv1bi-phase-2)
 11. [Reports: `/api/v1/bi/reports` (phase 3)](#reports-apiv1bireports-phase-3)
-12. [Boards: `/api/v1/bi/boards` (phase 5)](#boards-apiv1biboards-phase-5)
+12. [Boards: `/api/v1/bi/boards` (2.3 board files and the converter)](#boards-apiv1biboards-23-board-files-and-the-converter)
 13. [Publishing and governance: `/api/v1/bi` (phase 4)](#publishing-and-governance-apiv1bi-phase-4)
 14. [AI and MCP: `/api/v1/ai` and `/api/v1/admin/ai`](#ai-and-mcp-apiv1ai-and-apiv1adminai)
 15. [Embedding views in another web application](#embedding-views-in-another-web-application)

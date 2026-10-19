@@ -21,6 +21,8 @@
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}">{% endblock %}
 {% block footer %}{% endblock %}
+{# F1 opens the guide of the page: the designers, Analyse, Transforms and the Python console have their own (config/help.yaml, contextual). #}
+{% block screen %}{% if bi_page in ('designer', 'theme-designer', 'explore', 'transform', 'pyconsole') %}bi-{{ bi_page }}{% else %}{{ screen | default('bi') }}{% endif %}{% endblock %}
 {% block content %}
 {% macro rail_link(href, icon, label, key, soon='') -%}
   <a href="{{ href }}" class="bi-rail-link{% if soon %} bi-rail-soon{% endif %}"{% if bi_page == key %} aria-current="page"{% endif %}>
