@@ -507,6 +507,17 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
                 }
             }
         }
+        Fallback fb = fallback;
+        if (fb != null) {                              // Drishti*net: held by no local source, so the peer that holds it streams it
+            for (SourcePlugin p : fb.peers(ref, AsOf.LATEST)) {
+                if (p.manifest().capabilities().live()) {
+                    Subscription s = p.subscribe(ref, listener);
+                    if (s != Subscription.NONE) {
+                        return s;
+                    }
+                }
+            }
+        }
         for (SourcePlugin p : live) {
             Subscription s = p.subscribe(ref, listener);
             if (s != Subscription.NONE) {

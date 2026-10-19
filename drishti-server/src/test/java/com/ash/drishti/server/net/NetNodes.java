@@ -96,7 +96,12 @@ final class NetNodes implements AutoCloseable {
                 "--drishti.sources.connectors-dir=" + dir.resolve("connectors"), "--drishti.governance.dir=" + dir.resolve("governance"),
                 "--drishti.rachana.hot-reload=false", "--drishti.sources.plugins.demo.settings.ticking=false",
                 "--DRISHTI_NET_SECRET=" + KEY, "--spring.main.banner-mode=off"));
-        args.addAll(List.of(extra));
+        // an extra argument replaces a default one of the same key (two values of one key would be read as "a,b")
+        for (String e : extra) {
+            String key = e.contains("=") ? e.substring(0, e.indexOf('=') + 1) : e;
+            args.removeIf(a -> a.startsWith(key));
+            args.add(e);
+        }
         ConfigurableApplicationContext ctx = new SpringApplicationBuilder(DrishtiApplication.class).run(args.toArray(String[]::new));
         Node n = new Node(name, port, dir, ctx);
         nodes.put(name, n);

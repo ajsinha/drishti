@@ -69,6 +69,11 @@
   (who answered what) for administrators. A search of a kind whose pack is not on the node is scattered and merged there too. The type-ahead asks every
   reachable node within `suggest-budget` (150 ms). On trades split three ways (one on two nodes) every node answers the same union. Grouped pages are
   still built per node. NET.md section 7, API_GUIDE, TROUBLESHOOTING, USER_GUIDE.
+- **Drishti*net live relay and BI (N6).** A live view of an entity held on a peer ticks on the node that shows it: one stream from the peer
+  (`GET /api/v1/net/subscribe/{kind}/{id}`, masked there for the user) feeds the viewers of the same roles, opened again when it breaks; the topic hub
+  keeps an upstream per entity and role set while the cluster runs. A BI report's requests go to the node that holds the kinds its datasets read (the
+  report listed in that node's digest): the same report on a node with no data answers what the node with the lake answers. Source SPI unchanged;
+  `TopicHub.partition`. NET.md section 7, API_GUIDE.
 
 ### 2.4.0 (wave C, authoring and analysis): report schema v2, boards as a report layout, BI Studio
 

@@ -516,3 +516,15 @@ the design:
   a node down is partial rather than silently smaller.
 - A duplicate keeps the first answer (this node's, then the peers' in the order asked), not necessarily the one whose coverage is `HELD`.
 - **Not built:** grouped pages (derived connectors) gathered across nodes; each node builds them from its own data.
+
+**N6, live relay and BI (built).** `PeerSource.subscribe` opens one stream from the peer that holds the entity
+(`GET /api/v1/net/subscribe/{kind}/{id}`: the peer's own topic, masked for the token's user) and feeds this node's topic; the router asks its fallback
+for a live peer when no local source holds or pushes the entity. BI: `ViewForwardFilter` routes `/api/v1/bi/reports/{id}/**` with
+`NetRouting.report`: answered here when the report's datasets' kinds (`BiReportService.kinds`) are held here, else forwarded to a node that lists the
+report in its digest (its shipped reports) and holds them. Changes from the design:
+
+- **The topic hub is partitioned by the subscriber's roles while the cluster runs** (one upstream per entity and role set, not per entity): an upstream
+  from a peer is masked there for the user it was opened for, and sharing it with viewers of other roles could show one of them what the peer would
+  mask for them. Viewers with the same roles still share one upstream.
+- A relayed stream checks its on-behalf-of token when it opens; it is opened again (with a fresh token) when it breaks.
+- A BI report goes to the node that holds every kind its datasets read; a model spanning nodes is not joined across them.

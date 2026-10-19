@@ -355,6 +355,16 @@ scanned, matched and how long it took) for administrators only. The type-ahead a
 node would have suggested is simply missing, the list is never late. In the in-process test, trades split three ways (one on two nodes) give the same
 answer on every node: the union, the shared trade once, ordered by notional exactly as the union sorted.
 
+**Live views are relayed.** A live view of an entity whose data is on a peer is built here and ticks here: this node opens one stream from the
+peer (`GET /api/v1/net/subscribe/{kind}/{id}`, the entity's new generations as the viewer may see them there) and feeds every viewer here that has the
+same roles; viewers with other roles get a stream of their own, since the peer masks for the user a stream was opened for. A stream that breaks is
+opened again a second later. In the in-process test a ticking trade held on A streams frames to a viewer on B.
+
+**BI reports run where the model's data is.** A BI report's requests (`/api/v1/bi/reports/{id}` and what is under it: its query, its live table) are
+answered here when this node has the report and its sources hold every kind the report's datasets read; otherwise they go to a node whose digest lists
+the report and that holds those kinds, and its answer comes back unchanged. In the in-process test the same report asked of B (no data) answers
+exactly what A (the lake) answers. A model spanning nodes is not joined across them.
+
 **Grouped pages are built per node.** A page built from many entities by a derived connector (a counterparty's trades, a netting set over several
 systems) is built on each node from that node's own data: it is not yet gathered across nodes. Put the systems a grouped page needs on the nodes
 that build it (a shared lake does that by itself), or open the page on the node that holds them.

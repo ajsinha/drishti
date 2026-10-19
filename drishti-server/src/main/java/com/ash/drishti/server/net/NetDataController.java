@@ -53,13 +53,81 @@ public class NetDataController {
     private final ObjectMapper json = new ObjectMapper();
 
     private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.api.SearchController> searches;
+    private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.engine.live.TopicHub> hub;
+    private final java.util.concurrent.ExecutorService executor;
 
     public NetDataController(SourceRouter router, Entitlements entitlements, JsonCodec codec,
-            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.api.SearchController> searches) {
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.api.SearchController> searches,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.engine.live.TopicHub> hub,
+            java.util.concurrent.ExecutorService drishtiVirtualExecutor) {
         this.router = router;
         this.entitlements = entitlements;
         this.codec = codec;
         this.searches = searches;
+        this.hub = hub;
+        this.executor = drishtiVirtualExecutor;
+    }
+
+    /**
+     * The live relay's upstream ({@code GET /api/v1/net/subscribe/{kind}/{id}}): server-sent events, one {@code doc} event per new generation
+     * of the entity ({@code {provenance, data, deleted}}, masked for the on-behalf-of user as here), from this node's own topic, until the
+     * peer closes it; a comment every heartbeat keeps it open through proxies.
+     */
+    @GetMapping(path = "/subscribe/{kind}/{id}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public org.springframework.web.servlet.mvc.method.annotation.SseEmitter subscribe(@PathVariable String kind, @PathVariable String id,
+            @RequestParam(value = "id", required = false) String idParam, @RequestAttribute(Principal.ATTRIBUTE) Principal p,
+            @RequestAttribute(value = NetCallFilter.CLAIMS, required = false) Object claims) {
+        Principal user = forUser(p, claims);
+        entitlements.requireOpen(user, kind);
+        EntityRef ref = EntityRef.of(kind, "~".equals(id) && idParam != null ? idParam : id);
+        var emitter = new org.springframework.web.servlet.mvc.method.annotation.SseEmitter(0L);
+        java.util.concurrent.LinkedBlockingDeque<EntityDocument> box = new java.util.concurrent.LinkedBlockingDeque<>(64);
+        com.ash.drishti.api.Subscription sub = hub.getObject().subscribe(ref, d -> {
+            if (!box.offerLast(d)) {
+                box.pollFirst();                           // a slow peer gets the newest generations, not a growing backlog
+                box.offerLast(d);
+            }
+        });
+        Runnable close = sub::close;
+        emitter.onCompletion(close);
+        emitter.onError(e -> close.run());
+        executor.execute(() -> {
+            try {
+                emitter.send(org.springframework.web.servlet.mvc.method.annotation.SseEmitter.event().comment("open"));   // the peer sees the stream open at once
+                while (!Thread.currentThread().isInterrupted()) {
+                    EntityDocument d = box.pollFirst(10, java.util.concurrent.TimeUnit.SECONDS);
+                    if (d == null) {
+                        emitter.send(org.springframework.web.servlet.mvc.method.annotation.SseEmitter.event().comment("hb"));
+                        continue;
+                    }
+                    emitter.send(org.springframework.web.servlet.mvc.method.annotation.SseEmitter.event().name("doc").data(json(user, d), MediaType.APPLICATION_JSON));
+                }
+            } catch (Exception e) {
+                try {
+                    emitter.completeWithError(e);          // the peer went away (or this node stops): nothing more to send
+                } catch (IllegalStateException done) {
+                    // the request is already complete
+                }
+            } finally {
+                close.run();
+            }
+        });
+        return emitter;
+    }
+
+    /** One document as a peer receives it, masked for {@code user} as this node masks. */
+    private String json(Principal user, EntityDocument d) throws java.io.IOException {
+        Map<String, Object> prov = new LinkedHashMap<>();
+        var pv = d.provenance();
+        if (pv != null) {
+            prov.put("source", pv.source());
+            prov.put("generation", pv.generation());
+            prov.put("fetchedAt", pv.fetchedAt() == null ? null : pv.fetchedAt().toString());
+            prov.put("live", pv.live());
+            prov.put("businessDate", pv.businessDate() == null ? null : pv.businessDate().toString());
+        }
+        String data = d.deleted() ? "null" : codec.toJson(entitlements.redact(user, d.data()));
+        return "{\"provenance\":" + json.writeValueAsString(prov) + ",\"deleted\":" + d.deleted() + ",\"data\":" + data + "}";
     }
 
     /**

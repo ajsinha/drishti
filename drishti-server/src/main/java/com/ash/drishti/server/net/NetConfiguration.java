@@ -90,7 +90,11 @@ public class NetConfiguration {
 
     @Bean
     public PeerSources peerSources(NetRouting routing, NetService net, com.ash.drishti.common.JsonCodec codec, ForwardLog log,
-            com.ash.drishti.engine.source.SourceRouter router) {
+            com.ash.drishti.engine.source.SourceRouter router, com.ash.drishti.engine.live.TopicHub hub) {
+        // a live relay from a peer is masked there for the user it was opened for: while the cluster runs, viewers share an upstream only
+        // with viewers of the same roles (DRISHTI_NET.md section 8, as built)
+        hub.partition(() -> !net.running() ? "" : NetCaller.current().map(NetCaller.Caller::principal)
+                .map(p -> String.join(",", new java.util.TreeSet<>(p.roles())) + "|" + (p.embedApp() == null ? "" : p.embedApp())).orElse(""));
         return new PeerSources(routing, net, codec, log, router);
     }
 
@@ -107,8 +111,15 @@ public class NetConfiguration {
     @Bean
     public FilterRegistrationBean<ViewForwardFilter> viewForwardFilter(NetRouting routing, com.ash.drishti.server.security.Entitlements entitlements,
             ForwardLog log, ObjectProvider<com.ash.drishti.identity.AccessLog> access, ObjectProvider<com.ash.drishti.engine.command.Mnemonics> mnemonics,
-            SearchScatter scatter) {
-        FilterRegistrationBean<ViewForwardFilter> r = new FilterRegistrationBean<>(new ViewForwardFilter(routing, entitlements, log, access, mnemonics, scatter));
+            SearchScatter scatter, ObjectProvider<com.ash.drishti.server.bi.report.BiReportService> reports,
+            ObjectProvider<com.ash.drishti.server.bi.BiFolder> biFolder, DigestService digests) {
+        // the BI reports this node ships, gossiped in its digest: a report's query goes to a node that has it and holds its data
+        digests.reports(() -> {
+            var folder = biFolder.getIfAvailable();
+            return folder == null ? java.util.List.of() : folder.items().stream().filter(i -> "report".equals(i.kind())).map(i -> i.id()).toList();
+        });
+        FilterRegistrationBean<ViewForwardFilter> r = new FilterRegistrationBean<>(new ViewForwardFilter(routing, entitlements, log, access, mnemonics, scatter)
+                .withReports(reports));
         r.addUrlPatterns("/api/*");
         r.setOrder(3);
         return r;

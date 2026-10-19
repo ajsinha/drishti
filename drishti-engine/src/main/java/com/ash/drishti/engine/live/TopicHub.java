@@ -83,7 +83,11 @@ public final class TopicHub implements AutoCloseable {
     private final SourceRouter router;
     private final ScheduledExecutorService frames;
     private final long frameMillis;
-    private final Map<EntityRef, Topic> topics = new ConcurrentHashMap<>();
+    /** A topic is an entity, within a partition (Drishti*net: the subscriber's roles, see {@link #partition}). */
+    private record Key(EntityRef ref, String partition) {}
+
+    private final Map<Key, Topic> topics = new ConcurrentHashMap<>();
+    private volatile java.util.function.Supplier<String> partition = () -> "";
 
     public TopicHub(SourceRouter router, ScheduledExecutorService frames, LiveProperties props) {
         this.router = router;
@@ -91,10 +95,21 @@ public final class TopicHub implements AutoCloseable {
         this.frameMillis = props.frame().toMillis();
     }
 
+    /**
+     * Splits topics by a key of the subscriber (asked at each subscribe): one upstream subscription per entity and key. Without it (the
+     * default) one upstream per entity. Drishti*net keys by the subscriber's roles, because an upstream on another node is masked there for
+     * the user it was opened for: viewers with other roles get their own.
+     */
+    public void partition(java.util.function.Supplier<String> p) {
+        this.partition = p == null ? () -> "" : p;
+    }
+
     /** Receives each new generation of {@code ref}, at most once per frame, until the returned handle is closed. */
     public Subscription subscribe(EntityRef ref, Consumer<EntityDocument> listener) {
-        Topic t = topics.compute(ref, (r, existing) -> {
-            Topic topic = existing == null ? new Topic(r) : existing;
+        String part = partition.get();
+        Key key = new Key(ref, part == null ? "" : part);
+        Topic t = topics.compute(key, (k, existing) -> {
+            Topic topic = existing == null ? new Topic(k.ref()) : existing;
             topic.listeners.add(listener);
             return topic;
         });
@@ -103,18 +118,18 @@ public final class TopicHub implements AutoCloseable {
         if (t.source == Subscription.NONE) {
             t.lock.lock();                    // a ReentrantLock: the upstream subscribe may do I/O, and synchronized would pin
             try {
-                if (t.source == Subscription.NONE && topics.get(ref) == t) {
+                if (t.source == Subscription.NONE && topics.get(key) == t) {
                     t.source = router.subscribe(ref, t::onTick);
                 }
             } finally {
                 t.lock.unlock();
             }
         }
-        return () -> release(ref, listener);
+        return () -> release(key, listener);
     }
 
-    private void release(EntityRef ref, Consumer<EntityDocument> listener) {
-        topics.computeIfPresent(ref, (r, t) -> {
+    private void release(Key key, Consumer<EntityDocument> listener) {
+        topics.computeIfPresent(key, (r, t) -> {
             t.listeners.remove(listener);
             if (t.listeners.isEmpty()) {
                 t.lock.lock();                // not while a subscriber is still connecting it upstream

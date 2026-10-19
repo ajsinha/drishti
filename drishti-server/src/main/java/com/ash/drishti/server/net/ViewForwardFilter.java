@@ -60,6 +60,8 @@ public final class ViewForwardFilter extends OncePerRequestFilter {
             "proxy-authenticate", "trailer", "te", "vary");
     private static final Map<String, String> ACTIONS = Map.of("views", "view", "entities", "raw", "history", "history", "search", "search", "forms", "form");
     private static final int MAX_BODY = 16 * 1024 * 1024;
+    /** Paths under /api/v1/bi/reports/ that are not a report's id. */
+    private static final Set<String> BI_RESERVED = Set.of("format-schemas", "catalogue", "dataset", "validate", "format", "query");
 
     private final NetRouting routing;
     private final Entitlements entitlements;
@@ -67,6 +69,7 @@ public final class ViewForwardFilter extends OncePerRequestFilter {
     private final ObjectProvider<AccessLog> access;
     private final ObjectProvider<com.ash.drishti.engine.command.Mnemonics> mnemonics;
     private final SearchScatter scatter;
+    private volatile ObjectProvider<com.ash.drishti.server.bi.report.BiReportService> reports;
 
     public ViewForwardFilter(NetRouting routing, Entitlements entitlements, ForwardLog log, ObjectProvider<AccessLog> access,
             ObjectProvider<com.ash.drishti.engine.command.Mnemonics> mnemonics, SearchScatter scatter) {
@@ -76,6 +79,12 @@ public final class ViewForwardFilter extends OncePerRequestFilter {
         this.access = access;
         this.mnemonics = mnemonics;
         this.scatter = scatter;
+    }
+
+    /** The BI reports, to know the kinds a report reads (set by the configuration; without it a report is answered where asked). */
+    public ViewForwardFilter withReports(ObjectProvider<com.ash.drishti.server.bi.report.BiReportService> r) {
+        this.reports = r;
+        return this;
     }
 
     /** What a request names: the area (views, entities, history, search, forms), the kind (or the pack, for forms) and the entity. */
@@ -107,6 +116,9 @@ public final class ViewForwardFilter extends OncePerRequestFilter {
             Principal p = principal(req);
             return routing.kindOfMnemonic(head, p).or(() -> Optional.of(head.toLowerCase(Locale.ROOT))).map(k -> new Target(area, k, null, false));
         }
+        if ("bi".equals(area) && seg.length >= 3 && "reports".equals(seg[1]) && !BI_RESERVED.contains(seg[2])) {
+            return Optional.of(new Target("bi", null, decode(seg[2]), false));       // a BI report: routed to the node that holds its data
+        }
         if ("forms".equals(area) && seg.length >= 2) {
             return Optional.of(new Target(area, decode(seg[1]), null, true));
         }
@@ -131,6 +143,17 @@ public final class ViewForwardFilter extends OncePerRequestFilter {
         Principal p = principal(req);
         if (t.isEmpty() || p == null) {
             chain.doFilter(req, res);
+            return;
+        }
+        if ("bi".equals(t.get().area())) {
+            var service = reports == null ? null : reports.getIfAvailable();
+            java.util.Set<String> kinds = service == null ? java.util.Set.of() : service.kinds(p, t.get().id());
+            NetRouting.Plan bi = routing.report(t.get().id(), kinds, p);
+            if (bi.route() == NetRouting.Route.VIEW) {
+                forward(req, res, new Target("bi", kinds.isEmpty() ? "bi" : String.join(",", kinds), t.get().id(), false), bi, p);
+            } else {
+                chain.doFilter(req, res);
+            }
             return;
         }
         NetRouting.Plan plan = t.get().pack() ? packPlan(t.get().kind(), p, req) : routing.view(t.get().kind(), p, dated(req), t.get().id());

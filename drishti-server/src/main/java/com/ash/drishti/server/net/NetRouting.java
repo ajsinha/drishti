@@ -159,6 +159,41 @@ public final class NetRouting {
                 order(best, t, entityId, kind), unreachable(kind, p));
     }
 
+    /**
+     * The route of a BI report's request (DRISHTI_NET.md section 8: a BI query runs on the node that holds the model's data). Answered here
+     * when this node has the report and its sources say they hold every kind its datasets read; else forwarded to the peers that list the report
+     * and hold those kinds, the surest first; answered here (with its own answer) when no peer does.
+     *
+     * @param kinds the kinds the report's datasets read here, or empty when the report is not here
+     */
+    public Plan report(String id, java.util.Set<String> kinds, Principal p) {
+        if (!forwarding() || NetCaller.fromPeer()) {
+            return new Plan(Route.LOCAL, null, "answered here", List.of(), List.of());
+        }
+        CapabilityTable t = tableFor(p);
+        boolean allHere = !kinds.isEmpty() && kinds.stream().allMatch(k -> evidence(t, t.self(), k) >= 10);
+        if (allHere) {
+            return new Plan(Route.LOCAL, null, "the report and the data of " + kinds + " are here", List.of(), List.of());
+        }
+        List<String> peers = new ArrayList<>();
+        for (CapabilityTable.Node n : t.nodes()) {
+            if (!n.self() && n.digest().reports().contains(id)) {
+                peers.add(n.id());
+            }
+        }
+        Comparator<String> surest = Comparator.comparingInt((String n) -> -kinds.stream().mapToInt(k -> evidence(t, n, k)).sum()).thenComparing(choice(t, id));
+        peers.sort(surest);
+        if (!kinds.isEmpty()) {
+            peers.removeIf(n -> kinds.stream().anyMatch(k -> evidence(t, n, k) < 10));
+        }
+        if (peers.isEmpty()) {
+            return new Plan(Route.LOCAL, null, kinds.isEmpty() ? "no node the caller may reach has the report" : "no other node holds " + kinds,
+                    List.of(), List.of());
+        }
+        return new Plan(Route.VIEW, null, (kinds.isEmpty() ? "the report is not here" : "the data of " + kinds + " is not here") + ": forwarded to "
+                + peers.get(0), peers, List.of());
+    }
+
     /** Peers with another business calendar answer only live reads. */
     private CapabilityTable calendarCut(CapabilityTable t, boolean dated) {
         if (!dated) {
