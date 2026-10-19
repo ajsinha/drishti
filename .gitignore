@@ -43,3 +43,10 @@ external_lib/python/*
 # runtime data a module's tests or tools might make beside the module (the data folder is the repository root's data/ only)
 /drishti-*/data/
 /plugins/*/data/
+
+# drishti-stack/ (the local Drishti*net cluster, drishti-stack/README.md): the repository is public, so its secrets (the token, session and
+# cluster keys; any net-key file) and its run folder (the copy of the server jar, process ids, logs) are never committed; its node data and
+# lakes are under data/stack/ (data/ above). tools/test_no_hidden_names.py fails if one is tracked anyway.
+/drishti-stack/secrets.env
+/drishti-stack/run/
+net-key

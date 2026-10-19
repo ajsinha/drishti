@@ -243,6 +243,7 @@ drishti/
 ├── drishti-deltalake/           a Delta Kernel engine without Hadoop (local disk, Windows included, and S3)
 ├── drishti-net/                 Drishti*net: membership by gossip, the cluster key, capability digests (no Spring)
 ├── drishti-server/              the Spring Boot application: API, security, alerts, reports, pack registry
+├── drishti-stack/               a ready-made local Drishti*net cluster of three servers and a console: start.sh, stop.sh, status.sh
 ├── drishti-testkit/ drishti-it/ test fixtures; architecture, licence-header and file-size gates
 ├── drishti-benchmarks/          JMH hot-path benchmarks
 ├── plugins/drishti-plugin-*/     demo, file, rest, jdbc, delta, aerospike, redis, mongodb, iceberg, duckdb, feeds, news, yfinance, kafka, activemq, rabbitmq, s3

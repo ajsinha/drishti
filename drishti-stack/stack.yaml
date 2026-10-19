@@ -1,0 +1,73 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The local Drishti*net cluster of drishti-stack/ (README.md): every node, its port, packs, lake and the connectors it switches off, and
+# the console. start.sh reads this file; adding a node is one entry under nodes (its net folder is made from it on the first start).
+# No secret here: the keys are in secrets.env (git-ignored), made by start.sh on the first start.
+
+seed: drishti-main                 # the node every other node knows first (its peers/<seed>.yaml); it learns the rest by gossip
+java: /usr/lib/jvm/java-21-openjdk-amd64/bin/java     # JAVA_HOME/bin/java wins when JAVA_HOME is set
+admin: drishti-dev-admin           # the administrator status.sh asks /api/v1/net/members as (a token signed with DRISHTI_TOKEN_SECRET)
+
+gossip:                            # nodes/<node>/net/gossip.yaml of a new node
+  interval: 1s
+  suspect-after: 3s
+  dead-after: 10s
+
+settings:                          # every server and the console (not secret)
+  DRISHTI_SECURITY_ENABLED: "true"
+  DRISHTI_AUTH_ENABLED: "true"
+  DRISHTI_SECURE_COOKIE: "false"
+  DRISHTI_DEMO_ENABLED: "false"
+  DRISHTI_GRAPH_LINKBUDGET: 3s
+  DRISHTI_NEWS_ENABLED: "true"
+
+lakes:                             # synthetic trades (tools/bench/trades.py), built into data/stack/lakes/<name> when missing
+  shared: { systems: endur,calypso, per-day: 1500, days: 2, counterparties: 300 }
+  murex:  { systems: murex, per-day: 1500, days: 2, counterparties: 300 }
+
+nodes:
+  # your own stack: the repository is its working folder, so its data is the repository's data/ (the demo lakes) and its connectors
+  # config/connectors/, exactly as when you start the server from the IDE
+  - name: drishti-main
+    port: 18480
+    home: repo
+    heap: 3g
+    jvm: [-XX:G1PeriodicGCInterval=60000]
+    packs: core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets
+
+  # synthetic ENDUR and CALYPSO trades (ids 10000000+, CLY-30000000+); its data and connectors under data/stack/nodes/drishti-b
+  - name: drishti-b
+    port: 18791
+    heap: 1536m
+    lake: shared
+    packs: trading
+    off: [trade-murex]
+    args: [--drishti.security.registered-users-only=false]
+
+  # synthetic MUREX trades (MX-50000000+)
+  - name: drishti-c
+    port: 18792
+    heap: 1536m
+    lake: murex
+    packs: trading,counterparty-risk,market-risk
+    off: [trade-endur, trade-calypso]
+    args: [--drishti.security.registered-users-only=false]
+
+console:
+  port: 17480
+  servers: [drishti-main]          # the console is given these alone and learns the other servers from the cluster
+  settings:
+    DRISHTI_CONSOLE_HOST: 0.0.0.0
+    DRISHTI_PACKS: core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets

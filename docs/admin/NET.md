@@ -58,6 +58,11 @@ file with a key in clear is refused. It is never shown in Admin → Net either, 
 
 ## 2. A cluster of three
 
+**The ready-made local cluster: `drishti-stack/`.** For a cluster running on one machine without the steps below, the repository's
+`drishti-stack/` starts three servers (18480, 18791, 18792) and a console (17480) from one file, `stack.yaml`, with each node's net folder
+checked in (`secret: ${DRISHTI_NET_SECRET}` only) and the secrets made on the first start in a git-ignored `secrets.env`: `start.sh`,
+`status.sh`, `stop.sh` (by process id), one entry to add a node. See [drishti-stack/README.md](../../drishti-stack/README.md).
+
 Three nodes, `a`, `b` and `c`. Only `a` needs to be named anywhere: `b` and `c` are given `a` as their seed, and gossip tells every node
 about every other within a round or two. The examples run the three on one machine on ports 18783, 18784 and 18785; on three machines use
 each machine's own address.

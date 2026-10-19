@@ -99,5 +99,22 @@ class NoLitterInTheRepoRoot(unittest.TestCase):
         self.assertEqual(status(), before)                                               # nothing new in the repository
 
 
+class NoSecretTracked(unittest.TestCase):
+    """The repository is public: the local cluster's secrets (drishti-stack/secrets.env, a cluster key file net-key) and server jars are never
+    tracked; .gitignore keeps them out and this fails if one is added anyway (git add -f)."""
+
+    def test_no_secret_file_or_jar_is_tracked(self):
+        files = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.splitlines()
+        bad = [f for f in files if f == "drishti-stack/secrets.env" or f.split("/")[-1] == "net-key" or f.startswith("drishti-stack/run/")
+               or f.endswith(".jar")]
+        self.assertEqual(bad, [], "a secret or a jar is tracked: git rm --cached it (the repository is public)")
+
+    def test_gitignore_keeps_the_stack_secrets_and_run_folder_out(self):
+        for path in ("drishti-stack/secrets.env", "drishti-stack/run/server.jar", "drishti-stack/run/pids.txt", "drishti-stack/nodes/x/net/net-key",
+                     "data/stack/lakes/shared/x"):
+            r = subprocess.run(["git", "check-ignore", "-q", "--no-index", path], cwd=ROOT)
+            self.assertEqual(r.returncode, 0, path + " is not git-ignored")
+
+
 if __name__ == "__main__":
     unittest.main()

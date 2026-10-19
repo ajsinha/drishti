@@ -119,6 +119,22 @@
 - **Drishti*net soak on real processes** (`tools/bench/net_soak.py`): three servers from one seed (two reading one lake, one its own), a console
   given the first, `tools/bench/users.py` load, a shard holder killed and restarted, then the console's own server, every answer compared with a
   single server holding all the data. Results in NET.md section 13.
+- **A ready-made local cluster: `drishti-stack/`.** Three servers and a console on one machine from one file, `stack.yaml` (each node's
+  port, heap, packs, lake and the connectors it switches off; adding a node is one entry): `start.sh` starts what is not running (and makes
+  what is missing: the secrets, a node's net folder, the synthetic ENDUR, CALYPSO and MUREX lakes with `tools/bench/trades.py`, and
+  `run/server.jar`, a copy of the newest build, so a rebuild never replaces the jar under a running server), `stop.sh` stops by the process
+  ids it recorded (checking each is still the stack's own), `status.sh` shows the processes, ports, members and the console's servers.
+  Each node's `nodes/<node>/net/` is checked in with `secret: ${DRISHTI_NET_SECRET}` only; the token, session and cluster keys are in
+  `drishti-stack/secrets.env`, made with `openssl rand -hex 32` (mode 600) and git-ignored with `run/` and any `net-key`, and
+  `tools/test_no_hidden_names.py` fails if one of them or a jar is tracked. Node data and lakes go under `data/stack/`.
+  [drishti-stack/README.md](drishti-stack/README.md), NET.md section 2, tutorial 19, GETTING_STARTED, README.
+- **News falls back to the committed snapshot with offline mode off.** A connector of an internet plugin (`drishti.offline.plugins`:
+  `news`, `yfinance`, `feed`) that its file switches off (as shipped: `DRISHTI_NEWS_ENABLED` unset) has its kinds read from the other
+  connectors that serve them, exactly as in offline mode (`SourceRegistry.standIns`); Admin → Connectors shows it as *off (served from
+  the snapshot)* with `servedBy`, and an entity they do not hold is `DRS-1001` naming them (and saying when they have no table for the
+  kind yet: a demo lake built before the snapshot was committed, rebuilt with `drishti.py lake demo --only news-and-markets`), no longer
+  `DRS-1002 connector news is disabled`. `OfflineModeTest`, `ConnectorBadgeTest`, `test_news_browser.py` (the topic page's headlines
+  with the live connectors off and offline mode off); the pack guide, CONFIGURATION (offline mode), TROUBLESHOOTING (`DRS-1002`).
 - **Tutorial 19 with real captures.** Ten pictures of Admin → Net on three real servers made by the picture script (`tools/docs/shots/t19.py`,
   the console tests' own cluster: members, the console's servers, Files, a trade only c holds opened through a, Explain, the capability map,
   Access, Security, the cluster after a stopped, the page at 390 px), the real output of `drishti.py net members`, the servers' and the

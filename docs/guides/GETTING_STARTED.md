@@ -506,6 +506,7 @@ configurations), `docs/`, `tools/`, `external_lib/`.
 - Start again: repeat Step 6 and Step 7 (with the same `export` lines). No rebuild is needed unless the code changed. Your monitors,
   alerts, workspaces and settings are kept by the server under `./data`.
 - New demo data: run Step 5 again, with the server running or not (it is told, or clears its BI store at its next start).
+- Three servers as one cluster (Drishti\*net) with a console, on this machine: `drishti-stack/start.sh` ([drishti-stack/README.md](../../drishti-stack/README.md)).
 
 ## Running everything in Docker (optional)
 
