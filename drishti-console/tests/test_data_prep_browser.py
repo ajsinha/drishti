@@ -98,6 +98,8 @@ class PrepStack(bi_report_stack.ReportStack):
             (lake / day / "trade.jsonl").write_text("".join(json.dumps(prep_trade(day, i)) + "\n" for i in range(60)))
         (work / "config" / "connectors").mkdir(parents=True, exist_ok=True)
         (work / "config" / "connectors" / "prep-store.yaml").write_text(PREP_STORE.format(root=lake))
+        # the kind's route serves the same trades, so the editor offers their UPPER_SNAKE fields (the pack dataset of kind trade is read through trade-endur)
+        (work / "config" / "connectors" / "trade-endur.yaml").write_text(PREP_STORE.format(root=lake))
         (work / "config" / "bi" / "datasets" / "prep-trades.dataset.yaml").write_text(PREP_DATASET)
         (work / "config" / "bi" / "models").mkdir(parents=True, exist_ok=True)
         (work / "config" / "bi" / "models" / "prep-model.model.yaml").write_text(PREP_MODEL)
