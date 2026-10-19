@@ -107,4 +107,14 @@ class BoardsAsReportsTest {
         assertThat(all).anyMatch(p -> p.error() && p.path().equals("pages[0].visuals[0].from"));
         assertThat(all).anyMatch(p -> !p.error() && p.path().equals("pages[0].visuals[1].alert"));
     }
+
+    @Test
+    void anEmptyBoardConvertsToAReportWithAnEmptyBoardPageButABrokenOneStaysABoard() {
+        String empty = "rachana: 1\nboard: kpi-board\ntitle: KPI board\npages:\n  - id: page1\n    title: Page 1\n    tiles: []\n";
+        String report = BoardConverter.toReport(empty, "test");
+        assertThat(report).isNotNull().contains("report: kpi-board").contains("layout: board");
+        assertThat(ReportParser.parse(report).problems()).noneMatch(Problem::error);
+        String broken = "rachana: 1\nboard: bad\npages:\n  - id: p\n    tiles:\n      - { id: t, report: r, visual: v, at: { x: 10, y: 0, w: 4, h: 2 } }\n";
+        assertThat(BoardConverter.toReport(broken, "test")).isNull();
+    }
 }

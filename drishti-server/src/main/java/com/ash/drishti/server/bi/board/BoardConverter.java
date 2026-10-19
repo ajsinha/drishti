@@ -59,7 +59,7 @@ public final class BoardConverter {
      */
     @SuppressWarnings("unchecked")
     public static String toReport(String text, String origin) {
-        if (!isBoard(text) || !BoardParser.parse(text).ok()) {                          // a board with errors stays as it is: the migration lists it
+        if (!isBoard(text) || !convertible(BoardParser.parse(text))) {                  // a board with errors stays as it is: the migration lists it
             return null;
         }
         JsonNode root;
@@ -133,6 +133,11 @@ public final class BoardConverter {
      * What an item created with the 2.3 kind {@code board} is stored as: a report with board pages (an empty one for an empty body, the conversion of a board
      * that parses, the text itself when it is already a report); null for a board text with errors, which stays a 2.3 board and is refused where it is used.
      */
+    /** Parsed, and every error is a page with no tiles yet: an empty board page is a valid report page (the designer starts from one). */
+    private static boolean convertible(BoardParser.Result r) {
+        return r.board() != null && r.problems().stream().filter(p -> p.error()).allMatch(p -> p.path().endsWith(".tiles") && p.message().startsWith("this page has no tiles yet"));
+    }
+
     public static String onCreate(String content, String title) {
         if (content == null || content.isBlank()) {
             return emptyBoard(title);

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """A business user builds BI without typing YAML, in Chromium over the real server and console (tests/bi_report_stack.py on ports 18932 and 17932, security on, a small
-file lake read through the connector ``trading-store``).
+file lake read through the connector ``trading-store``, and through ``trade-endur``, the route of kind trade since 2.3.0, which the wizard offers).
 
 One story in order: the dataset wizard builds a dataset from a connector (tick columns, set a type, add an aggregate measure and a formula with field suggestions, a daily
 refresh), the review shows the YAML it wrote and the server's check, Save makes a draft; a report is started on it from the wizard's own link; in the designer a slicer becomes
@@ -95,7 +95,7 @@ def test_the_wizard_builds_a_dataset_from_a_connector_without_typing_yaml(stack,
     page.goto(page.url.split("/bi/")[0] + "/bi/datasets/new")                        # the guided tables builder, no longer pointed at from New dataset
     page.wait_for_selector('[data-wiz-body][data-step="source"]')
     page.check('[data-wiz-mode="connector"]')
-    page.select_option("[data-wiz-connector]", "trading-store")
+    page.select_option("[data-wiz-connector]", "trade-endur")
     page.check('[data-kind="trade"]')
     page.fill("[data-wiz-name]", "wiz-trades")
     page.fill("[data-wiz-title-in]", "Wizard trades")
@@ -388,7 +388,7 @@ def test_a_refresh_gives_the_wizard_its_draft_back_and_discard_draft_throws_it_a
     pg = sign_in(browser, "wes", "/bi/datasets/new")
     pg.wait_for_selector('[data-wiz-body][data-step="source"]')
     pg.check('[data-wiz-mode="connector"]')
-    pg.select_option("[data-wiz-connector]", "trading-store")
+    pg.select_option("[data-wiz-connector]", "trade-endur")
     pg.check('[data-kind="trade"]')
     pg.fill("[data-wiz-name]", "refresh-me")
     next_step(pg, "columns")
@@ -439,7 +439,7 @@ def test_a_new_report_takes_a_main_dataset_and_more_and_greys_out_what_cannot_be
     pg.context.close()
 
 
-# ---- board designer: a draft report, drag, a twice-added visual, an empty Check; view as readers see it; ids follow the type; Back after sign-in ----------------------
+# ---- a board page: a draft report's tile, publishing over a draft; view as readers see it; ids follow the type; Back after sign-in ----------------------
 
 REPORT_BODY = ("report: kpis\nmodel: trades-basic@1\npages:\n  - id: main\n    title: Main\n    visuals:\n"
                "      - { id: card-1, type: card, title: Trades, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n")
@@ -458,45 +458,30 @@ def make(ws, kind, title, body):
     return it["id"]
 
 
-def test_the_board_designer_lists_a_draft_report_drags_tiles_warns_on_a_twice_added_visual_and_refuses_to_publish_over_the_draft(stack, page):
+def test_a_board_page_lists_a_draft_report_draws_its_tile_and_refuses_to_publish_over_the_draft(stack, page):
+    """2.4.0: a board is a report with board pages, designed in the report designer; an item made as a board is stored as one."""
     ws = shared_workspace("Board Lab")
     rep, brd = make(ws, "report", "Draft KPIs", REPORT_BODY), make(ws, "board", "KPI board", EMPTY_BOARD)
-    page.goto(f"{CONSOLE_URL}/bi/design/board/{brd}")
-    page.wait_for_selector("[data-board-design-root][data-ready='1']", timeout=30000)
-    page.click("[data-check]")                                                                           # a fresh empty board: plain words, not "no problems"
-    expect(page.locator("[data-check-sum]")).to_contain_text(re.compile("add a tile", re.I))
-    expect(page.locator("[data-check] + .bi-near")).to_contain_text(re.compile("add a tile", re.I))      # and beside the button
-    option = page.locator(f'[data-add-report] option[value="{rep}"]')
-    assert option.inner_text() == "Draft KPIs (draft)"                                                   # the author's own draft is offered, labelled
-    expect(page.locator("[data-draft-note]")).to_be_visible()
-    page.select_option("[data-add-report]", rep)
-    page.wait_for_function("() => document.querySelectorAll('[data-add-visual] option').length > 0")
-    page.click("[data-add-btn]")
-    page.wait_for_selector("[data-tile]")
-    expect(page.locator("[data-draft-tile]")).to_have_count(1)                                           # the tile says it is a draft's
-    page.click("[data-add-btn]")                                                                         # the same visual again: allowed, with a warning
-    expect(page.locator("[data-tile]")).to_have_count(2)
-    expect(page.locator("[data-add-btn] + .bi-near")).to_contain_text("already on the board")
-    # drag the first tile by its head to the right, then by its corner to make it wider; the number fields follow
-    tile = page.locator("[data-tile]").first
-    tile.click()
-    x0, w0 = int(page.input_value('[data-tile-edit] [name="x"]')), int(page.input_value('[data-tile-edit] [name="w"]'))
-    head = tile.locator(".bi-btile-head").bounding_box()
-    page.mouse.move(head["x"] + 30, head["y"] + 8)
-    page.mouse.down()
-    page.mouse.move(head["x"] + 330, head["y"] + 8, steps=10)
-    page.mouse.up()
-    assert int(page.input_value('[data-tile-edit] [name="x"]')) > x0, "dragging moved the tile and the Column field shows it"
-    grip = page.locator("[data-tile].bi-selected [data-resize]").bounding_box()
-    page.mouse.move(grip["x"] + 8, grip["y"] + 8)
-    page.mouse.down()
-    page.mouse.move(grip["x"] + 108, grip["y"] + 8, steps=10)
-    page.mouse.up()
-    assert int(page.input_value('[data-tile-edit] [name="w"]')) > w0, "dragging the corner made it wider and the Wide field shows it"
-    page.click("[data-check]")
-    expect(page.locator("[data-draft-warning]").first).to_contain_text("a draft")
+    assert item(brd)["kind"] == "report" and "layout: board" in item(brd)["body"]
+    page.goto(f"{CONSOLE_URL}/bi/design/board/{brd}")                                                    # the 2.3 address opens the report designer
+    page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
+    assert "/bi/design/board/" not in page.url
+    page.click("[data-design-root] [data-title]")
+    page.keyboard.press("Escape")
+    page.click('.bi-vtype[data-type="tile"]')
+    page.wait_for_function("() => { const v = window.drishtiBi.design.sel(); return v && v.type === 'tile'; }")
+    tile = page.evaluate("window.drishtiBi.design.sel().id")
+    expect(page.locator(f'[data-design-root] [data-visual="{tile}"] [data-tile-placeholder]')).to_have_count(1)      # nothing chosen yet: it says what to do
+    page.click("[data-ptab='format']")
+    option = page.locator(f'[data-tile-report] option[value="{rep}"]')
+    expect(option).to_have_text("Draft KPIs (draft)")                                                    # the author's own draft is offered, labelled
+    page.select_option("[data-tile-report]", rep)
+    page.wait_for_function("() => document.querySelectorAll('[data-tile-visual] option').length > 1")
+    page.select_option("[data-tile-visual]", "main/card-1")
+    expect(page.locator(f'[data-design-root] [data-visual="{tile}"] .bi-card-value')).to_have_count(1, timeout=20000)    # drawn with the report's numbers
     page.click("[data-save]")
-    expect(page.locator("[data-save] + .bi-near")).to_contain_text("Saved as a draft")                   # the answer beside the button
+    page.wait_for_function("() => /^Saved/.test((document.querySelector('[data-save] + .bi-near') || {}).textContent || '')", timeout=20000)
+    assert "from: { report: " in item(brd)["body"] and "visual: card-1" in item(brd)["body"]
     # publishing the board is refused, in words, while the report it shows is a draft
     page.goto(f"{CONSOLE_URL}/bi/i/{brd}")
     page.get_by_role("button", name="Publish", exact=True).click()
@@ -586,7 +571,7 @@ def test_back_from_the_landing_page_does_not_show_the_sign_in_form_again(stack, 
 def test_a_range_slicer_two_rows_high_shows_both_from_and_to_and_hints_at_an_inverted_range(stack, browser):
     ws = shared_workspace("Range Lab")
     body = ("report: range\nmodel: trades-basic@1\npages:\n  - id: main\n    title: Main\n    visuals:\n"
-            "      - { id: slicer-1, type: slicer, title: Notional, at: { x: 0, y: 0, w: 4, h: 2 }, format: { mode: range }, wells: { field: [trade.notional] } }\n"
+            "      - { id: slicer-1, type: slicer, title: Notional, at: { x: 0, y: 0, w: 4, h: 2 }, format: { mode: range }, wells: { field: [trade.NOTIONAL] } }\n"
             "      - { id: card-1, type: card, title: Trades, at: { x: 4, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n")
     rep = make(ws, "report", "Range", body)
     page = sign_in(browser, "wes")

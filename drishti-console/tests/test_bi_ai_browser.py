@@ -51,9 +51,9 @@ mock:
           - id: main
             title: Main
             visuals:
-              - { id: by-desk, type: bar, title: Notional by desk, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trade.desk], values: [Notional] }, alt: Bar chart of notional by desk }
+              - { id: by-desk, type: bar, title: Notional by desk, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trade.DESK], values: [Notional] }, alt: Bar chart of notional by desk }
     - match: "QUESTION: [^\\n]*desk"
-      reply: '{"fields":["trade.desk"],"measures":["Notional"],%s,"orderBy":[{"by":"Notional","desc":true}]}'
+      reply: '{"fields":["trade.DESK"],"measures":["Notional"],%s,"orderBy":[{"by":"Notional","desc":true}]}'
 """ % DATES
 
 
@@ -115,7 +115,7 @@ def test_ask_the_data_and_explain_a_number_on_a_report(browser):
     assert set(got) == set(desks())
     assert "Shown as bar" in page.locator(".bi-ai-shown").inner_text()
     page.locator(".bi-ai-query summary").click()
-    assert '"trade.desk"' in page.locator("[data-ai-query]").inner_text()
+    assert '"trade.DESK"' in page.locator("[data-ai-query]").inner_text()
     assert page.locator("[data-ai-summary]").count() == 0                         # labels-only: the model never saw the answer, so it wrote nothing about it
     shot(page, "bi-ai-ask")
 
@@ -123,8 +123,8 @@ def test_ask_the_data_and_explain_a_number_on_a_report(browser):
     panel = page.locator("[data-ai-explain]")
     expect(panel).to_be_visible(timeout=20000)
     expect(page.locator("[data-ai-lineage]")).to_contain_text("Measure Notional")
-    expect(page.locator("[data-ai-lineage]")).to_contain_text("trading-store")
-    rows = page.locator('[data-ai-breakdown="trade.desk"] tbody tr')
+    expect(page.locator("[data-ai-lineage]")).to_contain_text("risk-store")
+    rows = page.locator('[data-ai-breakdown="trade.DESK"] tbody tr')
     expect(rows).to_have_count(3)
     assert page.locator("[data-ai-value]").inner_text().replace(",", "").replace(" ", "")  # the figure of the card, computed by the engine
     shot(page, "bi-ai-explain")
