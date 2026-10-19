@@ -46,12 +46,13 @@ cmd_data() {
   fcp="plugins/drishti-plugin-file/target/classes:$(classpath plugins/drishti-plugin-file)"
   dcp="plugins/drishti-plugin-duckdb/target/classes:$(classpath plugins/drishti-plugin-duckdb)"
   rm -rf "$D/files" "$D/drishti.duckdb"
-  "$JDK25/bin/java" -cp "$fcp" com.ash.drishti.plugin.file.JsonlLoader "$D/banking.jsonl" "$D/files"
+  mkdir -p "$D/tmp"                                  # the loaders' JVM temp folder: DuckDB unpacks its native library there, not in /tmp
+  "$JDK25/bin/java" -Djava.io.tmpdir="$D/tmp" -cp "$fcp" com.ash.drishti.plugin.file.JsonlLoader "$D/banking.jsonl" "$D/files"
   uv run -q "${WITH[@]}" python tools/samplegen/bulk_trades.py --trades "$TRADES" --days 3 --jsonl - \
-    | "$JDK25/bin/java" -cp "$fcp" com.ash.drishti.plugin.file.JsonlLoader - "$D/files"
-  "$JDK25/bin/java" -cp "$dcp" com.ash.drishti.plugin.duckdb.DuckDbLoader "$D/banking.jsonl" "$D/drishti.duckdb" --recreate
+    | "$JDK25/bin/java" -Djava.io.tmpdir="$D/tmp" -cp "$fcp" com.ash.drishti.plugin.file.JsonlLoader - "$D/files"
+  "$JDK25/bin/java" -Djava.io.tmpdir="$D/tmp" -cp "$dcp" com.ash.drishti.plugin.duckdb.DuckDbLoader "$D/banking.jsonl" "$D/drishti.duckdb" --recreate
   uv run -q "${WITH[@]}" python tools/samplegen/bulk_trades.py --trades "$TRADES" --days 3 --jsonl - \
-    | "$JDK25/bin/java" -cp "$dcp" com.ash.drishti.plugin.duckdb.DuckDbLoader - "$D/drishti.duckdb"
+    | "$JDK25/bin/java" -Djava.io.tmpdir="$D/tmp" -cp "$dcp" com.ash.drishti.plugin.duckdb.DuckDbLoader - "$D/drishti.duckdb"
   du -sh "$D"/lake "$D"/files "$D"/drishti.duckdb
 }
 
@@ -69,7 +70,7 @@ cmd_rabbit_down() { docker rm -f -v "$MQ" >/dev/null 2>&1 || true; echo "rabbitm
 cmd_run() {
   local cfg="${1:?config}" jdk="${2:?21 or 25}" secs="${3:-180}" home opts run
   [[ "$jdk" == 21 ]] && { home=$JDK21; opts=(-Djdk.tracePinnedThreads=full); } || { home=$JDK25; opts=(-XX:+UseCompactObjectHeaders); }
-  run="$D/run/$cfg-j$jdk"; rm -rf "$run"; mkdir -p "$run/identity"; cd "$run"
+  run="$D/run/$cfg-j$jdk"; rm -rf "$run"; mkdir -p "$run/identity" "$run/tmp"; cd "$run"
   if (exec 3<>"/dev/tcp/127.0.0.1/$PORT") 2>/dev/null; then echo "port $PORT is in use" >&2; exit 2; fi
   local jar; jar=$(ls -t "$REPO"/drishti-server/target/drishti-server-*-exec.jar | head -1)
   local env=(DRISHTI_PORT="$PORT" DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_PACKS_DIR="$REPO/packs" DRISHTI_DELTA_ROOT="$D/lake"
@@ -101,7 +102,7 @@ drishti:
 EOF
   docker exec -u rabbitmq "$MQ" rabbitmqctl -q purge_queue "$MQ_QUEUE" >/dev/null 2>&1 || true
   echo "[$(date +%H:%M:%S)] $cfg on Java $jdk: starting the server on :$PORT"
-  env "${env[@]}" "$home/bin/java" -Xmx2g "${opts[@]}" -jar "$jar" > server.log 2>&1 &
+  env "${env[@]}" DRISHTI_TMP_DIR="$run/tmp" "$home/bin/java" -Djava.io.tmpdir="$run/tmp" -Xmx2g "${opts[@]}" -jar "$jar" > server.log 2>&1 &
   local pid=$! pub=""
   trap '[[ -n "${pub:-}" ]] && kill "$pub" 2>/dev/null; kill "$pid" 2>/dev/null; true' EXIT
   for _ in $(seq 1 300); do

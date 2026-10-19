@@ -30,6 +30,8 @@
 # folder) and take about the size of the loaded JSON; put them on a disk, not a memory-backed /tmp, for a large book.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# the loader's JVM temp folder: native libraries (DuckDB, RocksDB, zstd) unpack there, never in /tmp; the server sweeps it at start
+JTMP="${DRISHTI_TMP_DIR:-${DRISHTI_DATA_DIR:-data}/tmp/server}"; mkdir -p "$JTMP"
 export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
 ROOT="${DRISHTI_DATA_DIR:-./data}/iceberg"; OPTS=(); TRADES=""; DAYS="3"
 [[ $# -gt 0 && "$1" != --* ]] && { ROOT="$1"; shift; }
@@ -47,7 +49,7 @@ done
 uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl data/banking.jsonl
 ./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-iceberg -am
 CP="plugins/drishti-plugin-iceberg/target/classes:$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-iceberg -Dmdep.outputFile=/dev/stdout)"
-JAVA=("$JAVA_HOME/bin/java" -Xmx6g -cp "$CP")
+JAVA=("$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx6g -cp "$CP")
 "${JAVA[@]}" com.ash.drishti.plugin.iceberg.IcebergLoader data/banking.jsonl "$ROOT" "${OPTS[@]}"
 if [[ -n "$TRADES" ]]; then
   # the bulk book straight from the generator into the loader: no file of gigabytes in between

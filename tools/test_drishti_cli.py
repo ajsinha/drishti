@@ -19,6 +19,7 @@ import io
 import json
 import os
 import pathlib
+import shutil
 import stat
 import sys
 import tempfile
@@ -90,10 +91,11 @@ class Tools(unittest.TestCase):
         self.jar = self.tmp / "x-exec.jar"
         self.jar.write_text("jar")
         self.log = self.tmp / "calls.log"
-        self.env = {"FAKE_LOG": str(self.log), "FAKE_EXIT": "0", "FAKE_OUT": "", "FAKE_ERR": ""}
+        self.env = {"FAKE_LOG": str(self.log), "FAKE_EXIT": "0", "FAKE_OUT": "", "FAKE_ERR": "", "DRISHTI_TMP_DIR": str(self.tmp / "jvm")}
         self.pack = self.tmp / "my-pack"
         (self.pack / "config").mkdir(parents=True)
         (self.pack / "pack.yaml").write_text("pack: my-pack\nkinds: [trade]\ningest:\n  trade: {key: tradeId, date: businessDate}\n")
+        self.addCleanup(shutil.rmtree, self.tmp, True)
 
     def jvm(self):
         return ["--java", self.java, "--jar", self.jar]
@@ -104,7 +106,9 @@ class Tools(unittest.TestCase):
     def test_sutra_lint_runs_the_jar_with_absolute_paths_and_returns_its_exit_code(self):
         code, _, _ = run("sutra", "lint", self.pack, "--strict", *self.jvm(), env=self.env)
         self.assertEqual(0, code)
-        self.assertEqual([f"-jar {self.jar} sutra lint {self.pack} --strict"], self.calls())
+        # -Djava.io.tmpdir= first (tools/javacmd.py): the server's temp base, here DRISHTI_TMP_DIR, made before java starts
+        self.assertEqual([f"-Djava.io.tmpdir={(self.tmp / 'jvm').resolve()} -jar {self.jar} sutra lint {self.pack} --strict"], self.calls())
+        self.assertTrue((self.tmp / "jvm").is_dir())
         self.assertEqual(1, run("sutra", "test", self.pack, "--junit", self.tmp / "t.xml", *self.jvm(), env={**self.env, "FAKE_EXIT": "1"})[0])
         self.assertIn(f"sutra test {self.pack} --junit {self.tmp / 't.xml'}", self.calls()[-1])
 

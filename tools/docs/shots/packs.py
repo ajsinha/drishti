@@ -33,7 +33,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from shotlib import Ctx, listening, out_dir, register  # noqa: E402
+from shotlib import Ctx, java_cmd, listening, out_dir, register  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[3]
 PACK = ROOT / "docs" / "guides" / "examples" / "pack" / "helpdesk"
@@ -155,7 +155,7 @@ def serve(work: Path) -> list:
     env = dict(os.environ, DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS=LISTED, DRISHTI_PACKS_DIR=str(packs), DRISHTI_PACK_REGISTRY=str(reg),
                DRISHTI_STUDIO_SAVE="true", DRISHTI_SUTRAS=str(work / "sutras"))
     (work / "sutras").mkdir()
-    server = subprocess.Popen([java, "-jar", str(jars[-1])], cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
+    server = subprocess.Popen(java_cmd(java, ["-jar", str(jars[-1])], cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     cenv = dict(os.environ, DRISHTI_BACKEND_URL=f"http://127.0.0.1:{SERVER_PORT}", DRISHTI_CONSOLE_PORT=str(CONSOLE_PORT), DRISHTI_PACKS_DIR=str(packs))
     console = subprocess.Popen([str(py), str(ROOT / "drishti-console" / "run_drishti_web.py")], cwd=ROOT / "drishti-console", env=cenv,
                                stdout=(work / "console.log").open("w"), stderr=subprocess.STDOUT)

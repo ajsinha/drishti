@@ -33,6 +33,7 @@ from pathlib import Path
 
 from bi_report_stack import CONNECTOR, TRADE_CONNECTOR, write_lake
 from bi_stack import FORBIDDEN, listening, wait
+from java_launch import java_cmd
 
 ROOT = Path(__file__).resolve().parents[2]
 CONSOLE = ROOT / "drishti-console"
@@ -161,8 +162,8 @@ class Stack:
         (work / "config" / "connectors" / "risk-store.yaml").write_text(CONNECTOR.format(root=lake / "risk"))          # the valuations the 2.1 sample reads (2.3.0)
         env = dict(os.environ, DRISHTI_PACKS="trading,market-risk", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_SECURITY_ENABLED="true", DRISHTI_TOKEN_SECRET=SECRET,
                    DRISHTI_BI_DIR=str(work / "config" / "bi"), DRISHTI_DATA_DIR=str(work / "data"))
-        self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
-                                                 f"--drishti.bi.query.store-dir={self.tmp / 'store'}"], cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
+        self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
+                                                 f"--drishti.bi.query.store-dir={self.tmp / 'store'}"], tmp=self.tmp / "jvm-tmp"), cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
         wait(SERVER + "/actuator/health", 150)
         self.ids = seed()
         cenv = dict(os.environ, DRISHTI_AUTH_ENABLED="true", DRISHTI_SESSION_SECRET="s" * 40, DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_SECURE_COOKIE="false",

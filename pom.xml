@@ -109,6 +109,8 @@
     <!-- test classes run in this many parallel JVM forks per module (each fork reused for many classes); -Ddrishti.test.forks=1
          runs them serially. Fixed scratch paths in a module's surefire configuration carry ${surefire.forkNumber} -->
     <drishti.test.forks>4</drishti.test.forks>
+    <!-- extra JVM options for the test forks; surefire's argLine adds -Djava.io.tmpdir= after them -->
+    <argLine></argLine>
     <!-- LLM provider layer (drishti-ai): Spring AI 1.0.x targets Spring Boot 3.4/3.5 and Java 17+ bytecode -->
     <spring-ai.version>1.0.3</spring-ai.version>
   </properties>
@@ -186,6 +188,13 @@
         <configuration>
           <forkCount>${drishti.test.forks}</forkCount>
           <reuseForks>true</reuseForks>
+          <!-- the test JVMs' temp folder is the module's target/tmp, never the system /tmp: DuckDB (60 MB), RocksDB and CatBoost unpack
+               their native code through Files.createTempFile, which reads java.io.tmpdir once, at JVM start, so only the command line moves
+               it; a fork killed at a timeout leaves its copy behind, and mvn clean removes it. Surefire's own working files (tempDir)
+               go in the same folder, which is how it exists before the first fork starts. Keep @{argLine} first: a module or a
+               coverage agent may add its own. -->
+          <tempDir>tmp</tempDir>
+          <argLine>@{argLine} -Djava.io.tmpdir=${project.build.directory}/tmp</argLine>
           <systemPropertyVariables>
             <!-- as the server does at start (ProxySettings.allowBasicThroughTunnels): the JDK reads this once, at its first
                  HTTP client, so a test that makes a client before a proxy test would otherwise fix the default (Basic refused) -->

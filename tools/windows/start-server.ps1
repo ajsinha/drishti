@@ -111,7 +111,11 @@ $env:DRISHTI_PORT = "$Port"
 $env:DRISHTI_DELTA_ROOT = $LakeRoot
 if ($Packs) { $env:DRISHTI_PACKS = $Packs }
 # compact object headers exist from Java 25 (Java 21 refuses to start with the flag)
-$javaArgs = @("-Xmx$Heap", '-jar', $Jar)
+# the JVM's temp folder is the server's own temp base (DRISHTI_TMP_DIR, else <data dir>\tmp\server): DuckDB, RocksDB and CatBoost
+# unpack their native libraries there, and the server removes stale copies at start; java.io.tmpdir only moves on the command line
+$tmpDir = if ($env:DRISHTI_TMP_DIR) { $env:DRISHTI_TMP_DIR } elseif ($env:DRISHTI_DATA_DIR) { Join-Path $env:DRISHTI_DATA_DIR 'tmp\server' } else { Join-Path $root 'data\tmp\server' }
+New-Item -ItemType Directory -Force -Path $tmpDir | Out-Null
+$javaArgs = @("-Djava.io.tmpdir=$tmpDir", "-Xmx$Heap", '-jar', $Jar)
 if ($major -ge 25) { $javaArgs = @('-XX:+UseCompactObjectHeaders') + $javaArgs }
 Write-Host "Drishti server: $Jar on port $Port, Delta engine $Engine, lake $LakeRoot, packs $(if ($Packs) { $Packs } else { '(default)' }), heap $Heap$(if ($DemoLakes) { ', offline demo on the lakes (sign in as drishti-dev-admin)' })"
 

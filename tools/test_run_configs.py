@@ -63,6 +63,16 @@ class RunConfigs(unittest.TestCase):
             if conf.get("type") == "Application":
                 self.assertEqual(options(conf).get("WORKING_DIRECTORY"), "$PROJECT_DIR$", f.name)
 
+    def test_the_server_configurations_keep_native_libraries_out_of_the_system_temp_folder(self):
+        """-Djava.io.tmpdir=<data dir>/tmp/server, the server's own temp base: DuckDB, RocksDB and CatBoost unpack there, not in /tmp."""
+        for f in CONFIGS:
+            conf = ET.parse(f).getroot().find("configuration")
+            if conf.get("type") != "Application":
+                continue
+            envs = {e.get("name"): e.get("value") for e in conf.iter("env")}
+            data = envs.get("DRISHTI_DATA_DIR", "$PROJECT_DIR$/data")
+            self.assertIn(f"-Djava.io.tmpdir={data}/tmp/server", options(conf).get("VM_PARAMETERS", ""), f.name)
+
 
 if __name__ == "__main__":
     unittest.main()

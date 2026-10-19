@@ -36,7 +36,12 @@ class TempFilesTest {
             Files.writeString(dead.resolve("spill.tmp"), "data");
             Path lookalike = Files.createDirectories(base.resolve("drishti-2147483645"));            // no marker: not ours, never removed
             Path other = Files.createDirectories(base.resolve("something-else"));
+            Path leftOver = Files.writeString(base.resolve("libduckdb_java123456.so"), "60 MB once");    // a killed JVM's DuckDB copy
+            Files.setLastModifiedTime(leftOver, java.nio.file.attribute.FileTime.from(java.time.Instant.now().minus(java.time.Duration.ofHours(1))));
             Path dir = TempFiles.start(base.toString());
+            assertThat(leftOver).as("stale native copies in the base go at start").doesNotExist();
+            assertThat(TempFiles.info()).containsEntry("nativeCopiesRemoved", 1);
+            assertThat(TempFiles.startWarning()).as("the fork got -Djava.io.tmpdir=").isNull();
             assertThat(dir).isEqualTo(base.toAbsolutePath().resolve("drishti-" + ProcessHandle.current().pid()));
             assertThat(System.getProperty("java.io.tmpdir")).isEqualTo(dir.toString());
             assertThat(dead.resolve("spill.tmp")).exists();                                   // a left-over folder is never deleted at start

@@ -30,6 +30,7 @@ import urllib.parse
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from java_launch import java_cmd
 
 ROOT = Path(__file__).resolve().parents[2]
 CONSOLE = ROOT / "drishti-console"
@@ -149,7 +150,7 @@ class Stack:
             if built.returncode:
                 raise RuntimeError("lake demo failed: " + built.stderr[-2000:])
             env.update(DRISHTI_OFFLINE="true", DRISHTI_DELTA_ROOT=str(lake), DRISHTI_DATA_DIR=str(work / "data"))
-        self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}"], cwd=work, env=env,
+        self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}"], tmp=self.tmp / "jvm-tmp"), cwd=work, env=env,
                                                 stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
         wait(SERVER + "/actuator/health")
         cenv = dict(os.environ)

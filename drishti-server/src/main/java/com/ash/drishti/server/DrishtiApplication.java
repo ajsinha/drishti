@@ -34,7 +34,9 @@ public class DrishtiApplication {
     /**
      * Makes the per-process temp folder before anything else loads: {@code --drishti.tmp-dir=}, the {@code drishti.tmp-dir} property or {@code DRISHTI_TMP_DIR}
      * name the base (default {@code <data dir>/tmp/server}, the data folder from {@code --drishti.data.dir=}, {@code DRISHTI_DATA_DIR} or {@code ./data});
-     * {@code java.io.tmpdir} then points into it so DuckDB, sqlite and the compression libraries unpack there.
+     * the {@code java.io.tmpdir} property then points into it, which reaches sqlite and snappy (they read the property) but not DuckDB, RocksDB or CatBoost:
+     * those unpack through {@code Files.createTempFile}, fixed to the value the JVM started with, so the launchers pass {@code -Djava.io.tmpdir=<base>} and
+     * the server warns when it is missing ({@link com.ash.drishti.common.JvmTempDir}).
      */
     static void startTempFolder(String[] args) {
         String base = null;
@@ -78,6 +80,10 @@ public class DrishtiApplication {
                 continue;
             }
             Restarter.takeUndo();                           // started: the change is kept
+            String tmpWarning = com.ash.drishti.common.TempFiles.startWarning();
+            if (tmpWarning != null) {
+                org.slf4j.LoggerFactory.getLogger(DrishtiApplication.class).warn(tmpWarning);   // again, now that the log file is open
+            }
             Restarter.await();
             ctx.close();
         }

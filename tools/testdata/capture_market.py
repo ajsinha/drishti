@@ -59,6 +59,9 @@ from datetime import datetime, timezone
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
+if str(ROOT / "tools") not in sys.path:
+    sys.path.append(str(ROOT / "tools"))
+from javacmd import java_cmd  # noqa: E402
 PACK = "news-and-markets"
 CONNECTOR = "news-store"                     # the pack's Delta connector that serves the snapshot
 KINDS = {"quote": ("QUOTE_ID", "Yahoo Finance (yfinance connector)"), "news": ("NEWS_ID", "Google News (news connector)")}
@@ -173,7 +176,7 @@ class ScratchServer:
                    DRISHTI_CONNECTORS_DIR=str(self.work / "connectors"), DRISHTI_DEMO_ENABLED="false", DRISHTI_LAKE_ENABLED="false",
                    DRISHTI_OFFLINE="false", DRISHTI_SECURITY_ENABLED="false", DRISHTI_PORT=str(self.a.port))
         log = (self.work / "server.log").open("ab")
-        self.proc = subprocess.Popen([java or "java", "-Xmx768m", "-jar", jar, f"--server.port={self.a.port}"], cwd=self.work, env=env,
+        self.proc = subprocess.Popen(java_cmd(java or "java", ["-Xmx768m", "-jar", jar, f"--server.port={self.a.port}"], cwd=self.work, env=env), cwd=self.work, env=env,
                                      stdout=log, stderr=subprocess.STDOUT)
         end = time.time() + 180
         while time.time() < end:

@@ -280,6 +280,11 @@ DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-econo
 
 After a `git pull` that changed Java code, build the jar again (step 2.3) before starting it this way.
 
+Both ways start Java with `-Djava.io.tmpdir=<repository>\data\tmp\server` (the run configuration in its *VM options*, the
+script on its java line), so DuckDB, RocksDB and CatBoost unpack their native libraries in the server's own folder, not in
+`%TEMP%`. If you made the configuration by hand (above), add `-Djava.io.tmpdir=$PROJECT_DIR$\data\tmp\server` to its
+*VM options*; without it the server says so in its log and on Admin, Health (*Temp folders*).
+
 **What you should see** (either way: in the Run window for way A, in the PowerShell window for way B):
 
 - within about 20 seconds: `Started DrishtiApplication in … seconds` — the server answers from now on;

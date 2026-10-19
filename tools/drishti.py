@@ -45,6 +45,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+from javacmd import java_cmd
+
 TOOLS = pathlib.Path(__file__).resolve().parent
 ROOT = TOOLS.parent
 DEFAULT_SERVER = "http://localhost:18480"
@@ -119,7 +121,7 @@ def find_java(explicit: str | None = None) -> str:
 
 def run_java(a, args: list[str], capture: bool = False) -> subprocess.CompletedProcess:
     """`java -jar <exec jar> sutra <args>` from the repository root (paths in `args` must already be absolute)."""
-    cmd = [find_java(getattr(a, "java", None)), "-jar", find_jar(getattr(a, "jar", None)), "sutra", *args]
+    cmd = java_cmd(find_java(getattr(a, "java", None)), ["-jar", find_jar(getattr(a, "jar", None)), "sutra", *args], cwd=ROOT)   # -Djava.io.tmpdir=<data dir>/tmp/server
     try:
         return subprocess.run(cmd, cwd=ROOT, text=True, capture_output=capture)
     except FileNotFoundError as e:

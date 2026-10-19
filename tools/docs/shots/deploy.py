@@ -33,7 +33,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from shotlib import CONSOLE_PORT, PACKS, ROOT, SERVER_PORT, Ctx, listening, out_dir, register  # noqa: E402
+from shotlib import CONSOLE_PORT, PACKS, ROOT, SERVER_PORT, Ctx, java_cmd, listening, out_dir, register  # noqa: E402
 
 shot = register("deploy")
 QUICKSTART = ["core", "market-data", "trading", "market-risk", "counterparty-risk", "world-economy", "news-and-markets"]
@@ -95,7 +95,7 @@ def start_servers(work: Path) -> list:
                DRISHTI_SUTRAS=str(work / "sutras"), DRISHTI_PACKS_INSTALLED=str(work / "data" / "installed"), DRISHTI_PACKS_SETTINGS=str(work / "data" / "settings"),
                DRISHTI_PACKS_DEPLOY_HISTORY=str(work / "data" / "history.jsonl"))
     (work / "sutras").mkdir()
-    server = subprocess.Popen([java, "-jar", str(jars[-1])], cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
+    server = subprocess.Popen(java_cmd(java, ["-jar", str(jars[-1])], cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     py = ROOT / "drishti-console" / ".venv" / "bin" / "python"
     py = py if py.exists() else Path(sys.executable)
     cenv = dict(os.environ, DRISHTI_BACKEND_URL=f"http://127.0.0.1:{SERVER_PORT}", DRISHTI_CONSOLE_PORT=str(CONSOLE_PORT), DRISHTI_PACKS_DIR=str(packs))

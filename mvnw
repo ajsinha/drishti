@@ -147,6 +147,16 @@ MAVEN_HOME="${MAVEN_USER_HOME}/wrapper/dists/${distributionUrlNameMain-}/$(hash_
 
 exec_maven() {
   unset MVNW_VERBOSE MVNW_USERNAME MVNW_PASSWORD MVNW_REPOURL || :
+  # Drishti: Maven's own JVM unpacks jansi's native library into java.io.tmpdir, read once at JVM start; keep it out of the
+  # system /tmp. An absolute path made here, since .mvn/jvm.config can neither expand a variable nor make the folder.
+  # DRISHTI_MAVEN_TMP names another folder; a java.io.tmpdir already in MAVEN_OPTS wins. (Windows needs none: Maven ships jansi's DLL.)
+  case "${MAVEN_OPTS-}" in
+  *-Djava.io.tmpdir=*) ;;
+  *)
+    _mvnw_tmp="${DRISHTI_MAVEN_TMP:-$(cd "$(dirname "$0")" && pwd)/data/tmp/maven}"
+    mkdir -p "$_mvnw_tmp" 2>/dev/null && MAVEN_OPTS="-Djava.io.tmpdir=$_mvnw_tmp ${MAVEN_OPTS-}" && export MAVEN_OPTS
+    ;;
+  esac
   exec "$MAVEN_HOME/bin/$MVN_CMD" "$@" || die "cannot exec $MAVEN_HOME/bin/$MVN_CMD"
 }
 

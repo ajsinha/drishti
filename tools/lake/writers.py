@@ -30,12 +30,16 @@ import os
 import pathlib
 import shutil
 import subprocess
+import sys
 import zipfile
 
 from stage import Part, read_rows
 
 LAKE_CLASS = "com/ash/drishti/deltalake/write/LakeWriter.class"
 ROOT = pathlib.Path(__file__).resolve().parents[2]
+if str(ROOT / "tools") not in sys.path:
+    sys.path.append(str(ROOT / "tools"))
+from javacmd import java_cmd  # noqa: E402
 
 
 class WriteError(RuntimeError):
@@ -97,19 +101,19 @@ def deltalake_available() -> bool:
         return False
 
 
-def java_command(jar: str | None, java: str | None) -> list[str] | None:
-    """How to start Drishti's writer: the server's exec jar (``java -jar J lake ...``), or for development a class path in
-    DRISHTI_LAKE_CLASSPATH (``java -cp CP com.ash.drishti.deltalake.write.LakeCli lake ...``)."""
+def java_command(jar: str | None, java: str | None) -> tuple[str, list[str]] | None:
+    """How to start Drishti's writer, as (java, arguments): the server's exec jar (``java -jar J lake ...``), or for development a class
+    path in DRISHTI_LAKE_CLASSPATH (``java -cp CP com.ash.drishti.deltalake.write.LakeCli lake ...``). javacmd.java_cmd starts it."""
     java_bin = find_java(java)
     if not java_bin:
         return None
     heap = "-Xmx" + os.environ.get("DRISHTI_LAKE_HEAP", "1g")
     cp = os.environ.get("DRISHTI_LAKE_CLASSPATH")
     if cp and not jar:
-        return [java_bin, heap, "-cp", cp, "com.ash.drishti.deltalake.write.LakeCli"]
+        return java_bin, [heap, "-cp", cp, "com.ash.drishti.deltalake.write.LakeCli"]
     j = find_jar(jar)
     if j and jar_has_writer(j):
-        return [java_bin, heap, "-jar", j]
+        return java_bin, [heap, "-jar", j]
     return None
 
 
@@ -118,7 +122,8 @@ def choose(engine: str, jar: str | None = None, java: str | None = None) -> tupl
     if engine in ("auto", "drishti"):
         cmd = java_command(jar, java)
         if cmd:
-            return "drishti", "Drishti's Java writer in " + (os.path.basename(cmd[-1]) if cmd[-2] == "-jar" else "DRISHTI_LAKE_CLASSPATH")
+            args = cmd[1]
+            return "drishti", "Drishti's Java writer in " + (os.path.basename(args[-1]) if args[-2] == "-jar" else "DRISHTI_LAKE_CLASSPATH")
         if engine == "drishti":
             raise WriteError("--engine drishti needs the server's exec jar with the lake writer (--jar, DRISHTI_JAR or a built "
                              "drishti-server/target/drishti-server-*-exec.jar) and Java 21")
@@ -284,8 +289,10 @@ def write_drishti(t: Table, by_day: dict, workdir: pathlib.Path, jar: str | None
     }
     mf = workdir / "manifest.json"
     mf.write_text(json.dumps(manifest), encoding="utf-8")
-    # the writer's temporary files (native libraries it unpacks) go beside the staged rows, in the lake, never the system temp folder
-    cmd = [base[0], f"-Ddrishti.tmp-dir={workdir / 'tmp'}", *base[1:], "lake", "write", "--manifest", str(mf)]
+    # the writer's temporary files go beside the staged rows, in the lake, never the system temp folder: drishti.tmp-dir for Drishti's own,
+    # -Djava.io.tmpdir= (javacmd) for the native libraries it unpacks, which only the command line moves
+    java_bin, args = base
+    cmd = java_cmd(java_bin, [f"-Ddrishti.tmp-dir={workdir / 'tmp'}", *args, "lake", "write", "--manifest", str(mf)], tmp=workdir / "tmp")
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     result: dict = {}
     total = len(manifest["parts"])

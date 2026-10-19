@@ -140,7 +140,7 @@ class RedisLoaderReplaceTest {
     void aKilledLoadsDocumentsAreDeletedByTheNextLoadOfTheDomain() throws Exception {
         load(rows("killed", "X-", 2, D3), "--codec", "zstd");
         String java = ProcessHandle.current().info().command().orElse("java");
-        Process loader = new ProcessBuilder(java, "-cp", System.getProperty("java.class.path"), RedisLoader.class.getName(), "-", uri(), "--codec", "zstd",
+        Process loader = new ProcessBuilder(java, "-Djava.io.tmpdir=" + System.getProperty("java.io.tmpdir"), "-cp", System.getProperty("java.class.path"), RedisLoader.class.getName(), "-", uri(), "--codec", "zstd",
                 "--threads", "2", "--in-flight", "50").redirectErrorStream(true).redirectOutput(ProcessBuilder.Redirect.DISCARD).start();
         try {
             try (OutputStream in = loader.getOutputStream()) {

@@ -30,6 +30,7 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
+from java_launch import java_cmd
 
 ROOT = Path(__file__).resolve().parents[2]
 CONSOLE = ROOT / "drishti-console"
@@ -152,7 +153,7 @@ class Stack:
         copy_samples(work / "config" / "bi", ["trades-basic"])           # publishing checks a report can be drawn: the model it names must exist
         env = dict(os.environ, DRISHTI_PACKS="trading", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_SECURITY_ENABLED="true", DRISHTI_TOKEN_SECRET=SECRET,
                    DRISHTI_BI_DIR=str(work / "config" / "bi"))
-        self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false"], cwd=work,
+        self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false"], tmp=self.tmp / "jvm-tmp"), cwd=work,
                                                 env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
         wait(SERVER + "/actuator/health", 150)
         self.ids = seed()

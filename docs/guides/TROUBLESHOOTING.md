@@ -146,7 +146,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 - **Fix:** stop the other process, or start this one on another port and tell the console where it is:
 
   ```bash
-  DRISHTI_PORT=18481 java -jar drishti-server/target/drishti-server-2.4.0-exec.jar
+  DRISHTI_PORT=18481 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.4.0-exec.jar
   DRISHTI_BACKEND_URL=http://127.0.0.1:18481 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```
 
@@ -164,7 +164,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 
   ```bash
   DRISHTI_PACKS=trading,counterparty-risk DRISHTI_PACKS_DIR=$PWD/packs \
-    java -jar drishti-server/target/drishti-server-2.4.0-exec.jar
+    java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.4.0-exec.jar
   ```
 
   A pack's parents load by themselves: enabling `trading` also loads `core` and `market-data`. Other
@@ -182,7 +182,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 
 ### An old version runs, or the wrong jar starts
 
-- **Cause:** `drishti-server/target/` holds jars from several builds, and `java -jar drishti-server/target/drishti-server-*-exec.jar`
+- **Cause:** `drishti-server/target/` holds jars from several builds, and `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar`
   expands to all of them; Java runs the **first** (the oldest, alphabetically) and ignores the rest.
 - **Check:** `curl -s http://localhost:18480/api/v1/about | python3 -c "import json,sys; print(json.load(sys.stdin)['version'])"`
   and `ls drishti-server/target/*-exec.jar`.
@@ -292,7 +292,7 @@ The log gets the first failure and failures number 2, 4, 8, ... of each thing, n
 
   ```bash
   export DRISHTI_TOKEN_SECRET='at-least-32-characters-shared-secret!!'   # same value for both
-  DRISHTI_SECURITY_ENABLED=true java -jar drishti-server/target/drishti-server-2.4.0-exec.jar
+  DRISHTI_SECURITY_ENABLED=true java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.4.0-exec.jar
   DRISHTI_AUTH_ENABLED=true DRISHTI_SESSION_SECRET='another-secret-of-32-characters-or-more' \
     drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```

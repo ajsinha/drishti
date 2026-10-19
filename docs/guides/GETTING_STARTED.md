@@ -268,19 +268,21 @@ export DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789
 export DRISHTI_SEED_ADMIN=true DRISHTI_SEED_USERNAME=drishti-dev-admin DRISHTI_SEED_PASSWORD=drishti-dev-admin123
 export DRISHTI_EXTERNAL_LIB=$PWD/external_lib
 export DRISHTI_DEMO_ENABLED=false
-java -Xmx4g -jar drishti-server/target/drishti-server-2.4.0-exec.jar
+mkdir -p data/tmp/server
+java -Djava.io.tmpdir=data/tmp/server -Xmx4g -jar drishti-server/target/drishti-server-2.4.0-exec.jar
 ```
 
 **B. The smallest start** (sign-in off, the packs' samples ticking live):
 
 ```bash
-java -jar drishti-server/target/drishti-server-2.4.0-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.4.0-exec.jar
 ```
 
 What the settings do:
 
 | Setting | Meaning |
 |---|---|
+| `-Djava.io.tmpdir=data/tmp/server` (and the `mkdir` before it) | Java's temp folder for this server: DuckDB, RocksDB and CatBoost unpack their native libraries there (DuckDB 60 MB a start), not in `/tmp`, and the server removes stale copies from it at start. Only the command line moves it (since JDK 17); without it the server warns in its log and on Admin, Health. `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=…` works too. [CONFIGURATION.md](../admin/CONFIGURATION.md#pass--djavaiotmpdir-to-java) |
 | `DRISHTI_PACKS` | The packs to load, comma-separated. A pack's parents load with it: `market-risk` brings `core`, `market-data` and `trading`. Without it the same seven load (they are the default). |
 | `DRISHTI_STUDIO_SAVE=true` | Lets the Build workbench save Sutras (the view layouts). Leave it out if you will not edit Sutras. |
 | `DRISHTI_SECURITY_ENABLED=true` | Sign-in on: every call needs a token. Off by default. |
@@ -569,7 +571,7 @@ overlay `<data>/packs/added.yaml` (`DRISHTI_PACKS_OVERLAY` moves it; the server 
 
 | You want | Do | Command |
 |---|---|---|
-| a site file read **in addition**, on top of the bundled defaults | `--spring.config.additional-location` | `java -jar drishti-server/target/drishti-server-2.4.0-exec.jar --spring.config.additional-location=file:/etc/drishti/site.yaml` |
+| a site file read **in addition**, on top of the bundled defaults | `--spring.config.additional-location` | `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.4.0-exec.jar --spring.config.additional-location=file:/etc/drishti/site.yaml` |
 | the same, from the environment | `SPRING_CONFIG_ADDITIONAL_LOCATION` | `SPRING_CONFIG_ADDITIONAL_LOCATION=file:/etc/drishti/site.yaml java -jar …` |
 | several files, later ones win | a comma list | `--spring.config.additional-location=file:/etc/drishti/site.yaml,file:/etc/drishti/secrets.yaml` |
 | a folder of files | end it with `/` | `--spring.config.additional-location=file:/etc/drishti/conf.d/` |

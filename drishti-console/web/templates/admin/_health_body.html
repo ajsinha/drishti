@@ -44,7 +44,9 @@
   <span><b>Temp folders</b></span>
   <span class="mono" data-tmp-server title="The server's folder drishti-&lt;pid&gt; (drishti.tmp-dir / DRISHTI_TMP_DIR): removed on shutdown; left-over ones are listed, never deleted automatically">server {{ (h.tmp or {}).get('path') or '—' }} · {{ (((h.tmp or {}).get('bytes') or 0) / 1048576) | round(1) }} MB · {{ (h.tmp or {}).get('files') or 0 }} files</span>
   <span class="mono" data-tmp-console title="The console's folder drishti-console-&lt;pid&gt; (tmp_dir / DRISHTI_CONSOLE_TMP_DIR)">console {{ console_tmp.path or '—' }} · {{ ((console_tmp.bytes or 0) / 1048576) | round(1) }} MB · {{ console_tmp.files or 0 }} files</span>
+  {% if (h.tmp or {}).get('nativeCopiesRemoved') %}<span class="mono" data-native-removed title="Native-library copies (DuckDB, RocksDB, sqlite…) that processes killed without a clean stop left in the server's temp base, removed at start">{{ h.tmp.nativeCopiesRemoved }} stale native copies removed at start</span>{% endif %}
 </div>
+{% if (h.tmp or {}).get('jvmTmpdirWarning') %}<p class="hl-err" role="alert" data-tmpdir-warning><b class="t-warn">Java temp folder</b> {{ h.tmp.jvmTmpdirWarning }}</p>{% endif %}
 
 {% if h.dataLate %}
 <section class="pnl" aria-label="Data that is late"><div class="pnl-b"><ul class="hl-late">{% for d in h.dataLate %}

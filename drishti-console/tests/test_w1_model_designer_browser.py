@@ -38,6 +38,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 from bi_stack import FORBIDDEN, listening, wait  # noqa: E402
 from scratch_ports import worker_ports  # noqa: E402
+from java_launch import java_cmd
 
 ROOT = Path(__file__).resolve().parents[2]
 CONSOLE = ROOT / "drishti-console"
@@ -153,8 +154,8 @@ class Stack:
             env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS="trading,core,market-risk", DRISHTI_LAKE_ENABLED="false",   # the packs' lakes off (the empty Calypso and Murex lakes would make every trade column text)
                        DRISHTI_SECURITY_ENABLED="true",
                        DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_BI_DIR=str(work / "config" / "bi"), DRISHTI_DATA_DIR=str(work / "data"))
-            self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
-                                                     f"--drishti.bi.query.store-dir={self.tmp / 'store'}"], cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"),
+            self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
+                                                     f"--drishti.bi.query.store-dir={self.tmp / 'store'}"], tmp=self.tmp / "jvm-tmp"), cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"),
                                                     stderr=subprocess.STDOUT)
             wait(SERVER + "/actuator/health", 150)
             for role, bi, raw in [("bi-writer", ["bi", "bi-author"], True), ("desk-head", ["bi"], True)]:

@@ -27,10 +27,15 @@ import java.util.stream.Stream;
 
 /**
  * The one place the server makes temporary files and folders. The server keeps a per-process folder, {@code drishti-<pid>}, under the configured temp base
- * ({@code drishti.tmp-dir} / {@code DRISHTI_TMP_DIR}, default {@code <data dir>/tmp/server}). {@link #start} makes it, removes the folders of dead processes left by a
- * crash, points {@code java.io.tmpdir} at it (so libraries that unpack native code or spill to disk, DuckDB, sqlite, snappy, land in it) and removes it on a
- * clean shutdown. An architecture test forbids {@code Files.createTempFile}, {@code Files.createTempDirectory} and {@code File.createTempFile} anywhere else in
- * main code.
+ * ({@code drishti.tmp-dir} / {@code DRISHTI_TMP_DIR}, default {@code <data dir>/tmp/server}). {@link #start} makes it, lists (never removes) the folders of dead
+ * processes, removes stale native-library copies from the base ({@link JvmTempDir}), sets the {@code java.io.tmpdir} property to the folder and removes the
+ * folder on a clean shutdown.
+ *
+ * <p>Setting the property reaches only code that reads it at runtime ({@code System.getProperty}: sqlite-jdbc, snappy, Drishti's own files). It does not
+ * move {@code Files.createTempFile} or {@code File.createTempFile}, which since JDK 17 use the value the JVM started with: DuckDB, RocksDB and CatBoost unpack
+ * their native code with those, into the system temp folder unless Java was started with {@code -Djava.io.tmpdir=} (the launchers pass the base). The server
+ * warns at start, in the log and on Admin → Health, when it was not. An architecture test forbids {@code Files.createTempFile},
+ * {@code Files.createTempDirectory} and {@code File.createTempFile} anywhere else in main code.
  */
 public final class TempFiles {
 
@@ -38,10 +43,12 @@ public final class TempFiles {
     static final String MARKER = "drishti-temp-folder.txt";
     static final String LEGACY_MARKER = ".drishti-tmp";
 
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(TempFiles.class);
     private static final String PREFIX = "drishti-";
     private static final ReentrantLock LOCK = new ReentrantLock();
     private static volatile Path root;
     private static volatile Path base;
+    private static volatile String startWarning;
 
     private TempFiles() {}
 
@@ -70,7 +77,8 @@ public final class TempFiles {
     }
 
     /**
-     * Starts the process folder under {@code baseDir} (null: the configured base), removes stale ones, sets {@code java.io.tmpdir} and registers the clean-up.
+     * Starts the process folder under {@code baseDir} (null: the configured base), removes stale native-library copies from the base, warns when
+     * {@code -Djava.io.tmpdir=} was not passed, sets the {@code java.io.tmpdir} property and registers the clean-up.
      * Call it first in {@code main}, before any library that unpacks native code is loaded. Calling it again returns the same folder.
      */
     public static Path start(String baseDir) {
@@ -79,14 +87,28 @@ public final class TempFiles {
             if (root != null) {
                 return root;
             }
+            JvmTempDir.startup();                                    // loads it, so it records java.io.tmpdir before it is set below
             Path b = Path.of(baseDir == null || baseDir.isBlank() ? configuredBase() : baseDir).toAbsolutePath();
             Path dir = make(b);
-            System.setProperty("java.io.tmpdir", dir.toString());
+            int swept = JvmTempDir.sweep(b);
+            if (swept > 0) {
+                LOG.info("removed {} stale native-library copies left in {} by processes that did not stop cleanly", swept, b);
+            }
+            startWarning = JvmTempDir.warning(b);
+            if (startWarning != null) {
+                LOG.warn(startWarning);                               // before logging is set up: the console; the server repeats it once it is
+            }
+            System.setProperty("java.io.tmpdir", dir.toString());   // reaches System.getProperty readers only (see the class comment)
             Runtime.getRuntime().addShutdownHook(new Thread(TempFiles::cleanUp, "drishti-tmp-cleanup"));
             return dir;
         } finally {
             LOCK.unlock();
         }
+    }
+
+    /** The warning {@link #start} logged when {@code -Djava.io.tmpdir=} was not passed to Java, or null (for the server's log once logging is set up). */
+    public static String startWarning() {
+        return startWarning;
     }
 
     /** The process folder; made (without changing {@code java.io.tmpdir}) the first time something needs a temporary file, when {@link #start} did not run. */
@@ -188,8 +210,9 @@ public final class TempFiles {
     /** What the health page shows: where the folder is and how much it holds. */
     public static Map<String, Object> info() {
         Path r = root != null ? root : null;
+        Map<String, Object> jvm = JvmTempDir.info(Path.of(base != null ? base.toString() : configuredBase()));
         if (r == null) {
-            return Map.of("base", configuredBase(), "path", "", "bytes", 0L, "files", 0L);
+            return with(Map.of("base", configuredBase(), "path", "", "bytes", 0L, "files", 0L), jvm);
         }
         long[] size = {0, 0};
         try (Stream<Path> s = Files.walk(r)) {
@@ -204,7 +227,13 @@ public final class TempFiles {
         } catch (IOException | UncheckedIOException e) {
             // counted as far as it could be
         }
-        return Map.of("base", base.toString(), "path", r.toString(), "bytes", size[0], "files", size[1]);
+        return with(Map.of("base", base.toString(), "path", r.toString(), "bytes", size[0], "files", size[1]), jvm);
+    }
+
+    private static Map<String, Object> with(Map<String, Object> a, Map<String, Object> b) {
+        Map<String, Object> out = new java.util.LinkedHashMap<>(a);
+        out.putAll(b);
+        return out;
     }
 
     /** The process folders under the base that are left over from dead processes (for a test and the health page). */

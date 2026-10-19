@@ -23,6 +23,8 @@
 # --ttl-days N lets MongoDB delete each day's documents N days after their business date (a TTL index on expireAt).
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# the loader's JVM temp folder: native libraries (DuckDB, RocksDB, zstd) unpack there, never in /tmp; the server sweeps it at start
+JTMP="${DRISHTI_TMP_DIR:-${DRISHTI_DATA_DIR:-data}/tmp/server}"; mkdir -p "$JTMP"
 export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
 URI="mongodb://localhost:27017"; DB="drishti"; OPTS=(); TRADES=""; DAYS="3"
 [[ $# -gt 0 && "$1" != --* ]] && { URI="$1"; shift; }
@@ -40,7 +42,7 @@ done
 uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl data/banking.jsonl
 ./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-mongodb -am
 CP="plugins/drishti-plugin-mongodb/target/classes:$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-mongodb -Dmdep.outputFile=/dev/stdout)"
-LOADER=("$JAVA_HOME/bin/java" -cp "$CP" com.ash.drishti.plugin.mongodb.MongoLoader)
+LOADER=("$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -cp "$CP" com.ash.drishti.plugin.mongodb.MongoLoader)
 if [[ -n "$TRADES" ]]; then
   "${LOADER[@]}" data/banking.jsonl "$URI" "$DB" ${OPTS[@]+"${OPTS[@]}"}
   # the bulk book straight from the generator into the loader: no file of gigabytes in between

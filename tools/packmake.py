@@ -134,7 +134,7 @@ def write_scripts(out: pathlib.Path, name: str, store: str) -> None:
     sh = f"""#!/usr/bin/env bash
 # Starts the Drishti server on this folder alone: the pack from ./pack, the data from ./data/{sub}.
 # Needs JDK 21+ and the server jar:  DRISHTI_JAR=/path/to/drishti-server-X.Y.Z-exec.jar ./run-server.sh
-# Optional: DRISHTI_PORT (default 18480), {root_var} (default ./data/{sub}), JAVA_HOME.
+# Optional: DRISHTI_PORT (default 18480), {root_var} (default ./data/{sub}), DRISHTI_TMP_DIR (default ./data/tmp/server), JAVA_HOME.
 set -euo pipefail
 HERE="$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)"
 JAVA="${{JAVA_HOME:+$JAVA_HOME/bin/}}java"
@@ -145,12 +145,15 @@ export DRISHTI_PACKS="{name}"
 export DRISHTI_PACKS_DIR="$HERE/pack"
 export {root_var}="${{{root_var}:-$HERE/data/{sub}}}"
 export SPRING_CONFIG_ADDITIONAL_LOCATION="optional:file:$HERE/config/drishti-site.yaml"
+# the JVM's temp folder is the server's own (native libraries unpack there, not in /tmp; the server sweeps stale copies at start)
+TMP_DIR="${{DRISHTI_TMP_DIR:-$HERE/data/tmp/server}}"
+mkdir -p "$TMP_DIR"
 cd "$HERE"
-exec "$JAVA" -jar "$JAR" "$@"
+exec "$JAVA" -Djava.io.tmpdir="$TMP_DIR" -jar "$JAR" "$@"
 """
     ps = f"""# Starts the Drishti server on this folder alone: the pack from .\\pack, the data from .\\data\\{sub}.
 # Needs JDK 21+ and the server jar:  $env:DRISHTI_JAR = 'C:\\path\\drishti-server-X.Y.Z-exec.jar'; .\\run-server.ps1
-# Optional: DRISHTI_PORT (default 18480), {root_var}, JAVA_HOME.
+# Optional: DRISHTI_PORT (default 18480), {root_var}, DRISHTI_TMP_DIR (default .\\data\\tmp\\server), JAVA_HOME.
 $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $java = if ($env:JAVA_HOME) {{ Join-Path $env:JAVA_HOME 'bin\\java.exe' }} else {{ 'java' }}
@@ -161,8 +164,11 @@ $env:DRISHTI_PACKS = '{name}'
 $env:DRISHTI_PACKS_DIR = Join-Path $here 'pack'
 if (-not $env:{root_var}) {{ $env:{root_var} = Join-Path $here 'data\\{sub}' }}
 $env:SPRING_CONFIG_ADDITIONAL_LOCATION = 'optional:file:' + ((Join-Path $here 'config\\drishti-site.yaml') -replace '\\\\', '/')
+# the JVM's temp folder is the server's own (native libraries unpack there, not in the system temp folder)
+$tmp = if ($env:DRISHTI_TMP_DIR) {{ $env:DRISHTI_TMP_DIR }} else {{ Join-Path $here 'data\\tmp\\server' }}
+New-Item -ItemType Directory -Force -Path $tmp | Out-Null
 Set-Location $here
-& $java -jar $jar @args
+& $java "-Djava.io.tmpdir=$tmp" -jar $jar @args
 """
     sp = out / "run-server.sh"
     sp.write_text(sh, encoding="utf-8", newline="\n")
