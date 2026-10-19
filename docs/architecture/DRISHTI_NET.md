@@ -28,7 +28,7 @@ in the code today; every other class, file or setting named here does.
 8. [Operations across nodes](#8-operations-across-nodes) · 9. [Identity and security](#9-identity-and-security) ·
 10. [Shared and separate lakes](#10-shared-and-separate-lakes) · 11. [State that belongs to a user](#11-state-that-belongs-to-a-user) ·
 12. [Failure](#12-failure) · 13. [Admin, management and observability](#13-admin-management-and-observability) · 14. [Configuration](#14-configuration) ·
-15. [APIs](#15-apis) · 16. [Build plan](#16-build-plan) · 17. [Tests](#17-tests) · 18. [Risks and open questions](#18-risks-and-open-questions)
+15. [APIs](#15-apis) · 16. [Build plan](#16-build-plan) · 17. [Tests](#17-tests) · 17A. [Documentation](#17a-documentation-part-of-every-phase-not-after-it) · 18. [Risks and open questions](#18-risks-and-open-questions)
 
 ## 1. The ask
 
@@ -399,6 +399,26 @@ All of N1–N7 are planned for 2.5.0, in this order; N1–N5 come first and are 
   down; a stand-in server that stops, hangs or answers 503; reads retried once, writes never; the
   stream reconnects; a recovered server is used again only for new sessions.
 - **A soak on real processes:** three servers on scratch ports, one killed and restarted under `tools/bench/users.py` load.
+
+## 17A. Documentation (part of every phase, not after it)
+
+Each phase ends with its docs written and checked against the running code (commands and outputs captured on a fresh
+stack, pictures of the real pages), as the product owner asked:
+
+| Document | What it gets |
+|---|---|
+| `docs/admin/NET.md` (new) | the operator's guide: set up a cluster of three, the `config/net/` files one by one, key rollover step by step, drain and maintenance, a node leaving, reading Admin → Net, sizing |
+| `docs/tutorials/` (new tutorial) | a cluster of three on one machine, from the first seed to a console that falls over: every step with the UI, the CLI (`drishti.py net`) and the YAML |
+| `docs/admin/CONFIGURATION.md` | `drishti.net.dir`, `watch`, `poll`; the console's `backend.urls`, `discover`, `discover-every`, `check-every`, `fail-after`; every file's settings |
+| `docs/admin/OPERATIONS.md` | environment variables, ports, firewalls, health and metrics, `peers.json` and `servers.json`, backups |
+| `docs/guides/API_GUIDE.md` | the `/api/v1/net/*` endpoints, the hop and on-behalf-of headers, `nodes` in a search answer |
+| `docs/guides/CLI_GUIDE.md` | `drishti.py net list | check | add-peer | set` |
+| `docs/guides/TROUBLESHOOTING.md` | a node that will not join, a refused key, a suspect that flaps, a partial search naming a node, a console that keeps failing over |
+| `docs/guides/USER_GUIDE.md` | what a user sees: nothing changes, partial answers name a server, provenance for administrators |
+| `docs/architecture/ARCHITECTURE.md` | the cluster in the component picture and the request path |
+| `docs/qa/` (the Windows QA guide) | the cluster steps a tester walks through |
+| `README.md`, Help → About, `CHANGELOG.md` | the feature and its measured results (fail-over time, soak numbers) |
+| this design | each phase marked *as built*, with anything that changed from the design |
 
 ## 18. Risks and open questions
 

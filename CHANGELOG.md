@@ -17,6 +17,22 @@
 
 ## Unreleased
 
+- **Query by form at scale (2.4.0).** A kind's form is kept per data version and per whether the caller sees masks, instead of
+  being built from a thousand rows on every request (twice per console search). On 35.7 million trades with 50 console users:
+  form search p50 5.8 s → 0.21 s, the console 56 → 182 pages/s, 0 failures. [PERFORMANCE.md](docs/admin/PERFORMANCE.md),
+  [QUERY_BY_FORM.md](docs/guides/QUERY_BY_FORM.md).
+- **A search on a date with no data says so (2.4.0).** When no source holds the kind on the business date, the search answers
+  `noData {businessDate, latestDate}` (new `SourcePlugin.latestDate`, cheap: a Delta table's newest date from its cached layout),
+  and the console's form and search pages say no data is loaded for that date, name the newest date that has data and offer
+  **Search on** it. [API_GUIDE.md](docs/guides/API_GUIDE.md), [QUERY_BY_FORM.md](docs/guides/QUERY_BY_FORM.md).
+- **Toronto business calendar `CATO` (2.4.0)**, in the server and the Python generator (golden 2026 and 2027 dates in both
+  tests). [CONFIGURATION.md](docs/admin/CONFIGURATION.md).
+- **A restated day while serving, measured (2.4.0).** 400,000 ENDUR trades with 10 % amended reloaded under 30 users: 2 min 54 s,
+  202 requests/s, 0 failures, the new version served within a minute. [PERFORMANCE.md](docs/admin/PERFORMANCE.md).
+- **Designs for the next releases:** Drishti*net, several servers acting as one, for 2.5.0
+  ([DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md)); GenUI ([GENUI.md](docs/architecture/GENUI.md)) and AI management
+  ([AI_MANAGEMENT.md](docs/architecture/AI_MANAGEMENT.md)) for 2.6.0; the release order in
+  [BI_DESIGN.md §12.2](docs/architecture/BI_DESIGN.md#122-the-three-waves).
 - **Python data prep, step by step (2.4.0, wave C).** A Python Transform's input may be a **pack kind read straight through a connector**, as the
   reader (`{kind, pack?, connector?, fields?, where?, limit?}`: the kind's entitlements, row rules and masks apply; checked on validate, in the lineage),
   and `POST /api/v1/bi/python/input` answers one input's rows as the caller. **BI → Transforms** (`/bi/transform`) builds a Transform without typing YAML:
