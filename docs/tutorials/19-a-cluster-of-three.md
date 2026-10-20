@@ -58,16 +58,15 @@ Each server has its own `config/net/` folder (`DRISHTI_NET_DIR`, default `./conf
 the node is on, the address the others call it at, its tags and the key, which is only ever a reference to the environment variable.
 
 **From the command line.** `drishti.py net set` writes one setting and checks the file as the server would. It refuses `enabled: true`
-until the key and the address are there:
+until the key is there:
 
 ```text
 $ drishti.py net set node.enabled true
 drishti: node.yaml was not written: enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least 32 bytes)
   error   node.yaml  secret: enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least 32 bytes)
-  error   node.yaml  advertise-url: enabled: true needs advertise-url: the address peers and consoles call this node at
 ```
 
-Give the key, the node id and the address, then switch it on (on node b; the same on a and c with their ports):
+Give the key, the node id and the address (this machine's real one), then switch it on (on node b; the same on a and c with their ports):
 
 ```text
 $ export DRISHTI_NET_SECRET=...                       # the generated key, the same on every node
@@ -75,7 +74,7 @@ $ drishti.py net set node.node-id drishti-b
 wrote ~/drishti/b/net/node.yaml
 $ drishti.py net set node.secret '${DRISHTI_NET_SECRET}'
 wrote ~/drishti/b/net/node.yaml
-$ drishti.py net set node.advertise-url http://127.0.0.1:18784
+$ drishti.py net set node.advertise-url http://$IP:18784
 wrote ~/drishti/b/net/node.yaml
 $ drishti.py net set node.enabled true
 wrote ~/drishti/b/net/node.yaml
@@ -87,7 +86,7 @@ wrote ~/drishti/b/net/node.yaml
 # config/net/node.yaml (Drishti*net, docs/admin/NET.md)
 node-id: drishti-b
 secret: ${DRISHTI_NET_SECRET}
-advertise-url: http://127.0.0.1:18784
+advertise-url: http://<this machine's IP>:18784
 enabled: true
 ```
 
@@ -100,19 +99,24 @@ carries the version you read; if someone saved in between, it is refused and the
 ![Admin → Net → Files on node a: node.yaml and gossip.yaml in force, routing.yaml and access.yaml not there (their defaults apply), gossip.yaml open in the editor with Check, Save, Delete and its history](img/t19/03-files-gossip.jpg)
 
 **You should see:** a key in clear (`secret: abc...`) is refused by the CLI, the UI and the server alike; the key never appears in a file,
-a page, an answer or a log.
+a page, an answer or a log. So is a loopback address:
+
+```text
+$ drishti.py net set node.advertise-url http://127.0.0.1:18784
+drishti: node.yaml was not written: 'http://127.0.0.1:18784' is a loopback or wildcard address: the address this node advertises must be an address other machines can call (this machine's address is 192.168.1.20: use http://192.168.1.20:18784); or leave advertise-url out and the node advertises that address with its port
+```
 
 ## Step 2 · One seed
 
 Only node a needs to be named anywhere. On b and c, one peer file:
 
 ```text
-$ drishti.py net add-peer drishti-a 127.0.0.1:18783
+$ drishti.py net add-peer drishti-a $IP:18783
 wrote ~/drishti/b/net/peers/drishti-a.yaml
 $ drishti.py net list
 config/net at ~/drishti/b/net: Drishti*net is ON
-  node drishti-b  at http://127.0.0.1:18784  tags -  key set
-  seed drishti-a  http://127.0.0.1:18783
+  node drishti-b  at http://192.168.1.20:18784  tags -  key set
+  seed drishti-a  http://192.168.1.20:18783
   node.yaml             in force
   gossip.yaml           absent (defaults)
   routing.yaml          absent (defaults)
@@ -122,7 +126,7 @@ config/net at ~/drishti/b/net: Drishti*net is ON
 
 ```yaml
 # config/net/peers/drishti-a.yaml (Drishti*net, docs/admin/NET.md)
-url: http://127.0.0.1:18783
+url: http://<this machine's IP>:18783
 ```
 
 `drishti.py net check` checks every file as the server does (exit 0 when all would be taken, 1 otherwise). Without the variable set:
@@ -141,7 +145,7 @@ drishti: gossip.yaml was not written: 'lots' is not a duration (150ms, 5s, 10m, 
   error   gossip.yaml:2  interval: 'lots' is not a duration (150ms, 5s, 10m, 24h)
 ```
 
-**In the UI:** **Admin → Net → Members**, **Add a seed**, type `127.0.0.1:18783`, **Add seed**: it is saved as a peer file and tried at once.
+**In the UI:** **Admin → Net → Members**, **Add a seed**, type `<this machine's IP>:18783` (here `192.168.1.20:18783`), **Add seed**: it is saved as a peer file and tried at once.
 
 **You should see:** `drishti.py net list` on b naming its seed `drishti-a` and `peers/drishti-a.yaml in force`; with the key unset, `net check`
 exits 1 and names `node.yaml:3`.
@@ -158,7 +162,7 @@ DRISHTI_NET_SECRET=$KEY DRISHTI_NET_DIR=~/drishti/b/net DRISHTI_DATA_DIR=~/drish
 Each logs its join and each member it learns. Node b's log, as captured:
 
 ```text
-INFO ... NetService : net: node drishti-b joined Drishti*net at http://127.0.0.1:18784 (incarnation 1, seeds [http://127.0.0.1:18783], 0 saved members)
+INFO ... NetService : net: node drishti-b joined Drishti*net at http://192.168.1.20:18784 (incarnation 1, seeds [http://192.168.1.20:18783], 0 saved members)
 INFO ... NetService : net: member drishti-a joined
 INFO ... NetService : net: member drishti-c joined
 ```
@@ -175,12 +179,12 @@ dashed band, and the centre counts the members alive. Hover an arc for the kinds
 **From the command line** (an administrator's token in `DRISHTI_TOKEN`, or sign-in off):
 
 ```text
-$ drishti.py net members --server http://127.0.0.1:18784
+$ drishti.py net members --server http://$IP:18784
 3 member(s); this node drishti-b
   node                   state  address                 version  tags                   latency  incarnation
-  drishti-b (this node)  alive  http://127.0.0.1:18784  2.4.0    region:emea            -        1
-  drishti-a              alive  http://127.0.0.1:18783  2.4.0    region:emea,tier:risk  6.4 ms   1
-  drishti-c              alive  http://127.0.0.1:18785  2.4.0    region:apac            8.8 ms   1
+  drishti-b (this node)  alive  http://192.168.1.20:18784  2.4.0    region:emea            -        1
+  drishti-a              alive  http://192.168.1.20:18783  2.4.0    region:emea,tier:risk  6.4 ms   1
+  drishti-c              alive  http://192.168.1.20:18785  2.4.0    region:apac            8.8 ms   1
 ```
 
 **You should see:** the three `alive` on every node within a few gossip rounds (rounds of 1 s). In the in-process test of three servers
@@ -213,7 +217,7 @@ are down) and the reason. Below it: forwarded calls per peer and minute, the slo
 **From the command line:**
 
 ```bash
-curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "http://127.0.0.1:18783/api/v1/net/explain?kind=trade&id=MX-00003&role=trader"
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "http://$IP:18783/api/v1/net/explain?kind=trade&id=MX-00003&role=trader"
 ```
 
 The answer, as captured on a:
@@ -235,7 +239,7 @@ The console's `config/application.yaml` (or `DRISHTI_BACKEND_URLS`):
 
 ```yaml
 backend:
-  urls: http://127.0.0.1:18783              # one is enough: the others are learnt
+  urls: http://<this machine's IP>:18783              # one is enough: the others are learnt
   discover: true                           # pull the member list from the server in use every discover_every
   discover_every: 60s
   check_every: 5s
@@ -289,16 +293,16 @@ The logs, as captured: node a leaves, b and c see it go, the console moves.
 ```text
 a:       net: node drishti-a left Drishti*net (the server is stopping)
 b:       net: member drishti-a is gone
-console: console moved from http://127.0.0.1:18783 to http://127.0.0.1:18785: ConnectError
+console: console moved from http://192.168.1.20:18783 to http://192.168.1.20:18785: ConnectError
 ```
 
 ```text
-$ drishti.py net members --server http://127.0.0.1:18784
+$ drishti.py net members --server http://$IP:18784
 3 member(s); this node drishti-b
   node                   state  address                 version  tags                   latency  incarnation
-  drishti-b (this node)  alive  http://127.0.0.1:18784  2.4.0    region:emea            -        1
-  drishti-a              left   http://127.0.0.1:18783  2.4.0    region:emea,tier:risk  6.1 ms   1
-  drishti-c              alive  http://127.0.0.1:18785  2.4.0    region:apac            6.7 ms   1
+  drishti-b (this node)  alive  http://192.168.1.20:18784  2.4.0    region:emea            -        1
+  drishti-a              left   http://192.168.1.20:18783  2.4.0    region:emea,tier:risk  6.1 ms   1
+  drishti-c              alive  http://192.168.1.20:18785  2.4.0    region:apac            6.7 ms   1
 ```
 
 ![Admin → Net → Members on c after a stopped: drishti-a left, b and c alive; this console's servers: 18783 set aside, 18785 in use](img/t19/09-after-a-stopped.jpg)
@@ -323,9 +327,9 @@ falls over, as in Step 7, even if a is gone for good. Disable or delete them on 
 does not bring them back.
 
 ```text
-$ curl -s -X POST http://127.0.0.1:18783/api/v1/admin/users -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
+$ curl -s -X POST http://$IP:18783/api/v1/admin/users -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
     -d '{"username":"rita","roles":["viewer"],"password":"a-long-pass-1"}'                        # on a
-$ curl -s http://127.0.0.1:18785/api/v1/admin/users/rita -H "Authorization: Bearer $DRISHTI_TOKEN"   # on c, a second later: rita
+$ curl -s http://$IP:18785/api/v1/admin/users/rita -H "Authorization: Bearer $DRISHTI_TOKEN"   # on c, a second later: rita
 ```
 
 **You should see:** Admin → Net → Members on b counting the changes applied from a (*Users' saved searches, layouts, pivots and workspaces are

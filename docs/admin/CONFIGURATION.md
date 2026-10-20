@@ -543,14 +543,16 @@ The files, each checked against its schema (a refused file keeps the previous se
 
 | File | Settings (default) |
 |---|---|
-| `node.yaml` | `enabled` (`false`), `node-id` (generated once, kept in `<data dir>/net/node-id`), `advertise-url`, `tags` (`[]`), `peer-only-packs` (`[]`), `secret: ${DRISHTI_NET_SECRET}` and `previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}` (environment references only, at least 32 bytes), `tls.*` (mutual TLS) |
-| `peers/<name>.yaml` | `url`, `tags`, `tls.*` (one file per seed) |
+| `node.yaml` | `enabled` (`false`), `node-id` (generated once, kept in `<data dir>/net/node-id`), `advertise-url` (this machine's primary IPv4 address with `server.port`; never `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` or `::`), `tags` (`[]`), `peer-only-packs` (`[]`), `secret: ${DRISHTI_NET_SECRET}` and `previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}` (environment references only, at least 32 bytes), `tls.*` (mutual TLS) |
+| `peers/<name>.yaml` | `url` (a real address, as `advertise-url`), `tags`, `tls.*` (one file per seed) |
 | `gossip.yaml` | `interval` (`1s`), `fanout` (`3`), `suspect-after` (`5s`), `indirect-probes` (`2`), `dead-after` (`30s`), `forget-after` (`24h`), `persist-every` (`10m`) |
 | `routing.yaml` | `forward-timeout` (`5s`), `scatter-budget` (`3s`), `suggest-budget` (`150ms`), `link-budget` (`1s`: a view's linked entity that only a peer holds), `max-hops` (`1`; `0` forwards nothing), `weights.latency` (`1.0`), `user-state` (`replicate` or `off`: user state and console sign-in sessions) |
 | `access.yaml` | `roles: { <role>: { nodes: [<node id or tag>, ...] } }` (a role not listed reaches every node) |
 
-`enabled: true` without the key or without `advertise-url` is refused at start and at every reload, as the server refuses a missing token secret
-with security on. What gossip learns (the member table) is state, kept in `<data dir>/net/peers.json`, never in this folder. Every file in
+`enabled: true` without the key is refused at start and at every reload, as the server refuses a missing token secret with security on; so is
+an `advertise-url` or a seed `url` that is a loopback or wildcard address (the message names this machine's address to use instead), and
+`enabled: true` without `advertise-url` on a machine with no address but loopback. Members advertise only real addresses
+([NET.md section 2](NET.md#2-a-cluster-of-three)). What gossip learns (the member table) is state, kept in `<data dir>/net/peers.json`, never in this folder. Every file in
 [NET.md section 3](NET.md#3-the-files-of-confignet).
 
 ### The console and several servers (Drishti*net)
@@ -726,7 +728,7 @@ drishti:
 | `connectors-poll` | `5s` | How often the files are looked at: the fallback when file events are unavailable, and a safety net beside them. |
 | `connectors-drain` | `3s` | A connector being restarted or stopped stays open this long so that reads in flight finish. |
 | `connectors-generate` | `true` | At the first start, write a connector file from the pack's template when no file of that name exists. Never overwrites a file. `false`: packs' templates are used in memory only and nothing is written. |
-| `connectors.<name>.plugin` | required (**deprecated**: put the connector in `connectors-dir`) | A named instance of a plugin (`delta`, `jdbc`, `file`, `rest`, `kafka`, `aerospike`, `redis`, `mongodb`, `iceberg`, `duckdb`, `activemq`, `rabbitmq`, `s3`, `feed`, `news`, `yfinance`). Run a plugin as often as you like. |
+| `connectors.<name>.plugin` | required (**deprecated**: put the connector in `connectors-dir`) | A named instance of a plugin (`delta`, `jdbc`, `file`, `rest`, `kafka`, `aerospike`, `cassandra`, `redis`, `mongodb`, `iceberg`, `duckdb`, `activemq`, `rabbitmq`, `s3`, `feed`, `news`, `yfinance`). Run a plugin as often as you like. |
 | `connectors.<name>.enabled` | `true` | Switch one connector off without deleting it. |
 | `connectors.<name>.kinds` | what the plugin reports | Restrict or declare the kinds it serves. |
 | `connectors.<name>.settings.*` | per plugin | Settings for this instance. `source-name` defaults to the connector's name. |
@@ -750,6 +752,7 @@ What the bundled file sets under `plugins`:
 | `jdbc` | `false` (`DRISHTI_JDBC_ENABLED`) | `url`, `user`, `password` from `DRISHTI_JDBC_URL`, `DRISHTI_JDBC_USER`, `DRISHTI_JDBC_PASSWORD`; `source-name: jdbc` (`pool-size` is inherited from [`drishti.db.pool`](#drishtidbpool--database-connection-pools)) |
 | `delta` | `false` | runs only as named connectors (the packs declare one per data domain) |
 | `aerospike` | `false` | runs only as named connectors (profile `aerospike`) |
+| `cassandra` | `false` | runs only as named connectors (`config/connectors.examples/cassandra/`) |
 | `activemq` | `false` (`DRISHTI_ACTIVEMQ_ENABLED`) | configure it, or use it as a named connector |
 | `rabbitmq` | `false` (`DRISHTI_RABBITMQ_ENABLED`) | configure it, or use it as a named connector |
 | `s3` | `false` (`DRISHTI_S3_ENABLED`) | configure it, or use it as a named connector |
@@ -2017,7 +2020,7 @@ Proxy: a `proxy:` block, or the site default [`drishti.http.proxy`](#drishtihttp
 ### `tls.*` — TLS for connectors
 
 Every connector that connects to a server over the network reads its TLS settings from these keys (Kafka, ActiveMQ,
-RabbitMQ, Redis, REST, the feeds, S3, MongoDB, PostgreSQL, Aerospike, Delta and Iceberg; the matrix is in [TLS.md](../connectors/TLS.md#connector-matrix)). Every key is optional. Passwords are `${ENV}` placeholders or `…-password-file` paths,
+RabbitMQ, Redis, REST, the feeds, S3, MongoDB, PostgreSQL, Aerospike, Cassandra, Delta and Iceberg; the matrix is in [TLS.md](../connectors/TLS.md#connector-matrix)). Every key is optional. Passwords are `${ENV}` placeholders or `…-password-file` paths,
 never written in a document. Full reference, with every source form, the openssl/keytool commands and rotation:
 [TLS.md](../connectors/TLS.md).
 
@@ -2264,6 +2267,40 @@ Retention is the records' time to live, set by the loader (`tools/load-aerospike
 has no retention setting.
 
 TLS and certificate log-in: `tls.enabled: true` with the shared [`tls.*`](#tls--tls-for-connectors) settings, `tls-name` (the name the server certificate carries; default each host's name), `auth-mode: pki` to log in with the client certificate. The server's TLS is Enterprise Edition ([AEROSPIKE_CONNECTOR.md, Security](../connectors/AEROSPIKE_CONNECTOR.md#security-tls-certificate-log-in-and-credentials)).
+
+### `cassandra`
+
+Apache Cassandra 4 and 5, ScyllaDB, DataStax Astra (Amazon Keyspaces through AWS's SigV4 plug-in). A data domain is a keyspace: a table
+per kind (`<kind>`: a partition per business day, generation and bucket, keyed by `id`; columns `doc` and the promoted fields), `entity_days`
+(the days each entity has) and `kind_days` (each kind's days and the generation readers follow). The loader writes them
+(`tools/load-cassandra.sh`); see [CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `contact-points` | required unless `secure-connect-bundle` | `host:port` list, comma-separated (port `9042` when left out). |
+| `local-datacenter` | required unless `secure-connect-bundle` | The data centre the driver prefers (`datacenter1` on a single node). |
+| `keyspace` | the connector's `domain`, else `drishti` | |
+| `kinds` | the keyspace's tables made by the loader | Kinds served. |
+| `mode.<kind>` | `snapshot` | `snapshot` or `effective`, as for Delta. |
+| `layout.<kind>.columns` | none | Promoted fields (usually from the pack): searches, pick lists, derived kinds, impact and reverse lookups read a day's columns instead of its documents. A path the table has no column for is read from documents. |
+| `consistency` | `LOCAL_QUORUM` | Read consistency; `LOCAL_ONE` for speed where staleness is acceptable. |
+| `lookback-days` | `10` | How far back a snapshot kind's newest day may fall. |
+| `refresh-seconds` | `60` | How often `kind_days` (the catalogue) is re-read; a day's ids are re-read when its generation changes. |
+| `page-size`, `scan-threads` | `5000`, `8` | Rows per page and partitions read at once when a day's columns or documents are read. |
+| `columns-cache-mb`, `doc-cache-mb` | `1024`, `64` | Memory for days of promoted columns and for documents. |
+| `max-load-rows` | `200000` | Documents read at most by a reverse lookup of a kind without promoted columns (and ids of an effective kind). |
+| `reverse-index` | `true` | `false` turns reverse lookups off. |
+| `connections-per-node`, `max-concurrent-reads` | `2`, `256` | The driver's pool (each connection carries many requests) and the requests in flight at once; more wait in the driver's queue. |
+| `request-timeout-ms`, `connect-timeout-ms` | `5000`, `5000` | Per statement; connecting (a cluster down is retried in the background and Health says DOWN). |
+| `speculative-executions`, `speculative-delay-ms` | `0`, `100` | Extra copies of a slow read to other replicas (off by default). |
+| `username`, `password` | none | Password log-in; `password` is `${ENV}` or `file:`. |
+| `secure-connect-bundle`, `token` | none | DataStax Astra: the bundle `.zip` and the application token. |
+| `sigv4`, `sigv4-region` | `false`, `AWS_REGION` | Amazon Keyspaces: SigV4 log-in; AWS's plug-in jar goes in the plugin folder. |
+| `source-name` | `cassandra` (a connector: its name) | Provenance source. |
+
+Retention is the loader's: `--ttl-days N` (cells expire; new tables get one-day time windows) or `--keep-days N` (whole partitions
+dropped). TLS: `tls.enabled: true` with the shared [`tls.*`](#tls--tls-for-connectors) settings. `proxy.*` is refused: the native
+protocol is TCP.
 
 ### `feed` — public data feeds
 

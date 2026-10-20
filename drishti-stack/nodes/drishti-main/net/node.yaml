@@ -14,5 +14,5 @@
 # drishti-main of the local cluster (drishti-stack/stack.yaml). The key comes from the environment only.
 enabled: true
 node-id: drishti-main
-advertise-url: http://127.0.0.1:18480
+advertise-url: http://${DRISHTI_STACK_HOST}:18480     # this machine's real address (start.sh sets it)
 secret: ${DRISHTI_NET_SECRET}

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.net;
 
+import com.ash.drishti.net.config.HostAddress;
 import com.ash.drishti.net.config.NetConfig;
 import com.ash.drishti.net.config.NetFolder;
 import com.ash.drishti.net.config.SeedPeer;
@@ -124,6 +125,24 @@ public final class NetService implements AutoCloseable {
 
     // -- life cycle ---------------------------------------------------------------------------------------------------
 
+    /** The address advertised when node.yaml sets none: this machine's primary IPv4 address with the server's port ("" when there is none). */
+    private volatile String defaultAdvert = "";
+
+    /**
+     * Sets the address this node advertises when node.yaml names none: {@code scheme://<this machine's primary IPv4 address>:port}
+     * ({@link HostAddress#primary()}); none when the machine has no address but loopback or the port is not fixed. Called before
+     * {@link #start()}.
+     */
+    public void advertiseDefault(String scheme, int port) {
+        defaultAdvert = port > 0 ? HostAddress.primary().map(ip -> scheme + "://" + ip + ":" + port).orElse("") : "";
+    }
+
+    /** The address this node advertises: node.yaml's advertise-url, else this machine's real address with the server's port. */
+    public String advertiseUrl() {
+        String set = config().node().advertiseUrl();
+        return set.isEmpty() ? defaultAdvert : set;
+    }
+
     /** Reads the folder once and starts watching it. */
     public void start() {
         reload();
@@ -163,7 +182,7 @@ public final class NetService implements AutoCloseable {
                     stopNode("node-id changed");
                     startNode(c);
                 } else {
-                    n.table.updateSelf(m -> m.withAdvert(c.node().advertiseUrl(), c.node().tags()));
+                    n.table.updateSelf(m -> m.withAdvert(advertiseUrl(), c.node().tags()));
                 }
             }
         } catch (RuntimeException e) {
@@ -178,7 +197,13 @@ public final class NetService implements AutoCloseable {
         String id = NodeIdentity.resolve(c.node().nodeId(), state.resolve("node-id"));
         Optional<PeersFile.Saved> saved = peersFile.read().filter(s -> id.equals(s.nodeId()));
         long incarnation = saved.map(s -> s.self() == null ? 1 : s.self().incarnation() + 1).orElse(1L);
-        Member self = new Member(id, c.node().advertiseUrl(), incarnation, 0, MemberState.ALIVE, digestHash, version, Member.PROTOCOL,
+        String advert = advertiseUrl();
+        if (advert.isEmpty() || HostAddress.loopbackUrl(advert)) {
+            LOG.error("net: node {} does not join Drishti*net: it has no address to advertise; set advertise-url in node.yaml to an address "
+                    + "other machines can call (this machine has no address but loopback, or the server's port is not fixed)", id);
+            return;
+        }
+        Member self = new Member(id, advert, incarnation, 0, MemberState.ALIVE, digestHash, version, Member.PROTOCOL,
                 c.node().tags(), clock.millis(), false);
         MemberTable table = new MemberTable(self, clock);
         Gossiper g = new Gossiper(table, () -> config().gossip(), http, clock, new java.security.SecureRandom(), exchanges);

@@ -44,7 +44,7 @@ exactly as before: no thread gossips, no peer is asked, nothing is forwarded, an
 | The same Drishti version on every node (the same Drishti*net protocol, `1`) | A node that speaks another protocol is listed but never sent a request |
 | One **cluster key**, at least 32 bytes, in the environment of every node (`DRISHTI_NET_SECRET`) | Every call between nodes is signed with it; a node without it cannot join or read |
 | The same **token secret** (`DRISHTI_TOKEN_SECRET`) or the same OIDC issuer on every node | A person signed in on one node is signed in on all, so a console can move between them |
-| Each node reachable by the others on its own port (the address it advertises) | Gossip, digests and forwarded requests are plain HTTP(S) calls to that address |
+| Each node reachable by the others on its own port (the address it advertises: a real one, never `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` or `::`) | Gossip, digests and forwarded requests are plain HTTP(S) calls to that address |
 | Clocks within 60 seconds of each other (NTP) | A signed call is refused outside a 60 s window, so a replay cannot be sent later |
 
 Generate the key, do not invent it, and keep it where only the service user can read it:
@@ -64,32 +64,48 @@ checked in (`secret: ${DRISHTI_NET_SECRET}` only) and the secrets made on the fi
 `status.sh`, `stop.sh` (by process id), one entry to add a node. See [drishti-stack/README.md](../../drishti-stack/README.md).
 
 Three nodes, `a`, `b` and `c`. Only `a` needs to be named anywhere: `b` and `c` are given `a` as their seed, and gossip tells every node
-about every other within a round or two. The examples run the three on one machine on ports 18783, 18784 and 18785; on three machines use
-each machine's own address.
+about every other within a round or two. The examples run the three on one machine on ports 18783, 18784 and 18785, at that machine's
+address, `192.168.1.20` here; on three machines use each machine's own address.
+
+**Members advertise a real address, never a loopback one.** A node is called at the address it advertises by every other node and every
+console, on any machine, so `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` and `::` are refused wherever an address is given: `advertise-url`
+in node.yaml, a seed's `url` in `peers/*.yaml` (by `drishti.py net check|set|add-peer`, by Admin → Net → Files and by the server when it
+loads the folder), and a member address learned by gossip is never kept nor passed on. Even three nodes on one machine use the machine's
+real address. The refusal names the address to use:
+
+```text
+$ drishti.py net set node.advertise-url http://192.168.1.20:18784
+drishti: node.yaml was not written: 'http://127.0.0.1:18784' is a loopback or wildcard address: the address this node advertises must be an address other machines can call (this machine's address is 192.168.1.20: use http://192.168.1.20:18784); or leave advertise-url out and the node advertises that address with its port
+```
+
+**Without `advertise-url`** a node advertises this machine's primary IPv4 address with the server's port (`server.port`; `https` when
+`server.ssl.enabled`): the address of the interface the default route leaves by, else the first interface that is up and is not a
+loopback, a container bridge (`docker0`, `br-…`, `veth…`) or a virtual link. Set `advertise-url` on a machine with several interfaces,
+behind a load balancer or with a DNS name. To see the address a node would take: `ip -4 route get 1.1.1.1` (Linux: the `src` address),
+`ipconfig getifaddr en0` (macOS) or `ipconfig` (Windows); Admin → Net → Members shows it beside **Address** as *detected*. A machine with
+no address but loopback cannot be a member: `enabled: true` without `advertise-url` is refused there.
 
 **Step 1 · node.yaml on each node.** The same file on each, with its own address and tags:
 
 ```yaml
 # config/net/node.yaml on node b
 enabled: true
-advertise-url: http://127.0.0.1:18784     # the address the other nodes and the consoles call this node at
+advertise-url: http://192.168.1.20:18784  # the address the other nodes and the consoles call this node at (left out: this machine's)
 tags: [region:emea, tier:risk]
 secret: ${DRISHTI_NET_SECRET}
 ```
 
-From a terminal, `drishti.py net` writes and checks the same file. It refuses `enabled: true` until the key and the address are there, as the
-server does:
+From a terminal, `drishti.py net` writes and checks the same file. It refuses `enabled: true` until the key is there, as the server does:
 
 ```text
 $ drishti.py net set node.enabled true
 drishti: node.yaml was not written: enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least 32 bytes)
   error   node.yaml  secret: enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least 32 bytes)
-  error   node.yaml  advertise-url: enabled: true needs advertise-url: the address peers and consoles call this node at
 (exit 1)
 
 $ drishti.py net set node.secret '${DRISHTI_NET_SECRET}'
 wrote ~/drishti/config/net/node.yaml
-$ drishti.py net set node.advertise-url http://127.0.0.1:18784
+$ drishti.py net set node.advertise-url http://192.168.1.20:18784
 wrote ~/drishti/config/net/node.yaml
 $ drishti.py net set node.tags region:emea,tier:risk
 wrote ~/drishti/config/net/node.yaml
@@ -102,13 +118,13 @@ In the UI: **Admin → Net → Files**, open `node.yaml`, type the settings, **C
 **Step 2 · the seed.** On `b` and `c`, one peer file naming `a`:
 
 ```text
-$ drishti.py net add-peer drishti-a 127.0.0.1:18783 --tags region:emea
+$ drishti.py net add-peer drishti-a 192.168.1.20:18783 --tags region:emea
 wrote ~/drishti/config/net/peers/drishti-a.yaml
 
 $ drishti.py net list
 config/net at ~/drishti/config/net: Drishti*net is ON
-  node (generated)  at http://127.0.0.1:18784  tags region:emea,tier:risk  key set
-  seed drishti-a  http://127.0.0.1:18783
+  node (generated)  at http://192.168.1.20:18784  tags region:emea,tier:risk  key set
+  seed drishti-a  http://192.168.1.20:18783
   node.yaml             in force
   gossip.yaml           absent (defaults)
   routing.yaml          absent (defaults)
@@ -118,11 +134,11 @@ config/net at ~/drishti/config/net: Drishti*net is ON
 
 ```yaml
 # config/net/peers/drishti-a.yaml
-url: http://127.0.0.1:18783
+url: http://192.168.1.20:18783
 tags: [region:emea]
 ```
 
-In the UI: **Admin → Net → Members**, **Add a seed**, type `127.0.0.1:18783`, **Add seed**. The seed is saved as `peers/127-0-0-1-18783.yaml`
+In the UI: **Admin → Net → Members**, **Add a seed**, type `192.168.1.20:18783`, **Add seed**. The seed is saved as `peers/192-168-1-20-18783.yaml`
 and tried at once; the page says whether it answered.
 
 **Step 3 · start them.** Start the three servers (each with `DRISHTI_NET_SECRET` in its environment). A running server picks a change of the
@@ -130,12 +146,12 @@ folder up by itself within `drishti.net.poll` (5 s), so a server that is already
 back to `false` makes it leave cleanly. Each logs what it did:
 
 ```text
-INFO  net: node n-1ace3ceb60 joined Drishti*net at http://127.0.0.1:18784 (incarnation 1, seeds [http://127.0.0.1:18783], 0 saved members)
+INFO  net: node n-1ace3ceb60 joined Drishti*net at http://192.168.1.20:18784 (incarnation 1, seeds [http://192.168.1.20:18783], 0 saved members)
 INFO  net: member n-3d5a69faa3 joined
 ```
 
 **Step 4 · check.** On any node, **Admin → Net → Members** lists the three, each `alive`, with its version, tags and the latency this node
-measured to it. From a terminal (an administrator's token in `DRISHTI_TOKEN`), `drishti.py net members --server http://127.0.0.1:18784` prints the same
+measured to it. From a terminal (an administrator's token in `DRISHTI_TOKEN`), `drishti.py net members --server http://192.168.1.20:18784` prints the same
 table: one line per member with its node id (this node marked), state, address, version, tags, the latency this node measured and its
 incarnation (`--json` for the whole answer).
 
@@ -169,7 +185,7 @@ Ready-made files, with every setting explained, are in [config/net.examples/](..
 |---|---|---|---|
 | `enabled` | `false` | `true` makes this server a member | `false` → `true` joins; `true` → `false` leaves cleanly (gossips `left` first) |
 | `node-id` | empty | This node's id; empty: generated once (`n-` and ten hex digits) and kept in `<data dir>/net/node-id` | the node leaves and joins again with the new id |
-| `advertise-url` | none (needed with `enabled: true`) | The address the other nodes and the consoles call this node at | gossiped at once |
+| `advertise-url` | this machine's primary IPv4 address with the server's port | The address the other nodes and the consoles call this node at; never `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` or `::` (refused) | gossiped at once |
 | `tags` | `[]` | `key:value` words (`region:emea`, `tier:risk`) that `access.yaml` names | gossiped at once |
 | `peer-only-packs` | `[]` | Packs this node serves to its peers only, hidden from its own users | the next request |
 | `secret` | none (needed with `enabled: true`) | The cluster key, **only** as `${DRISHTI_NET_SECRET}`; at least 32 bytes | the next call |
@@ -183,7 +199,7 @@ no longer a seed, but gossip may still know the node.
 
 | Setting | What it does |
 |---|---|
-| `url` | The peer's address (`http://` or `https://`, with a host) |
+| `url` | The peer's address (`http://` or `https://`, with a host); never `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` or `::` (refused) |
 | `tags` | The tags it is expected to carry |
 | `tls.*` | Overrides of node.yaml's `tls.*` for this peer |
 
@@ -390,7 +406,14 @@ on every node. The newest change wins; each change applied is audited on the rec
 their sessions end everywhere. **Deleting** a user or a role leaves a tombstone (`<data dir>/net/identity-deleted.json`, kept 90 days): a node that
 was down at the time deletes it when it comes back (with the user's tokens, settings and sessions), and its stale copy never brings the user back
 elsewhere; a user created again under the same name after the deletion is a new user. Two users of one name made apart on two nodes (each node's
-seeded administrator, typically) are settled by the older: a new node's seeded administrator never replaces the cluster's. Everything travels over
+seeded administrator, typically) are settled by the older: a new node's seeded administrator never replaces the cluster's. **The cluster never
+ends with no enabled administrator.** The last-administrator rule (`DRS-6006`) is checked on the node where a change is made, so two
+administrators on two nodes could each disable, demote or delete one of the last two administrators at the same moment. When a peer's change
+would leave a node with none, the node repairs it as it applies it: it enables the disabled administrator that was enabled most recently (the
+newest change, then the name, so every node picks the same one), or, when no disabled administrator is left, keeps the one the change took
+away (a deletion is refused and the user kept, as a new user, so the tombstone does not refuse them elsewhere). The repair is a change like any
+other, sent to every node, audited as `last-admin-kept` and shown on **Admin → Health** under Drishti*net as *Last administrator kept*.
+Everything travels over
 the signed `POST /api/v1/net/state`; between nodes on an untrusted network add mutual TLS ([section 6](#6-security-the-key-mutual-tls-nodes-per-role))
 so the password hashes are not readable on the wire. With one shared identity database (PostgreSQL, `DRISHTI_IDENTITY_DB_URL`) the nodes already
 share all of it: set `user-state: off` in routing.yaml. Admin → Net → Members says how many changes were sent and applied and what waits for which
@@ -442,7 +465,8 @@ With the cluster on, give the console several servers instead of one, so it alwa
 ```yaml
 # drishti-console/config/application.yaml
 backend:
-  urls: ${DRISHTI_BACKEND_URLS:}       # http://127.0.0.1:18783 (one is enough; empty: backend.url, as before)
+  urls: ${DRISHTI_BACKEND_URLS:}       # http://192.168.1.20:18783 (one is enough; empty: backend.url, as before; the console's own
+                                       # choice: it may name 127.0.0.1 for a server on its machine, members never advertise one)
   discover: true
   discover_every: 60s
   check_every: 5s
@@ -452,7 +476,8 @@ backend:
 - **It learns the cluster.** Every minute it asks the server it uses for the member list (`GET /api/v1/net/members`) and keeps it, so one configured
   server is enough: it learns every other member, and new members and departures within a minute. The list is saved to
   `<console data dir>/net/servers.json` (atomically, and at shutdown), so a console restarted while its configured server is down still knows where
-  else to go. A member the cluster reports dead or left is dropped; the configured `urls` never are.
+  else to go. A member the cluster reports dead or left is dropped; the configured `urls` never are. A member now advertised at another address
+  replaces its old one, and a loopback or wildcard address is never discovered or read back from the file, so the list holds real addresses.
 - **One server per session.** A session (a browser's sign-in) uses the first healthy server, the configured ones first, then the discovered ones,
   nearest first; it stays on it while it answers, so its caches and live views stay put. Each server is checked every `check_every`.
 - **Falling over.** A server that refuses connections, times out or answers 502/503 `fail_after` times in a row is set aside and the session moves to

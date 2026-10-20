@@ -20,19 +20,19 @@ from core.backend import BackendError
 KEY = "a-cluster-key-that-must-never-reach-a-page"
 MEMBERS = {
     "enabled": True, "running": True, "self": "n-a",
-    "node": {"enabled": True, "nodeId": "n-a", "advertiseUrl": "http://127.0.0.1:18783", "tags": ["region:emea"], "peerOnlyPacks": ["market-risk"],
+    "node": {"enabled": True, "nodeId": "n-a", "advertiseUrl": "http://192.0.2.10:18783", "tags": ["region:emea"], "peerOnlyPacks": ["market-risk"],
              "keySet": True, "previousKeySet": False, "version": "2.5.0", "drained": False, "leaving": False, "dir": "/srv/drishti/config/net",
              "watch": "WATCHING", "gossip": {"interval": "1s", "fanout": 3, "suspectAfter": "5s", "deadAfter": "30s", "rounds": 42, "exchangesFailed": 0}},
     "members": [
-        {"nodeId": "n-a", "self": True, "url": "http://127.0.0.1:18783", "state": "alive", "incarnation": 1, "heartbeat": 42, "version": "2.5.0",
+        {"nodeId": "n-a", "self": True, "url": "http://192.0.2.10:18783", "state": "alive", "incarnation": 1, "heartbeat": 42, "version": "2.5.0",
          "protocol": 1, "tags": ["region:emea"], "drained": False, "since": "", "lastHeard": "", "latencyMs": None, "digestHash": "",
          "packs": [{"name": "core", "version": "1.0", "peerOnly": False}]},
-        {"nodeId": "n-b", "self": False, "url": "http://127.0.0.1:18784", "state": "suspect", "incarnation": 2, "heartbeat": 40, "version": "2.5.0",
+        {"nodeId": "n-b", "self": False, "url": "http://192.0.2.10:18784", "state": "suspect", "incarnation": 2, "heartbeat": 40, "version": "2.5.0",
          "protocol": 1, "tags": ["region:apac"], "drained": True, "since": "", "lastHeard": "2026-10-19T10:00:00Z", "latencyMs": 3.2, "digestHash": ""},
-        {"nodeId": "n-c", "self": False, "url": "http://127.0.0.1:18785", "state": "dead", "incarnation": 1, "heartbeat": 9, "version": "2.5.0",
+        {"nodeId": "n-c", "self": False, "url": "http://192.0.2.10:18785", "state": "dead", "incarnation": 1, "heartbeat": 9, "version": "2.5.0",
          "protocol": 1, "tags": [], "drained": False, "since": "", "lastHeard": "2026-10-19T09:00:00Z", "latencyMs": 2.0, "digestHash": ""}],
     "counts": {"alive": 1, "suspect": 1, "dead": 1, "left": 0},
-    "seeds": [{"name": "drishti-b", "url": "http://127.0.0.1:18784", "tags": []}],
+    "seeds": [{"name": "drishti-b", "url": "http://192.0.2.10:18784", "tags": []}],
     "peersFile": {"path": "/srv/drishti/data/net/peers.json", "savedAt": "2026-10-19T10:00:00Z"}, "problems": []}
 FILES = {"dir": "/srv/drishti/config/net", "watch": "WATCHING", "files": [
     {"id": "node.yaml", "exists": True, "etag": "abc", "bytes": 90, "refused": False, "problems": []},
@@ -169,9 +169,9 @@ def test_the_console_s_own_servers_are_shown_when_it_has_several(client, backend
 
     class Pool:
         def snapshot(self):
-            return {"enabled": True, "active": "http://127.0.0.1:18784", "servers": [
+            return {"enabled": True, "active": "http://192.0.2.10:18784", "servers": [
                 {"url": "http://127.0.0.1:18783", "origin": "configured", "healthy": False, "latencyMs": None},
-                {"url": "http://127.0.0.1:18784", "origin": "discovered", "healthy": True, "latencyMs": 2.1}], "failovers": []}
+                {"url": "http://192.0.2.10:18784", "origin": "discovered", "healthy": True, "latencyMs": 2.1}], "failovers": []}
     monkeypatch.setattr(client.app.state, "cluster", Pool(), raising=False)
     page = client.get("/admin/net").text
     for text in ("This console's servers", "Console on", "set aside", "discovered", "in use", "2.1 ms"):

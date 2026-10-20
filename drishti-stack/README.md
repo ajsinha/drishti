@@ -35,6 +35,13 @@ Open the console at <http://127.0.0.1:17480> and go to **Admin → Net**: the th
 | `drishti-c` | <http://127.0.0.1:18792> | synthetic MUREX trades (`MX-50000000`+), packs `trading`, `counterparty-risk`, `market-risk` | `data/stack/nodes/drishti-c/`, lake `data/stack/lakes/murex/` |
 | console | <http://127.0.0.1:17480> | the console, given `drishti-main` alone; it learns `drishti-b` and `drishti-c` and fails over to them | the repository's `data/console/` |
 
+**The nodes advertise this machine's real address, never 127.0.0.1** (members never advertise localhost, a loopback or a wildcard address:
+[NET.md](../docs/admin/NET.md#2-a-cluster-of-three)). `start.sh` finds it (the default route's interface, never a docker bridge) and gives
+it to every node as `DRISHTI_STACK_HOST`, which the checked-in `node.yaml` and seed files name (`advertise-url: http://${DRISHTI_STACK_HOST}:18480`),
+so the files stay the same on every machine; the console is given `drishti-main` at that address too, so its discovered list matches what the
+cluster advertises. On a machine with several interfaces, set `host:` in `stack.yaml`. `status.sh` shows each member's advertised address.
+The local addresses in the table above still open the pages from this machine.
+
 Open `/v/trade/10000001` on the console: the trade is held by `drishti-b` only, and `drishti-main` forwards the read to it
 (**How this view was built** names the node that answered, for an administrator).
 
@@ -44,7 +51,7 @@ Open `/v/trade/10000001` on the console: the trade is held by `drishti-b` only, 
 |---|---|---|
 | `stack.yaml` | yes | the nodes (port, heap, packs, lake, connectors switched off), the lakes, the shared settings and the console. `start.sh` reads it |
 | `start.sh`, `stop.sh`, `status.sh`, `stack.py` | yes | the commands (`stack.py` does the work; the console's Python runs it) |
-| `nodes/<node>/net/` | yes | each node's Drishti*net folder: `node.yaml` (its id, address and `secret: ${DRISHTI_NET_SECRET}`, a reference, never the key), `gossip.yaml`, `peers/` (the seed) |
+| `nodes/<node>/net/` | yes | each node's Drishti*net folder: `node.yaml` (its id, its address as `http://${DRISHTI_STACK_HOST}:<port>` and `secret: ${DRISHTI_NET_SECRET}`, references, never the key or this machine's IP), `gossip.yaml`, `peers/` (the seed) |
 | `secrets.env.example` | yes | the names of the secrets, no values |
 | `secrets.env` | **no** (git-ignored) | the secrets themselves, mode 600 |
 | `run/` | **no** (git-ignored) | `server.jar` (the copy the servers run), `pids.txt`, `logs/` |

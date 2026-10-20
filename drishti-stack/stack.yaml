@@ -16,6 +16,8 @@
 # the console. start.sh reads this file; adding a node is one entry under nodes (its net folder is made from it on the first start).
 # No secret here: the keys are in secrets.env (git-ignored), made by start.sh on the first start.
 
+# host: 192.168.2.77              # the address every node advertises and the console is given; empty: this machine's primary IPv4
+                                   # (the default route's interface, never a docker bridge). Members never advertise 127.0.0.1.
 seed: drishti-main                 # the node every other node knows first (its peers/<seed>.yaml); it learns the rest by gossip
 java: /usr/lib/jvm/java-21-openjdk-amd64/bin/java     # JAVA_HOME/bin/java wins when JAVA_HOME is set
 admin: drishti-dev-admin           # the administrator status.sh asks /api/v1/net/members as (a token signed with DRISHTI_TOKEN_SECRET)

@@ -86,7 +86,8 @@
   <b class="{{ 't-warn' if nm.suspect }}">{{ nm.suspect }}</b> suspect, {{ nm.dead }} dead, {{ nm.left }} left.
   Last ten minutes: <b class="mono">{{ nt.forwarded or 0 }}</b> requests sent to peers, <b class="mono {{ 't-neg' if nt.failed }}">{{ nt.failed or 0 }}</b> failed.
   {% else %}The cluster is switched on but this node is not running in it (left, or its files are refused).{% endif %}
-  <a href="/admin/net">Admin → Net</a></p></div></section>
+  <a href="/admin/net">Admin → Net</a></p>
+  {% for w in h.net.warnings or [] %}<p class="t-warn" data-net-warning><b>Last administrator kept</b> {{ (w.at or '')[:19] | replace('T', ' ') }} UTC: {{ w.text }}</p>{% endfor %}</div></section>
 {% endif %}
 <h2 class="ws-h">Connectors</h2>
 <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl hl-tbl">

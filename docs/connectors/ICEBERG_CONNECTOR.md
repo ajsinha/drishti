@@ -531,6 +531,8 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 - **Orphan files are not removed** by the maintenance tool ([section 9](#9-retention-and-maintenance)).
 - **The loader holds `--buffer-mb` of rows plus up to two buffers being spilled**: about three times the buffer at peak.
 - **Live overlays are not in column searches**, as for Delta Lake.
+- **Hadoop is needed** (and on Windows `winutils.exe`): a Hadoop-free engine of Drishti's own is designed, not built, in
+  [DRISHTI_ICEBERG.md](../architecture/DRISHTI_ICEBERG.md).
 
 ## 14. Diagnosing
 

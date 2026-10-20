@@ -26,16 +26,24 @@ import java.util.Map;
 /**
  * Drishti*net on Admin → Health and in the metrics (DRISHTI_NET.md section 13): the members in each state, the requests forwarded to
  * peers and those that failed over the last ten minutes; the meters {@code drishti.net.members} (state) and
- * {@code drishti.net.gossip.rounds} beside the forwarding meters of {@link ForwardLog}.
+ * {@code drishti.net.gossip.rounds} beside the forwarding meters of {@link ForwardLog}; and the warnings: an enabled administrator kept
+ * because peers' changes made at the same moment would have left none ({@link IdentitySync#warnings()}).
  */
 public final class NetHealth {
 
     private final NetService net;
     private final ForwardLog log;
+    private final java.util.function.Supplier<IdentitySync> identity;
 
     public NetHealth(NetService net, ForwardLog log, MeterRegistry meters) {
+        this(net, log, meters, () -> null);
+    }
+
+    /** @param identity the identity sync, whose last-administrator repairs are shown as warnings (null when there is none) */
+    public NetHealth(NetService net, ForwardLog log, MeterRegistry meters, java.util.function.Supplier<IdentitySync> identity) {
         this.net = net;
         this.log = log;
+        this.identity = identity;
         if (meters != null) {
             for (MemberState s : MemberState.values()) {
                 Gauge.builder("drishti.net.members", this, h -> h.count(s)).description("Drishti*net members in a state, this node included")
@@ -63,6 +71,8 @@ public final class NetHealth {
         out.put("members", states);
         out.put("drained", net.node().map(n -> n.table().self()).map(Member::drained).orElse(false));
         out.put("last10Minutes", log.totals(10));
+        IdentitySync id = identity.get();
+        out.put("warnings", id == null ? java.util.List.of() : id.warnings());
         return out;
     }
 }

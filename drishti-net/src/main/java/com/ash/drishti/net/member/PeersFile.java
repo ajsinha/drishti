@@ -48,9 +48,10 @@ public final class PeersFile {
             members = members == null ? List.of() : List.copyOf(members);
         }
 
-        /** The urls of the saved members to try when rejoining: alive ones first, then suspect, never left. */
+        /** The urls of the saved members to try when rejoining: alive ones first, then suspect, never left, never a loopback address. */
         public List<String> rejoinUrls() {
-            List<Member> m = new ArrayList<>(members.stream().filter(x -> x.state() != MemberState.LEFT && !x.url().isBlank()).toList());
+            List<Member> m = new ArrayList<>(members.stream().filter(x -> x.state() != MemberState.LEFT && !x.url().isBlank()
+                    && !com.ash.drishti.net.config.HostAddress.loopbackUrl(x.url())).toList());
             m.sort(Comparator.comparing(x -> x.state() == MemberState.ALIVE ? 0 : x.state() == MemberState.SUSPECT ? 1 : 2));
             return m.stream().map(Member::url).distinct().toList();
         }

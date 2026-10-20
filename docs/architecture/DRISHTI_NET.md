@@ -101,7 +101,9 @@ carried over HTTP instead of UDP:
 
 - Every `gossip-interval` (1 s) a node picks `fanout` (3) random alive members and does a **push-pull** exchange:
   `POST /api/v1/net/gossip` **(new)** with its member table; the answer is the peer's table. Both merge.
-- Each member entry: `nodeId` (stable, generated once and saved), `url` (the advertised address), `incarnation` (raised only
+- Each member entry: `nodeId` (stable, generated once and saved), `url` (the advertised address: always a real one, never
+  `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` or `::`; an entry that names one is never stored nor sent on, and no saved member with one is
+  tried on a rejoin), `incarnation` (raised only
   by the node itself, to refute a suspicion), `heartbeat` (raised every interval), `state` (`alive`, `suspect`, `dead`,
   `left`), `digestHash`, `version`, `since`.
 - **Merge rule:** the higher incarnation wins; at equal incarnation the "worse" state wins (`left` > `dead` > `suspect` >
@@ -356,8 +358,15 @@ by deployment tools); `drishti.py net` (new) lists, checks and edits them (`net 
 <url>`, `net set node.tags region:emea`), like `drishti.py connector`. What gossip learns at run time (the member table)
 is state, not configuration: it is saved to `<data dir>/net/peers.json` (section 5), never into this folder.
 
-Start-up and every reload refuse `enabled: true` without a secret and an advertise URL, as the server refuses a missing
-token secret with security on.
+Start-up and every reload refuse `enabled: true` without a secret, as the server refuses a missing token secret with security
+on. **Members advertise real addresses only** (product owner, 2.6.0): an `advertise-url` or a seed's `url` that is `localhost`, a loopback
+(`127.x.x.x`, `::1`) or a wildcard address (`0.0.0.0`, `::`) is refused by the schema (the server at load, Admin → Net → Files,
+`drishti.py net check|set|add-peer`), with a message naming this machine's address to use. Without `advertise-url` the node advertises
+this machine's primary IPv4 address with `server.port` (`HostAddress`: the interface of the default route, else the first interface that
+is up and is not a loopback, a container bridge or a virtual link); a machine with no other address refuses `enabled: true` without one.
+There is no escape hatch: nodes on one machine, the in-process tests (`NetNodes`), `net_stack.py`, the soak and `drishti-stack/` all use
+the machine's real address (the tests skip, with that reason, on a machine that has none). The console's own `backend.urls` may still
+name 127.0.0.1 (its choice, not an advertisement); what it discovers never does, and a member that moved address replaces its old one.
 
 ## 15. APIs
 
@@ -568,14 +577,22 @@ a thread-local flag, so the stores' listeners do not send it back. Rules:
   is a new user. Applying a user's deletion forgets their pack cache, settings, tokens, sessions, designs, alerts and inbox, as a deletion on the
   node itself does.
 - Applied changes are audited with `net:<origin node>` as the actor; a sign-in time alone is copied but not audited.
-- The last-enabled-administrator rule is checked on the node where a change is made, not where it is applied: two administrators disabling the
-  last two other administrators on two nodes at the same second could leave none enabled (an administrator re-enables one from the console of any
-  node, or with `drishti.identity.seed-admin` on an empty store).
+- The last-enabled-administrator rule is checked on the node where a change is made, and **again where it is applied** (2.6.0): two
+  administrators on two nodes may each disable, demote or delete one of the last two administrators at the same moment, each allowed where it
+  is made. A peer's user change that would leave the node with no enabled administrator is repaired as it is applied (one user change at a
+  time, under a lock): the disabled administrator enabled most recently (the newest `updatedAt`, then the name) is enabled again, so every
+  node that has seen both changes picks the same one and their repairs (changes made there, sent to every peer) agree; when no disabled
+  administrator is left (a demotion), the one the change took away keeps the role; a deletion of the last one is refused and the user kept
+  as a new user (created now, after the tombstone, so no node refuses them). Each repair is audited (`last-admin-kept`, actor
+  `net:<this node>`) and listed on Admin → Health under Drishti*net (`NetHealth.summary().warnings`). The cluster never ends with no
+  enabled administrator.
 
 `NetIdentityTest` (three servers in one JVM, security on): a user and a role made on A, the user signed in through the console's calls on A, A
 stopped: the console's session check and the user's token and API token are accepted on B; a user disabled and another deleted on B while A was
 down are disabled and deleted on A when it comes back, and A's stale copies bring neither back on B; a node joining later gets the users, the role
-and the deletion, and the cluster's administrator stands over its seeded one.
+and the deletion, and the cluster's administrator stands over its seeded one. `NetLastAdminTest` (three servers, their copying held while two
+of them change at once): A disables ada while B disables bob, the last two; when the changes cross, every node keeps bob (disabled last)
+enabled, the repair is audited and on Admin → Health; two deletions at once keep an administrator on every node, the same on all.
 
 **Grouped pages across nodes (built, after N7).** A page of a derived kind is gathered with the scatter-gather of a search: the router's
 fallback (`SourceRouter.Fallback.gather`) hands the local page, or none, to `GroupGather`, which asks the search's targets for the kind the page

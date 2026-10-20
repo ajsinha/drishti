@@ -33,6 +33,8 @@ import os
 import pathlib
 import re
 
+import hostaddr
+
 FIXED = ("node.yaml", "gossip.yaml", "routing.yaml", "access.yaml")
 NAME = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
 ENV = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_.]*)(?::([^}]*))?}")
@@ -140,6 +142,9 @@ def check_text(cli, fid: str, text: str) -> list[dict]:
             err("node-id", f"'{m['node-id']}' is not a node id: lower-case letters, digits and dashes, at most 64")
         if m.get("advertise-url"):
             url("advertise-url", resolve(m["advertise-url"]))
+            if hostaddr.loopback_url(resolve(m["advertise-url"])):
+                err("advertise-url", hostaddr.refusal("the address this node advertises", resolve(m["advertise-url"]))
+                    + "; or leave advertise-url out and the node advertises that address with its port")
         tags("tags")
         secret = ""
         for key in ("secret", "previous-secret"):
@@ -152,8 +157,9 @@ def check_text(cli, fid: str, text: str) -> list[dict]:
         if enabled == "true":
             if not secret:
                 err("secret", "enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least 32 bytes)")
-            if not m.get("advertise-url"):
-                err("advertise-url", "enabled: true needs advertise-url: the address peers and consoles call this node at")
+            if not m.get("advertise-url") and not hostaddr.primary_ipv4():
+                err("advertise-url", "enabled: true needs advertise-url (the address peers and consoles call this node at, https://host:port): "
+                    "this machine has no address but loopback to advertise")
         if secret and len(secret.encode()) < 32:
             err("secret", "the cluster key must be at least 32 bytes")
     elif fid == "gossip.yaml":
@@ -184,6 +190,8 @@ def check_text(cli, fid: str, text: str) -> list[dict]:
             err("url", "a peer file needs url: the peer's address (https://host:port)")
         else:
             url("url", resolve(m["url"]))
+            if hostaddr.loopback_url(resolve(m["url"])):
+                err("url", hostaddr.refusal("a peer's address", resolve(m["url"])))
         tags("tags")
     return out
 

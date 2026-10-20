@@ -58,6 +58,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
 from javacmd import java_cmd  # noqa: E402
+import hostaddr  # noqa: E402
+
+HOST = hostaddr.primary_ipv4()      # members advertise this machine's real address, never a loopback one (docs/admin/NET.md)
 
 FORBIDDEN = {18480, 17480}
 KEY = "net-soak-cluster-key-0123456789abcdef-xyz"
@@ -130,13 +133,15 @@ class Soak:
         self.t0 = time.time()
         jars = sorted(ROOT.glob("drishti-server/target/drishti-server-*-exec.jar"), key=os.path.getmtime, reverse=True)
         self.java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
+        if not HOST:
+            raise SystemExit("this machine has no address but loopback: a Drishti*net member never advertises one")
         if not jars or not Path(self.java).exists():
             raise SystemExit("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
         self.jar = str(jars[0])
         self.dates = a.dates.split(",")
 
     def url(self, name: str) -> str:
-        return f"http://127.0.0.1:{self.port[name]}"
+        return f"http://{HOST}:{self.port[name]}"
 
     def note(self, what: str, **kw) -> None:
         e = {"t": round(time.time() - self.t0, 1), "what": what, **kw}
@@ -159,7 +164,7 @@ class Soak:
         for d in ("data", "connectors", "net/peers"):
             (work / d).mkdir(parents=True, exist_ok=True)
         if net:
-            (work / "net" / "node.yaml").write_text(f"enabled: true\nnode-id: drishti-{name}\nadvertise-url: http://127.0.0.1:{port}\n"
+            (work / "net" / "node.yaml").write_text(f"enabled: true\nnode-id: drishti-{name}\nadvertise-url: http://{HOST}:{port}\n"
                                                     "secret: ${DRISHTI_NET_SECRET}\n", encoding="utf-8")
             (work / "net" / "gossip.yaml").write_text("interval: 1s\nsuspect-after: 3s\ndead-after: 10s\npersist-every: 30s\n", encoding="utf-8")
             if seed:

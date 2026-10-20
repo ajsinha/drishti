@@ -47,12 +47,17 @@ def start_servers(work):
     return [p for p in stack.procs.values()]
 
 
+SHOWN_IP = "192.168.1.20"     # the pictures show this example address, never the real one of the machine that took them
+
+
 def tidy(c: Ctx):
-    """The scratch folder as ~/drishti, as the tutorial writes paths."""
-    work = STACK.get("work")
-    if work:
-        c.page.evaluate("""(w) => { const t = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-            for (let n = t.nextNode(); n; n = t.nextNode()) { if (n.nodeValue.includes(w)) { n.nodeValue = n.nodeValue.split(w).join('~/drishti'); } } }""", work)
+    """The scratch folder as ~/drishti, as the tutorial writes paths; this machine's real address (the members advertise it, never
+    127.0.0.1) as the tutorial's example address."""
+    from net_stack import HOST
+    for real, shown in ((STACK.get("work"), "~/drishti"), (HOST, SHOWN_IP)):
+        if real:
+            c.page.evaluate("""([w, s]) => { const t = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+                for (let n = t.nextNode(); n; n = t.nextNode()) { if (n.nodeValue.includes(w)) { n.nodeValue = n.nodeValue.split(w).join(s); } } }""", [real, shown])
 
 
 def net(c: Ctx, tab: str, wait: str, settle: int = 1200):

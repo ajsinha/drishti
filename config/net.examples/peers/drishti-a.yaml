@@ -13,5 +13,5 @@
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: copy to config/net/peers/drishti-a.yaml: one seed peer, the file name its logical name. A new file is contacted at once;
 # a deleted one is no longer a seed (gossip may still know the node). One seed is enough: gossip finds every other member.
-url: https://drishti-a.internal:8480
+url: https://drishti-a.internal:8480    # a name or the real IP of drishti-a: never localhost, 127.x.x.x or 0.0.0.0 (refused)
 tags: [region:emea]                  # the tags it is expected to carry (Admin -> Net warns when gossip says otherwise)

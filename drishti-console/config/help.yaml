@@ -61,7 +61,7 @@ categories:
     icon: plug
     blurb: "Where entities come from, how to connect them, and how to tell Drishti new data has landed."
     guides:
-      - { slug: connectors, doc: connectors/CONNECTORS.md, title: Connectors, icon: plug, summary: "One reference with a section per plugin (file, Delta, Iceberg, DuckDB, PostgreSQL, MongoDB, Redis, Aerospike, S3, REST, feeds, news, Kafka, ActiveMQ, RabbitMQ, demo): when to use it and a connector file." }
+      - { slug: connectors, doc: connectors/CONNECTORS.md, title: Connectors, icon: plug, summary: "One reference with a section per plugin (file, Delta, Iceberg, DuckDB, PostgreSQL, MongoDB, Redis, Aerospike, Cassandra, S3, REST, feeds, news, Kafka, ActiveMQ, RabbitMQ, demo): when to use it and a connector file." }
       - { slug: connector-files, doc: connectors/CONNECTOR_FILES.md, title: Connector files and Admin → Connectors, icon: file-earmark-code, summary: "One YAML file per connector in config/connectors: the format, how packs suggest templates, several connectors serving one kind (the union of trade connectors), precedence, live reload, the Admin page, the API and the CLI." }
       - { slug: connector-tls, doc: connectors/TLS.md, title: "TLS and proxy", icon: lock, summary: "The shared tls settings (private CA, PEM, PKCS12 and JKS, mutual TLS, expiry, rotation) and the outbound HTTP proxy for connectors, AI providers and MCP servers." }
       - { slug: data-loads, doc: guides/DATA_LOADS.md, title: "Data loads", icon: cloud-arrow-down, summary: "Your ETL loads the data; Drishti acts on it. One call (API or drishti.py data landed) makes Drishti refresh, check expectations and alert on a missing load." }
@@ -139,6 +139,7 @@ moved:
   connector-mongodb: connectors#mongodb
   connector-redis: connectors#redis
   connector-aerospike: connectors#aerospike
+  connector-cassandra: connectors#apache-cassandra
   connector-s3: connectors#s3
   connector-rest: connectors#rest
   connector-feeds: connectors#public-feeds

@@ -92,9 +92,9 @@ class Pool:
     """Stands in for the console's own server list (core/cluster.py): on n-b, the console's current server."""
 
     def snapshot(self):
-        return {"enabled": True, "active": "http://127.0.0.1:18784", "file": "/srv/console/net/servers.json", "failovers": [], "servers": [
+        return {"enabled": True, "active": "http://192.0.2.10:18784", "file": "/srv/console/net/servers.json", "failovers": [], "servers": [
             {"url": "http://127.0.0.1:18783", "origin": "configured", "nodeId": "n-a", "healthy": True, "latencyMs": 1.0, "fails": 0, "lastError": ""},
-            {"url": "http://127.0.0.1:18784", "origin": "discovered", "nodeId": "n-b", "healthy": True, "latencyMs": 2.0, "fails": 0, "lastError": ""}]}
+            {"url": "http://192.0.2.10:18784", "origin": "discovered", "nodeId": "n-b", "healthy": True, "latencyMs": 2.0, "fails": 0, "lastError": ""}]}
 
 
 @pytest.fixture(scope="module")
@@ -253,7 +253,7 @@ def test_a_member_that_joins_grows_in_and_one_that_goes_fades_out(browser, net_c
     page = browser.new_page(viewport={"width": 1400, "height": 900})
     page.goto(url + "/admin/net")
     page.locator("[data-arc='n-a']").wait_for(timeout=10000)
-    joined = dict(backend.members["members"][0], nodeId="n-d", self=False, url="http://127.0.0.1:18786", state="alive")
+    joined = dict(backend.members["members"][0], nodeId="n-d", self=False, url="http://192.0.2.10:18786", state="alive")
     backend.members["members"].append(joined)
     try:
         page.locator("[data-arc='n-d'].net-arc-in").wait_for(timeout=12000)      # the page's own refresh (5 s) draws it, growing in

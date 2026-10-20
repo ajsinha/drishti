@@ -66,6 +66,7 @@ HEADER = """# Project Drishti · Any data. Any domain. One grammar.
 
 sys.path.insert(0, str(ROOT / "tools"))
 from javacmd import java_cmd, server_tmp  # noqa: E402
+import hostaddr  # noqa: E402
 
 
 def say(text: str) -> None:
@@ -186,6 +187,19 @@ def wait_up(url: str, seconds: float, proc: subprocess.Popen | None = None) -> b
     return False
 
 
+def stack_host(stack: dict) -> str:
+    """The address every node advertises and the console is given: stack.yaml's host (for a machine with several interfaces), else this
+    machine's primary IPv4 address (the default route's interface; never a loopback or a container bridge). Members never advertise
+    localhost, 127.x.x.x or 0.0.0.0 (docs/admin/NET.md)."""
+    host = str(stack.get("host") or "").strip() or hostaddr.primary_ipv4()
+    if not host:
+        sys.exit("this machine has no address but loopback: set host: in stack.yaml to the address the nodes advertise")
+    if hostaddr.loopback_or_wildcard(host):
+        sys.exit(f"stack.yaml host: {host} is a loopback or wildcard address; members advertise a real one"
+                 + (f" (this machine's is {hostaddr.primary_ipv4()})" if hostaddr.primary_ipv4() else ""))
+    return host
+
+
 # -- nodes -------------------------------------------------------------------------------------------------------------------------
 def node_net(stack: dict, node: dict) -> Path:
     """nodes/<node>/net: made from stack.yaml the first time (node.yaml, gossip.yaml, peers/<seed>.yaml); kept as it is after that."""
@@ -193,7 +207,8 @@ def node_net(stack: dict, node: dict) -> Path:
     (net / "peers").mkdir(parents=True, exist_ok=True)
     if not (net / "node.yaml").exists():
         (net / "node.yaml").write_text(HEADER + f"# {node['name']} of the local cluster (drishti-stack/stack.yaml). The key comes from the environment only.\n"
-                                       f"enabled: true\nnode-id: {node['name']}\nadvertise-url: http://127.0.0.1:{node['port']}\n"
+                                       f"enabled: true\nnode-id: {node['name']}\n"
+                                       f"advertise-url: http://${{DRISHTI_STACK_HOST}}:{node['port']}     # this machine's real address (start.sh sets it)\n"
                                        "secret: ${DRISHTI_NET_SECRET}\n", encoding="utf-8")
     if not (net / "gossip.yaml").exists():
         g = stack.get("gossip") or {}
@@ -202,7 +217,7 @@ def node_net(stack: dict, node: dict) -> Path:
     seed = next((n for n in stack["nodes"] if n["name"] == stack.get("seed")), None)
     if seed and seed["name"] != node["name"] and not any((net / "peers").glob("*.yaml")):
         (net / "peers" / f"{seed['name']}.yaml").write_text(HEADER + f"# The seed: where {node['name']} knocks when it joins.\n"
-                                                           f"url: http://127.0.0.1:{seed['port']}\n", encoding="utf-8")
+                                                           f"url: http://${{DRISHTI_STACK_HOST}}:{seed['port']}     # the seed's real address (start.sh sets it)\n", encoding="utf-8")
     return net
 
 
@@ -234,6 +249,7 @@ def node_env(stack: dict, node: dict, keys: dict) -> tuple[dict, Path]:
     env = {**os.environ, **{k: str(v) for k, v in (stack.get("settings") or {}).items()}, **{k: str(v) for k, v in (node.get("env") or {}).items()}}
     env.update(keys)
     env["DRISHTI_NET_DIR"] = str(node_net(stack, node))
+    env["DRISHTI_STACK_HOST"] = stack_host(stack)
     env["DRISHTI_PACKS"] = node["packs"]
     if node.get("home") == "repo":
         return env, ROOT
@@ -286,7 +302,8 @@ def start_console(stack: dict, keys: dict, pids: dict) -> bool:
     by_name = {n["name"]: n for n in stack["nodes"]}
     env = {**os.environ, **{k: str(v) for k, v in (stack.get("settings") or {}).items()}, **{k: str(v) for k, v in (c.get("settings") or {}).items()}}
     env.update({k: keys[k] for k in ("DRISHTI_TOKEN_SECRET", "DRISHTI_SESSION_SECRET")})
-    env["DRISHTI_BACKEND_URLS"] = ",".join(f"http://127.0.0.1:{by_name[s]['port']}" for s in c.get("servers", []))
+    host = stack_host(stack)                               # by real address too, so its list matches what the cluster advertises
+    env["DRISHTI_BACKEND_URLS"] = ",".join(f"http://{host}:{by_name[s]['port']}" for s in c.get("servers", []))
     env["DRISHTI_CONSOLE_PORT"] = str(port)
     LOGS.mkdir(parents=True, exist_ok=True)
     with open(LOGS / "console.log", "ab") as log:
@@ -378,7 +395,7 @@ def status(_names: list[str]) -> int:
     for node in stack["nodes"]:
         m = get_json(f"http://127.0.0.1:{node['port']}/api/v1/net/members", auth)
         if m and m.get("members"):
-            states = ", ".join(f"{x['nodeId']} {x['state']}" for x in m["members"])
+            states = ", ".join(f"{x['nodeId']} {x['state']} at {x.get('url') or '?'}" for x in m["members"])
             say(f"members as {node['name']} sees them: {states}")
             break
     else:

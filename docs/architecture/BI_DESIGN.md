@@ -1216,9 +1216,9 @@ form before Enter), `test_showcase_clean_browser` (metric, market-charts), `test
 `test_bi_live_browser` (desk wall), `test_tree_rows.py`; and the ten the 2.5.0 release drill logged as flaky (`test_bi_python_browser`
 (browser policy, sandboxed sample), `test_bi_reports_cross_browser` (drill-through), `test_controls_browser` (remembered choice,
 cascading), `test_embed_elements_browser` (pivot in Firefox), `test_embed_report_browser` (strict policy), `test_pack_new_browser`
-(reading limits), `test_showcase_clean_browser[map]`, and the wizard refresh again); each fixed at its cause and passing 5 runs in a row under load. Also the
-Drishti*net gap that two nodes disabling the last administrators at the same moment could leave none enabled (DRISHTI_NET.md), and
-whatever the 2.5.0 drill's flakes log names.
+(reading limits), `test_showcase_clean_browser[map]`, and the wizard refresh again); each fixed at its cause and passing 5 runs in a row under load. Also
+whatever the 2.5.0 drill's flakes log names. (Done in 2.6.0: the Drishti*net gap that two nodes disabling the last administrators at the
+same moment could leave none enabled, DRISHTI_NET.md section 11; and members advertise only real addresses, never a loopback one.)
 
 **Server lane:**
 

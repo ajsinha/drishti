@@ -55,10 +55,11 @@
     {% if not members.enabled %}
     <div class="net-empty">
       <p>Drishti*net is off on this server: it is a single server, exactly as without the cluster. To switch it on, give it
-        <span class="mono">node.yaml</span> with <span class="mono">enabled: true</span>, its address and the cluster key from the environment:</p>
+        <span class="mono">node.yaml</span> with <span class="mono">enabled: true</span> and the cluster key from the environment; it advertises
+        this machine's real address with the server's port (or the <span class="mono">advertise-url</span> you name: never localhost, 127.x or 0.0.0.0):</p>
       <pre class="mono net-pre">enabled: true
-advertise-url: https://this-server:8480
-secret: ${DRISHTI_NET_SECRET}</pre>
+secret: ${DRISHTI_NET_SECRET}
+# advertise-url: https://this-server.example.com:8480</pre>
       <p>in the Files tab, or from a terminal: <span class="mono">drishti.py net set node.enabled true</span>. Ready-made files are in
         <span class="mono">config/net.examples/</span>.</p>
     </div>
@@ -67,7 +68,7 @@ secret: ${DRISHTI_NET_SECRET}</pre>
       <h2>This node</h2>
       <dl class="net-dl">
         <dt>Node id</dt><dd class="mono" data-node-id>{{ node.nodeId or '-' }}</dd>
-        <dt>Address</dt><dd class="mono">{{ node.advertiseUrl or '-' }}</dd>
+        <dt>Address</dt><dd class="mono">{{ node.advertiseUrl or '-' }}{% if node.advertiseDetected and node.advertiseUrl %} <span class="text-muted-d">(this machine's address, detected)</span>{% endif %}</dd>
         <dt>Tags</dt><dd>{% for t in node.tags or [] %}<span class="net-tag">{{ t }}</span>{% else %}<span class="text-muted-d">none</span>{% endfor %}</dd>
         <dt>Peer-only packs</dt><dd>{% for t in node.peerOnlyPacks or [] %}<span class="net-tag">{{ t }}</span>{% else %}<span class="text-muted-d">none</span>{% endfor %}</dd>
         <dt>Version</dt><dd class="mono">{{ node.version }}</dd>
