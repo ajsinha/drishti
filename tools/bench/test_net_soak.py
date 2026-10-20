@@ -16,8 +16,12 @@
 """The Drishti*net soak's checker without servers (tools/bench/soak_check.py): history answers against the reference (rows, changed
 flags, masks, named partial answers, DRS-1013), kill windows, the memory slope and the verdict; and users.py's history requests."""
 import copy
+import os
 import random
+import signal
+import subprocess
 import sys
+import time
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -97,6 +101,139 @@ class HistoryJudgeTest(unittest.TestCase):
         self.assertEqual([], sc.masked_leaks(answer(FULL)))
 
 
+class MaskCoverageTest(unittest.TestCase):
+    """SOAK-09: 35 distinct history requests, and no viewer trade history had a masked field ('trader' names no field of the trades)."""
+
+    def soak(self, **kw):
+        import net_soak
+        s = net_soak.Soak.__new__(net_soak.Soak)
+        s.a = SimpleNamespace(**{"history_share": 0.15, "history_sample": 40, "trades": 1500, "counterparties": 300, "equities": "", **kw})
+        s.dates, s.known_at = [f"2026-10-{d:02d}" for d in (5, 6, 7, 8, 9, 12, 13, 14, 15, 16)], "2026-10-20T10:00:00Z"
+        return s
+
+    def test_the_soak_masks_fields_its_trades_hold_and_its_history_shows(self):
+        import gzip
+        import json
+        import net_soak
+        snap = sorted((Path(__file__).resolve().parents[2] / "data" / "testdata" / "trades" / "murex").glob("snapshot-*.jsonl.gz"))
+        if snap:
+            with gzip.open(snap[0], "rt", encoding="utf-8") as fh:
+                doc = json.loads(fh.readline())
+            self.assertTrue(set(net_soak.MUST_MASK["trade"]) <= set(doc) and "TRADER_ID" in doc)        # what trades.py writes
+        self.assertTrue(set(net_soak.MUST_MASK["trade"]) | set(net_soak.MUST_MASK["counterparty"]) <= set(net_soak.REDACT))
+        self.assertNotIn("trader", net_soak.REDACT)
+
+    def test_many_distinct_histories_in_both_roles_with_every_range_and_peer_only_murex_ids(self):
+        import net_soak
+        s = self.soak()
+        reqs = s.history_requests(random.Random(20261019))
+        ids = {(q["kind"], q["id"]) for q in reqs}
+        self.assertGreaterEqual(len(ids), 140)
+        self.assertEqual(40, sum(1 for k, i in ids if k == "trade" and i.startswith("MX-")))
+        self.assertEqual(len(ids) * 2, len(reqs))
+        viewer = [q for q in reqs if q["role"] == "viewer"]
+        self.assertTrue(any(q["id"].startswith("MX-") for q in viewer))
+        for role in ("admin", "viewer"):
+            asked = {tuple(sorted(q["params"])) for q in reqs if q["role"] == role}
+            self.assertEqual({tuple(sorted(a)) for a in net_soak.HISTORY_ASKS}, asked, role)
+        windows = [q["params"] for q in reqs if "from" in q["params"]]
+        self.assertTrue(windows and all(p["from"] <= p["to"] and p["to"] in s.dates for p in windows))
+        self.assertEqual("2026-10-20T10:00:00Z", next(q["params"]["knownAt"] for q in reqs if "knownAt" in q["params"]))
+        self.assertEqual(("PRICE",), s.must_mask({"what": "history", "kind": "trade", "role": "viewer"}))
+        self.assertEqual((), s.must_mask({"what": "history", "kind": "trade", "role": "admin"}))
+        self.assertEqual([], self.soak(history_share=0).history_requests(random.Random(1)))
+
+    def test_a_viewer_history_must_show_the_field_masked_on_every_row_and_in_every_diff(self):
+        must = ("TRADER_ID",)
+        self.assertEqual([], sc.mask_missing(answer(FULL), must))
+        self.assertEqual("right", sc.judge_history(REF, 200, answer(FULL), [], must))
+        self.assertEqual(["TRADER_ID: column not masked"], sc.mask_missing(answer(FULL, masked=False), must))
+        shown = [row("2026-10-14", 100.0, trader="T1"), row("2026-10-15", 120.0, ["QUANTITY"], trader="T1"), row("2026-10-16", 120.0, trader="T1")]
+        self.assertEqual(["TRADER_ID: shown on 3 of 3 rows"], sc.mask_missing(answer(shown), must))
+        self.assertEqual("wrong", sc.judge_history(sc.history_essence(answer(shown)), 200, answer(shown), [], must))   # even equal to the ref
+        diff = copy.deepcopy(FULL)
+        diff[1]["changes"] = [{"path": "TRADER_ID", "kind": "changed", "before": "T0", "after": "T1"}]
+        self.assertEqual(["TRADER_ID: shown in a diff"], sc.mask_missing(answer(diff), must))
+        self.assertEqual(["PRICE: not a column"], sc.mask_missing(answer(FULL), ("PRICE",)))
+        self.assertEqual([], sc.mask_missing({"code": "DRS-5052"}, must))
+
+    def test_the_verdict_fails_when_no_viewer_history_masked_anything(self):
+        self.assertTrue(sc.verdict(0, [], [], {}, {}, 0, {"viewerHistories": 140, "masked": 140})["pass"])
+        self.assertFalse(sc.verdict(0, [], [], {}, {}, 0, {"viewerHistories": 140, "masked": 0})["pass"])
+        self.assertFalse(sc.verdict(0, [], [], {}, {}, 0, {"viewerHistories": 0, "masked": 0})["pass"])
+        self.assertTrue(sc.verdict(0, [], [], {}, {})["pass"])
+
+
+class SoakConfigurationTest(unittest.TestCase):
+    """SOAK-10: retry warnings for pack stores the lake does not hold, and `deprecated` warnings from the soak's own
+    --drishti.sources.connectors.*.enabled=false flags."""
+
+    def lake(self, root: Path, tables) -> Path:
+        for t in tables:
+            (root / t / "_delta_log").mkdir(parents=True)
+        return root
+
+    def test_each_node_switches_off_with_connector_files_the_delta_connectors_its_lake_lacks(self):
+        import tempfile
+        import yaml
+        import net_soak
+        with tempfile.TemporaryDirectory() as tmp:
+            murex = self.lake(Path(tmp) / "murex", ["trading/trade_murex", "reference/counterparty", "credit/netting-set"])
+            files = net_soak.connector_files(murex, "trading,counterparty-risk")
+            self.assertEqual({"trade-endur", "trade-calypso", "market-store", "legal-store", "collateral-store"}, set(files))
+            doc = yaml.safe_load(files["trade-endur"])
+            self.assertEqual(("delta", "false", ["trade"]), (doc["plugin"], doc["enabled"], doc["kinds"]))
+            self.assertEqual("trade_endur", doc["settings"]["table"]["trade"])
+            self.assertLessEqual(set(doc), {"plugin", "enabled", "kinds", "description", "settings", "name"})   # CONNECTOR_FILES section 3
+            shared = self.lake(Path(tmp) / "shared", ["trading/trade_endur", "trading/trade_calypso", "reference/counterparty"])
+            self.assertEqual({"trade-murex", "market-store"}, set(net_soak.connector_files(shared, "trading")))
+        self.assertEqual(["core", "market-data", "trading", "counterparty-risk"], net_soak.pack_closure("trading,counterparty-risk", net_soak.ROOT / "config" / "packs"))
+
+    def test_no_node_loads_a_pack_its_lake_holds_nothing_of_nor_uses_deprecated_connector_flags(self):
+        import inspect
+        import net_soak
+        self.assertTrue(all("market-risk" not in packs for _, packs, _ in net_soak.NODES.values()))
+        self.assertNotIn("market-risk", net_soak.REF_PACKS)
+        self.assertNotIn("drishti.sources.connectors.", inspect.getsource(net_soak.Soak.start_server))
+
+
+class WrongAnswersTest(unittest.TestCase):
+    """SOAK-08: 32 wrong answers, 5 kept, no time for the other 27, and the kept body cut before ``partial`` and ``problems``."""
+    P = [{"code": "DRS-5052", "source": "net", "days": ["2026-07-17"] * 60, "message": "the nodes that hold trade cannot be reached now: drishti-c (dead)"}]
+
+    def test_every_wrong_answer_is_kept_with_its_time_request_and_rule_and_the_first_200_in_detail(self):
+        log = sc.WrongLog()
+        big = answer(FULL * 40, partial=True, problems=self.P)              # a long body: partial and problems come after the rows
+        q = {"what": "history", "kind": "trade", "id": "CLY-30001298", "params": {"range": "3M"}, "role": "viewer", "date": "2026-10-16", "ref": REF}
+        for i in range(250):
+            verdict, why = sc.judge_history_why(REF, 200, answer(FULL, partial=True, problems=self.P), DOWN)
+            self.assertEqual(("wrong", "partial yet nothing missing"), (verdict, why))
+            log.add(1200.0 + i, "a", q, 200, big, why, sc.history_essence(big), REF)
+        log.add(1500.0, "b", {"what": "trade", "id": "MX-1", "date": "2026-10-16", "ref": None}, 500, "boom", "status 500")
+        out = log.report()
+        self.assertEqual(251, out["count"])
+        self.assertEqual(251, len(out["all"]))
+        self.assertEqual({"history": {"partial yet nothing missing": 250}, "trade": {"status 500": 1}}, out["byKind"])
+        self.assertEqual([1200.0, 1201.0], [w["t"] for w in out["all"][:2]])
+        self.assertEqual({"what": "history", "kind": "trade", "id": "CLY-30001298", "params": {"range": "3M"}, "role": "viewer",
+                          "date": "2026-10-16"}, out["all"][0]["q"])                               # the request, not its reference
+        self.assertEqual(200, len(out["samples"]))
+        s = out["samples"][0]
+        self.assertTrue(s["body"]["partial"])
+        self.assertEqual(self.P, s["body"]["problems"])                    # whole, however long the body
+        self.assertLessEqual(len(s["body"]["rest"]), 600)
+        self.assertIn({"path": "rows.length", "ref": 3, "got": 120}, s["diff"])
+        self.assertLessEqual(len(s["diff"]), 20)
+
+    def test_the_rule_is_named_for_each_kind_of_wrong_history(self):
+        self.assertEqual("complete answer differs from the reference",
+                         sc.judge_history_why(REF, 200, answer(FULL[:1] + [row("2026-10-15", 121.0, ["QUANTITY"])] + FULL[2:]), [])[1])
+        self.assertEqual("partial with DRS-1003", sc.judge_history_why(REF, 200, answer(FULL[1:], partial=True, problems=[{"code": "DRS-1003"}]), DOWN)[1])
+        self.assertEqual(("wrong", "DRS-1013 no data"), sc.judge_history_why(REF, 404, {"code": "DRS-1013"}, DOWN))
+        self.assertEqual(("partial", "named"), sc.judge_history_why(REF, 502, {"code": "DRS-5052", "message": "drishti-c cannot be reached now"}, DOWN))
+        self.assertEqual([{"path": "a[1]", "ref": 2, "got": 3}], sc.compact_diff({"a": [1, 2]}, {"a": [1, 3]}))
+
+
 class WindowsMemoryVerdictTest(unittest.TestCase):
     PLAN = [(1200, "kill", "c"), (1500, "restart", "c"), (3600, "kill", "a"), (3900, "restart", "a")]
 
@@ -121,6 +258,21 @@ class WindowsMemoryVerdictTest(unittest.TestCase):
         self.assertEqual("rssMb", m["console"]["measure"])
         self.assertIsNone(sc.memory_trend(samples, {"a": 3500}, 600, 64)["a"]["ok"])           # restarted late: too few samples
 
+    def test_a_step_when_the_load_moves_at_a_failover_is_not_growth_but_a_steady_slope_is(self):
+        """SOAK-04: b's live heap stepped from 128 to 367 MB when c died and the console moved its sessions to b; flat before and after."""
+        w = sc.kill_windows(self.PLAN, {"c": 1530, "a": 3940}, 7200, 30)
+        samples = [{"t": t, "node": "b", "liveMb": 128.0 if t < 1800 else 367.0} for t in range(0, 7200, 60)]
+        samples += [{"t": t, "node": "c", "liveMb": 340.0 + (200 if t >= 4200 else 0) + t / 36} for t in range(0, 7200, 60)]  # step + 100 MB/h
+        m = sc.memory_trend(samples, {"b": 0, "c": 0}, 600, 64, w, 600)
+        self.assertGreater(m["b"]["wholeRunSlopeMbPerHour"], 64)            # the old measure: fails on the step
+        self.assertAlmostEqual(0.0, m["b"]["slopeMbPerHour"], places=3)
+        self.assertTrue(m["b"]["ok"])
+        self.assertEqual([[600, 1200], [2160, 3600], [4570, 7140]], [[round(x) for x in s] for s in m["b"]["steadySpans"]])
+        self.assertAlmostEqual(100.0, m["c"]["slopeMbPerHour"], delta=0.5)   # a real slope still fails
+        self.assertFalse(m["c"]["ok"])
+        self.assertEqual([(0, 100)], sc.steady_segments(0, 100, [], 600))
+        self.assertIsNone(sc.pooled_slope_per_hour([[(0, 1)], [(60, 2)]]))
+
     def test_the_verdict_fails_on_wrong_answers_errors_outside_windows_slow_actions_and_growth(self):
         w = [{"node": "c", "from": 1200, "to": 1560}]
         users_out = {"trade": {"n": 10, "failed": 0, "p50": .05, "p95": .1, "p99": .2}, "history": {"n": 5, "failed": 1, "p50": .1, "p95": .3, "p99": .6}}
@@ -142,6 +294,34 @@ class WindowsMemoryVerdictTest(unittest.TestCase):
         self.assertTrue(any(x.startswith("history") and "0.600" in x for x in lines))
         self.assertTrue(any(x.split()[:6] == ["history", "4", "1", "0", "0", "0"] for x in lines))
         self.assertTrue(any(x.split()[:6] == ["trade", "9", "0", "0", "0", "1"] for x in lines))
+
+
+@unittest.skipUnless(Path("/proc/self/status").exists(), "needs /proc (Linux)")
+class ConsoleSampleTest(unittest.TestCase):
+    def test_the_console_is_sampled_with_its_workers_summed_and_one_by_one(self):
+        """SOAK-07: the soak sampled the uvicorn parent alone (1 thread, 50.7 MB on every sample); the workers hold the console's memory."""
+        import net_soak
+        worker = "import time; x = bytearray(40_000_000); x[::4096] = b'1' * len(x[::4096]); time.sleep(60)"
+        parent = subprocess.Popen([sys.executable, "-c", "import subprocess, sys, time; ps = [subprocess.Popen([sys.executable, '-c', sys.argv[1]]) "
+                                   "for _ in range(2)]; time.sleep(60)", worker])
+        try:
+            for _ in range(100):
+                s = net_soak.Soak.tree_status(parent.pid)
+                if len(s["workers"]) == 2 and all(w.get("rssMb", 0) > 35 for w in s["workers"]):
+                    break
+                time.sleep(0.1)
+            self.assertEqual(3, s["processes"])
+            self.assertTrue(all(w["rssMb"] > 35 for w in s["workers"]), s)
+            alone = net_soak.Soak.proc_status(parent.pid)
+            self.assertGreater(s["rssMb"], alone["rssMb"] + 70)
+            self.assertAlmostEqual(s["rssMb"], alone["rssMb"] + sum(w["rssMb"] for w in s["workers"]), delta=5)
+            self.assertEqual(s["threads"], alone["threads"] + sum(w["threads"] for w in s["workers"]))
+            self.assertIn("openFiles", s["workers"][0])
+        finally:
+            for c in net_soak.Soak.descendants(parent.pid):
+                os.kill(c, signal.SIGKILL)
+            parent.kill()
+            parent.wait(10)
 
 
 class UsersHistoryTest(unittest.TestCase):

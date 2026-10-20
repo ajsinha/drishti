@@ -21,7 +21,8 @@ restarted, and every answer checked against a single server holding all the data
 
 The data (tools/bench/trades.py, small: --trades a day per system, two days): a lake ``shared`` (ENDUR and CALYPSO) read by servers a and b
 (replicas: the same tables), a lake ``murex`` (MUREX) read by c alone (a shard), and a lake ``all`` with all three for the reference server.
-Packs overlap: a trading + counterparty-risk, b trading, c trading + counterparty-risk + market-risk (trading brings core and market-data).
+Packs overlap: a trading + counterparty-risk, b trading, c trading + counterparty-risk (trading brings core and market-data); only packs whose
+tables the lakes hold, and each node switches off, with a connector file, every Delta connector whose tables its lake lacks (SOAK-10).
 Security is on: one token secret, the console signs in once as the seeded administrator.
 
 The run: the reference server answers a fixed set of requests (trades of each system and date, searches by counterparty, counterparty
@@ -40,7 +41,8 @@ it (DRS-5052) or a time-out (DRS-1014); a short answer not marked partial, or DR
 
 Long runs: every --sample-every seconds each process's resident memory, heap (used, and live data after the last collection), open files
 and threads go into the report; it ends with a latency and error table (one line per action, history its own) and a verdict: no wrong
-answers, errors only inside the kill windows, p95/p99 per action, memory not growing after --warmup. The result is one JSON object (also in
+answers, errors only inside the kill windows, p95/p99 per action, memory not growing after --warmup (the steady slope, outside the kill
+windows and --settle seconds after each, a level per span; the whole-run slope is reported beside it). The result is one JSON object (also in
 <work>/soak.json, the table and verdict in <work>/soak-report.txt); the exit code is 0 only when the verdict passes. Processes are stopped by
 PID; nothing is written outside --work.
 """
@@ -82,14 +84,67 @@ TOKEN_SECRET = "net-soak-token-secret-0123456789abcdef-0123"
 SESSION_SECRET = "net-soak-session-secret-0123456789abcdef-0123"
 ADMIN, PASSWORD = "drishti-dev-admin", "drishti-dev-admin123"
 VIEWER = "soak-viewer"                  # a token with the viewer role: no raw, so drishti.security.redact fields read masked
-#: the history ranges the checked set and the load ask (HISTORY_QUERIES.md section 7.1); "knownAt" is filled with an instant
-HISTORY_ASKS = ({"days": "30"}, {"days": "60"}, {"range": "3M"}, {"days": "30", "diff": "true"}, {"days": "30", "knownAt": "now"})
+#: drishti.security.redact on every server of the soak: fields its synthetic data holds (tools/bench/trades.py), so that masks mask
+#: something (SOAK-09: the default list names fields such as 'trader' that these trades do not have, DRS-6011)
+REDACT = ("PRICE", "TRADER_ID", "NAME")
+#: per kind, the masked fields that are columns of its history: a viewer's history must show them masked on every row and in every diff.
+#: PRICE moves when a trade is amended, so "never shown as changed" is exercised; a counterparty's NAME is its first column.
+MUST_MASK = {"trade": ("PRICE",), "counterparty": ("NAME",)}
+#: the history ranges the checked set asks (HISTORY_QUERIES.md section 7.1); "now" is the instant the lakes were built (knownAt), "day:i"
+#: the i-th date of the run (from Python's index, clamped)
+HISTORY_ASKS = ({"days": "30"}, {"days": "60"}, {"range": "3M"}, {"days": "30", "diff": "true"}, {"days": "30", "knownAt": "now"},
+                {"days": "5"}, {"range": "1M"}, {"days": "10", "diff": "true"}, {"from": "day:2", "to": "day:-2"},
+                {"from": "day:1", "to": "day:-1", "diff": "true"})
 SYSTEMS = {"endur": lambda i: str(10_000_000 + i), "calypso": lambda i: f"CLY-{30_000_000 + i}", "murex": lambda i: f"MX-{50_000_000 + i}"}
-NODES = {  # name: (lake, packs, connectors switched off, port offset)
-    "a": ("shared", "trading,counterparty-risk", ["trade-murex"], 0),
-    "b": ("shared", "trading", ["trade-murex"], 1),
-    "c": ("murex", "trading,counterparty-risk,market-risk", ["trade-endur", "trade-calypso"], 2),
+NODES = {  # name: (lake, packs, port offset); only packs whose tables the lakes hold (no market-risk: SOAK-10)
+    "a": ("shared", "trading,counterparty-risk", 0),
+    "b": ("shared", "trading", 1),
+    "c": ("murex", "trading,counterparty-risk", 2),
 }
+REF_PACKS = "trading,counterparty-risk"
+
+
+def pack_closure(packs: str, packs_dir: Path) -> list[str]:
+    """The packs named and every pack they extend, each once, the extended ones first."""
+    import yaml
+    out: list[str] = []
+
+    def add(p: str) -> None:
+        if p in out:
+            return
+        spec = yaml.safe_load((packs_dir / p / "pack.yaml").read_text(encoding="utf-8")) or {}
+        for e in spec.get("extends") or []:
+            add(e)
+        out.append(p)
+
+    for p in (x.strip() for x in packs.split(",") if x.strip()):
+        add(p)
+    return out
+
+
+def connector_files(lake: Path, packs: str, packs_dir: Path = ROOT / "config" / "packs") -> dict[str, str]:
+    """name -> the text of a connector file that switches off each Delta connector of the packs (and those they extend) whose tables the
+    lake holds none of (<lake>/<domain>/<table.kind or kind>/_delta_log), so that the server neither starts nor retries it (SOAK-10). It is
+    the documented way (a file in the connector folder, CONNECTOR_FILES.md section 3), not ``--drishti.sources.connectors.<name>.enabled``,
+    which is deprecated and warns at every start. The file is the pack's template with ``enabled: "false"``."""
+    import yaml
+    out = {}
+    for p in pack_closure(packs, packs_dir):
+        spec = yaml.safe_load((packs_dir / p / "pack.yaml").read_text(encoding="utf-8")) or {}
+        for name, c in (spec.get("connectors") or {}).items():
+            if c.get("plugin") != "delta":
+                continue
+            st = c.get("settings") or {}
+            tables = st.get("table") if isinstance(st.get("table"), dict) else {}
+            held = [k for k in c.get("kinds") or [] if (lake / str(st.get("domain") or "") / str(tables.get(k) or st.get(f"table.{k}") or k)
+                                                       / "_delta_log").is_dir()]
+            if held:
+                continue
+            body = {"plugin": "delta", "enabled": "false", "kinds": list(c.get("kinds") or []),
+                    "description": f"switched off by the Drishti*net soak: the lake {lake.name} holds none of its tables", "settings": st}
+            out[name] = (f"# Written by tools/bench/net_soak.py: pack '{p}' connector, off for this node (SOAK-10).\n"
+                         + yaml.safe_dump(body, sort_keys=False, width=140))
+    return out
 
 
 def b64(raw: bytes) -> str:
@@ -143,7 +198,7 @@ class Soak:
     def __init__(self, a):
         self.a = a
         self.work = Path(a.work).expanduser().resolve()
-        self.port = {n: a.base_port + off for n, (_, _, _, off) in NODES.items()}
+        self.port = {n: a.base_port + off for n, (_, _, off) in NODES.items()}
         self.procs: dict[str, subprocess.Popen] = {}
         self.down: dict[str, float] = {}                   # node -> when it went down (still down)
         self.back: dict[str, float] = {}                   # node -> when it was restarted (peers may still name it for a while)
@@ -164,6 +219,7 @@ class Soak:
             import trades
             self.dates = trades.business_days(self.dates[-1], a.days)
         self.known_at = None                               # the instant "known at" history requests name: set once the lakes are built
+        self.mask_coverage: dict | None = None             # the reference's viewer histories and how many mask what they must
 
     def url(self, name: str) -> str:
         return f"http://{HOST}:{self.port[name]}"
@@ -189,7 +245,7 @@ class Soak:
         self.known_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")     # after every load: "known at" sees all of it
 
     # -- processes --------------------------------------------------------------------------------------------------------------
-    def start_server(self, name: str, lake: str, packs: str, off: list, port: int, seed: str | None, net: bool = True) -> None:
+    def start_server(self, name: str, lake: str, packs: str, port: int, seed: str | None, net: bool = True) -> None:
         work = self.work / "nodes" / name
         for d in ("data", "connectors", "net/peers"):
             (work / d).mkdir(parents=True, exist_ok=True)
@@ -199,22 +255,24 @@ class Soak:
             (work / "net" / "gossip.yaml").write_text("interval: 1s\nsuspect-after: 3s\ndead-after: 10s\npersist-every: 30s\n", encoding="utf-8")
             if seed:
                 (work / "net" / "peers" / "drishti-a.yaml").write_text(f"url: {seed}\n", encoding="utf-8")
+        for cname, text in connector_files(self.work / "lakes" / lake, packs).items():     # the lake holds none of its tables: off
+            (work / "connectors" / f"{cname}.yaml").write_text(text, encoding="utf-8")
         assert port not in FORBIDDEN and not listening(port), f"port {port} is in use"
         env = dict(os.environ, DRISHTI_NET_SECRET=KEY, DRISHTI_TOKEN_SECRET=TOKEN_SECRET, DRISHTI_SECURITY_ENABLED="true",
                    DRISHTI_DATA_DIR=str(work / "data"), DRISHTI_DELTA_ROOT=str(self.work / "lakes" / lake), DRISHTI_PACKS=packs,
                    DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_CONNECTORS_DIR=str(work / "connectors"),
                    DRISHTI_NET_DIR=str(work / "net"), DRISHTI_ACCESS_LOG="false")
         args = [f"-Xmx{self.a.heap}", "-jar", self.jar, f"--server.port={port}", f"--drishti.net.dir={work / 'net'}", "--drishti.net.poll=1s",
-                "--drishti.sources.plugins.demo.enabled=false", "--drishti.security.registered-users-only=false"]
-        args += [f"--drishti.sources.connectors.{c}.enabled=false" for c in off]
+                "--drishti.sources.plugins.demo.enabled=false", "--drishti.security.registered-users-only=false",
+                "--drishti.security.redact=" + ",".join(REDACT)]
         log = open(self.work / f"server-{name}.log", "ab")
         self.procs[name] = subprocess.Popen(java_cmd(self.java, args, tmp=work / "data" / "tmp" / "server"), cwd=work, env=env, stdout=log,
                                             stderr=subprocess.STDOUT)
         wait_up(f"http://127.0.0.1:{port}/actuator/health", 240)
 
     def node(self, name: str) -> None:
-        lake, packs, off, _ = NODES[name]
-        self.start_server(name, lake, packs, off, self.port[name], None if name == "a" else self.url("a"))
+        lake, packs, _ = NODES[name]
+        self.start_server(name, lake, packs, self.port[name], None if name == "a" else self.url("a"))
 
     def kill(self, name: str) -> None:
         p = self.procs.pop(name)
@@ -272,18 +330,34 @@ class Soak:
         return out + self.history_requests(r)
 
     def history_requests(self, r: random.Random) -> list[dict]:
-        """History of trades of every system (MUREX ones only c holds), counterparties and --equities, each range of HISTORY_ASKS in turn,
-        every other one asked as a viewer (masked fields); all to the last date."""
+        """History of --history-sample trades of every system (MUREX ones only c holds: peer-only from a and b), half as many
+        counterparties and the --equities, each asked twice, as the administrator and as a viewer (masked fields), with two different
+        ranges of HISTORY_ASKS, so every range is asked in both roles; all to the last date."""
         if self.a.history_share <= 0:
             return []
-        ids = [("trade", ident(i)) for ident in SYSTEMS.values() for i in r.sample(range(self.a.trades), max(1, self.a.sample // 6))]
-        ids += [("counterparty", f"CP-{c:05d}") for c in r.sample(range(self.a.counterparties), max(1, self.a.sample // 12))]
+        n = max(1, self.a.history_sample)
+        ids = [("trade", ident(i)) for ident in SYSTEMS.values() for i in r.sample(range(self.a.trades), min(self.a.trades, n))]
+        ids += [("counterparty", f"CP-{c:05d}") for c in r.sample(range(self.a.counterparties), min(self.a.counterparties, max(1, n // 2)))]
         ids += [("equity", e.strip()) for e in self.a.equities.split(",") if e.strip()]
         out = []
         for k, (kind, ident) in enumerate(ids):
-            params = {key: (self.known_at or "") if v == "now" else v for key, v in HISTORY_ASKS[k % len(HISTORY_ASKS)].items()}
-            out.append({"what": "history", "kind": kind, "id": ident, "params": params, "role": "viewer" if k % 2 else "admin",
-                        "date": self.dates[-1]})
+            for j, role in enumerate(("admin", "viewer")):
+                out.append({"what": "history", "kind": kind, "id": ident, "params": self.history_params(HISTORY_ASKS[(k + 3 * j) % len(HISTORY_ASKS)]),
+                            "role": role, "date": self.dates[-1]})
+        return out
+
+    def history_params(self, ask: dict) -> dict:
+        """An ask of HISTORY_ASKS with "now" and "day:i" filled in (from and to in order)."""
+        def value(v: str) -> str:
+            if v == "now":
+                return self.known_at or ""
+            if v.startswith("day:"):
+                i = int(v[4:])
+                return self.dates[max(-len(self.dates), min(i, len(self.dates) - 1))]
+            return v
+        out = {k: value(v) for k, v in ask.items()}
+        if out.get("from", "") > out.get("to", "￿"):
+            out["from"], out["to"] = out["to"], out["from"]
         return out
 
     def ask(self, base: str, q: dict) -> tuple[int, dict | str]:
@@ -325,46 +399,66 @@ class Soak:
 
     def reference(self) -> list[dict]:
         port = self.a.base_port + 3
-        self.start_server("ref", "all", "trading,counterparty-risk,market-risk", [], port, None, net=False)
+        self.start_server("ref", "all", REF_PACKS, port, None, net=False)
         base = f"http://127.0.0.1:{port}"
         reqs = self.requests()
+        masks = {"viewerHistories": 0, "masked": 0, "problems": []}         # the reference itself masks what a viewer must not see
         for q in reqs:
             status, body = self.ask(base, q)
             q["refStatus"], q["ref"] = status, self.essence(q, body)
+            if self.must_mask(q) and status == 200:
+                masks["viewerHistories"] += 1
+                missing = soak_check.mask_missing(body, self.must_mask(q))
+                masks["masked"] += not missing
+                masks["problems"] += [f"{q['kind']}/{q['id']}: {m}" for m in missing][: max(0, 5 - len(masks["problems"]))]
         (self.work / "reference.json").write_text(json.dumps(reqs, indent=1, default=str), encoding="utf-8")
         self.stop("ref")
         bad = [q for q in reqs if q["refStatus"] != 200]
-        self.note("reference", requests=len(reqs), notOk=len(bad), sample=bad[:3])
+        if self.a.history_share > 0:                       # no history checked: nothing to mask
+            self.mask_coverage = {**masks, "distinctHistories": len({(q["kind"], q["id"]) for q in reqs if q["what"] == "history"}),
+                                  "historyRequests": sum(1 for q in reqs if q["what"] == "history")}
+        self.note("reference", requests=len(reqs), notOk=len(bad), sample=bad[:3], masks=self.mask_coverage)
         return [q for q in reqs if q["refStatus"] == 200]
 
     # -- checking ---------------------------------------------------------------------------------------------------------------
+    @staticmethod
+    def must_mask(q: dict) -> tuple:
+        """The fields a history answer must show masked: MUST_MASK of its kind for a viewer, none for the administrator (raw)."""
+        return MUST_MASK.get(q.get("kind"), ()) if q.get("what") == "history" and q.get("role") == "viewer" else ()
+
     def judge(self, q: dict, status: int, body) -> str:
         """right | partial (named, a node down) | wrong; a history answer also timeout (DRS-1014) or unavailable (soak_check)."""
+        return self.judge_why(q, status, body)[0]
+
+    def judge_why(self, q: dict, status: int, body) -> tuple[str, str]:
+        """judge's verdict and the rule that decided it (kept for every wrong answer, SOAK-08)."""
         downs = [f"drishti-{n}" for n in self.down]
         if q["what"] == "history":                         # a node just restarted may still be named by peers that saw it dead
             downs += [f"drishti-{n}" for n, t in self.back.items() if time.time() - t < self.a.kill_grace]
-            return soak_check.judge_history(q["ref"], status, body, downs)
+            return soak_check.judge_history_why(q["ref"], status, body, downs, self.must_mask(q))
         text = json.dumps(body) if isinstance(body, dict) else str(body)
         if status == 200:
             got = self.essence(q, body)
             if got == q["ref"]:
-                return "right"
+                return "right", "equal"
             if q["what"] != "search" and self.loose(got) == self.loose(q["ref"]):
-                return "right-links-pending"
+                return "right-links-pending", "equal but for pending links"
             if q["what"] == "search" and isinstance(body, dict) and body.get("partial"):
                 named = [f for f in (body.get("failed") or []) if any(d in json.dumps(f) for d in downs)]
-                return "partial" if named and set(got) <= set(q["ref"]) else "wrong"
+                if not named:
+                    return "wrong", "partial search naming no node that is down"
+                return ("partial", "named") if set(got) <= set(q["ref"]) else ("wrong", "partial search with rows not the reference's")
             pv = body.get("provenance") or {} if isinstance(body, dict) else {}
             if q["what"] != "search" and pv.get("partial"):              # a grouped page with a node down: named on the page
-                return "partial" if any(d in json.dumps(pv.get("missing")) for d in downs) else "wrong"
-            return "wrong"
+                return ("partial", "named") if any(d in json.dumps(pv.get("missing")) for d in downs) else ("wrong", "partial page naming no node that is down")
+            return "wrong", "complete answer differs from the reference"
         if status in (502, 503) and downs and any(d in text for d in downs):
-            return "partial"
+            return "partial", "named"
         if status == 0 or status in (502, 503):
-            return "unavailable"
-        return "wrong"
+            return "unavailable", f"status {status}"
+        return "wrong", f"status {status}"
 
-    def checker(self, stop_at: float, stats: dict, wrong: list) -> None:
+    def checker(self, stop_at: float, stats: dict, wrong: soak_check.WrongLog) -> None:
         r = random.Random(7)
         while time.time() < stop_at:
             q = r.choice(self.reqs)
@@ -374,16 +468,15 @@ class Soak:
                 continue
             n = r.choice(up)
             status, body = self.ask(self.url(n), q)
-            verdict = self.judge(q, status, body)              # partial only when it names a node that is down (killed by then)
+            verdict, why = self.judge_why(q, status, body)     # partial only when it names a node that is down (killed by then)
             if verdict == "unavailable" and n in self.down:
                 verdict = "asked-a-node-going-down"
             key = f"{q['what']}:{verdict}"
             stats[key] = stats.get(key, 0) + 1
             if verdict in soak_check.ERRORS:
                 self.errors.append({"t": round(time.time() - self.t0, 1), "what": f"checker {q['what']}", "verdict": verdict})
-            if verdict == "wrong" and sum(1 for w in wrong if w["q"]["what"] == q["what"]) < 5:
-                wrong.append({"t": round(time.time() - self.t0, 1), "node": n, "q": {k: q[k] for k in q if k not in ("ref",)},
-                              "status": status, "got": self.essence(q, body), "ref": q["ref"], "body": (json.dumps(body) if isinstance(body, dict) else str(body))[:600]})
+            if verdict == "wrong":                             # every one: time, node, request, rule; the first 200 with body and diff
+                wrong.add(round(time.time() - self.t0, 1), n, q, status, body, why, self.essence(q, body), q["ref"])
             time.sleep(self.a.check_every)
 
     # -- the console ------------------------------------------------------------------------------------------------------------
@@ -429,6 +522,44 @@ class Soak:
             pass
         return out
 
+    @staticmethod
+    def descendants(pid: int) -> list[int]:
+        """Every process below ``pid`` (children, their children ...), from /proc: each thread's ``children`` list, else the parent field of
+        every /proc/<n>/stat. Empty where /proc is not there."""
+        def kids(p: int) -> list[int]:
+            try:
+                return [int(c) for t in os.listdir(f"/proc/{p}/task") for c in Path(f"/proc/{p}/task/{t}/children").read_text().split()]
+            except (OSError, ValueError):
+                pass
+            out = []
+            for n in (x for x in os.listdir("/proc") if x.isdigit()) if os.path.isdir("/proc") else ():
+                try:
+                    if int(Path(f"/proc/{n}/stat").read_text().rsplit(")", 1)[1].split()[1]) == p:
+                        out.append(int(n))
+                except (OSError, ValueError, IndexError):
+                    continue
+            return out
+        seen, todo = [], kids(pid)
+        while todo:
+            c = todo.pop(0)
+            if c not in seen:
+                seen.append(c)
+                todo += kids(c)
+        return seen
+
+    @classmethod
+    def tree_status(cls, pid: int) -> dict:
+        """A process and all its descendants (the console: the uvicorn parent and its workers, SOAK-07): resident memory, threads and open
+        files summed, the number of processes, and each worker's own figures."""
+        workers = [{"pid": c, **cls.proc_status(c)} for c in cls.descendants(pid)]
+        workers = [w for w in workers if "rssMb" in w]                     # gone between the listing and the read
+        out = cls.proc_status(pid)
+        for key in ("rssMb", "threads", "openFiles"):
+            vals = [x[key] for x in [out, *workers] if key in x]
+            if vals:
+                out[key] = round(sum(vals), 1) if key == "rssMb" else sum(vals)
+        return {**out, "processes": 1 + len(workers), "workers": workers}
+
     def jvm(self, name: str) -> dict:
         """A server's heap used and live data after the last collection (MB) and live threads, from its metrics endpoint."""
         out = {}
@@ -447,7 +578,7 @@ class Soak:
         while time.time() < stop_at:
             t = round(time.time() - self.t0, 1)
             for name, p in list(self.procs.items()):
-                s = {"t": t, "node": name, **self.proc_status(p.pid)}
+                s = {"t": t, "node": name, **(self.tree_status(p.pid) if name == "console" else self.proc_status(p.pid))}
                 if name in NODES:
                     s.update(self.jvm(name))
                 self.samples.append(s)
@@ -459,6 +590,7 @@ class Soak:
         self.lakes()
         self.reqs = self.reference()
         out["requests"] = len(self.reqs)
+        out["maskCoverage"] = self.mask_coverage
         t = time.time()
         for n in NODES:
             self.node(n)
@@ -482,7 +614,7 @@ class Soak:
         self.t0 = time.time()
         stop_at = self.t0 + self.a.seconds
         stats: dict = {}
-        wrong: list = []
+        wrong = soak_check.WrongLog()
         restarted: dict[str, float] = {}                    # node -> seconds from the start when its restart had converged
         check = threading.Thread(target=self.checker, args=(stop_at, stats, wrong), daemon=True)
         check.start()
@@ -532,7 +664,7 @@ class Soak:
         except (ValueError, IndexError):
             out["users"] = users_out[-2000:]
         out["checker"] = stats
-        out["wrong"] = wrong
+        out["wrong"] = wrong.report()                      # every wrong answer (SOAK-08): byKind, all, samples
         out["wrongAnswers"] = sum(v for k, v in stats.items() if k.endswith(":wrong"))
         out["checked"] = sum(stats.values())
         out["console"] = console_checks
@@ -552,10 +684,10 @@ class Soak:
             for b, n in buckets.items():
                 errors.append({"t": round(float(b) - self.t0, 1), "width": float(users.get("bucket", 10)), "what": f"load {label}", "n": n})
         starts = {n: self.started.get(n, 0.0) for n in [*NODES, "console"]}
-        memory = soak_check.memory_trend(self.samples, starts, self.a.warmup, self.a.max_growth)
+        memory = soak_check.memory_trend(self.samples, starts, self.a.warmup, self.a.max_growth, windows, self.a.settle)
         wrong = sum(v for k, v in stats.items() if k.endswith(":wrong"))
         return {"killWindows": windows, "memory": memory, "table": soak_check.table(users, stats),
-                "verdict": soak_check.verdict(wrong, errors, windows, users, memory, self.a.max_p99)}
+                "verdict": soak_check.verdict(wrong, errors, windows, users, memory, self.a.max_p99, self.mask_coverage)}
 
     def after_kill(self, n: str, opener) -> dict:
         """The console's next good page after n was killed (a: the console's own server), and how long the others take to see n dead."""
@@ -607,6 +739,8 @@ def main(argv=None) -> int:
     ap.add_argument("--kill-seed-at", type=float, default=330)
     ap.add_argument("--restart-seed-at", type=float, default=420)
     ap.add_argument("--sample", type=int, default=60, help="trades per system and date in the checked set (a third as many searches and pages)")
+    ap.add_argument("--history-sample", type=int, default=40, help="trades per system whose history is checked (half as many counterparties); "
+                    "each asked as the administrator and as a viewer, with two ranges")
     ap.add_argument("--check-every", type=float, default=0.05)
     ap.add_argument("--heap", default="1536m")
     ap.add_argument("--base-port", type=int, default=18783)
@@ -617,7 +751,10 @@ def main(argv=None) -> int:
     ap.add_argument("--kill-grace", type=float, default=30, help="seconds after a restarted node has rejoined that still count as its kill window")
     ap.add_argument("--sample-every", type=float, default=60, help="seconds between samples of each process's memory, open files and threads")
     ap.add_argument("--warmup", type=float, default=600, help="seconds after a process starts before its memory counts towards the trend")
-    ap.add_argument("--max-growth", type=float, default=64, help="MB an hour a process's memory may grow after warm-up (the slope of its samples)")
+    ap.add_argument("--max-growth", type=float, default=64, help="MB an hour a process's memory may grow after warm-up (the slope of its samples "
+                    "in the steady spans: outside the kill windows and --settle seconds after each, a level of its own per span)")
+    ap.add_argument("--settle", type=float, default=600, help="seconds after a kill window during which the load is still moving between nodes: "
+                    "left out of the steady memory slope")
     ap.add_argument("--max-p99", type=float, default=0, help="seconds: fail when an action's p99 is above it (0: report only)")
     a = ap.parse_args(argv)
     soak = Soak(a)
@@ -627,9 +764,12 @@ def main(argv=None) -> int:
     finally:
         soak.close()
     (soak.work / "soak.json").write_text(json.dumps(out, indent=1, default=str), encoding="utf-8")
-    report = out.get("table", "") + "\n\nverdict: " + json.dumps(out.get("verdict"), indent=1, default=str) + "\n"
+    report = out.get("table", "") + "\n\nwrong answers by kind and rule: " + json.dumps((out.get("wrong") or {}).get("byKind"), indent=1) + "\n\nverdict: " + json.dumps(out.get("verdict"), indent=1, default=str) + "\n"
     (soak.work / "soak-report.txt").write_text(report, encoding="utf-8")
-    print(json.dumps({k: v for k, v in out.items() if k != "resources"}, default=str))
+    brief = {k: v for k, v in out.items() if k != "resources"}           # every wrong answer and the samples stay in soak.json
+    if isinstance(brief.get("wrong"), dict):
+        brief["wrong"] = {k: v for k, v in brief["wrong"].items() if k in ("count", "byKind")}
+    print(json.dumps(brief, default=str))
     print(report)
     return 0 if out.get("wrongAnswers") == 0 and (out.get("verdict") or {}).get("pass") else 1
 

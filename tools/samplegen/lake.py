@@ -32,6 +32,7 @@ import argparse
 import copy
 import hashlib
 import json
+import math
 import pathlib
 import random
 import sys
@@ -58,7 +59,9 @@ def walk(doc, key: str, steps: int, rnd: random.Random):
         if isinstance(node, dict):
             for k, v in node.items():
                 if isinstance(v, (int, float)) and not isinstance(v, bool) and k in VARY and v != 0:
-                    drift = sum(rnd.gauss(0, 0.012) for _ in range(steps))
+                    # math.fsum, not sum(): the built-in sum of floats differs at the last bit between Python versions, and
+                    # round(nv, 6) of a large amount shows it (QA-OPEN-01)
+                    drift = math.fsum(rnd.gauss(0, 0.012) for _ in range(steps))
                     nv = v * (1 + drift) if abs(v) > 1 else v + drift * 0.01 * max(abs(v), 0.01)
                     node[k] = round(nv) if isinstance(v, int) else round(nv, 6)
                 else:

@@ -421,18 +421,38 @@ All of N1–N7 are planned for 2.5.0, in this order; N1–N5 come first and are 
 
 The soak also exercises history queries ([HISTORY_QUERIES.md](HISTORY_QUERIES.md), section 12 for Drishti\*net):
 
+- **Only what the lakes hold** (SOAK-10). The servers load only packs whose tables the soak's lakes hold: **a** and **c** trading and
+  counterparty-risk, **b** trading, the reference trading and counterparty-risk (trading brings core and market-data; no market-risk).
+  Before a server starts, the soak writes a connector file into the node's connector folder for every Delta connector of those packs whose
+  tables its lake lacks (`<lake>/<domain>/<table>/_delta_log`): the pack's template with `enabled: "false"`, the documented way
+  ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) section 3). On **c**'s MUREX lake that is `trade-endur`, `trade-calypso`,
+  `market-store`, `legal-store` and `collateral-store`. So no server retries a store it cannot read, and none warns `deprecated` about
+  `--drishti.sources.connectors.<name>.enabled=false`, which the soak no longer passes.
+
 - **The load.** `--history-share` (0.15 by default in the soak) of the users' requests ask a history through the console's
   `/v/{kind}/{id}/history` page, which asks the server's `GET /api/v1/history/{kind}/{id}`: a trade of any system four times in five
   (MUREX trades are held only by **c**, so from **a** and **b** they are peer-only), else a counterparty, or an equity named with
   `--equities` (the soak's lakes hold none unless a lake given to it does); with `days=30`, `days=60`, `range=3M`, `diff=true` or, one
   request in ten, `knownAt` of the moment it is asked. `history` is its own line of the latency and error table.
-- **The check.** The checked set adds history requests of trades of every system, counterparties and `--equities`, cycling through the
-  same ranges (the `knownAt` one names an instant taken after the lakes were built), every other one asked as a **viewer** (no `raw`, so
-  `drishti.security.redact` fields such as `TRADER_ID` are masked). Each is asked of the reference server holding all the data first,
+- **The check.** The checked set adds history requests of `--history-sample` (40) trades of every system (the MUREX ones peer-only
+  from **a** and **b**), half as many counterparties and the `--equities`: about 140 distinct entities, each asked twice, as the
+  administrator and as a **viewer**, with two different ranges, so that each of ten ranges (`days` 5, 30, 60, `range` 1M and 3M,
+  `diff=true` over 10 and 30 days, an explicit `from`/`to` with and without `diff`, `knownAt` an instant taken after the lakes were
+  built) is asked in both roles. The soak's servers mask fields its synthetic data really has (`--drishti.security.redact=PRICE,
+  TRADER_ID,NAME`; the default list names fields such as `trader` that these trades do not hold, DRS-6011): a viewer's trade history
+  must show `PRICE` (it moves when a trade is amended) and a counterparty's `NAME` masked, as a masked column, the mask on every row
+  and never a value in a diff; otherwise the answer is wrong (SOAK-09: the 2026-10-20 soak checked 35 distinct histories, none of
+  whose viewer trade histories had a masked column). The verdict's `masksExercised` fails unless the reference's viewer histories
+  mask those fields in every one (`maskCoverage` in `soak.json`). Each is asked of the reference server holding all the data first,
   then of a random running node all along, and compared by `tools/bench/soak_check.py`: the masked columns, the window's ends and baseline,
   and every row (date, data date, carried, deleted, values, part counts, the `changed` flags and, with `diff=true`, the changes). Timings,
   cache state, generations and sources are the node's own and not compared. Any difference is a **wrong answer** and fails the soak; so
   does a masked field whose values differ between rows or that is named as changed.
+- **Every wrong answer is kept** (SOAK-08), in `soak.json` under `wrong`: `count`; `byKind`, the count per kind of request and per rule
+  that failed (`partial yet nothing missing`, `partial with DRS-1003`, `complete answer differs from the reference`, `DRS-1013 no data`,
+  `status 500` …, also printed in `soak-report.txt`); `all`, every one (up to 20,000) with its time, node, request and rule; and
+  `samples`, the first 200 also with the status, the body's `partial` and `problems` whole (never cut), the rest of the body cut at 600
+  characters, and a compact diff against the reference (up to 20 paths with both values, `rows.length` when the row counts differ).
 - **While a node is down** (the shard kill and the seed kill) a history answer is complete, or a partial one whose `problems` are only
   `DRS-5052` naming the node that is down (or `DRS-1014`, a peer that did not answer in time) and whose rows are rows of the reference, or
   a refusal `502 DRS-5052` naming it, or `504 DRS-1014`. A short answer not marked partial, a partial one with another code or naming a
@@ -440,12 +460,18 @@ The soak also exercises history queries ([HISTORY_QUERIES.md](HISTORY_QUERIES.md
   `--kill-grace` seconds ago still counts as down, since its peers may not have seen it come back.
 - **Long runs.** Every `--sample-every` seconds (60) the report gets each process's resident memory, open files and threads (from
   `/proc`), and for each server its heap used, its live data after the last collection and its live threads (`/actuator/metrics`).
+  The console is sampled as its whole process tree, the uvicorn parent and every worker (SOAK-07: the parent alone is one thread and
+  51 MB whatever the load): resident memory, threads and open files summed, `processes`, and each worker's own figures under `workers`.
   The report (`<work>/soak.json`; the table and verdict also in `<work>/soak-report.txt`) ends with a **verdict**, which passes only when:
   no wrong answers; errors (partial, time-out, unavailable answers of the checker, failed pages, the load's failures per 10 s) only inside
   the **kill windows** (from a kill until the node has rejoined, plus `--kill-grace`); p95 and p99 per action (failing only past
   `--max-p99` when it is given); and memory not growing after warm-up: the least-squares slope of each process's samples taken
   `--warmup` seconds after it last started (live data after collection when the server reports it, else heap used, else resident memory)
-  below `--max-growth` MB an hour. The exit code is 0 only when the verdict passes.
+  below `--max-growth` MB an hour. The slope that decides is the **steady** one (`slopeMbPerHour`): only the samples outside every kill
+  window and the `--settle` seconds (600) after it, fitted with a level of its own per steady span, because a node that takes over a dead
+  one's sessions steps up and stays there, which is not a leak (the 2026-10-20 soak, SOAK-04: b +166 MB/h over the whole run, flat in
+  every steady span). The whole-run slope is reported beside it (`wholeRunSlopeMbPerHour`), with the spans used (`steadySpans`). The exit
+  code is 0 only when the verdict passes.
 
 A two-hour run, the shard killed at 20 minutes and the seed at 60 (each back five minutes later), with ten business days of data so a
 history has rows to compare:

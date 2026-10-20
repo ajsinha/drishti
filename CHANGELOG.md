@@ -20,7 +20,40 @@
 - **Fixed: a BI table rebuilt on Windows failed with DRS-9027** (`part.parquet.tmp -> part.parquet`): Windows cannot replace a file anything holds open (a query reading the previous version, a virus scanner, the indexer). The new file is written under a name of its own (two builds never share one) and moved over the old one, tried again for about 5 s while it is held; past that the message says what held it. `FileSwapTest`. Found on the product owner's Windows machine.
 - **Fixed: the server makes the folder `java.io.tmpdir` names when it is missing** (an IDE run configuration passes `-Djava.io.tmpdir=<data>/tmp/server` but cannot make it; on a fresh clone DuckDB, RocksDB and CatBoost then failed to unpack). The console never falls back to the system temp folder: without a setting its base is `<data dir>/tmp/console`, however it is started. `JvmTempDirTest`, `test_tmpdir.py`.
 - **Fixed: `build_demo_lakes.py` no longer signals a running server for every table and day** (3,960 signals for 66 tables over 60 days, each making the server read the data again; QA3A-01/05). Restart the server after a build, or let it pick the tables up at its next refresh.
-
+- **Fixed (SOAK-10): the soak configures only what its lakes hold.** Its servers retried `collateral-store`, `legal-store`,
+  `market-store` and `risk-store` (about 8 WARN attempts each) and warned `deprecated: connector 'trade-…' is defined in the server's own
+  configuration` because of the soak's own `--drishti.sources.connectors.*.enabled=false` flags. No server loads market-risk any more,
+  and before each start the soak writes a connector file (the pack's template with `enabled: "false"`) for every Delta connector whose
+  tables the node's lake lacks, the documented way; the flags are gone. `net_soak.connector_files`; test_net_soak; DRISHTI_NET
+  section 17.1, TOOLS.
+- **Fixed (SOAK-09): the soak's mask check covers something.** It checked 35 distinct histories, and no viewer trade history had a
+  masked field (the default `drishti.security.redact` names `trader`, which the synthetic trades do not hold). The soak's servers now
+  mask `PRICE`, `TRADER_ID` and `NAME`; a viewer's trade history must show `PRICE` and a counterparty's `NAME` as a masked column, the
+  mask on every row and never a value in a diff, or the answer is wrong. The checked set holds `--history-sample` (40) trades per
+  system (MUREX ones peer-only from a and b) and 20 counterparties, each asked as administrator and viewer with two of ten ranges (about
+  140 distinct histories, 280 requests); the verdict's `masksExercised` fails unless the reference masks them in every viewer history.
+  `soak_check.mask_missing`; test_net_soak; DRISHTI_NET section 17.1, TOOLS.
+- **Fixed (SOAK-08): the soak keeps every wrong answer.** It kept five per kind, with no time for the others and the body cut at 600
+  characters before `partial` and `problems`, which were what made them wrong. `soak.json`'s `wrong` now has the count per kind of
+  request and per rule that failed (`byKind`, also in `soak-report.txt`), every wrong answer's time, node, request and rule (`all`), and
+  the first 200 with the status, `partial` and `problems` whole, the rest of the body cut and a compact diff against the reference
+  (`samples`). `soak_check.judge_history_why`, `WrongLog`; test_net_soak; DRISHTI_NET section 17.1, TOOLS.
+- **Fixed (SOAK-07): the soak measures the console's memory.** It sampled the uvicorn parent alone (one thread, 50.7 MB on all 120
+  samples of the 2026-10-20 soak); `tools/bench/net_soak.py` now samples the console's whole process tree from `/proc`: resident memory,
+  threads and open files summed over the parent and its workers, `processes`, and each worker's own figures (`workers`), so the console's
+  memory slope means something. test_net_soak; DRISHTI_NET section 17.1, TOOLS.
+- **Fixed (SOAK-04): the soak's memory check tells a leak from a node taking over the load.** `tools/bench/net_soak.py` judges each
+  process by its steady slope: only the samples outside the kill windows and `--settle` seconds (600) after each, fitted with a level per
+  steady span, so a step when the console moves sessions to a node at a failover is not growth. The whole-run slope is reported beside
+  it (`wholeRunSlopeMbPerHour`, `steadySpans`). On the 2026-10-20 soak's b (128 to 367 MB at c's kill, flat after) the whole-run slope
+  is +166 MB/h and the steady one 0. `soak_check.memory_trend`; test_net_soak; DRISHTI_NET section 17.1, TOOLS.
+- **Fixed (QA-OPEN-01): `tools/testdata/make_testdata.py` writes the same bytes on every Python.** 16 counterparty and netting-set
+  change files differed in the sixth decimal of walked values between environments (`NET_MTM` 484329001.595759 vs .595758): a netting
+  set's `NET_MTM` is the sum of its trades' MTM, and the built-in `sum()` of floats gives a different last bit on Python 3.13 and 3.14
+  (597445765.99 vs 597445765.9899999), which the walk of earlier days carries into the sixth decimal. The banking generator's sums
+  (`data_results.py`: `amount()`, whole numbers exactly, others by `math.fsum` to the cent; every other float sum by `math.fsum`) and the
+  walk's drift (`samplegen/lake.py`) no longer use it; the pack samples are unchanged, data/testdata regenerated (63 files).
+  `make_testdata.py --check` passes on 3.14 and 3.13. `tools/testdata/test_deterministic.py`; TOOLS, DEMO_DATA, DEVELOPER_GUIDE.
 - **Fixed: a theme (or any personal setting) changed on one page could come back as the old one on the next page** when the console runs several worker processes (four on Windows by default): each worker kept the user's settings for 30 s, and a change cleared only the cache of the worker that saved it. A change now stamps the browser (`drishti_settings_at` cookie), and a worker re-reads the settings when its copy is older than the stamp; with four workers, 5 of 24 pages came back in the old theme before the fix and 0 after. `test_settings_workers.py`. Found on the product owner's Windows machine (Green → netting set → SIMM came up Blue).
 - **Fixed (QA2-205): the docs say `lake demo` builds 66 tables**, as its summary prints (one per dataset of
   data/testdata/testdata.yaml: 49 generated, 15 from the world-economy and news-and-markets samples, the captured quotes and headlines),
