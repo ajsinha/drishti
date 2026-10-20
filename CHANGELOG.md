@@ -29,6 +29,61 @@
   errors only in kill windows, p95/p99 per action, memory flat after warm-up) that sets the exit code; `--days`, `--kill-grace`,
   `--sample-every`, `--warmup`, `--max-growth`, `--max-p99`. Unit tests without servers: `tools/bench/test_net_soak.py`. DRISHTI_NET.md
   section 17.1, TOOLS.md.
+- **Fixed (QA2-21, round 2): `lake demo` and `make_data.py` write the feeds under the server's data folder.** `lake demo` takes
+  `--data-dir`; without it, `DRISHTI_DATA_DIR`, else the folder holding `--lake` when that is a `delta/` folder, else `data/`;
+  `make_data.py --data-dir DIR` too. A server on another data folder no longer finds its `file` connector DOWN for want of `feeds/`.
+  TOOLS section 4.9; tools/lake/test_demo.py.
+- **Fixed (QA2-15): the statement designer's Paper tab is readable at 1400 px.** The tab sits between the Studio's side panels, so its
+  two columns now follow the tab's own width (a container query), not the window's: when it is narrow the settings go above the preview,
+  and the sheet keeps the tab's width (it was about 130 px) while the four margin boxes share their row instead of running under the
+  preview. Page Down and Page Up page the preview wherever the focus is (but in a field), not only after a click on the sheet.
+  STATEMENTS section 5; test_bi_wave_d_browser.
+- **Fixed (QA2-16): Admin → Health fits a phone.** The external libraries' folder and jar list (and any long path in the summary lines)
+  wrap inside the page at 375 px instead of adding 154 px of horizontal scroll. test_admin_health_phone_browser.
+- **Fixed (QA1-14, QA1-15, QA1-16): the market history page.** The chart's hover label stays inside the chart and is put back at the
+  selected row after a resize or zoom, so narrowing the window no longer leaves it where the wider chart had it (647 px of horizontal
+  scroll). The table's numbers read in the chart field's format when the column has none (`21.66`, not `21.657685`); the CLI's headline
+  too (`chg +1.09 (+5.25%)  avg 21.29`); a row from the embedded series reads `—` (*not read on this day*) under each part, not `0`; the
+  crosshair's date is no longer drawn on the axis over its labels. A day opened from the history (`Enter`, *Open the day*) says *as it
+  was, from its history* (not *as it was shared*), with *Back to the history*, and the view's back link is that history, not an earlier
+  page's trail. USER_GUIDE, tutorial 21, HISTORY_QUERIES; HistoryServiceTest, test_history_routes, test_history_browser,
+  tools/test_historycmd.py.
+- **Fixed (QA2-12, QA2-14): a statement for a date with no data says so; a card with no value reads `–`.** A preview or file for a date no
+  data covers (`9999-12-31`, `1999-01-01`) has `hint` *No data is held for December 9999 (…): every band is empty. Choose a date the data
+  covers.* (also first in the file's notes, and beside the page count in the designer's preview) instead of an empty statement in silence.
+  A card whose value is empty (a sum of no rows) reads `–`, as a masked card and a card with no rows do, never blank; a count reads its number.
+- **Fixed (QA2-17, QA2-18, QA2-19): bursting says who is skipped and why, and draws what a recipient may see.** A disabled user named in a
+  subscription is listed as skipped (*the account is disabled*) instead of missing from the run; a recipient without access is skipped
+  with *… may not open the report: it is not shared with them, or their roles do not reach it* instead of `DRS-9001 no item 'bi-…'`; a
+  statement table sorted by a measure masked for the recipient is drawn in the query's own order with the note *Not sorted: 'MTM' is masked
+  for you …* (never *No rows.*), and the delivery's `notes` say so. STATEMENTS, DISTRIBUTION; StatementApiTest, SubscriptionServiceTest.
+- **Fixed (QA2-20): a field parameter in the wrong place is one problem naming it.** A field parameter in a well that cannot take its
+  choices is one `DRS-9037` per parameter and well, naming every choice that does not fit (*… can be MTM, NOTIONAL, measures: put it in a
+  measure well*), instead of one line per choice. Through `/bi/mq`, `param.metric` among `select.fields` answers `DRS-9164 'param.metric'
+  chooses among MTM, NOTIONAL: measures, so it goes in select.measures` instead of `DRS-9152` about its default; a value that is not a
+  choice reads *metric is one of its choices [MTM, NOTIONAL]* (not *the fields*). REPORTS, tutorial 20, API_GUIDE, TROUBLESHOOTING;
+  FieldParamsApiTest.
+- **Fixed (QA2-22): an Iceberg table moved after loading is one clear problem.** Its reads failed inside the connector's caches, and
+  each failure was logged by the cache with a full stack trace at every refresh while Health said `UP`. Health now says `DEGRADED:
+  cannot read trade: its metadata names files under <old folder> that are not there (…): the table was moved or copied after it was
+  written`, with the `relocate: <old> -> <new>` that reads it with `engine: native`; the log has one short line when the problem appears
+  or changes and one when it is over. `relocate` given to `engine: library` (which does not read it) is said in the log and in Health
+  instead of being ignored silently. The connector's refresh is cancelled when it stops. ICEBERG_CONNECTOR sections 14 and 15;
+  IcebergMovedTableTest.
+- **Fixed (QA2-23): a disabled Delta connector is quiet.** Its periodic re-listing of ids was never cancelled when the connector stopped,
+  and ran against the closed connector: one `trade log cannot be read: RejectedExecutionException` per stopped connector about 50 s
+  later (and a stale problem on its listing). The re-listing is cancelled at close, and a run already under way when it closes reports
+  nothing. CONNECTOR_FILES; DeltaSourcePluginTest.
+- **Fixed (QA2-10): a missing id is `DRS-1001` while the kind's routed connector is off and another serves the kind.** With
+  `trade-endur` disabled and a Cassandra `trading-store` serving `trade`, an id nobody holds answered `DRS-1002 connector trade-endur is
+  disabled` for every missing id; it now answers `DRS-1001 no source holds trade/… (asked trading-store; trade-endur, which kind 'trade'
+  is routed to, is disabled)`. `DRS-1002` stays the answer when nothing else serves the kind. CONNECTOR_FILES, CASSANDRA_CONNECTOR,
+  TROUBLESHOOTING; SourceRegistryLiveTest.
+- **Fixed (QA2-21, the rest): every loader's heap is `DRISHTI_LOADER_HEAP` (default `4g`) and its input under the data folder.**
+  `load-redis.sh` no longer has a fixed `-Xmx6g`, and the DuckDB, files, MongoDB, PostgreSQL and Aerospike loaders no longer run with
+  no `-Xmx` (a quarter of the machine); all of them write `banking.jsonl` under `DRISHTI_DATA_DIR` and remove it after the load.
+  `make_data.py` writes the feed folder under `DRISHTI_DATA_DIR`, not the repository's `data/feeds`. ICEBERG_CONNECTOR, CLI_GUIDE;
+  `tools/test_load_scripts.py`.
 - **Added: `build_demo_lakes.py` says it is alive**: every 30 s (`DRISHTI_HEARTBEAT_SECONDS`) a line with the step, the time so far, the lake's size and the table being written, so a long `lake demo` or `lake build` never looks stuck.
 - **Fixed (QA1-205): a `knownAt` before the data names the right thing.** `DRS-1013` now says nothing of the entity in that window was
   known at that instant, and names its days with data *as known now*, which may have been loaded later (*ask without knownAt, or with a

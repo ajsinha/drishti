@@ -232,11 +232,14 @@
       animation: !reduced,
       textStyle: { fontFamily: t.mono },
       grid: { left: 56, right: 18, top: 14, bottom: 26 },
-      tooltip: { trigger: 'axis', backgroundColor: t.surface, borderColor: t.grid, textStyle: { color: t.ink, fontFamily: t.mono, fontSize: 12 },
+      // confine: the hover label stays inside the chart, so it can never widen the page (QA1-14)
+      tooltip: { trigger: 'axis', confine: true, className: 'hx-tip', backgroundColor: t.surface, borderColor: t.grid, textStyle: { color: t.ink, fontFamily: t.mono, fontSize: 12 },
         axisPointer: { type: 'cross', lineStyle: { color: t.muted, type: 'dashed' }, crossStyle: { color: t.muted },
           label: { backgroundColor: t.grid, color: t.ink, fontFamily: t.mono } },
         formatter: function (ps) { var p = ps[0]; return p ? p.axisValue + '  <b>' + fmt(p.value, places) + '</b>' : ''; } },
-      xAxis: { type: 'category', data: dates, boundaryGap: false, axisLabel: { color: t.muted, fontSize: 11, formatter: function (v) { return v.slice(5); } },
+      // the crosshair's date is in the hover label and the ⌖ line: no second date label on the axis over its own labels (QA1-15)
+      xAxis: { type: 'category', data: dates, boundaryGap: false, axisPointer: { label: { show: false } },
+        axisLabel: { color: t.muted, fontSize: 11, hideOverlap: true, formatter: function (v) { return v.slice(5); } },
         axisLine: { lineStyle: { color: t.grid } }, axisTick: { show: false } },
       yAxis: { type: 'value', scale: true, axisLabel: { color: t.muted, fontSize: 11 }, splitLine: { lineStyle: { color: t.grid, type: 'dashed' } } },
       series: [{ type: 'line', name: s.label, data: vals, showSymbol: false, symbolSize: 7, connectNulls: false, smooth: false,
@@ -265,7 +268,17 @@
   if (seriesEl) {
     try { series = JSON.parse(seriesEl.getAttribute('data-hx-series')) || []; } catch (err) { series = []; }
     draw();
-    window.addEventListener('resize', function () { if (chart) { chart.resize(); } });
+    // a resize (or a zoom, which narrows the page) hides the hover label, resizes, then puts it back at the selected row's new place: it
+    // never stays where the wider chart had it (QA1-14)
+    var resized = function () {
+      if (!chart) { return; }
+      chart.dispatchAction({ type: 'hideTip' });
+      chart.resize();
+      var r = selectedRow();
+      if (r) { follow(r.getAttribute('data-date')); }
+    };
+    window.addEventListener('resize', resized);
+    if (window.ResizeObserver) { new ResizeObserver(resized).observe(chartEl); }
     // a theme switched while the page is open: redraw in its colours
     new MutationObserver(function () { if (chart) { chart.dispose(); chart = null; draw(); } })
       .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });

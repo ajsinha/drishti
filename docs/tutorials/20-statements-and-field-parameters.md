@@ -90,8 +90,8 @@ defaults back.
 ![The viewer: Break down by PORTFOLIO, Show NOTIONAL](../guides/img/bi-wave-d/field-parameter-slicer.jpg)
 
 **The YAML** of the visual: `wells: { axis: [param.breakdown], values: [param.metric] }`. A parameter that does not fit its well is refused by Check,
-`DRS-9037`: put `param.breakdown` in **values** and Problems says *the values well takes measures, and the field parameter 'breakdown' can be trade.DESK,
-a field: put it in a field well*.
+`DRS-9037`: put `param.breakdown` in **values** and Problems says, once for the parameter, *the values well takes measures, and the field parameter
+'breakdown' can be trade.DESK, trade.PORTFOLIO, fields: put it in a field well*.
 
 **From the command line**, the model query the chart asks with the reader's choice (a field parameter of measures goes among the measures), written as a
 file `switch.mq.yaml`:

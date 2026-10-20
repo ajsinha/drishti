@@ -261,3 +261,34 @@ def test_the_statement_designer_sets_the_paper_and_previews_page_by_page(stack, 
     assert "layout: statement" in saved["body"]["body"] and "orientation: landscape" in saved["body"]["body"], saved["body"]["body"]
     clean(page)
     page.context.close()
+
+
+def test_the_paper_tab_is_readable_at_1400_px_and_pages_with_page_down(stack, browser):
+    """QA2-15: at 1400 px the Paper tab's sheet was about 130 px wide and the fourth margin box ran under the preview; Page Down only paged
+    after a click on the sheet. QA2-12: a date no data covers says so beside the page count."""
+    page = sign_in(browser, "wes", viewport={"width": 1400, "height": 900})
+    rid = new_report(page, STATEMENT.replace("title: Positions\n    visuals:", "title: Positions\n    layout: statement\n    visuals:"), "Paper at 1400")
+    open_designer(page, rid)
+    page.click('[data-ptabs] [data-page="positions"]')
+    page.click('[data-tab="paper"]')
+    area = page.locator("[data-st-preview-area]")
+    expect(area).to_have_attribute("data-st-state", "ready", timeout=60000)
+    sheet = page.locator("[data-st-sheet]").bounding_box()
+    assert sheet["width"] >= 300, sheet
+    settings = page.locator("[data-st-settings]").bounding_box()
+    boxes = page.eval_on_selector_all(".bi-st-margins input", "els => els.map(e => e.getBoundingClientRect().right)")
+    assert len(boxes) == 4 and max(boxes) <= settings["x"] + settings["width"] + 1, (boxes, settings)
+    preview = area.bounding_box()
+    assert preview["y"] >= settings["y"] + settings["height"] - 1 or preview["x"] >= settings["x"] + settings["width"] - 1, (preview, settings)
+    assert int(area.get_attribute("data-st-pages")) >= 2
+    page.locator('[data-view="paper"] > p').first.click()                       # the focus away from the sheet
+    page.keyboard.press("PageDown")
+    expect(area).to_have_attribute("data-st-at", "2")
+    page.keyboard.press("PageUp")
+    expect(area).to_have_attribute("data-st-at", "1")
+    page.fill("[data-st-date]", "9999-12-31")
+    page.click("[data-st-preview]")
+    expect(page.locator("[data-st-where]")).to_contain_text("No data is held", timeout=60000)
+    assert "No data is held" in area.get_attribute("data-st-hint")
+    clean(page)
+    page.context.close()

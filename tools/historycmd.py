@@ -83,8 +83,15 @@ def render(res: dict, say, changes_only: bool = False) -> None:
         say(res["title"])
     s = res.get("summary") or {}
     if s.get("field"):
-        say(f"{s['field']}: last {s.get('last')}  chg {s.get('change')} ({s.get('changePct')}%)  high {s.get('high')} ({s.get('highDate')})  "
-            f"low {s.get('low')} ({s.get('lowDate')})  range {s.get('range')}  avg {s.get('average')}")
+        # the numbers in the chart field's format (price2: 2 places), the change in percent with 2 (QA1-15: not 5.25301205%)
+        fmt = next((c.get("format") for c in res.get("chart") or [] if c.get("path") == s["field"]), None) or ""
+        places = int("".join(ch for ch in fmt if ch.isdigit()) or 2)
+
+        def num(v, signed=False, n=places):
+            return "—" if not isinstance(v, (int, float)) or isinstance(v, bool) else (f"{v:+,.{n}f}" if signed else f"{v:,.{n}f}")
+        say(f"{s['field']}: last {num(s.get('last'))}  chg {num(s.get('change'), True)} ({num(s.get('changePct'), True, 2)}%)  "
+            f"high {num(s.get('high'))} ({s.get('highDate')})  low {num(s.get('low'))} ({s.get('lowDate')})  range {num(s.get('range'))}  "
+            f"avg {num(s.get('average'))}")
     header, rows = rows_of(res, changes_only)
     widths = [max([len(h)] + [len(r[i]) for r in rows]) for i, h in enumerate(header)]
     say("  ".join(h.ljust(widths[i]) for i, h in enumerate(header)).rstrip())

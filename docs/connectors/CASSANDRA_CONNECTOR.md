@@ -367,7 +367,9 @@ Connectors is generated from the same catalogue.
    Connectors → New, plugin `cassandra`). The server picks the files up without a restart. `trade-endur.yaml` replaces the trading pack's
    Delta connector of that name (kind `trade` routes to it) and serves every system's trades the loader wrote; the files' `username` and
    `password` default to empty (`${DRISHTI_CASSANDRA_USERNAME:}`, `${DRISHTI_CASSANDRA_PASSWORD:}`), which is a development node with no
-   sign-in: set both for a node that asks for one.
+   sign-in: set both for a node that asks for one. If you keep the Delta `trade-endur` disabled and name the Cassandra file otherwise
+   (`trading-store`), the kind is still read from it: an id it does not hold answers `DRS-1001 no source holds trade/… (asked
+   trading-store; trade-endur, which kind 'trade' is routed to, is disabled)`.
 4. **Check**: Admin → Connectors → `trade-endur` → Test connection lists the days and their rows; Admin → Health says `UP`.
 5. **Use it**: `TRD ` in the command line offers the trades; open one; a search such as `TRD PORTFOLIO=BOOK-RATES-3` reads the day's
    columns.

@@ -124,6 +124,14 @@
       if (e.key === 'PageDown' || e.key === 'ArrowRight') { next.click(); e.preventDefault(); }
       if (e.key === 'PageUp' || e.key === 'ArrowLeft') { prev.click(); e.preventDefault(); }
     });
+    // QA2-15: Page Down and Page Up page the preview while the Paper tab is shown, wherever the focus is (not only after a click on the
+    // sheet), except in a field, where they keep their own meaning
+    document.addEventListener('keydown', (e) => {
+      if (!S.shown || !S.answer || host.contains(e.target) || e.defaultPrevented) { return; }
+      if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) || e.target.isContentEditable || e.altKey || e.ctrlKey || e.metaKey) { return; }
+      if (e.key === 'PageDown') { next.click(); e.preventDefault(); }
+      if (e.key === 'PageUp') { prev.click(); e.preventDefault(); }
+    });
     downloads(files);
   }
 
@@ -199,7 +207,10 @@
     const root = D.q('[data-st-preview-area]');
     root.setAttribute('data-st-pages', String(r.pageCount));
     root.setAttribute('data-st-at', String(page.number));
-    D.q('[data-st-where]').textContent = 'Page ' + page.number + ' of ' + r.pageCount + ' · ' + r.paper.size + ' ' + r.paper.orientation + (r.period ? ' · ' + r.period : '') + (S.stale ? ' · changed since: preview again' : '');
+    // a date no data covers says so (QA2-12): the server's hint beside the page count, never an empty statement in silence
+    D.q('[data-st-where]').textContent = 'Page ' + page.number + ' of ' + r.pageCount + ' · ' + r.paper.size + ' ' + r.paper.orientation + (r.period ? ' · ' + r.period : '') + (S.stale ? ' · changed since: preview again' : '')
+      + (r.hint ? ' · ' + r.hint : '');
+    if (r.hint) { root.setAttribute('data-st-hint', r.hint); } else { root.removeAttribute('data-st-hint'); }
     D.q('[data-st-prev]').disabled = S.at <= 0;
     D.q('[data-st-next]').disabled = S.at >= r.pages.length - 1;
   }

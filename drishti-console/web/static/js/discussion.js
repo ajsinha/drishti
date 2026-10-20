@@ -84,7 +84,7 @@
       view.querySelectorAll('[data-path="' + CSS.escape(p) + '"]').forEach(function (e) { e.classList.add('has-note'); e.setAttribute('data-note', counts.fields[p] + ' comment(s)'); e.title = counts.fields[p] + (counts.fields[p] === 1 ? ' comment' : ' comments') + ' on this field (Alt+N)'; });
     });
   }
-  function loadCounts() { return api('GET', '/api/thread-counts/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id)).then(function (r) { if (r.ok) { counts = r.b; badges(); } }); }
+  function loadCounts() { return api('GET', '/api/thread-counts/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id)).then(function (r) { if (r.ok) { counts = { entity: (r.b || {}).entity || 0, panels: (r.b || {}).panels || {}, fields: (r.b || {}).fields || {} }; badges(); } }); }
 
   function draw() {
     list.textContent = '';

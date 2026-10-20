@@ -162,8 +162,9 @@ Date           Trade status  Trade version  Quantity  Price        Maturity date
 ## Step 4 · Open a day
 
 Select 2026-10-15 and press `Enter` (or double-click the row). The trade's normal view opens as of that day, at
-`/v/trade/1000015?asOf=2026-10-15&gen=59`. Its banner says *as it was* or, when the data has moved on since, *changed since*. `Esc` on the
-history page goes back to today's view.
+`/v/trade/1000015?asOf=2026-10-15&gen=59&via=history`. Its banner says *You are seeing 2026-10-15, as it was, from its history* or, when the
+data has moved on since, *changed since the history read that day*, with **Back to the history** (the same range); the back link above the
+view leads there too. `Esc` on the history page goes back to today's view.
 
 **From the command line,** the same day's view:
 
@@ -195,7 +196,7 @@ $ drishti.py history equity EQ-CSCA --range 3M
 ```text
 EQ EQ-CSCA  HISTORY  2026-07-20 -> 2026-10-19  66 days with data, 66 changed
 Cascadia Airlines Inc. · TSX · CAD
-PRICE: last 19.54  chg 0.5 (2.6261%)  high 20.16 (2026-08-24)  low 17.9 (2026-09-04)  range 2.26  avg 19.1644
+PRICE: last 19.54  chg +0.50 (+2.63%)  high 20.16 (2026-08-24)  low 17.90 (2026-09-04)  range 2.26  avg 19.16
 Date        Price   Chg 1D   Market cap       Beta
 ----------  ------  -------  ---------------  ----
 2026-10-19  19.54*  -1.36%*  30,709,733,636*  1.46

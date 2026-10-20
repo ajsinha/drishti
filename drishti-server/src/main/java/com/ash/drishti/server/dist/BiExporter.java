@@ -158,6 +158,9 @@ public final class BiExporter {
             if (!masked.isEmpty()) {
                 note = (note == null ? "" : note + " ") + "Masked for you: " + String.join(", ", masked) + ".";
             }
+            if (a.get("unsorted") instanceof String unsorted) {
+                note = (note == null ? "" : note + " ") + unsorted;              // QA2-18: drawn unsorted, never "No rows."
+            }
             @SuppressWarnings("unchecked")
             Map<String, Object> meta = (Map<String, Object>) a.get("meta");
             Object dates = meta == null ? null : meta.get("dates");

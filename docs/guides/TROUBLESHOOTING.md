@@ -1345,7 +1345,7 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 
 | Code | Meaning |
 |---|---|
-| `DRS-1001` | no source holds that entity |
+| `DRS-1001` | no source holds that entity. When the kind's routed connector is off and others serve the kind, the message names the ones asked and the one that is off (`… (asked trading-store; trade-endur, which kind 'trade' is routed to, is disabled)`): the id may live in the connector that is off |
 | `DRS-1002` | no source serves that kind. "connector news is disabled (kind 'news' is routed to it)": nothing else serves the kind on this server. For the news-and-markets pack, build the snapshot store (`drishti.py lake demo --only news-and-markets`): a switched-off internet connector's kinds are then read from `news-store` (Admin → Connectors: *off (served from the snapshot)*), and what it lacks is `DRS-1001` naming it. Or switch the live connector on (`DRISHTI_NEWS_ENABLED=true`) |
 | `DRS-1005` / `DRS-1006` / `DRS-1007` | pasted document is not a JSON object / a connector plugin could not be loaded (`/sources` lists why) / `knownAt` asked of a store with no earlier versions |
 | `DRS-1011` | a kind is routed to a connector that has no file in `config/connectors/` (HTTP 404). Cause: the pack names a connector nobody defined, or its file was deleted. Fix: create it in Admin → Connectors (the Create link on Admin → Packs → Data source pre-fills it from the pack's template) or `drishti.py connector apply NAME.yaml`; the pack itself loads and Admin → Health shows `connectorsNotConfigured` |
@@ -1529,7 +1529,7 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 | `DRS-9161` | a filter, sort or `top` on a field masked for you (HTTP 403, the body also names `DRS-9021`); `fix` offers the dataset's key, which identifies the same rows |
 | `DRS-9162` | a Python measure in a grouped model query (HTTP 422): a python visual runs it |
 | `DRS-9163` | a field or measure hidden for your roles (`hidden-for`, HTTP 422): it is not available to your role on any endpoint; ask the model's owner, or use another field |
-| `DRS-9164` | a `params` value the model does not take (HTTP 422): the message names the parameter, its kind and range; `GET /bi/models/{id}/describe` lists the parameters |
+| `DRS-9164` | a `params` value the model does not take (HTTP 422): the message names the parameter, its kind and range; `GET /bi/models/{id}/describe` lists the parameters. A field parameter of measures in `select.fields` (or of fields in `select.measures`) is named as itself: *'param.metric' chooses among MTM, NOTIONAL: measures, so it goes in select.measures* |
 | `DRS-9165` | a calculation group or item the model does not have (HTTP 422): `describe` lists `calcGroups`; the `fix` offers the names |
 | `DRS-9166` | a filter-context function cannot be planned (HTTP 422): `via=` must name a relationship id, `parent_of` a hierarchy, `as_of` a fixed date (`date('…')`, `asof()`, `shift_date(asof(), -1)`); contexts nest at most three deep |
 | `DRS-9190` | the expression converter (`drishti.py bi migrate --expressions`, `POST /api/v1/bi/expr/convert`) could not keep an old expression's meaning, so it left it as it was: rewrite it in DEL v2 by hand ([EXPRESSIONS.md section 10](EXPRESSIONS.md#10-the-old-syntax-and-the-converter)) |

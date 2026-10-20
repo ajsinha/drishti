@@ -179,5 +179,40 @@ class SeriesMoved(unittest.TestCase):
         line = '{"HISTORY":[{"DATE":"2026-09-29","CLOSE":1}]}'
         self.assertEqual(d.redate(line), line)
 
+
+class DataFolder(unittest.TestCase):
+    """QA2-21: the demo's feeds (and staging) go to the server's data folder, never the repository's when another is named."""
+
+    def folder(self, args, env=None):
+        import demo
+        old = os.environ.pop("DRISHTI_DATA_DIR", None)
+        if env:
+            os.environ["DRISHTI_DATA_DIR"] = env
+        try:
+            a = demo.build_parser().parse_args(args)
+            return demo.demo_data_dir(a, Path(a.lake).resolve())
+        finally:
+            os.environ.pop("DRISHTI_DATA_DIR", None)
+            if old is not None:
+                os.environ["DRISHTI_DATA_DIR"] = old
+
+    def test_the_data_folder_follows_the_server_not_the_repository(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp).resolve()
+            self.assertEqual(self.folder(["--lake", str(tmp / "srv" / "delta")]), tmp / "srv")
+            self.assertEqual(self.folder(["--lake", str(tmp / "x"), "--data-dir", str(tmp / "d")]), tmp / "d")
+            self.assertEqual(self.folder(["--lake", str(tmp / "srv" / "delta")], env=str(tmp / "e")), tmp / "e")
+            self.assertEqual(self.folder(["--lake", str(tmp / "elsewhere")]), (ROOT / "data").resolve())
+
+    def test_make_data_takes_the_data_folder_too(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            code = ("import sys; sys.path.insert(0, 'tools/packgen/banking'); import make_data as m; "
+                    "print(m.data_dir()); print(m.write_feeds(m.data_dir() / 'feeds'))")
+            env = {k: v for k, v in os.environ.items() if k != "DRISHTI_DATA_DIR"}
+            r = subprocess.run([sys.executable, "-c", code, "--data-dir", tmp], cwd=ROOT, env=env, capture_output=True, text=True, timeout=120)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(r.stdout.split("\n")[0], tmp)
+            self.assertTrue((Path(tmp) / "feeds" / "fixing" / "SOFR-HISTORY.csv").is_file())
+
 if __name__ == "__main__":
     unittest.main()

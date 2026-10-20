@@ -52,10 +52,13 @@
   {% if pin and not embed %}
   {# A pinned link (?asOf=&knownAt=&gen=): shown for this request only, the reader's own saved date is untouched #}
   {% set known_text = known_local(known_at, (business_date or {}).zone) | replace('T', ' ') if known_at else '' %}
-  <p class="asof-banner pin-banner" role="status" data-pin="{{ pin }}"><i class="bi bi-pin-angle" aria-hidden="true"></i>
-    {% if pin == 'retry' %}You are seeing the latest data for <b class="mono">{{ asof }}</b>: this source keeps no earlier versions, so the exact time it was shared cannot be shown.
-    {% elif pin == 'changed' %}You are seeing <b class="mono">{{ asof }}</b> live; the data has changed since it was shared (generation {{ pin_gen }} &rarr; {{ vm.provenance.generation }}).
-    {% else %}You are seeing <b class="mono">{{ asof }}</b>{% if known_text %} as known at <b class="mono">{{ known_text }} {{ ((business_date or {}).zone or CLOCK_TZ).split('/') | last | replace('_', ' ') }}</b>{% endif %}, as it was shared.{% endif %}
+  {# opened from the history page (via=history, QA1-16): nothing was shared, so the banner says where the day came from and links back #}
+  {% set from_history = pin_via == 'history' %}
+  <p class="asof-banner pin-banner" role="status" data-pin="{{ pin }}"{% if from_history %} data-pin-via="history"{% endif %}><i class="bi bi-pin-angle" aria-hidden="true"></i>
+    {% if pin == 'retry' %}You are seeing the latest data for <b class="mono">{{ asof }}</b>: this source keeps no earlier versions, so the exact time it was {{ 'read for the history' if from_history else 'shared' }} cannot be shown.
+    {% elif pin == 'changed' %}You are seeing <b class="mono">{{ asof }}</b> live; the data has changed since {{ 'the history read that day' if from_history else 'it was shared' }} (generation {{ pin_gen }} &rarr; {{ vm.provenance.generation }}).
+    {% else %}You are seeing <b class="mono">{{ asof }}</b>{% if known_text %} as known at <b class="mono">{{ known_text }} {{ ((business_date or {}).zone or CLOCK_TZ).split('/') | last | replace('_', ' ') }}</b>{% endif %}, {{ 'as it was, from its history' if from_history else 'as it was shared' }}.{% endif %}
+    {% if from_history %}<a href="/v/{{ vm.ref.kind }}/{{ vm.ref.id | urlencode }}/history" data-pin-history>Back to the history</a>{% endif %}
     <a href="/asof?d=live&amp;next={{ request.url.path | urlencode }}">Go live</a>
     {% if pin == 'changed' and known_text %}<a href="/compare/{{ vm.ref.kind }}/{{ vm.ref.id }}?fromKnownAt={{ known_text | replace(' ', 'T') | urlencode }}">What changed</a>{% endif %}</p>
   {% endif %}

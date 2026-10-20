@@ -186,3 +186,48 @@ def test_a_range_typed_with_to_before_from_is_refused_never_swapped(url, browser
     finally:
         ctx.close()
 
+
+def test_the_hover_label_follows_a_resize_and_never_widens_the_page(url, browser):
+    """QA1-14: at 1440 px the hover label sat at the chart's right end; narrowed to 720 px (what zoom 200 % does) it stayed there and the
+    page gained 647 px of horizontal scroll. QA1-15: the crosshair's date label sat on the axis over its own labels."""
+    ctx = browser.new_context(viewport={"width": 1440, "height": 900})
+    pg = ctx.new_page()
+    errors = []
+    pg.on("pageerror", lambda e: errors.append(str(e)))
+    try:
+        pg.goto(url + "/v/equity/EQ-CSCA/history?range=3M")
+        _ready(pg)
+        pg.wait_for_selector("[data-hx-chart] canvas", timeout=10000)
+        box = pg.locator("[data-hx-chart]").bounding_box()
+        pg.mouse.move(box["x"] + box["width"] - 30, box["y"] + box["height"] / 2)              # hover the newest days, at the right end
+        pg.wait_for_selector(".hx-tip", state="visible", timeout=5000)
+        pg.set_viewport_size({"width": 720, "height": 900})
+        pg.wait_for_function("() => { const c = document.querySelector('[data-hx-chart]').getBoundingClientRect(); return c.width < 700; }")
+        pg.wait_for_timeout(400)                                                               # the resize observer's turn
+        assert pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), pg.evaluate("document.documentElement.scrollWidth")
+        tip = pg.evaluate("""() => { const t = document.querySelector('.hx-tip'), c = document.querySelector('[data-hx-chart]').getBoundingClientRect();
+            if (!t || getComputedStyle(t).display === 'none' || getComputedStyle(t).opacity === '0') { return null; }
+            const r = t.getBoundingClientRect(); return {right: r.right, chartRight: c.right + 1}; }""")
+        assert tip is None or tip["right"] <= tip["chartRight"], tip                          # hidden, or put back inside the chart
+        assert pg.evaluate("echarts.getInstanceByDom(document.querySelector('[data-hx-chart]')).getOption().xAxis[0].axisPointer.label.show") is False
+        assert not errors, errors
+    finally:
+        ctx.close()
+
+
+def test_a_day_opened_from_the_history_leads_back_to_it(url, browser):
+    """QA1-16: the day's view says it came from the history and its back link is that history, not an earlier page's trail."""
+    ctx, pg, errors = _page(browser, "light")
+    try:
+        pg.goto(url + "/v/trade/IRS-48213")                                                  # an earlier page in this tab's trail
+        print("ERRS-AFTER-FIRST", list(errors))
+        pg.goto(url + "/v/trade/IRS-48213?asOf=2026-09-29&gen=1742&via=history")
+        banner = " ".join(pg.inner_text("[data-pin]").split())
+        assert "from its history" in banner and "shared" not in banner, banner
+        assert pg.get_attribute("[data-pin-history]", "href") == "/v/trade/IRS-48213/history"
+        crumbs = pg.locator("[data-crumbs] a")
+        assert crumbs.count() == 1 and crumbs.get_attribute("href") == "/v/trade/IRS-48213/history" and "History of" in crumbs.inner_text()
+        assert not errors, errors
+    finally:
+        ctx.close()
+

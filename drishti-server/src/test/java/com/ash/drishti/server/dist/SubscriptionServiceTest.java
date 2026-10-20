@@ -221,7 +221,7 @@ class SubscriptionServiceTest {
         assertThat(run.path("skipped").asInt()).isEqualTo(1);
         JsonNode d = run.path("deliveries");
         assertThat(d.get(1).path("status").asText()).isEqualTo("skipped");
-        assertThat(d.get(1).path("error").asText()).contains("no report");
+        assertThat(d.get(1).path("error").asText()).contains("may not open the report").doesNotContain("DRS-");   // QA2-19: in words, not the catalogue's refusal
         assertThat(sent).extracting(RenderedMail::to).containsExactly("alice@example.org");
     }
 

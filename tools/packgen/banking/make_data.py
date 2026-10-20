@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import json
 import re
+import os
 import sys
 from pathlib import Path
 
@@ -216,8 +217,15 @@ SOFR_HISTORY = [("2026-09-01", 3.95, 1910), ("2026-09-02", 3.95, 1879), ("2026-0
                 ("2026-09-29", 3.85, 1970), ("2026-09-30", 3.86, 2130)]
 
 
+def data_dir() -> Path:
+    """The data folder: --data-dir DIR, else DRISHTI_DATA_DIR, else the repository's data/ (QA2-21: never the repository's when either is given)."""
+    if "--data-dir" in sys.argv:
+        return Path(sys.argv[sys.argv.index("--data-dir") + 1])
+    return Path(os.environ.get("DRISHTI_DATA_DIR") or (ROOT / "data"))
+
+
 def write_feeds(root: Path) -> Path:
-    """data/feeds (not in git, like everything under data/): the feed folder the shipped configuration serves."""
+    """<data>/feeds (not in git, like everything under data/): the feed folder the shipped configuration serves."""
     f = root / "fixing" / "SOFR-HISTORY.csv"
     text = "date,rate,volume_bn\n" + "".join(f"{d},{r},{v}\n" for d, r, v in SOFR_HISTORY)
     f.parent.mkdir(parents=True, exist_ok=True)
@@ -252,7 +260,7 @@ def main() -> None:
         if not f.exists() or f.read_text(encoding="utf-8") != t:
             f.write_text(t, encoding="utf-8")
     print(f"wrote {sum(len(v) for v in docs.values())} documents into {len(layout.PACKS)} packs' samples; {TT.write(docs['trade'])} trading test files")
-    print(f"feeds: {write_feeds(ROOT / 'data' / 'feeds')}")
+    print(f"feeds: {write_feeds(data_dir() / 'feeds')}")
     if "--jsonl" in sys.argv:
         from samplegen.dates import Calendar
         from samplegen.lake import final_rows
@@ -261,6 +269,7 @@ def main() -> None:
         out = Path(sys.argv[sys.argv.index("--jsonl") + 1])
         days = int(sys.argv[sys.argv.index("--days") + 1]) if "--days" in sys.argv else 10
         n = 0
+        out.parent.mkdir(parents=True, exist_ok=True)
         with out.open("w", encoding="utf-8") as f:
             for domain in layout.DOMAINS:
                 kinds = {k: docs.get(k, {}) for k in (x for p in layout.PACKS.values() for d, ks in p["kinds"].items() if d == domain for x in ks)}

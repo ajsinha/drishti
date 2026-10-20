@@ -1519,7 +1519,8 @@ bash tools/load-files.sh data/demo-files --trades 1000 --days 2
 ```
 
 A real small run (200 trades, one day) into a scratch folder; these scripts also refresh the shipped packs' sample files and the
-repository's `data/` folder, which is not tracked:
+data folder (`DRISHTI_DATA_DIR`, else the repository's `data/`, which is not tracked). Each loader's heap is `DRISHTI_LOADER_HEAP`
+(default `4g`); its input file (`banking.jsonl`) is written under the data folder and removed after the load:
 
 ```text
 wrote 1791 documents into 5 packs' samples

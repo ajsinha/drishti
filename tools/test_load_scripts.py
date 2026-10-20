@@ -96,6 +96,34 @@ class LoadScripts(unittest.TestCase):
             self.assertIn(loader, code)
             self.assertLess(code.index("Add-Content"), code.index("& $java"), f"{script}: the book joins the samples' file before the load")
 
+    def test_every_loader_heap_is_drishti_loader_heap_and_its_input_is_under_the_data_folder(self):
+        """QA2-21: no loader has a fixed -Xmx (or none at all: a quarter of the machine); none writes data/banking.jsonl in the
+        repository when DRISHTI_DATA_DIR is set; each removes its input after the load."""
+        for script in sorted((ROOT / "tools").glob("load-*.sh")):
+            text = script.read_text()
+            if "banking.jsonl" not in text:
+                continue
+            with self.subTest(script.name):
+                self.assertIsNone(re.search(r"-Xmx\d", text), "a fixed heap")
+                for call in re.findall(r'"\$JAVA_HOME/bin/java"[^\n]*', text):
+                    self.assertIn('-Xmx"${DRISHTI_LOADER_HEAP:-4g}"', call)
+                self.assertNotIn(" data/banking.jsonl", text)
+                self.assertIn('DATA="${DRISHTI_DATA_DIR:-data}"', text)
+                self.assertIn('rm -f "$DATA/banking.jsonl"', text)
+
+    def test_make_data_writes_the_feeds_under_drishti_data_dir(self):
+        """QA2-21: make_data.py wrote data/feeds in the repository even with DRISHTI_DATA_DIR set."""
+        with tempfile.TemporaryDirectory() as tmp:
+            code = ("import sys; sys.path.insert(0, 'tools/packgen/banking'); import make_data as m; "
+                    "print(m.data_dir()); print(m.write_feeds(m.data_dir() / 'feeds'))")
+            r = subprocess.run(["python3", "-c", code], cwd=ROOT, env={**os.environ, "DRISHTI_DATA_DIR": tmp},
+                               capture_output=True, text=True, timeout=120)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(r.stdout.split("\n")[0], tmp)
+            self.assertTrue((Path(tmp) / "feeds" / "fixing" / "SOFR-HISTORY.csv").is_file())
+        text = (ROOT / "tools" / "packgen" / "banking" / "make_data.py").read_text()
+        self.assertNotIn("ROOT / 'data' / 'feeds'", text)
+
 
 if __name__ == "__main__":
     unittest.main()

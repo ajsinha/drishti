@@ -29,7 +29,7 @@
 # The loader sorts each day by id with an external sort: its run files go to --spill-dir (default: the system temp
 # folder) and take about the size of the loaded JSON; put them on a disk, not a memory-backed /tmp, for a large book.
 # The samples and the book go to the loader as one stream, so each business day of a table is written once and holds both (a second
-# load of the same days would replace them: QA2-05). The loader's heap is DRISHTI_LOADER_HEAP (default 6g); its input file is
+# load of the same days would replace them: QA2-05). The loader's heap is DRISHTI_LOADER_HEAP (default 4g); its input file is
 # written under the data folder (DRISHTI_DATA_DIR), never in the repository.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -59,5 +59,5 @@ CP="plugins/drishti-plugin-iceberg/target/classes:$(./mvnw -q -o dependency:buil
     # the bulk book straight from the generator: no file of gigabytes in between
     uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl -
   fi
-} | "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-6g}" -cp "$CP" com.ash.drishti.plugin.iceberg.IcebergLoader - "$ROOT" "${OPTS[@]}"
+} | "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -cp "$CP" com.ash.drishti.plugin.iceberg.IcebergLoader - "$ROOT" "${OPTS[@]}"
 rm -f "$DATA/banking.jsonl"

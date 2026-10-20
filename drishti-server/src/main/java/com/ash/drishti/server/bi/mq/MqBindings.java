@@ -22,6 +22,7 @@ import com.ash.drishti.server.bi.expr.Expressions;
 import com.ash.drishti.server.bi.layer.ModelDef;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,8 +54,10 @@ final class MqBindings {
         Map<String, ModelDef.Parameter> params = v.def().calculation().parameters();
         List<MqException.Problem> out = new ArrayList<>();
         checkValues(params, q.params(), out);
-        List<String> fields = chosen(params, q, q.fields(), "select.fields", out);
-        List<String> measures = chosen(params, q, q.measures(), "select.measures", out);
+        Set<String> measureNames = new java.util.HashSet<>(v.flat().measures().keySet());
+        measureNames.addAll(q.define().keySet());
+        List<String> fields = chosen(params, q, q.fields(), "select.fields", measureNames, out);
+        List<String> measures = chosen(params, q, q.measures(), "select.measures", measureNames, out);
         if (!out.isEmpty()) {
             throw new MqException(out);
         }
@@ -113,7 +116,8 @@ final class MqBindings {
     }
 
     /** The names a list of the query selects, each {@code param.x} replaced by the field (or measure) the field parameter {@code x} chose. */
-    private static List<String> chosen(Map<String, ModelDef.Parameter> params, ModelQuery q, List<String> names, String path, List<MqException.Problem> out) {
+    private static List<String> chosen(Map<String, ModelDef.Parameter> params, ModelQuery q, List<String> names, String path, Set<String> measureNames,
+            List<MqException.Problem> out) {
         List<String> list = new ArrayList<>(names.size());
         for (int i = 0; i < names.size(); i++) {
             String f = names.get(i);
@@ -124,6 +128,17 @@ final class MqBindings {
             ModelDef.Parameter p = params.get(f.substring(PARAM.length()));
             if (p == null || !"field".equals(p.kind())) {
                 out.add(MqException.Problem.of("DRS-9164", path + "[" + i + "]", "'" + f + "' names no field parameter of the model"));
+                continue;
+            }
+            // a parameter of measures among the fields (or of fields among the measures) is named as itself, not as the choice it stands for (QA2-20)
+            boolean amongMeasures = path.endsWith("measures");
+            List<String> wrong = p.fields().stream().filter(c -> measureNames.contains(c) != amongMeasures).toList();
+            if (!wrong.isEmpty()) {
+                out.add(MqException.Problem.of("DRS-9164", path + "[" + i + "]", "'" + f + "' chooses among " + String.join(", ", p.fields()) + ": "
+                        + (amongMeasures ? (wrong.size() == p.fields().size() ? "fields" : String.join(", ", wrong) + (wrong.size() == 1 ? " is a field" : " are fields"))
+                                + ", so it goes in select.fields"
+                                : (wrong.size() == p.fields().size() ? "measures" : String.join(", ", wrong) + (wrong.size() == 1 ? " is a measure" : " are measures"))
+                                        + ", so it goes in select.measures")));
                 continue;
             }
             list.add(String.valueOf(choice(p, q)));
@@ -182,7 +197,7 @@ final class MqBindings {
             }
             case "field" -> {
                 if (!p.fields().contains(String.valueOf(v))) {
-                    return p.name() + " is one of the fields " + p.fields() + ", not '" + v + "'";
+                    return p.name() + " is one of its choices " + p.fields() + ", not '" + v + "'";
                 }
             }
             default -> { }

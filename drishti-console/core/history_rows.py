@@ -129,8 +129,9 @@ def build_page(data: dict, kind: str, id_: str, known_at: str | None = None) -> 
         pcells = [{"path": p["path"], "count": (r.get("parts") or {}).get(p["path"]), "changed": "parts." + p["path"] in changed}
                   for p in parts]
         gen = r.get("generation")
+        # via=history: the day opens with a banner that says it came from the history (not "as it was shared") and a way back to it (QA1-16)
         href = f"/v/{quote(kind)}/{quote(id_)}?asOf={r['date']}" + (f"&gen={gen}" if gen is not None else "") \
-            + (f"&knownAt={quote(known_at)}" if known_at else "")
+            + (f"&knownAt={quote(known_at)}" if known_at else "") + "&via=history"
         built.append({"date": r["date"], "data_date": r.get("dataDate") or r["date"], "carried": bool(r.get("carried")),
                       "deleted": bool(r.get("deleted")), "cells": cells, "parts": pcells, "changed": bool(changed),
                       "versions": r.get("versions"), "restated": bool(r.get("restated")), "generation": gen,

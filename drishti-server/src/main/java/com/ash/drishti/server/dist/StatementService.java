@@ -77,7 +77,8 @@ public final class StatementService {
     }
 
     /** One statement made for one reader: its pages, the same figures as a table document (Excel and the email), and the values its header and footer used. */
-    public record Run(String title, StatementSpec spec, StatementPages pages, ExportDoc doc, Map<String, String> tokens, String period, List<String> cut) {
+    public record Run(String title, StatementSpec spec, StatementPages pages, ExportDoc doc, Map<String, String> tokens, String period, List<String> cut,
+            String hint) {
 
         public Run {
             cut = cut == null ? List.of() : List.copyOf(cut);
@@ -85,7 +86,7 @@ public final class StatementService {
 
         /** A run with no table cut. */
         public Run(String title, StatementSpec spec, StatementPages pages, ExportDoc doc, Map<String, String> tokens, String period) {
-            this(title, spec, pages, doc, tokens, period, List.of());
+            this(title, spec, pages, doc, tokens, period, List.of(), null);
         }
     }
 
@@ -183,9 +184,31 @@ public final class StatementService {
         }
         notes.addAll(BiExporter.filters(report, s));
         notes.addAll(cut);
+        String hint = asOf == null && empty(answersOf) ? "No data is held for " + ("none".equals(spec.period()) ? day.toString() : period.label() + " (" + period.from()
+                + " to " + period.to() + ")") + ": every band is empty. Choose a date the data covers." : null;
+        if (hint != null) {
+            notes.add(0, hint);
+        }
         String sub = (!"none".equals(spec.period()) ? period.label() + " · " : "") + "Data as of " + (asOf == null ? day.toString() : asOf) + " · " + out.pages().size() + " pages";
         ExportDoc doc = new ExportDoc(st.title(), sub, notes, sections);
-        return new Run(st.title(), spec, out, doc, tokens, "none".equals(spec.period()) ? "" : period.label(), cut);
+        return new Run(st.title(), spec, out, doc, tokens, "none".equals(spec.period()) ? "" : period.label(), cut, hint);
+    }
+
+    /** True when no band that reads data has a value: no row, or only rows with nothing in them but a zero count (QA2-12). */
+    private static boolean empty(List<List<BiExporter.Built>> answers) {
+        for (List<BiExporter.Built> page : answers) {
+            for (BiExporter.Built b : page) {
+                if (b == null) {
+                    continue;
+                }
+                for (List<Object> row : b.section().rows()) {
+                    if (row.stream().anyMatch(v -> v != null && !(v instanceof Number n && n.doubleValue() == 0))) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     /** The statement as a PDF file. */
@@ -212,6 +235,7 @@ public final class StatementService {
         m.put("tokens", r.tokens());
         m.put("rows", r.doc().rowCount());
         m.put("cut", r.cut());                                         // the tables that stop at max-rows, in words (QA2-01)
+        m.put("hint", r.hint());                                       // no data is held for the run's dates, in words (QA2-12); null when there is
         return m;
     }
 
@@ -378,6 +402,9 @@ public final class StatementService {
         String measure = v.well("values").isEmpty() ? (s.columns().isEmpty() ? "" : s.columns().get(0)) : BiExporter.shortName(v.well("values").get(0));
         int mi = Math.max(0, s.columns().indexOf(measure));
         String value = s.rows().isEmpty() ? "–" : text(s.shown(s.rows().get(0), mi));
+        if (value.isBlank()) {
+            value = "–";                                                  // no value (a sum of no rows): a dash, as a masked card and a card with no rows (QA2-14)
+        }
         return new StatementLayout.Band("card", v.id(), title.isBlank() ? measure : title, null, false, value, note, null, x, w, brk, keep, repeat);
     }
 
