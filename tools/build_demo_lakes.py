@@ -33,16 +33,30 @@ One part only, the rest of the lakes kept as they are::
     python tools/build_demo_lakes.py --only trades/endur --as-of 2026-10-16          # only the synthetic ENDUR table
     python tools/build_demo_lakes.py --only trades/calypso,trades/murex             # several datasets (folders of data/testdata)
 
+A server that reads the lake::
+
+    python tools/build_demo_lakes.py --only trades/murex --server http://192.168.2.77:18480 --token-file ~/drishti-token.txt
+
+No server is told by default (a build ran into the server on localhost:18480 whatever lake it built, QA3A-05): restart yours after a
+build, or let it pick the tables up at its next refresh. ``--server`` names the server that reads this lake; it is told once at the end,
+one data-load signal per table (its newest date), not one per table and day.
+
 Your ENDUR files are read where they are and never copied into the project.
 """
 from __future__ import annotations
 
 import argparse
+import gzip
+import json
+import os
 import re
 import shutil
 import subprocess
 import sys
 import time
+import urllib.error
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -60,11 +74,16 @@ def endur_files(folder: Path) -> list[tuple[str, Path]]:
     return out
 
 
-HEARTBEAT_SECONDS = int(__import__("os").environ.get("DRISHTI_HEARTBEAT_SECONDS", "30"))
+HEARTBEAT_SECONDS = int(os.environ.get("DRISHTI_HEARTBEAT_SECONDS", "30"))
+#: a trade each system's synthetic trades hold, for the closing lines' example commands
+SAMPLE_TRADE = {"endur": "1000279", "calypso": "CLY-3000157", "murex": "MX-20000001"}
+TRADE_ID = re.compile(rb'"TRADE_ID"\s*:\s*"?([A-Za-z0-9._-]+)')
 
 
-def lake_progress(lake: Path) -> str:
-    """The lake's size on disk and the table folder written most recently: what a heartbeat line says."""
+def lake_progress(lake: Path, now: float | None = None) -> str:
+    """The lake's size on disk and the table folder written most recently: what a heartbeat line says. A table is said to be
+    being written only while files still land in it; past a heartbeat with nothing new the line says how long nothing was written
+    (the step is then waiting, for instance on the server it tells; QA3A-07)."""
     total, newest, newest_t = 0, None, 0.0
     if lake.is_dir():
         for f in lake.rglob("*"):
@@ -79,7 +98,9 @@ def lake_progress(lake: Path) -> str:
     where = ""
     if newest is not None:
         rel = newest.relative_to(lake).parts
-        where = f", writing {'/'.join(rel[:2])}" + (f" {rel[2]}" if len(rel) > 2 and rel[2].startswith("business_date=") else "")
+        table = '/'.join(rel[:2]) + (f" {rel[2]}" if len(rel) > 2 and rel[2].startswith("business_date=") else "")
+        idle = (time.time() if now is None else now) - newest_t
+        where = f", writing {table}" if idle <= HEARTBEAT_SECONDS else f", nothing written for {idle:,.0f} s (the last: {table})"
     return f"{total / 1e6:,.0f} MB in the lake{where}"
 
 
@@ -102,6 +123,37 @@ def run(cmd: list[str], dry: bool, step: str = "", lake: Path | None = None) -> 
         done.set()
 
 
+def first_trade(path: Path) -> str | None:
+    """The first TRADE_ID in one of your files (its first megabyte), for the closing lines' example command."""
+    try:
+        opener = gzip.open if path.name.endswith(".gz") else open
+        with opener(path, "rb") as f:
+            m = TRADE_ID.search(f.read(1 << 20))
+        return m.group(1).decode() if m else None
+    except (OSError, EOFError):
+        return None
+
+
+def tell(server: str, token: str | None, pack: str, kind: str, day: str, dry: bool) -> str:
+    """One data-load signal to the server --server names; the line that says what came of it."""
+    url = server.rstrip("/") + f"/api/v1/packs/{urllib.parse.quote(pack, safe='')}/loads"
+    print(f"  tell {url}: {kind} {day}", flush=True)
+    if dry:
+        return "not sent (dry run)"
+    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    if token:
+        headers["Authorization"] = "Bearer " + token
+    body = {"kind": kind, "businessDate": day, "status": "ready", "source": "build_demo_lakes", "batchId": f"build-demo-lakes-{int(time.time())}"}
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, data=json.dumps(body).encode(), headers=headers, method="POST"), timeout=60):  # noqa: S310
+            return "told"
+    except urllib.error.HTTPError as e:
+        hint = " (a token with loads:write: --token-file or DRISHTI_TOKEN)" if e.code in (401, 403) else ""
+        return f"refused: {e.code} {e.read().decode('utf-8', 'replace')[:160]}{hint}"
+    except (urllib.error.URLError, OSError) as e:
+        return f"no answer: {getattr(e, 'reason', e)}"
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0], formatter_class=argparse.RawDescriptionHelpFormatter,
                                  epilog=__doc__.split("\n\n", 1)[1])
@@ -118,6 +170,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--connectors-dir", type=Path, help="the connector files' folder (default: as lake demo, config/connectors)")
     ap.add_argument("--keep-synthetic-endur", "--keep-synthetic", dest="keep_synthetic_endur", action="store_true",
                     help="add your files beside the system's synthetic trades instead of replacing them")
+    ap.add_argument("--server", help="the server that reads this lake: told once at the end, one data-load signal per table (its newest "
+                                     "date), not per table and day. Default: no server is told; restart yours, or let it pick the "
+                                     "tables up at its next refresh")
+    ap.add_argument("--token-file", type=Path, help="with --server: the API token (loads:write) for the signals (default: DRISHTI_TOKEN)")
     ap.add_argument("--dry-run", action="store_true", help="say every step, change nothing")
     a = ap.parse_args(argv)
 
@@ -134,10 +190,15 @@ def main(argv: list[str] | None = None) -> int:
     if src:
         folder = src.expanduser().resolve()
         if not folder.is_dir():
-            ap.error(f"--endur-dir {folder} is not a folder")
+            ap.error(f"{'--endur-dir' if a.endur_dir else '--source-dir'} {folder} is not a folder")
         files = endur_files(folder)
         if not files:
             ap.error(f"no file named YYYY-MM-DD.jsonl (or .json, .gz) in {folder}")
+    if a.token_file and not a.server:
+        ap.error("--token-file goes with --server")
+    token = None
+    if a.server:
+        token = (a.token_file.expanduser().read_text(encoding="utf-8").strip() if a.token_file else None) or os.environ.get("DRISHTI_TOKEN")
     as_of = a.as_of or (files[-1][0] if files else "today")
     lake = a.lake.expanduser().resolve()
     t0 = time.time()
@@ -147,10 +208,12 @@ def main(argv: list[str] | None = None) -> int:
     else:
         what = f"only {a.only}" if a.only else "every dataset"
         print(f"1/3 the demo lakes: {what}, every business day, ending {as_of} → {lake}")
-        # --no-signal: lake demo would otherwise tell a running server of every table and date (66 tables x 60 days = 3,960 signals),
-        # each making it read the data again: a running server ran out of memory (QA 2026-10-20, QA3A-01/05). A server reads the new
-        # tables at its next start, or within its refresh interval.
-        cmd = [py, str(DRISHTI), "lake", "demo", "--as-of", as_of, "--lake", str(lake), "--no-signal"]
+        # lake demo would otherwise tell a running server of every table and date (66 tables x 60 days = 3,960 signals), each making it
+        # read the data again (QA 2026-10-20, QA3A-01/05): no server is told unless --server names one, and then once per table
+        cmd = [py, str(DRISHTI), "lake", "demo", "--as-of", as_of, "--lake", str(lake)]
+        cmd += ["--server", a.server, "--signal-once"] if a.server else ["--no-signal"]
+        if a.server and a.token_file:
+            cmd += ["--token-file", str(a.token_file.expanduser().resolve())]
         if a.only:
             cmd += ["--only", a.only]
         if a.connectors_dir:
@@ -172,10 +235,32 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print("2/3 no --endur-dir or --source-dir: the synthetic trades stay")
 
+    told = None
+    if files and a.server:                               # your files: one signal, their table on its newest date
+        told = tell(a.server, token, "trading", "trade", files[-1][0], a.dry_run)
+        print(f"  the server: {told}")
     print(f"3/3 done in {time.time() - t0:.0f} s{' (dry run: nothing changed)' if a.dry_run else ''}.")
-    print("  Next: start the server (Drishti server (demo lakes), or tools\\windows\\start-server.ps1 -DemoLakes) and the console;")
-    print("  if a server was running, restart it so it reads the new tables. Then try:  TRD 1000279 60  ·  TRD 1000279 60 DIFF  ·  EQ EQ-CSCA 3M  ·  CPTY CP-NORTHPLAINS 30")
+    for line in closing(a, system, files, told):
+        print(line)
     return 0
+
+
+def closing(a, system: str, files: list[tuple[str, Path]], told: str | None) -> list[str]:
+    """What to do next, for the run that was made (QA3A-08): the system loaded, whether a server was told, and ids that exist."""
+    out = []
+    if a.server:
+        out.append(f"  The server at {a.server} was told once per table it reads (see the lines above); it reads the new data now.")
+    elif a.files_only:
+        out.append("  A running server reads the replaced table by itself within about 10 s (its refresh-seconds): no restart is needed.")
+    else:
+        out.append("  Next: start the server (Drishti server (demo lakes), or tools\\windows\\start-server.ps1 -DemoLakes) and the console.")
+        out.append("  A server already running picks the new tables up by itself at its next refresh; restart it to be sure, or pass --server next time.")
+    trade = (first_trade(files[-1][1]) if files else None) or SAMPLE_TRADE.get(system, SAMPLE_TRADE["endur"])
+    if a.files_only:
+        out.append(f"  Then try:  TRD {trade} 60  ·  TRD {trade} 60 DIFF  ({system.upper()} trades, from your files)")
+    else:
+        out.append(f"  Then try:  TRD {trade} 60  ·  TRD {trade} 60 DIFF  ·  EQ EQ-CSCA 3M  ·  CPTY CP-NORTHPLAINS 30")
+    return out
 
 
 if __name__ == "__main__":

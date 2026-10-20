@@ -475,7 +475,11 @@ local lake only. The sample feed the `file` connector serves (`feeds/`) and the 
 `DRISHTI_DATA_DIR`, else the folder holding `--lake` when that is a `delta/` folder (`--lake /srv/data/delta`: `/srv/data`), else `data/`, so a
 server on another data folder finds its feeds (`make_data.py --data-dir DIR` does the same). It then tells the server the lakes changed: the data-load signal for every table and date to `--server` (default
 `DRISHTI_SERVER`, then `http://localhost:18480`; a token with `loads:write` from `--token-file` or `DRISHTI_TOKEN`), or, with no server
-there, the stamp of section 4.7; `--no-signal` does neither. Everything about the data and the five-step quick start is in [data/testdata/README.md](../../data/testdata/README.md).
+there, the stamp of section 4.7; `--no-signal` does neither, and `--signal-once` tells each table once, for its newest date, instead of
+each table and date (what `tools/build_demo_lakes.py --server URL` uses; a running server reads the older dates again by itself). The
+summary says how many signals the server took, how many it **refused** (an HTTP error; the token hint only for 401 and 403) and how
+many it **did not answer** within 30 s (busy, not a refusal), and how long the signals took beside the build (`built in 193 s, the
+server told in 12 s`). `tools/build_demo_lakes.py` tells no server unless `--server` names one (QA3A-05). Everything about the data and the five-step quick start is in [data/testdata/README.md](../../data/testdata/README.md).
 
 `drishti.py testdata capture-market` refreshes the committed market snapshot that `lake demo` builds for offline demos
 (`data/testdata/news-and-markets/{quote,news}`): it starts a scratch server (or uses `--server`) and fetches the twenty companies'
