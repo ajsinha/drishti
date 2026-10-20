@@ -185,6 +185,10 @@ on a busy laptop, for sixty days; `data\delta` ends at about 2.2 GB), `2/3 your 
 | only the **synthetic ENDUR** table rebuilt | `--only trades/endur --as-of <the lakes' last date>` |
 | several datasets | `--only trades/calypso,trades/murex --as-of <date>` (any folder of `data\testdata`, or a pack name) |
 
+While it works, a line every 30 seconds says which step is running, for how long, how large `data\delta` has grown and which table
+is being written (`… 1/3 lake demo still running: 600 s; 1,450 MB in the lake, writing trading/trade_endur`). If the size stops
+growing for several minutes, see section 7 (antivirus scanning of `data`).
+
 With `--only`, give `--as-of` the same last date the other tables have, so every table covers the same days (one table alone takes
 about a minute). `--files-only` replaces that system's table with your files only (add `--keep-synthetic` to keep the synthetic trades
 beside yours). Always try `--dry-run` first: it prints every step.
