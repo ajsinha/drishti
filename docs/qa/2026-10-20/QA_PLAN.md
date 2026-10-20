@@ -27,8 +27,7 @@ report; fixes are made by fix builders after triage. Only after the exit criteri
 | 11:30 → 11:45 | **Triage**: every finding classed P1 / P2 / P3, grouped into fix lanes; duplicates merged; the product owner sees the summary | lead |
 | 11:45 → 14:00 | **Fix run**: two fix builders, one per lane (server and connectors / console, CLI and docs), each fix with a regression test and its docs | Fix-1, Fix-2 |
 | 11:45 → 12:15 | **Documentation verification** (30 minutes, section 6), in parallel with the fixes; wrong pages become doc fixes for Fix-2 | Docs reviewer |
-| 12:15 → 13:30 | **Quiet window for the product owner's demo** on the user's cluster: builders keep coding, but no browser, server or full test run starts | all |
-| 13:30 → 14:30 | **Regression**: every fix's own test, the touched suites, the browser files of the touched pages one at a time | Fix-1, Fix-2 |
+| 14:00 → 14:30 | **Regression**: every fix's own test, the touched suites, the browser files of the touched pages one at a time | Fix-1, Fix-2 |
 | 14:30 → 15:15 | **Round 2**: the testers re-run every P1 and P2 of round 1 and the areas next to each fix | QA-1, QA-2 |
 | 15:15 → 15:30 | **Close**: one drill, then 2.6.6 if anything was fixed, and the report to the product owner | lead |
 
