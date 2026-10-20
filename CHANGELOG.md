@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Fixed (QA2-205): the docs say `lake demo` builds 66 tables**, as its summary prints (one per dataset of
+  data/testdata/testdata.yaml: 49 generated, 15 from the world-economy and news-and-markets samples, the captured quotes and headlines),
+  not 64: GETTING_STARTED (twice), PACKS, DEVELOPER_GUIDE, DEMO_DATA, tutorial 1 (twice), the Windows QA guide, data/testdata/README.
+  test_testdata checks every one against the manifest.
 - **Fixed (QA2-204): `drishti.py bi statement preview` and `file` say when a table was cut.** Each table that stops at
   `drishti.distribution.statements.max-rows` is printed on a `cut:` line (`cut: Positions: The first 10,000 rows only: …`), from the
   preview's `cut` and from the file's new `X-Statement-Cut` headers (one per cut table, URL-encoded), as the PDF's note says it.
