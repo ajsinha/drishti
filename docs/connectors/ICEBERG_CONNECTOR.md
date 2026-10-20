@@ -237,7 +237,7 @@ tools/load-iceberg.sh s3a://risk-lake/iceberg --set s3.region=us-east-1 --spill-
 
 The samples and the book go to the loader as **one input**, so each business day of a table is written once and holds both: a load
 replaces the days it writes, so two loads of the same days (the samples, then a book) would leave only the book's trades on them.
-The loader's heap is `DRISHTI_LOADER_HEAP` (default `6g`; Windows: `-Heap`), and its input file is written under the data folder
+The loader's heap is `DRISHTI_LOADER_HEAP` (default `4g`; Windows: `-Heap`), and its input file is written under the data folder
 (`DRISHTI_DATA_DIR`) and removed after the load.
 
 Measured (10,000 trades x 3 days, two writer threads; before 2.6.6 the samples and the book were two loads):

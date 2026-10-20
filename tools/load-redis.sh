@@ -31,7 +31,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 # the loader's JVM temp folder: native libraries (DuckDB, RocksDB, zstd) unpack there, never in /tmp; the server sweeps it at start
-JTMP="${DRISHTI_TMP_DIR:-${DRISHTI_DATA_DIR:-data}/tmp/server}"; mkdir -p "$JTMP"
+DATA="${DRISHTI_DATA_DIR:-data}"
+JTMP="${DRISHTI_TMP_DIR:-$DATA/tmp/server}"; mkdir -p "$JTMP"
 export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
 URI="redis://localhost:6379"; OPTS=(); TRADES=""; DAYS="1"
 [[ $# -gt 0 && "$1" != --* ]] && { URI="$1"; shift; }
@@ -46,20 +47,21 @@ while [[ $# -gt 0 ]]; do
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done
-uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl data/banking.jsonl
+uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$DATA/banking.jsonl"
 ./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-redis -am
 CP="plugins/drishti-plugin-redis/target/classes:$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-redis -Dmdep.outputFile=/dev/stdout)"
 # the loader keeps one day's promoted values per kind (about 230 MB per million trades) until the input ends
-JAVA=("$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx6g -cp "$CP")
+JAVA=("$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -cp "$CP")
 SAMPLE_OPTS=("${OPTS[@]}")
 if [[ -n "$TRADES" && " ${OPTS[*]} " != *" --replace "* ]]; then
   # the bulk book below replaces the trade days it covers; the samples merge, so a reload over an earlier bulk book is
   # not refused for dropping most of its trades (they are a subset of it)
   SAMPLE_OPTS+=(--merge)
 fi
-"${JAVA[@]}" com.ash.drishti.plugin.redis.RedisLoader data/banking.jsonl "$URI" "${SAMPLE_OPTS[@]}"
+"${JAVA[@]}" com.ash.drishti.plugin.redis.RedisLoader "$DATA/banking.jsonl" "$URI" "${SAMPLE_OPTS[@]}"
 if [[ -n "$TRADES" ]]; then
   # the bulk book straight from the generator into the loader: no file of gigabytes in between
   uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl - \
     | "${JAVA[@]}" com.ash.drishti.plugin.redis.RedisLoader - "$URI" "${OPTS[@]}"
 fi
+rm -f "$DATA/banking.jsonl"

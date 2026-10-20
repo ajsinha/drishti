@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **Fixed (QA2-21, the rest): every loader's heap is `DRISHTI_LOADER_HEAP` (default `4g`) and its input under the data folder.**
+  `load-redis.sh` no longer has a fixed `-Xmx6g`, and the DuckDB, files, MongoDB, PostgreSQL and Aerospike loaders no longer run with
+  no `-Xmx` (a quarter of the machine); all of them write `banking.jsonl` under `DRISHTI_DATA_DIR` and remove it after the load.
+  `make_data.py` writes the feed folder under `DRISHTI_DATA_DIR`, not the repository's `data/feeds`. ICEBERG_CONNECTOR, CLI_GUIDE;
+  `tools/test_load_scripts.py`.
 - **Added: `build_demo_lakes.py` says it is alive**: every 30 s (`DRISHTI_HEARTBEAT_SECONDS`) a line with the step, the time so far, the lake's size and the table being written, so a long `lake demo` or `lake build` never looks stuck.
 - **Fixed (QA1-205): a `knownAt` before the data names the right thing.** `DRS-1013` now says nothing of the entity in that window was
   known at that instant, and names its days with data *as known now*, which may have been loaded later (*ask without knownAt, or with a

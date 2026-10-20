@@ -28,7 +28,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 # the loader's JVM temp folder: native libraries (DuckDB, RocksDB, zstd) unpack there, never in /tmp; the server sweeps it at start
-JTMP="${DRISHTI_TMP_DIR:-${DRISHTI_DATA_DIR:-data}/tmp/server}"; mkdir -p "$JTMP"
+DATA="${DRISHTI_DATA_DIR:-data}"
+JTMP="${DRISHTI_TMP_DIR:-$DATA/tmp/server}"; mkdir -p "$JTMP"
 export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
 DB="${DRISHTI_DUCKDB_PATH:-data/duckdb/drishti.duckdb}"; OPTS=(); TRADES=""; DAYS="3"
 [[ $# -gt 0 && "$1" != --* ]] && { DB="$1"; shift; }
@@ -42,12 +43,13 @@ while [[ $# -gt 0 ]]; do
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done
-uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl data/banking.jsonl
+uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$DATA/banking.jsonl"
 ./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-duckdb -am
 CP="plugins/drishti-plugin-duckdb/target/classes:$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-duckdb -Dmdep.outputFile=/dev/stdout)"
-"$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -cp "$CP" com.ash.drishti.plugin.duckdb.DuckDbLoader data/banking.jsonl "$DB" --recreate "${OPTS[@]}"
+"$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -cp "$CP" com.ash.drishti.plugin.duckdb.DuckDbLoader "$DATA/banking.jsonl" "$DB" --recreate "${OPTS[@]}"
 if [[ -n "$TRADES" ]]; then
   # the bulk book straight from the generator into the loader: no file of gigabytes in between
   uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl - \
-    | "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -cp "$CP" com.ash.drishti.plugin.duckdb.DuckDbLoader - "$DB" "${OPTS[@]}"
+    | "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -cp "$CP" com.ash.drishti.plugin.duckdb.DuckDbLoader - "$DB" "${OPTS[@]}"
 fi
+rm -f "$DATA/banking.jsonl"
