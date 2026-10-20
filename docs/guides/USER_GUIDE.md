@@ -1319,7 +1319,8 @@ form `/v/trade/1000015?days=30` opens the same page. After an id, a space in the
 
 **The header** names the entity, the range (*30 business days*), the first and last dates, how many days have data, how many changed,
 how many were restated, and the days in the range with no data (hover *no data on 1 day* for the dates). *known: latest* means each day
-is shown as it is known now.
+is shown as it is known now. When a calendar range (`3M`, `FROM … TO …`) runs past the newest day the sources hold, the header says
+*not loaded yet after 2026-10-16* rather than counting those days as missing.
 
 **Trades and other documents** show one row per business day, newest first, with the kind's top-level fields as columns and each
 list (legs, events) as a count with `▸`. A cell that differs from the day before is tinted and in bold, with `▲`/`▼` for numbers;

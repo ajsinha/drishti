@@ -170,6 +170,19 @@ def test_plain_words_for_a_history_open_it_or_say_how_they_were_read(client, bac
     assert "Read as" in t and 'href="/go?q=TRD%201000015%20FROM%202026-09-01%20TO%202026-09-30"' in t and "please" in t
 
 
+def test_a_span_past_the_newest_loaded_day_says_so(client, backend, monkeypatch):
+    assert "data-hx-loaded-to" not in client.get("/v/trade/1000015/history?days=30").text     # loadedTo null: nothing said
+    plain = backend.history
+
+    async def history(kind, id_, ident=None, **params):
+        d = await plain(kind, id_, ident, **params)
+        d["window"]["loadedTo"] = "2026-10-16"
+        return d
+    monkeypatch.setattr(backend, "history", history)
+    t = client.get("/v/equity/EQ-CSCA/history?range=3M").text
+    assert "data-hx-loaded-to" in t and "not loaded yet after" in t and "2026-10-16" in t
+
+
 def test_the_csv_keeps_formulas_as_text(client, backend, monkeypatch):
     async def history(kind, id_, ident=None, **params):
         return {"ref": {"kind": kind, "id": id_}, "window": {"from": "2026-10-19", "to": "2026-10-19"}, "parts": [],

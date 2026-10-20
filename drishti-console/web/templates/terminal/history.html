@@ -54,7 +54,8 @@
       {% if not page.market %}<span class="hx-sep" aria-hidden="true">·</span><span class="hx-chg-count"><b class="mono">{{ page.changed_days }}</b> changed</span>{% endif %}
       {% if page.restated %}<span class="hx-sep" aria-hidden="true">·</span><span><b class="mono">{{ page.restated }}</b> restated</span>{% endif %}
       {% if page.missing %}<span class="hx-sep" aria-hidden="true">·</span><span class="hx-missing" title="{{ page.missing | join(', ') }}">no data on {{ page.missing | length }} {{ 'day' if page.missing | length == 1 else 'days' }}</span>{% endif %}
-      <span class="hx-sep" aria-hidden="true">·</span><span>known: <b>{{ 'at ' ~ w.knownAt if w.get('knownAt') else 'latest' }}</b></span>
+      {% if w.get('loadedTo') %}<span class="hx-sep" aria-hidden="true">·</span><span class="hx-missing" data-hx-loaded-to title="The newest day the sources hold is {{ w.loadedTo }}: the days after it in the range are not loaded yet">not loaded yet after <span class="mono">{{ w.loadedTo }}</span></span>{% endif %}
+      <span class="hx-sep" aria-hidden="true">·</span><span>known:<b>{{ 'at ' ~ w.knownAt if w.get('knownAt') else 'latest' }}</b></span>
       {% if page.sources %}<span class="hx-sep" aria-hidden="true">·</span><span class="mono hx-src">{{ page.sources | join(', ') }}</span>{% endif %}
       {% if d.get('cache') %}<span class="hx-took mono" title="How the server answered: {{ d.cache }} cache{% if d.get('tookMs') is not none %}, {{ d.tookMs }} ms{% endif %}">{% if d.get('tookMs') is not none %}{{ d.tookMs }} ms{% endif %}</span>{% endif %}
     </div>
