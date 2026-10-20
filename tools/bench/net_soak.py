@@ -30,8 +30,19 @@ the console lists all three is measured; users.py runs for --seconds; meanwhile 
 through the console and compares: an answer equal to the reference is right, an answer that is partial or refused naming a node that is down
 (DRS-5052, ``failed``) is named-partial, anything else is wrong. At --kill-shard-at c is killed (SIGKILL by PID) and restarted at
 --restart-shard-at; at --kill-seed-at a is killed and the console's move timed (its next page that answers), and a restarted at
---restart-seed-at with no seed of its own (it rejoins from its peers.json). The result is one JSON object (also in <work>/soak.json).
-Processes are stopped by PID; nothing is written outside --work.
+--restart-seed-at with no seed of its own (it rejoins from its peers.json).
+
+History (HISTORY_QUERIES.md, 2.6.5): the load's users ask ``/v/{kind}/{id}/history`` (--history-share of their requests: 30 and 60 days,
+3M, DIFF, now and then "known at"), and the checked set holds history requests of trades of every system (MUREX ones only c holds), of
+counterparties and of --equities, asked as the administrator and as a viewer (masked fields), compared row by row (dates, values, changed
+flags, masked columns) with the reference (tools/bench/soak_check.py). While a node is down an answer may be partial or refused only naming
+it (DRS-5052) or a time-out (DRS-1014); a short answer not marked partial, or DRS-1013, is wrong.
+
+Long runs: every --sample-every seconds each process's resident memory, heap (used, and live data after the last collection), open files
+and threads go into the report; it ends with a latency and error table (one line per action, history its own) and a verdict: no wrong
+answers, errors only inside the kill windows, p95/p99 per action, memory not growing after --warmup. The result is one JSON object (also in
+<work>/soak.json, the table and verdict in <work>/soak-report.txt); the exit code is 0 only when the verdict passes. Processes are stopped by
+PID; nothing is written outside --work.
 """
 from __future__ import annotations
 
@@ -53,12 +64,15 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
+sys.path.insert(0, str(ROOT / "tools" / "bench"))
 from javacmd import java_cmd  # noqa: E402
 import hostaddr  # noqa: E402
+import soak_check  # noqa: E402
 
 HOST = hostaddr.primary_ipv4()      # members advertise this machine's real address, never a loopback one (docs/admin/NET.md)
 
@@ -67,6 +81,9 @@ KEY = "net-soak-cluster-key-0123456789abcdef-xyz"
 TOKEN_SECRET = "net-soak-token-secret-0123456789abcdef-0123"
 SESSION_SECRET = "net-soak-session-secret-0123456789abcdef-0123"
 ADMIN, PASSWORD = "drishti-dev-admin", "drishti-dev-admin123"
+VIEWER = "soak-viewer"                  # a token with the viewer role: no raw, so drishti.security.redact fields read masked
+#: the history ranges the checked set and the load ask (HISTORY_QUERIES.md section 7.1); "knownAt" is filled with an instant
+HISTORY_ASKS = ({"days": "30"}, {"days": "60"}, {"range": "3M"}, {"days": "30", "diff": "true"}, {"days": "30", "knownAt": "now"})
 SYSTEMS = {"endur": lambda i: str(10_000_000 + i), "calypso": lambda i: f"CLY-{30_000_000 + i}", "murex": lambda i: f"MX-{50_000_000 + i}"}
 NODES = {  # name: (lake, packs, connectors switched off, port offset)
     "a": ("shared", "trading,counterparty-risk", ["trade-murex"], 0),
@@ -129,6 +146,10 @@ class Soak:
         self.port = {n: a.base_port + off for n, (_, _, _, off) in NODES.items()}
         self.procs: dict[str, subprocess.Popen] = {}
         self.down: dict[str, float] = {}                   # node -> when it went down (still down)
+        self.back: dict[str, float] = {}                   # node -> when it was restarted (peers may still name it for a while)
+        self.started: dict[str, float] = {}                # node -> when it last started, in seconds from the start of the load
+        self.errors: list[dict] = []                       # the checker's errors: {"t", "what", "verdict"}
+        self.samples: list[dict] = []                      # resources, a sample per process every --sample-every seconds
         self.events: list[dict] = []
         self.t0 = time.time()
         jars = sorted(ROOT.glob("drishti-server/target/drishti-server-*-exec.jar"), key=os.path.getmtime, reverse=True)
@@ -139,6 +160,10 @@ class Soak:
             raise SystemExit("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
         self.jar = str(jars[0])
         self.dates = a.dates.split(",")
+        if a.days:                                         # the N business days to the last --dates (trades.py's calendar)
+            import trades
+            self.dates = trades.business_days(self.dates[-1], a.days)
+        self.known_at = None                               # the instant "known at" history requests name: set once the lakes are built
 
     def url(self, name: str) -> str:
         return f"http://{HOST}:{self.port[name]}"
@@ -150,6 +175,9 @@ class Soak:
 
     # -- data -------------------------------------------------------------------------------------------------------------------
     def lakes(self) -> None:
+        mark = self.work / "lakes" / "dates.json"
+        if mark.exists() and json.loads(mark.read_text(encoding="utf-8")) != {"dates": self.dates, "trades": self.a.trades}:
+            raise SystemExit(f"{self.work / 'lakes'} holds other dates or sizes: give a new --work")
         for lake, systems in (("all", "endur,calypso,murex"), ("shared", "endur,calypso"), ("murex", "murex")):
             root = self.work / "lakes" / lake
             if (root / "trading").exists():
@@ -157,6 +185,8 @@ class Soak:
             subprocess.run([sys.executable, str(ROOT / "tools/bench/trades.py"), "--lake", str(root), "--tmp", str(self.work / "tmp" / lake),
                             "--days", str(len(self.dates)), "--end", self.dates[-1], "--min", str(self.a.trades), "--max", str(self.a.trades),
                             "--counterparties", str(self.a.counterparties), "--systems", systems], check=True, stdout=subprocess.DEVNULL)
+        mark.write_text(json.dumps({"dates": self.dates, "trades": self.a.trades}), encoding="utf-8")
+        self.known_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")     # after every load: "known at" sees all of it
 
     # -- processes --------------------------------------------------------------------------------------------------------------
     def start_server(self, name: str, lake: str, packs: str, off: list, port: int, seed: str | None, net: bool = True) -> None:
@@ -239,12 +269,30 @@ class Soak:
                 out.append({"what": "search", "cp": f"CP-{c:05d}", "date": date})
         for c in r.sample(range(self.a.counterparties), self.a.sample // 3):
             out.append({"what": "ctrd", "cp": f"CP-{c:05d}", "date": self.dates[-1]})
+        return out + self.history_requests(r)
+
+    def history_requests(self, r: random.Random) -> list[dict]:
+        """History of trades of every system (MUREX ones only c holds), counterparties and --equities, each range of HISTORY_ASKS in turn,
+        every other one asked as a viewer (masked fields); all to the last date."""
+        if self.a.history_share <= 0:
+            return []
+        ids = [("trade", ident(i)) for ident in SYSTEMS.values() for i in r.sample(range(self.a.trades), max(1, self.a.sample // 6))]
+        ids += [("counterparty", f"CP-{c:05d}") for c in r.sample(range(self.a.counterparties), max(1, self.a.sample // 12))]
+        ids += [("equity", e.strip()) for e in self.a.equities.split(",") if e.strip()]
+        out = []
+        for k, (kind, ident) in enumerate(ids):
+            params = {key: (self.known_at or "") if v == "now" else v for key, v in HISTORY_ASKS[k % len(HISTORY_ASKS)].items()}
+            out.append({"what": "history", "kind": kind, "id": ident, "params": params, "role": "viewer" if k % 2 else "admin",
+                        "date": self.dates[-1]})
         return out
 
     def ask(self, base: str, q: dict) -> tuple[int, dict | str]:
         """One request of the set, to a server's API as the administrator."""
-        h = {"Authorization": "Bearer " + token(), "X-Drishti-As-Of": q["date"]}
-        if q["what"] == "trade":
+        who = (VIEWER, ("viewer",)) if q.get("role") == "viewer" else (ADMIN, ("admin",))
+        h = {"Authorization": "Bearer " + token(*who), "X-Drishti-As-Of": q["date"]}
+        if q["what"] == "history":
+            path = f"/api/v1/history/{q['kind']}/~?" + urllib.parse.urlencode({"id": q["id"], **q["params"]})
+        elif q["what"] == "trade":
             path = f"/api/v1/views/trade/{urllib.parse.quote(q['id'])}"
         elif q["what"] == "search":
             path = "/api/v1/search?q=" + urllib.parse.quote(f"TRD where COUNTERPARTY = '{q['cp']}' limit 1000")
@@ -262,6 +310,8 @@ class Soak:
         that built it, nor the shape fingerprint, nor a source's generation counter, which counts its own rebuilds); a search's rows (id and values), as a set."""
         if not isinstance(body, dict):
             return None
+        if q["what"] == "history":
+            return soak_check.history_essence(body)
         if q["what"] == "search":
             return sorted(json.dumps([(r.get("ref") or {}).get("id"), r.get("values")], sort_keys=True, default=str) for r in body.get("rows") or [])
         return walk({k: body.get(k) for k in ("ref", "title", "strip", "panels")}, lambda d: d.get("label") in ("Node", "Fingerprint") and "text" in d,
@@ -289,8 +339,11 @@ class Soak:
 
     # -- checking ---------------------------------------------------------------------------------------------------------------
     def judge(self, q: dict, status: int, body) -> str:
-        """right | partial (named, a node down) | wrong."""
+        """right | partial (named, a node down) | wrong; a history answer also timeout (DRS-1014) or unavailable (soak_check)."""
         downs = [f"drishti-{n}" for n in self.down]
+        if q["what"] == "history":                         # a node just restarted may still be named by peers that saw it dead
+            downs += [f"drishti-{n}" for n, t in self.back.items() if time.time() - t < self.a.kill_grace]
+            return soak_check.judge_history(q["ref"], status, body, downs)
         text = json.dumps(body) if isinstance(body, dict) else str(body)
         if status == 200:
             got = self.essence(q, body)
@@ -326,6 +379,8 @@ class Soak:
                 verdict = "asked-a-node-going-down"
             key = f"{q['what']}:{verdict}"
             stats[key] = stats.get(key, 0) + 1
+            if verdict in soak_check.ERRORS:
+                self.errors.append({"t": round(time.time() - self.t0, 1), "what": f"checker {q['what']}", "verdict": verdict})
             if verdict == "wrong" and sum(1 for w in wrong if w["q"]["what"] == q["what"]) < 5:
                 wrong.append({"t": round(time.time() - self.t0, 1), "node": n, "q": {k: q[k] for k in q if k not in ("ref",)},
                               "status": status, "got": self.essence(q, body), "ref": q["ref"], "body": (json.dumps(body) if isinstance(body, dict) else str(body))[:600]})
@@ -358,6 +413,46 @@ class Soak:
         signed_out = "/login" in urllib.parse.urlparse(where).path
         return status == 200 and must in body and not signed_out, status, ("signed out" if signed_out else body[-300:])
 
+    # -- resources ----------------------------------------------------------------------------------------------------------------
+    @staticmethod
+    def proc_status(pid: int) -> dict:
+        """A process's resident memory (MB), threads and open files, from /proc (Linux); empty where /proc is not there."""
+        out = {}
+        try:
+            for line in Path(f"/proc/{pid}/status").read_text().splitlines():
+                if line.startswith("VmRSS:"):
+                    out["rssMb"] = round(int(line.split()[1]) / 1024, 1)
+                elif line.startswith("Threads:"):
+                    out["threads"] = int(line.split()[1])
+            out["openFiles"] = len(os.listdir(f"/proc/{pid}/fd"))
+        except (OSError, ValueError, IndexError):
+            pass
+        return out
+
+    def jvm(self, name: str) -> dict:
+        """A server's heap used and live data after the last collection (MB) and live threads, from its metrics endpoint."""
+        out = {}
+        for key, metric in (("heapMb", "jvm.memory.used?tag=area:heap"), ("liveMb", "jvm.gc.live.data.size"), ("jvmThreads", "jvm.threads.live")):
+            status, body = fetch(f"{self.url(name)}/actuator/metrics/{metric}", {"Authorization": "Bearer " + token()}, timeout=5)
+            try:
+                value = json.loads(body)["measurements"][0]["value"] if status == 200 else None
+            except (ValueError, KeyError, IndexError, TypeError):
+                value = None
+            if value is not None:
+                out[key] = round(value / 1_048_576, 1) if key != "jvmThreads" else int(value)
+        return out
+
+    def sampler(self, stop_at: float) -> None:
+        """Every --sample-every seconds, each running process's resources into self.samples."""
+        while time.time() < stop_at:
+            t = round(time.time() - self.t0, 1)
+            for name, p in list(self.procs.items()):
+                s = {"t": t, "node": name, **self.proc_status(p.pid)}
+                if name in NODES:
+                    s.update(self.jvm(name))
+                self.samples.append(s)
+            time.sleep(max(0.1, min(self.a.sample_every, stop_at - time.time())))
+
     # -- the run ----------------------------------------------------------------------------------------------------------------
     def run(self) -> dict:
         out: dict = {"trades": {"perSystemPerDay": self.a.trades, "dates": self.dates, "distinct": 3 * self.a.trades}}
@@ -381,13 +476,18 @@ class Soak:
         self.note("console learnt the cluster", seconds=out["consoleLearntAllIn"], servers=urls)
         load = subprocess.Popen([self.python(), str(ROOT / "tools/bench/users.py"), "--console", self.console(), "--user", ADMIN, "--password", PASSWORD,
                                  "--users", str(self.a.users), "--seconds", str(self.a.seconds), "--ids", str(self.a.trades),
-                                 "--counterparties", str(self.a.counterparties), "--dates", ",".join(self.dates)], stdout=subprocess.PIPE, text=True)
+                                 "--counterparties", str(self.a.counterparties), "--dates", ",".join(self.dates),
+                                 "--history-share", str(self.a.history_share), "--equities", self.a.equities, "--fail-bucket", "10"],
+                                stdout=subprocess.PIPE, text=True)
         self.t0 = time.time()
         stop_at = self.t0 + self.a.seconds
         stats: dict = {}
         wrong: list = []
+        restarted: dict[str, float] = {}                    # node -> seconds from the start when its restart had converged
         check = threading.Thread(target=self.checker, args=(stop_at, stats, wrong), daemon=True)
         check.start()
+        sample = threading.Thread(target=self.sampler, args=(stop_at,), daemon=True)
+        sample.start()
         console_checks = {"ok": 0, "failed": 0, "signedOut": 0}
         plan = sorted([(self.a.kill_shard_at, "kill", "c"), (self.a.restart_shard_at, "restart", "c"),
                        (self.a.kill_seed_at, "kill", "a"), (self.a.restart_seed_at, "restart", "a")])
@@ -406,8 +506,11 @@ class Soak:
                         out["a-peers.json"] = json.loads(peers.read_text()) if peers.exists() else None
                     self.node(n)
                     self.down.pop(n, None)
+                    self.back[n] = time.time()
+                    self.started[n] = round(time.time() - self.t0, 1)
                     started = round(time.time() - t, 1)
                     self.converge(len(NODES), 90)
+                    restarted[n] = round(time.time() - self.t0, 1)
                     out[f"restart-{n}"] = {"started": started, "rejoinedAllAlive": round(time.time() - t, 1)}
                     self.note(f"restarted {n}", **out[f"restart-{n}"])
             q = r.choice([("/v/trade/CLY-30000001", "CLY-30000001"), ("/v/trade/10000002", "10000002"), ("/v/trade/MX-50000003", "MX-50000003")])
@@ -416,10 +519,13 @@ class Soak:
                 console_checks["ok"] += 1
             elif why == "signed out":
                 console_checks["signedOut"] += 1
+                self.errors.append({"t": round(time.time() - self.t0, 1), "what": "console page", "verdict": "signed out"})
             elif not (q[1].startswith("MX") and "c" in self.down):
                 console_checks["failed"] += 1
+                self.errors.append({"t": round(time.time() - self.t0, 1), "what": "console page", "verdict": f"failed {status}"})
             time.sleep(1.0)
         check.join(30)
+        sample.join(30)
         users_out, _ = load.communicate(timeout=120)
         try:
             out["users"] = json.loads(users_out.strip().splitlines()[-1])
@@ -432,7 +538,24 @@ class Soak:
         out["console"] = console_checks
         out["consoleFailovers"] = self.console_members(opener).get("failovers", [])
         out["events"] = self.events
+        out["resources"] = self.samples
+        out.update(self.verdict(stats, out["users"], restarted))
         return out
+
+    def verdict(self, stats: dict, users, restarted: dict) -> dict:
+        """The kill windows, the memory trend, the latency and error table and the verdict (soak_check)."""
+        plan = [(self.a.kill_shard_at, "kill", "c"), (self.a.kill_seed_at, "kill", "a")]
+        windows = soak_check.kill_windows(plan, restarted, self.a.seconds, self.a.kill_grace)
+        users = users if isinstance(users, dict) else {}
+        errors = list(self.errors)
+        for label, buckets in (users.get("failedBuckets") or {}).items():   # the load's failures, per bucket of seconds (epoch)
+            for b, n in buckets.items():
+                errors.append({"t": round(float(b) - self.t0, 1), "width": float(users.get("bucket", 10)), "what": f"load {label}", "n": n})
+        starts = {n: self.started.get(n, 0.0) for n in [*NODES, "console"]}
+        memory = soak_check.memory_trend(self.samples, starts, self.a.warmup, self.a.max_growth)
+        wrong = sum(v for k, v in stats.items() if k.endswith(":wrong"))
+        return {"killWindows": windows, "memory": memory, "table": soak_check.table(users, stats),
+                "verdict": soak_check.verdict(wrong, errors, windows, users, memory, self.a.max_p99)}
 
     def after_kill(self, n: str, opener) -> dict:
         """The console's next good page after n was killed (a: the console's own server), and how long the others take to see n dead."""
@@ -488,6 +611,14 @@ def main(argv=None) -> int:
     ap.add_argument("--heap", default="1536m")
     ap.add_argument("--base-port", type=int, default=18783)
     ap.add_argument("--console-port", type=int, default=17783)
+    ap.add_argument("--days", type=int, default=0, help="N business days ending at the last --dates, in place of --dates (more rows of history)")
+    ap.add_argument("--history-share", type=float, default=0.15, help="the share of the load's requests that ask a history (0: none, and none checked)")
+    ap.add_argument("--equities", default="", help="equity ids whose history is asked and checked too, when the lakes hold equities (comma separated)")
+    ap.add_argument("--kill-grace", type=float, default=30, help="seconds after a restarted node has rejoined that still count as its kill window")
+    ap.add_argument("--sample-every", type=float, default=60, help="seconds between samples of each process's memory, open files and threads")
+    ap.add_argument("--warmup", type=float, default=600, help="seconds after a process starts before its memory counts towards the trend")
+    ap.add_argument("--max-growth", type=float, default=64, help="MB an hour a process's memory may grow after warm-up (the slope of its samples)")
+    ap.add_argument("--max-p99", type=float, default=0, help="seconds: fail when an action's p99 is above it (0: report only)")
     a = ap.parse_args(argv)
     soak = Soak(a)
     soak.work.mkdir(parents=True, exist_ok=True)
@@ -496,8 +627,11 @@ def main(argv=None) -> int:
     finally:
         soak.close()
     (soak.work / "soak.json").write_text(json.dumps(out, indent=1, default=str), encoding="utf-8")
-    print(json.dumps(out, default=str))
-    return 0 if out.get("wrongAnswers") == 0 else 1
+    report = out.get("table", "") + "\n\nverdict: " + json.dumps(out.get("verdict"), indent=1, default=str) + "\n"
+    (soak.work / "soak-report.txt").write_text(report, encoding="utf-8")
+    print(json.dumps({k: v for k, v in out.items() if k != "resources"}, default=str))
+    print(report)
+    return 0 if out.get("wrongAnswers") == 0 and (out.get("verdict") or {}).get("pass") else 1
 
 
 if __name__ == "__main__":

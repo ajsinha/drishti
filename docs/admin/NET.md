@@ -630,3 +630,7 @@ Found and fixed by this soak (CHANGELOG 2.5.0): a trade held by a node that had 
 page with a node down was marked partial in its document only; the console moved off a healthy server that answered 502 about another node; and
 console sign-in sessions were known only to the node that opened them, so a failover sent people to sign in again. The live view through a
 failover is checked by the browser suite (`test_admin_net_stack_browser.py`: the console moved in 0.8 s and the open page kept ticking).
+
+Since 2.6.5 the soak also asks and checks history queries, samples each process's memory every minute and ends with a verdict, so it can
+run for hours: how to run a two-hour soak, and what its report holds, is in
+[DRISHTI_NET.md section 17.1](../architecture/DRISHTI_NET.md#171-the-soak-with-history-queries-and-long-runs-265).

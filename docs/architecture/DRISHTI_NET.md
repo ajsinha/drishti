@@ -414,7 +414,50 @@ All of N1–N7 are planned for 2.5.0, in this order; N1–N5 come first and are 
 - **Console fail-over:** the member list pulled, kept, saved and reloaded after a console restart with its configured server
   down; a stand-in server that stops, hangs or answers 503; reads retried once, writes never; the
   stream reconnects; a recovered server is used again only for new sessions.
-- **A soak on real processes:** three servers on scratch ports, one killed and restarted under `tools/bench/users.py` load.
+- **A soak on real processes:** three servers on scratch ports, one killed and restarted under `tools/bench/users.py` load
+  (`tools/bench/net_soak.py`; results in [NET.md section 13](../admin/NET.md)).
+
+### 17.1 The soak with history queries and long runs (2.6.5)
+
+The soak also exercises history queries ([HISTORY_QUERIES.md](HISTORY_QUERIES.md), section 12 for Drishti\*net):
+
+- **The load.** `--history-share` (0.15 by default in the soak) of the users' requests ask a history through the console's
+  `/v/{kind}/{id}/history` page, which asks the server's `GET /api/v1/history/{kind}/{id}`: a trade of any system four times in five
+  (MUREX trades are held only by **c**, so from **a** and **b** they are peer-only), else a counterparty, or an equity named with
+  `--equities` (the soak's lakes hold none unless a lake given to it does); with `days=30`, `days=60`, `range=3M`, `diff=true` or, one
+  request in ten, `knownAt` of the moment it is asked. `history` is its own line of the latency and error table.
+- **The check.** The checked set adds history requests of trades of every system, counterparties and `--equities`, cycling through the
+  same ranges (the `knownAt` one names an instant taken after the lakes were built), every other one asked as a **viewer** (no `raw`, so
+  `drishti.security.redact` fields such as `TRADER_ID` are masked). Each is asked of the reference server holding all the data first,
+  then of a random running node all along, and compared by `tools/bench/soak_check.py`: the masked columns, the window's ends and baseline,
+  and every row (date, data date, carried, deleted, values, part counts, the `changed` flags and, with `diff=true`, the changes). Timings,
+  cache state, generations and sources are the node's own and not compared. Any difference is a **wrong answer** and fails the soak; so
+  does a masked field whose values differ between rows or that is named as changed.
+- **While a node is down** (the shard kill and the seed kill) a history answer is complete, or a partial one whose `problems` are only
+  `DRS-5052` naming the node that is down (or `DRS-1014`, a peer that did not answer in time) and whose rows are rows of the reference, or
+  a refusal `502 DRS-5052` naming it, or `504 DRS-1014`. A short answer not marked partial, a partial one with another code or naming a
+  node that is up, one marked partial with nothing missing, and `DRS-1013` (*no data*) at any time are wrong. A node restarted less than
+  `--kill-grace` seconds ago still counts as down, since its peers may not have seen it come back.
+- **Long runs.** Every `--sample-every` seconds (60) the report gets each process's resident memory, open files and threads (from
+  `/proc`), and for each server its heap used, its live data after the last collection and its live threads (`/actuator/metrics`).
+  The report (`<work>/soak.json`; the table and verdict also in `<work>/soak-report.txt`) ends with a **verdict**, which passes only when:
+  no wrong answers; errors (partial, time-out, unavailable answers of the checker, failed pages, the load's failures per 10 s) only inside
+  the **kill windows** (from a kill until the node has rejoined, plus `--kill-grace`); p95 and p99 per action (failing only past
+  `--max-p99` when it is given); and memory not growing after warm-up: the least-squares slope of each process's samples taken
+  `--warmup` seconds after it last started (live data after collection when the server reports it, else heap used, else resident memory)
+  below `--max-growth` MB an hour. The exit code is 0 only when the verdict passes.
+
+A two-hour run, the shard killed at 20 minutes and the seed at 60 (each back five minutes later), with ten business days of data so a
+history has rows to compare:
+
+```bash
+python3 tools/bench/net_soak.py --work ~/drishti-scale-test/net-2h --users 20 --seconds 7200 --days 10 \
+    --kill-shard-at 1200 --restart-shard-at 1500 --kill-seed-at 3600 --restart-seed-at 3900 \
+    --history-share 0.15 --sample-every 60 --warmup 600 --max-growth 64
+```
+
+Give a new `--work` when `--dates`, `--days` or `--trades` change: the lakes are built once per folder and the soak refuses a folder
+holding other dates. The checker's logic is tested without servers by `tools/bench/test_net_soak.py`.
 
 ## 17A. Documentation (part of every phase, not after it)
 
