@@ -122,7 +122,7 @@ drishti-diskcache                 (nothing internal)
 drishti-messaging                 (api, diskcache)
 drishti-deltalake                 (nothing internal)
 plugins/*                         (api; kafka adds diskcache; activemq and rabbitmq add messaging; delta adds deltalake)
-drishti-server                    (engine, identity, packs, ai, and all seventeen plugins)
+drishti-server                    (engine, identity, packs, ai, and all eighteen plugins)
 drishti-it                        (server, testkit)
 drishti-benchmarks                (inference)
 ```

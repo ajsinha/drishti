@@ -2088,32 +2088,42 @@ config/net at ~/drishti/config/net: Drishti*net is off (a single server, as with
   access.yaml   absent (defaults)
 
 $ drishti.py net set node.enabled true
-  error   node.yaml  secret: enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least 32 bytes)
-  error   node.yaml  advertise-url: enabled: true needs advertise-url: the address peers and consoles call this node at
 drishti: node.yaml was not written: enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least 32 bytes)
+  error   node.yaml  secret: enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least 32 bytes)
 (exit 1)
 
 $ drishti.py net set node.secret '${DRISHTI_NET_SECRET}'
 wrote ~/drishti/config/net/node.yaml
 $ drishti.py net set node.advertise-url http://127.0.0.1:18784
+drishti: node.yaml was not written: 'http://127.0.0.1:18784' is a loopback or wildcard address: the address this node advertises must be an address other machines can call (this machine's address is 192.168.1.20: use http://192.168.1.20:18784); or leave advertise-url out and the node advertises that address with its port
+  error   node.yaml:3  advertise-url: 'http://127.0.0.1:18784' is a loopback or wildcard address: [the same message]
+(exit 1)
+$ drishti.py net set node.advertise-url http://192.168.1.20:18784
 wrote ~/drishti/config/net/node.yaml
+$ drishti.py net set node.tags region:emea,tier:risk
+wrote ~/drishti/config/net/node.yaml
+$ export DRISHTI_NET_SECRET=...            # at least 32 bytes, from your secret store
 $ drishti.py net set node.enabled true
 wrote ~/drishti/config/net/node.yaml
-$ drishti.py net add-peer drishti-a 127.0.0.1:18783 --tags region:emea
+$ drishti.py net add-peer drishti-a 192.168.1.20:18783 --tags region:emea
 wrote ~/drishti/config/net/peers/drishti-a.yaml
 
 $ drishti.py net check
 3 file(s) checked in ~/drishti/config/net: 1 error(s); those files would be refused
-  error   gossip.yaml:2  fanout: 'lots' is not a whole number
+  error   gossip.yaml:1  fanout: 'lots' is not a whole number
 (exit 1)
 ```
+
+Members advertise only a real address (2.6.0, [NET.md section 2](../admin/NET.md#2-a-cluster-of-three)): `localhost`, `127.x.x.x`, `::1`,
+`0.0.0.0` and `::` are refused in `advertise-url` and in a seed's URL, and the message names this machine's address. `advertise-url` may be
+left out: the node then advertises this machine's primary IPv4 address with the server's port (Admin → Net → Members shows it as *detected*).
 
 The file `net set` wrote:
 
 ```yaml
 # config/net/node.yaml (Drishti*net, docs/admin/NET.md)
 secret: ${DRISHTI_NET_SECRET}
-advertise-url: http://127.0.0.1:18784
+advertise-url: http://192.168.1.20:18784
 tags:
 - region:emea
 - tier:risk

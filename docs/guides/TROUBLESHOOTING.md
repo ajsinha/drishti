@@ -1285,8 +1285,26 @@ Several servers as one ([NET.md](../admin/NET.md)). Each node's log names what t
 start: `net: node n-... joined Drishti*net at <address> (incarnation 1, seeds [...], 0 saved members)` lists the seeds it tries. From the node's
 machine, `curl -s <seed>/api/v1/net/ping` must answer `401 DRS-5051` (the seed is there and wants a cluster credential), not a connection error.
 
-**Fix.** `enabled: true` needs `secret: ${DRISHTI_NET_SECRET}` with the variable set in the server's environment and `advertise-url`; the seed's
+**Fix.** `enabled: true` needs `secret: ${DRISHTI_NET_SECRET}` with the variable set in the server's environment; the node advertises
+`advertise-url`, or without it this machine's primary IPv4 address with the server's port (Admin → Net → Members: *detected*). The seed's
 address and port must be reachable (firewall); the seed must itself be enabled. One seed is enough; a node with none and no `peers.json` stays alone.
+
+### `... is a loopback or wildcard address: the address this node advertises must be an address other machines can call`
+
+Since 2.6.0 members advertise only a real address: `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` and `::` are refused in `advertise-url`
+(node.yaml) and in a seed's `url` (`peers/*.yaml`), by `drishti.py net check|set|add-peer`, Admin → Net → Files and the server when it loads the
+folder (the file is then shown **refused**). Even three nodes on one machine use the machine's address. **Fix:** the address the message names
+(`this machine's address is 192.168.1.20: use http://192.168.1.20:18784`), or leave `advertise-url` out. A machine with no address but loopback
+cannot be a member. A member that advertises such an address (an older node) is never kept nor passed on by the others: it is missing from
+every member table but its own. The console's own `backend.urls` may still name `127.0.0.1` ([NET.md section 2](../admin/NET.md#2-a-cluster-of-three)).
+
+### Admin → Health says *Last administrator kept*
+
+Two administrators on two nodes disabled, demoted or deleted the last two enabled administrators at about the same moment. Each node checked
+the last-administrator rule (`DRS-6006`) for its own change only; the node applying the other's change repaired it: it enabled again the
+administrator enabled most recently (or kept the one taken away), sent that to every node and audited it as `last-admin-kept`. **Check:** the
+audit log (Admin → Audit, action `last-admin-kept`: who was kept and why). **Fix:** nothing is broken; if the kept administrator should not be
+one, make another administrator first, then disable that one ([NET.md section 7](../admin/NET.md#7-routing-where-a-request-goes)).
 
 ### The log says `refused a call from ... bad signature` (or a node is listed as refused on Admin → Net)
 
