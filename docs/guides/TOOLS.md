@@ -955,7 +955,11 @@ ExecStart=/opt/drishti/drishti-console/.venv/bin/python tools/drishti.py lake ma
 | `tools/packgen/trades/make_trades.py` | **The trading pack's trades of three source systems** in the common schema (upper-snake, `LEGS` → `CASH_FLOWS` → `RESETS`, `EVENTS`): `--trades N` per system (ENDUR, CALYPSO, MUREX), `--days D` business days with about 6% amended each day, one `<out>/<system>/trades-<date>.jsonl.gz` a day; with `--lake <root>` each goes through `lake build --connector trade-<system>` into that system's table (`trade_endur`, `trade_calypso`, `trade_murex`). Deterministic; 10,000 trades or fewer on a laptop. `drishti-console/.venv/bin/python tools/packgen/trades/make_trades.py --trades 50 --days 2 --out data/build/trades` prints `ENDUR: 50 trades x 2 days -> data/build/trades/endur` and the same for CALYPSO and MUREX. |
 | `tools/samplegen/bulk_trades.py` | a large trade book for scale tests, N trades over D business days, as a Delta lake (`load-delta.sh --trades`) |
 
-The examples on this page read the committed test data (`data/testdata`, written by `tools/testdata/make_testdata.py`). For a book
+The examples on this page read the committed test data (`data/testdata`, written by `tools/testdata/make_testdata.py`). It writes the
+same bytes on every Python version and machine: amounts that are sums (a netting set's `NET_MTM`, a counterparty's) are added with
+`math.fsum` to the cent, never the built-in `sum()`, whose float result differs at the last bit between Python 3.13 and 3.14
+(`tools/testdata/test_deterministic.py`; give `DRISHTI_OTHER_PYTHON=<another python>` to compare two versions), so
+`make_testdata.py --check` passes wherever it runs. For a book
 of another size, or a JSON array as a booking system exports it, the generators write one:
 
 ```

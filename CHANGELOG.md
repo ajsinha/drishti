@@ -17,6 +17,13 @@
 
 ## Unreleased
 
+- **Fixed (QA-OPEN-01): `tools/testdata/make_testdata.py` writes the same bytes on every Python.** 16 counterparty and netting-set
+  change files differed in the sixth decimal of walked values between environments (`NET_MTM` 484329001.595759 vs .595758): a netting
+  set's `NET_MTM` is the sum of its trades' MTM, and the built-in `sum()` of floats gives a different last bit on Python 3.13 and 3.14
+  (597445765.99 vs 597445765.9899999), which the walk of earlier days carries into the sixth decimal. The banking generator's sums
+  (`data_results.py`: `amount()`, whole numbers exactly, others by `math.fsum` to the cent; every other float sum by `math.fsum`) and the
+  walk's drift (`samplegen/lake.py`) no longer use it; the pack samples are unchanged, data/testdata regenerated (63 files).
+  `make_testdata.py --check` passes on 3.14 and 3.13. `tools/testdata/test_deterministic.py`; TOOLS, DEMO_DATA, DEVELOPER_GUIDE.
 - **Fixed: a theme (or any personal setting) changed on one page could come back as the old one on the next page** when the console runs several worker processes (four on Windows by default): each worker kept the user's settings for 30 s, and a change cleared only the cache of the worker that saved it. A change now stamps the browser (`drishti_settings_at` cookie), and a worker re-reads the settings when its copy is older than the stamp; with four workers, 5 of 24 pages came back in the old theme before the fix and 0 after. `test_settings_workers.py`. Found on the product owner's Windows machine (Green → netting set → SIMM came up Blue).
 - **Fixed (QA2-205): the docs say `lake demo` builds 66 tables**, as its summary prints (one per dataset of
   data/testdata/testdata.yaml: 49 generated, 15 from the world-economy and news-and-markets samples, the captured quotes and headlines),

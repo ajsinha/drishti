@@ -59,7 +59,7 @@ table, partitions, documents on day 1, changes a day, size), are in [data/testda
 Re-running `lake demo` rebuilds every table it writes (the folder is removed first) and is safe while a server runs: the server gets
 the data-load signal for each table and date, or, when none is reachable, finds `data/bi-store/lake-rebuilt.json` at its next start
 and clears its stored BI columns and rollups; a running server also sees each rebuilt Delta date by itself. The test data itself is
-regenerated with `python3 tools/testdata/make_testdata.py` (deterministic; `tools/testdata/test_testdata.py` guards it).
+regenerated with `python3 tools/testdata/make_testdata.py` (deterministic, the same bytes on every Python version: `tools/testdata/test_testdata.py` and `test_deterministic.py` guard it).
 
 ## The sizes
 

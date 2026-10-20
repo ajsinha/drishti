@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import math
 import sys
+from math import fsum
 from collections import defaultdict
 from datetime import date, timedelta
 from pathlib import Path
@@ -41,6 +42,13 @@ SACCR_CLASS = {"Rates": "Interest rate", "Inflation": "Interest rate", "Money ma
 
 # ISO 3166 alpha-2 -> alpha-3, for the counterparties' countries of risk (the world-economy pack's ids are ECON-<alpha-3>)
 ISO3 = {"BM": "BMU", "BR": "BRA", "CA": "CAN", "CH": "CHE", "DE": "DEU", "GB": "GBR", "GR": "GRC", "JP": "JPN", "KY": "CYM", "NO": "NOR", "US": "USA"}
+
+def amount(values) -> int | float:
+    """A sum of amounts that is the same on every Python: whole numbers add exactly; other numbers by math.fsum (correctly rounded,
+    whatever the version: the built-in sum() of floats gives a different last bit on 3.13 and 3.14), to the cent (QA-OPEN-01)."""
+    xs = list(values)
+    return sum(xs) if all(isinstance(x, int) for x in xs) else round(fsum(xs), 2)
+
 
 def years(d: str) -> float:
     return max((date.fromisoformat(d) - N.AS_OF).days / 365, 0.0)
@@ -78,12 +86,12 @@ def netting_sets(trades: dict) -> dict[str, list[dict]]:
 
 
 def profile(members: list[dict], collateral: float) -> list[dict]:
-    net = sum(t["mtm"] for t in members)
+    net = amount(t["mtm"] for t in members)
     out = []
     for tn in TENORS:
         y = 0 if tn == "0" else tenor_years(tn)
         alive = [t for t in members if years(t["maturityDate"]) > y]
-        vol = sum(abs(t["notional"]) * SF[t["assetClass"]] * 0.35 for t in alive)
+        vol = fsum(abs(t["notional"]) * SF[t["assetClass"]] * 0.35 for t in alive)
         ee = max(net - collateral, 0) * math.exp(-y / 4) + vol * math.sqrt(max(y, 1 / 52)) * 0.4
         ene = -max(collateral - net, 0) * math.exp(-y / 4) - vol * math.sqrt(max(y, 1 / 52)) * 0.3
         out.append({"tenor": tn, "ee": round(ee), "ene": round(ene), "pfe95": round(ee * 2.2 + vol * 0.05), "pfe99": round(ee * 2.9 + vol * 0.07)})
@@ -95,14 +103,14 @@ def credit_results(trades: dict, docs: dict) -> None:
         cp = ns.split("-", 1)[1].rsplit("-", 1)[0]
         name, typ, sector, country, rating, _ = N.COUNTERPARTIES[cp]
         r = M.rng(ns)
-        net = sum(t["mtm"] for t in members)
+        net = amount(t["mtm"] for t in members)
         coll = round(net * r.uniform(0.6, 0.95)) if net > 0 else round(net * r.uniform(0.5, 0.9))
         prof = profile(members, coll)
         ee_peak, pfe_peak = max(p["ee"] for p in prof), max(p["pfe95"] for p in prof)
         limit = max(5e6, round(pfe_peak * r.uniform(1.2, 2.2), -6))
         pd = rating_pd(rating)
         # CVA = -LGD x sum over periods of EE x PD x period length (flat hazard from the one-year PD)
-        cva = -round(0.6 * sum(p["ee"] * pd * (tenor_years(p["tenor"]) - (0 if q["tenor"] == "0" else tenor_years(q["tenor"])))
+        cva = -round(0.6 * fsum(p["ee"] * pd * (tenor_years(p["tenor"]) - (0 if q["tenor"] == "0" else tenor_years(q["tenor"])))
                                for q, p in zip(prof[:-1], prof[1:])))
         by_asset = defaultdict(float)
         for t in members:
@@ -139,7 +147,7 @@ def credit_results(trades: dict, docs: dict) -> None:
         for (ac, h), e in hs.items():
             add[ac] += abs(e) * SF_BY_CLASS[ac]
         rc = max(net - coll, 0)
-        addon = sum(add.values())
+        addon = fsum(add.values())
         mult = round(min(1.0, 0.05 + 0.95 * math.exp((net - coll) / (2 * 0.95 * max(addon, 1)))), 4)
         ead = round(1.4 * (rc + mult * addon))
         docs["sa-ccr"][f"SACCR-{tag}"] = {
@@ -184,7 +192,7 @@ def credit_results(trades: dict, docs: dict) -> None:
             "utilisation": round(used / limit, 4), "status": "Within limit" if used < 0.8 * limit else "Early warning" if used < limit else "Breach",
             "buckets": buckets, "counterparty": f"CP-{cp}", "approvedBy": "Credit Risk Committee", "reviewDue": iso(N.AS_OF + timedelta(days=170)),
             "_meta": {"source": "limits-system", "generation": 1}}
-        im = round(sum(abs(t["mtm"]) for s in sets for t in s["trades"]) * 0.08 + 1e6)
+        im = round(fsum(abs(t["mtm"]) for s in sets for t in s["trades"]) * 0.08 + 1e6)
         classes = [("Interest rate", 0.45), ("Credit qualifying", 0.12), ("Equity", 0.18), ("Commodity", 0.08), ("FX", 0.17)]
         docs["simm"][f"SIMM-{cp}"] = {
             "calcId": f"SIMM-{cp}", "total": im, "posted": round(im * 0.97), "received": round(im * 1.02), "version": "ISDA SIMM 2.7",
@@ -207,7 +215,7 @@ SCENARIOS = {"SCN-GFC2008": ("Global financial crisis 2008", "Historical", "Seve
 
 
 def book_var(members: list[dict]) -> float:
-    return 2.33 * math.sqrt(sum((abs(t["mtm"]) * 0.004 + sum(abs(v) for v in t["risk"].values()) * 0.6) ** 2 for t in members))
+    return 2.33 * math.sqrt(fsum((abs(t["mtm"]) * 0.004 + fsum(abs(v) for v in t["risk"].values()) * 0.6) ** 2 for t in members))
 
 
 def market_results(trades: dict, docs: dict) -> None:
@@ -221,7 +229,7 @@ def market_results(trades: dict, docs: dict) -> None:
     for desk, bl in desk_books.items():
         r = M.rng("var" + desk)
         contrib = {b: book_var(books[b]) for b in sorted(bl)}
-        var99 = round(math.sqrt(sum(v * v for v in contrib.values())) * 0.85)
+        var99 = round(math.sqrt(fsum(v * v for v in contrib.values())) * 0.85)
         limit = round(var99 * r.uniform(1.25, 1.8), -4)
         pnl = [{"date": iso(d), "pnl": round(r.gauss(0, var99 / 2.33))} for d in days]
         exceptions = sum(1 for p in pnl if p["pnl"] < -var99)
@@ -249,7 +257,7 @@ def market_results(trades: dict, docs: dict) -> None:
                                   for c in classes for bk in ("1", "2", "3") for m in ("Delta", "Vega")],
                 "byClass": [{"riskClass": c, "charge": round((delta + vega + curv) / len(classes))} for c in classes],
                 "approach": "FRTB standardised (SBM)", "_meta": {"source": "frtb-engine", "generation": 1}}
-            actual = round(sum(t["pnl1d"] for t in ts))
+            actual = round(fsum(t["pnl1d"] for t in ts))
             explained = round(actual * rb.uniform(0.85, 1.05))
             docs["pnl-explain"][f"PNL-{b[5:]}"] = {
                 "resultId": f"PNL-{b[5:]}", "date": iso(N.AS_OF), "actual": actual, "explained": explained, "unexplained": actual - explained,
@@ -299,13 +307,13 @@ def reference(trades: dict, docs: dict) -> None:
         desks = [d for d, v in N.DESKS.items() if v[1] == le]
         docs["legal-entity"][le] = {"entityId": le, "name": name, "lei": ids.lei(name), "jurisdiction": country, "regulator": reg,
                                     "desks": [{"id": d, "name": N.DESKS[d][0]} for d in desks],
-                                    "books": [{"book": b, "desk": N.DESKS[d][0], "var": round(book_var(books[b]) * 0.85), "pnl": round(sum(t["pnl1d"] for t in books[b])),
-                                               "mtm": round(sum(t["mtm"] for t in books[b])), "trades": len(books[b])} for d in desks for b in TR.books_of(d) if books[b]],
+                                    "books": [{"book": b, "desk": N.DESKS[d][0], "var": round(book_var(books[b]) * 0.85), "pnl": round(fsum(t["pnl1d"] for t in books[b])),
+                                               "mtm": round(fsum(t["mtm"] for t in books[b])), "trades": len(books[b])} for d in desks for b in TR.books_of(d) if books[b]],
                                     "_meta": {"source": "entity-master", "generation": 1}}
     for desk, (name, le, classes, head) in N.DESKS.items():
         bl = TR.books_of(desk)
-        mtm = sum(t["mtm"] for b in bl for t in books[b])
-        docs["desk"][desk] = {"deskId": desk, "name": name, "head": head, "books": [{"id": b, "trades": len(books[b]), "mtm": round(sum(t["mtm"] for t in books[b]))} for b in bl],
+        mtm = fsum(t["mtm"] for b in bl for t in books[b])
+        docs["desk"][desk] = {"deskId": desk, "name": name, "head": head, "books": [{"id": b, "trades": len(books[b]), "mtm": round(fsum(t["mtm"] for t in books[b]))} for b in bl],
                               "var99": docs["var"].get(f"VAR-{desk[5:]}", {}).get("var99"), "mtm": round(mtm), "legalEntity": le,
                               "varResult": f"VAR-{desk[5:]}", "assetClasses": classes,
                               "positions": [{"tradeId": t["tradeId"], "book": b, "currency": t["currency"], "family": t["family"], "mtm": t["mtm"]}
@@ -314,7 +322,7 @@ def reference(trades: dict, docs: dict) -> None:
         for b in bl:
             ts = books[b]
             docs["book"][b] = {"bookId": b, "name": f"{name} · book {b[-1]}", "deskName": name, "tradeCount": len(ts),
-                               "mtm": round(sum(t["mtm"] for t in ts)), "dv01": round(sum(t["risk"].get("dv01", 0) for t in ts)),
+                               "mtm": round(fsum(t["mtm"] for t in ts)), "dv01": round(fsum(t["risk"].get("dv01", 0) for t in ts)),
                                "topTrades": [trade_row(t) for t in sorted(ts, key=lambda t: -abs(t["mtm"]))[:10]], "desk": desk,
                                "accountingTreatment": "Fair value (FVTPL)", "regulatoryBook": "Trading book", "volcker": "Market making",
                                "_meta": {"source": "org-master", "generation": 1, "live": True, "walk": {"mtm": 5000}}}
@@ -329,7 +337,7 @@ def reference(trades: dict, docs: dict) -> None:
         out = {"counterpartyId": f"CP-{cp}", "name": name, "lei": ids.lei(name), "rating": rating, "sector": sector, "country": country, "type": typ,
                "COUNTRY_OF_RISK": country, "UEN": f"UEN{100000 + n * 37:07d}", "economy": f"ECON-{ISO3[country]}",
                "newsId": "NEWS-" + name.replace(" ", "_"),           # its headlines, when the news-and-markets pack's connector is on
-               "netMtm": sum(s["netMtm"] for s in sets), "pfePeak": max([s["pfePeak"] for s in sets] or [0]),
+               "netMtm": amount(s["netMtm"] for s in sets), "pfePeak": max([s["pfePeak"] for s in sets] or [0]),
                "nettingSets": [{"id": s["nettingSetId"], "agreement": s["agreement"], "trades": s["tradeCount"], "netMtm": s["netMtm"]} for s in sets],
                "kyc": {"status": "Approved", "riskRating": "Standard" if rating[0] == "A" else "Enhanced", "lastReview": "2026-02-11",
                        "emirClassification": "FC" if typ in ("Bank", "Hedge fund", "Insurer", "Asset manager", "Pension fund") else "NFC-",
@@ -379,7 +387,7 @@ def reference(trades: dict, docs: dict) -> None:
         docs["ccp"][ccp] = {"ccpId": ccp, "name": name, "defaultFund": fund, "imPosted": round(fund * 0.06), "marginModel": model,
                             "accounts": [{"id": a, "im": round(fund * 0.06)} for a in accts], "_meta": {"source": "clearing-system", "generation": 1}}
         cleared = [t for t in trades.values() if t.get("clearingAccount") == accts[0]]
-        docs["clearing-account"][accts[0]] = {"accountId": accts[0], "ccpName": name, "im": round(fund * 0.06), "vmToday": round(sum(t["pnl1d"] for t in cleared)),
+        docs["clearing-account"][accts[0]] = {"accountId": accts[0], "ccpName": name, "im": round(fund * 0.06), "vmToday": round(fsum(t["pnl1d"] for t in cleared)),
                                               "excess": round(fund * 0.012), "trades": [trade_row(t) for t in cleared[:30]], "ccp": ccp,
                                               "_meta": {"source": "clearing-system", "generation": 1}}
     for cal, name in N.CALENDARS.items():
