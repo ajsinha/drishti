@@ -81,7 +81,7 @@ so a band shows exactly what the same visual shows on a grid page.
 | Key | Meaning | Default |
 |---|---|---|
 | `paper` | `A4`, `A3`, `A5`, `Letter` or `Legal` | `drishti.distribution.statements.paper` (`A4`) |
-| `orientation` | `portrait` or `landscape` | `portrait` |
+| `orientation` | `portrait` or `landscape` (any case, as `paper`) | `portrait` |
 | `margins` | `{ top, right, bottom, left }` in millimetres (0 to 60), or one number for all four | `{ top: 18, right: 15, bottom: 18, left: 15 }` |
 | `header`, `footer` | `{ left, center, right }`: the text of each part, with tokens; `header: false` (or `{}`) for none | header `{title}` · `{period}`; footer `{reader} · run {run-date}` · `Page {page} of {pages}` |
 | `period` | what the statement covers: `none`, `day`, `month`, `previous-month`, `quarter`, `previous-quarter`, `year`, `previous-year` (section 4) | `none` |
@@ -177,7 +177,7 @@ analyst's every trade with MTM masked; and two recipients of the same role and d
 | Method | Path | What it does |
 |---|---|---|
 | `POST` | `/api/v1/bi/reports/statement/preview` | body `{report: <id>` or `yaml: <draft>` (needs `bi-author`)`, page?, state?, date?}`: `{title, period, paper {size, orientation, margins}, width, height, pageCount, pages [{number, ops [...]}], tokens, rows, cut}` (`cut`: each table that stops at `max-rows`, in words; empty when none); each op is a `text` (`x`, `y`, `size`, `bold`, `rgb`, `text`, `role`: `header`, `footer`, `title`, `head`, `group`, `cell`, `text`, `label`, `value`, `note`), a `rule` or a `fill`, in points from the page's lower left corner |
-| `POST` | `/api/v1/bi/reports/statement/file` | the same body plus `format: pdf` (default) or `xlsx`: the file, made for the caller, with `X-Statement-Pages` |
+| `POST` | `/api/v1/bi/reports/statement/file` | the same body plus `format: pdf` (default) or `xlsx`: the file, made for the caller, with `X-Statement-Pages`; any other format is `422 DRS-9038` *a statement is made as pdf or xlsx* |
 | `POST` | `/api/v1/export/pdf` · `/xlsx` | a statement page as for any export (`{type: report, id, page, state?, date?}`): the statement |
 
 Captured on the test stack of `drishti-console/tests/test_bi_wave_d_browser.py` with the report of tutorial 20

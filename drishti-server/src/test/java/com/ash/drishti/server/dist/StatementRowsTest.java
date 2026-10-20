@@ -251,4 +251,21 @@ class StatementRowsTest {
         assertThat(call("/api/v1/bi/reports/statement/preview", Map.of("yaml", bad, "date", DAY)).getResponse().getStatus()).as("a bad statement is not drawn")
                 .isGreaterThanOrEqualTo(400);
     }
+
+    @Test
+    void aStatementIsMadeAsPdfOrXlsxAndEveryOtherFormatGetsTheSameAnswer() throws Exception {
+        for (String format : List.of("docx", "png", "csv", "DOCX")) {                    // QA2-11: docx once got "pdf, png, xlsx or csv"
+            MvcResult r = call("/api/v1/bi/reports/statement/file", Map.of("report", "file:report:rows-statement", "date", DAY, "format", format));
+            assertThat(r.getResponse().getStatus()).as(format).isGreaterThanOrEqualTo(400);
+            assertThat(r.getResponse().getContentAsString()).as(format).contains("DRS-9038").contains("a statement is made as pdf or xlsx");
+        }
+    }
+
+    @Test
+    void paperAndOrientationAreReadWhateverTheirCase() throws Exception {                 // QA2-13: letter was accepted, Landscape refused
+        JsonNode v = ok(call("/api/v1/bi/reports/validate", Map.of("yaml", TOKENS.replace("paper: A4", "paper: letter, orientation: Landscape"))));
+        assertThat(v.path("valid").asBoolean()).as(v.toString()).isTrue();
+        JsonNode p = ok(call("/api/v1/bi/reports/statement/preview", Map.of("yaml", TOKENS.replace("paper: A4", "paper: letter, orientation: Landscape"), "date", DAY)));
+        assertThat(p.path("width").asDouble()).isEqualTo(792.0);
+    }
 }

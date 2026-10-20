@@ -21,6 +21,8 @@
   of every point of a document's embedded series (`HISTORY`, `OHLC`, `FIXINGS`, `PNL_SERIES`) by the same business-day offset as the
   documents (holidays and coupon schedules stay); the test data's `CHANGE_1D` is now each day's move of the document's own price, not the
   last day's figure on all sixty (`data/testdata` regenerated). `tools/lake/test_demo.py`, `tools/testdata/test_testdata.py`.
+- **Fixed (QA2-11, QA2-13): statement formats and paper.** Any format but pdf or xlsx gets the one answer *a statement is made as pdf
+  or xlsx* (`docx` once got the export's list); `orientation` is read whatever its case, as `paper` was.
 - **Fixed (QA1-09, console): the console's discovered servers follow the server's address rule.** `core/cluster.py` refused only
   localhost, 127.x and the wildcard; it now refuses every spelling the server's `HostAddress` refuses (`0`, `2130706433`, `0x7f000001`,
   `localhost.`, `ip6-localhost`, link-local and bridge addresses, and host names that resolve to them), in `core/hostrule.py`.

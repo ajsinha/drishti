@@ -207,7 +207,7 @@ public record StatementSpec(String paper, boolean landscape, double[] margins, M
         if (s.containsKey("paper") && paperName(String.valueOf(s.get("paper"))) == null) {
             out.add(ReportParser.error(CODE, "statement.paper", "paper is one of " + PAPERS.keySet().stream().sorted().toList() + ", not '" + s.get("paper") + "'"));
         }
-        if (s.containsKey("orientation") && !Set.of("portrait", "landscape").contains(String.valueOf(s.get("orientation")))) {
+        if (s.containsKey("orientation") && !Set.of("portrait", "landscape").contains(String.valueOf(s.get("orientation")).toLowerCase(Locale.ROOT))) {
             out.add(ReportParser.error(CODE, "statement.orientation", "orientation is portrait or landscape"));
         }
         Object m = s.get("margins");
