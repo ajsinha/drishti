@@ -361,6 +361,10 @@ answered by the receiving node from itself only (one hop at most, `X-Drishti-Net
    a node without the pack forwards the whole request; a node with the pack reads the dates its own dated sources do not cover from a
    peer in **one** call for all of them (`GET /api/v1/net/history/{kind}/~?id=&from=&to=&dates=`, each day masked there and again here),
    not one call per day. Dates two peers both answer keep the higher generation. Admin → Net → Traffic lists the call as `history`.
+   The history cache is keyed by the peers' data versions too (their digests carry them), so a load on the peer shows on the next
+   request. When a node that holds the kind is down or suspect and no node that answered holds the dates, the answer is `502 DRS-5052`
+   naming that node (or, when some days were read, a partial answer whose `problems` name it), never `DRS-1013` "no data"; a failed,
+   partial or empty answer is never cached.
 
 **The newest pack is served.** When nodes hold different versions of a pack, a request for its kinds goes to a node with the newest, even when this
 node could answer with its older one (in the in-process test, B with the shipped finance pack forwards to A, which has 9.9.9).

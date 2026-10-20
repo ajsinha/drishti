@@ -48,8 +48,19 @@ public final class SourceHistory {
     /** What the connectors answered: the days, oldest first, and the dates that could not be read with the connector and why. */
     public record Routed(List<HistoryDay> days, List<Failure> failures, List<String> asked) {}
 
-    /** A date a connector could not read; {@code reason} is {@link HistoryReads#TIMED_OUT} when the budget ran out. */
-    public record Failure(String source, LocalDate date, String reason) {}
+    /**
+     * A date a connector could not read; {@code reason} is {@link HistoryReads#TIMED_OUT} when the budget ran out. The source
+     * {@link #UNREACHABLE} stands for the Drishti*net nodes that hold the kind but cannot be reached now (down, suspect, drained): no peer
+     * that answered held the date, so the date may be on one of them.
+     */
+    public record Failure(String source, LocalDate date, String reason) {
+        public boolean unreachable() {
+            return UNREACHABLE.equals(source);
+        }
+    }
+
+    /** The source of a {@link Failure} for the nodes that hold the kind but cannot be reached. */
+    public static final String UNREACHABLE = "net";
 
     Routed read(HistoryRequest r, List<SourcePlugin> candidates, SourceRouter.Fallback fb) {
         long deadline = System.nanoTime() + r.budget().toNanos();
@@ -116,6 +127,18 @@ public final class SourceHistory {
                     router.stats().failed(name, System.nanoTime() - t0, e);
                     for (LocalDate d : remaining) {
                         failures.add(new Failure(name, d, e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));
+                    }
+                }
+            }
+            // dates no node that answered holds, while a node that holds the kind is down: they may be there, so they are not "no data"
+            List<String> down = remaining.isEmpty() ? List.of() : fb.downHolders(r.ref().kind());
+            if (!down.isEmpty()) {
+                String why = "the nodes that hold " + r.ref().kind() + " cannot be reached now: " + String.join(", ", down);
+                Set<LocalDate> failed = new HashSet<>();
+                failures.forEach(f -> failed.add(f.date()));
+                for (LocalDate d : remaining) {
+                    if (!failed.contains(d)) {
+                        failures.add(new Failure(UNREACHABLE, d, why));
                     }
                 }
             }

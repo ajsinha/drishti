@@ -244,6 +244,26 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         default Duration budget(EntityRef ref, AsOf asOf, Duration local) {
             return local;
         }
+
+        /**
+         * The version of the data the peers a read of {@code ref} would ask hold for its kind (each node's sources' data versions, as their
+         * digests carry them), so an answer read through them can be cached under it: a load on a peer changes it. Empty when one of those
+         * peers cannot say (its answer is then never cached); an empty string when no peer would be asked.
+         */
+        default Optional<String> version(EntityRef ref, AsOf asOf) {
+            return Optional.of("");
+        }
+
+        /** The nodes that hold the kind but cannot be reached now, each with its state ({@code qa1-b (suspect)}); none by default. */
+        default List<String> downHolders(String kind) {
+            return List.of();
+        }
+    }
+
+    /** {@link Fallback#version} of the peers a read of {@code ref} would ask: an empty string while the cluster is off. */
+    public Optional<String> peerVersion(EntityRef ref, AsOf asOf) {
+        Fallback fb = fallback;
+        return fb == null ? Optional.of("") : fb.version(ref, asOf);
     }
 
     /** A derived source that serves a kind here, by its connector name: Drishti*net gathers its groups across nodes. */
@@ -749,7 +769,9 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         for (SourcePlugin p : sources) {
             Optional<String> v;
             try {
-                v = asOf.live() || asOf.businessDate() == null ? p.dataVersion(kind) : p.dataVersion(kind, asOf.businessDate());
+                // a source that holds nothing of the kind (a table not created yet) has nothing to version: "none" until data arrives
+                v = p.holdsNone(kind) ? Optional.of("none")
+                        : asOf.live() || asOf.businessDate() == null ? p.dataVersion(kind) : p.dataVersion(kind, asOf.businessDate());
             } catch (RuntimeException e) {
                 return Optional.empty();
             }

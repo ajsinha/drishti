@@ -1,0 +1,201 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.engine.history;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.ash.drishti.api.AsOf;
+import com.ash.drishti.api.DataNode;
+import com.ash.drishti.api.EntityDocument;
+import com.ash.drishti.api.EntityRef;
+import com.ash.drishti.api.PluginManifest;
+import com.ash.drishti.api.Provenance;
+import com.ash.drishti.api.SourceCapabilities;
+import com.ash.drishti.api.SourceContext;
+import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.common.JsonCodec;
+import com.ash.drishti.engine.search.SearchProperties;
+import com.ash.drishti.engine.source.SourceRegistry;
+import com.ash.drishti.engine.source.SourceRouter;
+import com.ash.drishti.engine.source.SourcesProperties;
+import com.ash.drishti.engine.time.BusinessDateProperties;
+import com.ash.drishti.engine.time.BusinessDates;
+import com.ash.drishti.rachana.el.ElCompiler;
+import com.ash.drishti.rachana.format.Formats;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.Executors;
+import org.junit.jupiter.api.Test;
+
+/**
+ * History of an entity a Drishti*net peer holds (QA1-01, QA1-02): the cache follows the peers' data versions, so a load on the peer shows
+ * at once; a peer that cannot be reached is named (DRS-5052), never "no data", and such an answer is never cached.
+ */
+class HistoryPeersTest {
+
+    private static final LocalDate TODAY = LocalDate.of(2026, 10, 2);
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-10-02T20:00:00Z"), ZoneOffset.UTC);
+
+    /** A dated store with trades from 09-22 up to {@code last}; {@code ids} are the trades it holds. */
+    static final class Store implements SourcePlugin {
+        final String name;
+        final Set<String> ids;
+        volatile LocalDate last;
+        volatile String version;
+
+        Store(String name, Set<String> ids, LocalDate last, String version) {
+            this.name = name;
+            this.ids = ids;
+            this.last = last;
+            this.version = version;
+        }
+
+        public PluginManifest manifest() {
+            return new PluginManifest(name, "t", Set.of("trade"), new SourceCapabilities(false, false, false, true));
+        }
+
+        public void start(SourceContext c) {}
+
+        public Optional<LocalDate> latestDate(String kind) {
+            return Optional.of(last);
+        }
+
+        public Optional<EntityDocument> fetch(EntityRef ref) {
+            return fetch(ref, AsOf.of(last));
+        }
+
+        public Optional<EntityDocument> fetch(EntityRef ref, AsOf asOf) {
+            LocalDate d = asOf.businessDate() == null ? last : asOf.businessDate();
+            if (!ids.contains(ref.id()) || d.isBefore(LocalDate.of(2026, 9, 22)) || d.isAfter(last) || d.getDayOfWeek().getValue() > 5) {
+                return Optional.empty();
+            }
+            return Optional.of(new EntityDocument(ref, DataNode.of(Map.of("TRADE_ID", ref.id(), "QUANTITY", d.getDayOfMonth())),
+                    new Provenance(name, 1, Instant.now(), false, d)));
+        }
+
+        public Optional<String> dataVersion(String kind) {
+            return Optional.ofNullable(version);
+        }
+    }
+
+    /** One peer that the fallback names while it is up; while it is down it is a down holder of trade. */
+    static final class Peers implements SourceRouter.Fallback {
+        final Store peer;
+        volatile boolean up = true;
+
+        Peers(Store peer) {
+            this.peer = peer;
+        }
+
+        public List<SourcePlugin> peers(EntityRef ref, AsOf asOf) {
+            return up ? List.of(peer) : List.of();
+        }
+
+        public Optional<String> version(EntityRef ref, AsOf asOf) {
+            return Optional.of(up ? "net:p{" + peer.version + "}" : "");
+        }
+
+        public List<String> downHolders(String kind) {
+            return up ? List.of() : List.of("p (suspect)");
+        }
+
+        public Optional<DrishtiException> unreachable(EntityRef ref) {
+            return up ? Optional.empty() : Optional.of(new DrishtiException(ErrorCode.NET_PEER_FAILED, "no source here holds " + ref
+                    + ", and the nodes that hold trade cannot be reached now: p (suspect)"));
+        }
+    }
+
+    private final Store local = new Store("lake", Set.of("T-1"), TODAY, "L1");
+    private final Store remote = new Store("net:p", Set.of("T-9", "T-8"), LocalDate.of(2026, 9, 30), "P1");
+    private final Peers peers = new Peers(remote);
+
+    private HistoryService service() {
+        var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(2), null, Map.of());
+        SourceRouter router = new SourceRouter(new SourceRegistry(List.of(local), props, new JsonCodec()), props,
+                Executors.newVirtualThreadPerTaskExecutor());
+        router.fallback(peers);
+        BusinessDates dates = new BusinessDates(new BusinessDateProperties("USNY", "UTC", null), CLOCK);
+        return new HistoryService(router, dates, HistoryProperties.defaults(), new SearchProperties(null, null, Map.of("trade", List.of("TRADE_ID"))),
+                Formats.defaults(), new ElCompiler(), HistorySpec::defaults, k -> "TRD");
+    }
+
+    private static HistoryService.Query days(String id, int n) {
+        return new HistoryService.Query("trade", id, n, null, null, null, Set.of(), false, null, false, null);
+    }
+
+    private static String last(HistoryAnswer a) {
+        return a.rows().get(a.rows().size() - 1).date();
+    }
+
+    @Test
+    void aLoadOnThePeerShowsAtOnce() {
+        HistoryService svc = service();
+        HistoryAnswer first = svc.read(days("T-9", 3), HistoryService.Viewer.NONE);
+        assertThat(last(first)).isEqualTo("2026-09-30");
+        assertThat(first.cache()).isEqualTo("miss");
+        assertThat(first.dataVersion()).contains("lake=L1").contains("net:p{P1}");
+        assertThat(svc.read(days("T-9", 3), HistoryService.Viewer.NONE).cache()).isEqualTo("hit");
+        // the peer loads 10-01: its digest carries the new version, and the history shows the new day (the local version is unchanged)
+        remote.last = LocalDate.of(2026, 10, 1);
+        remote.version = "P2";
+        HistoryAnswer after = svc.read(days("T-9", 3), HistoryService.Viewer.NONE);
+        assertThat(after.cache()).isEqualTo("miss");
+        assertThat(last(after)).isEqualTo("2026-10-01");
+    }
+
+    @Test
+    void aPeerThatCannotBeReachedIsNamedAndNothingIsCached() {
+        HistoryService svc = service();
+        peers.up = false;
+        assertThatThrownBy(() -> svc.read(days("T-8", 3), HistoryService.Viewer.NONE)).isInstanceOfSatisfying(DrishtiException.class, e -> {
+            assertThat(e.errorCode()).isEqualTo(ErrorCode.NET_PEER_FAILED);
+            assertThat(e.getMessage()).contains("p (suspect)");
+        });
+        assertThatThrownBy(() -> svc.read(days("T-8", 3), HistoryService.Viewer.NONE))
+                .isInstanceOfSatisfying(DrishtiException.class, e -> assertThat(e.errorCode()).isEqualTo(ErrorCode.NET_PEER_FAILED));
+        peers.up = true;                                                             // back: the rows, not a remembered failure
+        HistoryAnswer back = svc.read(days("T-8", 3), HistoryService.Viewer.NONE);
+        assertThat(back.rows()).hasSize(3);
+        assertThat(back.cache()).isEqualTo("miss");
+    }
+
+    @Test
+    void aLocalEntityWithAPeerDownIsPartialOnlyWhenDaysAreLeft() {
+        HistoryService svc = service();
+        peers.up = false;
+        HistoryAnswer five = svc.read(days("T-1", 5), HistoryService.Viewer.NONE);   // the five days are here: nothing is left to ask
+        assertThat(five.partial()).isFalse();
+        HistoryAnswer span = svc.read(new HistoryService.Query("trade", "T-1", null, null, "2026-09-15", null, Set.of(), false, null, false, null),
+                HistoryService.Viewer.NONE);
+        assertThat(span.partial()).isTrue();
+        assertThat(span.problems()).singleElement().satisfies(p -> {
+            assertThat(p.code()).isEqualTo(ErrorCode.NET_PEER_FAILED.code());
+            assertThat(p.message()).contains("p (suspect)");
+        });
+        assertThat(svc.read(new HistoryService.Query("trade", "T-1", null, null, "2026-09-15", null, Set.of(), false, null, false, null),
+                HistoryService.Viewer.NONE).cache()).isEqualTo("miss");
+    }
+}

@@ -17,6 +17,12 @@
 
 ## Unreleased
 
+- **Fixed (QA1-01): a history read through a Drishti*net peer shows the peer's new days.** The history cache was keyed by this node's
+  data version only, so a load on the peer never showed. The key now carries the data versions of the peers the read asks, as their
+  digests carry them; a connector that holds nothing of the kind counts as version `none` (so a node with an empty lake caches too).
+- **Fixed (QA1-02): a peer that cannot be reached is named, never "no data".** When a node that holds the kind is down or suspect and
+  no node that answered holds the dates, a history answers `502 DRS-5052` naming it (or, with some days read, a partial answer whose
+  `problems` name it), not `DRS-1013`; an empty, failed or partial answer is never cached, so the rows come back with the peer.
 - **Changed: the committed test data holds sixty business days** (`data/testdata`, was seven; 119 MB gzipped in 2,944 files, the
   largest 5 MB): a day-1 snapshot and fifty-nine days of changes, so a trade's history (`TRD <id> 60`) shows real amendments.
   `make_testdata.py --days` defaults to 60. The docs that said seven days say sixty; captured outputs (dates, counts, timings) are
