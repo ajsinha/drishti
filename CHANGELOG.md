@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **QA: soak 2 of 2.6.6, FAIL** ([SOAK2_REPORT.md](docs/qa/2026-10-20/SOAK2_REPORT.md), raw `soak2.json`). It ran two hours with the
+  production JVM settings. Errors were only in kill windows, memory was flat on the steady spans (console workers included), the log
+  flood was gone and the masks were exercised. SOAK-01, 02, 03, 06, 07, 08 and 09 are fixed. It failed on 77 wrong histories:
+  **SOAK2-01 (P1)**, an administrator's history of a peer-held trade shows a viewer's masks, from the history cache. Also
+  SOAK2-02 to 05 (P3).
 - **Soak: the servers can run with the production JVM settings.** `net_soak.py --jvm-arg` (repeatable, after `-Xmx`) and
   `--server-env KEY=VAL` (repeatable) reach every server, the reference too, and are recorded in `soak.json` (`serverLaunch`); soak 2
   ran with `MALLOC_ARENA_MAX=2`, `-XX:MaxDirectMemorySize=256m` and `-XX:TrimNativeHeapInterval=60000` (PERFORMANCE.md). test_net_soak;
