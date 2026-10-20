@@ -1208,6 +1208,14 @@ wrong answers; (5) QA findings fixed before the drill.
 
 #### Wave D — Sharing and integration → 2.6.0
 
+**First, before any feature: no known bug** (product owner, 2026-10-19). Browser tests that failed now and then under load in the
+2.5.0 work and were not yet made steady: `test_bi_gov_browser` (save twice), `test_pack_new_browser` (keyboard: wait for each step's
+form before Enter), `test_showcase_clean_browser` (metric, market-charts), `test_bi_reports_browser` (show the rows),
+`test_bi_wizard_and_controls_browser` (refresh), `test_form_browser` (keyboard), `test_bi_wave_a_browser` (tablet tab),
+`test_bi_live_browser` (desk wall), `test_tree_rows.py`; each fixed at its cause and passing 5 runs in a row under load. Also the
+Drishti*net gap that two nodes disabling the last administrators at the same moment could leave none enabled (DRISHTI_NET.md), and
+whatever the 2.5.0 drill's flakes log names.
+
 **Server lane:**
 
 1. **Paginated reports and statements:** page-exact layouts (headers, footers, page breaks, repeated table headers),
