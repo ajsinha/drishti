@@ -471,7 +471,9 @@ the page, then binds the lake to the pack's connector and sends the signal as th
 committed test data, `data/testdata`: the seven packs' tables under `data/delta` in about 15 minutes (943 s measured, about 2.2 GB), the sixty days moved to end on today's
 business date (`--as-of data` keeps the files' own dates), the connector files checked, the next steps printed. `--only PREFIX` builds
 some datasets, `--lake DIR` another folder (the connector files then point there), `--with-real FILE[,FILE]` adds real extracts to the
-local lake only. It then tells the server the lakes changed: the data-load signal for every table and date to `--server` (default
+local lake only. The sample feed the `file` connector serves (`feeds/`) and the staging go to the server's data folder: `--data-dir DIR`, else
+`DRISHTI_DATA_DIR`, else the folder holding `--lake` when that is a `delta/` folder (`--lake /srv/data/delta`: `/srv/data`), else `data/`, so a
+server on another data folder finds its feeds (`make_data.py --data-dir DIR` does the same). It then tells the server the lakes changed: the data-load signal for every table and date to `--server` (default
 `DRISHTI_SERVER`, then `http://localhost:18480`; a token with `loads:write` from `--token-file` or `DRISHTI_TOKEN`), or, with no server
 there, the stamp of section 4.7; `--no-signal` does neither. Everything about the data and the five-step quick start is in [data/testdata/README.md](../../data/testdata/README.md).
 

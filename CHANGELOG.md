@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Fixed (QA2-21, round 2): `lake demo` and `make_data.py` write the feeds under the server's data folder.** `lake demo` takes
+  `--data-dir`; without it, `DRISHTI_DATA_DIR`, else the folder holding `--lake` when that is a `delta/` folder, else `data/`;
+  `make_data.py --data-dir DIR` too. A server on another data folder no longer finds its `file` connector DOWN for want of `feeds/`.
+  TOOLS section 4.9; tools/lake/test_demo.py.
 - **Fixed (QA2-15): the statement designer's Paper tab is readable at 1400 px.** The tab sits between the Studio's side panels, so its
   two columns now follow the tab's own width (a container query), not the window's: when it is narrow the settings go above the preview,
   and the sheet keeps the tab's width (it was about 130 px) while the four margin boxes share their row instead of running under the

@@ -218,7 +218,9 @@ SOFR_HISTORY = [("2026-09-01", 3.95, 1910), ("2026-09-02", 3.95, 1879), ("2026-0
 
 
 def data_dir() -> Path:
-    """The data folder: DRISHTI_DATA_DIR, else the repository's data/ (QA2-21: never the repository's when the variable is set)."""
+    """The data folder: --data-dir DIR, else DRISHTI_DATA_DIR, else the repository's data/ (QA2-21: never the repository's when either is given)."""
+    if "--data-dir" in sys.argv:
+        return Path(sys.argv[sys.argv.index("--data-dir") + 1])
     return Path(os.environ.get("DRISHTI_DATA_DIR") or (ROOT / "data"))
 
 

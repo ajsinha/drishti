@@ -77,6 +77,19 @@ def data_dir() -> pathlib.Path:
     return pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or (ROOT / "data"))
 
 
+def demo_data_dir(a, lake: pathlib.Path) -> pathlib.Path:
+    """The data folder the demo writes beside its lake (the feeds, the staging): --data-dir, else DRISHTI_DATA_DIR, else the folder holding
+    the lake when it is a data folder's delta/ (--lake /srv/data/delta: /srv/data), else the repository's data/. QA2-21: a server on another
+    data folder found no feeds there (its file connector DOWN) because they went to the repository."""
+    if getattr(a, "data_dir", None):
+        return pathlib.Path(a.data_dir).resolve()
+    if os.environ.get("DRISHTI_DATA_DIR"):
+        return pathlib.Path(os.environ["DRISHTI_DATA_DIR"]).resolve()
+    if lake.name == "delta":
+        return lake.parent.resolve()
+    return (ROOT / "data").resolve()
+
+
 class Manifest:
     def __init__(self, testdata: pathlib.Path):
         import yaml
@@ -183,7 +196,7 @@ class DemoLake:
         self.a = a
         self.testdata = pathlib.Path(a.testdata)
         self.lake = pathlib.Path(a.lake).resolve()
-        self.data = data_dir().resolve()
+        self.data = demo_data_dir(a, self.lake)
         self.staging = self.data / "build" / "lake-demo"
         self.packs = Packs(pathlib.Path(a.packs))
         self.manifest = Manifest(self.testdata)
@@ -498,6 +511,8 @@ class DemoLake:
 def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--testdata", default=str(ROOT / "data" / "testdata"), help="the committed test data (default data/testdata)")
     p.add_argument("--lake", default=str(data_dir() / "delta"), help="the Delta root to build (default <data>/delta, what the packs read)")
+    p.add_argument("--data-dir", help="the data folder the feeds and the staging go to (default DRISHTI_DATA_DIR, else the folder holding "
+                   "--lake when it is a delta/ folder, else data/): the server's own data folder")
     p.add_argument("--packs", default=str(ROOT / "config" / "packs"), help="the packs folder (default config/packs)")
     p.add_argument("--connectors-dir", help="the connector files' folder (default DRISHTI_CONNECTORS_DIR, else config/connectors)")
     p.add_argument("--as-of", default="today", metavar="today|data|YYYY-MM-DD", help="the last business date of the lake: today (default: "
