@@ -101,6 +101,43 @@ class HistoryJudgeTest(unittest.TestCase):
         self.assertEqual([], sc.masked_leaks(answer(FULL)))
 
 
+class WrongAnswersTest(unittest.TestCase):
+    """SOAK-08: 32 wrong answers, 5 kept, no time for the other 27, and the kept body cut before ``partial`` and ``problems``."""
+    P = [{"code": "DRS-5052", "source": "net", "days": ["2026-07-17"] * 60, "message": "the nodes that hold trade cannot be reached now: drishti-c (dead)"}]
+
+    def test_every_wrong_answer_is_kept_with_its_time_request_and_rule_and_the_first_200_in_detail(self):
+        log = sc.WrongLog()
+        big = answer(FULL * 40, partial=True, problems=self.P)              # a long body: partial and problems come after the rows
+        q = {"what": "history", "kind": "trade", "id": "CLY-30001298", "params": {"range": "3M"}, "role": "viewer", "date": "2026-10-16", "ref": REF}
+        for i in range(250):
+            verdict, why = sc.judge_history_why(REF, 200, answer(FULL, partial=True, problems=self.P), DOWN)
+            self.assertEqual(("wrong", "partial yet nothing missing"), (verdict, why))
+            log.add(1200.0 + i, "a", q, 200, big, why, sc.history_essence(big), REF)
+        log.add(1500.0, "b", {"what": "trade", "id": "MX-1", "date": "2026-10-16", "ref": None}, 500, "boom", "status 500")
+        out = log.report()
+        self.assertEqual(251, out["count"])
+        self.assertEqual(251, len(out["all"]))
+        self.assertEqual({"history": {"partial yet nothing missing": 250}, "trade": {"status 500": 1}}, out["byKind"])
+        self.assertEqual([1200.0, 1201.0], [w["t"] for w in out["all"][:2]])
+        self.assertEqual({"what": "history", "kind": "trade", "id": "CLY-30001298", "params": {"range": "3M"}, "role": "viewer",
+                          "date": "2026-10-16"}, out["all"][0]["q"])                               # the request, not its reference
+        self.assertEqual(200, len(out["samples"]))
+        s = out["samples"][0]
+        self.assertTrue(s["body"]["partial"])
+        self.assertEqual(self.P, s["body"]["problems"])                    # whole, however long the body
+        self.assertLessEqual(len(s["body"]["rest"]), 600)
+        self.assertIn({"path": "rows.length", "ref": 3, "got": 120}, s["diff"])
+        self.assertLessEqual(len(s["diff"]), 20)
+
+    def test_the_rule_is_named_for_each_kind_of_wrong_history(self):
+        self.assertEqual("complete answer differs from the reference",
+                         sc.judge_history_why(REF, 200, answer(FULL[:1] + [row("2026-10-15", 121.0, ["QUANTITY"])] + FULL[2:]), [])[1])
+        self.assertEqual("partial with DRS-1003", sc.judge_history_why(REF, 200, answer(FULL[1:], partial=True, problems=[{"code": "DRS-1003"}]), DOWN)[1])
+        self.assertEqual(("wrong", "DRS-1013 no data"), sc.judge_history_why(REF, 404, {"code": "DRS-1013"}, DOWN))
+        self.assertEqual(("partial", "named"), sc.judge_history_why(REF, 502, {"code": "DRS-5052", "message": "drishti-c cannot be reached now"}, DOWN))
+        self.assertEqual([{"path": "a[1]", "ref": 2, "got": 3}], sc.compact_diff({"a": [1, 2]}, {"a": [1, 3]}))
+
+
 class WindowsMemoryVerdictTest(unittest.TestCase):
     PLAN = [(1200, "kill", "c"), (1500, "restart", "c"), (3600, "kill", "a"), (3900, "restart", "a")]
 

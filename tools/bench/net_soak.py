@@ -341,31 +341,37 @@ class Soak:
     # -- checking ---------------------------------------------------------------------------------------------------------------
     def judge(self, q: dict, status: int, body) -> str:
         """right | partial (named, a node down) | wrong; a history answer also timeout (DRS-1014) or unavailable (soak_check)."""
+        return self.judge_why(q, status, body)[0]
+
+    def judge_why(self, q: dict, status: int, body) -> tuple[str, str]:
+        """judge's verdict and the rule that decided it (kept for every wrong answer, SOAK-08)."""
         downs = [f"drishti-{n}" for n in self.down]
         if q["what"] == "history":                         # a node just restarted may still be named by peers that saw it dead
             downs += [f"drishti-{n}" for n, t in self.back.items() if time.time() - t < self.a.kill_grace]
-            return soak_check.judge_history(q["ref"], status, body, downs)
+            return soak_check.judge_history_why(q["ref"], status, body, downs)
         text = json.dumps(body) if isinstance(body, dict) else str(body)
         if status == 200:
             got = self.essence(q, body)
             if got == q["ref"]:
-                return "right"
+                return "right", "equal"
             if q["what"] != "search" and self.loose(got) == self.loose(q["ref"]):
-                return "right-links-pending"
+                return "right-links-pending", "equal but for pending links"
             if q["what"] == "search" and isinstance(body, dict) and body.get("partial"):
                 named = [f for f in (body.get("failed") or []) if any(d in json.dumps(f) for d in downs)]
-                return "partial" if named and set(got) <= set(q["ref"]) else "wrong"
+                if not named:
+                    return "wrong", "partial search naming no node that is down"
+                return ("partial", "named") if set(got) <= set(q["ref"]) else ("wrong", "partial search with rows not the reference's")
             pv = body.get("provenance") or {} if isinstance(body, dict) else {}
             if q["what"] != "search" and pv.get("partial"):              # a grouped page with a node down: named on the page
-                return "partial" if any(d in json.dumps(pv.get("missing")) for d in downs) else "wrong"
-            return "wrong"
+                return ("partial", "named") if any(d in json.dumps(pv.get("missing")) for d in downs) else ("wrong", "partial page naming no node that is down")
+            return "wrong", "complete answer differs from the reference"
         if status in (502, 503) and downs and any(d in text for d in downs):
-            return "partial"
+            return "partial", "named"
         if status == 0 or status in (502, 503):
-            return "unavailable"
-        return "wrong"
+            return "unavailable", f"status {status}"
+        return "wrong", f"status {status}"
 
-    def checker(self, stop_at: float, stats: dict, wrong: list) -> None:
+    def checker(self, stop_at: float, stats: dict, wrong: soak_check.WrongLog) -> None:
         r = random.Random(7)
         while time.time() < stop_at:
             q = r.choice(self.reqs)
@@ -375,16 +381,15 @@ class Soak:
                 continue
             n = r.choice(up)
             status, body = self.ask(self.url(n), q)
-            verdict = self.judge(q, status, body)              # partial only when it names a node that is down (killed by then)
+            verdict, why = self.judge_why(q, status, body)     # partial only when it names a node that is down (killed by then)
             if verdict == "unavailable" and n in self.down:
                 verdict = "asked-a-node-going-down"
             key = f"{q['what']}:{verdict}"
             stats[key] = stats.get(key, 0) + 1
             if verdict in soak_check.ERRORS:
                 self.errors.append({"t": round(time.time() - self.t0, 1), "what": f"checker {q['what']}", "verdict": verdict})
-            if verdict == "wrong" and sum(1 for w in wrong if w["q"]["what"] == q["what"]) < 5:
-                wrong.append({"t": round(time.time() - self.t0, 1), "node": n, "q": {k: q[k] for k in q if k not in ("ref",)},
-                              "status": status, "got": self.essence(q, body), "ref": q["ref"], "body": (json.dumps(body) if isinstance(body, dict) else str(body))[:600]})
+            if verdict == "wrong":                             # every one: time, node, request, rule; the first 200 with body and diff
+                wrong.add(round(time.time() - self.t0, 1), n, q, status, body, why, self.essence(q, body), q["ref"])
             time.sleep(self.a.check_every)
 
     # -- the console ------------------------------------------------------------------------------------------------------------
@@ -521,7 +526,7 @@ class Soak:
         self.t0 = time.time()
         stop_at = self.t0 + self.a.seconds
         stats: dict = {}
-        wrong: list = []
+        wrong = soak_check.WrongLog()
         restarted: dict[str, float] = {}                    # node -> seconds from the start when its restart had converged
         check = threading.Thread(target=self.checker, args=(stop_at, stats, wrong), daemon=True)
         check.start()
@@ -571,7 +576,7 @@ class Soak:
         except (ValueError, IndexError):
             out["users"] = users_out[-2000:]
         out["checker"] = stats
-        out["wrong"] = wrong
+        out["wrong"] = wrong.report()                      # every wrong answer (SOAK-08): byKind, all, samples
         out["wrongAnswers"] = sum(v for k, v in stats.items() if k.endswith(":wrong"))
         out["checked"] = sum(stats.values())
         out["console"] = console_checks
@@ -669,9 +674,12 @@ def main(argv=None) -> int:
     finally:
         soak.close()
     (soak.work / "soak.json").write_text(json.dumps(out, indent=1, default=str), encoding="utf-8")
-    report = out.get("table", "") + "\n\nverdict: " + json.dumps(out.get("verdict"), indent=1, default=str) + "\n"
+    report = out.get("table", "") + "\n\nwrong answers by kind and rule: " + json.dumps((out.get("wrong") or {}).get("byKind"), indent=1) + "\n\nverdict: " + json.dumps(out.get("verdict"), indent=1, default=str) + "\n"
     (soak.work / "soak-report.txt").write_text(report, encoding="utf-8")
-    print(json.dumps({k: v for k, v in out.items() if k != "resources"}, default=str))
+    brief = {k: v for k, v in out.items() if k != "resources"}           # every wrong answer and the samples stay in soak.json
+    if isinstance(brief.get("wrong"), dict):
+        brief["wrong"] = {k: v for k, v in brief["wrong"].items() if k in ("count", "byKind")}
+    print(json.dumps(brief, default=str))
     print(report)
     return 0 if out.get("wrongAnswers") == 0 and (out.get("verdict") or {}).get("pass") else 1
 

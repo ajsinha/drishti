@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **Fixed (SOAK-08): the soak keeps every wrong answer.** It kept five per kind, with no time for the others and the body cut at 600
+  characters before `partial` and `problems`, which were what made them wrong. `soak.json`'s `wrong` now has the count per kind of
+  request and per rule that failed (`byKind`, also in `soak-report.txt`), every wrong answer's time, node, request and rule (`all`), and
+  the first 200 with the status, `partial` and `problems` whole, the rest of the body cut and a compact diff against the reference
+  (`samples`). `soak_check.judge_history_why`, `WrongLog`; test_net_soak; DRISHTI_NET section 17.1, TOOLS.
 - **Fixed (SOAK-07): the soak measures the console's memory.** It sampled the uvicorn parent alone (one thread, 50.7 MB on all 120
   samples of the 2026-10-20 soak); `tools/bench/net_soak.py` now samples the console's whole process tree from `/proc`: resident memory,
   threads and open files summed over the parent and its workers, `processes`, and each worker's own figures (`workers`), so the console's

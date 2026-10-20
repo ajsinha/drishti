@@ -433,6 +433,11 @@ The soak also exercises history queries ([HISTORY_QUERIES.md](HISTORY_QUERIES.md
   and every row (date, data date, carried, deleted, values, part counts, the `changed` flags and, with `diff=true`, the changes). Timings,
   cache state, generations and sources are the node's own and not compared. Any difference is a **wrong answer** and fails the soak; so
   does a masked field whose values differ between rows or that is named as changed.
+- **Every wrong answer is kept** (SOAK-08), in `soak.json` under `wrong`: `count`; `byKind`, the count per kind of request and per rule
+  that failed (`partial yet nothing missing`, `partial with DRS-1003`, `complete answer differs from the reference`, `DRS-1013 no data`,
+  `status 500` …, also printed in `soak-report.txt`); `all`, every one (up to 20,000) with its time, node, request and rule; and
+  `samples`, the first 200 also with the status, the body's `partial` and `problems` whole (never cut), the rest of the body cut at 600
+  characters, and a compact diff against the reference (up to 20 paths with both values, `rows.length` when the row counts differ).
 - **While a node is down** (the shard kill and the seed kill) a history answer is complete, or a partial one whose `problems` are only
   `DRS-5052` naming the node that is down (or `DRS-1014`, a peer that did not answer in time) and whose rows are rows of the reference, or
   a refusal `502 DRS-5052` naming it, or `504 DRS-1014`. A short answer not marked partial, a partial one with another code or naming a
