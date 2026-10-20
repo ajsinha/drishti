@@ -297,6 +297,24 @@ class HistoryServiceTest {
     }
 
     @Test
+    void aColumnReadsAsItsChartFieldAndASeriesRowsPartsAreNotRead() {
+        // QA1-15: the table's PRICE had no format (21.657685) while the chart's had price2; a row from the embedded series counted its
+        // parts as 0 although they were not read that day
+        List<String> problems = new ArrayList<>();
+        HistorySpec eq = HistorySpec.parse("equity", Map.of("chart", List.of(Map.of("path", "PRICE", "format", "price2")), "columns", List.of("PRICE", "NAME"),
+                "parts", List.of("HISTORY"), "series", Map.of("path", "HISTORY", "date", "DATE", "value", "CLOSE")), 366, problems);
+        assertThat(problems).isEmpty();
+        HistoryAnswer a = service(new Lake("v1", true), Map.of("equity", eq)).read(
+                new HistoryService.Query("equity", "EQ-1", null, "2W", null, null, Set.of(), true, null, false, null), VIEWER);
+        assertThat(a.columns()).filteredOn(c -> c.path().equals("PRICE")).extracting(HistoryAnswer.Column::format).containsExactly("price2");
+        HistoryAnswer.Row series = a.rows().get(0);
+        assertThat(series.source()).isEqualTo("series");
+        assertThat(series.display().get("PRICE")).isEqualTo("9.30");
+        assertThat(series.parts()).containsEntry("HISTORY", null);
+        assertThat(a.rows().get(1).parts().get("HISTORY")).as("a stored day counts its parts").isEqualTo(6);
+    }
+
+    @Test
     void theErrors() {
         HistoryService svc = service(new Lake("v1", true), Map.of("trade", HistorySpec.parse("trade", false, 366, new ArrayList<>())));
         assertThatThrownBy(() -> svc.read(days("trade", "T-1", 5), VIEWER)).satisfies(e -> code(e, ErrorCode.HISTORY_NOT_KEPT));

@@ -1353,8 +1353,14 @@ and the one before) and *Open the day*.
 | `E` | export: CSV, Excel, JSON | `Alt+S` | copy a link to these rows |
 | `?` | the keys | `Esc` | back to today's view |
 
-**Open the day.** `Enter` opens `/v/trade/1000015?asOf=2026-10-15&gen=59`: the normal view as of that day, with the pinned banner
-(*as it was*, or *changed since* when the data has moved on).
+**Open the day.** `Enter` opens `/v/trade/1000015?asOf=2026-10-15&gen=59&via=history`: the normal view as of that day, with the pinned
+banner (*as it was, from its history*, or *changed since the history read that day* when the data has moved on) and **Back to the
+history**, which returns to the same range (the view's back link does too).
+
+**Market kinds.** The table's numbers read in the chart field's format (`price2`: `21.66`), as the chart and the headline do. On a row from
+the embedded series (a day before the stored documents), the parts' columns read `—` (*not read on this day*), not `0`. The chart's hover
+label stays inside the chart and follows the selected row when the window is resized or zoomed; the crosshair's date is in the label and the
+`⌖` line, not on the axis.
 
 **Export** (`E`) downloads the table as shown, newest first: CSV (numbers as numbers, the formula guard, UTF-8 with BOM), Excel, or the
 server's JSON as served (its rows oldest first). Excel's dates are date cells (`yyyy-mm-dd`), so they sort and filter as dates. With

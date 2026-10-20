@@ -109,15 +109,16 @@ public final class HistoryRows {
                 values.put(c.key, v);
                 display.put(c.key, display(v, c.format));
             }
+            boolean series = HistoryService.SERIES.equals(day.document().provenance().source());
             Map<String, DataNode> partNodes = new LinkedHashMap<>();
             Map<String, Integer> counts = new LinkedHashMap<>();
             for (String p : partPaths) {
                 DataNode n = doc.get(p);
                 partNodes.put(p, n);
-                counts.put(p, n.isMasked() ? null : Integer.valueOf(n.isNull() ? 0 : n.size()));
+                // a row from an embedded series holds the series' fields only: its parts were not read that day, which is not zero (QA1-15)
+                counts.put(p, n.isMasked() || series && n.isMissing() ? null : Integer.valueOf(n.isNull() || n.isMissing() ? 0 : n.size()));
             }
             List<String> changed = new ArrayList<>();
-            boolean series = HistoryService.SERIES.equals(day.document().provenance().source());
             if (prevValues != null) {
                 // beside a row from an embedded series only the series' own fields compare: the rest is not known on that day
                 boolean either = series || prevSeries;
@@ -311,7 +312,10 @@ public final class HistoryRows {
             }
         }
         String label = c.label() != null ? c.label() : Semantics.humanize(leaf(c.key()));
-        out.put(c.key(), new Col(c.key(), label, c.format(), c.path() != null && masked.test(top(c.path())), isKey, expr));
+        // a column with no format of its own reads as its chart field does (price2: 21.66, not 21.657685; QA1-15)
+        String format = c.format() != null ? c.format() : spec.chart().stream().filter(x -> x.key().equals(c.key()) && x.format() != null)
+                .map(HistorySpec.Column::format).findFirst().orElse(null);
+        out.put(c.key(), new Col(c.key(), label, format, c.path() != null && masked.test(top(c.path())), isKey, expr));
     }
 
     private static boolean scalar(DataNode v) {

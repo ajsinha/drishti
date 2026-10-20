@@ -17,6 +17,14 @@
 
 ## Unreleased
 
+- **Fixed (QA1-14, QA1-15, QA1-16): the market history page.** The chart's hover label stays inside the chart and is put back at the
+  selected row after a resize or zoom, so narrowing the window no longer leaves it where the wider chart had it (647 px of horizontal
+  scroll). The table's numbers read in the chart field's format when the column has none (`21.66`, not `21.657685`); the CLI's headline
+  too (`chg +1.09 (+5.25%)  avg 21.29`); a row from the embedded series reads `—` (*not read on this day*) under each part, not `0`; the
+  crosshair's date is no longer drawn on the axis over its labels. A day opened from the history (`Enter`, *Open the day*) says *as it
+  was, from its history* (not *as it was shared*), with *Back to the history*, and the view's back link is that history, not an earlier
+  page's trail. USER_GUIDE, tutorial 21, HISTORY_QUERIES; HistoryServiceTest, test_history_routes, test_history_browser,
+  tools/test_historycmd.py.
 - **Fixed (QA2-12, QA2-14): a statement for a date with no data says so; a card with no value reads `–`.** A preview or file for a date no
   data covers (`9999-12-31`, `1999-01-01`) has `hint` *No data is held for December 9999 (…): every band is empty. Choose a date the data
   covers.* (also first in the file's notes, and beside the page count in the designer's preview) instead of an empty statement in silence.

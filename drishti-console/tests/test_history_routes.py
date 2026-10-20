@@ -265,3 +265,41 @@ def test_no_data_in_the_window_links_to_the_first_day_with_data(client, backend,
     monkeypatch.setattr(backend, "history", other)
     assert "data-hx-first-day" not in client.get("/v/trade/1/history").text
 
+
+def _banner_text(html):
+    m = re.search(r'<p class="asof-banner pin-banner".*?</p>', html, re.S)
+    return (m.group(0), re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", m.group(0)))) if m else ("", "")
+
+
+def test_open_the_day_says_it_came_from_the_history_and_links_back(client):
+    """QA1-16: a day opened from the history (Enter, Open the day) said "as it was shared"; nothing was shared. It says it came from the
+    history and links back to it."""
+    t = client.get("/v/trade/1000015/history?days=30").text
+    hrefs = re.findall(r'data-href="([^"]+)"', t)
+    assert hrefs and all(h.endswith("&amp;via=history") for h in hrefs), hrefs[:2]
+    day = "/v/trade/IRS-48213?asOf=2026-09-29&gen=1742&via=history"                   # the stand-in server's trade, opened as a history row opens it
+    banner, text = _banner_text(client.get(day).text)
+    assert 'data-pin-via="history"' in banner and "from its history" in text and "shared" not in text, text
+    assert "data-pin-history" in banner and "Back to the history" in text
+    assert "as it was shared" in _banner_text(client.get(day.replace("&via=history", "")).text)[1]     # a shared link keeps its words
+
+
+def test_a_series_row_reads_its_parts_as_not_read(client, backend, monkeypatch):
+    """QA1-15: a row from the embedded series showed 0 under each part; the server now sends no count (not read that day) and the page
+    shows a dash with why, never 0 and no expander."""
+    real = backend.history
+
+    async def history(kind, id_, ident=None, **params):
+        data = await real(kind, id_, ident=ident, **params)
+        data["parts"] = [{"path": "HISTORY", "label": "History"}]
+        for i, r in enumerate(data["rows"]):
+            r["source"] = "series" if i < 3 else "market-store"
+            r["parts"] = {"HISTORY": None if i < 3 else 60}
+        return data
+    monkeypatch.setattr(backend, "history", history)
+    t = client.get("/v/equity/EQ-CSCA/history?range=3M").text
+    cells = re.findall(r'<td class="num mono hx-part[^"]*" data-path="HISTORY"([^>]*)>(.*?)</td>', t)
+    not_read = [c for c in cells if "data-not-read" in c[0]]
+    assert len(not_read) == 3 and all(c[1] == "—" and "embedded series" in c[0] for c in not_read), not_read
+    assert all(c[1].startswith("60 ") for c in cells if "data-not-read" not in c[0])
+

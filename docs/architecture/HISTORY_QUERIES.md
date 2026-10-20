@@ -212,8 +212,8 @@ declared before `/v/{kind}/{id_:path}`, as `/about` and `/panels` are. A pick li
 - **Several versions** in one day (a restatement, a second load) show `⟲2` beside the date; its tooltip names the versions or
   generations. The row is the latest version of that day.
 - **A row opens the normal view as of that day**: `Enter` (or a double click) goes to
-  `/v/{kind}/{id}?asOf=2026-10-15&gen=<generation>` (and `&knownAt=` when the history is "known at"), so the banner says
-  "as it was" or "changed since", as pinned links do today.
+  `/v/{kind}/{id}?asOf=2026-10-15&gen=<generation>&via=history` (and `&knownAt=` when the history is "known at"), so the banner
+  says "as it was, from its history" or "changed since the history read that day" (never "shared"), with *Back to the history*.
 
 ### 5.3 Equity history (market shape)
 

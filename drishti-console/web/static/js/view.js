@@ -332,8 +332,17 @@
     var here = { label: view.dataset.label, url: location.pathname };
     var trail = [];
     try { trail = JSON.parse(sessionStorage.getItem('drishti.trail') || '[]'); } catch (e) { trail = []; }
+    // a day opened from the history page (via=history, QA1-16): the way back is that history, with its range, not an earlier page's trail
+    var back = document.querySelector('[data-pin-history]');
+    if (back && new URLSearchParams(location.search).get('via') === 'history') {
+      var ref = null;
+      try { ref = document.referrer ? new URL(document.referrer) : null; } catch (e) { ref = null; }
+      var hist = ref && ref.origin === location.origin && ref.pathname === back.getAttribute('href') ? ref.pathname + ref.search : back.getAttribute('href');
+      back.setAttribute('href', hist);
+      trail = [{ label: 'History of ' + here.label, url: hist }];
+    }
     var at = trail.findIndex(function (c) { return c.url === here.url; });
-    var CRUMBS = 5;                                       // the trail shows the last five views; older ones are kept for Back, behind an ellipsis
+    var CRUMBS = 5;                                      // the trail shows the last five views; older ones are kept for Back, behind an ellipsis
     trail = at >= 0 ? trail.slice(0, at + 1) : trail.concat([here]).slice(-12);
     try { sessionStorage.setItem('drishti.trail', JSON.stringify(trail)); } catch (e) { /* storage blocked */ }
     var nav = document.querySelector('[data-crumbs]');

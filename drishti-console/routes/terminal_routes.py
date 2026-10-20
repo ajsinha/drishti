@@ -350,7 +350,7 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
             shared = None                           # the banner is a courtesy: never fail the view for it
     calc = {"offered": False} if embed else await request.app.state.calc.context(request, await packs(request), vm["ref"]["kind"])
     return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed), share_url=share_url(request, kind, id_, (vm.get("provenance") or {}).get("generation"), ctl),
-                  pin=pin, pin_gen=gen or None, ctl_query=controls.to_query(ctl), shared=shared, calc=calc, layout=layout, pivots=pivots, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")])
+                  pin=pin, pin_gen=gen or None, pin_via="history" if request.query_params.get("via") == "history" else None, ctl_query=controls.to_query(ctl), shared=shared, calc=calc, layout=layout, pivots=pivots, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")])
 
 
 def share_url(request: Request, kind: str, id_: str, generation=None, ctl: dict | None = None) -> str:
