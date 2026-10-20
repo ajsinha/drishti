@@ -17,6 +17,27 @@
 
 ## Unreleased
 
+- **Fixed: a BI item's history, review, impact and lineage could show an older state.** Drawn again after a save, the item asked for them again,
+  and a slower answer to the earlier request, arriving last, overwrote the newer one: the history could miss the save just made. Only the
+  answer to the newest request is drawn now (found by `test_bi_gov_browser` under load).
+- **Fixed: an embedded report's visuals, and Analyse's model queries and SQL, gave up after the console's usual few seconds.** 2.5.0 let a
+  report's query wait as long as the server lets it run (35 s) on the console's own pages only; an embedded report (`/embed/v1`) and the
+  Analyse page still timed out at 5 s with DRS-1004 on a loaded or cold server while the server was still answering. They wait as long now
+  (found by `test_embed_report_browser` under load: every visual said DRS-1004).
+- **Fixed: a BI query could fail with "connector 'trade-pages' is not running (running)" while a connector restarted.** A connector being
+  restarted (a retry, a changed file) is out of routing for its drain and its start, and a query in that window was refused although the
+  connector was listed as running. A query now waits (up to 30 s) for the restart. And a derived connector (`trade-pages`) asked while the
+  server was still starting said it was DOWN, which made the registry restart it as a lost connection a few seconds later, opening that
+  window: it now waits for the server instead (found by `test_bi_wizard_and_controls_browser` under load: the dataset wizard's first step
+  never appeared).
+- **Fixed: the report designer could save a draft without its last change.** The YAML is written by the server a moment after each change;
+  when two changes' texts crossed (the earlier one arriving last), the earlier text was kept and the YAML tab marked up to date, so the
+  YAML tab, and a Save, missed the last change (a tablet layout's Wide, say). An older text never replaces a newer one now, and Save waits for
+  the text of the last change (found by `test_bi_wave_a_browser` under load).
+- **Fixed: a report visual's Show the rows and Drill through used the selection of when its buttons were drawn.** A mark chosen just before
+  the click (the buttons not yet redrawn) was ignored: the rows of the earlier selection, or of none, were shown. The selection at the click
+  is used now (found by `test_bi_reports_browser` under load).
+
 - **Fixed: Drishti*net: the cluster never ends with no enabled administrator.** The last-administrator rule was checked only where a change was
   made, so two nodes disabling (or demoting, or deleting) the last two administrators at the same moment could leave none enabled. A peer's
   change that would leave a node with none is now repaired as it is applied: the disabled administrator enabled most recently is enabled again
