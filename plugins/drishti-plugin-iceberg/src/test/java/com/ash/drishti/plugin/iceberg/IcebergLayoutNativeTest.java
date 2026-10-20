@@ -16,13 +16,20 @@
 package com.ash.drishti.plugin.iceberg;
 
 /**
- * {@link IcebergLayoutTest} (the layout, the fast paths, delete files, time travel, retention, maintenance) with the
- * connector reading through drishti-iceberg, the native engine.
+ * {@link IcebergLayoutTest} (the layout, the fast paths, delete files, time travel, retention, maintenance) on the
+ * native engine throughout: the loader and maintenance write with drishti-iceberg and the connector reads with it. The
+ * test's own checks of the layout read the tables with the Iceberg library, so they also prove the library reads what
+ * drishti-iceberg writes.
  */
 class IcebergLayoutNativeTest extends IcebergLayoutTest {
 
     @Override
     protected String engine() {
+        return "native";
+    }
+
+    @Override
+    protected String writeEngine() {
         return "native";
     }
 }

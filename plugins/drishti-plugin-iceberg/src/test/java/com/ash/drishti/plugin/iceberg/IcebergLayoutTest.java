@@ -72,6 +72,16 @@ class IcebergLayoutTest {
         return "library";
     }
 
+    /** The engine the loader and maintenance write with. */
+    protected String writeEngine() {
+        return "library";
+    }
+
+    /** The trade table as maintenance sees it, through {@link #writeEngine()}. */
+    LayoutLake.LayoutTable maintained() {
+        return LayoutLake.of(Map.of("root", root.toString(), "domain", "desk", "engine", writeEngine())).load("trade").orElseThrow();
+    }
+
     static String doc(int i, LocalDate d) {
         ObjectNode n = JSON.createObjectNode();
         n.put("tradeId", String.format("T-%03d", i));
@@ -105,6 +115,7 @@ class IcebergLayoutTest {
         List<String> args = new ArrayList<>(List.of(f.toString(), root.toString(), "--file-rows", "15", "--row-group-mb", "0.0001", "--buffer-mb", "0",
             "--threads", "3", "--spill-dir", root.resolve("spill").toString()));
         args.addAll(List.of(options));
+        args.addAll(List.of("--engine", writeEngine()));
         IcebergLoader.main(args.toArray(new String[0]));
     }
 
@@ -252,13 +263,13 @@ class IcebergLayoutTest {
         assertThat(p.reverse(EntityRef.of("x", "NS-1"), "trade", AsOf.LATEST)).doesNotContain(EntityRef.of("trade", "T-010"));
         assertThat(p.cacheStats()).containsEntry("daysWithDeletes", 1L);
 
-        assertThat(IcebergMaintenance.relayout(t, false, root.resolve("spill"), 1 << 20)).isEqualTo(1);   // only the day with deletes
+        assertThat(maintained().relayout(false, root.resolve("spill"), 1 << 20)).isEqualTo(1);   // only the day with deletes
         IcebergSourcePlugin after = plugin(true);
         assertThat(after.cacheStats()).containsEntry("daysWithDeletes", 0L);
         assertThat(after.columns("trade", List.of("mtm"), AsOf.LATEST).orElseThrow().size()).isEqualTo(38);
         assertThat(after.fetch(EntityRef.of("trade", "T-005"))).isEmpty();
         assertThat(after.fetch(EntityRef.of("trade", "T-033")).orElseThrow().data().get("mtm").asDouble()).isEqualTo(12_900);
-        assertThat(IcebergMaintenance.relayout(t, false, root.resolve("spill"), 1 << 20)).isZero();      // in shape now
+        assertThat(maintained().relayout(false, root.resolve("spill"), 1 << 20)).isZero();      // in shape now
     }
 
     @Test
@@ -273,14 +284,14 @@ class IcebergLayoutTest {
         IcebergSourcePlugin p = plugin(true);
         assertThat(p.fetch(EntityRef.of("trade", "T-0105"))).isPresent();
         assertThat(p.columns("trade", List.of("mtm"), AsOf.LATEST).orElseThrow().size()).isEqualTo(42);
-        assertThat(IcebergMaintenance.relayout(t, false, root.resolve("spill"), 1 << 20)).isEqualTo(1);
+        assertThat(maintained().relayout(false, root.resolve("spill"), 1 << 20)).isEqualTo(1);
         t.refresh();
         try (CloseableIterable<FileScanTask> tasks = t.newScan().filter(Expressions.equal("business_date", D2.toString())).planFiles()) {
             assertThat(tasks).hasSize(3);                                       // 42 rows: three files again
         }
         // a field promoted later: the column is added and filled from each document
         IcebergMaintenance.main(new String[] {root.toString(), "--domain", "desk", "--kinds", "trade", "--columns", "trade:counterparty.name",
-            "--expire-hours", "-1", "--spill-dir", root.resolve("spill").toString()});
+            "--expire-hours", "-1", "--spill-dir", root.resolve("spill").toString(), "--engine", writeEngine()});
         IcebergSourcePlugin later = plugin(true, "counterparty.name");
         assertThat(later.health()).isEqualTo("UP");
         ColumnSet c = later.columns("trade", List.of("counterparty.name"), AsOf.of(D1)).orElseThrow();
@@ -307,9 +318,9 @@ class IcebergLayoutTest {
     @Test
     void retentionRemovesOldDaysAndExpiresTheirSnapshots() throws Exception {
         Table t = table();
-        assertThat(IcebergMaintenance.keepDays(t, 1)).isEqualTo(1);
-        IcebergMaintenance.rewriteManifests(t);
-        IcebergMaintenance.expireSnapshots(t, 0);
+        assertThat(maintained().keepDays(1, com.ash.drishti.api.LoadGuard.fromArgs(new String[0]))).isEqualTo(1);
+        maintained().rewriteManifests();
+        maintained().expireSnapshots(0);
         IcebergSourcePlugin p = plugin(true);
         assertThat(p.fetch(EntityRef.of("trade", "T-001"), AsOf.of(D1))).isEmpty();
         assertThat(p.fetch(EntityRef.of("trade", "T-001"))).isPresent();

@@ -139,6 +139,51 @@ public class IcebergNativeNoHadoopTest {                          // public: the
         }
     }
 
+    /** The loader and every maintenance step on the native engine, then a read: runs inside the isolated loader. */
+    public static String writeProbe(String root) throws Exception {
+        Path lines = Path.of(root).resolve("rows.jsonl");
+        List<String> rows = new ArrayList<>();
+        for (int d = 28; d <= 30; d++) {
+            for (int i = 1; i <= 30; i++) {
+                rows.add("{\"domain\":\"desk\",\"kind\":\"trade\",\"id\":\"T-" + String.format("%03d", i) + "\",\"date\":\"2026-09-" + d
+                        + "\",\"doc\":\"{\\\"mtm\\\":" + (i * 10 + d) + "}\",\"columns\":{\"mtm\":" + (i * 10 + d) + "}}");
+            }
+        }
+        java.util.Collections.shuffle(rows, new java.util.Random(3));
+        Files.write(lines, rows);
+        String spill = Path.of(root).resolve("spill").toString();
+        IcebergLoader.main(new String[] {lines.toString(), root, "--engine", "native", "--file-rows", "10", "--buffer-mb", "0", "--spill-dir", spill,
+            "--keep-days", "2", "--as-of", "2026-09-30"});
+        IcebergMaintenance.main(new String[] {root, "--domain", "desk", "--engine", "native", "--relayout", "--force", "--rewrite-manifests",
+            "--columns", "trade:mtm", "--expire-hours", "0", "--spill-dir", spill});
+        IcebergSourcePlugin p = new IcebergSourcePlugin();
+        p.start(DatedSourceContract.context(new java.util.HashMap<>(Map.of("root", root, "domain", "desk", "engine", "native",
+                "layout.trade.columns", "mtm"))));
+        try {
+            return "t7 " + p.fetch(EntityRef.of("trade", "T-007")).orElseThrow().data().get("mtm").asDouble() + "; days "
+                    + p.fetch(EntityRef.of("trade", "T-007"), AsOf.of(java.time.LocalDate.of(2026, 9, 28))).isPresent() + "; columns "
+                    + p.columns("trade", List.of("mtm"), AsOf.LATEST).orElseThrow().size();
+        } finally {
+            p.close();
+        }
+    }
+
+    @Test
+    void theLoaderAndMaintenanceOnTheNativeEngineLoadNoHadoop() throws Exception {
+        Path root = Files.createTempDirectory("drishti-iceberg-nohadoop-write");
+        try (Isolated loader = isolated()) {
+            Class<?> self = loader.loadClass(IcebergNativeNoHadoopTest.class.getName());
+            String result;
+            try {
+                result = (String) self.getMethod("writeProbe", String.class).invoke(null, root.toString());
+            } catch (InvocationTargetException e) {
+                throw new AssertionError("the native loader or maintenance failed; refused: " + loader.refused, e.getCause());
+            }
+            assertThat(loader.refused).isEmpty();
+            assertThat(result).isEqualTo("t7 100.0; days false; columns 30");          // two days kept, the oldest gone
+        }
+    }
+
     @Test
     void theGuardCatchesTheLibraryEngine() throws Exception {
         Path root = lake();

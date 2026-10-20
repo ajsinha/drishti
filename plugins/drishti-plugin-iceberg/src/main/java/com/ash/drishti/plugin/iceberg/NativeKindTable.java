@@ -174,7 +174,9 @@ final class NativeKindTable extends KindTable {
     @Override
     void scan(Layout l, Day day, int file, List<String> columns, String idEquals, Consumer<Object[]> sink) {
         Table t = table().orElseThrow();
-        Schema schema = t.metadata().schemaFor(snapshot(t, l.snapshotId()));
+        Schema snap = t.metadata().schemaFor(snapshot(t, l.snapshotId()));
+        // a column added since the snapshot (maintenance fills it): the current schema, which reads it as null
+        Schema schema = columns.stream().anyMatch(c -> snap.field(c) == null) ? t.metadata().schema() : snap;
         List<Integer> ids = new ArrayList<>();
         for (String c : columns) {
             NestedField f = schema.field(c);

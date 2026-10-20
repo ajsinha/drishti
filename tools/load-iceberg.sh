@@ -16,7 +16,7 @@
 # Loads the banking packs' data into Apache Iceberg tables (one per kind, <root>/<domain>/<kind>, or a REST catalog's
 # namespace per domain), in the layout the connector reads (IcebergLayout: promoted columns beside id and doc, each
 # business day sorted by id into files of 250,000 rows, small row groups, no metrics on doc):
-#   tools/load-iceberg.sh [root] [--catalog rest --uri URI --warehouse W --credential C] [--keep-days N]
+#   tools/load-iceberg.sh [root] [--engine native|library|auto] [--catalog rest --uri URI --warehouse W --credential C] [--keep-days N]
 #                         [--trades N --days D] [--spill-dir DIR] [--set key=value]
 #   tools/load-iceberg.sh ./data/iceberg                                   the 1,791 sample documents x 10 business days
 #   tools/load-iceberg.sh ./data/iceberg --trades 1000000 --days 3         and a book of a million trades, streamed
@@ -39,7 +39,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --trades) TRADES="$2"; shift 2 ;;
     --days) DAYS="$2"; shift 2 ;;
-    --catalog|--uri|--warehouse|--credential|--token|--keep-days|--spill-dir|--set|--threads|--buffer-mb|--file-rows|--row-group-mb)
+    --engine|--catalog|--uri|--warehouse|--credential|--token|--keep-days|--spill-dir|--set|--threads|--buffer-mb|--file-rows|--row-group-mb)
       OPTS+=("$1" "$2"); shift 2 ;;
     --as-of|--future-days|--zone|--max-drop-share) OPTS+=("$1" "$2"); shift 2 ;;
     --force-drop) OPTS+=("$1"); shift ;;
