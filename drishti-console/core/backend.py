@@ -59,11 +59,15 @@ def _error(r: httpx.Response, text: str) -> "BackendError":
 
 def peer_problem(status: int, content_type: str, text: str) -> bool:
     """A 502/503 that is the server's own answer about another node of its cluster (``DRS-5050`` to ``DRS-5059``: a peer that holds the data
-    is down, a node the role may not reach): the server answered, so it is not counted against it and the console does not move away from it
-    (DRISHTI_NET.md 11.1). A 502/503 from a proxy, or a server's own failure, still counts."""
+    is down, a node the role may not reach; or, from a server of 2.6.5 or older, ``DRS-1003`` naming a peer, ``net:<node> failed reading ...``):
+    the server answered, so it is not counted against it and the console does not move away from it (DRISHTI_NET.md 11.1). A time-out about
+    another node (``DRS-1014``, 504) is never counted either: only 502/503 are. A 502/503 from a proxy, or a server's own failure, still
+    counts (SOAK-02: the console set healthy servers aside 43 times on histories a dying peer could not answer)."""
     if status not in (502, 503) or "json" not in (content_type or ""):
         return False
-    return bool(re.search(r'"code"\s*:\s*"DRS-505\d"', text or ""))
+    if re.search(r'"code"\s*:\s*"DRS-505\d"', text or ""):
+        return True
+    return bool(re.search(r'"code"\s*:\s*"DRS-1003"', text or "") and re.search(r'"detail"\s*:\s*"(DRS-1003\s+)?net:', text or ""))
 
 
 class BackendError(Exception):
