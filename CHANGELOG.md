@@ -17,6 +17,19 @@
 
 ## Unreleased
 
+- **Fixed: Drishti*net: the cluster never ends with no enabled administrator.** The last-administrator rule was checked only where a change was
+  made, so two nodes disabling (or demoting, or deleting) the last two administrators at the same moment could leave none enabled. A peer's
+  change that would leave a node with none is now repaired as it is applied: the disabled administrator enabled most recently is enabled again
+  (every node picks the same one), else the one the change took away is kept; the repair travels to every node, is audited
+  (`last-admin-kept`) and shown on Admin → Health ([NET.md section 7](docs/admin/NET.md#7-routing-where-a-request-goes)). `NetLastAdminTest`.
+- **Changed: Drishti*net members advertise only a real address.** `advertise-url` in node.yaml and a seed's `url` in `peers/*.yaml` that is
+  `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` or `::` are refused by the server at load, Admin → Net → Files and `drishti.py net
+  check|set|add-peer`, with a message naming this machine's address to use; a member learned by gossip with such an address is never kept nor
+  passed on, and the console never discovers one (a member that moved address replaces its old one in `servers.json`). Without
+  `advertise-url` a node now advertises this machine's primary IPv4 address (the default route's interface, never a container bridge) with
+  its port, shown on Admin → Net as *detected*. The in-process cluster tests, `net_stack.py`, the soak, tutorial 19 and `drishti-stack/`
+  (`DRISHTI_STACK_HOST`, or `host:` in stack.yaml) use the machine's real address ([NET.md section 2](docs/admin/NET.md#2-a-cluster-of-three)).
+
 - **Design: write-back** ([WRITE_BACK.md](docs/architecture/WRITE_BACK.md)), editing and saving fields on a Sutra page through ordered
   lanes (one change at a time per record), for 2.7.0; AI moves to 2.8.0 and wave E to 2.9.0
   ([BI_DESIGN.md §12.2](docs/architecture/BI_DESIGN.md#122-the-three-waves)).

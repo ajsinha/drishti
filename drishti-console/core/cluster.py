@@ -21,7 +21,9 @@ Drishti*net on the console learns the rest of the cluster from the server it is 
   moves to the next healthy one. A read that failed on the way is tried once more on another server (the person sees the page, not an error);
   a write (a save) never is: the page says it did not save.
 * **Discovery.** Every ``discover_every`` the console asks the server it uses for the member list (``GET /api/v1/net/members``) and keeps the whole
-  list: new members are added, members the cluster reports dead or left are dropped (the configured ``urls`` never are). The list is saved to
+  list: new members are added, members the cluster reports dead or left are dropped (the configured ``urls`` never are), and a member now
+  advertised at another address replaces its old one. Members advertise only real addresses (never localhost, 127.x.x.x or 0.0.0.0), so a
+  loopback or wildcard address is never discovered or kept (only the configured ``urls`` may name one: that is the console's choice). The list is saved to
   ``<console data dir>/net/servers.json`` (atomically, and at shutdown), so a console restarted while its configured server is down still knows
   where else to go.
 * **Coming back.** A set-aside server is checked every ``check_every``; once healthy for a minute it is used again, for new sessions only.
@@ -33,10 +35,12 @@ from __future__ import annotations
 
 import asyncio
 import contextvars
+import ipaddress
 import json
 import logging
 import os
 import time
+import urllib.parse
 from collections import deque
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -46,6 +50,21 @@ import httpx
 LOG = logging.getLogger("drishti.console.cluster")
 SESSION: contextvars.ContextVar[str] = contextvars.ContextVar("drishti_cluster_session", default="")
 RECOVER_SECONDS = 60.0
+
+
+def loopback_url(url: str) -> bool:
+    """True when a URL's host is localhost, a loopback or a wildcard address: never a member's advertisement."""
+    try:
+        h = (urllib.parse.urlsplit(url).hostname or "").lower()
+    except ValueError:
+        return False
+    if h == "localhost" or h.endswith(".localhost"):
+        return True
+    try:
+        a = ipaddress.ip_address(h)
+    except ValueError:
+        return False
+    return a.is_loopback or a.is_unspecified
 HOUR = 3600.0
 
 
@@ -108,7 +127,7 @@ class ServerPool:
             return
         for s in saved.get("servers", []):
             url = str(s.get("url") or "").rstrip("/")
-            if url and url not in self.entries:
+            if url and url not in self.entries and not loopback_url(url):
                 self.entries[url] = Entry(url, "discovered", str(s.get("node_id") or ""))
 
     def save(self) -> None:
@@ -239,9 +258,14 @@ class ServerPool:
         changed = False
         for m in body.get("members") or []:
             murl = str(m.get("url") or "").rstrip("/")
-            if not murl:
-                continue
+            if not murl or loopback_url(murl):
+                continue                                  # a member never advertises a loopback address: not kept
             gone = m.get("state") in ("dead", "left")
+            node = str(m.get("nodeId") or "")
+            if node and not gone:                         # the member moved: its old address goes
+                for old in [x for x in self.entries.values() if x.origin == "discovered" and x.node_id == node and x.url != murl]:
+                    del self.entries[old.url]
+                    changed = True
             e = self.entries.get(murl)
             if e is None and not gone:
                 self.entries[murl] = Entry(murl, "discovered", str(m.get("nodeId") or ""))

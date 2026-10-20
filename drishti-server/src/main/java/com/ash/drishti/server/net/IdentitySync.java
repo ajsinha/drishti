@@ -58,6 +58,14 @@ import org.slf4j.LoggerFactory;
  * is audited with the node it came from ({@code net:<node>}); a user's sign-in times travel too but are not audited. Applied changes are
  * never sent on, so a change crosses each link once. With routing.yaml's {@code user-state: off} (one shared identity database) nothing
  * is sent.
+ *
+ * <p>The cluster never ends with no enabled administrator. The last-administrator rule is checked where a change is made, so two nodes
+ * may each disable (or demote, or delete) one of the last two administrators at the same moment. A peer's change that would leave this
+ * node with none is therefore repaired as it is applied: a disabled administrator is enabled again, the most recently enabled one (the
+ * newest change, then the name, so every node picks the same one and their repairs agree); when no disabled administrator is left, the
+ * administrator the change took away stays one (a deletion is refused and the user kept as a new user, so the deletion's tombstone
+ * does not refuse them elsewhere). A repair is a change made here: it is sent to every peer, audited ({@code last-admin-kept}) and shown
+ * on Admin → Health ({@link #warnings()}).
  */
 public final class IdentitySync implements StateSync.Part, AutoCloseable {
 
@@ -84,6 +92,12 @@ public final class IdentitySync implements StateSync.Part, AutoCloseable {
     private final Map<String, Long> last = new ConcurrentHashMap<>();
     /** Deleted users and roles (namespace and key) with when, kept for {@link #KEEP_TOMBSTONES}. */
     private final Map<String, Long> deleted = new ConcurrentHashMap<>();
+    /** One peer's user change applied at a time: the last-administrator check and its repair must see one state. */
+    private final java.util.concurrent.locks.ReentrantLock applyingUsers = new java.util.concurrent.locks.ReentrantLock();
+    /** The repairs made here (newest last, at most {@link #KEEP_WARNINGS}), for Admin → Health. */
+    private final java.util.Deque<Map<String, Object>> warnings = new java.util.concurrent.ConcurrentLinkedDeque<>();
+    private static final int KEEP_WARNINGS = 20;
+    static final String ADMIN = "admin";
 
     /**
      * @param userChanged told of a user written from a peer (to forget what was cached about them)
@@ -187,7 +201,7 @@ public final class IdentitySync implements StateSync.Part, AutoCloseable {
         applying.set(true);
         try {
             return switch (c.namespace()) {
-                case USERS -> user(c);
+                case USERS -> userGuarded(c);
                 case ROLES -> roles != null && role(c);
                 case TOKENS -> tokens != null && token(c);
                 default -> false;
@@ -279,6 +293,89 @@ public final class IdentitySync implements StateSync.Part, AutoCloseable {
                     + ", enabled " + u.enabled() + (here != null && !Objects.equals(here.passwordHash(), u.passwordHash()) ? ", password changed" : ""));
         }
         return true;
+    }
+
+    private static boolean activeAdmin(User u) {
+        return u != null && u.enabled() && u.roles().contains(ADMIN);
+    }
+
+    private boolean anyActiveAdmin() {
+        return users.all().stream().anyMatch(IdentitySync::activeAdmin);
+    }
+
+    /** A user's change from a peer, applied one at a time, and repaired when it would leave no enabled administrator here. */
+    private boolean userGuarded(StateSync.Change c) throws IOException {
+        applyingUsers.lock();
+        try {
+            User here = users.find(c.key()).orElse(null);
+            if (!activeAdmin(here)) {
+                return user(c);
+            }
+            if (gone(c) && born(here) <= c.at() && users.all().stream().noneMatch(u -> activeAdmin(u) && !u.username().equals(here.username()))) {
+                tombstone(USERS, here.username(), c.at());
+                Instant now = Instant.ofEpochMilli(Math.max(now(), c.at() + 1));
+                User kept = new User(here.username(), here.displayName(), here.email(), here.desk(), here.roles(), true, here.mustChangePassword(),
+                        here.passwordHash(), 0, null, now, now, here.lastLoginAt(), here.passwordChangedAt(), here.packs());
+                keep(kept, c, "kept: its deletion on node " + c.origin() + " was refused, as it would have left no enabled administrator");
+                return true;
+            }
+            boolean applied = user(c);
+            if (applied && !anyActiveAdmin()) {
+                repair(here, c);
+            }
+            return applied;
+        } finally {
+            applyingUsers.unlock();
+        }
+    }
+
+    /**
+     * No enabled administrator is left here after a peer's change: the most recently enabled administrator that is disabled is enabled
+     * again (newest change first, then the name: every node that sees both changes picks the same one), else the administrator the
+     * change took away is given back its role and enabled.
+     */
+    private void repair(User before, StateSync.Change c) {
+        Instant now = Instant.now();
+        User pick = users.all().stream().filter(u -> !u.enabled() && u.roles().contains(ADMIN))
+                .max(java.util.Comparator.comparing((User u) -> u.updatedAt() == null ? Instant.EPOCH : u.updatedAt())
+                        .thenComparing(User::username, java.util.Comparator.reverseOrder()))
+                .orElse(null);
+        if (pick != null) {
+            keep(new User(pick.username(), pick.displayName(), pick.email(), pick.desk(), pick.roles(), true, pick.mustChangePassword(),
+                    pick.passwordHash(), 0, null, pick.createdAt(), now, pick.lastLoginAt(), pick.passwordChangedAt(), pick.packs()), c,
+                    "enabled again: node " + c.origin() + "'s change to '" + c.key() + "' would have left no enabled administrator");
+            return;
+        }
+        User cur = users.find(before.username()).orElse(before);
+        java.util.Set<String> roles = new java.util.TreeSet<>(cur.roles());
+        roles.add(ADMIN);
+        keep(new User(cur.username(), cur.displayName(), cur.email(), cur.desk(), roles, true, cur.mustChangePassword(), cur.passwordHash(),
+                0, null, cur.createdAt(), now, cur.lastLoginAt(), cur.passwordChangedAt(), cur.packs()), c,
+                "kept an enabled administrator: node " + c.origin() + "'s change would have left none");
+    }
+
+    /** Writes a repaired user here and sends it to every peer as a change made here, audited and shown on Admin → Health. */
+    private void keep(User u, StateSync.Change c, String why) {
+        users.put(u);
+        userChanged.accept(u.username());
+        long at = Math.max(version(u), c.at() + 1);
+        last.put(key(USERS, u.username()), at);
+        sync.publish(new StateSync.Change("", USERS, u.username(), json.valueToTree(u), at, sync.nodeId(), false));
+        audit.record("net:" + sync.nodeId(), "last-admin-kept", u.username(), why);
+        LOG.warn("net: '{}' {}", u.username(), why);
+        Map<String, Object> w = new java.util.LinkedHashMap<>();
+        w.put("at", Instant.now().toString());
+        w.put("user", u.username());
+        w.put("text", "'" + u.username() + "' " + why);
+        warnings.addLast(w);
+        while (warnings.size() > KEEP_WARNINGS) {
+            warnings.pollFirst();
+        }
+    }
+
+    /** The last-administrator repairs made on this node, oldest first (Admin → Health). */
+    public List<Map<String, Object>> warnings() {
+        return List.copyOf(warnings);
     }
 
     // -- roles ----------------------------------------------------------------------------------------------------------------------

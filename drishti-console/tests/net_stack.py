@@ -41,6 +41,9 @@ from java_launch import java_cmd
 from scratch_ports import worker_port, worker_ports
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "tools"))
+import hostaddr  # noqa: E402
+
 CONSOLE = ROOT / "drishti-console"
 SERVER_PORTS = worker_ports(18783, 18784, 18785)
 CONSOLE_PORT = worker_port(17784)
@@ -50,8 +53,13 @@ TOKEN_SECRET = "net-stack-token-secret-0123456789abcdef"
 SYSTEMS = {"a": ("ENDUR", "END"), "b": ("CALYPSO", "CLY"), "c": ("MUREX", "MX")}
 
 
+# members advertise this machine's real address, never a loopback one (docs/admin/NET.md); None on a machine with no other address
+HOST = hostaddr.primary_ipv4()
+NO_HOST = "this machine has no address but loopback: a Drishti*net member never advertises one"
+
+
 def url(name: str) -> str:
-    return f"http://127.0.0.1:{SERVER_PORTS[NAMES.index(name)]}"
+    return f"http://{HOST}:{SERVER_PORTS[NAMES.index(name)]}"
 
 
 CONSOLE_URL = f"http://127.0.0.1:{CONSOLE_PORT}"

@@ -130,6 +130,9 @@ public final class MemberTable {
                 if (m == null || m.nodeId() == null || m.nodeId().isBlank()) {
                     continue;
                 }
+                if (!m.nodeId().equals(self.nodeId()) && com.ash.drishti.net.config.HostAddress.loopbackUrl(m.url())) {
+                    continue;                                      // a loopback or wildcard advertisement: never stored, so never sent on
+                }
                 if (m.nodeId().equals(self.nodeId())) {
                     if (self.state() == MemberState.LEFT) {
                         continue;                                  // leaving: nothing said about us is refuted any more

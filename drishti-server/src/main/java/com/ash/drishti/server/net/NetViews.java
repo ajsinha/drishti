@@ -157,7 +157,8 @@ public final class NetViews {
         var c = net.config();
         m.put("enabled", c.enabled());
         m.put("nodeId", net.nodeId());
-        m.put("advertiseUrl", c.node().advertiseUrl());
+        m.put("advertiseUrl", net.advertiseUrl());
+        m.put("advertiseDetected", c.node().advertiseUrl().isEmpty());     // node.yaml names none: this machine's real address
         m.put("tags", c.node().tags());
         m.put("peerOnlyPacks", c.node().peerOnlyPacks());
         m.put("keySet", net.key().set());

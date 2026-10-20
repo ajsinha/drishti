@@ -46,6 +46,8 @@ public class NetConfiguration {
         NetFolder folder = new NetFolder(Path.of(props.dir()), state, schema);
         String version = build.getIfAvailable() == null ? "dev" : build.getIfAvailable().getVersion();
         NetService net = new NetService(folder, state, props, version, NetClock.SYSTEM);
+        net.advertiseDefault("true".equalsIgnoreCase(env.getProperty("server.ssl.enabled")) ? "https" : "http",
+                env.getProperty("server.port", Integer.class, 8080));
         net.start();
         return net;
     }
@@ -123,8 +125,9 @@ public class NetConfiguration {
     }
 
     @Bean
-    public NetHealth netHealth(NetService net, ForwardLog log, io.micrometer.core.instrument.MeterRegistry meters) {
-        return new NetHealth(net, log, meters);
+    public NetHealth netHealth(NetService net, ForwardLog log, io.micrometer.core.instrument.MeterRegistry meters,
+            ObjectProvider<IdentitySync> identity) {
+        return new NetHealth(net, log, meters, identity::getIfAvailable);
     }
 
     @Bean

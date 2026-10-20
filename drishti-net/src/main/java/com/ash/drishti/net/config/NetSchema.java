@@ -81,6 +81,10 @@ public final class NetSchema {
         String url = c.string("advertise-url", "");
         if (!url.isEmpty()) {
             c.url("advertise-url", url);
+            if (HostAddress.loopbackUrl(url)) {
+                c.error("advertise-url", HostAddress.refusal("the address this node advertises", url)
+                        + "; or leave advertise-url out and the node advertises that address with its port");
+            }
         }
         List<String> tags = c.tags("tags");
         List<String> peerOnly = c.list("peer-only-packs");
@@ -92,8 +96,9 @@ public final class NetSchema {
                 c.error("secret", "enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least "
                         + MIN_SECRET_BYTES + " bytes), as the server refuses a missing token secret with security on");
             }
-            if (url.isEmpty()) {
-                c.error("advertise-url", "enabled: true needs advertise-url: the address peers and consoles call this node at (https://host:port)");
+            if (url.isEmpty() && HostAddress.primary().isEmpty()) {
+                c.error("advertise-url", "enabled: true needs advertise-url (the address peers and consoles call this node at, https://host:port): "
+                        + "this machine has no address but loopback to advertise");
             }
         }
         if (!secret.isEmpty() && secret.getBytes(StandardCharsets.UTF_8).length < MIN_SECRET_BYTES) {
@@ -114,6 +119,9 @@ public final class NetSchema {
             c.error("url", "a peer file needs url: the peer's address (https://host:port)");
         } else {
             c.url("url", url);
+            if (HostAddress.loopbackUrl(url)) {
+                c.error("url", HostAddress.refusal("a peer's address", url));
+            }
         }
         return c.done(new SeedPeer(name, url, c.tags("tags"), c.flat("tls")));
     }

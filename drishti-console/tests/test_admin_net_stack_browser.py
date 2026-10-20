@@ -25,13 +25,15 @@ import pytest
 
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 
-from net_stack import CONSOLE_URL, NetStack, get, url  # noqa: E402
+from net_stack import CONSOLE_URL, HOST, NO_HOST, NetStack, get, url  # noqa: E402
 from test_live_tabs_browser import COUNT_TICKS  # noqa: E402
 from test_live_tabs_browser import browser  # noqa: E402,F401 - the shared browser fixture
 
 
 @pytest.fixture(scope="module")
 def cluster(tmp_path_factory):
+    if not HOST:
+        pytest.skip(NO_HOST)
     try:
         stack = NetStack(tmp_path_factory.mktemp("net-stack")).start()
     except FileNotFoundError as e:

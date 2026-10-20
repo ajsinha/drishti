@@ -42,6 +42,8 @@ final class NetNodes implements AutoCloseable {
 
     static final String KEY = "a-test-cluster-key-of-at-least-32-bytes";
     static final int[] PORTS = ports(System.getProperty("drishti.net.it.ports", "18783,18784,18785"));
+    /** This machine's real address: members never advertise a loopback one, so nodes on one machine call each other by it too. */
+    static final String HOST = com.ash.drishti.net.config.HostAddress.primary().orElse(null);
 
     private static int[] ports(String list) {
         int[] p = java.util.Arrays.stream(list.split(",")).map(String::trim).filter(x -> !x.isEmpty()).mapToInt(Integer::parseInt).toArray();
@@ -54,7 +56,7 @@ final class NetNodes implements AutoCloseable {
     /** One node: its context, port and folders. */
     record Node(String name, int port, Path root, ConfigurableApplicationContext ctx) {
         String url() {
-            return "http://127.0.0.1:" + port;
+            return "http://" + HOST + ":" + port;
         }
 
         NetService net() {
@@ -84,12 +86,13 @@ final class NetNodes implements AutoCloseable {
 
     /** Writes a node's config/net/ folder: node.yaml (enabled, its address, tags, the key) and one peer file per seed. */
     static void folder(Path netDir, int port, List<String> tags, List<String> peerOnly, List<Integer> seeds) throws IOException {
+        org.junit.jupiter.api.Assumptions.assumeTrue(HOST != null, "this machine has no address but loopback: a cluster member never advertises one");
         Files.createDirectories(netDir.resolve("peers"));
-        Files.writeString(netDir.resolve("node.yaml"), "enabled: true\nadvertise-url: http://127.0.0.1:" + port + "\ntags: " + tags
+        Files.writeString(netDir.resolve("node.yaml"), "enabled: true\nadvertise-url: http://" + HOST + ":" + port + "\ntags: " + tags
                 + "\npeer-only-packs: " + peerOnly + "\nsecret: ${DRISHTI_NET_SECRET}\n");
         Files.writeString(netDir.resolve("gossip.yaml"), "interval: 1s\nsuspect-after: 3s\ndead-after: 4s\npersist-every: 2s\n");
         for (int s : seeds) {
-            Files.writeString(netDir.resolve("peers").resolve("node-" + s + ".yaml"), "url: http://127.0.0.1:" + s + "\n");
+            Files.writeString(netDir.resolve("peers").resolve("node-" + s + ".yaml"), "url: http://" + HOST + ":" + s + "\n");
         }
     }
 

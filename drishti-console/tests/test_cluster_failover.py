@@ -197,3 +197,28 @@ def test_a_broken_live_stream_counts_against_its_server_so_the_reconnect_goes_el
     assert not p.entries[A].healthy
     assert run(first_event())[0] == "view"                   # the browser's reconnect: on B
     assert stand.calls[-1][0] == B
+
+
+def test_a_loopback_advertisement_is_never_kept_and_a_member_that_moved_replaces_its_old_address(tmp_path, monkeypatch):
+    (tmp_path / "net").mkdir()
+    (tmp_path / "net" / "servers.json").write_text(json.dumps({"servers": [
+        {"url": "http://127.0.0.1:18784", "origin": "discovered", "node_id": "n-b"},
+        {"url": "http://0.0.0.0:18785", "origin": "discovered", "node_id": "n-c"}]}))
+    stand, p = Stand(), pool(tmp_path, A)
+    assert [e.url for e in p.ordered()] == [A]                           # a saved loopback or wildcard address is not read back
+    stand.members = [{"nodeId": "n-a", "url": A, "state": "alive"}, {"nodeId": "n-b", "url": "http://localhost:18784", "state": "alive"},
+                     {"nodeId": "n-c", "url": C, "state": "alive"}]
+    real = httpx.AsyncClient
+
+    def fake_client(*a, **kw):
+        kw["transport"] = httpx.MockTransport(stand.handler)
+        return real(*a, **kw)
+    monkeypatch.setattr(httpx, "AsyncClient", fake_client)
+    run(p.discover_once({}))
+    assert [e.url for e in p.ordered()] == [A, C]
+    stand.members = [{"nodeId": "n-a", "url": A, "state": "alive"}, {"nodeId": "n-c", "url": B, "state": "alive"}]
+    run(p.discover_once({}))
+    assert [e.url for e in p.ordered()] == [A, B]                        # n-c now advertised at B: C goes
+    saved = json.loads((tmp_path / "net" / "servers.json").read_text())
+    assert not any(cluster.loopback_url(s["url"]) for s in saved["servers"])
+    assert cluster.loopback_url("http://[::1]:1") and cluster.loopback_url("http://127.3.2.1:1") and not cluster.loopback_url("http://192.168.2.77:1")

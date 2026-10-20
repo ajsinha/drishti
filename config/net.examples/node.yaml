@@ -16,7 +16,9 @@
 # single server exactly as before.
 enabled: true
 # node-id: drishti-b                 # empty: generated once and kept in <data dir>/net/node-id
-advertise-url: https://drishti-b.internal:8480   # the address peers and consoles call this node at
+advertise-url: https://drishti-b.internal:8480   # the address peers and consoles call this node at: a name or the machine's real IP,
+                                     # never localhost, 127.x.x.x, ::1, 0.0.0.0 or :: (refused). Left out: this machine's primary IPv4
+                                     # address (the default route's interface) with the server's port, e.g. http://192.168.1.20:8480
 tags: [region:emea, tier:risk]       # for nodes per role (access.yaml)
 peer-only-packs: []                  # packs served to peers only, hidden from this node's own users
 secret: ${DRISHTI_NET_SECRET}        # the cluster key: an environment reference only, at least 32 bytes, the same on every node

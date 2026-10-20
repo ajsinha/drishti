@@ -58,7 +58,7 @@ class NetFolder(ServerCase):
         self.assertIn("environment reference", err)
         os.environ["DRISHTI_NET_SECRET"] = KEY
         self.assertEqual(0, self.net("set", "node.secret", "${DRISHTI_NET_SECRET}")[0])
-        self.assertEqual(0, self.net("set", "node.advertise-url", "http://127.0.0.1:18783")[0])
+        self.assertEqual(0, self.net("set", "node.advertise-url", "http://192.0.2.10:18783")[0])
         self.assertEqual(0, self.net("set", "node.tags", "region:emea,tier:risk")[0])
         self.assertEqual(0, self.net("set", "node.enabled", "true")[0])
         text = (self.dir / "node.yaml").read_text()
@@ -75,8 +75,8 @@ class NetFolder(ServerCase):
         self.assertFalse(any(p.name.startswith(".") for p in self.dir.rglob("*")))  # no hidden or temporary file left
 
     def test_a_peer_is_a_seed_file_and_a_bad_file_is_named_with_its_line(self):
-        self.assertEqual(0, self.net("add-peer", "drishti-a", "127.0.0.1:18783", "--tags", "region:emea")[0])
-        self.assertIn("url: http://127.0.0.1:18783", (self.dir / "peers" / "drishti-a.yaml").read_text())
+        self.assertEqual(0, self.net("add-peer", "drishti-a", "192.0.2.11:18783", "--tags", "region:emea")[0])
+        self.assertIn("url: http://192.0.2.11:18783", (self.dir / "peers" / "drishti-a.yaml").read_text())
         self.assertEqual(2, self.net("add-peer", "Drishti_A", "x:1")[0])
         (self.dir / "gossip.yaml").write_text("interval: 1s\nfanout: lots\nsurprise: 1\n")
         code, out, _ = self.net("check")
@@ -89,13 +89,35 @@ class NetFolder(ServerCase):
         self.assertTrue(json.loads(out)["ok"])
         self.assertEqual(0, self.net("set", "access.roles.risk.nodes", "n-a,region:emea")[0])
         self.assertIn("- region:emea", (self.dir / "access.yaml").read_text())
-        self.assertEqual(0, self.net("set", "peers.drishti-a.url", "http://127.0.0.1:18784")[0])
+        self.assertEqual(0, self.net("set", "peers.drishti-a.url", "http://192.0.2.11:18784")[0])
         self.assertIn("18784", (self.dir / "peers" / "drishti-a.yaml").read_text())
         self.assertEqual(2, self.net("set", "nowhere.x", "1")[0])
         (self.dir / "routing.yaml").write_text("this: [is not\n")
         code, out, _ = self.net("check", "routing.yaml")
         self.assertEqual(1, code)
         self.assertIn("is not YAML", out)
+
+    def test_a_loopback_or_wildcard_address_is_refused_naming_this_machines_address(self):
+        import hostaddr
+        ip = hostaddr.primary_ipv4()
+        for bad in ("http://127.0.0.1:18783", "http://localhost:18783", "http://0.0.0.0:18783", "http://[::1]:18783", "http://[::]:18783"):
+            code, _, err = self.net("set", "node.advertise-url", bad)
+            self.assertEqual(1, code, bad)
+            if "[" in bad:
+                continue                                                          # an IPv6 literal is not taken at all (as before)
+            self.assertIn("loopback or wildcard", err)
+            if ip:
+                self.assertIn(f"http://{ip}:18783", err)
+            code, _, err = self.net("add-peer", "drishti-a", bad)
+            self.assertEqual(1, code, bad)
+            self.assertIn("a peer's address", err)
+        self.assertFalse((self.dir / "node.yaml").exists())
+        self.assertFalse((self.dir / "peers" / "drishti-a.yaml").exists())
+        (self.dir / "peers").mkdir(parents=True)
+        (self.dir / "peers" / "drishti-b.yaml").write_text("url: http://127.0.0.2:18784\n")
+        code, out, _ = self.net("check", "peers/drishti-b.yaml")
+        self.assertEqual(1, code)
+        self.assertIn("loopback or wildcard", out)
 
     def test_members_of_a_running_server(self):
         Fake.routes[("GET", "/api/v1/net/members")] = {"running": True, "self": "n-a", "members": [

@@ -53,7 +53,7 @@ class NetFolderTest {
     @Test
     void anEnabledNodeNeedsTheKeyFromTheEnvironmentAndAnAdvertisedUrl() {
         NetFolder f = folder(Map.of("DRISHTI_NET_SECRET", KEY));
-        f.write("node.yaml", "enabled: true\nadvertise-url: http://127.0.0.1:18783\ntags: [region:emea]\nsecret: ${DRISHTI_NET_SECRET}\n", null);
+        f.write("node.yaml", "enabled: true\nadvertise-url: http://192.0.2.10:18783\ntags: [region:emea]\nsecret: ${DRISHTI_NET_SECRET}\n", null);
         NetFolder.Loaded l = f.load(null);
         assertThat(l.all()).isEmpty();
         assertThat(l.config().enabled()).isTrue();
@@ -67,7 +67,50 @@ class NetFolderTest {
         assertThat(refused.refused("node.yaml")).isTrue();
         assertThat(refused.problems().get("node.yaml")).anySatisfy(p -> assertThat(p.field()).isEqualTo("secret"));
         assertThat(refused.config().node()).isEqualTo(l.config().node());
-        assertThat(f.check("node.yaml", "enabled: true\nsecret: ${DRISHTI_NET_SECRET}\n")).anySatisfy(p -> assertThat(p.field()).isEqualTo("advertise-url"));
+        // without advertise-url: this machine's real address is advertised (refused only on a machine with no address but loopback)
+        List<NetSchema.Problem> noUrl = f.check("node.yaml", "enabled: true\nsecret: ${DRISHTI_NET_SECRET}\n");
+        if (com.ash.drishti.net.config.HostAddress.primary().isPresent()) {
+            assertThat(noUrl).noneSatisfy(p -> assertThat(p.field()).isEqualTo("advertise-url"));
+        } else {
+            assertThat(noUrl).anySatisfy(p -> assertThat(p.field()).isEqualTo("advertise-url"));
+        }
+    }
+
+    @Test
+    void aLoopbackOrWildcardAddressIsRefusedNamingThisMachinesAddress() {
+        NetFolder f = folder(Map.of("DRISHTI_NET_SECRET", KEY));
+        String ip = com.ash.drishti.net.config.HostAddress.primary().orElse("<this machine's IP>");
+        for (String bad : List.of("http://127.0.0.1:18783", "http://localhost:18783", "http://127.1.2.3:18783", "http://0.0.0.0:18783",
+                "http://[::1]:18783", "http://[::]:18783")) {
+            assertThat(f.check("node.yaml", "enabled: true\nadvertise-url: " + bad + "\nsecret: ${DRISHTI_NET_SECRET}\n")).as(bad).anySatisfy(p -> {
+                assertThat(p.error()).isTrue();
+                assertThat(p.field()).isEqualTo("advertise-url");
+                assertThat(p.message()).contains("loopback or wildcard").contains("http://" + ip + ":18783");
+            });
+            assertThat(f.check("peers/drishti-a.yaml", "url: " + bad + "\n")).as(bad).anySatisfy(p -> {
+                assertThat(p.field()).isEqualTo("url");
+                assertThat(p.message()).contains("a peer's address");
+            });
+        }
+        f.write("peers/drishti-a.yaml", "url: http://127.0.0.1:18783\n", null);
+        assertThat(f.load(null).refused("peers/drishti-a.yaml")).isTrue();
+        assertThat(f.load(null).config().seedUrls()).isEmpty();
+        assertThat(f.check("node.yaml", "enabled: true\nadvertise-url: http://192.0.2.10:18783\nsecret: ${DRISHTI_NET_SECRET}\n")).isEmpty();
+    }
+
+    @Test
+    void loopbackAndWildcardHostsAreKnown() {
+        for (String h : List.of("localhost", "LOCALHOST", "app.localhost", "127.0.0.1", "127.9.9.9", "0.0.0.0", "::1", "[::1]", "::", "[::]",
+                "0:0:0:0:0:0:0:1", "0:0:0:0:0:0:0:0")) {
+            assertThat(com.ash.drishti.net.config.HostAddress.loopbackOrWildcard(h)).as(h).isTrue();
+        }
+        for (String h : List.of("192.168.2.77", "10.0.0.5", "drishti-a.internal", "fe80::1", "2001:db8::1", "128.0.0.1")) {
+            assertThat(com.ash.drishti.net.config.HostAddress.loopbackOrWildcard(h)).as(h).isFalse();
+        }
+        com.ash.drishti.net.config.HostAddress.primary().ifPresent(ip -> {
+            assertThat(com.ash.drishti.net.config.HostAddress.loopbackOrWildcard(ip)).isFalse();
+            assertThat(ip).doesNotStartWith("172.17.").doesNotStartWith("169.254.");
+        });
     }
 
     @Test
@@ -107,15 +150,15 @@ class NetFolderTest {
     @Test
     void peerFilesAreSeedsAndHistoryKeepsEveryEarlierText() throws Exception {
         NetFolder f = folder(Map.of());
-        f.write("peers/drishti-a.yaml", "url: http://127.0.0.1:18783/\ntags: [region:emea]\n", null);
+        f.write("peers/drishti-a.yaml", "url: http://192.0.2.10:18783/\ntags: [region:emea]\n", null);
         f.write("peers/drishti-b.yaml", "url: ftp://nowhere\n", null);
         NetFolder.Loaded l = f.load(null);
-        assertThat(l.config().seedUrls()).containsExactly("http://127.0.0.1:18783");
+        assertThat(l.config().seedUrls()).containsExactly("http://192.0.2.10:18783");
         assertThat(l.refused("peers/drishti-b.yaml")).isTrue();
         assertThat(f.files()).extracting(NetFolder.FileInfo::id).containsExactly("node.yaml", "gossip.yaml", "routing.yaml", "access.yaml",
                 "peers/drishti-a.yaml", "peers/drishti-b.yaml");
         String etag = NetFolder.etag(f.text("peers/drishti-a.yaml").orElseThrow());
-        f.write("peers/drishti-a.yaml", "url: http://127.0.0.1:18784\n", etag);
+        f.write("peers/drishti-a.yaml", "url: http://192.0.2.10:18784\n", etag);
         assertThatThrownBy(() -> f.write("peers/drishti-a.yaml", "url: http://x:1\n", etag)).isInstanceOf(IllegalStateException.class);
         assertThat(f.history("peers/drishti-a.yaml")).hasSize(1);
         String rev = f.history("peers/drishti-a.yaml").get(0).id();
@@ -147,7 +190,7 @@ class NetFolderTest {
         String text = f.withSetting("node.yaml", "tags", "region:emea, tier:risk");
         f.write("node.yaml", text, null);
         f.write("node.yaml", f.withSetting("node.yaml", "secret", "${DRISHTI_NET_SECRET}"), null);
-        f.write("node.yaml", f.withSetting("node.yaml", "advertise-url", "http://127.0.0.1:18783"), null);
+        f.write("node.yaml", f.withSetting("node.yaml", "advertise-url", "http://192.0.2.10:18783"), null);
         f.write("node.yaml", f.withSetting("node.yaml", "enabled", "true"), null);
         NetFolder.Loaded l = f.load(null);
         assertThat(l.all()).isEmpty();

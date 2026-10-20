@@ -322,9 +322,16 @@ public final class StateSync implements AutoCloseable {
         }
     }
 
+    private volatile boolean held;
+
+    /** Tests: holds the changes made here (queued, none sent) until released, so two nodes can change one thing at the same moment. */
+    void hold(boolean on) {
+        held = on;
+    }
+
     /** Sends what is waiting to each peer that can be reached now; what a peer does not take stays for the next pass. */
     void flush() throws InterruptedException {
-        if (pending.isEmpty()) {
+        if (held || pending.isEmpty()) {
             return;
         }
         var node = net.node().orElse(null);
