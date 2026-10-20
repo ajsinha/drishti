@@ -106,6 +106,8 @@ async def go(request: Request, q: str = ""):
         r = await request.app.state.backend.command(q, ident(request))
     except BackendError as e:
         text = q.replace("<GO>", "").strip()
+        if e.code in ("DRS-4021", "DRS-4022"):  # a range after an entity that cannot be read (TRD 1000001 -5): say so, with what to type
+            return RedirectResponse(f"/t?error={quote(f'{e.code} {e.detail}')}", status_code=303)
         if len(text.split()) >= 2:          # not a command: perhaps plain words ("live trades over 5m"); show what they mean
             return RedirectResponse(f"/s?words={quote(text)}", status_code=303)
         return RedirectResponse(f"/t?error={quote(e.detail)}", status_code=303)

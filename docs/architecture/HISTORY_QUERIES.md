@@ -129,6 +129,11 @@ The rule: **a range is the last one to four words, never the first word after th
 
 `HistoryRange.trailing(String rest)` returns `Optional<Split(String id, HistoryRange range, boolean diff)>`; it never throws. A range that is
 read but not allowed (too large, `TO` before `FROM`, a future `FROM`) fails with its own code (section 16), not with a pick list.
+`HistoryRange.malformed` names what reads as a range but is none (`0`, `-5`, `99999`, `1.5M`, `3X`, `FROM yesterday`,
+`FROM 2026-02-30`, `DIFF DIFF`, a bare `DIFF`, `30 30`); `CommandController` answers it with `DRS-4022` (`DRS-4021` for a number of days
+past `max-days`) and what to type when what is before it is one entity the caller may open and the whole text is not itself an entity.
+`TO` before `FROM` and a date that does not exist are `DRS-4022` too, as at the endpoint. The console's `/go` shows the message on the
+terminal page.
 
 ### 4.3 The answer and the redirect
 

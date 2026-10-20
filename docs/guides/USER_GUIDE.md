@@ -287,6 +287,11 @@ The number of suggestions is a server setting (`drishti.commands.suggest-limit`,
   for `TRD PRODUCT_TYPE=FX_QUANTO`. Typing `MYBOOK <GO>` then does the same as the command; anything you add after
   the word is kept (`MYBOOK F3`). A mnemonic or a pack code cannot be an alias. The same through the API:
   `GET` / `PUT /api/v1/command/aliases` and `GET /api/v1/command/history`.
+- **A range that cannot be read.** After an id, what reads as a range but is none answers with its code and what to type, on the
+  terminal page: `TRD 1000001 0` gives *DRS-4022 a history of 0 days is empty: ask for 1 or more (TRD 1000001 30)*; `-5`, `1.5M`,
+  `3X`, `FROM yesterday`, `FROM 2026-02-30`, `DIFF DIFF`, a bare `DIFF` and two ranges (`30 30`) are `DRS-4022` too, and a number of
+  days past the limit (`99999`) is `DRS-4021`. It never opens today's view as if the range was not typed, nor a search that drops the
+  id. A lone word after the mnemonic stays an id (`TRD 0` opens trade `0`).
 
 ### When a command does not work
 

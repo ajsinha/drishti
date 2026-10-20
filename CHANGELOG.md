@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Fixed (QA1-03, QA1-12): a bad range typed after an id says so.** `TRD 1000001 0`, `-5`, `1.5M`, `3X`, `FROM yesterday`,
+  `FROM 2026-02-30`, `DIFF DIFF`, a bare `DIFF` and two ranges (`30 30`) answer `DRS-4022` with what to type, a number of days past
+  the limit (`99999`) `DRS-4021`, and `TO` before `FROM` is `DRS-4022` as at the endpoint (was `DRS-4001`); the console shows the
+  message on the terminal page instead of today's view or plain words that dropped the id (`HistoryRange.malformed`).
 - **Fixed (QA1-09): Drishti*net's "real address only" check can no longer be bypassed.** `advertise-url`, a seed's `url` and an
   address learned by gossip are refused in every spelling of loopback and wildcard (`localhost.`, `ip6-localhost`, `0`, `127.1`,
   `2130706433`, `0x7f000001`), when link-local, when they are an address of this machine's container or VM bridges (`172.17.0.1`), and

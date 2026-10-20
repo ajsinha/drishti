@@ -96,6 +96,7 @@ public class CommandController {
     }
 
     private ApiDtos.CommandResponse resolve(String text, AsOf asOf, Principal principal) {
+        refuseBadRange(text, asOf, principal);
         Optional<HistoryRange.Split> range = historyOf(text, asOf, principal);
         if (range.isPresent()) {                                    // TRD 1000015 30: the entity (or the pick list) over time
             ApiDtos.CommandResponse plain = resolvePlain(range.get().command(), asOf, principal);
@@ -129,6 +130,42 @@ public class CommandController {
             return Optional.empty();
         }
         return split;
+    }
+
+    /**
+     * A command that ends in what reads as a range but is none ({@code TRD 1000001 -5}, {@code 1.5M}, {@code FROM yesterday}, {@code DIFF
+     * DIFF}, {@code 30 30}) after one entity the caller may open fails with {@code DRS-4022} (or {@code DRS-4021} for a number of days past
+     * the limit) and says what to type, as the history endpoint does for the same range (QA1-03): never today's view as if the range was
+     * not typed, never a search that drops the id. Text that is itself an entity ({@code BOND UST 0}) or a search is left alone.
+     */
+    private void refuseBadRange(String text, AsOf asOf, Principal principal) {
+        if (SearchQuery.looksLikeSearch(text)) {
+            return;
+        }
+        int maxDays = historyProps == null ? 366 : historyProps.limits().maxDays();
+        for (HistoryRange.Bad bad : HistoryRange.malformed(text, maxDays)) {
+            String[] words = bad.command().split("\\s+", 2);
+            boolean mnemonic = mnemonics.of(words[0].toUpperCase(Locale.ROOT)).isPresent();
+            if (mnemonic ? words.length < 2 || SEARCHY.matcher(" " + words[1] + " ").find() : words.length != 1) {
+                continue;                                           // TRD 0 is trade 0; TRD desk=rates 0 is a search
+            }
+            Optional<EntityRef> ref = parser.parse(bad.command());
+            if (ref.isEmpty() || !entitlements.mayOpen(principal, ref.get().kind()) || !exists(ref.get(), asOf)) {
+                continue;
+            }
+            Optional<EntityRef> whole = parser.parse(text);         // an id that itself ends so is opened as before
+            if (whole.isPresent() && entitlements.mayOpen(principal, whole.get().kind()) && exists(whole.get(), asOf)) {
+                return;
+            }
+            throw new com.ash.drishti.common.DrishtiException(bad.code(), bad.message());
+        }
+    }
+
+    private com.ash.drishti.engine.history.HistoryProperties historyProps;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void historyProps(com.ash.drishti.engine.history.HistoryProperties p) {
+        this.historyProps = p;
     }
 
     /** What makes the rest of a command a search rather than one entity: a wildcard or a field operator. */

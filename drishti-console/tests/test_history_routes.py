@@ -198,6 +198,18 @@ def test_a_span_past_the_newest_loaded_day_says_so(client, backend, monkeypatch)
     assert "data-hx-loaded-to" in t and "not loaded yet after" in t and "2026-10-16" in t
 
 
+def test_a_bad_range_after_an_entity_is_shown_not_plain_words(client, backend, monkeypatch):
+    """QA1-03: the server names a range it cannot read after one entity (DRS-4022, DRS-4021); the console shows that message with what to
+    type, never today's view and never plain words that drop the id."""
+    async def command(text, ident=None):
+        raise BackendError(400, "DRS-4022", "DRS-4022 '-5' is not a range: use a number of days (30), a span (30D, 2W, 3M, 1Y), YTD")
+    monkeypatch.setattr(backend, "command", command)
+    r = client.get("/go", params={"q": "TRD 1000001 -5 <GO>"}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"].startswith("/t?error=DRS-4022")
+    page = client.get(r.headers["location"]).text
+    assert "DRS-4022" in page and "&#39;-5&#39; is not a range" in page and "3M" in page
+
+
 def test_the_csv_keeps_formulas_as_text(client, backend, monkeypatch):
     async def history(kind, id_, ident=None, **params):
         return {"ref": {"kind": kind, "id": id_}, "window": {"from": "2026-10-19", "to": "2026-10-19"}, "parts": [],

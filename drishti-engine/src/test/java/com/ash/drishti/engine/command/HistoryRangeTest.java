@@ -114,6 +114,40 @@ class HistoryRangeTest {
         assertThatThrownBy(() -> HistoryRange.trailing("TRD 1000015 FROM 2026-09-30 TO 2026-09-01"))
                 .isInstanceOf(DrishtiException.class).hasMessageContaining("is after TO");
         assertThatThrownBy(() -> HistoryRange.trailing("TRD 1000015 FROM 2026-13-01"))
-                .isInstanceOf(DrishtiException.class).hasMessageContaining("yyyy-mm-dd");
+                .isInstanceOf(DrishtiException.class).hasMessageContaining("yyyy-mm-dd").hasMessageStartingWith("DRS-4022");
+    }
+
+    private static HistoryRange.Bad bad(String text) {
+        return HistoryRange.malformed(text, 366).get(0);
+    }
+
+    @Test
+    void whatReadsAsARangeButIsNoneIsNamed() {
+        // QA1-03: each bad range, the command before it, its code and what to type
+        assertThat(bad("TRD 1000001 0")).satisfies(b -> {
+            assertThat(b.command()).isEqualTo("TRD 1000001");
+            assertThat(b.code()).isEqualTo(com.ash.drishti.common.ErrorCode.HISTORY_BAD_RANGE);
+            assertThat(b.message()).contains("0 days is empty").contains("TRD 1000001 30");
+        });
+        assertThat(bad("TRD 1000001 -5").message()).contains("'-5' is not a range").contains("3M");
+        assertThat(bad("TRD 1000001 99999").code()).isEqualTo(com.ash.drishti.common.ErrorCode.HISTORY_RANGE_TOO_LARGE);
+        assertThat(bad("TRD 1000001 99999").message()).startsWith("366 business days at most");
+        assertThat(bad("TRD 1000001 1.5M").message()).contains("'1.5M' is not a range");
+        assertThat(bad("TRD 1000001 3X").command()).isEqualTo("TRD 1000001");
+        assertThat(bad("TRD 1000001 FROM yesterday").message()).contains("'yesterday' is not a date");
+        assertThat(bad("TRD 1000001 FROM 2026-02-30").message()).contains("'2026-02-30' is not a date");
+        assertThat(bad("TRD 1000001 FROM 2026-10-15 TO 2026-10-01").message()).contains("is after TO");
+        assertThat(bad("TRD 1000001 FROM 2026-10-15 TO 2026-10-01").command()).isEqualTo("TRD 1000001");
+        assertThat(bad("TRD 1000001 DIFF DIFF").message()).contains("DIFF is said once");
+        assertThat(bad("TRD 1000001 30 DIFF DIFF").message()).contains("TRD 1000001 30 DIFF");
+        assertThat(bad("TRD 1000001 30 30").message()).contains("two ranges");
+        // a bare DIFF: the range candidate (1000001 after TRD) comes first, the caller takes the one whose command is an entity
+        assertThat(HistoryRange.malformed("TRD 1000001 DIFF", 366)).extracting(HistoryRange.Bad::command).containsExactly("TRD", "TRD 1000001");
+        assertThat(HistoryRange.malformed("TRD 1000001 DIFF", 366).get(1).message()).contains("DIFF follows a range");
+        // a range read whole, and text that does not end like a range, are not bad
+        assertThat(HistoryRange.malformed("TRD 1000001 30", 366)).isEmpty();
+        assertThat(HistoryRange.malformed("TRD 1000001 3M DIFF", 366)).isEmpty();
+        assertThat(HistoryRange.malformed("CPTY northbridge", 366)).isEmpty();
+        assertThat(HistoryRange.malformed("TRD", 366)).isEmpty();
     }
 }
