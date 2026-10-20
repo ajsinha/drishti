@@ -68,20 +68,38 @@ public record Digest(String nodeId, String url, String version, int protocol, Li
      * @param type the plugin
      * @param table where its data lives, the same on every node that reads it (empty: unique to this node)
      * @param latestDate the newest business date it holds, or empty
+     * @param earliestDate the oldest business date it holds, or empty (a node that is down counts only for the dates between the two)
      * @param dataVersion the version of the kind's data, or empty
      * @param columnar whether it keeps columns (searches read them without documents)
      * @param dated whether it holds data by business date
      * @param live whether it pushes updates
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record SourceEntry(String connector, String type, String table, String latestDate, String dataVersion, boolean columnar, boolean dated,
-            boolean live) {
+    public record SourceEntry(String connector, String type, String table, String earliestDate, String latestDate, String dataVersion,
+            boolean columnar, boolean dated, boolean live) {
         public SourceEntry {
             connector = connector == null ? "" : connector;
             type = type == null ? "" : type;
             table = table == null ? "" : table;
+            earliestDate = earliestDate == null ? "" : earliestDate;
             latestDate = latestDate == null ? "" : latestDate;
             dataVersion = dataVersion == null ? "" : dataVersion;
+        }
+
+        /**
+         * Whether the source may hold the business date: a source that keeps no dates, or cannot say its first or last date, may hold any;
+         * else only the dates from its oldest to its newest (as its digest last said).
+         */
+        public boolean mayHold(java.time.LocalDate date) {
+            if (!dated || date == null) {
+                return true;
+            }
+            try {
+                return (earliestDate.isBlank() || !date.isBefore(java.time.LocalDate.parse(earliestDate)))
+                        && (latestDate.isBlank() || !date.isAfter(java.time.LocalDate.parse(latestDate)));
+            } catch (java.time.format.DateTimeParseException e) {
+                return true;
+            }
         }
     }
 

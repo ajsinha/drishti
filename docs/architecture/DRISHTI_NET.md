@@ -84,7 +84,7 @@ The product owner, 2026-10-18:
 | Need | Already there |
 |---|---|
 | A place to plug a peer in | `SourceRouter.candidates(kind)` orders every registered `SourcePlugin` whose manifest serves the kind; `ConnectorInstance` wraps a plugin per connector |
-| Knowing whether a source holds a date | `SourcePlugin.coverage(kind, asOf)` (`HELD` / `NOT_HELD` / `UNKNOWN`), `latestDate(kind)`, `dataVersion(kind, date)` |
+| Knowing whether a source holds a date | `SourcePlugin.coverage(kind, asOf)` (`HELD` / `NOT_HELD` / `UNKNOWN`), `earliestDate(kind)`, `latestDate(kind)`, `dataVersion(kind, date)` |
 | Calling another HTTP service well | the REST connector (`RestSourcePlugin`): timeouts, the shared `tls.*` settings incl. mutual TLS, the site proxy |
 | Retry and back-off per failing source | `RetryBoard` (`connector '…' failed (first time) … next try …`) |
 | Partial answers that say why | search `partial` + `failed: [{source, reason}]` |
@@ -114,7 +114,11 @@ carried over HTTP instead of UDP:
   incarnation and gossips `alive`.
 - **Leaving:** a node stopping cleanly gossips `left` for a few rounds (in the shutdown hook) so peers drop it at once.
 - **Joining:** a new node contacts its configured `seeds`, and failing those the peers saved in `peers.json`; one
-  successful exchange gives it the whole table. With no seeds and no file it is a cluster of one.
+  successful exchange gives it the whole table. With no seeds and no file it is a cluster of one. A server joins (gossips itself
+  `alive`) only once it is ready, on Spring's `ApplicationReadyEvent`: its web server answers and its connectors have started
+  (after the 2.6.5 soak, SOAK-03). Until then its peers keep it as they last saw it (dead, after a restart) and answer `DRS-5052` naming it; before,
+  a restarting node joined 12 to 19 s before its port opened and peers got `ConnectException`. The log says `net: Drishti*net is on;
+  this node joins once the server is ready`, then `joined Drishti*net` right after `Tomcat started`.
 - **Forgetting:** `dead` and `left` entries are kept `forget-after` (24 h) so a stale table cannot resurrect them, then
   dropped.
 
@@ -135,7 +139,7 @@ gossip changes:
 | `nodeId`, `url`, `version`, `protocol` | who, where, which build; peers refuse a protocol they do not speak |
 | `packs` | name, code, version and content hash of every pack switched on |
 | `kinds` | per kind: its mnemonic, its pack, whether a Sutra renders it here, and its sources |
-| `sources` per kind | connector name, type, **table identity** (a Delta table's id and location; section 10), `latestDate`, `dataVersion` of the latest date, whether columnar |
+| `sources` per kind | connector name, type, **table identity** (a Delta table's id and location; section 10), `earliestDate` and `latestDate` (the oldest and newest business dates it holds; a node that goes down counts only for the dates between them, section 7), `dataVersion` of the latest date, whether columnar |
 | `load` | requests a second over the last minute (from `RequestActivity`) and p95 latency, for choosing between peers |
 | `calendar` | the business calendar (`DRISHTI_CALENDAR`): the as-of of a forwarded request must mean the same date |
 
@@ -169,7 +173,13 @@ Every API request goes through the same three questions, in order. A forwarded r
 **Choosing among peers** that can answer: alive (not suspect) → holds the date asked (its `latestDate` and coverage) →
 freshest data version → lowest recent latency → for a tie, a stable hash of the entity id (so the same entity goes to the
 same peer and its caches stay warm). A request that fails on one peer is tried once on the next (reads only), within the
-caller's time budget.
+caller's time budget. A peer that refuses the connection (it just died, or is restarting) passes the read to the next holder.
+
+**A node that is down counts only for what it may hold** (after the 2.6.5 soak, SOAK-01). An answer that is short because a holder of the kind is
+down, suspect, drained or refusing connections names it (`DRS-5052`), but only for the business dates its last digest said its sources
+of the kind hold (`earliestDate` to `latestDate`, section 6). When the live nodes and local sources answered every date the down node
+could have, the answer is complete: a calendar window that reaches back before every lake's first day is not partial because a node is
+down.
 
 ## 8. Operations across nodes
 
@@ -257,7 +267,10 @@ backend:
   *home node*, section 11): the configured ones first, then the discovered ones, nearest first by measured latency. Each
   server in the list is health-checked every `check-every`.
 - **Falling over.** A server that refuses connections, times out or answers 502/503 `fail-after` times in a row is set
-  aside, and the console moves to the next healthy one. A **read** that failed on the way is retried once on the new
+  aside, and the console moves to the next healthy one. A 502/503 that is the server's own answer about **another** node is not
+  counted: `DRS-5050` to `DRS-5059` (a peer that holds the data is down, refuses the connection or failed), and from a server of 2.6.5 or
+  older a `DRS-1003` whose detail names a peer (`net:<node> failed reading …`). A peer's time-out is `504 DRS-1014`, never counted.
+  In the 2.6.5 soak the console set healthy servers aside 43 times on histories a dying peer could not answer (SOAK-02). A **read** that failed on the way is retried once on the new
   server, so the person sees the page, not an error; a **write** (save a layout, a search, a pivot) is never retried
   automatically: the page says it did not save and offers to try again.
 - **Nothing to sign in again.** Every node accepts the same tokens (one token secret or OIDC issuer, section 9), so the
@@ -274,11 +287,11 @@ backend:
 | Event | What happens |
 |---|---|
 | A peer stops cleanly | it gossips `left`; peers drop it from the capability table within a round; requests go elsewhere or to a later source |
-| A peer crashes | suspected after 5 s, dead after 30 s more; meanwhile `RetryBoard` backs off calls to it; answers name it in `failed` |
+| A peer crashes | suspected after 5 s, dead after 30 s more; meanwhile `RetryBoard` backs off calls to it; answers name it in `failed`; a call that meets its closed port is `DRS-5052` naming it and goes on to the next holder. Each server logs these refusals as one WARN line per change of state (`drishti-c (dead)`), then a count once a minute, never a stack trace (after the 2.6.5 soak, SOAK-06; before, about 11 MB of log a minute per server) |
 | A network split | each side carries on with what it can reach; searches are partial and say which nodes are missing; when the split heals, gossip merges (higher incarnation wins) |
 | A slow peer | its share of a scatter is cut at the caller's budget and named; single-owner reads try the next peer once |
 | Two nodes disagree on a date (different calendars) | a peer whose `calendar` differs is used only for live reads; Admin → Net warns |
-| A node restarts | reads `peers.json`, rejoins in one round, republishes its digest |
+| A node restarts | reads `peers.json`; once its server is ready (web server up, connectors started) it rejoins in one round and republishes its digest |
 | Mixed versions | the `protocol` number gates gossip; an older node is listed but not routed to for features it lacks |
 
 ## 13. Admin, management and observability

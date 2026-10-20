@@ -110,6 +110,9 @@ public final class SourceHistory {
         }
         if (!remaining.isEmpty() && fb != null) {
             List<SourcePlugin> peers = fb.peers(r.ref(), AsOf.of(r.to()));
+            String kind = r.ref().kind();
+            List<Failure> fromPeers = new ArrayList<>();
+            List<SourcePlugin> refused = new ArrayList<>();
             for (SourcePlugin p : peers) {
                 if (remaining.isEmpty()) {
                     break;
@@ -126,26 +129,49 @@ public final class SourceHistory {
                         merge(days, d);
                         got.add(d.date());
                     }
-                    read.failed().forEach((d, why) -> failures.add(new Failure(name, d, why)));
+                    read.failed().forEach((d, why) -> fromPeers.add(new Failure(name, d, why)));
                     remaining.removeIf(got::contains);
                 } catch (Exception e) {
                     router.stats().failed(name, System.nanoTime() - t0, e);
-                    // a peer that did not answer in time is a time-out of those days (DRS-1014, or a partial answer), not a failure
+                    if (!timedOut(e) && connectionFailed(e)) {
+                        refused.add(p);         // it cannot be reached (it just died, or is still starting): the next holder is asked (SOAK-02/03)
+                        continue;
+                    }
+                    // a peer that did not answer in time is a time-out of those days (DRS-1014, or a partial answer), not a failure; a peer
+                    // counts only for the dates its digest says it may hold (SOAK-01)
                     String why = timedOut(e) ? HistoryReads.TIMED_OUT : e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
                     for (LocalDate d : remaining) {
-                        failures.add(new Failure(name, d, why));
+                        if (fb.mayHold(p, kind, d)) {
+                            fromPeers.add(new Failure(name, d, why));
+                        }
                     }
                 }
             }
-            // dates no node that answered holds, while a node that holds the kind is down: they may be there, so they are not "no data"
-            List<String> down = remaining.isEmpty() ? List.of() : fb.downHolders(r.ref().kind());
-            if (!down.isEmpty()) {
-                String why = "the nodes that hold " + r.ref().kind() + " cannot be reached now: " + String.join(", ", down);
+            // a date another peer answered is not failed: the failing peer was one holder of several
+            fromPeers.stream().filter(f -> !days.containsKey(f.date())).forEach(failures::add);
+            // dates no node that answered holds, while a node that holds the kind is down or refused the connection: they may be there, so
+            // they are not "no data" (DRS-5052 naming the node). A node counts only for the dates its sources of the kind held when it was
+            // last heard of (SOAK-01): a node whose data starts on 10-02 cannot hold 07-17, so a calendar window reaching back before every
+            // lake stays complete.
+            List<String> down = remaining.isEmpty() ? List.of() : fb.downHolders(kind);
+            if (!down.isEmpty() || !refused.isEmpty()) {
                 Set<LocalDate> failed = new HashSet<>();
                 failures.forEach(f -> failed.add(f.date()));
                 for (LocalDate d : remaining) {
-                    if (!failed.contains(d)) {
-                        failures.add(new Failure(UNREACHABLE, d, why));
+                    if (failed.contains(d)) {
+                        continue;
+                    }
+                    List<String> may = new ArrayList<>();
+                    for (SourcePlugin p : refused) {
+                        if (fb.mayHold(p, kind, d)) {
+                            may.add(p.manifest().name().replaceFirst("^net:", "") + " (not answering: the connection failed)");
+                        }
+                    }
+                    if (!down.isEmpty()) {
+                        fb.downHolders(kind, d).stream().filter(x -> !may.contains(x)).forEach(may::add);
+                    }
+                    if (!may.isEmpty()) {
+                        failures.add(new Failure(UNREACHABLE, d, "the nodes that hold " + kind + " cannot be reached now: " + String.join(", ", may)));
                     }
                 }
             }
@@ -158,6 +184,27 @@ public final class SourceHistory {
         LocalDate oldest = r.lastDays() > 0 && out.size() == r.lastDays() ? out.get(0).date() : null;
         List<Failure> kept = failures.stream().filter(f -> oldest == null || !f.date().isBefore(oldest)).toList();
         return new Routed(List.copyOf(out), dedupe(kept), List.copyOf(asked));
+    }
+
+    /**
+     * Whether a call to a peer failed because the peer cannot be reached: the connection was refused (it died, or its web server is not up
+     * yet), reset or closed before an answer, or there is no route to it. Such a peer is down as far as this read goes: DRS-5052 naming it,
+     * never DRS-1003 (a time-out stays DRS-1014).
+     */
+    public static boolean connectionFailed(Throwable e) {
+        for (Throwable t = e; t != null; t = t.getCause() == t ? null : t.getCause()) {
+            if (t instanceof java.net.ConnectException || t instanceof java.net.NoRouteToHostException
+                    || t instanceof java.net.PortUnreachableException || t instanceof java.io.EOFException
+                    || t instanceof java.nio.channels.ClosedChannelException) {
+                return true;
+            }
+            String m = t.getMessage() == null ? "" : t.getMessage().toLowerCase(java.util.Locale.ROOT);
+            if (t instanceof java.io.IOException && (m.contains("connection reset") || m.contains("broken pipe")
+                    || m.contains("received no bytes") || m.contains("connection closed") || m.contains("connection refused"))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Whether a read failed because it ran out of time (an HTTP time-out of a peer, a {@code TimeoutException}). */

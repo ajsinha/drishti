@@ -61,6 +61,38 @@
   (`data_results.py`: `amount()`, whole numbers exactly, others by `math.fsum` to the cent; every other float sum by `math.fsum`) and the
   walk's drift (`samplegen/lake.py`) no longer use it; the pack samples are unchanged, data/testdata regenerated (63 files).
   `make_testdata.py --check` passes on 3.14 and 3.13. `tools/testdata/test_deterministic.py`; TOOLS, DEMO_DATA, DEVELOPER_GUIDE.
+- **Investigated (SOAK-05): resident memory that creeps while the live heap is flat is the committed heap and glibc's malloc arenas,
+  not a native leak.** Two runs under 20 users with Native Memory Tracking: metaspace, code, threads and direct buffers flat; RSS grows
+  with G1's committed heap (to `-Xmx`) and, with the default allocator, 149 malloc arenas holding about 700 MB (about 200 MB with
+  `MALLOC_ARENA_MAX=2`). PERFORMANCE.md *Resident memory* gives the numbers, the budget (`-Xmx` plus about 1 GB, or 0.4 GB with two
+  arenas) and the settings `MALLOC_ARENA_MAX=2`, `-XX:MaxDirectMemorySize=256m`, `-XX:TrimNativeHeapInterval=60000`.
+- **Fixed (SOAK-01): a complete history is no longer marked partial while a node is down.** A node that is down counts only for the
+  business dates its last digest said it holds: each source of a digest now carries `earliestDate` beside `latestDate`
+  (`SourcePlugin.earliestDate`, given by the Delta and Cassandra connectors), and `NetRouting.downHolders(kind, date)` names a down
+  node only for a date inside one of its sources' ranges. A `range=3M` history of a CALYPSO trade or a counterparty asked while the
+  MUREX holder is down is complete again, not `partial` with `DRS-5052 … drishti-c (dead): 54 days of the window may be held there`
+  naming days before any lake's first day. DRISHTI_NET sections 6 and 7, HISTORY_QUERIES section 12, NET.md, API_GUIDE;
+  HistoryPeersTest, NetPeerDownTest.
+- **Fixed (SOAK-02): a history through a peer that just died answers `DRS-5052` naming it, never `502 DRS-1003 … ConnectException`.**
+  A connection failure to a peer (refused, reset, no route) is that node being down for the read: the next holder is asked, and the dates
+  no one answered are `DRS-5052` naming it (`… cannot be reached now: drishti-c (not answering: the connection failed)`), only for the
+  dates it may hold; any other failure of a peer is `DRS-5052` too, as views say. A date one peer failed and another answered is no
+  longer partial. `DRS-1014` stays for a time-out. The console never sets aside the server that answered for a problem about another
+  node: `DRS-505x`, and a `DRS-1003` naming a peer from a 2.6.5 server, are its own answer (`peer_problem`), and `504 DRS-1014` never
+  counts; the soak had 43 such set-asides of healthy servers. HISTORY_QUERIES sections 12 and 16, DRISHTI_NET 11.1, NET.md;
+  HistoryPeersTest, NetPeerDownTest, test_cluster_failover.
+- **Fixed (SOAK-03): a starting node joins Drishti\*net only once it is ready.** The node gossips itself alive on `ApplicationReadyEvent`
+  (web server up, connectors started), no longer as soon as its net service is made, 12 to 19 s before its port opened, so peers no
+  longer route to a closed port after a restart (`ConnectException`); a peer that refuses the connection passes the read to the next
+  holder. The log says `this node joins once the server is ready`, then `joined Drishti*net` after `Tomcat started`. DRISHTI_NET
+  sections 5 and 12, NET.md; NetJoinWhenReadyTest (a node held 4 s before its port opens: routed to while closed in 94 polls before,
+  0 after).
+- **Fixed (SOAK-06): expected refusals about another node are one short log line, not a stack trace each.** `DRS-5052`, `DRS-5053` and
+  `DRS-1014` are logged once per change of what they say about a node (`drishti-c (suspect)`, then `(dead)`), then as a count once a
+  minute (`request refused 6000 times in the last 60 s naming drishti-c (dead)`), never with a stack trace; unexpected errors keep
+  theirs. While a node was down each server wrote about 11 MB of log a minute (68 MB in the soak's six-minute window). NET.md
+  troubleshooting, HISTORY_QUERIES section 16; RefusalLogTest (10,000 refusals: 10,000 WARN lines with stack traces before, 2 short
+  lines after).
 - **Fixed: a theme (or any personal setting) changed on one page could come back as the old one on the next page** when the console runs several worker processes (four on Windows by default): each worker kept the user's settings for 30 s, and a change cleared only the cache of the worker that saved it. A change now stamps the browser (`drishti_settings_at` cookie), and a worker re-reads the settings when its copy is older than the stamp; with four workers, 5 of 24 pages came back in the old theme before the fix and 0 after. `test_settings_workers.py`. Found on the product owner's Windows machine (Green → netting set → SIMM came up Blue).
 - **Fixed (QA2-205): the docs say `lake demo` builds 66 tables**, as its summary prints (one per dataset of
   data/testdata/testdata.yaml: 49 generated, 15 from the world-economy and news-and-markets samples, the captured quotes and headlines),

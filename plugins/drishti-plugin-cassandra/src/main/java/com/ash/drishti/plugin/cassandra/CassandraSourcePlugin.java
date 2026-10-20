@@ -609,6 +609,12 @@ public final class CassandraSourcePlugin implements SourcePlugin {
         return d == null || d.isEmpty() ? Optional.empty() : Optional.of(d.lastKey());
     }
 
+    @Override
+    public Optional<LocalDate> earliestDate(String kind) {
+        NavigableMap<LocalDate, CassandraLayout.Day> d = catalogue.get(kind);
+        return d == null || d.isEmpty() ? Optional.empty() : Optional.of(d.firstKey());
+    }
+
     /** The kind's days and their generations: a new day, a reload or a dropped day changes it. */
     @Override
     public Optional<String> dataVersion(String kind) {

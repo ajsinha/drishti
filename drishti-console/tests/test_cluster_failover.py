@@ -59,6 +59,14 @@ class Stand:
             return httpx.Response(503, json={"code": "DRS-5003", "detail": "service unavailable"})
         if mode == "peer-down":                       # the server answers: the node that holds the data is down
             return httpx.Response(502, json={"code": "DRS-5052", "detail": "the node drishti-c that holds trade failed reading trade/MX-1"})
+        if mode == "peer-history":                    # histories while the node that holds the data dies or restarts (SOAK-02)
+            if request.url.params.get("n") == "1":
+                return httpx.Response(504, json={"code": "DRS-1014", "detail": "the node drishti-c did not answer the history of trade/MX-1"})
+            if request.url.params.get("n") == "2":         # a server of 2.6.5 or older named the dying peer with DRS-1003
+                return httpx.Response(502, json={"code": "DRS-1003", "detail": "DRS-1003 net:drishti-c failed reading the history of trade/MX-1: "
+                                                 "ConnectException"})
+            return httpx.Response(502, json={"code": "DRS-5052", "detail": "no node that answered holds the history of trade/MX-1, and the "
+                                             "nodes that hold trade cannot be reached now: drishti-c (not answering: the connection failed)"})
         if request.url.path == "/api/v1/net/members":
             return httpx.Response(200, json={"running": True, "members": self.members})
         if request.url.path.endswith("/stream"):
@@ -120,6 +128,38 @@ def test_a_502_about_another_node_is_the_servers_answer_not_its_failure(tmp_path
         assert e.value.status == 502 and "drishti-c" in e.value.detail
     assert p.entries[A].healthy and p.current() == A and not p.snapshot()["failovers"]
     assert {b for b, _, _ in stand.calls} == {A}      # never retried elsewhere: another server would say the same
+
+
+def test_a_history_about_another_node_never_sets_aside_the_server_that_answered(tmp_path):
+    # SOAK-02: DRS-5052 or DRS-1014 naming another node (and a DRS-1003 of a 2.6.5 server naming a peer) is the server's own answer
+    stand, p = Stand(), pool(tmp_path, f"{A},{B}")
+    c = client(stand, p)
+    stand.mode[A] = "peer-history"
+    for _ in range(3):
+        for n in ("0", "1", "2"):
+            with pytest.raises(BackendError) as e:
+                run(c._get("/history/trade/~", id="MX-1", range="3M", n=n))
+            assert e.value.status in (502, 504) and "drishti-c" in e.value.detail
+    assert p.entries[A].healthy and p.current() == A and not p.snapshot()["failovers"]
+    assert {b for b, _, _ in stand.calls} == {A}
+
+
+def test_a_502_of_the_servers_own_failure_still_counts(tmp_path):
+    stand, p = Stand(), pool(tmp_path, f"{A},{B}")
+    c = client(stand, p)
+    stand.mode[A] = "own-failure"
+    orig = stand.handler
+
+    def own(request):
+        if stand.mode.get(f"{request.url.scheme}://{request.url.host}:{request.url.port}") == "own-failure":
+            stand.calls.append((A, request.method, request.url.path))
+            return httpx.Response(502, json={"code": "DRS-1003", "detail": "DRS-1003 trade-endur failed reading the history of trade/1"})
+        return orig(request)
+
+    c._client = httpx.AsyncClient(transport=httpx.MockTransport(own))
+    assert run(c._get("/history/trade/~", id="1"))["served_by"] == B          # A's own source failed: tried once on B
+    run(c._get("/history/trade/~", id="1"))
+    assert not p.entries[A].healthy and p.current() == B
 
 
 def test_sessions_keep_their_server_and_a_recovered_one_is_used_only_by_new_sessions(tmp_path, monkeypatch):

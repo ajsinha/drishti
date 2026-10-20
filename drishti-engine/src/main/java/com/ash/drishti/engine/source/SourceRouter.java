@@ -292,6 +292,23 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         default List<String> downHolders(String kind) {
             return List.of();
         }
+
+        /**
+         * The nodes that hold the kind, cannot be reached now and may hold the business date: by the date range of their sources of the
+         * kind as their digest last said before they went down (SOAK-01). A node whose sources hold only other dates is not named for this
+         * one. {@link #downHolders(String)} by default.
+         */
+        default List<String> downHolders(String kind, java.time.LocalDate date) {
+            return downHolders(kind);
+        }
+
+        /**
+         * Whether the peer {@code peer} (one of {@link #peers}) may hold the kind on {@code date}, by the date range of its sources of the
+         * kind as its digest says; true when it cannot be told. A peer that failed or cannot be reached counts only for those dates.
+         */
+        default boolean mayHold(SourcePlugin peer, String kind, java.time.LocalDate date) {
+            return true;
+        }
     }
 
     /** {@link Fallback#version} of the peers a read of {@code ref} would ask: an empty string while the cluster is off. */

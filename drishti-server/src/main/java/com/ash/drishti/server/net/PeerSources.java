@@ -138,6 +138,18 @@ public final class PeerSources implements SourceRouter.Fallback {
     }
 
     @Override
+    public List<String> downHolders(String kind, java.time.LocalDate date) {
+        return routing.forwarding() && !NetCaller.fromPeer() ? routing.downHolders(kind, date) : List.of();
+    }
+
+    @Override
+    public boolean mayHold(SourcePlugin peer, String kind, java.time.LocalDate date) {
+        String id = peer.manifest().name().replaceFirst("^net:", "");
+        return routing.digests().table().node(id).flatMap(n -> n.digest().kind(kind))
+                .map(k -> k.sources().isEmpty() || k.sources().stream().anyMatch(s -> s.mayHold(date))).orElse(true);
+    }
+
+    @Override
     public Optional<DrishtiException> unreachable(EntityRef ref) {
         if (!routing.forwarding()) {
             return Optional.empty();                      // a forwarded request asks no peer, but may still say which holder is down

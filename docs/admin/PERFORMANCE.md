@@ -545,6 +545,40 @@ JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational" java 
 Check heap use under load in Admin → Health (`server.heapUsedMb`, `heapMaxMb`) or with
 `curl -s http://localhost:18480/actuator/metrics/jvm.memory.used`.
 
+### Resident memory: what to budget, and two settings
+
+A server's resident memory (RSS) is its committed heap plus its native memory, and both grow for a while after the start before they level
+off. The 2.6.5 soak saw RSS rise by about 100 to 130 MB an hour late in a two-hour run, up to 3.0 GB at `-Xmx2g`, while the live heap was
+flat (SOAK-05). Two 20 to 40 minute runs of `tools/bench/net_soak.py` (20 users, no kills, `-Xmx2g`, the default G1 collector) with
+`-XX:NativeMemoryTracking=summary` and `jcmd <pid> VM.native_memory summary.diff` every four minutes found **no native leak**:
+
+| Server a (the console's, under load) | Default allocator | `MALLOC_ARENA_MAX=2` |
+|---|---:|---:|
+| RSS after warm-up, then 20 to 32 minutes later | 2,548 → 2,846 MB | 1,832 → 2,290 MB |
+| of which committed heap (G1 growing it towards `-Xmx`) | 1,446 → 1,654 MB | 1,198 → 1,629 MB |
+| NMT total (heap, metaspace 131, code 84, GC 111, threads 13, direct buffers 9 MB) | 1,888 → 2,111 MB | 1,638 → 2,077 MB |
+| RSS that NMT does not see (glibc malloc arenas, native libraries' own allocations) | 660 → 735 MB | 194 → 213 MB |
+| glibc malloc arenas (64 MB each, from `pmap -x`) | 149 (733 MB resident) | 1 extra (49 MB) |
+| `jcmd <pid> System.trim_native_heap` at the end | | gave back 82 MB (b: 90 MB) |
+
+Server b (little load) stayed at 1,227 to 1,317 MB with the default allocator (388 to 489 MB unseen by NMT) and at 911 to 914 MB with
+`MALLOC_ARENA_MAX=2` (about 105 MB unseen). Metaspace, code cache, thread stacks and direct buffers were flat in both runs. So the growth
+is the committed heap reaching `-Xmx` (it stops there) and, with the default allocator, glibc keeping one malloc arena per busy thread
+(up to eight per CPU) and holding freed memory in them. RSS levels off at about `-Xmx` plus 0.9 to 1 GB with the default allocator, and
+about `-Xmx` plus 0.4 GB with two arenas. Budget the machine or container for that, and set:
+
+```bash
+export MALLOC_ARENA_MAX=2                      # glibc: two malloc arenas, not one per busy thread (500 MB less RSS here)
+JAVA_TOOL_OPTIONS="-Xmx2g -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000" java -jar drishti-server-2.6.5-exec.jar
+```
+
+`-XX:MaxDirectMemorySize` caps direct buffers (9 MB in use in these runs; the default cap is the heap size); `-XX:TrimNativeHeapInterval`
+(Java 21.0.1 and later) returns freed native memory to the system every minute, as `System.trim_native_heap` did by hand. To look at a
+running server: start it with `-XX:NativeMemoryTracking=summary`, take `jcmd <pid> VM.native_memory baseline`, and later
+`jcmd <pid> VM.native_memory summary.diff scale=MB`; compare its total with `VmRSS` in `/proc/<pid>/status`. A category of
+`summary.diff` that keeps rising after the heap is fully committed is a leak; RSS that NMT does not see and that `System.trim_native_heap`
+gives back is the allocator's, not a leak.
+
 ## Scaling out
 
 A server holds its own topics, streams and caches; servers share nothing at run time. To serve more users,

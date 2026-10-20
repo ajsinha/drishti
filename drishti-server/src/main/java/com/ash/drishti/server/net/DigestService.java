@@ -251,10 +251,11 @@ public final class DigestService implements AutoCloseable {
             String name = p.manifest().name();
             String type = sources.applied(name).map(c -> c.plugin()).orElse(name);
             String table = safe(() -> p.tableIdentity(kind).orElse(""));
+            String earliest = safe(() -> p.earliestDate(kind).map(Object::toString).orElse(""));
             String latest = safe(() -> p.latestDate(kind).map(Object::toString).orElse(""));
             String version = safe(() -> p.dataVersion(kind).orElse(""));
             boolean columnar = !safeSet(() -> p.columnar(kind)).isEmpty();
-            out.add(new Digest.SourceEntry(name, type, table, latest, version, columnar, p.manifest().capabilities().dated(),
+            out.add(new Digest.SourceEntry(name, type, table, earliest, latest, version, columnar, p.manifest().capabilities().dated(),
                     p.manifest().capabilities().live()));
         }
         out.sort(Comparator.comparing(Digest.SourceEntry::connector));

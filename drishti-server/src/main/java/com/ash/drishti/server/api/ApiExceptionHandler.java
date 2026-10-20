@@ -35,9 +35,16 @@ public class ApiExceptionHandler {
     private static final Logger LOG = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
     private final SutraRegistry sutras;
+    private final RefusalLog refusals;
 
+    @org.springframework.beans.factory.annotation.Autowired
     ApiExceptionHandler(SutraRegistry sutras) {
+        this(sutras, new RefusalLog(LOG, System::currentTimeMillis, 60_000));
+    }
+
+    ApiExceptionHandler(SutraRegistry sutras, RefusalLog refusals) {
         this.sutras = sutras;
+        this.refusals = refusals;
     }
 
     /** A Sutra problem names its file relative to the Sutra root; the absolute paths stay in the log only (SEC-11). */
@@ -84,7 +91,9 @@ public class ApiExceptionHandler {
     @ExceptionHandler(DrishtiException.class)
     ProblemDetail drishti(DrishtiException e) {
         HttpStatus status = HttpStatus.valueOf(e.errorCode().httpStatus());
-        if (status.is5xxServerError()) {
+        if (RefusalLog.expected(e)) {
+            refusals.refused(e);                     // another node is down or slow: one short line per change, counted (SOAK-06)
+        } else if (status.is5xxServerError()) {
             LOG.warn("request failed: {}", e.getMessage(), e);
         }
         ProblemDetail p = ProblemDetail.forStatusAndDetail(status, e.getMessage());
