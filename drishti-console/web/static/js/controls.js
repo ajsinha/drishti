@@ -373,7 +373,7 @@
       old.replaceWith(fresh);
       if (options.afterSwap) { options.afterSwap(fresh); }
       keep(fresh);
-      if (chosenId) { var t = fresh.querySelector('#' + CSS.escape(chosenId)); if (t) { t.click(); } }
+      if (chosenId) { var t = fresh.querySelector('#' + CSS.escape(chosenId)); if (t) { t.dispatchEvent(new MouseEvent('click', { bubbles: false, cancelable: true })); } }   // the tab's own handler; nothing on the page takes it for the reader's click
       return true;
     }
     function swapStrip(html) {

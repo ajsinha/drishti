@@ -304,8 +304,11 @@
   // ---- live: the page follows the report's live tables (RUPAKA.md section 12) -----------------------------------------------
   /** A tick: every visual of the page that draws data is asked again, quietly, three at a time; a burst of ticks is one round (bi-live.js coalesce). */
   function refreshLive() {
+    if (watch && watch.paused()) { return Promise.resolve(); }      // a round asked just before Pause (waiting out the coalescing) does not redraw a paused page
     const specs = pageOf(pageId).visuals.filter((v) => ['static', 'entity', 'slicer'].indexOf(VGROUP[v.type]) < 0);
-    return Promise.all(specs.map((v) => load(v, { quiet: true }))).then(() => { canvas.setAttribute('data-live-round', String((Number(canvas.getAttribute('data-live-round')) || 0) + 1)); });
+    canvas.setAttribute('data-live-busy', '');                         // a round under way (its answers may land just after a Pause)
+    return Promise.all(specs.map((v) => load(v, { quiet: true }))).then(() => { canvas.setAttribute('data-live-round', String((Number(canvas.getAttribute('data-live-round')) || 0) + 1)); })
+      .finally(() => canvas.removeAttribute('data-live-busy'));
   }
 
   function startLive() {
@@ -318,7 +321,7 @@
       staleSeconds: Number(canvas.getAttribute('data-live-stale')) || 30,
       onHello: (id, d) => { if (wasOff || Number(d.generation) > seenGeneration) { refresher.request(); } wasOff = false; },
       onTick: (id, d) => { if ((d && d.resumed) || !Array.from(frames.values()).some((e) => e.follow)) { refresher.request(); } },          // pushed answers redraw the followed visuals; Resume catches up
-      onState: (info) => { if (info.state === 'disconnected' || info.state === 'hidden') { wasOff = true; } if (indicator) { indicator.draw(); } },
+      onState: (info) => { if (info.state === 'disconnected' || info.state === 'hidden') { wasOff = true; } if (info.state === 'paused' && refresher) { refresher.cancel(); } if (indicator) { indicator.draw(); } },
       onSignal: () => { if (indicator) { indicator.draw(); } }
     });
     indicator = B.live.indicator(q('[data-live-bar]'), () => watch);

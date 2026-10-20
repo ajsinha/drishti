@@ -35,7 +35,7 @@ EMBED = WEB / "embed"
 OUT = WEB / "elements"
 PACKAGE = OUT / "package"
 LOCK = OUT / "integrity.json"
-VERSION = "1.4.2"                  # bump on ANY change of a file under web/embed/ (the guard test says so); major = the element API contract
+VERSION = "1.4.3"                  # bump on ANY change of a file under web/embed/ (the guard test says so); major = the element API contract
 API = "1.0"                        # the embed API contract the modules speak (Drishti-Embed-Api)
 ENTRY = "drishti-elements.js"
 SEMVER = re.compile(r"\d+(\.\d+){0,2}")

@@ -19,6 +19,7 @@ the old text back), the lint reaches the Problems tab, and the fragment carries 
 Skipped when Playwright, its Chromium, the server jar or JDK 25 is missing."""
 import io
 import json
+import time
 import zipfile
 
 from test_workbench_browser import browser, open_design, page, wait  # noqa: F401 - fixtures and helpers
@@ -37,6 +38,20 @@ def _set(page, text):
 
 def _value(page):
     return page.evaluate("() => window.drishtiWorkbench.about.value()")
+
+
+def _saved(page, base, id_, ok, what):
+    """Waits until the editor has saved its text (nothing waiting, the design's text is the editor's) and the server holds it as wanted: the
+    editor saves a moment after the last change (a step of the log), later under load, so a fixed pause raced the save."""
+    page.wait_for_function("() => { const w = window.drishtiWorkbench; return !w.about.pending() && w.store.state.about === w.about.value(); }",
+                           timeout=30000)
+    end = time.monotonic() + 30
+    while True:
+        d = page.request.get(f"{base}/build/designs/{id_}").json()
+        if ok(d.get("about")):
+            return d
+        assert time.monotonic() < end, f"the design was not saved with {what}: {d.get('about')!r}"
+        page.wait_for_timeout(200)
 
 
 def test_edit_the_about_text_and_the_card_updates_by_keyboard_alone_and_it_exports(live_console, page):
@@ -60,9 +75,7 @@ def test_edit_the_about_text_and_the_card_updates_by_keyboard_alone_and_it_expor
     starter = _value(page)
     assert "shipment:" in starter and "facts:" in starter and "carrier:" in starter    # kind, panel and the field shown without an entry
     page.locator("[data-about-card]").get_by_text("Where a shipment is.").wait_for(timeout=10000)      # the Sutra's description, layer 1
-    page.wait_for_timeout(2200)                                           # kept as a step of the log
-    first = page.request.get(f"{live_console}/build/designs/{id_}").json()
-    assert first["about"] == starter
+    first = _saved(page, live_console, id_, lambda t: t == starter, "the starter")       # kept as a step of the log
 
     # a shorter text with the entity's own numbers: the card follows on idle
     _set(page, TEXT)
@@ -77,26 +90,25 @@ def test_edit_the_about_text_and_the_card_updates_by_keyboard_alone_and_it_expor
     _set(page, GLOSS)
     page.locator("[data-about-card]").get_by_text("The line that moves the box.").wait_for(timeout=10000)
     page.wait_for_function("() => document.querySelector('[data-about-lint]').innerText.indexOf('DRS-2047') < 0", timeout=10000)
-    page.wait_for_timeout(2200)
-    saved = page.request.get(f"{live_console}/build/designs/{id_}").json()
-    assert saved["about"] == GLOSS and saved["rev"] > first["rev"]
+    saved = _saved(page, live_console, id_, lambda t: t == GLOSS, "the glossary")
+    assert saved["rev"] > first["rev"]
 
     # a mistake is located: an unclosed expression is DRS-2042 with its line
     _set(page, TEXT.replace("${$.carrier}", "${$.carrier"))
     page.wait_for_function("() => document.querySelector('[data-about-lint]').innerText.indexOf('DRS-2042') >= 0", timeout=10000)
     assert "line 4" in page.locator("[data-about-lint]").inner_text()
     _set(page, GLOSS)
-    page.wait_for_timeout(2200)
+    _saved(page, live_console, id_, lambda t: t == GLOSS, "the glossary again")
 
     # undo brings the earlier text back (focus outside the box: the design's own Ctrl+Z)
     page.locator("[data-about-card]").click()
     page.keyboard.press("Control+z")
     page.wait_for_function("() => window.drishtiWorkbench.about.value().indexOf('carrier: {') < 0", timeout=10000)
-    assert page.request.get(f"{live_console}/build/designs/{id_}").json()["about"] != GLOSS
+    _saved(page, live_console, id_, lambda t: t != GLOSS, "the text before the glossary (undone)")
 
     # the fragment carries the text
     _set(page, GLOSS)
-    page.wait_for_timeout(2200)
+    _saved(page, live_console, id_, lambda t: t == GLOSS, "the glossary before the export")
     zipped = page.request.get(f"{live_console}/build/designs/{id_}/export").body()
     with zipfile.ZipFile(io.BytesIO(zipped)) as z:
         names = z.namelist()

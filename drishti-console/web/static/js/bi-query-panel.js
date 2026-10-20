@@ -162,7 +162,8 @@
           plan ? h('span', { 'data-qp-plan': plan, text: 'Plan ' + String(plan).slice(0, 12) + (same === true ? ': the same plan as the visual\'s query.' : same === false ? ': a different plan from the visual\'s query.' : '.') }) : null);
       }).catch((e) => { B.clear(out).appendChild(h('span', { class: 'bi-bad', 'data-qp-error': e.code || '', text: e.status === 404 ? 'This server does not run Drishti SQL yet.' : e.message })); }));
     });
-    if (opts.on) { opts.on('select', draw); opts.on('model', () => window.setTimeout(draw, 600)); }
+    // a visual's answer (its query) can arrive after it was selected, or after a field was dropped on it: 'query' redraws then
+    if (opts.on) { opts.on('select', draw); opts.on('query', draw); opts.on('model', () => window.setTimeout(draw, 600)); }
     draw();
     return { draw, box };
   };

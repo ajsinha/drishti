@@ -460,6 +460,9 @@ async def audit(request: Request, subject: str = "", limit: int = 200):
     return render(request, "admin/audit.html", events=events, subject=subject)
 
 
+HEALTH_WAIT_SECONDS = 30.0
+
+
 @router.get("/health")
 async def health(request: Request, partial: int = 0):
     """Connector and pack health (admins): the page, or only its body for the page's own refresh."""
@@ -467,7 +470,9 @@ async def health(request: Request, partial: int = 0):
     if not me.is_admin:
         return _forbidden(request)
     try:
-        data = await request.app.state.backend.admin("GET", "/health", me)
+        # Health is the page an administrator opens when the server is struggling, and it measures (the connectors, the temp folders): it is
+        # given 30 s, not the console's usual 5 s, so a loaded server's answer is shown instead of a 504
+        data = await request.app.state.backend.admin("GET", "/health", me, timeout=HEALTH_WAIT_SECONDS)
     except BackendError as e:
         return render(request, "admin/forbidden.html", status_code=e.status, error=e)
     # Only a connector (a file under config/connectors) has a page: a source a plugin runs on its own (file, demo) does not.

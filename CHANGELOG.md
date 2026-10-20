@@ -19,6 +19,36 @@
 
 ## 2.5.0 — Drishti*net: many servers, one Drishti; no JVM litters /tmp; the documents, help and deck reviewed (2026-10-19)
 
+- **Fixed: Drishti*net: a user known to one node stays signed in after the console falls over.** The other nodes refused a user they did not
+  hold (`registered-users-only`), so a console moving from the node where the user was made signed them out, unless every node shared one
+  identity database. The nodes now copy their identity to each other over the signed user-state batches: users (roles, packs, enabled, the
+  password hash, never a password), the roles of Admin → Roles and personal API tokens (the secret's SHA-256), the newest change winning. Disabling
+  and deleting a user travel too: a deletion leaves a tombstone (`<data dir>/net/identity-deleted.json`, 90 days), so a node that was down deletes
+  the user (with their tokens, settings and sessions) when it comes back and its stale copy never brings them back; a user made again after a
+  deletion is a new user; of two users of one name made apart the older stands (a new node's seeded administrator never replaces the cluster's).
+  Every change applied is audited on the receiving node with `net:<node>`. `user-state: off` (one shared database) copies nothing, as before.
+  `NetIdentityTest` (three servers in one JVM, security on). NET.md section 7, DRISHTI_NET.md sections 9, 11 and 19, tutorial 19 step 8.
+- **Fixed: a Delta connector's on-disk document cache keeps what was read before a restart.** A document read by the start-up warm-up went
+  into the memory tier before the disk tier, so a page answered from memory at that moment never wrote it to disk, and a close dropped the
+  warm-up's late write; a background read still inside the cache also kept it locked after the close. The disk tier is now written first, and
+  closing waits up to 5 s for background reads to leave (found as a flaky `DeltaDocDiskCacheTest` under the drill's load).
+- **Fixed: a live view's tick no longer closes an open panel help popover.** A tick that replaced a panel with tabs selected the reader's tab
+  again by clicking it, and that click reached the page's own listeners: the panel `?` popover (and a pinned tip, a menu) closed about once a
+  second on a ticking view, in the console and in `<drishti-view>`. The tab is now selected by a click that does not bubble (live.js,
+  controls.js and Drishti Elements **1.4.3**). Found as a flaky `test_trusted_types_enforced_host_still_works`.
+- **Fixed: a BI visual a busy server answers in more than 5 s is drawn, not refused.** The console gave every BI call its usual 5 s wait,
+  while the server lets a query run 30 s (`drishti.bi.query.timeout`): a tile or visual on a loaded server showed `DRS-1004 the server did not
+  answer in time` while the server was still working on it. A query (`.../query`, `mq`, `sql`, the Arrow rows) now waits 35 s. Found as the
+  flaky board designer test of `test_wave_b_browser` (0 of 3 under load before, 5 of 5 after).
+- **Fixed: the report designer's Query pane shows the selected visual's query when its answer comes after the selection.** It redrew on a
+  selection and 0.6 s after a change only, so a visual selected before its query was answered said *Choose a visual*; it now redraws when the
+  answer arrives. And the Fields pane is no longer rebuilt when nothing in it changed: a rebuild just after the page was ready took the field
+  being dragged from under the pointer and the drop was lost. Found as the flaky `test_w1_model_designer_browser`.
+- **Fixed: Pause on a live BI page stops the redraws at once.** A redraw asked by a tick just before Pause (waiting out the 250 ms coalescing)
+  still ran on the paused page; it is now dropped. Admin → Health waits 30 s for the server (it measures connectors and temp folders, and is the
+  page an administrator opens when the server is struggling) instead of answering 504 after the console's usual 5 s.
+- **Fixed: `pytest` from the repo root collects every test.** `tools/bench/test_trades.py` and `tools/packgen/trades/test_trades.py`
+  shared a module name, so collection stopped with an import-file-mismatch error; the benchmark's test is now `tools/bench/test_bench_trades.py`.
 - **Fixed: derived pages kept on disk are never removed while another process has them open.** A server's start-up clean-up of
   `<data dir>/derived/<connector>` deleted every folder it did not keep, including a store another process was writing (two servers
   sharing a data folder; found by the drill's parallel test forks); it now leaves a store whose lock is held (`SortedStore.inUse`).

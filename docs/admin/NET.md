@@ -293,8 +293,9 @@ its place. Admin → Net → Security lists the configured certificates and when
 **The user is carried, not trusted blindly.** A request forwarded for a person carries an **on-behalf-of token**: the user, the roles, the embed
 application if any, the node that forwarded it and the request id, the node it is for, signed with the cluster key and valid 30 seconds. The
 receiving node checks the token as it checks the call, and serves the request as that person: their masks, their kinds, their packs. With
-`drishti.security.registered-users-only` on (the default), the user must exist and be enabled on the receiving node too: give the nodes one
-identity database (PostgreSQL, `DRISHTI_IDENTITY_DB_URL`) so that is true everywhere. A token for another node, or older than 30 s, is refused.
+`drishti.security.registered-users-only` on (the default), the user must exist and be enabled on the receiving node too; the nodes copy their
+users to each other ([section 7](#7-routing-where-a-request-goes), *the identity follows*), so a user known to one node is known to all. A token
+for another node, or older than 30 s, is refused.
 
 **Masks twice.** The node that reads the data masks it as it would for that person; the node that shows the page applies its own masks again. The
 stricter configuration wins; Admin → Net → Capability map warns when two nodes mask different fields.
@@ -379,9 +380,21 @@ documents it holds, applied there only where it has none. Alerts, monitors and s
 node; they stay on the node they were made on. **Console sign-in sessions are copied the same way**: when a console opens a session on one
 node, the others learn it (only the SHA-256 of the session id travels, with the user and the expiry, never the id), a sign-out on any node ends it
 on all, and an administrator's disabling or deleting a user ends their sessions everywhere; a node that joins is given the sessions that stand. So
-a console that moves to another server keeps every person signed in. The user must exist on every node (the seeded administrator does; others
-are created on each node, or kept in one shared identity database). With one shared identity database (PostgreSQL, `DRISHTI_IDENTITY_DB_URL`) the nodes already share all
-of it: set `user-state: off` in routing.yaml. Admin → Net → Members says how many changes were sent and applied and what waits for which peer.
+a console that moves to another server keeps every person signed in.
+
+**The identity follows too.** Users (their roles, packs, whether they are enabled, and the password hash, never a password), the roles
+administrators define (Admin → Roles) and personal API tokens (the SHA-256 of the secret, never the secret) made or changed on one node are copied to
+every other node the same way, so a user created on one node can sign in on any, stays signed in when the console moves, and a script's token works
+on every node. The newest change wins; each change applied is audited on the receiving node with the node it came from (`net:<node>`, e.g.
+`user-created`, `user-updated`, `user-deleted`, `role-updated`, `token-copied`, `token-revoked`). **Disabling** a user is copied as any change, and
+their sessions end everywhere. **Deleting** a user or a role leaves a tombstone (`<data dir>/net/identity-deleted.json`, kept 90 days): a node that
+was down at the time deletes it when it comes back (with the user's tokens, settings and sessions), and its stale copy never brings the user back
+elsewhere; a user created again under the same name after the deletion is a new user. Two users of one name made apart on two nodes (each node's
+seeded administrator, typically) are settled by the older: a new node's seeded administrator never replaces the cluster's. Everything travels over
+the signed `POST /api/v1/net/state`; between nodes on an untrusted network add mutual TLS ([section 6](#6-security-the-key-mutual-tls-nodes-per-role))
+so the password hashes are not readable on the wire. With one shared identity database (PostgreSQL, `DRISHTI_IDENTITY_DB_URL`) the nodes already
+share all of it: set `user-state: off` in routing.yaml. Admin → Net → Members says how many changes were sent and applied and what waits for which
+peer.
 
 **Which node answered, for administrators.** A view's *How this view was built* panel has, for an administrator only, a line **Node**:
 `drishti-a · local`, `drishti-a · built here, data from drishti-c`, `drishti-b · forwarded from drishti-a`, or

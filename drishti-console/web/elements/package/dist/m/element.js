@@ -343,7 +343,9 @@ export class DrishtiView extends HTMLElement {
     if (!done) { return; }
     const m = this.#mods;
     if (m) { m.view && m.view.enhance(done.fresh); m.charts && m.charts.draw(); m.view && m.view.redraw(); m.hints && m.hints.refresh(); }
-    if (done.chosen) { const t = this.shadowRoot.getElementById(done.chosen); t && t.click(); }
+    // the reader's tab again, by a click that does not bubble: the tab's own handler selects it, and nothing listening on the root takes
+    // a tick for a click of the reader's (an open panel help popover, a pinned tip or a menu stays open through ticks)
+    if (done.chosen) { const t = this.shadowRoot.getElementById(done.chosen); t && t.dispatchEvent(new MouseEvent('click', { bubbles: false, cancelable: true })); }
     done.fresh.querySelectorAll('tbody td, dd').forEach((td) => td.classList.add('live-cell'));
   }
 

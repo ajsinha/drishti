@@ -38,6 +38,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 from bi_stack import FORBIDDEN, listening, wait  # noqa: E402
 from scratch_ports import worker_ports  # noqa: E402
+from dnd import drag  # noqa: E402
 from java_launch import java_cmd
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -326,9 +327,9 @@ def test_pack_dataset_to_model_to_report(browser):
     # the designer takes a drop once it is ready (its fields, canvas and handlers bound): a drop before that is lost (it failed one run in two)
     expect(page.locator('[data-design-root][data-ready="yes"]')).to_be_visible(timeout=30000)
     expect(page.locator("[data-canvas-empty]")).to_be_visible()
-    page.drag_and_drop('[data-field="Sum of MTM"]', "[data-canvas-grid]", target_position={"x": 80, "y": 40})
+    drag(page, '[data-field="Sum of MTM"]', "[data-canvas-grid]", target_position={"x": 80, "y": 40})
     expect(page.locator(".bi-dvis").first).to_be_visible(timeout=15000)
-    page.drag_and_drop('[data-field="trade.DESK"]', ".bi-dvis")
+    drag(page, '[data-field="trade.DESK"]', ".bi-dvis")
     page.locator(".bi-dvis").first.click()
     expect(page.locator("[data-visual-query-text]").first).to_contain_text(f"model: {name}@1", timeout=15000)
     expect(page.locator(".bi-dvis").first).to_contain_text("3 rows", timeout=15000)           # three desks, drawn from the model query
@@ -354,8 +355,8 @@ def test_a_report_straight_from_a_dataset_reads_its_implicit_model_in_the_design
     expect(page.locator('[data-model-header="implicit"]')).to_contain_text("Implicit model of Trade", timeout=30000)
     expect(page.locator("[data-make-model]")).to_be_visible()
     expect(page.locator('[data-field="desk.NAME"]')).to_be_visible()                  # the pack dimension came along, one hop
-    page.drag_and_drop('[data-field="Sum of MTM"]', "[data-canvas-grid]", target_position={"x": 80, "y": 40})
-    page.drag_and_drop('[data-field="desk.NAME"]', ".bi-dvis")
+    drag(page, '[data-field="Sum of MTM"]', "[data-canvas-grid]", target_position={"x": 80, "y": 40})
+    drag(page, '[data-field="desk.NAME"]', ".bi-dvis")
     expect(page.locator(".bi-dvis").first).to_contain_text("3 rows", timeout=15000)
     page.click("[data-save]")
     expect(page.locator(".bi-near").first).to_contain_text("Saved", timeout=15000)

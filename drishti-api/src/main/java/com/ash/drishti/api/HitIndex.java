@@ -44,6 +44,8 @@ public final class HitIndex {
     private static final int FOLD_AT = 4096;
     private static final Comparator<Entry> BY_ID = Comparator.comparing(Entry::id);
     private final AtomicReference<State> state = new AtomicReference<>(new State(Map.of(), List.of(), java.util.Set.of(), 0));
+    /** Folds made (each rewrites the arrays of the kinds it touches): the work a test counts instead of timing it. */
+    private final java.util.concurrent.atomic.AtomicLong folds = new java.util.concurrent.atomic.AtomicLong();
 
     private static Entry entry(EntityHit h) {
         return new Entry(h, h.ref().id().toLowerCase(Locale.ROOT), (h.title() + " " + h.subtitle()).toLowerCase(Locale.ROOT));
@@ -56,7 +58,7 @@ public final class HitIndex {
             pending.addAll(old.pending());
             pending.add(e);
             State next = new State(old.byKind(), List.copyOf(pending), old.removed(), old.size() + 1);
-            return pending.size() >= FOLD_AT ? fold(next) : next;
+            return pending.size() >= FOLD_AT ? counted(fold(next)) : next;
         });
     }
 
@@ -90,7 +92,7 @@ public final class HitIndex {
             }
             int size = old.size() - (inPending ? old.pending().size() - pending.size() : 0) - (inArrays ? 1 : 0);
             State next = new State(old.byKind(), pending, removed, Math.max(0, size));
-            return removed.size() >= FOLD_AT ? fold(next) : next;
+            return removed.size() >= FOLD_AT ? counted(fold(next)) : next;
         });
     }
 
@@ -146,6 +148,16 @@ public final class HitIndex {
         });
         int size = byKind.values().stream().mapToInt(a -> a.length).sum();
         return new State(Map.copyOf(byKind), List.of(), java.util.Set.of(), size);
+    }
+
+    private State counted(State folded) {
+        folds.incrementAndGet();
+        return folded;
+    }
+
+    /** How many folds this index has made (a retried update may count one twice; a test counts them single-threaded). */
+    long folds() {
+        return folds.get();
     }
 
     private static Entry[] sorted(List<Entry> list) {

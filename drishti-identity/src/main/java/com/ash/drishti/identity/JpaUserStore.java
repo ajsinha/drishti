@@ -28,6 +28,22 @@ public final class JpaUserStore implements UserStore {
     private final IdentityRepositories.Users users;
     private final TransactionTemplate tx;
 
+    /**
+     * Told of every user written or deleted through this store, after the write: Drishti*net copies users (their roles, enabled flag and
+     * password hash) to the other nodes of a cluster, so a person known to one node stays signed in on another (DRISHTI_NET.md section 11).
+     */
+    public interface Listener {
+        void written(User user);
+
+        void deleted(String username);
+    }
+
+    private final List<Listener> listeners = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    public void listen(Listener l) {
+        listeners.add(l);
+    }
+
     public JpaUserStore(IdentityRepositories.Users users, TransactionTemplate tx) {
         this.users = users;
         this.tx = tx;
@@ -90,6 +106,9 @@ public final class JpaUserStore implements UserStore {
             users.save(e);
         });
         recent.remove(u.username());
+        for (Listener l : listeners) {
+            l.written(u);
+        }
     }
 
     @Override
@@ -102,6 +121,11 @@ public final class JpaUserStore implements UserStore {
             return true;
         }));
         recent.remove(username);
+        if (gone) {
+            for (Listener l : listeners) {
+                l.deleted(username);
+            }
+        }
         return gone;
     }
 

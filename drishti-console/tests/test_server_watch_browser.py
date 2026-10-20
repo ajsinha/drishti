@@ -64,6 +64,17 @@ def start_server(tmp: Path):
     return p
 
 
+def marker(page):
+    """The page's marker: 1 until the page reloads. The reload is the page's own, at any moment: an evaluation it interrupts ("execution
+    context was destroyed") means the reload is under way (it failed so, two runs in three under load)."""
+    try:
+        return page.evaluate("window.__marker")
+    except Exception as e:  # noqa: BLE001 - Playwright's Error
+        if "context was destroyed" in str(e) or "navigat" in str(e):
+            return None
+        raise
+
+
 def stop(p) -> None:
     p.terminate()
     try:
@@ -100,7 +111,7 @@ def test_banner_appears_recovers_and_returns(tmp_path):
             server = start_server(tmp_path)                               # the server starts later
             wait(SERVER + "/actuator/health", 150)
             end = time.time() + 90
-            while page.evaluate("window.__marker") == 1:                  # until the page has reloaded by itself
+            while marker(page) == 1:                                      # until the page has reloaded by itself
                 assert time.time() < end, "the page did not recover: " + page.locator("[data-server-watch]").inner_text() + " / " + (tmp_path / "console.log").read_text()[-600:]
                 page.wait_for_timeout(1000)
             page.wait_for_load_state("load")

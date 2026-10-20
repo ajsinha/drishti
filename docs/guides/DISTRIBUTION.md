@@ -623,7 +623,7 @@ The Alerts page, the form, the history and the inbox keep to the screen at 390 p
 **What the host writes.**
 
 ```html
-<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.4.2/drishti-elements.js" crossorigin="anonymous"></script>
+<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.4.3/drishti-elements.js" crossorigin="anonymous"></script>
 
 <drishti-report id="rep" report="file:report:live-trading-desk" theme="light"></drishti-report>
 <drishti-report id="one" report="file:report:live-trading-desk" visual="by-desk" chrome="bare"></drishti-report>

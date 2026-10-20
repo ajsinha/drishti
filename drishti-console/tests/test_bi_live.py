@@ -68,7 +68,7 @@ class LiveBackend(BiBackend):
             return dict(DATASET_ANSWER, live=LIVE_STATE)
         return await super().bi(method, path, ident, body, **params)
 
-    async def bi_arrow(self, path, ident, body, **params):
+    async def bi_arrow(self, path, ident, body, wait=None, **params):   # wait: the console waits longer for a query
         self.arrow_calls.append((path, body, params))
         return ARROW, {"x-bi-rows": "960", "x-bi-masked": "trader", "x-bi-live": json.dumps(LIVE_STATE), "content-type": "application/vnd.apache.arrow.stream", "server-timing": "x"}
 

@@ -126,9 +126,11 @@
 
     /** The Fields pane: one tree for the report's dataset and, when datasets were added, one collapsible tree for each (labelled, removable when no visual uses it). */
     function drawFields() {
-      B.clear(tree);
+      // built aside and put in only when it differs: a redraw that changes nothing (the perspective lists, a model change elsewhere) keeps the
+      // buttons in place, so a field being dragged, or focused, is not taken from under the reader (a drag just after the page was ready was lost)
+      const out = h('div');
       const extra = D.extraEntries ? D.extraEntries() : [];
-      if (!extra.length) { drawTree(tree, D.dataset, D.idx, ''); } else {
+      if (!extra.length) { drawTree(out, D.dataset, D.idx, ''); } else {
         const wrap = (ref, ds, idx, title, main) => {
           const box = h('div', { class: 'bi-dstree-body' });
           drawTree(box, ds, idx, ref);
@@ -140,11 +142,13 @@
             rm.addEventListener('click', (e) => { e.preventDefault(); D.removeDataset(ref); });
             sum.appendChild(rm);
           }
-          tree.appendChild(det);
+          out.appendChild(det);
         };
         wrap('', D.dataset, D.idx, D.dataset.title || D.dataset.id || D.model.dataset, true);
         extra.forEach((x) => wrap(x.ref, x.dataset, x.idx, x.title, false));
       }
+      const same = out.childNodes.length === tree.childNodes.length && [...out.childNodes].every((n, i) => n.isEqualNode(tree.childNodes[i]));
+      if (!same) { B.clear(tree); while (out.firstChild) { tree.appendChild(out.firstChild); } }
       q('[data-model-link]').href = '/bi/m/' + B.id2path(D.dataset.id || '');
     }
     D.drawFields = drawFields;

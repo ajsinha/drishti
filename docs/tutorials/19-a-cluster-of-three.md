@@ -317,8 +317,20 @@ the failover of Step 7 they are where you are. A node that was down is given wha
 reports stay on the node they were made on: they act, and would act once per node. With one shared identity database, set `user-state: off` in
 routing.yaml.
 
+Your account follows you too. Create a user on a (**Admin → Users → New user**, or the REST call below; the CLI has no user command): within a second b and c know them, with their
+roles, the roles you defined on **Admin → Roles**, and their API tokens; so they can sign in through any node and stay signed in when the console
+falls over, as in Step 7, even if a is gone for good. Disable or delete them on b while a is stopped: when a comes back it learns that too, and a
+does not bring them back.
+
+```text
+$ curl -s -X POST http://127.0.0.1:18783/api/v1/admin/users -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
+    -d '{"username":"rita","roles":["viewer"],"password":"a-long-pass-1"}'                        # on a
+$ curl -s http://127.0.0.1:18785/api/v1/admin/users/rita -H "Authorization: Bearer $DRISHTI_TOKEN"   # on c, a second later: rita
+```
+
 **You should see:** Admin → Net → Members on b counting the changes applied from a (*Users' saved searches, layouts, pivots and workspaces are
-copied ...: N changes sent, M applied here*), and your saved search in the list on b after the failover.
+copied ...: N changes sent, M applied here*), your saved search in the list on b after the failover, and on b's **Admin → Audit** the user
+`rita` as `user-created` by `net:drishti-a`.
 
 ## Next steps
 

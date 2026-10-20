@@ -219,6 +219,7 @@
         if (token !== e.token) { return; }
         D.timings.set(id, res.meta.millis);
         (D.lastMq = D.lastMq || new Map()).set(id, res.mq || null);                       // what the Studio's Query pane shows for the selected visual
+        D.emit('query', id);                                                                 // the Query pane redraws: the answer may come after the visual was selected
         e.frame.result(res, (host) => B.visuals.draw(host, spec, ctxFor(v), res));
       }, (err) => { if (token === e.token) { e.frame.error(err); } });
     }

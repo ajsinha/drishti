@@ -71,7 +71,9 @@
     if (keepControls) { keepControls(fresh); }
     if (window.drishtiLayout) { window.drishtiLayout.decorate(fresh); }
     if (window.drishti) { window.drishti.enhance(fresh); }
-    if (chosenId) { var t = document.getElementById(chosenId); if (t) { t.click(); } }
+    // the reader's tab again, by a click that does not bubble: the tab's own handler selects it, and nothing listening on the page takes a
+    // tick for a click of the reader's (an open panel help popover, a pinned tip or a menu stays open through ticks)
+    if (chosenId) { var t = document.getElementById(chosenId); if (t) { t.dispatchEvent(new MouseEvent('click', { bubbles: false, cancelable: true })); } }
     fresh.querySelectorAll('tbody td, dd').forEach(function (td) { td.classList.add('live-cell'); });
   }
 

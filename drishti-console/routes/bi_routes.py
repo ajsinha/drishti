@@ -33,6 +33,14 @@ router = APIRouter(include_in_schema=False)
 # the server paths the page script may reach: nothing else is passed on
 _ALLOWED = ("me", "home", "catalogue", "settings", "workspaces", "items", "datasets", "model", "engine", "reports", "bundle", "boards", "python", "ai", "imports", "mq", "models", "pack-datasets", "expr", "sql", "layer-datasets", "lineage", "themes")
 _NO_BODY = {"GET", "DELETE"}
+# A query (a visual's, a model query, SQL) may run on the server up to drishti.bi.query.timeout (30 s): the console waits that long and a little
+# more, not its usual 5 s, so a query a loaded server answers in 6 s is drawn, not refused with DRS-1004 while the server still works on it.
+QUERY_WAIT_SECONDS = 35.0
+
+
+def _query_wait(head: str, path: str) -> dict:
+    """The longer wait for a query, as the keyword the backend takes (nothing for any other call)."""
+    return {"wait": QUERY_WAIT_SECONDS} if path.endswith("/query") or head in ("mq", "sql") else {}
 
 
 _KEPT = ("mq", "problems", "path", "fix", "at")    # what a refusal carries for the page: the model query a 410 names, the problems with their fixes
@@ -209,14 +217,14 @@ async def proxy(request: Request, path: str):
     params = {k: v for k, v in request.query_params.items()}
     if request.method == "POST" and head == "reports" and path.endswith("/query") and params.get("format") == "arrow":
         try:                                                  # a Perspective visual's rows: the server's Arrow bytes, passed through unchanged
-            content, headers = await request.app.state.backend.bi_arrow("/" + path, ident(request), body, **params)
+            content, headers = await request.app.state.backend.bi_arrow("/" + path, ident(request), body, wait=QUERY_WAIT_SECONDS, **params)
         except BackendError as e:
             return _problem(e)
         kept = {k: v for k, v in headers.items() if k.lower() in ("x-bi-rows", "x-bi-masked", "x-bi-live")}
         kept["Cache-Control"] = "no-store"
         return Response(content, media_type="application/vnd.apache.arrow.stream", headers=kept)
     try:
-        answer = await request.app.state.backend.bi(request.method, "/" + path, ident(request), body, **params)
+        answer = await request.app.state.backend.bi(request.method, "/" + path, ident(request), body, **_query_wait(head, path), **params)
     except BackendError as e:
         return _problem(e)
     if request.method != "GET":
