@@ -122,3 +122,14 @@ def test_the_heartbeat_names_the_table_not_the_builds_working_folders(tmp_path):
     staging.write_bytes(b"y" * 1000)                       # newer than the table's file, as during a build
     line = b.lake_progress(tmp_path)
     assert "writing trading/trade_endur business_date=2026-10-16" in line and "_drishti-lake" not in line
+
+
+def test_a_python_without_deltalake_is_told_which_python_to_use(tmp_path):
+    """QA (Fix-9a): run with a plain python3, every table failed with "no engine" and nothing said why."""
+    import os
+    stub = tmp_path / "stub"
+    stub.mkdir()
+    (stub / "deltalake.py").write_text("raise ImportError('no deltalake here', name='deltalake')\n")
+    env = {**os.environ, "PYTHONPATH": str(stub)}
+    r = subprocess.run([sys.executable, str(SCRIPT), "--dry-run"], capture_output=True, text=True, env=env)
+    assert r.returncode != 0 and "lacks deltalake" in r.stderr and ".venv" in r.stderr

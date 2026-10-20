@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **Fixed: `build_demo_lakes.py` run with a Python that lacks `deltalake` failed every table with "no engine"**; it now stops at once and names the console's environment to use.
+
 - **Fixed (DOCS2-01): `build_demo_lakes.py`'s heartbeat named its own working folders** (`_drishti-lake/staging`, `locks`) instead of the table being written; it now names the table, as the Windows QA guide shows.
 
 - **Docs: the second verification of 2026-10-20** ([DOCS_VERIFICATION_2.md](docs/qa/2026-10-20/DOCS_VERIFICATION_2.md)). Outputs captured on the seven-day snapshot (`snapshot-2026-09-22`) were re-run on `snapshot-2026-07-08`, which the pages have named since QA1-201: `pack make`, `pack new`, `pack regenerate`, `data profile` (CLI_GUIDE), `lake scan` and `lake build` (TOOLS), `sutra gen` (SUTRA_DEVELOPER_GUIDE); data/testdata/README's dataset table is the sixty days' (it showed seven: *Day 7*, 2026-09-22 to 2026-09-30). The hand-written `bi statement preview` no-data output replaced by the real one (2 pages on the tutorial's report; `file` prints the hint too); API_GUIDE's statement rows name `cut`, `hint`, `exact` and `X-Statement-Hint`; the `net set` loopback refusal reads `(loopback)` and its `error` line (NET, CLI_GUIDE, tutorial 19); tutorial 21 and HISTORY_QUERIES' *FROM after TO* example used a future date (*… is in the future* is what the server says); mixed Delta and Iceberg storage named in 2.6.7's lists (BI_DESIGN, IMPLEMENTATION_PLAN); *seventeen plugins* in the example connector's pom.
