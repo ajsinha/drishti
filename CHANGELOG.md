@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Soak: the servers can run with the production JVM settings.** `net_soak.py --jvm-arg` (repeatable, after `-Xmx`) and
+  `--server-env KEY=VAL` (repeatable) reach every server, the reference too, and are recorded in `soak.json` (`serverLaunch`); soak 2
+  ran with `MALLOC_ARENA_MAX=2`, `-XX:MaxDirectMemorySize=256m` and `-XX:TrimNativeHeapInterval=60000` (PERFORMANCE.md). test_net_soak;
+  DRISHTI_NET section 17.1.
 - **Design: fewer duplicate BI runs** (BI_RUNS.md 8.3a, product owner 2026-10-20): normalise questions before hashing, offer an existing result on older data before a heavy run, suggest a rollup to the model owner for heavy questions asked again and again (in 2.6.7), with reuse and join rates in Admin → Runs.
 
 - **Design: BI runs (release 2.6.7).** New [BI_RUNS.md](docs/architecture/BI_RUNS.md), the product owner's decisions of 2026-10-20: super scale is the architecture at every data size; every BI query goes through one bounded asynchronous pipeline (submit, plan with a metadata-only estimate, admission, run, store, notify), drawn inline within about 2 s or shown as a visible job in a new Runs tab of the BI Workspace with a count on the bell; three tiers (interactive, known heavy from products and rollups, ad-hoc heavy as a background run); results stored as Parquet under the data folder, keyed by fingerprint, data version and security signature, re-masked or recomputed per recipient when shared; background class caps in admission, cancellation, restart and cluster rules; settings in `config/runs/runs.yaml`; codes DRS-9080 to DRS-9089; build steps R1 to R9 for two builders. The release order in IMPLEMENTATION_PLAN and BI_DESIGN 12.2 (2.6.6, 2.6.7, 2.7.0, 2.8.0, the real-life QA, 2.9.0, 3.0.0), SUPER_SCALE and the docs index follow.

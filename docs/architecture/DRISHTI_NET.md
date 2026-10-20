@@ -495,6 +495,10 @@ python3 tools/bench/net_soak.py --work ~/drishti-scale-test/net-2h --users 20 --
     --history-share 0.15 --sample-every 60 --warmup 600 --max-growth 64
 ```
 
+To soak with the production settings of [PERFORMANCE.md](../admin/PERFORMANCE.md) add `--server-env MALLOC_ARENA_MAX=2
+--jvm-arg=-XX:MaxDirectMemorySize=256m --jvm-arg=-XX:TrimNativeHeapInterval=60000`: `--server-env KEY=VAL` and `--jvm-arg` (after `-Xmx`)
+are repeatable, reach every server, the reference too, and are recorded in `soak.json` under `serverLaunch`.
+
 Give a new `--work` when `--dates`, `--days` or `--trades` change: the lakes are built once per folder and the soak refuses a folder
 holding other dates. The checker's logic is tested without servers by `tools/bench/test_net_soak.py`.
 
