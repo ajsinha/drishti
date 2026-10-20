@@ -27,7 +27,7 @@ def _text(rel: str) -> str:
 
 
 def _modules() -> list[str]:
-    return re.findall(r"<module>plugins/drishti-plugin-([a-z0-9]+)</module>", _text("pom.xml"))
+    return re.findall(r"<module>plugins/drishti-plugin-([a-z0-9-]+)</module>", _text("pom.xml"))
 
 
 def test_the_root_pom_lists_every_plugin_directory():

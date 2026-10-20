@@ -728,7 +728,7 @@ drishti:
 | `connectors-poll` | `5s` | How often the files are looked at: the fallback when file events are unavailable, and a safety net beside them. |
 | `connectors-drain` | `3s` | A connector being restarted or stopped stays open this long so that reads in flight finish. |
 | `connectors-generate` | `true` | At the first start, write a connector file from the pack's template when no file of that name exists. Never overwrites a file. `false`: packs' templates are used in memory only and nothing is written. |
-| `connectors.<name>.plugin` | required (**deprecated**: put the connector in `connectors-dir`) | A named instance of a plugin (`delta`, `jdbc`, `file`, `rest`, `kafka`, `aerospike`, `cassandra`, `redis`, `mongodb`, `iceberg`, `duckdb`, `activemq`, `rabbitmq`, `s3`, `feed`, `news`, `yfinance`). Run a plugin as often as you like. |
+| `connectors.<name>.plugin` | required (**deprecated**: put the connector in `connectors-dir`) | A named instance of a plugin (`delta`, `jdbc`, `file`, `rest`, `kafka`, `aerospike`, `cassandra`, `redis`, `mongodb`, `iceberg`, `iceberg-external`, `duckdb`, `activemq`, `rabbitmq`, `s3`, `feed`, `news`, `yfinance`). Run a plugin as often as you like. |
 | `connectors.<name>.enabled` | `true` | Switch one connector off without deleting it. |
 | `connectors.<name>.kinds` | what the plugin reports | Restrict or declare the kinds it serves. |
 | `connectors.<name>.settings.*` | per plugin | Settings for this instance. `source-name` defaults to the connector's name. |
