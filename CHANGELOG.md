@@ -30,6 +30,11 @@
   its port, shown on Admin → Net as *detected*. The in-process cluster tests, `net_stack.py`, the soak, tutorial 19 and `drishti-stack/`
   (`DRISHTI_STACK_HOST`, or `host:` in stack.yaml) use the machine's real address ([NET.md section 2](docs/admin/NET.md#2-a-cluster-of-three)).
 
+- **Design: history queries** ([HISTORY_QUERIES.md](docs/architecture/HISTORY_QUERIES.md)), for 2.6.5: a range after the id
+  (`TRD 1000015 30`, `EQ EQ-CSCA 3M`, `YTD`, `FROM … TO …`, `DIFF`) shows the entity over the business days it has data, as a table of
+  its top-level fields with the changes marked or, for market data, a chart with the high, low and change; a pack's `history:` block per
+  kind, `GET /api/v1/history/{kind}/{id}`, an optional `SourcePlugin.history` with fast paths per store, the same masks on every day.
+
 - **Design: write-back** ([WRITE_BACK.md](docs/architecture/WRITE_BACK.md)), editing and saving fields on a Sutra page through ordered
   lanes (one change at a time per record), for 2.7.0; AI moves to 2.8.0 and wave E to 2.9.0
   ([BI_DESIGN.md §12.2](docs/architecture/BI_DESIGN.md#122-the-three-waves)).
