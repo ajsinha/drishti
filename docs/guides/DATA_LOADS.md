@@ -350,7 +350,8 @@ Also listed in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiloads--data-l
 After the steps, the **BI layers** that read the kind are brought up to date for the business date. A table whose stored partition for
 the date was built from the data its connector holds now (the connector can say its data version: Delta, Iceberg and the others with
 `dataVersion`) is left alone, so a signal that repeats a load changes nothing. Otherwise the date's partition is invalidated (its metadata
-removed; the Parquet file stays until a build replaces it, so a page reading it finishes) and rebuilt in the background: one rebuild
+removed; a build writes a new file and a page reading the old one finishes on it) and, when a page has read that date, rebuilt in the
+background (a date nobody has read is built when a page asks for it, not by every signal of a backfill): one rebuild
 running per table and at most one waiting per date, two tables' rebuilds at once in the whole server, and a waiting one runs only if the
 data changed since the one before it. A partition is built by one build at a time (on demand by a page, in the background, or as a
 table's latest), and an invalidation never deletes a build's files. A dataset that refreshes `after-load` gets one refresh running and one
