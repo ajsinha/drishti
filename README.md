@@ -28,8 +28,8 @@ TRD where QUANTITY > 200m order by QUANTITY desc   →  every trade over 200m, l
 amended trades over 5m in BOOK-RATES-3, biggest first   →  plain words: Drishti shows the search it makes
 ```
 
-**Current release: 2.5.0** ([release notes](RELEASE_NOTES.md) · [changelog](CHANGELOG.md) ·
-[what shipped when](docs/architecture/IMPLEMENTATION_PLAN.md)). **Learn it by doing:** [nineteen tutorials](docs/tutorials/README.md), from your first 15 minutes to BI, AI, embedding and
+**Current release: 2.5.0**; 2.6.0 (statements, field parameters, the Cassandra connector) is under way ([release notes](RELEASE_NOTES.md) · [changelog](CHANGELOG.md) ·
+[what shipped when](docs/architecture/IMPLEMENTATION_PLAN.md)). **Learn it by doing:** [twenty tutorials](docs/tutorials/README.md), from your first 15 minutes to BI, AI, embedding and
 production, each with real screenshots; the [guides](docs/README.md) are the reference.
 
 ## What you can do
@@ -93,6 +93,9 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
   **Problems** and **Query**; a typed `format:` per visual drives a generated Format pane; **conditional formatting** (rules, colour scales,
   icons), **themes** (Corporate and Print shipped, a theme designer), an **interactions matrix**, slicer **sync groups**, **tooltip pages**,
   **small multiples** and the **matrix at every level** ([BI_GUIDE.md section 26](docs/guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product-wave-c-240)).
+- **Statements and field parameters** (2.6.0): report pages laid out on paper, page-exact PDF and Excel with headers, footers and page
+  numbers, one statement per recipient through a subscription, designed in BI Studio's Paper tab ([STATEMENTS.md](docs/guides/STATEMENTS.md));
+  a parameter slicer that switches which field or measure a visual draws ([tutorial 20](docs/tutorials/20-statements-and-field-parameters.md)).
 - **Live BI**: live tables, data that moves together (**coherent walks**), reports that follow the ticks with pause and resume,
   incremental live measures and a history of a live table, and **boards**: report pages of live tiles (with the report's own visuals beside them) in kiosk mode, built in the report designer ([BOARDS.md](docs/guides/BOARDS.md), [tutorial 12](docs/tutorials/12-live-bi-and-boards.md)).
 - **Distribution**: export a report, page or visual as PDF, PNG, Excel or CSV; **subscriptions** by email; **alerts** on a number, each person on
@@ -127,7 +130,7 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
   kept on disk, so they are complete at millions of trades a day and rebuilt only when a load changes the data.
 
 **Connect any data**
-- Delta Lake (local or S3, dated, time travel), PostgreSQL and other JDBC databases, Aerospike, Kafka, ActiveMQ,
+- Delta Lake (local or S3, dated, time travel), PostgreSQL and other JDBC databases, Aerospike, Apache Cassandra (and ScyllaDB, Astra), Kafka, ActiveMQ,
   RabbitMQ, Amazon S3 and compatible stores, REST services, JSON and CSV files, and public market data (NY Fed
   SOFR, ECB €STR and FX, US Treasury, FRED), and computed ones such as news headlines for a name and Yahoo Finance quotes.
   Each connector is **one YAML file** in `config/connectors`, changed live in **Admin -> Connectors** with no restart;
@@ -148,14 +151,15 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
   and any of them answers any request, forwarding it to the node that holds the data with the caller's masks applied on both. A search
   covers every node's data, a live view ticks from the node that holds it, a user's saved searches and layouts follow them, and the
   console is given one server, learns the others and moves to another when it stops, with no new sign-in. Signed calls under a cluster
-  key that rotates with no downtime, nodes per role, peer-only packs, Admin → Net ([NET.md](docs/admin/NET.md),
+  key that rotates with no downtime, nodes per role, peer-only packs, members on real addresses only, the last administrator kept across nodes, Admin → Net ([NET.md](docs/admin/NET.md),
   [tutorial 19](docs/tutorials/19-a-cluster-of-three.md)). In-process tests of three servers: they list each other about 50 ms after
   the third starts; 13,542 signed calls through a key rotation, none refused. A 10-minute soak on three real servers under 20 users, one
   node killed and restarted, then the console's own: the console moved in 0.27 s with nobody signed out, and 9,362 answers checked against
   a single server, 0 wrong ([NET.md section 13](docs/admin/NET.md#13-measured-the-soak-on-real-processes)).
 - Admin → Health, Prometheus metrics, a Grafana dashboard, liveness and readiness checks, Docker images and
   runbooks ([OPERATIONS.md](docs/admin/OPERATIONS.md)).
-- Seven themes (Terminal, Parchment, Blue, Wall Street, Green, Crimson, Crimson dark; the last three crimson, blue and green as in Sajha), one top
+- Ten themes (Terminal, Parchment, Blue, Wall Street, Green, Crimson, Crimson dark, and the Terminal look in one hue: Green, Crimson and Blue
+  Terminal; every text colour checked at 4.5:1 on every ground), one top
   bar on every page, a strict content security policy with every asset vendored (no CDN), and phones: it works on iPhone
   and Android and can be added to the home screen.
 
@@ -263,7 +267,7 @@ Start with **[Install and run](docs/guides/GETTING_STARTED.md)**, then the **[tu
 
 | Read this when… | Document |
 |---|---|
-| you want to learn by doing | [the nineteen tutorials](docs/tutorials/README.md) |
+| you want to learn by doing | [the twenty tutorials](docs/tutorials/README.md) |
 | you want it installed and running | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) |
 | you run the server in IntelliJ IDEA and the console (UX) in PyCharm | [IDE_GUIDE.md](docs/guides/IDE_GUIDE.md) |
 | you build, check, load and ship packs and Sutras from a terminal or a pipeline (`tools/drishti.py`) | [CLI_GUIDE.md](docs/guides/CLI_GUIDE.md) |

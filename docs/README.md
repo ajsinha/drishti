@@ -14,7 +14,7 @@ before the consolidation (for example `/help/quickstart` or `/help/connector-kaf
 ## New here? Read these, in order
 
 1. **[GETTING_STARTED.md](guides/GETTING_STARTED.md)** (*Install and run*): prerequisites, build, start the server and the console, sign-in, Docker, other ways to build, and Windows.
-2. **[tutorials/](tutorials/README.md)**: nineteen hands-on tutorials on the shipped demo data, with the exact commands, real output and real screenshots. Start with [your first 15 minutes](tutorials/01-first-15-minutes.md).
+2. **[tutorials/](tutorials/README.md)**: twenty hands-on tutorials on the shipped demo data, with the exact commands, real output and real screenshots. Start with [your first 15 minutes](tutorials/01-first-15-minutes.md).
 3. **[USER_GUIDE.md](guides/USER_GUIDE.md)**: every feature of the console, as a reference. **[PACKS.md](guides/PACKS.md)**: which industries are available and how to load them; building your own is [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md).
 
 If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md).
@@ -35,7 +35,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 
 | Folder | What is in it |
 |---|---|
-| [tutorials/](tutorials/README.md) | the nineteen hands-on tutorials: a worked example each, on the demo data, with commands, real output and screenshots |
+| [tutorials/](tutorials/README.md) | the twenty hands-on tutorials: a worked example each, on the demo data, with commands, real output and screenshots |
 | [guides/](guides/) | install and run, the user guide, business intelligence (Rūpaka), packs and the command line, the Sutra and Rachana guides, panels, clients, API and troubleshooting; `examples/` holds working Sutras |
 | [connectors/](connectors/) | connecting your data: the Connectors reference, the connector files, TLS and proxy, the developer guide, a design document per store (Delta Lake, PostgreSQL, Aerospike, Cassandra, files …) and demo data |
 | [admin/](admin/) | running Drishti: operations, configuration, users and roles, performance, and the runbooks |
@@ -53,7 +53,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Learn it by doing, from your first 15 minutes | [tutorials/](tutorials/README.md) |
 | Tell Drishti a batch of data has landed (API, CLI, Airflow, cron, DishtaYantra), flag late data | [DATA_LOADS.md](guides/DATA_LOADS.md) |
 | Open business intelligence: `RUPAKA <GO>`, the catalogue, workspaces, publish and review, certify | [BI_GUIDE.md](guides/BI_GUIDE.md) |
-| Learn BI by building a report, then making it run itself, live, governed, in Python and with AI | [tutorials 10 to 15 and 18](tutorials/README.md) |
+| Learn BI by building a report, then making it run itself, live, governed, in Python and with AI | [tutorials 10 to 15, 18 and 20](tutorials/README.md) |
 | Author in **BI Studio**: the Explorer, open items as tabs, the Problems and Query dock, the generated Format pane, conditional formatting, themes and the theme designer, Edit interactions, tooltip pages, small multiples, the matrix | [BI_GUIDE.md › BI Studio](guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product-wave-c-240), [REPORTS.md › Format](guides/REPORTS.md#5-format) |
 | Prepare data in Python step by step (**BI → Transforms**: inputs through a pack's connector, a snippets library, a preview and a profile after every step) | [PYTHON_BI.md › Data prep](guides/PYTHON_BI.md#17-data-prep-the-transform-editor-240), [tutorial 14, step 12](tutorials/14-python-and-analyse.md#step-12--prepare-raw-trades-step-by-step-the-transform-editor-240) |
 | Run your own Python in the browser on a masked extract, and promote it to the server (**BI → Python console**, `/pyconsole`) | [ANALYSE.md › The browser Python console](guides/ANALYSE.md#16-the-browser-python-console) |
@@ -151,9 +151,9 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Fix something that is not working | [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md), then the runbooks below |
 | Know how fast it is, and how that is measured | [PERFORMANCE.md](admin/PERFORMANCE.md) |
 | Know how many users a server holds, whether memory stays flat over a day, and how to load-test it | [LOAD_AND_MEMORY.md](admin/LOAD_AND_MEMORY.md) |
-| Compare the stores at several sizes, see how each scales, and run the scale benchmark yourself | [NET.md](admin/NET.md) | you run several servers as one cluster (Drishti\*net, 2.5.0): a cluster of three, the files of `config/net/`, membership, capability digests, security, routing, the console and several servers, Admin → Net, drain, sizing, troubleshooting |
-| [LAKE_MAINTENANCE.md](admin/LAKE_MAINTENANCE.md) | you keep Delta tables bounded and fast: retention, compaction, checkpoints and vacuum from Admin → Lakes or `lake maintain`, schedules, history |
-| [SCALE_BENCHMARK.md](admin/SCALE_BENCHMARK.md) |
+| Compare the stores at several sizes, see how each scales, and run the scale benchmark yourself | [SCALE_BENCHMARK.md](admin/SCALE_BENCHMARK.md) |
+| Lay a report out on paper: statements, page-exact PDF and Excel, one per recipient | [STATEMENTS.md](guides/STATEMENTS.md), [tutorial 20](tutorials/20-statements-and-field-parameters.md) |
+| Choose a theme (ten, three of them the Terminal hues of 2.6.0) | [USER_GUIDE.md › Themes](guides/USER_GUIDE.md#themes) |
 | Serve millions of entities a day for years from Delta Lake | [DELTA_CONNECTOR.md](connectors/DELTA_CONNECTOR.md) |
 | Run the server on Windows, or choose the Delta engine (native or Hadoop) | [GETTING_STARTED.md: Windows](guides/GETTING_STARTED.md#drishti-on-windows), [DELTA_CONNECTOR.md › Engines](connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop) |
 | Serve millions of entities a day from Aerospike, with recent history there and years in Delta Lake | [AEROSPIKE_CONNECTOR.md](connectors/AEROSPIKE_CONNECTOR.md) |
@@ -316,6 +316,8 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [OPERATIONS.md](admin/OPERATIONS.md) | you deploy, secure, monitor, back up or upgrade a server and console |
 | [PERFORMANCE.md](admin/PERFORMANCE.md) | you want the measured numbers, to measure your own installation, or to tune it |
 | [LOAD_AND_MEMORY.md](admin/LOAD_AND_MEMORY.md) | you need to know how many users a server holds, whether memory stays flat over a day, and how to load-test and memory-profile the server, the console and the browser (strategy, tools, gates, build plan) |
+| [NET.md](admin/NET.md) | you run several servers as one cluster (Drishti\*net, 2.5.0; real addresses only and the last administrator kept across nodes, 2.6.0): a cluster of three, the files of `config/net/`, membership, capability digests, security, routing, the console and several servers, Admin → Net, drain, sizing, troubleshooting |
+| [LAKE_MAINTENANCE.md](admin/LAKE_MAINTENANCE.md) | you keep Delta tables bounded and fast: retention, compaction, checkpoints and vacuum from Admin → Lakes or `lake maintain`, schedules, history |
 | [SCALE_BENCHMARK.md](admin/SCALE_BENCHMARK.md) | you choose a store or size a server: every store measured at 10,000, 25,000 and 50,000 trades a day, linear scaling fits, labelled extrapolations to a million, and the harness (`tools/bench/`) to run it at a million on a real server |
 
 ### Runbooks (`admin/runbooks/`)
@@ -349,6 +351,7 @@ Eleven working Sutras with their data, introduced in [guides/examples/README.md]
 | [all-panels-showcase.md](guides/examples/all-panels-showcase.md) | All twenty-two panel kinds on one screen, reading one self-contained bond trade. |
 | [exposure-profile.md](guides/examples/exposure-profile.md) | Expected and potential future exposure over tenor, against a limit. |
 | [linked-sources.md](guides/examples/linked-sources.md) | Panels that read other entities with `source: "link(id, kind)"`: the counterparty's netting sets, a netting set's exposure and a desk's pivot, all fetched live. |
+| [map.md](guides/examples/map.md) | A country on the map: the world with the country highlighted, and the same country's regions beside it. |
 | [market-charts.md](guides/examples/market-charts.md) | Market data: daily bars, a line of closes and a volatility surface. |
 | [metric.md](guides/examples/metric.md) | A desk's headline numbers as big-number tiles: one large formatted, toned figure each, with a small change, a unit and a caption. |
 | [operations-status.md](guides/examples/operations-status.md) | The back office on one screen: where a trade stands and what comes next. |
@@ -385,6 +388,7 @@ The index is [adr/README.md](architecture/adr/README.md); the 20 records:
 | [018-signed-pack-registry.md](architecture/adr/018-signed-pack-registry.md): ADR-018: Packs come from a signed, versioned registry |
 | [019-pricing-is-a-quantlib-service-behind-the-server.md](architecture/adr/019-pricing-is-a-quantlib-service-behind-the-server.md): ADR-019: Pricing is a QuantLib service behind the Drishti server |
 | [020-collaboration-records-live-in-the-identity-database.md](architecture/adr/020-collaboration-records-live-in-the-identity-database.md): ADR-020: Collaboration records live in the identity database; the notice is a link, never  |
+| [021-embedding-is-html-over-the-wire.md](architecture/adr/021-embedding-is-html-over-the-wire.md): ADR-021: Embedding is HTML over the wire for views, and the viewer's own code for reports |
 
 ### Quality assurance runs (`qa/`)
 
@@ -416,7 +420,7 @@ Each run has a README (what was tested, findings by severity, how each was fixed
 | Folder | Read this when… |
 |---|---|
 | [requirements/](requirements/) | you want the four reference mockups the first views reproduced, and the logo and icon |
-| [publications/](publications/) | you want the design-and-evidence presentation (`Drishti-Design-and-Evidence.pptx`, 48 slides, current to 2.5.0: the idea, the product with BI Studio, Python data prep and Drishti\*net, security, the evidence with the 35.7-million-trade run, and the release order to 3.0; each slide's notes name their sources) |
+| [publications/](publications/) | you want the design-and-evidence presentation (`Drishti-Design-and-Evidence.pptx`, 48 slides, current to 2.6.0 under way: the idea, the product with BI Studio, Python data prep and Drishti\*net, security, the evidence with the 35.7-million-trade run, and the release order to 3.0; each slide's notes name their sources) |
 
 ## Words you will meet
 
