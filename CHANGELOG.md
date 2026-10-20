@@ -19,6 +19,8 @@
 
 ## 2.6.5 — History queries: any entity over time from the command line (`TRD <id> 30`, `EQ <id> 3M`), on every connector and across Drishti*net (2026-10-20)
 
+- **Fixed: an API token can preview a statement and fetch its PDF or Excel** (`POST /api/v1/bi/reports/statement/preview` and `/file`
+  read and render as the caller and store nothing, so they are read-only posts; in 2.6.0 they had no token scope).
 - **Docs: QA on Windows** gains section 6c, history with the demo lakes' ids that changed most, the CLI form and plain words; the
   trading pack's history shows status, action, version, quantity and price first; `drishti-stack`'s peers hold 60 business days of
   synthetic trades for history demos.

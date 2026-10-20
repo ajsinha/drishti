@@ -217,6 +217,8 @@ drishti:
       - /api/v1/bi/sql                  # one read-only Drishti SQL statement over a model as the caller (or EXPLAIN), changes nothing
       - /api/v1/bi/sql/validate         # checks a Drishti SQL statement without reading data
       - /api/v1/bi/expr/validate        # checks one expression (DEL) in its scope against a model as the caller sees it, reads no data
+      - /api/v1/bi/reports/statement/preview  # a statement's pages laid out for the caller (masked), stores nothing
+      - /api/v1/bi/reports/statement/file     # the same as a PDF or Excel file for the caller, stores nothing
       - /api/v1/bi/expr/convert         # converts an expression or an item's YAML from the old syntax to DEL v2, stores nothing
       - /api/v1/bi/mq/subscribe         # a standing query: the same answer kept current for the caller (ended by DELETE, or when no stream reads it)
       - /api/v1/bi/model/start          # a draft dataset from pack kinds: reads connectors, stores nothing
