@@ -133,6 +133,8 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
 - Delta Lake (local or S3, dated, time travel), PostgreSQL and other JDBC databases, Aerospike, Apache Cassandra (and ScyllaDB, Astra), Kafka, ActiveMQ,
   RabbitMQ, Amazon S3 and compatible stores, REST services, JSON and CSV files, and public market data (NY Fed
   SOFR, ECB €STR and FX, US Treasury, FRED), and computed ones such as news headlines for a name and Yahoo Finance quotes.
+  Iceberg runs without Hadoop on **drishti-iceberg**, Drishti's own Iceberg engine (with `iceberg-external` for anyone's tables), over
+  **drishti-lakeio**, the shared storage layer (local disk and S3; 2.6.0, arriving with the Iceberg work).
   Each connector is **one YAML file** in `config/connectors`, changed live in **Admin -> Connectors** with no restart;
   TLS (private CA, mutual TLS) and an outbound HTTP proxy are settings of the file
   ([CONNECTOR_FILES.md](docs/connectors/CONNECTOR_FILES.md), [TLS.md](docs/connectors/TLS.md), [the proxy](docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)).
@@ -141,21 +143,31 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
   ([CONNECTOR_DEVELOPER_GUIDE.md](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md)).
 - Data lands from your ETL; one call tells Drishti to refresh, verify and flag late data ([DATA_LOADS.md](docs/guides/DATA_LOADS.md)).
 
+**Many servers, one Drishti (Drishti\*net, 2.5.0)**
+- **Drishti\*net** (off by default): several servers join into one cluster by gossip; each keeps its own packs, connectors and data,
+  and any of them answers any request, forwarding it to the node that holds the data with the caller's masks applied on both. A search
+  covers every node's data, a live view ticks from the node that holds it, a user's saved searches and layouts follow them, and the
+  console is given one server, learns the others and moves to another when it stops, with no new sign-in. Signed calls under a cluster
+  key that rotates with no downtime, nodes per role, peer-only packs, Admin → Net ([NET.md](docs/admin/NET.md),
+  [tutorial 19](docs/tutorials/19-a-cluster-of-three.md)). In-process tests of three servers: they list each other about 50 ms after
+  the third starts; 13,542 signed calls through a key rotation, none refused. A 10-minute soak on three real servers under 20 users, one
+  node killed and restarted, then the console's own: the console moved in 0.27 s with nobody signed out, and 9,362 answers checked against
+  a single server, 0 wrong ([NET.md section 13](docs/admin/NET.md#13-measured-the-soak-on-real-processes)).
+- **Membership** by SWIM-style gossip over HTTP (no separate port): a node is named once as a seed, the others learn each other within a
+  round or two, a stopped node turns suspect then dead, and a restarted one rejoins from its saved member table. **Admin → Net → Members**
+  draws the cluster as a hash ring, one arc per member coloured by its state, beside the member table.
+- **Real addresses only** (2.6.0): members advertise an address other machines can call, never `localhost`, `127.0.0.1` or `0.0.0.0`
+  (refused in node.yaml, in seeds and in gossip); without `advertise-url` a node takes this machine's primary IPv4 address. A user and their roles
+  are known on every node, and the cluster never ends with no enabled administrator (repaired across nodes, audited `last-admin-kept`).
+- **`drishti-stack/`**: a three-server cluster and a console on one machine from one `stack.yaml` (`start.sh`, `status.sh`, `stop.sh`),
+  each node on the machine's real address ([drishti-stack/README.md](drishti-stack/README.md)).
+
 **Run it safely**
 - Sign-in with passwords or single sign-on (OpenID Connect), roles that decide which kinds each person may open,
   redaction of sensitive fields, and an **access log** of who looked at what (Admin → Access).
 - Users, roles, packs per user, notes, reports and audit in one identity database: SQLite by default, PostgreSQL
   for production.
 - **One console, many servers**: list several servers and people pick one, signing in to each separately.
-- **Drishti\*net** (off by default): several servers join into one cluster by gossip; each keeps its own packs, connectors and data,
-  and any of them answers any request, forwarding it to the node that holds the data with the caller's masks applied on both. A search
-  covers every node's data, a live view ticks from the node that holds it, a user's saved searches and layouts follow them, and the
-  console is given one server, learns the others and moves to another when it stops, with no new sign-in. Signed calls under a cluster
-  key that rotates with no downtime, nodes per role, peer-only packs, members on real addresses only, the last administrator kept across nodes, Admin → Net ([NET.md](docs/admin/NET.md),
-  [tutorial 19](docs/tutorials/19-a-cluster-of-three.md)). In-process tests of three servers: they list each other about 50 ms after
-  the third starts; 13,542 signed calls through a key rotation, none refused. A 10-minute soak on three real servers under 20 users, one
-  node killed and restarted, then the console's own: the console moved in 0.27 s with nobody signed out, and 9,362 answers checked against
-  a single server, 0 wrong ([NET.md section 13](docs/admin/NET.md#13-measured-the-soak-on-real-processes)).
 - Admin → Health, Prometheus metrics, a Grafana dashboard, liveness and readiness checks, Docker images and
   runbooks ([OPERATIONS.md](docs/admin/OPERATIONS.md)).
 - Ten themes (Terminal, Parchment, Blue, Wall Street, Green, Crimson, Crimson dark, and the Terminal look in one hue: Green, Crimson and Blue
@@ -250,14 +262,15 @@ drishti/
 ├── drishti-stack/               a ready-made local Drishti*net cluster of three servers and a console: start.sh, stop.sh, status.sh
 ├── drishti-testkit/ drishti-it/ test fixtures; architecture, licence-header and file-size gates
 ├── drishti-benchmarks/          JMH hot-path benchmarks
-├── plugins/drishti-plugin-*/     demo, file, rest, jdbc, delta, aerospike, redis, mongodb, iceberg, duckdb, feeds, news, yfinance, kafka, activemq, rabbitmq, s3
+├── plugins/drishti-plugin-*/     demo, file, rest, jdbc, delta, aerospike, cassandra, redis, mongodb, iceberg, iceberg-external, duckdb, feeds, news,
+│                                yfinance, kafka, activemq, rabbitmq, s3
 ├── drishti-console/                     the web console (routes/, core/, web/templates, web/static, tests/)
 ├── clients/python/              drishti_client.py: the standard-library Python client
 ├── config/packs/<name>/                the seven domain packs: pack.yaml, Sutras, vocabulary, samples, guides (retired ones in examples/packs/)
 ├── deploy/                      Dockerfiles, compose, Grafana dashboard
 ├── tools/                       packgen/ samplegen/ lake/ (pack data and lakes), rachana/, packreg/ (signed packs),
 │                                drill.sh, license_headers.py
-└── docs/                        tutorials (19), guides, references, runbooks, plan, ADRs
+└── docs/                        tutorials (20), guides, references, runbooks, plan, ADRs
 ```
 
 ## Documentation
