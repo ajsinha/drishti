@@ -260,7 +260,10 @@ and the recipient (*Monthly statement September 2026 hana.pdf*); each delivery i
 acceptance is a monthly statement burst to ten recipients of two roles, every PDF checked for its page count and its header on every page
 (`StatementApiTest`, [STATEMENTS.md section 6](STATEMENTS.md#6-pdf-excel-and-bursting-through-subscriptions)). A table sorted by a measure that is masked for a
 recipient is drawn for them in the query's own order (its order would tell the masked figures), with a note above it, and their delivery says so in
-`notes` (*Positions: Not sorted: 'MTM' is masked for you …*).
+`notes` (*Positions: Not sorted: 'MTM' is masked for you …*). An Excel statement carries the same notes as the PDF (its *About* sheet and beside each
+table), and the mail's subject ends with the page count (*· 1 page*, *· 3 pages*). The **Subscribe** form says so when it opens on a statement page
+(*This is a statement page: each recipient gets one statement of their own*) and offers a PDF first; on any other report page it says that a statement
+page is sent as one statement per person.
 
 An export of a statement page (**Export → PDF** or **Excel** on the page, `POST /api/v1/export/pdf`) is the statement too, made for you.
 

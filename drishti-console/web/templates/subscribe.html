@@ -49,6 +49,10 @@
         <option value="html"{% if form.format == 'html' %} selected{% endif %}>the email itself (tables in the body)</option>
         <option value="pdf"{% if form.format == 'pdf' %} selected{% endif %}>a PDF attached</option>
         <option value="xlsx"{% if form.format == 'xlsx' %} selected{% endif %}>an Excel workbook attached</option></select></label>
+      {% if form.statement %}<p class="text-muted-d wide" data-statement-hint><b>This is a statement page: each recipient gets one statement of their own</b>, made as them
+        (their rows and masks), as a page-exact PDF or an Excel workbook that prints on the statement's paper. A role sends one statement to each person in it.</p>
+      {% elif form.target and form.target.type == 'report' %}<p class="text-muted-d wide" data-statement-hint>A statement page (<code>layout: statement</code>) is sent as
+        one statement per person: a PDF or Excel file each, made as them.</p>{% endif %}
       <label class="wide">To (user names, <code>role:NAME</code> for everyone with a role, separated by commas)
         <input name="recipients" class="studio-in mono" value="{{ form.recipients or '' }}" required placeholder="alice, role:risk"></label>
       <label class="wide bi-people">Find people or roles to add

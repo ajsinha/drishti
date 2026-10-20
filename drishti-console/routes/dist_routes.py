@@ -128,6 +128,21 @@ async def _form_page(request: Request, form: dict, error: str = "", status_code:
                   target_json=json.dumps(form["target"], separators=(",", ":")), screen="reports", opts=await _options(request))
 
 
+async def _is_statement(request: Request, target: dict) -> bool:
+    """Whether the subscribed report page is a statement page (``layout: statement``; no page: every page a reader sees is one), as the server
+    decides when it sends: then each recipient gets one statement of their own, a file. False when the report cannot be read here."""
+    if target.get("type") != "report" or not target.get("id") or target.get("visual"):
+        return False
+    try:
+        r = await request.app.state.backend.bi("GET", "/reports/" + quote(str(target["id"]), safe=":"), ident(request))
+    except BackendError:
+        return False
+    pages = [p for p in ((r or {}).get("report") or {}).get("pages") or [] if not p.get("tooltip")]
+    if target.get("page"):
+        pages = [p for p in pages if p.get("id") == target["page"]]
+    return bool(pages) and all(p.get("layout") == "statement" for p in pages)
+
+
 @router.get("/reports/subscribe")
 async def subscribe_form(request: Request, type: str = "report", id: str = "", page: str = "", visual: str = "", state: str = "", view: str = "", title: str = ""):
     target = {"type": "view" if type == "view" else "report", "id": id, "page": page, "visual": visual, "view": view}
@@ -135,8 +150,9 @@ async def subscribe_form(request: Request, type: str = "report", id: str = "", p
     if st is not None:
         target["state"] = st
     me = request.state.identity
+    statement = await _is_statement(request, target)
     return await _form_page(request, {"name": title.strip()[:64] or (id.split(":")[-1] if id else "My subscription"), "title": title.strip()[:200], "target": target, "schedule": "business-days 07:30",
-                                      "format": "html", "date": "today", "recipients": getattr(me, "user", "")})
+                                      "format": "pdf" if statement else "html", "date": "today", "recipients": getattr(me, "user", ""), "statement": statement})
 
 
 @router.post("/reports/subscribe")

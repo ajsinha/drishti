@@ -77,6 +77,35 @@ def test_the_subscribe_form_describes_what_is_subscribed_and_saves_a_subscriptio
     assert kept["recipients"] == ["ash", "role:risk"] and kept["format"] == "pdf" and kept["date"] == "previous" and kept["target"]["state"] == {"slicers": {"ccy": ["USD"]}}
 
 
+def test_the_subscribe_form_says_a_statement_page_is_sent_as_one_statement_per_person(client, backend, monkeypatch):
+    """QA3B workflow note: the form offered html first and never said a statement page bursts, one statement per recipient."""
+    report = {"report": {"pages": [{"id": "statement", "title": "Statement", "layout": "statement"}, {"id": "main", "title": "Main"},
+                                   {"id": "tip", "title": "Tip", "tooltip": True}]}}
+    seen = []
+
+    async def bi(method, path, ident, body=None, **params):
+        seen.append(path)
+        if path == "/ai/status":
+            return {"enabled": False, "values": "labels-only"}
+        if path == "/reports/file:report:monthly":
+            return report
+        raise BackendError(404, "DRS-9001", "no such report")
+
+    from core.backend import BackendError
+    monkeypatch.setattr(backend, "bi", bi)
+    page = client.get("/reports/subscribe", params={"type": "report", "id": "file:report:monthly", "page": "statement"}).text
+    assert "/reports/file:report:monthly" in seen
+    assert "each recipient gets one statement of their own" in page and "data-statement-hint" in page
+    assert '<option value="pdf" selected>' in page                                   # a statement is a file: PDF first, not the email body
+    other = client.get("/reports/subscribe", params={"type": "report", "id": "file:report:monthly", "page": "main"}).text
+    assert "each recipient gets one statement of their own" not in other and "one statement per person" in other
+    assert '<option value="html" selected>' in other
+    unknown = client.get("/reports/subscribe", params={"type": "report", "id": "file:report:gone"}).text
+    assert unknown.count("data-statement-hint") == 1 and '<option value="html" selected>' in unknown   # the server cannot say: the general hint only
+    view = client.get("/reports/subscribe", params={"type": "view", "id": "trade/IRS-48213"}).text
+    assert "data-statement-hint" not in view
+
+
 def test_the_form_keeps_what_was_typed_when_the_server_refuses(client, backend):
     r = client.post("/reports/subscribe", content="name=Bad&schedule=whenever&date=today&format=html&recipients=ash&target=" + quote(_target()), headers=FORM)
     assert r.status_code == 422 and "DRS-9061" in r.text and "not a schedule" in r.text and 'value="whenever"' in r.text and 'value="Bad"' in r.text
