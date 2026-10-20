@@ -1072,7 +1072,9 @@ visual in Build and switches it in the viewer.
 A page with `layout: statement` is **paper**: its visuals (text, cards, tables, matrices) are bands laid out page by page on the paper the report's
 `statement:` sets (size, orientation, margins, a header and footer with page numbers and the run date), with page breaks, the column titles of a table on
 every page it runs onto, and groups of rows kept together. It is made as a page-exact PDF or as Excel set to print on that paper, previewed page by page in
-BI Studio's **Paper** tab, and a subscription to it sends each recipient their own statement, made as them. The reference is [STATEMENTS.md](STATEMENTS.md).
+BI Studio's **Paper** tab, and a subscription to it sends each recipient their own statement, made as them. A figure on a statement is never cut with an
+ellipsis: its column takes the width of its widest figure, the table's font shrinks, its number columns go on in parts below, a card reads in compact units
+with the exact figure under it ([STATEMENTS.md section 3](STATEMENTS.md#3-how-the-pages-are-laid-out)). The reference is [STATEMENTS.md](STATEMENTS.md).
 
 ```yaml
 statement: { paper: A4, header: { left: "{title}", right: "{period}" }, footer: { right: "Page {page} of {pages}" }, period: previous-month }

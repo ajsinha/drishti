@@ -30,8 +30,10 @@ import java.util.Objects;
  * moves to the next page whole when it is {@code keepTogether} and fits on one. {@code pageBreak} starts a band on a new page, or a new page after it. The
  * header and footer are written last, when the number of pages is known ({@code {page}} and {@code {pages}}).
  *
- * <p>Text is measured with the widths of the standard Helvetica fonts (the fonts the PDF uses), so a cell is cut with an ellipsis exactly where the paper ends.
- * One instance lays out one statement; it is not shared between threads.
+ * <p>Text is measured with the widths of the standard Helvetica fonts (the fonts the PDF uses), so a text cell is cut with an ellipsis exactly where its column
+ * ends. A figure is never cut ({@link StatementFit}, QA3B-01): its column is as wide as its widest figure, the table's font shrinks to a floor, its number
+ * columns go on in parts below, and a card reads in compact units with the exact figure under it; a figure that still cannot fit is cut with a note on the
+ * page and in {@link #cut()}. One instance lays out one statement; it is not shared between threads.
  */
 final class StatementLayout {
 
@@ -73,6 +75,12 @@ final class StatementLayout {
     private List<StatementPages.Op> ops;
     private double y;
     private boolean breakNext;
+    /** The font size and row height of the table being drawn (a table's font may shrink so its figures fit, QA3B-01). */
+    private double tfs;
+    private double trh;
+    /** Whether a figure of the table or card being drawn was cut after all (it is wider than the paper allows). */
+    private boolean figureCut;
+    private final List<String> cut = new ArrayList<>();
 
     StatementLayout(StatementSpec spec, int maxPages) {
         this.spec = spec;
@@ -82,6 +90,8 @@ final class StatementLayout {
         this.height = wh[1];
         this.fs = spec.fontSize();
         this.rowH = Math.round(fs * 1.75 * 100) / 100.0;
+        this.tfs = fs;
+        this.trh = rowH;
         this.left = spec.marginPoints(3);
         this.right = width - spec.marginPoints(1);
         double headH = spec.header().isEmpty() ? 0 : fs + 10;
@@ -120,6 +130,11 @@ final class StatementLayout {
             out.add(new StatementPages.Page(i + 1, all));
         }
         return new StatementPages(width, height, out);
+    }
+
+    /** What could not be drawn whole, in words (a figure wider than its column or card allows), for the preview's {@code cut} and the file's notes. */
+    List<String> cut() {
+        return List.copyOf(cut);
     }
 
     /** The roles whose text an author wrote (a text band, a title, a card's label): {@code {page}} and {@code {pages}} work there as in the header (QA2-02). */
@@ -217,10 +232,14 @@ final class StatementLayout {
         double cw = right - left;
         double h = 0;
         List<List<String>> wrapped = new ArrayList<>();
-        for (Band b : row) {
+        List<CardText> values = new ArrayList<>();
+        for (int i = 0; i < row.size(); i++) {
+            Band b = row.get(i);
             List<String> lines = "text".equals(b.kind()) ? wrap(b.text(), cw * b.w() - PAD, textSize(b), b.heading()) : List.of();
             wrapped.add(lines);
-            h = Math.max(h, "text".equals(b.kind()) ? lines.size() * textSize(b) * 1.35 + 2 : cardHeight(b));
+            CardText ct = "text".equals(b.kind()) ? null : cardText(b, cw * b.w() - (i < row.size() - 1 ? PAD * 2 : 0));
+            values.add(ct);
+            h = Math.max(h, "text".equals(b.kind()) ? lines.size() * textSize(b) * 1.35 + 2 : cardHeight(b, ct));
         }
         if (h > room() && !atTop()) {
             newPage();
@@ -237,28 +256,86 @@ final class StatementLayout {
                     ops.add(new StatementPages.Text(x, yy + textSize(b) * 0.3, textSize(b), b.heading(), INK, line, "text"));
                 }
             } else {
-                card(b, x, w, top0);
+                card(b, values.get(i), x, w, top0);
             }
         }
         y = top0 - h;
     }
 
-    private double cardHeight(Band b) {
-        return fs * 1.3 + (fs + 7) * 1.3 + (b.note() == null ? 0 : fs * 1.3) + 10;
+    /**
+     * How a card's value is drawn: at {@code size}, as {@code value} (compact units when the figure is too wide whole), with {@code exact} (the whole figure,
+     * or why it is cut) in a line under it, else null.
+     */
+    record CardText(double size, String value, String exact) {}
+
+    /** The card's value fitted to {@code w} points (QA3B-01): its font shrinks to the table floor, then a figure reads in compact units with the exact one under it. */
+    private CardText cardText(Band b, double w) {
+        String v = b.value() == null ? "" : b.value();
+        double avail = w - 2 * PAD - 2;
+        double big = fs + 7;
+        double floor = StatementFit.floor(fs);
+        boolean number = StatementFit.isNumber(v);
+        for (double size = big; size >= (number ? fs : floor) - 1e-9; size -= 0.5) {      // a figure stays big; compact units before a small font
+            if (Metrics.width(v, size, true) <= avail) {
+                return new CardText(size, v, null);
+            }
+        }
+        if (number) {
+            String c = StatementFit.compact(v);
+            for (double size = big; size >= floor - 1e-9; size -= 0.5) {
+                if (Metrics.width(c, size, true) <= avail) {
+                    return new CardText(size, c, "Exactly " + v);
+                }
+            }
+            return new CardText(floor, c, "Exactly " + v);
+        }
+        return new CardText(floor, v, null);                                // text may be cut with an ellipsis
     }
 
-    private void card(Band b, double x, double w, double top0) {
-        double h = cardHeight(b);
+    private double cardHeight(Band b, CardText ct) {
+        return fs * 1.3 + (fs + 7) * 1.3 + (b.note() == null ? 0 : fs * 1.3) + (ct != null && ct.exact() != null ? fs * 1.3 : 0) + 10;
+    }
+
+    private void card(Band b, CardText ct, double x, double w, double top0) {
+        double h = cardHeight(b, ct);
         ops.add(new StatementPages.Fill(x, top0 - h, w, h, GROUP_FILL));
         double yy = top0 - 4 - fs;
-        ops.add(new StatementPages.Text(x + PAD + 2, yy, fs - 0.5, false, GREY, fit(b.title(), w - 2 * PAD, fs - 0.5, false), "label"));
+        double avail = w - 2 * PAD;
+        ops.add(new StatementPages.Text(x + PAD + 2, yy, fs - 0.5, false, GREY, fit(b.title(), avail, fs - 0.5, false), "label"));
         yy -= (fs + 7) * 1.25;
-        ops.add(new StatementPages.Text(x + PAD + 2, yy, fs + 7, true, INK, fit(b.value(), w - 2 * PAD, fs + 7, true), "value"));
+        String value = fit(ct.value(), avail, ct.size(), true);
+        boolean valueCut = !value.equals(ct.value()) && StatementFit.isNumber(ct.value().replaceAll("(tn|bn|m|k)$", ""));
+        ops.add(new StatementPages.Text(x + PAD + 2, yy, ct.size(), true, INK, value, "value"));
+        if (ct.exact() != null) {
+            yy -= fs * 1.3;
+            String whole = ct.exact();
+            double size = fs - 1.5;
+            while (size > StatementFit.floor(fs) && Metrics.width(whole, size, false) > avail) {
+                size -= 0.5;
+            }
+            if (Metrics.width(whole, size, false) > avail && whole.startsWith("Exactly ")) {
+                whole = whole.substring("Exactly ".length());                  // the figure alone, without its word, rather than cut
+                size = fs - 1.5;
+                while (size > StatementFit.floor(fs) && Metrics.width(whole, size, false) > avail) {
+                    size -= 0.5;
+                }
+            }
+            String exact = fit(whole, avail, size, false);
+            valueCut |= !exact.equals(whole);
+            ops.add(new StatementPages.Text(x + PAD + 2, yy, size, false, GREY, exact, "exact"));
+        }
         if (b.note() != null) {
             yy -= fs * 1.3;
-            ops.add(new StatementPages.Text(x + PAD + 2, yy, fs - 1.5, false, GREY, fit(b.note(), w - 2 * PAD, fs - 1.5, false), "note"));
+            ops.add(new StatementPages.Text(x + PAD + 2, yy, fs - 1.5, false, GREY, fit(b.note(), avail, fs - 1.5, false), "note"));
+        }
+        if (valueCut) {
+            cut.add((b.title() == null || b.title().isBlank() ? b.id() : b.title()) + ": " + CUT_NOTE);
+            ops.add(new StatementPages.Text(x + PAD + 2, top0 - h + 2, fs - 2, false, GREY, fit("Cut: " + CUT_NOTE, avail, fs - 2, false), "note"));
         }
     }
+
+    /** What a page and the preview's {@code cut} say of a figure that could not be drawn whole. */
+    static final String CUT_NOTE = "a figure is wider than the paper allows and is cut: print it on wider paper or landscape, or read the Excel file";
 
     private double textSize(Band b) {
         return b.heading() ? fs + 5 : fs + 0.5;
@@ -289,11 +366,56 @@ final class StatementLayout {
         return (fs + 2) * 1.6;
     }
 
+    /**
+     * A table band: in one part, or (its figures too wide for the paper even at the smallest font) in parts across, each with the row labels and the next
+     * number columns (QA3B-01); a figure cut after all is noted under the table and in {@link #cut()}.
+     */
     private void table(Band b) {
         Table t = b.table();
-        double[] cols = columns(t);
+        StatementFit.Plan plan = StatementFit.plan(t, right - left, fs);
+        tfs = plan.size();
+        trh = Math.round(tfs * 1.75 * 100) / 100.0;
+        figureCut = false;
+        int n = plan.parts().size();
+        String name = b.title() == null || b.title().isBlank() ? "" : b.title();
+        for (int k = 0; k < n; k++) {
+            StatementFit.Part part = plan.parts().get(k);
+            Table pt = n == 1 ? t : StatementFit.sub(t, part.columns());
+            String title = b.title();
+            String note = b.note();
+            if (n > 1 && k == 0) {
+                String parts = "Too wide for the paper: the table is in " + n + " parts, its columns going on below.";
+                note = note == null ? parts : note + " " + parts;
+            } else if (k > 0) {
+                List<String> numbers = new ArrayList<>();
+                for (int c = 0; c < pt.headers().size(); c++) {
+                    if (pt.numeric()[c]) {
+                        numbers.add(pt.headers().get(c));
+                    }
+                }
+                String span = numbers.isEmpty() ? "" : numbers.size() == 1 ? numbers.get(0) : numbers.get(0) + " to " + numbers.get(numbers.size() - 1);
+                title = (name.isEmpty() ? "" : name + " ") + "(part " + (k + 1) + " of " + n + (span.isEmpty() ? "" : ": " + span) + ")";
+                note = null;
+                y -= GAP;
+            }
+            Band pb = new Band(b.kind(), b.id(), title, b.text(), b.heading(), b.value(), note, pt, b.x(), b.w(), b.pageBreak(), b.keepTogether(), b.repeatHeader());
+            part(pb, pt, part.widths());
+        }
+        if (figureCut) {
+            if (fs * 1.4 > room()) {
+                newPage();
+            }
+            y -= fs * 1.4;
+            ops.add(new StatementPages.Text(left, y + fs * 0.35, fs - 1, false, GREY, fit("Cut: " + CUT_NOTE, right - left, fs - 1, false), "note"));
+            cut.add((name.isEmpty() ? b.id() : name) + ": " + CUT_NOTE);
+        }
+        tfs = fs;
+        trh = rowH;
+    }
+
+    private void part(Band b, Table t, double[] cols) {
         boolean hasTitle = b.title() != null && !b.title().isBlank();
-        double head = (hasTitle ? titleH() : 0) + (b.note() == null ? 0 : fs * 1.4) + rowH;
+        double head = (hasTitle ? titleH() : 0) + (b.note() == null ? 0 : fs * 1.4) + trh;
         double whole = head + rowsHeight(t, 0, t.rows().size());
         if (b.keepTogether() && whole <= capacity() && whole > room() && !atTop()) {
             newPage();
@@ -313,31 +435,31 @@ final class StatementLayout {
         }
         headRow(t, cols);
         if (t.rows().isEmpty()) {
-            y -= rowH;
-            ops.add(new StatementPages.Text(left + PAD, y + rowH * 0.32, fs, false, GREY, "No rows.", "cell"));
+            y -= trh;
+            ops.add(new StatementPages.Text(left + PAD, y + trh * 0.32, tfs, false, GREY, "No rows.", "cell"));
             return;
         }
         int i = 0;
         while (i < t.rows().size()) {
             if (t.groupColumn() >= 0) {
                 int end = groupEnd(t, i);
-                double gh = rowH + rowsHeight(t, i, end);
-                if (gh > room() && gh <= capacity() - rowH - titleH()) {
+                double gh = trh + rowsHeight(t, i, end);
+                if (gh > room() && gh <= capacity() - trh - titleH()) {
                     continued(b, t, cols);                                     // the group moves to the next page whole (keep-together group)
                 }
-                if (rowH * 2 > room()) {
+                if (trh * 2 > room()) {
                     continued(b, t, cols);
                 }
                 groupRow(t, cols, t.rows().get(i).get(t.groupColumn()));
                 for (int r = i; r < end; r++) {
-                    if (rowH > room()) {
+                    if (trh > room()) {
                         continued(b, t, cols);
                     }
                     dataRow(t, cols, t.rows().get(r));
                 }
                 i = end;
             } else {
-                if (rowH > room()) {
+                if (trh > room()) {
                     continued(b, t, cols);
                 }
                 dataRow(t, cols, t.rows().get(i));
@@ -370,12 +492,12 @@ final class StatementLayout {
     }
 
     private double rowsHeight(Table t, int from, int to) {
-        return (to - from) * rowH;
+        return (to - from) * trh;
     }
 
     private void headRow(Table t, double[] cols) {
-        y -= rowH;
-        ops.add(new StatementPages.Fill(left, y, right - left, rowH, HEAD_FILL));
+        y -= trh;
+        ops.add(new StatementPages.Fill(left, y, right - left, trh, HEAD_FILL));
         double x = left;
         for (int c = 0; c < cols.length; c++) {
             if (c == t.groupColumn()) {
@@ -387,14 +509,14 @@ final class StatementLayout {
     }
 
     private void groupRow(Table t, double[] cols, String value) {
-        y -= rowH;
-        ops.add(new StatementPages.Fill(left, y, right - left, rowH, GROUP_FILL));
+        y -= trh;
+        ops.add(new StatementPages.Fill(left, y, right - left, trh, GROUP_FILL));
         String label = t.headers().get(t.groupColumn()) + ": " + (value == null ? "" : value);
-        ops.add(new StatementPages.Text(left + PAD, y + rowH * 0.32, fs, true, INK, fit(label, right - left - 2 * PAD, fs, true), "group"));
+        ops.add(new StatementPages.Text(left + PAD, y + trh * 0.32, tfs, true, INK, fit(label, right - left - 2 * PAD, tfs, true), "group"));
     }
 
     private void dataRow(Table t, double[] cols, List<String> row) {
-        y -= rowH;
+        y -= trh;
         double x = left;
         for (int c = 0; c < cols.length; c++) {
             if (c == t.groupColumn()) {
@@ -407,40 +529,16 @@ final class StatementLayout {
     }
 
     private void cell(String text, double x, double w, boolean number, boolean bold, String role) {
-        String s = fit(text == null ? "" : text, w - 2 * PAD, fs, bold);
+        String whole = text == null ? "" : text;
+        String s = fit(whole, w - 2 * PAD + 0.01, tfs, bold);
+        if (number && !bold && !s.equals(whole)) {
+            figureCut = true;                                                   // a figure that did not fit after all: noted under the table
+        }
         if (s.isEmpty()) {
             return;
         }
-        double tx = number ? x + w - PAD - Metrics.width(s, fs, bold) : x + PAD;
-        ops.add(new StatementPages.Text(tx, y + rowH * 0.32, fs, bold, MASK.equals(s) ? GREY : INK, s, role));
-    }
-
-    /** Column widths across the content width: each as wide as its widest text (of the first 500 rows), scaled to fill the width exactly. */
-    private double[] columns(Table t) {
-        int n = t.headers().size();
-        double[] w = new double[n];
-        for (int c = 0; c < n; c++) {
-            if (c == t.groupColumn()) {
-                continue;
-            }
-            double m = Metrics.width(t.headers().get(c), fs, true);
-            for (int r = 0; r < Math.min(500, t.rows().size()); r++) {
-                List<String> row = t.rows().get(r);
-                if (c < row.size() && row.get(c) != null) {
-                    m = Math.max(m, Metrics.width(row.get(c), fs, false));
-                }
-            }
-            w[c] = Math.min(m, 260) + 2 * PAD;
-        }
-        double total = 0;
-        for (double x : w) {
-            total += x;
-        }
-        double scale = total <= 0 ? 1 : (right - left) / total;
-        for (int c = 0; c < n; c++) {
-            w[c] *= scale;
-        }
-        return w;
+        double tx = number ? x + w - PAD - Metrics.width(s, tfs, bold) : x + PAD;
+        ops.add(new StatementPages.Text(tx, y + trh * 0.32, tfs, bold, MASK.equals(s) ? GREY : INK, s, role));
     }
 
     // ---- text ----------------------------------------------------------------------------------------------------

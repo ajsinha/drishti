@@ -115,18 +115,33 @@ The server lays the pages out (`StatementLayout`), so the PDF, the preview and t
   with filters or parameters, or raise `max-rows`.
 * A table **sorted by a measure masked for the reader** is drawn in the query's own order, with the note *Not sorted: 'MTM' is masked for you, and its order
   would tell the masked figures* (never *No rows.*).
-* A **card** with no value (a sum of no rows, a day with no data) reads `–`, as a masked one does; a count reads its number.
-* When **no band has data** for the run's dates (a date the data does not cover, such as `9999-12-31`), the preview's `hint` and the file's notes say *No data
-  is held for December 9999 (…): every band is empty. Choose a date the data covers.*; the console's preview shows it beside the page count.
+* A **card** with no value follows one rule in the preview, the PDF and Excel: **a count of nothing is `0`**, a value of nothing (a sum of no rows, a day
+  with no data, a date later than the business date) is `–`, as a masked one reads its mask. A count is a measure that is one `count(...)` or
+  `distinct(...)`; in Excel the `0` is a number and the dash a text cell.
+* When **no band has data** for the run's dates, the preview's `hint`, the file's notes (and `X-Statement-Hint`) and `drishti.py bi statement`'s `hint:`
+  line say which dates were read and where data is: *No data is held for 2026-10-25, the date this October 2026 statement reads: every band is empty. The
+  nearest date with data is 2026-10-20 (before). Choose a date the data covers.* With `dates: end` only the period's last day is read, so the hint names
+  that day, never the whole month; with `dates: window` it names the days read (*2026-10-01 to 2026-10-25*). The nearest dates come from what the
+  connectors already keep (a lake's dates, a folder per date; nothing is read); a connector that can only tell its first and newest dates gives *The data
+  held runs from … to …*. The console's preview shows the hint beside the page count.
 * A **table** starts with its title (and a note: rows cut, values masked for the reader), then its column titles and its rows. It never leaves its title and
   column titles alone at the foot of a page: when the first row (or the first group) does not fit, the table starts on the next page. On each page it runs
   onto it repeats its column titles (`repeatHeader`).
 * **Keep-together groups** (`groupBy`): when a group does not fit in what is left of the page but fits on a page, it moves to the next page whole, after the
   column titles. A group longer than a page runs over pages like any rows.
 * A **matrix** is drawn as a table: its rows fields, then a column per value of its column field (and measure), its numbers to the right.
-* Column widths follow the widest text of each column (the first 500 rows) and fill the content width; a cell wider than its column is cut with an ellipsis
-  exactly where the column ends (the widths are the Helvetica fonts' own). Numbers: whole numbers with thousands separators, others with two decimals; a
-  masked value reads `•••`, as on the screen.
+* **A figure is never cut.** A cut figure reads as another number (`-428,350,58…` reads a thousand times smaller than it is), so a number column is as
+  wide as its widest figure (every row measured) and the text columns share what is left. When the figures do not fit, in this order:
+  1. the table's font shrinks in half-point steps to a floor (three quarters of `fontSize`, at least 6 pt);
+  2. the number columns go on **in parts below the table**, each part repeating the text columns (the row labels) and titled *MTM by desk and currency
+     (part 2 of 2: NOK to NZD)*; the first part's note says *Too wide for the paper: the table is in 2 parts, its columns going on below.*;
+  3. the text columns narrow to a few letters.
+
+  A **card**'s value shrinks to the statement's font, then reads in compact units (`3.62tn`, `428.4m`, `12.5k`) with the exact figure in a line under it
+  (*Exactly 3,617,068,619,773.12*). Only a figure wider than the paper itself is cut: the page then says *Cut: a figure is wider than the paper allows
+  and is cut: print it on wider paper or landscape, or read the Excel file*, and the preview's `cut` (and `X-Statement-Cut`) lists it.
+* **Text** (a label, a counterparty name) wider than its column is still cut with an ellipsis exactly where the column ends (the widths are the Helvetica
+  fonts' own). Numbers: whole numbers with thousands separators, others with two decimals; a masked value reads `•••`, as on the screen.
 * The header and the footer are written last, when the number of pages is known, on every page, in the top and bottom margins, each with a thin rule.
 * A statement longer than `drishti.distribution.statements.max-pages` (500) is refused, never cut (`DRS-9038`): narrow it with filters or parameters.
 
@@ -169,10 +184,12 @@ Phone, Tablet and YAML:
   page is always the statement; the export of a grid page is the picture it always was.
 * **Excel**: the bands' tables as typed sheets (an *About* sheet first), each set to print on the statement's paper: its orientation and size, its margins,
   the header and footer in Excel's codes (`&P` the page, `&N` the pages, `&D` the date), and the column titles repeated on every printed page
-  (`_xlnm.Print_Titles`).
+  (`_xlnm.Print_Titles`). The file carries **every note the PDF has**: the *About* sheet lists the run's notes (the no-data hint, the period, the
+  filters, what was cut) and, beside each sheet's rows, its **Notes** (*Masked for you: MTM.*, *Not sorted: 'MTM' is masked for you …*, *The first
+  10,000 rows only …*); each sheet also has its note next to the table, to the right of the column titles (under the data when a chart sits there).
 * **Bursting**: a subscription to a statement page (format `pdf` or `xlsx`) makes **one statement per recipient**: each is asked of the engine **as that
   recipient**, so two people's statements differ only by their masks and row rules (and their name). The file is named after the statement, its period and
-  the recipient (*Monthly statement September 2026 hfx1.pdf*); each delivery in the history says `statement: true`, its `pages` and its `file`. A recipient
+  the recipient (*Monthly statement September 2026 hfx1.pdf*); each delivery in the history says `statement: true`, its `pages` and its `file`; the mail's subject ends with the page count (*· 1 page*, *· 3 pages*). A recipient
   who may not open the report is skipped with the reason in words (*may not open the report*), and a disabled user named in the subscription is listed as
   skipped (*the account is disabled*), as for any subscription ([DISTRIBUTION.md section 2](DISTRIBUTION.md#2-subscriptions)). A table sorted by a
   measure masked for a recipient is drawn unsorted for them, and the delivery's `notes` say so.
@@ -186,8 +203,8 @@ analyst's every trade with MTM masked; and two recipients of the same role and d
 
 | Method | Path | What it does |
 |---|---|---|
-| `POST` | `/api/v1/bi/reports/statement/preview` | body `{report: <id>` or `yaml: <draft>` (needs `bi-author`)`, page?, state?, date?}`: `{title, period, paper {size, orientation, margins}, width, height, pageCount, pages [{number, ops [...]}], tokens, rows, cut, hint}` (`cut`: each table that stops at `max-rows`, in words; empty when none; `hint`: *No data is held for …* when no band has data for the dates, else null); each op is a `text` (`x`, `y`, `size`, `bold`, `rgb`, `text`, `role`: `header`, `footer`, `title`, `head`, `group`, `cell`, `text`, `label`, `value`, `note`), a `rule` or a `fill`, in points from the page's lower left corner |
-| `POST` | `/api/v1/bi/reports/statement/file` | the same body plus `format: pdf` (default) or `xlsx`: the file, made for the caller, with `X-Statement-Pages` and one `X-Statement-Cut` per table cut at `max-rows` (the preview's `cut` text, URL-encoded UTF-8); any other format is `422 DRS-9038` *a statement is made as pdf or xlsx* |
+| `POST` | `/api/v1/bi/reports/statement/preview` | body `{report: <id>` or `yaml: <draft>` (needs `bi-author`)`, page?, state?, date?}`: `{title, period, paper {size, orientation, margins}, width, height, pageCount, pages [{number, ops [...]}], tokens, rows, cut, hint}` (`cut`: each table that stops at `max-rows` and each figure that could not be drawn whole, in words; empty when none; `hint`: *No data is held for …* (the dates read and the nearest dates with data) when no band has data for the dates, else null); each op is a `text` (`x`, `y`, `size`, `bold`, `rgb`, `text`, `role`: `header`, `footer`, `title`, `head`, `group`, `cell`, `text`, `label`, `value`, `exact` (a card's exact figure under its compact units), `note`), a `rule` or a `fill`, in points from the page's lower left corner |
+| `POST` | `/api/v1/bi/reports/statement/file` | the same body plus `format: pdf` (default) or `xlsx`: the file, made for the caller, with `X-Statement-Pages`, one `X-Statement-Cut` per line of the preview's `cut` and `X-Statement-Hint` when no data is held (the preview's text, URL-encoded UTF-8); any other format is `422 DRS-9038` *a statement is made as pdf or xlsx* |
 | `POST` | `/api/v1/export/pdf` · `/xlsx` | a statement page as for any export (`{type: report, id, page, state?, date?}`): the statement |
 
 Captured on the test stack of `drishti-console/tests/test_bi_wave_d_browser.py` with the report of tutorial 20
@@ -209,7 +226,15 @@ $ drishti.py bi statement file bi-39eb12fe47 --date 2026-10-08 --format xlsx -o 
 wrote statement.xlsx (7,823 bytes)
 ```
 
-`--file report.yaml` makes the statement of a draft's YAML instead (a BI author).
+`--file report.yaml` makes the statement of a draft's YAML instead (a BI author). A date no data covers prints the hint after the first line, as the
+designer shows it (`preview` and `file` alike); one page reads *1 page*:
+
+```
+$ drishti.py bi statement preview bi-39eb12fe47 --date 9999-12-31
+Monthly statement: 1 page, A4 portrait, December 9999, 3 rows
+  hint: No data is held for 9999-12-31, the date this December 9999 statement reads: every band is empty. The nearest date with data is 2026-10-20 (before). Choose a date the data covers.
+  page 1: Monthly statement | December 9999 | For wes  ...  Run 2026-10-20 · by DESK | Page 1 of 1  (1 cell)
+```
 
 ([CLI_GUIDE.md](CLI_GUIDE.md#bi-statement), [API_GUIDE.md](API_GUIDE.md#statements-apiv1bireportsstatement-260).)
 

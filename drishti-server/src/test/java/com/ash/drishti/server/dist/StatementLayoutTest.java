@@ -120,6 +120,114 @@ class StatementLayoutTest {
         assertThat(p.pages().get(0).texts("cell").get(0)).endsWith("…");
     }
 
+    /** QA3B-01's matrix: MTM by desk and seven currencies, figures of a billion and more, on A4 portrait. */
+    static StatementLayout.Table currencyMatrix(int currencies, double scale) {
+        List<String> ccy = List.of("AUD", "CAD", "CHF", "EUR", "GBP", "JPY", "USD", "NOK", "SEK", "SGD", "HKD", "NZD").subList(0, currencies);
+        List<String> headers = new ArrayList<>(List.of("DESK"));
+        headers.addAll(ccy);
+        List<List<String>> rows = new ArrayList<>();
+        String[] desks = {"DESK-COMMODITIES", "DESK-RATES", "DESK-CREDIT", "DESK-FX", "DESK-EQUITY-DERIVATIVES"};
+        double[] base = {291_648_023.10, -428_350_581.27, -1_196_646_912.55, 3_617_068_619.77, -87_004_118.40};
+        for (int d = 0; d < desks.length; d++) {
+            List<String> row = new ArrayList<>(List.of(desks[d]));
+            for (int c = 0; c < ccy.size(); c++) {
+                row.add(String.format(java.util.Locale.ROOT, "%,.2f", base[(d + c) % base.length] * scale * (1 + c / 10.0)));
+            }
+            rows.add(row);
+        }
+        boolean[] numeric = new boolean[headers.size()];
+        java.util.Arrays.fill(numeric, 1, numeric.length, true);
+        return new StatementLayout.Table(headers, rows, numeric, -1);
+    }
+
+    static StatementLayout.Band matrixBand(StatementLayout.Table t) {
+        return new StatementLayout.Band("table", "m", "MTM by desk and currency", null, false, null, null, t, 0, 1, "none", false, true);
+    }
+
+    static StatementLayout.Band wideCard(String label, String value) {
+        return new StatementLayout.Band("card", "n", label, null, false, value, null, null, 0, 4 / 12.0, "none", false, true);
+    }
+
+    /** Every figure the table holds, and the figures the pages drew. */
+    static List<String> figures(StatementLayout.Table t) {
+        List<String> out = new ArrayList<>();
+        t.rows().forEach(r -> out.addAll(r.subList(1, r.size())));
+        return out;
+    }
+
+    static List<String> drawnFigures(StatementPages p) {
+        List<String> out = new ArrayList<>();
+        p.pages().forEach(page -> page.texts("cell").stream().filter(s -> s.matches("[-0-9,.…]+") && s.matches(".*\\d.*")).forEach(out::add));
+        return out;
+    }
+
+    @Test
+    void aSevenCurrencyMatrixAndABigCardOnA4PortraitDrawEveryFigureWhole() {
+        // QA3B-01: -428,350,58… read a thousand times smaller than the real figure; a figure is now never cut
+        StatementSpec spec = spec("{ paper: A4, orientation: portrait, fontSize: 9, margins: { top: 15, right: 12, bottom: 15, left: 12 } }");
+        StatementLayout.Table m = currencyMatrix(7, 1);
+        StatementLayout layout = new StatementLayout(spec, 50);
+        StatementPages p = layout.lay(List.of(List.of(List.of(wideCard("Notional", "3,617,068,619,773.12"), card("b", "MTM", "-75,000.00", 4 / 12.0),
+                card("c", "Trades", "120", 8 / 12.0)), List.of(matrixBand(m)))), Map.of());
+        List<String> drawn = drawnFigures(p);
+        assertThat(drawn).as("no figure ends in an ellipsis").noneMatch(s -> s.contains("…"));
+        assertThat(drawn).containsExactlyInAnyOrderElementsOf(figures(m));
+        List<String> values = p.pages().get(0).texts("value");
+        assertThat(values.get(0)).doesNotContain("…");
+        List<String> exact = p.pages().get(0).texts("exact");
+        assertThat(values.get(0).equals("3,617,068,619,773.12") || exact.contains("Exactly 3,617,068,619,773.12"))
+                .as("the card reads the whole figure, or compact units with the exact figure under it: " + values + " " + exact).isTrue();
+        assertThat(layout.cut()).as("nothing was cut, so nothing says so").isEmpty();
+        assertThat(String.join(" ", p.pages().get(0).texts("note"))).doesNotContain("Cut:");
+    }
+
+    @Test
+    void aMatrixTooWideForThePaperGoesOnInPartsWithItsRowLabelsAndACompactCard() {
+        StatementSpec spec = spec("{ paper: A4, orientation: portrait, fontSize: 9, margins: { top: 15, right: 12, bottom: 15, left: 12 } }");
+        StatementLayout.Table m = currencyMatrix(12, 1000);                // twelve currencies, figures of a trillion
+        StatementLayout layout = new StatementLayout(spec, 50);
+        StatementPages p = layout.lay(List.of(List.of(List.of(new StatementLayout.Band("card", "n", "Notional", null, false, "3,617,068,619,773.12", null, null, 0, 2 / 12.0, "none",
+                false, true), card("b", "MTM", "1", 2 / 12.0)),
+                List.of(matrixBand(m)))), Map.of());
+        List<String> drawn = drawnFigures(p);
+        assertThat(drawn).noneMatch(s -> s.contains("…"));
+        assertThat(drawn).containsExactlyInAnyOrderElementsOf(figures(m));
+        List<String> titles = new ArrayList<>();
+        p.pages().forEach(page -> titles.addAll(page.texts("title")));
+        assertThat(titles).anyMatch(s -> s.startsWith("MTM by desk and currency (part 2 of "));
+        List<String> labels = new ArrayList<>();
+        p.pages().forEach(page -> page.texts("cell").stream().filter(s -> s.startsWith("DESK-")).forEach(labels::add));
+        assertThat(labels.size()).as("each part repeats the row labels").isGreaterThanOrEqualTo(10);
+        assertThat(p.pages().get(0).texts("value").get(0)).as("a narrow card: compact units").isEqualTo("3.62tn");
+        assertThat(p.pages().get(0).texts("exact")).as("the exact figure under it, whole").hasSize(1).allMatch(s -> s.endsWith("3,617,068,619,773.12"));
+        assertThat(String.join(" ", p.pages().get(0).texts("note"))).contains("the table is in").contains("parts");
+        assertThat(layout.cut()).isEmpty();
+    }
+
+    @Test
+    void aFigureWiderThanThePaperItselfIsCutWithANoteOnThePageAndInTheCutList() {
+        String huge = "1" + ",234".repeat(40) + ".00";
+        StatementLayout.Table t = new StatementLayout.Table(List.of("DESK", "MTM"), List.of(List.of("DESK-FX", huge)), new boolean[] {false, true}, -1);
+        StatementLayout layout = new StatementLayout(spec("{ paper: A5, margins: 10 }"), 50);
+        StatementPages p = layout.lay(List.of(List.of(List.of(matrixBand(t)))), Map.of());
+        assertThat(drawnFigures(p)).allMatch(s -> s.endsWith("…"));
+        assertThat(String.join(" ", p.pages().get(0).texts("note"))).contains("Cut: a figure is wider than the paper allows");
+        assertThat(layout.cut()).containsExactly("MTM by desk and currency: " + StatementLayout.CUT_NOTE);
+    }
+
+    @Test
+    void figuresInCompactUnits() {
+        assertThat(StatementFit.compact("3,617,068,619,773.12")).isEqualTo("3.62tn");
+        assertThat(StatementFit.compact("-428,350,581.27")).isEqualTo("-428.4m");
+        assertThat(StatementFit.compact("1,196,646,912.55")).isEqualTo("1.20bn");
+        assertThat(StatementFit.compact("12,500")).isEqualTo("12.5k");
+        assertThat(StatementFit.compact("999.50")).isEqualTo("999.50");
+        assertThat(StatementFit.compact("DESK-FX")).isEqualTo("DESK-FX");
+        assertThat(StatementFit.isNumber("-1,234.50")).isTrue();
+        assertThat(StatementFit.isNumber("•••")).isFalse();
+        assertThat(List.of(StatementService.pages(1), StatementService.pages(2))).as("QA3B-09: the mail subject and the audit").containsExactly("1 page", "2 pages");
+    }
+
     @Test
     void aStatementLongerThanThePageLimitIsRefusedNotCut() {
         assertThatThrownBy(() -> new StatementLayout(spec(null), 2).lay(List.of(List.of(List.of(tableBand("t", table(400, false), "none", false, true)))), Map.of()))

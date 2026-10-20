@@ -178,7 +178,9 @@ public final class StatementService {
             }
             laid.add(rows);
         }
-        StatementPages out = new StatementLayout(spec, limits.maxPages()).lay(laid, tokens);
+        StatementLayout layout = new StatementLayout(spec, limits.maxPages());
+        StatementPages out = layout.lay(laid, tokens);
+        cut.addAll(layout.cut());                                         // a figure that could not be drawn whole (QA3B-01)
         List<String> notes = new ArrayList<>();
         notes.add("Statement for " + who.user() + ", run " + tokens.get("run-date") + " " + tokens.get("run-time"));
         if (!"none".equals(spec.period())) {
