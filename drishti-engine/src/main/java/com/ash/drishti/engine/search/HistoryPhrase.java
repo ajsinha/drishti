@@ -63,6 +63,18 @@ public final class HistoryPhrase {
      * @param isValue whether a word is a value of one of the kind's fields ({@code BOOK-RATES-3}), so not an id
      */
     public static Optional<Read> read(List<String> words, LocalDate today, java.util.function.Predicate<String> isValue) {
+        return read(words, today, isValue, w -> Optional.empty());
+    }
+
+    /**
+     * As {@link #read(List, LocalDate, java.util.function.Predicate)}, and a word that names one entity of the kind ({@code idOf}: its id
+     * in any case, or the end of its id after a dash, {@code audusd} for {@code FX-AUDUSD}) is the id even when it is also a value of a
+     * field ({@code EQ-CSCA} is the equity's TICKER too; QA1-08).
+     *
+     * @param idOf the id of the one entity of the kind a word names, or empty
+     */
+    public static Optional<Read> read(List<String> words, LocalDate today, java.util.function.Predicate<String> isValue,
+            java.util.function.Function<String, Optional<String>> idOf) {
         List<String> lw = words.stream().map(w -> w.toLowerCase(Locale.ROOT)).toList();
         for (int i = 0; i < lw.size(); i++) {
             Optional<Time> t = time(lw, i, today);
@@ -79,8 +91,13 @@ public final class HistoryPhrase {
                     continue;
                 }
                 String w = lw.get(k);
+                Optional<String> named = id != null || CHANGED.contains(w) || FILLER.contains(w) || DATE.matcher(w).matches() ? Optional.empty()
+                        : idOf.apply(words.get(k));
                 if (CHANGED.contains(w)) {
                     diff = true;
+                } else if (named.isPresent()) {
+                    id = named.get();
+                    idWord = words.get(k);
                 } else if (id == null && ID.matcher(words.get(k)).matches() && !DATE.matcher(w).matches() && !isValue.test(words.get(k))) {
                     id = words.get(k).toUpperCase(Locale.ROOT);
                     idWord = words.get(k);
@@ -88,7 +105,7 @@ public final class HistoryPhrase {
                     ignored.add(words.get(k));
                 }
             }
-            if (id == null || ignored.stream().anyMatch(x -> isValue.test(x))) {
+            if (id == null || ignored.stream().anyMatch(isValue)) {
                 return Optional.empty();                                  // a field's value too: a search with a date, not one entity
             }
             String meaning = HistoryRange.trailing("X Y " + time.range).map(s -> s.range().describe()).orElse(time.range);

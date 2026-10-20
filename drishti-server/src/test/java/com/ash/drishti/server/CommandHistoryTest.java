@@ -104,6 +104,17 @@ class CommandHistoryTest {
     }
 
     @Test
+    void plainWordsReadABareIdAndAnIdInAnyCase() throws Exception {
+        // QA1-08: a bare id that names one entity, then a range; an id typed in lower case after the kind word
+        mvc.perform(get("/api/v1/phrase").param("text", "IRS-48213 30").header("X-Drishti-User", "hist-t"))
+                .andExpect(jsonPath("$.command").value("TRD IRS-48213 30"));
+        mvc.perform(get("/api/v1/phrase").param("text", "trade irs-48213 last 3 months").header("X-Drishti-User", "hist-t"))
+                .andExpect(jsonPath("$.command").value("TRD IRS-48213 3M"));
+        mvc.perform(get("/api/v1/phrase").param("text", "NO-SUCH-ID-77 30").header("X-Drishti-User", "hist-t"))
+                .andExpect(jsonPath("$.command").doesNotExist());
+    }
+
+    @Test
     void theTypeAheadOffersRangesAfterAnId() throws Exception {
         mvc.perform(get("/api/v1/command/suggest").param("q", "TRD IRS-48213 ").header("X-Drishti-User", "hist-t"))
                 .andExpect(jsonPath("$[0].type").value("range"))

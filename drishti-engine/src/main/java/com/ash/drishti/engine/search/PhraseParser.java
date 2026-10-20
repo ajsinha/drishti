@@ -63,6 +63,19 @@ public final class PhraseParser {
         Map<String, KindWord> kinds();
 
         List<Field> fields(String kind);
+
+        /**
+         * The id of the one entity of {@code kind} that {@code word} names: its id in any case, or the one id that ends with
+         * {@code -word} ({@code audusd} for {@code FX-AUDUSD}); empty when none or several (QA1-08).
+         */
+        default Optional<String> entityId(String kind, String word) {
+            return Optional.empty();
+        }
+
+        /** The kind of the one entity whose id {@code word} is, among the kinds this vocabulary names; empty when none or several. */
+        default Optional<KindWord> kindOfEntity(String word) {
+            return Optional.empty();
+        }
     }
 
     /** One part of the phrase and what it became. */
@@ -106,6 +119,47 @@ public final class PhraseParser {
         this.today = today;
     }
 
+    /**
+     * A bare id first: when it names one entity (of one kind) and what follows is a range as a command writes it ({@code 30}, {@code 3M},
+     * {@code FROM 2026-10-01}) or a time phrase, that entity's history; empty otherwise.
+     */
+    private Optional<Parsed> bareHistory(List<String> words, List<Step> steps) {
+        if (words.size() < 2 || DATE.matcher(words.get(0)).matches() || !words.get(0).matches(".*[0-9-].*")) {
+            return Optional.empty();
+        }
+        Optional<KindWord> k = vocab.kindOfEntity(words.get(0));
+        if (k.isEmpty()) {
+            return Optional.empty();
+        }
+        KindWord kind = k.get();
+        String id = vocab.entityId(kind.kind(), words.get(0)).orElse(words.get(0));
+        String rest = String.join(" ", words.subList(1, words.size()));
+        List<Step> out = new ArrayList<>(steps);
+        Optional<com.ash.drishti.engine.command.HistoryRange.Split> range;
+        try {
+            range = com.ash.drishti.engine.command.HistoryRange.trailing(kind.mnemonic() + " " + id + " " + rest);
+        } catch (RuntimeException e) {
+            range = Optional.empty();
+        }
+        if (range.isPresent() && range.get().command().equalsIgnoreCase(kind.mnemonic() + " " + id)) {
+            String command = kind.mnemonic() + " " + id + " " + range.get().range().render() + (range.get().diff() ? " DIFF" : "");
+            out.add(new Step(words.get(0), "the " + kind.label().toLowerCase(Locale.ROOT) + " " + id));
+            out.add(new Step(rest, range.get().range().describe() + (range.get().diff() ? ", only what changed" : "")));
+            return Optional.of(new Parsed(command, kind.kind(), out, List.of(), null, command));
+        }
+        String kindName = kind.kind();
+        List<Field> kindFields = vocab.fields(kindName);
+        Optional<HistoryPhrase.Read> h = HistoryPhrase.read(words, today.get(), w -> valueOf(w, kindFields).isPresent(),
+                w -> w.equalsIgnoreCase(words.get(0)) ? Optional.of(id) : Optional.empty());
+        if (h.isEmpty() || !h.get().idWords().equalsIgnoreCase(words.get(0))) {
+            return Optional.empty();
+        }
+        String command = kind.mnemonic() + " " + id + " " + h.get().range() + (h.get().diff() ? " DIFF" : "");
+        out.add(new Step(words.get(0), "the " + kind.label().toLowerCase(Locale.ROOT) + " " + id));
+        out.add(new Step(h.get().timeWords(), h.get().meaning() + (h.get().diff() ? ", only what changed" : "")));
+        return Optional.of(new Parsed(command, kind.kind(), out, h.get().ignored(), null, command));
+    }
+
     public Parsed parse(String phrase) {
         List<String> words = tokens(phrase);
         List<Step> steps = new ArrayList<>();
@@ -126,6 +180,13 @@ public final class PhraseParser {
                 }
             }
         }
+        if (kind == null && !words.isEmpty()) {
+            // QA1-08: a bare id that names one entity, then a range or a time phrase ("1000015 30", "BOOK-RATES-3 last week")
+            Optional<Parsed> bare = bareHistory(words, steps);
+            if (bare.isPresent()) {
+                return bare.get();
+            }
+        }
         if (kind == null) {
             // named as the vocabulary names them, with their mnemonics: no guessed plurals, no list brackets
             return new Parsed(null, null, steps, List.of(), "say what to look for: a kind such as "
@@ -134,7 +195,9 @@ public final class PhraseParser {
         }
         // 2. kind word, id, time phrase: the entity over time (HISTORY_QUERIES.md section 15.5), not a search
         List<Field> kindFields = vocab.fields(kind.kind());
-        Optional<HistoryPhrase.Read> history = HistoryPhrase.read(words, today.get(), w -> valueOf(w, kindFields).isPresent());
+        String kindName = kind.kind();
+        Optional<HistoryPhrase.Read> history = HistoryPhrase.read(words, today.get(), w -> valueOf(w, kindFields).isPresent(),
+                w -> vocab.entityId(kindName, w));
         if (history.isPresent()) {
             HistoryPhrase.Read h = history.get();
             String command = kind.mnemonic() + " " + h.id() + " " + h.range() + (h.diff() ? " DIFF" : "");

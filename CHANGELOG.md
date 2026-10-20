@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Fixed (QA1-08): the documented plain-words history phrases work for market kinds and bare ids.** `equity EQ-CSCA last 3 months`
+  (an id that is also a field's value), `fx audusd since 2026-10-01` (an id named by its end) and `1000015 30` (a bare id with a range)
+  open the history instead of becoming searches; `BOOK-RATES-3 last week` is the book's history; `trades in BOOK-RATES-3 since …` stays a
+  search. USER_GUIDE and HISTORY_QUERIES.md section 15.5 say the rule.
 - **Fixed (QA1-05, QA1-06): the type-ahead after an id offers every range, labelled, in a cluster and with masks.** Merged across
   Drishti*net it kept one row per entity, so only `30` was offered; now each range is its own row and the ranges come first. For a
   user with field masks the range rows were retitled as the entity (`TRD 1000002 · Commodity …`, or the masked title) and a partial

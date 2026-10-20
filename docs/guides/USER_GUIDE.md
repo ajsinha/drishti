@@ -1429,11 +1429,17 @@ trade 1000015 last 30 days                  TRD 1000015 30
 equity EQ-CSCA this year                    EQ EQ-CSCA YTD
 trade 1000015 since 2026-10-01              TRD 1000015 FROM 2026-10-01
 what changed on trade 1000015 this week     TRD 1000015 FROM 2026-10-19 DIFF
+fx audusd since 2026-10-01                  FX FX-AUDUSD FROM 2026-10-01
+1000015 30                                  TRD 1000015 30
+BOOK-RATES-3 last week                      BOOK BOOK-RATES-3 FROM 2026-10-12 TO 2026-10-16
 ```
 
 Time phrases: `last` or `past N days|weeks|months|years`, `last week|month|year` (the whole previous one), `this week|month|quarter|year`,
-`ytd`, `since <date>`, `from <date> to <date>`, `between <date> and <date>`. `changed` or `changes` anywhere adds `DIFF`. The id is the one word
-with a digit or a dash that is not a value of one of the kind's fields, so `trades in BOOK-RATES-3 since 2026-01-01` stays a search.
+`ytd`, `since <date>`, `from <date> to <date>`, `between <date> and <date>`. `changed` or `changes` anywhere adds `DIFF`. The id is the word
+that names one entity of the kind (its id in any case, or the end of its id after a dash: `audusd` is `FX-AUDUSD`), even when it is also
+a value of a field (`EQ-CSCA` is the equity's ticker); else the one word with a digit or a dash that is not a value of one of the kind's
+fields, so `trades in BOOK-RATES-3 since 2026-01-01` stays a search (`BOOK-RATES-3` is no trade). Without a kind word, an id that names one
+entity followed by a range (`1000015 30`, `1000015 3M DIFF`) or a time phrase (`BOOK-RATES-3 last week`) is that entity's history.
 
 It is deterministic: no AI service, only the server's own vocabulary (its kinds, and each kind's fields and the
 values its documents have). Words it did not understand are listed as *Not understood, left out*, never guessed.

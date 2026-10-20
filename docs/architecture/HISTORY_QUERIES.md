@@ -123,7 +123,7 @@ The rule: **a range is the last one to four words, never the first word after th
 | `MYBOOK 30` (alias for `BOOK BOOK-RATES-1`) | `BOOK BOOK-RATES-1 30`, a pick list | history of the book | `CommandMemory.expand` appends trailing words (`MYBOOK F3` becomes `BOOK BOOK-RATES-1 F3`), so the range survives the alias |
 | `MYPICK 30` (alias for `TRD desk=rates`) | search | the same | an alias that expands to a search stays a search |
 | `MX-20000001 30` (bare id) | not read (two words), plain words | history | allowed only when `ReferenceCatalog.kindOf(id)` names the kind (the pack's `graph.id-patterns`), as for a bare id today |
-| `1000015 30` (bare, no id pattern) | plain words | plain words, which now understand it (section 15.5) | no id pattern for `1000015` |
+| `1000015 30` (bare, no id pattern) | plain words | plain words, which now understand it (section 15.5): an id that names one entity of one kind, then a range or a time phrase | no id pattern for `1000015` |
 | `MKT`, `RUPAKA …`, `FORM …` | pack overview, BI, form | the same | single words and reserved first words are handled before the command in `/go` |
 | `TRD 1000015 FROM 2026-09-01` | pick list | history from that date to the date box | `FROM` and `TO` are keywords only in the last four words and only followed by a date |
 | `TRD YTD` | opens trade `YTD` | the same | first word after the mnemonic |
@@ -726,11 +726,16 @@ built as step H12, which may move to 2.7.0** if 2.6.5 runs long; nothing else de
 `PhraseParser` (deterministic, no model) learns one more form before searches: *kind word, id, time phrase*. Time phrases: `last N days`
 → `N`, `last N weeks|months|years` → `NW|NM|NY`, `last month` → `FROM <first of the previous month> TO <its last day>`, `this month` →
 `MTD`, `this year`, `ytd` → `YTD`, `since <date>` → `FROM <date>`, `between <date> and <date>`, `from <date> to <date>`, `past 30 days`.
+The id is the word that names one entity of the kind (`Vocabulary.entityId`: its id in any case, or the one id ending `-<word>`, so `audusd`
+is `FX-AUDUSD`), even when it is also a field's value (`EQ-CSCA`, the ticker); else a word with a digit or a dash that is no field's value.
+Without a kind word, an id that names one entity of one kind (`Vocabulary.kindOfEntity`) followed by a range or a time phrase is that
+entity's history (`1000015 30`, `BOOK-RATES-3 last week`).
 
 ```text
 trade 1000015 last month                 TRD 1000015 FROM 2026-09-01 TO 2026-09-30
 equity EQ-CSCA last 3 months             EQ EQ-CSCA 3M
 fx audusd since 2026-10-01               FX FX-AUDUSD FROM 2026-10-01
+1000015 30                               TRD 1000015 30
 what changed on trade 1000015 this week  TRD 1000015 FROM 2026-10-19 DIFF
 ```
 
