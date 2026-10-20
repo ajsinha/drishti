@@ -357,7 +357,18 @@ public final class IdentitySync implements StateSync.Part, AutoCloseable {
         }
     }
 
-    private synchronized void saveTombstones() {
+    private final java.util.concurrent.locks.ReentrantLock saving = new java.util.concurrent.locks.ReentrantLock();   // file work: never under synchronized
+
+    private void saveTombstones() {
+        saving.lock();
+        try {
+            writeTombstones();
+        } finally {
+            saving.unlock();
+        }
+    }
+
+    private void writeTombstones() {
         long oldest = now() - KEEP_TOMBSTONES.toMillis();
         deleted.values().removeIf(at -> at < oldest);
         Map<String, Long> out = new TreeMap<>();
