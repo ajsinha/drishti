@@ -194,6 +194,23 @@ def wait_up(url: str, seconds: float) -> None:
     raise RuntimeError(f"{url} did not come up in {seconds:.0f} s")
 
 
+def server_env(given: list[str] | None) -> dict[str, str]:
+    """``--server-env KEY=VAL`` (repeatable) as a dict: added to every server's environment (for example ``MALLOC_ARENA_MAX=2``)."""
+    out: dict[str, str] = {}
+    for item in given or []:
+        key, sep, value = item.partition("=")
+        if not sep or not key.strip():
+            raise SystemExit(f"--server-env wants KEY=VAL, got {item!r}")
+        out[key.strip()] = value
+    return out
+
+
+def jvm_args(heap: str, extra: list[str] | None) -> list[str]:
+    """The servers' JVM options before ``-jar``: ``-Xmx<heap>`` then every ``--jvm-arg`` in order (for example
+    ``-XX:MaxDirectMemorySize=256m``, ``-XX:TrimNativeHeapInterval=60000``, docs/admin/PERFORMANCE.md)."""
+    return [f"-Xmx{heap}", *(extra or [])]
+
+
 class Soak:
     def __init__(self, a):
         self.a = a
@@ -261,8 +278,8 @@ class Soak:
         env = dict(os.environ, DRISHTI_NET_SECRET=KEY, DRISHTI_TOKEN_SECRET=TOKEN_SECRET, DRISHTI_SECURITY_ENABLED="true",
                    DRISHTI_DATA_DIR=str(work / "data"), DRISHTI_DELTA_ROOT=str(self.work / "lakes" / lake), DRISHTI_PACKS=packs,
                    DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_CONNECTORS_DIR=str(work / "connectors"),
-                   DRISHTI_NET_DIR=str(work / "net"), DRISHTI_ACCESS_LOG="false")
-        args = [f"-Xmx{self.a.heap}", "-jar", self.jar, f"--server.port={port}", f"--drishti.net.dir={work / 'net'}", "--drishti.net.poll=1s",
+                   DRISHTI_NET_DIR=str(work / "net"), DRISHTI_ACCESS_LOG="false", **server_env(getattr(self.a, "server_env", None)))
+        args = [*jvm_args(self.a.heap, getattr(self.a, "jvm_arg", None)), "-jar", self.jar, f"--server.port={port}", f"--drishti.net.dir={work / 'net'}", "--drishti.net.poll=1s",
                 "--drishti.sources.plugins.demo.enabled=false", "--drishti.security.registered-users-only=false",
                 "--drishti.security.redact=" + ",".join(REDACT)]
         log = open(self.work / f"server-{name}.log", "ab")
@@ -587,6 +604,8 @@ class Soak:
     # -- the run ----------------------------------------------------------------------------------------------------------------
     def run(self) -> dict:
         out: dict = {"trades": {"perSystemPerDay": self.a.trades, "dates": self.dates, "distinct": 3 * self.a.trades}}
+        out["serverLaunch"] = {"jvm": jvm_args(self.a.heap, getattr(self.a, "jvm_arg", None)),
+                               "env": server_env(getattr(self.a, "server_env", None))}
         self.lakes()
         self.reqs = self.reference()
         out["requests"] = len(self.reqs)
@@ -756,6 +775,10 @@ def main(argv=None) -> int:
     ap.add_argument("--settle", type=float, default=600, help="seconds after a kill window during which the load is still moving between nodes: "
                     "left out of the steady memory slope")
     ap.add_argument("--max-p99", type=float, default=0, help="seconds: fail when an action's p99 is above it (0: report only)")
+    ap.add_argument("--jvm-arg", action="append", default=[], help="a JVM option for every server, after -Xmx (repeatable), "
+                    "e.g. -XX:MaxDirectMemorySize=256m")
+    ap.add_argument("--server-env", action="append", default=[], help="KEY=VAL added to every server's environment (repeatable), "
+                    "e.g. MALLOC_ARENA_MAX=2")
     a = ap.parse_args(argv)
     soak = Soak(a)
     soak.work.mkdir(parents=True, exist_ok=True)

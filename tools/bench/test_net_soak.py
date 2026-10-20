@@ -357,5 +357,44 @@ class UsersHistoryTest(unittest.TestCase):
         self.assertEqual(2, out["history"]["failed"])
 
 
+class ServerLaunchTest(unittest.TestCase):
+    """--jvm-arg and --server-env: the production settings of docs/admin/PERFORMANCE.md reach every server."""
+
+    def test_jvm_args_follow_the_heap_in_order(self):
+        import net_soak
+        self.assertEqual(["-Xmx2g"], net_soak.jvm_args("2g", []))
+        self.assertEqual(["-Xmx2g", "-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000"],
+                         net_soak.jvm_args("2g", ["-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000"]))
+
+    def test_server_env_parses_key_value_pairs(self):
+        import net_soak
+        self.assertEqual({}, net_soak.server_env(None))
+        self.assertEqual({"MALLOC_ARENA_MAX": "2", "X": "a=b"}, net_soak.server_env(["MALLOC_ARENA_MAX=2", "X=a=b"]))
+        with self.assertRaises(SystemExit):
+            net_soak.server_env(["MALLOC_ARENA_MAX"])
+
+    def test_the_options_are_parsed_repeatably(self):
+        import net_soak
+        seen = {}
+
+        class Stop(Exception):
+            pass
+
+        def fake(a):
+            seen.update(vars(a))
+            raise Stop
+
+        real = net_soak.Soak
+        net_soak.Soak = fake
+        try:
+            with self.assertRaises(Stop):
+                net_soak.main(["--work", "/nowhere", "--jvm-arg=-XX:MaxDirectMemorySize=256m", "--jvm-arg=-XX:TrimNativeHeapInterval=60000",
+                               "--server-env", "MALLOC_ARENA_MAX=2"])
+        finally:
+            net_soak.Soak = real
+        self.assertEqual(["-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000"], seen["jvm_arg"])
+        self.assertEqual(["MALLOC_ARENA_MAX=2"], seen["server_env"])
+
+
 if __name__ == "__main__":
     unittest.main()
