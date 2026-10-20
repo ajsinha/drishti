@@ -608,7 +608,18 @@ nothing of the kind counts as `none`) followed, in a cluster, by the data versio
 carry them (`SourceRouter.peerVersion`, `net:<node>{<connector>=<version>,…}`). A new load, here or on a peer, changes the version, so
 the cache never serves stale data and needs no expiry. A connector or peer that gives no version (`Optional.empty()`) is not cached, nor
 is an answer that failed, is partial or has no day.
-Masks and formats are applied on every answer, so one entry serves every user. `purgeCaches` (Admin → Cache) empties it.
+Masks and formats are applied on every answer, so an entry of days this node's own sources read serves every user.
+
+**Days a peer answered are the caller's alone** (after the 2.6.6 soak, SOAK2-01). A peer masks the days it sends for the user it acts
+for (section 13), so they are not unmasked rows. When a peer answered any day of a read (`SourceHistory.Routed.fromPeer`), the entry is
+kept under the key above followed by `|viewer=<signature>`, the caller's security signature (`Principal.securitySignature()`: the
+sorted roles and the embedding app, which decide every node's masks and the nodes the caller reaches; the live relay's topic partition
+is the same signature). A caller with another signature misses it and reads the peer again for themselves, so an administrator never
+gets a viewer's `•••` and a viewer never gets an administrator's raw values. A read whose days were all this node's own is kept under
+the shared key, and a lookup tries the shared key first, then the caller's. A caller without a signature (`Viewer.of(redact, masked)`)
+is never cached when a peer answered. Before, the first caller's masked days were served to everyone for the life of the entry: in soak 2,
+77 administrator histories of peer-held trades showed `PRICE` as `•••` in a column marked `masked: false`, with the price's changes
+missing. `purgeCaches` (Admin → Cache) empties it.
 
 **Docs and test.** Every setting goes into `docs/admin/CONFIGURATION.md`; `drishti-console/tests/test_docs_settings.py` already fails when
 a key of `application.yaml` or a `@ConfigurationProperties` binding is not in that document.
@@ -660,8 +671,12 @@ owner that does not answer within `forward-timeout` from S3 itself (section 10.3
   any change is computed or any summary is taken, so a masked field reads as the mask on every row, never shows as "changed", and cannot
   be probed by the headline numbers. `columns[].masked` comes from `Entitlements.masked(principal, field)`. Hidden fields (no role may see
   them) are dropped from the columns entirely.
-- **The cache holds unmasked rows** and never leaves the server; masks are applied per answer.
+- **The cache holds unmasked rows** of this node's own days and never leaves the server; masks are applied per answer. Days a peer
+  answered arrive masked for the caller and are kept under the caller's security signature only (section 11, SOAK2-01).
 - **Peers** apply masks themselves (`NetDataController`) and the asking node applies them again, as type-ahead does ("masks twice").
+  A field that reads as the mask on any day, whoever masked it, is `masked: true` in `columns[]` and never in `changed` or the diff's
+  changes, even where this node's own rules do not mask it (a peer's `redact` stricter than this node's). A field not masked for the
+  caller shows every real change.
 - **Export** (section 15.2) goes through the same endpoint, so it is masked the same way; the console never masks.
 - **Audit.** Each request is one access-log row (`history`), with the range in the detail, as `series` is today.
 

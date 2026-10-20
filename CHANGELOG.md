@@ -17,6 +17,23 @@
 
 ## Unreleased
 
+- **Fixed (SOAK2-01, P1): an administrator's history of a peer-held entity no longer shows a viewer's masks.** The history cache kept
+  the days a peer answered (masked there for the first caller) as if they were unmasked, and served them to every later caller: after a
+  viewer, an administrator got `PRICE` as `•••` in a column marked `masked: false`, with the price's changes missing, until the entry
+  went. Days a peer answered are now kept under the caller's security signature (`Principal.securitySignature()`: sorted roles and
+  embedding app, the live relay's partition too) and never served to a caller with another one; days this node holds stay one shared
+  unmasked entry, masked per answer. A field that reads as the mask on any day (a peer's stricter `redact`) is `masked: true` and never
+  "changed". Other caches on the history and net paths checked: none shares one caller's data with another (HISTORY_QUERIES.md
+  sections 11 and 13, DRISHTI_NET.md *Masks twice*). Tests: HistoryCacheMasksTest, NetHistoryMasksTest (three servers: viewer first and
+  administrator first, two reading nodes, repeated within the cache's life; it failed before the fix).
+- **Fixed (SOAK2-02): a connector file's `enabled: "false"` (quoted) switches the connector off.** It was refused (`'enabled' is true or
+  false`) though `${VAR:false}` resolves to the same text; `"true"` and `"false"` in any case are now the booleans, anything else is
+  refused naming the value. `net_soak.py` writes a YAML boolean. CONNECTOR_FILES.md; ConnectorFilesTest, test_net_soak.
+- **Fixed (SOAK2-05): the refusal log says each thing about a node once a minute from the first refusal.** Pages that said a node
+  "failed" and histories that said it was "not answering" alternated and logged a line each time (38 lines in the 2 s before the node
+  was suspect); each is now one line, then the count a minute. A node gossip says is back whose digest has not arrived yet is named
+  `(rejoining)` in a refusal, never `(alive)`. NET.md troubleshooting; RefusalLogTest.
+
 - **Fixed (DOCS2-01): `build_demo_lakes.py`'s heartbeat named its own working folders** (`_drishti-lake/staging`, `locks`) instead of the table being written; it now names the table, as the Windows QA guide shows.
 
 - **Docs: the second verification of 2026-10-20** ([DOCS_VERIFICATION_2.md](docs/qa/2026-10-20/DOCS_VERIFICATION_2.md)). Outputs captured on the seven-day snapshot (`snapshot-2026-09-22`) were re-run on `snapshot-2026-07-08`, which the pages have named since QA1-201: `pack make`, `pack new`, `pack regenerate`, `data profile` (CLI_GUIDE), `lake scan` and `lake build` (TOOLS), `sutra gen` (SUTRA_DEVELOPER_GUIDE); data/testdata/README's dataset table is the sixty days' (it showed seven: *Day 7*, 2026-09-22 to 2026-09-30). The hand-written `bi statement preview` no-data output replaced by the real one (2 pages on the tutorial's report; `file` prints the hint too); API_GUIDE's statement rows name `cut`, `hint`, `exact` and `X-Statement-Hint`; the `net set` loopback refusal reads `(loopback)` and its `error` line (NET, CLI_GUIDE, tutorial 19); tutorial 21 and HISTORY_QUERIES' *FROM after TO* example used a future date (*… is in the future* is what the server says); mixed Delta and Iceberg storage named in 2.6.7's lists (BI_DESIGN, IMPLEMENTATION_PLAN); *seventeen plugins* in the example connector's pom.
