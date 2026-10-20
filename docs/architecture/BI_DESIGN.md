@@ -1224,18 +1224,19 @@ same moment could leave none enabled, DRISHTI_NET.md section 11; and members adv
 
 1. **Paginated reports and statements:** page-exact layouts (headers, footers, page breaks, repeated table headers),
    parameters, per-recipient bursting through subscriptions, PDF and Excel output, masked per reader.
-2. **Send and push:** Send to Outlook and Teams (Teams off until configured), SharePoint push from Forms, connector dump
-   (TEAMS_EMAIL_SHAREPOINT.md).
+2. ~~**Send and push**~~: **out of 2.6.0, after the 3.0.0 release** (product owner, 2026-10-20): Send to Outlook and Teams,
+   SharePoint push from Forms, connector dump (TEAMS_EMAIL_SHAREPOINT.md) stay designed, not scheduled.
 3. **Integration:** PostgreSQL-wire read-only endpoint (decision 5); Excel feed; embed tokens bound to envelopes; SDK events.
 4. **Sajha MCP connector.**
+6. **Apache Cassandra connector** (added 2026-10-20, [CASSANDRA_CONNECTOR_DESIGN.md](CASSANDRA_CONNECTOR_DESIGN.md)).
 5. **Field parameters in report wells** (wave C gap 9, decided 2026-10-19): a report visual's well names `param.<name>` and
    the reader's parameter slicer switches the field or measure it draws; checked by the report schema.
 
 **Console lane:**
 
 1. **Statement designer** for paginated reports, previewed page by page.
-2. **Feeds, sending and embedding UI:** per-user connection details for SQL tools, the Excel feed wizard, send dialogs,
-   embed configuration.
+2. **Feeds and embedding UI:** per-user connection details for SQL tools, the Excel feed wizard, embed configuration (send
+   dialogs go with send and push, after 3.0.0).
 3. **Field parameters in the Studio's wells**, with a browser test.
 4. **Docs and tutorials** (UI, CLI and YAML; REPORTS.md and BI_GUIDE for field parameters).
 
