@@ -373,6 +373,45 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         return queryMode == null ? Optional.empty() : queryMode.fetch(ref, asOf.businessDate());
     }
 
+    /**
+     * History queries' fast path in table mode (HISTORY_QUERIES.md section 10): the entity's rows from..to in one query; query mode reads
+     * day by day through the site's query (the default).
+     */
+    @Override
+    public com.ash.drishti.api.HistoryRead history(com.ash.drishti.api.HistoryRequest r) throws Exception {
+        if (table == null) {
+            return com.ash.drishti.api.HistoryReads.perDay(this, r);
+        }
+        if (!tableKinds.contains(r.ref().kind())) {
+            if (!catalog.catalogued()) {
+                throw new java.sql.SQLException(sourceName + " has not read its table yet: " + catalog.problem());
+            }
+            return com.ash.drishti.api.HistoryRead.NONE;
+        }
+        java.util.List<EntityTable.Hit> hits = withConnection(c -> table.range(c, r.ref().kind(), r.ref().id(), r.from(), r.to()));
+        java.util.Set<java.time.LocalDate> wanted = r.dates().isEmpty() ? null : new java.util.HashSet<>(r.candidateDates());
+        java.util.List<com.ash.drishti.api.HistoryDay> days = new java.util.ArrayList<>();
+        for (int i = hits.size() - 1; i >= 0; i--) {                          // newest first, for the last N days
+            EntityTable.Hit h = hits.get(i);
+            if (wanted != null && !wanted.contains(h.date())) {
+                continue;
+            }
+            if (r.lastDays() > 0 && days.size() >= r.lastDays()) {
+                break;
+            }
+            DataNode d = context.parseJson(new ByteArrayInputStream(h.json().getBytes(StandardCharsets.UTF_8)));
+            EntityDocument doc = new EntityDocument(r.ref(), d, new Provenance(sourceName, h.date().toEpochDay(), Instant.now(), false, h.date()));
+            days.add(new com.ash.drishti.api.HistoryDay(h.date(), com.ash.drishti.api.HistoryReads.project(doc, r.fields()), null));
+        }
+        java.util.Set<java.time.LocalDate> covered = new java.util.HashSet<>();
+        for (java.time.LocalDate d : r.candidateDates()) {
+            if (coverage(r.ref().kind(), com.ash.drishti.api.AsOf.of(d)) == com.ash.drishti.api.DateCoverage.HELD) {
+                covered.add(d);
+            }
+        }
+        return new com.ash.drishti.api.HistoryRead(days, covered, java.util.Map.of());
+    }
+
     @Override
     public String health() {
         String e = lastError;

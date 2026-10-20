@@ -272,6 +272,12 @@ public final class CassandraLayout {
         return "SELECT " + q(DATE) + " FROM " + t(keyspace, ENTITY_DAYS) + " WHERE " + q(KIND) + " = ? AND " + q(ID) + " = ? AND " + q(DATE) + " <= ? LIMIT ?";
     }
 
+    /** An entity's days from..to (both included), newest first: one single-partition range read. */
+    public static String selectEntityDaysBetween(String keyspace) {
+        return "SELECT " + q(DATE) + " FROM " + t(keyspace, ENTITY_DAYS) + " WHERE " + q(KIND) + " = ? AND " + q(ID) + " = ? AND " + q(DATE) + " >= ? AND "
+                + q(DATE) + " <= ?";
+    }
+
     /** An entity's newest days. */
     public static String selectEntityDays(String keyspace) {
         return "SELECT " + q(DATE) + " FROM " + t(keyspace, ENTITY_DAYS) + " WHERE " + q(KIND) + " = ? AND " + q(ID) + " = ? LIMIT ?";

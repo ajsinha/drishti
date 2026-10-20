@@ -40,6 +40,15 @@
   History section) ([docs/tutorials/21-an-entity-over-time.md](docs/tutorials/21-an-entity-over-time.md)). `test_tutorials.py` now reads
   every numbered tutorial (its glob stopped at 19); tutorial 20's missing *Next steps* and *You should see* lines and its unused picture
   are listed there as a follow-up.
+- **Changed: a market history longer than the store's days is filled from the document's own series.** `EQ EQ-CSCA 3M` on a lake that
+  keeps a week took the week only and listed 55 days as missing: the days before the oldest stored one now come from the newest
+  document's `series:` list (`basis: "documents+series"`, those rows `source: "series"`), so the chart and the high, low and change cover
+  the three months; and the days before an entity's first day with data are not missing (`window.loadedFrom`).
+- **Added: history queries, the Cassandra fast path (H6).** An entity's days from `entity_days` in one range read, then one point read per
+  day, eight at once ([CASSANDRA_CONNECTOR.md](docs/connectors/CASSANDRA_CONNECTOR.md)); `DatedSourceContract`'s history cases pass.
+- **Added: history queries, the Redis and PostgreSQL fast paths (H5).** Redis reads an entity's days and all their documents in two or three
+  round trips (`ZRANGEBYSCORE`, one `MGET`) ([REDIS_CONNECTOR.md](docs/connectors/REDIS_CONNECTOR.md)); PostgreSQL in table mode in one
+  range query ([POSTGRES_CONNECTOR.md](docs/connectors/POSTGRES_CONNECTOR.md)). Both pass `DatedSourceContract`'s history cases.
 - **Added: `HistoryBench` (H14, `drishti-benchmarks`).** 10K synthetic trades × 30 business days on Delta, 200 trades: the 30-day history at
   the service in 13.2 ms cold (p95 19.1), 0.83 ms warm, 0.29 ms cached ([HISTORY_QUERIES.md section 14](docs/architecture/HISTORY_QUERIES.md#14-performance-targets),
   [SCALE_STRATEGY.md](docs/architecture/SCALE_STRATEGY.md)).

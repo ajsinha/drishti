@@ -397,6 +397,13 @@ data is and a connector's `stale-after` can warn. Pub/sub is fire-and-forget: a 
 published misses it, and the next refresh (`refresh-seconds`) catches up on days and ids; an open view of an entity
 changed meanwhile refreshes when it is opened again.
 
+### History queries
+
+`TRD MX-20000017 30` ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)) reads the entity's own days set (`ZRANGEBYSCORE`
+from..to, one call), then every day's document in one `MGET` (the entity's keys share a slot); a day switched to a new generation since
+is asked once more. Two or three round trips for any number of days. Redis holds the recent days only: the router asks the next
+connector of the kind (Delta behind it) for the dates Redis does not cover.
+
 ## 6. Retention: TTL on every key
 
 Load with `--ttl-days N` and every key the loader writes expires N days after it is written: the documents with `SET …

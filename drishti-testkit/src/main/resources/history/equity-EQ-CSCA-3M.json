@@ -16,7 +16,8 @@
     "baseline": "2026-07-17",
     "missing": [],
     "knownAt": null,
-    "loadedTo": null
+    "loadedTo": null,
+    "loadedFrom": null
   },
   "columns": [
     {

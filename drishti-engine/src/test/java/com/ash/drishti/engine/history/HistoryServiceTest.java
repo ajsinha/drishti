@@ -99,7 +99,10 @@ class HistoryServiceTest {
                 return Optional.empty();
             }
             Map<String, Object> doc = new LinkedHashMap<>();
-            if (ref.kind().equals("trade") && ref.id().equals("T-1")) {
+            if (ref.id().equals("T-GAP") && d.equals(LocalDate.of(2026, 9, 24))) {
+                return Optional.empty();                                          // a real gap inside the loaded span
+            }
+            if (ref.kind().equals("trade") && (ref.id().equals("T-1") || ref.id().equals("T-GAP"))) {
                 doc.put("TRADE_ID", "T-1");
                 doc.put("QUANTITY", d.isBefore(LocalDate.of(2026, 9, 29)) ? 100 : 120);
                 doc.put("TRADER_ID", "u" + d.getDayOfMonth());                  // changes every day, but masked
@@ -109,6 +112,10 @@ class HistoryServiceTest {
                 doc.put("PRICE", 10.0 + d.getDayOfMonth() % 7);
                 doc.put("NAME", "Equity one");
                 List<Map<String, Object>> hist = new ArrayList<>();
+                hist.add(Map.of("DATE", "2026-09-16", "CLOSE", 9.0));
+                hist.add(Map.of("DATE", "2026-09-17", "CLOSE", 9.1));
+                hist.add(Map.of("DATE", "2026-09-18", "CLOSE", 9.2));
+                hist.add(Map.of("DATE", "2026-09-21", "CLOSE", 9.3));
                 hist.add(Map.of("DATE", "2026-09-30", "CLOSE", 9.5));
                 hist.add(Map.of("DATE", "2026-10-01", "CLOSE", 9.75));
                 doc.put("HISTORY", hist);
@@ -194,7 +201,8 @@ class HistoryServiceTest {
         HistoryAnswer span = svc.read(new HistoryService.Query("trade", "T-1", null, "2W", null, null, Set.of(), false, null, false, null), VIEWER);
         assertThat(span.window().to()).isEqualTo("2026-10-02");
         assertThat(span.window().loadedTo()).isEqualTo("2026-09-30");
-        assertThat(span.window().missing()).containsExactly("2026-09-21");             // a gap inside the range, not 10-01 and 10-02
+        assertThat(span.window().missing()).isEmpty();                                // not 10-01 and 10-02, not 09-21 before the first day
+        assertThat(span.window().loadedFrom()).isEqualTo("2026-09-22");
     }
 
     @Test
@@ -216,8 +224,12 @@ class HistoryServiceTest {
                 new HistoryService.Query("trade", "T-1", null, "2W", null, null, Set.of(), true, null, true, null), VIEWER);
         assertThat(a.window().mode()).isEqualTo("calendar");
         assertThat(a.window().from()).isEqualTo("2026-09-19");
-        assertThat(a.window().missing()).containsExactly("2026-09-21");
+        assertThat(a.window().missing()).isEmpty();                                   // 09-21 is before the first day with data
+        assertThat(a.window().loadedFrom()).isEqualTo("2026-09-22");
         assertThat(a.window().baseline()).isNull();                                 // 09-18 had no data
+        HistoryAnswer gap = service(new Lake("v1", true), Map.of()).read(
+                new HistoryService.Query("trade", "T-GAP", null, "2W", null, null, Set.of(), false, null, false, null), VIEWER);
+        assertThat(gap.window().missing()).containsExactly("2026-09-24");             // a real gap inside the loaded span
         assertThat(a.rows().get(0).date()).isEqualTo("2026-10-02");                  // order=desc
         assertThat(a.rows()).allSatisfy(r -> assertThat(r.changes()).isNotNull());
         assertThat(a.rows()).filteredOn(r -> r.date().equals("2026-09-29")).singleElement()
@@ -255,8 +267,33 @@ class HistoryServiceTest {
         assertThat(problems).isEmpty();
         HistoryAnswer a = service(new Lake("v1", false), Map.of("equity", eq)).read(days("equity", "EQ-1", 5), VIEWER);
         assertThat(a.basis()).isEqualTo("embedded");
-        assertThat(a.rows()).extracting(r -> r.values().get("PRICE")).containsExactly(9.5, 9.75);
-        assertThat(a.summary().change()).isEqualTo(0.25);
+        assertThat(a.rows()).extracting(r -> r.values().get("PRICE")).containsExactly(9.1, 9.2, 9.3, 9.5, 9.75);
+        assertThat(a.rows()).allSatisfy(r -> assertThat(r.source()).isEqualTo("series"));
+        assertThat(a.summary().change()).isEqualTo(0.65);
+    }
+
+    @Test
+    void storedDaysAreFilledBackFromTheSeriesBeforeTheOldestStoredDay() {
+        List<String> problems = new ArrayList<>();
+        HistorySpec eq = HistorySpec.parse("equity", Map.of("chart", List.of("PRICE"), "columns", List.of("PRICE", "NAME"),
+                "series", Map.of("path", "HISTORY", "date", "DATE", "value", "CLOSE")), 366, problems);
+        assertThat(problems).isEmpty();
+        // the store keeps 09-22 .. 10-02; 2W asks from 09-19 (the baseline candidate 09-18): 09-21 and 09-18 come from the series
+        HistoryAnswer a = service(new Lake("v1", true), Map.of("equity", eq)).read(
+                new HistoryService.Query("equity", "EQ-1", null, "2W", null, null, Set.of(), true, null, false, null), VIEWER);
+        assertThat(a.basis()).isEqualTo("documents+series");
+        assertThat(a.window().baseline()).isEqualTo("2026-09-18");
+        assertThat(a.rows().get(0).date()).isEqualTo("2026-09-21");
+        assertThat(a.rows().get(0).source()).isEqualTo("series");
+        assertThat(a.rows().get(0).values().get("PRICE")).isEqualTo(9.3);
+        assertThat(a.rows().get(1).source()).isEqualTo("lake");                       // stored documents win on the days they cover
+        assertThat(a.rows().get(1).values().get("PRICE")).isEqualTo(11.0);
+        assertThat(a.rows().get(1).changed()).containsExactly("PRICE");               // NAME is not known on a series day: not a change
+        assertThat(a.rows().get(1).changes()).extracting(HistoryAnswer.Change::path).containsExactly("PRICE");
+        assertThat(a.summary().first()).isEqualTo(9.3);                                // the summary covers the whole span
+        assertThat(a.summary().low()).isEqualTo(9.3);
+        assertThat(a.window().missing()).isEmpty();
+        assertThat(a.window().loadedFrom()).isNull();
     }
 
     @Test

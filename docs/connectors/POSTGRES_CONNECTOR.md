@@ -315,6 +315,13 @@ most `max-load-rows` (200,000) of them. `reverse-index: false` turns reverse loo
 Desk P&L and impact (F8) work from the column set as on Delta Lake: desk P&L of a desk in **20 ms** once computed (it is
 computed in the background after start and kept), impact of a netting set with 143,842 trades in **217 ms**.
 
+### History queries
+
+In table mode a history ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)) is one query:
+`SELECT doc, business_date FROM <table> WHERE kind = ? AND id = ? AND business_date BETWEEN ? AND ? ORDER BY business_date`, pruned to
+the months asked. A snapshot kind has a row on each date it holds the entity, an effective kind on each date it changed. Query mode
+reads day by day through the site's `query.<kind>`.
+
 ## 6. Retention: dropping months
 
 `--keep-months N` on the loader drops every monthly partition older than the N newest months, counted back from

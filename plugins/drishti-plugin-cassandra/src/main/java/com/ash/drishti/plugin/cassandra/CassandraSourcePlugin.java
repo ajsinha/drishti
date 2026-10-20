@@ -331,6 +331,76 @@ public final class CassandraSourcePlugin implements SourcePlugin {
         return null;
     }
 
+    /**
+     * History queries (HISTORY_QUERIES.md section 10): the entity's days from {@code entity_days} (one single-partition range read), kept
+     * only where {@code kind_days} still names the day (an {@code entity_days} row may outlive its data). Reads no document.
+     */
+    @Override
+    public Optional<java.util.NavigableSet<LocalDate>> days(EntityRef ref, LocalDate from, LocalDate to) {
+        if (!configuredKinds.isEmpty() && !configuredKinds.contains(ref.kind())) {
+            return Optional.of(new java.util.TreeSet<>());
+        }
+        NavigableMap<LocalDate, CassandraLayout.Day> held = days(ref.kind());
+        java.util.TreeSet<LocalDate> out = new java.util.TreeSet<>();
+        if (held.isEmpty()) {
+            return Optional.of(out);
+        }
+        for (Row r : store.execute(CassandraLayout.selectEntityDaysBetween(keyspace), ref.kind(), ref.id(), from, to).all()) {
+            LocalDate d = r.getLocalDate(0);
+            if (held.containsKey(d)) {
+                out.add(d);
+            }
+        }
+        return Optional.of(out);
+    }
+
+    /**
+     * The entity on each of its days in the request: the days from {@link #days(EntityRef, LocalDate, LocalDate)}, then one token-aware point
+     * read per day (generation and bucket from the catalogue), {@code parallelDays} at once. The documents cannot come from one query: the
+     * business date is part of the data table's partition key. One generation is kept, so {@code versions} is 1.
+     */
+    @Override
+    public com.ash.drishti.api.HistoryRead history(com.ash.drishti.api.HistoryRequest r) throws Exception {
+        if (!configuredKinds.isEmpty() && !configuredKinds.contains(r.ref().kind())) {
+            return com.ash.drishti.api.HistoryRead.NONE;
+        }
+        NavigableMap<LocalDate, CassandraLayout.Day> held = days(r.ref().kind());
+        List<LocalDate> dates = new java.util.ArrayList<>(com.ash.drishti.api.HistoryReads.dates(this, r));
+        java.util.Collections.reverse(dates);                                       // newest first, for the last N days
+        long deadline = System.nanoTime() + r.budget().toNanos();
+        List<com.ash.drishti.api.HistoryDay> out = new java.util.ArrayList<>();
+        java.util.Map<LocalDate, String> failed = new java.util.TreeMap<>();
+        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor();
+        try {
+            for (int i = 0; i < dates.size() && (r.lastDays() == 0 || out.size() < r.lastDays()); i += r.parallelDays()) {
+                List<LocalDate> chunk = dates.subList(i, Math.min(dates.size(), i + r.parallelDays()));
+                List<java.util.concurrent.Future<String>> reads = new java.util.ArrayList<>();
+                for (LocalDate d : chunk) {
+                    reads.add(pool.submit(() -> document(r.ref(), held.get(d))));
+                }
+                for (int k = 0; k < chunk.size(); k++) {
+                    LocalDate d = chunk.get(k);
+                    try {
+                        String json = reads.get(k).get(Math.max(0, deadline - System.nanoTime()), java.util.concurrent.TimeUnit.NANOSECONDS);
+                        if (json != null && (r.lastDays() == 0 || out.size() < r.lastDays())) {
+                            EntityDocument doc = new EntityDocument(r.ref(), parse(json),
+                                    new Provenance(sourceName, held.get(d).generation(), Instant.now(), false, d));
+                            out.add(new com.ash.drishti.api.HistoryDay(d, com.ash.drishti.api.HistoryReads.project(doc, r.fields()), 1));
+                        }
+                    } catch (java.util.concurrent.TimeoutException e) {
+                        reads.get(k).cancel(true);
+                        failed.put(d, com.ash.drishti.api.HistoryReads.TIMED_OUT);
+                    } catch (java.util.concurrent.ExecutionException e) {
+                        failed.put(d, String.valueOf(e.getCause() == null ? e : e.getCause().getMessage()));
+                    }
+                }
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+        return new com.ash.drishti.api.HistoryRead(out, java.util.Set.of(), failed);
+    }
+
     private String document(EntityRef ref, CassandraLayout.Day day) {
         DocKey key = new DocKey(ref.kind(), ref.id(), day.date(), day.generation());
         String cached = documents.getIfPresent(key);
