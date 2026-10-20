@@ -632,6 +632,25 @@ needed columns, so the per-day cost is a footer (cached by the native engine) an
 
 The benchmark (section 19.4) measures these at 10K trades × 30 days and records them in SCALE_STRATEGY.md's history row.
 
+**Measured (2026-10-20, H14).** `HistoryBench` (`drishti-benchmarks`), 10,000 synthetic trades × 30 business days (2026-08-19 ..
+2026-09-30, about 6% amended a day) written with Drishti's writer under `target/`, the native Delta engine, 200 random trades, the 30-day
+history at the service (`HistoryService.read`, columns, changes and all), laptop, one process, `-Xmx4g`:
+
+| Case | Median | p95 | Target |
+|---|---|---|---|
+| cold (each trade's documents read for the first time, the table's id maps loaded) | **13.2 ms** | 19.1 ms | < 400 ms |
+| warm (documents in the caches) | **0.83 ms** | 1.6 ms | < 150 ms |
+| cached answer | **0.29 ms** | 0.49 ms | < 30 ms |
+| default per-day loop (the connector's `days()` hidden), cold | 11.1 ms | 18.5 ms | |
+| the Delta fast path again, cold, after the default loop | 8.5 ms | | |
+
+The write took 7.6 s. **The fast path is 1.3× the default loop here, not the 3× of section 19.4**: on Delta the default loop already
+costs nothing for a date without the entity (its id map, cached, answers "not here" without a read), and in this table every date holds
+every trade, so both read the same 30 row groups. The fast path's gain is in the reads it never starts: dates the entity was not loaded,
+and stores where a per-date call is a network round trip. The first fast-path run, before the default loop, measured 13.2 ms against the
+default's 11.1 ms (an order effect: the file pages were cold for the first run), so the table reports both. Not measured yet: 250 days
+of promoted fields only (that read is not built, section 21), and the other stores (H6 and the rest of H5).
+
 ## 15. Extras: DIFF, export, CLI, BI, plain words
 
 ### 15.1 `TRD X 30 DIFF`
@@ -816,6 +835,10 @@ as the 2.5.0 flaky-test work requires.
 service, the cached answer, 250 days with promoted fields only, and the default loop against the fast path (the fast path must be at
 least 3× faster cold). It fails when the warm median passes 150 ms or the cold p95 passes 400 ms. One heavy job at a time.
 
+*As built:* a plain `main` (not JMH), run as
+`java -Xmx4g -cp <the module's class path> com.ash.drishti.benchmarks.HistoryBench [trades=10000] [days=30] [sample=200]`; it refuses more
+than 10,000 trades, deletes its folder at the end and exits 1 on a missed target. The numbers are in section 14.
+
 ## 20. Docs to update when it is built
 
 | Document | What |
@@ -847,6 +870,9 @@ least 3× faster cold). It fails when the warm median passes 150 ms or the cold 
 | Cassandra: `entity_days` gives the days | it gives the days; the documents still need one point read per day | `business_date` is part of the data table's partition key |
 | default columns: top-level scalars | key columns first, empty columns hidden | a trade has about 45 top-level scalars (`config/packs/trading/samples/trade.jsonl`) |
 | *As built (H1):* `HistoryRequest(ref, from, to, fields, knownAt, lastDays, budget)` | `HistoryRequest(ref, from, to, dates, fields, knownAt, lastDays, budget, parallelDays)` | a plugin has no calendar, so the business dates travel in the request (`dates`, empty means every calendar day); the default loop's parallelism is the server's `parallel-days`, so it travels too |
+| *As built (H5):* Delta: `days()`, a promoted-column row read, and `versions` from the log | `days()` only | the demo came first; with `days()` a history reads only the dates that hold the entity. The column-only read (no `doc` decode) and the per-day version count are still to build, so Delta's `versions` is `null` |
+| *As built (H3):* effective kinds: every business day a row, carried days marked | the change days only | a source's history leaves out a date answered by an earlier date's document, so the rows of an effective kind are its change dates; `carried` is always false. Filling the days between is a later step |
+| *As built (H14):* the fast path at least 3× the default loop | 1.3× on Delta | the default loop is already cheap on Delta (section 14) |
 | *As built (H3):* `window.to` is the date box | `data-days` ends at the newest day with data; `loadedTo` added | found in the first integration run: a lake loaded up to Friday, read on Tuesday, said "no data on 2 days" for Monday and Tuesday, which are only not loaded yet |
 | *As built (H1):* `window.missing` only for `calendar` and `between` | filled in every mode | the document screen's header lists the days with no data for a bare number too (section 5.2: "no data on 2026-09-14"); the fixture's 30 rows span 31 business days |
 

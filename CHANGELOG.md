@@ -40,6 +40,9 @@
   History section) ([docs/tutorials/21-an-entity-over-time.md](docs/tutorials/21-an-entity-over-time.md)). `test_tutorials.py` now reads
   every numbered tutorial (its glob stopped at 19); tutorial 20's missing *Next steps* and *You should see* lines and its unused picture
   are listed there as a follow-up.
+- **Added: `HistoryBench` (H14, `drishti-benchmarks`).** 10K synthetic trades × 30 business days on Delta, 200 trades: the 30-day history at
+  the service in 13.2 ms cold (p95 19.1), 0.83 ms warm, 0.29 ms cached ([HISTORY_QUERIES.md section 14](docs/architecture/HISTORY_QUERIES.md#14-performance-targets),
+  [SCALE_STRATEGY.md](docs/architecture/SCALE_STRATEGY.md)).
 - **Added: history queries, the shipped packs' `history:` blocks (H13).** trading (trade; the derived kinds off), market-data (equity,
   equity index, FX spot, IR and credit curves, commodity, bond, inflation index as charts with their headline numbers), counterparty-risk
   and market-risk (their measures as columns) ([PACKS.md](docs/guides/PACKS.md#history-an-entity-over-time),
