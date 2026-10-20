@@ -17,6 +17,15 @@
 
 ## Unreleased
 
+- **Fixed (QA2-12, QA2-14): a statement for a date with no data says so; a card with no value reads `–`.** A preview or file for a date no
+  data covers (`9999-12-31`, `1999-01-01`) has `hint` *No data is held for December 9999 (…): every band is empty. Choose a date the data
+  covers.* (also first in the file's notes, and beside the page count in the designer's preview) instead of an empty statement in silence.
+  A card whose value is empty (a sum of no rows) reads `–`, as a masked card and a card with no rows do, never blank; a count reads its number.
+- **Fixed (QA2-17, QA2-18, QA2-19): bursting says who is skipped and why, and draws what a recipient may see.** A disabled user named in a
+  subscription is listed as skipped (*the account is disabled*) instead of missing from the run; a recipient without access is skipped
+  with *… may not open the report: it is not shared with them, or their roles do not reach it* instead of `DRS-9001 no item 'bi-…'`; a
+  statement table sorted by a measure masked for the recipient is drawn in the query's own order with the note *Not sorted: 'MTM' is masked
+  for you …* (never *No rows.*), and the delivery's `notes` say so. STATEMENTS, DISTRIBUTION; StatementApiTest, SubscriptionServiceTest.
 - **Fixed (QA2-20): a field parameter in the wrong place is one problem naming it.** A field parameter in a well that cannot take its
   choices is one `DRS-9037` per parameter and well, naming every choice that does not fit (*… can be MTM, NOTIONAL, measures: put it in a
   measure well*), instead of one line per choice. Through `/bi/mq`, `param.metric` among `select.fields` answers `DRS-9164 'param.metric'

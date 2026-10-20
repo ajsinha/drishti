@@ -142,7 +142,13 @@ public final class SubscriptionService implements AutoCloseable {
         void sms(String phone, String text);
     }
 
-    private record Recipient(String address, String user, Principal principal, String label) {}
+    /** One person a run reaches; {@code skip} is why they get nothing this time (a disabled account, QA2-17), or null. */
+    private record Recipient(String address, String user, Principal principal, String label, String skip) {
+
+        Recipient(String address, String user, Principal principal, String label) {
+            this(address, user, principal, label, null);
+        }
+    }
 
     private final PreferenceStore store;
     private final Renderer renderer;
@@ -489,11 +495,18 @@ public final class SubscriptionService implements AutoCloseable {
         if (r.user() != null) {
             d.put("user", r.user());
         }
+        if (r.skip() != null) {
+            return d.put("status", "skipped").put("error", r.skip());
+        }
         if (r.principal() == null) {
             return d.put("status", "skipped").put("error", "outside address: subscriptions go to users only, so it is not sent to");
         }
         if (r.address() == null || r.address().isBlank()) {
             return d.put("status", "skipped").put("error", "no email address on file");
+        }
+        String denied = denied(s, r);
+        if (denied != null) {
+            return d.put("status", "skipped").put("error", denied);
         }
         RenderedMail m;
         try {
@@ -508,6 +521,24 @@ public final class SubscriptionService implements AutoCloseable {
             return d.put("status", "sent").put("at", clock.instant().toString()).put("bytes", m.files().stream().mapToInt(f -> f.bytes().length).sum());
         } catch (RuntimeException e) {
             return failure(d, clip(MailFailures.describe(e)), attempt, MailFailures.permanent(e));
+        }
+    }
+
+    /**
+     * Why the recipient may not open what the subscription sends, in words (QA2-19: "may not open the report", not the catalogue's {@code DRS-9001 no item}
+     * that a report they cannot see answers), or null when they may.
+     */
+    private String denied(JsonNode s, Recipient r) {
+        ContentExporter.Target t = target(s.path("target"), null);
+        try {
+            checker.check(t, r.principal());
+            return null;
+        } catch (DrishtiException e) {
+            ErrorCode c = e.errorCode();
+            if (c == ErrorCode.BI_NOT_FOUND || c == ErrorCode.BI_FORBIDDEN || c == ErrorCode.FORBIDDEN) {
+                return r.label() + " may not open the " + (t.isReport() ? "report" : "view") + ": it is not shared with them, or their roles do not reach it";
+            }
+            return clip(e.getMessage());
         }
     }
 
@@ -541,14 +572,16 @@ public final class SubscriptionService implements AutoCloseable {
             return d.put("status", "skipped").put("error", "text messages are not set up (drishti.notify.sms.url)");
         }
         Optional<String> phone = r.user() == null ? Optional.empty() : out.phone(r.user());
+        if (r.skip() != null) {
+            return d.put("status", "skipped").put("error", r.skip());
+        }
         if (r.principal() == null || phone.isEmpty()) {
             return d.put("status", "skipped").put("error", "no phone number on file");
         }
         ContentExporter.Target t = target(s.path("target"), null);
-        try {
-            checker.check(t, r.principal());
-        } catch (DrishtiException e) {
-            return d.put("status", "skipped").put("error", clip(e.getMessage()));
+        String denied = denied(s, r);
+        if (denied != null) {
+            return d.put("status", "skipped").put("error", denied);
         }
         try {
             out.sms(phone.get(), s.path("title").asText() + " is ready: " + link(t));
@@ -593,6 +626,13 @@ public final class SubscriptionService implements AutoCloseable {
         ExportDoc doc = o.doc();
         if (o.statement()) {
             delivery.put("statement", true).put("pages", o.pages()).put("file", o.filename());   // one statement per recipient, made as them (2.6.0)
+        }
+        // what was drawn differently for this reader, so the run says so (QA2-18: a table sorted by a measure masked for them is drawn unsorted)
+        List<String> unsorted = o.doc().sections().stream().filter(x -> x.note() != null && x.note().contains("Not sorted: "))
+                .map(x -> (x.title() == null || x.title().isBlank() ? x.id() : x.title()) + ": " + x.note().substring(x.note().indexOf("Not sorted: "))).toList();
+        if (!unsorted.isEmpty()) {
+            ArrayNode notes = delivery.putArray("notes");
+            unsorted.forEach(notes::add);
         }
         String asOf = doc.subtitle() == null ? "" : doc.subtitle().replaceFirst("^.*Data as of ", "");
         String headline = doc.title() + (asOf.isBlank() ? "" : " · " + asOf);
@@ -690,7 +730,9 @@ public final class SubscriptionService implements AutoCloseable {
             } else if (x.startsWith("role:")) {
                 directory.members(x.substring(5)).forEach(p -> out.putIfAbsent(p.username(), new Recipient(p.email(), p.username(), p.principal(), p.displayName())));
             } else {
-                directory.person(x).filter(Person::enabled).ifPresent(p -> out.putIfAbsent(p.username(), new Recipient(p.email(), p.username(), p.principal(), p.displayName())));
+                // a person named by name whose account is disabled is listed as skipped with the reason, never silently left out (QA2-17)
+                directory.person(x).ifPresent(p -> out.putIfAbsent(p.username(), p.enabled() ? new Recipient(p.email(), p.username(), p.principal(), p.displayName())
+                        : new Recipient(p.email(), p.username(), null, p.displayName(), "the account is disabled")));
             }
         }
         if (out.size() > props.maxRecipients()) {

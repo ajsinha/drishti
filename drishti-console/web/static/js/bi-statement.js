@@ -199,7 +199,10 @@
     const root = D.q('[data-st-preview-area]');
     root.setAttribute('data-st-pages', String(r.pageCount));
     root.setAttribute('data-st-at', String(page.number));
-    D.q('[data-st-where]').textContent = 'Page ' + page.number + ' of ' + r.pageCount + ' · ' + r.paper.size + ' ' + r.paper.orientation + (r.period ? ' · ' + r.period : '') + (S.stale ? ' · changed since: preview again' : '');
+    // a date no data covers says so (QA2-12): the server's hint beside the page count, never an empty statement in silence
+    D.q('[data-st-where]').textContent = 'Page ' + page.number + ' of ' + r.pageCount + ' · ' + r.paper.size + ' ' + r.paper.orientation + (r.period ? ' · ' + r.period : '') + (S.stale ? ' · changed since: preview again' : '')
+      + (r.hint ? ' · ' + r.hint : '');
+    if (r.hint) { root.setAttribute('data-st-hint', r.hint); } else { root.removeAttribute('data-st-hint'); }
     D.q('[data-st-prev]').disabled = S.at <= 0;
     D.q('[data-st-next]').disabled = S.at >= r.pages.length - 1;
   }

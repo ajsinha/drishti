@@ -492,8 +492,25 @@ public final class BiReportService {
         QueryRequest q0 = pre.built().query();
         int limit = Math.min(Math.max(1, maxRows) + 1, datasets.maxRows());
         QueryRequest q = new QueryRequest(q0.fields(), q0.measures(), q0.filters(), q0.from(), q0.to(), q0.orderBy(), limit, q0.layer(), q0.detail());
-        DatasetService.Asked asked = datasets.asked(p, pre.dsItem(), q, false);
+        DatasetService.Asked asked;
+        String unsorted = null;
+        try {
+            asked = datasets.asked(p, pre.dsItem(), q, false);
+        } catch (DrishtiException e) {
+            if (q.orderBy() == null || q.orderBy().isEmpty() || e.getMessage() == null || !e.getMessage().contains("cannot be sorted on")) {
+                throw e;
+            }
+            // sorted by a measure masked for this reader (a statement burst to an analyst, QA2-18): its order would tell the masked figures, so the rows are
+            // drawn in the query's own order and the answer says so, rather than no rows at all
+            q = new QueryRequest(q0.fields(), q0.measures(), q0.filters(), q0.from(), q0.to(), List.of(), limit, q0.layer(), q0.detail());
+            asked = datasets.asked(p, pre.dsItem(), q, false);
+            String why = e.getMessage().replaceFirst("^DRS-\\d+ ", "");
+            unsorted = "Not sorted: " + why.replace(": it cannot be sorted on", "") + ", and its order would tell the masked figures.";
+        }
         Map<String, Object> out = new LinkedHashMap<>(datasets.json(shortNames(pre, asked.result()), limit));
+        if (unsorted != null) {
+            out.put("unsorted", unsorted);
+        }
         out.put("visual", pre.visual().id());
         out.put("query", describe(q));
         out.put("mq", asked.query());

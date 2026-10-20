@@ -240,8 +240,10 @@ You are receiving this because you are a recipient of a subscription in Drishti.
 Ask the owner of the subscription, o
 ```
 
-* **A recipient who cannot open the target** (the role lost the report, the kind) is **skipped**, with the reason in the history; they are not mailed a refusal.
-* **A recipient with no email address**, or a disabled user, is skipped.
+* **A recipient who cannot open the target** (the role lost the report, the kind, a workspace report not shared with them) is **skipped**, with the reason in
+  the history in words (*rita may not open the report: it is not shared with them, or their roles do not reach it*); they are not mailed a refusal.
+* **A recipient with no email address**, or a disabled user named in the subscription, is skipped and listed with the reason (*the account is disabled*);
+  a role's disabled members are not among its members.
 * **Outside addresses are refused.** A person who is not a user has no rights, so no render can be made for them without handing over the owner's view; creating or changing a subscription with an address
   fails with `DRS-9061` and says to name a user or `role:NAME`. (There was an administrator setting for this; it is gone.) A subscription saved earlier with an address **keeps it, but the address is skipped at
   every send** with the reason (`outside address: subscriptions go to users only`) in the history; edit the subscription to remove it.
@@ -256,7 +258,9 @@ the header). The statement's `period` is worked out from the run's business date
 month before), and the subscription's view state may carry the model's parameters (`target.state.params`). The file is named after the statement, its period
 and the recipient (*Monthly statement September 2026 hana.pdf*); each delivery in the history has `statement: true`, its `pages` and its `file`. The
 acceptance is a monthly statement burst to ten recipients of two roles, every PDF checked for its page count and its header on every page
-(`StatementApiTest`, [STATEMENTS.md section 6](STATEMENTS.md#6-pdf-excel-and-bursting-through-subscriptions)).
+(`StatementApiTest`, [STATEMENTS.md section 6](STATEMENTS.md#6-pdf-excel-and-bursting-through-subscriptions)). A table sorted by a measure that is masked for a
+recipient is drawn for them in the query's own order (its order would tell the masked figures), with a note above it, and their delivery says so in
+`notes` (*Positions: Not sorted: 'MTM' is masked for you …*).
 
 An export of a statement page (**Export → PDF** or **Excel** on the page, `POST /api/v1/export/pdf`) is the statement too, made for you.
 

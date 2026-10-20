@@ -210,6 +210,8 @@ class StatementApiTest {
                       Trades:   { expr: "count(trade)" }
                     """);
             Files.writeString(reports.resolve("monthly-statement.report.yaml"), STATEMENT);
+            Files.writeString(reports.resolve("sorted-statement.report.yaml"), STATEMENT.replace("report: monthly-statement", "report: sorted-statement")
+                    .replace("sort: { by: trade.TRADE_ID }", "sort: { by: MTM, desc: true }"));
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }
@@ -507,5 +509,79 @@ class StatementApiTest {
             assertThat(problems).as(path).contains("\"path\":\"" + path + "\"");
         }
         assertThat(problems).contains("DRS-9038");
+    }
+
+    /** The texts of a preview's pages with the given role (a card's value is "value", a table cell "cell"). */
+    static List<String> texts(JsonNode preview, String role) {
+        List<String> out = new ArrayList<>();
+        preview.path("pages").forEach(p -> p.path("ops").forEach(o -> {
+            if (role == null || role.equals(o.path("role").asText())) {
+                out.add(o.path("text").asText());
+            }
+        }));
+        return out;
+    }
+
+    @Test @Order(4)
+    void aDateWithNoDataHintsSoAndACardWithNoValueReadsADash() throws Exception {
+        // QA2-12, QA2-14: a statement for a date no data covers says so; its cards read a dash (a count reads 0), never blank
+        for (String date : List.of("9999-12-31", "1999-01-01")) {
+            JsonNode preview = ok(call("POST", "/api/v1/bi/reports/statement/preview", as("hfx1", "st-head"), Map.of("report", REPORT, "page", "statement",
+                    "date", date)));
+            assertThat(preview.path("hint").asText()).as(date).startsWith("No data is held for ").contains("every band is empty");
+            List<String> cards = texts(preview, "value");
+            assertThat(cards).as(date + ": Notional, MTM, Trades").hasSize(3).noneMatch(String::isBlank);
+            assertThat(cards.subList(0, 2)).as("a sum of nothing").containsExactly("–", "–");
+            assertThat(cards.get(2)).as("a count of nothing: its number, or a dash when no row came back").isIn("0", "–");
+        }
+        JsonNode held = ok(call("POST", "/api/v1/bi/reports/statement/preview", as("hfx1", "st-head"), Map.of("report", REPORT, "page", "statement",
+                "state", Map.of("dates", Map.of("from", "2026-10-01", "to", "2026-10-01")))));
+        assertThat(held.path("hint").isNull()).as("a date with data has no hint").isTrue();
+        // a card whose sum comes back as one empty row (its filter leaves no trade) reads a dash too, not a blank (QA2-14)
+        String draft = STATEMENT.replace("report: monthly-statement", "report: empty-card")
+                .replace("wells: { values: [NOTIONAL] } }", "wells: { values: [NOTIONAL] }, filters: [{ field: trade.DESK, op: in, values: [NOPE] }] }");
+        JsonNode empty = ok(call("POST", "/api/v1/bi/reports/statement/preview", wes(), Map.of("yaml", draft, "page", "statement",
+                "state", Map.of("dates", Map.of("from", "2026-10-01", "to", "2026-10-01")))));
+        assertThat(texts(empty, "value").get(0)).as(empty.toString().substring(0, 300)).isEqualTo("–");
+        assertThat(empty.path("hint").isNull()).as("the other bands have data").isTrue();
+    }
+
+    @Test @Order(5)
+    void burstingNamesWhoIsSkippedAndWhyAndATableSortedByAMaskedMeasureIsDrawnUnsorted() throws Exception {
+        var res = mvc.perform(put("/api/v1/admin/role-definitions/st-none").header("Authorization", admin()).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("kinds", List.of("*"), "approve", false, "raw", false, "bi", List.of())))).andReturn().getResponse();
+        assertThat(res.getStatus()).as(res.getContentAsString()).isEqualTo(200);
+        for (String[] u : new String[][] {{"hoff", "st-head", "DESK-FX"}, {"nobi", "st-none", ""}}) {
+            var made = mvc.perform(post("/api/v1/admin/users").header("Authorization", admin()).contentType(MediaType.APPLICATION_JSON)
+                    .content(json.writeValueAsString(Map.of("username", u[0], "displayName", u[0], "email", u[0] + "@desk.test", "desk", u[2], "roles", List.of(u[1]),
+                            "packs", List.of("finance"), "password", "long-enough-pass-1")))).andReturn().getResponse();
+            assertThat(made.getStatus()).as(made.getContentAsString()).isEqualTo(201);
+        }
+        String sorted = "file:report:sorted-statement";
+        ok(call("PUT", "/api/v1/me/subscriptions/sorted", wes(), Map.of("target", Map.of("type", "report", "id", sorted, "page", "statement",
+                "state", Map.of("dates", Map.of("from", "2026-10-01", "to", "2026-10-01"))), "schedule", "monthly 1 07:30 business", "format", "pdf",
+                "recipients", List.of("hoff", "nobi", "ana1", "hfx1"), "title", "Sorted statement")));
+        ok(call("POST", "/api/v1/admin/users/hoff/enabled", admin(), Map.of("enabled", false)));
+        JsonNode run = ok(call("POST", "/api/v1/me/subscriptions/sorted/run", wes(), null));
+        Map<String, JsonNode> by = new HashMap<>();
+        run.path("deliveries").forEach(d -> by.put(d.path("user").asText(), d));
+        // QA2-17: a disabled recipient is listed as skipped with the reason
+        assertThat(by.get("hoff")).as(run.toString()).isNotNull();
+        assertThat(by.get("hoff").path("status").asText()).isEqualTo("skipped");
+        assertThat(by.get("hoff").path("error").asText()).isEqualTo("the account is disabled");
+        // QA2-19: a recipient without access is told in words, not the catalogue's DRS-9001
+        assertThat(by.get("nobi").path("status").asText()).isEqualTo("skipped");
+        assertThat(by.get("nobi").path("error").asText()).contains("may not open the report").doesNotContain("DRS-");
+        // QA2-18: the analyst's table sorted by the MTM masked for them is drawn unsorted, and the delivery says so
+        assertThat(by.get("ana1").path("status").asText()).isEqualTo("sent");
+        assertThat(by.get("ana1").path("notes").toString()).contains("Not sorted: 'MTM' is masked for you");
+        assertThat(by.get("hfx1").path("status").asText()).isEqualTo("sent");
+        assertThat(by.get("hfx1").has("notes")).as("MTM is not masked for a desk head: sorted as asked").isFalse();
+        JsonNode preview = ok(call("POST", "/api/v1/bi/reports/statement/preview", as("ana1", "st-analyst"), Map.of("report", sorted, "page", "statement",
+                "state", Map.of("dates", Map.of("from", "2026-10-01", "to", "2026-10-01")))));
+        String all = String.join(" ", texts(preview, null));
+        assertThat(tradeIds(all)).as("every trade, drawn unsorted rather than No rows.").isEqualTo(expectedIds(""));
+        assertThat(all).contains("Not sorted: 'MTM' is masked for you").doesNotContain("No rows.");
+        ok(call("POST", "/api/v1/admin/users/hoff/enabled", admin(), Map.of("enabled", true)));
     }
 }

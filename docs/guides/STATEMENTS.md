@@ -112,6 +112,11 @@ The server lays the pages out (`StatementLayout`), so the PDF, the preview and t
 * A **table** holds every row of its query, up to `drishti.distribution.statements.max-rows` (10,000), not the 5,000 rows one answer to the screen
   holds: the statement asks for them all. A longer table stops there and says so in a note above it (*The first 10,000 rows only: the table goes on*), in
   the preview's `cut` and in the Excel file's notes; narrow it with filters or parameters, or raise `max-rows`.
+* A table **sorted by a measure masked for the reader** is drawn in the query's own order, with the note *Not sorted: 'MTM' is masked for you, and its order
+  would tell the masked figures* (never *No rows.*).
+* A **card** with no value (a sum of no rows, a day with no data) reads `–`, as a masked one does; a count reads its number.
+* When **no band has data** for the run's dates (a date the data does not cover, such as `9999-12-31`), the preview's `hint` and the file's notes say *No data
+  is held for December 9999 (…): every band is empty. Choose a date the data covers.*; the console's preview shows it beside the page count.
 * A **table** starts with its title (and a note: rows cut, values masked for the reader), then its column titles and its rows. It never leaves its title and
   column titles alone at the foot of a page: when the first row (or the first group) does not fit, the table starts on the next page. On each page it runs
   onto it repeats its column titles (`repeatHeader`).
@@ -165,7 +170,9 @@ Phone, Tablet and YAML:
 * **Bursting**: a subscription to a statement page (format `pdf` or `xlsx`) makes **one statement per recipient**: each is asked of the engine **as that
   recipient**, so two people's statements differ only by their masks and row rules (and their name). The file is named after the statement, its period and
   the recipient (*Monthly statement September 2026 hfx1.pdf*); each delivery in the history says `statement: true`, its `pages` and its `file`. A recipient
-  who may not open the report is skipped with the reason, as for any subscription ([DISTRIBUTION.md section 2](DISTRIBUTION.md#2-subscriptions)).
+  who may not open the report is skipped with the reason in words (*may not open the report*), and a disabled user named in the subscription is listed as
+  skipped (*the account is disabled*), as for any subscription ([DISTRIBUTION.md section 2](DISTRIBUTION.md#2-subscriptions)). A table sorted by a
+  measure masked for a recipient is drawn unsorted for them, and the delivery's `notes` say so.
 
 The acceptance (`StatementApiTest`): a monthly statement on a model bursts through one subscription to ten recipients of two roles; every PDF is A4 portrait,
 has as many pages as its page tree counts and its footer says (*Page k of N* on each), the title, the period and the recipient in the header of every page,
@@ -176,7 +183,7 @@ analyst's every trade with MTM masked; and two recipients of the same role and d
 
 | Method | Path | What it does |
 |---|---|---|
-| `POST` | `/api/v1/bi/reports/statement/preview` | body `{report: <id>` or `yaml: <draft>` (needs `bi-author`)`, page?, state?, date?}`: `{title, period, paper {size, orientation, margins}, width, height, pageCount, pages [{number, ops [...]}], tokens, rows, cut}` (`cut`: each table that stops at `max-rows`, in words; empty when none); each op is a `text` (`x`, `y`, `size`, `bold`, `rgb`, `text`, `role`: `header`, `footer`, `title`, `head`, `group`, `cell`, `text`, `label`, `value`, `note`), a `rule` or a `fill`, in points from the page's lower left corner |
+| `POST` | `/api/v1/bi/reports/statement/preview` | body `{report: <id>` or `yaml: <draft>` (needs `bi-author`)`, page?, state?, date?}`: `{title, period, paper {size, orientation, margins}, width, height, pageCount, pages [{number, ops [...]}], tokens, rows, cut, hint}` (`cut`: each table that stops at `max-rows`, in words; empty when none; `hint`: *No data is held for …* when no band has data for the dates, else null); each op is a `text` (`x`, `y`, `size`, `bold`, `rgb`, `text`, `role`: `header`, `footer`, `title`, `head`, `group`, `cell`, `text`, `label`, `value`, `note`), a `rule` or a `fill`, in points from the page's lower left corner |
 | `POST` | `/api/v1/bi/reports/statement/file` | the same body plus `format: pdf` (default) or `xlsx`: the file, made for the caller, with `X-Statement-Pages`; any other format is `422 DRS-9038` *a statement is made as pdf or xlsx* |
 | `POST` | `/api/v1/export/pdf` · `/xlsx` | a statement page as for any export (`{type: report, id, page, state?, date?}`): the statement |
 
