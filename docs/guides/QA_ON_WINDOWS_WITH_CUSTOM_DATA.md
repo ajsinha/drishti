@@ -168,8 +168,8 @@ days** of the committed test data (moved to end on the date of your newest ENDUR
    C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\build_demo_lakes.py --endur-dir C:\Users\asinh09\drishti-private\endur
    ```
 
-You should see three numbered steps: `1/3 the demo lakes …` (the longest: about 15 minutes on a fast machine, up to half an hour on a
-laptop, for sixty days; `data\delta` ends at about 2.2 GB), `2/3 your ENDUR files (N: <first date> … <last date>)` with one `lake-build ok … rejected=0` line per file, and `3/3 done in … s`.
+You should see three numbered steps: `1/3 the demo lakes …` (the longest: about 15 minutes on a fast, idle machine and up to 45 minutes
+on a busy laptop, for sixty days; `data\delta` ends at about 2.2 GB), `2/3 your ENDUR files (N: <first date> … <last date>)` with one `lake-build ok … rejected=0` line per file, and `3/3 done in … s`.
 
 - Without your files (synthetic data only): leave out `--endur-dir …`; the lakes then end on today's business date.
 - To keep the synthetic ENDUR trades beside yours: add `--keep-synthetic-endur`.
