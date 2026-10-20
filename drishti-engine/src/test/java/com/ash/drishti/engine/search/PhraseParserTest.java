@@ -125,12 +125,10 @@ class PhraseParserTest {
         assertThat(on.parse("live trades last 30 days").command()).isNull();
     }
 
-    @Test
-    void theDocumentedMarketPhrasesAndABareIdAreHistoryCommands() {
-        // QA1-08: an id that is also a field's value (EQ-CSCA is the TICKER), an id named by its end (audusd), a bare id with a range
+    private static PhraseParser market() {
         Map<String, List<String>> ids = Map.of("trade", List.of("1000015"), "equity", List.of("EQ-CSCA"), "fx-spot", List.of("FX-AUDUSD"),
                 "book", List.of("BOOK-RATES-3"));
-        PhraseParser on = new PhraseParser(new PhraseParser.Vocabulary() {
+        return new PhraseParser(new PhraseParser.Vocabulary() {
             final List<KindWord> all = List.of(new KindWord("trade", "TRD", "Trade"), new KindWord("equity", "EQ", "Equity"),
                     new KindWord("fx-spot", "FX", "FX spot"), new KindWord("book", "BOOK", "Book"));
 
@@ -157,6 +155,12 @@ class PhraseParserTest {
                 return all.stream().filter(k -> ids.getOrDefault(k.kind(), List.of()).stream().anyMatch(word::equalsIgnoreCase)).findFirst();
             }
         }, () -> java.time.LocalDate.of(2026, 10, 20));
+    }
+
+    @Test
+    void theDocumentedMarketPhrasesAndABareIdAreHistoryCommands() {
+        // QA1-08: an id that is also a field's value (EQ-CSCA is the TICKER), an id named by its end (audusd), a bare id with a range
+        PhraseParser on = market();
         assertThat(on.parse("equity EQ-CSCA last 3 months").command()).isEqualTo("EQ EQ-CSCA 3M");
         assertThat(on.parse("fx audusd since 2026-10-01").command()).isEqualTo("FX FX-AUDUSD FROM 2026-10-01");
         assertThat(on.parse("1000015 30").command()).isEqualTo("TRD 1000015 30");
@@ -166,5 +170,50 @@ class PhraseParserTest {
         // a field's value that is no entity of the kind stays a search, and a bare word that is no entity says what to look for
         assertThat(on.parse("trades in BOOK-RATES-3 since 2026-01-01").command()).isNull();
         assertThat(on.parse("9999999 30").command()).isNull();
+    }
+
+    @Test
+    void halfATimePhraseIsNeverDroppedSilently() {
+        // QA1-207: since A until B is both dates, in order; a search names the time phrase it cannot use; a kind and an id alone open it
+        PhraseParser on = market();
+        assertThat(on.parse("trade 1000015 since 2026-10-01 until 2026-10-10").command()).isEqualTo("TRD 1000015 FROM 2026-10-01 TO 2026-10-10");
+        assertThat(on.parse("trade 1000015 since 2026-10-01 until 2026-10-10").ignored()).isEmpty();
+        assertThat(on.parse("fx audusd since 2026-10-15 until 2026-10-01").command()).isEqualTo("FX FX-AUDUSD FROM 2026-10-01 TO 2026-10-15");
+        assertThat(on.parse("trade 1000015 from 2026-10-01 until 2026-10-10").command()).isEqualTo("TRD 1000015 FROM 2026-10-01 TO 2026-10-10");
+        PhraseParser.Parsed week = on.parse("trades in BOOK-RATES-3 last week");
+        assertThat(week.query()).isEqualTo("TRD where book = 'BOOK-RATES-3'");
+        assertThat(week.command()).isNull();
+        assertThat(week.ignored()).containsExactly("last week");
+        assertThat(week.steps()).anySatisfy(st -> {
+            assertThat(st.words()).isEqualTo("last week");
+            assertThat(st.meaning()).startsWith("left out: a search reads one business date").contains("BOOK-RATES-3 last week");
+        });
+        assertThat(on.parse("trades in BOOK-RATES-3 last month").ignored()).containsExactly("last month");
+        assertThat(on.parse("trades in BOOK-RATES-3 since 2026-01-01").ignored()).isEmpty();      // a date condition, as before
+        PhraseParser.Parsed fx = on.parse("fx audusd");
+        assertThat(fx.command()).isEqualTo("FX FX-AUDUSD");
+        assertThat(fx.ignored()).isEmpty();
+        assertThat(on.parse("show me the equity eq-csca").command()).isEqualTo("EQ EQ-CSCA");
+        assertThat(on.parse("live trades").command()).isNull();
+    }
+
+    @Test
+    void aBareIdWithARangeThatIsNoneSaysWhatToType() {
+        // QA1-203: as TRD 1000015 -5 on the command line, never "say what to look for"
+        PhraseParser on = market();
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> on.parse("1000015 -5"))
+                .isInstanceOfSatisfying(com.ash.drishti.common.DrishtiException.class, e -> {
+                    assertThat(e.errorCode()).isEqualTo(com.ash.drishti.common.ErrorCode.HISTORY_BAD_RANGE);
+                    assertThat(e.getMessage()).contains("'-5' is not a range");
+                });
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> on.parse("1000015 since yesterday"))
+                .isInstanceOfSatisfying(com.ash.drishti.common.DrishtiException.class, e -> {
+                    assertThat(e.errorCode()).isEqualTo(com.ash.drishti.common.ErrorCode.HISTORY_BAD_RANGE);
+                    assertThat(e.getMessage()).contains("'yesterday' is not a date").contains("1000015 since 2026-09-01");
+                });
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> on.parse("1000015 99999"))
+                .isInstanceOfSatisfying(com.ash.drishti.common.DrishtiException.class,
+                        e -> assertThat(e.errorCode()).isEqualTo(com.ash.drishti.common.ErrorCode.HISTORY_RANGE_TOO_LARGE));
+        assertThat(on.parse("9999999 -5").problem()).contains("say what to look for");          // no such entity: as before
     }
 }

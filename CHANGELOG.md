@@ -18,6 +18,35 @@
 ## Unreleased
 
 - **Added: `build_demo_lakes.py` says it is alive**: every 30 s (`DRISHTI_HEARTBEAT_SECONDS`) a line with the step, the time so far, the lake's size and the table being written, so a long `lake demo` or `lake build` never looks stuck.
+- **Fixed (QA1-205): a `knownAt` before the data names the right thing.** `DRS-1013` now says nothing of the entity in that window was
+  known at that instant, and names its days with data *as known now*, which may have been loaded later (*ask without knownAt, or with a
+  later one*), instead of sending the reader to days that give the same 404. HISTORY_QUERIES.md section 7, tutorial 21.
+- **Fixed (QA1-208, the rest of QA1-18): a history kind in another case, or no kind at all, is named.** `history/Trade/…` and
+  `history/TRADE/…` answer `DRS-4004 unknown kind Trade: kinds are written in lower case, did you mean trade?` (kinds are exact everywhere
+  in the API); `history/nokind/…` answers `DRS-4004 unknown kind nokind: the kinds here are …`, unless a source that serves any kind holds
+  that entity; the CLI's `drishti.py history Trade …` says the same. Never `DRS-1001 no source holds`. HISTORY_QUERIES.md section 7.
+
+- **Fixed (QA1-204): on a node that does not hold the trade, the type-ahead keeps the exact id first.** `TRD 1000002` on a node holding
+  `10000020…` lists the peer's `1000002` right after the ranges, before this node's longer ids, instead of leaving it out.
+  HISTORY_QUERIES.md 4.4.
+
+- **Fixed (QA1-203): the range forms that still escaped answer `DRS-4022` with what to type**: `TRD 1000001 30.` (it opened today's
+  view), `1e3`, `FROM 2026-10-01 TO` (*TO needs a date*), `TO 2026-10-01` (*TO follows FROM*) and `DIFF 30` (*DIFF follows a range*)
+  instead of parser text; full-width digits are read as digits (`３0` is `30`, `０` is *0 days is empty*) instead of a raw `DRS-5001`;
+  a bare id with a bad range (`1000015 -5`, `1000015 since yesterday`) answers `DRS-4022` from plain words and the console shows it on
+  the terminal page. HISTORY_QUERIES.md 4.2 and 15.5, USER_GUIDE.
+- **Fixed (QA1-207): plain words no longer drop half a time phrase.** `since A until B` (and `from A until B`) is `FROM A TO B`, the
+  dates in order; a kind word and one id with no range open it (`fx audusd` is `FX FX-AUDUSD`); a time phrase in a search (`trades in
+  BOOK-RATES-3 last week`) is listed as left out with how to ask for one entity over time, so the search no longer runs as if it was
+  read. HISTORY_QUERIES.md 15.5, USER_GUIDE *Asking in plain words*.
+
+- **Fixed (QA1-202, QA1-206): an advertise-url or seed url with port 0 or a port past 65535 is refused**, by the schema check
+  (`POST /net/file/check`, `PUT`, the folder at start), by the gossip intake (such a member is never kept, so it no longer shows *alive*
+  while every read through it fails) and by `drishti.py net`. The CLI and the server now take and refuse the same addresses: the CLI no
+  longer writes `%`-escaped or trailing-dot hosts the server refuses, and takes a global IPv6 address (`http://[2001:db8::5]:18611`) as
+  the server does; one table of cases (`advertise-urls.tsv`) is tested on both sides. NET.md section 2 says the rules.
+
+- **Fixed (QA1-201): `tools/bench/trades.py` (and so `drishti-stack`'s lakes) opened the seven-day test data's `snapshot-2026-09-22`**, gone since the test data holds sixty days: it now takes the system's snapshot whatever its date. The help examples and docs name `snapshot-2026-07-08`.
 
 - **Added: one part of the demo lakes at a time with `tools/build_demo_lakes.py`**: `--files-only` loads only your files into their system's table (the rest of the lakes kept), `--source-dir` with `--system calypso|murex` for another system's files, `--only trades/endur,…` rebuilds only those datasets. Windows QA guide step 3.0; `tools/test_build_demo_lakes.py`.
 

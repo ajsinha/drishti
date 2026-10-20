@@ -181,9 +181,26 @@ class HistoryApiTest {
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("TRD is a mnemonic: use the kind trade")));
         mvc.perform(get("/api/v1/history/trades/T-1").param("days", "3").header("Authorization", as("full")))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("did you mean trade")));
+        // QA1-208: a kind in another case, or no kind at all, is named, not "no source holds"
+        for (String k : List.of("Trade", "TRADE")) {
+            mvc.perform(get("/api/v1/history/" + k + "/T-1").param("days", "3").header("Authorization", as("full")))
+                    .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("DRS-4004"))
+                    .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("unknown kind " + k + ": kinds are written in lower case, did you mean trade?")));
+        }
+        mvc.perform(get("/api/v1/history/nokind/T-1").param("days", "3").header("Authorization", as("full")))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("DRS-4004"))
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("unknown kind nokind: the kinds here are ")));
         mvc.perform(get("/api/v1/history/trade/T-1").param("from", "2026-09-28").param("to", "2026-09-30").param("fields", "mtm,NOPE")
                 .header("Authorization", as("full"))).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("no trade has a field NOPE")));
+        // QA1-205: a "known at" before the data says nothing was known then, and that the days it has now came later
+        mvc.perform(get("/api/v1/history/trade/T-1").param("from", "2026-09-28").param("to", "2026-09-30").param("knownAt", "2000-01-01T00:00:00Z")
+                .header("Authorization", as("full"))).andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("DRS-1013"))
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.allOf(
+                        org.hamcrest.Matchers.containsString("as known at 2000-01-01T00:00:00Z: none of its data in that window was known then"),
+                        org.hamcrest.Matchers.containsString("as known now its days with data run from 2026-09-28 to 2026-09-30"),
+                        org.hamcrest.Matchers.containsString("ask without knownAt, or with a later one"),
+                        org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("; its days with data run")))));
         // QA1-13: a bad "known at" names itself, not the business date
         for (String bad : List.of("garbage", "2026-10-20")) {
             mvc.perform(get("/api/v1/history/trade/T-1").param("days", "3").param("knownAt", bad).header("Authorization", as("full")))

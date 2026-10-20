@@ -198,9 +198,10 @@ public final class NetService implements AutoCloseable {
         Optional<PeersFile.Saved> saved = peersFile.read().filter(s -> id.equals(s.nodeId()));
         long incarnation = saved.map(s -> s.self() == null ? 1 : s.self().incarnation() + 1).orElse(1L);
         String advert = advertiseUrl();
-        if (advert.isEmpty() || HostAddress.loopbackUrl(advert)) {
-            LOG.error("net: node {} does not join Drishti*net: it has no address to advertise; set advertise-url in node.yaml to an address "
-                    + "other machines can call (this machine has no address but loopback, or the server's port is not fixed)", id);
+        if (advert.isEmpty() || !HostAddress.callableUrl(advert)) {
+            LOG.error("net: node {} does not join Drishti*net: it has no address to advertise ({}); set advertise-url in node.yaml to an address "
+                    + "other machines can call (this machine has no address but loopback, or the server's port is not fixed)", id,
+                    advert.isEmpty() ? "none" : HostAddress.urlProblem(advert).orElse(advert + " is loopback or wildcard"));
             return;
         }
         Member self = new Member(id, advert, incarnation, 0, MemberState.ALIVE, digestHash, version, Member.PROTOCOL,

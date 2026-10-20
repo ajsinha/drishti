@@ -31,8 +31,8 @@ import java.util.regex.Pattern;
  * deterministically, no model. {@code trade 1000015 last month} is {@code TRD 1000015 FROM 2026-09-01 TO 2026-09-30};
  * {@code equity EQ-CSCA last 3 months} is {@code EQ EQ-CSCA 3M}; {@code what changed on trade 1000015 this week} ends in {@code DIFF}.
  * <p>Time phrases: {@code last|past N days} (N data days), {@code last|past N weeks|months|years}, {@code last week|month|year},
- * {@code this week|month|quarter|year}, {@code ytd|mtd|qtd}, {@code since <date>}, {@code from <date> to <date>},
- * {@code between <date> and <date>}.
+ * {@code this week|month|quarter|year}, {@code ytd|mtd|qtd}, {@code since <date>}, {@code from|since <date> to|until <date>},
+ * {@code between <date> and <date>}; two dates are put in order.
  */
 public final class HistoryPhrase {
 
@@ -116,6 +116,14 @@ public final class HistoryPhrase {
 
     private record Time(String range, int end) {}
 
+    /**
+     * The end of the time phrase that starts at word {@code i} (lower case), or -1: for a search, which reads one business date, a time
+     * phrase it cannot use is named rather than dropped (QA1-207).
+     */
+    static int timeEnd(List<String> lowerWords, int i, LocalDate today) {
+        return time(lowerWords, i, today).map(Time::end).orElse(-1);
+    }
+
     private static Optional<Time> time(List<String> w, int i, LocalDate today) {
         String a = w.get(i);
         String b = i + 1 < w.size() ? w.get(i + 1) : "";
@@ -168,10 +176,16 @@ public final class HistoryPhrase {
         if (a.equals("ytd") || a.equals("mtd") || a.equals("qtd")) {
             return Optional.of(new Time(a.toUpperCase(Locale.ROOT), i + 1));
         }
+        if ((a.equals("since") || a.equals("from")) && (c.equals("until") || c.equals("to") || c.equals("till")) && date(b) != null
+                && date(d) != null) {                                             // since A until B (QA1-207); the dates in order
+            LocalDate x = date(b);
+            LocalDate y = date(d);
+            return Optional.of(new Time(between(x.isAfter(y) ? y : x, x.isAfter(y) ? x : y), i + 4));
+        }
         if (a.equals("since") && date(b) != null) {
             return Optional.of(new Time("FROM " + date(b), i + 2));
         }
-        if ((a.equals("from") && c.equals("to") || a.equals("between") && c.equals("and")) && date(b) != null && date(d) != null) {
+        if (a.equals("between") && c.equals("and") && date(b) != null && date(d) != null) {
             LocalDate x = date(b);
             LocalDate y = date(d);
             return Optional.of(new Time(between(x.isAfter(y) ? y : x, x.isAfter(y) ? x : y), i + 4));

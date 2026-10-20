@@ -168,6 +168,8 @@ async def search(request: Request, q: str = "", vs: str = "", words: str = ""):
         try:
             phrase = await request.app.state.backend.phrase(words.strip(), ident(request))
         except BackendError as e:
+            if e.code in ("DRS-4021", "DRS-4022"):   # a bare id with a range that is none (1000015 -5): what to type, as on /go (QA1-203)
+                return RedirectResponse(f"/t?error={quote(f'{e.code} {e.detail}')}", status_code=303)
             phrase = {"problem": e.detail, "steps": [], "ignored": []}
         if phrase.get("command") and not phrase.get("ignored") and not q.strip():   # trade 1000015 last month: read fully, so open it
             return RedirectResponse(f"/go?q={quote(phrase['command'])}", status_code=303)

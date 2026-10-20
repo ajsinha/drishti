@@ -110,8 +110,9 @@ def check_text(cli, fid: str, text: str) -> list[dict]:
             err(k, f"unknown setting; ignored (known: {', '.join(sorted(known))})", "warning")
 
     def url(key, value):
-        if not re.match(r"^https?://[^/:\s]+(:\d+)?(/.*)?$", value):
-            err(key, f"'{value}' is not an http or https address with a host (https://host:port)")
+        problem = hostaddr.url_problem(value)
+        if problem:
+            err(key, problem)
 
     def tags(key):
         for t in m.get(key) or []:
@@ -141,10 +142,10 @@ def check_text(cli, fid: str, text: str) -> list[dict]:
         if m.get("node-id") and not NAME.fullmatch(str(m["node-id"])):
             err("node-id", f"'{m['node-id']}' is not a node id: lower-case letters, digits and dashes, at most 64")
         if m.get("advertise-url"):
-            url("advertise-url", resolve(m["advertise-url"]))
-            if hostaddr.loopback_url(resolve(m["advertise-url"])):
+            if hostaddr.loopback_url(resolve(m["advertise-url"])):      # first: it names the address to use instead
                 err("advertise-url", hostaddr.refusal("the address this node advertises", resolve(m["advertise-url"]))
                     + "; or leave advertise-url out and the node advertises that address with its port")
+            url("advertise-url", resolve(m["advertise-url"]))
         tags("tags")
         secret = ""
         for key in ("secret", "previous-secret"):
@@ -189,9 +190,9 @@ def check_text(cli, fid: str, text: str) -> list[dict]:
         if not m.get("url"):
             err("url", "a peer file needs url: the peer's address (https://host:port)")
         else:
-            url("url", resolve(m["url"]))
             if hostaddr.loopback_url(resolve(m["url"])):
                 err("url", hostaddr.refusal("a peer's address", resolve(m["url"])))
+            url("url", resolve(m["url"]))
         tags("tags")
     return out
 

@@ -124,12 +124,13 @@ public final class MemberTable {
         List<String> gone = new ArrayList<>();
         boolean refuted = false;
         boolean changed = false;
-        // a loopback, wildcard, link-local or bridge advertisement (in any spelling, or a name that resolves here to one) is never stored,
+        // an advertisement that is no address (port 0 or past 65535, QA1-202) or a loopback, wildcard, link-local or bridge one (in any
+        // spelling, or a name that resolves here to one) is never stored,
         // so never sent on; looked at before the lock, since a name may need a lookup
         java.util.Set<Member> refused = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
         String selfId = self.nodeId();
         for (Member m : incoming) {
-            if (m != null && m.nodeId() != null && !m.nodeId().equals(selfId) && com.ash.drishti.net.config.HostAddress.loopbackUrl(m.url())) {
+            if (m != null && m.nodeId() != null && !m.nodeId().equals(selfId) && !com.ash.drishti.net.config.HostAddress.callableUrl(m.url())) {
                 refused.add(m);
             }
         }

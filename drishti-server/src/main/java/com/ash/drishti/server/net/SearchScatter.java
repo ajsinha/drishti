@@ -58,6 +58,9 @@ public final class SearchScatter {
     /** One peer's share: its answer, or why it has none, and how long it took. */
     public record Share(String nodeId, JsonNode answer, String failure, long ms) {}
 
+    private static final com.fasterxml.jackson.databind.ObjectMapper PLAIN = new com.fasterxml.jackson.databind.ObjectMapper()
+            .configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
     private final NetRouting routing;
     private final ForwardLog log;
     private final ExecutorService executor;
@@ -314,12 +317,23 @@ public final class SearchScatter {
 
     /** This node's suggestions first, then the peers' in turn (one from each), an entity or a mnemonic counted once, at most {@code limit}. */
     public List<Suggestion> mergeSuggestions(List<Suggestion> local, List<Share> shares, int limit) {
+        return mergeSuggestions(local, shares, limit, "");
+    }
+
+    /**
+     * As {@link #mergeSuggestions(List, List, int)}, and an entity whose id is a word of what was typed comes right after the ranges, from
+     * whichever node holds it: on a node that does not hold {@code 1000002}, {@code TRD 1000002} lists the peer's {@code 1000002} first,
+     * not ten of this node's longer ids that start with it (QA1-204).
+     *
+     * @param typed what was typed ({@code TRD 1000002})
+     */
+    public List<Suggestion> mergeSuggestions(List<Suggestion> local, List<Share> shares, int limit, String typed) {
         Map<String, Suggestion> merged = new LinkedHashMap<>();
         local.forEach(s -> merged.putIfAbsent(key(s), s));
         List<List<Suggestion>> theirs = new ArrayList<>();
         for (Share s : shares) {
             if (s.answer() != null && s.answer().isArray()) {
-                theirs.add(routing.net().http().json().convertValue(s.answer(), new TypeReference<List<Suggestion>>() {}));
+                theirs.add((routing == null ? PLAIN : routing.net().http().json()).convertValue(s.answer(), new TypeReference<List<Suggestion>>() {}));
             }
         }
         int longest = theirs.stream().mapToInt(List::size).max().orElse(0);
@@ -331,8 +345,15 @@ public final class SearchScatter {
             }
         }
         // the ranges after an id first, as on one node (QA1-05): a peer that holds the entity offers them when this node cannot
+        java.util.Set<String> words = new java.util.HashSet<>();
+        for (String w : (typed == null ? "" : typed).trim().split("\\s+")) {
+            words.add(w.toLowerCase(java.util.Locale.ROOT));
+        }
+        java.util.function.Predicate<Suggestion> exact = s -> !"range".equals(s.type()) && s.id() != null
+                && words.contains(s.id().toLowerCase(java.util.Locale.ROOT));
         List<Suggestion> ordered = new ArrayList<>(merged.values().stream().filter(s -> "range".equals(s.type())).toList());
-        merged.values().stream().filter(s -> !"range".equals(s.type())).forEach(ordered::add);
+        merged.values().stream().filter(exact).forEach(ordered::add);
+        merged.values().stream().filter(s -> !"range".equals(s.type()) && !exact.test(s)).forEach(ordered::add);
         return ordered.stream().limit(Math.max(1, limit)).toList();
     }
 

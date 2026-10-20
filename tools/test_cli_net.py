@@ -148,6 +148,23 @@ class NetFolder(ServerCase):
         if loops:
             self.assertIn(f"{name} is 127.", hostaddr.why(name))
 
+    def test_the_cli_and_the_server_take_the_same_addresses(self):
+        """QA1-202, QA1-206: the table the server's AdvertiseUrlCasesTest reads; port 0 or past 65535, %-escapes, a trailing dot refused,
+        a global IPv6 address taken, each with the server's reason."""
+        import hostaddr
+        table = pathlib.Path(__file__).resolve().parent.parent / "drishti-net/src/test/resources/net/advertise-urls.tsv"
+        cases = [ln.split("\t") for ln in table.read_text(encoding="utf-8").splitlines() if ln.strip() and not ln.startswith("#")]
+        self.assertGreater(len(cases), 30)
+        os.environ["DRISHTI_NET_SECRET"] = KEY
+        for c in cases:
+            url, ok, reason = c[0], c[1] == "ok", (c[2] if len(c) > 2 else "")
+            self.assertEqual(ok, hostaddr.callable_url(url), url)
+            for argv in (("set", "node.advertise-url", url), ("add-peer", "drishti-a", url)):
+                code, out, err = self.net(*argv)
+                self.assertEqual(0 if ok else 1, code, f"{url}: {err}")
+                if not ok:
+                    self.assertIn(reason, out + err, url)
+
     def test_members_of_a_running_server(self):
         Fake.routes[("GET", "/api/v1/net/members")] = {"running": True, "self": "n-a", "members": [
             {"nodeId": "n-a", "self": True, "url": "http://127.0.0.1:18783", "state": "alive", "version": "2.5.0", "tags": ["region:emea"], "latencyMs": None, "incarnation": 1},

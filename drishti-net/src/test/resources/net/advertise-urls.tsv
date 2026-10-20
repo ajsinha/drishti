@@ -1,0 +1,49 @@
+# Project Drishti · Any data. Any domain. One grammar.
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved. PROPRIETARY AND CONFIDENTIAL.
+# See the LICENSE file in the root of this repository for the full terms.
+#
+# Advertised and seed addresses (QA1-202, QA1-206): one table, read by the server's AdvertiseUrlCasesTest (drishti-net) and by
+# tools/test_cli_net.py, so the server (HostAddress) and the CLI (tools/hostaddr.py) take and refuse the same addresses.
+# Columns, tab-separated: the URL, ok or refused, and for a refusal a piece of the reason.
+http://192.168.2.77:18611	ok
+http://10.0.0.1:18611	ok
+http://192.0.2.10	ok
+https://192.0.2.10:443/drishti	ok
+http://drishti-a.cluster.invalid:18611	ok
+http://Drishti-A.Cluster.INVALID:18611	ok
+http://[2001:db8::5]:18611	ok
+http://[2001:db8::5]	ok
+http://192.168.2.77:65535	ok
+http://192.168.2.77:1	ok
+http://192.168.2.77:0	refused	the port must be 1 to 65535
+http://192.168.2.77:99999	refused	the port must be 1 to 65535
+http://192.168.2.77:65536	refused	the port must be 1 to 65535
+http://192.168.2.77:000000018611	refused	the port must be 1 to 65535
+http://192.168.2.77:	refused	not an http or https address
+http://%31%32%37.0.0.1:18611	refused	not an http or https address
+http://127.0.0.1%2e:18611	refused	not an http or https address
+http://192.168.2.77.:18611	refused	ends with a dot
+http://drishti-a.cluster.invalid.:18611	refused	ends with a dot
+http://drishti_a:18611	refused	not an http or https address
+http://-drishti:18611	refused	not a host name
+http://192.168.2.256:18611	refused	not an IPv4 address
+http://192.168.2:18611	refused	not an IPv4 address
+http://192.168.02.77:18611	refused	not an IPv4 address
+http://3232236109:18611	refused	not an IPv4 address
+http://0x7f000001:18611	refused	loopback
+http://[2001:db8::5::1]:18611	refused	not an IPv6 address
+http://[192.168.2.77]:18611	refused	not an IPv6 address
+http://user@192.168.2.77:18611	refused	not an http or https address
+http://192.168.2.77:18611?x=1	refused	not an http or https address
+http://192.168.2.77:18611#top	refused	not an http or https address
+ftp://192.168.2.77:18611	refused	not an http or https address
+HTTP://192.168.2.77:18611	refused	not an http or https address
+http:// 192.168.2.77:18611	refused	not an http or https address
+http://[::1]:18611	refused	loopback
+http://[::]:18611	refused	wildcard
+http://[fe80::1]:18611	refused	link-local
+http://127.0.0.1:18611	refused	loopback
+http://0.0.0.0:18611	refused	wildcard
+http://169.254.1.1:18611	refused	link-local
+http://localhost:18611	refused	loopback
+http://localhost.:18611	refused	loopback

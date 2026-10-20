@@ -108,6 +108,7 @@ public final class PhraseParser {
 
     private final Vocabulary vocab;
     private final java.util.function.Supplier<java.time.LocalDate> today;
+    private int maxDays = 366;
 
     public PhraseParser(Vocabulary vocab) {
         this(vocab, java.time.LocalDate::now);
@@ -117,6 +118,33 @@ public final class PhraseParser {
     public PhraseParser(Vocabulary vocab, java.util.function.Supplier<java.time.LocalDate> today) {
         this.vocab = vocab;
         this.today = today;
+    }
+
+    /** The most business days a history may span here, for the message of a number of days past it ({@code DRS-4021}). */
+    public PhraseParser maxDays(int days) {
+        this.maxDays = days;
+        return this;
+    }
+
+    private static final Set<String> TIME_WORDS = Set.of("since", "from", "until", "till", "between");
+
+    /**
+     * A bare id followed by what reads as a range but is none ({@code 1000015 -5}, {@code 1000015 since yesterday}): {@code DRS-4022} (or
+     * {@code DRS-4021}) saying what to type, as {@code TRD 1000015 -5} on the command line (QA1-203), never "say what to look for".
+     */
+    private void refuseBadRange(KindWord kind, String id, String typed, List<String> rest) {
+        String command = kind.mnemonic() + " " + id;
+        for (com.ash.drishti.engine.command.HistoryRange.Bad b
+                : com.ash.drishti.engine.command.HistoryRange.malformed(command + " " + String.join(" ", rest), maxDays)) {
+            if (b.command().equalsIgnoreCase(command)) {
+                throw new com.ash.drishti.common.DrishtiException(b.code(), b.message());
+            }
+        }
+        String first = rest.get(0).toLowerCase(Locale.ROOT);
+        if (rest.size() >= 2 && TIME_WORDS.contains(first) && !isDate(rest.get(1))) {
+            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.HISTORY_BAD_RANGE, "'" + rest.get(1)
+                    + "' is not a date: write it as yyyy-mm-dd, for example " + typed + " " + first + " 2026-09-01");
+        }
     }
 
     /**
@@ -152,6 +180,7 @@ public final class PhraseParser {
         Optional<HistoryPhrase.Read> h = HistoryPhrase.read(words, today.get(), w -> valueOf(w, kindFields).isPresent(),
                 w -> w.equalsIgnoreCase(words.get(0)) ? Optional.of(id) : Optional.empty());
         if (h.isEmpty() || !h.get().idWords().equalsIgnoreCase(words.get(0))) {
+            refuseBadRange(kind, id, words.get(0), words.subList(1, words.size()));
             return Optional.empty();
         }
         String command = kind.mnemonic() + " " + id + " " + h.get().range() + (h.get().diff() ? " DIFF" : "");
@@ -205,7 +234,19 @@ public final class PhraseParser {
             steps.add(new Step(h.timeWords(), h.meaning() + (h.diff() ? ", only what changed" : "")));
             return new Parsed(command, kind.kind(), steps, h.ignored(), null, command);
         }
+        // 3. kind word and one id, no range: that entity (fx audusd is FX FX-AUDUSD; QA1-207)
+        List<String> content = words.stream().filter(w -> !FILLER.contains(w.toLowerCase(Locale.ROOT))).toList();
+        if (content.size() == 1 && content.get(0).length() > 1) {
+            Optional<String> one = vocab.entityId(kindName, content.get(0));
+            if (one.isPresent()) {
+                String command = kind.mnemonic() + " " + one.get();
+                steps.add(new Step(content.get(0), "the " + kind.label().toLowerCase(Locale.ROOT) + " " + one.get()));
+                return new Parsed(command, kind.kind(), steps, List.of(), null, command);
+            }
+        }
         List<Field> fields = vocab.fields(kind.kind());
+        String timeWords = null;
+        String valueSeen = null;
         List<String> conditions = new ArrayList<>();
         String orderBy = null;
         boolean descending = true;
@@ -214,6 +255,14 @@ public final class PhraseParser {
         while (i < words.size()) {
             String w = words.get(i);
             String lw = w.toLowerCase(Locale.ROOT);
+            // a time phrase a search cannot use (it reads one business date): named, never dropped; "since <date>" is a date condition
+            int timeEnd = lw.equals("since") ? -1 : HistoryPhrase.timeEnd(words.stream().map(x -> x.toLowerCase(Locale.ROOT)).toList(), i,
+                    today.get());
+            if (timeEnd > i) {
+                timeWords = String.join(" ", words.subList(i, timeEnd));
+                i = timeEnd;
+                continue;
+            }
             // a field named here, possibly followed by a comparison
             Optional<Match> f = field(words, i, fields);
             int j = f.map(m -> m.end).orElse(i);
@@ -334,6 +383,7 @@ public final class PhraseParser {
             if (val.isPresent()) {
                 Field target = val.get().getKey();
                 conditions.add(target.path() + " = '" + val.get().getValue().replace("'", "\\'") + "'");
+                valueSeen = val.get().getValue();
                 int end = named != null ? j + 1 : i + 1;
                 steps.add(new Step(String.join(" ", words.subList(i, end)), target.label() + " is " + val.get().getValue()));
                 i = end;
@@ -343,6 +393,11 @@ public final class PhraseParser {
                 ignored.add(w);
             }
             i++;
+        }
+        if (timeWords != null) {
+            steps.add(new Step(timeWords, "left out: a search reads one business date (the date box); for one entity over time name it with the "
+                    + "time phrase alone (" + (valueSeen != null ? valueSeen : kind.label().toLowerCase(Locale.ROOT) + " <id>") + " " + timeWords + ")"));
+            ignored.add(timeWords);
         }
         StringBuilder q = new StringBuilder(kind.mnemonic());
         if (!conditions.isEmpty()) {
@@ -446,6 +501,14 @@ public final class PhraseParser {
         };
         return fields.stream().filter(f -> f.type() == Type.DATE && f.path().toLowerCase(Locale.ROOT).contains(hint)).findFirst()
                 .orElse(fields.stream().filter(f -> f.type() == Type.DATE).findFirst().orElse(null));
+    }
+
+    private static boolean isDate(String w) {
+        try {
+            return DATE.matcher(w).matches() && java.time.LocalDate.parse(w) != null;
+        } catch (java.time.format.DateTimeParseException e) {
+            return false;
+        }
     }
 
     private static List<String> tokens(String phrase) {

@@ -16,7 +16,6 @@
 package com.ash.drishti.net.config;
 
 import com.ash.drishti.net.member.NodeIdentity;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -80,11 +79,11 @@ public final class NetSchema {
         }
         String url = c.string("advertise-url", "");
         if (!url.isEmpty()) {
-            c.url("advertise-url", url);
-            if (HostAddress.loopbackUrl(url)) {
+            if (HostAddress.loopbackUrl(url)) {                                // first: it names the address to use instead
                 c.error("advertise-url", HostAddress.refusal("the address this node advertises", url)
                         + "; or leave advertise-url out and the node advertises that address with its port");
             }
+            c.url("advertise-url", url);
         }
         List<String> tags = c.tags("tags");
         List<String> peerOnly = c.list("peer-only-packs");
@@ -118,10 +117,10 @@ public final class NetSchema {
         if (url.isEmpty()) {
             c.error("url", "a peer file needs url: the peer's address (https://host:port)");
         } else {
-            c.url("url", url);
             if (HostAddress.loopbackUrl(url)) {
                 c.error("url", HostAddress.refusal("a peer's address", url));
             }
+            c.url("url", url);
         }
         return c.done(new SeedPeer(name, url, c.tags("tags"), c.flat("tls")));
     }
@@ -371,14 +370,7 @@ public final class NetSchema {
         }
 
         void url(String key, String url) {
-            try {
-                URI u = URI.create(url);
-                if (!("http".equals(u.getScheme()) || "https".equals(u.getScheme())) || u.getHost() == null) {
-                    error(key, "'" + url + "' is not an http or https address with a host (https://host:port)");
-                }
-            } catch (IllegalArgumentException e) {
-                error(key, "'" + url + "' is not an address: " + e.getMessage());
-            }
+            HostAddress.urlProblem(url).ifPresent(p -> error(key, p));
         }
 
         /** A cluster key: only an environment reference, read here; empty when absent or unset. */
