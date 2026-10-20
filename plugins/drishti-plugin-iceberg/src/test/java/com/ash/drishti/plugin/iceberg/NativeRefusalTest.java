@@ -69,9 +69,11 @@ class NativeRefusalTest {
     void aStoreTheNativeEngineCannotReachNamesTheLibraryEngine() {
         assertThatThrownBy(() -> Catalogs.open(Map.of("root", "abfs://c@acct.dfs.core.windows.net/lake"))).hasMessageContaining("engine: library");
         assertThatThrownBy(() -> IcebergEngine.choose("native", null, "gs://bucket/lake", false)).hasMessageContaining("engine: library");
-        assertThat(IcebergEngine.choose(null, null, "gs://bucket/lake", true)).isEqualTo(IcebergEngine.LIBRARY);   // auto, Windows, unreadable root
+        assertThat(IcebergEngine.choose(null, null, "gs://bucket/lake", true)).isEqualTo(IcebergEngine.LIBRARY);   // the default, a root it cannot read
         assertThat(IcebergEngine.choose(null, null, "C:\\lake", true)).isEqualTo(IcebergEngine.NATIVE);
-        assertThat(IcebergEngine.choose(null, null, "/srv/lake", false)).isEqualTo(IcebergEngine.LIBRARY);
+        assertThat(IcebergEngine.choose(null, null, "/srv/lake", false)).isEqualTo(IcebergEngine.NATIVE);         // the default on Linux too
+        assertThat(IcebergEngine.choose("auto", null, "/srv/lake", false)).isEqualTo(IcebergEngine.LIBRARY);
+        assertThat(IcebergEngine.choose("auto", null, "C:\\lake", true)).isEqualTo(IcebergEngine.NATIVE);
         assertThat(IcebergEngine.choose(null, "native", "/srv/lake", false)).isEqualTo(IcebergEngine.NATIVE);         // DRISHTI_ICEBERG_ENGINE
         assertThat(IcebergEngine.choose("library", "native", "/srv/lake", true)).isEqualTo(IcebergEngine.LIBRARY);    // the setting wins
         assertThatThrownBy(() -> IcebergEngine.choose("hadoop", null, "/srv/lake", false)).hasMessageContaining("native, library or auto");

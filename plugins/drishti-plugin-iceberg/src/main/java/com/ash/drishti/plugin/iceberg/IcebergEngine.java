@@ -22,11 +22,13 @@ import java.util.Map;
 
 /**
  * Which engine reads (and writes) a connector's Iceberg tables, from its {@code engine} setting, else the environment
- * variable {@code DRISHTI_ICEBERG_ENGINE}, else {@link #DEFAULT}:
+ * variable {@code DRISHTI_ICEBERG_ENGINE}, else the default, {@code native} where it can read the tables:
  *
  * <ul>
- *   <li>{@code native}: drishti-iceberg, no Hadoop (local disk and S3, path-based and REST catalogs); the only one that
- *       works on Windows without {@code winutils.exe};</li>
+ *   <li>{@code native} (the default): drishti-iceberg, no Hadoop (local disk and S3, path-based and REST catalogs); the
+ *       only one that works on Windows without {@code winutils.exe}. Asked for by name with a root it cannot read
+ *       ({@code abfs://}, {@code gs://}, {@code hdfs://}), the connector refuses to start; left to the default, such a
+ *       root is read by the library;</li>
  *   <li>{@code library}: Apache Iceberg Java over Hadoop's file systems (also Azure {@code abfs://}, Google
  *       {@code gs://}, HDFS);</li>
  *   <li>{@code auto}: native on Windows, the library elsewhere (and the library for a root the native engine does not
@@ -41,7 +43,7 @@ enum IcebergEngine {
     static final String ENV = "DRISHTI_ICEBERG_ENGINE";
 
     /** The engine when nothing is configured. */
-    static final String DEFAULT = "auto";
+    static final String DEFAULT = "native";
 
     /** The setting's value as Health shows it ({@code native}, {@code library}). */
     String label() {
@@ -62,15 +64,16 @@ enum IcebergEngine {
      * @param windows whether this is Windows (for {@code auto})
      */
     static IcebergEngine choose(String setting, String env, String root, boolean windows) {
+        boolean given = setting != null && !setting.isBlank() || env != null && !env.isBlank();
         String v = setting != null && !setting.isBlank() ? setting : env != null && !env.isBlank() ? env : DEFAULT;
         boolean readable = root == null || root.isBlank() || FileAccess.supports(root);
         return switch (v.trim().toLowerCase(Locale.ROOT)) {
             case "native" -> {
-                if (!readable) {
+                if (!readable && given) {
                     throw new IllegalArgumentException("the native Iceberg engine reads local disk and S3 (s3://, s3a://), not " + root
                             + "; set the connector's engine: library (or DRISHTI_ICEBERG_ENGINE=library) for this lake");
                 }
-                yield NATIVE;
+                yield readable ? NATIVE : LIBRARY;
             }
             case "library" -> LIBRARY;
             case "auto" -> windows && readable ? NATIVE : LIBRARY;

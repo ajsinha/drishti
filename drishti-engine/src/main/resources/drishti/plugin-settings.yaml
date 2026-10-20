@@ -146,7 +146,7 @@ plugins:
     proxy: true
     settings:
       - { name: "layout.*", desc: "Per-kind column layout", group: mapping }
-      - { name: engine, type: "enum:native|library|auto", default: "auto", desc: "native: drishti-iceberg, no Hadoop (local disk and S3; Windows without winutils.exe); library: Apache Iceberg Java over Hadoop (also Azure, Google Cloud Storage, HDFS); auto: native on Windows, library elsewhere. DRISHTI_ICEBERG_ENGINE sets it for every connector", group: connection }
+      - { name: engine, type: "enum:native|library|auto", default: "native", desc: "native: drishti-iceberg, no Hadoop (local disk and S3; Windows without winutils.exe; left to the default, a root it cannot reach is read by the library); library: Apache Iceberg Java over Hadoop (also Azure, Google Cloud Storage, HDFS); auto: native on Windows, library elsewhere. DRISHTI_ICEBERG_ENGINE sets it for every connector", group: connection }
       - { name: "metadata-location.*", desc: "A table named by its metadata file, read-only (metadata-location.<kind>: s3://…/v12.metadata.json); native engine", group: connection }
       - { name: relocate, desc: "Read a table copied elsewhere: '<old prefix> -> <new prefix>; …' replaces the start of every path its metadata names (native engine)", group: connection }
       - { name: vended-credentials, type: boolean, default: "true", desc: "Ask a REST catalog for each table's own S3 credentials (X-Iceberg-Access-Delegation); native engine", group: connection }
