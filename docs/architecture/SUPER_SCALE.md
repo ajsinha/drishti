@@ -22,6 +22,11 @@ Status: **design, not built.** Release not decided (product owner, 2026-10-20). 
 [AWS_DELTA_LAKE.md](AWS_DELTA_LAKE.md); it marks each piece of this design it relies on as planned. Every number is an **estimate** unless marked *measured*; step S8 replaces the estimates with
 measurements.
 
+**Super scale is the architecture at every size** (product owner, 2026-10-20): one code path that scales down (a laptop: one
+node owns every slice) and up (many nodes), with external engines (Athena, Trino, Spark) as optional plug-ins. How every BI
+query uses it (tiers chosen from metadata, products and rollups first, heavy work as bounded background runs split over slice
+owners): see [BI_RUNS.md](BI_RUNS.md) (release 2.6.7).
+
 ## Contents
 
 1. [The ask](#1-the-ask)
