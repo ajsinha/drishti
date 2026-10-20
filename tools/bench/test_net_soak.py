@@ -16,8 +16,12 @@
 """The Drishti*net soak's checker without servers (tools/bench/soak_check.py): history answers against the reference (rows, changed
 flags, masks, named partial answers, DRS-1013), kill windows, the memory slope and the verdict; and users.py's history requests."""
 import copy
+import os
 import random
+import signal
+import subprocess
 import sys
+import time
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -157,6 +161,34 @@ class WindowsMemoryVerdictTest(unittest.TestCase):
         self.assertTrue(any(x.startswith("history") and "0.600" in x for x in lines))
         self.assertTrue(any(x.split()[:6] == ["history", "4", "1", "0", "0", "0"] for x in lines))
         self.assertTrue(any(x.split()[:6] == ["trade", "9", "0", "0", "0", "1"] for x in lines))
+
+
+@unittest.skipUnless(Path("/proc/self/status").exists(), "needs /proc (Linux)")
+class ConsoleSampleTest(unittest.TestCase):
+    def test_the_console_is_sampled_with_its_workers_summed_and_one_by_one(self):
+        """SOAK-07: the soak sampled the uvicorn parent alone (1 thread, 50.7 MB on every sample); the workers hold the console's memory."""
+        import net_soak
+        worker = "import time; x = bytearray(40_000_000); x[::4096] = b'1' * len(x[::4096]); time.sleep(60)"
+        parent = subprocess.Popen([sys.executable, "-c", "import subprocess, sys, time; ps = [subprocess.Popen([sys.executable, '-c', sys.argv[1]]) "
+                                   "for _ in range(2)]; time.sleep(60)", worker])
+        try:
+            for _ in range(100):
+                s = net_soak.Soak.tree_status(parent.pid)
+                if len(s["workers"]) == 2 and all(w.get("rssMb", 0) > 35 for w in s["workers"]):
+                    break
+                time.sleep(0.1)
+            self.assertEqual(3, s["processes"])
+            self.assertTrue(all(w["rssMb"] > 35 for w in s["workers"]), s)
+            alone = net_soak.Soak.proc_status(parent.pid)
+            self.assertGreater(s["rssMb"], alone["rssMb"] + 70)
+            self.assertAlmostEqual(s["rssMb"], alone["rssMb"] + sum(w["rssMb"] for w in s["workers"]), delta=5)
+            self.assertEqual(s["threads"], alone["threads"] + sum(w["threads"] for w in s["workers"]))
+            self.assertIn("openFiles", s["workers"][0])
+        finally:
+            for c in net_soak.Soak.descendants(parent.pid):
+                os.kill(c, signal.SIGKILL)
+            parent.kill()
+            parent.wait(10)
 
 
 class UsersHistoryTest(unittest.TestCase):

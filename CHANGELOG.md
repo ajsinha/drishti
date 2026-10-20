@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Fixed (SOAK-07): the soak measures the console's memory.** It sampled the uvicorn parent alone (one thread, 50.7 MB on all 120
+  samples of the 2026-10-20 soak); `tools/bench/net_soak.py` now samples the console's whole process tree from `/proc`: resident memory,
+  threads and open files summed over the parent and its workers, `processes`, and each worker's own figures (`workers`), so the console's
+  memory slope means something. test_net_soak; DRISHTI_NET section 17.1, TOOLS.
 - **Fixed (SOAK-04): the soak's memory check tells a leak from a node taking over the load.** `tools/bench/net_soak.py` judges each
   process by its steady slope: only the samples outside the kill windows and `--settle` seconds (600) after each, fitted with a level per
   steady span, so a step when the console moves sessions to a node at a failover is not growth. The whole-run slope is reported beside

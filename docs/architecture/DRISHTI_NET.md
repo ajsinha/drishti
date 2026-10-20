@@ -440,6 +440,8 @@ The soak also exercises history queries ([HISTORY_QUERIES.md](HISTORY_QUERIES.md
   `--kill-grace` seconds ago still counts as down, since its peers may not have seen it come back.
 - **Long runs.** Every `--sample-every` seconds (60) the report gets each process's resident memory, open files and threads (from
   `/proc`), and for each server its heap used, its live data after the last collection and its live threads (`/actuator/metrics`).
+  The console is sampled as its whole process tree, the uvicorn parent and every worker (SOAK-07: the parent alone is one thread and
+  51 MB whatever the load): resident memory, threads and open files summed, `processes`, and each worker's own figures under `workers`.
   The report (`<work>/soak.json`; the table and verdict also in `<work>/soak-report.txt`) ends with a **verdict**, which passes only when:
   no wrong answers; errors (partial, time-out, unavailable answers of the checker, failed pages, the load's failures per 10 s) only inside
   the **kill windows** (from a kill until the node has rejoined, plus `--kill-grace`); p95 and p99 per action (failing only past

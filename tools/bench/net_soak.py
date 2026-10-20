@@ -430,6 +430,44 @@ class Soak:
             pass
         return out
 
+    @staticmethod
+    def descendants(pid: int) -> list[int]:
+        """Every process below ``pid`` (children, their children ...), from /proc: each thread's ``children`` list, else the parent field of
+        every /proc/<n>/stat. Empty where /proc is not there."""
+        def kids(p: int) -> list[int]:
+            try:
+                return [int(c) for t in os.listdir(f"/proc/{p}/task") for c in Path(f"/proc/{p}/task/{t}/children").read_text().split()]
+            except (OSError, ValueError):
+                pass
+            out = []
+            for n in (x for x in os.listdir("/proc") if x.isdigit()) if os.path.isdir("/proc") else ():
+                try:
+                    if int(Path(f"/proc/{n}/stat").read_text().rsplit(")", 1)[1].split()[1]) == p:
+                        out.append(int(n))
+                except (OSError, ValueError, IndexError):
+                    continue
+            return out
+        seen, todo = [], kids(pid)
+        while todo:
+            c = todo.pop(0)
+            if c not in seen:
+                seen.append(c)
+                todo += kids(c)
+        return seen
+
+    @classmethod
+    def tree_status(cls, pid: int) -> dict:
+        """A process and all its descendants (the console: the uvicorn parent and its workers, SOAK-07): resident memory, threads and open
+        files summed, the number of processes, and each worker's own figures."""
+        workers = [{"pid": c, **cls.proc_status(c)} for c in cls.descendants(pid)]
+        workers = [w for w in workers if "rssMb" in w]                     # gone between the listing and the read
+        out = cls.proc_status(pid)
+        for key in ("rssMb", "threads", "openFiles"):
+            vals = [x[key] for x in [out, *workers] if key in x]
+            if vals:
+                out[key] = round(sum(vals), 1) if key == "rssMb" else sum(vals)
+        return {**out, "processes": 1 + len(workers), "workers": workers}
+
     def jvm(self, name: str) -> dict:
         """A server's heap used and live data after the last collection (MB) and live threads, from its metrics endpoint."""
         out = {}
@@ -448,7 +486,7 @@ class Soak:
         while time.time() < stop_at:
             t = round(time.time() - self.t0, 1)
             for name, p in list(self.procs.items()):
-                s = {"t": t, "node": name, **self.proc_status(p.pid)}
+                s = {"t": t, "node": name, **(self.tree_status(p.pid) if name == "console" else self.proc_status(p.pid))}
                 if name in NODES:
                     s.update(self.jvm(name))
                 self.samples.append(s)
