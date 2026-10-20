@@ -445,7 +445,11 @@ The soak also exercises history queries ([HISTORY_QUERIES.md](HISTORY_QUERIES.md
   the **kill windows** (from a kill until the node has rejoined, plus `--kill-grace`); p95 and p99 per action (failing only past
   `--max-p99` when it is given); and memory not growing after warm-up: the least-squares slope of each process's samples taken
   `--warmup` seconds after it last started (live data after collection when the server reports it, else heap used, else resident memory)
-  below `--max-growth` MB an hour. The exit code is 0 only when the verdict passes.
+  below `--max-growth` MB an hour. The slope that decides is the **steady** one (`slopeMbPerHour`): only the samples outside every kill
+  window and the `--settle` seconds (600) after it, fitted with a level of its own per steady span, because a node that takes over a dead
+  one's sessions steps up and stays there, which is not a leak (the 2026-10-20 soak, SOAK-04: b +166 MB/h over the whole run, flat in
+  every steady span). The whole-run slope is reported beside it (`wholeRunSlopeMbPerHour`), with the spans used (`steadySpans`). The exit
+  code is 0 only when the verdict passes.
 
 A two-hour run, the shard killed at 20 minutes and the seed at 60 (each back five minutes later), with ten business days of data so a
 history has rows to compare:

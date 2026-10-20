@@ -40,7 +40,8 @@ it (DRS-5052) or a time-out (DRS-1014); a short answer not marked partial, or DR
 
 Long runs: every --sample-every seconds each process's resident memory, heap (used, and live data after the last collection), open files
 and threads go into the report; it ends with a latency and error table (one line per action, history its own) and a verdict: no wrong
-answers, errors only inside the kill windows, p95/p99 per action, memory not growing after --warmup. The result is one JSON object (also in
+answers, errors only inside the kill windows, p95/p99 per action, memory not growing after --warmup (the steady slope, outside the kill
+windows and --settle seconds after each, a level per span; the whole-run slope is reported beside it). The result is one JSON object (also in
 <work>/soak.json, the table and verdict in <work>/soak-report.txt); the exit code is 0 only when the verdict passes. Processes are stopped by
 PID; nothing is written outside --work.
 """
@@ -552,7 +553,7 @@ class Soak:
             for b, n in buckets.items():
                 errors.append({"t": round(float(b) - self.t0, 1), "width": float(users.get("bucket", 10)), "what": f"load {label}", "n": n})
         starts = {n: self.started.get(n, 0.0) for n in [*NODES, "console"]}
-        memory = soak_check.memory_trend(self.samples, starts, self.a.warmup, self.a.max_growth)
+        memory = soak_check.memory_trend(self.samples, starts, self.a.warmup, self.a.max_growth, windows, self.a.settle)
         wrong = sum(v for k, v in stats.items() if k.endswith(":wrong"))
         return {"killWindows": windows, "memory": memory, "table": soak_check.table(users, stats),
                 "verdict": soak_check.verdict(wrong, errors, windows, users, memory, self.a.max_p99)}
@@ -617,7 +618,10 @@ def main(argv=None) -> int:
     ap.add_argument("--kill-grace", type=float, default=30, help="seconds after a restarted node has rejoined that still count as its kill window")
     ap.add_argument("--sample-every", type=float, default=60, help="seconds between samples of each process's memory, open files and threads")
     ap.add_argument("--warmup", type=float, default=600, help="seconds after a process starts before its memory counts towards the trend")
-    ap.add_argument("--max-growth", type=float, default=64, help="MB an hour a process's memory may grow after warm-up (the slope of its samples)")
+    ap.add_argument("--max-growth", type=float, default=64, help="MB an hour a process's memory may grow after warm-up (the slope of its samples "
+                    "in the steady spans: outside the kill windows and --settle seconds after each, a level of its own per span)")
+    ap.add_argument("--settle", type=float, default=600, help="seconds after a kill window during which the load is still moving between nodes: "
+                    "left out of the steady memory slope")
     ap.add_argument("--max-p99", type=float, default=0, help="seconds: fail when an action's p99 is above it (0: report only)")
     a = ap.parse_args(argv)
     soak = Soak(a)

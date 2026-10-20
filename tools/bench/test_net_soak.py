@@ -121,6 +121,21 @@ class WindowsMemoryVerdictTest(unittest.TestCase):
         self.assertEqual("rssMb", m["console"]["measure"])
         self.assertIsNone(sc.memory_trend(samples, {"a": 3500}, 600, 64)["a"]["ok"])           # restarted late: too few samples
 
+    def test_a_step_when_the_load_moves_at_a_failover_is_not_growth_but_a_steady_slope_is(self):
+        """SOAK-04: b's live heap stepped from 128 to 367 MB when c died and the console moved its sessions to b; flat before and after."""
+        w = sc.kill_windows(self.PLAN, {"c": 1530, "a": 3940}, 7200, 30)
+        samples = [{"t": t, "node": "b", "liveMb": 128.0 if t < 1800 else 367.0} for t in range(0, 7200, 60)]
+        samples += [{"t": t, "node": "c", "liveMb": 340.0 + (200 if t >= 4200 else 0) + t / 36} for t in range(0, 7200, 60)]  # step + 100 MB/h
+        m = sc.memory_trend(samples, {"b": 0, "c": 0}, 600, 64, w, 600)
+        self.assertGreater(m["b"]["wholeRunSlopeMbPerHour"], 64)            # the old measure: fails on the step
+        self.assertAlmostEqual(0.0, m["b"]["slopeMbPerHour"], places=3)
+        self.assertTrue(m["b"]["ok"])
+        self.assertEqual([[600, 1200], [2160, 3600], [4570, 7140]], [[round(x) for x in s] for s in m["b"]["steadySpans"]])
+        self.assertAlmostEqual(100.0, m["c"]["slopeMbPerHour"], delta=0.5)   # a real slope still fails
+        self.assertFalse(m["c"]["ok"])
+        self.assertEqual([(0, 100)], sc.steady_segments(0, 100, [], 600))
+        self.assertIsNone(sc.pooled_slope_per_hour([[(0, 1)], [(60, 2)]]))
+
     def test_the_verdict_fails_on_wrong_answers_errors_outside_windows_slow_actions_and_growth(self):
         w = [{"node": "c", "from": 1200, "to": 1560}]
         users_out = {"trade": {"n": 10, "failed": 0, "p50": .05, "p95": .1, "p99": .2}, "history": {"n": 5, "failed": 1, "p50": .1, "p95": .3, "p99": .6}}

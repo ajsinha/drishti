@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **Fixed (SOAK-04): the soak's memory check tells a leak from a node taking over the load.** `tools/bench/net_soak.py` judges each
+  process by its steady slope: only the samples outside the kill windows and `--settle` seconds (600) after each, fitted with a level per
+  steady span, so a step when the console moves sessions to a node at a failover is not growth. The whole-run slope is reported beside
+  it (`wholeRunSlopeMbPerHour`, `steadySpans`). On the 2026-10-20 soak's b (128 to 367 MB at c's kill, flat after) the whole-run slope
+  is +166 MB/h and the steady one 0. `soak_check.memory_trend`; test_net_soak; DRISHTI_NET section 17.1, TOOLS.
 - **Fixed (QA-OPEN-01): `tools/testdata/make_testdata.py` writes the same bytes on every Python.** 16 counterparty and netting-set
   change files differed in the sixth decimal of walked values between environments (`NET_MTM` 484329001.595759 vs .595758): a netting
   set's `NET_MTM` is the sum of its trades' MTM, and the built-in `sum()` of floats gives a different last bit on Python 3.13 and 3.14

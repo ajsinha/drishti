@@ -147,20 +147,63 @@ def slope_per_hour(points: list[tuple[float, float]]) -> float | None:
     return None if den == 0 else sum((x - mx) * (y - my) for x, y in points) / den * 3600
 
 
-def memory_trend(samples: list[dict], starts: dict[str, float], warmup: float, max_mb_per_hour: float) -> dict:
+def steady_segments(t0: float, t1: float, windows: list[dict], settle: float) -> list[tuple[float, float]]:
+    """The spans of ``t0`` .. ``t1`` outside every kill window and the ``settle`` seconds after it, in order: the load moves between nodes
+    when one dies and when it comes back, so those spans are not steady."""
+    out, at = [], t0
+    for lo, hi in sorted((w["from"], w["to"] + settle) for w in windows):
+        if lo > at:
+            out.append((at, min(lo, t1)))
+        at = max(at, hi)
+        if at >= t1:
+            break
+    if at < t1:
+        out.append((at, t1))
+    return [(x, y) for x, y in out if y > x]
+
+
+def pooled_slope_per_hour(groups: list[list[tuple[float, float]]]) -> float | None:
+    """The common slope of several groups of (seconds, value) points, each with a level of its own (a fit after each failover: a step
+    between groups is not growth), per hour; groups of fewer than two points are left out; None with fewer than three points in all."""
+    groups = [g for g in groups if len(g) >= 2]
+    if sum(len(g) for g in groups) < 3:
+        return None
+    num = den = 0.0
+    for g in groups:
+        mx = sum(x for x, _ in g) / len(g)
+        my = sum(y for _, y in g) / len(g)
+        num += sum((x - mx) * (y - my) for x, y in g)
+        den += sum((x - mx) ** 2 for x, _ in g)
+    return None if den == 0 else num / den * 3600
+
+
+def memory_trend(samples: list[dict], starts: dict[str, float], warmup: float, max_mb_per_hour: float, windows: list[dict] | None = None,
+                 settle: float = 300.0) -> dict:
     """Per process, the slope of its memory after warm-up: each sample is ``{"t", "node", "rssMb", "heapMb", "liveMb"}``; only samples
     taken ``warmup`` seconds after the process last started count (a restarted node starts afresh). The measure is the heap's live data
-    after the last collection when the server reports it, else the heap used, else the resident set (the console). ``ok`` is None when
-    there are too few samples to say."""
+    after the last collection when the server reports it, else the heap used, else the resident set (the console: its parent and
+    workers summed).
+
+    Two slopes (SOAK-04): ``wholeRunSlopeMbPerHour`` over every such sample, and ``slopeMbPerHour`` over the steady spans only, outside
+    the kill ``windows`` and ``settle`` seconds after each, fitted with a level of its own per span, so that a node taking the load of a
+    dead one (a step) is not read as a leak. ``ok`` is the steady slope below ``max_mb_per_hour``; None when there are too few samples."""
     out = {}
+    windows = windows or []
     for node in sorted({s["node"] for s in samples}):
         mine = [s for s in samples if s["node"] == node and s["t"] >= starts.get(node, 0) + warmup]
         measure = next((m for m in ("liveMb", "heapMb", "rssMb") if mine and all(s.get(m) is not None for s in mine)), "rssMb")
-        heap = slope_per_hour([(s["t"], s[measure]) for s in mine if s.get(measure) is not None])
+        pts = [(s["t"], s[measure]) for s in mine if s.get(measure) is not None]
+        whole = slope_per_hour(pts)
         rss = slope_per_hour([(s["t"], s["rssMb"]) for s in mine if s.get("rssMb") is not None])
-        out[node] = {"samples": len(mine), "measure": measure, "slopeMbPerHour": None if heap is None else round(heap, 1),
+        spans = steady_segments(pts[0][0], pts[-1][0] + 1e-6, windows, settle) if pts else []
+        groups = [[p for p in pts if lo <= p[0] < hi] for lo, hi in spans]
+        steady = pooled_slope_per_hour(groups)
+        out[node] = {"samples": len(mine), "steadySamples": sum(len(g) for g in groups if len(g) >= 2), "measure": measure,
+                     "slopeMbPerHour": None if steady is None else round(steady, 1),
+                     "wholeRunSlopeMbPerHour": None if whole is None else round(whole, 1),
                      "rssSlopeMbPerHour": None if rss is None else round(rss, 1),
-                     "ok": None if heap is None else heap < max_mb_per_hour}
+                     "steadySpans": [[round(x, 1), round(y, 1)] for x, y in spans],
+                     "ok": None if steady is None else steady < max_mb_per_hour}
     return out
 
 
