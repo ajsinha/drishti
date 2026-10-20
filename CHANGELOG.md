@@ -17,6 +17,9 @@
 
 ## Unreleased
 
+- **Added: history queries, the Delta fast path (H5).** The Delta connector lists an entity's dates from the snapshot's partitions and
+  the id maps it already keeps (`days()`), so a history reads only the days that hold the entity ([DELTA_CONNECTOR.md section
+  8](docs/connectors/DELTA_CONNECTOR.md#8-seven-years-of-history)).
 - **Added: history queries across Drishti*net (H4).** A node with the pack but not the data reads an entity's history from the peer that
   holds it in one call for all the dates (`GET /api/v1/net/history/{kind}/~`, node-only, masked there and again here); a node without the
   pack forwards the whole request, as views are ([NET.md](docs/admin/NET.md#7-routing-where-a-request-goes)). `NetHistoryTest`. A history of

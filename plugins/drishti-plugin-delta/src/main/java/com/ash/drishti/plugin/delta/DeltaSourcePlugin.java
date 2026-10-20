@@ -517,6 +517,37 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     /**
+     * History queries' fast path (HISTORY_QUERIES.md section 10): the dates the table's snapshot already lists in memory
+     * ({@code business_date=} partitions from..to) whose id map holds the entity, so the per-day read
+     * ({@link com.ash.drishti.api.HistoryReads#perDay}) reads only those days' row groups and never a date without the entity. Id maps are
+     * the ones single reads use (memory-mapped, cached). For an effective table these are the entity's change dates. No document is read.
+     */
+    @Override
+    public Optional<java.util.NavigableSet<LocalDate>> days(EntityRef ref, LocalDate from, LocalDate to) {
+        if (!tables.containsKey(ref.kind())) {
+            return Optional.of(new java.util.TreeSet<>());
+        }
+        Optional<DeltaTable.Layout> l = readableLayout(ref.kind(), null);
+        if (l.isEmpty()) {
+            return Optional.of(new java.util.TreeSet<>());
+        }
+        java.util.TreeSet<LocalDate> out = new java.util.TreeSet<>();
+        for (LocalDate d : l.get().files().subMap(from, true, to, true).keySet()) {
+            if (d == LocalDate.MIN) {
+                continue;
+            }
+            try {
+                if (idMap(ref.kind(), l.get(), d).file(ref.id()) >= 0) {
+                    out.add(d);
+                }
+            } catch (RuntimeException e) {
+                throw problems.failed(ref.kind(), d.toString(), l.get().timestamp(), e);
+            }
+        }
+        return Optional.of(out);
+    }
+
+    /**
      * The date's documents in one pass over its files (derived pages): a snapshot table only, whose newest partition on or
      * before the date holds every entity; an effective table (an entity's latest row across dates) is read entity by entity.
      */
