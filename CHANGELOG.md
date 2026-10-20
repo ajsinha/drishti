@@ -17,6 +17,9 @@
 
 ## Unreleased
 
+- **Fixed (QA2-03): Crimson Terminal's accent buttons** (the statement designer's Save and Preview pages, and every `.btn-accent`) were a pale
+  pink gradient of the text accent under white labels (about 2:1); they now run from `--d-fill` to `--d-fill-strong` with `--d-on-fill`. A new guard in
+  `test_contrast.py` fails any button rule that fills from `--d-accent`, or writes `--d-on-fill` on another ground.
 - **Fixed (QA2-01): a statement's table no longer stops silently at 5,000 rows.** A table or matrix band is read whole, up to
   `drishti.distribution.statements.max-rows` (10,000), past the 5,000 rows one JSON answer to the screen holds; a longer one says so in a note above it,
   in the preview's new `cut` list and in the Excel file. Excel and CSV exports read their tables whole the same way (up to `export.max-rows`), and any

@@ -1879,7 +1879,8 @@ otherwise the browser remembers it.
 by eye: all text, including faint notes, the footer, links and placeholders, reads at 4.5:1 or more on every background it is drawn on, and
 accents and chart fills at 3:1. Buttons and pressed controls fill with `--d-fill` (and `--d-fill-strong` on hover), which is the accent
 unless a theme gives buttons a colour of its own, and carry their label in `--d-on-fill` at 4.5:1 on both: Crimson Terminal, for one, fills
-its buttons with a deep crimson under white labels rather than its bright text accent. A page that embeds Drishti's elements and sets the
+its buttons with a deep crimson under white labels rather than its bright text accent. The same test fails any stylesheet rule that fills a
+button from the accent instead (the accent buttons' gradient runs from `--d-fill` to `--d-fill-strong`). A page that embeds Drishti's elements and sets the
 `--d-*` values itself ([ELEMENTS.md](ELEMENTS.md)) should keep the same rule.
 
 These are the console's themes. A BI report has a theme of its own (the shipped *Corporate* and *Print*, or one made in the
