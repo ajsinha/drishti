@@ -31,10 +31,17 @@
     D.timings = new Map();
 
     // ---- fields into wells -------------------------------------------------------------------------------------------
-    D.kindOf = (name) => ((D.curIdx || D.idx).measures[name] ? 'measure' : 'field');
+    /** What a field parameter of the model (param.<name>, 2.6.0) holds: 'measure' when every choice is a measure, 'field' when every one is a field, else 'any'. */
+    D.paramKind = (name) => {
+      const p = ((D.dataset && D.dataset.parameters) || []).find((x) => x.kind === 'field' && 'param.' + x.name === name);
+      if (!p) { return null; }
+      const ms = (p.fields || []).map((f) => !!(D.curIdx || D.idx).measures[f]);
+      return ms.every(Boolean) ? 'measure' : ms.some(Boolean) ? 'any' : 'field';
+    };
+    D.kindOf = (name) => (String(name).indexOf('param.') === 0 && D.paramKind(name) ? D.paramKind(name) : (D.curIdx || D.idx).measures[name] ? 'measure' : 'field');
     D.isDate = (field) => { const c = B.column(D.curIdx || D.idx, field); return !!c && (!!c.part || c.type === 'date' || c.type === 'timestamp'); };
     D.wellSpecs = (type) => (D.catalogue.visuals[type] || { wells: {} }).wells;
-    const accepts = (spec, kind) => spec.kind === 'any' || spec.kind === kind;
+    const accepts = (spec, kind) => spec.kind === 'any' || spec.kind === kind;          // a field parameter of fields and measures ('any') goes in a well of either only
 
     /** Puts `name` in the visual's well (replacing the item when the well holds one and is full). */
     D.putInWell = function (v, wellName, name) {

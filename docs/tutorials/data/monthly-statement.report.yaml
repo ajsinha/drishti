@@ -1,0 +1,46 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Tutorial 20, steps 3 to 6: a statement on the model of step 1 (docs/guides/STATEMENTS.md). A grid page for the screen, with the field parameters in a
+# chart's wells, and a statement page: paper, page by page, one per reader through a subscription.
+rachana: 1
+report: monthly-statement
+title: Monthly statement
+model: fp-desk@1
+statement:
+  paper: A4
+  orientation: portrait
+  margins: { top: 15, right: 12, bottom: 15, left: 12 }
+  header: { left: "{title}", center: "{period}", right: "For {reader}" }
+  footer: { left: "Run {run-date} · by {param.breakdown}", right: "Page {page} of {pages}" }
+  period: month
+  fontSize: 9
+pages:
+  - id: overview
+    title: Overview
+    visuals:
+      - { id: chart, type: column, title: By the reader's choice, at: { x: 0, y: 0, w: 8, h: 5 }, wells: { axis: [param.breakdown], values: [param.metric] } }
+  - id: statement
+    title: Statement
+    layout: statement
+    visuals:
+      - { id: intro, type: text, at: { x: 0, y: 0, w: 12, h: 1 }, text: "Positions of {reader} for {period}", format: { size: heading } }
+      - { id: notional, type: card, title: Notional, at: { x: 0, y: 1, w: 4, h: 2 }, wells: { values: [NOTIONAL] } }
+      - { id: mtm, type: card, title: MTM, at: { x: 4, y: 1, w: 4, h: 2 }, wells: { values: [MTM] } }
+      - { id: trades, type: card, title: Trades, at: { x: 8, y: 1, w: 4, h: 2 }, wells: { values: [Trades] } }
+      - { id: positions, type: table, title: Positions, at: { x: 0, y: 3, w: 12, h: 8 },
+          wells: { columns: [param.breakdown, trade.TRADE_ID, trade.CURRENCY, NOTIONAL, MTM] }, sort: { by: trade.TRADE_ID },
+          format: { groupBy: param.breakdown } }
+      - { id: by-currency, type: matrix, title: Notional by book and currency, at: { x: 0, y: 11, w: 12, h: 4 },
+          wells: { rows: [trade.PORTFOLIO], columns: [trade.CURRENCY], values: [NOTIONAL] }, format: { pageBreak: before } }

@@ -30,7 +30,8 @@ import java.util.Map;
 /**
  * The bindings of {@code mq: 2} (docs/architecture/BI_DESIGN.md sections 3.3.5 and 3.6), applied before and after a query's local measures:
  * <ul>
- * <li><b>field parameters</b>: a field written {@code param.breakdown} is the field the query's {@code params} chose (or the parameter's default);</li>
+ * <li><b>field parameters</b>: a field written {@code param.breakdown} is the field the query's {@code params} chose (or the parameter's default); a field
+ * parameter whose choices are measures ({@code metric: { kind: field, fields: [MTM, Notional] }}) is named the same way among the measures (2.6.0);</li>
  * <li><b>perspective</b>: the query may name only the fields and measures of that perspective ({@code DRS-9153});</li>
  * <li><b>what-if parameters</b>: every {@code param.name} in the model's measures (and the local ones) is bound to the query's value or the default, checked
  * against the parameter's kind, range and values ({@code DRS-9164}); the values are part of the plan, so of every cache key;</li>
@@ -52,25 +53,18 @@ final class MqBindings {
         Map<String, ModelDef.Parameter> params = v.def().calculation().parameters();
         List<MqException.Problem> out = new ArrayList<>();
         checkValues(params, q.params(), out);
-        List<String> fields = new ArrayList<>();
-        for (int i = 0; i < q.fields().size(); i++) {
-            String f = q.fields().get(i);
-            if (f.startsWith(PARAM)) {
-                ModelDef.Parameter p = params.get(f.substring(PARAM.length()));
-                if (p == null || !"field".equals(p.kind())) {
-                    out.add(MqException.Problem.of("DRS-9164", "select.fields[" + i + "]", "'" + f + "' names no field parameter of the model"));
-                    continue;
-                }
-                Object chosen = q.params().getOrDefault(p.name(), p.defaultValue() != null ? p.defaultValue() : p.fields().get(0));
-                fields.add(String.valueOf(chosen));
-            } else {
-                fields.add(f);
-            }
-        }
+        List<String> fields = chosen(params, q, q.fields(), "select.fields", out);
+        List<String> measures = chosen(params, q, q.measures(), "select.measures", out);
         if (!out.isEmpty()) {
             throw new MqException(out);
         }
-        ModelQuery bound = fields.equals(q.fields()) ? q : q.withSelect(fields, q.measures());
+        ModelQuery bound = fields.equals(q.fields()) && measures.equals(q.measures()) ? q : q.withSelect(fields, measures);
+        if (bound.sort().stream().anyMatch(s -> s.by() != null && s.by().startsWith(PARAM))) {
+            List<ModelQuery.Sort> sort = bound.sort().stream().map(s -> s.by() != null && s.by().startsWith(PARAM) && params.containsKey(s.by().substring(PARAM.length()))
+                    ? new ModelQuery.Sort(String.valueOf(choice(params.get(s.by().substring(PARAM.length())), q)), s.desc()) : s).toList();
+            bound = new ModelQuery(bound.mq(), bound.model(), bound.define(), bound.fields(), bound.measures(), bound.where(), bound.having(), bound.time(), sort, bound.limit(),
+                    bound.totals(), bound.drill(), bound.shape(), bound.params(), bound.options(), bound.ext());
+        }
         Map<String, Object> values = values(v, q);
         if (!values.isEmpty() && q.define().values().stream().anyMatch(t -> t.contains(PARAM))) {
             Map<String, String> define = new LinkedHashMap<>();
@@ -116,6 +110,30 @@ final class MqBindings {
             throw new MqException(out);
         }
         return bound;
+    }
+
+    /** The names a list of the query selects, each {@code param.x} replaced by the field (or measure) the field parameter {@code x} chose. */
+    private static List<String> chosen(Map<String, ModelDef.Parameter> params, ModelQuery q, List<String> names, String path, List<MqException.Problem> out) {
+        List<String> list = new ArrayList<>(names.size());
+        for (int i = 0; i < names.size(); i++) {
+            String f = names.get(i);
+            if (!f.startsWith(PARAM)) {
+                list.add(f);
+                continue;
+            }
+            ModelDef.Parameter p = params.get(f.substring(PARAM.length()));
+            if (p == null || !"field".equals(p.kind())) {
+                out.add(MqException.Problem.of("DRS-9164", path + "[" + i + "]", "'" + f + "' names no field parameter of the model"));
+                continue;
+            }
+            list.add(String.valueOf(choice(p, q)));
+        }
+        return list;
+    }
+
+    /** What a field parameter is for this query: the query's value, else the parameter's default, else its first choice. */
+    private static Object choice(ModelDef.Parameter p, ModelQuery q) {
+        return q.params().getOrDefault(p.name(), p.defaultValue() != null ? p.defaultValue() : p.fields().get(0));
     }
 
     private static void checkValues(Map<String, ModelDef.Parameter> params, Map<String, Object> values, List<MqException.Problem> out) {

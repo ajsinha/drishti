@@ -46,7 +46,12 @@ public final class BiReportService {
     private static final ObjectMapper JSON = new ObjectMapper();
 
     /** A report with what is needed to use it. */
-    private record Loaded(BiStore.Item item, ReportParser.Result parsed, BiStore.Item datasetItem, Dataset dataset, List<ReportParser.Problem> problems, DatasetSet sets) {
+    private record Loaded(BiStore.Item item, ReportParser.Result parsed, BiStore.Item datasetItem, Dataset dataset, List<ReportParser.Problem> problems, DatasetSet sets,
+            Map<String, com.ash.drishti.server.bi.layer.ModelDef.Parameter> params) {
+
+        Loaded(BiStore.Item item, ReportParser.Result parsed, BiStore.Item datasetItem, Dataset dataset, List<ReportParser.Problem> problems, DatasetSet sets) {
+            this(item, parsed, datasetItem, dataset, problems, sets, Map.of());
+        }
 
         /** The dataset one visual reads: its own when it names one, else the report's. */
         DatasetSet.Entry of(Report.Visual v) {
@@ -119,8 +124,10 @@ public final class BiReportService {
         if (parsed.report() != null && parsed.report().model() != null) {
             String model = parsed.report().model();                             // a report bound to a model: its visuals are model queries on it
             String consumer = viaPublished && item != null ? item.id() : null;  // the published text: a reader without read on the model asks within its envelope
+            Map<String, com.ash.drishti.server.bi.layer.ModelDef.Parameter> params = Map.of();
             try {
                 ds = consumer == null ? datasets.modelDataset(p, model) : datasets.modelDataset(p, model, consumer);
+                params = datasets.modelParameters(p, model, consumer);         // field parameters a well may name (param.<name>, 2.6.0)
                 Map<String, String> define = new LinkedHashMap<>();
                 for (Report.LocalMeasure lm : parsed.report().measures().values()) {
                     if (ds.measures().containsKey(lm.name())) {
@@ -142,8 +149,9 @@ public final class BiReportService {
                     }
                 }
                 problems.addAll(ReportValidator.validate(parsed.report(), ds, sets));
+                problems.addAll(FieldParams.check(parsed.report(), ds, params));
             }
-            return new Loaded(item, parsed, dsItem, ds, problems, sets);
+            return new Loaded(item, parsed, dsItem, ds, problems, sets, params);
         }
         if (parsed.report() != null && !parsed.report().dataset().isBlank()) {
             try {
@@ -167,6 +175,7 @@ public final class BiReportService {
                 }
             }
             problems.addAll(ReportValidator.validate(parsed.report(), ds, sets));
+            problems.addAll(FieldParams.check(parsed.report(), ds, Map.of()));     // a field parameter in a well needs a report on a model (DRS-9037)
         }
         return new Loaded(item, parsed, dsItem, ds, problems, sets);
     }
@@ -282,6 +291,30 @@ public final class BiReportService {
         }
         String t = l.parsed().report().title();
         return new Opened(l.item().id(), t == null || t.isBlank() ? l.item().title() : t, l.parsed().report());
+    }
+
+    /** A report as a statement reads it (2.6.0): its id (null for draft YAML), title, parsed form and its model's parameters (empty on a dataset). */
+    public record Statement(String id, String title, Report report, Map<String, com.ash.drishti.server.bi.layer.ModelDef.Parameter> params) {}
+
+    /**
+     * The stored report {@code id} the caller may read, or (an author's preview) the draft {@code yaml}, for a statement; refused with its first error when it
+     * cannot be drawn, as an export is.
+     */
+    public Statement statement(Principal p, String id, String yaml) {
+        Loaded l;
+        if (yaml != null) {
+            bi.requirePower(p, BiAccess.AUTHOR);
+            l = load(p, null, yaml, false);
+        } else {
+            l = loadItem(p, id);
+        }
+        if (l.parsed().report() == null || !ok(l.problems())) {
+            String why = l.problems().stream().filter(ReportParser.Problem::error).findFirst().map(x -> x.code() + " " + x.path() + ": " + x.message()).orElse("the report cannot be read");
+            throw new DrishtiException(ErrorCode.REPORT_DATASET, "the report has errors, so its statement cannot be made: " + why);
+        }
+        String t = l.parsed().report().title();
+        return new Statement(l.item() == null ? null : l.item().id(), t == null || t.isBlank() ? (l.item() == null ? l.parsed().report().name() : l.item().title()) : t,
+                l.parsed().report(), l.params());
     }
 
     /** The model's engine dataset with the report's own measures added (what the visuals are checked and drawn against). */
@@ -431,6 +464,9 @@ public final class BiReportService {
             out.put("highlight", null);
         }
         out.put("visual", pre.visual().id());
+        if (pre.resolved()) {
+            out.put("wells", pre.visual().wells());                 // a field parameter's choice in place of param.<name>: what the client draws (2.6.0)
+        }
         out.put("query", describe(fitted.query()));
         VisualFit.describe(fitted, out);
         out.put("mq", asked.query());                                // the model query the visual ran (docs/architecture/BI_MODEL_SPEC.md section 5.9)
@@ -562,7 +598,8 @@ public final class BiReportService {
         return new Base(l.datasetItem(), l.dataset(), datasetSummary(p, l.datasetItem()), null, null);
     }
 
-    private record Prepared(Report report, Report.Visual visual, BiStore.Item dsItem, Dataset dataset, VisualQueries.Built built) {}
+    /** One visual ready to ask: {@code visual} with any field parameter's choice in place ({@code resolved} when one was), and the dataset item it asks. */
+    private record Prepared(Report report, Report.Visual visual, BiStore.Item dsItem, Dataset dataset, VisualQueries.Built built, boolean resolved) {}
 
     private Prepared prepare(Principal p, String id, String yaml, String pageId, String visualId, JsonNode stateJson) {
         Loaded l;
@@ -591,10 +628,11 @@ public final class BiReportService {
         }
         ReportState state = relative(report, ReportState.of(stateJson));
         DatasetSet.Entry own = l.of(visual) == null ? new DatasetSet.Entry(l.datasetItem(), l.dataset()) : l.of(visual);       // the visual's own dataset, else the report's
-        BiStore.Item dsItem = own.item();
-        VisualQueries.Built built = VisualQueries.build(report, page, visual, state, own.dataset(), props, (field, n, by, desc, context, from, to) -> top(p, dsItem, field, n, by, desc, context, from, to),
+        Report.Visual drawn = FieldParams.resolve(visual, l.params(), state.params());     // the reader's field-parameter choices (2.6.0)
+        BiStore.Item dsItem = DatasetService.withParams(own.item(), state.params());        // and their what-if values, as MQ v2 params
+        VisualQueries.Built built = VisualQueries.build(report, page, drawn, state, own.dataset(), props, (field, n, by, desc, context, from, to) -> top(p, dsItem, field, n, by, desc, context, from, to),
                 l.sets());
-        return new Prepared(report, visual, dsItem, own.dataset(), built);
+        return new Prepared(report, drawn, dsItem, own.dataset(), built, drawn != visual);
     }
 
     /**

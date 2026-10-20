@@ -50,6 +50,26 @@
   `advertise-url` a node now advertises this machine's primary IPv4 address (the default route's interface, never a container bridge) with
   its port, shown on Admin → Net as *detected*. The in-process cluster tests, `net_stack.py`, the soak, tutorial 19 and `drishti-stack/`
   (`DRISHTI_STACK_HOST`, or `host:` in stack.yaml) use the machine's real address ([NET.md section 2](docs/admin/NET.md#2-a-cluster-of-three)).
+- **Field parameters in a report's wells.** A well of a report on a model may name `param.<name>`, a field parameter of the model, and the reader's
+  parameter slicer switches which field or measure the visual draws (a field parameter's choices may now be measures as well as fields, in the model
+  designer's Calculations tab too). The server puts the choice in place of the parameter in the wells and the sort, asks that as the reader (masks hold)
+  and answers the visual's `wells` as drawn; the report state carries the reader's parameter values (`params`), which every model query of the report
+  now takes as MQ v2 `params`. The report schema refuses a parameter that does not fit its well, a what-if parameter in a well, one on a report over a
+  dataset (`DRS-9037`). BI Studio's Build offers the model's field parameters in each well that can take them. A model query takes a field parameter of
+  measures in `select.measures` and in `sort`. `FieldParamsApiTest`, `drishti-console/tests/test_bi_wave_d_browser.py` (a slicer switches a column chart
+  from DESK to PORTFOLIO and from MTM to NOTIONAL). REPORTS.md section 21, BI_GUIDE.md section 27, tutorial 20.
+- **Paginated reports and statements.** A report page with `layout: statement` is paper, as boards became a report layout: its bands (text, cards,
+  tables, matrices) are laid out page by page by the server on the paper the report's `statement:` sets (A4, A3, A5, Letter or Legal, portrait or
+  landscape, margins, a header and footer with tokens such as `{page}`, `{pages}`, `{run-date}`, `{period}`, `{reader}`, `{param.<name>}`), with
+  automatic and explicit page breaks (`pageBreak`), a table's column titles repeated on every page it runs onto (`repeatHeader`), bands and groups of rows
+  kept together (`keepTogether`, `groupBy`), a period worked out from the run's date (`period: previous-month`) and the model's parameters. It is made as a
+  page-exact PDF (written by the server, no library) or as Excel set to print on the same paper (print titles, header and footer), and a subscription
+  bursts it: one statement per recipient, each made as that recipient, the file named after them. `POST /api/v1/bi/reports/statement/preview` and
+  `/file`, `drishti.py bi statement preview|file`, `drishti.distribution.statements.*`, the report schema's checks (`DRS-9038`). The statement designer in
+  BI Studio: Format → Layout → statement, the **Paper** tab (paper, header and footer, period) with a page-by-page preview, and each band's Format →
+  Statement. Accepted: a monthly statement bursts to ten recipients, each masked, page-exact in PDF (page count and header text checked on every page,
+  two recipients' statements differing only by their masks and row rules; `StatementApiTest`, `StatementLayoutTest`). STATEMENTS.md (new),
+  DISTRIBUTION.md, REPORTS.md section 22, API_GUIDE.md, CLI_GUIDE.md, CONFIGURATION.md, tutorial 20.
 
 - **Design: write-back** ([WRITE_BACK.md](docs/architecture/WRITE_BACK.md)), editing and saving fields on a Sutra page through ordered
   lanes (one change at a time per record), for 2.7.0; AI moves to 2.8.0 and wave E to 2.9.0

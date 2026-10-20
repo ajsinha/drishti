@@ -96,6 +96,35 @@ public final class ConsumerQueries implements DatasetService.ModelGateway {
     }
 
     @Override
+    public DatasetService.Asked askModel(Principal p, String model, String consumer, Map<String, String> define, Map<String, Object> params, QueryRequest q, boolean explain) {
+        if (params == null || params.isEmpty()) {
+            return askModel(p, model, consumer, define, q, explain);
+        }
+        try {
+            MqService.Bound b = consumer == null ? catalog.bind(p, model) : catalog.bindVia(p, model, consumer);
+            ModelQuery mq0 = withParams(withDefine(of(b.view(), q).withModel(model), define), params);
+            MqService.Ran ran = mq.run(b, mq0, explain, true);
+            return new DatasetService.Asked(ran.withWarnings(), ran.canonical());
+        } catch (MqException e) {
+            throw e.legacy();
+        }
+    }
+
+    @Override
+    public Map<String, com.ash.drishti.server.bi.layer.ModelDef.Parameter> parameters(Principal p, String model, String consumer) {
+        MqService.Bound b = consumer == null ? catalog.bind(p, model) : catalog.bindVia(p, model, consumer);
+        return b.view().def().calculation().parameters();
+    }
+
+    /** The query as MQ v2 with the reader's parameter values ({@code params}): what-if values bound into the measures, field parameters' choices. */
+    static ModelQuery withParams(ModelQuery q, Map<String, Object> params) {
+        Map<String, Object> all = new java.util.LinkedHashMap<>(q.params());
+        all.putAll(params);
+        return new ModelQuery(2, q.model(), q.define(), q.fields(), q.measures(), q.where(), q.having(), q.time(), q.sort(), q.limit(), q.totals(), q.drill(), q.shape(),
+                all, q.options(), q.ext());
+    }
+
+    @Override
     public List<com.ash.drishti.server.bi.engine.QueryService.Loaded> publishedModels() {
         return catalog.publishedLoaded();
     }

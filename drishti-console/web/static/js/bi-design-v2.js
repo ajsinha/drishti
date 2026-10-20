@@ -99,11 +99,11 @@
     fmt.appendChild(box);
   };
 
-  /** Format with no visual selected, the page: its layout (grid or board) and whether it is a tooltip page. */
+  /** Format with no visual selected, the page: its layout (grid, board or statement) and whether it is a tooltip page. */
   D.pageV2 = function (fmt, p) {
-    fmt.appendChild(P.row('Layout', P.select([['grid', 'grid (a report page)'], ['board', 'board (a wall of tiles, kiosk and rotation)']], p.layout || 'grid',
-      (x) => D.change('Page layout', () => { if (x === 'board') { p.layout = 'board'; delete p.tooltip; } else { delete p.layout; } }), { 'data-page-layout': '' }),
-      'A board page holds tiles (visuals of other reports, with alert colours) beside the report\'s own visuals, and turns in kiosk mode.'));
+    fmt.appendChild(P.row('Layout', P.select([['grid', 'grid (a report page)'], ['board', 'board (a wall of tiles, kiosk and rotation)'], ['statement', 'statement (paper: page-exact PDF and Excel)']], p.layout || 'grid',
+      (x) => D.change('Page layout', () => { if (x === 'board' || x === 'statement') { p.layout = x; delete p.tooltip; } else { delete p.layout; } }), { 'data-page-layout': '' }),
+      'A board page holds tiles (visuals of other reports, with alert colours) beside the report\'s own visuals, and turns in kiosk mode. A statement page is paper: its visuals are bands laid out page by page (the Paper tab sets the paper and previews it); a subscription sends each person their own.'));
     fmt.appendChild(P.checkbox('Use as a tooltip page (shown over a mark, not as a tab)', !!p.tooltip, (on) => D.change('Tooltip page', () => { if (on) { p.tooltip = true; delete p.layout; } else { delete p.tooltip; } }),
       { 'data-page-tooltip': '' }));
   };

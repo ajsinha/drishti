@@ -68,6 +68,7 @@ A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), t
 24. [The languages in the console (wave A, 2.2.0)](#24-the-languages-in-the-console-wave-a-220)
 25. [Live answers and standing queries (wave B, 2.3.0)](#25-live-answers-and-standing-queries-wave-b-230)
 26. [BI Studio: authoring as one product (wave C, 2.4.0)](#26-bi-studio-authoring-as-one-product-wave-c-240)
+27. [Field parameters in the wells, and statements (wave D, 2.6.0)](#27-field-parameters-in-the-wells-and-statements-wave-d-260)
 
 ## 1. What BI is, and is not
 
@@ -375,7 +376,7 @@ and the sample *Region economics* drills from the world map to Australian and US
 
 **Waves A, B and C (2.2.0 to 2.4.0).** Datasets and data models rooted in packs, the Python-like expression language (DEL) and read-only Drishti SQL in one query plan (section 24, [EXPRESSIONS.md](EXPRESSIONS.md), [SQL.md](SQL.md)); calculations with filter context, time and balances, standing queries pushed from the server, and the servers computing every number (section 25); **BI Studio**, report schema v2 (typed formats, conditional formatting, themes, the interactions matrix, sync groups, tooltip pages, small multiples, the matrix at every level), **boards as a report layout**, Python data prep step by step with **BI → Transforms**, and the browser **Python console** (section 26, [PYTHON_BI.md section 17](PYTHON_BI.md#17-data-prep-the-transform-editor-240), [ANALYSE.md section 16](ANALYSE.md#16-the-browser-python-console)).
 
-**Not built (and not faked).** The consolidated list is [RUPAKA.md section 20.15](../architecture/RUPAKA.md#2015-as-built-at-210-and-what-is-still-not-built): the Python Source interface and a pool of pre-forked Python children (the fork-server is warm since 2.4.0: [PYTHON_BI.md](PYTHON_BI.md) section 12); field parameters in report wells (2.6.0); a Data tab, Notes and million-row extracts in Analyse ([ANALYSE.md](ANALYSE.md) section 12); escalation of alerts; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses.
+**Not built (and not faked).** The consolidated list is [RUPAKA.md section 20.15](../architecture/RUPAKA.md#2015-as-built-at-210-and-what-is-still-not-built): the Python Source interface and a pool of pre-forked Python children (the fork-server is warm since 2.4.0: [PYTHON_BI.md](PYTHON_BI.md) section 12); a Data tab, Notes and million-row extracts in Analyse ([ANALYSE.md](ANALYSE.md) section 12); escalation of alerts; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses.
 
 ## 12. Problems
 
@@ -1015,3 +1016,29 @@ format defaults of each kind of visual, drawn by the same generated pane, with a
 From the command line a theme and a report are items like any other (`drishti.py bi item save`, [CLI_GUIDE.md](CLI_GUIDE.md)); `drishti.py bi migrate --boards` converts 2.3 board files and the stored boards
 ([BOARDS.md section 12](BOARDS.md#12-from-a-23-board-to-a-board-page)). The acceptance of the wave, a Power BI author's desk pack made without the YAML tab, is the browser test
 `drishti-console/tests/test_bi_studio_browser.py` and [REPORTS.md section 20](REPORTS.md#20-report-schema-v2-in-one-report-240).
+
+## 27. Field parameters in the wells, and statements (wave D, 2.6.0)
+
+**Field parameters in a visual's wells.** A model's field parameter (a choice of fields, such as *break down by desk or by portfolio*, or of measures,
+*show MTM or Notional*; the Calculations tab of the model designer makes one) can now be put in a visual's well. In the report designer's **Build**, each
+well's *Add a field…* list ends with **Field parameters**: a parameter of fields in a field well (axis, legend, rows, columns), one of measures in a measure
+well (values), one of both only in a well of either. Its chip in the well is marked as a field parameter, and the canvas draws its default. In the viewer the
+parameter slicers above the page (*Parameters*) switch it: choose *PORTFOLIO* in *Break down by* and the chart is asked again by portfolio, its axis named
+by what was chosen; the choice is a chip in the filter line and **Reset** puts the defaults back. Masks hold whatever the reader chooses. The YAML is
+`wells: { axis: [param.breakdown], values: [param.metric] }`; the report schema refuses a parameter that does not fit its well (`DRS-9037`)
+([REPORTS.md section 21](REPORTS.md#21-field-parameters-in-a-well-260)).
+
+![Build: param.breakdown on the axis, param.metric in values](img/bi-wave-d/field-parameter-wells.jpg)
+
+**Statements.** In Format with no visual selected, **Layout → statement** makes a page paper: its visuals are bands (text, cards, tables, matrices) laid out
+page by page, with a header and footer on every page. The **Paper** tab beside Canvas sets the paper (size, orientation, margins, text size), the header and
+footer (left, centre, right, with tokens such as `{page}`, `{pages}`, `{run-date}`, `{period}`, `{reader}`) and the period the statement covers, and
+**Preview pages** shows the statement page by page as the server lays it out for you, with **‹** and **›**. Each band's page break, keep-together, repeated
+column titles and grouping are in its Format, under **Statement**. **PDF** and **Excel** download the saved draft; a subscription to the page sends each
+recipient their own statement, made as them ([STATEMENTS.md](STATEMENTS.md), [DISTRIBUTION.md section 2](DISTRIBUTION.md#2-subscriptions)).
+
+![The Paper tab and page 2 of the preview](img/bi-wave-d/statement-designer.jpg)
+
+From the command line: `drishti.py bi statement preview <report>` lists the pages with their header and footer, `drishti.py bi statement file <report> -o
+statement.pdf` writes the PDF (`--format xlsx` the workbook) ([CLI_GUIDE.md](CLI_GUIDE.md#bi-statement)); tutorial 20 does both in the UI, the CLI and the
+YAML ([20-statements-and-field-parameters.md](../tutorials/20-statements-and-field-parameters.md)).

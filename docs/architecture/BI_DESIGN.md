@@ -1102,6 +1102,8 @@ round's findings are fixed before the drill.
 5. **Scale.** Work classes and per-model shares, per-query memory, cost estimates and budgets, Micrometer metrics
    (6.8), model-shard ownership and the subscription directory for several Java nodes, no static shared state; a
    load test of 500 viewers on a real server (never locally).
+6. **Apache Cassandra connector** (added 2026-10-20, [CASSANDRA_CONNECTOR_DESIGN.md](CASSANDRA_CONNECTOR_DESIGN.md)).
+7. **drishti-iceberg**, Drishti's own Iceberg engine with no Hadoop (added 2026-10-20, [DRISHTI_ICEBERG.md](DRISHTI_ICEBERG.md), steps I1–I5).
 
 **Console lane:**
 
@@ -1223,21 +1225,30 @@ Pivot tab is replaced before a pointer click settles; an in-one-step click was w
 
 1. **Paginated reports and statements:** page-exact layouts (headers, footers, page breaks, repeated table headers),
    parameters, per-recipient bursting through subscriptions, PDF and Excel output, masked per reader.
+   *Built (2.6.0):* `layout: statement` pages and the report's `statement:` paper (`StatementSpec`, `DRS-9038`), the layout (`StatementLayout`: rows of
+   bands, automatic and explicit page breaks, repeated column titles, keep-together bands and `groupBy` groups, headers and footers with tokens, a page
+   limit), PDF written by the server (`StatementPdf`, no library) and Excel with the paper's print setup, the period and the model's parameters, bursting
+   through subscriptions (one statement per recipient, made as them), `POST /bi/reports/statement/preview` and `/file`, `drishti.py bi statement`
+   ([STATEMENTS.md](../guides/STATEMENTS.md)); the acceptance (1) is `StatementApiTest`.
 2. ~~**Send and push**~~: **out of 2.6.0, after the 3.0.0 release** (product owner, 2026-10-20): Send to Outlook and Teams,
    SharePoint push from Forms, connector dump (TEAMS_EMAIL_SHAREPOINT.md) stay designed, not scheduled.
 3. ~~**Integration**~~: **out of 2.6.0, after the 3.0.0 release** (product owner, 2026-10-20): PostgreSQL-wire read-only
    endpoint (decision 5), Excel feed, embed tokens bound to envelopes, SDK events.
 4. ~~**Sajha MCP connector**~~: **moved to wave I, 2.8.0** (product owner, 2026-10-20: it belongs to the release that does the AI work).
-6. **Apache Cassandra connector** (added 2026-10-20, [CASSANDRA_CONNECTOR_DESIGN.md](CASSANDRA_CONNECTOR_DESIGN.md)).
-7. **drishti-iceberg**, Drishti's own Iceberg engine with no Hadoop (added 2026-10-20, [DRISHTI_ICEBERG.md](DRISHTI_ICEBERG.md), steps I1–I5).
 5. **Field parameters in report wells** (wave C gap 9, decided 2026-10-19): a report visual's well names `param.<name>` and
    the reader's parameter slicer switches the field or measure it draws; checked by the report schema.
+   *Built (2.6.0):* `FieldParams` (`DRS-9037`), the report state's `params` (every model query of a report takes them as MQ v2 `params`), a field
+   parameter of measures in MQ `select.measures` and `sort`; `FieldParamsApiTest` ([REPORTS.md section 21](../guides/REPORTS.md#21-field-parameters-in-a-well-260)).
 
 **Console lane:**
 
 1. **Statement designer** for paginated reports, previewed page by page.
+   *Built (2.6.0):* Format → Layout → statement, the designer's **Paper** tab (`bi-statement.js`: paper, header and footer, period, and the server's
+   pages drawn one at a time), each band's Format → Statement (from the format schemas); `test_bi_wave_d_browser.py`.
 2. ~~**Feeds and embedding UI**~~: after the 3.0.0 release, with integration and send and push.
 3. **Field parameters in the Studio's wells**, with a browser test.
+   *Built (2.6.0):* Build offers the model's field parameters per well kind, the model designer's field parameters may list measures, the viewer draws
+   the server's `wells`; the acceptance (3) is `test_bi_wave_d_browser.py` (DESK to PORTFOLIO, MTM to NOTIONAL).
 4. **Docs and tutorials** (UI, CLI and YAML; REPORTS.md and BI_GUIDE for field parameters).
 
 **Accepted when:** (1) a monthly statement bursts to ten recipients, each masked, page-exact in PDF; (2) psql and Excel
