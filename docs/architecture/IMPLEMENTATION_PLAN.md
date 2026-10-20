@@ -310,6 +310,13 @@ What is open today. None blocks normal use; each is a candidate for a future wav
 
 Everything planned up to 2.4.0 is built (see the changelog, [What 2.0.0 contains](#what-200-contains), [What 2.1.0 contains](#what-210-contains) and [What 2.2.0 to 2.5.0 contain](#what-220-to-250-contain)); 2.5.0 (Drishti\*net) is released (2026-10-19); 2.6.0 (the known-bug pass, statements and field parameters, the Cassandra connector, drishti-iceberg with `iceberg-external`) and 2.6.5 (history queries, [HISTORY_QUERIES.md](HISTORY_QUERIES.md)) are released (2026-10-20). Next: 2.7.0 write-back → 2.8.0 GenAI and the Sajha MCP connector → the real-life QA → 2.9.0 → 3.0.0.
 
+**2.7.0, in order (product owner, 2026-10-20):**
+
+| Item | What | Design |
+|---|---|---|
+| 0 | **The one Drishti database:** every Drishti-owned relational table (identity today; the edit log, lanes, overlays and owned data next) in one database; SQLite by default, PostgreSQL long term; no migrations: two complete schema files with a parity test, a schema version stamp, `drishti.py db copy` to switch or upgrade; its own file `config/db/database.yaml` | [DATABASE.md](DATABASE.md) |
+| W1–W5 | Write-back, with **the edit log on that database**: `drishti_edit_lane` and `drishti_edit_log`, acknowledged after commit, ordered by seq, fenced by epoch; SQLite on one node (W1), PostgreSQL or S3 across a cluster, or one edit primary (W3); source commands through the outbox and connector `writes:` (W4); off by default | [WRITE_BACK.md](WRITE_BACK.md) sections 5, 7, 11, 12, 14 |
+
 The long tail of BI gaps that the product owner trimmed on 2026-10-11 (window functions, several fact tables in one query, relative-date slicers, per-device layouts, rename detection, BI in pack archives, import rollback, incremental aggregates, live-table history, a board designer) was built after all, in 2.1.0. The platform loose ends (live bridges and plugin jars, proxy gaps, AI streaming and stdio MCP) remain candidates, not plans.
 
 Later candidates: server-side pricing (the QuantLib service), Windows proven on a real machine, a real deployment (single

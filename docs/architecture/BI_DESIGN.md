@@ -1268,9 +1268,18 @@ applied by a transaction handler over a fixed number of ordered lanes (one chang
 checks against lost updates, four eyes, overlays and Drishti-owned kinds first (approved overlays flow into the lake), one source
 amendment as a pilot, the change log kept 7 years (configurable), lanes owned on the Drishti*net ring.
 
+0. **The one Drishti database** (item 0, first; [DATABASE.md](DATABASE.md), decided 2026-10-20): identity and everything relational
+   Drishti owns in one database, SQLite by default and PostgreSQL long term; no migrations (two complete schema files, a parity test,
+   a version stamp, `drishti.py db copy`); configured in `config/db/database.yaml`.
+- **The edit log on it:** `drishti_edit_lane` (ownership by conditional UPDATE) and `drishti_edit_log` (acknowledged after commit,
+  ordered by seq, every apply fenced by epoch); SQLite on one node, PostgreSQL or S3 conditional writes across a cluster, or one edit
+  primary; the lake never written per edit; source commands through the outbox and connector `writes:`; off by default
+  ([WRITE_BACK.md](WRITE_BACK.md) sections 5, 7, 11, 12).
+
 **Accepted when:** two users editing one field never silently overwrite each other; 100,000 concurrent changes over 1,000,000
 entities apply in per-record order; an approved overlay appears in the next lake build; the per-record guarantee holds with a node
-killed mid-run; QA findings fixed before the drill.
+killed mid-run and with a network split (only the current epoch writes); a 2.6.5 data folder starts unchanged and read-only; QA
+findings fixed before the drill.
 
 #### Wave I — AI → 2.8.0
 
