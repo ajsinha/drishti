@@ -354,23 +354,28 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.cluster = pool if pool.enabled else None
     app.state.backend_watch = BackendWatch(catalogue, _seconds(settings.get("backend.check_seconds", 5)),
                                            url_of=(lambda s: pool.current() if s.id == catalogue.default else s.url) if pool.enabled else None)
-    app.state.auth = (Auth(settings) if len(catalogue) == 1 and catalogue.default == "default"
-                      else Switch({s.id: Auth(settings, s) for s in catalogue.all()}, catalogue.default))
+    from core.user_stamps import UserStamps
+
+    # a change through one worker process (a setting, packs, a layout, a disabled user) reaches every worker of this console at once
+    app.state.user_stamps = stamps = UserStamps(_console_data_dir(settings) / "user-stamps")
+    user_ttl = _seconds(settings.get("ui.user_cache_seconds", 10))
+    app.state.auth = (Auth(settings, stamps=stamps) if len(catalogue) == 1 and catalogue.default == "default"
+                      else Switch({s.id: Auth(settings, s, stamps=stamps) for s in catalogue.all()}, catalogue.default))
     from core.oidc import Oidc
 
     app.state.oidc = Oidc(settings, app.state.auth)
     from core.settings import UserSettings
 
-    app.state.user_settings = UserSettings()
+    app.state.user_settings = UserSettings(user_ttl, stamps)
     from core.bi import BiMe
 
-    app.state.bi_me = BiMe()
+    app.state.bi_me = BiMe(user_ttl, stamps)
     app.state.bi_on = str(settings.get("bi.enabled", True)).lower() in ("true", "1", "yes", "on")      # false: no BI menu, no /bi pages
     console_dir = WEB.parent
     docs_dir = Path(settings.get("help.docs_dir", "../docs"))
     from core.packs import Packs
 
-    app.state.packs = Packs(settings, console_dir)
+    app.state.packs = Packs(settings, console_dir, stamps)
     app.state.docs_dir = docs_dir if docs_dir.is_absolute() else (console_dir / docs_dir).resolve()
     from core.guides import tutorial_count_word
 
@@ -416,9 +421,9 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.pyrunner = PyRunner(settings)          # the BI Python runner: nothing starts until a python visual runs (docs/guides/PYTHON_BI.md)
     from core.layouts import Layouts
 
-    app.state.layouts = Layouts(settings)
+    app.state.layouts = Layouts(settings, stamps)
     from core.pivots import Pivots
-    app.state.pivots = Pivots()
+    app.state.pivots = Pivots(stamps, user_ttl)
     if app.state.calc.runtime.installed:          # the Python runtime of Calc, from this origin only (tools/fetch-pyodide.sh)
         app.mount(app.state.calc.runtime.base.rstrip("/"), StaticFiles(directory=str(app.state.calc.runtime.folder)), name="pyodide")
     app.include_router(home_routes.router)

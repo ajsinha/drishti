@@ -14,7 +14,8 @@
 
 """The console side of domain packs: which packs are enabled (asked of the server, the single source of truth)
 and what each contributes to the console: example commands, workspace starters and help guides, read from
-``config/packs/<name>/``. Cached for a minute; falls back to ``packs.enabled`` when the server is unreachable."""
+``config/packs/<name>/``. Cached per user for ``ui.user_cache_seconds`` (10 s) and read again at once on every worker after a
+change (core/user_stamps.py); falls back to ``packs.enabled`` when the server is unreachable."""
 from __future__ import annotations
 
 import logging
@@ -23,6 +24,7 @@ from pathlib import Path
 
 import yaml
 from core.servers import scoped
+from core.user_stamps import EVERYONE, NONE as NO_STAMPS
 
 log = logging.getLogger(__name__)
 # The packs the server enables when DRISHTI_PACKS is not set (PackPaths.DEFAULT_ENABLED): the seven shipped packs.
@@ -30,7 +32,7 @@ DEFAULT_ENABLED = "core,market-data,trading,counterparty-risk,market-risk,world-
 
 
 class Packs:
-    def __init__(self, settings, console_dir: Path):
+    def __init__(self, settings, console_dir: Path, stamps=NO_STAMPS):
         d = Path(settings.get("packs.dir", "../config/packs"))
         self.dir = d if d.is_absolute() else (console_dir / d).resolve()
         legacy = (console_dir / "../packs").resolve()
@@ -41,7 +43,10 @@ class Packs:
                                   for e in (Path(s.strip()) for s in str(settings.get("packs.extra_dirs", "") or "").split(",") if s.strip()))
                       if x.is_dir() and x != self.dir]
         self.fallback = [p.strip() for p in str(settings.get("packs.enabled", DEFAULT_ENABLED)).split(",") if p.strip()]
-        self._cache: dict[str, tuple[float, list, list]] = {}
+        self._cache: dict[str, tuple[float, list, list, float]] = {}    # user -> (monotonic time, packs, switcher, wall time read)
+        # every worker of the console sees a change at once (core/user_stamps.py); other consoles within ``ttl`` (QA3A-02)
+        self.stamps = stamps
+        self.ttl = float(settings.get("ui.user_cache_seconds", 10) or 0)
 
     async def current(self, backend, ident=None) -> list[dict]:
         """The user's active packs."""
@@ -52,18 +57,22 @@ class Packs:
         return (await self._fetch(backend, ident))[1]
 
     def forget(self, ident=None) -> None:
-        self._cache.pop(scoped(getattr(ident, "user", "")), None)
+        key = scoped(getattr(ident, "user", ""))
+        self._cache.pop(key, None)
+        self.stamps.touch(key)
 
     def forget_all(self) -> None:
-        """An admin switched a pack on or off: every user's packs change."""
+        """An admin switched a pack on or off: every user's packs change (on every worker)."""
         self._cache.clear()
+        self.stamps.touch(EVERYONE)
 
     async def _fetch(self, backend, ident):
         key = scoped(getattr(ident, "user", ""))
         now = time.monotonic()
         hit = self._cache.get(key)
-        if hit and now - hit[0] < 60:
+        if hit and now - hit[0] < self.ttl and self.stamps.fresh(key, hit[3]):
             return hit[1], hit[2]
+        began = time.time()
         try:
             rows = await backend.packs(ident)
             served = {r["name"]: r for r in rows}
@@ -79,7 +88,7 @@ class Packs:
         packs = [self._served(p, served) for p in (self._load(n) for n in active) if p]
         switcher = [{**p, "active": a} for p, a in ((self._load(n), a) for n, a in assigned) if p]
         if fresh:                            # a fallback is never cached, so the real list returns at the next request
-            self._cache[key] = (now, packs, switcher)
+            self._cache[key] = (now, packs, switcher, began)
         return packs, switcher
 
     @staticmethod

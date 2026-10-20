@@ -27,6 +27,15 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures"
 sys.path.insert(0, str(CONSOLE))
 # the stand-in server serves the retired example packs finance and logistics (examples/packs), as the server's tests do
 os.environ.setdefault("DRISHTI_PACKS_EXTRA_DIRS", str(CONSOLE.parent / "examples" / "packs"))
+if not os.environ.get("DRISHTI_CONSOLE_DATA_DIR"):
+    # what the console keeps between runs (user stamps, net/servers.json): a folder of the test run's own, never the repository's data/
+    import atexit
+    import shutil
+    import tempfile
+
+    _DATA = tempfile.mkdtemp(prefix="drishti-console-tests-")
+    os.environ["DRISHTI_CONSOLE_DATA_DIR"] = _DATA
+    atexit.register(shutil.rmtree, _DATA, True)
 
 from core.app import create_app  # noqa: E402
 from core.backend import BackendError  # noqa: E402

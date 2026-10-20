@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import time
 from core.servers import scoped
+from core.user_stamps import NONE as NO_STAMPS
 
 DEFAULTS = {"theme": None, "landing": "/t", "clockZone": None, "locale": None, "density": "comfortable", "flash": True, "searchLimit": 100, "pinned": [], "savedSearches": []}
 
@@ -35,28 +36,33 @@ class UserSettings:
     (CHANGED_COOKIE) and every worker reads the settings again for a request whose stamp is newer than its copy (QA
     2026-10-20: a theme picked on one page came back as the old one on the next page another worker served)."""
 
-    def __init__(self, ttl: float = 30.0):
+    def __init__(self, ttl: float = 10.0, stamps=NO_STAMPS):
         self.ttl = ttl
-        self._cache: dict[str, tuple[float, float, dict]] = {}   # user → (monotonic time, wall time, settings)
+        self.stamps = stamps            # the console's user stamps (core/user_stamps.py): every worker, every browser of the user
+        self._cache: dict[str, tuple[float, float, dict]] = {}   # user → (monotonic time, wall time the read began, settings)
 
     async def get(self, backend, ident, changed_at: float = 0.0) -> dict:
         if ident is None:
             return dict(DEFAULTS)
-        hit = self._cache.get(scoped(ident.user))
-        if hit and time.monotonic() - hit[0] < self.ttl and hit[1] > changed_at:
+        key = scoped(ident.user)
+        hit = self._cache.get(key)
+        if hit and time.monotonic() - hit[0] < self.ttl and hit[1] > changed_at and self.stamps.fresh(key, hit[1]):
             return hit[2]
+        began = time.time()             # before the call: a change landing while it runs is newer than this copy
         try:
             data = {**DEFAULTS, **(await backend.settings(ident))}
         except Exception:  # noqa: BLE001 - settings are a convenience; a page never fails for them
             return dict(DEFAULTS)
-        self._cache[scoped(ident.user)] = (time.monotonic(), time.time(), data)
+        self._cache[key] = (time.monotonic(), began, data)
         return data
 
     def forget(self, user: str, request=None) -> None:
-        """Drops this worker's copy; with the request, the response also stamps the browser so the other workers drop theirs."""
+        """Drops this worker's copy and stamps the user (every worker, every browser of theirs, reads again); with the request, the
+        response also stamps the browser (the fast path, and consoles behind one address that share no data folder)."""
         self._cache.pop(scoped(user), None)
+        stamp = self.stamps.touch(scoped(user))
         if request is not None:
-            request.state.settings_changed_at = time.time()
+            request.state.settings_changed_at = stamp
 
 
 def changed_at(request) -> float:

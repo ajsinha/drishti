@@ -15,13 +15,14 @@
 """Saved pivots, the console side (USER_GUIDE.md, The Pivot tab). A Pivot tab exists only where a Sutra (pivot: on a table
 or ladder) or a pack (pivot: beside a kind's columns:) opts in; the server says so in the view or the search result. What
 the console adds is the user's own arrangement of each tab, kept by the server per (Sutra, panel) and per kind, so the tab
-opens as they left it, and whether they may promote one (an author, with Studio saving on). Asked of the server once a
-minute per user, and forgotten whenever they save, reset or promote one."""
+opens as they left it, and whether they may promote one (an author, with Studio saving on). Asked of the server every
+10 s per user, and read again on every worker whenever they save, reset or promote one (core/user_stamps.py)."""
 from __future__ import annotations
 
 import time
 
 from core.servers import scoped
+from core.user_stamps import NONE as NO_STAMPS
 
 ARRANGEMENT = ("rows", "columns", "values", "filters", "heat", "chart")
 
@@ -36,10 +37,12 @@ def arrangement(saved: dict | None) -> dict | None:
 class Pivots:
     """The user's saved pivots."""
 
-    TTL = 60.0
+    TTL = 10.0
 
-    def __init__(self):
-        self._kept: dict[str, tuple[float, dict]] = {}
+    def __init__(self, stamps=NO_STAMPS, ttl: float | None = None):
+        self.stamps = stamps            # every worker sees a save or reset at once (core/user_stamps.py, QA3A-03)
+        self.ttl = self.TTL if ttl is None else ttl
+        self._kept: dict[str, tuple[float, dict, float]] = {}   # user -> (monotonic time, state, wall time read)
 
     async def state(self, backend, ident) -> dict:
         """``enabled``, ``promote``, ``review`` and ``pivots`` (each still valid against its Sutra or pack). An older server,
@@ -49,17 +52,19 @@ class Pivots:
             return none
         key = scoped(ident.user)
         hit = self._kept.get(key)
-        if hit and time.monotonic() - hit[0] < self.TTL:
+        if hit and time.monotonic() - hit[0] < self.ttl and self.stamps.fresh(key, hit[2]):
             return hit[1]
+        began = time.time()
         try:
             data = await backend.pivots(ident)
         except Exception:  # noqa: BLE001 - the tabs work without saved arrangements
             return none
-        self._kept[key] = (time.monotonic(), data)
+        self._kept[key] = (time.monotonic(), data, began)
         return data
 
     def forget(self, user: str) -> None:
         self._kept.pop(scoped(user), None)
+        self.stamps.touch(scoped(user))
 
     @staticmethod
     def saved_panel(state: dict, sutra: str | None, panel: str) -> dict | None:
