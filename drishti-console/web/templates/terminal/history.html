@@ -142,7 +142,14 @@
   </section>
   {% endif %}
   <footer class="hx-foot">
-    {% if not page.market %}<p class="hx-legend"><span class="hx-sw hx-sw-ch" aria-hidden="true"></span> changed from the day before <span class="hx-sw-ver">⟲2</span> two versions that day (the latest shown) <span class="hx-sw-same">72K</span> same as the day before</p>{% endif %}
+    {# the legend names only what this page shows #}
+    {% if not page.market and (page.changed_days or page.restated or page.carried or page.masked) %}<p class="hx-legend" data-hx-legend>
+      {% if page.changed_days %}<span class="hx-li" data-legend="changed"><span class="hx-sw hx-sw-ch" aria-hidden="true"></span> changed from the day before</span>
+      <span class="hx-li" data-legend="same"><span class="hx-sw hx-sw-same" aria-hidden="true">Aa</span> same as the day before</span>{% endif %}
+      {% if page.restated %}<span class="hx-li" data-legend="versions"><span class="hx-sw-ver">⟲{{ page.max_versions }}</span> {{ page.max_versions }} versions that day (the latest shown)</span>{% endif %}
+      {% if page.carried %}<span class="hx-li" data-legend="carried"><span class="hx-carry">↧</span> no change that day: carried forward</span>{% endif %}
+      {% if page.masked %}<span class="hx-li" data-legend="masked"><i class="bi bi-eye-slash" aria-hidden="true"></i> masked for you</span>{% endif %}
+    </p>{% endif %}
     <p class="hx-keyline"><kbd>↑</kbd><kbd>↓</kbd> day <kbd>←</kbd><kbd>→</kbd> column <kbd>Enter</kbd> open the day {% if not page.market %}<kbd>C</kbd> changes only {% else %}<kbd>1</kbd><kbd>3</kbd><kbd>6</kbd><kbd>Y</kbd><kbd>T</kbd> range {% endif %}<kbd>D</kbd> diff <kbd>E</kbd> export <kbd>R</kbd> range <kbd>?</kbd> keys <kbd>Esc</kbd> today’s view</p>
   </footer>
   <dialog class="hx-help" data-hx-help aria-label="History keys">

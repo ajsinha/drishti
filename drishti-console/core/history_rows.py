@@ -156,10 +156,12 @@ def build_page(data: dict, kind: str, id_: str, known_at: str | None = None) -> 
                "points": [[r["date"], (r.get("values") or {}).get(c["path"]) if _num((r.get("values") or {}).get(c["path"])) else None]
                           for r in rows_asc]} for c in chart]
     restated = sum(1 for r in rows_asc if r.get("restated"))
+    max_versions = max([r.get("versions") or 1 for r in rows_asc] or [1])
     sources = sorted({r.get("source") for r in rows_asc if r.get("source")})
     return {"data": data, "market": market, "columns": columns, "parts": parts, "rows": built, "window": window,
             "count": len(rows_asc), "changed_days": data.get("changedDays", sum(1 for r in rows_asc if r.get("changed"))),
-            "restated": restated, "sources": sources, "headline": headline, "series": series,
+            "restated": restated, "max_versions": max(max_versions, 2), "carried": sum(1 for r in rows_asc if r.get("carried")),
+            "masked": any(c.get("masked") for c in columns), "sources": sources, "headline": headline, "series": series,
             "ranges": MARKET_RANGES if market else DOCUMENT_RANGES, "missing": window.get("missing") or [],
             "problems": data.get("problems") or [], "partial": bool(data.get("partial")), "truncated": bool(data.get("truncated")),
             "diff": any(r.get("changes") for r in rows_asc)}

@@ -130,6 +130,31 @@ def test_exports(client):
     assert x.status_code == 200 and x.content[:2] == b"PK"
 
 
+def test_the_legend_names_only_what_the_page_shows(client, backend, monkeypatch):
+    t = client.get("/v/trade/1000015/history?days=30").text
+    for item in ("changed", "same", "versions", "masked"):
+        assert f'data-legend="{item}"' in t, item
+    assert "72K</span> same" not in t                                       # no value of one entity in the legend
+    assert "2 versions that day" in t
+
+    async def history(kind, id_, ident=None, **params):                    # a counterparty: one version a day, no masks, one change
+        return {"ref": {"kind": kind, "id": id_}, "shape": "document", "window": {"from": "2026-10-16", "to": "2026-10-19"}, "parts": [],
+                "columns": [{"path": "RATING", "label": "Rating", "type": "text"}],
+                "rows": [{"date": "2026-10-16", "values": {"RATING": "A"}, "display": {"RATING": "A"}, "changed": [], "versions": 1},
+                         {"date": "2026-10-19", "values": {"RATING": "A-"}, "display": {"RATING": "A-"}, "changed": ["RATING"], "versions": 1}]}
+    monkeypatch.setattr(backend, "history", history)
+    t = client.get("/v/counterparty/CP-NORTHPLAINS/history?days=30").text
+    assert 'data-legend="changed"' in t and 'data-legend="versions"' not in t and 'data-legend="masked"' not in t
+    assert 'data-legend="carried"' not in t
+
+    async def unchanged(kind, id_, ident=None, **params):
+        d = await history(kind, id_)
+        d["rows"][1]["changed"], d["rows"][1]["values"], d["rows"][1]["display"] = [], {"RATING": "A"}, {"RATING": "A"}
+        return d
+    monkeypatch.setattr(backend, "history", unchanged)
+    assert "data-hx-legend" not in client.get("/v/counterparty/CP-NORTHPLAINS/history?days=30").text
+
+
 def test_the_csv_keeps_formulas_as_text(client, backend, monkeypatch):
     async def history(kind, id_, ident=None, **params):
         return {"ref": {"kind": kind, "id": id_}, "window": {"from": "2026-10-19", "to": "2026-10-19"}, "parts": [],
