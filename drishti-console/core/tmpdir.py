@@ -14,7 +14,7 @@
 """The console's one temp folder.
 
 The console keeps a per-process folder ``drishti-console-<pid>`` under the configured base (``tmp_dir`` /
-``DRISHTI_CONSOLE_TMP_DIR``, then ``DRISHTI_TMP_DIR``, then the system temp folder). :func:`start` makes it, removes the folders of
+``DRISHTI_CONSOLE_TMP_DIR``, then ``DRISHTI_TMP_DIR``, then ``<data dir>/tmp/console``; never the system temp folder). :func:`start` makes it, removes the folders of
 dead processes a crash left behind, points ``tempfile.tempdir`` at it (so uploads, exports, the static-zip cache and the Python
 runner's scratch all land in it) and removes it on a clean exit. Every temporary file or folder of the console is made through this
 module: a test forbids ``tempfile.*`` calls anywhere else in console code.
@@ -37,11 +37,17 @@ _before: str | None = None            # tempfile.tempdir before start(), put bac
 
 
 def configured_base(setting: str = "") -> str:
-    """The base: the ``tmp_dir`` setting, ``DRISHTI_CONSOLE_TMP_DIR``, ``DRISHTI_TMP_DIR``, then the system temp folder."""
+    """The base: the ``tmp_dir`` setting, ``DRISHTI_CONSOLE_TMP_DIR``, ``DRISHTI_TMP_DIR``, then ``<data dir>/tmp/console`` (``DRISHTI_DATA_DIR``,
+    else the repository's ``data``); never the system temp folder."""
     for candidate in (setting, os.environ.get("DRISHTI_CONSOLE_TMP_DIR", ""), os.environ.get("DRISHTI_TMP_DIR", "")):
         if candidate and str(candidate).strip():
             return str(candidate).strip()
-    return tempfile.gettempdir() if _root is None else str(_base)
+    if _root is not None:
+        return str(_base)
+    # never the system temp folder (QA 2026-10-20: it can be a small in-memory file system, and the product owner's rule is never /tmp):
+    # the data folder's tmp/console, as run_drishti_web.py sets it, also when the console is started another way
+    data = os.environ.get("DRISHTI_DATA_DIR") or str(Path(__file__).resolve().parents[2] / "data")
+    return str(Path(data) / "tmp" / "console")
 
 
 def _alive(pid: int) -> bool:

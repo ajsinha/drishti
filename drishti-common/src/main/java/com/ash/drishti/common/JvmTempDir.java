@@ -56,6 +56,30 @@ public final class JvmTempDir {
         return STARTUP;
     }
 
+    /**
+     * Makes the folder {@code java.io.tmpdir} names when it does not exist yet. The launchers pass {@code -Djava.io.tmpdir=<data>/tmp/server}
+     * and an IDE run configuration cannot make the folder first: on a fresh clone the folder is missing, and DuckDB, RocksDB and CatBoost
+     * then fail to unpack their native code (QA 2026-10-20, Windows: "java.io.tmpdir does not exist"). Called first thing in main.
+     *
+     * @return the folder made, or null when it existed or none was named
+     */
+    public static java.nio.file.Path ensureExists() {
+        String dir = System.getProperty("java.io.tmpdir", "");
+        if (dir.isBlank()) {
+            return null;
+        }
+        java.nio.file.Path p = java.nio.file.Path.of(dir);
+        if (java.nio.file.Files.isDirectory(p)) {
+            return null;
+        }
+        try {
+            return java.nio.file.Files.createDirectories(p);
+        } catch (java.io.IOException | RuntimeException e) {
+            System.err.println("java.io.tmpdir " + dir + " does not exist and cannot be made: " + e.getMessage());
+            return null;
+        }
+    }
+
     /** Whether {@code -Djava.io.tmpdir=} reached this JVM: on its command line, or through {@code JAVA_TOOL_OPTIONS} / {@code JDK_JAVA_OPTIONS}. */
     public static boolean passed() {
         List<String> args;

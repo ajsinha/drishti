@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Fixed: a BI table rebuilt on Windows failed with DRS-9027** (`part.parquet.tmp -> part.parquet`): Windows cannot replace a file anything holds open (a query reading the previous version, a virus scanner, the indexer). The new file is written under a name of its own (two builds never share one) and moved over the old one, tried again for about 5 s while it is held; past that the message says what held it. `FileSwapTest`. Found on the product owner's Windows machine.
+- **Fixed: the server makes the folder `java.io.tmpdir` names when it is missing** (an IDE run configuration passes `-Djava.io.tmpdir=<data>/tmp/server` but cannot make it; on a fresh clone DuckDB, RocksDB and CatBoost then failed to unpack). The console never falls back to the system temp folder: without a setting its base is `<data dir>/tmp/console`, however it is started. `JvmTempDirTest`, `test_tmpdir.py`.
+- **Fixed: `build_demo_lakes.py` no longer signals a running server for every table and day** (3,960 signals for 66 tables over 60 days, each making the server read the data again; QA3A-01/05). Restart the server after a build, or let it pick the tables up at its next refresh.
+
 - **Fixed: a theme (or any personal setting) changed on one page could come back as the old one on the next page** when the console runs several worker processes (four on Windows by default): each worker kept the user's settings for 30 s, and a change cleared only the cache of the worker that saved it. A change now stamps the browser (`drishti_settings_at` cookie), and a worker re-reads the settings when its copy is older than the stamp; with four workers, 5 of 24 pages came back in the old theme before the fix and 0 after. `test_settings_workers.py`. Found on the product owner's Windows machine (Green → netting set → SIMM came up Blue).
 
 - **Added: `lake demo` says how far a table has got**: every ten committed days a line `trading/trade_endur: committed 20/60 days, 90,023 rows so far (through 2026-08-19)`, besides the table's closing line and `build_demo_lakes.py`'s heartbeat.
