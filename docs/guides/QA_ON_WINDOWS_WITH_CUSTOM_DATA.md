@@ -388,12 +388,17 @@ trades.
 Only if the demo should show two servers acting as one ([tutorial 19](../tutorials/19-a-cluster-of-three.md)). Nothing here changes the
 single server of section 4: without a `config\net` folder Drishti*net is off.
 
+**Members use this machine's real address, never `127.0.0.1` or `localhost`** (since 2.6.0 the server, Admin → Net and `drishti.py net`
+refuse a loopback address). Find yours once: PowerShell → `ipconfig` → the **IPv4 Address** of your Wi-Fi or Ethernet adapter, for example
+`10.20.30.40`. It is written `<your IPv4>` below.
+
 1. In PowerShell, make a key once and keep it for both servers: `$env:DRISHTI_NET_SECRET = [guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N')`.
 2. For the first server (the one of section 4.1):
-   `C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\drishti.py net set node.advertise-url http://127.0.0.1:18480`,
-   then the same with `node.secret '${DRISHTI_NET_SECRET}'` and last `node.enabled true`. `net list` must say **Drishti*net is ON** and `key set`.
-3. For the second server, a copy of the project's `config` in another folder with its own `data` folder, the same three settings with port
-   18490 (`--dir <that folder>\config\net`), and its seed: `net add-peer first 127.0.0.1:18480 --dir <that folder>\config\net`.
+   `C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\drishti.py net set node.secret '${DRISHTI_NET_SECRET}'`,
+   then the same with `node.enabled true`. No `advertise-url` is needed: the server advertises `http://<your IPv4>:18480` by itself (Admin → Net
+   shows it as *detected*). `net list` must say **Drishti*net is ON** and `key set`.
+3. For the second server, a copy of the project's `config` in another folder with its own `data` folder, the same two settings
+   (`--dir <that folder>\config\net`), and its seed: `net add-peer first <your IPv4>:18480 --dir <that folder>\config\net`.
 4. Start the first server as in section 4.1 with `DRISHTI_NET_SECRET` in the run configuration's environment; start the second from a
    PowerShell window in its folder: `java -Djava.io.tmpdir=data\tmp\server -jar <project>\drishti-server\target\drishti-server-<version>-exec.jar --server.port=18490`
    (make `data\tmp\server` first). Each server logs `net: node ... joined Drishti*net at ...` and then `net: member ... joined` for the other.
@@ -401,12 +406,51 @@ single server of section 4: without a `config\net` folder Drishti*net is off.
    machine). Open a trade only the second holds through the console: the same page as on the second; as an administrator, *How this view was
    built* says `Node: <first> · built here, data from <second>`. **Admin → Net → Routing → Explain a request** names the route and lists the
    second under *Data read from*. The members table looks like [tutorial 19's picture](../tutorials/img/t19/01-members.jpg).
-6. To show failover, set the console's `DRISHTI_BACKEND_URLS=http://127.0.0.1:18480` before starting it, stop the first server: the next page
+6. To show failover, set the console's `DRISHTI_BACKEND_URLS=http://<your IPv4>:18480` before starting it, stop the first server: the next page
    comes from the second within a second, still signed in (sign-in sessions are copied to every server), and an open trade page keeps ticking.
    **Admin → Net → Members** on the second says the first `left`, and *This console's servers* shows 18480 *set aside* and 18490 *in use*
    ([picture](../tutorials/img/t19/09-after-a-stopped.jpg)). A user other than `drishti-dev-admin` must exist on both servers to stay signed in.
 
-If `net set node.enabled true` says *needs the cluster key*, the variable of point 1 is not set in that PowerShell window.
+If `net set node.enabled true` says *needs the cluster key*, the variable of point 1 is not set in that PowerShell window. If a `net` command
+says the address is a loopback address, use `<your IPv4>` from `ipconfig` instead of `127.0.0.1` or `localhost`.
+
+---
+
+## 6b. What is new in 2.6.0: check these (30 minutes)
+
+Do this after `git pull` on **main** and a fresh jar (step 2.3: the file is `drishti-server-2.6.0-exec.jar`), with the server and the
+console started as in section 4.
+
+| # | Check | How | You should see |
+|---|---|---|---|
+| 1 | **Three new themes** | the palette icon in the top bar → **Green Terminal**, then **Crimson Terminal**, then **Blue Terminal**; open a trade in each | dark ground in one hue; every text easy to read; buttons filled (Crimson: deep crimson with white labels, text dusty rose, no blood-red text). Reload the page: the theme stays |
+| 2 | **Theme on your phone** | phone on the same network → `http://<your IPv4>:17480` → sign in → pick a Terminal theme | the same look; if the phone shows the old themes, reload the page once |
+| 3 | **A statement (paper report)** | follow [tutorial 20](../tutorials/20-statements-and-field-parameters.md) steps 3–5: BI Studio → a report page → **Format → Layout → statement** → the **Paper** tab → preview | pages drawn one at a time with header and footer; **PDF** downloads a page-exact file, **Excel** one set to print on the same paper |
+| 4 | **Field parameters** | tutorial 20 steps 1–2: a chart whose slicer switches DESK ↔ PORTFOLIO and MTM ↔ NOTIONAL | the chart redraws with the chosen field; no error |
+| 5 | **Iceberg on Windows, no Hadoop** | in a **separate copy** of the project (say `C:\Users\asinh09\IdeaProjects\drishti-iceberg-test`, so your demo's `config\connectors` is untouched): `powershell -ExecutionPolicy Bypass -File tools\windows\load-iceberg.ps1 -Python drishti-console\.venv\Scripts\python.exe`, then `powershell -ExecutionPolicy Bypass -File tools\windows\start-server.ps1 -Iceberg` | the loader ends without any `winutils.exe` or `HADOOP_HOME` error; `data\iceberg` holds one folder per kind; the server starts and **Admin → Connectors** shows the `*-store` connectors **RUNNING** on Iceberg |
+| 6 | **Drishti*net addresses** (only if you did section 6a) | **Admin → Net → Members** | both members at `http://<your IPv4>:…`, never `127.0.0.1` |
+
+Not to check on Windows: the **Cassandra** connector needs a Cassandra or ScyllaDB server, which this machine does not have.
+
+---
+
+## 6c. History of a trade or an equity (2.6.5)
+
+Needs **2.6.5** (when it is out: `git pull` on **main**, step 2.3 again, restart both). The demo lakes of step 3.1 hold **seven business
+days**, enough to show it; your own ENDUR history shows as soon as **two or more** of your files are loaded (step 3.2, one per date).
+
+| # | Type in the top bar | You should see |
+|---|---|---|
+| 1 | `TRD <one of your ENDUR ids> 7` → Enter | one row per business day, newest first; a cell that changed from the day before is highlighted with ▲/▼; the header says the dates, how many days changed and any day with no data |
+| 2 | `TRD CLY-3000157 30` | the same for a CALYPSO trade (30 asks for up to 30 days; you get the seven there are) |
+| 3 | press **C** | *Changes only*: the days on which nothing moved are hidden |
+| 4 | press **D** (or type `TRD <id> 7 DIFF`) | only the fields that changed, and on which day |
+| 5 | arrow keys to a row → **Enter** | the trade's normal page as it stood on that day |
+| 6 | `EQ <an equity id> 3M` | a price chart on top, the last price, change, high, low and range, the daily table below |
+| 7 | **E** → CSV or Excel | the table downloads as shown |
+| 8 | **Link** | a link that opens the same history for a colleague (within their permissions) |
+
+Also try `TRD <id> YTD` and `TRD <id> FROM 2026-10-07 TO 2026-10-16`. A field you may not see stays `•••` on every day's row.
 
 ---
 
@@ -435,6 +479,9 @@ If `net set node.enabled true` says *needs the cluster key*, the variable of poi
 | A trade page says `DRS-1004 … timed out` | The first read of a date on a large table; open it again. If it keeps happening, exclude the project's `data` folder from the antivirus's real-time scanning (ask IT), and check that `data` is on the local disk, not a network share. |
 | The log says `documents are not cached on disk (…): reads go on without it` | Right after a restart: the old server was still stopping; wait for *documents are cached on disk again* (within a few minutes). Otherwise a second server is running on the same `data` folder: stop it. Nothing is wrong with the data. |
 | F7, F8 or F9 do nothing, or Edge opens its Immersive Reader | Use `Alt`+`Shift`+`7`, `8`, `9` (section 4.2). |
+| `net …` or Admin → Net says the address is a loopback address | Use this machine's real address (`ipconfig` → IPv4 Address), never `127.0.0.1` or `localhost` (section 6a). |
+| `load-iceberg.ps1` asks for `winutils.exe` or `HADOOP_HOME` | An older copy of the project: `git pull` (since 2.6.0 Iceberg runs on Drishti's own engine, no Hadoop). Check the script's first line says the native engine. |
+| `TRD <id> 7` opens a pick list instead of the history | A version before 2.6.5: `git pull`, build the jar again (step 2.3), restart both. |
 | A counterparty or portfolio page lists only 1,000 trades | By design: the count and every total cover all of its trades; search for the rest. |
 
 ---
@@ -449,6 +496,8 @@ If `net set node.enabled true` says *needs the cluster key*, the variable of poi
 - [ ] Step 4: server and console start; sign-in works.
 - [ ] Step 5: Lakes, Connectors, Health as described.
 - [ ] Step 6: walk through the ten pages once.
+- [ ] Step 6b: the 2.6.0 checks (themes, statement, field parameters, Iceberg in a separate copy).
+- [ ] Step 6c (2.6.5): `TRD <your id> 7` and `EQ <id> 3M` show their history.
 
 **After the demo:**
 
