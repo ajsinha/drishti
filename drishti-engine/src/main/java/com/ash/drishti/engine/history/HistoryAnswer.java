@@ -28,7 +28,13 @@ public record HistoryAnswer(Ref ref, String mnemonic, String title, String shape
 
     public record Ref(String kind, String id) {}
 
-    public record Window(String asked, String from, String to, int days, String mode, String baseline, List<String> missing, String knownAt) {}
+    /**
+     * {@code to} is the last day shown: for data days the entity's newest day with data, else the end of the span. {@code missing} are the
+     * business days from {@code from} with no data for the entity, up to the newest date the kind's sources hold; {@code loadedTo}, set
+     * only when a span ends after that date, is that date (the days after it are not loaded yet).
+     */
+    public record Window(String asked, String from, String to, int days, String mode, String baseline, List<String> missing, String knownAt,
+            String loadedTo) {}
 
     public record Column(String path, String label, String type, String format, boolean masked, boolean key) {}
 

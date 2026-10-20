@@ -232,9 +232,20 @@ public final class HistoryService {
             truncated = true;
         }
         LocalDate shownFrom = HistoryWindow.DATA_DAYS.equals(w.mode()) ? LocalDate.parse(rows.get(0).date()) : w.from();
-        List<String> missing = missing(w, shownFrom, rows, failures);
-        HistoryAnswer.Window window = new HistoryAnswer.Window(w.asked(), shownFrom.toString(), w.to().toString(), w.days(), w.mode(),
-                built.baseline(), missing, q.knownAt() == null ? null : q.knownAt().toString());
+        // data days end at the entity's newest day with data; a calendar span keeps its end, but the days after the newest date the kind's
+        // sources hold are "not loaded yet" (loadedTo), not missing
+        LocalDate newest = LocalDate.parse(rows.get(rows.size() - 1).date());
+        LocalDate loadedTo = router.latestDate(q.kind()).filter(l -> l.isBefore(w.to())).orElse(null);
+        if (loadedTo != null && loadedTo.isBefore(newest)) {
+            loadedTo = newest;
+        }
+        boolean dataDays = HistoryWindow.DATA_DAYS.equals(w.mode());
+        LocalDate shownTo = dataDays ? newest : w.to();
+        LocalDate gapsTo = dataDays ? newest : loadedTo != null ? loadedTo : w.to();
+        List<String> missing = missing(w, shownFrom, gapsTo, rows, failures);
+        HistoryAnswer.Window window = new HistoryAnswer.Window(w.asked(), shownFrom.toString(), shownTo.toString(), w.days(), w.mode(),
+                built.baseline(), missing, q.knownAt() == null ? null : q.knownAt().toString(),
+                !dataDays && loadedTo != null ? loadedTo.toString() : null);
         List<HistoryAnswer.Row> ordered = rows;
         if (q.descending()) {
             ordered = new ArrayList<>(rows);
@@ -268,13 +279,14 @@ public final class HistoryService {
         throw new DrishtiException(ErrorCode.HISTORY_NO_DATA, ref + " has no data from " + w.from() + " to " + w.to());
     }
 
-    private static List<String> missing(HistoryWindow w, LocalDate shownFrom, List<HistoryAnswer.Row> rows, List<SourceHistory.Failure> failures) {
+    private static List<String> missing(HistoryWindow w, LocalDate shownFrom, LocalDate gapsTo, List<HistoryAnswer.Row> rows,
+            List<SourceHistory.Failure> failures) {
         Set<String> have = new HashSet<>();
         rows.forEach(r -> have.add(r.date()));
         failures.forEach(f -> have.add(f.date().toString()));
         List<String> out = new ArrayList<>();
         for (LocalDate d : w.dates()) {
-            if (!d.isBefore(shownFrom) && !d.isAfter(w.to()) && !have.contains(d.toString()) && out.size() < 400) {
+            if (!d.isBefore(shownFrom) && !d.isAfter(gapsTo) && !have.contains(d.toString()) && out.size() < 400) {
                 out.add(d.toString());
             }
         }

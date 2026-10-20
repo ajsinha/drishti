@@ -66,10 +66,20 @@ class HistoryServiceTest {
         final AtomicInteger reads = new AtomicInteger();
         final String version;
         final boolean dated;
+        final LocalDate last;
 
         Lake(String version, boolean dated) {
+            this(version, dated, TODAY);
+        }
+
+        Lake(String version, boolean dated, LocalDate last) {
             this.version = version;
             this.dated = dated;
+            this.last = last;
+        }
+
+        public Optional<LocalDate> latestDate(String kind) {
+            return Optional.of(last);
         }
 
         public PluginManifest manifest() {
@@ -85,7 +95,7 @@ class HistoryServiceTest {
         public Optional<EntityDocument> fetch(EntityRef ref, AsOf asOf) {
             reads.incrementAndGet();
             LocalDate d = asOf.businessDate() == null ? TODAY : asOf.businessDate();
-            if (d.isBefore(LocalDate.of(2026, 9, 22)) || d.isAfter(TODAY) || d.getDayOfWeek().getValue() > 5) {
+            if (d.isBefore(LocalDate.of(2026, 9, 22)) || d.isAfter(last) || d.getDayOfWeek().getValue() > 5) {
                 return Optional.empty();
             }
             Map<String, Object> doc = new LinkedHashMap<>();
@@ -171,6 +181,20 @@ class HistoryServiceTest {
         assertThat(a.summary()).isEqualTo(HistoryAnswer.Summary.NONE);
         assertThat(a.partial()).isFalse();
         assertThat(a.window().missing()).isEmpty();
+    }
+
+    @Test
+    void daysAfterTheNewestLoadedDateAreNotMissing() {
+        // the lake was last loaded on 09-30; the business date is 10-02
+        HistoryService svc = service(new Lake("v1", true, LocalDate.of(2026, 9, 30)), Map.of());
+        HistoryAnswer n = svc.read(days("trade", "T-1", 3), VIEWER);
+        assertThat(n.window().to()).isEqualTo("2026-09-30");                        // data days end at the newest day with data
+        assertThat(n.window().missing()).isEmpty();
+        assertThat(n.window().loadedTo()).isNull();
+        HistoryAnswer span = svc.read(new HistoryService.Query("trade", "T-1", null, "2W", null, null, Set.of(), false, null, false, null), VIEWER);
+        assertThat(span.window().to()).isEqualTo("2026-10-02");
+        assertThat(span.window().loadedTo()).isEqualTo("2026-09-30");
+        assertThat(span.window().missing()).containsExactly("2026-09-21");             // a gap inside the range, not 10-01 and 10-02
     }
 
     @Test

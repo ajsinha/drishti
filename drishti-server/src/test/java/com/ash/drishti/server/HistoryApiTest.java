@@ -146,6 +146,22 @@ class HistoryApiTest {
     }
 
     @Test
+    void anyDatedKindWithNoHistoryBlockHasTheDocumentShape() throws Exception {
+        // counterparty: an effective-dated kind with no history: block; its rows are the days it changed
+        JsonNode a = read("full", "/api/v1/history/counterparty/CP-X", "from", "2026-09-28", "to", "2026-09-30");
+        assertThat(a.at("/shape").asText()).isEqualTo("document");
+        assertThat(a.at("/rows").size()).isEqualTo(2);
+        assertThat(a.at("/rows/0/date").asText()).isEqualTo("2026-09-28");
+        assertThat(a.at("/rows/1/date").asText()).isEqualTo("2026-09-30");
+        assertThat(a.at("/rows/1/values/rating").asText()).isEqualTo("A-");
+        assertThat(a.at("/rows/1/changed").toString()).contains("rating");
+        List<String> paths = new ArrayList<>();
+        a.at("/columns").forEach(c -> paths.add(c.path("path").asText()));
+        assertThat(paths).contains("id", "rating");
+        assertThat(a.at("/window/missing").toString()).contains("2026-09-29");
+    }
+
+    @Test
     void rightsAndErrors() throws Exception {
         mvc.perform(get("/api/v1/history/trade/T-1").param("days", "3").header("Authorization", as("other"))).andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/history/trade/T-1").param("days", "9999").header("Authorization", as("full")))

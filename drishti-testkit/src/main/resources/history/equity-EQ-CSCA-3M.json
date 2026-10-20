@@ -15,7 +15,8 @@
     "mode": "calendar",
     "baseline": "2026-07-17",
     "missing": [],
-    "knownAt": null
+    "knownAt": null,
+    "loadedTo": null
   },
   "columns": [
     {

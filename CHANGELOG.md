@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **Added: history queries across Drishti*net (H4).** A node with the pack but not the data reads an entity's history from the peer that
+  holds it in one call for all the dates (`GET /api/v1/net/history/{kind}/~`, node-only, masked there and again here); a node without the
+  pack forwards the whole request, as views are ([NET.md](docs/admin/NET.md#7-routing-where-a-request-goes)). `NetHistoryTest`. A history of
+  data days now ends at the entity's newest day with data, and a span that ends after the newest loaded date says so (`window.loadedTo`)
+  instead of listing those days as missing.
 - **Added: history queries, the server (H2, H3).** `GET /api/v1/history/{kind}/{id}?days=30 | range=3M | from=&to=` (and `/~?id=`)
   answers the entity over the business days it has data: one row per day with its top-level fields, the fields that changed from the day
   before (a baseline day is read for the first row), the counts of its lists, versions and generation, and for market kinds the headline
