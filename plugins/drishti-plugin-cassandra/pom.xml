@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.ash.drishti</groupId>
+    <artifactId>drishti-parent</artifactId>
+    <version>2.5.0</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+  <artifactId>drishti-plugin-cassandra</artifactId>
+  <name>drishti-plugin-cassandra</name>
+  <description>Apache Cassandra source (also ScyllaDB, Astra, Keyspaces): a partition per business day per bucket keyed by id, generations so a day appears whole, promoted columns for searches</description>
+  <properties>
+    <!-- the test classes share one Cassandra node in Docker (CassandraNode): one JVM, so one container rather than one per fork -->
+    <drishti.test.forks>1</drishti.test.forks>
+  </properties>
+  <dependencies>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
+    <dependency>
+      <groupId>org.apache.cassandra</groupId><artifactId>java-driver-core</artifactId><version>${cassandra-driver.version}</version>
+      <exclusions>
+        <!-- jnr-posix only gives the driver the process id through a native library (jffi); without it the driver uses the JVM's -->
+        <exclusion><groupId>com.github.jnr</groupId><artifactId>jnr-posix</artifactId></exclusion>
+      </exclusions>
+    </dependency>
+    <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-core</artifactId></dependency>
+    <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
+    <!-- the equality test reads the Delta connector's fixture lake beside the same rows loaded into Cassandra -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-delta</artifactId><scope>test</scope></dependency>
+    <!-- Cassandra 5 and ScyllaDB in Docker for the contract tests; skipped where Docker is not reachable -->
+    <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers</artifactId><version>${testcontainers.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers-junit-jupiter</artifactId><version>${testcontainers.version}</version><scope>test</scope></dependency>
+  </dependencies>
+</project>

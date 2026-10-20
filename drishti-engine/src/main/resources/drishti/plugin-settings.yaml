@@ -210,6 +210,35 @@ plugins:
       - { name: columns-cache-mb, type: int, desc: "Column cache size", group: tuning }
       - { name: columns-seconds, type: int, desc: "Column cache lifetime", group: tuning }
       - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
+  cassandra:
+    tls: true
+    settings:
+      - { name: "layout.*", desc: "Per-kind promoted columns: layout.<kind>.columns: a, b, c (columns the loader created)", group: mapping }
+      - { name: contact-points, desc: "host:port list, comma separated (port 9042 when left out); required unless secure-connect-bundle is set", group: connection }
+      - { name: local-datacenter, desc: "The data centre the driver prefers (nodetool status names it; datacenter1 on one node); required unless secure-connect-bundle is set", group: connection }
+      - { name: keyspace, desc: "The keyspace (default: the domain)", group: connection }
+      - { name: kinds, type: list, desc: "Kinds to read (default: the tables the loader made)", group: mapping }
+      - { name: username, desc: "User name", group: connection }
+      - { name: password, secret: true, desc: "Password: ${ENV_VAR} or file:/path", group: connection }
+      - { name: secure-connect-bundle, type: path, desc: "DataStax Astra: the secure connect bundle (.zip); replaces contact-points and local-datacenter", group: connection }
+      - { name: token, secret: true, desc: "DataStax Astra: the application token (AstraCS:...): ${ENV_VAR}", group: connection }
+      - { name: sigv4, type: boolean, default: "false", desc: "Amazon Keyspaces: SigV4 log-in through AWS's driver plug-in (put it in the plugin folder) with the default AWS credential chain", group: security }
+      - { name: sigv4-region, desc: "Amazon Keyspaces: the region (default: AWS_REGION)", group: security }
+      - { name: consistency, type: "enum:LOCAL_QUORUM|LOCAL_ONE|QUORUM|ONE|TWO|THREE|ALL|EACH_QUORUM", default: LOCAL_QUORUM, desc: "Read consistency; LOCAL_ONE for speed where staleness is acceptable", group: connection }
+      - { name: connections-per-node, type: int, default: "2", desc: "Connections to each node (each carries many requests at once)", group: pool }
+      - { name: max-concurrent-reads, type: int, default: "256", desc: "Requests in flight at most; further ones wait in the driver's queue", group: pool }
+      - { name: request-timeout-ms, type: int, default: "5000", desc: "Longest one statement may run", group: pool }
+      - { name: connect-timeout-ms, type: int, default: "5000", desc: "Connect timeout (a cluster not reachable is retried in the background)", group: pool }
+      - { name: speculative-executions, type: int, default: "0", desc: "Extra copies of a slow read sent to other replicas (0: off; reads are idempotent)", group: tuning }
+      - { name: speculative-delay-ms, type: int, default: "100", desc: "How long a read waits before a speculative copy is sent", group: tuning }
+      - { name: page-size, type: int, default: "5000", desc: "Rows per page when a day's columns or documents are read", group: tuning }
+      - { name: scan-threads, type: int, default: "8", desc: "A day's partitions read at once", group: tuning }
+      - { name: refresh-seconds, type: int, default: "60", desc: "Re-read interval of the catalogue (kind_days) and the ids", group: tuning }
+      - { name: lookback-days, type: int, default: "10", desc: "A snapshot kind is read on its newest day at most this many days before the date asked", group: tuning }
+      - { name: max-load-rows, type: int, default: "200000", desc: "Documents read at most for a reverse lookup without promoted columns, and ids of an effective kind", group: tuning }
+      - { name: columns-cache-mb, type: int, default: "1024", desc: "Memory for the days' promoted columns", group: tuning }
+      - { name: doc-cache-mb, type: int, default: "64", desc: "Memory for documents read", group: tuning }
+      - { name: reverse-index, type: boolean, default: "true", desc: "Answer reverse lookups", group: tuning }
   mongodb:
     tls: true
     settings:
