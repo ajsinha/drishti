@@ -17,6 +17,45 @@
 
 ## Unreleased
 
+
+- **Fixed (QA1-201): `tools/bench/trades.py` (and so `drishti-stack`'s lakes) opened the seven-day test data's `snapshot-2026-09-22`**, gone since the test data holds sixty days: it now takes the system's snapshot whatever its date. The help examples and docs name `snapshot-2026-07-08`.
+
+- **Fixed (QA1-11): `DRS-1013` says when the entity has data** (*… has no data from 2026-09-01 to 2026-09-30; its days with data run
+  from 2026-10-09 to 2026-10-20*), and for a number of days names the business days walked, not the whole `max-days` span as dates.
+- **Fixed (QA1-18): a mnemonic, a plural or an unknown field in a history request is named.** `history TRD 1000001` answers
+  *TRD is a mnemonic: use the kind trade*, `history trades …` *unknown kind trades: did you mean trade?* (`DRS-4004`), and a field in
+  `fields` that no day has is `DRS-4004` instead of being dropped; a top-level field that is no column (`TRADER_ID`) is shown.
+- **Fixed (QA1-08): the documented plain-words history phrases work for market kinds and bare ids.** `equity EQ-CSCA last 3 months`
+  (an id that is also a field's value), `fx audusd since 2026-10-01` (an id named by its end) and `1000015 30` (a bare id with a range)
+  open the history instead of becoming searches; `BOOK-RATES-3 last week` is the book's history; `trades in BOOK-RATES-3 since …` stays a
+  search. USER_GUIDE and HISTORY_QUERIES.md section 15.5 say the rule.
+- **Fixed (QA1-05, QA1-06): the type-ahead after an id offers every range, labelled, in a cluster and with masks.** Merged across
+  Drishti*net it kept one row per entity, so only `30` was offered; now each range is its own row and the ranges come first. For a
+  user with field masks the range rows were retitled as the entity (`TRD 1000002 · Commodity …`, or the masked title) and a partial
+  range (`TRD 1000002 3`) offered nothing; range rows now pass through the masks unchanged (they hold nothing of the document).
+- **Fixed (QA1-02, QA1-19): a Drishti*net peer that does not answer a history in time is a time-out** (`504 DRS-1014 the node qa1-b
+  did not answer the history of … within 10 s`, or a `DRS-1014` problem of a partial answer), as HISTORY_QUERIES.md section 16 says,
+  not `502 DRS-1003`. RELEASE_NOTES 2.6.5 *Across a cluster* notes the QA1-01 and QA1-02 fixes.
+- **Fixed (QA1-03, QA1-12): a bad range typed after an id says so.** `TRD 1000001 0`, `-5`, `1.5M`, `3X`, `FROM yesterday`,
+  `FROM 2026-02-30`, `DIFF DIFF`, a bare `DIFF` and two ranges (`30 30`) answer `DRS-4022` with what to type, a number of days past
+  the limit (`99999`) `DRS-4021`, and `TO` before `FROM` is `DRS-4022` as at the endpoint (was `DRS-4001`); the console shows the
+  message on the terminal page instead of today's view or plain words that dropped the id (`HistoryRange.malformed`).
+- **Fixed (QA1-09): Drishti*net's "real address only" check can no longer be bypassed.** `advertise-url`, a seed's `url` and an
+  address learned by gossip are refused in every spelling of loopback and wildcard (`localhost.`, `ip6-localhost`, `0`, `127.1`,
+  `2130706433`, `0x7f000001`), when link-local, when they are an address of this machine's container or VM bridges (`172.17.0.1`), and
+  when they are a host name that resolves here to any of those (the machine's own name is `127.0.1.1` on Debian and Ubuntu; the
+  message says *oryxpro is 127.0.1.1 here*). The same in the server (`HostAddress`, the schema and the gossip intake) and in
+  `drishti.py net` (`tools/hostaddr.py`).
+- **Fixed (QA1-04): a history "as known at" an instant works on Delta Lake and Iceberg.** It was always refused with `DRS-1007`
+  naming the shipped `file` connector, which serves every kind but holds none of the dates; a store without time travel is now
+  refused only when it may hold one of the dates, as single reads do.
+- **Fixed (QA1-13): a bad `knownAt` names itself** (`DRS-4003 knownAt 'garbage' is not an instant …`), not the business date.
+- **Fixed (QA1-01): a history read through a Drishti*net peer shows the peer's new days.** The history cache was keyed by this node's
+  data version only, so a load on the peer never showed. The key now carries the data versions of the peers the read asks, as their
+  digests carry them; a connector that holds nothing of the kind counts as version `none` (so a node with an empty lake caches too).
+- **Fixed (QA1-02): a peer that cannot be reached is named, never "no data".** When a node that holds the kind is down or suspect and
+  no node that answered holds the dates, a history answers `502 DRS-5052` naming it (or, with some days read, a partial answer whose
+  `problems` name it), not `DRS-1013`; an empty, failed or partial answer is never cached, so the rows come back with the peer.
 - **Added: the AWS Delta lake deck** (`docs/publications/Drishti-AWS-Delta-Lake.pptx`, 72 slides, and its PDF): AWS_DELTA_LAKE.md section by section, from the lake in S3 and the folder layout and partition keys to setup, loading, maintenance, caches, scale, cost, runbooks and the decisions to take.
 
 - **Docs: the 2.6.5 QA's documentation verification** ([DOCS_VERIFICATION.md](docs/qa/2026-10-20/DOCS_VERIFICATION.md)). The demo

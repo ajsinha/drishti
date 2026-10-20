@@ -455,7 +455,7 @@ Sections 3 to 9 build the artifacts one command at a time. When you start from J
 them in a single folder, so that what you carry to a server is that folder:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz \
+drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz \
     --kind trade --match PRODUCT_TYPE --name my-bank
 ```
 

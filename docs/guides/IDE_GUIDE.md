@@ -255,7 +255,7 @@ This is the walk a tester follows without a terminal. It uses ports 18580 (serve
    *Parameters*: the first argument is your sample file (JSON, JSON Lines or `.gz`; the placeholder is
    `$USER_HOME$/Downloads/YOUR_SAMPLE.jsonl`), `--kind` the entity kind, `--match` the field that tells the kinds apart (the placeholder
    is `PRODUCT_TYPE`), `--name` the pack's name. To try it without a file of your own, use the committed test data:
-   `data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz`. It writes `data/qa/packs/<name>/` (the pack is in `data/qa/packs/<name>/pack/<name>`).
+   `data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz`. It writes `data/qa/packs/<name>/` (the pack is in `data/qa/packs/<name>/pack/<name>`).
 7. **Build the lake from the big JSON.** Open **QA lake build (big JSON to Delta)** and edit *Parameters*:
 
    | Parameter | Meaning | Placeholder |
