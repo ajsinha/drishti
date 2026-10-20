@@ -104,9 +104,39 @@ class NetFolderTest {
                 "0:0:0:0:0:0:0:1", "0:0:0:0:0:0:0:0")) {
             assertThat(com.ash.drishti.net.config.HostAddress.loopbackOrWildcard(h)).as(h).isTrue();
         }
-        for (String h : List.of("192.168.2.77", "10.0.0.5", "drishti-a.internal", "fe80::1", "2001:db8::1", "128.0.0.1")) {
+        for (String h : List.of("192.168.2.77", "10.0.0.5", "drishti-a.internal", "2001:db8::1", "128.0.0.1", "192.0.2.10", "3232236109")) {
             assertThat(com.ash.drishti.net.config.HostAddress.loopbackOrWildcard(h)).as(h).isFalse();
         }
+    }
+
+    @Test
+    void everySpellingOfLoopbackWildcardLinkLocalAndBridgeIsKnown() throws Exception {
+        // QA1-09: the spellings that got through: inet_aton forms, a trailing dot, the IPv6 names, link-local, bridges, host names
+        for (String h : List.of("0", "0x7f000001", "2130706433", "127.1", "0177.0.0.1", "localhost.", "LOCALHOST.", "ip6-localhost", "ip6-loopback",
+                "fe80::1", "[fe80::1]", "169.254.1.1", "0.0.0.0.")) {
+            assertThat(com.ash.drishti.net.config.HostAddress.loopbackOrWildcard(h)).as(h).isTrue();
+        }
+        // a name this machine resolves to a loopback address (Debian and Ubuntu map the host name to 127.0.1.1)
+        String name = java.net.InetAddress.getLocalHost().getHostName();
+        boolean loops = java.util.Arrays.stream(java.net.InetAddress.getAllByName(name)).anyMatch(java.net.InetAddress::isLoopbackAddress);
+        assertThat(com.ash.drishti.net.config.HostAddress.loopbackOrWildcard(name)).as(name).isEqualTo(loops
+                || com.ash.drishti.net.config.HostAddress.why(name).isPresent());
+        if (loops) {
+            assertThat(com.ash.drishti.net.config.HostAddress.why(name).orElseThrow()).contains("loopback");
+            assertThat(folder(Map.of()).check("node.yaml", "enabled: true\nadvertise-url: http://" + name + ":18783\nsecret: ${DRISHTI_NET_SECRET}\n"))
+                    .anySatisfy(p -> assertThat(p.message()).contains("loopback"));
+        }
+        // the addresses of this machine's container and VM bridges (docker0's 172.17.0.1)
+        for (java.net.NetworkInterface ni : java.util.Collections.list(java.net.NetworkInterface.getNetworkInterfaces())) {
+            if (ni.getName().matches("^(docker|br-|virbr|veth).*")) {
+                for (java.net.InetAddress a : java.util.Collections.list(ni.getInetAddresses())) {
+                    String host = a.getHostAddress().replaceAll("%.*$", "");
+                    assertThat(com.ash.drishti.net.config.HostAddress.loopbackOrWildcard(host)).as(ni.getName() + " " + host).isTrue();
+                }
+            }
+        }
+        assertThat(folder(Map.of()).check("node.yaml", "enabled: true\nadvertise-url: http://0:18783\nsecret: ${DRISHTI_NET_SECRET}\n"))
+                .anySatisfy(p -> assertThat(p.message()).contains("loopback or wildcard"));
         com.ash.drishti.net.config.HostAddress.primary().ifPresent(ip -> {
             assertThat(com.ash.drishti.net.config.HostAddress.loopbackOrWildcard(ip)).isFalse();
             assertThat(ip).doesNotStartWith("172.17.").doesNotStartWith("169.254.");

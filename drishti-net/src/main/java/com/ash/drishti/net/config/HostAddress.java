@@ -129,23 +129,138 @@ public final class HostAddress {
         return !a.isLoopbackAddress() && !a.isAnyLocalAddress() && !a.isLinkLocalAddress() && !a.isMulticastAddress();
     }
 
-    /** True when a host is {@code localhost} (or a name under it), a loopback address or a wildcard address. */
+    /**
+     * True when a host is no address another machine can call: {@code localhost} in any spelling ({@code localhost.}, a name under it,
+     * {@code ip6-localhost}), a loopback, wildcard or link-local address in any notation ({@code 127.0.1.1}, {@code 0}, {@code 2130706433},
+     * {@code 0x7f000001}, {@code [::1]}, {@code fe80::1}), an address of one of this machine's container or VM bridges ({@code 172.17.0.1}
+     * on docker0), or a name that resolves here to one of those (a machine's own host name is {@code 127.0.1.1} on Debian and Ubuntu).
+     * A name that cannot be resolved here is not refused: another machine may know it. Resolutions are kept a minute (QA1-09).
+     */
     public static boolean loopbackOrWildcard(String host) {
+        return why(host).isPresent();
+    }
+
+    /** What makes a host unusable as an advertised address (see {@link #loopbackOrWildcard}), or empty when it is usable. */
+    public static Optional<String> why(String host) {
         if (host == null) {
-            return false;
+            return Optional.empty();
         }
         String h = host.trim().toLowerCase(Locale.ROOT);
         if (h.startsWith("[") && h.endsWith("]")) {
             h = h.substring(1, h.length() - 1);
         }
-        if (h.equals("localhost") || h.endsWith(".localhost") || h.startsWith("127.") || h.equals("0.0.0.0")) {
-            return true;
+        while (h.endsWith(".")) {
+            h = h.substring(0, h.length() - 1);                            // "localhost." is localhost
         }
-        if (h.contains(":")) {
-            String compact = h.replaceAll("(^|:)0+(?=[0-9a-f])", "$1");
-            return compact.equals("::") || compact.equals("::1") || compact.matches("(0:){7}[01]") || compact.equals("::0");
+        if (h.isEmpty()) {
+            return Optional.empty();
         }
-        return false;
+        if (h.equals("localhost") || h.endsWith(".localhost") || h.equals("ip6-localhost") || h.equals("ip6-loopback")) {
+            return Optional.of("loopback");
+        }
+        Optional<byte[]> v4 = inetAton(h);
+        try {
+            if (v4.isPresent()) {
+                return bad(InetAddress.getByAddress(v4.get()));
+            }
+            if (h.contains(":")) {
+                if (!h.matches("[0-9a-f:.%a-z]+")) {
+                    return Optional.empty();
+                }
+                return bad(InetAddress.getByName(h));                       // a literal: no lookup
+            }
+        } catch (java.net.UnknownHostException e) {
+            return Optional.empty();
+        }
+        return resolved(h);
+    }
+
+    /** Why an address is unusable, or empty. */
+    private static Optional<String> bad(InetAddress a) {
+        if (a.isLoopbackAddress()) {
+            return Optional.of("loopback");
+        }
+        if (a.isAnyLocalAddress()) {
+            return Optional.of("wildcard");
+        }
+        if (a.isLinkLocalAddress()) {
+            return Optional.of("link-local");
+        }
+        try {
+            NetworkInterface ni = NetworkInterface.getByInetAddress(a);
+            if (ni != null && VIRTUAL.matcher(ni.getName()).matches()) {
+                return Optional.of("this machine's " + ni.getName() + " bridge");
+            }
+        } catch (SocketException | RuntimeException e) {
+            // cannot tell: not refused
+        }
+        return Optional.empty();
+    }
+
+    private record Resolution(long until, Optional<String> why) {}
+
+    private static final java.util.concurrent.ConcurrentHashMap<String, Resolution> RESOLVED = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** A name looked up here: unusable when any of its addresses is ({@code oryxpro} → 127.0.1.1). */
+    private static Optional<String> resolved(String name) {
+        long now = System.currentTimeMillis();
+        Resolution r = RESOLVED.get(name);
+        if (r != null && r.until() > now) {
+            return r.why();
+        }
+        Optional<String> why = Optional.empty();
+        try {
+            for (InetAddress a : InetAddress.getAllByName(name)) {
+                Optional<String> b = bad(a);
+                if (b.isPresent()) {
+                    why = Optional.of(name + " is " + a.getHostAddress() + " here: " + b.get());
+                    break;
+                }
+            }
+        } catch (java.net.UnknownHostException | RuntimeException e) {
+            // unknown here: another machine may know it
+        }
+        if (RESOLVED.size() > 1000) {
+            RESOLVED.clear();
+        }
+        RESOLVED.put(name, new Resolution(now + 60_000, why));
+        return why;
+    }
+
+    /**
+     * An IPv4 address in any notation {@code inet_aton} reads (and so the HTTP clients that call it): one to four parts, each decimal,
+     * {@code 0x} hex or {@code 0} octal, the last filling the bytes left ({@code 0} is 0.0.0.0, {@code 2130706433} and {@code 0x7f000001}
+     * are 127.0.0.1, {@code 127.1} is 127.0.0.1). Empty when the text is not one.
+     */
+    static Optional<byte[]> inetAton(String h) {
+        if (!h.matches("(0x[0-9a-f]+|[0-9]+)(\\.(0x[0-9a-f]+|[0-9]+)){0,3}")) {
+            return Optional.empty();
+        }
+        String[] parts = h.split("\\.");
+        long[] v = new long[parts.length];
+        try {
+            for (int i = 0; i < parts.length; i++) {
+                String x = parts[i];
+                v[i] = x.startsWith("0x") ? Long.parseLong(x.substring(2), 16) : x.length() > 1 && x.startsWith("0") ? Long.parseLong(x, 8)
+                        : Long.parseLong(x);
+            }
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
+        long value = 0;
+        int n = parts.length;
+        for (int i = 0; i < n - 1; i++) {
+            if (v[i] > 255) {
+                return Optional.empty();
+            }
+            value |= v[i] << (8 * (3 - i));
+        }
+        long lastMax = (1L << (8 * (5 - n))) - 1;
+        if (v[n - 1] > lastMax) {
+            return Optional.empty();
+        }
+        value |= v[n - 1];
+        return Optional.of(new byte[] {(byte) (value >>> 24), (byte) (value >>> 16), (byte) (value >>> 8), (byte) value});
     }
 
     /** True when a URL's host is loopback or wildcard ({@link #loopbackOrWildcard(String)}); false for a URL that cannot be read. */
@@ -153,15 +268,23 @@ public final class HostAddress {
         if (url == null || url.isBlank()) {
             return false;
         }
+        return loopbackOrWildcard(hostOf(url));
+    }
+
+    /** A URL's host, or null when it cannot be read. */
+    private static String hostOf(String url) {
+        if (url == null || url.isBlank()) {
+            return null;
+        }
         try {
             URI u = URI.create(url.trim());
             String host = u.getHost();
             if (host == null && u.getAuthority() != null) {
-                host = u.getAuthority().replaceAll(":\\d+$", "");
+                host = u.getAuthority().replaceAll("^[^@]*@", "").replaceAll(":\\d+$", "");
             }
-            return loopbackOrWildcard(host);
+            return host;
         } catch (IllegalArgumentException e) {
-            return false;
+            return null;
         }
     }
 
@@ -180,7 +303,8 @@ public final class HostAddress {
     /** The refusal of a loopback or wildcard address, naming the address to use instead. */
     public static String refusal(String what, String url) {
         String ip = primary().map(a -> "this machine's address is " + a + ": ").orElse("");
-        return "'" + url + "' is a loopback or wildcard address: " + what + " must be an address other machines can call ("
+        String why = why(hostOf(url)).map(w -> " (" + w + ")").orElse("");
+        return "'" + url + "' is a loopback or wildcard address" + why + ": " + what + " must be an address other machines can call ("
                 + ip + "use " + suggestion(url) + ")";
     }
 }

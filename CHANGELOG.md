@@ -17,6 +17,12 @@
 
 ## Unreleased
 
+- **Fixed (QA1-09): Drishti*net's "real address only" check can no longer be bypassed.** `advertise-url`, a seed's `url` and an
+  address learned by gossip are refused in every spelling of loopback and wildcard (`localhost.`, `ip6-localhost`, `0`, `127.1`,
+  `2130706433`, `0x7f000001`), when link-local, when they are an address of this machine's container or VM bridges (`172.17.0.1`), and
+  when they are a host name that resolves here to any of those (the machine's own name is `127.0.1.1` on Debian and Ubuntu; the
+  message says *oryxpro is 127.0.1.1 here*). The same in the server (`HostAddress`, the schema and the gossip intake) and in
+  `drishti.py net` (`tools/hostaddr.py`).
 - **Fixed (QA1-04): a history "as known at" an instant works on Delta Lake and Iceberg.** It was always refused with `DRS-1007`
   naming the shipped `file` connector, which serves every kind but holds none of the dates; a store without time travel is now
   refused only when it may hold one of the dates, as single reads do.

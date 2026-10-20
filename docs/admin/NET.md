@@ -68,7 +68,10 @@ about every other within a round or two. The examples run the three on one machi
 address, `192.168.1.20` here; on three machines use each machine's own address.
 
 **Members advertise a real address, never a loopback one.** A node is called at the address it advertises by every other node and every
-console, on any machine, so `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` and `::` are refused wherever an address is given: `advertise-url`
+console, on any machine, so `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` and `::` are refused wherever an address is given, in any spelling
+(`localhost.`, `ip6-localhost`, `0`, `127.1`, `2130706433`, `0x7f000001`), as are link-local addresses (`169.254.x.x`, `fe80::…`), the
+addresses of this machine's container and VM bridges (`172.17.0.1` on `docker0`) and a host name that resolves here to any of them (on
+Debian and Ubuntu the machine's own name is `127.0.1.1` in `/etc/hosts`; the message says so): `advertise-url`
 in node.yaml, a seed's `url` in `peers/*.yaml` (by `drishti.py net check|set|add-peer`, by Admin → Net → Files and by the server when it
 loads the folder), and a member address learned by gossip is never kept nor passed on. Even three nodes on one machine use the machine's
 real address. The refusal names the address to use:
