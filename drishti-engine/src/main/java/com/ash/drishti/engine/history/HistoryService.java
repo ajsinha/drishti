@@ -344,7 +344,7 @@ public final class HistoryService {
             days = days.subList(days.size() - w.lastDays(), days.size());
         }
         List<HistorySpec.Column> cols = keys.stream().map(k -> new HistorySpec.Column(k, null, null,
-                spec.chart().stream().filter(c -> c.key().equals(k)).map(HistorySpec.Column::format).findFirst().orElse(null))).toList();
+                spec.chart().stream().filter(c -> c.key().equals(k)).findFirst().map(HistorySpec.Column::format).orElse(null))).toList();
         HistorySpec used = new HistorySpec(spec.kind(), true, spec.chart().isEmpty() ? spec.shape() : HistorySpec.MARKET, cols, Set.of(), Set.of(),
                 List.of(), spec.chart().isEmpty() ? List.of(new HistorySpec.Column(keys.get(0), null, null, null)) : spec.chart(), spec.headline(),
                 s, spec.defaultDays(), spec.maxDays());

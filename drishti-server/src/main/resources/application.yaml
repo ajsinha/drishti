@@ -182,6 +182,17 @@ drishti:
     calendar: ${DRISHTI_CALENDAR:USNY}      # USNY, GBLO, EUTA, JPTO, CATO or joint, e.g. USNY+GBLO
     zone: America/New_York
     history: P5Y                            # how far back users may go
+  history:
+    # History queries (TRD 1000015 30): one entity over the business days it has data. docs/architecture/HISTORY_QUERIES.md
+    enabled: true                           # off: no history is read; the endpoint answers DRS-1012
+    default-days: 30                        # the range when a link or the CLI names none
+    max-days: 366                           # the most business days one request may span (a pack's max-days can only lower it)
+    max-rows: 1000                          # the most rows returned
+    max-columns: 200                        # the most columns
+    timeout: 10s                            # the whole request; days not read by then make the answer partial (DRS-1014)
+    parallel-days: 8                        # days read at once per request by the default per-day loop
+    max-concurrent: 16                      # history requests running at once on this server
+    cache-mb: 64                            # memory for cached answers (keyed by the data's version)
   security:
     # Off for local development. Production: enabled: true and DRISHTI_TOKEN_SECRET (>= 32 bytes, shared with the console).
     enabled: ${DRISHTI_SECURITY_ENABLED:false}

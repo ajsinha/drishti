@@ -17,6 +17,16 @@
 
 ## Unreleased
 
+- **Added: history queries, the server (H2, H3).** `GET /api/v1/history/{kind}/{id}?days=30 | range=3M | from=&to=` (and `/~?id=`)
+  answers the entity over the business days it has data: one row per day with its top-level fields, the fields that changed from the day
+  before (a baseline day is read for the first row), the counts of its lists, versions and generation, and for market kinds the headline
+  numbers (last, change, high and low with their dates, range, average); `diff=true` adds each day's changes, `knownAt` reads the history
+  as the store stood then. Every day is masked for the caller before anything is computed from it. The kind's dated connectors are read in
+  order, each for the dates no earlier one covers (`SourceRouter.history`); answers are cached by the kind's data version. New settings
+  `drishti.history.*` ([CONFIGURATION](docs/admin/CONFIGURATION.md)), new codes `DRS-1012`, `DRS-1013`, `DRS-1014`, `DRS-2061`,
+  `DRS-4021`, `DRS-4022` ([API_GUIDE](docs/guides/API_GUIDE.md#history-queries-an-entity-over-time),
+  [TROUBLESHOOTING](docs/guides/TROUBLESHOOTING.md#error-codes)); the field dialog's series now goes back `drishti.history.max-days`
+  instead of 260 days; Admin → Cache lists and purges `history`. `HistoryServiceTest`, `SourceRouterHistoryTest`, `HistoryApiTest`.
 - **Added: history queries, the connector contract (H1).** `SourcePlugin.history(HistoryRequest)` returns `HistoryRead(days, covered,
   failed)`, one `HistoryDay(date, document, versions)` per business date the source holds the entity on; `SourcePlugin.days(ref, from, to)`
   lists those dates without reading a document. The default (`HistoryReads.perDay`) reads date by date through `fetch(ref, asOf)`, eight at

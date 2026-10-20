@@ -1347,6 +1347,9 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 | `DRS-1002` | no source serves that kind. "connector news is disabled (kind 'news' is routed to it)": nothing else serves the kind on this server. For the news-and-markets pack, build the snapshot store (`drishti.py lake demo --only news-and-markets`): a switched-off internet connector's kinds are then read from `news-store` (Admin → Connectors: *off (served from the snapshot)*), and what it lacks is `DRS-1001` naming it. Or switch the live connector on (`DRISHTI_NEWS_ENABLED=true`) |
 | `DRS-1005` / `DRS-1006` / `DRS-1007` | pasted document is not a JSON object / a connector plugin could not be loaded (`/sources` lists why) / `knownAt` asked of a store with no earlier versions |
 | `DRS-1011` | a kind is routed to a connector that has no file in `config/connectors/` (HTTP 404). Cause: the pack names a connector nobody defined, or its file was deleted. Fix: create it in Admin → Connectors (the Create link on Admin → Packs → Data source pre-fills it from the pack's template) or `drishti.py connector apply NAME.yaml`; the pack itself loads and Admin → Health shows `connectorsNotConfigured` |
+| `DRS-1012` | history queries: the kind keeps no daily history here. Cause: its pack says `history: {<kind>: {enabled: false}}`, `drishti.history.enabled` is off, or every connector of the kind holds today's data only (REST, a feed) and the pack declares no embedded `series:`. Fix: route the kind to a dated store (Delta Lake, a dated folder, a database with a date column) or add `series:` to the kind's `history:` block |
+| `DRS-1013` | history queries: the entity has no data in the range. Fix: widen the range (`TRD X 3M`), or move the date box to a date the entity has data |
+| `DRS-1014` | history queries: the connector did not answer within `drishti.history.timeout` (10 s), or `drishti.history.max-concurrent` history requests were running. With some days read the page shows them and says which days are missing. Fix: a shorter range, or raise `timeout` and look at the connector on Admin → Health |
 | `DRS-1003` / `DRS-1004` | a source failed / timed out (a console page answers 504 for a timeout, 502 for a failed source) |
 | `DRS-2001` / `DRS-2002` / `DRS-2003` | Sutra parse error / invalid / not found |
 | `DRS-2005` / `DRS-2006` / `DRS-2007` | proposal not found / stale / four eyes |
@@ -1357,6 +1360,7 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 | `DRS-2045`–`DRS-2047` | `sutra lint` help warnings (not load errors): a Sutra binds `F1`, an about `panels.<id>` matches no panel, a shown field has no glossary entry; `--strict` fails the run on them |
 | `DRS-2048` | a shared panel block cannot be used: `use:` names no block or version, `with:` names a parameter the block does not declare, a block uses another block, or a block file is misnamed ([Shared panel blocks](RACHANA_REFERENCE.md#shared-panel-blocks-use)) |
 | `DRS-2060` | A search form (the `form:` section of a pack, or a design's Form tab) is not valid YAML or names a field path, type or operator wrongly; the message says which field and what is allowed |
+| `DRS-2061` | A pack's `history:` block is wrong (an unknown shape, more than 4 chart fields, a `headline` not among `chart`, a `max-days` above `drishti.history.max-days`, a column with both `path` and `expr`); the message names the key. The kind keeps the default history meanwhile. Fix it and run `sutra lint <pack-dir>` |
 | `DRS-2101` / `DRS-2102` | expression syntax (or past the size limits) / evaluation error |
 | `DRS-3001` | reserved; nothing raises it in this release |
 | `DRS-4001` | command not understood |
@@ -1375,6 +1379,8 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 | `DRS-4018` | The AI policy does not allow this feature for your role |
 | `DRS-4019` | The model, provider, MCP server or tool named is not configured: check `config/ai/` or `config/mcp/` |
 | `DRS-4020` | BI with AI: the model's answer could not be used. A draft that did not pass the report check (after one repair) or an answer that is not a query is refused, nothing is changed: say it more plainly, name the measure or field, or try a stronger model (`drishti.bi.ai.model`). With the `mock` provider this is what a question no rule matches answers ([BI_AI.md](BI_AI.md) section 7) |
+| `DRS-4021` | history queries: the range spans more business days than `max-days` (the kind's, else `drishti.history.max-days`). Fix: narrow it with `FROM … TO …` |
+| `DRS-4022` | history queries: the range cannot be read: `TO` before `FROM`, a `FROM` in the future, an unreadable date or range. Use `30`, `30D`, `2W`, `3M`, `1Y`, `YTD`, `MTD`, `QTD` or `FROM yyyy-mm-dd [TO yyyy-mm-dd]` |
 | `DRS-5001` | bad request |
 | `DRS-5002` | forbidden (role or pack) |
 | `DRS-5003` | raised by the console only: it cannot reach the server, a live stream was refused, or a browser is over its live-subscription limit |
