@@ -373,7 +373,8 @@ class DemoLake:
         key = ds.get("key")
         worst, rows = 0, 0
         stage = self.staging / f"{domain}-{table}.jsonl"
-        for day, state in zip(self.dates, self.states(ds)):
+        n_days = len(self.dates)
+        for i, (day, state) in enumerate(zip(self.dates, self.states(ds)), 1):
             if key is None:
                 key = next((k for k in json.loads(next(iter(state.values()))) if k.endswith("_ID")), "id") if state else "id"
             with stage.open("w", encoding="utf-8") as fh:
@@ -388,6 +389,8 @@ class DemoLake:
                 print(f"  {domain}/{table} {day}: {summary.get('status')} {summary.get('error', '')}", file=sys.stderr)
             worst = max(worst, code)
             rows += len(state)
+            if not self.a.quiet and n_days > 10 and (i % 10 == 0 or i == n_days):
+                print(f"    {domain}/{table}: committed {i}/{n_days} days, {rows:,} rows so far (through {day})", flush=True)
         stage.unlink(missing_ok=True)
         self.checkpoint(path)
         self.tables.append(f"{domain}/{table}")
