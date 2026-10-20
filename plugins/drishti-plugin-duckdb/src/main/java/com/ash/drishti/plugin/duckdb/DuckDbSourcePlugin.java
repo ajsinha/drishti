@@ -228,6 +228,55 @@ public final class DuckDbSourcePlugin implements SourcePlugin {
         }
     }
 
+    /**
+     * History queries' fast path (HISTORY_QUERIES.md section 10): the entity's rows from..to in one query; a snapshot kind has a row on each
+     * date it holds the entity, an effective kind on each date it changed.
+     */
+    @Override
+    public com.ash.drishti.api.HistoryRead history(com.ash.drishti.api.HistoryRequest r) throws Exception {
+        if (!kinds.contains(r.ref().kind())) {
+            requireCatalogue();
+            return com.ash.drishti.api.HistoryRead.NONE;
+        }
+        List<Object[]> rows = with(c -> {
+            try (PreparedStatement ps = c.prepareStatement("SELECT doc, CAST(business_date AS VARCHAR) FROM " + catalog.table()
+                    + " WHERE kind = ? AND id = ? AND business_date >= CAST(? AS DATE) AND business_date <= CAST(? AS DATE) ORDER BY business_date DESC")) {
+                ps.setString(1, r.ref().kind());
+                ps.setString(2, r.ref().id());
+                ps.setString(3, r.from().toString());
+                ps.setString(4, r.to().toString());
+                List<Object[]> out = new ArrayList<>();
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        out.add(new Object[] {rs.getString(1), rs.getString(2)});
+                    }
+                }
+                return out;
+            }
+        });
+        Set<LocalDate> wanted = r.dates().isEmpty() ? null : new HashSet<>(r.candidateDates());
+        List<com.ash.drishti.api.HistoryDay> days = new ArrayList<>();
+        for (Object[] row : rows) {                                             // newest first, for the last N days
+            LocalDate date = LocalDate.parse((String) row[1]);
+            if (wanted != null && !wanted.contains(date)) {
+                continue;
+            }
+            if (r.lastDays() > 0 && days.size() >= r.lastDays()) {
+                break;
+            }
+            DataNode d = context.parseJson(new ByteArrayInputStream(((String) row[0]).getBytes(StandardCharsets.UTF_8)));
+            EntityDocument doc = new EntityDocument(r.ref(), d, new Provenance(sourceName, date.toEpochDay(), Instant.now(), false, date));
+            days.add(new com.ash.drishti.api.HistoryDay(date, com.ash.drishti.api.HistoryReads.project(doc, r.fields()), null));
+        }
+        Set<LocalDate> covered = new HashSet<>();
+        for (LocalDate d : r.candidateDates()) {
+            if (coverage(r.ref().kind(), AsOf.of(d)) == com.ash.drishti.api.DateCoverage.HELD) {
+                covered.add(d);
+            }
+        }
+        return new com.ash.drishti.api.HistoryRead(days, covered, Map.of());
+    }
+
     private static Optional<Object[]> one(Connection c, String sql, String... params) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement(sql)) {
             for (int i = 0; i < params.length; i++) {

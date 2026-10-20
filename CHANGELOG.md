@@ -40,6 +40,9 @@
   History section) ([docs/tutorials/21-an-entity-over-time.md](docs/tutorials/21-an-entity-over-time.md)). `test_tutorials.py` now reads
   every numbered tutorial (its glob stopped at 19); tutorial 20's missing *Next steps* and *You should see* lines and its unused picture
   are listed there as a follow-up.
+- **Added: history queries, more fast paths (H5, H6).** DuckDB (one range query), MongoDB (one range read on the `_id` index), Aerospike
+  (the entity's index record, then one batch get) and Iceberg (the entity's dates from the layout and id maps); each passes
+  `DatedSourceContract`'s history cases. The file, S3, REST and stream connectors keep the default per-day read.
 - **Changed: a market history longer than the store's days is filled from the document's own series.** `EQ EQ-CSCA 3M` on a lake that
   keeps a week took the week only and listed 55 days as missing: the days before the oldest stored one now come from the newest
   document's `series:` list (`basis: "documents+series"`, those rows `source: "series"`), so the chart and the high, low and change cover

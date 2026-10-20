@@ -365,6 +365,49 @@ public final class MongoSourcePlugin implements SourcePlugin {
         return Optional.of(new EntityDocument(ref, data, new Provenance(sourceName, day, Instant.now(), false, MongoLayout.date(day))));
     }
 
+    /**
+     * History queries' fast path (HISTORY_QUERIES.md section 10): one indexed range read over the entity's keys
+     * ({@code kind/id/from} to {@code kind/id/to}, the {@code _id} index), newest first; a snapshot kind keeps only the days its catalogue
+     * lists (a day being loaded is not yet one).
+     */
+    @Override
+    public com.ash.drishti.api.HistoryRead history(com.ash.drishti.api.HistoryRequest req) throws Exception {
+        if (configuredKinds.isEmpty() ? !kindDates.containsKey(req.ref().kind()) : !configuredKinds.contains(req.ref().kind())) {
+            if (configuredKinds.isEmpty() && !catalogued) {
+                throw new IllegalStateException(sourceName + " has not reached MongoDB yet" + (refreshProblem == null ? "" : ": " + refreshProblem));
+            }
+            return com.ash.drishti.api.HistoryRead.NONE;
+        }
+        reads.incrementAndGet();
+        String prefix = MongoLayout.entityPrefix(req.ref().kind(), req.ref().id());
+        Bson range = Filters.and(Filters.gte(MongoLayout.KEY, prefix + MongoLayout.day(req.from())),
+                Filters.lte(MongoLayout.KEY, prefix + MongoLayout.day(req.to())), Filters.eq(MongoLayout.ID, req.ref().id()));
+        var held = effective(req.ref().kind()) ? null : kindDates.get(req.ref().kind());
+        Set<LocalDate> wanted = req.dates().isEmpty() ? null : new java.util.HashSet<>(req.candidateDates());
+        List<com.ash.drishti.api.HistoryDay> out = new java.util.ArrayList<>();
+        for (RawBsonDocument r : docs.find(range).projection(Projections.include(MongoLayout.DOC, MongoLayout.DATE)).sort(Sorts.descending(MongoLayout.KEY))) {
+            if (req.lastDays() > 0 && out.size() >= req.lastDays()) {
+                break;
+            }
+            int day = r.getInt32(MongoLayout.DATE).getValue();
+            LocalDate date = MongoLayout.date(day);
+            String json = json(r.get(MongoLayout.DOC));
+            if (json == null || (held != null && !held.contains(date)) || (wanted != null && !wanted.contains(date))) {
+                continue;
+            }
+            var data = context.parseJson(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
+            EntityDocument doc = new EntityDocument(req.ref(), data, new Provenance(sourceName, day, Instant.now(), false, date));
+            out.add(new com.ash.drishti.api.HistoryDay(date, com.ash.drishti.api.HistoryReads.project(doc, req.fields()), null));
+        }
+        Set<LocalDate> covered = new java.util.HashSet<>();
+        for (LocalDate d : req.candidateDates()) {
+            if (coverage(req.ref().kind(), AsOf.of(d)) == com.ash.drishti.api.DateCoverage.HELD) {
+                covered.add(d);
+            }
+        }
+        return new com.ash.drishti.api.HistoryRead(out, covered, java.util.Map.of());
+    }
+
     /** The stored document as JSON: the text itself, or an embedded document written out (relaxed extended JSON). */
     private static String json(BsonValue doc) {
         if (doc == null) {

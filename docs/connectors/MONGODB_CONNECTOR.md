@@ -311,6 +311,10 @@ parsing it. Kinds the domain does not hold are never read. `reverse-index: false
 Desk P&L and impact (F8) work from the column set exactly as on Delta Lake. Measured: desk P&L **11–13 ms**; impact of
 netting set `NS-SUMMIT-NY` **33–59 ms**.
 
+### History queries
+
+`TRD 1000015 30` ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)): one indexed range read over the entity's keys (`kind/id/from` to `kind/id/to` on the `_id` index), newest first; a snapshot kind keeps only the days its catalogue lists.
+
 ## 6. Retention: deleting old days, or TTL
 
 Two ways, both set at load time; the connector has no retention setting.

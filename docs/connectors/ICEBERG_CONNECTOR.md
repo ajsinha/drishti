@@ -363,6 +363,10 @@ As for Delta Lake ([DELTA_CONNECTOR.md, section 7](DELTA_CONNECTOR.md#7-searches
 the engine asks `columnar(kind)` and `columns(kind, paths, asOf)`. `columns` answers "not held" (empty) for a business day
 the table does not have, so the next store for the kind is asked.
 
+### History queries
+
+`TRD 1000015 30` ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)): the connector lists an entity's dates itself (`days()`): the days of the snapshot's layout whose id map holds it, so only those days' row groups are read. The design's planned scan (pruning by the manifests' id bounds without an id map) is not built yet.
+
 ## 8. Delete files and time travel
 
 **Delete files are applied by every read**, not only by single reads. Spark, Trino, Flink and Snowflake delete or update

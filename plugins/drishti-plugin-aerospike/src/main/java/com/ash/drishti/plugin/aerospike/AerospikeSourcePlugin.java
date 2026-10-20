@@ -256,6 +256,57 @@ public final class AerospikeSourcePlugin implements SourcePlugin {
         return Optional.of(new EntityDocument(ref, data, new Provenance(sourceName, r.generation, Instant.now(), false, day)));
     }
 
+    /** The entity's dates from..to, from its index record (one get); a snapshot kind keeps only the dates the kind holds. No document is read. */
+    @Override
+    public Optional<NavigableSet<LocalDate>> days(EntityRef ref, LocalDate from, LocalDate to) {
+        if (!configuredKinds.isEmpty() && !configuredKinds.contains(ref.kind())) {
+            return Optional.of(new TreeSet<>());
+        }
+        Record ix = client.get(null, new Key(namespace, AerospikeLayout.indexSet(set), AerospikeLayout.indexKey(ref.kind(), ref.id())),
+                AerospikeLayout.DATES);
+        NavigableSet<LocalDate> out = new TreeSet<>();
+        if (ix == null || ix.getList(AerospikeLayout.DATES) == null) {
+            return Optional.of(out);
+        }
+        var held = effective(ref.kind()) ? null : kindDates.get(ref.kind());
+        ix.getList(AerospikeLayout.DATES).forEach(d -> {
+            LocalDate date = AerospikeLayout.date(((Number) d).longValue());
+            if (!date.isBefore(from) && !date.isAfter(to) && (held == null || held.contains(date))) {
+                out.add(date);
+            }
+        });
+        return Optional.of(out);
+    }
+
+    /**
+     * History queries' fast path (HISTORY_QUERIES.md section 10): the entity's index record (one get), then the documents of its dates in
+     * one batch get.
+     */
+    @Override
+    public com.ash.drishti.api.HistoryRead history(com.ash.drishti.api.HistoryRequest r) throws Exception {
+        java.util.List<LocalDate> dates = new java.util.ArrayList<>(com.ash.drishti.api.HistoryReads.dates(this, r));
+        java.util.Collections.reverse(dates);                                         // newest first, for the last N days
+        Key[] keys = dates.stream().map(d -> new Key(namespace, set, AerospikeLayout.docKey(r.ref().kind(), r.ref().id(), d))).toArray(Key[]::new);
+        Record[] recs = keys.length == 0 ? new Record[0] : client.get(null, keys, AerospikeLayout.DOC);
+        java.util.List<com.ash.drishti.api.HistoryDay> out = new java.util.ArrayList<>();
+        for (int i = 0; i < recs.length && (r.lastDays() == 0 || out.size() < r.lastDays()); i++) {
+            String json = recs[i] == null ? null : recs[i].getString(AerospikeLayout.DOC);
+            if (json == null) {
+                continue;
+            }
+            var data = context.parseJson(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
+            EntityDocument doc = new EntityDocument(r.ref(), data, new Provenance(sourceName, recs[i].generation, Instant.now(), false, dates.get(i)));
+            out.add(new com.ash.drishti.api.HistoryDay(dates.get(i), com.ash.drishti.api.HistoryReads.project(doc, r.fields()), null));
+        }
+        Set<LocalDate> covered = new java.util.HashSet<>();
+        for (LocalDate d : r.candidateDates()) {
+            if (coverage(r.ref().kind(), AsOf.of(d)) == com.ash.drishti.api.DateCoverage.HELD) {
+                covered.add(d);
+            }
+        }
+        return new com.ash.drishti.api.HistoryRead(out, covered, java.util.Map.of());
+    }
+
     @Override
     public Set<String> columnar(String kind) {
         return effective(kind) ? Set.of() : Set.copyOf(promoted.getOrDefault(kind, List.of()));
