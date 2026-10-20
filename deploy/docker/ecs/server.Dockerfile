@@ -41,6 +41,7 @@ ENV DRISHTI_DATA_DIR=/opt/drishti/data \
     TMPDIR=/opt/drishti/data/tmp/server \
     HOME=/opt/drishti/data/home/server \
     DRISHTI_REQUIRE_EFS=true \
-    DRISHTI_HEAP=8g
+    DRISHTI_HEAP=8g \
+    MALLOC_ARENA_MAX=2
 EXPOSE 18480
 ENTRYPOINT ["/opt/drishti/bin/entrypoint.sh"]

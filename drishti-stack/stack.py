@@ -243,6 +243,10 @@ def build_lake(stack: dict, name: str) -> None:
     shutil.rmtree(tmp, ignore_errors=True)
 
 
+# Native memory of a long-running server (SOAK-05, PERFORMANCE.md *Resident memory*): direct buffers capped, freed native memory given back
+SERVER_MEMORY_FLAGS = ["-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000"]
+
+
 def node_env(stack: dict, node: dict, keys: dict) -> tuple[dict, Path]:
     """The node's environment and working folder: the repository for home: repo, else data/stack/nodes/<node> with its own data,
     connectors and lake."""
@@ -251,6 +255,7 @@ def node_env(stack: dict, node: dict, keys: dict) -> tuple[dict, Path]:
     env["DRISHTI_NET_DIR"] = str(node_net(stack, node))
     env["DRISHTI_STACK_HOST"] = stack_host(stack)
     env["DRISHTI_PACKS"] = node["packs"]
+    env.setdefault("MALLOC_ARENA_MAX", "2")                 # glibc: two malloc arenas, not one per busy thread (PERFORMANCE.md, Resident memory)
     if node.get("home") == "repo":
         return env, ROOT
     home = STACK_DATA / "nodes" / node["name"]
@@ -273,7 +278,7 @@ def start_node(stack: dict, node: dict, keys: dict, jar: Path, pids: dict) -> bo
     if node.get("lake"):
         build_lake(stack, node["lake"])
     env, cwd = node_env(stack, node, keys)
-    args = [f"-Xmx{node.get('heap', '1536m')}", *node.get("jvm", []), "-jar", str(jar), f"--server.port={port}"]
+    args = [f"-Xmx{node.get('heap', '1536m')}", *SERVER_MEMORY_FLAGS, *node.get("jvm", []), "-jar", str(jar), f"--server.port={port}"]
     args += [f"--drishti.sources.connectors.{c}.enabled=false" for c in node.get("off", [])]
     args += node.get("args", [])
     cmd = java_cmd(java(stack), args, tmp=server_tmp(cwd, env), cwd=cwd, env=env)

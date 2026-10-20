@@ -573,7 +573,13 @@ JAVA_TOOL_OPTIONS="-Xmx2g -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterva
 ```
 
 `-XX:MaxDirectMemorySize` caps direct buffers (9 MB in use in these runs; the default cap is the heap size); `-XX:TrimNativeHeapInterval`
-(Java 21.0.1 and later) returns freed native memory to the system every minute, as `System.trim_native_heap` did by hand. To look at a
+(Java 21.0.1 and later) returns freed native memory to the system every minute, as `System.trim_native_heap` did by hand.
+
+The launchers Drishti ships set all three: `drishti-stack/stack.py` (each server it starts; a node's `jvm:` list adds to them), the ECS
+server image (`deploy/docker/ecs/server-entrypoint.sh`), `deploy/docker/server.Dockerfile` (in `JAVA_TOOL_OPTIONS`, with
+`MALLOC_ARENA_MAX` in the image and in `compose.yaml`), the IntelliJ run configurations under `run-configs/`, and
+`tools/windows/start-server.ps1`, which sets the two JVM flags only (`MALLOC_ARENA_MAX` is a glibc setting; Windows' allocator has none).
+Java 21 (21.0.12 checked) accepts both flags. To look at a
 running server: start it with `-XX:NativeMemoryTracking=summary`, take `jcmd <pid> VM.native_memory baseline`, and later
 `jcmd <pid> VM.native_memory summary.diff scale=MB`; compare its total with `VmRSS` in `/proc/<pid>/status`. A category of
 `summary.diff` that keeps rising after the heap is fully committed is a leak; RSS that NMT does not see and that `System.trim_native_heap`

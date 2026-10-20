@@ -299,7 +299,8 @@ What does **not** change live, and why:
 
 `deploy/docker/compose.yaml` runs the server and the console as two containers. The images run as a non-root user
 (uid 10001) and have health checks. The server image runs ZGC (generational) with `-XX:MaxRAMPercentage=75`, so it
-uses up to three quarters of the container's memory limit.
+uses up to three quarters of the container's memory limit, plus the native memory settings of section 7.2 (`MALLOC_ARENA_MAX=2`,
+`-XX:MaxDirectMemorySize=256m`, `-XX:TrimNativeHeapInterval=60000`): leave about 1 GB of the limit above the heap.
 
 ### 4.1 Build the images
 
@@ -679,7 +680,8 @@ Wants=network-online.target
 User=drishti
 WorkingDirectory=/opt/drishti
 EnvironmentFile=/etc/drishti/drishti.env
-Environment=JAVA_TOOL_OPTIONS=-Xmx4g -XX:+UseZGC -XX:+ZGenerational
+Environment=JAVA_TOOL_OPTIONS=-Xmx4g -XX:+UseZGC -XX:+ZGenerational -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000
+Environment=MALLOC_ARENA_MAX=2
 ExecStart=/usr/lib/jvm/java-21-openjdk-amd64/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -jar /opt/drishti/drishti-server.jar
 SuccessExitStatus=143
 TimeoutStopSec=45
@@ -694,6 +696,11 @@ WantedBy=multi-user.target
 - The server shuts down gracefully (`server.shutdown: graceful`): it stops taking requests and lets running ones
   finish, for up to 30 seconds; `TimeoutStopSec=45` gives it that time. Exit code 143 is a normal stop on SIGTERM.
 - Without `-Xmx` the JVM takes a quarter of the machine's memory as its heap ceiling.
+- `MALLOC_ARENA_MAX=2`, `-XX:MaxDirectMemorySize=256m` and `-XX:TrimNativeHeapInterval=60000` keep the server's resident memory near
+  `-Xmx` plus 0.4 GB over days (two glibc malloc arenas instead of one per busy thread, direct buffers capped, freed native memory given
+  back every minute; Java 21.0.1 or later). Every launcher Drishti ships sets them: `drishti-stack`, the Docker and ECS server images,
+  `deploy/docker/compose.yaml`, `tools/windows/start-server.ps1` (the two JVM flags; `MALLOC_ARENA_MAX` is glibc's) and the IntelliJ run
+  configurations. Budget the machine for `-Xmx` plus about 1 GB all the same ([PERFORMANCE.md](PERFORMANCE.md#resident-memory-what-to-budget-and-two-settings)).
 
 ### 7.3 The console
 
