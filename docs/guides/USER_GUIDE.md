@@ -176,6 +176,22 @@ the same trade as `TRD MX-20000001`.
 names several (`TRD MX-200000`, the start of an id), you get a table to pick from. See
 [Pick lists](#pick-lists-when-a-command-names-several-entities).
 
+**A range after the id shows the entity over time.** `TRD 1000015 30` opens the trade's
+[History](#history-an-entity-over-time): one row per business day it has data, the last 30 such days.
+
+```text
+TRD 1000015 30            the last 30 business days on which the trade has data
+EQ EQ-CSCA 3M             the last 3 months (also 30D, 2W, 1Y): every business day in the span that has data
+FX FX-AUDUSD YTD          since 1 January (also MTD, QTD)
+CRV CRV-USD-SOFR FROM 2026-09-01 TO 2026-09-30
+TRD 1000015 30 DIFF       only what changed, day by day
+```
+
+The range is always the last words, never the first word after the mnemonic: `TRD 30` still opens trade `30`, and an id that really
+contains the words (`BOND UST 2030`) opens as before. A search (`TRD desk=rates 30`, `TRD MX-2* 30`) stays a search. A prefix that names
+several trades (`TRD MX-2000 30`) gives the pick list, and each of its rows opens that trade's history. Aliases keep the range:
+`MYBOOK 30` is `BOOK BOOK-RATES-1 30`.
+
 Mnemonics come from the packs that are switched on. The full list, pack by pack, is in
 [PACKS.md](PACKS.md#the-packs-that-ship). The most used ones, from the seven shipped packs:
 
@@ -1287,6 +1303,55 @@ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "$DRISHTI_SERVER/api/v1/histor
 ```
 
 It also takes `fromKnownAt` and `toKnownAt`. See [API_GUIDE.md](API_GUIDE.md).
+
+## History: an entity over time
+
+Type a range after the id (`TRD 1000015 30 <GO>`, see [The command line](#the-form-of-a-command)) and the screen becomes that entity
+over time. The address is `/v/trade/1000015/history?days=30` (`?range=3M`, `?from=2026-09-01&to=2026-09-30`, `&diff=1`); the short
+form `/v/trade/1000015?days=30` opens the same page. After an id, a space in the command line offers the ranges: `30`, `3M`, `YTD`,
+`30 DIFF`.
+
+**The header** names the entity, the range (*30 business days*), the first and last dates, how many days have data, how many changed,
+how many were restated, and the days in the range with no data (hover *no data on 1 day* for the dates). *known: latest* means each day
+is shown as it is known now.
+
+**Trades and other documents** show one row per business day, newest first, with the kind's top-level fields as columns and each
+list (legs, events) as a count with `▸`. A cell that differs from the day before is tinted and in bold, with `▲`/`▼` for numbers;
+hover it for the value it had (*changed from 72K*). What stayed the same is dimmed, so the moves stand out. `⟲2` beside a date means the
+store kept two versions of that day: the row is the latest. Masked fields read as the mask on every row, exactly as in the view.
+
+**Equities, FX, curves and other market kinds** add the headline numbers of the chart's field (*Last*, *Chg*, *Chg %*, *High* and *Low*
+with their dates, *Range*, *Avg*) and a chart in the theme's colours above the same table. The chart's crosshair follows the selected
+row. The range buttons (`1M` `3M` `6M` `YTD` `1Y`) ask again; the address follows, so *Back* works and a link reproduces it.
+
+**Diff** (`D`, or `DIFF` at the end of the command) turns the table into a change log: one block per day on which something changed,
+each change on its own line (`Quantity 72,000 → 75,000`), with *Compare* (the full [compare page](#compare-what-changed) for that day
+and the one before) and *Open the day*.
+
+**Keys** (shown with `?`; ignored while you type in a field):
+
+| Key | Does | Key | Does |
+|---|---|---|---|
+| `↑` `↓`, `j` `k` | previous, next day | `Home` `End`, `PgUp` `PgDn` | first, last, a page |
+| `←` `→` | previous, next column (read aloud with its header) | `Enter`, double click | open the day's view, as it was that day |
+| `C` | changes only: hide the days on which nothing moved (*7 of 30 days*) | `D` | diff, on and off |
+| `R` | type a new range (`30`, `3M`, `YTD`, `FROM 2026-09-01`) | `1` `3` `6` `Y` `T` | 1M, 3M, 6M, 1Y, YTD |
+| `E` | export: CSV, Excel, JSON | `Alt+S` | copy a link to these rows |
+| `?` | the keys | `Esc` | back to today's view |
+
+**Open the day.** `Enter` opens `/v/trade/1000015?asOf=2026-10-15&gen=58`: the normal view as of that day, with the pinned banner
+(*as it was*, or *changed since* when the data has moved on).
+
+**Export** (`E`) downloads the table as shown, newest first: CSV (numbers as numbers, the formula guard, UTF-8 with BOM), Excel, or the
+server's JSON exactly as served. With *changes only* on, only the changed days. Files are named `1000015-history-2026-09-07-2026-10-19.csv`.
+Every export reads through the server, so it carries your masks.
+
+**Link** (`Alt+S`) copies a link that pins the last date (`…/history?days=30&to=2026-10-19`), so a colleague sees the same rows a week
+later. A link without `to` moves with the business date.
+
+**When there is nothing to show** the page says why and offers today's view: an unknown entity (`DRS-1001`), a kind that keeps no daily
+history here (`DRS-1012`), no data in the range (`DRS-1013`), a range larger than allowed (`DRS-4021`, with a link to the last 30 days)
+or one that cannot hold (`FROM` after `TO`).
 
 ## How fresh is it
 

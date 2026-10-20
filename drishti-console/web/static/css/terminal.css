@@ -35,6 +35,7 @@ body.terminal { font-size: 14px; }
   background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 6px; box-shadow: var(--d-shadow); max-height: 60vh; overflow: auto; }
 .cmd-list li { display: grid; grid-template-columns: 4.2rem 9.5rem 1fr; gap: .6rem; align-items: baseline; padding: .38rem .75rem; cursor: pointer; }
 .cmd-list li[aria-selected="true"], .cmd-list li:hover { background: var(--d-accent-tint); }
+.cmd-list .sg-range { color: var(--d-accent); font-weight: 700; margin-left: .3rem; }   /* a history range after the id */
 .cmd-list .sg-m { color: var(--d-accent); font: 600 .85rem var(--d-font-mono); }
 .cmd-list .sg-t { color: var(--d-ink); font: .88rem var(--d-font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cmd-list .sg-s { color: var(--d-muted); font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

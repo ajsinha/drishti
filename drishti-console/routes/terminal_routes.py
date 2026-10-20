@@ -24,7 +24,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from core import about_index, asof, collab as collab_core, compare_side, controls
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
-from routes import api_routes
+from routes import api_routes, history_routes
 from routes.common import ident, packs, render
 
 router = APIRouter(include_in_schema=False)
@@ -111,8 +111,11 @@ async def go(request: Request, q: str = ""):
         return RedirectResponse(f"/t?error={quote(e.detail)}", status_code=303)
     if r.get("pack"):                       # a pack's code typed alone (MKT): its overview
         return RedirectResponse(f"/p/{quote(r['pack'])}", status_code=303)
+    hist = (r.get("history") or {}).get("query")   # TRD 1000015 30: the entity over time (HISTORY_QUERIES.md section 4.3)
     if not r.get("ref"):                    # several (or no) entities: a pick list, as on a Bloomberg terminal
-        return RedirectResponse(f"/s?q={quote(r.get('list') or q)}", status_code=303)
+        return RedirectResponse(f"/s?q={quote(r.get('list') or q)}" + (f"&{hist}" if hist else ""), status_code=303)
+    if hist:
+        return RedirectResponse(f"/v/{r['ref']['kind']}/{quote(r['ref']['id'])}/history?{hist}", status_code=303)
     return RedirectResponse(f"/v/{r['ref']['kind']}/{quote(r['ref']['id'])}", status_code=303)
 
 
@@ -176,6 +179,7 @@ async def search(request: Request, q: str = "", vs: str = "", words: str = ""):
                 data = await request.app.state.backend.search(asked, ident(request))
         except BackendError as e:
             error = e
+    hq = history_routes.history_query(request.query_params)   # a pick list of a history command: each row opens its history
     rows = []
     if data:
         for r in data.get("rows", []):
@@ -196,7 +200,7 @@ async def search(request: Request, q: str = "", vs: str = "", words: str = ""):
         state = await request.app.state.pivots.state(request.app.state.backend, ident(request))
         pivot_saved = request.app.state.pivots.saved_search(state, data.get("kind", ""))
     return render(request, "terminal/search.html", q=q, vs=vs, words=words, phrase=phrase, data=data, rows=rows, error=error, titled=titled,
-                  screen="search", pivot_saved=pivot_saved)
+                  screen="search", pivot_saved=pivot_saved, hq=hq)
 
 
 @router.post("/s/watch")
@@ -305,6 +309,9 @@ async def view_panels(request: Request, kind: str, id_: str, panels: str = ""):
 
 @router.get("/v/{kind}/{id_:path}")
 async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int = 0, share: str = ""):
+    hist = history_routes.history_link(kind, id_, request.query_params)
+    if hist:                                        # /v/trade/1000015?days=30, the short form of a history link
+        return RedirectResponse(hist, status_code=303)
     sid = collab_core.set_share(share)              # a view opened through a share's link tells the server so (its access log)
     pin = None                                      # how a pinned link (?asOf=&knownAt=&gen=) was honoured, for the banner
     ctl = controls.from_query(request.query_params)  # ?ctl.leg=L2: the controls' values, so a link reproduces what was seen

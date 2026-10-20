@@ -1,0 +1,162 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# History (HISTORY_QUERIES.md section 5): TRD 1000015 30 <GO>. One row per business day the entity has data, newest first; what
+   changed from the day before is tinted and says what it was; a market kind has a chart and its headline numbers on top. Keyboard
+   first: history-page.js (? lists the keys). #}
+{% extends "base.html" %}
+{% set d = page.data if page else {} %}
+{% set mn = (d.mnemonic if page else '') or '' %}
+{% set typed_range = params.get('days') or params.get('range') or (('FROM ' ~ params.get('from') ~ ((' TO ' ~ params.get('to')) if params.get('to') else '')) if params.get('from') else '') %}
+{% block title %}{{ id }} · History · {{ PRODUCT }}{% endblock %}
+{% block screen %}history{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/history.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% with command_text=((mn ~ ' ') if mn else '') ~ id ~ ' ' ~ typed_range ~ (' DIFF' if params.get('diff') else '') ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block content %}
+{% if error %}
+<div class="hx hx-error" data-history data-history-ready data-today="{{ today }}">
+  <header class="hx-head">
+    <div class="hx-bar"><span class="hx-id mono">{{ id }}</span><span class="hx-arrow" aria-hidden="true">▸</span><span class="hx-word">HISTORY</span></div>
+  </header>
+  <p class="pnl-err" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ drs_message(error.code, error.detail, " · ") }}</p>
+  <p class="text-muted-d">{{ drs_advice(error.code, kind, id) }}</p>
+  <p class="hx-error-links"><a class="lnk" href="{{ today }}">Today’s view of {{ id }}</a>
+    {% if params.get('days') != '30' %}<a class="lnk" href="?days=30">The last 30 days</a>{% endif %}
+    <a class="lnk" href="/t">The terminal</a></p>
+</div>
+{% else %}
+{% set w = page.window %}
+<div class="hx{% if page.market %} hx-market{% else %} hx-doc{% endif %}{% if only %} hx-only{% endif %}" data-history data-kind="{{ kind }}" data-id="{{ id }}"
+     data-mnemonic="{{ mn }}" data-shape="{{ 'market' if page.market else 'document' }}" data-today="{{ today }}" data-q="{{ q }}"
+     data-total="{{ page.count }}" data-changed-days="{{ page.changed_days }}" data-share-url="{{ share }}" data-history-ready>
+  <header class="hx-head">
+    <div class="hx-bar">
+      {% if mn %}<span class="hx-mn">{{ mn }}</span>{% endif %}<span class="hx-id mono">{{ id }}</span><span class="hx-arrow" aria-hidden="true">▸</span><span class="hx-word">HISTORY</span>
+      <span class="hx-title">{{ d.title or '' }}</span>
+      <span class="hx-span" data-hx-span>{{ range_text }}</span>
+    </div>
+    <div class="hx-meta">
+      <span class="hx-dates mono"{% if page.missing %} title="No data on {{ page.missing | join(', ') }}"{% endif %} data-hx-dates>{{ w.get('from') or '—' }} <span aria-hidden="true">→</span><span class="visually-hidden"> to </span> {{ w.get('to') or '—' }}</span>
+      <span class="hx-sep" aria-hidden="true">·</span><span><b class="mono" data-hx-shown>{{ page.count }}</b> <span data-hx-shown-label>{{ 'day' if page.count == 1 else 'days' }}</span> with data</span>
+      {% if not page.market %}<span class="hx-sep" aria-hidden="true">·</span><span class="hx-chg-count"><b class="mono">{{ page.changed_days }}</b> changed</span>{% endif %}
+      {% if page.restated %}<span class="hx-sep" aria-hidden="true">·</span><span><b class="mono">{{ page.restated }}</b> restated</span>{% endif %}
+      {% if page.missing %}<span class="hx-sep" aria-hidden="true">·</span><span class="hx-missing" title="{{ page.missing | join(', ') }}">no data on {{ page.missing | length }} {{ 'day' if page.missing | length == 1 else 'days' }}</span>{% endif %}
+      <span class="hx-sep" aria-hidden="true">·</span><span>known: <b>{{ 'at ' ~ w.knownAt if w.get('knownAt') else 'latest' }}</b></span>
+      {% if page.sources %}<span class="hx-sep" aria-hidden="true">·</span><span class="mono hx-src">{{ page.sources | join(', ') }}</span>{% endif %}
+      {% if d.get('cache') %}<span class="hx-took mono" title="How the server answered: {{ d.cache }} cache{% if d.get('tookMs') is not none %}, {{ d.tookMs }} ms{% endif %}">{% if d.get('tookMs') is not none %}{{ d.tookMs }} ms{% endif %}</span>{% endif %}
+    </div>
+    <div class="hx-tools">
+      <nav class="hx-ranges" aria-label="Range">
+        {% for label, href, on in ranges %}<a class="hx-rng{% if on %} on{% endif %}" href="{{ href }}"{% if on %} aria-current="true"{% endif %} data-hx-range-btn="{{ label }}">{{ label }}</a>{% endfor %}
+      </nav>
+      <form class="hx-rform" data-hx-rform role="search" aria-label="Type a range">
+        <label class="visually-hidden" for="hxRange">Range</label>
+        <input id="hxRange" class="mono" data-hx-rinput autocomplete="off" spellcheck="false" placeholder="30 · 3M · YTD · FROM 2026-09-01" value="{{ typed_range }}" aria-keyshortcuts="R">
+      </form>
+      <span class="hx-keys-bar">
+        {% if not page.market and not params.get('diff') %}<button type="button" class="fk" data-hx-key="c" aria-pressed="{{ 'true' if only else 'false' }}" aria-keyshortcuts="C"><b>C</b> Changes only</button>{% endif %}
+        <a class="fk{% if params.get('diff') %} on{% endif %}" href="{{ diff_href }}" data-hx-key="d" aria-keyshortcuts="D"{% if params.get('diff') %} aria-current="true"{% endif %}><b>D</b> {{ 'Table' if params.get('diff') else 'Diff' }}</a>
+        <span class="dropdown">
+          <button type="button" class="fk" data-bs-toggle="dropdown" aria-expanded="false" data-hx-key="e" aria-keyshortcuts="E"><b>E</b> Export</button>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" data-hx-export="csv" href="/export/history/{{ kind | urlencode }}/{{ id | urlencode }}.csv?{{ q }}"><i class="bi bi-filetype-csv" aria-hidden="true"></i> CSV</a>
+            <a class="dropdown-item" data-hx-export="xlsx" href="/export/history/{{ kind | urlencode }}/{{ id | urlencode }}.xlsx?{{ q }}"><i class="bi bi-filetype-xlsx" aria-hidden="true"></i> Excel</a>
+            <a class="dropdown-item" data-hx-export="json" href="/export/history/{{ kind | urlencode }}/{{ id | urlencode }}.json?{{ q }}"><i class="bi bi-filetype-json" aria-hidden="true"></i> JSON (as served)</a>
+          </div>
+        </span>
+        <button type="button" class="fk" data-hx-key="s" aria-keyshortcuts="Alt+S" title="Copy a link to these rows: the end date is pinned, so it shows the same days later"><b>⧉</b> <span data-hx-share-label>Link</span></button>
+        <button type="button" class="fk" data-hx-key="?" aria-keyshortcuts="?"><b>?</b> Keys</button>
+      </span>
+    </div>
+  </header>
+  {% if page.partial or page.truncated %}
+  <p class="asof-banner" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+    {% if page.partial %}Some days could not be read: {% for p in page.problems %}<span class="mono">{{ p.code }}</span> {{ p.message }}{% if p.days %} ({{ p.days | join(', ') }}){% endif %}{% if not loop.last %}; {% endif %}{% endfor %}.{% endif %}
+    {% if page.truncated %}Only the newest {{ page.count }} rows are shown: narrow the range with FROM … TO.{% endif %}</p>
+  {% endif %}
+  {% if page.market and page.headline %}
+  {% set h = page.headline %}
+  <section class="hx-kpis" aria-label="Headline numbers of {{ h.label }}">
+    <div class="hx-kpi hx-kpi-last"><span class="hx-k">Last</span><span class="hx-v mono">{{ h.last }}</span></div>
+    <div class="hx-kpi"><span class="hx-k">Chg</span><span class="hx-v mono{% if h.dir %} t-{{ h.dir }}{% endif %}">{{ h.change }}</span></div>
+    <div class="hx-kpi"><span class="hx-k">Chg %</span><span class="hx-v mono{% if h.dir %} t-{{ h.dir }}{% endif %}">{{ h.pct }}</span></div>
+    <div class="hx-kpi"><span class="hx-k">High</span><span class="hx-v mono">{{ h.high }}</span><span class="hx-d mono">{{ h.high_date }}</span></div>
+    <div class="hx-kpi"><span class="hx-k">Low</span><span class="hx-v mono">{{ h.low }}</span><span class="hx-d mono">{{ h.low_date }}</span></div>
+    <div class="hx-kpi"><span class="hx-k">Range</span><span class="hx-v mono">{{ h.range }}</span></div>
+    <div class="hx-kpi"><span class="hx-k">Avg</span><span class="hx-v mono">{{ h.average }}</span></div>
+    <div class="hx-kpi hx-kpi-field"><span class="hx-k">Field</span><span class="hx-v" data-hx-field>{{ h.label }}</span></div>
+  </section>
+  <section class="hx-chart-box" aria-label="{{ h.label }} from {{ w.get('from') }} to {{ w.get('to') }}: last {{ h.last }}, change {{ h.change }} ({{ h.pct }}), high {{ h.high }} on {{ h.high_date }}, low {{ h.low }} on {{ h.low_date }}. The table below has every value.">
+    <div class="hx-chart" data-hx-chart data-hx-series="{{ page.series | tojson | forceescape }}" role="img" aria-label="Chart of {{ h.label }}"></div>
+    <p class="hx-cross mono" data-hx-cross aria-live="polite"></p>
+  </section>
+  {% endif %}
+  {% if params.get('diff') %}
+  <section class="hx-log" aria-label="What changed, day by day" data-hx-rows>
+    {% set changed_rows = page.rows | selectattr('changes') | list %}
+    {% if not changed_rows %}<p class="text-muted-d">Nothing changed in these {{ page.count }} days.</p>{% endif %}
+    {% for r in changed_rows %}
+    <article class="hx-day" data-row data-date="{{ r.date }}" data-href="{{ r.href }}" tabindex="{{ 0 if loop.first else -1 }}" aria-selected="{{ 'true' if loop.first else 'false' }}">
+      <header class="hx-day-h"><b class="mono">{{ r.date }}</b>{% if r.restated %} <span class="hx-ver" title="{{ r.versions }} versions that day (the latest shown)">⟲{{ r.versions }}</span>{% endif %}
+        <span class="hx-day-n">{{ r.changes | length }} {{ 'change' if r.changes | length == 1 else 'changes' }}{% if r.prev_date %} since <span class="mono">{{ r.prev_date }}</span>{% endif %}</span>
+        <span class="hx-day-links">{% if r.prev_date %}<a class="lnk" href="/compare/{{ kind }}/{{ id | urlencode }}?from={{ r.prev_date }}&amp;to={{ r.date }}">Compare</a>{% endif %}<a class="lnk" href="{{ r.href }}">Open the day</a></span></header>
+      <ul class="hx-chg">
+        {% for c in r.changes %}<li><span class="hx-f">{{ c.label }}</span><span class="hx-path mono">{{ c.path }}</span><span class="hx-b mono">{{ c.before }}</span><span class="hx-to" aria-label="to">→</span><span class="hx-a mono">{{ c.after }}</span><span class="hx-dl mono{% if c.delta.startswith('−') %} t-neg{% elif c.delta.startswith('+') %} t-pos{% endif %}">{{ c.delta }}</span></li>{% endfor %}
+      </ul>
+    </article>
+    {% endfor %}
+  </section>
+  {% else %}
+  <section class="hx-table-box">
+    <div class="tbl-wrap hx-wrap">
+      <table class="tbl hx-tbl" data-plain data-hx-rows aria-label="{{ id }} by business day, newest first" aria-rowcount="{{ page.count + 1 }}">
+        <thead><tr>
+          <th scope="col" class="hx-date" aria-sort="descending">Date</th>
+          {% for c in page.columns %}<th scope="col" class="{% if c.type == 'number' %}num{% endif %}{% if c.key %} hx-key{% endif %}" data-path="{{ c.path }}" title="{{ c.path }}{% if c.masked %} (masked for you){% endif %}">{{ c.label or c.path }}{% if c.masked %} <i class="bi bi-eye-slash" aria-label="masked"></i>{% endif %}</th>{% endfor %}
+          {% for p in page.parts %}<th scope="col" class="num hx-part-h" data-path="{{ p.path }}">{{ p.label or p.path }}</th>{% endfor %}
+        </tr></thead>
+        <tbody>
+        {% for r in page.rows %}
+          <tr data-row data-date="{{ r.date }}" data-href="{{ r.href }}" tabindex="{{ 0 if loop.first else -1 }}" aria-selected="{{ 'true' if loop.first else 'false' }}"{% if r.changed %} data-changed{% endif %}{% if r.carried %} class="hx-carried"{% endif %}>
+            <th scope="row" class="hx-date mono">{{ r.date }}{% if r.restated %}<span class="hx-ver" title="{{ r.versions }} versions that day (the latest shown)">⟲{{ r.versions }}</span>{% endif %}{% if r.carried %}<span class="hx-carry" title="No change that day: carried from {{ r.data_date }}">↧</span>{% endif %}{% if r.deleted %}<span class="hx-del">deleted</span>{% endif %}</th>
+            {% for c in r.cells %}<td class="mono{% if c.num %} num{% endif %}{% if c.changed %} hx-ch{% endif %}{% if c.masked %} hx-mask{% endif %}{% if c.neg %} t-neg{% elif c.pos %} t-pos{% endif %}" data-path="{{ c.path }}"{% if c.changed %} data-changed title="{{ c.title }}"{% endif %}>{{ c.text }}{% if c.arrow == 'up' %}<span class="hx-up" aria-label="up">▲</span>{% elif c.arrow == 'down' %}<span class="hx-down" aria-label="down">▼</span>{% endif %}</td>{% endfor %}
+            {% for p in r.parts %}<td class="num mono hx-part{% if p.changed %} hx-ch{% endif %}" data-path="{{ p.path }}"{% if p.changed %} data-changed title="changed from the day before"{% endif %}>{{ '—' if p.count is none else p.count }} <span class="hx-tri" aria-hidden="true">▸</span></td>{% endfor %}
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
+  <footer class="hx-foot">
+    {% if not page.market %}<p class="hx-legend"><span class="hx-sw hx-sw-ch" aria-hidden="true"></span> changed from the day before <span class="hx-sw-ver">⟲2</span> two versions that day (the latest shown) <span class="hx-sw-same">72K</span> same as the day before</p>{% endif %}
+    <p class="hx-keyline"><kbd>↑</kbd><kbd>↓</kbd> day <kbd>←</kbd><kbd>→</kbd> column <kbd>Enter</kbd> open the day {% if not page.market %}<kbd>C</kbd> changes only {% else %}<kbd>1</kbd><kbd>3</kbd><kbd>6</kbd><kbd>Y</kbd><kbd>T</kbd> range {% endif %}<kbd>D</kbd> diff <kbd>E</kbd> export <kbd>R</kbd> range <kbd>?</kbd> keys <kbd>Esc</kbd> today’s view</p>
+  </footer>
+  <dialog class="hx-help" data-hx-help aria-label="History keys">
+    <header><h3>Keys</h3><button type="button" class="fk" data-hx-help-close aria-label="Close"><b>Esc</b></button></header>
+    <table class="tbl" data-plain><tbody>
+      <tr><td><kbd>↑</kbd> <kbd>↓</kbd> <kbd>j</kbd> <kbd>k</kbd></td><td>previous, next day</td><td><kbd>Home</kbd> <kbd>End</kbd> <kbd>PgUp</kbd> <kbd>PgDn</kbd></td><td>first, last, a page</td></tr>
+      <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>previous, next column</td><td><kbd>Enter</kbd></td><td>open the day’s view, as it was</td></tr>
+      <tr><td><kbd>C</kbd></td><td>changes only, on and off</td><td><kbd>D</kbd></td><td>diff: what changed, day by day</td></tr>
+      <tr><td><kbd>R</kbd></td><td>type a range (30, 3M, YTD, FROM …)</td><td><kbd>1</kbd> <kbd>3</kbd> <kbd>6</kbd> <kbd>Y</kbd> <kbd>T</kbd></td><td>1M, 3M, 6M, 1Y, YTD</td></tr>
+      <tr><td><kbd>P</kbd></td><td>next chart field</td><td><kbd>E</kbd></td><td>export: CSV, Excel, JSON</td></tr>
+      <tr><td><kbd>Alt</kbd>+<kbd>S</kbd></td><td>copy a link to these rows</td><td><kbd>Esc</kbd></td><td>close, else today’s view</td></tr>
+    </tbody></table>
+  </dialog>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}{% if page and page.market %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script>{% endif %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/history-page.js?v={{ ASSET_V }}"></script>{% endblock %}

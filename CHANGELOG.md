@@ -17,6 +17,17 @@
 
 ## Unreleased
 
+- **Added: history queries in the console (H7, H8, H9).** A range after the id shows the entity over time: `TRD 1000015 30`, `EQ EQ-CSCA 3M`,
+  `FX FX-AUDUSD YTD`, `CRV CRV-USD-SOFR FROM 2026-09-01 TO 2026-09-30`, each optionally ending in `DIFF`. The server reads the range off the
+  end of a command after the alias is expanded (`HistoryRange`); a lone id after the mnemonic, a search and an id that contains the words stay
+  as they were, and a range that cannot hold says why (`DRS-4001`). `POST /api/v1/command` answers `history` (range, mode, query) and the
+  type-ahead offers `30`, `3M`, `YTD`, `30 DIFF` after one entity's id. The console's `/go` opens `/v/{kind}/{id}/history?days=30`
+  (`/v/{kind}/{id}?days=30` redirects there; a pick list carries the range to its rows). The page: a header with the dates, the counts and
+  the days with no data; one row per business day, newest first, changed cells tinted with what they were, `⟲2` for a restated day,
+  changes only (`C`), the keyboard (`↑↓ ←→ Enter Esc R ?`), every theme; a market kind adds its headline numbers (last, change, high, low,
+  range, average) and a chart that follows the selected row. DIFF lists each changed day's changes with links to Compare and to the day.
+  Exports `/export/history/{kind}/{id}.csv|.xlsx|.json` and a link that pins the last date
+  ([USER_GUIDE › History](docs/guides/USER_GUIDE.md#history-an-entity-over-time)).
 - **Added: history queries, the connector contract (H1).** `SourcePlugin.history(HistoryRequest)` returns `HistoryRead(days, covered,
   failed)`, one `HistoryDay(date, document, versions)` per business date the source holds the entity on; `SourcePlugin.days(ref, from, to)`
   lists those dates without reading a document. The default (`HistoryReads.perDay`) reads date by date through `fetch(ref, asOf)`, eight at
