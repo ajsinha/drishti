@@ -61,6 +61,31 @@ the data-load signal for each table and date, or, when none is reachable, finds 
 and clears its stored BI columns and rollups; a running server also sees each rebuilt Delta date by itself. The test data itself is
 regenerated with `python3 tools/testdata/make_testdata.py` (deterministic, the same bytes on every Python version: `tools/testdata/test_testdata.py` and `test_deterministic.py` guard it).
 
+## Mixed Delta and Iceberg storage (planned, 2.6.7)
+
+Decided by the product owner on 2026-10-20, to be built in 2.6.7: each source system's trades can be stored in **Delta Lake or Apache
+Iceberg**, chosen per system when the demo lakes are built, so one installation proves that the connectors, history, search, the
+grouped pages and BI answer the same whatever the storage. This section is the design; the Windows QA guide, TOOLS.md and CLI_GUIDE.md
+describe the commands once they are built.
+
+| Command (planned) | Result |
+|---|---|
+| `build_demo_lakes.py` | everything in Delta, as today |
+| `build_demo_lakes.py --store calypso=iceberg` | CALYPSO in Iceberg, ENDUR and MUREX in Delta (the mixed case) |
+| `build_demo_lakes.py --store endur=delta --store calypso=iceberg --store murex=iceberg` | any mix, one `--store` per system |
+| `build_demo_lakes.py --store all=iceberg` | every system in Iceberg |
+| `build_demo_lakes.py --only trades/calypso --store calypso=iceberg --as-of <date>` | one system rebuilt, in its store |
+| `build_demo_lakes.py --source-dir <folder> --system calypso --store calypso=iceberg --files-only` | your own CALYPSO files into Iceberg |
+
+- **Where:** Iceberg tables under `<data>/iceberg/trading/trade_<system>` (`DRISHTI_ICEBERG_ROOT` moves them), written by Drishti's own
+  Iceberg engine (`engine: native`): no Hadoop, so it works on Windows.
+- **Connector files:** the build writes `trade-<system>.yaml` with `plugin: delta` or `plugin: iceberg` to match; the trading pack's
+  union of the three systems is unchanged. Restart the server after a build.
+- **Proof:** an equality test builds the same data all-Delta and mixed and compares trade pages, 60-day history, search, the grouped
+  counterparty pages and a BI report row by row; QA runs the browser tests on the mixed lake.
+- **Maintenance:** `lake maintain` for the Delta tables; Iceberg's own maintenance (expire snapshots, compaction) for the Iceberg ones.
+- **Default:** an option first; the demo default becomes mixed once 2.6.7's QA is clean on it.
+
 ## The sizes
 
 | Size | Command | What you get | When to use it |
