@@ -201,6 +201,14 @@ a reload or a dropped day changes it; one day's version is its generation, so a 
 **Live changes.** The connector refreshes; it does not push. Cassandra's change data capture is per node and on disk; to push, put a
 Kafka connector in front of it (Drishti reads Kafka).
 
+### History queries
+
+`TRD 1000015 30` ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)) lists the entity's days with one single-partition range read
+of `entity_days` (`kind = ? AND id = ? AND business_date >= ? AND business_date <= ?`), keeping only days `kind_days` still names (an
+`entity_days` row may outlive its data), then reads one document per day by its partition (date, generation, bucket computed here),
+eight at once. The documents cannot come from one query: the business date is part of the data table's partition key. One generation is
+kept, so `versions` is 1 and `knownAt` is refused (`DRS-1007`).
+
 ## 6. Retention: TTL or dropped days
 
 | Way | How | When |

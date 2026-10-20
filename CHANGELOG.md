@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **Added: history queries, the Cassandra fast path (H6).** An entity's days from `entity_days` in one range read, then one point read per
+  day, eight at once ([CASSANDRA_CONNECTOR.md](docs/connectors/CASSANDRA_CONNECTOR.md)); `DatedSourceContract`'s history cases pass.
 - **Added: history queries, the Redis and PostgreSQL fast paths (H5).** Redis reads an entity's days and all their documents in two or three
   round trips (`ZRANGEBYSCORE`, one `MGET`) ([REDIS_CONNECTOR.md](docs/connectors/REDIS_CONNECTOR.md)); PostgreSQL in table mode in one
   range query ([POSTGRES_CONNECTOR.md](docs/connectors/POSTGRES_CONNECTOR.md)). Both pass `DatedSourceContract`'s history cases.
