@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Fixed (QA1-204): on a node that does not hold the trade, the type-ahead keeps the exact id first.** `TRD 1000002` on a node holding
+  `10000020…` lists the peer's `1000002` right after the ranges, before this node's longer ids, instead of leaving it out.
+  HISTORY_QUERIES.md 4.4.
+
 - **Fixed (QA1-203): the range forms that still escaped answer `DRS-4022` with what to type**: `TRD 1000001 30.` (it opened today's
   view), `1e3`, `FROM 2026-10-01 TO` (*TO needs a date*), `TO 2026-10-01` (*TO follows FROM*) and `DIFF 30` (*DIFF follows a range*)
   instead of parser text; full-width digits are read as digits (`３0` is `30`, `０` is *0 days is empty*) instead of a raw `DRS-5001`;

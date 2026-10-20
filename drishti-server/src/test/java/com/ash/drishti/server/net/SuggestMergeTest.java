@@ -40,4 +40,23 @@ class SuggestMergeTest {
         assertThat(merged).extracting(Suggestion::complete).containsExactly("TRD 1000002 30", "TRD 1000002 3M", "TRD 1000002 YTD",
                 "TRD 1000002 30 DIFF", "TRD 10000020", "TRD 1000002");
     }
+
+    @Test
+    void theExactIdFromThePeerThatHoldsItComesFirst() {
+        // QA1-204: this node holds 10000020..10000029, the peer holds 1000002; ten rows asked
+        List<Suggestion> local = new java.util.ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            local.add(entity("1000002" + i));
+        }
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        SearchScatter.Share peer = new SearchScatter.Share("n1", json.valueToTree(List.of(entity("1000002"), entity("10000020"))), null, 3);
+        SearchScatter sc = new SearchScatter(null, null, null);
+        assertThat(sc.mergeSuggestions(local, List.of(peer), 10, "TRD 1000002")).extracting(Suggestion::id).startsWith("1000002", "10000020")
+                .hasSize(10);
+        List<Suggestion> withRanges = new java.util.ArrayList<>(local);
+        SearchScatter.Share peerRanges = new SearchScatter.Share("n1", json.valueToTree(List.of(range("30"), range("3M"), range("YTD"),
+                range("30 DIFF"), entity("1000002"))), null, 3);
+        assertThat(sc.mergeSuggestions(withRanges, List.of(peerRanges), 10, "TRD 1000002 ")).extracting(Suggestion::complete)
+                .startsWith("TRD 1000002 30", "TRD 1000002 3M", "TRD 1000002 YTD", "TRD 1000002 30 DIFF", "TRD 1000002");
+    }
 }

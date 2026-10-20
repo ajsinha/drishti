@@ -227,7 +227,7 @@ public class CommandController {
         }
         String path = "/api/v1/command/suggest?q=" + java.net.URLEncoder.encode(q, java.nio.charset.StandardCharsets.UTF_8) + (limit == null ? "" : "&limit=" + limit);
         var shares = sc.ask(peers, path, asOf, principal, sc.suggestBudget(), "suggest", null);
-        List<Suggestion> merged = sc.mergeSuggestions(local, shares, limit == null ? Math.max(local.size(), 10) : limit);
+        List<Suggestion> merged = sc.mergeSuggestions(local, shares, limit == null ? Math.max(local.size(), 10) : limit, q);
         // this node's masks and kinds again on what the peers suggested, for the kinds whose packs are here (masks twice)
         return masks.apply(principal, q, merged.stream().filter(s -> s.kind() == null || packAccess == null || packAccess.ownerOf(s.kind()) == null
                 || entitlements.mayOpen(principal, s.kind())).toList(), asOf);
