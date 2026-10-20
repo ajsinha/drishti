@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **Changed: the native Delta engine's file access is a module of its own, `drishti-lakeio`**, shared with the coming Iceberg engine
+  ([DRISHTI_ICEBERG.md](docs/architecture/DRISHTI_ICEBERG.md) step I1): local disk and S3 storage, byte ranges, the Parquet page codecs
+  (which now also compress, for writers) and the per-file Parquet footer cache moved out of `drishti-deltalake` unchanged; local disk gains
+  an exclusive create (a hard link of a finished file) and S3 a conditional PUT (`If-None-Match: *`) with a start-up probe, for safe commits.
+  Every Delta test passes as before; the tests of the moved classes moved with them.
 - **Fixed: Drishti*net: the cluster never ends with no enabled administrator.** The last-administrator rule was checked only where a change was
   made, so two nodes disabling (or demoting, or deleting) the last two administrators at the same moment could leave none enabled. A peer's
   change that would leave a node with none is now repaired as it is applied: the disabled administrator enabled most recently is enabled again

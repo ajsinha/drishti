@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.deltalake;
+package com.ash.drishti.lakeio;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -96,9 +96,6 @@ class LocalPathsTest {
         assertThat(LocalPaths.scheme("S3://bucket/lake")).isEqualTo("s3");
         assertThat(LocalPaths.scheme("abfs://c@acct.dfs.core.windows.net/lake")).isEqualTo("abfs");
         assertThat(LocalPaths.scheme("D:\\lake")).isEqualTo("file");
-        assertThat(NativeEngine.supports("s3a://b/l")).isTrue();
-        assertThat(NativeEngine.supports("C:\\lake")).isTrue();
-        assertThat(NativeEngine.supports("abfs://c@a/l")).isFalse();
     }
 
     @Test

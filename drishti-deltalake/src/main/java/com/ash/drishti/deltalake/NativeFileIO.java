@@ -15,6 +15,14 @@
  */
 package com.ash.drishti.deltalake;
 
+import com.ash.drishti.lakeio.FileEntry;
+import com.ash.drishti.lakeio.LocalPaths;
+import com.ash.drishti.lakeio.LocalStorage;
+import com.ash.drishti.lakeio.NativeCodecs;
+import com.ash.drishti.lakeio.ParquetInput;
+import com.ash.drishti.lakeio.S3Settings;
+import com.ash.drishti.lakeio.S3Storage;
+import com.ash.drishti.lakeio.Storage;
 import io.delta.kernel.defaults.engine.fileio.FileIO;
 import io.delta.kernel.defaults.engine.fileio.InputFile;
 import io.delta.kernel.defaults.engine.fileio.OutputFile;
@@ -68,7 +76,8 @@ public final class NativeFileIO implements FileIO {
         this.local = local;
         this.s3Settings = s3Settings;
         this.conf = Map.copyOf(conf);
-        this.codecs = NativeCodecs.of(this.conf.get(NativeCodecs.LZ4_DECODER));
+        this.codecs = NativeCodecs.of(this.conf.get(NativeCodecs.LZ4_DECODER), "the native Delta engine",
+                "rewrite the date with Snappy or ZSTD (tools/lake/maintain.py relayout --force --dates <date>)");
     }
 
     /** The Parquet page decompressors this engine reads with (the LZ4 decoder follows the {@code lz4-decoder} setting). */
@@ -124,14 +133,19 @@ public final class NativeFileIO implements FileIO {
         }
     }
 
+    /** Kernel's form of a shared-module file entry. */
+    static FileStatus kernel(FileEntry e) {
+        return FileStatus.of(e.path(), e.size(), e.modified());
+    }
+
     @Override
     public CloseableIterator<FileStatus> listFrom(String filePath) throws IOException {
-        return Utils.toCloseableIterator(storage(filePath).listFrom(filePath).iterator());
+        return Utils.toCloseableIterator(storage(filePath).listFrom(filePath).stream().map(NativeFileIO::kernel).iterator());
     }
 
     @Override
     public FileStatus getFileStatus(String path) throws IOException {
-        return storage(path).status(path);
+        return kernel(storage(path).status(path));
     }
 
     @Override
@@ -146,7 +160,7 @@ public final class NativeFileIO implements FileIO {
 
     /** Parquet's view of the same file. */
     org.apache.parquet.io.InputFile newParquetFile(String path, long fileSize) {
-        return new Streams.ParquetFile(storage(path), path, fileSize);
+        return ParquetInput.of(storage(path), path, fileSize);
     }
 
     @Override

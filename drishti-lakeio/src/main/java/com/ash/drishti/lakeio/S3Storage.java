@@ -13,9 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.deltalake;
+package com.ash.drishti.lakeio;
 
-import io.delta.kernel.utils.FileStatus;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -149,12 +148,12 @@ public final class S3Storage implements Storage, AutoCloseable {
     }
 
     @Override
-    public List<FileStatus> listFrom(String path) throws IOException {
+    public List<FileEntry> listFrom(String path) throws IOException {
         Location l = Location.parse(path);
         int slash = l.key().lastIndexOf('/');
         String dirPrefix = slash < 0 ? "" : l.key().substring(0, slash + 1);
         String startKey = l.key();
-        List<FileStatus> out = new ArrayList<>();
+        List<FileEntry> out = new ArrayList<>();
         try {
             ListObjectsV2Request.Builder req = ListObjectsV2Request.builder().bucket(l.bucket()).prefix(dirPrefix).delimiter("/");
             String after = before(startKey);
@@ -164,7 +163,7 @@ public final class S3Storage implements Storage, AutoCloseable {
             for (ListObjectsV2Response page : client.listObjectsV2Paginator(req.build())) {
                 for (S3Object o : page.contents()) {
                     if (o.key().compareTo(startKey) >= 0 && !o.key().equals(dirPrefix)) {
-                        out.add(FileStatus.of(l.uri(o.key()), o.size(), o.lastModified().toEpochMilli()));
+                        out.add(new FileEntry(l.uri(o.key()), o.size(), o.lastModified().toEpochMilli()));
                     }
                 }
             }
@@ -191,11 +190,11 @@ public final class S3Storage implements Storage, AutoCloseable {
     }
 
     @Override
-    public FileStatus status(String path) throws IOException {
+    public FileEntry status(String path) throws IOException {
         Location l = Location.parse(path);
         try {
             HeadObjectResponse h = client.headObject(b -> b.bucket(l.bucket()).key(l.key()));
-            return FileStatus.of(path, h.contentLength(), h.lastModified().toEpochMilli());
+            return new FileEntry(path, h.contentLength(), h.lastModified().toEpochMilli());
         } catch (NoSuchKeyException e) {
             throw missing(path, e);
         } catch (S3Exception e) {
@@ -209,7 +208,7 @@ public final class S3Storage implements Storage, AutoCloseable {
     @Override
     public RangeReader open(String path, long knownLength) throws IOException {
         Location l = Location.parse(path);
-        long length = knownLength >= 0 ? knownLength : status(path).getSize();
+        long length = knownLength >= 0 ? knownLength : status(path).size();
         return new ObjectReader(l, length);
     }
 
@@ -252,6 +251,83 @@ public final class S3Storage implements Storage, AutoCloseable {
     @Override
     public void close() {
         client.close();
+    }
+
+    @Override
+    public java.io.OutputStream create(String path) {
+        return new S3Output(client, Location.parse(path), PART_BYTES);
+    }
+
+    /** Parts of a multipart upload (and the most a single PUT sends); S3's smallest part is 5 MiB. */
+    static final int PART_BYTES = 16 << 20;
+
+    /**
+     * A conditional PUT ({@code If-None-Match: *}): S3 (since 2024) and MinIO refuse it with 412 when the key exists,
+     * and with 409 when another conditional PUT of the key is in flight; both mean the name is taken.
+     */
+    @Override
+    public boolean createIfAbsent(String path, byte[] content) throws IOException {
+        Location l = Location.parse(path);
+        try {
+            client.putObject(b -> b.bucket(l.bucket()).key(l.key()).ifNoneMatch("*"),
+                    software.amazon.awssdk.core.sync.RequestBody.fromBytes(content));
+            return true;
+        } catch (S3Exception e) {
+            if (e.statusCode() == 412 || e.statusCode() == 409) {
+                return false;
+            }
+            throw io(path, e);
+        }
+    }
+
+    private volatile Boolean exclusive;
+    private final java.util.concurrent.locks.ReentrantLock probing = new java.util.concurrent.locks.ReentrantLock();
+
+    /**
+     * Probes once whether the store honours conditional writes: two conditional creates of one probe key under
+     * {@code probeDir} (the first must succeed, the second be refused), then the key is removed. The answer is kept.
+     */
+    public boolean exclusiveCreates(String probeDir) throws IOException {
+        Boolean known = exclusive;
+        if (known != null) {
+            return known;
+        }
+        probing.lock();
+        try {
+            if (exclusive == null) {
+                String key = probeDir.replaceAll("/+$", "") + "/drishti-commit-probe-" + java.util.UUID.randomUUID();
+                byte[] one = {1};
+                boolean first = createIfAbsent(key, one);
+                boolean second = createIfAbsent(key, one);
+                delete(key);
+                exclusive = first && !second;
+            }
+            return exclusive;
+        } finally {
+            probing.unlock();
+        }
+    }
+
+    @Override
+    public boolean exclusiveCreates() {
+        Boolean known = exclusive;
+        return known != null && known;
+    }
+
+    @Override
+    public boolean delete(String path) throws IOException {
+        Location l = Location.parse(path);
+        try {
+            client.deleteObject(b -> b.bucket(l.bucket()).key(l.key()));
+            return true;                                         // S3 does not say whether the key existed
+        } catch (NoSuchKeyException e) {
+            return false;
+        } catch (S3Exception e) {
+            if (e.statusCode() == 404) {
+                return false;
+            }
+            throw io(path, e);
+        }
     }
 
     private static FileNotFoundException missing(String path, Exception cause) {

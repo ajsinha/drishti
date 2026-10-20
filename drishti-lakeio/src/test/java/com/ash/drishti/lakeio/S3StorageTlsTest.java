@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.deltalake;
+package com.ash.drishti.lakeio;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -79,7 +79,7 @@ class S3StorageTlsTest {
 
     private static long length(Map<String, String> settings) throws Exception {
         try (S3Storage s = new S3Storage(S3Settings.from(settings))) {
-            return s.status("s3://lake/_delta_log/0.json").getSize();
+            return s.status("s3://lake/_delta_log/0.json").size();
         }
     }
 

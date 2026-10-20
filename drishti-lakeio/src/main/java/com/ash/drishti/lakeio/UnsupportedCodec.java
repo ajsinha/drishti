@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.deltalake;
+package com.ash.drishti.lakeio;
 
 /**
  * A Parquet file whose pages use a compression codec the native engine does not decompress (Brotli, LZO). Its message names the codec and what to do; readers that recognise this type show it to whoever asked rather
@@ -25,9 +25,13 @@ public final class UnsupportedCodec extends UnsupportedOperationException {
 
     private final String codec;
 
-    UnsupportedCodec(String codec) {
-        super("the native Delta engine does not decompress " + codec + " Parquet pages (it reads Snappy, ZSTD, GZIP, LZ4, LZ4_RAW and uncompressed);"
-                + " rewrite the date with Snappy or ZSTD (tools/lake/maintain.py relayout --force --dates <date>)");
+    /**
+     * @param codec the codec's Parquet name
+     * @param engine who reads ({@code the native Delta engine}, {@code drishti-iceberg})
+     * @param remedy what to do about it, as a command
+     */
+    UnsupportedCodec(String codec, String engine, String remedy) {
+        super(engine + " does not decompress " + codec + " Parquet pages (it reads Snappy, ZSTD, GZIP, LZ4, LZ4_RAW and uncompressed); " + remedy);
         this.codec = codec;
     }
 
@@ -37,7 +41,7 @@ public final class UnsupportedCodec extends UnsupportedOperationException {
     }
 
     /** The same failure naming the Parquet file it was read from. */
-    UnsupportedCodec inFile(String file) {
+    public UnsupportedCodec inFile(String file) {
         return new UnsupportedCodec(this, file);
     }
 

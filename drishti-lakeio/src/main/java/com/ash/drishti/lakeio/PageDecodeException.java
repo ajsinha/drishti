@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.deltalake;
+package com.ash.drishti.lakeio;
 
 /**
  * A compressed Parquet page that does not decode (an LZ4 page that is neither Hadoop-framed nor a single block, or one
@@ -41,7 +41,7 @@ public final class PageDecodeException extends RuntimeException {
     }
 
     /** The same failure naming the Parquet file it was read from. */
-    PageDecodeException inFile(String file) {
+    public PageDecodeException inFile(String file) {
         return new PageDecodeException(this, file);
     }
 

@@ -48,6 +48,7 @@
     <module>drishti-testkit</module>
     <module>drishti-diskcache</module>
     <module>drishti-messaging</module>
+    <module>drishti-lakeio</module>
     <module>drishti-deltalake</module>
     <module>drishti-net</module>
     <module>plugins/drishti-plugin-demo</module>
@@ -161,6 +162,7 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-messaging</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeio</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-net</artifactId><version>${project.version}</version></dependency>
       <!-- pinned here: Spring Boot's dependency management would otherwise pick older clients -->
       <dependency><groupId>com.rabbitmq</groupId><artifactId>amqp-client</artifactId><version>${rabbitmq.version}</version></dependency>

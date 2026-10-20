@@ -13,9 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.deltalake;
+package com.ash.drishti.lakeio;
 
-import io.delta.kernel.utils.FileStatus;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -43,7 +42,7 @@ public final class LocalStorage implements Storage {
         this(LocalPaths.WINDOWS);
     }
 
-    LocalStorage(boolean windows) {
+    public LocalStorage(boolean windows) {
         this.windows = windows;
     }
 
@@ -59,13 +58,13 @@ public final class LocalStorage implements Storage {
     }
 
     @Override
-    public List<FileStatus> listFrom(String path) throws IOException {
+    public List<FileEntry> listFrom(String path) throws IOException {
         String p = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
         int slash = p.lastIndexOf('/');
         String parent = slash < 0 ? "." : p.substring(0, slash);
         String from = p.substring(slash + 1);
         Path dir = path(parent);
-        List<FileStatus> out = new ArrayList<>();
+        List<FileEntry> out = new ArrayList<>();
         try (DirectoryStream<Path> files = Files.newDirectoryStream(dir)) {
             for (Path f : files) {
                 String name = f.getFileName().toString();
@@ -79,21 +78,21 @@ public final class LocalStorage implements Storage {
                     continue;                                    // removed while listing (a vacuum)
                 }
                 if (a.isRegularFile()) {
-                    out.add(FileStatus.of(parent + "/" + name, a.size(), a.lastModifiedTime().toMillis()));
+                    out.add(new FileEntry(parent + "/" + name, a.size(), a.lastModifiedTime().toMillis()));
                 }
             }
         } catch (NoSuchFileException | NotDirectoryException e) {
             throw notFound(parent, e);
         }
-        out.sort(Comparator.comparing(FileStatus::getPath));
+        out.sort(Comparator.comparing(FileEntry::path));
         return out;
     }
 
     @Override
-    public FileStatus status(String path) throws IOException {
+    public FileEntry status(String path) throws IOException {
         try {
             BasicFileAttributes a = Files.readAttributes(path(path), BasicFileAttributes.class);
-            return FileStatus.of(path, a.isDirectory() ? 0 : a.size(), a.lastModifiedTime().toMillis());
+            return new FileEntry(path, a.isDirectory() ? 0 : a.size(), a.lastModifiedTime().toMillis());
         } catch (NoSuchFileException e) {
             throw notFound(path, e);
         }
@@ -125,6 +124,74 @@ public final class LocalStorage implements Storage {
     @Override
     public boolean isDirectory(String path) {
         return Files.isDirectory(path(path));
+    }
+
+    @Override
+    public java.io.OutputStream create(String path) throws IOException {
+        Path p = path(path);
+        Files.createDirectories(p.getParent());
+        return new java.io.BufferedOutputStream(Files.newOutputStream(p), 1 << 16);
+    }
+
+    /**
+     * The content is written to a temporary file beside the target, then the target is <em>created</em> as a hard link
+     * to it, which fails when the name exists (on every file system Drishti runs on: ext4, xfs, APFS, NTFS, SMB shares).
+     * A file system without hard links (FAT, some network mounts) falls back to an exclusive create of the target
+     * ({@code CREATE_NEW}), still atomic as a claim on the name.
+     */
+    @Override
+    public boolean createIfAbsent(String path, byte[] content) throws IOException {
+        Path target = path(path);
+        Files.createDirectories(target.getParent());
+        if (Files.exists(target)) {
+            return false;
+        }
+        Path temp = target.resolveSibling(target.getFileName() + "." + java.util.UUID.randomUUID() + ".tmp");
+        Files.write(temp, content, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+        try {
+            Files.createLink(target, temp);
+            return true;
+        } catch (java.nio.file.FileAlreadyExistsException e) {
+            return false;
+        } catch (UnsupportedOperationException | java.nio.file.FileSystemException e) {
+            if (e instanceof java.nio.file.FileSystemException fe && Files.exists(target)) {
+                return false;                                    // taken meanwhile (some systems report EEXIST this way)
+            }
+            try {
+                Files.write(target, content, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+                return true;
+            } catch (java.nio.file.FileAlreadyExistsException taken) {
+                return false;
+            }
+        } finally {
+            Files.deleteIfExists(temp);
+        }
+    }
+
+    @Override
+    public boolean exclusiveCreates() {
+        return true;
+    }
+
+    @Override
+    public void put(String path, byte[] content) throws IOException {
+        Path target = path(path);
+        Files.createDirectories(target.getParent());
+        Path temp = target.resolveSibling(target.getFileName() + "." + java.util.UUID.randomUUID() + ".tmp");
+        Files.write(temp, content, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+        try {
+            // a reader sees the old content or the new, never a partly written file
+            Files.move(temp, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+        } catch (java.nio.file.AtomicMoveNotSupportedException e) {
+            Files.move(temp, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        } finally {
+            Files.deleteIfExists(temp);
+        }
+    }
+
+    @Override
+    public boolean delete(String path) throws IOException {
+        return Files.deleteIfExists(path(path));
     }
 
     private static FileNotFoundException notFound(String path, IOException cause) {

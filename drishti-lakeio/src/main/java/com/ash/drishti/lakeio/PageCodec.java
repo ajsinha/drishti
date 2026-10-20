@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.deltalake;
+package com.ash.drishti.lakeio;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -22,7 +22,7 @@ import org.apache.parquet.bytes.BytesInput;
 import org.apache.parquet.compression.CompressionCodecFactory.BytesInputDecompressor;
 
 /** A codec that decompresses whole pages held in arrays: Parquet's decompressor API on top of one method. Stateless. */
-interface PageCodec extends BytesInputDecompressor {
+public interface PageCodec extends BytesInputDecompressor {
 
     /** The page {@code in[off, off+len)} decompressed to exactly {@code size} bytes. */
     byte[] decompress(byte[] in, int off, int len, int size) throws IOException;

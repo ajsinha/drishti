@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.deltalake;
+package com.ash.drishti.lakeio;
 
 import com.ash.drishti.api.proxy.ProxySettings;
 import com.ash.drishti.api.tls.TlsContexts;
