@@ -210,6 +210,23 @@ def test_a_bad_range_after_an_entity_is_shown_not_plain_words(client, backend, m
     assert "DRS-4022" in page and "&#39;-5&#39; is not a range" in page and "3M" in page
 
 
+def test_a_bare_id_with_a_bad_range_in_plain_words_says_what_to_type(client, backend, monkeypatch):
+    """QA1-203: `1000015 -5` goes from /go to plain words; the server's phrase answers DRS-4022 and the console shows it, never "say what
+    to look for"."""
+    async def command(text, ident=None):
+        raise BackendError(404, "DRS-1001", "no source holds 1000015 -5")
+
+    async def phrase(text, ident=None):
+        raise BackendError(400, "DRS-4022", "DRS-4022 '-5' is not a range: use a number of days (30), a span (30D, 2W, 3M, 1Y), YTD")
+    monkeypatch.setattr(backend, "command", command)
+    monkeypatch.setattr(backend, "phrase", phrase)
+    r = client.get("/go", params={"q": "1000015 -5"}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"].startswith("/s?words=")
+    r = client.get(r.headers["location"], follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"].startswith("/t?error=DRS-4022")
+    assert "&#39;-5&#39; is not a range" in client.get(r.headers["location"]).text
+
+
 def test_the_csv_keeps_formulas_as_text(client, backend, monkeypatch):
     async def history(kind, id_, ident=None, **params):
         return {"ref": {"kind": kind, "id": id_}, "window": {"from": "2026-10-19", "to": "2026-10-19"}, "parts": [],

@@ -131,10 +131,14 @@ The rule: **a range is the last one to four words, never the first word after th
 `HistoryRange.trailing(String rest)` returns `Optional<Split(String id, HistoryRange range, boolean diff)>`; it never throws. A range that is
 read but not allowed (too large, `TO` before `FROM`, a future `FROM`) fails with its own code (section 16), not with a pick list.
 `HistoryRange.malformed` names what reads as a range but is none (`0`, `-5`, `99999`, `1.5M`, `3X`, `FROM yesterday`,
-`FROM 2026-02-30`, `DIFF DIFF`, a bare `DIFF`, `30 30`); `CommandController` answers it with `DRS-4022` (`DRS-4021` for a number of days
+`FROM 2026-02-30`, `DIFF DIFF`, a bare `DIFF`, `30 30`, and since QA1-203 `30.`, `1e3`, a dangling `FROM` or `TO`
+(`FROM 2026-10-01 TO`: *TO needs a date*), `TO` without `FROM` (*TO follows FROM*), `DIFF 30` (*DIFF follows a range: TRD 1000001 30
+DIFF*)); `CommandController` answers it with `DRS-4022` (`DRS-4021` for a number of days
 past `max-days`) and what to type when what is before it is one entity the caller may open and the whole text is not itself an entity.
 `TO` before `FROM` and a date that does not exist are `DRS-4022` too, as at the endpoint. The console's `/go` shows the message on the
-terminal page.
+terminal page. Digits of another script are read as digits first (`TRD 1000001 ３0` is `TRD 1000001 30`, `０` is *0 days is empty*), as
+the endpoint reads `days=０`. A bare id with such a range (`1000015 -5`, `1000015 since yesterday`) goes to plain words, which answer the
+same `DRS-4022` (section 15.5); the console shows it on the terminal page too.
 
 ### 4.3 The answer and the redirect
 
@@ -154,7 +158,9 @@ declared before `/v/{kind}/{id_:path}`, as `/about` and `/panels` are. A pick li
 - `SuggestionService.suggest` (engine `command/SuggestionService`): when the text is `<MNEMONIC> <ID> ` and the id names one entity, the
   first suggestions are ranges: `30 — last 30 days`, `3M — last 3 months`, `YTD — since 1 January`, `30 DIFF — what changed`. `Tab`
   completes, as today. The kind's `history.default-days` is the first one offered. Across Drishti*net the peers' suggestions are
-  merged with one row per range (each completes differently) and the ranges first; for a caller with field masks the range rows keep
+  merged with one row per range (each completes differently) and the ranges first, then the entity whose id was typed, from whichever
+  node holds it (on a node that does not hold `1000002`, `TRD 1000002` lists the peer's `1000002` before this node's `10000020`…;
+  QA1-204), then the rest; for a caller with field masks the range rows keep
   their labels (only entity rows are described again from the document as the caller sees it). A partial range (`TRD 1000015 3`)
   offers the ranges that start with it to every caller.
 - `CommandMemory.remember` keeps the typed text, so `↑` recalls `TRD 1000015 30` as typed.
@@ -728,16 +734,24 @@ built as step H12, which may move to 2.7.0** if 2.6.5 runs long; nothing else de
 
 `PhraseParser` (deterministic, no model) learns one more form before searches: *kind word, id, time phrase*. Time phrases: `last N days`
 → `N`, `last N weeks|months|years` → `NW|NM|NY`, `last month` → `FROM <first of the previous month> TO <its last day>`, `this month` →
-`MTD`, `this year`, `ytd` → `YTD`, `since <date>` → `FROM <date>`, `between <date> and <date>`, `from <date> to <date>`, `past 30 days`.
+`MTD`, `this year`, `ytd` → `YTD`, `since <date>` → `FROM <date>`, `between <date> and <date>`, `from|since <date> to|until <date>`
+(two dates are put in order), `past 30 days`.
 The id is the word that names one entity of the kind (`Vocabulary.entityId`: its id in any case, or the one id ending `-<word>`, so `audusd`
 is `FX-AUDUSD`), even when it is also a field's value (`EQ-CSCA`, the ticker); else a word with a digit or a dash that is no field's value.
 Without a kind word, an id that names one entity of one kind (`Vocabulary.kindOfEntity`) followed by a range or a time phrase is that
-entity's history (`1000015 30`, `BOOK-RATES-3 last week`).
+entity's history (`1000015 30`, `BOOK-RATES-3 last week`); followed by what reads as a range but is none it is `DRS-4022` with what to type
+(`1000015 -5`, `1000015 since yesterday`). A kind word and one id with no time phrase open that entity (`fx audusd` is `FX FX-AUDUSD`).
+A search reads one business date, so a time phrase in one (`trades in BOOK-RATES-3 last week`) is never dropped silently: it is listed as
+not understood, with the step *left out: a search reads one business date (the date box); for one entity over time name it with the time
+phrase alone (BOOK-RATES-3 last week)*, and the console does not run the search on its own. `since <date>` in a search stays a condition
+on the kind's date (`trades in BOOK-RATES-3 since 2026-01-01`), as before (QA1-207).
 
 ```text
 trade 1000015 last month                 TRD 1000015 FROM 2026-09-01 TO 2026-09-30
 equity EQ-CSCA last 3 months             EQ EQ-CSCA 3M
 fx audusd since 2026-10-01               FX FX-AUDUSD FROM 2026-10-01
+trade 1000015 since 2026-10-01 until 2026-10-10   TRD 1000015 FROM 2026-10-01 TO 2026-10-10
+fx audusd                                FX FX-AUDUSD
 1000015 30                               TRD 1000015 30
 what changed on trade 1000015 this week  TRD 1000015 FROM 2026-10-19 DIFF
 ```

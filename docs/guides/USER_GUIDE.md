@@ -289,9 +289,11 @@ The number of suggestions is a server setting (`drishti.commands.suggest-limit`,
   `GET` / `PUT /api/v1/command/aliases` and `GET /api/v1/command/history`.
 - **A range that cannot be read.** After an id, what reads as a range but is none answers with its code and what to type, on the
   terminal page: `TRD 1000001 0` gives *DRS-4022 a history of 0 days is empty: ask for 1 or more (TRD 1000001 30)*; `-5`, `1.5M`,
-  `3X`, `FROM yesterday`, `FROM 2026-02-30`, `DIFF DIFF`, a bare `DIFF` and two ranges (`30 30`) are `DRS-4022` too, and a number of
-  days past the limit (`99999`) is `DRS-4021`. It never opens today's view as if the range was not typed, nor a search that drops the
-  id. A lone word after the mnemonic stays an id (`TRD 0` opens trade `0`).
+  `3X`, `30.`, `1e3`, `FROM yesterday`, `FROM 2026-02-30`, `FROM 2026-10-01 TO` (*TO needs a date*), `TO 2026-10-01` (*TO follows
+  FROM*), `DIFF DIFF`, a bare `DIFF`, `DIFF 30` (*DIFF follows a range: TRD 1000001 30 DIFF*) and two ranges (`30 30`) are `DRS-4022`
+  too, and a number of days past the limit (`99999`) is `DRS-4021`. The same after a bare id (`1000015 -5`, `1000015 since yesterday`).
+  Full-width digits are read as digits (`３0` is `30`). It never opens today's view as if the range was not typed, nor a search that
+  drops the id. A lone word after the mnemonic stays an id (`TRD 0` opens trade `0`).
 
 ### When a command does not work
 
@@ -1428,18 +1430,23 @@ equity EQ-CSCA last 3 months                EQ EQ-CSCA 3M
 trade 1000015 last 30 days                  TRD 1000015 30
 equity EQ-CSCA this year                    EQ EQ-CSCA YTD
 trade 1000015 since 2026-10-01              TRD 1000015 FROM 2026-10-01
+trade 1000015 since 2026-10-01 until 2026-10-10   TRD 1000015 FROM 2026-10-01 TO 2026-10-10
 what changed on trade 1000015 this week     TRD 1000015 FROM 2026-10-19 DIFF
 fx audusd since 2026-10-01                  FX FX-AUDUSD FROM 2026-10-01
 1000015 30                                  TRD 1000015 30
 BOOK-RATES-3 last week                      BOOK BOOK-RATES-3 FROM 2026-10-12 TO 2026-10-16
+fx audusd                                   FX FX-AUDUSD (today's view)
 ```
 
 Time phrases: `last` or `past N days|weeks|months|years`, `last week|month|year` (the whole previous one), `this week|month|quarter|year`,
-`ytd`, `since <date>`, `from <date> to <date>`, `between <date> and <date>`. `changed` or `changes` anywhere adds `DIFF`. The id is the word
+`ytd`, `since <date>`, `from <date> to <date>` (or `since … until …`; two dates are put in order), `between <date> and <date>`. `changed` or `changes` anywhere adds `DIFF`. The id is the word
 that names one entity of the kind (its id in any case, or the end of its id after a dash: `audusd` is `FX-AUDUSD`), even when it is also
 a value of a field (`EQ-CSCA` is the equity's ticker); else the one word with a digit or a dash that is not a value of one of the kind's
 fields, so `trades in BOOK-RATES-3 since 2026-01-01` stays a search (`BOOK-RATES-3` is no trade). Without a kind word, an id that names one
 entity followed by a range (`1000015 30`, `1000015 3M DIFF`) or a time phrase (`BOOK-RATES-3 last week`) is that entity's history.
+A kind and one id with no time phrase open the entity (`fx audusd`). A search is of one business date, so a time phrase in a search
+(`trades in BOOK-RATES-3 last week`) is listed as *left out*, with how to ask for one entity over time instead (`BOOK-RATES-3 last week`),
+and the search does not run on its own; `since <date>` in a search is a condition on the date, as before.
 
 It is deterministic: no AI service, only the server's own vocabulary (its kinds, and each kind's fields and the
 values its documents have). Words it did not understand are listed as *Not understood, left out*, never guessed.

@@ -164,8 +164,30 @@ public record HistoryRange(Mode mode, Integer days, String span, LocalDate from,
      */
     public record Bad(String command, ErrorCode code, String message) {}
 
-    /** A word that reads as an attempt at a range: a number (signed, with a fraction) with or without letters after it. */
-    private static final Pattern RANGY = Pattern.compile("(?i)[-+]?\\d+([.,]\\d+)?[A-Z]*");
+    /**
+     * A word that reads as an attempt at a range: a digit (signed) and then digits, letters, points or commas ({@code -5}, {@code 1.5M},
+     * {@code 30.}, {@code 1e3}; QA1-203).
+     */
+    private static final Pattern RANGY = Pattern.compile("(?i)[-+]?\\d[0-9A-Z.,]*");
+
+    /**
+     * The text with every decimal digit of another script written as an ASCII digit ({@code ３0} is {@code 30}; QA1-203), as the history
+     * endpoint already reads {@code days=０}; nothing else changes.
+     */
+    public static String asciiDigits(String text) {
+        if (text == null || text.chars().noneMatch(c -> c > 127 && Character.isDigit(c))) {
+            return text;
+        }
+        StringBuilder b = new StringBuilder(text.length());
+        text.codePoints().forEach(c -> {
+            if (c > 127 && Character.isDigit(c)) {
+                b.append((char) ('0' + Character.digit(c, 10)));
+            } else {
+                b.appendCodePoint(c);
+            }
+        });
+        return b.toString();
+    }
 
     private static final String HINT = "use a number of days (30), a span (30D, 2W, 3M, 1Y), YTD, MTD, QTD or FROM yyyy-mm-dd [TO yyyy-mm-dd], "
             + "then DIFF for the changes only";
@@ -212,6 +234,12 @@ public record HistoryRange(Mode mode, Integer days, String span, LocalDate from,
             out.add(new Bad(join(w, Math.max(1, from)), e.errorCode(), e.getMessage().replaceFirst("^DRS-\\d+\\s*", "")));
             return out;
         }
+        if (read.isPresent() && read.get().command().matches("(?i).*\\sDIFF")) {  // TRD 1000001 DIFF 30: DIFF before the range
+            String command = read.get().command().replaceFirst("(?i)\\s+DIFF$", "");
+            out.add(new Bad(command, ErrorCode.HISTORY_BAD_RANGE, "DIFF follows a range: " + command + " " + read.get().range().render()
+                    + " DIFF"));
+            return out;
+        }
         if (read.isPresent()) {
             Optional<Split> again = quiet(read.get().command());          // TRD 1000001 30 30: a range before the range
             again.ifPresent(a -> out.add(new Bad(a.command(), ErrorCode.HISTORY_BAD_RANGE, "two ranges: '" + a.range().render() + "' and '"
@@ -228,6 +256,18 @@ public record HistoryRange(Mode mode, Integer days, String span, LocalDate from,
                     + join(w, end - 4) + " FROM 2026-09-01 TO 2026-09-30"));
         }
         String last = w[end - 1];
+        if (last.equalsIgnoreCase("TO")) {                                 // TRD 1000001 FROM 2026-10-01 TO
+            boolean afterFrom = end >= 4 && w[end - 3].equalsIgnoreCase("FROM") && DATE.matcher(w[end - 2]).matches();
+            String command = join(w, afterFrom ? end - 3 : end - 1);
+            out.add(new Bad(command, ErrorCode.HISTORY_BAD_RANGE, afterFrom ? "TO needs a date: " + command + " FROM " + w[end - 2]
+                    + " TO yyyy-mm-dd" : "TO follows FROM: " + command + " FROM yyyy-mm-dd TO yyyy-mm-dd"));
+        } else if (last.equalsIgnoreCase("FROM")) {                       // TRD 1000001 FROM
+            String command = join(w, end - 1);
+            out.add(new Bad(command, ErrorCode.HISTORY_BAD_RANGE, "FROM needs a date: " + command + " FROM 2026-09-01"));
+        } else if (end >= 3 && w[end - 2].equalsIgnoreCase("TO") && !(end >= 4 && w[end - 4].equalsIgnoreCase("FROM"))) {
+            String command = join(w, end - 2);                            // TRD 1000001 TO 2026-10-01: no FROM
+            out.add(new Bad(command, ErrorCode.HISTORY_BAD_RANGE, "TO follows FROM: " + command + " FROM yyyy-mm-dd TO " + w[end - 1]));
+        }
         if (RANGY.matcher(last).matches()) {
             String command = join(w, end - 1);
             if (last.matches("0+")) {

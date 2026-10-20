@@ -17,6 +17,16 @@
 
 ## Unreleased
 
+- **Fixed (QA1-203): the range forms that still escaped answer `DRS-4022` with what to type**: `TRD 1000001 30.` (it opened today's
+  view), `1e3`, `FROM 2026-10-01 TO` (*TO needs a date*), `TO 2026-10-01` (*TO follows FROM*) and `DIFF 30` (*DIFF follows a range*)
+  instead of parser text; full-width digits are read as digits (`３0` is `30`, `０` is *0 days is empty*) instead of a raw `DRS-5001`;
+  a bare id with a bad range (`1000015 -5`, `1000015 since yesterday`) answers `DRS-4022` from plain words and the console shows it on
+  the terminal page. HISTORY_QUERIES.md 4.2 and 15.5, USER_GUIDE.
+- **Fixed (QA1-207): plain words no longer drop half a time phrase.** `since A until B` (and `from A until B`) is `FROM A TO B`, the
+  dates in order; a kind word and one id with no range open it (`fx audusd` is `FX FX-AUDUSD`); a time phrase in a search (`trades in
+  BOOK-RATES-3 last week`) is listed as left out with how to ask for one entity over time, so the search no longer runs as if it was
+  read. HISTORY_QUERIES.md 15.5, USER_GUIDE *Asking in plain words*.
+
 - **Fixed (QA1-202, QA1-206): an advertise-url or seed url with port 0 or a port past 65535 is refused**, by the schema check
   (`POST /net/file/check`, `PUT`, the folder at start), by the gossip intake (such a member is never kept, so it no longer shows *alive*
   while every read through it fails) and by `drishti.py net`. The CLI and the server now take and refuse the same addresses: the CLI no

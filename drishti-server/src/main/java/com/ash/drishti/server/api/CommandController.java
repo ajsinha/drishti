@@ -86,7 +86,7 @@ public class CommandController {
     @PostMapping
     public ApiDtos.CommandResponse command(@RequestBody ApiDtos.CommandRequest req, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
-        String typed = req.text() == null ? "" : req.text().replaceAll("(?i)<\\s*GO\\s*>", " ").trim();
+        String typed = HistoryRange.asciiDigits(req.text() == null ? "" : req.text().replaceAll("(?i)<\\s*GO\\s*>", " ").trim());   // ３0 is 30
         String text = memory.expand(principal.user(), typed).trim();         // MYBOOK -> BOOK BOOK-RATES-1
         ApiDtos.CommandResponse answer = resolve(text, asOf, principal);
         if (principal.embedApp() == null) {

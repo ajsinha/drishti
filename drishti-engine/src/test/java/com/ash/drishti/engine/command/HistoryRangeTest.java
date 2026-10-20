@@ -150,4 +150,31 @@ class HistoryRangeTest {
         assertThat(HistoryRange.malformed("CPTY northbridge", 366)).isEmpty();
         assertThat(HistoryRange.malformed("TRD", 366)).isEmpty();
     }
+
+    /** The first bad reading whose command is the entity (as CommandController takes it). */
+    private static HistoryRange.Bad badAfter(String entity, String text) {
+        return HistoryRange.malformed(text, 366).stream().filter(b -> b.command().equals(entity)).findFirst().orElseThrow(() ->
+                new AssertionError(text + ": " + HistoryRange.malformed(text, 366)));
+    }
+
+    @Test
+    void theFormsThatStillEscapedAreNamed() {
+        // QA1-203: a trailing point, an exponent, TO without a date or without FROM, DIFF before the range, a dangling FROM
+        assertThat(badAfter("TRD 1000001", "TRD 1000001 30.").message()).contains("'30.' is not a range");
+        assertThat(badAfter("TRD 1000001", "TRD 1000001 1e3").message()).contains("'1e3' is not a range");
+        assertThat(badAfter("TRD 1000001", "TRD 1000001 FROM 2026-10-01 TO").message())
+                .isEqualTo("TO needs a date: TRD 1000001 FROM 2026-10-01 TO yyyy-mm-dd");
+        assertThat(badAfter("TRD 1000001", "TRD 1000001 TO 2026-10-01").message())
+                .isEqualTo("TO follows FROM: TRD 1000001 FROM yyyy-mm-dd TO 2026-10-01");
+        assertThat(badAfter("TRD 1000001", "TRD 1000001 DIFF 30").message()).isEqualTo("DIFF follows a range: TRD 1000001 30 DIFF");
+        assertThat(badAfter("TRD 1000001", "TRD 1000001 FROM").message()).contains("FROM needs a date");
+        assertThat(badAfter("TRD 1000001", "TRD 1000001 FROM 2026-10-01 TO yesterday").message()).contains("'yesterday' is not a date");
+        HistoryRange.malformed("TRD 1000001 FROM 2026-10-01 TO yesterday", 366)
+                .forEach(b -> assertThat(b.message()).doesNotContain("TO follows FROM"));
+        assertThat(HistoryRange.malformed("TRD 1000001 FROM 2026-10-01 TO 2026-10-10", 366)).isEmpty();
+        // digits of another script are read as digits: TRD 1000001 ３0 is TRD 1000001 30
+        assertThat(HistoryRange.asciiDigits("TRD 1000001 \uFF130")).isEqualTo("TRD 1000001 30");
+        assertThat(badAfter("TRD 1000001", HistoryRange.asciiDigits("TRD 1000001 \uFF10")).message()).contains("0 days is empty");
+        assertThat(HistoryRange.asciiDigits("CPTY Zürich 30")).isEqualTo("CPTY Zürich 30");
+    }
 }

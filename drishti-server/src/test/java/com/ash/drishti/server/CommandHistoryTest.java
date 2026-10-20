@@ -104,6 +104,24 @@ class CommandHistoryTest {
     }
 
     @Test
+    void theFormsThatStillEscapedAreNamedToo() throws Exception {
+        // QA1-203: a trailing point, an exponent, TO without its date or its FROM, DIFF first, digits of another script
+        String[][] cases = {{"TRD IRS-48213 30.", "'30.' is not a range"}, {"TRD IRS-48213 1e3", "'1e3' is not a range"},
+            {"TRD IRS-48213 FROM 2026-10-01 TO", "TO needs a date"}, {"TRD IRS-48213 TO 2026-10-01", "TO follows FROM"},
+            {"TRD IRS-48213 DIFF 30", "DIFF follows a range: TRD IRS-48213 30 DIFF"}, {"TRD IRS-48213 \uFF10", "0 days is empty"}};
+        for (String[] c : cases) {
+            command(c[0]).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("DRS-4022"))
+                    .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString(c[1])));
+        }
+        command("TRD IRS-48213 \uFF130").andExpect(status().isOk()).andExpect(jsonPath("$.history.query").value("days=30"));
+        // a bare id in plain words with a range that is none: DRS-4022 too
+        mvc.perform(get("/api/v1/phrase").param("text", "IRS-48213 -5").header("X-Drishti-User", "hist-t"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("DRS-4022"));
+        mvc.perform(get("/api/v1/phrase").param("text", "IRS-48213 since yesterday").header("X-Drishti-User", "hist-t"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("'yesterday' is not a date")));
+    }
+
+    @Test
     void plainWordsReadABareIdAndAnIdInAnyCase() throws Exception {
         // QA1-08: a bare id that names one entity, then a range; an id typed in lower case after the kind word
         mvc.perform(get("/api/v1/phrase").param("text", "IRS-48213 30").header("X-Drishti-User", "hist-t"))

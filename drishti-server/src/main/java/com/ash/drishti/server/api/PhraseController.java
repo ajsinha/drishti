@@ -94,7 +94,15 @@ public class PhraseController {
             public java.util.Optional<PhraseParser.KindWord> kindOfEntity(String word) {
                 return kindOf(kinds, word);
             }
-        }).parse(text.length() > 300 ? text.substring(0, 300) : text);
+        }).maxDays(historyProps == null ? 366 : historyProps.limits().maxDays())
+                .parse(com.ash.drishti.engine.command.HistoryRange.asciiDigits(text.length() > 300 ? text.substring(0, 300) : text));
+    }
+
+    private com.ash.drishti.engine.history.HistoryProperties historyProps;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void historyProps(com.ash.drishti.engine.history.HistoryProperties p) {
+        this.historyProps = p;
     }
 
     private static final Duration ID_BUDGET = Duration.ofSeconds(2);
