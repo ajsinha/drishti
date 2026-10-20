@@ -520,12 +520,12 @@ If you prefer containers, build the server first (Step 3), then:
 export DRISHTI_TOKEN_SECRET=$(openssl rand -hex 32) DRISHTI_SESSION_SECRET=$(openssl rand -hex 32)
 export DRISHTI_ADMIN_USER=admin DRISHTI_ADMIN_PASSWORD='choose-a-long-one-123'   # the first administrator; required
 export DRISHTI_PACKS=market-risk,counterparty-risk   # or leave it out for the seven packs
-docker compose -f deploy/compose.yaml up -d --build
+docker compose -f deploy/docker/compose.yaml up -d --build
 ```
 
 Sign-in is **on** in this setup and there is **no** development admin: sign in at http://localhost:17480 as the
-`DRISHTI_ADMIN_USER` you chose. The containers serve the packs' samples (no lake is mounted; `deploy/compose.data.yaml` adds data
-stores). `docker compose -f deploy/compose.yaml down` stops it. Production details are in [OPERATIONS.md](../admin/OPERATIONS.md).
+`DRISHTI_ADMIN_USER` you chose. The containers serve the packs' samples (no lake is mounted; `deploy/docker/compose.data.yaml` adds data
+stores). `docker compose -f deploy/docker/compose.yaml down` stops it. Production details are in [OPERATIONS.md](../admin/OPERATIONS.md).
 
 ## Build and run without the wrapper, or from an IDE
 

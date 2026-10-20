@@ -88,7 +88,7 @@ same machine. Replace `localhost` if yours run elsewhere.
    (With security on, this call needs an admin's token; use the console page instead.)
 
 **Where the logs are.** Both programs log to standard output: the terminal where you started them. Under
-Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `console`).
+Docker Compose, use `docker compose -f deploy/docker/compose.yaml logs -f server` (or `console`).
 
 ## Building and starting
 

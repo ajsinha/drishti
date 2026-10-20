@@ -190,7 +190,7 @@ How the loader works:
 Count what was loaded with `asinfo`, which the server image includes:
 
 ```bash
-docker compose -f deploy/compose.data.yaml exec aerospike asinfo -v sets/test/trading
+docker compose -f deploy/docker/compose.data.yaml exec aerospike asinfo -v sets/test/trading
 # objects=7500:tombstones=0:...   after the sample load: 750 trades x 10 business days
 ```
 
@@ -442,7 +442,7 @@ ids now:
 | Symptom | Likely cause | What to do |
 |---|---|---|
 | `DOWN: not connected to Aerospike` | wrong `hosts`, port closed, or the cluster is down. The client tends the cluster in the background and does not fail at start; reads fail (`DRS-1003`) until it reconnects, and the next refresh refills the catalogue | `nc -z <host> 3000`; check `hosts` |
-| the container exits at start | too few file descriptors | `deploy/compose.data.yaml` sets `nofile` to 15000; do the same |
+| the container exits at start | too few file descriptors | `deploy/docker/compose.data.yaml` sets `nofile` to 15000; do the same |
 | a snapshot kind shows *gone* for one entity | it has no record `kind/id/yyyyMMdd` for the kind's newest date | write every entity each date, or use `mode.<kind>: effective` |
 | memory | the promoted bins of the days read (`columns-cache-mb`) and one id per entity in the index set; it does not grow with the days kept | lower `columns-cache-mb`, or promote fewer fields; set `--ttl-days` so old index records expire |
 | a trade is in type-ahead but does not open on a date | its record for that day expired (TTL) or was never loaded | check the index record's `dates`; with a Delta Lake connector behind, older days come from there |
@@ -615,7 +615,7 @@ domain has three sets in one namespace ([section 2](#2-the-record-layout)); a da
 3. **Load sample data.**
 
 ```bash
-docker compose -f deploy/compose.data.yaml up -d aerospike
+docker compose -f deploy/docker/compose.data.yaml up -d aerospike
 tools/load-aerospike.sh localhost:3000 test                                 # 1,791 documents x 10 business days
 tools/load-aerospike.sh localhost:3000 test --trades 1000000 --days 3       # and a book of a million trades a day
 SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=counterparty-risk,market-risk \
@@ -679,7 +679,7 @@ routes:
 **Try it**, with a million trades a day and retention:
 
 ```bash
-docker compose -f deploy/compose.data.yaml up -d aerospike
+docker compose -f deploy/docker/compose.data.yaml up -d aerospike
 tools/load-aerospike.sh localhost:3000 test --trades 1000000 --days 3 --ttl-days 30
 SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=trading java -jar drishti-server/target/drishti-server-*-exec.jar
 ```

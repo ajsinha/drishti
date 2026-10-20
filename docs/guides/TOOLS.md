@@ -99,7 +99,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `sutra` | `sutra shape`, `sutra design`, `sutra lint`, `sutra test`, `sutra preview`, `sutra gen` | [5.1](#51-sutra) |
 | `pack` | `pack make`, `pack new`, `pack regenerate`, `pack diff`, `pack catalogue`, `pack i18n`, `pack check`, `pack about-check`, `pack bundle`, `pack verify`, `pack deploy`, `pack rollback`, `pack publish`, `pack keygen`, `pack install` | [5.2](#52-pack) |
 | `data` | `data profile`, `data ingest`, `data load`, `data landed`, `data loads` | [5.3](#53-data) |
-| `lake` | `lake build`, `lake scan`, `lake status`, `lake demo`, `lake maintain` | [4](#4-lake-build-a-large-json-export-into-a-delta-lake) |
+| `lake` | `lake build`, `lake publish`, `lake scan`, `lake status`, `lake demo`, `lake maintain` | [4](#4-lake-build-a-large-json-export-into-a-delta-lake) |
 | `server` | `server health`, `server caches`, `server packs`, `server smoke` | [5.4](#54-server-and-doctor) |
 | `connector` | `connector list`, `connector get`, `connector apply`, `connector delete`, `connector test`, `connector plugins`, `connector enable`, `connector disable`, `connector reset`, `connector history` | [5.5](#55-connector) |
 | `net` | `net list`, `net check`, `net add-peer`, `net set`, `net members` | [5.9](#59-net) |
@@ -529,6 +529,33 @@ drishti-console/.venv/bin/python tools/drishti.py lake status --lake /srv/drisht
 the same table. Re-run a failed night by hand with the same command. A run that finds the lock held exits `3` at once; let the
 scheduler try again (systemd: `Restart=on-failure` with `RestartSec=10min` on the service, or simply the next timer). A watch on
 a drop folder is `drishti.py data ingest --watch` (section 5.3).
+
+### 4.11 lake publish: a built day into a Delta table in S3
+
+`lake build` writes tables on local disk or a network file system (EFS) only: its lock, its staging and Drishti's Java writer are
+local. A lake in Amazon S3 is loaded in two steps: `lake build` into a fresh scratch lake, then the scratch table's data files are
+copied to the S3 table's folder (`aws s3 sync`, without `_delta_log/`) and `lake publish` commits them:
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py lake publish --from /scratch/run-1/trading/trade_endur \
+    --to s3://acme-drishti-prod-lake/lake/trading/trade_endur --dates 2026-10-20 --storage-option AWS_REGION=eu-west-2
+lake publish: ok exit=0 published <n> file(s), <bytes> bytes, dates 2026-10-20 to s3://acme-drishti-prod-lake/lake/trading/trade_endur version=<v>
+```
+
+It reads the scratch table's log (paths, sizes, partition values, row counts, the id and promoted-column statistics), checks that
+every file is in the target with its size, and makes **one** commit: with `--mode overwrite-dates` (the default) the dates' old
+files are removed and the new ones added, so a reader sees the old day or the new day; `overwrite-partitions` replaces only the
+partitions carried; `append` adds. A new table is created with the scratch table's schema, partitioning and statistics columns, a
+checkpoint every `--checkpoint-interval` (10) commits, and `--log-retention-days` (30) and `--deleted-file-retention-days` (7).
+Commits use S3 conditional writes (deltalake 1.x; no DynamoDB lock) and retry a lost race `--commit-retries` (20) times;
+`AWS_S3_ALLOW_UNSAFE_RENAME=true` is refused. A day whose columns differ from the table's is refused, naming the columns.
+`--dry-run` checks everything and commits nothing; `--list-files` prints the data files the publish needs; `--signal` sends the
+data-load signal as `lake build` does. Exit: 0 ok, 1 failure (nothing committed), 2 committed but the signal failed, 3 nothing to
+publish for the dates asked.
+
+`deploy/aws/delta-lake/load-day.sh` runs the three steps per table under a per-table lock; the whole AWS setup, sizing past 200 TB
+and the runbooks are [AWS_DELTA_LAKE.md](../architecture/AWS_DELTA_LAKE.md). Tested by `tools/lake/test_publish.py` (a local
+folder stands in for S3).
 
 ## 5. The other `drishti.py` groups
 

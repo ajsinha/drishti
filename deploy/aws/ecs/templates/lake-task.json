@@ -1,0 +1,28 @@
+{
+  "family": "drishti-${DRISHTI_ENV}-${JOB}",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "${LOADER_CPU}",
+  "memory": "${LOADER_MEMORY}",
+  "ephemeralStorage": { "sizeInGiB": 21 },
+  "runtimePlatform": { "operatingSystemFamily": "LINUX", "cpuArchitecture": "X86_64" },
+  "taskRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/drishti-${DRISHTI_ENV}-${TASK_ROLE}-task",
+  "executionRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/drishti-${DRISHTI_ENV}-execution",
+  "volumes": [
+    { "name": "data", "efsVolumeConfiguration": { "fileSystemId": "${EFS_FILE_SYSTEM_ID}", "transitEncryption": "ENABLED",
+        "authorizationConfig": { "accessPointId": "${AP_DATA}", "iam": "ENABLED" } } }
+  ],
+  "containerDefinitions": [
+    { "name": "${JOB}", "image": "${ECR_REGISTRY}/drishti-loader-ecs:${DRISHTI_VERSION}",
+      "essential": true, "readonlyRootFilesystem": true, "stopTimeout": 120,
+      "command": ${COMMAND_JSON},
+      "mountPoints": [{ "sourceVolume": "data", "containerPath": "/opt/drishti/data" }],
+      "environment": [
+        { "name": "DRISHTI_AWS_ENV", "value": "/opt/drishti/app/deploy/aws/env" },
+        { "name": "AWS_REGION", "value": "${AWS_REGION}" },
+        { "name": "JAVA_TOOL_OPTIONS", "value": "-XX:MaxRAMPercentage=50 -XX:-UsePerfData -Djava.io.tmpdir=/opt/drishti/data/tmp/loader" } ],
+      "logConfiguration": { "logDriver": "awslogs", "options": { "awslogs-group": "/drishti/${DRISHTI_ENV}", "awslogs-region": "${AWS_REGION}",
+                                                                 "awslogs-stream-prefix": "${JOB}" } } }
+  ],
+  "tags": [{ "key": "app", "value": "drishti" }, { "key": "env", "value": "${DRISHTI_ENV}" }, { "key": "job", "value": "${JOB}" }]
+}

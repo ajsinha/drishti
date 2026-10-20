@@ -187,7 +187,7 @@ The first ten waves (plus W11, user management, after 1.0.0); all are done. Each
 - Sutra Studio (`/studio`): vendored CodeMirror, schema completion, live preview, "promote inferred panel".
 - Security: console sign-in (users file, PBKDF2, signed cookies), HS256 tokens to the server, per-role kinds (`drishti.security.roles`), links disabled with the reason, F9 redaction, CSP. *(OIDC was deferred; it shipped in W20.)*
 - Plugins `rest` and `jdbc`. *(The `aero` plugin was deferred; it shipped in R5 as `aerospike`.)*
-- Ops: Dockerfiles, `deploy/compose.yaml`, Grafana dashboard, `OPERATIONS.md`, `runbooks/`, `TROUBLESHOOTING.md`.
+- Ops: Dockerfiles, `deploy/docker/compose.yaml`, Grafana dashboard, `OPERATIONS.md`, `runbooks/`, `TROUBLESHOOTING.md`.
 - Release: `RELEASE_NOTES.md`, tag `v1.0.0`, merge to `main`.
 
 ---

@@ -1,0 +1,17 @@
+{
+  "serviceName": "${NODE}",
+  "cluster": "${ECS_CLUSTER}",
+  "taskDefinition": "drishti-${DRISHTI_ENV}-${NODE}",
+  "desiredCount": 1,
+  "launchType": "${LAUNCH_TYPE}",
+  "deploymentConfiguration": { "maximumPercent": 100, "minimumHealthyPercent": 0,
+                               "deploymentCircuitBreaker": { "enable": true, "rollback": true } },
+  "networkConfiguration": { "awsvpcConfiguration": { "subnets": ${SUBNETS_JSON},
+                                                     "securityGroups": ["${NODE_SECURITY_GROUP}"], "assignPublicIp": "DISABLED" } },
+  "loadBalancers": [{ "targetGroupArn": "${CONSOLE_TARGET_GROUP_ARN}", "containerName": "console", "containerPort": 17480 }],
+  "serviceRegistries": [{ "registryArn": "${REGISTRY_ARN}" }],
+  "healthCheckGracePeriodSeconds": 240,
+  "enableExecuteCommand": false,
+  "propagateTags": "SERVICE",
+  "tags": [{ "key": "app", "value": "drishti" }, { "key": "env", "value": "${DRISHTI_ENV}" }, { "key": "node", "value": "${NODE}" }]
+}

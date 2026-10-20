@@ -982,7 +982,7 @@ topic's partitions, 5 s for a cold read, supervisor backoff 1 s to 30 s.
 ## 15. Trying it: `stream.py`
 
 ```bash
-docker compose -f deploy/compose.data.yaml up -d kafka            # apache/kafka 3.9.1, single-node KRaft, cleanup.policy compact
+docker compose -f deploy/docker/compose.data.yaml up -d kafka            # apache/kafka 3.9.1, single-node KRaft, cleanup.policy compact
 uv run --with kafka-python python tools/samplegen/stream.py \
     --bootstrap localhost:9092 --topic drishti.trading.trades --samples config/packs/trading/samples --rate 5 --seconds 0
 DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_DEMO_ENABLED=false \
@@ -1063,9 +1063,9 @@ them (Kafka's default `auto.create.topics.enable`), so a connector started first
 `--if-not-exists` keeps the command from failing with `TopicExistsException`:
 
 ```bash
-docker compose -f deploy/compose.data.yaml exec kafka /opt/kafka/bin/kafka-topics.sh \
+docker compose -f deploy/docker/compose.data.yaml exec kafka /opt/kafka/bin/kafka-topics.sh \
     --bootstrap-server localhost:9092 --create --if-not-exists --topic risk.envelopes --config cleanup.policy=compact
-docker compose -f deploy/compose.data.yaml exec -T kafka /opt/kafka/bin/kafka-console-producer.sh \
+docker compose -f deploy/docker/compose.data.yaml exec -T kafka /opt/kafka/bin/kafka-console-producer.sh \
     --bootstrap-server localhost:9092 --topic risk.envelopes \
     --property parse.key=true --property key.separator='|' <<'EOF'
 netting-set/NS-ALDERSHOT-FRA|{"kind":"netting-set","id":"NS-ALDERSHOT-FRA","doc":{"NETTING_SET_ID":"NS-ALDERSHOT-FRA","TRADE_COUNT":3,"NET_MTM":-339550}}
@@ -1086,7 +1086,7 @@ re-reading Kafka for documents not in memory.
 To send one mapped message by hand:
 
 ```bash
-docker compose -f deploy/compose.data.yaml exec kafka /opt/kafka/bin/kafka-console-producer.sh \
+docker compose -f deploy/docker/compose.data.yaml exec kafka /opt/kafka/bin/kafka-console-producer.sh \
     --bootstrap-server localhost:9092 --topic drishti.trading.trades --property parse.key=true --property key.separator='|'
 MX-20000001|{"TRADE_ID":"MX-20000001","PRODUCT_TYPE":"IRS_FIXFLOAT","QUANTITY":242000000.0,"PRICE":0.040829}
 ```

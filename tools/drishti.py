@@ -1274,7 +1274,7 @@ def build_parser() -> argparse.ArgumentParser:
             p.add_argument("--panel", help="explain one panel only")
         else:
             p.add_argument("--table", action="store_true", help="text tables (the default; --json gives the raw view)")
-    load_module("lakecli", "lake/cli.py").register(groups, add, srv)   # lake build|scan|status|demo|maintain
+    load_module("lakecli", "lake/cli.py").register(groups, add, srv)   # lake build|publish|scan|status|demo|maintain
     td = group("testdata", "The committed test data (data/testdata): capture the news-and-markets pack's real market snapshot for offline demos")
     CM = load_module("capture_market", "testdata/capture_market.py")
     add(td, "capture-market", cmd_testdata_capture_market, "testdata capture-market: fetch the 20 companies' quotes (1y daily history) and the "

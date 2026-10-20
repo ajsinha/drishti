@@ -94,6 +94,7 @@ python_tool_tests() {
   python3 -m unittest -q tools/test_pack_authoring.py
   python3 -m unittest -q tools/test_cli_extras.py
   python3 -m unittest -q tools/test_pack_deploy.py
+  python3 -m unittest -q tools/test_deploy_aws.py      # deploy/aws: --help and --dry-run of every script (a fake aws fails if called), templates
   python3 -m unittest -q tools/test_cli_bi.py
   python3 -m unittest -q tools/test_cli_bitransform.py
   python3 -m unittest -q tools/test_cli_connectors.py
@@ -107,6 +108,7 @@ python_tool_tests() {
     timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/samplegen/test_layout.py
     timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_maintain.py tools/lake/test_maintain_admin.py 2>&1 | grep -v '^{"at"'
     timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_demo.py
+    timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_publish.py
     # the real-data tools (tools/realdata) are pytest-style functions on recorded fixtures: no network, a few seconds
     timeout --kill-after=30 600 uv run -q --with pytest --with pyyaml python -m pytest -q -p no:cacheprovider tools/realdata/tests
   fi

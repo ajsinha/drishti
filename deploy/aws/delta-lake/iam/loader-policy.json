@@ -1,0 +1,21 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    { "Sid": "ListLandingAndLake", "Effect": "Allow", "Action": "s3:ListBucket",
+      "Resource": ["arn:aws:s3:::${LANDING_BUCKET}", "arn:aws:s3:::${LAKE_BUCKET}"] },
+    { "Sid": "ReadTheDumps", "Effect": "Allow", "Action": "s3:GetObject", "Resource": "arn:aws:s3:::${LANDING_BUCKET}/*" },
+    { "Sid": "WriteDataFilesAndCommits", "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:AbortMultipartUpload", "s3:ListMultipartUploadParts"],
+      "Resource": "arn:aws:s3:::${LAKE_BUCKET}/${LAKE_PREFIX}/*" },
+    { "Sid": "NeverDeleteFromTheLake", "Effect": "Deny", "Action": ["s3:DeleteObject", "s3:DeleteObjectVersion"],
+      "Resource": "arn:aws:s3:::${LAKE_BUCKET}/*" },
+    { "Sid": "EncryptAndDecrypt", "Effect": "Allow", "Action": ["kms:Decrypt", "kms:Encrypt", "kms:GenerateDataKey"],
+      "Resource": "${LAKE_KMS_KEY_ARN}" },
+    { "Sid": "LoadMetrics", "Effect": "Allow", "Action": "cloudwatch:PutMetricData", "Resource": "*",
+      "Condition": { "StringEquals": { "cloudwatch:namespace": "Drishti/Lake" } } },
+    { "Sid": "SignalToken", "Effect": "Allow", "Action": "secretsmanager:GetSecretValue",
+      "Resource": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:drishti/${DRISHTI_ENV}/loader-token*" },
+    { "Sid": "MountTheLoaderFolder", "Effect": "Allow", "Action": ["elasticfilesystem:ClientMount", "elasticfilesystem:ClientWrite"],
+      "Resource": "arn:aws:elasticfilesystem:${AWS_REGION}:${AWS_ACCOUNT_ID}:file-system/${EFS_FILE_SYSTEM_ID}" }
+  ]
+}

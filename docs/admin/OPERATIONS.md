@@ -297,7 +297,7 @@ What does **not** change live, and why:
 
 ## 4. Install with Docker Compose
 
-`deploy/compose.yaml` runs the server and the console as two containers. The images run as a non-root user
+`deploy/docker/compose.yaml` runs the server and the console as two containers. The images run as a non-root user
 (uid 10001) and have health checks. The server image runs ZGC (generational) with `-XX:MaxRAMPercentage=75`, so it
 uses up to three quarters of the container's memory limit.
 
@@ -308,8 +308,8 @@ From the repository root:
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ./mvnw -q clean package -DskipTests
-docker build -f deploy/server.Dockerfile  -t drishti-server:2.6.5 .   # base image eclipse-temurin:21-jre; --build-arg BASE_IMAGE=eclipse-temurin:25-jre for Java 25
-docker build -f deploy/console.Dockerfile -t drishti-console:2.6.5 .
+docker build -f deploy/docker/server.Dockerfile  -t drishti-server:2.6.5 .   # base image eclipse-temurin:21-jre; --build-arg BASE_IMAGE=eclipse-temurin:25-jre for Java 25
+docker build -f deploy/docker/console.Dockerfile -t drishti-console:2.6.5 .
 ```
 
 The server image contains the jar and `config/packs/`. The console image contains the console, `docs/`, `config/packs/` and the
@@ -341,8 +341,8 @@ characters for the session secret).
 ### 4.3 Start
 
 ```bash
-docker compose -f deploy/compose.yaml up -d
-docker compose -f deploy/compose.yaml ps
+docker compose -f deploy/docker/compose.yaml up -d
+docker compose -f deploy/docker/compose.yaml ps
 ```
 
 You should see both services `running`, and after about 30 seconds `(healthy)`. If you forgot a secret you get
@@ -419,10 +419,10 @@ so its BI store reads the new data: [data/testdata/README.md](../../data/testdat
 
 ### 5.2 PostgreSQL, Aerospike and Kafka in Docker
 
-`deploy/compose.data.yaml` starts PostgreSQL 18, a single-node Kafka 3.9 broker and Aerospike Community Edition:
+`deploy/docker/compose.data.yaml` starts PostgreSQL 18, a single-node Kafka 3.9 broker and Aerospike Community Edition:
 
 ```bash
-docker compose -f deploy/compose.data.yaml up -d
+docker compose -f deploy/docker/compose.data.yaml up -d
 tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti
 tools/load-aerospike.sh localhost:3000 test
 ```
@@ -861,7 +861,7 @@ Work through this list for every shared installation. Each item says how to chec
     (section 13).
 13. **Secrets** only in a `0600` environment file or your secret store; never in `application.yaml` or a repository.
     No password in a sample is a password to keep: `DRISHTI_PG_PASSWORD` (the development stack
-    `deploy/compose.data.yaml` uses `drishti` and binds `127.0.0.1` only; a shared database needs its own),
+    `deploy/docker/compose.data.yaml` uses `drishti` and binds `127.0.0.1` only; a shared database needs its own),
     `DRISHTI_SEED_PASSWORD`, `DRISHTI_METRICS_TOKEN` (empty means only an admin token reads `/actuator`).
 14. **The token secret** is protected and rotated as a master key (next section).
 15. **Published ports.** `docker compose ps` shows no `0.0.0.0:18480`; the server's port is not reachable from outside.
@@ -1715,7 +1715,7 @@ fragments in use, runs, refused, last error) and `bus` (notices published and de
 
 ```bash
 journalctl -u drishti-server --since "1 hour ago" --no-pager | grep -E "WARN|ERROR"
-docker compose -f deploy/compose.yaml logs --tail 100 server
+docker compose -f deploy/docker/compose.yaml logs --tail 100 server
 ```
 
 Lines worth knowing:
@@ -1749,7 +1749,7 @@ User actions (sign-ins, user changes, cache purges, Sutra approvals) are not in 
    You should see the new `version`, and `{"status":"UP"}`. Then check **Admin → Health** shows `OK` and open a view.
 
 With Docker: build the new images with the new tag, change the `image:` tags in your compose file, and run
-`docker compose -f deploy/compose.yaml up -d`; the named volumes are kept.
+`docker compose -f deploy/docker/compose.yaml up -d`; the named volumes are kept.
 
 **Rollback**: stop, put the old jar (or image tag) back, restore the backup if the new version changed stored
 data, start.

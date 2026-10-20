@@ -535,7 +535,7 @@ Site settings override what a pack contributes, key by key.
 ### JVM settings
 
 The server image runs with `-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational` (see
-`deploy/server.Dockerfile`). Generational ZGC keeps pauses well under a millisecond, which matters for the live
+`deploy/docker/server.Dockerfile`). Generational ZGC keeps pauses well under a millisecond, which matters for the live
 p99. Use the same flags when you run the jar yourself:
 
 ```bash
