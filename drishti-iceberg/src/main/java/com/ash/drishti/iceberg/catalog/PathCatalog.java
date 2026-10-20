@@ -66,6 +66,26 @@ public final class PathCatalog implements Catalog {
     }
 
     @Override
+    public String missing(String name) {
+        String meta = base + "/" + name + "/metadata";
+        String held;
+        try {
+            List<String> files = new ArrayList<>();
+            for (var f : io.storage(io.resolve(meta)).listFrom(io.resolve(meta + "/!"))) {
+                files.add(f.path().substring(f.path().lastIndexOf('/') + 1));
+            }
+            held = files.isEmpty() ? "the folder is empty"
+                    : "it holds " + String.join(", ", files.subList(0, Math.min(3, files.size()))) + (files.size() > 3 ? " and " + (files.size() - 3) + " more" : "");
+        } catch (java.io.FileNotFoundException e) {
+            held = "the folder does not exist";
+        } catch (IOException | RuntimeException e) {
+            held = "it cannot be listed: " + e.getMessage();
+        }
+        return "no table " + name + ": looked in " + meta + " for version-hint.text, v<N>.metadata.json and a catalog's"
+                + " NNNNN-<uuid>.metadata.json (" + held + ")";
+    }
+
+    @Override
     public List<String> tables() throws IOException {
         Storage s = io.storage(io.resolve(base));
         List<String> out = new ArrayList<>();

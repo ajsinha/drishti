@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **Fixed (QA2-203): `iceberg-external` names what it looked for when a table folder has no metadata, and says DEGRADED.** Health
+  and Admin → Connectors read `qa-ghost: no table qa.ghost: looked in <root>/qa/ghost/metadata for version-hint.text,
+  v<N>.metadata.json and a catalog's NNNNN-<uuid>.metadata.json (the folder is empty)` (or what stray files it holds), and a
+  connector with a configured table it cannot serve (missing, no id) is `DEGRADED`, no longer `UP (…)` with level ok.
+  ICEBERG_EXTERNAL_CONNECTOR section 2; IcebergExternalPluginTest.
 - **Fixed (QA2-202): a read during a connector file swap waits for the new connector.** While a connector of the kind is being
   restarted (its file changed, Delta to Cassandra and back, a retry), an entity read (`/entities/…`, views) waits for the new instance,
   up to 30 s as a BI query already did, instead of answering `404 DRS-1002 connector trade-endur is running` for its drain and start

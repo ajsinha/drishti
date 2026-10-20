@@ -214,6 +214,17 @@ public final class IcebergExternalPlugin implements SourcePlugin {
         return catalog(k.namespace()).load(k.tableName());
     }
 
+    /** Why a kind's table was not found: its catalog's account of what it looked for (a path-based one names the metadata files). */
+    private String missing(KindConfig k) {
+        try {
+            String named = settings.containsKey("metadata-location." + k.kind()) ? k.kind() : k.tableName();
+            String why = catalog(settings.containsKey("metadata-location." + k.kind()) ? List.of() : k.namespace()).missing(named);
+            return why.startsWith("no table " + named) ? "no table " + k.table() + why.substring(("no table " + named).length()) : why;
+        } catch (RuntimeException e) {
+            return "no table " + k.table();
+        }
+    }
+
     void refresh() {
         if (!refreshing.tryLock()) {
             return;
@@ -233,8 +244,8 @@ public final class IcebergExternalPlugin implements SourcePlugin {
                 }
                 try {
                     Optional<Table> t = open(k);
-                    if (t.isEmpty()) {
-                        problems.put(k.kind(), k.kind() + ": no table " + k.table());
+                    if (t.isEmpty()) {                          // Health names the files looked for and what is there instead (QA2-203)
+                        problems.put(k.kind(), k.kind() + ": " + missing(k));
                         continue;
                     }
                     ExternalTable et = new ExternalTable(k, t.get(), loaders, options);
@@ -588,6 +599,9 @@ public final class IcebergExternalPlugin implements SourcePlugin {
                 + " so one entity reads one row group"));
         if (!partial.isEmpty()) {
             notes.add("partial (max-index-rows): " + String.join(", ", new TreeSet<>(partial)));
+        }
+        if (!problems.isEmpty()) {                              // a configured table not served (missing, no id): the connector is degraded (QA2-203)
+            return "DEGRADED: " + String.join("; ", notes);
         }
         return notes.isEmpty() ? "UP" : "UP (" + String.join("; ", notes) + ")";
     }
