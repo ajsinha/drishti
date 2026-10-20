@@ -74,7 +74,7 @@ loads the folder), and a member address learned by gossip is never kept nor pass
 real address. The refusal names the address to use:
 
 ```text
-$ drishti.py net set node.advertise-url http://192.168.1.20:18784
+$ drishti.py net set node.advertise-url http://127.0.0.1:18784
 drishti: node.yaml was not written: 'http://127.0.0.1:18784' is a loopback or wildcard address: the address this node advertises must be an address other machines can call (this machine's address is 192.168.1.20: use http://192.168.1.20:18784); or leave advertise-url out and the node advertises that address with its port
 ```
 
@@ -572,7 +572,10 @@ declaring a node that paused (a long garbage collection) dead and having it refu
 
 | Symptom | Look at | Fix |
 |---|---|---|
-| A node lists no members | Its log: `net: node ... joined ... seeds [...]`; Admin → Net → Files: is `node.yaml` **refused**? | The seed's address and port, the firewall, `enabled: true` with the key and the address |
+| A node lists no members | Its log: `net: node ... joined ... seeds [...]`; Admin → Net → Files: is `node.yaml` **refused**? | The seed's address and port, the firewall, `enabled: true` with the key (the address is detected unless `advertise-url` says otherwise) |
+| `node.yaml was not written: 'http://127.0.0.1:...' is a loopback or wildcard address` (or a seed's file refused the same way) | The address in `advertise-url` or the seed's `url` | The machine's real address, which the message names ([section 2](#2-a-cluster-of-three)); or leave `advertise-url` out |
+| A member is missing that a node's own log says joined at `127.0.0.1` or `0.0.0.0` | That node's version and `advertise-url` | A member advertising a loopback or wildcard address is never kept nor passed on: give it a real address |
+| Admin → Health shows *Last administrator kept* (audit action `last-admin-kept`) | The audit log: which change would have left no enabled administrator, and which administrator was kept | Nothing to repair: the cluster kept one enabled administrator ([section 7](#7-routing-where-a-request-goes)); review who disabled whom |
 | `401 DRS-5051 cluster credential refused: bad signature` in a node's log, the caller listed on Admin → Net | The two nodes' `DRISHTI_NET_SECRET` | The same key on every node (during a rollover, the three steps of [section 6](#6-security-the-key-mutual-tls-nodes-per-role)) |
 | `... signed 75 s away from this node's clock` | The two machines' clocks | NTP on every node |
 | A member flaps between `alive` and `suspect` | The latency on Admin → Net, the log of the flapping node (long pauses) | Raise `suspect-after`, or fix the network or the pauses |

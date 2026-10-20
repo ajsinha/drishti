@@ -1425,6 +1425,15 @@ HTTP and answers requests for packs and data the others hold ([NET.md](NET.md), 
 
 - **Ports and firewalls.** Each node calls the others at the address it advertises (`advertise-url`, the server's own port): open that port
   between the nodes. Nothing else is needed; there is no separate gossip port.
+- **Addresses.** A member advertises only a real address (2.6.0): `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` and `::` are refused in
+  `advertise-url` and in a seed's `url`, and never kept from gossip. Without `advertise-url` a node advertises this machine's primary IPv4
+  address (the default route's interface, never a container bridge) with its port; set it on a machine with several interfaces, behind a
+  load balancer or with a DNS name ([NET.md section 2](NET.md#2-a-cluster-of-three)).
+- **Administrators.** The cluster never ends with no enabled administrator: a peer's change that would leave none is repaired where it is
+  applied, audited `last-admin-kept` and shown on Admin → Health ([NET.md section 7](NET.md#7-routing-where-a-request-goes)).
+- **A cluster on one machine.** `drishti-stack/` at the repository's root starts three servers and a console from one `stack.yaml`, each
+  node advertising the machine's real address (`DRISHTI_STACK_HOST`, set by `start.sh`); for trying a cluster, not for production
+  ([drishti-stack/README.md](../../drishti-stack/README.md)).
 - **The key.** `DRISHTI_NET_SECRET`, the same on every node, in the environment only; every call between nodes is signed with it and refused
   outside a 60 s window, so keep the clocks in step (NTP).
 - **What it writes.** `<data dir>/net/node-id`, `<data dir>/net/peers.json` (atomically), `<data dir>/net/history/` (earlier texts of the
