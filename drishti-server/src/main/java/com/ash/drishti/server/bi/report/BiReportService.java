@@ -150,6 +150,7 @@ public final class BiReportService {
                 }
                 problems.addAll(ReportValidator.validate(parsed.report(), ds, sets));
                 problems.addAll(FieldParams.check(parsed.report(), ds, params));
+                problems.addAll(StatementSpec.checkParams(parsed.report(), params.keySet()));      // {param.nope} in a statement (QA2-02)
             }
             return new Loaded(item, parsed, dsItem, ds, problems, sets, params);
         }
@@ -176,6 +177,7 @@ public final class BiReportService {
             }
             problems.addAll(ReportValidator.validate(parsed.report(), ds, sets));
             problems.addAll(FieldParams.check(parsed.report(), ds, Map.of()));     // a field parameter in a well needs a report on a model (DRS-9037)
+            problems.addAll(StatementSpec.checkParams(parsed.report(), java.util.Set.of()));
         }
         return new Loaded(item, parsed, dsItem, ds, problems, sets);
     }
@@ -477,6 +479,25 @@ public final class BiReportService {
         if (live != null) {
             out.put("live", live);
         }
+        return out;
+    }
+
+    /**
+     * Every row of one table-like visual (a table, a matrix, a multi-row card) up to {@code maxRows} + 1, for a statement's band and an export's table: the
+     * visual's query asked with that limit and answered past {@code drishti.bi.query.json-max-rows}, so nothing is cut at what one screen shows (QA2-01). The
+     * row past {@code maxRows} tells the caller the table goes on, so it says so.
+     */
+    public Map<String, Object> queryRows(Principal p, String id, String yaml, String pageId, String visualId, JsonNode stateJson, int maxRows) {
+        Prepared pre = prepare(p, id, yaml, pageId, visualId, stateJson);
+        QueryRequest q0 = pre.built().query();
+        int limit = Math.min(Math.max(1, maxRows) + 1, datasets.maxRows());
+        QueryRequest q = new QueryRequest(q0.fields(), q0.measures(), q0.filters(), q0.from(), q0.to(), q0.orderBy(), limit, q0.layer(), q0.detail());
+        DatasetService.Asked asked = datasets.asked(p, pre.dsItem(), q, false);
+        Map<String, Object> out = new LinkedHashMap<>(datasets.json(shortNames(pre, asked.result()), limit));
+        out.put("visual", pre.visual().id());
+        out.put("query", describe(q));
+        out.put("mq", asked.query());
+        out.put("limit", limit);
         return out;
     }
 

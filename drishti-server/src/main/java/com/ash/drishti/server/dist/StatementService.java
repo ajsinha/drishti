@@ -77,7 +77,17 @@ public final class StatementService {
     }
 
     /** One statement made for one reader: its pages, the same figures as a table document (Excel and the email), and the values its header and footer used. */
-    public record Run(String title, StatementSpec spec, StatementPages pages, ExportDoc doc, Map<String, String> tokens, String period) {}
+    public record Run(String title, StatementSpec spec, StatementPages pages, ExportDoc doc, Map<String, String> tokens, String period, List<String> cut) {
+
+        public Run {
+            cut = cut == null ? List.of() : List.copyOf(cut);
+        }
+
+        /** A run with no table cut. */
+        public Run(String title, StatementSpec spec, StatementPages pages, ExportDoc doc, Map<String, String> tokens, String period) {
+            this(title, spec, pages, doc, tokens, period, List.of());
+        }
+    }
 
     /**
      * Whether an export of {@code page} of the report is a statement: the page is a statement page, or (no page named) every page of the report a reader
@@ -127,11 +137,27 @@ public final class StatementService {
         Map<String, String> tokens = tokens(st, who, s, period, spec, day);
         List<List<List<StatementLayout.Band>>> laid = new ArrayList<>();
         List<ExportDoc.Section> sections = new ArrayList<>();
+        List<String> cut = new ArrayList<>();
         String asOf = null;
-        for (Report.Page p : pages) {
+        List<List<Report.Visual>> visualsOf = new ArrayList<>();
+        List<List<BiExporter.Built>> answersOf = new ArrayList<>();
+        for (Report.Page p : pages) {                                     // every band asked first: {as-of} is known before any text is filled (QA2-02)
             List<Report.Visual> visuals = new ArrayList<>(p.visuals());
             visuals.sort(Comparator.comparingInt((Report.Visual v) -> v.at() == null ? 0 : v.at().y()).thenComparingInt(v -> v.at() == null ? 0 : v.at().x()));
             List<BiExporter.Built> answers = ask(who, st.id(), yaml, p, visuals, s);
+            for (int i = 0; i < visuals.size(); i++) {
+                answers.set(i, trimmed(visuals.get(i), answers.get(i), cut));
+                if (asOf == null && answers.get(i) != null) {
+                    asOf = answers.get(i).asOf();
+                }
+            }
+            visualsOf.add(visuals);
+            answersOf.add(answers);
+        }
+        tokens.put("as-of", asOf == null ? day.toString() : asOf);
+        for (int pi = 0; pi < pages.size(); pi++) {
+            List<Report.Visual> visuals = visualsOf.get(pi);
+            List<BiExporter.Built> answers = answersOf.get(pi);
             List<List<StatementLayout.Band>> rows = new ArrayList<>();
             Integer rowY = null;
             for (int i = 0; i < visuals.size(); i++) {
@@ -139,7 +165,6 @@ public final class StatementService {
                 BiExporter.Built b = answers.get(i);
                 if (b != null) {
                     sections.add(b.section());
-                    asOf = asOf == null ? b.asOf() : asOf;
                 }
                 int y = v.at() == null ? i : v.at().y();
                 if (rowY == null || y != rowY || StatementSpec.FLOWING.contains(v.type()) || rows.get(rows.size() - 1).stream().anyMatch(x -> "table".equals(x.kind()))) {
@@ -150,7 +175,6 @@ public final class StatementService {
             }
             laid.add(rows);
         }
-        tokens.putIfAbsent("as-of", asOf == null ? day.toString() : asOf);
         StatementPages out = new StatementLayout(spec, limits.maxPages()).lay(laid, tokens);
         List<String> notes = new ArrayList<>();
         notes.add("Statement for " + who.user() + ", run " + tokens.get("run-date") + " " + tokens.get("run-time"));
@@ -158,9 +182,10 @@ public final class StatementService {
             notes.add("Period: " + period.label() + " (" + period.from() + " to " + period.to() + ")");
         }
         notes.addAll(BiExporter.filters(report, s));
+        notes.addAll(cut);
         String sub = (!"none".equals(spec.period()) ? period.label() + " · " : "") + "Data as of " + (asOf == null ? day.toString() : asOf) + " · " + out.pages().size() + " pages";
         ExportDoc doc = new ExportDoc(st.title(), sub, notes, sections);
-        return new Run(st.title(), spec, out, doc, tokens, "none".equals(spec.period()) ? "" : period.label());
+        return new Run(st.title(), spec, out, doc, tokens, "none".equals(spec.period()) ? "" : period.label(), cut);
     }
 
     /** The statement as a PDF file. */
@@ -186,6 +211,7 @@ public final class StatementService {
         m.put("paper", Map.of("size", r.spec().paper(), "orientation", r.spec().landscape() ? "landscape" : "portrait", "margins", r.spec().margins()));
         m.put("tokens", r.tokens());
         m.put("rows", r.doc().rowCount());
+        m.put("cut", r.cut());                                         // the tables that stop at max-rows, in words (QA2-01)
         return m;
     }
 
@@ -268,7 +294,8 @@ public final class StatementService {
                 futures.add(pool.submit(() -> {
                     room.acquire();
                     try {
-                        return exporter.section(who, reportId, yaml, page, v, state, v.title() == null || v.title().isBlank() ? v.id() : v.title());
+                        return exporter.section(who, reportId, yaml, page, v, state, v.title() == null || v.title().isBlank() ? v.id() : v.title(),
+                                StatementSpec.FLOWING.contains(v.type()) ? limits.maxRows() : null);     // a table is read whole, never the screen's first rows (QA2-01)
                     } finally {
                         room.release();
                     }
@@ -315,6 +342,22 @@ public final class StatementService {
                 r.alt(), r.interacts(), r.action(), r.dataset(), r.tooltip(), r.from(), r.alert());
     }
 
+    /**
+     * A table band's answer cut at {@code max-rows} (it was asked for one row more, so a longer table is known): the rows kept, a note above the table that
+     * says so, and the same words in {@code cut} for the preview and the Excel file. Other bands are as they came.
+     */
+    private BiExporter.Built trimmed(Report.Visual v, BiExporter.Built b, List<String> cut) {
+        if (b == null || !StatementSpec.FLOWING.contains(v.type()) || b.section().rows().size() <= limits.maxRows()) {
+            return b;
+        }
+        ExportDoc.Section s = b.section();
+        String says = "The first " + String.format(Locale.ROOT, "%,d", limits.maxRows()) + " rows only: the table goes on (drishti.distribution.statements.max-rows).";
+        cut.add((s.title() == null || s.title().isBlank() ? v.id() : s.title()) + ": " + says);
+        ExportDoc.Section kept = new ExportDoc.Section(s.id(), s.title(), s.type(), s.columns(), s.rows().subList(0, limits.maxRows()),
+                s.note() == null ? says : says + " " + s.note(), s.masked(), s.kind());
+        return new BiExporter.Built(kept, b.asOf());
+    }
+
     private StatementLayout.Band band(Report.Visual v, BiExporter.Built b, Map<String, String> tokens) {
         double x = v.at() == null ? 0 : v.at().x() / (double) Report.COLUMNS;
         double w = v.at() == null ? 1 : Math.min(1 - x, v.at().w() / (double) Report.COLUMNS);
@@ -330,10 +373,6 @@ public final class StatementService {
         String note = s.note();
         if (StatementSpec.FLOWING.contains(v.type())) {
             StatementLayout.Table t = "matrix".equals(v.type()) ? pivot(v, s) : table(s, v);
-            if (s.rows().size() > limits.maxRows()) {
-                note = (note == null ? "" : note + " ") + "The first " + limits.maxRows() + " rows (drishti.distribution.statements.max-rows).";
-                t = new StatementLayout.Table(t.headers(), t.rows().subList(0, Math.min(t.rows().size(), limits.maxRows())), t.numeric(), t.groupColumn());
-            }
             return new StatementLayout.Band("table", v.id(), title, null, false, null, note, t, 0, 1, brk, keep, repeat);
         }
         String measure = v.well("values").isEmpty() ? (s.columns().isEmpty() ? "" : s.columns().get(0)) : BiExporter.shortName(v.well("values").get(0));

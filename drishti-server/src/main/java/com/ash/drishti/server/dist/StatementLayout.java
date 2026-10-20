@@ -114,12 +114,28 @@ final class StatementLayout {
             java.util.Map<String, String> t = new java.util.HashMap<>(tokens);
             t.put("page", String.valueOf(i + 1));
             t.put("pages", String.valueOf(n));
-            List<StatementPages.Op> all = new ArrayList<>(pages.get(i));
+            List<StatementPages.Op> all = new ArrayList<>(numbered(pages.get(i), t));
             margins(all, spec.header(), height - spec.marginPoints(0) - fs, true, t);
             margins(all, spec.footer(), spec.marginPoints(2), false, t);
             out.add(new StatementPages.Page(i + 1, all));
         }
         return new StatementPages(width, height, out);
+    }
+
+    /** The roles whose text an author wrote (a text band, a title, a card's label): {@code {page}} and {@code {pages}} work there as in the header (QA2-02). */
+    private static final java.util.Set<String> AUTHORED = java.util.Set.of("text", "title", "label");
+
+    /** A page's ops with {@code {page}} and {@code {pages}} filled in the author's own text, once the number of pages is known; data cells are left as they are. */
+    static List<StatementPages.Op> numbered(List<StatementPages.Op> ops, Map<String, String> tokens) {
+        List<StatementPages.Op> out = new ArrayList<>(ops.size());
+        for (StatementPages.Op op : ops) {
+            if (op instanceof StatementPages.Text t && AUTHORED.contains(t.role()) && t.text().indexOf('{') >= 0) {
+                out.add(new StatementPages.Text(t.x(), t.y(), t.size(), t.bold(), t.rgb(), StatementSpec.fill(t.text(), Map.of("page", tokens.get("page"), "pages", tokens.get("pages"))), t.role()));
+            } else {
+                out.add(op);
+            }
+        }
+        return out;
     }
 
     // ---- pages ---------------------------------------------------------------------------------------------------

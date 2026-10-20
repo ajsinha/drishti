@@ -91,7 +91,9 @@ so a band shows exactly what the same visual shows on a grid page.
 **Tokens** in the header, the footer, a text band and a visual's title: `{title}` (the report's), `{page}` and `{pages}` (counted once the statement is laid
 out), `{run-date}` and `{run-time}` (when it was made, in the server's business time zone), `{period}` (*September 2026*, *2026-Q3*, *2026*, or the date),
 `{from}` and `{to}` (the period's first and last day), `{as-of}` (the date the data is as of), `{reader}` (who it was made for) and `{param.<name>}` (a
-parameter of the model, as the run has it: section 4). An unknown token is refused (`DRS-9038`).
+parameter of the model, as the run has it: section 4). Each works in all four places; in a text band and a title `{page}` is the page the text is
+printed on, so a table's *(continued)* title on page 3 reads `p3`. An unknown token, and a `{param.<name>}` that names no parameter of the report's model,
+is refused (`DRS-9038`) when the report is checked.
 
 A **band** adds to its own `format` (the Format pane's **Statement** group):
 
@@ -107,6 +109,9 @@ A **band** adds to its own `format` (the Format pane's **Statement** group):
 The server lays the pages out (`StatementLayout`), so the PDF, the preview and the Excel print setup agree: the browser never computes a page.
 
 * Rows of bands go top to bottom; a row is as tall as its tallest band and is never split. Text that is taller than a page flows line by line.
+* A **table** holds every row of its query, up to `drishti.distribution.statements.max-rows` (10,000), not the 5,000 rows one answer to the screen
+  holds: the statement asks for them all. A longer table stops there and says so in a note above it (*The first 10,000 rows only: the table goes on*), in
+  the preview's `cut` and in the Excel file's notes; narrow it with filters or parameters, or raise `max-rows`.
 * A **table** starts with its title (and a note: rows cut, values masked for the reader), then its column titles and its rows. It never leaves its title and
   column titles alone at the foot of a page: when the first row (or the first group) does not fit, the table starts on the next page. On each page it runs
   onto it repeats its column titles (`repeatHeader`).
@@ -171,7 +176,7 @@ analyst's every trade with MTM masked; and two recipients of the same role and d
 
 | Method | Path | What it does |
 |---|---|---|
-| `POST` | `/api/v1/bi/reports/statement/preview` | body `{report: <id>` or `yaml: <draft>` (needs `bi-author`)`, page?, state?, date?}`: `{title, period, paper {size, orientation, margins}, width, height, pageCount, pages [{number, ops [...]}], tokens, rows}`; each op is a `text` (`x`, `y`, `size`, `bold`, `rgb`, `text`, `role`: `header`, `footer`, `title`, `head`, `group`, `cell`, `text`, `label`, `value`, `note`), a `rule` or a `fill`, in points from the page's lower left corner |
+| `POST` | `/api/v1/bi/reports/statement/preview` | body `{report: <id>` or `yaml: <draft>` (needs `bi-author`)`, page?, state?, date?}`: `{title, period, paper {size, orientation, margins}, width, height, pageCount, pages [{number, ops [...]}], tokens, rows, cut}` (`cut`: each table that stops at `max-rows`, in words; empty when none); each op is a `text` (`x`, `y`, `size`, `bold`, `rgb`, `text`, `role`: `header`, `footer`, `title`, `head`, `group`, `cell`, `text`, `label`, `value`, `note`), a `rule` or a `fill`, in points from the page's lower left corner |
 | `POST` | `/api/v1/bi/reports/statement/file` | the same body plus `format: pdf` (default) or `xlsx`: the file, made for the caller, with `X-Statement-Pages` |
 | `POST` | `/api/v1/export/pdf` · `/xlsx` | a statement page as for any export (`{type: report, id, page, state?, date?}`): the statement |
 
@@ -206,7 +211,8 @@ The report schema checks a statement when it is validated, saved, proposed and p
 |---|---|
 | `statement.paper`, `statement.orientation` | not one of the paper sizes; not portrait or landscape |
 | `statement.margins.<side>` | not 0 to 60 millimetres, or a side that is not top, right, bottom or left |
-| `statement.header.<part>`, `.footer.<part>` | a part that is not left, center or right; an unknown token (`{nope}`) |
+| `statement.header.<part>`, `.footer.<part>` | a part that is not left, center or right; an unknown token (`{nope}`), or `{param.<name>}` naming no parameter of the model |
+| `pages[i].visuals[j].text`, `.title` | the same tokens in a text band or a title of a statement page |
 | `statement.period`, `statement.dates`, `statement.fontSize` | not one of the periods; not end or window; not 7 to 12 |
 | `pages[i].visuals[j].type` | a visual a statement does not draw (a chart: put it on a grid page and export that as a picture) |
 | `pages[i].visuals[j].at` | a table, matrix or multirow card that shares its row |
@@ -219,7 +225,7 @@ The report schema checks a statement when it is validated, saved, proposed and p
 ## 9. Settings
 
 `drishti.distribution.statements.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)): `max-pages` (500: a longer statement is refused), `max-rows` (10,000 rows
-of one table band; past it the band says so), `paper` (`A4`: the paper of a statement that names none), `band-queries` (2: the bands of one statement asked
+of one table band, all read even past `drishti.bi.query.json-max-rows`; past it the band says so above itself), `paper` (`A4`: the paper of a statement that names none), `band-queries` (2: the bands of one statement asked
 at the same time, each as the reader, within the query limits). A statement is an export: `drishti.distribution.export.timeout` and `max-bytes` apply.
 
 ## 10. Built and not built

@@ -17,6 +17,13 @@
 
 ## Unreleased
 
+- **Fixed (QA2-01): a statement's table no longer stops silently at 5,000 rows.** A table or matrix band is read whole, up to
+  `drishti.distribution.statements.max-rows` (10,000), past the 5,000 rows one JSON answer to the screen holds; a longer one says so in a note above it,
+  in the preview's new `cut` list and in the Excel file. Excel and CSV exports read their tables whole the same way (up to `export.max-rows`), and any
+  other visual the engine cut says *The first N of M rows*.
+- **Fixed (QA2-02): statement tokens work where STATEMENTS.md says.** `{page}`, `{pages}` and `{as-of}` are filled in a text band and a visual's title
+  (a *(continued)* title carries its own page), and the check refuses `{param.<name>}` naming no parameter of the model and an unknown token in a title
+  (`DRS-9038`).
 - **Changed: the committed test data holds sixty business days** (`data/testdata`, was seven; 119 MB gzipped in 2,944 files, the
   largest 5 MB): a day-1 snapshot and fifty-nine days of changes, so a trade's history (`TRD <id> 60`) shows real amendments.
   `make_testdata.py --days` defaults to 60. The docs that said seven days say sixty; captured outputs (dates, counts, timings) are

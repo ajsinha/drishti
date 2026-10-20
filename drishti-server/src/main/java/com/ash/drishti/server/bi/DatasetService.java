@@ -867,8 +867,16 @@ public final class DatasetService {
 
     /** The answer as JSON for a small result: columns with their types and the rows. */
     public Map<String, Object> json(QueryService.Result r) {
-        if (r.rows() > props.jsonMaxRows()) {
-            throw new DrishtiException(ErrorCode.QUERY_ROWS, "the answer has " + r.rows() + " rows, more than the " + props.jsonMaxRows()
+        return json(r, props.jsonMaxRows());
+    }
+
+    /**
+     * As above with a caller's own ceiling instead of {@code drishti.bi.query.json-max-rows}: a statement's table or an export's table reads every row it
+     * prints (up to its own {@code max-rows}), never what one screen shows (QA2-01).
+     */
+    public Map<String, Object> json(QueryService.Result r, int maxRows) {
+        if (r.rows() > maxRows) {
+            throw new DrishtiException(ErrorCode.QUERY_ROWS, "the answer has " + r.rows() + " rows, more than the " + maxRows
                     + " an answer in JSON may hold (drishti.bi.query.json-max-rows): ask for format=arrow, or limit it");
         }
         List<Map<String, Object>> cols = new ArrayList<>();
