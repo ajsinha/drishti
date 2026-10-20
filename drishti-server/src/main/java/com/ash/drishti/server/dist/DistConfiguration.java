@@ -57,9 +57,14 @@ public class DistConfiguration {
         return new ViewExporter(pipeline, entitlements);
     }
 
+    @Bean
+    public StatementService statementService(BiReportService reports, BiExporter bi, DistProperties props, BusinessDates dates) {
+        return new StatementService(reports, bi, props.statements(), Clock.systemUTC(), dates.zone(), dates::current);
+    }
+
     @Bean(destroyMethod = "close")
-    public ContentExporter contentExporter(BiExporter bi, ViewExporter views, DistProperties props, BusinessDates dates, CollabProperties collab) {
-        return new ContentExporter(bi, views, props.export(), Clock.systemUTC(), dates.zone(), collab.consoleUrl());
+    public ContentExporter contentExporter(BiExporter bi, ViewExporter views, DistProperties props, BusinessDates dates, CollabProperties collab, StatementService statements) {
+        return new ContentExporter(bi, views, props.export(), Clock.systemUTC(), dates.zone(), collab.consoleUrl()).with(statements);
     }
 
     @Bean(destroyMethod = "close")

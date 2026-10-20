@@ -52,6 +52,11 @@ param(
     [string]$Heap = '',
     # The offline demo on the lakes: the settings of the run configuration 'Drishti server (demo lakes)'.
     [switch]$DemoLakes,
+    # Serve the stores from Iceberg tables (tools\windows\load-iceberg.ps1): the connector files of
+    # config\connectors.examples\iceberg are copied into config\connectors (those not there yet), read by the native engine.
+    [switch]$Iceberg,
+    # The Iceberg tables' root (DRISHTI_ICEBERG_ROOT), with -Iceberg.
+    [string]$IcebergRoot = $(if ($env:DRISHTI_ICEBERG_ROOT) { $env:DRISHTI_ICEBERG_ROOT } else { '.\data\iceberg' }),
     # Start in the background (log in data\logs\server.log, process id in data\server.pid).
     [switch]$Background,
     # Stop a server started with -Background.
@@ -110,6 +115,17 @@ $env:DRISHTI_DELTA_ENGINE = $Engine
 $env:DRISHTI_PORT = "$Port"
 $env:DRISHTI_DELTA_ROOT = $LakeRoot
 if ($Packs) { $env:DRISHTI_PACKS = $Packs }
+if ($Iceberg) {
+    # Iceberg without Hadoop: the native engine (drishti-iceberg) needs no winutils.exe
+    $env:DRISHTI_ICEBERG_ENGINE = 'native'
+    $env:DRISHTI_ICEBERG_ROOT = $IcebergRoot
+    $connectors = Join-Path $root 'config\connectors'
+    New-Item -ItemType Directory -Force -Path $connectors | Out-Null
+    foreach ($f in Get-ChildItem -Path (Join-Path $root 'config\connectors.examples\iceberg') -Filter '*.yaml') {
+        $to = Join-Path $connectors $f.Name
+        if (-not (Test-Path $to)) { Copy-Item $f.FullName $to; Write-Host "Connector file $($f.Name) copied into config\connectors" }
+    }
+}
 # compact object headers exist from Java 25 (Java 21 refuses to start with the flag)
 # the JVM's temp folder is the server's own temp base (DRISHTI_TMP_DIR, else <data dir>\tmp\server): DuckDB, RocksDB and CatBoost
 # unpack their native libraries there, and the server removes stale copies at start; java.io.tmpdir only moves on the command line

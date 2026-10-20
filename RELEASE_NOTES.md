@@ -13,6 +13,36 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.6.0 — release notes
+
+*2026-10-20.* **Paper statements and field parameters in BI, Cassandra and Iceberg without Hadoop, three new themes, and the
+known bugs fixed.** (Wave D of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md); the full list is in the [changelog](CHANGELOG.md).)
+
+- **Paginated reports and statements:** a report page with `layout: statement` is paper: page-exact PDF (written by the
+  server) and Excel set to print, headers and footers with tokens, page breaks, repeated column titles, groups kept
+  together, and bursting through subscriptions, one statement per recipient, masked as them. The statement designer
+  (Format → Layout → statement, the Paper tab) previews page by page ([STATEMENTS.md](docs/guides/STATEMENTS.md), tutorial 20).
+- **Field parameters in a report's wells:** a reader's slicer switches which field or measure a visual draws.
+- **Apache Cassandra connector** (`cassandra`): Cassandra 4 and 5, ScyllaDB, Astra; a day appears whole or not at all
+  ([CASSANDRA_CONNECTOR.md](docs/connectors/CASSANDRA_CONNECTOR.md)).
+- **drishti-iceberg:** Drishti's own Apache Iceberg engine with no Hadoop, so Iceberg runs on Windows; it is the default
+  engine (`engine: library` brings back the old one), and faster: a connector starts in 637 ms (1.8 s before), a trade on a
+  past day reads in 94 ms (353 ms). **`iceberg-external`** reads Iceberg tables Drishti did not write (Spark, Flink, Trino,
+  Snowflake, Glue) ([DRISHTI_ICEBERG.md](docs/architecture/DRISHTI_ICEBERG.md), [ICEBERG_EXTERNAL_CONNECTOR.md](docs/connectors/ICEBERG_EXTERNAL_CONNECTOR.md)).
+- **Three themes:** Green Terminal, Crimson Terminal and Blue Terminal (ten in all); every text colour passes the contrast
+  rule on every ground, labels on button fills too.
+- **Known bugs fixed:** a Drishti*net cluster never ends with no enabled administrator; members advertise only a real
+  address; a BI query waits for a connector that is restarting; the report designer never saves a draft without its last
+  change; Show the rows and Drill through use the selection at the click; embedded reports and Analyse wait as long as the
+  server runs a query; flaky browser tests made steady under load.
+- **Designs:** history queries (2.6.5, [HISTORY_QUERIES.md](docs/architecture/HISTORY_QUERIES.md)), Drishti on AWS
+  ([AWS_DEPLOYMENT.md](docs/architecture/AWS_DEPLOYMENT.md)) and super scale, 500 GB a day for seven years
+  ([SUPER_SCALE.md](docs/architecture/SUPER_SCALE.md)).
+- **Roadmap:** 2.6.5 history queries → 2.7.0 write-back → 2.8.0 AI and the Sajha MCP connector; send and push and
+  integration (PG-wire, Excel feed, embed tokens) after 3.0.0.
+- **Known:** two browser tests still flaky under heavy load (`test_showcase_clean_browser[map]`, the embedded Pivot click
+  in Firefox and WebKit), carried to 2.6.5. 2.6.0 was released on targeted tests; the full drill runs with 2.6.5.
+
 # Drishti 2.5.0 — release notes
 
 *2026-10-19.* **Drishti*net: several servers act as one Drishti, and the console carries on when one stops.** (Wave N of

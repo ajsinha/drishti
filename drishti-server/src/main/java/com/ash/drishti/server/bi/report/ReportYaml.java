@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 public final class ReportYaml {
 
     private static final List<String> TOP = List.of("rachana", "report", "board", "version", "title", "description", "sample", "owner", "tags", "endorsement", "endorsedBy",
-            "audience", "dataset", "theme", "dates", "filters", "bookmarks", "layouts", "links", "tests", "rotate", "notify", "pages");
+            "audience", "dataset", "theme", "statement", "dates", "filters", "bookmarks", "layouts", "links", "tests", "rotate", "notify", "pages");
     private static final List<String> PAGE = List.of("id", "title", "layout", "tooltip", "drillthrough", "filters", "interactions", "visuals");
     private static final List<String> VISUAL = List.of("id", "type", "title", "dataset", "from", "at", "wells", "filters", "sort", "limit", "hierarchy", "drillthrough", "tooltip", "format", "alert",
             "text", "src", "alt", "interacts", "action");
@@ -82,7 +82,8 @@ public final class ReportYaml {
                     line(indent + 2, key(String.valueOf(device)) + ":");
                     ((Map<?, ?>) byPage).forEach((page, lay) -> line(indent + 4, key(String.valueOf(page)) + ": " + flow(lay)));
                 });
-            } else if (v instanceof Map<?, ?> fm && ("format".equals(e.getKey()) || "interactions".equals(e.getKey())) && depth >= 1 && flow(fm).length() > FLOW_MAX) {
+            } else if (v instanceof Map<?, ?> fm && (("format".equals(e.getKey()) || "interactions".equals(e.getKey())) && depth >= 1 || "statement".equals(e.getKey()) && depth == 0)
+                    && flow(fm).length() > FLOW_MAX) {
                 line(indent, key + ":");
                 map((Map<String, ?>) fm, indent + 2, List.of(), depth + 2);
             } else if (v instanceof List<?> l && !l.isEmpty() && l.get(0) instanceof Map) {

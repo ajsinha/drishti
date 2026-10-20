@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.deltalake.write;
 
-import com.ash.drishti.deltalake.LocalPaths;
+import com.ash.drishti.lakeio.LocalPaths;
 import com.ash.drishti.deltalake.NativeFileIO;
-import com.ash.drishti.deltalake.S3Settings;
+import com.ash.drishti.lakeio.S3Settings;
 import io.delta.kernel.defaults.engine.fileio.FileIO;
 import io.delta.kernel.defaults.engine.fileio.InputFile;
 import io.delta.kernel.defaults.engine.fileio.OutputFile;

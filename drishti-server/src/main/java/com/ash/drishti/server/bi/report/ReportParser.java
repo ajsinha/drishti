@@ -73,7 +73,7 @@ public final class ReportParser {
     private static final Pattern ID = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_-]{0,39}");
     private static final Pattern DAY = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
     private static final Set<String> TOP = Set.of("rachana", "report", "version", "title", "description", "sample", "dataset", "model", "perspective", "measures", "theme", "dates", "filters", "bookmarks", "layouts", "links", "tests", "pages",
-            "owner", "tags", "endorsement", "endorsedBy", "audience", "board");
+            "owner", "tags", "endorsement", "endorsedBy", "audience", "board", "statement");
     private static final Set<String> PAGE = Set.of("id", "title", "filters", "drillthrough", "visuals", "layout", "tooltip", "interactions");
     private static final Set<String> VISUAL_KEYS = Set.of("id", "type", "title", "at", "wells", "filters", "sort", "limit", "hierarchy", "drillthrough", "format", "text", "src", "alt",
             "interacts", "action", "dataset", "tooltip", "from", "alert");
@@ -131,6 +131,7 @@ public final class ReportParser {
         } else if (dataset.isBlank() && !tilesOnly) {                         // a wall of tiles reads no data of its own (R7): each tile is answered by its report
             out.add(error(INVALID, "dataset", "`dataset:` names the dataset the report reads (its catalogue id, file name or name), or `model:` the model"));
         }
+        Map<String, Object> statement = map(root.path("statement"), "statement", out);
         Map<String, Object> board = map(root.path("board"), "board", out);
         board.keySet().stream().filter(k -> !BOARD_KEYS.contains(k)).forEach(k -> out.add(new Problem("warning", INVALID, "board." + k, "unknown board key '" + k + "' is ignored (rotate, notify)")));
         if (!board.isEmpty() && pages.stream().noneMatch(Report.Page::board)) {
@@ -146,8 +147,9 @@ public final class ReportParser {
             out.add(error("DRS-9140", local.isEmpty() ? "perspective" : "measures", "a report's own measures and its perspective belong to a report on a model (`model:`)"));
         }
         Report r = new Report(name, root.path("version").asInt(1), text(root, "title", name), text(root, "description", ""), root.path("sample").asBoolean(false), dataset,
-                theme, dates, filters, pages, bookmarks, layouts(root.path("layouts"), out), links(root.path("links"), out), tests, local, perspective, board);
+                theme, dates, filters, pages, bookmarks, layouts(root.path("layouts"), out), links(root.path("links"), out), tests, local, perspective, board, statement);
         out.addAll(com.ash.drishti.server.bi.board.ReportBoards.check(r));
+        out.addAll(StatementSpec.check(r));                                     // statement pages and their paper (2.6.0, DRS-9038)
         pageReferences(r, out);
         return new Result(r, out);
     }
@@ -384,8 +386,8 @@ public final class ReportParser {
             }
             List<Report.Visual> visuals = visuals(p.path("visuals"), path + ".visuals", out);
             String layout = text(p, "layout", "grid");
-            if (!layout.equals("grid") && !layout.equals("board")) {
-                out.add(error(INVALID, path + ".layout", "layout is grid (the default) or board (a wall of tiles with kiosk, rotation and tile alerts)"));
+            if (!layout.equals("grid") && !layout.equals("board") && !layout.equals("statement")) {
+                out.add(error(INVALID, path + ".layout", "layout is grid (the default), board (a wall of tiles with kiosk, rotation and tile alerts) or statement (page-exact paper: PDF and Excel)"));
                 layout = "grid";
             }
             JsonNode tip = p.path("tooltip");

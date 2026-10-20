@@ -16,9 +16,10 @@
 
 $id: table
 x-types: [table]
-x-order: [Title, Grid, Values, Totals, Conditional formatting, Frame]
+x-order: [Title, Grid, Values, Totals, Conditional formatting, Frame, Statement]
 allOf:
   - $ref: "common#/$defs/frame"
+  - $ref: "common#/$defs/paged"
 type: object
 additionalProperties: false
 properties:

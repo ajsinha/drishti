@@ -15,6 +15,9 @@
  */
 package com.ash.drishti.deltalake;
 
+import com.ash.drishti.lakeio.PageDecodeException;
+import com.ash.drishti.lakeio.ParquetFooters;
+import com.ash.drishti.lakeio.UnsupportedCodec;
 import io.delta.kernel.data.ColumnarBatch;
 import io.delta.kernel.defaults.internal.parquet.ParquetFileReader.BatchReadSupport;
 import io.delta.kernel.defaults.internal.parquet.ParquetFileReader.RowRecordCollector;
@@ -35,8 +38,6 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import org.apache.parquet.ParquetReadOptions;
 import org.apache.parquet.column.page.PageReadStore;
-import org.apache.parquet.conf.ParquetConfiguration;
-import org.apache.parquet.conf.PlainParquetConfiguration;
 import org.apache.parquet.filter2.compat.FilterCompat;
 import org.apache.parquet.filter2.predicate.FilterPredicate;
 import org.apache.parquet.hadoop.ParquetFileReader;
@@ -57,8 +58,6 @@ import org.apache.parquet.schema.MessageType;
  */
 final class ParquetBatches implements CloseableIterator<ColumnarBatch> {
 
-    /** Parquet's options without a Hadoop {@code Configuration}; read-only after construction, so shared. */
-    private static final ParquetConfiguration PLAIN = new PlainParquetConfiguration();
 
     private final NativeFileIO io;
     private final FileStatus file;
@@ -91,33 +90,18 @@ final class ParquetBatches implements CloseableIterator<ColumnarBatch> {
     private ParquetReadOptions.Builder options() {
         // row groups are pruned by statistics only, as Kernel's own reader does: no per-record filtering (Kernel
         // filters rows itself), no dictionary, bloom or page-index reads (extra I/O for a sorted table)
-        return ParquetReadOptions.builder(PLAIN).withCodecFactory(io.codecs()).useStatsFilter(true).useDictionaryFilter(false)
-                .useBloomFilter(false).useColumnIndexFilter(false).withUseHadoopVectoredIo(false);
+        return ParquetFooters.options(io.codecs());
     }
 
     /** The codecs of every column chunk of {@code file}, from its footer. */
     static Set<CompressionCodecName> codecs(NativeFileIO io, FileStatus file) throws IOException {
         InputFile in = io.newParquetFile(file.getPath(), file.getSize());
         try (SeekableInputStream stream = in.newStream()) {
-            ParquetMetadata footer = ParquetFileReader.readFooter(in, ParquetReadOptions.builder(PLAIN).build(), stream);
+            ParquetMetadata footer = ParquetFileReader.readFooter(in, ParquetReadOptions.builder(ParquetFooters.PLAIN).build(), stream);
             Set<CompressionCodecName> found = EnumSet.noneOf(CompressionCodecName.class);
             footer.getBlocks().forEach(b -> b.getColumns().forEach(c -> found.add(c.getCodec())));
             return found;
         }
-    }
-
-    /**
-     * Parsed footers by file. A Delta data file never changes once written (a rewrite is a new file), so its footer is read
-     * once, not on every single-entity read; a file of many row groups has a large footer (hundreds of KB to parse). Weighed
-     * by row groups: at most {@code drishti.parquet.footer-cache-groups} (default 50,000, a few tens of MB) are kept.
-     */
-    private static final com.github.benmanes.caffeine.cache.Cache<String, ParquetMetadata> FOOTERS = com.github.benmanes.caffeine.cache.Caffeine
-            .newBuilder().maximumWeight(Long.getLong("drishti.parquet.footer-cache-groups", 50_000))
-            .weigher((String k, ParquetMetadata m) -> 1 + m.getBlocks().size()).build();
-
-    /** Forgets every parsed footer (a purge of the connector's caches; a file changed in place is read again). */
-    static void purgeFooters() {
-        FOOTERS.invalidateAll();
     }
 
     /** Whether single-entity reads use the page index (drishti.parquet.page-index, default true; every Parquet library is one version, the root pom). */
@@ -129,12 +113,8 @@ final class ParquetBatches implements CloseableIterator<ColumnarBatch> {
         InputFile in = io.newParquetFile(file.getPath(), file.getSize());
         SeekableInputStream stream = in.newStream();
         try {
-            String key = file.getPath() + "|" + file.getSize();
-            ParquetMetadata footer = FOOTERS.getIfPresent(key);
-            if (footer == null) {
-                footer = ParquetFileReader.readFooter(in, options().build(), stream);
-                FOOTERS.put(key, footer);
-            }
+            // the footer from the shared cache: a Delta data file never changes once written
+            ParquetMetadata footer = ParquetFooters.footer(file.getPath(), file.getSize(), in, stream, options().build());
             MessageType fileSchema = footer.getFileMetaData().getSchema();
             Optional<FilterPredicate> filter = predicate.flatMap(p -> ParquetFilterUtils.toParquetFilter(fileSchema, p));
             // a single entity's read (id = …) also uses the page index, when the file has one: only the page that can hold the id
@@ -143,7 +123,7 @@ final class ParquetBatches implements CloseableIterator<ColumnarBatch> {
             ParquetReadOptions withFilter = options().useColumnIndexFilter(pageFiltered)
                     .withRecordFilter(filter.map(FilterCompat::get).orElse(FilterCompat.NOOP)).build();
             reader = ParquetFileReader.open(in, footer, withFilter, stream);      // the reader owns the stream now
-            MessageType requested = new BatchReadSupport(batchSize, schema).init(new InitContext(PLAIN, Map.of(), fileSchema))
+            MessageType requested = new BatchReadSupport(batchSize, schema).init(new InitContext(ParquetFooters.PLAIN, Map.of(), fileSchema))
                     .getRequestedSchema();
             reader.setRequestedSchema(requested);
             collector = new RowRecordCollector(batchSize, schema, fileSchema);

@@ -30,6 +30,7 @@ from fastapi.responses import Response
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from core.embed import EmbedError
+from routes.bi_routes import QUERY_WAIT_SECONDS
 from routes.embed_routes import identity, refuse, reply
 
 router = APIRouter(prefix="/embed/v1", include_in_schema=False)
@@ -44,7 +45,8 @@ async def _call(request: Request, method: str, path: str, body: dict | None = No
     except EmbedError as e:
         return await refuse(request, e.status, e.code, e.detail, e.retry_after)
     try:
-        return await request.app.state.backend.bi(method, path, me, body)
+        # a query waits as long as the server lets it run (bi_routes.QUERY_WAIT_SECONDS), not the console's usual few seconds
+        return await request.app.state.backend.bi(method, path, me, body, **({"wait": QUERY_WAIT_SECONDS} if path.endswith("/query") else {}))
     except BackendError as e:
         return await refuse(request, e.page_status, e.code, e.detail, e.retry_after)
 

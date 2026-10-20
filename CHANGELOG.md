@@ -35,6 +35,75 @@
   The JSON contract of `GET /api/v1/history/{kind}/{id}` is fixed as `drishti-testkit/src/main/resources/history/trade-1000015-30.json`
   and `equity-EQ-CSCA-3M.json` ([CONNECTOR_DEVELOPER_GUIDE](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md),
   [HISTORY_QUERIES.md section 8](docs/architecture/HISTORY_QUERIES.md#8-the-json-contract)).
+
+## 2.6.0 — Statements and field parameters, the Cassandra connector, drishti-iceberg (Iceberg without Hadoop), three Terminal themes, the known-bug pass (2026-10-20)
+
+- **Fixed: a BI item's history, review, impact and lineage could show an older state.** Drawn again after a save, the item asked for them again,
+  and a slower answer to the earlier request, arriving last, overwrote the newer one: the history could miss the save just made. Only the
+  answer to the newest request is drawn now (found by `test_bi_gov_browser` under load).
+- **Fixed: an embedded report's visuals, and Analyse's model queries and SQL, gave up after the console's usual few seconds.** 2.5.0 let a
+  report's query wait as long as the server lets it run (35 s) on the console's own pages only; an embedded report (`/embed/v1`) and the
+  Analyse page still timed out at 5 s with DRS-1004 on a loaded or cold server while the server was still answering. They wait as long now
+  (found by `test_embed_report_browser` under load: every visual said DRS-1004).
+- **Fixed: a BI query could fail with "connector 'trade-pages' is not running (running)" while a connector restarted.** A connector being
+  restarted (a retry, a changed file) is out of routing for its drain and its start, and a query in that window was refused although the
+  connector was listed as running. A query now waits (up to 30 s) for the restart. And a derived connector (`trade-pages`) asked while the
+  server was still starting said it was DOWN, which made the registry restart it as a lost connection a few seconds later, opening that
+  window: it now waits for the server instead (found by `test_bi_wizard_and_controls_browser` under load: the dataset wizard's first step
+  never appeared).
+- **Fixed: the report designer could save a draft without its last change.** The YAML is written by the server a moment after each change;
+  when two changes' texts crossed (the earlier one arriving last), the earlier text was kept and the YAML tab marked up to date, so the
+  YAML tab, and a Save, missed the last change (a tablet layout's Wide, say). An older text never replaces a newer one now, and Save waits for
+  the text of the last change (found by `test_bi_wave_a_browser` under load).
+- **Fixed: a report visual's Show the rows and Drill through used the selection of when its buttons were drawn.** A mark chosen just before
+  the click (the buttons not yet redrawn) was ignored: the rows of the earlier selection, or of none, were shown. The selection at the click
+  is used now (found by `test_bi_reports_browser` under load).
+- **New: the Apache Cassandra connector** (plugin `cassandra`, `plugins/drishti-plugin-cassandra`), built as designed in
+  [CASSANDRA_CONNECTOR_DESIGN.md](docs/architecture/CASSANDRA_CONNECTOR_DESIGN.md) over the Apache Cassandra Java driver 4.19 (pure Java):
+  Apache Cassandra 4 and 5, ScyllaDB and DataStax Astra (secure connect bundle and token); Amazon Keyspaces' SigV4 log-in is wired but not
+  yet checked by hand. A data domain is a keyspace, each kind a table with a partition per business day, generation and bucket keyed by id,
+  beside `entity_days` and `kind_days`; no secondary index, and no statement without a whole partition key. Every read path: one entity
+  (snapshot and effective kinds), type-ahead, a day's promoted columns for searches, pick lists, derived kinds and impact, reverse lookups,
+  a day's documents, inventory, the latest day and data versions, the pool and health. `CassandraLoader` (`tools/load-cassandra.sh`,
+  `tools/windows/load-cassandra.ps1`, `drishti.py data load --store cassandra`) writes each day under a new generation and names it in
+  `kind_days` last, so **a day appears whole or not at all**, then drops the old generation's partitions; `--create` makes the tables (else
+  it prints the CQL), `--ttl-days` (one-day time windows) or `--keep-days` with `--force-drop`, bounded writes in flight, unlogged batches
+  only within a partition. TLS through the shared `tls.*`; `proxy.*` refused (TCP). Tests: the dated-source contract against Cassandra 5 and
+  ScyllaDB 6.2 in Testcontainers, every read path equal to the Delta connector over the same data, a reader polling through a reload, every
+  prepared statement checked against the live partition keys, mutual TLS against Cassandra 5, the loader's schema, retention and TTL.
+  [CASSANDRA_CONNECTOR.md](docs/connectors/CASSANDRA_CONNECTOR.md) (with numbers measured at 10,000 trades a day); CONNECTORS, CONFIGURATION,
+  TLS, DEMO_DATA, TOOLS, GETTING_STARTED, DEVELOPER_GUIDE, the help centre and `config/connectors.examples/cassandra/`.
+- **New: drishti-iceberg, Drishti's own Apache Iceberg engine with no Hadoop; Iceberg on Windows without winutils.exe.** The Iceberg
+  connector reads and writes through it with `engine: native` (or `DRISHTI_ICEBERG_ENGINE=native`; `--engine` for `IcebergLoader`
+  and `IcebergMaintenance`): table metadata (fields it does not know are kept when it writes the next version), path-based tables,
+  a metadata file named directly (`metadata-location.<kind>`) and REST catalogs over the JDK's HTTP client (config, OAuth2 client
+  credentials, `loadTable` with the ETag, vended S3 credentials, commits, SigV4 for Glue), Avro manifests, planning with
+  partition-summary and column-bound pruning over every transform, Parquet read by field id (renames, added columns, widened types,
+  files without ids through the name mapping), position and equality deletes by the sequence-number rules, time travel, and the
+  writer: Parquet with field ids and Iceberg metrics through parquet-java on `PlainParquetConfiguration` with Drishti's own codecs,
+  commits made safe by a hard-link create on local disk, a conditional PUT on S3 (a store without them is found by a probe and its
+  tables are single-writer) and the REST catalog's requirements. Each Parquet footer, manifest and delete file is read once and kept,
+  so the first single-entity read no longer re-reads the footer. Format version 3, encrypted tables and ORC or Avro data files are
+  refused by name. `engine: library` is today's Apache Iceberg Java code, kept for tables in Azure, Google Cloud Storage or HDFS;
+  **`native` is the default** (every Iceberg test passes on it), and left to the default a root it cannot reach is read by the
+  library; `engine: library` (or `DRISHTI_ICEBERG_ENGINE=library`) brings back the old behaviour, `auto` keeps the library on Linux. On 10,000 trades a day the native engine started the connector in 0.6 s (library 1.8 s) and read a trade
+  in 54 ms median (75 ms) ([ICEBERG_CONNECTOR.md section 17](docs/connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library)).
+  `tools/windows/load-iceberg.ps1` loads Iceberg tables on Windows, `tools/windows/start-server.ps1 -Iceberg` serves them;
+  GETTING_STARTED's Windows table loses its Iceberg row. Proven by a pyiceberg interop suite (fixtures written by pyiceberg, read
+  back equal; tables written by drishti-iceberg read back by pyiceberg), every plugin test on both engines, a class-loader test that
+  refuses Hadoop's file systems, `Shell` and `Configuration` for the connector, the loader and maintenance, writers committing at once
+  (local disk, a REST catalog), and refusal and Windows path tests ([DRISHTI_ICEBERG.md](docs/architecture/DRISHTI_ICEBERG.md)).
+- **New: the `iceberg-external` connector, for Iceberg tables Drishti does not write** (Spark, Flink, Trino, Snowflake, Glue, dbt):
+  read-only through drishti-iceberg, the row is the document (structs, lists, maps; `decimals: string`, `binary: omit`), the id comes
+  from the identifier fields or named columns, the business date from a column, a timestamp's day in a zone or the partition spec
+  (else current only), every primitive column is searchable, `links` make reverse lookups, an unsorted table gets an id index,
+  `tables: auto` serves a namespace and names tables without an id, and `StarterSchemas` drafts a pack's schemas from the tables
+  ([ICEBERG_EXTERNAL_CONNECTOR.md](docs/connectors/ICEBERG_EXTERNAL_CONNECTOR.md)).
+- **Changed: the native Delta engine's file access is a module of its own, `drishti-lakeio`**, shared with the coming Iceberg engine
+  ([DRISHTI_ICEBERG.md](docs/architecture/DRISHTI_ICEBERG.md) step I1): local disk and S3 storage, byte ranges, the Parquet page codecs
+  (which now also compress, for writers) and the per-file Parquet footer cache moved out of `drishti-deltalake` unchanged; local disk gains
+  an exclusive create (a hard link of a finished file) and S3 a conditional PUT (`If-None-Match: *`) with a start-up probe, for safe commits.
+  Every Delta test passes as before; the tests of the moved classes moved with them.
 - **Fixed: Drishti*net: the cluster never ends with no enabled administrator.** The last-administrator rule was checked only where a change was
   made, so two nodes disabling (or demoting, or deleting) the last two administrators at the same moment could leave none enabled. A peer's
   change that would leave a node with none is now repaired as it is applied: the disabled administrator enabled most recently is enabled again
@@ -47,6 +116,49 @@
   `advertise-url` a node now advertises this machine's primary IPv4 address (the default route's interface, never a container bridge) with
   its port, shown on Admin → Net as *detected*. The in-process cluster tests, `net_stack.py`, the soak, tutorial 19 and `drishti-stack/`
   (`DRISHTI_STACK_HOST`, or `host:` in stack.yaml) use the machine's real address ([NET.md section 2](docs/admin/NET.md#2-a-cluster-of-three)).
+- **Field parameters in a report's wells.** A well of a report on a model may name `param.<name>`, a field parameter of the model, and the reader's
+  parameter slicer switches which field or measure the visual draws (a field parameter's choices may now be measures as well as fields, in the model
+  designer's Calculations tab too). The server puts the choice in place of the parameter in the wells and the sort, asks that as the reader (masks hold)
+  and answers the visual's `wells` as drawn; the report state carries the reader's parameter values (`params`), which every model query of the report
+  now takes as MQ v2 `params`. The report schema refuses a parameter that does not fit its well, a what-if parameter in a well, one on a report over a
+  dataset (`DRS-9037`). BI Studio's Build offers the model's field parameters in each well that can take them. A model query takes a field parameter of
+  measures in `select.measures` and in `sort`. `FieldParamsApiTest`, `drishti-console/tests/test_bi_wave_d_browser.py` (a slicer switches a column chart
+  from DESK to PORTFOLIO and from MTM to NOTIONAL). REPORTS.md section 21, BI_GUIDE.md section 27, tutorial 20.
+- **Paginated reports and statements.** A report page with `layout: statement` is paper, as boards became a report layout: its bands (text, cards,
+  tables, matrices) are laid out page by page by the server on the paper the report's `statement:` sets (A4, A3, A5, Letter or Legal, portrait or
+  landscape, margins, a header and footer with tokens such as `{page}`, `{pages}`, `{run-date}`, `{period}`, `{reader}`, `{param.<name>}`), with
+  automatic and explicit page breaks (`pageBreak`), a table's column titles repeated on every page it runs onto (`repeatHeader`), bands and groups of rows
+  kept together (`keepTogether`, `groupBy`), a period worked out from the run's date (`period: previous-month`) and the model's parameters. It is made as a
+  page-exact PDF (written by the server, no library) or as Excel set to print on the same paper (print titles, header and footer), and a subscription
+  bursts it: one statement per recipient, each made as that recipient, the file named after them. `POST /api/v1/bi/reports/statement/preview` and
+  `/file`, `drishti.py bi statement preview|file`, `drishti.distribution.statements.*`, the report schema's checks (`DRS-9038`). The statement designer in
+  BI Studio: Format → Layout → statement, the **Paper** tab (paper, header and footer, period) with a page-by-page preview, and each band's Format →
+  Statement. Accepted: a monthly statement bursts to ten recipients, each masked, page-exact in PDF (page count and header text checked on every page,
+  two recipients' statements differing only by their masks and row rules; `StatementApiTest`, `StatementLayoutTest`). STATEMENTS.md (new),
+  DISTRIBUTION.md, REPORTS.md section 22, API_GUIDE.md, CLI_GUIDE.md, CONFIGURATION.md, tutorial 20.
+- **New: three themes, the Terminal look in one dominant hue.** **Green Terminal** (`terminal-green`: phosphor green with light lime on deep
+  forest), **Crimson Terminal** (`terminal-crimson`: crimson with blush on wine-black; text in the accent dusty rose, links peach, crimson kept
+  for buttons, highlights and the chrome's gradient) and **Blue Terminal** (`terminal-blue`: azure with periwinkle on midnight): ten themes in
+  the theme menu, the account page, `PATCH /api/v1/me/settings` (`DRS-5001` lists them), `ui.default_theme` and the elements' `theme`.
+  Buttons and pressed controls now fill with `--d-fill` / `--d-fill-strong` and label with `--d-on-fill` (the accent and `--d-on-accent` unless a
+  theme sets its own, as Crimson Terminal does: a deep crimson under white labels). `test_contrast.py`: every text colour at 4.5:1 on every
+  ground in all ten themes, and labels on button fills. USER_GUIDE (Themes: how to choose, the contrast rule), GETTING_STARTED, ARCHITECTURE,
+  CONFIGURATION, API_GUIDE, ELEMENTS.
+- **Plan (product owner, 2026-10-20): 2.6.0 is the known-bug pass, statements, field parameters, the Cassandra connector and drishti-iceberg**
+  (Iceberg without Hadoop). Send and push (Outlook, Teams, SharePoint, connector dump) and integration (the PostgreSQL-wire endpoint, the
+  Excel feed, embed tokens bound to envelopes, SDK events, and the feeds and embedding UI) move after the 3.0.0 release; the Sajha MCP
+  connector moves to 2.8.0 with the AI work ([BI_DESIGN.md §12.2](docs/architecture/BI_DESIGN.md#122-the-three-waves),
+  [IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#roadmap)).
+- **Design: Drishti on AWS** ([AWS_DEPLOYMENT.md](docs/architecture/AWS_DEPLOYMENT.md)), design only, with no AWS or Docker code in the
+  repository (`deploy/aws/` removed; the Dockerfiles and entry points are in the document): ECS with the server and the console as separate
+  containers, every written path on EFS at the same path, lakes in S3, Drishti*net through Cloud Map.
+- **Design: super scale** (`docs/architecture/SUPER_SCALE.md`, not built, release not decided): 500 GB of JSON a day kept seven years on
+  one Delta lake in S3 shared by many servers and consoles: tables by year, a loader fleet with a day register, products computed when loading,
+  range maps instead of id maps, (table, day) slices owned on the Drishti*net ring; build plan S1-S8.
+- **Docs reviewed for 2.5.0 and 2.6.0.** The release order the same everywhere (BI_DESIGN, IMPLEMENTATION_PLAN, BI_MODEL_ARCHITECTURE,
+  WRITE_BACK, GENUI, SQL.md); Drishti*net as built (CLI_GUIDE's `net` walk-through on real output, NET.md and TROUBLESHOOTING for the
+  real-address refusal and *Last administrator kept*, OPERATIONS, ARCHITECTURE, HOW_IT_FITS); the README and the documentation index
+  (twenty tutorials, statements, themes, broken rows repaired, ADR-021); help cards; the deck current to 2.6.0.
 
 - **Design: history queries** ([HISTORY_QUERIES.md](docs/architecture/HISTORY_QUERIES.md)), for 2.6.5: a range after the id
   (`TRD 1000015 30`, `EQ EQ-CSCA 3M`, `YTD`, `FROM … TO …`, `DIFF`) shows the entity over the business days it has data, as a table of

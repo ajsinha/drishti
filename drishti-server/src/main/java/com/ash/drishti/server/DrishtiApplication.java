@@ -24,9 +24,16 @@ import org.springframework.context.annotation.Import;
  * The Drishti backend. Drishti ships only as this Spring Boot application; it is never embedded as a library.
  * Each module contributes its beans through its own {@code @Configuration} class, imported here.
  */
-// The MongoDB driver is on the class path for the mongodb plugin, which makes its own client only when configured;
-// Spring Boot's MongoDB auto-configuration would otherwise open an unused client to localhost:27017 on every start
-@SpringBootApplication(excludeName = "org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration")
+// The MongoDB and Cassandra drivers are on the class path for the mongodb and cassandra plugins, which make their own clients
+// only when configured; Spring Boot's auto-configuration would otherwise open an unused MongoDB client to localhost:27017 and
+// a Cassandra session to 127.0.0.1:9042 on every start (the Cassandra one, and its health check, fail the start when none runs)
+@SpringBootApplication(excludeName = {"org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration",
+        "org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration",
+        "org.springframework.boot.autoconfigure.data.cassandra.CassandraDataAutoConfiguration",
+        "org.springframework.boot.autoconfigure.data.cassandra.CassandraReactiveDataAutoConfiguration",
+        "org.springframework.boot.autoconfigure.data.cassandra.CassandraRepositoriesAutoConfiguration",
+        "org.springframework.boot.autoconfigure.data.cassandra.CassandraReactiveRepositoriesAutoConfiguration",
+        "org.springframework.boot.actuate.autoconfigure.cassandra.CassandraHealthContributorAutoConfiguration"})
 @Import({EngineConfiguration.class, com.ash.drishti.server.security.SecurityConfiguration.class,
         com.ash.drishti.identity.IdentityConfiguration.class})
 public class DrishtiApplication {

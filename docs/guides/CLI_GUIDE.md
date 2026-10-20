@@ -1712,7 +1712,7 @@ and whether the token is accepted, with the exact id, scopes and expiry of the t
 ```
 $ python3 tools/drishti.py doctor --server http://localhost:18971
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.5.0-exec.jar (version 2.5.0)
+GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.6.0-exec.jar (version 2.5.0)
 GREEN  python                  /usr/bin/python3: Python 3.14.4
 GREEN  python pyyaml           installed
 YELLOW python deltalake        not installed (needed for data ingest --store delta)
@@ -1725,7 +1725,7 @@ YELLOW console venv            ~/drishti/drishti-console/.venv
 GREEN  configured directories  none of DRISHTI_DELTA_ROOT, DRISHTI_FILES_ROOT, DRISHTI_PACKS_INSTALLED is set
 GREEN  port 18971              in use by Drishti: status UP
 GREEN  port 17971              free (the default console port)
-YELLOW server                  http://localhost:18971: version 2.5.0, java 21.0.12.1, status DEGRADED
+YELLOW server                  http://localhost:18971: version 2.6.0, java 21.0.12.1, status DEGRADED
 YELLOW token                   none given: calls run anonymously or as --user
                                fix: set DRISHTI_TOKEN or --token-file (My account, API tokens)
 doctor: 0 red, 5 yellow
@@ -1829,7 +1829,7 @@ archive helpdesk-0.2.0.tar.gz (5819 bytes, sha256 aee6b807bb8149e8...)
   ok    unpack          21 files, 18 KB; no path leaves the pack folder, no links
   ok    pack.yaml       helpdesk 0.2.0
   ok    manifest        20 files listed; every checksum matches; nothing unlisted
-  ok    server version  needs >=1.0.0, this is 2.5.0
+  ok    server version  needs >=1.0.0, this is 2.6.0
   ok    sutra lint      1 Sutra file(s) passed
   ok    sutra test      1 Sutra file(s) passed
   ok    dependencies    extends no other pack
@@ -2088,32 +2088,42 @@ config/net at ~/drishti/config/net: Drishti*net is off (a single server, as with
   access.yaml   absent (defaults)
 
 $ drishti.py net set node.enabled true
-  error   node.yaml  secret: enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least 32 bytes)
-  error   node.yaml  advertise-url: enabled: true needs advertise-url: the address peers and consoles call this node at
 drishti: node.yaml was not written: enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least 32 bytes)
+  error   node.yaml  secret: enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least 32 bytes)
 (exit 1)
 
 $ drishti.py net set node.secret '${DRISHTI_NET_SECRET}'
 wrote ~/drishti/config/net/node.yaml
 $ drishti.py net set node.advertise-url http://127.0.0.1:18784
+drishti: node.yaml was not written: 'http://127.0.0.1:18784' is a loopback or wildcard address: the address this node advertises must be an address other machines can call (this machine's address is 192.168.1.20: use http://192.168.1.20:18784); or leave advertise-url out and the node advertises that address with its port
+  error   node.yaml:3  advertise-url: 'http://127.0.0.1:18784' is a loopback or wildcard address: [the same message]
+(exit 1)
+$ drishti.py net set node.advertise-url http://192.168.1.20:18784
 wrote ~/drishti/config/net/node.yaml
+$ drishti.py net set node.tags region:emea,tier:risk
+wrote ~/drishti/config/net/node.yaml
+$ export DRISHTI_NET_SECRET=...            # at least 32 bytes, from your secret store
 $ drishti.py net set node.enabled true
 wrote ~/drishti/config/net/node.yaml
-$ drishti.py net add-peer drishti-a 127.0.0.1:18783 --tags region:emea
+$ drishti.py net add-peer drishti-a 192.168.1.20:18783 --tags region:emea
 wrote ~/drishti/config/net/peers/drishti-a.yaml
 
 $ drishti.py net check
 3 file(s) checked in ~/drishti/config/net: 1 error(s); those files would be refused
-  error   gossip.yaml:2  fanout: 'lots' is not a whole number
+  error   gossip.yaml:1  fanout: 'lots' is not a whole number
 (exit 1)
 ```
+
+Members advertise only a real address (2.6.0, [NET.md section 2](../admin/NET.md#2-a-cluster-of-three)): `localhost`, `127.x.x.x`, `::1`,
+`0.0.0.0` and `::` are refused in `advertise-url` and in a seed's URL, and the message names this machine's address. `advertise-url` may be
+left out: the node then advertises this machine's primary IPv4 address with the server's port (Admin → Net → Members shows it as *detected*).
 
 The file `net set` wrote:
 
 ```yaml
 # config/net/node.yaml (Drishti*net, docs/admin/NET.md)
 secret: ${DRISHTI_NET_SECRET}
-advertise-url: http://127.0.0.1:18784
+advertise-url: http://192.168.1.20:18784
 tags:
 - region:emea
 - tier:risk
@@ -2291,6 +2301,29 @@ pass  The book holds 750 trades: expected 750, found 750
 fail  Close to 100 trades: expected 100 ± 1%, found 750
 ...
 3 passed, 1 failed
+```
+
+### `bi statement`
+
+A report's statement pages ([STATEMENTS.md](STATEMENTS.md), 2.6.0) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
+tab previews and a subscription mails.
+
+```
+drishti.py bi statement preview REPORT|--file F [--page P] [--date D] [--param NAME=VALUE ...]   the pages: count, paper, period, each page's header and footer
+drishti.py bi statement file REPORT|--file F [--format pdf|xlsx] [-o OUT] [--page P] [--date D] [--param NAME=VALUE ...]   the PDF (page-exact) or the Excel workbook
+```
+
+`REPORT` is the report's id (`file:report:<name>` for a shipped file); `--file` sends a draft's YAML (a BI author). `--date` is the statement's date: its
+`period` is worked out from it. `--param` gives a parameter of the report's model (a field parameter's choice, a what-if value). Captured, tutorial 20:
+
+```text
+$ python3 tools/drishti.py bi statement preview bi-39eb12fe47 --date 2026-10-08
+Monthly statement: 3 pages, A4 portrait, October 2026, 66 rows
+  page 1: Monthly statement | October 2026 | For wes  ...  Run 2026-10-19 · by DESK | Page 1 of 3  (80 cells)
+  page 2: Monthly statement | October 2026 | For wes  ...  Run 2026-10-19 · by DESK | Page 2 of 3  (160 cells)
+  page 3: Monthly statement | October 2026 | For wes  ...  Run 2026-10-19 · by DESK | Page 3 of 3  (6 cells)
+$ python3 tools/drishti.py bi statement file bi-39eb12fe47 --date 2026-10-08 -o statement.pdf
+wrote statement.pdf (5,000 bytes)
 ```
 
 ### Shell completion
@@ -2750,7 +2783,7 @@ The Java `sutra` commands keep their own 0/1/2 and pass them through.
 
 | You see | Why | Do |
 |---|---|---|
-| `drishti: no drishti-server-*-exec.jar under drishti-server/target: build it ... or pass --jar / DRISHTI_JAR` | the Java commands need the exec jar | `./mvnw -q -DskipTests package`, or `export DRISHTI_JAR=/path/to/drishti-server-2.5.0-exec.jar` |
+| `drishti: no drishti-server-*-exec.jar under drishti-server/target: build it ... or pass --jar / DRISHTI_JAR` | the Java commands need the exec jar | `./mvnw -q -DskipTests package`, or `export DRISHTI_JAR=/path/to/drishti-server-2.6.0-exec.jar` |
 | `drishti: jar not found: ...` | `--jar` / `DRISHTI_JAR` names a missing file | fix the path |
 | `drishti: cannot run java: ...; pass --java or set JAVA_HOME` | no JDK found | set `JAVA_HOME` to a JDK 21+ |
 | `drishti: PyYAML is not installed: run with uv run --with pyyaml ...` | the system Python has no PyYAML | use `uv run --with pyyaml`, or a venv |
@@ -2804,7 +2837,7 @@ empty PyCharm to a run configuration for each common task.
 | **Script path** (not *Module name*; switch the toggle on the left of the field) | `<repo>/tools/drishti.py` |
 | **Python interpreter** | the `drishti-console/.venv` interpreter from 14.1 |
 | **Working directory** | **the repository root**: relative paths in *Parameters* resolve from here |
-| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-2.5.0-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
+| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-2.6.0-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
 
 Click the folder icon next to **Environment variables** to edit them as a table (one row per variable). `JAVA_HOME` and
 `DRISHTI_JAR` may be left out: the tool then looks for JDK 21 and for the newest `drishti-server/target/*-exec.jar` itself.

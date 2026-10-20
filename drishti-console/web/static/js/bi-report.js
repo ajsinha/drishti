@@ -72,6 +72,7 @@
     st.drill = state.drills[spec.id] || [];
     if (state.rows[spec.id]) { st.rows = state.rows[spec.id] === true ? true : state.rows[spec.id]; }
     if (state.all && state.all[spec.id]) { st.limit = 5000; }                       // "Show all" of a visual that said it was cut
+    if (pbar && pbar.active()) { const pv = pbar.params(); if (Object.keys(pv).length) { st.params = pv; } }   // a field parameter's choice: the server draws the field chosen (2.6.0)
     return st;
   }
 
@@ -184,7 +185,7 @@
       const asked = askedMq(entry);
       const named = (cols) => (res.period ? cols.map((c) => (c.name && c.name.endsWith('.' + res.period + '_start') ? Object.assign({}, c, { name: c.name.slice(0, -('.' + res.period + '_start').length) }) : c)) : cols);   // a series asked by period keeps its axis's name
       const formats = (cols) => { const f = {}; (cols || []).forEach((c) => { if (c.kind === 'measure' && c.format) { f[c.name] = c.format; } }); return f; };   // a calculation item's format (a Share reads as a percent)
-      if (asked !== entry.mq && entry.mq && !DISTRIBUTIONS[spec.type]) { return B.enqueue(() => B.mq.ask(asked)).then((a) => [Object.assign({}, res, { columns: named(a.columns), rows: a.rows, rowCount: a.rowCount, totals: undefined, highlight: null, formats: formats(a.columns), meta: Object.assign({}, res.meta, a.meta) })]); }
+      if (asked !== entry.mq && entry.mq && !DISTRIBUTIONS[spec.type] && JSON.stringify(asked) !== JSON.stringify(entry.mq)) { return B.enqueue(() => B.mq.ask(asked)).then((a) => [Object.assign({}, res, { columns: named(a.columns), rows: a.rows, rowCount: a.rowCount, totals: undefined, highlight: null, formats: formats(a.columns), meta: Object.assign({}, res.meta, a.meta) })]); }
       return [res];
     }).then((got) => {
       if (!got || token !== entry.token) { return; }

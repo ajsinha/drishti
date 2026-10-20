@@ -86,8 +86,22 @@ public final class ContentExporter implements AutoCloseable {
         }
     }
 
-    /** A made file, and the table form it came from (for the email body and for tests). */
-    public record Output(byte[] bytes, String contentType, String filename, int rows, ExportDoc doc) {}
+    /**
+     * A made file, and the table form it came from (for the email body and for tests).
+     *
+     * @param pages the pages of a statement's PDF (2.6.0); 0 for any other file
+     */
+    public record Output(byte[] bytes, String contentType, String filename, int rows, ExportDoc doc, int pages) {
+
+        /** A file that is not a statement. */
+        public Output(byte[] bytes, String contentType, String filename, int rows, ExportDoc doc) {
+            this(bytes, contentType, filename, rows, doc, 0);
+        }
+
+        public boolean statement() {
+            return pages > 0;
+        }
+    }
 
     private static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
@@ -98,6 +112,7 @@ public final class ContentExporter implements AutoCloseable {
     private final ZoneId zone;
     private final String consoleUrl;
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+    private volatile StatementService statements;
 
     public ContentExporter(BiExporter bi, ViewExporter views, DistProperties.Export limits, Clock clock, ZoneId zone, String consoleUrl) {
         this.bi = bi;
@@ -110,6 +125,12 @@ public final class ContentExporter implements AutoCloseable {
 
     public DistProperties.Export limits() {
         return limits;
+    }
+
+    /** Gives the exporter the statements (2.6.0): an export or a subscription of a statement page is then made page-exact, as a statement. */
+    public ContentExporter with(StatementService statements) {
+        this.statements = statements;
+        return this;
     }
 
     /** Throws when {@code who} cannot use the target at all (a report they cannot read, a view they may not open); nothing is rendered. */
@@ -154,6 +175,10 @@ public final class ContentExporter implements AutoCloseable {
         ExportDoc doc;
         byte[] bytes;
         ViewExporter.Built view = null;
+        StatementService st = statements;
+        if (st != null && t.isReport() && f != Format.CSV && f != Format.PNG && st.isStatement(who, t)) {
+            return statement(st, t, f, who);
+        }
         if (t.isReport()) {
             doc = bi.build(who, t.id(), t.page(), t.visual(), t.state(), t.date());
         } else {
@@ -176,6 +201,21 @@ public final class ContentExporter implements AutoCloseable {
                     + " (drishti.distribution.export.max-bytes): export one page or one visual, or narrow the filters");
         }
         return new Output(bytes, f.contentType(), filename(doc.title(), view == null ? t.date() : view.asOf(), f), doc.rowCount(), doc);
+    }
+
+    /** A statement for one reader: page-exact PDF, Excel with the paper's print setup, or (an email body) its tables. */
+    private Output statement(StatementService st, Target t, Format f, Principal who) {
+        StatementService.Run run = st.run(who, t.id(), null, t.page(), t.state(), t.date());
+        byte[] bytes = switch (f) {
+            case PDF -> st.pdf(run);
+            case XLSX -> st.xlsx(run);
+            default -> new byte[0];
+        };
+        if (bytes.length > limits.maxBytes()) {
+            throw new DrishtiException(ErrorCode.EXPORT_FAILED, "the statement is " + bytes.length + " bytes, over the limit of " + limits.maxBytes()
+                    + " (drishti.distribution.export.max-bytes): narrow it with filters or parameters");
+        }
+        return new Output(bytes, f.contentType(), StatementService.filename(run, who, f), run.doc().rowCount(), run.doc(), run.pages().pages().size());
     }
 
     private byte[] pdf(ExportDoc doc, ViewExporter.Built view, Principal who, String footer, String stamp, Target t) {

@@ -96,7 +96,7 @@ public final class BiExporter {
                 }
                 one = v.title();
                 String name = (pages.size() > 1 ? p.title() + ": " : "") + (v.title() == null || v.title().isBlank() ? v.id() : v.title());
-                Built b = section(who, reportId, p, v, st, name);
+                Built b = section(who, reportId, null, p, v, st, name);
                 asOf = asOf == null ? b.asOf() : asOf;
                 sections.add(b.section());
             }
@@ -109,13 +109,18 @@ public final class BiExporter {
         return new ExportDoc(title, sub, notes, sections);
     }
 
-    private record Built(ExportDoc.Section section, String asOf) {}
+    /** One visual's table as one reader sees it, and the date its data is as of (null when it does not say). */
+    record Built(ExportDoc.Section section, String asOf) {}
 
-    private Built section(Principal who, String reportId, Report.Page p, Report.Visual v, JsonNode state, String name) {
+    /**
+     * One visual of a stored report ({@code yaml} null) or of draft YAML (an author's preview), asked as {@code who} under {@code state}: its masked table. A
+     * visual that cannot be read is a section that says why.
+     */
+    Built section(Principal who, String reportId, String yaml, Report.Page p, Report.Visual v, JsonNode state, String name) {
         boolean countries = "map".equals(v.type()) && !v.well("location").isEmpty();
         String type = CARDS.contains(v.type()) ? ExportDoc.CARD : BARS.contains(v.type()) || countries ? ExportDoc.CHART : ExportDoc.TABLE;
         try {
-            Map<String, Object> a = reports.query(who, reportId, null, p.id(), v.id(), state, false);
+            Map<String, Object> a = reports.query(who, reportId, yaml, p.id(), v.id(), state, false);
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> cols = (List<Map<String, Object>>) a.get("columns");
             @SuppressWarnings("unchecked")

@@ -39,8 +39,8 @@ jobs:
         with: { python-version: '3.13' }
       - name: Build (no tests)
         run: ./mvnw.cmd -B -q install -DskipTests
-      - name: Tests of the native engine, the Delta connector and the server
-        run: ./mvnw.cmd -B verify -pl drishti-deltalake,plugins/drishti-plugin-delta,drishti-server
+      - name: Tests of the native engines, the Delta and Iceberg connectors and the server
+        run: ./mvnw.cmd -B verify -pl drishti-lakeio,drishti-deltalake,plugins/drishti-plugin-delta,drishti-iceberg,plugins/drishti-plugin-iceberg,plugins/drishti-plugin-iceberg-external,drishti-server
       - name: A small lake (the banking packs' samples, ten business days)
         run: |
           python -m pip install --quiet deltalake pyarrow pyyaml

@@ -147,7 +147,7 @@ integration tests too), which is slower and gives the same server. When it finis
 ls drishti-server/target/*-exec.jar
 ```
 
-You should see `drishti-server/target/drishti-server-2.5.0-exec.jar`. In the IDE this step is the run configuration
+You should see `drishti-server/target/drishti-server-2.6.0-exec.jar`. In the IDE this step is the run configuration
 **Drishti build server jar**.
 
 > **Note:** `./mvnw -q verify` builds **and** runs every test (much longer). Use it when you change code; for a first try,
@@ -269,13 +269,13 @@ export DRISHTI_SEED_ADMIN=true DRISHTI_SEED_USERNAME=drishti-dev-admin DRISHTI_S
 export DRISHTI_EXTERNAL_LIB=$PWD/external_lib
 export DRISHTI_DEMO_ENABLED=false
 mkdir -p data/tmp/server
-java -Djava.io.tmpdir=data/tmp/server -Xmx4g -jar drishti-server/target/drishti-server-2.5.0-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -Xmx4g -jar drishti-server/target/drishti-server-2.6.0-exec.jar
 ```
 
 **B. The smallest start** (sign-in off, the packs' samples ticking live):
 
 ```bash
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.5.0-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.6.0-exec.jar
 ```
 
 What the settings do:
@@ -431,7 +431,7 @@ drishti-console/.venv/bin/python tools/drishti.py doctor --server http://localho
 The last lines of what you should see:
 
 ```text
-GREEN  server                  http://localhost:18480: version 2.5.0, java 21.0.12.1, status UP
+GREEN  server                  http://localhost:18480: version 2.6.0, java 21.0.12.1, status UP
 GREEN  token                   accepted; this token 'cqFV714maGDy' acts as drishti-dev-admin: scopes read, expires 2026-10-18T21:33:38.684Z
 doctor: 0 red, 0 yellow
 ```
@@ -463,7 +463,8 @@ here, `writeMaxDays`). Revoke a token on the same page when you no longer use it
 - **Packs.** The box icon in the top bar shows how many packs you see (`7 packs`). Click it, untick the ones you do not need, and
   click **Apply**. The examples, suggestions and help follow your choice. You can only choose among packs the server loaded and an
   admin assigned to you.
-- **Themes.** The palette icon offers seven themes: Terminal, Parchment, Blue, Wall Street, Green, Crimson and Crimson dark.
+- **Themes.** The palette icon offers ten themes: Terminal, Parchment, Blue, Wall Street, Green, Crimson, Crimson dark, and the three
+  Terminal hues Green Terminal, Crimson Terminal and Blue Terminal ([USER_GUIDE.md › Themes](USER_GUIDE.md#themes): how to choose).
 - **Settings.** *My account → Settings* (`/account`) keeps your theme, the page to open after signing in (for example
   `/v/trade/1000001`), the clock's time zone, density, whether changes flash, and how many search results to show.
 
@@ -507,6 +508,9 @@ configurations), `docs/`, `tools/`, `external_lib/`.
   alerts, workspaces and settings are kept by the server under `./data`.
 - New demo data: run Step 5 again, with the server running or not (it is told, or clears its BI store at its next start).
 - Three servers as one cluster (Drishti\*net) with a console, on this machine: `drishti-stack/start.sh` ([drishti-stack/README.md](../../drishti-stack/README.md)).
+  The nodes advertise this machine's real address (`DRISHTI_STACK_HOST`, found by `start.sh`), never `127.0.0.1`: members of a cluster are
+  called by other machines, so a loopback or wildcard address is refused ([NET.md section 2](../admin/NET.md#2-a-cluster-of-three)). The
+  console listens on every interface: from another machine open `http://<this machine's address>:17480`.
 
 ## Running everything in Docker (optional)
 
@@ -543,7 +547,7 @@ mvn -v                                  # "Apache Maven 3.9.…" and "Java versi
 mvn -q package -DskipTests              # build (add -o to work offline once ~/.m2 is filled)
 mvn -q verify                           # build, every test and every rule
 mvn -q -pl drishti-server -am package -DskipTests    # the server and what it needs
-ls drishti-server/target/*-exec.jar     # the application: drishti-server/target/drishti-server-2.5.0-exec.jar
+ls drishti-server/target/*-exec.jar     # the application: drishti-server/target/drishti-server-2.6.0-exec.jar
 ```
 
 Run the server from the repository root (it finds `./config/packs` and `./data` relative to where you start it). Java-25-only
@@ -573,7 +577,7 @@ overlay `<data>/packs/added.yaml` (`DRISHTI_PACKS_OVERLAY` moves it; the server 
 
 | You want | Do | Command |
 |---|---|---|
-| a site file read **in addition**, on top of the bundled defaults | `--spring.config.additional-location` | `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.5.0-exec.jar --spring.config.additional-location=file:/etc/drishti/site.yaml` |
+| a site file read **in addition**, on top of the bundled defaults | `--spring.config.additional-location` | `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.6.0-exec.jar --spring.config.additional-location=file:/etc/drishti/site.yaml` |
 | the same, from the environment | `SPRING_CONFIG_ADDITIONAL_LOCATION` | `SPRING_CONFIG_ADDITIONAL_LOCATION=file:/etc/drishti/site.yaml java -jar …` |
 | several files, later ones win | a comma list | `--spring.config.additional-location=file:/etc/drishti/site.yaml,file:/etc/drishti/secrets.yaml` |
 | a folder of files | end it with `/` | `--spring.config.additional-location=file:/etc/drishti/conf.d/` |
@@ -646,7 +650,9 @@ wrong.
 
 Why it works without Hadoop: the Delta Lake connector reads through its **native engine** (module `drishti-deltalake`), which uses
 Java's own file access for local disk and the AWS SDK for S3. Hadoop's local file system, and with it `winutils.exe`, is never used.
-See [DELTA_CONNECTOR.md › Engines](../connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop).
+See [DELTA_CONNECTOR.md › Engines](../connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop). The Iceberg connectors do the same
+through **drishti-iceberg**, Drishti's own Iceberg engine ([ICEBERG_CONNECTOR.md › Engines](../connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library)),
+the default engine.
 
 > **Status.** The native engine is tested on Linux on every build, including its Windows path rules (drive letters, backslashes, UNC
 > shares) as unit tests. The `windows` GitHub Actions job builds, tests and starts the server on `windows-latest`. Report what you
@@ -686,15 +692,16 @@ $env:JAVA_HOME = $env:DRISHTI_JAVA_HOME
 dir drishti-server\target\*-exec.jar
 ```
 
-You should see `drishti-server-2.5.0-exec.jar`. To also run the tests of the Delta engine and connector:
-`.\mvnw.cmd -q verify -pl drishti-deltalake,plugins/drishti-plugin-delta -am` (tests that need Docker skip themselves).
+You should see `drishti-server-2.6.0-exec.jar`. To also run the tests of the Delta engine and connector:
+`.\mvnw.cmd -q verify -pl drishti-deltalake,plugins/drishti-plugin-delta -am` (tests that need Docker skip themselves); of the
+Iceberg engine and connectors: `.\mvnw.cmd -q verify -pl drishti-iceberg,plugins/drishti-plugin-iceberg,plugins/drishti-plugin-iceberg-external -am`.
 
 **Or copy** a server built elsewhere (on Linux, or by CI): Java bytecode is the same on every system. Make a folder, for example
 `C:\drishti`, holding:
 
 | Copy | From | Why |
 |---|---|---|
-| `drishti-server-2.5.0-exec.jar` | `drishti-server\target\` | the server (all its libraries are inside) |
+| `drishti-server-2.6.0-exec.jar` | `drishti-server\target\` | the server (all its libraries are inside) |
 | `config\packs\` | the repository root | the domain packs (Sutras, mnemonics, samples). Also `config\connectors\` (connector files) and `config\bi\` (BI datasets and reports) if you use them |
 | `drishti-console\` | the repository root | only if you will run the console on this machine |
 | `tools\` and `data\testdata\` | the repository | the scripts and `drishti.py`, and the test data if you will build the demo lakes here |
@@ -751,7 +758,7 @@ To run the jar by hand instead:
 
 ```powershell
 $env:DRISHTI_PACKS = 'market-risk'
-& "$env:DRISHTI_JAVA_HOME\bin\java.exe" -Xmx2g -jar drishti-server\target\drishti-server-2.5.0-exec.jar
+& "$env:DRISHTI_JAVA_HOME\bin\java.exe" -Xmx2g -jar drishti-server\target\drishti-server-2.6.0-exec.jar
 ```
 
 The native Delta engine is the default, so nothing else is needed.
@@ -796,18 +803,31 @@ A lake in S3 reads the same on Windows, with the connector's `s3.endpoint`, `s3.
 ([CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake)). Paths with spaces (`C:\Users\Jane Doe\drishti\data\delta`) are
 fine.
 
+**Iceberg tables on Windows.** The Iceberg loader and connector run on the native engine (drishti-iceberg), so no `winutils.exe` and
+no `HADOOP_HOME` either. Load the banking samples (and, with `-Trades`, a trade book) into `data\iceberg`, then start the server with
+the Iceberg connector files:
+
+```powershell
+.\tools\windows\load-iceberg.ps1                                    # the sample documents, ten business days
+.\tools\windows\load-iceberg.ps1 -Trades 10000 -Days 3              # and a book of 10,000 trades a day
+.\tools\windows\start-server.ps1 -Iceberg                           # copies config\connectors.examples\iceberg\*.yaml in, engine native
+```
+
+The loader's sort spills under `data\tmp\iceberg` (`-SpillDir` to move it), never the system temp folder. On Linux the same is
+`tools/load-iceberg.sh ./data/iceberg --engine native` ([TOOLS.md](TOOLS.md)). `engine: library` (Apache Iceberg Java over Hadoop)
+still needs `winutils.exe` on Windows; it is only for tables in Azure, Google Cloud Storage or HDFS.
+
 ### 7. What does not work on Windows
 
 | What | Why | Instead |
 |---|---|---|
-| The Iceberg connector (profile `iceberg`) | it reads through Hadoop's file systems, which need `winutils.exe` | keep the default Delta Lake; the Iceberg connector is idle unless the `iceberg` profile is set |
 | `engine: hadoop` on a local lake | Hadoop's local file system needs `winutils.exe` | `engine: native` (the default) |
 | Replacing a DuckDB file while the server reads it | Windows cannot rename a file over one that is open ([DUCKDB_CONNECTOR.md](../connectors/DUCKDB_CONNECTOR.md)) | load into a new file and switch the connector's `path`, or stop the server first |
 | The bash scripts in `tools\*.sh` (`load-postgres.sh`, `drill.sh`, …) | they need bash | `tools\windows\*.ps1` for the server and the console, `tools\drishti.py` for lakes and packs; for the others, the Python tools they call run as they are (`python tools\…`), or use Git Bash or WSL |
 | `docker compose` deployments (`deploy\`) | Linux containers | Docker Desktop runs them as on Linux; the jar runs natively as above |
 
-The Aerospike, PostgreSQL, Kafka, RabbitMQ, ActiveMQ, Redis, MongoDB, S3 and REST connectors are plain network clients and work on
-Windows; their servers are yours to run.
+The Aerospike, Cassandra, PostgreSQL, Kafka, RabbitMQ, ActiveMQ, Redis, MongoDB, S3 and REST connectors are plain network clients and work on
+Windows; their servers are yours to run (`tools\windows\load-cassandra.ps1` loads the demo data into Cassandra).
 
 ### 8. Troubleshooting
 

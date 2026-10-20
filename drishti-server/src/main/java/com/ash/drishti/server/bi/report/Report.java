@@ -36,10 +36,12 @@ import java.util.Map;
  * @param links which fields of different datasets mean the same thing, so a slicer or a selection on one filters the visuals of the others (RUPAKA.md section 20.10)
  * @param board the settings of the report's board pages ({@code layout: board}, R7): {@code rotate} (kiosk rotation, "20s") and {@code notify} (the tile alerts'
  *        default notification), as written; empty when the report has none
+ * @param statement the settings of the report's statement pages ({@code layout: statement}, 2.6.0): paper, orientation, margins, header, footer, period and
+ *        dates ({@link StatementSpec}), as written; empty when the report has none
  */
 public record Report(String name, int version, String title, String description, boolean sample, String dataset, Map<String, String> theme, Dates dates, List<Filter> filters,
         List<Page> pages, List<Bookmark> bookmarks, Map<String, Map<String, PhonePage>> layouts, List<Link> links, List<com.ash.drishti.server.bi.dataset.ExpectedValue> tests,
-        Map<String, LocalMeasure> measures, String perspective, Map<String, Object> board) {
+        Map<String, LocalMeasure> measures, String perspective, Map<String, Object> board, Map<String, Object> statement) {
 
     /**
      * A report's own measure (docs/architecture/BI_MODEL_SPEC.md section 4.2): a DEL aggregate over the model's fields and measures, used by this report only,
@@ -51,6 +53,14 @@ public record Report(String name, int version, String title, String description,
         measures = measures == null ? Map.of() : java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(measures));
         perspective = perspective == null || perspective.isBlank() ? null : perspective;
         board = board == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(board));
+        statement = statement == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(statement));
+    }
+
+    /** Compatibility: a report without statement settings. */
+    public Report(String name, int version, String title, String description, boolean sample, String dataset, Map<String, String> theme, Dates dates, List<Filter> filters,
+            List<Page> pages, List<Bookmark> bookmarks, Map<String, Map<String, PhonePage>> layouts, List<Link> links, List<com.ash.drishti.server.bi.dataset.ExpectedValue> tests,
+            Map<String, LocalMeasure> measures, String perspective, Map<String, Object> board) {
+        this(name, version, title, description, sample, dataset, theme, dates, filters, pages, bookmarks, layouts, links, tests, measures, perspective, board, Map.of());
     }
 
     /** Compatibility: a report without board settings. */
@@ -223,11 +233,21 @@ public record Report(String name, int version, String title, String description,
             return "board".equals(layout);
         }
 
+        /** A statement page (2.6.0): its visuals are bands laid out on paper, page by page, top to bottom ({@link StatementSpec}). */
+        public boolean statement() {
+            return "statement".equals(layout);
+        }
+
         /** How a selection on {@code source} acts on {@code target}: {@code filter}, {@code highlight}, {@code none}, or null when the page does not say. */
         public String interaction(String source, String target) {
             Map<String, String> row = interactions.get(source);
             return row == null ? null : row.get(target);
         }
+    }
+
+    /** True when some page is a statement ({@code layout: statement}). */
+    public boolean hasStatement() {
+        return pages.stream().anyMatch(Page::statement);
     }
 
     /** True when some page is a board ({@code layout: board}). */
@@ -346,6 +366,9 @@ public record Report(String name, int version, String title, String description,
         if (!board.isEmpty()) {
             m.put("board", board);
         }
+        if (!statement.isEmpty()) {
+            m.put("statement", statement);
+        }
         if (!theme.isEmpty()) {
             m.put("theme", theme);
         }
@@ -396,8 +419,8 @@ public record Report(String name, int version, String title, String description,
             Map<String, Object> x = new LinkedHashMap<>();
             x.put("id", p.id());
             x.put("title", p.title());
-            if (p.board()) {
-                x.put("layout", "board");
+            if (p.board() || p.statement()) {
+                x.put("layout", p.layout());
             }
             if (p.tooltip()) {
                 x.put("tooltip", true);

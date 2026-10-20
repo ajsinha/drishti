@@ -565,7 +565,7 @@ the site keeps control of what agents may do with them.
 A new scope `embed:genui` (new) in `EmbedProperties.scopes`, opening `GET /api/v1/genui/*`, `GET /api/v1/genui/*/stream`
 and the fragment listing, and, only when the app's registration says `genui-compose: true` (new), `POST /api/v1/genui`
 (the one non-GET an embed token may make, so an embedded agent can compose for its user). Compositions made with an embed
-token have `audience: app` and the app recorded. When embed tokens are bound to consumer envelopes (a wave D item;
+token have `audience: app` and the app recorded. When embed tokens are bound to consumer envelopes (planned after 3.0.0;
 [BI_DESIGN.md §5.3](BI_DESIGN.md#53-model-read-build-and-the-consumer-envelope)), a `dataset` binding is limited to the
 token's envelope.
 

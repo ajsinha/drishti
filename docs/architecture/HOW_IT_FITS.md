@@ -96,6 +96,11 @@ The Maven modules: `drishti-api` (the plugin interface and shared types), `drish
 The UI is the separate Python project in `drishti-console/`. The full module list is in
 [ARCHITECTURE.md §13](ARCHITECTURE.md#13-module-layout-java).
 
+**Several servers as one** (Drishti\*net, since 2.5.0; off by default): with `config/net/` switched on, servers find each other by gossip,
+tell each other the packs and kinds they serve, and forward behind the source router what they cannot answer themselves, so a console
+connected to any node sees one Drishti. Nothing in the picture above changes; the router simply has more places to ask
+([ARCHITECTURE.md §13a](ARCHITECTURE.md#13a-several-servers-as-one-drishtinet), [NET.md](../admin/NET.md)).
+
 ---
 
 ## 2. The pieces and how they refer to each other
@@ -846,6 +851,8 @@ documents it draws, and its panels' `$.paths` are checked against your samples. 
 | Make a dataset, report or board (business intelligence) | YAML files in `config/bi/` (watched) or the BI pages (workspaces, designer, Model view); the query runs on the server over DuckDB with the reader's masks and row rules | [BI_GUIDE.md](../guides/BI_GUIDE.md), [DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [RUPAKA.md](RUPAKA.md) |
 | Show a view inside another web application | register the application in Admin → Embedding; the page uses `<drishti-view>` | [ELEMENTS.md](ELEMENTS.md) |
 | Use a language model, or an MCP tool server | a provider file in `config/ai/` or `config/mcp/` and `drishti.ai.enabled` / `drishti.mcp.enabled` (both off by default) | [AI_PROVIDERS.md](AI_PROVIDERS.md), [MCP_CLIENT.md](MCP_CLIENT.md) |
+| Run several servers as one (Drishti\*net) | the files of `config/net/` (`node.yaml` with `enabled: true` and the cluster key, a seed in `peers/`), or Admin → Net → Files; members advertise a real address, never a loopback one | [NET.md](../admin/NET.md), [tutorial 19](../tutorials/19-a-cluster-of-three.md) |
+| Lay a report out on paper (a statement, one per recipient) | `layout: statement` on a report page and the report's `statement:`; BI Studio's Paper tab | [STATEMENTS.md](../guides/STATEMENTS.md) |
 | Make something that failed (a pack, a connector, a provider) try again | nothing: it is retried with backoff; Retry now in Admin | [OPERATIONS.md](../admin/OPERATIONS.md#retries-what-failed-is-tried-again-by-itself) |
 
 ---

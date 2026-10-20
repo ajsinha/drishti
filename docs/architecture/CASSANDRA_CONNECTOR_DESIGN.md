@@ -15,7 +15,11 @@
 -->
 # The Apache Cassandra connector: design
 
-Status: **design, not built.** Release not decided (product owner, 2026-10-20). Related:
+Status: **built** for 2.6.0 (steps C1–C4 of [section 12](#12-build-plan)): `plugins/drishti-plugin-cassandra`, documented in
+[CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md), which supersedes this design where they differ. As built: `kind_days`
+also records each day's `buckets`; a generation is the seconds since 2020 (at least the current one plus one), so a stopped load's
+partitions are never reused; the data tables carry the comment `drishti kind: <kind>`, from which the connector learns the kinds without
+scanning; Amazon Keyspaces (SigV4) and Azure Cosmos DB are wired but not yet checked by hand, so not listed as supported. Related:
 [AEROSPIKE_CONNECTOR.md](../connectors/AEROSPIKE_CONNECTOR.md) (the closest connector built: a key-value store for recent
 days), [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md) section 7 (how the engine uses column sets),
 [DRISHTI_ICEBERG.md](DRISHTI_ICEBERG.md) (the other design of the same day).

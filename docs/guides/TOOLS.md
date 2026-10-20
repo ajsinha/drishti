@@ -60,7 +60,7 @@ repository root. Scratch output (`lake`, `lake2`, `build/...`) goes into the clo
 | Change where a connector reads | Admin → **Connectors** | `drishti.py connector apply` |
 | Install or uninstall a pack, connector or BI file safely | Admin → **Artifacts** | `drishti.py server packs`, `connector delete` |
 | Keep a lake small and fast | | `drishti.py lake maintain` (on a timer) |
-| Load the demo data into Postgres, DuckDB, MongoDB, Redis, Aerospike, Iceberg, files or Delta | | `tools/load-*.sh`, `drishti.py data load` |
+| Load the demo data into Postgres, DuckDB, MongoDB, Redis, Aerospike, Cassandra, Iceberg, files or Delta | | `tools/load-*.sh`, `drishti.py data load` |
 | Check a machine before a demo | Admin → **Health** | `drishti.py doctor`, `drishti.py server smoke` |
 
 Use the page for a one-off file, a first look at new data, or when you want to see each choice before it is made. Use the command
@@ -114,7 +114,7 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 `tools/dataprofile.py`, `tools/packmake.py`, `tools/packregen.py`, `tools/packdiff.py`, `tools/packcatalogue.py`, `tools/packi18n.py`,
 `tools/packform.py` (the `form:` section a pack check reads), `tools/schemapack.py` (`--schema`), `tools/sutragen.py` (`sutra gen`),
 `tools/ingest_jsonl.py` and `tools/ingest_watch.py` (`data ingest`), `tools/packbundle.py` (`pack bundle|verify|deploy|rollback`),
-`tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/servernet.py` (`net`), `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
+`tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/servernet.py` (`net`), `tools/hostaddr.py` (this machine's real address for Drishti*net members), `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
 `tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
 `tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/demo.py` (`lake demo`) and `tools/lake/laketables.py` (the tables `lake status` lists).
 
@@ -163,7 +163,7 @@ dates, not the day of the extract), so the walk-through below uses `--as-of` for
 $ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz \
     --kind trade --key TRADE_ID --as-of 2026-09-22 --partition-by PRODUCT_TYPE --promote COUNTERPARTY,PORTFOLIO,QUANTITY \
     --lake lake --domain trading
-engine: drishti (Drishti's Java writer in drishti-server-2.5.0-exec.jar)
+engine: drishti (Drishti's Java writer in drishti-server-2.6.0-exec.jar)
 business date  PRODUCT_TYPE           rows
 2026-09-22     CallNot                  55
 2026-09-22     Cash                    815
@@ -191,7 +191,7 @@ The next file of the book holds the day's changes (189 trades). Two bad lines ad
 $ (zcat data/testdata/trades/endur/changes-2026-09-23.jsonl.gz; echo '{"PRODUCT_TYPE": "Cash"}'; echo 'not json') | gzip > day2.jsonl.gz
 $ drishti-console/.venv/bin/python tools/drishti.py lake build --from day2.jsonl.gz --kind trade --key TRADE_ID --as-of 2026-09-23 --partition-by PRODUCT_TYPE \
     --promote COUNTERPARTY,PORTFOLIO,QUANTITY --lake lake --domain trading
-engine: drishti (Drishti's Java writer in drishti-server-2.5.0-exec.jar)
+engine: drishti (Drishti's Java writer in drishti-server-2.6.0-exec.jar)
 business date  PRODUCT_TYPE           rows
 2026-09-23     Cash                     33
 2026-09-23     ComFut                   35
@@ -368,7 +368,7 @@ removed by the next run, which holds the lock. A summary (the run of 4.3, two of
  "sampleId": "1000029", "sampleDate": "2026-09-23",
  "timings": {"readSeconds": 0.035, "writeSeconds": 2.159, "totalSeconds": 2.201},
  "engine": "drishti",
- "engineWhy": "Drishti's Java writer in drishti-server-2.5.0-exec.jar",
+ "engineWhy": "Drishti's Java writer in drishti-server-2.6.0-exec.jar",
  "batchRows": 10565, "averageDocumentBytes": 12703,
  "commit": {"commits": 1, "version": 1, "files": 4},
  "columns": {"partition": ["PRODUCT_TYPE"], "promoted": {"COUNTERPARTY": "string", "PORTFOLIO": "string", "QUANTITY": "double"}},
@@ -632,7 +632,7 @@ trade               2026-12-01              3
 total rows: 300
 ```
 
-`data load --store delta|files|postgres|duckdb|mongodb|redis|aerospike|iceberg` runs the store's demo loader (section 6);
+`data load --store delta|files|postgres|duckdb|mongodb|redis|aerospike|cassandra|iceberg` runs the store's demo loader (section 6);
 `data landed` announces a batch to a server and `data loads` lists what landed and what is due ([DATA_LOADS.md](DATA_LOADS.md)).
 **Scheduling** `data ingest --watch DIR --once` from cron is a drop folder polled every few minutes (exit `1` when a file failed);
 `data landed` is the last step of any ETL job that loads a store itself.
@@ -648,7 +648,7 @@ the terminal) and `server smoke` (opens sample views of every kind on two dates;
 ```
 $ drishti-console/.venv/bin/python tools/drishti.py doctor --server http://127.0.0.1:19590 --token-file ~/.drishti-token
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              <repo>/drishti-server/target/drishti-server-2.5.0-exec.jar (version 2.5.0)
+GREEN  server jar              <repo>/drishti-server/target/drishti-server-2.6.0-exec.jar (version 2.5.0)
 GREEN  python                  <repo>/drishti-console/.venv/bin/python: Python 3.13.15
 GREEN  python pyyaml           installed
 GREEN  python deltalake        installed
@@ -658,7 +658,7 @@ GREEN  console venv            <repo>/drishti-console/.venv
 GREEN  configured directories  none of DRISHTI_DELTA_ROOT, DRISHTI_FILES_ROOT, DRISHTI_PACKS_INSTALLED is set
 GREEN  port 18480              in use by Drishti: status UP
 GREEN  port 17480              in use by Drishti: answers 404 on /actuator/health, as the Drishti console does
-YELLOW server                  http://127.0.0.1:19590: version 2.5.0, java 21.0.12.1, status DEGRADED
+YELLOW server                  http://127.0.0.1:19590: version 2.6.0, java 21.0.12.1, status DEGRADED
 GREEN  token                   accepted as a signed-in session (not a personal drk_ token): its power is the user's roles
 doctor: 0 red, 1 yellow
 ```
@@ -841,7 +841,8 @@ generated trade book streamed in) into one store, **in the layout that store's c
 | `tools/load-mongodb.sh` | MongoDB, a collection per domain, zstd, the `day_ids` index | `--keep-days N` or `--ttl-days N` |
 | `tools/load-redis.sh` | Redis, a compressed document per entity per day, each day replaced atomically | `--ttl-days N` |
 | `tools/load-aerospike.sh` | Aerospike, a set per domain, promoted fields as bins | `--ttl-days N` |
-| `tools/load-iceberg.sh` | Apache Iceberg tables (a folder or a REST catalog), sorted by id, external sort with `--spill-dir` | `--keep-days N` |
+| `tools/load-cassandra.sh` | Apache Cassandra or ScyllaDB, a keyspace per domain, a partition per day per bucket, each day under a new generation (appears whole); `--create` makes the tables (`tools/windows/load-cassandra.ps1` on Windows) | `--ttl-days N` or `--keep-days N` |
+| `tools/load-iceberg.sh` | Apache Iceberg tables (a folder or a REST catalog), sorted by id, external sort with `--spill-dir`; `--engine native` writes with drishti-iceberg, no Hadoop (`tools/windows/load-iceberg.ps1` on Windows, native by default) | `--keep-days N` |
 
 ```bash
 tools/load-duckdb.sh /tmp/demo.duckdb --trades 10000 --days 3

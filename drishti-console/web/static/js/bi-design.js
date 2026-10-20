@@ -458,11 +458,13 @@
       return;
     }
     tabNow = name;
-    ['canvas', 'phone', 'tablet', 'yaml'].forEach((t) => {
-      q('[data-view="' + t + '"]').hidden = t !== name;
-      q('[data-tab="' + t + '"]').setAttribute('aria-selected', t === name ? 'true' : 'false');
+    ['canvas', 'phone', 'tablet', 'yaml', 'paper'].forEach((t) => {
+      const view = q('[data-view="' + t + '"]'), tab = q('[data-tab="' + t + '"]');
+      if (view) { view.hidden = t !== name; }
+      if (tab) { tab.setAttribute('aria-selected', t === name ? 'true' : 'false'); }
     });
-    if (name === 'yaml') { D.flushYaml().then(() => { if (editor) { editor.refresh(); editor.focus(); } else { ta.focus(); } suggest(); }); } else if (name === 'phone' || name === 'tablet') { D.emit(name, 'show'); } else { D.emit('model', 'show'); }
+    if (name !== 'paper') { D.emit('paper', 'hide'); }
+    if (name === 'yaml') { D.flushYaml().then(() => { if (editor) { editor.refresh(); editor.focus(); } else { ta.focus(); } suggest(); }); } else if (name === 'phone' || name === 'tablet' || name === 'paper') { D.emit(name, 'show'); } else { D.emit('model', 'show'); }
   }
 
   // ---- Check, Save ---------------------------------------------------------------------------------------------------
@@ -577,6 +579,7 @@
     q('[data-tab="phone"]').addEventListener('click', () => showTab('phone'));
     q('[data-tab="tablet"]').addEventListener('click', () => showTab('tablet'));
     q('[data-tab="yaml"]').addEventListener('click', () => showTab('yaml'));
+    if (q('[data-tab="paper"]')) { q('[data-tab="paper"]').addEventListener('click', () => showTab('paper')); }       // a statement page's paper and preview (2.6.0)
     q('[data-preview]').addEventListener('change', (e) => { D.preview = e.target.checked; D.emit('preview', D.preview); });
     D.preview = true;
     document.addEventListener('keydown', (e) => {

@@ -270,7 +270,7 @@ PY
 curl -s -H "Authorization: Bearer $TOKEN" $B/about | jq .version
 ```
 
-You should see the version string, for example `"2.5.0"`. The roles you put in the token decide what the
+You should see the version string, for example `"2.6.0"`. The roles you put in the token decide what the
 script may open (roles are defined under `drishti.security.roles`; see
 [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)). Keep the lifetime short.
 
@@ -1746,6 +1746,8 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9034 | 422 | Report dataset | The report's dataset cannot be found or has errors, so the report cannot be drawn |
 | DRS-9035 | 422 | Report state | A visual query names a page, visual or slicer the report lacks, or its state (slicers, selections, drill path, carried values, dates) is not valid |
 | DRS-9036 | 422 | Theme | (2.4.0) A theme item is not valid (its palette, a colour, its font or a visual default the format schemas refuse), or a report names a theme that does not exist (a warning there: the report draws with the default colours) |
+| DRS-9037 | 422 | Report field parameter | (2.6.0) A well names `param.<name>` that is not a field parameter of the report's model, or one whose choices the well cannot take; or a visual is asked with a value the parameter does not list |
+| DRS-9038 | 422 | Statement | (2.6.0) A statement page or the report's `statement:` is not valid, or the statement cannot be laid out (too little paper inside the margins, more pages than `drishti.distribution.statements.max-pages`) |
 | DRS-9040 | 409 | Breaks reports | Publishing a dataset would break published reports (a field, measure or hierarchy they use is removed or renamed); a `bi-admin` may force it |
 | DRS-9041 | 422 | Bundle invalid | A BI bundle is not readable, fails its checksums, is too large or holds an invalid item |
 | DRS-9043 | 409 | Failing tests | A report or dataset declares expected values (`tests:`) and one fails or cannot run, so publishing is refused; a `bi-admin` may publish with `force` |
@@ -2266,7 +2268,9 @@ any item (`404 DRS-9001` otherwise); what a visual shows is the dataset engine's
 **The state** of a visual query is what the person has done on the page: `{"slicers": {"currency": ["USD"], "notional": {"from": 1000000, "to": 3000000}}, "selections": [{"visual": "by-desk", "field": "trade.desk", "values": ["DESK-FX"], "highlight": false}],
 "drill": ["DESK-FX"], "carry": [{"field": "counterparties.name", "op": "in", "values": ["Orbital"]}], "dates": {"from": "2026-10-01", "to": "2026-10-08"}, "rows": true, "limit": 200}`. Slicers are by the slicer's visual id (a list, or `{from, to}`); selections are the marks selected on
 other visuals (`highlight: true` asks a bar or column chart for the highlighted answer as well); `drill` is the values clicked down the visual's hierarchy; `carry` is what a drill-through or a bookmark carries; `rows` shows the rows behind the visual
-(`true`, or `{field, values}` for one mark). Anything wrong is `422 DRS-9035`.
+(`true`, or `{field, values}` for one mark). Anything wrong is `422 DRS-9035`. Since 2.6.0 the state may carry `params` (`{"breakdown": "trade.PORTFOLIO", "shock": 0.5}`): the
+reader's parameter values of a report on a model. A field parameter named in a well (`param.breakdown`) is drawn as the field or measure chosen, and the answer has `wells` (the visual's
+wells as drawn); every parameter value rides on the model query as MQ v2 `params` (`422 DRS-9037` for a value a field parameter does not list; [REPORTS.md section 21](REPORTS.md#21-field-parameters-in-a-well-260)).
 
 Captured from a real server (the bar of *Trades overview*; `rita` holds the raw power):
 
@@ -2398,7 +2402,7 @@ Errors are `DRS-9060` (an export) and `DRS-9061` (a subscription); an unreadable
 | `GET` | `/me/subscriptions/{name}` | one |
 | `PUT` | `/me/subscriptions/{name}` | save: `{target: {type, id, page?, visual?, state?, view?}, schedule, format: html\|pdf\|xlsx, recipients: [user \| role:NAME], date?: today\|previous\|load, enabled?, title?, narrative?: bool, webhooks?: [name], sms?: bool}`. `narrative: true` opens each email with a short written summary of **that recipient's own** figures (needs the AI layer on, else `422`; written only when the AI policy lets the model see values, otherwise left out and the delivery says why); `webhooks` are names an administrator defined (`GET /notify/options`; unknown: `422`); `sms: true` texts each recipient who gave a number (needs a gateway, else `422`). `422 DRS-9061` says what is wrong |
 | `DELETE` | `/me/subscriptions/{name}` | delete (`204`) |
-| `POST` | `/me/subscriptions/{name}/run` | run now: one render and one mail per recipient, as that recipient; answers the run |
+| `POST` | `/me/subscriptions/{name}/run` | run now: one render and one mail per recipient, as that recipient; answers the run. A statement page (format `pdf` or `xlsx`) is one statement per recipient: each delivery has `statement: true`, `pages` and `file` ([STATEMENTS.md section 6](STATEMENTS.md#6-pdf-excel-and-bursting-through-subscriptions)) |
 | `POST` | `/me/subscriptions/{name}/pause` · `/me/subscriptions/{name}/resume` | pause or resume (a resumed one is scheduled from now) |
 | `POST` | `/subscriptions/preview` | `{schedule}`: `{next: [3 instants]}` (empty for `after-load`) |
 | `GET` | `/notify/options` | what alerts and subscriptions may use besides mail: `{webhooks: [name], sms: {configured, maxChars, phone}}` (`phone` is the caller's own number with all but its last two digits hidden, or empty). The URLs and secrets of the webhooks are never shown |
@@ -2562,6 +2566,19 @@ Other endpoints: `GET /api/v1/embed/check` answers `{app, user, jti, scopes, exp
 **4. The console's embed API** (`/embed/v1`, served when the console has `embed.enabled`; the element calls it, a host rarely does): `GET /views/{kind}/{id}` (head, strip and panels as HTML), `GET /views/{kind}/{id}/about` (scope `embed:about`; `<drishti-about>`), `GET /search?q=&limit=` (scope `embed:search`; `<drishti-search>`), `GET /views/{kind}/{id}/panels/{panel}/records`, `GET /resolve?text=` (a typed command or id to `{ref, mnemonic, title}`, read-only), `GET /channel?s=view:{kind}/{id}` (server-sent events: `channel`, `view`, `frame`, `gone`, `end`, `token`), `POST /channel/{cid}` (`{add, remove}`) and `POST /channel/{cid}/token`. Every call carries `Authorization: Bearer <embed token>`; CORS answers only the registered origins. The console verifies the token's signature (the server's key from `/api/v1/embed/jwks`, cached, re-read when a key id is new), expiry, audience and origin, then passes it to the server. A stream outlives its token: at expiry the console sends `event: token`, the element posts a fresh token to `/channel/{cid}/token` (the same user and application, a later expiry) and the stream carries on; with none within `embed.token_grace_seconds` it ends with `gone` `DRS-8001`. Problems are `{"code", "detail"}` (`DRS-8001` to `DRS-8006`; `429` carries `Retry-After`). Responses are gzip or Brotli compressed when accepted. A report is `GET /reports/{id}`, `POST /reports/{id}/query` and the channel key `bilive:{id}`, below. The library itself is served at `GET /embed/v1/elements/{version}/drishti-elements.js`, `.../m/{name}.js` and `.../integrity.json` (an exact semantic version, immutable; `1` and `1.1` answer `302` to it; a version this console does not hold is `410 DRS-8006`; with `embed.lifecycle` set every answer carries `Deprecation` and `Sunset`). Console settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#console-embed--the-consoles-side-of-embedded-views).
 
 **What a view says about masks.** `provenance.masked` (a number) and `provenance.maskedPanels` (panel ids) in every ViewModel and live `provenance` patch count the values the caller's masks replaced; both are `0` and `[]` when nothing is masked for the caller.
+
+## Statements: `/api/v1/bi/reports/statement` (2.6.0)
+
+A report's statement pages (`layout: statement`, [STATEMENTS.md](STATEMENTS.md)) made for the caller, with their masks and row rules. A subscription or an export
+(`POST /export/pdf` or `/export/xlsx` naming a statement page) makes the same for each recipient or the caller. Errors: `422 DRS-9038` (the statement), `DRS-9034` (a report
+with errors), `403 DRS-9002` for draft YAML without `bi-author`.
+
+| Method | Path | What it does |
+|---|---|---|
+| `POST` | `/bi/reports/statement/preview` | body `{report: <id>` or `yaml: <draft report>, page?, state?, date?}`: `{title, period, paper: {size, orientation, margins}, width, height, pageCount, pages: [{number, ops: [...]}], tokens, rows}`. `state` is the view state (`params`, `slicers`, `dates`); `date` the statement's date, from which its `period` is worked out. Each op is `{t: text, x, y, size, bold, rgb, text, role}` (`role`: `header`, `footer`, `title`, `head`, `group`, `cell`, `text`, `label`, `value`, `note`), `{t: rule, x1, y1, x2, y2, w, rgb}` or `{t: fill, x, y, w, h, rgb}`, in points from the page's lower left corner: what the PDF draws |
+| `POST` | `/bi/reports/statement/file` | the same body and `format`: `pdf` (default) or `xlsx`; the file with `Content-Disposition: attachment` (*Monthly statement October 2026 wes.pdf*) and `X-Statement-Pages` |
+
+A model query (`/bi/mq`, `mq: 2`) may name a field parameter of measures among `select.measures` (`param.metric`), and `param.<name>` in `sort`, as in `select.fields`.
 
 ## Embedding a report (`/embed/v1/reports`)
 

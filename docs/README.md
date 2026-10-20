@@ -14,7 +14,7 @@ before the consolidation (for example `/help/quickstart` or `/help/connector-kaf
 ## New here? Read these, in order
 
 1. **[GETTING_STARTED.md](guides/GETTING_STARTED.md)** (*Install and run*): prerequisites, build, start the server and the console, sign-in, Docker, other ways to build, and Windows.
-2. **[tutorials/](tutorials/README.md)**: nineteen hands-on tutorials on the shipped demo data, with the exact commands, real output and real screenshots. Start with [your first 15 minutes](tutorials/01-first-15-minutes.md).
+2. **[tutorials/](tutorials/README.md)**: twenty hands-on tutorials on the shipped demo data, with the exact commands, real output and real screenshots. Start with [your first 15 minutes](tutorials/01-first-15-minutes.md).
 3. **[USER_GUIDE.md](guides/USER_GUIDE.md)**: every feature of the console, as a reference. **[PACKS.md](guides/PACKS.md)**: which industries are available and how to load them; building your own is [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md).
 
 If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md).
@@ -25,7 +25,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 |---|---|
 | **Start** | [Install and run](guides/GETTING_STARTED.md) · [Tutorials](tutorials/README.md) |
 | **Use** | [User guide](guides/USER_GUIDE.md) · [Query by form](guides/QUERY_BY_FORM.md) · [Reports and subscriptions](guides/SCHEDULED_REPORTS.md) · Sharing and collaboration (console guide) · [Calc](guides/PYTHON_CALC.md) · [Scripts, notebooks and Excel](guides/CLIENTS.md) |
-| **BI** | [BI guide](guides/BI_GUIDE.md) · [BI recipes](guides/BI_RECIPES.md) · [Datasets](guides/DATASETS.md) · [Reports](guides/REPORTS.md) · [Boards](guides/BOARDS.md) · [Governance](guides/BI_GOVERNANCE.md) · [Distribution](guides/DISTRIBUTION.md) · [Python in BI](guides/PYTHON_BI.md) · [Analyse](guides/ANALYSE.md) · [AI in BI](guides/BI_AI.md) |
+| **BI** | [BI guide](guides/BI_GUIDE.md) · [BI recipes](guides/BI_RECIPES.md) · [Datasets](guides/DATASETS.md) · [Reports](guides/REPORTS.md) · [Statements](guides/STATEMENTS.md) · [Boards](guides/BOARDS.md) · [Governance](guides/BI_GOVERNANCE.md) · [Distribution](guides/DISTRIBUTION.md) · [Python in BI](guides/PYTHON_BI.md) · [Analyse](guides/ANALYSE.md) · [AI in BI](guides/BI_AI.md) |
 | **Data** | [Connectors](connectors/CONNECTORS.md) (a section per plugin) · [Connector files](connectors/CONNECTOR_FILES.md) · [TLS and proxy](connectors/TLS.md) · [Data loads](guides/DATA_LOADS.md) |
 | **Build** | [Packs](guides/PACKS.md) · [Pack developer guide](guides/PACK_DEVELOPER_GUIDE.md) · [Schema to pack](guides/SCHEMA_TO_PACK.md) · [Rachana guide](guides/SUTRA_DEVELOPER_GUIDE.md) · [Rachana reference](guides/RACHANA_REFERENCE.md) · [Panels](guides/PANELS.md) · [Examples](guides/examples/README.md) · [Build workbench](guides/SCREEN_DESIGNER.md) · [Connector developer guide](connectors/CONNECTOR_DEVELOPER_GUIDE.md) · [Developer guide](guides/DEVELOPER_GUIDE.md) · [Embedding](guides/ELEMENTS.md) |
 | **Operate** | [Configuration](admin/CONFIGURATION.md) · [Operations](admin/OPERATIONS.md) · [Users and roles](admin/USER_MANAGEMENT.md) · [Install and uninstall safely](admin/ARTIFACTS.md) · [API](guides/API_GUIDE.md) · [Command line](guides/CLI_GUIDE.md) · [Tools](guides/TOOLS.md) · [AI providers](architecture/AI_PROVIDERS.md) · [Troubleshooting](guides/TROUBLESHOOTING.md) · [Release notes](../RELEASE_NOTES.md) |
@@ -35,9 +35,9 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 
 | Folder | What is in it |
 |---|---|
-| [tutorials/](tutorials/README.md) | the nineteen hands-on tutorials: a worked example each, on the demo data, with commands, real output and screenshots |
+| [tutorials/](tutorials/README.md) | the twenty hands-on tutorials: a worked example each, on the demo data, with commands, real output and screenshots |
 | [guides/](guides/) | install and run, the user guide, business intelligence (Rūpaka), packs and the command line, the Sutra and Rachana guides, panels, clients, API and troubleshooting; `examples/` holds working Sutras |
-| [connectors/](connectors/) | connecting your data: the Connectors reference, the connector files, TLS and proxy, the developer guide, a design document per store (Delta Lake, PostgreSQL, Aerospike, files …) and demo data |
+| [connectors/](connectors/) | connecting your data: the Connectors reference, the connector files, TLS and proxy, the developer guide, a design document per store (Delta Lake, PostgreSQL, Aerospike, Cassandra, files …) and demo data |
 | [admin/](admin/) | running Drishti: operations, configuration, users and roles, performance, and the runbooks |
 | [qa/](qa/) | quality assurance runs: each with its activity logs, findings by severity, and the scripts that reproduce them |
 | [architecture/](architecture/) | how Drishti is built: the architecture, design notes (inference, live updates, Rūpaka, Elements, collaboration, the AI layer), the implementation plan, the [scale strategy](architecture/SCALE_STRATEGY.md) (millions of trades a day, a year of history) and the decision records (ADRs) |
@@ -53,7 +53,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Learn it by doing, from your first 15 minutes | [tutorials/](tutorials/README.md) |
 | Tell Drishti a batch of data has landed (API, CLI, Airflow, cron, DishtaYantra), flag late data | [DATA_LOADS.md](guides/DATA_LOADS.md) |
 | Open business intelligence: `RUPAKA <GO>`, the catalogue, workspaces, publish and review, certify | [BI_GUIDE.md](guides/BI_GUIDE.md) |
-| Learn BI by building a report, then making it run itself, live, governed, in Python and with AI | [tutorials 10 to 15 and 18](tutorials/README.md) |
+| Learn BI by building a report, then making it run itself, live, governed, in Python and with AI | [tutorials 10 to 15, 18 and 20](tutorials/README.md) |
 | Author in **BI Studio**: the Explorer, open items as tabs, the Problems and Query dock, the generated Format pane, conditional formatting, themes and the theme designer, Edit interactions, tooltip pages, small multiples, the matrix | [BI_GUIDE.md › BI Studio](guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product-wave-c-240), [REPORTS.md › Format](guides/REPORTS.md#5-format) |
 | Prepare data in Python step by step (**BI → Transforms**: inputs through a pack's connector, a snippets library, a preview and a profile after every step) | [PYTHON_BI.md › Data prep](guides/PYTHON_BI.md#17-data-prep-the-transform-editor-240), [tutorial 14, step 12](tutorials/14-python-and-analyse.md#step-12--prepare-raw-trades-step-by-step-the-transform-editor-240) |
 | Run your own Python in the browser on a masked extract, and promote it to the server (**BI → Python console**, `/pyconsole`) | [ANALYSE.md › The browser Python console](guides/ANALYSE.md#16-the-browser-python-console) |
@@ -151,12 +151,13 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Fix something that is not working | [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md), then the runbooks below |
 | Know how fast it is, and how that is measured | [PERFORMANCE.md](admin/PERFORMANCE.md) |
 | Know how many users a server holds, whether memory stays flat over a day, and how to load-test it | [LOAD_AND_MEMORY.md](admin/LOAD_AND_MEMORY.md) |
-| Compare the stores at several sizes, see how each scales, and run the scale benchmark yourself | [NET.md](admin/NET.md) | you run several servers as one cluster (Drishti\*net, 2.5.0): a cluster of three, the files of `config/net/`, membership, capability digests, security, routing, the console and several servers, Admin → Net, drain, sizing, troubleshooting |
-| [LAKE_MAINTENANCE.md](admin/LAKE_MAINTENANCE.md) | you keep Delta tables bounded and fast: retention, compaction, checkpoints and vacuum from Admin → Lakes or `lake maintain`, schedules, history |
-| [SCALE_BENCHMARK.md](admin/SCALE_BENCHMARK.md) |
+| Compare the stores at several sizes, see how each scales, and run the scale benchmark yourself | [SCALE_BENCHMARK.md](admin/SCALE_BENCHMARK.md) |
+| Lay a report out on paper: statements, page-exact PDF and Excel, one per recipient | [STATEMENTS.md](guides/STATEMENTS.md), [tutorial 20](tutorials/20-statements-and-field-parameters.md) |
+| Choose a theme (ten, three of them the Terminal hues of 2.6.0) | [USER_GUIDE.md › Themes](guides/USER_GUIDE.md#themes) |
 | Serve millions of entities a day for years from Delta Lake | [DELTA_CONNECTOR.md](connectors/DELTA_CONNECTOR.md) |
 | Run the server on Windows, or choose the Delta engine (native or Hadoop) | [GETTING_STARTED.md: Windows](guides/GETTING_STARTED.md#drishti-on-windows), [DELTA_CONNECTOR.md › Engines](connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop) |
 | Serve millions of entities a day from Aerospike, with recent history there and years in Delta Lake | [AEROSPIKE_CONNECTOR.md](connectors/AEROSPIKE_CONNECTOR.md) |
+| Read from Apache Cassandra, ScyllaDB or DataStax Astra: the table layout, the loader, days that appear whole | [CASSANDRA_CONNECTOR.md](connectors/CASSANDRA_CONNECTOR.md) |
 | Serve millions of entities a day from PostgreSQL | [POSTGRES_CONNECTOR.md](connectors/POSTGRES_CONNECTOR.md) |
 | Serve data from plain JSON-lines files, the simplest store | [FILE_CONNECTOR.md](connectors/FILE_CONNECTOR.md) |
 | Serve documents kept as JSON objects in S3, MinIO or another S3-compatible store | [S3_CONNECTOR.md](connectors/S3_CONNECTOR.md) |
@@ -174,6 +175,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Understand the sample data every pack ships, and its live ticks | [DEMO_CONNECTOR.md](connectors/DEMO_CONNECTOR.md) |
 | Read your own database with your own SQL: several queries per kind | [JDBC_QUERIES.md](connectors/JDBC_QUERIES.md) |
 | Serve millions of entities a day from Apache Iceberg (Snowflake, Glue, Polaris, Trino) | [ICEBERG_CONNECTOR.md](connectors/ICEBERG_CONNECTOR.md) |
+| Serve Iceberg tables your Spark or Snowflake pipelines already write | [ICEBERG_EXTERNAL_CONNECTOR.md](connectors/ICEBERG_EXTERNAL_CONNECTOR.md) |
 | Serve a large book from one embedded DuckDB file, with no database server | [DUCKDB_CONNECTOR.md](connectors/DUCKDB_CONNECTOR.md) |
 | Serve entities from MongoDB documents | [MONGODB_CONNECTOR.md](connectors/MONGODB_CONNECTOR.md) |
 | Serve today and recent days from Redis memory, with live updates | [REDIS_CONNECTOR.md](connectors/REDIS_CONNECTOR.md) |
@@ -223,6 +225,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [DATASETS.md](guides/DATASETS.md) | the YAML reference, aggregates and functions, security, modes, layers and rollups, the query, DRS-9010 to 9027, what is not built |
 | [REPORTS.md](guides/REPORTS.md) | the YAML reference, the 30 visuals and their wells (Vega-Lite included; the three 2.1 Perspective types drawn as Drishti's grid since 2.3.0), filters and top-N, format (schema v2: typed per visual family, conditional formatting, themes), interactions, tooltip pages, small multiples, the matrix, how the page's state becomes a dataset query, what people can do, checking, security, what is not built |
 | [BI_GOVERNANCE.md](guides/BI_GOVERNANCE.md) | saved states and published versions, the diff, who reviews and what they see, when certification falls, what impact analysis compares, the bundle and its dry run, the audit actions, what is not built |
+| [STATEMENTS.md](guides/STATEMENTS.md) | (2.6.0) statement pages of a report (`layout: statement`): paginated, page-exact paper (size, orientation, margins, header and footer with page numbers, page breaks, repeated column titles, groups kept together), the period and parameters, PDF and Excel, one statement per recipient through subscriptions, the statement designer (the Paper tab), the API and `drishti.py bi statement`, DRS-9038 |
 | [BOARDS.md](guides/BOARDS.md) | board pages of a report (`layout: board`) and their tiles, how 2.3 boards were converted, alerts, the viewer and kiosk, who sees what, the checks and their codes, settings, the API, what is not built (live tables: [DATASETS.md](guides/DATASETS.md#71-live-tables-phase-5); live visuals and Perspective: [REPORTS.md](guides/REPORTS.md#13-live-visuals-and-perspective-phase-5)) |
 | [tutorial 6](tutorials/06-design-a-screen.md) | you are new to the Build workbench: four complete projects with a picture of each step |
 | [SCREEN_DESIGNER.md](guides/SCREEN_DESIGNER.md) | you design or edit a Sutra in the browser, save it and submit it for review |
@@ -266,8 +269,8 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [AI_MANAGEMENT.md](architecture/AI_MANAGEMENT.md) | you want the design of AI management (2.8.0, not built): every AI setting, use and review in the console (providers, features, data protection, MCP tools, usage and cost, golden questions, audit, playground, AI drafts) |
 | [HISTORY_QUERIES.md](architecture/HISTORY_QUERIES.md) | you want the design of history queries (design, release 2.6.5): `TRD 1000015 30 <GO>` shows an entity over its last 30 business days with data; the range grammar, the document and market screens, the pack's `history:` block, `GET /api/v1/history/{kind}/{id}`, the connector SPI and each store's fast path, limits, masks, Drishti\*net, build steps H1 to H14 for two builders, tests |
 | [WRITE_BACK.md](architecture/WRITE_BACK.md) | you want the design of write-back (2.7.0, not built): editing and saving fields on a Sutra page, change requests in a fixed number of ordered lanes (one at a time per record), version checks, four eyes, overlays that flow into the lake, the change log kept 7 years |
-| [DRISHTI_ICEBERG.md](architecture/DRISHTI_ICEBERG.md) | you want the design of drishti-iceberg (not built, release not decided): Drishti's own Apache Iceberg engine with no Hadoop, so Iceberg runs on Windows; what of the spec it covers, catalogs, reads, commits, interop tests, build plan |
-| [CASSANDRA_CONNECTOR_DESIGN.md](architecture/CASSANDRA_CONNECTOR_DESIGN.md) | you want the design of the Apache Cassandra connector (not built, release not decided): Cassandra, ScyllaDB, Astra, Keyspaces; a partition per day per bucket, generations so a day appears whole, no secondary index, retention, sizing, tests, build plan |
+| [DRISHTI_ICEBERG.md](architecture/DRISHTI_ICEBERG.md) | you want the design of drishti-iceberg (built in 2.6.0): Drishti's own Apache Iceberg engine with no Hadoop, so Iceberg runs on Windows; what of the spec it covers, catalogs, reads, commits, interop tests, the two Iceberg connectors |
+| [CASSANDRA_CONNECTOR_DESIGN.md](architecture/CASSANDRA_CONNECTOR_DESIGN.md) | you want the design of the Apache Cassandra connector (built for 2.6.0; [CASSANDRA_CONNECTOR.md](connectors/CASSANDRA_CONNECTOR.md) is the reference): Cassandra, ScyllaDB, Astra, Keyspaces; a partition per day per bucket, generations so a day appears whole, no secondary index, retention, sizing, tests, build plan |
 | [AWS_DEPLOYMENT.md](architecture/AWS_DEPLOYMENT.md) | you deploy Drishti on AWS (design only, no code: the Dockerfiles are in the document): ECS with the server and the console as separate containers, every written path on EFS at the same path (read-only root), lakes in S3, Drishti*net on task addresses through Cloud Map |
 | [SUPER_SCALE.md](architecture/SUPER_SCALE.md) | you want the design for 500 GB a day kept seven years (not built, release not decided): 500 GB of JSON a day; one Delta lake in S3 shared by many servers and consoles, with diagrams: tables by year, a loader fleet with a day register, products computed when loading, range maps instead of id maps, each server owning a share of (table, day) slices on the Drishti*net ring |
 | [DRISHTI_NET.md](architecture/DRISHTI_NET.md) | you want the design of Drishti*net (built in 2.5.0; the operator's guide is [NET.md](admin/NET.md), section 19 says what was built): several servers that find each other by gossip over HTTP, tell each other the packs and kinds they serve, and answer any client as one, forwarding what they cannot serve themselves |
@@ -289,13 +292,15 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [DEMO_DATA.md](connectors/DEMO_DATA.md) | you need demo data in Delta Lake, PostgreSQL or Aerospike, small for a laptop or a million trades a day |
 | [FILE_CONNECTOR.md](connectors/FILE_CONNECTOR.md) | you serve data from JSON-lines files: the layout, one file per kind per day, the index of a day, loading, sizes, measurements |
 | [DELTA_CONNECTOR.md](connectors/DELTA_CONNECTOR.md) | you run Drishti over a large Delta Lake (a million trades a day for seven years): layout, writers, reads, memory, maintenance, measurements, and the two engines (native without Hadoop, or Hadoop) |
-| [ICEBERG_CONNECTOR.md](connectors/ICEBERG_CONNECTOR.md) | you run Drishti over Apache Iceberg: the layout, path-based and REST catalogs, delete files, time travel, the loader and maintenance, sizing, measurements |
+| [ICEBERG_CONNECTOR.md](connectors/ICEBERG_CONNECTOR.md) | you run Drishti over Apache Iceberg: the layout, path-based and REST catalogs, delete files, time travel, the loader and maintenance, sizing, measurements, and the two engines (native without Hadoop, or the Iceberg library) |
+| [ICEBERG_EXTERNAL_CONNECTOR.md](connectors/ICEBERG_EXTERNAL_CONNECTOR.md) | you serve Iceberg tables other engines write (Spark, Snowflake, Glue, Flink, dbt): rows as documents, ids and dates from columns or the table's metadata, every column searchable, an id index for unsorted tables, read-only |
 | [DUCKDB_CONNECTOR.md](connectors/DUCKDB_CONNECTOR.md) | you run Drishti on one embedded DuckDB file: the layout, the loader and its file swap, the shared read-only instance, read paths, retention, sizing, memory, measurements |
 | [POSTGRES_CONNECTOR.md](connectors/POSTGRES_CONNECTOR.md) | you run Drishti on PostgreSQL at scale: partitioned table, promoted columns, COPY loader, monthly retention, sizing, measurements |
 | [JDBC_QUERIES.md](connectors/JDBC_QUERIES.md) | you read your own schema with SQL: the entity, its parts, ids, columns and reverse queries, parameters, naming, performance |
 | [MONGODB_CONNECTOR.md](connectors/MONGODB_CONNECTOR.md) | you run Drishti on MongoDB: a document per entity per day, the narrow columns collection, indexes, parallel day reads, retention, sharding, measurements |
 | [REDIS_CONNECTOR.md](connectors/REDIS_CONNECTOR.md) | you run Drishti on Redis: key layout, zstd dictionaries, column chunks, live pub/sub, TTL, sizing, measurements |
 | [AEROSPIKE_CONNECTOR.md](connectors/AEROSPIKE_CONNECTOR.md) | you run Drishti on Aerospike at scale: record layout, loader, partition-parallel scans, TTL retention, sizing, measurements |
+| [CASSANDRA_CONNECTOR.md](connectors/CASSANDRA_CONNECTOR.md) | you run Drishti on Apache Cassandra, ScyllaDB or Astra: table layout, generations, the loader, retention, sizing, measurements |
 | [S3_CONNECTOR.md](connectors/S3_CONNECTOR.md) | you serve documents from S3 or an S3-compatible store: the key layout, listing and caching, credentials, cost of large buckets |
 | [REST_CONNECTOR.md](connectors/REST_CONNECTOR.md) | you read entities from an HTTP/JSON service: paths, headers, generations, timeouts, what it cannot do, load on the service |
 | [FEEDS_CONNECTOR.md](connectors/FEEDS_CONNECTOR.md) | you switch on the public feeds: each source's URL and parsing, entities and ids, schedules, history, offline mirrors |
@@ -315,6 +320,8 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [OPERATIONS.md](admin/OPERATIONS.md) | you deploy, secure, monitor, back up or upgrade a server and console |
 | [PERFORMANCE.md](admin/PERFORMANCE.md) | you want the measured numbers, to measure your own installation, or to tune it |
 | [LOAD_AND_MEMORY.md](admin/LOAD_AND_MEMORY.md) | you need to know how many users a server holds, whether memory stays flat over a day, and how to load-test and memory-profile the server, the console and the browser (strategy, tools, gates, build plan) |
+| [NET.md](admin/NET.md) | you run several servers as one cluster (Drishti\*net, 2.5.0; real addresses only and the last administrator kept across nodes, 2.6.0): a cluster of three, the files of `config/net/`, membership, capability digests, security, routing, the console and several servers, Admin → Net, drain, sizing, troubleshooting |
+| [LAKE_MAINTENANCE.md](admin/LAKE_MAINTENANCE.md) | you keep Delta tables bounded and fast: retention, compaction, checkpoints and vacuum from Admin → Lakes or `lake maintain`, schedules, history |
 | [SCALE_BENCHMARK.md](admin/SCALE_BENCHMARK.md) | you choose a store or size a server: every store measured at 10,000, 25,000 and 50,000 trades a day, linear scaling fits, labelled extrapolations to a million, and the harness (`tools/bench/`) to run it at a million on a real server |
 
 ### Runbooks (`admin/runbooks/`)
@@ -348,6 +355,7 @@ Eleven working Sutras with their data, introduced in [guides/examples/README.md]
 | [all-panels-showcase.md](guides/examples/all-panels-showcase.md) | All twenty-two panel kinds on one screen, reading one self-contained bond trade. |
 | [exposure-profile.md](guides/examples/exposure-profile.md) | Expected and potential future exposure over tenor, against a limit. |
 | [linked-sources.md](guides/examples/linked-sources.md) | Panels that read other entities with `source: "link(id, kind)"`: the counterparty's netting sets, a netting set's exposure and a desk's pivot, all fetched live. |
+| [map.md](guides/examples/map.md) | A country on the map: the world with the country highlighted, and the same country's regions beside it. |
 | [market-charts.md](guides/examples/market-charts.md) | Market data: daily bars, a line of closes and a volatility surface. |
 | [metric.md](guides/examples/metric.md) | A desk's headline numbers as big-number tiles: one large formatted, toned figure each, with a small change, a unit and a caption. |
 | [operations-status.md](guides/examples/operations-status.md) | The back office on one screen: where a trade stands and what comes next. |
@@ -384,6 +392,7 @@ The index is [adr/README.md](architecture/adr/README.md); the 20 records:
 | [018-signed-pack-registry.md](architecture/adr/018-signed-pack-registry.md): ADR-018: Packs come from a signed, versioned registry |
 | [019-pricing-is-a-quantlib-service-behind-the-server.md](architecture/adr/019-pricing-is-a-quantlib-service-behind-the-server.md): ADR-019: Pricing is a QuantLib service behind the Drishti server |
 | [020-collaboration-records-live-in-the-identity-database.md](architecture/adr/020-collaboration-records-live-in-the-identity-database.md): ADR-020: Collaboration records live in the identity database; the notice is a link, never  |
+| [021-embedding-is-html-over-the-wire.md](architecture/adr/021-embedding-is-html-over-the-wire.md): ADR-021: Embedding is HTML over the wire for views, and the viewer's own code for reports |
 
 ### Quality assurance runs (`qa/`)
 
@@ -415,7 +424,7 @@ Each run has a README (what was tested, findings by severity, how each was fixed
 | Folder | Read this when… |
 |---|---|
 | [requirements/](requirements/) | you want the four reference mockups the first views reproduced, and the logo and icon |
-| [publications/](publications/) | you want the design-and-evidence presentation (`Drishti-Design-and-Evidence.pptx`, 48 slides, current to 2.5.0: the idea, the product with BI Studio, Python data prep and Drishti\*net, security, the evidence with the 35.7-million-trade run, and the release order to 3.0; each slide's notes name their sources) |
+| [publications/](publications/) | you want the design-and-evidence presentation (`Drishti-Design-and-Evidence.pptx`, 48 slides, current to 2.6.0 under way: the idea, the product with BI Studio, Python data prep and Drishti\*net, security, the evidence with the 35.7-million-trade run, and the release order to 3.0; each slide's notes name their sources) |
 
 ## Words you will meet
 

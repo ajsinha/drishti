@@ -18,7 +18,7 @@
 
   <groupId>com.ash.drishti</groupId>
   <artifactId>drishti-parent</artifactId>
-  <version>2.5.0</version>
+  <version>2.6.0</version>
   <packaging>pom</packaging>
   <name>Drishti</name>
   <description>Any data. Any domain. One grammar.</description>
@@ -48,7 +48,9 @@
     <module>drishti-testkit</module>
     <module>drishti-diskcache</module>
     <module>drishti-messaging</module>
+    <module>drishti-lakeio</module>
     <module>drishti-deltalake</module>
+    <module>drishti-iceberg</module>
     <module>drishti-net</module>
     <module>plugins/drishti-plugin-demo</module>
     <module>plugins/drishti-plugin-file</module>
@@ -56,9 +58,11 @@
     <module>plugins/drishti-plugin-jdbc</module>
     <module>plugins/drishti-plugin-delta</module>
     <module>plugins/drishti-plugin-aerospike</module>
+    <module>plugins/drishti-plugin-cassandra</module>
     <module>plugins/drishti-plugin-redis</module>
     <module>plugins/drishti-plugin-mongodb</module>
     <module>plugins/drishti-plugin-iceberg</module>
+    <module>plugins/drishti-plugin-iceberg-external</module>
     <module>plugins/drishti-plugin-duckdb</module>
     <module>plugins/drishti-plugin-feeds</module>
     <module>plugins/drishti-plugin-news</module>
@@ -95,6 +99,8 @@
     <awssdk.version>2.55.9</awssdk.version>
     <rocksdb.version>11.0.4</rocksdb.version>
     <aerospike.version>10.5.0</aerospike.version>
+    <!-- the Apache Cassandra Java driver (also ScyllaDB, Astra, Keyspaces): pure Java, no native library -->
+    <cassandra-driver.version>4.19.3</cassandra-driver.version>
     <lettuce.version>6.8.2.RELEASE</lettuce.version>
     <zstd-jni.version>1.5.7-6</zstd-jni.version>
     <!-- 1.10.x reads and writes Parquet 1.16, the version Delta Kernel uses: one Parquet on the server's classpath -->
@@ -141,12 +147,14 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-file</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-delta</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-aerospike</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-cassandra</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-redis</artifactId><version>${project.version}</version></dependency>
       <!-- Redis: Lettuce on Netty 4.1 (the line Spring Boot 3.5 manages); zstd for compressed documents and columns -->
       <dependency><groupId>io.lettuce</groupId><artifactId>lettuce-core</artifactId><version>${lettuce.version}</version></dependency>
       <dependency><groupId>com.github.luben</groupId><artifactId>zstd-jni</artifactId><version>${zstd-jni.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-mongodb</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg-external</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-duckdb</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>org.duckdb</groupId><artifactId>duckdb_jdbc</artifactId><version>${duckdb.version}</version></dependency>
       <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-format</artifactId><version>${arrow-format.version}</version></dependency>
@@ -161,6 +169,8 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-messaging</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeio</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-iceberg</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-net</artifactId><version>${project.version}</version></dependency>
       <!-- pinned here: Spring Boot's dependency management would otherwise pick older clients -->
       <dependency><groupId>com.rabbitmq</groupId><artifactId>amqp-client</artifactId><version>${rabbitmq.version}</version></dependency>

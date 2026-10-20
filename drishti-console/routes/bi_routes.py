@@ -36,10 +36,13 @@ _NO_BODY = {"GET", "DELETE"}
 # A query (a visual's, a model query, SQL) may run on the server up to drishti.bi.query.timeout (30 s): the console waits that long and a little
 # more, not its usual 5 s, so a query a loaded server answers in 6 s is drawn, not refused with DRS-1004 while the server still works on it.
 QUERY_WAIT_SECONDS = 35.0
+STATEMENT_WAIT_SECONDS = 70.0
 
 
 def _query_wait(head: str, path: str) -> dict:
     """The longer wait for a query, as the keyword the backend takes (nothing for any other call)."""
+    if path.endswith("/statement/preview"):                     # a statement asks each of its bands, then lays the pages out (2.6.0)
+        return {"wait": STATEMENT_WAIT_SECONDS}
     return {"wait": QUERY_WAIT_SECONDS} if path.endswith("/query") or head in ("mq", "sql") else {}
 
 

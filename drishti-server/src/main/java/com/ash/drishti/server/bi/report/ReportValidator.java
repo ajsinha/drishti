@@ -282,6 +282,9 @@ public final class ReportValidator {
                 err(ReportParser.VISUAL, wp, "the " + e.getKey() + " well of a " + v.type() + " holds " + well.max() + " item" + (well.max() == 1 ? "" : "s") + ", not " + items.size());
             }
             for (String item : items) {
+                if (FieldParams.isParam(item)) {
+                    continue;                                                   // a field parameter: FieldParams checks it against the model (DRS-9037)
+                }
                 boolean isMeasure = ds.measures().containsKey(item);
                 switch (well.kind()) {
                     case MEASURE -> {
