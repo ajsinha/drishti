@@ -66,6 +66,38 @@
   its port, shown on Admin → Net as *detected*. The in-process cluster tests, `net_stack.py`, the soak, tutorial 19 and `drishti-stack/`
   (`DRISHTI_STACK_HOST`, or `host:` in stack.yaml) use the machine's real address ([NET.md section 2](docs/admin/NET.md#2-a-cluster-of-three)).
 
+- **New: three themes, the Terminal look in one dominant hue.** **Green Terminal** (`terminal-green`: phosphor green with light lime on deep
+  forest), **Crimson Terminal** (`terminal-crimson`: crimson with blush on wine-black; text in the accent dusty rose, links peach, crimson kept
+  for buttons, highlights and the chrome's gradient) and **Blue Terminal** (`terminal-blue`: azure with periwinkle on midnight): ten themes in
+  the theme menu, the account page, `PATCH /api/v1/me/settings` (`DRS-5001` lists them), `ui.default_theme` and the elements' `theme`.
+  Buttons and pressed controls now fill with `--d-fill` / `--d-fill-strong` and label with `--d-on-fill` (the accent and `--d-on-accent` unless a
+  theme sets its own, as Crimson Terminal does: a deep crimson under white labels). `test_contrast.py`: every text colour at 4.5:1 on every
+  ground in all ten themes, and labels on button fills. USER_GUIDE (Themes: how to choose, the contrast rule), GETTING_STARTED, ARCHITECTURE,
+  CONFIGURATION, API_GUIDE, ELEMENTS.
+- **Fixed: a BI query no longer fails while its named connector restarts.** It waits (up to 30 s) for the connector instead of answering
+  `not running (running)`; a derived connector asked while the server is still starting no longer says DOWN (which made the registry restart it
+  as a lost connection). `SourceRegistryLiveTest`.
+- **Fixed: the console draws only the newest answer.** A BI item's history, review, impact and lineage no longer show an older answer that
+  came late; a report visual's *Show the rows* and *Drill through* use the selection at the click; in the report designer an older YAML text
+  never replaces a newer one, and the tab stays stale until the last change's text is in, so Save never misses the last change. The browser
+  tests that failed now and then under load wait for what they check instead of fixed pauses (governance save, report selection, control swap
+  versus a live tick, the pack wizard's keyboard steps, the showcase check, the first live report on a cold server).
+- **Plan (product owner, 2026-10-20): 2.6.0 is the known-bug pass, statements, field parameters, the Cassandra connector and drishti-iceberg**
+  (Iceberg without Hadoop). Send and push (Outlook, Teams, SharePoint, connector dump) and integration (the PostgreSQL-wire endpoint, the
+  Excel feed, embed tokens bound to envelopes, SDK events, and the feeds and embedding UI) move after the 3.0.0 release; the Sajha MCP
+  connector moves to 2.8.0 with the AI work ([BI_DESIGN.md §12.2](docs/architecture/BI_DESIGN.md#122-the-three-waves),
+  [IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#roadmap)).
+- **Design: Drishti on AWS** ([AWS_DEPLOYMENT.md](docs/architecture/AWS_DEPLOYMENT.md)), design only, with no AWS or Docker code in the
+  repository (`deploy/aws/` removed; the Dockerfiles and entry points are in the document): ECS with the server and the console as separate
+  containers, every written path on EFS at the same path, lakes in S3, Drishti*net through Cloud Map.
+- **Design: super scale** (`docs/architecture/SUPER_SCALE.md`, not built, release not decided): 500 GB of JSON a day kept seven years on
+  one Delta lake in S3 shared by many servers and consoles: tables by year, a loader fleet with a day register, products computed when loading,
+  range maps instead of id maps, (table, day) slices owned on the Drishti*net ring; build plan S1-S8.
+- **Docs reviewed for 2.5.0 and 2.6.0.** The release order the same everywhere (BI_DESIGN, IMPLEMENTATION_PLAN, BI_MODEL_ARCHITECTURE,
+  WRITE_BACK, GENUI, SQL.md); Drishti*net as built (CLI_GUIDE's `net` walk-through on real output, NET.md and TROUBLESHOOTING for the
+  real-address refusal and *Last administrator kept*, OPERATIONS, ARCHITECTURE, HOW_IT_FITS); the README and the documentation index
+  (twenty tutorials, statements, themes, broken rows repaired, ADR-021); help cards; the deck current to 2.6.0.
+
 - **Design: write-back** ([WRITE_BACK.md](docs/architecture/WRITE_BACK.md)), editing and saving fields on a Sutra page through ordered
   lanes (one change at a time per record), for 2.7.0; AI moves to 2.8.0 and wave E to 2.9.0
   ([BI_DESIGN.md §12.2](docs/architecture/BI_DESIGN.md#122-the-three-waves)).

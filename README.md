@@ -262,8 +262,7 @@ drishti/
 ├── drishti-stack/               a ready-made local Drishti*net cluster of three servers and a console: start.sh, stop.sh, status.sh
 ├── drishti-testkit/ drishti-it/ test fixtures; architecture, licence-header and file-size gates
 ├── drishti-benchmarks/          JMH hot-path benchmarks
-├── plugins/drishti-plugin-*/     demo, file, rest, jdbc, delta, aerospike, cassandra, redis, mongodb, iceberg, iceberg-external, duckdb, feeds, news,
-│                                yfinance, kafka, activemq, rabbitmq, s3
+├── plugins/drishti-plugin-*/     demo, file, rest, jdbc, delta, aerospike, cassandra, redis, mongodb, iceberg, iceberg-external, duckdb, feeds, news, yfinance, kafka, activemq, rabbitmq, s3
 ├── drishti-console/                     the web console (routes/, core/, web/templates, web/static, tests/)
 ├── clients/python/              drishti_client.py: the standard-library Python client
 ├── config/packs/<name>/                the seven domain packs: pack.yaml, Sutras, vocabulary, samples, guides (retired ones in examples/packs/)
