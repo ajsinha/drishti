@@ -93,6 +93,37 @@ def layouts_for_domain(domain: str, packs: pathlib.Path = PACKS) -> dict[str, La
     return out
 
 
+def layouts_by_table(domain: str, packs: pathlib.Path = PACKS) -> dict[str, tuple[str, Layout]]:
+    """Every laid-out table of `domain`, by its folder name: {table: (kind, layout)}. A connector may name its table
+    (settings.table.<kind>: trade_endur), so the trading pack's three trade connectors have three tables of one kind: a
+    table found by its folder is never looked up by kind."""
+    import yaml
+
+    out: dict[str, tuple[str, Layout]] = {}
+    for f in sorted(packs.glob("*/pack.yaml")):
+        manifest = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        for conn in (manifest.get("connectors") if isinstance(manifest.get("connectors"), dict) else manifest.get("connector-templates") or {}).values():
+            settings = conn.get("settings") or {}
+            if conn.get("plugin") != "delta" or settings.get("domain") != domain:
+                continue
+            named = settings.get("table") if isinstance(settings.get("table"), dict) else {}
+            for kind in conn.get("kinds") or []:
+                lay = Layout.from_settings(settings, kind)
+                if lay:
+                    out[str(named.get(kind) or settings.get(f"table.{kind}") or kind)] = (kind, lay)
+    return out
+
+
+def partition_columns(table_path: str) -> list[str] | None:
+    """The partition columns of the Delta table at `table_path`, or None when there is no table there yet."""
+    try:
+        from deltalake import DeltaTable
+
+        return list(DeltaTable(str(table_path)).metadata().partition_columns)
+    except Exception:  # noqa: BLE001 - not a table (yet)
+        return None
+
+
 def column_name(path: str) -> str:
     """The physical column of a promoted path: counterparty.id -> counterparty__id."""
     return path.replace(".", "__")
@@ -184,7 +215,16 @@ def write_file(table_path: str, table, layout: Layout | None, mode: str, day: da
     schema replaced) or "overwrite-partition" (the business date `day` only; new columns merge into the schema)."""
     from deltalake import WriterProperties, write_deltalake
 
-    kw: dict = {"partition_by": ["business_date"], "target_file_size": ONE_FILE}
+    # an existing table keeps its own partitions (a trade table is by business_date and PRODUCT_TYPE); a column it is
+    # partitioned by that the rows do not carry is read from each document
+    parts = (partition_columns(table_path) if mode != "overwrite" else None) or ["business_date"]
+    for c in parts:
+        if c not in table.column_names:
+            import pyarrow as pa
+
+            values = [value_at(json.loads(d), c) for d in table.column("doc").to_pylist()]
+            table = table.append_column(c, pa.array([None if v is None else str(v) for v in values], pa.string()))
+    kw: dict = {"partition_by": parts, "target_file_size": ONE_FILE}
     if layout:
         kw["writer_properties"] = WriterProperties(max_row_group_size=layout.row_group_rows, compression="SNAPPY")   # deltalake's default
         kw["configuration"] = {"delta.dataSkippingStatsColumns": stats_columns(layout)}   # applies when the table is created

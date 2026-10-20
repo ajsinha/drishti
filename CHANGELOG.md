@@ -17,6 +17,9 @@
 
 ## Unreleased
 
+- **Fixed: `lake maintain` lays out the per-source trade tables.** It looked a table's layout up by its folder name as if it were a kind,
+  so `trade_endur`, `trade_calypso` and `trade_murex` got a plain compaction out of id order; it now finds the layout of the connector whose
+  table it is, and `relayout` keeps a table's own partitions (`business_date` and `PRODUCT_TYPE`) and checks each of them. `test_maintain.py`.
 - **Fixed (QA1-07): History *Link* and `Alt+S` copy on a plain-http LAN address**: the link is shown, selected, in a field under the
   toolbar and copied with the Clipboard API where the page may use it, else from that field (`execCommand('copy')`), with a visible
   *Copied*; the link keeps `&only=1` when *changes only* is on. `test_history_browser.py`.

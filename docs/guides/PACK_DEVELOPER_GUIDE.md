@@ -1135,7 +1135,8 @@ history:
 | `max-days` | `drishti.history.max-days` (366) | can only lower the server's |
 
 Unknown keys are warnings; a wrong value is an error (`DRS-2061`) that `sutra lint <pack-dir>` and the deploy check report, while the
-running server logs it and keeps the kind's default history. Every day's row is masked exactly as the kind's view is.
+running server logs it when the pack loads (at start and at every reload), shows it as the pack's problem on Admin → Packs and in Health
+(the pack DEGRADED), and keeps the kind's default history. Every day's row is masked exactly as the kind's view is.
 
 ### Keys for packs that inherit and read real data
 
@@ -1276,7 +1277,8 @@ connectors:
   document (`doc`), `business_date`, the partition columns it is given (`--partition-by PRODUCT_TYPE` for the trade tables) and one column per
   promoted field (a nested path such as `INDEX.NAME` is the column `INDEX__NAME`; numbers as `float64`, everything else as text). A bank's
   own loader (Spark, Databricks) writes the same columns; `drishti.py lake maintain relayout` rewrites an existing table into the layout, a
-  day at a time, and leaves days already in it alone.
+  day at a time, and leaves days already in it alone. It finds a table's layout by the table's folder (`trade_endur` is the table of the
+  connector whose `table.trade` names it), and keeps a table's own partitions (`business_date` and `PRODUCT_TYPE` for the trade tables).
 - **The server uses it.** Opening a trade reads one row group of one file (the id says which). Type-ahead indexes the
   id column alone. Searches, pick lists, the search form's drop-downs, derived kinds and impact (F8) read the columns, over every
   trade of the day, exactly, without parsing a document; a query that uses a field that is not a column reads documents as

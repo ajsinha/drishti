@@ -163,7 +163,7 @@ class MaintainTest(unittest.TestCase):
         from deltalake import DeltaTable
         from samplegen.layout import write_partition
         with tempfile.TemporaryDirectory() as tmp:
-            uri = str(Path(tmp) / "trading" / "trade")                  # the trading pack declares a layout for trade
+            uri = str(Path(tmp) / "trading" / "trade_endur")            # trade-endur's table: the trading pack declares its layout
             lay = maintain.layout_of(uri)
             self.assertIsNotNone(lay)
             for n, day in enumerate((date(2026, 9, 29), date(2026, 9, 30))):
@@ -184,6 +184,42 @@ class MaintainTest(unittest.TestCase):
             self.assertNotIn("min.doc", actions[0])                                            # no document in the log
             again = maintain.maintain(uri, conf, date(2026, 9, 30), dry_run=False)
             self.assertEqual(again["compact"]["relaid-dates"], [])
+
+    def test_a_per_source_trade_table_partitioned_by_product_type_is_laid_out_by_its_connector(self):
+        """The trading pack's tables are trade_endur, trade_calypso and trade_murex (connectors trade-endur ... with
+        table.trade), partitioned by business_date and PRODUCT_TYPE: maintenance finds their layout by the table's folder
+        (it once looked up the folder as a kind, found none and only compacted, out of id order), and relayout keeps both
+        partition columns."""
+        import pyarrow as pa
+        from deltalake import DeltaTable, write_deltalake
+        from samplegen.layout import layouts_by_table
+        tables = layouts_by_table("trading")
+        self.assertEqual({t: k for t, (k, _l) in tables.items() if k == "trade"}, {"trade_endur": "trade", "trade_calypso": "trade", "trade_murex": "trade"})
+        with tempfile.TemporaryDirectory() as tmp:
+            uri = str(Path(tmp) / "trading" / "trade_calypso")
+            lay = maintain.layout_of(uri)
+            self.assertIsNotNone(lay)
+            self.assertIn("PRODUCT_TYPE", lay.columns)
+            day = date(2026, 9, 30)
+            for part in range(3):                                       # intraday loads: unsorted, small, both product types
+                ids = [f"CA-{(7 * i + part) % 30:05d}" for i in range(10)]
+                docs = [json.dumps({"TRADE_ID": i, "PRODUCT_TYPE": "ComSwap" if n % 2 else "ComFut"}) for n, i in enumerate(ids)]
+                write_deltalake(uri, pa.table({"id": ids, "doc": docs, "business_date": pa.array([day] * 10, pa.date32()),
+                                               "PRODUCT_TYPE": ["ComSwap" if n % 2 else "ComFut" for n in range(10)]}),
+                                mode="append", partition_by=["business_date", "PRODUCT_TYPE"])
+            own(uri, kind="trade")
+            conf = {**maintain.DEFAULTS, "checkpoint": False, "vacuum-hours": None}
+            done = maintain.maintain(uri, conf, day, dry_run=False)
+            self.assertEqual(done["compact"].get("relaid-dates"), ["2026-09-30"], done["compact"])   # laid out, not a plain compaction
+            dt = DeltaTable(uri)
+            self.assertEqual(dt.metadata().partition_columns, ["business_date", "PRODUCT_TYPE"])
+            rows = dt.to_pyarrow_table().to_pylist()
+            self.assertEqual(len(rows), 30)
+            self.assertTrue(all(r["PRODUCT_TYPE"] == json.loads(r["doc"])["PRODUCT_TYPE"] for r in rows))
+            for a in maintain.add_actions(dt):
+                self.assertIn(a["partition.PRODUCT_TYPE"], ("ComSwap", "ComFut"))
+                self.assertIsNotNone(a.get("min.TRADE_ID"))                                    # the promoted columns have statistics
+            self.assertEqual(maintain.relayout(uri, lay, dates="2026-09-30")["skipped"], ["2026-09-30"])
 
     def test_the_schedule(self):
         from datetime import datetime
