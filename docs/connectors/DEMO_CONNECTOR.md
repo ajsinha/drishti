@@ -389,7 +389,7 @@ kinds, so it is a candidate for **every** kind, and answers "not held" for ids i
 | The user asks for | Where the demo stands | Effect |
 |---|---|---|
 | Live | live sources first, and among live sources the `default-route` last: a real stream (Kafka, ActiveMQ, RabbitMQ, Redis) before the samples, then the samples, then non-live stores | with no stream for the kind, a sample **answers before** the lake for an id both hold (`MX-20000001` is both a sample and a lake trade) |
-| a picked date | dated sources first, then undated ones (the demo among them) | the lakes answer for the seven dates they hold; for a date older than every store's history, the sample answers, with the banner *No data held for 2026-08-01: the current data of endur, a source that keeps no dates* (the name is the sample's `_meta.source`) |
+| a picked date | dated sources first, then undated ones (the demo among them) | the lakes answer for the sixty dates they hold; for a date older than every store's history, the sample answers, with the banner *No data held for 2026-08-01: the current data of endur, a source that keeps no dates* (the name is the sample's `_meta.source`) |
 | ticks | the first live source that **holds** the entity, in live order | a view read from a real stream ticks from the stream; one read from a sample ticks from the sample |
 | type-ahead, search | every search-capable source is asked and hits are merged | samples appear beside the lakes' ids |
 | reverse lookups | every source that declares them | sample referrers are added to the stores' |

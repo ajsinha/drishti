@@ -2753,8 +2753,8 @@ patterns, and the server decides in one filter (`TokenScopes`):
 | `ai:admin` | `POST /admin/ai/test` | `admin` |
 
 There is no `admin` scope and no `data:admin`: the server has no data-loading endpoint (data is loaded by your ETL, or staged by
-`drishti.py data`; `loads:write` only *announces* that a batch landed), and users, roles, tokens, sign-in, caches, installing and uninstalling artifacts (`/admin/artifacts`), the audit log, shares, comments, notes, workspaces and
-every `/me/**` write are **never** open to a token (`drishti.security.token-never`). A write that no scope opens answers
+`drishti.py data`; `loads:write` only *announces* that a batch landed), and users, roles, tokens, sign-in, caches, installing and uninstalling artifacts (`/admin/artifacts`), the audit log, shares, comments, notes, your console workspaces (`/me/workspaces`; BI workspaces are opened by `bi:write` and
+`bi:admin` above) and every `/me/**` write are **never** open to a token (`drishti.security.token-never`). A write that no scope opens answers
 `403 DRS-5002 this token lacks the scope design:write` (or `API tokens only read`); one that is never open, `API tokens may not
 call this endpoint`. The effective right is the scope **and** the user's roles at the time of the call, so a token never exceeds
 its user; a disabled or deleted user's token answers `401`. A token with a write scope must expire (`token-write-max-days`,

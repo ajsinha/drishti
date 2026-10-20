@@ -468,7 +468,7 @@ the page, then binds the lake to the pack's connector and sends the signal as th
 ### 4.9 The demo lakes: lake demo
 
 `drishti.py lake demo` (run configuration **Build demo lakes**) is `lake build` run for every dataset and business day of the
-committed test data, `data/testdata`: the seven packs' tables under `data/delta` in about 50 s, the seven days moved to end on today's
+committed test data, `data/testdata`: the seven packs' tables under `data/delta` in about 15 minutes (943 s measured, about 2.2 GB), the sixty days moved to end on today's
 business date (`--as-of data` keeps the files' own dates), the connector files checked, the next steps printed. `--only PREFIX` builds
 some datasets, `--lake DIR` another folder (the connector files then point there), `--with-real FILE[,FILE]` adds real extracts to the
 local lake only. It then tells the server the lakes changed: the data-load signal for every table and date to `--server` (default

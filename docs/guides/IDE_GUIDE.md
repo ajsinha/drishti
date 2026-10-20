@@ -59,7 +59,7 @@ flag and refuses to start when it is given, so leave it out there. The build sto
 Use an IntelliJ IDEA release that knows your JDK (Java 25 needs IDEA 2025.2 or newer).
 
 1. **File → Open**, choose the repository's root `pom.xml`, then **Open as Project**. IDEA imports every Maven module
-   (the server, the engine, the 17 plugins, the testkit, …). Wait for the import and indexing to finish.
+   (the server, the engine, the 19 plugins, the testkit, …). Wait for the import and indexing to finish.
 2. **File → Project Structure → Project**:
    - **SDK**: your JDK 21 or newer. If it is not listed: **Add SDK → Add JDK…** and choose its folder, for example
      `/usr/lib/jvm/java-21-openjdk-amd64` (Ubuntu OpenJDK), `/usr/lib/jvm/jdk-21-oracle-x64` (Oracle JDK on Linux),
@@ -91,8 +91,8 @@ nothing to type. Every one uses `$PROJECT_DIR$` (the repository root), the proje
 | **Drishti server (QA profile)** | The same, with **its own data folder `data/qa/data`** (git-ignored) so QA never touches `./data` or another stack. | **18580** |
 | **Drishti server (debug-friendly)** | The QA profile with sign-in **off**, DEBUG logging for `com.ash.drishti` and `-Xmx1g`: for stepping through code without logging in (pair it with a console whose sign-in is off too). | 18580 |
 | **Drishti build server jar** | Maven: `package -DskipTests -pl drishti-server -am`; produces `drishti-server/target/drishti-server-<version>-exec.jar`. | |
-| **Build demo lakes** (PyCharm) | `drishti.py lake demo`: the seven packs' Delta lakes under `data/delta`, sixty business days, from the committed test data ([data/testdata/README.md](../../data/testdata/README.md)); under a minute; the seven days end on today's business date. Then start **Drishti server (demo lakes)**. | |
-| **Drishti server (demo lakes)** | **Drishti server** with the samples off (`DRISHTI_DEMO_ENABLED=false`), so every page reads the demo lakes, and `-Xmx4g` (15,000 trades over seven days and the BI tables of them). | 18480 |
+| **Build demo lakes** (PyCharm) | `drishti.py lake demo`: the seven packs' Delta lakes under `data/delta`, sixty business days, from the committed test data ([data/testdata/README.md](../../data/testdata/README.md)); about 15 minutes and 2.2 GB; the sixty days end on today's business date. Then start **Drishti server (demo lakes)**. | |
+| **Drishti server (demo lakes)** | **Drishti server** with the samples off (`DRISHTI_DEMO_ENABLED=false`), so every page reads the demo lakes, and `-Xmx4g` (15,000 trades a day over sixty days and the BI tables of them). | 18480 |
 | **QA pack make (from JSON)**, **QA lake build (big JSON to Delta)**, **QA server smoke**, **QA doctor** (PyCharm) | The command-line tools of [CLI_GUIDE.md](CLI_GUIDE.md) as Python run configurations in `drishti-console/run-configs/`. Edit **Parameters** to point at your file (see section 6). | against 18580 |
 
 The QA server and the QA console are started one in each IDE (**Drishti server (QA profile)** in IntelliJ, **Drishti console (QA

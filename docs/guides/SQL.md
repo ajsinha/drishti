@@ -39,8 +39,8 @@ LIMIT  20
 Every example on this page runs on the shipped model **`trading-risk`** (`config/bi/models/trading-risk.model.yaml`: tables `trades`,
 `netting_sets`, `counterparties`, `desks`, `books`, columns in the packs' UPPER_SNAKE names) over the demo lakes
 (`drishti.py lake demo`, [data/testdata/README.md](../../data/testdata/README.md)), asked as the seeded administrator. The demo lakes end on
-**today's** business date, so your dates differ from the ones captured here (the seven days 2026-10-07 to 2026-10-16); the figures of each of the
-seven days are the same. The statement above answered six counterparties, the first `["Northern Plains Energy Canada", -251066943.0, 528,
+**today's** business date, so your dates differ from the ones captured here. The figures were captured on the seven-day lakes of 2.5.0
+(2026-10-07 to 2026-10-16); the lakes hold sixty business days since 2.6.5, and a figure may differ on yours. The statement above answered six counterparties, the first `["Northern Plains Energy Canada", -251066943.0, 528,
 125556404805.7]`.
 
 A filter on `trades` does not reach `netting_sets`: `MEASURE('Exposure (PFE peak)')` in the statement above is refused with `DRS-9156` (the
