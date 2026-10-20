@@ -86,6 +86,11 @@ public final class DatasetRefresher implements AutoCloseable {
         final java.util.concurrent.ConcurrentLinkedDeque<Map<String, Object>> history = new java.util.concurrent.ConcurrentLinkedDeque<>();
         final java.util.concurrent.atomic.AtomicLong runs = new java.util.concurrent.atomic.AtomicLong();
         final java.util.concurrent.atomic.AtomicBoolean running = new java.util.concurrent.atomic.AtomicBoolean();
+        /** The business dates signalled and not refreshed yet, and whether a refresh of them waits: one waits at most (QA3B-07). */
+        final java.util.concurrent.ConcurrentSkipListMap<LocalDate, Set<String>> loaded = new java.util.concurrent.ConcurrentSkipListMap<>();
+        final java.util.concurrent.atomic.AtomicBoolean waiting = new java.util.concurrent.atomic.AtomicBoolean();
+        /** The status before "waiting", shown again when every date waiting was already fresh (nothing ran). */
+        volatile String beforeWaiting;
 
         State(String schedule, State previous) {
             this.schedule = schedule;
@@ -289,9 +294,15 @@ public final class DatasetRefresher implements AutoCloseable {
 
     /** Runs the job now on this thread. A failure is recorded (and a retry planned) rather than thrown. */
     private void run(Job j, State st, String trigger, LocalDate date) {
+        run(j, st, trigger, date, true);
+    }
+
+    /** As above; {@code release}: the job's running flag is cleared at the end (false: the caller runs more dates and clears it). */
+    private void run(Job j, State st, String trigger, LocalDate date, boolean release) {
         st.status = "running";
         st.trigger = trigger;
         Instant started = clock.instant();
+        String ended = null;                                   // shown once the run is over (running cleared): a retry looks at both
         try {
             QueryService.Refreshed r = j.readers() == null ? queries.refresh(j.ds(), j.tables(), date) : across(j.readers(), date);
             if (j.ds().dataset() != null && j.ds().dataset().framed()) {
@@ -306,9 +317,9 @@ public final class DatasetRefresher implements AutoCloseable {
             st.retryAt = null;
             st.error = r.warnings().isEmpty() ? null : String.join("; ", r.warnings());
             boolean warned = r.warnings().stream().anyMatch(w -> w.startsWith("warning: "));
-            st.status = warned ? "warning" : "ok";
+            ended = warned ? "warning" : "ok";
             st.runs.incrementAndGet();
-            st.remember(entry(started, trigger, st.status, r.rows(), r.millis(), r.date(), st.error), props.history());
+            st.remember(entry(started, trigger, ended, r.rows(), r.millis(), r.date(), st.error), props.history());
             LOG.info("BI refresh {} {}: {} rows in {} ms ({})", j.key(), r.date(), r.rows(), r.millis(), trigger);
             audit.record("system", "bi-dataset-refresh", j.ds().id(), trigger + ": " + r.rows() + " rows of " + r.tables() + " for " + r.date());
         } catch (RuntimeException e) {
@@ -319,15 +330,20 @@ public final class DatasetRefresher implements AutoCloseable {
             boolean permanent = RetryPolicy.looksPermanent(e);
             if (retry.enabled() && failed < props.maxAttempts()) {
                 st.retryAt = clock.instant().plus(retry.delay(failed, permanent, RandomGenerator.getDefault().nextDouble()));
-                st.status = "retrying";
+                ended = "retrying";
             } else {
                 st.retryAt = null;
-                st.status = "failed";
+                ended = "failed";
             }
-            st.remember(entry(started, trigger, st.status, 0, 0, date.toString(), st.error), props.history());
+            st.remember(entry(started, trigger, ended, 0, 0, date.toString(), st.error), props.history());
             LOG.warn("BI refresh {} failed (attempt {}): {}", j.key(), failed, st.error);
         } finally {
-            st.running.set(false);
+            if (release) {
+                st.running.set(false);
+            }
+            if (ended != null) {
+                st.status = ended;
+            }
             save();
         }
     }
@@ -500,17 +516,51 @@ public final class DatasetRefresher implements AutoCloseable {
                     continue;
                 }
                 State st = states.compute(j.key(), (k, old) -> old != null && old.schedule.equals(j.schedule()) ? old : new State(j.schedule(), old));
-                if (st.running.get()) {
-                    continue;
+                st.loaded.computeIfAbsent(businessDate, d -> java.util.concurrent.ConcurrentHashMap.newKeySet()).add(kind);
+                if (!st.waiting.compareAndSet(false, true)) {
+                    continue;                                  // a refresh waits already: it takes this date too
                 }
-                st.status = "waiting";
-                ticker.schedule(() -> {
-                    if (st.running.compareAndSet(false, true)) {
-                        Thread.ofVirtual().name("drishti-bi-refresh-" + j.key()).start(() -> run(j, st, "after-load " + kind, businessDate));
-                    }
-                }, props.loadDelay().toMillis(), TimeUnit.MILLISECONDS);
+                if (!st.running.get()) {
+                    st.beforeWaiting = st.status;
+                    st.status = "waiting";
+                }
+                afterLoad(j, st, "after-load " + kind);
             }
         }
+    }
+
+    /**
+     * The one waiting after-load refresh of a job: after {@code load-delay}, and after the refresh running ends, it refreshes each signalled date
+     * once, skipping a date whose stored layers were built from the data the source holds now. A burst of signals (2,976 in QA3B-07) started
+     * a refresh after each run before; one running and one waiting now, whatever the signals.
+     */
+    private void afterLoad(Job j, State st, String trigger) {
+        ticker.schedule(() -> {
+            if (!st.running.compareAndSet(false, true)) {
+                afterLoad(j, st, trigger);                     // the running one ends first; this one keeps waiting
+                return;
+            }
+            st.waiting.set(false);
+            List<Map.Entry<LocalDate, Set<String>>> dates = new ArrayList<>();
+            for (Map.Entry<LocalDate, Set<String>> d; (d = st.loaded.pollLastEntry()) != null; ) {
+                dates.add(d);                                  // the newest first, with the kinds signalled for it
+            }
+            Thread.ofVirtual().name("drishti-bi-refresh-" + j.key()).start(() -> {
+                try {
+                    for (Map.Entry<LocalDate, Set<String>> d : dates) {
+                        if (j.readers() == null && queries.fresh(j.ds(), j.tables(), d.getKey(), d.getValue())) {
+                            continue;                          // the signalled kinds hold the same data as the layers: nothing to read again
+                        }
+                        run(j, st, trigger, d.getKey(), false);
+                    }
+                } finally {
+                    if ("waiting".equals(st.status) && st.beforeWaiting != null) {
+                        st.status = st.beforeWaiting;          // every date was fresh: nothing ran
+                    }
+                    st.running.set(false);
+                }
+            });
+        }, props.loadDelay().toMillis(), TimeUnit.MILLISECONDS);
     }
 
     // ---- what the page shows -----------------------------------------------------------------------------------------

@@ -147,7 +147,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         String root = ctx.setting("root", "").replaceAll("/+$", "");
         String domain = ctx.setting("domain", "");
         this.problems = new TableProblems(sourceName, kind -> root.isBlank() || !ctx.setting("uri", "").isBlank() ? null
-                : root + (domain.isBlank() ? "" : "/" + domain) + "/" + kind);
+                : root + (domain.isBlank() ? "" : "/" + domain) + "/" + kind, relocation(ctx.setting("relocate", "")));
         if (!ctx.setting("relocate", "").isBlank() && lake.engine() == IcebergEngine.LIBRARY) {
             relocateIgnored = "relocate is read by engine: native only; engine: library ignores it";
             java.lang.System.getLogger(IcebergSourcePlugin.class.getName()).log(java.lang.System.Logger.Level.WARNING, "{0}: {1}",
@@ -186,6 +186,14 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         long every = Long.parseLong(ctx.setting("refresh-seconds", "10"));
         // the scheduler's tasks must be short: the refresh (metadata reads, an id map) runs on a virtual thread
         refreshTask = ctx.scheduler().scheduleWithFixedDelay(() -> loaders.execute(this::refresh), every, every, TimeUnit.SECONDS);
+    }
+
+    /** The {@code relocate} pairs the native engine reads through (the library engine ignores them: none). */
+    private com.ash.drishti.iceberg.io.Relocation relocation(String spec) {
+        if (lake.engine() != IcebergEngine.NATIVE) {
+            return com.ash.drishti.iceberg.io.Relocation.none();
+        }
+        return com.ash.drishti.iceberg.io.Relocation.parse(spec);   // read already by the catalog: a pair that cannot be read failed the start there
     }
 
     private static long mb(SourceContext ctx, String key, String fallback) {
@@ -371,14 +379,14 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             problems.ok(kind);
             return v;
         } catch (QuietFailure q) {
-            problems.failed(kind, q.getCause());
-            if (q.getCause() instanceof RuntimeException re) {
+            Throwable given = problems.failed(kind, q.getCause());
+            if (given instanceof RuntimeException re) {
                 throw re;
             }
-            if (q.getCause() instanceof Error err) {
+            if (given instanceof Error err) {
                 throw err;
             }
-            throw new CompletionException(q.getCause());
+            throw new CompletionException(given);
         }
     }
 

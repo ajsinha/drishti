@@ -347,6 +347,17 @@ Also listed in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiloads--data-l
 | `late` | clears the late-data flag of this kind and date, if there was one | present only when a flag was cleared |
 | `notices` | one inbox row and a bell each for the people the pack names, and an email when `notify.email` is on | `ok`: `N people told`; `skipped`: nobody with those roles may open the kind |
 
+After the steps, the **BI layers** that read the kind are brought up to date for the business date. A table whose stored partition for
+the date was built from the data its connector holds now (the connector can say its data version: Delta, Iceberg and the others with
+`dataVersion`) is left alone, so a signal that repeats a load changes nothing. Otherwise the date's partition is invalidated (its metadata
+removed; a build writes a new file and a page reading the old one finishes on it) and, when a page has read that date, rebuilt in the
+background (a date nobody has read is built when a page asks for it, not by every signal of a backfill): one rebuild
+running per table and at most one waiting per date, two tables' rebuilds at once in the whole server, and a waiting one runs only if the
+data changed since the one before it. A partition is built by one build at a time (on demand by a page, in the background, or as a
+table's latest), and an invalidation never deletes a build's files. A dataset that refreshes `after-load` gets one refresh running and one
+waiting with every signalled date, each date once, and skips a date whose layers hold the data held now. So a burst of thousands of
+signals for the same data (QA3B-07) reads each date at most once more and the server settles when the burst ends.
+
 The notice text is the `summary`: `trade for 2026-10-06 loaded: 48,213 rows, 12 rejected; 3 alerts fired` (a reload says `reloaded`; a
 not-found says `; NOT FOUND in the data`). A notice holds only counts and names, never a data value, and a reader sees it only while their
 roles open the kind. Opening it goes to the Data loads page for administrators.

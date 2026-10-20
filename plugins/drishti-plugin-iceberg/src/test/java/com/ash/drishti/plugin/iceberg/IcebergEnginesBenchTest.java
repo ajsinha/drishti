@@ -55,7 +55,7 @@ class IcebergEnginesBenchTest {
     static Result run(String engine, Path jsonl, Path dir) throws Exception {
         Path root = dir.resolve(engine);
         long t0 = System.nanoTime();
-        IcebergLoader.main(new String[] {jsonl.toString(), root.toString(), "--engine", engine, "--spill-dir", dir.resolve("spill-" + engine).toString(),
+        IcebergLoader.load(new String[] {jsonl.toString(), root.toString(), "--engine", engine, "--spill-dir", dir.resolve("spill-" + engine).toString(),
             "--file-rows", "250000", "--threads", "3"});
         double load = (System.nanoTime() - t0) / 1e9;
         Map<String, String> s = new HashMap<>(Map.of("root", root.toString(), "domain", "trading", "engine", engine, "index.days", "1",

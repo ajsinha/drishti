@@ -68,7 +68,9 @@ fi
 v=$(java -XX:-UsePerfData -XshowSettings:properties -version 2>&1 | sed -n 's/.*java.specification.version = //p')
 if [ "${v:-21}" -ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set --; fi
 # -XX:-UsePerfData: no hsperfdata file in /tmp (the root is read-only); crash files and heap dumps go to EFS
-exec java "$@" -Xmx"${DRISHTI_HEAP:-8g}" -XX:+UseZGC -XX:-UsePerfData \
+# native memory (PERFORMANCE.md, Resident memory): two glibc malloc arenas, direct buffers capped, freed native memory given back
+export MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX:-2}"
+exec java "$@" -Xmx"${DRISHTI_HEAP:-8g}" -XX:+UseZGC -XX:-UsePerfData -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 \
   -Djava.io.tmpdir="$TMPDIR" -Duser.home="$HOME" \
   -XX:ErrorFile="$D/data/logs/hs_err_pid%p.log" -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath="$D/data/logs" \
   -jar "$D/app.jar"

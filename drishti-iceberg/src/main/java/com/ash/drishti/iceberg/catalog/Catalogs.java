@@ -38,7 +38,7 @@ import java.util.Map;
  * <p>Object storage: {@code s3.endpoint}, {@code s3.access-key}, {@code s3.secret-key}, {@code s3.region},
  * {@code s3.path-style}, {@code s3.read-block-kb}, TLS ({@code tls.*}) and proxy ({@code proxy.*}) as for Delta.
  * {@code relocate: <from> -> <to>; …} reads a table copied from one place to another (its metadata still names the
- * old one).
+ * old one); each side is a plain folder ({@code /data/ice1}, {@code C:\lake}) or a URI ({@code file:/data/ice1}, {@code s3://bucket/wh}).
  */
 public final class Catalogs {
 
@@ -78,15 +78,11 @@ public final class Catalogs {
         return new PathCatalog(d.isEmpty() ? base : base + "/" + d, io);
     }
 
-    /** {@code from -> to; from2 -> to2}. */
-    static Map<String, String> relocate(String spec) {
-        Map<String, String> out = new LinkedHashMap<>();
-        for (String pair : spec.split(";")) {
-            int arrow = pair.indexOf("->");
-            if (arrow > 0) {
-                out.put(pair.substring(0, arrow).trim(), pair.substring(arrow + 2).trim());
-            }
-        }
-        return out;
+    /**
+     * {@code from -> to; from2 -> to2}, each side a plain folder or a URI ({@link com.ash.drishti.iceberg.io.Relocation}); a pair that cannot be
+     * read fails the start, naming it (QA3B-04: it was ignored without a word).
+     */
+    static com.ash.drishti.iceberg.io.Relocation relocate(String spec) {
+        return com.ash.drishti.iceberg.io.Relocation.parse(spec);
     }
 }

@@ -647,11 +647,14 @@ class QueryEngineTest {
             s.forEach(p -> names.add(p.getFileName().toString()));
         }
         assertThat(names).containsExactlyInAnyOrder("date=2026-10-08", "date=2026-10-09");
-        assertThat(dir.resolve("date=2026-10-09").resolve("part.parquet")).exists();
         assertThat(dir.resolve("date=2026-10-09").resolve("meta.json")).exists();
+        // the file the metadata names: a build writes a file of its own, never over the one a query reads (QA3B-07)
+        String file = json.readTree(Files.readString(dir.resolve("date=2026-10-09").resolve("meta.json"))).path("file").asText();
+        assertThat(file).matches("part-[0-9a-z]+-[0-9a-f]{8}\\.parquet");
+        assertThat(dir.resolve("date=2026-10-09").resolve(file)).exists();
         AnalyticEngine engine = new DuckDbEngine(QueryProperties.defaults(store.toString()));
         AnalyticEngine.Answer a = engine.query("SELECT typeof(\"notional\") AS n, typeof(\"tradeDate\") AS d, typeof(\"businessDate\") AS b FROM read_parquet('"
-                + dir.resolve("date=2026-10-09").resolve("part.parquet") + "') LIMIT 1", List.of(), 1, java.time.Duration.ofSeconds(10));
+                + dir.resolve("date=2026-10-09").resolve(file) + "') LIMIT 1", List.of(), 1, java.time.Duration.ofSeconds(10));
         assertThat(a.columns().get(0).values()[0]).isEqualTo("DOUBLE");
         assertThat(a.columns().get(1).values()[0]).isEqualTo("DATE");
         assertThat(a.columns().get(2).values()[0]).isEqualTo("DATE");

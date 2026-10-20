@@ -29,6 +29,7 @@ services:
       DRISHTI_SEED_USERNAME: ${DRISHTI_ADMIN_USER:?set DRISHTI_ADMIN_USER}
       DRISHTI_SEED_PASSWORD: ${DRISHTI_ADMIN_PASSWORD:?set DRISHTI_ADMIN_PASSWORD}
       DRISHTI_METRICS_TOKEN: ${DRISHTI_METRICS_TOKEN:-}      # for a Prometheus scrape; empty: only an admin token reads /actuator
+      MALLOC_ARENA_MAX: "2"                   # glibc: two malloc arenas (the image's JVM flags cap direct buffers and trim native memory)
     volumes:
       - ../../sutras:/opt/drishti/sutras:ro      # optional site Sutras; packs ship inside the image
       - ../../data/feeds:/opt/drishti/data/feeds:ro

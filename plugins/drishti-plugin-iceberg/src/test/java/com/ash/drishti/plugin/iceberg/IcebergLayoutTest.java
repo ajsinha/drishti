@@ -116,7 +116,7 @@ class IcebergLayoutTest {
             "--threads", "3", "--spill-dir", root.resolve("spill").toString()));
         args.addAll(List.of(options));
         args.addAll(List.of("--engine", writeEngine()));
-        IcebergLoader.main(args.toArray(new String[0]));
+        IcebergLoader.load(args.toArray(new String[0]));
     }
 
     @BeforeEach

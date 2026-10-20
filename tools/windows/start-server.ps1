@@ -131,7 +131,8 @@ if ($Iceberg) {
 # unpack their native libraries there, and the server removes stale copies at start; java.io.tmpdir only moves on the command line
 $tmpDir = if ($env:DRISHTI_TMP_DIR) { $env:DRISHTI_TMP_DIR } elseif ($env:DRISHTI_DATA_DIR) { Join-Path $env:DRISHTI_DATA_DIR 'tmp\server' } else { Join-Path $root 'data\tmp\server' }
 New-Item -ItemType Directory -Force -Path $tmpDir | Out-Null
-$javaArgs = @("-Djava.io.tmpdir=$tmpDir", "-Xmx$Heap", '-jar', $Jar)
+# native memory (PERFORMANCE.md, Resident memory): direct buffers capped, freed native memory given back (MALLOC_ARENA_MAX is glibc's: not here)
+$javaArgs = @("-Djava.io.tmpdir=$tmpDir", "-Xmx$Heap", '-XX:MaxDirectMemorySize=256m', '-XX:TrimNativeHeapInterval=60000', '-jar', $Jar)
 if ($major -ge 25) { $javaArgs = @('-XX:+UseCompactObjectHeaders') + $javaArgs }
 Write-Host "Drishti server: $Jar on port $Port, Delta engine $Engine, lake $LakeRoot, packs $(if ($Packs) { $Packs } else { '(default)' }), heap $Heap$(if ($DemoLakes) { ', offline demo on the lakes (sign in as drishti-dev-admin)' })"
 

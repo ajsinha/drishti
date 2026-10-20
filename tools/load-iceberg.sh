@@ -53,11 +53,16 @@ done
 uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$DATA/banking.jsonl"
 ./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-iceberg -am
 CP="plugins/drishti-plugin-iceberg/target/classes:$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-iceberg -Dmdep.outputFile=/dev/stdout)"
-{
+# a failed load ends with the loader's one line (which bucket, which endpoint, what to check: QA3B-12), never a stack trace
+if ! {
   cat "$DATA/banking.jsonl"
   if [[ -n "$TRADES" ]]; then
     # the bulk book straight from the generator: no file of gigabytes in between
     uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl -
   fi
-} | "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -cp "$CP" com.ash.drishti.plugin.iceberg.IcebergLoader - "$ROOT" "${OPTS[@]}"
+} | "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -cp "$CP" com.ash.drishti.plugin.iceberg.IcebergLoader - "$ROOT" "${OPTS[@]}"; then
+  rm -f "$DATA/banking.jsonl"
+  echo "load-iceberg: the load did not finish: see the line above" >&2
+  exit 1
+fi
 rm -f "$DATA/banking.jsonl"

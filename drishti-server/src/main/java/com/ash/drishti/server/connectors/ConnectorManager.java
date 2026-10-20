@@ -548,8 +548,9 @@ public final class ConnectorManager {
 
     /**
      * What the badge says, so no screen shows "running" for a connector that is down or serving nothing: {level, label} where the level is
-     * ok, warn, down or off. A connector that runs but reports DOWN (or is being retried) is "down, retrying"; one whose health carries a
-     * warning (unreadable lines, nothing served for the day) is "running, with a warning".
+     * ok, warn, down or off. A connector that runs but reports DOWN (or is being retried) is "down, retrying"; one that reports DEGRADED
+     * (some of its tables cannot be read) is "degraded"; one whose health carries a warning (unreadable lines, nothing served for the day)
+     * is "running, with a warning".
      */
     /** The badge of an internet connector switched off whose kinds other connectors serve ({@code servedBy}): offline mode in all but name. */
     static final String SERVED_FROM_SNAPSHOT = "off (served from the snapshot)";
@@ -577,6 +578,10 @@ public final class ConnectorManager {
         }
         if (health != null && health.startsWith("DOWN") || retrying) {
             return new String[] {"down", retrying ? "down, retrying" : "down"};
+        }
+        if (health != null && health.startsWith("DEGRADED")) {
+            // it serves, but some of its data cannot be read (an Iceberg table moved after it was written): never "running" (QA3B-03)
+            return new String[] {"warn", "degraded"};
         }
         if (health != null && (health.contains("unreadable") || health.contains("0 rows served") || health.contains("duplicate"))) {
             return new String[] {"warn", "running, with a warning"};

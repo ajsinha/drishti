@@ -30,6 +30,9 @@ class ConnectorBadgeTest {
         assertThat(ConnectorManager.shown("RUNNING", "UP (2 unreadable lines in a.jsonl (line 1: no id))", false)).containsExactly("warn", "running, with a warning");
         assertThat(ConnectorManager.shown("RUNNING", "UP (0 rows served for 2026-10-12: 'note' holds 2099-01-05, none on or before it)", false))
                 .containsExactly("warn", "running, with a warning");
+        // QA3B-03: a connector some of whose tables cannot be read is never "running"
+        assertThat(ConnectorManager.shown("RUNNING", "DEGRADED: cannot read credit-limit: its metadata names files under /a/ice1/credit/credit-limit", false))
+                .containsExactly("warn", "degraded");
     }
 
     @Test

@@ -52,6 +52,7 @@ input=""
 for a in "$@"; do case "$a" in *Loader) seen=1 ;; *) if [[ -n "$seen" && -z "$input" ]]; then input="$a"; fi ;; esac; done
 if [[ "$input" == "-" ]]; then n=$(wc -l); else n=$(wc -l < "$input"); fi
 echo "loader $n" >> "$CALLS"
+if [[ -n "$LOADER_FAILS" ]]; then echo "iceberg: the bucket 'warehouse' does not exist at http://localhost:9000" >&2; exit 1; fi
 """
 
 
@@ -78,6 +79,28 @@ class LoadScripts(unittest.TestCase):
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertFalse((tmp / "data" / "banking.jsonl").exists(), "the input file is removed after the load")
             return calls.read_text().split("\n")[:-1]
+
+    def test_a_failed_iceberg_load_ends_with_the_loaders_line_and_removes_its_input(self):
+        """QA3B-12: the loader's one line, then the script's, status 1, the input removed; no stack trace, no PowerShell error record."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            (tmp / "tools").mkdir()
+            shutil.copy(ROOT / "tools" / "load-iceberg.sh", tmp / "tools" / "load-iceberg.sh")
+            _exe(tmp / "mvnw", MVNW)
+            _exe(tmp / "bin" / "uv", UV)
+            _exe(tmp / "jdk" / "bin" / "java", JAVA)
+            env = {**os.environ, "PATH": f"{tmp / 'bin'}:{os.environ['PATH']}", "JAVA_HOME": str(tmp / "jdk"), "CALLS": str(tmp / "calls.txt"),
+                   "DRISHTI_DATA_DIR": str(tmp / "data"), "LOADER_FAILS": "1"}
+            env.pop("DRISHTI_TMP_DIR", None)
+            r = subprocess.run(["bash", str(tmp / "tools" / "load-iceberg.sh")], cwd=tmp, env=env, capture_output=True, text=True, timeout=60)
+            self.assertEqual(r.returncode, 1, r.stderr)
+            self.assertEqual(r.stderr.strip().splitlines(), ["iceberg: the bucket 'warehouse' does not exist at http://localhost:9000",
+                                                              "load-iceberg: the load did not finish: see the line above"])
+            self.assertFalse((tmp / "data" / "banking.jsonl").exists())
+        ps1 = (ROOT / "tools" / "windows" / "load-iceberg.ps1").read_text()
+        after = ps1[ps1.index("& $java @jvm"):]
+        self.assertNotIn("throw", after.split("Write-Host")[0], "a failed load is the loader's line, not a PowerShell error record")
+        self.assertIn("exit $code", after)
 
     def test_iceberg_loads_the_samples_and_the_book_once(self):
         self.assertEqual(self.run_script("load-iceberg.sh", ["--trades", "3", "--days", "1"]), ["loader 5"])

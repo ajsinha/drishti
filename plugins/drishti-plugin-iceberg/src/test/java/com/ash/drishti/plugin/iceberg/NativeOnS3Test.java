@@ -130,7 +130,7 @@ class NativeOnS3Test {
         for (String k : List.of("s3.endpoint", "s3.access-key", "s3.secret-key", "s3.region")) {
             args.addAll(List.of("--set", k + "=" + s.get(k)));
         }
-        IcebergLoader.main(args.toArray(new String[0]));
+        IcebergLoader.load(args.toArray(new String[0]));
         IcebergSourcePlugin p = new IcebergSourcePlugin();
         Map<String, String> read = new HashMap<>(s);
         read.put("layout.trade.columns", "mtm");
