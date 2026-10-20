@@ -24,16 +24,16 @@ drishti-stack/status.sh      # the processes and ports, the members, the console
 drishti-stack/stop.sh        # stop everything start.sh started (by process id, never by name)
 ```
 
-Open the console at <http://127.0.0.1:17480> and go to **Admin → Net**: the three members are alive.
+Open the console at `http://<this machine's address>:17480` (start.sh prints it) and go to **Admin → Net**: the three members are alive.
 
 ## What runs where
 
 | Process | Address | What it serves | Its data |
 |---|---|---|---|
-| `drishti-main` | <http://127.0.0.1:18480> | your own stack: all seven packs, the demo lakes, live news | the repository's `data/` and `config/connectors/` (it runs in the repository, as from the IDE) |
-| `drishti-b` | <http://127.0.0.1:18791> | synthetic ENDUR and CALYPSO trades (ids `10000000`+, `CLY-30000000`+), pack `trading` | `data/stack/nodes/drishti-b/`, lake `data/stack/lakes/shared/` |
-| `drishti-c` | <http://127.0.0.1:18792> | synthetic MUREX trades (`MX-50000000`+), packs `trading`, `counterparty-risk`, `market-risk` | `data/stack/nodes/drishti-c/`, lake `data/stack/lakes/murex/` |
-| console | <http://127.0.0.1:17480> | the console, given `drishti-main` alone; it learns `drishti-b` and `drishti-c` and fails over to them | the repository's `data/console/` |
+| `drishti-main` | `http://<this machine's address>:18480` (start.sh prints it) | your own stack: all seven packs, the demo lakes, live news | the repository's `data/` and `config/connectors/` (it runs in the repository, as from the IDE) |
+| `drishti-b` | `http://<this machine's address>:18791` (start.sh prints it) | synthetic ENDUR and CALYPSO trades (ids `10000000`+, `CLY-30000000`+), pack `trading` | `data/stack/nodes/drishti-b/`, lake `data/stack/lakes/shared/` |
+| `drishti-c` | `http://<this machine's address>:18792` (start.sh prints it) | synthetic MUREX trades (`MX-50000000`+), packs `trading`, `counterparty-risk`, `market-risk` | `data/stack/nodes/drishti-c/`, lake `data/stack/lakes/murex/` |
+| console | `http://<this machine's address>:17480` (start.sh prints it) | the console, given `drishti-main` alone; it learns `drishti-b` and `drishti-c` and fails over to them | the repository's `data/console/` |
 
 **The nodes advertise this machine's real address, never 127.0.0.1** (members never advertise localhost, a loopback or a wildcard address:
 [NET.md](../docs/admin/NET.md#2-a-cluster-of-three)). `start.sh` finds it (the default route's interface, never a docker bridge) and gives

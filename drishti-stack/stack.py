@@ -286,7 +286,7 @@ def start_node(stack: dict, node: dict, keys: dict, jar: Path, pids: dict) -> bo
     if not wait_up(f"http://127.0.0.1:{port}/actuator/health", 300, proc):
         say(f"{name}: did not come up: see {(LOGS / (name + '.log')).relative_to(ROOT)}")
         return False
-    say(f"{name}: up on http://127.0.0.1:{port}")
+    say(f"{name}: up on http://{stack_host(stack)}:{port}")
     return True
 
 
@@ -314,7 +314,7 @@ def start_console(stack: dict, keys: dict, pids: dict) -> bool:
     if not wait_up(f"http://127.0.0.1:{port}/healthz", 90, proc):
         say(f"console: did not come up: see {(LOGS / 'console.log').relative_to(ROOT)}")
         return False
-    say(f"console: up on http://127.0.0.1:{port} (given {env['DRISHTI_BACKEND_URLS']})")
+    say(f"console: up on http://{host}:{port} (given {env['DRISHTI_BACKEND_URLS']})")
     return True
 
 
