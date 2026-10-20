@@ -33,6 +33,9 @@ tutorial 21, [USER_GUIDE](docs/guides/USER_GUIDE.md#history-an-entity-over-time)
 - **Also:** `drishti.py history KIND ID` and the Python client's `history()`; `GET /api/v1/history/{kind}/{id}`; tutorial 21;
   tutorial 20 completed; the Windows QA guide's history section.
 - **Not in 2.6.5:** history as a BI data source (2.7.0); the iceberg-external fast path (the default path serves it).
+- **Tested:** the drill passed Java 21, Java 25 and the tools; the console stage's failures were test drift (a stale element sheet,
+  the tutorial count word, TOOLS.md missing `history` and `bi statement`), fixed and re-run green, and browser tests that passed
+  on their re-run under load (`test_bi_python_browser`, `test_controls_browser`, carried to the adversarial QA).
 
 # Drishti 2.6.0 — release notes
 

@@ -53,7 +53,7 @@ _DOC_CATEGORY = {"connectors": "data", "admin": "operate", "guides": "use", "arc
 
 
 _WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
-          "seventeen", "eighteen", "nineteen", "twenty"]
+          "seventeen", "eighteen", "nineteen", "twenty", "twenty-one", "twenty-two", "twenty-three", "twenty-four", "twenty-five"]
 
 
 def tutorial_count_word(docs_dir: Path) -> str:

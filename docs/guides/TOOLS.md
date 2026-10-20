@@ -106,8 +106,9 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `design` | `design list`, `design create`, `design get`, `design save`, `design check`, `design propose`, `design approve`, `design reject`, `design proposals`, `design export`, `design import`, `design bind`, `design autodesign`, `design delete` | [5.6](#56-design) |
 | `docs` | `docs shots` | [9](#9-developer-tools) |
 | `doctor` | `drishti.py doctor` | [5.4](#54-server-and-doctor) |
-| `bi` | `bi workspace`, `bi catalogue`, `bi expr`, `bi migrate`, `bi sql`, `bi model`, `bi mq`, `bi item`, `bi dataset`, `bi transform` | [5.7](#57-bi) |
+| `bi` | `bi workspace`, `bi catalogue`, `bi expr`, `bi migrate`, `bi sql`, `bi model`, `bi mq`, `bi item`, `bi dataset`, `bi transform`, `bi statement` | [5.7](#57-bi) |
 | `view` | `view get`, `view explain` | [5.8](#58-view-and-completion) |
+| `history` | `drishti.py history KIND ID` (`--days`, `--range`, `--from`/`--to`, `--diff`, `--changes-only`, `--csv`, `--json`): one entity over business days, as the console's history page shows it | [CLI_GUIDE.md](CLI_GUIDE.md) |
 | `completion` | `drishti.py completion bash` (also `zsh`, `powershell`) | [5.8](#58-view-and-completion) |
 
 The group modules live beside it and are not run on their own: `tools/authoring.py` (`data profile`, `pack regenerate|diff|catalogue|i18n`),
@@ -115,7 +116,7 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 `tools/packform.py` (the `form:` section a pack check reads), `tools/schemapack.py` (`--schema`), `tools/sutragen.py` (`sutra gen`),
 `tools/ingest_jsonl.py` and `tools/ingest_watch.py` (`data ingest`), `tools/packbundle.py` (`pack bundle|verify|deploy|rollback`),
 `tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/servernet.py` (`net`), `tools/hostaddr.py` (this machine's real address for Drishti*net members), `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
-`tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
+`tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, `tools/bistatement.py` (`bi statement preview|file`), `tools/historycmd.py` (`history`), and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
 `tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/demo.py` (`lake demo`) and `tools/lake/laketables.py` (the tables `lake status` lists).
 
 ## 4. lake build: a large JSON export into a Delta lake
