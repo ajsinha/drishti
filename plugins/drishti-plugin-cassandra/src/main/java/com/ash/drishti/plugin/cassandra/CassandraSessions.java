@@ -115,6 +115,8 @@ final class CassandraSessions {
     static DriverConfigLoader config(Map<String, String> settings, Plan plan) {
         Duration connect = Duration.ofMillis(Long.parseLong(settings.getOrDefault("connect-timeout-ms", "5000")));
         ProgrammaticDriverConfigLoaderBuilder c = DriverConfigLoader.programmaticBuilder()
+                // the driver's log lines and threads carry the connector's name ([trade-cass] Error connecting …), not s0, s1, …
+                .withString(DefaultDriverOption.SESSION_NAME, settings.getOrDefault("source-name", "cassandra").replaceAll("[^A-Za-z0-9._-]", "_"))
                 .withDuration(DefaultDriverOption.REQUEST_TIMEOUT, plan.requestTimeout())
                 .withString(DefaultDriverOption.REQUEST_CONSISTENCY, plan.consistency())
                 .withInt(DefaultDriverOption.REQUEST_PAGE_SIZE, Integer.parseInt(settings.getOrDefault("page-size", "5000")))

@@ -60,10 +60,10 @@ class CassandraConnectFailureTest {
         return ((AtomicInteger) f.get(null)).get();
     }
 
-    /** Threads of driver sessions ({@code s3-admin-0}, {@code s3-io-1}, {@code s3-timer-0}). */
+    /** Threads of this test's driver sessions, named after the connector ({@code nocass-3-admin-0}, {@code nocass-3-io-1}). */
     private static long driverThreads() {
         return Thread.getAllStackTraces().keySet().stream().filter(Thread::isAlive)
-                .filter(t -> t.getName().matches("s\\d+-(admin|io|timer)-\\d+")).count();
+                .filter(t -> t.getName().matches("nocass-\\d+-(admin|io|timer)-\\d+")).count();
     }
 
     private static int closedPort() throws Exception {
@@ -93,7 +93,7 @@ class CassandraConnectFailureTest {
             assertThat(sessions()).as("one session while it runs, never one per restart").isLessThanOrEqualTo(before + 1);
             p.close();                                        // stopped, or its file deleted
         }
-        long deadline = System.currentTimeMillis() + 15_000;
+        long deadline = System.currentTimeMillis() + 40_000;  // the driver's event loops end after their quiet period (seconds; more on a busy machine)
         while ((sessions() > before || driverThreads() > 0) && System.currentTimeMillis() < deadline) {
             Thread.sleep(100);
         }
