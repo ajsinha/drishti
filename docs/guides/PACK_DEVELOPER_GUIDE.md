@@ -826,6 +826,7 @@ data from `config/packs/counterparty-risk/pack.yaml`. Every key here is read eit
 | `columns` | server | `ticket: [SUBJECT, STATUS, PRIORITY]` | Key fields in pick lists and searches | [columns](#columns-the-key-fields-of-a-pick-list) |
 | `pivot` | server | `trade: { rows: [PRODUCT_TYPE], columns: [SOURCE_SYSTEM] }` | A Pivot tab on the kind's search results and pick lists | [pivot](#pivot-a-pivot-tab-on-search-results) |
 | `form` | server | `trade: [ { path: QUANTITY, type: amount } ]` | The search form of each kind (`FORM <pack>`): its fields, their types and operators | [form](#form-the-search-form-of-a-kind) |
+| `history` | server | `equity: { chart: [PRICE] }` | How a kind looks over time (`EQ EQ-CSCA 3M`): its columns, parts, chart fields and limits; never needed, any dated kind has a history | [history](#history-a-kind-over-time) |
 | `roles` | server | `support: { kinds: [ticket, agent] }` | Roles this pack adds | [Roles](#roles-and-field-masks) |
 | `python` | server | `python: { enabled: true }` | Calc (Python in the browser, `Alt+C`) on this pack's kinds, and starter snippets (also `python/*.py`) | [Calc](#calc-python-snippets) |
 | `connectors` | server | `[helpdesk-store]` (names), or `helpdesk-store: { plugin: file, … }` (a mapping: the pack's templates) | The connectors the pack reads through. A list names site connectors; a mapping names them **and** suggests each one's definition | [below](#connectors-the-pack-names-them-the-site-owns-them) |
@@ -1097,6 +1098,44 @@ that names the kind and field (`pack.yaml form.trade.fields[2] (QUANTITY): type 
 `columns` and `form_overrides` for the packbuild generators (a kind's form is its id and its pick-list columns, typed by name). `pack new`,
 `pack make` and *New pack* write a `form:` from the sample documents or schemas. A change proposed from the workbench's Form tab is kept on
 the server, once approved, in front of the pack's own `form:` until the pack carries it ([Screen designer, The Form tab](SCREEN_DESIGNER.md#the-form-tab)).
+
+### `history`: a kind over time
+
+`TRD 1000015 30 <GO>` shows the trade over the last 30 business days it has data; `EQ EQ-CSCA 3M` shows the equity's last three months
+as a chart with its high, low and change ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)). **Any kind read from a dated
+store has a history without this key**: a table of its top-level fields (the kind's `columns` first, then every other top-level
+scalar), its top-level lists and objects shown as counts, the cells that changed from the day before marked. `history:` only shapes
+it, per kind, as `form:` does. From the shipped packs:
+
+```yaml
+history:
+  trade:                                    # config/packs/trading/pack.yaml
+    exclude: [_meta]                        # never shown
+    ignore-changes: [SOURCE_UPDATE_TIME, INPUT_DATE]   # shown, but a change here is not "a change" (changes only, DIFF)
+    parts: [LEGS, EVENTS]                   # top-level lists shown as counts (default: every list or object)
+    default-days: 30                        # the range when none is named (at most max-days)
+  counterparty-trades: {enabled: false}     # a derived kind: no history (DRS-1012)
+  equity:                                   # config/packs/market-data/pack.yaml
+    chart: [{path: PRICE, format: price2}]  # the market shape: a chart and the headline numbers (at most 4 fields)
+    columns: [PRICE, {path: CHANGE_1D, format: pct2}, {path: MARKET_CAP, format: compact}, BETA, NAME, EXCHANGE, CURRENCY]
+    series: {path: HISTORY, date: DATE, value: CLOSE}   # used when no source keeps daily documents
+```
+
+| Key | Default | Rule |
+|---|---|---|
+| `enabled` | `true` | `false`: the kind has no history (`DRS-1012`) |
+| `shape` | `market` when `chart` is set, else `document` | |
+| `columns` | the kind's `columns`, then every top-level scalar | a top-level path, or `{path \| expr, label, format}` (`expr` is Rachana-EL: `first($.LEGS).NOTIONAL`) |
+| `exclude`, `ignore-changes` | none | lists of paths |
+| `parts` | every top-level list or object | lists of paths |
+| `chart` | none | numeric fields, at most 4; a chart field is always a column |
+| `headline` | the first `chart` field | must be one of `chart`: the field the last, change, high, low, range and average are taken on |
+| `series` | none | `{path, date, value \| values}`: a list inside the newest document with a date per item |
+| `default-days` | `drishti.history.default-days` (30) | 1..`max-days` |
+| `max-days` | `drishti.history.max-days` (366) | can only lower the server's |
+
+Unknown keys are warnings; a wrong value is an error (`DRS-2061`) that `sutra lint <pack-dir>` and the deploy check report, while the
+running server logs it and keeps the kind's default history. Every day's row is masked exactly as the kind's view is.
 
 ### Keys for packs that inherit and read real data
 

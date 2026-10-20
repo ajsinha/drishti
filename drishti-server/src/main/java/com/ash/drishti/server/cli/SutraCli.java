@@ -194,8 +194,43 @@ public final class SutraCli {
             }
             bad |= helpWarnings(u, s.sutras().check(u.text()), parsed, a, cases);
         }
+        bad |= historyBlocks(a.paths(), cases);
         return bad ? PROBLEMS : OK;
     }
+
+    /** The {@code history:} block of each pack folder linted (DRS-2061): an error fails the run, a warning is printed. */
+    private boolean historyBlocks(List<Path> paths, List<Case> cases) throws IOException {
+        boolean bad = false;
+        for (Path p : paths) {
+            Path manifest = p.resolve("pack.yaml");
+            if (!Files.isRegularFile(manifest)) {
+                continue;
+            }
+            Object raw = new org.yaml.snakeyaml.Yaml().load(Files.readString(manifest));
+            if (!(raw instanceof java.util.Map<?, ?> m)) {
+                continue;
+            }
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, Object> man = (java.util.Map<String, Object>) m;
+            List<String> problems = com.ash.drishti.server.design.HistoryDefinitions.check(man, HISTORY_MAX_DAYS);
+            for (String problem : problems) {
+                boolean error = problem.startsWith("error:");
+                String line = manifest + " " + (error ? "DRS-2061 " : "warning DRS-2061 ") + problem.replaceFirst("^(error|warning): ", "");
+                err.println(line);
+                if (error) {
+                    cases.add(Case.fail(String.valueOf(man.getOrDefault("pack", p.getFileName())), "history", line));
+                    bad = true;
+                }
+            }
+            if (problems.stream().noneMatch(x -> x.startsWith("error:")) && man.containsKey("history")) {
+                out.println("ok      " + manifest + " (history:)");
+            }
+        }
+        return bad;
+    }
+
+    /** The server's default {@code drishti.history.max-days}: the bound a pack's {@code max-days} is checked against offline. */
+    static final int HISTORY_MAX_DAYS = 366;
 
     /** The help warnings (DRS-2045 to 2047) of one Sutra; true when they fail the run (only with {@code --strict}). */
     private boolean helpWarnings(Unit u, Sutra sutra, List<Sutra> run, CliArgs a, List<Case> cases) throws IOException {

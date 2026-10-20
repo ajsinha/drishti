@@ -404,3 +404,12 @@ roles:
     - '*'
     raw: true
     calc: true
+# History queries (TRD 1000015 30, docs/architecture/HISTORY_QUERIES.md section 6): how this pack's kinds look over time.
+# Only the shape: any dated kind has a history without an entry here.
+history:
+  netting-set:
+    columns: [NET_MTM, COLLATERAL, EE_PEAK, PFE_PEAK, LIMIT, UTILISATION, CVA, TRADE_COUNT]
+  credit-limit:
+    columns: [LIMIT, USED, UTILISATION]
+  cva:
+    columns: [CVA, DVA, FVA, KVA, CS01]

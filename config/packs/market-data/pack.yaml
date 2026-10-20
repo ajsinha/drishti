@@ -693,3 +693,40 @@ console:
   help: config/help.yaml
 python:
   enabled: true
+# History queries (TRD 1000015 30, docs/architecture/HISTORY_QUERIES.md section 6): how this pack's kinds look over time.
+# Only the shape: any dated kind has a history without an entry here.
+history:
+  equity:
+    chart: [{path: PRICE, format: price2}]
+    columns: [PRICE, {path: CHANGE_1D, format: pct2}, {path: MARKET_CAP, format: compact}, BETA, NAME, EXCHANGE, CURRENCY]
+    exclude: [OHLC]
+    series: {path: HISTORY, date: DATE, value: CLOSE}       # when no source keeps daily documents
+  equity-index:
+    chart: [{path: LEVEL, format: price2}]
+    columns: [LEVEL, {path: CHANGE_1D, format: pct2}, CONSTITUENT_COUNT]
+    series: {path: HISTORY, date: DATE, value: CLOSE}
+  fx-spot:
+    chart: [{path: MID, format: rate5}]
+    columns: [MID, BID, ASK, {path: CHANGE_1D, format: pct2}]
+    series: {path: HISTORY, date: DATE, value: MID}
+  ir-curve:
+    chart: [TEN_Y, SLOPE_2S_10S]
+    columns: [TEN_Y, SLOPE_2S_10S]
+    parts: [POINTS]
+  credit-curve:
+    chart: [SPREAD_5Y, PD_1Y]
+    columns: [SPREAD_5Y, RECOVERY, PD_1Y]
+    parts: [POINTS]
+  commodity:
+    chart: [{path: FRONT, format: price2}]
+    columns: [FRONT]
+    exclude: [OHLC]
+  bond:
+    chart: [PRICE, YIELD]
+    headline: PRICE
+    columns: [PRICE, YIELD, Z_SPREAD, MOD_DURATION, COUPON]
+    series: {path: HISTORY, date: DATE, value: PRICE}
+  inflation-index:
+    chart: [LATEST, YOY]
+    columns: [LATEST, YOY]
+    parts: [FIXINGS]

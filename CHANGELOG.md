@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **Added: history queries, the shipped packs' `history:` blocks (H13).** trading (trade; the derived kinds off), market-data (equity,
+  equity index, FX spot, IR and credit curves, commodity, bond, inflation index as charts with their headline numbers), counterparty-risk
+  and market-risk (their measures as columns) ([PACKS.md](docs/guides/PACKS.md#history-an-entity-over-time),
+  [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md#history-a-kind-over-time)). `sutra lint <pack-dir>` (and so the deploy
+  check) reports a wrong block as `DRS-2061`. `ShippedHistoryBlocksTest` holds every block clean and naming real sample fields.
 - **Added: history queries, the Delta fast path (H5).** The Delta connector lists an entity's dates from the snapshot's partitions and
   the id maps it already keeps (`days()`), so a history reads only the days that hold the entity ([DELTA_CONNECTOR.md section
   8](docs/connectors/DELTA_CONNECTOR.md#8-seven-years-of-history)).
