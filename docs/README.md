@@ -14,7 +14,7 @@ before the consolidation (for example `/help/quickstart` or `/help/connector-kaf
 ## New here? Read these, in order
 
 1. **[GETTING_STARTED.md](guides/GETTING_STARTED.md)** (*Install and run*): prerequisites, build, start the server and the console, sign-in, Docker, other ways to build, and Windows.
-2. **[tutorials/](tutorials/README.md)**: twenty hands-on tutorials on the shipped demo data, with the exact commands, real output and real screenshots. Start with [your first 15 minutes](tutorials/01-first-15-minutes.md).
+2. **[tutorials/](tutorials/README.md)**: twenty-one hands-on tutorials on the shipped demo data, with the exact commands, real output and real screenshots. Start with [your first 15 minutes](tutorials/01-first-15-minutes.md).
 3. **[USER_GUIDE.md](guides/USER_GUIDE.md)**: every feature of the console, as a reference. **[PACKS.md](guides/PACKS.md)**: which industries are available and how to load them; building your own is [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md).
 
 If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md).
@@ -35,7 +35,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 
 | Folder | What is in it |
 |---|---|
-| [tutorials/](tutorials/README.md) | the twenty hands-on tutorials: a worked example each, on the demo data, with commands, real output and screenshots |
+| [tutorials/](tutorials/README.md) | the twenty-one hands-on tutorials: a worked example each, on the demo data, with commands, real output and screenshots |
 | [guides/](guides/) | install and run, the user guide, business intelligence (Rūpaka), packs and the command line, the Sutra and Rachana guides, panels, clients, API and troubleshooting; `examples/` holds working Sutras |
 | [connectors/](connectors/) | connecting your data: the Connectors reference, the connector files, TLS and proxy, the developer guide, a design document per store (Delta Lake, PostgreSQL, Aerospike, Cassandra, files …) and demo data |
 | [admin/](admin/) | running Drishti: operations, configuration, users and roles, performance, and the runbooks |
@@ -153,6 +153,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Know how many users a server holds, whether memory stays flat over a day, and how to load-test it | [LOAD_AND_MEMORY.md](admin/LOAD_AND_MEMORY.md) |
 | Compare the stores at several sizes, see how each scales, and run the scale benchmark yourself | [SCALE_BENCHMARK.md](admin/SCALE_BENCHMARK.md) |
 | Lay a report out on paper: statements, page-exact PDF and Excel, one per recipient | [STATEMENTS.md](guides/STATEMENTS.md), [tutorial 20](tutorials/20-statements-and-field-parameters.md) |
+| See any entity over time (`TRD 1000279 60`, `EQ EQ-CSCA 3M`): one row per business day, changes only, DIFF | [USER_GUIDE › History](guides/USER_GUIDE.md#history-an-entity-over-time), [tutorial 21](tutorials/21-an-entity-over-time.md), [HISTORY_QUERIES.md](architecture/HISTORY_QUERIES.md) |
 | Choose a theme (ten, three of them the Terminal hues of 2.6.0) | [USER_GUIDE.md › Themes](guides/USER_GUIDE.md#themes) |
 | Serve millions of entities a day for years from Delta Lake | [DELTA_CONNECTOR.md](connectors/DELTA_CONNECTOR.md) |
 | Run the server on Windows, or choose the Delta engine (native or Hadoop) | [GETTING_STARTED.md: Windows](guides/GETTING_STARTED.md#drishti-on-windows), [DELTA_CONNECTOR.md › Engines](connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop) |
@@ -267,7 +268,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [guides/ELEMENTS.md](guides/ELEMENTS.md) | you are embedding Drishti in your own application: a five-minute start, the token exchange (Node, Java, Python), versions, SRI and npm, the element reference, a cookbook, troubleshooting by code |
 | [GENUI.md](architecture/GENUI.md) | you want the design of GenUI (2.8.0, not built): an AI agent composes a screen from governed Sutra fragments with typed slots, Drishti binds it to live data as the viewer and streams it to another application through `<drishti-genui>` |
 | [AI_MANAGEMENT.md](architecture/AI_MANAGEMENT.md) | you want the design of AI management (2.8.0, not built): every AI setting, use and review in the console (providers, features, data protection, MCP tools, usage and cost, golden questions, audit, playground, AI drafts) |
-| [HISTORY_QUERIES.md](architecture/HISTORY_QUERIES.md) | you want the design of history queries (design, release 2.6.5): `TRD 1000015 30 <GO>` shows an entity over its last 30 business days with data; the range grammar, the document and market screens, the pack's `history:` block, `GET /api/v1/history/{kind}/{id}`, the connector SPI and each store's fast path, limits, masks, Drishti\*net, build steps H1 to H14 for two builders, tests |
+| [HISTORY_QUERIES.md](architecture/HISTORY_QUERIES.md) | you want the design of history queries (built in 2.6.5): `TRD 1000015 30 <GO>` shows an entity over its last 30 business days with data; the range grammar, the document and market screens, the pack's `history:` block, `GET /api/v1/history/{kind}/{id}`, the connector SPI and each store's fast path, limits, masks, Drishti\*net, build steps H1 to H14 for two builders, tests |
 | [WRITE_BACK.md](architecture/WRITE_BACK.md) | you want the design of write-back (2.7.0, not built): editing and saving fields on a Sutra page, change requests in a fixed number of ordered lanes (one at a time per record), version checks, four eyes, overlays that flow into the lake, the change log kept 7 years |
 | [DRISHTI_ICEBERG.md](architecture/DRISHTI_ICEBERG.md) | you want the design of drishti-iceberg (built in 2.6.0): Drishti's own Apache Iceberg engine with no Hadoop, so Iceberg runs on Windows; what of the spec it covers, catalogs, reads, commits, interop tests, the two Iceberg connectors |
 | [CASSANDRA_CONNECTOR_DESIGN.md](architecture/CASSANDRA_CONNECTOR_DESIGN.md) | you want the design of the Apache Cassandra connector (built for 2.6.0; [CASSANDRA_CONNECTOR.md](connectors/CASSANDRA_CONNECTOR.md) is the reference): Cassandra, ScyllaDB, Astra, Keyspaces; a partition per day per bucket, generations so a day appears whole, no secondary index, retention, sizing, tests, build plan |
@@ -426,6 +427,7 @@ Each run has a README (what was tested, findings by severity, how each was fixed
 |---|---|
 | [requirements/](requirements/) | you want the four reference mockups the first views reproduced, and the logo and icon |
 | [publications/](publications/) | you want the design-and-evidence presentation (`Drishti-Design-and-Evidence.pptx`, 48 slides, current to 2.6.0 under way: the idea, the product with BI Studio, Python data prep and Drishti\*net, security, the evidence with the 35.7-million-trade run, and the release order to 3.0; each slide's notes name their sources) |
+| [publications/Drishti-AWS-Delta-Lake.pptx](publications/Drishti-AWS-Delta-Lake.pptx) | you want the AWS Delta lake deck (72 slides, with a PDF copy beside it): every section of [AWS_DELTA_LAKE.md](architecture/AWS_DELTA_LAKE.md) as slides: the lake in S3, the flow, why S3 and not EFS, setup steps 0–11 with commands, buckets, the prefix tree, partition keys, columns and keys, file sizes and sorting, loading and safe commits, maintenance and tiers, caches, staying fast past 200 TB, sizing and cost, runbooks, the scripts and the decisions to take |
 
 ## Words you will meet
 

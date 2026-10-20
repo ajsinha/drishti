@@ -119,6 +119,35 @@ class NetFolder(ServerCase):
         self.assertEqual(1, code)
         self.assertIn("loopback or wildcard", out)
 
+    def test_every_spelling_of_loopback_wildcard_link_local_and_bridge_is_refused(self):
+        """QA1-09: the spellings that got through: inet_aton forms, a trailing dot, the IPv6 names, link-local, this machine's bridges and
+        its own host name when it resolves to 127.0.1.1."""
+        import hostaddr
+        import socket
+        bad = ["http://0:18783", "http://localhost.:18783", "http://ip6-localhost:18783", "http://2130706433:18783",
+               "http://0x7f000001:18783", "http://127.1:18783", "http://169.254.1.1:18783"]
+        bad += [f"http://{ip}:18783" for ip in hostaddr.bridge_addresses()]
+        name = socket.gethostname()
+        try:
+            loops = any(info[4][0].startswith("127.") or info[4][0] == "::1" for info in socket.getaddrinfo(name, None))
+        except OSError:
+            loops = False
+        if loops:
+            bad.append(f"http://{name}:18783")
+        for url in bad:
+            code, _, err = self.net("set", "node.advertise-url", url)
+            self.assertEqual(1, code, url)
+            self.assertIn("loopback or wildcard", err)
+            code, _, err = self.net("add-peer", "drishti-a", url)
+            self.assertEqual(1, code, url)
+        self.assertFalse((self.dir / "node.yaml").exists())
+        for host in ("192.0.2.10", "10.0.0.5", "drishti-a.invalid", "2001:db8::1"):
+            self.assertFalse(hostaddr.loopback_or_wildcard(host), host)
+        self.assertEqual("127.0.0.1", str(hostaddr.inet_aton("0x7f000001")))
+        self.assertIsNone(hostaddr.inet_aton("256.1.1.1"))
+        if loops:
+            self.assertIn(f"{name} is 127.", hostaddr.why(name))
+
     def test_members_of_a_running_server(self):
         Fake.routes[("GET", "/api/v1/net/members")] = {"running": True, "self": "n-a", "members": [
             {"nodeId": "n-a", "self": True, "url": "http://127.0.0.1:18783", "state": "alive", "version": "2.5.0", "tags": ["region:emea"], "latencyMs": None, "incarnation": 1},

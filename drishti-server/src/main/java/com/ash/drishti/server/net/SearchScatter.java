@@ -330,10 +330,15 @@ public final class SearchScatter {
                 }
             }
         }
-        return merged.values().stream().limit(Math.max(1, limit)).toList();
+        // the ranges after an id first, as on one node (QA1-05): a peer that holds the entity offers them when this node cannot
+        List<Suggestion> ordered = new ArrayList<>(merged.values().stream().filter(s -> "range".equals(s.type())).toList());
+        merged.values().stream().filter(s -> !"range".equals(s.type())).forEach(ordered::add);
+        return ordered.stream().limit(Math.max(1, limit)).toList();
     }
 
+    /** One row per entity, mnemonic or range: the ranges of one entity (30, 3M, YTD, 30 DIFF) differ by what they complete. */
     private static String key(Suggestion s) {
-        return s.type() + "\u001f" + s.kind() + "\u001f" + s.id() + "\u001f" + s.mnemonic() + "\u001f" + (s.id() == null ? s.complete() : "");
+        return s.type() + "\u001f" + s.kind() + "\u001f" + s.id() + "\u001f" + s.mnemonic() + "\u001f"
+                + (s.id() == null || "range".equals(s.type()) ? s.complete() : "");
     }
 }

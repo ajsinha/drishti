@@ -37,7 +37,10 @@ About 30 minutes.
 The screens and outputs below come from this version's console and `drishti.py`, reading the history contract's two reference answers:
 trade `1000015` over 30 data days and equity `EQ-CSCA` over 3 months
 (`drishti-testkit/src/main/resources/history/`, [HISTORY_QUERIES.md section 8](../architecture/HISTORY_QUERIES.md#8-the-json-contract)).
-Your dates and values are your data's.
+Your dates and values are your data's. Trade `1000015` and its *Trader* column are the reference answer's: on the demo lakes the
+trading pack's `history:` block (step 6) lists no trader column. On the sixty-day demo lakes, the
+trades amended most (ten times each) are ENDUR `1000279` and `1001049`, CALYPSO `CLY-4000509` and MUREX `MX-30001745`: try
+`TRD 1000279 60`. `MX-20000001` is cancelled part-way through the sixty days.
 
 ## What you will learn
 
@@ -284,8 +287,9 @@ it), `max-rows` rows and `timeout` for the whole request.
 | You see | Why | What to do |
 |---|---|---|
 | `DRS-4021` *366 business days at most (asked 500)* | the range is larger than allowed | narrow it with `FROM … TO`, or follow the page's *The last 30 days* link |
-| `DRS-4001` *FROM 2026-10-30 is after TO 2026-10-19* | the dates are the wrong way round | put the earlier date first |
-| `DRS-1013` *no data from … to …* | the entity has no data in the range | the message names its first day with data |
+| `DRS-4022` *FROM 2026-10-30 is after TO 2026-10-19* | the dates are the wrong way round | put the earlier date first |
+| `DRS-4022` *'-5' is not a range: use a number of days (30), a span …* | a range typed after the id that cannot be read (`0`, `-5`, `1.5M`, `3X`, `FROM yesterday`, `DIFF DIFF`, `30 30`, a bare `DIFF`) | type it as the message says; the command line shows the message, never today's view |
+| `DRS-1013` *no data from … to …* | the entity has no data in the range | the message says from when to when it has data (*its days with data run from … to …*) |
 | `DRS-1012` *keeps no daily history here* | the kind's connector holds today's data only, or the pack turned history off | today's view is one link away |
 | *Some days could not be read* | a source did not answer for some days in time (`DRS-1014`) | the rows that were read are shown, and the banner lists the missing days |
 

@@ -183,7 +183,10 @@ public final class HistoryService {
                     + (undated.isEmpty() ? "no connector serves it" : String.join(", ", undated) + " hold" + (undated.size() == 1 ? "s" : "")
                             + " today's data only"));
         }
-        String dataVersion = router.dataVersion(q.kind(), AsOf.LATEST).orElse(null);
+        // the peers' versions too: days a peer holds are read through it, and a load there must change the key (QA1-01)
+        String local = router.dataVersion(q.kind(), AsOf.LATEST).orElse(null);
+        String peers = local == null ? null : router.peerVersion(ref, AsOf.of(w.to())).orElse(null);
+        String dataVersion = local == null || peers == null ? null : peers.isEmpty() ? local : local + "|" + peers;
         List<HistoryDay> days = List.of();
         List<SourceHistory.Failure> failures = List.of();
         String cacheState = "off";
@@ -202,7 +205,7 @@ public final class HistoryService {
                 days = routed.days();
                 failures = routed.failures();
                 cacheState = key == null ? "off" : "miss";
-                if (key != null && failures.isEmpty()) {
+                if (key != null && failures.isEmpty() && !days.isEmpty()) {   // a failure, a partial or an empty answer is never kept
                     cache.put(key, days, limits.cacheMb() * 1024L * 1024L);
                 }
             }
@@ -286,9 +289,17 @@ public final class HistoryService {
 
     /** No row: the reads failed (DRS-1014 or the source's failure), the entity is unknown (DRS-1001), or it has no data then (DRS-1013). */
     private void nothing(EntityRef ref, HistoryWindow w, List<SourceHistory.Failure> failures) {
+        if (!failures.isEmpty() && failures.stream().allMatch(SourceHistory.Failure::unreachable)) {
+            throw new DrishtiException(ErrorCode.NET_PEER_FAILED, "no node that answered holds the history of " + ref + ", and "
+                    + failures.get(0).reason() + "; try again in a moment");
+        }
         if (!failures.isEmpty()) {
             boolean timedOut = failures.stream().allMatch(f -> HistoryReads.TIMED_OUT.equals(f.reason()));
             SourceHistory.Failure f = failures.get(0);
+            if (timedOut && f.source().startsWith("net:")) {                  // a peer: one call for all the days
+                throw new DrishtiException(ErrorCode.HISTORY_TIMEOUT, "the node " + f.source().substring(4) + " did not answer the history of "
+                        + ref + " within " + props.limits().timeout().toSeconds() + " s; try again in a moment");
+            }
             if (timedOut) {
                 throw new DrishtiException(ErrorCode.HISTORY_TIMEOUT, f.source() + " did not answer " + failures.size() + " days of " + ref
                         + " within " + props.limits().timeout().toSeconds() + " s");
@@ -298,11 +309,18 @@ public final class HistoryService {
         try {
             router.fetch(ref, AsOf.LATEST).join();
         } catch (CompletionException e) {
-            if (e.getCause() instanceof DrishtiException de && de.errorCode() == ErrorCode.ENTITY_NOT_FOUND) {
+            if (e.getCause() instanceof DrishtiException de && (de.errorCode() == ErrorCode.ENTITY_NOT_FOUND
+                    || de.errorCode() == ErrorCode.NET_PEER_FAILED)) {
                 throw de;
             }
         }
-        throw new DrishtiException(ErrorCode.HISTORY_NO_DATA, ref + " has no data from " + w.from() + " to " + w.to());
+        // QA1-11: say when it has data, so the page can offer that span
+        String held = router.daysHeld(ref, dates.earliest(), dates.current())
+                .map(d -> d[0].equals(d[1]) ? "; its only day with data is " + d[0] : "; its days with data run from " + d[0] + " to " + d[1])
+                .orElse("");
+        String span = HistoryWindow.DATA_DAYS.equals(w.mode()) ? " in the " + w.dates().size() + " business days to " + w.to()
+                : " from " + w.from() + " to " + w.to();
+        throw new DrishtiException(ErrorCode.HISTORY_NO_DATA, ref + " has no data" + span + held);
     }
 
     private static List<String> missing(HistoryWindow w, LocalDate shownFrom, LocalDate gapsTo, List<HistoryAnswer.Row> rows,
@@ -332,6 +350,11 @@ public final class HistoryService {
             boolean timeout = k.endsWith("|true");
             String source = list.get(0).source();
             List<String> ds = list.stream().map(f -> f.date().toString()).sorted().toList();
+            if (list.get(0).unreachable()) {
+                out.add(new HistoryAnswer.Problem(ErrorCode.NET_PEER_FAILED.code(), source, ds, list.get(0).reason() + ": " + ds.size() + " day"
+                        + (ds.size() == 1 ? "" : "s") + " of the window may be held there"));
+                return;
+            }
             String msg = timeout ? source + " did not answer " + ds.size() + " day" + (ds.size() == 1 ? "" : "s") + " within the budget"
                     : source + " failed reading " + ds.size() + " day" + (ds.size() == 1 ? "" : "s") + ": " + list.get(0).reason();
             out.add(new HistoryAnswer.Problem(timeout ? ErrorCode.HISTORY_TIMEOUT.code() : ErrorCode.SOURCE_FAILED.code(), source, ds, msg));

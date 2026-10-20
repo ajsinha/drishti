@@ -107,8 +107,8 @@ public record HistoryRange(Mode mode, Integer days, String span, LocalDate from,
 
     /**
      * Takes a trailing range (and {@code DIFF}) off a command. Never throws for text that is not a range: it is then simply not
-     * one ({@link Optional#empty()}). A range that is read but cannot hold ({@code TO} before {@code FROM}) fails with
-     * {@link ErrorCode#COMMAND_UNKNOWN}, saying why, rather than becoming a pick list.
+     * one ({@link Optional#empty()}). A range that is read but cannot hold ({@code TO} before {@code FROM}, a date that does not exist)
+     * fails with {@link ErrorCode#HISTORY_BAD_RANGE} ({@code DRS-4022}, as the endpoint), saying why, rather than becoming a pick list.
      *
      * @param text the whole command, {@code <GO>} already removed ({@code TRD 1000015 30 DIFF})
      * @return the command without the range, the range and the {@code DIFF} flag; empty when the text ends with no range, or
@@ -131,7 +131,7 @@ public record HistoryRange(Mode mode, Integer days, String span, LocalDate from,
             LocalDate from = date(w[end - 3]);
             LocalDate to = date(w[end - 1]);
             if (to.isBefore(from)) {
-                throw new DrishtiException(ErrorCode.COMMAND_UNKNOWN, "FROM " + from + " is after TO " + to + ": put the earlier date first");
+                throw new DrishtiException(ErrorCode.HISTORY_BAD_RANGE, "FROM " + from + " is after TO " + to + ": put the earlier date first");
             }
             return split(w, end - 4, between(from, to), diff);
         }
@@ -154,6 +154,110 @@ public record HistoryRange(Mode mode, Integer days, String span, LocalDate from,
         return Optional.empty();
     }
 
+    /**
+     * A command that ends in what reads as a range but is none (QA1-03): {@code 0}, {@code -5}, {@code 99999}, {@code 1.5M}, {@code 3X},
+     * {@code FROM yesterday}, {@code DIFF DIFF}, a bare {@code DIFF}, two ranges ({@code 30 30}).
+     *
+     * @param command what is left before it ({@code TRD 1000001}): the caller answers with {@code code} only when that is one entity
+     * @param code {@code DRS-4022}, or {@code DRS-4021} for a number of days past what a command may name
+     * @param message why, and what to type instead
+     */
+    public record Bad(String command, ErrorCode code, String message) {}
+
+    /** A word that reads as an attempt at a range: a number (signed, with a fraction) with or without letters after it. */
+    private static final Pattern RANGY = Pattern.compile("(?i)[-+]?\\d+([.,]\\d+)?[A-Z]*");
+
+    private static final String HINT = "use a number of days (30), a span (30D, 2W, 3M, 1Y), YTD, MTD, QTD or FROM yyyy-mm-dd [TO yyyy-mm-dd], "
+            + "then DIFF for the changes only";
+
+    /**
+     * What may make the end of {@code text} a range that cannot be read, when it ends like one ({@link Bad}), most likely first: the
+     * caller answers with the first whose {@code command} is one entity ({@code TRD 1000001 DIFF} is a bare DIFF after the trade, not the
+     * range {@code 1000001} after {@code TRD}). Empty when the text does not end like a range, or ends in one {@link #trailing} reads.
+     * Never throws.
+     *
+     * @param maxDays the most business days a history may span here (for the message of a number past {@link #MAX_NUMBER})
+     */
+    public static java.util.List<Bad> malformed(String text, int maxDays) {
+        java.util.List<Bad> out = new java.util.ArrayList<>();
+        if (text == null || text.isBlank()) {
+            return out;
+        }
+        String[] w = text.trim().split("\\s+");
+        int end = w.length;
+        int diffs = 0;
+        while (end > 1 && w[end - 1].equalsIgnoreCase("DIFF")) {
+            diffs++;
+            end--;
+        }
+        if (end < 2) {
+            return out;
+        }
+        if (diffs > 1) {
+            String rest = join(w, end);
+            Optional<Split> before = quiet(rest + " DIFF");
+            before.ifPresent(b -> out.add(new Bad(b.command(), ErrorCode.HISTORY_BAD_RANGE, "DIFF is said once, after the range: "
+                    + b.command() + " " + b.range().render() + " DIFF")));
+            out.add(new Bad(rest, ErrorCode.HISTORY_BAD_RANGE, "DIFF is said once, after the range: " + rest + " 30 DIFF"));
+            return out;
+        }
+        Optional<Split> read;
+        try {
+            read = trailing(join(w, end));
+        } catch (DrishtiException e) {                                    // FROM 2026-02-30, TO before FROM: read, and cannot hold
+            int from = end - 1;
+            while (from > 0 && !w[from].equalsIgnoreCase("FROM")) {
+                from--;
+            }
+            out.add(new Bad(join(w, Math.max(1, from)), e.errorCode(), e.getMessage().replaceFirst("^DRS-\\d+\\s*", "")));
+            return out;
+        }
+        if (read.isPresent()) {
+            Optional<Split> again = quiet(read.get().command());          // TRD 1000001 30 30: a range before the range
+            again.ifPresent(a -> out.add(new Bad(a.command(), ErrorCode.HISTORY_BAD_RANGE, "two ranges: '" + a.range().render() + "' and '"
+                    + read.get().range().render() + "'; give one, for example " + a.command() + " " + read.get().range().render())));
+            return out;
+        }
+        if (end >= 3 && w[end - 2].equalsIgnoreCase("FROM")) {
+            out.add(new Bad(join(w, end - 2), ErrorCode.HISTORY_BAD_RANGE, "'" + w[end - 1] + "' is not a date: write it as yyyy-mm-dd, "
+                    + "for example " + join(w, end - 2) + " FROM 2026-09-01"));
+        }
+        if (end >= 5 && w[end - 4].equalsIgnoreCase("FROM") && w[end - 2].equalsIgnoreCase("TO")) {
+            String bad = DATE.matcher(w[end - 3]).matches() ? w[end - 1] : w[end - 3];
+            out.add(new Bad(join(w, end - 4), ErrorCode.HISTORY_BAD_RANGE, "'" + bad + "' is not a date: write it as yyyy-mm-dd, for example "
+                    + join(w, end - 4) + " FROM 2026-09-01 TO 2026-09-30"));
+        }
+        String last = w[end - 1];
+        if (RANGY.matcher(last).matches()) {
+            String command = join(w, end - 1);
+            if (last.matches("0+")) {
+                out.add(new Bad(command, ErrorCode.HISTORY_BAD_RANGE, "a history of 0 days is empty: ask for 1 or more (" + command + " 30)"));
+            } else if (last.matches("\\d{5,}")) {
+                out.add(new Bad(command, ErrorCode.HISTORY_RANGE_TOO_LARGE, maxDays + " business days at most (asked " + last
+                        + "): ask for fewer, or narrow it with " + command + " FROM yyyy-mm-dd TO yyyy-mm-dd"));
+            } else {
+                out.add(new Bad(command, ErrorCode.HISTORY_BAD_RANGE, "'" + last + "' is not a range: " + HINT));
+            }
+        }
+        if (diffs == 1) {
+            String command = join(w, end);
+            out.add(new Bad(command, ErrorCode.HISTORY_BAD_RANGE, "DIFF follows a range: " + command + " 30 DIFF"));
+        }
+        return out;
+    }
+
+    private static Optional<Split> quiet(String text) {
+        try {
+            return trailing(text);
+        } catch (DrishtiException e) {
+            return Optional.empty();
+        }
+    }
+
+    private static String join(String[] w, int to) {
+        return String.join(" ", Arrays.copyOfRange(w, 0, to));
+    }
+
     private static Optional<Split> split(String[] words, int at, HistoryRange range, boolean diff) {
         return at < 1 ? Optional.empty() : Optional.of(new Split(String.join(" ", Arrays.copyOfRange(words, 0, at)), range, diff));
     }
@@ -162,7 +266,7 @@ public record HistoryRange(Mode mode, Integer days, String span, LocalDate from,
         try {
             return LocalDate.parse(text);
         } catch (DateTimeParseException e) {
-            throw new DrishtiException(ErrorCode.COMMAND_UNKNOWN, "'" + text + "' is not a date: write it as yyyy-mm-dd, for example 2026-09-01");
+            throw new DrishtiException(ErrorCode.HISTORY_BAD_RANGE, "'" + text + "' is not a date: write it as yyyy-mm-dd, for example 2026-09-01");
         }
     }
 

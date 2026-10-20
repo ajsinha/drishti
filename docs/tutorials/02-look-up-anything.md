@@ -25,8 +25,11 @@ About 20 minutes.
 ## Before you start
 
 - [Tutorial 1](01-first-15-minutes.md) done: the demo lakes built (`lake demo`), server and console running with sign-in on, and you signed in as `drishti-dev-admin`.
-- The sixty business days of the lakes are what the past-date steps read. The outputs here were captured with the lakes ending on **2026-10-16** (first day 2026-10-07);
-  `lake demo` printed your own seven dates: use your last date where this tutorial says 2026-10-16 and the one before it for 2026-10-15.
+- The sixty business days of the lakes are what the past-date steps read. The outputs here were captured on the seven-day lakes of 2.5.0, ending on **2026-10-16**
+  (first day 2026-10-07); `lake demo` printed your own sixty dates: use your last date where this tutorial says 2026-10-16 and the one before it for 2026-10-15.
+  On the sixty-day lakes a captured value may differ, and `MX-20000001` is cancelled part-way through the sixty days (its last seven days read `CANCELLED`,
+  version 7): pick an earlier date to see it live. The trades amended most often (ten times each) are ENDUR `1000279` and `1001049`, CALYPSO
+  `CLY-4000509` and MUREX `MX-30001745`.
 - For the command-line steps: `DRISHTI_SERVER` and `DRISHTI_TOKEN` set, as at the end of tutorial 1.
 
 ## What you will learn
@@ -337,6 +340,6 @@ Society and governance (latest)  (table, indicators, F3)
 |---|---|
 | `DRS-4001 cannot read command` | the first word is not a mnemonic of a pack that is switched on: type its first letter and pick from the list |
 | *Pick a trade ... 0 of 15000 trades match* | nothing starts with what you typed: type less of the id |
-| *No data held for 2026-10-15* | the lakes do not hold that day: pick one of the seven dates `lake demo` printed, or run it again |
+| *No data held for 2026-10-15* | the lakes do not hold that day: pick one of the sixty dates `lake demo` printed, or run it again |
 | `DRS-1004 timed out reading counterparty-trades/...` | the page is built from every trade of the counterparty and the server is busy: open it again in a moment |
 | the date box refuses a date | dates run from five years back to today |

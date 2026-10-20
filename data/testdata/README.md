@@ -22,7 +22,7 @@ demo: within minutes, on a laptop.
 ```
 data/testdata/
   testdata.yaml                 the manifest: business dates, and per dataset its pack, kind, connector, key, partitions, files and counts
-  trades/endur/                 5,000 ENDUR trades: snapshot-2026-09-22.jsonl.gz, changes-2026-09-23.jsonl.gz ... changes-2026-09-30.jsonl.gz
+  trades/endur/                 5,000 ENDUR trades: snapshot-2026-07-08.jsonl.gz, changes-2026-07-09.jsonl.gz ... changes-2026-09-30.jsonl.gz
   trades/calypso/               5,000 CALYPSO trades
   trades/murex/                 5,000 MUREX trades
   core/<kind>/                  counterparties, groups, legal entities, books, desks, traders, calendars, issuers, CCPs, clearing accounts
@@ -52,15 +52,15 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    drishti-console/.venv/bin/python tools/drishti.py lake demo
    ```
 
-   It rebuilds the seven daily snapshots of each dataset, writes them under `data/delta/<domain>/<kind>/` (the trades under
+   It rebuilds the sixty daily snapshots of each dataset, writes them under `data/delta/<domain>/<kind>/` (the trades under
    `data/delta/trading/trade_endur`, `trade_calypso` and `trade_murex`, partitioned by business date and `PRODUCT_TYPE`; every other
    table by business date), checks the seven packs' connector files and prints what to start next. The sixty days are moved to end on
    **today's business date** (the server's current date, so every page opens on data; `--as-of data` keeps the test data's own
-   2026-09-22 to 2026-09-30, `--as-of 2026-10-30` any other end); the documents' own dates of the day (`AS_OF`, `VALUATION_DATE`,
+   2026-07-08 to 2026-09-30, `--as-of 2026-10-30` any other end); the documents' own dates of the day (`AS_OF`, `VALUATION_DATE`,
    `RUN_DATE`, `SOURCE_UPDATE_TIME`) move with them, and so does each point of a document's embedded market series (`HISTORY`, `OHLC`,
    `FIXINGS`, `PNL_SERIES`: its `DATE`, by the same number of business days), so a price history has no missing days between the series
-   and the stored days. A market document's `CHANGE_1D` is the day's move of its own price (`PRICE`, `LEVEL`, `MID`). Measured from a clean copy on a 24-core laptop with an NVMe disk: **about 50 s,
-   800 MB peak memory**, 64 tables, 243 MB on disk (16 tables are static reference data built from the world-economy and
+   and the stored days. A market document's `CHANGE_1D` is the day's move of its own price (`PRICE`, `LEVEL`, `MID`). Measured for sixty days on a fast machine: **943 s (about 15 minutes; up to half an hour on a laptop)**,
+   64 tables, about 2.2 GB on disk (16 tables are static reference data built from the world-economy and
    news-and-markets packs' samples).
 4. **Start** the server and the console: the run configurations **Drishti server (demo lakes)** (the samples off,
    `DRISHTI_DEMO_ENABLED=false`, so every page reads the lakes; with the samples on, a sample answers before the lake for an id both
@@ -93,7 +93,7 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    security on), and a running server also sees each rebuilt Delta date by itself and reads it again, so BI never shows the old figures.
    With no server running it leaves `data/bi-store/lake-rebuilt.json`, and the next start clears the stored BI columns and rollups.
 
-   **Compare across days**: on a trade page pick the first of the seven dates `lake demo` printed, then **Compare** with the last; an
+   **Compare across days**: on a trade page pick the first of the sixty dates `lake demo` printed, then **Compare** with the last; an
    amended trade (about 6%
    of each book is amended each day: the trades whose `TRADE_VERSION` moved) shows its changed rates, notionals, status or added fees.
 
@@ -211,7 +211,7 @@ those same connectors, which the pack serves from the demo lake when the live co
 - **Terms.** The data belongs to its providers: prices to Yahoo Finance and the exchanges, headlines and links to Google News and the
   publishers. It is committed for demonstrations of Drishti only, never for trading, research or redistribution; Yahoo's endpoint is
   unofficial and its terms restrict use. Before showing the demo outside the organisation, raise this again.
-- **In the lake.** `lake demo` writes both into `news/quote` and `news/news` (the same snapshot on each of the seven days, never
+- **In the lake.** `lake demo` writes both into `news/quote` and `news/news` (the same snapshot on each of the sixty days, never
   re-dated); the pack's `news-store` connector serves them beside the topics and companies.
 - **Offline mode.** `DRISHTI_OFFLINE=true` (set by the run configuration **Drishti server (demo lakes)**) keeps the `news`, `yfinance`
   and `feed` connectors from starting, whatever their files say: nothing tries the network, and Admin → Connectors shows them

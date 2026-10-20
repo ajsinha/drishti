@@ -75,12 +75,12 @@ public class SuggestionMasks {
         UnaryOperator<DataNode> redact = entitlements.redactor(p);
         String text = suggestions.matchText(query).toLowerCase(Locale.ROOT);
         Set<EntityRef> refs = new LinkedHashSet<>();
-        in.stream().filter(s -> s.id() != null && s.kind() != null).forEach(s -> refs.add(EntityRef.of(s.kind(), s.id())));
+        in.stream().filter(s -> s.id() != null && s.kind() != null && !"range".equals(s.type())).forEach(s -> refs.add(EntityRef.of(s.kind(), s.id())));
         Map<EntityRef, EntityDocument> docs = refs.isEmpty() ? Map.of() : router.fetchAll(refs, budget, asOf);
         List<Suggestion> out = new ArrayList<>(in.size());
         for (Suggestion s : in) {
-            if (s.id() == null || s.kind() == null) {
-                out.add(s);                                      // a mnemonic: nothing of a document in it
+            if (s.id() == null || s.kind() == null || "range".equals(s.type())) {
+                out.add(s);                                      // a mnemonic, or a range after the id typed: nothing of a document in it (QA1-06)
                 continue;
             }
             String[] described = describe(docs.get(EntityRef.of(s.kind(), s.id())), s, redact);

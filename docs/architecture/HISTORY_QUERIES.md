@@ -15,7 +15,8 @@
 -->
 # History queries: `TRD 1000015 30 <GO>`
 
-Status: **design, not built.** Planned for **2.6.5**, between 2.6.0 (wave D) and 2.7.0 (write-back). Written 2026-10-20 from the
+Status: **built and released in 2.6.5** (2026-10-20), between 2.6.0 (wave D) and 2.7.0 (write-back); the *As built* notes say where
+the build differs from the design. Written 2026-10-20 from the
 design agreed with the product owner, checked against the code on `develop` and against the two connector branches that are not merged
 yet (drishti-iceberg and iceberg-external; Cassandra). Related: [HOW_IT_FITS.md](HOW_IT_FITS.md) (a command becomes a screen),
 [DRISHTI_NET.md](DRISHTI_NET.md) (forwarding), [SUPER_SCALE.md](SUPER_SCALE.md) section 10 (slices and owners),
@@ -122,13 +123,18 @@ The rule: **a range is the last one to four words, never the first word after th
 | `MYBOOK 30` (alias for `BOOK BOOK-RATES-1`) | `BOOK BOOK-RATES-1 30`, a pick list | history of the book | `CommandMemory.expand` appends trailing words (`MYBOOK F3` becomes `BOOK BOOK-RATES-1 F3`), so the range survives the alias |
 | `MYPICK 30` (alias for `TRD desk=rates`) | search | the same | an alias that expands to a search stays a search |
 | `MX-20000001 30` (bare id) | not read (two words), plain words | history | allowed only when `ReferenceCatalog.kindOf(id)` names the kind (the pack's `graph.id-patterns`), as for a bare id today |
-| `1000015 30` (bare, no id pattern) | plain words | plain words, which now understand it (section 15.5) | no id pattern for `1000015` |
+| `1000015 30` (bare, no id pattern) | plain words | plain words, which now understand it (section 15.5): an id that names one entity of one kind, then a range or a time phrase | no id pattern for `1000015` |
 | `MKT`, `RUPAKA …`, `FORM …` | pack overview, BI, form | the same | single words and reserved first words are handled before the command in `/go` |
 | `TRD 1000015 FROM 2026-09-01` | pick list | history from that date to the date box | `FROM` and `TO` are keywords only in the last four words and only followed by a date |
 | `TRD YTD` | opens trade `YTD` | the same | first word after the mnemonic |
 
 `HistoryRange.trailing(String rest)` returns `Optional<Split(String id, HistoryRange range, boolean diff)>`; it never throws. A range that is
 read but not allowed (too large, `TO` before `FROM`, a future `FROM`) fails with its own code (section 16), not with a pick list.
+`HistoryRange.malformed` names what reads as a range but is none (`0`, `-5`, `99999`, `1.5M`, `3X`, `FROM yesterday`,
+`FROM 2026-02-30`, `DIFF DIFF`, a bare `DIFF`, `30 30`); `CommandController` answers it with `DRS-4022` (`DRS-4021` for a number of days
+past `max-days`) and what to type when what is before it is one entity the caller may open and the whole text is not itself an entity.
+`TO` before `FROM` and a date that does not exist are `DRS-4022` too, as at the endpoint. The console's `/go` shows the message on the
+terminal page.
 
 ### 4.3 The answer and the redirect
 
@@ -147,7 +153,10 @@ declared before `/v/{kind}/{id_:path}`, as `/about` and `/panels` are. A pick li
 
 - `SuggestionService.suggest` (engine `command/SuggestionService`): when the text is `<MNEMONIC> <ID> ` and the id names one entity, the
   first suggestions are ranges: `30 — last 30 days`, `3M — last 3 months`, `YTD — since 1 January`, `30 DIFF — what changed`. `Tab`
-  completes, as today. The kind's `history.default-days` is the first one offered.
+  completes, as today. The kind's `history.default-days` is the first one offered. Across Drishti*net the peers' suggestions are
+  merged with one row per range (each completes differently) and the ranges first; for a caller with field masks the range rows keep
+  their labels (only entity rows are described again from the document as the caller sees it). A partial range (`TRD 1000015 3`)
+  offers the ranges that start with it to every caller.
 - `CommandMemory.remember` keeps the typed text, so `↑` recalls `TRD 1000015 30` as typed.
 - Aliases store any command text, so `MYTRD = TRD 1000015 30` works without change.
 - Share links carry the range and pin the end: `/v/trade/1000015/history?days=30&to=2026-10-19` (and `&knownAt=` when pinned), so the
@@ -335,6 +344,9 @@ GET /api/v1/history/{kind}/~?id=<id>&…          an id a path cannot carry ("/"
 It sits in the existing `HistoryController` (`@RequestMapping("/api/v1/history")`) beside `/series` and `/diff`, not under
 `/api/v1/entities` (section 21). The date box's `AsOf` (resolved by `AsOfResolver` from `X-Drishti-As-Of`) is the default end;
 `to` overrides it. The access log gets `"/api/v1/history/{kind}/{id}" → "history"` in `AccessRecorder.ACTIONS`.
+A mnemonic or a plural in place of the kind is `DRS-4004` saying which kind to use (*TRD is a mnemonic: use the kind trade*, *unknown
+kind trades: did you mean trade?*). A field in `fields` that is no column but a top-level field of the documents is shown as a column;
+one that no day's document has is `DRS-4004` (*no trade has a field NOPE on these days*), never dropped silently.
 
 ### 7.2 What it does
 
@@ -371,7 +383,10 @@ history), so the field dialog gets the fast paths and the 260-day constant becom
   `null`, unknown) and `restated` is true when there is more than one. Only connectors that can say it cheaply fill it (section 10).
 - **Known at.** Without `knownAt` each day is its latest version (what we know now). With `knownAt=K` the whole history is read as the store
   stood at instant K: each day is the version of that day that was known at K, and days loaded after K are absent. It is Delta's and
-  Iceberg's time travel (`timeTravel()`); a connector without it refuses with `DRS-1007` as reads do today. "Each day as it was known at
+  Iceberg's time travel (`timeTravel()`); a connector without it that may hold one of the dates refuses with `DRS-1007` as reads do
+  today. One that holds none of them (`holdsNone`, or `NOT_HELD` for every date: the shipped `file` connector before any file of the kind)
+  is not asked, so it never refuses for the Delta or Iceberg sources behind it. A `knownAt` that is not an ISO-8601 instant fails with
+  `DRS-4003` naming it (*knownAt '2026-10-20' is not an instant*). "Each day as it was known at
   the end of that day" (as first reported) is a different question, kept as open question 1.
 
 ## 8. The JSON contract
@@ -577,8 +592,11 @@ restart, as `SearchProperties`), with its defaults in drishti-server's `applicat
 | `drishti.history.cache-mb` | `64` | memory for cached answers (by size) |
 
 **Cache.** `HistoryCache` keeps unmasked, unformatted rows keyed by `(kind, id, from, to, fields, knownAt, dataVersion)`, where
-`dataVersion` is `SourceRouter.dataVersion(kind, AsOf.LATEST)` (Delta: the table's version and commit time). A new load changes the
-version, so the cache never serves stale data and needs no expiry. A connector that gives no version (`Optional.empty()`) is not cached.
+`dataVersion` is `SourceRouter.dataVersion(kind, AsOf.LATEST)` (Delta: the table's version and commit time; a connector that holds
+nothing of the kind counts as `none`) followed, in a cluster, by the data versions of the peers the read would ask, as their digests
+carry them (`SourceRouter.peerVersion`, `net:<node>{<connector>=<version>,…}`). A new load, here or on a peer, changes the version, so
+the cache never serves stale data and needs no expiry. A connector or peer that gives no version (`Optional.empty()`) is not cached, nor
+is an answer that failed, is partial or has no day.
 Masks and formats are applied on every answer, so one entry serves every user. `purgeCaches` (Admin → Cache) empties it.
 
 **Docs and test.** Every setting goes into `docs/admin/CONFIGURATION.md`; `drishti-console/tests/test_docs_settings.py` already fails when
@@ -597,6 +615,12 @@ a key of `application.yaml` or a `@ConfigurationProperties` binding is not in th
   same headers (`X-Drishti-Net-Hop: 1`, `X-Drishti-Net-On-Behalf-Of`, `X-Drishti-As-Of`, `X-Drishti-Known-At`), checks
   `entitlements.requireOpen`, applies the caller's masks at the peer, and asks no further peer (one hop).
 - The answers are merged by date; a date two peers both answer (shards that overlap) takes the higher generation.
+- A node that holds the kind but is down, suspect or drained cannot be asked. Dates no node that answered holds are then failures of
+  that node (`Fallback.downHolders`): with no day read the answer is `502 DRS-5052` naming it, as the view says; with some days read it
+  is partial, a `problems` entry with code `DRS-5052` naming it. Never `DRS-1013`, and never cached.
+- A peer that is asked but does not answer in time (frozen, overloaded) is a time-out of those days: `504 DRS-1014` *the node qa1-b did
+  not answer the history of trade/10000901 within 10 s* when no day was read, else a `problems` entry with `DRS-1014`. Another failure of
+  the peer stays `DRS-1003` naming it.
 
 **Super scale (SUPER_SCALE.md section 10, not built).** A slice is `(table, business day, group)`; each slice has owners on the ring
 (`hash(table, day, group)`, 64 virtual nodes, 2 owners for the `hot-days`). A history of one entity spans one slice per day, so the days
@@ -705,11 +729,16 @@ built as step H12, which may move to 2.7.0** if 2.6.5 runs long; nothing else de
 `PhraseParser` (deterministic, no model) learns one more form before searches: *kind word, id, time phrase*. Time phrases: `last N days`
 → `N`, `last N weeks|months|years` → `NW|NM|NY`, `last month` → `FROM <first of the previous month> TO <its last day>`, `this month` →
 `MTD`, `this year`, `ytd` → `YTD`, `since <date>` → `FROM <date>`, `between <date> and <date>`, `from <date> to <date>`, `past 30 days`.
+The id is the word that names one entity of the kind (`Vocabulary.entityId`: its id in any case, or the one id ending `-<word>`, so `audusd`
+is `FX-AUDUSD`), even when it is also a field's value (`EQ-CSCA`, the ticker); else a word with a digit or a dash that is no field's value.
+Without a kind word, an id that names one entity of one kind (`Vocabulary.kindOfEntity`) followed by a range or a time phrase is that
+entity's history (`1000015 30`, `BOOK-RATES-3 last week`).
 
 ```text
 trade 1000015 last month                 TRD 1000015 FROM 2026-09-01 TO 2026-09-30
 equity EQ-CSCA last 3 months             EQ EQ-CSCA 3M
 fx audusd since 2026-10-01               FX FX-AUDUSD FROM 2026-10-01
+1000015 30                               TRD 1000015 30
 what changed on trade 1000015 this week  TRD 1000015 FROM 2026-10-19 DIFF
 ```
 
@@ -724,13 +753,14 @@ New codes in `drishti-common` `ErrorCode` (none of them used before):
 | Code | Name | HTTP | When | Message (example) |
 |---|---|---|---|---|
 | `DRS-1012` | `HISTORY_NOT_KEPT` | 404 | the kind has no daily history: history off for it (`enabled: false`), or every connector of the kind is undated and no `series:` is declared | "equity keeps no daily history here: market-store holds today's data only" |
-| `DRS-1013` | `HISTORY_NO_DATA` | 404 | the entity exists but has no data in the window | "TRD 1000015 has no data from 2026-01-02 to 2026-01-30; its first day is 2026-06-20" |
-| `DRS-1014` | `HISTORY_TIMEOUT` | 504 (or 200 with `partial`) | a connector did not answer within the budget: the whole request when no day was read, otherwise a `problems` entry | "trade-endur did not answer 4 of 30 days within 10 s" |
+| `DRS-1013` | `HISTORY_NO_DATA` | 404 | the entity exists but has no data in the window | "TRD 1000015 has no data from 2026-01-02 to 2026-01-30; its days with data run from 2026-06-20 to 2026-10-19" |
+| `DRS-1014` | `HISTORY_TIMEOUT` | 504 (or 200 with `partial`) | a connector, or a Drishti*net peer (an HTTP time-out of its one call), did not answer within the budget: the whole request when no day was read, otherwise a `problems` entry | "trade-endur did not answer 4 of 30 days within 10 s" |
 | `DRS-2061` | `HISTORY_INVALID` | 422 | the pack's `history:` block is wrong | "history.equity.headline: PRICE2 is not one of chart" |
 | `DRS-4021` | `HISTORY_RANGE_TOO_LARGE` | 400 | more than `max-days` (the kind's or the server's) | "366 business days at most (asked 500): narrow it with FROM … TO" |
 | `DRS-4022` | `HISTORY_BAD_RANGE` | 400 | `TO` before `FROM`, a future `FROM`, an unreadable date | "FROM 2026-10-30 is after TO 2026-10-19" |
 
-A `knownAt` on a store without time travel stays `DRS-1007`; an unknown entity stays `DRS-1001`. Each new code goes into API_GUIDE's
+A `knownAt` on a store without time travel stays `DRS-1007`; an unknown entity stays `DRS-1001`; a Drishti*net node that holds the kind
+and cannot be reached is `DRS-5052` (section 12). Each new code goes into API_GUIDE's
 "Error code table" and TROUBLESHOOTING's "Error codes" table in the same push; `drishti-console/tests/test_docs_error_codes.py` fails
 otherwise (and checks `DRS-2061` in TROUBLESHOOTING). The console shows each on the history page as the view's `missing.html` does,
 with the fix: the largest allowed range as a link, the first day with data as a link.

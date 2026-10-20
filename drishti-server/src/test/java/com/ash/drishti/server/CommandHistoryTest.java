@@ -78,8 +78,40 @@ class CommandHistoryTest {
 
     @Test
     void aRangeThatCannotHoldIsAnErrorNotAPickList() throws Exception {
+        // QA1-12: the same code as the endpoint (DRS-4022), not "command unknown"
         command("TRD IRS-48213 FROM 2026-09-30 TO 2026-09-01").andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("DRS-4001"));
+                .andExpect(jsonPath("$.code").value("DRS-4022"))
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("is after TO")));
+    }
+
+    @Test
+    void aBadRangeAfterAnEntityIsNamedNeverTodaysViewNorASearch() throws Exception {
+        // QA1-03: every row of the finding's table answers its DRS code and what to type
+        String[][] cases = {{"TRD IRS-48213 0", "DRS-4022", "0 days is empty"}, {"TRD IRS-48213 -5", "DRS-4022", "'-5' is not a range"},
+            {"TRD IRS-48213 99999", "DRS-4021", "business days at most (asked 99999)"}, {"TRD IRS-48213 1.5M", "DRS-4022", "'1.5M' is not a range"},
+            {"TRD IRS-48213 3X", "DRS-4022", "'3X' is not a range"}, {"TRD IRS-48213 DIFF DIFF", "DRS-4022", "DIFF is said once"},
+            {"TRD IRS-48213 30 DIFF DIFF", "DRS-4022", "TRD IRS-48213 30 DIFF"},
+            {"TRD IRS-48213 FROM 2026-02-30", "DRS-4022", "'2026-02-30' is not a date"},
+            {"TRD IRS-48213 FROM yesterday", "DRS-4022", "'yesterday' is not a date"}, {"TRD IRS-48213 DIFF", "DRS-4022", "DIFF follows a range"},
+            {"TRD IRS-48213 30 30", "DRS-4022", "two ranges"}, {"TRD IRS-48213 99999 DIFF", "DRS-4021", "asked 99999"}};
+        for (String[] c : cases) {
+            command(c[0]).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value(c[1]))
+                    .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString(c[2])));
+        }
+        // not after one entity: as before (a lone id after the mnemonic, a prefix that is no entity)
+        command("TRD 0").andExpect(jsonPath("$.code").doesNotExist());
+        command("TRD NO-SUCH-TRADE-X 0").andExpect(jsonPath("$.code").doesNotExist());
+    }
+
+    @Test
+    void plainWordsReadABareIdAndAnIdInAnyCase() throws Exception {
+        // QA1-08: a bare id that names one entity, then a range; an id typed in lower case after the kind word
+        mvc.perform(get("/api/v1/phrase").param("text", "IRS-48213 30").header("X-Drishti-User", "hist-t"))
+                .andExpect(jsonPath("$.command").value("TRD IRS-48213 30"));
+        mvc.perform(get("/api/v1/phrase").param("text", "trade irs-48213 last 3 months").header("X-Drishti-User", "hist-t"))
+                .andExpect(jsonPath("$.command").value("TRD IRS-48213 3M"));
+        mvc.perform(get("/api/v1/phrase").param("text", "NO-SUCH-ID-77 30").header("X-Drishti-User", "hist-t"))
+                .andExpect(jsonPath("$.command").doesNotExist());
     }
 
     @Test

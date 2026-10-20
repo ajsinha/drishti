@@ -84,7 +84,65 @@ public class PhraseController {
             public List<PhraseParser.Field> fields(String kind) {
                 return masked(fieldsOf(kind), p);
             }
+
+            @Override
+            public java.util.Optional<String> entityId(String kind, String word) {
+                return idOf(kind, word);
+            }
+
+            @Override
+            public java.util.Optional<PhraseParser.KindWord> kindOfEntity(String word) {
+                return kindOf(kinds, word);
+            }
         }).parse(text.length() > 300 ? text.substring(0, 300) : text);
+    }
+
+    private static final Duration ID_BUDGET = Duration.ofSeconds(2);
+
+    /**
+     * The id of the one entity of the kind a word names (QA1-08): the id as typed or in upper case when it exists, else the one id among
+     * the kind's search hits that equals it in any case or ends with {@code -word} ({@code audusd} for {@code FX-AUDUSD}).
+     */
+    java.util.Optional<String> idOf(String kind, String word) {
+        if (word == null || word.isBlank() || word.length() > 120) {
+            return java.util.Optional.empty();
+        }
+        List<com.ash.drishti.api.EntityRef> refs = new ArrayList<>(List.of(com.ash.drishti.api.EntityRef.of(kind, word)));
+        if (!word.equals(word.toUpperCase(Locale.ROOT))) {
+            refs.add(com.ash.drishti.api.EntityRef.of(kind, word.toUpperCase(Locale.ROOT)));
+        }
+        Map<com.ash.drishti.api.EntityRef, EntityDocument> found = router.fetchAll(refs, ID_BUDGET);
+        for (com.ash.drishti.api.EntityRef r : refs) {
+            if (found.containsKey(r)) {
+                return java.util.Optional.of(r.id());
+            }
+        }
+        String w = word.toLowerCase(Locale.ROOT);
+        List<String> ids = router.search(kind, word, 20, ID_BUDGET, AsOf.LATEST).stream().map(h -> h.ref().id())
+                .filter(id -> id.toLowerCase(Locale.ROOT).equals(w) || id.toLowerCase(Locale.ROOT).endsWith("-" + w)).distinct().toList();
+        return ids.size() == 1 ? java.util.Optional.of(ids.get(0)) : java.util.Optional.empty();
+    }
+
+    /** The kind (among those the caller may open) of the one entity whose id a word is, as typed or in upper case; empty for none or several. */
+    java.util.Optional<PhraseParser.KindWord> kindOf(List<PhraseParser.KindWord> kinds, String word) {
+        if (word == null || word.isBlank() || word.length() > 120) {
+            return java.util.Optional.empty();
+        }
+        Map<String, PhraseParser.KindWord> byKind = new LinkedHashMap<>();
+        kinds.forEach(k -> byKind.putIfAbsent(k.kind(), k));
+        List<com.ash.drishti.api.EntityRef> refs = new ArrayList<>();
+        for (String kind : byKind.keySet()) {
+            refs.add(com.ash.drishti.api.EntityRef.of(kind, word));
+            if (!word.equals(word.toUpperCase(Locale.ROOT))) {
+                refs.add(com.ash.drishti.api.EntityRef.of(kind, word.toUpperCase(Locale.ROOT)));
+            }
+        }
+        java.util.Set<String> held = new java.util.LinkedHashSet<>();
+        router.fetchAll(refs, ID_BUDGET).keySet().forEach(r -> held.add(r.kind()));
+        if (held.size() > 1) {
+            held.removeIf(k -> router.derivedOf(k).isPresent());          // a grouped page keyed by the same id is not the entity
+        }
+        return held.size() == 1 ? java.util.Optional.of(byKind.get(held.iterator().next())) : java.util.Optional.empty();
     }
 
     /**

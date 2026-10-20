@@ -99,6 +99,44 @@ public final class PeerSources implements SourceRouter.Fallback {
         return peer.compareTo(local) > 0 ? peer : local;
     }
 
+    /**
+     * The peers this caller's read of {@code ref} would ask, each with its sources' data versions for the kind from its digest (gossiped
+     * every interval, so a load on a peer changes this within a few seconds): {@code net:qa1-b{trade-endur=60@…}}. Empty when a peer's
+     * digest gives no version for one of its sources.
+     */
+    @Override
+    public Optional<String> version(EntityRef ref, AsOf asOf) {
+        NetCaller.Caller c = NetCaller.current().orElse(null);
+        if (c == null || c.principal() == null) {
+            return Optional.of("");
+        }
+        StringBuilder out = new StringBuilder();
+        var table = routing.digests().table();
+        for (String id : routing.dataPeers(ref.kind(), c.principal(), asOf == null ? null : asOf.businessDate(), asOf == null || asOf.live(),
+                ref.id())) {
+            var kind = table.node(id).flatMap(n -> n.digest().kind(ref.kind()));
+            if (kind.isEmpty()) {
+                return Optional.empty();
+            }
+            out.append(out.isEmpty() ? "" : "|").append("net:").append(id).append('{');
+            boolean first = true;
+            for (var s : kind.get().sources()) {
+                if (s.dataVersion() == null || s.dataVersion().isBlank()) {
+                    return Optional.empty();
+                }
+                out.append(first ? "" : ",").append(s.connector()).append('=').append(s.dataVersion());
+                first = false;
+            }
+            out.append('}');
+        }
+        return Optional.of(out.toString());
+    }
+
+    @Override
+    public List<String> downHolders(String kind) {
+        return routing.forwarding() && !NetCaller.fromPeer() ? routing.downHolders(kind) : List.of();
+    }
+
     @Override
     public Optional<DrishtiException> unreachable(EntityRef ref) {
         if (!routing.forwarding()) {

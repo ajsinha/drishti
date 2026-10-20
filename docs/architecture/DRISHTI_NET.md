@@ -362,7 +362,9 @@ is state, not configuration: it is saved to `<data dir>/net/peers.json` (section
 
 Start-up and every reload refuse `enabled: true` without a secret, as the server refuses a missing token secret with security
 on. **Members advertise real addresses only** (product owner, 2.6.0): an `advertise-url` or a seed's `url` that is `localhost`, a loopback
-(`127.x.x.x`, `::1`) or a wildcard address (`0.0.0.0`, `::`) is refused by the schema (the server at load, Admin → Net → Files,
+(`127.x.x.x`, `::1`), a wildcard (`0.0.0.0`, `::`) or a link-local address, in any spelling (`0`, `2130706433`, `0x7f000001`, `localhost.`,
+`ip6-localhost`), an address of this machine's container or VM bridges, or a host name that resolves here to one of those
+(`HostAddress.why`; tools/hostaddr.py the same) is refused by the schema and dropped at the gossip intake (the server at load, Admin → Net → Files,
 `drishti.py net check|set|add-peer`), with a message naming this machine's address to use. Without `advertise-url` the node advertises
 this machine's primary IPv4 address with `server.port` (`HostAddress`: the interface of the default route, else the first interface that
 is up and is not a loopback, a container bridge or a virtual link); a machine with no other address refuses `enabled: true` without one.

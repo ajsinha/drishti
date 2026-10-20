@@ -171,8 +171,33 @@ class HistoryApiTest {
         mvc.perform(get("/api/v1/history/trade/T-1").param("range", "3Q").header("Authorization", as("full")))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("DRS-4022"));
         mvc.perform(get("/api/v1/history/trade/T-1").param("from", "2026-01-05").param("to", "2026-01-30").header("Authorization", as("full")))
-                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("DRS-1013"));
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("DRS-1013"))
+                // QA1-11: the message says when it has data
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("its days with data run from 2026-09-28 to 2026-09-30")));
         mvc.perform(get("/api/v1/history/trade/NOPE").param("from", "2026-09-28").param("to", "2026-09-30").header("Authorization", as("full")))
                 .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("DRS-1001"));
+        // QA1-18: a mnemonic or a plural where the kind belongs, and a field no day has, are named
+        mvc.perform(get("/api/v1/history/TRD/T-1").param("days", "3").header("Authorization", as("full")))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("TRD is a mnemonic: use the kind trade")));
+        mvc.perform(get("/api/v1/history/trades/T-1").param("days", "3").header("Authorization", as("full")))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("did you mean trade")));
+        mvc.perform(get("/api/v1/history/trade/T-1").param("from", "2026-09-28").param("to", "2026-09-30").param("fields", "mtm,NOPE")
+                .header("Authorization", as("full"))).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("no trade has a field NOPE")));
+        // QA1-13: a bad "known at" names itself, not the business date
+        for (String bad : List.of("garbage", "2026-10-20")) {
+            mvc.perform(get("/api/v1/history/trade/T-1").param("days", "3").param("knownAt", bad).header("Authorization", as("full")))
+                    .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("knownAt '" + bad
+                            + "' is not an instant")));
+        }
+    }
+
+    @Test
+    void knownAtReadsTheDeltaLakeAsItStood() throws Exception {
+        // QA1-04: every source of trade that may hold the dates is Delta (time travel); the shipped file connector holds none of them
+        JsonNode a = read("full", "/api/v1/history/trade/T-1", "from", "2026-09-28", "to", "2026-09-30", "knownAt", java.time.Instant.now().toString());
+        assertThat(a.at("/window/knownAt").asText()).isNotBlank();
+        assertThat(a.path("rows")).hasSize(3);
+        assertThat(a.at("/rows/2/values/mtm").asDouble()).isEqualTo(125.0);
     }
 }

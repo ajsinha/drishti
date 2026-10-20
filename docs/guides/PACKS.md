@@ -272,15 +272,15 @@ drishti-console/.venv/bin/python tools/drishti.py lake demo
 ```
 
 ```text
-  trading/trade_endur: 34,957 rows over 7 days
-  trading/trade_calypso: 34,824 rows over 7 days
-  trading/trade_murex: 34,866 rows over 7 days
-  legal/agreement: 168 rows over 7 days
+  trading/trade_endur: … rows over 60 days
+  trading/trade_calypso: … rows over 60 days
+  trading/trade_murex: … rows over 60 days
+  legal/agreement: … rows over 60 days
   …
-  news/listed-company: 140 rows over 7 days
-  news/news-topic: 105 rows over 7 days
+  news/listed-company: … rows over 60 days
+  news/news-topic: … rows over 60 days
 
-Demo lake ready: …/data/delta: 64 tables, 7 business days 2026-10-07 to 2026-10-16 (the test data's 2026-09-22 to 2026-09-30, moved to end on 2026-10-16), 53 s
+Demo lake ready: …/data/delta: 64 tables, 60 business days 2026-07-08 to 2026-09-30, 943 s
 Feeds: …/data/feeds/fixing/SOFR-HISTORY.csv (the file connector's sample feed)
 Server: no server at http://127.0.0.1:19590: left …/data/bi-store/lake-rebuilt.json, so a server clears its stored BI columns and rollups at its next start
 Connector files:
@@ -288,8 +288,9 @@ Connector files:
   …
 ```
 
-(The run above was on a clean clone, with `--server` naming a port where nothing ran; measured: 53 s and 807 MB peak memory.) The
-seven days are moved to end on today's business date, so every page opens on data; `--as-of data` keeps the test data's own dates.
+(The table lines were captured on a clean clone of 2.5.0, on the seven-day lakes, with `--server` naming a port where nothing ran, so
+their row counts are left out; the summary line is from a sixty-day run of 2.6.5 that kept the test data's own dates: 943 s, about
+2.2 GB on disk.) By default the sixty days are moved to end on today's business date, so every page opens on data; `--as-of data` keeps the test data's own dates.
 Start the server with the samples off so that every page reads the lakes: the run configuration **Drishti server (demo lakes)**, or
 `DRISHTI_DEMO_ENABLED=false` with the seven packs. Running `lake demo` again while a server runs is safe: it sends the data-load
 signal for every table and date it wrote (`--server`, `--token-file`), and a running server also sees each rebuilt Delta date by

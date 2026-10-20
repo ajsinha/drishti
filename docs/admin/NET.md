@@ -68,7 +68,10 @@ about every other within a round or two. The examples run the three on one machi
 address, `192.168.1.20` here; on three machines use each machine's own address.
 
 **Members advertise a real address, never a loopback one.** A node is called at the address it advertises by every other node and every
-console, on any machine, so `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` and `::` are refused wherever an address is given: `advertise-url`
+console, on any machine, so `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` and `::` are refused wherever an address is given, in any spelling
+(`localhost.`, `ip6-localhost`, `0`, `127.1`, `2130706433`, `0x7f000001`), as are link-local addresses (`169.254.x.x`, `fe80::…`), the
+addresses of this machine's container and VM bridges (`172.17.0.1` on `docker0`) and a host name that resolves here to any of them (on
+Debian and Ubuntu the machine's own name is `127.0.1.1` in `/etc/hosts`; the message says so): `advertise-url`
 in node.yaml, a seed's `url` in `peers/*.yaml` (by `drishti.py net check|set|add-peer`, by Admin → Net → Files and by the server when it
 loads the folder), and a member address learned by gossip is never kept nor passed on. Even three nodes on one machine use the machine's
 real address. The refusal names the address to use:
@@ -361,6 +364,10 @@ answered by the receiving node from itself only (one hop at most, `X-Drishti-Net
    a node without the pack forwards the whole request; a node with the pack reads the dates its own dated sources do not cover from a
    peer in **one** call for all of them (`GET /api/v1/net/history/{kind}/~?id=&from=&to=&dates=`, each day masked there and again here),
    not one call per day. Dates two peers both answer keep the higher generation. Admin → Net → Traffic lists the call as `history`.
+   The history cache is keyed by the peers' data versions too (their digests carry them), so a load on the peer shows on the next
+   request. When a node that holds the kind is down or suspect and no node that answered holds the dates, the answer is `502 DRS-5052`
+   naming that node (or, when some days were read, a partial answer whose `problems` name it), never `DRS-1013` "no data"; a failed,
+   partial or empty answer is never cached.
 
 **The newest pack is served.** When nodes hold different versions of a pack, a request for its kinds goes to a node with the newest, even when this
 node could answer with its older one (in the in-process test, B with the shipped finance pack forwards to A, which has 9.9.9).

@@ -48,8 +48,19 @@ public final class SourceHistory {
     /** What the connectors answered: the days, oldest first, and the dates that could not be read with the connector and why. */
     public record Routed(List<HistoryDay> days, List<Failure> failures, List<String> asked) {}
 
-    /** A date a connector could not read; {@code reason} is {@link HistoryReads#TIMED_OUT} when the budget ran out. */
-    public record Failure(String source, LocalDate date, String reason) {}
+    /**
+     * A date a connector could not read; {@code reason} is {@link HistoryReads#TIMED_OUT} when the budget ran out. The source
+     * {@link #UNREACHABLE} stands for the Drishti*net nodes that hold the kind but cannot be reached now (down, suspect, drained): no peer
+     * that answered held the date, so the date may be on one of them.
+     */
+    public record Failure(String source, LocalDate date, String reason) {
+        public boolean unreachable() {
+            return UNREACHABLE.equals(source);
+        }
+    }
+
+    /** The source of a {@link Failure} for the nodes that hold the kind but cannot be reached. */
+    public static final String UNREACHABLE = "net";
 
     Routed read(HistoryRequest r, List<SourcePlugin> candidates, SourceRouter.Fallback fb) {
         long deadline = System.nanoTime() + r.budget().toNanos();
@@ -63,7 +74,12 @@ public final class SourceHistory {
                 break;
             }
             String name = p.manifest().name();
-            refuseKnownAt(p, r, name);
+            if (r.knownAt() != null && !p.timeTravel()) {
+                if (!mayHold(p, r.ref().kind(), remaining)) {
+                    continue;                    // holds none of these dates: it has nothing to answer "as known at" (as single reads)
+                }
+                refuseKnownAt(p, r, name);
+            }
             Duration left = Duration.ofNanos(Math.max(0, deadline - System.nanoTime()));
             asked.add(name);
             Set<LocalDate> settled = new HashSet<>();
@@ -114,8 +130,22 @@ public final class SourceHistory {
                     remaining.removeIf(got::contains);
                 } catch (Exception e) {
                     router.stats().failed(name, System.nanoTime() - t0, e);
+                    // a peer that did not answer in time is a time-out of those days (DRS-1014, or a partial answer), not a failure
+                    String why = timedOut(e) ? HistoryReads.TIMED_OUT : e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
                     for (LocalDate d : remaining) {
-                        failures.add(new Failure(name, d, e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));
+                        failures.add(new Failure(name, d, why));
+                    }
+                }
+            }
+            // dates no node that answered holds, while a node that holds the kind is down: they may be there, so they are not "no data"
+            List<String> down = remaining.isEmpty() ? List.of() : fb.downHolders(r.ref().kind());
+            if (!down.isEmpty()) {
+                String why = "the nodes that hold " + r.ref().kind() + " cannot be reached now: " + String.join(", ", down);
+                Set<LocalDate> failed = new HashSet<>();
+                failures.forEach(f -> failed.add(f.date()));
+                for (LocalDate d : remaining) {
+                    if (!failed.contains(d)) {
+                        failures.add(new Failure(UNREACHABLE, d, why));
                     }
                 }
             }
@@ -130,6 +160,16 @@ public final class SourceHistory {
         return new Routed(List.copyOf(out), dedupe(kept), List.copyOf(asked));
     }
 
+    /** Whether a read failed because it ran out of time (an HTTP time-out of a peer, a {@code TimeoutException}). */
+    static boolean timedOut(Throwable e) {
+        for (Throwable t = e; t != null; t = t.getCause() == t ? null : t.getCause()) {
+            if (t instanceof java.util.concurrent.TimeoutException || t.getClass().getSimpleName().endsWith("TimeoutException")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** A date two sources both answer (shards that overlap, a peer and a local store) keeps the higher generation. */
     private static void merge(TreeMap<LocalDate, HistoryDay> days, HistoryDay d) {
         days.merge(d.date(), d, (a, b) -> b.document().provenance().generation() > a.document().provenance().generation() ? b : a);
@@ -141,6 +181,27 @@ public final class SourceHistory {
             seen.putIfAbsent(f.source() + "|" + f.date(), f);
         }
         return List.copyOf(seen.values());
+    }
+
+    /**
+     * Whether a dated store may hold one of {@code dates} of the kind: not when it holds nothing of the kind ({@link SourcePlugin#holdsNone})
+     * or says of every date that it is {@link com.ash.drishti.api.DateCoverage#NOT_HELD} (the shipped {@code file} connector before any file
+     * of the kind appears). Such a store is not asked, so a read "as known at" an instant is not refused for it (QA1-04).
+     */
+    private static boolean mayHold(SourcePlugin p, String kind, List<LocalDate> dates) {
+        try {
+            if (p.holdsNone(kind)) {
+                return false;
+            }
+            for (LocalDate d : dates) {
+                if (p.coverage(kind, AsOf.of(d)) != com.ash.drishti.api.DateCoverage.NOT_HELD) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (RuntimeException e) {
+            return true;                                                  // it cannot say: it may hold them
+        }
     }
 
     /** A read "as known at" an instant cannot be put to a dated store that keeps no earlier versions (DRS-1007, as single reads). */

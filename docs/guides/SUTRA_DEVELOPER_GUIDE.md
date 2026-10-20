@@ -21,8 +21,8 @@ next: how one Sutra is chosen among several (source system and product type), ho
 expandable row groups, dates and live data, controls, how inference and a Sutra share a screen, testing in CI, and the Build workbench. It ends with the mistakes everyone makes once, with their
 problem codes, and a checklist.
 
-Every Sutra on this page was previewed against the demo lakes of a fresh clone (`drishti.py lake demo`, sixty business days ending 2026-10-16), and every figure you are told to expect was read from
-that preview. Figures that depend on the business date (a count of payments still to come) are marked as such; the seven days of the demo lakes end on the day you build them.
+Every Sutra on this page was previewed against the demo lakes of a fresh clone (`drishti.py lake demo`: the seven-day lakes of 2.5.0 ending 2026-10-16; the lakes hold sixty business days since 2.6.5), and every figure you are told to expect was read from
+that preview. Figures that depend on the business date (a count of payments still to come) are marked as such; the sixty days of the demo lakes end on the day you build them.
 
 **What this guide does not repeat.** One place owns each topic and this guide links to it:
 
@@ -581,7 +581,7 @@ panels: []
 ```
 
 You should see `[Rates · Interest rate swap (fixed/float)] MX-20000001 with CP-MERIDIAN-RE` and the strip `Notional AUD 242,000,000 · Side Sell · Fixed rate 4.0829% · Maturity 2032-06-25 · Status
-AMENDED v2 · Source MUREX · Trader A. Shah · Portfolio BOOK-RATES-3`. `with`, `Trader` and `Portfolio` are links. `panels: []` is valid: a Sutra may have no panels. A booking carries no
+AMENDED v2 · Source MUREX · Trader A. Shah · Portfolio BOOK-RATES-3` (the status was captured on the seven-day lakes of 2.5.0. On the sixty-day lakes of 2.6.5 `MX-20000001` is cancelled part-way through: on its last seven business days it reads `CANCELLED`, version 7; on an earlier date it reads `AMENDED`). `with`, `Trader` and `Portfolio` are links. `panels: []` is valid: a Sutra may have no panels. A booking carries no
 mark-to-market: the trade's MTM, P&L and DV01 are market-risk's trade valuation (`TVAL TVAL-MX-20000001`), a page of its own.
 
 ### 4.2 The ticket, and legs side by side

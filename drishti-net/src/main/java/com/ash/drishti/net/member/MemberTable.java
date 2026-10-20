@@ -124,14 +124,23 @@ public final class MemberTable {
         List<String> gone = new ArrayList<>();
         boolean refuted = false;
         boolean changed = false;
+        // a loopback, wildcard, link-local or bridge advertisement (in any spelling, or a name that resolves here to one) is never stored,
+        // so never sent on; looked at before the lock, since a name may need a lookup
+        java.util.Set<Member> refused = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        String selfId = self.nodeId();
+        for (Member m : incoming) {
+            if (m != null && m.nodeId() != null && !m.nodeId().equals(selfId) && com.ash.drishti.net.config.HostAddress.loopbackUrl(m.url())) {
+                refused.add(m);
+            }
+        }
         lock.lock();
         try {
             for (Member m : incoming) {
                 if (m == null || m.nodeId() == null || m.nodeId().isBlank()) {
                     continue;
                 }
-                if (!m.nodeId().equals(self.nodeId()) && com.ash.drishti.net.config.HostAddress.loopbackUrl(m.url())) {
-                    continue;                                      // a loopback or wildcard advertisement: never stored, so never sent on
+                if (refused.contains(m)) {
+                    continue;
                 }
                 if (m.nodeId().equals(self.nodeId())) {
                     if (self.state() == MemberState.LEFT) {

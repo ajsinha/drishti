@@ -23,7 +23,8 @@ the Model view. Everything else that used to be in the BI tutorial is now a tuto
 
 Every answer below was captured on a fresh clone over the **demo lakes** (`drishti.py lake demo`: sixty business days of the seven packs, 5,000 trades for
 each of ENDUR, CALYPSO and MUREX, 15,000 trade valuations a day). The demo lakes end on **today's** business date, so your dates differ from the ones
-here (2026-10-07 to 2026-10-16); the figures of each day are the same. Some pictures are from the 2.2 demo data and show its lower-case column names; the
+here. The answers were captured on the seven-day lakes of 2.5.0 (2026-10-07 to 2026-10-16); the lakes hold sixty business days since 2.6.5, and a
+figure may differ on yours. Some pictures are from the 2.2 demo data and show its lower-case column names; the
 steps are the same.
 
 | Sample model | What it teaches | Tables (aliases) |

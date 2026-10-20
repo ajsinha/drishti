@@ -244,6 +244,26 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         default Duration budget(EntityRef ref, AsOf asOf, Duration local) {
             return local;
         }
+
+        /**
+         * The version of the data the peers a read of {@code ref} would ask hold for its kind (each node's sources' data versions, as their
+         * digests carry them), so an answer read through them can be cached under it: a load on a peer changes it. Empty when one of those
+         * peers cannot say (its answer is then never cached); an empty string when no peer would be asked.
+         */
+        default Optional<String> version(EntityRef ref, AsOf asOf) {
+            return Optional.of("");
+        }
+
+        /** The nodes that hold the kind but cannot be reached now, each with its state ({@code qa1-b (suspect)}); none by default. */
+        default List<String> downHolders(String kind) {
+            return List.of();
+        }
+    }
+
+    /** {@link Fallback#version} of the peers a read of {@code ref} would ask: an empty string while the cluster is off. */
+    public Optional<String> peerVersion(EntityRef ref, AsOf asOf) {
+        Fallback fb = fallback;
+        return fb == null ? Optional.of("") : fb.version(ref, asOf);
     }
 
     /** A derived source that serves a kind here, by its connector name: Drishti*net gathers its groups across nodes. */
@@ -749,7 +769,9 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         for (SourcePlugin p : sources) {
             Optional<String> v;
             try {
-                v = asOf.live() || asOf.businessDate() == null ? p.dataVersion(kind) : p.dataVersion(kind, asOf.businessDate());
+                // a source that holds nothing of the kind (a table not created yet) has nothing to version: "none" until data arrives
+                v = p.holdsNone(kind) ? Optional.of("none")
+                        : asOf.live() || asOf.businessDate() == null ? p.dataVersion(kind) : p.dataVersion(kind, asOf.businessDate());
             } catch (RuntimeException e) {
                 return Optional.empty();
             }
@@ -863,6 +885,30 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
     }
 
     /** The newest business date any source of the kind holds (empty when none can say). */
+    /**
+     * The first and last business dates on which {@code ref} has data between {@code from} and {@code to}, from the local dated sources
+     * that can list an entity's days cheaply ({@link SourcePlugin#days}); empty when none of them can say or none holds a day (QA1-11).
+     */
+    public Optional<java.time.LocalDate[]> daysHeld(EntityRef ref, java.time.LocalDate from, java.time.LocalDate to) {
+        java.time.LocalDate first = null;
+        java.time.LocalDate last = null;
+        for (SourcePlugin p : candidates(ref.kind())) {
+            if (!p.manifest().capabilities().dated()) {
+                continue;
+            }
+            try {
+                Optional<java.util.NavigableSet<java.time.LocalDate>> d = p.days(ref, from, to);
+                if (d.isPresent() && !d.get().isEmpty()) {
+                    first = first == null || d.get().first().isBefore(first) ? d.get().first() : first;
+                    last = last == null || d.get().last().isAfter(last) ? d.get().last() : last;
+                }
+            } catch (RuntimeException e) {
+                // a source that cannot say does not stop the others
+            }
+        }
+        return first == null ? Optional.empty() : Optional.of(new java.time.LocalDate[] {first, last});
+    }
+
     public Optional<java.time.LocalDate> latestDate(String kind) {
         Optional<java.time.LocalDate> out = Optional.empty();
         for (SourcePlugin p : candidates(kind)) {

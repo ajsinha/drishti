@@ -212,6 +212,30 @@ class FieldMaskingTest {
     }
 
     @Test
+    void theRangesAfterAnIdKeepTheirLabelsForEveryUser() throws Exception {
+        // QA1-06: a caller with masks sees the range rows as ranges (30, 3M, YTD, 30 DIFF), not retitled as the entity, and a partial
+        // range (TRD MX-20000001 3) still offers the ranges that start with it
+        for (String role : List.of("full", "masked")) {
+            JsonNode after = read("/api/v1/command/suggest", role, "q", "TRD MX-20000001 ");
+            List<String> titles = new ArrayList<>();
+            List<String> subtitles = new ArrayList<>();
+            after.forEach(s -> {
+                if ("range".equals(s.path("type").asText())) {
+                    titles.add(s.path("title").asText());
+                    subtitles.add(s.path("subtitle").asText());
+                }
+            });
+            assertThat(titles).as(role).containsExactly("30", "3M", "YTD", "30 DIFF");
+            assertThat(subtitles.get(1)).as(role).contains("3 months");
+            assertThat(after.get(0).path("type").asText()).as(role).isEqualTo("range");
+            JsonNode partial = read("/api/v1/command/suggest", role, "q", "TRD MX-20000001 3");
+            List<String> completes = new ArrayList<>();
+            partial.forEach(s -> completes.add(s.path("complete").asText()));
+            assertThat(completes).as(role).contains("TRD MX-20000001 30", "TRD MX-20000001 3M", "TRD MX-20000001 30 DIFF");
+        }
+    }
+
+    @Test
     void alertsAndPhrasesCannotProbeAMaskedField() throws Exception {
         String user = "u-masked";
         long before = alerts.events(user, 1).stream().mapToLong(e -> e.seq()).max().orElse(Long.MIN_VALUE);  // the history survives runs

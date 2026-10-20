@@ -15,7 +15,7 @@
 -->
 # Connectors: a developer's guide
 
-This guide is for the person who connects Drishti to data: choosing among the seventeen plugins that ship, combining
+This guide is for the person who connects Drishti to data: choosing among the nineteen plugins that ship, combining
 and operating them, and, when none fits, writing a new one. It teaches. The exact settings, data layouts, health texts
 and limits of each connector live in that connector's own document (`docs/connectors/<NAME>_CONNECTOR.md`), and this
 guide links there instead of repeating them. Named connectors are **files**, one YAML file per connector in `config/connectors/`: the folder, the
@@ -985,7 +985,7 @@ The contract covers the happy path. **Add your own tests for the failure semanti
 
 `docs/guides/examples/connector/` is a complete, small, **dated** source plugin written for teaching. It is built and
 tested with the rest of the project (`./mvnw verify`), but it is **not shipped**: the server does not depend on it,
-it is not one of the seventeen plugins, and it exists to be copied.
+it is not one of the nineteen plugins, and it exists to be copied.
 
 ```text
 docs/guides/examples/connector/

@@ -24,8 +24,8 @@ fictitious, all deterministic:
 
 | Form | Where | What it is | Built by |
 |---|---|---|---|
-| **The test data** | `data/testdata/` (committed, about 120 MB of `.jsonl.gz`) | sixty business days of every dataset the seven packs read: 5,000 trades a day per source system (ENDUR, CALYPSO, MUREX), counterparties, market data, agreements, netting sets, risk results; a first-day snapshot and each later day's changes | `tools/testdata/make_testdata.py` (`--check` says whether the files are current) |
-| **The demo lakes** | `data/delta/` (generated, never committed) | the test data as Delta tables, one per dataset, seven daily snapshots each: what the packs' connectors read | `drishti.py lake demo` (one command, about a minute) |
+| **The test data** | `data/testdata/` (committed, about 120 MB of `.jsonl.gz`) | sixty business days of every dataset the seven packs read: up to 5,000 trades a day per source system (ENDUR, CALYPSO, MUREX), counterparties, market data, agreements, netting sets, risk results; a first-day snapshot and each later day's changes | `tools/testdata/make_testdata.py` (`--check` says whether the files are current) |
+| **The demo lakes** | `data/delta/` (generated, never committed) | the test data as Delta tables, one per dataset, sixty daily snapshots each: what the packs' connectors read | `drishti.py lake demo` (one command, about 15 minutes) |
 | **The samples** | `config/packs/<pack>/samples/<kind>.jsonl` (committed) | a few hundred documents a pack, the same shape, that the `demo` source serves live and ticking, with no store at all | `tools/packgen/banking/make_data.py` and each pack's generator |
 
 The other stores (PostgreSQL, DuckDB, Iceberg, MongoDB, Redis, Aerospike, Cassandra, JSON-lines files) are loaded with the samples (ten business
@@ -37,8 +37,8 @@ days) and, for scale tests, a generated trade book: the scripts in [the other st
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 ```
 
-(the IDE run configuration **Build demo lakes**). On a fresh clone: **53 s, 807 MB peak memory, 64 tables**, sixty business days
-ending on today's business date (the test data's 2026-09-22 to 2026-09-30, moved; `--as-of data` keeps them). The trades go to one
+(the IDE run configuration **Build demo lakes**). Measured for sixty days: **943 s (about 15 minutes), 64 tables, about 2.2 GB**, sixty business days
+ending on today's business date (the test data's 2026-07-08 to 2026-09-30, moved; `--as-of data` keeps them). The trades go to one
 table per source system, `data/delta/trading/trade_endur`, `trade_calypso` and `trade_murex`, partitioned by business date and
 `PRODUCT_TYPE`, each read by its own connector (`trade-endur`, `trade-calypso`, `trade-murex`) and served together as one kind,
 `trade`; every other dataset goes to `data/delta/<domain>/<kind>/`, partitioned by business date. Datasets of static reference data
@@ -49,11 +49,11 @@ table, partitions, documents on day 1, changes a day, size), are in [data/testda
 
 | What | Value |
 |---|---|
-| Business days | 7 (USNY calendar) |
-| Trades | 5,000 a day per source system, 15,000 in all; about 3–7% amended each day (`TRADE_VERSION` moves) |
+| Business days | 60 (USNY calendar; the test data's 2026-07-08 to 2026-09-30) |
+| Trades | 5,000 per source system on the last day, 15,000 in all (4,407 ENDUR, 3,471 CALYPSO, 4,198 MUREX on the first); about 3–7% amended each day (`TRADE_VERSION` moves) |
 | Source systems | `ENDUR` (ids `1000001` …), `CALYPSO` (`CLY-3000001` …), `MUREX` (`MX-20000001` …): ids unique across them |
 | Tables | 64: 3 trade tables, 46 test-data datasets of the five banking packs, 15 reference tables of world-economy and news-and-markets |
-| Disk | about 243 MB |
+| Disk | about 2.2 GB (the committed test data: about 120 MB) |
 | Counterparties | fictitious look-alikes (`CP-NORTHPLAINS`, `CP-VAULTGUARD`, …), with UEN, country of risk, legal entity, agreements and netting sets holding their trades |
 
 Re-running `lake demo` rebuilds every table it writes (the folder is removed first) and is safe while a server runs: the server gets

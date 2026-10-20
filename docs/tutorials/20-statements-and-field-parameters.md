@@ -215,17 +215,23 @@ month). **Run now** in the subscription's history: one mail per person, each wit
 shows each delivery with `statement: true` and its page count. A desk head's statement holds their desk's trades only; an analyst's has MTM masked;
 two people with the same rights get the same pages but their name ([DISTRIBUTION.md section 2](../guides/DISTRIBUTION.md#2-subscriptions)).
 
-**From the command line** (as with any subscription, over the API):
+**From the command line.** A subscription is yours, so it is saved and run from the console while you are signed in: saving one
+(`PUT /api/v1/me/subscriptions/{name}`) or running it (`POST …/{name}/run`) with a personal API token answers `403 DRS-5002 API tokens
+may not call this endpoint`, whatever the token's scopes, because every `/me/**` write is never open to a token
+([API_GUIDE.md › Personal API tokens](../guides/API_GUIDE.md#personal-api-tokens)). A token can read it back once the console has saved it,
+with its runs and deliveries:
 
 ```
-$ curl -s -X PUT -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' $DRISHTI_SERVER/api/v1/me/subscriptions/monthly \
-    -d '{"target": {"type": "report", "id": "bi-39eb12fe47", "page": "statement"}, "schedule": "monthly 1 07:30 business", "format": "pdf",
-         "date": "previous", "recipients": ["role:desk-head"], "title": "Monthly statement"}'
-$ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" $DRISHTI_SERVER/api/v1/me/subscriptions/monthly/run
+$ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" $DRISHTI_SERVER/api/v1/me/subscriptions \
+    | jq '.[] | {name, title, schedule, format, recipients, runs: [.runs[] | {at, status, sent}]}'
 ```
 
-**You should see:** one mail per person in `role:desk-head`, each with their own PDF (*Monthly statement October 2026 hana.pdf*), and in the
-subscription's history one delivery per person with `statement: true` and its page count; a desk head's PDF holds only their desk's trades.
+and make your own statement as a file, which only reads (step 5's `drishti.py bi statement file`, or
+`POST /api/v1/bi/reports/statement/file`, [STATEMENTS.md](../guides/STATEMENTS.md)).
+
+**You should see:** after **Run now**, one mail per person in `role:desk-head`, each with their own PDF (*Monthly statement October 2026
+hana.pdf*), and in the subscription's history one delivery per person with `statement: true` and its page count; a desk head's PDF holds
+only their desk's trades. On the command line, the subscription with `format: pdf`, `recipients: ["role:desk-head"]` and the run.
 
 ## What you did
 

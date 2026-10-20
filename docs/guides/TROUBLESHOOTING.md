@@ -1292,6 +1292,8 @@ address and port must be reachable (firewall); the seed must itself be enabled. 
 ### `... is a loopback or wildcard address: the address this node advertises must be an address other machines can call`
 
 Since 2.6.0 members advertise only a real address: `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` and `::` are refused in `advertise-url`
+in any spelling (`localhost.`, `0`, `2130706433`, `0x7f000001`), with link-local and container-bridge addresses and a host name that
+resolves here to one of them (`… (oryxpro is 127.0.1.1 here: loopback)`: the machine's own name in `/etc/hosts` on Debian and Ubuntu)
 (node.yaml) and in a seed's `url` (`peers/*.yaml`), by `drishti.py net check|set|add-peer`, Admin → Net → Files and the server when it loads the
 folder (the file is then shown **refused**). Even three nodes on one machine use the machine's address. **Fix:** the address the message names
 (`this machine's address is 192.168.1.20: use http://192.168.1.20:18784`), or leave `advertise-url` out. A machine with no address but loopback

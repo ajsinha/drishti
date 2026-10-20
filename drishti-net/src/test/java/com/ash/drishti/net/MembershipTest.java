@@ -162,6 +162,31 @@ class MembershipTest {
     }
 
     @Test
+    void anAdvertisementNoOtherMachineCanCallIsNeverStored() {
+        // QA1-09: every spelling of loopback and wildcard, and a name that resolves here to loopback, are dropped at the gossip intake
+        MemberTable table = new MemberTable(m("self", 1, 0, MemberState.ALIVE), () -> 1000);
+        List<String> bad = new java.util.ArrayList<>(List.of("http://0:18611", "http://localhost.:18611", "http://ip6-localhost:18611",
+                "http://2130706433:18611", "http://0x7f000001:18611", "http://127.1:18611", "http://[fe80::1]:18611", "http://169.254.10.1:18611"));
+        hostName().filter(h -> com.ash.drishti.net.config.HostAddress.loopbackOrWildcard(h)).ifPresent(h -> bad.add("http://" + h + ":18611"));
+        int i = 0;
+        for (String url : bad) {
+            table.merge(List.of(new Member("bad-" + i++, url, 1, 1, MemberState.ALIVE, "", "", Member.PROTOCOL, List.of(), 0, false)));
+        }
+        assertThat(table.others()).isEmpty();
+        table.merge(List.of(new Member("good", "http://192.0.2.10:18611", 1, 1, MemberState.ALIVE, "", "", Member.PROTOCOL, List.of(), 0, false)));
+        assertThat(table.known("good")).isPresent();
+    }
+
+    /** This machine's host name, when it has one. */
+    static java.util.Optional<String> hostName() {
+        try {
+            return java.util.Optional.of(java.net.InetAddress.getLocalHost().getHostName());
+        } catch (java.net.UnknownHostException e) {
+            return java.util.Optional.empty();
+        }
+    }
+
+    @Test
     void peersFileIsWrittenAtomicallyAndACorruptOneIsIgnored() throws Exception {
         MemberTable table = new MemberTable(m("self", 3, 0, MemberState.ALIVE), () -> 1000);
         table.merge(List.of(m("x", 1, 1, MemberState.ALIVE), m("y", 1, 1, MemberState.LEFT), m("z", 1, 1, MemberState.SUSPECT)));
