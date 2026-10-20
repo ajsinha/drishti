@@ -182,7 +182,8 @@ class SoakConfigurationTest(unittest.TestCase):
             files = net_soak.connector_files(murex, "trading,counterparty-risk")
             self.assertEqual({"trade-endur", "trade-calypso", "market-store", "legal-store", "collateral-store"}, set(files))
             doc = yaml.safe_load(files["trade-endur"])
-            self.assertEqual(("delta", "false", ["trade"]), (doc["plugin"], doc["enabled"], doc["kinds"]))
+            self.assertEqual(("delta", False, ["trade"]), (doc["plugin"], doc["enabled"], doc["kinds"]))
+            self.assertIn("enabled: false\n", files["trade-endur"])                  # a YAML boolean, never the string "false" (SOAK2-02)
             self.assertEqual("trade_endur", doc["settings"]["table"]["trade"])
             self.assertLessEqual(set(doc), {"plugin", "enabled", "kinds", "description", "settings", "name"})   # CONNECTOR_FILES section 3
             shared = self.lake(Path(tmp) / "shared", ["trading/trade_endur", "trading/trade_calypso", "reference/counterparty"])

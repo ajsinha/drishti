@@ -249,8 +249,13 @@ public final class ConnectorFiles {
             throw new InvalidFile(name + ".yaml: 'plugin' is required (jdbc, delta, kafka, ...)");
         }
         Object en = m.get("enabled");
+        // a quoted "true" or "false" is the same switch (SOAK2-02): "${DRISHTI_LAKE_ENABLED:true}" resolves to that string too, and
+        // render() writes either form back as a boolean
+        if (en instanceof String s && (s.trim().equalsIgnoreCase("true") || s.trim().equalsIgnoreCase("false"))) {
+            en = Boolean.valueOf(s.trim());
+        }
         if (en != null && !(en instanceof Boolean) && !(en instanceof String s && s.contains("${"))) {
-            throw new InvalidFile(name + ".yaml: 'enabled' is true or false");
+            throw new InvalidFile(name + ".yaml: 'enabled' is true or false (or a \"${VARIABLE:true}\" placeholder), not '" + en + "'");
         }
         List<String> kinds = new ArrayList<>();
         Object k = m.get("kinds");

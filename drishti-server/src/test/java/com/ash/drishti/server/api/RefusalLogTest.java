@@ -94,6 +94,42 @@ class RefusalLogTest {
     }
 
     @Test
+    void refusalsThatAlternateWhatTheySayAboutANodeAreOneLineEachFromTheFirst() {
+        // SOAK2-05: in the 2 s before drishti-c was suspect, pages said "failed" and histories "not answering", one after the other: 38 lines
+        for (int i = 0; i < 400; i++) {
+            handler.drishti(i % 2 == 0
+                    ? new DrishtiException(ErrorCode.NET_PEER_FAILED, "the node drishti-c that holds trade failed reading trade/MX-" + i)
+                    : down("MX-" + i, "not answering: the connection failed"));
+            now.addAndGet(5);                                           // 2 s
+        }
+        assertThat(lines.list).extracting(ILoggingEvent::getFormattedMessage).hasSize(2)
+                .anySatisfy(m -> assertThat(m).contains("failed reading"))
+                .anySatisfy(m -> assertThat(m).contains("drishti-c (not answering"));
+        handler.drishti(down("MX-x", "suspect"));                      // then suspect, then dead: a line each
+        handler.drishti(down("MX-y", "dead"));
+        handler.drishti(down("MX-z", "dead"));
+        assertThat(lines.list).hasSize(4);
+        now.addAndGet(60_000);                                          // a minute on: the count, not a line per refusal
+        handler.drishti(down("MX-w", "dead"));
+        handler.drishti(down("MX-v", "dead"));
+        assertThat(lines.list).hasSize(5);
+        assertThat(lines.list.get(4).getFormattedMessage()).contains("times in the last");
+    }
+
+    @Test
+    void aNodeGossipSaysIsBackButNotYetRoutableIsRejoiningNotAlive() {
+        var alive = new com.ash.drishti.net.member.Member("drishti-c", "http://192.0.2.1:1", 2, 1,
+                com.ash.drishti.net.member.MemberState.ALIVE, "", "", com.ash.drishti.net.member.Member.PROTOCOL, List.of(), 0, false);
+        assertThat(com.ash.drishti.server.net.NetRouting.label(alive, false)).isEqualTo("rejoining");
+        assertThat(com.ash.drishti.server.net.NetRouting.label(alive, true)).isEqualTo("alive");
+        assertThat(com.ash.drishti.server.net.NetRouting.label(alive.withState(com.ash.drishti.net.member.MemberState.DEAD, 1), false))
+                .isEqualTo("dead");
+        assertThat(com.ash.drishti.server.net.NetRouting.label(alive.withDrained(true), false)).isEqualTo("drained");
+        handler.drishti(down("MX-1", "rejoining"));
+        assertThat(lines.list).singleElement().satisfies(e -> assertThat(e.getFormattedMessage()).contains("drishti-c (rejoining)"));
+    }
+
+    @Test
     void anUnexpectedServerErrorKeepsItsStackTrace() {
         handler.drishti(new DrishtiException(ErrorCode.SOURCE_FAILED, "trade-endur failed reading trade/1"));
         handler.drishti(new DrishtiException(ErrorCode.SOURCE_FAILED, "trade-endur failed reading trade/2"));
