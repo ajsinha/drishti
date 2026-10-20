@@ -792,7 +792,16 @@ public final class QueryService implements AutoCloseable {
     public List<String> onLoad(String kind, LocalDate date, List<Loaded> datasets) {
         List<String> touched = new ArrayList<>();
         for (Loaded ds : datasets) {
-            List<String> tables = layers.invalidate(ds.key(), ds.dataset(), kind, date);
+            // a table whose stored date was built from the data the source holds now is left alone: a burst of signals for the same data
+            // (2,976 in QA3B-07) cleared and rebuilt each date of each table 25 times; only a date whose data changed is cleared
+            List<Dataset.Table> stale = ds.dataset().tablesOfKind(kind).stream().filter(t -> !layers.fresh(ds.key(), t, date)).toList();
+            if (stale.size() < ds.dataset().tablesOfKind(kind).size()) {
+                unchangedSignals.incrementAndGet();
+            }
+            if (stale.isEmpty()) {
+                continue;
+            }
+            List<String> tables = layers.invalidate(ds.key(), ds.dataset(), stale, date);
             if (tables.isEmpty()) {
                 continue;
             }
@@ -802,7 +811,7 @@ public final class QueryService implements AutoCloseable {
                 cache.asMap().keySet().removeIf(k -> k.startsWith(ds.key() + "|"));
             }
             if (props.eagerRebuild()) {
-                for (Dataset.Table t : ds.dataset().tablesOfKind(kind)) {
+                for (Dataset.Table t : stale) {
                     if (t.onLoad() && "cached".equals(t.mode())) {
                         queueRebuild(ds, t, date);
                     }
@@ -810,6 +819,17 @@ public final class QueryService implements AutoCloseable {
             }
         }
         return touched;
+    }
+
+    /**
+     * Whether every cached table of the dataset ({@code only}: these, null for all) that reads one of {@code kinds} (null: any) holds the date as
+     * built from the data the source holds now (its source can say its data version, and it matches): a refresh of that date for a signal
+     * of those kinds would read the same data again.
+     */
+    public boolean fresh(Loaded ds, java.util.Collection<String> only, LocalDate date, java.util.Collection<String> kinds) {
+        List<Dataset.Table> tables = ds.dataset().tables().values().stream()
+                .filter(t -> "cached".equals(t.mode()) && (only == null || only.contains(t.name())) && (kinds == null || kinds.contains(t.kind()))).toList();
+        return date != null && !tables.isEmpty() && tables.stream().allMatch(t -> layers.fresh(ds.key(), t, date));
     }
 
     /** What a refresh did: the date rebuilt, the tables, the rows read and how long it took. */
@@ -865,6 +885,15 @@ public final class QueryService implements AutoCloseable {
         return new Refreshed(shown, tables.stream().map(Dataset.Table::name).toList(), rows, Math.round((System.nanoTime() - t0) / 1e6), warnings.stream().distinct().toList());
     }
 
+    /** Signals that found at least one table's date already built from the data the source holds (nothing cleared for it). */
+    private final java.util.concurrent.atomic.AtomicLong unchangedSignals = new java.util.concurrent.atomic.AtomicLong();
+    /** Background rebuilds run, and those skipped because the date was already built from the data held now (by a query or a rebuild). */
+    private final java.util.concurrent.atomic.AtomicLong rebuildsRun = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong rebuildsSkipped = new java.util.concurrent.atomic.AtomicLong();
+    /** Background rebuilds at once over every table: a burst over many tables reads the sources a few at a time, not all at once. */
+    static final int REBUILDS_AT_ONCE = 2;
+    private final java.util.concurrent.Semaphore rebuildSlots = new java.util.concurrent.Semaphore(REBUILDS_AT_ONCE, true);
+
     /** The dates waiting to be rebuilt for one table of one dataset, and whether its one rebuild runs (QA3A-01). */
     private static final class Rebuilds {
         final java.util.TreeSet<LocalDate> dates = new java.util.TreeSet<>();
@@ -910,11 +939,41 @@ public final class QueryService implements AutoCloseable {
                     d = r.dates.pollLast();                   // the newest first: the date pages most likely show
                     ds = r.ds;
                 }
-                rebuild(ds, t, d == LocalDate.MIN ? null : d);
+                LocalDate date = d == LocalDate.MIN ? null : d;
+                if (date != null && layers.fresh(ds.key(), t, date)) {
+                    rebuildsSkipped.incrementAndGet();        // built meanwhile from the data held now (a query, the rebuild before): nothing to read
+                    continue;
+                }
+                rebuildSlots.acquireUninterruptibly();
+                try {
+                    if (date != null && layers.fresh(ds.key(), t, date)) {
+                        rebuildsSkipped.incrementAndGet();
+                        continue;
+                    }
+                    rebuildsRun.incrementAndGet();
+                    rebuild(ds, t, date);
+                } finally {
+                    rebuildSlots.release();
+                }
             }
         } finally {
             rebuildsRunning.decrementAndGet();
         }
+    }
+
+    /** Background rebuilds run since the start (tests and the health page: bounded by the dates whose data changed, not by the signals). */
+    public long rebuildsRun() {
+        return rebuildsRun.get();
+    }
+
+    /** Background rebuilds skipped: the date was already built from the data held now. */
+    public long rebuildsSkipped() {
+        return rebuildsSkipped.get();
+    }
+
+    /** Signals that found a table's date already built from the data held now. */
+    public long unchangedSignals() {
+        return unchangedSignals.get();
     }
 
     /** The most table rebuilds that ran at once since the start (tests: one per table, whatever the signals). */

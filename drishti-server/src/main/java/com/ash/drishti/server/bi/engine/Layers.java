@@ -169,8 +169,11 @@ public final class Layers {
                     return new Layer(List.of(p), warnings, 0);
                 }
             }
-            TableBuilder.Built b = lock(dir.toString() + "|latest", () -> builder.build(t, null, d -> partitionDir(dir, d)));
-            Partition p = finish(dir, b, sig, version(t, b.date()));
+            java.util.concurrent.atomic.AtomicReference<Partition> made = new java.util.concurrent.atomic.AtomicReference<>();
+            // the read under the latest's lock; the write of the date's partition under that partition's own lock (QA3B-07)
+            TableBuilder.Built b = lock(dir.toString() + "|latest", () -> builder.build(t, null, d -> partitionDir(dir, d), this::partitionLock,
+                    x -> made.set(finish(dir, x, sig, version(t, x.date()), -1))));
+            Partition p = made.get();
             latest.put(lk, new Latest(b.date(), now));
             builds.incrementAndGet();
             warnings.addAll(b.warnings());
@@ -191,14 +194,21 @@ public final class Layers {
                     break;
                 }
                 final LocalDate day = d;
-                TableBuilder.Built b = lock(partitionDir(dir, day) + "|build", () -> {
+                java.util.concurrent.atomic.AtomicReference<Partition> made = new java.util.concurrent.atomic.AtomicReference<>();
+                // one build of a partition at a time, its check, read, write and metadata under the partition's lock (QA3B-07)
+                TableBuilder.Built b = lockPartition(partitionDir(dir, day), () -> {
                     Partition again = valid(dir, day, sig, ver);
-                    return again != null ? null : builder.build(t, day, x -> partitionDir(dir, x));
+                    if (again != null) {
+                        made.set(again);
+                        return null;
+                    }
+                    long epoch = epoch(partitionDir(dir, day));
+                    return builder.build(t, day, x -> partitionDir(dir, x), this::partitionLock, x -> made.set(finish(dir, x, sig, ver, epoch)));
                 });
                 if (b == null) {
-                    p = valid(dir, d, sig, ver);
+                    p = made.get();
                 } else {
-                    p = finish(dir, b, sig, ver);
+                    p = made.get();
                     builds.incrementAndGet();
                     built++;
                     warnings.addAll(b.warnings());
@@ -211,9 +221,17 @@ public final class Layers {
         return new Layer(out, warnings.stream().distinct().toList(), built);
     }
 
-    private Partition finish(Path dir, TableBuilder.Built b, String sig, String sourceVersion) {
+    /**
+     * Writes the partition's metadata (called holding the partition's lock), which makes it valid. A partition whose source cannot say its
+     * data version and that was invalidated while it was built ({@code epoch} moved: a data-load signal came during the read) is served to
+     * the query that built it but gets no metadata, so the next read builds it again from the new data.
+     */
+    private Partition finish(Path dir, TableBuilder.Built b, String sig, String sourceVersion, long epoch) {
         Map<String, Object> meta = new LinkedHashMap<>();
         String id = Long.toHexString(System.nanoTime()) + "-" + b.rows();
+        if (sourceVersion == null && epoch >= 0 && epoch != epoch(partitionDir(dir, b.date()))) {
+            return new Partition(b.date(), b.file(), b.rows(), id);
+        }
         meta.put("signature", sig);
         if (sourceVersion != null) {
             meta.put("sourceVersion", sourceVersion);
@@ -484,15 +502,27 @@ public final class Layers {
         return true;
     }
 
-    /** Deletes the date's partitions of every table (and rollup) of the dataset that reads the kind; returns the tables touched. */
+    /** Invalidates the date's partitions of every table (and rollup) of the dataset that reads the kind; returns the tables touched. */
     public List<String> invalidate(String key, Dataset ds, String kind, LocalDate date) {
+        return invalidate(key, ds, ds.tablesOfKind(kind), date);
+    }
+
+    /**
+     * Invalidates the date's partitions of these tables (and their rollups): their metadata is removed, so the next read builds them again.
+     * The Parquet files stay until a build replaces them, so a query reading one now finishes, and a build running now keeps its temporary
+     * file: before, the folders were deleted, under a build writing into them (QA3B-07: {@code part.parquet.….tmp is gone}, {@code cannot
+     * write the layer's metadata}).
+     */
+    public List<String> invalidate(String key, Dataset ds, List<Dataset.Table> tables, LocalDate date) {
         List<String> touched = new ArrayList<>();
-        for (Dataset.Table t : ds.tablesOfKind(kind)) {
+        for (Dataset.Table t : tables) {
             try {
-                TableBuilder.delete(partitionDir(tableDir(key, t.name()), date));
+                Path pd = partitionDir(tableDir(key, t.name()), date);
+                epochs.computeIfAbsent(pd.toString(), k -> new AtomicLong()).incrementAndGet();
+                Files.deleteIfExists(pd.resolve("meta.json"));
                 for (Dataset.Rollup r : ds.rollups()) {
                     if (r.table().equals(t.name())) {
-                        TableBuilder.delete(partitionDir(root.resolve("rollups").resolve(key).resolve(r.name()), date));
+                        Files.deleteIfExists(partitionDir(root.resolve("rollups").resolve(key).resolve(r.name()), date).resolve("meta.json"));
                     }
                 }
             } catch (IOException e) {
@@ -537,7 +567,43 @@ public final class Layers {
         return out;
     }
 
+    /**
+     * Whether the table's partition for the date is built from the data the source holds now: it exists, is complete, has this definition and
+     * the source can say its data version, which matches the one it was built from. A data-load signal for such a date changes nothing
+     * (QA3B-07: a burst re-signalling the same dates rebuilt each one 25 times).
+     */
+    public boolean fresh(String key, Dataset.Table t, LocalDate date) {
+        if (date == null || !"cached".equals(t.mode())) {
+            return false;
+        }
+        String ver = version(t, date);
+        return ver != null && valid(tableDir(key, t.name()), date, signature(t), ver) != null;
+    }
+
     // ---- single flight -----------------------------------------------------------------------------------------------
+
+    /** Invalidations per partition folder: a build started before one does not make its partition valid (sources without a data version). */
+    private final Map<String, AtomicLong> epochs = new ConcurrentHashMap<>();
+
+    private long epoch(Path partition) {
+        AtomicLong e = epochs.get(partition.toString());
+        return e == null ? 0 : e.get();
+    }
+
+    /** The one lock of a partition folder: its builds, on demand and in the background, the latest's write and its metadata. */
+    private java.util.concurrent.locks.Lock partitionLock(Path partition) {
+        return locks.computeIfAbsent(partition + "|build", k -> new ReentrantLock());
+    }
+
+    private <T> T lockPartition(Path partition, java.util.function.Supplier<T> work) {
+        java.util.concurrent.locks.Lock l = partitionLock(partition);
+        l.lock();
+        try {
+            return work.get();
+        } finally {
+            l.unlock();
+        }
+    }
 
     private <T> T lock(String name, java.util.function.Supplier<T> work) {
         ReentrantLock l = locks.computeIfAbsent(name, k -> new ReentrantLock());

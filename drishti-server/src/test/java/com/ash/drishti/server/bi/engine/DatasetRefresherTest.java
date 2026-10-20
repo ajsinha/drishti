@@ -95,9 +95,12 @@ class DatasetRefresherTest {
             return lake.plugin(connector, kind);
         }
 
+        /** Whether the lake's data versions are given (off: the failures count reads only). */
+        volatile boolean versions;
+
         @Override
         public String dataVersion(String connector, String kind, LocalDate date) {
-            return null;                         // no versions: the failures count reads only
+            return versions ? lake.dataVersion(connector, kind, date) : null;
         }
 
         @Override
@@ -283,6 +286,45 @@ class DatasetRefresherTest {
         awaitStatus("failed");
         assertThat(dataset().get("retryAt")).isNull();
         assertThat(dataset().get("failures")).isEqualTo(2);
+    }
+
+    @Test
+    void aBurstOfAfterLoadSignalsRefreshesEachDateOnceAndUnchangedDataNotAgain() throws Exception {
+        // QA3B-07: every signal arriving while no refresh ran started one more full refresh; one runs and one waits now, each date once
+        lake.versions.put(TestLake.DAY1, "files-1");
+        lake.versions.put(TestLake.DAY2, "files-1");
+        gateway.versions = true;
+        start("after-load", new BiRefreshProperties(null, null, null, Duration.ofMillis(20), null));
+        lake.scanDelayMillis = 10;
+        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor();
+        java.util.List<java.util.concurrent.Future<?>> sent = new java.util.ArrayList<>();
+        for (int c = 0; c < 4; c++) {
+            sent.add(pool.submit(() -> {
+                for (int i = 0; i < 250; i++) {
+                    refresher.onLoad("trade", i % 2 == 0 ? TestLake.DAY1 : TestLake.DAY2);
+                }
+            }));
+        }
+        for (var f : sent) {
+            f.get();
+        }
+        pool.shutdown();
+        awaitStatus("ok");
+        for (int stable = 0, last = -1; stable < 8; ) {                     // until the refreshes are over: no read for 400 ms
+            Thread.sleep(50);
+            int now = lake.scans.get();
+            stable = now == last ? stable + 1 : 0;
+            last = now;
+        }
+        long runs = ((Number) dataset().get("runs")).longValue();
+        assertThat(runs).as("refreshes for 1,000 signals over two dates").isBetween(1L, 4L);
+        int scans = lake.scans.get();
+        for (int i = 0; i < 200; i++) {
+            refresher.onLoad("trade", TestLake.DAY1);                    // the same data again
+        }
+        Thread.sleep(400);
+        assertThat(lake.scans.get()).as("the same data is not read again").isEqualTo(scans);
+        assertThat(dataset().get("status")).isEqualTo("ok");
     }
 
     @Test
