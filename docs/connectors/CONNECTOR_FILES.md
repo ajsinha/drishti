@@ -286,11 +286,12 @@ the plugin defaults.
 **A connector file never holds a secret.** A setting whose name says it is a credential (`password`, `secret…`, `token`, `api-key`,
 `access-key`, `private-key`, `credential`) must be one of:
 
-- an environment reference: `password: ${ORDERS_DB_PASSWORD}`, or
+- an environment reference: `password: ${ORDERS_DB_PASSWORD}` (refused at start when the variable is not set), or
+  `password: ${ORDERS_DB_PASSWORD:}` with an empty default, for a store that may have no sign-in (a development node), or
 - a file reference: `password: file:/run/secrets/orders-db-password` (the first line of the file is the secret, read when the connector
   starts; this is how Docker and Kubernetes secrets are mounted).
 
-A literal value, a default inside the reference (`${X:fallback}`) and a password inside a URL (`jdbc:…//user:pw@host`, `?password=…`)
+A literal value, a value as the default inside the reference (`${X:fallback}`) and a password inside a URL (`jdbc:…//user:pw@host`, `?password=…`)
 are **refused** by Admin → Connectors, the API and the CLI with the reason and the name to use (real output in
 [section 10](#10-the-cli)). A hand-edited file that breaks this still loads (so a running site is not stopped by an edit), and the page
 shows a note on the connector.

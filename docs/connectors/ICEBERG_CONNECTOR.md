@@ -235,7 +235,12 @@ tools/load-iceberg.sh --catalog rest --uri http://polaris:8181/api/catalog --war
 tools/load-iceberg.sh s3a://risk-lake/iceberg --set s3.region=us-east-1 --spill-dir /data/tmp
 ```
 
-Measured (10,000 trades x 3 days, two writer threads):
+The samples and the book go to the loader as **one input**, so each business day of a table is written once and holds both: a load
+replaces the days it writes, so two loads of the same days (the samples, then a book) would leave only the book's trades on them.
+The loader's heap is `DRISHTI_LOADER_HEAP` (default `6g`; Windows: `-Heap`), and its input file is written under the data folder
+(`DRISHTI_DATA_DIR`) and removed after the load.
+
+Measured (10,000 trades x 3 days, two writer threads; before 2.6.6 the samples and the book were two loads):
 
 ```
 iceberg: loaded 17,910 rows into 46 tables in 8 s
@@ -660,12 +665,15 @@ settings:
   root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}
   uri: ${DRISHTI_ICEBERG_URI:}
   warehouse: ${DRISHTI_ICEBERG_WAREHOUSE:}
-  credential: ${DRISHTI_ICEBERG_CREDENTIAL}   # an environment (or file:) reference
+  credential: ${DRISHTI_ICEBERG_CREDENTIAL:}  # an environment (or file:) reference; empty for a path-based lake
   layout:
     trade:
       columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
 ```
 
+Every `${…}` here has a default, so the file starts as it is on a path-based lake; a REST catalog sets `DRISHTI_ICEBERG_CATALOG`,
+`DRISHTI_ICEBERG_URI` and the credential. The trading pack routes kind `trade` to `trade-endur`, so this file replaces that Delta connector
+(the ready-made [`iceberg/trade-endur.yaml`](../../config/connectors.examples/iceberg/trade-endur.yaml) is the same file).
 A file replaces the pack's template wholesale, so it repeats the promoted `layout` the pack declared ([section 5](#5-declaring-the-layout-in-a-pack)).
 
 The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). Ready-made files for this store are in [`config/connectors.examples/iceberg/`](../../config/connectors.examples/iceberg).

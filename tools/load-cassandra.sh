@@ -22,6 +22,7 @@
 # --buckets N | --buckets KIND=N (128), --in-flight N (256), --username U --password P (or DRISHTI_CASSANDRA_USERNAME /
 # DRISHTI_CASSANDRA_PASSWORD), --setting key=value (any connector setting, e.g. tls.enabled=true), --future-days N, --zone Z.
 # The samples and the book go to the loader as one stream, so each business day is loaded once and appears whole.
+# The loader's heap is DRISHTI_LOADER_HEAP (default 4g); its input file is written under the data folder and removed after the load.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 # the loader's JVM temp folder: never /tmp; the server sweeps it at start
@@ -50,4 +51,5 @@ CP="plugins/drishti-plugin-cassandra/target/classes:$(./mvnw -q -o dependency:bu
     # the bulk book straight from the generator: no file of gigabytes in between
     uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl -
   fi
-} | "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -cp "$CP" com.ash.drishti.plugin.cassandra.CassandraLoader - "$POINTS" "$DC" "${OPTS[@]}"
+} | "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -cp "$CP" com.ash.drishti.plugin.cassandra.CassandraLoader - "$POINTS" "$DC" "${OPTS[@]}"
+rm -f "$DATA/banking.jsonl"

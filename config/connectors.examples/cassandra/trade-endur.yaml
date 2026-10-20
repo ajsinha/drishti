@@ -11,15 +11,17 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-# Example: copy to config/connectors/trading-store.yaml to read the trading-store data from cassandra. It replaces the
-# connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
+# Example: copy to config/connectors/trade-endur.yaml to read the trades from cassandra. The trading pack routes kind trade to
+# trade-endur, so this file replaces that Delta connector (settings are not merged); the loader puts every source system's trades
+# in one table, so trade-calypso and trade-murex may be disabled. Credentials are ${ENV_VAR} references; an empty default
+# (${X:}) is a store with no sign-in, as a development node.
 plugin: cassandra
 kinds:
 - trade
-description: trading-store read from Apache Cassandra (loaded by tools/load-cassandra.sh)
+description: trades read from Apache Cassandra (loaded by tools/load-cassandra.sh)
 settings:
   domain: trading
   contact-points: ${DRISHTI_CASSANDRA_CONTACT_POINTS:localhost:9042}
   local-datacenter: ${DRISHTI_CASSANDRA_DATACENTER:datacenter1}
   username: ${DRISHTI_CASSANDRA_USERNAME:}
-  password: ${DRISHTI_CASSANDRA_PASSWORD}
+  password: ${DRISHTI_CASSANDRA_PASSWORD:}

@@ -33,6 +33,14 @@
 - **Fixed (QA2-08): Admin → Tokens no longer says tokens "never change anything"**: it says a read token only reads and a token with write
   scopes may change what they name; a new **Scopes** column marks each token *read only* or *writes* with its scopes; *Last used* is in the
   console's time zone with its name (`2026-10-20 08:54 New York`), as on the other Admin pages.
+- **Fixed (QA2-04): the Iceberg and Cassandra example connector files start as copied.** Their credentials default to empty
+  (`${DRISHTI_ICEBERG_CREDENTIAL:}`, `${DRISHTI_CASSANDRA_PASSWORD:}`, a path-based lake or a node with no sign-in) instead of refusing
+  the file; the trades' examples are `trade-endur.yaml` (the connector kind `trade` routes to), not a fourth `trading-store`, and promote
+  the UPPER_SNAKE columns. ICEBERG_CONNECTOR's and CASSANDRA_CONNECTOR's complete files match. A credential may be an environment reference with an
+  empty default (`${VAR:}`), never a value. `ConnectorExamplesTest` resolves every example with no environment set and checks its promoted columns.
+- **Fixed (QA2-05): `tools/load-iceberg.sh --trades N --days D` no longer deletes the sample trades of those days**: the samples and the
+  book are one input to one load, as `load-cassandra.sh` does; the same for `tools/windows/load-iceberg.ps1`. Both shell loaders take
+  `DRISHTI_LOADER_HEAP` and keep their input file under the data folder, removed after the load (QA2-21). `tools/test_load_scripts.py`.
 - **Fixed (QA2-03): Crimson Terminal's accent buttons** (the statement designer's Save and Preview pages, and every `.btn-accent`) were a pale
   pink gradient of the text accent under white labels (about 2:1); they now run from `--d-fill` to `--d-fill-strong` with `--d-on-fill`. A new guard in
   `test_contrast.py` fails any button rule that fills from `--d-accent`, or writes `--d-on-fill` on another ground.

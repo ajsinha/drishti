@@ -28,12 +28,16 @@
 # loaded, and dropping more than --max-drop-share (0.5) of a table needs --force-drop.
 # The loader sorts each day by id with an external sort: its run files go to --spill-dir (default: the system temp
 # folder) and take about the size of the loaded JSON; put them on a disk, not a memory-backed /tmp, for a large book.
+# The samples and the book go to the loader as one stream, so each business day of a table is written once and holds both (a second
+# load of the same days would replace them: QA2-05). The loader's heap is DRISHTI_LOADER_HEAP (default 6g); its input file is
+# written under the data folder (DRISHTI_DATA_DIR), never in the repository.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 # the loader's JVM temp folder: native libraries (DuckDB, RocksDB, zstd) unpack there, never in /tmp; the server sweeps it at start
-JTMP="${DRISHTI_TMP_DIR:-${DRISHTI_DATA_DIR:-data}/tmp/server}"; mkdir -p "$JTMP"
+DATA="${DRISHTI_DATA_DIR:-data}"
+JTMP="${DRISHTI_TMP_DIR:-$DATA/tmp/server}"; mkdir -p "$JTMP"
 export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
-ROOT="${DRISHTI_DATA_DIR:-./data}/iceberg"; OPTS=(); TRADES=""; DAYS="3"
+ROOT="$DATA/iceberg"; OPTS=(); TRADES=""; DAYS="3"
 [[ $# -gt 0 && "$1" != --* ]] && { ROOT="$1"; shift; }
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -46,13 +50,14 @@ while [[ $# -gt 0 ]]; do
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done
-uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl data/banking.jsonl
+uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$DATA/banking.jsonl"
 ./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-iceberg -am
 CP="plugins/drishti-plugin-iceberg/target/classes:$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-iceberg -Dmdep.outputFile=/dev/stdout)"
-JAVA=("$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx6g -cp "$CP")
-"${JAVA[@]}" com.ash.drishti.plugin.iceberg.IcebergLoader data/banking.jsonl "$ROOT" "${OPTS[@]}"
-if [[ -n "$TRADES" ]]; then
-  # the bulk book straight from the generator into the loader: no file of gigabytes in between
-  uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl - \
-    | "${JAVA[@]}" com.ash.drishti.plugin.iceberg.IcebergLoader - "$ROOT" "${OPTS[@]}"
-fi
+{
+  cat "$DATA/banking.jsonl"
+  if [[ -n "$TRADES" ]]; then
+    # the bulk book straight from the generator: no file of gigabytes in between
+    uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl -
+  fi
+} | "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-6g}" -cp "$CP" com.ash.drishti.plugin.iceberg.IcebergLoader - "$ROOT" "${OPTS[@]}"
+rm -f "$DATA/banking.jsonl"
