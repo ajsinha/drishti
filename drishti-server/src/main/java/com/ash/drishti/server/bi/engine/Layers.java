@@ -44,7 +44,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The columns and rollup layers on disk (RUPAKA.md section 7.1): the BI store, a folder of typed Parquet files laid out
- * {@code columns/<dataset>/<table>/date=<yyyy-mm-dd>/part.parquet} and {@code rollups/<dataset>/<name>/date=.../part.parquet}, each with a
+ * {@code columns/<dataset>/<table>/date=<yyyy-mm-dd>/part-<id>.parquet} (the {@code file} its metadata names; a build writes a new one, so a
+ * query reading the old one goes on, and old ones go ten minutes later) and {@code rollups/<dataset>/<name>/date=.../part.parquet}, each with a
  * {@code meta.json} beside it (the table's signature, rows, a build id, how it was read, warnings). A partition is <em>valid</em> while its
  * signature matches the table's definition; a data-load signal deletes the date's partitions, so the next query (or the eager rebuild) reads the
  * source for that date only. A partition also records the version of the source data it was read from ({@link SourceGateway#dataVersion}: a Delta
@@ -241,12 +242,28 @@ public final class Layers {
         meta.put("how", b.how());
         meta.put("builtAt", Instant.now(clock).toString());
         meta.put("warnings", b.warnings());
+        meta.put("file", b.file().getFileName().toString());
+        Path pd = partitionDir(dir, b.date());
+        writeMeta(pd, meta);
+        FileSwap.sweep(pd, b.file().getFileName().toString());
+        return new Partition(b.date(), b.file(), b.rows(), id);
+    }
+
+    /** The metadata written whole under a name of its own, then moved in place: a reader never sees half of it. */
+    private static void writeMeta(Path pd, Map<String, Object> meta) {
         try {
-            Files.writeString(partitionDir(dir, b.date()).resolve("meta.json"), JSON.writeValueAsString(meta), StandardCharsets.UTF_8);
+            Path tmp = pd.resolve("meta." + java.util.UUID.randomUUID().toString().substring(0, 8) + ".json.tmp");
+            Files.writeString(tmp, JSON.writeValueAsString(meta), StandardCharsets.UTF_8);
+            Files.move(tmp, pd.resolve("meta.json"), java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
         } catch (IOException e) {
             throw new DrishtiException(ErrorCode.QUERY_ENGINE, "cannot write the layer's metadata: " + e.getMessage());
         }
-        return new Partition(b.date(), b.file(), b.rows(), id);
+    }
+
+    /** The data file the metadata names (a store written before files had names of their own: part.parquet). */
+    private static Path dataFile(Path pd, JsonNode meta) {
+        String f = meta.path("file").asText("");
+        return pd.resolve(f.isBlank() || f.contains("/") || f.contains("\\") ? "part.parquet" : f);
     }
 
     /**
@@ -271,11 +288,15 @@ public final class Layers {
     private Partition valid(Path dir, LocalDate date, String sig, String sourceVersion) {
         Path pd = partitionDir(dir, date);
         Path meta = pd.resolve("meta.json");
-        if (!Files.isRegularFile(meta) || !Files.isRegularFile(pd.resolve("part.parquet"))) {
+        if (!Files.isRegularFile(meta)) {
             return null;
         }
         try {
             JsonNode m = JSON.readTree(Files.readString(meta));
+            Path file = dataFile(pd, m);
+            if (!Files.isRegularFile(file)) {
+                return null;
+            }
             if (!sig.equals(m.path("signature").asText())) {
                 return null;
             }
@@ -283,7 +304,7 @@ public final class Layers {
                 LOG.info("{} {}: the source holds other data now (a rebuilt or restated table): built again", dir.getFileName(), date);
                 return null;
             }
-            return new Partition(date, pd.resolve("part.parquet"), m.path("rows").asLong(), m.path("buildId").asText());
+            return new Partition(date, file, m.path("rows").asLong(), m.path("buildId").asText());
         } catch (IOException e) {
             return null;
         }
@@ -332,10 +353,11 @@ public final class Layers {
             Path meta = pd.resolve("meta.json");
             Partition have = null;
             try {
-                if (Files.isRegularFile(meta) && Files.isRegularFile(pd.resolve("part.parquet"))) {
+                if (Files.isRegularFile(meta)) {
                     JsonNode m = JSON.readTree(Files.readString(meta));
-                    if (sig.equals(m.path("signature").asText()) && src.buildId().equals(m.path("sourceBuild").asText())) {
-                        have = new Partition(src.date(), pd.resolve("part.parquet"), m.path("rows").asLong(), src.buildId());
+                    Path file = dataFile(pd, m);
+                    if (Files.isRegularFile(file) && sig.equals(m.path("signature").asText()) && src.buildId().equals(m.path("sourceBuild").asText())) {
+                        have = new Partition(src.date(), file, m.path("rows").asLong(), src.buildId());
                     }
                 }
             } catch (IOException e) {
@@ -366,20 +388,23 @@ public final class Layers {
         }
         try {
             Files.createDirectories(pd);
-            Path tmp = FileSwap.temp(pd.resolve("part.parquet"));
+            Path target = FileSwap.unique(pd);                  // a file of its own: a query reading the old one goes on (QA3B-07)
+            Path tmp = FileSwap.temp(target);
             String sql = "COPY (SELECT " + String.join(", ", select) + " FROM read_parquet('" + TableBuilder.literal(src.file()) + "') AS " + Dialect.quote(r.table())
                     + " GROUP BY " + String.join(", ", group) + ") TO '" + TableBuilder.literal(tmp) + "' (FORMAT PARQUET, COMPRESSION ZSTD)";
             engine.execute(sql, e.params());
-            FileSwap.replace(tmp, pd.resolve("part.parquet"));
-            long rows = count(pd.resolve("part.parquet"));
+            FileSwap.replace(tmp, target);
+            long rows = count(target);
             Map<String, Object> meta = new LinkedHashMap<>();
             meta.put("signature", sig);
             meta.put("rows", rows);
             meta.put("sourceBuild", src.buildId());
             meta.put("builtAt", Instant.now(clock).toString());
-            Files.writeString(pd.resolve("meta.json"), JSON.writeValueAsString(meta), StandardCharsets.UTF_8);
+            meta.put("file", target.getFileName().toString());
+            writeMeta(pd, meta);
+            FileSwap.sweep(pd, target.getFileName().toString());
             builds.incrementAndGet();
-            return new Partition(src.date(), pd.resolve("part.parquet"), rows, src.buildId());
+            return new Partition(src.date(), target, rows, src.buildId());
         } catch (IOException ex) {
             throw new DrishtiException(ErrorCode.QUERY_ENGINE, "cannot write rollup " + r.name() + ": " + ex.getMessage());
         }
@@ -578,6 +603,18 @@ public final class Layers {
         }
         String ver = version(t, date);
         return ver != null && valid(tableDir(key, t.name()), date, signature(t), ver) != null;
+    }
+
+    /**
+     * Whether the table holds a stored partition for the date (valid or stale): a page has read that date. A data-load signal rebuilds such a
+     * date in the background; a date nobody has read is built when a page asks for it, not by every signal of a backfill (QA3B-07: sixty
+     * dates of twelve tables, each read from the documents, kept the server busy long after the burst).
+     */
+    public boolean holds(String key, Dataset.Table t, LocalDate date) {
+        if (date == null) {
+            return false;
+        }
+        return FileSwap.holdsData(partitionDir(tableDir(key, t.name()), date));
     }
 
     // ---- single flight -----------------------------------------------------------------------------------------------

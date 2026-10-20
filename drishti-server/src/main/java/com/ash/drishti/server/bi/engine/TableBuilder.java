@@ -73,7 +73,12 @@ final class TableBuilder {
      * @param partition the directory the file goes in when the date is known; for a null date {@code partitionFor} gives it once the date is
      */
     Built build(Dataset.Table t, LocalDate date, java.util.function.Function<LocalDate, Path> partitionFor) {
-        return build(t, date, partitionFor, dir -> new java.util.concurrent.locks.ReentrantLock(), b -> { });
+        return build(t, date, partitionFor, dir -> new java.util.concurrent.locks.ReentrantLock(), b -> { }, false);
+    }
+
+    Built build(Dataset.Table t, LocalDate date, java.util.function.Function<LocalDate, Path> partitionFor,
+            java.util.function.Function<Path, java.util.concurrent.locks.Lock> lockOf, java.util.function.Consumer<Built> commit) {
+        return build(t, date, partitionFor, lockOf, commit, true);
     }
 
     /**
@@ -81,8 +86,8 @@ final class TableBuilder {
      * metadata) runs holding {@code lockOf}'s lock for the partition's folder, so two builds of one partition never write at once and a
      * build's temporary file is never another's to clean up (QA3B-07: {@code part.parquet.….tmp is gone}).
      */
-    Built build(Dataset.Table t, LocalDate date, java.util.function.Function<LocalDate, Path> partitionFor,
-            java.util.function.Function<Path, java.util.concurrent.locks.Lock> lockOf, java.util.function.Consumer<Built> commit) {
+    private Built build(Dataset.Table t, LocalDate date, java.util.function.Function<LocalDate, Path> partitionFor,
+            java.util.function.Function<Path, java.util.concurrent.locks.Lock> lockOf, java.util.function.Consumer<Built> commit, boolean newFile) {
         List<SourcePlugin> plugins = sources.plugins(t.connector(), t.kind());
         if (plugins.isEmpty()) {
             throw new DrishtiException(ErrorCode.QUERY_SOURCE, "no running connector serves kind '" + t.kind() + "'"
@@ -157,7 +162,7 @@ final class TableBuilder {
             lock.lock();
             try {
                 Files.createDirectories(dir);
-                Path file = dir.resolve("part.parquet");
+                Path file = newFile ? FileSwap.unique(dir) : dir.resolve("part.parquet");   // a file of its own: a query reading the old one goes on
                 Path tmp = FileSwap.temp(file);               // a name of its own: two builds of one partition never share it
                 try (Statement s = c.createStatement()) {
                     s.execute("COPY (" + select(stage, cols, resolved, each) + ") TO '" + literal(tmp) + "' (FORMAT PARQUET, COMPRESSION ZSTD)");

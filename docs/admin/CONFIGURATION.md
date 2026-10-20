@@ -1316,7 +1316,7 @@ answers with its own code (the codes are in [API_GUIDE.md](../guides/API_GUIDE.m
 
 | Key | Default | Meaning |
 |---|---|---|
-| `store-dir` | `./data/bi-store` (`DRISHTI_BI_STORE`) | The BI store: `columns/<dataset>/<table>/date=<d>/part.parquet`, `rollups/...`, `live/...`, `duckdb-tmp/`. Anything in it can be rebuilt from the connectors. |
+| `store-dir` | `./data/bi-store` (`DRISHTI_BI_STORE`) | The BI store: `columns/<dataset>/<table>/date=<d>/part-<id>.parquet` (the file its `meta.json` names), `rollups/...`, `live/...`, `duckdb-tmp/`. Anything in it can be rebuilt from the connectors. |
 | `timeout` | `30s` | Longest a query may run; it is then cancelled (`504 DRS-9024`). |
 | `max-rows` | `100000` | Most rows a query returns without a `limit` (`413 DRS-9022`). |
 | `max-bytes` | `67108864` | Most bytes of an Arrow answer (`413 DRS-9023`). |

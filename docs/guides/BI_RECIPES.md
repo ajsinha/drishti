@@ -115,7 +115,7 @@ From a terminal: `drishti.py bi mq --model trades-basic@1 --select trade.DESK --
 `drishti.py bi sql "SELECT trade.DESK, MEASURE('MTM') FROM trade GROUP BY trade.DESK" --model trades-basic@1`, [SQL.md](SQL.md)).
 
 What happened: the first query **built the columns layer** for the table: the connector scanned the declared columns and the engine wrote
-`<data>/bi-store/columns/file_model_trades-basic/trade/date=2026-10-16/part.parquet`. Run it again and the answer comes from the **result cache**
+`<data>/bi-store/columns/file_model_trades-basic/trade/date=2026-10-16/part-<id>.parquet`. Run it again and the answer comes from the **result cache**
 (`cached: true`, in microseconds). The date is the newest the lake holds; give `time: {as-of: "2026-10-15"}` (a report's date picker) for another day.
 If the lake is built again (`lake demo` once more), the server reads it again: `lake demo` tells it, and a changed Delta date is noticed by itself
 ([TOOLS.md section 4.7](TOOLS.md#47-a-pack-a-connector-and-the-data-load-signal)).

@@ -104,6 +104,41 @@ final class FileSwap {
                 + "the data folder from real-time scanning): " + (last == null ? "" : last.getClass().getSimpleName()));
     }
 
+    /** How long a replaced partition file is kept for queries still reading it before a later build of the partition removes it. */
+    static final java.time.Duration KEEP_REPLACED = java.time.Duration.ofMinutes(10);
+
+    /**
+     * A new file name for a partition's built data, its own (QA3B-07): a build never replaces the file a query is reading (DuckDB opens a
+     * file more than once while it reads it, and a file replaced in between read as {@code TProtocolException: Invalid data}); the
+     * layer's metadata names the file that is current, and {@link #sweep} removes the replaced ones later.
+     */
+    static Path unique(Path dir) {
+        return dir.resolve("part-" + Long.toString(System.currentTimeMillis(), 36) + "-" + UUID.randomUUID().toString().substring(0, 8) + ".parquet");
+    }
+
+    /** The partition's data files other than {@code keep}, replaced more than {@link #KEEP_REPLACED} ago, removed (a held one stays for next time). */
+    static void sweep(Path dir, String keep) {
+        long before = System.currentTimeMillis() - KEEP_REPLACED.toMillis();
+        try (var files = Files.newDirectoryStream(dir, "part*.parquet")) {
+            for (Path p : files) {
+                if (!p.getFileName().toString().equals(keep) && Files.getLastModifiedTime(p).toMillis() < before) {
+                    deleteQuietly(p);
+                }
+            }
+        } catch (IOException | RuntimeException ignored) {
+            // nothing to sweep now: the next build does
+        }
+    }
+
+    /** Whether the folder holds a partition data file (current or replaced). */
+    static boolean holdsData(Path dir) {
+        try (var files = Files.newDirectoryStream(dir, "part*.parquet")) {
+            return files.iterator().hasNext();
+        } catch (IOException | RuntimeException e) {
+            return false;
+        }
+    }
+
     private static void deleteQuietly(Path p) {
         try {
             Files.deleteIfExists(p);

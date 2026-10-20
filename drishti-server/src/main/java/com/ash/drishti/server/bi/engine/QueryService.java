@@ -812,7 +812,8 @@ public final class QueryService implements AutoCloseable {
             }
             if (props.eagerRebuild()) {
                 for (Dataset.Table t : stale) {
-                    if (t.onLoad() && "cached".equals(t.mode())) {
+                    // only a date a page has read (its partition is stored): the others are built when asked, not by every signal of a backfill
+                    if (t.onLoad() && "cached".equals(t.mode()) && (date == null || layers.holds(ds.key(), t, date))) {
                         queueRebuild(ds, t, date);
                     }
                 }

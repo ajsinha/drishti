@@ -130,6 +130,21 @@ class LoadBurstTest {
     }
 
     @Test
+    void aSignalForADateNoPageHasReadBuildsNothingInTheBackground() throws Exception {
+        // a backfill of sixty dates over twelve tables kept the server reading documents long after the burst: only dates a page has read
+        // are rebuilt in the background; the others are built when a page asks for them
+        int scans = lake.scans.get();
+        for (int i = 0; i < 500; i++) {
+            service.onLoad("trade", i % 2 == 0 ? TestLake.DAY1 : TestLake.DAY2, List.of(ds));
+        }
+        settle();
+        assertThat(lake.scans.get()).as("no page has read either date").isEqualTo(scans);
+        assertThat(service.rebuildsRun()).isZero();
+        preview();
+        assertThat(lake.scans.get()).as("built when asked").isGreaterThan(scans);
+    }
+
+    @Test
     void threeThousandSignalsForUnchangedDataRebuildNothing() throws Exception {
         lake.versions.put(TestLake.DAY1, "files-1");
         lake.versions.put(TestLake.DAY2, "files-1");
