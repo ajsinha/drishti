@@ -100,4 +100,18 @@ class JvmTempDirTest {
         assertThat(JvmTempDir.sweep(inner, Duration.ZERO, Instant.now().plusSeconds(60))).isZero();
         assertThat(target).exists();
     }
+
+    @Test
+    void aMissingTmpdirIsMadeAtStart(@TempDir Path dir) {
+        String before = System.getProperty("java.io.tmpdir");
+        Path missing = dir.resolve("data").resolve("tmp").resolve("server");
+        try {
+            System.setProperty("java.io.tmpdir", missing.toString());
+            assertThat(JvmTempDir.ensureExists()).isEqualTo(missing);   // QA 2026-10-20, Windows: "java.io.tmpdir does not exist"
+            assertThat(Files.isDirectory(missing)).isTrue();
+            assertThat(JvmTempDir.ensureExists()).isNull();             // there now: nothing to make
+        } finally {
+            System.setProperty("java.io.tmpdir", before);
+        }
+    }
 }

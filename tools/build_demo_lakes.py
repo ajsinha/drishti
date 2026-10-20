@@ -147,7 +147,10 @@ def main(argv: list[str] | None = None) -> int:
     else:
         what = f"only {a.only}" if a.only else "every dataset"
         print(f"1/3 the demo lakes: {what}, every business day, ending {as_of} → {lake}")
-        cmd = [py, str(DRISHTI), "lake", "demo", "--as-of", as_of, "--lake", str(lake)]
+        # --no-signal: lake demo would otherwise tell a running server of every table and date (66 tables x 60 days = 3,960 signals),
+        # each making it read the data again: a running server ran out of memory (QA 2026-10-20, QA3A-01/05). A server reads the new
+        # tables at its next start, or within its refresh interval.
+        cmd = [py, str(DRISHTI), "lake", "demo", "--as-of", as_of, "--lake", str(lake), "--no-signal"]
         if a.only:
             cmd += ["--only", a.only]
         if a.connectors_dir:

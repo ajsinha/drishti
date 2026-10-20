@@ -28,7 +28,6 @@ import com.ash.drishti.server.bi.dataset.Dataset;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.time.LocalDate;
@@ -145,13 +144,13 @@ final class TableBuilder {
             }
             Path dir = partitionFor.apply(resolved);
             Files.createDirectories(dir);
-            Path tmp = dir.resolve("part.parquet.tmp");
             Path file = dir.resolve("part.parquet");
+            Path tmp = FileSwap.temp(file);                   // a name of its own: two builds of one partition never share it
             try (Statement s = c.createStatement()) {
                 s.execute("COPY (" + select(stage, cols, resolved, each) + ") TO '" + literal(tmp) + "' (FORMAT PARQUET, COMPRESSION ZSTD)");
                 s.execute("DROP TABLE IF EXISTS " + stage);
             }
-            Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            FileSwap.replace(tmp, file);                      // retried while Windows holds the old file open
             return new Built(resolved, rows, file, warnings, how);
         });
     }

@@ -78,3 +78,17 @@ def test_no_console_code_makes_a_temporary_file_except_through_the_helper():
                 if re.search(r"\btempfile\b", line) and not line.lstrip().startswith("#"):
                     offenders.append(f"{py.relative_to(CONSOLE)}:{n}: {line.strip()}")
     assert not offenders, "use core.tmpdir (mkdtemp, temp_dir, sub_dir): " + "; ".join(offenders)
+
+
+def test_without_a_setting_the_base_is_the_data_folder_never_the_system_temp(monkeypatch, tmp_path):
+    """QA 2026-10-20: the console must never fall back to /tmp (or %TEMP%); started any way at all, its base is <data dir>/tmp/console."""
+    import tempfile as _tf
+    from core import tmpdir
+    for v in ("DRISHTI_CONSOLE_TMP_DIR", "DRISHTI_TMP_DIR"):
+        monkeypatch.delenv(v, raising=False)
+    monkeypatch.setattr(tmpdir, "_root", None)
+    monkeypatch.setenv("DRISHTI_DATA_DIR", str(tmp_path / "data"))
+    assert tmpdir.configured_base("") == str(tmp_path / "data" / "tmp" / "console")
+    monkeypatch.delenv("DRISHTI_DATA_DIR")
+    base = tmpdir.configured_base("")
+    assert base.endswith(str(Path("data") / "tmp" / "console")) and not base.startswith(_tf.gettempdir())

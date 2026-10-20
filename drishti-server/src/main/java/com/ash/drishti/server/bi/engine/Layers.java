@@ -348,11 +348,11 @@ public final class Layers {
         }
         try {
             Files.createDirectories(pd);
-            Path tmp = pd.resolve("part.parquet.tmp");
+            Path tmp = FileSwap.temp(pd.resolve("part.parquet"));
             String sql = "COPY (SELECT " + String.join(", ", select) + " FROM read_parquet('" + TableBuilder.literal(src.file()) + "') AS " + Dialect.quote(r.table())
                     + " GROUP BY " + String.join(", ", group) + ") TO '" + TableBuilder.literal(tmp) + "' (FORMAT PARQUET, COMPRESSION ZSTD)";
             engine.execute(sql, e.params());
-            Files.move(tmp, pd.resolve("part.parquet"), java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            FileSwap.replace(tmp, pd.resolve("part.parquet"));
             long rows = count(pd.resolve("part.parquet"));
             Map<String, Object> meta = new LinkedHashMap<>();
             meta.put("signature", sig);
