@@ -105,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"3/3 done in {time.time() - t0:.0f} s{' (dry run: nothing changed)' if a.dry_run else ''}.")
     print("  Next: start the server (Drishti server (demo lakes), or tools\\windows\\start-server.ps1 -DemoLakes) and the console;")
-    print("  if a server was running, restart it so it reads the new tables. Then try:  TRD 1004545 30  ·  EQ EQ-CSCA 3M  ·  CPTY CP-NORTHPLAINS 30")
+    print("  if a server was running, restart it so it reads the new tables. Then try:  TRD 1000279 60  ·  TRD 1000279 60 DIFF  ·  EQ EQ-CSCA 3M  ·  CPTY CP-NORTHPLAINS 30")
     return 0
 
 
