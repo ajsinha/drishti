@@ -159,7 +159,7 @@ public final class FieldParams {
     }
 
     /** What {@code param.<name>} is for these values: the value when it is one of the choices, else the default, else the first choice. */
-    static String choice(String item, Map<String, ModelDef.Parameter> params, Map<String, Object> values) {
+    public static String choice(String item, Map<String, ModelDef.Parameter> params, Map<String, Object> values) {
         String name = item.substring(PREFIX.length());
         ModelDef.Parameter p = params.get(name);
         if (p == null || !"field".equals(p.kind()) || p.fields().isEmpty()) {

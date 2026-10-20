@@ -251,6 +251,13 @@
         (ds.measures || []).forEach((m) => g.appendChild(h('option', { value: m.name, text: m.name })));
         frag.appendChild(g);
       }
+      // the model's field parameters (2.6.0): the reader's parameter slicer chooses which field or measure the visual draws
+      const fp = (ds.parameters || []).filter((p) => p.kind === 'field' && (kind === 'any' || D.paramKind('param.' + p.name) === kind));
+      if (fp.length) {
+        const g = h('optgroup', { label: 'Field parameters', 'data-field-params': '' });
+        fp.forEach((p) => g.appendChild(h('option', { value: 'param.' + p.name, text: (p.title || p.name) + ' (' + (p.fields || []).map(B.label).join(' / ') + ')', 'data-field-param': p.name })));
+        frag.appendChild(g);
+      }
       return frag;
     }
 
@@ -264,7 +271,7 @@
         const spec = specs[w], items = v.wells[w] || [];
         const ul = h('ul', { class: 'bi-chiplist' });
         items.forEach((name, i) => {
-          const li = h('li', { class: 'bi-wchip', 'data-item': name }, h('span', { text: name }));
+          const li = h('li', { class: 'bi-wchip' + (name.indexOf('param.') === 0 ? ' bi-wchip-param' : ''), 'data-item': name, title: name.indexOf('param.') === 0 ? 'A field parameter: the reader chooses which field or measure is drawn' : '' }, h('span', { text: name }));
           const mv = (d) => D.change('Reorder', () => { const l = v.wells[w]; const j = i + d; if (j >= 0 && j < l.length) { const t = l[i]; l[i] = l[j]; l[j] = t; } });
           if (items.length > 1) {
             const l = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Move ' + name + ' earlier', disabled: i === 0 }, B.icon('chevron-up'));

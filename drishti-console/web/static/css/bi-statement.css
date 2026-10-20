@@ -1,0 +1,35 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* The statement designer's Paper tab (bi-statement.js, 2.6.0): the paper settings beside a page-by-page preview. The sheet is paper: white with the
+   statement's own ink in every theme, as it prints. */
+.bi-st-wrap { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 1rem; align-items: start; }
+@media (max-width: 1100px) { .bi-st-wrap { grid-template-columns: minmax(0, 1fr); } }
+.bi-st-settings { display: flex; flex-direction: column; gap: .35rem; }
+.bi-st-h { font-size: .85rem; font-weight: 600; margin: .6rem 0 .1rem; }
+.bi-st-row { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: .35rem; align-items: center; }
+.bi-st-row small { grid-column: 1 / -1; }
+.bi-st-row-wide { grid-template-columns: minmax(0, 1fr); }
+.bi-st-margins { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .25rem; }
+.bi-st-margins .studio-in { min-width: 0; }
+.bi-st-preview { outline: none; }
+.bi-st-preview:focus-visible { box-shadow: 0 0 0 2px var(--accent, #2f6fde); border-radius: 4px; }
+.bi-st-bar { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin-bottom: .6rem; }
+.bi-st-where { min-width: 12rem; font-size: .85rem; }
+.bi-st-files { margin-left: auto; display: flex; gap: .3rem; }
+.bi-st-stage { overflow: auto; padding: 2px; }
+.bi-st-sheet { position: relative; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .25); overflow: hidden; margin: 0 auto 1rem; font-family: Helvetica, Arial, sans-serif; }
+.bi-st-text { position: absolute; white-space: pre; line-height: 1; }
+.bi-st-rule, .bi-st-fill { position: absolute; }

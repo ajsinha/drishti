@@ -19,6 +19,7 @@ import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.server.bi.layer.ModelDef;
 import com.ash.drishti.server.bi.report.BiReportService;
+import com.ash.drishti.server.bi.report.FieldParams;
 import com.ash.drishti.server.bi.report.Report;
 import com.ash.drishti.server.bi.report.StatementSpec;
 import com.ash.drishti.server.security.Principal;
@@ -145,7 +146,7 @@ public final class StatementService {
                     rows.add(new ArrayList<>());
                     rowY = y;
                 }
-                rows.get(rows.size() - 1).add(band(v, b, tokens));
+                rows.get(rows.size() - 1).add(band(drawn(v, st.params(), values(s)), b, tokens));
             }
             laid.add(rows);
         }
@@ -290,6 +291,29 @@ public final class StatementService {
     }
 
     // ---- bands ---------------------------------------------------------------------------------------------------
+
+    /** The run's parameter values ({@code state.params}). */
+    private static Map<String, Object> values(JsonNode state) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        state.path("params").fields().forEachRemaining(e -> out.put(e.getKey(), JSON.convertValue(e.getValue(), Object.class)));
+        return out;
+    }
+
+    /** A band as it is drawn for the run: a field parameter in its wells, its sort or its {@code groupBy} is the field (or measure) the run chose. */
+    static Report.Visual drawn(Report.Visual v, Map<String, ModelDef.Parameter> params, Map<String, Object> values) {
+        if (params.isEmpty()) {
+            return v;
+        }
+        Report.Visual r = FieldParams.resolve(v, params, values);
+        Object g = r.format().get("groupBy");
+        if (g == null || !FieldParams.isParam(String.valueOf(g))) {
+            return r;
+        }
+        Map<String, Object> format = new LinkedHashMap<>(r.format());
+        format.put("groupBy", FieldParams.choice(String.valueOf(g), params, values));
+        return new Report.Visual(r.id(), r.type(), r.title(), r.at(), r.wells(), r.filters(), r.sort(), r.limit(), r.hierarchy(), r.drillThrough(), format, r.text(), r.src(),
+                r.alt(), r.interacts(), r.action(), r.dataset(), r.tooltip(), r.from(), r.alert());
+    }
 
     private StatementLayout.Band band(Report.Visual v, BiExporter.Built b, Map<String, String> tokens) {
         double x = v.at() == null ? 0 : v.at().x() / (double) Report.COLUMNS;
