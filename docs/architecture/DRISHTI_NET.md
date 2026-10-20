@@ -421,6 +421,14 @@ All of N1–N7 are planned for 2.5.0, in this order; N1–N5 come first and are 
 
 The soak also exercises history queries ([HISTORY_QUERIES.md](HISTORY_QUERIES.md), section 12 for Drishti\*net):
 
+- **Only what the lakes hold** (SOAK-10). The servers load only packs whose tables the soak's lakes hold: **a** and **c** trading and
+  counterparty-risk, **b** trading, the reference trading and counterparty-risk (trading brings core and market-data; no market-risk).
+  Before a server starts, the soak writes a connector file into the node's connector folder for every Delta connector of those packs whose
+  tables its lake lacks (`<lake>/<domain>/<table>/_delta_log`): the pack's template with `enabled: "false"`, the documented way
+  ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) section 3). On **c**'s MUREX lake that is `trade-endur`, `trade-calypso`,
+  `market-store`, `legal-store` and `collateral-store`. So no server retries a store it cannot read, and none warns `deprecated` about
+  `--drishti.sources.connectors.<name>.enabled=false`, which the soak no longer passes.
+
 - **The load.** `--history-share` (0.15 by default in the soak) of the users' requests ask a history through the console's
   `/v/{kind}/{id}/history` page, which asks the server's `GET /api/v1/history/{kind}/{id}`: a trade of any system four times in five
   (MUREX trades are held only by **c**, so from **a** and **b** they are peer-only), else a counterparty, or an equity named with

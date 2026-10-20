@@ -17,6 +17,12 @@
 
 ## Unreleased
 
+- **Fixed (SOAK-10): the soak configures only what its lakes hold.** Its servers retried `collateral-store`, `legal-store`,
+  `market-store` and `risk-store` (about 8 WARN attempts each) and warned `deprecated: connector 'trade-…' is defined in the server's own
+  configuration` because of the soak's own `--drishti.sources.connectors.*.enabled=false` flags. No server loads market-risk any more,
+  and before each start the soak writes a connector file (the pack's template with `enabled: "false"`) for every Delta connector whose
+  tables the node's lake lacks, the documented way; the flags are gone. `net_soak.connector_files`; test_net_soak; DRISHTI_NET
+  section 17.1, TOOLS.
 - **Fixed (SOAK-09): the soak's mask check covers something.** It checked 35 distinct histories, and no viewer trade history had a
   masked field (the default `drishti.security.redact` names `trader`, which the synthetic trades do not hold). The soak's servers now
   mask `PRICE`, `TRADER_ID` and `NAME`; a viewer's trade history must show `PRICE` and a counterparty's `NAME` as a masked column, the

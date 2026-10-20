@@ -164,6 +164,39 @@ class MaskCoverageTest(unittest.TestCase):
         self.assertTrue(sc.verdict(0, [], [], {}, {})["pass"])
 
 
+class SoakConfigurationTest(unittest.TestCase):
+    """SOAK-10: retry warnings for pack stores the lake does not hold, and `deprecated` warnings from the soak's own
+    --drishti.sources.connectors.*.enabled=false flags."""
+
+    def lake(self, root: Path, tables) -> Path:
+        for t in tables:
+            (root / t / "_delta_log").mkdir(parents=True)
+        return root
+
+    def test_each_node_switches_off_with_connector_files_the_delta_connectors_its_lake_lacks(self):
+        import tempfile
+        import yaml
+        import net_soak
+        with tempfile.TemporaryDirectory() as tmp:
+            murex = self.lake(Path(tmp) / "murex", ["trading/trade_murex", "reference/counterparty", "credit/netting-set"])
+            files = net_soak.connector_files(murex, "trading,counterparty-risk")
+            self.assertEqual({"trade-endur", "trade-calypso", "market-store", "legal-store", "collateral-store"}, set(files))
+            doc = yaml.safe_load(files["trade-endur"])
+            self.assertEqual(("delta", "false", ["trade"]), (doc["plugin"], doc["enabled"], doc["kinds"]))
+            self.assertEqual("trade_endur", doc["settings"]["table"]["trade"])
+            self.assertLessEqual(set(doc), {"plugin", "enabled", "kinds", "description", "settings", "name"})   # CONNECTOR_FILES section 3
+            shared = self.lake(Path(tmp) / "shared", ["trading/trade_endur", "trading/trade_calypso", "reference/counterparty"])
+            self.assertEqual({"trade-murex", "market-store"}, set(net_soak.connector_files(shared, "trading")))
+        self.assertEqual(["core", "market-data", "trading", "counterparty-risk"], net_soak.pack_closure("trading,counterparty-risk", net_soak.ROOT / "config" / "packs"))
+
+    def test_no_node_loads_a_pack_its_lake_holds_nothing_of_nor_uses_deprecated_connector_flags(self):
+        import inspect
+        import net_soak
+        self.assertTrue(all("market-risk" not in packs for _, packs, _ in net_soak.NODES.values()))
+        self.assertNotIn("market-risk", net_soak.REF_PACKS)
+        self.assertNotIn("drishti.sources.connectors.", inspect.getsource(net_soak.Soak.start_server))
+
+
 class WrongAnswersTest(unittest.TestCase):
     """SOAK-08: 32 wrong answers, 5 kept, no time for the other 27, and the kept body cut before ``partial`` and ``problems``."""
     P = [{"code": "DRS-5052", "source": "net", "days": ["2026-07-17"] * 60, "message": "the nodes that hold trade cannot be reached now: drishti-c (dead)"}]

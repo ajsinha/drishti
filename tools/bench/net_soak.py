@@ -21,7 +21,8 @@ restarted, and every answer checked against a single server holding all the data
 
 The data (tools/bench/trades.py, small: --trades a day per system, two days): a lake ``shared`` (ENDUR and CALYPSO) read by servers a and b
 (replicas: the same tables), a lake ``murex`` (MUREX) read by c alone (a shard), and a lake ``all`` with all three for the reference server.
-Packs overlap: a trading + counterparty-risk, b trading, c trading + counterparty-risk + market-risk (trading brings core and market-data).
+Packs overlap: a trading + counterparty-risk, b trading, c trading + counterparty-risk (trading brings core and market-data); only packs whose
+tables the lakes hold, and each node switches off, with a connector file, every Delta connector whose tables its lake lacks (SOAK-10).
 Security is on: one token secret, the console signs in once as the seeded administrator.
 
 The run: the reference server answers a fixed set of requests (trades of each system and date, searches by counterparty, counterparty
@@ -95,11 +96,55 @@ HISTORY_ASKS = ({"days": "30"}, {"days": "60"}, {"range": "3M"}, {"days": "30", 
                 {"days": "5"}, {"range": "1M"}, {"days": "10", "diff": "true"}, {"from": "day:2", "to": "day:-2"},
                 {"from": "day:1", "to": "day:-1", "diff": "true"})
 SYSTEMS = {"endur": lambda i: str(10_000_000 + i), "calypso": lambda i: f"CLY-{30_000_000 + i}", "murex": lambda i: f"MX-{50_000_000 + i}"}
-NODES = {  # name: (lake, packs, connectors switched off, port offset)
-    "a": ("shared", "trading,counterparty-risk", ["trade-murex"], 0),
-    "b": ("shared", "trading", ["trade-murex"], 1),
-    "c": ("murex", "trading,counterparty-risk,market-risk", ["trade-endur", "trade-calypso"], 2),
+NODES = {  # name: (lake, packs, port offset); only packs whose tables the lakes hold (no market-risk: SOAK-10)
+    "a": ("shared", "trading,counterparty-risk", 0),
+    "b": ("shared", "trading", 1),
+    "c": ("murex", "trading,counterparty-risk", 2),
 }
+REF_PACKS = "trading,counterparty-risk"
+
+
+def pack_closure(packs: str, packs_dir: Path) -> list[str]:
+    """The packs named and every pack they extend, each once, the extended ones first."""
+    import yaml
+    out: list[str] = []
+
+    def add(p: str) -> None:
+        if p in out:
+            return
+        spec = yaml.safe_load((packs_dir / p / "pack.yaml").read_text(encoding="utf-8")) or {}
+        for e in spec.get("extends") or []:
+            add(e)
+        out.append(p)
+
+    for p in (x.strip() for x in packs.split(",") if x.strip()):
+        add(p)
+    return out
+
+
+def connector_files(lake: Path, packs: str, packs_dir: Path = ROOT / "config" / "packs") -> dict[str, str]:
+    """name -> the text of a connector file that switches off each Delta connector of the packs (and those they extend) whose tables the
+    lake holds none of (<lake>/<domain>/<table.kind or kind>/_delta_log), so that the server neither starts nor retries it (SOAK-10). It is
+    the documented way (a file in the connector folder, CONNECTOR_FILES.md section 3), not ``--drishti.sources.connectors.<name>.enabled``,
+    which is deprecated and warns at every start. The file is the pack's template with ``enabled: "false"``."""
+    import yaml
+    out = {}
+    for p in pack_closure(packs, packs_dir):
+        spec = yaml.safe_load((packs_dir / p / "pack.yaml").read_text(encoding="utf-8")) or {}
+        for name, c in (spec.get("connectors") or {}).items():
+            if c.get("plugin") != "delta":
+                continue
+            st = c.get("settings") or {}
+            tables = st.get("table") if isinstance(st.get("table"), dict) else {}
+            held = [k for k in c.get("kinds") or [] if (lake / str(st.get("domain") or "") / str(tables.get(k) or st.get(f"table.{k}") or k)
+                                                       / "_delta_log").is_dir()]
+            if held:
+                continue
+            body = {"plugin": "delta", "enabled": "false", "kinds": list(c.get("kinds") or []),
+                    "description": f"switched off by the Drishti*net soak: the lake {lake.name} holds none of its tables", "settings": st}
+            out[name] = (f"# Written by tools/bench/net_soak.py: pack '{p}' connector, off for this node (SOAK-10).\n"
+                         + yaml.safe_dump(body, sort_keys=False, width=140))
+    return out
 
 
 def b64(raw: bytes) -> str:
@@ -153,7 +198,7 @@ class Soak:
     def __init__(self, a):
         self.a = a
         self.work = Path(a.work).expanduser().resolve()
-        self.port = {n: a.base_port + off for n, (_, _, _, off) in NODES.items()}
+        self.port = {n: a.base_port + off for n, (_, _, off) in NODES.items()}
         self.procs: dict[str, subprocess.Popen] = {}
         self.down: dict[str, float] = {}                   # node -> when it went down (still down)
         self.back: dict[str, float] = {}                   # node -> when it was restarted (peers may still name it for a while)
@@ -200,7 +245,7 @@ class Soak:
         self.known_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")     # after every load: "known at" sees all of it
 
     # -- processes --------------------------------------------------------------------------------------------------------------
-    def start_server(self, name: str, lake: str, packs: str, off: list, port: int, seed: str | None, net: bool = True) -> None:
+    def start_server(self, name: str, lake: str, packs: str, port: int, seed: str | None, net: bool = True) -> None:
         work = self.work / "nodes" / name
         for d in ("data", "connectors", "net/peers"):
             (work / d).mkdir(parents=True, exist_ok=True)
@@ -210,6 +255,8 @@ class Soak:
             (work / "net" / "gossip.yaml").write_text("interval: 1s\nsuspect-after: 3s\ndead-after: 10s\npersist-every: 30s\n", encoding="utf-8")
             if seed:
                 (work / "net" / "peers" / "drishti-a.yaml").write_text(f"url: {seed}\n", encoding="utf-8")
+        for cname, text in connector_files(self.work / "lakes" / lake, packs).items():     # the lake holds none of its tables: off
+            (work / "connectors" / f"{cname}.yaml").write_text(text, encoding="utf-8")
         assert port not in FORBIDDEN and not listening(port), f"port {port} is in use"
         env = dict(os.environ, DRISHTI_NET_SECRET=KEY, DRISHTI_TOKEN_SECRET=TOKEN_SECRET, DRISHTI_SECURITY_ENABLED="true",
                    DRISHTI_DATA_DIR=str(work / "data"), DRISHTI_DELTA_ROOT=str(self.work / "lakes" / lake), DRISHTI_PACKS=packs,
@@ -218,15 +265,14 @@ class Soak:
         args = [f"-Xmx{self.a.heap}", "-jar", self.jar, f"--server.port={port}", f"--drishti.net.dir={work / 'net'}", "--drishti.net.poll=1s",
                 "--drishti.sources.plugins.demo.enabled=false", "--drishti.security.registered-users-only=false",
                 "--drishti.security.redact=" + ",".join(REDACT)]
-        args += [f"--drishti.sources.connectors.{c}.enabled=false" for c in off]
         log = open(self.work / f"server-{name}.log", "ab")
         self.procs[name] = subprocess.Popen(java_cmd(self.java, args, tmp=work / "data" / "tmp" / "server"), cwd=work, env=env, stdout=log,
                                             stderr=subprocess.STDOUT)
         wait_up(f"http://127.0.0.1:{port}/actuator/health", 240)
 
     def node(self, name: str) -> None:
-        lake, packs, off, _ = NODES[name]
-        self.start_server(name, lake, packs, off, self.port[name], None if name == "a" else self.url("a"))
+        lake, packs, _ = NODES[name]
+        self.start_server(name, lake, packs, self.port[name], None if name == "a" else self.url("a"))
 
     def kill(self, name: str) -> None:
         p = self.procs.pop(name)
@@ -353,7 +399,7 @@ class Soak:
 
     def reference(self) -> list[dict]:
         port = self.a.base_port + 3
-        self.start_server("ref", "all", "trading,counterparty-risk,market-risk", [], port, None, net=False)
+        self.start_server("ref", "all", REF_PACKS, port, None, net=False)
         base = f"http://127.0.0.1:{port}"
         reqs = self.requests()
         masks = {"viewerHistories": 0, "masked": 0, "problems": []}         # the reference itself masks what a viewer must not see
