@@ -116,17 +116,35 @@ public final class FieldParams {
         if (well == null) {
             return;                                                         // an unknown well is the parser's DRS-9032
         }
+        // one problem per parameter and well (QA2-20), naming every choice that does not fit
+        List<String> neither = new ArrayList<>();
+        List<String> fields = new ArrayList<>();
+        List<String> measures = new ArrayList<>();
         for (String choice : p.fields()) {
             boolean measure = ds.measures().containsKey(choice);
             boolean field = !measure && isField(resolver, choice);
             if (!measure && !field) {
-                out.add(ReportParser.error(CODE, path, "the field parameter '" + name + "' can be '" + choice + "', which is neither a field nor a measure of the model"));
+                neither.add(choice);
             } else if (well.kind() == VisualCatalogue.Kind.MEASURE && !measure) {
-                out.add(ReportParser.error(CODE, path, "the " + wellName(path) + " well takes measures, and the field parameter '" + name + "' can be " + choice + ", a field: put it in a field well"));
+                fields.add(choice);
             } else if (well.kind() == VisualCatalogue.Kind.FIELD && measure) {
-                out.add(ReportParser.error(CODE, path, "the " + wellName(path) + " well takes fields, and the field parameter '" + name + "' can be " + choice + ", a measure: put it in a measure well"));
+                measures.add(choice);
             }
         }
+        if (!neither.isEmpty()) {
+            out.add(ReportParser.error(CODE, path, "the field parameter '" + name + "' can be " + quoted(neither) + ", " + (neither.size() == 1 ? "which is" : "which are")
+                    + " neither a field nor a measure of the model"));
+        } else if (!fields.isEmpty()) {
+            out.add(ReportParser.error(CODE, path, "the " + wellName(path) + " well takes measures, and the field parameter '" + name + "' can be " + String.join(", ", fields)
+                    + (fields.size() == 1 ? ", a field" : ", fields") + ": put it in a field well"));
+        } else if (!measures.isEmpty()) {
+            out.add(ReportParser.error(CODE, path, "the " + wellName(path) + " well takes fields, and the field parameter '" + name + "' can be " + String.join(", ", measures)
+                    + (measures.size() == 1 ? ", a measure" : ", measures") + ": put it in a measure well"));
+        }
+    }
+
+    private static String quoted(List<String> names) {
+        return String.join(", ", names.stream().map(n -> "'" + n + "'").toList());
     }
 
     private static String wellName(String path) {
@@ -168,7 +186,7 @@ public final class FieldParams {
         Object chosen = values == null ? null : values.get(name);
         if (chosen != null) {
             if (!p.fields().contains(String.valueOf(chosen))) {
-                throw new DrishtiException(ErrorCode.REPORT_FIELD_PARAMETER, name + " is one of " + p.fields() + ", not '" + chosen + "'");
+                throw new DrishtiException(ErrorCode.REPORT_FIELD_PARAMETER, name + " is one of its choices " + p.fields() + ", not '" + chosen + "'");
             }
             return String.valueOf(chosen);
         }

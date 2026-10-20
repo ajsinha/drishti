@@ -1529,7 +1529,7 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 | `DRS-9161` | a filter, sort or `top` on a field masked for you (HTTP 403, the body also names `DRS-9021`); `fix` offers the dataset's key, which identifies the same rows |
 | `DRS-9162` | a Python measure in a grouped model query (HTTP 422): a python visual runs it |
 | `DRS-9163` | a field or measure hidden for your roles (`hidden-for`, HTTP 422): it is not available to your role on any endpoint; ask the model's owner, or use another field |
-| `DRS-9164` | a `params` value the model does not take (HTTP 422): the message names the parameter, its kind and range; `GET /bi/models/{id}/describe` lists the parameters |
+| `DRS-9164` | a `params` value the model does not take (HTTP 422): the message names the parameter, its kind and range; `GET /bi/models/{id}/describe` lists the parameters. A field parameter of measures in `select.fields` (or of fields in `select.measures`) is named as itself: *'param.metric' chooses among MTM, NOTIONAL: measures, so it goes in select.measures* |
 | `DRS-9165` | a calculation group or item the model does not have (HTTP 422): `describe` lists `calcGroups`; the `fix` offers the names |
 | `DRS-9166` | a filter-context function cannot be planned (HTTP 422): `via=` must name a relationship id, `parent_of` a hierarchy, `as_of` a fixed date (`date('…')`, `asof()`, `shift_date(asof(), -1)`); contexts nest at most three deep |
 | `DRS-9190` | the expression converter (`drishti.py bi migrate --expressions`, `POST /api/v1/bi/expr/convert`) could not keep an old expression's meaning, so it left it as it was: rewrite it in DEL v2 by hand ([EXPRESSIONS.md section 10](EXPRESSIONS.md#10-the-old-syntax-and-the-converter)) |

@@ -17,6 +17,12 @@
 
 ## Unreleased
 
+- **Fixed (QA2-20): a field parameter in the wrong place is one problem naming it.** A field parameter in a well that cannot take its
+  choices is one `DRS-9037` per parameter and well, naming every choice that does not fit (*… can be MTM, NOTIONAL, measures: put it in a
+  measure well*), instead of one line per choice. Through `/bi/mq`, `param.metric` among `select.fields` answers `DRS-9164 'param.metric'
+  chooses among MTM, NOTIONAL: measures, so it goes in select.measures` instead of `DRS-9152` about its default; a value that is not a
+  choice reads *metric is one of its choices [MTM, NOTIONAL]* (not *the fields*). REPORTS, tutorial 20, API_GUIDE, TROUBLESHOOTING;
+  FieldParamsApiTest.
 - **Fixed (QA2-22): an Iceberg table moved after loading is one clear problem.** Its reads failed inside the connector's caches, and
   each failure was logged by the cache with a full stack trace at every refresh while Health said `UP`. Health now says `DEGRADED:
   cannot read trade: its metadata names files under <old folder> that are not there (…): the table was moved or copied after it was

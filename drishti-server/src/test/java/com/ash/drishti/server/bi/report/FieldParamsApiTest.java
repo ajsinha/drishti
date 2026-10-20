@@ -284,6 +284,15 @@ class FieldParamsApiTest {
         JsonNode mq = ok(call("POST", "/api/v1/bi/mq", rita, Map.of("mq", 2, "model", "fp-model@1", "select", Map.of("fields", List.of("param.breakdown"),
                 "measures", List.of("param.metric")), "params", Map.of("metric", "NOTIONAL"), "time", Map.of("as-of", DAY))));
         assertThat(byKey(mq)).isEqualTo(expected(FieldParamsApiTest::desk, FieldParamsApiTest::notional));
+        // QA2-20: a parameter of measures among the fields is named as itself, not as its default ('MTM' is trade.MTM)
+        MvcResult misplaced = call("POST", "/api/v1/bi/mq", rita, Map.of("mq", 2, "model", "fp-model@1", "select", Map.of("fields", List.of("param.metric"),
+                "measures", List.of("Trades")), "time", Map.of("as-of", DAY)));
+        assertThat(misplaced.getResponse().getStatus()).isEqualTo(422);
+        assertThat(misplaced.getResponse().getContentAsString()).contains("DRS-9164").contains("'param.metric' chooses among MTM, NOTIONAL: measures, so it goes in select.measures")
+                .doesNotContain("names its dataset");
+        MvcResult notAChoice = call("POST", "/api/v1/bi/mq", rita, Map.of("mq", 2, "model", "fp-model@1", "select", Map.of("fields", List.of("trade.DESK"),
+                "measures", List.of("param.metric")), "params", Map.of("metric", "PV"), "time", Map.of("as-of", DAY)));
+        assertThat(notAChoice.getResponse().getContentAsString()).contains("metric is one of its choices [MTM, NOTIONAL], not 'PV'").doesNotContain("the fields");
     }
 
     @Test
@@ -307,6 +316,13 @@ class FieldParamsApiTest {
         JsonNode onDataset = ok(call("POST", "/api/v1/bi/reports/validate", wes, Map.of("yaml", head.replace("model: fp-model@1", "dataset: fp-trade")
                 + "      - { id: c, type: column, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [param.breakdown], values: [NOTIONAL] } }\n")));
         assertThat(onDataset.path("problems").toString()).contains("DRS-9037").contains("belong to a model");
+        // QA2-20: one problem per parameter in the wrong well (not one per choice), naming every choice that does not fit
+        JsonNode wrongWell = ok(call("POST", "/api/v1/bi/reports/validate", wes, Map.of("yaml", head
+                + "      - { id: c, type: column, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [param.metric], values: [MTM] } }\n")));
+        List<String> lines = new ArrayList<>();
+        wrongWell.path("problems").forEach(p -> lines.add(p.toString()));
+        assertThat(lines.stream().filter(l -> l.contains("DRS-9037"))).hasSize(1);
+        assertThat(lines.stream().filter(l -> l.contains("DRS-9037")).findFirst().orElseThrow()).contains("can be MTM, NOTIONAL, measures: put it in a measure well");
         JsonNode described = ok(call("GET", "/api/v1/bi/reports/" + REPORT, wes, null));
         assertThat(described.path("dataset").path("parameters").toString()).as("the Studio offers the model's field parameters").contains("breakdown").contains("metric");
     }
