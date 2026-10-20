@@ -69,6 +69,7 @@ Every connector with a network client reads these settings. This is what each do
 | [AI providers](../architecture/AI_PROVIDERS.md#119-tls-the-same-block-as-the-connectors) (every `type:` in `config/ai`, the console's AI and MCP clients) | `https://` `base-url` | yes | yes (the console: `TLSv1.2` / `TLSv1.3`, OpenSSL cipher names; Bedrock: no) | yes (Bedrock: **refused**) | yes (Admin → AI) | fake HTTPS servers with a test CA, mutual TLS and a CONNECT proxy tunnel, in Java and Python; the console reads PEM and PKCS12, not JKS |
 | other JDBC drivers | not mapped: the driver's own options in the URL | | | | | documented only |
 | [Aerospike](AEROSPIKE_CONNECTOR.md#security-tls-certificate-log-in-and-credentials) | `tls.enabled` | yes (also the log-in, `auth-mode: pki`) | yes | yes (no TLS name is given) | yes | unit tests of the wiring; the live check is a manual procedure (the server's TLS is Enterprise Edition) |
+| [Cassandra](CASSANDRA_CONNECTOR.md#security-tls-log-ins-and-connections) (also ScyllaDB; Astra: its bundle) | `tls.enabled` | yes | yes | yes | yes | Cassandra 5 in Docker, `client_encryption_options` with `require_client_auth: true` |
 | [Delta](DELTA_CONNECTOR.md#security-tls-and-credentials) (native engine) | `https://` `s3.endpoint` | yes | yes | yes | yes | an HTTPS stand-in S3 in the test process; refused with `engine: hadoop` |
 | [Iceberg](ICEBERG_CONNECTOR.md#security-tls-and-credentials) (REST catalog's object store) | `https://` `s3.endpoint` | yes | checked, not narrowed | **refused** | yes | an HTTPS stand-in S3 in the test process; refused with `catalog: hadoop` |
 
@@ -564,7 +565,7 @@ private CA.
 | [Kafka](KAFKA_CONNECTOR.md#outbound-proxy) | the **schema registry** only (HTTP) | `HttpURLConnection` with the proxy and a per-connection authenticator. Brokers speak the Kafka protocol, not HTTP, and are not proxied |
 | AI providers: OpenAI-compatible, Anthropic ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md#outbound-proxy)) | yes | the JDK HTTP client (server), `httpx` (console) |
 | MCP Streamable HTTP clients ([MCP_CLIENT.md](../architecture/MCP_CLIENT.md#outbound-proxy)) | yes | same |
-| JDBC, Redis, MongoDB, Aerospike, ActiveMQ, RabbitMQ, files, DuckDB | no | not HTTP: they speak their own protocols (use a TCP-level route if the site needs one) |
+| JDBC, Redis, MongoDB, Aerospike, Cassandra, ActiveMQ, RabbitMQ, files, DuckDB | no | not HTTP: they speak their own protocols (use a TCP-level route if the site needs one) |
 
 When a connector's target is on the no-proxy list its health says so instead of claiming the proxy:
 `UP (proxy proxy.corp.example:3128 not used for db.intranet.example: no-proxy)`. Otherwise it ends `... via proxy proxy.corp.example:3128 (connector)`
@@ -623,7 +624,7 @@ the old behaviour.
 * **NTLM, Kerberos, Digest** proxy authentication: Basic only. (The Apache-based SDK clients could do NTLM; it is not wired.)
 * **SOCKS** proxies: `http://` proxies only.
 * **PAC files / automatic proxy discovery**.
-* **Kafka brokers, JDBC, Redis, MongoDB, Aerospike, ActiveMQ, RabbitMQ**: not HTTP.
+* **Kafka brokers, JDBC, Redis, MongoDB, Aerospike, Cassandra, ActiveMQ, RabbitMQ**: not HTTP.
 * **The server's own other HTTP clients** (the pack registry client, report e-mail, OIDC discovery and JWKS fetch, the collaboration bridge): they are
   not connectors; they use the JDK default (direct) and can be sent through a proxy only with the JVM's own `-Dhttps.proxyHost` family of options
   for those that honour them. Say if a site needs them on the shared mechanism.

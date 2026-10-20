@@ -21,7 +21,7 @@
   <parent>
     <groupId>com.ash.drishti</groupId>
     <artifactId>drishti-parent</artifactId>
-    <version>2.5.0</version>
+    <version>2.6.0</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <artifactId>drishti-plugin-iceberg</artifactId>
@@ -29,6 +29,8 @@
   <description>Apache Iceberg source: dated entity tables (path-based or through a REST catalog) read with Iceberg's own Parquet reader, with time travel</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
+    <!-- engine: native (no Hadoop); engine: library is Apache Iceberg Java below -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-iceberg</artifactId></dependency>
     <dependency><groupId>org.apache.iceberg</groupId><artifactId>iceberg-core</artifactId><version>${iceberg.version}</version></dependency>
     <dependency><groupId>org.apache.iceberg</groupId><artifactId>iceberg-parquet</artifactId><version>${iceberg.version}</version></dependency>
     <dependency>

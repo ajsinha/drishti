@@ -28,7 +28,7 @@ fictitious, all deterministic:
 | **The demo lakes** | `data/delta/` (generated, never committed) | the test data as Delta tables, one per dataset, seven daily snapshots each: what the packs' connectors read | `drishti.py lake demo` (one command, about a minute) |
 | **The samples** | `config/packs/<pack>/samples/<kind>.jsonl` (committed) | a few hundred documents a pack, the same shape, that the `demo` source serves live and ticking, with no store at all | `tools/packgen/banking/make_data.py` and each pack's generator |
 
-The other stores (PostgreSQL, DuckDB, Iceberg, MongoDB, Redis, Aerospike, JSON-lines files) are loaded with the samples (ten business
+The other stores (PostgreSQL, DuckDB, Iceberg, MongoDB, Redis, Aerospike, Cassandra, JSON-lines files) are loaded with the samples (ten business
 days) and, for scale tests, a generated trade book: the scripts in [the other stores](#postgresql).
 
 ## The test data and the demo lakes (the default)
@@ -170,6 +170,19 @@ SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=market-risk,counterparty-risk jav
 `--ttl-days N` lets Aerospike expire each day after N days. The default namespace of the Docker image keeps data in memory and is too
 small for a million-trade book; see [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md#4-loading).
 
+## Apache Cassandra
+
+Cassandra (or ScyllaDB) is yours to run; a single development node is enough for the samples. Then:
+
+```bash
+tools/load-cassandra.sh localhost:9042 datacenter1 --create --create-keyspace 1                   # the samples, a keyspace per domain
+tools/load-cassandra.sh localhost:9042 datacenter1 --create --create-keyspace 1 --trades 10000   # and a book of 10,000 trades a day
+cp config/connectors.examples/cassandra/*.yaml config/connectors/                                  # read the domains from Cassandra
+```
+
+Each business day is written under a new generation and switched to at the end, so a reload never shows half a day. `--ttl-days N`
+expires cells after N days; `--keep-days N` drops the older days. See [CASSANDRA_CONNECTOR.md](CASSANDRA_CONNECTOR.md#4-loading).
+
 ## JSON-lines files (no store at all)
 
 ```bash
@@ -297,6 +310,7 @@ trades.) So any store a new connector adds can be loaded with the same demo data
 | `tools/load-mongodb.sh [uri] [db] [--trades N] [--days D] [--keep-days N \| --ttl-days N] [--doc-format string\|bson]` | `make_data.py --jsonl`, then `MongoLoader`, then the bulk book streamed |
 | `tools/load-redis.sh [uri] [--trades N] [--days D] [--ttl-days N] [--merge] [--publish] [--cluster]` | `make_data.py --jsonl`, then `RedisLoader`, then the bulk book streamed |
 | `tools/load-aerospike.sh [hosts] [namespace] [--trades N] [--days D] [--ttl-days N]` | `make_data.py --jsonl`, then `AerospikeLoader`, then the bulk book streamed |
+| `tools/load-cassandra.sh [contact-points] [datacenter] [--create] [--create-keyspace RF] [--trades N] [--days D] [--ttl-days N] [--keep-days N]` | `make_data.py --jsonl` and the bulk book as one stream into `CassandraLoader` |
 | `tools/packgen/banking/make_data.py` | the samples, `--lake`, `--jsonl`, `--check` |
 | `tools/samplegen/bulk_trades.py` | a large trade book for one source system, into the lake or as JSON lines |
 

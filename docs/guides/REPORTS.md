@@ -45,6 +45,8 @@ Three sample reports ship in `config/bi/reports/` (and a fourth for Python, **De
 18. [A report on a model (wave W1)](#18-a-report-on-a-model-wave-w1)
 19. [Languages in the report designer (wave A)](#19-languages-in-the-report-designer-wave-a)
 20. [Report schema v2 in one report (2.4.0)](#20-report-schema-v2-in-one-report-240)
+21. [Field parameters in a well (2.6.0)](#21-field-parameters-in-a-well-260)
+22. [Statement pages: paper, page by page (2.6.0)](#22-statement-pages-paper-page-by-page-260)
 
 ## 1. Where a report lives
 
@@ -550,6 +552,8 @@ YAML tab and Check button, and the viewer when a report cannot be drawn).
 | `DRS-9034` | the dataset cannot be found or has errors, so the report cannot be drawn | `no dataset 'x' (a catalogue id, a file name such as trades-basic, or the dataset's name)` |
 | `DRS-9035` | a visual query names a page, a visual or a slicer the report lacks, or its state is not valid (a drill path past the last level, dates that are not dates) | `the hierarchy 'Desk and book' has 2 levels; there is nothing below trade.PORTFOLIO` |
 | `DRS-9036` | (2.4.0) a theme item is not valid, or (a warning) the report names a theme that cannot be found | `palette[1]: 'red' is not a colour (#rrggbb)` |
+| `DRS-9037` | (2.6.0) a well names `param.<name>` that is not a field parameter of the report's model, or a choice of it the well cannot take (section 21) | `pages[0].visuals[0].wells.values: the values well takes measures, and the field parameter 'breakdown' can be trade.DESK, a field: put it in a field well` |
+| `DRS-9038` | (2.6.0) a statement page or the report's `statement:` is not valid (section 22, [STATEMENTS.md section 8](STATEMENTS.md#8-checks-drs-9038)) | `statement.paper: paper is one of [A3, A4, A5, Legal, Letter], not 'B5'` |
 
 Report schema v2 adds, among others: `pages[0].visuals[1].format.valueAxis.min: is a number, not 'low'` (`DRS-9032`), `pages[0].visuals[0].format.rules[2].apply: 'Notional' is not shown by this visual` (`DRS-9031`),
 `pages[1].visuals[0].format.syncGroup: the slicers of sync group 'ccy' share one choice, so they slice one field (trade.CURRENCY), not trade.DESK` (`DRS-9032`),
@@ -601,6 +605,8 @@ Built later: Vega-Lite visuals (3.5), the relative-date slicer (6.1), tablet lay
 
 Built in 2.4.0 (report schema v2, section 20): the typed format per family with the generated Format pane (5), conditional formatting rules (5.1), theme items and the theme designer (5.2), small multiples (5.4),
 the matrix at every level (5.5), sync groups and tile slicers (6), the interactions matrix and highlight for lines, areas and combos, tooltip pages (8), board pages ([BOARDS.md](BOARDS.md)).
+
+Built in 2.6.0: field parameters in a visual's wells (section 21) and statement pages, paginated and page-exact, burst one per reader through subscriptions (section 22, [STATEMENTS.md](STATEMENTS.md)).
 
 Not built, and not faked: a `perspective-*` visual over **several tables**; pivoting or charting in the browser (no BI page computes: use a `matrix` or a chart); a `shape` visual; the **entity view in the designer's canvas and in an embedded element** (it shows a note; the viewer shows the view); a python visual in a **subscription** (section 3.3; [PYTHON_BI.md](PYTHON_BI.md) section 12; boards and alerts are built: [PYTHON_BI.md section 16](PYTHON_BI.md#16-python-in-alerts-and-on-boards)); a **tile** map or a map service (nothing is fetched from outside; the shapes are the vendored files), regions **below the first level** (counties inside a state), a
 shape-file import, a **choropleth by a field that is not a country code or name**; a histogram with bands of your own (equal-width only), a box plot of **summary** data you already have (it summarises the members the query returns); true totals for a **table's subtotals by group** (a table has one total row); highlight for the charts other than bar, column, line, area and combo, and for tables and matrices (they are filtered); a matrix with **more than one column field**; capturing a bookmark's slicer choices from the page (they are
@@ -1011,3 +1017,70 @@ pages:
 The browser test `drishti-console/tests/test_bi_studio_browser.py` builds this report through the UI, then views it: the matrix opens at the desks and expands and collapses,
 coloured and with icons; the small multiples draw a chart per currency; a selection on the chart filters the card and not the matrix; the tooltip page opens over a bar,
 filtered to it; a currency chosen on page 1 holds on page 3.
+
+## 21. Field parameters in a well (2.6.0)
+
+A **field parameter** of a model (`parameters: { breakdown: { kind: field, fields: [...] } }`, since 2.3.0, [BI_GUIDE.md section 25](BI_GUIDE.md))
+lets the **reader** choose what a visual draws: a well of a report on that model may name `param.<name>` instead of a field or a measure, and the parameter
+slicer above the page (*Parameters*) switches it. A field parameter's choices are fields (*break down by desk or by portfolio*) or measures (*show MTM or
+Notional*):
+
+```yaml
+# the model (excerpt)
+measures:
+  MTM:      { expr: "sum(trade.MTM)" }
+  NOTIONAL: { expr: "sum(trade.NOTIONAL)" }
+parameters:
+  breakdown: { kind: field, fields: [trade.DESK, trade.PORTFOLIO], default: trade.DESK, title: Break down by }
+  metric:    { kind: field, fields: [MTM, NOTIONAL], default: MTM, title: Show }
+```
+
+```yaml
+# the report
+model: fp-desk@1
+pages:
+  - id: main
+    title: Main
+    visuals:
+      - { id: chart, type: column, title: By the reader's choice, at: { x: 0, y: 0, w: 8, h: 5 },
+          wells: { axis: [param.breakdown], values: [param.metric] }, sort: { by: param.metric, desc: true } }
+```
+
+* **What is drawn.** Each query of the visual carries the reader's values (the report state's `params`); the server puts the chosen field or measure in
+  place of `param.<name>` in the wells and the sort, asks that, and answers the visual's `wells` as drawn, so the axis, the legend and the tooltips name
+  what was chosen. Without a choice the parameter's `default` (else its first choice) is drawn: in the designer's canvas, in an export, in a statement.
+* **Masks hold.** The choice is only a name: the visual is asked as the reader, so a masked measure chosen stays masked (and a visual sorted by a masked
+  measure is refused for that reader, `DRS-9021`, as any sort on it is).
+* **In BI Studio.** Build offers the model's field parameters under *Field parameters* in each well that can take them: a parameter of fields in a field
+  well, a parameter of measures in a measure well, a parameter of both only in a well of either. A chip of a field parameter is marked as one.
+* **The report schema checks it (`DRS-9037`).** The report is on a model (a 2.1 dataset has no parameters); the model has a parameter of that name and it
+  is `kind: field` (a what-if value goes in a measure, not a well); every choice fits the well (a field in a measure well is refused, and the reverse); every
+  choice is a field or a measure of the model; a slicer's `field` is a field (the reader chooses a field parameter with the parameter slicer). A value the
+  parameter does not list is refused when the visual is asked (`422 DRS-9037`).
+* **In a model query.** `param.<name>` works in `select.measures` too (a field parameter of measures), and in `sort` ([API_GUIDE.md](API_GUIDE.md)).
+
+![Build: param.breakdown in the axis well, param.metric in the values well, each marked as a field parameter](img/bi-wave-d/field-parameter-wells.jpg)
+
+![The viewer: Break down by PORTFOLIO and Show NOTIONAL chosen above the page; the chart draws Notional by book](img/bi-wave-d/field-parameter-slicer.jpg)
+
+The server test `FieldParamsApiTest` switches a column chart from DESK to PORTFOLIO and from MTM to NOTIONAL, each answer equal to an independent sum of the
+lake's rows, keeps MTM masked for a reader without raw, and refuses each wrong well; the browser test `drishti-console/tests/test_bi_wave_d_browser.py` builds the
+visual in Build and switches it in the viewer.
+
+## 22. Statement pages: paper, page by page (2.6.0)
+
+A page with `layout: statement` is **paper**: its visuals (text, cards, tables, matrices) are bands laid out page by page on the paper the report's
+`statement:` sets (size, orientation, margins, a header and footer with page numbers and the run date), with page breaks, the column titles of a table on
+every page it runs onto, and groups of rows kept together. It is made as a page-exact PDF or as Excel set to print on that paper, previewed page by page in
+BI Studio's **Paper** tab, and a subscription to it sends each recipient their own statement, made as them. The reference is [STATEMENTS.md](STATEMENTS.md).
+
+```yaml
+statement: { paper: A4, header: { left: "{title}", right: "{period}" }, footer: { right: "Page {page} of {pages}" }, period: previous-month }
+pages:
+  - id: statement
+    title: Statement
+    layout: statement
+    visuals:
+      - { id: positions, type: table, title: Positions, at: { x: 0, y: 0, w: 12, h: 8 }, wells: { columns: [trade.DESK, trade.TRADE_ID, Notional, MTM] },
+          format: { groupBy: trade.DESK, repeatHeader: true } }
+```

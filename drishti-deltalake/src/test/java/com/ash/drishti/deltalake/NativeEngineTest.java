@@ -82,6 +82,13 @@ class NativeEngineTest {
     }
 
     @Test
+    void readsLocalDiskAndS3Only() {
+        assertThat(NativeEngine.supports("s3a://b/l")).isTrue();
+        assertThat(NativeEngine.supports("C:\\lake")).isTrue();
+        assertThat(NativeEngine.supports("abfs://c@a/l")).isFalse();
+    }
+
+    @Test
     void readsTheSameRowsAsTheHadoopEngine() throws Exception {
         for (String table : List.of("desk/trade", "desk/counterparty")) {
             String path = lake.resolve(table).toString();

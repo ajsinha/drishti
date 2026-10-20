@@ -62,7 +62,9 @@ Related: [BI_DESIGN.md §3.4](../architecture/BI_DESIGN.md#34-drishti-sql-dsql-r
 | `POST /api/v1/bi/sql`, `drishti.py bi sql` | one model, as the caller | 2.2.0 |
 | A **SQL view dataset** (`source: { sql, model }`): a reviewed statement whose answer is a table | one model, as each reader | 2.2.0 |
 | A model's **SQL tests** (`tests: [{ sql, expect }]`) | the model, as the test's role | 2.2.0 |
-| Analyse SQL cells, the PostgreSQL-wire endpoint for outside tools, AI and MCP | one model | waves B and C |
+| Analyse SQL cells (Drishti SQL on the server) | one model, as the analyst | 2.2.0 |
+| The PostgreSQL-wire endpoint for outside tools | one model | planned after 3.0.0 |
+| AI and MCP | one model | planned for 2.8.0 |
 | **Not** in measures, row rules or derived columns: those are DEL | — | — |
 
 Free querying needs **read on the model** (as `POST /bi/mq` does): a person who may only view a report cannot send SQL to its model.

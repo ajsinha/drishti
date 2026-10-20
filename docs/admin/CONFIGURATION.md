@@ -72,7 +72,7 @@ pack.yaml contributions  <  application.yaml  <  application.local.yaml  <  envi
 The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in the bundled file (2s before 2026-10-18: the first read of a date on a large table loads its id index first).
 
 1. Create `application.local.yaml` in the directory you start the server from (the repository root when
-   you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.5.0-exec.jar`):
+   you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.6.0-exec.jar`):
 
    ```yaml
    drishti:
@@ -85,7 +85,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in t
 2. Start the server with an environment variable as well:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.5.0-exec.jar
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.6.0-exec.jar
    ```
 
    The effective value is `4s`: the environment beats the local file.
@@ -93,7 +93,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in t
 3. Add an argument:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.5.0-exec.jar \
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.6.0-exec.jar \
        --drishti.sources.fetch-timeout=5s
    ```
 
@@ -227,7 +227,7 @@ Setting `java.io.tmpdir` inside a running JVM does not move `Files.createTempFil
 
 ```bash
 mkdir -p data/tmp/server        # once: the server makes it too, but the JVM warns on a first start when it does not exist yet
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.5.0-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.6.0-exec.jar
 ```
 
 or, where editing the command is awkward (a service manager, a container, a wrapper script), through the environment: `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/opt/drishti/data/tmp/server` (Java prints `Picked up JAVA_TOOL_OPTIONS` once). With another data folder or `DRISHTI_TMP_DIR`, use that base: `<data dir>/tmp/server`. Everything Drishti ships passes it already: `tools/windows/start-server.ps1`, the IntelliJ run configurations, `deploy/server.Dockerfile` (in `JAVA_TOOL_OPTIONS`), the `run-server.sh`/`.ps1` that `tools/packmake.py` writes, the loaders `tools/load-*.sh`, and every java the tests and tools start (`tools/javacmd.py`; a guard test fails on one that does not). `./mvnw` gives Maven's own JVM `<repository>/data/tmp/maven` (`DRISHTI_MAVEN_TMP` names another), and the test JVMs get `<module>/target/tmp`, which `mvn clean` removes.
@@ -617,7 +617,7 @@ and [MCP_CLIENT.md](../architecture/MCP_CLIENT.md).
 ### Change the port
 
 ```bash
-DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.5.0-exec.jar
+DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.6.0-exec.jar
 ```
 
 You should see `Tomcat started on port 18490` in the log. Point the console at it with
@@ -626,7 +626,7 @@ You should see `Tomcat started on port 18490` in the log. Point the console at i
 ### Load more packs
 
 ```bash
-DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.5.0-exec.jar
+DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.6.0-exec.jar
 ```
 
 Packs a listed pack `extends:` (or the older `requires:`) are loaded too, dependencies first. Then
@@ -639,7 +639,7 @@ set `DRISHTI_PACKS_DIR` to an absolute path so both programs find the same folde
 export DRISHTI_SECURITY_ENABLED=true
 export DRISHTI_TOKEN_SECRET="$(openssl rand -base64 48)"   # at least 32 bytes; give the console the same value
 export DRISHTI_SEED_ADMIN=false
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.5.0-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.6.0-exec.jar
 ```
 
 The console needs `DRISHTI_AUTH_ENABLED=true`, the same `DRISHTI_TOKEN_SECRET`, and its own
@@ -683,7 +683,7 @@ Admin → Connectors. Defining the connector under `drishti.sources.connectors` 
 ### Use a different holiday calendar
 
 ```bash
-DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.5.0-exec.jar
+DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.6.0-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/business-date` then shows `"calendar":"USNY+GBLO"`.
@@ -728,7 +728,7 @@ drishti:
 | `connectors-poll` | `5s` | How often the files are looked at: the fallback when file events are unavailable, and a safety net beside them. |
 | `connectors-drain` | `3s` | A connector being restarted or stopped stays open this long so that reads in flight finish. |
 | `connectors-generate` | `true` | At the first start, write a connector file from the pack's template when no file of that name exists. Never overwrites a file. `false`: packs' templates are used in memory only and nothing is written. |
-| `connectors.<name>.plugin` | required (**deprecated**: put the connector in `connectors-dir`) | A named instance of a plugin (`delta`, `jdbc`, `file`, `rest`, `kafka`, `aerospike`, `redis`, `mongodb`, `iceberg`, `duckdb`, `activemq`, `rabbitmq`, `s3`, `feed`, `news`, `yfinance`). Run a plugin as often as you like. |
+| `connectors.<name>.plugin` | required (**deprecated**: put the connector in `connectors-dir`) | A named instance of a plugin (`delta`, `jdbc`, `file`, `rest`, `kafka`, `aerospike`, `cassandra`, `redis`, `mongodb`, `iceberg`, `iceberg-external`, `duckdb`, `activemq`, `rabbitmq`, `s3`, `feed`, `news`, `yfinance`). Run a plugin as often as you like. |
 | `connectors.<name>.enabled` | `true` | Switch one connector off without deleting it. |
 | `connectors.<name>.kinds` | what the plugin reports | Restrict or declare the kinds it serves. |
 | `connectors.<name>.settings.*` | per plugin | Settings for this instance. `source-name` defaults to the connector's name. |
@@ -752,6 +752,7 @@ What the bundled file sets under `plugins`:
 | `jdbc` | `false` (`DRISHTI_JDBC_ENABLED`) | `url`, `user`, `password` from `DRISHTI_JDBC_URL`, `DRISHTI_JDBC_USER`, `DRISHTI_JDBC_PASSWORD`; `source-name: jdbc` (`pool-size` is inherited from [`drishti.db.pool`](#drishtidbpool--database-connection-pools)) |
 | `delta` | `false` | runs only as named connectors (the packs declare one per data domain) |
 | `aerospike` | `false` | runs only as named connectors (profile `aerospike`) |
+| `cassandra` | `false` | runs only as named connectors (`config/connectors.examples/cassandra/`) |
 | `activemq` | `false` (`DRISHTI_ACTIVEMQ_ENABLED`) | configure it, or use it as a named connector |
 | `rabbitmq` | `false` (`DRISHTI_RABBITMQ_ENABLED`) | configure it, or use it as a named connector |
 | `s3` | `false` (`DRISHTI_S3_ENABLED`) | configure it, or use it as a named connector |
@@ -1541,6 +1542,15 @@ Under `drishti.distribution.subscriptions`:
 | `load-delay` | `5s` | After a data load, wait this long before an `after-load` subscription runs, so the BI layers rebuild |
 | `narrative-rows` | `15` | Most rows per table the model is shown when it writes a subscription's narrative summary (`narrative: true`; only in `drishti.bi.ai.values: aggregates`, and only from the recipient's own unmasked columns) |
 
+Under `drishti.distribution.statements` (2.6.0, statement pages: [STATEMENTS.md](../guides/STATEMENTS.md)):
+
+| Key | Default | Meaning |
+|---|---|---|
+| `max-pages` | `500` | Most pages one statement may run to; a longer one is refused (`422 DRS-9038`), never cut |
+| `max-rows` | `10000` | Most rows of one table band; past it the band is cut and says so |
+| `paper` | `A4` | The paper of a statement whose `statement:` names none (`A4`, `A3`, `A5`, `Letter`, `Legal`) |
+| `band-queries` | `2` | How many bands of one statement are asked at the same time (1 to 8), each as the reader, within the query limits |
+
 ### `drishti.alerts.measure` — alerts on numbers and board notifications
 
 Alerts on a visual, a dataset measure or a Sutra field, and notifications from board tiles (phase 7, part 2: [DISTRIBUTION.md section 4](../guides/DISTRIBUTION.md#4-alerts-on-numbers)). Every key has a default;
@@ -2010,7 +2020,7 @@ Proxy: a `proxy:` block, or the site default [`drishti.http.proxy`](#drishtihttp
 ### `tls.*` — TLS for connectors
 
 Every connector that connects to a server over the network reads its TLS settings from these keys (Kafka, ActiveMQ,
-RabbitMQ, Redis, REST, the feeds, S3, MongoDB, PostgreSQL, Aerospike, Delta and Iceberg; the matrix is in [TLS.md](../connectors/TLS.md#connector-matrix)). Every key is optional. Passwords are `${ENV}` placeholders or `…-password-file` paths,
+RabbitMQ, Redis, REST, the feeds, S3, MongoDB, PostgreSQL, Aerospike, Cassandra, Delta and Iceberg; the matrix is in [TLS.md](../connectors/TLS.md#connector-matrix)). Every key is optional. Passwords are `${ENV}` placeholders or `…-password-file` paths,
 never written in a document. Full reference, with every source form, the openssl/keytool commands and rotation:
 [TLS.md](../connectors/TLS.md).
 
@@ -2124,10 +2134,12 @@ TLS: an `https://` `endpoint` with the shared [`tls.*`](#tls--tls-for-connectors
 ### `iceberg` — Apache Iceberg
 
 Path-based tables or a REST catalog (Polaris, Snowflake Open Catalog, Glue), in the same layout as Delta Lake. Design,
-loading and maintenance: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md).
+loading and maintenance: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md); the two engines: its
+[section 17](../connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library).
 
 | Setting | Default | Meaning |
 |---|---|---|
+| `engine` | `native` (`DRISHTI_ICEBERG_ENGINE`) | `native`: drishti-iceberg, no Hadoop (local disk and S3; Windows; left to the default, a root it cannot reach is read by the library); `library`: Apache Iceberg Java over Hadoop (also Azure, Google Cloud Storage, HDFS); `auto`: native on Windows, library elsewhere |
 | `catalog` | `hadoop` | `hadoop` (path-based tables) or `rest` |
 | `root` | none (`root` or `uri` is required; the plugin stays idle without one; the `iceberg` profile sets `./data/iceberg`) | `hadoop`: the lake, a folder or `s3a://…` (`abfs://`, `gs://`, `hdfs://`) |
 | `domain` | empty | the data domain: the folder under `root`, or the REST namespace |
@@ -2136,7 +2148,11 @@ loading and maintenance: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.
 | `warehouse`, `credential`, `token`, `scope`, `oauth2-server-uri`, `prefix`, `io-impl` | none | `rest`: passed to the catalog |
 | `catalog.<key>` | — | `rest`: any other catalog property (`catalog.rest.sigv4-enabled` …) |
 | `s3.endpoint`, `s3.access-key`, `s3.secret-key`, `s3.region`, `s3.path-style` | — | object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint) |
-| `hadoop.<key>` | — | passed to Hadoop as `<key>` |
+| `hadoop.<key>` | — | `library`: passed to Hadoop as `<key>` |
+| `metadata-location.<kind>` | none | `native`: the kind's table named by its metadata file, read-only |
+| `relocate` | none | `native`: `<old prefix> -> <new prefix>; …` reads a table copied elsewhere |
+| `vended-credentials` | `true` | `native`, `rest`: ask the catalog for each table's own S3 credentials |
+| `lz4-decoder` | `safe` | `native`: the LZ4 page decoder, `safe` or `fast` |
 | `kinds` | every table found (new ones too) | comma list of kinds to serve |
 | `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
 | `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
@@ -2153,7 +2169,28 @@ loading and maintenance: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.
 | `source-name` | the connector's name | the name shown in provenance and Health |
 | `stale-after` | none | warn when no new data arrived for this long (engine setting) |
 
-TLS for a REST catalog's object store on a private CA: the shared [`tls.*`](#tls--tls-for-connectors) settings with `s3.endpoint: https://...` ([ICEBERG_CONNECTOR.md, Security](../connectors/ICEBERG_CONNECTOR.md#security-tls-and-credentials)); refused with `catalog: hadoop`.
+TLS for a REST catalog's object store on a private CA: the shared [`tls.*`](#tls--tls-for-connectors) settings with `s3.endpoint: https://...` ([ICEBERG_CONNECTOR.md, Security](../connectors/ICEBERG_CONNECTOR.md#security-tls-and-credentials)); on the `library` engine refused with `catalog: hadoop`, on `native` accepted for path-based tables too.
+
+### `iceberg-external` — Iceberg tables Drishti does not write
+
+Tables of Spark, Flink, Trino, Snowflake, Glue, dbt or pyiceberg, in their own layout, read-only through drishti-iceberg: rows as
+documents, ids from identifier fields or columns, dates from a column or the partition spec, every column searchable
+([ICEBERG_EXTERNAL_CONNECTOR.md](../connectors/ICEBERG_EXTERNAL_CONNECTOR.md)).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| the catalog's (`catalog`, `root`, `uri`, `warehouse`, `credential`, `token`, `scope`, `oauth2-server-uri`, `prefix`, `catalog.<key>`, `metadata-location.<kind>`, `relocate`, `vended-credentials`, `s3.*`, `tls.*`, `proxy.*`) | as `iceberg` | where the tables are |
+| `engine` | `auto` | `native` or `auto` (both drishti-iceberg); `library` is refused |
+| `tables.<kind>.table` | the kind | `namespace.table` |
+| `tables.<kind>.id`, `.id-separator` | the identifier fields, `:` | the id columns (several joined) |
+| `tables.<kind>.date`, `.date-from`, `.date-zone` | the partition spec's date, none, `UTC` | the business date: a date column, or a timestamp's `day` in a zone; none: current only |
+| `tables.<kind>.mode` | `snapshot` | `snapshot` or `effective` |
+| `tables.<kind>.document` | `row` | `row`, or `column:<name>` (a JSON column) |
+| `tables.<kind>.columns.exclude`, `.columns.rename.<column>`, `.links.<column>`, `.depth` | none, none, none, `2` | columns left out, renamed, naming other kinds, nesting searched |
+| `tables`, `namespace` | none | `tables: auto` serves every table of `namespace` |
+| `decimals`, `binary` | `number`, `base64` | `string` keeps decimals' precision; `omit` leaves binary out |
+| `id-index-mb`, `id-index-warn-rows`, `max-index-rows` | `1024`, `5000000`, `10000000` | the id index of unsorted tables; the Health hint; the rows type-ahead and columns take |
+| `refresh-seconds`, `lookback-days`, `doc-cache-mb`, `columns-cache-mb`, `max-concurrent-reads`, `source-name` | `10`, `10`, `256`, `1024`, `16`, `iceberg-external` | as `iceberg` |
 
 ### `duckdb` — one embedded DuckDB file
 
@@ -2258,6 +2295,40 @@ has no retention setting.
 
 TLS and certificate log-in: `tls.enabled: true` with the shared [`tls.*`](#tls--tls-for-connectors) settings, `tls-name` (the name the server certificate carries; default each host's name), `auth-mode: pki` to log in with the client certificate. The server's TLS is Enterprise Edition ([AEROSPIKE_CONNECTOR.md, Security](../connectors/AEROSPIKE_CONNECTOR.md#security-tls-certificate-log-in-and-credentials)).
 
+### `cassandra`
+
+Apache Cassandra 4 and 5, ScyllaDB, DataStax Astra (Amazon Keyspaces through AWS's SigV4 plug-in). A data domain is a keyspace: a table
+per kind (`<kind>`: a partition per business day, generation and bucket, keyed by `id`; columns `doc` and the promoted fields), `entity_days`
+(the days each entity has) and `kind_days` (each kind's days and the generation readers follow). The loader writes them
+(`tools/load-cassandra.sh`); see [CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `contact-points` | required unless `secure-connect-bundle` | `host:port` list, comma-separated (port `9042` when left out). |
+| `local-datacenter` | required unless `secure-connect-bundle` | The data centre the driver prefers (`datacenter1` on a single node). |
+| `keyspace` | the connector's `domain`, else `drishti` | |
+| `kinds` | the keyspace's tables made by the loader | Kinds served. |
+| `mode.<kind>` | `snapshot` | `snapshot` or `effective`, as for Delta. |
+| `layout.<kind>.columns` | none | Promoted fields (usually from the pack): searches, pick lists, derived kinds, impact and reverse lookups read a day's columns instead of its documents. A path the table has no column for is read from documents. |
+| `consistency` | `LOCAL_QUORUM` | Read consistency; `LOCAL_ONE` for speed where staleness is acceptable. |
+| `lookback-days` | `10` | How far back a snapshot kind's newest day may fall. |
+| `refresh-seconds` | `60` | How often `kind_days` (the catalogue) is re-read; a day's ids are re-read when its generation changes. |
+| `page-size`, `scan-threads` | `5000`, `8` | Rows per page and partitions read at once when a day's columns or documents are read. |
+| `columns-cache-mb`, `doc-cache-mb` | `1024`, `64` | Memory for days of promoted columns and for documents. |
+| `max-load-rows` | `200000` | Documents read at most by a reverse lookup of a kind without promoted columns (and ids of an effective kind). |
+| `reverse-index` | `true` | `false` turns reverse lookups off. |
+| `connections-per-node`, `max-concurrent-reads` | `2`, `256` | The driver's pool (each connection carries many requests) and the requests in flight at once; more wait in the driver's queue. |
+| `request-timeout-ms`, `connect-timeout-ms` | `5000`, `5000` | Per statement; connecting (a cluster down is retried in the background and Health says DOWN). |
+| `speculative-executions`, `speculative-delay-ms` | `0`, `100` | Extra copies of a slow read to other replicas (off by default). |
+| `username`, `password` | none | Password log-in; `password` is `${ENV}` or `file:`. |
+| `secure-connect-bundle`, `token` | none | DataStax Astra: the bundle `.zip` and the application token. |
+| `sigv4`, `sigv4-region` | `false`, `AWS_REGION` | Amazon Keyspaces: SigV4 log-in; AWS's plug-in jar goes in the plugin folder. |
+| `source-name` | `cassandra` (a connector: its name) | Provenance source. |
+
+Retention is the loader's: `--ttl-days N` (cells expire; new tables get one-day time windows) or `--keep-days N` (whole partitions
+dropped). TLS: `tls.enabled: true` with the shared [`tls.*`](#tls--tls-for-connectors) settings. `proxy.*` is refused: the native
+protocol is TCP.
+
 ### `feed` — public data feeds
 
 One connector per feed (the market-data pack declares them, all off by default).
@@ -2349,7 +2420,7 @@ Example: the trading pack with its live Kafka stream.
 
 ```bash
 DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=kafka:9092 \
-  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.5.0-exec.jar
+  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.6.0-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/sources` should then list `trading-stream`.
@@ -2375,7 +2446,7 @@ the lake. The packs still decide kinds, routes and modes.
 
 ```bash
 SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti \
-  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.5.0-exec.jar
+  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.6.0-exec.jar
 ```
 
 ---

@@ -69,6 +69,35 @@ $defs:
         maximum: 32
         x-label: Padding (px)
         x-group: Frame
+  paged:
+    # a band of a statement page (layout: statement, 2.6.0): how it falls on paper (docs/guides/STATEMENTS.md). Ignored on a grid or board page.
+    type: object
+    properties:
+      pageBreak:
+        type: string
+        enum: [none, before, after]
+        x-label: Page break
+        x-hint: "On a statement page: start this band on a new page, or start a new page after it."
+        x-group: Statement
+      keepTogether:
+        type: boolean
+        x-label: Keep together
+        x-hint: "On a statement page: never split this band across two pages (it moves to the next page whole when it fits on one)."
+        x-group: Statement
+      repeatHeader:
+        type: boolean
+        x-label: Repeat the column titles on every page
+        x-hint: "On a statement page (the default): a table that runs onto the next page starts it with its column titles."
+        x-group: Statement
+        x-types: [table, matrix, multirow-card]
+      groupBy:
+        type: string
+        maxLength: 200
+        x-label: Keep rows together by
+        x-hint: "On a statement page: the rows of one value of this field (a field the table shows) stay on one page when they fit, under a heading."
+        x-control: field
+        x-group: Statement
+        x-types: [table, matrix]
   legacyConditional:
     type: array
     maxItems: 20

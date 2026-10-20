@@ -195,6 +195,12 @@ class Tools(unittest.TestCase):
         self.assertTrue(out.startswith("bash "))
         self.assertTrue(out.strip().endswith("load-files.sh data/x --trades 1000 --days 2 --future-days 3"))
 
+    def test_data_load_reaches_the_cassandra_loader(self):
+        code, out, _ = run("data", "load", "--store", "cassandra", "localhost:9042", "datacenter1", "--trades", 10000, "--create", "--dry-run")
+        self.assertEqual(0, code)
+        self.assertTrue(out.strip().endswith("load-cassandra.sh localhost:9042 datacenter1 --trades 10000 --create"))
+        self.assertTrue((ROOT / "tools" / "load-cassandra.sh").is_file())
+
     def test_publish_wraps_packreg(self):
         called = {}
         reg = D.load_module("packreg", "packreg/packreg.py")

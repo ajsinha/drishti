@@ -51,7 +51,34 @@ public final class XlsxWriter {
 
     private XlsxWriter() {}
 
+    /**
+     * How the data sheets print (a statement's paper, 2.6.0): orientation, the Excel paper size code, margins in inches (top, right, bottom, left), the header
+     * and footer in Excel's codes ({@code &L}, {@code &C}, {@code &R}, {@code &P} page, {@code &N} pages, {@code &D} date), and the column titles repeated on
+     * every printed page.
+     */
+    public record PrintSetup(boolean landscape, int paperSize, double[] margins, String header, String footer) {
+
+        public PrintSetup {
+            margins = margins.clone();
+        }
+
+        String xml(boolean chart) {
+            return "<pageMargins left=\"" + inch(margins[3]) + "\" right=\"" + inch(margins[1]) + "\" top=\"" + inch(margins[0]) + "\" bottom=\"" + inch(margins[2])
+                    + "\" header=\"0.2\" footer=\"0.2\"/><pageSetup paperSize=\"" + paperSize + "\" orientation=\"" + (landscape ? "landscape" : "portrait") + "\""
+                    + (chart ? " fitToHeight=\"0\"" : "") + "/><headerFooter><oddHeader>" + esc(header) + "</oddHeader><oddFooter>" + esc(footer) + "</oddFooter></headerFooter>";
+        }
+
+        private static String inch(double v) {
+            return String.format(java.util.Locale.ROOT, "%.2f", v);
+        }
+    }
+
     public static byte[] write(ExportDoc doc) {
+        return write(doc, null);
+    }
+
+    /** As {@link #write(ExportDoc)}, the data sheets set to print as {@code print} says (null: Excel's own defaults). */
+    public static byte[] write(ExportDoc doc, PrintSetup print) {
         List<String> names = new ArrayList<>();
         Set<String> used = new HashSet<>();
         names.add(unique("About", used));
@@ -67,14 +94,14 @@ public final class XlsxWriter {
             entry(z, "[Content_Types].xml", contentTypes(names.size(), plans));
             entry(z, "_rels/.rels", XML + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
                     + "<Relationship Id=\"rId1\" Type=\"" + REL + "officeDocument\" Target=\"xl/workbook.xml\"/></Relationships>");
-            entry(z, "xl/workbook.xml", workbook(names));
+            entry(z, "xl/workbook.xml", workbook(names, print != null));
             entry(z, "xl/_rels/workbook.xml.rels", workbookRels(names.size()));
             entry(z, "xl/styles.xml", styles());
             entry(z, "xl/worksheets/sheet1.xml", about(doc));
             for (int i = 0; i < doc.sections().size(); i++) {
                 XlsxCharts.Plan plan = plans.get(i);
                 int n = i + 2;
-                entry(z, "xl/worksheets/sheet" + n + ".xml", sheet(doc.sections().get(i), plan != null));
+                entry(z, "xl/worksheets/sheet" + n + ".xml", sheet(doc.sections().get(i), plan != null, print));
                 if (plan != null) {                                       // the chart sits next to the data: sheet -> drawing -> chart
                     entry(z, "xl/worksheets/_rels/sheet" + n + ".xml.rels", XML + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
                             + "<Relationship Id=\"rId1\" Type=\"" + REL + "drawing\" Target=\"../drawings/drawing" + n + ".xml\"/></Relationships>");
@@ -117,12 +144,20 @@ public final class XlsxWriter {
         return b.append("</Types>").toString();
     }
 
-    private static String workbook(List<String> names) {
+    private static String workbook(List<String> names, boolean printTitles) {
         StringBuilder b = new StringBuilder(XML).append("<workbook ").append(MAIN).append(" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"><sheets>");
         for (int i = 0; i < names.size(); i++) {
             b.append("<sheet name=\"").append(esc(names.get(i))).append("\" sheetId=\"").append(i + 1).append("\" r:id=\"rId").append(i + 1).append("\"/>");
         }
-        return b.append("</sheets></workbook>").toString();
+        b.append("</sheets>");
+        if (printTitles && names.size() > 1) {                                  // each data sheet prints its column titles at the top of every page
+            b.append("<definedNames>");
+            for (int i = 1; i < names.size(); i++) {
+                b.append("<definedName name=\"_xlnm.Print_Titles\" localSheetId=\"").append(i).append("\">'").append(esc(names.get(i).replace("'", "''"))).append("'!$1:$1</definedName>");
+            }
+            b.append("</definedNames>");
+        }
+        return b.append("</workbook>").toString();
     }
 
     private static String workbookRels(int sheets) {
@@ -178,7 +213,7 @@ public final class XlsxWriter {
         return XML + "<worksheet " + MAIN + "><cols><col min=\"1\" max=\"1\" width=\"60\" customWidth=\"1\"/></cols><sheetData>" + rows + "</sheetData></worksheet>";
     }
 
-    private static String sheet(ExportDoc.Section s, boolean chart) {
+    private static String sheet(ExportDoc.Section s, boolean chart, PrintSetup print) {
         StringBuilder b = new StringBuilder(XML).append("<worksheet ").append(MAIN).append(chart ? " xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"" : "").append('>');
         if (chart) {
             b.append("<sheetPr><pageSetUpPr fitToPage=\"1\"/></sheetPr>");                       // printed or saved as PDF, the table and its chart share one page's width
@@ -202,7 +237,13 @@ public final class XlsxWriter {
             }
             b.append(row(r++, cells.toString()));
         }
-        return b.append("</sheetData>").append(chart ? "<pageSetup orientation=\"landscape\" fitToHeight=\"0\"/><drawing r:id=\"rId1\"/>" : "").append("</worksheet>").toString();
+        b.append("</sheetData>");
+        if (print != null) {
+            b.append(print.xml(chart));
+        } else if (chart) {
+            b.append("<pageSetup orientation=\"landscape\" fitToHeight=\"0\"/>");
+        }
+        return b.append(chart ? "<drawing r:id=\"rId1\"/>" : "").append("</worksheet>").toString();
     }
 
     private static int width(ExportDoc.Section s, int c) {

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.deltalake;
 
+import com.ash.drishti.lakeio.RangeReader;
 import io.delta.kernel.engine.FileReadRequest;
 import io.delta.kernel.engine.FileSystemClient;
 import io.delta.kernel.utils.CloseableIterator;

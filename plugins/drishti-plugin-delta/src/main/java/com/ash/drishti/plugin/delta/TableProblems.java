@@ -16,8 +16,8 @@
 package com.ash.drishti.plugin.delta;
 
 import com.ash.drishti.api.UnreadableData;
-import com.ash.drishti.deltalake.PageDecodeException;
-import com.ash.drishti.deltalake.UnsupportedCodec;
+import com.ash.drishti.lakeio.PageDecodeException;
+import com.ash.drishti.lakeio.UnsupportedCodec;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;

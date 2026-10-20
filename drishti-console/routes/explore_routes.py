@@ -37,7 +37,7 @@ from core.explore import (ExploreError, Extract, Limits, check_extracts, check_f
 from core.promote_report import add_to_report, sql_to_slice, visual_for
 from core.pyrunner import PyError
 from core.quant import get_engine
-from routes.bi_routes import _page
+from routes.bi_routes import QUERY_WAIT_SECONDS, _page
 from routes.common import ident
 
 router = APIRouter(include_in_schema=False)
@@ -89,7 +89,7 @@ async def extract_for(request: Request, spec: dict, max_rows: int | None = None)
         content, headers = await backend.bi_arrow("/mq", me, mq, format="arrow")
         low = {str(k).lower(): v for k, v in headers.items()}
         return from_arrow(content, cap, [x for x in (low.get("x-bi-masked") or "").split(",") if x])
-    return from_json(await backend.bi("POST", "/mq", me, mq, format="json"), cap)
+    return from_json(await backend.bi("POST", "/mq", me, mq, wait=QUERY_WAIT_SECONDS, format="json"), cap)
 
 
 async def extras_for(request: Request, specs) -> list[tuple[dict, Extract]]:
@@ -190,7 +190,7 @@ async def dsql(request: Request):
                                                    "choose 'over the extract' for this cell"))
     t0 = time.monotonic()
     try:
-        out = await request.app.state.backend.bi("POST", "/sql", ident(request), dsql_request(str(body.get("sql", "")), ref, limits))
+        out = await request.app.state.backend.bi("POST", "/sql", ident(request), dsql_request(str(body.get("sql", "")), ref, limits), wait=QUERY_WAIT_SECONDS)
     except (BackendError, ExploreError) as e:
         if isinstance(e, BackendError) and e.status in (404, 405):
             return _fail(ExploreError("DRS-9070", 501, "this server does not run Drishti SQL yet: choose 'over the extract' for this cell"))

@@ -155,6 +155,8 @@ drishti:
         enabled: false
       aerospike:                    # the Aerospike plugin; runs as named connectors (profile `aerospike`)
         enabled: false
+      cassandra:                    # the Apache Cassandra plugin (also ScyllaDB, Astra, Keyspaces); runs as named connectors
+        enabled: false
       activemq:                     # ActiveMQ queues and topics; off until configured (or used as a named connector)
         enabled: ${DRISHTI_ACTIVEMQ_ENABLED:false}
       rabbitmq:                     # RabbitMQ queues; off until configured (or used as a named connector)

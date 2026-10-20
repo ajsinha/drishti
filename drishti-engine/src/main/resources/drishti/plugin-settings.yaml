@@ -146,6 +146,11 @@ plugins:
     proxy: true
     settings:
       - { name: "layout.*", desc: "Per-kind column layout", group: mapping }
+      - { name: engine, type: "enum:native|library|auto", default: "native", desc: "native: drishti-iceberg, no Hadoop (local disk and S3; Windows without winutils.exe; left to the default, a root it cannot reach is read by the library); library: Apache Iceberg Java over Hadoop (also Azure, Google Cloud Storage, HDFS); auto: native on Windows, library elsewhere. DRISHTI_ICEBERG_ENGINE sets it for every connector", group: connection }
+      - { name: "metadata-location.*", desc: "A table named by its metadata file, read-only (metadata-location.<kind>: s3://…/v12.metadata.json); native engine", group: connection }
+      - { name: relocate, desc: "Read a table copied elsewhere: '<old prefix> -> <new prefix>; …' replaces the start of every path its metadata names (native engine)", group: connection }
+      - { name: vended-credentials, type: boolean, default: "true", desc: "Ask a REST catalog for each table's own S3 credentials (X-Iceberg-Access-Delegation); native engine", group: connection }
+      - { name: lz4-decoder, type: "enum:safe|fast", default: "safe", desc: "The LZ4 page decoder of the native engine: safe (pure Java) or fast (JNI when present)", group: tuning }
       - { name: "hadoop.*", desc: "Any Hadoop configuration property (hadoop.fs.s3a.connection.maximum)", group: tuning }
       - { name: "catalog.*", desc: "Any Iceberg catalog property (catalog.<property>)", group: connection }
       - { name: warehouse, desc: "REST catalog warehouse", group: connection }
@@ -177,6 +182,44 @@ plugins:
       - { name: index.reload-every, default: "10m", desc: "How often each past day is checked against its source and rebuilt when the source changed (a source with no version is rebuilt every cycle); 0 = never; the newest day has its own faster refresh", group: tuning }
       - { name: index.block-cache, type: int, default: "16", desc: "Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none", group: tuning }
       - { name: "index.kinds.*", desc: "Per-kind override of any index setting (index.kinds.<kind>.days)", group: tuning }
+  iceberg-external:
+    tls: true
+    proxy: true
+    settings:
+      - { name: "tables.*", desc: "Per kind: tables.<kind>.table (namespace.table), id (columns, joined by id-separator), id-separator (:), date, date-from (day), date-zone (UTC), mode (snapshot|effective), document (row|column:<name>), columns.exclude, columns.rename.<column>, links.<column> (a kind), depth (2); or tables: auto with namespace", group: mapping }
+      - { name: tables, desc: "auto: every table of the namespace is a kind (its name in lower case with -), its id from the identifier fields, its date from the partition spec", group: mapping }
+      - { name: engine, type: "enum:native|auto", default: "auto", desc: "The engine: drishti-iceberg (no Hadoop); library is the iceberg connector's only", group: connection }
+      - { name: root, type: path, desc: "Path-based tables' root (a folder or s3://…); tables.<kind>.table names the folder under it", group: connection }
+      - { name: uri, desc: "A REST catalog's URI (Polaris, Snowflake Open Catalog, Glue, Unity, Nessie, Lakekeeper)", group: connection }
+      - { name: catalog, desc: "hadoop (path-based, the default) or rest", group: connection }
+      - { name: warehouse, desc: "REST catalog warehouse", group: connection }
+      - { name: credential, secret: true, desc: "REST catalog OAuth2 client credentials (id:secret): ${ENV_VAR} or file:/path", group: connection }
+      - { name: token, secret: true, desc: "A fixed REST catalog bearer token: ${ENV_VAR} or file:/path", group: connection }
+      - { name: scope, desc: "The OAuth2 scope (catalog)", group: connection }
+      - { name: oauth2-server-uri, desc: "Where OAuth2 tokens come from (default: the catalog's /v1/oauth/tokens)", group: connection }
+      - { name: prefix, desc: "The REST catalog's path prefix (default: what /v1/config says)", group: connection }
+      - { name: namespace, desc: "The namespace of tables: auto (dots separate levels)", group: connection }
+      - { name: "catalog.*", desc: "Iceberg catalog properties (catalog.rest.sigv4-enabled, catalog.rest.signing-region, catalog.rest.signing-name)", group: connection }
+      - { name: "metadata-location.*", desc: "A table named by its metadata file, read as kind <kind> (metadata-location.<kind>)", group: connection }
+      - { name: relocate, desc: "Read tables copied elsewhere: '<old prefix> -> <new prefix>; …'", group: connection }
+      - { name: vended-credentials, type: boolean, default: "true", desc: "Ask a REST catalog for each table's own S3 credentials", group: connection }
+      - { name: decimals, type: "enum:number|string", default: "number", desc: "Decimals in documents as JSON numbers, or as text keeping full precision", group: mapping }
+      - { name: binary, type: "enum:base64|omit", default: "base64", desc: "Fixed and binary columns in documents as Base64 text, or left out", group: mapping }
+      - { name: id-index-mb, type: int, default: "1024", desc: "Memory for the id indexes of tables not sorted by their id (about 60 B per id; least-used days dropped first)", group: tuning }
+      - { name: id-index-warn-rows, type: int, default: "5000000", desc: "Health suggests sorting a table by its id when one day's id index passes this", group: tuning }
+      - { name: max-index-rows, type: int, default: "10000000", desc: "Most rows type-ahead and column reads take from one day (or a table with no date); partial beyond it", group: tuning }
+      - { name: refresh-seconds, type: int, default: "10", desc: "How often each table's current snapshot is checked", group: tuning }
+      - { name: lookback-days, type: int, default: "10", desc: "How far back a snapshot kind looks for the newest date on or before the one asked", group: tuning }
+      - { name: doc-cache-mb, type: int, default: "256", desc: "Memory for recently read documents", group: tuning }
+      - { name: columns-cache-mb, type: int, default: "1024", desc: "Memory for a day's searchable columns", group: tuning }
+      - { name: max-concurrent-reads, type: int, default: "16", desc: "Documents read at once at most", group: tuning }
+      - { name: source-name, desc: "The connector's name in provenance (iceberg-external)", group: connection }
+      - { name: s3.endpoint, desc: "S3-compatible endpoint", group: s3 }
+      - { name: s3.region, desc: "S3 region", group: s3 }
+      - { name: s3.path-style, type: boolean, desc: "Path-style S3 addressing", group: s3 }
+      - { name: s3.access-key, secret: true, desc: "S3 access key: ${ENV_VAR} or file:/path", group: s3 }
+      - { name: s3.secret-key, secret: true, desc: "S3 secret key: ${ENV_VAR} or file:/path", group: s3 }
+      - { name: s3.read-block-kb, type: int, default: "1024", desc: "The smallest ranged GET", group: s3 }
   aerospike:
     tls: true
     settings:
@@ -210,6 +253,35 @@ plugins:
       - { name: columns-cache-mb, type: int, desc: "Column cache size", group: tuning }
       - { name: columns-seconds, type: int, desc: "Column cache lifetime", group: tuning }
       - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
+  cassandra:
+    tls: true
+    settings:
+      - { name: "layout.*", desc: "Per-kind promoted columns: layout.<kind>.columns: a, b, c (columns the loader created)", group: mapping }
+      - { name: contact-points, desc: "host:port list, comma separated (port 9042 when left out); required unless secure-connect-bundle is set", group: connection }
+      - { name: local-datacenter, desc: "The data centre the driver prefers (nodetool status names it; datacenter1 on one node); required unless secure-connect-bundle is set", group: connection }
+      - { name: keyspace, desc: "The keyspace (default: the domain)", group: connection }
+      - { name: kinds, type: list, desc: "Kinds to read (default: the tables the loader made)", group: mapping }
+      - { name: username, desc: "User name", group: connection }
+      - { name: password, secret: true, desc: "Password: ${ENV_VAR} or file:/path", group: connection }
+      - { name: secure-connect-bundle, type: path, desc: "DataStax Astra: the secure connect bundle (.zip); replaces contact-points and local-datacenter", group: connection }
+      - { name: token, secret: true, desc: "DataStax Astra: the application token (AstraCS:...): ${ENV_VAR}", group: connection }
+      - { name: sigv4, type: boolean, default: "false", desc: "Amazon Keyspaces: SigV4 log-in through AWS's driver plug-in (put it in the plugin folder) with the default AWS credential chain", group: security }
+      - { name: sigv4-region, desc: "Amazon Keyspaces: the region (default: AWS_REGION)", group: security }
+      - { name: consistency, type: "enum:LOCAL_QUORUM|LOCAL_ONE|QUORUM|ONE|TWO|THREE|ALL|EACH_QUORUM", default: LOCAL_QUORUM, desc: "Read consistency; LOCAL_ONE for speed where staleness is acceptable", group: connection }
+      - { name: connections-per-node, type: int, default: "2", desc: "Connections to each node (each carries many requests at once)", group: pool }
+      - { name: max-concurrent-reads, type: int, default: "256", desc: "Requests in flight at most; further ones wait in the driver's queue", group: pool }
+      - { name: request-timeout-ms, type: int, default: "5000", desc: "Longest one statement may run", group: pool }
+      - { name: connect-timeout-ms, type: int, default: "5000", desc: "Connect timeout (a cluster not reachable is retried in the background)", group: pool }
+      - { name: speculative-executions, type: int, default: "0", desc: "Extra copies of a slow read sent to other replicas (0: off; reads are idempotent)", group: tuning }
+      - { name: speculative-delay-ms, type: int, default: "100", desc: "How long a read waits before a speculative copy is sent", group: tuning }
+      - { name: page-size, type: int, default: "5000", desc: "Rows per page when a day's columns or documents are read", group: tuning }
+      - { name: scan-threads, type: int, default: "8", desc: "A day's partitions read at once", group: tuning }
+      - { name: refresh-seconds, type: int, default: "60", desc: "Re-read interval of the catalogue (kind_days) and the ids", group: tuning }
+      - { name: lookback-days, type: int, default: "10", desc: "A snapshot kind is read on its newest day at most this many days before the date asked", group: tuning }
+      - { name: max-load-rows, type: int, default: "200000", desc: "Documents read at most for a reverse lookup without promoted columns, and ids of an effective kind", group: tuning }
+      - { name: columns-cache-mb, type: int, default: "1024", desc: "Memory for the days' promoted columns", group: tuning }
+      - { name: doc-cache-mb, type: int, default: "64", desc: "Memory for documents read", group: tuning }
+      - { name: reverse-index, type: boolean, default: "true", desc: "Answer reverse lookups", group: tuning }
   mongodb:
     tls: true
     settings:

@@ -235,10 +235,13 @@
       const row = h('div', { class: 'bi-md-row' }, h('label', {}, 'Kind ', kSel), h('label', {}, 'Title ', title));
       if (kind === 'field') {
         const chosen = new Set(p.fields || []);
-        const box = h('div', { class: 'bi-p-fields', role: 'group', 'aria-label': 'Fields ' + n + ' can be', 'data-p-fields': n }, fields.map((f) => {
+        // a field parameter switches a field (a breakdown) or, since 2.6.0, a measure (what a values well shows): its choices are the model's fields and measures
+        const measures = Object.keys(M.doc.measures || {});
+        const choices = fields.concat(measures);
+        const box = h('div', { class: 'bi-p-fields', role: 'group', 'aria-label': 'Fields or measures ' + n + ' can be', 'data-p-fields': n }, choices.map((f) => {
           const cb = h('input', { type: 'checkbox', value: f, checked: chosen.has(f), disabled: M.readOnly });
-          cb.addEventListener('change', () => M.edit((doc) => { const x = doc.parameters[n]; const s = new Set(x.fields || []); if (cb.checked) { s.add(f); } else { s.delete(f); } x.fields = fields.filter((y) => s.has(y)); if (x.fields.indexOf(x.default) < 0) { x.default = x.fields[0]; } }, true));
-          return h('label', { class: 'bi-check' }, cb, ' ' + f);
+          cb.addEventListener('change', () => M.edit((doc) => { const x = doc.parameters[n]; const s = new Set(x.fields || []); if (cb.checked) { s.add(f); } else { s.delete(f); } x.fields = choices.filter((y) => s.has(y)); if (x.fields.indexOf(x.default) < 0) { x.default = x.fields[0]; } }, true));
+          return h('label', { class: 'bi-check', 'data-p-choice': measures.indexOf(f) >= 0 ? 'measure' : 'field' }, cb, ' ' + f + (measures.indexOf(f) >= 0 ? ' (measure)' : ''));
         }));
         const dflt = sel((p.fields || []).map((f) => [f, f]), p.default || '', { 'aria-label': 'Default of ' + n, 'data-p-default': n, disabled: M.readOnly });
         dflt.addEventListener('change', () => set('default', dflt.value));

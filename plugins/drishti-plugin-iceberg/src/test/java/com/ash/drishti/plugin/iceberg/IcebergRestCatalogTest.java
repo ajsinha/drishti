@@ -65,7 +65,16 @@ class IcebergRestCatalogTest extends DatedSourceContract {
             .withEnv("AWS_REGION", "us-east-1").withEnv("AWS_ACCESS_KEY_ID", "k").withEnv("AWS_SECRET_ACCESS_KEY", "s")
             .waitingFor(Wait.forHttp("/v1/config").forPort(8181).forStatusCode(200));
 
-    private static IcebergSourcePlugin plugin;
+    private static final Map<String, IcebergSourcePlugin> PLUGINS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** The engine the connector reads with; {@code IcebergRestCatalogNativeTest} runs every test on the other one. */
+    protected String engine() {
+        return "library";
+    }
+
+    private static String key(String engine) {
+        return engine + "@" + CATALOG.getContainerId();
+    }
 
     /** Each container is capped at 1 GB: the test machine is shared. */
     static void oneGb(com.github.dockerjava.api.command.CreateContainerCmd cmd) {
@@ -87,8 +96,8 @@ class IcebergRestCatalogTest extends DatedSourceContract {
 
     @Override
     protected synchronized SourcePlugin plugin() throws Exception {
-        if (plugin != null) {
-            return plugin;
+        if (PLUGINS.containsKey(key(engine()))) {
+            return PLUGINS.get(key(engine()));
         }
         try (S3Client c = S3Client.builder().endpointOverride(URI.create("http://" + S3.getHost() + ":" + S3.getMappedPort(9090))).forcePathStyle(true)
                 .region(Region.US_EAST_1).httpClient(ApacheHttpClient.create())
@@ -104,10 +113,10 @@ class IcebergRestCatalogTest extends DatedSourceContract {
             IcebergSourcePluginTest.write(lake, ROWS, Map.of("trade", trade));
         }
         Map<String, String> s = settings();
-        s.putAll(Map.of("mode.counterparty", "effective", "source-name", "rest-iceberg", "layout.trade.columns", "mtm,nettingSet"));
+        s.putAll(Map.of("mode.counterparty", "effective", "source-name", "rest-iceberg", "layout.trade.columns", "mtm,nettingSet", "engine", engine()));
         IcebergSourcePlugin p = new IcebergSourcePlugin();
         p.start(context(s));
-        plugin = p;
+        PLUGINS.put(key(engine()), p);
         return p;
     }
 

@@ -15,6 +15,10 @@
  */
 package com.ash.drishti.deltalake;
 
+import com.ash.drishti.lakeio.NativeCodecs;
+import com.ash.drishti.lakeio.ParquetFooters;
+import com.ash.drishti.lakeio.S3Settings;
+import com.ash.drishti.lakeio.Storage;
 import io.delta.kernel.defaults.engine.DefaultExpressionHandler;
 import io.delta.kernel.engine.Engine;
 import io.delta.kernel.engine.ExpressionHandler;
@@ -47,7 +51,7 @@ public final class NativeEngine implements Engine, AutoCloseable {
 
     /** Forgets the parsed Parquet footers kept across reads (a purge of a connector's caches). */
     public static void purgeFooterCache() {
-        ParquetBatches.purgeFooters();
+        ParquetFooters.purge();
     }
 
 

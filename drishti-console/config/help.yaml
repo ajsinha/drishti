@@ -33,7 +33,7 @@ categories:
     icon: terminal
     blurb: "Working in the console: commands, views, forms, reports, sharing, and Python on any screen."
     guides:
-      - { slug: user-guide, doc: guides/USER_GUIDE.md, title: User guide, icon: terminal, summary: "The top bar, commands, type-ahead, every key, tables, filters, controls, layout mode, the Pivot tab, business dates, Compare, workspaces, monitors, alerts, themes, settings, and what changes (nothing) when several servers act as one." }
+      - { slug: user-guide, doc: guides/USER_GUIDE.md, title: User guide, icon: terminal, summary: "The top bar, commands, type-ahead, every key, tables, filters, controls, layout mode, the Pivot tab, business dates, Compare, workspaces, monitors, alerts, the ten themes and how to choose one, settings, and what changes (nothing) when several servers act as one." }
       - { slug: query-by-form, doc: guides/QUERY_BY_FORM.md, title: Query by form, icon: card-checklist, summary: "Fill in boxes instead of writing a search: the forms home, the inputs, the search it writes, saving and scheduling it; a date with no data says so and offers the newest one." }
       - { slug: reports-page, doc: guides/SCHEDULED_REPORTS.md, title: Reports and subscriptions, icon: file-earmark-bar-graph, summary: "The Reports page: scheduled searches, when they run and where the file goes, export, and subscriptions by email." }
       - { slug: sharing-and-discussion, title: Sharing and collaboration, icon: chat-square-text, summary: "Send a view with a note, read your inbox, discuss a number: what travels is your words and a link, and everyone sees the view with their own permissions." }
@@ -49,10 +49,10 @@ categories:
       - { slug: datasets, doc: guides/DATASETS.md, title: "Datasets", icon: database, summary: "Tables, relationships, measures, the expression language, composed and derived datasets, window functions, several fact tables, row rules, masks, layers and rollups, live tables and their history, refresh." }
       - { slug: expressions, doc: guides/EXPRESSIONS.md, title: "Expressions (DEL)", icon: braces, summary: "The Python-like language of measures, derived columns, filters and row rules: scopes, grammar, every function with examples and edge cases, problems and their fixes, DEL against Python and DAX, the converter, and fifty-odd finance and risk recipes." }
       - { slug: sql, doc: guides/SQL.md, title: "Drishti SQL", icon: filetype-sql, summary: "Read-only SQL over one model: tables are the model's aliases, MEASURE('name'), joins along the model's relationships, composite statements, AS OF and windows, EXPLAIN, SQL view datasets; one plan with the model query, your rules and masks always applied." }
-      - { slug: reports, doc: guides/REPORTS.md, title: "BI reports", icon: bar-chart, summary: "Pages, visuals, wells, filters, slicers and sync groups, drill-down and drill-through, the typed format and the Format pane, conditional formatting, themes, interactions, tooltip pages, small multiples, the matrix, Vega-Lite, live visuals, phone and tablet layouts, expected-value tests, checks and codes." }
+      - { slug: reports, doc: guides/REPORTS.md, title: "BI reports", icon: bar-chart, summary: "Pages, visuals, wells, filters, slicers and sync groups, drill-down and drill-through, the typed format and the Format pane, conditional formatting, themes, interactions, tooltip pages, small multiples, the matrix, Vega-Lite, live visuals, phone and tablet layouts, expected-value tests, checks and codes; field parameters in the wells (a slicer switches the field) and statement pages on paper." }
       - { slug: boards, doc: guides/BOARDS.md, title: "Boards and live BI", icon: speedometer2, summary: "A board is a report page of live tiles beside the report's own visuals: the tile editor in the report designer, kiosk mode, tile alerts with hysteresis and notifications, Python tiles, live tables, and 2.3 boards converted." }
       - { slug: bi-governance, doc: guides/BI_GOVERNANCE.md, title: "Governance", icon: shield-check, summary: "Versions and diffs, review, certification, lineage, impact of a change (renames, types), bundles between environments and inside pack archives, rollback of an import." }
-      - { slug: distribution, doc: guides/DISTRIBUTION.md, title: "Distribution: export, subscriptions, alerts, embedding", icon: envelope-paper, summary: "A report or view as PDF, PNG, Excel (with charts) or CSV; subscriptions by email with narrative summaries; alerts on a number with retries, webhook and text channels, each person on their own masks; a report embedded in another application." }
+      - { slug: distribution, doc: guides/DISTRIBUTION.md, title: "Distribution: export, subscriptions, alerts, embedding", icon: envelope-paper, summary: "A report or view as PDF, PNG, Excel (with charts) or CSV; subscriptions by email with narrative summaries; alerts on a number with retries, webhook and text channels, each person on their own masks; a report embedded in another application; statements, page-exact PDF and Excel burst one per recipient." }
       - { slug: python-bi, doc: guides/PYTHON_BI.md, title: "Python in BI", icon: filetype-py, summary: "Measures, visuals and Transforms in Python as BI items: the manifest, the sandboxed runner on the console with warm workers, Vega-Lite output, tests, and data prep step by step in BI → Transforms (inputs through a connector, 21 snippets, a profile after every step)." }
       - { slug: analyse, doc: guides/ANALYSE.md, title: "Analyse: slice, SQL and Python", icon: binoculars, summary: "Open a dataset or model as your masked extract, then slice it, query it with SQL, work on it in Python, worked out by the console and the server; save a notebook and promote cells into report visuals. And the Python console: your own Python in the browser, promoted to the server." }
       - { slug: bi-ai, doc: guides/BI_AI.md, title: "AI in BI", icon: stars, summary: "Report from words, ask the data, explain this number, the designer copilot, the dataset helper and narrative summaries: what is sent to the model, the AI policy and the providers." }
@@ -61,7 +61,7 @@ categories:
     icon: plug
     blurb: "Where entities come from, how to connect them, and how to tell Drishti new data has landed."
     guides:
-      - { slug: connectors, doc: connectors/CONNECTORS.md, title: Connectors, icon: plug, summary: "One reference with a section per plugin (file, Delta, Iceberg, DuckDB, PostgreSQL, MongoDB, Redis, Aerospike, S3, REST, feeds, news, Kafka, ActiveMQ, RabbitMQ, demo): when to use it and a connector file." }
+      - { slug: connectors, doc: connectors/CONNECTORS.md, title: Connectors, icon: plug, summary: "One reference with a section per plugin (file, Delta, Iceberg, DuckDB, PostgreSQL, MongoDB, Redis, Aerospike, Cassandra, S3, REST, feeds, news, Kafka, ActiveMQ, RabbitMQ, demo): when to use it and a connector file." }
       - { slug: connector-files, doc: connectors/CONNECTOR_FILES.md, title: Connector files and Admin → Connectors, icon: file-earmark-code, summary: "One YAML file per connector in config/connectors: the format, how packs suggest templates, several connectors serving one kind (the union of trade connectors), precedence, live reload, the Admin page, the API and the CLI." }
       - { slug: connector-tls, doc: connectors/TLS.md, title: "TLS and proxy", icon: lock, summary: "The shared tls settings (private CA, PEM, PKCS12 and JKS, mutual TLS, expiry, rotation) and the outbound HTTP proxy for connectors, AI providers and MCP servers." }
       - { slug: data-loads, doc: guides/DATA_LOADS.md, title: "Data loads", icon: cloud-arrow-down, summary: "Your ETL loads the data; Drishti acts on it. One call (API or drishti.py data landed) makes Drishti refresh, check expectations and alert on a missing load." }
@@ -87,12 +87,12 @@ categories:
     blurb: "Configure it, run it, give people access, call it, and fix it when something goes wrong."
     guides:
       - { slug: configuration, doc: admin/CONFIGURATION.md, title: Configuration, icon: sliders, summary: "Every server and console setting with its default: the type-ahead index, the BI and Python settings, config/net/ for Drishti*net, the business calendars (CATO among them) and -Djava.io.tmpdir for the JVM." }
-      - { slug: operations, doc: admin/OPERATIONS.md, title: Operations, icon: hdd-stack, summary: "Deploying, the security checklist, monitoring, capacity, connection pools, the type-ahead index, several console workers, several servers as one (Drishti*net: Admin → Net), and shipping by copying; the runbooks." }
+      - { slug: operations, doc: admin/OPERATIONS.md, title: Operations, icon: hdd-stack, summary: "Deploying, the security checklist, monitoring, capacity, connection pools, the type-ahead index, several console workers, several servers as one (Drishti*net: Admin → Net, real addresses only, drishti-stack), and shipping by copying; the runbooks." }
       - { slug: admin-artifacts, doc: admin/ARTIFACTS.md, title: "Artifacts: install and uninstall safely", icon: archive, summary: "Admin → Artifacts: every installed pack, connector file and BI file in one list; what depends on each; disable, uninstall to an archive, restore, install a BI file." }
       - { slug: user-management, doc: admin/USER_MANAGEMENT.md, title: Users and roles, icon: people, summary: "The seeded admin, managing users, roles and BI powers, password rules, lockout and the audit log." }
       - { slug: api, doc: guides/API_GUIDE.md, title: API, icon: braces-asterisk, summary: "REST endpoints (BI, Python data prep, themes, Drishti*net), the ViewModel contract and error codes." }
       - { slug: tools, doc: guides/TOOLS.md, title: "Tools", icon: tools, summary: "Every command, script and page that builds, loads and looks after Drishti: drishti.py, lake build for large JSON exports, loaders, maintenance, generators, scheduling and sizing." }
-      - { slug: cli-guide, doc: guides/CLI_GUIDE.md, title: "Command line", icon: command, summary: "One program for the terminal and CI: JSON Lines to a pack, pack check with JUnit, loading data and packs, BI (models, SQL, Transforms, migrations), the demo lakes, drishti.py net, and the headless Sutra tool." }
+      - { slug: cli-guide, doc: guides/CLI_GUIDE.md, title: "Command line", icon: command, summary: "One program for the terminal and CI: JSON Lines to a pack, pack check with JUnit, loading data and packs, BI (models, SQL, Transforms, migrations), the demo lakes, drishti.py net, bi statement, data load --store cassandra, and the headless Sutra tool." }
       - { slug: ai-providers, doc: architecture/AI_PROVIDERS.md, title: "AI providers", icon: stars, summary: "Model providers (seventeen vendor types), one file each, off by default; TLS and Test connection; the admin page and API." }
       - { slug: troubleshooting, doc: guides/TROUBLESHOOTING.md, title: Troubleshooting, icon: life-preserver, summary: "Symptoms, likely causes and fixes." }
       - { slug: release-notes, doc: ../RELEASE_NOTES.md, title: Release notes, icon: tag, summary: "What each release contains and its known limits; the changelog and the third-party notices are linked from it." }
@@ -108,6 +108,11 @@ moved:
   transforms: python-bi#17-data-prep-the-transform-editor-240             # BI -> Transforms, /bi/transform (2.4.0)
   python-console: analyse#16-the-browser-python-console                  # BI -> Python console, /pyconsole (2.4.0)
   themes: reports#52-themes                                               # report themes and the theme designer (2.4.0)
+  console-themes: user-guide#themes                                       # the console's ten themes (three Terminal hues in 2.6.0)
+  statements: docs-guides-statements                                      # statement pages, paginated reports, bursting (2.6.0; docs/guides/STATEMENTS.md)
+  paginated-reports: docs-guides-statements
+  field-parameters: reports#21-field-parameters-in-a-well-260             # field parameters in a report's wells (2.6.0)
+  drishti-stack: docs-admin-net#2-a-cluster-of-three                     # the ready-made local cluster (drishti-stack/)
   quickstart: install-and-run
   windows: install-and-run#drishti-on-windows
   ide-guide: docs-guides-ide-guide
@@ -139,6 +144,7 @@ moved:
   connector-mongodb: connectors#mongodb
   connector-redis: connectors#redis
   connector-aerospike: connectors#aerospike
+  connector-cassandra: connectors#apache-cassandra
   connector-s3: connectors#s3
   connector-rest: connectors#rest
   connector-feeds: connectors#public-feeds

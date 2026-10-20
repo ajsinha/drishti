@@ -31,16 +31,28 @@ import java.util.Map;
  * <pre>
  * { "slicers": {"s1": ["USD"], "s2": {"from": 1, "to": 5}}, "selections": [{"visual": "v2", "field": "trades.desk", "values": ["DESK-FX"], "highlight": false}],
  *   "drill": ["2026"], "carry": [{"field": "counterparties.name", "values": ["Orbital"]}], "dates": {"from": "2026-10-01", "to": "2026-10-08"},
- *   "rows": {"field": "trades.desk", "values": ["DESK-FX"]}, "limit": 200 }
+ *   "rows": {"field": "trades.desk", "values": ["DESK-FX"]}, "limit": 200, "params": {"breakdown": "trade.PORTFOLIO", "shock": 0.5} }
  * </pre>
  *
  * @param slicers by slicer visual id: a list of values (list, dropdown) or {@code {from, to}} (range)
  * @param drill the values clicked so far down the visual's hierarchy
  * @param rows non-null: show the rows behind the visual (and, when {@code field} is given, only those of the mark)
  * @param since for a Perspective visual over a live table: only the rows whose {@code updateSeq} is greater (what changed since the client's last answer)
+ * @param params (2.6.0) the reader's parameter values of a report on a model: a field parameter's choice (what a well's {@code param.<name>} draws) and
+ *        what-if values, sent with each model query as MQ v2 {@code params}; empty when the reader kept the defaults
  */
 public record ReportState(Map<String, JsonNode> slicers, List<Selection> selections, List<Object> drill, List<Carry> carry, String from, String to, Mark rows, Integer limit,
-        Long since) {
+        Long since, Map<String, Object> params) {
+
+    public ReportState {
+        params = params == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(params));
+    }
+
+    /** Compatibility: a state with no parameter values. */
+    public ReportState(Map<String, JsonNode> slicers, List<Selection> selections, List<Object> drill, List<Carry> carry, String from, String to, Mark rows, Integer limit,
+            Long since) {
+        this(slicers, selections, drill, carry, from, to, rows, limit, since, Map.of());
+    }
 
     /** A mark selected on another visual: its field, its values, and whether other visuals highlight it (instead of filtering to it). */
     public record Selection(String visual, String field, List<Object> values, boolean highlight) {}
@@ -90,13 +102,20 @@ public record ReportState(Map<String, JsonNode> slicers, List<Selection> selecti
         }
         Integer limit = n.has("limit") && n.get("limit").canConvertToInt() && n.get("limit").asInt() > 0 ? n.get("limit").asInt() : null;
         Long since = n.has("since") && n.get("since").canConvertToLong() && n.get("since").asLong() >= 0 ? n.get("since").asLong() : null;
+        Map<String, Object> params = new LinkedHashMap<>();
+        JsonNode ps = n.path("params");
+        if (ps.isObject()) {
+            ps.fields().forEachRemaining(e -> params.put(e.getKey(), scalar(e.getValue())));
+        } else if (!ps.isMissingNode() && !ps.isNull()) {
+            throw bad("params maps a parameter's name to its value: { breakdown: trade.PORTFOLIO, shock: 0.5 }");
+        }
         return new ReportState(slicers, selections, values(n.path("drill")), carry, dates.path("from").isTextual() ? dates.path("from").asText() : null,
-                dates.path("to").isTextual() ? dates.path("to").asText() : null, rows, limit, since);
+                dates.path("to").isTextual() ? dates.path("to").asText() : null, rows, limit, since, params);
     }
 
     /** The same state with other slicer values (the relative-date choices worked out into dates). */
     public ReportState withSlicers(Map<String, JsonNode> other) {
-        return new ReportState(other, selections, drill, carry, from, to, rows, limit, since);
+        return new ReportState(other, selections, drill, carry, from, to, rows, limit, since, params);
     }
 
     private static List<JsonNode> list(JsonNode n, String key) {

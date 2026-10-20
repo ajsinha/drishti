@@ -147,7 +147,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 - **Fix:** stop the other process, or start this one on another port and tell the console where it is:
 
   ```bash
-  DRISHTI_PORT=18481 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.5.0-exec.jar
+  DRISHTI_PORT=18481 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.6.0-exec.jar
   DRISHTI_BACKEND_URL=http://127.0.0.1:18481 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```
 
@@ -165,7 +165,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 
   ```bash
   DRISHTI_PACKS=trading,counterparty-risk DRISHTI_PACKS_DIR=$PWD/packs \
-    java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.5.0-exec.jar
+    java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.6.0-exec.jar
   ```
 
   A pack's parents load by themselves: enabling `trading` also loads `core` and `market-data`. Other
@@ -187,7 +187,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
   expands to all of them; Java runs the **first** (the oldest, alphabetically) and ignores the rest.
 - **Check:** `curl -s http://localhost:18480/api/v1/about | python3 -c "import json,sys; print(json.load(sys.stdin)['version'])"`
   and `ls drishti-server/target/*-exec.jar`.
-- **Fix:** name the jar exactly (`drishti-server-2.5.0-exec.jar`), or delete the old ones.
+- **Fix:** name the jar exactly (`drishti-server-2.6.0-exec.jar`), or delete the old ones.
 
 ### The console will not start: `ModuleNotFoundError: No module named 'fastapi'`
 
@@ -293,7 +293,7 @@ The log gets the first failure and failures number 2, 4, 8, ... of each thing, n
 
   ```bash
   export DRISHTI_TOKEN_SECRET='at-least-32-characters-shared-secret!!'   # same value for both
-  DRISHTI_SECURITY_ENABLED=true java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.5.0-exec.jar
+  DRISHTI_SECURITY_ENABLED=true java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.6.0-exec.jar
   DRISHTI_AUTH_ENABLED=true DRISHTI_SESSION_SECRET='another-secret-of-32-characters-or-more' \
     drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```
@@ -1285,8 +1285,26 @@ Several servers as one ([NET.md](../admin/NET.md)). Each node's log names what t
 start: `net: node n-... joined Drishti*net at <address> (incarnation 1, seeds [...], 0 saved members)` lists the seeds it tries. From the node's
 machine, `curl -s <seed>/api/v1/net/ping` must answer `401 DRS-5051` (the seed is there and wants a cluster credential), not a connection error.
 
-**Fix.** `enabled: true` needs `secret: ${DRISHTI_NET_SECRET}` with the variable set in the server's environment and `advertise-url`; the seed's
+**Fix.** `enabled: true` needs `secret: ${DRISHTI_NET_SECRET}` with the variable set in the server's environment; the node advertises
+`advertise-url`, or without it this machine's primary IPv4 address with the server's port (Admin → Net → Members: *detected*). The seed's
 address and port must be reachable (firewall); the seed must itself be enabled. One seed is enough; a node with none and no `peers.json` stays alone.
+
+### `... is a loopback or wildcard address: the address this node advertises must be an address other machines can call`
+
+Since 2.6.0 members advertise only a real address: `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` and `::` are refused in `advertise-url`
+(node.yaml) and in a seed's `url` (`peers/*.yaml`), by `drishti.py net check|set|add-peer`, Admin → Net → Files and the server when it loads the
+folder (the file is then shown **refused**). Even three nodes on one machine use the machine's address. **Fix:** the address the message names
+(`this machine's address is 192.168.1.20: use http://192.168.1.20:18784`), or leave `advertise-url` out. A machine with no address but loopback
+cannot be a member. A member that advertises such an address (an older node) is never kept nor passed on by the others: it is missing from
+every member table but its own. The console's own `backend.urls` may still name `127.0.0.1` ([NET.md section 2](../admin/NET.md#2-a-cluster-of-three)).
+
+### Admin → Health says *Last administrator kept*
+
+Two administrators on two nodes disabled, demoted or deleted the last two enabled administrators at about the same moment. Each node checked
+the last-administrator rule (`DRS-6006`) for its own change only; the node applying the other's change repaired it: it enabled again the
+administrator enabled most recently (or kept the one taken away), sent that to every node and audited it as `last-admin-kept`. **Check:** the
+audit log (Admin → Audit, action `last-admin-kept`: who was kept and why). **Fix:** nothing is broken; if the kept administrator should not be
+one, make another administrator first, then disable that one ([NET.md section 7](../admin/NET.md#7-routing-where-a-request-goes)).
 
 ### The log says `refused a call from ... bad signature` (or a node is listed as refused on Admin → Net)
 
@@ -1444,6 +1462,8 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 | `DRS-9034` | a report's dataset cannot be found (a catalogue id, a file name such as `trades-basic`, or the dataset's name) or has errors, so the report cannot be drawn (HTTP 422). Open the dataset's page to see its problems |
 | `DRS-9035` | a visual query names a page, visual or slicer the report lacks, or its state is not valid: a drill path past the last level of the hierarchy, a selection from a visual that is not on the page, dates that are not `yyyy-mm-dd` (HTTP 422) |
 | `DRS-9036` | (2.4.0) a theme item is not valid: its palette is not 3 to 12 `#rrggbb` colours, a colour is not `#rrggbb`, its font family is not one of `sans`, `serif`, `mono`, `system` (nothing is fetched), its size is not 10 to 18, or one of its `visuals:` defaults is a format key the visual family does not take or a value out of range (the format schemas, REPORTS.md section 5); on a report, a warning that the theme it names cannot be found: it draws with the default colours (HTTP 422) |
+| `DRS-9037` | (2.6.0) a well names `param.<name>` that is not a field parameter of the report's model, or a field parameter whose choices do not fit the well (a field in a measure well, a measure in a field well), or the report is on a dataset, not a model (HTTP 422); asked with a value the parameter does not list, the visual answers it too. The message names the parameter, the well and what fits: put the parameter in a field or measure well, or choose one of its values ([REPORTS.md section 21](REPORTS.md#21-field-parameters-in-a-well-260)) |
+| `DRS-9038` | (2.6.0) a statement is not valid (HTTP 422): a paper, orientation, margin, header or footer part, token, period or text size the report's `statement:` cannot have, a visual a statement page does not draw (a chart), a table sharing its row, a `groupBy` the band does not show; or it cannot be made: the margins leave too little paper, or it runs past `drishti.distribution.statements.max-pages` ([STATEMENTS.md section 8](STATEMENTS.md#8-checks-drs-9038)) |
 | `DRS-9040` | publishing the dataset would break published reports (HTTP 409): a field, measure or hierarchy they use is removed or renamed. The message lists the reports and what each uses. Fix the reports first, publish the dataset with the names kept (add the new name beside the old), or have a `bi-admin` publish with `force` ([BI_GOVERNANCE.md](BI_GOVERNANCE.md#6-impact-what-breaks-if-i-change-this)) |
 | `DRS-9041` | a BI bundle cannot be used (HTTP 422): not a bundle of this format, a file fails its checksum, it is larger than `drishti.bi.governance.bundle-max-bytes`, or an item in it is not valid. The message says which |
 | `DRS-9042` | a bundle import is refused (HTTP 409): items that changed here since the bundle was made would be overwritten (conflicts), or a workspace or owner it names cannot be mapped. Run it as a dry run to see the list, then choose `overwrite` or map the names |

@@ -41,7 +41,7 @@ import org.junit.jupiter.api.Test;
  */
 class IcebergSourcePluginTest extends DatedSourceContract {
 
-    private static IcebergSourcePlugin plugin;
+    private static final Map<String, IcebergSourcePlugin> PLUGINS = new java.util.concurrent.ConcurrentHashMap<>();
     static Path root;
 
     /** Writes rows (any order) as the layout does: a table per kind, each business day sorted by id, one commit a day. */
@@ -64,10 +64,16 @@ class IcebergSourcePluginTest extends DatedSourceContract {
         });
     }
 
+    /** The engine the connector reads with; {@code IcebergSourcePluginNativeTest} runs every test on the other one. */
+    protected String engine() {
+        return "library";
+    }
+
     @Override
     protected synchronized SourcePlugin plugin() throws Exception {
-        if (plugin != null) {
-            return plugin;
+        IcebergSourcePlugin known = PLUGINS.get(engine());
+        if (known != null) {
+            return known;
         }
         root = Files.createTempDirectory("drishti-iceberg");
         Map<String, Boolean> trade = new LinkedHashMap<>();
@@ -78,8 +84,8 @@ class IcebergSourcePluginTest extends DatedSourceContract {
         }
         IcebergSourcePlugin p = new IcebergSourcePlugin();
         p.start(context(new HashMap<>(Map.of("root", root.toString(), "domain", "desk", "mode.counterparty", "effective",
-                "source-name", "desk-iceberg", "layout.trade.columns", "mtm,nettingSet"))));
-        plugin = p;
+                "source-name", "desk-iceberg", "layout.trade.columns", "mtm,nettingSet", "engine", engine()))));
+        PLUGINS.put(engine(), p);
         return p;
     }
 

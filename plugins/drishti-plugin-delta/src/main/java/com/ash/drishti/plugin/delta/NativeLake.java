@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.plugin.delta;
 
-import com.ash.drishti.deltalake.LocalPaths;
+import com.ash.drishti.lakeio.LocalPaths;
 import com.ash.drishti.deltalake.NativeEngine;
-import com.ash.drishti.deltalake.Storage;
+import com.ash.drishti.lakeio.Storage;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;

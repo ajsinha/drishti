@@ -591,6 +591,9 @@ public final class SubscriptionService implements AutoCloseable {
         ContentExporter.Target t = target(s.path("target"), dateOf(s, trigger));
         ContentExporter.Output o = renderer.render(t, "html".equals(format) ? ContentExporter.Format.HTML : ContentExporter.Format.of(format), r.principal());
         ExportDoc doc = o.doc();
+        if (o.statement()) {
+            delivery.put("statement", true).put("pages", o.pages()).put("file", o.filename());   // one statement per recipient, made as them (2.6.0)
+        }
         String asOf = doc.subtitle() == null ? "" : doc.subtitle().replaceFirst("^.*Data as of ", "");
         String headline = doc.title() + (asOf.isBlank() ? "" : " · " + asOf);
         String link = link(t);

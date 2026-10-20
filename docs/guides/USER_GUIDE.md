@@ -121,6 +121,12 @@ says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA` or `FOR
 [BI_GUIDE.md](BI_GUIDE.md). **Using a report:** click a bar and the page filters to it, the buttons in a visual's header drill down, drill through to another page, show the rows behind it or open a trade in the terminal, and a slicer filters
 what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([BI_GUIDE.md](BI_GUIDE.md) sections 15 and 26, [tutorial 10](../tutorials/10-first-bi-report.md)); the YAML reference is [REPORTS.md](REPORTS.md). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
 
+**Since 2.6.0, in a report:** a **parameter slicer** may switch *which* field or measure a visual draws (a field parameter: the chart breaks down
+by desk, then by portfolio; it shows MTM, then notional), and the choice is yours alone, as any slicer's ([REPORTS.md section 21](REPORTS.md#21-field-parameters-in-a-well-260)).
+A report may also have **statement pages**: paper, page by page, with a header and footer, page numbers and a period, downloaded as PDF or
+Excel made as you (your masks and row rules), and sent by a subscription as one statement per recipient; the reference is
+[STATEMENTS.md](STATEMENTS.md), the walk-through [tutorial 20](../tutorials/20-statements-and-field-parameters.md).
+
 **On the right:** round tools, from left to right.
 
 | Tool | Looks like | What it does |
@@ -128,7 +134,7 @@ what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *De
 | Live | the round button right of the theme switcher | Your choice and this page's stream in one: green while live (glowing while ticks arrive, an amber ring while it reconnects, steady on a page without a stream), red with pause bars while paused or on a picked date. Hover to read both, for example *Live updates on — click to pause · Live, built 1.92 ms*. A click switches ([Business dates](#business-dates-live-or-a-day-in-the-past)) |
 | Alerts | a bell | Opens `/alerts`. A number on the bell counts alerts you have not seen ([Alerts](#alerts)) |
 | Packs | a box with a number | Appears when you may use more than one pack. The number is how many you have switched on; hover to read their names ([Domain packs](#domain-packs-choosing-what-you-see)) |
-| Theme | a palette | Seven themes ([Themes](#themes)) |
+| Theme | a palette | Ten themes ([Themes](#themes)) |
 | You | a round avatar with your initial and name | A menu: your name, desk and roles, a clock in your time zone (`NY` by default), **My account**, **Settings**, and **Sign out** when sign-in is on (when it is off, the menu says *Sign-in is off on this server* and links to how to turn it on) |
 
 Worked example: find the audit log without typing an address.
@@ -1735,7 +1741,7 @@ any browser.
 
 | Setting | Choices | Example |
 |---|---|---|
-| Theme | *This browser's choice* or one of the seven themes | `Wallstreet` |
+| Theme | *This browser's choice* or one of the ten themes | `Wallstreet` |
 | After signing in, open | Any console address | `/t`, `/w/Rates`, `/m/High utilisation`, `/v/trade/MX-20000001` |
 | Clock time zone | Default (NY) or a listed zone. Also the zone of every time in comments, shares, the inbox and revision history (labelled with the zone's city, e.g. `Kolkata`); a picture of a share is drawn on the server, in the business-date zone | `Europe/London` |
 | Density | *Comfortable* or *Compact* (more on screen) | `Compact` |
@@ -1760,25 +1766,39 @@ in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 
 ## Themes
 
-The palette among the round tools of the top bar offers seven themes:
+The palette among the round tools of the top bar offers ten themes (three added in 2.6.0: the Terminal look in one dominant hue):
 
-| Theme | Look |
-|---|---|
-| Terminal (default) | dark, amber accents |
-| Parchment | light, warm paper |
-| Blue | light page; Sajha's blue: a navy-to-blue top bar with white text |
-| Wall Street | dark, the Bloomberg colours: black, amber, yellow |
-| Green | light page; Sajha's green: a deep-green top bar with white text |
-| Crimson | light page; a crimson-deep to crimson to indigo top bar with white text, deep-crimson headings |
-| Crimson dark | the same crimson on a dark page |
+| Theme | Name in settings | Look |
+|---|---|---|
+| Terminal (default) | `terminal` | dark navy, amber accents |
+| Parchment | `light` | light, warm paper |
+| Blue | `blue` | light page; Sajha's blue: a navy-to-blue top bar with white text |
+| Wall Street | `wallstreet` | dark, the Bloomberg colours: black, amber, yellow |
+| Green | `green` | light page; Sajha's green: a deep-green top bar with white text |
+| Crimson | `crimson` | light page; a crimson-deep to crimson to indigo top bar with white text, deep-crimson headings |
+| Crimson dark | `crimson-dark` | the same crimson on a dark page |
+| Green Terminal | `terminal-green` | dark: phosphor green with light lime on deep forest |
+| Crimson Terminal | `terminal-crimson` | dark: crimson with blush on wine-black; text in the accent is dusty rose, buttons a deep crimson with white labels |
+| Blue Terminal | `terminal-blue` | dark: azure with periwinkle on midnight |
+
+**Choosing one.** Pick by the room and the screen, not by taste alone: a dark theme (Terminal, Wall Street, Crimson dark or one of the
+three Terminal hues) for a trading floor, a wall screen or long sessions; a light one (Parchment, Blue, Green, Crimson) for a bright office,
+a projector or anything you print or capture for a document. Wall Street is for people who read Bloomberg all day. A desk that wants its
+screens told apart at a glance can give each its own Terminal hue. Your choice follows you (below); an administrator sets the default for
+everyone with `ui.default_theme` ([CONFIGURATION.md](../admin/CONFIGURATION.md)), and *My account → Settings → Theme* or
+`PATCH /api/v1/me/settings` (`"theme": "terminal-blue"`, [API_GUIDE.md](API_GUIDE.md)) set it too.
 
 Each theme's colours shade the page, the top bar, view and panel headers and accent buttons; panel
 bodies, tables and figures stay on solid colours so they read clearly. If your system asks for more
 contrast or less transparency, the solid look is used. Signed in, your choice is saved to your account;
 otherwise the browser remembers it.
 
-Every theme meets WCAG AA contrast: all text, including faint notes, the footer and placeholders, reads at
-4.5:1 or more on its background, and buttons in the accent colour carry a label that reads on them.
+**The contrast rule.** Every theme meets WCAG AA contrast, checked by a test on every theme (`drishti-console/tests/test_contrast.py`), not
+by eye: all text, including faint notes, the footer, links and placeholders, reads at 4.5:1 or more on every background it is drawn on, and
+accents and chart fills at 3:1. Buttons and pressed controls fill with `--d-fill` (and `--d-fill-strong` on hover), which is the accent
+unless a theme gives buttons a colour of its own, and carry their label in `--d-on-fill` at 4.5:1 on both: Crimson Terminal, for one, fills
+its buttons with a deep crimson under white labels rather than its bright text accent. A page that embeds Drishti's elements and sets the
+`--d-*` values itself ([ELEMENTS.md](ELEMENTS.md)) should keep the same rule.
 
 These are the console's themes. A BI report has a theme of its own (the shipped *Corporate* and *Print*, or one made in the
 theme designer), chosen by its author in BI Studio: [REPORTS.md section 5.2](REPORTS.md#52-themes).

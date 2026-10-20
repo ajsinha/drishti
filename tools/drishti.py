@@ -50,7 +50,7 @@ from javacmd import java_cmd
 TOOLS = pathlib.Path(__file__).resolve().parent
 ROOT = TOOLS.parent
 DEFAULT_SERVER = "http://localhost:18480"
-LOADERS = ("delta", "files", "postgres", "duckdb", "iceberg", "mongodb", "redis", "aerospike")
+LOADERS = ("delta", "files", "postgres", "duckdb", "iceberg", "mongodb", "redis", "aerospike", "cassandra")
 
 
 class CliError(Exception):
@@ -1261,6 +1261,7 @@ def build_parser() -> argparse.ArgumentParser:
     load_module("bimodel", "bimodel.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})  # bi model, bi mq
     load_module("biitem", "biitem.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})    # bi item, bi dataset
     load_module("bitransform", "bitransform.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})   # bi transform
+    load_module("bistatement", "bistatement.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})   # bi statement (2.6.0)
 
     vw = group("view", "A rendered entity view in the terminal, as the caller's token sees it (masks apply)")
     for name, what in (("get", "the strip and every panel as text tables (--json: the raw view)"), ("explain", "the About answer: what you are looking at, glossary, data source, why this layout and its match trace")):

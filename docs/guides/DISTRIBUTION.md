@@ -247,6 +247,18 @@ Ask the owner of the subscription, o
 * **Who may subscribe whom.** Anyone may subscribe **themselves**. Subscribing other people or a role needs a BI author (power `bi-author`) or an administrator (`DRS-9061` otherwise). The subscriber
   must be able to open the target themselves.
 
+### Statements: one per recipient (2.6.0)
+
+A subscription to a **statement page** (a page with `layout: statement`, [STATEMENTS.md](STATEMENTS.md)) in `pdf` or `xlsx` **bursts** it: each recipient gets
+their own statement, laid out page by page and made **as them**, so two recipients' statements differ only by their masks and row rules (and their name in
+the header). The statement's `period` is worked out from the run's business date (*Data for*: `previous` on the first of the month makes a statement of the
+month before), and the subscription's view state may carry the model's parameters (`target.state.params`). The file is named after the statement, its period
+and the recipient (*Monthly statement September 2026 hana.pdf*); each delivery in the history has `statement: true`, its `pages` and its `file`. The
+acceptance is a monthly statement burst to ten recipients of two roles, every PDF checked for its page count and its header on every page
+(`StatementApiTest`, [STATEMENTS.md section 6](STATEMENTS.md#6-pdf-excel-and-bursting-through-subscriptions)).
+
+An export of a statement page (**Export → PDF** or **Excel** on the page, `POST /api/v1/export/pdf`) is the statement too, made for you.
+
 ### A written summary at the top (`narrative`)
 
 The tick-box *Open the email with a short written summary* appears on the form **only when AI is switched on** for this server (`drishti.ai.enabled`); without AI there is nothing to tick (and `narrative: true` is refused). With it, tick it (or send `narrative: true`). Each recipient's email then opens with two or three sentences by an AI model that word **their own** figures: the model is called **as that recipient**
@@ -721,4 +733,5 @@ Both channels are in the history: an alert's `delivered` has `webhook:NAME` and 
 * **Excel pivot tables** inside the workbook, and charts other than bar, column, line, area, pie and donut in an Excel export (they are drawn as columns; the six are real Excel charts); **XLSX styling** beyond the header, number and date formats.
 * **Notifying the owner in the inbox** when a delivery fails for good: the history and the audit say so; the bell does not.
 * **Subscribing a live visual's state as it ticks**; a subscription reads the data as of the run.
+* **Charts on a statement page** (a statement draws text, cards, tables and matrices; [STATEMENTS.md section 10](STATEMENTS.md#10-built-and-not-built)).
 * **Per-recipient pictures of a view with charts in the email body**: a view is sent as its tables (html) or as a PDF.
