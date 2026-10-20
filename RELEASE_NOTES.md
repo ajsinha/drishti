@@ -13,6 +13,27 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.6.5 — release notes
+
+*2026-10-20.* **History queries: type a range after an id and see the entity over time.** ([HISTORY_QUERIES.md](docs/architecture/HISTORY_QUERIES.md),
+tutorial 21, [USER_GUIDE](docs/guides/USER_GUIDE.md#history-an-entity-over-time).)
+
+- **The command:** `TRD 1000015 30` (the last 30 business days with data), `30D`, `2W`, `3M`, `1Y`, `YTD`, `MTD`, `QTD`,
+  `FROM 2026-09-01 TO 2026-09-30`, and `DIFF` at the end for only what changed. Aliases keep their range; the type-ahead offers
+  `30 — last 30 days` after an id; plain words such as `trade 1000015 last month` make the same command.
+- **Generic:** any kind with dated data has a history, with no code per kind: a trade, a counterparty, a curve, an economy. A pack's
+  `history:` block only shapes the view (columns, chart fields, headline numbers, limits), and `sutra lint` checks it.
+- **The page:** one row per business day, the cells that changed from the day before highlighted with ▲/▼, restated days marked,
+  *Changes only* (`C`), a change log (`D`), Enter opens the full page as it stood that day, CSV / Excel / JSON export, a link that
+  pins the view. Market data (equities, indices, FX, bonds, curves) gets a chart with last, change, high, low, range and average;
+  days before the store's first day come from the price history the document carries. Every theme; masks hold on every day's row.
+- **Fast:** 30 days of one trade among 10,000 on Delta in 13 ms cold, under 1 ms warm, 0.3 ms from the cache. Fast paths for
+  Delta, Redis, PostgreSQL, DuckDB, MongoDB, Aerospike, Cassandra and Iceberg; every other connector works through the default.
+- **Across a cluster:** a node reads an entity's days from the peer that holds them in one call, masked on both nodes.
+- **Also:** `drishti.py history KIND ID` and the Python client's `history()`; `GET /api/v1/history/{kind}/{id}`; tutorial 21;
+  tutorial 20 completed; the Windows QA guide's history section.
+- **Not in 2.6.5:** history as a BI data source (2.7.0); the iceberg-external fast path (the default path serves it).
+
 # Drishti 2.6.0 — release notes
 
 *2026-10-20.* **Paper statements and field parameters in BI, Cassandra and Iceberg without Hadoop, three new themes, and the

@@ -143,7 +143,7 @@ You should see: the drop-down at the top right lists **Build demo lakes**, **Loa
    first, see section 4.1.) (This is Maven `package -DskipTests -pl drishti-server -am`
    on the project's `pom.xml`.)
 
-You should see: in the Run window `BUILD SUCCESS`, and the file `drishti-server\target\drishti-server-2.6.0-exec.jar`
+You should see: in the Run window `BUILD SUCCESS`, and the file `drishti-server\target\drishti-server-2.6.5-exec.jar`
 exists.
 
 ---
@@ -418,7 +418,7 @@ says the address is a loopback address, use `<your IPv4>` from `ipconfig` instea
 
 ## 6b. What is new in 2.6.0: check these (30 minutes)
 
-Do this after `git pull` on **main** and a fresh jar (step 2.3: the file is `drishti-server-2.6.0-exec.jar`), with the server and the
+Do this after `git pull` on **main** and a fresh jar (step 2.3: the file is `drishti-server-2.6.5-exec.jar`), with the server and the
 console started as in section 4.
 
 | # | Check | How | You should see |
@@ -436,21 +436,29 @@ Not to check on Windows: the **Cassandra** connector needs a Cassandra or Scylla
 
 ## 6c. History of a trade or an equity (2.6.5)
 
-Needs **2.6.5** (when it is out: `git pull` on **main**, step 2.3 again, restart both). The demo lakes of step 3.1 hold **seven business
-days**, enough to show it; your own ENDUR history shows as soon as **two or more** of your files are loaded (step 3.2, one per date).
+Needs **2.6.5**: `git pull` on **main**, step 2.3 again (the jar is `drishti-server-2.6.5-exec.jar`), and **restart both** the server and
+the console. The demo lakes of step 3.1 hold **seven business days**, enough to show it; your own ENDUR history shows as soon as **two or
+more** of your files are loaded (step 3.2, one per date). Any kind of data has a history, not only trades: a counterparty, a curve, an
+economy.
+
+Ids in the demo lakes that changed most over the seven days: ENDUR `1004545` and `1000340` (four changed days: quantity, status, version,
+legs, events), CALYPSO `CLY-4000638`, MUREX `MX-20000184`; cancelled trades `1003244` and `MX-30001509`; equities `EQ-CSCA`, `EQ-GRNT`
+(the price moves every day), FX `FX-AUDUSD`, the index `EQX-SPX`.
 
 | # | Type in the top bar | You should see |
 |---|---|---|
 | 1 | `TRD <one of your ENDUR ids> 7` → Enter | one row per business day, newest first; a cell that changed from the day before is highlighted with ▲/▼; the header says the dates, how many days changed and any day with no data |
-| 2 | `TRD CLY-3000157 30` | the same for a CALYPSO trade (30 asks for up to 30 days; you get the seven there are) |
+| 2 | `TRD 1004545 30` | a synthetic ENDUR trade that changed on four days (30 asks for up to 30 days; you get the seven there are) |
 | 3 | press **C** | *Changes only*: the days on which nothing moved are hidden |
 | 4 | press **D** (or type `TRD <id> 7 DIFF`) | only the fields that changed, and on which day |
 | 5 | arrow keys to a row → **Enter** | the trade's normal page as it stood on that day |
-| 6 | `EQ <an equity id> 3M` | a price chart on top, the last price, change, high, low and range, the daily table below |
+| 6 | `EQ EQ-CSCA 3M` | a price chart on top, the last price, change, high, low and range, the daily table below. Days before the lake's first day come from the price history each equity carries; a gap of a few days between the two says *no data on N days* |
 | 7 | **E** → CSV or Excel | the table downloads as shown |
 | 8 | **Link** | a link that opens the same history for a colleague (within their permissions) |
 
-Also try `TRD <id> YTD` and `TRD <id> FROM 2026-10-07 TO 2026-10-16`. A field you may not see stays `•••` on every day's row.
+Also try `TRD <id> YTD`, `TRD <id> FROM 2026-10-07 TO 2026-10-16`, `CPTY CP-NORTHPLAINS 30` (a counterparty) and plain words:
+`trade 1004545 last month`. A field you may not see stays `•••` on every day's row. From a terminal:
+`…\python.exe …\tools\drishti.py history trade 1004545 --days 30` (add `--diff` for the changes only, `--csv` for a file).
 
 ---
 

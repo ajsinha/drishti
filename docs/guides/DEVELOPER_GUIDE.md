@@ -301,7 +301,7 @@ directory):
 ```bash
 ./mvnw -q package -DskipTests -pl drishti-server -am
 DRISHTI_DEMO_ENABLED=false DRISHTI_STUDIO_SAVE=true \
-  java -jar drishti-server/target/drishti-server-2.6.0-exec.jar
+  java -jar drishti-server/target/drishti-server-2.6.5-exec.jar
 ```
 
 Server settings follow the same precedence as the console: `drishti-server/src/main/resources/application.yaml`, then
@@ -1535,7 +1535,7 @@ while it was stopped (`The lake was rebuilt while the server was stopped …`), 
 level for Drishti's packages with Spring's usual environment form:
 
 ```bash
-LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-2.6.0-exec.jar
+LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-2.6.5-exec.jar
 ```
 
 The console runs Uvicorn with access logs off (`access_log=False` in `run_drishti_web.py`). The run configuration **Drishti server

@@ -17,6 +17,12 @@
 
 ## Unreleased
 
+## 2.6.5 — History queries: any entity over time from the command line (`TRD <id> 30`, `EQ <id> 3M`), on every connector and across Drishti*net (2026-10-20)
+
+- **Docs: QA on Windows** gains section 6c, history with the demo lakes' ids that changed most, the CLI form and plain words; the
+  trading pack's history shows status, action, version, quantity and price first; `drishti-stack`'s peers hold 60 business days of
+  synthetic trades for history demos.
+
 - **Added: history queries in the console (H7, H8, H9).** A range after the id shows the entity over time: `TRD 1000015 30`, `EQ EQ-CSCA 3M`,
   `FX FX-AUDUSD YTD`, `CRV CRV-USD-SOFR FROM 2026-09-01 TO 2026-09-30`, each optionally ending in `DIFF`. The server reads the range off the
   end of a command after the alias is expanded (`HistoryRange`); a lone id after the mnemonic, a search and an id that contains the words stay
