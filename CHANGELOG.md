@@ -33,6 +33,9 @@
 - **Fixed (QA2-08): Admin → Tokens no longer says tokens "never change anything"**: it says a read token only reads and a token with write
   scopes may change what they name; a new **Scopes** column marks each token *read only* or *writes* with its scopes; *Last used* is in the
   console's time zone with its name (`2026-10-20 08:54 New York`), as on the other Admin pages.
+- **Fixed (QA2-06): a bad `history:` block in a pack on disk shows on Admin → Packs (`problem`, `historyProblems`) and in Health (the pack
+  DEGRADED)** from the start and after every reload, and is logged then, not only at the first history request; the pack keeps running
+  with the default history. `HistoryBlockProblemsTest`.
 - **Fixed (QA2-04): the Iceberg and Cassandra example connector files start as copied.** Their credentials default to empty
   (`${DRISHTI_ICEBERG_CREDENTIAL:}`, `${DRISHTI_CASSANDRA_PASSWORD:}`, a path-based lake or a node with no sign-in) instead of refusing
   the file; the trades' examples are `trade-endur.yaml` (the connector kind `trade` routes to), not a fourth `trading-store`, and promote

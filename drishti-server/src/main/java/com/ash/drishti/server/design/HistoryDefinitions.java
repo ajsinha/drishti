@@ -62,6 +62,39 @@ public class HistoryDefinitions {
         return HistorySpec.defaults(kind);
     }
 
+    /** The errors found in each loaded pack's history block, by pack name, with the pack they were found in (a reload is a new pack). */
+    private final Map<String, Map.Entry<Pack, List<String>>> errors = new ConcurrentHashMap<>();
+
+    /**
+     * The errors of a loaded pack's {@code history:} block ({@code "error: ..."}, empty when it has none), for Admin &rarr; Packs and Health
+     * (QA2-06): worked out once per loaded version of the pack and logged then, so a bad block on disk shows at start and after a reload,
+     * not only at the first history request.
+     */
+    public List<String> errors(Pack pack) {
+        Map.Entry<Pack, List<String>> e = errors.get(pack.name());
+        if (e != null && e.getKey() == pack) {
+            return e.getValue();
+        }
+        List<String> found = check(pack.manifest(), props.limits().maxDays()).stream().filter(x -> x.startsWith("error:")).toList();
+        errors.put(pack.name(), Map.entry(pack, found));
+        if (!found.isEmpty() && logged.add(pack.name() + "/" + found)) {
+            LOG.warn("pack {}: {} (the kinds keep the default history)", pack.name(), String.join("; ", found));
+        }
+        return found;
+    }
+
+    /** Every loaded pack's history block checked (and logged) once the server is up. */
+    @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
+    public void checkAll() {
+        registry.packs().forEach(this::errors);
+    }
+
+    /** A pack's history errors as one line for its {@code problem}, or null. */
+    public String problem(Pack pack) {
+        List<String> e = errors(pack);
+        return e.isEmpty() ? null : "history block: " + String.join("; ", e.stream().map(x -> x.substring("error: ".length())).toList());
+    }
+
     /**
      * The problems of a pack manifest's {@code history:} block: each {@code "error: ..."} or {@code "warning: ..."}. A kind the pack does
      * not declare is a warning. Used by the deploy check and {@code sutra lint}.
