@@ -37,7 +37,7 @@ def register(cli, packs, data, add, jvm, js, PFJ) -> None:
 
     # data profile
     p = add(data, "profile", guarded("dataprofile", lambda m, a: m.run(a, cli)), "data profile: every field of your JSON Lines (types, coverage, distinct, examples) and the key, date and match candidates, with a ready `pack make` line",
-            [js], "example:\n  drishti.py data profile data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz\n  drishti.py data profile data/testdata/trades/endur --kind trade --json\n"
+            [js], "example:\n  drishti.py data profile data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz\n  drishti.py data profile data/testdata/trades/endur --kind trade --json\n"
             "Streaming: memory is bounded by --max-distinct per field. Exit 0; 2 when nothing could be read.")
     p.add_argument("inputs", type=pathlib.Path, nargs="+", help="folders of *.jsonl and/or single .jsonl files")
     p.add_argument("--kind", help="treat every document as this kind (default: the file stem, or the loader envelope's kind)")

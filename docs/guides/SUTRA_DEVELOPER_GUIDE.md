@@ -1389,7 +1389,7 @@ splits JSON Lines files into groups by the values of the `--match` fields, write
 `tests/<sutra>/sample-*.json`, and runs `sutra lint`. On 400 Endur trades of the committed test data:
 
 ```bash
-mkdir -p /tmp/gen && zcat data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz | head -400 > /tmp/gen/trade.jsonl
+mkdir -p /tmp/gen && zcat data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz | head -400 > /tmp/gen/trade.jsonl
 drishti-console/.venv/bin/python tools/drishti.py sutra gen /tmp/gen --kind trade --key TRADE_ID \
     --match SOURCE_SYSTEM,PRODUCT_TYPE --date TRADE_DATE --fallback --out /tmp/genout
 ```

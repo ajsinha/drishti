@@ -96,6 +96,15 @@ def evolve(doc: dict, i: int, k: int, day: str) -> dict:
     return doc
 
 
+def snapshot_of(system: str) -> Path:
+    """The committed test data's first-day snapshot of a system's trades (data/testdata/trades/<system>/snapshot-<date>.jsonl.gz),
+    whatever its date: the test data's days move when it is regenerated (make_testdata.py --days)."""
+    found = sorted((ROOT / "data" / "testdata" / "trades" / system).glob("snapshot-*.jsonl.gz"))
+    if not found:
+        raise SystemExit(f"no snapshot-*.jsonl.gz in data/testdata/trades/{system}: run tools/testdata/make_testdata.py")
+    return found[0]
+
+
 days_of: list[str] = []
 
 
@@ -164,8 +173,7 @@ def main(argv=None) -> int:
     days_of[:] = days
     tmp = Path(a.tmp)
     tmp.mkdir(parents=True, exist_ok=True)
-    base = {s: [json.loads(x) for x in gzip.open(ROOT / "data" / "testdata" / "trades" / s / "snapshot-2026-09-22.jsonl.gz", "rt", encoding="utf-8")]
-            for s in systems}
+    base = {s: [json.loads(x) for x in gzip.open(snapshot_of(s), "rt", encoding="utf-8")] for s in systems}
     n_cp = a.counterparties
     order = list(enumerate(days))
     if a.order == "random":

@@ -1043,7 +1043,7 @@ def build_parser() -> argparse.ArgumentParser:
              "  drishti.py pack new your-folder/ --name my-bank --date BUSINESS_DATE --store files --files-root data/files "
              "--load --server http://localhost:18977")
     pm = add(k, "make", cmd_pack_make, "pack make: ONE folder to deploy from JSON Lines: pack, Delta data, bundle, server config, run scripts and README.txt (tools/packmake.py)", [],
-             "example:\n  drishti.py pack make data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank\n"
+             "example:\n  drishti.py pack make data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank\n"
              "Chooses --key and --date itself when you do not (and says why), then runs pack check and pack verify.")
     load_module("packmake", "packmake.py").add_arguments(pm)
     pn.add_argument("--load", action="store_true", help="afterwards ask the running server to load the pack (administrator; takes effect at once, no restart)")

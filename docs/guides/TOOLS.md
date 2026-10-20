@@ -142,7 +142,7 @@ files, go in a folder beside the lake (never the system temp folder), removed wh
 often it is present, its types and most frequent values, then suggests an id, a business date and classifiers:
 
 ```
-$ drishti-console/.venv/bin/python tools/drishti.py lake scan data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz --limit 500 | tail -n 8
+$ drishti-console/.venv/bin/python tools/drishti.py lake scan data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --limit 500 | tail -n 8
 PRECIOUS_METAL_FLAG                    500         2  text  (458), Y(42)
 TT_GROUP                               500         1  text  (500)
 TT_BOOK                                500         1  text  (500)
@@ -161,7 +161,7 @@ dates, not the day of the extract), so the walk-through below uses `--as-of` for
 ### 4.2 The first load
 
 ```
-$ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz \
+$ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz \
     --kind trade --key TRADE_ID --as-of 2026-09-22 --partition-by PRODUCT_TYPE --promote COUNTERPARTY,PORTFOLIO,QUANTITY \
     --lake lake --domain trading
 engine: drishti (Drishti's Java writer in drishti-server-2.6.5-exec.jar)
@@ -217,7 +217,7 @@ applies each day's changes to the previous day by key and writes the whole book 
 ### 4.4 Re-running a day replaces that day only
 
 ```
-$ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz ... --lake lake --domain trading -q
+$ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz ... --lake lake --domain trading -q
 2026-10-17T17:44:01-04:00 lake-build ok exit=0 run=20261017T174358-1340108 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4980 rejected=0 dates=1 partitions=5 seconds=3.14
 $ find lake -maxdepth 4 -type d | sort
 lake
@@ -248,7 +248,7 @@ lake/trading/trade/_delta_log
 A table keeps the partitioning it was created with; a run that asks for another fails before reading anything:
 
 ```
-$ ... lake build --from data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz --kind trade --key TRADE_ID --as-of 2026-09-22 --partition-by PORTFOLIO --lake lake --domain trading
+$ ... lake build --from data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --kind trade --key TRADE_ID --as-of 2026-09-22 --partition-by PORTFOLIO --lake lake --domain trading
 lake build: lake/trading/trade is partitioned by business_date, PRODUCT_TYPE; this run asks for business_date, PORTFOLIO (give --partition-by PRODUCT_TYPE or write a new table)
 summary: lake/_drishti-lake/runs/20261017T174401-1340283.json
 2026-10-17T17:44:01-04:00 lake-build failed exit=1 run=20261017T174401-1340283 domain=trading kind=trade mode=overwrite-dates seconds=0.0 error="lake/trading/trade is partitioned by business_date, PRODUCT_TYPE; this run asks for business_date, PORTFOLIO (give --partition-by PRODUCT_TYPE or write a new table)"
@@ -274,7 +274,7 @@ The same day through `deltalake`, into a second lake; then the table Drishti's w
 the three runs above), read back with deltalake: the two engines write the same table.
 
 ```
-$ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz --kind trade --key TRADE_ID \
+$ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --kind trade --key TRADE_ID \
     --as-of 2026-09-22 --partition-by PRODUCT_TYPE --promote COUNTERPARTY,PORTFOLIO,QUANTITY --lake lake2 --domain trading --engine deltalake
 engine: deltalake (the Python deltalake package)
 business date  PRODUCT_TYPE           rows
@@ -424,7 +424,7 @@ The pack has three Delta connectors for `trade`, so the run names one with `--co
 sixteen promoted columns); captured as a dry run:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz --pack config/packs/trading \
+drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --pack config/packs/trading \
     --kind trade --connector trade-endur --key TRADE_ID --as-of 2026-09-22 --partition-by PRODUCT_TYPE --lake lake3 --dry-run --json
 # "pack": "trading", "domain": "trading", "kind": "trade", "table": "lake3/trading/trade_endur", "promote": ["TRADE_ID", "SOURCE_SYSTEM",
 # "PRODUCT_TYPE", ... "TRADER_ID"] (16), "documents": 4980, "status": "dry-run", "exitCode": 0
@@ -567,7 +567,7 @@ Lines (for example one per `PRODUCT_TYPE`). The first five are the Java tool in 
 (`tools/sutragen.py`) and lints its result with the Java tool unless `--no-lint`.
 
 ```bash
-mkdir -p build/tools-walk && zcat data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz | head -n 300 > build/tools-walk/trade.jsonl
+mkdir -p build/tools-walk && zcat data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz | head -n 300 > build/tools-walk/trade.jsonl
 drishti-console/.venv/bin/python tools/drishti.py sutra gen build/tools-walk --key trade=TRADE_ID --match trade=PRODUCT_TYPE --out build/tools-walk/sutras
 drishti-console/.venv/bin/python tools/drishti.py sutra lint config/packs/trading --strict
 ```

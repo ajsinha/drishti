@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **Fixed (QA1-201): `tools/bench/trades.py` (and so `drishti-stack`'s lakes) opened the seven-day test data's `snapshot-2026-09-22`**, gone since the test data holds sixty days: it now takes the system's snapshot whatever its date. The help examples and docs name `snapshot-2026-07-08`.
+
 - **Fixed (QA1-11): `DRS-1013` says when the entity has data** (*… has no data from 2026-09-01 to 2026-09-30; its days with data run
   from 2026-10-09 to 2026-10-20*), and for a number of days names the business days walked, not the whole `max-days` span as dates.
 - **Fixed (QA1-18): a mnemonic, a plural or an unknown field in a history request is named.** `history TRD 1000001` answers

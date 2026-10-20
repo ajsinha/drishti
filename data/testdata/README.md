@@ -241,12 +241,12 @@ manifest names the pack, kind, connector, key and partitions of each dataset); t
 
 ```bash
 # the first day of the ENDUR trades, into the table the trade-endur connector reads (trading/trade_endur)
-drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz \
+drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz \
     --pack config/packs/trading --kind trade --connector trade-endur --key TRADE_ID --as-of 2026-09-22 \
     --partition-by PRODUCT_TYPE --lake data/delta
 
 # a kind of another pack (core/counterparty: connector reference-store, domain reference)
-drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/core/counterparty/snapshot-2026-09-22.jsonl.gz \
+drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/core/counterparty/snapshot-2026-07-08.jsonl.gz \
     --pack config/packs/core --kind counterparty --key COUNTERPARTY_ID --as-of 2026-09-22 --lake data/delta
 ```
 
