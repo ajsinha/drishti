@@ -216,6 +216,25 @@ public final class HistoryService {
                 basis = "embedded";
                 cacheState = "off";
             }
+        } else if (!days.isEmpty() && spec.series() != null && days.get(0).date().isAfter(w.readFrom())) {
+            // the stored days start inside the window: the days before them come from the newest document's own series (the stored
+            // documents win on the days they cover), so a 3M chart covers 3 months though the store keeps a few days
+            LocalDate oldest = days.get(0).date();
+            List<HistoryDay> earlier;
+            try {
+                earlier = embedded(ref, spec, w, viewer).days().stream().filter(d -> d.date().isBefore(oldest)).toList();
+            } catch (RuntimeException e) {
+                earlier = List.of();                                         // the newest document cannot be read: the stored days alone
+            }
+            if (!earlier.isEmpty()) {
+                List<HistoryDay> merged = new ArrayList<>(earlier);
+                merged.addAll(days);
+                if (w.lastDays() > 0 && merged.size() > w.lastDays()) {
+                    merged = merged.subList(merged.size() - w.lastDays(), merged.size());
+                }
+                days = List.copyOf(merged);
+                basis = "documents+series";
+            }
         }
         boolean baselineFirst = !days.isEmpty() && (HistoryWindow.DATA_DAYS.equals(w.mode())
                 ? days.size() == w.lastDays()
@@ -232,6 +251,11 @@ public final class HistoryService {
             truncated = true;
         }
         LocalDate shownFrom = HistoryWindow.DATA_DAYS.equals(w.mode()) ? LocalDate.parse(rows.get(0).date()) : w.from();
+        // a span that starts before the entity's first day with data: the days before it are not missing (not loaded here, or the
+        // entity did not exist yet); loadedFrom says from when there is data
+        LocalDate oldestRow = LocalDate.parse(rows.get(0).date());
+        LocalDate firstBusiness = w.dates().stream().filter(d -> !d.isBefore(w.from())).findFirst().orElse(w.from());
+        LocalDate loadedFrom = HistoryWindow.DATA_DAYS.equals(w.mode()) || !oldestRow.isAfter(firstBusiness) ? null : oldestRow;
         // data days end at the entity's newest day with data; a calendar span keeps its end, but the days after the newest date the kind's
         // sources hold are "not loaded yet" (loadedTo), not missing
         LocalDate newest = LocalDate.parse(rows.get(rows.size() - 1).date());
@@ -242,10 +266,10 @@ public final class HistoryService {
         boolean dataDays = HistoryWindow.DATA_DAYS.equals(w.mode());
         LocalDate shownTo = dataDays ? newest : w.to();
         LocalDate gapsTo = dataDays ? newest : loadedTo != null ? loadedTo : w.to();
-        List<String> missing = missing(w, shownFrom, gapsTo, rows, failures);
+        List<String> missing = missing(w, loadedFrom != null ? loadedFrom : shownFrom, gapsTo, rows, failures);
         HistoryAnswer.Window window = new HistoryAnswer.Window(w.asked(), shownFrom.toString(), shownTo.toString(), w.days(), w.mode(),
                 built.baseline(), missing, q.knownAt() == null ? null : q.knownAt().toString(),
-                !dataDays && loadedTo != null ? loadedTo.toString() : null);
+                !dataDays && loadedTo != null ? loadedTo.toString() : null, loadedFrom == null ? null : loadedFrom.toString());
         List<HistoryAnswer.Row> ordered = rows;
         if (q.descending()) {
             ordered = new ArrayList<>(rows);
@@ -315,6 +339,9 @@ public final class HistoryService {
 
     // ---- embedded series (section 6.2) ----
 
+    /** The source a row taken from a document's embedded series names. */
+    public static final String SERIES = "series";
+
     private record Embedded(List<HistoryDay> days, HistorySpec spec) {}
 
     private Embedded embedded(EntityRef ref, HistorySpec spec, HistoryWindow w, Viewer viewer) {
@@ -349,7 +376,7 @@ public final class HistoryService {
             }
             Provenance p = doc.provenance();
             byDate.put(d, new HistoryDay(d, new EntityDocument(ref, new DataNode.Obj(fields),
-                    new Provenance(p.source(), p.generation(), p.fetchedAt(), false, d)), null));
+                    new Provenance(SERIES, p.generation(), p.fetchedAt(), false, d)), null));
         }
         List<HistoryDay> days = new ArrayList<>(byDate.values());
         if (w.lastDays() > 0 && days.size() > w.lastDays()) {

@@ -97,6 +97,7 @@ public final class HistoryRows {
         Map<String, Object> prevValues = null;
         Map<String, DataNode> prevParts = null;
         DataNode prevDoc = null;
+        boolean prevSeries = false;
         int changedDays = 0;
         for (int i = 0; i < days.size(); i++) {
             HistoryDay day = days.get(i);
@@ -116,21 +117,30 @@ public final class HistoryRows {
                 counts.put(p, n.isMasked() ? null : Integer.valueOf(n.isNull() ? 0 : n.size()));
             }
             List<String> changed = new ArrayList<>();
+            boolean series = HistoryService.SERIES.equals(day.document().provenance().source());
             if (prevValues != null) {
+                // beside a row from an embedded series only the series' own fields compare: the rest is not known on that day
+                boolean either = series || prevSeries;
+                DataNode seriesDoc = series ? doc : prevDoc;
                 for (Col c : cols) {
+                    if (either && seriesDoc.get(c.key).isMissing()) {
+                        continue;
+                    }
                     if (!ignore.contains(c.key) && !c.masked && !Values.equal(prevValues.get(c.key), values.get(c.key))) {
                         changed.add(c.key);
                     }
                 }
                 for (String p : partPaths) {
-                    if (!ignore.contains(p) && !Objects.equals(prevParts.get(p), partNodes.get(p))) {
+                    if (!either && !ignore.contains(p) && !Objects.equals(prevParts.get(p), partNodes.get(p))) {
                         changed.add("parts." + p);
                     }
                 }
             }
             List<HistoryAnswer.Change> changes = null;
             if (differ != null && prevDoc != null) {
+                DataNode only = series ? doc : prevSeries ? prevDoc : null;          // beside a series row: its fields only
                 changes = differ.diff(prevDoc, doc).changes().stream().filter(c -> !ignored(c.path(), ignore))
+                        .filter(c -> only == null || !only.get(top(c.path())).isMissing())
                         .map(c -> new HistoryAnswer.Change(c.path(), label(c.path()), c.kind().name().toLowerCase(Locale.ROOT), c.before(), c.after(), c.delta()))
                         .toList();
             } else if (differ != null) {
@@ -149,6 +159,7 @@ public final class HistoryRows {
             prevValues = values;
             prevParts = partNodes;
             prevDoc = doc;
+            prevSeries = series;
         }
         List<HistoryAnswer.Column> columns = cols.stream()
                 .map(c -> new HistoryAnswer.Column(c.key, c.label, c.type(rows), c.format, c.masked, c.isKey)).toList();

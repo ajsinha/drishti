@@ -311,7 +311,10 @@ workbench gets a History tab later (open question 3). `docs/guides/PACK_DEVELOPE
 The market samples (`config/packs/market-data/samples/equity.jsonl`, `fx-spot.jsonl`) carry their own history inside today's document
 (`HISTORY: [{DATE, CLOSE}]`, `[{DATE, MID}]`). When `series:` is declared and the kind's sources hold no daily documents in the range,
 the rows come from that list in the newest document (`"basis": "embedded"` in the answer): a chart and a one-column table, no versions.
-When daily documents exist they win, because they carry every field.
+When daily documents exist they win, because they carry every field. *As built:* when the stored days start inside the window
+(a store that keeps a week, asked for 3 months), the days before the oldest stored one are filled from the newest document's series
+(`basis: "documents+series"`, those rows `source: "series"`), so the chart and the headline numbers cover the whole range; beside a
+series row only the series' own fields count as changes.
 
 ### 6.3 Shipped packs
 
@@ -392,7 +395,8 @@ This is the contract between the two builders (section 18). Builder B builds the
     "baseline": "2026-09-07",
     "missing": ["2026-09-14"],
     "knownAt": null,
-    "loadedTo": null
+    "loadedTo": null,
+    "loadedFrom": null
   },
   "columns": [
     {"path": "TRADE_STATUS", "label": "Trade status", "type": "text", "format": null, "masked": false, "key": true},
@@ -455,10 +459,11 @@ This is the contract between the two builders (section 18). Builder B builds the
 | Field | Meaning |
 |---|---|
 | `shape` | `document` or `market` (section 5.1) |
-| `basis` | `documents` (daily documents), `embedded` (the kind's `series:` list), or `none` (never sent: `DRS-1012` instead) |
+| `basis` | `documents` (daily documents), `embedded` (the kind's `series:` list), `documents+series` (daily documents, and the days before the oldest stored one from the newest document's `series:` list, those rows with `source: "series"`), or `none` (never sent: `DRS-1012` instead) |
 | `window.mode` | `data-days` (a bare number), `calendar` (`30D`, `3M`, `YTD`…), `between` (`FROM … TO`) |
 | `window.to` | the last day shown: for `data-days` the entity's newest day with data (not the date box), else the end of the span |
 | `window.missing` | business days in the window with no data for this entity (every mode; capped at 400), up to the newest date the kind's sources hold |
+| `window.loadedFrom` | set only when a `calendar` or `between` span starts before the entity's first day with data: that day (the days before it are not missing: not loaded here, or the entity did not exist yet) |
 | `window.loadedTo` | set only when a `calendar` or `between` span ends after the newest date the kind's sources hold: that date (the days after it are not loaded yet, not missing) |
 | `columns[].masked` | true when the caller's masks hide the field: its values are the mask on every row |
 | `columns[].key` | one of the kind's key columns (shown first, frozen when scrolling) |
@@ -873,6 +878,7 @@ than 10,000 trades, deletes its folder at the end and exits 1 on a missed target
 | *As built (H5):* Delta: `days()`, a promoted-column row read, and `versions` from the log | `days()` only | the demo came first; with `days()` a history reads only the dates that hold the entity. The column-only read (no `doc` decode) and the per-day version count are still to build, so Delta's `versions` is `null` |
 | *As built (H3):* effective kinds: every business day a row, carried days marked | the change days only | a source's history leaves out a date answered by an earlier date's document, so the rows of an effective kind are its change dates; `carried` is always false. Filling the days between is a later step |
 | *As built (H14):* the fast path at least 3× the default loop | 1.3× on Delta | the default loop is already cheap on Delta (section 14) |
+| *As built (H3):* `series:` only when no source keeps daily documents | also to fill the days before the oldest stored day; `window.loadedFrom` | the demo cluster's market lake keeps 7 days: `EQ EQ-CSCA 3M` drew 7 points and said "no data on 55 days" |
 | *As built (H3):* `window.to` is the date box | `data-days` ends at the newest day with data; `loadedTo` added | found in the first integration run: a lake loaded up to Friday, read on Tuesday, said "no data on 2 days" for Monday and Tuesday, which are only not loaded yet |
 | *As built (H1):* `window.missing` only for `calendar` and `between` | filled in every mode | the document screen's header lists the days with no data for a bare number too (section 5.2: "no data on 2026-09-14"); the fixture's 30 rows span 31 business days |
 
