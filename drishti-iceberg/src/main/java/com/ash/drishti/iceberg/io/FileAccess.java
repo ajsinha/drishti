@@ -22,7 +22,6 @@ import com.ash.drishti.lakeio.S3Settings;
 import com.ash.drishti.lakeio.S3Storage;
 import com.ash.drishti.lakeio.Storage;
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -43,7 +42,7 @@ public final class FileAccess implements AutoCloseable {
 
     private final LocalStorage local;
     private final S3Settings s3Settings;
-    private final Map<String, String> relocate;
+    private final Relocation relocate;
     private final NativeCodecs codecs;
     private final ReentrantLock s3Lock = new ReentrantLock();
     private volatile S3Storage s3;
@@ -54,19 +53,28 @@ public final class FileAccess implements AutoCloseable {
      * @param lz4Decoder {@code safe} or {@code fast} (null: safe)
      */
     public FileAccess(S3Settings s3Settings, Map<String, String> relocate, String lz4Decoder) {
+        this(new LocalStorage(), s3Settings, Relocation.of(relocate), lz4Decoder);
+    }
+
+    /** As above, with the {@code relocate} setting already read ({@link Relocation#parse}). */
+    public FileAccess(S3Settings s3Settings, Relocation relocate, String lz4Decoder) {
         this(new LocalStorage(), s3Settings, relocate, lz4Decoder);
     }
 
     FileAccess(LocalStorage local, S3Settings s3Settings, Map<String, String> relocate, String lz4Decoder) {
+        this(local, s3Settings, Relocation.of(relocate), lz4Decoder);
+    }
+
+    FileAccess(LocalStorage local, S3Settings s3Settings, Relocation relocate, String lz4Decoder) {
         this.local = local;
         this.s3Settings = s3Settings;
-        this.relocate = new LinkedHashMap<>(relocate);
+        this.relocate = relocate == null ? Relocation.none() : relocate;
         this.codecs = NativeCodecs.of(lz4Decoder, "drishti-iceberg", "rewrite the day with ZSTD or Snappy (IcebergMaintenance --relayout --force)");
     }
 
     /** Local disk only, with no relocation (tests, tools). */
     public static FileAccess local() {
-        return new FileAccess(S3Settings.from(Map.of()), Map.of(), null);
+        return new FileAccess(S3Settings.from(Map.of()), Relocation.none(), null);
     }
 
     /** The same local disk and relocation, with other S3 credentials (a REST catalog's vended credentials). */
@@ -89,14 +97,14 @@ public final class FileAccess implements AutoCloseable {
         return scheme.equals("file") || S3_SCHEMES.contains(scheme.toLowerCase(Locale.ROOT));
     }
 
-    /** {@code path} with the first matching {@code relocate} prefix replaced. */
+    /** {@code path} with the first matching {@code relocate} folder replaced (both in one form: {@link Relocation}). */
     public String resolve(String path) {
-        for (Map.Entry<String, String> e : relocate.entrySet()) {
-            if (path.startsWith(e.getKey())) {
-                return e.getValue() + path.substring(e.getKey().length());
-            }
-        }
-        return path;
+        return relocate.apply(path);
+    }
+
+    /** The {@code relocate} pairs this reads through (none when not set). */
+    public Relocation relocation() {
+        return relocate;
     }
 
     /** The storage serving {@code path} (after relocation: call with {@link #resolve(String)}'s result). */

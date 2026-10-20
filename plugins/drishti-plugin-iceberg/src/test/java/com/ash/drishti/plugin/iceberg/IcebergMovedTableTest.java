@@ -102,7 +102,7 @@ class IcebergMovedTableTest {
                 String health = p.health();
                 assertThat(health).as(engine).startsWith("DEGRADED: cannot read trade: its metadata names files under ")
                         .contains("the table was moved or copied after it was written")
-                        .contains("relocate: ").contains(" -> " + moved + "/desk/trade");
+                        .contains("relocate: '").contains(" -> " + moved + "'");
                 assertThat(RECORDS).as(engine + ": no Caffeine stack trace").noneMatch(r -> r.getLoggerName().startsWith("com.github.benmanes"));
                 assertThat(RECORDS.stream().filter(r -> r.getLevel() == java.util.logging.Level.WARNING).count()).as(engine + ": one line").isEqualTo(1);
                 assertThat(RECORDS).allMatch(r -> r.getThrown() == null);
@@ -117,7 +117,7 @@ class IcebergMovedTableTest {
         IcebergSourcePlugin probe = start("native", null);
         String why = probe.problem("trade").orElseThrow();
         probe.close();
-        String relocate = why.substring(why.indexOf("relocate: ") + "relocate: ".length());
+        String relocate = why.substring(why.indexOf("relocate: ") + "relocate: ".length());   // as Health gives it, quotes and all
         IcebergSourcePlugin p = start("native", relocate);
         try {
             assertThat(p.fetch(EntityRef.of("trade", "T-1"))).isPresent();

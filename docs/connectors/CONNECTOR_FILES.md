@@ -931,7 +931,9 @@ Sizing the pools against the database's `max_connections` is in
 
 The badge never says *running* for a connector that is not serving. **running** means up and healthy; **running, with a warning** means
 up with something to read beside it (unreadable lines, or every dated folder is after today: *0 rows served for 2026-10-12: 'note'
-holds 2099-01-05 to 2099-01-06, none on or before 2026-10-12*); **down, retrying** is a connector that runs but reports DOWN or is
+holds 2099-01-05 to 2099-01-06, none on or before 2026-10-12*); **degraded** is a connector that serves but some of whose tables
+cannot be read (its health starts `DEGRADED`, shown in full beside the badge: an Iceberg table moved after it was written, with the
+`relocate` to copy); **down, retrying** is a connector that runs but reports DOWN or is
 being retried; **failed**, **disabled** and **not started** keep their words. The list, the connector's page, a pack's *Data source*
 panel and `drishti.py connector list|get` use the same words. The pages poll every 5 seconds: a connector's own page updates its status
 as it starts, and the list and the Packs list offer a **Refresh** banner when something changed on disk, in the CLI or by another

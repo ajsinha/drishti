@@ -93,6 +93,10 @@ public class ApiExceptionHandler {
         HttpStatus status = HttpStatus.valueOf(e.errorCode().httpStatus());
         if (RefusalLog.expected(e)) {
             refusals.refused(e);                     // another node is down or slow: one short line per change, counted (SOAK-06)
+        } else if (status.is5xxServerError() && com.ash.drishti.api.UnreadableData.in(e).isPresent()) {
+            // the source said what cannot be read and what to do (an Iceberg table moved, a codec not read): one line, no stack trace (QA3B-03)
+            LOG.warn("request failed: {}", e.getMessage());
+            LOG.debug("request failed: {}", e.getMessage(), e);
         } else if (status.is5xxServerError()) {
             LOG.warn("request failed: {}", e.getMessage(), e);
         }
