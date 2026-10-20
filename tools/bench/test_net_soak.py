@@ -130,7 +130,7 @@ class MaskCoverageTest(unittest.TestCase):
         ids = {(q["kind"], q["id"]) for q in reqs}
         self.assertGreaterEqual(len(ids), 140)
         self.assertEqual(40, sum(1 for k, i in ids if k == "trade" and i.startswith("MX-")))
-        self.assertEqual(len(ids) * 2, len(reqs))
+        self.assertEqual(len(ids) * 4, len(reqs))                      # two ranges, each in both roles
         viewer = [q for q in reqs if q["role"] == "viewer"]
         self.assertTrue(any(q["id"].startswith("MX-") for q in viewer))
         for role in ("admin", "viewer"):
@@ -142,6 +142,49 @@ class MaskCoverageTest(unittest.TestCase):
         self.assertEqual(("PRICE",), s.must_mask({"what": "history", "kind": "trade", "role": "viewer"}))
         self.assertEqual((), s.must_mask({"what": "history", "kind": "trade", "role": "admin"}))
         self.assertEqual([], self.soak(history_share=0).history_requests(random.Random(1)))
+
+    def test_each_range_is_asked_in_both_roles_and_the_checker_asks_the_twin_at_once_in_either_order(self):
+        """SOAK2-01: the admin and the viewer must meet on the same entity, range and node, both orders, back to back."""
+        import net_soak
+        s = self.soak()
+        reqs = s.history_requests(random.Random(20261019))
+        twins = s.twins(reqs)
+        self.assertEqual(len(reqs), len(twins))
+        for q in reqs:
+            other = twins[(q["pair"], "viewer" if q["role"] == "admin" else "admin")]
+            self.assertEqual((q["kind"], q["id"], q["params"]), (other["kind"], other["id"], other["params"]))
+            self.assertNotEqual(q["role"], other["role"])
+        for q in reqs:
+            q["ref"] = {"rows": []}
+        s.reqs, s.procs, s.down, s.back, s.errors, s.t0, s.pairs = reqs, {"a": 1, "b": 1, "c": 1}, {}, {}, [], time.time(), {}
+        s.a.check_every, s.a.kill_grace = 0, 30
+        asked = []
+
+        class Enough(Exception):
+            pass
+
+        def ask(base, q):
+            asked.append((base, q["pair"], q["role"]))
+            if len(asked) >= 4000:
+                raise Enough
+            return 200, {}
+        s.ask, s.url, s.essence = ask, (lambda n: n), (lambda q, body: None)
+        s.judge_why = lambda q, status, body: ("wrong", "x") if q["role"] == "admin" and q["id"].startswith("MX-") else ("right", "equal")
+        with self.assertRaises(Enough):
+            s.checker(time.time() + 3600, {}, sc.WrongLog())
+        for (b1, p1, r1), (b2, p2, r2) in zip(asked[::2], asked[1::2]):
+            self.assertEqual((b1, p1), (b2, p2))                              # the twin: same node, entity and range, at once
+            self.assertNotEqual(r1, r2)
+        self.assertGreater(s.pairs["adminFirst"]["pairs"], 100)
+        self.assertGreater(s.pairs["viewerFirst"]["pairs"], 100)
+        self.assertGreater(s.pairs["viewerFirst"]["peerHeld"], 0)
+        self.assertGreater(s.pairs["viewerFirst"]["wrongSecond"], 0)     # an admin answer after a viewer's is counted when wrong
+        self.assertEqual(0, s.pairs["adminFirst"]["wrongSecond"])
+        self.assertTrue(s.peer_held("a", {"kind": "trade", "id": "MX-50000001"}))
+        self.assertFalse(s.peer_held("c", {"kind": "trade", "id": "MX-50000001"}))
+        self.assertTrue(s.peer_held("c", {"kind": "trade", "id": "CLY-30000001"}))
+        self.assertTrue(s.peer_held("b", {"kind": "counterparty", "id": "CP-00001"}))
+        self.assertFalse(s.peer_held("a", {"kind": "counterparty", "id": "CP-00001"}))
 
     def test_a_viewer_history_must_show_the_field_masked_on_every_row_and_in_every_diff(self):
         must = ("TRADER_ID",)

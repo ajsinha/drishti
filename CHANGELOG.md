@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Soak: the checker asks the administrator and the viewer back to back, in both orders (SOAK2-01).** Each checked history range is
+  asked in both roles, and the checker asks a history's twin (same entity, range and node, the other role) straight after it, so the
+  class of SOAK2-01 is exercised every few seconds; `soak.json` `maskPairs` counts the pairs per order, peer-held, and wrong answers.
+  `net_soak.py`; test_net_soak; DRISHTI_NET.md 17.1.
 - **Fixed: `build_demo_lakes.py` run with a Python that lacks `deltalake` failed every table with "no engine"**; it now stops at once and names the console's environment to use.
 - **Fixed (SOAK2-01, P1): an administrator's history of a peer-held entity no longer shows a viewer's masks.** The history cache kept
   the days a peer answered (masked there for the first caller) as if they were unmasked, and served them to every later caller: after a
