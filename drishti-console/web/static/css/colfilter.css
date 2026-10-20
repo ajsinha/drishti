@@ -27,7 +27,7 @@ table.tbl th:hover .cf-btn, table.tbl th:focus-within .cf-btn, .cf-btn.cf-on, .c
 .cf-act { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; padding: .25rem .6rem; text-align: left; cursor: pointer; font: inherit; min-height: 28px; }
 .cf-act:hover { border-color: var(--d-accent); }
 .cf-act[aria-pressed="true"] { border-color: var(--d-accent); color: var(--d-accent); }
-.cf-ok { background: var(--d-accent); color: var(--d-on-accent); border-color: var(--d-accent); text-align: center; }
+.cf-ok { background: var(--d-fill); color: var(--d-on-fill); border-color: var(--d-fill); text-align: center; }
 .cf-cond { display: flex; flex-wrap: wrap; gap: .3rem; }
 .cf-cond select, .cf-cond input, .cf-q { flex: 1 1 100%; min-width: 0; background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; padding: .2rem .4rem; font: inherit; min-height: 28px; }
 .cf-cond input:not([hidden]) { flex: 1 1 8rem; }

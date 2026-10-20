@@ -23,7 +23,7 @@
 .pk-step[aria-current="step"] { border-color: var(--d-accent); background: var(--d-accent-tint); font-weight: 700; }
 .pk-step.done .pk-n { background: var(--d-ok); color: var(--d-on-accent); }
 .pk-n { display: inline-flex; align-items: center; justify-content: center; width: 1.4rem; height: 1.4rem; border-radius: 50%; background: var(--d-border); color: var(--d-ink); font-size: .78rem; font-weight: 700; }
-.pk-step[aria-current="step"] .pk-n { background: var(--d-accent); color: var(--d-on-accent); }
+.pk-step[aria-current="step"] .pk-n { background: var(--d-fill); color: var(--d-on-fill); }
 .pk-warn { color: var(--d-warn); }
 .pk-nav { margin-top: .8rem; align-items: center; }
 .pk-caps { margin: .5rem 0; }

@@ -101,7 +101,7 @@ body {
    and so do near-black themes whose colours are dark; the defaults above suit the blue-black themes. */
 :root[data-theme="light"], :root[data-theme="crimson"], :root[data-theme="blue"], :root[data-theme="green"] { --g-page: 30%; --g-bar: 34%; --g-head: 26%; --g-pnl: 22%; }
 :root[data-theme="crimson-dark"] { --g-page: 36%; --g-bar: 42%; --g-head: 32%; --g-pnl: 26%; }
-:root:is([data-theme="terminal-green"], [data-theme="terminal-crimson"]) { --g-page: 32%; --g-bar: 38%; --g-head: 28%; --g-pnl: 24%; }   /* terminal-blue keeps the blue-black defaults */
+:root[data-theme="terminal-green"] { --g-page: 32%; --g-bar: 38%; --g-head: 28%; --g-pnl: 24%; }   /* terminal-crimson and terminal-blue keep the defaults */
 :root[data-theme="wallstreet"] { --g-page: 22%; --g-bar: 28%; --g-head: 22%; --g-pnl: 18%; }
 
 

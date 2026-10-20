@@ -98,6 +98,16 @@ def test_labels_on_accent_fills_read_in_every_theme():
             assert _ratio(t["on-accent"], t[fill]) >= 4.5, (name, fill, round(_ratio(t["on-accent"], t[fill]), 2))
 
 
+def test_labels_on_button_fills_read_in_every_theme():
+    """Buttons and pressed controls fill with --d-fill (the accent unless a theme sets its own, as terminal-crimson does: a
+    deep crimson with white labels instead of its bright text accent): the label reads at 4.5:1 on the fill and its hover."""
+    for name in THEMES:
+        t = _theme(name)
+        fill, strong, on = t.get("fill", t["accent"]), t.get("fill-strong", t["accent-strong"]), t.get("on-fill", t["on-accent"])
+        for f in (fill, strong):
+            assert _ratio(on, f) >= 4.5, (name, f, round(_ratio(on, f), 2))
+
+
 def test_the_css_colours_text_only_with_checked_tokens():
     """A text colour taken from a token outside TEXT_TOKENS would escape the checks above: every `color:` in the
     console's CSS is one of them or --d-on-accent (or a fixed colour on a fixed ground, such as white on a badge)."""
@@ -106,7 +116,7 @@ def test_the_css_colours_text_only_with_checked_tokens():
         if f.name == "tokens.css":
             continue
         used |= set(re.findall(r"(?<![-\w])color:\s*var\(--d-([a-z0-9-]+)\)", f.read_text()))
-    checked = set(TEXT_TOKENS) | {"on-accent"}
+    checked = set(TEXT_TOKENS) | {"on-accent", "on-fill"}
     assert {"faint", "accent"} <= used <= checked, sorted(used - checked)
 
 

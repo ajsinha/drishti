@@ -50,7 +50,7 @@
 .bi-editing-interactions .bi-dvis { outline: 1px dashed var(--d-link); }
 .bi-ix-bar { position: absolute; top: .25rem; right: .25rem; z-index: 3; display: flex; gap: 2px; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 6px; padding: 2px; }
 .bi-ix-btn { border: 0; background: none; color: var(--d-muted); padding: .2rem .35rem; border-radius: 4px; cursor: pointer; }
-.bi-ix-btn[aria-pressed="true"] { background: var(--d-accent); color: var(--d-on-accent); }
+.bi-ix-btn[aria-pressed="true"] { background: var(--d-fill); color: var(--d-on-fill); }
 .bi-dvis { position: relative; }
 
 /* the theme designer */

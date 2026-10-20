@@ -35,6 +35,9 @@
   --d-accent-strong: #f2b453;
   --d-accent-tint: rgba(232, 163, 58, .14);
   --d-on-accent: #14100a;       /* a label on an accent fill (buttons) */
+  --d-fill: var(--d-accent);    /* button and pressed-control fills: the accent, unless a theme gives them their own */
+  --d-fill-strong: var(--d-accent-strong);
+  --d-on-fill: var(--d-on-accent);
   --d-link: #7fb2ff;            /* blue: links, positive values */
   --d-pos: #7fb2ff;
   --d-neg: #f2955a;
@@ -272,10 +275,13 @@
   --d-ink: #f7e9ec;
   --d-muted: #c99fa9;
   --d-faint: #bb919c;
-  --d-accent: #ff4f6f;          /* crimson */
-  --d-accent-strong: #ff7b92;
-  --d-accent-tint: rgba(255, 79, 111, .14);
+  --d-accent: #e45a72;          /* crimson, softened to read as text on the dark grounds */
+  --d-accent-strong: #ec7d90;
+  --d-accent-tint: rgba(228, 90, 114, .12);
   --d-on-accent: #1a0509;
+  --d-fill: #b3203a;            /* buttons: a deep crimson with white labels, not the bright text accent */
+  --d-fill-strong: #c92a46;
+  --d-on-fill: #ffffff;
   --d-link: #ffb8a3;            /* blush */
   --d-pos: #8fd8c0;             /* sea green: up is never the accent's red */
   --d-neg: #ff9a5c;
@@ -283,10 +289,10 @@
   --d-warn: #f5c454;
   --d-bad: #ff6f7d;
   --d-highlight: rgba(255, 184, 163, .07);
-  --d-emph-bg: rgba(255, 79, 111, .24);
-  --d-glow: rgba(255, 79, 111, .38);
-  --d-grad-from: #ff4f6f;
-  --d-grad-to: #ffb199;
+  --d-emph-bg: rgba(228, 90, 114, .20);
+  --d-glow: rgba(228, 90, 114, .26);
+  --d-grad-from: #c8304b;
+  --d-grad-to: #e0907e;
   --d-nav: rgba(20, 7, 11, .88);
   --d-shadow: 0 10px 40px rgba(0, 0, 0, .5);
   color-scheme: dark;

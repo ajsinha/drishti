@@ -48,7 +48,7 @@
 .ctl-seg { display: inline-flex; border: 1px solid var(--d-border); border-radius: 5px; overflow: hidden; }
 .ctl-seg-b { background: var(--d-bg-2); color: var(--d-ink); border: 0; border-right: 1px solid var(--d-border); padding: .2rem .7rem; cursor: pointer; font: inherit; min-height: 30px; }
 .ctl-seg-b:last-child { border-right: 0; }
-.ctl-seg-b[aria-checked="true"] { background: var(--d-accent); color: var(--d-on-accent); }
+.ctl-seg-b[aria-checked="true"] { background: var(--d-fill); color: var(--d-on-fill); }
 .ctl-switch { display: inline-flex; align-items: center; gap: .4rem; background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 999px; padding: .15rem .75rem; cursor: pointer; font: inherit; min-height: 30px; }
 .ctl-switch[aria-checked="true"] { border-color: var(--d-accent); color: var(--d-accent); }
 .ctl button:focus-visible, .ctl input:focus-visible, .ctl select:focus-visible, .ctl summary:focus-visible, .ctl-pick:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }

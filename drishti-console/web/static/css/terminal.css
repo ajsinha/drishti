@@ -162,7 +162,7 @@ body.terminal { font-size: 14px; }
 .fkeys nav { display: flex; flex-wrap: nowrap; gap: .4rem; min-width: 0; overflow-x: auto; scrollbar-width: thin; }
 .fk { flex: 0 0 auto; display: inline-flex; align-items: center; gap: .35rem; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 6px;
   padding: .15rem .55rem .15rem .2rem; color: var(--d-ink); white-space: nowrap; }
-.fk b { color: var(--d-on-accent); background: var(--d-accent); font-weight: 600; font-size: .75rem; border-radius: 4px; padding: 0 .35rem; }
+.fk b { color: var(--d-on-fill); background: var(--d-fill); font-weight: 600; font-size: .75rem; border-radius: 4px; padding: 0 .35rem; }
 .fk-t { display: inline-block; max-width: 20ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }   /* the whole title shows on hover and focus (title, aria-label) */
 .fk:hover { border-color: var(--d-accent); }
 .fk:disabled { opacity: .55; }
