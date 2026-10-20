@@ -176,6 +176,19 @@ laptop, for sixty days; `data\delta` ends at about 2.2 GB), `2/3 your ENDUR file
 - To pick the last date yourself: `--as-of 2026-10-16`.
 - Your files stay in `drishti-private`; nothing is copied into the project.
 
+**One part only** (the rest of the lakes stays as it is; stop the server first, start it again after):
+
+| You want | Run (the same `python.exe …\tools\build_demo_lakes.py` as above, with) |
+|---|---|
+| only **your ENDUR files** loaded again, nothing else rebuilt (a new file arrived, say) | `--endur-dir C:\Users\asinh09\drishti-private\endur --files-only` |
+| only your files of **another system** | `--source-dir <folder> --system calypso --files-only` (or `--system murex`) |
+| only the **synthetic ENDUR** table rebuilt | `--only trades/endur --as-of <the lakes' last date>` |
+| several datasets | `--only trades/calypso,trades/murex --as-of <date>` (any folder of `data\testdata`, or a pack name) |
+
+With `--only`, give `--as-of` the same last date the other tables have, so every table covers the same days (one table alone takes
+about a minute). `--files-only` replaces that system's table with your files only (add `--keep-synthetic` to keep the synthetic trades
+beside yours). Always try `--dry-run` first: it prints every step.
+
 Then start the server and the console (section 4). The manual steps below do the same thing in parts.
 
 
