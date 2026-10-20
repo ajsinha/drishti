@@ -197,6 +197,48 @@ def why(host: str | None) -> str | None:
     return _resolved(h)
 
 
+_URL = re.compile(r"https?://(?:\[([0-9A-Fa-f:.]+)\]|([A-Za-z0-9.-]+))(?::([0-9]+))?(/\S*)?", re.ASCII)
+_LABEL = re.compile(r"[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?", re.ASCII)
+_QUAD_PART = re.compile(r"0|[1-9][0-9]{0,2}")
+
+
+def url_problem(url: str | None) -> str | None:
+    """What makes a URL no address at all, or None when it is one (QA1-202, QA1-206): http or https, then a host that is a bracketed IPv6
+    literal, an IPv4 address in four decimal parts, or a host name (labels of letters, digits and dashes between dots, the last starting
+    with a letter, no dot at the end), then an optional port 1 to 65535 and path. Word for word the server's HostAddress.urlProblem; both
+    are tested on drishti-net/src/test/resources/net/advertise-urls.tsv
+    (test_cli_net.py). Whether the host is one other machines can call is loopback_url."""
+    u = "" if url is None else str(url)
+    m = _URL.fullmatch(u)
+    if not m:
+        return f"'{u}' is not an http or https address with a host (https://host:port)"
+    if m.group(1) is not None:
+        try:
+            if ":" not in m.group(1) or ipaddress.ip_address(m.group(1)).version != 6:
+                raise ValueError(m.group(1))
+        except ValueError:
+            return f"'{m.group(1)}' is not an IPv6 address"
+    else:
+        h = m.group(2)
+        labels = h.split(".")
+        if h.endswith("."):
+            return f"'{h}' ends with a dot: write the address without it"
+        if re.fullmatch(r"[0-9.]+", h):
+            if len(labels) != 4 or not all(_QUAD_PART.fullmatch(x) and int(x) <= 255 for x in labels):
+                return f"'{h}' is not an IPv4 address: four numbers 0 to 255 (192.168.2.77)"
+        elif not (labels[-1][:1].isalpha() and all(_LABEL.fullmatch(x) for x in labels)):
+            return f"'{h}' is not a host name: letters, digits and dashes between dots, no dot at the end"
+    port = m.group(3)
+    if port is not None and (len(port) > 5 or not 1 <= int(port) <= 65535):
+        return f"port {port} is not a port: the port must be 1 to 65535"
+    return None
+
+
+def callable_url(url: str | None) -> bool:
+    """True when other machines can call a URL: it is an address (url_problem) and its host is not loopback or wildcard."""
+    return url_problem(url) is None and not loopback_url(url)
+
+
 def loopback_or_wildcard(host: str | None) -> bool:
     """True when a host is no address another machine can call (see why)."""
     return why(host) is not None

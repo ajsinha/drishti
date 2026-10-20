@@ -17,6 +17,12 @@
 
 ## Unreleased
 
+- **Fixed (QA1-202, QA1-206): an advertise-url or seed url with port 0 or a port past 65535 is refused**, by the schema check
+  (`POST /net/file/check`, `PUT`, the folder at start), by the gossip intake (such a member is never kept, so it no longer shows *alive*
+  while every read through it fails) and by `drishti.py net`. The CLI and the server now take and refuse the same addresses: the CLI no
+  longer writes `%`-escaped or trailing-dot hosts the server refuses, and takes a global IPv6 address (`http://[2001:db8::5]:18611`) as
+  the server does; one table of cases (`advertise-urls.tsv`) is tested on both sides. NET.md section 2 says the rules.
+
 - **Fixed (QA1-201): `tools/bench/trades.py` (and so `drishti-stack`'s lakes) opened the seven-day test data's `snapshot-2026-09-22`**, gone since the test data holds sixty days: it now takes the system's snapshot whatever its date. The help examples and docs name `snapshot-2026-07-08`.
 
 - **Fixed (QA1-11): `DRS-1013` says when the entity has data** (*… has no data from 2026-09-01 to 2026-09-30; its days with data run

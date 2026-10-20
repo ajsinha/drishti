@@ -81,6 +81,14 @@ $ drishti.py net set node.advertise-url http://127.0.0.1:18784
 drishti: node.yaml was not written: 'http://127.0.0.1:18784' is a loopback or wildcard address: the address this node advertises must be an address other machines can call (this machine's address is 192.168.1.20: use http://192.168.1.20:18784); or leave advertise-url out and the node advertises that address with its port
 ```
 
+**An address is an address.** `advertise-url` and a seed's `url` are `http` or `https`, then a host, then an optional port and path,
+and nothing else: the host is a host name (letters, digits and dashes between dots, no dot at the end), an IPv4 address in four decimal
+parts (`192.168.2.77`) or an IPv6 address in brackets (`http://[2001:db8::5]:18611`); the port is 1 to 65535. A port of `0` or past
+65535, a `%`-escaped or trailing-dot host, a user part (`user@host`), a query or a fragment are refused with the reason (*port 0 is not a
+port: the port must be 1 to 65535*, *'192.168.2.77.' ends with a dot: write the address without it*), and a member gossiping such an
+address is never kept, so it can't show *alive* while every read through it fails. `drishti.py net` and the server apply the same rules:
+both are tested on one table of cases (`drishti-net/src/test/resources/net/advertise-urls.tsv`).
+
 **Without `advertise-url`** a node advertises this machine's primary IPv4 address with the server's port (`server.port`; `https` when
 `server.ssl.enabled`): the address of the interface the default route leaves by, else the first interface that is up and is not a
 loopback, a container bridge (`docker0`, `br-…`, `veth…`) or a virtual link. Set `advertise-url` on a machine with several interfaces,

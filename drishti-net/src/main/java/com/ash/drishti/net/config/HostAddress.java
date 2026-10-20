@@ -263,6 +263,69 @@ public final class HostAddress {
         return Optional.of(new byte[] {(byte) (value >>> 24), (byte) (value >>> 16), (byte) (value >>> 8), (byte) value});
     }
 
+    /** An advertised or seed address: http or https, a host, an optional port and path; nothing else (no user, no query, no %-escapes). */
+    private static final Pattern URL = Pattern.compile("https?://(?:\\[([0-9A-Fa-f:.]+)]|([A-Za-z0-9.-]+))(?::([0-9]+))?(/\\S*)?");
+    private static final Pattern LABEL = Pattern.compile("[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?");
+    private static final Pattern QUAD_PART = Pattern.compile("0|[1-9][0-9]{0,2}");
+
+    /**
+     * What makes a URL no address at all, or empty when it is one (QA1-202, QA1-206): {@code http} or {@code https}, then a host that is a
+     * bracketed IPv6 literal, an IPv4 address in four decimal parts, or a host name (labels of letters, digits and dashes between dots, the
+     * last starting with a letter, no dot at the end), then an optional port 1 to 65535 and path. The same rules, word for word, as
+     * {@code tools/hostaddr.py url_problem}; both are tested on {@code advertise-urls.tsv}. Whether the host is one other machines can
+     * call is {@link #loopbackUrl(String)}.
+     */
+    public static Optional<String> urlProblem(String url) {
+        String u = url == null ? "" : url;
+        java.util.regex.Matcher m = URL.matcher(u);
+        if (!m.matches()) {
+            return Optional.of("'" + u + "' is not an http or https address with a host (https://host:port)");
+        }
+        if (m.group(1) != null) {
+            if (!m.group(1).contains(":")) {
+                return Optional.of("'" + m.group(1) + "' is not an IPv6 address");
+            }
+            try {
+                InetAddress.getByName("[" + m.group(1) + "]");                   // a literal: no lookup
+            } catch (java.net.UnknownHostException | RuntimeException e) {
+                return Optional.of("'" + m.group(1) + "' is not an IPv6 address");
+            }
+        } else {
+            String h = m.group(2);
+            String[] labels = h.split("\\.", -1);
+            if (h.endsWith(".")) {
+                return Optional.of("'" + h + "' ends with a dot: write the address without it");
+            }
+            if (h.matches("[0-9.]+")) {
+                boolean quad = labels.length == 4;
+                for (String x : labels) {
+                    quad &= QUAD_PART.matcher(x).matches() && Integer.parseInt(x) <= 255;
+                }
+                if (!quad) {
+                    return Optional.of("'" + h + "' is not an IPv4 address: four numbers 0 to 255 (192.168.2.77)");
+                }
+            } else {
+                boolean name = Character.isLetter(labels[labels.length - 1].isEmpty() ? '0' : labels[labels.length - 1].charAt(0));
+                for (String x : labels) {
+                    name &= LABEL.matcher(x).matches();
+                }
+                if (!name) {
+                    return Optional.of("'" + h + "' is not a host name: letters, digits and dashes between dots, no dot at the end");
+                }
+            }
+        }
+        String port = m.group(3);
+        if (port != null && (port.length() > 5 || Integer.parseInt(port) < 1 || Integer.parseInt(port) > 65535)) {
+            return Optional.of("port " + port + " is not a port: the port must be 1 to 65535");
+        }
+        return Optional.empty();
+    }
+
+    /** True when other machines can call a URL: it is an address ({@link #urlProblem}) and its host is not loopback or wildcard. */
+    public static boolean callableUrl(String url) {
+        return urlProblem(url).isEmpty() && !loopbackUrl(url);
+    }
+
     /** True when a URL's host is loopback or wildcard ({@link #loopbackOrWildcard(String)}); false for a URL that cannot be read. */
     public static boolean loopbackUrl(String url) {
         if (url == null || url.isBlank()) {
