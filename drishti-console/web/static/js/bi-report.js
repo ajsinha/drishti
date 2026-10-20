@@ -110,6 +110,7 @@
     out.push(alertButton(spec, mk));                                               // Alert me: every visual that shows numbers, live ones too (a live source can alert on change)
     if (group === 'perspective' || group === 'live') { return out; }
     const sel = state.selections.find((s) => s.visual === spec.id);
+    const current = () => state.selections.find((s) => s.visual === spec.id);       // at the click: a mark chosen since these buttons were drawn counts
     const path = state.drills[spec.id] || [];
     const lv = levels(spec);
     if (lv) {
@@ -118,10 +119,10 @@
         { 'data-act': 'drill-down', disabled: !sel || startLevel(spec) + path.length + 1 >= lv.length }));
     }
     const targets = throughTargets(spec, sel);
-    targets.forEach((t) => out.push(mk('bi-through', 'box-arrow-up-right', 'Drill through to ' + t.title, () => { drillThrough(t, sel); }, { 'data-act': 'drill-through', 'data-page': t.id })));
+    targets.forEach((t) => out.push(mk('bi-through', 'box-arrow-up-right', 'Drill through to ' + t.title, () => { drillThrough(t, current() || sel); }, { 'data-act': 'drill-through', 'data-page': t.id })));
     const key = terminalTarget(spec, sel);
     if (key) { out.push(mk('bi-toterm', 'terminal', 'Open ' + key.value + ' in the terminal', () => { window.location.href = '/v/' + encodeURIComponent(key.kind) + '/' + encodeURIComponent(String(key.value)); }, { 'data-act': 'open-terminal' })); }
-    out.push(mk('bi-rows', 'list-ul', state.rows[spec.id] ? 'Back to the visual' : 'Show the rows behind this visual', () => toggleRows(spec, sel), { 'data-act': 'rows', 'aria-pressed': state.rows[spec.id] ? 'true' : 'false' }));
+    out.push(mk('bi-rows', 'list-ul', state.rows[spec.id] ? 'Back to the visual' : 'Show the rows behind this visual', () => toggleRows(spec, current()), { 'data-act': 'rows', 'aria-pressed': state.rows[spec.id] ? 'true' : 'false' }));
     out.push(mk('bi-astable', 'table', state.asTable[spec.id] ? 'Show as a chart' : 'Show as a table', () => { state.asTable[spec.id] = !state.asTable[spec.id]; redraw(spec.id); }, { 'data-act': 'as-table', 'aria-pressed': state.asTable[spec.id] ? 'true' : 'false' }));
     if (sel) { out.push(mk('bi-clear', 'x-circle', 'Clear the selection', () => { clearSelection(spec.id); }, { 'data-act': 'clear' })); }
     return out;

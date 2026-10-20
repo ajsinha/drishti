@@ -248,12 +248,13 @@ def test_a_date_range_has_presets_and_ends_a_number_range_bounds_and_top_n_cuts(
 
 def test_cascading_toggle_segmented_and_date_move_the_other_panel_only(page, backend):
     assert page.locator("[data-ctl='country'] option").all_inner_texts() == ["UK", "DE"]
-    page.evaluate("document.querySelector('#p-schedule').setAttribute('data-mark', 'kept')")
     done(page, lambda: page.locator("[data-ctl='region'] select").select_option("APAC"))
     assert page.locator("[data-ctl='country'] option").all_inner_texts() == ["JP", "AU", "SG"]     # the child's options moved with its parent
     assert page.locator("[data-ctl='country'] select").input_value() == "JP"
     assert page.locator("#p-other h3").inner_text() == "Other APAC JP Net A"
-    assert backend.asked[-1][1] == ["other"] and page.evaluate("document.querySelector('#p-schedule').getAttribute('data-mark')") == "kept"
+    # only `other` was asked for and swapped in by the change (the live stream redraws `schedule` on its own ticks, so a mark on its element
+    # would not tell the two apart)
+    assert backend.asked[-1][1] == ["other"] and page.evaluate("window.__drishtiControls.at(-1).panels") == ["other"]
     done(page, lambda: page.locator("[data-ctl='country'] select").select_option("SG"))
     assert "SG" in page.locator("#p-other h3").inner_text()
     done(page, lambda: page.locator("button[role=switch]").click())

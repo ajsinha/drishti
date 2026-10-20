@@ -93,6 +93,7 @@ def edit_body(page, change, message):
     box.fill(change(box.input_value()))
     page.fill("[data-edit] input[name=message]", message)
     page.click("[data-edit] button[type=submit]")
+    expect(page.locator("[data-edit]")).to_be_hidden(timeout=30000)        # this save went through (the message may still be the last save's)
     expect(page.locator("[data-msg]")).to_contain_text("Draft saved")
     expect(rows).to_have_count(before + 1, timeout=15000)                # this save's revision is listed (the message may still be the last save's)
     expect(rows.first).to_contain_text(message, timeout=15000)           # and it is this save, newest first

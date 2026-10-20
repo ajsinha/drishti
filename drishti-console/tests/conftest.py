@@ -40,6 +40,11 @@ class FakeBackend:
         self.calls = []
         self.sessions = {}                       # console sign-in sessions the server keeps: id -> user name
 
+    async def _send(self, method, path, ident=None, **kw):
+        """The collaboration calls (core/collab.py: the bell's unread count every page asks, the inbox, shares): an empty inbox, so a page
+        under test never answers 500 to its own bell (each one logged a long traceback)."""
+        return {"unread": 0} if path.endswith("/count") else {"items": []}
+
     async def view(self, kind, id_, user, controls=None, panels=None):
         self.calls.append(("view", kind, id_, user))
         f = FIXTURES / f"view_{kind}_{id_}.json"

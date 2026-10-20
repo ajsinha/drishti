@@ -21,7 +21,7 @@
   var B = window.drishtiBi, canvas = document.getElementById('biCanvas');
   if (!B || !canvas || canvas.getAttribute('data-bi-page') !== 'item') { return; }
   var h = B.h, q = B.q, clear = B.clear, icon = B.icon;
-  var item = null, seq = 0;
+  var item = null, seq = 0;                    // seq: the item drawn last (bi:item), so an older answer never overwrites a newer one
 
   function path() { return '/items/' + encodeURIComponent(item.id).replace(/%3A/g, ':'); }
   function say(text, bad) { B.say(q('[data-msg]'), text, bad); }
@@ -60,7 +60,9 @@
   function history() {
     var sec = q('[data-sec-history]');
     if (item.shipped || !(item.can && item.can.edit) && !(item.status === 'proposed' && item.can && item.can.review)) { sec.hidden = true; return; }
+    var mine = seq;
     B.api('GET', path() + '/history').then(function (d) {
+      if (mine !== seq) { return; }                                   // the item was drawn again since: a newer answer is on its way
       sec.hidden = false;
       var tb = q('[data-history] tbody'), from = q('[data-diff-from]'), to = q('[data-diff-to]');
       clear(tb); clear(from); clear(to);
@@ -78,7 +80,7 @@
       var ev = q('[data-events]'); clear(ev);
       d.events.forEach(function (e) { ev.appendChild(h('li', { text: stamp(e.at) + ' · ' + e.actor + ' · ' + e.action + (e.note ? ': ' + e.note : '') })); });
       q('[data-events-wrap]').hidden = !d.events.length;
-    }).catch(function () { sec.hidden = true; });
+    }).catch(function () { if (mine === seq) { sec.hidden = true; } });
   }
   function show(a, b) {
     B.api('GET', path() + '/diff?from=' + encodeURIComponent(a) + '&to=' + encodeURIComponent(b)).then(function (d) {
@@ -150,7 +152,9 @@
   function review() {
     var sec = q('[data-sec-review]');
     if (item.status !== 'proposed' || item.shipped) { sec.hidden = true; return; }
+    var mine = seq;
     B.api('GET', path() + '/review').then(function (r) {
+      if (mine !== seq) { return; }                                   // the item was drawn again since: a newer answer is on its way
       sec.hidden = false;
       var body = q('[data-review-body]'); clear(body);
       var rq = r.request;
@@ -169,7 +173,7 @@
       body.appendChild(h('h3', { text: 'Data preview' }));
       body.appendChild(previewTable(r.preview));
       body.appendChild(h('p', { class: 'text-muted-d', text: 'Write your comment in the note box above, then Approve and publish or Reject. The author cannot approve their own request.' }));
-    }).catch(function (e) { sec.hidden = true; if (e.status !== 403 && e.status !== 404) { fail(e); } });
+    }).catch(function (e) { if (mine !== seq) { return; } sec.hidden = true; if (e.status !== 403 && e.status !== 404) { fail(e); } });
   }
 
   // -- impact ---------------------------------------------------------------------------------------------------------------
@@ -180,7 +184,9 @@
     sec.hidden = false;
     var out = q('[data-impact-draft]'); clear(out);
     if (!item.isPublished && !item.publishedVersion) { out.appendChild(h('p', { class: 'bi-empty', text: 'Not published yet: no report reads it, so nothing can break.' })); return; }
+    var mine = seq;
     B.api('GET', path() + '/impact').then(function (im) {
+      if (mine !== seq) { return; }
       out.appendChild(h('h3', { text: 'If you publish the draft' })); out.appendChild(impactBlock(im));
       if (im.renamable && item && item.can && (item.can.publish || item.can.approve)) {
         out.appendChild(button('Publish and update the reports', function () { publishRenamed(item.can.approve && item.status === 'proposed' ? 'approve' : 'publish'); }, 'btn-accent'));
@@ -243,7 +249,9 @@
   }
   function lineage() {
     var sec = q('[data-sec-lineage]'), box = q('[data-lineage]');
+    var mine = seq;
     B.api('GET', path() + '/lineage').then(function (l) {
+      if (mine !== seq) { return; }                                   // the item was drawn again since: a newer answer is on its way
       clear(box);
       if (l.layer) { layerLineage(l, box); sec.hidden = false; return; }
       if (l.note) { box.appendChild(h('p', { class: 'bi-empty', text: l.note })); }
@@ -272,7 +280,7 @@
         if (l.hidden) { box.appendChild(h('p', { class: 'text-muted-d', text: l.hidden + ' more report' + (l.hidden === 1 ? '' : 's') + ' you cannot open.' })); }
       }
       sec.hidden = false;
-    }).catch(function () { sec.hidden = true; });
+    }).catch(function () { if (mine === seq) { sec.hidden = true; } });
   }
 
   // -- a refusal over a dataset change, and the warnings of a publish ---------------------------------------------------------
@@ -309,6 +317,7 @@
 
   document.addEventListener('bi:item', function (ev) {
     item = ev.detail;
+    seq++;                                       // each loader draws only the answer to the newest item: a slow older one is dropped
     item.isPublished = item.publishedVersion > 0;
     var f = q('[data-force]'); if (f) { f.hidden = true; clear(f); }
     warnings(ev.detail);

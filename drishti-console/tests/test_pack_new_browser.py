@@ -355,6 +355,15 @@ def test_a_draft_is_saved_and_resumed(browser, pack_console, tmp_path):
     page2.close()
 
 
+def enter_next(page, step):
+    """Enter on Next, by keyboard, once it can be pressed (it is disabled while the step plans), and the next step shown: a key pressed on a
+    disabled button, or before the step's form is drawn, does nothing."""
+    page.locator("[data-next]:not([disabled])").wait_for()
+    page.focus("[data-next]")
+    page.keyboard.press("Enter")
+    page.locator(f"[data-step='{step}']:not([hidden])").wait_for()
+
+
 def test_keyboard_only_through_the_steps(browser, pack_console):
     url, _ = pack_console
     page = browser.new_page()
@@ -364,14 +373,12 @@ def test_keyboard_only_through_the_steps(browser, pack_console):
     page.focus("[data-paste-add]")
     page.keyboard.press("Enter")
     page.locator("[data-sources]:has-text('pasted')").wait_for()
-    page.focus("[data-next]")
-    page.keyboard.press("Enter")
+    enter_next(page, 2)
     page.locator(".pk-card").first.wait_for()
     assert page.evaluate("document.activeElement.closest('[data-step]') && document.activeElement.closest('[data-step]').dataset.step") == "2"   # focus moved into the step
-    page.focus("[data-next]")
-    page.keyboard.press("Enter")
-    page.focus("[data-next]")
-    page.keyboard.press("Enter")
+    enter_next(page, 3)
+    page.locator("[data-pack-form] [data-pack-field='name']").wait_for()          # the step's form is drawn before Enter moves on
+    enter_next(page, 4)
     page.locator(".pk-item").first.wait_for(timeout=20000)
     page.focus(".pk-item")
     page.keyboard.press("ArrowDown")

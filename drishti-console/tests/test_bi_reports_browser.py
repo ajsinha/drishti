@@ -181,6 +181,8 @@ def test_show_the_rows_and_show_as_a_table(stack, browser):
     open_report(page, REPORT)
     settled(page)
     click_mark(page, "by-desk", "DESK-EQD")
+    expect(page.locator('[data-chip="selection"]')).to_contain_text("DESK-EQD")                      # the selection is made and the visuals answered it
+    settled(page)
     page.click('[data-visual="by-desk"] [data-act="rows"]')
     page.wait_for_selector('[data-visual="by-desk"] table tbody tr')
     expect(page.locator('[data-visual="by-desk"] table tbody tr')).to_have_count(20)                     # the 20 trades of that desk, every column of the table
