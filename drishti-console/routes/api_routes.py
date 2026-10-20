@@ -199,7 +199,7 @@ async def patch_settings(request: Request):
         out = await request.app.state.backend.patch_settings(body, me)
     except BackendError as e:
         return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
-    request.app.state.user_settings.forget(me.user)
+    request.app.state.user_settings.forget(me.user, request)
     return out
 
 

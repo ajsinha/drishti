@@ -23,6 +23,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from core import forms
+from core.settings import changed_at
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes.common import ident, packs, render
@@ -67,7 +68,7 @@ async def save(request: Request):
         return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
     me = ident(request)
     name, path = str(body.get("name", "")).strip(), str(body.get("path", ""))
-    s = await request.app.state.user_settings.get(request.app.state.backend, me)
+    s = await request.app.state.user_settings.get(request.app.state.backend, me, changed_at(request))
     kept = [x for x in s.get("savedSearches") or [] if x.get("name", "").lower() != name.lower()]
     if body.get("forget"):
         entry = []
@@ -77,7 +78,7 @@ async def save(request: Request):
         out = await request.app.state.backend.patch_settings({"savedSearches": (entry + kept)[:50]}, me)
     except BackendError as e:
         return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
-    request.app.state.user_settings.forget(me.user if me else "")
+    request.app.state.user_settings.forget(me.user if me else "", request)
     return JSONResponse({"saved": out.get("savedSearches", [])})
 
 

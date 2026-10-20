@@ -157,7 +157,9 @@ class AuthGate(BaseHTTPMiddleware):
         request.state.settings = None
         request.state.bi_me = None
         if request.state.identity is not None and not path.startswith(("/static/", PYODIDE, EMBED, "/api/", "/healthz", "/readyz")):
-            request.state.settings = await request.app.state.user_settings.get(request.app.state.backend, request.state.identity)
+            from core.settings import changed_at
+            request.state.settings = await request.app.state.user_settings.get(request.app.state.backend, request.state.identity,
+                                                                               changed_at(request))
             if request.app.state.bi_on and not path.startswith("/bi/api/"):
                 request.state.bi_me = await request.app.state.bi_me.get(request.app.state.backend, request.state.identity)
             try:
@@ -182,6 +184,11 @@ class AuthGate(BaseHTTPMiddleware):
         if request.state.asof_cleared:
             response.delete_cookie(asof.COOKIE, path="/")
             response.delete_cookie(asof.KNOWN_COOKIE, path="/")
+        stamp = getattr(request.state, "settings_changed_at", None)
+        if stamp:                                  # a setting changed: every worker reads the settings again (core/settings.py)
+            from core.settings import CHANGED_COOKIE
+            response.set_cookie(CHANGED_COOKIE, f"{stamp:.6f}", path="/", httponly=True, samesite="lax",
+                                secure=bool(getattr(request.app.state.auth, "secure_cookie", False)))
         return response
 
 

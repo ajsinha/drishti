@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **Fixed: a theme (or any personal setting) changed on one page could come back as the old one on the next page** when the console runs several worker processes (four on Windows by default): each worker kept the user's settings for 30 s, and a change cleared only the cache of the worker that saved it. A change now stamps the browser (`drishti_settings_at` cookie), and a worker re-reads the settings when its copy is older than the stamp; with four workers, 5 of 24 pages came back in the old theme before the fix and 0 after. `test_settings_workers.py`. Found on the product owner's Windows machine (Green → netting set → SIMM came up Blue).
+
 - **Added: `lake demo` says how far a table has got**: every ten committed days a line `trading/trade_endur: committed 20/60 days, 90,023 rows so far (through 2026-08-19)`, besides the table's closing line and `build_demo_lakes.py`'s heartbeat.
 
 - **Faster: `lake build` and `lake demo` with the deltalake writer make one commit per business date** (every partition of the date in it; one per partition only with `overwrite-partitions`) and a checkpoint every ten commits. Sixty days of `trade_endur` (five product types) were 300 commits, each replaying the whole log (98 s on Linux, far longer on Windows, where each log file is opened and scanned); now 60 commits with a short log, the same rows.

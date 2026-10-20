@@ -191,7 +191,7 @@ async def save_settings(request: Request):
         await request.app.state.backend.patch_settings(changes, me)
     except BackendError as e:
         return RedirectResponse(f"/account?error={quote(e.detail)}#settings", status_code=303)
-    request.app.state.user_settings.forget(me.user)
+    request.app.state.user_settings.forget(me.user, request)
     return RedirectResponse("/account?saved=1#settings", status_code=303)
 
 

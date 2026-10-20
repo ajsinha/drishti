@@ -22,6 +22,7 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from core import about_index, asof, collab as collab_core, compare_side, controls
+from core.settings import changed_at
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes import api_routes, history_routes
@@ -43,7 +44,7 @@ async def home(request: Request, error: str | None = None):
 async def pin(request: Request, kind: str, id_: str):
     """Pins an entity to the terminal home, or unpins it (W21)."""
     me = ident(request)
-    s = await request.app.state.user_settings.get(request.app.state.backend, me)
+    s = await request.app.state.user_settings.get(request.app.state.backend, me, changed_at(request))
     pins = [p for p in s.get("pinned") or [] if not (p.get("kind") == kind and p.get("id") == id_)]
     if len(pins) == len(s.get("pinned") or []):
         pins = ([{"kind": kind, "id": id_}] + pins)[:20]
@@ -51,7 +52,7 @@ async def pin(request: Request, kind: str, id_: str):
         await request.app.state.backend.patch_settings({"pinned": pins}, me)
     except BackendError:
         pass
-    request.app.state.user_settings.forget(me.user if me else "")
+    request.app.state.user_settings.forget(me.user if me else "", request)
     return RedirectResponse(f"/v/{quote(kind)}/{quote(id_)}", status_code=303)
 
 
