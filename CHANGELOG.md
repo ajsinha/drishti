@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **Faster: `lake build` and `lake demo` with the deltalake writer make one commit per business date** (every partition of the date in it; one per partition only with `overwrite-partitions`) and a checkpoint every ten commits. Sixty days of `trade_endur` (five product types) were 300 commits, each replaying the whole log (98 s on Linux, far longer on Windows, where each log file is opened and scanned); now 60 commits with a short log, the same rows.
+
 - **Added: `build_demo_lakes.py` says it is alive**: every 30 s (`DRISHTI_HEARTBEAT_SECONDS`) a line with the step, the time so far, the lake's size and the table being written, so a long `lake demo` or `lake build` never looks stuck.
 - **Fixed (QA1-205): a `knownAt` before the data names the right thing.** `DRS-1013` now says nothing of the entity in that window was
   known at that instant, and names its days with data *as known now*, which may have been loaded later (*ask without knownAt, or with a
