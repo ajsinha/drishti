@@ -100,6 +100,46 @@ public final class DatasetService {
         return sources.calendar();
     }
 
+    /** The business dates the datasets' sources hold ({@code every}: each source listed all of them; else only the first and newest dates some told). */
+    public record HeldDates(java.util.NavigableSet<java.time.LocalDate> dates, boolean every) {}
+
+    /**
+     * The dates the tables of {@code sets} read hold data for, from what their connectors already keep (no data read): a statement for a date without data
+     * names the nearest dates with some (QA3B-02). A table without a kind (composed, derived) is skipped; a connector that cannot say adds nothing.
+     */
+    public HeldDates heldDates(java.util.Collection<Dataset> sets) {
+        java.util.TreeSet<java.time.LocalDate> out = new java.util.TreeSet<>();
+        boolean every = true;
+        for (Dataset d : sets) {
+            for (Dataset.Table t : d.tables().values()) {
+                if (t.kind() == null || t.kind().isBlank()) {
+                    continue;
+                }
+                List<com.ash.drishti.api.SourcePlugin> ps;
+                try {
+                    ps = sources.plugins(t.connector(), t.kind());
+                } catch (RuntimeException e) {
+                    continue;                                                 // a connector that is not running: nothing to tell
+                }
+                for (com.ash.drishti.api.SourcePlugin p : ps) {
+                    try {
+                        Optional<java.util.NavigableSet<java.time.LocalDate>> all = p.heldDates(t.kind());
+                        if (all.isPresent()) {
+                            out.addAll(all.get());
+                            continue;
+                        }
+                        every = false;
+                        p.earliestDate(t.kind()).ifPresent(out::add);
+                        p.latestDate(t.kind()).ifPresent(out::add);
+                    } catch (RuntimeException e) {
+                        every = false;                                        // a table that cannot be read now says nothing of its dates
+                    }
+                }
+            }
+        }
+        return new HeldDates(java.util.Collections.unmodifiableNavigableSet(out), every);
+    }
+
     /** The service that asks the sources of composed and derived datasets (set once at start-up). */
     public void attach(FrameService frames) {
         this.frames = frames;

@@ -17,6 +17,7 @@ package com.ash.drishti.server.dist;
 
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.server.bi.DatasetService;
 import com.ash.drishti.server.bi.layer.ModelDef;
 import com.ash.drishti.server.bi.report.BiReportService;
 import com.ash.drishti.server.bi.report.FieldParams;
@@ -136,6 +137,7 @@ public final class StatementService {
         }
         s.put("limit", limits.maxRows() + 1);
         Map<String, String> tokens = tokens(st, who, s, period, spec, day);
+        java.util.Set<String> counts = counts(st);
         List<List<List<StatementLayout.Band>>> laid = new ArrayList<>();
         List<ExportDoc.Section> sections = new ArrayList<>();
         List<String> cut = new ArrayList<>();
@@ -147,7 +149,7 @@ public final class StatementService {
             visuals.sort(Comparator.comparingInt((Report.Visual v) -> v.at() == null ? 0 : v.at().y()).thenComparingInt(v -> v.at() == null ? 0 : v.at().x()));
             List<BiExporter.Built> answers = ask(who, st.id(), yaml, p, visuals, s);
             for (int i = 0; i < visuals.size(); i++) {
-                answers.set(i, trimmed(visuals.get(i), answers.get(i), cut));
+                answers.set(i, carded(visuals.get(i), trimmed(visuals.get(i), answers.get(i), cut), counts));
                 if (asOf == null && answers.get(i) != null) {
                     asOf = answers.get(i).asOf();
                 }
@@ -184,14 +186,60 @@ public final class StatementService {
         }
         notes.addAll(BiExporter.filters(report, s));
         notes.addAll(cut);
-        String hint = asOf == null && empty(answersOf) ? "No data is held for " + ("none".equals(spec.period()) ? day.toString() : period.label() + " (" + period.from()
-                + " to " + period.to() + ")") + ": every band is empty. Choose a date the data covers." : null;
+        String hint = asOf == null && empty(answersOf) ? hint(st, spec, period, s, day) : null;
         if (hint != null) {
             notes.add(0, hint);
         }
-        String sub = (!"none".equals(spec.period()) ? period.label() + " · " : "") + "Data as of " + (asOf == null ? day.toString() : asOf) + " · " + out.pages().size() + " pages";
+        String sub = (!"none".equals(spec.period()) ? period.label() + " · " : "") + "Data as of " + (asOf == null ? day.toString() : asOf) + " · " + pages(out.pages().size());
         ExportDoc doc = new ExportDoc(st.title(), sub, notes, sections);
         return new Run(st.title(), spec, out, doc, tokens, "none".equals(spec.period()) ? "" : period.label(), cut, hint);
+    }
+
+    /**
+     * What a run that found no data says (QA2-12, QA3B-02): the dates its bands actually read (the period's last day, every day of it, or the date asked), never
+     * the whole period when only its last day was read, and the nearest dates before and after them that hold data, when the sources can say.
+     */
+    private String hint(BiReportService.Statement st, StatementSpec spec, StatementSpec.Period period, JsonNode state, LocalDate day) {
+        LocalDate from = dateOr(state.path("dates").path("from"), day);
+        LocalDate to = dateOr(state.path("dates").path("to"), from);
+        StringBuilder b = new StringBuilder("No data is held for ");
+        b.append(from.equals(to) ? to.toString() : from + " to " + to);
+        if (!"none".equals(spec.period())) {
+            b.append(from.equals(to) ? ", the date" : ", the dates").append(" this ").append(period.label()).append(" statement reads");
+        }
+        b.append(": every band is empty.");
+        DatasetService.HeldDates held;
+        try {
+            held = reports.heldDates(st);
+        } catch (RuntimeException e) {
+            held = new DatasetService.HeldDates(new java.util.TreeSet<>(), false);
+        }
+        java.util.NavigableSet<LocalDate> dates = held.dates();
+        if (!dates.isEmpty() && held.every()) {
+            LocalDate before = dates.lower(from);
+            LocalDate after = dates.higher(to);
+            List<String> near = new ArrayList<>();
+            if (before != null) {
+                near.add(before + " (before)");
+            }
+            if (after != null) {
+                near.add(after + " (after)");
+            }
+            if (!near.isEmpty()) {
+                b.append(near.size() == 1 ? " The nearest date with data is " : " The nearest dates with data are ").append(String.join(" and ", near)).append('.');
+            }
+        } else if (!dates.isEmpty()) {
+            b.append(dates.size() == 1 ? " Data is held for " + dates.first() + "." : " The data held runs from " + dates.first() + " to " + dates.last() + ".");
+        }
+        return b.append(" Choose a date the data covers.").toString();
+    }
+
+    private static LocalDate dateOr(JsonNode n, LocalDate dflt) {
+        try {
+            return n.isTextual() ? LocalDate.parse(n.asText()) : dflt;
+        } catch (java.time.format.DateTimeParseException e) {
+            return dflt;
+        }
     }
 
     /** True when no band that reads data has a value: no row, or only rows with nothing in them but a zero count (QA2-12). */
@@ -202,13 +250,18 @@ public final class StatementService {
                     continue;
                 }
                 for (List<Object> row : b.section().rows()) {
-                    if (row.stream().anyMatch(v -> v != null && !(v instanceof Number n && n.doubleValue() == 0))) {
+                    if (row.stream().anyMatch(v -> v != null && !"–".equals(v) && !(v instanceof Number n && n.doubleValue() == 0))) {
                         return false;
                     }
                 }
             }
         }
         return true;
+    }
+
+    /** {@code 1 page}, {@code 2 pages}: the count with its noun, singular for one (the subject of a mail, the audit, QA3B-09). */
+    public static String pages(int n) {
+        return n + (n == 1 ? " page" : " pages");
     }
 
     /** The statement as a PDF file. */
@@ -380,6 +433,80 @@ public final class StatementService {
         ExportDoc.Section kept = new ExportDoc.Section(s.id(), s.title(), s.type(), s.columns(), s.rows().subList(0, limits.maxRows()),
                 s.note() == null ? says : says + " " + s.note(), s.masked(), s.kind());
         return new BiExporter.Built(kept, b.asOf());
+    }
+
+    /** The measures of the statement's datasets that count ({@code count(...)}, {@code distinct(...)}): a count of nothing reads 0, never a dash (QA3B-08). */
+    static java.util.Set<String> counts(BiReportService.Statement st) {
+        java.util.Set<String> out = new java.util.HashSet<>();
+        for (com.ash.drishti.server.bi.dataset.Dataset d : st.datasets()) {
+            d.measures().forEach((name, m) -> {
+                if (isCount(m.expr())) {
+                    out.add(BiExporter.shortName(name));
+                }
+            });
+        }
+        return out;
+    }
+
+    /** True for an expression that is one count: {@code count(trade)}, {@code distinct(trade.BOOK)}, the call spanning the whole expression. */
+    static boolean isCount(String expr) {
+        if (expr == null) {
+            return false;
+        }
+        String e = expr.strip();
+        String lower = e.toLowerCase(Locale.ROOT);
+        String fn = lower.startsWith("count") ? "count" : lower.startsWith("distinct") ? "distinct" : null;
+        if (fn == null || !e.endsWith(")")) {
+            return false;
+        }
+        String rest = e.substring(fn.length()).stripLeading();
+        if (!rest.startsWith("(")) {
+            return false;
+        }
+        int depth = 0;
+        for (int i = 0; i < rest.length(); i++) {
+            char c = rest.charAt(i);
+            if (c == '(') {
+                depth++;
+            } else if (c == ')' && --depth == 0) {
+                return i == rest.length() - 1;                                 // the first call closes at the very end: nothing is added to it
+            }
+        }
+        return false;
+    }
+
+    /**
+     * A card's answer with its empty value made one rule for the preview, the PDF and Excel (QA3B-08): a count of nothing is 0, any other value of nothing (a
+     * sum of no rows) is a dash; whether no row came back, one empty row, or the date was refused as later than the business date (DRS-9020: no data is held
+     * for it, so nothing is counted). A masked value stays the mask; a card that failed for another reason keeps its "Not available" note and its dash.
+     */
+    static BiExporter.Built carded(Report.Visual v, BiExporter.Built b, java.util.Set<String> counts) {
+        if (b != null && "card".equals(v.type()) && b.section().columns().isEmpty() && b.section().note() != null && b.section().note().contains("DRS-9020")
+                && !v.well("values").isEmpty()) {
+            String measure = BiExporter.shortName(v.well("values").get(0));
+            List<Object> row = new ArrayList<>(List.of(counts.contains(measure) ? (Object) 0L : "–"));
+            ExportDoc.Section s = b.section();
+            return new BiExporter.Built(new ExportDoc.Section(s.id(), s.title(), ExportDoc.CARD, List.of(measure), List.of(row), s.note(), List.of(), v.type()), b.asOf());
+        }
+        if (b == null || !ExportDoc.CARD.equals(b.section().type()) || b.section().columns().isEmpty()) {
+            return b;
+        }
+        ExportDoc.Section s = b.section();
+        String measure = v.well("values").isEmpty() ? s.columns().get(0) : BiExporter.shortName(v.well("values").get(0));
+        int mi = Math.max(0, s.columns().indexOf(measure));
+        List<Object> first = s.rows().isEmpty() ? null : s.rows().get(0);
+        Object value = first == null || mi >= first.size() ? null : first.get(mi);
+        if ((value != null && !"".equals(value)) || s.masked().contains(s.columns().get(mi))) {
+            return b;
+        }
+        List<Object> row = new ArrayList<>(java.util.Collections.nCopies(s.columns().size(), null));
+        if (first != null) {
+            for (int c = 0; c < Math.min(first.size(), row.size()); c++) {
+                row.set(c, first.get(c));
+            }
+        }
+        row.set(mi, counts.contains(s.columns().get(mi)) || counts.contains(measure) ? (Object) 0L : "–");
+        return new BiExporter.Built(new ExportDoc.Section(s.id(), s.title(), s.type(), s.columns(), List.of(row), s.note(), s.masked(), s.kind()), b.asOf());
     }
 
     private StatementLayout.Band band(Report.Visual v, BiExporter.Built b, Map<String, String> tokens) {

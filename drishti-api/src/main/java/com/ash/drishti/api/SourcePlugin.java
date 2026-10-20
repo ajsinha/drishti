@@ -116,6 +116,15 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
+     * Every business date this source holds the kind for, oldest first, or empty when it cannot say. Must be cheap, as {@link #latestDate}
+     * (what the source already keeps: a lake's layout, a folder per date): a statement for a date without data names the nearest dates that
+     * have some (STATEMENTS.md section 6).
+     */
+    default Optional<java.util.NavigableSet<java.time.LocalDate>> heldDates(String kind) {
+        return Optional.empty();
+    }
+
+    /**
      * The version of one business date's data of the kind (a Delta table's files for that date), or the kind's {@link #dataVersion(String)}
      * when the source cannot be more precise: a later day appended leaves an earlier day's stored layer valid.
      */

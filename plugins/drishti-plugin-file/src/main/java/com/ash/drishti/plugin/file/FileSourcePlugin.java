@@ -222,6 +222,16 @@ public final class FileSourcePlugin implements SourcePlugin {
                 : null;
     }
 
+    /** The dates the kind has a dated {@code <kind>.jsonl} for (the folders already scanned; no data read); empty when it has none. */
+    @Override
+    public Optional<java.util.NavigableSet<LocalDate>> heldDates(String kind) {
+        java.util.NavigableSet<LocalDate> held = jsonl.get(kind);
+        if (held == null || held.tailSet(UNDATED, false).isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(java.util.Collections.unmodifiableNavigableSet(new java.util.TreeSet<>(held.tailSet(UNDATED, false))));
+    }
+
     @Override
     public java.util.Map<LocalDate, Long> inventory(String kind, int maxDates) {
         java.util.NavigableSet<LocalDate> held = jsonl.get(kind);

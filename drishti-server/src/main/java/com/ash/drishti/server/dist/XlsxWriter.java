@@ -204,13 +204,15 @@ public final class XlsxWriter {
             r++;
         }
         r++;
-        rows.append(row(r, text("A", r, "Sheet", S_HEAD) + text("B", r, "Rows", S_HEAD)));
+        rows.append(row(r, text("A", r, "Sheet", S_HEAD) + text("B", r, "Rows", S_HEAD) + text("C", r, "Notes", S_HEAD)));
         r++;
         for (ExportDoc.Section s : doc.sections()) {
-            rows.append(row(r, text("A", r, s.title(), 0) + number("B", r, s.rows().size(), S_INT)));
+            String note = s.note() == null || s.note().isBlank() ? "" : text("C", r, s.note(), 0);    // every note the PDF draws by the band (QA3B-10)
+            rows.append(row(r, text("A", r, s.title(), 0) + number("B", r, s.rows().size(), S_INT) + note));
             r++;
         }
-        return XML + "<worksheet " + MAIN + "><cols><col min=\"1\" max=\"1\" width=\"60\" customWidth=\"1\"/></cols><sheetData>" + rows + "</sheetData></worksheet>";
+        return XML + "<worksheet " + MAIN + "><cols><col min=\"1\" max=\"1\" width=\"60\" customWidth=\"1\"/><col min=\"3\" max=\"3\" width=\"80\" customWidth=\"1\"/></cols><sheetData>"
+                + rows + "</sheetData></worksheet>";
     }
 
     private static String sheet(ExportDoc.Section s, boolean chart, PrintSetup print) {
@@ -219,14 +221,24 @@ public final class XlsxWriter {
             b.append("<sheetPr><pageSetUpPr fitToPage=\"1\"/></sheetPr>");                       // printed or saved as PDF, the table and its chart share one page's width
         }
         b.append("<sheetViews><sheetView workbookViewId=\"0\"><pane ySplit=\"1\" topLeftCell=\"A2\" activePane=\"bottomLeft\" state=\"frozen\"/></sheetView></sheetViews>");
+        // the section's note (rows left out, masked for you, not sorted) next to the table, as the PDF draws it by the band (QA3B-10): to the right of the column
+        // titles, or under the data when a chart sits to the right
+        String note = s.note() == null || s.note().isBlank() ? null : s.note();
+        int noteCol = s.columns().size() + 1;
         b.append("<cols>");
         for (int c = 0; c < s.columns().size(); c++) {
             b.append("<col min=\"").append(c + 1).append("\" max=\"").append(c + 1).append("\" width=\"").append(width(s, c)).append("\" customWidth=\"1\"/>");
+        }
+        if (note != null && !chart) {
+            b.append("<col min=\"").append(noteCol + 1).append("\" max=\"").append(noteCol + 1).append("\" width=\"80\" customWidth=\"1\"/>");
         }
         b.append("</cols><sheetData>");
         StringBuilder head = new StringBuilder();
         for (int c = 0; c < s.columns().size(); c++) {
             head.append(text(col(c), 1, s.columns().get(c), S_HEAD));
+        }
+        if (note != null && !chart) {
+            head.append(text(col(noteCol), 1, note, S_NOTE));
         }
         b.append(row(1, head.toString()));
         int r = 2;
@@ -236,6 +248,9 @@ public final class XlsxWriter {
                 cells.append(cell(col(c), r, s.shown(values, c)));
             }
             b.append(row(r++, cells.toString()));
+        }
+        if (note != null && chart) {
+            b.append(row(r + 1, text("A", r + 1, note, S_NOTE)));
         }
         b.append("</sheetData>");
         if (print != null) {

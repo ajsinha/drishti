@@ -207,6 +207,15 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return readableLayout(kind, null).filter(l -> !l.files().isEmpty()).map(l -> l.files().firstKey());
     }
 
+    /** Every business date of the kind's table, from its latest layout (cached; no data read). */
+    @Override
+    public Optional<java.util.NavigableSet<LocalDate>> heldDates(String kind) {
+        if (!tables.containsKey(kind)) {
+            return Optional.empty();
+        }
+        return readableLayout(kind, null).map(l -> java.util.Collections.unmodifiableNavigableSet(new java.util.TreeSet<>(l.files().keySet())));
+    }
+
     /** A table's versions answer {@code knownAt}. */
     @Override
     public Map<LocalDate, Long> inventory(String kind, int maxDates) {

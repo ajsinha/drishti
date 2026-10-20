@@ -77,12 +77,14 @@ public class StatementController {
         StatementService.Run run = statements.run(p, yaml == null ? id : null, yaml, body.path("page").asText(""), body.path("state").isObject() ? body.get("state") : null,
                 body.path("date").asText(""));
         byte[] bytes = f == ContentExporter.Format.PDF ? statements.pdf(run) : statements.xlsx(run);
-        audit.record(p.user(), "statement", "report/" + (yaml == null ? id : "draft"), f.extension() + " · " + run.pages().pages().size() + " pages · " + bytes.length + " bytes");
+        audit.record(p.user(), "statement", "report/" + (yaml == null ? id : "draft"), f.extension() + " · " + StatementService.pages(run.pages().pages().size()) + " · " + bytes.length + " bytes");
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(f.contentType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(StatementService.filename(run, p, f), StandardCharsets.UTF_8).build().toString())
                 .header("X-Statement-Pages", String.valueOf(run.pages().pages().size()))
                 // each table that stops at max-rows, in words, as the preview's cut (URL-encoded UTF-8): a script can tell a cut statement (QA2-204)
                 .header("X-Statement-Cut", run.cut().stream().map(c -> java.net.URLEncoder.encode(c, StandardCharsets.UTF_8)).toArray(String[]::new))
+                // no data is held for the dates the statement reads, in words, as the preview's hint (URL-encoded UTF-8; QA3B-09)
+                .header("X-Statement-Hint", run.hint() == null ? new String[0] : new String[] {java.net.URLEncoder.encode(run.hint(), StandardCharsets.UTF_8)})
                 .body(bytes);
     }
 }

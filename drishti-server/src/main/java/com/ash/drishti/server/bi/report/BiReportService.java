@@ -296,7 +296,22 @@ public final class BiReportService {
     }
 
     /** A report as a statement reads it (2.6.0): its id (null for draft YAML), title, parsed form and its model's parameters (empty on a dataset). */
-    public record Statement(String id, String title, Report report, Map<String, com.ash.drishti.server.bi.layer.ModelDef.Parameter> params) {}
+    /** A report ready for its statement: its parameters, and the engine datasets it reads (their measures and tables, for counts and the dates held). */
+    public record Statement(String id, String title, Report report, Map<String, com.ash.drishti.server.bi.layer.ModelDef.Parameter> params, List<Dataset> datasets) {
+
+        public Statement {
+            datasets = datasets == null ? List.of() : List.copyOf(datasets);
+        }
+
+        public Statement(String id, String title, Report report, Map<String, com.ash.drishti.server.bi.layer.ModelDef.Parameter> params) {
+            this(id, title, report, params, List.of());
+        }
+    }
+
+    /** The business dates the statement's datasets hold, from what their connectors keep (no data read; QA3B-02). */
+    public DatasetService.HeldDates heldDates(Statement st) {
+        return datasets.heldDates(st.datasets());
+    }
 
     /**
      * The stored report {@code id} the caller may read, or (an author's preview) the draft {@code yaml}, for a statement; refused with its first error when it
@@ -316,7 +331,22 @@ public final class BiReportService {
         }
         String t = l.parsed().report().title();
         return new Statement(l.item() == null ? null : l.item().id(), t == null || t.isBlank() ? (l.item() == null ? l.parsed().report().name() : l.item().title()) : t,
-                l.parsed().report(), l.params());
+                l.parsed().report(), l.params(), datasetsOf(l));
+    }
+
+    private static List<Dataset> datasetsOf(Loaded l) {
+        List<Dataset> out = new ArrayList<>();
+        if (l.dataset() != null) {
+            out.add(l.dataset());
+        }
+        if (l.sets() != null) {
+            l.sets().all().values().forEach(e -> {
+                if (e.dataset() != null && !out.contains(e.dataset())) {
+                    out.add(e.dataset());
+                }
+            });
+        }
+        return out;
     }
 
     /** The model's engine dataset with the report's own measures added (what the visuals are checked and drawn against). */

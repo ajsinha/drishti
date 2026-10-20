@@ -102,6 +102,11 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public Optional<java.util.NavigableSet<java.time.LocalDate>> heldDates(String kind) {
+        return serves(kind) ? delegate.heldDates(kind) : Optional.empty();
+    }
+
+    @Override
     public com.ash.drishti.api.DateCoverage coverage(String kind, AsOf asOf) {
         return serves(kind) ? delegate.coverage(kind, asOf) : com.ash.drishti.api.DateCoverage.NOT_HELD;
     }

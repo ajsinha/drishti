@@ -511,6 +511,17 @@ class StatementApiTest {
         assertThat(problems).contains("DRS-9038");
     }
 
+    /** An Excel file's parts by name ({@code xl/worksheets/sheet1.xml} is the About sheet). */
+    static Map<String, String> unzip(byte[] xlsx) throws Exception {
+        Map<String, String> parts = new HashMap<>();
+        try (ZipInputStream z = new ZipInputStream(new ByteArrayInputStream(xlsx))) {
+            for (ZipEntry e = z.getNextEntry(); e != null; e = z.getNextEntry()) {
+                parts.put(e.getName(), new String(z.readAllBytes(), StandardCharsets.UTF_8));
+            }
+        }
+        return parts;
+    }
+
     /** The texts of a preview's pages with the given role (a card's value is "value", a table cell "cell"). */
     static List<String> texts(JsonNode preview, String role) {
         List<String> out = new ArrayList<>();
@@ -525,15 +536,37 @@ class StatementApiTest {
     @Test @Order(4)
     void aDateWithNoDataHintsSoAndACardWithNoValueReadsADash() throws Exception {
         // QA2-12, QA2-14: a statement for a date no data covers says so; its cards read a dash (a count reads 0), never blank
+        // QA3B-02: the hint names the date the statement read (previous-month, dates: end, so the month's last day), never the whole month, and the nearest
+        // date the data holds (the lake holds 2026-09-30 only)
+        Map<String, String> hints = Map.of("9999-12-31", "No data is held for 9999-11-30, the date this November 9999 statement reads: every band is empty."
+                + " The nearest date with data is 2026-09-30 (before). Choose a date the data covers.",
+                "1999-01-01", "No data is held for 1998-12-31, the date this December 1998 statement reads: every band is empty."
+                + " The nearest date with data is 2026-09-30 (after). Choose a date the data covers.");
         for (String date : List.of("9999-12-31", "1999-01-01")) {
             JsonNode preview = ok(call("POST", "/api/v1/bi/reports/statement/preview", as("hfx1", "st-head"), Map.of("report", REPORT, "page", "statement",
                     "date", date)));
-            assertThat(preview.path("hint").asText()).as(date).startsWith("No data is held for ").contains("every band is empty");
+            assertThat(preview.path("hint").asText()).as(date).isEqualTo(hints.get(date));
             List<String> cards = texts(preview, "value");
             assertThat(cards).as(date + ": Notional, MTM, Trades").hasSize(3).noneMatch(String::isBlank);
             assertThat(cards.subList(0, 2)).as("a sum of nothing").containsExactly("–", "–");
-            assertThat(cards.get(2)).as("a count of nothing: its number, or a dash when no row came back").isIn("0", "–");
+            assertThat(cards.get(2)).as("a count of nothing is 0, on every date (QA3B-08)").isEqualTo("0");
         }
+        // QA3B-02: a date inside a month the data holds (a month's statement, its last day read) names that date, not the month, and the nearest day held
+        String monthly = STATEMENT.replace("report: monthly-statement", "report: month-statement").replace("period: previous-month", "period: month");
+        JsonNode inside = ok(call("POST", "/api/v1/bi/reports/statement/preview", wes(), Map.of("yaml", monthly, "page", "statement", "date", "2026-09-29")));
+        assertThat(inside.path("hint").asText()).isEqualTo("No data is held for 2026-09-29, the date this September 2026 statement reads: every band is empty."
+                + " The nearest date with data is 2026-09-30 (after). Choose a date the data covers.").doesNotContain("2026-09-01 to");
+        assertThat(texts(inside, "value").get(2)).as("a count of nothing is 0 here too").isEqualTo("0");
+        // QA3B-08: the Excel file reads the same: a count of nothing is 0 (a number), a value of nothing a dash; QA3B-09: "1 page", never "1 pages"
+        MvcResult x = call("POST", "/api/v1/bi/reports/statement/file", as("hfx1", "st-head"), Map.of("report", REPORT, "page", "statement", "format", "xlsx",
+                "date", "9999-12-31"));
+        assertThat(x.getResponse().getStatus()).isEqualTo(200);
+        assertThat(java.net.URLDecoder.decode(x.getResponse().getHeader("X-Statement-Hint"), StandardCharsets.UTF_8)).isEqualTo(hints.get("9999-12-31"));
+        Map<String, String> sheets = unzip(x.getResponse().getContentAsByteArray());
+        String about = sheets.get("xl/worksheets/sheet1.xml");
+        assertThat(about).contains("· 2 pages<").contains(hints.get("9999-12-31"));          // the matrix starts its own page; "1 page" in StatementLayoutTest
+        assertThat(sheets.get("xl/worksheets/sheet2.xml")).as("Notional").contains(">–<");
+        assertThat(sheets.get("xl/worksheets/sheet4.xml")).as("Trades").contains("<v>0</v>").doesNotContain(">–<");
         JsonNode held = ok(call("POST", "/api/v1/bi/reports/statement/preview", as("hfx1", "st-head"), Map.of("report", REPORT, "page", "statement",
                 "state", Map.of("dates", Map.of("from", "2026-10-01", "to", "2026-10-01")))));
         assertThat(held.path("hint").isNull()).as("a date with data has no hint").isTrue();
@@ -582,6 +615,16 @@ class StatementApiTest {
         String all = String.join(" ", texts(preview, null));
         assertThat(tradeIds(all)).as("every trade, drawn unsorted rather than No rows.").isEqualTo(expectedIds(""));
         assertThat(all).contains("Not sorted: 'MTM' is masked for you").doesNotContain("No rows.");
+        // QA3B-10: the analyst's Excel file carries every note the PDF draws: on the About sheet and next to each table
+        MvcResult x = call("POST", "/api/v1/bi/reports/statement/file", as("ana1", "st-analyst"), Map.of("report", sorted, "page", "statement", "format", "xlsx",
+                "state", Map.of("dates", Map.of("from", "2026-10-01", "to", "2026-10-01"))));
+        assertThat(x.getResponse().getStatus()).isEqualTo(200);
+        Map<String, String> sheets = unzip(x.getResponse().getContentAsByteArray());
+        String about = sheets.get("xl/worksheets/sheet1.xml");
+        assertThat(about).contains(">Notes<").contains("Masked for you: MTM.").contains("Not sorted: 'MTM' is masked for you");
+        String positions = sheets.values().stream().filter(s -> s.contains("TRADE_ID") && s.contains("<pageSetup")).findFirst().orElseThrow();
+        assertThat(positions).as("the note next to the table").contains("Masked for you: MTM.").contains("Not sorted: 'MTM' is masked for you");
+        assertThat(sheets.get("xl/worksheets/sheet3.xml")).as("the MTM card's sheet").contains("Masked for you: MTM.");
         ok(call("POST", "/api/v1/admin/users/hoff/enabled", admin(), Map.of("enabled", true)));
     }
 }
