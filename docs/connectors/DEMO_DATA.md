@@ -24,7 +24,7 @@ fictitious, all deterministic:
 
 | Form | Where | What it is | Built by |
 |---|---|---|---|
-| **The test data** | `data/testdata/` (committed, about 24 MB of `.jsonl.gz`) | seven business days of every dataset the seven packs read: 5,000 trades a day per source system (ENDUR, CALYPSO, MUREX), counterparties, market data, agreements, netting sets, risk results; a first-day snapshot and each later day's changes | `tools/testdata/make_testdata.py` (`--check` says whether the files are current) |
+| **The test data** | `data/testdata/` (committed, about 120 MB of `.jsonl.gz`) | sixty business days of every dataset the seven packs read: 5,000 trades a day per source system (ENDUR, CALYPSO, MUREX), counterparties, market data, agreements, netting sets, risk results; a first-day snapshot and each later day's changes | `tools/testdata/make_testdata.py` (`--check` says whether the files are current) |
 | **The demo lakes** | `data/delta/` (generated, never committed) | the test data as Delta tables, one per dataset, seven daily snapshots each: what the packs' connectors read | `drishti.py lake demo` (one command, about a minute) |
 | **The samples** | `config/packs/<pack>/samples/<kind>.jsonl` (committed) | a few hundred documents a pack, the same shape, that the `demo` source serves live and ticking, with no store at all | `tools/packgen/banking/make_data.py` and each pack's generator |
 
@@ -37,7 +37,7 @@ days) and, for scale tests, a generated trade book: the scripts in [the other st
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 ```
 
-(the IDE run configuration **Build demo lakes**). On a fresh clone: **53 s, 807 MB peak memory, 64 tables**, seven business days
+(the IDE run configuration **Build demo lakes**). On a fresh clone: **53 s, 807 MB peak memory, 64 tables**, sixty business days
 ending on today's business date (the test data's 2026-09-22 to 2026-09-30, moved; `--as-of data` keeps them). The trades go to one
 table per source system, `data/delta/trading/trade_endur`, `trade_calypso` and `trade_murex`, partitioned by business date and
 `PRODUCT_TYPE`, each read by its own connector (`trade-endur`, `trade-calypso`, `trade-murex`) and served together as one kind,
@@ -66,7 +66,7 @@ regenerated with `python3 tools/testdata/make_testdata.py` (deterministic; `tool
 | Size | Command | What you get | When to use it |
 |---|---|---|---|
 | **samples** | none: the `demo` source serves them | the packs' samples (765 trades, 2,571 documents in the five banking packs), today only, ticking | a first look with no store, writing a pack |
-| **the demo lakes** | `drishti.py lake demo` | 15,000 trades a day and every other dataset, seven business days | demos, QA, the tutorials |
+| **the demo lakes** | `drishti.py lake demo` | 15,000 trades a day and every other dataset, sixty business days | demos, QA, the tutorials |
 | **a store of your choice, small** | `tools/load-<store>.sh` | the samples as ten business days ending 2026-09-30 | trying PostgreSQL, DuckDB, … with the same data |
 | **large** | `tools/load-<store>.sh … --trades 1000000 --days 3`, or `tools/samplegen/bulk_trades.py` | a million trades a day for 3 days | scale tests, performance measurements |
 

@@ -148,3 +148,7 @@
   .hx-chart { height: 220px; }
 }
 @media (prefers-reduced-motion: reduce) { .hx * { transition: none !important; } }
+
+/* the change log of an entity that did not change: what it means and where to go next */
+.hx-empty { padding: 1rem 1.25rem; border: 1px dashed var(--d-border); border-radius: 6px; margin: .75rem 0; }
+.hx-empty p { margin: .25rem 0; }

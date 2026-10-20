@@ -148,11 +148,40 @@ exists.
 
 ---
 
-## 3. Put the data in place (PyCharm)
+## 3. Put the data in place
 
-### 3.1 All synthetic data, aligned to your ENDUR dates
+### 3.0 One command for everything (recommended)
 
-The synthetic data has seven business days. Make them **end on the date of your newest ENDUR file**, so the date picker
+`tools\build_demo_lakes.py` builds **every** demo lake from start to finish: every dataset of the seven packs over all **sixty business
+days** of the committed test data (moved to end on the date of your newest ENDUR file), then replaces the synthetic ENDUR trades with
+**your** files, one per date. It is steps 3.1 and 3.2 below in one go. Stop the server first if it is running.
+
+1. **Look first** (changes nothing, prints every step it would run):
+
+   ```
+   C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\build_demo_lakes.py --endur-dir C:\Users\asinh09\drishti-private\endur --dry-run
+   ```
+
+2. **Build** (the same line without `--dry-run`):
+
+   ```
+   C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\build_demo_lakes.py --endur-dir C:\Users\asinh09\drishti-private\endur
+   ```
+
+You should see three numbered steps: `1/3 the demo lakes …` (the longest: several minutes for sixty days; `data\delta` ends at about
+2 GB), `2/3 your ENDUR files (N: <first date> … <last date>)` with one `lake-build ok … rejected=0` line per file, and `3/3 done in … s`.
+
+- Without your files (synthetic data only): leave out `--endur-dir …`; the lakes then end on today's business date.
+- To keep the synthetic ENDUR trades beside yours: add `--keep-synthetic-endur`.
+- To pick the last date yourself: `--as-of 2026-10-16`.
+- Your files stay in `drishti-private`; nothing is copied into the project.
+
+Then start the server and the console (section 4). The manual steps below do the same thing in parts.
+
+
+### 3.1 By hand: all synthetic data, aligned to your ENDUR dates (PyCharm)
+
+The synthetic data has sixty business days. Make them **end on the date of your newest ENDUR file**, so the date picker
 shows CALYPSO, MUREX and ENDUR together.
 
 0. **If this project folder was used before** (an earlier Drishti ran from it): in Windows Explorer delete the folder
@@ -174,7 +203,7 @@ Terminal instead (one line, from any folder):
 C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\drishti.py lake demo --as-of 2026-10-16
 ```
 
-### 3.2 Replace the synthetic ENDUR trades with your real files
+### 3.2 By hand: replace the synthetic ENDUR trades with your real files
 
 1. **Delete the synthetic ENDUR table:** in Windows Explorer delete the folder
    `C:\Users\asinh09\IdeaProjects\drishti-orig\data\delta\trading\trade_endur`. (Only that folder. `trade_calypso` and
@@ -437,11 +466,11 @@ Not to check on Windows: the **Cassandra** connector needs a Cassandra or Scylla
 ## 6c. History of a trade or an equity (2.6.5)
 
 Needs **2.6.5**: `git pull` on **main**, step 2.3 again (the jar is `drishti-server-2.6.5-exec.jar`), and **restart both** the server and
-the console. The demo lakes of step 3.1 hold **seven business days**, enough to show it; your own ENDUR history shows as soon as **two or
+the console. The demo lakes of step 3.1 hold **sixty business days**, enough to show it; your own ENDUR history shows as soon as **two or
 more** of your files are loaded (step 3.2, one per date). Any kind of data has a history, not only trades: a counterparty, a curve, an
 economy.
 
-Ids in the demo lakes that changed most over the seven days: ENDUR `1004545` and `1000340` (four changed days: quantity, status, version,
+Ids in the demo lakes that changed most over the sixty days: ENDUR `1004545` and `1000340` (four changed days: quantity, status, version,
 legs, events), CALYPSO `CLY-4000638`, MUREX `MX-20000184`; cancelled trades `1003244` and `MX-30001509`; equities `EQ-CSCA`, `EQ-GRNT`
 (the price moves every day), FX `FX-AUDUSD`, the index `EQX-SPX`.
 
@@ -499,8 +528,7 @@ Also try `TRD <id> YTD`, `TRD <id> FROM 2026-10-07 TO 2026-10-16`, `CPTY CP-NORT
 **The day before:**
 
 - [ ] Step 2 done once (Python environment, PyCharm, IntelliJ, jar built).
-- [ ] Step 3.1 with `--as-of` = your newest ENDUR date.
-- [ ] Step 3.2 for every ENDUR file, each `rejected=0`.
+- [ ] Step 3.0 (`build_demo_lakes.py --endur-dir …`): three steps, every file `rejected=0`; or steps 3.1 and 3.2 by hand.
 - [ ] Step 4: server and console start; sign-in works.
 - [ ] Step 5: Lakes, Connectors, Health as described.
 - [ ] Step 6: walk through the ten pages once.

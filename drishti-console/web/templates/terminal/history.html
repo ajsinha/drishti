@@ -108,7 +108,15 @@
   {% if params.get('diff') %}
   <section class="hx-log" aria-label="What changed, day by day" data-hx-rows>
     {% set changed_rows = page.rows | selectattr('changes') | list %}
-    {% if not changed_rows %}<p class="text-muted-d">Nothing changed in these {{ page.count }} days.</p>{% endif %}
+    {% if not changed_rows %}
+    <div class="hx-empty" role="status" data-hx-empty>
+      <p><b>No field of {{ id }} changed</b> in these {{ page.count }} days with data
+        (<span class="mono">{{ w.get('from') }}</span> to <span class="mono">{{ w.get('to') }}</span>): every day is the same as the day before.</p>
+      <p class="text-muted-d"><a class="lnk" href="{{ diff_href }}">Show the table</a> (or press <kbd>D</kbd>) to see each day's values
+        · <a class="lnk" href="?range=1Y&amp;diff=1" data-hx-wider>Look back a year</a>
+        · or open one that was amended.</p>
+    </div>
+    {% endif %}
     {% for r in changed_rows %}
     <article class="hx-day" data-row data-date="{{ r.date }}" data-href="{{ r.href }}" tabindex="{{ 0 if loop.first else -1 }}" aria-selected="{{ 'true' if loop.first else 'false' }}">
       <header class="hx-day-h"><b class="mono">{{ r.date }}</b>{% if r.restated %} <span class="hx-ver" title="{{ r.versions }} versions that day (the latest shown)">⟲{{ r.versions }}</span>{% endif %}

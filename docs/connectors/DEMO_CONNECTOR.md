@@ -22,7 +22,7 @@ no lake and no store shows working screens. This document explains what it reads
 the routing, what it costs, and why it should be off in production.
 
 **On the demo lakes it is off.** The run configuration **Drishti server (demo lakes)** starts the server with
-`DRISHTI_DEMO_ENABLED=false`, so every page reads the lakes `drishti.py lake demo` built (seven business days, 15,000 trades a day,
+`DRISHTI_DEMO_ENABLED=false`, so every page reads the lakes `drishti.py lake demo` built (sixty business days, 15,000 trades a day,
 [DEMO_DATA.md](DEMO_DATA.md)). Turn it on (`DRISHTI_DEMO_ENABLED=true`, the run configuration **Drishti server**, or the default of a
 bare `java -jar`) for what only it gives: values that tick live (tutorial 12's live BI and boards), and screens with no store at all.
 With it on beside the lakes, a sample answers before the lake for an id both hold ([section 8](#8-its-place-in-routing)).

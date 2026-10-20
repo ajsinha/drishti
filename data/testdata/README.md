@@ -15,7 +15,7 @@
 -->
 # Test data and the demo lakes
 
-`data/testdata/` is the one folder under `data/` that is committed: seven business days of every dataset the seven packs read,
+`data/testdata/` is the one folder under `data/` that is committed: sixty business days of every dataset the seven packs read,
 production-shaped and fictitious, from which **one command builds the Delta lakes** the packs' connectors read. Clone, build, start,
 demo: within minutes, on a laptop.
 
@@ -54,7 +54,7 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
 
    It rebuilds the seven daily snapshots of each dataset, writes them under `data/delta/<domain>/<kind>/` (the trades under
    `data/delta/trading/trade_endur`, `trade_calypso` and `trade_murex`, partitioned by business date and `PRODUCT_TYPE`; every other
-   table by business date), checks the seven packs' connector files and prints what to start next. The seven days are moved to end on
+   table by business date), checks the seven packs' connector files and prints what to start next. The sixty days are moved to end on
    **today's business date** (the server's current date, so every page opens on data; `--as-of data` keeps the test data's own
    2026-09-22 to 2026-09-30, `--as-of 2026-10-30` any other end); the documents' own dates of the day (`AS_OF`, `VALUATION_DATE`,
    `RUN_DATE`, `SOURCE_UPDATE_TIME`) move with them. Measured from a clean copy on a 24-core laptop with an NVMe disk: **about 50 s,
@@ -84,7 +84,7 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    | [/v/counterparty-trades/CP-NORTHPLAINS](http://localhost:17480/v/counterparty-trades/CP-NORTHPLAINS) | a look-alike energy counterparty: live trades, payments due in 7/30/90 days, notional by product, maturity ladder |
    | [/v/netting-set/NS-NORTHPLAINS-NY](http://localhost:17480/v/netting-set/NS-NORTHPLAINS-NY) | its netting set: every member trade (`TRADE_IDS`), exposure, CVA, collateral |
    | [/v/counterparty/CP-VAULTGUARD](http://localhost:17480/v/counterparty/CP-VAULTGUARD) | the vault look-alike: UEN, country of risk, legal entity, netting sets |
-   | [/bi](http://localhost:17480/bi) | the shipped BI reports and models, now over seven business days (pick a date, or a range in Analyse) |
+   | [/bi](http://localhost:17480/bi) | the shipped BI reports and models, now over sixty business days (pick a date, or a range in Analyse) |
 
    **Running `lake demo` again** (new dates, regenerated data) is safe while a server runs: `lake demo` tells it (the data-load signal for
    every table and date; pass `--server URL` and a token with `loads:write`, `--token-file` or `DRISHTI_TOKEN`, when the server has
@@ -99,7 +99,7 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
 
 **Ids are text; numeric ids in files are read as text.** `TRADE_ID` and every other id (`LEG_ID`, `FLOW_ID`, `RESET_ID`, `EVENT_ID`, `TRADE_IDS`) is a string in the test data and samples (ENDUR's are digits, `"1000008"`). A real extract that writes an id as a JSON number (`1000008`) is read as `"1000008"`, never `1000008.0`; text ids keep their leading zeros; no id prefix or shape is assumed (`SWP-AB_12`, `mx_2000-01`, `007123` are all ids) — `SOURCE_SYSTEM` says which system a trade comes from. An older lake whose `TRADE_ID` column was written as a number is still read (as text).
 
-Seven business days, 2026-09-22 to 2026-09-30 in the files (USNY calendar; `lake demo` moves them to end today unless `--as-of data`). Every document is UPPER_SNAKE, the shape the packs read; every
+Sixty business days, 2026-09-22 to 2026-09-30 in the files (USNY calendar; `lake demo` moves them to end today unless `--as-of data`). Every document is UPPER_SNAKE, the shape the packs read; every
 counterparty is fictitious (`CP-…`). Columns: the first day's documents, the documents new or changed on each later day, the documents
 on the last day, and the folder's compressed size (MB).
 

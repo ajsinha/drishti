@@ -456,7 +456,7 @@ class DemoLake:
               "     /v/counterparty-trades/CP-NORTHPLAINS   a counterparty's live trades, payments and maturity ladder\n"
               "     /v/netting-set/NS-NORTHPLAINS-NY        a netting set and its trades\n"
               f"     Compare a trade across two days ({d[0]} and {d[-1]}): the date picker, then Compare on the trade page\n"
-              "  data/testdata/README.md has the rest (the BI samples over the seven days, the manual way).")
+              "  data/testdata/README.md has the rest (the BI samples over the sixty days, the manual way).")
 
 
 def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:

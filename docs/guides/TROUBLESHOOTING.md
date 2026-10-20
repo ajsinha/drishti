@@ -730,7 +730,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Fix:** pick a date the lake covers, or build more history:
 
   ```bash
-  drishti-console/.venv/bin/python tools/drishti.py lake demo                  # the seven business days ending today
+  drishti-console/.venv/bin/python tools/drishti.py lake demo                  # the sixty business days ending today
   drishti-console/.venv/bin/python tools/drishti.py lake demo --as-of 2026-10-30  # or ending on another date
   ```
 

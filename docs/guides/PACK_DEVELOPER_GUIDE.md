@@ -1333,7 +1333,7 @@ the source to the screen, and is the pattern to copy:
 6. **Derived pages across systems.** `CTRD`, `PTRD`, `LTRD`, `ITRD` are derived kinds over `trade` (the `trade-pages` connector), so a
    counterparty's page gathers its trades from every system ([Derived kinds](#derived-kinds-entities-computed-from-other-kinds)).
 
-The test data in `data/testdata/trades/{endur,calypso,murex}/` (5,000 trades per system over seven business days: a day-1 snapshot and
+The test data in `data/testdata/trades/{endur,calypso,murex}/` (5,000 trades per system over sixty business days: a day-1 snapshot and
 daily changes) and `drishti.py lake demo` build the three tables; `tools/packgen/trades/` generates both the test data and the pack's
 samples ([How the shipped packs are generated](#how-the-shipped-packs-are-generated)).
 

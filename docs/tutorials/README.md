@@ -16,7 +16,7 @@
 # Drishti tutorials
 
 Hands-on, one worked example each. Every tutorial uses the demo data that ships with Drishti: the **demo lakes** that `drishti.py lake demo` builds from
-[data/testdata](../../data/testdata/README.md) (seven business days of trades from three booking systems, ENDUR, CALYPSO and MUREX, with their counterparties,
+[data/testdata](../../data/testdata/README.md) (sixty business days of trades from three booking systems, ENDUR, CALYPSO and MUREX, with their counterparties,
 netting sets, market data and risk), the public data of the world-economy pack, and a few small files in [data/](data/). Every field is UPPER_SNAKE (`TRADE_ID`,
 `COUNTERPARTY`, `QUANTITY`), as production data is. Each step says what to do **in the UI**, gives the real command and its real output **from the command line** wherever a
 command exists, shows the YAML it produces, shows a real screenshot, and tells you what you should see. Each ends with next steps and what to do when something goes wrong.
@@ -58,7 +58,7 @@ the server and console started with sign-in on: the quick-start environment of [
 personal API token (tutorial 1, Step 9) in `DRISHTI_TOKEN`.
 
 Run commands from the repository root with the console's Python (`drishti-console/.venv/bin/python tools/drishti.py ...`). Where a tutorial shows output, it was captured from
-a fresh clone of this version (2.5.0) on the demo lakes, built on Saturday 17 October 2026: the seven business days run from **2026-10-07 to 2026-10-16**. `lake demo` moves
+a fresh clone of this version (2.5.0) on the demo lakes, built on Saturday 17 October 2026: the sixty business days run from **2026-10-07 to 2026-10-16**. `lake demo` moves
 the days to end on *your* today's business date, so your dates differ; the counts (15,000 trades a day, 5,000 per booking system) and ids (`MX-20000001`, `1000001`,
 `CLY-3000157`, `CP-NORTHPLAINS`) are the same on every machine.
 

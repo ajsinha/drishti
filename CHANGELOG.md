@@ -17,6 +17,16 @@
 
 ## Unreleased
 
+- **Changed: the committed test data holds sixty business days** (`data/testdata`, was seven; 119 MB gzipped in 2,944 files, the
+  largest 5 MB): a day-1 snapshot and fifty-nine days of changes, so a trade's history (`TRD <id> 60`) shows real amendments.
+  `make_testdata.py --days` defaults to 60. The docs that said seven days say sixty; captured outputs (dates, counts, timings) are
+  re-checked in the 2.6.5 QA's documentation verification.
+- **Added: `tools/build_demo_lakes.py`**, every demo lake from start to finish in one command: `lake demo` over all sixty days, then
+  your ENDUR files (`--endur-dir`, one `YYYY-MM-DD.jsonl` per date) in place of the synthetic ones, `--dry-run` to look first. The
+  Windows QA guide's new step 3.0.
+- **Changed: a history's change log that has nothing to show says so and offers the way on** (`TRD <id> 30 DIFF` on an unchanged
+  trade): which days were read, *Show the table* (`D`) and *Look back a year*, instead of one grey line that read as a failure.
+
 ## 2.6.5 — History queries: any entity over time from the command line (`TRD <id> 30`, `EQ <id> 3M`), on every connector and across Drishti*net (2026-10-20)
 
 - **Fixed: an API token can preview a statement and fetch its PDF or Excel** (`POST /api/v1/bi/reports/statement/preview` and `/file`

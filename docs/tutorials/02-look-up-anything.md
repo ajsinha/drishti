@@ -25,7 +25,7 @@ About 20 minutes.
 ## Before you start
 
 - [Tutorial 1](01-first-15-minutes.md) done: the demo lakes built (`lake demo`), server and console running with sign-in on, and you signed in as `drishti-dev-admin`.
-- The seven business days of the lakes are what the past-date steps read. The outputs here were captured with the lakes ending on **2026-10-16** (first day 2026-10-07);
+- The sixty business days of the lakes are what the past-date steps read. The outputs here were captured with the lakes ending on **2026-10-16** (first day 2026-10-07);
   `lake demo` printed your own seven dates: use your last date where this tutorial says 2026-10-16 and the one before it for 2026-10-15.
 - For the command-line steps: `DRISHTI_SERVER` and `DRISHTI_TOKEN` set, as at the end of tutorial 1.
 

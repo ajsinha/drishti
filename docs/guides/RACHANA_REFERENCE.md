@@ -25,7 +25,7 @@ soon as it is saved. If an edit is invalid, the last good version is kept and th
 
 This page is the authoritative reference. Everything in it was checked against the code in `drishti-rachana` (grammar, parser,
 validator, Rachana-EL, formats), `drishti-engine` (binding) and `drishti-inference` (gaps and labels), and every example was
-previewed against the demo lakes of the seven packs (`drishti.py lake demo`, seven business days ending 2026-10-16): the trades of
+previewed against the demo lakes of the seven packs (`drishti.py lake demo`, sixty business days ending 2026-10-16): the trades of
 the `trading` pack in the common schema of their source systems (ENDUR, CALYPSO, MUREX), and every other kind, all in the production
 systems' UPPER_SNAKE attribute names. Figures that depend on the business date are marked as such.
 

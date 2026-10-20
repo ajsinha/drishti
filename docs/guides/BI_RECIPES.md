@@ -21,7 +21,7 @@ the Model view. Everything else that used to be in the BI tutorial is now a tuto
 [tutorial 11](../tutorials/11-bi-that-runs-itself.md), live BI and boards [tutorial 12](../tutorials/12-live-bi-and-boards.md), governance [tutorial 13](../tutorials/13-govern-bi.md), Python and Analyse
 [tutorial 14](../tutorials/14-python-and-analyse.md). The references are [DATASETS.md](DATASETS.md), [EXPRESSIONS.md](EXPRESSIONS.md), [SQL.md](SQL.md), [REPORTS.md](REPORTS.md), [BOARDS.md](BOARDS.md) and [BI_GOVERNANCE.md](BI_GOVERNANCE.md).
 
-Every answer below was captured on a fresh clone over the **demo lakes** (`drishti.py lake demo`: seven business days of the seven packs, 5,000 trades for
+Every answer below was captured on a fresh clone over the **demo lakes** (`drishti.py lake demo`: sixty business days of the seven packs, 5,000 trades for
 each of ENDUR, CALYPSO and MUREX, 15,000 trade valuations a day). The demo lakes end on **today's** business date, so your dates differ from the ones
 here (2026-10-07 to 2026-10-16); the figures of each day are the same. Some pictures are from the 2.2 demo data and show its lower-case column names; the
 steps are the same.

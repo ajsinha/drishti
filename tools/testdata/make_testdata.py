@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Writes data/testdata: the committed test data behind `drishti.py lake demo` (seven business days of every dataset the seven packs read).
+"""Writes data/testdata: the committed test data behind `drishti.py lake demo` (sixty business days of every dataset the seven packs read).
 
     python3 tools/testdata/make_testdata.py                  write data/testdata (about a minute; deterministic)
     python3 tools/testdata/make_testdata.py --out DIR        somewhere else (a test)
@@ -82,7 +82,7 @@ def main(argv=None) -> int:
                                 epilog=__doc__.split("\n\n", 1)[1])
     p.add_argument("--out", default=str(ROOT / "data" / "testdata"), help="where (default data/testdata)")
     p.add_argument("--per-system", type=int, default=UV.PER_SYSTEM, help=f"trades per source system (default {UV.PER_SYSTEM:,})")
-    p.add_argument("--days", type=int, default=7, help="business days ending on the samples' date (default 7)")
+    p.add_argument("--days", type=int, default=60, help="business days ending on the samples' date (default 60)")
     p.add_argument("--part-mb", type=float, default=9.0, help="split a file above this many compressed MB (default 9)")
     p.add_argument("--check", action="store_true", help="write into <data>/build/testdata-check and compare with --out; nothing changes")
     p.add_argument("--captured-from", help="the folder whose captured market snapshot the manifest lists (default --out)")

@@ -264,7 +264,7 @@ a folder of Delta tables, one per kind, under `<root>/<domain>/`. The root is `$
 | `macro-store`, `civic-store` | `macro/`, `civic/` | world-economy | the economic kinds; the political and social kinds |
 | `news-store` | `news/` | news-and-markets | `news-topic`, `listed-company`; and `quote`, `news` from the captured market snapshot (offline) |
 
-The committed test data (`data/testdata/`, seven business days of every dataset, 5,000 trades per source system) becomes those
+The committed test data (`data/testdata/`, sixty business days of every dataset, 5,000 trades per source system) becomes those
 tables with **one command** (or the IDE run configuration **Build demo lakes**):
 
 ```bash

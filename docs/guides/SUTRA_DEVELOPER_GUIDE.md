@@ -21,7 +21,7 @@ next: how one Sutra is chosen among several (source system and product type), ho
 expandable row groups, dates and live data, controls, how inference and a Sutra share a screen, testing in CI, and the Build workbench. It ends with the mistakes everyone makes once, with their
 problem codes, and a checklist.
 
-Every Sutra on this page was previewed against the demo lakes of a fresh clone (`drishti.py lake demo`, seven business days ending 2026-10-16), and every figure you are told to expect was read from
+Every Sutra on this page was previewed against the demo lakes of a fresh clone (`drishti.py lake demo`, sixty business days ending 2026-10-16), and every figure you are told to expect was read from
 that preview. Figures that depend on the business date (a count of payments still to come) are marked as such; the seven days of the demo lakes end on the day you build them.
 
 **What this guide does not repeat.** One place owns each topic and this guide links to it:

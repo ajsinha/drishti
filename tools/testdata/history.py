@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Seven business days of every dataset, as committed test data: the first day a full snapshot, each later day only what changed.
+"""Sixty business days of every dataset, as committed test data: the first day a full snapshot, each later day only what changed.
 
     trades        a trade joins the book on the first business day on or after its TRADE_DATE (a new booking is a change of that
                   day); each later day about 6% of the book is amended (tools/packgen/trades/amend.py: a rate, a notional, the status,

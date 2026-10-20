@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""`drishti.py lake demo` on a small test-data set (40 trades a system): seven business days per table, trades partitioned by
+"""`drishti.py lake demo` on a small test-data set (40 trades a system, seven business days): seven business days per table, trades partitioned by
 PRODUCT_TYPE in their source system's table, `--with-real` adding a made-up "real" extract's trades, counterparty, agreement and
 netting set to the lake and never to the test data, and a connector file that pointed elsewhere moved to the lake with its earlier text
 kept. Needs deltalake, pyarrow and PyYAML (uv run --with deltalake --with pyarrow --with pyyaml python -m unittest tools/lake/test_demo.py).
@@ -85,7 +85,7 @@ class LakeDemo(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             td, lake, conn, data = tmp / "testdata", tmp / "lake", tmp / "connectors", tmp / "data"
-            subprocess.run([sys.executable, str(ROOT / "tools" / "testdata" / "make_testdata.py"), "--out", str(td), "--per-system", "40"],
+            subprocess.run([sys.executable, str(ROOT / "tools" / "testdata" / "make_testdata.py"), "--out", str(td), "--per-system", "40", "--days", "7"],
                            check=True, capture_output=True)
             real = tmp / "real.json"
             real.write_text(json.dumps(FAKE))

@@ -102,7 +102,7 @@ def register(groups, add, srv) -> None:
     st.add_argument("--lake", required=True, metavar="DIR")
     st.add_argument("--runs", type=int, default=10, help="log lines shown (default 10)")
     st.add_argument("--json", action="store_true")
-    dm = add(sub, "demo", cmd_demo, "lake demo: build the demo lakes of the seven packs from data/testdata (seven business days), point the "
+    dm = add(sub, "demo", cmd_demo, "lake demo: build the demo lakes of the seven packs from data/testdata (sixty business days), point the "
              "connector files at them, say what to start next", [],
              "examples:\n  drishti.py lake demo\n  drishti.py lake demo --lake /tmp/demo-lake\n"
              "  drishti.py lake demo --with-real ~/Downloads/endur.json,~/Downloads/ComSwap.json      (LOCAL ONLY: never into data/testdata)\n"

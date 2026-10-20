@@ -84,12 +84,12 @@ class TestData(unittest.TestCase):
         big = [f"{f.relative_to(TD)} {f.stat().st_size / 1e6:.1f} MB" for f in files if f.stat().st_size > 10 * 1024 * 1024]
         self.assertEqual(big, [], "a file above 10 MB: lower --part-mb")
         total = sum(f.stat().st_size for f in files)
-        self.assertLess(total, 60e6, f"{total / 1e6:.1f} MB committed")
+        self.assertLess(total, 150e6, f"{total / 1e6:.1f} MB committed")   # sixty days, about 115 MB; GitHub refuses files over 100 MB, none is over 10
         self.assertEqual(sorted(p.name for p in TD.iterdir() if p.is_file()), ["README.md", "testdata.yaml"])
 
     def test_the_manifest_matches_the_files_and_the_packs(self):
         import yaml
-        self.assertEqual(len(self.dates), 7)
+        self.assertEqual(len(self.dates), 60)
         packs = {}
         for ds in self.m["datasets"]:
             spec = packs.setdefault(ds["pack"], yaml.safe_load((ROOT / "config" / "packs" / ds["pack"] / "pack.yaml").read_text(encoding="utf-8")))

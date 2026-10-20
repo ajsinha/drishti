@@ -104,6 +104,21 @@ def test_diff_lists_each_changed_day(client, backend):
     assert "/compare/trade/1000015?from=" in t and "Open the day" in t
 
 
+def test_a_diff_with_no_change_says_so_and_offers_the_table_and_a_wider_range(client, backend, monkeypatch):
+    real = backend.history
+
+    async def history(kind, id_, ident=None, **params):
+        data = await real(kind, id_, ident=ident, **params)
+        for r in data.get("rows") or []:
+            r["changed"], r["changes"] = False, []
+        return data
+    monkeypatch.setattr(backend, "history", history)
+    t = client.get("/v/trade/1000015/history?days=30&diff=1").text
+    assert "data-hx-empty" in t and "No field of 1000015 changed" in t
+    assert "Show the table" in t and 'href="?range=1Y&amp;diff=1"' in t
+    assert '<article class="hx-day"' not in t
+
+
 def test_an_unknown_entity_or_a_refused_range_says_why(client, backend, monkeypatch):
     r = client.get("/v/trade/NOPE-1/history?days=30")
     assert r.status_code == 404 and "DRS-1001" in r.text and "Today’s view of NOPE-1" in r.text

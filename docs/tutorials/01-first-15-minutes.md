@@ -28,7 +28,7 @@ You need a Linux, macOS or Windows machine with Java 21 or newer, Python 3.11 or
 Docker. On Windows follow [GETTING_STARTED.md (Windows)](../guides/GETTING_STARTED.md#drishti-on-windows) for the same steps in PowerShell.
 
 These tutorials run on the **quick-start environment** of [data/testdata/README.md](../../data/testdata/README.md): the seven packs (`core`, `market-data`, `trading`,
-`counterparty-risk`, `market-risk`, `world-economy`, `news-and-markets`) reading the **demo lakes**, seven business days of production-shaped test data (5,000 trades from
+`counterparty-risk`, `market-risk`, `world-economy`, `news-and-markets`) reading the **demo lakes**, sixty business days of production-shaped test data (5,000 trades from
 each of three booking systems, ENDUR, CALYPSO and MUREX, and everything the packs need around them). Every field name is UPPER_SNAKE (`TRADE_ID`, `COUNTERPARTY`,
 `QUANTITY`), as in production.
 
@@ -64,7 +64,7 @@ uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requ
 
 (`python3 -m venv` works too where your Python has `ensurepip`; on Ubuntu's system Python without the `python3-venv` package it does not, and `uv venv` does.)
 
-Then build the demo lakes, seven business days ending on today's business date, so that past dates and **Compare** work in tutorial 2. The lake tool also tells a
+Then build the demo lakes, sixty business days ending on today's business date, so that past dates and **Compare** work in tutorial 2. The lake tool also tells a
 running server that the data changed (here none is running yet, so it leaves a note the server reads at its first start):
 
 ```text

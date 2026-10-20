@@ -957,7 +957,7 @@ write_deltalake("data/delta/trading/trade", table, mode="overwrite",
 3. **Load sample data.**
 
 ```bash
-# the seven packs' lakes from the committed test data: seven business days ending today (data/testdata/README.md)
+# the seven packs' lakes from the committed test data: sixty business days ending today (data/testdata/README.md)
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 # or one pack's samples into one domain (tools/samplegen/lake.py, section 5)
 drishti-console/.venv/bin/python tools/samplegen/lake.py --samples config/packs/market-data/samples --root data/delta --domain market --days 10
