@@ -289,7 +289,14 @@ Connectors → the connector → Pool its connections.
 
 | Symptom | Likely cause | What to do |
 |---|---|---|
-| `DOWN: connecting to Cassandra at …` | wrong `contact-points`, a closed port, the cluster down, or TLS refused. The connector starts anyway and the driver keeps trying in the background | `nc -z <host> 9042`; check `local-datacenter` (`nodetool status`), TLS and the log-in |
+| `DOWN: connecting to Cassandra at …` | the driver cannot open a session. The connector starts anyway and the driver keeps trying in the background (one session: a retry, a stop or deleting the connector file closes the one being built, its reconnection included); the connector also opens one connection of its own to the first contact point (again at most every 30 s) and adds what it found after a colon, below. With nothing added, the node answers CQL: look at `local-datacenter` (`nodetool status`) and the log-in | the rows below |
+| `… : no connection to <host:port> (ConnectException: Connection refused): check contact-points, the port and that the node runs` | wrong `contact-points`, a closed port, the node down | `nc -z <host> 9042` |
+| `… : TLS to <host:port> failed (…): the node asks for a client certificate (mutual TLS) and none is set: set tls.cert-file and tls.key-file (or tls.keystore) …` | the node has `require_client_auth: true` and the connector gives no certificate | set the client certificate ([TLS.md](TLS.md)) |
+| `… : TLS to <host:port> failed (…): the node refused the client certificate: …` | the client certificate is not signed by an authority in the node's truststore | a certificate from the node's authority, or add its CA to the node |
+| `… : TLS to <host:port> failed (…): the node's certificate is not trusted: set tls.ca-file (or tls.truststore) …` | the connector does not trust the node's authority | `tls.ca-file` or `tls.truststore` |
+| `… : TLS to <host:port> failed (…): the node's certificate does not name <host> …` | the host name check failed | connect by a name the certificate holds, or `tls.verify-hostname: false` |
+| `… : TLS to <host:port> failed (…): the node does not speak TLS on this port …` | `tls.enabled: true` against a plain port | `tls.enabled: false`, or the TLS port |
+| `… : TLS: the node at <host:port> did not answer CQL in plain text and closed the connection, so it requires TLS (client_encryption_options) …` | a connector without TLS against a node that demands it | `tls.enabled: true` with `tls.ca-file`, and the client certificate when it asks for one |
 | `DOWN: keyspace … does not exist` | the keyspace is named after the domain unless `keyspace` is set | set `keyspace`, or load it |
 | `DOWN: keyspace … has no kind_days table` | nothing was loaded in the connector's layout | `tools/load-cassandra.sh --create`, or run the printed CQL |
 | `UP (2 of 3 nodes up)` | a node is down; reads go to the replicas left | the driver reconnects by itself |

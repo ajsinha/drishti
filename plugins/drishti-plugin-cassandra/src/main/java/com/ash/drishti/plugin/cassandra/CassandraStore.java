@@ -220,13 +220,20 @@ final class CassandraStore implements AutoCloseable {
         return s == null ? Optional.empty() : s.getMetadata().getClusterName();
     }
 
+    /**
+     * Closes the session. One still connecting (the driver retries a cluster it cannot reach in the background, with its own threads and
+     * reconnection schedule) is cancelled: the driver then stops reconnecting and closes the session it was building. Before, it was left to
+     * close "when it connects", which a cluster that refuses never does, so every restart of a connector that could not connect left one more
+     * session retrying for good (QA3B-05: "too many session instances: 9 active").
+     */
     @Override
     public void close() {
         CqlSession s = session.isCompletedExceptionally() ? null : session.getNow(null);
         if (s != null) {
             s.close();
-        } else {
-            session.thenAccept(CqlSession::close);                 // still connecting: close it when it does
+            return;
         }
+        session.thenAccept(CqlSession::close);                     // connected at this very moment: closed when the future completes
+        session.cancel(true);                                      // still connecting: the driver stops and force-closes it
     }
 }

@@ -146,6 +146,9 @@ public final class CassandraSourcePlugin implements SourcePlugin {
         this.connectionsPerNode = plan.connectionsPerNode();
         Duration connect = Duration.ofMillis(Long.parseLong(ctx.setting("connect-timeout-ms", "5000")));
         this.store = new CassandraStore(CassandraSessions.open(ctx.settings(), plan, System::getenv), Integer.parseInt(ctx.setting("scan-threads", "8")), connect);
+        this.probePoints = plan.bundle() == null ? plan.contactPoints() : List.of();
+        this.probeTimeout = connect;
+        probeLater();                                          // why it cannot connect, in words, while the driver retries (QA3B-11)
         this.reads = new DayReads(store, keyspace);
         try {
             refresh();                                         // a cluster down now: the connector starts, health says so, a later refresh fills in
@@ -153,7 +156,7 @@ public final class CassandraSourcePlugin implements SourcePlugin {
             catalogueProblem = e.getMessage();
         }
         long every = Long.parseLong(ctx.setting("refresh-seconds", "60"));
-        ctx.scheduler().scheduleWithFixedDelay(() -> {
+        this.refreshTask = ctx.scheduler().scheduleWithFixedDelay(() -> {
             if (refreshing.compareAndSet(false, true)) {       // the scheduler's thread is shared: the reads run on a virtual thread
                 Thread.ofVirtual().name("cassandra-refresh-" + sourceName).start(() -> {
                     try {
@@ -696,7 +699,8 @@ public final class CassandraSourcePlugin implements SourcePlugin {
     public String health() {
         if (store == null || !store.connected()) {
             String why = store == null ? null : store.lastError();
-            return "DOWN: connecting to Cassandra at " + contactPoints + (why == null ? "" : " (" + why + ")");
+            String probed = store == null ? null : probed();
+            return "DOWN: connecting to Cassandra at " + contactPoints + (why == null ? "" : " (" + why + ")") + (probed == null ? "" : ": " + probed);
         }
         int[] nodes = store.nodes();
         if (nodes[0] == 0) {
@@ -728,8 +732,73 @@ public final class CassandraSourcePlugin implements SourcePlugin {
                 Math.max(0, flying - maxConcurrent), -1, 0, 0));
     }
 
+    // ---- why it cannot connect ------------------------------------------------------------------------------------------------
+
+    private volatile List<java.net.InetSocketAddress> probePoints = List.of();
+    private volatile Duration probeTimeout = Duration.ofSeconds(5);
+    private volatile java.util.concurrent.CompletableFuture<Optional<String>> probe;
+    private volatile long probedAt;
+    private volatile String lastProbed;
+    private volatile boolean closed;
+    private volatile java.util.concurrent.ScheduledFuture<?> refreshTask;
+    /** A probe is repeated at most this often while the connector cannot connect. */
+    static final long PROBE_EVERY_MS = 30_000;
+
+    /** Starts a probe of the first contact point on a virtual thread, unless one ran moments ago or the session is connected. */
+    private void probeLater() {
+        if (closed || probePoints.isEmpty() || store != null && store.connected()) {
+            return;
+        }
+        java.util.concurrent.CompletableFuture<Optional<String>> p = probe;
+        if (p != null && (!p.isDone() || System.currentTimeMillis() - probedAt < PROBE_EVERY_MS)) {
+            return;
+        }
+        java.util.concurrent.CompletableFuture<Optional<String>> next = new java.util.concurrent.CompletableFuture<>();
+        probe = next;
+        probedAt = System.currentTimeMillis();
+        List<java.net.InetSocketAddress> points = probePoints;
+        Thread.ofVirtual().name("cassandra-probe-" + sourceName).start(() -> {
+            try {
+                Optional<String> words = CassandraProbe.diagnose(points, tls, probeTimeout);
+                lastProbed = words.orElse(null);
+                next.complete(words);
+            } catch (RuntimeException e) {
+                next.complete(Optional.empty());
+            }
+            probedAt = System.currentTimeMillis();
+        });
+    }
+
+    /** The probe's words (the first one waited for briefly, so the first look at Health has them), or null. */
+    private String probed() {
+        probeLater();
+        java.util.concurrent.CompletableFuture<Optional<String>> p = probe;
+        if (p == null) {
+            return null;
+        }
+        if (!p.isDone() && lastProbed != null) {
+            return lastProbed;                                 // a later probe running: the last words meanwhile
+        }
+        try {
+            return p.get(Math.min(2_000, probeTimeout.toMillis() + 500), TimeUnit.MILLISECONDS).orElse(null);
+        } catch (java.util.concurrent.TimeoutException e) {
+            return null;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        } catch (java.util.concurrent.ExecutionException e) {
+            return null;
+        }
+    }
+
+    /** Stops the refresh and closes the session, also one still connecting (QA3B-05: a session leaked at every restart). */
     @Override
     public void close() {
+        closed = true;
+        java.util.concurrent.ScheduledFuture<?> t = refreshTask;
+        if (t != null) {
+            t.cancel(false);
+        }
         if (store != null) {
             store.close();
         }

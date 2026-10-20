@@ -155,7 +155,16 @@ class CassandraTlsTest {
         noCert.put("connect-timeout-ms", "3000");
         try (CassandraSourcePlugin p = new CassandraSourcePlugin()) {
             p.start(DatedSourceContract.context(noCert));
-            assertThat(p.health()).startsWith("DOWN");
+            // QA3B-11: the refusal is named, with the settings to look at (not only "connecting to Cassandra at …")
+            assertThat(p.health()).startsWith("DOWN").contains("TLS to localhost:")
+                    .contains("the node asks for a client certificate (mutual TLS) and none is set: set tls.cert-file and tls.key-file");
+        }
+        // a connector without TLS against the TLS-only node
+        Map<String, String> plain = new java.util.HashMap<>(CassandraNode.settings(hostPort, "tls_desk", "tls-cassandra-plain"));
+        plain.put("connect-timeout-ms", "3000");
+        try (CassandraSourcePlugin p = new CassandraSourcePlugin()) {
+            p.start(DatedSourceContract.context(plain));
+            assertThat(p.health()).startsWith("DOWN").contains("requires TLS (client_encryption_options): set tls.enabled: true");
         }
     }
 }
