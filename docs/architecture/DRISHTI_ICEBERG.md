@@ -26,7 +26,8 @@ Delta Lake), [GETTING_STARTED.md: Windows](../guides/GETTING_STARTED.md#drishti-
 6. [Catalogs](#6-catalogs) · 7. [Reading](#7-reading) · 8. [Writing and commits](#8-writing-and-commits) ·
 9. [Files: local disk and S3](#9-files-local-disk-and-s3) · 10. [Engines and configuration](#10-engines-and-configuration) ·
 11. [Windows](#11-windows) · 12. [Proving it keeps to the protocol](#12-proving-it-keeps-to-the-protocol) ·
-13. [Build plan](#13-build-plan) · 14. [Risks and open questions](#14-risks-and-open-questions)
+13. [Build plan](#13-build-plan) · 14. [Risks and open questions](#14-risks-and-open-questions) ·
+15. [Two connectors: Drishti tables and external tables](#15-two-connectors-drishti-tables-and-external-tables)
 
 ## 1. The ask
 
@@ -248,6 +249,7 @@ Five steps, each merged with its tests and docs; the `library` engine stays the 
 | I2 | **Read**: metadata, path-based and direct catalogs, manifests, planning with pruning, field-id Parquet reads, schema evolution, deletes, time travel; the `engine` setting | interop-read suite, engine equality, no-Hadoop test |
 | I3 | **REST catalog**: config, OAuth2, loadTable with ETag, vended credentials, SigV4 | the REST catalog test on both engines |
 | I4 | **Write**: Parquet with field ids and metrics, manifests, the three commit kinds, the operations of section 8; loader and maintenance on the native engine; `load-iceberg.ps1` | interop-write suite, concurrent-commit tests, maintenance tests on both engines |
+| I6 | **The external-table connector** (`iceberg-external`, [section 15](#15-two-connectors-drishti-tables-and-external-tables)): table mapping, rows as documents, discovery from identifier fields and partition specs, every column searchable, id lookup for unsorted tables, the connector form's table browser | a Spark-shaped and a Snowflake-shaped fixture table (pyiceberg-written, merge-on-read deletes, nested types) served as kinds: one entity, search, type-ahead, reverse links, time travel |
 | I5 | **Switch and document**: `native` the default, speed table measured, ICEBERG_CONNECTOR.md, GETTING_STARTED (Windows), TOOLS, CONFIGURATION, CHANGELOG, help cards | the Windows laptop run; the release drill |
 
 Size: about the native Delta engine for reading (I2–I3) plus about as much again for writing (I4). One builder.
@@ -265,3 +267,100 @@ Size: about the native Delta engine for reading (I2–I3) plus about as much aga
   Each is added when a real table needs it; until then they are refused by name.
 - **Open for the product owner**: the release (not decided); whether `auto` or `native` is the default in the first
   release that ships it; whether format version 3 reading (deletion vectors) is part of the first release.
+
+## 15. Two connectors: Drishti tables and external tables
+
+The product owner (2026-10-20): Drishti needs **a connector for Iceberg tables Drishti writes and one for Iceberg tables
+it does not write**. Both run on `drishti-iceberg` (or the `library` engine); they differ in what they expect of a table.
+
+| | `iceberg` (Drishti tables) | `iceberg-external` (anyone's tables) |
+|---|---|---|
+| Tables | written in Drishti's layout by `IcebergLoader` (ICEBERG_CONNECTOR.md section 3): `id`, `doc`, `business_date`, promoted columns, sorted by id | written by Spark, Flink, Trino, Snowflake, Glue, dbt, pyiceberg, in any layout |
+| The document | the `doc` column, exactly as loaded | **the row**, as JSON (every column; structs as objects, lists as arrays, maps as objects), or a JSON column named by `document: column:<name>` |
+| The id | the `id` column | one column or several (`id: [SOURCE_SYSTEM, TRADE_ID]`, joined by `id-separator`, `:`); by default the table's **identifier fields** (Iceberg v2's `identifier-field-ids`) |
+| The business date | `business_date` | a date column, or a timestamp column with `date-from: day` (in `date-zone`); by default the partition spec's date (`identity` of a date, or `day(ts)`); none: the table is **current only** (every read is the current snapshot) |
+| Searchable fields | the promoted columns the pack declares | **every primitive column** (nested ones flattened to `depth`, 2): the table is already columnar, nothing to promote |
+| One entity | id map or range map: one row group | pushed-down filter on the id columns with partition, metric and row-group pruning; for a table **not sorted by id**, an **id index** built by Drishti on first use per snapshot and day (id → file and row group, bounded by `id-index-mb`), so later reads are one row group |
+| Writes | the loader and maintenance | **never**: the connector only reads; the owners' engines maintain the tables |
+| Deletes, time travel | as section 7 | the same: merge-on-read position and equality deletes from Spark and Flink are applied; *known at* uses the snapshot log |
+
+### 15.1 Configuration
+
+```yaml
+# config/connectors/risk-mart.yaml: tables a Spark pipeline writes to a Polaris catalog
+plugin: iceberg-external
+settings:
+  catalog: rest
+  uri: https://polaris.example.com/api/catalog
+  warehouse: risk
+  credential: ${POLARIS_CLIENT_ID}:${POLARIS_CLIENT_SECRET}
+  engine: native
+tables:
+  trade:
+    table: risk_mart.trades                       # namespace.table
+    id: [SOURCE_SYSTEM, TRADE_ID]                 # MUREX:20000017
+    date: BUSINESS_DATE                           # a date column
+    mode: snapshot                                # or effective (a row only when the entity changes)
+    columns: { exclude: [ETL_LOAD_TS, _FILE], rename: { cpty_id: COUNTERPARTY } }
+    links: { COUNTERPARTY: counterparty, PORTFOLIO: portfolio }   # columns that name entities of other kinds
+  counterparty:
+    table: refdata.counterparties
+    id: CPTY_ID                                   # no date: current only
+  market-quote:
+    table: market.quotes
+    date: QUOTE_TS
+    date-from: day                                # the business date of a timestamp
+    date-zone: Europe/London
+```
+
+**Discovery.** `tables: auto` with `namespace: risk_mart` makes every table of the namespace a kind (its name in
+lower-case with `-`), its id from the identifier fields and its date from the partition spec; a table with neither is
+listed in Admin → Connectors → this connector as needing an `id`, and is not served until it has one.
+
+### 15.2 Rows as documents
+
+| Iceberg type | In the document |
+|---|---|
+| boolean, int, long, float, double | JSON boolean and number |
+| decimal(P,S) | a number; `decimals: string` keeps full precision as text |
+| date, time, timestamp, timestamptz | ISO-8601 text (`2026-09-30`, `18:30:00`, `2026-09-30T18:30:00`, `2026-09-30T18:30:00Z`) |
+| string, uuid | text |
+| fixed, binary | Base64 text (or left out with `binary: omit`) |
+| struct | an object |
+| list | an array |
+| map | an object when keys are text, else an array of `{key, value}` |
+
+Column names keep their case; `rename` maps them to the names a pack uses. The kind's fields are the table's columns:
+a **starter pack** can be generated from the table's schema (Admin → Connectors → this connector → *Make a pack*: the
+kind, its fields, a default Sutra listing them, links from `links`), then edited like any pack.
+
+### 15.3 Reading at scale
+
+- A table **sorted or bucketed by its id** (sort order or `bucket(id)` partition) is read like a Drishti table: range
+  maps from the manifests' id bounds, one row group per entity.
+- An **unsorted** table pays for its first lookup per day: the id column of the day's files is read once into the id
+  index (about 60 B per id, bounded by `id-index-mb`, 1024; least-used days dropped first). Admin → Health suggests
+  sorting the table by id when the index for one day passes `id-index-warn-rows` (5 million).
+- Searches read only the columns asked, with partition and metric pruning, as the Drishti connector does.
+- A table with no date and many rows: type-ahead and column reads are bounded (`max-index-rows`, 10 million) and say
+  `partial` beyond it.
+
+### 15.4 Settings of `iceberg-external`
+
+| Setting | Default | Meaning |
+|---|---|---|
+| catalog settings | as `iceberg` | `catalog`, `root`, `uri`, `warehouse`, `credential`, `token`, `scope`, `prefix`, `s3.*`, TLS, proxy |
+| `engine` | `auto` | `native`, `library`, `auto` (section 10) |
+| `tables` | none | per kind: `table`, `id`, `id-separator`, `date`, `date-from`, `date-zone`, `mode`, `document`, `columns`, `links`, `depth`; or `auto` with `namespace` |
+| `decimals`, `binary` | `number`, `base64` | how those types appear in documents |
+| `id-index-mb`, `id-index-warn-rows`, `max-index-rows` | 1024, 5,000,000, 10,000,000 | section 15.3 |
+| `refresh-seconds`, `lookback-days`, `doc-cache-mb`, `columns-cache-mb`, `max-concurrent-reads` | as `iceberg` | the same meaning |
+
+### 15.5 Tests
+
+Fixture tables written by pyiceberg in the shapes other engines write: a Spark-style table (partitioned by
+`days(ts)`, unsorted, with merge-on-read position deletes), a Snowflake-style table (identifier fields, nested structs,
+decimals, timestamptz), a current-only reference table, and a table renamed and evolved (columns added, renamed,
+widened). For each: one entity, a search on any column, type-ahead, a reverse link, time travel, and the document's
+JSON compared with pyiceberg's rows converted by the rules of section 15.2.
+
