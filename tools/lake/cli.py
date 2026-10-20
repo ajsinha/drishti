@@ -12,10 +12,11 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""`drishti.py lake build|scan|status|demo|maintain`: build and look after Delta lakes from the terminal or a scheduler.
+"""`drishti.py lake build|publish|scan|status|demo|maintain`: build and look after Delta lakes from the terminal or a scheduler.
 
     build      stream a JSON array, JSON Lines or .gz export into <lake>/<domain>/<kind> (tools/lake/build.py)
     scan       the fields of an export with their values, and the suggested --key, --date and --partition-by (tools/lake/scan.py)
+    publish    commit a table lake build wrote (a scratch lake) into a Delta table in S3, one commit (tools/lake/publish.py)
     status     whether the lake's lock is held (lake maintain, or a load), and the last runs (from <lake>/_drishti-lake)
     demo       the demo lakes of the seven packs from the committed test data, data/testdata (tools/lake/demo.py)
     maintain   retention, compaction, checkpoints and vacuum, now or on schedules; --history (tools/lake/maintain.py; options passed through)
@@ -36,6 +37,11 @@ def _mod(name: str):
 
 def cmd_build(a, extra) -> int:
     code, _ = _mod("build").run(a)
+    return code
+
+
+def cmd_publish(a, extra) -> int:
+    code, _ = _mod("publish").run(a)
     return code
 
 
@@ -94,6 +100,12 @@ def register(groups, add, srv) -> None:
                 "--signal http://localhost:18480\nexit: 0 ok, 2 written with rejects (or the signal failed), 1 failure, 3 another run holds the table's (or the lake's) lock. "
                 "Guide: docs/guides/TOOLS.md")
     _mod("build").add_arguments(b)
+    pb = add(sub, "publish", cmd_publish, "lake publish: commit the files of a table lake build wrote into a Delta table in S3 (one commit "
+             "replacing the dates; S3 conditional writes)", [],
+             "example:\n  drishti.py lake publish --from /opt/drishti/data/lake-build/run-1/trading/trade_endur "
+             "--to s3://acme-drishti-prod-lake/lake/trading/trade_endur --dates 2026-10-20 --storage-option AWS_REGION=eu-west-2\n"
+             "exit: 0 ok, 1 failure (nothing committed), 2 committed but the signal failed, 3 nothing to publish. Guide: docs/architecture/AWS_DELTA_LAKE.md")
+    _mod("publish").add_arguments(pb)
     s = add(sub, "scan", cmd_scan, "lake scan: an export's fields (presence, types, frequent values) and the suggested key, date and classifiers",
             [], "example:\n  drishti.py lake scan exports/book.json --limit 5000")
     _mod("scan").add_arguments(s)
