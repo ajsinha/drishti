@@ -275,22 +275,22 @@
   --d-ink: #f7e9ec;
   --d-muted: #c99fa9;
   --d-faint: #bb919c;
-  --d-accent: #e45a72;          /* crimson, softened to read as text on the dark grounds */
-  --d-accent-strong: #ec7d90;
-  --d-accent-tint: rgba(228, 90, 114, .12);
+  --d-accent: #e9a1ad;          /* dusty rose: text in the accent stays easy on the eyes; crimson is in fills and chrome */
+  --d-accent-strong: #f2bcc4;
+  --d-accent-tint: rgba(179, 32, 58, .16);
   --d-on-accent: #1a0509;
   --d-fill: #b3203a;            /* buttons: a deep crimson with white labels, not the bright text accent */
   --d-fill-strong: #c92a46;
   --d-on-fill: #ffffff;
-  --d-link: #ffb8a3;            /* blush */
+  --d-link: #f3c6a8;            /* peach */
   --d-pos: #8fd8c0;             /* sea green: up is never the accent's red */
-  --d-neg: #ff9a5c;
+  --d-neg: #ffa86b;
   --d-ok: #74dca2;
   --d-warn: #f5c454;
-  --d-bad: #ff6f7d;
-  --d-highlight: rgba(255, 184, 163, .07);
-  --d-emph-bg: rgba(228, 90, 114, .20);
-  --d-glow: rgba(228, 90, 114, .26);
+  --d-bad: #f08a94;
+  --d-highlight: rgba(243, 198, 168, .06);
+  --d-emph-bg: rgba(179, 32, 58, .30);
+  --d-glow: rgba(179, 32, 58, .40);
   --d-grad-from: #c8304b;
   --d-grad-to: #e0907e;
   --d-nav: rgba(20, 7, 11, .88);
