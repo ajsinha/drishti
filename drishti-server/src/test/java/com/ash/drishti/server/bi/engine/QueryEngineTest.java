@@ -433,6 +433,26 @@ class QueryEngineTest {
     }
 
     @Test
+    void aBurstOfLoadSignalsRebuildsOneDateAtATimeAndEachDateOnce() throws Exception {
+        // QA3A-01: sixty signals in a row each started a background rebuild beside the others
+        service.query(ds, q("{\"fields\":[\"trades.desk\"],\"measures\":[\"Notional\"],\"dates\":{\"from\":\"2026-10-08\",\"to\":\"2026-10-09\"}}"), risk(), false);
+        lake.scanDelayMillis = 40;
+        int scans = lake.scans.get();
+        lake.scanPeak.set(0);
+        for (int i = 0; i < 60; i++) {
+            service.onLoad("trade", i % 2 == 0 ? TestLake.DAY1 : TestLake.DAY2, List.of(ds));
+        }
+        long deadline = System.currentTimeMillis() + 10_000;
+        while ((service.rebuildsWaiting() > 0 || lake.scanning.get() > 0) && System.currentTimeMillis() < deadline) {
+            Thread.sleep(20);
+        }
+        Thread.sleep(100);
+        assertThat(lake.scanPeak.get()).as("rebuilds at once").isEqualTo(1);
+        assertThat(lake.scans.get() - scans).as("two dates signalled thirty times each").isBetween(2, 6);
+        assertThat(service.rebuildsPeak()).isEqualTo(1);
+    }
+
+    @Test
     void aRebuiltSourceDateIsReadAgainWithoutASignalAndOtherDatesAreKept() {
         lake.versions.put(TestLake.DAY1, "files-1");
         lake.versions.put(TestLake.DAY2, "files-1");

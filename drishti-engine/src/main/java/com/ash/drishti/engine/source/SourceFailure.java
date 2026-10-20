@@ -60,6 +60,11 @@ public final class SourceFailure extends DrishtiException {
         if (t instanceof TimeoutException) {
             return "did not answer within " + budget.toMillis() + " ms";
         }
+        for (Throwable c = t; c != null; c = c.getCause() == c ? null : c.getCause()) {
+            if (c instanceof com.ash.drishti.api.ReadSlots.Busy || c instanceof com.ash.drishti.api.ReadSlots.Abandoned) {
+                return c.getMessage();                         // too many reads queued, or the caller had gone: no host or path in it
+            }
+        }
         var unreadable = UnreadableData.in(t);
         if (unreadable.isPresent()) {
             return unreadable.get().getMessage();

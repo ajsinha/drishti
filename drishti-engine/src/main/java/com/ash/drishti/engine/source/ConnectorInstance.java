@@ -202,6 +202,11 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public void refreshVersions() {
+        delegate.refreshVersions();
+    }
+
+    @Override
     public java.util.Optional<String> tableIdentity(String kind) {
         return delegate.tableIdentity(kind);
     }

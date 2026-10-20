@@ -71,7 +71,8 @@ import java.util.concurrent.TimeUnit;
  * ({@code doc-cache-mb}, 256, keeps recent documents), and searches and aggregates from the columns a pack's
  * {@code layout.<kind>.columns} promotes beside the document ({@code columns-cache-mb}, 1024). Reverse lookups use the
  * promoted columns; without them a day is loaded only when it has at most {@code max-load-rows} (200000) rows. At most
- * {@code max-concurrent-reads} (16) single-entity reads run at once (each decodes one row group of documents).
+ * {@code max-concurrent-reads} (16) single-entity reads run at once (each decodes one row group of documents), and at most
+ * {@code max-queued-reads} (4096) wait for one: more are refused at once, and a read whose caller stopped waiting leaves the queue.
  */
 public final class DeltaSourcePlugin implements SourcePlugin {
 
@@ -169,10 +170,13 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     /** Kind to the document paths its pack promotes to columns ({@code layout.<kind>.columns}). */
     private final Map<String, List<String>> promoted = new java.util.concurrent.ConcurrentHashMap<>();
     private int maxLoadRows;
-    /** Single-entity reads decode a row group each: bounded, so a burst of them cannot exhaust memory. */
-    private java.util.concurrent.Semaphore docReads;
+    /**
+     * Single-entity reads decode a row group each: bounded, so a burst of them cannot exhaust memory; at most {@code max-queued-reads}
+     * wait, and a read whose caller has stopped waiting leaves the queue (QA3A-01).
+     */
+    private com.ash.drishti.api.ReadSlots docReads;
     /** Single reads of background work (the start-up warm-up): apart from {@link #docReads}, so a page never waits behind them. */
-    private final java.util.concurrent.Semaphore warmReads = new java.util.concurrent.Semaphore(2);
+    private com.ash.drishti.api.ReadSlots warmReads = new com.ash.drishti.api.ReadSlots("warm-up reads", 2, 64);
     private SourceContext context;
     private String sourceName;
     private int lookbackDays;
@@ -282,7 +286,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         this.docs = !set.containsKey("doc-cache-mb") ? Shared.DOCS : Caffeine.newBuilder().maximumWeight(Long.parseLong(set.get("doc-cache-mb")) * 1024 * 1024)
                 .weigher((String k, String v) -> 2 * (k.length() + v.length()) + 64).build();
         this.maxLoadRows = Integer.parseInt(ctx.setting("max-load-rows", "200000"));
-        this.docReads = new java.util.concurrent.Semaphore(Integer.parseInt(ctx.setting("max-concurrent-reads", "16")));
+        this.docReads = new com.ash.drishti.api.ReadSlots("document reads of " + ctx.setting("source-name", "delta"),
+                Integer.parseInt(ctx.setting("max-concurrent-reads", "16")), Integer.parseInt(ctx.setting("max-queued-reads", "4096")));
+        this.warmReads = new com.ash.drishti.api.ReadSlots("warm-up reads of " + ctx.setting("source-name", "delta"), 2, 64);
         ctx.settings().forEach((k, v) -> {
             if (k.startsWith("layout.") && k.endsWith(".columns")) {
                 promoted.put(k.substring(7, k.length() - 8), java.util.Arrays.stream(v.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList());
@@ -608,7 +614,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     /** The entity's document on one date, read under {@code slots} (pages: {@link #docReads}; background work: {@link #warmReads}). */
-    private String doc(EntityRef ref, DeltaTable.Layout l, LocalDate d, java.util.concurrent.Semaphore slots) {
+    private String doc(EntityRef ref, DeltaTable.Layout l, LocalDate d, com.ash.drishti.api.ReadSlots slots) {
         // the id map says which file holds the entity; only that file's matching row group is read
         int file = idMap(ref.kind(), l, d).file(ref.id());
         if (file < 0) {
@@ -626,7 +632,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             }
         }
         if (json == null) {
-            slots.acquireUninterruptibly();
+            slots.acquire();                                   // refused when too many wait; never taken for a caller that has gone
             try {
                 json = tables.get(ref.kind()).doc(l, d, file, ref.id()).orElse(null);
             } finally {
@@ -990,6 +996,12 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         idMaps.synchronous().asMap().keySet().removeIf(k -> k.owner().equals(owner));
         columnSets.synchronous().asMap().keySet().removeIf(k -> k.owner().equals(owner));
         docs.asMap().keySet().removeIf(k -> k.startsWith(owner + "\u001f"));
+    }
+
+    /** A data-load signal merged into the next purge: the tables' newest versions are read again at the next read (layouts only). */
+    @Override
+    public void refreshVersions() {
+        latest.synchronous().invalidateAll();
     }
 
     @Override

@@ -1725,6 +1725,7 @@ pack expects and who is told is the pack's `loads:` section and the administrato
 | `lookback-days` | `3` | Business days before today that are still checked for missing data. |
 | `default-notify-roles` | `[admin]` | Roles told about a load or late data when the pack names no roles or users. |
 | `smoke-max` | `20` | Most sample entities a pack may ask to be opened after a ready load. |
+| `refresh-window` | `5s` | Signals within this time of a connector's last refresh are merged: the first refreshes the connector at once, the others join one more refresh at the end of the window (each still looks for the connector's newest version, so its checks see the new data). At most one refresh runs and one waits per connector, however many signals arrive (a 60-day backfill sends 60). `0s` refreshes on every signal. |
 | `upload-max-mb` | `2048` | **Load data** from the browser (Admin → Packs → a pack → Load data, `POST /api/v1/admin/packs/{pack}/data`): the largest file. The file is streamed, one document in memory at a time, so this bounds disk and time, not memory; the console streams it on without holding it, under its own cap `builder.pack_load_max_mb`. |
 
 The token scope that opens `POST /api/v1/packs/{pack}/loads` to a personal API token is `loads:write` (`drishti.security.token-scopes`); the
@@ -1944,6 +1945,7 @@ Layout: `<root>/<domain>/<kind>/business_date=yyyy-MM-dd/` holding `(id, doc)` r
 | `columns-cache-mb` | not set: shared, 20 % of the heap | A day's promoted columns, read once and kept by size (the newest day is loaded in the background). |
 | (memory budget) | — | Delta connectors that do not set `cache-mb`, `id-map-mb`, `columns-cache-mb` or `doc-cache-mb` share one cache of each, sized from `-Xmx` (5 %, 20 %, 20 %, 5 %: half the heap in all, however many connectors run); a connector that sets one keeps a cache of its own of that size. Admin → Caches shows each shared cache's size against its cap. |
 | `max-concurrent-reads` | `16` | Single-document reads at once (each decodes one row group). |
+| `max-queued-reads` | `4096` | Single-document reads that may wait for one of those slots. More are refused at once (`DRS-1003 … reads already wait … the server is busy, try again`), and a waiting read whose caller has stopped waiting (its time-out, `drishti.sources.fetch-timeout`) leaves the queue and never reads. |
 | `max-load-rows` | `200000` | A table without columns has a whole day loaded for reverse lookups only up to this many rows. |
 | `warm-dates` | `3` | After start, in the background, each table's newest N dates get their id map and one document read, so the first read of a recent past date is not the slow one. `0` turns it off. |
 | `s3.endpoint`, `s3.access-key`, `s3.secret-key`, `s3.region`, `s3.path-style` | empty, empty, empty, empty, `true` with an endpoint | Shorthands for an `s3a://` (or, native engine, `s3://`) root; both engines read them. Without keys the AWS chain is used (environment, profile, instance role). |
@@ -2182,6 +2184,7 @@ loading and maintenance: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.
 | `doc-cache-mb` | `256` | memory for recently read documents |
 | `cache-mb` | `512` | memory for small days read whole for reverse lookups |
 | `max-concurrent-reads` | `16` | single-document reads at once |
+| `max-queued-reads` | `4096` | single-document reads that may wait for a slot; more are refused at once, and a read whose caller has gone leaves the queue |
 | `max-load-rows` | `200000` | the largest day read whole for reverse lookups when a table has no promoted columns |
 | `reverse-index` | `true` | `false` turns reverse lookups off |
 | `source-name` | the connector's name | the name shown in provenance and Health |
@@ -2389,6 +2392,7 @@ Nothing is stored: each document is worked out when asked for (the news about th
 | `store` | `heap` (`disk` in the trading pack's `trade-pages`) | `heap`: every page is built and kept in memory (small books). `disk`: the pages live under `store-dir`, the heap keeps each group's totals only; complete at any number of members (1.16 million trades a day measured in an 8 GB heap, 2026-10-18). |
 | `store-dir` | `<data dir>/derived/<connector>` | The pages' only folder (`store: disk`); emptied at start, one sub-folder per computation, deleted when a newer one replaces it. |
 | `retire-after` | `60s` | How long replaced pages on disk are kept for reads still running. |
+| `rebuild-delay` | `5s` | `store: disk`: after a purge (a data-load signal, Admin → Caches) the latest pages are rebuilt in the background this long after the last purge of a burst. A purge never starts a second full read beside one that runs: the running build is kept for its readers and the next reader after it builds once more. |
 | (restart) | — | With `store: disk`, the pages of the previous run are served again at start when built by the same definitions (`pages.json` in their folder); their data version is then checked as for any build. Without that, grouped pages would wait for the first build after every restart. |
 | `version-check` | `10s` | How often the members' data version is asked; a new version (a load) rebuilds, nothing else does. |
 | `refresh` | `30s` | Rebuild age, used only when a source cannot say its data's version. |

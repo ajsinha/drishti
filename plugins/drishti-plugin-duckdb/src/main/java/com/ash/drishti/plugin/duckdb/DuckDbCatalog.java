@@ -45,7 +45,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -73,7 +72,7 @@ final class DuckDbCatalog {
     private final HitIndex index = new HitIndex();
     private final DatedHitIndex dated;                                 // past days' ids by business date (index.days > 1)
     private final Cache<DayKey, ColumnSet> columnSets;
-    private final Semaphore dayReads = new Semaphore(2);
+    private final com.ash.drishti.api.ReadSlots dayReads = new com.ash.drishti.api.ReadSlots("day reads", 2, 256);   // bounded queue (QA3A-01)
     private volatile Map<String, NavigableSet<LocalDate>> dates = Map.of();
     private volatile Map<String, Boolean> present = Map.of();          // promoted column -> number
     private volatile Instant loadedAt;
@@ -400,7 +399,7 @@ final class DuckDbCatalog {
         numberPaths.forEach(p -> select.append(", ").append(DuckDbLayout.quoted(p)));
         textPaths.forEach(p -> select.append(", ").append(DuckDbLayout.quoted(p)));
         select.append(" FROM ").append(table).append(" WHERE kind = ? AND business_date = CAST(? AS DATE)");
-        dayReads.acquireUninterruptibly();
+        dayReads.acquire();
         try (var pool = Executors.newVirtualThreadPerTaskExecutor()) {
             List<String> cuts = file.with(c -> boundaries(c, kind, day, scanThreads));
             List<Future<Chunk>> parts = new ArrayList<>();

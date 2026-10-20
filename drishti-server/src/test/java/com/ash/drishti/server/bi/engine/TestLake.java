@@ -53,6 +53,9 @@ public class TestLake implements SourceGateway {
 
     public final Map<LocalDate, List<Trade>> trades = new LinkedHashMap<>();
     public final AtomicInteger scans = new AtomicInteger();
+    /** Column scans running now, and the most at once (QA3A-01: one rebuild per table, however many signals). */
+    public final AtomicInteger scanning = new AtomicInteger();
+    public final AtomicInteger scanPeak = new AtomicInteger();
     /** The trades' data version per business date (a Delta date's files); empty: the connector cannot tell, as before. */
     public final Map<LocalDate, String> versions = new java.util.concurrent.ConcurrentHashMap<>();
     final AtomicInteger recordReads = new AtomicInteger();
@@ -166,12 +169,15 @@ public class TestLake implements SourceGateway {
                 return Optional.empty();
             }
             scans.incrementAndGet();
-            if (scanDelayMillis > 0) {
-                try {
+            scanPeak.accumulateAndGet(scanning.incrementAndGet(), Math::max);
+            try {
+                if (scanDelayMillis > 0) {
                     Thread.sleep(scanDelayMillis);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
                 }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                scanning.decrementAndGet();
             }
             int n = list.size();
             String[] ids = list.stream().map(Trade::id).toArray(String[]::new);

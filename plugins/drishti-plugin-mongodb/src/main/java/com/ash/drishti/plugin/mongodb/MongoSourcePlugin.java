@@ -60,7 +60,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
@@ -133,7 +132,7 @@ public final class MongoSourcePlugin implements SourcePlugin {
     private volatile boolean narrow;
     private LoadingCache<DayKey, ColumnSet> columnSets;
     /** Reads of a whole day (a million documents' promoted fields) at once per connector; more wait. */
-    private Semaphore heavy;
+    private com.ash.drishti.api.ReadSlots heavy;      // bounded queue (QA3A-01)
 
     @Override
     public PluginManifest manifest() {
@@ -154,7 +153,7 @@ public final class MongoSourcePlugin implements SourcePlugin {
         this.maxLoadRows = Integer.parseInt(ctx.setting("max-load-rows", "200000"));
         this.reverseIndex = Boolean.parseBoolean(ctx.setting("reverse-index", "true"));
         this.readThreads = Math.max(1, Integer.parseInt(ctx.setting("read-threads", "8")));
-        this.heavy = new Semaphore(Math.max(1, Integer.parseInt(ctx.setting("heavy-reads", "2"))));
+        this.heavy = new com.ash.drishti.api.ReadSlots("day reads", Math.max(1, Integer.parseInt(ctx.setting("heavy-reads", "2"))), 256);
         String kinds = ctx.setting("kinds", "");
         this.configuredKinds = kinds.isBlank() ? List.of() : Arrays.stream(kinds.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList();
         ctx.settings().forEach((k, v) -> {
@@ -448,7 +447,7 @@ public final class MongoSourcePlugin implements SourcePlugin {
 
     /** One day of a kind as columns, at most {@code heavy-reads} at once. */
     private ColumnSet readDay(String kind, LocalDate day) {
-        heavy.acquireUninterruptibly();
+        heavy.acquire();
         try {
             dayReads.incrementAndGet();
             return reader.read(kind, day, promoted.getOrDefault(kind, List.of()), boundaries.getOrDefault(kind, List.of()));

@@ -55,7 +55,6 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -107,7 +106,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     private AsyncCache<DayKey, ColumnSet> columnSets;
     private AsyncCache<DayKey, Part> parts;
     private Cache<String, String> docs;
-    private Semaphore docReads;
+    private com.ash.drishti.api.ReadSlots docReads;   // bounded queue; a read whose caller has gone leaves it (QA3A-01)
     private LakeTables lake;
     private SourceContext context;
     private String sourceName;
@@ -169,7 +168,8 @@ public final class IcebergSourcePlugin implements SourcePlugin {
                 .buildAsync();
         this.docs = Caffeine.newBuilder().maximumWeight(mb(ctx, "doc-cache-mb", "256"))
                 .weigher((String k, String v) -> 2 * (k.length() + v.length()) + 64).build();
-        this.docReads = new Semaphore(Integer.parseInt(ctx.setting("max-concurrent-reads", "16")));
+        this.docReads = new com.ash.drishti.api.ReadSlots("document reads of " + ctx.setting("source-name", "iceberg"),
+                Integer.parseInt(ctx.setting("max-concurrent-reads", "16")), Integer.parseInt(ctx.setting("max-queued-reads", "4096")));
         ctx.settings().forEach((k, v) -> {
             if (k.startsWith("layout.") && k.endsWith(".columns")) {
                 promoted.put(k.substring(7, k.length() - 8), Arrays.stream(v.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList());
@@ -441,7 +441,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             String key = ref.kind() + "\u001f" + d.fingerprint() + "\u001f" + d.date() + "\u001f" + ref.id();
             String json = docs.getIfPresent(key);
             if (json == null) {
-                docReads.acquireUninterruptibly();
+                docReads.acquire();
                 try {
                     json = tables.get(ref.kind()).doc(l.get(), d, file, ref.id()).orElse(null);
                 } finally {

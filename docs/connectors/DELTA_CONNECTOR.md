@@ -346,7 +346,10 @@ without it, and tries again every 30 s for 10 minutes; *documents are cached on 
 disk until the next start* (WARN) that it gave up.
 
 At most `max-concurrent-reads` (16) such reads run at once: each decodes about 7 MB of documents, so a burst of
-thousands of reads (an impact analysis, a search falling back to documents) queues instead of exhausting memory.
+thousands of reads (an impact analysis, a search falling back to documents) queues instead of exhausting memory. The queue
+is bounded too: at most `max-queued-reads` (4096) wait, more are refused at once (*… reads already wait … the server is busy,
+try again*), and a read whose caller has stopped waiting (its time-out) leaves the queue without reading. Before this, reads
+abandoned by a burst of data-load signals stayed queued and filled the heap (QA3A-01).
 
 | | Time |
 |---|---|
@@ -811,6 +814,7 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 | `doc-disk-cache.enabled`, `doc-disk-cache.dir` | `true`, `<data dir>/cache/<connector>/docs` | documents read before, in a RocksDB on disk, kept across restarts ([section 6.3](#63-opening-one-entity)) |
 | `doc-disk-cache.max-gb`, `.ttl`, `.reset-at`, `.zone` | `1`, `12h`, `02:00`, `America/New_York` | its size cap, time limit and daily clearing |
 | `max-concurrent-reads` | `16` | single-document reads at once |
+| `max-queued-reads` | `4096` | single-document reads that may wait for a slot; more are refused at once, and a read whose caller has gone leaves the queue |
 | `max-load-rows` | `200000` | the largest day loaded whole for reverse lookups when a table has no promoted columns |
 | `cache-mb` | not set: the shared cache, 5 % of the heap | memory for whole days of small tables |
 | `id-column`, `doc-column`, `date-column` | `id`, `doc`, `business_date` | column names |

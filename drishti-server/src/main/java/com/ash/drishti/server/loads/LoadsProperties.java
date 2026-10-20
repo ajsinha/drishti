@@ -31,10 +31,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param lookbackDays business days before today that are still checked for missing data
  * @param defaultNotifyRoles roles told about a load or late data when the pack names none
  * @param smokeMax most sample entities a smoke step may open
+ * @param refreshWindow signals within this time of a connector's last refresh are merged into one more refresh at its end (QA3A-01)
  */
 @ConfigurationProperties("drishti.loads")
 public record LoadsProperties(String dir, Integer keep, Duration checkInterval, Boolean scheduler, Integer verifyLimit, Duration verifyTimeout,
-        Integer lookbackDays, List<String> defaultNotifyRoles, Integer smokeMax) {
+        Integer lookbackDays, List<String> defaultNotifyRoles, Integer smokeMax, Duration refreshWindow) {
 
     public LoadsProperties {
         dir = dir == null || dir.isBlank() ? com.ash.drishti.api.DataDir.under("loads") : dir;
@@ -46,5 +47,6 @@ public record LoadsProperties(String dir, Integer keep, Duration checkInterval, 
         lookbackDays = lookbackDays == null ? 3 : Math.max(0, lookbackDays);
         defaultNotifyRoles = defaultNotifyRoles == null ? List.of("admin") : List.copyOf(defaultNotifyRoles);
         smokeMax = smokeMax == null ? 20 : Math.max(0, smokeMax);
+        refreshWindow = refreshWindow == null ? Duration.ofSeconds(5) : refreshWindow.isNegative() ? Duration.ZERO : refreshWindow;
     }
 }

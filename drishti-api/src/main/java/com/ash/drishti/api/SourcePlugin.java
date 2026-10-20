@@ -265,6 +265,14 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
+     * Looks for the source's newest data at the next read, dropping no cached data: a data-load signal that arrives while a purge of this
+     * source has just run is merged into the next one ({@code drishti.loads.refresh-window}), and only this runs for it, so the load's
+     * checks still see the new version. The default does nothing (the source's own refresh interval applies).
+     */
+    default void refreshVersions() {
+    }
+
+    /**
      * What the plugin's own definition says a field of one of its kinds means, for About this page's glossary: a derived kind
      * says "sum of mtm over the trades" and the formula. The default knows nothing.
      *

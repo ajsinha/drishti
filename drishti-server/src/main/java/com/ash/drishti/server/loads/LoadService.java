@@ -70,6 +70,8 @@ public final class LoadService {
     private final BusinessDates dates;
     private final AuditLog audit;
     private final Clock clock;
+    /** At most one refresh running and one waiting per connector, however many signals arrive (QA3A-01). */
+    private final RefreshCoalescer refreshes;
 
     @SuppressWarnings("java:S107")
     public LoadService(PackRegistry packs, LoadStore store, LoadsConfig.Overrides configs, LoadsProperties props, SourceRegistry sources,
@@ -86,6 +88,12 @@ public final class LoadService {
         this.dates = dates;
         this.audit = audit;
         this.clock = clock;
+        this.refreshes = new RefreshCoalescer(props.refreshWindow());
+    }
+
+    /** The refreshes of the connectors (tests and the health page: how many ran, how many wait). */
+    public RefreshCoalescer refreshes() {
+        return refreshes;
     }
 
     private final java.util.List<java.util.function.Consumer<LoadRecord>> readyListeners = new java.util.concurrent.CopyOnWriteArrayList<>();
@@ -238,17 +246,30 @@ public final class LoadService {
     private LoadRecord.Step refresh(String kind) {
         long t0 = System.nanoTime();
         List<String> purged = new ArrayList<>();
+        List<String> merged = new ArrayList<>();
+        long in = 0;
         try {
             for (SourcePlugin p : sources.plugins()) {
                 // the kind's own stores, and the pages built from it (a derived connector groups loaded documents: its pages are stale now)
                 if (p.manifest().serves(kind) || p.dependsOn(kind)) {
-                    p.purgeCaches();
-                    purged.add(p.manifest().name());
+                    // a connector refreshed moments ago is not dropped again: the signal joins one more refresh at the end of the window,
+                    // and the connector only looks at its newest version now, so the checks below still see the new data (QA3A-01)
+                    RefreshCoalescer.Outcome o = refreshes.request(p.manifest().name(), p::purgeCaches);
+                    if (o.now()) {
+                        purged.add(p.manifest().name());
+                    } else {
+                        p.refreshVersions();
+                        merged.add(p.manifest().name());
+                        in = Math.max(in, o.inMillis());
+                    }
                 }
             }
             pipeline.purgeCaches();
-            return new LoadRecord.Step("refresh", "ok", purged.isEmpty() ? "no connector serves " + kind + "; engine caches dropped"
-                    : "caches dropped: " + String.join(", ", purged), ms(t0));
+            String detail = purged.isEmpty() && merged.isEmpty() ? "no connector serves " + kind + "; engine caches dropped"
+                    : (purged.isEmpty() ? "" : "caches dropped: " + String.join(", ", purged))
+                    + (merged.isEmpty() ? "" : (purged.isEmpty() ? "" : "; ") + "merged with a refresh moments ago: " + String.join(", ", merged)
+                    + " (their caches are dropped once more in " + Math.max(1, Math.round(in / 1000.0)) + " s)");
+            return new LoadRecord.Step("refresh", "ok", detail, ms(t0));
         } catch (RuntimeException e) {
             return new LoadRecord.Step("refresh", "failed", message(e), ms(t0));
         }
