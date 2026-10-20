@@ -23,8 +23,9 @@
   went. Days a peer answered are now kept under the caller's security signature (`Principal.securitySignature()`: sorted roles and
   embedding app, the live relay's partition too) and never served to a caller with another one; days this node holds stay one shared
   unmasked entry, masked per answer. A field that reads as the mask on any day (a peer's stricter `redact`) is `masked: true` and never
-  "changed". Other caches on the history and net paths checked: none shares one caller's data with another (HISTORY_QUERIES.md
-  sections 11 and 13, DRISHTI_NET.md *Masks twice*). Tests: HistoryCacheMasksTest, NetHistoryMasksTest (three servers: viewer first and
+  "changed". The other caches on the history and net paths were checked; two more shared what peers read for one caller and are now
+  per signature too (`SourceRouter.partition()`): the map panels' listing and documents (60 s), and a view's document-shape cache
+  (a masked value's type is not the value's). HISTORY_QUERIES.md sections 11 and 13, DRISHTI_NET.md *Masks twice*. Tests: HistoryCacheMasksTest, NetHistoryMasksTest (three servers: viewer first and
   administrator first, two reading nodes, repeated within the cache's life; it failed before the fix).
 - **Fixed (SOAK2-02): a connector file's `enabled: "false"` (quoted) switches the connector off.** It was refused (`'enabled' is true or
   false`) though `${VAR:false}` resolves to the same text; `"true"` and `"false"` in any case are now the booleans, anything else is

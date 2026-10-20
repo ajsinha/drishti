@@ -1639,7 +1639,8 @@ domain): nothing is fetched from the internet, there are no map tiles and no map
 
 `highlight`, `region`, `shade.field` and `shade.by` are expressions compiled when the Sutra loads (`DRS-2101`); `link` and `shade` that
 are not mappings of the shape above, a link template with no code, and a `highlight` that is a list are `DRS-2029`. The entities are read
-once per kind and kept for `drishti.panels.map-cache-seconds` (60), at most `drishti.panels.map-entities` (1,000), within
+once per kind (in a Drishti\*net cluster, once per kind and caller's roles, since peers list and mask for the caller) and kept for
+`drishti.panels.map-cache-seconds` (60), at most `drishti.panels.map-entities` (1,000), within
 `drishti.panels.map-budget-millis` (5,000): a slower read leaves the map unshaded, with the reason under it. Countries too small for the
 world shapes (Cayman Islands, Bermuda, ...) and regions that are tiny at their country's scale are drawn as dots, so they can still be
 clicked. Under the map, *Open a country* lists the same places as links (the way in from a keyboard, a screen reader or a phone).

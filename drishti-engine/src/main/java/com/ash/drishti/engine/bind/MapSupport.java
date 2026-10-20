@@ -46,7 +46,8 @@ import java.util.regex.Pattern;
 /**
  * What a {@code map} panel reads across a whole kind, before the panels are bound: which entities of its {@code link} kind
  * exist (so a country with no page is not clickable) and the {@code shade} field of every entity of its {@code shade} kind.
- * The entities are read once per kind and kept briefly ({@code drishti.panels.map-cache-seconds}), then the caller's masks
+ * The entities are read once per kind (in a cluster, once per kind and caller signature: peers list and mask for the caller) and kept
+ * briefly ({@code drishti.panels.map-cache-seconds}), then the caller's masks
  * are applied to each: a masked field shades nothing and is never added up or ranked, and a kind the caller may not open is
  * never listed (the panel says so). Read within {@code drishti.panels.map-budget-millis}; a slower read leaves the map
  * unshaded, with the reason in its note.
@@ -124,7 +125,8 @@ public final class MapSupport {
     }
 
     private List<EntityRef> listing(String kind, AsOf asOf) {
-        return listings.get(kind + "|" + asOf.businessDate(), k -> {
+        // per partition: in a cluster the listing and the documents come partly from peers, listed and masked there for the caller (SOAK2-01)
+        return listings.get(kind + "|" + asOf.businessDate() + "|" + router.partition(), k -> {
             Duration budget = Duration.ofMillis(limits.mapBudgetMillis());
             List<EntityHit> hits = router.list(kind, "", limits.mapEntities(), budget, asOf, new SourceFailures()).hits();
             List<EntityRef> refs = new ArrayList<>();
@@ -180,6 +182,6 @@ public final class MapSupport {
     }
 
     private Map<EntityRef, EntityDocument> documents(String kind, AsOf asOf) {
-        return documents.get(kind + "|" + asOf.businessDate(), k -> router.fetchAll(listing(kind, asOf), Duration.ofMillis(limits.mapBudgetMillis()), asOf));
+        return documents.get(kind + "|" + asOf.businessDate() + "|" + router.partition(), k -> router.fetchAll(listing(kind, asOf), Duration.ofMillis(limits.mapBudgetMillis()), asOf));
     }
 }
