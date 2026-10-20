@@ -30,9 +30,9 @@ About 60 minutes.
 - A shared workspace called **Exposure desk** (**Workspaces → New workspace**): a model and a report are published from a shared workspace; a private one cannot publish.
 - The console's Python environment from tutorial 1 (it carries `pandas` and `pyarrow`), for steps 4, 6 and 8.
 - **The numbers.** Every number below (`15,000` trade valuations, MTM `2,796,077,089`, P&L `91,932,705`, `76` netting sets, exposure
-  `40,648,705,220`, the sector rows) was taken on the demo lake `lake demo` built on 17 October 2026: sixty business days ending 2026-10-16, each a
-  snapshot, so a question asks **one business date** (the latest, unless you pick another) and a sum is one day's, never seven days added up. `lake demo`
-  moves the days to end on *your* business date; the figures are the same.
+  `40,648,705,220`, the sector rows) was taken on the demo lake `lake demo` built on 17 October 2026: the seven-day lakes of 2.5.0 ending 2026-10-16 (since 2.6.5 they hold sixty
+  business days, and a figure may differ on yours), each day a snapshot, so a question asks **one business date** (the latest, unless you pick another) and a sum is one day's, never the days added up. `lake demo`
+  moves the days to end on *your* business date.
 - Files in [data/](data/): [cp-risk.model.yaml](data/cp-risk.model.yaml) (the model of step 2, for the command-line path), [cp-risk-view.report.yaml](data/cp-risk-view.report.yaml), [cp-risk-extracts.notebook.yaml](data/cp-risk-extracts.notebook.yaml), [cp-table.python.yaml](data/cp-table.python.yaml) and [cp-table.dataset.yaml](data/cp-table.dataset.yaml).
 
 ## What you will learn

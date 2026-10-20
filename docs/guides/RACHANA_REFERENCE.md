@@ -25,7 +25,7 @@ soon as it is saved. If an edit is invalid, the last good version is kept and th
 
 This page is the authoritative reference. Everything in it was checked against the code in `drishti-rachana` (grammar, parser,
 validator, Rachana-EL, formats), `drishti-engine` (binding) and `drishti-inference` (gaps and labels), and every example was
-previewed against the demo lakes of the seven packs (`drishti.py lake demo`, sixty business days ending 2026-10-16): the trades of
+previewed against the demo lakes of the seven packs (`drishti.py lake demo`: the seven-day lakes of 2.5.0 ending 2026-10-16; the lakes hold sixty business days since 2.6.5): the trades of
 the `trading` pack in the common schema of their source systems (ENDUR, CALYPSO, MUREX), and every other kind, all in the production
 systems' UPPER_SNAKE attribute names. Figures that depend on the business date are marked as such.
 
@@ -617,7 +617,8 @@ match: { kind: trade, where: "$.SOURCE_SYSTEM == 'MUREX' && $.PRODUCT_TYPE == 'I
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'MUREX' && $.PRODUCT_TYPE == 'IRS_FIXFLOAT'", priority: 10 }
 ```
 
-`MX-20000001` has `"TRADE_STATUS": "AMENDED"`, so `irs-matured` does not hold and `irs-fixfloat` is used. To check which Sutra a
+`MX-20000001` has `"TRADE_STATUS": "AMENDED"`, so `irs-matured` does not hold and `irs-fixfloat` is used (on the sixty-day demo
+lakes of 2.6.5 its last seven days read `CANCELLED`, which is not `MATURED` either: the same Sutra is used). To check which Sutra a
 document gets:
 
 ```bash
@@ -1297,7 +1298,7 @@ Always give each field a `label` (a field without one is labelled `null`). `tone
 ```
 
 You should see, for `MX-20000001`, `Status AMENDED` in the `ok` colour, `Last action AMEND (version 2)`, `Delivery versus payment NO`
-and `Transit 00107`.
+and `Transit 00107` (captured on the seven-day lakes of 2.5.0. On the sixty-day lakes of 2.6.5 `MX-20000001` is cancelled part-way through: on its last seven business days it reads `CANCELLED`, version 7; on an earlier date it reads `AMENDED`, so pick an earlier date to see these values).
 
 #### provenance
 

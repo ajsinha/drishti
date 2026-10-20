@@ -37,7 +37,10 @@ About 30 minutes.
 The screens and outputs below come from this version's console and `drishti.py`, reading the history contract's two reference answers:
 trade `1000015` over 30 data days and equity `EQ-CSCA` over 3 months
 (`drishti-testkit/src/main/resources/history/`, [HISTORY_QUERIES.md section 8](../architecture/HISTORY_QUERIES.md#8-the-json-contract)).
-Your dates and values are your data's.
+Your dates and values are your data's. Trade `1000015` and its *Trader* column are the reference answer's: on the demo lakes the
+trading pack's `history:` block (step 6) lists no trader column. On the sixty-day demo lakes, the
+trades amended most (ten times each) are ENDUR `1000279` and `1001049`, CALYPSO `CLY-4000509` and MUREX `MX-30001745`: try
+`TRD 1000279 60`. `MX-20000001` is cancelled part-way through the sixty days.
 
 ## What you will learn
 

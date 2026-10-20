@@ -17,6 +17,14 @@
 
 ## Unreleased
 
+- **Docs: the 2.6.5 QA's documentation verification** ([DOCS_VERIFICATION.md](docs/qa/2026-10-20/DOCS_VERIFICATION.md)). The demo
+  lakes' outputs say sixty business days (`64 tables, 60 business days 2026-07-08 to 2026-09-30, 943 s`; about 15 minutes and 2.2 GB),
+  and figures captured on the seven-day lakes of 2.5.0 say so; `MX-20000001` is noted as cancelled part-way through the sixty days,
+  and the ten-amendment ids (`1000279`, `1001049`, `CLY-4000509`, `MX-30001745`) are named for history. Tutorial 20 step 6 no longer
+  saves a subscription with a token (`/me/**` writes never take one: the console saves it, a token reads it back; QA2-07). API_GUIDE
+  says which workspaces a token never touches (QA2-25); HISTORY_QUERIES.md is marked built (QA1-19); tutorial 21 says its trader
+  column is the reference answer's; GETTING_STARTED step 5 says the lakes end on today's business date (QA2-24);
+  IMPLEMENTATION_PLAN names 2.6.5 as the current release; nineteen plugins and twenty-one tutorials where the counts were old.
 - **Changed: the committed test data holds sixty business days** (`data/testdata`, was seven; 119 MB gzipped in 2,944 files, the
   largest 5 MB): a day-1 snapshot and fifty-nine days of changes, so a trade's history (`TRD <id> 60`) shows real amendments.
   `make_testdata.py --days` defaults to 60. The docs that said seven days say sixty; captured outputs (dates, counts, timings) are
