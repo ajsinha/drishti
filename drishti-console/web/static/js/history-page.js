@@ -96,13 +96,17 @@
     if (/^[1-9]\d{0,3}$/.test(t)) { q = 'days=' + t; }
     else if ((m = /^([1-9]\d{0,3}) ?([DWMY])$/.exec(t))) { q = 'range=' + m[1] + m[2]; }
     else if (/^(YTD|MTD|QTD)$/.test(t)) { q = 'range=' + t; }
-    else if ((m = /^FROM (\d{4}-\d{2}-\d{2})(?: TO (\d{4}-\d{2}-\d{2}))?$/.exec(t))) { q = 'from=' + m[1] + (m[2] ? '&to=' + m[2] : ''); }
+    else if ((m = /^FROM (\d{4}-\d{2}-\d{2})(?: TO (\d{4}-\d{2}-\d{2}))?$/.exec(t))) {
+      if (m[2] && m[2] < m[1]) { return { error: 'DRS-4022 TO ' + m[2] + ' is before FROM ' + m[1] + ': type the earlier date first' }; }   // never swapped silently (QA1-12)
+      q = 'from=' + m[1] + (m[2] ? '&to=' + m[2] : '');
+    }
     return q === null ? null : q + (diff ? '&diff=1' : '');
   }
   if (rform) {
     rform.addEventListener('submit', function (e) {
       e.preventDefault();
       var q = rangeQuery(rinput.value);
+      if (q && q.error) { rinput.setCustomValidity(q.error); rinput.reportValidity(); return; }
       if (q === null) { rinput.setCustomValidity('Type 30, 3M, YTD or FROM 2026-09-01 TO 2026-09-30'); rinput.reportValidity(); return; }
       window.location.href = window.location.pathname + '?' + q;
     });

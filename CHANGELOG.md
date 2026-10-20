@@ -17,6 +17,9 @@
 
 ## Unreleased
 
+- **Fixed (QA1-11, QA1-12, console): the history page links to an entity's days with data and never swaps a range.** A `DRS-1013` page
+  offers *From its first day with data* (the span the server names); `FROM b TO a` typed in the page's range field says `DRS-4022`
+  and stays, as the server does. `test_history_routes.py`, `test_history_browser.py`.
 - **Fixed (QA1-10): the demo lakes' market history has no phantom missing days and a real daily change.** `lake demo` moves the `DATE`
   of every point of a document's embedded series (`HISTORY`, `OHLC`, `FIXINGS`, `PNL_SERIES`) by the same business-day offset as the
   documents (holidays and coupon schedules stay); the test data's `CHANGE_1D` is now each day's move of the document's own price, not the

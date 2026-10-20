@@ -33,7 +33,8 @@
   </header>
   <p class="pnl-err" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ drs_message(error.code, error.detail, " · ") }}</p>
   <p class="text-muted-d">{{ drs_advice(error.code, kind, id) }}</p>
-  <p class="hx-error-links"><a class="lnk" href="{{ today }}">Today’s view of {{ id }}</a>
+  <p class="hx-error-links">{% if data_span %}<a class="lnk" data-hx-first-day href="?from={{ data_span[0] }}&amp;to={{ data_span[1] }}">From its first day with data, {{ data_span[0] }}</a>
+    {% endif %}<a class="lnk" href="{{ today }}">Today’s view of {{ id }}</a>
     {% if params.get('days') != '30' %}<a class="lnk" href="?days=30">The last 30 days</a>{% endif %}
     <a class="lnk" href="/t">The terminal</a></p>
 </div>

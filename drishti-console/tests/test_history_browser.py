@@ -170,3 +170,19 @@ def test_link_copies_on_a_plain_http_lan_address_and_keeps_changes_only(url, bro
         assert not errors, errors
     finally:
         ctx.close()
+
+
+def test_a_range_typed_with_to_before_from_is_refused_never_swapped(url, browser):
+    """QA1-12: FROM 2026-10-15 TO 2026-10-01 in the page's range field says DRS-4022 and stays; it never opens the dates swapped."""
+    ctx, pg, errors = _page(browser, "light")
+    try:
+        pg.goto(url + "/v/trade/1000015/history?days=30")
+        _ready(pg)
+        pg.fill("[data-hx-rinput]", "FROM 2026-10-15 TO 2026-10-01")
+        pg.press("[data-hx-rinput]", "Enter")
+        assert "DRS-4022" in pg.eval_on_selector("[data-hx-rinput]", "e => e.validationMessage")
+        assert pg.url.endswith("/v/trade/1000015/history?days=30")
+        assert not errors, errors
+    finally:
+        ctx.close()
+

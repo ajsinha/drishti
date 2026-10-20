@@ -19,6 +19,7 @@ terminal's and the export router's, so its routes win over ``/v/{kind}/{id}`` an
 from __future__ import annotations
 
 import json
+import re
 from urllib.parse import quote, urlencode
 
 from fastapi import APIRouter, Request
@@ -59,6 +60,20 @@ def page_query(params: dict, **change) -> str:
     return urlencode(p)
 
 
+_SPAN = re.compile(r"its days with data run from (\d{4}-\d{2}-\d{2}) to (\d{4}-\d{2}-\d{2})|its only day with data is (\d{4}-\d{2}-\d{2})")
+
+
+def data_span(e: BackendError) -> tuple[str, str] | None:
+    """The days an entity has data, as DRS-1013 names them (*its days with data run from A to B*, *its only day with data is A*), so
+    the page can link to them (QA1-11); None for any other problem."""
+    if e.code != "DRS-1013":
+        return None
+    m = _SPAN.search(e.detail or "")
+    if not m:
+        return None
+    return (m.group(1), m.group(2)) if m.group(1) else (m.group(3), m.group(3))
+
+
 def _shown_problem(e: BackendError) -> Response:
     return Response(drs_message(e.code, e.detail, " ") + "\n", status_code=e.page_status, media_type="text/plain; charset=utf-8")
 
@@ -74,7 +89,7 @@ async def history(request: Request, kind: str, id_: str):
         data = await request.app.state.backend.history(kind, id_, ident(request), **params)
     except BackendError as e:
         return render(request, "terminal/history.html", status_code=e.page_status, kind=kind, id=id_, error=e, page=None,
-                      params=params, screen="history", today=f"/v/{quote(kind)}/{quote(id_)}")
+                      params=params, screen="history", today=f"/v/{quote(kind)}/{quote(id_)}", data_span=data_span(e))
     page = build_page(data, kind, id_, known_at=getattr(request.state, "known_at", None))
     base = str(request.base_url).rstrip("/")
     to = params.get("to") or (data.get("window") or {}).get("to") or ""
