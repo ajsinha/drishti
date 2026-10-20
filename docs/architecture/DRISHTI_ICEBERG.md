@@ -15,8 +15,7 @@
 -->
 # drishti-iceberg: Drishti's own Apache Iceberg engine, without Hadoop
 
-Status: **design, not built.** Release not decided (product owner, 2026-10-20: "write the design first; we will decide
-later when to implement"). Related: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md) (the connector today),
+Status: **design, being built for 2.6.0** (product owner, 2026-10-20, after send and push and integration moved past 3.0.0). Related: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md) (the connector today),
 [DELTA_CONNECTOR.md section 16](../connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop) (the same move made for
 Delta Lake), [GETTING_STARTED.md: Windows](../guides/GETTING_STARTED.md#drishti-on-windows).
 

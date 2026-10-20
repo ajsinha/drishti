@@ -1230,6 +1230,7 @@ same moment could leave none enabled, DRISHTI_NET.md section 11; and members adv
    endpoint (decision 5), Excel feed, embed tokens bound to envelopes, SDK events.
 4. ~~**Sajha MCP connector**~~: **moved to wave I, 2.8.0** (product owner, 2026-10-20: it belongs to the release that does the AI work).
 6. **Apache Cassandra connector** (added 2026-10-20, [CASSANDRA_CONNECTOR_DESIGN.md](CASSANDRA_CONNECTOR_DESIGN.md)).
+7. **drishti-iceberg**, Drishti's own Iceberg engine with no Hadoop (added 2026-10-20, [DRISHTI_ICEBERG.md](DRISHTI_ICEBERG.md), steps I1–I5).
 5. **Field parameters in report wells** (wave C gap 9, decided 2026-10-19): a report visual's well names `param.<name>` and
    the reader's parameter slicer switches the field or measure it draws; checked by the report schema.
 
