@@ -78,7 +78,90 @@ public final class IcebergLoader {
 
     private record Line(String domain, String kind, LocalDate date, Row row) {}
 
-    public static void main(String[] args) throws Exception {
+    /**
+     * Runs a load; a failure ends it with one line on standard error and exit status 1, never a Java stack trace (QA3B-12: a REST
+     * catalog whose bucket is missing ended in {@code Exception in thread "main" java.io.UncheckedIOException …} and eight frames).
+     * {@code -Ddrishti.loader.trace=true} prints the stack trace as well.
+     */
+    public static void main(String[] args) {
+        try {
+            load(args);
+        } catch (Exception | Error e) {
+            System.err.println("iceberg: " + oneLine(e, settingsOf(args)));
+            if (Boolean.getBoolean("drishti.loader.trace")) {
+                e.printStackTrace();
+            }
+            System.exit(1);
+        }
+    }
+
+    /** The settings the arguments give (for the words of a failure). */
+    private static Map<String, String> settingsOf(String[] args) {
+        Map<String, String> s = new HashMap<>();
+        if (args.length > 1 && !args[1].startsWith("--")) {
+            s.put("root", args[1]);
+        }
+        for (int i = 1; i + 1 < args.length; i++) {
+            switch (args[i]) {
+                case "--catalog", "--uri", "--warehouse" -> s.put(args[i].substring(2), args[i + 1]);
+                case "--set" -> {
+                    int eq = args[i + 1].indexOf('=');
+                    if (eq > 0) {
+                        s.put(args[i + 1].substring(0, eq), args[i + 1].substring(eq + 1));
+                    }
+                }
+                default -> {
+                    continue;
+                }
+            }
+            i++;
+        }
+        return s;
+    }
+
+    /** A failure in one line: a missing bucket names the bucket, the endpoint and what to check; else the innermost message. */
+    static String oneLine(Throwable e, Map<String, String> settings) {
+        StringBuilder chain = new StringBuilder();
+        Throwable root = e;
+        for (Throwable c = e; c != null; c = c.getCause() == c ? null : c.getCause()) {
+            root = c;
+            String m = c.getMessage();
+            if (m != null && !m.isBlank() && chain.indexOf(m) < 0) {
+                chain.append(chain.length() == 0 ? "" : " / ").append(m);
+            }
+        }
+        String all = chain.toString();
+        String endpoint = settings.getOrDefault("s3.endpoint", "").isBlank() ? "AWS S3 (no s3.endpoint set)" : settings.get("s3.endpoint");
+        String catalog = settings.getOrDefault("uri", "");
+        if (all.contains("NoSuchBucket") || all.contains("bucket does not exist")) {
+            String bucket = bucket(settings.getOrDefault("warehouse", "")).or(() -> bucket(settings.getOrDefault("root", "")))
+                    .map(b -> "'" + b + "'").orElse("of the catalog's warehouse");
+            return "the bucket " + bucket + " does not exist at " + endpoint + (catalog.isBlank() ? "" : " (said by the REST catalog at " + catalog + ")")
+                    + ": create it, or check --warehouse, --set s3.endpoint and the catalog's own warehouse setting [" + first(all, 300) + "]";
+        }
+        if (!catalog.isBlank() && root instanceof java.net.ConnectException) {
+            return "cannot reach the REST catalog at " + catalog + " (" + root.getClass().getSimpleName() + ": " + root.getMessage() + "): check --uri and that "
+                    + "the catalog runs";
+        }
+        if (root instanceof java.net.ConnectException && !settings.getOrDefault("s3.endpoint", "").isBlank()) {
+            return "cannot reach the object store at " + endpoint + " (" + root.getMessage() + "): check --set s3.endpoint and that the store runs";
+        }
+        return "the load failed: " + first(all.isEmpty() ? root.getClass().getName() : all, 600) + " (" + root.getClass().getSimpleName()
+                + "; -Ddrishti.loader.trace=true prints the stack trace)";
+    }
+
+    private static java.util.Optional<String> bucket(String uri) {
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("^s3[an]?://([^/]+)").matcher(uri.trim());
+        return m.find() ? java.util.Optional.of(m.group(1)) : java.util.Optional.empty();
+    }
+
+    private static String first(String s, int n) {
+        String one = s.replace('\n', ' ');
+        return one.length() <= n ? one : one.substring(0, n - 1) + "…";
+    }
+
+    /** The load itself (tests call it, and see its exceptions). */
+    static void load(String[] args) throws Exception {
         String file = args[0];
         Map<String, String> settings = new HashMap<>();
         settings.put("root", args.length > 1 && !args[1].startsWith("--") ? args[1] : com.ash.drishti.api.DataDir.under("iceberg"));

@@ -100,6 +100,12 @@ foreach ($kv in $Set) { $loaderArgs += @('--set', $kv) }
 $jvm = @("-Djava.io.tmpdir=$jtmp", "-Xmx$Heap", '-cp', $cp, 'com.ash.drishti.plugin.iceberg.IcebergLoader')
 
 & $java @jvm $jsonl $Root @loaderArgs
-if ($LASTEXITCODE -ne 0) { throw "the load failed (exit $LASTEXITCODE)" }
+if ($LASTEXITCODE -ne 0) {
+    # the loader said why in one line (which bucket, which endpoint, what to check: QA3B-12); no PowerShell error record on top of it
+    $code = $LASTEXITCODE
+    Remove-Item $jsonl -ErrorAction SilentlyContinue
+    [Console]::Error.WriteLine('load-iceberg: the load did not finish: see the line above')
+    exit $code
+}
 Remove-Item $jsonl
 Write-Host "Iceberg tables ready under $Root (engine: $Engine)"

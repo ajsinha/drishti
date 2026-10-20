@@ -58,7 +58,7 @@ class IcebergMovedLoaderTableTest {
             }
         }
         Files.writeString(lines, sb);
-        IcebergLoader.main(new String[] {lines.toString(), written.toString(), "--engine", "native", "--spill-dir", base.resolve("spill").toString()});
+        IcebergLoader.load(new String[] {lines.toString(), written.toString(), "--engine", "native", "--spill-dir", base.resolve("spill").toString()});
         moved = base.resolve("ice2");
         Files.move(written, moved);
     }

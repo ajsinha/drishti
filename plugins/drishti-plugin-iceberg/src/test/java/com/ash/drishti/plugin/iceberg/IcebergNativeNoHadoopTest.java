@@ -152,7 +152,7 @@ public class IcebergNativeNoHadoopTest {                          // public: the
         java.util.Collections.shuffle(rows, new java.util.Random(3));
         Files.write(lines, rows);
         String spill = Path.of(root).resolve("spill").toString();
-        IcebergLoader.main(new String[] {lines.toString(), root, "--engine", "native", "--file-rows", "10", "--buffer-mb", "0", "--spill-dir", spill,
+        IcebergLoader.load(new String[] {lines.toString(), root, "--engine", "native", "--file-rows", "10", "--buffer-mb", "0", "--spill-dir", spill,
             "--keep-days", "2", "--as-of", "2026-09-30"});
         IcebergMaintenance.main(new String[] {root, "--domain", "desk", "--engine", "native", "--relayout", "--force", "--rewrite-manifests",
             "--columns", "trade:mtm", "--expire-hours", "0", "--spill-dir", spill});

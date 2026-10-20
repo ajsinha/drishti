@@ -238,7 +238,11 @@ tools/load-iceberg.sh s3a://risk-lake/iceberg --set s3.region=us-east-1 --spill-
 The samples and the book go to the loader as **one input**, so each business day of a table is written once and holds both: a load
 replaces the days it writes, so two loads of the same days (the samples, then a book) would leave only the book's trades on them.
 The loader's heap is `DRISHTI_LOADER_HEAP` (default `4g`; Windows: `-Heap`), and its input file is written under the data folder
-(`DRISHTI_DATA_DIR`) and removed after the load.
+(`DRISHTI_DATA_DIR`) and removed after the load. A load that fails ends with one line and status 1, never a Java stack trace (both
+scripts): `iceberg: the bucket 'warehouse' does not exist at http://localhost:9000 (said by the REST catalog at http://localhost:8181):
+create it, or check --warehouse, --set s3.endpoint and the catalog's own warehouse setting […]`, `iceberg: cannot reach the REST
+catalog at …: check --uri …`, or `iceberg: the load failed: <why>`; `-Ddrishti.loader.trace=true` (in `JAVA_TOOL_OPTIONS`) prints the
+stack trace as well.
 
 Measured (10,000 trades x 3 days, two writer threads; before 2.6.6 the samples and the book were two loads):
 
