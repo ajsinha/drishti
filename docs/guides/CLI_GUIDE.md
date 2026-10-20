@@ -2293,6 +2293,29 @@ fail  Close to 100 trades: expected 100 ± 1%, found 750
 3 passed, 1 failed
 ```
 
+### `bi statement`
+
+A report's statement pages ([STATEMENTS.md](STATEMENTS.md), 2.6.0) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
+tab previews and a subscription mails.
+
+```
+drishti.py bi statement preview REPORT|--file F [--page P] [--date D] [--param NAME=VALUE ...]   the pages: count, paper, period, each page's header and footer
+drishti.py bi statement file REPORT|--file F [--format pdf|xlsx] [-o OUT] [--page P] [--date D] [--param NAME=VALUE ...]   the PDF (page-exact) or the Excel workbook
+```
+
+`REPORT` is the report's id (`file:report:<name>` for a shipped file); `--file` sends a draft's YAML (a BI author). `--date` is the statement's date: its
+`period` is worked out from it. `--param` gives a parameter of the report's model (a field parameter's choice, a what-if value). Captured, tutorial 20:
+
+```text
+$ python3 tools/drishti.py bi statement preview bi-39eb12fe47 --date 2026-10-08
+Monthly statement: 3 pages, A4 portrait, October 2026, 66 rows
+  page 1: Monthly statement | October 2026 | For wes  ...  Run 2026-10-19 · by DESK | Page 1 of 3  (80 cells)
+  page 2: Monthly statement | October 2026 | For wes  ...  Run 2026-10-19 · by DESK | Page 2 of 3  (160 cells)
+  page 3: Monthly statement | October 2026 | For wes  ...  Run 2026-10-19 · by DESK | Page 3 of 3  (6 cells)
+$ python3 tools/drishti.py bi statement file bi-39eb12fe47 --date 2026-10-08 -o statement.pdf
+wrote statement.pdf (5,000 bytes)
+```
+
 ### Shell completion
 
 `drishti.py completion bash|zsh|powershell` prints a completion script generated from the command tree (groups, commands,

@@ -1539,6 +1539,15 @@ Under `drishti.distribution.subscriptions`:
 | `load-delay` | `5s` | After a data load, wait this long before an `after-load` subscription runs, so the BI layers rebuild |
 | `narrative-rows` | `15` | Most rows per table the model is shown when it writes a subscription's narrative summary (`narrative: true`; only in `drishti.bi.ai.values: aggregates`, and only from the recipient's own unmasked columns) |
 
+Under `drishti.distribution.statements` (2.6.0, statement pages: [STATEMENTS.md](../guides/STATEMENTS.md)):
+
+| Key | Default | Meaning |
+|---|---|---|
+| `max-pages` | `500` | Most pages one statement may run to; a longer one is refused (`422 DRS-9038`), never cut |
+| `max-rows` | `10000` | Most rows of one table band; past it the band is cut and says so |
+| `paper` | `A4` | The paper of a statement whose `statement:` names none (`A4`, `A3`, `A5`, `Letter`, `Legal`) |
+| `band-queries` | `2` | How many bands of one statement are asked at the same time (1 to 8), each as the reader, within the query limits |
+
 ### `drishti.alerts.measure` — alerts on numbers and board notifications
 
 Alerts on a visual, a dataset measure or a Sutra field, and notifications from board tiles (phase 7, part 2: [DISTRIBUTION.md section 4](../guides/DISTRIBUTION.md#4-alerts-on-numbers)). Every key has a default;
