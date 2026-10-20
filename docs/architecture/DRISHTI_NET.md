@@ -414,6 +414,43 @@ View forwarding reuses the ordinary `/api/v1/**` endpoints with the hop header a
 
 All of N1–N7 are planned for 2.5.0, in this order; N1–N5 come first and are the minimum for the release.
 
+### Planned, 2.6.7: the transport between nodes
+
+Decided by the product owner on 2026-10-20, built in 2.6.7 beside BI runs ([BI_RUNS.md](BI_RUNS.md)) and chart any table
+([TABLE_CHARTS.md](TABLE_CHARTS.md)). The transport stays **HTTP** (signed as in N3, through `PeerHttp`). Connections are already
+persistent: the JDK client keeps them alive and reuses them, so neither item is about keep-alive.
+
+**1. Gossip off the busy path.** Today every node-to-node call shares one JDK `HttpClient` per scheme and TLS settings in `PeerHttp`:
+gossip, probes, digest pulls, state sync and data forwarding alike; the round loop (`drishti-net-gossip`) and the exchanges
+(`drishti-net-io-*`) run on virtual threads. Under a heavy BI load a gossip exchange can wait behind forwarded data on the same client,
+and CPU-bound work holding the virtual-thread carriers can delay the round itself, so a healthy node can miss `suspect-after` (5 s) and
+be marked *suspect*. The change:
+
+- **Sender:** gossip and probes (`POST /api/v1/net/gossip`, `GET /api/v1/net/ping` and the indirect probes) get **their own small client
+  pool** (a separate `HttpClient` with its own executor of two platform threads, HTTP/1.1, short timeouts), and the round runs on **one
+  dedicated platform thread**, so neither depends on the virtual-thread scheduler or on data traffic. Digest pulls, state sync and
+  forwarding keep the shared client.
+- **Receiver:** **reserved handling of `/api/v1/net/gossip` and the probes**: the cluster key is checked first (`NetCallFilter`) and the
+  request skips every later filter and gate (tokens, request activity, BI admission); the answer is built from memory with no blocking
+  I/O. Heavy BI work runs in BI runs' background class on bounded pools (BI_RUNS section 10), which keeps carriers free for it.
+- **Accepted when** a heavy BI burst on one node (the BI_RUNS 19.5 load) gives **no false *suspect* anywhere** in a three-node cluster,
+  with the gossip round time and exchange latency recorded per node (`drishti_net_gossip_rounds_total` plus a new
+  `drishti_net_gossip_exchange_seconds`).
+
+**2. HTTP/2 for peer data forwarding.** `PeerHttp` builds its clients with `HttpClient.Version.HTTP_1_1` today. Data forwarding (views
+and their sub-paths, raw documents, history, searches and their scatter, `PeerSource` fetches, the live relay's streams) moves to
+**HTTP/2**: many requests multiplexed over one connection per peer instead of a connection each, with header compression for the signed
+headers. Over TLS it is negotiated by ALPN; over plain HTTP by the `h2c` upgrade, which the JDK client attempts only on a request without
+a body, so the first call to a peer is a `GET` (the digest pull). The servers enable HTTP/2 (`server.http2.enabled`). Gossip stays on its
+own HTTP/1.1 client (item 1), so a congested data connection never delays it. A node that cannot speak HTTP/2 is answered in HTTP/1.1, as
+the protocol falls back.
+
+- **Tests:** forwarded views, history (`TRD <id> 30` on a peer), searches with scatter-gather, and the live relay (a ticking entity on A
+  watched on B) over HTTP/2, plain and with mutual TLS; a peer limited to HTTP/1.1; and a **soak comparison** (the 17.1 soak run once on
+  HTTP/1.1 and once on HTTP/2: errors, p95 and connections per peer).
+- **Arrow streaming over HTTP/2** (split queries returning Arrow between owners) comes with [SUPER_SCALE.md](SUPER_SCALE.md) **S6**, not
+  in 2.6.7.
+
 ## 17. Tests
 
 - **In-process clusters:** several Spring Boot contexts in one JVM on random ports (`SpringBootTest` with a web

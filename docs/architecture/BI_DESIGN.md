@@ -37,7 +37,7 @@ W1 vs design and the waves A, B, C · [13](#13-decisions-for-the-product-owner) 
 
 **Wave labels.** The build is three waves, each a release (section 12): **A** = 2.2.0 *Foundation and languages*,
 **B** = 2.3.0 *Calculation, live and scale*, **C** = 2.4.0 *Authoring and analysis*; then **N** = 2.5.0 *Drishti*net*, **D** = 2.6.0
-*Statements, field parameters and connectors* (named *Sharing and integration* until 2026-10-20), **R** = 2.6.7 *BI runs*, **W** = 2.7.0 *Write-back*, **I** = 2.8.0 *AI* and **E** = 2.9.0 *QA findings and production readiness* (section 12.2, as agreed on
+*Statements, field parameters and connectors* (named *Sharing and integration* until 2026-10-20), **R** = 2.6.7 *BI runs* (with the Drishti\*net transport items and chart any table), **W** = 2.7.0 *Write-back*, **I** = 2.8.0 *AI* and **E** = 2.9.0 *QA findings and production readiness* (section 12.2, as agreed on
 2026-10-17 and re-ordered on 2026-10-18, 2026-10-19 and 2026-10-20; send and push and integration after 3.0.0). W1 is the
 already-built first wave of 2.2.0. A component marked (A), (B) or (C) is delivered in that wave; one marked (C) in the
 sections below that is about integration arrives in D, about AI in I, and about governance in E.
@@ -1022,7 +1022,8 @@ wave ends with: **one experience QA round** by power users (findings fixed) → 
 drill** → tag. The server lane publishes request/response types on day one of each task so the console lane can build
 against them.
 
-**Release order (product owner, 2026-10-20):** 2.6.6 (QA clean) → **2.6.7 BI runs** (wave R, [BI_RUNS.md](BI_RUNS.md)) →
+**Release order (product owner, 2026-10-20):** 2.6.6 (QA clean) → **2.6.7 BI runs** (wave R, [BI_RUNS.md](BI_RUNS.md), with gossip off the busy path, HTTP/2 between nodes and chart any table,
+[TABLE_CHARTS.md](TABLE_CHARTS.md)) →
 2.7.0 write-back (item 0 the one Drishti database, [DATABASE.md](DATABASE.md)) → 2.8.0 AI and Sajha → the real-life QA → 2.9.0 →
 3.0.0.
 
@@ -1265,7 +1266,7 @@ Pivot tab is replaced before a pointer click settles; an in-one-step click was w
 answers equal the MQ answers per user, masked~~ (with integration, after 3.0.0); (3) a report visual switches its field through a
 field-parameter slicer; (4) the Cassandra connector answers as the Delta connector over the same data; (5) QA findings fixed before the drill.
 
-#### Wave R — BI runs → 2.6.7
+#### Wave R — BI runs, the transport between nodes and chart any table → 2.6.7
 
 Decided by the product owner on 2026-10-20 ([BI_RUNS.md](BI_RUNS.md)): super scale is the architecture at every data size, and
 every BI query goes through one bounded asynchronous pipeline (submit → plan → admission → run → store → notify). An answer within
@@ -1283,9 +1284,25 @@ metrics.
 **Console lane:** R1c–R6c of [BI_RUNS.md §18.2](BI_RUNS.md#182-console-lane-b): the Runs tab, the run card and confirm dialog,
 the bell, `drishti.py bi runs`, Admin → BI → Runs, help cards and the browser test.
 
+**Also in 2.6.7** (product owner, 2026-10-20):
+
+* **Gossip off the busy path** ([DRISHTI_NET.md, Planned, 2.6.7](DRISHTI_NET.md#planned-267-the-transport-between-nodes)): on the
+  sender, gossip and probes get their own small HTTP client pool and a platform thread (today they share `PeerHttp`'s clients with data
+  forwarding, and the round runs on a virtual thread); on the receiver, `/api/v1/net/gossip` and the probes are handled on a reserved
+  path that heavy BI work cannot crowd out. Accepted when a heavy BI burst on one node gives **no false *suspect* anywhere**.
+* **HTTP/2 for peer data forwarding** (same section): `PeerHttp` is HTTP/1.1 today; forwarded views, history, searches and the live relay
+  move to HTTP/2 (gossip stays on its own HTTP/1.1 client). Tested across views, history, search and live relay, with a soak comparison
+  against 2.6.6.
+* **Chart any table** ([TABLE_CHARTS.md](TABLE_CHARTS.md)): a Chart icon and K on every table (Sutra panels, search results and pick
+  lists, history, BI tables), one shared `table-chart.js` over the pivot engine and ECharts; chart all N through the panel records, the
+  search pivot or a BI run; save, export, Promote to Sutra as a new `chart` panel kind, Open in BI. Build steps C1–C10, one console and
+  one server builder.
+
 **Accepted when:** (1) a question answered within the inline wait looks exactly as in 2.6.6; (2) a burst of heavy runs leaves
 interactive p95 within 1.5× its baseline with no `DRS-9025` (BI_RUNS 19.5); (3) a shared run never shows a recipient a value
-their masks hide; (4) a restart loses no run silently; (5) QA findings fixed before the drill.
+their masks hide; (4) a restart loses no run silently; (5) a heavy BI burst on one node gives no false *suspect* anywhere; (6) the
+HTTP/2 soak is no worse than HTTP/1.1 in errors and p95; (7) every table type charts in all ten themes and no masked value reaches a
+chart or its export (TABLE_CHARTS 19); (8) QA findings fixed before the drill.
 
 #### Wave W — Write-back → 2.7.0
 
