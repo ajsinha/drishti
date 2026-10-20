@@ -216,6 +216,10 @@ public enum ErrorCode {
     REPORT_STATE("DRS-9035", 422),
     /** Reports (2.4.0): a theme item is not valid (its palette, colours, font or visual defaults), or a report names a theme that does not exist. */
     THEME_INVALID("DRS-9036", 422),
+    /** Reports (2.6.0): a well names {@code param.<name>} that is not a field parameter of the report's model, or whose choices do not fit the well. */
+    REPORT_FIELD_PARAMETER("DRS-9037", 422),
+    /** Reports (2.6.0): a statement (a page with {@code layout: statement}, or the report's {@code statement:} settings) is not valid, or it cannot be laid out. */
+    STATEMENT_INVALID("DRS-9038", 422),
     /** Governance: publishing the dataset change would break published reports (a field, measure or hierarchy they use is removed or renamed); a bi-admin may force it. */
     BI_IMPACT("DRS-9040", 409),
     /** Governance: a BI bundle is not readable, fails its checksums, is too large or is not a bundle of this format. */

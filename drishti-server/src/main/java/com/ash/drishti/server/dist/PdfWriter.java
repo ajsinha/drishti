@@ -165,13 +165,13 @@ public final class PdfWriter {
         return c.toString().getBytes(StandardCharsets.ISO_8859_1);
     }
 
-    private static String textOp(int font, double size, int rgb, double x, double y, double degrees, String text) {
+    static String textOp(int font, double size, int rgb, double x, double y, double degrees, String text) {
         double rad = Math.toRadians(degrees);
         return "BT /F" + font + ' ' + f(size) + " Tf " + color(rgb, "rg") + f(Math.cos(rad)) + ' ' + f(Math.sin(rad)) + ' ' + f(-Math.sin(rad)) + ' ' + f(Math.cos(rad)) + ' '
                 + f(x) + ' ' + f(y) + " Tm (" + escape(text) + ") Tj ET\n";
     }
 
-    private static String color(int rgb, String op) {
+    static String color(int rgb, String op) {
         return f(((rgb >> 16) & 0xFF) / 255.0) + ' ' + f(((rgb >> 8) & 0xFF) / 255.0) + ' ' + f((rgb & 0xFF) / 255.0) + ' ' + op + ' ';
     }
 
@@ -198,19 +198,19 @@ public final class PdfWriter {
         return t.length() <= max ? t : t.substring(0, max - 1) + "…";
     }
 
-    private static String f(double v) {
+    static String f(double v) {
         return String.format(Locale.ROOT, "%.2f", v);
     }
 
-    private static byte[] bytes(String s) {
+    static byte[] bytes(String s) {
         return s.getBytes(StandardCharsets.ISO_8859_1);
     }
 
-    private static void write(ByteArrayOutputStream o, String s) {
+    static void write(ByteArrayOutputStream o, String s) {
         o.writeBytes(bytes(s));
     }
 
-    private static byte[] deflate(byte[] raw) {
+    static byte[] deflate(byte[] raw) {
         ByteArrayOutputStream o = new ByteArrayOutputStream(raw.length / 3 + 64);
         try (DeflaterOutputStream d = new DeflaterOutputStream(o, new Deflater(Deflater.BEST_SPEED))) {
             d.write(raw);
@@ -220,7 +220,7 @@ public final class PdfWriter {
         return o.toByteArray();
     }
 
-    private static byte[] assemble(List<byte[]> objects) {
+    static byte[] assemble(List<byte[]> objects) {
         ByteArrayOutputStream o = new ByteArrayOutputStream(64 * 1024);
         write(o, "%PDF-1.4\n%âãÏÓ\n");
         int[] offsets = new int[objects.size()];

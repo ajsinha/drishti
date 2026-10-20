@@ -16,9 +16,10 @@
 
 $id: card
 x-types: [card, multirow-card, kpi, gauge]
-x-order: [Title, Values, Callout, Target, Conditional formatting, Frame]
+x-order: [Title, Values, Callout, Target, Conditional formatting, Frame, Statement]
 allOf:
   - $ref: "common#/$defs/frame"
+  - $ref: "common#/$defs/paged"
 type: object
 additionalProperties: false
 properties:

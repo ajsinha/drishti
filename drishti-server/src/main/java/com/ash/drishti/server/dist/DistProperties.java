@@ -23,13 +23,37 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @param export limits of a PDF, PNG, Excel or CSV export
  * @param subscriptions the scheduled delivery of a report or a view by email
+ * @param statements paginated reports (statement pages, 2.6.0): their limits and default paper
  */
 @ConfigurationProperties("drishti.distribution")
-public record DistProperties(Export export, Subscriptions subscriptions) {
+public record DistProperties(Export export, Subscriptions subscriptions, Statements statements) {
 
+    @org.springframework.boot.context.properties.bind.ConstructorBinding
     public DistProperties {
         export = export == null ? new Export(null, null, null, null, null, null, null, null, null, null) : export;
         subscriptions = subscriptions == null ? new Subscriptions(null, null, null, null, null, null, null, null, null) : subscriptions;
+        statements = statements == null ? new Statements(null, null, null, null) : statements;
+    }
+
+    /** Compatibility: the settings without statements (their defaults). */
+    public DistProperties(Export export, Subscriptions subscriptions) {
+        this(export, subscriptions, null);
+    }
+
+    /**
+     * @param maxPages most pages one statement may run to; a longer one is refused ({@code DRS-9038}) rather than cut
+     * @param maxRows most rows of one table band (a table is cut there, and the statement says so)
+     * @param paper the paper of a statement whose {@code statement:} names none (A4, A3, A5, Letter, Legal)
+     * @param bandQueries how many bands of one statement are asked at the same time (each as the reader, within the query limits)
+     */
+    public record Statements(Integer maxPages, Integer maxRows, String paper, Integer bandQueries) {
+
+        public Statements {
+            maxPages = maxPages == null ? 500 : Math.max(1, maxPages);
+            maxRows = maxRows == null ? 10_000 : Math.max(1, maxRows);
+            paper = paper == null || paper.isBlank() ? "A4" : paper;
+            bandQueries = bandQueries == null ? 2 : Math.max(1, Math.min(8, bandQueries));
+        }
     }
 
     /**

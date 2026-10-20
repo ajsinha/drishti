@@ -17,9 +17,10 @@
 
 $id: static
 x-types: [text, image, button, tile]
-x-order: [Title, Text, Frame]
+x-order: [Title, Text, Frame, Statement]
 allOf:
   - $ref: "common#/$defs/frame"
+  - $ref: "common#/$defs/paged"
 type: object
 additionalProperties: false
 properties:

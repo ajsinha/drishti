@@ -132,6 +132,19 @@ public final class DatasetService {
             return askModel(p, model, consumer, q, explain);
         }
 
+        /**
+         * As {@link #askModel(Principal, String, String, Map, QueryRequest, boolean)} with the reader's parameter values (MQ v2 {@code params}: what-if values
+         * and field parameters' choices); without values it is the call above.
+         */
+        default Asked askModel(Principal p, String model, String consumer, Map<String, String> define, Map<String, Object> params, QueryRequest q, boolean explain) {
+            return askModel(p, model, consumer, define, q, explain);
+        }
+
+        /** The model's parameters by name (what-if and field parameters), as the caller (or the consumer's envelope) reads the model; empty when it has none. */
+        default Map<String, com.ash.drishti.server.bi.layer.ModelDef.Parameter> parameters(Principal p, String model, String consumer) {
+            return Map.of();
+        }
+
         /** As {@link #dataset(Principal, String)} through a published consumer. */
         default Dataset dataset(Principal p, String model, String consumer) {
             return dataset(p, model);
@@ -209,6 +222,53 @@ public final class DatasetService {
 
     private static final String DEFINE = "define:";
     private static final String PERSPECTIVE = "perspective:";
+    private static final String PARAM = "param:";
+    private static final com.fasterxml.jackson.databind.ObjectMapper PARAM_JSON = new com.fasterxml.jackson.databind.ObjectMapper();
+
+    /**
+     * As {@code modelRef} with the reader's parameter values (what-if values and field parameters' choices) carried in the reference's tags, so every query
+     * a visual asks through it is a model query with these {@code params}. The reference unchanged when there are none.
+     */
+    public static BiStore.Item withParams(BiStore.Item modelRef, Map<String, Object> params) {
+        if (!isModelRef(modelRef) || params == null || params.isEmpty()) {
+            return modelRef;
+        }
+        List<String> tags = new ArrayList<>(modelRef.tags().stream().filter(t -> !t.startsWith(PARAM)).toList());
+        params.forEach((k, v) -> {
+            try {
+                tags.add(PARAM + k + "=" + PARAM_JSON.writeValueAsString(v));
+            } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                throw new IllegalArgumentException("parameter " + k + " is not a plain value", e);
+            }
+        });
+        BiStore.Item r = modelRef;
+        return new BiStore.Item(r.id(), r.workspace(), r.kind(), r.title(), r.description(), r.owner(), tags, r.body(), r.status(), r.publishedVersion(),
+                r.endorsement(), r.endorsedBy(), r.audienceRoles(), r.audienceUsers(), r.audiencePacks(), r.proposedBy(), r.proposedAt(), r.createdAt(), r.updatedAt(),
+                r.updatedBy(), r.publishedAt(), r.publishedBy());
+    }
+
+    /** The parameter values a model reference carries (name to value), in order; empty when none. */
+    public static Map<String, Object> paramsOf(BiStore.Item modelRef) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        if (modelRef != null) {
+            modelRef.tags().stream().filter(t -> t.startsWith(PARAM)).forEach(t -> {
+                String kv = t.substring(PARAM.length());
+                int eq = kv.indexOf('=');
+                try {
+                    out.put(kv.substring(0, eq), PARAM_JSON.readValue(kv.substring(eq + 1), Object.class));
+                } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                    throw new IllegalStateException(e);
+                }
+            });
+        }
+        return out;
+    }
+
+    /** The model's parameters (what-if and field parameters) as the caller reads it, or through the consumer's envelope; empty without the model layer. */
+    public Map<String, com.ash.drishti.server.bi.layer.ModelDef.Parameter> modelParameters(Principal p, String model, String consumer) {
+        ModelGateway g = gateway;
+        return g == null ? Map.of() : g.parameters(p, model, consumer);
+    }
 
     /** The report's own measures a model reference carries (name to DEL), in order. */
     public static Map<String, String> defineOf(BiStore.Item modelRef) {
@@ -346,7 +406,9 @@ public final class DatasetService {
      */
     public Asked asked(Principal p, BiStore.Item item, QueryRequest q, boolean explain) {
         if (isModelRef(item)) {
-            return requireGateway().askModel(p, item.id(), consumerOf(item), defineOf(item), q, explain);
+            Map<String, Object> params = paramsOf(item);
+            return params.isEmpty() ? requireGateway().askModel(p, item.id(), consumerOf(item), defineOf(item), q, explain)
+                    : requireGateway().askModel(p, item.id(), consumerOf(item), defineOf(item), params, q, explain);
         }
         ModelGateway g = gateway;
         return g == null ? new Asked(queryItem(p, item, q, explain), null) : g.ask(p, item, q, explain);

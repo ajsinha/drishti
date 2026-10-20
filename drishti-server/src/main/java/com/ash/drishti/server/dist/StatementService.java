@@ -1,0 +1,449 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.server.dist;
+
+import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.server.bi.layer.ModelDef;
+import com.ash.drishti.server.bi.report.BiReportService;
+import com.ash.drishti.server.bi.report.Report;
+import com.ash.drishti.server.bi.report.StatementSpec;
+import com.ash.drishti.server.security.Principal;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
+import java.util.function.Supplier;
+
+/**
+ * Paginated reports and statements (docs/architecture/BI_DESIGN.md section 12.2, wave D server item 1; docs/guides/STATEMENTS.md): the statement pages of
+ * a report ({@code layout: statement}) made for <b>one reader</b>. Every band that holds data is asked of the report service as that reader, so their row
+ * rules and masks apply exactly as on the screen; the period, the parameters and the business date of the run are the state every band is asked under.
+ * The bands are then laid out page by page ({@link StatementLayout}) and written as PDF ({@link StatementPdf}) or Excel ({@link XlsxWriter}, the paper's
+ * print setup), or returned as pages for the BI Studio's preview. A subscription to a statement bursts it: one run, and one file, per recipient.
+ *
+ * <p>Stateless and thread-safe: each run has its own layout and its own small pool of band queries ({@code bandQueries} at a time).
+ */
+public final class StatementService {
+
+    private static final ObjectMapper JSON = new ObjectMapper();
+    private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm");
+    /** Excel's paper size codes. */
+    private static final Map<String, Integer> EXCEL_PAPER = Map.of("Letter", 1, "Legal", 5, "A3", 8, "A4", 9, "A5", 11);
+
+    private final BiReportService reports;
+    private final BiExporter exporter;
+    private final DistProperties.Statements limits;
+    private final Clock clock;
+    private final ZoneId zone;
+    private final Supplier<LocalDate> businessDate;
+
+    public StatementService(BiReportService reports, BiExporter exporter, DistProperties.Statements limits, Clock clock, ZoneId zone, Supplier<LocalDate> businessDate) {
+        this.reports = reports;
+        this.exporter = exporter;
+        this.limits = limits;
+        this.clock = clock;
+        this.zone = zone;
+        this.businessDate = businessDate;
+    }
+
+    /** One statement made for one reader: its pages, the same figures as a table document (Excel and the email), and the values its header and footer used. */
+    public record Run(String title, StatementSpec spec, StatementPages pages, ExportDoc doc, Map<String, String> tokens, String period) {}
+
+    /**
+     * Whether an export of {@code page} of the report is a statement: the page is a statement page, or (no page named) every page of the report a reader
+     * sees (tooltip pages aside) is one.
+     */
+    public static boolean isStatement(Report report, String page) {
+        if (report == null || !report.hasStatement()) {
+            return false;
+        }
+        if (page != null && !page.isBlank()) {
+            Report.Page p = report.page(page);
+            return p != null && p.statement();
+        }
+        return report.pages().stream().filter(p -> !p.tooltip()).allMatch(Report.Page::statement);
+    }
+
+    /** Whether the target of an export or a subscription is a statement, for {@code who}. */
+    public boolean isStatement(Principal who, ContentExporter.Target t) {
+        return t.isReport() && isStatement(reports.open(who, t.id()).report(), t.page());
+    }
+
+    /**
+     * Makes the statement for {@code who}.
+     *
+     * @param reportId a stored report the reader may read, or null with {@code yaml}
+     * @param yaml draft report YAML (an author's preview), or null
+     * @param page a statement page, or blank for every statement page of the report
+     * @param state the view state: slicers, parameters ({@code params}), dates
+     * @param date the run's business date (yyyy-mm-dd), or blank for the state's or today's
+     */
+    public Run run(Principal who, String reportId, String yaml, String page, JsonNode state, String date) {
+        BiReportService.Statement st = reports.statement(who, reportId, yaml);
+        Report report = st.report();
+        List<Report.Page> pages = pagesOf(report, page);
+        StatementSpec spec = StatementSpec.of(report.statement(), limits.paper());
+        ObjectNode s = state != null && state.isObject() ? ((ObjectNode) state).deepCopy() : JSON.createObjectNode();
+        LocalDate day = dayOf(date, s);
+        StatementSpec.Period period = StatementSpec.period(spec.period(), day);
+        if (!"none".equals(spec.period())) {
+            LocalDate end = period.to().isAfter(day) ? day : period.to();
+            LocalDate from = "window".equals(spec.dates()) ? period.from() : end;
+            s.set("dates", JSON.createObjectNode().put("from", from.toString()).put("to", end.toString()));
+        } else if (date != null && !date.isBlank()) {
+            s.set("dates", JSON.createObjectNode().put("from", day.toString()).put("to", day.toString()));
+        }
+        s.put("limit", limits.maxRows() + 1);
+        Map<String, String> tokens = tokens(st, who, s, period, spec, day);
+        List<List<List<StatementLayout.Band>>> laid = new ArrayList<>();
+        List<ExportDoc.Section> sections = new ArrayList<>();
+        String asOf = null;
+        for (Report.Page p : pages) {
+            List<Report.Visual> visuals = new ArrayList<>(p.visuals());
+            visuals.sort(Comparator.comparingInt((Report.Visual v) -> v.at() == null ? 0 : v.at().y()).thenComparingInt(v -> v.at() == null ? 0 : v.at().x()));
+            List<BiExporter.Built> answers = ask(who, st.id(), yaml, p, visuals, s);
+            List<List<StatementLayout.Band>> rows = new ArrayList<>();
+            Integer rowY = null;
+            for (int i = 0; i < visuals.size(); i++) {
+                Report.Visual v = visuals.get(i);
+                BiExporter.Built b = answers.get(i);
+                if (b != null) {
+                    sections.add(b.section());
+                    asOf = asOf == null ? b.asOf() : asOf;
+                }
+                int y = v.at() == null ? i : v.at().y();
+                if (rowY == null || y != rowY || StatementSpec.FLOWING.contains(v.type()) || rows.get(rows.size() - 1).stream().anyMatch(x -> "table".equals(x.kind()))) {
+                    rows.add(new ArrayList<>());
+                    rowY = y;
+                }
+                rows.get(rows.size() - 1).add(band(v, b, tokens));
+            }
+            laid.add(rows);
+        }
+        tokens.putIfAbsent("as-of", asOf == null ? day.toString() : asOf);
+        StatementPages out = new StatementLayout(spec, limits.maxPages()).lay(laid, tokens);
+        List<String> notes = new ArrayList<>();
+        notes.add("Statement for " + who.user() + ", run " + tokens.get("run-date") + " " + tokens.get("run-time"));
+        if (!"none".equals(spec.period())) {
+            notes.add("Period: " + period.label() + " (" + period.from() + " to " + period.to() + ")");
+        }
+        notes.addAll(BiExporter.filters(report, s));
+        String sub = (!"none".equals(spec.period()) ? period.label() + " · " : "") + "Data as of " + (asOf == null ? day.toString() : asOf) + " · " + out.pages().size() + " pages";
+        ExportDoc doc = new ExportDoc(st.title(), sub, notes, sections);
+        return new Run(st.title(), spec, out, doc, tokens, "none".equals(spec.period()) ? "" : period.label());
+    }
+
+    /** The statement as a PDF file. */
+    public byte[] pdf(Run r) {
+        return StatementPdf.write(r.pages(), r.title());
+    }
+
+    /** The statement's tables as an Excel workbook that prints on the statement's paper, with its header and footer and the column titles on every page. */
+    public byte[] xlsx(Run r) {
+        StatementSpec s = r.spec();
+        double[] mm = s.margins();
+        double[] inches = {mm[0] / 25.4, mm[1] / 25.4, mm[2] / 25.4, mm[3] / 25.4};
+        return XlsxWriter.write(r.doc(), new XlsxWriter.PrintSetup(s.landscape(), EXCEL_PAPER.getOrDefault(s.paper(), 9), inches, excel(s.header(), r.tokens()),
+                excel(s.footer(), r.tokens())));
+    }
+
+    /** The pages for the BI Studio's preview (what the PDF draws), with the run's period and tokens. */
+    public Map<String, Object> preview(Principal who, String reportId, String yaml, String page, JsonNode state, String date) {
+        Run r = run(who, reportId, yaml, page, state, date);
+        Map<String, Object> m = new LinkedHashMap<>(r.pages().toMap());
+        m.put("title", r.title());
+        m.put("period", r.period());
+        m.put("paper", Map.of("size", r.spec().paper(), "orientation", r.spec().landscape() ? "landscape" : "portrait", "margins", r.spec().margins()));
+        m.put("tokens", r.tokens());
+        m.put("rows", r.doc().rowCount());
+        return m;
+    }
+
+    /** The file name of a reader's statement: its title, period and the reader ({@code Monthly statement September 2026 rita.pdf}). */
+    public static String filename(Run r, Principal who, ContentExporter.Format f) {
+        return ContentExporter.filename(r.title() + (r.period().isBlank() ? "" : " " + r.period()) + " " + who.user(), null, f);
+    }
+
+    // ---- the run -------------------------------------------------------------------------------------------------
+
+    private static List<Report.Page> pagesOf(Report report, String page) {
+        if (page != null && !page.isBlank()) {
+            Report.Page p = report.page(page);
+            if (p == null) {
+                throw new DrishtiException(ErrorCode.STATEMENT_INVALID, "the report has no page '" + page + "'");
+            }
+            if (!p.statement()) {
+                throw new DrishtiException(ErrorCode.STATEMENT_INVALID, "page '" + page + "' is not a statement page (layout: statement): export it as a picture instead");
+            }
+            return List.of(p);
+        }
+        List<Report.Page> all = report.pages().stream().filter(Report.Page::statement).toList();
+        if (all.isEmpty()) {
+            throw new DrishtiException(ErrorCode.STATEMENT_INVALID, "the report has no statement page: give a page layout: statement");
+        }
+        return all;
+    }
+
+    private LocalDate dayOf(String date, JsonNode state) {
+        try {
+            if (date != null && !date.isBlank()) {
+                return LocalDate.parse(date);
+            }
+            if (state.path("dates").path("to").isTextual()) {
+                return LocalDate.parse(state.path("dates").path("to").asText());
+            }
+        } catch (java.time.format.DateTimeParseException e) {
+            throw new DrishtiException(ErrorCode.STATEMENT_INVALID, "a statement's date is yyyy-mm-dd, not '" + date + "'");
+        }
+        return businessDate.get();
+    }
+
+    private Map<String, String> tokens(BiReportService.Statement st, Principal who, JsonNode state, StatementSpec.Period period, StatementSpec spec, LocalDate day) {
+        ZonedDateTime now = clock.instant().atZone(zone);
+        Map<String, String> t = new LinkedHashMap<>();
+        t.put("title", st.title());
+        t.put("run-date", now.toLocalDate().toString());
+        t.put("run-time", TIME.format(now));
+        t.put("reader", who.user());
+        t.put("period", "none".equals(spec.period()) ? day.toString() : period.label());
+        t.put("from", period.from().toString());
+        t.put("to", period.to().toString());
+        for (Map.Entry<String, ModelDef.Parameter> e : st.params().entrySet()) {
+            JsonNode v = state.path("params").path(e.getKey());
+            ModelDef.Parameter p = e.getValue();
+            Object dflt = p.defaultValue() != null || p.fields().isEmpty() ? p.defaultValue() : p.fields().get(0);
+            Object value = v.isMissingNode() || v.isNull() ? dflt : v.isNumber() ? v.numberValue() : v.asText();
+            t.put("param." + e.getKey(), value == null ? "" : label(String.valueOf(value)));
+        }
+        state.path("params").fields().forEachRemaining(e -> t.putIfAbsent("param." + e.getKey(), label(e.getValue().asText())));
+        return t;
+    }
+
+    /** {@code trade.DESK} reads as {@code DESK} in a header. */
+    private static String label(String v) {
+        int dot = v.indexOf('.');
+        return dot > 0 && dot < v.length() - 1 && v.indexOf(' ') < 0 ? v.substring(dot + 1) : v;
+    }
+
+    /** Each band that holds data asked as the reader, {@code bandQueries} at a time, in order; null for a text band. */
+    private List<BiExporter.Built> ask(Principal who, String reportId, String yaml, Report.Page page, List<Report.Visual> visuals, JsonNode state) {
+        Semaphore room = new Semaphore(limits.bandQueries());
+        List<Future<BiExporter.Built>> futures = new ArrayList<>();
+        try (ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor()) {
+            for (Report.Visual v : visuals) {
+                if ("text".equals(v.type())) {
+                    futures.add(null);
+                    continue;
+                }
+                futures.add(pool.submit(() -> {
+                    room.acquire();
+                    try {
+                        return exporter.section(who, reportId, yaml, page, v, state, v.title() == null || v.title().isBlank() ? v.id() : v.title());
+                    } finally {
+                        room.release();
+                    }
+                }));
+            }
+            List<BiExporter.Built> out = new ArrayList<>();
+            for (Future<BiExporter.Built> f : futures) {
+                out.add(f == null ? null : f.get());
+            }
+            return out;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new DrishtiException(ErrorCode.EXPORT_FAILED, "the statement was interrupted");
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof RuntimeException r) {
+                throw r;
+            }
+            throw new DrishtiException(ErrorCode.EXPORT_FAILED, "a band of the statement failed: " + e.getCause(), e.getCause());
+        }
+    }
+
+    // ---- bands ---------------------------------------------------------------------------------------------------
+
+    private StatementLayout.Band band(Report.Visual v, BiExporter.Built b, Map<String, String> tokens) {
+        double x = v.at() == null ? 0 : v.at().x() / (double) Report.COLUMNS;
+        double w = v.at() == null ? 1 : Math.min(1 - x, v.at().w() / (double) Report.COLUMNS);
+        String brk = String.valueOf(v.format().getOrDefault("pageBreak", "none"));
+        boolean keep = Boolean.TRUE.equals(v.format().get("keepTogether"));
+        boolean repeat = !Boolean.FALSE.equals(v.format().get("repeatHeader"));
+        String title = StatementSpec.fill(v.title(), tokens);
+        if ("text".equals(v.type())) {
+            return new StatementLayout.Band("text", v.id(), title, StatementSpec.fill(v.text(), tokens), "heading".equals(v.format().get("size")), null, null, null, x, w, brk, keep,
+                    repeat);
+        }
+        ExportDoc.Section s = b.section();
+        String note = s.note();
+        if (StatementSpec.FLOWING.contains(v.type())) {
+            StatementLayout.Table t = "matrix".equals(v.type()) ? pivot(v, s) : table(s, v);
+            if (s.rows().size() > limits.maxRows()) {
+                note = (note == null ? "" : note + " ") + "The first " + limits.maxRows() + " rows (drishti.distribution.statements.max-rows).";
+                t = new StatementLayout.Table(t.headers(), t.rows().subList(0, Math.min(t.rows().size(), limits.maxRows())), t.numeric(), t.groupColumn());
+            }
+            return new StatementLayout.Band("table", v.id(), title, null, false, null, note, t, 0, 1, brk, keep, repeat);
+        }
+        String measure = v.well("values").isEmpty() ? (s.columns().isEmpty() ? "" : s.columns().get(0)) : BiExporter.shortName(v.well("values").get(0));
+        int mi = Math.max(0, s.columns().indexOf(measure));
+        String value = s.rows().isEmpty() ? "–" : text(s.shown(s.rows().get(0), mi));
+        return new StatementLayout.Band("card", v.id(), title.isBlank() ? measure : title, null, false, value, note, null, x, w, brk, keep, repeat);
+    }
+
+    /** A table section as the layout's table: cells as text (masked cells as the mask), number columns to the right, the {@code groupBy} column. */
+    private static StatementLayout.Table table(ExportDoc.Section s, Report.Visual v) {
+        List<List<String>> rows = new ArrayList<>(s.rows().size());
+        for (List<Object> r : s.rows()) {
+            List<String> cells = new ArrayList<>(s.columns().size());
+            for (int c = 0; c < s.columns().size(); c++) {
+                cells.add(text(s.shown(r, c)));
+            }
+            rows.add(cells);
+        }
+        boolean[] numeric = new boolean[s.columns().size()];
+        for (int c = 0; c < numeric.length; c++) {
+            numeric[c] = s.isNumeric(c);
+        }
+        int group = groupColumn(s.columns(), v);
+        return new StatementLayout.Table(s.columns(), grouped(rows, group), numeric, group);
+    }
+
+    /** The rows with each group's rows together, the groups in the order they first appear and the rows in their own order inside each (a stable grouping). */
+    static List<List<String>> grouped(List<List<String>> rows, int column) {
+        if (column < 0) {
+            return rows;
+        }
+        Map<String, List<List<String>>> groups = new LinkedHashMap<>();
+        for (List<String> r : rows) {
+            groups.computeIfAbsent(column < r.size() ? r.get(column) : "", k -> new ArrayList<>()).add(r);
+        }
+        List<List<String>> out = new ArrayList<>(rows.size());
+        groups.values().forEach(out::addAll);
+        return out;
+    }
+
+    private static int groupColumn(List<String> columns, Report.Visual v) {
+        Object g = v.format().get("groupBy");
+        if (g == null) {
+            return -1;
+        }
+        String name = BiExporter.shortName(String.valueOf(g));
+        return columns.indexOf(name);
+    }
+
+    /**
+     * A matrix's answer (its rows fields, its column field, its measures, one row per combination) turned wide: a row per combination of the rows fields and a
+     * column per value of the column field (and measure), in the order the answer gives them.
+     */
+    static StatementLayout.Table pivot(Report.Visual v, ExportDoc.Section s) {
+        int nr = v.well("rows").size();
+        int nc = v.well("columns").isEmpty() ? 0 : 1;
+        int nm = Math.max(0, s.columns().size() - nr - nc);
+        if (nc == 0 || nm == 0 || s.columns().size() < nr + nc + nm) {
+            return table(s, v);
+        }
+        List<String> colValues = new ArrayList<>();
+        Map<List<String>, Map<String, List<String>>> byRow = new LinkedHashMap<>();
+        for (List<Object> r : s.rows()) {
+            List<String> key = new ArrayList<>();
+            for (int i = 0; i < nr; i++) {
+                key.add(text(s.shown(r, i)));
+            }
+            String col = text(s.shown(r, nr));
+            if (!colValues.contains(col)) {
+                colValues.add(col);
+            }
+            List<String> vals = new ArrayList<>();
+            for (int m = 0; m < nm; m++) {
+                vals.add(text(s.shown(r, nr + nc + m)));
+            }
+            byRow.computeIfAbsent(key, k -> new LinkedHashMap<>()).put(col, vals);
+        }
+        List<String> headers = new ArrayList<>(s.columns().subList(0, nr));
+        for (String c : colValues) {
+            for (int m = 0; m < nm; m++) {
+                headers.add(nm == 1 ? c : c + " " + s.columns().get(nr + nc + m));
+            }
+        }
+        List<List<String>> rows = new ArrayList<>();
+        byRow.forEach((key, cols) -> {
+            List<String> row = new ArrayList<>(key);
+            for (String c : colValues) {
+                List<String> vals = cols.get(c);
+                for (int m = 0; m < nm; m++) {
+                    row.add(vals == null ? "" : vals.get(m));
+                }
+            }
+            rows.add(row);
+        });
+        boolean[] numeric = new boolean[headers.size()];
+        for (int c = nr; c < numeric.length; c++) {
+            numeric[c] = true;
+        }
+        int group = groupColumn(headers, v);
+        return new StatementLayout.Table(headers, grouped(rows, group), numeric, group);
+    }
+
+    /** A cell as the paper shows it: whole numbers with thousands separators, other numbers with two decimals, dates as yyyy-mm-dd. */
+    static String text(Object v) {
+        if (v == null) {
+            return "";
+        }
+        if (v instanceof Long || v instanceof Integer) {
+            return String.format(Locale.ROOT, "%,d", ((Number) v).longValue());
+        }
+        if (v instanceof Number n) {
+            double d = n.doubleValue();
+            return Double.isNaN(d) || Double.isInfinite(d) ? "" : String.format(Locale.ROOT, "%,.2f", d);
+        }
+        return String.valueOf(v);
+    }
+
+    /** A header or footer line in Excel's codes ({@code &L}, {@code &C}, {@code &R}; {@code &P}, {@code &N}, {@code &D} for the page, pages and date). */
+    static String excel(Map<String, String> line, Map<String, String> tokens) {
+        if (line.isEmpty()) {
+            return "";
+        }
+        Map<String, String> t = new LinkedHashMap<>();
+        tokens.forEach((k, v) -> t.put(k, v.replace("&", "&&")));
+        t.put("page", "&P");
+        t.put("pages", "&N");
+        t.put("run-date", "&D");
+        StringBuilder b = new StringBuilder();
+        for (String[] part : new String[][] {{"left", "&L"}, {"center", "&C"}, {"right", "&R"}}) {
+            String text = line.get(part[0]);
+            if (text != null && !text.isBlank()) {
+                b.append(part[1]).append(StatementSpec.fill(text.replace("&", "&&"), t));
+            }
+        }
+        return b.toString();
+    }
+}

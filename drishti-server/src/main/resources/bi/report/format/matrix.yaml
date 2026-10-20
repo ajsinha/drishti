@@ -17,9 +17,10 @@
 
 $id: matrix
 x-types: [matrix]
-x-order: [Title, Layout, Subtotals, Values, Conditional formatting, Frame]
+x-order: [Title, Layout, Subtotals, Values, Conditional formatting, Frame, Statement]
 allOf:
   - $ref: "common#/$defs/frame"
+  - $ref: "common#/$defs/paged"
 type: object
 additionalProperties: false
 properties:
