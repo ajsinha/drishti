@@ -1,0 +1,16 @@
+{
+  "serviceName": "consoles",
+  "cluster": "${ECS_CLUSTER}",
+  "taskDefinition": "drishti-${DRISHTI_ENV}-consoles",
+  "desiredCount": ${CONSOLE_COUNT},
+  "launchType": "${LAUNCH_TYPE}",
+  "deploymentConfiguration": { "maximumPercent": 200, "minimumHealthyPercent": 50,
+                               "deploymentCircuitBreaker": { "enable": true, "rollback": true } },
+  "networkConfiguration": { "awsvpcConfiguration": { "subnets": ${SUBNETS_JSON},
+                                                     "securityGroups": ["${NODE_SECURITY_GROUP}"], "assignPublicIp": "DISABLED" } },
+  "loadBalancers": [{ "targetGroupArn": "${CONSOLE_TARGET_GROUP_ARN}", "containerName": "console", "containerPort": 17480 }],
+  "healthCheckGracePeriodSeconds": 120,
+  "enableExecuteCommand": false,
+  "propagateTags": "SERVICE",
+  "tags": [{ "key": "app", "value": "drishti" }, { "key": "env", "value": "${DRISHTI_ENV}" }]
+}

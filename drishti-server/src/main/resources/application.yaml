@@ -692,7 +692,7 @@ drishti:
     # On first start with no users, create a development admin. Change its password at once;
     # the console warns until you do. Turn off (DRISHTI_SEED_ADMIN=false) for production.
     seed-admin: ${DRISHTI_SEED_ADMIN:true}
-    # With DRISHTI_SEED_USERNAME / DRISHTI_SEED_PASSWORD set (deploy/compose.yaml requires both) it is the first
+    # With DRISHTI_SEED_USERNAME / DRISHTI_SEED_PASSWORD set (deploy/docker/compose.yaml requires both) it is the first
     # administrator you chose, not the development admin.
     seed-username: ${DRISHTI_SEED_USERNAME:drishti-dev-admin}
     seed-password: ${DRISHTI_SEED_PASSWORD:drishti-dev-admin123}

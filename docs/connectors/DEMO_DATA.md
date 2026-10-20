@@ -98,7 +98,7 @@ memory, partitions and promoted columns ([TOOLS.md](../guides/TOOLS.md)).
 ## PostgreSQL
 
 ```bash
-docker compose -f deploy/compose.data.yaml up -d postgres                                       # or your own server
+docker compose -f deploy/docker/compose.data.yaml up -d postgres                                       # or your own server
 tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti                                 # the samples, 10 days
 tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti --trades 10000                  # and a book
 SPRING_PROFILES_ACTIVE=postgres DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
@@ -161,7 +161,7 @@ a day, so keep large books for a server. Each load replaces the business days it
 ## Aerospike
 
 ```bash
-docker compose -f deploy/compose.data.yaml up -d aerospike
+docker compose -f deploy/docker/compose.data.yaml up -d aerospike
 tools/load-aerospike.sh localhost:3000 test                                  # the samples
 tools/load-aerospike.sh localhost:3000 test --trades 10000                   # and a book
 SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar

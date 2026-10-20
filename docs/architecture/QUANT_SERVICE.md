@@ -212,7 +212,7 @@ in the body instead of entity ids.
 
 ## 12. Failure and operations
 
-- **Deployment**: one more container in `deploy/compose.yaml` (`drishti-quant`), and `drishti.quant.url`,
+- **Deployment**: one more container in `deploy/docker/compose.yaml` (`drishti-quant`), and `drishti.quant.url`,
   `drishti.quant.secret`, `drishti.quant.enabled` in the server. Without it, Calc's pricer calls and Valuation panels
   say "pricing is not configured" and everything else works as today.
 - **Health**: Admin → Health shows the service; when it is down, Valuation panels show the reason in place (not an

@@ -1,0 +1,30 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The maintenance of the lake in S3 (tools/lake/maintain.py, run by deploy/aws/delta-lake/maintain.sh, which fills the ${...}).
+# The format is deploy/lake-maintenance.yaml's (a local lake); docs/admin/LAKE_MAINTENANCE.md explains every key.
+schedule:
+  at: "02:30"                    # unused here: EventBridge Scheduler starts maintain.sh (MAINTAIN_SCHEDULE)
+  zone: ${LOAD_SCHEDULE_ZONE}
+lakes:
+  - root: s3://${LAKE_BUCKET}/${LAKE_PREFIX}
+    domains: ["*"]
+    storage-options: { AWS_REGION: "${AWS_REGION}" }      # credentials: the task role, through the AWS default chain
+    keep-business-days: ${LAKE_KEEP_BUSINESS_DAYS}         # retention, counted back from today; older business dates are removed
+    max-drop-share: 0.5                                    # a run that would remove more than half a table removes nothing
+    compact: false                                         # days arrive laid out (load-day.sh sorts before it publishes); a plain
+                                                           # compaction would merge files out of id order (AWS_DELTA_LAKE.md 9.3)
+    checkpoint: true                                       # a checkpoint, and commit files past delta.logRetentionDuration removed
+    vacuum-hours: ${LAKE_VACUUM_HOURS}                     # files no version uses, older than this, are deleted (S3 keeps them
+                                                           # NONCURRENT_KEEP_DAYS more as noncurrent versions)

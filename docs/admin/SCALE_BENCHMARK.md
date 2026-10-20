@@ -126,12 +126,12 @@ The stores and what `scale.sh` starts for them:
 | Store | Container | Server profile and settings |
 |---|---|---|
 | `delta` | none | the default profile, `DRISHTI_DELTA_ROOT` at the scratch lake, `DRISHTI_DELTA_ENGINE=native` |
-| `postgres` | `postgres:18-alpine` (as `deploy/compose.data.yaml` and the tests), port 15432 | `postgres` |
+| `postgres` | `postgres:18-alpine` (as `deploy/docker/compose.data.yaml` and the tests), port 15432 | `postgres` |
 | `duckdb` | none | `duckdb`, `DRISHTI_DUCKDB_PATH` at the scratch file |
 | `files` | none | `files`, `DRISHTI_FILES_ROOT` at the scratch folder |
 | `mongodb` | `mongo:7 --wiredTigerCacheSizeGB 0.5` (as in DEMO_DATA.md), port 37017 | `mongodb` |
 | `redis` | `redis:8.2` (as the tests), no persistence, port 16379 | `redis` |
-| `aerospike` | `aerospike/aerospike-server:8.1.2.5` (as `deploy/compose.data.yaml`), namespace `test` on a file, port 13000 | `aerospike` |
+| `aerospike` | `aerospike/aerospike-server:8.1.2.5` (as `deploy/docker/compose.data.yaml`), namespace `test` on a file, port 13000 | `aerospike` |
 | `iceberg` | none (path-based tables) | `iceberg`, `DRISHTI_ICEBERG_ROOT` at the scratch folder |
 
 The server runs `DRISHTI_PACKS=market-risk,counterparty-risk` (with the packs they extend: trading, market data,

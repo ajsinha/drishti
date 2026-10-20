@@ -15,15 +15,18 @@
 -->
 # Drishti on AWS: ECS, EFS and S3
 
-Status: **design only.** Nothing in this document exists as code or files in the repository: the Dockerfiles, entry
-points, task definitions and policies below are the design, to be built when the product owner schedules it (product
-owner, 2026-10-20: "do not write any code for AWS or Docker; the Dockerfiles may be written in the document"). Release
-not decided.
+Status: **scripts in `deploy/`.** The images and entry points of sections 5 and 6 are files in
+[`deploy/docker/ecs/`](../../deploy/docker/ecs); the EFS access points, Cloud Map, task and service definitions of
+sections 4, 9, 12 and 13 are scripts and templates in [`deploy/aws/ecs/`](../../deploy/aws/ecs); the lake in S3 (buckets,
+roles, loading, maintenance, tiers, alarms) is [AWS_DELTA_LAKE.md](AWS_DELTA_LAKE.md) and
+[`deploy/aws/delta-lake/`](../../deploy/aws/delta-lake). Every script has `--help` and `--dry-run` and is tested that way;
+none has yet run against a real AWS account (step A3 below). The server's two small changes of section 5.3 are not built.
 
 Related: [SUPER_SCALE.md](SUPER_SCALE.md) (500 GB a day for seven years on this deployment),
 [DRISHTI_NET.md](DRISHTI_NET.md) and [NET.md](../admin/NET.md) (several servers), [OPERATIONS.md](../admin/OPERATIONS.md)
 (running one server), [OPERATIONALISING.md section 13](../guides/OPERATIONALISING.md#13-docker-and-kubernetes) (Docker
-and Kubernetes today, `deploy/server.Dockerfile` and `deploy/console.Dockerfile`).
+and Kubernetes today, `deploy/docker/server.Dockerfile` and `deploy/docker/console.Dockerfile`),
+[AWS_DELTA_LAKE.md](AWS_DELTA_LAKE.md) (the lake in S3, past 200 TB: layout, loading, maintenance, tiers, alarms).
 
 ## Contents
 
@@ -199,6 +202,9 @@ searched first, as today.
 
 ### 4.2 Access points
 
+`deploy/aws/ecs/setup-efs.sh` creates them (and one `data` access point each for the lake's `loader` and
+`maintenance` tasks).
+
 One access point per node per path (three per node). Each roots its path and enforces the user the containers run as:
 
 | Access point (name tag) | Root directory | POSIX user | Root directory creation |
@@ -240,106 +246,29 @@ Two tasks on one node's folders would open the same RocksDB stores and DuckDB fi
 
 ## 5. The server container
 
-### 5.1 Dockerfile
+### 5.1 Dockerfile and entry point
 
-```dockerfile
-# Drishti server image for Amazon ECS with EFS. Build from the repository root after ./mvnw -q package -DskipTests:
-#   docker build -f server.Dockerfile -t drishti-server-ecs:<version> .
-# Java 21 by default; Java 25: --build-arg BASE_IMAGE=eclipse-temurin:25-jre
-ARG BASE_IMAGE=eclipse-temurin:21-jre
-FROM ${BASE_IMAGE}
-# curl: the health check and the task metadata endpoint (the task's ARN for task.lock)
-RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/* \
- && useradd --system --uid 10001 drishti
-WORKDIR /opt/drishti
-COPY drishti-server/target/drishti-server-*-exec.jar app.jar
-# shipped packs live outside the EFS paths, so a mount never hides them; installed packs go to data/packs/installed (EFS)
-COPY config/packs/ shipped/packs/
-COPY server-entrypoint.sh bin/entrypoint.sh
-# the mount points, owned by the user the EFS access points enforce (uid/gid 10001)
-RUN chmod 0555 bin/entrypoint.sh && mkdir -p data config sutras && chown drishti:drishti data config sutras
-USER drishti
-ENV DRISHTI_DATA_DIR=/opt/drishti/data \
-    DRISHTI_PACKS_DIR=/opt/drishti/shipped/packs \
-    DRISHTI_CONNECTORS_DIR=/opt/drishti/config/connectors \
-    DRISHTI_NET_DIR=/opt/drishti/config/net \
-    DRISHTI_AI_DIR=/opt/drishti/config/ai \
-    DRISHTI_MCP_DIR=/opt/drishti/config/mcp \
-    DRISHTI_BI_DIR=/opt/drishti/config/bi \
-    DRISHTI_SUTRAS=/opt/drishti/sutras \
-    DRISHTI_PORT=18480 \
-    TMPDIR=/opt/drishti/data/tmp/server \
-    HOME=/opt/drishti/data/home/server \
-    DRISHTI_REQUIRE_EFS=true \
-    DRISHTI_HEAP=8g
-EXPOSE 18480
-ENTRYPOINT ["/opt/drishti/bin/entrypoint.sh"]
+[`deploy/docker/ecs/server.Dockerfile`](../../deploy/docker/ecs/server.Dockerfile) and
+[`deploy/docker/ecs/server-entrypoint.sh`](../../deploy/docker/ecs/server-entrypoint.sh). Build from the repository root
+after `./mvnw -q package -DskipTests`:
+
+```bash
+docker build -f deploy/docker/ecs/server.Dockerfile -t drishti-server-ecs:2.6.5 .     # Java 25: --build-arg BASE_IMAGE=eclipse-temurin:25-jre
 ```
 
-### 5.2 Entry point
+The image: the server jar, the shipped packs in `/opt/drishti/shipped/packs` (outside the EFS paths, so a mount never hides
+them), the entry point, mount points owned by uid 10001, and the variables of section 3.3. Before Java starts, the entry
+point:
 
-```sh
-#!/bin/sh
-# The Drishti server on ECS. Before Java starts:
-#   1. every writable path must be a writable EFS (NFS) mount; the root file system is read-only
-#   2. one task per node (task.lock)
-#   3. the node's real IPv4 address (the task's network interface), never loopback or the wildcard
-#   4. on this node's first start only, its Drishti*net files; never overwritten
-set -eu
-D=/opt/drishti
-fail() { echo "drishti-server: $*" >&2; exit 78; }
-
-for p in "$D/data" "$D/config" "$D/sutras"; do
-  [ -d "$p" ] && [ -w "$p" ] || fail "$p is not mounted writable (each writable path is an EFS access point at the same path)"
-  if [ "${DRISHTI_REQUIRE_EFS:-true}" = true ]; then
-    t=$(stat -f -c %T "$p")
-    case "$t" in nfs*) ;; *) fail "$p is on '$t', not EFS; DRISHTI_REQUIRE_EFS=false is only for a local check of the image" ;; esac
-  fi
-done
-mkdir -p "$TMPDIR" "$HOME" "$D/data/logs" "$D/data/net"
-
-me=$(curl -fsS --max-time 2 "${ECS_CONTAINER_METADATA_URI_V4:-http://invalid}/task" 2>/dev/null | sed -n 's/.*"TaskARN":"\([^"]*\)".*/\1/p')
-me="${me:-$(hostname)}"
-lock="$D/data/net/task.lock"
-if [ -f "$lock" ] && [ "$(cat "$lock")" != "$me" ] && [ -n "$(find "$lock" -mmin -1)" ]; then
-  fail "another task ($(cat "$lock")) is running on this node's folders"
-fi
-echo "$me" > "$lock"          # the server touches it every gossip interval while it runs
-
-ip="${DRISHTI_NODE_IP:-$(hostname -I 2>/dev/null | awk '{print $1}')}"
-case "$ip" in ''|127.*|0.0.0.0|::1|localhost) fail "no real IPv4 address for this task (found '$ip'); set DRISHTI_NODE_IP" ;; esac
-export DRISHTI_NODE_IP="$ip"
-port="${DRISHTI_PORT:-18480}"
-
-net="${DRISHTI_NET_DIR:-$D/config/net}"
-if [ -n "${DRISHTI_NODE_ID:-}" ] && [ ! -f "$net/node.yaml" ]; then
-  mkdir -p "$net/peers"
-  # ${DRISHTI_NODE_IP} and ${DRISHTI_NET_SECRET} stay references: the server resolves them at every start, so a task
-  # that comes back with a new address advertises the new one, and the secret never lands on EFS
-  cat > "$net/node.yaml" <<EOF
-enabled: true
-node-id: ${DRISHTI_NODE_ID}
-advertise-url: http://\${DRISHTI_NODE_IP}:${port}
-secret: \${DRISHTI_NET_SECRET}
-EOF
-  for seed in $(echo "${DRISHTI_NET_SEEDS:-}" | tr ',' ' '); do
-    host=$(echo "$seed" | sed -E 's#^[a-z]+://##; s#[:/].*##')
-    name=${host%%.*}
-    [ "$name" = "$DRISHTI_NODE_ID" ] && continue          # a seed never lists itself
-    [ -f "$net/peers/$name.yaml" ] || echo "url: $seed" > "$net/peers/$name.yaml"
-  done
-  echo "drishti-server: first start of node $DRISHTI_NODE_ID: wrote $net/node.yaml and its seeds" >&2
-fi
-
-# -XX:+UseCompactObjectHeaders exists from Java 25 (Java 21 refuses to start with it)
-v=$(java -XX:-UsePerfData -XshowSettings:properties -version 2>&1 | sed -n 's/.*java.specification.version = //p')
-if [ "${v:-21}" -ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set --; fi
-# -XX:-UsePerfData: no hsperfdata file in /tmp (the root is read-only); crash files and heap dumps go to EFS
-exec java "$@" -Xmx"${DRISHTI_HEAP:-8g}" -XX:+UseZGC -XX:-UsePerfData \
-  -Djava.io.tmpdir="$TMPDIR" -Duser.home="$HOME" \
-  -XX:ErrorFile="$D/data/logs/hs_err_pid%p.log" -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath="$D/data/logs" \
-  -jar "$D/app.jar"
-```
+1. checks that `/opt/drishti/data`, `/config` and `/sutras` are writable NFS mounts (exit 78 otherwise;
+   `DRISHTI_REQUIRE_EFS=false` only for a local check of the image);
+2. refuses to start while another task's `data/net/task.lock` is fresh (one task per node);
+3. finds the task's real IPv4 address (never `127.*`, `0.0.0.0` or `localhost`);
+4. on the node's first start only, writes `config/net/node.yaml` (`advertise-url: http://${DRISHTI_NODE_IP}:18480`,
+   `secret: ${DRISHTI_NET_SECRET}`, both resolved by the server at every start) and a peer file per seed of
+   `DRISHTI_NET_SEEDS`;
+5. starts Java with ZGC, `-XX:-UsePerfData`, the temp folder, home, crash files and heap dumps on EFS
+   (`-XX:+UseCompactObjectHeaders` on Java 25).
 
 The task's ARN comes from the ECS task metadata endpoint (`ECS_CONTAINER_METADATA_URI_V4`, set by ECS in every
 container); outside ECS the container's host name stands in.
@@ -363,84 +292,23 @@ container); outside ECS the container's host name stands in.
 
 ## 6. The console container
 
-### 6.1 Dockerfile
+### 6.1 Dockerfile and entry point
 
-```dockerfile
-# Drishti console image for Amazon ECS with EFS, a separate container from the server. Build from the repository root:
-#   docker build -f console.Dockerfile -t drishti-console-ecs:<version> .
-# Calc's Python runtime (Pyodide) and DuckDB-Wasm are fetched in the first stage (pinned, SHA-256 checked), so a running
-# console needs no internet.
-FROM python:3.13-slim AS pyodide
-WORKDIR /src
-COPY tools/fetch-pyodide.sh tools/fetch-pyodide.sh
-COPY tools/fetch-duckdb-wasm.sh tools/fetch-duckdb-wasm.sh
-COPY drishti-console/ drishti-console/
-RUN bash tools/fetch-pyodide.sh && bash tools/fetch-duckdb-wasm.sh && rm -rf /root/.cache/drishti
+[`deploy/docker/ecs/console.Dockerfile`](../../deploy/docker/ecs/console.Dockerfile) and
+[`deploy/docker/ecs/console-entrypoint.sh`](../../deploy/docker/ecs/console-entrypoint.sh):
 
-FROM python:3.13-slim
-RUN useradd --system --uid 10001 drishti
-WORKDIR /opt/drishti/console
-COPY drishti-console/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY --from=pyodide /src/drishti-console/ .
-# the help centre renders the repository's documents; packs as shipped, outside the EFS paths (as in the server image)
-COPY docs/ /opt/drishti/docs/
-COPY config/packs/ /opt/drishti/shipped/packs/
-COPY tools/packbundle.py /opt/drishti/tools/packbundle.py
-COPY LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/
-COPY console-entrypoint.sh /opt/drishti/bin/entrypoint.sh
-# compiled once here, so the read-only root never needs __pycache__ written at run time
-RUN python -m compileall -q /opt/drishti/console && chmod 0555 /opt/drishti/bin/entrypoint.sh \
- && mkdir -p /opt/drishti/data /opt/drishti/config /opt/drishti/sutras \
- && chown drishti:drishti /opt/drishti/data /opt/drishti/config /opt/drishti/sutras
-USER drishti
-ENV DRISHTI_DATA_DIR=/opt/drishti/data \
-    DRISHTI_PACKS_DIR=/opt/drishti/shipped/packs \
-    DRISHTI_AI_DIR=/opt/drishti/config/ai \
-    DRISHTI_MCP_DIR=/opt/drishti/config/mcp \
-    DRISHTI_CONSOLE_DATA_DIR=/opt/drishti/data/console \
-    DRISHTI_CONSOLE_TMP_DIR=/opt/drishti/data/tmp/console \
-    TMPDIR=/opt/drishti/data/tmp/console \
-    HOME=/opt/drishti/data/home/console \
-    PYTHONDONTWRITEBYTECODE=1 \
-    DRISHTI_CONSOLE_HOST=0.0.0.0 \
-    DRISHTI_CONSOLE_PORT=17480 \
-    DRISHTI_REQUIRE_EFS=true
-EXPOSE 17480
-ENTRYPOINT ["/opt/drishti/bin/entrypoint.sh"]
+```bash
+docker build -f deploy/docker/ecs/console.Dockerfile -t drishti-console-ecs:2.6.5 .
 ```
+
+Calc's Python runtime (Pyodide) and DuckDB-Wasm are fetched in a first stage (pinned, SHA-256 checked), so a running
+console needs no internet; the Python code is compiled at build time, so the read-only root never needs `__pycache__`.
+The entry point checks the three mounts as the server's does, finds the task's real address and, unless
+`DRISHTI_BACKEND_URL` is set (a console service of its own names the seeds' Cloud Map names), reaches the server of its
+own task at `http://<task IP>:18480`.
 
 The console **listens** on every interface of its task (`0.0.0.0`, so the load balancer reaches it); it never
 **advertises** an address: the real-address rule of Drishti*net concerns what members advertise.
-
-### 6.2 Entry point
-
-```sh
-#!/bin/sh
-# The Drishti console on ECS. It mounts the same EFS access points, at the same paths, as the server of its node,
-# checks them as the server does, and reaches that server by the task's real address.
-set -eu
-D=/opt/drishti
-fail() { echo "drishti-console: $*" >&2; exit 78; }
-
-for p in "$D/data" "$D/config" "$D/sutras"; do
-  [ -d "$p" ] && [ -w "$p" ] || fail "$p is not mounted writable (each writable path is an EFS access point at the same path)"
-  if [ "${DRISHTI_REQUIRE_EFS:-true}" = true ]; then
-    t=$(stat -f -c %T "$p")
-    case "$t" in nfs*) ;; *) fail "$p is on '$t', not EFS; DRISHTI_REQUIRE_EFS=false is only for a local check of the image" ;; esac
-  fi
-done
-mkdir -p "$TMPDIR" "$HOME" "$DRISHTI_CONSOLE_DATA_DIR"
-
-ip="${DRISHTI_NODE_IP:-$(hostname -I 2>/dev/null | awk '{print $1}')}"
-case "$ip" in ''|127.*|0.0.0.0|::1|localhost) fail "no real IPv4 address for this task (found '$ip'); set DRISHTI_NODE_IP" ;; esac
-export DRISHTI_NODE_IP="$ip"
-# the server of the same task, by the task's real address; the console learns the cluster's other members from it
-export DRISHTI_BACKEND_URL="${DRISHTI_BACKEND_URL:-http://$ip:${DRISHTI_PORT:-18480}}"
-
-cd "$D/console"
-exec python run_drishti_web.py
-```
 
 ### 6.3 Sizing, sessions and health
 
@@ -482,7 +350,7 @@ exec python run_drishti_web.py
 
 | Bucket | Content | Settings |
 |---|---|---|
-| `<org>-drishti-<env>-lake` | the lakes (Delta Lake tables; Iceberg; files) | versioning **off** for Delta tables (Delta keeps its own history; S3 versions would only multiply storage), SSE-KMS with `alias/drishti-lake`, Block Public Access, access logging to the logs bucket, lifecycle by age ([SUPER_SCALE.md section 15](SUPER_SCALE.md#15-seven-years-storage-tiers-and-retention)) |
+| `<org>-drishti-<env>-lake` | the lakes (Delta Lake tables; Iceberg; files) | versioning **on** with noncurrent versions expired after 14 days (a safety net against a wrong delete; Delta keeps its own history; [AWS_DELTA_LAKE.md section 5.1](AWS_DELTA_LAKE.md#51-buckets)), SSE-KMS with `alias/drishti-lake`, Block Public Access, access logging to the logs bucket, lifecycle tiers by business date (`deploy/aws/delta-lake/setup-lifecycle.sh`; [SUPER_SCALE.md section 15](SUPER_SCALE.md#15-seven-years-storage-tiers-and-retention)) |
 | `<org>-drishti-<env>-artifacts` | pack bundles, release artifacts | versioning on, SSE-KMS |
 | `<org>-drishti-<env>-logs` | S3 and load balancer access logs | lifecycle: expire after the bank's log retention |
 
@@ -523,10 +391,14 @@ settings:
 ### 8.4 What is not in S3
 
 Anything the server or the console writes while running: by the rule it is on EFS. Loading the lakes (writing to S3) is
-done by loader tasks with their own role ([SUPER_SCALE.md section 7](SUPER_SCALE.md#7-loading-500-gb-a-day)); the
+done by loader tasks with their own role ([AWS_DELTA_LAKE.md section 8](AWS_DELTA_LAKE.md#8-loading-the-daily-load-backfill-and-restatement), built;
+[SUPER_SCALE.md section 7](SUPER_SCALE.md#7-loading-500-gb-a-day), the planned fleet); the
 servers' role reads only.
 
 ## 9. Drishti*net on ECS
+
+`deploy/aws/ecs/setup-cloud-map.sh` creates the namespace and a service per node; `register.sh` sets each server's
+`DRISHTI_NET_SEEDS` from `DRISHTI_NET_SEED_NODES`.
 
 ```
    Cloud Map namespace drishti.local (private DNS)
@@ -603,7 +475,9 @@ servers' role reads only.
 }
 ```
 
-One task role per node (`drishti-prod-drishti-a-task`) limits each node to its own access points.
+One task role per node (`drishti-prod-drishti-a-task`) limits each node to its own access points. The scripts create
+one shared role, `drishti-<env>-server-task` (`deploy/aws/delta-lake/setup-iam.sh`), allowed any access point of the file
+system; a role per node is a tightening left to the platform team's template.
 
 ### 11.2 Execution role (what ECS does for the task)
 
@@ -626,7 +500,10 @@ rotating the token secret signs everyone out, as on one machine.
 
 ## 12. Task definition
 
-For node `drishti-a` (the other nodes differ only in the node id, the task role and the three access point ids):
+For node `drishti-a` (the other nodes differ only in the node id and the three access point ids). The template is
+[`deploy/aws/ecs/templates/node-task.json`](../../deploy/aws/ecs/templates/node-task.json); `deploy/aws/ecs/register.sh`
+fills it from `deploy/aws/env` and the access points of `setup-efs.sh`, and registers it. It also sets
+`DRISHTI_DELTA_ROOT=s3://<lake bucket>/lake`, so the shipped Delta connectors read the lake in S3. As rendered:
 
 ```json
 {
@@ -694,6 +571,10 @@ The server's health check asks readiness on the task's own address, so the conso
 only when its server answers.
 
 ## 13. Service definition
+
+Template [`deploy/aws/ecs/templates/node-service.json`](../../deploy/aws/ecs/templates/node-service.json), created or
+updated by `register.sh`; a console service of its own is `console-task.json` and `console-service.json`
+(`register.sh --consoles N`). As rendered for `drishti-a`:
 
 ```json
 {
@@ -843,8 +724,8 @@ discounts):
 
 | Step | Content | Done when |
 |---|---|---|
-| A1 | The images and entry points of sections 5–6 as files; `task.lock` touched by the server; DNS seed names accepted | the read-only-root and entry-point tests pass on a build machine with Docker |
-| A2 | One template (CloudFormation or Terraform): VPC pieces, EFS and its access points, roles, secrets, task and service definitions, load balancer, Cloud Map, endpoints, backup plan, alarms | a new environment comes up from the template alone |
+| A1 | The images and entry points of sections 5–6 as files (**done**: `deploy/docker/ecs/`); `task.lock` touched by the server; DNS seed names accepted | the read-only-root and entry-point tests pass on a build machine with Docker |
+| A2 | One template (CloudFormation or Terraform): VPC pieces, EFS and its access points, roles, secrets, task and service definitions, load balancer, Cloud Map, endpoints, backup plan, alarms (**scripted** with the AWS CLI in `deploy/aws/`: access points, Cloud Map, roles, task and service definitions, schedules, lake buckets, alarms; the VPC, EFS, load balancer, endpoints and secrets remain the platform team's) | a new environment comes up from the template alone |
 | A3 | A development environment: the durability, zone, restore, Drishti*net and rolling-upgrade tests | all pass |
 | A4 | EFS measurements (section 17) | recorded here |
 | A5 | Documentation: OPERATIONS (an AWS chapter), OPERATIONALISING section 13, a tutorial "Drishti on AWS" (UI and CLI), help cards | reviewed |

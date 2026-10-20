@@ -106,7 +106,7 @@ A healthy server with some viewers:
 ### Step 3. Find occasional stalls
 
 1. GC pauses. The server should run generational ZGC (`-XX:+UseZGC -XX:+ZGenerational`, as in
-   `deploy/server.Dockerfile`), which keeps pauses below a millisecond. Check the flags of the running process:
+   `deploy/docker/server.Dockerfile`), which keeps pauses below a millisecond. Check the flags of the running process:
 
    ```bash
    ps -o args= -C java | grep drishti-server

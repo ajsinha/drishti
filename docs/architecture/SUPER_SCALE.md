@@ -18,7 +18,8 @@
 Status: **design, not built.** Release not decided (product owner, 2026-10-20). Builds on
 [SCALE_STRATEGY.md](SCALE_STRATEGY.md) (one server, millions of trades a day: built and measured),
 [DRISHTI_NET.md](DRISHTI_NET.md) (many servers, one Drishti: built in 2.5.0) and [AWS_DEPLOYMENT.md](AWS_DEPLOYMENT.md)
-(ECS, EFS, S3: designed). Every number is an **estimate** unless marked *measured*; step S8 replaces the estimates with
+(ECS, EFS, S3: scripts in `deploy/`). What can be set up today for a lake in S3 past 200 TB, with the scripts, is
+[AWS_DELTA_LAKE.md](AWS_DELTA_LAKE.md); it marks each piece of this design it relies on as planned. Every number is an **estimate** unless marked *measured*; step S8 replaces the estimates with
 measurements.
 
 ## Contents

@@ -50,3 +50,5 @@ external_lib/python/*
 /drishti-stack/secrets.env
 /drishti-stack/run/
 net-key
+# the AWS scripts' settings (deploy/aws/env, copied from deploy/aws/env.example): account ids and resource names, never committed
+/deploy/aws/env

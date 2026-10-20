@@ -551,8 +551,10 @@ uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.
 
 **On Amazon S3** nothing maintains a Delta table by itself: S3 stores files and knows nothing of the log. Run
 `maintain.py` against the `s3://` root (a small container, a cron host, AWS Batch), or let Databricks do it with
-`OPTIMIZE … ZORDER BY (id)` and its retention settings. Never use S3 lifecycle rules on a Delta table: they delete files
-the log still points to and break the table.
+`OPTIMIZE … ZORDER BY (id)` and its retention settings. Never use S3 lifecycle **expiry** on a Delta table: it deletes files
+the log still points to and breaks the table (storage-class transitions are safe: the files stay). The scripts that set up,
+load (`lake build`, then `lake publish`), tier and maintain a lake in S3 are in `deploy/aws/delta-lake/`:
+[AWS_DELTA_LAKE.md](../architecture/AWS_DELTA_LAKE.md).
 
 ## 11. Measured results
 

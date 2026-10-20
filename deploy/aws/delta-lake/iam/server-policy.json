@@ -1,0 +1,12 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    { "Sid": "ListTheLake", "Effect": "Allow", "Action": "s3:ListBucket", "Resource": "arn:aws:s3:::${LAKE_BUCKET}",
+      "Condition": { "StringLike": { "s3:prefix": ["${LAKE_PREFIX}/*"] } } },
+    { "Sid": "ReadTheLakeOnly", "Effect": "Allow", "Action": "s3:GetObject", "Resource": "arn:aws:s3:::${LAKE_BUCKET}/${LAKE_PREFIX}/*" },
+    { "Sid": "DecryptTheLake", "Effect": "Allow", "Action": "kms:Decrypt", "Resource": "${LAKE_KMS_KEY_ARN}" },
+    { "Sid": "MountThisNodesFolders", "Effect": "Allow", "Action": ["elasticfilesystem:ClientMount", "elasticfilesystem:ClientWrite"],
+      "Resource": "arn:aws:elasticfilesystem:${AWS_REGION}:${AWS_ACCOUNT_ID}:file-system/${EFS_FILE_SYSTEM_ID}",
+      "Condition": { "StringLike": { "elasticfilesystem:AccessPointArn": "arn:aws:elasticfilesystem:${AWS_REGION}:${AWS_ACCOUNT_ID}:access-point/*" } } }
+  ]
+}

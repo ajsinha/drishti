@@ -266,7 +266,7 @@ drishti/
 ├── drishti-console/                     the web console (routes/, core/, web/templates, web/static, tests/)
 ├── clients/python/              drishti_client.py: the standard-library Python client
 ├── config/packs/<name>/                the seven domain packs: pack.yaml, Sutras, vocabulary, samples, guides (retired ones in examples/packs/)
-├── deploy/                      Dockerfiles, compose, Grafana dashboard
+├── deploy/                      docker/ (Dockerfiles, compose; ecs/ images), aws/ (Delta lake and ECS scripts), grafana/
 ├── tools/                       packgen/ samplegen/ lake/ (pack data and lakes), rachana/, packreg/ (signed packs),
 │                                drill.sh, license_headers.py
 └── docs/                        tutorials (20), guides, references, runbooks, plan, ADRs

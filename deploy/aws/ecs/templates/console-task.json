@@ -1,0 +1,40 @@
+{
+  "family": "drishti-${DRISHTI_ENV}-consoles",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["${LAUNCH_TYPE}"],
+  "cpu": "2048",
+  "memory": "4096",
+  "runtimePlatform": { "operatingSystemFamily": "LINUX", "cpuArchitecture": "X86_64" },
+  "taskRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/drishti-${DRISHTI_ENV}-server-task",
+  "executionRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/drishti-${DRISHTI_ENV}-execution",
+  "volumes": [
+    { "name": "data", "efsVolumeConfiguration": { "fileSystemId": "${EFS_FILE_SYSTEM_ID}", "transitEncryption": "ENABLED",
+        "authorizationConfig": { "accessPointId": "${AP_DATA}", "iam": "ENABLED" } } },
+    { "name": "config", "efsVolumeConfiguration": { "fileSystemId": "${EFS_FILE_SYSTEM_ID}", "transitEncryption": "ENABLED",
+        "authorizationConfig": { "accessPointId": "${AP_CONFIG}", "iam": "ENABLED" } } },
+    { "name": "sutras", "efsVolumeConfiguration": { "fileSystemId": "${EFS_FILE_SYSTEM_ID}", "transitEncryption": "ENABLED",
+        "authorizationConfig": { "accessPointId": "${AP_SUTRAS}", "iam": "ENABLED" } } }
+  ],
+  "containerDefinitions": [
+    { "name": "console", "image": "${ECR_REGISTRY}/drishti-console-ecs:${DRISHTI_VERSION}",
+      "cpu": 2048, "memory": 4096, "essential": true, "readonlyRootFilesystem": true, "stopTimeout": 30,
+      "portMappings": [{ "containerPort": 17480, "protocol": "tcp" }],
+      "mountPoints": [
+        { "sourceVolume": "data", "containerPath": "/opt/drishti/data" },
+        { "sourceVolume": "config", "containerPath": "/opt/drishti/config" },
+        { "sourceVolume": "sutras", "containerPath": "/opt/drishti/sutras" } ],
+      "environment": [
+        { "name": "DRISHTI_BACKEND_URL", "value": "${CONSOLE_BACKENDS}" },
+        { "name": "DRISHTI_CONSOLE_WORKERS", "value": "4" },
+        { "name": "DRISHTI_AUTH_ENABLED", "value": "true" },
+        { "name": "DRISHTI_CONSOLE__PACKS__ENABLED", "value": "${DRISHTI_PACKS}" } ],
+      "secrets": [
+        { "name": "DRISHTI_TOKEN_SECRET", "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:${SECRET_TOKEN}" },
+        { "name": "DRISHTI_SESSION_SECRET", "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:${SECRET_SESSION}" } ],
+      "healthCheck": { "command": ["CMD-SHELL", "python -c \"import urllib.request;urllib.request.urlopen('http://localhost:17480/healthz')\""],
+                       "interval": 15, "timeout": 5, "retries": 4, "startPeriod": 60 },
+      "logConfiguration": { "logDriver": "awslogs", "options": { "awslogs-group": "/drishti/${DRISHTI_ENV}", "awslogs-region": "${AWS_REGION}",
+                                                                 "awslogs-stream-prefix": "consoles" } } }
+  ],
+  "tags": [{ "key": "app", "value": "drishti" }, { "key": "env", "value": "${DRISHTI_ENV}" }]
+}

@@ -1,0 +1,27 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The tables the AWS scripts load, tier and maintain (LAKE_TABLES_FILE). One line per table, whitespace-separated:
+#   table      <domain>/<table folder>: the target is s3://LAKE_BUCKET/LAKE_PREFIX/<domain>/<table>/
+#   kind       the entity kind the table holds (lake build --kind; the data-load signal names it)
+#   pack       the pack folder (relative to the repository or the loader image): layout, promoted columns, id field
+#   connector  the pack's Delta connector the table is for (one per source system)
+#   landing    the dump prefix in s3://LANDING_BUCKET/, {date} replaced by the business date (YYYY-MM-DD)
+#   date       the business-date field of each document, or - for "the day being loaded" (lake build --as-of)
+#   partition  partition columns after business_date (lake build --partition-by), or - for none
+#
+# table                  kind    pack                   connector       landing                 date   partition
+trading/trade_endur      trade   config/packs/trading   trade-endur     {date}/endur/           -      PRODUCT_TYPE
+trading/trade_calypso    trade   config/packs/trading   trade-calypso   {date}/calypso/         -      PRODUCT_TYPE
+trading/trade_murex      trade   config/packs/trading   trade-murex     {date}/murex/           -      PRODUCT_TYPE

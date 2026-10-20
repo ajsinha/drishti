@@ -17,6 +17,26 @@
 
 ## Unreleased
 
+- **Added: a Delta lake in Amazon S3 for Drishti past 200 TB, with real scripts** ([AWS_DELTA_LAKE.md](docs/architecture/AWS_DELTA_LAKE.md)).
+  The lake (data files and `_delta_log`) is in S3; EFS keeps each node's state and warm caches. `deploy/aws/delta-lake/`: buckets
+  (versioning, SSE-KMS, Block Public Access, VPC endpoint only, access logs, request metrics), IAM (read-only servers, a loader that
+  never deletes, maintenance), a conditional-write probe, lifecycle tiers by **business date** (Standard, Standard-IA, Glacier
+  Instant Retrieval; never an expiry of table files, never Flexible or Deep Archive), the daily load, backfill and restatement,
+  nightly maintenance (`lake maintain` on `s3://`), a health and size report and CloudWatch alarms; `deploy/aws/ecs/`: EFS access
+  points one per node per path, Cloud Map seeds, task and service definitions for the nodes, a console service, the loader,
+  maintenance and report tasks, and EventBridge schedules. Every script is bash with the AWS CLI v2, takes its settings from
+  `deploy/aws/env` (git-ignored; `env.example` has placeholders only) and has `--help` and `--dry-run`; `tools/test_deploy_aws.py`
+  runs them all that way. Not yet run against a real AWS account.
+- **New: `drishti.py lake publish`** commits the files of a table `lake build` wrote into a Delta table in S3 as one commit that
+  replaces the dates (or partitions) it carries, with S3 conditional writes (deltalake 1.x has no DynamoDB lock), checking every file
+  is in place first and refusing a change of columns ([TOOLS.md section 4.11](docs/guides/TOOLS.md#411-lake-publish-a-built-day-into-a-delta-table-in-s3);
+  `tools/lake/test_publish.py`).
+- **Changed: `deploy/` reorganised.** The Dockerfiles and compose files moved to `deploy/docker/` (`docker compose -f
+  deploy/docker/compose.yaml up`, `docker build -f deploy/docker/server.Dockerfile .`; the build context stays the repository
+  root); the ECS images and entry points that were written out in AWS_DEPLOYMENT.md are files in `deploy/docker/ecs/` (plus a
+  loader image), and AWS_DEPLOYMENT.md points to them (status: scripts in `deploy/`). The lake bucket's versioning is now on, with
+  noncurrent versions expired after 14 days. `deploy/lake-maintenance.yaml` (the local example) stays where it was.
+
 ## 2.6.5 — History queries: any entity over time from the command line (`TRD <id> 30`, `EQ <id> 3M`), on every connector and across Drishti*net (2026-10-20)
 
 - **Fixed: an API token can preview a statement and fetch its PDF or Excel** (`POST /api/v1/bi/reports/statement/preview` and `/file`

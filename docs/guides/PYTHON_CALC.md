@@ -471,7 +471,7 @@ python3 to download.
 |---|---|
 | A machine with internet | `tools/fetch-pyodide.sh` |
 | An offline machine | download `pyodide-314.0.7.tar.bz2` elsewhere, copy it over, `tools/fetch-pyodide.sh --tarball pyodide-314.0.7.tar.bz2` (the hash is still checked) |
-| The console Docker image | nothing: `deploy/console.Dockerfile` runs the script in a build stage (it reuses a runtime already in the build context), so the image carries the runtime and a running console needs no internet |
+| The console Docker image | nothing: `deploy/docker/console.Dockerfile` runs the script in a build stage (it reuses a runtime already in the build context), so the image carries the runtime and a running console needs no internet |
 | Upgrading Pyodide | change `VERSION` and `SHA256` in the script (the release's `.tar.bz2` digest), run it, restart the console. The URL names the version, so browsers fetch the new runtime at once |
 
 Restart the console after installing: it mounts the runtime at `/pyodide/<version>/` at start-up, served with

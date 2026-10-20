@@ -740,7 +740,7 @@ routes:
 #### Try it
 
 ```bash
-docker compose -f deploy/compose.data.yaml up -d postgres
+docker compose -f deploy/docker/compose.data.yaml up -d postgres
 tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti
 SPRING_PROFILES_ACTIVE=postgres DRISHTI_PACKS=counterparty-risk,market-risk \
   java -jar drishti-server/target/drishti-server-*-exec.jar
