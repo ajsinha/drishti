@@ -33,6 +33,9 @@
 - **Fixed (QA2-08): Admin → Tokens no longer says tokens "never change anything"**: it says a read token only reads and a token with write
   scopes may change what they name; a new **Scopes** column marks each token *read only* or *writes* with its scopes; *Last used* is in the
   console's time zone with its name (`2026-10-20 08:54 New York`), as on the other Admin pages.
+- **Fixed (QA2-09): `iceberg-external` (and the native Iceberg engine) find a path-based table a catalog wrote** (pyiceberg's
+  `00003-<uuid>.metadata.json`, no `version-hint.text`) at the folder the docs name: the newest metadata file by sequence number is the
+  current version, and a newer one is picked up at the next refresh. `CatalogNamedMetadataTest`.
 - **Fixed (QA2-06): a bad `history:` block in a pack on disk shows on Admin → Packs (`problem`, `historyProblems`) and in Health (the pack
   DEGRADED)** from the start and after every reload, and is logged then, not only at the first history request; the pack keeps running
   with the default history. `HistoryBlockProblemsTest`.
