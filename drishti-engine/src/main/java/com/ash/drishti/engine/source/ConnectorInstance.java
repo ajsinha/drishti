@@ -82,6 +82,16 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public com.ash.drishti.api.HistoryRead history(com.ash.drishti.api.HistoryRequest request) throws Exception {
+        return serves(request.ref().kind()) ? delegate.history(request) : com.ash.drishti.api.HistoryRead.NONE;
+    }
+
+    @Override
+    public Optional<java.util.NavigableSet<java.time.LocalDate>> days(EntityRef ref, java.time.LocalDate from, java.time.LocalDate to) {
+        return serves(ref.kind()) ? delegate.days(ref, from, to) : Optional.of(new java.util.TreeSet<>());
+    }
+
+    @Override
     public Optional<java.time.LocalDate> latestDate(String kind) {
         return serves(kind) ? delegate.latestDate(kind) : Optional.empty();
     }

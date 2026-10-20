@@ -17,6 +17,13 @@
 
 ## Unreleased
 
+- **Added: history queries, the connector contract (H1).** `SourcePlugin.history(HistoryRequest)` returns `HistoryRead(days, covered,
+  failed)`, one `HistoryDay(date, document, versions)` per business date the source holds the entity on; `SourcePlugin.days(ref, from, to)`
+  lists those dates without reading a document. The default (`HistoryReads.perDay`) reads date by date through `fetch(ref, asOf)`, eight at
+  once, within a budget, so every connector has history; `DatedSourceContract` gains eight history cases that every dated plugin passes.
+  The JSON contract of `GET /api/v1/history/{kind}/{id}` is fixed as `drishti-testkit/src/main/resources/history/trade-1000015-30.json`
+  and `equity-EQ-CSCA-3M.json` ([CONNECTOR_DEVELOPER_GUIDE](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md),
+  [HISTORY_QUERIES.md section 8](docs/architecture/HISTORY_QUERIES.md#8-the-json-contract)).
 - **Fixed: Drishti*net: the cluster never ends with no enabled administrator.** The last-administrator rule was checked only where a change was
   made, so two nodes disabling (or demoting, or deleting) the last two administrators at the same moment could leave none enabled. A peer's
   change that would leave a node with none is now repaired as it is applied: the disabled administrator enabled most recently is enabled again
