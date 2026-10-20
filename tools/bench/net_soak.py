@@ -83,8 +83,17 @@ TOKEN_SECRET = "net-soak-token-secret-0123456789abcdef-0123"
 SESSION_SECRET = "net-soak-session-secret-0123456789abcdef-0123"
 ADMIN, PASSWORD = "drishti-dev-admin", "drishti-dev-admin123"
 VIEWER = "soak-viewer"                  # a token with the viewer role: no raw, so drishti.security.redact fields read masked
-#: the history ranges the checked set and the load ask (HISTORY_QUERIES.md section 7.1); "knownAt" is filled with an instant
-HISTORY_ASKS = ({"days": "30"}, {"days": "60"}, {"range": "3M"}, {"days": "30", "diff": "true"}, {"days": "30", "knownAt": "now"})
+#: drishti.security.redact on every server of the soak: fields its synthetic data holds (tools/bench/trades.py), so that masks mask
+#: something (SOAK-09: the default list names fields such as 'trader' that these trades do not have, DRS-6011)
+REDACT = ("PRICE", "TRADER_ID", "NAME")
+#: per kind, the masked fields that are columns of its history: a viewer's history must show them masked on every row and in every diff.
+#: PRICE moves when a trade is amended, so "never shown as changed" is exercised; a counterparty's NAME is its first column.
+MUST_MASK = {"trade": ("PRICE",), "counterparty": ("NAME",)}
+#: the history ranges the checked set asks (HISTORY_QUERIES.md section 7.1); "now" is the instant the lakes were built (knownAt), "day:i"
+#: the i-th date of the run (from Python's index, clamped)
+HISTORY_ASKS = ({"days": "30"}, {"days": "60"}, {"range": "3M"}, {"days": "30", "diff": "true"}, {"days": "30", "knownAt": "now"},
+                {"days": "5"}, {"range": "1M"}, {"days": "10", "diff": "true"}, {"from": "day:2", "to": "day:-2"},
+                {"from": "day:1", "to": "day:-1", "diff": "true"})
 SYSTEMS = {"endur": lambda i: str(10_000_000 + i), "calypso": lambda i: f"CLY-{30_000_000 + i}", "murex": lambda i: f"MX-{50_000_000 + i}"}
 NODES = {  # name: (lake, packs, connectors switched off, port offset)
     "a": ("shared", "trading,counterparty-risk", ["trade-murex"], 0),
@@ -165,6 +174,7 @@ class Soak:
             import trades
             self.dates = trades.business_days(self.dates[-1], a.days)
         self.known_at = None                               # the instant "known at" history requests name: set once the lakes are built
+        self.mask_coverage: dict | None = None             # the reference's viewer histories and how many mask what they must
 
     def url(self, name: str) -> str:
         return f"http://{HOST}:{self.port[name]}"
@@ -206,7 +216,8 @@ class Soak:
                    DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_CONNECTORS_DIR=str(work / "connectors"),
                    DRISHTI_NET_DIR=str(work / "net"), DRISHTI_ACCESS_LOG="false")
         args = [f"-Xmx{self.a.heap}", "-jar", self.jar, f"--server.port={port}", f"--drishti.net.dir={work / 'net'}", "--drishti.net.poll=1s",
-                "--drishti.sources.plugins.demo.enabled=false", "--drishti.security.registered-users-only=false"]
+                "--drishti.sources.plugins.demo.enabled=false", "--drishti.security.registered-users-only=false",
+                "--drishti.security.redact=" + ",".join(REDACT)]
         args += [f"--drishti.sources.connectors.{c}.enabled=false" for c in off]
         log = open(self.work / f"server-{name}.log", "ab")
         self.procs[name] = subprocess.Popen(java_cmd(self.java, args, tmp=work / "data" / "tmp" / "server"), cwd=work, env=env, stdout=log,
@@ -273,18 +284,34 @@ class Soak:
         return out + self.history_requests(r)
 
     def history_requests(self, r: random.Random) -> list[dict]:
-        """History of trades of every system (MUREX ones only c holds), counterparties and --equities, each range of HISTORY_ASKS in turn,
-        every other one asked as a viewer (masked fields); all to the last date."""
+        """History of --history-sample trades of every system (MUREX ones only c holds: peer-only from a and b), half as many
+        counterparties and the --equities, each asked twice, as the administrator and as a viewer (masked fields), with two different
+        ranges of HISTORY_ASKS, so every range is asked in both roles; all to the last date."""
         if self.a.history_share <= 0:
             return []
-        ids = [("trade", ident(i)) for ident in SYSTEMS.values() for i in r.sample(range(self.a.trades), max(1, self.a.sample // 6))]
-        ids += [("counterparty", f"CP-{c:05d}") for c in r.sample(range(self.a.counterparties), max(1, self.a.sample // 12))]
+        n = max(1, self.a.history_sample)
+        ids = [("trade", ident(i)) for ident in SYSTEMS.values() for i in r.sample(range(self.a.trades), min(self.a.trades, n))]
+        ids += [("counterparty", f"CP-{c:05d}") for c in r.sample(range(self.a.counterparties), min(self.a.counterparties, max(1, n // 2)))]
         ids += [("equity", e.strip()) for e in self.a.equities.split(",") if e.strip()]
         out = []
         for k, (kind, ident) in enumerate(ids):
-            params = {key: (self.known_at or "") if v == "now" else v for key, v in HISTORY_ASKS[k % len(HISTORY_ASKS)].items()}
-            out.append({"what": "history", "kind": kind, "id": ident, "params": params, "role": "viewer" if k % 2 else "admin",
-                        "date": self.dates[-1]})
+            for j, role in enumerate(("admin", "viewer")):
+                out.append({"what": "history", "kind": kind, "id": ident, "params": self.history_params(HISTORY_ASKS[(k + 3 * j) % len(HISTORY_ASKS)]),
+                            "role": role, "date": self.dates[-1]})
+        return out
+
+    def history_params(self, ask: dict) -> dict:
+        """An ask of HISTORY_ASKS with "now" and "day:i" filled in (from and to in order)."""
+        def value(v: str) -> str:
+            if v == "now":
+                return self.known_at or ""
+            if v.startswith("day:"):
+                i = int(v[4:])
+                return self.dates[max(-len(self.dates), min(i, len(self.dates) - 1))]
+            return v
+        out = {k: value(v) for k, v in ask.items()}
+        if out.get("from", "") > out.get("to", "￿"):
+            out["from"], out["to"] = out["to"], out["from"]
         return out
 
     def ask(self, base: str, q: dict) -> tuple[int, dict | str]:
@@ -329,16 +356,30 @@ class Soak:
         self.start_server("ref", "all", "trading,counterparty-risk,market-risk", [], port, None, net=False)
         base = f"http://127.0.0.1:{port}"
         reqs = self.requests()
+        masks = {"viewerHistories": 0, "masked": 0, "problems": []}         # the reference itself masks what a viewer must not see
         for q in reqs:
             status, body = self.ask(base, q)
             q["refStatus"], q["ref"] = status, self.essence(q, body)
+            if self.must_mask(q) and status == 200:
+                masks["viewerHistories"] += 1
+                missing = soak_check.mask_missing(body, self.must_mask(q))
+                masks["masked"] += not missing
+                masks["problems"] += [f"{q['kind']}/{q['id']}: {m}" for m in missing][: max(0, 5 - len(masks["problems"]))]
         (self.work / "reference.json").write_text(json.dumps(reqs, indent=1, default=str), encoding="utf-8")
         self.stop("ref")
         bad = [q for q in reqs if q["refStatus"] != 200]
-        self.note("reference", requests=len(reqs), notOk=len(bad), sample=bad[:3])
+        if self.a.history_share > 0:                       # no history checked: nothing to mask
+            self.mask_coverage = {**masks, "distinctHistories": len({(q["kind"], q["id"]) for q in reqs if q["what"] == "history"}),
+                                  "historyRequests": sum(1 for q in reqs if q["what"] == "history")}
+        self.note("reference", requests=len(reqs), notOk=len(bad), sample=bad[:3], masks=self.mask_coverage)
         return [q for q in reqs if q["refStatus"] == 200]
 
     # -- checking ---------------------------------------------------------------------------------------------------------------
+    @staticmethod
+    def must_mask(q: dict) -> tuple:
+        """The fields a history answer must show masked: MUST_MASK of its kind for a viewer, none for the administrator (raw)."""
+        return MUST_MASK.get(q.get("kind"), ()) if q.get("what") == "history" and q.get("role") == "viewer" else ()
+
     def judge(self, q: dict, status: int, body) -> str:
         """right | partial (named, a node down) | wrong; a history answer also timeout (DRS-1014) or unavailable (soak_check)."""
         return self.judge_why(q, status, body)[0]
@@ -348,7 +389,7 @@ class Soak:
         downs = [f"drishti-{n}" for n in self.down]
         if q["what"] == "history":                         # a node just restarted may still be named by peers that saw it dead
             downs += [f"drishti-{n}" for n, t in self.back.items() if time.time() - t < self.a.kill_grace]
-            return soak_check.judge_history_why(q["ref"], status, body, downs)
+            return soak_check.judge_history_why(q["ref"], status, body, downs, self.must_mask(q))
         text = json.dumps(body) if isinstance(body, dict) else str(body)
         if status == 200:
             got = self.essence(q, body)
@@ -503,6 +544,7 @@ class Soak:
         self.lakes()
         self.reqs = self.reference()
         out["requests"] = len(self.reqs)
+        out["maskCoverage"] = self.mask_coverage
         t = time.time()
         for n in NODES:
             self.node(n)
@@ -599,7 +641,7 @@ class Soak:
         memory = soak_check.memory_trend(self.samples, starts, self.a.warmup, self.a.max_growth, windows, self.a.settle)
         wrong = sum(v for k, v in stats.items() if k.endswith(":wrong"))
         return {"killWindows": windows, "memory": memory, "table": soak_check.table(users, stats),
-                "verdict": soak_check.verdict(wrong, errors, windows, users, memory, self.a.max_p99)}
+                "verdict": soak_check.verdict(wrong, errors, windows, users, memory, self.a.max_p99, self.mask_coverage)}
 
     def after_kill(self, n: str, opener) -> dict:
         """The console's next good page after n was killed (a: the console's own server), and how long the others take to see n dead."""
@@ -651,6 +693,8 @@ def main(argv=None) -> int:
     ap.add_argument("--kill-seed-at", type=float, default=330)
     ap.add_argument("--restart-seed-at", type=float, default=420)
     ap.add_argument("--sample", type=int, default=60, help="trades per system and date in the checked set (a third as many searches and pages)")
+    ap.add_argument("--history-sample", type=int, default=40, help="trades per system whose history is checked (half as many counterparties); "
+                    "each asked as the administrator and as a viewer, with two ranges")
     ap.add_argument("--check-every", type=float, default=0.05)
     ap.add_argument("--heap", default="1536m")
     ap.add_argument("--base-port", type=int, default=18783)

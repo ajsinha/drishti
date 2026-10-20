@@ -77,19 +77,49 @@ def masked_leaks(body) -> list[str]:
     return out
 
 
-def judge_history(ref: dict, status: int, body, downs: list[str]) -> str:
+#: the mask a field reads for a role without ``raw`` (DataNode.MASK)
+MASK = "\u2022\u2022\u2022"
+
+
+def mask_missing(body, fields) -> list[str]:
+    """Masks that should be there and are not (SOAK-09): each of ``fields`` must be a column of the answer, marked masked, read the mask
+    (or nothing) on every row, and never show a value in a diff (``changes``). Empty when every field is masked everywhere."""
+    if not fields or not isinstance(body, dict) or not isinstance(body.get("rows"), list):
+        return []
+    cols = {c.get("path"): c for c in body.get("columns") or []}
+    rows = body["rows"]
+    out = []
+    for f in fields:
+        if f not in cols:
+            out.append(f"{f}: not a column")
+            continue
+        if not cols[f].get("masked"):
+            out.append(f"{f}: column not masked")
+        shown = sum(1 for r in rows if (r.get("values") or {}).get(f) not in (MASK, None))
+        if shown:
+            out.append(f"{f}: shown on {shown} of {len(rows)} rows")
+        if any(str(c.get("path") or "") == f or str(c.get("path") or "").startswith(f + ".")
+               for r in rows for c in r.get("changes") or [] if c.get("before") not in (MASK, None) or c.get("after") not in (MASK, None)):
+            out.append(f"{f}: shown in a diff")
+    return out
+
+
+def judge_history(ref: dict, status: int, body, downs: list[str], must_mask=()) -> str:
     """judge_history_why's verdict alone."""
-    return judge_history_why(ref, status, body, downs)[0]
+    return judge_history_why(ref, status, body, downs, must_mask)[0]
 
 
-def judge_history_why(ref: dict, status: int, body, downs: list[str]) -> tuple[str, str]:
+def judge_history_why(ref: dict, status: int, body, downs: list[str], must_mask=()) -> tuple[str, str]:
     """A history answer against the reference's essence: (verdict, the rule that decided it). The verdict is right | partial (named:
     DRS-5052 naming a node that is down) | timeout (DRS-1014) | unavailable | wrong. Wrong is any other answer: different rows, changed
     flags or masks, a short answer not marked partial, a partial one without a named problem or with rows the reference does not have, a
-    leaked mask, and DRS-1013 at any time."""
+    leaked mask, a field of ``must_mask`` (a viewer's) not masked on every row and in every diff, and DRS-1013 at any time."""
     leaks = masked_leaks(body)
     if leaks:
         return "wrong", "mask leaks: " + "; ".join(leaks)
+    missing = mask_missing(body, must_mask) if status == 200 else []
+    if missing:
+        return "wrong", "mask missing: " + "; ".join(missing)
     named = lambda x: any(d in json.dumps(x, default=str) for d in downs)  # noqa: E731
     if status == 200 and isinstance(body, dict):
         got = history_essence(body)
@@ -301,10 +331,13 @@ def table(users: dict, checker: dict) -> str:
     return "\n".join(lines)
 
 
-def verdict(wrong_answers: int, errors: list[dict], windows: list[dict], users: dict, memory: dict, max_p99: float = 0.0) -> dict:
+def verdict(wrong_answers: int, errors: list[dict], windows: list[dict], users: dict, memory: dict, max_p99: float = 0.0,
+            masks: dict | None = None) -> dict:
     """The run's verdict: no wrong answers; errors only inside kill windows (``errors`` are ``{"t", "width", "what", "n"}``: the checker's
     at a moment, the load's per bucket of seconds); p95 and p99 per action (failing only past ``max_p99`` when it is set); no process whose
-    memory grows after warm-up. ``pass`` is all four."""
+    memory grows after warm-up; and, given the reference's mask coverage (``{"viewerHistories", "masked"}``), masks really exercised:
+    viewer histories were checked and the reference masks the fields in every one (SOAK-09: a check of nothing passes vacuously).
+    ``pass`` is all of them."""
     outside = [e for e in errors if not inside(e["t"], windows, e.get("width", 0.0))]
     latency = {k: {"p95": v["p95"], "p99": v["p99"]} for k, v in (users or {}).items() if isinstance(v, dict) and "p95" in v}
     slow = [k for k, v in latency.items() if max_p99 and v["p99"] > max_p99]
@@ -315,4 +348,6 @@ def verdict(wrong_answers: int, errors: list[dict], windows: list[dict], users: 
         "latency": {"ok": not slow, "perAction": latency, "maxP99": max_p99 or None, "over": slow},
         "memoryFlat": {"ok": not growing, "growing": growing, "perProcess": memory},
     }
+    if masks is not None:
+        checks["masksExercised"] = {"ok": masks.get("viewerHistories", 0) > 0 and masks.get("masked") == masks.get("viewerHistories"), **masks}
     return {"pass": all(c["ok"] for c in checks.values()), **checks}

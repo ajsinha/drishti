@@ -17,6 +17,13 @@
 
 ## Unreleased
 
+- **Fixed (SOAK-09): the soak's mask check covers something.** It checked 35 distinct histories, and no viewer trade history had a
+  masked field (the default `drishti.security.redact` names `trader`, which the synthetic trades do not hold). The soak's servers now
+  mask `PRICE`, `TRADER_ID` and `NAME`; a viewer's trade history must show `PRICE` and a counterparty's `NAME` as a masked column, the
+  mask on every row and never a value in a diff, or the answer is wrong. The checked set holds `--history-sample` (40) trades per
+  system (MUREX ones peer-only from a and b) and 20 counterparties, each asked as administrator and viewer with two of ten ranges (about
+  140 distinct histories, 280 requests); the verdict's `masksExercised` fails unless the reference masks them in every viewer history.
+  `soak_check.mask_missing`; test_net_soak; DRISHTI_NET section 17.1, TOOLS.
 - **Fixed (SOAK-08): the soak keeps every wrong answer.** It kept five per kind, with no time for the others and the body cut at 600
   characters before `partial` and `problems`, which were what made them wrong. `soak.json`'s `wrong` now has the count per kind of
   request and per rule that failed (`byKind`, also in `soak-report.txt`), every wrong answer's time, node, request and rule (`all`), and

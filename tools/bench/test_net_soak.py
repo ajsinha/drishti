@@ -101,6 +101,69 @@ class HistoryJudgeTest(unittest.TestCase):
         self.assertEqual([], sc.masked_leaks(answer(FULL)))
 
 
+class MaskCoverageTest(unittest.TestCase):
+    """SOAK-09: 35 distinct history requests, and no viewer trade history had a masked field ('trader' names no field of the trades)."""
+
+    def soak(self, **kw):
+        import net_soak
+        s = net_soak.Soak.__new__(net_soak.Soak)
+        s.a = SimpleNamespace(**{"history_share": 0.15, "history_sample": 40, "trades": 1500, "counterparties": 300, "equities": "", **kw})
+        s.dates, s.known_at = [f"2026-10-{d:02d}" for d in (5, 6, 7, 8, 9, 12, 13, 14, 15, 16)], "2026-10-20T10:00:00Z"
+        return s
+
+    def test_the_soak_masks_fields_its_trades_hold_and_its_history_shows(self):
+        import gzip
+        import json
+        import net_soak
+        snap = sorted((Path(__file__).resolve().parents[2] / "data" / "testdata" / "trades" / "murex").glob("snapshot-*.jsonl.gz"))
+        if snap:
+            with gzip.open(snap[0], "rt", encoding="utf-8") as fh:
+                doc = json.loads(fh.readline())
+            self.assertTrue(set(net_soak.MUST_MASK["trade"]) <= set(doc) and "TRADER_ID" in doc)        # what trades.py writes
+        self.assertTrue(set(net_soak.MUST_MASK["trade"]) | set(net_soak.MUST_MASK["counterparty"]) <= set(net_soak.REDACT))
+        self.assertNotIn("trader", net_soak.REDACT)
+
+    def test_many_distinct_histories_in_both_roles_with_every_range_and_peer_only_murex_ids(self):
+        import net_soak
+        s = self.soak()
+        reqs = s.history_requests(random.Random(20261019))
+        ids = {(q["kind"], q["id"]) for q in reqs}
+        self.assertGreaterEqual(len(ids), 140)
+        self.assertEqual(40, sum(1 for k, i in ids if k == "trade" and i.startswith("MX-")))
+        self.assertEqual(len(ids) * 2, len(reqs))
+        viewer = [q for q in reqs if q["role"] == "viewer"]
+        self.assertTrue(any(q["id"].startswith("MX-") for q in viewer))
+        for role in ("admin", "viewer"):
+            asked = {tuple(sorted(q["params"])) for q in reqs if q["role"] == role}
+            self.assertEqual({tuple(sorted(a)) for a in net_soak.HISTORY_ASKS}, asked, role)
+        windows = [q["params"] for q in reqs if "from" in q["params"]]
+        self.assertTrue(windows and all(p["from"] <= p["to"] and p["to"] in s.dates for p in windows))
+        self.assertEqual("2026-10-20T10:00:00Z", next(q["params"]["knownAt"] for q in reqs if "knownAt" in q["params"]))
+        self.assertEqual(("PRICE",), s.must_mask({"what": "history", "kind": "trade", "role": "viewer"}))
+        self.assertEqual((), s.must_mask({"what": "history", "kind": "trade", "role": "admin"}))
+        self.assertEqual([], self.soak(history_share=0).history_requests(random.Random(1)))
+
+    def test_a_viewer_history_must_show_the_field_masked_on_every_row_and_in_every_diff(self):
+        must = ("TRADER_ID",)
+        self.assertEqual([], sc.mask_missing(answer(FULL), must))
+        self.assertEqual("right", sc.judge_history(REF, 200, answer(FULL), [], must))
+        self.assertEqual(["TRADER_ID: column not masked"], sc.mask_missing(answer(FULL, masked=False), must))
+        shown = [row("2026-10-14", 100.0, trader="T1"), row("2026-10-15", 120.0, ["QUANTITY"], trader="T1"), row("2026-10-16", 120.0, trader="T1")]
+        self.assertEqual(["TRADER_ID: shown on 3 of 3 rows"], sc.mask_missing(answer(shown), must))
+        self.assertEqual("wrong", sc.judge_history(sc.history_essence(answer(shown)), 200, answer(shown), [], must))   # even equal to the ref
+        diff = copy.deepcopy(FULL)
+        diff[1]["changes"] = [{"path": "TRADER_ID", "kind": "changed", "before": "T0", "after": "T1"}]
+        self.assertEqual(["TRADER_ID: shown in a diff"], sc.mask_missing(answer(diff), must))
+        self.assertEqual(["PRICE: not a column"], sc.mask_missing(answer(FULL), ("PRICE",)))
+        self.assertEqual([], sc.mask_missing({"code": "DRS-5052"}, must))
+
+    def test_the_verdict_fails_when_no_viewer_history_masked_anything(self):
+        self.assertTrue(sc.verdict(0, [], [], {}, {}, 0, {"viewerHistories": 140, "masked": 140})["pass"])
+        self.assertFalse(sc.verdict(0, [], [], {}, {}, 0, {"viewerHistories": 140, "masked": 0})["pass"])
+        self.assertFalse(sc.verdict(0, [], [], {}, {}, 0, {"viewerHistories": 0, "masked": 0})["pass"])
+        self.assertTrue(sc.verdict(0, [], [], {}, {})["pass"])
+
+
 class WrongAnswersTest(unittest.TestCase):
     """SOAK-08: 32 wrong answers, 5 kept, no time for the other 27, and the kept body cut before ``partial`` and ``problems``."""
     P = [{"code": "DRS-5052", "source": "net", "days": ["2026-07-17"] * 60, "message": "the nodes that hold trade cannot be reached now: drishti-c (dead)"}]

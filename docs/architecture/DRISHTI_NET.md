@@ -426,9 +426,16 @@ The soak also exercises history queries ([HISTORY_QUERIES.md](HISTORY_QUERIES.md
   (MUREX trades are held only by **c**, so from **a** and **b** they are peer-only), else a counterparty, or an equity named with
   `--equities` (the soak's lakes hold none unless a lake given to it does); with `days=30`, `days=60`, `range=3M`, `diff=true` or, one
   request in ten, `knownAt` of the moment it is asked. `history` is its own line of the latency and error table.
-- **The check.** The checked set adds history requests of trades of every system, counterparties and `--equities`, cycling through the
-  same ranges (the `knownAt` one names an instant taken after the lakes were built), every other one asked as a **viewer** (no `raw`, so
-  `drishti.security.redact` fields such as `TRADER_ID` are masked). Each is asked of the reference server holding all the data first,
+- **The check.** The checked set adds history requests of `--history-sample` (40) trades of every system (the MUREX ones peer-only
+  from **a** and **b**), half as many counterparties and the `--equities`: about 140 distinct entities, each asked twice, as the
+  administrator and as a **viewer**, with two different ranges, so that each of ten ranges (`days` 5, 30, 60, `range` 1M and 3M,
+  `diff=true` over 10 and 30 days, an explicit `from`/`to` with and without `diff`, `knownAt` an instant taken after the lakes were
+  built) is asked in both roles. The soak's servers mask fields its synthetic data really has (`--drishti.security.redact=PRICE,
+  TRADER_ID,NAME`; the default list names fields such as `trader` that these trades do not hold, DRS-6011): a viewer's trade history
+  must show `PRICE` (it moves when a trade is amended) and a counterparty's `NAME` masked, as a masked column, the mask on every row
+  and never a value in a diff; otherwise the answer is wrong (SOAK-09: the 2026-10-20 soak checked 35 distinct histories, none of
+  whose viewer trade histories had a masked column). The verdict's `masksExercised` fails unless the reference's viewer histories
+  mask those fields in every one (`maskCoverage` in `soak.json`). Each is asked of the reference server holding all the data first,
   then of a random running node all along, and compared by `tools/bench/soak_check.py`: the masked columns, the window's ends and baseline,
   and every row (date, data date, carried, deleted, values, part counts, the `changed` flags and, with `diff=true`, the changes). Timings,
   cache state, generations and sources are the node's own and not compared. Any difference is a **wrong answer** and fails the soak; so
