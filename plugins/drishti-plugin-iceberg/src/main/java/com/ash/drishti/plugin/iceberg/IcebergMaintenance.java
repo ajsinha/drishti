@@ -17,8 +17,8 @@ package com.ash.drishti.plugin.iceberg;
 
 import com.ash.drishti.api.LoadGuard;
 import com.ash.drishti.plugin.iceberg.IcebergLayout.Row;
-import com.ash.drishti.plugin.iceberg.IcebergTable.Day;
-import com.ash.drishti.plugin.iceberg.IcebergTable.Layout;
+import com.ash.drishti.plugin.iceberg.KindTable.Day;
+import com.ash.drishti.plugin.iceberg.KindTable.Layout;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -215,8 +215,8 @@ public final class IcebergMaintenance {
                 return;
             }
             Day newest = l.days().lastEntry().getValue();
-            try (CloseableIterable<Record> rows = IcebergTable.open(t.io(), l.schema(), newest.files().get(0),
-                    new Schema(l.schema().findField(IcebergLayout.DOC)), Expressions.alwaysTrue())) {
+            try (CloseableIterable<Record> rows = IcebergTable.open(t.io(), t.schema(), IcebergTable.tasks(newest).get(0),
+                    new Schema(t.schema().findField(IcebergLayout.DOC)), Expressions.alwaysTrue())) {
                 int n = 0;
                 Map<String, Integer> seen = new HashMap<>();
                 for (Record r : rows) {
@@ -264,13 +264,13 @@ public final class IcebergMaintenance {
                     continue;
                 }
                 try (SortedRuns rows = new SortedRuns(spillDir, "relayout-" + day.date())) {
-                    for (FileScanTask task : day.files()) {
+                    for (FileScanTask task : IcebergTable.tasks(day)) {
                         copy(t, schema, task, promoted, rows, budget);
                     }
                     List<DataFile> files = IcebergLayout.writeDay(t, day.date(), rows.merged(), fileRows);
                     RewriteFiles rw = t.newRewrite().validateFromSnapshot(l.snapshotId());
                     java.util.Set<String> gone = new java.util.HashSet<>();
-                    for (FileScanTask task : day.files()) {
+                    for (FileScanTask task : IcebergTable.tasks(day)) {
                         rw.deleteFile(task.file());
                         for (DeleteFile d : task.deletes()) {
                             Integer p = d.partition().size() > 0 ? d.partition().get(0, Integer.class) : null;
@@ -294,7 +294,7 @@ public final class IcebergMaintenance {
             return true;
         }
         List<String[]> ranges = new ArrayList<>();
-        for (FileScanTask task : day.files()) {
+        for (FileScanTask task : IcebergTable.tasks(day)) {
             DataFile f = task.file();
             if (f.recordCount() > fileRows) {
                 return true;

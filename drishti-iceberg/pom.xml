@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.ash.drishti</groupId>
+    <artifactId>drishti-parent</artifactId>
+    <version>2.5.0</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+  <artifactId>drishti-iceberg</artifactId>
+  <name>drishti-iceberg</name>
+  <description>Drishti's own Apache Iceberg engine, with no Hadoop: table metadata, manifests (Avro), planning with partition and metric pruning, field-id Parquet reads with schema evolution and deletes, path-based and REST catalogs, the Parquet writer and safe commits; on local disk (Windows included) and S3</description>
+  <dependencies>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeio</artifactId></dependency>
+    <!-- manifests and manifest lists are Avro container files: Avro's core library only (no Hadoop) -->
+    <dependency><groupId>org.apache.avro</groupId><artifactId>avro</artifactId><version>${avro.version}</version></dependency>
+    <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
+    <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
+    <!-- SigV4 request signing for AWS Glue's Iceberg REST endpoint -->
+    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>auth</artifactId><version>${awssdk.version}</version></dependency>
+    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>http-auth-aws</artifactId><version>${awssdk.version}</version></dependency>
+    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
+  </dependencies>
+</project>

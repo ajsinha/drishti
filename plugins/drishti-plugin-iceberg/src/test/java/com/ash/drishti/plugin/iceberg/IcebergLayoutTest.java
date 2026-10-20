@@ -67,6 +67,11 @@ class IcebergLayoutTest {
 
     Path root;
 
+    /** The engine the connector reads with; {@code IcebergLayoutNativeTest} runs every test on the other one. */
+    protected String engine() {
+        return "library";
+    }
+
     static String doc(int i, LocalDate d) {
         ObjectNode n = JSON.createObjectNode();
         n.put("tradeId", String.format("T-%03d", i));
@@ -118,7 +123,7 @@ class IcebergLayoutTest {
     }
 
     IcebergSourcePlugin plugin(boolean laidOut, String... extra) throws Exception {
-        Map<String, String> s = new HashMap<>(Map.of("root", root.toString(), "domain", "desk", "source-name", "lake"));
+        Map<String, String> s = new HashMap<>(Map.of("root", root.toString(), "domain", "desk", "source-name", "lake", "engine", engine()));
         if (laidOut) {
             s.put("layout.trade.columns", String.join(",", PROMOTED) + (extra.length > 0 ? "," + String.join(",", extra) : ""));
         }

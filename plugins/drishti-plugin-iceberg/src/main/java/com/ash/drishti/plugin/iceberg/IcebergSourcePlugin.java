@@ -28,9 +28,9 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.drishti.plugin.iceberg.IcebergTable.Day;
-import com.ash.drishti.plugin.iceberg.IcebergTable.IdMap;
-import com.ash.drishti.plugin.iceberg.IcebergTable.Layout;
+import com.ash.drishti.plugin.iceberg.KindTable.Day;
+import com.ash.drishti.plugin.iceberg.KindTable.IdMap;
+import com.ash.drishti.plugin.iceberg.KindTable.Layout;
 import com.github.benmanes.caffeine.cache.AsyncCache;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -92,7 +92,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     /** A whole day of a small table, for reverse lookups without promoted columns: its ids and who refers to what. */
     private record Part(Set<String> ids, Map<String, Set<String>> refs) {}
 
-    private final Map<String, IcebergTable> tables = new ConcurrentHashMap<>();
+    private final Map<String, KindTable> tables = new ConcurrentHashMap<>();
     private final Map<String, String> modes = new ConcurrentHashMap<>();
     private final Map<String, Long> current = new ConcurrentHashMap<>();
     private final Map<String, List<String>> promoted = new ConcurrentHashMap<>();
@@ -108,7 +108,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     private AsyncCache<DayKey, Part> parts;
     private Cache<String, String> docs;
     private Semaphore docReads;
-    private IcebergLake lake;
+    private LakeTables lake;
     private SourceContext context;
     private String sourceName;
     private int lookbackDays;
@@ -140,7 +140,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
         this.maxLoadRows = Integer.parseInt(ctx.setting("max-load-rows", "200000"));
         this.reverseIndex = Boolean.parseBoolean(ctx.setting("reverse-index", "true"));
-        this.lake = IcebergLake.of(ctx.settings());
+        this.lake = LakeTables.open(ctx.settings());
         this.dated = new DatedHitIndex(sourceName, DatedHitIndex.defaultRoot(), ctx.settings(), this::dayHits, (k, d) -> {
             Long v = datedSnapshots.get(k);
             return v == null ? null : "s" + v;
@@ -181,7 +181,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
 
     private void add(String kind) {
         modes.put(kind, context.setting("mode." + kind, "snapshot"));
-        tables.putIfAbsent(kind, new IcebergTable(kind, lake, loaders));
+        tables.putIfAbsent(kind, lake.table(kind, loaders));
     }
 
     /**
@@ -205,7 +205,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
                 }
             }
             boolean changed = false;
-            for (Map.Entry<String, IcebergTable> e : tables.entrySet()) {
+            for (Map.Entry<String, KindTable> e : tables.entrySet()) {
                 try {
                     Optional<Long> id = e.getValue().refresh();
                     if (id.isPresent() && !id.get().equals(current.get(e.getKey()))) {
@@ -289,7 +289,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
 
     /** The table's snapshot (the current one, or as known at {@code knownAt}) planned by business date. */
     private Optional<Layout> layout(String kind, Instant knownAt) {
-        IcebergTable t = tables.get(kind);
+        KindTable t = tables.get(kind);
         if (t == null) {
             return Optional.empty();
         }
@@ -312,7 +312,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         Map<String, String> out = new LinkedHashMap<>();
         for (String path : promoted.getOrDefault(kind, List.of())) {
             String column = IcebergLayout.column(path);
-            if (l.schema().findField(column) != null) {
+            if (l.hasColumn(column)) {
                 out.put(path, column);
             }
         }
@@ -399,8 +399,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             }
             if (json != null) {
                 DataNode doc = context.parseJson(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
-                long generation = Optional.ofNullable(tables.get(ref.kind()).table().orElseThrow().snapshot(l.get().snapshotId()))
-                        .map(s -> s.sequenceNumber()).orElse(0L);
+                long generation = tables.get(ref.kind()).sequenceNumber(l.get().snapshotId());
                 return Optional.of(new EntityDocument(ref, doc, new Provenance(sourceName, generation, Instant.now(), false,
                         LocalDate.MIN.equals(d.date()) ? null : d.date())));
             }
@@ -556,6 +555,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         Map<String, Object> m = new java.util.LinkedHashMap<>(Map.of("tables", tables.size(), "snapshots", layouts.synchronous().estimatedSize(), "idMaps", idMaps.synchronous().estimatedSize(),
                 "columnSets", columnSets.synchronous().estimatedSize(), "documents", docs.estimatedSize(),
                 "partitions", parts.synchronous().estimatedSize(), "daysWithDeletes", deletes, "ids", index.size()));
+        m.put("engine", lake.engine().label());
         if (dated.enabled()) {
             m.putAll(dated.health());
         }
@@ -569,6 +569,11 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         columnSets.synchronous().invalidateAll();
         parts.synchronous().invalidateAll();
         docs.invalidateAll();
+        if (lake.engine() == IcebergEngine.NATIVE) {           // the native engine's per-file caches (footers, manifests, delete files)
+            com.ash.drishti.lakeio.ParquetFooters.purge();
+            com.ash.drishti.iceberg.scan.Planner.purge();
+            com.ash.drishti.iceberg.read.Deletes.purge();
+        }
     }
 
     @Override

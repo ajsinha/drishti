@@ -36,9 +36,26 @@ import java.util.Map;
  * @param readBlockBytes the smallest ranged GET: small reads (a Parquet footer, a deletion vector) fetch this much
  * @param tls the shared TLS material ({@code tls.*}: a private CA, a client certificate) for an {@code https://} endpoint, or null
  * @param proxy the outbound proxy ({@code proxy.*} or the site default), {@link ProxySettings#none()} when the store is reached directly
+ * @param sessionToken a session token with temporary keys (a REST catalog's vended credentials), or blank
  */
 public record S3Settings(String endpoint, String accessKey, String secretKey, String region, boolean pathStyle, int readBlockBytes,
-        TlsMaterial tls, ProxySettings proxy) {
+        TlsMaterial tls, ProxySettings proxy, String sessionToken) {
+
+    /** With long-lived keys (or the AWS chain). */
+    public S3Settings(String endpoint, String accessKey, String secretKey, String region, boolean pathStyle, int readBlockBytes,
+            TlsMaterial tls, ProxySettings proxy) {
+        this(endpoint, accessKey, secretKey, region, pathStyle, readBlockBytes, tls, proxy, "");
+    }
+
+    /** The same store reached with other credentials (temporary ones when {@code token} is not blank). */
+    public S3Settings withCredentials(String access, String secret, String token) {
+        return new S3Settings(endpoint, access, secret, region, pathStyle, readBlockBytes, tls, proxy, token == null ? "" : token);
+    }
+
+    /** The same credentials against another endpoint, region and addressing (what a REST catalog says the table's store is). */
+    public S3Settings withStore(String newEndpoint, String newRegion, boolean newPathStyle) {
+        return new S3Settings(newEndpoint, accessKey, secretKey, newRegion, newPathStyle, readBlockBytes, tls, proxy, sessionToken);
+    }
 
     /** Without TLS material: the JVM's trust, as before. */
     public S3Settings(String endpoint, String accessKey, String secretKey, String region, boolean pathStyle, int readBlockBytes) {
