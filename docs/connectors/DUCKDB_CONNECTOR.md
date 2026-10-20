@@ -352,6 +352,10 @@ document with `arg_max(doc, business_date)`). `reverse-index: false` turns rever
 Desk P&L and impact work from the column set as on Delta Lake and PostgreSQL: desk P&L of `DESK-RATES` in 34 ms, then
 11 ms; impact of netting set `NS-SUMMIT-NY` in 60 ms, on the 10,000-trade book.
 
+### History queries
+
+`TRD 1000015 30` ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)): one query: `SELECT doc, business_date FROM <domain>.entities WHERE kind = ? AND id = ? AND business_date BETWEEN ? AND ?`, newest first; a snapshot kind has a row on each date it holds the entity, an effective kind on each date it changed.
+
 ## 6. Retention: dropping days
 
 `--keep-days N` on the loader drops every business date more than N calendar days before `--as-of` (default: today

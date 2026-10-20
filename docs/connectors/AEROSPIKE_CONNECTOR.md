@@ -279,6 +279,10 @@ Desk P&L and impact (F8) work from the column set exactly as on Delta Lake. Desk
 after start and kept, recomputed behind the scenes every `refresh` (the last result is served meanwhile): **29–42 ms**.
 Impact of a netting set with 143,842 trades: **1.6 s**.
 
+### History queries
+
+`TRD 1000015 30` ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)): the entity's index record lists its dates (`days()`, one get), then one batch get reads their documents.
+
 ## 6. Retention: TTL instead of a maintenance job
 
 Aerospike expires records by itself. Load with `--ttl-days N` (or write with a `WritePolicy.expiration`) and each day's
