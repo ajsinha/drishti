@@ -53,6 +53,7 @@ class PluginSettingsCatalogueSyncTest {
     private static final Map<String, List<String>> SOURCES = Map.ofEntries(
             Map.entry("jdbc", List.of("plugins/drishti-plugin-jdbc")), Map.entry("duckdb", List.of("plugins/drishti-plugin-duckdb")),
             Map.entry("delta", List.of("plugins/drishti-plugin-delta")), Map.entry("iceberg", List.of("plugins/drishti-plugin-iceberg")),
+            Map.entry("iceberg-external", List.of("plugins/drishti-plugin-iceberg-external")),
             Map.entry("aerospike", List.of("plugins/drishti-plugin-aerospike")), Map.entry("mongodb", List.of("plugins/drishti-plugin-mongodb")),
             Map.entry("redis", List.of("plugins/drishti-plugin-redis")), Map.entry("file", List.of("plugins/drishti-plugin-file")),
             Map.entry("demo", List.of("plugins/drishti-plugin-demo")), Map.entry("feed", List.of("plugins/drishti-plugin-feeds")),

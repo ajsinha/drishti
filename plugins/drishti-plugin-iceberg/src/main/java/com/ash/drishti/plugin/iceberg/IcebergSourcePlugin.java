@@ -562,6 +562,11 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         return m;
     }
 
+    /** Forgets the cached documents only (a read then opens its row group again: what the speed table measures). */
+    void purgeDocs() {
+        docs.invalidateAll();
+    }
+
     @Override
     public void purgeCaches() {
         layouts.synchronous().invalidateAll();
