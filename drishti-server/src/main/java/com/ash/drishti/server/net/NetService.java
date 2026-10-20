@@ -143,6 +143,32 @@ public final class NetService implements AutoCloseable {
         return set.isEmpty() ? defaultAdvert : set;
     }
 
+    /** False while the server is starting and joining waits for it ({@link #joinWhenReady()}); true once it may join. */
+    private volatile boolean mayJoin = true;
+
+    /**
+     * Holds the joining back until {@link #ready()}: the node gossips itself alive only once its web server answers and its connectors have
+     * started, so no peer routes a request to a port that is not open yet (SOAK-03: a restarting node used to join 12 to 19 s before its
+     * port opened, and peers got ConnectException). Called before {@link #start()}; the server calls {@link #ready()} on
+     * {@code ApplicationReadyEvent}. A NetService made without it (a test, a tool) joins at once, as before.
+     */
+    public void joinWhenReady() {
+        mayJoin = false;
+    }
+
+    /** The server is ready (its web server answers, its connectors have started): the node joins now if node.yaml says so. */
+    public void ready() {
+        if (!mayJoin) {
+            mayJoin = true;
+            reload();
+        }
+    }
+
+    /** True once the node may join (the server is ready, or nothing holds it back). */
+    public boolean mayJoin() {
+        return mayJoin;
+    }
+
     /** Reads the folder once and starts watching it. */
     public void start() {
         reload();
@@ -172,7 +198,9 @@ public final class NetService implements AutoCloseable {
                 http.reset();
             }
             Node n = node;
-            if (c.enabled() && n == null) {
+            if (c.enabled() && n == null && !mayJoin) {
+                LOG.info("net: Drishti*net is on; this node joins once the server is ready (its web server answers and its connectors have started)");
+            } else if (c.enabled() && n == null) {
                 startNode(c);
             } else if (!c.enabled() && n != null) {
                 stopNode("node.yaml switched it off");

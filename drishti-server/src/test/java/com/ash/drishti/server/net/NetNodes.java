@@ -98,6 +98,11 @@ final class NetNodes implements AutoCloseable {
 
     /** Starts a node on {@code port}; {@code extra} are more {@code --key=value} arguments (packs, security). */
     Node start(String name, int port, String... extra) {
+        return start(name, port, List.of(), extra);
+    }
+
+    /** As {@link #start(String, int, String...)}, with more classes registered as beans of the node (a test's slow start-up). */
+    Node start(String name, int port, List<Class<?>> beans, String... extra) {
         Path dir = root.resolve(name);
         List<String> args = new ArrayList<>(List.of("--server.port=" + port, "--drishti.data.dir=" + dir.resolve("data"),
                 "--drishti.net.dir=" + dir.resolve("net"), "--drishti.net.poll=200ms",
@@ -114,7 +119,9 @@ final class NetNodes implements AutoCloseable {
             args.removeIf(a -> a.startsWith(key));
             args.add(e);
         }
-        ConfigurableApplicationContext ctx = new SpringApplicationBuilder(DrishtiApplication.class).run(args.toArray(String[]::new));
+        List<Class<?>> sources = new ArrayList<>(List.of(DrishtiApplication.class));
+        sources.addAll(beans);
+        ConfigurableApplicationContext ctx = new SpringApplicationBuilder(sources.toArray(Class<?>[]::new)).run(args.toArray(String[]::new));
         Node n = new Node(name, port, dir, ctx);
         nodes.put(name, n);
         return n;
@@ -122,6 +129,11 @@ final class NetNodes implements AutoCloseable {
 
     Node node(String name) {
         return nodes.get(name);
+    }
+
+    /** Stops only the node's web server: its gossip goes on, so peers still take it for alive, but its port refuses connections. */
+    void closePort(String name) {
+        ((org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext) nodes.get(name).ctx()).getWebServer().stop();
     }
 
     void stop(String name) {

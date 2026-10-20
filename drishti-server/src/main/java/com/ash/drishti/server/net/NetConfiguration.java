@@ -48,8 +48,30 @@ public class NetConfiguration {
         NetService net = new NetService(folder, state, props, version, NetClock.SYSTEM);
         net.advertiseDefault("true".equalsIgnoreCase(env.getProperty("server.ssl.enabled")) ? "https" : "http",
                 env.getProperty("server.port", Integer.class, 8080));
+        net.joinWhenReady();                      // SOAK-03: gossip "alive" only once the port answers and the connectors have started
         net.start();
         return net;
+    }
+
+    /** The server is ready (web server up, connectors started, start-up runners done): the node joins Drishti*net now (SOAK-03). */
+    @Bean
+    public JoinWhenReady netJoinsWhenReady(NetService net) {
+        return new JoinWhenReady(net);
+    }
+
+    /** Lets the node join once the application is ready. */
+    public static final class JoinWhenReady implements org.springframework.context.ApplicationListener<
+            org.springframework.boot.context.event.ApplicationReadyEvent> {
+        private final NetService net;
+
+        JoinWhenReady(NetService net) {
+            this.net = net;
+        }
+
+        @Override
+        public void onApplicationEvent(org.springframework.boot.context.event.ApplicationReadyEvent e) {
+            net.ready();
+        }
     }
 
     @Bean(destroyMethod = "close")
