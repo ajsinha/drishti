@@ -17,6 +17,14 @@
 
 ## Unreleased
 
+- **Fixed (QA1-205): a `knownAt` before the data names the right thing.** `DRS-1013` now says nothing of the entity in that window was
+  known at that instant, and names its days with data *as known now*, which may have been loaded later (*ask without knownAt, or with a
+  later one*), instead of sending the reader to days that give the same 404. HISTORY_QUERIES.md section 7, tutorial 21.
+- **Fixed (QA1-208, the rest of QA1-18): a history kind in another case, or no kind at all, is named.** `history/Trade/…` and
+  `history/TRADE/…` answer `DRS-4004 unknown kind Trade: kinds are written in lower case, did you mean trade?` (kinds are exact everywhere
+  in the API); `history/nokind/…` answers `DRS-4004 unknown kind nokind: the kinds here are …`, unless a source that serves any kind holds
+  that entity; the CLI's `drishti.py history Trade …` says the same. Never `DRS-1001 no source holds`. HISTORY_QUERIES.md section 7.
+
 - **Fixed (QA1-204): on a node that does not hold the trade, the type-ahead keeps the exact id first.** `TRD 1000002` on a node holding
   `10000020…` lists the peer's `1000002` right after the ranges, before this node's longer ids, instead of leaving it out.
   HISTORY_QUERIES.md 4.4.

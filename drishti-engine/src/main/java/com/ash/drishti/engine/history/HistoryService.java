@@ -245,7 +245,7 @@ public final class HistoryService {
                 ? days.size() == w.lastDays()
                 : days.get(0).date().isBefore(w.from()));
         if (days.isEmpty() || (baselineFirst && days.size() == 1)) {
-            nothing(ref, w, failures);
+            nothing(ref, w, failures, q.knownAt());
         }
         HistoryRows.Built built = new HistoryRows(used, search.columnsOf(q.kind()), formats, el, viewer::redact, viewer::masked,
                 limits.maxColumns()).build(days, baselineFirst, wanted, q.diff());
@@ -288,7 +288,7 @@ public final class HistoryService {
     }
 
     /** No row: the reads failed (DRS-1014 or the source's failure), the entity is unknown (DRS-1001), or it has no data then (DRS-1013). */
-    private void nothing(EntityRef ref, HistoryWindow w, List<SourceHistory.Failure> failures) {
+    private void nothing(EntityRef ref, HistoryWindow w, List<SourceHistory.Failure> failures, Instant knownAt) {
         if (!failures.isEmpty() && failures.stream().allMatch(SourceHistory.Failure::unreachable)) {
             throw new DrishtiException(ErrorCode.NET_PEER_FAILED, "no node that answered holds the history of " + ref + ", and "
                     + failures.get(0).reason() + "; try again in a moment");
@@ -315,11 +315,18 @@ public final class HistoryService {
             }
         }
         // QA1-11: say when it has data, so the page can offer that span
-        String held = router.daysHeld(ref, dates.earliest(), dates.current())
-                .map(d -> d[0].equals(d[1]) ? "; its only day with data is " + d[0] : "; its days with data run from " + d[0] + " to " + d[1])
-                .orElse("");
+        java.util.Optional<LocalDate[]> days = router.daysHeld(ref, dates.earliest(), dates.current());
         String span = HistoryWindow.DATA_DAYS.equals(w.mode()) ? " in the " + w.dates().size() + " business days to " + w.to()
                 : " from " + w.from() + " to " + w.to();
+        if (knownAt != null) {
+            // QA1-205: the days listed are those known now, not at knownAt: naming them as the entity's days sent the reader to the same 404
+            String now = days.map(d -> "; as known now its days with data run " + (d[0].equals(d[1]) ? "on " + d[0] : "from " + d[0] + " to "
+                    + d[1]) + ", which may have been loaded after " + knownAt + ": ask without knownAt, or with a later one").orElse("");
+            throw new DrishtiException(ErrorCode.HISTORY_NO_DATA, ref + " has no data" + span + " as known at " + knownAt
+                    + ": none of its data in that window was known then" + now);
+        }
+        String held = days.map(d -> d[0].equals(d[1]) ? "; its only day with data is " + d[0] : "; its days with data run from " + d[0] + " to " + d[1])
+                .orElse("");
         throw new DrishtiException(ErrorCode.HISTORY_NO_DATA, ref + " has no data" + span + held);
     }
 

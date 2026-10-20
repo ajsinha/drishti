@@ -74,6 +74,13 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         registry.attach(this);
     }
 
+    /** The kinds the sources name in their manifests (a source that serves any kind names none). */
+    public java.util.Set<String> declaredKinds() {
+        java.util.Set<String> out = new java.util.TreeSet<>();
+        registry.plugins().forEach(p -> out.addAll(p.manifest().kinds()));
+        return out;
+    }
+
     /** Plugins to try for {@code kind}, in order. */
     List<SourcePlugin> candidates(String kind) {
         Map<String, SourcePlugin> ordered = new LinkedHashMap<>();

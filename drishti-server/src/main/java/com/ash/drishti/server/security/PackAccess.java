@@ -312,6 +312,11 @@ public final class PackAccess {
         return registry.removedOwner(kind);
     }
 
+    /** Every kind a loaded pack owns. */
+    public java.util.Set<String> ownedKinds() {
+        return java.util.Collections.unmodifiableSet(kindOwner().keySet());
+    }
+
     /** The pack that owns the kind, or null when no pack does. */
     public String ownerOf(String kind) {
         return kindOwner().get(kind);

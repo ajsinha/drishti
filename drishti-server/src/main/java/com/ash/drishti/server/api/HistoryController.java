@@ -114,7 +114,7 @@ public class HistoryController {
             @RequestParam(required = false) String fields, @RequestParam(defaultValue = "false") boolean diff,
             @RequestParam(required = false) String knownAt, @RequestParam(defaultValue = "asc") String order,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
-        refuseUnknownKind(kind);
+        refuseUnknownKind(kind, id);
         entitlements.requireOpen(principal, kind);
         java.time.Instant known = current.knownAt();
         if (knownAt != null && !knownAt.isBlank()) {
@@ -143,9 +143,34 @@ public class HistoryController {
 
     /**
      * A mnemonic or a plural where the kind belongs (QA1-18): {@code TRD} says to use {@code trade}, {@code trades} says it is no kind,
-     * instead of "no source holds TRD/1000001". A kind no pack owns and that looks like neither is left to the sources, as before.
+     * instead of "no source holds TRD/1000001". A kind in another case ({@code Trade}) is no kind either, as everywhere in the API, and
+     * says which it means; a kind no pack, source or mnemonic knows ({@code nokind}) names the kinds there are, unless a source that
+     * serves any kind holds that very entity (QA1-208).
      */
-    private void refuseUnknownKind(String kind) {
+    private void refuseUnknownKind(String kind, String id) {
+        refuseMisnamedKind(kind);
+        if (mnemonics == null || packs == null || kind == null || packs.ownerOf(kind) != null) {
+            return;
+        }
+        java.util.Set<String> known = new java.util.TreeSet<>(packs.ownedKinds());
+        known.addAll(router.declaredKinds());
+        mnemonics.all().values().forEach(m -> known.add(m.kind()));
+        if (known.isEmpty() || known.contains(kind)) {
+            return;
+        }
+        for (String k : known) {
+            if (k.equalsIgnoreCase(kind)) {
+                throw new DrishtiException(ErrorCode.BAD_SEARCH, "unknown kind " + kind + ": kinds are written in lower case, did you mean " + k + "?");
+            }
+        }
+        if (id != null && !router.fetchAll(java.util.List.of(com.ash.drishti.api.EntityRef.of(kind, id)), java.time.Duration.ofSeconds(2)).isEmpty()) {
+            return;                                                   // a source that serves any kind holds it
+        }
+        throw new DrishtiException(ErrorCode.BAD_SEARCH, "unknown kind " + kind + ": the kinds here are " + String.join(", ",
+                known.stream().limit(12).toList()) + (known.size() > 12 ? " and " + (known.size() - 12) + " more" : ""));
+    }
+
+    private void refuseMisnamedKind(String kind) {
         if (mnemonics == null || packs == null || kind == null || packs.ownerOf(kind) != null) {
             return;
         }

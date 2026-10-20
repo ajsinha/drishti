@@ -351,7 +351,9 @@ It sits in the existing `HistoryController` (`@RequestMapping("/api/v1/history")
 `/api/v1/entities` (section 21). The date box's `AsOf` (resolved by `AsOfResolver` from `X-Drishti-As-Of`) is the default end;
 `to` overrides it. The access log gets `"/api/v1/history/{kind}/{id}" → "history"` in `AccessRecorder.ACTIONS`.
 A mnemonic or a plural in place of the kind is `DRS-4004` saying which kind to use (*TRD is a mnemonic: use the kind trade*, *unknown
-kind trades: did you mean trade?*). A field in `fields` that is no column but a top-level field of the documents is shown as a column;
+kind trades: did you mean trade?*). Kinds are matched exactly, as everywhere in the API: one in another case is `DRS-4004` too
+(*unknown kind Trade: kinds are written in lower case, did you mean trade?*), and one that no pack, source or mnemonic knows names the
+kinds there are (*unknown kind nokind: the kinds here are …*), unless a source that serves any kind holds that entity. A field in `fields` that is no column but a top-level field of the documents is shown as a column;
 one that no day's document has is `DRS-4004` (*no trade has a field NOPE on these days*), never dropped silently.
 
 ### 7.2 What it does
@@ -392,7 +394,10 @@ history), so the field dialog gets the fast paths and the 260-day constant becom
   Iceberg's time travel (`timeTravel()`); a connector without it that may hold one of the dates refuses with `DRS-1007` as reads do
   today. One that holds none of them (`holdsNone`, or `NOT_HELD` for every date: the shipped `file` connector before any file of the kind)
   is not asked, so it never refuses for the Delta or Iceberg sources behind it. A `knownAt` that is not an ISO-8601 instant fails with
-  `DRS-4003` naming it (*knownAt '2026-10-20' is not an instant*). "Each day as it was known at
+  `DRS-4003` naming it (*knownAt '2026-10-20' is not an instant*). A window with no data as known at K is `DRS-1013` saying so, and the
+  days it has now are named as known now, since they may have been loaded after K (*… has no data in the 5 business days to 2026-10-20 as
+  known at 2026-10-20T13:00:00Z: none of its data in that window was known then; as known now its days with data run from 2026-07-27 to
+  2026-10-20, which may have been loaded after 2026-10-20T13:00:00Z: ask without knownAt, or with a later one*). "Each day as it was known at
   the end of that day" (as first reported) is a different question, kept as open question 1.
 
 ## 8. The JSON contract
