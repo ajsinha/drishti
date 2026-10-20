@@ -149,6 +149,46 @@ def test_bi_powers_follow_a_change_through_another_worker(tmp_path):
     assert all(run(c.get(server, ME))["theme"] == "green" for c in caches)
 
 
+class RoleServer(Server):
+    """BI powers come from the role a user holds (carl and dan hold qa-nobi)."""
+
+    def __init__(self):
+        super().__init__()
+        self.role_powers = []
+
+    async def bi(self, method, path, ident, body=None, wait=None, **params):
+        self.calls += 1
+        return {"enabled": True, "powers": list(self.role_powers)} if path == "/me" else {"recent": []}
+
+
+def test_bi_powers_changed_on_a_role_reach_every_holder_on_every_worker_at_once(tmp_path):
+    """QA3B-06: Admin, BI settings (or Roles) changes a role's powers through one worker; before, only the administrator's own copy was forgotten,
+    so carl's menu was wrong on 26 of 64 pages for up to 6 s. Now every worker re-reads every holder's powers at once, and the other per-user copies
+    (settings here) too."""
+    server = RoleServer()
+    stamps = workers(tmp_path)
+    caches = [BiMe(30.0, s) for s in stamps]
+    settings = [UserSettings(30.0, s) for s in stamps]
+    carl, dan = SimpleNamespace(user="carl"), SimpleNamespace(user="dan")
+    for c in caches:
+        assert run(c.get(server, carl))["enabled"] is False                         # no bi power: no BI menu, on every worker
+        assert run(c.get(server, dan))["enabled"] is False
+    assert all(run(s.get(server, carl))["theme"] == "blue" for s in settings)
+    server.role_powers, server.theme = ["bi", "bi-author"], "crimson"
+    time.sleep(0.01)
+    caches[1].forget_all()                                                          # PUT /bi/api-roles/qa-nobi on worker 2 (the admin's)
+    for c in caches:
+        assert run(c.get(server, carl))["enabled"] is True and "bi-author" in run(c.get(server, carl))["powers"]
+        assert run(c.get(server, dan))["enabled"] is True
+    assert all(run(s.get(server, carl))["theme"] == "crimson" for s in settings)    # what else the role decides is read again too
+    calls = server.calls
+    assert all(run(c.get(server, carl))["enabled"] for c in caches) and server.calls == calls    # then cached again
+    server.role_powers = []                                                         # revoked
+    time.sleep(0.01)
+    caches[3].forget_all()
+    assert [run(c.get(server, carl))["enabled"] for c in caches] == [False] * 4
+
+
 def test_a_user_disabled_through_one_worker_is_signed_out_on_every_worker_at_once(tmp_path):
     server = Server()
     settings = Settings({"auth.enabled": True, "auth.session_secret": "s" * 40, "auth.token_secret": "t" * 40, "auth.recheck_seconds": 60})

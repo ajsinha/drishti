@@ -57,3 +57,14 @@ class BiMe:
     def forget(self, user: str) -> None:
         self._cache.pop(scoped(user), None)
         self.stamps.touch(scoped(user))
+
+    def forget_all(self) -> None:
+        """A role's powers or definition changed (Admin, BI settings or Roles): every user who holds it, on every worker, reads again (QA3B-06).
+
+        The worker that made the change drops all its copies; the shared stamp (core/user_stamps.py) makes every other worker's copies older than
+        the change, so each re-reads the BI powers, and with them every per-user copy (settings, packs, layouts, the session check) at its next use.
+        """
+        from core.user_stamps import EVERYONE
+
+        self._cache.clear()
+        self.stamps.touch(EVERYONE)

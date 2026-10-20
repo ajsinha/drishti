@@ -249,5 +249,5 @@ async def role_powers(request: Request, name: str):
         saved = await backend.admin("PUT", f"/role-definitions/{name}", me, {**keep, "bi": [str(p) for p in powers]})
     except BackendError as e:
         return _problem(e)
-    request.app.state.bi_me.forget(me.user)
+    request.app.state.bi_me.forget_all()                # every holder of the role, on every worker, at once (QA3B-06)
     return JSONResponse({"name": saved["name"], "bi": sorted(saved.get("bi") or [])})

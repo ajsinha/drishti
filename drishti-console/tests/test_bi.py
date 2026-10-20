@@ -159,13 +159,20 @@ def test_role_powers_are_saved_through_the_role_definition_api(bi):
         if method == "GET":
             return {"name": "desk", "description": "d", "kinds": ["*"], "raw": False, "author": False, "approve": False, "admin": False, "calc": False,
                     "layout": True, "collaborate": True, "compliance": False, "bi": []}
-        return {"name": "desk", "bi": body["bi"]}
+        return {"name": "desk", "bi": (body or {}).get("bi", [])}
 
     backend.admin = admin
+    everyone = []
+    client.app.state.bi_me.forget_all = lambda: everyone.append(True)             # QA3B-06: every holder, on every worker, not the admin's copy only
     r = client.put("/bi/api-roles/desk", json={"bi": ["bi", "bi-author"]})
     assert r.json() == {"name": "desk", "bi": ["bi", "bi-author"]}
+    assert everyone == [True]
     assert seen[("PUT", "/role-definitions/desk")]["kinds"] == ["*"] and seen[("PUT", "/role-definitions/desk")]["bi"] == ["bi", "bi-author"]
     assert client.put("/bi/api-roles/desk", json={"bi": "bi"}).status_code == 422
+    # Admin, Roles: saving or deleting a role does the same (it forgot nothing before)
+    assert client.post("/admin/api/roles/desk", json={"kinds": ["*"], "bi": ["bi"]}).status_code == 200
+    assert client.post("/admin/api/roles/desk/delete").status_code == 200
+    assert everyone == [True, True, True]
 
 
 def test_the_command_line_offers_rupaka(bi):

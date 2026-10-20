@@ -308,7 +308,8 @@ pages: []
 - *The BI folder*: how it is watched (`WATCHING`, `POLLING`, `OFF`), how many shipped items it holds, and any file with a problem.
 - *Roles and their powers*: tick `bi`, `bi-author`, `bi-steward`, `bi-admin` per role and **Save**. Roles from configuration or a pack
   (built in) are read-only here; roles defined in Admin, Roles are editable, and only by an administrator (the page calls the
-  role-definition API as you).
+  role-definition API as you). A change reaches everyone who holds the role at once, on every worker of the console (the shared user stamp): their BI
+  menu and their access to `/bi` follow at their next page, as does a role changed in Admin, Roles.
 
 **Settings** (all in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibi--rupaka-business-intelligence-phase-1-the-shell-and-the-catalogue)): `drishti.bi.enabled`,
 `dir`, `watch`, `folder-refresh`, `workspace-creation`, `max-body-bytes`, `versions-keep`, `usage-days`, `recent`, `list-limit`; the

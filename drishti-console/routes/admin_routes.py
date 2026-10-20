@@ -79,9 +79,11 @@ async def roles(request: Request):
 async def save_role(request: Request, name: str):
     body = await json_body(request)
     try:
-        return await request.app.state.backend.admin("PUT", f"/role-definitions/{quote(name)}", ident(request), body)
+        saved = await request.app.state.backend.admin("PUT", f"/role-definitions/{quote(name)}", ident(request), body)
     except BackendError as e:
         return _problem(e)
+    _role_changed(request)
+    return saved
 
 
 @router.post("/api/roles/{name}/delete")
@@ -90,7 +92,24 @@ async def delete_role(request: Request, name: str):
         await request.app.state.backend.admin("DELETE", f"/role-definitions/{quote(name)}", ident(request))
     except BackendError as e:
         return _problem(e)
+    _role_changed(request)
     return {"ok": True}
+
+
+def _role_changed(request: Request) -> None:
+    """A role's definition changed (its BI powers, kinds, raw, layout ...): what every holder may do changes, on every worker at once (QA3B-06).
+
+    The shared stamp (core/user_stamps.py) makes every per-user copy on every worker older than the change: BI powers, packs, settings, layouts and
+    the session check are read again at their next use."""
+    bi_me = getattr(request.app.state, "bi_me", None)
+    if bi_me is not None:
+        bi_me.forget_all()
+    else:
+        stamps = getattr(request.app.state, "user_stamps", None)
+        if stamps is not None:
+            from core.user_stamps import EVERYONE
+
+            stamps.touch(EVERYONE)
 
 
 @router.get("/packs")
