@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **Added: `lake demo` says how far a table has got**: every ten committed days a line `trading/trade_endur: committed 20/60 days, 90,023 rows so far (through 2026-08-19)`, besides the table's closing line and `build_demo_lakes.py`'s heartbeat.
+
 - **Faster: `lake build` and `lake demo` with the deltalake writer make one commit per business date** (every partition of the date in it; one per partition only with `overwrite-partitions`) and a checkpoint every ten commits. Sixty days of `trade_endur` (five product types) were 300 commits, each replaying the whole log (98 s on Linux, far longer on Windows, where each log file is opened and scanned); now 60 commits with a short log, the same rows.
 
 - **Added: `build_demo_lakes.py` says it is alive**: every 30 s (`DRISHTI_HEARTBEAT_SECONDS`) a line with the step, the time so far, the lake's size and the table being written, so a long `lake demo` or `lake build` never looks stuck.
