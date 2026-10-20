@@ -578,6 +578,9 @@ roles:
 # Only the shape: any dated kind has a history without an entry here.
 history:
   trade:
+    # what a trader reads first: the status and version, then the economics, then where it sits
+    columns: [TRADE_STATUS, TRADE_ACTION, TRADE_VERSION, QUANTITY, PRICE, BUY_SELL_CODE, CURRENCY, PORTFOLIO, COUNTERPARTY,
+              MATURITY_DATE, PRODUCT_TYPE, SOURCE_SYSTEM, TRADE_DATE]
     exclude: [_meta]
     ignore-changes: [SOURCE_UPDATE_TIME, INPUT_DATE]
     parts: [LEGS, EVENTS]

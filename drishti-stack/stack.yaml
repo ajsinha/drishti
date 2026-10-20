@@ -36,8 +36,8 @@ settings:                          # every server and the console (not secret)
   DRISHTI_NEWS_ENABLED: "true"
 
 lakes:                             # synthetic trades (tools/bench/trades.py), built into data/stack/lakes/<name> when missing
-  shared: { systems: endur,calypso, per-day: 1500, days: 2, counterparties: 300 }
-  murex:  { systems: murex, per-day: 1500, days: 2, counterparties: 300 }
+  shared: { systems: endur,calypso, per-day: 1500, days: 60, counterparties: 300 }
+  murex:  { systems: murex, per-day: 1500, days: 60, counterparties: 300 }
 
 nodes:
   # your own stack: the repository is its working folder, so its data is the repository's data/ (the demo lakes) and its connectors
