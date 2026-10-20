@@ -649,6 +649,22 @@ Everything is under the configurable data folder, with visible names only:
 The L1 `ResultCache` stays in front, in memory: a hit there is microseconds. The store is the tier under it. An L1 miss with a store
 hit loads `result.parquet` (milliseconds) and puts it in L1 when it is under L1's entry weight.
 
+### 8.3a Fewer duplicate runs (product owner, 2026-10-20)
+
+Five rules keep the same work from running twice. The first two are the key and the join (8.2, 8.3, 13.3); the other three were
+added on the product owner's word.
+
+| Rule | What it does | Where |
+|---|---|---|
+| **Same key, reuse** | the same question on the same data for the same rights opens the stored result | 8.2, 8.3 |
+| **Join a running twin** | a submit whose key matches a running run follows it (single-flight) instead of starting another | 13.3 |
+| **Normalise before hashing** | `Canonicalizer` sorts filter values and conjuncts, fills parameter and well defaults, resolves relative dates (`this year`, `last month`, `latest`) to the dates read, and drops aliases and visual-only properties (column order, titles, formats) that do not change the rows, so `region in (EU, US)` and `region in (US, EU)` hash alike. A test lists equivalent pairs that must hash the same and near pairs that must not | 8.2 (`planHash`) |
+| **"This already ran"** | before an ad-hoc heavy run starts, the confirm step looks for a `done` run of the same plan and signature on **older** data. When one exists it offers *Open that result* (with its as-of date and age) or *Run on the newest data* (the estimate). Many people need only yesterday's answer | 6.2 confirm dialog, `GET /api/v1/bi/runs?plan=<hash>&latest=1` |
+| **Repeated heavy questions become products** | the run log counts ad-hoc heavy runs per (model, grain, filters shape). Past `suggest.min-runs` (default 5 in 7 days) and `suggest.min-seconds` (default 60), the model's owner sees *"asked 37 times this week, about 4 min each: make it a rollup refreshed at load"* in the model designer and Admin → Runs, with the rollup YAML drafted for review (BI_DESIGN 6.1 *suggested aggregations*); once the rollup exists those questions are known heavy and answer instantly | Admin → Runs, model designer; in 2.6.7 |
+
+Measured, not assumed: Admin → Runs shows the **reuse rate** (answered from a stored result), the **join rate** (attached to a
+running twin), the **already-ran choice rate** and the top repeated heavy questions with their suggestion status (section 17).
+
 ### 8.4 Retention and limits
 
 | Rule | Setting (default) |
@@ -1312,5 +1328,4 @@ It runs as `drishti-it` `BiRunsLoadIT` (excluded from the default build, run in 
 3. **Visibility in shared workspaces.** `owner-and-shared` (default) or `members` (run rows visible to workspace members, results
    never)?
 4. **Which external engine first** (3.0 groundwork): Trino (on-premises, the Delta connector) or Athena (AWS)?
-5. **Rollup suggestions from runs.** A grain that keeps causing ad-hoc heavy runs could raise a suggested rollup to the model owner
-   (BI_DESIGN 6.1 *suggested aggregations*). Should that be in 2.6.7 or later?
+5. ~~**Rollup suggestions from runs.**~~ Decided (product owner, 2026-10-20): in 2.6.7, with normalisation and the already-ran prompt (section 8.3a).
