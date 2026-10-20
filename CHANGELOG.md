@@ -17,6 +17,13 @@
 
 ## Unreleased
 
+- **Fixed (QA2-22): an Iceberg table moved after loading is one clear problem.** Its reads failed inside the connector's caches, and
+  each failure was logged by the cache with a full stack trace at every refresh while Health said `UP`. Health now says `DEGRADED:
+  cannot read trade: its metadata names files under <old folder> that are not there (…): the table was moved or copied after it was
+  written`, with the `relocate: <old> -> <new>` that reads it with `engine: native`; the log has one short line when the problem appears
+  or changes and one when it is over. `relocate` given to `engine: library` (which does not read it) is said in the log and in Health
+  instead of being ignored silently. The connector's refresh is cancelled when it stops. ICEBERG_CONNECTOR sections 14 and 15;
+  IcebergMovedTableTest.
 - **Fixed (QA2-23): a disabled Delta connector is quiet.** Its periodic re-listing of ids was never cancelled when the connector stopped,
   and ran against the closed connector: one `trade log cannot be read: RejectedExecutionException` per stopped connector about 50 s
   later (and a stale problem on its listing). The re-listing is cancelled at close, and a run already under way when it closes reports

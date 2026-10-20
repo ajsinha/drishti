@@ -571,9 +571,13 @@ current snapshot's days with delete files.
 | *known at* finds nothing | the snapshots of that time were expired | keep more history (`--expire-hours`) |
 | new data not visible | the refresh has not run yet | wait `refresh-seconds`; check the catalog's current snapshot |
 | loader: disk full in the temp folder | run files of the external sort | `--spill-dir` on a large disk |
+| `DEGRADED: cannot read trade: its metadata names files under <old folder> that are not there (…): the table was moved or copied after it was written …` | the table's folder was moved or copied after it was written: Iceberg's metadata names every file by its full path | write it again where it is now, or read it with `engine: native` and the `relocate: <old folder> -> <new folder>` the message gives (one entry per table, `;` between them) |
+| `UP (relocate is read by engine: native only; engine: library ignores it)` | `relocate` with `engine: library` | set `engine: native` (the library engine reads files where the metadata names them) |
 
 Iceberg logs `Table location loaded` once per table and `Refreshing table metadata` when a table changes; the
-connector turns off the scan report Iceberg would log for every planning.
+connector turns off the scan report Iceberg would log for every planning. A table that cannot be read is one problem in Health per
+kind, and the log has one short line when it appears or changes (`<connector>: trade cannot be read: …`) and one when it is over
+(`… is readable again`), never a stack trace at each refresh.
 
 ## Security: TLS and credentials
 
@@ -695,7 +699,7 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 | `s3.endpoint`, `s3.access-key`, `s3.secret-key`, `s3.region`, `s3.path-style` | — | object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint) |
 | `hadoop.<key>` | — | `library`: passed to Hadoop as `<key>` |
 | `metadata-location.<kind>` | none | `native`: the kind's table named by its metadata file (`s3://…/v12.metadata.json`), read-only |
-| `relocate` | none | `native`: `<old prefix> -> <new prefix>; …` reads a table copied elsewhere (an S3 table synced to a laptop) |
+| `relocate` | none | `native`: `<old prefix> -> <new prefix>; …` reads a table copied elsewhere (an S3 table synced to a laptop, a folder moved after loading: Health names the prefixes, [section 14](#14-diagnosing)). The library engine does not read it, and Health says so |
 | `vended-credentials` | `true` | `native`, `rest`: ask the catalog for each table's own S3 credentials (`X-Iceberg-Access-Delegation`), renewed before they expire |
 | `lz4-decoder` | `safe` | `native`: the LZ4 page decoder, `safe` (pure Java) or `fast` |
 | `kinds` | every table found (new ones too) | comma list of kinds to serve |

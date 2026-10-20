@@ -117,6 +117,10 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     /** True when no {@code kinds} are configured: every table in the domain is served, including new ones. */
     private boolean discover;
     private volatile Instant lastUpdate;
+    private TableProblems problems = new TableProblems("iceberg", k -> null);
+    /** Set when {@code relocate} is given to the library engine, which does not read it (QA2-22). */
+    private String relocateIgnored;
+    private volatile java.util.concurrent.ScheduledFuture<?> refreshTask;
 
     @Override
     public PluginManifest manifest() {
@@ -141,6 +145,15 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         this.maxLoadRows = Integer.parseInt(ctx.setting("max-load-rows", "200000"));
         this.reverseIndex = Boolean.parseBoolean(ctx.setting("reverse-index", "true"));
         this.lake = LakeTables.open(ctx.settings());
+        String root = ctx.setting("root", "").replaceAll("/+$", "");
+        String domain = ctx.setting("domain", "");
+        this.problems = new TableProblems(sourceName, kind -> root.isBlank() || !ctx.setting("uri", "").isBlank() ? null
+                : root + (domain.isBlank() ? "" : "/" + domain) + "/" + kind);
+        if (!ctx.setting("relocate", "").isBlank() && lake.engine() == IcebergEngine.LIBRARY) {
+            relocateIgnored = "relocate is read by engine: native only; engine: library ignores it";
+            java.lang.System.getLogger(IcebergSourcePlugin.class.getName()).log(java.lang.System.Logger.Level.WARNING, "{0}: {1}",
+                    sourceName, relocateIgnored);
+        }
         this.dated = new DatedHitIndex(sourceName, DatedHitIndex.defaultRoot(), ctx.settings(), this::dayHits, (k, d) -> {
             Long v = datedSnapshots.get(k);
             return v == null ? null : "s" + v;
@@ -172,7 +185,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         refresh();
         long every = Long.parseLong(ctx.setting("refresh-seconds", "10"));
         // the scheduler's tasks must be short: the refresh (metadata reads, an id map) runs on a virtual thread
-        ctx.scheduler().scheduleWithFixedDelay(() -> loaders.execute(this::refresh), every, every, TimeUnit.SECONDS);
+        refreshTask = ctx.scheduler().scheduleWithFixedDelay(() -> loaders.execute(this::refresh), every, every, TimeUnit.SECONDS);
     }
 
     private static long mb(SourceContext ctx, String key, String fallback) {
@@ -300,11 +313,11 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         } else {
             snapshot = t.snapshotAt(knownAt);
         }
-        return snapshot.map(id -> join(layouts.get(new SnapKey(kind, id), k -> t.layout(id))));
+        return snapshot.map(id -> load(kind, layouts, new SnapKey(kind, id), k -> t.layout(id)));
     }
 
     private IdMap idMap(String kind, Layout l, Day d) {
-        return join(idMaps.get(new DayKey(kind, d.date(), d.fingerprint()), k -> tables.get(kind).ids(l, d)));
+        return load(kind, idMaps, new DayKey(kind, d.date(), d.fingerprint()), k -> tables.get(kind).ids(l, d));
     }
 
     /** The promoted paths the table really has as columns (a pack may declare more than a writer wrote). */
@@ -321,11 +334,11 @@ public final class IcebergSourcePlugin implements SourcePlugin {
 
     /** Every promoted column of one date, read once and kept (by memory), shared by searches and aggregates. */
     private ColumnSet columnSet(String kind, Layout l, Day d, Map<String, String> cols) {
-        return join(columnSets.get(new DayKey(kind, d.date(), d.fingerprint()), k -> tables.get(kind).columns(l, d, cols)));
+        return load(kind, columnSets, new DayKey(kind, d.date(), d.fingerprint()), k -> tables.get(kind).columns(l, d, cols));
     }
 
     private Part part(String kind, Layout l, Day d) {
-        return join(parts.get(new DayKey(kind, d.date(), d.fingerprint()), k -> {
+        return load(kind, parts, new DayKey(kind, d.date(), d.fingerprint()), k -> {
             Map<String, Set<String>> refs = new HashMap<>();
             Set<String> ids = new HashSet<>();
             tables.get(kind).read(l, d).forEach((id, json) -> {
@@ -333,7 +346,48 @@ public final class IcebergSourcePlugin implements SourcePlugin {
                 ReferenceScanner.referencedIds(json).forEach(r -> refs.computeIfAbsent(r, x -> new HashSet<>()).add(id));
             });
             return new Part(ids, refs);
-        }));
+        });
+    }
+
+    /**
+     * A load that fails without Caffeine's own WARN and stack trace, which a table moved after it was written gave at every refresh
+     * (QA2-22): the failure reaches its caller as before and is kept, one per kind, for Health ({@link TableProblems}), which logs one
+     * short line when it is new or changes. A load that succeeds ends the kind's problem.
+     */
+    private <K, V> V load(String kind, AsyncCache<K, V> cache, K key, java.util.function.Function<K, V> fn) {
+        CompletableFuture<V> f = cache.get(key, (k, executor) -> {
+            CompletableFuture<V> out = new CompletableFuture<>();
+            executor.execute(() -> {
+                try {
+                    out.complete(fn.apply(k));
+                } catch (Throwable e) {
+                    out.completeExceptionally(new QuietFailure(e));   // Caffeine logs every failed load but a cancellation
+                }
+            });
+            return out;
+        });
+        try {
+            V v = f.join();
+            problems.ok(kind);
+            return v;
+        } catch (QuietFailure q) {
+            problems.failed(kind, q.getCause());
+            if (q.getCause() instanceof RuntimeException re) {
+                throw re;
+            }
+            if (q.getCause() instanceof Error err) {
+                throw err;
+            }
+            throw new CompletionException(q.getCause());
+        }
+    }
+
+    /** A failed load, carried as a cancellation so the cache drops it without logging it (its cause is what the caller gets). */
+    private static final class QuietFailure extends java.util.concurrent.CancellationException {
+        QuietFailure(Throwable cause) {
+            super(cause.toString());
+            initCause(cause);
+        }
     }
 
     /** Waits for a load, rethrowing what it threw (not wrapped). */
@@ -604,8 +658,16 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         }
     }
 
+    /** Why the kind's table cannot be read now (Health's words), or empty. */
+    Optional<String> problem(String kind) {
+        return problems.of(kind);
+    }
+
     @Override
     public void close() {
+        if (refreshTask != null) {
+            refreshTask.cancel(false);
+        }
         loaders.shutdownNow();               // loads in flight are abandoned; their callers get an error, not a hang
         try {
             lake.close();
@@ -636,7 +698,13 @@ public final class IcebergSourcePlugin implements SourcePlugin {
                 // reported by reads
             }
         });
+        if (!problems.isEmpty()) {
+            return "DEGRADED: cannot read " + problems.summary() + (relocateIgnored == null ? "" : " (" + relocateIgnored + ")");
+        }
         String indexNote = dated.enabled() ? dated.summary() : null;
+        if (relocateIgnored != null) {
+            indexNote = indexNote == null ? relocateIgnored : relocateIgnored + "; " + indexNote;
+        }
         String up = notLaidOut.isEmpty() ? (indexNote == null ? "UP" : "UP (" + indexNote + ")")
                 : "UP (not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents"
                         + (indexNote == null ? "" : "; " + indexNote) + ")";
