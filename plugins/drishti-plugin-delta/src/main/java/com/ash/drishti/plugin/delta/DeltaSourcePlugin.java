@@ -194,6 +194,15 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return readableLayout(kind, null).filter(l -> !l.files().isEmpty()).map(l -> l.files().lastKey());
     }
 
+    /** The oldest business date of the kind's table, from its latest layout (cached; no data read). */
+    @Override
+    public Optional<LocalDate> earliestDate(String kind) {
+        if (!tables.containsKey(kind)) {
+            return Optional.empty();
+        }
+        return readableLayout(kind, null).filter(l -> !l.files().isEmpty()).map(l -> l.files().firstKey());
+    }
+
     /** A table's versions answer {@code knownAt}. */
     @Override
     public Map<LocalDate, Long> inventory(String kind, int maxDates) {

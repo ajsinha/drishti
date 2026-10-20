@@ -122,6 +122,13 @@ class HistoryPeersTest {
             return up ? List.of() : List.of("p (suspect)");
         }
 
+        /** The oldest date the down peer's digest said it holds (null: it could not say). */
+        volatile LocalDate heldFrom;
+
+        public List<String> downHolders(String kind, LocalDate date) {
+            return heldFrom != null && date.isBefore(heldFrom) ? List.of() : downHolders(kind);
+        }
+
         public Optional<DrishtiException> unreachable(EntityRef ref) {
             return up ? Optional.empty() : Optional.of(new DrishtiException(ErrorCode.NET_PEER_FAILED, "no source here holds " + ref
                     + ", and the nodes that hold trade cannot be reached now: p (suspect)"));
@@ -220,5 +227,83 @@ class HistoryPeersTest {
         });
         assertThat(svc.read(new HistoryService.Query("trade", "T-1", null, null, "2026-09-15", null, Set.of(), false, null, false, null),
                 HistoryService.Viewer.NONE).cache()).isEqualTo("miss");
+    }
+
+    @Test
+    void aDownPeerCountsOnlyForTheDatesItMayHold() {
+        // SOAK-01: the peer's data starts on 09-22, so the days 09-15 to 09-21 cannot be there: the answer is complete
+        HistoryService svc = service();
+        peers.up = false;
+        peers.heldFrom = LocalDate.of(2026, 9, 22);
+        HistoryService.Query span = new HistoryService.Query("trade", "T-1", null, null, "2026-09-15", null, Set.of(), false, null, false, null);
+        HistoryAnswer complete = svc.read(span, HistoryService.Viewer.NONE);
+        assertThat(complete.partial()).isFalse();
+        assertThat(complete.problems()).isEmpty();
+        // its data starts on 09-17: only the business days from 09-17 to the local data (09-22) may be there, and only they are named
+        peers.heldFrom = LocalDate.of(2026, 9, 17);
+        HistoryAnswer some = service().read(span, HistoryService.Viewer.NONE);
+        assertThat(some.partial()).isTrue();
+        assertThat(some.problems()).singleElement().satisfies(p -> {
+            assertThat(p.code()).isEqualTo(ErrorCode.NET_PEER_FAILED.code());
+            assertThat(p.days()).containsExactly("2026-09-17", "2026-09-18", "2026-09-21");
+        });
+    }
+
+    /** A service over {@link #local} whose fallback asks {@code peers} in order, with no node known to be down. */
+    private HistoryService serviceWith(List<SourcePlugin> asked) {
+        var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(2), null, Map.of());
+        SourceRouter router = new SourceRouter(new SourceRegistry(List.of(local), props, new JsonCodec()), props,
+                Executors.newVirtualThreadPerTaskExecutor());
+        router.fallback(new SourceRouter.Fallback() {
+            public List<SourcePlugin> peers(EntityRef ref, AsOf asOf) {
+                return asked;
+            }
+        });
+        return new HistoryService(router, new BusinessDates(new BusinessDateProperties("USNY", "UTC", null), CLOCK), HistoryProperties.defaults(),
+                new SearchProperties(null, null, Map.of("trade", List.of("TRADE_ID"))), Formats.defaults(), new ElCompiler(), HistorySpec::defaults,
+                k -> "TRD");
+    }
+
+    /** A peer whose history call fails with {@code e}, as a node that just died (or is not serving yet) does. */
+    private static Store failing(Exception e) {
+        return new Store("net:dead", Set.of("T-6"), TODAY, "D1") {
+            @Override
+            public com.ash.drishti.api.HistoryRead history(com.ash.drishti.api.HistoryRequest r) throws Exception {
+                throw e;
+            }
+        };
+    }
+
+    @Test
+    void aPeerThatRefusesTheConnectionIsDrs5052NamingItNotDrs1003() {
+        // SOAK-02: the peer died a moment ago (no gossip has said so yet): DRS-5052 naming it, as a view says, never DRS-1003
+        Store dead = failing(new java.net.ConnectException("Connection refused"));
+        assertThatThrownBy(() -> serviceWith(List.of(dead)).read(days("T-6", 3), HistoryService.Viewer.NONE))
+                .isInstanceOfSatisfying(DrishtiException.class, e -> {
+                    assertThat(e.errorCode()).isEqualTo(ErrorCode.NET_PEER_FAILED);
+                    assertThat(e.getMessage()).contains("dead (not answering").doesNotContain("DRS-1003");
+                });
+        // a peer that answers with a failure of its own is about that node too: DRS-5052, the server that answered is not at fault
+        Store broken = failing(new java.io.IOException("HTTP 500 boom"));
+        assertThatThrownBy(() -> serviceWith(List.of(broken)).read(days("T-6", 3), HistoryService.Viewer.NONE))
+                .isInstanceOfSatisfying(DrishtiException.class, e -> {
+                    assertThat(e.errorCode()).isEqualTo(ErrorCode.NET_PEER_FAILED);
+                    assertThat(e.getMessage()).contains("the node dead that holds trade failed reading");
+                });
+        // a local entity whose earlier days were on the refusing peer: a partial answer whose problem is DRS-5052
+        HistoryAnswer partial = serviceWith(List.of(dead)).read(new HistoryService.Query("trade", "T-1", null, null, "2026-09-15", null, Set.of(),
+                false, null, false, null), HistoryService.Viewer.NONE);
+        assertThat(partial.partial()).isTrue();
+        assertThat(partial.problems()).allSatisfy(p -> assertThat(p.code()).isEqualTo(ErrorCode.NET_PEER_FAILED.code()));
+    }
+
+    @Test
+    void aPeerThatRefusesTheConnectionIsPassedForTheNextHolder() {
+        // SOAK-03: the first holder is not serving yet; the second holds the same trade: a complete answer, no problem
+        Store dead = failing(new java.net.ConnectException("Connection refused"));
+        Store alive = new Store("net:p", Set.of("T-6"), TODAY, "P1");
+        HistoryAnswer a = serviceWith(List.of(dead, alive)).read(days("T-6", 3), HistoryService.Viewer.NONE);
+        assertThat(a.partial()).isFalse();
+        assertThat(a.rows()).hasSize(3);
     }
 }

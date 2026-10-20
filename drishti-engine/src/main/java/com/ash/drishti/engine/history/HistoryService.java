@@ -304,6 +304,10 @@ public final class HistoryService {
                 throw new DrishtiException(ErrorCode.HISTORY_TIMEOUT, f.source() + " did not answer " + failures.size() + " days of " + ref
                         + " within " + props.limits().timeout().toSeconds() + " s");
             }
+            if (f.source().startsWith("net:")) {                              // another node failed: the server that answered did not
+                throw new DrishtiException(ErrorCode.NET_PEER_FAILED, "the node " + f.source().substring(4) + " that holds " + ref.kind()
+                        + " failed reading the history of " + ref + ": " + f.reason() + "; try again in a moment");
+            }
             throw new DrishtiException(ErrorCode.SOURCE_FAILED, f.source() + " failed reading the history of " + ref + ": " + f.reason());
         }
         try {
@@ -364,7 +368,10 @@ public final class HistoryService {
             }
             String msg = timeout ? source + " did not answer " + ds.size() + " day" + (ds.size() == 1 ? "" : "s") + " within the budget"
                     : source + " failed reading " + ds.size() + " day" + (ds.size() == 1 ? "" : "s") + ": " + list.get(0).reason();
-            out.add(new HistoryAnswer.Problem(timeout ? ErrorCode.HISTORY_TIMEOUT.code() : ErrorCode.SOURCE_FAILED.code(), source, ds, msg));
+            // a peer's failure is about another node (DRS-5052 naming it, as views say), never this server's own source failure (SOAK-02)
+            String code = timeout ? ErrorCode.HISTORY_TIMEOUT.code() : source.startsWith("net:") ? ErrorCode.NET_PEER_FAILED.code()
+                    : ErrorCode.SOURCE_FAILED.code();
+            out.add(new HistoryAnswer.Problem(code, source, ds, msg));
         });
         return out;
     }

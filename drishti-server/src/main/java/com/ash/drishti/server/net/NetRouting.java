@@ -310,6 +310,20 @@ public final class NetRouting {
         return out;
     }
 
+    /**
+     * The nodes that hold the kind, are not routable now and may hold {@code date}: one of their sources of the kind keeps no dates, cannot
+     * say its range, or held the date by the range its digest last gave (oldest to newest business date) before the node went down (SOAK-01).
+     */
+    public List<String> downHolders(String kind, LocalDate date) {
+        List<String> out = new ArrayList<>();
+        for (CapabilityTable.Node n : digests.table().nodes()) {
+            if (!n.self() && !liveRoutable(n) && n.digest().kind(kind).map(k -> k.sources().stream().anyMatch(s -> s.mayHold(date))).orElse(false)) {
+                out.add(n.id() + " (" + state(n) + ")");
+            }
+        }
+        return out;
+    }
+
     /** The kind a mnemonic names on any node the caller may reach (for a search of a kind whose pack is not here). */
     public Optional<String> kindOfMnemonic(String code, Principal p) {
         return tableFor(p).kindOfMnemonic(code);

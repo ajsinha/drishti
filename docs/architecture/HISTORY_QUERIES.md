@@ -629,9 +629,21 @@ a key of `application.yaml` or a `@ConfigurationProperties` binding is not in th
 - A node that holds the kind but is down, suspect or drained cannot be asked. Dates no node that answered holds are then failures of
   that node (`Fallback.downHolders`): with no day read the answer is `502 DRS-5052` naming it, as the view says; with some days read it
   is partial, a `problems` entry with code `DRS-5052` naming it. Never `DRS-1013`, and never cached.
+- **A down node counts only for the dates it may hold** (after the 2.6.5 soak, SOAK-01). Each source of a node's digest carries `earliestDate` and
+  `latestDate` for the kind (the oldest and newest business dates its table holds), and the last digest heard before the node went down
+  is kept. A date outside every one of its sources' ranges cannot be there, so it is not named (`Fallback.downHolders(kind, date)`,
+  `NetRouting.downHolders(kind, date)`). A `range=3M` history of a CALYPSO trade asked while the MUREX holder is down, whose lake starts
+  on 2026-10-02, is complete: the 54 days before 10-02 are before any lake, as the window's `loadedFrom` says. A source that keeps no
+  dates, or a digest without the two dates (a node of 2.6.5 or older), may hold any date, as before.
+- **A peer that refuses the connection** (it just died and gossip has not said so yet, or it is restarting and its port is not open:
+  `ConnectException`, a reset, no route) is down as far as the read goes (SOAK-02, SOAK-03): the next holder is asked for the same
+  dates, and the dates no one answered are `DRS-5052` naming it, `… cannot be reached now: drishti-c (not answering: the connection
+  failed)`, for the dates its digest says it may hold. Never `DRS-1003`.
 - A peer that is asked but does not answer in time (frozen, overloaded) is a time-out of those days: `504 DRS-1014` *the node qa1-b did
-  not answer the history of trade/10000901 within 10 s* when no day was read, else a `problems` entry with `DRS-1014`. Another failure of
-  the peer stays `DRS-1003` naming it.
+  not answer the history of trade/10000901 within 10 s* when no day was read, else a `problems` entry with `DRS-1014`. Any other failure
+  of the peer (it answered with its own error) is about that node too: `DRS-5052` *the node qa1-b that holds trade failed reading the
+  history of trade/10000901: …*, as a view says, never `DRS-1003`, which names a source of the server that answered. A date that one
+  peer failed and another answered is not failed.
 
 **Super scale (SUPER_SCALE.md section 10, not built).** A slice is `(table, business day, group)`; each slice has owners on the ring
 (`hash(table, day, group)`, 64 virtual nodes, 2 owners for the `hot-days`). A history of one entity spans one slice per day, so the days
@@ -779,7 +791,10 @@ New codes in `drishti-common` `ErrorCode` (none of them used before):
 | `DRS-4022` | `HISTORY_BAD_RANGE` | 400 | `TO` before `FROM`, a future `FROM`, an unreadable date | "FROM 2026-10-30 is after TO 2026-10-19" |
 
 A `knownAt` on a store without time travel stays `DRS-1007`; an unknown entity stays `DRS-1001`; a Drishti*net node that holds the kind
-and cannot be reached is `DRS-5052` (section 12). Each new code goes into API_GUIDE's
+and cannot be reached, refuses the connection or fails its read is `DRS-5052` naming it, only for the dates it may hold (section 12); a
+peer's time-out is `DRS-1014`. `DRS-1003` names only a source of the server that answered, so the console never sets a healthy server aside
+for another node's failure (DRISHTI_NET.md 11.1). The server logs `DRS-5052`, `DRS-5053` and `DRS-1014` as one short WARN line per change
+of what they say about a node, with a count once a minute, never with a stack trace (after the 2.6.5 soak, SOAK-06). Each new code goes into API_GUIDE's
 "Error code table" and TROUBLESHOOTING's "Error codes" table in the same push; `drishti-console/tests/test_docs_error_codes.py` fails
 otherwise (and checks `DRS-2061` in TROUBLESHOOTING). The console shows each on the history page as the view's `missing.html` does,
 with the fix: the largest allowed range as a link, the first day with data as a link.

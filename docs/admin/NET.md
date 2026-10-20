@@ -157,9 +157,15 @@ folder up by itself within `drishti.net.poll` (5 s), so a server that is already
 back to `false` makes it leave cleanly. Each logs what it did:
 
 ```text
+INFO  net: Drishti*net is on; this node joins once the server is ready (its web server answers and its connectors have started)
+INFO  Tomcat started on port 18784 (http) with context path '/'
 INFO  net: node n-1ace3ceb60 joined Drishti*net at http://192.168.1.20:18784 (incarnation 1, seeds [http://192.168.1.20:18783], 0 saved members)
 INFO  net: member n-3d5a69faa3 joined
 ```
+
+A server joins only once it is ready (since the 2.6.5 soak): its web server answers and its connectors have started. Until then its peers keep it as they
+last saw it, so a restarting node is never routed to before its port opens (before, it joined 12 to 19 s early and its peers got
+`ConnectException`).
 
 **Step 4 · check.** On any node, **Admin → Net → Members** lists the three, each `alive`, with its version, tags and the latency this node
 measured to it. From a terminal (an administrator's token in `DRISHTI_TOKEN`), `drishti.py net members --server http://192.168.1.20:18784` prints the same
@@ -375,7 +381,10 @@ answered by the receiving node from itself only (one hop at most, `X-Drishti-Net
    The history cache is keyed by the peers' data versions too (their digests carry them), so a load on the peer shows on the next
    request. When a node that holds the kind is down or suspect and no node that answered holds the dates, the answer is `502 DRS-5052`
    naming that node (or, when some days were read, a partial answer whose `problems` name it), never `DRS-1013` "no data"; a failed,
-   partial or empty answer is never cached.
+   partial or empty answer is never cached. The down node counts only for the dates its last digest said it holds (`earliestDate` to
+   `latestDate` of its sources of the kind): a 3-month history of data this node holds, asked while a node whose lake starts later is
+   down, is complete. A peer that refuses the connection (it just died, or is still starting) passes the read to the next holder, and is
+   `DRS-5052` naming it when no one else holds the dates; a peer that answers with its own failure is `DRS-5052` too, never `DRS-1003`.
 
 **The newest pack is served.** When nodes hold different versions of a pack, a request for its kinds goes to a node with the newest, even when this
 node could answer with its older one (in the in-process test, B with the shipped finance pack forwards to A, which has 9.9.9).
@@ -501,7 +510,8 @@ backend:
   nearest first; it stays on it while it answers, so its caches and live views stay put. Each server is checked every `check_every`.
 - **Falling over.** A server that refuses connections, times out or answers 502/503 `fail_after` times in a row is set aside and the session moves to
   the next. A 502 or 503 that is the server's own answer about another node (a problem with a code from `DRS-5050` to `DRS-5059`, such as
-  `DRS-5052` while the node holding a trade is down) is not a failure of the server: the console stays, and the page shows the answer. A **read** that failed on the way is tried once on another server, so the person sees the page, not an error; a **write** (a layout, a
+  `DRS-5052` while the node holding a trade is down, and from a server of 2.6.5 or older a `DRS-1003` naming a peer, `net:<node> failed reading …`)
+  is not a failure of the server: the console stays, and the page shows the answer. A peer's time-out (`504 DRS-1014`) never counts. A **read** that failed on the way is tried once on another server, so the person sees the page, not an error; a **write** (a layout, a
   search, a pivot) never is: the page says it did not save, and saving again works on the new server.
 - **Nothing to sign in again.** Every node accepts the same tokens (one token secret, or one OIDC issuer), and every node knows the console's
   sign-in sessions (copied with the user's state, section 7), so the session carries over. An open
@@ -600,6 +610,7 @@ declaring a node that paused (a long garbage collection) dead and having it refu
 | A member flaps between `alive` and `suspect` | The latency on Admin → Net, the log of the flapping node (long pauses) | Raise `suspect-after`, or fix the network or the pauses |
 | `404 DRS-5050 Drishti*net is off on this node` | The node's `node.yaml` | `enabled: true` (and the node is not left: Rejoin) |
 | A page says `502 DRS-5052 ... cannot be reached now: n-a (left)` | Admin → Net → Members: the node that holds the data | Start it (or Rejoin it); the page works again by itself |
+| While a node is down the log has `WARN request refused: DRS-5052 … n-a (dead) …; repeats are counted and logged once a minute`, then `request refused 6000 times in the last 60 s naming n-a (dead)` | Nothing: these are the expected answers, one line per change of the node's state and a count a minute (since the 2.6.5 soak; before, every refusal was a WARN with a stack trace, about 11 MB a minute) | Start the node; a `request failed:` line with a stack trace is a real fault of this server |
 | The console moves between servers often | Admin → Health, *Console servers*, and the console's log (`console moved from ... to ...`) | The server it leaves: its health and latency; raise `backend.fail_after` on a flaky network |
 | Links on a page say *pending* on one node and not on another | The peer that holds them answers slower than routing.yaml's `link-budget` (1 s): its latency on Admin → Net | The peer's health and latency; raise `link-budget` (a page waits that long at most) |
 | A view is answered by an older pack | Admin → Net → Capability map: which node has the newest, and whether it is routable | The newest is served only from nodes the caller may reach and that are not drained |

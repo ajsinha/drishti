@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 class CapabilityTableTest {
 
     static Digest.SourceEntry src(String connector, String table) {
-        return new Digest.SourceEntry(connector, "delta", table, "2026-10-16", "v1", true, true, false);
+        return new Digest.SourceEntry(connector, "delta", table, "2026-10-02", "2026-10-16", "v1", true, true, false);
     }
 
     static Digest digest(String node, String packVersion, String hash, List<Digest.SourceEntry> trades, String calendar, List<String> redact) {

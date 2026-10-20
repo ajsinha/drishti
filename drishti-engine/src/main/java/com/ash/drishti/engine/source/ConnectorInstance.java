@@ -97,6 +97,11 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public Optional<java.time.LocalDate> earliestDate(String kind) {
+        return serves(kind) ? delegate.earliestDate(kind) : Optional.empty();
+    }
+
+    @Override
     public com.ash.drishti.api.DateCoverage coverage(String kind, AsOf asOf) {
         return serves(kind) ? delegate.coverage(kind, asOf) : com.ash.drishti.api.DateCoverage.NOT_HELD;
     }
