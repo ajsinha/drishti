@@ -60,10 +60,46 @@ def endur_files(folder: Path) -> list[tuple[str, Path]]:
     return out
 
 
-def run(cmd: list[str], dry: bool) -> None:
+HEARTBEAT_SECONDS = int(__import__("os").environ.get("DRISHTI_HEARTBEAT_SECONDS", "30"))
+
+
+def lake_progress(lake: Path) -> str:
+    """The lake's size on disk and the table folder written most recently: what a heartbeat line says."""
+    total, newest, newest_t = 0, None, 0.0
+    if lake.is_dir():
+        for f in lake.rglob("*"):
+            try:
+                st = f.stat()
+            except OSError:
+                continue
+            if f.is_file():
+                total += st.st_size
+                if st.st_mtime > newest_t:
+                    newest_t, newest = st.st_mtime, f
+    where = ""
+    if newest is not None:
+        rel = newest.relative_to(lake).parts
+        where = f", writing {'/'.join(rel[:2])}" + (f" {rel[2]}" if len(rel) > 2 and rel[2].startswith("business_date=") else "")
+    return f"{total / 1e6:,.0f} MB in the lake{where}"
+
+
+def run(cmd: list[str], dry: bool, step: str = "", lake: Path | None = None) -> None:
+    """Runs one command; while it runs, a heartbeat every HEARTBEAT_SECONDS says it is alive and how far the lake has grown."""
     print("  $ " + " ".join(f'"{c}"' if " " in c else c for c in cmd), flush=True)
-    if not dry:
+    if dry:
+        return
+    import threading
+    t0, done = time.time(), threading.Event()
+
+    def beat():
+        while not done.wait(HEARTBEAT_SECONDS):
+            extra = f"; {lake_progress(lake)}" if lake else ""
+            print(f"  … {step} still running: {time.time() - t0:,.0f} s{extra}", flush=True)
+    threading.Thread(target=beat, daemon=True).start()
+    try:
         subprocess.run(cmd, check=True, cwd=ROOT)
+    finally:
+        done.set()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -116,7 +152,7 @@ def main(argv: list[str] | None = None) -> int:
             cmd += ["--only", a.only]
         if a.connectors_dir:
             cmd += ["--connectors-dir", str(a.connectors_dir.expanduser().resolve())]
-        run(cmd, a.dry_run)
+        run(cmd, a.dry_run, "1/3 lake demo", lake)
 
     if files:
         table = lake / "trading" / f"trade_{system}"
@@ -128,7 +164,8 @@ def main(argv: list[str] | None = None) -> int:
         for day, path in files:
             run([py, str(DRISHTI), "lake", "build", "--from", str(path), "--as-of", day,
                  "--pack", str(ROOT / "config" / "packs" / "trading"), "--connector", f"trade-{system}", "--key", "TRADE_ID",
-                 "--partition-by", "PRODUCT_TYPE", "--mode", "overwrite-dates", "--lake", str(lake)], a.dry_run)
+                 "--partition-by", "PRODUCT_TYPE", "--mode", "overwrite-dates", "--lake", str(lake)], a.dry_run,
+                f"2/3 {path.name} ({day})", lake / "trading" / f"trade_{system}")
     else:
         print("2/3 no --endur-dir or --source-dir: the synthetic trades stay")
 
