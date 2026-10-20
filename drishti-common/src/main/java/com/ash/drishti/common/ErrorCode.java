@@ -36,6 +36,8 @@ public enum ErrorCode {
     HISTORY_NO_DATA("DRS-1013", 404),
     /** History queries: no day of the range was read within the budget, or too many history requests are running. */
     HISTORY_TIMEOUT("DRS-1014", 504),
+    /** The connector a kind is routed to is being restarted (its file changed, a retry) and was not back within the read's wait. */
+    CONNECTOR_RESTARTING("DRS-1015", 503),
     SUTRA_PARSE("DRS-2001", 422),
     SUTRA_INVALID("DRS-2002", 422),
     SUTRA_NOT_FOUND("DRS-2003", 404),

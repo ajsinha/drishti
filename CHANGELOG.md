@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **Fixed (QA2-202): a read during a connector file swap waits for the new connector.** While a connector of the kind is being
+  restarted (its file changed, Delta to Cassandra and back, a retry), an entity read (`/entities/…`, views) waits for the new instance,
+  up to 30 s as a BI query already did, instead of answering `404 DRS-1002 connector trade-endur is running` for its drain and start
+  (3 to 5 s). A start that takes longer answers `503 DRS-1015 connector … is restarting`. CONNECTOR_FILES section 13, API_GUIDE,
+  TROUBLESHOOTING; SourceRouterRestartTest.
 - **Fixed (QA2-201): the demo's market data is one picture each day.** A day's FX `BID` and `ASK` keep their spread around the moved
   `MID` (it lay outside them on 59 of 60 days); a bond's `YIELD` moves against its `PRICE` by the modified duration, its `Z_SPREAD` with
   the credit share of that move and its `MOD_DURATION` with the yield and the bond's age (all three never changed). Audited and fixed

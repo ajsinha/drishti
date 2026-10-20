@@ -1673,6 +1673,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-1012 | 404 | history not kept | history queries: the kind keeps no daily history here (`history: {enabled: false}` for it in its pack, `drishti.history.enabled` off, or every connector of the kind holds today's data only and the pack declares no embedded `series:`) |
 | DRS-1013 | 404 | history: no data | the entity exists but has no data in the range asked; widen the range or move the date box |
 | DRS-1014 | 504 | history timeout | no day of the range was read within `drishti.history.timeout`, or `max-concurrent` history requests were running; when some days were read the answer is `200` with `partial: true` and the others in `problems` |
+| DRS-1015 | 503 | connector restarting | the connector the kind is routed to is being restarted (its file changed, a retry) and was not back within 30 s; a read waits that long for it (and for any connector of the kind being restarted) before answering; try again |
 | DRS-2001 | 422 | sutra parse | the Sutra text cannot be parsed |
 | DRS-2002 | 422 | sutra invalid | the Sutra parsed but has problems (listed in `problems`) |
 | DRS-2003 | 404 | sutra not found | no Sutra with that name and version |

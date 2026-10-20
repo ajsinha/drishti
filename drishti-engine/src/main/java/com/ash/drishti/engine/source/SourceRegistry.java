@@ -698,6 +698,43 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         return connector(source);
     }
 
+    /**
+     * The connectors of {@code kind} (by their file's kinds, or {@code routed}, the one the kind is routed to) that are out of routing
+     * because they are being started or restarted right now (a changed file, a retry): a read of the kind waits for them (QA2-202).
+     */
+    public List<String> restartingFor(String kind, String routed) {
+        List<String> out = new ArrayList<>();
+        locks.forEach((name, lock) -> {
+            if (lock.isLocked() && !lock.isHeldByCurrentThread() && plugins.get(name) == null) {
+                SourcesProperties.ConnectorSettings c = applied.get(name);
+                if (name.equals(routed) || (c != null && c.kinds().contains(kind))) {
+                    out.add(name);
+                }
+            }
+        });
+        return out;
+    }
+
+    /** Waits, at most {@code wait} in all, until none of the named connectors is being started or restarted. */
+    public void awaitStarted(List<String> names, java.time.Duration wait) {
+        long deadline = System.nanoTime() + wait.toNanos();
+        for (String n : names) {
+            var lock = locks.get(n);
+            long left = deadline - System.nanoTime();
+            if (lock == null || lock.isHeldByCurrentThread() || left <= 0) {
+                continue;
+            }
+            try {
+                if (lock.tryLock(left, java.util.concurrent.TimeUnit.NANOSECONDS)) {
+                    lock.unlock();
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+    }
+
     public Optional<SourcePlugin> plugin(String name) {
         return Optional.ofNullable(plugins.get(name));
     }
