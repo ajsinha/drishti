@@ -52,7 +52,7 @@ Names used below:
 | **Python 3.12 or 3.13** | PowerShell: `py -3.13 --version` (or `py -3.12 --version`) |
 | **IntelliJ IDEA** (for the server) and **PyCharm** (for the console and the tools) | both start |
 | pip and Maven reach your **internal mirror** | if a download fails, see section 7 |
-| 8 GB free memory, 2 GB free disk | Task Manager |
+| 8 GB free memory, 5 GB free disk (the sixty-day demo lakes take about 2.2 GB) | Task Manager |
 
 ---
 
@@ -168,8 +168,8 @@ days** of the committed test data (moved to end on the date of your newest ENDUR
    C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\build_demo_lakes.py --endur-dir C:\Users\asinh09\drishti-private\endur
    ```
 
-You should see three numbered steps: `1/3 the demo lakes …` (the longest: several minutes for sixty days; `data\delta` ends at about
-2 GB), `2/3 your ENDUR files (N: <first date> … <last date>)` with one `lake-build ok … rejected=0` line per file, and `3/3 done in … s`.
+You should see three numbered steps: `1/3 the demo lakes …` (the longest: about 15 minutes on a fast machine, up to half an hour on a
+laptop, for sixty days; `data\delta` ends at about 2.2 GB), `2/3 your ENDUR files (N: <first date> … <last date>)` with one `lake-build ok … rejected=0` line per file, and `3/3 done in … s`.
 
 - Without your files (synthetic data only): leave out `--endur-dir …`; the lakes then end on today's business date.
 - To keep the synthetic ENDUR trades beside yours: add `--keep-synthetic-endur`.
@@ -466,28 +466,29 @@ Not to check on Windows: the **Cassandra** connector needs a Cassandra or Scylla
 ## 6c. History of a trade or an equity (2.6.5)
 
 Needs **2.6.5**: `git pull` on **main**, step 2.3 again (the jar is `drishti-server-2.6.5-exec.jar`), and **restart both** the server and
-the console. The demo lakes of step 3.1 hold **sixty business days**, enough to show it; your own ENDUR history shows as soon as **two or
+the console. The demo lakes of step 3.0 hold **sixty business days**, enough to show it; your own ENDUR history shows as soon as **two or
 more** of your files are loaded (step 3.2, one per date). Any kind of data has a history, not only trades: a counterparty, a curve, an
 economy.
 
-Ids in the demo lakes that changed most over the sixty days: ENDUR `1004545` and `1000340` (four changed days: quantity, status, version,
-legs, events), CALYPSO `CLY-4000638`, MUREX `MX-20000184`; cancelled trades `1003244` and `MX-30001509`; equities `EQ-CSCA`, `EQ-GRNT`
-(the price moves every day), FX `FX-AUDUSD`, the index `EQX-SPX`.
+Ids in the demo lakes that changed most over the sixty days (ten amendments each: version, quantity, price, legs, events): ENDUR
+`1000279` and `1001049`, CALYPSO `CLY-4000509` and `CLY-4001041`, MUREX `MX-30001745`; cancelled part-way: ENDUR `1000010`, CALYPSO
+`CLY-3000007`, MUREX `MX-20000001`; equities `EQ-CSCA`, `EQ-GRNT` (the price moves every day), FX `FX-AUDUSD`, the index `EQX-SPX`. A
+trade that was never amended (most are not) says *No field changed* in its change log: pick one of these.
 
 | # | Type in the top bar | You should see |
 |---|---|---|
-| 1 | `TRD <one of your ENDUR ids> 7` → Enter | one row per business day, newest first; a cell that changed from the day before is highlighted with ▲/▼; the header says the dates, how many days changed and any day with no data |
-| 2 | `TRD 1004545 30` | a synthetic ENDUR trade that changed on four days (30 asks for up to 30 days; you get the seven there are) |
+| 1 | `TRD <one of your ENDUR ids> 60` → Enter | one row per business day, newest first; a cell that changed from the day before is highlighted with ▲/▼; the header says the dates, how many days changed and any day with no data |
+| 2 | `TRD 1000279 60` | a synthetic ENDUR trade amended ten times in the sixty days |
 | 3 | press **C** | *Changes only*: the days on which nothing moved are hidden |
-| 4 | press **D** (or type `TRD <id> 7 DIFF`) | only the fields that changed, and on which day |
+| 4 | press **D** (or type `TRD 1000279 60 DIFF`) | only the fields that changed, and on which day |
 | 5 | arrow keys to a row → **Enter** | the trade's normal page as it stood on that day |
 | 6 | `EQ EQ-CSCA 3M` | a price chart on top, the last price, change, high, low and range, the daily table below. Days before the lake's first day come from the price history each equity carries; a gap of a few days between the two says *no data on N days* |
 | 7 | **E** → CSV or Excel | the table downloads as shown |
 | 8 | **Link** | a link that opens the same history for a colleague (within their permissions) |
 
 Also try `TRD <id> YTD`, `TRD <id> FROM 2026-10-07 TO 2026-10-16`, `CPTY CP-NORTHPLAINS 30` (a counterparty) and plain words:
-`trade 1004545 last month`. A field you may not see stays `•••` on every day's row. From a terminal:
-`…\python.exe …\tools\drishti.py history trade 1004545 --days 30` (add `--diff` for the changes only, `--csv` for a file).
+`trade 1000279 last month`. A field you may not see stays `•••` on every day's row. From a terminal:
+`…\python.exe …\tools\drishti.py history trade 1000279 --days 60` (add `--diff` for the changes only, `--csv` for a file).
 
 ---
 
@@ -533,7 +534,7 @@ Also try `TRD <id> YTD`, `TRD <id> FROM 2026-10-07 TO 2026-10-16`, `CPTY CP-NORT
 - [ ] Step 5: Lakes, Connectors, Health as described.
 - [ ] Step 6: walk through the ten pages once.
 - [ ] Step 6b: the 2.6.0 checks (themes, statement, field parameters, Iceberg in a separate copy).
-- [ ] Step 6c (2.6.5): `TRD <your id> 7` and `EQ <id> 3M` show their history.
+- [ ] Step 6c (2.6.5): `TRD 1000279 60`, `TRD <your id> 60` and `EQ EQ-CSCA 3M` show their history.
 
 **After the demo:**
 
