@@ -14,14 +14,13 @@
 
 """Every shipped example opens in the workbench as a copy with no problems: the Problems tab is empty and its count is blank.
 Runs against ``wb_live.py``'s real server; skipped when Playwright, its Chromium, the server jar or JDK 25 is missing."""
-import time
-
 import pytest
 
 from conftest import CONSOLE
 from wb_live import BROWSER_WAIT_MS, live_console, post  # noqa: F401 - the fixture
 
 sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
+expect = sync_api.expect
 EXAMPLES = sorted(p.name[: -len(".sutra.yaml")] for p in (CONSOLE.parent / "docs" / "guides" / "examples").glob("*.sutra.yaml"))
 
 
@@ -47,11 +46,11 @@ def test_an_example_opens_as_a_copy_with_no_problems(browser, live_console, exam
         made = post(page, f"{live_console}/build/examples/{example}/open", {})
         assert made["http"] in (200, 201), made
         page.goto(live_console + made["url"])
-        deadline = time.monotonic() + 25
-        while time.monotonic() < deadline and not page.evaluate("window.drishtiWorkbench && window.drishtiWorkbench.store.state.id"):
-            page.wait_for_timeout(100)
+        page.wait_for_function("() => window.drishtiWorkbench && window.drishtiWorkbench.store.state.id", timeout=max(BROWSER_WAIT_MS, 120_000))   # a cold server under load: as long as the preview may take
         page.locator("[data-preview] [data-panel]").first.wait_for(timeout=max(BROWSER_WAIT_MS, 120_000))   # the first example on a worker meets a cold server under the drill's load
-        page.wait_for_timeout(2500)                          # the check runs on idle: give its matrix time to arrive
+        # the check runs on idle; run it now and wait for its answer (the matrix, or why it could not run) instead of a fixed time
+        page.evaluate("() => window.drishtiWorkbench.tests.run()")
+        expect(page.locator("[data-result]")).not_to_have_text("… checking", timeout=max(BROWSER_WAIT_MS, 60_000))
         items = page.evaluate("[...document.querySelectorAll('[data-problems] .wb-problem-b')].map(b => b.textContent)")
         if example != SHOWCASE:                              # the others match kinds of the banking packs and link to their entities: not on this plain server
             items = [i for i in items if "is not a valid kind" not in i and "not found" not in i]

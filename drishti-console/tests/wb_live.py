@@ -131,7 +131,9 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False):
     env = {"PATH": os.environ.get("PATH", ""), "HOME": str(work), "DRISHTI_PORT": str(port), **extra_env}
     proc = subprocess.Popen(java_cmd(str(JAVA), ["-Xmx768m", "-jar", str(jar())], tmp=work / "jvm-tmp"), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     try:
-        deadline = time.monotonic() + 120
+        # a server that is still starting is waited for (on a loaded machine a cold start takes minutes): only one that exited is skipped, and one
+        # that never answers fails rather than skipping every test of the file in silence
+        deadline = time.monotonic() + 600
         while time.monotonic() < deadline:
             if proc.poll() is not None:
                 pytest.skip("the server did not start: " + (work / "server.log").read_text()[-400:])
@@ -143,7 +145,7 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False):
             except OSError:
                 time.sleep(0.5)
         else:
-            pytest.skip("the server did not start in time")
+            pytest.fail("the server did not answer within 10 minutes: " + (work / "server.log").read_text()[-400:])
         data = load_settings(CONSOLE / "config").as_dict()
         data.setdefault("backend", {})["url"] = f"http://127.0.0.1:{port}"
         if auth:
