@@ -143,6 +143,15 @@ def test_exports(client):
     assert j.json()["ref"] == {"kind": "trade", "id": "1000015"} and j.headers["content-disposition"].endswith('.json"')
     x = client.get("/export/history/equity/EQ-CSCA.xlsx?range=3M")
     assert x.status_code == 200 and x.content[:2] == b"PK"
+    # QA1-17: with changes only on, the JSON holds the changed days too; in Excel the dates are dates (yyyy-mm-dd), not text
+    jo = client.get("/export/history/trade/1000015.json?days=30&only=1").json()
+    assert len(jo["rows"]) == 7 and all(r["changed"] for r in jo["rows"]) and jo["onlyChanged"] is True
+    import io
+    import zipfile
+    sheet = zipfile.ZipFile(io.BytesIO(client.get("/export/history/trade/1000015.xlsx?days=30").content)).read("xl/worksheets/sheet1.xml").decode()
+    assert '<c r="A2" s="2"><v>46314</v></c>' in sheet                       # 2026-10-19 as a date serial
+    styles = zipfile.ZipFile(io.BytesIO(client.get("/export/history/trade/1000015.xlsx?days=30").content)).read("xl/styles.xml").decode()
+    assert 'formatCode="yyyy-mm-dd"' in styles
 
 
 def test_the_legend_names_only_what_the_page_shows(client, backend, monkeypatch):

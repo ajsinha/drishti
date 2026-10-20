@@ -251,7 +251,7 @@ server's start and after a reload.
 ## Step 7 · Export, and a link that shows the same rows
 
 **In the UI.** Press `E` for the export menu: CSV, Excel, or the server's JSON as served. With *changes only* on, only the changed days are
-exported. Every export reads through the server with your token, so your masks travel with it.
+exported, in all three. The JSON keeps the server's order (oldest first); CSV and Excel are newest first, and Excel's dates are dates. Every export reads through the server with your token, so your masks travel with it.
 
 ![The export menu: CSV, Excel and JSON](img/t21/06-export-light.jpg)
 

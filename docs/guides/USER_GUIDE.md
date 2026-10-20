@@ -1355,7 +1355,8 @@ and the one before) and *Open the day*.
 (*as it was*, or *changed since* when the data has moved on).
 
 **Export** (`E`) downloads the table as shown, newest first: CSV (numbers as numbers, the formula guard, UTF-8 with BOM), Excel, or the
-server's JSON exactly as served. With *changes only* on, only the changed days. Files are named `1000015-history-2026-09-07-2026-10-19.csv`.
+server's JSON as served (its rows oldest first). Excel's dates are date cells (`yyyy-mm-dd`), so they sort and filter as dates. With
+*changes only* on, only the changed days, in all three. Files are named `1000015-history-2026-09-07-2026-10-19.csv`.
 Every export reads through the server, so it carries your masks.
 
 **Link** (`Alt+S`) copies a link that pins the last date (`…/history?days=30&to=2026-10-19`), so a colleague sees the same rows a week

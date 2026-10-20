@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import date
 from urllib.parse import quote, urlencode
 
 from fastapi import APIRouter, Request
@@ -138,17 +139,28 @@ async def history_xlsx(request: Request, kind: str, id_: str):
     except BackendError as e:
         return _shown_problem(e)
     header, rows = export_rows(data, only_changed=request.query_params.get("only") == "1")
+    rows = [[_day(r[0])] + r[1:] for r in rows]                     # the dates as date cells, so they sort and filter as dates (QA1-17)
     return Response(to_xlsx(header, rows, sheet="History"), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     headers={"Content-Disposition": f'attachment; filename="{_name(id_, data, ".xlsx")}"'})
 
 
+def _day(text):
+    try:
+        return date.fromisoformat(text)
+    except (TypeError, ValueError):
+        return text
+
+
 @router.get("/export/history/{kind}/{id_:path}.json")
 async def history_json(request: Request, kind: str, id_: str):
-    """The server's answer exactly as served (section 8 of HISTORY_QUERIES.md), masks applied."""
+    """The server's answer as served (section 8 of HISTORY_QUERIES.md: rows oldest first), masks applied; with ``only=1`` its rows are the
+    changed days only, as the CSV and Excel files are (QA1-17)."""
     try:
         data = await _data(request, kind, id_)
     except BackendError as e:
         return _shown_problem(e)
+    if request.query_params.get("only") == "1" and isinstance(data.get("rows"), list):
+        data = {**data, "rows": [r for r in data["rows"] if r.get("changed")], "onlyChanged": True}
     return Response(json.dumps(data, indent=2, ensure_ascii=False).encode("utf-8"), media_type="application/json",
                     headers={"Content-Disposition": f'attachment; filename="{_name(id_, data, ".json")}"'})
 

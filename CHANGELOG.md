@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **Fixed (QA1-17): history exports agree with the page.** With *changes only* on, the JSON holds only the changed days too
+  (`onlyChanged: true`), as the CSV and Excel files do; Excel's dates are date cells (`yyyy-mm-dd`) that sort and filter as dates.
 - **Fixed (QA1-11, QA1-12, console): the history page links to an entity's days with data and never swaps a range.** A `DRS-1013` page
   offers *From its first day with data* (the span the server names); `FROM b TO a` typed in the page's range field says `DRS-4022`
   and stays, as the server does. `test_history_routes.py`, `test_history_browser.py`.
