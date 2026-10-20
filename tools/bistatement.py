@@ -73,21 +73,28 @@ def body_of(a, ctx) -> dict:
     return body
 
 
+def plural(n, word: str) -> str:
+    """``1 page``, ``2 pages``, ``1,234 rows``: a count and its noun, singular for one (QA3B-09)."""
+    return f"{n:,} {word}" + ("" if n == 1 else "s")
+
+
 def preview(a, ctx) -> int:
     r = ctx["Api"].from_args(a).json("POST", "/api/v1/bi/reports/statement/preview", body_of(a, ctx))
     if a.json:
         ctx["say_json"](r)
         return 0
     paper = r.get("paper") or {}
-    print(f"{r.get('title')}: {r.get('pageCount')} pages, {paper.get('size')} {paper.get('orientation')}" + (f", {r['period']}" if r.get("period") else "")
-          + f", {r.get('rows', 0)} rows")
+    print(f"{r.get('title')}: {plural(r.get('pageCount') or 0, 'page')}, {paper.get('size')} {paper.get('orientation')}" + (f", {r['period']}" if r.get("period") else "")
+          + f", {plural(r.get('rows') or 0, 'row')}")
+    if r.get("hint"):                                                 # no data is held for the dates the statement reads, as the designer says (QA3B-09)
+        print(f"  hint: {r['hint']}")
     for c in r.get("cut") or []:                                      # a table that stops at max-rows, as the PDF's note says (QA2-204)
         print(f"  cut: {c}")
     for p in r.get("pages", []):
         head = [o["text"] for o in p.get("ops", []) if o.get("t") == "text" and o.get("role") == "header"]
         foot = [o["text"] for o in p.get("ops", []) if o.get("t") == "text" and o.get("role") == "footer"]
         cells = sum(1 for o in p.get("ops", []) if o.get("t") == "text" and o.get("role") == "cell")
-        print(f"  page {p.get('number')}: {' | '.join(head)}  ...  {' | '.join(foot)}  ({cells} cells)")
+        print(f"  page {p.get('number')}: {' | '.join(head)}  ...  {' | '.join(foot)}  ({plural(cells, 'cell')})")
     return 0
 
 
@@ -100,6 +107,8 @@ def make(a, ctx) -> int:
     out.write_bytes(raw)
     print(f"wrote {out} ({len(raw):,} bytes)")
     headers = getattr(api, "headers", None)
+    for h in (headers.get_all("X-Statement-Hint") or []) if headers is not None else []:
+        print(f"  hint: {urllib.parse.unquote_plus(h)}")                # no data for the dates the statement reads (QA3B-09)
     for c in (headers.get_all("X-Statement-Cut") or []) if headers is not None else []:
         print(f"  cut: {urllib.parse.unquote_plus(c)}")                # a table that stops at max-rows, as the file's note says (QA2-204)
     return 0

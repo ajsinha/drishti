@@ -55,7 +55,8 @@ class BiStatement(unittest.TestCase):
                            "--param", "shock=0.5", env=self.env)
         self.assertEqual(0, code)
         self.assertIn("Monthly statement: 2 pages, A4 portrait, September 2026, 80 rows", out)
-        self.assertIn("page 2: Monthly statement  ...  Page 2 of 2  (1 cells)", out)
+        self.assertIn("page 2: Monthly statement  ...  Page 2 of 2  (1 cell)", out)
+        self.assertNotIn("hint:", out, "a statement with data has no hint")
         sent = json.loads(FakeServer.requests[-1][5])
         self.assertEqual({"report": "file:report:monthly-statement", "page": "", "date": "2026-10-01", "state": {"params": {"breakdown": "trade.PORTFOLIO", "shock": 0.5}}}, sent)
 
@@ -85,6 +86,22 @@ class BiStatement(unittest.TestCase):
         FakeServer.routes[("POST", "/api/v1/bi/reports/statement/file")] = (200, b"%PDF-1.4 fake")
         code, out, _ = run("bi", "statement", "file", "file:report:monthly-statement", "-o", str(self.tmp / "whole.pdf"), env=self.env)
         self.assertNotIn("cut:", out, "a whole statement says nothing")
+
+    def test_preview_and_file_print_the_no_data_hint_and_one_page_is_singular(self):
+        """QA3B-09: the API's hint (preview) and X-Statement-Hint (file) are printed, as the designer shows it; 1 page, 1 row, never "1 pages"."""
+        hint = "No data is held for 9999-11-30, the date this November 9999 statement reads: every band is empty. Choose a date the data covers."
+        empty = {**PREVIEW, "pageCount": 1, "rows": 1, "period": "November 9999", "hint": hint, "pages": PREVIEW["pages"][:1]}
+        FakeServer.routes[("POST", "/api/v1/bi/reports/statement/preview")] = (200, empty)
+        code, out, _ = run("bi", "statement", "preview", "file:report:monthly-statement", "--date", "9999-12-31", env=self.env)
+        self.assertEqual(0, code)
+        self.assertIn("Monthly statement: 1 page, A4 portrait, November 9999, 1 row\n", out)
+        self.assertNotIn("1 pages", out)
+        self.assertIn("  hint: " + hint, out)
+        encoded = "No+data+is+held+for+9999-11-30%2C+the+date+this+November+9999+statement+reads%3A+every+band+is+empty.+Choose+a+date+the+data+covers."
+        FakeServer.routes[("POST", "/api/v1/bi/reports/statement/file")] = (200, b"%PDF-1.4 fake", [("X-Statement-Hint", encoded)])
+        code, out, _ = run("bi", "statement", "file", "file:report:monthly-statement", "-o", str(self.tmp / "empty.pdf"), env=self.env)
+        self.assertEqual(0, code, out)
+        self.assertIn("  hint: " + hint, out)
 
     def test_without_a_report_or_a_file_it_says_so(self):
         code, _, err = run("bi", "statement", "preview", env=self.env)

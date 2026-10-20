@@ -2382,6 +2382,16 @@ wrote full.pdf (649,813 bytes)
   cut: Positions: The first 10,000 rows only: the table goes on (drishti.distribution.statements.max-rows).
 ```
 
+A date no data covers is named on a `hint:` line by both commands (the preview's `hint`, the file's `X-Statement-Hint`), as the designer shows it beside
+the page count: the dates the statement read and the nearest dates with data. Counts read in the singular for one (*1 page*, *1 row*, *1 cell*):
+
+```text
+$ python3 tools/drishti.py bi statement preview bi-39eb12fe47 --date 9999-12-31
+Monthly statement: 1 page, A4 portrait, December 9999, 3 rows
+  hint: No data is held for 9999-12-31, the date this December 9999 statement reads: every band is empty. The nearest date with data is 2026-10-20 (before). Choose a date the data covers.
+  page 1: Monthly statement | December 9999 | For wes  ...  Run 2026-10-20 · by DESK | Page 1 of 1  (1 cell)
+```
+
 ### Shell completion
 
 `drishti.py completion bash|zsh|powershell` prints a completion script generated from the command tree (groups, commands,
