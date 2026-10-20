@@ -788,7 +788,7 @@ New codes in `drishti-common` `ErrorCode` (none of them used before):
 | `DRS-1014` | `HISTORY_TIMEOUT` | 504 (or 200 with `partial`) | a connector, or a Drishti*net peer (an HTTP time-out of its one call), did not answer within the budget: the whole request when no day was read, otherwise a `problems` entry | "trade-endur did not answer 4 of 30 days within 10 s" |
 | `DRS-2061` | `HISTORY_INVALID` | 422 | the pack's `history:` block is wrong | "history.equity.headline: PRICE2 is not one of chart" |
 | `DRS-4021` | `HISTORY_RANGE_TOO_LARGE` | 400 | more than `max-days` (the kind's or the server's) | "366 business days at most (asked 500): narrow it with FROM … TO" |
-| `DRS-4022` | `HISTORY_BAD_RANGE` | 400 | `TO` before `FROM`, a future `FROM`, an unreadable date | "FROM 2026-10-30 is after TO 2026-10-19" |
+| `DRS-4022` | `HISTORY_BAD_RANGE` | 400 | `TO` before `FROM`, a future `FROM`, an unreadable date | "FROM 2026-10-15 is after TO 2026-10-01"; "FROM 2026-10-30 is in the future (the business date is 2026-10-20)" |
 
 A `knownAt` on a store without time travel stays `DRS-1007`; an unknown entity stays `DRS-1001`; a Drishti*net node that holds the kind
 and cannot be reached, refuses the connection or fails its read is `DRS-5052` naming it, only for the dates it may hold (section 12); a

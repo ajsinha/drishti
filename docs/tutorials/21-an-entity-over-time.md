@@ -288,7 +288,7 @@ it), `max-rows` rows and `timeout` for the whole request.
 | You see | Why | What to do |
 |---|---|---|
 | `DRS-4021` *366 business days at most (asked 500)* | the range is larger than allowed | narrow it with `FROM … TO`, or follow the page's *The last 30 days* link |
-| `DRS-4022` *FROM 2026-10-30 is after TO 2026-10-19* | the dates are the wrong way round | put the earlier date first (the page's range field says so too, and never swaps them) |
+| `DRS-4022` *FROM 2026-10-15 is after TO 2026-10-01* | the dates are the wrong way round (a `FROM` after the business date is *FROM … is in the future*) | put the earlier date first (the page's range field says so too, and never swaps them) |
 | `DRS-4022` *'-5' is not a range: use a number of days (30), a span …* | a range typed after the id that cannot be read (`0`, `-5`, `1.5M`, `3X`, `30.`, `1e3`, `FROM yesterday`, `FROM 2026-10-01 TO`, `TO 2026-10-01`, `DIFF DIFF`, `DIFF 30`, `30 30`, a bare `DIFF`; also after a bare id, `1000015 -5`) | type it as the message says; the command line shows the message, never today's view |
 | `DRS-1013` *no data from … to …* | the entity has no data in the range | the message says from when to when it has data (*its days with data run from … to …*); with `knownAt` (the CLI's `--known-at`), it says nothing in that window was known then, and that the days it has now may have been loaded later: leave it out or ask with a later instant; the page links to it (*From its first day with data*) |
 | `DRS-1012` *keeps no daily history here* | the kind's connector holds today's data only, or the pack turned history off | today's view is one link away |

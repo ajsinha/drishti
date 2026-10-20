@@ -562,18 +562,18 @@ those tools (`tools/packmake.py` only chooses the key and the date, lays the fol
 
 ```text
 $ drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank
-read 4980 trade document(s)
-key:   TRADE_ID  (named <kind>_id, present and unique in all 4980 documents)
-date:  START_DATE  (the date-valued field with the fewest distinct dates (26); pass --date to choose another)
-4980 documents, 1 kind(s), 6 group(s)
+read 4407 trade document(s)
+key:   TRADE_ID  (named <kind>_id, present and unique in all 4407 documents)
+date:  START_DATE  (the date-valued field with the fewest distinct dates (24); pass --date to choose another)
+4407 documents, 1 kind(s), 6 group(s)
 drafting 6 Sutra(s) with one `sutra design --each` run ...
 kind            group                                          docs samples  sutra
-trade           PRODUCT_TYPE=CallNot                             55       5  trade-callnot
-trade           PRODUCT_TYPE=Cash                               815       5  trade-cash
-trade           PRODUCT_TYPE=ComFut                             994       5  trade-comfut
-trade           PRODUCT_TYPE=ComSwap                           2266       5  trade-comswap
-trade           PRODUCT_TYPE=Commodity                          850       5  trade-commodity
-trade           (all)                                          4980       5  trade-default
+trade           PRODUCT_TYPE=CallNot                             50       5  trade-callnot
+trade           PRODUCT_TYPE=Cash                               723       5  trade-cash
+trade           PRODUCT_TYPE=ComFut                             883       5  trade-comfut
+trade           PRODUCT_TYPE=ComSwap                           1994       5  trade-comswap
+trade           PRODUCT_TYPE=Commodity                          757       5  trade-commodity
+trade           (all)                                          4407       5  trade-default
 ...
 == pack bundle
 bundled my-bank 1.0.0: 47 files
@@ -583,12 +583,12 @@ bundled my-bank 1.0.0: 47 files
 verified
 
 pack make: data/build/my-bank-1.0.0
-  6 Sutra group(s) for 4980 trade document(s), 26 date(s) in data/delta; pack check passed, pack verify passed
+  6 Sutra group(s) for 4407 trade document(s), 24 date(s) in data/delta; pack check passed, pack verify passed
 next: read data/build/my-bank-1.0.0/README.txt; for a new server  DRISHTI_JAR=<exec jar> ...
 ```
 
 Read the `date:` line. The test data's trades carry no business-date field (a file is one business day), so `pack make` took the date
-field with the fewest distinct values, `START_DATE`, and stored each trade under its start date: 26 "business dates" that are not business
+field with the fewest distinct values, `START_DATE`, and stored each trade under its start date: 24 "business dates" that are not business
 dates. For such snapshots, build the lake with [`lake build --as-of`](TOOLS.md) (or the demo lakes, `drishti.py lake demo`) and use
 `pack make` for the pack alone; for documents that carry their business date, pass `--date` with that field.
 
@@ -696,13 +696,13 @@ drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/trades/
 ```
 
 ```text
-4933 documents, 1 kind(s), 74 group(s)
-drafting 74 Sutra(s) with one `sutra design --each` run ...
+4198 documents, 1 kind(s), 68 group(s)
+drafting 68 Sutra(s) with one `sutra design --each` run ...
 kind            group                                          docs samples  sutra
 trade           PRODUCT_TYPE=ACCRETING_SWAP                      72       5  trade-accreting-swap
 trade           PRODUCT_TYPE=AMORT_SWAP                          72       5  trade-amort-swap
 ...
-trade           PRODUCT_TYPE=RANGE_ACCRUAL_NOTE                  66       5  trade-range-accrual-note
+trade           PRODUCT_TYPE=RANGE_ACCRUAL_NOTE                  55       5  trade-range-accrual-note
 ...
 pack written to data/build/murex-book
 sutra lint: exit 0
@@ -949,25 +949,25 @@ priority set to 15, the About sentence of the kind written), then the data grows
 ```text
 $ drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --name mb \
     --kind trade --match PRODUCT_TYPE --key TRADE_ID --out data/build/mb
-4980 documents, 1 kind(s), 5 group(s)
+4407 documents, 1 kind(s), 5 group(s)
 ...
 $ drishti-console/.venv/bin/python tools/drishti.py pack regenerate data/build/mb data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz \
     data/testdata/trades/calypso/snapshot-2026-07-08.jsonl.gz --dry-run
 pack regenerate --dry-run: data/build/mb
   add         sutras/trade/trade-abs.v1.sutra.yaml
   add         sutras/trade/trade-amort-bond.v1.sutra.yaml
-  add         sutras/trade/trade-buy-sell-back.v1.sutra.yaml
-  add         sutras/trade/trade-call-account.v1.sutra.yaml
   add         sutras/trade/trade-callable-bond.v1.sutra.yaml
   add         sutras/trade/trade-cds-index.v1.sutra.yaml
-  add         ... and 351 more
+  add         sutras/trade/trade-cds-single.v1.sutra.yaml
+  add         sutras/trade/trade-cds-swaption.v1.sutra.yaml
+  add         ... and 267 more
   refresh     README.md
   refresh     pack.yaml
   refresh     samples/catalog.json
   refresh     samples/trade.jsonl
   merge       config/about.yaml   (your edit and the new text merged cleanly)
   keep        sutras/trade/trade-comswap.v1.sutra.yaml   (your edit kept; the generated text did not change)
-summary: 357 add, 1 keep, 1 merge, 4 refresh; 34 unchanged
+summary: 273 add, 1 keep, 1 merge, 4 refresh; 34 unchanged
 (exit 0)
 ```
 
@@ -981,7 +981,7 @@ $ drishti-console/.venv/bin/python tools/drishti.py pack regenerate data/build/m
 pack regenerate: data/build/mb
   add         sutras/trade/trade-abs.v1.sutra.yaml
   ...
-  add         ... and 351 more
+  add         ... and 267 more
   refresh     README.md
   refresh     pack.yaml
   refresh     sutras/trade/trade-callnot.v1.sutra.yaml
@@ -991,7 +991,7 @@ pack regenerate: data/build/mb
   refresh     ... and 2 more
   merge       config/about.yaml   (your edit and the new text merged cleanly)
   conflict    sutras/trade/trade-comswap.v1.sutra.yaml   (1 conflict(s): markers written, resolve them by hand)
-summary: 357 add, 1 conflict, 1 merge, 8 refresh; 30 unchanged
+summary: 273 add, 1 conflict, 1 merge, 8 refresh; 30 unchanged
 attention: 1 file(s) need you (search for '<<<<<<<'), then  drishti.py pack check data/build/mb
 (exit 1)
 
@@ -1251,36 +1251,36 @@ needs. Memory is bounded: `--max-distinct` (default 10,000) values are tracked p
 
 ```text
 $ drishti-console/.venv/bin/python tools/drishti.py data profile data/testdata/trades/murex/snapshot-2026-07-08.jsonl.gz --kind trade
-data profile: 1 file(s), 4933 document(s), 1 kind(s)
+data profile: 1 file(s), 4198 document(s), 1 kind(s)
 
-== trade: 4933 document(s), 107 field(s)
+== trade: 4198 document(s), 107 field(s)
   field                                           type            cover  distinct  examples
   SOURCE_SYSTEM                                   string           100%         1  MUREX
-  SOURCE_UPDATE_TIME                              string           100%         1  2026-09-22T18:30:00Z
-  TRADE_DATE                                      string           100%       292  2025-07-25, 2025-02-06, 2026-09-18
-  INPUT_DATE                                      string           100%       292  2025-07-25, 2025-02-06, 2026-09-18
-  TRADE_ID                                        string           100%      4933  MX-20000001, MX-20000002, MX-20000003
+  SOURCE_UPDATE_TIME                              string           100%         1  2026-07-08T18:30:00Z
+  TRADE_DATE                                      string           100%       258  2025-07-25, 2025-02-06, 2025-04-28
+  INPUT_DATE                                      string           100%       258  2025-07-25, 2025-02-06, 2025-04-28
+  TRADE_ID                                        string           100%      4198  MX-20000001, MX-20000002, MX-20000004
   TRADE_STATUS                                    string           100%         3  AMENDED, VALIDATED, MATURED
   ...
   LEGS[].CASH_FLOWS[].RESETS                      array            100%         0
   EVENTS                                          array            100%         0
   ...
   key candidates (present and unique everywhere):
-    TRADE_ID                     exact     present in all 4933 documents, 4933 different values
-    TRANSACTION_ID               exact     present in all 4933 documents, 4933 different values
+    TRADE_ID                     exact     present in all 4198 documents, 4198 different values
+    TRANSACTION_ID               exact     present in all 4198 documents, 4198 different values
   date candidates (ISO dates in at least 95% of the documents):
-    SOURCE_UPDATE_TIME           1 date(s) 2026-09-22 .. 2026-09-22, coverage 100%
-    TRADE_DATE                   292 date(s) 2024-04-16 .. 2026-09-22, coverage 100%
-    INPUT_DATE                   292 date(s) 2024-04-16 .. 2026-09-22, coverage 100%
-    START_DATE                   259 date(s) 2024-04-18 .. 2026-09-24, coverage 100%
-    MATURITY_DATE                361 date(s) 2026-09-30 .. 2038-02-01, coverage 100%
+    SOURCE_UPDATE_TIME           1 date(s) 2026-07-08 .. 2026-07-08, coverage 100%
+    TRADE_DATE                   258 date(s) 2024-04-16 .. 2026-07-07, coverage 100%
+    INPUT_DATE                   258 date(s) 2024-04-16 .. 2026-07-07, coverage 100%
+    START_DATE                   227 date(s) 2024-04-18 .. 2026-07-09, coverage 100%
+    MATURITY_DATE                308 date(s) 2026-09-30 .. 2038-02-01, coverage 100%
   match candidates (split the kind into screens; score 0..1):
-    PRODUCT_TYPE                 1.000  coverage 100%, 74 values over 4933 documents (average 66.7 per value, evenness 1.00; largest group IRS_FIXFLOAT = 72); name suggests a category
-    PRODUCT_SUB_TYPE             1.000  coverage 100%, 74 values over 4933 documents (average 66.7 per value, evenness 1.00; largest group Interest rate swap (fixed/float) = 72); name suggests a category
-    COUNTERPARTY                 0.985  coverage 100%, 18 values over 4933 documents (average 274.1 per value, evenness 0.98; largest group CP-SUMMIT = 759)
-    COUNTERPARTY_UEN             0.985  coverage 100%, 18 values over 4933 documents (average 274.1 per value, evenness 0.98; largest group UEN0100592 = 759)
-    PORTFOLIO                    0.962  coverage 100%, 15 values over 4933 documents (average 328.9 per value, evenness 0.93; largest group BOOK-RATES-2 = 635)
-    TT_BOOK                      0.962  coverage 100%, 15 values over 4933 documents (average 328.9 per value, evenness 0.93; largest group BOOK-RATES-2 = 635)
+    PRODUCT_TYPE                 1.000  coverage 100%, 68 values over 4198 documents (average 61.7 per value, evenness 1.00; largest group OIS = 72); name suggests a category
+    PRODUCT_SUB_TYPE             1.000  coverage 100%, 68 values over 4198 documents (average 61.7 per value, evenness 1.00; largest group Overnight index swap = 72); name suggests a category
+    COUNTERPARTY                 0.993  coverage 100%, 18 values over 4198 documents (average 233.2 per value, evenness 1.00; largest group CP-SUMMIT = 385)
+    COUNTERPARTY_UEN             0.993  coverage 100%, 18 values over 4198 documents (average 233.2 per value, evenness 1.00; largest group UEN0100592 = 385)
+    PORTFOLIO                    0.963  coverage 100%, 15 values over 4198 documents (average 279.9 per value, evenness 0.93; largest group BOOK-RATES-3 = 526)
+    TT_BOOK                      0.963  coverage 100%, 15 values over 4198 documents (average 279.9 per value, evenness 0.93; largest group BOOK-RATES-3 = 526)
   suggested:
     python3 tools/drishti.py pack make data/testdata/trades/murex/snapshot-2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --key TRADE_ID --date SOURCE_UPDATE_TIME --name trade-pack
 ```
@@ -2142,8 +2142,8 @@ drishti: node.yaml was not written: enabled: true needs the cluster key: secret:
 $ drishti.py net set node.secret '${DRISHTI_NET_SECRET}'
 wrote ~/drishti/config/net/node.yaml
 $ drishti.py net set node.advertise-url http://127.0.0.1:18784
-drishti: node.yaml was not written: 'http://127.0.0.1:18784' is a loopback or wildcard address: the address this node advertises must be an address other machines can call (this machine's address is 192.168.1.20: use http://192.168.1.20:18784); or leave advertise-url out and the node advertises that address with its port
-  error   node.yaml:3  advertise-url: 'http://127.0.0.1:18784' is a loopback or wildcard address: [the same message]
+drishti: node.yaml was not written: 'http://127.0.0.1:18784' is a loopback or wildcard address (loopback): the address this node advertises must be an address other machines can call (this machine's address is 192.168.1.20: use http://192.168.1.20:18784); or leave advertise-url out and the node advertises that address with its port
+  error   node.yaml:3  advertise-url: 'http://127.0.0.1:18784' is a loopback or wildcard address (loopback): [the same message]
 (exit 1)
 $ drishti.py net set node.advertise-url http://192.168.1.20:18784
 wrote ~/drishti/config/net/node.yaml
@@ -2378,7 +2378,7 @@ above the table says it, so a script can tell a whole statement from a cut one:
 
 ```text
 $ python3 tools/drishti.py bi statement file bi-39eb12fe47 -o full.pdf
-wrote full.pdf (649,813 bytes)
+wrote full.pdf (646,896 bytes)
   cut: Positions: The first 10,000 rows only: the table goes on (drishti.distribution.statements.max-rows).
 ```
 
@@ -2387,9 +2387,13 @@ the page count: the dates the statement read and the nearest dates with data. Co
 
 ```text
 $ python3 tools/drishti.py bi statement preview bi-39eb12fe47 --date 9999-12-31
-Monthly statement: 1 page, A4 portrait, December 9999, 3 rows
+Monthly statement: 2 pages, A4 portrait, December 9999, 3 rows
   hint: No data is held for 9999-12-31, the date this December 9999 statement reads: every band is empty. The nearest date with data is 2026-10-20 (before). Choose a date the data covers.
-  page 1: Monthly statement | December 9999 | For wes  ...  Run 2026-10-20 · by DESK | Page 1 of 1  (1 cell)
+  page 1: Monthly statement | December 9999 | For wes  ...  Run 2026-10-20 · by DESK | Page 1 of 2  (1 cell)
+  page 2: Monthly statement | December 9999 | For wes  ...  Run 2026-10-20 · by DESK | Page 2 of 2  (1 cell)
+$ python3 tools/drishti.py bi statement file bi-39eb12fe47 --date 9999-12-31 -o empty.pdf
+wrote empty.pdf (2,093 bytes)
+  hint: No data is held for 9999-12-31, the date this December 9999 statement reads: every band is empty. The nearest date with data is 2026-10-20 (before). Choose a date the data covers.
 ```
 
 ### Shell completion

@@ -227,13 +227,14 @@ wrote statement.xlsx (7,823 bytes)
 ```
 
 `--file report.yaml` makes the statement of a draft's YAML instead (a BI author). A date no data covers prints the hint after the first line, as the
-designer shows it (`preview` and `file` alike); one page reads *1 page*:
+designer shows it (`preview` and `file` alike); one page reads *1 page*, one cell *1 cell*. On the tutorial's report (its matrix starts a page of its own, so even an empty statement has two pages):
 
 ```
 $ drishti.py bi statement preview bi-39eb12fe47 --date 9999-12-31
-Monthly statement: 1 page, A4 portrait, December 9999, 3 rows
+Monthly statement: 2 pages, A4 portrait, December 9999, 3 rows
   hint: No data is held for 9999-12-31, the date this December 9999 statement reads: every band is empty. The nearest date with data is 2026-10-20 (before). Choose a date the data covers.
-  page 1: Monthly statement | December 9999 | For wes  ...  Run 2026-10-20 · by DESK | Page 1 of 1  (1 cell)
+  page 1: Monthly statement | December 9999 | For wes  ...  Run 2026-10-20 · by DESK | Page 1 of 2  (1 cell)
+  page 2: Monthly statement | December 9999 | For wes  ...  Run 2026-10-20 · by DESK | Page 2 of 2  (1 cell)
 ```
 
 ([CLI_GUIDE.md](CLI_GUIDE.md#bi-statement), [API_GUIDE.md](API_GUIDE.md#statements-apiv1bireportsstatement-260).)

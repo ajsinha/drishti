@@ -103,7 +103,7 @@ a page, an answer or a log. So is a loopback address:
 
 ```text
 $ drishti.py net set node.advertise-url http://127.0.0.1:18784
-drishti: node.yaml was not written: 'http://127.0.0.1:18784' is a loopback or wildcard address: the address this node advertises must be an address other machines can call (this machine's address is 192.168.1.20: use http://192.168.1.20:18784); or leave advertise-url out and the node advertises that address with its port
+drishti: node.yaml was not written: 'http://127.0.0.1:18784' is a loopback or wildcard address (loopback): the address this node advertises must be an address other machines can call (this machine's address is 192.168.1.20: use http://192.168.1.20:18784); or leave advertise-url out and the node advertises that address with its port
 ```
 
 ## Step 2 · One seed

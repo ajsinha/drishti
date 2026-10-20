@@ -143,17 +143,17 @@ often it is present, its types and most frequent values, then suggests an id, a 
 
 ```
 $ drishti-console/.venv/bin/python tools/drishti.py lake scan data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --limit 500 | tail -n 8
-PRECIOUS_METAL_FLAG                    500         2  text  (458), Y(42)
+PRECIOUS_METAL_FLAG                    500         2  text  (456), Y(44)
 TT_GROUP                               500         1  text  (500)
 TT_BOOK                                500         1  text  (500)
-LEASE_PERPETUITY_FLAG                  500         3  text  (480), Y(10), N(10)
+LEASE_PERPETUITY_FLAG                  500         3  text  (477), N(12), Y(11)
 SETTLEMENT_DATE                        500         1  text  (500)
 LEGS                                   500         0  array
 EVENTS                                 500         0  array
 suggested --key TRADE_ID   --date START_DATE   --partition-by: PRODUCT_TYPE, PRODUCT_SUB_TYPE, PORTFOLIO
 ```
 
-`(458)` is a blank value counted 458 times. The id is a field present in (nearly) every document with every value different;
+`(456)` is a blank value counted 456 times. The id is a field present in (nearly) every document with every value different;
 the business date ranks names such as *business*, *cob*, *as of* and *snapshot* first; the classifiers are text fields rarely
 blank with 2 to 40 values, *product* and *type* first. This export is a snapshot of the book (its dates are trade and start
 dates, not the day of the extract), so the walk-through below uses `--as-of` for the day the file was taken, 2026-09-22.
@@ -166,14 +166,14 @@ $ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testd
     --lake lake --domain trading
 engine: drishti (Drishti's Java writer in drishti-server-2.6.5-exec.jar)
 business date  PRODUCT_TYPE           rows
-2026-09-22     CallNot                  55
-2026-09-22     Cash                    815
-2026-09-22     ComFut                  994
-2026-09-22     ComSwap                2266
-2026-09-22     Commodity               850
-documents read: 4980, rows written: 4980, rejected: 0
+2026-09-22     CallNot                  50
+2026-09-22     Cash                    723
+2026-09-22     ComFut                  883
+2026-09-22     ComSwap                1994
+2026-09-22     Commodity               757
+documents read: 4407, rows written: 4407, rejected: 0
 summary: lake/_drishti-lake/runs/20261017T174352-1339862.json
-2026-10-17T17:43:55-04:00 lake-build ok exit=0 run=20261017T174352-1339862 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4980 rejected=0 dates=1 partitions=5 seconds=3.614
+2026-10-17T17:43:55-04:00 lake-build ok exit=0 run=20261017T174352-1339862 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4407 rejected=0 dates=1 partitions=5 seconds=3.614
 ```
 
 The last line is **the** log line of the run (also appended to `<lake>/_drishti-lake/runs.log`): one line per run, whatever
@@ -186,7 +186,7 @@ rollups it had read from a lake, so it never answers from the data before this b
 
 ### 4.3 The next day, with rejects
 
-The next file of the book holds the day's changes (189 trades). Two bad lines added at its end show what a reject looks like:
+The next file of the book holds the day's changes (159 trades). Two bad lines added at its end show what a reject looks like:
 
 ```
 $ (zcat data/testdata/trades/endur/changes-2026-09-23.jsonl.gz; echo '{"PRODUCT_TYPE": "Cash"}'; echo 'not json') | gzip > day2.jsonl.gz
@@ -194,31 +194,31 @@ $ drishti-console/.venv/bin/python tools/drishti.py lake build --from day2.jsonl
     --promote COUNTERPARTY,PORTFOLIO,QUANTITY --lake lake --domain trading
 engine: drishti (Drishti's Java writer in drishti-server-2.6.5-exec.jar)
 business date  PRODUCT_TYPE           rows
-2026-09-23     Cash                     33
-2026-09-23     ComFut                   35
-2026-09-23     ComSwap                  90
-2026-09-23     Commodity                31
-documents read: 191, rows written: 189, rejected: 2
+2026-09-23     Cash                     27
+2026-09-23     ComFut                   29
+2026-09-23     ComSwap                  75
+2026-09-23     Commodity                28
+documents read: 161, rows written: 159, rejected: 2
   rejected 1: no id (field 'TRADE_ID' is missing or empty)
   rejected 1: not JSON (Expecting value)
-    e.g. day2.jsonl.gz:190: no id (field 'TRADE_ID' is missing or empty)
-    e.g. day2.jsonl.gz:191: not JSON (Expecting value)
+    e.g. day2.jsonl.gz:160: no id (field 'TRADE_ID' is missing or empty)
+    e.g. day2.jsonl.gz:161: not JSON (Expecting value)
 summary: lake/_drishti-lake/runs/20261017T174355-1339986.json
-2026-10-17T17:43:57-04:00 lake-build partial exit=2 run=20261017T174355-1339986 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=189 rejected=2 dates=1 partitions=4 seconds=2.201
+2026-10-17T17:43:57-04:00 lake-build partial exit=2 run=20261017T174355-1339986 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=159 rejected=2 dates=1 partitions=4 seconds=2.201
 ```
 
 A reject never stops the run: it is counted per reason, the first 50 are kept with where they were (`file:line` for JSON Lines,
 `file[n]` for an element of an array), and the run exits `2` so a scheduler can tell "loaded, look at the rejects" from "all
 good". The reasons: not JSON, not a JSON object, no id, an id that is an object, no business date, a date that is not a date
 (ISO dates and date-times, `yyyymmdd` as text or a number are dates). An id seen twice on one date is reported as a duplicate.
-(The table holds what each file holds: the changes file is a day's changes, so the 2026-09-23 date has 189 trades. `lake demo`
+(The table holds what each file holds: the changes file is a day's changes, so the 2026-09-23 date has 159 trades. `lake demo`
 applies each day's changes to the previous day by key and writes the whole book every day: section 4.9.)
 
 ### 4.4 Re-running a day replaces that day only
 
 ```
 $ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz ... --lake lake --domain trading -q
-2026-10-17T17:44:01-04:00 lake-build ok exit=0 run=20261017T174358-1340108 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4980 rejected=0 dates=1 partitions=5 seconds=3.14
+2026-10-17T17:44:01-04:00 lake-build ok exit=0 run=20261017T174358-1340108 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4407 rejected=0 dates=1 partitions=5 seconds=3.14
 $ find lake -maxdepth 4 -type d | sort
 lake
 lake/_drishti-lake
@@ -278,14 +278,14 @@ $ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testd
     --as-of 2026-09-22 --partition-by PRODUCT_TYPE --promote COUNTERPARTY,PORTFOLIO,QUANTITY --lake lake2 --domain trading --engine deltalake
 engine: deltalake (the Python deltalake package)
 business date  PRODUCT_TYPE           rows
-2026-09-22     CallNot                  55
-2026-09-22     Cash                    815
-2026-09-22     ComFut                  994
-2026-09-22     ComSwap                2266
-2026-09-22     Commodity               850
-documents read: 4980, rows written: 4980, rejected: 0
+2026-09-22     CallNot                  50
+2026-09-22     Cash                    723
+2026-09-22     ComFut                  883
+2026-09-22     ComSwap                1994
+2026-09-22     Commodity               757
+documents read: 4407, rows written: 4407, rejected: 0
 summary: lake2/_drishti-lake/runs/20261017T174401-1340285.json
-2026-10-17T17:44:02-04:00 lake-build ok exit=0 run=20261017T174401-1340285 domain=trading kind=trade engine=deltalake mode=overwrite-dates rows=4980 rejected=0 dates=1 partitions=5 seconds=0.828
+2026-10-17T17:44:02-04:00 lake-build ok exit=0 run=20261017T174401-1340285 domain=trading kind=trade engine=deltalake mode=overwrite-dates rows=4407 rejected=0 dates=1 partitions=5 seconds=0.828
 $ ls lake/trading/trade/_delta_log lake2/trading/trade/_delta_log
 lake/trading/trade/_delta_log:
 00000000000000000000.crc  00000000000000000000.json  00000000000000000001.crc  00000000000000000001.json  00000000000000000002.crc  00000000000000000002.json
@@ -304,7 +304,7 @@ PORTFOLIO: string
 QUANTITY: double
 ```
 
-(5,169 rows: the 4,980 of 2026-09-22 and the 189 of 2026-09-23. Read a table with `to_pyarrow_dataset()` as above: with deltalake 1.6
+(4,566 rows: the 4,407 of 2026-09-22 and the 159 of 2026-09-23. Read a table with `to_pyarrow_dataset()` as above: with deltalake 1.6
 on Python 3.13, a script that called `to_pyarrow_table()` printed its answer but did not exit.)
 
 ### 4.6 Exit codes, the lock, the log and the summary
@@ -331,7 +331,7 @@ the whole lake as before (loads there run one after another). A second load of t
 and ENDUR and CALYPSO loaded side by side into one lake, finishing a second apart:
 
 ```
-2026-10-18T14:52:00-04:00 lake-build ok exit=0 run=20261018T145157-2322020 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4980 rejected=0 dates=1 partitions=5 seconds=3.31
+2026-10-18T14:52:00-04:00 lake-build ok exit=0 run=20261018T145157-2322020 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4407 rejected=0 dates=1 partitions=5 seconds=3.31
 2026-10-18T14:52:01-04:00 lake-build ok exit=0 run=20261018T145158-2322023 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4936 rejected=0 dates=1 partitions=51 seconds=3.624
 ```
 
@@ -353,19 +353,19 @@ removed by the next run, which holds the lock. A summary (the run of 4.3, two of
  "partitionBy": ["PRODUCT_TYPE"],
  "asOf": "2026-09-23",
  "table": "lake/trading/trade",
- "rows": {"2026-09-23": 189},
+ "rows": {"2026-09-23": 159},
  "partitions": [
-  {"date": "2026-09-23", "values": {"PRODUCT_TYPE": "Cash"}, "rows": 33},
-  {"date": "2026-09-23", "values": {"PRODUCT_TYPE": "ComFut"}, "rows": 35}
+  {"date": "2026-09-23", "values": {"PRODUCT_TYPE": "Cash"}, "rows": 27},
+  {"date": "2026-09-23", "values": {"PRODUCT_TYPE": "ComFut"}, "rows": 29}
  ],
- "documents": 191, "accepted": 189, "rejected": 2,
+ "documents": 161, "accepted": 159, "rejected": 2,
  "rejects": {
   "byReason": {"no id (field 'TRADE_ID' is missing or empty)": 1, "not JSON (Expecting value)": 1},
-  "first": [{"where": "day2.jsonl.gz:190", "reason": "no id (field 'TRADE_ID' is missing or empty)"},
-            {"where": "day2.jsonl.gz:191", "reason": "not JSON (Expecting value)"}]
+  "first": [{"where": "day2.jsonl.gz:160", "reason": "no id (field 'TRADE_ID' is missing or empty)"},
+            {"where": "day2.jsonl.gz:161", "reason": "not JSON (Expecting value)"}]
  },
  "duplicates": {},
- "files": [{"file": "day2.jsonl.gz", "bytes": 174087}],
+ "files": [{"file": "day2.jsonl.gz", "bytes": 148726}],
  "sampleId": "1000029", "sampleDate": "2026-09-23",
  "timings": {"readSeconds": 0.035, "writeSeconds": 2.159, "totalSeconds": 2.201},
  "engine": "drishti",
@@ -388,11 +388,11 @@ tables (1):
   trading/trade  5,169  9      7.5 MB  9 (PRODUCT_TYPE)  2      2026-09-23   2026-10-17 21:54:10Z
 lock: free
 runs (5 logged, last 5):
-  2026-10-17T17:43:55-04:00 lake-build ok exit=0 run=20261017T174352-1339862 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4980 rejected=0 dates=1 partitions=5 seconds=3.614
-  2026-10-17T17:43:57-04:00 lake-build partial exit=2 run=20261017T174355-1339986 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=189 rejected=2 dates=1 partitions=4 seconds=2.201
-  2026-10-17T17:44:01-04:00 lake-build ok exit=0 run=20261017T174358-1340108 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4980 rejected=0 dates=1 partitions=5 seconds=3.14
+  2026-10-17T17:43:55-04:00 lake-build ok exit=0 run=20261017T174352-1339862 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4407 rejected=0 dates=1 partitions=5 seconds=3.614
+  2026-10-17T17:43:57-04:00 lake-build partial exit=2 run=20261017T174355-1339986 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=159 rejected=2 dates=1 partitions=4 seconds=2.201
+  2026-10-17T17:44:01-04:00 lake-build ok exit=0 run=20261017T174358-1340108 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4407 rejected=0 dates=1 partitions=5 seconds=3.14
   2026-10-17T17:44:01-04:00 lake-build failed exit=1 run=20261017T174401-1340283 domain=trading kind=trade mode=overwrite-dates seconds=0.0 error="lake/trading/trade is partitioned by business_date, PRODUCT_TYPE; this run asks for business_date, PORTFOLIO (give --partition-by PRODUCT_TYPE or write a new table)"
-  2026-10-17T17:54:10-04:00 lake-build ok exit=0 run=20261017T175408-1353448 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4980 rejected=0 dates=1 partitions=5 seconds=2.575
+  2026-10-17T17:54:10-04:00 lake-build ok exit=0 run=20261017T175408-1353448 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4407 rejected=0 dates=1 partitions=5 seconds=2.575
 last run: ok (exit 0), summary lake/_drishti-lake/last-run.json
 ```
 
@@ -427,7 +427,7 @@ sixteen promoted columns); captured as a dry run:
 drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --pack config/packs/trading \
     --kind trade --connector trade-endur --key TRADE_ID --as-of 2026-09-22 --partition-by PRODUCT_TYPE --lake lake3 --dry-run --json
 # "pack": "trading", "domain": "trading", "kind": "trade", "table": "lake3/trading/trade_endur", "promote": ["TRADE_ID", "SOURCE_SYSTEM",
-# "PRODUCT_TYPE", ... "TRADER_ID"] (16), "documents": 4980, "status": "dry-run", "exitCode": 0
+# "PRODUCT_TYPE", ... "TRADER_ID"] (16), "documents": 4407, "status": "dry-run", "exitCode": 0
 ```
 
 In production the same run names the real lake and tells the server (the ETL's last step):
@@ -780,8 +780,8 @@ $ drishti-console/.venv/bin/python tools/drishti.py connector test --file tools-
 tools-trade (delta): reachable, health UP (engine: native), 38 ms
   kind   business date  rows  note
   -----  -------------  ----  ----
-  trade  2026-09-23     189
-  trade  2026-09-22     4980
+  trade  2026-09-23     159
+  trade  2026-09-22     4407
 $ drishti-console/.venv/bin/python tools/drishti.py connector list --server http://127.0.0.1:19590 | head -n 12
 23 connector(s) in <repo>/config/connectors   (watching: WATCHING)
   name               origin  plugin    kinds                                                        state           used by            problems

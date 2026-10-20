@@ -101,59 +101,59 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
 
 **Ids are text; numeric ids in files are read as text.** `TRADE_ID` and every other id (`LEG_ID`, `FLOW_ID`, `RESET_ID`, `EVENT_ID`, `TRADE_IDS`) is a string in the test data and samples (ENDUR's are digits, `"1000008"`). A real extract that writes an id as a JSON number (`1000008`) is read as `"1000008"`, never `1000008.0`; text ids keep their leading zeros; no id prefix or shape is assumed (`SWP-AB_12`, `mx_2000-01`, `007123` are all ids) — `SOURCE_SYSTEM` says which system a trade comes from. An older lake whose `TRADE_ID` column was written as a number is still read (as text).
 
-Sixty business days, 2026-09-22 to 2026-09-30 in the files (USNY calendar; `lake demo` moves them to end today unless `--as-of data`). Every document is UPPER_SNAKE, the shape the packs read; every
+Sixty business days, 2026-07-08 to 2026-09-30 in the files (USNY calendar; `lake demo` moves them to end today unless `--as-of data`). Every document is UPPER_SNAKE, the shape the packs read; every
 counterparty is fictitious (`CP-…`). Columns: the first day's documents, the documents new or changed on each later day, the documents
 on the last day, and the folder's compressed size (MB).
 
-| Folder | Pack · kind | Key | Connector → table | Partitions | Day 1 | Changes a day | Day 7 | MB |
+| Folder | Pack · kind | Key | Connector → table | Partitions | Day 1 | Changes a day | Day 60 | MB |
 |---|---|---|---|---|---|---|---|---|
-| `trades/endur` | trading · `trade` | `TRADE_ID` | `trade-endur` → `trading/trade_endur` | business_date, PRODUCT_TYPE | 4,980 | 145–189 | 5,000 | 3.92 |
-| `trades/calypso` | trading · `trade` | `TRADE_ID` | `trade-calypso` → `trading/trade_calypso` | business_date, PRODUCT_TYPE | 4,936 | 287–367 | 5,000 | 2.49 |
-| `trades/murex` | trading · `trade` | `TRADE_ID` | `trade-murex` → `trading/trade_murex` | business_date, PRODUCT_TYPE | 4,933 | 275–324 | 5,000 | 7.62 |
+| `trades/endur` | trading · `trade` | `TRADE_ID` | `trade-endur` → `trading/trade_endur` | business_date, PRODUCT_TYPE | 4,407 | 108–164 | 5,000 | 9.20 |
+| `trades/calypso` | trading · `trade` | `TRADE_ID` | `trade-calypso` → `trading/trade_calypso` | business_date, PRODUCT_TYPE | 3,471 | 174–373 | 5,000 | 8.22 |
+| `trades/murex` | trading · `trade` | `TRADE_ID` | `trade-murex` → `trading/trade_murex` | business_date, PRODUCT_TYPE | 4,198 | 214–313 | 5,000 | 24.14 |
 | `counterparty-risk/agreement` | counterparty-risk · `agreement` | `AGREEMENT_ID` | `legal-store` → `legal/agreement` | business_date | 24 | 0–0 | 24 | 0.00 |
-| `market-data/bond` | market-data · `bond` | `ISIN` | `market-store` → `market/bond` | business_date | 32 | 32–32 | 32 | 0.07 |
-| `core/book` | core · `book` | `BOOK_ID` | `reference-store` → `reference/book` | business_date | 30 | 30–30 | 30 | 0.06 |
+| `market-data/bond` | market-data · `bond` | `ISIN` | `market-store` → `market/bond` | business_date | 32 | 32–32 | 32 | 0.47 |
+| `core/book` | core · `book` | `BOOK_ID` | `reference-store` → `reference/book` | business_date | 30 | 30–30 | 30 | 0.56 |
 | `core/calendar` | core · `calendar` | `CALENDAR_ID` | `reference-store` → `reference/calendar` | business_date | 4 | 0–0 | 4 | 0.00 |
 | `market-data/cap-vol-surface` | market-data · `cap-vol-surface` | `SURFACE_ID` | `market-store` → `market/cap-vol-surface` | business_date | 7 | 0–0 | 7 | 0.00 |
 | `core/ccp` | core · `ccp` | `CCP_ID` | `reference-store` → `reference/ccp` | business_date | 5 | 0–0 | 5 | 0.00 |
-| `core/clearing-account` | core · `clearing-account` | `ACCOUNT_ID` | `reference-store` → `reference/clearing-account` | business_date | 5 | 2–2 | 5 | 0.01 |
-| `counterparty-risk/collateral-balance` | counterparty-risk · `collateral-balance` | `BALANCE_ID` | `collateral-store` → `collateral/collateral-balance` | business_date | 76 | 76–76 | 76 | 0.03 |
-| `market-data/commodity` | market-data · `commodity` | `COMMODITY_ID` | `market-store` → `market/commodity` | business_date | 8 | 0–0 | 8 | 0.01 |
-| `market-data/commodity-curve` | market-data · `commodity-curve` | `CURVE_ID` | `market-store` → `market/commodity-curve` | business_date | 8 | 8–8 | 8 | 0.01 |
+| `core/clearing-account` | core · `clearing-account` | `ACCOUNT_ID` | `reference-store` → `reference/clearing-account` | business_date | 5 | 2–2 | 5 | 0.10 |
+| `counterparty-risk/collateral-balance` | counterparty-risk · `collateral-balance` | `BALANCE_ID` | `collateral-store` → `collateral/collateral-balance` | business_date | 76 | 76–76 | 76 | 0.28 |
+| `market-data/commodity` | market-data · `commodity` | `COMMODITY_ID` | `market-store` → `market/commodity` | business_date | 8 | 8–8 | 8 | 0.61 |
+| `market-data/commodity-curve` | market-data · `commodity-curve` | `CURVE_ID` | `market-store` → `market/commodity-curve` | business_date | 8 | 7–8 | 8 | 0.06 |
 | `market-data/commodity-vol-surface` | market-data · `commodity-vol-surface` | `SURFACE_ID` | `market-store` → `market/commodity-vol-surface` | business_date | 8 | 0–0 | 8 | 0.00 |
 | `market-data/correlation-matrix` | market-data · `correlation-matrix` | `MATRIX_ID` | `market-store` → `market/correlation-matrix` | business_date | 3 | 0–0 | 3 | 0.00 |
-| `core/counterparty` | core · `counterparty` | `COUNTERPARTY_ID` | `reference-store` → `reference/counterparty` | business_date | 24 | 24–24 | 24 | 0.05 |
-| `core/counterparty-group` | core · `counterparty-group` | `GROUP_ID` | `reference-store` → `reference/counterparty-group` | business_date | 23 | 22–23 | 23 | 0.01 |
+| `core/counterparty` | core · `counterparty` | `COUNTERPARTY_ID` | `reference-store` → `reference/counterparty` | business_date | 24 | 24–24 | 24 | 0.43 |
+| `core/counterparty-group` | core · `counterparty-group` | `GROUP_ID` | `reference-store` → `reference/counterparty-group` | business_date | 23 | 22–23 | 23 | 0.07 |
 | `market-data/credit-curve` | market-data · `credit-curve` | `CURVE_ID` | `market-store` → `market/credit-curve` | business_date | 16 | 0–0 | 16 | 0.00 |
-| `counterparty-risk/credit-limit` | counterparty-risk · `credit-limit` | `LIMIT_ID` | `credit-store` → `credit/credit-limit` | business_date | 24 | 24–24 | 24 | 0.02 |
+| `counterparty-risk/credit-limit` | counterparty-risk · `credit-limit` | `LIMIT_ID` | `credit-store` → `credit/credit-limit` | business_date | 24 | 24–24 | 24 | 0.20 |
 | `counterparty-risk/csa` | counterparty-risk · `csa` | `CSA_ID` | `legal-store` → `legal/csa` | business_date | 24 | 0–0 | 24 | 0.00 |
-| `counterparty-risk/cva` | counterparty-risk · `cva` | `RESULT_ID` | `credit-store` → `credit/cva` | business_date | 76 | 74–76 | 76 | 0.04 |
-| `core/desk` | core · `desk` | `DESK_ID` | `reference-store` → `reference/desk` | business_date | 10 | 10–10 | 10 | 1.16 |
+| `counterparty-risk/cva` | counterparty-risk · `cva` | `RESULT_ID` | `credit-store` → `credit/cva` | business_date | 76 | 71–76 | 76 | 0.35 |
+| `core/desk` | core · `desk` | `DESK_ID` | `reference-store` → `reference/desk` | business_date | 10 | 10–10 | 10 | 9.04 |
 | `market-data/dividend-curve` | market-data · `dividend-curve` | `CURVE_ID` | `market-store` → `market/dividend-curve` | business_date | 15 | 0–0 | 15 | 0.00 |
-| `market-data/equity` | market-data · `equity` | `TICKER` | `market-store` → `market/equity` | business_date | 10 | 10–10 | 10 | 0.11 |
-| `market-data/equity-index` | market-data · `equity-index` | `INDEX_ID` | `market-store` → `market/equity-index` | business_date | 5 | 5–5 | 5 | 0.01 |
+| `market-data/equity` | market-data · `equity` | `TICKER` | `market-store` → `market/equity` | business_date | 10 | 10–10 | 10 | 0.93 |
+| `market-data/equity-index` | market-data · `equity-index` | `INDEX_ID` | `market-store` → `market/equity-index` | business_date | 5 | 5–5 | 5 | 0.09 |
 | `market-data/equity-vol-surface` | market-data · `equity-vol-surface` | `SURFACE_ID` | `market-store` → `market/equity-vol-surface` | business_date | 15 | 0–0 | 15 | 0.00 |
-| `counterparty-risk/exposure-profile` | counterparty-risk · `exposure-profile` | `PROFILE_ID` | `credit-store` → `credit/exposure-profile` | business_date | 76 | 76–76 | 76 | 0.14 |
+| `counterparty-risk/exposure-profile` | counterparty-risk · `exposure-profile` | `PROFILE_ID` | `credit-store` → `credit/exposure-profile` | business_date | 76 | 76–76 | 76 | 1.21 |
 | `market-risk/frtb-sensitivity` | market-risk · `frtb-sensitivity` | `RESULT_ID` | `risk-store` → `risk/frtb-sensitivity` | business_date | 30 | 0–0 | 30 | 0.00 |
-| `market-data/fx-forward-curve` | market-data · `fx-forward-curve` | `CURVE_ID` | `market-store` → `market/fx-forward-curve` | business_date | 12 | 12–12 | 12 | 0.01 |
-| `market-data/fx-spot` | market-data · `fx-spot` | `PAIR` | `market-store` → `market/fx-spot` | business_date | 12 | 12–12 | 12 | 0.02 |
+| `market-data/fx-forward-curve` | market-data · `fx-forward-curve` | `CURVE_ID` | `market-store` → `market/fx-forward-curve` | business_date | 12 | 11–12 | 12 | 0.09 |
+| `market-data/fx-spot` | market-data · `fx-spot` | `PAIR` | `market-store` → `market/fx-spot` | business_date | 12 | 12–12 | 12 | 0.18 |
 | `market-data/fx-vol-surface` | market-data · `fx-vol-surface` | `SURFACE_ID` | `market-store` → `market/fx-vol-surface` | business_date | 12 | 0–0 | 12 | 0.00 |
 | `market-data/inflation-curve` | market-data · `inflation-curve` | `CURVE_ID` | `market-store` → `market/inflation-curve` | business_date | 4 | 0–0 | 4 | 0.00 |
 | `market-data/inflation-index` | market-data · `inflation-index` | `INDEX_ID` | `market-store` → `market/inflation-index` | business_date | 4 | 0–0 | 4 | 0.00 |
-| `market-data/ir-curve` | market-data · `ir-curve` | `CURVE_ID` | `market-store` → `market/ir-curve` | business_date | 28 | 28–28 | 28 | 0.05 |
+| `market-data/ir-curve` | market-data · `ir-curve` | `CURVE_ID` | `market-store` → `market/ir-curve` | business_date | 28 | 28–28 | 28 | 0.41 |
 | `market-data/ir-vol-cube` | market-data · `ir-vol-cube` | `CUBE_ID` | `market-store` → `market/ir-vol-cube` | business_date | 7 | 0–0 | 7 | 0.00 |
 | `core/issuer` | core · `issuer` | `ISSUER_ID` | `reference-store` → `reference/issuer` | business_date | 16 | 0–0 | 16 | 0.00 |
-| `core/legal-entity` | core · `legal-entity` | `ENTITY_ID` | `reference-store` → `reference/legal-entity` | business_date | 4 | 4–4 | 4 | 0.01 |
+| `core/legal-entity` | core · `legal-entity` | `ENTITY_ID` | `reference-store` → `reference/legal-entity` | business_date | 4 | 4–4 | 4 | 0.08 |
 | `counterparty-risk/margin-call` | counterparty-risk · `margin-call` | `CALL_ID` | `collateral-store` → `collateral/margin-call` | business_date | 152 | 0–0 | 152 | 0.00 |
-| `counterparty-risk/netting-set` | counterparty-risk · `netting-set` | `NETTING_SET_ID` | `credit-store` → `credit/netting-set` | business_date | 76 | 76–76 | 76 | 1.04 |
+| `counterparty-risk/netting-set` | counterparty-risk · `netting-set` | `NETTING_SET_ID` | `credit-store` → `credit/netting-set` | business_date | 76 | 76–76 | 76 | 23.21 |
 | `market-risk/pnl-explain` | market-risk · `pnl-explain` | `RESULT_ID` | `risk-store` → `risk/pnl-explain` | business_date | 30 | 0–0 | 30 | 0.00 |
-| `market-data/rate-fixing` | market-data · `rate-fixing` | `INDEX_ID` | `market-store` → `market/rate-fixing` | business_date | 7 | 7–7 | 7 | 0.01 |
-| `market-data/repo-curve` | market-data · `repo-curve` | `CURVE_ID` | `market-store` → `market/repo-curve` | business_date | 7 | 7–7 | 7 | 0.00 |
+| `market-data/rate-fixing` | market-data · `rate-fixing` | `INDEX_ID` | `market-store` → `market/rate-fixing` | business_date | 7 | 5–7 | 7 | 0.12 |
+| `market-data/repo-curve` | market-data · `repo-curve` | `CURVE_ID` | `market-store` → `market/repo-curve` | business_date | 7 | 7–7 | 7 | 0.03 |
 | `counterparty-risk/sa-ccr` | counterparty-risk · `sa-ccr` | `CALC_ID` | `credit-store` → `credit/sa-ccr` | business_date | 76 | 0–0 | 76 | 0.01 |
 | `counterparty-risk/simm` | counterparty-risk · `simm` | `CALC_ID` | `collateral-store` → `collateral/simm` | business_date | 24 | 0–0 | 24 | 0.00 |
 | `market-risk/stress-result` | market-risk · `stress-result` | `RESULT_ID` | `risk-store` → `risk/stress-result` | business_date | 80 | 0–0 | 80 | 0.00 |
 | `market-risk/stress-scenario` | market-risk · `stress-scenario` | `SCENARIO_ID` | `risk-store` → `risk/stress-scenario` | business_date | 8 | 0–0 | 8 | 0.00 |
-| `market-risk/trade-valuation` | market-risk · `trade-valuation` | `VALUATION_ID` | `risk-store` → `risk/trade-valuation` | business_date | 14,849 | 14,877–15,000 | 15,000 | 4.47 |
+| `market-risk/trade-valuation` | market-risk · `trade-valuation` | `VALUATION_ID` | `risk-store` → `risk/trade-valuation` | business_date | 12,076 | 12,096–15,000 | 15,000 | 34.60 |
 | `core/trader` | core · `trader` | `TRADER_ID` | `reference-store` → `reference/trader` | business_date | 20 | 0–0 | 20 | 0.00 |
 | `market-risk/var` | market-risk · `var` | `RESULT_ID` | `risk-store` → `risk/var` | business_date | 10 | 0–0 | 10 | 0.03 |
 

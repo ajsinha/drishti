@@ -293,7 +293,7 @@ The number of suggestions is a server setting (`drishti.commands.suggest-limit`,
   FROM*), `DIFF DIFF`, a bare `DIFF`, `DIFF 30` (*DIFF follows a range: TRD 1000001 30 DIFF*) and two ranges (`30 30`) are `DRS-4022`
   too, and a number of days past the limit (`99999`) is `DRS-4021`. The same after a bare id (`1000015 -5`, `1000015 since yesterday`).
   Full-width digits are read as digits (`３0` is `30`). It never opens today's view as if the range was not typed, nor a search that
-  drops the id. A lone word after the mnemonic stays an id (`TRD 0` opens trade `0`).
+  drops the id. A lone word after the mnemonic stays an id, never a range (`TRD 0` looks up the id `0`).
 
 ### When a command does not work
 

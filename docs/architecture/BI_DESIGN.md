@@ -37,7 +37,7 @@ W1 vs design and the waves A, B, C · [13](#13-decisions-for-the-product-owner) 
 
 **Wave labels.** The build is three waves, each a release (section 12): **A** = 2.2.0 *Foundation and languages*,
 **B** = 2.3.0 *Calculation, live and scale*, **C** = 2.4.0 *Authoring and analysis*; then **N** = 2.5.0 *Drishti*net*, **D** = 2.6.0
-*Statements, field parameters and connectors* (named *Sharing and integration* until 2026-10-20), **R** = 2.6.7 *BI runs* (with the Drishti\*net transport items and chart any table), **W** = 2.7.0 *Write-back*, **I** = 2.8.0 *AI* and **E** = 2.9.0 *QA findings and production readiness* (section 12.2, as agreed on
+*Statements, field parameters and connectors* (named *Sharing and integration* until 2026-10-20), **R** = 2.6.7 *BI runs* (with the Drishti\*net transport items, chart any table and mixed Delta and Iceberg storage), **W** = 2.7.0 *Write-back*, **I** = 2.8.0 *AI* and **E** = 2.9.0 *QA findings and production readiness* (section 12.2, as agreed on
 2026-10-17 and re-ordered on 2026-10-18, 2026-10-19 and 2026-10-20; send and push and integration after 3.0.0). W1 is the
 already-built first wave of 2.2.0. A component marked (A), (B) or (C) is delivered in that wave; one marked (C) in the
 sections below that is about integration arrives in D, about AI in I, and about governance in E.
@@ -1022,8 +1022,8 @@ wave ends with: **one experience QA round** by power users (findings fixed) → 
 drill** → tag. The server lane publishes request/response types on day one of each task so the console lane can build
 against them.
 
-**Release order (product owner, 2026-10-20):** 2.6.6 (QA clean) → **2.6.7 BI runs** (wave R, [BI_RUNS.md](BI_RUNS.md), with gossip off the busy path, HTTP/2 between nodes and chart any table,
-[TABLE_CHARTS.md](TABLE_CHARTS.md)) →
+**Release order (product owner, 2026-10-20):** 2.6.6 (QA clean) → **2.6.7 BI runs** (wave R, [BI_RUNS.md](BI_RUNS.md), with gossip off the busy path, HTTP/2 between nodes, chart any table,
+[TABLE_CHARTS.md](TABLE_CHARTS.md), and mixed Delta and Iceberg storage, [DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage-planned-267)) →
 2.7.0 write-back (item 0 the one Drishti database, [DATABASE.md](DATABASE.md)) → 2.8.0 AI and Sajha → the real-life QA → 2.9.0 →
 3.0.0.
 
@@ -1297,6 +1297,8 @@ the bell, `drishti.py bi runs`, Admin → BI → Runs, help cards and the browse
   lists, history, BI tables), one shared `table-chart.js` over the pivot engine and ECharts; chart all N through the panel records, the
   search pivot or a BI run; save, export, Promote to Sutra as a new `chart` panel kind, Open in BI. Build steps C1–C10, one console and
   one server builder.
+* **Mixed Delta and Iceberg storage** ([DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage-planned-267)): each source system's trades in Delta or
+  Iceberg, chosen per system by `build_demo_lakes.py --store <system>=delta|iceberg`, proven by an equality test against all-Delta.
 
 **Accepted when:** (1) a question answered within the inline wait looks exactly as in 2.6.6; (2) a burst of heavy runs leaves
 interactive p95 within 1.5× its baseline with no `DRS-9025` (BI_RUNS 19.5); (3) a shared run never shows a recipient a value

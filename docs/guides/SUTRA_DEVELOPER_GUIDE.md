@@ -1400,9 +1400,9 @@ You should see, in about 20 seconds:
 400 documents, 1 kind(s), 6 group(s)
 drafting 6 Sutra(s) with one `sutra design --each` run ...
 kind            group                                          docs samples  sutra
-trade           SOURCE_SYSTEM=ENDUR, PRODUCT_TYPE=CallNot         7       5  trade-endur-callnot
-…               (Cash 67, ComFut 79 and ComSwap 187 documents likewise)
-trade           SOURCE_SYSTEM=ENDUR, PRODUCT_TYPE=Commodity      60       5  trade-endur-commodity
+trade           SOURCE_SYSTEM=ENDUR, PRODUCT_TYPE=CallNot         6       5  trade-endur-callnot
+…               (Cash 65, ComFut 74 and ComSwap 198 documents likewise)
+trade           SOURCE_SYSTEM=ENDUR, PRODUCT_TYPE=Commodity      57       5  trade-endur-commodity
 trade           (all)                                           400       5  trade-default
 ok      /tmp/genout/trade/trade-default.v1.sutra.yaml
 …
