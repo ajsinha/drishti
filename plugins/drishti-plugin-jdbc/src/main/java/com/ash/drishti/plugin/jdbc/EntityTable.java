@@ -103,6 +103,28 @@ final class EntityTable {
     }
 
     /**
+     * The entity's rows from..to, oldest first, in one query (history queries): a snapshot kind has a row on each date it holds the entity,
+     * an effective kind on each date it changed. Partition pruning by date keeps it to the months asked.
+     */
+    List<Hit> range(Connection c, String k, String entity, LocalDate from, LocalDate to) throws SQLException {
+        String sql = "SELECT " + doc + "::text, " + date + " FROM " + table + " WHERE " + kind + " = ? AND " + id + " = ? AND " + date
+                + " >= ? AND " + date + " <= ? ORDER BY " + date;
+        try (PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, k);
+            ps.setString(2, entity);
+            ps.setDate(3, Date.valueOf(from));
+            ps.setDate(4, Date.valueOf(to));
+            List<Hit> out = new java.util.ArrayList<>();
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.add(new Hit(rs.getString(1), rs.getDate(2).toLocalDate()));
+                }
+            }
+            return out;
+        }
+    }
+
+    /**
      * Entities of a kind whose document mentions {@code target} anywhere, reading at most {@code maxRows} documents (a
      * kind of millions a day is answered from its promoted link columns instead; see {@link TableCatalog}).
      */

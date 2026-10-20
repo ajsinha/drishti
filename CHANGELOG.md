@@ -17,6 +17,9 @@
 
 ## Unreleased
 
+- **Added: history queries, the Redis and PostgreSQL fast paths (H5).** Redis reads an entity's days and all their documents in two or three
+  round trips (`ZRANGEBYSCORE`, one `MGET`) ([REDIS_CONNECTOR.md](docs/connectors/REDIS_CONNECTOR.md)); PostgreSQL in table mode in one
+  range query ([POSTGRES_CONNECTOR.md](docs/connectors/POSTGRES_CONNECTOR.md)). Both pass `DatedSourceContract`'s history cases.
 - **Added: `HistoryBench` (H14, `drishti-benchmarks`).** 10K synthetic trades × 30 business days on Delta, 200 trades: the 30-day history at
   the service in 13.2 ms cold (p95 19.1), 0.83 ms warm, 0.29 ms cached ([HISTORY_QUERIES.md section 14](docs/architecture/HISTORY_QUERIES.md#14-performance-targets),
   [SCALE_STRATEGY.md](docs/architecture/SCALE_STRATEGY.md)).

@@ -402,6 +402,119 @@ public final class RedisSourcePlugin implements SourcePlugin {
     }
 
     /**
+     * History queries' fast path (HISTORY_QUERIES.md section 10): the entity's own days ({@code ZRANGEBYSCORE} of its days set, one call)
+     * from..to, then every day's document in one {@code MGET} (the entity's keys share a slot); a day whose generation was switched since is
+     * asked once more in its current generation. Two or three round trips, whatever the number of days.
+     */
+    @Override
+    public com.ash.drishti.api.HistoryRead history(com.ash.drishti.api.HistoryRequest req) throws Exception {
+        EntityRef ref = req.ref();
+        if (!configuredKinds.isEmpty() && !configuredKinds.contains(ref.kind())) {
+            return com.ash.drishti.api.HistoryRead.NONE;
+        }
+        failFast.check();
+        Duration wait = req.budget().compareTo(timeout) < 0 ? req.budget() : timeout;
+        List<LocalDate> days = new ArrayList<>(entityDays(ref, req.from(), req.to(), wait));
+        if (!req.dates().isEmpty()) {
+            Set<LocalDate> wanted = new HashSet<>(req.candidateDates());
+            days.removeIf(d -> !wanted.contains(d));
+        }
+        java.util.Collections.reverse(days);                                 // newest first
+        RedisClusterAsyncCommands<byte[], byte[]> r = redis();
+        Map<LocalDate, Found> found = new java.util.TreeMap<>();
+        try {
+            List<String> gens = days.stream().map(d -> generation(ref.kind(), d)).toList();
+            List<Optional<Found>> first = ColumnReader.await(each(r, ref, days, gens), wait);
+            List<LocalDate> again = new ArrayList<>();
+            for (int i = 0; i < days.size(); i++) {
+                if (first.get(i).isPresent()) {
+                    found.put(days.get(i), first.get(i).get());
+                } else {
+                    again.add(days.get(i));
+                }
+            }
+            if (!again.isEmpty()) {                                          // a day switched to a new generation since: ask once
+                List<String> now = ColumnReader.await(currentGeneration(r, ref.kind(), again), wait);
+                List<Optional<Found>> second = ColumnReader.await(each(r, ref, again, now), wait);
+                for (int i = 0; i < again.size(); i++) {
+                    second.get(i).ifPresent(f -> found.put(f.day(), f));
+                }
+            }
+            commandFailure = null;
+        } catch (Exception e) {
+            failed(e);
+            throw e;
+        }
+        List<com.ash.drishti.api.HistoryDay> out = new ArrayList<>();
+        List<LocalDate> newestFirst = new ArrayList<>(found.keySet());
+        java.util.Collections.reverse(newestFirst);
+        for (LocalDate d : newestFirst) {
+            if (req.lastDays() > 0 && out.size() >= req.lastDays()) {
+                break;
+            }
+            byte[] value = found.get(d).value();
+            var data = context.parseJson(new ByteArrayInputStream(decode(value)));
+            EntityDocument doc = new EntityDocument(ref, data, new Provenance(sourceName, DocCodec.generation(value), Instant.now(), false, d));
+            out.add(new com.ash.drishti.api.HistoryDay(d, com.ash.drishti.api.HistoryReads.project(doc, req.fields()), 1));
+        }
+        Set<LocalDate> covered = new HashSet<>();
+        for (LocalDate d : req.candidateDates()) {
+            if (coverage(ref.kind(), AsOf.of(d)) == com.ash.drishti.api.DateCoverage.HELD) {
+                covered.add(d);
+            }
+        }
+        return new com.ash.drishti.api.HistoryRead(out, covered, Map.of());
+    }
+
+    /** The entity's days from..to, from its own days set (a snapshot kind: only days the kind holds). Reads no document. */
+    @Override
+    public Optional<NavigableSet<LocalDate>> days(EntityRef ref, LocalDate from, LocalDate to) {
+        if (!configuredKinds.isEmpty() && !configuredKinds.contains(ref.kind())) {
+            return Optional.of(new java.util.TreeSet<>());
+        }
+        try {
+            return Optional.of(entityDays(ref, from, to, timeout));
+        } catch (Exception e) {
+            failed(e);
+            return Optional.empty();                                         // the per-day reads then say what is wrong
+        }
+    }
+
+    private NavigableSet<LocalDate> entityDays(EntityRef ref, LocalDate from, LocalDate to, Duration wait) throws Exception {
+        byte[] entity = RedisLayout.bytes(RedisLayout.entity(domain, ref.kind(), ref.id()));
+        Range<Long> span = Range.create(RedisLayout.day(from), RedisLayout.day(to));
+        List<byte[]> members = ColumnReader.await(redis().zrangebyscore(entity, span).toCompletableFuture(), wait);
+        NavigableSet<LocalDate> out = new java.util.TreeSet<>();
+        NavigableSet<LocalDate> held = effective(ref.kind()) ? null : kindDates.get(ref.kind());
+        for (byte[] m : members) {
+            LocalDate d = RedisLayout.date(Long.parseLong(new String(m, StandardCharsets.UTF_8)));
+            if (held == null || held.contains(d)) {
+                out.add(d);
+            }
+        }
+        return out;
+    }
+
+    /** Each day's document in its generation, in one MGET (the entity's keys share a slot). */
+    private CompletableFuture<List<Optional<Found>>> each(RedisClusterAsyncCommands<byte[], byte[]> r, EntityRef ref, List<LocalDate> days, List<String> gens) {
+        if (days.isEmpty()) {
+            return CompletableFuture.completedFuture(List.of());
+        }
+        byte[][] keys = new byte[days.size()][];
+        for (int i = 0; i < keys.length; i++) {
+            keys[i] = RedisLayout.bytes(RedisLayout.doc(domain, ref.kind(), ref.id(), days.get(i), gens.get(i)));
+        }
+        return r.mget(keys).toCompletableFuture().thenApply(values -> {
+            List<Optional<Found>> out = new ArrayList<>(values.size());
+            for (int i = 0; i < values.size(); i++) {
+                KeyValue<byte[], byte[]> kv = values.get(i);
+                out.add(kv.hasValue() ? Optional.of(new Found(days.get(i), kv.getValue())) : Optional.empty());
+            }
+            return out;
+        });
+    }
+
+    /**
      * The stored value of the entity on the date asked, without waiting: for a snapshot kind one {@code GET} of the
      * kind's day in its generation; for an effective kind (or before the kinds are known) the entity's latest days on or
      * before the date, then their documents in one {@code MGET}, the newest found winning.
