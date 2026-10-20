@@ -22,6 +22,10 @@
                   move the market-sensitive numbers back by a deterministic walk (tools/samplegen/lake.py) and carry their own date in
                   AS_OF, VALUATION_DATE and RUN_DATE; a valuation exists from its trade's booking day; a netting set lists the trades
                   booked by that day
+    market data   equities, indices, FX, bonds, fixings, commodities and the IR, repo, commodity and FX forward curves are built per day
+                  by marketdays.py instead of the walk: the day's price is the close of the document's own series on that day, and the
+                  fields quoted next to it move with it (BID/ASK around MID, a bond's YIELD, Z_SPREAD and MOD_DURATION against its PRICE,
+                  a curve's points together), QA2-201
 
 Files: <folder>/snapshot-<first day>.jsonl.gz and <folder>/changes-<day>.jsonl.gz (one document a line, sorted by key; a day with no
 change writes an empty file), split into .part-001, .part-002 ... when a file would pass the part limit (default 9 MB compressed).
@@ -164,20 +168,29 @@ def trade_states(book: list[dict], days: Days, seed: int = 5):
         yield {k: dumps(t) for k, t in live.items()}
 
 
-def doc_states(kind: str, docs: dict[str, dict], days: Days, since: dict[str, int] | None = None, members: dict | None = None):
+def doc_states(kind: str, docs: dict[str, dict], days: Days, since: dict[str, int] | None = None, members: dict | None = None,
+               market=None):
     """The documents of each day as {id: json}: the last day as built, earlier days walked back; ``since`` (id -> first day index)
-    leaves a document out before that day; ``members`` (trade id -> first day) trims a netting set's TRADE_IDS to the trades booked."""
+    leaves a document out before that day; ``members`` (trade id -> first day) trims a netting set's TRADE_IDS to the trades booked.
+    ``market`` (marketdays.MarketDays) builds the day's market documents of the kinds it handles, their quoted fields moving together
+    (QA2-201), instead of the walk."""
     last = len(days.dates) - 1
     prev: dict[str, dict] = {}
+    coherent = market is not None and market.handles(kind)
+
+    def body_of(id_: str, doc: dict, i: int) -> dict:
+        if coherent:
+            return market.day(kind, id_, i)
+        return walk(doc, id_, last - i, _seed(kind, id_)) if last - i else dict(doc)
+
     for i, day in enumerate(days.dates):
         out = {}
         for id_, doc in docs.items():
             if since and since.get(id_, 0) > i:
                 continue
-            steps = last - i
-            body = walk(doc, id_, steps, _seed(kind, id_)) if steps else dict(doc)
+            body = body_of(id_, doc, i)
             if "CHANGE_1D" in body:
-                before = prev.get(id_) or walk(doc, id_, steps + 1, _seed(kind, id_))
+                before = prev.get(id_) or body_of(id_, doc, i - 1)
                 prev[id_] = dict(body)
                 day_change(body, before)
             for f in DATED:

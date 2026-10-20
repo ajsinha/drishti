@@ -162,12 +162,13 @@ class SeriesMoved(unittest.TestCase):
         old = ["2026-09-28", "2026-09-29", "2026-09-30"]
         new = ["2026-10-16", "2026-10-19", "2026-10-20"]
         d = self.lake(old, new)
-        doc = {"TICKER": "EQ-X", "AS_OF": "2026-09-30", "PRICE": 21.84,
+        doc = {"TICKER": "EQ-X", "AS_OF": "2026-09-30", "BUILT_AT": "2026-09-30T18:02:41Z", "PRICE": 21.84,
                "HISTORY": [{"DATE": "2026-09-25", "CLOSE": 21.0}, {"DATE": "2026-09-28", "CLOSE": 21.5}, {"DATE": "2026-09-30", "CLOSE": 21.84}],
                "OHLC": [{"DATE": "2026-09-29", "OPEN": 1, "CLOSE": 2}], "COUPONS": [{"DATE": "2027-03-15", "AMOUNT": 2.5}],
                "HOLIDAYS": [{"DATE": "2026-12-25", "NAME": "Christmas"}]}
         out = json.loads(d.redate(json.dumps(doc, separators=(",", ":"))))
         self.assertEqual(out["AS_OF"], "2026-10-20")
+        self.assertEqual(out["BUILT_AT"], "2026-10-20T18:02:41Z", "a curve is built on its own day (QA2-201)")
         # 09-25 is the business day before the data's first (09-28): it lands on the business day before the lake's first (10-16)
         self.assertEqual([p["DATE"] for p in out["HISTORY"]], ["2026-10-15", "2026-10-16", "2026-10-20"])
         self.assertEqual(out["OHLC"][0]["DATE"], "2026-10-19")

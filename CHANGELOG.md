@@ -17,6 +17,16 @@
 
 ## Unreleased
 
+- **Fixed (QA2-201): the demo's market data is one picture each day.** A day's FX `BID` and `ASK` keep their spread around the moved
+  `MID` (it lay outside them on 59 of 60 days); a bond's `YIELD` moves against its `PRICE` by the modified duration, its `Z_SPREAD` with
+  the credit share of that move and its `MOD_DURATION` with the yield and the bond's age (all three never changed). Audited and fixed
+  the same way: an equity's `PRICE` and a commodity's `FRONT` are the close of their own `OHLC` bar of the day, an index `LEVEL` its
+  `HISTORY` close; embedded series end on their day (no future points); an equity's `MARKET_CAP` follows its price; fixings end on the
+  day with `LATEST` the newest and `RATE_PCT` = `RATE` × 100; the IR and repo curves of a currency move together (zero rates, quotes,
+  discount factors, forwards, `TEN_Y`, `SLOPE_2S_10S`, `OVERNIGHT`; `BUILT_AT` the day's, and `lake demo` moves it with the dates); a
+  commodity curve follows its commodity's `FRONT`, an FX forward curve its pair's `MID`. Credit curves and vol surfaces stay as on the
+  last day (internally consistent). `tools/testdata/marketdays.py`; data/testdata regenerated (115 MB, no file over 5 MB);
+  `tools/testdata/test_market_quotes.py` checks every committed day; data/testdata/README.
 - **Added: `lake demo` says how far a table has got**: every ten committed days a line `trading/trade_endur: committed 20/60 days, 90,023 rows so far (through 2026-08-19)`, besides the table's closing line and `build_demo_lakes.py`'s heartbeat.
 
 - **Faster: `lake build` and `lake demo` with the deltalake writer make one commit per business date** (every partition of the date in it; one per partition only with `overwrite-partitions`) and a checkpoint every ten commits. Sixty days of `trade_endur` (five product types) were 300 commits, each replaying the whole log (98 s on Linux, far longer on Windows, where each log file is opened and scanned); now 60 commits with a short log, the same rows.

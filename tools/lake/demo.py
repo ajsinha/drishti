@@ -66,7 +66,7 @@ ROOT = HERE.parents[1]
 DEFAULT_ROOT = "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
 DEFAULT_SERVER = "http://localhost:18480"
 REBUILT_STAMP = "lake-rebuilt.json"          # read by the server at start (Layers.REBUILT_STAMP)
-REDATE = re.compile(r'("(?:AS_OF|VALUATION_DATE|RUN_DATE|SOURCE_UPDATE_TIME)":")(\d{4}-\d{2}-\d{2})')
+REDATE = re.compile(r'("(?:AS_OF|VALUATION_DATE|RUN_DATE|SOURCE_UPDATE_TIME|BUILT_AT)":")(\d{4}-\d{2}-\d{2})')
 # A document's embedded market series (a list of {DATE, CLOSE ...}): moved with the business dates too, so a price history has no phantom
 # missing days between its series and the stored days (QA1-10). Holidays and coupon schedules are real dates and stay.
 SERIES = ("HISTORY", "OHLC", "FIXINGS", "PNL_SERIES")
@@ -224,7 +224,7 @@ class DemoLake:
         return [d.isoformat() for d in business_days(end, len(self.manifest.dates), cal)]
 
     def redate(self, line: str) -> str:
-        """A document's own dates of the day (AS_OF, VALUATION_DATE, RUN_DATE, SOURCE_UPDATE_TIME) moved with the business dates, and
+        """A document's own dates of the day (AS_OF, VALUATION_DATE, RUN_DATE, SOURCE_UPDATE_TIME, a curve's BUILT_AT) moved with the business dates, and
         the DATE of each point of its embedded series (HISTORY, OHLC, FIXINGS, PNL_SERIES) by the same number of business days."""
         if not self.shift:
             return line
