@@ -407,6 +407,29 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         return Optional.empty();
     }
 
+    /**
+     * History queries (HISTORY_QUERIES.md section 10): the days of the snapshot's layout from..to whose id map holds the entity, so the
+     * per-day read touches only those days' row groups. The id maps are the ones single reads use. (The planned scan of the design, pruning
+     * by the manifests' id bounds without an id map, is not built yet.)
+     */
+    @Override
+    public Optional<java.util.NavigableSet<LocalDate>> days(EntityRef ref, LocalDate from, LocalDate to) {
+        java.util.TreeSet<LocalDate> out = new java.util.TreeSet<>();
+        if (!tables.containsKey(ref.kind())) {
+            return Optional.of(out);
+        }
+        Optional<Layout> l = layout(ref.kind(), null);
+        if (l.isEmpty()) {
+            return Optional.of(out);
+        }
+        for (Day d : l.get().days().subMap(from, true, to, true).values()) {
+            if (!LocalDate.MIN.equals(d.date()) && idMap(ref.kind(), l.get(), d).file(ref.id()) >= 0) {
+                out.add(d.date());
+            }
+        }
+        return Optional.of(out);
+    }
+
     @Override
     public List<EntityRef> reverse(EntityRef target, String kind) {
         return reverse(target, kind, AsOf.LATEST);
