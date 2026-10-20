@@ -378,7 +378,7 @@ A deploy job (or a person) downloads `trading-bundle` and runs `pack deploy` per
 
 ## 13. Docker and Kubernetes
 
-For Amazon ECS with EFS and S3 (every written path on EFS at the same path, the server and the console as separate containers), see the design [AWS_DEPLOYMENT.md](../architecture/AWS_DEPLOYMENT.md) and the images in `deploy/aws/`.
+For Amazon ECS with EFS and S3 (every written path on EFS at the same path, the server and the console as separate containers), see the design [AWS_DEPLOYMENT.md](../architecture/AWS_DEPLOYMENT.md) (design only; its Dockerfiles are in the document).
 
 The image ships the packs it was built with. Provide yours without rebuilding the image by mounting a folder as the
 **installed** packs folder (searched before the shipped ones):

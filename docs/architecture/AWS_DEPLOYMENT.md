@@ -15,19 +15,39 @@
 -->
 # Drishti on AWS: ECS, EFS and S3
 
-Status: **design; the images are written (`deploy/aws/`), not yet built or run.** Release not decided (product owner,
-2026-10-20). Related: [DRISHTI_NET.md](DRISHTI_NET.md) and [NET.md](../admin/NET.md) (several servers),
-[OPERATIONS.md](../admin/OPERATIONS.md) (running one server), [OPERATIONALISING.md section 13](../guides/OPERATIONALISING.md#13-docker-and-kubernetes)
-(Docker and Kubernetes today).
+Status: **design only.** Nothing in this document exists as code or files in the repository: the Dockerfiles, entry
+points, task definitions and policies below are the design, to be built when the product owner schedules it (product
+owner, 2026-10-20: "do not write any code for AWS or Docker; the Dockerfiles may be written in the document"). Release
+not decided.
+
+Related: [SUPER_SCALE.md](SUPER_SCALE.md) (500 GB a day for seven years on this deployment),
+[DRISHTI_NET.md](DRISHTI_NET.md) and [NET.md](../admin/NET.md) (several servers), [OPERATIONS.md](../admin/OPERATIONS.md)
+(running one server), [OPERATIONALISING.md section 13](../guides/OPERATIONALISING.md#13-docker-and-kubernetes) (Docker
+and Kubernetes today, `deploy/server.Dockerfile` and `deploy/console.Dockerfile`).
 
 ## Contents
 
-1. [The ask and the rule](#1-the-ask-and-the-rule) · 2. [The picture](#2-the-picture) · 3. [The path map](#3-the-path-map) ·
-4. [EFS](#4-efs) · 5. [The server](#5-the-server) · 6. [The console](#6-the-console) · 7. [S3](#7-s3) ·
-8. [Drishti*net on ECS](#8-drishtinet-on-ecs) · 9. [Network and security](#9-network-and-security) ·
-10. [Task definition](#10-task-definition) · 11. [Operations](#11-operations-deploy-restart-back-up-restore) ·
-12. [Performance](#12-performance-what-efs-costs) · 13. [Tests](#13-tests) · 14. [Build plan](#14-build-plan) ·
-15. [Open questions](#15-open-questions)
+1. [The ask and the rule](#1-the-ask-and-the-rule)
+2. [The picture](#2-the-picture)
+3. [The path map](#3-the-path-map)
+4. [EFS](#4-efs)
+5. [The server container](#5-the-server-container)
+6. [The console container](#6-the-console-container)
+7. [Starting a node](#7-starting-a-node)
+8. [S3](#8-s3)
+9. [Drishti*net on ECS](#9-drishtinet-on-ecs)
+10. [Network](#10-network)
+11. [Identity, roles and secrets](#11-identity-roles-and-secrets)
+12. [Task definition](#12-task-definition)
+13. [Service definition](#13-service-definition)
+14. [Operations](#14-operations)
+15. [Observability](#15-observability)
+16. [Disaster recovery](#16-disaster-recovery)
+17. [Performance: what EFS costs](#17-performance-what-efs-costs)
+18. [Cost](#18-cost)
+19. [Tests and acceptance](#19-tests-and-acceptance)
+20. [Build plan](#20-build-plan)
+21. [Open questions](#21-open-questions)
 
 ## 1. The ask and the rule
 
@@ -36,179 +56,577 @@ The product owner (2026-10-20): Drishti runs in AWS on **ECS**, with **S3** and 
 
 > **Whatever path a container uses must have a mapped path on EFS, identical, so that everything is durable.**
 
-This design turns the rule into something that cannot be broken by accident:
+The design turns the rule into something that cannot be broken by accident:
 
-- **Everything a container writes is on EFS, at the same path as in the container.** A task that stops, restarts, moves
-  to another Availability Zone or is replaced by a new image comes back to exactly the files it left.
-- **The container's root file system is read-only** (`readonlyRootFilesystem: true`). A write anywhere else fails at
-  once instead of being silently lost when the task stops. `/tmp`, `HOME`, the JVM's temp folder, crash files and heap
-  dumps are all pointed at EFS.
-- **The entry point refuses to start** if a writable path is not mounted, not writable, or not on EFS (NFS).
-- **The image holds only what never changes while it runs:** the server jar, the console's code, the packs Drishti
-  ships, the documents for the help centre. These are versioned with the image in ECR, not data.
-- **S3 holds the lakes,** read directly by the connectors (`s3://`), as today.
+| Mechanism | What it guarantees |
+|---|---|
+| Every path a container writes is an **EFS access point mounted at the same path** (section 3) | a task that stops, restarts, moves to another Availability Zone or is replaced by a new image comes back to exactly the files it left |
+| The container's **root file system is read-only** (`readonlyRootFilesystem: true`) | a write anywhere else fails at once, naming the path, instead of being silently lost when the task stops |
+| `/tmp`, `HOME`, the JVM's temp folder, crash files and heap dumps are **pointed at EFS** (section 5) | the usual "hidden" writers write durably too |
+| The **entry point refuses to start** if a writable path is not mounted, not writable, or not on NFS (section 7) | a task definition with a missing or wrong mount never runs |
+| The **image** holds only what never changes while it runs: the server jar, the console's code, the packs Drishti ships, the documents for the help centre | an image is a version, kept in Amazon ECR; it is not data |
+| **S3 holds the lakes**, read directly by the connectors | the business data needs no file system at all |
 
 ## 2. The picture
 
 ```
-                       users ──HTTPS──► Application Load Balancer (ACM certificate; optional OIDC)
-                                                │ 17480
-              ┌─────────────────────────────────┼─────────────────────────────────┐
-              ▼                                 ▼                                 ▼
-   ECS service drishti-a              ECS service drishti-b              ECS service drishti-c        (one task each)
-   ┌──── task (awsvpc, 10.0.1.23) ──┐ ┌──── task (10.0.2.41) ───────┐  ┌──── task (10.0.3.17) ───────┐
-   │ console :17480 ─► server :18480│ │ console ─► server           │  │ console ─► server           │
-   │   same EFS paths, uid 10001    │ │                             │  │                             │
-   └──────────────┬─────────────────┘ └─────────────┬───────────────┘  └─────────────┬───────────────┘
-                  │   ◄──── Drishti*net gossip, on the tasks' real addresses, port 18480 ────►       │
-                  ▼                                  ▼                                ▼
-   EFS (Regional, encrypted): /drishti/prod/drishti-a/…   /drishti/prod/drishti-b/…   /drishti/prod/drishti-c/…
-                  │
-                  ▼  (task role, VPC endpoint)
-   S3: lakes (Delta Lake, Iceberg, files)            Secrets Manager: token, session and cluster secrets
+                                   users (browsers)
+                                          │ HTTPS 443
+                                          ▼
+        ┌──────────────────── Application Load Balancer (public or internal subnets) ────────────────────┐
+        │  ACM certificate · listener 443 → target group "consoles" (port 17480, health /healthz)         │
+        └───────────────┬───────────────────────────────┬───────────────────────────────┬─────────────────┘
+                        │                               │                               │
+   ┌─ ECS service drishti-a (1 task) ─┐  ┌─ ECS service drishti-b ─────────┐  ┌─ ECS service drishti-c ─────────┐
+   │ task, awsvpc, 10.0.1.23          │  │ task, 10.0.2.41                 │  │ task, 10.0.3.17                 │
+   │ ┌──────────┐    ┌─────────────┐  │  │ ┌──────────┐   ┌─────────────┐  │  │ ┌──────────┐   ┌─────────────┐  │
+   │ │ console  │───►│   server    │  │  │ │ console  │──►│   server    │  │  │ │ console  │──►│   server    │  │
+   │ │  :17480  │    │   :18480    │◄─┼──┼─┼──────────┼──►│   :18480    │◄─┼──┼─┼──────────┼──►│   :18480    │  │
+   │ └────┬─────┘    └──────┬──────┘  │  │ └────┬─────┘   └──────┬──────┘  │  │ └────┬─────┘   └──────┬──────┘  │
+   │      └──── same EFS paths ───┘   │  │      └── same EFS paths ──┘     │  │      └── same EFS paths ──┘     │
+   └──────────────┬───────────────────┘  └──────────────┬──────────────────┘  └──────────────┬──────────────────┘
+                  │        Drishti*net gossip and forwarding between servers, task addresses, port 18480       │
+                  ▼                                     ▼                                    ▼
+   ┌──────────────────────────────── Amazon EFS (Regional, encrypted, Elastic throughput) ───────────────────────┐
+   │ /drishti/prod/drishti-a/opt/drishti/{data,config,sutras}   /drishti/prod/drishti-b/…   /drishti/prod/drishti-c/… │
+   └──────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+                  │  task role, gateway VPC endpoint
+                  ▼
+   ┌── Amazon S3 ── lakes (Delta Lake, Iceberg, files) ──┐   ┌── Secrets Manager ── token, session, cluster, admin ──┐
+   └──────────────────────────────────────────────────────┘   └───────────────────────────────────────────────────────┘
+   ┌── AWS Cloud Map ── drishti-a.drishti.local … ──┐   ┌── CloudWatch ── logs, metrics, alarms ──┐   ┌── AWS Backup ── EFS ──┐
 ```
 
-**One ECS service per Drishti node**, each running exactly one task with **two containers, the server and the console**.
-A node has a fixed name (`drishti-a`), its own EFS folders and its own place in the Drishti*net ring. The two containers
-of a task share its network address and mount the same EFS folders at the same paths, so the console sees the packs,
-lakes and folders exactly as on a single machine.
+**One ECS service per Drishti node.** Each service runs exactly one task. The task has **two containers, the server and
+the console**, sharing the task's network address and mounting the same EFS folders at the same paths. A node has a
+fixed name (`drishti-a`), its own EFS folders and its own place on the Drishti*net ring, so it must be a service of its
+own: an ECS service with several tasks gives them no stable identity.
+
+**Why the console sits beside its server** (not in a service of its own): the console reads the same packs, lakes
+settings and folders as its server, through the same paths, exactly as on one machine. At the scale of
+[SUPER_SCALE.md](SUPER_SCALE.md) consoles become a service of their own (section 21).
 
 ## 3. The path map
 
-Every writable path, the same in the container and on EFS. On EFS each path sits under the node's prefix
-`/drishti/<environment>/<node>`, because several environments and nodes share one file system and each node must have
-its own files (RocksDB stores and DuckDB files are opened by one process at a time). Below the prefix the path is
-**identical** to the container path:
+### 3.1 The rule, made concrete
 
-| Container path | EFS path | Container(s) | What lives there |
-|---|---|---|---|
-| `/opt/drishti/data` | `/drishti/prod/drishti-a/opt/drishti/data` | server, console | identity (users, roles, API tokens), governance, BI store, reports, collaboration, loads history, installed packs, derived pages (RocksDB), the disk cache, DuckDB files, lake maintenance settings, the console's data (`data/console`), temp folders (`data/tmp/server`, `data/tmp/console`), homes (`data/home/…`), logs, crash files and heap dumps (`data/logs`) |
-| `/opt/drishti/config` | `/drishti/prod/drishti-a/opt/drishti/config` | server, console | connector files (`config/connectors`), Drishti*net (`config/net`), AI providers (`config/ai`), MCP servers (`config/mcp`), BI files (`config/bi`) |
-| `/opt/drishti/sutras` | `/drishti/prod/drishti-a/opt/drishti/sutras` | server, console | site Sutras |
+Every writable path is the **same in the container and on EFS**. On EFS each node's paths sit under the node's prefix
+`/drishti/<environment>/<node>`: several environments and nodes share one file system, and each node must have its own
+files (a RocksDB store or a DuckDB file is opened by one process at a time). Below the prefix the path is identical:
 
-What is **not** on EFS, because it is not written: `/opt/drishti/app.jar`, `/opt/drishti/shipped/packs`,
-`/opt/drishti/console` (code), `/opt/drishti/docs`, `/opt/drishti/bin`. The images move the shipped packs from
-`config/packs` to `shipped/packs` so the `config` mount never hides them (`DRISHTI_PACKS_DIR=/opt/drishti/shipped/packs`
-in both images).
+```
+  container of node drishti-a (prod)                EFS file system fs-…
+  ──────────────────────────────────                ───────────────────────────────────────────────
+  /opt/drishti/data          ◄── access point ──►   /drishti/prod/drishti-a/opt/drishti/data
+  /opt/drishti/config        ◄── access point ──►   /drishti/prod/drishti-a/opt/drishti/config
+  /opt/drishti/sutras        ◄── access point ──►   /drishti/prod/drishti-a/opt/drishti/sutras
 
-The variables that pin every path (set in both Dockerfiles, so nothing depends on a working directory):
+  /opt/drishti/app.jar, /opt/drishti/shipped/packs, /opt/drishti/console, /opt/drishti/docs, /opt/drishti/bin
+                             ── image (ECR), read-only; never written
+```
 
-| Variable | Value |
-|---|---|
-| `DRISHTI_DATA_DIR` | `/opt/drishti/data` |
-| `DRISHTI_CONNECTORS_DIR`, `DRISHTI_NET_DIR`, `DRISHTI_AI_DIR`, `DRISHTI_MCP_DIR`, `DRISHTI_BI_DIR` | `/opt/drishti/config/{connectors,net,ai,mcp,bi}` |
-| `DRISHTI_SUTRAS` | `/opt/drishti/sutras` |
-| `DRISHTI_PACKS_DIR` | `/opt/drishti/shipped/packs` (read-only, from the image) |
-| `TMPDIR`, `HOME` | `/opt/drishti/data/tmp/<server or console>`, `/opt/drishti/data/home/<server or console>` |
-| `DRISHTI_CONSOLE_DATA_DIR`, `DRISHTI_CONSOLE_TMP_DIR` | `/opt/drishti/data/console`, `/opt/drishti/data/tmp/console` |
+### 3.2 Every folder, and who writes it
+
+| Container path | Written by | Content |
+|---|---|---|
+| `/opt/drishti/data/identity` | server | users, roles, API tokens, tombstones (replicated between nodes by IdentitySync) |
+| `/opt/drishti/data/governance` | server | certification, lineage, approvals |
+| `/opt/drishti/data/bi-store` | server | BI columns and rollups (Parquet, DuckDB) |
+| `/opt/drishti/data/reports` | server | report files, subscriptions' deliveries |
+| `/opt/drishti/data/collab` | server | collaboration store and exports |
+| `/opt/drishti/data/loads` | server | load history per pack, expectation overrides |
+| `/opt/drishti/data/packs/installed` | server | packs deployed to this node |
+| `/opt/drishti/data/uninstalled` | server | uninstalled artifacts (moved, never deleted) |
+| `/opt/drishti/data/derived` | server | grouped pages (RocksDB sorted stores) |
+| `/opt/drishti/data/cache` | server | document cache (RocksDB), warm column files, type-ahead segments |
+| `/opt/drishti/data/designs` | server | Sutra designs |
+| `/opt/drishti/data/dev-sutras` | server | bound development Sutras, one folder per user |
+| `/opt/drishti/data/net` | server | Drishti*net state |
+| `/opt/drishti/data/lakes` | console | lake maintenance settings and history |
+| `/opt/drishti/data/console` | console | what the console keeps between runs (`net/servers.json`) |
+| `/opt/drishti/data/tmp/server`, `/opt/drishti/data/tmp/console` | both | temp folders (the JVM's `java.io.tmpdir`, native libraries unpacked by DuckDB and RocksDB, Python's `TMPDIR`) |
+| `/opt/drishti/data/home/server`, `/opt/drishti/data/home/console` | both | `HOME` (DuckDB extensions, font caches and any library that writes under home) |
+| `/opt/drishti/data/logs` | server | log files, `hs_err_pid*.log`, heap dumps |
+| `/opt/drishti/config/connectors` | server (Admin → Connectors) | connector files |
+| `/opt/drishti/config/net` | server, entry point | `node.yaml`, `gossip.yaml`, `routing.yaml`, `peers/` |
+| `/opt/drishti/config/ai`, `/opt/drishti/config/mcp` | both | AI providers, MCP servers |
+| `/opt/drishti/config/bi` | server | Rupaka files: datasets, reports, boards, notebooks |
+| `/opt/drishti/sutras` | server (going live) | site Sutras |
+
+A folder the code adds later is under one of the three roots by construction (every Drishti path setting defaults to
+`${drishti.data.dir}` or `./config`), so the map does not need to grow; the read-only-root test (section 19) catches
+any exception.
+
+### 3.3 The variables that pin every path
+
+Set in both images, so nothing depends on a working directory:
+
+| Variable | Value | Image |
+|---|---|---|
+| `DRISHTI_DATA_DIR` | `/opt/drishti/data` | both |
+| `DRISHTI_CONNECTORS_DIR` | `/opt/drishti/config/connectors` | server |
+| `DRISHTI_NET_DIR` | `/opt/drishti/config/net` | server |
+| `DRISHTI_AI_DIR`, `DRISHTI_MCP_DIR` | `/opt/drishti/config/ai`, `/opt/drishti/config/mcp` | both |
+| `DRISHTI_BI_DIR` | `/opt/drishti/config/bi` | server |
+| `DRISHTI_SUTRAS` | `/opt/drishti/sutras` | server |
+| `DRISHTI_PACKS_DIR` | `/opt/drishti/shipped/packs` (read-only, from the image) | both |
+| `DRISHTI_CONSOLE_DATA_DIR` | `/opt/drishti/data/console` | console |
+| `DRISHTI_CONSOLE_TMP_DIR` | `/opt/drishti/data/tmp/console` | console |
+| `TMPDIR` | `/opt/drishti/data/tmp/server` or `/opt/drishti/data/tmp/console` | both |
+| `HOME` | `/opt/drishti/data/home/server` or `/opt/drishti/data/home/console` | both |
+
+**Shipped packs move out of `config`.** Today's images copy the packs to `/opt/drishti/config/packs`; an EFS mount on
+`/opt/drishti/config` would hide them. The ECS images copy them to `/opt/drishti/shipped/packs` and point
+`DRISHTI_PACKS_DIR` there. Installed packs (Admin → Packs, `pack deploy`) go to `data/packs/installed` on EFS and are
+searched first, as today.
 
 ## 4. EFS
 
-- **One Regional file system** (data in several Availability Zones; a task restarted in another zone finds its files),
-  encrypted at rest (KMS) and in transit (TLS mount), `General Purpose` performance mode, **Elastic throughput**.
-- **Access points, one per node per path** (three per node). Each roots its path and enforces the user:
+### 4.1 The file system
 
-| Access point | Root directory | POSIX user | Creation (first use) |
+| Setting | Value | Why |
+|---|---|---|
+| Type | **Regional** (Multi-AZ) | a task restarted in another Availability Zone finds its files |
+| Performance mode | General Purpose | lowest latency per operation |
+| Throughput mode | **Elastic** | throughput follows the load (start-up warm-ups, BI builds) with no provisioning |
+| Encryption at rest | on, with a customer-managed KMS key `alias/drishti-efs` | bank policy |
+| Encryption in transit | TLS on every mount (`transitEncryption: ENABLED`) | |
+| Lifecycle (Infrequent Access) | **off** | caches are read rarely but must be fast when they are |
+| Mount targets | one per private subnet (one per Availability Zone), security group `drishti-efs` | section 10 |
+| File system policy | deny any access without TLS; allow mounts only through the access points, only to the task role | section 11 |
+| Backups | AWS Backup plan `drishti-efs-daily` | section 14.5 |
+| Replication | EFS replication to the recovery Region | section 16 |
+
+### 4.2 Access points
+
+One access point per node per path (three per node). Each roots its path and enforces the user the containers run as:
+
+| Access point (name tag) | Root directory | POSIX user | Root directory creation |
 |---|---|---|---|
-| `drishti-prod-drishti-a-data` | `/drishti/prod/drishti-a/opt/drishti/data` | uid 10001, gid 10001 | owner 10001:10001, mode 0750 |
-| `drishti-prod-drishti-a-config` | `/drishti/prod/drishti-a/opt/drishti/config` | uid 10001, gid 10001 | owner 10001:10001, mode 0750 |
-| `drishti-prod-drishti-a-sutras` | `/drishti/prod/drishti-a/opt/drishti/sutras` | uid 10001, gid 10001 | owner 10001:10001, mode 0750 |
+| `drishti-prod-drishti-a-data` | `/drishti/prod/drishti-a/opt/drishti/data` | uid 10001, gid 10001 | owner 10001:10001, permissions 0750 |
+| `drishti-prod-drishti-a-config` | `/drishti/prod/drishti-a/opt/drishti/config` | uid 10001, gid 10001 | owner 10001:10001, permissions 0750 |
+| `drishti-prod-drishti-a-sutras` | `/drishti/prod/drishti-a/opt/drishti/sutras` | uid 10001, gid 10001 | owner 10001:10001, permissions 0750 |
+| … the same three for `drishti-b`, `drishti-c`, … | | | |
 
-  Both images run as uid 10001 (`drishti`), so the server and the console of a node read and write the same files.
-- **IAM authorisation** on the mounts (`elasticfilesystem:ClientMount`, `ClientWrite`), allowed only to the node's task
-  role and only through its access points.
-- **No lifecycle move to Infrequent Access** by default: caches are read rarely but must be fast when they are.
-- **Backups**: AWS Backup, daily, kept 35 days (a site setting), restorable per node folder.
-- **Never two tasks on one node's folders**: the service's deployment allows at most one running task
-  (`maximumPercent: 100`, `minimumHealthyPercent: 0`), and Drishti's own lock checks (`SortedStore.inUse`, which takes
-  the RocksDB `LOCK` file's lock; EFS supports NFSv4 locks) refuse a second process on the same store.
+Both images run as uid 10001 (`drishti`), so the server and the console of a node read and write the same files, and
+the access point enforces that identity whatever the image says.
 
-## 5. The server
+### 4.3 The tree on EFS
 
-Image `deploy/aws/server.Dockerfile`, entry point `deploy/aws/server-entrypoint.sh`.
+```
+/drishti/
+├── prod/
+│   ├── drishti-a/opt/drishti/
+│   │   ├── data/      identity/  governance/  bi-store/  reports/  collab/  loads/  packs/installed/  derived/
+│   │   │              cache/  designs/  dev-sutras/  net/  lakes/  console/  tmp/{server,console}/  home/  logs/
+│   │   ├── config/    connectors/  net/{node.yaml,gossip.yaml,routing.yaml,peers/}  ai/  mcp/  bi/
+│   │   └── sutras/
+│   ├── drishti-b/opt/drishti/…
+│   └── drishti-c/opt/drishti/…
+└── uat/
+    └── drishti-a/opt/drishti/…
+```
 
-**At start** the entry point:
+### 4.4 One node, one writer
 
-1. checks that `/opt/drishti/data`, `/opt/drishti/config` and `/opt/drishti/sutras` are writable and on NFS (EFS), and
-   stops with exit code 78 and a message naming the path otherwise;
-2. finds the task's **real IPv4 address** (the task's network interface; never loopback or `0.0.0.0`) into
-   `DRISHTI_NODE_IP`;
-3. on the node's **first start only** (no `config/net/node.yaml` yet, and `DRISHTI_NODE_ID` set) writes the node's
-   Drishti*net files ([section 8](#8-drishtinet-on-ecs)); later starts never overwrite them;
-4. starts Java 21 (or 25) with `-Xmx` from `DRISHTI_HEAP` (8 GB by default), ZGC, `java.io.tmpdir` and `user.home` on
-   EFS, no `hsperfdata` file (`-XX:-UsePerfData`), crash files and heap dumps in `data/logs`.
+Two tasks on one node's folders would open the same RocksDB stores and DuckDB files. Three guards:
 
-**Sizing**: 4 vCPU and 12 GB per task for the 8 GB heap (off-heap: RocksDB, DuckDB, Arrow, ZGC).
+1. The service allows at most one running task (`maximumPercent: 100`, `minimumHealthyPercent: 0`, section 13): ECS
+   stops the old task before it starts the new one.
+2. Drishti's own lock checks: `SortedStore.inUse` takes the lock of a RocksDB store's `LOCK` file (EFS supports NFSv4.1
+   byte-range locks), and a second process refuses a store in use.
+3. The entry point writes `data/net/task.lock` with the task's ARN and refuses to start while another task's file is
+   fresh (younger than two gossip `dead-after` periods): a hand-started duplicate stops at once.
 
-**Health**: the task definition checks `/actuator/health/readiness` on the task's own address; the load balancer
-checks the console ([section 6](#6-the-console)).
+## 5. The server container
 
-**Logs**: standard output to CloudWatch Logs (`awslogs`); files the server writes stay in `data/logs` on EFS.
+### 5.1 Dockerfile
 
-## 6. The console
+```dockerfile
+# Drishti server image for Amazon ECS with EFS. Build from the repository root after ./mvnw -q package -DskipTests:
+#   docker build -f server.Dockerfile -t drishti-server-ecs:<version> .
+# Java 21 by default; Java 25: --build-arg BASE_IMAGE=eclipse-temurin:25-jre
+ARG BASE_IMAGE=eclipse-temurin:21-jre
+FROM ${BASE_IMAGE}
+# curl: the health check and the task metadata endpoint (the task's ARN for task.lock)
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/* \
+ && useradd --system --uid 10001 drishti
+WORKDIR /opt/drishti
+COPY drishti-server/target/drishti-server-*-exec.jar app.jar
+# shipped packs live outside the EFS paths, so a mount never hides them; installed packs go to data/packs/installed (EFS)
+COPY config/packs/ shipped/packs/
+COPY server-entrypoint.sh bin/entrypoint.sh
+# the mount points, owned by the user the EFS access points enforce (uid/gid 10001)
+RUN chmod 0555 bin/entrypoint.sh && mkdir -p data config sutras && chown drishti:drishti data config sutras
+USER drishti
+ENV DRISHTI_DATA_DIR=/opt/drishti/data \
+    DRISHTI_PACKS_DIR=/opt/drishti/shipped/packs \
+    DRISHTI_CONNECTORS_DIR=/opt/drishti/config/connectors \
+    DRISHTI_NET_DIR=/opt/drishti/config/net \
+    DRISHTI_AI_DIR=/opt/drishti/config/ai \
+    DRISHTI_MCP_DIR=/opt/drishti/config/mcp \
+    DRISHTI_BI_DIR=/opt/drishti/config/bi \
+    DRISHTI_SUTRAS=/opt/drishti/sutras \
+    DRISHTI_PORT=18480 \
+    TMPDIR=/opt/drishti/data/tmp/server \
+    HOME=/opt/drishti/data/home/server \
+    DRISHTI_REQUIRE_EFS=true \
+    DRISHTI_HEAP=8g
+EXPOSE 18480
+ENTRYPOINT ["/opt/drishti/bin/entrypoint.sh"]
+```
 
-Image `deploy/aws/console.Dockerfile` (a separate container; Calc's Pyodide and DuckDB-Wasm fetched at build, so it needs
-no internet), entry point `deploy/aws/console-entrypoint.sh`.
+### 5.2 Entry point
 
-**At start** it makes the same mount checks, finds the task's real address and sets
-`DRISHTI_BACKEND_URL=http://<task address>:18480`: the server of the same task. The console learns the cluster's
-other members from that server (`DRISHTI_BACKEND_DISCOVER`, on by default) and falls over to them when its own
-server does not answer.
+```sh
+#!/bin/sh
+# The Drishti server on ECS. Before Java starts:
+#   1. every writable path must be a writable EFS (NFS) mount; the root file system is read-only
+#   2. one task per node (task.lock)
+#   3. the node's real IPv4 address (the task's network interface), never loopback or the wildcard
+#   4. on this node's first start only, its Drishti*net files; never overwritten
+set -eu
+D=/opt/drishti
+fail() { echo "drishti-server: $*" >&2; exit 78; }
 
-- The code is compiled into the image (`compileall`) and `PYTHONDONTWRITEBYTECODE=1`: nothing is written beside the
-  code.
-- What the console keeps between runs (`data/console`, such as `net/servers.json`), its temp folders
-  (`data/tmp/console`), lake maintenance settings (`data/lakes`) and its AI and MCP files (`config/ai`, `config/mcp`)
-  are on EFS.
-- **Sizing**: 2 vCPU and 4 GB (`DRISHTI_CONSOLE_WORKERS`, 4 processes).
-- **Behind the load balancer** on port 17480, health check `/healthz`. Sessions are signed cookies
-  (`DRISHTI_SESSION_SECRET`, the same in every task), so any console accepts any session; stickiness is still on, so a
-  user's live pages keep to one task.
+for p in "$D/data" "$D/config" "$D/sutras"; do
+  [ -d "$p" ] && [ -w "$p" ] || fail "$p is not mounted writable (each writable path is an EFS access point at the same path)"
+  if [ "${DRISHTI_REQUIRE_EFS:-true}" = true ]; then
+    t=$(stat -f -c %T "$p")
+    case "$t" in nfs*) ;; *) fail "$p is on '$t', not EFS; DRISHTI_REQUIRE_EFS=false is only for a local check of the image" ;; esac
+  fi
+done
+mkdir -p "$TMPDIR" "$HOME" "$D/data/logs" "$D/data/net"
 
-## 7. S3
+me=$(curl -fsS --max-time 2 "${ECS_CONTAINER_METADATA_URI_V4:-http://invalid}/task" 2>/dev/null | sed -n 's/.*"TaskARN":"\([^"]*\)".*/\1/p')
+me="${me:-$(hostname)}"
+lock="$D/data/net/task.lock"
+if [ -f "$lock" ] && [ "$(cat "$lock")" != "$me" ] && [ -n "$(find "$lock" -mmin -1)" ]; then
+  fail "another task ($(cat "$lock")) is running on this node's folders"
+fi
+echo "$me" > "$lock"          # the server touches it every gossip interval while it runs
 
-- **Lakes stay in S3** and are read directly: the Delta Lake native engine, Iceberg and the S3 connector take
-  `s3://` roots in their connector files (`/opt/drishti/config/connectors/*.yaml` on EFS). Credentials come from the
-  **task role** through the AWS default chain: no keys in files or variables.
-- **A gateway VPC endpoint for S3**: traffic stays inside AWS (no NAT costs); the bucket policy allows only that
-  endpoint and the task roles.
-- **Loading the lakes** in AWS (later): the loaders (`tools/load-delta.sh`, `tools/load-iceberg.sh`) as scheduled ECS
-  tasks writing to S3, with their own role.
-- **Not in S3**: anything the server or the console writes while running. That is EFS, by the rule.
+ip="${DRISHTI_NODE_IP:-$(hostname -I 2>/dev/null | awk '{print $1}')}"
+case "$ip" in ''|127.*|0.0.0.0|::1|localhost) fail "no real IPv4 address for this task (found '$ip'); set DRISHTI_NODE_IP" ;; esac
+export DRISHTI_NODE_IP="$ip"
+port="${DRISHTI_PORT:-18480}"
 
-## 8. Drishti*net on ECS
+net="${DRISHTI_NET_DIR:-$D/config/net}"
+if [ -n "${DRISHTI_NODE_ID:-}" ] && [ ! -f "$net/node.yaml" ]; then
+  mkdir -p "$net/peers"
+  # ${DRISHTI_NODE_IP} and ${DRISHTI_NET_SECRET} stay references: the server resolves them at every start, so a task
+  # that comes back with a new address advertises the new one, and the secret never lands on EFS
+  cat > "$net/node.yaml" <<EOF
+enabled: true
+node-id: ${DRISHTI_NODE_ID}
+advertise-url: http://\${DRISHTI_NODE_IP}:${port}
+secret: \${DRISHTI_NET_SECRET}
+EOF
+  for seed in $(echo "${DRISHTI_NET_SEEDS:-}" | tr ',' ' '); do
+    host=$(echo "$seed" | sed -E 's#^[a-z]+://##; s#[:/].*##')
+    name=${host%%.*}
+    [ "$name" = "$DRISHTI_NODE_ID" ] && continue          # a seed never lists itself
+    [ -f "$net/peers/$name.yaml" ] || echo "url: $seed" > "$net/peers/$name.yaml"
+  done
+  echo "drishti-server: first start of node $DRISHTI_NODE_ID: wrote $net/node.yaml and its seeds" >&2
+fi
 
-- **Real addresses only.** With `awsvpc` networking each task has its own address in the VPC; the server advertises
-  `http://<that address>:18480` (`advertise-url: http://${DRISHTI_NODE_IP}:18480` in `node.yaml`, resolved at every start,
-  so a task that comes back with a new address advertises the new one). Never loopback or `0.0.0.0`.
-- **Finding the seeds.** Each node's service registers in AWS Cloud Map (`drishti-a.drishti.local`, an A record of the
-  task's address). `DRISHTI_NET_SEEDS` lists the seeds' URLs by those names; on the node's first start the entry point
-  writes one peer file per seed (`config/net/peers/drishti-a.yaml`), skipping the node itself. The name resolves to
-  the seed task's real address; the advertised addresses stay IPs.
-- **The cluster secret** (`DRISHTI_NET_SECRET`) comes from Secrets Manager; `node.yaml` names it as `${DRISHTI_NET_SECRET}`,
-  so it never lands on EFS.
-- **Users, roles and API tokens** replicate between nodes as today (IdentitySync); each node also keeps its own copy on
-  its EFS folders, so a whole-cluster restart loses nothing.
+# -XX:+UseCompactObjectHeaders exists from Java 25 (Java 21 refuses to start with it)
+v=$(java -XX:-UsePerfData -XshowSettings:properties -version 2>&1 | sed -n 's/.*java.specification.version = //p')
+if [ "${v:-21}" -ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set --; fi
+# -XX:-UsePerfData: no hsperfdata file in /tmp (the root is read-only); crash files and heap dumps go to EFS
+exec java "$@" -Xmx"${DRISHTI_HEAP:-8g}" -XX:+UseZGC -XX:-UsePerfData \
+  -Djava.io.tmpdir="$TMPDIR" -Duser.home="$HOME" \
+  -XX:ErrorFile="$D/data/logs/hs_err_pid%p.log" -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath="$D/data/logs" \
+  -jar "$D/app.jar"
+```
 
-## 9. Network and security
+The task's ARN comes from the ECS task metadata endpoint (`ECS_CONTAINER_METADATA_URI_V4`, set by ECS in every
+container); outside ECS the container's host name stands in.
 
-| Security group | Allows in |
+### 5.3 What the server needs from the code (small changes when built)
+
+| Change | Why |
 |---|---|
-| load balancer | 443 from the users' networks |
-| Drishti tasks | 17480 from the load balancer; 18480 from the Drishti tasks (gossip, scatter-gather, consoles of other nodes) |
-| EFS mount targets | 2049 from the Drishti tasks |
+| Touch `data/net/task.lock` every gossip interval | the entry point's duplicate check (section 4.4) |
+| Accept a peer `url` whose host is a DNS name that resolves to a real address | seeds by Cloud Map names (section 9); refused today only if it resolves to loopback or the wildcard |
+| Nothing else | every path is already a setting; the real-address rule of 2.6.0 is already in the server |
 
-- Private subnets for the tasks and EFS; only the load balancer is reachable from users.
-- `DRISHTI_SECURITY_ENABLED=true`; the first administrator from Secrets Manager (`DRISHTI_SEED_USERNAME`,
-  `DRISHTI_SEED_PASSWORD`), as in `deploy/compose.yaml`; the development administrator is off.
-- Secrets Manager into the task's environment through the task definition's `secrets`: `DRISHTI_TOKEN_SECRET`,
-  `DRISHTI_SESSION_SECRET`, `DRISHTI_NET_SECRET` (the variables `drishti-stack/secrets.env.example` lists). The execution role
-  reads them; nothing is in the image, the task definition's plain environment, or EFS.
-- TLS at the load balancer (ACM certificate); optional OIDC sign-in at the console as today.
+### 5.4 Sizing, health and logs
 
-## 10. Task definition
+| | Value |
+|---|---|
+| CPU, memory | 4 vCPU, 12 GB (8 GB heap; RocksDB, DuckDB, Arrow and ZGC off the heap) |
+| Health check | `/actuator/health/readiness` on the task's own address, every 15 s, 4 retries, 180 s start period (caches warm in the background; readiness says when the node answers) |
+| Logs | standard output to CloudWatch Logs (`awslogs`, group `/drishti/<env>`, stream prefix the node id); files the server writes stay in `data/logs` on EFS |
+| Stop | ECS sends SIGTERM; Spring Boot's graceful shutdown finishes requests in flight (`stopTimeout: 60`) |
 
-For node `drishti-a` (the other nodes differ only in the node id and the three access point ids):
+## 6. The console container
+
+### 6.1 Dockerfile
+
+```dockerfile
+# Drishti console image for Amazon ECS with EFS, a separate container from the server. Build from the repository root:
+#   docker build -f console.Dockerfile -t drishti-console-ecs:<version> .
+# Calc's Python runtime (Pyodide) and DuckDB-Wasm are fetched in the first stage (pinned, SHA-256 checked), so a running
+# console needs no internet.
+FROM python:3.13-slim AS pyodide
+WORKDIR /src
+COPY tools/fetch-pyodide.sh tools/fetch-pyodide.sh
+COPY tools/fetch-duckdb-wasm.sh tools/fetch-duckdb-wasm.sh
+COPY drishti-console/ drishti-console/
+RUN bash tools/fetch-pyodide.sh && bash tools/fetch-duckdb-wasm.sh && rm -rf /root/.cache/drishti
+
+FROM python:3.13-slim
+RUN useradd --system --uid 10001 drishti
+WORKDIR /opt/drishti/console
+COPY drishti-console/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY --from=pyodide /src/drishti-console/ .
+# the help centre renders the repository's documents; packs as shipped, outside the EFS paths (as in the server image)
+COPY docs/ /opt/drishti/docs/
+COPY config/packs/ /opt/drishti/shipped/packs/
+COPY tools/packbundle.py /opt/drishti/tools/packbundle.py
+COPY LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/
+COPY console-entrypoint.sh /opt/drishti/bin/entrypoint.sh
+# compiled once here, so the read-only root never needs __pycache__ written at run time
+RUN python -m compileall -q /opt/drishti/console && chmod 0555 /opt/drishti/bin/entrypoint.sh \
+ && mkdir -p /opt/drishti/data /opt/drishti/config /opt/drishti/sutras \
+ && chown drishti:drishti /opt/drishti/data /opt/drishti/config /opt/drishti/sutras
+USER drishti
+ENV DRISHTI_DATA_DIR=/opt/drishti/data \
+    DRISHTI_PACKS_DIR=/opt/drishti/shipped/packs \
+    DRISHTI_AI_DIR=/opt/drishti/config/ai \
+    DRISHTI_MCP_DIR=/opt/drishti/config/mcp \
+    DRISHTI_CONSOLE_DATA_DIR=/opt/drishti/data/console \
+    DRISHTI_CONSOLE_TMP_DIR=/opt/drishti/data/tmp/console \
+    TMPDIR=/opt/drishti/data/tmp/console \
+    HOME=/opt/drishti/data/home/console \
+    PYTHONDONTWRITEBYTECODE=1 \
+    DRISHTI_CONSOLE_HOST=0.0.0.0 \
+    DRISHTI_CONSOLE_PORT=17480 \
+    DRISHTI_REQUIRE_EFS=true
+EXPOSE 17480
+ENTRYPOINT ["/opt/drishti/bin/entrypoint.sh"]
+```
+
+The console **listens** on every interface of its task (`0.0.0.0`, so the load balancer reaches it); it never
+**advertises** an address: the real-address rule of Drishti*net concerns what members advertise.
+
+### 6.2 Entry point
+
+```sh
+#!/bin/sh
+# The Drishti console on ECS. It mounts the same EFS access points, at the same paths, as the server of its node,
+# checks them as the server does, and reaches that server by the task's real address.
+set -eu
+D=/opt/drishti
+fail() { echo "drishti-console: $*" >&2; exit 78; }
+
+for p in "$D/data" "$D/config" "$D/sutras"; do
+  [ -d "$p" ] && [ -w "$p" ] || fail "$p is not mounted writable (each writable path is an EFS access point at the same path)"
+  if [ "${DRISHTI_REQUIRE_EFS:-true}" = true ]; then
+    t=$(stat -f -c %T "$p")
+    case "$t" in nfs*) ;; *) fail "$p is on '$t', not EFS; DRISHTI_REQUIRE_EFS=false is only for a local check of the image" ;; esac
+  fi
+done
+mkdir -p "$TMPDIR" "$HOME" "$DRISHTI_CONSOLE_DATA_DIR"
+
+ip="${DRISHTI_NODE_IP:-$(hostname -I 2>/dev/null | awk '{print $1}')}"
+case "$ip" in ''|127.*|0.0.0.0|::1|localhost) fail "no real IPv4 address for this task (found '$ip'); set DRISHTI_NODE_IP" ;; esac
+export DRISHTI_NODE_IP="$ip"
+# the server of the same task, by the task's real address; the console learns the cluster's other members from it
+export DRISHTI_BACKEND_URL="${DRISHTI_BACKEND_URL:-http://$ip:${DRISHTI_PORT:-18480}}"
+
+cd "$D/console"
+exec python run_drishti_web.py
+```
+
+### 6.3 Sizing, sessions and health
+
+| | Value |
+|---|---|
+| CPU, memory | 2 vCPU, 4 GB; `DRISHTI_CONSOLE_WORKERS=4` (one process per core serves about 40 pages a second, *measured*) |
+| Starts after | the server of its task is healthy (`dependsOn … HEALTHY`) |
+| Other servers | discovered from its server (`DRISHTI_BACKEND_DISCOVER`, on by default); a session falls over to another server when its own does not answer |
+| Sessions | signed cookies (`DRISHTI_SESSION_SECRET`, the same in every task), so any console accepts any session; load balancer stickiness stays on so a user's live pages keep to one task |
+| Health check | `/healthz`, by the load balancer's target group and the task definition |
+| Logs | standard output to CloudWatch Logs |
+
+## 7. Starting a node
+
+```
+ ECS                         server container                                    console container
+  │ start task                 │                                                   │
+  ├─ mount EFS access points ──┤ (data, config, sutras at /opt/drishti/…)          │
+  ├─ inject secrets ───────────┤                                                   │
+  │                            ├─ check the three mounts: writable, NFS  ──fail──► exit 78, task stops, ECS retries
+  │                            ├─ task.lock: another task alive?          ──yes──► exit 78
+  │                            ├─ real IPv4 of the task (never 127.*, 0.0.0.0)
+  │                            ├─ first start? write config/net/node.yaml + peers/<seed>.yaml
+  │                            ├─ java -Xmx8g … -jar app.jar
+  │                            │     ├─ gossip: join through the seeds, advertise http://<task IP>:18480
+  │                            │     ├─ IdentitySync and StateSync catch up from peers
+  │                            │     └─ caches warm in the background
+  │                            ├─ readiness UP ─────────────────────────────────►  │ (dependsOn HEALTHY)
+  │                            │                                                   ├─ same mount checks, real IPv4
+  │                            │                                                   ├─ backend = http://<task IP>:18480
+  │                            │                                                   ├─ python run_drishti_web.py
+  ├─ register in Cloud Map (drishti-a.drishti.local → task IP)                    │
+  └─ target group: console healthy (/healthz) ◄────────────────────────────────────┘ users reach it
+```
+
+## 8. S3
+
+### 8.1 Buckets
+
+| Bucket | Content | Settings |
+|---|---|---|
+| `<org>-drishti-<env>-lake` | the lakes (Delta Lake tables; Iceberg; files) | versioning **off** for Delta tables (Delta keeps its own history; S3 versions would only multiply storage), SSE-KMS with `alias/drishti-lake`, Block Public Access, access logging to the logs bucket, lifecycle by age ([SUPER_SCALE.md section 15](SUPER_SCALE.md#15-seven-years-storage-tiers-and-retention)) |
+| `<org>-drishti-<env>-artifacts` | pack bundles, release artifacts | versioning on, SSE-KMS |
+| `<org>-drishti-<env>-logs` | S3 and load balancer access logs | lifecycle: expire after the bank's log retention |
+
+### 8.2 How Drishti reads S3
+
+- The Delta Lake native engine, Iceberg and the S3 connector take `s3://` roots in their connector files
+  (`/opt/drishti/config/connectors/*.yaml`, on EFS).
+- Credentials come from the **task role** through the AWS default chain: no access keys in files, variables or EFS.
+- A **gateway VPC endpoint for S3** keeps the traffic inside AWS (no NAT gateway charges); the lake bucket's policy
+  allows only that endpoint and the Drishti roles.
+
+```yaml
+# /opt/drishti/config/connectors/trade-endur.yaml
+plugin: delta
+kinds: [trade]
+settings:
+  root: s3://acme-drishti-prod-lake/trades/endur
+  engine: native
+  s3.region: eu-west-2
+```
+
+### 8.3 Bucket policy (lake)
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    { "Sid": "OnlyThroughTheVpcEndpoint", "Effect": "Deny", "Principal": "*", "Action": "s3:*",
+      "Resource": ["arn:aws:s3:::acme-drishti-prod-lake", "arn:aws:s3:::acme-drishti-prod-lake/*"],
+      "Condition": { "StringNotEquals": { "aws:sourceVpce": "vpce-…" } } },
+    { "Sid": "TlsOnly", "Effect": "Deny", "Principal": "*", "Action": "s3:*",
+      "Resource": ["arn:aws:s3:::acme-drishti-prod-lake", "arn:aws:s3:::acme-drishti-prod-lake/*"],
+      "Condition": { "Bool": { "aws:SecureTransport": "false" } } }
+  ]
+}
+```
+
+### 8.4 What is not in S3
+
+Anything the server or the console writes while running: by the rule it is on EFS. Loading the lakes (writing to S3) is
+done by loader tasks with their own role ([SUPER_SCALE.md section 7](SUPER_SCALE.md#7-loading-500-gb-a-day)); the
+servers' role reads only.
+
+## 9. Drishti*net on ECS
+
+```
+   Cloud Map namespace drishti.local (private DNS)
+     drishti-a.drishti.local  A  10.0.1.23     ◄── registered by ECS when drishti-a's task is healthy
+     drishti-b.drishti.local  A  10.0.2.41
+     drishti-c.drishti.local  A  10.0.3.17
+
+   drishti-c starts (first time):
+     DRISHTI_NET_SEEDS = http://drishti-a.drishti.local:18480,http://drishti-b.drishti.local:18480
+       └─► entry point writes config/net/peers/drishti-a.yaml and drishti-b.yaml (url: http://drishti-a.drishti.local:18480)
+     server resolves drishti-a.drishti.local → 10.0.1.23 (a real address; loopback would be refused)
+       └─► gossips with drishti-a, advertising http://10.0.3.17:18480 (its own task address)
+     every member now lists drishti-c at 10.0.3.17; the console of any node discovers it
+```
+
+- **Real addresses only.** With `awsvpc` networking each task has its own address in the VPC. The server advertises
+  `http://<that address>:18480`; `node.yaml` says `advertise-url: http://${DRISHTI_NODE_IP}:18480`, resolved at every
+  start, so a task that comes back with a new address advertises the new one. Never loopback, never `0.0.0.0`.
+- **Seeds by name.** Peer files name seeds by their Cloud Map names, which resolve to task addresses; what members
+  advertise stays an IP.
+- **The cluster secret** (`DRISHTI_NET_SECRET`) comes from Secrets Manager; `node.yaml` names it, so it never lands on
+  EFS.
+- **Users, roles and API tokens** replicate between nodes as today (IdentitySync); each node also keeps its copy on its
+  own EFS folders, so a whole-cluster restart loses nothing.
+- **A node's identity is its service**: node id `drishti-a`, its access points, its Cloud Map name. The ring position
+  follows the node id, so a task that restarts keeps its share.
+
+## 10. Network
+
+```
+ VPC 10.0.0.0/16 (three Availability Zones)
+ ┌───────────────────────────────────────────────────────────────────────────────────────────────┐
+ │ public or internal subnets:   ALB (sg drishti-alb)                                             │
+ │ private subnets (one per AZ): ECS tasks (sg drishti-node) · EFS mount targets (sg drishti-efs) │
+ │ endpoints: S3 (gateway) · Secrets Manager, ECR (api, dkr), CloudWatch Logs, STS (interface)    │
+ │ no internet route from the private subnets (a NAT gateway only if a connector needs the internet,│
+ │ such as news or market data; otherwise none)                                                    │
+ └───────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+| Security group | Inbound | Outbound |
+|---|---|---|
+| `drishti-alb` | 443 from the users' networks | 17480 to `drishti-node` |
+| `drishti-node` | 17480 from `drishti-alb`; 18480 from `drishti-node` (gossip, forwarding, consoles of other nodes) | 18480 to `drishti-node`; 2049 to `drishti-efs`; 443 to the endpoints |
+| `drishti-efs` | 2049 from `drishti-node` | none |
+
+- Only the load balancer is reachable from users; servers are never exposed.
+- **TLS** at the load balancer with an ACM certificate; between the load balancer and the consoles, and between
+  servers, traffic stays in the VPC on private subnets. A bank that requires TLS inside the VPC as well runs the
+  servers with their own certificate (Drishti's TLS settings) and `https://` advertise URLs.
+- **Sign-in**: the console's own sign-in, or OIDC as today (the load balancer can also authenticate with OIDC before
+  the console).
+
+## 11. Identity, roles and secrets
+
+### 11.1 Task role (what the containers may do)
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    { "Sid": "ReadTheLake", "Effect": "Allow", "Action": ["s3:GetObject", "s3:ListBucket"],
+      "Resource": ["arn:aws:s3:::acme-drishti-prod-lake", "arn:aws:s3:::acme-drishti-prod-lake/*"] },
+    { "Sid": "DecryptTheLake", "Effect": "Allow", "Action": ["kms:Decrypt"],
+      "Resource": "arn:aws:kms:…:key/<drishti-lake key>" },
+    { "Sid": "MountThisNodesFolders", "Effect": "Allow",
+      "Action": ["elasticfilesystem:ClientMount", "elasticfilesystem:ClientWrite"],
+      "Resource": "arn:aws:elasticfilesystem:…:file-system/fs-…",
+      "Condition": { "StringEquals": { "elasticfilesystem:AccessPointArn": [
+        "arn:aws:elasticfilesystem:…:access-point/fsap-…data",
+        "arn:aws:elasticfilesystem:…:access-point/fsap-…config",
+        "arn:aws:elasticfilesystem:…:access-point/fsap-…sutras" ] } } }
+  ]
+}
+```
+
+One task role per node (`drishti-prod-drishti-a-task`) limits each node to its own access points.
+
+### 11.2 Execution role (what ECS does for the task)
+
+Pull the images from ECR, write the log streams, and read the node's secrets:
+`ecr:GetAuthorizationToken`, `ecr:BatchGetImage`, `ecr:GetDownloadUrlForLayer`, `logs:CreateLogStream`,
+`logs:PutLogEvents`, `secretsmanager:GetSecretValue` on `drishti/prod/*`, `kms:Decrypt` on the secrets' key.
+
+### 11.3 Secrets
+
+| Secret (Secrets Manager) | Variable | Container |
+|---|---|---|
+| `drishti/prod/token` | `DRISHTI_TOKEN_SECRET` (at least 32 characters; a master key, OPERATIONS.md section 9) | server, console |
+| `drishti/prod/session` | `DRISHTI_SESSION_SECRET` (at least 32 characters) | console |
+| `drishti/prod/net` | `DRISHTI_NET_SECRET` (the cluster key) | server |
+| `drishti/prod/admin` (`username`, `password`) | `DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD` (the first administrator, first start only) | server |
+
+These are the variables `drishti-stack/secrets.env.example` lists for the local cluster. Nothing secret is in an image,
+a task definition's plain environment, or EFS. Rotation: a new secret version and a rolling restart (section 14.1);
+rotating the token secret signs everyone out, as on one machine.
+
+## 12. Task definition
+
+For node `drishti-a` (the other nodes differ only in the node id, the task role and the three access point ids):
 
 ```json
 {
@@ -216,7 +634,8 @@ For node `drishti-a` (the other nodes differ only in the node id and the three a
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE", "EC2"],
   "cpu": "6144", "memory": "16384",
-  "taskRoleArn": "arn:aws:iam::<account>:role/drishti-prod-task",
+  "runtimePlatform": { "operatingSystemFamily": "LINUX", "cpuArchitecture": "X86_64" },
+  "taskRoleArn": "arn:aws:iam::<account>:role/drishti-prod-drishti-a-task",
   "executionRoleArn": "arn:aws:iam::<account>:role/drishti-prod-execution",
   "volumes": [
     { "name": "data",   "efsVolumeConfiguration": { "fileSystemId": "fs-…", "transitEncryption": "ENABLED",
@@ -227,9 +646,9 @@ For node `drishti-a` (the other nodes differ only in the node id and the three a
         "authorizationConfig": { "accessPointId": "fsap-…sutras", "iam": "ENABLED" } } }
   ],
   "containerDefinitions": [
-    { "name": "server", "image": "<account>.dkr.ecr.<region>.amazonaws.com/drishti-server-ecs:2.5.0",
-      "cpu": 4096, "memory": 12288, "essential": true, "readonlyRootFilesystem": true,
-      "portMappings": [{ "containerPort": 18480 }],
+    { "name": "server", "image": "<account>.dkr.ecr.<region>.amazonaws.com/drishti-server-ecs:<version>",
+      "cpu": 4096, "memory": 12288, "essential": true, "readonlyRootFilesystem": true, "stopTimeout": 60,
+      "portMappings": [{ "containerPort": 18480, "protocol": "tcp" }],
       "mountPoints": [
         { "sourceVolume": "data",   "containerPath": "/opt/drishti/data" },
         { "sourceVolume": "config", "containerPath": "/opt/drishti/config" },
@@ -241,18 +660,18 @@ For node `drishti-a` (the other nodes differ only in the node id and the three a
         { "name": "DRISHTI_SEED_ADMIN", "value": "true" },
         { "name": "DRISHTI_PACKS", "value": "core,market-data,trading,counterparty-risk,market-risk" } ],
       "secrets": [
-        { "name": "DRISHTI_TOKEN_SECRET", "valueFrom": "arn:aws:secretsmanager:…:drishti/prod/token" },
-        { "name": "DRISHTI_NET_SECRET",   "valueFrom": "arn:aws:secretsmanager:…:drishti/prod/net" },
-        { "name": "DRISHTI_SEED_USERNAME", "valueFrom": "arn:aws:secretsmanager:…:drishti/prod/admin:username::" },
-        { "name": "DRISHTI_SEED_PASSWORD", "valueFrom": "arn:aws:secretsmanager:…:drishti/prod/admin:password::" } ],
-      "healthCheck": { "command": ["CMD-SHELL", "wget -qO- http://$(hostname -I | awk '{print $1}'):18480/actuator/health/readiness || exit 1"],
+        { "name": "DRISHTI_TOKEN_SECRET",  "valueFrom": "arn:aws:secretsmanager:…:secret:drishti/prod/token" },
+        { "name": "DRISHTI_NET_SECRET",    "valueFrom": "arn:aws:secretsmanager:…:secret:drishti/prod/net" },
+        { "name": "DRISHTI_SEED_USERNAME", "valueFrom": "arn:aws:secretsmanager:…:secret:drishti/prod/admin:username::" },
+        { "name": "DRISHTI_SEED_PASSWORD", "valueFrom": "arn:aws:secretsmanager:…:secret:drishti/prod/admin:password::" } ],
+      "healthCheck": { "command": ["CMD-SHELL", "curl -fsS --max-time 3 http://$(hostname -I | awk '{print $1}'):18480/actuator/health/readiness"],
                        "interval": 15, "timeout": 5, "retries": 4, "startPeriod": 180 },
       "logConfiguration": { "logDriver": "awslogs", "options": { "awslogs-group": "/drishti/prod", "awslogs-region": "<region>",
                                                                  "awslogs-stream-prefix": "drishti-a" } } },
-    { "name": "console", "image": "<account>.dkr.ecr.<region>.amazonaws.com/drishti-console-ecs:2.5.0",
-      "cpu": 2048, "memory": 4096, "essential": true, "readonlyRootFilesystem": true,
+    { "name": "console", "image": "<account>.dkr.ecr.<region>.amazonaws.com/drishti-console-ecs:<version>",
+      "cpu": 2048, "memory": 4096, "essential": true, "readonlyRootFilesystem": true, "stopTimeout": 30,
       "dependsOn": [{ "containerName": "server", "condition": "HEALTHY" }],
-      "portMappings": [{ "containerPort": 17480 }],
+      "portMappings": [{ "containerPort": 17480, "protocol": "tcp" }],
       "mountPoints": [
         { "sourceVolume": "data",   "containerPath": "/opt/drishti/data" },
         { "sourceVolume": "config", "containerPath": "/opt/drishti/config" },
@@ -261,75 +680,181 @@ For node `drishti-a` (the other nodes differ only in the node id and the three a
         { "name": "DRISHTI_AUTH_ENABLED", "value": "true" },
         { "name": "DRISHTI_CONSOLE__PACKS__ENABLED", "value": "core,market-data,trading,counterparty-risk,market-risk" } ],
       "secrets": [
-        { "name": "DRISHTI_TOKEN_SECRET",   "valueFrom": "arn:aws:secretsmanager:…:drishti/prod/token" },
-        { "name": "DRISHTI_SESSION_SECRET", "valueFrom": "arn:aws:secretsmanager:…:drishti/prod/session" } ],
+        { "name": "DRISHTI_TOKEN_SECRET",   "valueFrom": "arn:aws:secretsmanager:…:secret:drishti/prod/token" },
+        { "name": "DRISHTI_SESSION_SECRET", "valueFrom": "arn:aws:secretsmanager:…:secret:drishti/prod/session" } ],
+      "healthCheck": { "command": ["CMD-SHELL", "python -c \"import urllib.request;urllib.request.urlopen('http://localhost:17480/healthz')\""],
+                       "interval": 15, "timeout": 5, "retries": 4, "startPeriod": 60 },
       "logConfiguration": { "logDriver": "awslogs", "options": { "awslogs-group": "/drishti/prod", "awslogs-region": "<region>",
                                                                  "awslogs-stream-prefix": "drishti-a" } } }
   ]
 }
 ```
 
-The service: `desiredCount: 1`, `deploymentConfiguration: { maximumPercent: 100, minimumHealthyPercent: 0 }`, Cloud Map
-registration `drishti-a.drishti.local`, the console's port in the load balancer's target group. Step A3 of the build
-plan writes all of this (EFS, access points, roles, task definitions, services, load balancer, Cloud Map, secrets) as
-one template.
+The server's health check asks readiness on the task's own address, so the console (`dependsOn … HEALTHY`) starts
+only when its server answers.
 
-## 11. Operations: deploy, restart, back up, restore
+## 13. Service definition
+
+```json
+{
+  "serviceName": "drishti-a",
+  "cluster": "drishti-prod",
+  "taskDefinition": "drishti-prod-drishti-a",
+  "desiredCount": 1,
+  "launchType": "FARGATE",
+  "platformVersion": "1.4.0",
+  "deploymentConfiguration": { "maximumPercent": 100, "minimumHealthyPercent": 0,
+                               "deploymentCircuitBreaker": { "enable": true, "rollback": true } },
+  "networkConfiguration": { "awsvpcConfiguration": { "subnets": ["subnet-a", "subnet-b", "subnet-c"],
+                                                     "securityGroups": ["sg-drishti-node"], "assignPublicIp": "DISABLED" } },
+  "loadBalancers": [{ "targetGroupArn": "arn:aws:elasticloadbalancing:…:targetgroup/drishti-consoles/…",
+                      "containerName": "console", "containerPort": 17480 }],
+  "serviceRegistries": [{ "registryArn": "arn:aws:servicediscovery:…:service/srv-drishti-a" }],
+  "healthCheckGracePeriodSeconds": 240,
+  "enableExecuteCommand": false,
+  "propagateTags": "SERVICE"
+}
+```
+
+- `maximumPercent: 100` and `minimumHealthyPercent: 0`: a new deployment stops the node's task before starting the
+  new one: never two tasks on one node's folders.
+- The deployment circuit breaker rolls back a version that cannot become healthy.
+- `enableExecuteCommand: false`: no shell into production tasks; diagnosis is through logs, metrics and Admin.
+
+## 14. Operations
+
+### 14.1 A new version (rolling, one node at a time)
+
+```
+  for each node (drishti-a, then b, then c), waiting for each to be healthy before the next:
+    1. register a task definition revision with the new image tags
+    2. update the node's service → ECS stops the old task (SIGTERM, graceful) → starts the new task
+    3. the new task mounts the same EFS folders, rejoins Drishti*net with its (possibly new) address
+    4. healthy: the load balancer sends it users again
+  the other nodes answer meanwhile (the console falls over to another server; reads forward to a peer)
+```
+
+Schema and cache migrations happen at start, as on one machine; a version that needs all nodes on it at once is
+marked in RELEASE_NOTES and deployed by stopping every service first.
+
+### 14.2 Everyday events
 
 | Event | What happens |
 |---|---|
-| **New version** | a new task definition revision with the new image tags; each node's service stops its task, then starts the new one on the same EFS folders (one node at a time, so the cluster keeps answering) |
-| **Task or host failure** | ECS starts a new task, possibly in another zone, on the same folders; the node rejoins Drishti*net with its new address |
-| **Adding a node** | three access points, a task definition and a service for `drishti-d`; its first start writes its Drishti*net files and joins through the seeds |
-| **Back-up** | AWS Backup of the file system: every node's every file, daily |
-| **Restore one node** | stop its service, restore `/drishti/prod/<node>` from the back-up, start the service |
-| **A pack** | `drishti.py pack deploy … --to /opt/drishti/data/packs/installed` from an administration host that mounts the node's data access point, or **Admin → Packs** upload; the server picks it up by itself |
+| **Task or host failure** | ECS starts a new task, possibly in another zone, on the same folders; the node rejoins with its new address; the console of another node keeps its users |
+| **Adding a node** | three access points, a task role, a task definition and a service for `drishti-d`; its first start writes its Drishti*net files and joins through the seeds; Admin → Net shows it |
+| **Removing a node** | scale its service to 0, then delete it; Admin → Net → Members, "forget"; its EFS folders are kept until the backup retention passes, then deleted by hand |
+| **A pack** | `drishti.py pack deploy … --to /opt/drishti/data/packs/installed` from an administration host that mounts the node's data access point, or Admin → Packs upload; the server loads it by itself; for every node, repeat per node (or deploy once and let Drishti*net's newest-version rule serve it, DRISHTI_NET.md section 9) |
 | **Connector files, Sutras** | edited in the console (written to EFS) or copied onto EFS from an administration host |
+| **Secrets rotation** | new secret version, then a rolling restart (14.1) |
+| **Certificates** | ACM renews the load balancer's certificate by itself |
 
-## 12. Performance: what EFS costs
+### 14.3 The administration host
 
-EFS is a network file system: each operation takes about a millisecond or more, where a local NVMe disk takes tens of
-microseconds. For files read and written whole (users, settings, reports, designs) this does not matter. It does for
-the **caches** that the rule also puts on EFS: RocksDB derived pages, the disk cache, DuckDB files and the temp folders.
-Expected effects (to be measured in step A4):
+A small EC2 instance (or an AWS Systems Manager session on one) in a private subnet that mounts the EFS file system
+with an administrator's access point rooted at `/drishti`, for pack deployment, inspecting files and restores. It is
+the only place where people touch EFS directly.
 
-- a **slower first start** of a node while caches are opened and warmed;
-- **slower first reads** of pages served from the disk cache or derived pages; reads already in memory are unchanged;
-- **slower builds** of derived pages and DuckDB work that write many small pieces.
+### 14.4 Upgrading Drishti*net membership settings
 
-What helps, within the rule: Elastic throughput; the memory caches Drishti already keeps in front of every disk
-cache; EFS's mount options from the EFS mount helper (`nfsvers=4.1`, large `rsize` and `wsize`). Step A4 measures
-start time, first trade view, a search and a derived-page build on EFS against local disk and records them here.
+`config/net/*.yaml` are files on EFS: edited on the administration host or in Admin → Net; the server watches them
+(`DRISHTI_NET_WATCH`), so no restart is needed.
 
-## 13. Tests
+### 14.5 Back-up and restore
 
-- **Read-only root, every flow**: both images run with a read-only root file system and plain folders mounted at the
-  three paths (`DRISHTI_REQUIRE_EFS=false`, the only use of that switch), and the browser test suite's smoke set runs
-  against them. Any write outside the three paths fails the test, naming the path.
-- **The entry points**: a missing mount, a read-only mount, a mount that is not NFS, a loopback address: each refuses
-  to start with its message.
-- **Durability**: in a development AWS account, a node's task is stopped and comes back: users, tokens, connector
-  files, Sutras, designs, reports, installed packs and the cluster membership are as before; then the same across
-  zones, and a restore from AWS Backup.
-- **Two tasks, one node**: a second task started by hand on a node's folders is refused (store locks).
-- **Drishti*net**: three nodes find each other through Cloud Map names, advertise their task addresses, and the
-  cluster survives a node's restart with a new address.
+| | |
+|---|---|
+| Back-up | AWS Backup plan `drishti-efs-daily`: daily at 01:00, kept 35 days (a site setting), monthly kept 13 months; vault locked against deletion |
+| Restore one node | stop its service (desired count 0); restore `/drishti/prod/<node>` from the recovery point to the same path (item-level restore); start the service |
+| Restore everything | stop every service; restore the file system's `/drishti/prod`; start the seeds first, then the rest |
+| What is lost | changes since the recovery point; users, roles and tokens are also on the other nodes (IdentitySync) and come back from them |
 
-## 14. Build plan
+## 15. Observability
 
-| Step | Content | State |
+| Signal | Where |
+|---|---|
+| Logs | CloudWatch Logs `/drishti/<env>`, one stream per node and container; log files on EFS in `data/logs` |
+| Metrics | the server's Prometheus endpoint (`/actuator/prometheus`, `DRISHTI_METRICS_TOKEN`) scraped by Amazon Managed Service for Prometheus or the CloudWatch agent; the Grafana dashboard in `deploy/grafana` |
+| ECS | CPU and memory per container (Container Insights) |
+| EFS | `PercentIOLimit`, `ClientConnections`, `MeteredIOBytes`, latency (CloudWatch) |
+| Drishti | Admin → Health, Admin → Net (members, the donut, forwarding), Admin → Caches, per node |
+
+Alarms: a node's service with no running task for 5 minutes; a console target unhealthy; server heap above 90 % for 10
+minutes; EFS `PercentIOLimit` above 80 %; Drishti*net member `dead` for longer than 5 minutes; the backup job failed.
+
+## 16. Disaster recovery
+
+| | Primary Region | Recovery Region |
 |---|---|---|
-| A1 | ECS images and entry points (`deploy/aws/`) | written; not built or run yet |
-| A2 | Read-only-root test of both images and the entry-point tests (needs Docker on the build machine) | |
-| A3 | One template (CloudFormation or Terraform, [section 15](#15-open-questions)): EFS, access points, roles, secrets, task definitions, services, load balancer, Cloud Map, security groups, AWS Backup plan | |
-| A4 | A development environment: the durability tests, the EFS measurements of section 12 | |
-| A5 | Docs: OPERATIONS (an AWS chapter), OPERATIONALISING section 13, a tutorial "Drishti on AWS", help cards | |
+| Lakes | S3 bucket | S3 Cross-Region Replication of the lake bucket |
+| Node files | EFS | EFS replication (read-only replica, made writable on fail-over) |
+| Images | ECR | ECR replication |
+| Secrets | Secrets Manager | replicated secrets |
+| Running | the services | the same task and service definitions, desired count 0 |
 
-## 15. Open questions
+Fail-over: make the EFS replica writable, set the recovery services' desired count to 1, point the load balancer's DNS
+(Route 53) at the recovery Region. Recovery point: the replication lag (minutes); recovery time: the time to start the
+nodes and warm their caches (tens of minutes). Exercised twice a year.
+
+## 17. Performance: what EFS costs
+
+EFS is a network file system: an operation takes about a millisecond or more, where a local NVMe disk takes tens of
+microseconds. For files read and written whole (users, settings, reports, designs) this does not matter. It does for
+the **caches** that the rule also puts on EFS:
+
+| Cache on EFS | Effect | What softens it |
+|---|---|---|
+| RocksDB derived pages and document cache | slower first reads of a page; slower builds (many small writes) | Drishti's memory caches in front of every disk cache; RocksDB's block cache |
+| DuckDB files (BI store) | slower first queries after a start | DuckDB's buffer pool |
+| Warm column files and type-ahead segments (memory-mapped) | the first touch of a page of the file reads it over NFS; then the operating system's page cache serves it | page cache: give the task memory beyond the heap |
+| Temp folders, native libraries | a slower start (a few seconds) | none needed |
+
+Step A4 measures, on EFS and on local disk: node start to ready, first trade view, a form search, a derived-page build
+and a BI query; the numbers go here. If they show slow first reads that matter, the product owner decides whether
+the caches (which Drishti can always rebuild from the lake) may use the task's local disk instead (section 21).
+
+## 18. Cost
+
+Order of magnitude for three nodes in one Region, list prices, on-demand (to be priced for the bank's Region and
+discounts):
+
+| Item | Size | Monthly |
+|---|---|---|
+| ECS on Fargate | 3 tasks × (6 vCPU, 16 GB), always on | about USD 650–750 |
+| EFS | 300 GB Standard, Elastic throughput | about USD 100 plus throughput charges |
+| Load balancer | one ALB | about USD 25 plus capacity units |
+| S3 | the lake (depends on data; SUPER_SCALE.md section 19 for 500 GB a day) | |
+| Other | Secrets Manager, Cloud Map, CloudWatch, AWS Backup, VPC endpoints | about USD 100–200 |
+
+## 19. Tests and acceptance
+
+| Test | Pass when |
+|---|---|
+| **Read-only root, every flow**: both images run with a read-only root and plain folders mounted at the three paths (`DRISHTI_REQUIRE_EFS=false`, the only use of that switch), and the browser suite's smoke set runs against them | no write outside the three paths (a write elsewhere fails the test, naming the path) |
+| **Entry points**: a missing mount, a read-only mount, a mount that is not NFS, a loopback address, a second task | each refuses to start with its message and exit code 78 |
+| **Durability** (development account): stop a node's task | users, tokens, connector files, Sutras, designs, reports, installed packs and cluster membership are as before |
+| **Zone move**: force the task into another Availability Zone | the same |
+| **Restore** from AWS Backup to a new path, then swapped in | the node comes back as of the recovery point |
+| **Drishti*net**: three nodes find each other through Cloud Map names | each advertises its task address; a restart with a new address is seen by every member within one `dead-after` |
+| **Rolling upgrade** | users of the node being upgraded fall over to another console without signing in again |
+| **Performance** (section 17) | measured and recorded |
+
+## 20. Build plan
+
+| Step | Content | Done when |
+|---|---|---|
+| A1 | The images and entry points of sections 5–6 as files; `task.lock` touched by the server; DNS seed names accepted | the read-only-root and entry-point tests pass on a build machine with Docker |
+| A2 | One template (CloudFormation or Terraform): VPC pieces, EFS and its access points, roles, secrets, task and service definitions, load balancer, Cloud Map, endpoints, backup plan, alarms | a new environment comes up from the template alone |
+| A3 | A development environment: the durability, zone, restore, Drishti*net and rolling-upgrade tests | all pass |
+| A4 | EFS measurements (section 17) | recorded here |
+| A5 | Documentation: OPERATIONS (an AWS chapter), OPERATIONALISING section 13, a tutorial "Drishti on AWS" (UI and CLI), help cards | reviewed |
+
+## 21. Open questions
 
 - **Fargate or EC2** capacity: Fargate is simpler; EC2 allows larger tasks and cheaper steady capacity. The design
   works on both.
-- **CloudFormation or Terraform** for step A3: whichever the bank's platform team uses.
-- **Caches on EFS**: the rule puts them there; if the measurements of step A4 show slow first reads that matter,
-  the product owner decides whether caches (which Drishti can rebuild) may move to the task's local disk.
-- **Consoles**: one per node (this design), or a separate console service scaled on its own.
+- **CloudFormation or Terraform** for step A2: whichever the bank's platform team uses.
+- **Caches on EFS**: the rule puts them there; step A4's numbers decide whether to keep it so.
+- **Consoles**: one per node (this design), or a console service scaled on its own (recommended at the scale of
+  SUPER_SCALE.md).
+- **TLS inside the VPC**: required by the bank or not.
