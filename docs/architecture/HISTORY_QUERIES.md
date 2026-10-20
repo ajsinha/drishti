@@ -612,6 +612,9 @@ a key of `application.yaml` or a `@ConfigurationProperties` binding is not in th
 - A node that holds the kind but is down, suspect or drained cannot be asked. Dates no node that answered holds are then failures of
   that node (`Fallback.downHolders`): with no day read the answer is `502 DRS-5052` naming it, as the view says; with some days read it
   is partial, a `problems` entry with code `DRS-5052` naming it. Never `DRS-1013`, and never cached.
+- A peer that is asked but does not answer in time (frozen, overloaded) is a time-out of those days: `504 DRS-1014` *the node qa1-b did
+  not answer the history of trade/10000901 within 10 s* when no day was read, else a `problems` entry with `DRS-1014`. Another failure of
+  the peer stays `DRS-1003` naming it.
 
 **Super scale (SUPER_SCALE.md section 10, not built).** A slice is `(table, business day, group)`; each slice has owners on the ring
 (`hash(table, day, group)`, 64 virtual nodes, 2 owners for the `hot-days`). A history of one entity spans one slice per day, so the days
@@ -740,7 +743,7 @@ New codes in `drishti-common` `ErrorCode` (none of them used before):
 |---|---|---|---|---|
 | `DRS-1012` | `HISTORY_NOT_KEPT` | 404 | the kind has no daily history: history off for it (`enabled: false`), or every connector of the kind is undated and no `series:` is declared | "equity keeps no daily history here: market-store holds today's data only" |
 | `DRS-1013` | `HISTORY_NO_DATA` | 404 | the entity exists but has no data in the window | "TRD 1000015 has no data from 2026-01-02 to 2026-01-30; its first day is 2026-06-20" |
-| `DRS-1014` | `HISTORY_TIMEOUT` | 504 (or 200 with `partial`) | a connector did not answer within the budget: the whole request when no day was read, otherwise a `problems` entry | "trade-endur did not answer 4 of 30 days within 10 s" |
+| `DRS-1014` | `HISTORY_TIMEOUT` | 504 (or 200 with `partial`) | a connector, or a Drishti*net peer (an HTTP time-out of its one call), did not answer within the budget: the whole request when no day was read, otherwise a `problems` entry | "trade-endur did not answer 4 of 30 days within 10 s" |
 | `DRS-2061` | `HISTORY_INVALID` | 422 | the pack's `history:` block is wrong | "history.equity.headline: PRICE2 is not one of chart" |
 | `DRS-4021` | `HISTORY_RANGE_TOO_LARGE` | 400 | more than `max-days` (the kind's or the server's) | "366 business days at most (asked 500): narrow it with FROM … TO" |
 | `DRS-4022` | `HISTORY_BAD_RANGE` | 400 | `TO` before `FROM`, a future `FROM`, an unreadable date | "FROM 2026-10-30 is after TO 2026-10-19" |

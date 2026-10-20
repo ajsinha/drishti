@@ -29,7 +29,9 @@ tutorial 21, [USER_GUIDE](docs/guides/USER_GUIDE.md#history-an-entity-over-time)
   days before the store's first day come from the price history the document carries. Every theme; masks hold on every day's row.
 - **Fast:** 30 days of one trade among 10,000 on Delta in 13 ms cold, under 1 ms warm, 0.3 ms from the cache. Fast paths for
   Delta, Redis, PostgreSQL, DuckDB, MongoDB, Aerospike, Cassandra and Iceberg; every other connector works through the default.
-- **Across a cluster:** a node reads an entity's days from the peer that holds them in one call, masked on both nodes.
+- **Across a cluster:** a node reads an entity's days from the peer that holds them in one call, masked on both nodes. *Fixed after
+  the release (QA1-01, QA1-02):* the history cache follows the peers' data versions, so a load on the peer shows on the next request;
+  a peer that is down is named (`DRS-5052`), one that does not answer in time is `DRS-1014`, never "no data", and neither is cached.
 - **Also:** `drishti.py history KIND ID` and the Python client's `history()`; `GET /api/v1/history/{kind}/{id}`; tutorial 21;
   tutorial 20 completed; the Windows QA guide's history section.
 - **Not in 2.6.5:** history as a BI data source (2.7.0); the iceberg-external fast path (the default path serves it).

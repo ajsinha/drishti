@@ -130,8 +130,10 @@ public final class SourceHistory {
                     remaining.removeIf(got::contains);
                 } catch (Exception e) {
                     router.stats().failed(name, System.nanoTime() - t0, e);
+                    // a peer that did not answer in time is a time-out of those days (DRS-1014, or a partial answer), not a failure
+                    String why = timedOut(e) ? HistoryReads.TIMED_OUT : e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
                     for (LocalDate d : remaining) {
-                        failures.add(new Failure(name, d, e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));
+                        failures.add(new Failure(name, d, why));
                     }
                 }
             }
@@ -156,6 +158,16 @@ public final class SourceHistory {
         LocalDate oldest = r.lastDays() > 0 && out.size() == r.lastDays() ? out.get(0).date() : null;
         List<Failure> kept = failures.stream().filter(f -> oldest == null || !f.date().isBefore(oldest)).toList();
         return new Routed(List.copyOf(out), dedupe(kept), List.copyOf(asked));
+    }
+
+    /** Whether a read failed because it ran out of time (an HTTP time-out of a peer, a {@code TimeoutException}). */
+    static boolean timedOut(Throwable e) {
+        for (Throwable t = e; t != null; t = t.getCause() == t ? null : t.getCause()) {
+            if (t instanceof java.util.concurrent.TimeoutException || t.getClass().getSimpleName().endsWith("TimeoutException")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** A date two sources both answer (shards that overlap, a peer and a local store) keeps the higher generation. */

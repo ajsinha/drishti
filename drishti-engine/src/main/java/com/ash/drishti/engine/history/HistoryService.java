@@ -296,6 +296,10 @@ public final class HistoryService {
         if (!failures.isEmpty()) {
             boolean timedOut = failures.stream().allMatch(f -> HistoryReads.TIMED_OUT.equals(f.reason()));
             SourceHistory.Failure f = failures.get(0);
+            if (timedOut && f.source().startsWith("net:")) {                  // a peer: one call for all the days
+                throw new DrishtiException(ErrorCode.HISTORY_TIMEOUT, "the node " + f.source().substring(4) + " did not answer the history of "
+                        + ref + " within " + props.limits().timeout().toSeconds() + " s; try again in a moment");
+            }
             if (timedOut) {
                 throw new DrishtiException(ErrorCode.HISTORY_TIMEOUT, f.source() + " did not answer " + failures.size() + " days of " + ref
                         + " within " + props.limits().timeout().toSeconds() + " s");

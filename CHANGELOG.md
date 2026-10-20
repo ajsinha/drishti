@@ -17,6 +17,9 @@
 
 ## Unreleased
 
+- **Fixed (QA1-02, QA1-19): a Drishti*net peer that does not answer a history in time is a time-out** (`504 DRS-1014 the node qa1-b
+  did not answer the history of … within 10 s`, or a `DRS-1014` problem of a partial answer), as HISTORY_QUERIES.md section 16 says,
+  not `502 DRS-1003`. RELEASE_NOTES 2.6.5 *Across a cluster* notes the QA1-01 and QA1-02 fixes.
 - **Fixed (QA1-03, QA1-12): a bad range typed after an id says so.** `TRD 1000001 0`, `-5`, `1.5M`, `3X`, `FROM yesterday`,
   `FROM 2026-02-30`, `DIFF DIFF`, a bare `DIFF` and two ranges (`30 30`) answer `DRS-4022` with what to type, a number of days past
   the limit (`99999`) `DRS-4021`, and `TO` before `FROM` is `DRS-4022` as at the endpoint (was `DRS-4001`); the console shows the

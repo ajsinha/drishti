@@ -60,7 +60,7 @@ class HistoryPeersTest {
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-10-02T20:00:00Z"), ZoneOffset.UTC);
 
     /** A dated store with trades from 09-22 up to {@code last}; {@code ids} are the trades it holds. */
-    static final class Store implements SourcePlugin {
+    static class Store implements SourcePlugin {
         final String name;
         final Set<String> ids;
         volatile LocalDate last;
@@ -180,6 +180,29 @@ class HistoryPeersTest {
         HistoryAnswer back = svc.read(days("T-8", 3), HistoryService.Viewer.NONE);
         assertThat(back.rows()).hasSize(3);
         assertThat(back.cache()).isEqualTo("miss");
+    }
+
+    @Test
+    void aPeerThatTimesOutIsATimeOutNotAFailure() {
+        // QA1-02, QA1-19: a peer's HTTP time-out is DRS-1014 naming the node (HISTORY_QUERIES.md section 16), not DRS-1003
+        Store slow = new Store("net:p", Set.of("T-7"), TODAY, "P1") {
+            @Override
+            public com.ash.drishti.api.HistoryRead history(com.ash.drishti.api.HistoryRequest r) throws Exception {
+                throw new java.net.http.HttpTimeoutException("request timed out");
+            }
+        };
+        Peers timing = new Peers(slow);
+        var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(2), null, Map.of());
+        SourceRouter router = new SourceRouter(new SourceRegistry(List.of(local), props, new JsonCodec()), props,
+                Executors.newVirtualThreadPerTaskExecutor());
+        router.fallback(timing);
+        HistoryService svc = new HistoryService(router, new BusinessDates(new BusinessDateProperties("USNY", "UTC", null), CLOCK),
+                HistoryProperties.defaults(), new SearchProperties(null, null, Map.of("trade", List.of("TRADE_ID"))), Formats.defaults(),
+                new ElCompiler(), HistorySpec::defaults, k -> "TRD");
+        assertThatThrownBy(() -> svc.read(days("T-7", 3), HistoryService.Viewer.NONE)).isInstanceOfSatisfying(DrishtiException.class, e -> {
+            assertThat(e.errorCode()).isEqualTo(ErrorCode.HISTORY_TIMEOUT);
+            assertThat(e.getMessage()).contains("the node p did not answer");
+        });
     }
 
     @Test
