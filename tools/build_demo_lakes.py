@@ -93,7 +93,8 @@ def lake_progress(lake: Path, now: float | None = None) -> str:
                 continue
             if f.is_file():
                 total += st.st_size
-                if st.st_mtime > newest_t:
+                # the build's own working folders (_drishti-lake/staging, locks) change all the time: name the table, not them (DOCS2-01)
+                if st.st_mtime > newest_t and not f.relative_to(lake).parts[0].startswith("_"):
                     newest_t, newest = st.st_mtime, f
     where = ""
     if newest is not None:

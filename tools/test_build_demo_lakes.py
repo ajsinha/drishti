@@ -108,3 +108,17 @@ def test_the_heartbeat_says_waiting_when_nothing_is_written(tmp_path):
     os.utime(f, (old, old))
     line = b.lake_progress(tmp_path)
     assert "writing" not in line and "nothing written for 600 s (the last: trading/trade_murex" in line
+
+
+def test_the_heartbeat_names_the_table_not_the_builds_working_folders(tmp_path):
+    import sys as _sys
+    _sys.path.insert(0, str(ROOT / "tools"))
+    import build_demo_lakes as b
+    table = tmp_path / "trading" / "trade_endur" / "business_date=2026-10-16" / "part.parquet"
+    table.parent.mkdir(parents=True)
+    table.write_bytes(b"x" * 1000)
+    staging = tmp_path / "_drishti-lake" / "staging" / "trading-trade_endur.jsonl"
+    staging.parent.mkdir(parents=True)
+    staging.write_bytes(b"y" * 1000)                       # newer than the table's file, as during a build
+    line = b.lake_progress(tmp_path)
+    assert "writing trading/trade_endur business_date=2026-10-16" in line and "_drishti-lake" not in line
