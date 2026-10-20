@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+## 2.6.0 — Statements and field parameters, the Cassandra connector, drishti-iceberg (Iceberg without Hadoop), three Terminal themes, the known-bug pass (2026-10-20)
+
 - **Fixed: a BI item's history, review, impact and lineage could show an older state.** Drawn again after a save, the item asked for them again,
   and a slower answer to the earlier request, arriving last, overwrote the newer one: the history could miss the save just made. Only the
   answer to the newest request is drawn now (found by `test_bi_gov_browser` under load).
