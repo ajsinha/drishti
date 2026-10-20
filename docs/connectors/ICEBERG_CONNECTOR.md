@@ -53,6 +53,7 @@ loader produces, or **extrapolations** from the benchmark, also marked.
 14. [Diagnosing](#14-diagnosing)
 15. [Settings](#15-settings)
 16. [Checklist for production](#16-checklist-for-production)
+17. [Engines: native and library](#17-engines-native-and-library)
 
 Also: [Security: TLS and credentials](#security-tls-and-credentials) (before *As a connector file*).
 
@@ -518,21 +519,24 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 
 ## 13. Limits and trade-offs
 
-- **The Parquet footer is read on every single-entity read.** Iceberg's reader does not cache footers; with 1 MB row
-  groups a 250,000-row file has 400–800 groups and a footer of 1–2 MB (estimate), the larger part of a first read.
-  Larger row groups shrink it and make each read decode more.
+- **On the `library` engine the Parquet footer is read on every single-entity read.** Iceberg's reader does not cache
+  footers; with 1 MB row groups a 250,000-row file has 400–800 groups and a footer of 1–2 MB (estimate), the larger part
+  of a first read. Larger row groups shrink it and make each read decode more. The `native` engine reads each footer
+  once and keeps it ([section 17](#17-engines-native-and-library)).
 - **Only promoted fields are fast**; others are searched in documents (20,000 at most, `partial`).
 - **Effective-mode kinds** are not read as columns (each entity's latest row would have to be resolved across days);
   their type-ahead lists every day's ids.
-- **Only Parquet data files** are read; a table with ORC or Avro data files fails on those files. Encrypted tables are
-  not supported. Format-version-3 deletion vectors are not read by Iceberg 1.10.
+- **Only Parquet data files** are read; a table with ORC or Avro data files fails on those files (the native engine
+  refuses it by name, naming the file). Encrypted tables are not supported. Format version 3 (deletion vectors, new
+  types) is refused by the native engine and not read by Iceberg 1.10.
 - **Path-based tables on S3 need one writer at a time** ([section 4](#4-catalogs-path-based-tables-and-rest-catalogs)).
 - **Time travel reaches back only as far as snapshots are kept.**
 - **Orphan files are not removed** by the maintenance tool ([section 9](#9-retention-and-maintenance)).
 - **The loader holds `--buffer-mb` of rows plus up to two buffers being spilled**: about three times the buffer at peak.
 - **Live overlays are not in column searches**, as for Delta Lake.
-- **Hadoop is needed** (and on Windows `winutils.exe`): a Hadoop-free engine of Drishti's own is designed, not built, in
-  [DRISHTI_ICEBERG.md](../architecture/DRISHTI_ICEBERG.md).
+- **The `library` engine needs Hadoop** (and on Windows `winutils.exe`); the `native` engine, drishti-iceberg, needs
+  neither but reads local disk and S3 only ([section 17](#17-engines-native-and-library)) and is the default from 2.6.0
+  (a root it cannot reach falls back to the library).
 
 ## 14. Diagnosing
 
@@ -581,8 +585,10 @@ Two things `tls.*` does not cover, because the libraries underneath have no sett
 - **The REST catalog's own `https://` connection** uses the JVM's truststore. If the catalog is on a private CA too, import that CA into
   the truststore the server runs with (`-Djavax.net.ssl.trustStore=/etc/drishti/tls/truststore.p12 -Djavax.net.ssl.trustStorePassword=...`).
   The connector logs a warning at start when `tls.*` is set and the catalog URI is `https://`, to say so.
-- **Path-based tables (`catalog: hadoop`)** are read through Hadoop's S3A, which has no setting for a private CA. `tls.*` with
-  that catalog is refused at start (`tls.* applies to a REST catalog's object store: ...`); import the CA into the JVM's truststore instead.
+- **Path-based tables (`catalog: hadoop`) on the `library` engine** are read through Hadoop's S3A, which has no setting for a
+  private CA. `tls.*` with that catalog is refused at start (`tls.* applies to a REST catalog's object store: ...`); import the CA
+  into the JVM's truststore instead. The `native` engine reads them with the AWS SDK and the shared TLS settings, so `tls.*`
+  works there for path-based tables too.
 
 ### A complete file
 
@@ -666,6 +672,7 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 
 | Setting | Default | Meaning |
 |---|---|---|
+| `engine` | `native` | `native` (drishti-iceberg, no Hadoop; a root it cannot reach is read by the library unless `native` is set), `library` (Apache Iceberg Java over Hadoop) or `auto` (native on Windows, library elsewhere); `DRISHTI_ICEBERG_ENGINE` sets it for every connector ([section 17](#17-engines-native-and-library)) |
 | `catalog` | `hadoop` | `hadoop` (path-based tables) or `rest` |
 | `root` | none (`root` or `uri` is required: without either the plugin stays idle; the `iceberg` profile sets `./data/iceberg`) | `hadoop`: the lake, a folder or `s3a://…` (`abfs://`, `gs://`, `hdfs://`) |
 | `domain` | empty | the data domain: the folder under `root`, or the REST namespace |
@@ -674,7 +681,11 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 | `warehouse`, `credential`, `token`, `scope`, `oauth2-server-uri`, `prefix`, `io-impl` | none | `rest`: passed to the catalog |
 | `catalog.<key>` | — | `rest`: any other catalog property (`catalog.rest.sigv4-enabled` …) |
 | `s3.endpoint`, `s3.access-key`, `s3.secret-key`, `s3.region`, `s3.path-style` | — | object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint) |
-| `hadoop.<key>` | — | passed to Hadoop as `<key>` |
+| `hadoop.<key>` | — | `library`: passed to Hadoop as `<key>` |
+| `metadata-location.<kind>` | none | `native`: the kind's table named by its metadata file (`s3://…/v12.metadata.json`), read-only |
+| `relocate` | none | `native`: `<old prefix> -> <new prefix>; …` reads a table copied elsewhere (an S3 table synced to a laptop) |
+| `vended-credentials` | `true` | `native`, `rest`: ask the catalog for each table's own S3 credentials (`X-Iceberg-Access-Delegation`), renewed before they expire |
+| `lz4-decoder` | `safe` | `native`: the LZ4 page decoder, `safe` (pure Java) or `fast` |
 | `kinds` | every table found (new ones too) | comma list of kinds to serve |
 | `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
 | `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
@@ -693,7 +704,7 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 | `proxy.*` | none | the outbound HTTP proxy ([TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none`; for the REST catalog and the object store |
 
 Loader options (`IcebergLoader FILE|- [root]`): `--file-rows` (250000), `--row-group-mb` (1), `--buffer-mb` (1024),
-`--threads` (half the cores, at most 8), `--spill-dir` (the system temp folder), `--keep-days`, `--as-of yyyy-MM-dd` (today in the business zone), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--catalog`,
+`--engine` (`native`, `library` or `auto`, as the connector's `engine`), `--threads` (half the cores, at most 8), `--spill-dir` (the system temp folder), `--keep-days`, `--as-of yyyy-MM-dd` (today in the business zone), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--catalog`,
 `--uri`, `--warehouse`, `--credential`, `--token`, `--set key=value`.
 
 ## 16. Checklist for production
@@ -707,3 +718,66 @@ Loader options (`IcebergLoader FILE|- [root]`): `--file-rows` (250000), `--row-g
    platform's own maintenance, [section 9](#9-retention-and-maintenance)).
 5. Give the server at least 8 GB of heap per million entities a day (estimate).
 6. Measure on your data: a search reports `elapsedMs`, `scanned` and `partial`; a view reports its timings.
+
+## 17. Engines: native and library
+
+The connector reads (and its loader and maintenance write) through one of two engines, chosen by its `engine` setting
+(or `DRISHTI_ICEBERG_ENGINE` for every connector; the loader and maintenance take `--engine`):
+
+| `engine` | What reads and writes | Reaches | Use it for |
+|---|---|---|---|
+| `native` (default) | **drishti-iceberg** (module `drishti-iceberg`, [DRISHTI_ICEBERG.md](../architecture/DRISHTI_ICEBERG.md)): Drishti's own Iceberg engine, no Hadoop | local disk (Windows drive letters, backslashes, UNC shares), `s3://`, `s3a://`; path-based tables, a metadata file named directly, REST catalogs | everything on local disk and S3; **Windows**, with no `winutils.exe` and no `HADOOP_HOME` |
+| `library` | Apache Iceberg Java over Hadoop's file systems (the connector's code before 2.6.0) | the above, plus `abfs://`, `gs://`, `hdfs://` | tables in Azure, Google Cloud Storage or HDFS; a fallback |
+| `auto` | `native` on Windows, `library` elsewhere (and `library` for a root the native engine cannot reach) | | keeping the library on Linux servers while Windows laptops use `native` |
+
+Left to the default, a root the native engine cannot reach (`abfs://`, `gs://`, `hdfs://`) is read by the library; asked for
+by name, `engine: native` with such a root refuses to start, saying to use `library`.
+
+Packs, connector files, the layout ([section 3](#3-what-is-stored)), the caches and every read path of
+[section 7](#7-how-the-connector-reads) are the same on both; a table written by one engine is read and maintained by
+the other. `cacheStats` (Admin → Health) shows `engine`.
+
+**What the native engine is.** It reads table metadata (keeping every field it does not know when it writes the next
+version), manifest lists and manifests (Avro, versions 1 and 2), plans a snapshot with partition-summary and column-bound
+pruning over every transform (identity, bucket, truncate, year, month, day, hour, void; several specs), reads Parquet by
+**field id** (renamed columns, added columns as null, widened types, files without ids through
+`schema.name-mapping.default`), applies position and equality deletes by the spec's sequence-number rules, and travels
+in time through the snapshot log. It writes Parquet with field ids and Iceberg metrics through parquet-java with no
+Hadoop `Configuration` and its own codecs, manifests and manifest lists, and commits safely: on local disk the next
+`vN.metadata.json` is created as a hard link of a finished file (two writers: one wins, the other re-reads and retries),
+on S3 with a conditional PUT (`If-None-Match: *`; a store that ignores it is found by a probe at the first commit and its
+tables are single-writer), through a REST catalog with the commit's requirements (a 409 is retried). Its REST client is
+the JDK's (config, OAuth2 client credentials, `loadTable` with the ETag, vended S3 credentials, SigV4 for Glue with the
+AWS SDK's signer). A class-loader test runs the connector, the loader and maintenance with Hadoop's file systems,
+`Shell` and `Configuration` refused.
+
+**What it refuses, by name** (never reads wrongly): format version 3 tables, encrypted tables and files, ORC and Avro
+data files (naming the file), types it does not know, S3 remote signing. The message says to use `engine: library`.
+
+**The footer cache.** The native engine reads each Parquet file's footer once and keeps it (files never change), shared
+with the native Delta engine (`drishti.parquet.footer-cache-groups`, 50,000 row groups): the larger part of a first
+single-entity read ([section 13](#13-limits-and-trade-offs)) is gone after the first read of a file. It also keeps parsed
+manifests (`drishti.iceberg.manifest-cache-entries`, 2,000,000 entries) and delete files
+(`drishti.iceberg.delete-cache-rows`, 5,000,000 rows); a purge of the connector's caches empties all three.
+
+**Speed.** The same 10,000 trades a day over three days (`tools/samplegen/bulk_trades.py --trades 10000 --days 3
+--jsonl`, documents of about 18 KB), loaded by each engine's loader into its own lake and read by the connector on that
+engine in one JVM (`IcebergEnginesBenchTest`, `-Ddrishti.iceberg.bench=<jsonl>`; 2026-10-20, a 24-core workstation, heap 6 GB):
+
+| | native | library |
+|---|---|---|
+| load (30,000 rows, three days) | 22.7 s | 25.7 s |
+| connector start (plan, type-ahead from the newest day's ids) | 637 ms | 1,848 ms |
+| first trade (cold: id map, footer) | 212 ms | 288 ms |
+| one trade, document cache emptied each time: median / p95 | 54 / 111 ms | 75 / 144 ms |
+| a trade on a past date (a day not yet read) | 94 ms | 353 ms |
+
+Both engines answered the same (ids, documents, the day's 15 columns, a past date). The day's columns had been loaded
+in the background at start on both, so a search is answered from memory on either.
+
+**Windows.** `tools\windows\load-iceberg.ps1` loads the sample documents (and `-Trades N -Days D`) with the native
+engine; `tools\windows\start-server.ps1 -Iceberg` starts the server with the Iceberg connector files and
+`DRISHTI_ICEBERG_ENGINE=native` ([GETTING_STARTED.md](../guides/GETTING_STARTED.md#drishti-on-windows)).
+
+**Tables Drishti does not write.** The `iceberg-external` connector serves tables of Spark, Flink, Trino, Snowflake or
+Glue in their own layout, through the native engine: [ICEBERG_EXTERNAL_CONNECTOR.md](ICEBERG_EXTERNAL_CONNECTOR.md).

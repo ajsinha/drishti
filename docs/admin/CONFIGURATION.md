@@ -2134,10 +2134,12 @@ TLS: an `https://` `endpoint` with the shared [`tls.*`](#tls--tls-for-connectors
 ### `iceberg` — Apache Iceberg
 
 Path-based tables or a REST catalog (Polaris, Snowflake Open Catalog, Glue), in the same layout as Delta Lake. Design,
-loading and maintenance: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md).
+loading and maintenance: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md); the two engines: its
+[section 17](../connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library).
 
 | Setting | Default | Meaning |
 |---|---|---|
+| `engine` | `native` (`DRISHTI_ICEBERG_ENGINE`) | `native`: drishti-iceberg, no Hadoop (local disk and S3; Windows; left to the default, a root it cannot reach is read by the library); `library`: Apache Iceberg Java over Hadoop (also Azure, Google Cloud Storage, HDFS); `auto`: native on Windows, library elsewhere |
 | `catalog` | `hadoop` | `hadoop` (path-based tables) or `rest` |
 | `root` | none (`root` or `uri` is required; the plugin stays idle without one; the `iceberg` profile sets `./data/iceberg`) | `hadoop`: the lake, a folder or `s3a://…` (`abfs://`, `gs://`, `hdfs://`) |
 | `domain` | empty | the data domain: the folder under `root`, or the REST namespace |
@@ -2146,7 +2148,11 @@ loading and maintenance: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.
 | `warehouse`, `credential`, `token`, `scope`, `oauth2-server-uri`, `prefix`, `io-impl` | none | `rest`: passed to the catalog |
 | `catalog.<key>` | — | `rest`: any other catalog property (`catalog.rest.sigv4-enabled` …) |
 | `s3.endpoint`, `s3.access-key`, `s3.secret-key`, `s3.region`, `s3.path-style` | — | object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint) |
-| `hadoop.<key>` | — | passed to Hadoop as `<key>` |
+| `hadoop.<key>` | — | `library`: passed to Hadoop as `<key>` |
+| `metadata-location.<kind>` | none | `native`: the kind's table named by its metadata file, read-only |
+| `relocate` | none | `native`: `<old prefix> -> <new prefix>; …` reads a table copied elsewhere |
+| `vended-credentials` | `true` | `native`, `rest`: ask the catalog for each table's own S3 credentials |
+| `lz4-decoder` | `safe` | `native`: the LZ4 page decoder, `safe` or `fast` |
 | `kinds` | every table found (new ones too) | comma list of kinds to serve |
 | `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
 | `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
@@ -2163,7 +2169,28 @@ loading and maintenance: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.
 | `source-name` | the connector's name | the name shown in provenance and Health |
 | `stale-after` | none | warn when no new data arrived for this long (engine setting) |
 
-TLS for a REST catalog's object store on a private CA: the shared [`tls.*`](#tls--tls-for-connectors) settings with `s3.endpoint: https://...` ([ICEBERG_CONNECTOR.md, Security](../connectors/ICEBERG_CONNECTOR.md#security-tls-and-credentials)); refused with `catalog: hadoop`.
+TLS for a REST catalog's object store on a private CA: the shared [`tls.*`](#tls--tls-for-connectors) settings with `s3.endpoint: https://...` ([ICEBERG_CONNECTOR.md, Security](../connectors/ICEBERG_CONNECTOR.md#security-tls-and-credentials)); on the `library` engine refused with `catalog: hadoop`, on `native` accepted for path-based tables too.
+
+### `iceberg-external` — Iceberg tables Drishti does not write
+
+Tables of Spark, Flink, Trino, Snowflake, Glue, dbt or pyiceberg, in their own layout, read-only through drishti-iceberg: rows as
+documents, ids from identifier fields or columns, dates from a column or the partition spec, every column searchable
+([ICEBERG_EXTERNAL_CONNECTOR.md](../connectors/ICEBERG_EXTERNAL_CONNECTOR.md)).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| the catalog's (`catalog`, `root`, `uri`, `warehouse`, `credential`, `token`, `scope`, `oauth2-server-uri`, `prefix`, `catalog.<key>`, `metadata-location.<kind>`, `relocate`, `vended-credentials`, `s3.*`, `tls.*`, `proxy.*`) | as `iceberg` | where the tables are |
+| `engine` | `auto` | `native` or `auto` (both drishti-iceberg); `library` is refused |
+| `tables.<kind>.table` | the kind | `namespace.table` |
+| `tables.<kind>.id`, `.id-separator` | the identifier fields, `:` | the id columns (several joined) |
+| `tables.<kind>.date`, `.date-from`, `.date-zone` | the partition spec's date, none, `UTC` | the business date: a date column, or a timestamp's `day` in a zone; none: current only |
+| `tables.<kind>.mode` | `snapshot` | `snapshot` or `effective` |
+| `tables.<kind>.document` | `row` | `row`, or `column:<name>` (a JSON column) |
+| `tables.<kind>.columns.exclude`, `.columns.rename.<column>`, `.links.<column>`, `.depth` | none, none, none, `2` | columns left out, renamed, naming other kinds, nesting searched |
+| `tables`, `namespace` | none | `tables: auto` serves every table of `namespace` |
+| `decimals`, `binary` | `number`, `base64` | `string` keeps decimals' precision; `omit` leaves binary out |
+| `id-index-mb`, `id-index-warn-rows`, `max-index-rows` | `1024`, `5000000`, `10000000` | the id index of unsorted tables; the Health hint; the rows type-ahead and columns take |
+| `refresh-seconds`, `lookback-days`, `doc-cache-mb`, `columns-cache-mb`, `max-concurrent-reads`, `source-name` | `10`, `10`, `256`, `1024`, `16`, `iceberg-external` | as `iceberg` |
 
 ### `duckdb` — one embedded DuckDB file
 

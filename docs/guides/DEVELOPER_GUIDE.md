@@ -67,7 +67,9 @@ All Java code lives under the package `com.ash.drishti`. The parent POM (`pom.xm
 | `drishti-ai` | `ai` | The LLM provider layer and the MCP client: providers (Anthropic, OpenAI-compatible through Spring AI, a mock), model registry, call policy, prompt masking, MCP clients over streamable HTTP. Depends on `api` and `common` only (`ArchitectureRulesTest.aiLayerDependsOneWay`). **Off by default**; see [AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md) and [MCP_CLIENT.md](../architecture/MCP_CLIENT.md). | `LlmGateway`, `LlmRegistry`, `LlmProvider`, `AnthropicProvider`, `SpringAiOpenAiProvider`, `McpGateway`, `McpRegistry`, `McpClient` |
 | `drishti-diskcache` | `diskcache` | A disk-backed, size-bounded, self-clearing cache (RocksDB) for live connector state. | `DiskCache` |
 | `drishti-messaging` | `messaging` | The latest-state store and live fan-out shared by the ActiveMQ and RabbitMQ connectors. | `MessageStateSource` |
-| `drishti-deltalake` | `deltalake` | A Delta Kernel engine without Hadoop: local disk through `java.nio` (Windows paths included), S3 through the AWS SDK, Parquet through parquet-java with its own input files and codecs; and Drishti's own Delta writer (`lake build --engine drishti`). Its tests prove in an isolated class loader that no Hadoop `FileSystem`, `Shell` or `Configuration` loads. | `NativeEngine`, `write.LakeManifest` |
+| `drishti-lakeio` | `lakeio` | Lake file access shared by the native Delta and Iceberg engines, no Hadoop: `Storage` (local disk through `java.nio`, Windows drive letters, backslashes and UNC shares included; S3 through the AWS SDK, with conditional PUTs for commits), byte ranges, Parquet page codecs (`NativeCodecs`, reading and writing) and the per-file Parquet footer cache. | `Storage`, `LocalStorage`, `S3Storage`, `LocalPaths`, `NativeCodecs`, `ParquetFooters` |
+| `drishti-iceberg` | `iceberg` | Drishti's own Apache Iceberg engine without Hadoop, on `drishti-lakeio`: metadata JSON kept whole, path-based, metadata-file and REST catalogs (JDK HTTP client, OAuth2, ETag, vended credentials, SigV4), Avro manifests, planning with partition and metric pruning, field-id Parquet reads with schema evolution and deletes, the Parquet writer with Iceberg metrics, safe commits and the table operations. Its tests prove the writer loads no Hadoop `Configuration`. | `Table`, `catalog.Catalogs`, `scan.Planner`, `read.TaskReader`, `write.Operations`, `write.ParquetDataWriter` |
+| `drishti-deltalake` | `deltalake` | A Delta Kernel engine without Hadoop on `drishti-lakeio` (local disk, Windows paths included, and S3; Parquet through parquet-java with the shared input files and codecs); and Drishti's own Delta writer (`lake build --engine drishti`). Its tests prove in an isolated class loader that no Hadoop `FileSystem`, `Shell` or `Configuration` loads. | `NativeEngine`, `write.LakeManifest` |
 | `drishti-testkit` | `testkit` | Contract tests every source plugin of a kind must pass. | `DatedSourceContract`, `MessageSourceContract`, `BrokerOutage` |
 | `drishti-server` | `server` | The Spring Boot application: REST and SSE controllers, security, alerts, Sutra governance, and one sub-package per feature area (`admin`, `ai`, `alerts`, `bi`, `calc`, `cli`, `collab`, `connectors`, `deploy`, `design`, `dist`, `embed`, `explain`, `governance`, `layout`, `loads`, `notify`, `pivot`, `registry`, `reports`). `bi` is Rūpaka, the BI engine (section 4.4). | `DrishtiApplication`, `api.*Controller`, `security.Entitlements`, `security.TokenFilter`, `alerts.AlertEngine`, `governance.SutraGovernance`, `bi.mq.MqService`, `bi.engine.QueryService` |
 | `drishti-it` | `it` | Repository-wide rules, as tests only. | `ArchitectureRulesTest`, `LicenseHeaderTest`, `SourceFileSizeTest`, `NoBlockingUnderSynchronizedTest` |
@@ -91,7 +93,8 @@ them, so they are on its class path; each starts only when enabled or used by a 
 | `drishti-plugin-cassandra` | `cassandra` | Apache Cassandra, ScyllaDB, Astra: a keyspace per data domain, a partition per business day, generation and bucket keyed by id, `entity_days` and `kind_days` (`CassandraLayout`); `CassandraLoader` writes it, a day under a new generation | — |
 | `drishti-plugin-redis` | `redis` | Redis (standalone or Cluster): today and recent days in memory, with live updates | — |
 | `drishti-plugin-mongodb` | `mongodb` | A document per entity per business day, in a collection per data domain | — |
-| `drishti-plugin-iceberg` | `iceberg` | Apache Iceberg tables (path-based or a REST catalog), with time travel | — |
+| `drishti-plugin-iceberg` | `iceberg` | Apache Iceberg tables in Drishti's layout (path-based or a REST catalog), with time travel; engine `native` (drishti-iceberg, no Hadoop) or `library` | `drishti-iceberg` |
+| `drishti-plugin-iceberg-external` | `iceberg-external` | Iceberg tables other engines write, rows as documents, read-only, through drishti-iceberg | `drishti-iceberg` |
 | `drishti-plugin-duckdb` | `duckdb` | Every data domain in one embedded DuckDB file | — |
 | `drishti-plugin-feeds` | `feed` | Public feeds: NY Fed SOFR, ECB €STR and FX, US Treasury, FRED ([FEEDS_CONNECTOR.md](../connectors/FEEDS_CONNECTOR.md)) | — |
 | `drishti-plugin-news` | `news` | Headlines for a named entity, computed on demand from Google News RSS (code, not a store) | `drishti-common` |
@@ -101,7 +104,7 @@ them, so they are on its class path; each starts only when enabled or used by a 
 | `drishti-plugin-rabbitmq` | `rabbitmq` | RabbitMQ queues | `drishti-messaging` |
 | `drishti-plugin-s3` | `s3` | Documents in Amazon S3 or an S3-compatible store | — |
 
-Besides the seventeen plugins, the engine has one built-in plugin type, `derived`: entities computed from other kinds (the trading
+Besides these plugins, the engine has one built-in plugin type, `derived`: entities computed from other kinds (the trading
 pack's `trade-pages` connector makes the counterparty, portfolio, legal-entity and index pages from the `trade` kind).
 
 ### 1.3 How the modules depend on each other
@@ -120,9 +123,11 @@ drishti-api                       (nothing internal; no Spring)
     └── drishti-testkit            (api, common)
 drishti-diskcache                 (nothing internal)
 drishti-messaging                 (api, diskcache)
-drishti-deltalake                 (nothing internal)
-plugins/*                         (api; kafka adds diskcache; activemq and rabbitmq add messaging; delta adds deltalake)
-drishti-server                    (engine, identity, packs, ai, and all eighteen plugins)
+drishti-lakeio                    (api)
+drishti-deltalake                 (lakeio)
+drishti-iceberg                   (api, lakeio)
+plugins/*                         (api; kafka adds diskcache; activemq and rabbitmq add messaging; delta adds deltalake; iceberg and iceberg-external add iceberg)
+drishti-server                    (engine, identity, packs, ai, and all nineteen plugins)
 drishti-it                        (server, testkit)
 drishti-benchmarks                (inference)
 ```

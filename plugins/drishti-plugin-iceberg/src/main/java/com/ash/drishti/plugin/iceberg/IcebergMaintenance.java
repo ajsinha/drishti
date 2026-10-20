@@ -17,8 +17,8 @@ package com.ash.drishti.plugin.iceberg;
 
 import com.ash.drishti.api.LoadGuard;
 import com.ash.drishti.plugin.iceberg.IcebergLayout.Row;
-import com.ash.drishti.plugin.iceberg.IcebergTable.Day;
-import com.ash.drishti.plugin.iceberg.IcebergTable.Layout;
+import com.ash.drishti.plugin.iceberg.KindTable.Day;
+import com.ash.drishti.plugin.iceberg.KindTable.Layout;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -66,7 +66,8 @@ import org.apache.iceberg.types.Types;
  *       files only they referenced; time travel reaches back that far.</li>
  * </ul>
  *
- * <p>Catalog options as {@link IcebergLoader}: {@code --catalog rest --uri …}, {@code --set key=value}.
+ * <p>Catalog options as {@link IcebergLoader}: {@code --engine native|library|auto} (as the connector's; {@code native}, drishti-iceberg,
+ * needs no Hadoop), {@code --catalog rest --uri …}, {@code --set key=value}.
  * {@code --kinds k1,k2} limits the tables; {@code --spill-dir} and {@code --buffer-mb} bound a rewrite's sort.
  */
 public final class IcebergMaintenance {
@@ -94,7 +95,7 @@ public final class IcebergMaintenance {
             switch (args[i]) {
                 case "--domain" -> domains = Arrays.asList(v.split(","));
                 case "--kinds" -> kinds = Arrays.asList(v.split(","));
-                case "--catalog", "--uri", "--warehouse", "--credential", "--token" -> settings.put(args[i].substring(2), v);
+                case "--catalog", "--uri", "--warehouse", "--credential", "--token", "--engine" -> settings.put(args[i].substring(2), v);
                 case "--set" -> settings.put(v.substring(0, v.indexOf('=')), v.substring(v.indexOf('=') + 1));
                 case "--keep-days" -> keepDays = Integer.parseInt(v);
                 case "--expire-hours" -> expireHours = Long.parseLong(v);
@@ -123,36 +124,41 @@ public final class IcebergMaintenance {
         for (String domain : domains) {
             Map<String, String> s = new HashMap<>(settings);
             s.put("domain", domain.trim());
-            try (IcebergLake lake = IcebergLake.of(s)) {
+            try (LayoutLake lake = LayoutLake.of(s)) {
                 for (String kind : kinds.isEmpty() ? lake.kinds() : kinds) {
-                    Table t = lake.load(kind).orElse(null);
+                    LayoutLake.LayoutTable t = lake.load(kind).orElse(null);
                     if (t == null) {
                         continue;
                     }
                     String name = (domain.isBlank() ? "" : domain + "/") + kind;
                     if (keepDays > 0) {
-                        System.out.printf("%s: %d business days removed%n", name, keepDays(t, keepDays, guard));
+                        System.out.printf("%s: %d business days removed%n", name, t.keepDays(keepDays, guard));
                     }
                     if (addColumns.containsKey(kind)) {
-                        Map<String, Boolean> cols = new LinkedHashMap<>();
-                        addColumns.get(kind).forEach(p -> cols.put(p.trim(), false));
-                        inferTypes(t, cols);
-                        IcebergLayout.open(lake, kind, cols, IcebergLayout.DEFAULT_ROW_GROUP_BYTES, IcebergLayout.fileRows(t));
-                        t.refresh();
+                        t.addColumns(addColumns.get(kind));
                     }
                     if (relayout || addColumns.containsKey(kind)) {
                         System.out.printf("%s: %d business days rewritten%n", name,
-                                relayout(t, force || addColumns.containsKey(kind), spill.resolve("drishti-iceberg-" + ProcessHandle.current().pid()), budget));
+                                t.relayout(force || addColumns.containsKey(kind), spill.resolve("drishti-iceberg-" + ProcessHandle.current().pid()), budget));
                     }
                     if (manifests) {
-                        rewriteManifests(t);
+                        t.rewriteManifests();
                     }
                     if (expireHours >= 0) {
-                        expireSnapshots(t, expireHours);
+                        t.expireSnapshots(expireHours);
                     }
                 }
             }
         }
+    }
+
+    /** Adds promoted columns ({@code paths}, typed by the newest day's documents) to the library-engine table {@code t}. */
+    static void addColumns(IcebergLake lake, String kind, Table t, List<String> paths) {
+        Map<String, Boolean> cols = new LinkedHashMap<>();
+        paths.forEach(p -> cols.put(p.trim(), false));
+        inferTypes(t, cols);
+        IcebergLayout.open(lake, kind, cols, IcebergLayout.DEFAULT_ROW_GROUP_BYTES, IcebergLayout.fileRows(t));
+        t.refresh();
     }
 
     /** {@link #keepDays(Table, int, LoadGuard)} counting back from today. */
@@ -215,8 +221,8 @@ public final class IcebergMaintenance {
                 return;
             }
             Day newest = l.days().lastEntry().getValue();
-            try (CloseableIterable<Record> rows = IcebergTable.open(t.io(), l.schema(), newest.files().get(0),
-                    new Schema(l.schema().findField(IcebergLayout.DOC)), Expressions.alwaysTrue())) {
+            try (CloseableIterable<Record> rows = IcebergTable.open(t.io(), t.schema(), IcebergTable.tasks(newest).get(0),
+                    new Schema(t.schema().findField(IcebergLayout.DOC)), Expressions.alwaysTrue())) {
                 int n = 0;
                 Map<String, Integer> seen = new HashMap<>();
                 for (Record r : rows) {
@@ -264,13 +270,13 @@ public final class IcebergMaintenance {
                     continue;
                 }
                 try (SortedRuns rows = new SortedRuns(spillDir, "relayout-" + day.date())) {
-                    for (FileScanTask task : day.files()) {
+                    for (FileScanTask task : IcebergTable.tasks(day)) {
                         copy(t, schema, task, promoted, rows, budget);
                     }
                     List<DataFile> files = IcebergLayout.writeDay(t, day.date(), rows.merged(), fileRows);
                     RewriteFiles rw = t.newRewrite().validateFromSnapshot(l.snapshotId());
                     java.util.Set<String> gone = new java.util.HashSet<>();
-                    for (FileScanTask task : day.files()) {
+                    for (FileScanTask task : IcebergTable.tasks(day)) {
                         rw.deleteFile(task.file());
                         for (DeleteFile d : task.deletes()) {
                             Integer p = d.partition().size() > 0 ? d.partition().get(0, Integer.class) : null;
@@ -294,7 +300,7 @@ public final class IcebergMaintenance {
             return true;
         }
         List<String[]> ranges = new ArrayList<>();
-        for (FileScanTask task : day.files()) {
+        for (FileScanTask task : IcebergTable.tasks(day)) {
             DataFile f = task.file();
             if (f.recordCount() > fileRows) {
                 return true;

@@ -842,7 +842,7 @@ generated trade book streamed in) into one store, **in the layout that store's c
 | `tools/load-redis.sh` | Redis, a compressed document per entity per day, each day replaced atomically | `--ttl-days N` |
 | `tools/load-aerospike.sh` | Aerospike, a set per domain, promoted fields as bins | `--ttl-days N` |
 | `tools/load-cassandra.sh` | Apache Cassandra or ScyllaDB, a keyspace per domain, a partition per day per bucket, each day under a new generation (appears whole); `--create` makes the tables (`tools/windows/load-cassandra.ps1` on Windows) | `--ttl-days N` or `--keep-days N` |
-| `tools/load-iceberg.sh` | Apache Iceberg tables (a folder or a REST catalog), sorted by id, external sort with `--spill-dir` | `--keep-days N` |
+| `tools/load-iceberg.sh` | Apache Iceberg tables (a folder or a REST catalog), sorted by id, external sort with `--spill-dir`; `--engine native` writes with drishti-iceberg, no Hadoop (`tools/windows/load-iceberg.ps1` on Windows, native by default) | `--keep-days N` |
 
 ```bash
 tools/load-duckdb.sh /tmp/demo.duckdb --trades 10000 --days 3

@@ -48,7 +48,9 @@
     <module>drishti-testkit</module>
     <module>drishti-diskcache</module>
     <module>drishti-messaging</module>
+    <module>drishti-lakeio</module>
     <module>drishti-deltalake</module>
+    <module>drishti-iceberg</module>
     <module>drishti-net</module>
     <module>plugins/drishti-plugin-demo</module>
     <module>plugins/drishti-plugin-file</module>
@@ -60,6 +62,7 @@
     <module>plugins/drishti-plugin-redis</module>
     <module>plugins/drishti-plugin-mongodb</module>
     <module>plugins/drishti-plugin-iceberg</module>
+    <module>plugins/drishti-plugin-iceberg-external</module>
     <module>plugins/drishti-plugin-duckdb</module>
     <module>plugins/drishti-plugin-feeds</module>
     <module>plugins/drishti-plugin-news</module>
@@ -151,6 +154,7 @@
       <dependency><groupId>com.github.luben</groupId><artifactId>zstd-jni</artifactId><version>${zstd-jni.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-mongodb</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg-external</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-duckdb</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>org.duckdb</groupId><artifactId>duckdb_jdbc</artifactId><version>${duckdb.version}</version></dependency>
       <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-format</artifactId><version>${arrow-format.version}</version></dependency>
@@ -165,6 +169,8 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-messaging</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeio</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-iceberg</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-net</artifactId><version>${project.version}</version></dependency>
       <!-- pinned here: Spring Boot's dependency management would otherwise pick older clients -->
       <dependency><groupId>com.rabbitmq</groupId><artifactId>amqp-client</artifactId><version>${rabbitmq.version}</version></dependency>

@@ -30,6 +30,7 @@
   <dependencies>
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeio</artifactId></dependency>
     <dependency><groupId>io.delta</groupId><artifactId>delta-kernel-api</artifactId><version>${delta-kernel.version}</version></dependency>
     <!-- for its Hadoop-free parts only: JSON handler, expression evaluator, column vectors and Parquet column readers -->
     <dependency>

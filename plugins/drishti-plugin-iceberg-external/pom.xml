@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.ash.drishti</groupId>
+    <artifactId>drishti-parent</artifactId>
+    <version>2.5.0</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+  <artifactId>drishti-plugin-iceberg-external</artifactId>
+  <name>drishti-plugin-iceberg-external</name>
+  <description>Iceberg tables Drishti does not write (Spark, Flink, Trino, Snowflake, Glue, dbt, pyiceberg): rows as documents, ids from identifier fields or columns, dates from a column or the partition spec, every column searchable; read-only, through drishti-iceberg (no Hadoop)</description>
+  <dependencies>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-iceberg</artifactId></dependency>
+    <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
+    <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
+    <!-- the tests add merge-on-read delete files to fixture tables with the Iceberg library, a writer independent of drishti-iceberg -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+  </dependencies>
+</project>

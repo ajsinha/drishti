@@ -650,7 +650,9 @@ wrong.
 
 Why it works without Hadoop: the Delta Lake connector reads through its **native engine** (module `drishti-deltalake`), which uses
 Java's own file access for local disk and the AWS SDK for S3. Hadoop's local file system, and with it `winutils.exe`, is never used.
-See [DELTA_CONNECTOR.md › Engines](../connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop).
+See [DELTA_CONNECTOR.md › Engines](../connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop). The Iceberg connectors do the same
+through **drishti-iceberg**, Drishti's own Iceberg engine ([ICEBERG_CONNECTOR.md › Engines](../connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library)),
+the default engine.
 
 > **Status.** The native engine is tested on Linux on every build, including its Windows path rules (drive letters, backslashes, UNC
 > shares) as unit tests. The `windows` GitHub Actions job builds, tests and starts the server on `windows-latest`. Report what you
@@ -691,7 +693,8 @@ dir drishti-server\target\*-exec.jar
 ```
 
 You should see `drishti-server-2.5.0-exec.jar`. To also run the tests of the Delta engine and connector:
-`.\mvnw.cmd -q verify -pl drishti-deltalake,plugins/drishti-plugin-delta -am` (tests that need Docker skip themselves).
+`.\mvnw.cmd -q verify -pl drishti-deltalake,plugins/drishti-plugin-delta -am` (tests that need Docker skip themselves); of the
+Iceberg engine and connectors: `.\mvnw.cmd -q verify -pl drishti-iceberg,plugins/drishti-plugin-iceberg,plugins/drishti-plugin-iceberg-external -am`.
 
 **Or copy** a server built elsewhere (on Linux, or by CI): Java bytecode is the same on every system. Make a folder, for example
 `C:\drishti`, holding:
@@ -800,11 +803,24 @@ A lake in S3 reads the same on Windows, with the connector's `s3.endpoint`, `s3.
 ([CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake)). Paths with spaces (`C:\Users\Jane Doe\drishti\data\delta`) are
 fine.
 
+**Iceberg tables on Windows.** The Iceberg loader and connector run on the native engine (drishti-iceberg), so no `winutils.exe` and
+no `HADOOP_HOME` either. Load the banking samples (and, with `-Trades`, a trade book) into `data\iceberg`, then start the server with
+the Iceberg connector files:
+
+```powershell
+.\tools\windows\load-iceberg.ps1                                    # the sample documents, ten business days
+.\tools\windows\load-iceberg.ps1 -Trades 10000 -Days 3              # and a book of 10,000 trades a day
+.\tools\windows\start-server.ps1 -Iceberg                           # copies config\connectors.examples\iceberg\*.yaml in, engine native
+```
+
+The loader's sort spills under `data\tmp\iceberg` (`-SpillDir` to move it), never the system temp folder. On Linux the same is
+`tools/load-iceberg.sh ./data/iceberg --engine native` ([TOOLS.md](TOOLS.md)). `engine: library` (Apache Iceberg Java over Hadoop)
+still needs `winutils.exe` on Windows; it is only for tables in Azure, Google Cloud Storage or HDFS.
+
 ### 7. What does not work on Windows
 
 | What | Why | Instead |
 |---|---|---|
-| The Iceberg connector (profile `iceberg`) | it reads through Hadoop's file systems, which need `winutils.exe` | keep the default Delta Lake; the Iceberg connector is idle unless the `iceberg` profile is set |
 | `engine: hadoop` on a local lake | Hadoop's local file system needs `winutils.exe` | `engine: native` (the default) |
 | Replacing a DuckDB file while the server reads it | Windows cannot rename a file over one that is open ([DUCKDB_CONNECTOR.md](../connectors/DUCKDB_CONNECTOR.md)) | load into a new file and switch the connector's `path`, or stop the server first |
 | The bash scripts in `tools\*.sh` (`load-postgres.sh`, `drill.sh`, …) | they need bash | `tools\windows\*.ps1` for the server and the console, `tools\drishti.py` for lakes and packs; for the others, the Python tools they call run as they are (`python tools\…`), or use Git Bash or WSL |

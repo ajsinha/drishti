@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.plugin.delta;
 
-import com.ash.drishti.deltalake.LocalPaths;
+import com.ash.drishti.lakeio.LocalPaths;
 import com.ash.drishti.deltalake.NativeEngine;
 import java.util.Locale;
 import java.util.Map;

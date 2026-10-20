@@ -1,0 +1,51 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Example: copy to config/connectors/risk-mart.yaml to serve Iceberg tables a Spark pipeline writes to a REST catalog
+# (Apache Polaris, Snowflake Open Catalog, Glue's Iceberg endpoint) as Drishti kinds, read-only
+# (docs/connectors/ICEBERG_EXTERNAL_CONNECTOR.md). Credentials are ${ENV_VAR} references.
+plugin: iceberg-external
+kinds:
+- trade
+- counterparty
+- market-quote
+description: risk-mart tables written by Spark, read through drishti-iceberg (no Hadoop)
+settings:
+  catalog: rest
+  uri: ${RISK_MART_CATALOG_URI:https://polaris.example.com/api/catalog}
+  warehouse: risk
+  credential: ${RISK_MART_CREDENTIAL}
+  engine: native
+  decimals: string
+  tables:
+    trade:
+      table: risk_mart.trades
+      id: [SOURCE_SYSTEM, TRADE_ID]
+      date: BUSINESS_DATE
+      mode: snapshot
+      columns:
+        exclude: [ETL_LOAD_TS, _FILE]
+        rename:
+          cpty_id: COUNTERPARTY
+      links:
+        COUNTERPARTY: counterparty
+        PORTFOLIO: portfolio
+    counterparty:
+      table: refdata.counterparties
+      id: CPTY_ID
+    market-quote:
+      table: market.quotes
+      date: QUOTE_TS
+      date-from: day
+      date-zone: Europe/London

@@ -52,7 +52,37 @@
   prepared statement checked against the live partition keys, mutual TLS against Cassandra 5, the loader's schema, retention and TTL.
   [CASSANDRA_CONNECTOR.md](docs/connectors/CASSANDRA_CONNECTOR.md) (with numbers measured at 10,000 trades a day); CONNECTORS, CONFIGURATION,
   TLS, DEMO_DATA, TOOLS, GETTING_STARTED, DEVELOPER_GUIDE, the help centre and `config/connectors.examples/cassandra/`.
-
+- **New: drishti-iceberg, Drishti's own Apache Iceberg engine with no Hadoop; Iceberg on Windows without winutils.exe.** The Iceberg
+  connector reads and writes through it with `engine: native` (or `DRISHTI_ICEBERG_ENGINE=native`; `--engine` for `IcebergLoader`
+  and `IcebergMaintenance`): table metadata (fields it does not know are kept when it writes the next version), path-based tables,
+  a metadata file named directly (`metadata-location.<kind>`) and REST catalogs over the JDK's HTTP client (config, OAuth2 client
+  credentials, `loadTable` with the ETag, vended S3 credentials, commits, SigV4 for Glue), Avro manifests, planning with
+  partition-summary and column-bound pruning over every transform, Parquet read by field id (renames, added columns, widened types,
+  files without ids through the name mapping), position and equality deletes by the sequence-number rules, time travel, and the
+  writer: Parquet with field ids and Iceberg metrics through parquet-java on `PlainParquetConfiguration` with Drishti's own codecs,
+  commits made safe by a hard-link create on local disk, a conditional PUT on S3 (a store without them is found by a probe and its
+  tables are single-writer) and the REST catalog's requirements. Each Parquet footer, manifest and delete file is read once and kept,
+  so the first single-entity read no longer re-reads the footer. Format version 3, encrypted tables and ORC or Avro data files are
+  refused by name. `engine: library` is today's Apache Iceberg Java code, kept for tables in Azure, Google Cloud Storage or HDFS;
+  **`native` is the default** (every Iceberg test passes on it), and left to the default a root it cannot reach is read by the
+  library; `engine: library` (or `DRISHTI_ICEBERG_ENGINE=library`) brings back the old behaviour, `auto` keeps the library on Linux. On 10,000 trades a day the native engine started the connector in 0.6 s (library 1.8 s) and read a trade
+  in 54 ms median (75 ms) ([ICEBERG_CONNECTOR.md section 17](docs/connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library)).
+  `tools/windows/load-iceberg.ps1` loads Iceberg tables on Windows, `tools/windows/start-server.ps1 -Iceberg` serves them;
+  GETTING_STARTED's Windows table loses its Iceberg row. Proven by a pyiceberg interop suite (fixtures written by pyiceberg, read
+  back equal; tables written by drishti-iceberg read back by pyiceberg), every plugin test on both engines, a class-loader test that
+  refuses Hadoop's file systems, `Shell` and `Configuration` for the connector, the loader and maintenance, writers committing at once
+  (local disk, a REST catalog), and refusal and Windows path tests ([DRISHTI_ICEBERG.md](docs/architecture/DRISHTI_ICEBERG.md)).
+- **New: the `iceberg-external` connector, for Iceberg tables Drishti does not write** (Spark, Flink, Trino, Snowflake, Glue, dbt):
+  read-only through drishti-iceberg, the row is the document (structs, lists, maps; `decimals: string`, `binary: omit`), the id comes
+  from the identifier fields or named columns, the business date from a column, a timestamp's day in a zone or the partition spec
+  (else current only), every primitive column is searchable, `links` make reverse lookups, an unsorted table gets an id index,
+  `tables: auto` serves a namespace and names tables without an id, and `StarterSchemas` drafts a pack's schemas from the tables
+  ([ICEBERG_EXTERNAL_CONNECTOR.md](docs/connectors/ICEBERG_EXTERNAL_CONNECTOR.md)).
+- **Changed: the native Delta engine's file access is a module of its own, `drishti-lakeio`**, shared with the coming Iceberg engine
+  ([DRISHTI_ICEBERG.md](docs/architecture/DRISHTI_ICEBERG.md) step I1): local disk and S3 storage, byte ranges, the Parquet page codecs
+  (which now also compress, for writers) and the per-file Parquet footer cache moved out of `drishti-deltalake` unchanged; local disk gains
+  an exclusive create (a hard link of a finished file) and S3 a conditional PUT (`If-None-Match: *`) with a start-up probe, for safe commits.
+  Every Delta test passes as before; the tests of the moved classes moved with them.
 - **Fixed: Drishti*net: the cluster never ends with no enabled administrator.** The last-administrator rule was checked only where a change was
   made, so two nodes disabling (or demoting, or deleting) the last two administrators at the same moment could leave none enabled. A peer's
   change that would leave a node with none is now repaired as it is applied: the disabled administrator enabled most recently is enabled again

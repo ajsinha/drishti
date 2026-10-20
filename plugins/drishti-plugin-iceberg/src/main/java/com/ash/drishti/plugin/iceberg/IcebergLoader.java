@@ -40,8 +40,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantLock;
-import org.apache.iceberg.DataFile;
-import org.apache.iceberg.Table;
 
 /**
  * Loads JSON lines into Iceberg tables in {@link IcebergLayout}: {@code java -cp <plugin classpath>
@@ -58,7 +56,9 @@ import org.apache.iceberg.Table;
  * rows each, are committed together in one overwrite of those days).
  * Up to {@code --threads} days are written at once; commits to one table are serialised.
  *
- * <p>Options: {@code --catalog rest --uri U --warehouse W --credential C --token T} for a REST catalog (the domain is
+ * <p>Options: {@code --engine native|library|auto} (the engine that writes: as the connector's {@code engine}, else
+ * {@code DRISHTI_ICEBERG_ENGINE}, else {@code native}; {@code native} needs no Hadoop, so it runs on Windows), {@code --catalog rest --uri U
+ * --warehouse W --credential C --token T} for a REST catalog (the domain is
  * the namespace), {@code --set key=value} for any connector setting ({@code s3.endpoint}, {@code hadoop.…}),
  * {@code --keep-days N} to remove each loaded table's business days older than its newest N on or before
  * {@code --as-of} (today) afterwards and expire the snapshots that referenced them ({@link IcebergMaintenance}; more
@@ -92,7 +92,7 @@ public final class IcebergLoader {
             String a = args[i];
             String v = i + 1 < args.length ? args[i + 1] : "";
             switch (a) {
-                case "--catalog", "--uri", "--warehouse", "--credential", "--token" -> settings.put(a.substring(2), v);
+                case "--catalog", "--uri", "--warehouse", "--credential", "--token", "--engine" -> settings.put(a.substring(2), v);
                 case "--set" -> settings.put(v.substring(0, v.indexOf('=')), v.substring(v.indexOf('=') + 1));
                 case "--file-rows" -> fileRows = Integer.parseInt(v);
                 case "--row-group-mb" -> rowGroupBytes = (long) (Double.parseDouble(v) * 1024 * 1024);
@@ -122,10 +122,10 @@ public final class IcebergLoader {
         private final Map<Bucket, SortedRuns> buckets = new LinkedHashMap<>();
         /** Per domain and kind, per promoted path: 1 when a number was seen, 2 when text was. */
         private final Map<String, Map<String, Integer>> seen = new HashMap<>();
-        private final Map<String, IcebergLake> lakes = new ConcurrentHashMap<>();
+        private final Map<String, LayoutLake> lakes = new ConcurrentHashMap<>();
         private final Map<String, ReentrantLock> commitLocks = new ConcurrentHashMap<>();
         /** Per table, its days of fewer than {@link #SMALL_DAY} rows, committed together once all are written. */
-        private final Map<String, Map<LocalDate, List<DataFile>>> smallDays = new ConcurrentHashMap<>();
+        private final Map<String, Map<LocalDate, List<?>>> smallDays = new ConcurrentHashMap<>();
 
         Run(Map<String, String> settings, int fileRows, long rowGroupBytes, long budget, int threads, Path spillDir, LoadGuard guard) {
             this.settings = settings;
@@ -140,14 +140,14 @@ public final class IcebergLoader {
         void load(String file, int keepDays) throws Exception {
             long t0 = System.nanoTime();
             long n = read(file, t0);
-            List<Table> loaded = write(t0);
+            List<LayoutLake.LayoutTable> loaded = write(t0);
             if (keepDays > 0) {
-                for (Table t : loaded) {
-                    IcebergMaintenance.keepDays(t, keepDays, guard);
-                    IcebergMaintenance.expireSnapshots(t, 168);   // time travel keeps a week; older files go
+                for (LayoutLake.LayoutTable t : loaded) {
+                    t.keepDays(keepDays, guard);
+                    t.expireSnapshots(168);                       // time travel keeps a week; older files go
                 }
             }
-            for (IcebergLake l : lakes.values()) {
+            for (LayoutLake l : lakes.values()) {
                 l.close();
             }
             System.out.printf("iceberg: loaded %,d rows into %d tables in %,.0f s%n", n, loaded.size(), (System.nanoTime() - t0) / 1e9);
@@ -204,14 +204,14 @@ public final class IcebergLoader {
         }
 
         /** Writes each day (up to {@code threads} at once) and commits it; returns the tables written. */
-        private List<Table> write(long t0) throws Exception {
-            Map<String, Table> tables = new TreeMap<>();
+        private List<LayoutLake.LayoutTable> write(long t0) throws Exception {
+            Map<String, LayoutLake.LayoutTable> tables = new TreeMap<>();
             for (Bucket b : buckets.keySet()) {
                 String key = b.domain() + "/" + b.kind();
                 if (!tables.containsKey(key)) {
                     Map<String, Boolean> promoted = new LinkedHashMap<>();
                     seen.getOrDefault(key, Map.of()).forEach((path, t) -> promoted.put(path, t == 1));   // numbers only: a number column
-                    tables.put(key, IcebergLayout.open(lake(b.domain()), b.kind(), promoted, rowGroupBytes, fileRows));
+                    tables.put(key, lake(b.domain()).open(b.kind(), promoted, rowGroupBytes, fileRows));
                 }
             }
             Semaphore slots = new Semaphore(threads);
@@ -220,18 +220,18 @@ public final class IcebergLoader {
                 for (Map.Entry<Bucket, SortedRuns> e : buckets.entrySet()) {
                     Bucket b = e.getKey();
                     String key = b.domain() + "/" + b.kind();
-                    Table table = tables.get(key);
+                    LayoutLake.LayoutTable table = tables.get(key);
                     slots.acquire();
                     done.add(writers.submit(() -> {
                         try (SortedRuns rows = e.getValue()) {
                             long d0 = System.nanoTime();
-                            List<DataFile> files = IcebergLayout.writeDay(table, b.date(), rows.merged(), fileRows);
-                            long count = files.stream().mapToLong(DataFile::recordCount).sum();
+                            List<?> files = table.writeDay(b.date(), rows.merged(), fileRows);
+                            long count = table.rows(files);
                             ReentrantLock lock = commitLocks.computeIfAbsent(key, k -> new ReentrantLock());
                             lock.lock();
                             try {
                                 if (count >= SMALL_DAY) {
-                                    IcebergLayout.commitDays(table, Map.of(b.date(), files));
+                                    table.commitDays(Map.of(b.date(), files));
                                 } else {                         // small days of a table: one commit for all of them, below
                                     smallDays.computeIfAbsent(key, k -> new TreeMap<>()).put(b.date(), files);
                                 }
@@ -240,7 +240,7 @@ public final class IcebergLoader {
                             }
                             if (count >= SMALL_DAY) {
                                 System.err.printf("iceberg: %s %s: %,d rows, %d files, %,.2f GB, %,.0f s%n", key, b.date(), count, files.size(),
-                                        files.stream().mapToLong(DataFile::fileSizeInBytes).sum() / 1e9, (System.nanoTime() - d0) / 1e9);
+                                        table.bytes(files) / 1e9, (System.nanoTime() - d0) / 1e9);
                             }
                         } finally {
                             slots.release();
@@ -251,7 +251,7 @@ public final class IcebergLoader {
                 for (Future<?> f : done) {
                     f.get();
                 }
-                smallDays.forEach((key, days) -> IcebergLayout.commitDays(tables.get(key), days));
+                smallDays.forEach((key, days) -> tables.get(key).commitDays(days));
             } finally {
                 buckets.values().forEach(SortedRuns::close);
                 try (var files = Files.exists(spillDir) ? Files.list(spillDir) : java.util.stream.Stream.<Path>empty()) {
@@ -267,11 +267,11 @@ public final class IcebergLoader {
             }).toList();
         }
 
-        private IcebergLake lake(String domain) {
+        private LayoutLake lake(String domain) {
             return lakes.computeIfAbsent(domain, d -> {
                 Map<String, String> s = new HashMap<>(settings);
                 s.put("domain", d);
-                return IcebergLake.of(s);
+                return LayoutLake.of(s);
             });
         }
     }
