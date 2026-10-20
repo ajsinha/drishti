@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **Faster: `lake build` and `lake demo` with the deltalake writer make one commit per business date** (every partition of the date in it; one per partition only with `overwrite-partitions`) and a checkpoint every ten commits. Sixty days of `trade_endur` (five product types) were 300 commits, each replaying the whole log (98 s on Linux, far longer on Windows, where each log file is opened and scanned); now 60 commits with a short log, the same rows.
+
 - **Added: `build_demo_lakes.py` says it is alive**: every 30 s (`DRISHTI_HEARTBEAT_SECONDS`) a line with the step, the time so far, the lake's size and the table being written, so a long `lake demo` or `lake build` never looks stuck.
 - **Added: one part of the demo lakes at a time with `tools/build_demo_lakes.py`**: `--files-only` loads only your files into their system's table (the rest of the lakes kept), `--source-dir` with `--system calypso|murex` for another system's files, `--only trades/endur,…` rebuilds only those datasets. Windows QA guide step 3.0; `tools/test_build_demo_lakes.py`.
 - **Fixed (QA1-201): `tools/bench/trades.py` (and so `drishti-stack`'s lakes) opened the seven-day test data's `snapshot-2026-09-22`**, gone since the test data holds sixty days: it now takes the system's snapshot whatever its date. The help examples and docs name `snapshot-2026-07-08`.

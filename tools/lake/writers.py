@@ -17,8 +17,9 @@
 ``drishti``    Drishti's own Java writer, in the server's exec jar (``java -jar drishti-server-<v>-exec.jar lake write --manifest M``):
                Delta Kernel and Parquet, no Python dependency; a whole table (every business date of the run) is ONE commit, so a
                reader sees all of it or none of it; old files of a replaced date are removed in the same commit.
-``deltalake``  the Python deltalake package (delta-rs) with pyarrow: one commit per batch of rows; the first batch of a replaced
-               date or partition replaces it (``predicate`` overwrite), the next ones append.
+``deltalake``  the Python deltalake package (delta-rs) with pyarrow: one commit per business date and batch of rows (every partition
+               of the date together; one per partition with ``overwrite-partitions``), a checkpoint every ten commits; the first
+               batch of a replaced date or partition replaces it (``predicate`` overwrite), the next ones append.
 
 Both write the same table: ``id`` STRING, ``doc`` STRING (the whole document, nested arrays intact), ``business_date`` DATE, the
 partition columns (STRING, Hive folders ``business_date=2026-10-01/desk=RATES/``) and the promoted columns (DOUBLE when every value
@@ -213,7 +214,14 @@ def _chunks(t: Table, part: Part):
 
 # ------------------------------------------------------------------------------------------------ deltalake (Python)
 
+CHECKPOINT_EVERY = 10   # commits between checkpoints while writing: a commit then replays at most this many log files, not all of them
+
+
 def write_deltalake(t: Table, by_day: dict, progress=None) -> dict:
+    """One commit per business date and batch of rows, every partition of the date in it (``overwrite-partitions`` keeps one
+    commit per partition, as it replaces partitions one by one); a checkpoint every CHECKPOINT_EVERY commits, so the log a commit
+    replays stays short however many dates a run writes (sixty dates of a table partitioned by product type were 300 commits, each
+    replaying the whole log: minutes on Linux, far longer on Windows)."""
     import pyarrow as pa
     from deltalake import DeltaTable, WriterProperties, write_deltalake as _write
 
@@ -222,38 +230,66 @@ def write_deltalake(t: Table, by_day: dict, progress=None) -> dict:
     commits = 0
     done = 0
     total = sum(len(parts) for parts in by_day.values())
+    per_part = t.mode == "overwrite-partitions"
+
+    def arrow(day, part, rows):
+        cols = {"id": pa.array([r[0] for r in rows], pa.string()), "doc": pa.array([r[1] for r in rows], pa.string()),
+                "business_date": pa.array([day] * len(rows), pa.date32())}
+        for n, v in zip(t.partition_names, part.values):
+            cols[n] = pa.array([v] * len(rows), pa.string())
+        for name, kind in t.promoted.items():
+            cols[name] = pa.array([_cell(r[2].get(name), kind) for r in rows], pa.float64() if kind == "double" else pa.string())
+        return pa.table(cols)
+
+    def commit(table, replace):
+        nonlocal exists, commits
+        kw: dict = {"partition_by": t.partition_by, "writer_properties": WriterProperties(compression="SNAPPY")}
+        if not exists:
+            kw["configuration"] = {"delta.dataSkippingStatsColumns": ",".join(t.stats_columns)}
+        if replace:
+            kw.update(mode="overwrite", predicate=replace, schema_mode="merge")
+        else:
+            kw.update(mode="append", schema_mode="merge" if exists else None)
+            if kw["schema_mode"] is None:
+                del kw["schema_mode"]
+        _write(t.uri, table, **kw)
+        exists = True
+        commits += 1
+        if commits % CHECKPOINT_EVERY == 0:
+            try:
+                DeltaTable(t.uri).create_checkpoint()
+            except Exception:                                 # noqa: BLE001 - an optimisation: the table reads without it
+                pass
+
     for day, parts in by_day.items():
         first_of_day = True
+        pending, pending_rows = [], 0
+
+        def flush():
+            nonlocal pending, pending_rows, first_of_day
+            if not pending:
+                return
+            replace = predicate_for(day.isoformat(), [], None) if (exists and t.mode == "overwrite-dates" and first_of_day) else None
+            commit(pa.concat_tables(pending) if len(pending) > 1 else pending[0], replace)
+            pending, pending_rows, first_of_day = [], 0, False
+
         for part in parts:
             first_of_part = True
             for rows in _chunks(t, part):
-                cols = {"id": pa.array([r[0] for r in rows], pa.string()), "doc": pa.array([r[1] for r in rows], pa.string()),
-                        "business_date": pa.array([day] * len(rows), pa.date32())}
-                for n, v in zip(t.partition_names, part.values):
-                    cols[n] = pa.array([v] * len(rows), pa.string())
-                for name, kind in t.promoted.items():
-                    cols[name] = pa.array([_cell(r[2].get(name), kind) for r in rows], pa.float64() if kind == "double" else pa.string())
-                table = pa.table(cols)
-                kw: dict = {"partition_by": t.partition_by, "writer_properties": WriterProperties(compression="SNAPPY")}
-                if not exists:
-                    kw["configuration"] = {"delta.dataSkippingStatsColumns": ",".join(t.stats_columns)}
-                replace = None
-                if exists and t.mode == "overwrite-dates" and first_of_day:
-                    replace = predicate_for(day.isoformat(), [], None)
-                elif exists and t.mode == "overwrite-partitions" and first_of_part:
-                    replace = predicate_for(day.isoformat(), t.partition_names, part.values)
-                if replace:
-                    kw.update(mode="overwrite", predicate=replace, schema_mode="merge")
+                table = arrow(day, part, rows)
+                if per_part:
+                    replace = predicate_for(day.isoformat(), t.partition_names, part.values) if (exists and first_of_part) else None
+                    commit(table, replace)
+                    first_of_part = False
                 else:
-                    kw.update(mode="append", schema_mode="merge" if exists else None)
-                    if kw["schema_mode"] is None:
-                        del kw["schema_mode"]
-                _write(t.uri, table, **kw)
-                exists, first_of_day, first_of_part = True, False, False
-                commits += 1
+                    pending.append(table)
+                    pending_rows += len(rows)
+                    if pending_rows >= t.batch_rows:
+                        flush()
             done += 1
             if progress:
                 progress(done, total)
+        flush()
     version = DeltaTable(t.uri).version() if exists else None
     return {"commits": commits, "version": version}
 
