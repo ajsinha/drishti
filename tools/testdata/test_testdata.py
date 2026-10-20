@@ -126,6 +126,18 @@ class TestData(unittest.TestCase):
                 self.assertEqual(set(Counter(t["PRODUCT_TYPE"] for t in last)), {"ComSwap", "ComFut", "Cash", "CallNot", "Commodity"})
         self.assertEqual(len(ids), len(set(ids)), "trade ids unique across the systems")
 
+    def test_a_days_change_follows_the_price_and_is_not_one_figure_every_day(self):
+        """QA1-10: CHANGE_1D is the day's move of the walked price (equity PRICE, index LEVEL, FX MID), not the last day's figure on all."""
+        for folder, key, price in (("market-data/equity", "TICKER", "PRICE"), ("market-data/equity-index", "INDEX_ID", "LEVEL"),
+                                   ("market-data/fx-spot", "PAIR", "MID")):
+            days = [{str(d[key]): d for d in rebuild(folder, key, self.dates, i)} for i in range(5)]
+            some = sorted(days[0])[0]
+            changes = {days[i][some]["CHANGE_1D"] for i in range(5)}
+            self.assertGreater(len(changes), 3, f"{folder} {some}: {changes}")
+            for i in range(1, 5):
+                today, before = days[i][some], days[i - 1][some]
+                self.assertAlmostEqual(today["CHANGE_1D"], today[price] / before[price] - 1, places=4, msg=f"{folder} {some} day {i}")
+
     def test_every_attribute_is_upper_snake(self):
         for ds in self.m["datasets"]:
             if "folder" not in ds:

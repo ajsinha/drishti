@@ -59,7 +59,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -67,6 +67,10 @@ DEFAULT_ROOT = "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
 DEFAULT_SERVER = "http://localhost:18480"
 REBUILT_STAMP = "lake-rebuilt.json"          # read by the server at start (Layers.REBUILT_STAMP)
 REDATE = re.compile(r'("(?:AS_OF|VALUATION_DATE|RUN_DATE|SOURCE_UPDATE_TIME)":")(\d{4}-\d{2}-\d{2})')
+# A document's embedded market series (a list of {DATE, CLOSE ...}): moved with the business dates too, so a price history has no phantom
+# missing days between its series and the stored days (QA1-10). Holidays and coupon schedules are real dates and stay.
+SERIES = ("HISTORY", "OHLC", "FIXINGS", "PNL_SERIES")
+SERIES_MARK = tuple(f'"{k}":[{{"DATE":"' for k in SERIES)
 
 
 def data_dir() -> pathlib.Path:
@@ -207,10 +211,42 @@ class DemoLake:
         return [d.isoformat() for d in business_days(end, len(self.manifest.dates), cal)]
 
     def redate(self, line: str) -> str:
-        """A document's own dates of the day (AS_OF, VALUATION_DATE, RUN_DATE, SOURCE_UPDATE_TIME) moved with the business dates."""
+        """A document's own dates of the day (AS_OF, VALUATION_DATE, RUN_DATE, SOURCE_UPDATE_TIME) moved with the business dates, and
+        the DATE of each point of its embedded series (HISTORY, OHLC, FIXINGS, PNL_SERIES) by the same number of business days."""
         if not self.shift:
             return line
-        return REDATE.sub(lambda m: m.group(1) + self.shift.get(m.group(2), m.group(2)), line)
+        line = REDATE.sub(lambda m: m.group(1) + self.shift.get(m.group(2), m.group(2)), line)
+        if not any(mark in line for mark in SERIES_MARK):
+            return line
+        doc = json.loads(line)
+        for k in SERIES:
+            points = doc.get(k)
+            if isinstance(points, list):
+                for pt in points:
+                    if isinstance(pt, dict) and isinstance(pt.get("DATE"), str) and len(pt["DATE"]) == 10:
+                        pt["DATE"] = self.move_day(pt["DATE"])
+        return json.dumps(doc, separators=(",", ":"), ensure_ascii=False)
+
+    def move_day(self, day: str) -> str:
+        """A date moved as the business dates were: a test-data date to its lake date, any other by the same number of USNY business
+        days (a series point before the test data's first day keeps its distance from it)."""
+        if day in self.shift:
+            return self.shift[day]
+        if not hasattr(self, "_cal"):
+            sys.path.insert(0, str(ROOT / "tools"))
+            from samplegen.dates import Calendar
+            self._cal = Calendar.of("USNY")
+            first_old, first_new = self.manifest.dates[0], self.dates[0]
+            a, b = date.fromisoformat(first_old), date.fromisoformat(first_new)
+            n, d, step = 0, a, (1 if b >= a else -1)
+            while d != b:                                   # business days from the old first day to the new one
+                d = self._cal.add_business_days(d, step)
+                n += step
+            self._offset = n
+        try:
+            return self._cal.add_business_days(date.fromisoformat(day), self._offset).isoformat()
+        except ValueError:
+            return day
 
     def run(self) -> int:
         started = time.monotonic()

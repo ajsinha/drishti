@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Fixed (QA1-10): the demo lakes' market history has no phantom missing days and a real daily change.** `lake demo` moves the `DATE`
+  of every point of a document's embedded series (`HISTORY`, `OHLC`, `FIXINGS`, `PNL_SERIES`) by the same business-day offset as the
+  documents (holidays and coupon schedules stay); the test data's `CHANGE_1D` is now each day's move of the document's own price, not the
+  last day's figure on all sixty (`data/testdata` regenerated). `tools/lake/test_demo.py`, `tools/testdata/test_testdata.py`.
 - **Fixed (QA1-09, console): the console's discovered servers follow the server's address rule.** `core/cluster.py` refused only
   localhost, 127.x and the wildcard; it now refuses every spelling the server's `HostAddress` refuses (`0`, `2130706433`, `0x7f000001`,
   `localhost.`, `ip6-localhost`, link-local and bridge addresses, and host names that resolve to them), in `core/hostrule.py`.
@@ -39,7 +43,7 @@
 - **Fixed (QA2-02): statement tokens work where STATEMENTS.md says.** `{page}`, `{pages}` and `{as-of}` are filled in a text band and a visual's title
   (a *(continued)* title carries its own page), and the check refuses `{param.<name>}` naming no parameter of the model and an unknown token in a title
   (`DRS-9038`).
-- **Changed: the committed test data holds sixty business days** (`data/testdata`, was seven; 119 MB gzipped in 2,944 files, the
+- **Changed: the committed test data holds sixty business days** (`data/testdata`, was seven; 115 MB gzipped in 2,942 files, the
   largest 5 MB): a day-1 snapshot and fifty-nine days of changes, so a trade's history (`TRD <id> 60`) shows real amendments.
   `make_testdata.py --days` defaults to 60. The docs that said seven days say sixty; captured outputs (dates, counts, timings) are
   re-checked in the 2.6.5 QA's documentation verification.

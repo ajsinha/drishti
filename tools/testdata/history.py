@@ -43,6 +43,18 @@ import amend as A  # noqa: E402
 
 PART_BYTES = 9 * 1024 * 1024
 DATED = ("AS_OF", "VALUATION_DATE", "RUN_DATE")
+# The price a document's CHANGE_1D is the day's move of (equity PRICE, index LEVEL, FX MID): worked out from the walked price of the day
+# and of the day before, so it moves with the price instead of staying the last day's figure on every day (QA1-10).
+PRICE_OF_CHANGE = ("PRICE", "LEVEL", "MID", "SPOT", "LAST_PRICE")
+
+
+def day_change(body: dict, before: dict) -> None:
+    """Sets body's CHANGE_1D (a fraction, five places) from its price and the previous day's; left as it is without both prices."""
+    if "CHANGE_1D" not in body:
+        return
+    f = next((k for k in PRICE_OF_CHANGE if isinstance(body.get(k), (int, float)) and isinstance(before.get(k), (int, float)) and before.get(k)), None)
+    if f:
+        body["CHANGE_1D"] = round(body[f] / before[f] - 1, 5)
 
 
 def dumps(doc: dict) -> str:
@@ -156,6 +168,7 @@ def doc_states(kind: str, docs: dict[str, dict], days: Days, since: dict[str, in
     """The documents of each day as {id: json}: the last day as built, earlier days walked back; ``since`` (id -> first day index)
     leaves a document out before that day; ``members`` (trade id -> first day) trims a netting set's TRADE_IDS to the trades booked."""
     last = len(days.dates) - 1
+    prev: dict[str, dict] = {}
     for i, day in enumerate(days.dates):
         out = {}
         for id_, doc in docs.items():
@@ -163,6 +176,10 @@ def doc_states(kind: str, docs: dict[str, dict], days: Days, since: dict[str, in
                 continue
             steps = last - i
             body = walk(doc, id_, steps, _seed(kind, id_)) if steps else dict(doc)
+            if "CHANGE_1D" in body:
+                before = prev.get(id_) or walk(doc, id_, steps + 1, _seed(kind, id_))
+                prev[id_] = dict(body)
+                day_change(body, before)
             for f in DATED:
                 if isinstance(body.get(f), str) and len(body[f]) == 10:
                     body[f] = day
