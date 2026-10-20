@@ -40,6 +40,14 @@
   History section) ([docs/tutorials/21-an-entity-over-time.md](docs/tutorials/21-an-entity-over-time.md)). `test_tutorials.py` now reads
   every numbered tutorial (its glob stopped at 19); tutorial 20's missing *Next steps* and *You should see* lines and its unused picture
   are listed there as a follow-up.
+- **Added: history queries, the shipped packs' `history:` blocks (H13).** trading (trade; the derived kinds off), market-data (equity,
+  equity index, FX spot, IR and credit curves, commodity, bond, inflation index as charts with their headline numbers), counterparty-risk
+  and market-risk (their measures as columns) ([PACKS.md](docs/guides/PACKS.md#history-an-entity-over-time),
+  [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md#history-a-kind-over-time)). `sutra lint <pack-dir>` (and so the deploy
+  check) reports a wrong block as `DRS-2061`. `ShippedHistoryBlocksTest` holds every block clean and naming real sample fields.
+- **Added: history queries, the Delta fast path (H5).** The Delta connector lists an entity's dates from the snapshot's partitions and
+  the id maps it already keeps (`days()`), so a history reads only the days that hold the entity ([DELTA_CONNECTOR.md section
+  8](docs/connectors/DELTA_CONNECTOR.md#8-seven-years-of-history)).
 - **Added: history queries across Drishti*net (H4).** A node with the pack but not the data reads an entity's history from the peer that
   holds it in one call for all the dates (`GET /api/v1/net/history/{kind}/~`, node-only, masked there and again here); a node without the
   pack forwards the whole request, as views are ([NET.md](docs/admin/NET.md#7-routing-where-a-request-goes)). `NetHistoryTest`. A history of

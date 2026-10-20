@@ -474,6 +474,13 @@ Measured on a table of 1,800 business days and 7,200 files (small rows, to test 
 the file list and the newest day's ids **729 ms**; a trade on 2019-12-05 **22 ms**; on 2022-06-15 **13 ms**; the file list
 re-read after expiry **84 ms**; an old day's columns **13 ms**.
 
+**History queries** (`TRD 1000015 30`, [HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)): the connector lists an entity's
+dates itself (`days()`): the `business_date=` partitions of the snapshot already in memory, from..to, whose id map holds the entity. Only
+those days are read, each as a single read (its id map, one row group, the document caches), eight at once; a weekend, a holiday or a day
+the entity was not loaded costs nothing. For an effective table the dates listed are the entity's change dates. `knownAt` reads each day
+as the table stood then (time travel). Not yet built: reading only promoted columns when every field asked is promoted, and the number of
+versions of a day (`versions` is `null`).
+
 ## 9. Memory
 
 | Held in memory | Per million trades | Bounded by | Default |

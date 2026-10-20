@@ -660,6 +660,19 @@ The precedence for a connector's settings, highest first: environment variables 
 override a file setting by setting), the connector file, the pack's template. `drishti.py connector list|get|apply|test|reset|...`
 ([CLI_GUIDE.md](CLI_GUIDE.md#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history)) does from a terminal what Admin → Connectors does.
 
+## History: an entity over time
+
+Type a range after an id: `TRD 1000015 30` (the last 30 business days with data), `EQ EQ-CSCA 3M`, `FX FX-AUDUSD YTD`,
+`TRD 1000015 FROM 2026-09-01 TO 2026-09-30`. Every kind a dated store holds has a history; a pack's `history:` block only chooses its
+columns, parts and chart ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#history-a-kind-over-time)). The shipped packs declare:
+
+| Pack | Kinds | Shape |
+|---|---|---|
+| trading | `trade` (key columns, `LEGS` and `EVENTS` as parts, `SOURCE_UPDATE_TIME` and `INPUT_DATE` changes ignored); `counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades` off (derived pages) | document |
+| market-data | `equity` (`PRICE`), `equity-index` (`LEVEL`), `fx-spot` (`MID`), `ir-curve` (`TEN_Y`, `SLOPE_2S_10S`), `credit-curve` (`SPREAD_5Y`, `PD_1Y`), `commodity` (`FRONT`), `bond` (`PRICE`, `YIELD`), `inflation-index` (`LATEST`, `YOY`); equity, index, FX and bond fall back to the `HISTORY` list inside the document | market (a chart, high, low, change) |
+| counterparty-risk | `netting-set`, `credit-limit`, `cva`: their headline measures as columns | document |
+| market-risk | `var`, `trade-valuation`, `pnl-explain`: their measures as columns | document |
+
 ## BI over the packs' kinds
 
 A pack's kinds are BI data with nothing to build: every kind of every pack you may open is a **dataset** named `pack.<pack>.<kind>`

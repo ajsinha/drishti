@@ -251,3 +251,12 @@ roles:
     - '*'
     raw: true
     calc: true
+# History queries (TRD 1000015 30, docs/architecture/HISTORY_QUERIES.md section 6): how this pack's kinds look over time.
+# Only the shape: any dated kind has a history without an entry here.
+history:
+  var:
+    columns: [VAR_99, ES_975, SVAR, LIMIT, EXCEPTIONS, MEAN_PNL]
+  trade-valuation:
+    columns: [MTM, PNL_1D, DV01, NOTIONAL]
+  pnl-explain:
+    columns: [ACTUAL, EXPLAINED, UNEXPLAINED]
