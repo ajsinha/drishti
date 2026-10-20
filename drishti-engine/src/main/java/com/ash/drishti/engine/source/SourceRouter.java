@@ -458,7 +458,15 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             if (!standIns.isEmpty()) {
                 throw servedInstead(ref, routed, candidates);   // an internet connector that is off: its stand-ins were asked and do not hold it
             }
-            throw noSource(ref.kind());                 // the connector the pack routes this kind to is not there: say that, not just "nothing holds it"
+            if (candidates.isEmpty()) {
+                throw noSource(ref.kind());             // the connector the pack routes this kind to is not there: say that, not just "nothing holds it"
+            }
+            // other connectors serve the kind and were asked (QA2-10): not found, naming them and the routed connector that is off
+            var status = registry.connectorStatuses().get(routed);
+            String off = status == null ? "is not configured" : "is " + status.state().toLowerCase(java.util.Locale.ROOT);
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no source holds " + ref + " (asked "
+                    + String.join(", ", candidates.stream().map(p -> p.manifest().name()).toList()) + "; " + routed + ", which kind '"
+                    + ref.kind() + "' is routed to, " + off + ")");
         }
         throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no source holds " + ref);
     }

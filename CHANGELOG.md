@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **Fixed (QA2-10): a missing id is `DRS-1001` while the kind's routed connector is off and another serves the kind.** With
+  `trade-endur` disabled and a Cassandra `trading-store` serving `trade`, an id nobody holds answered `DRS-1002 connector trade-endur is
+  disabled` for every missing id; it now answers `DRS-1001 no source holds trade/… (asked trading-store; trade-endur, which kind 'trade'
+  is routed to, is disabled)`. `DRS-1002` stays the answer when nothing else serves the kind. CONNECTOR_FILES, CASSANDRA_CONNECTOR,
+  TROUBLESHOOTING; SourceRegistryLiveTest.
 - **Fixed (QA2-21, the rest): every loader's heap is `DRISHTI_LOADER_HEAP` (default `4g`) and its input under the data folder.**
   `load-redis.sh` no longer has a fixed `-Xmx6g`, and the DuckDB, files, MongoDB, PostgreSQL and Aerospike loaders no longer run with
   no `-Xmx` (a quarter of the machine); all of them write `banking.jsonl` under `DRISHTI_DATA_DIR` and remove it after the load.

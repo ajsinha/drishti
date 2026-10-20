@@ -204,4 +204,21 @@ class SourceRegistryLiveTest {
         r.apply("trading-lake", cs("boom", true));
         assertThat(router.noSource("trade").getMessage()).contains("trading-lake is failed").contains("cannot reach boom");
     }
+
+    @Test
+    void aMissingIdWhileTheRoutedConnectorIsOffAndAnotherServesTheKindIsNotFound() {
+        // QA2-10: trade-endur disabled, the Cassandra store serving trade: an id nobody holds is DRS-1001 (naming the connector that is
+        // off), not DRS-1002 "connector trade-endur is disabled" for every missing id
+        var initial = new java.util.LinkedHashMap<String, SourcesProperties.ConnectorSettings>();
+        initial.put("trade-endur", cs("e", false));
+        initial.put("trading-store", cs("s", true));
+        var props = new SourcesProperties(Map.of("trade", "trade-endur"), null, Map.of("recorder", new SourcesProperties.PluginSettings(false, Map.of())),
+                Duration.ofSeconds(1), null, initial);
+        SourceRegistry r = new SourceRegistry(List.of(new Recorder()), props, new JsonCodec());
+        var router = new SourceRouter(r, props, java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor());
+        var e = org.assertj.core.api.Assertions.catchThrowable(() -> router.fetch(new EntityRef("trade", "NOPE")).join());
+        var de = (com.ash.drishti.common.DrishtiException) e.getCause();
+        assertThat(de.errorCode()).isEqualTo(com.ash.drishti.common.ErrorCode.ENTITY_NOT_FOUND);
+        assertThat(de.getMessage()).contains("DRS-1001 no source holds trade/NOPE").contains("trading-store").contains("trade-endur").contains("disabled");
+    }
 }
