@@ -167,6 +167,8 @@ async def search(request: Request, q: str = "", vs: str = "", words: str = ""):
             phrase = await request.app.state.backend.phrase(words.strip(), ident(request))
         except BackendError as e:
             phrase = {"problem": e.detail, "steps": [], "ignored": []}
+        if phrase.get("command") and not phrase.get("ignored") and not q.strip():   # trade 1000015 last month: read fully, so open it
+            return RedirectResponse(f"/go?q={quote(phrase['command'])}", status_code=303)
     """Structured search (W17): entities by field values, e.g. TRD where mtm > 1m and currency = 'EUR' order by mtm desc."""
     data, error = None, None
     if q.strip():

@@ -1413,6 +1413,22 @@ It understands:
 | `maturing before 2028`, `traded after 2025`, `maturing in 2027`, `before 2026-12-31` | dates |
 | `biggest`, `top 10`, `smallest 5 … by quantity`, `newest`, `sorted by` | the order, and how many |
 
+**One entity over time, in words.** A kind, an id and a time phrase make a [history](#history-an-entity-over-time) command
+instead of a search. When every word was read, it opens at once; otherwise the page shows *Read as …* with an **Open** button.
+
+```text
+trade 1000015 last month                    TRD 1000015 FROM 2026-09-01 TO 2026-09-30
+equity EQ-CSCA last 3 months                EQ EQ-CSCA 3M
+trade 1000015 last 30 days                  TRD 1000015 30
+equity EQ-CSCA this year                    EQ EQ-CSCA YTD
+trade 1000015 since 2026-10-01              TRD 1000015 FROM 2026-10-01
+what changed on trade 1000015 this week     TRD 1000015 FROM 2026-10-19 DIFF
+```
+
+Time phrases: `last` or `past N days|weeks|months|years`, `last week|month|year` (the whole previous one), `this week|month|quarter|year`,
+`ytd`, `since <date>`, `from <date> to <date>`, `between <date> and <date>`. `changed` or `changes` anywhere adds `DIFF`. The id is the one word
+with a digit or a dash that is not a value of one of the kind's fields, so `trades in BOOK-RATES-3 since 2026-01-01` stays a search.
+
 It is deterministic: no AI service, only the server's own vocabulary (its kinds, and each kind's fields and the
 values its documents have). Words it did not understand are listed as *Not understood, left out*, never guessed.
 Change the words, or edit the search itself.

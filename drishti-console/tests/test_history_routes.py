@@ -155,6 +155,21 @@ def test_the_legend_names_only_what_the_page_shows(client, backend, monkeypatch)
     assert "data-hx-legend" not in client.get("/v/counterparty/CP-NORTHPLAINS/history?days=30").text
 
 
+def test_plain_words_for_a_history_open_it_or_say_how_they_were_read(client, backend, monkeypatch):
+    answer = {"query": "TRD 1000015 FROM 2026-09-01 TO 2026-09-30", "command": "TRD 1000015 FROM 2026-09-01 TO 2026-09-30", "kind": "trade",
+              "steps": [{"words": "trade", "meaning": "Trade (TRD)"}, {"words": "1000015", "meaning": "the trade 1000015"},
+                        {"words": "last month", "meaning": "from 2026-09-01 to 2026-09-30"}], "ignored": [], "problem": None}
+
+    async def phrase(text, ident=None):
+        return dict(answer)
+    monkeypatch.setattr(backend, "phrase", phrase)
+    r = client.get("/s", params={"words": "trade 1000015 last month"}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/go?q=TRD%201000015%20FROM%202026-09-01%20TO%202026-09-30"
+    answer["ignored"] = ["please"]
+    t = client.get("/s", params={"words": "trade 1000015 last month please"}).text
+    assert "Read as" in t and 'href="/go?q=TRD%201000015%20FROM%202026-09-01%20TO%202026-09-30"' in t and "please" in t
+
+
 def test_the_csv_keeps_formulas_as_text(client, backend, monkeypatch):
     async def history(kind, id_, ident=None, **params):
         return {"ref": {"kind": kind, "id": id_}, "window": {"from": "2026-10-19", "to": "2026-10-19"}, "parts": [],

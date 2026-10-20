@@ -32,6 +32,10 @@
   `--known-at`, `--diff`, `--changes-only`; a text table newest first with changed cells marked `*`, `--json` (the answer), `--csv`
   ([CLI_GUIDE › history](docs/guides/CLI_GUIDE.md#history-an-entity-over-time)). `Drishti.history(kind, id, days=…)` and `history_rows()`
   in `clients/python/drishti_client.py` ([CLIENTS](docs/guides/CLIENTS.md)).
+- **Added: plain words for history (H11).** A kind, an id and a time phrase make a history command: `trade 1000015 last month` is
+  `TRD 1000015 FROM 2026-09-01 TO 2026-09-30`, `equity EQ-CSCA last 3 months` is `EQ EQ-CSCA 3M`, `what changed on trade 1000015 this week`
+  ends in `DIFF` (`HistoryPhrase`, `PhraseParser.Parsed.command`). Read fully, it opens at once; otherwise the search page says *Read as …*
+  ([USER_GUIDE › Asking in plain words](docs/guides/USER_GUIDE.md#asking-in-plain-words)).
 - **Added: tutorial 21, An entity over time**, and the help centre's `history` entries (F1 on the history page opens the user guide's
   History section) ([docs/tutorials/21-an-entity-over-time.md](docs/tutorials/21-an-entity-over-time.md)). `test_tutorials.py` now reads
   every numbered tutorial (its glob stopped at 19); tutorial 20's missing *Next steps* and *You should see* lines and its unused picture

@@ -90,4 +90,38 @@ class PhraseParserTest {
             assertThat(parsed.head()).isIn("TRD", "CPTY");
         }
     }
+
+    /** HISTORY_QUERIES.md section 15.5: kind word, id, time phrase is the entity over time, read with a fixed today. */
+    @Test
+    void aKindAnIdAndATimePhraseAreAHistoryCommand() {
+        PhraseParser on = new PhraseParser(new PhraseParser.Vocabulary() {
+            @Override
+            public Map<String, KindWord> kinds() {
+                return PhraseParser.kindWords(List.of(new KindWord("trade", "TRD", "Trade"), new KindWord("equity", "EQ", "Equity")));
+            }
+
+            @Override
+            public List<Field> fields(String kind) {
+                return kind.equals("trade") ? TRADE : List.of();
+            }
+        }, () -> java.time.LocalDate.of(2026, 10, 20));
+        assertThat(on.parse("trade 1000015 last month").command()).isEqualTo("TRD 1000015 FROM 2026-09-01 TO 2026-09-30");
+        assertThat(on.parse("equity EQ-CSCA last 3 months").command()).isEqualTo("EQ EQ-CSCA 3M");
+        assertThat(on.parse("trade 1000015 last 30 days").command()).isEqualTo("TRD 1000015 30");
+        assertThat(on.parse("show me trade 1000015 over the past 2 weeks").command()).isEqualTo("TRD 1000015 2W");
+        assertThat(on.parse("equity eq-csca this year").command()).isEqualTo("EQ EQ-CSCA YTD");
+        assertThat(on.parse("equity EQ-CSCA ytd").command()).isEqualTo("EQ EQ-CSCA YTD");
+        assertThat(on.parse("trade 1000015 since 2026-10-01").command()).isEqualTo("TRD 1000015 FROM 2026-10-01");
+        assertThat(on.parse("trade 1000015 between 2026-09-30 and 2026-09-01").command()).isEqualTo("TRD 1000015 FROM 2026-09-01 TO 2026-09-30");
+        assertThat(on.parse("trade 1000015 from 2026-09-01 to 2026-09-30").command()).isEqualTo("TRD 1000015 FROM 2026-09-01 TO 2026-09-30");
+        PhraseParser.Parsed changed = on.parse("what changed on trade 1000015 this week");
+        assertThat(changed.command()).isEqualTo("TRD 1000015 FROM 2026-10-19 DIFF");
+        assertThat(changed.query()).isEqualTo(changed.command());
+        assertThat(changed.ignored()).isEmpty();
+        assertThat(changed.steps()).extracting(PhraseParser.Step::words).containsExactly("trade", "1000015", "this week");
+        // still searches: no id, or a field's value with a date
+        assertThat(on.parse("trades maturing before 2027 with negative mtm").command()).isNull();
+        assertThat(on.parse("trades in BOOK-RATES-3 since 2026-01-01").command()).isNull();
+        assertThat(on.parse("live trades last 30 days").command()).isNull();
+    }
 }

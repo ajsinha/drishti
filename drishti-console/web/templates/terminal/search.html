@@ -37,7 +37,13 @@
     <button type="submit" class="btn btn-sm btn-outline-secondary">Make the search</button>
   </form>
   {% if phrase %}<section class="pnl phrase" aria-live="polite"><div class="pnl-b">
-    {% if phrase.query %}
+    {% if phrase.command %}
+    <p>Read as <a class="lnk mono phrase-q" href="/go?q={{ phrase.command | urlencode }}">{{ phrase.command }}</a>
+      <a class="btn-pill btn-accent btn-sm-pill" href="/go?q={{ phrase.command | urlencode }}" data-phrase-open>Open <kbd>Enter</kbd></a>
+      <span class="text-muted-d">the entity over time.</span></p>
+    <ul class="phrase-steps">{% for s in phrase.steps %}<li><span class="mono">“{{ s.words }}”</span> → {{ s.meaning }}</li>{% endfor %}</ul>
+    {% if phrase.ignored %}<p class="t-warn">Not understood, left out: {% for w in phrase.ignored %}<span class="mono">{{ w }}</span>{% if not loop.last %}, {% endif %}{% endfor %}.</p>{% endif %}
+    {% elif phrase.query %}
     <p>Your words make this search: <a class="lnk mono phrase-q" href="/s?q={{ phrase.query | urlencode }}">{{ phrase.query }}</a>
       <a class="btn-pill btn-accent btn-sm-pill" href="/s?q={{ phrase.query | urlencode }}">Run it</a>
       <span class="text-muted-d">or copy it into the search box and change it.</span></p>
