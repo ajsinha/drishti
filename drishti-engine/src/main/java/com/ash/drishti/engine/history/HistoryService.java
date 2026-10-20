@@ -233,7 +233,9 @@ public final class HistoryService {
                     merged = merged.subList(merged.size() - w.lastDays(), merged.size());
                 }
                 days = List.copyOf(merged);
-                basis = "documents+series";
+                if (days.get(0).date().isBefore(oldest)) {                   // the last N days may all be stored ones after all
+                    basis = "documents+series";
+                }
             }
         }
         boolean baselineFirst = !days.isEmpty() && (HistoryWindow.DATA_DAYS.equals(w.mode())
