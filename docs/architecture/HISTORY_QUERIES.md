@@ -153,7 +153,10 @@ declared before `/v/{kind}/{id_:path}`, as `/about` and `/panels` are. A pick li
 
 - `SuggestionService.suggest` (engine `command/SuggestionService`): when the text is `<MNEMONIC> <ID> ` and the id names one entity, the
   first suggestions are ranges: `30 — last 30 days`, `3M — last 3 months`, `YTD — since 1 January`, `30 DIFF — what changed`. `Tab`
-  completes, as today. The kind's `history.default-days` is the first one offered.
+  completes, as today. The kind's `history.default-days` is the first one offered. Across Drishti*net the peers' suggestions are
+  merged with one row per range (each completes differently) and the ranges first; for a caller with field masks the range rows keep
+  their labels (only entity rows are described again from the document as the caller sees it). A partial range (`TRD 1000015 3`)
+  offers the ranges that start with it to every caller.
 - `CommandMemory.remember` keeps the typed text, so `↑` recalls `TRD 1000015 30` as typed.
 - Aliases store any command text, so `MYTRD = TRD 1000015 30` works without change.
 - Share links carry the range and pin the end: `/v/trade/1000015/history?days=30&to=2026-10-19` (and `&knownAt=` when pinned), so the

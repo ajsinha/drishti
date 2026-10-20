@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Fixed (QA1-05, QA1-06): the type-ahead after an id offers every range, labelled, in a cluster and with masks.** Merged across
+  Drishti*net it kept one row per entity, so only `30` was offered; now each range is its own row and the ranges come first. For a
+  user with field masks the range rows were retitled as the entity (`TRD 1000002 · Commodity …`, or the masked title) and a partial
+  range (`TRD 1000002 3`) offered nothing; range rows now pass through the masks unchanged (they hold nothing of the document).
 - **Fixed (QA1-02, QA1-19): a Drishti*net peer that does not answer a history in time is a time-out** (`504 DRS-1014 the node qa1-b
   did not answer the history of … within 10 s`, or a `DRS-1014` problem of a partial answer), as HISTORY_QUERIES.md section 16 says,
   not `502 DRS-1003`. RELEASE_NOTES 2.6.5 *Across a cluster* notes the QA1-01 and QA1-02 fixes.
