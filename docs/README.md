@@ -427,6 +427,7 @@ Each run has a README (what was tested, findings by severity, how each was fixed
 |---|---|
 | [requirements/](requirements/) | you want the four reference mockups the first views reproduced, and the logo and icon |
 | [publications/](publications/) | you want the design-and-evidence presentation (`Drishti-Design-and-Evidence.pptx`, 48 slides, current to 2.6.0 under way: the idea, the product with BI Studio, Python data prep and Drishti\*net, security, the evidence with the 35.7-million-trade run, and the release order to 3.0; each slide's notes name their sources) |
+| [publications/Drishti-AWS-Delta-Lake.pptx](publications/Drishti-AWS-Delta-Lake.pptx) | you want the AWS Delta lake deck (72 slides, with a PDF copy beside it): every section of [AWS_DELTA_LAKE.md](architecture/AWS_DELTA_LAKE.md) as slides: the lake in S3, the flow, why S3 and not EFS, setup steps 0–11 with commands, buckets, the prefix tree, partition keys, columns and keys, file sizes and sorting, loading and safe commits, maintenance and tiers, caches, staying fast past 200 TB, sizing and cost, runbooks, the scripts and the decisions to take |
 
 ## Words you will meet
 
