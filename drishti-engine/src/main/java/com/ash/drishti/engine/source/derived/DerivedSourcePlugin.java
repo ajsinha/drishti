@@ -394,8 +394,14 @@ public final class DerivedSourcePlugin implements SourcePlugin {
             try {
                 f.complete(compute(asOf, true));
             } catch (RuntimeException e) {
-                health = "DOWN: " + e.getMessage();
-                LOG.warn("derived pages for {} could not be built: {}", asOf, e.toString());
+                if (com.ash.drishti.engine.source.SourceRegistry.ServerStarting.in(e)) {
+                    // asked while the server is still starting: not a failure of this source (DOWN would make the registry restart it as a
+                    // lost connection); the next reader builds the pages
+                    LOG.info("derived pages for {} wait for the server to start: {}", asOf, e.getMessage());
+                } else {
+                    health = "DOWN: " + e.getMessage();
+                    LOG.warn("derived pages for {} could not be built: {}", asOf, e.toString());
+                }
                 f.completeExceptionally(e);
             } catch (OutOfMemoryError e) {
                 // never leave the computation pending: every later reader would wait on it forever

@@ -149,6 +149,23 @@ class SourceRegistryLiveTest {
     }
 
     @Test
+    void aReadDuringARestartWaitsForTheStartedConnectorInsteadOfFailing() throws Exception {
+        SourceRegistry r = registry(Duration.ofMillis(400), Map.of("lake", cs("a", true)));
+        Thread.ofVirtual().start(() -> r.apply("lake", cs("b", true)));
+        Thread.sleep(150);                                                    // mid-drain: out of routing
+        assertThat(r.connector("lake")).isEmpty();
+        assertThat(r.connector("lake", Duration.ofSeconds(5))).as("waited for the restart").isPresent();
+        assertThat(r.connector("nowhere", Duration.ofSeconds(5))).as("a connector that is not there is answered at once").isEmpty();
+    }
+
+    @Test
+    void aReadOfOtherKindsBeforeTheServerHasStartedSaysSo() {
+        IllegalStateException e = new SourceRegistry.ServerStarting();
+        assertThat(SourceRegistry.ServerStarting.in(new RuntimeException("wrapped", e))).isTrue();
+        assertThat(SourceRegistry.ServerStarting.in(new IllegalStateException("other"))).isFalse();
+    }
+
+    @Test
     void changesToTheSameConnectorRunOneAtATimeAndDifferentOnesInParallel() throws Exception {
         SourceRegistry r = registry(Duration.ofMillis(200), Map.of("a", cs("a", true), "b", cs("b", true)));
         long t0 = System.nanoTime();

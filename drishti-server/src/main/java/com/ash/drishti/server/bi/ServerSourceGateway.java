@@ -59,10 +59,13 @@ public final class ServerSourceGateway implements SourceGateway {
         this.hub = hub;
     }
 
+    /** How long a query waits for a named connector that is being (re)started: its drain and its start. */
+    static final java.time.Duration RESTART_WAIT = java.time.Duration.ofSeconds(30);
+
     @Override
     public Optional<SourcePlugin> plugin(String connector, String kind) {
         if (connector != null && !connector.isBlank()) {
-            Optional<SourcePlugin> named = registry.connector(connector);
+            Optional<SourcePlugin> named = registry.connector(connector, RESTART_WAIT);       // a connector restarting is waited for, not reported as not running
             if (named.isEmpty()) {
                 String why = registry.connectorStatuses().containsKey(connector) ? " (" + registry.connectorStatuses().get(connector).state().toLowerCase() + ")" : " (no such connector)";
                 throw new DrishtiException(ErrorCode.QUERY_SOURCE, "connector '" + connector + "' is not running" + why + ": check Admin, Connectors");
@@ -140,7 +143,7 @@ public final class ServerSourceGateway implements SourceGateway {
     @Override
     public com.ash.drishti.api.Subscription subscribe(String connector, EntityRef ref, java.util.function.Consumer<EntityDocument> listener) {
         if (connector != null && !connector.isBlank()) {
-            Optional<SourcePlugin> named = registry.connector(connector);
+            Optional<SourcePlugin> named = registry.connector(connector, RESTART_WAIT);
             if (named.isPresent()) {
                 try {
                     return named.get().subscribe(ref, listener);

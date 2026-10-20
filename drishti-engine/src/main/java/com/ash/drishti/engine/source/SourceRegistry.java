@@ -77,6 +77,28 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
      */
     public record Freshness(String source, java.time.Instant lastUpdate, java.time.Duration staleAfter, boolean stale) {}
 
+    /**
+     * A read of other kinds asked before the router is attached (the server is still starting): not a failure of the connector that asked, so a
+     * derived source that meets it does not say it is DOWN (which would make the registry restart it as a lost connection).
+     */
+    public static final class ServerStarting extends IllegalStateException {
+        private static final long serialVersionUID = 1L;
+
+        ServerStarting() {
+            super("the server is still starting: other kinds cannot be read yet");
+        }
+
+        /** True when {@code t} or one of its causes is this. */
+        public static boolean in(Throwable t) {
+            for (Throwable x = t; x != null; x = x.getCause() == x ? null : x.getCause()) {
+                if (x instanceof ServerStarting) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
     /** Reads through the router, which is built after the registry: bound by {@link #attach}. */
     private final RouterReader reader = new RouterReader();
 
@@ -87,7 +109,7 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         private SourceRouter router() {
             SourceRouter r = router;
             if (r == null) {
-                throw new IllegalStateException("the server is still starting: other kinds cannot be read yet");
+                throw new ServerStarting();
             }
             return r;
         }
@@ -653,6 +675,27 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
 
     public Optional<SourcePlugin> connector(String source) {
         return source == null ? Optional.empty() : Optional.ofNullable(bySource.get(source));
+    }
+
+    /**
+     * As {@link #connector(String)}, waiting up to {@code wait} while the named connector is being started or restarted (a retry, a changed
+     * file): it is out of routing for its drain and its start, and a read in that window gets the started connector instead of a "not
+     * running" error. A connector that is simply not there is answered at once.
+     */
+    public Optional<SourcePlugin> connector(String source, java.time.Duration wait) {
+        Optional<SourcePlugin> now = connector(source);
+        var lock = source == null ? null : locks.get(source);
+        if (now.isPresent() || lock == null || !lock.isLocked() || lock.isHeldByCurrentThread()) {
+            return now;
+        }
+        try {
+            if (lock.tryLock(wait.toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS)) {
+                lock.unlock();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return connector(source);
     }
 
     public Optional<SourcePlugin> plugin(String name) {
