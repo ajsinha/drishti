@@ -2373,6 +2373,15 @@ $ python3 tools/drishti.py bi statement file bi-39eb12fe47 --date 2026-10-08 -o 
 wrote statement.pdf (5,000 bytes)
 ```
 
+A table that stops at `drishti.distribution.statements.max-rows` (10,000) is named on a `cut:` line by both commands, as the PDF's note
+above the table says it, so a script can tell a whole statement from a cut one:
+
+```text
+$ python3 tools/drishti.py bi statement file bi-39eb12fe47 -o full.pdf
+wrote full.pdf (649,813 bytes)
+  cut: Positions: The first 10,000 rows only: the table goes on (drishti.distribution.statements.max-rows).
+```
+
 ### Shell completion
 
 `drishti.py completion bash|zsh|powershell` prints a completion script generated from the command tree (groups, commands,

@@ -185,6 +185,7 @@ class Api:
         req = urllib.request.Request(self.base + path, data=data, method=method, headers={**headers, **(extra or {})})
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as r:      # noqa: S310 - the URL is the operator's own --server
+                self.headers = r.headers                                       # the last answer's headers (a statement's X-Statement-Cut)
                 return r.status, r.read()
         except urllib.error.HTTPError as e:
             raw = e.read()

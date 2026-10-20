@@ -2622,7 +2622,7 @@ with errors), `403 DRS-9002` for draft YAML without `bi-author`.
 | Method | Path | What it does |
 |---|---|---|
 | `POST` | `/bi/reports/statement/preview` | body `{report: <id>` or `yaml: <draft report>, page?, state?, date?}`: `{title, period, paper: {size, orientation, margins}, width, height, pageCount, pages: [{number, ops: [...]}], tokens, rows}`. `state` is the view state (`params`, `slicers`, `dates`); `date` the statement's date, from which its `period` is worked out. Each op is `{t: text, x, y, size, bold, rgb, text, role}` (`role`: `header`, `footer`, `title`, `head`, `group`, `cell`, `text`, `label`, `value`, `note`), `{t: rule, x1, y1, x2, y2, w, rgb}` or `{t: fill, x, y, w, h, rgb}`, in points from the page's lower left corner: what the PDF draws |
-| `POST` | `/bi/reports/statement/file` | the same body and `format`: `pdf` (default) or `xlsx`; the file with `Content-Disposition: attachment` (*Monthly statement October 2026 wes.pdf*) and `X-Statement-Pages` |
+| `POST` | `/bi/reports/statement/file` | the same body and `format`: `pdf` (default) or `xlsx`; the file with `Content-Disposition: attachment` (*Monthly statement October 2026 wes.pdf*), `X-Statement-Pages` and one `X-Statement-Cut` per table cut at `max-rows` (the preview's `cut` text, URL-encoded) |
 
 A model query (`/bi/mq`, `mq: 2`) may name a field parameter of measures among `select.measures` (`param.metric`), and `param.<name>` in `sort`, as in `select.fields`.
 

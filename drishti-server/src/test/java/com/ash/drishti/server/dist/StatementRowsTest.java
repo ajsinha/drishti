@@ -202,6 +202,8 @@ class StatementRowsTest {
         // the Excel file holds the same rows and says the same
         MvcResult x = call("/api/v1/bi/reports/statement/file", Map.of("report", "file:report:rows-statement", "date", DAY, "format", "xlsx"));
         assertThat(x.getResponse().getStatus()).as(x.getResponse().getContentAsString()).isEqualTo(200);
+        assertThat(x.getResponse().getHeaders("X-Statement-Cut")).as("the file says so too, for a script (QA2-204)").hasSize(1)
+                .allSatisfy(h -> assertThat(java.net.URLDecoder.decode(h, StandardCharsets.UTF_8)).startsWith("All: The first 6,000 rows only"));
         StringBuilder all = new StringBuilder();
         try (ZipInputStream z = new ZipInputStream(new ByteArrayInputStream(x.getResponse().getContentAsByteArray()))) {
             for (ZipEntry e = z.getNextEntry(); e != null; e = z.getNextEntry()) {

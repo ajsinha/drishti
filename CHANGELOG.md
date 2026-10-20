@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Fixed (QA2-204): `drishti.py bi statement preview` and `file` say when a table was cut.** Each table that stops at
+  `drishti.distribution.statements.max-rows` is printed on a `cut:` line (`cut: Positions: The first 10,000 rows only: …`), from the
+  preview's `cut` and from the file's new `X-Statement-Cut` headers (one per cut table, URL-encoded), as the PDF's note says it.
+  CLI_GUIDE `bi statement`, STATEMENTS, API_GUIDE; test_cli_bistatement, StatementRowsTest.
 - **Fixed (QA2-203): `iceberg-external` names what it looked for when a table folder has no metadata, and says DEGRADED.** Health
   and Admin → Connectors read `qa-ghost: no table qa.ghost: looked in <root>/qa/ghost/metadata for version-hint.text,
   v<N>.metadata.json and a catalog's NNNNN-<uuid>.metadata.json (the folder is empty)` (or what stray files it holds), and a
