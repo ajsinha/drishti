@@ -74,6 +74,9 @@ parameters:
   metric:    { kind: field, fields: [MTM, NOTIONAL], default: MTM, title: Show }
 ```
 
+**You should see:** the model published as `fp-desk@1`, its **Calculations** tab listing the parameters `breakdown` (the fields `trade.DESK` and
+`trade.PORTFOLIO`, *Break down by*) and `metric` (the measures `MTM` and `NOTIONAL`, *Show*).
+
 ## Step 2 · A chart the reader switches
 
 **In the UI.** New report on the model `fp-desk@1`, add a **column** visual and open **Build**. The *Add a field…* list of the **axis** well ends with
@@ -106,6 +109,9 @@ $ drishti.py bi mq switch.mq.yaml          # notional by book, as you
 
 A reader without raw sees MTM masked whichever way they choose: the choice is only a name; the visual is asked as them.
 
+**You should see:** the column chart drawing MTM by desk by default; with *PORTFOLIO* and *NOTIONAL* chosen, notional by book and the two choices
+as chips above the page (**Reset** brings MTM by desk back); `param.breakdown` in the values well refused with `DRS-9037`.
+
 ## Step 3 · A statement page
 
 **In the UI.** In the same report, **+** a page, then in **Format** with no visual selected, **Layout → statement**. The **Paper** tab appears beside
@@ -131,6 +137,9 @@ MTM, Trades), a **table** of `param.breakdown`, `trade.TRADE_ID`, `trade.CURRENC
           wells: { rows: [trade.PORTFOLIO], columns: [trade.CURRENCY], values: [NOTIONAL] }, format: { pageBreak: before } }
 ```
 
+**You should see:** the page's layout *statement*, the **Paper** tab beside Canvas, and the bands one under another: the heading, the three cards
+in a row, the *Positions* table and the *Notional by book and currency* matrix, each table on a row of its own.
+
 ## Step 4 · The paper, and how the pages break
 
 **In the UI.** The **Paper** tab: *Size* A4, *Orientation* portrait, the margins in millimetres, the **Header** (left `{title}`, centre `{period}`, right
@@ -153,6 +162,10 @@ statement:
 
 Try a wrong one in the YAML tab (`paper: B5`, a token `{nope}`): Problems lists each with `DRS-9038` and its path.
 
+**You should see:** the Paper tab holding A4 portrait, the margins, the header and footer as typed and *Covers* the month; the table's Format →
+Statement keeping rows together by `param.breakdown` with the column titles repeated, the matrix's page break *before*; and for `paper: B5` or
+`{nope}`, a `DRS-9038` in Problems naming the key's path.
+
 ## Step 5 · Preview page by page
 
 **In the UI.** Paper tab → *Statement date* 2026-10-08 → **Preview pages**. The server lays the statement out for you, with your masks and row rules, and
@@ -163,6 +176,8 @@ landscape and preview again: more pages, as fewer rows fit a landscape page. **P
 ![The Paper tab and its preview](../guides/img/bi-wave-d/statement-designer.jpg)
 
 ![Page 1: the header, the heading, the cards, the first desk under the column titles](img/t20/statement-page-1.jpg)
+
+![Page 2: Positions (continued), the column titles again, each desk whole under its heading](img/t20/statement-page-2.jpg)
 
 ![Page 3: the matrix on a page of its own](img/t20/statement-page-3.jpg)
 
@@ -187,6 +202,11 @@ wrote statement.xlsx (7,823 bytes)
 
 The workbook's sheets print on the same paper, with the header and footer and the column titles on every printed page.
 
+**You should see:** *Page 1 of 3 · A4 portrait · October 2026* in the preview; page 2 headed *Positions (continued)* with the column titles
+`TRADE_ID`, `CURRENCY`, `NOTIONAL`, `MTM` again and each desk (*DESK: DESK-FI*, *DESK: DESK-EQD*) whole under its heading; page 3 the matrix alone;
+the footer *Run … · by DESK* and *Page n of 3* on every page. On the command line, `3 pages, A4 portrait, October 2026, 66 rows`, the footer saying
+*by PORTFOLIO* with `--param breakdown=trade.PORTFOLIO`, and `statement.pdf` and `statement.xlsx` written.
+
 ## Step 6 · One statement per person: a subscription
 
 Move the report to a shared workspace and publish it (tutorial 13). Then on the report's **Statement** page, **Subscribe**: *Send as* **pdf**, *To*
@@ -204,11 +224,18 @@ $ curl -s -X PUT -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: app
 $ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" $DRISHTI_SERVER/api/v1/me/subscriptions/monthly/run
 ```
 
+**You should see:** one mail per person in `role:desk-head`, each with their own PDF (*Monthly statement October 2026 hana.pdf*), and in the
+subscription's history one delivery per person with `statement: true` and its page count; a desk head's PDF holds only their desk's trades.
+
 ## What you did
 
 - a model's field parameters in a chart's wells, switched by the reader, masks intact (`DRS-9037` for one that does not fit);
 - a statement page with its paper, header and footer, page breaks, repeated column titles and groups kept together (`DRS-9038` for a wrong one);
 - a page-by-page preview in the Studio, the PDF and Excel from the CLI, and one statement per person from one subscription.
 
-Next: [STATEMENTS.md](../guides/STATEMENTS.md) for every key and how the layout decides, [DISTRIBUTION.md](../guides/DISTRIBUTION.md) for schedules and
-retries.
+## Next steps
+
+- [STATEMENTS.md](../guides/STATEMENTS.md): every key of a statement and how the layout decides where a page breaks.
+- [DISTRIBUTION.md](../guides/DISTRIBUTION.md): schedules, recipients and retries of a subscription.
+- [REPORTS.md section 21](../guides/REPORTS.md#21-field-parameters-in-a-well-260): field parameters in every kind of well.
+- [Tutorial 13](13-govern-bi.md): workspaces, publishing and who may see a shared report.

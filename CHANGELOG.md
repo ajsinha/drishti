@@ -38,8 +38,8 @@
   ([USER_GUIDE › Asking in plain words](docs/guides/USER_GUIDE.md#asking-in-plain-words)).
 - **Added: tutorial 21, An entity over time**, and the help centre's `history` entries (F1 on the history page opens the user guide's
   History section) ([docs/tutorials/21-an-entity-over-time.md](docs/tutorials/21-an-entity-over-time.md)). `test_tutorials.py` now reads
-  every numbered tutorial (its glob stopped at 19); tutorial 20's missing *Next steps* and *You should see* lines and its unused picture
-  are listed there as a follow-up.
+  every numbered tutorial (its glob stopped at 19). Tutorial 20 gains its *You should see* lines, a *Next steps* section and the
+  statement's second page (`statement-page-2.jpg`).
 - **Added: history queries, more fast paths (H5, H6).** DuckDB (one range query), MongoDB (one range read on the `_id` index), Aerospike
   (the entity's index record, then one batch get) and Iceberg (the entity's dates from the layout and id maps); each passes
   `DatedSourceContract`'s history cases. The file, S3, REST and stream connectors keep the default per-day read.
