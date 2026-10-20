@@ -53,6 +53,8 @@
 - **Fixed (QA1-02): a peer that cannot be reached is named, never "no data".** When a node that holds the kind is down or suspect and
   no node that answered holds the dates, a history answers `502 DRS-5052` naming it (or, with some days read, a partial answer whose
   `problems` name it), not `DRS-1013`; an empty, failed or partial answer is never cached, so the rows come back with the peer.
+- **Added: the AWS Delta lake deck** (`docs/publications/Drishti-AWS-Delta-Lake.pptx`, 72 slides, and its PDF): AWS_DELTA_LAKE.md section by section, from the lake in S3 and the folder layout and partition keys to setup, loading, maintenance, caches, scale, cost, runbooks and the decisions to take.
+
 - **Docs: the 2.6.5 QA's documentation verification** ([DOCS_VERIFICATION.md](docs/qa/2026-10-20/DOCS_VERIFICATION.md)). The demo
   lakes' outputs say sixty business days (`64 tables, 60 business days 2026-07-08 to 2026-09-30, 943 s`; about 15 minutes and 2.2 GB),
   and figures captured on the seven-day lakes of 2.5.0 say so; `MX-20000001` is noted as cancelled part-way through the sixty days,
