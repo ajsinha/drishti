@@ -56,6 +56,7 @@
     <module>plugins/drishti-plugin-jdbc</module>
     <module>plugins/drishti-plugin-delta</module>
     <module>plugins/drishti-plugin-aerospike</module>
+    <module>plugins/drishti-plugin-cassandra</module>
     <module>plugins/drishti-plugin-redis</module>
     <module>plugins/drishti-plugin-mongodb</module>
     <module>plugins/drishti-plugin-iceberg</module>
@@ -95,6 +96,8 @@
     <awssdk.version>2.55.9</awssdk.version>
     <rocksdb.version>11.0.4</rocksdb.version>
     <aerospike.version>10.5.0</aerospike.version>
+    <!-- the Apache Cassandra Java driver (also ScyllaDB, Astra, Keyspaces): pure Java, no native library -->
+    <cassandra-driver.version>4.19.3</cassandra-driver.version>
     <lettuce.version>6.8.2.RELEASE</lettuce.version>
     <zstd-jni.version>1.5.7-6</zstd-jni.version>
     <!-- 1.10.x reads and writes Parquet 1.16, the version Delta Kernel uses: one Parquet on the server's classpath -->
@@ -141,6 +144,7 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-file</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-delta</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-aerospike</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-cassandra</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-redis</artifactId><version>${project.version}</version></dependency>
       <!-- Redis: Lettuce on Netty 4.1 (the line Spring Boot 3.5 manages); zstd for compressed documents and columns -->
       <dependency><groupId>io.lettuce</groupId><artifactId>lettuce-core</artifactId><version>${lettuce.version}</version></dependency>

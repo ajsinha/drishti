@@ -60,7 +60,7 @@ repository root. Scratch output (`lake`, `lake2`, `build/...`) goes into the clo
 | Change where a connector reads | Admin → **Connectors** | `drishti.py connector apply` |
 | Install or uninstall a pack, connector or BI file safely | Admin → **Artifacts** | `drishti.py server packs`, `connector delete` |
 | Keep a lake small and fast | | `drishti.py lake maintain` (on a timer) |
-| Load the demo data into Postgres, DuckDB, MongoDB, Redis, Aerospike, Iceberg, files or Delta | | `tools/load-*.sh`, `drishti.py data load` |
+| Load the demo data into Postgres, DuckDB, MongoDB, Redis, Aerospike, Cassandra, Iceberg, files or Delta | | `tools/load-*.sh`, `drishti.py data load` |
 | Check a machine before a demo | Admin → **Health** | `drishti.py doctor`, `drishti.py server smoke` |
 
 Use the page for a one-off file, a first look at new data, or when you want to see each choice before it is made. Use the command
@@ -632,7 +632,7 @@ trade               2026-12-01              3
 total rows: 300
 ```
 
-`data load --store delta|files|postgres|duckdb|mongodb|redis|aerospike|iceberg` runs the store's demo loader (section 6);
+`data load --store delta|files|postgres|duckdb|mongodb|redis|aerospike|cassandra|iceberg` runs the store's demo loader (section 6);
 `data landed` announces a batch to a server and `data loads` lists what landed and what is due ([DATA_LOADS.md](DATA_LOADS.md)).
 **Scheduling** `data ingest --watch DIR --once` from cron is a drop folder polled every few minutes (exit `1` when a file failed);
 `data landed` is the last step of any ETL job that loads a store itself.
@@ -841,6 +841,7 @@ generated trade book streamed in) into one store, **in the layout that store's c
 | `tools/load-mongodb.sh` | MongoDB, a collection per domain, zstd, the `day_ids` index | `--keep-days N` or `--ttl-days N` |
 | `tools/load-redis.sh` | Redis, a compressed document per entity per day, each day replaced atomically | `--ttl-days N` |
 | `tools/load-aerospike.sh` | Aerospike, a set per domain, promoted fields as bins | `--ttl-days N` |
+| `tools/load-cassandra.sh` | Apache Cassandra or ScyllaDB, a keyspace per domain, a partition per day per bucket, each day under a new generation (appears whole); `--create` makes the tables (`tools/windows/load-cassandra.ps1` on Windows) | `--ttl-days N` or `--keep-days N` |
 | `tools/load-iceberg.sh` | Apache Iceberg tables (a folder or a REST catalog), sorted by id, external sort with `--spill-dir` | `--keep-days N` |
 
 ```bash

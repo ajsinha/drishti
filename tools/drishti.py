@@ -50,7 +50,7 @@ from javacmd import java_cmd
 TOOLS = pathlib.Path(__file__).resolve().parent
 ROOT = TOOLS.parent
 DEFAULT_SERVER = "http://localhost:18480"
-LOADERS = ("delta", "files", "postgres", "duckdb", "iceberg", "mongodb", "redis", "aerospike")
+LOADERS = ("delta", "files", "postgres", "duckdb", "iceberg", "mongodb", "redis", "aerospike", "cassandra")
 
 
 class CliError(Exception):

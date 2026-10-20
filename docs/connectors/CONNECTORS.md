@@ -41,7 +41,7 @@ settings:                         # the plugin's settings; nesting is flattened 
 - Edit the file in your editor, in **Admin → Connectors** (a form generated from the plugin's settings, a YAML tab, **Test connection**, history, restore), or with
   `drishti.py connector list|get|apply|delete|test|plugins|enable|disable|reset|history`. A change is applied to that connector without a restart.
 - A credential (`password`, `secret…`, `token`, `api-key`, `access-key`, `private-key`, `credential`) is only ever an `${ENV_VAR}` or a `file:/path` reference.
-- Ready-made files for every store are in [`config/connectors.examples/`](../../config/connectors.examples) (`postgres/`, `duckdb/`, `aerospike/`, `mongodb/`, `iceberg/`,
+- Ready-made files for every store are in [`config/connectors.examples/`](../../config/connectors.examples) (`postgres/`, `duckdb/`, `aerospike/`, `cassandra/`, `mongodb/`, `iceberg/`,
   `redis/`, `files/`, `other/`). Every connector document ends its settings with an "As a connector file" section.
 - A site that reaches the internet only through a forward proxy sets it once for every HTTP-based connector (REST, feeds, news, yfinance, S3, Delta and Iceberg on S3, the
   Kafka schema registry), AI provider and MCP server: `drishti.http.proxy.*` in `application.yaml`, or a `proxy:` block (`url`, `username`, `password` as `${ENV}`, `no-proxy`)
@@ -99,6 +99,7 @@ trading pack ships its three trade connectors this way ([DELTA_CONNECTOR.md](DEL
 | in PostgreSQL loaded for Drishti | `jdbc` table mode | [postgresql and jdbc](#postgresql-and-jdbc) |
 | in a Delta Lake or an Iceberg catalog | `delta`, `iceberg` | [delta lake](#delta-lake), [apache iceberg](#apache-iceberg) |
 | in DuckDB, MongoDB, Redis or Aerospike | `duckdb`, `mongodb`, `redis`, `aerospike` | [duckdb](#duckdb), [mongodb](#mongodb), [redis](#redis), [aerospike](#aerospike) |
+| in Apache Cassandra, ScyllaDB, DataStax Astra or Amazon Keyspaces | `cassandra` | [apache cassandra](#apache-cassandra) |
 | on Kafka, ActiveMQ or RabbitMQ (live) | `kafka`, `activemq`, `rabbitmq` | [kafka](#kafka), [activemq](#activemq), [rabbitmq](#rabbitmq) |
 | JSON objects in a bucket (S3, MinIO, Ceph) | `s3` | [S3_CONNECTOR.md](S3_CONNECTOR.md) |
 | public rates and FX | `feed` | [public feeds](#public-feeds) |
@@ -310,6 +311,33 @@ settings:
 ```
 
 Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md).
+
+## Apache Cassandra
+
+Plugin `cassandra`. Apache Cassandra 4 and 5, ScyllaDB, DataStax Astra (and Amazon Keyspaces, checked by hand first): a partition per business day per
+bucket, keyed by id; a day appears whole or not at all (the loader writes a new generation and switches to it last); no secondary index, nothing scans a table.
+
+A connector file (`config/connectors/<name>.yaml`):
+
+```yaml
+plugin: cassandra
+kinds: [trade]
+description: Trades in Cassandra over mutual TLS
+settings:
+  domain: trading                       # the keyspace (or keyspace: …)
+  contact-points: cass-1.example.com:9142,cass-2.example.com:9142
+  local-datacenter: dc-east
+  username: drishti_reader
+  password: ${DRISHTI_CASSANDRA_PASSWORD}
+  tls:
+    enabled: true
+    ca-file: /etc/drishti/tls/ca.pem
+    cert-file: /etc/drishti/tls/client.pem
+    key-file: /etc/drishti/tls/client.key
+```
+
+Load it with `tools/load-cassandra.sh` (or `drishti.py data load --store cassandra`). Everything else (the table layout, how it reads, generations, retention,
+sizing, measured numbers, every setting): [CASSANDRA_CONNECTOR.md](CASSANDRA_CONNECTOR.md).
 
 ## S3
 
