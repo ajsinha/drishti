@@ -42,6 +42,8 @@ public class AccessRecorder implements WebMvcConfigurer, HandlerInterceptor {
             Map.entry("/api/v1/views/{kind}/{id}", "view"),                    // its live stream is the same look: not recorded again
             Map.entry("/api/v1/views/{kind}/{id}/panels/{panel}/records", "view"),   // a panel's rows for its Pivot tab
             Map.entry("/api/v1/entities/{kind}/{id}/raw", "raw"),
+            Map.entry("/api/v1/history/{kind}/{id}", "history"),
+            Map.entry("/api/v1/history/{kind}/~", "history"),
             Map.entry("/api/v1/history/{kind}/{id}/diff", "history"),
             Map.entry("/api/v1/history/{kind}/{id}/series", "history"),
             Map.entry("/api/v1/search", "search"),
@@ -89,7 +91,7 @@ public class AccessRecorder implements WebMvcConfigurer, HandlerInterceptor {
         Map<String, String> vars = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
         String kind = vars == null ? null : vars.get("kind");
         String id = vars == null ? null : vars.get("id");
-        String detail = action.equals("history") ? request.getParameter("path")
+        String detail = action.equals("history") ? historyDetail(request)
                 : request.getParameter("q") != null ? request.getParameter("q") : request.getParameter("paths");
         String date = request.getHeader(AsOfResolver.HEADER);
         if (date == null || date.isBlank()) {
@@ -114,5 +116,20 @@ public class AccessRecorder implements WebMvcConfigurer, HandlerInterceptor {
             detail = (detail == null ? "" : detail + " ") + "net:from " + c.origin() + " request " + c.request();
         }
         sink.record(new AccessLog.Event(Instant.now(), who.user(), action, kind, id, detail, date == null || date.isBlank() ? null : date));
+    }
+
+    /** The series' path, or a history's range as asked ({@code days=30}, {@code range=3M}, {@code from=..&to=..}). */
+    private static String historyDetail(HttpServletRequest request) {
+        if (request.getParameter("path") != null) {
+            return request.getParameter("path");
+        }
+        StringBuilder b = new StringBuilder();
+        for (String k : new String[] {"days", "range", "from", "to", "fields", "knownAt"}) {
+            String v = request.getParameter(k);
+            if (v != null && !v.isBlank()) {
+                b.append(b.length() == 0 ? "" : "&").append(k).append('=').append(v);
+            }
+        }
+        return b.length() == 0 ? null : b.toString();
     }
 }

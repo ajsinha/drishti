@@ -22,6 +22,8 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.engine.history.DocumentDiff;
+import com.ash.drishti.engine.history.HistoryAnswer;
+import com.ash.drishti.engine.history.HistoryService;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.engine.time.BusinessDates;
 import com.ash.drishti.inference.Semantics;
@@ -73,8 +75,11 @@ public class HistoryController {
     private final com.ash.drishti.rachana.el.ElCompiler el;
     private final com.ash.drishti.rachana.format.Formats formats;
 
+    private final HistoryService history;
+
     public HistoryController(SourceRouter router, BusinessDates dates, Entitlements entitlements, com.ash.drishti.rachana.el.ElCompiler el,
-            com.ash.drishti.rachana.format.Formats formats) {
+            com.ash.drishti.rachana.format.Formats formats, HistoryService history) {
+        this.history = history;
         this.router = router;
         this.dates = dates;
         this.entitlements = entitlements;
@@ -96,7 +101,46 @@ public class HistoryController {
     /** A field over business days, oldest first; {@code dated} is false when no dated source answered (one value repeated). */
     public record Series(ViewModelRef ref, String path, String label, List<Point> points, boolean dated) {}
 
-    static final int MAX_DAYS = 260;
+    /**
+     * The entity over the business days it has data (HISTORY_QUERIES.md sections 7 and 8): one row per day, its top-level fields, what
+     * changed from the day before, and for market kinds the headline numbers. The range is {@code days} (days with data), {@code range}
+     * ({@code 30D}, {@code 3M}, {@code YTD}...) or {@code from} / {@code to}; it ends at the date box unless {@code to} says otherwise.
+     * Every day is redacted for the caller before anything is computed from it.
+     */
+    @GetMapping("/{kind}/{id}")
+    public HistoryAnswer rows(@PathVariable String kind, @PathVariable String id, AsOf current,
+            @RequestParam(required = false) Integer days, @RequestParam(required = false) String range,
+            @RequestParam(required = false) String from, @RequestParam(required = false) String to,
+            @RequestParam(required = false) String fields, @RequestParam(defaultValue = "false") boolean diff,
+            @RequestParam(required = false) String knownAt, @RequestParam(defaultValue = "asc") String order,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        entitlements.requireOpen(principal, kind);
+        java.time.Instant known = current.knownAt();
+        if (knownAt != null && !knownAt.isBlank()) {
+            try {
+                known = java.time.Instant.parse(knownAt.trim());
+            } catch (java.time.format.DateTimeParseException e) {
+                throw new DrishtiException(ErrorCode.HISTORY_BAD_RANGE, "knownAt '" + knownAt + "' is not an ISO-8601 instant (2026-10-19T18:00:00Z)");
+            }
+        }
+        java.util.Set<String> wanted = fields == null || fields.isBlank() ? java.util.Set.of()
+                : java.util.Arrays.stream(fields.split(",")).map(String::trim).filter(f -> !f.isEmpty())
+                        .map(f -> f.startsWith("$.") ? f.substring(2) : f).collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new));
+        HistoryService.Query q = new HistoryService.Query(kind, id, days, range, from, to, wanted, diff, known,
+                "desc".equalsIgnoreCase(order), current.businessDate());
+        return history.read(q, HistoryService.Viewer.of(d -> entitlements.redact(principal, d), f -> entitlements.masked(principal, f)));
+    }
+
+    /** {@link #rows} for an id a path cannot carry ({@code /}, {@code \}, {@code ..}): {@code /api/v1/history/{kind}/~?id=}. */
+    @GetMapping("/{kind}/~")
+    public HistoryAnswer rowsById(@PathVariable String kind, @RequestParam String id, AsOf current,
+            @RequestParam(required = false) Integer days, @RequestParam(required = false) String range,
+            @RequestParam(required = false) String from, @RequestParam(required = false) String to,
+            @RequestParam(required = false) String fields, @RequestParam(defaultValue = "false") boolean diff,
+            @RequestParam(required = false) String knownAt, @RequestParam(defaultValue = "asc") String order,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        return rows(kind, id, current, days, range, from, to, fields, diff, knownAt, order, principal);
+    }
 
     /**
      * One field's value on each of the last {@code days} business days up to {@code to} (default: the request's date),
@@ -115,7 +159,7 @@ public class HistoryController {
         } catch (RuntimeException e) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "cannot read the path '" + path + "': " + e.getMessage());
         }
-        int n = Math.max(2, Math.min(MAX_DAYS, days));
+        int n = Math.max(2, Math.min(history.limits().maxDays(), days));
         LocalDate last = to == null ? (current.businessDate() == null ? dates.current() : current.businessDate()) : LocalDate.parse(to);
         java.util.ArrayDeque<LocalDate> wanted = new java.util.ArrayDeque<>();
         for (LocalDate d = last; wanted.size() < n && !d.isBefore(dates.earliest()); d = dates.calendar().previous(d)) {

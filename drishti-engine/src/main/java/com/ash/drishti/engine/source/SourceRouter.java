@@ -108,6 +108,38 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         return out;
     }
 
+    /**
+     * One entity over business dates (HISTORY_QUERIES.md section 9.3): the kind's dated connectors in read order, each asked for the dates
+     * no earlier one holds or covers, then the Drishti*net peers for the rest. A {@code knownAt} put to a dated store without time travel
+     * fails with {@code DRS-1007}.
+     */
+    public SourceHistory.Routed history(com.ash.drishti.api.HistoryRequest request) {
+        List<SourcePlugin> candidates = candidates(request.ref().kind());
+        readOrder(candidates, AsOf.of(request.to()));
+        return new SourceHistory(this).read(request, candidates, fallback);
+    }
+
+    /**
+     * True when some source of the kind keeps daily history here (a dated connector), or the cluster may hold it on a peer; false when
+     * every connector of the kind holds current data only.
+     */
+    public boolean keepsHistory(EntityRef ref, java.time.LocalDate date) {
+        if (candidates(ref.kind()).stream().anyMatch(p -> p.manifest().capabilities().dated())) {
+            return true;
+        }
+        Fallback fb = fallback;
+        return fb != null && !fb.peers(ref, AsOf.of(date)).isEmpty();
+    }
+
+    /** The names of the kind's connectors that hold current data only (for the message when the kind keeps no history). */
+    public List<String> undatedSources(String kind) {
+        return candidates(kind).stream().filter(p -> !p.manifest().capabilities().dated()).map(p -> p.manifest().name()).toList();
+    }
+
+    boolean isUnion(String connector) {
+        return registry.union(connector);
+    }
+
     /** The union connectors among a kind's candidates, in order (empty when the kind has no union). */
     public List<SourcePlugin> unionOf(String kind) {
         return candidates(kind).stream().filter(p -> registry.union(p.manifest().name())).toList();

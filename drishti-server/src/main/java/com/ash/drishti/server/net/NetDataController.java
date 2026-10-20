@@ -181,6 +181,46 @@ public class NetDataController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body("{\"share\":" + share + "}");
     }
 
+    /**
+     * This node's days of one entity ({@code GET /api/v1/net/history/{kind}/{id}}, HISTORY_QUERIES.md section 12): the dates asked, read
+     * from this node's own sources only (one hop), each document masked for the on-behalf-of user as here:
+     * {@code {days: [{date, versions, provenance, deleted, data}], failed: {date: why}}}.
+     */
+    @GetMapping("/history/{kind}/{id}")
+    public ResponseEntity<String> history(@PathVariable String kind, @PathVariable String id, @RequestParam(value = "id", required = false) String idParam,
+            @RequestParam String from, @RequestParam String to, @RequestParam(required = false) String dates,
+            @RequestParam(required = false) String fields, @RequestParam(defaultValue = "0") int lastDays, AsOf asOf,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestAttribute(value = NetCallFilter.CLAIMS, required = false) Object claims)
+            throws java.io.IOException {
+        Principal user = forUser(p, claims);
+        entitlements.requireOpen(user, kind);
+        String entity = "~".equals(id) && idParam != null ? idParam : id;
+        java.util.List<java.time.LocalDate> list = dates == null || dates.isBlank() ? java.util.List.of()
+                : java.util.Arrays.stream(dates.split(",")).map(String::trim).filter(x -> !x.isEmpty()).map(java.time.LocalDate::parse).toList();
+        java.util.Set<String> wanted = fields == null || fields.isBlank() ? java.util.Set.of()
+                : java.util.Set.copyOf(java.util.Arrays.stream(fields.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList());
+        com.ash.drishti.api.HistoryRequest r = new com.ash.drishti.api.HistoryRequest(EntityRef.of(kind, entity), java.time.LocalDate.parse(from),
+                java.time.LocalDate.parse(to), list, wanted, asOf.knownAt(), lastDays, null, 0);
+        var routed = router.history(r);
+        StringBuilder b = new StringBuilder("{\"days\":[");
+        boolean first = true;
+        for (var d : routed.days()) {
+            b.append(first ? "" : ",");
+            first = false;
+            String doc = json(user, d.document());
+            b.append("{\"date\":\"").append(d.date()).append("\",\"versions\":").append(d.versions() == null ? "null" : d.versions().toString())
+                    .append(',').append(doc, 1, doc.length());
+        }
+        b.append("],\"failed\":{");
+        first = true;
+        for (var f : routed.failures()) {
+            b.append(first ? "" : ",").append(json.writeValueAsString(f.date().toString())).append(':').append(json.writeValueAsString(f.reason()));
+            first = false;
+        }
+        b.append("}}");
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(b.toString());
+    }
+
     /** {@code id} in the path, or {@code ~} in the path and the id as {@code ?id=} (an id with a slash, as every view endpoint takes it). */
     @GetMapping("/fetch/{kind}/{id}")
     public ResponseEntity<String> fetch(@PathVariable String kind, @PathVariable String id, @RequestParam(value = "id", required = false) String idParam,

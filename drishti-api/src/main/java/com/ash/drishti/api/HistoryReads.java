@@ -53,7 +53,8 @@ public final class HistoryReads {
         Map<LocalDate, String> failed = new LinkedHashMap<>();
         List<LocalDate> newestFirst = new ArrayList<>(dates);
         java.util.Collections.reverse(newestFirst);
-        try (ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor()) {
+        ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor();
+        try {
             int i = 0;
             while (i < newestFirst.size()) {
                 if (r.lastDays() > 0 && days.size() >= r.lastDays()) {
@@ -91,7 +92,8 @@ public final class HistoryReads {
                 }
                 i = end;
             }
-            pool.shutdownNow();
+        } finally {
+            pool.shutdownNow();            // never waits: a read that ignores the interrupt does not hold the answer past the budget
         }
         List<HistoryDay> kept = days;
         if (r.lastDays() > 0 && days.size() > r.lastDays()) {

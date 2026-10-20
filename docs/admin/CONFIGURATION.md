@@ -778,6 +778,24 @@ drishti:
     history: P2Y
 ```
 
+### `drishti.history` — history queries
+
+`TRD 1000015 30 <GO>` shows an entity over the business days it has data
+([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md), `GET /api/v1/history/{kind}/{id}`). These limits follow a settings reload
+without a restart. A pack's `history:` block can lower `max-days` and set `default-days` per kind ([PACKS.md](../guides/PACKS.md)).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `drishti.history.enabled` | `true` | Off: no history is read and the endpoint answers `DRS-1012`. |
+| `drishti.history.default-days` | `30` | The range when a link or the CLI names none. |
+| `drishti.history.max-days` | `366` | The most business days one request may span; more is `DRS-4021`. A pack's `max-days` can only lower it. |
+| `drishti.history.max-rows` | `1000` | The most rows returned; the oldest are dropped and the answer says `truncated`. |
+| `drishti.history.max-columns` | `200` | The most columns. |
+| `drishti.history.timeout` | `10s` | The whole request. Days not read by then are listed in `problems` and the answer is `partial` (`DRS-1014` when no day was read). |
+| `drishti.history.parallel-days` | `8` | Days read at once per request by the default per-day loop (connectors with a fast path read their own way). |
+| `drishti.history.max-concurrent` | `16` | History requests running at once on this server; the next waits up to `timeout`, then `DRS-1014`. |
+| `drishti.history.cache-mb` | `64` | Memory for cached answers. An entry is keyed by the kind's data version, so a new load never serves stale rows; a kind whose connector gives no version is not cached. Admin → Cache → `history` empties it. |
+
 ### `drishti.packs` — domain packs
 
 | Key | Default | Meaning |

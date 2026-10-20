@@ -30,6 +30,12 @@ public enum ErrorCode {
     NO_TIME_TRAVEL("DRS-1007", 400),
     /** A kind is routed to a connector (by a pack) for which no connector file or definition exists. */
     CONNECTOR_NOT_CONFIGURED("DRS-1011", 404),
+    /** History queries: the kind keeps no daily history here (history off for it, or every connector of it holds today's data only). */
+    HISTORY_NOT_KEPT("DRS-1012", 404),
+    /** History queries: the entity has no data in the range asked. */
+    HISTORY_NO_DATA("DRS-1013", 404),
+    /** History queries: no day of the range was read within the budget, or too many history requests are running. */
+    HISTORY_TIMEOUT("DRS-1014", 504),
     SUTRA_PARSE("DRS-2001", 422),
     SUTRA_INVALID("DRS-2002", 422),
     SUTRA_NOT_FOUND("DRS-2003", 404),
@@ -38,6 +44,8 @@ public enum ErrorCode {
     FOUR_EYES("DRS-2007", 403),
     /** A search form (the form: section of a pack, or a Design's Form tab) that is not valid YAML or names a field, type or operator wrongly. */
     FORM_INVALID("DRS-2060", 422),
+    /** The history: section of a pack names a field, shape or limit wrongly. */
+    HISTORY_INVALID("DRS-2061", 422),
     EL_SYNTAX("DRS-2101", 422),
     EL_EVAL("DRS-2102", 422),
     INFERENCE_FAILED("DRS-3001", 500),
@@ -73,6 +81,10 @@ public enum ErrorCode {
     AI_NOT_FOUND("DRS-4019", 404),
     /** BI with AI (docs/guides/BI_AI.md): the model's answer could not be used (not a valid report, not a query the engine accepts); nothing was changed. */
     AI_ANSWER("DRS-4020", 422),
+    /** History queries: a range of more business days than the kind's or the server's max-days. */
+    HISTORY_RANGE_TOO_LARGE("DRS-4021", 400),
+    /** History queries: a range that cannot be read (TO before FROM, a future FROM, an unreadable date or range). */
+    HISTORY_BAD_RANGE("DRS-4022", 400),
     BAD_REQUEST("DRS-5001", 400),
     CACHE_NOT_FOUND("DRS-5004", 404),
     FORBIDDEN("DRS-5002", 403),

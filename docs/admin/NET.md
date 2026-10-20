@@ -357,6 +357,10 @@ answered by the receiving node from itself only (one hop at most, `X-Drishti-Net
    within `drishti.graph.link-budget` (40 ms), and one that none of them holds from the peers within routing.yaml's `link-budget` (1 s from the
    read's start), so a linked entity a peer holds shows with its badge, and a panel that reads it (`source:`) is drawn, exactly as on the node
    that holds it; only a peer slower than that leaves it *pending*.
+   A **history** (`GET /api/v1/history/{kind}/{id}`, [HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)) takes the same three steps:
+   a node without the pack forwards the whole request; a node with the pack reads the dates its own dated sources do not cover from a
+   peer in **one** call for all of them (`GET /api/v1/net/history/{kind}/~?id=&from=&to=&dates=`, each day masked there and again here),
+   not one call per day. Dates two peers both answer keep the higher generation. Admin → Net → Traffic lists the call as `history`.
 
 **The newest pack is served.** When nodes hold different versions of a pack, a request for its kinds goes to a node with the newest, even when this
 node could answer with its older one (in the in-process test, B with the shipped finance pack forwards to A, which has 9.9.9).
