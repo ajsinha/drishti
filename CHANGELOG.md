@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **Investigated (SOAK-05): resident memory that creeps while the live heap is flat is the committed heap and glibc's malloc arenas,
+  not a native leak.** Two runs under 20 users with Native Memory Tracking: metaspace, code, threads and direct buffers flat; RSS grows
+  with G1's committed heap (to `-Xmx`) and, with the default allocator, 149 malloc arenas holding about 700 MB (about 200 MB with
+  `MALLOC_ARENA_MAX=2`). PERFORMANCE.md *Resident memory* gives the numbers, the budget (`-Xmx` plus about 1 GB, or 0.4 GB with two
+  arenas) and the settings `MALLOC_ARENA_MAX=2`, `-XX:MaxDirectMemorySize=256m`, `-XX:TrimNativeHeapInterval=60000`.
 - **Fixed (SOAK-01): a complete history is no longer marked partial while a node is down.** A node that is down counts only for the
   business dates its last digest said it holds: each source of a digest now carries `earliestDate` beside `latestDate`
   (`SourcePlugin.earliestDate`, given by the Delta and Cassandra connectors), and `NetRouting.downHolders(kind, date)` names a down
