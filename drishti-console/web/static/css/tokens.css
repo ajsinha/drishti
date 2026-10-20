@@ -15,7 +15,8 @@
  */
 /* Drishti design tokens. Colours are defined here and nowhere else.
    Themes: terminal (default, navy + amber as in the reference mockups), light (parchment), wallstreet, blue,
-   green, crimson and crimson-dark (the Maya palette).
+   green, crimson and crimson-dark (the Maya palette), and terminal-green, terminal-crimson and terminal-blue (the Terminal
+   look in one dominant hue).
    Selected by data-theme on <html>; "terminal" also answers prefers-color-scheme: dark.
    Every colour used for text (ink, muted, faint, link, accent, accent-strong, pos, neg, ok, warn, bad) reads at 4.5:1 or
    more on every ground of its theme (bg, bg-2, surface, surface-2), and --d-on-accent on the accent fills (WCAG AA;
@@ -227,6 +228,96 @@
   --d-grad-to: #a9b6d6;
   --d-nav: rgba(21, 21, 23, .88);
   --d-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+  color-scheme: dark;
+}
+
+/* Green, crimson and blue terminals: the Terminal theme's dark, dense look, each with one dominant hue. Green: a deep
+   forest ground with phosphor green and light lime; crimson: a wine-black ground with crimson and blush; blue: a midnight
+   ground with azure and periwinkle. Up and down keep their own hues so they never read as the accent. */
+:root[data-theme="terminal-green"] {
+  --d-bg: #06140e;
+  --d-bg-2: #081a12;
+  --d-surface: #0b2117;
+  --d-surface-2: #0f291d;
+  --d-border: #1c4532;
+  --d-ink: #e2f6ea;
+  --d-muted: #8fbfa3;
+  --d-faint: #82b096;
+  --d-accent: #39e58c;          /* phosphor green */
+  --d-accent-strong: #6ef0a8;
+  --d-accent-tint: rgba(57, 229, 140, .13);
+  --d-on-accent: #03130a;
+  --d-link: #b6ef7d;            /* light lime: links, positive values */
+  --d-pos: #b6ef7d;
+  --d-neg: #ff9d7a;
+  --d-ok: #7ee8b0;
+  --d-warn: #f2c94e;
+  --d-bad: #ff7f7f;
+  --d-highlight: rgba(182, 239, 125, .07);
+  --d-emph-bg: rgba(57, 229, 140, .22);
+  --d-glow: rgba(57, 229, 140, .38);
+  --d-grad-from: #39e58c;
+  --d-grad-to: #c4f27a;
+  --d-nav: rgba(6, 20, 14, .86);
+  --d-shadow: 0 10px 40px rgba(0, 0, 0, .45);
+  color-scheme: dark;
+}
+
+:root[data-theme="terminal-crimson"] {
+  --d-bg: #14070b;
+  --d-bg-2: #1a090f;
+  --d-surface: #210c14;
+  --d-surface-2: #2a101a;
+  --d-border: #4a1d2c;
+  --d-ink: #f7e9ec;
+  --d-muted: #c99fa9;
+  --d-faint: #bb919c;
+  --d-accent: #ff4f6f;          /* crimson */
+  --d-accent-strong: #ff7b92;
+  --d-accent-tint: rgba(255, 79, 111, .14);
+  --d-on-accent: #1a0509;
+  --d-link: #ffb8a3;            /* blush */
+  --d-pos: #8fd8c0;             /* sea green: up is never the accent's red */
+  --d-neg: #ff9a5c;
+  --d-ok: #74dca2;
+  --d-warn: #f5c454;
+  --d-bad: #ff6f7d;
+  --d-highlight: rgba(255, 184, 163, .07);
+  --d-emph-bg: rgba(255, 79, 111, .24);
+  --d-glow: rgba(255, 79, 111, .38);
+  --d-grad-from: #ff4f6f;
+  --d-grad-to: #ffb199;
+  --d-nav: rgba(20, 7, 11, .88);
+  --d-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+  color-scheme: dark;
+}
+
+:root[data-theme="terminal-blue"] {
+  --d-bg: #050f1e;
+  --d-bg-2: #081527;
+  --d-surface: #0b1b31;
+  --d-surface-2: #0f223b;
+  --d-border: #1d3b61;
+  --d-ink: #e5f0fc;
+  --d-muted: #92adcb;
+  --d-faint: #86a1bf;
+  --d-accent: #3ab8ff;          /* azure */
+  --d-accent-strong: #74cdff;
+  --d-accent-tint: rgba(58, 184, 255, .14);
+  --d-on-accent: #021120;
+  --d-link: #a9c5ff;            /* periwinkle */
+  --d-pos: #5ee3d1;
+  --d-neg: #ff9e6e;
+  --d-ok: #5fd39a;
+  --d-warn: #f2c14e;
+  --d-bad: #ff7a7a;
+  --d-highlight: rgba(169, 197, 255, .07);
+  --d-emph-bg: rgba(58, 184, 255, .24);
+  --d-glow: rgba(58, 184, 255, .38);
+  --d-grad-from: #3ab8ff;
+  --d-grad-to: #9d8cff;
+  --d-nav: rgba(5, 15, 30, .86);
+  --d-shadow: 0 10px 40px rgba(0, 0, 0, .45);
   color-scheme: dark;
 }
 

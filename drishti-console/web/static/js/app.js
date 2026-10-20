@@ -24,7 +24,7 @@ window.drsMessage = function (p, fallback) {
 (function () {
   'use strict';
   var root = document.documentElement;
-  var THEMES = ['terminal', 'light', 'wallstreet', 'blue', 'green', 'crimson', 'crimson-dark'];
+  var THEMES = ['terminal', 'light', 'wallstreet', 'blue', 'green', 'crimson', 'crimson-dark', 'terminal-green', 'terminal-crimson', 'terminal-blue'];
 
   function apply(theme) {
     if (THEMES.indexOf(theme) < 0) { return; }

@@ -81,7 +81,7 @@ ui:
     DRS-4004: The search could not be read. Check its fields and syntax.
     default: Go back to the terminal and try again, or type part of an identifier in the command line.
   studio_example: all-panels-showcase   # the example Studio opens on (a name under studio.examples_dir); blank or missing: the first pack example
-  default_theme: terminal        # terminal | light | wallstreet | blue | green | crimson | crimson-dark
+  default_theme: terminal        # terminal | light | wallstreet | blue | green | crimson | crimson-dark | terminal-green | terminal-crimson | terminal-blue
   # The product's name and legal notices on every page; nothing user-visible names them in code. The server has the
   # same under drishti.branding.
   product: ${DRISHTI_PRODUCT:Drishti}

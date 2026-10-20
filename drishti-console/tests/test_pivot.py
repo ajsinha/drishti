@@ -254,7 +254,7 @@ def test_heat_shading_keeps_text_readable_in_every_theme():
         cb = [int(b[i:i + 2], 16) for i in (1, 3, 5)]
         return "#" + "".join(f"{round(x * w + y * (1 - w)):02x}" for x, y in zip(ca, cb))
 
-    for name in ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark"):
+    for name in ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue"):
         t = _theme(name)
         for tone in ("accent", "pos", "neg"):
             bg = mix(t[tone], t["surface"], strongest * scale.get(name, 1.0) / 100)

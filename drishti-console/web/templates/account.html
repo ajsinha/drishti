@@ -38,7 +38,7 @@
     <div class="set-form">
       <label for="sTheme">Theme</label>
       <select id="sTheme" name="theme"><option value="">This browser's choice</option>
-        {% for t in ['terminal', 'light', 'wallstreet', 'blue', 'green', 'crimson', 'crimson-dark'] %}<option value="{{ t }}"{% if settings.theme == t %} selected{% endif %}>{{ t | replace('-', ' ') | capitalize }}</option>{% endfor %}</select>
+        {% for t in ['terminal', 'light', 'wallstreet', 'blue', 'green', 'crimson', 'crimson-dark', 'terminal-green', 'terminal-crimson', 'terminal-blue'] %}<option value="{{ t }}"{% if settings.theme == t %} selected{% endif %}>{{ t | replace('-', ' ') | capitalize }}</option>{% endfor %}</select>
       <label for="sLanding">After signing in, open</label>
       <input id="sLanding" name="landing" class="mono" value="{{ settings.landing or '/t' }}" placeholder="/t, /w/Rates, /m/Watchlist or /v/trade/MX-20000001">
       <label for="sZone">Clock time zone</label>

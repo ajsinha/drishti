@@ -38,7 +38,7 @@ def _ratio(a, b):
 
 
 def test_contrast_all_themes():
-    for name in ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark"):
+    for name in ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue"):
         t = _theme(name)
         for fg in ("ink", "muted", "link", "neg", "pos"):
             for bg in ("bg", "surface"):
@@ -49,7 +49,7 @@ def test_contrast_all_themes():
 def test_the_about_drawer_text_reads_in_every_theme():
     """About this page (about.css) draws ink, muted and link text on the surface, its headings in the accent, its health words in
     pos / accent / neg, and ink on the key caps (surface-2): all at 4.5:1."""
-    for name in ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark"):
+    for name in ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue"):
         t = _theme(name)
         for fg in ("ink", "muted", "link", "accent", "pos", "neg"):
             assert _ratio(t[fg], t["surface"]) >= 4.5, (name, fg, round(_ratio(t[fg], t["surface"]), 2))
@@ -59,7 +59,7 @@ def test_the_about_drawer_text_reads_in_every_theme():
 def test_waterfall_bars_stand_out_in_every_theme():
     """A waterfall fills its bars with ok/bad (rises green, falls red; the default), pos/neg (colors: theme) and muted
     (totals): graphical objects need 3:1 against the panel (WCAG 1.4.11), and the two colours of a step must differ."""
-    for name in ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark"):
+    for name in ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue"):
         t = _theme(name)
         for fill in ("ok", "bad", "pos", "neg", "muted"):
             for bg in ("bg", "surface"):
@@ -67,7 +67,7 @@ def test_waterfall_bars_stand_out_in_every_theme():
         assert t["ok"].lower() != t["bad"].lower() and t["pos"].lower() != t["neg"].lower(), name
 
 
-THEMES = ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark")
+THEMES = ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue")
 # Every token the console's CSS sets as a text colour, and every ground text sits on: the page, the second ground
 # (inputs, the command line), panels and the second surface (code, headers).
 TEXT_TOKENS = ("ink", "muted", "faint", "link", "accent", "accent-strong", "pos", "neg", "ok", "warn", "bad")
@@ -77,7 +77,7 @@ CSS = Path(__file__).resolve().parent.parent / "web" / "static" / "css"
 
 def test_every_text_colour_reads_on_every_ground_in_every_theme():
     """UX-04: faint text ("No data available", the footer, placeholders, key notes) and accent used as text (example
-    commands, inline code, kickers) need 4.5:1 like any text (WCAG 1.4.3), on every ground, in all seven themes."""
+    commands, inline code, kickers) need 4.5:1 like any text (WCAG 1.4.3), on every ground, in all ten themes."""
     low = []
     for name in THEMES:
         t = _theme(name)
@@ -123,7 +123,7 @@ def test_the_light_fallback_is_the_light_theme():
 def test_the_share_dialog_and_inbox_read_in_every_theme():
     """Share with a note (collab.css): ink, muted, accent, warn and neg text on the surface; ink on the chips (surface-2), on an unread row
     (emph-bg) and on the highlighted option (accent-tint): all at 4.5:1."""
-    for name in ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark"):
+    for name in ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue"):
         t = _theme(name)
         for fg in ("ink", "muted", "link", "accent", "warn", "neg"):
             assert _ratio(t[fg], t["surface"]) >= 4.5, (name, fg, round(_ratio(t[fg], t["surface"]), 2))

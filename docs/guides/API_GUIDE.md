@@ -884,7 +884,7 @@ It is kept on the server, so it follows the user to any browser.
 
 | Field | Default | Allowed values |
 |---|---|---|
-| `theme` | `null` (console default) | `terminal`, `light`, `wallstreet`, `blue`, `green`, `crimson`, `crimson-dark` |
+| `theme` | `null` (console default) | `terminal`, `light`, `wallstreet`, `blue`, `green`, `crimson`, `crimson-dark`, `terminal-green`, `terminal-crimson`, `terminal-blue` |
 | `landing` | `/t` | `/t`, `/help`, `/w/<workspace>`, `/m/<monitor>`, `/v/<kind>/<id>` |
 | `clockZone` | `null` | any Java time-zone id, e.g. `Europe/London` |
 | `density` | `comfortable` | `comfortable`, `compact` |
@@ -908,7 +908,7 @@ curl -s -X PATCH -H "X-Drishti-User: ash" -H 'Content-Type: application/json' $B
 ```
 
 You should see the full settings back, with `"theme":"light"` and `"density":"compact"`. A bad value:
-`{"theme": "pink"}` → `400` with `detail` `DRS-5001 theme is one of [blue, crimson, crimson-dark, green, light, terminal, wallstreet]`.
+`{"theme": "pink"}` → `400` with `detail` `DRS-5001 theme is one of [blue, crimson, crimson-dark, green, light, terminal, terminal-blue, terminal-crimson, terminal-green, wallstreet]`.
 
 **Packs.**
 

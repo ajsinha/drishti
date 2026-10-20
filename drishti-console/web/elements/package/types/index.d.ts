@@ -41,7 +41,7 @@ export class DrishtiView extends HTMLElement {
   asOf: string;
   /** an ISO instant: bitemporal "as known at" */
   knownAt: string;
-  /** `inherit`, or a Drishti theme: `terminal`, `light` (default), `blue`, `green`, `wallstreet`, `crimson`, `crimson-dark` */
+  /** `inherit`, or a Drishti theme: `terminal`, `light` (default), `blue`, `green`, `wallstreet`, `crimson`, `crimson-dark`, `terminal-green`, `terminal-crimson`, `terminal-blue` */
   theme: string;
   /** row padding of tables */
   density: 'compact' | 'comfortable';

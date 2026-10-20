@@ -39,7 +39,7 @@ VIEW_ATTRS = [
     ("entity", "string", "the entity id; change it to show another entity (reloads in place); required"),
     ("as-of", "string", "`live` (default) or a business date `YYYY-MM-DD` (a past date is a static snapshot)"),
     ("known-at", "string", "an ISO instant: bitemporal \"as known at\""),
-    ("theme", "string", "`inherit`, or a Drishti theme: `terminal`, `light` (default), `blue`, `green`, `wallstreet`, `crimson`, `crimson-dark`"),
+    ("theme", "string", "`inherit`, or a Drishti theme: `terminal`, `light` (default), `blue`, `green`, `wallstreet`, `crimson`, `crimson-dark`, `terminal-green`, `terminal-crimson`, `terminal-blue`"),
     ("density", "'compact' | 'comfortable'", "row padding of tables"),
     ("header", "'full' | 'strip' | 'none'", "title and strip, strip only, or panels only (default `full`; `none` for `<drishti-panel>`)"),
     ("panels", "string", "comma-separated panel ids to show (default all)"),

@@ -79,6 +79,9 @@ a:hover { text-decoration: underline; }
 .swatch-green { background: linear-gradient(135deg, #f7f5ef 50%, #006039 50%); }
 .swatch-crimson { background: linear-gradient(135deg, #f7f5f2 50%, #a51c30 50%); }
 .swatch-crimson-dark { background: linear-gradient(135deg, #151517 50%, #de6b81 50%); }
+.swatch-terminal-green { background: linear-gradient(135deg, #06140e 50%, #39e58c 50%); }
+.swatch-terminal-crimson { background: linear-gradient(135deg, #14070b 50%, #ff4f6f 50%); }
+.swatch-terminal-blue { background: linear-gradient(135deg, #050f1e 50%, #3ab8ff 50%); }
 
 /* ---- Buttons ---- */
 .btn-pill { border-radius: 999px; padding: .6rem 1.35rem; font-weight: 600; border: 1px solid transparent; }

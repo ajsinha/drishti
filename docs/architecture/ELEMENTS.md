@@ -231,7 +231,7 @@ importing twice is harmless.
 | `entity` | the entity id | required | change it to show another entity: reload in place |
 | `as-of` | `live` or a business date `YYYY-MM-DD` | `live` | a past date is a static snapshot (as in the console); sent as `X-Drishti-As-Of` |
 | `known-at` | an ISO instant | none | bitemporal "as known at" (`X-Drishti-Known-At`) |
-| `theme` | `inherit`, or a Drishti theme: `terminal`, `light`, `blue`, `green`, `wallstreet`, `crimson`, `crimson-dark` | `inherit` | `inherit` uses the host's `--d-*` values, falling back to `light` |
+| `theme` | `inherit`, or a Drishti theme: `terminal`, `light`, `blue`, `green`, `wallstreet`, `crimson`, `crimson-dark`, `terminal-green`, `terminal-crimson`, `terminal-blue` | `inherit` | `inherit` uses the host's `--d-*` values, falling back to `light` |
 | `header` | `full`, `strip`, `none` | `full` | title + strip, strip only, or panels only |
 | `density` | `compact`, `comfortable` | the sheet's | row padding of tables (a host-level choice; the view's own look otherwise) |
 | `panel` | a panel id | none | the attribute of `<drishti-panel>` (step 14, built): accepted and ignored by `<drishti-view>` (use `panels` to show some) |

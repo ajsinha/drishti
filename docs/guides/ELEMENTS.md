@@ -177,7 +177,7 @@ A live Drishti view of one entity.
 | `entity` | `string` | the entity id; change it to show another entity (reloads in place); required |
 | `as-of` | `string` | `live` (default) or a business date `YYYY-MM-DD` (a past date is a static snapshot) |
 | `known-at` | `string` | an ISO instant: bitemporal "as known at" |
-| `theme` | `string` | `inherit`, or a Drishti theme: `terminal`, `light` (default), `blue`, `green`, `wallstreet`, `crimson`, `crimson-dark` |
+| `theme` | `string` | `inherit`, or a Drishti theme: `terminal`, `light` (default), `blue`, `green`, `wallstreet`, `crimson`, `crimson-dark`, `terminal-green`, `terminal-crimson`, `terminal-blue` |
 | `density` | `'compact' | 'comfortable'` | row padding of tables |
 | `header` | `'full' | 'strip' | 'none'` | title and strip, strip only, or panels only (default `full`; `none` for `<drishti-panel>`) |
 | `panels` | `string` | comma-separated panel ids to show (default all) |
@@ -428,7 +428,7 @@ it skips when the vendor folder is not there. The React page, drawn in Chromium 
 | `--d-pos`, `--d-neg`, `--d-ok`, `--d-warn`, `--d-bad` | tones (gains, losses, status); charts take their palette from these |
 | `--d-font-sans`, `--d-font-mono` | fonts (the host's fonts work: the element loads none but its icon font) |
 
-`theme="inherit"` uses your values with `light` as the fallback; `terminal`, `light`, `blue`, `green`, `wallstreet`, `crimson` and `crimson-dark` are the console's own. Parts for spacing and borders without reaching into the shadow root: `::part(header)`, `::part(strip)`, `::part(grid)`, `::part(panel)` (views) and
+`theme="inherit"` uses your values with `light` as the fallback; `terminal`, `light`, `blue`, `green`, `wallstreet`, `crimson`, `crimson-dark`, `terminal-green`, `terminal-crimson` and `terminal-blue` are the console's own. Parts for spacing and borders without reaching into the shadow root: `::part(header)`, `::part(strip)`, `::part(grid)`, `::part(panel)` (views) and
 `::part(report)`, `::part(tabs)`, `::part(chips)`, `::part(grid)` (reports).
 
 **Sizing.** Every element is `display: block`, as wide as its container, as tall as its content; give it a width the way you give any block one (a grid cell, a flex item with `min-width: 0`). It is a **size container**: the console's width breakpoints (760 px, 640 px and others) apply to **its own width**, not the page's, so an element in a 360 px

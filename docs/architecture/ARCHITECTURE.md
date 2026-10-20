@@ -717,10 +717,11 @@ Python 3.12, FastAPI + Jinja2: `core/` (app, settings, auth, backend client, bus
 Python console; vanilla JS, no build step); no CDN, no inline script
 (strict CSP); static assets are fingerprinted.
 
-**Themes** — tokens only in `web/static/css/tokens.css` (gradient chrome in `gradients.css`); seven themes selected by
+**Themes** — tokens only in `web/static/css/tokens.css` (gradient chrome in `gradients.css`); ten themes selected by
 `data-theme` on `<html>`: `terminal` (default, the navy/amber of the mockups), `light` (parchment), `wallstreet`
 (Bloomberg Terminal colours: black ground, amber data, yellow commands, green/red ticks, blue highlight — colours
-only, not fonts), `blue`, `green`, `crimson` and `crimson-dark`. The choice is saved to the user's account and
+only, not fonts), `blue`, `green`, `crimson`, `crimson-dark`, and `terminal-green`, `terminal-crimson` and `terminal-blue` (the Terminal
+look in one dominant hue: phosphor green with lime, crimson with blush, azure with periwinkle). The choice is saved to the user's account and
 mirrored in `localStorage['drishti.theme']` for first paint. Contrast is checked by `drishti-console/tests/test_contrast.py`
 (≥ 4.5:1 for every token used as text — ink, muted, faint, link, accent, accent-strong, pos, neg, ok, warn, bad — on
 bg, bg-2, surface and surface-2, and for `--d-on-accent` on accent fills; ≥ 3:1 non-text). Layout is checked at 390,

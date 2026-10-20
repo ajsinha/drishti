@@ -46,7 +46,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class SettingsController {
 
     static final String NS = "settings";
-    static final Set<String> THEMES = Set.of("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark");
+    static final Set<String> THEMES = Set.of("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark",
+            "terminal-green", "terminal-crimson", "terminal-blue");
     static final Set<String> DENSITIES = Set.of("comfortable", "compact");
     private static final Pattern LOCALE = Pattern.compile("^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8}){0,3}$");
     private static final Pattern LANDING = Pattern.compile("^/(t|w/[^/?#]{1,64}|m/[^/?#]{1,64}|v/[a-z0-9-]{1,40}/[^/?#]{1,128}|help)$");
