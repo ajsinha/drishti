@@ -110,6 +110,9 @@ settings:                         # the plugin's settings; nesting is flattened 
 
 - Only these top-level keys are allowed (`plugin`, `enabled`, `kinds`, `description`, `settings`, and an optional `name`); anything
   else is an error that names the key.
+- `enabled` is `true` or `false`, quoted or not (`enabled: "false"` switches the connector off, as `${VAR:false}` resolves to the
+  same text), or a `${ENV_VAR:default}` placeholder. Anything else (`maybe`, `"off"`) refuses the file with `'enabled' is true or false
+  (or a "${VARIABLE:true}" placeholder), not 'maybe'`.
 - A `name:` inside the file must equal the file name. A file `a.yaml` that says `name: b` is an error: rename the file or remove the
   line. The file name always wins as the identity.
 - `${ENV_VAR}` and `${ENV_VAR:default}` placeholders are resolved when the connector starts, exactly as everywhere else in Drishti's
@@ -815,6 +818,7 @@ The panel itself is now a **view** of the pack's connectors with links to Admin 
 | You see | Cause and fix |
 |---|---|
 | `unknown key 'x'` | Only `plugin`, `enabled`, `kinds`, `description`, `settings` (and `name`) at the top level; put plugin settings under `settings:`. |
+| `'enabled' is true or false … not 'maybe'` | Write `true` or `false` (quotes are fine), or a `${VARIABLE:true}` placeholder. |
 | `says name 'b' but the file name is the connector's name` | Rename the file, or delete the `name:` line. |
 | `'password' refers to an environment variable that is not set` | Set the variable in the server's environment, or give a default for a non-secret value. The last good configuration keeps running. |
 | `a credential is never written into a connector file` | Use `${ENV_VAR}` or `file:/path`. |

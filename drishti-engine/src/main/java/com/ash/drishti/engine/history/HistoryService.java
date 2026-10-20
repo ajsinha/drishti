@@ -68,6 +68,15 @@ public final class HistoryService {
 
         boolean masked(String field);
 
+        /**
+         * The caller's security signature as every node sees it (their roles and embedding app): two callers with the same signature are
+         * masked alike and reach the same nodes. Days read through a peer come back masked there for the caller, so they are cached under
+         * it and never served to a caller with another one (SOAK2-01). Null: not known, and days read through a peer are not cached.
+         */
+        default String signature() {
+            return null;
+        }
+
         /** Nobody masked: for tests and internal callers that must not show a document to a user. */
         Viewer NONE = new Viewer() {
             public DataNode redact(DataNode data) {
@@ -77,9 +86,18 @@ public final class HistoryService {
             public boolean masked(String field) {
                 return false;
             }
+
+            public String signature() {
+                return "none";
+            }
         };
 
+        /** A viewer without a signature: days read through a peer are not cached for it. */
         static Viewer of(UnaryOperator<DataNode> redact, Predicate<String> masked) {
+            return of(redact, masked, null);
+        }
+
+        static Viewer of(UnaryOperator<DataNode> redact, Predicate<String> masked, String signature) {
             return new Viewer() {
                 public DataNode redact(DataNode data) {
                     return redact.apply(data);
@@ -88,8 +106,30 @@ public final class HistoryService {
                 public boolean masked(String field) {
                     return masked.test(field);
                 }
+
+                public String signature() {
+                    return signature;
+                }
             };
         }
+    }
+
+    /**
+     * The shared cache key of a read (HISTORY_QUERIES.md section 11), or null when it must not be cached: the days this node's own sources
+     * answered, unmasked, one entry for every caller (masks are applied per answer).
+     */
+    static String cacheKey(String kind, String id, LocalDate readFrom, LocalDate to, int lastDays, Set<String> wanted, Instant knownAt,
+            String dataVersion) {
+        return dataVersion == null ? null : String.join("|", kind, id, String.valueOf(readFrom), String.valueOf(to), String.valueOf(lastDays),
+                String.valueOf(new TreeSet<>(wanted)), String.valueOf(knownAt), dataVersion);
+    }
+
+    /**
+     * The key of a read some of whose days a peer answered (SOAK2-01): they arrive masked there for the caller, so the entry is the
+     * caller's security signature's alone, never another caller's. Null (not cached) when the caller has no signature.
+     */
+    static String signedKey(String shared, String signature) {
+        return shared == null || signature == null ? null : shared + "|viewer=" + signature;
     }
 
     private final SourceRouter router;
@@ -194,9 +234,14 @@ public final class HistoryService {
         if (kept) {
             HistoryRequest request = new HistoryRequest(ref, w.readFrom(), w.to(), w.dates(), wanted, q.knownAt(), w.lastDays(), limits.timeout(),
                     limits.parallelDays());
-            String key = dataVersion == null ? null : String.join("|", q.kind(), q.id(), String.valueOf(w.readFrom()), String.valueOf(w.to()),
-                    String.valueOf(w.lastDays()), String.valueOf(new TreeSet<>(wanted)), String.valueOf(q.knownAt()), dataVersion);
-            List<HistoryDay> hit = key == null ? null : cache.get(key);
+            // SOAK2-01: the days this node holds are kept unmasked under the shared key; a read a peer answered part of is masked there
+            // for this caller, so it is kept under the caller's signature only and never served to a caller with another one
+            String shared = cacheKey(q.kind(), q.id(), w.readFrom(), w.to(), w.lastDays(), wanted, q.knownAt(), dataVersion);
+            String signed = signedKey(shared, viewer.signature());
+            List<HistoryDay> hit = shared == null ? null : cache.get(shared);
+            if (hit == null && signed != null) {
+                hit = cache.get(signed);
+            }
             if (hit != null) {
                 days = hit;
                 cacheState = "hit";
@@ -204,6 +249,7 @@ public final class HistoryService {
                 SourceHistory.Routed routed = router.history(request);
                 days = routed.days();
                 failures = routed.failures();
+                String key = routed.fromPeer() ? signed : shared;
                 cacheState = key == null ? "off" : "miss";
                 if (key != null && failures.isEmpty() && !days.isEmpty()) {   // a failure, a partial or an empty answer is never kept
                     cache.put(key, days, limits.cacheMb() * 1024L * 1024L);

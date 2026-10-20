@@ -333,6 +333,21 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
 
     private volatile Fallback fallback;
 
+    private volatile java.util.function.Supplier<String> partition = () -> "";
+
+    /**
+     * Who the current read is for, as far as the peers' answers differ (Drishti*net: the caller's security signature; "" outside a cluster).
+     * A peer masks and routes for the user it acts for, so a cache of what reads through this router return is shared only within one
+     * partition (SOAK2-01).
+     */
+    public void partition(java.util.function.Supplier<String> p) {
+        this.partition = p == null ? () -> "" : p;
+    }
+
+    public String partition() {
+        return partition.get();
+    }
+
     /** Sets (or, with null, removes) the sources a read falls back to after the local ones. */
     public void fallback(Fallback f) {
         this.fallback = f;

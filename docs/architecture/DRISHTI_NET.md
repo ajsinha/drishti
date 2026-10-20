@@ -207,7 +207,11 @@ a UI that ignores it sees one result, as asked.
   checks it, and also checks the user exists and is enabled when `registered-users-only` is on (the nodes copy users, roles
   and API tokens to each other, section 19 *Identity across nodes*, or share one identity database, so that is true everywhere).
 - **Masks twice.** The peer redacts as it would for that user; the asking node, which renders, applies its own masks again.
-  The stricter configuration wins; an administrator sees on Admin → Net when two nodes' `redact` lists differ.
+  The stricter configuration wins; an administrator sees on Admin → Net when two nodes' `redact` lists differ. What a peer sent
+  masked for one user is never kept for another: a cache of it is keyed by the caller's security signature (their sorted roles and
+  embedding app, `Principal.securitySignature()`): the live relay's topic partition, the history cache's days read through a peer
+  (HISTORY_QUERIES.md section 11), and, through `SourceRouter.partition()`, the map panels' listing and documents and a view's shape
+  cache (after soak 2's SOAK2-01).
 - **Nodes per role.** A role may name the nodes it may reach (`config/net/access.yaml`, **new**: node ids or tags such as
   `region:emea`; empty means every node). The capability table is filtered by the caller's roles before any
   routing: a scattered search, type-ahead or forwarded request never reaches a node outside them, and the peer refuses

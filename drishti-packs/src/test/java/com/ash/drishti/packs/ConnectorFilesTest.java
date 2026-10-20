@@ -73,6 +73,18 @@ class ConnectorFilesTest {
     }
 
     @Test
+    void aQuotedTrueOrFalseIsTheSameSwitch(@TempDir Path dir) {
+        // SOAK2-02: "${X:false}" resolves to the string "false", so the string written out is accepted too, as a boolean
+        ConnectorFiles files = new ConnectorFiles(dir);
+        assertThat(files.parse("a", "plugin: file\nenabled: \"false\"\n").isEnabled()).isFalse();
+        assertThat(files.parse("a", "plugin: file\nenabled: 'FALSE'\n").isEnabled()).isFalse();
+        assertThat(files.parse("a", "plugin: file\nenabled: \"true\"\n").isEnabled()).isTrue();
+        assertThat(files.parse("a", "plugin: file\nenabled: \"false\"\n").enabled()).isEqualTo("false");
+        assertThatThrownBy(() -> files.parse("a", "plugin: file\nenabled: \"off\"\n"))
+                .hasMessageContaining("'enabled' is true or false").hasMessageContaining("not 'off'");
+    }
+
+    @Test
     void writesAreAtomicAndKeepEveryEarlierTextInHistory(@TempDir Path dir) throws Exception {
         ConnectorFiles files = new ConnectorFiles(dir.resolve("config/connectors"));          // created on first write
         assertThat(files.names()).isEmpty();

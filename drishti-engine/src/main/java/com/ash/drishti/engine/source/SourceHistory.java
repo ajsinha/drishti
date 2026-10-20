@@ -45,8 +45,16 @@ public final class SourceHistory {
         this.router = router;
     }
 
-    /** What the connectors answered: the days, oldest first, and the dates that could not be read with the connector and why. */
-    public record Routed(List<HistoryDay> days, List<Failure> failures, List<String> asked) {}
+    /**
+     * What the connectors answered: the days, oldest first, and the dates that could not be read with the connector and why.
+     * {@code fromPeer}: a Drishti*net peer answered one of the days, masked there for the caller it acted for (so the answer is that
+     * caller's, never to be shared with another; SOAK2-01).
+     */
+    public record Routed(List<HistoryDay> days, List<Failure> failures, List<String> asked, boolean fromPeer) {
+        public Routed(List<HistoryDay> days, List<Failure> failures, List<String> asked) {
+            this(days, failures, asked, false);
+        }
+    }
 
     /**
      * A date a connector could not read; {@code reason} is {@link HistoryReads#TIMED_OUT} when the budget ran out. The source
@@ -68,6 +76,7 @@ public final class SourceHistory {
         TreeMap<LocalDate, HistoryDay> days = new TreeMap<>();
         List<Failure> failures = new ArrayList<>();
         List<String> asked = new ArrayList<>();
+        Set<HistoryDay> peerDays = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());   // the days a peer answered
         List<SourcePlugin> dated = candidates.stream().filter(p -> p.manifest().capabilities().dated()).toList();
         for (SourcePlugin p : dated) {
             if (remaining.isEmpty()) {
@@ -127,6 +136,7 @@ public final class SourceHistory {
                     Set<LocalDate> got = new HashSet<>();
                     for (HistoryDay d : read.days()) {
                         merge(days, d);
+                        peerDays.add(d);
                         got.add(d.date());
                     }
                     read.failed().forEach((d, why) -> fromPeers.add(new Failure(name, d, why)));
@@ -183,7 +193,8 @@ public final class SourceHistory {
         // with the last N days found, a date older than all of them that failed changes nothing shown
         LocalDate oldest = r.lastDays() > 0 && out.size() == r.lastDays() ? out.get(0).date() : null;
         List<Failure> kept = failures.stream().filter(f -> oldest == null || !f.date().isBefore(oldest)).toList();
-        return new Routed(List.copyOf(out), dedupe(kept), List.copyOf(asked));
+        boolean fromPeer = out.stream().anyMatch(peerDays::contains);
+        return new Routed(List.copyOf(out), dedupe(kept), List.copyOf(asked), fromPeer);
     }
 
     /**

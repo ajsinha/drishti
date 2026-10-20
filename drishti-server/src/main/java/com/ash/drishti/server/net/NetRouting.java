@@ -283,9 +283,21 @@ public final class NetRouting {
         return n.routable() && live(n).routable();
     }
 
+    /**
+     * The state a refusal names a node by. A node that gossip says is alive again while this node's table has not taken it back yet (its
+     * digest has not arrived) is {@code rejoining}, never {@code alive}: a refusal naming an alive node as unreachable reads as a fault
+     * (SOAK2-05).
+     */
     private String state(CapabilityTable.Node n) {
-        var m = live(n);
-        return m.drained() ? "drained" : m.state().wire();
+        return label(live(n), n.routable());
+    }
+
+    /** The state of {@code live} (gossip's view of the member) as a refusal names it, given whether this node's table routes to it. */
+    public static String label(com.ash.drishti.net.member.Member live, boolean inTable) {
+        if (live.drained()) {
+            return "drained";
+        }
+        return live.routable() && !inTable ? "rejoining" : live.state().wire();
     }
 
     /** Nodes that render the kind but are not routable now (suspect, dead, left, drained), with their state. */

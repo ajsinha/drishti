@@ -105,7 +105,11 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
     /** Callers that are not users (tests, internal jobs) may open everything; every user-facing path passes its own right. */
     private static final Predicate<String> ANY = k -> true;
 
-    record GenKey(EntityRef ref, long generation, java.time.LocalDate businessDate) {}
+    /**
+     * A document's shape, per generation; {@code partition} is the caller's (SourceRouter#partition): a document read through a peer is
+     * masked there for the caller, and a masked value's type differs from the value's, so one caller's shape is never another's (SOAK2-01).
+     */
+    record GenKey(EntityRef ref, long generation, java.time.LocalDate businessDate, String partition) {}
 
     private final SourceRouter router;
     private final SutraMatcher matcher;
@@ -311,7 +315,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
             Predicate<String> mayOpen) {
         EntityDocument doc = fetch(ref, asOf);
         Optional<Sutra> sutra = matcher.match(ref.kind(), doc.data());
-        Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation(), doc.provenance().businessDate()),
+        Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation(), doc.provenance().businessDate(), router.partition()),
                 k -> fingerprinter.fingerprint(doc.data()));
         EffectiveLayout layout = layouts.get(new LayoutKey(sutra.<Object>map(SutraIdentity::new).orElse("-"), ref.kind(), fp),
                 k -> merger.merge(sutra, doc.data(), ref.kind()));
@@ -360,7 +364,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
     public ViewModel.TitleView title(EntityDocument doc, UnaryOperator<DataNode> redact) {
         EntityRef ref = doc.ref();
         Optional<Sutra> sutra = matcher.match(ref.kind(), doc.data());
-        Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation(), doc.provenance().businessDate()),
+        Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation(), doc.provenance().businessDate(), router.partition()),
                 k -> fingerprinter.fingerprint(doc.data()));
         EffectiveLayout layout = layouts.get(new LayoutKey(sutra.<Object>map(SutraIdentity::new).orElse("-"), ref.kind(), fp),
                 k -> merger.merge(sutra, doc.data(), ref.kind()));
@@ -382,7 +386,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
             UnaryOperator<DataNode> redact, Predicate<String> mayOpen, ControlValues values) {
         EntityRef ref = doc.ref();
         boolean current = dates.isCurrent(asOf);
-        Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation(), doc.provenance().businessDate()),
+        Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation(), doc.provenance().businessDate(), router.partition()),
                 k -> fingerprinter.fingerprint(doc.data()));
         EffectiveLayout layout = cached
                 ? layouts.get(new LayoutKey(sutra.<Object>map(SutraIdentity::new).orElse("-"), ref.kind(), fp), k -> merger.merge(sutra, doc.data(), ref.kind()))

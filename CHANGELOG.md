@@ -18,6 +18,23 @@
 ## Unreleased
 
 - **Fixed: `build_demo_lakes.py` run with a Python that lacks `deltalake` failed every table with "no engine"**; it now stops at once and names the console's environment to use.
+- **Fixed (SOAK2-01, P1): an administrator's history of a peer-held entity no longer shows a viewer's masks.** The history cache kept
+  the days a peer answered (masked there for the first caller) as if they were unmasked, and served them to every later caller: after a
+  viewer, an administrator got `PRICE` as `•••` in a column marked `masked: false`, with the price's changes missing, until the entry
+  went. Days a peer answered are now kept under the caller's security signature (`Principal.securitySignature()`: sorted roles and
+  embedding app, the live relay's partition too) and never served to a caller with another one; days this node holds stay one shared
+  unmasked entry, masked per answer. A field that reads as the mask on any day (a peer's stricter `redact`) is `masked: true` and never
+  "changed". The other caches on the history and net paths were checked; two more shared what peers read for one caller and are now
+  per signature too (`SourceRouter.partition()`): the map panels' listing and documents (60 s), and a view's document-shape cache
+  (a masked value's type is not the value's). HISTORY_QUERIES.md sections 11 and 13, DRISHTI_NET.md *Masks twice*. Tests: HistoryCacheMasksTest, NetHistoryMasksTest (three servers: viewer first and
+  administrator first, two reading nodes, repeated within the cache's life; it failed before the fix).
+- **Fixed (SOAK2-02): a connector file's `enabled: "false"` (quoted) switches the connector off.** It was refused (`'enabled' is true or
+  false`) though `${VAR:false}` resolves to the same text; `"true"` and `"false"` in any case are now the booleans, anything else is
+  refused naming the value. `net_soak.py` writes a YAML boolean. CONNECTOR_FILES.md; ConnectorFilesTest, test_net_soak.
+- **Fixed (SOAK2-05): the refusal log says each thing about a node once a minute from the first refusal.** Pages that said a node
+  "failed" and histories that said it was "not answering" alternated and logged a line each time (38 lines in the 2 s before the node
+  was suspect); each is now one line, then the count a minute. A node gossip says is back whose digest has not arrived yet is named
+  `(rejoining)` in a refusal, never `(alive)`. NET.md troubleshooting; RefusalLogTest.
 
 - **Fixed (DOCS2-01): `build_demo_lakes.py`'s heartbeat named its own working folders** (`_drishti-lake/staging`, `locks`) instead of the table being written; it now names the table, as the Windows QA guide shows.
 

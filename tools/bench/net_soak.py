@@ -126,7 +126,7 @@ def connector_files(lake: Path, packs: str, packs_dir: Path = ROOT / "config" / 
     """name -> the text of a connector file that switches off each Delta connector of the packs (and those they extend) whose tables the
     lake holds none of (<lake>/<domain>/<table.kind or kind>/_delta_log), so that the server neither starts nor retries it (SOAK-10). It is
     the documented way (a file in the connector folder, CONNECTOR_FILES.md section 3), not ``--drishti.sources.connectors.<name>.enabled``,
-    which is deprecated and warns at every start. The file is the pack's template with ``enabled: "false"``."""
+    which is deprecated and warns at every start. The file is the pack's template with ``enabled: false``, a YAML boolean (SOAK2-02)."""
     import yaml
     out = {}
     for p in pack_closure(packs, packs_dir):
@@ -140,7 +140,7 @@ def connector_files(lake: Path, packs: str, packs_dir: Path = ROOT / "config" / 
                                                        / "_delta_log").is_dir()]
             if held:
                 continue
-            body = {"plugin": "delta", "enabled": "false", "kinds": list(c.get("kinds") or []),
+            body = {"plugin": "delta", "enabled": False, "kinds": list(c.get("kinds") or []),
                     "description": f"switched off by the Drishti*net soak: the lake {lake.name} holds none of its tables", "settings": st}
             out[name] = (f"# Written by tools/bench/net_soak.py: pack '{p}' connector, off for this node (SOAK-10).\n"
                          + yaml.safe_dump(body, sort_keys=False, width=140))

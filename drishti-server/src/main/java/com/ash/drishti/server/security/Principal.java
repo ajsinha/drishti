@@ -32,6 +32,15 @@ public record Principal(String user, List<String> roles, String embedApp) {
 
     public static final String ATTRIBUTE = "drishti.principal";
 
+    /**
+     * What decides how every node masks and routes for this caller: the roles (sorted) and the embedding app. Two callers with the same
+     * signature see the same fields masked and reach the same nodes, so what a peer answered for one may be shared with the other (the
+     * live relay's topic partition, the history cache of days read through a peer); never with a caller of another signature.
+     */
+    public String securitySignature() {
+        return String.join(",", new java.util.TreeSet<>(roles == null ? List.of() : roles)) + "|" + (embedApp == null ? "" : embedApp);
+    }
+
     /** Everyone, when security is off. */
     public static Principal anonymous(String user) {
         return new Principal(user == null || user.isBlank() ? "anonymous" : user, List.of("*"));
