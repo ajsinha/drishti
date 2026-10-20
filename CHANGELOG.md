@@ -17,6 +17,9 @@
 
 ## Unreleased
 
+- **Added: `HistoryBench` (H14, `drishti-benchmarks`).** 10K synthetic trades × 30 business days on Delta, 200 trades: the 30-day history at
+  the service in 13.2 ms cold (p95 19.1), 0.83 ms warm, 0.29 ms cached ([HISTORY_QUERIES.md section 14](docs/architecture/HISTORY_QUERIES.md#14-performance-targets),
+  [SCALE_STRATEGY.md](docs/architecture/SCALE_STRATEGY.md)).
 - **Added: history queries, the shipped packs' `history:` blocks (H13).** trading (trade; the derived kinds off), market-data (equity,
   equity index, FX spot, IR and credit curves, commodity, bond, inflation index as charts with their headline numbers), counterparty-risk
   and market-risk (their measures as columns) ([PACKS.md](docs/guides/PACKS.md#history-an-entity-over-time),
