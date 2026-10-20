@@ -222,9 +222,12 @@ def test_the_designer_has_a_tablet_tab_that_writes_layouts_tablet(stack, browser
     page.click('[data-tab="tablet"]')
     page.wait_for_selector("[data-tablet-list] li")
     page.locator("[data-tablet-wide]").first.check()
+    expect(page.locator("[data-tablet-wide]").first).to_be_checked()
     page.click('[data-tab="yaml"]')
-    page.wait_for_timeout(600)
-    yaml = page.evaluate("() => { const e = document.querySelector('.CodeMirror'); return e && e.CodeMirror ? e.CodeMirror.getValue() : document.querySelector('[data-yaml]').value; }")
+    text = "() => { const e = document.querySelector('.CodeMirror'); return e && e.CodeMirror ? e.CodeMirror.getValue() : (document.querySelector('[data-yaml]') || {}).value || ''; }"
+    # the YAML tab is drawn from the design when it opens (its editor may load first): wait for the text, not a fixed time
+    page.wait_for_function(f"() => {{ const t = ({text})(); return t.includes('layouts:') && t.includes('tablet:') && t.includes('wide:'); }}", timeout=30000)
+    yaml = page.evaluate(text)
     assert "layouts:" in yaml and "tablet:" in yaml and "wide:" in yaml, yaml
     clean(page)
     page.context.close()

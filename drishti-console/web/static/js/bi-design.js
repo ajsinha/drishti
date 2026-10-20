@@ -318,15 +318,25 @@
   }
   D.yamlText = () => (editor ? editor.getValue() : ta.value);
 
+  // yamlRev counts the draft's changes; yamlShown is the change the tab's text was written from. Two writes may cross (a change made while the
+  // previous one's text is on its way): an older answer never replaces a newer one, and the tab stays stale until the newest change's text is in,
+  // so Save never saves a text that misses the last change.
+  let yamlRev = 0, yamlShown = 0;
   function scheduleYaml() {
     yamlStale = true;
+    yamlRev++;
     clearTimeout(yamlTimer);
     yamlTimer = setTimeout(refreshYaml, 250);
   }
   /** Writes the draft as YAML into the tab (the server writes it, so what you see is what is saved). Returns a promise of the text. */
   function refreshYaml() {
+    const rev = yamlRev;
     return B.api('POST', '/reports/format', { report: D.model }).then((r) => {
-      if (yamlStale) { setYamlText(r.yaml); yamlStale = false; D.lastYaml = r.yaml; showProblems([]); }
+      if (yamlStale && rev >= yamlShown) {
+        setYamlText(r.yaml); D.lastYaml = r.yaml; showProblems([]);
+        yamlShown = rev;
+        if (rev === yamlRev) { yamlStale = false; }                // else a newer change's text is still to come
+      }
       dockProblems(r.yaml);
       return r.yaml;
     }).catch((e) => { say(e.message, true); return D.yamlText(); });
@@ -354,6 +364,7 @@
       D.model = D.normalize(r.report);
       D.dirty = true;
       yamlStale = false;
+      yamlShown = yamlRev;                                          // the text typed is the draft now: an older answer on its way is dropped
       D.lastYaml = text;
       if (!D.model.pages.some((p) => p.id === D.pageId)) { D.pageId = D.model.pages[0].id; }
       if (D.selected && !D.visual(D.selected)) { D.selected = null; }
