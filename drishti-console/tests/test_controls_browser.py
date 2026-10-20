@@ -18,6 +18,7 @@ bar setting a control (cross-filtering), keyboard only, a phone (390 px, touch) 
 server that evaluates the controls as the real one does (the same rows, the same `where`); skipped when Playwright's Chromium is missing."""
 import asyncio
 import json
+import re
 import threading
 import time
 
@@ -271,12 +272,14 @@ def test_the_address_carries_the_values_and_reproduces_the_view(page, url, backe
     assert "ctl.legs=2" in q and "ctl.when=2026-10-10..2027-01-07" in q and "%2C" not in q
     share = page.evaluate("document.querySelector('[data-share]').dataset.share")
     assert share.endswith(q.lstrip("?")) or "ctl.legs=2" in share
-    expected = rows(page)
+    # the schedule panel is live: a tick marks its last cell (" t1", " t2" ...) on either page at any moment, so the rows are compared without it
+    tickless = lambda rs: [re.sub(r"\s+t\d+$", "", r) for r in rs]                    # noqa: E731
+    expected = tickless(rows(page))
     ctx2 = page.context.browser.new_context(viewport={"width": 1280, "height": 900}, bypass_csp=True)
     other = ctx2.new_page()
     other.goto(url + VIEW + q, wait_until="load")                      # a link: the same rows, the same controls, with no request after the page
     other.wait_for_selector("[data-ctl]")
-    assert rows(other) == expected
+    assert tickless(rows(other)) == expected
     assert other.locator("[data-ctl='when'] .ctl-from").input_value() == "2026-10-10"
     assert other.locator("[data-ctl='legs'] summary").inner_text() == "2"
     ctx2.close()

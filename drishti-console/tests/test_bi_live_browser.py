@@ -128,12 +128,15 @@ def test_coalescing_and_backpressure_keep_the_rounds_bounded(stack, browser):
     page = sign_in(browser)
     open_report(page)
     wait_state(page, "live")
+    # rounds happen at all: waited for, since a loaded machine ticks the source slower (a fixed 4 s saw none, once, beside three other suites)
+    first = page.evaluate(ROUND)
+    page.wait_for_function(f"() => ({ROUND})() > {first}", timeout=30000)
+    # the ceiling is the coalescing: counted over 4 s from a round
     before = page.evaluate(ROUND)
     page.wait_for_timeout(4000)
     after = page.evaluate(ROUND)
     ticks_a_second = (after - before) / 4
-    assert 0 < ticks_a_second <= 4.5, f"{ticks_a_second} redraw rounds a second: at most one every 250 ms (bi.live.min_interval_ms), however fast the source ticks"
-    # the floor only says rounds happen at all: a loaded machine ticks the source slower; the ceiling is the coalescing
+    assert ticks_a_second <= 4.5, f"{ticks_a_second} redraw rounds a second: at most one every 250 ms (bi.live.min_interval_ms), however fast the source ticks"
     busy = page.evaluate("""async () => { let worst = 0; for (let i = 0; i < 20; i++) { worst = Math.max(worst, document.querySelectorAll('.bi-vis-busy').length); await new Promise(r => setTimeout(r, 100)); } return worst; }""")
     assert busy == 0, "a live redraw never greys a visual (quiet refresh)"
     clean(page)
@@ -146,7 +149,8 @@ def test_pause_stops_the_redraws_and_resume_catches_up(stack, browser):
     page.click("[data-live-pause]")
     wait_state(page, "paused")
     assert page.get_attribute("[data-live-pause]", "aria-pressed") == "true" and "Resume" in page.inner_text("[data-live-pause]") and "Paused" in page.inner_text(".bi-live-state [data-live-text]")
-    page.wait_for_timeout(600)
+    # a round under way when Pause was pressed still lands (its answers were asked before): wait for it, not a fixed 600 ms (too short under load)
+    page.wait_for_function("() => !document.getElementById('biCanvas').hasAttribute('data-live-busy')", timeout=30000)
     stopped = page.evaluate(ROUND)
     page.wait_for_timeout(2500)
     assert page.evaluate(ROUND) == stopped, "no redraw while paused, though the server keeps ticking"

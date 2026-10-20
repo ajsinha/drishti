@@ -720,8 +720,8 @@ class BackendClient:
         kw = {"params": params} if params else {}
         if headers:
             kw["headers"] = headers
-        if wait:
-            kw["timeout"] = wait
+        if timeout:
+            kw["timeout"] = timeout
         if body is not None:
             kw["json"] = body
         return await self._send(method, "/admin" + path, ident, **kw)

@@ -44,6 +44,9 @@
   selection and 0.6 s after a change only, so a visual selected before its query was answered said *Choose a visual*; it now redraws when the
   answer arrives. And the Fields pane is no longer rebuilt when nothing in it changed: a rebuild just after the page was ready took the field
   being dragged from under the pointer and the drop was lost. Found as the flaky `test_w1_model_designer_browser`.
+- **Fixed: Pause on a live BI page stops the redraws at once.** A redraw asked by a tick just before Pause (waiting out the 250 ms coalescing)
+  still ran on the paused page; it is now dropped. Admin → Health waits 30 s for the server (it measures connectors and temp folders, and is the
+  page an administrator opens when the server is struggling) instead of answering 504 after the console's usual 5 s.
 - **Fixed: `pytest` from the repo root collects every test.** `tools/bench/test_trades.py` and `tools/packgen/trades/test_trades.py`
   shared a module name, so collection stopped with an import-file-mismatch error; the benchmark's test is now `tools/bench/test_bench_trades.py`.
 - **Fixed: derived pages kept on disk are never removed while another process has them open.** A server's start-up clean-up of
