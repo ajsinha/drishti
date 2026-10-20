@@ -187,8 +187,16 @@ on a busy laptop, for sixty days; `data\delta` ends at about 2.2 GB), `2/3 your 
 
 Every ten days a table has committed, a line says so (`trading/trade_endur: committed 20/60 days, 90,023 rows so far (through
 2026-08-19)`). While it works, a line every 30 seconds says which step is running, for how long, how large `data\delta` has grown and which table
-is being written (`… 1/3 lake demo still running: 600 s; 1,450 MB in the lake, writing trading/trade_endur`). If the size stops
-growing for several minutes, see section 7 (antivirus scanning of `data`).
+is being written (`… 1/3 lake demo still running: 600 s; 1,450 MB in the lake, writing trading/trade_endur`). When nothing has been
+written for a while the line says so instead (`… nothing written for 420 s (the last: trading/trade_endur …)`): the step is then
+waiting (for a server it tells, or a slow disk). If the size stops growing for several minutes, see section 7 (antivirus scanning of `data`).
+
+**A server that is running.** No server is told by default: restart the server after a build, or wait for its refresh (a table's new
+version is read within about 10 s; `--files-only` needs no restart at all). To tell a running server at once, name it:
+`--server http://<its address>:18480`, with a token that has the `loads:write` scope in `DRISHTI_TOKEN` (or `--token-file <file>`).
+It is told once at the end, one data-load signal per table (its newest date), never one per table and day. The closing lines say
+which of these applies to the run, and the example commands name a trade of the system you loaded (with your own files, the first
+`TRADE_ID` of the newest file).
 
 With `--only`, give `--as-of` the same last date the other tables have, so every table covers the same days (one table alone takes
 about a minute). `--files-only` replaces that system's table with your files only (add `--keep-synthetic` to keep the synthetic trades

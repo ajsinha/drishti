@@ -20,7 +20,8 @@
   (HMAC-SHA256 with ``auth.session_secret``) and carries the session id with the user's name; any console instance
   serves any user. Per request the console asks the server whether the session still stands and who the user is now
   (enabled, roles, whether a password change is due), cached for ``auth.recheck_seconds``: disabling, demoting or
-  signing out takes effect within that time (at once on the console where an administrator made the change).
+  signing out takes effect within that time, and at once on the console where it was done: every worker process of that console
+  reads the user's stamp (core/user_stamps.py) before it reuses a check (QA3A-04).
 * For every backend call the console mints a short-lived HS256 token (``auth.token_secret``, shared with
   the server) carrying the user and their current roles.
 
@@ -80,7 +81,7 @@ def mint_token(sub: str, roles, secret: str, ttl: int) -> str:
 class Auth:
     """Sessions and tokens for one console process."""
 
-    def __init__(self, settings, server=None):
+    def __init__(self, settings, server=None, stamps=None):
         """``server``: the :class:`core.servers.Server` this Auth signs in to (its own token secret and session cookie);
         None for the one server of a console without ``servers:``."""
         self.enabled = bool(settings.get("auth.enabled", False))
@@ -94,7 +95,10 @@ class Auth:
         self.secure_cookie = bool(settings.get("auth.secure_cookie", True))
         # how long a session check (still signed in? enabled? which roles?) is reused before the server is asked again
         self.recheck = max(0.0, float(settings.get("auth.recheck_seconds", 10)))
-        self._checked: dict[str, tuple[float, dict | None]] = {}
+        from core.user_stamps import NONE
+
+        self.stamps = stamps or NONE
+        self._checked: dict[str, tuple[float, dict | None, float]] = {}   # session -> (valid until, profile, wall time asked)
         self._inflight: dict[str, asyncio.Future] = {}
         self.default = Identity(settings.get("ui.user", "ash"), settings.get("ui.user_display", "Ash"),
                                 settings.get("ui.desk", "Rates desk"))
@@ -161,7 +165,7 @@ class Auth:
     async def _check(self, session: str, backend):
         hit = self._checked.get(session)
         now = time.monotonic()
-        if hit is not None and now < hit[0]:
+        if hit is not None and now < hit[0] and (hit[1] is None or self.stamps.fresh(self._key(hit[1].get("username", "")), hit[2])):
             return hit[1]
         pending = self._inflight.get(session)
         if pending is None:                              # one server call per session, however many requests wait
@@ -173,6 +177,7 @@ class Auth:
     async def _ask(self, session: str, backend):
         from core.backend import BackendError
 
+        began = time.time()
         try:
             answer = await backend.session(session, self.service())
             profile = (answer or {}).get("user")
@@ -182,24 +187,32 @@ class Auth:
             profile = None                               # 401/403/404: ended, unknown or the user may not sign in
         if len(self._checked) >= _CACHE_MAX:
             self._prune()
-        self._checked[session] = (time.monotonic() + self.recheck, profile)
+        self._checked[session] = (time.monotonic() + self.recheck, profile, began)
         return profile
+
+    def _key(self, user: str) -> str:
+        """The user's stamp key on this Auth's server (the same as core.servers.scoped while a request of that server runs)."""
+        return f"{self.server}\x1f{user}"
 
     def _prune(self) -> None:
         now = time.monotonic()
-        for k in [k for k, (until, _) in self._checked.items() if until <= now]:
+        for k in [k for k, (until, _p, _t) in self._checked.items() if until <= now]:
             self._checked.pop(k, None)
         while len(self._checked) >= _CACHE_MAX:
             self._checked.pop(next(iter(self._checked)), None)
 
     def forget(self, user: str | None = None, session: str | None = None) -> None:
         """Drops cached session checks (of one session, or of every session of a user), so the next request asks the
-        server: after an administrator changes a user, a password change or a sign-out on this console."""
+        server: after an administrator changes a user, a password change or a sign-out on this console. The user's stamp tells
+        the console's other worker processes to ask again too."""
         if session:
-            self._checked.pop(session, None)
+            hit = self._checked.pop(session, None)
+            if not user and hit and hit[1]:
+                user = hit[1].get("username")
         if user:
-            for k in [k for k, (_, p) in list(self._checked.items()) if p and p.get("username") == user]:
+            for k in [k for k, (_, p, _t) in list(self._checked.items()) if p and p.get("username") == user]:
                 self._checked.pop(k, None)
+            self.stamps.touch(self._key(user))
 
     def _with_token(self, ident: Identity) -> Identity:
         if not self.token_secret:

@@ -114,6 +114,7 @@ plugins:
       - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
       - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }
       - { name: max-concurrent-reads, type: int, desc: "Concurrent reads", group: tuning }
+      - { name: max-queued-reads, type: int, default: "4096", desc: "Document reads that may wait for a slot; more are refused at once, and a read whose caller has gone leaves the queue", group: tuning }
       - { name: cache-mb, type: int, default: "256", desc: "Cache size", group: tuning }
       - { name: doc-cache-mb, type: int, desc: "Document cache size", group: tuning }
       - { name: doc-disk-cache.enabled, type: bool, default: "true", desc: "Documents already read also kept on disk (RocksDB, one per connector): answered without decompressing Parquet pages, also after a restart", group: tuning }
@@ -166,6 +167,7 @@ plugins:
       - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
       - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }
       - { name: max-concurrent-reads, type: int, desc: "Concurrent reads", group: tuning }
+      - { name: max-queued-reads, type: int, default: "4096", desc: "Document reads that may wait for a slot; more are refused at once, and a read whose caller has gone leaves the queue", group: tuning }
       - { name: layout-cache, type: int, desc: "Layout cache entries", group: tuning }
       - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
       - { name: s3.endpoint, desc: "S3-compatible endpoint", group: s3 }
@@ -213,6 +215,7 @@ plugins:
       - { name: doc-cache-mb, type: int, default: "256", desc: "Memory for recently read documents", group: tuning }
       - { name: columns-cache-mb, type: int, default: "1024", desc: "Memory for a day's searchable columns", group: tuning }
       - { name: max-concurrent-reads, type: int, default: "16", desc: "Documents read at once at most", group: tuning }
+      - { name: max-queued-reads, type: int, default: "4096", desc: "Document reads that may wait for a slot; more are refused at once, and a read whose caller has gone leaves the queue", group: tuning }
       - { name: source-name, desc: "The connector's name in provenance (iceberg-external)", group: connection }
       - { name: s3.endpoint, desc: "S3-compatible endpoint", group: s3 }
       - { name: s3.region, desc: "S3 region", group: s3 }

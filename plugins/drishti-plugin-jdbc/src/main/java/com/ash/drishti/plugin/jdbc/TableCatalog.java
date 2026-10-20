@@ -43,7 +43,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
-import java.util.concurrent.Semaphore;
 import java.util.function.Predicate;
 
 /**
@@ -82,7 +81,7 @@ final class TableCatalog {
     private final Map<String, List<EntityHit>> hitsByKind = new ConcurrentHashMap<>();
     private final Map<String, Object> indexedFrom = new ConcurrentHashMap<>();   // kind -> the day (or load) its ids came from
     private final Cache<DayKey, ColumnSet> columnSets;
-    private final Semaphore dayReads = new Semaphore(2);
+    private final com.ash.drishti.api.ReadSlots dayReads = new com.ash.drishti.api.ReadSlots("day reads", 2, 256);   // bounded queue (QA3A-01)
     private volatile Map<String, NavigableSet<LocalDate>> dates = Map.of();
     private volatile Map<String, Boolean> present = Map.of();          // promoted column -> number
     private volatile Instant loadedAt;
@@ -368,7 +367,7 @@ final class TableCatalog {
      * when the loader's dates table says the day was loaded again during the read, it is read again.
      */
     private ColumnSet readDay(String kind, LocalDate day, List<String> paths) {
-        dayReads.acquireUninterruptibly();
+        dayReads.acquire();
         try {
             for (int attempt = 1; ; attempt++) {
                 Instant before = keepsDates ? db.with(c -> table.dayLoadedAt(c, kind, day)) : null;

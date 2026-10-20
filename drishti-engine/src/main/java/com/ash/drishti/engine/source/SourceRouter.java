@@ -219,8 +219,17 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         readOrder(candidates, asOf);
         AtomicReference<String> asking = new AtomicReference<>();
         java.util.concurrent.atomic.AtomicBoolean peers = new java.util.concurrent.atomic.AtomicBoolean();
-        CompletableFuture<EntityDocument> read = CompletableFuture.supplyAsync(
-                () -> fb == null ? readFirst(ref, candidates, asOf, asking) : readWithPeers(ref, candidates, asOf, asking, fb, peers), executor);
+        // the read knows when its caller stops waiting (its budget, or the local budget once it completed it): a connector's queue for a
+        // slot of its own (ReadSlots) then drops it instead of reading for nobody (QA3A-01)
+        long deadline = System.nanoTime() + (fb == null || peerTimeout.compareTo(timeout) <= 0 ? timeout : peerTimeout).toNanos();
+        AtomicReference<CompletableFuture<EntityDocument>> self = new AtomicReference<>();
+        java.util.function.BooleanSupplier gone = () -> {
+            CompletableFuture<EntityDocument> f = self.get();
+            return f != null && f.isDone();
+        };
+        CompletableFuture<EntityDocument> read = CompletableFuture.supplyAsync(() -> com.ash.drishti.api.ReadDeadline.within(deadline, gone,
+                () -> fb == null ? readFirst(ref, candidates, asOf, asking) : readWithPeers(ref, candidates, asOf, asking, fb, peers)), executor);
+        self.set(read);
         if (fb == null || peerTimeout.compareTo(timeout) <= 0) {
             read.orTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS);
         } else {

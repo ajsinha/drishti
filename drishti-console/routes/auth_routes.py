@@ -143,7 +143,7 @@ async def logout(request: Request):
             await request.app.state.backend.end_session(claimed.session, auth.service())
         except BackendError:
             pass                                         # already ended, or the server is down: the cookie goes anyway
-        auth.forget(session=claimed.session)
+        auth.forget(user=claimed.user, session=claimed.session)   # every worker of this console drops its check at once (QA3A-04)
     r = RedirectResponse("/?signedout=1" if auth.enabled else "/", status_code=303)
     r.delete_cookie(auth.cookie)
     return r

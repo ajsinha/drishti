@@ -42,7 +42,9 @@ A server must not keep serving the old figures: its BI store (<data>/bi-store) h
 build, lake demo sends the data-load signal (POST /api/v1/packs/{pack}/loads) for every table and business date it wrote to the server
 --server names (default DRISHTI_SERVER, then http://localhost:18480; the token from --token-file or DRISHTI_TOKEN). When no server is
 reachable, or one refuses the signal, it leaves <bi-store>/lake-rebuilt.json and the server clears its columns and rollups at its next
-start. A running server also notices a rebuilt table by itself (a date's Delta files changed) and reads it again. --no-signal skips both.
+start. A running server also notices a rebuilt table by itself (a date's Delta files changed) and reads it again. --no-signal skips both;
+--signal-once tells each table once, for its newest date (a running server reads the older dates again by itself), not each table and
+date: the right choice for a running server (QA3A-01/05).
 """
 from __future__ import annotations
 
@@ -65,6 +67,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 DEFAULT_ROOT = "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
 DEFAULT_SERVER = "http://localhost:18480"
+SIGNAL_TIMEOUT = 30.0                        # seconds a data-load signal waits for its answer
 REBUILT_STAMP = "lake-rebuilt.json"          # read by the server at start (Layers.REBUILT_STAMP)
 REDATE = re.compile(r'("(?:AS_OF|VALUATION_DATE|RUN_DATE|SOURCE_UPDATE_TIME|BUILT_AT)":")(\d{4}-\d{2}-\d{2})')
 # A document's embedded market series (a list of {DATE, CLOSE ...}): moved with the business dates too, so a price history has no phantom
@@ -301,7 +304,10 @@ class DemoLake:
             headers["Authorization"] = "Bearer " + token
         elif os.environ.get("DRISHTI_USER"):
             headers["X-Drishti-User"] = os.environ["DRISHTI_USER"]
-        sent, failed, why = 0, 0, ""
+        sent, refused, unanswered, why, slow = 0, 0, 0, "", ""
+        once = bool(getattr(self.a, "signal_once", False))
+        signals = [(pack, kind, day) for pack, kind, _table in self.written for day in (self.dates[-1:] if once else self.dates)]
+        t0 = time.monotonic()
         try:
             with urllib.request.urlopen(urllib.request.Request(base + "/actuator/health"), timeout=3):   # noqa: S310 - the operator's --server
                 reachable = True
@@ -310,30 +316,41 @@ class DemoLake:
         except (urllib.error.URLError, OSError):
             reachable = False
         if reachable:
-            for pack, kind, _table in self.written:
-                for day in self.dates:
-                    body = {"kind": kind, "businessDate": day, "status": "ready", "source": "lake demo", "batchId": f"lake-demo-{self.run_id}"}
-                    url = base + f"/api/v1/packs/{urllib.parse.quote(pack, safe='')}/loads"
-                    req = urllib.request.Request(url, data=json.dumps(body).encode(), headers=headers, method="POST")
-                    try:
-                        with urllib.request.urlopen(req, timeout=30):     # noqa: S310 - the operator's --server
-                            sent += 1
-                    except urllib.error.HTTPError as e:
-                        failed += 1
-                        why = why or f"{e.code} {e.read().decode('utf-8', 'replace')[:160]}"
-                    except (urllib.error.URLError, OSError) as e:
-                        failed += 1
-                        why = why or str(getattr(e, "reason", e))
-            if not failed:
-                return f"{base} told: {sent} data-load signals (each table, each date); it reads them again"
+            if not getattr(self.a, "quiet", False):
+                print(f"Telling {base}: {len(signals)} data-load signal(s) ({'each table once, its newest date' if once else 'each table, each date'})",
+                      flush=True)
+            for pack, kind, day in signals:
+                body = {"kind": kind, "businessDate": day, "status": "ready", "source": "lake demo", "batchId": f"lake-demo-{self.run_id}"}
+                url = base + f"/api/v1/packs/{urllib.parse.quote(pack, safe='')}/loads"
+                req = urllib.request.Request(url, data=json.dumps(body).encode(), headers=headers, method="POST")
+                try:
+                    with urllib.request.urlopen(req, timeout=SIGNAL_TIMEOUT):     # noqa: S310 - the operator's --server
+                        sent += 1
+                except urllib.error.HTTPError as e:               # the server answered no: refused
+                    refused += 1
+                    why = why or f"{e.code} {e.read().decode('utf-8', 'replace')[:160]}"
+                    e.close()
+                except (urllib.error.URLError, OSError) as e:     # no answer in time, or the connection dropped: not a refusal
+                    unanswered += 1
+                    slow = slow or str(getattr(e, "reason", e))
+            took = f" in {time.monotonic() - t0:,.0f} s"
+            self.signal_seconds = time.monotonic() - t0
+            if not refused and not unanswered:
+                return f"{base} told: {sent} data-load signals{took} ({'each table once, its newest date' if once else 'each table, each date'}); it reads them again"
         stamp = self.bi_store() / REBUILT_STAMP
         stamp.parent.mkdir(parents=True, exist_ok=True)
         stamp.write_text(json.dumps({"at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "by": "drishti.py lake demo", "lake": str(self.lake),
                                      "dates": self.dates, "tables": [t for _, _, t in self.written]}, indent=1) + "\n", encoding="utf-8")
         if not reachable:
             return (f"no server at {base}: left {stamp}, so a server clears its stored BI columns and rollups at its next start")
-        return (f"{base} refused {failed} of {sent + failed} data-load signals ({why.strip()}; a token with loads:write: --token-file or "
-                f"DRISHTI_TOKEN): left {stamp} for its next start; a running server also re-reads a rebuilt table by itself")
+        parts = []
+        if refused:
+            hint = "; a token with loads:write: --token-file or DRISHTI_TOKEN" if why[:3] in ("401", "403") else ""
+            parts.append(f"refused {refused} ({why.strip()}{hint})")
+        if unanswered:
+            parts.append(f"did not answer {unanswered} within {SIGNAL_TIMEOUT:g} s ({slow.strip()}; the server is busy: it reads the new data)")
+        return (f"{base} took {sent} of {len(signals)} data-load signals{took}, " + ", ".join(parts)
+                + f": left {stamp} for its next start; a running server also re-reads a rebuilt table by itself")
 
     def wanted(self, ds: dict) -> bool:
         only = [x.strip() for x in (self.a.only or "").split(",") if x.strip()]
@@ -481,7 +498,9 @@ class DemoLake:
     def report(self, elapsed: float, notes: list[str]) -> None:
         d = self.dates
         moved = f" (the test data's {self.manifest.dates[0]} to {self.manifest.dates[-1]}, moved to end on {d[-1]})" if self.shift else ""
-        print(f"\nDemo lake ready: {self.lake}: {len(self.tables)} tables, {len(d)} business days {d[0]} to {d[-1]}{moved}, {elapsed:.0f} s"
+        sig = getattr(self, "signal_seconds", 0.0)
+        took = f"built in {elapsed:.0f} s" + (f", the server told in {sig:.0f} s ({elapsed + sig:.0f} s in all)" if sig >= 1 else "")
+        print(f"\nDemo lake ready: {self.lake}: {len(self.tables)} tables, {len(d)} business days {d[0]} to {d[-1]}{moved}, {took}"
               + (f"; real extracts added locally ({sum(len(v) for v in self.extras.values())} documents)" if self.extras else ""))
         if self.left_out:
             print(f"  left out {len(self.left_out)} real document(s) whose id the test data already uses")
@@ -527,6 +546,8 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--server", help=f"the server told of the new data (default: DRISHTI_SERVER, then {DEFAULT_SERVER})")
     p.add_argument("--token-file", help="the API token for the data-load signal (default: DRISHTI_TOKEN); never printed")
     p.add_argument("--no-signal", action="store_true", help="tell no server, and leave no stamp for one")
+    p.add_argument("--signal-once", action="store_true", help="tell each table once, for its newest date, not each table and date "
+                   "(a running server reads the older dates again by itself)")
     p.add_argument("-q", "--quiet", action="store_true", help="only the summary")
     return p
 

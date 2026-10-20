@@ -108,6 +108,21 @@ public final class DerivedSourcePlugin implements SourcePlugin {
     /** How long retired pages on disk are kept for reads still running. */
     private Duration retireAfter = Duration.ofSeconds(60);
     private final Map<String, CompletableFuture<Snapshot>> cache = new LinkedHashMap<>(CACHED_DATES, 0.75f, true);
+    /**
+     * Purges so far, and the purge count each cached computation started at (under the cache lock): a purge keeps a computation that is
+     * running (its readers get it) and the next reader after it builds again, so a burst of data-load signals never runs two full reads of
+     * a date at once (QA3A-01: each signal cleared the cache and started a full read of every trade document on top of the running ones).
+     */
+    private long purges;
+    private final Map<String, Long> startedAt = new java.util.HashMap<>();
+    /** Dates whose version refresh runs now (a purge meanwhile serves the last pages until it ends, rather than starting a second read). */
+    private final java.util.Set<String> refreshing = new java.util.HashSet<>();
+    /** The rebuild of the latest pages after a purge (store: disk): one runs, and purges while it waits or runs ask for one more at most. */
+    private final java.util.concurrent.atomic.AtomicBoolean rebuildRunning = new java.util.concurrent.atomic.AtomicBoolean();
+    private final java.util.concurrent.atomic.AtomicBoolean rebuildWanted = new java.util.concurrent.atomic.AtomicBoolean();
+    /** How long the rebuild after a purge waits for more purges (a burst of data-load signals) before it reads. */
+    private Duration rebuildDelay = Duration.ofSeconds(5);
+    private final AtomicLong builds = new AtomicLong();
     private volatile String health = "UP (nothing computed yet)";
 
     @Override
@@ -140,6 +155,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         onDisk = "disk".equalsIgnoreCase(context.setting("store", "heap"));
         zone = java.time.ZoneId.of(context.setting("zone", "America/New_York"));
         retireAfter = org.springframework.boot.convert.DurationStyle.detectAndParse(context.setting("retire-after", "60s"));
+        rebuildDelay = org.springframework.boot.convert.DurationStyle.detectAndParse(context.setting("rebuild-delay", "5s"));
         if (onDisk) {
             // the pages' only folder: <data dir>/derived/<connector>; a previous run's pages are served again when still valid, the rest removed
             storeRoot = java.nio.file.Path.of(context.setting("store-dir", com.ash.drishti.api.DataDir.under("derived/" + sourceName))).toAbsolutePath();
@@ -247,18 +263,68 @@ public final class DerivedSourcePlugin implements SourcePlugin {
     @Override
     public void purgeCaches() {
         synchronized (cache) {
-            cache.values().forEach(f -> retire(f, null));
-            cache.clear();
+            purges++;
+            for (var it = cache.entrySet().iterator(); it.hasNext(); ) {
+                var e = it.next();
+                if (e.getValue().isDone()) {                   // a computation still running is kept: its readers get it, the next builds again
+                    retire(e.getValue(), null);
+                    startedAt.remove(e.getKey());
+                    it.remove();
+                }
+            }
         }
         if (onDisk) {
-            Thread.ofVirtual().name("derived-rebuild").start(() -> {
-                try {
-                    snapshot(AsOf.LATEST);
-                } catch (RuntimeException e) {
-                    // said in health and the log by the computation; the next reader tries again
-                }
-            });
+            rebuildLatest();
         }
+    }
+
+    /**
+     * Builds the latest pages again after a purge, in the background, after {@code rebuild-delay}: purges meanwhile (a burst of data-load
+     * signals) are one rebuild, and a purge while it reads asks for one more, never a second read beside it.
+     */
+    private void rebuildLatest() {
+        rebuildWanted.set(true);
+        if (!rebuildRunning.compareAndSet(false, true)) {
+            return;                                           // the running rebuild takes it
+        }
+        Thread.ofVirtual().name("derived-rebuild").start(() -> {
+            while (true) {
+                try {
+                    while (rebuildWanted.get()) {
+                        Thread.sleep(rebuildDelay.toMillis());
+                        rebuildWanted.set(false);
+                        try {
+                            snapshot(AsOf.LATEST);
+                            if (!current("live")) {
+                                rebuildWanted.set(true);      // it joined a read that began before the last purge: once more
+                            }
+                        } catch (RuntimeException e) {
+                            // said in health and the log by the computation; the next reader tries again
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    rebuildRunning.set(false);
+                    return;
+                }
+                rebuildRunning.set(false);
+                if (!rebuildWanted.get() || !rebuildRunning.compareAndSet(false, true)) {
+                    return;                                   // nothing more asked, or another rebuild took it
+                }
+            }
+        });
+    }
+
+    /** True when the computation cached under {@code key} began after the last purge. */
+    private boolean current(String key) {
+        synchronized (cache) {
+            return cache.containsKey(key) && startedAt.getOrDefault(key, 0L) >= purges;
+        }
+    }
+
+    /** Full computations started since the start (tests: a burst of purges is one or two of them). */
+    long builds() {
+        return builds.get();
     }
 
     // ---- Drishti*net: a group gathered across nodes (GroupShares) ----------------------------------------------------------
@@ -353,7 +419,13 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         boolean mine = false;
         synchronized (cache) {   // pinning-ok: join() is only called on futures that are already done
             f = cache.get(key);
-            boolean done = f != null && f.isDone() && !f.isCompletedExceptionally();
+            // done before the last purge: built again (once: the new computation is cached at once and shared); while its version refresh
+            // runs, the last pages are served until it ends
+            boolean purged = f != null && f.isDone() && startedAt.getOrDefault(key, 0L) < purges;
+            if (purged && refreshing.contains(key) && !f.isCompletedExceptionally()) {
+                return f.join();
+            }
+            boolean done = !purged && f != null && f.isDone() && !f.isCompletedExceptionally();
             if (done && Boolean.FALSE.equals(changed)) {
                 Snapshot same = f.join().checked(Instant.now());          // unchanged: asked again after version-check
                 put(key, CompletableFuture.completedFuture(same));
@@ -367,23 +439,32 @@ public final class DerivedSourcePlugin implements SourcePlugin {
                 Snapshot last = f.join();
                 CompletableFuture<Snapshot> next = new CompletableFuture<>();
                 put(key, CompletableFuture.completedFuture(last.checked(Instant.now())));   // one refresh at a time
+                long epoch = purges;
+                refreshing.add(key);
                 Thread.ofVirtual().name("derived-refresh").start(() -> {
                     try {
+                        builds.incrementAndGet();
                         next.complete(compute(asOf, false));
                         synchronized (cache) {
                             put(key, next);
+                            startedAt.put(key, epoch);
                         }
                     } catch (RuntimeException | OutOfMemoryError e) {
                         // the last computation stays in use; out of memory is said, not left to kill the thread silently
                         health = (e instanceof OutOfMemoryError ? "DEGRADED: " : "DOWN: ") + e;
                         LOG.warn("derived pages for {} could not be refreshed: {}", asOf, e.toString());
+                    } finally {
+                        synchronized (cache) {
+                            refreshing.remove(key);
+                        }
                     }
                 });
                 return last;
             }
-            if (f == null || f.isCompletedExceptionally()) {
+            if (f == null || f.isCompletedExceptionally() || purged) {
                 f = new CompletableFuture<>();
                 put(key, f);
+                startedAt.put(key, purges);
                 mine = true;
                 while (cache.size() > CACHED_DATES) {
                     retire(cache.remove(cache.keySet().iterator().next()), null);
@@ -392,6 +473,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         }
         if (mine) {
             try {
+                builds.incrementAndGet();
                 f.complete(compute(asOf, true));
             } catch (RuntimeException e) {
                 if (com.ash.drishti.engine.source.SourceRegistry.ServerStarting.in(e)) {

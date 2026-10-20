@@ -1725,6 +1725,7 @@ pack expects and who is told is the pack's `loads:` section and the administrato
 | `lookback-days` | `3` | Business days before today that are still checked for missing data. |
 | `default-notify-roles` | `[admin]` | Roles told about a load or late data when the pack names no roles or users. |
 | `smoke-max` | `20` | Most sample entities a pack may ask to be opened after a ready load. |
+| `refresh-window` | `5s` | Signals within this time of a connector's last refresh are merged: the first refreshes the connector at once, the others join one more refresh at the end of the window (each still looks for the connector's newest version, so its checks see the new data). At most one refresh runs and one waits per connector, however many signals arrive (a 60-day backfill sends 60). `0s` refreshes on every signal. |
 | `upload-max-mb` | `2048` | **Load data** from the browser (Admin → Packs → a pack → Load data, `POST /api/v1/admin/packs/{pack}/data`): the largest file. The file is streamed, one document in memory at a time, so this bounds disk and time, not memory; the console streams it on without holding it, under its own cap `builder.pack_load_max_mb`. |
 
 The token scope that opens `POST /api/v1/packs/{pack}/loads` to a personal API token is `loads:write` (`drishti.security.token-scopes`); the
@@ -1944,6 +1945,7 @@ Layout: `<root>/<domain>/<kind>/business_date=yyyy-MM-dd/` holding `(id, doc)` r
 | `columns-cache-mb` | not set: shared, 20 % of the heap | A day's promoted columns, read once and kept by size (the newest day is loaded in the background). |
 | (memory budget) | — | Delta connectors that do not set `cache-mb`, `id-map-mb`, `columns-cache-mb` or `doc-cache-mb` share one cache of each, sized from `-Xmx` (5 %, 20 %, 20 %, 5 %: half the heap in all, however many connectors run); a connector that sets one keeps a cache of its own of that size. Admin → Caches shows each shared cache's size against its cap. |
 | `max-concurrent-reads` | `16` | Single-document reads at once (each decodes one row group). |
+| `max-queued-reads` | `4096` | Single-document reads that may wait for one of those slots. More are refused at once (`DRS-1003 … reads already wait … the server is busy, try again`), and a waiting read whose caller has stopped waiting (its time-out, `drishti.sources.fetch-timeout`) leaves the queue and never reads. |
 | `max-load-rows` | `200000` | A table without columns has a whole day loaded for reverse lookups only up to this many rows. |
 | `warm-dates` | `3` | After start, in the background, each table's newest N dates get their id map and one document read, so the first read of a recent past date is not the slow one. `0` turns it off. |
 | `s3.endpoint`, `s3.access-key`, `s3.secret-key`, `s3.region`, `s3.path-style` | empty, empty, empty, empty, `true` with an endpoint | Shorthands for an `s3a://` (or, native engine, `s3://`) root; both engines read them. Without keys the AWS chain is used (environment, profile, instance role). |
@@ -2182,6 +2184,7 @@ loading and maintenance: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.
 | `doc-cache-mb` | `256` | memory for recently read documents |
 | `cache-mb` | `512` | memory for small days read whole for reverse lookups |
 | `max-concurrent-reads` | `16` | single-document reads at once |
+| `max-queued-reads` | `4096` | single-document reads that may wait for a slot; more are refused at once, and a read whose caller has gone leaves the queue |
 | `max-load-rows` | `200000` | the largest day read whole for reverse lookups when a table has no promoted columns |
 | `reverse-index` | `true` | `false` turns reverse lookups off |
 | `source-name` | the connector's name | the name shown in provenance and Health |
@@ -2389,6 +2392,7 @@ Nothing is stored: each document is worked out when asked for (the news about th
 | `store` | `heap` (`disk` in the trading pack's `trade-pages`) | `heap`: every page is built and kept in memory (small books). `disk`: the pages live under `store-dir`, the heap keeps each group's totals only; complete at any number of members (1.16 million trades a day measured in an 8 GB heap, 2026-10-18). |
 | `store-dir` | `<data dir>/derived/<connector>` | The pages' only folder (`store: disk`); emptied at start, one sub-folder per computation, deleted when a newer one replaces it. |
 | `retire-after` | `60s` | How long replaced pages on disk are kept for reads still running. |
+| `rebuild-delay` | `5s` | `store: disk`: after a purge (a data-load signal, Admin → Caches) the latest pages are rebuilt in the background this long after the last purge of a burst. A purge never starts a second full read beside one that runs: the running build is kept for its readers and the next reader after it builds once more. |
 | (restart) | — | With `store: disk`, the pages of the previous run are served again at start when built by the same definitions (`pages.json` in their folder); their data version is then checked as for any build. Without that, grouped pages would wait for the first build after every restart. |
 | `version-check` | `10s` | How often the members' data version is asked; a new version (a load) rebuilds, nothing else does. |
 | `refresh` | `30s` | Rebuild age, used only when a source cannot say its data's version. |
@@ -2513,7 +2517,7 @@ You should see uvicorn report `Uvicorn running on http://127.0.0.1:17481`.
 |---|---|---|
 | `server.host` | `0.0.0.0` (`DRISHTI_CONSOLE_HOST`) | Listening address: every interface, so the console opens from other machines and phones. Use `127.0.0.1` behind a proxy on the same host, or to keep it to this machine. |
 | `server.port` | `17480` (`DRISHTI_CONSOLE_PORT`) | Listening port. |
-| `server.workers` | `4` (`DRISHTI_CONSOLE_WORKERS`) | Worker processes on that port (`run_drishti_web.py`). |
+| `server.workers` | `4` (`DRISHTI_CONSOLE_WORKERS`) | Worker processes on that port (`run_drishti_web.py`). Each keeps short-lived copies of what the server says about a user (settings, packs, view layouts, saved pivots, BI powers, the session check); a change made through one worker writes the user's stamp under the console's data folder (`<console data>/user-stamps`, one small file per user) and every worker reads its copy again at its next page, in every browser of the user. Consoles behind one address that share no data folder see each other's changes within `ui.user_cache_seconds` (10 s), sessions within `auth.recheck_seconds`. |
 | `server.shutdown_seconds` | `5` (`DRISHTI_CONSOLE_SHUTDOWN_SECONDS`) | On a stop, the longest an open stream keeps a worker; then it is closed and the worker ends. |
 | `backend.url` | `http://127.0.0.1:18480` (`DRISHTI_BACKEND_URL`) | The Drishti server. |
 | `backend.timeout_seconds` | `5` | Per call to the server. |
@@ -2573,6 +2577,7 @@ sign-on settings (`auth.oidc`) apply to every server; each server verifies the I
 | `default_theme` | `terminal` | `terminal`, `light`, `wallstreet`, `blue`, `green`, `crimson`, `crimson-dark`, `terminal-green`, `terminal-crimson`, `terminal-blue`. Users can choose their own. |
 | `product` / `tagline` | `Drishti` / `Any data. Any domain. One grammar.` | Shown in the top bar and sign-in page. |
 | `user`, `user_display`, `desk` | `ash` (`DRISHTI_USER`), `Ash`, `Rates desk` | The acting user when `auth.enabled` is false (local development only). |
+| `user_cache_seconds` | `10` | How long a console worker reuses what the server said about a user (settings, packs, view layouts, saved pivots, BI powers) before asking again. A change made on this console is seen at once by all its workers (the user stamps, see `server.workers`); this bounds how long another console behind the same address shows the old choice. |
 | `about_prefetch` | `true` (`DRISHTI_ABOUT_PREFETCH`) | Fetch the page's *About this page* answer once the view is idle, so table headers, strip and key-value labels that have a glossary entry are underlined (with a hint) before the drawer is opened. It costs the server one explain per page view: the view is derived again for the caller and kept `drishti.explain.cache-ttl`, so opening the drawer afterwards is free. Set `false` on a busy installation; the labels are then underlined when the drawer is first opened ([PERFORMANCE.md](PERFORMANCE.md#about-this-page-and-its-cost)). |
 | `clock_tz` / `clock_label` | `America/New_York` / `NY` | The top-bar clock. |
 | `landing_examples` | `4` | How many example commands the landing page plays. They are the example commands (`console.examples`) of the packs switched on, so the landing page never names an entity of a pack that is not installed; with none, it shows the form `<MNEMONIC> <ID> <GO>`. Studio's first preview is the first of these examples too. |
@@ -2599,7 +2604,7 @@ Off by default: with `enabled: false` nothing under `/embed/` exists. Host appli
 | `token_secret` | empty (`DRISHTI_TOKEN_SECRET`) | Signs the short-lived tokens sent to the server; must equal the server's `drishti.security.secret`. |
 | `token_ttl_seconds` | `300` | Lifetime of each server token. |
 | `session_hours` | `10` | Session lifetime (the cookie's and the server session's). |
-| `recheck_seconds` | `10` (`DRISHTI_SESSION_RECHECK_SECONDS`) | How long the console reuses the server's answer to "does this session still stand, and who is the user now?" (enabled, roles, password change due). Disabling, demoting or signing out takes effect within this time, at once on the console an administrator used. `0` asks on every request. |
+| `recheck_seconds` | `10` (`DRISHTI_SESSION_RECHECK_SECONDS`) | How long the console reuses the server's answer to "does this session still stand, and who is the user now?" (enabled, roles, password change due). Disabling, demoting or signing out takes effect within this time, and at once on the console where it was done: every worker process of that console checks the user's stamp before it reuses an answer. `0` asks on every request. |
 | `allowed_origins` | `[]` | Origins besides the console's own (the request's `Host`) allowed to send state-changing requests; for a proxy that changes the `Host` header. Requests from any other origin are refused (`403 DRS-5002`). |
 | `secure_cookie` | `true` (`DRISHTI_SECURE_COOKIE`) | Cookie sent over HTTPS only. Set `false` only for plain-HTTP testing. |
 | `oidc.enabled` | `false` (`DRISHTI_OIDC_ENABLED`) | Show the single sign-on button. |

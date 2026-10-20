@@ -804,7 +804,7 @@ public final class QueryService implements AutoCloseable {
             if (props.eagerRebuild()) {
                 for (Dataset.Table t : ds.dataset().tablesOfKind(kind)) {
                     if (t.onLoad() && "cached".equals(t.mode())) {
-                        background.execute(() -> rebuild(ds, t, date));
+                        queueRebuild(ds, t, date);
                     }
                 }
             }
@@ -863,6 +863,72 @@ public final class QueryService implements AutoCloseable {
         bus.publish(new GenerationBus.Notice(ds.key(), null, date.isBefore(sources.currentDate()) ? "backdated" : "refresh", date, layers.generation(ds.key()), null));
         events.rebuild((System.nanoTime() - t0) / 1e9);
         return new Refreshed(shown, tables.stream().map(Dataset.Table::name).toList(), rows, Math.round((System.nanoTime() - t0) / 1e6), warnings.stream().distinct().toList());
+    }
+
+    /** The dates waiting to be rebuilt for one table of one dataset, and whether its one rebuild runs (QA3A-01). */
+    private static final class Rebuilds {
+        final java.util.TreeSet<LocalDate> dates = new java.util.TreeSet<>();
+        Loaded ds;
+        boolean running;
+    }
+
+    private final java.util.concurrent.ConcurrentHashMap<String, Rebuilds> rebuilds = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.concurrent.atomic.AtomicInteger rebuildsRunning = new java.util.concurrent.atomic.AtomicInteger();
+    private final java.util.concurrent.atomic.AtomicInteger rebuildsPeak = new java.util.concurrent.atomic.AtomicInteger();
+
+    /**
+     * Rebuilds a table's date in the background, one date at a time per table: a burst of data-load signals (sixty business dates in a row)
+     * queues the dates, each once, behind the one rebuild running, instead of starting a read per signal beside the others (QA3A-01).
+     */
+    private void queueRebuild(Loaded ds, Dataset.Table t, LocalDate date) {
+        String key = ds.key() + "\u001f" + t.name();
+        Rebuilds r = rebuilds.computeIfAbsent(key, k -> new Rebuilds());
+        boolean start;
+        synchronized (r) {
+            r.dates.add(date == null ? LocalDate.MIN : date);
+            r.ds = ds;                                       // the dataset as published last
+            start = !r.running;
+            r.running = true;
+        }
+        if (start) {
+            background.execute(() -> drain(r, t));
+        }
+    }
+
+    private void drain(Rebuilds r, Dataset.Table t) {
+        int now = rebuildsRunning.incrementAndGet();
+        rebuildsPeak.accumulateAndGet(now, Math::max);
+        try {
+            while (true) {
+                LocalDate d;
+                Loaded ds;
+                synchronized (r) {
+                    if (r.dates.isEmpty()) {
+                        r.running = false;
+                        return;
+                    }
+                    d = r.dates.pollLast();                   // the newest first: the date pages most likely show
+                    ds = r.ds;
+                }
+                rebuild(ds, t, d == LocalDate.MIN ? null : d);
+            }
+        } finally {
+            rebuildsRunning.decrementAndGet();
+        }
+    }
+
+    /** The most table rebuilds that ran at once since the start (tests: one per table, whatever the signals). */
+    int rebuildsPeak() {
+        return rebuildsPeak.get();
+    }
+
+    /** Dates waiting to be rebuilt, over every table. */
+    public int rebuildsWaiting() {
+        return rebuilds.values().stream().mapToInt(r -> {
+            synchronized (r) {
+                return r.dates.size();
+            }
+        }).sum();
     }
 
     private void rebuild(Loaded ds, Dataset.Table t, LocalDate date) {

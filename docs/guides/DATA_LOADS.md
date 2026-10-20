@@ -330,6 +330,7 @@ Also listed in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiloads--data-l
 | `drishti.loads.lookback-days` | `3` | business days before today still checked for missing data |
 | `drishti.loads.default-notify-roles` | `[admin]` | told when a pack names no one |
 | `drishti.loads.smoke-max` | `20` | most sample entities a pack may ask to be opened |
+| `drishti.loads.refresh-window` | `5s` | signals within this time of a connector's last refresh are merged into one more refresh at the end of the window (at most one runs and one waits per connector); `0s` refreshes on every signal |
 | `drishti.security.token-scopes` (`loads:write`) | declared | what the `loads:write` token scope opens: `POST /api/v1/packs/*/loads` |
 
 ## 7. What happens, step by step
@@ -339,7 +340,7 @@ Also listed in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiloads--data-l
 | Step | What it does | Result and how it shows |
 |---|---|---|
 | `record` | writes the announcement to the history (once per key) | always `ok`; the detail says `recorded`, `recorded as attempt N` or `recorded as a reload of an earlier ready load` |
-| `refresh` | calls `purgeCaches()` on every connector that serves the kind, and drops the engine's layout caches: the same machinery as Admin → Caches, scoped to the kind | `ok` with the connectors named; `failed` with the error if a purge threw |
+| `refresh` | calls `purgeCaches()` on every connector that serves the kind, and drops the engine's layout caches: the same machinery as Admin → Caches, scoped to the kind. A connector refreshed less than `drishti.loads.refresh-window` (5 s) ago, or being refreshed, is not purged again: the signal joins one more refresh at the end of the window, and the connector only looks for its newest table version now, so the steps below still see the new data. A backfill of 60 dates refreshes each connector once or twice, not 60 times | `ok` with the connectors named (`caches dropped: …`, and `merged with a refresh moments ago: … (their caches are dropped once more in N s)`); `failed` with the error if a purge threw |
 | `verify` | lists the kind's entities on the business date through the router and counts them | `ok` with the count; `warn` when none were found (`verified` becomes `not-found`) or when some sources could not answer (they are named); `failed` if the read threw |
 | `alerts` | evaluates every enabled alert rule whose entity is of this kind against the entity **on that business date**, for every user, each as that user may see the data (field masks apply). A rule's remembered state is cleared first, so a condition that holds on the date fires once | `ok`: `N alerts fired`; `skipped` when the data is not readable for the date |
 | `smoke` | opens the first N entities of the verify listing as views on that date (N = the pack's `smoke`) | `ok`: `opened 2 of 2 sample entities`; `failed` names the first failures; `skipped` when `smoke` is 0 |

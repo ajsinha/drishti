@@ -28,6 +28,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import unittest
 from pathlib import Path
 
@@ -214,6 +215,104 @@ class DataFolder(unittest.TestCase):
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertEqual(r.stdout.split("\n")[0], tmp)
             self.assertTrue((Path(tmp) / "feeds" / "fixing" / "SOFR-HISTORY.csv").is_file())
+
+class TellServer(unittest.TestCase):
+    """QA3A-07: a signal the server did not answer in time is not "refused", and the token hint is only for 401/403; --signal-once tells
+    each table once (QA3A-05)."""
+
+    def lake(self, url, tmp, once=False):
+        import argparse
+        import demo
+        d = object.__new__(demo.DemoLake)
+        d.a = argparse.Namespace(no_signal=False, server=url, token_file=None, signal_once=once, quiet=True)
+        d.written = [("trading", "trade", "trading/trade_murex"), ("core", "counterparty", "reference/counterparty")]
+        d.dates = ["2026-10-19", "2026-10-20"]
+        d.run_id = "t"
+        d.data = Path(tmp)
+        d.lake = Path(tmp) / "delta"
+        return d
+
+    def server(self, answer):
+        got = []
+
+        class H(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(200)
+                self.end_headers()
+
+            def do_POST(self):
+                got.append(json.loads(self.rfile.read(int(self.headers["Content-Length"]))))
+                answer(self, len(got))
+
+            def log_message(self, *a):
+                pass
+        srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), H)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        return srv, got
+
+    def test_signal_once_tells_each_table_on_its_newest_date(self):
+        def ok(h, n):
+            h.send_response(201)
+            h.end_headers()
+        srv, got = self.server(ok)
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                note = self.lake(f"http://127.0.0.1:{srv.server_port}", tmp, once=True).tell_server()
+        finally:
+            srv.shutdown()
+            srv.server_close()
+        self.assertEqual(sorted((b["kind"], b["businessDate"]) for b in got), [("counterparty", "2026-10-20"), ("trade", "2026-10-20")])
+        self.assertIn("told: 2 data-load signals", note)
+        self.assertIn("each table once", note)
+
+    def test_a_signal_that_times_out_is_not_called_refused(self):
+        import demo
+
+        def slow_then_401(h, n):
+            if n == 1:
+                time.sleep(1.5)                                   # longer than the signal's time-out below
+            h.send_response(401 if n == 2 else 201)
+            h.end_headers()
+            if n == 2:
+                h.wfile.write(b"DRS-5010 missing bearer token")
+        srv, got = self.server(slow_then_401)
+        old = demo.SIGNAL_TIMEOUT
+        demo.SIGNAL_TIMEOUT = 0.5
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                note = self.lake(f"http://127.0.0.1:{srv.server_port}", tmp).tell_server()
+        finally:
+            demo.SIGNAL_TIMEOUT = old
+            srv.shutdown()
+            srv.server_close()
+        self.assertIn("took 2 of 4 data-load signals", note)
+        self.assertIn("refused 1 (401", note)
+        self.assertIn("loads:write", note)                    # a 401: the token hint
+        self.assertIn("did not answer 1 within 0.5 s", note)
+        self.assertNotIn("refused 2", note)
+
+    def test_no_token_hint_when_nothing_was_refused(self):
+        import demo
+
+        def slow(h, n):
+            time.sleep(1.0)
+            h.send_response(201)
+            h.end_headers()
+        srv, got = self.server(slow)
+        old = demo.SIGNAL_TIMEOUT
+        demo.SIGNAL_TIMEOUT = 0.3
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                d = self.lake(f"http://127.0.0.1:{srv.server_port}", tmp, once=True)
+                note = d.tell_server()
+        finally:
+            demo.SIGNAL_TIMEOUT = old
+            srv.shutdown()
+            srv.server_close()
+        self.assertIn("did not answer 2", note)
+        self.assertNotIn("refused", note)
+        self.assertNotIn("loads:write", note)
+
 
 if __name__ == "__main__":
     unittest.main()

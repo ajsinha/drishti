@@ -713,6 +713,7 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 | `doc-cache-mb` | `256` | memory for recently read documents |
 | `cache-mb` | `512` | memory for small days read whole for reverse lookups |
 | `max-concurrent-reads` | `16` | single-document reads at once |
+| `max-queued-reads` | `4096` | single-document reads that may wait for a slot; more are refused at once, and a read whose caller has gone leaves the queue |
 | `max-load-rows` | `200000` | the largest day read whole for reverse lookups when a table has no promoted columns |
 | `reverse-index` | `true` | `false` turns reverse lookups off |
 | `source-name` | the connector's name | the name shown in provenance and Health |

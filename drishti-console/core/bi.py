@@ -26,16 +26,21 @@ RECENT_IN_MENU = 3
 
 
 class BiMe:
-    def __init__(self, ttl: float = 30.0):
+    def __init__(self, ttl: float = 10.0, stamps=None):
+        from core.user_stamps import NONE
+
         self.ttl = ttl
-        self._cache: dict[str, tuple[float, dict]] = {}
+        self.stamps = stamps or NONE    # core/user_stamps.py: a change through another worker is seen at once
+        self._cache: dict[str, tuple[float, dict, float]] = {}
 
     async def get(self, backend, ident) -> dict:
         if ident is None:
             return dict(NONE)
-        hit = self._cache.get(scoped(ident.user))
-        if hit and time.monotonic() - hit[0] < self.ttl:
+        key = scoped(ident.user)
+        hit = self._cache.get(key)
+        if hit and time.monotonic() - hit[0] < self.ttl and self.stamps.fresh(key, hit[2]):
             return hit[1]
+        began = time.time()
         try:
             me = await backend.bi("GET", "/me", ident)
             data = {**NONE, **me}
@@ -46,8 +51,9 @@ class BiMe:
                 data["enabled"] = False
         except Exception:  # noqa: BLE001 - the menu is a convenience; a page never fails for it
             return dict(NONE)
-        self._cache[scoped(ident.user)] = (time.monotonic(), data)
+        self._cache[key] = (time.monotonic(), data, began)
         return data
 
     def forget(self, user: str) -> None:
         self._cache.pop(scoped(user), None)
+        self.stamps.touch(scoped(user))

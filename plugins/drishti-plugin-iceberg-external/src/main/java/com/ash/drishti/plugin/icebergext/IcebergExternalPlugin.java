@@ -57,7 +57,6 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -110,7 +109,7 @@ public final class IcebergExternalPlugin implements SourcePlugin {
     private AsyncCache<DayKey, Map<String, int[]>> idIndexes;
     private AsyncCache<String, Columns> columnSets;
     private Cache<String, String> docs;
-    private Semaphore reads;
+    private com.ash.drishti.api.ReadSlots reads;      // bounded queue; a read whose caller has gone leaves it (QA3A-01)
     private SourceContext context;
     private Map<String, String> settings;
     private String sourceName;
@@ -156,7 +155,8 @@ public final class IcebergExternalPlugin implements SourcePlugin {
         this.columnSets = Caffeine.newBuilder().executor(loaders).maximumWeight(mb("columns-cache-mb", "1024"))
                 .weigher((String k, Columns v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes())).buildAsync();
         this.docs = Caffeine.newBuilder().maximumWeight(mb("doc-cache-mb", "256")).weigher((String k, String v) -> 2 * (k.length() + v.length()) + 64).build();
-        this.reads = new Semaphore(Integer.parseInt(ctx.setting("max-concurrent-reads", "16")));
+        this.reads = new com.ash.drishti.api.ReadSlots("document reads of " + ctx.setting("source-name", "iceberg-external"),
+                Integer.parseInt(ctx.setting("max-concurrent-reads", "16")), Integer.parseInt(ctx.setting("max-queued-reads", "4096")));
         refresh();
         long every = Long.parseLong(ctx.setting("refresh-seconds", "10"));
         ctx.scheduler().scheduleWithFixedDelay(() -> loaders.execute(this::refresh), every, every, TimeUnit.SECONDS);
@@ -403,7 +403,7 @@ public final class IcebergExternalPlugin implements SourcePlugin {
                 if (files.isEmpty()) {
                     continue;
                 }
-                reads.acquireUninterruptibly();
+                reads.acquire();
                 try {
                     json = t.fetch(l.get(), d, ref.id(), values.get(), files).orElse(null);
                 } finally {

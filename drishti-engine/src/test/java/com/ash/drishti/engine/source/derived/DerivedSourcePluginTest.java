@@ -260,6 +260,80 @@ class DerivedSourcePluginTest {
         }
     }
 
+    /** Trades read slowly (a full pass over a large book), counting how many passes run at once. */
+    static final class SlowTrades extends Trades {
+        final AtomicInteger running = new AtomicInteger();
+        final AtomicInteger peak = new AtomicInteger();
+
+        @Override
+        public Map<EntityRef, EntityDocument> read(Collection<EntityRef> refs, AsOf asOf) {
+            peak.accumulateAndGet(running.incrementAndGet(), Math::max);
+            try {
+                Thread.sleep(150);
+                return super.read(refs, asOf);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException(e);
+            } finally {
+                running.decrementAndGet();
+            }
+        }
+    }
+
+    @Test
+    void aBurstOfPurgesNeverRunsTwoFullReadsAtOnce() throws Exception {
+        // QA3A-01: sixty data-load signals each purged the pages while readers kept reading; each purge dropped the running build and the
+        // next reader started another full read beside it
+        SlowTrades slow = new SlowTrades();
+        DerivedSourcePlugin p = started(settings(), slow);
+        java.util.concurrent.atomic.AtomicBoolean stop = new java.util.concurrent.atomic.AtomicBoolean();
+        List<Thread> readers = new ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            readers.add(Thread.ofVirtual().start(() -> {
+                while (!stop.get()) {
+                    p.fetch(EntityRef.of("book-pnl", "RATES-1"), AsOf.LATEST);
+                }
+            }));
+        }
+        Thread.sleep(50);
+        for (int i = 0; i < 60; i++) {
+            p.purgeCaches();
+            Thread.sleep(10);
+        }
+        Thread.sleep(400);
+        stop.set(true);
+        for (Thread t : readers) {
+            t.join(5_000);
+        }
+        assertThat(slow.peak.get()).as("full reads at once").isEqualTo(1);
+        assertThat(p.builds()).as("builds for 60 purges in 0.6 s, each read taking 0.15 s").isLessThanOrEqualTo(8);
+        assertThat(p.fetch(EntityRef.of("book-pnl", "RATES-1")).orElseThrow().data().get("mtm").asDouble()).isEqualTo(60);
+    }
+
+    @Test
+    void sixtyPurgesInARowRebuildThePagesOnDiskOnce(@org.junit.jupiter.api.io.TempDir java.nio.file.Path root) throws Exception {
+        Map<String, String> s = settings();
+        s.put("store", "disk");
+        s.put("store-dir", root.toString());
+        s.put("retire-after", "0s");
+        s.put("rebuild-delay", "300ms");
+        SlowTrades slow = new SlowTrades();
+        DerivedSourcePlugin p = started(s, slow);
+        p.fetch(EntityRef.of("book-pnl", "RATES-1"));
+        long before = p.builds();
+        for (int i = 0; i < 60; i++) {
+            p.purgeCaches();                                    // sixty signals in quick succession
+        }
+        long deadline = System.currentTimeMillis() + 5_000;
+        while (p.builds() == before && System.currentTimeMillis() < deadline) {
+            Thread.sleep(20);
+        }
+        Thread.sleep(800);
+        assertThat(p.builds() - before).as("rebuilds after sixty purges").isBetween(1L, 2L);
+        assertThat(slow.peak.get()).isEqualTo(1);
+        assertThat(p.fetch(EntityRef.of("book-pnl", "RATES-1")).orElseThrow().data().get("mtm").asDouble()).isEqualTo(60);
+    }
+
     @Test
     void todayInAFieldIsTheComputationsDateInTheHeapAndOnDisk(@org.junit.jupiter.api.io.TempDir java.nio.file.Path tmp) throws Exception {
         for (String store : List.of("heap", "disk")) {

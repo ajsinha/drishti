@@ -192,6 +192,34 @@ class LoadsApiTest {
         mvc.perform(delete("/api/v1/me/alerts/rules/Negative MTM").header("Authorization", admin));
     }
 
+    @Autowired LoadService loadService;
+
+    @Test
+    void sixtySignalsInQuickSuccessionRefreshEachConnectorOnceOrTwice() throws Exception {
+        // QA3A-01: a 60-day backfill sent sixty signals; each dropped the caches of the trade connectors and the pages built from them
+        String admin = as(ADMIN, "admin");
+        List<String> touched = sources.plugins().stream().filter(p -> p.manifest().serves("trade") || p.dependsOn("trade"))
+                .map(p -> p.manifest().name()).toList();
+        assertThat(touched).isNotEmpty();
+        java.util.Map<String, Long> before = new java.util.HashMap<>();
+        touched.forEach(n -> before.put(n, loadService.refreshes().runs(n)));
+        long t0 = System.nanoTime();
+        List<String> details = new java.util.ArrayList<>();
+        for (int i = 0; i < 60; i++) {
+            JsonNode load = body(announce(admin, "finance", batchBody("2026-09-24", "burst-" + i + "-" + UUID.randomUUID())).andExpect(status().isCreated()));
+            details.addAll(load.path("steps").findValues("detail").stream().map(JsonNode::asText).filter(d -> d.contains("caches") || d.contains("merged")).toList());
+        }
+        double windows = (System.nanoTime() - t0) / (double) props.refreshWindow().toNanos();
+        Thread.sleep(props.refreshWindow().toMillis() + 500);              // the one waiting refresh runs at the end of the window
+        for (String n : touched) {
+            long runs = loadService.refreshes().runs(n) - before.get(n);
+            assertThat(runs).as(n + ": refreshes for 60 signals in " + String.format("%.1f", windows) + " windows")
+                    .isBetween(1L, 2L + (long) Math.floor(windows));
+        }
+        assertThat(details).anyMatch(d -> d.contains("merged with a refresh moments ago"));
+        assertThat(loadService.refreshes().waiting()).isZero();
+    }
+
     /** A clock the test moves. */
     private static final class TestClock extends Clock {
         private volatile Instant now;

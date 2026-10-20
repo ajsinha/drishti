@@ -16,12 +16,13 @@
 column, width in columns of a 12-column grid, height in grid rows, hidden) is kept by the server per user and Sutra;
 the console applies it when it draws a view for that user, so the screen, workspace panes and printing all follow it,
 while the server's view (and every API client, live update and cache) stays the Sutra's own. Whether the user may
-customise layouts, and their layouts, are asked of the server once a minute per user, and forgotten when they save."""
+customise layouts, and their layouts, are asked of the server every ``ui.user_cache_seconds`` (10 s) per user, and read again on every worker when they save (core/user_stamps.py)."""
 from __future__ import annotations
 
 import time
 
 from core.servers import scoped
+from core.user_stamps import NONE as NO_STAMPS
 
 GRID = 12          # columns of the grid each column of a view is divided into
 MAX_HEIGHT = 24    # grid rows a panel may be given
@@ -30,12 +31,14 @@ MAX_HEIGHT = 24    # grid rows a panel may be given
 class Layouts:
     """The user's layouts, and applying one to a view's panels."""
 
-    TTL = 60.0
+    TTL = 10.0
 
-    def __init__(self, settings):
+    def __init__(self, settings, stamps=NO_STAMPS):
+        self.stamps = stamps            # every worker sees a save or reset at once (core/user_stamps.py, QA3A-03)
+        self.ttl = float(settings.get("ui.user_cache_seconds", self.TTL) or 0)
         self.enabled = bool(settings.get("layouts.enabled", True))
         self.min_span = max(1, min(12, int(settings.get("layouts.min_span", 3))))      # narrowest width layout mode allows
-        self._kept: dict[str, tuple[float, dict]] = {}
+        self._kept: dict[str, tuple[float, dict, float]] = {}   # user -> (monotonic time, state, wall time read)
 
     async def state(self, backend, ident) -> dict:
         """The server's answer for this user: ``allowed``, ``promote``, ``review`` and ``layouts`` (each read against its
@@ -44,17 +47,19 @@ class Layouts:
             return {"allowed": False, "enabled": False, "layouts": []}
         key = scoped(ident.user)
         hit = self._kept.get(key)
-        if hit and time.monotonic() - hit[0] < self.TTL:
+        if hit and time.monotonic() - hit[0] < self.ttl and self.stamps.fresh(key, hit[2]):
             return hit[1]
+        began = time.time()
         try:
             data = await backend.layouts(ident)
         except Exception:  # noqa: BLE001 - not offered when the server cannot say
             return {"allowed": False, "enabled": False, "layouts": []}
-        self._kept[key] = (time.monotonic(), data)
+        self._kept[key] = (time.monotonic(), data, began)
         return data
 
     def forget(self, user: str) -> None:
         self._kept.pop(scoped(user), None)
+        self.stamps.touch(scoped(user))
 
     @staticmethod
     def find(state: dict, sutra: str | None, kind: str) -> dict | None:
