@@ -68,6 +68,7 @@ public final class SuggestionService {
         if (m.isPresent() && (parts.length > 1 || q.endsWith(" "))) {
             String rest = parts.length > 1 ? parts[1] : "";
             String kind = m.get().kind();
+            ranges(parts[0].toUpperCase(Locale.ROOT), kind, rest, q.endsWith(" "), user, asOf).forEach(s -> add(out, s));
             recents.of(user).stream().filter(h -> h.ref().kind().equals(kind) && matches(h, rest))
                     .forEach(h -> add(out, entity("recent", h)));
             router.search(kind, rest, max, budget, asOf).forEach(h -> add(out, entity("entity", h)));
@@ -88,6 +89,72 @@ public final class SuggestionService {
         recents.of(user).stream().filter(h -> matches(h, trimmed)).forEach(h -> add(out, entity("recent", h)));
         router.search(null, trimmed, max, budget, asOf).forEach(h -> add(out, entity("entity", h)));
         return cap(out, max);
+    }
+
+    /** The ranges offered after an entity ({@code TRD 1000015 } gives {@code 30}, {@code 3M}, {@code YTD}, {@code 30 DIFF}). */
+    static final List<String> RANGES = List.of("30", "3M", "YTD", "30 DIFF");
+
+    private static final java.util.regex.Pattern PARTIAL_RANGE = java.util.regex.Pattern.compile(
+            "(?i)\\d{1,4}[DWMY]?|Y|YT|YTD|M|MT|MTD|Q|QT|QTD|30\\s+D|30\\s+DI|30\\s+DIF|30\\s+DIFF");
+
+    /**
+     * History ranges for {@code <MNEMONIC> <ID> } (a space typed after one entity's id) and for a range being typed
+     * ({@code TRD 1000015 3}): the ranges that start with what was typed, first in the list (HISTORY_QUERIES.md section 4.4).
+     * Nothing when the id does not name one entity of the kind.
+     */
+    private List<Suggestion> ranges(String code, String kind, String rest, boolean spaced, String user, com.ash.drishti.api.AsOf asOf) {
+        String r = rest.trim();
+        if (r.isEmpty()) {
+            return List.of();
+        }
+        String[] w = r.split("\\s+", 2);
+        String typed;
+        if (w.length == 1 && spaced) {
+            typed = "";
+        } else if (w.length == 2 && PARTIAL_RANGE.matcher(w[1]).matches()) {
+            typed = w[1].replaceAll("\\s+", " ").toUpperCase(Locale.ROOT);
+        } else {
+            return List.of();
+        }
+        String id = entityId(kind, w[0], user, asOf);
+        if (id == null) {
+            return List.of();
+        }
+        List<Suggestion> out = new ArrayList<>();
+        for (String range : RANGES) {
+            if (range.startsWith(typed) && !range.equals(typed)) {
+                out.add(new Suggestion("range", code, kind, id, range, describe(range), code + " " + id + " " + range));
+            }
+        }
+        if (out.isEmpty() && !typed.isEmpty()) {                    // TRD 1000015 90: the range typed itself, explained
+            try {
+                HistoryRange.trailing(code + " " + id + " " + typed).ifPresent(s -> out.add(new Suggestion("range", code, kind, id,
+                        typed, describe(typed), code + " " + id + " " + typed)));
+            } catch (RuntimeException notYet) {
+                // a range still being typed
+            }
+        }
+        return out;
+    }
+
+    private static String describe(String range) {
+        return HistoryRange.trailing("X Y " + range).map(s -> s.range().describe() + (s.diff() ? ": only what changed, day by day" : ""))
+                .orElse(range);
+    }
+
+    /** The id of the one entity of the kind that {@code word} names (any case), or null. */
+    private String entityId(String kind, String word, String user, com.ash.drishti.api.AsOf asOf) {
+        for (EntityHit h : recents.of(user)) {
+            if (h.ref().kind().equals(kind) && h.ref().id().equalsIgnoreCase(word)) {
+                return h.ref().id();
+            }
+        }
+        for (EntityHit h : router.search(kind, word, 5, budget, asOf)) {
+            if (h.ref().id().equalsIgnoreCase(word)) {
+                return h.ref().id();
+            }
+        }
+        return null;
     }
 
     /**
@@ -115,7 +182,7 @@ public final class SuggestionService {
     }
 
     private static void add(Map<String, Suggestion> out, Suggestion s) {
-        String key = s.id() == null ? "m:" + s.mnemonic() : s.kind() + "/" + s.id();
+        String key = s.id() == null ? "m:" + s.mnemonic() : s.kind() + "/" + s.id() + ("range".equals(s.type()) ? " " + s.title() : "");
         out.putIfAbsent(key, s);
     }
 
