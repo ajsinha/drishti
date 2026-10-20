@@ -280,7 +280,7 @@ drishti-console/.venv/bin/python tools/drishti.py lake demo
   news/listed-company: … rows over 60 days
   news/news-topic: … rows over 60 days
 
-Demo lake ready: …/data/delta: 64 tables, 60 business days 2026-07-08 to 2026-09-30, 943 s
+Demo lake ready: …/data/delta: 66 tables, 60 business days 2026-07-08 to 2026-09-30, 943 s
 Feeds: …/data/feeds/fixing/SOFR-HISTORY.csv (the file connector's sample feed)
 Server: no server at http://127.0.0.1:19590: left …/data/bi-store/lake-rebuilt.json, so a server clears its stored BI columns and rollups at its next start
 Connector files:

@@ -18,10 +18,13 @@ masks and row rules.
 
   bi statement preview REPORT|--file F [--page P] [--date D] [--param k=v]   the pages: count, paper, period, and each page's header and footer
   bi statement file REPORT|--file F [--format pdf|xlsx] [-o OUT] ...          the PDF (page-exact) or the Excel workbook (set to print on the paper)
+
+Both say `cut: <table>: The first 10,000 rows only ...` for each table that stops at drishti.distribution.statements.max-rows.
 """
 import argparse
 import json
 import pathlib
+import urllib.parse
 
 
 def register(bi, srv, ctx) -> None:
@@ -78,6 +81,8 @@ def preview(a, ctx) -> int:
     paper = r.get("paper") or {}
     print(f"{r.get('title')}: {r.get('pageCount')} pages, {paper.get('size')} {paper.get('orientation')}" + (f", {r['period']}" if r.get("period") else "")
           + f", {r.get('rows', 0)} rows")
+    for c in r.get("cut") or []:                                      # a table that stops at max-rows, as the PDF's note says (QA2-204)
+        print(f"  cut: {c}")
     for p in r.get("pages", []):
         head = [o["text"] for o in p.get("ops", []) if o.get("t") == "text" and o.get("role") == "header"]
         foot = [o["text"] for o in p.get("ops", []) if o.get("t") == "text" and o.get("role") == "footer"]
@@ -94,4 +99,7 @@ def make(a, ctx) -> int:
     out = pathlib.Path(a.out) if a.out else pathlib.Path(("statement." + a.format))
     out.write_bytes(raw)
     print(f"wrote {out} ({len(raw):,} bytes)")
+    headers = getattr(api, "headers", None)
+    for c in (headers.get_all("X-Statement-Cut") or []) if headers is not None else []:
+        print(f"  cut: {urllib.parse.unquote_plus(c)}")                # a table that stops at max-rows, as the file's note says (QA2-204)
     return 0

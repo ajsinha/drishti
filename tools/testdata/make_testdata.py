@@ -40,6 +40,7 @@ ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 import capture_market as CM  # noqa: E402
 import history as H  # noqa: E402
+import marketdays as MK  # noqa: E402
 import universe as UV  # noqa: E402
 
 PACKS = ("core", "market-data", "trading", "counterparty-risk", "market-risk", "world-economy", "news-and-markets")
@@ -110,6 +111,7 @@ def main(argv=None) -> int:
                          "partition-by": ["PRODUCT_TYPE"], **hist})
         print(f"  {folder}: {len(book):,} trades")
     owners = delta_connectors(ROOT / "config" / "packs")
+    market = MK.MarketDays(u.docs, days.dates)            # the market documents of each day, one coherent picture (QA2-201)
     for kind in sorted(u.docs):
         docs = u.docs[kind]
         if not docs or kind == "trade":
@@ -119,7 +121,7 @@ def main(argv=None) -> int:
         since = {f"TVAL-{tid}": i for tid, i in booked.items()} if kind == "trade-valuation" else None
         members = booked if kind == "netting-set" else None
         folder = f"{pack}/{kind}"
-        hist = H.DatasetHistory(out / folder, key, days).write(H.doc_states(kind, docs, days, since, members))
+        hist = H.DatasetHistory(out / folder, key, days).write(H.doc_states(kind, docs, days, since, members, market))
         datasets.append({"folder": folder, "pack": pack, "kind": kind, "connector": connector, "key": key, **hist})
     for pack in FROM_SAMPLES:
         for kind, (pk, connector) in sorted(owners.items()):

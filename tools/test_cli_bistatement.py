@@ -70,6 +70,22 @@ class BiStatement(unittest.TestCase):
         sent = json.loads(FakeServer.requests[-1][5])
         self.assertEqual(("pdf", "report: monthly\nmodel: m@1\n"), (sent["format"], sent["yaml"]))
 
+    def test_preview_and_file_say_when_a_table_was_cut_at_max_rows(self):
+        """QA2-204: the API's cut (preview) and X-Statement-Cut (file) are printed, as the PDF's note says it."""
+        note = "Positions: The first 10,000 rows only: the table goes on (drishti.distribution.statements.max-rows)."
+        FakeServer.routes[("POST", "/api/v1/bi/reports/statement/preview")] = (200, {**PREVIEW, "rows": 10156, "cut": [note]})
+        code, out, _ = run("bi", "statement", "preview", "file:report:monthly-statement", env=self.env)
+        self.assertEqual(0, code)
+        self.assertIn("  cut: " + note, out)
+        encoded = "Positions%3A+The+first+10%2C000+rows+only%3A+the+table+goes+on+%28drishti.distribution.statements.max-rows%29."
+        FakeServer.routes[("POST", "/api/v1/bi/reports/statement/file")] = (200, b"%PDF-1.4 fake", [("X-Statement-Cut", encoded)])
+        code, out, _ = run("bi", "statement", "file", "file:report:monthly-statement", "-o", str(self.tmp / "full.pdf"), env=self.env)
+        self.assertEqual(0, code, out)
+        self.assertIn("  cut: " + note, out)
+        FakeServer.routes[("POST", "/api/v1/bi/reports/statement/file")] = (200, b"%PDF-1.4 fake")
+        code, out, _ = run("bi", "statement", "file", "file:report:monthly-statement", "-o", str(self.tmp / "whole.pdf"), env=self.env)
+        self.assertNotIn("cut:", out, "a whole statement says nothing")
+
     def test_without_a_report_or_a_file_it_says_so(self):
         code, _, err = run("bi", "statement", "preview", env=self.env)
         self.assertEqual(2, code)

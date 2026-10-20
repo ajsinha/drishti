@@ -168,6 +168,10 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
     DrishtiException noSource(String kind) {
         String routed = routes.get(kind);
         if (routed != null && registry.plugin(routed).isEmpty()) {
+            if (registry.restartingFor(kind, routed).contains(routed)) {
+                return new DrishtiException(ErrorCode.CONNECTOR_RESTARTING, "connector " + routed + " is restarting (kind '" + kind
+                        + "' is routed to it) and was not back within " + RESTART_WAIT.toSeconds() + " s: try again in a moment");
+            }
             var status = registry.connectorStatuses().get(routed);
             if (status == null) {
                 return new DrishtiException(ErrorCode.CONNECTOR_NOT_CONFIGURED, "connector " + routed + " is not configured: kind '" + kind
@@ -193,6 +197,20 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      * than a read of this node's own data, which keeps {@code timeout}.
      */
     CompletableFuture<EntityDocument> fetch(EntityRef ref, Duration timeout, AsOf asOf, Duration peerTimeout) {
+        List<String> restarting = registry.restartingFor(ref.kind(), routes.get(ref.kind()));
+        if (!restarting.isEmpty()) {
+            // a connector of the kind is being restarted (its file changed, a retry) and is out of routing for its drain and its start: the
+            // read waits for it, as a query does (ServerSourceGateway), instead of answering "no source" or "not found" meanwhile (QA2-202)
+            return CompletableFuture.runAsync(() -> registry.awaitStarted(restarting, RESTART_WAIT), executor)
+                    .thenCompose(x -> fetchNow(ref, timeout, asOf, peerTimeout));
+        }
+        return fetchNow(ref, timeout, asOf, peerTimeout);
+    }
+
+    /** How long a read waits for a connector of its kind that is being (re)started: its drain and its start. */
+    static final Duration RESTART_WAIT = Duration.ofSeconds(30);
+
+    private CompletableFuture<EntityDocument> fetchNow(EntityRef ref, Duration timeout, AsOf asOf, Duration peerTimeout) {
         List<SourcePlugin> candidates = candidates(ref.kind());
         Fallback fb = fallback;
         if (candidates.isEmpty() && fb == null) {

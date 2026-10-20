@@ -90,7 +90,11 @@ For path-based tables `table: risk_mart.trades` is the folder `<root>/risk_mart/
 `metadata/version-hint.text` names (`vN.metadata.json`, as Iceberg's Hadoop tables and the `iceberg` loader write them), or, for a table a
 catalog wrote (pyiceberg, a JDBC or Glue catalog, Spark through one: `00003-<uuid>.metadata.json` and no hint), the metadata file with the
 highest sequence number, as Iceberg's own readers take it; a later commit by that catalog is seen at the next refresh. A folder with
-neither is `no table risk_mart.trades`, and Health says which files it looked for.
+neither is not served, and Health (and Admin → Connectors) says which files it looked for and what the folder holds instead:
+`DEGRADED: trade: no table risk_mart.trades: looked in <root>/risk_mart/trades/metadata for version-hint.text, v<N>.metadata.json and
+a catalog's NNNNN-<uuid>.metadata.json (the folder is empty)` (or `the folder does not exist`, or `it holds 00001-abc.metadata.json.tmp`).
+Any configured table that is not served (missing, or with no id, below) makes the connector **DEGRADED**; the tables it does serve
+answer as usual.
 
 ## 3. Rows as documents
 

@@ -81,6 +81,8 @@ public class StatementController {
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(f.contentType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(StatementService.filename(run, p, f), StandardCharsets.UTF_8).build().toString())
                 .header("X-Statement-Pages", String.valueOf(run.pages().pages().size()))
+                // each table that stops at max-rows, in words, as the preview's cut (URL-encoded UTF-8): a script can tell a cut statement (QA2-204)
+                .header("X-Statement-Cut", run.cut().stream().map(c -> java.net.URLEncoder.encode(c, StandardCharsets.UTF_8)).toArray(String[]::new))
                 .body(bytes);
     }
 }

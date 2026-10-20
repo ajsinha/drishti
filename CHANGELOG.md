@@ -18,7 +18,34 @@
 ## Unreleased
 
 - **Fixed: a theme (or any personal setting) changed on one page could come back as the old one on the next page** when the console runs several worker processes (four on Windows by default): each worker kept the user's settings for 30 s, and a change cleared only the cache of the worker that saved it. A change now stamps the browser (`drishti_settings_at` cookie), and a worker re-reads the settings when its copy is older than the stamp; with four workers, 5 of 24 pages came back in the old theme before the fix and 0 after. `test_settings_workers.py`. Found on the product owner's Windows machine (Green → netting set → SIMM came up Blue).
-
+- **Fixed (QA2-205): the docs say `lake demo` builds 66 tables**, as its summary prints (one per dataset of
+  data/testdata/testdata.yaml: 49 generated, 15 from the world-economy and news-and-markets samples, the captured quotes and headlines),
+  not 64: GETTING_STARTED (twice), PACKS, DEVELOPER_GUIDE, DEMO_DATA, tutorial 1 (twice), the Windows QA guide, data/testdata/README.
+  test_testdata checks every one against the manifest.
+- **Fixed (QA2-204): `drishti.py bi statement preview` and `file` say when a table was cut.** Each table that stops at
+  `drishti.distribution.statements.max-rows` is printed on a `cut:` line (`cut: Positions: The first 10,000 rows only: …`), from the
+  preview's `cut` and from the file's new `X-Statement-Cut` headers (one per cut table, URL-encoded), as the PDF's note says it.
+  CLI_GUIDE `bi statement`, STATEMENTS, API_GUIDE; test_cli_bistatement, StatementRowsTest.
+- **Fixed (QA2-203): `iceberg-external` names what it looked for when a table folder has no metadata, and says DEGRADED.** Health
+  and Admin → Connectors read `qa-ghost: no table qa.ghost: looked in <root>/qa/ghost/metadata for version-hint.text,
+  v<N>.metadata.json and a catalog's NNNNN-<uuid>.metadata.json (the folder is empty)` (or what stray files it holds), and a
+  connector with a configured table it cannot serve (missing, no id) is `DEGRADED`, no longer `UP (…)` with level ok.
+  ICEBERG_EXTERNAL_CONNECTOR section 2; IcebergExternalPluginTest.
+- **Fixed (QA2-202): a read during a connector file swap waits for the new connector.** While a connector of the kind is being
+  restarted (its file changed, Delta to Cassandra and back, a retry), an entity read (`/entities/…`, views) waits for the new instance,
+  up to 30 s as a BI query already did, instead of answering `404 DRS-1002 connector trade-endur is running` for its drain and start
+  (3 to 5 s). A start that takes longer answers `503 DRS-1015 connector … is restarting`. CONNECTOR_FILES section 13, API_GUIDE,
+  TROUBLESHOOTING; SourceRouterRestartTest.
+- **Fixed (QA2-201): the demo's market data is one picture each day.** A day's FX `BID` and `ASK` keep their spread around the moved
+  `MID` (it lay outside them on 59 of 60 days); a bond's `YIELD` moves against its `PRICE` by the modified duration, its `Z_SPREAD` with
+  the credit share of that move and its `MOD_DURATION` with the yield and the bond's age (all three never changed). Audited and fixed
+  the same way: an equity's `PRICE` and a commodity's `FRONT` are the close of their own `OHLC` bar of the day, an index `LEVEL` its
+  `HISTORY` close; embedded series end on their day (no future points); an equity's `MARKET_CAP` follows its price; fixings end on the
+  day with `LATEST` the newest and `RATE_PCT` = `RATE` × 100; the IR and repo curves of a currency move together (zero rates, quotes,
+  discount factors, forwards, `TEN_Y`, `SLOPE_2S_10S`, `OVERNIGHT`; `BUILT_AT` the day's, and `lake demo` moves it with the dates); a
+  commodity curve follows its commodity's `FRONT`, an FX forward curve its pair's `MID`. Credit curves and vol surfaces stay as on the
+  last day (internally consistent). `tools/testdata/marketdays.py`; data/testdata regenerated (115 MB, no file over 5 MB);
+  `tools/testdata/test_market_quotes.py` checks every committed day; data/testdata/README.
 - **Added: `lake demo` says how far a table has got**: every ten committed days a line `trading/trade_endur: committed 20/60 days, 90,023 rows so far (through 2026-08-19)`, besides the table's closing line and `build_demo_lakes.py`'s heartbeat.
 
 - **Faster: `lake build` and `lake demo` with the deltalake writer make one commit per business date** (every partition of the date in it; one per partition only with `overwrite-partitions`) and a checkpoint every ten commits. Sixty days of `trade_endur` (five product types) were 300 commits, each replaying the whole log (98 s on Linux, far longer on Windows, where each log file is opened and scanned); now 60 commits with a short log, the same rows.

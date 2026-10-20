@@ -59,9 +59,9 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    2026-07-08 to 2026-09-30, `--as-of 2026-10-30` any other end); the documents' own dates of the day (`AS_OF`, `VALUATION_DATE`,
    `RUN_DATE`, `SOURCE_UPDATE_TIME`) move with them, and so does each point of a document's embedded market series (`HISTORY`, `OHLC`,
    `FIXINGS`, `PNL_SERIES`: its `DATE`, by the same number of business days), so a price history has no missing days between the series
-   and the stored days. A market document's `CHANGE_1D` is the day's move of its own price (`PRICE`, `LEVEL`, `MID`). Measured for sixty days on a fast machine: **943 s (about 15 minutes; up to half an hour on a laptop)**,
-   64 tables, about 2.2 GB on disk (16 tables are static reference data built from the world-economy and
-   news-and-markets packs' samples).
+   and the stored days. A market document's `CHANGE_1D` is the day's move of its own price (`PRICE`, `LEVEL`, `MID`), and the fields quoted next to the price move with it ([below](#the-datasets)). Measured for sixty days on a fast machine: **943 s (about 15 minutes; up to half an hour on a laptop)**,
+   66 tables, about 2.2 GB on disk (15 tables are static reference data built from the world-economy and
+   news-and-markets packs' samples, 2 the captured quotes and headlines).
 4. **Start** the server and the console: the run configurations **Drishti server (demo lakes)** (the samples off,
    `DRISHTI_DEMO_ENABLED=false`, so every page reads the lakes; with the samples on, a sample answers before the lake for an id both
    hold) and **Drishti console**. The server reads `data/delta` by default (`DRISHTI_DELTA_ROOT` moves it).
@@ -189,6 +189,18 @@ a counterparty lists its netting sets. Earlier days move the market-sensitive nu
 by a deterministic walk and carry their own date in `AS_OF`, `VALUATION_DATE` and `RUN_DATE`; a valuation exists from its trade's
 booking day; a netting set's `TRADE_IDS` lists the trades booked by that day.
 
+**Market data is one picture each day** (`tools/testdata/marketdays.py`, QA2-201). An equity's `PRICE` and a commodity's `FRONT` are
+the close of the document's own `OHLC` bar of that day, an index `LEVEL`, an FX `MID` and a bond `PRICE` the day's point of its own
+`HISTORY`; the embedded series are the trailing window ending on the day (no point after it; points before the series' first are walked
+back with its own volatility). Next to the price: an FX `BID` and `ASK` keep the spread around `MID`; a bond's `YIELD` moves against its
+price by the modified duration (`dy = -dP/P / D`), `Z_SPREAD` takes the credit share of that move and `MOD_DURATION` follows the yield and
+the bond's age; an equity's `MARKET_CAP` moves with its price. A fixing index's `FIXINGS` end on the day (`LATEST` the newest, `RATE_PCT`
+= `RATE` × 100). The IR and repo curves of a currency move together by one shift and twist a day (`ZERO_RATE`, `QUOTE`, `DF`,
+`FORWARDS`, `TEN_Y`, `SLOPE_2S_10S`, `OVERNIGHT`; `BUILT_AT` the day's); a commodity curve is scaled to its commodity's `FRONT`, an FX
+forward curve to its pair's `MID`. Credit curves, vol surfaces and cubes, dividend, inflation and correlation documents keep the last
+day's values. `tools/testdata/test_market_quotes.py` checks every committed day: no `MID` outside `BID`/`ASK`, no bond price and yield
+up together, no headline that is not its own series' point, no curve apart from its underlier.
+
 **Files.** One document a line, gzip, sorted by key: `snapshot-<first day>.jsonl.gz`, then `changes-<day>.jsonl.gz` for each later day
 (the documents new or different that day, whole; an empty file when nothing changed). A file that would pass 9 MB is split into
 `.part-001`, `.part-002` … (`--part-mb`). A day's state is the snapshot with every change up to that day applied by key.
@@ -277,9 +289,9 @@ so their charts are flat.
 ## Regenerating
 
 ```bash
-python3 tools/testdata/make_testdata.py           # about 20 s; rewrites the dataset folders and testdata.yaml (this README stays)
+python3 tools/testdata/make_testdata.py           # a few minutes; rewrites the dataset folders and testdata.yaml (this README stays)
 python3 tools/testdata/make_testdata.py --check   # fails when the files differ from what would be written
-python3 -m unittest -q tools/testdata/test_testdata.py
+python3 -m unittest -q tools/testdata/test_testdata.py tools/testdata/test_market_quotes.py
 ```
 
 The generator builds on the banking generators (`tools/packgen/banking`, `tools/packgen/trades`): change those, regenerate the

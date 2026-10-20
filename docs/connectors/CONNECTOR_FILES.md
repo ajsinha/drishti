@@ -489,6 +489,8 @@ A bad file shows in **Admin → Health** (`connectors.badFiles`, overall status 
 **Concurrency.** One reconfiguration at a time **per connector**; different connectors reconfigure in parallel. The old instance is
 taken out of routing at once, stays open for `connectors-drain` (3 s) so reads in flight finish on it, then closes; the new one starts
 after. Connectors you did not touch are not interrupted. A connector's place in the read order is kept across restarts.
+A read of one of its kinds meanwhile (an entity, a view, a query) waits for the new instance, up to 30 s, instead of answering
+"no source" or "not found"; a start that takes longer answers `503 DRS-1015 connector … is restarting`.
 
 **The data changes, not the file.** A connector file does not change when its lake is rebuilt. The Delta connector checks each table's
 latest version every `refresh-seconds` (10 s) and keys everything it caches by the table's version **and** commit time, so a table
@@ -840,7 +842,8 @@ The panel itself is now a **view** of the pack's connectors with links to Admin 
 - **What the server keeps about the files is in the data folder**, visible (`generated/`, `history/`), so the connector folder holds
   only what the site wrote.
 - **Restarts drain.** A restart waits `connectors-drain` before closing the old instance so reads in flight finish; during that window
-  and the new instance's start the connector's kinds are not served.
+  and the new instance's start the connector's kinds are not served: their reads wait for the new instance (up to 30 s, then
+  `DRS-1015`).
 
 ## 14. Connection pools
 

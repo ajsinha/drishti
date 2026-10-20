@@ -1673,6 +1673,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-1012 | 404 | history not kept | history queries: the kind keeps no daily history here (`history: {enabled: false}` for it in its pack, `drishti.history.enabled` off, or every connector of the kind holds today's data only and the pack declares no embedded `series:`) |
 | DRS-1013 | 404 | history: no data | the entity exists but has no data in the range asked; widen the range or move the date box |
 | DRS-1014 | 504 | history timeout | no day of the range was read within `drishti.history.timeout`, or `max-concurrent` history requests were running; when some days were read the answer is `200` with `partial: true` and the others in `problems` |
+| DRS-1015 | 503 | connector restarting | the connector the kind is routed to is being restarted (its file changed, a retry) and was not back within 30 s; a read waits that long for it (and for any connector of the kind being restarted) before answering; try again |
 | DRS-2001 | 422 | sutra parse | the Sutra text cannot be parsed |
 | DRS-2002 | 422 | sutra invalid | the Sutra parsed but has problems (listed in `problems`) |
 | DRS-2003 | 404 | sutra not found | no Sutra with that name and version |
@@ -2621,7 +2622,7 @@ with errors), `403 DRS-9002` for draft YAML without `bi-author`.
 | Method | Path | What it does |
 |---|---|---|
 | `POST` | `/bi/reports/statement/preview` | body `{report: <id>` or `yaml: <draft report>, page?, state?, date?}`: `{title, period, paper: {size, orientation, margins}, width, height, pageCount, pages: [{number, ops: [...]}], tokens, rows}`. `state` is the view state (`params`, `slicers`, `dates`); `date` the statement's date, from which its `period` is worked out. Each op is `{t: text, x, y, size, bold, rgb, text, role}` (`role`: `header`, `footer`, `title`, `head`, `group`, `cell`, `text`, `label`, `value`, `note`), `{t: rule, x1, y1, x2, y2, w, rgb}` or `{t: fill, x, y, w, h, rgb}`, in points from the page's lower left corner: what the PDF draws |
-| `POST` | `/bi/reports/statement/file` | the same body and `format`: `pdf` (default) or `xlsx`; the file with `Content-Disposition: attachment` (*Monthly statement October 2026 wes.pdf*) and `X-Statement-Pages` |
+| `POST` | `/bi/reports/statement/file` | the same body and `format`: `pdf` (default) or `xlsx`; the file with `Content-Disposition: attachment` (*Monthly statement October 2026 wes.pdf*), `X-Statement-Pages` and one `X-Statement-Cut` per table cut at `max-rows` (the preview's `cut` text, URL-encoded) |
 
 A model query (`/bi/mq`, `mq: 2`) may name a field parameter of measures among `select.measures` (`param.metric`), and `param.<name>` in `sort`, as in `select.fields`.
 

@@ -289,6 +289,36 @@ class IcebergExternalPluginTest {
     }
 
     @Test
+    void aTableFolderWithoutMetadataNamesTheFilesLookedForAndDegradesTheConnector() throws Exception {
+        Path meta = lake.resolve("qa").resolve("ghost").resolve("metadata");                 // QA2-203
+        java.nio.file.Files.createDirectories(meta);
+        Map<String, String> ghost = Map.of("tables.qa-ghost.table", "qa.ghost", "tables.qa-ghost.id", "POSITION_ID");
+        try {
+            IcebergExternalPlugin p = plugin(ghost);
+            try {
+                assertThat(p.health()).startsWith("DEGRADED: ").contains("qa-ghost: no table qa.ghost: looked in ")
+                        .contains("version-hint.text, v<N>.metadata.json and a catalog's NNNNN-<uuid>.metadata.json (the folder is empty)");
+                assertThat(p.notServed().get("qa-ghost")).contains("qa/ghost/metadata");
+                assertThat(p.fetch(EntityRef.of("currency", "JPY"), AsOf.of(LocalDate.of(2020, 1, 1)))).as("the other tables still served").isPresent();
+            } finally {
+                p.close();
+            }
+            java.nio.file.Files.writeString(meta.resolve("00001-abc.metadata.json.tmp"), "{}");
+            p = plugin(ghost);
+            try {
+                assertThat(p.health()).startsWith("DEGRADED: ").contains("(it holds 00001-abc.metadata.json.tmp)");
+            } finally {
+                p.close();
+            }
+        } finally {
+            java.nio.file.Files.deleteIfExists(meta.resolve("00001-abc.metadata.json.tmp"));
+            java.nio.file.Files.deleteIfExists(meta);
+            java.nio.file.Files.deleteIfExists(meta.getParent());
+            java.nio.file.Files.deleteIfExists(meta.getParent().getParent());
+        }
+    }
+
+    @Test
     void theLibraryEngineIsRefused() {
         assertThatThrownBy(() -> plugin(Map.of("engine", "library"))).hasMessageContaining("drishti-iceberg");
     }

@@ -111,7 +111,8 @@ The server lays the pages out (`StatementLayout`), so the PDF, the preview and t
 * Rows of bands go top to bottom; a row is as tall as its tallest band and is never split. Text that is taller than a page flows line by line.
 * A **table** holds every row of its query, up to `drishti.distribution.statements.max-rows` (10,000), not the 5,000 rows one answer to the screen
   holds: the statement asks for them all. A longer table stops there and says so in a note above it (*The first 10,000 rows only: the table goes on*), in
-  the preview's `cut` and in the Excel file's notes; narrow it with filters or parameters, or raise `max-rows`.
+  the preview's `cut`, the file's `X-Statement-Cut` headers, the Excel file's notes and `drishti.py bi statement`'s `cut:` lines; narrow it
+  with filters or parameters, or raise `max-rows`.
 * A table **sorted by a measure masked for the reader** is drawn in the query's own order, with the note *Not sorted: 'MTM' is masked for you, and its order
   would tell the masked figures* (never *No rows.*).
 * A **card** with no value (a sum of no rows, a day with no data) reads `–`, as a masked one does; a count reads its number.
@@ -186,7 +187,7 @@ analyst's every trade with MTM masked; and two recipients of the same role and d
 | Method | Path | What it does |
 |---|---|---|
 | `POST` | `/api/v1/bi/reports/statement/preview` | body `{report: <id>` or `yaml: <draft>` (needs `bi-author`)`, page?, state?, date?}`: `{title, period, paper {size, orientation, margins}, width, height, pageCount, pages [{number, ops [...]}], tokens, rows, cut, hint}` (`cut`: each table that stops at `max-rows`, in words; empty when none; `hint`: *No data is held for …* when no band has data for the dates, else null); each op is a `text` (`x`, `y`, `size`, `bold`, `rgb`, `text`, `role`: `header`, `footer`, `title`, `head`, `group`, `cell`, `text`, `label`, `value`, `note`), a `rule` or a `fill`, in points from the page's lower left corner |
-| `POST` | `/api/v1/bi/reports/statement/file` | the same body plus `format: pdf` (default) or `xlsx`: the file, made for the caller, with `X-Statement-Pages`; any other format is `422 DRS-9038` *a statement is made as pdf or xlsx* |
+| `POST` | `/api/v1/bi/reports/statement/file` | the same body plus `format: pdf` (default) or `xlsx`: the file, made for the caller, with `X-Statement-Pages` and one `X-Statement-Cut` per table cut at `max-rows` (the preview's `cut` text, URL-encoded UTF-8); any other format is `422 DRS-9038` *a statement is made as pdf or xlsx* |
 | `POST` | `/api/v1/export/pdf` · `/xlsx` | a statement page as for any export (`{type: report, id, page, state?, date?}`): the statement |
 
 Captured on the test stack of `drishti-console/tests/test_bi_wave_d_browser.py` with the report of tutorial 20

@@ -226,9 +226,12 @@ class FakeServer(BaseHTTPRequestHandler):
         body = self.rfile.read(n) if n else b""
         FakeServer.requests.append((self.command, self.path, self.headers.get("Authorization"), self.headers.get("X-Drishti-User"),
                                     self.headers.get("Content-Type"), body))
-        status, payload = FakeServer.routes.get((self.command, self.path.split("?")[0]), (404, {"title": "nope", "detail": "no route", "code": "DRS-1000"}))
+        route = FakeServer.routes.get((self.command, self.path.split("?")[0]), (404, {"title": "nope", "detail": "no route", "code": "DRS-1000"}))
+        status, payload, more = route[0], route[1], (route[2] if len(route) > 2 else [])   # more: [(header, value)] to send as well
         raw = payload if isinstance(payload, bytes) else json.dumps(payload).encode()
         self.send_response(status)
+        for k, v in more:
+            self.send_header(k, v)
         self.send_header("Content-Type", "application/zip" if isinstance(payload, bytes) else "application/json")
         self.send_header("Content-Length", str(len(raw)))
         self.end_headers()

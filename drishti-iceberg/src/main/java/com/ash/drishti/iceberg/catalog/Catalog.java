@@ -33,6 +33,14 @@ public interface Catalog extends AutoCloseable {
     /** The table, or empty when it does not exist. */
     Optional<Table> load(String name) throws IOException;
 
+    /**
+     * Why {@link #load} found no table {@code name}, for Health: at least {@code no table <name>}; a path-based catalog adds the files it
+     * looked for and what the metadata folder holds instead.
+     */
+    default String missing(String name) {
+        return "no table " + name;
+    }
+
     /** The tables there are, sorted. */
     List<String> tables() throws IOException;
 
