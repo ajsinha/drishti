@@ -33,7 +33,7 @@ yet (drishti-iceberg and iceberg-external; Cassandra). Related: [HOW_IT_FITS.md]
 15. [Extras: DIFF, export, CLI, BI, plain words](#15-extras-diff-export-cli-bi-plain-words) · 16. [Errors](#16-errors) ·
 17. [The data flow](#17-the-data-flow) · 18. [Build steps](#18-build-steps-h1h14) · 19. [Tests](#19-tests) ·
 20. [Docs to update](#20-docs-to-update-when-it-is-built) · 21. [Where the code forced a change](#21-where-the-code-forced-a-change-from-the-agreed-design) ·
-22. [Open questions](#22-open-questions)
+22. [Open questions](#22-decisions-on-the-open-questions-product-owner-2026-10-20)
 
 ## 1. The ask
 

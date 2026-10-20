@@ -32,7 +32,7 @@ history queries ([HISTORY_QUERIES.md](HISTORY_QUERIES.md)).
 13. [Keys](#13-keys) · 14. [Themes and accessibility](#14-themes-and-accessibility) · 15. [Edge cases](#15-edge-cases) ·
 16. [Endpoints](#16-endpoints) · 17. [Settings](#17-settings) · 18. [Build steps C1..C10](#18-build-steps-c1c10) · 19. [Tests](#19-tests) ·
 20. [Docs to update when it is built](#20-docs-to-update-when-it-is-built) · 21. [What the real code changed](#21-what-the-real-code-changed) ·
-22. [Open questions](#22-open-questions)
+22. [Decisions on the open questions](#22-decisions-on-the-open-questions-product-owner-2026-10-20)
 
 ## 1. The ask
 
