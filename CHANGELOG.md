@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **Fixed (QA1-11): `DRS-1013` says when the entity has data** (*… has no data from 2026-09-01 to 2026-09-30; its days with data run
+  from 2026-10-09 to 2026-10-20*), and for a number of days names the business days walked, not the whole `max-days` span as dates.
+- **Fixed (QA1-18): a mnemonic, a plural or an unknown field in a history request is named.** `history TRD 1000001` answers
+  *TRD is a mnemonic: use the kind trade*, `history trades …` *unknown kind trades: did you mean trade?* (`DRS-4004`), and a field in
+  `fields` that no day has is `DRS-4004` instead of being dropped; a top-level field that is no column (`TRADER_ID`) is shown.
 - **Fixed (QA1-08): the documented plain-words history phrases work for market kinds and bare ids.** `equity EQ-CSCA last 3 months`
   (an id that is also a field's value), `fx audusd since 2026-10-01` (an id named by its end) and `1000015 30` (a bare id with a range)
   open the history instead of becoming searches; `BOOK-RATES-3 last week` is the book's history; `trades in BOOK-RATES-3 since …` stays a

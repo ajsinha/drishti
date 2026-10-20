@@ -314,7 +314,13 @@ public final class HistoryService {
                 throw de;
             }
         }
-        throw new DrishtiException(ErrorCode.HISTORY_NO_DATA, ref + " has no data from " + w.from() + " to " + w.to());
+        // QA1-11: say when it has data, so the page can offer that span
+        String held = router.daysHeld(ref, dates.earliest(), dates.current())
+                .map(d -> d[0].equals(d[1]) ? "; its only day with data is " + d[0] : "; its days with data run from " + d[0] + " to " + d[1])
+                .orElse("");
+        String span = HistoryWindow.DATA_DAYS.equals(w.mode()) ? " in the " + w.dates().size() + " business days to " + w.to()
+                : " from " + w.from() + " to " + w.to();
+        throw new DrishtiException(ErrorCode.HISTORY_NO_DATA, ref + " has no data" + span + held);
     }
 
     private static List<String> missing(HistoryWindow w, LocalDate shownFrom, LocalDate gapsTo, List<HistoryAnswer.Row> rows,

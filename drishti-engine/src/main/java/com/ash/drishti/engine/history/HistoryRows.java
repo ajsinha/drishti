@@ -270,6 +270,27 @@ public final class HistoryRows {
         for (HistorySpec.Column c : spec.chart()) {                        // a chart field is always a column
             add(out, c, keyColumns.contains(c.key()));
         }
+        if (!wanted.isEmpty()) {
+            // QA1-18: a field asked for that is no column but is in the documents is shown; one in none of them is named, not dropped
+            List<String> unknown = new ArrayList<>();
+            for (String f : wanted) {
+                if (out.containsKey(f)) {
+                    continue;
+                }
+                String t = top(f);
+                boolean seen = docs.stream().anyMatch(d -> d instanceof DataNode.Obj o && o.fields().containsKey(t));
+                if (seen && t.equals(f) && docs.stream().anyMatch(d -> d instanceof DataNode.Obj o && o.fields().containsKey(f)
+                        && scalar(o.fields().get(f)))) {
+                    add(out, new HistorySpec.Column(f, null, null, null), keyColumns.contains(f));
+                } else if (!seen) {
+                    unknown.add(f);
+                }
+            }
+            if (!unknown.isEmpty()) {
+                throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.BAD_SEARCH, "no " + spec.kind()
+                        + " has " + (unknown.size() == 1 ? "a field " : "the fields ") + String.join(", ", unknown) + " on these days");
+            }
+        }
         List<Col> list = new ArrayList<>(out.values());
         if (!wanted.isEmpty()) {
             list.removeIf(c -> !wanted.contains(c.key));

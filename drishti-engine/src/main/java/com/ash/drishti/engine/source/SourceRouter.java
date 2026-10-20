@@ -885,6 +885,30 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
     }
 
     /** The newest business date any source of the kind holds (empty when none can say). */
+    /**
+     * The first and last business dates on which {@code ref} has data between {@code from} and {@code to}, from the local dated sources
+     * that can list an entity's days cheaply ({@link SourcePlugin#days}); empty when none of them can say or none holds a day (QA1-11).
+     */
+    public Optional<java.time.LocalDate[]> daysHeld(EntityRef ref, java.time.LocalDate from, java.time.LocalDate to) {
+        java.time.LocalDate first = null;
+        java.time.LocalDate last = null;
+        for (SourcePlugin p : candidates(ref.kind())) {
+            if (!p.manifest().capabilities().dated()) {
+                continue;
+            }
+            try {
+                Optional<java.util.NavigableSet<java.time.LocalDate>> d = p.days(ref, from, to);
+                if (d.isPresent() && !d.get().isEmpty()) {
+                    first = first == null || d.get().first().isBefore(first) ? d.get().first() : first;
+                    last = last == null || d.get().last().isAfter(last) ? d.get().last() : last;
+                }
+            } catch (RuntimeException e) {
+                // a source that cannot say does not stop the others
+            }
+        }
+        return first == null ? Optional.empty() : Optional.of(new java.time.LocalDate[] {first, last});
+    }
+
     public Optional<java.time.LocalDate> latestDate(String kind) {
         Optional<java.time.LocalDate> out = Optional.empty();
         for (SourcePlugin p : candidates(kind)) {

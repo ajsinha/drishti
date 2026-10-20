@@ -287,7 +287,7 @@ it), `max-rows` rows and `timeout` for the whole request.
 | `DRS-4021` *366 business days at most (asked 500)* | the range is larger than allowed | narrow it with `FROM … TO`, or follow the page's *The last 30 days* link |
 | `DRS-4022` *FROM 2026-10-30 is after TO 2026-10-19* | the dates are the wrong way round | put the earlier date first |
 | `DRS-4022` *'-5' is not a range: use a number of days (30), a span …* | a range typed after the id that cannot be read (`0`, `-5`, `1.5M`, `3X`, `FROM yesterday`, `DIFF DIFF`, `30 30`, a bare `DIFF`) | type it as the message says; the command line shows the message, never today's view |
-| `DRS-1013` *no data from … to …* | the entity has no data in the range | the message names its first day with data |
+| `DRS-1013` *no data from … to …* | the entity has no data in the range | the message says from when to when it has data (*its days with data run from … to …*) |
 | `DRS-1012` *keeps no daily history here* | the kind's connector holds today's data only, or the pack turned history off | today's view is one link away |
 | *Some days could not be read* | a source did not answer for some days in time (`DRS-1014`) | the rows that were read are shown, and the banner lists the missing days |
 

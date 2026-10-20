@@ -114,6 +114,7 @@ public class HistoryController {
             @RequestParam(required = false) String fields, @RequestParam(defaultValue = "false") boolean diff,
             @RequestParam(required = false) String knownAt, @RequestParam(defaultValue = "asc") String order,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        refuseUnknownKind(kind);
         entitlements.requireOpen(principal, kind);
         java.time.Instant known = current.knownAt();
         if (knownAt != null && !knownAt.isBlank()) {
@@ -129,6 +130,35 @@ public class HistoryController {
         HistoryService.Query q = new HistoryService.Query(kind, id, days, range, from, to, wanted, diff, known,
                 "desc".equalsIgnoreCase(order), current.businessDate());
         return history.read(q, HistoryService.Viewer.of(d -> entitlements.redact(principal, d), f -> entitlements.masked(principal, f)));
+    }
+
+    private com.ash.drishti.engine.command.Mnemonics mnemonics;
+    private com.ash.drishti.server.security.PackAccess packs;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void kinds(com.ash.drishti.engine.command.Mnemonics m, com.ash.drishti.server.security.PackAccess p) {
+        this.mnemonics = m;
+        this.packs = p;
+    }
+
+    /**
+     * A mnemonic or a plural where the kind belongs (QA1-18): {@code TRD} says to use {@code trade}, {@code trades} says it is no kind,
+     * instead of "no source holds TRD/1000001". A kind no pack owns and that looks like neither is left to the sources, as before.
+     */
+    private void refuseUnknownKind(String kind) {
+        if (mnemonics == null || packs == null || kind == null || packs.ownerOf(kind) != null) {
+            return;
+        }
+        var m = mnemonics.of(kind.toUpperCase(java.util.Locale.ROOT));
+        if (m.isPresent() && !m.get().kind().equals(kind)) {
+            throw new DrishtiException(ErrorCode.BAD_SEARCH, kind + " is a mnemonic: use the kind " + m.get().kind() + " (history "
+                    + m.get().kind() + " <id>)");
+        }
+        for (String singular : java.util.List.of(kind.replaceAll("ies$", "y"), kind.replaceAll("es$", ""), kind.replaceAll("s$", ""))) {
+            if (!singular.equals(kind) && packs.ownerOf(singular) != null) {
+                throw new DrishtiException(ErrorCode.BAD_SEARCH, "unknown kind " + kind + ": did you mean " + singular + "?");
+            }
+        }
     }
 
     /** {@link #rows} for an id a path cannot carry ({@code /}, {@code \}, {@code ..}): {@code /api/v1/history/{kind}/~?id=}. */
