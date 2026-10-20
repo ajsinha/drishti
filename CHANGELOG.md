@@ -17,6 +17,15 @@
 
 ## Unreleased
 
+- **Added: the Drishti\*net soak exercises history queries and runs for hours** (`tools/bench/net_soak.py`, `users.py`, new
+  `soak_check.py`): `--history-share` (0.15) of the load asks histories (30 and 60 days, 3M, DIFF, *known at*; trades held only by a peer,
+  counterparties, `--equities`), `history` its own line of the latency and error table; the checker compares history answers with the
+  reference server row by row (dates, values, changed flags, masked columns, as administrator and as viewer) and, while a node is killed,
+  accepts only complete answers or partial/refused ones naming it (`DRS-5052`, or `DRS-1014`), never a silent short answer or `DRS-1013`.
+  Every minute each process's memory, heap, open files and threads are sampled, and the report ends with a verdict (no wrong answers,
+  errors only in kill windows, p95/p99 per action, memory flat after warm-up) that sets the exit code; `--days`, `--kill-grace`,
+  `--sample-every`, `--warmup`, `--max-growth`, `--max-p99`. Unit tests without servers: `tools/bench/test_net_soak.py`. DRISHTI_NET.md
+  section 17.1, TOOLS.md.
 - **Added: `build_demo_lakes.py` says it is alive**: every 30 s (`DRISHTI_HEARTBEAT_SECONDS`) a line with the step, the time so far, the lake's size and the table being written, so a long `lake demo` or `lake build` never looks stuck.
 - **Fixed (QA1-205): a `knownAt` before the data names the right thing.** `DRS-1013` now says nothing of the entity in that window was
   known at that instant, and names its days with data *as known now*, which may have been loaded later (*ask without knownAt, or with a

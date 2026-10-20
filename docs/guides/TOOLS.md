@@ -979,7 +979,8 @@ of Parquet.
 | `tools/maps/build_regions.py` | builds the vendored region maps from Natural Earth |
 | `tools/packreg/packreg.py` | the signed pack registry behind `pack publish`, `pack keygen` and `pack install` |
 | `tools/bench/trades.py` | synthetic trades of the real ENDUR, CALYPSO and MUREX shapes at scale (`--min`/`--max` a day per system, `--days`, `--counterparties`, with netting sets), trades repeat across days and change like a full daily dump (about 5 % amended a day, a few cancelled), loaded day by day through `lake build`; `--parallel` loads a day's tables side by side, `--order random` loads the days in a shuffled order, `--skip`/`--start` resume a run; writes only under `--lake` and `--tmp`; `--dry-run` says the days and counts ([SCALE_BENCHMARK.md section 9](../admin/SCALE_BENCHMARK.md)) |
-| `tools/bench/users.py` | simultaneous users against a server's API (`--server`, `--token-file`) or a console's pages (`--console`, `--user`, `--password`) for `--seconds`: a mix of single trades, counterparty pages, netting sets and searches; one JSON line with requests a second and p50/p95/p99 and failures per kind of request |
+| `tools/bench/users.py` | simultaneous users against a server's API (`--server`, `--token-file`) or a console's pages (`--console`, `--user`, `--password`) for `--seconds`: a mix of single trades, counterparty pages, netting sets and searches, and with `--history-share` that share of histories (30 and 60 days, 3M, DIFF, now and then *known at*; `--equities` adds equities); one JSON line with requests a second, p50/p95/p99 and failures per kind of request, and the failures per 10 s (`failedBuckets`) |
+| `tools/bench/net_soak.py` (with `tools/bench/soak_check.py`) | the Drishti\*net soak on real processes: three servers, a console, `users.py` load, a shard and the seed killed and restarted, every answer (views, searches, histories as administrator and viewer) checked against one server holding all the data; samples memory, heap, open files and threads every minute and ends with a verdict (no wrong answers, errors only in kill windows, p95/p99 per action, memory flat after warm-up), exit `0` only when it passes ([DRISHTI_NET.md section 17.1](../architecture/DRISHTI_NET.md#171-the-soak-with-history-queries-and-long-runs-265)) |
 | `tools/bench/scale.sh`, `tools/bench/pinning.sh` | the scale benchmark per store and size, and the virtual-thread pinning comparison (Java 21 / 25); they start and stop their own servers by process id |
 | `tools/windows/start-server.ps1`, `tools/windows/start-console.ps1`, `tools/windows/load-delta.ps1` | starting the server and console, and loading the demo lake, on Windows |
 | `tools/smoke.py` | the engine of `drishti.py server smoke` |
@@ -990,6 +991,18 @@ $ python3 tools/license_headers.py
 $ echo $?
 0
 ```
+
+A two-hour soak, the shard killed at 20 minutes and the seed at 60 (on a workstation with no other heavy job running; nothing is written
+outside `--work`):
+
+```bash
+python3 tools/bench/net_soak.py --work ~/drishti-scale-test/net-2h --users 20 --seconds 7200 --days 10 \
+    --kill-shard-at 1200 --restart-shard-at 1500 --kill-seed-at 3600 --restart-seed-at 3900 \
+    --history-share 0.15 --sample-every 60 --warmup 600 --max-growth 64
+```
+
+It prints the latency and error table (one line per action, `history` its own) and the verdict, and keeps them in
+`<work>/soak-report.txt` beside the full `<work>/soak.json` (the per-minute samples are its `resources`).
 
 ## 10. The tools in the console
 

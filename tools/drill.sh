@@ -93,6 +93,7 @@ python_tool_tests() {
   python3 -m unittest -q tools/test_packmake.py
   python3 -m unittest -q tools/test_pack_authoring.py
   python3 -m unittest -q tools/test_cli_extras.py
+  python3 -m unittest -q tools/bench/test_net_soak.py   # the Drishti*net soak's checker (history, kill windows, memory, verdict): no servers
   python3 -m unittest -q tools/test_pack_deploy.py
   python3 -m unittest -q tools/test_deploy_aws.py      # deploy/aws: --help and --dry-run of every script (a fake aws fails if called), templates
   python3 -m unittest -q tools/test_cli_bi.py
