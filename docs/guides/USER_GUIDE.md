@@ -1999,7 +1999,7 @@ between them without the menu.
 | Packs | `/admin/packs` | Switch a domain pack off or on for everyone; deploy an archive; see which connectors a pack reads through (**Data source**, read only) |
 | Artifacts | `/admin/artifacts` | Everything installed in one list (packs, connector files, shipped BI files): see what depends on each, **disable** it, **uninstall** it to an archive and **restore** it, install a BI file ([ARTIFACTS.md](../admin/ARTIFACTS.md)) |
 | Connectors | `/admin/connectors` | Where data comes from: one connector per YAML file in `config/connectors/`; create, edit, test, switch off and see which packs use each ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)) |
-| Tokens | `/admin/tokens` | Every personal API token (never its secret), and revoking any of them ([CLIENTS.md](CLIENTS.md)) |
+| Tokens | `/admin/tokens` | Every personal API token (never its secret): its owner, its scopes (*read only* or what it may write), when it was last used (in the console's time zone, named), and revoking any of them ([CLIENTS.md](CLIENTS.md)) |
 | Access | `/admin/access` | Who read which entity, filtered by user, action, kind, id and dates ([USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)) |
 | AI | `/admin/ai` | The AI layer: off by default; providers, models, MCP servers and a test call ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md)) |
 | Data loads | `/admin/loads` | What your ETL announced, what is due and what is late ([DATA_LOADS.md](DATA_LOADS.md)) |

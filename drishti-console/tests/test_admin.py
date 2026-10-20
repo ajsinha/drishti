@@ -106,3 +106,23 @@ def test_the_health_page_draws_activity_and_page_times(client, backend, monkeypa
     assert "act-err" in page and "<polyline" in page and "13:29 UTC: 290 requests, average 49 ms, slowest 119 ms, 1 errors" in page
     assert "most <b class=\"mono\">290</b>" in page
     assert "data-page-times" in page and page.index("counterparty-trades") < page.index(">trade<") and "t-warn" in page   # p95 over 1 s marked
+
+
+def test_the_tokens_page_says_what_each_token_may_do_and_whose_clock_last_used_is_on(client, backend, monkeypatch):
+    """QA2-08: write-scoped tokens exist, so the page never says tokens change nothing; a Scopes column tells read-only from writing
+    tokens, and Last used is in the console's zone with its label (2026-10-20 12:54 UTC is 08:54 New York)."""
+    rows = [{"id": "t1", "user": "wes", "name": "Publisher", "createdAt": "2026-10-19T10:00:00Z", "expiresAt": "2026-11-18T10:00:00Z",
+             "lastUsedAt": "2026-10-20T12:54:00Z", "revokedAt": None, "active": True, "scopes": ["read", "bi:write"]},
+            {"id": "t2", "user": "ana", "name": "Notebook", "createdAt": "2026-10-19T10:00:00Z", "expiresAt": None,
+             "lastUsedAt": None, "revokedAt": None, "active": True, "scopes": ["read"]}]
+
+    async def admin(method, path, ident, body=None, **params):
+        assert path == "/tokens"
+        return rows
+    monkeypatch.setattr(backend, "admin", admin)
+    page = client.get("/admin/tokens").text
+    flat = " ".join(__import__("re").sub(r"<[^>]+>", "", page).split())
+    assert "never changes anything" not in page
+    assert "<th>Scopes</th>" in page
+    assert "writes bi:write" in flat and "read only" in flat
+    assert "2026-10-20 08:54 New York" in flat

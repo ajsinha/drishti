@@ -17,6 +17,9 @@
 
 ## Unreleased
 
+- **Fixed (QA2-08): Admin → Tokens no longer says tokens "never change anything"**: it says a read token only reads and a token with write
+  scopes may change what they name; a new **Scopes** column marks each token *read only* or *writes* with its scopes; *Last used* is in the
+  console's time zone with its name (`2026-10-20 08:54 New York`), as on the other Admin pages.
 - **Fixed (QA2-03): Crimson Terminal's accent buttons** (the statement designer's Save and Preview pages, and every `.btn-accent`) were a pale
   pink gradient of the text accent under white labels (about 2:1); they now run from `--d-fill` to `--d-fill-strong` with `--d-on-fill`. A new guard in
   `test_contrast.py` fails any button rule that fills from `--d-accent`, or writes `--d-on-fill` on another ground.
