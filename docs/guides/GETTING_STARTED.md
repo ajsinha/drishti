@@ -463,7 +463,8 @@ here, `writeMaxDays`). Revoke a token on the same page when you no longer use it
 - **Packs.** The box icon in the top bar shows how many packs you see (`7 packs`). Click it, untick the ones you do not need, and
   click **Apply**. The examples, suggestions and help follow your choice. You can only choose among packs the server loaded and an
   admin assigned to you.
-- **Themes.** The palette icon offers seven themes: Terminal, Parchment, Blue, Wall Street, Green, Crimson and Crimson dark.
+- **Themes.** The palette icon offers ten themes: Terminal, Parchment, Blue, Wall Street, Green, Crimson, Crimson dark, and the three
+  Terminal hues Green Terminal, Crimson Terminal and Blue Terminal ([USER_GUIDE.md › Themes](USER_GUIDE.md#themes): how to choose).
 - **Settings.** *My account → Settings* (`/account`) keeps your theme, the page to open after signing in (for example
   `/v/trade/1000001`), the clock's time zone, density, whether changes flash, and how many search results to show.
 
@@ -507,6 +508,9 @@ configurations), `docs/`, `tools/`, `external_lib/`.
   alerts, workspaces and settings are kept by the server under `./data`.
 - New demo data: run Step 5 again, with the server running or not (it is told, or clears its BI store at its next start).
 - Three servers as one cluster (Drishti\*net) with a console, on this machine: `drishti-stack/start.sh` ([drishti-stack/README.md](../../drishti-stack/README.md)).
+  The nodes advertise this machine's real address (`DRISHTI_STACK_HOST`, found by `start.sh`), never `127.0.0.1`: members of a cluster are
+  called by other machines, so a loopback or wildcard address is refused ([NET.md section 2](../admin/NET.md#2-a-cluster-of-three)). The
+  console listens on every interface: from another machine open `http://<this machine's address>:17480`.
 
 ## Running everything in Docker (optional)
 
