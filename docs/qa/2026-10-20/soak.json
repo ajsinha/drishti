@@ -1,0 +1,7388 @@
+{
+ "trades": {
+  "perSystemPerDay": 1500,
+  "dates": [
+   "2026-10-02",
+   "2026-10-05",
+   "2026-10-06",
+   "2026-10-07",
+   "2026-10-08",
+   "2026-10-09",
+   "2026-10-13",
+   "2026-10-14",
+   "2026-10-15",
+   "2026-10-16"
+  ],
+  "distinct": 4500
+ },
+ "requests": 2055,
+ "clusterUp": 38.3,
+ "consoleLearntAllIn": 1.9,
+ "kill-c": {
+  "consoleNextGoodPage": 0.02,
+  "searchAfter": [
+   200,
+   true
+  ],
+  "suspectOrDeadEverywhere": 3.6
+ },
+ "restart-c": {
+  "started": 22.1,
+  "rejoinedAllAlive": 22.2
+ },
+ "kill-a": {
+  "consoleNextGoodPage": 0.05,
+  "searchAfter": [
+   200,
+   true
+  ],
+  "suspectOrDeadEverywhere": 3.1
+ },
+ "a-peers.json": {
+  "nodeId": "drishti-a",
+  "savedAt": 1792514583142,
+  "self": {
+   "nodeId": "drishti-a",
+   "url": "http://192.168.2.77:18710",
+   "incarnation": 1,
+   "heartbeat": 3611,
+   "state": "alive",
+   "digestHash": "ea9bf305ca587e1e",
+   "version": "2.6.5",
+   "protocol": 1,
+   "tags": [],
+   "since": 1792510960441,
+   "drained": false
+  },
+  "members": [
+   {
+    "nodeId": "drishti-b",
+    "url": "http://192.168.2.77:18711",
+    "incarnation": 1,
+    "heartbeat": 3598,
+    "state": "alive",
+    "digestHash": "459304f9882af501",
+    "version": "2.6.5",
+    "protocol": 1,
+    "tags": [],
+    "since": 1792510972163,
+    "drained": false
+   },
+   {
+    "nodeId": "drishti-c",
+    "url": "http://192.168.2.77:18712",
+    "incarnation": 2,
+    "heartbeat": 2072,
+    "state": "alive",
+    "digestHash": "d8df9a33f9f03031",
+    "version": "2.6.5",
+    "protocol": 1,
+    "tags": [],
+    "since": 1792512503857,
+    "drained": false
+   }
+  ]
+ },
+ "restart-a": {
+  "started": 21.2,
+  "rejoinedAllAlive": 21.2
+ },
+ "users": {
+  "target": "console",
+  "users": 20,
+  "seconds": 7200,
+  "requests": 1491085,
+  "perSecond": 207.1,
+  "bucket": 10.0,
+  "failedBuckets": {
+   "history": {
+    "1792512190": 40,
+    "1792512200": 108,
+    "1792512210": 128,
+    "1792512220": 130,
+    "1792512230": 134,
+    "1792512240": 131,
+    "1792512250": 117,
+    "1792512260": 130,
+    "1792512270": 98,
+    "1792512280": 129,
+    "1792512290": 134,
+    "1792512300": 120,
+    "1792512310": 127,
+    "1792512320": 130,
+    "1792512330": 126,
+    "1792512340": 143,
+    "1792512350": 133,
+    "1792512360": 102,
+    "1792512370": 111,
+    "1792512380": 133,
+    "1792512390": 135,
+    "1792512400": 109,
+    "1792512410": 124,
+    "1792512420": 129,
+    "1792512430": 114,
+    "1792512440": 128,
+    "1792512450": 114,
+    "1792512460": 117,
+    "1792512470": 112,
+    "1792512480": 130,
+    "1792512490": 101,
+    "1792512500": 75,
+    "1792512510": 49
+   },
+   "trade": {
+    "1792512190": 167,
+    "1792512200": 742,
+    "1792512210": 761,
+    "1792512220": 755,
+    "1792512230": 668,
+    "1792512240": 797,
+    "1792512250": 623,
+    "1792512260": 773,
+    "1792512270": 691,
+    "1792512280": 755,
+    "1792512290": 764,
+    "1792512300": 679,
+    "1792512310": 659,
+    "1792512320": 742,
+    "1792512330": 737,
+    "1792512340": 690,
+    "1792512350": 773,
+    "1792512360": 752,
+    "1792512370": 712,
+    "1792512380": 696,
+    "1792512390": 742,
+    "1792512400": 647,
+    "1792512410": 656,
+    "1792512420": 673,
+    "1792512430": 648,
+    "1792512440": 672,
+    "1792512450": 678,
+    "1792512460": 700,
+    "1792512470": 658,
+    "1792512480": 640,
+    "1792512490": 563,
+    "1792512500": 509,
+    "1792512510": 285
+   }
+  },
+  "ctrd": {
+   "n": 127036,
+   "failed": 0,
+   "p50": 0.075,
+   "p95": 0.216,
+   "p99": 0.316
+  },
+  "history": {
+   "n": 223262,
+   "failed": 3841,
+   "p50": 0.103,
+   "p95": 0.236,
+   "p99": 0.328
+  },
+  "netting-set": {
+   "n": 63087,
+   "failed": 0,
+   "p50": 0.091,
+   "p95": 0.214,
+   "p99": 0.303
+  },
+  "search": {
+   "n": 63194,
+   "failed": 0,
+   "p50": 0.075,
+   "p95": 0.255,
+   "p99": 0.374
+  },
+  "trade": {
+   "n": 1014506,
+   "failed": 22007,
+   "p50": 0.072,
+   "p95": 0.208,
+   "p99": 0.304
+  }
+ },
+ "checker": {
+  "trade:right": 101231,
+  "search:right": 10979,
+  "history:right": 2046,
+  "ctrd:right": 1049,
+  "trade:right-links-pending": 335,
+  "trade:partial": 1633,
+  "search:partial": 531,
+  "ctrd:partial": 62,
+  "history:wrong": 32,
+  "history:partial": 20,
+  "trade:asked-a-node-going-down": 223,
+  "history:asked-a-node-going-down": 3,
+  "search:asked-a-node-going-down": 20,
+  "trade:unavailable": 1,
+  "ctrd:asked-a-node-going-down": 1
+ },
+ "wrong": [
+  {
+   "t": 1212.4,
+   "node": "a",
+   "q": {
+    "what": "history",
+    "kind": "trade",
+    "id": "CLY-30001298",
+    "params": {
+     "range": "3M"
+    },
+    "role": "viewer",
+    "date": "2026-10-16",
+    "refStatus": 200
+   },
+   "status": 200,
+   "got": {
+    "masked": [],
+    "window": {
+     "from": "2026-07-17",
+     "to": "2026-10-16",
+     "baseline": null,
+     "knownAt": null
+    },
+    "rows": [
+     {
+      "date": "2026-10-02",
+      "dataDate": "2026-10-02",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-05",
+      "dataDate": "2026-10-05",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-06",
+      "dataDate": "2026-10-06",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-07",
+      "dataDate": "2026-10-07",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-08",
+      "dataDate": "2026-10-08",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-09",
+      "dataDate": "2026-10-09",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-13",
+      "dataDate": "2026-10-13",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-14",
+      "dataDate": "2026-10-14",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-15",
+      "dataDate": "2026-10-15",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-16",
+      "dataDate": "2026-10-16",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     }
+    ]
+   },
+   "ref": {
+    "masked": [],
+    "window": {
+     "from": "2026-07-17",
+     "to": "2026-10-16",
+     "baseline": null,
+     "knownAt": null
+    },
+    "rows": [
+     {
+      "date": "2026-10-02",
+      "dataDate": "2026-10-02",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-05",
+      "dataDate": "2026-10-05",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-06",
+      "dataDate": "2026-10-06",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-07",
+      "dataDate": "2026-10-07",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-08",
+      "dataDate": "2026-10-08",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-09",
+      "dataDate": "2026-10-09",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-13",
+      "dataDate": "2026-10-13",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-14",
+      "dataDate": "2026-10-14",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-15",
+      "dataDate": "2026-10-15",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-16",
+      "dataDate": "2026-10-16",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     }
+    ]
+   },
+   "body": "{\"ref\": {\"kind\": \"trade\", \"id\": \"CLY-30001298\"}, \"mnemonic\": \"TRD\", \"title\": \"VALIDATED \\u00b7 845,600,000\", \"shape\": \"document\", \"basis\": \"documents\", \"window\": {\"asked\": \"3M\", \"from\": \"2026-07-17\", \"to\": \"2026-10-16\", \"days\": 64, \"mode\": \"calendar\", \"baseline\": null, \"missing\": [], \"knownAt\": null, \"loadedTo\": null, \"loadedFrom\": \"2026-10-02\"}, \"columns\": [{\"path\": \"TRADE_STATUS\", \"label\": \"Trade status\", \"type\": \"text\", \"format\": null, \"masked\": false, \"key\": true}, {\"path\": \"TRADE_ACTION\", \"label\": \"Trade action\", \"type\": \"text\", \"format\": null, \"masked\": false, \"key\": false}, {\"path\": \"TR"
+  },
+  {
+   "t": 1230.2,
+   "node": "b",
+   "q": {
+    "what": "history",
+    "kind": "counterparty",
+    "id": "CP-00089",
+    "params": {
+     "range": "3M"
+    },
+    "role": "admin",
+    "date": "2026-10-16",
+    "refStatus": 200
+   },
+   "status": 200,
+   "got": {
+    "masked": [],
+    "window": {
+     "from": "2026-07-17",
+     "to": "2026-10-16",
+     "baseline": null,
+     "knownAt": null
+    },
+    "rows": [
+     {
+      "date": "2026-10-02",
+      "dataDate": "2026-10-02",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-05",
+      "dataDate": "2026-10-05",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-06",
+      "dataDate": "2026-10-06",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-07",
+      "dataDate": "2026-10-07",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-08",
+      "dataDate": "2026-10-08",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-09",
+      "dataDate": "2026-10-09",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-13",
+      "dataDate": "2026-10-13",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-14",
+      "dataDate": "2026-10-14",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-15",
+      "dataDate": "2026-10-15",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-16",
+      "dataDate": "2026-10-16",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     }
+    ]
+   },
+   "ref": {
+    "masked": [],
+    "window": {
+     "from": "2026-07-17",
+     "to": "2026-10-16",
+     "baseline": null,
+     "knownAt": null
+    },
+    "rows": [
+     {
+      "date": "2026-10-02",
+      "dataDate": "2026-10-02",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-05",
+      "dataDate": "2026-10-05",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-06",
+      "dataDate": "2026-10-06",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-07",
+      "dataDate": "2026-10-07",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-08",
+      "dataDate": "2026-10-08",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-09",
+      "dataDate": "2026-10-09",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-13",
+      "dataDate": "2026-10-13",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-14",
+      "dataDate": "2026-10-14",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-15",
+      "dataDate": "2026-10-15",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-16",
+      "dataDate": "2026-10-16",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     }
+    ]
+   },
+   "body": "{\"ref\": {\"kind\": \"counterparty\", \"id\": \"CP-00089\"}, \"mnemonic\": \"CPTY\", \"title\": \"Counterparty 00089 \\u00b7 A\", \"shape\": \"document\", \"basis\": \"documents\", \"window\": {\"asked\": \"3M\", \"from\": \"2026-07-17\", \"to\": \"2026-10-16\", \"days\": 64, \"mode\": \"calendar\", \"baseline\": null, \"missing\": [], \"knownAt\": null, \"loadedTo\": null, \"loadedFrom\": \"2026-10-02\"}, \"columns\": [{\"path\": \"NAME\", \"label\": \"Name\", \"type\": \"text\", \"format\": null, \"masked\": false, \"key\": true}, {\"path\": \"RATING\", \"label\": \"Rating\", \"type\": \"text\", \"format\": null, \"masked\": false, \"key\": true}, {\"path\": \"SECTOR\", \"label\": \"Sector\", "
+  },
+  {
+   "t": 1273.2,
+   "node": "b",
+   "q": {
+    "what": "history",
+    "kind": "counterparty",
+    "id": "CP-00089",
+    "params": {
+     "range": "3M"
+    },
+    "role": "admin",
+    "date": "2026-10-16",
+    "refStatus": 200
+   },
+   "status": 200,
+   "got": {
+    "masked": [],
+    "window": {
+     "from": "2026-07-17",
+     "to": "2026-10-16",
+     "baseline": null,
+     "knownAt": null
+    },
+    "rows": [
+     {
+      "date": "2026-10-02",
+      "dataDate": "2026-10-02",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-05",
+      "dataDate": "2026-10-05",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-06",
+      "dataDate": "2026-10-06",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-07",
+      "dataDate": "2026-10-07",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-08",
+      "dataDate": "2026-10-08",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-09",
+      "dataDate": "2026-10-09",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-13",
+      "dataDate": "2026-10-13",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-14",
+      "dataDate": "2026-10-14",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-15",
+      "dataDate": "2026-10-15",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-16",
+      "dataDate": "2026-10-16",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     }
+    ]
+   },
+   "ref": {
+    "masked": [],
+    "window": {
+     "from": "2026-07-17",
+     "to": "2026-10-16",
+     "baseline": null,
+     "knownAt": null
+    },
+    "rows": [
+     {
+      "date": "2026-10-02",
+      "dataDate": "2026-10-02",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-05",
+      "dataDate": "2026-10-05",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-06",
+      "dataDate": "2026-10-06",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-07",
+      "dataDate": "2026-10-07",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-08",
+      "dataDate": "2026-10-08",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-09",
+      "dataDate": "2026-10-09",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-13",
+      "dataDate": "2026-10-13",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-14",
+      "dataDate": "2026-10-14",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-15",
+      "dataDate": "2026-10-15",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-16",
+      "dataDate": "2026-10-16",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "NAME": "Counterparty 00089",
+       "RATING": "A",
+       "SECTOR": null,
+       "COUNTRY_OF_RISK": "GB",
+       "UEN": null,
+       "NET_MTM": null,
+       "COUNTERPARTY_ID": "CP-00089"
+      },
+      "parts": {
+       "NETTING_SETS": 3
+      },
+      "changed": [],
+      "changes": null
+     }
+    ]
+   },
+   "body": "{\"ref\": {\"kind\": \"counterparty\", \"id\": \"CP-00089\"}, \"mnemonic\": \"CPTY\", \"title\": \"Counterparty 00089 \\u00b7 A\", \"shape\": \"document\", \"basis\": \"documents\", \"window\": {\"asked\": \"3M\", \"from\": \"2026-07-17\", \"to\": \"2026-10-16\", \"days\": 64, \"mode\": \"calendar\", \"baseline\": null, \"missing\": [], \"knownAt\": null, \"loadedTo\": null, \"loadedFrom\": \"2026-10-02\"}, \"columns\": [{\"path\": \"NAME\", \"label\": \"Name\", \"type\": \"text\", \"format\": null, \"masked\": false, \"key\": true}, {\"path\": \"RATING\", \"label\": \"Rating\", \"type\": \"text\", \"format\": null, \"masked\": false, \"key\": true}, {\"path\": \"SECTOR\", \"label\": \"Sector\", "
+  },
+  {
+   "t": 1303.8,
+   "node": "b",
+   "q": {
+    "what": "history",
+    "kind": "trade",
+    "id": "10001306",
+    "params": {
+     "range": "3M"
+    },
+    "role": "viewer",
+    "date": "2026-10-16",
+    "refStatus": 200
+   },
+   "status": 200,
+   "got": {
+    "masked": [],
+    "window": {
+     "from": "2026-07-17",
+     "to": "2026-10-16",
+     "baseline": null,
+     "knownAt": null
+    },
+    "rows": [
+     {
+      "date": "2026-10-02",
+      "dataDate": "2026-10-02",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-05",
+      "dataDate": "2026-10-05",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-06",
+      "dataDate": "2026-10-06",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-07",
+      "dataDate": "2026-10-07",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-08",
+      "dataDate": "2026-10-08",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-09",
+      "dataDate": "2026-10-09",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-13",
+      "dataDate": "2026-10-13",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-14",
+      "dataDate": "2026-10-14",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-15",
+      "dataDate": "2026-10-15",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-16",
+      "dataDate": "2026-10-16",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     }
+    ]
+   },
+   "ref": {
+    "masked": [],
+    "window": {
+     "from": "2026-07-17",
+     "to": "2026-10-16",
+     "baseline": null,
+     "knownAt": null
+    },
+    "rows": [
+     {
+      "date": "2026-10-02",
+      "dataDate": "2026-10-02",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-05",
+      "dataDate": "2026-10-05",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-06",
+      "dataDate": "2026-10-06",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-07",
+      "dataDate": "2026-10-07",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-08",
+      "dataDate": "2026-10-08",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-09",
+      "dataDate": "2026-10-09",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-13",
+      "dataDate": "2026-10-13",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-14",
+      "dataDate": "2026-10-14",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-15",
+      "dataDate": "2026-10-15",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-16",
+      "dataDate": "2026-10-16",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "MATURED",
+       "TRADE_ACTION": "",
+       "TRADE_VERSION": "",
+       "QUANTITY": 600.0,
+       "PRICE": null,
+       "BUY_SELL_CODE": "S",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-COMM-1",
+       "COUNTERPARTY": "CP-00014",
+       "MATURITY_DATE": "2025-06-30",
+       "PRODUCT_TYPE": "ComSwap",
+       "SOURCE_SYSTEM": "ENDUR",
+       "TRADE_DATE": "2025-02-10"
+      },
+      "parts": {
+       "LEGS": 2,
+       "EVENTS": 8
+      },
+      "changed": [],
+      "changes": null
+     }
+    ]
+   },
+   "body": "{\"ref\": {\"kind\": \"trade\", \"id\": \"10001306\"}, \"mnemonic\": \"TRD\", \"title\": \"MATURED \\u00b7 600\", \"shape\": \"document\", \"basis\": \"documents\", \"window\": {\"asked\": \"3M\", \"from\": \"2026-07-17\", \"to\": \"2026-10-16\", \"days\": 64, \"mode\": \"calendar\", \"baseline\": null, \"missing\": [], \"knownAt\": null, \"loadedTo\": null, \"loadedFrom\": \"2026-10-02\"}, \"columns\": [{\"path\": \"TRADE_STATUS\", \"label\": \"Trade status\", \"type\": \"text\", \"format\": null, \"masked\": false, \"key\": true}, {\"path\": \"TRADE_ACTION\", \"label\": \"Trade action\", \"type\": \"text\", \"format\": null, \"masked\": false, \"key\": false}, {\"path\": \"TRADE_VERSION\", "
+  },
+  {
+   "t": 1315.2,
+   "node": "b",
+   "q": {
+    "what": "history",
+    "kind": "trade",
+    "id": "CLY-30001298",
+    "params": {
+     "range": "3M"
+    },
+    "role": "viewer",
+    "date": "2026-10-16",
+    "refStatus": 200
+   },
+   "status": 200,
+   "got": {
+    "masked": [],
+    "window": {
+     "from": "2026-07-17",
+     "to": "2026-10-16",
+     "baseline": null,
+     "knownAt": null
+    },
+    "rows": [
+     {
+      "date": "2026-10-02",
+      "dataDate": "2026-10-02",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-05",
+      "dataDate": "2026-10-05",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-06",
+      "dataDate": "2026-10-06",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-07",
+      "dataDate": "2026-10-07",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-08",
+      "dataDate": "2026-10-08",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-09",
+      "dataDate": "2026-10-09",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-13",
+      "dataDate": "2026-10-13",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-14",
+      "dataDate": "2026-10-14",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-15",
+      "dataDate": "2026-10-15",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-16",
+      "dataDate": "2026-10-16",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     }
+    ]
+   },
+   "ref": {
+    "masked": [],
+    "window": {
+     "from": "2026-07-17",
+     "to": "2026-10-16",
+     "baseline": null,
+     "knownAt": null
+    },
+    "rows": [
+     {
+      "date": "2026-10-02",
+      "dataDate": "2026-10-02",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-05",
+      "dataDate": "2026-10-05",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-06",
+      "dataDate": "2026-10-06",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-07",
+      "dataDate": "2026-10-07",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-08",
+      "dataDate": "2026-10-08",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-09",
+      "dataDate": "2026-10-09",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-13",
+      "dataDate": "2026-10-13",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-14",
+      "dataDate": "2026-10-14",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-15",
+      "dataDate": "2026-10-15",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     },
+     {
+      "date": "2026-10-16",
+      "dataDate": "2026-10-16",
+      "carried": false,
+      "deleted": false,
+      "values": {
+       "TRADE_STATUS": "VALIDATED",
+       "TRADE_ACTION": "NEW",
+       "TRADE_VERSION": "1",
+       "QUANTITY": 845600000.0,
+       "PRICE": 1341710.5,
+       "BUY_SELL_CODE": "B",
+       "CURRENCY": "USD",
+       "PORTFOLIO": "BOOK-FX-2",
+       "COUNTERPARTY": "CP-00265",
+       "MATURITY_DATE": "2029-09-10",
+       "PRODUCT_TYPE": "FX_BARRIER",
+       "SOURCE_SYSTEM": "CALYPSO",
+       "TRADE_DATE": "2025-11-07"
+      },
+      "parts": {
+       "LEGS": 1,
+       "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null
+     }
+    ]
+   },
+   "body": "{\"ref\": {\"kind\": \"trade\", \"id\": \"CLY-30001298\"}, \"mnemonic\": \"TRD\", \"title\": \"VALIDATED \\u00b7 845,600,000\", \"shape\": \"document\", \"basis\": \"documents\", \"window\": {\"asked\": \"3M\", \"from\": \"2026-07-17\", \"to\": \"2026-10-16\", \"days\": 64, \"mode\": \"calendar\", \"baseline\": null, \"missing\": [], \"knownAt\": null, \"loadedTo\": null, \"loadedFrom\": \"2026-10-02\"}, \"columns\": [{\"path\": \"TRADE_STATUS\", \"label\": \"Trade status\", \"type\": \"text\", \"format\": null, \"masked\": false, \"key\": true}, {\"path\": \"TRADE_ACTION\", \"label\": \"Trade action\", \"type\": \"text\", \"format\": null, \"masked\": false, \"key\": false}, {\"path\": \"TR"
+  }
+ ],
+ "wrongAnswers": 32,
+ "checked": 118166,
+ "console": {
+  "ok": 6496,
+  "failed": 0,
+  "signedOut": 0
+ },
+ "consoleFailovers": [
+  {
+   "at": 1792514599.93446,
+   "from": "http://192.168.2.77:18710",
+   "to": "http://192.168.2.77:18711",
+   "why": "ConnectError"
+  },
+  {
+   "at": 1792514606.2109385,
+   "from": "http://192.168.2.77:18710",
+   "to": "http://192.168.2.77:18711",
+   "why": "ConnectError"
+  }
+ ],
+ "events": [
+  {
+   "t": 407.3,
+   "what": "reference",
+   "requests": 2055,
+   "notOk": 0,
+   "sample": []
+  },
+  {
+   "t": 447.5,
+   "what": "console learnt the cluster",
+   "seconds": 1.9,
+   "servers": [
+    "http://192.168.2.77:18710",
+    "http://192.168.2.77:18711",
+    "http://192.168.2.77:18712"
+   ]
+  },
+  {
+   "t": 1200.5,
+   "what": "killed c",
+   "pid": "by PID"
+  },
+  {
+   "t": 1204.1,
+   "what": "after killing c",
+   "consoleNextGoodPage": 0.02,
+   "searchAfter": [
+    200,
+    true
+   ],
+   "suspectOrDeadEverywhere": 3.6
+  },
+  {
+   "t": 1522.2,
+   "what": "restarted c",
+   "started": 22.1,
+   "rejoinedAllAlive": 22.2
+  },
+  {
+   "t": 3600.3,
+   "what": "killed a",
+   "pid": "by PID"
+  },
+  {
+   "t": 3603.4,
+   "what": "after killing a",
+   "consoleNextGoodPage": 0.05,
+   "searchAfter": [
+    200,
+    true
+   ],
+   "suspectOrDeadEverywhere": 3.1
+  },
+  {
+   "t": 3922.0,
+   "what": "restarted a",
+   "started": 21.2,
+   "rejoinedAllAlive": 21.2
+  }
+ ],
+ "resources": [
+  {
+   "t": 0.0,
+   "node": "a",
+   "rssMb": 1114.1,
+   "threads": 100,
+   "openFiles": 97,
+   "heapMb": 263.7,
+   "liveMb": 109.8,
+   "jvmThreads": 62
+  },
+  {
+   "t": 0.0,
+   "node": "b",
+   "rssMb": 1133.4,
+   "threads": 90,
+   "openFiles": 78,
+   "heapMb": 148.7,
+   "liveMb": 108.0,
+   "jvmThreads": 52
+  },
+  {
+   "t": 0.0,
+   "node": "c",
+   "rssMb": 1062.4,
+   "threads": 97,
+   "openFiles": 89,
+   "heapMb": 213.1,
+   "liveMb": 0.0,
+   "jvmThreads": 59
+  },
+  {
+   "t": 0.0,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 60.1,
+   "node": "a",
+   "rssMb": 2323.7,
+   "threads": 144,
+   "openFiles": 156,
+   "heapMb": 939.6,
+   "liveMb": 356.6,
+   "jvmThreads": 107
+  },
+  {
+   "t": 60.1,
+   "node": "b",
+   "rssMb": 1209.0,
+   "threads": 115,
+   "openFiles": 91,
+   "heapMb": 340.4,
+   "liveMb": 106.8,
+   "jvmThreads": 79
+  },
+  {
+   "t": 60.1,
+   "node": "c",
+   "rssMb": 1413.2,
+   "threads": 117,
+   "openFiles": 138,
+   "heapMb": 344.2,
+   "liveMb": 179.9,
+   "jvmThreads": 81
+  },
+  {
+   "t": 60.1,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 120.2,
+   "node": "a",
+   "rssMb": 2405.6,
+   "threads": 144,
+   "openFiles": 166,
+   "heapMb": 506.4,
+   "liveMb": 379.9,
+   "jvmThreads": 108
+  },
+  {
+   "t": 120.2,
+   "node": "b",
+   "rssMb": 1231.6,
+   "threads": 116,
+   "openFiles": 92,
+   "heapMb": 127.8,
+   "liveMb": 108.8,
+   "jvmThreads": 80
+  },
+  {
+   "t": 120.2,
+   "node": "c",
+   "rssMb": 1497.6,
+   "threads": 116,
+   "openFiles": 150,
+   "heapMb": 231.2,
+   "liveMb": 192.4,
+   "jvmThreads": 80
+  },
+  {
+   "t": 120.2,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 180.2,
+   "node": "a",
+   "rssMb": 2429.5,
+   "threads": 144,
+   "openFiles": 171,
+   "heapMb": 773.0,
+   "liveMb": 401.0,
+   "jvmThreads": 108
+  },
+  {
+   "t": 180.2,
+   "node": "b",
+   "rssMb": 1242.4,
+   "threads": 113,
+   "openFiles": 87,
+   "heapMb": 258.0,
+   "liveMb": 116.5,
+   "jvmThreads": 77
+  },
+  {
+   "t": 180.2,
+   "node": "c",
+   "rssMb": 1540.3,
+   "threads": 119,
+   "openFiles": 153,
+   "heapMb": 297.8,
+   "liveMb": 217.9,
+   "jvmThreads": 83
+  },
+  {
+   "t": 180.2,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 240.2,
+   "node": "a",
+   "rssMb": 2436.1,
+   "threads": 143,
+   "openFiles": 165,
+   "heapMb": 1015.2,
+   "liveMb": 419.7,
+   "jvmThreads": 107
+  },
+  {
+   "t": 240.2,
+   "node": "b",
+   "rssMb": 1248.6,
+   "threads": 117,
+   "openFiles": 86,
+   "heapMb": 139.5,
+   "liveMb": 118.5,
+   "jvmThreads": 80
+  },
+  {
+   "t": 240.2,
+   "node": "c",
+   "rssMb": 1543.4,
+   "threads": 115,
+   "openFiles": 147,
+   "heapMb": 477.8,
+   "liveMb": 242.7,
+   "jvmThreads": 79
+  },
+  {
+   "t": 240.2,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 300.2,
+   "node": "a",
+   "rssMb": 2441.0,
+   "threads": 144,
+   "openFiles": 176,
+   "heapMb": 522.1,
+   "liveMb": 420.8,
+   "jvmThreads": 108
+  },
+  {
+   "t": 300.2,
+   "node": "b",
+   "rssMb": 1251.9,
+   "threads": 122,
+   "openFiles": 85,
+   "heapMb": 147.4,
+   "liveMb": 115.5,
+   "jvmThreads": 84
+  },
+  {
+   "t": 300.2,
+   "node": "c",
+   "rssMb": 1598.3,
+   "threads": 118,
+   "openFiles": 152,
+   "heapMb": 644.2,
+   "liveMb": 256.5,
+   "jvmThreads": 82
+  },
+  {
+   "t": 300.2,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 360.3,
+   "node": "a",
+   "rssMb": 2489.8,
+   "threads": 144,
+   "openFiles": 179,
+   "heapMb": 650.0,
+   "liveMb": 455.0,
+   "jvmThreads": 108
+  },
+  {
+   "t": 360.3,
+   "node": "b",
+   "rssMb": 1258.0,
+   "threads": 122,
+   "openFiles": 91,
+   "heapMb": 205.6,
+   "liveMb": 117.3,
+   "jvmThreads": 85
+  },
+  {
+   "t": 360.3,
+   "node": "c",
+   "rssMb": 1637.9,
+   "threads": 120,
+   "openFiles": 166,
+   "heapMb": 410.3,
+   "liveMb": 284.8,
+   "jvmThreads": 84
+  },
+  {
+   "t": 360.3,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 420.3,
+   "node": "a",
+   "rssMb": 2529.6,
+   "threads": 143,
+   "openFiles": 176,
+   "heapMb": 573.3,
+   "liveMb": 465.8,
+   "jvmThreads": 107
+  },
+  {
+   "t": 420.3,
+   "node": "b",
+   "rssMb": 1259.3,
+   "threads": 121,
+   "openFiles": 92,
+   "heapMb": 332.3,
+   "liveMb": 118.7,
+   "jvmThreads": 85
+  },
+  {
+   "t": 420.3,
+   "node": "c",
+   "rssMb": 1671.1,
+   "threads": 119,
+   "openFiles": 161,
+   "heapMb": 364.4,
+   "liveMb": 311.5,
+   "jvmThreads": 83
+  },
+  {
+   "t": 420.3,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 480.3,
+   "node": "a",
+   "rssMb": 2617.7,
+   "threads": 144,
+   "openFiles": 178,
+   "heapMb": 614.3,
+   "liveMb": 460.2,
+   "jvmThreads": 108
+  },
+  {
+   "t": 480.3,
+   "node": "b",
+   "rssMb": 1259.5,
+   "threads": 117,
+   "openFiles": 92,
+   "heapMb": 364.8,
+   "liveMb": 121.1,
+   "jvmThreads": 81
+  },
+  {
+   "t": 480.3,
+   "node": "c",
+   "rssMb": 1736.5,
+   "threads": 121,
+   "openFiles": 162,
+   "heapMb": 731.1,
+   "liveMb": 332.6,
+   "jvmThreads": 85
+  },
+  {
+   "t": 480.3,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 540.4,
+   "node": "a",
+   "rssMb": 2644.1,
+   "threads": 141,
+   "openFiles": 178,
+   "heapMb": 754.3,
+   "liveMb": 478.8,
+   "jvmThreads": 105
+  },
+  {
+   "t": 540.4,
+   "node": "b",
+   "rssMb": 1259.8,
+   "threads": 117,
+   "openFiles": 94,
+   "heapMb": 126.3,
+   "liveMb": 122.5,
+   "jvmThreads": 81
+  },
+  {
+   "t": 540.4,
+   "node": "c",
+   "rssMb": 1803.5,
+   "threads": 125,
+   "openFiles": 165,
+   "heapMb": 381.4,
+   "liveMb": 336.6,
+   "jvmThreads": 89
+  },
+  {
+   "t": 540.4,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 600.4,
+   "node": "a",
+   "rssMb": 2666.6,
+   "threads": 142,
+   "openFiles": 181,
+   "heapMb": 893.5,
+   "liveMb": 473.0,
+   "jvmThreads": 106
+  },
+  {
+   "t": 600.4,
+   "node": "b",
+   "rssMb": 1305.7,
+   "threads": 118,
+   "openFiles": 93,
+   "heapMb": 269.7,
+   "liveMb": 122.7,
+   "jvmThreads": 82
+  },
+  {
+   "t": 600.4,
+   "node": "c",
+   "rssMb": 1837.2,
+   "threads": 122,
+   "openFiles": 168,
+   "heapMb": 783.8,
+   "liveMb": 334.2,
+   "jvmThreads": 86
+  },
+  {
+   "t": 600.4,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 660.4,
+   "node": "a",
+   "rssMb": 2719.4,
+   "threads": 143,
+   "openFiles": 177,
+   "heapMb": 866.5,
+   "liveMb": 483.0,
+   "jvmThreads": 107
+  },
+  {
+   "t": 660.4,
+   "node": "b",
+   "rssMb": 1334.2,
+   "threads": 119,
+   "openFiles": 91,
+   "heapMb": 215.5,
+   "liveMb": 122.6,
+   "jvmThreads": 83
+  },
+  {
+   "t": 660.4,
+   "node": "c",
+   "rssMb": 1839.9,
+   "threads": 123,
+   "openFiles": 164,
+   "heapMb": 644.3,
+   "liveMb": 337.3,
+   "jvmThreads": 87
+  },
+  {
+   "t": 660.4,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 720.4,
+   "node": "a",
+   "rssMb": 2720.0,
+   "threads": 141,
+   "openFiles": 173,
+   "heapMb": 1407.3,
+   "liveMb": 478.4,
+   "jvmThreads": 105
+  },
+  {
+   "t": 720.4,
+   "node": "b",
+   "rssMb": 1338.7,
+   "threads": 123,
+   "openFiles": 92,
+   "heapMb": 351.9,
+   "liveMb": 122.7,
+   "jvmThreads": 82
+  },
+  {
+   "t": 720.4,
+   "node": "c",
+   "rssMb": 1853.6,
+   "threads": 122,
+   "openFiles": 162,
+   "heapMb": 468.9,
+   "liveMb": 345.8,
+   "jvmThreads": 86
+  },
+  {
+   "t": 720.4,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 780.4,
+   "node": "a",
+   "rssMb": 2721.4,
+   "threads": 144,
+   "openFiles": 174,
+   "heapMb": 610.4,
+   "liveMb": 480.9,
+   "jvmThreads": 108
+  },
+  {
+   "t": 780.4,
+   "node": "b",
+   "rssMb": 1339.6,
+   "threads": 118,
+   "openFiles": 92,
+   "heapMb": 361.5,
+   "liveMb": 122.7,
+   "jvmThreads": 82
+  },
+  {
+   "t": 780.4,
+   "node": "c",
+   "rssMb": 1855.6,
+   "threads": 123,
+   "openFiles": 161,
+   "heapMb": 614.8,
+   "liveMb": 348.4,
+   "jvmThreads": 87
+  },
+  {
+   "t": 780.4,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 840.5,
+   "node": "a",
+   "rssMb": 2722.2,
+   "threads": 143,
+   "openFiles": 179,
+   "heapMb": 889.0,
+   "liveMb": 481.0,
+   "jvmThreads": 107
+  },
+  {
+   "t": 840.5,
+   "node": "b",
+   "rssMb": 1369.1,
+   "threads": 118,
+   "openFiles": 93,
+   "heapMb": 270.3,
+   "liveMb": 123.5,
+   "jvmThreads": 82
+  },
+  {
+   "t": 840.5,
+   "node": "c",
+   "rssMb": 1858.9,
+   "threads": 126,
+   "openFiles": 165,
+   "heapMb": 464.4,
+   "liveMb": 345.4,
+   "jvmThreads": 90
+  },
+  {
+   "t": 840.5,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 900.5,
+   "node": "a",
+   "rssMb": 2723.1,
+   "threads": 141,
+   "openFiles": 178,
+   "heapMb": 747.8,
+   "liveMb": 485.8,
+   "jvmThreads": 105
+  },
+  {
+   "t": 900.5,
+   "node": "b",
+   "rssMb": 1369.5,
+   "threads": 119,
+   "openFiles": 89,
+   "heapMb": 165.0,
+   "liveMb": 124.1,
+   "jvmThreads": 83
+  },
+  {
+   "t": 900.5,
+   "node": "c",
+   "rssMb": 1862.1,
+   "threads": 122,
+   "openFiles": 163,
+   "heapMb": 974.8,
+   "liveMb": 348.8,
+   "jvmThreads": 86
+  },
+  {
+   "t": 900.5,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 960.5,
+   "node": "a",
+   "rssMb": 2724.0,
+   "threads": 141,
+   "openFiles": 177,
+   "heapMb": 734.9,
+   "liveMb": 487.9,
+   "jvmThreads": 105
+  },
+  {
+   "t": 960.5,
+   "node": "b",
+   "rssMb": 1369.9,
+   "threads": 120,
+   "openFiles": 93,
+   "heapMb": 182.5,
+   "liveMb": 124.1,
+   "jvmThreads": 84
+  },
+  {
+   "t": 960.5,
+   "node": "c",
+   "rssMb": 1864.1,
+   "threads": 123,
+   "openFiles": 164,
+   "heapMb": 437.5,
+   "liveMb": 348.3,
+   "jvmThreads": 87
+  },
+  {
+   "t": 960.5,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 1020.5,
+   "node": "a",
+   "rssMb": 2724.7,
+   "threads": 143,
+   "openFiles": 171,
+   "heapMb": 938.8,
+   "liveMb": 480.0,
+   "jvmThreads": 107
+  },
+  {
+   "t": 1020.5,
+   "node": "b",
+   "rssMb": 1369.9,
+   "threads": 119,
+   "openFiles": 92,
+   "heapMb": 177.3,
+   "liveMb": 123.6,
+   "jvmThreads": 83
+  },
+  {
+   "t": 1020.5,
+   "node": "c",
+   "rssMb": 1864.4,
+   "threads": 122,
+   "openFiles": 160,
+   "heapMb": 642.1,
+   "liveMb": 340.6,
+   "jvmThreads": 86
+  },
+  {
+   "t": 1020.5,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 1080.5,
+   "node": "a",
+   "rssMb": 2742.1,
+   "threads": 143,
+   "openFiles": 176,
+   "heapMb": 1225.0,
+   "liveMb": 490.0,
+   "jvmThreads": 107
+  },
+  {
+   "t": 1080.5,
+   "node": "b",
+   "rssMb": 1370.2,
+   "threads": 120,
+   "openFiles": 89,
+   "heapMb": 184.6,
+   "liveMb": 124.4,
+   "jvmThreads": 84
+  },
+  {
+   "t": 1080.5,
+   "node": "c",
+   "rssMb": 1869.5,
+   "threads": 123,
+   "openFiles": 161,
+   "heapMb": 943.2,
+   "liveMb": 343.7,
+   "jvmThreads": 87
+  },
+  {
+   "t": 1080.5,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 1140.6,
+   "node": "a",
+   "rssMb": 2742.9,
+   "threads": 142,
+   "openFiles": 171,
+   "heapMb": 995.4,
+   "liveMb": 497.4,
+   "jvmThreads": 106
+  },
+  {
+   "t": 1140.6,
+   "node": "b",
+   "rssMb": 1370.3,
+   "threads": 121,
+   "openFiles": 92,
+   "heapMb": 366.7,
+   "liveMb": 127.4,
+   "jvmThreads": 85
+  },
+  {
+   "t": 1140.6,
+   "node": "c",
+   "rssMb": 1870.1,
+   "threads": 124,
+   "openFiles": 160,
+   "heapMb": 548.3,
+   "liveMb": 340.7,
+   "jvmThreads": 88
+  },
+  {
+   "t": 1140.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 1200.6,
+   "node": "a",
+   "rssMb": 2751.2,
+   "threads": 153,
+   "openFiles": 162,
+   "heapMb": 1399.1,
+   "liveMb": 524.6,
+   "jvmThreads": 107
+  },
+  {
+   "t": 1200.6,
+   "node": "b",
+   "rssMb": 1370.2,
+   "threads": 119,
+   "openFiles": 82,
+   "heapMb": 321.1,
+   "liveMb": 127.3,
+   "jvmThreads": 83
+  },
+  {
+   "t": 1200.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 1260.6,
+   "node": "a",
+   "rssMb": 2790.0,
+   "threads": 132,
+   "openFiles": 160,
+   "heapMb": 1235.1,
+   "liveMb": 453.8,
+   "jvmThreads": 96
+  },
+  {
+   "t": 1260.6,
+   "node": "b",
+   "rssMb": 1363.2,
+   "threads": 115,
+   "openFiles": 82,
+   "heapMb": 308.9,
+   "liveMb": 127.4,
+   "jvmThreads": 78
+  },
+  {
+   "t": 1260.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 1320.6,
+   "node": "a",
+   "rssMb": 2790.8,
+   "threads": 133,
+   "openFiles": 155,
+   "heapMb": 1172.2,
+   "liveMb": 453.8,
+   "jvmThreads": 97
+  },
+  {
+   "t": 1320.6,
+   "node": "b",
+   "rssMb": 1363.4,
+   "threads": 113,
+   "openFiles": 82,
+   "heapMb": 158.0,
+   "liveMb": 127.4,
+   "jvmThreads": 77
+  },
+  {
+   "t": 1320.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 1380.6,
+   "node": "a",
+   "rssMb": 2791.4,
+   "threads": 132,
+   "openFiles": 153,
+   "heapMb": 1263.1,
+   "liveMb": 486.9,
+   "jvmThreads": 96
+  },
+  {
+   "t": 1380.6,
+   "node": "b",
+   "rssMb": 1374.1,
+   "threads": 114,
+   "openFiles": 82,
+   "heapMb": 255.5,
+   "liveMb": 127.5,
+   "jvmThreads": 78
+  },
+  {
+   "t": 1380.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 1440.6,
+   "node": "a",
+   "rssMb": 2791.7,
+   "threads": 131,
+   "openFiles": 158,
+   "heapMb": 662.1,
+   "liveMb": 486.9,
+   "jvmThreads": 95
+  },
+  {
+   "t": 1440.6,
+   "node": "b",
+   "rssMb": 1374.2,
+   "threads": 113,
+   "openFiles": 82,
+   "heapMb": 265.6,
+   "liveMb": 127.8,
+   "jvmThreads": 77
+  },
+  {
+   "t": 1440.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 1500.6,
+   "node": "a",
+   "rssMb": 2812.5,
+   "threads": 134,
+   "openFiles": 155,
+   "heapMb": 570.7,
+   "liveMb": 486.9,
+   "jvmThreads": 96
+  },
+  {
+   "t": 1500.6,
+   "node": "b",
+   "rssMb": 1374.3,
+   "threads": 114,
+   "openFiles": 83,
+   "heapMb": 171.6,
+   "liveMb": 127.8,
+   "jvmThreads": 78
+  },
+  {
+   "t": 1500.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 1500.6,
+   "node": "c",
+   "rssMb": 160.6,
+   "threads": 45,
+   "openFiles": 6
+  },
+  {
+   "t": 1560.6,
+   "node": "a",
+   "rssMb": 2859.7,
+   "threads": 140,
+   "openFiles": 169,
+   "heapMb": 1400.8,
+   "liveMb": 512.8,
+   "jvmThreads": 104
+  },
+  {
+   "t": 1560.6,
+   "node": "b",
+   "rssMb": 1974.0,
+   "threads": 138,
+   "openFiles": 109,
+   "heapMb": 658.1,
+   "liveMb": 240.1,
+   "jvmThreads": 96
+  },
+  {
+   "t": 1560.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 1560.6,
+   "node": "c",
+   "rssMb": 1216.5,
+   "threads": 122,
+   "openFiles": 165,
+   "heapMb": 340.9,
+   "liveMb": 181.3,
+   "jvmThreads": 82
+  },
+  {
+   "t": 1620.7,
+   "node": "a",
+   "rssMb": 2860.8,
+   "threads": 144,
+   "openFiles": 168,
+   "heapMb": 1073.1,
+   "liveMb": 484.1,
+   "jvmThreads": 108
+  },
+  {
+   "t": 1620.7,
+   "node": "b",
+   "rssMb": 2417.7,
+   "threads": 138,
+   "openFiles": 114,
+   "heapMb": 580.4,
+   "liveMb": 321.4,
+   "jvmThreads": 102
+  },
+  {
+   "t": 1620.7,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 1620.7,
+   "node": "c",
+   "rssMb": 1335.4,
+   "threads": 123,
+   "openFiles": 163,
+   "heapMb": 209.7,
+   "liveMb": 188.7,
+   "jvmThreads": 87
+  },
+  {
+   "t": 1680.7,
+   "node": "a",
+   "rssMb": 2861.5,
+   "threads": 142,
+   "openFiles": 172,
+   "heapMb": 968.3,
+   "liveMb": 491.4,
+   "jvmThreads": 106
+  },
+  {
+   "t": 1680.7,
+   "node": "b",
+   "rssMb": 2518.4,
+   "threads": 139,
+   "openFiles": 117,
+   "heapMb": 1145.8,
+   "liveMb": 334.3,
+   "jvmThreads": 103
+  },
+  {
+   "t": 1680.7,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 1680.7,
+   "node": "c",
+   "rssMb": 1405.7,
+   "threads": 123,
+   "openFiles": 165,
+   "heapMb": 577.2,
+   "liveMb": 214.5,
+   "jvmThreads": 87
+  },
+  {
+   "t": 1740.8,
+   "node": "a",
+   "rssMb": 2862.6,
+   "threads": 142,
+   "openFiles": 169,
+   "heapMb": 1165.3,
+   "liveMb": 478.8,
+   "jvmThreads": 106
+  },
+  {
+   "t": 1740.8,
+   "node": "b",
+   "rssMb": 2531.6,
+   "threads": 140,
+   "openFiles": 123,
+   "heapMb": 1030.5,
+   "liveMb": 347.0,
+   "jvmThreads": 104
+  },
+  {
+   "t": 1740.8,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 1740.8,
+   "node": "c",
+   "rssMb": 1440.8,
+   "threads": 124,
+   "openFiles": 163,
+   "heapMb": 531.1,
+   "liveMb": 243.3,
+   "jvmThreads": 88
+  },
+  {
+   "t": 1800.8,
+   "node": "a",
+   "rssMb": 2879.5,
+   "threads": 143,
+   "openFiles": 170,
+   "heapMb": 1133.9,
+   "liveMb": 470.4,
+   "jvmThreads": 107
+  },
+  {
+   "t": 1800.8,
+   "node": "b",
+   "rssMb": 2603.6,
+   "threads": 140,
+   "openFiles": 124,
+   "heapMb": 1124.9,
+   "liveMb": 367.4,
+   "jvmThreads": 104
+  },
+  {
+   "t": 1800.8,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 1800.8,
+   "node": "c",
+   "rssMb": 1488.3,
+   "threads": 125,
+   "openFiles": 166,
+   "heapMb": 599.6,
+   "liveMb": 265.9,
+   "jvmThreads": 89
+  },
+  {
+   "t": 1860.8,
+   "node": "a",
+   "rssMb": 2879.9,
+   "threads": 141,
+   "openFiles": 164,
+   "heapMb": 737.3,
+   "liveMb": 466.3,
+   "jvmThreads": 105
+  },
+  {
+   "t": 1860.8,
+   "node": "b",
+   "rssMb": 2653.1,
+   "threads": 141,
+   "openFiles": 124,
+   "heapMb": 606.4,
+   "liveMb": 363.9,
+   "jvmThreads": 105
+  },
+  {
+   "t": 1860.8,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 1860.8,
+   "node": "c",
+   "rssMb": 1508.7,
+   "threads": 125,
+   "openFiles": 161,
+   "heapMb": 467.1,
+   "liveMb": 294.9,
+   "jvmThreads": 89
+  },
+  {
+   "t": 1920.8,
+   "node": "a",
+   "rssMb": 2880.3,
+   "threads": 142,
+   "openFiles": 172,
+   "heapMb": 1099.5,
+   "liveMb": 453.0,
+   "jvmThreads": 106
+  },
+  {
+   "t": 1920.8,
+   "node": "b",
+   "rssMb": 2664.2,
+   "threads": 141,
+   "openFiles": 129,
+   "heapMb": 541.0,
+   "liveMb": 386.0,
+   "jvmThreads": 105
+  },
+  {
+   "t": 1920.8,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 1920.8,
+   "node": "c",
+   "rssMb": 1527.9,
+   "threads": 119,
+   "openFiles": 168,
+   "heapMb": 353.9,
+   "liveMb": 313.2,
+   "jvmThreads": 83
+  },
+  {
+   "t": 1980.8,
+   "node": "a",
+   "rssMb": 2880.6,
+   "threads": 140,
+   "openFiles": 163,
+   "heapMb": 825.7,
+   "liveMb": 475.3,
+   "jvmThreads": 104
+  },
+  {
+   "t": 1980.8,
+   "node": "b",
+   "rssMb": 2680.7,
+   "threads": 143,
+   "openFiles": 134,
+   "heapMb": 505.0,
+   "liveMb": 382.0,
+   "jvmThreads": 107
+  },
+  {
+   "t": 1980.8,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 1980.8,
+   "node": "c",
+   "rssMb": 1561.7,
+   "threads": 123,
+   "openFiles": 161,
+   "heapMb": 419.3,
+   "liveMb": 336.0,
+   "jvmThreads": 87
+  },
+  {
+   "t": 2040.9,
+   "node": "a",
+   "rssMb": 2880.9,
+   "threads": 141,
+   "openFiles": 170,
+   "heapMb": 1319.9,
+   "liveMb": 474.5,
+   "jvmThreads": 105
+  },
+  {
+   "t": 2040.9,
+   "node": "b",
+   "rssMb": 2682.8,
+   "threads": 140,
+   "openFiles": 130,
+   "heapMb": 769.0,
+   "liveMb": 367.0,
+   "jvmThreads": 104
+  },
+  {
+   "t": 2040.9,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 2040.9,
+   "node": "c",
+   "rssMb": 1624.0,
+   "threads": 122,
+   "openFiles": 162,
+   "heapMb": 382.3,
+   "liveMb": 346.7,
+   "jvmThreads": 86
+  },
+  {
+   "t": 2100.9,
+   "node": "a",
+   "rssMb": 2881.2,
+   "threads": 140,
+   "openFiles": 169,
+   "heapMb": 771.7,
+   "liveMb": 496.7,
+   "jvmThreads": 104
+  },
+  {
+   "t": 2100.9,
+   "node": "b",
+   "rssMb": 2684.7,
+   "threads": 140,
+   "openFiles": 136,
+   "heapMb": 1182.0,
+   "liveMb": 376.0,
+   "jvmThreads": 104
+  },
+  {
+   "t": 2100.9,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 2100.9,
+   "node": "c",
+   "rssMb": 1632.4,
+   "threads": 122,
+   "openFiles": 164,
+   "heapMb": 765.7,
+   "liveMb": 346.5,
+   "jvmThreads": 86
+  },
+  {
+   "t": 2160.9,
+   "node": "a",
+   "rssMb": 2881.6,
+   "threads": 141,
+   "openFiles": 175,
+   "heapMb": 1039.5,
+   "liveMb": 482.5,
+   "jvmThreads": 105
+  },
+  {
+   "t": 2160.9,
+   "node": "b",
+   "rssMb": 2690.1,
+   "threads": 141,
+   "openFiles": 137,
+   "heapMb": 1144.7,
+   "liveMb": 381.7,
+   "jvmThreads": 105
+  },
+  {
+   "t": 2160.9,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 2160.9,
+   "node": "c",
+   "rssMb": 1656.8,
+   "threads": 127,
+   "openFiles": 173,
+   "heapMb": 567.5,
+   "liveMb": 344.2,
+   "jvmThreads": 91
+  },
+  {
+   "t": 2221.0,
+   "node": "a",
+   "rssMb": 2882.0,
+   "threads": 142,
+   "openFiles": 170,
+   "heapMb": 934.4,
+   "liveMb": 479.9,
+   "jvmThreads": 106
+  },
+  {
+   "t": 2221.0,
+   "node": "b",
+   "rssMb": 2692.1,
+   "threads": 140,
+   "openFiles": 130,
+   "heapMb": 742.3,
+   "liveMb": 385.8,
+   "jvmThreads": 104
+  },
+  {
+   "t": 2221.0,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 2221.0,
+   "node": "c",
+   "rssMb": 1690.7,
+   "threads": 122,
+   "openFiles": 161,
+   "heapMb": 501.9,
+   "liveMb": 343.4,
+   "jvmThreads": 86
+  },
+  {
+   "t": 2281.0,
+   "node": "a",
+   "rssMb": 2882.7,
+   "threads": 142,
+   "openFiles": 169,
+   "heapMb": 1344.6,
+   "liveMb": 465.6,
+   "jvmThreads": 106
+  },
+  {
+   "t": 2281.0,
+   "node": "b",
+   "rssMb": 2693.0,
+   "threads": 140,
+   "openFiles": 137,
+   "heapMb": 1218.3,
+   "liveMb": 411.8,
+   "jvmThreads": 104
+  },
+  {
+   "t": 2281.0,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 2281.0,
+   "node": "c",
+   "rssMb": 1716.3,
+   "threads": 125,
+   "openFiles": 167,
+   "heapMb": 451.3,
+   "liveMb": 350.9,
+   "jvmThreads": 89
+  },
+  {
+   "t": 2341.0,
+   "node": "a",
+   "rssMb": 2883.0,
+   "threads": 143,
+   "openFiles": 174,
+   "heapMb": 1158.5,
+   "liveMb": 474.5,
+   "jvmThreads": 107
+  },
+  {
+   "t": 2341.0,
+   "node": "b",
+   "rssMb": 2694.6,
+   "threads": 141,
+   "openFiles": 139,
+   "heapMb": 483.0,
+   "liveMb": 415.0,
+   "jvmThreads": 105
+  },
+  {
+   "t": 2341.0,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 2341.0,
+   "node": "c",
+   "rssMb": 1727.6,
+   "threads": 125,
+   "openFiles": 167,
+   "heapMb": 474.7,
+   "liveMb": 350.8,
+   "jvmThreads": 89
+  },
+  {
+   "t": 2401.0,
+   "node": "a",
+   "rssMb": 2883.0,
+   "threads": 143,
+   "openFiles": 175,
+   "heapMb": 788.5,
+   "liveMb": 481.0,
+   "jvmThreads": 107
+  },
+  {
+   "t": 2401.0,
+   "node": "b",
+   "rssMb": 2695.7,
+   "threads": 142,
+   "openFiles": 141,
+   "heapMb": 1152.2,
+   "liveMb": 405.2,
+   "jvmThreads": 106
+  },
+  {
+   "t": 2401.0,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 2401.0,
+   "node": "c",
+   "rssMb": 1770.1,
+   "threads": 126,
+   "openFiles": 169,
+   "heapMb": 408.0,
+   "liveMb": 348.4,
+   "jvmThreads": 90
+  },
+  {
+   "t": 2461.0,
+   "node": "a",
+   "rssMb": 2883.2,
+   "threads": 143,
+   "openFiles": 171,
+   "heapMb": 1130.2,
+   "liveMb": 470.7,
+   "jvmThreads": 107
+  },
+  {
+   "t": 2461.0,
+   "node": "b",
+   "rssMb": 2716.0,
+   "threads": 139,
+   "openFiles": 141,
+   "heapMb": 912.5,
+   "liveMb": 420.0,
+   "jvmThreads": 103
+  },
+  {
+   "t": 2461.0,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 2461.0,
+   "node": "c",
+   "rssMb": 1799.6,
+   "threads": 127,
+   "openFiles": 164,
+   "heapMb": 401.4,
+   "liveMb": 350.8,
+   "jvmThreads": 91
+  },
+  {
+   "t": 2521.1,
+   "node": "a",
+   "rssMb": 2911.7,
+   "threads": 144,
+   "openFiles": 168,
+   "heapMb": 1144.0,
+   "liveMb": 470.5,
+   "jvmThreads": 108
+  },
+  {
+   "t": 2521.1,
+   "node": "b",
+   "rssMb": 2718.7,
+   "threads": 139,
+   "openFiles": 135,
+   "heapMb": 951.0,
+   "liveMb": 423.0,
+   "jvmThreads": 103
+  },
+  {
+   "t": 2521.1,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 2521.1,
+   "node": "c",
+   "rssMb": 1856.5,
+   "threads": 123,
+   "openFiles": 159,
+   "heapMb": 800.1,
+   "liveMb": 344.6,
+   "jvmThreads": 87
+  },
+  {
+   "t": 2581.1,
+   "node": "a",
+   "rssMb": 2911.6,
+   "threads": 142,
+   "openFiles": 174,
+   "heapMb": 1167.0,
+   "liveMb": 464.0,
+   "jvmThreads": 105
+  },
+  {
+   "t": 2581.1,
+   "node": "b",
+   "rssMb": 2719.5,
+   "threads": 141,
+   "openFiles": 144,
+   "heapMb": 835.5,
+   "liveMb": 432.0,
+   "jvmThreads": 105
+  },
+  {
+   "t": 2581.1,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 2581.1,
+   "node": "c",
+   "rssMb": 1879.9,
+   "threads": 126,
+   "openFiles": 171,
+   "heapMb": 532.8,
+   "liveMb": 340.4,
+   "jvmThreads": 90
+  },
+  {
+   "t": 2641.1,
+   "node": "a",
+   "rssMb": 2911.7,
+   "threads": 142,
+   "openFiles": 173,
+   "heapMb": 1009.4,
+   "liveMb": 466.9,
+   "jvmThreads": 106
+  },
+  {
+   "t": 2641.1,
+   "node": "b",
+   "rssMb": 2721.2,
+   "threads": 141,
+   "openFiles": 138,
+   "heapMb": 1135.9,
+   "liveMb": 438.4,
+   "jvmThreads": 105
+  },
+  {
+   "t": 2641.1,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 2641.1,
+   "node": "c",
+   "rssMb": 1881.0,
+   "threads": 126,
+   "openFiles": 169,
+   "heapMb": 617.6,
+   "liveMb": 346.2,
+   "jvmThreads": 90
+  },
+  {
+   "t": 2701.1,
+   "node": "a",
+   "rssMb": 2911.8,
+   "threads": 142,
+   "openFiles": 170,
+   "heapMb": 1085.1,
+   "liveMb": 460.8,
+   "jvmThreads": 106
+  },
+  {
+   "t": 2701.1,
+   "node": "b",
+   "rssMb": 2721.9,
+   "threads": 142,
+   "openFiles": 140,
+   "heapMb": 1232.3,
+   "liveMb": 423.3,
+   "jvmThreads": 106
+  },
+  {
+   "t": 2701.1,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 2701.1,
+   "node": "c",
+   "rssMb": 1882.0,
+   "threads": 129,
+   "openFiles": 169,
+   "heapMb": 484.0,
+   "liveMb": 344.5,
+   "jvmThreads": 91
+  },
+  {
+   "t": 2761.2,
+   "node": "a",
+   "rssMb": 2911.8,
+   "threads": 143,
+   "openFiles": 168,
+   "heapMb": 1205.4,
+   "liveMb": 476.9,
+   "jvmThreads": 107
+  },
+  {
+   "t": 2761.2,
+   "node": "b",
+   "rssMb": 2728.3,
+   "threads": 142,
+   "openFiles": 138,
+   "heapMb": 672.8,
+   "liveMb": 437.3,
+   "jvmThreads": 106
+  },
+  {
+   "t": 2761.2,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 2761.2,
+   "node": "c",
+   "rssMb": 1886.4,
+   "threads": 127,
+   "openFiles": 163,
+   "heapMb": 387.1,
+   "liveMb": 346.7,
+   "jvmThreads": 91
+  },
+  {
+   "t": 2821.2,
+   "node": "a",
+   "rssMb": 2912.0,
+   "threads": 143,
+   "openFiles": 171,
+   "heapMb": 961.0,
+   "liveMb": 516.0,
+   "jvmThreads": 107
+  },
+  {
+   "t": 2821.2,
+   "node": "b",
+   "rssMb": 2765.9,
+   "threads": 142,
+   "openFiles": 151,
+   "heapMb": 551.3,
+   "liveMb": 431.8,
+   "jvmThreads": 106
+  },
+  {
+   "t": 2821.2,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 2821.2,
+   "node": "c",
+   "rssMb": 1977.3,
+   "threads": 129,
+   "openFiles": 175,
+   "heapMb": 893.6,
+   "liveMb": 344.6,
+   "jvmThreads": 92
+  },
+  {
+   "t": 2881.2,
+   "node": "a",
+   "rssMb": 2912.0,
+   "threads": 142,
+   "openFiles": 165,
+   "heapMb": 943.5,
+   "liveMb": 475.0,
+   "jvmThreads": 106
+  },
+  {
+   "t": 2881.2,
+   "node": "b",
+   "rssMb": 2772.5,
+   "threads": 140,
+   "openFiles": 146,
+   "heapMb": 629.6,
+   "liveMb": 465.6,
+   "jvmThreads": 104
+  },
+  {
+   "t": 2881.2,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 2881.2,
+   "node": "c",
+   "rssMb": 1973.1,
+   "threads": 126,
+   "openFiles": 166,
+   "heapMb": 723.2,
+   "liveMb": 344.4,
+   "jvmThreads": 90
+  },
+  {
+   "t": 2941.2,
+   "node": "a",
+   "rssMb": 2912.2,
+   "threads": 144,
+   "openFiles": 172,
+   "heapMb": 1155.9,
+   "liveMb": 478.9,
+   "jvmThreads": 108
+  },
+  {
+   "t": 2941.2,
+   "node": "b",
+   "rssMb": 2790.2,
+   "threads": 141,
+   "openFiles": 143,
+   "heapMb": 1018.4,
+   "liveMb": 469.9,
+   "jvmThreads": 105
+  },
+  {
+   "t": 2941.2,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 2941.2,
+   "node": "c",
+   "rssMb": 1977.7,
+   "threads": 127,
+   "openFiles": 169,
+   "heapMb": 770.2,
+   "liveMb": 345.9,
+   "jvmThreads": 91
+  },
+  {
+   "t": 3001.2,
+   "node": "a",
+   "rssMb": 2912.6,
+   "threads": 141,
+   "openFiles": 170,
+   "heapMb": 614.5,
+   "liveMb": 480.4,
+   "jvmThreads": 105
+  },
+  {
+   "t": 3001.2,
+   "node": "b",
+   "rssMb": 2803.1,
+   "threads": 140,
+   "openFiles": 146,
+   "heapMb": 926.5,
+   "liveMb": 468.0,
+   "jvmThreads": 104
+  },
+  {
+   "t": 3001.2,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 3001.2,
+   "node": "c",
+   "rssMb": 1983.8,
+   "threads": 127,
+   "openFiles": 173,
+   "heapMb": 392.1,
+   "liveMb": 341.5,
+   "jvmThreads": 91
+  },
+  {
+   "t": 3061.3,
+   "node": "a",
+   "rssMb": 2912.7,
+   "threads": 142,
+   "openFiles": 169,
+   "heapMb": 604.8,
+   "liveMb": 448.8,
+   "jvmThreads": 106
+  },
+  {
+   "t": 3061.3,
+   "node": "b",
+   "rssMb": 2809.0,
+   "threads": 141,
+   "openFiles": 139,
+   "heapMb": 1300.9,
+   "liveMb": 472.9,
+   "jvmThreads": 105
+  },
+  {
+   "t": 3061.3,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 3061.3,
+   "node": "c",
+   "rssMb": 1980.2,
+   "threads": 127,
+   "openFiles": 163,
+   "heapMb": 822.3,
+   "liveMb": 347.0,
+   "jvmThreads": 91
+  },
+  {
+   "t": 3121.3,
+   "node": "a",
+   "rssMb": 2912.8,
+   "threads": 143,
+   "openFiles": 172,
+   "heapMb": 1047.0,
+   "liveMb": 486.0,
+   "jvmThreads": 107
+  },
+  {
+   "t": 3121.3,
+   "node": "b",
+   "rssMb": 2812.4,
+   "threads": 140,
+   "openFiles": 137,
+   "heapMb": 1188.8,
+   "liveMb": 476.8,
+   "jvmThreads": 104
+  },
+  {
+   "t": 3121.3,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 3121.3,
+   "node": "c",
+   "rssMb": 1982.4,
+   "threads": 126,
+   "openFiles": 165,
+   "heapMb": 440.3,
+   "liveMb": 341.6,
+   "jvmThreads": 90
+  },
+  {
+   "t": 3181.3,
+   "node": "a",
+   "rssMb": 2913.1,
+   "threads": 145,
+   "openFiles": 165,
+   "heapMb": 809.0,
+   "liveMb": 475.5,
+   "jvmThreads": 109
+  },
+  {
+   "t": 3181.3,
+   "node": "b",
+   "rssMb": 2816.9,
+   "threads": 142,
+   "openFiles": 138,
+   "heapMb": 1132.0,
+   "liveMb": 459.0,
+   "jvmThreads": 106
+  },
+  {
+   "t": 3181.3,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 3181.3,
+   "node": "c",
+   "rssMb": 1983.3,
+   "threads": 126,
+   "openFiles": 160,
+   "heapMb": 662.7,
+   "liveMb": 342.3,
+   "jvmThreads": 90
+  },
+  {
+   "t": 3241.3,
+   "node": "a",
+   "rssMb": 2913.1,
+   "threads": 145,
+   "openFiles": 171,
+   "heapMb": 1476.5,
+   "liveMb": 515.5,
+   "jvmThreads": 109
+  },
+  {
+   "t": 3241.3,
+   "node": "b",
+   "rssMb": 2820.0,
+   "threads": 141,
+   "openFiles": 142,
+   "heapMb": 540.5,
+   "liveMb": 474.0,
+   "jvmThreads": 105
+  },
+  {
+   "t": 3241.3,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 3241.3,
+   "node": "c",
+   "rssMb": 1999.8,
+   "threads": 125,
+   "openFiles": 167,
+   "heapMb": 831.9,
+   "liveMb": 335.0,
+   "jvmThreads": 88
+  },
+  {
+   "t": 3301.4,
+   "node": "a",
+   "rssMb": 2931.6,
+   "threads": 144,
+   "openFiles": 168,
+   "heapMb": 1102.5,
+   "liveMb": 458.5,
+   "jvmThreads": 108
+  },
+  {
+   "t": 3301.4,
+   "node": "b",
+   "rssMb": 2835.5,
+   "threads": 143,
+   "openFiles": 143,
+   "heapMb": 790.5,
+   "liveMb": 471.0,
+   "jvmThreads": 107
+  },
+  {
+   "t": 3301.4,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 3301.4,
+   "node": "c",
+   "rssMb": 2000.9,
+   "threads": 126,
+   "openFiles": 167,
+   "heapMb": 902.6,
+   "liveMb": 335.0,
+   "jvmThreads": 90
+  },
+  {
+   "t": 3361.5,
+   "node": "a",
+   "rssMb": 2931.9,
+   "threads": 144,
+   "openFiles": 163,
+   "heapMb": 1080.5,
+   "liveMb": 478.0,
+   "jvmThreads": 108
+  },
+  {
+   "t": 3361.5,
+   "node": "b",
+   "rssMb": 2875.8,
+   "threads": 144,
+   "openFiles": 143,
+   "heapMb": 1037.0,
+   "liveMb": 506.5,
+   "jvmThreads": 108
+  },
+  {
+   "t": 3361.5,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 3361.5,
+   "node": "c",
+   "rssMb": 2001.2,
+   "threads": 126,
+   "openFiles": 164,
+   "heapMb": 888.6,
+   "liveMb": 336.3,
+   "jvmThreads": 90
+  },
+  {
+   "t": 3421.5,
+   "node": "a",
+   "rssMb": 2932.0,
+   "threads": 142,
+   "openFiles": 163,
+   "heapMb": 1109.5,
+   "liveMb": 461.5,
+   "jvmThreads": 106
+  },
+  {
+   "t": 3421.5,
+   "node": "b",
+   "rssMb": 2886.2,
+   "threads": 140,
+   "openFiles": 138,
+   "heapMb": 1426.0,
+   "liveMb": 469.0,
+   "jvmThreads": 104
+  },
+  {
+   "t": 3421.5,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 3421.5,
+   "node": "c",
+   "rssMb": 2001.7,
+   "threads": 127,
+   "openFiles": 155,
+   "heapMb": 842.8,
+   "liveMb": 332.5,
+   "jvmThreads": 91
+  },
+  {
+   "t": 3481.5,
+   "node": "a",
+   "rssMb": 2932.0,
+   "threads": 142,
+   "openFiles": 161,
+   "heapMb": 1172.5,
+   "liveMb": 478.5,
+   "jvmThreads": 106
+  },
+  {
+   "t": 3481.5,
+   "node": "b",
+   "rssMb": 2886.5,
+   "threads": 141,
+   "openFiles": 145,
+   "heapMb": 1003.3,
+   "liveMb": 470.3,
+   "jvmThreads": 105
+  },
+  {
+   "t": 3481.5,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 3481.5,
+   "node": "c",
+   "rssMb": 2001.9,
+   "threads": 125,
+   "openFiles": 164,
+   "heapMb": 770.1,
+   "liveMb": 335.1,
+   "jvmThreads": 89
+  },
+  {
+   "t": 3541.6,
+   "node": "a",
+   "rssMb": 2932.2,
+   "threads": 143,
+   "openFiles": 172,
+   "heapMb": 585.0,
+   "liveMb": 489.0,
+   "jvmThreads": 107
+  },
+  {
+   "t": 3541.6,
+   "node": "b",
+   "rssMb": 2887.3,
+   "threads": 140,
+   "openFiles": 142,
+   "heapMb": 799.5,
+   "liveMb": 473.5,
+   "jvmThreads": 104
+  },
+  {
+   "t": 3541.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 3541.6,
+   "node": "c",
+   "rssMb": 2002.3,
+   "threads": 127,
+   "openFiles": 170,
+   "heapMb": 970.3,
+   "liveMb": 339.5,
+   "jvmThreads": 91
+  },
+  {
+   "t": 3601.6,
+   "node": "b",
+   "rssMb": 2887.9,
+   "threads": 141,
+   "openFiles": 148,
+   "heapMb": 891.5,
+   "liveMb": 479.0,
+   "jvmThreads": 105
+  },
+  {
+   "t": 3601.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 3601.6,
+   "node": "c",
+   "rssMb": 2031.5,
+   "threads": 139,
+   "openFiles": 172,
+   "heapMb": 654.0,
+   "liveMb": 337.8,
+   "jvmThreads": 95
+  },
+  {
+   "t": 3661.6,
+   "node": "b",
+   "rssMb": 2867.4,
+   "threads": 141,
+   "openFiles": 158,
+   "heapMb": 613.5,
+   "liveMb": 436.9,
+   "jvmThreads": 105
+  },
+  {
+   "t": 3661.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 3661.6,
+   "node": "c",
+   "rssMb": 2043.5,
+   "threads": 147,
+   "openFiles": 177,
+   "heapMb": 945.2,
+   "liveMb": 339.4,
+   "jvmThreads": 111
+  },
+  {
+   "t": 3721.6,
+   "node": "b",
+   "rssMb": 2847.4,
+   "threads": 140,
+   "openFiles": 166,
+   "heapMb": 857.2,
+   "liveMb": 428.6,
+   "jvmThreads": 104
+  },
+  {
+   "t": 3721.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 3721.6,
+   "node": "c",
+   "rssMb": 2051.6,
+   "threads": 148,
+   "openFiles": 183,
+   "heapMb": 514.5,
+   "liveMb": 344.7,
+   "jvmThreads": 112
+  },
+  {
+   "t": 3781.6,
+   "node": "b",
+   "rssMb": 2848.1,
+   "threads": 139,
+   "openFiles": 151,
+   "heapMb": 1108.4,
+   "liveMb": 452.6,
+   "jvmThreads": 103
+  },
+  {
+   "t": 3781.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 3781.6,
+   "node": "c",
+   "rssMb": 2069.9,
+   "threads": 149,
+   "openFiles": 168,
+   "heapMb": 714.9,
+   "liveMb": 346.2,
+   "jvmThreads": 113
+  },
+  {
+   "t": 3841.6,
+   "node": "b",
+   "rssMb": 2849.0,
+   "threads": 140,
+   "openFiles": 164,
+   "heapMb": 1207.6,
+   "liveMb": 479.6,
+   "jvmThreads": 104
+  },
+  {
+   "t": 3841.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 3841.6,
+   "node": "c",
+   "rssMb": 2072.0,
+   "threads": 150,
+   "openFiles": 183,
+   "heapMb": 957.4,
+   "liveMb": 346.2,
+   "jvmThreads": 114
+  },
+  {
+   "t": 3901.6,
+   "node": "b",
+   "rssMb": 2849.5,
+   "threads": 140,
+   "openFiles": 159,
+   "heapMb": 937.6,
+   "liveMb": 507.8,
+   "jvmThreads": 104
+  },
+  {
+   "t": 3901.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 3901.6,
+   "node": "c",
+   "rssMb": 2073.2,
+   "threads": 146,
+   "openFiles": 176,
+   "heapMb": 869.6,
+   "liveMb": 360.6,
+   "jvmThreads": 110
+  },
+  {
+   "t": 3901.6,
+   "node": "a",
+   "rssMb": 188.8,
+   "threads": 46,
+   "openFiles": 6
+  },
+  {
+   "t": 3961.7,
+   "node": "b",
+   "rssMb": 2888.5,
+   "threads": 139,
+   "openFiles": 160,
+   "heapMb": 777.7,
+   "liveMb": 506.6,
+   "jvmThreads": 103
+  },
+  {
+   "t": 3961.7,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 3961.7,
+   "node": "c",
+   "rssMb": 2287.2,
+   "threads": 150,
+   "openFiles": 192,
+   "heapMb": 887.4,
+   "liveMb": 528.4,
+   "jvmThreads": 114
+  },
+  {
+   "t": 3961.7,
+   "node": "a",
+   "rssMb": 1069.4,
+   "threads": 121,
+   "openFiles": 167,
+   "heapMb": 340.8,
+   "liveMb": 132.0,
+   "jvmThreads": 85
+  },
+  {
+   "t": 4021.7,
+   "node": "b",
+   "rssMb": 2944.6,
+   "threads": 140,
+   "openFiles": 157,
+   "heapMb": 1392.8,
+   "liveMb": 443.1,
+   "jvmThreads": 104
+  },
+  {
+   "t": 4021.7,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 4021.7,
+   "node": "c",
+   "rssMb": 2633.6,
+   "threads": 149,
+   "openFiles": 184,
+   "heapMb": 1143.9,
+   "liveMb": 521.9,
+   "jvmThreads": 113
+  },
+  {
+   "t": 4021.7,
+   "node": "a",
+   "rssMb": 1128.8,
+   "threads": 122,
+   "openFiles": 169,
+   "heapMb": 307.5,
+   "liveMb": 152.5,
+   "jvmThreads": 86
+  },
+  {
+   "t": 4081.7,
+   "node": "b",
+   "rssMb": 2945.0,
+   "threads": 141,
+   "openFiles": 151,
+   "heapMb": 584.7,
+   "liveMb": 448.9,
+   "jvmThreads": 105
+  },
+  {
+   "t": 4081.7,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 4081.7,
+   "node": "c",
+   "rssMb": 2728.2,
+   "threads": 150,
+   "openFiles": 176,
+   "heapMb": 813.0,
+   "liveMb": 511.0,
+   "jvmThreads": 114
+  },
+  {
+   "t": 4081.7,
+   "node": "a",
+   "rssMb": 1160.4,
+   "threads": 119,
+   "openFiles": 167,
+   "heapMb": 190.2,
+   "liveMb": 157.6,
+   "jvmThreads": 83
+  },
+  {
+   "t": 4141.8,
+   "node": "b",
+   "rssMb": 2945.4,
+   "threads": 140,
+   "openFiles": 150,
+   "heapMb": 1256.6,
+   "liveMb": 473.6,
+   "jvmThreads": 104
+  },
+  {
+   "t": 4141.8,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 4141.8,
+   "node": "c",
+   "rssMb": 2763.2,
+   "threads": 149,
+   "openFiles": 180,
+   "heapMb": 959.5,
+   "liveMb": 510.4,
+   "jvmThreads": 113
+  },
+  {
+   "t": 4141.8,
+   "node": "a",
+   "rssMb": 1161.9,
+   "threads": 121,
+   "openFiles": 164,
+   "heapMb": 330.9,
+   "liveMb": 169.9,
+   "jvmThreads": 85
+  },
+  {
+   "t": 4201.8,
+   "node": "b",
+   "rssMb": 2946.0,
+   "threads": 143,
+   "openFiles": 158,
+   "heapMb": 1179.2,
+   "liveMb": 475.2,
+   "jvmThreads": 107
+  },
+  {
+   "t": 4201.8,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 4201.8,
+   "node": "c",
+   "rssMb": 2784.0,
+   "threads": 151,
+   "openFiles": 182,
+   "heapMb": 882.0,
+   "liveMb": 541.0,
+   "jvmThreads": 115
+  },
+  {
+   "t": 4201.8,
+   "node": "a",
+   "rssMb": 1168.4,
+   "threads": 119,
+   "openFiles": 161,
+   "heapMb": 234.8,
+   "liveMb": 176.2,
+   "jvmThreads": 83
+  },
+  {
+   "t": 4261.8,
+   "node": "b",
+   "rssMb": 2946.2,
+   "threads": 142,
+   "openFiles": 153,
+   "heapMb": 860.3,
+   "liveMb": 473.3,
+   "jvmThreads": 106
+  },
+  {
+   "t": 4261.8,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 4261.8,
+   "node": "c",
+   "rssMb": 2792.4,
+   "threads": 148,
+   "openFiles": 179,
+   "heapMb": 716.1,
+   "liveMb": 513.0,
+   "jvmThreads": 112
+  },
+  {
+   "t": 4261.8,
+   "node": "a",
+   "rssMb": 1172.4,
+   "threads": 120,
+   "openFiles": 160,
+   "heapMb": 254.8,
+   "liveMb": 180.0,
+   "jvmThreads": 84
+  },
+  {
+   "t": 4321.8,
+   "node": "b",
+   "rssMb": 2946.6,
+   "threads": 139,
+   "openFiles": 151,
+   "heapMb": 1315.5,
+   "liveMb": 450.0,
+   "jvmThreads": 103
+  },
+  {
+   "t": 4321.8,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 4321.8,
+   "node": "c",
+   "rssMb": 2795.3,
+   "threads": 151,
+   "openFiles": 186,
+   "heapMb": 748.5,
+   "liveMb": 519.0,
+   "jvmThreads": 115
+  },
+  {
+   "t": 4321.8,
+   "node": "a",
+   "rssMb": 1178.6,
+   "threads": 122,
+   "openFiles": 165,
+   "heapMb": 383.9,
+   "liveMb": 182.0,
+   "jvmThreads": 86
+  },
+  {
+   "t": 4381.8,
+   "node": "b",
+   "rssMb": 2947.0,
+   "threads": 141,
+   "openFiles": 153,
+   "heapMb": 745.0,
+   "liveMb": 449.0,
+   "jvmThreads": 105
+  },
+  {
+   "t": 4381.8,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 4381.8,
+   "node": "c",
+   "rssMb": 2802.4,
+   "threads": 147,
+   "openFiles": 176,
+   "heapMb": 1088.3,
+   "liveMb": 509.4,
+   "jvmThreads": 111
+  },
+  {
+   "t": 4381.8,
+   "node": "a",
+   "rssMb": 1182.5,
+   "threads": 121,
+   "openFiles": 159,
+   "heapMb": 223.8,
+   "liveMb": 187.9,
+   "jvmThreads": 85
+  },
+  {
+   "t": 4441.9,
+   "node": "b",
+   "rssMb": 2947.5,
+   "threads": 140,
+   "openFiles": 149,
+   "heapMb": 830.4,
+   "liveMb": 453.4,
+   "jvmThreads": 104
+  },
+  {
+   "t": 4441.9,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 4441.9,
+   "node": "c",
+   "rssMb": 2804.9,
+   "threads": 151,
+   "openFiles": 171,
+   "heapMb": 757.0,
+   "liveMb": 530.0,
+   "jvmThreads": 115
+  },
+  {
+   "t": 4441.9,
+   "node": "a",
+   "rssMb": 1185.1,
+   "threads": 118,
+   "openFiles": 155,
+   "heapMb": 362.4,
+   "liveMb": 191.0,
+   "jvmThreads": 82
+  },
+  {
+   "t": 4501.9,
+   "node": "b",
+   "rssMb": 2947.8,
+   "threads": 139,
+   "openFiles": 152,
+   "heapMb": 603.4,
+   "liveMb": 442.4,
+   "jvmThreads": 103
+  },
+  {
+   "t": 4501.9,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 4501.9,
+   "node": "c",
+   "rssMb": 2807.6,
+   "threads": 150,
+   "openFiles": 185,
+   "heapMb": 1235.8,
+   "liveMb": 545.8,
+   "jvmThreads": 114
+  },
+  {
+   "t": 4501.9,
+   "node": "a",
+   "rssMb": 1187.1,
+   "threads": 121,
+   "openFiles": 163,
+   "heapMb": 262.7,
+   "liveMb": 188.9,
+   "jvmThreads": 85
+  },
+  {
+   "t": 4561.9,
+   "node": "b",
+   "rssMb": 2948.2,
+   "threads": 141,
+   "openFiles": 150,
+   "heapMb": 1111.5,
+   "liveMb": 451.5,
+   "jvmThreads": 105
+  },
+  {
+   "t": 4561.9,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 4561.9,
+   "node": "c",
+   "rssMb": 2821.2,
+   "threads": 148,
+   "openFiles": 182,
+   "heapMb": 1096.7,
+   "liveMb": 520.2,
+   "jvmThreads": 112
+  },
+  {
+   "t": 4561.9,
+   "node": "a",
+   "rssMb": 1188.8,
+   "threads": 120,
+   "openFiles": 166,
+   "heapMb": 352.3,
+   "liveMb": 193.7,
+   "jvmThreads": 84
+  },
+  {
+   "t": 4621.9,
+   "node": "b",
+   "rssMb": 2948.5,
+   "threads": 142,
+   "openFiles": 151,
+   "heapMb": 680.4,
+   "liveMb": 469.4,
+   "jvmThreads": 106
+  },
+  {
+   "t": 4621.9,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 4621.9,
+   "node": "c",
+   "rssMb": 2822.5,
+   "threads": 149,
+   "openFiles": 183,
+   "heapMb": 1195.2,
+   "liveMb": 520.7,
+   "jvmThreads": 113
+  },
+  {
+   "t": 4621.9,
+   "node": "a",
+   "rssMb": 1190.4,
+   "threads": 121,
+   "openFiles": 165,
+   "heapMb": 219.2,
+   "liveMb": 194.1,
+   "jvmThreads": 85
+  },
+  {
+   "t": 4681.9,
+   "node": "b",
+   "rssMb": 2949.2,
+   "threads": 139,
+   "openFiles": 148,
+   "heapMb": 560.5,
+   "liveMb": 462.0,
+   "jvmThreads": 103
+  },
+  {
+   "t": 4681.9,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 4681.9,
+   "node": "c",
+   "rssMb": 2825.6,
+   "threads": 150,
+   "openFiles": 173,
+   "heapMb": 1324.9,
+   "liveMb": 544.4,
+   "jvmThreads": 114
+  },
+  {
+   "t": 4681.9,
+   "node": "a",
+   "rssMb": 1195.3,
+   "threads": 121,
+   "openFiles": 161,
+   "heapMb": 331.2,
+   "liveMb": 193.4,
+   "jvmThreads": 85
+  },
+  {
+   "t": 4742.0,
+   "node": "b",
+   "rssMb": 2949.6,
+   "threads": 141,
+   "openFiles": 150,
+   "heapMb": 560.9,
+   "liveMb": 468.4,
+   "jvmThreads": 105
+  },
+  {
+   "t": 4742.0,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 4742.0,
+   "node": "c",
+   "rssMb": 2825.9,
+   "threads": 150,
+   "openFiles": 176,
+   "heapMb": 1524.0,
+   "liveMb": 520.0,
+   "jvmThreads": 114
+  },
+  {
+   "t": 4742.0,
+   "node": "a",
+   "rssMb": 1195.3,
+   "threads": 121,
+   "openFiles": 162,
+   "heapMb": 298.2,
+   "liveMb": 195.1,
+   "jvmThreads": 85
+  },
+  {
+   "t": 4802.0,
+   "node": "b",
+   "rssMb": 2949.9,
+   "threads": 141,
+   "openFiles": 149,
+   "heapMb": 1403.5,
+   "liveMb": 444.5,
+   "jvmThreads": 105
+  },
+  {
+   "t": 4802.0,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 4802.0,
+   "node": "c",
+   "rssMb": 2826.4,
+   "threads": 151,
+   "openFiles": 180,
+   "heapMb": 1160.0,
+   "liveMb": 534.0,
+   "jvmThreads": 115
+  },
+  {
+   "t": 4802.0,
+   "node": "a",
+   "rssMb": 1199.7,
+   "threads": 119,
+   "openFiles": 165,
+   "heapMb": 239.7,
+   "liveMb": 197.4,
+   "jvmThreads": 83
+  },
+  {
+   "t": 4862.0,
+   "node": "b",
+   "rssMb": 2950.0,
+   "threads": 140,
+   "openFiles": 154,
+   "heapMb": 964.1,
+   "liveMb": 448.2,
+   "jvmThreads": 104
+  },
+  {
+   "t": 4862.0,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 4862.0,
+   "node": "c",
+   "rssMb": 2826.7,
+   "threads": 152,
+   "openFiles": 180,
+   "heapMb": 763.5,
+   "liveMb": 543.0,
+   "jvmThreads": 116
+  },
+  {
+   "t": 4862.0,
+   "node": "a",
+   "rssMb": 1201.2,
+   "threads": 120,
+   "openFiles": 166,
+   "heapMb": 311.5,
+   "liveMb": 198.9,
+   "jvmThreads": 84
+  },
+  {
+   "t": 4922.0,
+   "node": "b",
+   "rssMb": 2950.9,
+   "threads": 139,
+   "openFiles": 154,
+   "heapMb": 928.4,
+   "liveMb": 469.4,
+   "jvmThreads": 103
+  },
+  {
+   "t": 4922.0,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 4922.0,
+   "node": "c",
+   "rssMb": 2837.8,
+   "threads": 149,
+   "openFiles": 176,
+   "heapMb": 1537.0,
+   "liveMb": 525.0,
+   "jvmThreads": 113
+  },
+  {
+   "t": 4922.0,
+   "node": "a",
+   "rssMb": 1203.1,
+   "threads": 119,
+   "openFiles": 162,
+   "heapMb": 284.4,
+   "liveMb": 197.7,
+   "jvmThreads": 83
+  },
+  {
+   "t": 4982.0,
+   "node": "b",
+   "rssMb": 2951.2,
+   "threads": 140,
+   "openFiles": 152,
+   "heapMb": 811.3,
+   "liveMb": 474.3,
+   "jvmThreads": 104
+  },
+  {
+   "t": 4982.0,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 4982.0,
+   "node": "c",
+   "rssMb": 2844.6,
+   "threads": 151,
+   "openFiles": 177,
+   "heapMb": 1507.3,
+   "liveMb": 520.3,
+   "jvmThreads": 115
+  },
+  {
+   "t": 4982.0,
+   "node": "a",
+   "rssMb": 1203.5,
+   "threads": 120,
+   "openFiles": 160,
+   "heapMb": 251.5,
+   "liveMb": 197.3,
+   "jvmThreads": 84
+  },
+  {
+   "t": 5042.0,
+   "node": "b",
+   "rssMb": 2951.7,
+   "threads": 143,
+   "openFiles": 154,
+   "heapMb": 845.7,
+   "liveMb": 458.7,
+   "jvmThreads": 107
+  },
+  {
+   "t": 5042.0,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 5042.0,
+   "node": "c",
+   "rssMb": 2851.4,
+   "threads": 150,
+   "openFiles": 182,
+   "heapMb": 1010.0,
+   "liveMb": 522.0,
+   "jvmThreads": 114
+  },
+  {
+   "t": 5042.0,
+   "node": "a",
+   "rssMb": 1204.1,
+   "threads": 123,
+   "openFiles": 163,
+   "heapMb": 359.4,
+   "liveMb": 195.2,
+   "jvmThreads": 86
+  },
+  {
+   "t": 5102.1,
+   "node": "b",
+   "rssMb": 2966.6,
+   "threads": 142,
+   "openFiles": 158,
+   "heapMb": 1202.8,
+   "liveMb": 475.3,
+   "jvmThreads": 106
+  },
+  {
+   "t": 5102.1,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 5102.1,
+   "node": "c",
+   "rssMb": 2862.9,
+   "threads": 151,
+   "openFiles": 187,
+   "heapMb": 747.8,
+   "liveMb": 510.3,
+   "jvmThreads": 115
+  },
+  {
+   "t": 5102.1,
+   "node": "a",
+   "rssMb": 1204.3,
+   "threads": 117,
+   "openFiles": 163,
+   "heapMb": 332.4,
+   "liveMb": 198.2,
+   "jvmThreads": 81
+  },
+  {
+   "t": 5162.1,
+   "node": "b",
+   "rssMb": 2967.0,
+   "threads": 142,
+   "openFiles": 152,
+   "heapMb": 1000.7,
+   "liveMb": 496.7,
+   "jvmThreads": 106
+  },
+  {
+   "t": 5162.1,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 5162.1,
+   "node": "c",
+   "rssMb": 2870.4,
+   "threads": 151,
+   "openFiles": 182,
+   "heapMb": 804.0,
+   "liveMb": 523.5,
+   "jvmThreads": 115
+  },
+  {
+   "t": 5162.1,
+   "node": "a",
+   "rssMb": 1206.2,
+   "threads": 121,
+   "openFiles": 162,
+   "heapMb": 206.5,
+   "liveMb": 196.9,
+   "jvmThreads": 85
+  },
+  {
+   "t": 5222.1,
+   "node": "b",
+   "rssMb": 2971.8,
+   "threads": 142,
+   "openFiles": 154,
+   "heapMb": 832.7,
+   "liveMb": 475.2,
+   "jvmThreads": 106
+  },
+  {
+   "t": 5222.1,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 5222.1,
+   "node": "c",
+   "rssMb": 2883.1,
+   "threads": 154,
+   "openFiles": 190,
+   "heapMb": 806.8,
+   "liveMb": 542.8,
+   "jvmThreads": 118
+  },
+  {
+   "t": 5222.1,
+   "node": "a",
+   "rssMb": 1204.2,
+   "threads": 120,
+   "openFiles": 166,
+   "heapMb": 388.2,
+   "liveMb": 198.3,
+   "jvmThreads": 84
+  },
+  {
+   "t": 5282.1,
+   "node": "b",
+   "rssMb": 2971.9,
+   "threads": 140,
+   "openFiles": 154,
+   "heapMb": 574.6,
+   "liveMb": 450.1,
+   "jvmThreads": 104
+  },
+  {
+   "t": 5282.1,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 5282.1,
+   "node": "c",
+   "rssMb": 2902.3,
+   "threads": 154,
+   "openFiles": 183,
+   "heapMb": 897.0,
+   "liveMb": 526.5,
+   "jvmThreads": 118
+  },
+  {
+   "t": 5282.1,
+   "node": "a",
+   "rssMb": 1202.5,
+   "threads": 121,
+   "openFiles": 160,
+   "heapMb": 365.5,
+   "liveMb": 194.7,
+   "jvmThreads": 85
+  },
+  {
+   "t": 5342.1,
+   "node": "b",
+   "rssMb": 2972.3,
+   "threads": 141,
+   "openFiles": 151,
+   "heapMb": 1300.0,
+   "liveMb": 446.5,
+   "jvmThreads": 105
+  },
+  {
+   "t": 5342.1,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 5342.1,
+   "node": "c",
+   "rssMb": 2925.1,
+   "threads": 149,
+   "openFiles": 183,
+   "heapMb": 1518.5,
+   "liveMb": 537.0,
+   "jvmThreads": 113
+  },
+  {
+   "t": 5342.1,
+   "node": "a",
+   "rssMb": 1208.8,
+   "threads": 124,
+   "openFiles": 165,
+   "heapMb": 243.2,
+   "liveMb": 195.5,
+   "jvmThreads": 85
+  },
+  {
+   "t": 5402.2,
+   "node": "b",
+   "rssMb": 2972.7,
+   "threads": 141,
+   "openFiles": 159,
+   "heapMb": 1042.2,
+   "liveMb": 456.0,
+   "jvmThreads": 105
+  },
+  {
+   "t": 5402.2,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 5402.2,
+   "node": "c",
+   "rssMb": 2925.5,
+   "threads": 150,
+   "openFiles": 200,
+   "heapMb": 1589.2,
+   "liveMb": 527.7,
+   "jvmThreads": 114
+  },
+  {
+   "t": 5402.2,
+   "node": "a",
+   "rssMb": 1211.9,
+   "threads": 123,
+   "openFiles": 169,
+   "heapMb": 357.6,
+   "liveMb": 196.0,
+   "jvmThreads": 87
+  },
+  {
+   "t": 5462.2,
+   "node": "b",
+   "rssMb": 2972.9,
+   "threads": 140,
+   "openFiles": 154,
+   "heapMb": 754.5,
+   "liveMb": 462.5,
+   "jvmThreads": 104
+  },
+  {
+   "t": 5462.2,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 5462.2,
+   "node": "c",
+   "rssMb": 2925.7,
+   "threads": 151,
+   "openFiles": 184,
+   "heapMb": 738.9,
+   "liveMb": 528.0,
+   "jvmThreads": 115
+  },
+  {
+   "t": 5462.2,
+   "node": "a",
+   "rssMb": 1212.0,
+   "threads": 121,
+   "openFiles": 159,
+   "heapMb": 236.9,
+   "liveMb": 196.3,
+   "jvmThreads": 85
+  },
+  {
+   "t": 5522.2,
+   "node": "b",
+   "rssMb": 2973.3,
+   "threads": 141,
+   "openFiles": 156,
+   "heapMb": 631.0,
+   "liveMb": 476.0,
+   "jvmThreads": 105
+  },
+  {
+   "t": 5522.2,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 5522.2,
+   "node": "c",
+   "rssMb": 2927.3,
+   "threads": 154,
+   "openFiles": 188,
+   "heapMb": 1572.0,
+   "liveMb": 541.5,
+   "jvmThreads": 118
+  },
+  {
+   "t": 5522.2,
+   "node": "a",
+   "rssMb": 1215.6,
+   "threads": 119,
+   "openFiles": 160,
+   "heapMb": 215.1,
+   "liveMb": 198.2,
+   "jvmThreads": 83
+  },
+  {
+   "t": 5582.2,
+   "node": "b",
+   "rssMb": 2973.4,
+   "threads": 140,
+   "openFiles": 156,
+   "heapMb": 715.6,
+   "liveMb": 459.6,
+   "jvmThreads": 104
+  },
+  {
+   "t": 5582.2,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 5582.2,
+   "node": "c",
+   "rssMb": 2940.1,
+   "threads": 151,
+   "openFiles": 184,
+   "heapMb": 1610.0,
+   "liveMb": 543.0,
+   "jvmThreads": 115
+  },
+  {
+   "t": 5582.2,
+   "node": "a",
+   "rssMb": 1216.1,
+   "threads": 121,
+   "openFiles": 161,
+   "heapMb": 376.0,
+   "liveMb": 197.7,
+   "jvmThreads": 85
+  },
+  {
+   "t": 5642.2,
+   "node": "b",
+   "rssMb": 2973.6,
+   "threads": 141,
+   "openFiles": 153,
+   "heapMb": 636.5,
+   "liveMb": 450.0,
+   "jvmThreads": 105
+  },
+  {
+   "t": 5642.2,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 5642.2,
+   "node": "c",
+   "rssMb": 2942.4,
+   "threads": 150,
+   "openFiles": 185,
+   "heapMb": 1300.5,
+   "liveMb": 529.5,
+   "jvmThreads": 114
+  },
+  {
+   "t": 5642.2,
+   "node": "a",
+   "rssMb": 1216.5,
+   "threads": 122,
+   "openFiles": 164,
+   "heapMb": 383.0,
+   "liveMb": 198.0,
+   "jvmThreads": 86
+  },
+  {
+   "t": 5702.2,
+   "node": "b",
+   "rssMb": 2974.5,
+   "threads": 140,
+   "openFiles": 155,
+   "heapMb": 1070.8,
+   "liveMb": 472.8,
+   "jvmThreads": 104
+  },
+  {
+   "t": 5702.2,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 5702.2,
+   "node": "c",
+   "rssMb": 2942.6,
+   "threads": 149,
+   "openFiles": 188,
+   "heapMb": 1457.2,
+   "liveMb": 522.7,
+   "jvmThreads": 113
+  },
+  {
+   "t": 5702.2,
+   "node": "a",
+   "rssMb": 1218.4,
+   "threads": 121,
+   "openFiles": 167,
+   "heapMb": 361.4,
+   "liveMb": 196.7,
+   "jvmThreads": 85
+  },
+  {
+   "t": 5762.3,
+   "node": "b",
+   "rssMb": 2974.7,
+   "threads": 141,
+   "openFiles": 150,
+   "heapMb": 621.0,
+   "liveMb": 473.5,
+   "jvmThreads": 105
+  },
+  {
+   "t": 5762.3,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 5762.3,
+   "node": "c",
+   "rssMb": 2946.0,
+   "threads": 151,
+   "openFiles": 180,
+   "heapMb": 1410.3,
+   "liveMb": 542.8,
+   "jvmThreads": 115
+  },
+  {
+   "t": 5762.3,
+   "node": "a",
+   "rssMb": 1220.2,
+   "threads": 119,
+   "openFiles": 162,
+   "heapMb": 323.1,
+   "liveMb": 199.0,
+   "jvmThreads": 83
+  },
+  {
+   "t": 5822.3,
+   "node": "b",
+   "rssMb": 2975.0,
+   "threads": 142,
+   "openFiles": 150,
+   "heapMb": 1004.9,
+   "liveMb": 453.4,
+   "jvmThreads": 106
+  },
+  {
+   "t": 5822.3,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 5822.3,
+   "node": "c",
+   "rssMb": 2946.2,
+   "threads": 152,
+   "openFiles": 182,
+   "heapMb": 1044.5,
+   "liveMb": 533.5,
+   "jvmThreads": 116
+  },
+  {
+   "t": 5822.3,
+   "node": "a",
+   "rssMb": 1220.9,
+   "threads": 121,
+   "openFiles": 165,
+   "heapMb": 353.1,
+   "liveMb": 192.9,
+   "jvmThreads": 85
+  },
+  {
+   "t": 5882.3,
+   "node": "b",
+   "rssMb": 2992.3,
+   "threads": 142,
+   "openFiles": 153,
+   "heapMb": 1221.4,
+   "liveMb": 446.6,
+   "jvmThreads": 106
+  },
+  {
+   "t": 5882.3,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 5882.3,
+   "node": "c",
+   "rssMb": 2951.7,
+   "threads": 149,
+   "openFiles": 180,
+   "heapMb": 1445.5,
+   "liveMb": 552.5,
+   "jvmThreads": 113
+  },
+  {
+   "t": 5882.3,
+   "node": "a",
+   "rssMb": 1221.1,
+   "threads": 120,
+   "openFiles": 157,
+   "heapMb": 359.6,
+   "liveMb": 190.0,
+   "jvmThreads": 84
+  },
+  {
+   "t": 5942.3,
+   "node": "b",
+   "rssMb": 3002.1,
+   "threads": 142,
+   "openFiles": 151,
+   "heapMb": 1209.0,
+   "liveMb": 450.5,
+   "jvmThreads": 106
+  },
+  {
+   "t": 5942.3,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 5942.3,
+   "node": "c",
+   "rssMb": 2951.9,
+   "threads": 152,
+   "openFiles": 189,
+   "heapMb": 1119.5,
+   "liveMb": 521.0,
+   "jvmThreads": 116
+  },
+  {
+   "t": 5942.3,
+   "node": "a",
+   "rssMb": 1221.8,
+   "threads": 120,
+   "openFiles": 166,
+   "heapMb": 325.3,
+   "liveMb": 189.0,
+   "jvmThreads": 84
+  },
+  {
+   "t": 6002.3,
+   "node": "b",
+   "rssMb": 3002.3,
+   "threads": 142,
+   "openFiles": 149,
+   "heapMb": 1251.7,
+   "liveMb": 494.7,
+   "jvmThreads": 106
+  },
+  {
+   "t": 6002.3,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 6002.3,
+   "node": "c",
+   "rssMb": 2952.3,
+   "threads": 147,
+   "openFiles": 181,
+   "heapMb": 1385.0,
+   "liveMb": 539.0,
+   "jvmThreads": 111
+  },
+  {
+   "t": 6002.3,
+   "node": "a",
+   "rssMb": 1222.6,
+   "threads": 123,
+   "openFiles": 160,
+   "heapMb": 382.3,
+   "liveMb": 186.4,
+   "jvmThreads": 87
+  },
+  {
+   "t": 6062.3,
+   "node": "b",
+   "rssMb": 3014.6,
+   "threads": 141,
+   "openFiles": 153,
+   "heapMb": 982.4,
+   "liveMb": 454.7,
+   "jvmThreads": 105
+  },
+  {
+   "t": 6062.3,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 6062.3,
+   "node": "c",
+   "rssMb": 2952.9,
+   "threads": 152,
+   "openFiles": 191,
+   "heapMb": 986.5,
+   "liveMb": 560.0,
+   "jvmThreads": 116
+  },
+  {
+   "t": 6062.3,
+   "node": "a",
+   "rssMb": 1227.0,
+   "threads": 124,
+   "openFiles": 168,
+   "heapMb": 253.6,
+   "liveMb": 187.7,
+   "jvmThreads": 88
+  },
+  {
+   "t": 6122.3,
+   "node": "b",
+   "rssMb": 3014.6,
+   "threads": 141,
+   "openFiles": 154,
+   "heapMb": 824.0,
+   "liveMb": 451.0,
+   "jvmThreads": 105
+  },
+  {
+   "t": 6122.3,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 6122.3,
+   "node": "c",
+   "rssMb": 2956.3,
+   "threads": 153,
+   "openFiles": 183,
+   "heapMb": 910.3,
+   "liveMb": 525.8,
+   "jvmThreads": 117
+  },
+  {
+   "t": 6122.3,
+   "node": "a",
+   "rssMb": 1227.3,
+   "threads": 122,
+   "openFiles": 166,
+   "heapMb": 271.0,
+   "liveMb": 186.6,
+   "jvmThreads": 86
+  },
+  {
+   "t": 6182.4,
+   "node": "b",
+   "rssMb": 3015.1,
+   "threads": 141,
+   "openFiles": 154,
+   "heapMb": 1207.2,
+   "liveMb": 520.4,
+   "jvmThreads": 105
+  },
+  {
+   "t": 6182.4,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 6182.4,
+   "node": "c",
+   "rssMb": 2958.7,
+   "threads": 149,
+   "openFiles": 186,
+   "heapMb": 1322.0,
+   "liveMb": 546.5,
+   "jvmThreads": 113
+  },
+  {
+   "t": 6182.4,
+   "node": "a",
+   "rssMb": 1228.7,
+   "threads": 121,
+   "openFiles": 163,
+   "heapMb": 275.8,
+   "liveMb": 185.7,
+   "jvmThreads": 85
+  },
+  {
+   "t": 6242.4,
+   "node": "b",
+   "rssMb": 3032.5,
+   "threads": 140,
+   "openFiles": 151,
+   "heapMb": 1096.0,
+   "liveMb": 458.6,
+   "jvmThreads": 104
+  },
+  {
+   "t": 6242.4,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 6242.4,
+   "node": "c",
+   "rssMb": 2962.6,
+   "threads": 150,
+   "openFiles": 178,
+   "heapMb": 749.5,
+   "liveMb": 546.5,
+   "jvmThreads": 114
+  },
+  {
+   "t": 6242.4,
+   "node": "a",
+   "rssMb": 1229.2,
+   "threads": 122,
+   "openFiles": 160,
+   "heapMb": 259.3,
+   "liveMb": 185.3,
+   "jvmThreads": 86
+  },
+  {
+   "t": 6302.4,
+   "node": "b",
+   "rssMb": 3032.8,
+   "threads": 142,
+   "openFiles": 151,
+   "heapMb": 1066.5,
+   "liveMb": 449.6,
+   "jvmThreads": 106
+  },
+  {
+   "t": 6302.4,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 6302.4,
+   "node": "c",
+   "rssMb": 2962.8,
+   "threads": 151,
+   "openFiles": 179,
+   "heapMb": 1449.5,
+   "liveMb": 528.0,
+   "jvmThreads": 115
+  },
+  {
+   "t": 6302.4,
+   "node": "a",
+   "rssMb": 1231.4,
+   "threads": 123,
+   "openFiles": 161,
+   "heapMb": 353.1,
+   "liveMb": 188.8,
+   "jvmThreads": 87
+  },
+  {
+   "t": 6362.4,
+   "node": "b",
+   "rssMb": 3032.8,
+   "threads": 141,
+   "openFiles": 155,
+   "heapMb": 1190.5,
+   "liveMb": 457.0,
+   "jvmThreads": 105
+  },
+  {
+   "t": 6362.4,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 6362.4,
+   "node": "c",
+   "rssMb": 2962.8,
+   "threads": 151,
+   "openFiles": 187,
+   "heapMb": 1322.8,
+   "liveMb": 537.0,
+   "jvmThreads": 115
+  },
+  {
+   "t": 6362.4,
+   "node": "a",
+   "rssMb": 1231.6,
+   "threads": 123,
+   "openFiles": 166,
+   "heapMb": 307.6,
+   "liveMb": 188.2,
+   "jvmThreads": 87
+  },
+  {
+   "t": 6422.4,
+   "node": "b",
+   "rssMb": 3033.1,
+   "threads": 141,
+   "openFiles": 150,
+   "heapMb": 1317.5,
+   "liveMb": 476.5,
+   "jvmThreads": 105
+  },
+  {
+   "t": 6422.4,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 6422.4,
+   "node": "c",
+   "rssMb": 2962.9,
+   "threads": 151,
+   "openFiles": 176,
+   "heapMb": 978.7,
+   "liveMb": 540.2,
+   "jvmThreads": 115
+  },
+  {
+   "t": 6422.4,
+   "node": "a",
+   "rssMb": 1231.8,
+   "threads": 122,
+   "openFiles": 160,
+   "heapMb": 219.0,
+   "liveMb": 187.9,
+   "jvmThreads": 86
+  },
+  {
+   "t": 6482.5,
+   "node": "b",
+   "rssMb": 3033.2,
+   "threads": 142,
+   "openFiles": 152,
+   "heapMb": 918.4,
+   "liveMb": 456.3,
+   "jvmThreads": 106
+  },
+  {
+   "t": 6482.5,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 6482.5,
+   "node": "c",
+   "rssMb": 2963.1,
+   "threads": 154,
+   "openFiles": 178,
+   "heapMb": 1437.9,
+   "liveMb": 523.4,
+   "jvmThreads": 118
+  },
+  {
+   "t": 6482.5,
+   "node": "a",
+   "rssMb": 1230.2,
+   "threads": 122,
+   "openFiles": 162,
+   "heapMb": 285.8,
+   "liveMb": 185.9,
+   "jvmThreads": 86
+  },
+  {
+   "t": 6542.5,
+   "node": "b",
+   "rssMb": 3033.3,
+   "threads": 142,
+   "openFiles": 151,
+   "heapMb": 774.3,
+   "liveMb": 454.0,
+   "jvmThreads": 106
+  },
+  {
+   "t": 6542.5,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 6542.5,
+   "node": "c",
+   "rssMb": 2963.1,
+   "threads": 152,
+   "openFiles": 182,
+   "heapMb": 1142.8,
+   "liveMb": 544.3,
+   "jvmThreads": 116
+  },
+  {
+   "t": 6542.5,
+   "node": "a",
+   "rssMb": 1230.4,
+   "threads": 121,
+   "openFiles": 162,
+   "heapMb": 214.8,
+   "liveMb": 186.5,
+   "jvmThreads": 85
+  },
+  {
+   "t": 6602.5,
+   "node": "b",
+   "rssMb": 3033.3,
+   "threads": 140,
+   "openFiles": 156,
+   "heapMb": 751.3,
+   "liveMb": 462.3,
+   "jvmThreads": 104
+  },
+  {
+   "t": 6602.5,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 6602.5,
+   "node": "c",
+   "rssMb": 2963.6,
+   "threads": 152,
+   "openFiles": 184,
+   "heapMb": 1619.3,
+   "liveMb": 526.8,
+   "jvmThreads": 116
+  },
+  {
+   "t": 6602.5,
+   "node": "a",
+   "rssMb": 1240.4,
+   "threads": 124,
+   "openFiles": 167,
+   "heapMb": 342.1,
+   "liveMb": 186.6,
+   "jvmThreads": 88
+  },
+  {
+   "t": 6662.5,
+   "node": "b",
+   "rssMb": 3033.4,
+   "threads": 142,
+   "openFiles": 151,
+   "heapMb": 993.5,
+   "liveMb": 468.5,
+   "jvmThreads": 106
+  },
+  {
+   "t": 6662.5,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 6662.5,
+   "node": "c",
+   "rssMb": 2972.7,
+   "threads": 152,
+   "openFiles": 180,
+   "heapMb": 1399.9,
+   "liveMb": 532.9,
+   "jvmThreads": 116
+  },
+  {
+   "t": 6662.5,
+   "node": "a",
+   "rssMb": 1240.8,
+   "threads": 123,
+   "openFiles": 165,
+   "heapMb": 219.2,
+   "liveMb": 185.3,
+   "jvmThreads": 87
+  },
+  {
+   "t": 6722.5,
+   "node": "b",
+   "rssMb": 3033.4,
+   "threads": 139,
+   "openFiles": 151,
+   "heapMb": 979.8,
+   "liveMb": 458.3,
+   "jvmThreads": 103
+  },
+  {
+   "t": 6722.5,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 6722.5,
+   "node": "c",
+   "rssMb": 2975.2,
+   "threads": 151,
+   "openFiles": 178,
+   "heapMb": 1524.0,
+   "liveMb": 534.0,
+   "jvmThreads": 115
+  },
+  {
+   "t": 6722.5,
+   "node": "a",
+   "rssMb": 1243.0,
+   "threads": 123,
+   "openFiles": 163,
+   "heapMb": 220.1,
+   "liveMb": 184.8,
+   "jvmThreads": 87
+  },
+  {
+   "t": 6782.6,
+   "node": "b",
+   "rssMb": 3033.7,
+   "threads": 141,
+   "openFiles": 150,
+   "heapMb": 727.8,
+   "liveMb": 448.4,
+   "jvmThreads": 105
+  },
+  {
+   "t": 6782.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 6782.6,
+   "node": "c",
+   "rssMb": 2975.7,
+   "threads": 153,
+   "openFiles": 179,
+   "heapMb": 1112.7,
+   "liveMb": 515.2,
+   "jvmThreads": 117
+  },
+  {
+   "t": 6782.6,
+   "node": "a",
+   "rssMb": 1252.0,
+   "threads": 123,
+   "openFiles": 164,
+   "heapMb": 230.9,
+   "liveMb": 182.3,
+   "jvmThreads": 87
+  },
+  {
+   "t": 6842.6,
+   "node": "b",
+   "rssMb": 3033.6,
+   "threads": 141,
+   "openFiles": 153,
+   "heapMb": 838.0,
+   "liveMb": 474.0,
+   "jvmThreads": 105
+  },
+  {
+   "t": 6842.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 6842.6,
+   "node": "c",
+   "rssMb": 2975.7,
+   "threads": 154,
+   "openFiles": 185,
+   "heapMb": 941.7,
+   "liveMb": 512.0,
+   "jvmThreads": 118
+  },
+  {
+   "t": 6842.6,
+   "node": "a",
+   "rssMb": 1256.5,
+   "threads": 123,
+   "openFiles": 166,
+   "heapMb": 256.3,
+   "liveMb": 183.3,
+   "jvmThreads": 87
+  },
+  {
+   "t": 6902.6,
+   "node": "b",
+   "rssMb": 3033.9,
+   "threads": 142,
+   "openFiles": 151,
+   "heapMb": 1236.0,
+   "liveMb": 462.0,
+   "jvmThreads": 106
+  },
+  {
+   "t": 6902.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 6902.6,
+   "node": "c",
+   "rssMb": 2975.9,
+   "threads": 154,
+   "openFiles": 182,
+   "heapMb": 1621.0,
+   "liveMb": 526.0,
+   "jvmThreads": 118
+  },
+  {
+   "t": 6902.6,
+   "node": "a",
+   "rssMb": 1263.6,
+   "threads": 122,
+   "openFiles": 164,
+   "heapMb": 377.3,
+   "liveMb": 182.8,
+   "jvmThreads": 86
+  },
+  {
+   "t": 6962.6,
+   "node": "b",
+   "rssMb": 3034.0,
+   "threads": 142,
+   "openFiles": 152,
+   "heapMb": 831.3,
+   "liveMb": 476.8,
+   "jvmThreads": 106
+  },
+  {
+   "t": 6962.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 6962.6,
+   "node": "c",
+   "rssMb": 2975.8,
+   "threads": 153,
+   "openFiles": 187,
+   "heapMb": 1047.0,
+   "liveMb": 533.0,
+   "jvmThreads": 117
+  },
+  {
+   "t": 6962.6,
+   "node": "a",
+   "rssMb": 1266.2,
+   "threads": 123,
+   "openFiles": 164,
+   "heapMb": 303.0,
+   "liveMb": 185.3,
+   "jvmThreads": 87
+  },
+  {
+   "t": 7022.6,
+   "node": "b",
+   "rssMb": 3034.1,
+   "threads": 143,
+   "openFiles": 155,
+   "heapMb": 840.0,
+   "liveMb": 470.5,
+   "jvmThreads": 107
+  },
+  {
+   "t": 7022.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 7022.6,
+   "node": "c",
+   "rssMb": 2975.8,
+   "threads": 151,
+   "openFiles": 187,
+   "heapMb": 1279.0,
+   "liveMb": 538.0,
+   "jvmThreads": 115
+  },
+  {
+   "t": 7022.6,
+   "node": "a",
+   "rssMb": 1266.7,
+   "threads": 125,
+   "openFiles": 166,
+   "heapMb": 234.8,
+   "liveMb": 184.6,
+   "jvmThreads": 89
+  },
+  {
+   "t": 7082.6,
+   "node": "b",
+   "rssMb": 3034.2,
+   "threads": 143,
+   "openFiles": 155,
+   "heapMb": 942.9,
+   "liveMb": 452.9,
+   "jvmThreads": 107
+  },
+  {
+   "t": 7082.6,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 7082.6,
+   "node": "c",
+   "rssMb": 2976.0,
+   "threads": 152,
+   "openFiles": 183,
+   "heapMb": 1608.5,
+   "liveMb": 514.0,
+   "jvmThreads": 116
+  },
+  {
+   "t": 7082.6,
+   "node": "a",
+   "rssMb": 1268.8,
+   "threads": 123,
+   "openFiles": 163,
+   "heapMb": 218.3,
+   "liveMb": 187.0,
+   "jvmThreads": 87
+  },
+  {
+   "t": 7142.7,
+   "node": "b",
+   "rssMb": 3034.1,
+   "threads": 143,
+   "openFiles": 150,
+   "heapMb": 1220.5,
+   "liveMb": 475.0,
+   "jvmThreads": 107
+  },
+  {
+   "t": 7142.7,
+   "node": "console",
+   "rssMb": 50.7,
+   "threads": 1,
+   "openFiles": 21
+  },
+  {
+   "t": 7142.7,
+   "node": "c",
+   "rssMb": 2976.1,
+   "threads": 153,
+   "openFiles": 179,
+   "heapMb": 1024.0,
+   "liveMb": 524.0,
+   "jvmThreads": 117
+  },
+  {
+   "t": 7142.7,
+   "node": "a",
+   "rssMb": 1269.0,
+   "threads": 123,
+   "openFiles": 159,
+   "heapMb": 214.1,
+   "liveMb": 186.2,
+   "jvmThreads": 87
+  }
+ ],
+ "killWindows": [
+  {
+   "node": "c",
+   "from": 1200.0,
+   "to": 1552.2
+  },
+  {
+   "node": "a",
+   "from": 3600.0,
+   "to": 3952.0
+  }
+ ],
+ "memory": {
+  "a": {
+   "samples": 44,
+   "measure": "liveMb",
+   "slopeMbPerHour": -21.7,
+   "rssSlopeMbPerHour": 99.7,
+   "ok": true
+  },
+  "b": {
+   "samples": 110,
+   "measure": "liveMb",
+   "slopeMbPerHour": 166.4,
+   "rssSlopeMbPerHour": 815.3,
+   "ok": false
+  },
+  "c": {
+   "samples": 84,
+   "measure": "liveMb",
+   "slopeMbPerHour": 185.3,
+   "rssSlopeMbPerHour": 1066.1,
+   "ok": false
+  },
+  "console": {
+   "samples": 110,
+   "measure": "rssMb",
+   "slopeMbPerHour": 0.0,
+   "rssSlopeMbPerHour": 0.0,
+   "ok": true
+  }
+ },
+ "table": "action                n  failed   p50 s   p95 s   p99 s\nctrd             127036       0   0.075   0.216   0.316\nhistory          223262    3841   0.103   0.236   0.328\nnetting-set       63087       0   0.091   0.214   0.303\nsearch            63194       0   0.075   0.255   0.374\ntrade           1014506   22007   0.072   0.208   0.304\n\nchecked            right   partial   timeout   unavail     wrong\nctrd                1049        62         0         1         0\nhistory             2046        20         0         3        32\nsearch             10979       531         0        20         0\ntrade             101566      1633         0       224         0",
+ "verdict": {
+  "pass": false,
+  "noWrongAnswers": {
+   "ok": false,
+   "wrong": 32
+  },
+  "errorsOnlyInKillWindows": {
+   "ok": true,
+   "outside": 0,
+   "first": [],
+   "windows": [
+    {
+     "node": "c",
+     "from": 1200.0,
+     "to": 1552.2
+    },
+    {
+     "node": "a",
+     "from": 3600.0,
+     "to": 3952.0
+    }
+   ]
+  },
+  "latency": {
+   "ok": true,
+   "perAction": {
+    "ctrd": {
+     "p95": 0.216,
+     "p99": 0.316
+    },
+    "history": {
+     "p95": 0.236,
+     "p99": 0.328
+    },
+    "netting-set": {
+     "p95": 0.214,
+     "p99": 0.303
+    },
+    "search": {
+     "p95": 0.255,
+     "p99": 0.374
+    },
+    "trade": {
+     "p95": 0.208,
+     "p99": 0.304
+    }
+   },
+   "maxP99": null,
+   "over": []
+  },
+  "memoryFlat": {
+   "ok": false,
+   "growing": [
+    "b",
+    "c"
+   ],
+   "perProcess": {
+    "a": {
+     "samples": 44,
+     "measure": "liveMb",
+     "slopeMbPerHour": -21.7,
+     "rssSlopeMbPerHour": 99.7,
+     "ok": true
+    },
+    "b": {
+     "samples": 110,
+     "measure": "liveMb",
+     "slopeMbPerHour": 166.4,
+     "rssSlopeMbPerHour": 815.3,
+     "ok": false
+    },
+    "c": {
+     "samples": 84,
+     "measure": "liveMb",
+     "slopeMbPerHour": 185.3,
+     "rssSlopeMbPerHour": 1066.1,
+     "ok": false
+    },
+    "console": {
+     "samples": 110,
+     "measure": "rssMb",
+     "slopeMbPerHour": 0.0,
+     "rssSlopeMbPerHour": 0.0,
+     "ok": true
+    }
+   }
+  }
+ }
+}
