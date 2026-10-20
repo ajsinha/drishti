@@ -379,6 +379,61 @@ class Rest(unittest.TestCase):
         self.assertEqual(2, self.go("design", "bind", "d1")[0])
 
 
+class History(unittest.TestCase):
+    """drishti.py history KIND ID against the contract's fixture (drishti-testkit history/)."""
+    FIXTURE = ROOT / "drishti-testkit" / "src" / "main" / "resources" / "history" / "trade-1000015-30.json"
+
+    @classmethod
+    def setUpClass(cls):
+        cls.httpd = ThreadingHTTPServer(("127.0.0.1", 0), FakeServer)
+        cls.url = f"http://127.0.0.1:{cls.httpd.server_address[1]}"
+        threading.Thread(target=cls.httpd.serve_forever, daemon=True).start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.httpd.shutdown()
+
+    go = Rest.go
+
+    def setUp(self):
+        Rest.setUp(self)
+        FakeServer.routes[("GET", "/api/v1/history/trade/1000015")] = (200, json.loads(self.FIXTURE.read_text()))
+
+    def test_help(self):
+        code, out, _ = run("history", "--help")
+        self.assertEqual(0, code)
+        self.assertIn("drishti.py history trade 1000015 --days 30", out)
+
+    def test_text_is_newest_first_with_changed_cells_marked(self):
+        code, out, _ = self.go("history", "trade", "1000015", "--days", "30")
+        self.assertEqual(0, code)
+        self.assertIn("/api/v1/history/trade/1000015?days=30", FakeServer.requests[-1][1])
+        lines = out.splitlines()
+        self.assertIn("2026-09-07 -> 2026-10-19", lines[0])
+        body = [ln for ln in lines if ln[:4] == "2026"]
+        self.assertTrue(body[0].startswith("2026-10-19") and body[-1].startswith("2026-09-07"))
+        self.assertIn("75K*", out)
+        self.assertIn("⟲2", out)
+
+    def test_changes_only_json_csv_and_the_query(self):
+        out = self.go("history", "trade", "1000015", "--days", "30", "--changes-only")[1]
+        self.assertIn("7 of 30 days changed", out)
+        res = json.loads(self.go("history", "trade", "1000015", "--range", "3M", "--diff", "--json", "--changes-only")[1])
+        self.assertEqual(7, len(res["rows"]))
+        self.assertIn("range=3M&diff=true", FakeServer.requests[-1][1])
+        csv_text = self.go("history", "trade", "1000015", "--from", "2026-09-01", "--to", "2026-09-30", "--csv")[1]
+        self.assertTrue(csv_text.startswith("\ufeffDate,"))
+        self.assertIn("\r\n", csv_text)
+        self.assertIn("from=2026-09-01&to=2026-09-30", FakeServer.requests[-1][1])
+
+    def test_usage_and_refusals(self):
+        self.assertEqual(2, self.go("history", "trade", "1000015", "--csv", "--json")[0])
+        self.assertEqual(2, self.go("history", "trade", "1000015", "--days", "0")[0])
+        code, _, err = self.go("history", "trade", "NOPE-1")
+        self.assertEqual(1, code)
+        self.assertIn("404", err)
+
+
 class RealJar(unittest.TestCase):
     def test_sutra_lint_on_a_shipped_pack(self):
         try:

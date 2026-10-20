@@ -28,6 +28,10 @@
   range, average) and a chart that follows the selected row. DIFF lists each changed day's changes with links to Compare and to the day.
   Exports `/export/history/{kind}/{id}.csv|.xlsx|.json` and a link that pins the last date
   ([USER_GUIDE › History](docs/guides/USER_GUIDE.md#history-an-entity-over-time)).
+- **Added: `drishti.py history KIND ID` and the Python client's `history()` (H11).** `--days`, `--range`, `--from`/`--to`, `--fields`,
+  `--known-at`, `--diff`, `--changes-only`; a text table newest first with changed cells marked `*`, `--json` (the answer), `--csv`
+  ([CLI_GUIDE › history](docs/guides/CLI_GUIDE.md#history-an-entity-over-time)). `Drishti.history(kind, id, days=…)` and `history_rows()`
+  in `clients/python/drishti_client.py` ([CLIENTS](docs/guides/CLIENTS.md)).
 - **Added: history queries, the connector contract (H1).** `SourcePlugin.history(HistoryRequest)` returns `HistoryRead(days, covered,
   failed)`, one `HistoryDay(date, document, versions)` per business date the source holds the entity on; `SourcePlugin.days(ref, from, to)`
   lists those dates without reading a document. The default (`HistoryReads.perDay`) reads date by date through `fetch(ref, asOf)`, eight at

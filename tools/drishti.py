@@ -19,7 +19,7 @@
 
 Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback,
 publish, keygen, install), data (profile and ingest your own JSON Lines or watch a drop folder, load the demo data), server (health, packs, smoke),
-lake (build a Delta lake from a large JSON export, scan, status, maintain), testdata (capture-market: a real offline snapshot), view (get, explain), doctor, completion, design (the Screen Designer's designs over
+lake (build a Delta lake from a large JSON export, scan, status, maintain), testdata (capture-market: a real offline snapshot), view (get, explain), history (an entity over business days), doctor, completion, design (the Screen Designer's designs over
 REST: create, save, check, propose, approve, export, import, bind) and docs (screenshots).
 Needs Python 3.10+ and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
 recipes and real output is docs/guides/CLI_GUIDE.md.
@@ -1263,6 +1263,7 @@ def build_parser() -> argparse.ArgumentParser:
     load_module("bitransform", "bitransform.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})   # bi transform
     load_module("bistatement", "bistatement.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})   # bi statement (2.6.0)
 
+    load_module("historycmd", "historycmd.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # history KIND ID (2.6.5)
     vw = group("view", "A rendered entity view in the terminal, as the caller's token sees it (masks apply)")
     for name, what in (("get", "the strip and every panel as text tables (--json: the raw view)"), ("explain", "the About answer: what you are looking at, glossary, data source, why this layout and its match trace")):
         p = add(vw, name, cmd_view, f"view {name}: {what}", [srv], f"examples:\n  drishti.py view {name} trade/BBG-60000001\n  drishti.py view {name} trade/BBG-60000001 --date 2026-10-02")

@@ -77,6 +77,9 @@ rows = d.search("TRD PRODUCT_TYPE=REPO")            # a pick list: one dict per 
 
 d.search("TRD where QUANTITY > 1bn order by QUANTITY desc limit 20", as_of="2026-10-14")   # a past business date
 d.diff("trade", "MX-20000022", "2026-10-07", "2026-10-16")                                    # what changed between two dates
+h = d.history("trade", "1000015", days=30)          # the entity over its last 30 business days with data (rows oldest first)
+d.history("equity", "EQ-CSCA", range_="3M", fields=["PRICE"])   # 30D, 2W, 1Y, YTD, MTD, QTD; or date_from=, date_to=; diff=True
+d.history_rows("trade", "1000015")                  # one flat dict per day, newest first: {'date': '2026-10-19', 'QUANTITY': 72000.0, …, 'changed': ['PRICE']}
 df = d.to_pandas("CPTY RATING=BBB")                 # a pandas DataFrame, if pandas is installed: 3 rows, columns kind, id, title, Rating, Name, …
 ```
 
