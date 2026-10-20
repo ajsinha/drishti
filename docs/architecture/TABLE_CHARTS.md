@@ -713,11 +713,10 @@ Reading the code on `develop` changed the agreed outline in these places:
 9. **A BI measure must not be re-aggregated.** A BI table's measure column (a ratio, an average) summed again by X would be wrong; the BI
    path asks the engine for the measure at the chart's grain, and only fields get an aggregation menu.
 
-## 22. Open questions
+## 22. Decisions on the open questions (product owner, 2026-10-20)
 
-1. **Chart all N on searches without `pivot:`:** keep the pack owner's opt-in (this design), or let the chart aggregate the kind's
-   search columns without it?
-2. **Open in BI for Sutra tables:** worth a "dataset from a document's rows" path later, or never (this design: not offered)?
-3. **Live tables:** snapshot with *Refresh* (this design), or follow live patches when the person asks?
-4. **Saved charts for `dom` tables** (admin lists): keep them per tab only, or key them by screen and table id?
-5. **More than one saved chart per table** (named charts, like bookmarks): later, or in 2.6.7?
+1. **Chart all N on searches without `pivot:`:** not in 2.6.7. The pack owner's opt-in stays; the rows on screen are always chartable.
+2. **Open in BI for Sutra tables:** not offered in 2.6.7.
+3. **Live tables:** a snapshot with *Refresh*.
+4. **Saved charts for `dom` tables** (admin lists): not saved.
+5. **Saved charts per table:** one per table in 2.6.7; named charts may come later.
