@@ -142,6 +142,8 @@ re-check. Priorities, in order:
 
 ## 8. Exit criteria for moving to 2.7.0
 
+**Product owner, 2026-10-20: fix them all.** Every finding of every round (P1, P2 and P3) is fixed and re-tested before 2.7.0; nothing is deferred without the product owner's word. A soak on real processes (three servers, a console, user load with history queries, a shard and the seed killed and restarted, every answer checked against one server holding all the data) runs before the drill, and the results go into `QA_REPORT.md`.
+
 - No P1 open; every P2 fixed or explicitly deferred by the product owner.
 - Round 2 confirms every fixed finding and finds no new P1.
 - The regression for every fix passes (targeted tests, then one drill), released as 2.6.6.
