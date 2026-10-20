@@ -81,7 +81,8 @@
       if (on) { u.searchParams.set('only', '1'); } else { u.searchParams.delete('only'); }
       a.href = u.pathname + u.search;
     });
-    select(0, false);
+    var keep = selectedRow(), at = keep ? rows().indexOf(keep) : -1;   // the selected day stays selected when it is still shown
+    select(at < 0 ? 0 : at, false);
   }
   if (onlyBtn) { onlyBtn.addEventListener('click', function () { setOnly(!root.classList.contains('hx-only')); }); }
   if (root.classList.contains('hx-only')) { setOnly(true); }
