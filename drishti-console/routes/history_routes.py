@@ -78,14 +78,15 @@ async def history(request: Request, kind: str, id_: str):
     page = build_page(data, kind, id_, known_at=getattr(request.state, "known_at", None))
     base = str(request.base_url).rstrip("/")
     to = params.get("to") or (data.get("window") or {}).get("to") or ""
-    share = f"{base}/v/{quote(kind)}/{quote(id_)}/history?" + page_query(params, to=to or None)   # pinned: the same rows a week later
+    only = request.query_params.get("only") == "1"
+    share = f"{base}/v/{quote(kind)}/{quote(id_)}/history?" + page_query(params, to=to or None) + ("&only=1" if only else "")   # pinned: the same rows a week later
     q = page_query(params)
     return render(request, "terminal/history.html", kind=kind, id=id_, error=None, page=page, params=params, screen="history",
                   share=share, q=q, today=f"/v/{quote(kind)}/{quote(id_)}",
                   diff_href=f"?{page_query(params, diff=None if 'diff' in params else '1')}",
                   ranges=[(label, f"?{page_query(params, **{**{'days': None, 'range': None, 'from_': None, 'to': None}, key: value})}",
                            params.get(key) == value) for label, key, value in page["ranges"]],
-                  range_text=range_label(params), only=request.query_params.get("only") == "1")
+                  range_text=range_label(params), only=only)
 
 
 async def _data(request: Request, kind: str, id_: str):

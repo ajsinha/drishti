@@ -239,7 +239,8 @@ you check any pack (an unknown key is a warning, a bad value the error `DRS-2061
 $ drishti.py sutra lint config/packs/trading --strict
 ```
 
-In the UI, a pack with a bad block shows its problem on Admin → Packs after a reload.
+In the UI, a pack with a bad block shows its problem on Admin → Packs (and Health marks the pack DEGRADED) as soon as it is loaded: at the
+server's start and after a reload.
 
 **You should see:** `sutra lint` clean for a correct block; a misspelt key (`colums:`) as a warning naming it, and `headline: PRICE2`
 (not one of `chart`) as `DRS-2061`.
@@ -252,7 +253,8 @@ exported. Every export reads through the server with your token, so your masks t
 ![The export menu: CSV, Excel and JSON](img/t21/06-export-light.jpg)
 
 `Alt+S` (*Link*) copies a link that pins the last date: `…/v/trade/1000015/history?days=30&to=2026-10-19`. A colleague opening it next week
-sees the same 30 rows. A link without `to` moves with the business date.
+sees the same 30 rows. With *changes only* on, the link keeps `&only=1`. A link without `to` moves with the business date. You should see the
+link in a field under the toolbar and *Copied: the link is on the clipboard.* beside it, on a LAN address too.
 
 **From the command line:**
 

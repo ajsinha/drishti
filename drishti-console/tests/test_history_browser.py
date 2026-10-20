@@ -143,3 +143,30 @@ def test_an_equity_over_three_months(url, browser, theme):
         assert not errors, errors
     finally:
         ctx.close()
+
+
+def test_link_copies_on_a_plain_http_lan_address_and_keeps_changes_only(url, browser):
+    """QA1-07: on a console's LAN address over plain http the page is not a secure context and has no navigator.clipboard. Link (and
+    Alt+S) still shows the link, selected in a field under the toolbar, copies it with execCommand('copy') and says so; the link keeps
+    &only=1 when changes only is on, and its end date is pinned."""
+    ctx, pg, errors = _page(browser, "terminal")
+    pg.add_init_script("Object.defineProperty(window, 'isSecureContext', {get: () => false});"
+                       "Object.defineProperty(navigator, 'clipboard', {get: () => undefined});"
+                       "window.__copied = [];"
+                       "document.execCommand = function (c) { if (c === 'copy') { window.__copied.push(document.activeElement.value); return true; } return false; };")
+    try:
+        pg.goto(url + "/v/trade/1000015/history?days=30&only=1")
+        _ready(pg)
+        assert pg.is_hidden("[data-hx-linkbox]")
+        pg.keyboard.press("Alt+s")
+        pg.wait_for_selector("[data-hx-linkbox]:not([hidden])")
+        link = pg.input_value("[data-hx-link-text]")
+        assert "/v/trade/1000015/history?" in link and "days=30" in link and "only=1" in link and "to=2026-10-19" in link, link
+        assert pg.evaluate("window.__copied") == [link]
+        assert "Copied" in pg.inner_text("[data-hx-link-msg]")
+        pg.click("[data-hx-key='c']")                                         # changes only off: the next link drops only=1
+        pg.click("[data-hx-key='s']")
+        assert "only=1" not in pg.input_value("[data-hx-link-text]")
+        assert not errors, errors
+    finally:
+        ctx.close()

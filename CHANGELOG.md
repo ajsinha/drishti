@@ -17,6 +17,9 @@
 
 ## Unreleased
 
+- **Fixed (QA1-07): History *Link* and `Alt+S` copy on a plain-http LAN address**: the link is shown, selected, in a field under the
+  toolbar and copied with the Clipboard API where the page may use it, else from that field (`execCommand('copy')`), with a visible
+  *Copied*; the link keeps `&only=1` when *changes only* is on. `test_history_browser.py`.
 - **Fixed (QA2-08): Admin → Tokens no longer says tokens "never change anything"**: it says a read token only reads and a token with write
   scopes may change what they name; a new **Scopes** column marks each token *read only* or *writes* with its scopes; *Last used* is in the
   console's time zone with its name (`2026-10-20 08:54 New York`), as on the other Admin pages.

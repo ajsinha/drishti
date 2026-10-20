@@ -110,14 +110,40 @@
     rinput.addEventListener('keydown', function (e) { if (e.key === 'Escape') { rinput.blur(); e.stopPropagation(); } });
   }
 
-  // a link to these rows, the end pinned
+  // a link to these rows, the end pinned, with "changes only" when it is on. The link is always shown in a field under the toolbar,
+  // selected; it is copied with the Clipboard API where the page may use it (https, localhost), else with execCommand('copy') from that
+  // field: a console on a plain-http LAN address is not a secure context and has no navigator.clipboard (QA1-07)
   var shareBtn = root.querySelector('[data-hx-key="s"]');
-  function share() {
-    var url = root.getAttribute('data-share-url'), label = root.querySelector('[data-hx-share-label]');
-    var done = function () { if (label) { label.textContent = 'Copied'; setTimeout(function () { label.textContent = 'Link'; }, 1600); } };
-    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(url).then(done, function () { window.prompt('Copy this link', url); }); }
-    else { window.prompt('Copy this link', url); }
+  var linkBox = root.querySelector('[data-hx-linkbox]'), linkText = root.querySelector('[data-hx-link-text]'), linkMsg = root.querySelector('[data-hx-link-msg]');
+  function shareUrl() {
+    var u = new URL(root.getAttribute('data-share-url'), window.location.href);
+    if (root.classList.contains('hx-only')) { u.searchParams.set('only', '1'); } else { u.searchParams.delete('only'); }
+    return u.toString();
   }
+  function share() {
+    var url = shareUrl(), label = root.querySelector('[data-hx-share-label]');
+    function said(text, copied) {
+      if (linkMsg) { linkMsg.textContent = text; }
+      if (label && copied) { label.textContent = 'Copied'; setTimeout(function () { label.textContent = 'Link'; }, 1600); }
+    }
+    if (linkBox) { linkBox.hidden = false; }
+    if (linkText) { linkText.value = url; }
+    function byHand() {
+      var ok = false;
+      if (linkText) {
+        linkText.focus();
+        linkText.select();
+        try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      }
+      said(ok ? 'Copied: the link is on the clipboard.' : 'Select the link and copy it (Ctrl+C).', ok);
+    }
+    if (window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function () { said('Copied: the link is on the clipboard.', true); }, byHand);
+    } else {
+      byHand();
+    }
+  }
+  if (linkText) { linkText.addEventListener('focus', function () { linkText.select(); }); }
   if (shareBtn) { shareBtn.addEventListener('click', share); }
 
   var help = root.querySelector('[data-hx-help]');

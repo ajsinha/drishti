@@ -1354,7 +1354,9 @@ server's JSON exactly as served. With *changes only* on, only the changed days. 
 Every export reads through the server, so it carries your masks.
 
 **Link** (`Alt+S`) copies a link that pins the last date (`…/history?days=30&to=2026-10-19`), so a colleague sees the same rows a week
-later. A link without `to` moves with the business date.
+later; with *changes only* on it keeps `&only=1`. A link without `to` moves with the business date. The link is also shown, selected,
+in a field under the toolbar, with *Copied* beside it: on a console opened by its plain-http LAN address the browser offers no clipboard
+to the page, so Drishti copies from that field instead (and says *Select the link and copy it* if the browser refuses even that).
 
 **When there is nothing to show** the page says why and offers today's view: an unknown entity (`DRS-1001`), a kind that keeps no daily
 history here (`DRS-1012`), no data in the range (`DRS-1013`), a range larger than allowed (`DRS-4021`, with a link to the last 30 days)

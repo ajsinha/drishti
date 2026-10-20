@@ -82,6 +82,11 @@
         <button type="button" class="fk" data-hx-key="?" aria-keyshortcuts="?"><b>?</b> Keys</button>
       </span>
     </div>
+    <div class="hx-linkbox" data-hx-linkbox hidden>
+      <label class="hx-linkbox-l" for="hxLinkText">Link to these rows</label>
+      <input id="hxLinkText" class="mono hx-link-text" type="text" readonly data-hx-link-text value="{{ share }}">
+      <span class="hx-link-msg" data-hx-link-msg role="status" aria-live="polite"></span>
+    </div>
   </header>
   {% if page.partial or page.truncated %}
   <p class="asof-banner" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
