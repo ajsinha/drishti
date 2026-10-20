@@ -162,6 +162,8 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     /** Documents read before, on disk (doc-disk-cache.enabled), or null. */
     private volatile com.ash.drishti.diskcache.DiskCache diskDocs;
     private volatile java.util.concurrent.ScheduledFuture<?> diskDocsRetry;
+    /** The periodic reindex: cancelled at close, so a stopped connector reads nothing and logs nothing (QA2-23). */
+    private volatile java.util.concurrent.ScheduledFuture<?> reindexTask;
     /** Seconds between attempts to open a document cache found locked (tests shorten it). */
     static long diskRetrySeconds = 30;
     /** Kind to the document paths its pack promotes to columns ({@code layout.<kind>.columns}). */
@@ -291,7 +293,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             return v == null ? null : "v" + v;
         });
         reindex();
-        ctx.scheduler().scheduleWithFixedDelay(this::reindex, refresh * 6, refresh * 6, TimeUnit.SECONDS);
+        reindexTask = ctx.scheduler().scheduleWithFixedDelay(this::reindex, refresh * 6, refresh * 6, TimeUnit.SECONDS);
         int warm = Integer.parseInt(ctx.setting("warm-dates", "3"));
         if (warm > 0) {
             loaders.execute(() -> warmRecentDates(warm));          // in the background: start does not wait for it
@@ -767,6 +769,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
      * ({@link #listingProblem}) and to health, and is tried again at the next reindex.
      */
     void reindex() {
+        if (loaders.isShutdown()) {
+            return;                                    // closed: a run already due when the connector stopped reads nothing (QA2-23)
+        }
         discoverTables();
         for (String kind : tables.keySet()) {
             String where = TableProblems.LOG;
@@ -788,6 +793,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 problems.ok(kind, where);
                 problems.listingOk(kind);
             } catch (RuntimeException e) {
+                if (loaders.isShutdown()) {
+                    return;                            // closed while this run was reading: nothing to report (QA2-23)
+                }
                 // a table being rewritten, a broken log, an unreadable newest day: the previous ids stay listed
                 RuntimeException why = problems.failed(kind, where, version, e);
                 Listed kept = listed.get(kind);
@@ -800,6 +808,12 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         List<EntityHit> hits = new ArrayList<>();
         listed.values().forEach(l -> hits.addAll(l.hits()));
         index.replaceAll(hits);
+    }
+
+    /** True while the periodic reindex is scheduled (from start to close). */
+    boolean reindexScheduled() {
+        java.util.concurrent.ScheduledFuture<?> f = reindexTask;
+        return f != null && !f.isCancelled() && !f.isDone();
     }
 
     /** The ids a kind listed at the last reindex that could read them, and when. */
@@ -980,6 +994,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     @Override
     public void close() {
+        if (reindexTask != null) {
+            reindexTask.cancel(false);
+        }
         loaders.shutdownNow();               // loads in flight are abandoned; their callers get an error, not a hang
         try {
             // a background read still inside the disk cache keeps its store open (and locked) after the close below, until it leaves:

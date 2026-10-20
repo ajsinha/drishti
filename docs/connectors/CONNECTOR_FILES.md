@@ -607,7 +607,8 @@ you disable or uninstall a connector that packs use, the page lists them and ask
 
 ![Disabling a connector a pack uses asks first](img/connector_files/09-disable-asks.jpg)
 
-When a disabled connector is the one a kind is routed to and another connector still serves the kind (a Cassandra `trading-store`
+A disabled connector stops at once: its background work (a lake's periodic re-listing of ids, warming) stops with it, so it reads and
+logs nothing more. When a disabled connector is the one a kind is routed to and another connector still serves the kind (a Cassandra `trading-store`
 beside a disabled `trade-endur`), the others are asked: an id none of them holds answers `DRS-1001 no source holds trade/… (asked
 trading-store; trade-endur, which kind 'trade' is routed to, is disabled)`. `DRS-1002 connector … is disabled` is the answer only when
 nothing else serves the kind.

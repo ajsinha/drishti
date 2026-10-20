@@ -186,6 +186,25 @@ class DeltaSourcePluginTest extends DatedSourceContract {
         }
     }
 
+    /**
+     * QA2-23: a stopped (disabled) connector is quiet. Its reindex was still scheduled after the close and read through the closed
+     * loaders: "trade log cannot be read: RejectedExecutionException" per stopped connector.
+     */
+    @Test
+    void aClosedConnectorStopsReindexingAndRecordsNoProblem() throws Exception {
+        Path root = Files.createTempDirectory("drishti-lake-closed");
+        copy(Path.of("src/test/resources/lake/desk/trade"), root.resolve("desk").resolve("trade"));
+        DeltaSourcePlugin p = new DeltaSourcePlugin();
+        p.start(context(Map.of("root", root.toString(), "domain", "desk", "source-name", "stopped", "warm-dates", "0", "engine", engine())));
+        assertThat(p.reindexScheduled()).isTrue();
+        p.close();
+        assertThat(p.reindexScheduled()).isFalse();
+        copy(Path.of("src/test/resources/lake/desk/counterparty"), root.resolve("desk").resolve("counterparty"));   // a log not read yet
+        p.reindex();                                                                // a run that had already started when it was closed
+        assertThat(p.listingProblem("counterparty")).isEmpty();
+        assertThat(p.listingProblem("trade")).isEmpty();
+    }
+
     /** Drishti*net's replicas: every server that reads this table names it the same, by the id in its log. */
     @Test
     void theTableIsNamedByTheIdInItsLog() throws Exception {
