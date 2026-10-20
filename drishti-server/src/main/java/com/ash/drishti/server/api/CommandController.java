@@ -18,6 +18,7 @@ package com.ash.drishti.server.api;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.engine.command.CommandParser;
+import com.ash.drishti.engine.command.HistoryRange;
 import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.engine.command.Suggestion;
 import com.ash.drishti.engine.command.SuggestionService;
@@ -95,6 +96,46 @@ public class CommandController {
     }
 
     private ApiDtos.CommandResponse resolve(String text, AsOf asOf, Principal principal) {
+        Optional<HistoryRange.Split> range = historyOf(text, asOf, principal);
+        if (range.isPresent()) {                                    // TRD 1000015 30: the entity (or the pick list) over time
+            ApiDtos.CommandResponse plain = resolvePlain(range.get().command(), asOf, principal);
+            return plain.pack() != null ? plain : plain.withHistory(ApiDtos.HistoryAsk.of(range.get()));
+        }
+        return resolvePlain(text, asOf, principal);
+    }
+
+    /**
+     * The range a command ends with, when it is one (HISTORY_QUERIES.md section 4.2): never the first word after the mnemonic,
+     * never on a search ({@code where}, an operator, a {@code *}), never when the whole text after the mnemonic is itself an
+     * entity ({@code BOND UST 2030}); a bare id with a range only when the id's pattern names its kind.
+     */
+    private Optional<HistoryRange.Split> historyOf(String text, AsOf asOf, Principal principal) {
+        if (SearchQuery.looksLikeSearch(text)) {
+            return Optional.empty();
+        }
+        Optional<HistoryRange.Split> split = HistoryRange.trailing(text);
+        if (split.isEmpty()) {
+            return split;
+        }
+        String[] words = split.get().command().split("\\s+", 2);
+        if (mnemonics.of(words[0].toUpperCase(Locale.ROOT)).isEmpty()) {
+            return words.length == 1 && parser.parse(words[0]).isPresent() ? split : Optional.empty();   // MX-20000001 30
+        }
+        if (words.length < 2 || SEARCHY.matcher(" " + words[1] + " ").find()) {
+            return Optional.empty();                                // TRD 30 opens trade 30; TRD desk=rates 30 stays a search
+        }
+        Optional<EntityRef> whole = parser.parse(text);             // BOND UST 2030: the whole rest is tried as an id first
+        if (whole.isPresent() && entitlements.mayOpen(principal, whole.get().kind()) && exists(whole.get(), asOf)) {
+            return Optional.empty();
+        }
+        return split;
+    }
+
+    /** What makes the rest of a command a search rather than one entity: a wildcard or a field operator. */
+    private static final java.util.regex.Pattern SEARCHY = java.util.regex.Pattern.compile(
+            "(?i)(\\*|!=|<>|<=|>=|==|=|<|>|\\scontains\\s|\\sstartswith\\s|\\smatches\\s|\\smatchescase\\s|^\\s*not\\s|^\\s*\\()");
+
+    private ApiDtos.CommandResponse resolvePlain(String text, AsOf asOf, Principal principal) {
         boolean pick = SearchQuery.looksLikePick(text);
         Optional<EntityRef> named = pick ? Optional.empty() : parser.parse(text);
         String head = text.split("\\s+", 2)[0];

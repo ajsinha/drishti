@@ -885,6 +885,25 @@ class FakeBackend:
                 "points": [{"date": "2026-09-29", "value": 110, "dataDate": "2026-09-29", "source": "lake"},
                            {"date": "2026-09-30", "value": 125, "dataDate": "2026-09-30", "source": "lake"}]}
 
+    HISTORY = {("trade", "1000015"): "trade-1000015-30.json", ("equity", "EQ-CSCA"): "equity-EQ-CSCA-3M.json"}
+
+    async def history(self, kind, id_, ident=None, **params):
+        """The history contract's fixtures (drishti-testkit history/, HISTORY_QUERIES.md section 8), whatever the range; with
+        ``diff=true`` each changed row carries its changes, as the server's DIFF does."""
+        self.calls.append(("history", kind, id_, dict(params)))
+        name = self.HISTORY.get((kind, id_))
+        if name is None:
+            raise BackendError(404, "DRS-1001", f"no source holds {kind}/{id_}")
+        data = json.loads((CONSOLE.parent / "drishti-testkit" / "src" / "main" / "resources" / "history" / name).read_text())
+        if params.get("diff") == "true":
+            labels = {c["path"]: c.get("label") for c in data["columns"]}
+            prev = None
+            for r in data["rows"]:
+                r["changes"] = [{"path": p, "label": labels.get(p, p), "kind": "changed", "before": (prev or {}).get("values", {}).get(p),
+                                 "after": r["values"].get(p), "delta": None} for p in r["changed"] if not p.startswith("parts.")] or None
+                prev = r
+        return data
+
     async def search_compare(self, q, from_, to, ident=None):
         return {"kind": "trade", "mnemonic": "TRD", "columns": ["$.mtm"], "labels": {"$.mtm": "MTM"}, "matched": 2, "scanned": 2,
                 "elapsedMs": 1, "partial": False, "from": from_, "to": "2026-09-30",

@@ -73,8 +73,14 @@ public final class PhraseParser {
      * @param steps how each part was read
      * @param ignored words that were not understood (not in the query)
      * @param problem why there is no query, or null
+     * @param command a history command to open instead of a search ({@code TRD 1000015 FROM 2026-09-01 TO 2026-09-30}), or null
      */
-    public record Parsed(String query, String kind, List<Step> steps, List<String> ignored, String problem) {}
+    public record Parsed(String query, String kind, List<Step> steps, List<String> ignored, String problem, String command) {
+
+        public Parsed(String query, String kind, List<Step> steps, List<String> ignored, String problem) {
+            this(query, kind, steps, ignored, problem, null);
+        }
+    }
 
     private static final Set<String> FILLER = Set.of("show", "me", "all", "the", "list", "find", "get", "give", "of", "which", "that", "are",
             "is", "with", "where", "and", "please", "a", "an", "whose", "have", "has", "for", "in", "on", "at", "by", "from", "first", "to");
@@ -88,9 +94,16 @@ public final class PhraseParser {
     private static final Pattern DATE = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
 
     private final Vocabulary vocab;
+    private final java.util.function.Supplier<java.time.LocalDate> today;
 
     public PhraseParser(Vocabulary vocab) {
+        this(vocab, java.time.LocalDate::now);
+    }
+
+    /** @param today the date "last month" and "this week" count from (the business date) */
+    public PhraseParser(Vocabulary vocab, java.util.function.Supplier<java.time.LocalDate> today) {
         this.vocab = vocab;
+        this.today = today;
     }
 
     public Parsed parse(String phrase) {
@@ -118,6 +131,16 @@ public final class PhraseParser {
             return new Parsed(null, null, steps, List.of(), "say what to look for: a kind such as "
                     + String.join(", ", vocab.kinds().values().stream().map(k -> k.label().toLowerCase(Locale.ROOT) + " (" + k.mnemonic() + ")")
                             .distinct().sorted().limit(4).toList()));
+        }
+        // 2. kind word, id, time phrase: the entity over time (HISTORY_QUERIES.md section 15.5), not a search
+        List<Field> kindFields = vocab.fields(kind.kind());
+        Optional<HistoryPhrase.Read> history = HistoryPhrase.read(words, today.get(), w -> valueOf(w, kindFields).isPresent());
+        if (history.isPresent()) {
+            HistoryPhrase.Read h = history.get();
+            String command = kind.mnemonic() + " " + h.id() + " " + h.range() + (h.diff() ? " DIFF" : "");
+            steps.add(new Step(h.idWords(), "the " + kind.label().toLowerCase(Locale.ROOT) + " " + h.id()));
+            steps.add(new Step(h.timeWords(), h.meaning() + (h.diff() ? ", only what changed" : "")));
+            return new Parsed(command, kind.kind(), steps, h.ignored(), null, command);
         }
         List<Field> fields = vocab.fields(kind.kind());
         List<String> conditions = new ArrayList<>();

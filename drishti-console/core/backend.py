@@ -252,6 +252,12 @@ class BackendClient:
         where, q = entity_path(kind, id_)
         return await self._get(f"/history/{where}/series", ident, path=path, days=days, **q)
 
+    async def history(self, kind: str, id_: str, ident=None, **params: str) -> dict:
+        """One entity over business days (HISTORY_QUERIES.md section 8): ``days=``, ``range=`` or ``from=``/``to=``, plus
+        ``fields=``, ``diff=true``, ``knownAt=``; blank parameters take the server's defaults. Rows oldest first."""
+        where, q = entity_path(kind, id_)
+        return await self._send("GET", f"/history/{where}", ident, params={**{k: v for k, v in params.items() if v}, **q}, timeout=20.0)
+
     async def search_compare(self, q: str, from_: str, to: str, ident=None) -> dict:
         """A search on two business dates, side by side, with the change of every number."""
         return await self._get("/search/compare", ident, q=q, **{"from": from_}, **({"to": to} if to else {}))

@@ -1,0 +1,1221 @@
+{
+  "ref": {
+    "kind": "trade",
+    "id": "1000015"
+  },
+  "mnemonic": "TRD",
+  "title": "ComSwap ENGY-SWAP · CP-HARBORPT",
+  "shape": "document",
+  "basis": "documents",
+  "window": {
+    "asked": "30",
+    "from": "2026-09-07",
+    "to": "2026-10-19",
+    "days": 30,
+    "mode": "data-days",
+    "baseline": "2026-09-04",
+    "missing": [
+      "2026-09-14"
+    ],
+    "knownAt": null,
+    "loadedTo": null
+  },
+  "columns": [
+    {
+      "path": "TRADE_STATUS",
+      "label": "Trade status",
+      "type": "text",
+      "format": null,
+      "masked": false,
+      "key": true
+    },
+    {
+      "path": "TRADE_VERSION",
+      "label": "Trade version",
+      "type": "number",
+      "format": null,
+      "masked": false,
+      "key": true
+    },
+    {
+      "path": "QUANTITY",
+      "label": "Quantity",
+      "type": "number",
+      "format": "compact",
+      "masked": false,
+      "key": true
+    },
+    {
+      "path": "PRICE",
+      "label": "Price",
+      "type": "number",
+      "format": null,
+      "masked": false,
+      "key": false
+    },
+    {
+      "path": "MATURITY_DATE",
+      "label": "Maturity date",
+      "type": "date",
+      "format": null,
+      "masked": false,
+      "key": false
+    },
+    {
+      "path": "PORTFOLIO",
+      "label": "Portfolio",
+      "type": "text",
+      "format": null,
+      "masked": false,
+      "key": false
+    },
+    {
+      "path": "COUNTERPARTY",
+      "label": "Counterparty",
+      "type": "text",
+      "format": null,
+      "masked": false,
+      "key": false
+    },
+    {
+      "path": "TRADER_ID",
+      "label": "Trader",
+      "type": "text",
+      "format": null,
+      "masked": true,
+      "key": false
+    }
+  ],
+  "parts": [
+    {
+      "path": "LEGS",
+      "label": "Legs"
+    },
+    {
+      "path": "EVENTS",
+      "label": "Events"
+    }
+  ],
+  "chart": [],
+  "rows": [
+    {
+      "date": "2026-09-07",
+      "dataDate": "2026-09-07",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "NEW",
+        "TRADE_VERSION": 1,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "NEW",
+        "TRADE_VERSION": "1",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 3
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 31,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-08",
+      "dataDate": "2026-09-08",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "NEW",
+        "TRADE_VERSION": 1,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "NEW",
+        "TRADE_VERSION": "1",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 3
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 32,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-09",
+      "dataDate": "2026-09-09",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 1,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "1",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 3
+      },
+      "changed": [
+        "TRADE_STATUS"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 33,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-10",
+      "dataDate": "2026-09-10",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 1,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "1",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 3
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 34,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-11",
+      "dataDate": "2026-09-11",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 1,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "1",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 3
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 35,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-15",
+      "dataDate": "2026-09-15",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 1,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "1",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 3
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 36,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-16",
+      "dataDate": "2026-09-16",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 1,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "1",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 3
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 37,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-17",
+      "dataDate": "2026-09-17",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 1,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "1",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 3
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 38,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-18",
+      "dataDate": "2026-09-18",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 1,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "1",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 3
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 39,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-21",
+      "dataDate": "2026-09-21",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 1,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "1",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 3
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 40,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-22",
+      "dataDate": "2026-09-22",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 2,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "2",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 4
+      },
+      "changed": [
+        "TRADE_VERSION",
+        "parts.EVENTS"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 41,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-23",
+      "dataDate": "2026-09-23",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 2,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "2",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 42,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-24",
+      "dataDate": "2026-09-24",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 2,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "2",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 43,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-25",
+      "dataDate": "2026-09-25",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 2,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "2",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 44,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-28",
+      "dataDate": "2026-09-28",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 2,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "2",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 45,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-29",
+      "dataDate": "2026-09-29",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 2,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "2",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 46,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-30",
+      "dataDate": "2026-09-30",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 2,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "2",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 47,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-01",
+      "dataDate": "2026-10-01",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 2,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-3",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "2",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-3",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 4
+      },
+      "changed": [
+        "PORTFOLIO"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 48,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-02",
+      "dataDate": "2026-10-02",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 2,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-3",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "2",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-3",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 49,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-05",
+      "dataDate": "2026-10-05",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 2,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-3",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "2",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-3",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 50,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-06",
+      "dataDate": "2026-10-06",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 2,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-3",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "2",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-3",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 51,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-07",
+      "dataDate": "2026-10-07",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 2,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "2",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 4
+      },
+      "changed": [
+        "PORTFOLIO"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 52,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-08",
+      "dataDate": "2026-10-08",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 2,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "2",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 53,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-09",
+      "dataDate": "2026-10-09",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 2,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "2",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 54,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-12",
+      "dataDate": "2026-10-12",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 2,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "2",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 55,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-13",
+      "dataDate": "2026-10-13",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 2,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "2",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 56,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-14",
+      "dataDate": "2026-10-14",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 2,
+        "QUANTITY": 72000.0,
+        "PRICE": 2332.9131,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "2",
+        "QUANTITY": "72K",
+        "PRICE": "2,332.9131",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 4
+      },
+      "changed": [],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 57,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-15",
+      "dataDate": "2026-10-15",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 3,
+        "QUANTITY": 75000.0,
+        "PRICE": 2338.4,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "3",
+        "QUANTITY": "75K",
+        "PRICE": "2,338.4000",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 5
+      },
+      "changed": [
+        "TRADE_VERSION",
+        "QUANTITY",
+        "PRICE",
+        "parts.EVENTS"
+      ],
+      "changes": null,
+      "versions": 2,
+      "restated": true,
+      "generation": 59,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-16",
+      "dataDate": "2026-10-16",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 3,
+        "QUANTITY": 72000.0,
+        "PRICE": 2336.12,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "3",
+        "QUANTITY": "72K",
+        "PRICE": "2,336.1200",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 5
+      },
+      "changed": [
+        "QUANTITY",
+        "PRICE"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 59,
+      "source": "trade-endur",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-19",
+      "dataDate": "2026-10-19",
+      "carried": false,
+      "values": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": 3,
+        "QUANTITY": 72000.0,
+        "PRICE": 2341.05,
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "display": {
+        "TRADE_STATUS": "VALIDATED",
+        "TRADE_VERSION": "3",
+        "QUANTITY": "72K",
+        "PRICE": "2,341.0500",
+        "MATURITY_DATE": "2028-07-31",
+        "PORTFOLIO": "BOOK-COMM-2",
+        "COUNTERPARTY": "CP-HARBORPT",
+        "TRADER_ID": "•••"
+      },
+      "parts": {
+        "LEGS": 2,
+        "EVENTS": 5
+      },
+      "changed": [
+        "PRICE"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 60,
+      "source": "trade-endur",
+      "deleted": false
+    }
+  ],
+  "summary": {
+    "field": null,
+    "last": null,
+    "first": null,
+    "change": null,
+    "changePct": null,
+    "high": null,
+    "highDate": null,
+    "low": null,
+    "lowDate": null,
+    "range": null,
+    "average": null
+  },
+  "changedDays": 7,
+  "partial": false,
+  "problems": [],
+  "truncated": false,
+  "dataVersion": "7@1760700000000",
+  "cache": "miss",
+  "tookMs": 184
+}

@@ -391,7 +391,8 @@ This is the contract between the two builders (section 18). Builder B builds the
     "mode": "data-days",
     "baseline": "2026-09-07",
     "missing": ["2026-09-14"],
-    "knownAt": null
+    "knownAt": null,
+    "loadedTo": null
   },
   "columns": [
     {"path": "TRADE_STATUS", "label": "Trade status", "type": "text", "format": null, "masked": false, "key": true},
@@ -456,7 +457,9 @@ This is the contract between the two builders (section 18). Builder B builds the
 | `shape` | `document` or `market` (section 5.1) |
 | `basis` | `documents` (daily documents), `embedded` (the kind's `series:` list), or `none` (never sent: `DRS-1012` instead) |
 | `window.mode` | `data-days` (a bare number), `calendar` (`30D`, `3M`, `YTD`…), `between` (`FROM … TO`) |
-| `window.missing` | business days in the window with no data for this entity (only for `calendar` and `between`; capped at 400) |
+| `window.to` | the last day shown: for `data-days` the entity's newest day with data (not the date box), else the end of the span |
+| `window.missing` | business days in the window with no data for this entity (every mode; capped at 400), up to the newest date the kind's sources hold |
+| `window.loadedTo` | set only when a `calendar` or `between` span ends after the newest date the kind's sources hold: that date (the days after it are not loaded yet, not missing) |
 | `columns[].masked` | true when the caller's masks hide the field: its values are the mask on every row |
 | `columns[].key` | one of the kind's key columns (shown first, frozen when scrolling) |
 | `rows` | oldest first; at most `drishti.history.max-rows`; `order=desc` reverses |
@@ -843,16 +846,26 @@ least 3× faster cold). It fails when the warm median passes 150 ms or the cold 
 | market kinds from daily documents | also an embedded `series:` | the shipped market samples keep their history inside today's document (`HISTORY: [{DATE, CLOSE}]`) |
 | Cassandra: `entity_days` gives the days | it gives the days; the documents still need one point read per day | `business_date` is part of the data table's partition key |
 | default columns: top-level scalars | key columns first, empty columns hidden | a trade has about 45 top-level scalars (`config/packs/trading/samples/trade.jsonl`) |
+| *As built (H1):* `HistoryRequest(ref, from, to, fields, knownAt, lastDays, budget)` | `HistoryRequest(ref, from, to, dates, fields, knownAt, lastDays, budget, parallelDays)` | a plugin has no calendar, so the business dates travel in the request (`dates`, empty means every calendar day); the default loop's parallelism is the server's `parallel-days`, so it travels too |
+| *As built (H3):* `window.to` is the date box | `data-days` ends at the newest day with data; `loadedTo` added | found in the first integration run: a lake loaded up to Friday, read on Tuesday, said "no data on 2 days" for Monday and Tuesday, which are only not loaded yet |
+| *As built (H1):* `window.missing` only for `calendar` and `between` | filled in every mode | the document screen's header lists the days with no data for a bare number too (section 5.2: "no data on 2026-09-14"); the fixture's 30 rows span 31 business days |
 
 ## 22. Open questions
 
+All five were decided by the product owner on 2026-10-20, before the build started.
+
 1. **"As first reported."** Should a mode show each day as it was known at the end of that day (bitemporal, for audit), beside "latest"
    and "known at K"? It needs one time-travel layout per day on Delta and Iceberg: affordable for 30 days, not for 366.
+   **Decided: later, not in 2.6.5.** 2.6.5 has "latest" and "known at K" only.
 2. **Derived kinds** (`counterparty-trades`, `portfolio-trades`): their pages are rebuilt from every member trade per day. History is off
    for them in the shipped packs; turn it on later with a per-day page cache?
+   **Decided: off in the shipped packs** (`enabled: false`); a per-day page cache is not planned yet.
 3. **The Build workbench:** a History tab to edit `history:` with a preview, now or with 2.7.0's write-back forms?
+   **Decided: 2.7.0.** In 2.6.5 the block is edited as YAML and checked by `sutra lint` and the deploy check.
 4. **Ranges over a pick list** (`TRD desk=rates 30`: many trades over time) are BI's job; keep them out of the command for good?
+   **Decided: left to BI** (the `history` data source, section 15.4). The command takes a range for one entity only.
 5. **Tutorial numbering:** the ask names tutorial 21; 20 is not used on develop today. Keep 21 (20 left for 2.6.0's tutorial)?
+   **Decided: 21** (`docs/tutorials/21-an-entity-over-time.md`).
 
 ---
 

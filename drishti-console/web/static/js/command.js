@@ -15,7 +15,8 @@
  */
 /* The command line: Bloomberg-style type-ahead. Suggestions are fetched as you type (debounced 60 ms,
    stale requests aborted), shown in an ARIA listbox, and driven from the keyboard:
-   ↑/↓ move (↑ in an empty box: earlier commands), Tab completes, Enter opens (<GO>), Esc closes. "/" focuses the command line anywhere.
+   ↑/↓ move (↑ in an empty box: earlier commands), Tab completes, Enter opens (<GO>), Esc closes. After one entity's id a space offers
+   history ranges (30, 3M, YTD, 30 DIFF): choosing one opens the entity over time. "/" focuses the command line anywhere.
    An entity suggestion carries its kind and id, so a workspace can take it by drag and drop (workspace.js). */
 (function () {
   'use strict';
@@ -47,9 +48,10 @@
     }
     list.innerHTML = items.map(function (s, i) {
       return '<li role="option" id="sg-' + i + '" data-i="' + i + '" aria-selected="false"' +
-        (s.id && s.kind ? ' data-ref data-kind="' + esc(s.kind) + '" data-id="' + esc(s.id) + '" data-label="' + esc(s.id) + '"' : '') + '>' +
+        (s.id && s.kind && s.type !== 'range' ? ' data-ref data-kind="' + esc(s.kind) + '" data-id="' + esc(s.id) + '" data-label="' + esc(s.id) + '"' : '') + '>' +
         '<span class="sg-m">' + esc(s.mnemonic || '') + '</span>' +
-        '<span class="sg-t">' + mark(s.id || s.title, q) + '</span>' +
+        (s.type === 'range' ? '<span class="sg-t">' + esc(s.id) + ' <b class="sg-range">' + esc(s.title) + '</b></span>'
+          : '<span class="sg-t">' + mark(s.id || s.title, q) + '</span>') +
         '<span class="sg-s">' + (s.type === 'recent' ? '<span class="sg-type">recent · </span>' : '') + esc(s.subtitle || '') + '</span></li>';
     }).join('');
     open(true);
@@ -81,13 +83,14 @@
     if (!s) { return false; }
     input.value = s.complete + (s.id ? ' <GO>' : '');
     lastQ = null;
-    if (s.id) { open(false); } else { fetchSuggestions(); }
+    if (s.id) { open(false); } else { fetchSuggestions(); }      // a range (TRD 1000015 30) completes like an entity
     return true;
   }
 
   function go(i) {
     var s = items[i];
     if (s && s.href) { window.location.href = s.href; return; }          // FORM <pack> [kind]: the pack's search form
+    if (s && s.type === 'range') { input.value = s.complete; form.submit(); return; }   // TRD 1000015 30: the history page, through <GO>
     if (s && s.id) {
       window.location.href = '/v/' + encodeURIComponent(s.kind) + '/' + encodeURIComponent(s.id);
       return;

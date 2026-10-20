@@ -36,15 +36,47 @@ public final class ApiDtos {
      * @param list the pick list to show instead ({@code /search?q=}), when {@code ref} is null
      * @param matched how many entities the pick list holds
      * @param pack the pack whose overview to show instead (its code or name was typed alone), or null
+     * @param history the range the command ended with ({@code TRD 1000015 30}): open the entity's history, or carry the range
+     *        on the pick list; null when there is none
      */
-    public record CommandResponse(ViewModel.Ref ref, String mnemonic, String list, Integer matched, String pack) {
+    public record CommandResponse(ViewModel.Ref ref, String mnemonic, String list, Integer matched, String pack, HistoryAsk history) {
 
         public CommandResponse(ViewModel.Ref ref, String mnemonic) {
-            this(ref, mnemonic, null, null, null);
+            this(ref, mnemonic, null, null, null, null);
         }
 
         public CommandResponse(ViewModel.Ref ref, String mnemonic, String list, Integer matched) {
-            this(ref, mnemonic, list, matched, null);
+            this(ref, mnemonic, list, matched, null, null);
+        }
+
+        public CommandResponse(ViewModel.Ref ref, String mnemonic, String list, Integer matched, String pack) {
+            this(ref, mnemonic, list, matched, pack, null);
+        }
+
+        /** The same answer with a history range. */
+        public CommandResponse withHistory(HistoryAsk h) {
+            return new CommandResponse(ref, mnemonic, list, matched, pack, h);
+        }
+    }
+
+    /**
+     * The range of a history command (HISTORY_QUERIES.md section 4.3).
+     *
+     * @param range the range as a command writes it ({@code 30}, {@code 3M}, {@code FROM 2026-09-01 TO 2026-09-30})
+     * @param mode {@code data-days}, {@code calendar} or {@code between}
+     * @param days the number of data days, for a bare number
+     * @param span the calendar span ({@code 3M}, {@code YTD}), for a calendar range
+     * @param from the first date, for {@code FROM}
+     * @param to the last date, for {@code TO}
+     * @param diff whether {@code DIFF} ended the command
+     * @param query the console's query string for it ({@code days=30&diff=1})
+     */
+    public record HistoryAsk(String range, String mode, Integer days, String span, String from, String to, boolean diff, String query) {
+
+        public static HistoryAsk of(com.ash.drishti.engine.command.HistoryRange.Split s) {
+            var r = s.range();
+            return new HistoryAsk(r.render(), r.mode().wire(), r.days(), r.span(), r.from() == null ? null : r.from().toString(),
+                    r.to() == null ? null : r.to().toString(), s.diff(), r.query() + (s.diff() ? "&diff=1" : ""));
         }
     }
 

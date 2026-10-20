@@ -17,6 +17,52 @@
 
 ## Unreleased
 
+- **Added: history queries in the console (H7, H8, H9).** A range after the id shows the entity over time: `TRD 1000015 30`, `EQ EQ-CSCA 3M`,
+  `FX FX-AUDUSD YTD`, `CRV CRV-USD-SOFR FROM 2026-09-01 TO 2026-09-30`, each optionally ending in `DIFF`. The server reads the range off the
+  end of a command after the alias is expanded (`HistoryRange`); a lone id after the mnemonic, a search and an id that contains the words stay
+  as they were, and a range that cannot hold says why (`DRS-4001`). `POST /api/v1/command` answers `history` (range, mode, query) and the
+  type-ahead offers `30`, `3M`, `YTD`, `30 DIFF` after one entity's id. The console's `/go` opens `/v/{kind}/{id}/history?days=30`
+  (`/v/{kind}/{id}?days=30` redirects there; a pick list carries the range to its rows). The page: a header with the dates, the counts and
+  the days with no data; one row per business day, newest first, changed cells tinted with what they were, `⟲2` for a restated day,
+  changes only (`C`), the keyboard (`↑↓ ←→ Enter Esc R ?`), every theme; a market kind adds its headline numbers (last, change, high, low,
+  range, average) and a chart that follows the selected row. DIFF lists each changed day's changes with links to Compare and to the day.
+  Exports `/export/history/{kind}/{id}.csv|.xlsx|.json` and a link that pins the last date
+  ([USER_GUIDE › History](docs/guides/USER_GUIDE.md#history-an-entity-over-time)).
+- **Added: `drishti.py history KIND ID` and the Python client's `history()` (H11).** `--days`, `--range`, `--from`/`--to`, `--fields`,
+  `--known-at`, `--diff`, `--changes-only`; a text table newest first with changed cells marked `*`, `--json` (the answer), `--csv`
+  ([CLI_GUIDE › history](docs/guides/CLI_GUIDE.md#history-an-entity-over-time)). `Drishti.history(kind, id, days=…)` and `history_rows()`
+  in `clients/python/drishti_client.py` ([CLIENTS](docs/guides/CLIENTS.md)).
+- **Added: plain words for history (H11).** A kind, an id and a time phrase make a history command: `trade 1000015 last month` is
+  `TRD 1000015 FROM 2026-09-01 TO 2026-09-30`, `equity EQ-CSCA last 3 months` is `EQ EQ-CSCA 3M`, `what changed on trade 1000015 this week`
+  ends in `DIFF` (`HistoryPhrase`, `PhraseParser.Parsed.command`). Read fully, it opens at once; otherwise the search page says *Read as …*
+  ([USER_GUIDE › Asking in plain words](docs/guides/USER_GUIDE.md#asking-in-plain-words)).
+- **Added: tutorial 21, An entity over time**, and the help centre's `history` entries (F1 on the history page opens the user guide's
+  History section) ([docs/tutorials/21-an-entity-over-time.md](docs/tutorials/21-an-entity-over-time.md)). `test_tutorials.py` now reads
+  every numbered tutorial (its glob stopped at 19); tutorial 20's missing *Next steps* and *You should see* lines and its unused picture
+  are listed there as a follow-up.
+- **Added: history queries across Drishti*net (H4).** A node with the pack but not the data reads an entity's history from the peer that
+  holds it in one call for all the dates (`GET /api/v1/net/history/{kind}/~`, node-only, masked there and again here); a node without the
+  pack forwards the whole request, as views are ([NET.md](docs/admin/NET.md#7-routing-where-a-request-goes)). `NetHistoryTest`. A history of
+  data days now ends at the entity's newest day with data, and a span that ends after the newest loaded date says so (`window.loadedTo`)
+  instead of listing those days as missing.
+- **Added: history queries, the server (H2, H3).** `GET /api/v1/history/{kind}/{id}?days=30 | range=3M | from=&to=` (and `/~?id=`)
+  answers the entity over the business days it has data: one row per day with its top-level fields, the fields that changed from the day
+  before (a baseline day is read for the first row), the counts of its lists, versions and generation, and for market kinds the headline
+  numbers (last, change, high and low with their dates, range, average); `diff=true` adds each day's changes, `knownAt` reads the history
+  as the store stood then. Every day is masked for the caller before anything is computed from it. The kind's dated connectors are read in
+  order, each for the dates no earlier one covers (`SourceRouter.history`); answers are cached by the kind's data version. New settings
+  `drishti.history.*` ([CONFIGURATION](docs/admin/CONFIGURATION.md)), new codes `DRS-1012`, `DRS-1013`, `DRS-1014`, `DRS-2061`,
+  `DRS-4021`, `DRS-4022` ([API_GUIDE](docs/guides/API_GUIDE.md#history-queries-an-entity-over-time),
+  [TROUBLESHOOTING](docs/guides/TROUBLESHOOTING.md#error-codes)); the field dialog's series now goes back `drishti.history.max-days`
+  instead of 260 days; Admin → Cache lists and purges `history`. `HistoryServiceTest`, `SourceRouterHistoryTest`, `HistoryApiTest`.
+- **Added: history queries, the connector contract (H1).** `SourcePlugin.history(HistoryRequest)` returns `HistoryRead(days, covered,
+  failed)`, one `HistoryDay(date, document, versions)` per business date the source holds the entity on; `SourcePlugin.days(ref, from, to)`
+  lists those dates without reading a document. The default (`HistoryReads.perDay`) reads date by date through `fetch(ref, asOf)`, eight at
+  once, within a budget, so every connector has history; `DatedSourceContract` gains eight history cases that every dated plugin passes.
+  The JSON contract of `GET /api/v1/history/{kind}/{id}` is fixed as `drishti-testkit/src/main/resources/history/trade-1000015-30.json`
+  and `equity-EQ-CSCA-3M.json` ([CONNECTOR_DEVELOPER_GUIDE](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md),
+  [HISTORY_QUERIES.md section 8](docs/architecture/HISTORY_QUERIES.md#8-the-json-contract)).
+
 ## 2.6.0 — Statements and field parameters, the Cassandra connector, drishti-iceberg (Iceberg without Hadoop), three Terminal themes, the known-bug pass (2026-10-20)
 
 - **Fixed: a BI item's history, review, impact and lineage could show an older state.** Drawn again after a save, the item asked for them again,

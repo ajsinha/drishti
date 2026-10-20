@@ -549,6 +549,7 @@ The explain answer also carries `glossary`: an entry for each field the page sho
 | Method | Path | Notes |
 |---|---|---|
 | `GET` | `/entities/{kind}/{id}/raw` | as-of. `{ref, provenance, data}`: the document as the source produced it (F9 in the console). Fields listed in `drishti.security.redact` read `•••` unless the caller has `raw` |
+| `GET` | `/history/{kind}/{id}?days=30` \| `range=3M` \| `from=&to=` `[&fields=&diff=true&knownAt=&order=asc\|desc]` | as-of (the date box is the default end). The entity over the business days it has data ([history queries](#history-queries-an-entity-over-time)): one row per day, its top-level fields, what changed from the day before, the headline numbers for market kinds. `/history/{kind}/~?id=` for an id a path cannot carry. Masked per row |
 | `GET` | `/history/{kind}/{id}/diff?from=&to=&fromKnownAt=&toKnownAt=` | what changed between two points. `to` defaults to the request's as-of; `from` to the business day before `to`. At most 2,000 changes (`truncated: true` beyond) |
 | `GET` | `/impact/{kind}/{id}` | as-of. F8: what depends on the entity, grouped by level and kind. With [field masks](#field-masks): entities tied in only through a masked field are left out; a masked measure (`measure`) and its group's `total` read `•••` |
 
@@ -588,6 +589,43 @@ To see a restatement — what we knew about 29 September at 18:00 versus now —
 ```bash
 curl -s "$B/history/trade/MX-20000001/diff?from=2026-09-29&to=2026-09-29&fromKnownAt=2026-09-29T22:00:00Z" | jq '.changed'
 ```
+
+### History queries: an entity over time
+
+`TRD 1000015 30 <GO>` reads this endpoint ([HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)). The range is one of:
+
+* `days=N`: the last N business days on which the entity has data, ending at the date box (`X-Drishti-As-Of`) or `to`;
+* `range=`: `30D`, `2W`, `3M`, `1Y` (every business day of that span), `YTD`, `MTD`, `QTD`;
+* `from=yyyy-mm-dd` and optionally `to=yyyy-mm-dd`.
+
+`fields=PRICE,TRADE_STATUS` keeps only those columns; `diff=true` adds each row's changes against the row before (as `/diff` gives them);
+`knownAt=<ISO-8601>` reads every day as the store stood then (Delta Lake and Iceberg; others answer `DRS-1007`); `order=desc` gives the
+newest row first (the default is oldest first).
+
+```bash
+curl -s "$B/history/trade/T-1?from=2026-09-28&to=2026-09-30" | jq -c '{shape, window: .window.mode, rows: [.rows[] | {date, mtm: .values.mtm, changed}]}'
+```
+
+```json
+{"shape":"document","window":"between","rows":[{"date":"2026-09-28","mtm":100,"changed":[]},
+  {"date":"2026-09-29","mtm":110,"changed":["mtm"]},{"date":"2026-09-30","mtm":125,"changed":["mtm","restated"]}]}
+```
+
+The whole answer, field by field, is the contract in
+[HISTORY_QUERIES.md section 8](../architecture/HISTORY_QUERIES.md#8-the-json-contract); the testkit's
+`drishti-testkit/src/main/resources/history/trade-1000015-30.json` (document shape) and `equity-EQ-CSCA-3M.json` (market shape) are
+examples of it. In short: `window` (`asked`, `from`, `to`, `days`, `mode` `data-days` \| `calendar` \| `between`, the `baseline` day
+compared with, the business days with no data in `missing`), `columns` (`path`, `label`, `type`, `format`, `masked`, `key`), `parts`
+(top-level lists and objects, shown as counts), `chart`, `rows` (`date`, `values`, `display`, `parts`, `changed`, `changes`,
+`versions`, `restated`, `generation`, `source`, `deleted`), `summary` (market kinds: `last`, `first`, `change`, `changePct`, `high` and
+`highDate`, `low` and `lowDate`, `range`, `average`), `partial` and `problems` (days a connector could not read in time: `DRS-1014`),
+`truncated`, `dataVersion` and `cache` (`miss`, `hit`, `off`).
+
+Every day's document is redacted for the caller before anything is computed from it: a masked field reads `•••` on every row, is
+`masked: true` in `columns`, is never in `changed` and is not in `summary`. The kind's pack shapes the answer with its `history:` block
+([PACKS.md](PACKS.md)); the limits are `drishti.history.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)). Errors: `DRS-1012` (the
+kind keeps no daily history here), `DRS-1013` (no data in the range), `DRS-1014` (no day read in time), `DRS-4021` (range too large),
+`DRS-4022` (a range that cannot be read), `DRS-1001` (no such entity).
 
 Impact — what depends on a counterparty:
 
@@ -1631,6 +1669,9 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-1006 | 500 | plugin load failed | a connector plugin could not be loaded (see `/sources` → `failures`) |
 | DRS-1007 | 400 | no time travel | `knownAt` asked of a dated store that keeps no earlier versions (only Delta Lake and Iceberg do); `detail` names the connector (`DRS-1007 recent-files keeps no earlier versions, so a read 'as known at' an instant cannot be answered from it …`). Today's data is never shown in its place; a structured search names it in `failed` and is `partial` |
 | DRS-1011 | 404 | connector not configured | a kind is routed to a connector that has no file in the connector folder; the pack loads, the kind does not; create it in Admin → Connectors or `drishti.py connector apply` |
+| DRS-1012 | 404 | history not kept | history queries: the kind keeps no daily history here (`history: {enabled: false}` for it in its pack, `drishti.history.enabled` off, or every connector of the kind holds today's data only and the pack declares no embedded `series:`) |
+| DRS-1013 | 404 | history: no data | the entity exists but has no data in the range asked; widen the range or move the date box |
+| DRS-1014 | 504 | history timeout | no day of the range was read within `drishti.history.timeout`, or `max-concurrent` history requests were running; when some days were read the answer is `200` with `partial: true` and the others in `problems` |
 | DRS-2001 | 422 | sutra parse | the Sutra text cannot be parsed |
 | DRS-2002 | 422 | sutra invalid | the Sutra parsed but has problems (listed in `problems`) |
 | DRS-2003 | 404 | sutra not found | no Sutra with that name and version |
@@ -1638,6 +1679,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-2006 | 409 | proposal conflict | the proposal was already decided, or the live Sutra changed after it was proposed |
 | DRS-2007 | 403 | four eyes | the author may not approve their own proposal |
 | DRS-2060 | 422 | form invalid | a search form that is not valid YAML or names a field path, type or operator wrongly; the Form tab lists each problem, `pack check` reports the pack's |
+| DRS-2061 | 422 | history invalid | a pack's `history:` block names a shape, chart field, headline or limit wrongly; `sutra lint` and the deploy check list each problem |
 | DRS-2101 | 422 | el syntax | a Rachana-EL expression does not parse (alert rules, Sutra expressions, search conditions) |
 | DRS-2102 | 422 | el eval | a Rachana-EL expression failed while evaluating |
 | DRS-3001 | 500 | inference failed | reserved: the code exists, but nothing in this release raises it (a document with no Sutra is laid out by inference, which does not fail) |
@@ -1657,6 +1699,8 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-4018 | 403 | AI policy | the AI policy refuses the call for this user, role or feature |
 | DRS-4019 | 404 | AI not found | no such model, provider, MCP server or tool |
 | DRS-4020 | 422 | AI answer unusable | BI with AI: the model's draft did not pass the report check (after one repair), or its answer is not a query; nothing was changed ([BI_AI.md](BI_AI.md)) |
+| DRS-4021 | 400 | history range too large | more business days than `max-days` (the kind's `history.<kind>.max-days`, else `drishti.history.max-days`, 366) |
+| DRS-4022 | 400 | history bad range | `TO` before `FROM`, a `FROM` in the future, an unreadable date, `knownAt` or range (use `30`, `30D`, `2W`, `3M`, `1Y`, `YTD`, `MTD`, `QTD`, or `from`/`to`) |
 | DRS-5001 | 400 | bad request | an invalid argument or body; a path not written plainly (`;`, a needless `%`-escape, a dot or empty segment); also "too many live streams on this server" |
 | DRS-5002 | 403 | forbidden | the caller lacks the role, the pack is not active for them, or the feature is off |
 | DRS-5005 | 413 | too large | builder samples over `drishti.builder.max-samples`, `max-file-mb`, `max-total-mb` or `max-depth`; any `/api/v1/builder/**` request body over `max-total-mb` (answered before the body is read: `detail` gives the size and the limit, the connection is not reset; `drishti.http.request-limits`, `server.tomcat.max-swallow-size`); designs over `drishti.builder.designs.*` (`detail` names the limit and the file) |

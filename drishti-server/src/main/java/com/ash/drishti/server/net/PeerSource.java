@@ -131,6 +131,61 @@ public final class PeerSource implements SourcePlugin {
     }
 
     /**
+     * The entity over business dates from the peer in one call (HISTORY_QUERIES.md section 12): {@code GET /api/v1/net/history/{kind}/~},
+     * the dates asked, for the caller, as the peer may show them to that caller (masked there; this node masks again). The peer reads
+     * only its own sources (one hop). A date the peer could not read comes back failed.
+     */
+    @Override
+    public com.ash.drishti.api.HistoryRead history(com.ash.drishti.api.HistoryRequest r) throws Exception {
+        NetCaller.Caller c = NetCaller.current().orElse(null);
+        if (c == null || c.principal() == null) {
+            return com.ash.drishti.api.HistoryRead.NONE;       // a background read acts for nobody: a peer is never asked for it
+        }
+        Map<String, String> headers = forCaller(c.principal(), c.requestId());
+        if (r.knownAt() != null) {
+            headers.put(AsOfResolver.KNOWN_AT_HEADER, r.knownAt().toString());
+        }
+        StringBuilder path = new StringBuilder("/api/v1/net/history/").append(URLEncoder.encode(r.ref().kind(), StandardCharsets.UTF_8))
+                .append("/~?id=").append(URLEncoder.encode(r.ref().id(), StandardCharsets.UTF_8))
+                .append("&from=").append(r.from()).append("&to=").append(r.to()).append("&lastDays=").append(r.lastDays());
+        if (!r.dates().isEmpty()) {
+            path.append("&dates=").append(String.join(",", r.dates().stream().map(LocalDate::toString).toList()));
+        }
+        if (!r.fields().isEmpty()) {
+            path.append("&fields=").append(URLEncoder.encode(String.join(",", r.fields()), StandardCharsets.UTF_8));
+        }
+        Duration forward = net.config().routing().forwardTimeout();
+        Duration timeout = r.budget().compareTo(forward) < 0 ? forward : r.budget();
+        long t0 = System.nanoTime();
+        PeerHttp.Answer a;
+        try {
+            a = net.http().send(url.get(), "GET", path.toString(), headers, null, timeout);
+        } catch (IOException e) {
+            log.record(nodeId, r.ref().kind(), "history", e instanceof java.net.http.HttpTimeoutException ? "timeout" : "failed", ms(t0), e.toString());
+            throw e;
+        }
+        log.record(nodeId, r.ref().kind(), "history", ForwardLog.outcome(a.status()), ms(t0), r.ref().id());
+        if (a.status() == 404) {
+            return com.ash.drishti.api.HistoryRead.NONE;
+        }
+        if (a.status() != 200) {
+            throw new IOException("HTTP " + a.status() + " " + PeerHttp.brief(a.text()));
+        }
+        JsonNode body = net.http().json().readTree(a.body());
+        java.util.List<com.ash.drishti.api.HistoryDay> days = new java.util.ArrayList<>();
+        for (JsonNode d : body.path("days")) {
+            Integer versions = d.path("versions").isNumber() ? d.path("versions").asInt() : null;
+            days.add(new com.ash.drishti.api.HistoryDay(LocalDate.parse(d.path("date").asText()), document(r.ref(), d), versions));
+        }
+        Map<LocalDate, String> failed = new LinkedHashMap<>();
+        body.path("failed").fields().forEachRemaining(e -> failed.put(LocalDate.parse(e.getKey()), e.getValue().asText()));
+        if (!days.isEmpty()) {
+            c.served().data(nodeId);
+        }
+        return new com.ash.drishti.api.HistoryRead(days, Set.of(), failed);
+    }
+
+    /**
      * The live relay (DRISHTI_NET.md section 8): one stream from the peer ({@code GET /api/v1/net/subscribe/{kind}/{id}}, server-sent events
      * of the entity's documents as the subscriber may see them there) feeding this node's topic, which every viewer here shares (per role set,
      * see the topic hub's partition). A stream that breaks is opened again after a second, with a fresh on-behalf-of token, until closed.

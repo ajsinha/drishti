@@ -37,7 +37,13 @@
     <button type="submit" class="btn btn-sm btn-outline-secondary">Make the search</button>
   </form>
   {% if phrase %}<section class="pnl phrase" aria-live="polite"><div class="pnl-b">
-    {% if phrase.query %}
+    {% if phrase.command %}
+    <p>Read as <a class="lnk mono phrase-q" href="/go?q={{ phrase.command | urlencode }}">{{ phrase.command }}</a>
+      <a class="btn-pill btn-accent btn-sm-pill" href="/go?q={{ phrase.command | urlencode }}" data-phrase-open>Open <kbd>Enter</kbd></a>
+      <span class="text-muted-d">the entity over time.</span></p>
+    <ul class="phrase-steps">{% for s in phrase.steps %}<li><span class="mono">“{{ s.words }}”</span> → {{ s.meaning }}</li>{% endfor %}</ul>
+    {% if phrase.ignored %}<p class="t-warn">Not understood, left out: {% for w in phrase.ignored %}<span class="mono">{{ w }}</span>{% if not loop.last %}, {% endif %}{% endfor %}.</p>{% endif %}
+    {% elif phrase.query %}
     <p>Your words make this search: <a class="lnk mono phrase-q" href="/s?q={{ phrase.query | urlencode }}">{{ phrase.query }}</a>
       <a class="btn-pill btn-accent btn-sm-pill" href="/s?q={{ phrase.query | urlencode }}">Run it</a>
       <span class="text-muted-d">or copy it into the search box and change it.</span></p>
@@ -77,7 +83,7 @@
       <thead><tr><th>{{ data.mnemonic or data.kind }}</th>{% if titled %}<th>Title</th>{% endif %}
         {% for c in data.columns %}<th class="{{ 'num' if rows and rows[0].cells[loop.index0][1] else '' }}" title="{{ c }}">{{ data.labels[c] }}</th>{% endfor %}</tr></thead>
       <tbody>{% for r in rows %}
-        <tr{% if r.status %} class="cmp-{{ r.status }}" title="{{ 'only on the later date' if r.status == 'added' else 'only on ' ~ vs }}"{% endif %}><td><a class="lnk mono" href="/v/{{ r.ref.kind }}/{{ r.ref.id | urlencode }}">{{ r.ref.id }}</a>{% if r.status %} <span class="st">{{ r.status }}</span>{% endif %}</td>{% if titled %}<td>{{ r.title }}</td>{% endif %}
+        <tr{% if r.status %} class="cmp-{{ r.status }}" title="{{ 'only on the later date' if r.status == 'added' else 'only on ' ~ vs }}"{% endif %}><td><a class="lnk mono" href="/v/{{ r.ref.kind }}/{{ r.ref.id | urlencode }}{% if hq %}/history?{{ hq }}{% endif %}">{{ r.ref.id }}</a>{% if r.status %} <span class="st">{{ r.status }}</span>{% endif %}</td>{% if titled %}<td>{{ r.title }}</td>{% endif %}
           {% for text, number in r.cells %}<td class="{{ 'num ' if number else '' }}mono">{{ text }}</td>{% endfor %}</tr>
       {% endfor %}</tbody></table></div>{% if pv %}</div>
       {{ pivot_host('search', pv, pivot_saved, data.kind, q) }}</div>{% endif %}</div></section>

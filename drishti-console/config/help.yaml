@@ -110,6 +110,8 @@ moved:
   themes: reports#52-themes                                               # report themes and the theme designer (2.4.0)
   console-themes: user-guide#themes                                       # the console's ten themes (three Terminal hues in 2.6.0)
   statements: docs-guides-statements                                      # statement pages, paginated reports, bursting (2.6.0; docs/guides/STATEMENTS.md)
+  history: user-guide#history-an-entity-over-time                         # TRD 1000015 30 <GO>: an entity over time (2.6.5)
+  history-tutorial: docs-tutorials-21-an-entity-over-time                 # tutorial 21 (2.6.5)
   paginated-reports: docs-guides-statements
   field-parameters: reports#21-field-parameters-in-a-well-260             # field parameters in a report's wells (2.6.0)
   drishti-stack: docs-admin-net#2-a-cluster-of-three                     # the ready-made local cluster (drishti-stack/)
@@ -198,6 +200,7 @@ contextual:
   reports: reports-page
   search: user-guide
   compare: user-guide
+  history: user-guide#history-an-entity-over-time
   bi-designer: bi-guide#26-bi-studio-authoring-as-one-product-wave-c-240
   bi-theme-designer: reports#52-themes
   bi-transform: python-bi#17-data-prep-the-transform-editor-240

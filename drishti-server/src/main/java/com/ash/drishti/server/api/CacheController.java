@@ -43,6 +43,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CacheController {
 
     public static final String ENGINE = "engine";
+    public static final String HISTORY = "history";
 
     /** One cache: its owner (a connector, or the engine) and what it holds. */
     public record CacheInfo(String name, String type, Map<String, Object> stats) {}
@@ -52,8 +53,11 @@ public class CacheController {
     private final com.ash.drishti.engine.explain.ExplainService explain;
     private final Entitlements entitlements;
     private final UserService users;
+    private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.engine.history.HistoryService> history;
 
-    public CacheController(SourceRegistry sources, ViewPipeline pipeline, com.ash.drishti.engine.explain.ExplainService explain, Entitlements entitlements, UserService users) {
+    public CacheController(SourceRegistry sources, ViewPipeline pipeline, com.ash.drishti.engine.explain.ExplainService explain, Entitlements entitlements, UserService users,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.engine.history.HistoryService> history) {
+        this.history = history;
         this.sources = sources;
         this.pipeline = pipeline;
         this.explain = explain;
@@ -67,6 +71,10 @@ public class CacheController {
         List<CacheInfo> out = new ArrayList<>();
         out.add(new CacheInfo(ENGINE, "Layouts and shape fingerprints", pipeline.cacheStats()));
         // the one memory budget the Delta connectors share (those that set no cache size of their own): size against cap
+        com.ash.drishti.engine.history.HistoryService h = history.getIfAvailable();
+        if (h != null) {
+            out.add(new CacheInfo(HISTORY, "History queries' answers, by data version", h.cache().stats()));
+        }
         out.add(new CacheInfo("memory-budget", "Shared by the Delta connectors", com.ash.drishti.plugin.delta.DeltaSourcePlugin.sharedBudget()));
         for (SourcePlugin s : sources.plugins()) {
             Map<String, Object> stats = s.cacheStats();
@@ -87,6 +95,11 @@ public class CacheController {
             pipeline.purgeCaches();
             explain.purge();
             purged.add(ENGINE);
+        }
+        com.ash.drishti.engine.history.HistoryService h = history.getIfAvailable();
+        if (h != null && (name.equals(HISTORY) || name.equals("all"))) {
+            h.cache().clear();
+            purged.add(HISTORY);
         }
         for (SourcePlugin s : sources.plugins()) {
             if ((name.equals("all") && !s.cacheStats().isEmpty()) || s.manifest().name().equals(name)) {

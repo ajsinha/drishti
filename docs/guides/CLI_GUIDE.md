@@ -29,6 +29,7 @@ and how to run it all from PyCharm.
 - [5. `pack`: make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install](#5-pack-make-new-regenerate-diff-catalogue-i18n-check-about-check-bundle-verify-deploy-rollback-publish-keygen-install)
 - [6. `data`: profile, ingest, load, and tell the server a batch landed](#6-data-profile-ingest-and-load)
 - [7. `server`: health and packs; also smoke, `doctor`, `view`, shell completion, and the `connector` commands](#7-server-health-and-packs)
+  - [`history`: an entity over time](#history-an-entity-over-time)
   - [`connector`: list, get, apply, delete, test, plugins, enable, disable, reset, history](#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history)
 - [8. `design`: the Screen Designer over REST](#8-design-the-screen-designer-over-rest)
 - [9. `docs`: screenshots](#9-docs-screenshots)
@@ -1802,6 +1803,51 @@ Why this layout: Sutra counterparty v1 + inference (a Sutra plus inference for w
 
 Next: F2 Netting sets; F3 Group hierarchy; F7 Counterparty group; F8 Impact; F9 Raw JSON
 ```
+
+### `history`: an entity over time
+
+`drishti.py history KIND ID` prints one row per business day the entity has data, newest first, a changed cell marked `*`: the same
+answer as the console's history page (`TRD 1000015 30 <GO>`, [USER_GUIDE › History](USER_GUIDE.md#history-an-entity-over-time)),
+read from `GET /api/v1/history/{kind}/{id}` with your token, so masks apply.
+
+```text
+drishti.py history trade 1000015 --days 30                        the last 30 business days with data (the default)
+drishti.py history equity EQ-CSCA --range 3M --fields PRICE,CHANGE_1D
+drishti.py history trade 1000015 --from 2026-09-01 --to 2026-09-30 --diff
+drishti.py history trade 1000015 --days 30 --changes-only --json
+drishti.py history trade 1000015 --days 30 --csv > trade-1000015.csv
+```
+
+| Option | Does |
+|---|---|
+| `--days N` | the last N business days on which the entity has data |
+| `--range R` | a calendar range: `30D`, `2W`, `3M`, `1Y`, `YTD`, `MTD`, `QTD` |
+| `--from D`, `--to D` | between two business dates (`--to` defaults to the latest) |
+| `--fields A,B` | only these top-level fields |
+| `--known-at T` | the history as it was known at an instant (stores with time travel: Delta, Iceberg) |
+| `--diff` | each day's changes against the day before, listed after the table |
+| `--changes-only` | only the days on which something changed |
+| `--json`, `--csv` | the server's answer as JSON; the table as CSV (UTF-8 with a BOM, CRLF, formulas kept as text) |
+
+`drishti.py history trade 1000015 --days 30 --changes-only` (the contract's fixture trade):
+
+```text
+TRD 1000015  HISTORY  2026-09-07 -> 2026-10-19  30 days with data, 7 changed, no data on 2026-09-14
+ComSwap ENGY-SWAP · CP-HARBORPT
+Date           Trade status  Trade version  Quantity  Price        Maturity date  Portfolio     Counterparty  Trader  Legs  Events
+-------------  ------------  -------------  --------  -----------  -------------  ------------  ------------  ------  ----  ------
+2026-10-19     VALIDATED     3              72K       2,341.0500*  2028-07-31     BOOK-COMM-2   CP-HARBORPT   •••     2     5
+2026-10-16     VALIDATED     3              72K*      2,336.1200*  2028-07-31     BOOK-COMM-2   CP-HARBORPT   •••     2     5
+2026-10-15 ⟲2  VALIDATED     3*             75K*      2,338.4000*  2028-07-31     BOOK-COMM-2   CP-HARBORPT   •••     2     5*
+2026-10-07     VALIDATED     2              72K       2,332.9131   2028-07-31     BOOK-COMM-2*  CP-HARBORPT   •••     2     4
+2026-10-01     VALIDATED     2              72K       2,332.9131   2028-07-31     BOOK-COMM-3*  CP-HARBORPT   •••     2     4
+2026-09-22     VALIDATED     2*             72K       2,332.9131   2028-07-31     BOOK-COMM-2   CP-HARBORPT   •••     2     4*
+2026-09-09     VALIDATED*    1              72K       2,332.9131   2028-07-31     BOOK-COMM-2   CP-HARBORPT   •••     2     3
+7 of 30 days changed
+```
+
+`⟲2` marks a day the store kept two versions of (the latest shown); `•••` is a field masked for you. Exit codes: 0; 1 when the server
+refused (the code and its message on standard error) or some days could not be read (`partial`); 2 for usage.
 
 ### `server packs deploy`, `history`, `rollback` and `datasource`
 

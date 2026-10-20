@@ -57,7 +57,8 @@ import org.springframework.context.annotation.Import;
 @EnableConfigurationProperties({SourcesProperties.class, EngineProperties.class, CommandsProperties.class, LiveProperties.class,
         com.ash.drishti.engine.time.BusinessDateProperties.class, com.ash.drishti.engine.search.SearchProperties.class,
         com.ash.drishti.engine.bind.PanelLimits.class, com.ash.drishti.engine.pivot.PivotProperties.class,
-        com.ash.drishti.engine.shape.BuilderProperties.class, com.ash.drishti.engine.explain.ExplainProperties.class})
+        com.ash.drishti.engine.shape.BuilderProperties.class, com.ash.drishti.engine.explain.ExplainProperties.class,
+        com.ash.drishti.engine.history.HistoryProperties.class})
 public class EngineConfiguration {
 
     /**

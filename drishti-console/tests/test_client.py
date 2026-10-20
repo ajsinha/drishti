@@ -41,6 +41,10 @@ class Fake(BaseHTTPRequestHandler):
         if self.path.startswith("/api/v1/search?"):
             return self._send(200, {"columns": ["$.productType"], "labels": {"$.productType": "Product type"},
                                     "rows": [{"ref": {"kind": "trade", "id": "T-9"}, "title": "T-9", "values": {"$.productType": "REVOLVER"}}]})
+        if self.path.startswith("/api/v1/history/trade/1000015?"):
+            return self._send(200, {"ref": {"kind": "trade", "id": "1000015"}, "rows": [
+                {"date": "2026-10-16", "values": {"QUANTITY": 72000.0}, "changed": []},
+                {"date": "2026-10-19", "values": {"QUANTITY": 75000.0}, "changed": ["QUANTITY"]}]})
         return self._send(404, {"code": "DRS-1001", "detail": "no source holds it"})
 
     def _send(self, status, body):
@@ -78,3 +82,14 @@ def test_the_client_says_what_the_server_refused(server, capsys):
     assert e.value.code == "DRS-1001"
     assert main(["--url", server, "--token", "drk_good", "search", "TRD productType=Revolver"]) == 0
     assert capsys.readouterr().out.splitlines()[0] == "kind,id,title,Product type"
+
+
+def test_the_client_reads_an_entity_over_time(server):
+    d = Drishti(server, token="drk_good")
+    rows = d.history_rows("trade", "1000015")
+    assert rows[0] == {"date": "2026-10-19", "QUANTITY": 75000.0, "changed": ["QUANTITY"]}       # newest first
+    assert SEEN[-1][0] == "/api/v1/history/trade/1000015?days=30"
+    d.history("trade", "1000015", range_="3M", diff=True, fields=["PRICE", "QUANTITY"])
+    assert SEEN[-1][0] == "/api/v1/history/trade/1000015?range=3M&fields=PRICE%2CQUANTITY&diff=true"
+    d.history("trade", "1000015", date_from="2026-09-01", date_to="2026-09-30")
+    assert SEEN[-1][0] == "/api/v1/history/trade/1000015?from=2026-09-01&to=2026-09-30"

@@ -21,15 +21,21 @@ import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
+import com.ash.drishti.api.HistoryDay;
+import com.ash.drishti.api.HistoryRead;
+import com.ash.drishti.api.HistoryRequest;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.common.JsonCodec;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import org.junit.jupiter.api.Test;
@@ -130,6 +136,83 @@ public abstract class DatedSourceContract {
                 .containsExactly(EntityRef.of("trade", "T-1"), EntityRef.of("trade", "T-2"));
         assertThat(plugin().reverse(EntityRef.of("netting-set", "NS-B"), "trade", AsOf.of(D1))).containsExactly(EntityRef.of("trade", "T-3"));
         assertThat(plugin().reverse(EntityRef.of("netting-set", "NS-B"), "trade", AsOf.of(D3))).isEmpty();
+    }
+
+    // ---- history (HISTORY_QUERIES.md section 19.2): the same answers from the default per-day loop and from every fast path ----
+
+    private HistoryRead history(String kind, String id, LocalDate from, LocalDate to) throws Exception {
+        return plugin().history(HistoryRequest.of(EntityRef.of(kind, id), from, to));
+    }
+
+    private static List<LocalDate> dates(HistoryRead read) {
+        return read.days().stream().map(HistoryDay::date).toList();
+    }
+
+    @Test
+    void historyOfASnapshotKindHasOneRowPerDateItHolds() throws Exception {
+        HistoryRead t1 = history("trade", "T-1", D1, D3);
+        assertThat(dates(t1)).containsExactly(D1, D2, D3);
+        assertThat(t1.days()).extracting(d -> d.document().data().get("mtm").asDouble()).containsExactly(100.0, 110.0, 125.0);
+        assertThat(t1.days()).allSatisfy(d -> assertThat(d.document().provenance().businessDate()).isEqualTo(d.date()));
+        assertThat(t1.failed()).isEmpty();
+        assertThat(dates(history("trade", "T-3", D1, D3))).containsExactly(D1);
+        assertThat(history("trade", "NOPE", D1, D3).days()).isEmpty();
+    }
+
+    @Test
+    void historySkipsDatesAnsweredByAnEarlierDate() throws Exception {
+        assertThat(dates(history("trade", "T-1", D3, D3.plusDays(4)))).containsExactly(D3);
+        assertThat(history("trade", "T-1", LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 5)).days()).isEmpty();
+    }
+
+    @Test
+    void historyOfAnEffectiveKindListsTheChangeDates() throws Exception {
+        HistoryRead cp = history("counterparty", "CP-X", D1, D3);
+        assertThat(dates(cp)).containsExactly(D1, D3);
+        assertThat(cp.days()).extracting(d -> d.document().data().get("rating").asText()).containsExactly("A", "A-");
+    }
+
+    @Test
+    void historyAsksOnlyTheFields() throws Exception {
+        HistoryRead read = plugin().history(HistoryRequest.of(EntityRef.of("trade", "T-1"), D1, D3).withFields(Set.of("mtm")));
+        assertThat(dates(read)).containsExactly(D1, D2, D3);
+        assertThat(read.days()).extracting(d -> d.document().data().get("mtm").asDouble()).containsExactly(100.0, 110.0, 125.0);
+    }
+
+    @Test
+    void historyOfTheLastDaysWithData() throws Exception {
+        HistoryRead read = plugin().history(HistoryRequest.of(EntityRef.of("trade", "T-1"), D1.minusDays(5), D3.plusDays(3)).withLastDays(2));
+        assertThat(dates(read)).containsExactly(D2, D3);
+    }
+
+    @Test
+    void historyDaysAgreeWithHistory() throws Exception {
+        Optional<NavigableSet<LocalDate>> days = plugin().days(EntityRef.of("trade", "T-1"), D1.minusDays(2), D3.plusDays(2));
+        days.ifPresent(d -> assertThat(d).containsExactly(D1, D2, D3));
+        plugin().days(EntityRef.of("counterparty", "CP-X"), D1, D3).ifPresent(d -> assertThat(d).containsExactly(D1, D3));
+        plugin().days(EntityRef.of("trade", "T-3"), D1, D3).ifPresent(d -> assertThat(d).containsExactly(D1));
+    }
+
+    @Test
+    void historyMatchesFetchDayByDay() throws Exception {
+        for (String id : List.of("T-1", "T-2", "T-3")) {
+            for (HistoryDay day : history("trade", id, D1, D3).days()) {
+                EntityDocument one = at("trade", id, day.date()).orElseThrow();
+                assertThat(day.document().data()).isEqualTo(one.data());
+                assertThat(day.document().provenance().source()).isEqualTo(one.provenance().source());
+            }
+        }
+    }
+
+    @Test
+    void historyWithKnownAtFollowsTimeTravel() throws Exception {
+        if (!plugin().timeTravel()) {
+            return;
+        }
+        HistoryRequest now = new HistoryRequest(EntityRef.of("trade", "T-1"), D1, D3, List.of(), Set.of(), Instant.now(), 0, null, 0);
+        HistoryRead read = plugin().history(now);
+        assertThat(dates(read)).containsExactly(D1, D2, D3);
+        assertThat(read.days()).allSatisfy(d -> assertThat(d.restated()).isFalse());
     }
 
     @Test

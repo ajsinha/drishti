@@ -118,6 +118,21 @@ class Drishti:
         where, q = _entity(kind, id_)
         return self._get(f"/history/{where}/diff", None, **{"from": date_from, "to": date_to}, **q)
 
+    def history(self, kind: str, id_: str, days: int | None = None, range_: str | None = None, date_from: str | None = None,
+                date_to: str | None = None, fields: list[str] | None = None, diff: bool = False, known_at: str | None = None) -> dict:
+        """One entity over business days (rows oldest first): ``days=30`` the last 30 days with data, ``range_="3M"`` (30D, 2W, 1Y, YTD,
+        MTD, QTD) or ``date_from``/``date_to``; ``diff=True`` adds each day's changes. Masks apply as in the console."""
+        where, q = _entity(kind, id_)
+        if days is None and range_ is None and date_from is None:
+            days = 30
+        return self._get(f"/history/{where}", None, days=days, range=range_, fields=",".join(fields) if fields else None,
+                         diff="true" if diff else None, knownAt=known_at, **{"from": date_from, "to": date_to}, **q)
+
+    def history_rows(self, kind: str, id_: str, **kw) -> list[dict]:
+        """The history as one flat dict per day, newest first: ``date``, every column by its path, ``changed`` (the paths)."""
+        r = self.history(kind, id_, **kw)
+        return [{"date": row["date"], **(row.get("values") or {}), "changed": row.get("changed") or []} for row in reversed(r.get("rows") or [])]
+
     def to_pandas(self, query: str, as_of: str | None = None):
         """The search as a pandas DataFrame (needs pandas)."""
         import pandas as pd  # noqa: PLC0415 - optional
