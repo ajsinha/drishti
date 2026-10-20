@@ -74,7 +74,12 @@ public final class SourceHistory {
                 break;
             }
             String name = p.manifest().name();
-            refuseKnownAt(p, r, name);
+            if (r.knownAt() != null && !p.timeTravel()) {
+                if (!mayHold(p, r.ref().kind(), remaining)) {
+                    continue;                    // holds none of these dates: it has nothing to answer "as known at" (as single reads)
+                }
+                refuseKnownAt(p, r, name);
+            }
             Duration left = Duration.ofNanos(Math.max(0, deadline - System.nanoTime()));
             asked.add(name);
             Set<LocalDate> settled = new HashSet<>();
@@ -164,6 +169,27 @@ public final class SourceHistory {
             seen.putIfAbsent(f.source() + "|" + f.date(), f);
         }
         return List.copyOf(seen.values());
+    }
+
+    /**
+     * Whether a dated store may hold one of {@code dates} of the kind: not when it holds nothing of the kind ({@link SourcePlugin#holdsNone})
+     * or says of every date that it is {@link com.ash.drishti.api.DateCoverage#NOT_HELD} (the shipped {@code file} connector before any file
+     * of the kind appears). Such a store is not asked, so a read "as known at" an instant is not refused for it (QA1-04).
+     */
+    private static boolean mayHold(SourcePlugin p, String kind, List<LocalDate> dates) {
+        try {
+            if (p.holdsNone(kind)) {
+                return false;
+            }
+            for (LocalDate d : dates) {
+                if (p.coverage(kind, AsOf.of(d)) != com.ash.drishti.api.DateCoverage.NOT_HELD) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (RuntimeException e) {
+            return true;                                                  // it cannot say: it may hold them
+        }
     }
 
     /** A read "as known at" an instant cannot be put to a dated store that keeps no earlier versions (DRS-1007, as single reads). */

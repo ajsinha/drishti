@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Fixed (QA1-04): a history "as known at" an instant works on Delta Lake and Iceberg.** It was always refused with `DRS-1007`
+  naming the shipped `file` connector, which serves every kind but holds none of the dates; a store without time travel is now
+  refused only when it may hold one of the dates, as single reads do.
+- **Fixed (QA1-13): a bad `knownAt` names itself** (`DRS-4003 knownAt 'garbage' is not an instant …`), not the business date.
 - **Fixed (QA1-01): a history read through a Drishti*net peer shows the peer's new days.** The history cache was keyed by this node's
   data version only, so a load on the peer never showed. The key now carries the data versions of the peers the read asks, as their
   digests carry them; a connector that holds nothing of the kind counts as version `none` (so a node with an empty lake caches too).

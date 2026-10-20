@@ -83,14 +83,22 @@ public final class BusinessDates {
 
     /** Parses a request value: {@code 2026-09-30} (a static snapshot), or blank / {@code live} for live data. */
     public AsOf parse(String date, String knownAt) {
+        LocalDate d;
         try {
             boolean live = date == null || date.isBlank() || date.trim().equalsIgnoreCase("live");
-            LocalDate d = live ? null : LocalDate.parse(date.trim());
-            java.time.Instant k = knownAt == null || knownAt.isBlank() ? null : java.time.Instant.parse(knownAt.trim());
-            return resolve(new AsOf(d, k));
+            d = live ? null : LocalDate.parse(date.trim());
         } catch (DateTimeParseException e) {
             throw new DrishtiException(ErrorCode.BAD_BUSINESS_DATE, "cannot read business date '" + date + "' (use yyyy-MM-dd)");
         }
+        java.time.Instant k;
+        try {
+            k = knownAt == null || knownAt.isBlank() ? null : java.time.Instant.parse(knownAt.trim());
+        } catch (DateTimeParseException e) {
+            // QA1-13: a bad "known at" names itself, not the business date
+            throw new DrishtiException(ErrorCode.BAD_BUSINESS_DATE, "knownAt '" + knownAt + "' is not an instant: use ISO-8601 with a time and a zone "
+                    + "(2026-10-19T18:00:00Z)");
+        }
+        return resolve(new AsOf(d, k));
     }
 
     /** True when {@code asOf} is live data: views stream only then. A picked date, even today, is static. */

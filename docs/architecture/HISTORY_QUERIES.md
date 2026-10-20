@@ -371,7 +371,10 @@ history), so the field dialog gets the fast paths and the 260-day constant becom
   `null`, unknown) and `restated` is true when there is more than one. Only connectors that can say it cheaply fill it (section 10).
 - **Known at.** Without `knownAt` each day is its latest version (what we know now). With `knownAt=K` the whole history is read as the store
   stood at instant K: each day is the version of that day that was known at K, and days loaded after K are absent. It is Delta's and
-  Iceberg's time travel (`timeTravel()`); a connector without it refuses with `DRS-1007` as reads do today. "Each day as it was known at
+  Iceberg's time travel (`timeTravel()`); a connector without it that may hold one of the dates refuses with `DRS-1007` as reads do
+  today. One that holds none of them (`holdsNone`, or `NOT_HELD` for every date: the shipped `file` connector before any file of the kind)
+  is not asked, so it never refuses for the Delta or Iceberg sources behind it. A `knownAt` that is not an ISO-8601 instant fails with
+  `DRS-4003` naming it (*knownAt '2026-10-20' is not an instant*). "Each day as it was known at
   the end of that day" (as first reported) is a different question, kept as open question 1.
 
 ## 8. The JSON contract

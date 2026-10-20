@@ -110,6 +110,22 @@ class SourceRouterHistoryTest {
     }
 
     @Test
+    void knownAtIsNotRefusedForAStoreThatHoldsNoneOfTheDates() {
+        // QA1-04: the shipped file connector serves every kind but holds no date of it; the Delta lake behind it answers "as known at"
+        var empty = new StoreAuthorityTest.Store("file", Set.of(), Set.of(), true, false);
+        var lake = new StoreAuthorityTest.Store("lake", Set.of(D25, D28, D29, D30), Set.of("MX-1"), true, true);
+        HistoryRequest known = new HistoryRequest(MX, D25, D30, week(), Set.of(), Instant.parse("2026-09-30T00:00:00Z"), 0, null, 0);
+        SourceHistory.Routed r = router(empty, lake).history(known);
+        assertThat(r.days()).hasSize(4);
+        assertThat(r.failures()).isEmpty();
+        assertThat(r.asked()).containsExactly("lake");
+        // a store without time travel that may hold a date is still refused
+        var recent = new StoreAuthorityTest.Store("recent", Set.of(D30), Set.of("MX-1"), true, false);
+        assertThatThrownBy(() -> router(recent, lake).history(known)).isInstanceOf(DrishtiException.class)
+                .satisfies(e -> assertThat(((DrishtiException) e).errorCode()).isEqualTo(ErrorCode.NO_TIME_TRAVEL));
+    }
+
+    @Test
     void aSlowStoreGivesTimedOutDates() {
         SourcePlugin slow = new SourcePlugin() {
             public PluginManifest manifest() {
