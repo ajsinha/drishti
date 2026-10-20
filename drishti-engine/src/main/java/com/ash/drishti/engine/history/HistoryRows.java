@@ -28,6 +28,7 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -92,6 +93,21 @@ public final class HistoryRows {
         List<String> partPaths = parts(docs);
         Set<String> ignore = spec.ignoreChanges();
         DocumentDiff differ = diff ? new DocumentDiff(DIFF_LIMIT) : null;
+        // each day's column values; a column that reads as the mask on some day is masked for this caller, whoever masked it (a peer
+        // masks by its own rules too: "masks twice"), so it never shows as changed and its column says so (SOAK2-01)
+        List<Map<String, Object>> allValues = new ArrayList<>(days.size());
+        Set<String> maskedSeen = new HashSet<>();
+        for (int i = 0; i < days.size(); i++) {
+            Map<String, Object> values = new LinkedHashMap<>();
+            for (Col c : cols) {
+                Object v = days.get(i).document().deleted() ? null : c.value(docs.get(i));
+                values.put(c.key, v);
+                if (DataNode.MASK.equals(v)) {
+                    maskedSeen.add(c.key);
+                }
+            }
+            allValues.add(values);
+        }
 
         List<HistoryAnswer.Row> rows = new ArrayList<>();
         Map<String, Object> prevValues = null;
@@ -102,12 +118,10 @@ public final class HistoryRows {
         for (int i = 0; i < days.size(); i++) {
             HistoryDay day = days.get(i);
             DataNode doc = docs.get(i);
-            Map<String, Object> values = new LinkedHashMap<>();
+            Map<String, Object> values = allValues.get(i);
             Map<String, String> display = new LinkedHashMap<>();
             for (Col c : cols) {
-                Object v = day.document().deleted() ? null : c.value(doc);
-                values.put(c.key, v);
-                display.put(c.key, display(v, c.format));
+                display.put(c.key, display(values.get(c.key), c.format));
             }
             boolean series = HistoryService.SERIES.equals(day.document().provenance().source());
             Map<String, DataNode> partNodes = new LinkedHashMap<>();
@@ -127,7 +141,8 @@ public final class HistoryRows {
                     if (either && seriesDoc.get(c.key).isMissing()) {
                         continue;
                     }
-                    if (!ignore.contains(c.key) && !c.masked && !Values.equal(prevValues.get(c.key), values.get(c.key))) {
+                    if (!ignore.contains(c.key) && !c.masked && !maskedSeen.contains(c.key)
+                            && !Values.equal(prevValues.get(c.key), values.get(c.key))) {
                         changed.add(c.key);
                     }
                 }
@@ -142,6 +157,7 @@ public final class HistoryRows {
                 DataNode only = series ? doc : prevSeries ? prevDoc : null;          // beside a series row: its fields only
                 changes = differ.diff(prevDoc, doc).changes().stream().filter(c -> !ignored(c.path(), ignore))
                         .filter(c -> only == null || !only.get(top(c.path())).isMissing())
+                        .filter(c -> !DataNode.MASK.equals(c.before()) && !DataNode.MASK.equals(c.after()))   // a masked value never changes
                         .map(c -> new HistoryAnswer.Change(c.path(), label(c.path()), c.kind().name().toLowerCase(Locale.ROOT), c.before(), c.after(), c.delta()))
                         .toList();
             } else if (differ != null) {
@@ -163,7 +179,8 @@ public final class HistoryRows {
             prevSeries = series;
         }
         List<HistoryAnswer.Column> columns = cols.stream()
-                .map(c -> new HistoryAnswer.Column(c.key, c.label, c.type(rows), c.format, c.masked, c.isKey)).toList();
+                .map(c -> new HistoryAnswer.Column(c.key, c.label, c.type(rows), c.format, c.masked || maskedSeen.contains(c.key),
+                        c.isKey)).toList();
         List<HistoryAnswer.Part> parts = partPaths.stream().map(p -> new HistoryAnswer.Part(p, Semantics.humanize(p))).toList();
         List<HistoryAnswer.Chart> chart = spec.chart().stream()
                 .map(c -> new HistoryAnswer.Chart(c.key(), c.label() != null ? c.label() : Semantics.humanize(c.key()), c.format())).toList();

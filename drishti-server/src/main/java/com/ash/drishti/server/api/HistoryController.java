@@ -129,7 +129,9 @@ public class HistoryController {
                         .map(f -> f.startsWith("$.") ? f.substring(2) : f).collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new));
         HistoryService.Query q = new HistoryService.Query(kind, id, days, range, from, to, wanted, diff, known,
                 "desc".equalsIgnoreCase(order), current.businessDate());
-        return history.read(q, HistoryService.Viewer.of(d -> entitlements.redact(principal, d), f -> entitlements.masked(principal, f)));
+        // the signature keys the days read through a peer, which arrive masked there for this caller (SOAK2-01)
+        return history.read(q, HistoryService.Viewer.of(d -> entitlements.redact(principal, d), f -> entitlements.masked(principal, f),
+                principal.securitySignature()));
     }
 
     private com.ash.drishti.engine.command.Mnemonics mnemonics;

@@ -177,7 +177,7 @@ public class NetConfiguration {
         // a live relay from a peer is masked there for the user it was opened for: while the cluster runs, viewers share an upstream only
         // with viewers of the same roles (DRISHTI_NET.md section 8, as built)
         hub.partition(() -> !net.running() ? "" : NetCaller.current().map(NetCaller.Caller::principal)
-                .map(p -> String.join(",", new java.util.TreeSet<>(p.roles())) + "|" + (p.embedApp() == null ? "" : p.embedApp())).orElse(""));
+                .map(com.ash.drishti.server.security.Principal::securitySignature).orElse(""));
         PeerSources sources = new PeerSources(routing, net, codec, log, router);
         sources.groups(new GroupGather(router, routing, scatter, codec));   // grouped pages gathered across the nodes (section 8)
         return sources;
