@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **Added: one part of the demo lakes at a time with `tools/build_demo_lakes.py`**: `--files-only` loads only your files into their system's table (the rest of the lakes kept), `--source-dir` with `--system calypso|murex` for another system's files, `--only trades/endur,…` rebuilds only those datasets. Windows QA guide step 3.0; `tools/test_build_demo_lakes.py`.
+
 - **Fixed (QA1-201): `tools/bench/trades.py` (and so `drishti-stack`'s lakes) opened the seven-day test data's `snapshot-2026-09-22`**, gone since the test data holds sixty days: it now takes the system's snapshot whatever its date. The help examples and docs name `snapshot-2026-07-08`.
 
 - **Fixed (QA1-11): `DRS-1013` says when the entity has data** (*… has no data from 2026-09-01 to 2026-09-30; its days with data run

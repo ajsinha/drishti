@@ -26,6 +26,13 @@ Examples::
     python tools/build_demo_lakes.py --endur-dir C:\\Users\\me\\drishti-private\\endur
     python tools/build_demo_lakes.py --endur-dir ~/private/endur --as-of 2026-10-16 --dry-run
 
+One part only, the rest of the lakes kept as they are::
+
+    python tools/build_demo_lakes.py --endur-dir C:\\…\\endur --files-only        # only your ENDUR files, nothing rebuilt
+    python tools/build_demo_lakes.py --source-dir C:\\…\\calypso --system calypso --files-only   # another system's files
+    python tools/build_demo_lakes.py --only trades/endur --as-of 2026-10-16          # only the synthetic ENDUR table
+    python tools/build_demo_lakes.py --only trades/calypso,trades/murex             # several datasets (folders of data/testdata)
+
 Your ENDUR files are read where they are and never copied into the project.
 """
 from __future__ import annotations
@@ -63,17 +70,33 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0], formatter_class=argparse.RawDescriptionHelpFormatter,
                                  epilog=__doc__.split("\n\n", 1)[1])
     ap.add_argument("--endur-dir", type=Path, help="a folder of your ENDUR files, one per business date, named YYYY-MM-DD.jsonl")
+    ap.add_argument("--source-dir", type=Path, help="the same for the system --system names (the same as --endur-dir with --system endur)")
+    ap.add_argument("--system", default="endur", choices=("endur", "calypso", "murex"),
+                    help="whose files --source-dir holds: they go into trading/trade_<system> through connector trade-<system> (default endur)")
+    ap.add_argument("--files-only", action="store_true",
+                    help="load only your files into their system's table; every other table of the lake stays as it is (no lake demo)")
+    ap.add_argument("--only", help="rebuild only these datasets of the test data (lake demo --only: folders such as trades/endur, "
+                                   "trades/calypso, core/counterparty, or a pack name); the other tables stay as they are")
     ap.add_argument("--as-of", help="the last business date of the lakes (default: your newest ENDUR file's date, else today)")
     ap.add_argument("--lake", type=Path, default=ROOT / "data" / "delta", help="the Delta root the server reads (default data/delta)")
     ap.add_argument("--connectors-dir", type=Path, help="the connector files' folder (default: as lake demo, config/connectors)")
-    ap.add_argument("--keep-synthetic-endur", action="store_true", help="add your files beside the synthetic ENDUR trades instead of replacing them")
+    ap.add_argument("--keep-synthetic-endur", "--keep-synthetic", dest="keep_synthetic_endur", action="store_true",
+                    help="add your files beside the system's synthetic trades instead of replacing them")
     ap.add_argument("--dry-run", action="store_true", help="say every step, change nothing")
     a = ap.parse_args(argv)
 
     py = sys.executable
     files: list[tuple[str, Path]] = []
-    if a.endur_dir:
-        folder = a.endur_dir.expanduser().resolve()
+    if a.endur_dir and a.source_dir:
+        ap.error("give --endur-dir or --source-dir, not both")
+    src = a.endur_dir or a.source_dir
+    system = "endur" if a.endur_dir else a.system
+    if a.files_only and not src:
+        ap.error("--files-only needs --endur-dir or --source-dir")
+    if a.files_only and a.only:
+        ap.error("--files-only loads only your files; leave out --only")
+    if src:
+        folder = src.expanduser().resolve()
         if not folder.is_dir():
             ap.error(f"--endur-dir {folder} is not a folder")
         files = endur_files(folder)
@@ -83,25 +106,31 @@ def main(argv: list[str] | None = None) -> int:
     lake = a.lake.expanduser().resolve()
     t0 = time.time()
 
-    print(f"1/3 the demo lakes: every dataset, every business day, ending {as_of} → {lake}")
-    cmd = [py, str(DRISHTI), "lake", "demo", "--as-of", as_of, "--lake", str(lake)]
-    if a.connectors_dir:
-        cmd += ["--connectors-dir", str(a.connectors_dir.expanduser().resolve())]
-    run(cmd, a.dry_run)
+    if a.files_only:
+        print(f"1/3 the demo lakes: kept as they are (--files-only)")
+    else:
+        what = f"only {a.only}" if a.only else "every dataset"
+        print(f"1/3 the demo lakes: {what}, every business day, ending {as_of} → {lake}")
+        cmd = [py, str(DRISHTI), "lake", "demo", "--as-of", as_of, "--lake", str(lake)]
+        if a.only:
+            cmd += ["--only", a.only]
+        if a.connectors_dir:
+            cmd += ["--connectors-dir", str(a.connectors_dir.expanduser().resolve())]
+        run(cmd, a.dry_run)
 
     if files:
-        table = lake / "trading" / "trade_endur"
-        print(f"2/3 your ENDUR files ({len(files)}: {files[0][0]} … {files[-1][0]}) into {table}")
+        table = lake / "trading" / f"trade_{system}"
+        print(f"2/3 your {system.upper()} files ({len(files)}: {files[0][0]} … {files[-1][0]}) into {table}")
         if not a.keep_synthetic_endur:
-            print(f"  the synthetic ENDUR table is removed first: {table}")
+            print(f"  the synthetic {system.upper()} table is removed first: {table}")
             if not a.dry_run and table.exists():
                 shutil.rmtree(table)
         for day, path in files:
             run([py, str(DRISHTI), "lake", "build", "--from", str(path), "--as-of", day,
-                 "--pack", str(ROOT / "config" / "packs" / "trading"), "--connector", "trade-endur", "--key", "TRADE_ID",
+                 "--pack", str(ROOT / "config" / "packs" / "trading"), "--connector", f"trade-{system}", "--key", "TRADE_ID",
                  "--partition-by", "PRODUCT_TYPE", "--mode", "overwrite-dates", "--lake", str(lake)], a.dry_run)
     else:
-        print("2/3 no --endur-dir: the synthetic ENDUR trades stay")
+        print("2/3 no --endur-dir or --source-dir: the synthetic trades stay")
 
     print(f"3/3 done in {time.time() - t0:.0f} s{' (dry run: nothing changed)' if a.dry_run else ''}.")
     print("  Next: start the server (Drishti server (demo lakes), or tools\\windows\\start-server.ps1 -DemoLakes) and the console;")
