@@ -81,7 +81,9 @@ def live(page):
     return page.get_attribute(".bi-live-state", "data-live-state")
 
 
-def wait_state(page, state, timeout=20000):
+def wait_state(page, state, timeout=60000):
+    """The live state the page shows. The first live report of the file opens its stream on a cold server (its first query, its first
+    subscriptions): 22 s measured under the drill's load, so the bound is a minute; a state that never comes still fails."""
     page.wait_for_function("(s) => document.querySelector('.bi-live-state').getAttribute('data-live-state') === s", arg=state, timeout=timeout)
 
 
