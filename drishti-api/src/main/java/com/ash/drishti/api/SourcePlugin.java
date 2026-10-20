@@ -168,6 +168,24 @@ public interface SourcePlugin extends AutoCloseable {
         return Optional.empty();
     }
 
+    /**
+     * The entity on each business date of the request that this source holds, oldest first (HISTORY_QUERIES.md section 9). The default
+     * reads date by date through {@link #fetch(EntityRef, AsOf)}, {@link HistoryRequest#parallelDays()} at once ({@link HistoryReads#perDay});
+     * a connector whose layout can list or read an entity's dates in one go overrides it. A date answered by an earlier date's document is
+     * not a day of the entity. {@link HistoryRequest#fields()}, when set, may cut the documents to those top-level fields.
+     */
+    default HistoryRead history(HistoryRequest request) throws Exception {
+        return HistoryReads.perDay(this, request);
+    }
+
+    /**
+     * The business dates from..to (both included) on which this source holds the entity, or empty when it cannot list them cheaply (then
+     * every business date is read). Must read no document.
+     */
+    default Optional<java.util.NavigableSet<java.time.LocalDate>> days(EntityRef ref, java.time.LocalDate from, java.time.LocalDate to) {
+        return Optional.empty();
+    }
+
     /** Where this source's SQL store keeps its kinds, so a compiled query can run in the source (pushdown); empty when it is not a SQL store. */
     default Optional<SqlTarget> sqlTarget() {
         return Optional.empty();

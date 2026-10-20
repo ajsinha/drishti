@@ -1,0 +1,1998 @@
+{
+  "ref": {
+    "kind": "equity",
+    "id": "EQ-CSCA"
+  },
+  "mnemonic": "EQ",
+  "title": "Cascadia Airlines Inc. · TSX · CAD",
+  "shape": "market",
+  "basis": "documents",
+  "window": {
+    "asked": "3M",
+    "from": "2026-07-20",
+    "to": "2026-10-19",
+    "days": 66,
+    "mode": "calendar",
+    "baseline": "2026-07-17",
+    "missing": [],
+    "knownAt": null
+  },
+  "columns": [
+    {
+      "path": "PRICE",
+      "label": "Price",
+      "type": "number",
+      "format": "price2",
+      "masked": false,
+      "key": true
+    },
+    {
+      "path": "CHANGE_1D",
+      "label": "Chg 1D",
+      "type": "number",
+      "format": "pct2",
+      "masked": false,
+      "key": false
+    },
+    {
+      "path": "MARKET_CAP",
+      "label": "Market cap",
+      "type": "number",
+      "format": "int",
+      "masked": false,
+      "key": false
+    },
+    {
+      "path": "BETA",
+      "label": "Beta",
+      "type": "number",
+      "format": "num2",
+      "masked": false,
+      "key": false
+    }
+  ],
+  "parts": [],
+  "chart": [
+    {
+      "path": "PRICE",
+      "label": "Price",
+      "format": "price2"
+    }
+  ],
+  "rows": [
+    {
+      "date": "2026-07-20",
+      "dataDate": "2026-07-20",
+      "carried": false,
+      "values": {
+        "PRICE": 19.04,
+        "CHANGE_1D": 0.0,
+        "MARKET_CAP": 29923916501,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.04",
+        "CHANGE_1D": "+0.00%",
+        "MARKET_CAP": "29,923,916,501",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 100,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-07-21",
+      "dataDate": "2026-07-21",
+      "carried": false,
+      "values": {
+        "PRICE": 19.07,
+        "CHANGE_1D": 0.16,
+        "MARKET_CAP": 29971065529,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.07",
+        "CHANGE_1D": "+0.16%",
+        "MARKET_CAP": "29,971,065,529",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 101,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-07-22",
+      "dataDate": "2026-07-22",
+      "carried": false,
+      "values": {
+        "PRICE": 19.1,
+        "CHANGE_1D": 0.16,
+        "MARKET_CAP": 30018214557,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.10",
+        "CHANGE_1D": "+0.16%",
+        "MARKET_CAP": "30,018,214,557",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 102,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-07-23",
+      "dataDate": "2026-07-23",
+      "carried": false,
+      "values": {
+        "PRICE": 18.96,
+        "CHANGE_1D": -0.73,
+        "MARKET_CAP": 29798185759,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "18.96",
+        "CHANGE_1D": "-0.73%",
+        "MARKET_CAP": "29,798,185,759",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 103,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-07-24",
+      "dataDate": "2026-07-24",
+      "carried": false,
+      "values": {
+        "PRICE": 19.06,
+        "CHANGE_1D": 0.53,
+        "MARKET_CAP": 29955349186,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.06",
+        "CHANGE_1D": "+0.53%",
+        "MARKET_CAP": "29,955,349,186",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 104,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-07-27",
+      "dataDate": "2026-07-27",
+      "carried": false,
+      "values": {
+        "PRICE": 19.1,
+        "CHANGE_1D": 0.21,
+        "MARKET_CAP": 30018214557,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.10",
+        "CHANGE_1D": "+0.21%",
+        "MARKET_CAP": "30,018,214,557",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 105,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-07-28",
+      "dataDate": "2026-07-28",
+      "carried": false,
+      "values": {
+        "PRICE": 19.48,
+        "CHANGE_1D": 1.99,
+        "MARKET_CAP": 30615435580,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.48",
+        "CHANGE_1D": "+1.99%",
+        "MARKET_CAP": "30,615,435,580",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 106,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-07-29",
+      "dataDate": "2026-07-29",
+      "carried": false,
+      "values": {
+        "PRICE": 19.2,
+        "CHANGE_1D": -1.44,
+        "MARKET_CAP": 30175377984,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.20",
+        "CHANGE_1D": "-1.44%",
+        "MARKET_CAP": "30,175,377,984",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 107,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-07-30",
+      "dataDate": "2026-07-30",
+      "carried": false,
+      "values": {
+        "PRICE": 20.04,
+        "CHANGE_1D": 4.37,
+        "MARKET_CAP": 31495550771,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "20.04",
+        "CHANGE_1D": "+4.37%",
+        "MARKET_CAP": "31,495,550,771",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 108,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-07-31",
+      "dataDate": "2026-07-31",
+      "carried": false,
+      "values": {
+        "PRICE": 19.05,
+        "CHANGE_1D": -4.94,
+        "MARKET_CAP": 29939632844,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.05",
+        "CHANGE_1D": "-4.94%",
+        "MARKET_CAP": "29,939,632,844",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 109,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-03",
+      "dataDate": "2026-08-03",
+      "carried": false,
+      "values": {
+        "PRICE": 19.11,
+        "CHANGE_1D": 0.31,
+        "MARKET_CAP": 30033930900,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.11",
+        "CHANGE_1D": "+0.31%",
+        "MARKET_CAP": "30,033,930,900",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 110,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-04",
+      "dataDate": "2026-08-04",
+      "carried": false,
+      "values": {
+        "PRICE": 19.43,
+        "CHANGE_1D": 1.67,
+        "MARKET_CAP": 30536853866,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.43",
+        "CHANGE_1D": "+1.67%",
+        "MARKET_CAP": "30,536,853,866",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 111,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-05",
+      "dataDate": "2026-08-05",
+      "carried": false,
+      "values": {
+        "PRICE": 19.41,
+        "CHANGE_1D": -0.1,
+        "MARKET_CAP": 30505421181,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.41",
+        "CHANGE_1D": "-0.10%",
+        "MARKET_CAP": "30,505,421,181",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 112,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-06",
+      "dataDate": "2026-08-06",
+      "carried": false,
+      "values": {
+        "PRICE": 19.21,
+        "CHANGE_1D": -1.03,
+        "MARKET_CAP": 30191094327,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.21",
+        "CHANGE_1D": "-1.03%",
+        "MARKET_CAP": "30,191,094,327",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 113,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-07",
+      "dataDate": "2026-08-07",
+      "carried": false,
+      "values": {
+        "PRICE": 19.23,
+        "CHANGE_1D": 0.1,
+        "MARKET_CAP": 30222527012,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.23",
+        "CHANGE_1D": "+0.10%",
+        "MARKET_CAP": "30,222,527,012",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 114,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-10",
+      "dataDate": "2026-08-10",
+      "carried": false,
+      "values": {
+        "PRICE": 19.49,
+        "CHANGE_1D": 1.35,
+        "MARKET_CAP": 30631151922,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.49",
+        "CHANGE_1D": "+1.35%",
+        "MARKET_CAP": "30,631,151,922",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 115,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-11",
+      "dataDate": "2026-08-11",
+      "carried": false,
+      "values": {
+        "PRICE": 19.93,
+        "CHANGE_1D": 2.26,
+        "MARKET_CAP": 31322671001,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.93",
+        "CHANGE_1D": "+2.26%",
+        "MARKET_CAP": "31,322,671,001",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 116,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-12",
+      "dataDate": "2026-08-12",
+      "carried": false,
+      "values": {
+        "PRICE": 19.47,
+        "CHANGE_1D": -2.31,
+        "MARKET_CAP": 30599719237,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.47",
+        "CHANGE_1D": "-2.31%",
+        "MARKET_CAP": "30,599,719,237",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 117,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-13",
+      "dataDate": "2026-08-13",
+      "carried": false,
+      "values": {
+        "PRICE": 19.58,
+        "CHANGE_1D": 0.56,
+        "MARKET_CAP": 30772599007,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.58",
+        "CHANGE_1D": "+0.56%",
+        "MARKET_CAP": "30,772,599,007",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 118,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-14",
+      "dataDate": "2026-08-14",
+      "carried": false,
+      "values": {
+        "PRICE": 19.41,
+        "CHANGE_1D": -0.87,
+        "MARKET_CAP": 30505421181,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.41",
+        "CHANGE_1D": "-0.87%",
+        "MARKET_CAP": "30,505,421,181",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 119,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-17",
+      "dataDate": "2026-08-17",
+      "carried": false,
+      "values": {
+        "PRICE": 19.78,
+        "CHANGE_1D": 1.91,
+        "MARKET_CAP": 31086925861,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.78",
+        "CHANGE_1D": "+1.91%",
+        "MARKET_CAP": "31,086,925,861",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 120,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-18",
+      "dataDate": "2026-08-18",
+      "carried": false,
+      "values": {
+        "PRICE": 19.65,
+        "CHANGE_1D": -0.66,
+        "MARKET_CAP": 30882613405,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.65",
+        "CHANGE_1D": "-0.66%",
+        "MARKET_CAP": "30,882,613,405",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 121,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-19",
+      "dataDate": "2026-08-19",
+      "carried": false,
+      "values": {
+        "PRICE": 19.73,
+        "CHANGE_1D": 0.41,
+        "MARKET_CAP": 31008344147,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.73",
+        "CHANGE_1D": "+0.41%",
+        "MARKET_CAP": "31,008,344,147",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 122,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-20",
+      "dataDate": "2026-08-20",
+      "carried": false,
+      "values": {
+        "PRICE": 20.12,
+        "CHANGE_1D": 1.98,
+        "MARKET_CAP": 31621281512,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "20.12",
+        "CHANGE_1D": "+1.98%",
+        "MARKET_CAP": "31,621,281,512",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 123,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-21",
+      "dataDate": "2026-08-21",
+      "carried": false,
+      "values": {
+        "PRICE": 20.05,
+        "CHANGE_1D": -0.35,
+        "MARKET_CAP": 31511267114,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "20.05",
+        "CHANGE_1D": "-0.35%",
+        "MARKET_CAP": "31,511,267,114",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 124,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-24",
+      "dataDate": "2026-08-24",
+      "carried": false,
+      "values": {
+        "PRICE": 20.16,
+        "CHANGE_1D": 0.55,
+        "MARKET_CAP": 31684146883,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "20.16",
+        "CHANGE_1D": "+0.55%",
+        "MARKET_CAP": "31,684,146,883",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 125,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-25",
+      "dataDate": "2026-08-25",
+      "carried": false,
+      "values": {
+        "PRICE": 19.92,
+        "CHANGE_1D": -1.19,
+        "MARKET_CAP": 31306954658,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.92",
+        "CHANGE_1D": "-1.19%",
+        "MARKET_CAP": "31,306,954,658",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 126,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-26",
+      "dataDate": "2026-08-26",
+      "carried": false,
+      "values": {
+        "PRICE": 19.84,
+        "CHANGE_1D": -0.4,
+        "MARKET_CAP": 31181223917,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.84",
+        "CHANGE_1D": "-0.40%",
+        "MARKET_CAP": "31,181,223,917",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 127,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-27",
+      "dataDate": "2026-08-27",
+      "carried": false,
+      "values": {
+        "PRICE": 19.22,
+        "CHANGE_1D": -3.12,
+        "MARKET_CAP": 30206810669,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.22",
+        "CHANGE_1D": "-3.12%",
+        "MARKET_CAP": "30,206,810,669",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 128,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-28",
+      "dataDate": "2026-08-28",
+      "carried": false,
+      "values": {
+        "PRICE": 18.96,
+        "CHANGE_1D": -1.35,
+        "MARKET_CAP": 29798185759,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "18.96",
+        "CHANGE_1D": "-1.35%",
+        "MARKET_CAP": "29,798,185,759",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 129,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-08-31",
+      "dataDate": "2026-08-31",
+      "carried": false,
+      "values": {
+        "PRICE": 18.81,
+        "CHANGE_1D": -0.79,
+        "MARKET_CAP": 29562440619,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "18.81",
+        "CHANGE_1D": "-0.79%",
+        "MARKET_CAP": "29,562,440,619",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 130,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-01",
+      "dataDate": "2026-09-01",
+      "carried": false,
+      "values": {
+        "PRICE": 18.61,
+        "CHANGE_1D": -1.06,
+        "MARKET_CAP": 29248113765,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "18.61",
+        "CHANGE_1D": "-1.06%",
+        "MARKET_CAP": "29,248,113,765",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 131,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-02",
+      "dataDate": "2026-09-02",
+      "carried": false,
+      "values": {
+        "PRICE": 19.29,
+        "CHANGE_1D": 3.65,
+        "MARKET_CAP": 30316825068,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.29",
+        "CHANGE_1D": "+3.65%",
+        "MARKET_CAP": "30,316,825,068",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 132,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-03",
+      "dataDate": "2026-09-03",
+      "carried": false,
+      "values": {
+        "PRICE": 18.57,
+        "CHANGE_1D": -3.73,
+        "MARKET_CAP": 29185248394,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "18.57",
+        "CHANGE_1D": "-3.73%",
+        "MARKET_CAP": "29,185,248,394",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 133,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-04",
+      "dataDate": "2026-09-04",
+      "carried": false,
+      "values": {
+        "PRICE": 17.9,
+        "CHANGE_1D": -3.61,
+        "MARKET_CAP": 28132253433,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "17.90",
+        "CHANGE_1D": "-3.61%",
+        "MARKET_CAP": "28,132,253,433",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 134,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-07",
+      "dataDate": "2026-09-07",
+      "carried": false,
+      "values": {
+        "PRICE": 17.98,
+        "CHANGE_1D": 0.45,
+        "MARKET_CAP": 28257984175,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "17.98",
+        "CHANGE_1D": "+0.45%",
+        "MARKET_CAP": "28,257,984,175",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 135,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-08",
+      "dataDate": "2026-09-08",
+      "carried": false,
+      "values": {
+        "PRICE": 18.18,
+        "CHANGE_1D": 1.11,
+        "MARKET_CAP": 28572311029,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "18.18",
+        "CHANGE_1D": "+1.11%",
+        "MARKET_CAP": "28,572,311,029",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 136,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-09",
+      "dataDate": "2026-09-09",
+      "carried": false,
+      "values": {
+        "PRICE": 18.24,
+        "CHANGE_1D": 0.33,
+        "MARKET_CAP": 28666609085,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "18.24",
+        "CHANGE_1D": "+0.33%",
+        "MARKET_CAP": "28,666,609,085",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 137,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-10",
+      "dataDate": "2026-09-10",
+      "carried": false,
+      "values": {
+        "PRICE": 18.6,
+        "CHANGE_1D": 1.97,
+        "MARKET_CAP": 29232397422,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "18.60",
+        "CHANGE_1D": "+1.97%",
+        "MARKET_CAP": "29,232,397,422",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 138,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-11",
+      "dataDate": "2026-09-11",
+      "carried": false,
+      "values": {
+        "PRICE": 19.26,
+        "CHANGE_1D": 3.55,
+        "MARKET_CAP": 30269676040,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.26",
+        "CHANGE_1D": "+3.55%",
+        "MARKET_CAP": "30,269,676,040",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 139,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-14",
+      "dataDate": "2026-09-14",
+      "carried": false,
+      "values": {
+        "PRICE": 19.12,
+        "CHANGE_1D": -0.73,
+        "MARKET_CAP": 30049647242,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.12",
+        "CHANGE_1D": "-0.73%",
+        "MARKET_CAP": "30,049,647,242",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 140,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-15",
+      "dataDate": "2026-09-15",
+      "carried": false,
+      "values": {
+        "PRICE": 18.71,
+        "CHANGE_1D": -2.14,
+        "MARKET_CAP": 29405277192,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "18.71",
+        "CHANGE_1D": "-2.14%",
+        "MARKET_CAP": "29,405,277,192",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 141,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-16",
+      "dataDate": "2026-09-16",
+      "carried": false,
+      "values": {
+        "PRICE": 18.67,
+        "CHANGE_1D": -0.21,
+        "MARKET_CAP": 29342411821,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "18.67",
+        "CHANGE_1D": "-0.21%",
+        "MARKET_CAP": "29,342,411,821",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 142,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-17",
+      "dataDate": "2026-09-17",
+      "carried": false,
+      "values": {
+        "PRICE": 19.05,
+        "CHANGE_1D": 2.04,
+        "MARKET_CAP": 29939632844,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.05",
+        "CHANGE_1D": "+2.04%",
+        "MARKET_CAP": "29,939,632,844",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 143,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-18",
+      "dataDate": "2026-09-18",
+      "carried": false,
+      "values": {
+        "PRICE": 19.2,
+        "CHANGE_1D": 0.79,
+        "MARKET_CAP": 30175377984,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.20",
+        "CHANGE_1D": "+0.79%",
+        "MARKET_CAP": "30,175,377,984",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 144,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-21",
+      "dataDate": "2026-09-21",
+      "carried": false,
+      "values": {
+        "PRICE": 19.15,
+        "CHANGE_1D": -0.26,
+        "MARKET_CAP": 30096796270,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.15",
+        "CHANGE_1D": "-0.26%",
+        "MARKET_CAP": "30,096,796,270",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 145,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-22",
+      "dataDate": "2026-09-22",
+      "carried": false,
+      "values": {
+        "PRICE": 19.26,
+        "CHANGE_1D": 0.57,
+        "MARKET_CAP": 30269676040,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.26",
+        "CHANGE_1D": "+0.57%",
+        "MARKET_CAP": "30,269,676,040",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 146,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-23",
+      "dataDate": "2026-09-23",
+      "carried": false,
+      "values": {
+        "PRICE": 19.37,
+        "CHANGE_1D": 0.57,
+        "MARKET_CAP": 30442555810,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.37",
+        "CHANGE_1D": "+0.57%",
+        "MARKET_CAP": "30,442,555,810",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 147,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-24",
+      "dataDate": "2026-09-24",
+      "carried": false,
+      "values": {
+        "PRICE": 18.83,
+        "CHANGE_1D": -2.79,
+        "MARKET_CAP": 29593873304,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "18.83",
+        "CHANGE_1D": "-2.79%",
+        "MARKET_CAP": "29,593,873,304",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 148,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-25",
+      "dataDate": "2026-09-25",
+      "carried": false,
+      "values": {
+        "PRICE": 18.98,
+        "CHANGE_1D": 0.8,
+        "MARKET_CAP": 29829618445,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "18.98",
+        "CHANGE_1D": "+0.80%",
+        "MARKET_CAP": "29,829,618,445",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 149,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-28",
+      "dataDate": "2026-09-28",
+      "carried": false,
+      "values": {
+        "PRICE": 18.73,
+        "CHANGE_1D": -1.32,
+        "MARKET_CAP": 29436709877,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "18.73",
+        "CHANGE_1D": "-1.32%",
+        "MARKET_CAP": "29,436,709,877",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 150,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-29",
+      "dataDate": "2026-09-29",
+      "carried": false,
+      "values": {
+        "PRICE": 18.67,
+        "CHANGE_1D": -0.32,
+        "MARKET_CAP": 29342411821,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "18.67",
+        "CHANGE_1D": "-0.32%",
+        "MARKET_CAP": "29,342,411,821",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 151,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-09-30",
+      "dataDate": "2026-09-30",
+      "carried": false,
+      "values": {
+        "PRICE": 18.52,
+        "CHANGE_1D": -0.8,
+        "MARKET_CAP": 29106666680,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "18.52",
+        "CHANGE_1D": "-0.80%",
+        "MARKET_CAP": "29,106,666,680",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 152,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-01",
+      "dataDate": "2026-10-01",
+      "carried": false,
+      "values": {
+        "PRICE": 18.56,
+        "CHANGE_1D": 0.22,
+        "MARKET_CAP": 29169532051,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "18.56",
+        "CHANGE_1D": "+0.22%",
+        "MARKET_CAP": "29,169,532,051",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 153,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-02",
+      "dataDate": "2026-10-02",
+      "carried": false,
+      "values": {
+        "PRICE": 18.86,
+        "CHANGE_1D": 1.62,
+        "MARKET_CAP": 29641022332,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "18.86",
+        "CHANGE_1D": "+1.62%",
+        "MARKET_CAP": "29,641,022,332",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 154,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-05",
+      "dataDate": "2026-10-05",
+      "carried": false,
+      "values": {
+        "PRICE": 18.81,
+        "CHANGE_1D": -0.27,
+        "MARKET_CAP": 29562440619,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "18.81",
+        "CHANGE_1D": "-0.27%",
+        "MARKET_CAP": "29,562,440,619",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 155,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-06",
+      "dataDate": "2026-10-06",
+      "carried": false,
+      "values": {
+        "PRICE": 18.88,
+        "CHANGE_1D": 0.37,
+        "MARKET_CAP": 29672455018,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "18.88",
+        "CHANGE_1D": "+0.37%",
+        "MARKET_CAP": "29,672,455,018",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 156,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-07",
+      "dataDate": "2026-10-07",
+      "carried": false,
+      "values": {
+        "PRICE": 19.18,
+        "CHANGE_1D": 1.59,
+        "MARKET_CAP": 30143945299,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.18",
+        "CHANGE_1D": "+1.59%",
+        "MARKET_CAP": "30,143,945,299",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 157,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-08",
+      "dataDate": "2026-10-08",
+      "carried": false,
+      "values": {
+        "PRICE": 19.34,
+        "CHANGE_1D": 0.83,
+        "MARKET_CAP": 30395406782,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.34",
+        "CHANGE_1D": "+0.83%",
+        "MARKET_CAP": "30,395,406,782",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 158,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-09",
+      "dataDate": "2026-10-09",
+      "carried": false,
+      "values": {
+        "PRICE": 19.14,
+        "CHANGE_1D": -1.03,
+        "MARKET_CAP": 30081079928,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.14",
+        "CHANGE_1D": "-1.03%",
+        "MARKET_CAP": "30,081,079,928",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 159,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-12",
+      "dataDate": "2026-10-12",
+      "carried": false,
+      "values": {
+        "PRICE": 19.41,
+        "CHANGE_1D": 1.41,
+        "MARKET_CAP": 30505421181,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.41",
+        "CHANGE_1D": "+1.41%",
+        "MARKET_CAP": "30,505,421,181",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 160,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-13",
+      "dataDate": "2026-10-13",
+      "carried": false,
+      "values": {
+        "PRICE": 19.29,
+        "CHANGE_1D": -0.62,
+        "MARKET_CAP": 30316825068,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.29",
+        "CHANGE_1D": "-0.62%",
+        "MARKET_CAP": "30,316,825,068",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 161,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-14",
+      "dataDate": "2026-10-14",
+      "carried": false,
+      "values": {
+        "PRICE": 19.22,
+        "CHANGE_1D": -0.36,
+        "MARKET_CAP": 30206810669,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.22",
+        "CHANGE_1D": "-0.36%",
+        "MARKET_CAP": "30,206,810,669",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 162,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-15",
+      "dataDate": "2026-10-15",
+      "carried": false,
+      "values": {
+        "PRICE": 19.31,
+        "CHANGE_1D": 0.47,
+        "MARKET_CAP": 30348257754,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.31",
+        "CHANGE_1D": "+0.47%",
+        "MARKET_CAP": "30,348,257,754",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 163,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-16",
+      "dataDate": "2026-10-16",
+      "carried": false,
+      "values": {
+        "PRICE": 19.81,
+        "CHANGE_1D": 2.59,
+        "MARKET_CAP": 31134074889,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.81",
+        "CHANGE_1D": "+2.59%",
+        "MARKET_CAP": "31,134,074,889",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 164,
+      "source": "market-store",
+      "deleted": false
+    },
+    {
+      "date": "2026-10-19",
+      "dataDate": "2026-10-19",
+      "carried": false,
+      "values": {
+        "PRICE": 19.54,
+        "CHANGE_1D": -1.36,
+        "MARKET_CAP": 30709733636,
+        "BETA": 1.46
+      },
+      "display": {
+        "PRICE": "19.54",
+        "CHANGE_1D": "-1.36%",
+        "MARKET_CAP": "30,709,733,636",
+        "BETA": "1.46"
+      },
+      "parts": {},
+      "changed": [
+        "PRICE",
+        "CHANGE_1D",
+        "MARKET_CAP"
+      ],
+      "changes": null,
+      "versions": 1,
+      "restated": false,
+      "generation": 165,
+      "source": "market-store",
+      "deleted": false
+    }
+  ],
+  "summary": {
+    "field": "PRICE",
+    "last": 19.54,
+    "first": 19.04,
+    "change": 0.5,
+    "changePct": 2.6261,
+    "high": 20.16,
+    "highDate": "2026-08-24",
+    "low": 17.9,
+    "lowDate": "2026-09-04",
+    "range": 2.26,
+    "average": 19.1644
+  },
+  "changedDays": 66,
+  "partial": false,
+  "problems": [],
+  "truncated": false,
+  "dataVersion": "12@1760700000000",
+  "cache": "miss",
+  "tookMs": 96
+}

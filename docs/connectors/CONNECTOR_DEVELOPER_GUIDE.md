@@ -383,6 +383,8 @@ public interface SourcePlugin extends AutoCloseable {
     default Optional<ColumnSet> columns(String kind, Collection<String> paths, AsOf asOf) throws Exception;
     default boolean documents(String kind, AsOf asOf, Consumer<EntityDocument> sink) throws Exception;
     default Optional<ArrowScan> scan(ScanRequest request) throws Exception;
+    default HistoryRead history(HistoryRequest request) throws Exception;
+    default Optional<NavigableSet<LocalDate>> days(EntityRef ref, LocalDate from, LocalDate to);
     default Optional<SqlTarget> sqlTarget();
     default List<EntityRef> reverse(EntityRef target, String kind);
     default List<EntityRef> reverse(EntityRef target, String kind, AsOf asOf);
@@ -545,6 +547,33 @@ default Optional<SqlTarget> sqlTarget()                                      // 
   file) and the PostgreSQL connector (table mode) provide it; Delta and files do not (their pushdown is the scan above). A connector wrapper (`ConnectorInstance`, the named connector) forwards both methods.
 
 Test it as the engine does: [`ColumnScansTest`](../../drishti-api/src/test/java/com/ash/drishti/api/ColumnScansTest.java) is a stub source and the range, filter, batch and refusal cases; the engine's tests read a small generated lake through a stub connector.
+
+### `history(request)` and `days(ref, from, to)`: one entity over business dates
+
+`TRD 1000015 30` (history queries, [HISTORY_QUERIES.md](../architecture/HISTORY_QUERIES.md)) reads one entity on many business dates.
+
+```java
+default HistoryRead history(HistoryRequest request) throws Exception     // the entity on each date it holds, oldest first
+default Optional<NavigableSet<LocalDate>> days(EntityRef ref, LocalDate from, LocalDate to)   // the dates it holds the entity, no document read
+```
+
+* **`HistoryRequest(ref, from, to, dates, fields, knownAt, lastDays, budget, parallelDays)`**: the dates `from`..`to` (both included);
+  `dates` are the business dates of that span from the server's calendar (a plugin has no calendar; empty means every calendar day);
+  `fields`, when not empty, are the top-level fields wanted (you may return whole documents); `knownAt` asks for time travel (only when
+  `timeTravel()` is true); `lastDays > 0` asks for only the last N dates with data on or before `to`; `budget` is how long the whole read
+  may take; `parallelDays` how many dates the default reads at once.
+* **`HistoryRead(days, covered, failed)`**: `days` are `HistoryDay(date, document, versions)`, one per date the source holds the entity
+  on, where the document's provenance names that date. A date answered by an **earlier** date (a snapshot lookback, an effective kind
+  carrying a change forward) is not a day. `versions` is how many versions of the date the store keeps, or `null` when it cannot say
+  cheaply. `covered` are the dates `coverage()` says `HELD`; the router asks the next connector of the kind only for the others (Redis in
+  front of Delta). `failed` maps a date to why it could not be read (`HistoryReads.TIMED_OUT` when the budget ran out).
+* **The default**, `HistoryReads.perDay`, reads date by date through `fetch(ref, asOf)`, newest first, `parallelDays` at once on
+  virtual threads, and stops early for `lastDays`. When `days()` is present it reads only those dates. Every connector therefore has
+  history on day one; override `history` (and `days`) only when your layout can do better: one range query, a list of the entity's
+  dates, a read of promoted columns without the document.
+* The contract (`DatedSourceContract`) holds the default and every fast path to the same answers, including
+  `historyMatchesFetchDayByDay`: each day's document equals `fetch(ref, AsOf.of(date))`.
+* `ConnectorInstance` (the named connector) forwards both methods for the kinds it serves.
 
 ### `reverse(target, kind[, asOf])`: what refers to this entity
 
@@ -913,7 +942,7 @@ a test dependency (with `drishti-common` for its JSON codec).
 
 | Class | For | You supply | It checks |
 |---|---|---|---|
-| `DatedSourceContract` | any dated store | `plugin()`: the started plugin over a store holding `ROWS` (trades as `snapshot` data over three business days, counterparties as `effective` data), with `mode.counterparty = effective`; `context(settings)` builds a `SourceContext` | it is dated and serves `trade` and `counterparty`; each business date reads its own data; a snapshot kind takes the newest date on or before the one asked, an entity absent from it is gone; an effective kind carries the last change forward; reverse lookups follow the date; search finds ids |
+| `DatedSourceContract` | any dated store | `plugin()`: the started plugin over a store holding `ROWS` (trades as `snapshot` data over three business days, counterparties as `effective` data), with `mode.counterparty = effective`; `context(settings)` builds a `SourceContext` | it is dated and serves `trade` and `counterparty`; each business date reads its own data; a snapshot kind takes the newest date on or before the one asked, an entity absent from it is gone; an effective kind carries the last change forward; reverse lookups follow the date; search finds ids; `history` gives one day per date held (snapshot lookback days and carried effective days left out), the last N days, the fields asked, `days()` agreeing with it, and each day equal to `fetch` of that date |
 | `MessageSourceContract` | a message-queue connector, against a real broker | `start(Path state)`, `send(destination, id, body, deleted)` | documents and envelopes become entities; updates reach live views; deletes remove; the latest state survives a restart of Drishti; messages sent while Drishti was down arrive when it returns; search finds what arrived |
 | `BrokerOutage` | a message connector's recovery | `broker(port)` (kill it by closing), `start(port, state)`, `send(port, destination, body)` | a connector started before its broker exists connects when the broker comes up, and again after the broker is killed and started on the same port |
 
