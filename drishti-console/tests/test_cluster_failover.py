@@ -222,3 +222,21 @@ def test_a_loopback_advertisement_is_never_kept_and_a_member_that_moved_replaces
     saved = json.loads((tmp_path / "net" / "servers.json").read_text())
     assert not any(cluster.loopback_url(s["url"]) for s in saved["servers"])
     assert cluster.loopback_url("http://[::1]:1") and cluster.loopback_url("http://127.3.2.1:1") and not cluster.loopback_url("http://192.168.2.77:1")
+
+
+def test_a_discovered_member_on_any_spelling_of_this_machine_is_refused():
+    """The server's rule (HostAddress, tools/hostaddr.py; QA1-09): 0, 127.x, 2130706433, 0x7f000001, localhost., ip6-localhost, link-local
+    addresses, and a host name that resolves to a loopback address (this machine's own name is 127.0.1.1 on Debian and Ubuntu)."""
+    import socket
+    for url in ("http://0:18611", "http://127.0.1.1:1", "http://2130706433:1", "http://0x7f000001:1", "http://127.1:1", "http://localhost.:1",
+                "http://ip6-localhost:1", "http://foo.localhost:1", "http://169.254.10.1:1", "http://[fe80::1]:1", "http://[::]:1", "http://0.0.0.0:1"):
+        assert cluster.loopback_url(url), url
+    for url in ("http://192.168.2.77:1", "http://10.1.2.3:18480", "http://no-such-host.invalid:1"):
+        assert not cluster.loopback_url(url), url
+    name = socket.gethostname()
+    try:
+        resolved = {i[4][0] for i in socket.getaddrinfo(name, None)}
+    except OSError:
+        resolved = set()
+    if resolved and all(a.startswith("127.") or a == "::1" for a in resolved):
+        assert cluster.loopback_url(f"http://{name}:1")

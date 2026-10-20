@@ -17,6 +17,9 @@
 
 ## Unreleased
 
+- **Fixed (QA1-09, console): the console's discovered servers follow the server's address rule.** `core/cluster.py` refused only
+  localhost, 127.x and the wildcard; it now refuses every spelling the server's `HostAddress` refuses (`0`, `2130706433`, `0x7f000001`,
+  `localhost.`, `ip6-localhost`, link-local and bridge addresses, and host names that resolve to them), in `core/hostrule.py`.
 - **Fixed: `lake maintain` lays out the per-source trade tables.** It looked a table's layout up by its folder name as if it were a kind,
   so `trade_endur`, `trade_calypso` and `trade_murex` got a plain compaction out of id order; it now finds the layout of the connector whose
   table it is, and `relayout` keeps a table's own partitions (`business_date` and `PRODUCT_TYPE`) and checks each of them. `test_maintain.py`.
