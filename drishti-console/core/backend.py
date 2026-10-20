@@ -657,18 +657,23 @@ class BackendClient:
             raise BackendError(503, "DRS-5003", f"backend unreachable: {e}") from e
 
     # -- Rupaka phase 1: the BI shell and catalogue (docs/architecture/RUPAKA.md) ---------------------------------------------
-    async def bi(self, method: str, path: str, ident, body: dict | None = None, **params):
-        """``/api/v1/bi/...`` as the signed-in user: the server decides what they may see and do, every time."""
+    async def bi(self, method: str, path: str, ident, body: dict | None = None, wait: float | None = None, **params):
+        """``/api/v1/bi/...`` as the signed-in user: the server decides what they may see and do, every time. ``wait`` (seconds) replaces
+        the console's own wait for a call that may run longer (a query: the server lets one run ``drishti.bi.query.timeout``, 30 s)."""
         kw: dict = {}
+        if wait:
+            kw["timeout"] = wait
         if params:
             kw["params"] = params
         if body is not None:
             kw["json"] = body
         return await self._send(method, "/bi" + path, ident, **kw)
 
-    async def bi_arrow(self, path: str, ident, body: dict | None, **params):
+    async def bi_arrow(self, path: str, ident, body: dict | None, wait: float | None = None, **params):
         """A BI answer that is bytes (a Perspective visual's rows as an Arrow IPC stream): ``(bytes, response headers)``."""
         kw: dict = {"raw": True, "with_headers": True}
+        if wait:
+            kw["timeout"] = wait
         if params:
             kw["params"] = params
         if body is not None:
@@ -715,8 +720,8 @@ class BackendClient:
         kw = {"params": params} if params else {}
         if headers:
             kw["headers"] = headers
-        if timeout:
-            kw["timeout"] = timeout
+        if wait:
+            kw["timeout"] = wait
         if body is not None:
             kw["json"] = body
         return await self._send(method, "/admin" + path, ident, **kw)

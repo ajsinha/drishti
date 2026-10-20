@@ -36,6 +36,14 @@
   again by clicking it, and that click reached the page's own listeners: the panel `?` popover (and a pinned tip, a menu) closed about once a
   second on a ticking view, in the console and in `<drishti-view>`. The tab is now selected by a click that does not bubble (live.js,
   controls.js and Drishti Elements **1.4.3**). Found as a flaky `test_trusted_types_enforced_host_still_works`.
+- **Fixed: a BI visual a busy server answers in more than 5 s is drawn, not refused.** The console gave every BI call its usual 5 s wait,
+  while the server lets a query run 30 s (`drishti.bi.query.timeout`): a tile or visual on a loaded server showed `DRS-1004 the server did not
+  answer in time` while the server was still working on it. A query (`.../query`, `mq`, `sql`, the Arrow rows) now waits 35 s. Found as the
+  flaky board designer test of `test_wave_b_browser` (0 of 3 under load before, 5 of 5 after).
+- **Fixed: the report designer's Query pane shows the selected visual's query when its answer comes after the selection.** It redrew on a
+  selection and 0.6 s after a change only, so a visual selected before its query was answered said *Choose a visual*; it now redraws when the
+  answer arrives. And the Fields pane is no longer rebuilt when nothing in it changed: a rebuild just after the page was ready took the field
+  being dragged from under the pointer and the drop was lost. Found as the flaky `test_w1_model_designer_browser`.
 - **Fixed: `pytest` from the repo root collects every test.** `tools/bench/test_trades.py` and `tools/packgen/trades/test_trades.py`
   shared a module name, so collection stopped with an import-file-mismatch error; the benchmark's test is now `tools/bench/test_bench_trades.py`.
 - **Fixed: derived pages kept on disk are never removed while another process has them open.** A server's start-up clean-up of
