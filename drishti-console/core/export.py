@@ -19,6 +19,7 @@ numbers (-412580, 0.0425). UTF-8 with a byte-order mark, so spreadsheet programs
 from __future__ import annotations
 
 import csv
+import datetime
 import io
 import re
 import zipfile
@@ -191,6 +192,8 @@ def _col(i: int) -> str:
 
 def _cell(ref: str, v, style: int = 0) -> str:
     s = f' s="{style}"' if style else ""
+    if isinstance(v, datetime.date) and not isinstance(v, datetime.datetime):      # a date cell (yyyy-mm-dd): sorts and filters as a date
+        return f'<c r="{ref}" s="2"><v>{(v - datetime.date(1899, 12, 30)).days}</v></c>'
     if isinstance(v, bool):
         return f'<c r="{ref}" t="b"{s}><v>{int(v)}</v></c>'
     if isinstance(v, (int, float)) and v == v and v not in (float("inf"), float("-inf")):
@@ -220,12 +223,14 @@ _XLSX_PARTS = {
     "</Relationships>",
     "xl/styles.xml": '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
     '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+    '<numFmts count="1"><numFmt numFmtId="164" formatCode="yyyy-mm-dd"/></numFmts>'
     '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>'
     '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>'
     '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
     '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
-    '<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
-    '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs>'
+    '<cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
+    '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>'
+    '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs>'
     "</styleSheet>",
 }
 

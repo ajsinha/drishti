@@ -86,7 +86,11 @@ settings:
 
 `tables:` sits under `settings:` (nesting is flattened to `tables.trade.table`, `tables.trade.links.COUNTERPARTY`, …, as in every
 connector file). A ready-made file is [`config/connectors.examples/other/iceberg-external-risk-mart.yaml`](../../config/connectors.examples/other/iceberg-external-risk-mart.yaml).
-For path-based tables `table: risk_mart.trades` is the folder `<root>/risk_mart/trades`.
+For path-based tables `table: risk_mart.trades` is the folder `<root>/risk_mart/trades`. Its current version is the one its
+`metadata/version-hint.text` names (`vN.metadata.json`, as Iceberg's Hadoop tables and the `iceberg` loader write them), or, for a table a
+catalog wrote (pyiceberg, a JDBC or Glue catalog, Spark through one: `00003-<uuid>.metadata.json` and no hint), the metadata file with the
+highest sequence number, as Iceberg's own readers take it; a later commit by that catalog is seen at the next refresh. A folder with
+neither is `no table risk_mart.trades`, and Health says which files it looked for.
 
 ## 3. Rows as documents
 

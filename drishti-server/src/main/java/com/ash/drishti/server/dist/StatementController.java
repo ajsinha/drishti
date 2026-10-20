@@ -64,11 +64,11 @@ public class StatementController {
     /** Body as {@link #preview} plus {@code format}: {@code pdf} (the default) or {@code xlsx}; the file, made for the caller. */
     @PostMapping("/api/v1/bi/reports/statement/file")
     public ResponseEntity<byte[]> file(@RequestBody JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        String format = body.path("format").asText("pdf");
-        ContentExporter.Format f = ContentExporter.Format.of(format);
-        if (f != ContentExporter.Format.PDF && f != ContentExporter.Format.XLSX) {
-            throw new DrishtiException(ErrorCode.STATEMENT_INVALID, "a statement is made as pdf or xlsx");
+        String format = body.path("format").asText("pdf").trim().toLowerCase(java.util.Locale.ROOT);
+        if (!format.equals("pdf") && !format.equals("xlsx")) {            // one answer for every other format, docx as png (QA2-11)
+            throw new DrishtiException(ErrorCode.STATEMENT_INVALID, "a statement is made as pdf or xlsx, not '" + format + "'");
         }
+        ContentExporter.Format f = ContentExporter.Format.of(format);
         String yaml = body.path("yaml").isTextual() ? body.get("yaml").asText() : null;
         String id = body.path("report").asText("");
         if (yaml == null && id.isBlank()) {

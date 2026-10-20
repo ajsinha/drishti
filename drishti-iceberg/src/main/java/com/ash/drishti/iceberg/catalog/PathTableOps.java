@@ -36,6 +36,11 @@ import java.util.regex.Pattern;
  * {@code metadata/vN.metadata.json} (or {@code vN.gz.metadata.json}) is it. With no hint, the highest version is
  * found by listing; a hint that lags (a writer stopped between its two steps) is caught up by looking for N+1.
  *
+ * <p>A table a catalog wrote (pyiceberg, a JDBC or Glue catalog, Spark through one) names its metadata
+ * {@code NNNNN-<uuid>.metadata.json} and writes no hint: with neither a hint nor a {@code vN} file, the file with the highest
+ * sequence number NNNNN is the current one, as Iceberg's own readers take it (QA2-09). Such a table is read; this engine
+ * commits only to the {@code vN} convention.
+ *
  * <p>A commit writes {@code vN+1.metadata.json} as one exclusive create ({@link Storage#createIfAbsent}: a hard link
  * on local disk, a conditional PUT on S3), so of two writers exactly one wins and the other gets
  * {@link CommitConflict}; then it replaces the hint. Metadata files beyond {@code write.metadata.previous-versions-max}
@@ -47,6 +52,8 @@ import java.util.regex.Pattern;
 public final class PathTableOps implements TableOps {
 
     private static final Pattern VERSION = Pattern.compile("v(\\d+)(\\.gz)?\\.metadata\\.json(\\.gz)?$");
+    /** A catalog's metadata file: {@code 00003-1b2c...-uuid.metadata.json} (also {@code .gz.metadata.json}, {@code .metadata.json.gz}). */
+    private static final Pattern CATALOG_NAMED = Pattern.compile("(\\d+)-[0-9A-Za-z-]+(\\.gz)?\\.metadata\\.json(\\.gz)?$");
 
     private final String location;
     private final FileAccess io;
@@ -70,9 +77,31 @@ public final class PathTableOps implements TableOps {
         return io.storage(io.resolve(location));
     }
 
-    /** Whether a table is here: a hint or a metadata file. */
+    /** Whether a table is here: a hint or a metadata file (ours, or a catalog's). */
     public boolean exists() throws IOException {
-        return currentVersion() > 0;
+        return currentVersion() > 0 || catalogNamed() != null;
+    }
+
+    /** The catalog-named metadata file with the highest sequence number ({@code NNNNN-<uuid>.metadata.json}), or null when there is none. */
+    String catalogNamed() throws IOException {
+        String best = null;
+        long seq = -1;
+        try {
+            for (FileEntry f : storage().listFrom(io.resolve(metadataDir() + "/0"))) {
+                String name = f.path().substring(f.path().lastIndexOf('/') + 1);
+                Matcher m = CATALOG_NAMED.matcher(name);
+                if (m.matches()) {
+                    long n = Long.parseLong(m.group(1));
+                    if (n > seq) {
+                        seq = n;
+                        best = metadataDir() + "/" + name;
+                    }
+                }
+            }
+        } catch (FileNotFoundException e) {
+            return null;
+        }
+        return best;
     }
 
     /** The newest version: the hint (caught up when it lags), else the highest listed; 0 when there is none. */
@@ -129,7 +158,12 @@ public final class PathTableOps implements TableOps {
     public Loaded load() throws IOException {
         int v = currentVersion();
         if (v == 0) {
-            throw new NoSuchTable("no Iceberg table at " + location + " (no metadata/version-hint.text and no metadata/v*.metadata.json)");
+            String named = catalogNamed();
+            if (named != null) {
+                return new Loaded(TableMetadata.read(io.readAll(named)), named, null);
+            }
+            throw new NoSuchTable("no Iceberg table at " + location + " (no metadata/version-hint.text, no metadata/v*.metadata.json and no catalog's"
+                    + " metadata/NNNNN-<uuid>.metadata.json)");
         }
         String f = file(v);
         if (f == null) {
@@ -141,6 +175,10 @@ public final class PathTableOps implements TableOps {
     @Override
     public Optional<Loaded> refresh(Loaded current) throws IOException {
         int v = currentVersion();
+        if (v == 0) {
+            String named = catalogNamed();                    // a catalog-written table: a newer sequence number is a new version
+            return named == null || named.equals(current.location()) ? Optional.empty() : Optional.of(load());
+        }
         if (v == versionOf(current.location())) {
             return Optional.empty();
         }

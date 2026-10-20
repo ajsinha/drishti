@@ -24,4 +24,4 @@ settings:
   contact-points: ${DRISHTI_CASSANDRA_CONTACT_POINTS:localhost:9042}
   local-datacenter: ${DRISHTI_CASSANDRA_DATACENTER:datacenter1}
   username: ${DRISHTI_CASSANDRA_USERNAME:}
-  password: ${DRISHTI_CASSANDRA_PASSWORD}
+  password: ${DRISHTI_CASSANDRA_PASSWORD:}

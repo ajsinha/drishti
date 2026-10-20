@@ -143,6 +143,15 @@ def test_exports(client):
     assert j.json()["ref"] == {"kind": "trade", "id": "1000015"} and j.headers["content-disposition"].endswith('.json"')
     x = client.get("/export/history/equity/EQ-CSCA.xlsx?range=3M")
     assert x.status_code == 200 and x.content[:2] == b"PK"
+    # QA1-17: with changes only on, the JSON holds the changed days too; in Excel the dates are dates (yyyy-mm-dd), not text
+    jo = client.get("/export/history/trade/1000015.json?days=30&only=1").json()
+    assert len(jo["rows"]) == 7 and all(r["changed"] for r in jo["rows"]) and jo["onlyChanged"] is True
+    import io
+    import zipfile
+    sheet = zipfile.ZipFile(io.BytesIO(client.get("/export/history/trade/1000015.xlsx?days=30").content)).read("xl/worksheets/sheet1.xml").decode()
+    assert '<c r="A2" s="2"><v>46314</v></c>' in sheet                       # 2026-10-19 as a date serial
+    styles = zipfile.ZipFile(io.BytesIO(client.get("/export/history/trade/1000015.xlsx?days=30").content)).read("xl/styles.xml").decode()
+    assert 'formatCode="yyyy-mm-dd"' in styles
 
 
 def test_the_legend_names_only_what_the_page_shows(client, backend, monkeypatch):
@@ -218,3 +227,24 @@ def test_the_csv_keeps_formulas_as_text(client, backend, monkeypatch):
     monkeypatch.setattr(backend, "history", history)
     body = client.get("/export/history/trade/X.csv?days=1").content.decode("utf-8-sig")
     assert "'=HYPERLINK(1)" in body
+
+
+def test_no_data_in_the_window_links_to_the_first_day_with_data(client, backend, monkeypatch):
+    """QA1-11: DRS-1013 names the entity's days with data; the page links to them, from the first."""
+    async def history(kind, id_, ident=None, **params):
+        raise BackendError(404, "DRS-1013", "DRS-1013 trade/1000015 has no data from 2026-09-01 to 2026-09-30; its days with data run from "
+                                            "2026-10-09 to 2026-10-20")
+    monkeypatch.setattr(backend, "history", history)
+    page = client.get("/v/trade/1000015/history", params={"from": "2026-09-01", "to": "2026-09-30"}).text
+    assert 'data-hx-first-day href="?from=2026-10-09&amp;to=2026-10-20"' in page and "From its first day with data, 2026-10-09" in page
+
+    async def one_day(kind, id_, ident=None, **params):
+        raise BackendError(404, "DRS-1013", "DRS-1013 trade/1000015 has no data from 2026-09-01 to 2026-09-30; its only day with data is 2026-10-20")
+    monkeypatch.setattr(backend, "history", one_day)
+    assert 'href="?from=2026-10-20&amp;to=2026-10-20"' in client.get("/v/trade/1000015/history", params={"days": "5"}).text
+
+    async def other(kind, id_, ident=None, **params):
+        raise BackendError(404, "DRS-1001", "DRS-1001 no source holds trade/1")
+    monkeypatch.setattr(backend, "history", other)
+    assert "data-hx-first-day" not in client.get("/v/trade/1/history").text
+

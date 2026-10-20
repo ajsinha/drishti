@@ -121,6 +121,7 @@ tools/load-cassandra.sh cass1:9042,cass2:9042 dc-east --ttl-days 90 --setting tl
     --setting tls.ca-file=/etc/drishti/tls/ca.pem --username loader --password "$PW"            # a secured cluster
 ```
 
+The loader's heap is `DRISHTI_LOADER_HEAP` (default `4g`); its input file is written under the data folder and removed after the load.
 The last line names the rows, the days (a kind's business day counts once per kind) and the rate, e.g. for the measured book of
 [section 9](#9-measured-results): `cassandra: loaded 30,000 rows (3 days) in 49.7 s (604 rows/s)`.
 
@@ -332,8 +333,8 @@ settings:
   domain: trading                                   # the keyspace
   contact-points: ${DRISHTI_CASSANDRA_CONTACT_POINTS:localhost:9042}
   local-datacenter: ${DRISHTI_CASSANDRA_DATACENTER:datacenter1}
-  username: drishti_reader
-  password: ${DRISHTI_CASSANDRA_PASSWORD}
+  username: ${DRISHTI_CASSANDRA_USERNAME:}         # empty: a node with no sign-in
+  password: ${DRISHTI_CASSANDRA_PASSWORD:}
   layout.trade.columns: TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,PORTFOLIO,COUNTERPARTY,CURRENCY,QUANTITY
 ```
 
@@ -363,8 +364,11 @@ Connectors is generated from the same catalogue.
 2. **Load the samples and a small book**: `tools/load-cassandra.sh localhost:9042 datacenter1 --create --create-keyspace 1 --trades 10000 --days 3`.
    The last line reads `cassandra: loaded … rows (… days)`.
 3. **Point the domains at Cassandra**: `cp config/connectors.examples/cassandra/*.yaml config/connectors/` (or one file through Admin →
-   Connectors → New, plugin `cassandra`). The server picks the files up without a restart.
-4. **Check**: Admin → Connectors → `trading-store` → Test connection lists the days and their rows; Admin → Health says `UP`.
+   Connectors → New, plugin `cassandra`). The server picks the files up without a restart. `trade-endur.yaml` replaces the trading pack's
+   Delta connector of that name (kind `trade` routes to it) and serves every system's trades the loader wrote; the files' `username` and
+   `password` default to empty (`${DRISHTI_CASSANDRA_USERNAME:}`, `${DRISHTI_CASSANDRA_PASSWORD:}`), which is a development node with no
+   sign-in: set both for a node that asks for one.
+4. **Check**: Admin → Connectors → `trade-endur` → Test connection lists the days and their rows; Admin → Health says `UP`.
 5. **Use it**: `TRD ` in the command line offers the trades; open one; a search such as `TRD PORTFOLIO=BOOK-RATES-3` reads the day's
    columns.
 6. **Reload a day** with the same command: readers switch to the new generation when the load ends, never seeing half a day.

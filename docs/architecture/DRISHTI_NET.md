@@ -250,7 +250,9 @@ backend:
   list itself, so one configured server is enough: it learns every other member, and new members and departures within a
   minute. The list is saved to `<console data dir>/net/servers.json` (atomically, and at shutdown), so a console restarted
   while its configured server is down still knows where else to go. A member the cluster reports `dead` or `left` is
-  dropped from the list; the configured `urls` are never dropped.
+  dropped from the list; the configured `urls` are never dropped. A discovered URL that no other machine can call is never
+  kept, by the server's own rule for `advertise-url`: localhost in any spelling, a loopback, wildcard or link-local address in
+  any notation (`0`, `127.0.1.1`, `2130706433`, `0x7f000001`), a container bridge, or a host name that resolves to one of them.
 - **One active server, the rest standing by.** The console sends its requests to the first healthy server (its user's
   *home node*, section 11): the configured ones first, then the discovered ones, nearest first by measured latency. Each
   server in the list is health-checked every `check-every`.

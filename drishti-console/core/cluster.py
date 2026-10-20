@@ -35,12 +35,10 @@ from __future__ import annotations
 
 import asyncio
 import contextvars
-import ipaddress
 import json
 import logging
 import os
 import time
-import urllib.parse
 from collections import deque
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -53,18 +51,13 @@ RECOVER_SECONDS = 60.0
 
 
 def loopback_url(url: str) -> bool:
-    """True when a URL's host is localhost, a loopback or a wildcard address: never a member's advertisement."""
-    try:
-        h = (urllib.parse.urlsplit(url).hostname or "").lower()
-    except ValueError:
-        return False
-    if h == "localhost" or h.endswith(".localhost"):
-        return True
-    try:
-        a = ipaddress.ip_address(h)
-    except ValueError:
-        return False
-    return a.is_loopback or a.is_unspecified
+    """True when a URL's host is no address another machine can call, so never a member's advertisement: localhost in any spelling, a
+    loopback, wildcard or link-local address in any notation (0, 127.x, 2130706433, 0x7f000001), a container bridge, or a host name that
+    resolves here to one of those. The server's rule (HostAddress, tools/hostaddr.py), in core/hostrule.py."""
+    from core.hostrule import unreachable_url
+
+    return unreachable_url(url)
+
 HOUR = 3600.0
 
 

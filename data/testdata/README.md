@@ -57,7 +57,9 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    table by business date), checks the seven packs' connector files and prints what to start next. The sixty days are moved to end on
    **today's business date** (the server's current date, so every page opens on data; `--as-of data` keeps the test data's own
    2026-07-08 to 2026-09-30, `--as-of 2026-10-30` any other end); the documents' own dates of the day (`AS_OF`, `VALUATION_DATE`,
-   `RUN_DATE`, `SOURCE_UPDATE_TIME`) move with them. Measured for sixty days on a fast machine: **943 s (about 15 minutes; up to half an hour on a laptop)**,
+   `RUN_DATE`, `SOURCE_UPDATE_TIME`) move with them, and so does each point of a document's embedded market series (`HISTORY`, `OHLC`,
+   `FIXINGS`, `PNL_SERIES`: its `DATE`, by the same number of business days), so a price history has no missing days between the series
+   and the stored days. A market document's `CHANGE_1D` is the day's move of its own price (`PRICE`, `LEVEL`, `MID`). Measured for sixty days on a fast machine: **943 s (about 15 minutes; up to half an hour on a laptop)**,
    64 tables, about 2.2 GB on disk (16 tables are static reference data built from the world-economy and
    news-and-markets packs' samples).
 4. **Start** the server and the console: the run configurations **Drishti server (demo lakes)** (the samples off,

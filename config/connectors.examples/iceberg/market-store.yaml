@@ -42,4 +42,4 @@ settings:
   catalog: ${DRISHTI_ICEBERG_CATALOG:hadoop}
   uri: ${DRISHTI_ICEBERG_URI:}
   warehouse: ${DRISHTI_ICEBERG_WAREHOUSE:}
-  credential: ${DRISHTI_ICEBERG_CREDENTIAL}
+  credential: ${DRISHTI_ICEBERG_CREDENTIAL:}

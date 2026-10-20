@@ -70,10 +70,12 @@ public class PackAdminController {
 
     private final com.ash.drishti.server.RetryService retry;
     private final com.ash.drishti.rachana.SutraRegistry sutras;
+    private final com.ash.drishti.server.design.HistoryDefinitions history;
 
     public PackAdminController(PackRegistry registry, PackAccess access, PackStateStore states, Entitlements entitlements, Environment env,
             com.ash.drishti.identity.AuditLog audit, com.ash.drishti.server.PackReloader reloader, com.ash.drishti.packs.SamplePolicy policy,
-            com.ash.drishti.server.RetryService retry, com.ash.drishti.rachana.SutraRegistry sutras) {
+            com.ash.drishti.server.RetryService retry, com.ash.drishti.rachana.SutraRegistry sutras, com.ash.drishti.server.design.HistoryDefinitions history) {
+        this.history = history;
         this.retry = retry;
         this.sutras = sutras;
         this.reloader = reloader;
@@ -185,7 +187,10 @@ public class PackAdminController {
             m.put("loaded", true);
             m.put("added", overlay.added().contains(pack.name()));
             m.put("sample", pack.sample());
-            m.put("problem", registry.problems().get(pack.name()));
+            String bad = registry.problems().get(pack.name());
+            String historyProblem = history.problem(pack);                 // a bad history: block (QA2-06): the pack runs, its kinds keep the default history
+            m.put("problem", bad == null ? historyProblem : historyProblem == null ? bad : bad + "; " + historyProblem);
+            m.put("historyProblems", history.errors(pack));
             m.put("enabled", access.isEnabled(pack.name()));
             m.put("extends", pack.parents());
             m.put("requiredBy", access.requiredBy(pack.name()));

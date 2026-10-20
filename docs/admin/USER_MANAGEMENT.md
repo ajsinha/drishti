@@ -226,7 +226,8 @@ tokens** ([CLIENTS.md](../guides/CLIENTS.md)). What an administrator needs to kn
   personal or collaboration state are never open to a token (`token-never`); there is no `admin` scope. Tokens made before scopes
   existed keep reading only.
 - Disabling a user stops their tokens at once (and they cannot make new ones); deleting a user deletes them.
-- **Admin → Tokens** lists every token (owner, name, created, expires, last used) and revokes any of them.
+- **Admin → Tokens** lists every token (owner, name, scopes: *read only* or the write scopes it holds, created, expires, last used in the console's
+  time zone) and revokes any of them.
 - Secrets are never stored, only their SHA-256; nobody, administrators included, can see a secret after it is made.
 - `token-created` and `token-revoked` are in the audit log; so are `signed-out` (a console sign-out) and
   `sessions-ended` (an administrator's disable, delete or password reset ended the user's console sessions).

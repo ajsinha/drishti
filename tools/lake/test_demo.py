@@ -146,5 +146,38 @@ class LakeDemo(unittest.TestCase):
             self.assertIn("no server at http://127.0.0.1:9", out2.getvalue())
 
 
+
+class SeriesMoved(unittest.TestCase):
+    """QA1-10: a document's embedded market series moves with the business dates, by the same number of business days."""
+
+    def lake(self, old, new):
+        import demo
+        d = object.__new__(demo.DemoLake)
+        d.manifest = type("M", (), {"dates": old})()
+        d.dates = new
+        d.shift = {o: n for o, n in zip(old, new) if o != n}
+        return d
+
+    def test_series_points_move_with_the_days_and_points_before_them_keep_their_distance(self):
+        old = ["2026-09-28", "2026-09-29", "2026-09-30"]
+        new = ["2026-10-16", "2026-10-19", "2026-10-20"]
+        d = self.lake(old, new)
+        doc = {"TICKER": "EQ-X", "AS_OF": "2026-09-30", "PRICE": 21.84,
+               "HISTORY": [{"DATE": "2026-09-25", "CLOSE": 21.0}, {"DATE": "2026-09-28", "CLOSE": 21.5}, {"DATE": "2026-09-30", "CLOSE": 21.84}],
+               "OHLC": [{"DATE": "2026-09-29", "OPEN": 1, "CLOSE": 2}], "COUPONS": [{"DATE": "2027-03-15", "AMOUNT": 2.5}],
+               "HOLIDAYS": [{"DATE": "2026-12-25", "NAME": "Christmas"}]}
+        out = json.loads(d.redate(json.dumps(doc, separators=(",", ":"))))
+        self.assertEqual(out["AS_OF"], "2026-10-20")
+        # 09-25 is the business day before the data's first (09-28): it lands on the business day before the lake's first (10-16)
+        self.assertEqual([p["DATE"] for p in out["HISTORY"]], ["2026-10-15", "2026-10-16", "2026-10-20"])
+        self.assertEqual(out["OHLC"][0]["DATE"], "2026-10-19")
+        self.assertEqual(out["COUPONS"][0]["DATE"], "2027-03-15", "a coupon schedule is real dates")
+        self.assertEqual(out["HOLIDAYS"][0]["DATE"], "2026-12-25")
+
+    def test_nothing_moves_when_the_dates_are_the_data_own(self):
+        d = self.lake(["2026-09-30"], ["2026-09-30"])
+        line = '{"HISTORY":[{"DATE":"2026-09-29","CLOSE":1}]}'
+        self.assertEqual(d.redate(line), line)
+
 if __name__ == "__main__":
     unittest.main()

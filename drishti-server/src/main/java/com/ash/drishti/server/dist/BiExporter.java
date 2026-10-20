@@ -40,6 +40,8 @@ public final class BiExporter {
     private static final Set<String> NOT_DATA = Set.of("slicer", "text", "image", "button", "entity-view");
     private static final Set<String> BARS = Set.of("bar", "column", "line", "area", "pie", "donut", "waterfall", "treemap", "funnel", "histogram");
     private static final Set<String> CARDS = Set.of("card", "multirow-card", "kpi", "gauge");
+    /** Visuals read whole for a file (every row up to its limit), not as the screen's first rows. */
+    static final Set<String> WHOLE = Set.of("table", "matrix");
 
     private final BiReportService reports;
     private final DistProperties.Export limits;
@@ -96,7 +98,7 @@ public final class BiExporter {
                 }
                 one = v.title();
                 String name = (pages.size() > 1 ? p.title() + ": " : "") + (v.title() == null || v.title().isBlank() ? v.id() : v.title());
-                Built b = section(who, reportId, null, p, v, st, name);
+                Built b = section(who, reportId, null, p, v, st, name, limits.maxRows());
                 asOf = asOf == null ? b.asOf() : asOf;
                 sections.add(b.section());
             }
@@ -117,10 +119,19 @@ public final class BiExporter {
      * visual that cannot be read is a section that says why.
      */
     Built section(Principal who, String reportId, String yaml, Report.Page p, Report.Visual v, JsonNode state, String name) {
+        return section(who, reportId, yaml, p, v, state, name, null);
+    }
+
+    /**
+     * As above; a table or a matrix with {@code whole} given is read whole up to that many rows (and one more, to know it goes on), past what one answer to the
+     * screen holds (QA2-01). Any other visual the engine cut says so in its note.
+     */
+    Built section(Principal who, String reportId, String yaml, Report.Page p, Report.Visual v, JsonNode state, String name, Integer whole) {
         boolean countries = "map".equals(v.type()) && !v.well("location").isEmpty();
         String type = CARDS.contains(v.type()) ? ExportDoc.CARD : BARS.contains(v.type()) || countries ? ExportDoc.CHART : ExportDoc.TABLE;
         try {
-            Map<String, Object> a = reports.query(who, reportId, yaml, p.id(), v.id(), state, false);
+            Map<String, Object> a = whole != null && WHOLE.contains(v.type()) ? reports.queryRows(who, reportId, yaml, p.id(), v.id(), state, whole)
+                    : reports.query(who, reportId, yaml, p.id(), v.id(), state, false);
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> cols = (List<Map<String, Object>>) a.get("columns");
             @SuppressWarnings("unchecked")
@@ -141,6 +152,8 @@ public final class BiExporter {
             } else if (rows.size() > limits.maxRows()) {
                 kept = new ArrayList<>(rows.subList(0, limits.maxRows()));
                 note = "Cut at " + limits.maxRows() + " rows (drishti.distribution.export.max-rows).";
+            } else if (Boolean.TRUE.equals(a.get("truncated")) && a.get("total") instanceof Number total && !ExportDoc.CARD.equals(type)) {
+                note = "The first " + rows.size() + " of " + (Boolean.TRUE.equals(a.get("totalMore")) ? "more than " : "") + total + " rows.";   // never cut silently
             }
             if (!masked.isEmpty()) {
                 note = (note == null ? "" : note + " ") + "Masked for you: " + String.join(", ", masked) + ".";

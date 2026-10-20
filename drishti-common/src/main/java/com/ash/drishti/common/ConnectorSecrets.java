@@ -25,14 +25,16 @@ import java.util.regex.Pattern;
 
 /**
  * What a connector setting may hold when it is a credential. A configuration file is never a place for a secret, so a
- * credential setting is either an environment reference ({@code ${DB_PASSWORD}}) or a file reference
+ * credential setting is either an environment reference ({@code ${DB_PASSWORD}}, or {@code ${DB_PASSWORD:}} for a store that may have no
+ * sign-in: empty when the variable is not set) or a file reference
  * ({@code file:/run/secrets/db-password}, whose first line is the secret, read when the connector starts).
  */
 public final class ConnectorSecrets {
 
     private static final Pattern SECRET_KEY = Pattern.compile(
             "(?i).*(password|passwd|secret|token|api[-_.]?key|access[-_.]?key|private[-_.]?key|credential).*");
-    private static final Pattern ENV_ONLY = Pattern.compile("\\$\\{[A-Za-z_][A-Za-z0-9_]*}(:\\$\\{[A-Za-z_][A-Za-z0-9_]*})*");   // one reference, or KEY:SECRET references
+    // one reference, or KEY:SECRET references; a reference may default to empty (${DB_PASSWORD:}: a store with no sign-in), never to a value
+    private static final Pattern ENV_ONLY = Pattern.compile("\\$\\{[A-Za-z_][A-Za-z0-9_]*:?}(:\\$\\{[A-Za-z_][A-Za-z0-9_]*:?})*");
     private static final Pattern URL_PASSWORD = Pattern.compile("(?i)(password|pwd)=(?!\\$\\{)[^&;]+|://[^/@\\s:]+:(?!\\$\\{)[^/@\\s]+@");
     private static final String FILE = "file:";
 

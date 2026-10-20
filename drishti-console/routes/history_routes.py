@@ -19,6 +19,8 @@ terminal's and the export router's, so its routes win over ``/v/{kind}/{id}`` an
 from __future__ import annotations
 
 import json
+import re
+from datetime import date
 from urllib.parse import quote, urlencode
 
 from fastapi import APIRouter, Request
@@ -59,6 +61,20 @@ def page_query(params: dict, **change) -> str:
     return urlencode(p)
 
 
+_SPAN = re.compile(r"its days with data run from (\d{4}-\d{2}-\d{2}) to (\d{4}-\d{2}-\d{2})|its only day with data is (\d{4}-\d{2}-\d{2})")
+
+
+def data_span(e: BackendError) -> tuple[str, str] | None:
+    """The days an entity has data, as DRS-1013 names them (*its days with data run from A to B*, *its only day with data is A*), so
+    the page can link to them (QA1-11); None for any other problem."""
+    if e.code != "DRS-1013":
+        return None
+    m = _SPAN.search(e.detail or "")
+    if not m:
+        return None
+    return (m.group(1), m.group(2)) if m.group(1) else (m.group(3), m.group(3))
+
+
 def _shown_problem(e: BackendError) -> Response:
     return Response(drs_message(e.code, e.detail, " ") + "\n", status_code=e.page_status, media_type="text/plain; charset=utf-8")
 
@@ -74,18 +90,19 @@ async def history(request: Request, kind: str, id_: str):
         data = await request.app.state.backend.history(kind, id_, ident(request), **params)
     except BackendError as e:
         return render(request, "terminal/history.html", status_code=e.page_status, kind=kind, id=id_, error=e, page=None,
-                      params=params, screen="history", today=f"/v/{quote(kind)}/{quote(id_)}")
+                      params=params, screen="history", today=f"/v/{quote(kind)}/{quote(id_)}", data_span=data_span(e))
     page = build_page(data, kind, id_, known_at=getattr(request.state, "known_at", None))
     base = str(request.base_url).rstrip("/")
     to = params.get("to") or (data.get("window") or {}).get("to") or ""
-    share = f"{base}/v/{quote(kind)}/{quote(id_)}/history?" + page_query(params, to=to or None)   # pinned: the same rows a week later
+    only = request.query_params.get("only") == "1"
+    share = f"{base}/v/{quote(kind)}/{quote(id_)}/history?" + page_query(params, to=to or None) + ("&only=1" if only else "")   # pinned: the same rows a week later
     q = page_query(params)
     return render(request, "terminal/history.html", kind=kind, id=id_, error=None, page=page, params=params, screen="history",
                   share=share, q=q, today=f"/v/{quote(kind)}/{quote(id_)}",
                   diff_href=f"?{page_query(params, diff=None if 'diff' in params else '1')}",
                   ranges=[(label, f"?{page_query(params, **{**{'days': None, 'range': None, 'from_': None, 'to': None}, key: value})}",
                            params.get(key) == value) for label, key, value in page["ranges"]],
-                  range_text=range_label(params), only=request.query_params.get("only") == "1")
+                  range_text=range_label(params), only=only)
 
 
 async def _data(request: Request, kind: str, id_: str):
@@ -122,17 +139,28 @@ async def history_xlsx(request: Request, kind: str, id_: str):
     except BackendError as e:
         return _shown_problem(e)
     header, rows = export_rows(data, only_changed=request.query_params.get("only") == "1")
+    rows = [[_day(r[0])] + r[1:] for r in rows]                     # the dates as date cells, so they sort and filter as dates (QA1-17)
     return Response(to_xlsx(header, rows, sheet="History"), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     headers={"Content-Disposition": f'attachment; filename="{_name(id_, data, ".xlsx")}"'})
 
 
+def _day(text):
+    try:
+        return date.fromisoformat(text)
+    except (TypeError, ValueError):
+        return text
+
+
 @router.get("/export/history/{kind}/{id_:path}.json")
 async def history_json(request: Request, kind: str, id_: str):
-    """The server's answer exactly as served (section 8 of HISTORY_QUERIES.md), masks applied."""
+    """The server's answer as served (section 8 of HISTORY_QUERIES.md: rows oldest first), masks applied; with ``only=1`` its rows are the
+    changed days only, as the CSV and Excel files are (QA1-17)."""
     try:
         data = await _data(request, kind, id_)
     except BackendError as e:
         return _shown_problem(e)
+    if request.query_params.get("only") == "1" and isinstance(data.get("rows"), list):
+        data = {**data, "rows": [r for r in data["rows"] if r.get("changed")], "onlyChanged": True}
     return Response(json.dumps(data, indent=2, ensure_ascii=False).encode("utf-8"), media_type="application/json",
                     headers={"Content-Disposition": f'attachment; filename="{_name(id_, data, ".json")}"'})
 

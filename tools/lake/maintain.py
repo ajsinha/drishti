@@ -60,7 +60,7 @@ from zoneinfo import ZoneInfo
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from samplegen.layout import Layout, column_name, keep_stats_small, layouts_for_domain, promote, write_partition  # noqa: E402
+from samplegen.layout import Layout, column_name, keep_stats_small, layouts_by_table, promote, write_partition  # noqa: E402
 from samplegen.layout import stats_columns as stats_columns_of  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -210,12 +210,14 @@ def maintain(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool 
 
 
 def layout_of(uri: str) -> Layout | None:
-    """The layout a pack declares for the table at <root>/<domain>/<kind>, if any."""
+    """The layout a pack declares for the table at <root>/<domain>/<table>, if any: found by the table's folder (trade_endur
+    is the trade layout of the connector whose table it is), never by taking the folder for a kind."""
     parts = uri.rstrip("/").split("/")
     if len(parts) < 2:
         return None
     try:
-        return layouts_for_domain(parts[-2]).get(parts[-1])
+        found = layouts_by_table(parts[-2]).get(parts[-1])
+        return found[1] if found else None
     except Exception:  # noqa: BLE001 - no packs folder (a lake maintained elsewhere): plain compaction
         return None
 
@@ -372,15 +374,26 @@ def in_layout(actions: list[dict], lay: Layout, columns: set[str]) -> bool:
     file over file-rows and, sorted by id, contiguous disjoint id ranges with only the last file short."""
     if not actions or any(column_name(p) not in columns for p in lay.columns):
         return False
-    if any(a.get(f"null_count.{column_name(p)}") is None for a in actions for p in lay.columns):
+    partitioned = {k.removeprefix("partition.") for a in actions for k in a if k.startswith("partition.")}   # no statistics: one value a folder
+    if any(a.get(f"null_count.{column_name(p)}") is None for a in actions for p in lay.columns if column_name(p) not in partitioned):
         return False
     if any(a["num_records"] > lay.file_rows for a in actions):
         return False
     if lay.sort_by != "id":
         return True
-    files = sorted(actions, key=lambda a: str(a.get("min.id")))
-    return all(a.get("min.id") is not None and a.get("max.id") is not None for a in files) and \
-        all(files[k]["max.id"] < files[k + 1]["min.id"] and files[k]["num_records"] == lay.file_rows for k in range(len(files) - 1))
+    # a table partitioned past the date (a trade table by PRODUCT_TYPE) is checked in each of its partitions: the layout's
+    # files of file-rows are cut across them, so there the files are in id order but need not be full
+    groups: dict[tuple, list[dict]] = {}
+    for a in actions:
+        groups.setdefault(tuple(sorted((k, str(v)) for k, v in a.items() if k.startswith("partition.") and k != "partition.business_date")), []).append(a)
+    full = len(groups) == 1 and not next(iter(groups))
+    for group in groups.values():
+        files = sorted(group, key=lambda a: str(a.get("min.id")))
+        if not all(a.get("min.id") is not None and a.get("max.id") is not None for a in files):
+            return False
+        if not all(files[k]["max.id"] < files[k + 1]["min.id"] and (not full or files[k]["num_records"] == lay.file_rows) for k in range(len(files) - 1)):
+            return False
+    return True
 
 
 def wanted_dates(spec: str | None) -> tuple[str, str] | set[str] | None:
@@ -441,15 +454,17 @@ def relayout_main(argv: list[str]) -> int:
     ap.add_argument("--force", action="store_true", help="rewrite dates already in the layout too")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args(argv)
-    layouts = layouts_for_domain(a.domain, Path(a.packs)) if a.packs else layouts_for_domain(a.domain)
+    tables = layouts_by_table(a.domain, Path(a.packs)) if a.packs else layouts_by_table(a.domain)
     if a.kind:
-        if a.kind not in layouts:
+        tables = {t: kl for t, kl in tables.items() if kl[0] == a.kind}
+        if not tables:
             log(event="failed", domain=a.domain, kind=a.kind, error="no layout declared for this kind")
             return 1
-        layouts = {a.kind: layouts[a.kind]}
     failures = 0
-    for kind, lay in sorted(layouts.items()):
-        uri = str(Path(a.root) / a.domain / kind)
+    for table, (_kind, lay) in sorted(tables.items()):
+        uri = str(Path(a.root) / a.domain / table)
+        if not (Path(uri) / "_delta_log").is_dir() and "://" not in uri:
+            continue                                          # a table the lake does not have (yet)
         try:
             log(event="relayout", dry_run=a.dry_run, **relayout(uri, lay, a.dates, a.force, a.dry_run))
         except Exception as e:  # noqa: BLE001 - one table must not stop the others

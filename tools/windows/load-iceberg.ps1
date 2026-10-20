@@ -18,8 +18,8 @@
 
 .DESCRIPTION
   Writes the sample documents (ten business days) as Iceberg tables under -Root (default data\iceberg), one per kind,
-  in the layout the Iceberg connector reads; with -Trades it then loads a book of that many trades over -Days days,
-  streamed from the generator into the loader. The loader runs on the native engine (drishti-iceberg): no Hadoop, so
+  in the layout the Iceberg connector reads; with -Trades also a book of that many trades over -Days days, in the same
+  load (the samples and the book as one input, so each day holds both). The loader runs on the native engine (drishti-iceberg): no Hadoop, so
   no winutils.exe and no HADOOP_HOME. Its sort spills to -SpillDir, by default under the data folder (data\tmp\iceberg),
   never the system temp folder. Needs Java 21 or newer (JAVA_HOME or java on the PATH) and uv, or a Python with pyyaml
   (and deltalake and pyarrow for -Trades).
@@ -75,7 +75,16 @@ function Invoke-Tool([string[]]$withs, [string[]]$toolArgs) {
     }
 }
 
-Invoke-Tool @('pyyaml') @('tools/packgen/banking/make_data.py', '--jsonl', (Join-Path $data 'banking.jsonl'))
+# the loader's input: the samples, then the book, in one file, so each business day of a table is written once and holds both
+# (a second load of the same days would replace them: QA2-05)
+$jsonl = Join-Path $data 'banking.jsonl'
+Invoke-Tool @('pyyaml') @('tools/packgen/banking/make_data.py', '--jsonl', $jsonl)
+if ($Trades -gt 0) {
+    $book = Join-Path $data 'iceberg-book.jsonl'
+    Invoke-Tool @('deltalake', 'pyarrow', 'pyyaml') @('tools/samplegen/bulk_trades.py', '--trades', "$Trades", '--days', "$Days", '--jsonl', $book)
+    Get-Content $book | Add-Content $jsonl
+    Remove-Item $book
+}
 
 & .\mvnw.cmd -q -o install -DskipTests -pl plugins/drishti-plugin-iceberg -am
 if ($LASTEXITCODE -ne 0) { throw 'building the Iceberg plugin failed' }
@@ -90,16 +99,7 @@ if ($KeepDays -gt 0) { $loaderArgs += @('--keep-days', "$KeepDays") }
 foreach ($kv in $Set) { $loaderArgs += @('--set', $kv) }
 $jvm = @("-Djava.io.tmpdir=$jtmp", "-Xmx$Heap", '-cp', $cp, 'com.ash.drishti.plugin.iceberg.IcebergLoader')
 
-& $java @jvm (Join-Path $data 'banking.jsonl') $Root @loaderArgs
-if ($LASTEXITCODE -ne 0) { throw 'loading the samples failed' }
-if ($Trades -gt 0) {
-    # the bulk book straight from the generator into the loader: no file of gigabytes in between
-    if (Get-Command uv -ErrorAction SilentlyContinue) {
-        & uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$Trades" --days "$Days" --jsonl - |
-            & $java @jvm - $Root @loaderArgs
-    } else {
-        & $Python tools/samplegen/bulk_trades.py --trades "$Trades" --days "$Days" --jsonl - | & $java @jvm - $Root @loaderArgs
-    }
-    if ($LASTEXITCODE -ne 0) { throw 'loading the trade book failed' }
-}
+& $java @jvm $jsonl $Root @loaderArgs
+if ($LASTEXITCODE -ne 0) { throw "the load failed (exit $LASTEXITCODE)" }
+Remove-Item $jsonl
 Write-Host "Iceberg tables ready under $Root (engine: $Engine)"

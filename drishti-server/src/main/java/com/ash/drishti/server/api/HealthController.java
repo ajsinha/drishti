@@ -77,6 +77,7 @@ public class HealthController {
     }
     private final com.ash.drishti.server.bi.BiFolder biFolder;
     private final com.ash.drishti.server.RetryService retry;
+    private final com.ash.drishti.server.design.HistoryDefinitions history;
     private final ObjectProvider<com.zaxxer.hikari.HikariDataSource> identityDataSource;
     private final com.ash.drishti.identity.IdentityProperties identity;
     private final com.ash.drishti.server.security.MaskCoverage masks;
@@ -86,7 +87,8 @@ public class HealthController {
             org.springframework.core.env.Environment env, com.ash.drishti.server.loads.ExpectationService expectations, com.ash.drishti.server.connectors.ConnectorManager connectors,
             com.ash.drishti.server.bi.BiFolder biFolder, com.ash.drishti.server.RetryService retry,
             ObjectProvider<com.zaxxer.hikari.HikariDataSource> identityDataSource, com.ash.drishti.identity.IdentityProperties identity,
-            com.ash.drishti.server.security.MaskCoverage masks) {
+            com.ash.drishti.server.security.MaskCoverage masks, com.ash.drishti.server.design.HistoryDefinitions history) {
+        this.history = history;
         this.masks = masks;
         this.identityDataSource = identityDataSource;
         this.identity = identity;
@@ -247,7 +249,9 @@ public class HealthController {
             row.put("connectorsDown", connectorsDown);
             row.put("connectorsOff", connectorsMissing);
             row.put("connectorsNotConfigured", notConfigured);
-            String problem = packs.problems().get(pack.name());                 // a bad edit: the last good version keeps running
+            String bad = packs.problems().get(pack.name());                     // a bad edit: the last good version keeps running
+            String historyProblem = history.problem(pack);                       // a bad history: block (QA2-06): the default history applies
+            String problem = bad == null ? historyProblem : historyProblem == null ? bad : bad + "; " + historyProblem;
             row.put("problem", problem);
             row.put("sample", pack.sample());
             row.put("status", !broken.isEmpty() || !connectorsDown.isEmpty() || !notConfigured.isEmpty() || problem != null ? "DEGRADED" : "OK");

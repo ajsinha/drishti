@@ -20,7 +20,53 @@
 - **Added: one part of the demo lakes at a time with `tools/build_demo_lakes.py`**: `--files-only` loads only your files into their system's table (the rest of the lakes kept), `--source-dir` with `--system calypso|murex` for another system's files, `--only trades/endur,…` rebuilds only those datasets. Windows QA guide step 3.0; `tools/test_build_demo_lakes.py`.
 
 - **Fixed (QA1-201): `tools/bench/trades.py` (and so `drishti-stack`'s lakes) opened the seven-day test data's `snapshot-2026-09-22`**, gone since the test data holds sixty days: it now takes the system's snapshot whatever its date. The help examples and docs name `snapshot-2026-07-08`.
-
+- **Fixed (QA1-17): history exports agree with the page.** With *changes only* on, the JSON holds only the changed days too
+  (`onlyChanged: true`), as the CSV and Excel files do; Excel's dates are date cells (`yyyy-mm-dd`) that sort and filter as dates.
+- **Fixed (QA1-11, QA1-12, console): the history page links to an entity's days with data and never swaps a range.** A `DRS-1013` page
+  offers *From its first day with data* (the span the server names); `FROM b TO a` typed in the page's range field says `DRS-4022`
+  and stays, as the server does. `test_history_routes.py`, `test_history_browser.py`.
+- **Fixed (QA1-10): the demo lakes' market history has no phantom missing days and a real daily change.** `lake demo` moves the `DATE`
+  of every point of a document's embedded series (`HISTORY`, `OHLC`, `FIXINGS`, `PNL_SERIES`) by the same business-day offset as the
+  documents (holidays and coupon schedules stay); the test data's `CHANGE_1D` is now each day's move of the document's own price, not the
+  last day's figure on all sixty (`data/testdata` regenerated). `tools/lake/test_demo.py`, `tools/testdata/test_testdata.py`.
+- **Fixed (QA2-11, QA2-13): statement formats and paper.** Any format but pdf or xlsx gets the one answer *a statement is made as pdf
+  or xlsx* (`docx` once got the export's list); `orientation` is read whatever its case, as `paper` was.
+- **Fixed (QA1-09, console): the console's discovered servers follow the server's address rule.** `core/cluster.py` refused only
+  localhost, 127.x and the wildcard; it now refuses every spelling the server's `HostAddress` refuses (`0`, `2130706433`, `0x7f000001`,
+  `localhost.`, `ip6-localhost`, link-local and bridge addresses, and host names that resolve to them), in `core/hostrule.py`.
+- **Fixed: `lake maintain` lays out the per-source trade tables.** It looked a table's layout up by its folder name as if it were a kind,
+  so `trade_endur`, `trade_calypso` and `trade_murex` got a plain compaction out of id order; it now finds the layout of the connector whose
+  table it is, and `relayout` keeps a table's own partitions (`business_date` and `PRODUCT_TYPE`) and checks each of them. `test_maintain.py`.
+- **Fixed (QA1-07): History *Link* and `Alt+S` copy on a plain-http LAN address**: the link is shown, selected, in a field under the
+  toolbar and copied with the Clipboard API where the page may use it, else from that field (`execCommand('copy')`), with a visible
+  *Copied*; the link keeps `&only=1` when *changes only* is on. `test_history_browser.py`.
+- **Fixed (QA2-08): Admin → Tokens no longer says tokens "never change anything"**: it says a read token only reads and a token with write
+  scopes may change what they name; a new **Scopes** column marks each token *read only* or *writes* with its scopes; *Last used* is in the
+  console's time zone with its name (`2026-10-20 08:54 New York`), as on the other Admin pages.
+- **Fixed (QA2-09): `iceberg-external` (and the native Iceberg engine) find a path-based table a catalog wrote** (pyiceberg's
+  `00003-<uuid>.metadata.json`, no `version-hint.text`) at the folder the docs name: the newest metadata file by sequence number is the
+  current version, and a newer one is picked up at the next refresh. `CatalogNamedMetadataTest`.
+- **Fixed (QA2-06): a bad `history:` block in a pack on disk shows on Admin → Packs (`problem`, `historyProblems`) and in Health (the pack
+  DEGRADED)** from the start and after every reload, and is logged then, not only at the first history request; the pack keeps running
+  with the default history. `HistoryBlockProblemsTest`.
+- **Fixed (QA2-04): the Iceberg and Cassandra example connector files start as copied.** Their credentials default to empty
+  (`${DRISHTI_ICEBERG_CREDENTIAL:}`, `${DRISHTI_CASSANDRA_PASSWORD:}`, a path-based lake or a node with no sign-in) instead of refusing
+  the file; the trades' examples are `trade-endur.yaml` (the connector kind `trade` routes to), not a fourth `trading-store`, and promote
+  the UPPER_SNAKE columns. ICEBERG_CONNECTOR's and CASSANDRA_CONNECTOR's complete files match. A credential may be an environment reference with an
+  empty default (`${VAR:}`), never a value. `ConnectorExamplesTest` resolves every example with no environment set and checks its promoted columns.
+- **Fixed (QA2-05): `tools/load-iceberg.sh --trades N --days D` no longer deletes the sample trades of those days**: the samples and the
+  book are one input to one load, as `load-cassandra.sh` does; the same for `tools/windows/load-iceberg.ps1`. Both shell loaders take
+  `DRISHTI_LOADER_HEAP` and keep their input file under the data folder, removed after the load (QA2-21). `tools/test_load_scripts.py`.
+- **Fixed (QA2-03): Crimson Terminal's accent buttons** (the statement designer's Save and Preview pages, and every `.btn-accent`) were a pale
+  pink gradient of the text accent under white labels (about 2:1); they now run from `--d-fill` to `--d-fill-strong` with `--d-on-fill`. A new guard in
+  `test_contrast.py` fails any button rule that fills from `--d-accent`, or writes `--d-on-fill` on another ground.
+- **Fixed (QA2-01): a statement's table no longer stops silently at 5,000 rows.** A table or matrix band is read whole, up to
+  `drishti.distribution.statements.max-rows` (10,000), past the 5,000 rows one JSON answer to the screen holds; a longer one says so in a note above it,
+  in the preview's new `cut` list and in the Excel file. Excel and CSV exports read their tables whole the same way (up to `export.max-rows`), and any
+  other visual the engine cut says *The first N of M rows*.
+- **Fixed (QA2-02): statement tokens work where STATEMENTS.md says.** `{page}`, `{pages}` and `{as-of}` are filled in a text band and a visual's title
+  (a *(continued)* title carries its own page), and the check refuses `{param.<name>}` naming no parameter of the model and an unknown token in a title
+  (`DRS-9038`).
 - **Fixed (QA1-11): `DRS-1013` says when the entity has data** (*… has no data from 2026-09-01 to 2026-09-30; its days with data run
   from 2026-10-09 to 2026-10-20*), and for a number of days names the business days walked, not the whole `max-days` span as dates.
 - **Fixed (QA1-18): a mnemonic, a plural or an unknown field in a history request is named.** `history TRD 1000001` answers
@@ -67,7 +113,7 @@
   says which workspaces a token never touches (QA2-25); HISTORY_QUERIES.md is marked built (QA1-19); tutorial 21 says its trader
   column is the reference answer's; GETTING_STARTED step 5 says the lakes end on today's business date (QA2-24);
   IMPLEMENTATION_PLAN names 2.6.5 as the current release; nineteen plugins and twenty-one tutorials where the counts were old.
-- **Changed: the committed test data holds sixty business days** (`data/testdata`, was seven; 119 MB gzipped in 2,944 files, the
+- **Changed: the committed test data holds sixty business days** (`data/testdata`, was seven; 115 MB gzipped in 2,942 files, the
   largest 5 MB): a day-1 snapshot and fifty-nine days of changes, so a trade's history (`TRD <id> 60`) shows real amendments.
   `make_testdata.py --days` defaults to 60. The docs that said seven days say sixty; captured outputs (dates, counts, timings) are
   re-checked in the 2.6.5 QA's documentation verification.

@@ -152,3 +152,9 @@
 /* the change log of an entity that did not change: what it means and where to go next */
 .hx-empty { padding: 1rem 1.25rem; border: 1px dashed var(--d-border); border-radius: 6px; margin: .75rem 0; }
 .hx-empty p { margin: .25rem 0; }
+/* the link to these rows (Link, Alt+S): always shown once asked for, selected, so it can be copied by hand where the clipboard is not offered */
+.hx-linkbox { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .6rem; margin-top: .5rem; }
+.hx-linkbox[hidden] { display: none; }
+.hx-linkbox-l { color: var(--d-muted); font-size: .82rem; }
+.hx-link-text { flex: 1 1 22rem; min-width: 0; max-width: 100%; }
+.hx-link-msg { color: var(--d-muted); font-size: .82rem; }

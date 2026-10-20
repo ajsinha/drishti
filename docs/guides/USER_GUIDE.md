@@ -1355,11 +1355,14 @@ and the one before) and *Open the day*.
 (*as it was*, or *changed since* when the data has moved on).
 
 **Export** (`E`) downloads the table as shown, newest first: CSV (numbers as numbers, the formula guard, UTF-8 with BOM), Excel, or the
-server's JSON exactly as served. With *changes only* on, only the changed days. Files are named `1000015-history-2026-09-07-2026-10-19.csv`.
+server's JSON as served (its rows oldest first). Excel's dates are date cells (`yyyy-mm-dd`), so they sort and filter as dates. With
+*changes only* on, only the changed days, in all three. Files are named `1000015-history-2026-09-07-2026-10-19.csv`.
 Every export reads through the server, so it carries your masks.
 
 **Link** (`Alt+S`) copies a link that pins the last date (`…/history?days=30&to=2026-10-19`), so a colleague sees the same rows a week
-later. A link without `to` moves with the business date.
+later; with *changes only* on it keeps `&only=1`. A link without `to` moves with the business date. The link is also shown, selected,
+in a field under the toolbar, with *Copied* beside it: on a console opened by its plain-http LAN address the browser offers no clipboard
+to the page, so Drishti copies from that field instead (and says *Select the link and copy it* if the browser refuses even that).
 
 **When there is nothing to show** the page says why and offers today's view: an unknown entity (`DRS-1001`), a kind that keeps no daily
 history here (`DRS-1012`), no data in the range (`DRS-1013`), a range larger than allowed (`DRS-4021`, with a link to the last 30 days)
@@ -1890,7 +1893,8 @@ otherwise the browser remembers it.
 by eye: all text, including faint notes, the footer, links and placeholders, reads at 4.5:1 or more on every background it is drawn on, and
 accents and chart fills at 3:1. Buttons and pressed controls fill with `--d-fill` (and `--d-fill-strong` on hover), which is the accent
 unless a theme gives buttons a colour of its own, and carry their label in `--d-on-fill` at 4.5:1 on both: Crimson Terminal, for one, fills
-its buttons with a deep crimson under white labels rather than its bright text accent. A page that embeds Drishti's elements and sets the
+its buttons with a deep crimson under white labels rather than its bright text accent. The same test fails any stylesheet rule that fills a
+button from the accent instead (the accent buttons' gradient runs from `--d-fill` to `--d-fill-strong`). A page that embeds Drishti's elements and sets the
 `--d-*` values itself ([ELEMENTS.md](ELEMENTS.md)) should keep the same rule.
 
 These are the console's themes. A BI report has a theme of its own (the shipped *Corporate* and *Print*, or one made in the
@@ -2009,7 +2013,7 @@ between them without the menu.
 | Packs | `/admin/packs` | Switch a domain pack off or on for everyone; deploy an archive; see which connectors a pack reads through (**Data source**, read only) |
 | Artifacts | `/admin/artifacts` | Everything installed in one list (packs, connector files, shipped BI files): see what depends on each, **disable** it, **uninstall** it to an archive and **restore** it, install a BI file ([ARTIFACTS.md](../admin/ARTIFACTS.md)) |
 | Connectors | `/admin/connectors` | Where data comes from: one connector per YAML file in `config/connectors/`; create, edit, test, switch off and see which packs use each ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)) |
-| Tokens | `/admin/tokens` | Every personal API token (never its secret), and revoking any of them ([CLIENTS.md](CLIENTS.md)) |
+| Tokens | `/admin/tokens` | Every personal API token (never its secret): its owner, its scopes (*read only* or what it may write), when it was last used (in the console's time zone, named), and revoking any of them ([CLIENTS.md](CLIENTS.md)) |
 | Access | `/admin/access` | Who read which entity, filtered by user, action, kind, id and dates ([USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)) |
 | AI | `/admin/ai` | The AI layer: off by default; providers, models, MCP servers and a test call ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md)) |
 | Data loads | `/admin/loads` | What your ETL announced, what is due and what is late ([DATA_LOADS.md](DATA_LOADS.md)) |

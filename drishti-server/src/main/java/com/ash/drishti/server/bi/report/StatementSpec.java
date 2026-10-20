@@ -207,7 +207,7 @@ public record StatementSpec(String paper, boolean landscape, double[] margins, M
         if (s.containsKey("paper") && paperName(String.valueOf(s.get("paper"))) == null) {
             out.add(ReportParser.error(CODE, "statement.paper", "paper is one of " + PAPERS.keySet().stream().sorted().toList() + ", not '" + s.get("paper") + "'"));
         }
-        if (s.containsKey("orientation") && !Set.of("portrait", "landscape").contains(String.valueOf(s.get("orientation")))) {
+        if (s.containsKey("orientation") && !Set.of("portrait", "landscape").contains(String.valueOf(s.get("orientation")).toLowerCase(Locale.ROOT))) {
             out.add(ReportParser.error(CODE, "statement.orientation", "orientation is portrait or landscape"));
         }
         Object m = s.get("margins");
@@ -260,6 +260,49 @@ public record StatementSpec(String paper, boolean landscape, double[] margins, M
         }
     }
 
+    /**
+     * The {@code {param.<name>}} tokens of a report's header, footer, text bands and titles that name no parameter of its model ({@code DRS-9038}): {@code
+     * params} are the model's parameter names (none for a report on a dataset). Run once the model is known (QA2-02).
+     */
+    public static List<Problem> checkParams(Report r, Set<String> params) {
+        List<Problem> out = new ArrayList<>();
+        if (!r.hasStatement() && r.statement().isEmpty()) {
+            return out;
+        }
+        for (String key : List.of("header", "footer")) {
+            if (r.statement().get(key) instanceof Map<?, ?> line) {
+                line.forEach((k, t) -> params(String.valueOf(t), "statement." + key + "." + k, params, out));
+            }
+        }
+        for (int pi = 0; pi < r.pages().size(); pi++) {
+            Report.Page page = r.pages().get(pi);
+            if (!page.statement()) {
+                continue;
+            }
+            for (int vi = 0; vi < page.visuals().size(); vi++) {
+                Report.Visual v = page.visuals().get(vi);
+                String vp = "pages[" + pi + "].visuals[" + vi + "]";
+                params(v.text(), vp + ".text", params, out);
+                params(v.title(), vp + ".title", params, out);
+            }
+        }
+        return out;
+    }
+
+    private static void params(String text, String path, Set<String> params, List<Problem> out) {
+        if (text == null || text.indexOf('{') < 0) {
+            return;
+        }
+        Matcher m = TOKEN.matcher(text);
+        while (m.find()) {
+            String t = m.group(1);
+            if (t.startsWith("param.") && !params.contains(t.substring(6))) {
+                out.add(ReportParser.error(CODE, path, "{" + t + "} names no parameter of the report's model" + (params.isEmpty() ? " (it has none)"
+                        : ": " + params.stream().sorted().map(x -> "{param." + x + "}").toList())));
+            }
+        }
+    }
+
     private static void page(Report.Page page, String pp, List<Problem> out) {
         if (page.tooltip()) {
             out.add(ReportParser.error(CODE, pp + ".tooltip", "a tooltip page is drawn over a mark; a statement page is paper"));
@@ -291,6 +334,9 @@ public record StatementSpec(String paper, boolean landscape, double[] margins, M
             }
             if (v.text() != null && !v.text().isBlank()) {
                 tokens(v.text(), vp + ".text", out);
+            }
+            if (v.title() != null && v.title().indexOf('{') >= 0) {
+                tokens(v.title(), vp + ".title", out);                       // a title takes the same tokens as a text band (QA2-02)
             }
         }
         rows.forEach((y, vs) -> {

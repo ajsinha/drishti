@@ -140,3 +140,45 @@ def test_the_share_dialog_and_inbox_read_in_every_theme():
         for bg in ("surface-2", "emph-bg", "accent-tint"):
             if bg in t:
                 assert _ratio(t["ink"], t[bg]) >= 4.5, (name, bg, round(_ratio(t["ink"], t[bg]), 2))
+
+
+BUTTON = re.compile(r"btn|button|aria-pressed|aria-checked")
+
+
+def _rules(text):
+    """(selector, body) of each plain rule of a stylesheet, comments dropped; @media wrappers are looked through."""
+    text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+    return [(sel.strip(), body) for sel, body in re.findall(r"([^{}]+)\{([^{}]*)\}", text)]
+
+
+def button_fill_problems(sheets):
+    """The rules of `sheets` that fill a button with something other than --d-fill / --d-fill-strong, or write --d-on-fill on
+    another ground."""
+    bad = []
+    for f in sheets:
+        for sel, body in _rules(f.read_text()):
+            # a faint tint of a colour (color-mix with transparent, under the page's own ink) is a hover wash, not a fill
+            grounds = [re.sub(r"color-mix\([^()]*(?:var\([^()]*\)[^()]*)*transparent\)", "", g)
+                       for g in re.findall(r"background(?:-color|-image)?\s*:([^;]*)", body)]
+            used = {v for g in grounds for v in re.findall(r"var\(--d-([a-z0-9-]+)", g)}
+            if BUTTON.search(sel) and used & {"accent", "accent-strong"}:
+                bad.append(f"{f.name}: {sel} fills with --d-accent (use --d-fill / --d-fill-strong)")
+            if re.search(r"(?<![-\w])color:\s*var\(--d-on-fill\)", body) and used - {"fill", "fill-strong"}:
+                bad.append(f"{f.name}: {sel} writes --d-on-fill on --d-{', --d-'.join(sorted(used - {'fill', 'fill-strong'}))}")
+    return bad
+
+
+def test_buttons_fill_with_the_fill_tokens_only():
+    """QA2-03: a button (or a pressed control) takes its ground from --d-fill / --d-fill-strong, the pair whose label
+    (--d-on-fill) test_labels_on_button_fills_read_in_every_theme checks: a gradient of the bright text accent under a white
+    label read 2:1 in Crimson Terminal. A rule that writes --d-on-fill puts it on those fills, never on another token."""
+    sheets = [f for f in sorted(CSS.glob("*.css")) if f.name != "tokens.css"] + [CSS.parent.parent / "elements" / "drishti-view.css"]
+    assert not (bad := button_fill_problems(sheets)), "\n".join(bad)
+
+
+def test_the_button_guard_catches_an_accent_gradient(tmp_path):
+    """The guard above fails on the 2.6.5 rule that made Crimson Terminal's Save and Preview pale pink."""
+    css = tmp_path / "old.css"
+    css.write_text(".btn-accent, .btn-pill.btn-accent {\n  background: linear-gradient(135deg, var(--d-accent), "
+                   "color-mix(in srgb, var(--d-accent) 72%, var(--d-grad-to)));\n  border: 0;\n}\n")
+    assert button_fill_problems([css])

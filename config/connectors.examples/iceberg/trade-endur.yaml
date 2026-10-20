@@ -11,20 +11,22 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-# Example: copy to config/connectors/trading-store.yaml to read the trading-store data from iceberg. It replaces the
-# connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
+# Example: copy to config/connectors/trade-endur.yaml to read the trades from iceberg. The trading pack routes kind trade to
+# trade-endur, so this file replaces that Delta connector (settings are not merged); the loader puts every source system's trades
+# in one table, so trade-calypso and trade-murex may be disabled. Credentials are ${ENV_VAR} references; an empty default
+# (${X:}) is a store with no sign-in, as a development node.
 plugin: iceberg
 kinds:
 - trade
-description: trading-store read from iceberg (the former application-iceberg.yaml profile)
+description: trades read from Iceberg (loaded by tools/load-iceberg.sh)
 settings:
   root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}
   domain: trading
-  layout.trade.columns: tradeId,productType,productName,direction,currency,notional,mtm,pnl1d,maturityDate,tradeDate,book,desk,status,assetClass,counterparty.id,counterparty.name,nettingSet,risk.dv01,sourceSystem
+  layout.trade.columns: TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,PRODUCT_SUB_TYPE,PRODUCT_GROUP,TRADE_STATUS,TRADE_VERSION,BUY_SELL_CODE,CURRENCY,QUANTITY,TRADE_DATE,MATURITY_DATE,COUNTERPARTY,LEGAL_ENTITY,PORTFOLIO,TRADER_ID
   layout.trade.sort-by: id
   layout.trade.file-rows: 250000
   layout.trade.row-group-rows: 1000
   catalog: ${DRISHTI_ICEBERG_CATALOG:hadoop}
   uri: ${DRISHTI_ICEBERG_URI:}
   warehouse: ${DRISHTI_ICEBERG_WAREHOUSE:}
-  credential: ${DRISHTI_ICEBERG_CREDENTIAL}
+  credential: ${DRISHTI_ICEBERG_CREDENTIAL:}

@@ -242,7 +242,8 @@ you check any pack (an unknown key is a warning, a bad value the error `DRS-2061
 $ drishti.py sutra lint config/packs/trading --strict
 ```
 
-In the UI, a pack with a bad block shows its problem on Admin → Packs after a reload.
+In the UI, a pack with a bad block shows its problem on Admin → Packs (and Health marks the pack DEGRADED) as soon as it is loaded: at the
+server's start and after a reload.
 
 **You should see:** `sutra lint` clean for a correct block; a misspelt key (`colums:`) as a warning naming it, and `headline: PRICE2`
 (not one of `chart`) as `DRS-2061`.
@@ -250,12 +251,13 @@ In the UI, a pack with a bad block shows its problem on Admin → Packs after a 
 ## Step 7 · Export, and a link that shows the same rows
 
 **In the UI.** Press `E` for the export menu: CSV, Excel, or the server's JSON as served. With *changes only* on, only the changed days are
-exported. Every export reads through the server with your token, so your masks travel with it.
+exported, in all three. The JSON keeps the server's order (oldest first); CSV and Excel are newest first, and Excel's dates are dates. Every export reads through the server with your token, so your masks travel with it.
 
 ![The export menu: CSV, Excel and JSON](img/t21/06-export-light.jpg)
 
 `Alt+S` (*Link*) copies a link that pins the last date: `…/v/trade/1000015/history?days=30&to=2026-10-19`. A colleague opening it next week
-sees the same 30 rows. A link without `to` moves with the business date.
+sees the same 30 rows. With *changes only* on, the link keeps `&only=1`. A link without `to` moves with the business date. You should see the
+link in a field under the toolbar and *Copied: the link is on the clipboard.* beside it, on a LAN address too.
 
 **From the command line:**
 
@@ -285,9 +287,9 @@ it), `max-rows` rows and `timeout` for the whole request.
 | You see | Why | What to do |
 |---|---|---|
 | `DRS-4021` *366 business days at most (asked 500)* | the range is larger than allowed | narrow it with `FROM … TO`, or follow the page's *The last 30 days* link |
-| `DRS-4022` *FROM 2026-10-30 is after TO 2026-10-19* | the dates are the wrong way round | put the earlier date first |
+| `DRS-4022` *FROM 2026-10-30 is after TO 2026-10-19* | the dates are the wrong way round | put the earlier date first (the page's range field says so too, and never swaps them) |
 | `DRS-4022` *'-5' is not a range: use a number of days (30), a span …* | a range typed after the id that cannot be read (`0`, `-5`, `1.5M`, `3X`, `FROM yesterday`, `DIFF DIFF`, `30 30`, a bare `DIFF`) | type it as the message says; the command line shows the message, never today's view |
-| `DRS-1013` *no data from … to …* | the entity has no data in the range | the message says from when to when it has data (*its days with data run from … to …*) |
+| `DRS-1013` *no data from … to …* | the entity has no data in the range | the message says from when to when it has data (*its days with data run from … to …*); the page links to it (*From its first day with data*) |
 | `DRS-1012` *keeps no daily history here* | the kind's connector holds today's data only, or the pack turned history off | today's view is one link away |
 | *Some days could not be read* | a source did not answer for some days in time (`DRS-1014`) | the rows that were read are shown, and the banner lists the missing days |
 

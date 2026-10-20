@@ -66,13 +66,16 @@ body {
 }
 .ws-h { border-image: linear-gradient(90deg, var(--d-grad-from), transparent 60%) 1; }
 
-/* accent controls: a gradient of the accent toward the second colour, keeping the accent's dark label */
+/* accent controls: a gradient between the theme's button fill and its stronger shade, under the fill's own label. Only --d-fill and
+   --d-fill-strong: test_contrast checks --d-on-fill on both, so a theme with its own fill (Crimson Terminal's deep crimson) keeps it (QA2-03) */
 .btn-accent, .btn-pill.btn-accent {
-  background: linear-gradient(135deg, var(--d-accent), color-mix(in srgb, var(--d-accent) 72%, var(--d-grad-to)));
+  background: linear-gradient(135deg, var(--d-fill), var(--d-fill-strong));
+  color: var(--d-on-fill);
   border: 0;
 }
 .btn-accent:hover, .btn-pill.btn-accent:hover {
-  background: linear-gradient(135deg, var(--d-accent-strong), color-mix(in srgb, var(--d-accent-strong) 65%, var(--d-grad-to)));
+  background: linear-gradient(135deg, var(--d-fill-strong), var(--d-fill));
+  color: var(--d-on-fill);
 }
 .pill {
   border-color: transparent;

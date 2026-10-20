@@ -123,7 +123,7 @@ Personal tokens are listed for everyone in **Admin → Tokens**:
 
 ![Admin, API tokens: the owner, name, id, created, expires, last used and status, with a Revoke button](img/t17/06-tokens.jpg)
 
-You should see the token of tutorial 1 (`tutorials`), who owns it, when it was last used and its status, and **Revoke**. A secret is never stored, only its hash; every creation and revocation is in the audit log. On **My account** a person makes their own:
+You should see the token of tutorial 1 (`tutorials`), who owns it, its scopes (*read only*, or *writes* and the write scopes it holds), when it was last used (in the console's time zone, named) and its status, and **Revoke**. A secret is never stored, only its hash; every creation and revocation is in the audit log. On **My account** a person makes their own:
 
 ![My account, API tokens: a name, days, and the scopes: read always; ai:use, bi:write, design:write, loads:write, packs:admin and others to tick](img/t17/07-account.jpg)
 
