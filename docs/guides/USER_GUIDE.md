@@ -1345,7 +1345,7 @@ and the one before) and *Open the day*.
 | `E` | export: CSV, Excel, JSON | `Alt+S` | copy a link to these rows |
 | `?` | the keys | `Esc` | back to today's view |
 
-**Open the day.** `Enter` opens `/v/trade/1000015?asOf=2026-10-15&gen=58`: the normal view as of that day, with the pinned banner
+**Open the day.** `Enter` opens `/v/trade/1000015?asOf=2026-10-15&gen=59`: the normal view as of that day, with the pinned banner
 (*as it was*, or *changed since* when the data has moved on).
 
 **Export** (`E`) downloads the table as shown, newest first: CSV (numbers as numbers, the formula guard, UTF-8 with BOM), Excel, or the

@@ -72,9 +72,9 @@
         <span class="dropdown">
           <button type="button" class="fk" data-bs-toggle="dropdown" aria-expanded="false" data-hx-key="e" aria-keyshortcuts="E"><b>E</b> Export</button>
           <div class="dropdown-menu">
-            <a class="dropdown-item" data-hx-export="csv" href="/export/history/{{ kind | urlencode }}/{{ id | urlencode }}.csv?{{ q }}"><i class="bi bi-filetype-csv" aria-hidden="true"></i> CSV</a>
-            <a class="dropdown-item" data-hx-export="xlsx" href="/export/history/{{ kind | urlencode }}/{{ id | urlencode }}.xlsx?{{ q }}"><i class="bi bi-filetype-xlsx" aria-hidden="true"></i> Excel</a>
-            <a class="dropdown-item" data-hx-export="json" href="/export/history/{{ kind | urlencode }}/{{ id | urlencode }}.json?{{ q }}"><i class="bi bi-filetype-json" aria-hidden="true"></i> JSON (as served)</a>
+            <a class="dropdown-item" data-hx-export="csv" href="/export/history/{{ kind | urlencode }}/{{ id | urlencode }}.csv?{{ q }}"><i class="bi bi-file-earmark-spreadsheet" aria-hidden="true"></i> CSV</a>
+            <a class="dropdown-item" data-hx-export="xlsx" href="/export/history/{{ kind | urlencode }}/{{ id | urlencode }}.xlsx?{{ q }}"><i class="bi bi-file-earmark-excel" aria-hidden="true"></i> Excel</a>
+            <a class="dropdown-item" data-hx-export="json" href="/export/history/{{ kind | urlencode }}/{{ id | urlencode }}.json?{{ q }}"><i class="bi bi-braces" aria-hidden="true"></i> JSON (as served)</a>
           </div>
         </span>
         <button type="button" class="fk" data-hx-key="s" aria-keyshortcuts="Alt+S" title="Copy a link to these rows: the end date is pinned, so it shows the same days later"><b>⧉</b> <span data-hx-share-label>Link</span></button>

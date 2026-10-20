@@ -32,6 +32,10 @@
   `--known-at`, `--diff`, `--changes-only`; a text table newest first with changed cells marked `*`, `--json` (the answer), `--csv`
   ([CLI_GUIDE › history](docs/guides/CLI_GUIDE.md#history-an-entity-over-time)). `Drishti.history(kind, id, days=…)` and `history_rows()`
   in `clients/python/drishti_client.py` ([CLIENTS](docs/guides/CLIENTS.md)).
+- **Added: tutorial 21, An entity over time**, and the help centre's `history` entries (F1 on the history page opens the user guide's
+  History section) ([docs/tutorials/21-an-entity-over-time.md](docs/tutorials/21-an-entity-over-time.md)). `test_tutorials.py` now reads
+  every numbered tutorial (its glob stopped at 19); tutorial 20's missing *Next steps* and *You should see* lines and its unused picture
+  are listed there as a follow-up.
 - **Added: history queries, the connector contract (H1).** `SourcePlugin.history(HistoryRequest)` returns `HistoryRead(days, covered,
   failed)`, one `HistoryDay(date, document, versions)` per business date the source holds the entity on; `SourcePlugin.days(ref, from, to)`
   lists those dates without reading a document. The default (`HistoryReads.perDay`) reads date by date through `fetch(ref, asOf)`, eight at
