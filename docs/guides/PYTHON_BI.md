@@ -678,5 +678,5 @@ The server's `drishti.bi.transform.max-input-rows` (50,000) caps an input, in th
 
 ### 17.9 Not built
 
-AI-written Transforms (P4, the AI release 2.7.0); a precomputed run on refresh for configured roles (the rest of P6); parameters bound to a report (P7); an incremental
+AI-written Transforms (P4, the AI release 2.8.0); a precomputed run on refresh for configured roles (the rest of P6); parameters bound to a report (P7); an incremental
 mode (P8); promoting several Analyse cells as steps (P9); a drift warning when a Transform's columns change (P10); a Python-only Source (rows from an API).

@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Design: write-back** ([WRITE_BACK.md](docs/architecture/WRITE_BACK.md)), editing and saving fields on a Sutra page through ordered
+  lanes (one change at a time per record), for 2.7.0; AI moves to 2.8.0 and wave E to 2.9.0
+  ([BI_DESIGN.md §12.2](docs/architecture/BI_DESIGN.md#122-the-three-waves)).
+
 ## 2.5.0 — Drishti*net: many servers, one Drishti; no JVM litters /tmp; the documents, help and deck reviewed (2026-10-19)
 
 - **Fixed: Drishti*net: a user known to one node stays signed in after the console falls over.** The other nodes refused a user they did not

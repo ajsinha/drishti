@@ -37,7 +37,7 @@ W1 vs design and the waves A, B, C · [13](#13-decisions-for-the-product-owner) 
 
 **Wave labels.** The build is three waves, each a release (section 12): **A** = 2.2.0 *Foundation and languages*,
 **B** = 2.3.0 *Calculation, live and scale*, **C** = 2.4.0 *Authoring and analysis*; then **N** = 2.5.0 *Drishti*net*, **D** = 2.6.0
-*Sharing and integration*, **I** = 2.7.0 *AI* and **E** = 2.8.0 *QA findings and production readiness* (section 12.2, as agreed on
+*Sharing and integration*, **W** = 2.7.0 *Write-back*, **I** = 2.8.0 *AI* and **E** = 2.9.0 *QA findings and production readiness* (section 12.2, as agreed on
 2026-10-17 and re-ordered on 2026-10-18 and 2026-10-19). W1 is the
 already-built first wave of 2.2.0. A component marked (A), (B) or (C) is delivered in that wave; one marked (C) in the
 sections below that is about integration arrives in D, about AI in I, and about governance in E.
@@ -1145,7 +1145,7 @@ D and E; Python data prep and the browser Python console moved into C).
    library (as-of joins for prices and FX, unpivot, type fixes), profiling of a Transform's input and output, a step-by-step
    run (each step's rows and profile) for the editor. **Built (2.4.0):** a pack kind through a connector as an input, as the
    reader (`POST /api/v1/bi/python/input`); the fork-server started with the console; 21 snippets each with an example run in
-   pandas and in the sandbox; the profile of inputs, every step and the output; the step-by-step run. Not built: P4 (wave I, 2.7.0),
+   pandas and in the sandbox; the profile of inputs, every step and the output; the step-by-step run. Not built: P4 (wave I, 2.8.0),
    precompute on refresh (rest of P6), P7 to P10 ([PYTHON_BI.md section 17](../guides/PYTHON_BI.md#17-data-prep-the-transform-editor-240)).
 3. **The browser Python console's server side:** masked extracts of a model for the browser, promotion of a result to run
    on the console backend. **Built (2.4.0):** `POST /pyconsole/extract` (the reader's masked rows, `bi.pyconsole.max_rows`) and
@@ -1179,7 +1179,8 @@ the drill.
 
 Decided by the product owner on 2026-10-18: Drishti*net is built straight after 2.4.0, as a release of its own, then
 fully tested. On 2026-10-19 the rest was split: sharing and integration (with field parameters) is wave D, 2.6.0; AI is
-wave I, 2.7.0; the real-life QA follows 2.7.0 and wave E is 2.8.0.
+wave I, 2.7.0; the real-life QA follows 2.7.0 and wave E is 2.8.0. Re-ordered again the same day: write-back is wave W,
+2.7.0 ([WRITE_BACK.md](WRITE_BACK.md)); AI becomes 2.8.0, the real-life QA follows it, and wave E is 2.9.0.
 
 **Server lane:** N1–N7 of [DRISHTI_NET.md §16](DRISHTI_NET.md#16-build-plan): membership by gossip over HTTP and
 `peers.json`; capability digests; security (cluster key or mutual TLS, key rollover, on-behalf-of tokens, masks on both
@@ -1212,7 +1213,10 @@ wrong answers; (5) QA findings fixed before the drill.
 2.5.0 work and were not yet made steady: `test_bi_gov_browser` (save twice), `test_pack_new_browser` (keyboard: wait for each step's
 form before Enter), `test_showcase_clean_browser` (metric, market-charts), `test_bi_reports_browser` (show the rows),
 `test_bi_wizard_and_controls_browser` (refresh), `test_form_browser` (keyboard), `test_bi_wave_a_browser` (tablet tab),
-`test_bi_live_browser` (desk wall), `test_tree_rows.py`; each fixed at its cause and passing 5 runs in a row under load. Also the
+`test_bi_live_browser` (desk wall), `test_tree_rows.py`; and the ten the 2.5.0 release drill logged as flaky (`test_bi_python_browser`
+(browser policy, sandboxed sample), `test_bi_reports_cross_browser` (drill-through), `test_controls_browser` (remembered choice,
+cascading), `test_embed_elements_browser` (pivot in Firefox), `test_embed_report_browser` (strict policy), `test_pack_new_browser`
+(reading limits), `test_showcase_clean_browser[map]`, and the wizard refresh again); each fixed at its cause and passing 5 runs in a row under load. Also the
 Drishti*net gap that two nodes disabling the last administrators at the same moment could leave none enabled (DRISHTI_NET.md), and
 whatever the 2.5.0 drill's flakes log names.
 
@@ -1239,7 +1243,18 @@ whatever the 2.5.0 drill's flakes log names.
 answers equal the MQ answers per user, masked; (3) a report visual switches its field through a field-parameter slicer;
 (4) QA findings fixed before the drill.
 
-#### Wave I — AI → 2.7.0
+#### Wave W — Write-back → 2.7.0
+
+Editing and saving fields on a Sutra page ([WRITE_BACK.md](WRITE_BACK.md), phases W1–W5): `edit:` in the Sutra, change requests
+applied by a transaction handler over a fixed number of ordered lanes (one change at a time per record, lanes in parallel), version
+checks against lost updates, four eyes, overlays and Drishti-owned kinds first (approved overlays flow into the lake), one source
+amendment as a pilot, the change log kept 7 years (configurable), lanes owned on the Drishti*net ring.
+
+**Accepted when:** two users editing one field never silently overwrite each other; 100,000 concurrent changes over 1,000,000
+entities apply in per-record order; an approved overlay appears in the next lake build; the per-record guarantee holds with a node
+killed mid-run; QA findings fixed before the drill.
+
+#### Wave I — AI → 2.8.0
 
 **Server lane:**
 
@@ -1262,10 +1277,10 @@ answers equal the MQ answers per user, masked; (3) a report visual switches its 
 user may see; (2) an agent composes a GenUI screen that streams into a host page with live ticks, masked for its viewer;
 (3) QA findings fixed before the drill.
 
-**After I: the product owner's real-life QA on 2.7.0.** An isolated, full, real-life QA (real users' tasks on real-shaped
+**After I: the product owner's real-life QA on 2.8.0.** An isolated, full, real-life QA (real users' tasks on real-shaped
 data, outside the builders' own tests). Its findings are triaged first and fixed in wave E before anything else in it.
 
-#### Wave E — QA findings and production readiness → 2.8.0
+#### Wave E — QA findings and production readiness → 2.9.0
 
 1. **Real-life QA findings** first (server and console).
 2. **Governance:** environment parameter rules in bundles and deployment between environments; two-way git sync
