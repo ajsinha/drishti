@@ -17,13 +17,18 @@
    statement's own ink in every theme, as it prints. */
 .bi-st-wrap { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 1rem; align-items: start; }
 @media (max-width: 1100px) { .bi-st-wrap { grid-template-columns: minmax(0, 1fr); } }
+/* QA2-15: the Paper tab sits between the Studio's side panels, so its width is not the window's: the settings go above the preview when
+   the tab itself is narrow (a 1400 px window left the sheet about 130 px wide), and the margin boxes share their row, never running under
+   the preview */
+.bi-dview[data-view="paper"] { container: st-paper / inline-size; }
+@container st-paper (max-width: 900px) { .bi-st-wrap { grid-template-columns: minmax(0, 1fr); } }
 .bi-st-settings { display: flex; flex-direction: column; gap: .35rem; }
 .bi-st-h { font-size: .85rem; font-weight: 600; margin: .6rem 0 .1rem; }
 .bi-st-row { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: .35rem; align-items: center; }
 .bi-st-row small { grid-column: 1 / -1; }
 .bi-st-row-wide { grid-template-columns: minmax(0, 1fr); }
 .bi-st-margins { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .25rem; }
-.bi-st-margins .studio-in { min-width: 0; }
+.bi-st-margins .studio-in { min-width: 0; width: 100%; box-sizing: border-box; }
 .bi-st-preview { outline: none; }
 .bi-st-preview:focus-visible { box-shadow: 0 0 0 2px var(--accent, #2f6fde); border-radius: 4px; }
 .bi-st-bar { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin-bottom: .6rem; }

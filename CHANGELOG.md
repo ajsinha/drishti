@@ -17,6 +17,13 @@
 
 ## Unreleased
 
+- **Fixed (QA2-15): the statement designer's Paper tab is readable at 1400 px.** The tab sits between the Studio's side panels, so its
+  two columns now follow the tab's own width (a container query), not the window's: when it is narrow the settings go above the preview,
+  and the sheet keeps the tab's width (it was about 130 px) while the four margin boxes share their row instead of running under the
+  preview. Page Down and Page Up page the preview wherever the focus is (but in a field), not only after a click on the sheet.
+  STATEMENTS section 5; test_bi_wave_d_browser.
+- **Fixed (QA2-16): Admin → Health fits a phone.** The external libraries' folder and jar list (and any long path in the summary lines)
+  wrap inside the page at 375 px instead of adding 154 px of horizontal scroll. test_admin_health_phone_browser.
 - **Fixed (QA1-14, QA1-15, QA1-16): the market history page.** The chart's hover label stays inside the chart and is put back at the
   selected row after a resize or zoom, so narrowing the window no longer leaves it where the wider chart had it (647 px of horizontal
   scroll). The table's numbers read in the chart field's format when the column has none (`21.66`, not `21.657685`); the CLI's headline

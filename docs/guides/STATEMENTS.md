@@ -152,7 +152,9 @@ Phone, Tablet and YAML:
 * **Paper**: size, orientation, the four margins, the text size; **Header** and **Footer**: the left, centre and right text, with the tokens listed under
   them; **Period**: what it covers and whether its queries read the last day or every day. Each control writes `statement:`; nothing needs the YAML tab.
 * **Preview pages** lays the draft out on the server, as you (your masks and row rules), for the **Statement date** you choose: one sheet at a time with
-  **‹** and **›** (or Page Up and Page Down), *Page 2 of 3 · Letter landscape* beside them. A change marks the preview *changed since: preview again*.
+  **‹** and **›** (or Page Up and Page Down, wherever the focus is but in a field), *Page 2 of 3 · Letter landscape* beside them. A change marks the
+  preview *changed since: preview again*; a date no data covers adds *No data is held for …* there. When the tab is narrow (the Studio's side panels
+  open on a laptop screen), the settings go above the preview, so the sheet keeps the tab's width.
 * **PDF** and **Excel** download the saved draft, made as you.
 * Each band's **Page break**, **Keep together**, **Repeat the column titles on every page** and **Keep rows together by** are in **Format → Statement** of
   the selected visual.

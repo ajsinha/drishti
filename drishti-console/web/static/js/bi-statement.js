@@ -124,6 +124,14 @@
       if (e.key === 'PageDown' || e.key === 'ArrowRight') { next.click(); e.preventDefault(); }
       if (e.key === 'PageUp' || e.key === 'ArrowLeft') { prev.click(); e.preventDefault(); }
     });
+    // QA2-15: Page Down and Page Up page the preview while the Paper tab is shown, wherever the focus is (not only after a click on the
+    // sheet), except in a field, where they keep their own meaning
+    document.addEventListener('keydown', (e) => {
+      if (!S.shown || !S.answer || host.contains(e.target) || e.defaultPrevented) { return; }
+      if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) || e.target.isContentEditable || e.altKey || e.ctrlKey || e.metaKey) { return; }
+      if (e.key === 'PageDown') { next.click(); e.preventDefault(); }
+      if (e.key === 'PageUp') { prev.click(); e.preventDefault(); }
+    });
     downloads(files);
   }
 
