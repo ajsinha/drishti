@@ -258,7 +258,8 @@ Together, **queue + version check** give: no two writes to a record at once, and
 | W4 | `SourcePlugin.write` and **source commands**: the one real-amendment pilot (one field of one kind on one connector, JDBC first); pending at source; idempotency | a source command applied twice by a retry changes the source once |
 | W5 | Form mode, bulk edit, phone, docs and a tutorial (UI, CLI, YAML) | a tutorial edits, approves and sees the change tick on another browser |
 
-Placement: **2.7.0** (product owner, 2026-10-19), after 2.6.0's integration work; AI (grounding, AI UI, GenUI, AI management)
+Placement: **2.7.0** (product owner, 2026-10-19), after 2.6.0 (statements, field parameters, the Cassandra connector, drishti-iceberg;
+integration moved after 3.0.0 on 2026-10-20); AI (grounding, AI UI, GenUI, AI management)
 becomes 2.8.0, GenUI's write-back forms build on this.
 
 ## 15. Tests

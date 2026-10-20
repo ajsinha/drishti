@@ -37,8 +37,8 @@ W1 vs design and the waves A, B, C · [13](#13-decisions-for-the-product-owner) 
 
 **Wave labels.** The build is three waves, each a release (section 12): **A** = 2.2.0 *Foundation and languages*,
 **B** = 2.3.0 *Calculation, live and scale*, **C** = 2.4.0 *Authoring and analysis*; then **N** = 2.5.0 *Drishti*net*, **D** = 2.6.0
-*Sharing and integration*, **W** = 2.7.0 *Write-back*, **I** = 2.8.0 *AI* and **E** = 2.9.0 *QA findings and production readiness* (section 12.2, as agreed on
-2026-10-17 and re-ordered on 2026-10-18 and 2026-10-19). W1 is the
+*Statements, field parameters and connectors* (named *Sharing and integration* until 2026-10-20), **W** = 2.7.0 *Write-back*, **I** = 2.8.0 *AI* and **E** = 2.9.0 *QA findings and production readiness* (section 12.2, as agreed on
+2026-10-17 and re-ordered on 2026-10-18, 2026-10-19 and 2026-10-20; send and push and integration after 3.0.0). W1 is the
 already-built first wave of 2.2.0. A component marked (A), (B) or (C) is delivered in that wave; one marked (C) in the
 sections below that is about integration arrives in D, about AI in I, and about governance in E.
 
@@ -1180,7 +1180,8 @@ the drill.
 Decided by the product owner on 2026-10-18: Drishti*net is built straight after 2.4.0, as a release of its own, then
 fully tested. On 2026-10-19 the rest was split: sharing and integration (with field parameters) is wave D, 2.6.0; AI is
 wave I, 2.7.0; the real-life QA follows 2.7.0 and wave E is 2.8.0. Re-ordered again the same day: write-back is wave W,
-2.7.0 ([WRITE_BACK.md](WRITE_BACK.md)); AI becomes 2.8.0, the real-life QA follows it, and wave E is 2.9.0.
+2.7.0 ([WRITE_BACK.md](WRITE_BACK.md)); AI becomes 2.8.0, the real-life QA follows it, and wave E is 2.9.0. On 2026-10-20 send and push and
+integration left wave D for after 3.0.0, the Sajha MCP connector moved to 2.8.0, and the Cassandra connector and drishti-iceberg joined wave D.
 
 **Server lane:** N1–N7 of [DRISHTI_NET.md §16](DRISHTI_NET.md#16-build-plan): membership by gossip over HTTP and
 `peers.json`; capability digests; security (cluster key or mutual TLS, key rollover, on-behalf-of tokens, masks on both
@@ -1207,7 +1208,7 @@ stopped server makes answers partial and named, never wrong, and a restarted one
 stays masked whichever node holds the data, and a role never reaches a node outside its list; (4) the soak runs with 0
 wrong answers; (5) QA findings fixed before the drill.
 
-#### Wave D — Sharing and integration → 2.6.0
+#### Wave D — Statements, field parameters and connectors → 2.6.0
 
 **First, before any feature: no known bug** (product owner, 2026-10-19). Browser tests that failed now and then under load in the
 2.5.0 work and were not yet made steady: `test_bi_gov_browser` (save twice), `test_pack_new_browser` (keyboard: wait for each step's
@@ -1229,30 +1230,35 @@ same moment could leave none enabled, DRISHTI_NET.md section 11; and members adv
    limit), PDF written by the server (`StatementPdf`, no library) and Excel with the paper's print setup, the period and the model's parameters, bursting
    through subscriptions (one statement per recipient, made as them), `POST /bi/reports/statement/preview` and `/file`, `drishti.py bi statement`
    ([STATEMENTS.md](../guides/STATEMENTS.md)); the acceptance (1) is `StatementApiTest`.
-2. **Send and push:** Send to Outlook and Teams (Teams off until configured), SharePoint push from Forms, connector dump
-   (TEAMS_EMAIL_SHAREPOINT.md).
-3. **Integration:** PostgreSQL-wire read-only endpoint (decision 5); Excel feed; embed tokens bound to envelopes; SDK events.
-4. **Sajha MCP connector.**
+2. ~~**Send and push**~~: **out of 2.6.0, after the 3.0.0 release** (product owner, 2026-10-20): Send to Outlook and Teams,
+   SharePoint push from Forms, connector dump (TEAMS_EMAIL_SHAREPOINT.md) stay designed, not scheduled.
+3. ~~**Integration**~~: **out of 2.6.0, after the 3.0.0 release** (product owner, 2026-10-20): PostgreSQL-wire read-only
+   endpoint (decision 5), Excel feed, embed tokens bound to envelopes, SDK events.
+4. ~~**Sajha MCP connector**~~: **moved to wave I, 2.8.0** (product owner, 2026-10-20: it belongs to the release that does the AI work).
 5. **Field parameters in report wells** (wave C gap 9, decided 2026-10-19): a report visual's well names `param.<name>` and
    the reader's parameter slicer switches the field or measure it draws; checked by the report schema.
    *Built (2.6.0):* `FieldParams` (`DRS-9037`), the report state's `params` (every model query of a report takes them as MQ v2 `params`), a field
    parameter of measures in MQ `select.measures` and `sort`; `FieldParamsApiTest` ([REPORTS.md section 21](../guides/REPORTS.md#21-field-parameters-in-a-well-260)).
+6. **Apache Cassandra connector** (added 2026-10-20, [CASSANDRA_CONNECTOR_DESIGN.md](CASSANDRA_CONNECTOR_DESIGN.md)).
+   *Built (2.6.0):* plugin `cassandra` (Cassandra 4 and 5, ScyllaDB, Astra), its loader (a day appears whole) and every read path, equal to the
+   Delta connector over the same data ([CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md)).
+7. **drishti-iceberg**, Drishti's own Iceberg engine with no Hadoop (added 2026-10-20, [DRISHTI_ICEBERG.md](DRISHTI_ICEBERG.md), steps I1–I5),
+   being built.
 
 **Console lane:**
 
 1. **Statement designer** for paginated reports, previewed page by page.
    *Built (2.6.0):* Format → Layout → statement, the designer's **Paper** tab (`bi-statement.js`: paper, header and footer, period, and the server's
    pages drawn one at a time), each band's Format → Statement (from the format schemas); `test_bi_wave_d_browser.py`.
-2. **Feeds, sending and embedding UI:** per-user connection details for SQL tools, the Excel feed wizard, send dialogs,
-   embed configuration.
+2. ~~**Feeds and embedding UI**~~: after the 3.0.0 release, with integration and send and push.
 3. **Field parameters in the Studio's wells**, with a browser test.
    *Built (2.6.0):* Build offers the model's field parameters per well kind, the model designer's field parameters may list measures, the viewer draws
    the server's `wells`; the acceptance (3) is `test_bi_wave_d_browser.py` (DESK to PORTFOLIO, MTM to NOTIONAL).
 4. **Docs and tutorials** (UI, CLI and YAML; REPORTS.md and BI_GUIDE for field parameters).
 
-**Accepted when:** (1) a monthly statement bursts to ten recipients, each masked, page-exact in PDF; (2) psql and Excel
-answers equal the MQ answers per user, masked; (3) a report visual switches its field through a field-parameter slicer;
-(4) QA findings fixed before the drill.
+**Accepted when:** (1) a monthly statement bursts to ten recipients, each masked, page-exact in PDF; (2) ~~psql and Excel
+answers equal the MQ answers per user, masked~~ (with integration, after 3.0.0); (3) a report visual switches its field through a
+field-parameter slicer; (4) the Cassandra connector answers as the Delta connector over the same data; (5) QA findings fixed before the drill.
 
 #### Wave W — Write-back → 2.7.0
 
@@ -1273,6 +1279,7 @@ killed mid-run; QA findings fixed before the drill.
    from plain words, reports from intent and AI-drafted Transforms (P4) as drafts through review; MCP tools of section 9.
 2. **GenUI:** screens an AI agent composes from governed Sutra fragments, bound to live data as the viewer, streamed to
    other applications through `<drishti-genui>` ([GENUI.md](GENUI.md)).
+3. **Sajha MCP connector** (moved from 2.6.0 on 2026-10-20): Drishti reaches sajhamcpserver's tools as an MCP client.
 
 **Console lane:**
 
