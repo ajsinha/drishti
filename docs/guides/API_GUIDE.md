@@ -270,7 +270,7 @@ PY
 curl -s -H "Authorization: Bearer $TOKEN" $B/about | jq .version
 ```
 
-You should see the version string, for example `"2.5.0"`. The roles you put in the token decide what the
+You should see the version string, for example `"2.6.0"`. The roles you put in the token decide what the
 script may open (roles are defined under `drishti.security.roles`; see
 [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)). Keep the lifetime short.
 

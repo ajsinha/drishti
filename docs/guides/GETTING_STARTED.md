@@ -147,7 +147,7 @@ integration tests too), which is slower and gives the same server. When it finis
 ls drishti-server/target/*-exec.jar
 ```
 
-You should see `drishti-server/target/drishti-server-2.5.0-exec.jar`. In the IDE this step is the run configuration
+You should see `drishti-server/target/drishti-server-2.6.0-exec.jar`. In the IDE this step is the run configuration
 **Drishti build server jar**.
 
 > **Note:** `./mvnw -q verify` builds **and** runs every test (much longer). Use it when you change code; for a first try,
@@ -269,13 +269,13 @@ export DRISHTI_SEED_ADMIN=true DRISHTI_SEED_USERNAME=drishti-dev-admin DRISHTI_S
 export DRISHTI_EXTERNAL_LIB=$PWD/external_lib
 export DRISHTI_DEMO_ENABLED=false
 mkdir -p data/tmp/server
-java -Djava.io.tmpdir=data/tmp/server -Xmx4g -jar drishti-server/target/drishti-server-2.5.0-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -Xmx4g -jar drishti-server/target/drishti-server-2.6.0-exec.jar
 ```
 
 **B. The smallest start** (sign-in off, the packs' samples ticking live):
 
 ```bash
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.5.0-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.6.0-exec.jar
 ```
 
 What the settings do:
@@ -431,7 +431,7 @@ drishti-console/.venv/bin/python tools/drishti.py doctor --server http://localho
 The last lines of what you should see:
 
 ```text
-GREEN  server                  http://localhost:18480: version 2.5.0, java 21.0.12.1, status UP
+GREEN  server                  http://localhost:18480: version 2.6.0, java 21.0.12.1, status UP
 GREEN  token                   accepted; this token 'cqFV714maGDy' acts as drishti-dev-admin: scopes read, expires 2026-10-18T21:33:38.684Z
 doctor: 0 red, 0 yellow
 ```
@@ -547,7 +547,7 @@ mvn -v                                  # "Apache Maven 3.9.…" and "Java versi
 mvn -q package -DskipTests              # build (add -o to work offline once ~/.m2 is filled)
 mvn -q verify                           # build, every test and every rule
 mvn -q -pl drishti-server -am package -DskipTests    # the server and what it needs
-ls drishti-server/target/*-exec.jar     # the application: drishti-server/target/drishti-server-2.5.0-exec.jar
+ls drishti-server/target/*-exec.jar     # the application: drishti-server/target/drishti-server-2.6.0-exec.jar
 ```
 
 Run the server from the repository root (it finds `./config/packs` and `./data` relative to where you start it). Java-25-only
@@ -577,7 +577,7 @@ overlay `<data>/packs/added.yaml` (`DRISHTI_PACKS_OVERLAY` moves it; the server 
 
 | You want | Do | Command |
 |---|---|---|
-| a site file read **in addition**, on top of the bundled defaults | `--spring.config.additional-location` | `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.5.0-exec.jar --spring.config.additional-location=file:/etc/drishti/site.yaml` |
+| a site file read **in addition**, on top of the bundled defaults | `--spring.config.additional-location` | `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.6.0-exec.jar --spring.config.additional-location=file:/etc/drishti/site.yaml` |
 | the same, from the environment | `SPRING_CONFIG_ADDITIONAL_LOCATION` | `SPRING_CONFIG_ADDITIONAL_LOCATION=file:/etc/drishti/site.yaml java -jar …` |
 | several files, later ones win | a comma list | `--spring.config.additional-location=file:/etc/drishti/site.yaml,file:/etc/drishti/secrets.yaml` |
 | a folder of files | end it with `/` | `--spring.config.additional-location=file:/etc/drishti/conf.d/` |
@@ -692,7 +692,7 @@ $env:JAVA_HOME = $env:DRISHTI_JAVA_HOME
 dir drishti-server\target\*-exec.jar
 ```
 
-You should see `drishti-server-2.5.0-exec.jar`. To also run the tests of the Delta engine and connector:
+You should see `drishti-server-2.6.0-exec.jar`. To also run the tests of the Delta engine and connector:
 `.\mvnw.cmd -q verify -pl drishti-deltalake,plugins/drishti-plugin-delta -am` (tests that need Docker skip themselves); of the
 Iceberg engine and connectors: `.\mvnw.cmd -q verify -pl drishti-iceberg,plugins/drishti-plugin-iceberg,plugins/drishti-plugin-iceberg-external -am`.
 
@@ -701,7 +701,7 @@ Iceberg engine and connectors: `.\mvnw.cmd -q verify -pl drishti-iceberg,plugins
 
 | Copy | From | Why |
 |---|---|---|
-| `drishti-server-2.5.0-exec.jar` | `drishti-server\target\` | the server (all its libraries are inside) |
+| `drishti-server-2.6.0-exec.jar` | `drishti-server\target\` | the server (all its libraries are inside) |
 | `config\packs\` | the repository root | the domain packs (Sutras, mnemonics, samples). Also `config\connectors\` (connector files) and `config\bi\` (BI datasets and reports) if you use them |
 | `drishti-console\` | the repository root | only if you will run the console on this machine |
 | `tools\` and `data\testdata\` | the repository | the scripts and `drishti.py`, and the test data if you will build the demo lakes here |
@@ -758,7 +758,7 @@ To run the jar by hand instead:
 
 ```powershell
 $env:DRISHTI_PACKS = 'market-risk'
-& "$env:DRISHTI_JAVA_HOME\bin\java.exe" -Xmx2g -jar drishti-server\target\drishti-server-2.5.0-exec.jar
+& "$env:DRISHTI_JAVA_HOME\bin\java.exe" -Xmx2g -jar drishti-server\target\drishti-server-2.6.0-exec.jar
 ```
 
 The native Delta engine is the default, so nothing else is needed.
