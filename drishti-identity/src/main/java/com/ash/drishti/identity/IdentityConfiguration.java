@@ -52,6 +52,7 @@ public class IdentityConfiguration {
      * ({@code drishti.store.file}, {@code config/store/store.yaml}).
      */
     @Bean(destroyMethod = "close")
+    @org.springframework.context.annotation.Primary
     public com.ash.drishti.identity.content.ContentStore contentStore(org.springframework.core.env.Environment env) {
         java.nio.file.Path file = java.nio.file.Path.of(env.getProperty("drishti.store.file", "./config/store/store.yaml"));
         java.nio.file.Path data = java.nio.file.Path.of(env.getProperty("drishti.data.dir", "./data"));
@@ -99,42 +100,99 @@ public class IdentityConfiguration {
     }
 
     /**
-     * Where shares and inbox rows are kept ({@code drishti.collab.store}): the identity database (default) or files. Files are
-     * for one server: with a shared (PostgreSQL) database the server refuses to start, because several servers would not see
-     * each other's writes.
+     * The content store with multi-document transactions (CONTENT_STORE.md section 9): what collaboration and the admin data write
+     * through. Interrupted commits on any node are finished at start and on the identity refresh interval.
+     */
+    @Bean
+    public com.ash.drishti.identity.content.TxContentStore contentTransactions(com.ash.drishti.identity.content.ContentStore content) {
+        com.ash.drishti.identity.content.TxContentStore tx = new com.ash.drishti.identity.content.TxContentStore(content);
+        tx.recover();
+        return tx;
+    }
+
+    /**
+     * Collaboration in the content store ({@code drishti.collab.store=content}, the default): the stores, after the one-time import
+     * of the identity database's collaboration tables and of the {@code <data>/collab} files. Empty for {@code jpa} and {@code file}.
+     */
+    @Bean
+    public com.ash.drishti.identity.collab.CollabImport.Content collabContent(com.ash.drishti.identity.collab.CollabProperties props,
+            com.ash.drishti.identity.content.TxContentStore content, IdentityRepositories.Threads threads, IdentityRepositories.Comments comments,
+            IdentityRepositories.Revisions revisions, IdentityRepositories.Mentions mentions, IdentityRepositories.Follows follows,
+            IdentityRepositories.NoteLinks links, IdentityRepositories.Shares shares, IdentityRepositories.ShareRecipients recipients,
+            IdentityRepositories.Inbox inbox, IdentityRepositories.Outbox outbox, IdentityRepositories.Holds holds,
+            IdentityRepositories.Seals seals, TransactionTemplate identityTransactions) {
+        if (!props.content()) {
+            return new com.ash.drishti.identity.collab.CollabImport.Content(null);
+        }
+        com.ash.drishti.identity.collab.CollabImport.Target target = com.ash.drishti.identity.collab.CollabImport.Target.of(content);
+        com.ash.drishti.identity.collab.CollabImport.run(new com.ash.drishti.identity.collab.CollabImport.Source("jpa", new com.ash.drishti.identity.collab.JpaThreadStore(threads, comments, revisions, mentions, follows, links,
+                identityTransactions), new com.ash.drishti.identity.collab.JpaShareStore(shares, recipients, identityTransactions), new com.ash.drishti.identity.collab.JpaInboxStore(inbox,
+                identityTransactions), new com.ash.drishti.identity.collab.JpaOutboxStore(outbox, identityTransactions), new com.ash.drishti.identity.collab.JpaHoldStore(holds, identityTransactions),
+                new com.ash.drishti.identity.collab.JpaSealStore(seals, identityTransactions)), target);
+        java.nio.file.Path dir = java.nio.file.Path.of(props.dir());
+        if (java.nio.file.Files.isDirectory(dir.resolve("threads")) || java.nio.file.Files.isDirectory(dir.resolve("shares"))
+                || java.nio.file.Files.isDirectory(dir.resolve("inbox")) || java.nio.file.Files.isDirectory(dir.resolve("outbox"))
+                || java.nio.file.Files.isRegularFile(dir.resolve("seals.log"))) {
+            com.ash.drishti.identity.collab.CollabImport.run(new com.ash.drishti.identity.collab.CollabImport.Source("file", new com.ash.drishti.identity.collab.FileThreadStore(dir), new com.ash.drishti.identity.collab.FileShareStore(dir),
+                    new com.ash.drishti.identity.collab.FileInboxStore(dir, Integer.MAX_VALUE), new com.ash.drishti.identity.collab.FileOutboxStore(dir), new com.ash.drishti.identity.collab.FileHoldStore(dir), new com.ash.drishti.identity.collab.FileSealStore(dir)),
+                    target);
+        }
+        return new com.ash.drishti.identity.collab.CollabImport.Content(new com.ash.drishti.identity.collab.CollabImport.Target(content, target.threads(), target.shares(),
+                new com.ash.drishti.identity.collab.ContentInboxStore(content, props.inbox().keep()), target.outbox(), target.holds(), target.seals()));
+    }
+
+    /**
+     * Where collaboration is kept ({@code drishti.collab.store}): the content store (default, every node of a cluster), or, for one
+     * node only, the identity database ({@code jpa}) or files ({@code file}). Files are refused beside a shared (PostgreSQL) database.
      */
     @Bean
     public com.ash.drishti.identity.collab.CollabTx collabTx(com.ash.drishti.identity.collab.CollabProperties props, IdentityProperties id,
-            TransactionTemplate identityTransactions) {
+            TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.CollabImport.Content collabContent) {
         requireSingleServerForFiles(props, id);
+        if (collabContent.isPresent()) {
+            return com.ash.drishti.identity.collab.CollabTx.of(collabContent.get().store());
+        }
         return props.jpa() ? com.ash.drishti.identity.collab.CollabTx.of(identityTransactions) : com.ash.drishti.identity.collab.CollabTx.serial();
     }
 
     /** Tamper-evidence seals for threads, comment rows, holds and the audit trail, next to the rows they cover. */
     @Bean
     public com.ash.drishti.identity.collab.Seal.Store sealStore(com.ash.drishti.identity.collab.CollabProperties props,
-            IdentityRepositories.Seals seals, TransactionTemplate identityTransactions) {
+            IdentityRepositories.Seals seals, TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.CollabImport.Content collabContent) {
+        if (collabContent.isPresent()) {
+            return collabContent.get().seals();
+        }
         return props.jpa() ? new com.ash.drishti.identity.collab.JpaSealStore(seals, identityTransactions)
                 : new com.ash.drishti.identity.collab.FileSealStore(java.nio.file.Path.of(props.dir()));
     }
 
     @Bean
     public com.ash.drishti.identity.collab.ShareStore shareStore(com.ash.drishti.identity.collab.CollabProperties props,
-            IdentityRepositories.Shares shares, IdentityRepositories.ShareRecipients recipients, TransactionTemplate identityTransactions) {
+            IdentityRepositories.Shares shares, IdentityRepositories.ShareRecipients recipients, TransactionTemplate identityTransactions,
+            com.ash.drishti.identity.collab.CollabImport.Content collabContent) {
+        if (collabContent.isPresent()) {
+            return collabContent.get().shares();
+        }
         return props.jpa() ? new com.ash.drishti.identity.collab.JpaShareStore(shares, recipients, identityTransactions)
                 : new com.ash.drishti.identity.collab.FileShareStore(java.nio.file.Path.of(props.dir()));
     }
 
     @Bean
     public com.ash.drishti.identity.collab.InboxStore inboxStore(com.ash.drishti.identity.collab.CollabProperties props,
-            IdentityRepositories.Inbox inbox, TransactionTemplate identityTransactions) {
+            IdentityRepositories.Inbox inbox, TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.CollabImport.Content collabContent) {
+        if (collabContent.isPresent()) {
+            return collabContent.get().inbox();
+        }
         return props.jpa() ? new com.ash.drishti.identity.collab.JpaInboxStore(inbox, identityTransactions)
                 : new com.ash.drishti.identity.collab.FileInboxStore(java.nio.file.Path.of(props.dir()), props.inbox().keep());
     }
 
     @Bean
     public com.ash.drishti.identity.collab.OutboxStore outboxStore(com.ash.drishti.identity.collab.CollabProperties props,
-            IdentityRepositories.Outbox outbox, TransactionTemplate identityTransactions) {
+            IdentityRepositories.Outbox outbox, TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.CollabImport.Content collabContent) {
+        if (collabContent.isPresent()) {
+            return collabContent.get().outbox();
+        }
         return props.jpa() ? new com.ash.drishti.identity.collab.JpaOutboxStore(outbox, identityTransactions)
                 : new com.ash.drishti.identity.collab.FileOutboxStore(java.nio.file.Path.of(props.dir()));
     }
@@ -143,21 +201,24 @@ public class IdentityConfiguration {
     public com.ash.drishti.identity.collab.ThreadStore threadStore(com.ash.drishti.identity.collab.CollabProperties props,
             IdentityRepositories.Threads threads, IdentityRepositories.Comments comments, IdentityRepositories.Revisions revisions,
             IdentityRepositories.Mentions mentions, IdentityRepositories.Follows follows, IdentityRepositories.NoteLinks links,
-            TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.Seal.Store seals) {
-        return com.ash.drishti.identity.collab.Seals.sealing(props.jpa() ? new com.ash.drishti.identity.collab.JpaThreadStore(threads, comments,
-                revisions, mentions, follows, links, identityTransactions)
-                : new com.ash.drishti.identity.collab.FileThreadStore(java.nio.file.Path.of(props.dir())), seals);
+            TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.Seal.Store seals, com.ash.drishti.identity.collab.CollabImport.Content collabContent) {
+        com.ash.drishti.identity.collab.ThreadStore inner = collabContent.isPresent() ? collabContent.get().threads()
+                : props.jpa() ? new com.ash.drishti.identity.collab.JpaThreadStore(threads, comments, revisions, mentions, follows, links, identityTransactions)
+                : new com.ash.drishti.identity.collab.FileThreadStore(java.nio.file.Path.of(props.dir()));
+        return com.ash.drishti.identity.collab.Seals.sealing(inner, seals);
     }
 
     @Bean
     public com.ash.drishti.identity.collab.HoldStore holdStore(com.ash.drishti.identity.collab.CollabProperties props,
-            IdentityRepositories.Holds holds, TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.Seal.Store seals) {
-        return com.ash.drishti.identity.collab.Seals.sealing(props.jpa() ? new com.ash.drishti.identity.collab.JpaHoldStore(holds, identityTransactions)
-                : new com.ash.drishti.identity.collab.FileHoldStore(java.nio.file.Path.of(props.dir())), seals);
+            IdentityRepositories.Holds holds, TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.Seal.Store seals,
+            com.ash.drishti.identity.collab.CollabImport.Content collabContent) {
+        com.ash.drishti.identity.collab.HoldStore inner = collabContent.isPresent() ? collabContent.get().holds()
+                : props.jpa() ? new com.ash.drishti.identity.collab.JpaHoldStore(holds, identityTransactions) : new com.ash.drishti.identity.collab.FileHoldStore(java.nio.file.Path.of(props.dir()));
+        return com.ash.drishti.identity.collab.Seals.sealing(inner, seals);
     }
 
     public static void requireSingleServerForFiles(com.ash.drishti.identity.collab.CollabProperties props, IdentityProperties id) {
-        if (!props.jpa() && !id.sqlite()) {
+        if ("file".equals(props.store()) && !id.sqlite()) {
             throw new IllegalStateException("drishti.collab.store=file keeps shares on this server only, but drishti.identity.database-url "
                     + "is a shared database: use drishti.collab.store=jpa");
         }
@@ -229,7 +290,7 @@ public class IdentityConfiguration {
      */
     @Bean(destroyMethod = "shutdownNow")
     public java.util.concurrent.ScheduledExecutorService identityRefresher(RoleStore roles, PackStateStore packs, EmbedAppStore embedApps,
-            org.springframework.core.env.Environment env) {
+            org.springframework.core.env.Environment env, com.ash.drishti.identity.content.TxContentStore contentTransactions) {
         long every = Long.parseLong(env.getProperty("drishti.identity.refresh-seconds", "15"));
         var exec = java.util.concurrent.Executors.newSingleThreadScheduledExecutor(Thread.ofVirtual().name("drishti-identity-refresh").factory());
         exec.scheduleWithFixedDelay(() -> {
@@ -237,6 +298,7 @@ public class IdentityConfiguration {
                 roles.refresh();
                 packs.refresh();
                 embedApps.refresh();
+                contentTransactions.recover();
             } catch (RuntimeException e) {
                 org.slf4j.LoggerFactory.getLogger(IdentityConfiguration.class).warn("identity refresh failed: {}", e.getMessage());
             }

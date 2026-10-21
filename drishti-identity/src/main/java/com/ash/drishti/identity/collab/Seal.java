@@ -29,5 +29,10 @@ public record Seal(long count, String hash) {
         Optional<Seal> get(String key);
 
         void put(String key, Seal seal);
+
+        /** Every seal (the one-time import into the content store reads it). */
+        default java.util.Map<String, Seal> all() {
+            return java.util.Map.of();
+        }
     }
 }
