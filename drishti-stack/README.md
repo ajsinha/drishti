@@ -116,3 +116,7 @@ the system `/tmp`.
 `stop.sh` stops the processes in `run/pids.txt`, the console first, by process id: it checks that the id is still one of this stack's
 processes (its command line names `run/server.jar` or the console) before it sends `SIGTERM`, and sends `SIGKILL` only after 60 s. Other
 Java or Python processes on the machine are never touched.
+
+## Content store
+
+Every node of this stack uses one content store, `data/fstore` in the repository (`DRISHTI_STORE_ROOT`), so a design or other user content saved through one node opens through any other ([CONTENT_STORE.md](../docs/architecture/CONTENT_STORE.md)).
