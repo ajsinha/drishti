@@ -380,7 +380,7 @@ public final class NetService implements AutoCloseable {
         n.loop.interrupt();
         node = null;
         try {
-            gossipPorts.applyAsInt(com.ash.drishti.net.config.NodeSettings.GOSSIP_OFF);   // the gossip port closes with the node
+            int unused = gossipPorts.applyAsInt(com.ash.drishti.net.config.NodeSettings.GOSSIP_OFF);   // the gossip port closes with the node
         } catch (RuntimeException e) {
             LOG.debug("net: closing the gossip port: {}", e.toString());
         }
