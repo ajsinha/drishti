@@ -959,6 +959,10 @@ public final class RunService {
      * fails it with DRS-9085 and {@code failedWhy}. A running row is moved to queued (attempt + 1) with {@code again}.
      */
     private void resume(Run r, boolean wasRunning, boolean adopted, String again, String failedWhy, String told, String failedTold) {
+        if (r.state() == RunState.AWAITING_CONFIRM || r.state() == RunState.PLANNED) {
+            keepAwaiting(r);                                                    // nothing ran and nobody confirmed: not a failure (BIR-08)
+            return;
+        }
         int before = adopted ? r.attempt() - 1 : r.attempt();                   // an adopted row was counted again by the conditional update
         Optional<Question> q = props.restart().resumeRunning() && before < props.restart().maxAttempts() ? replay.of(r) : Optional.empty();
         if (q.isPresent() && r.state() != RunState.AWAITING_CONFIRM && r.state() != RunState.PLANNED) {
@@ -988,6 +992,39 @@ public final class RunService {
         records.save(failed);
         publish(failed);
         tell(failed, "Run failed: " + title(failed) + " (" + ErrorCode.RUN_INTERRUPTED.code() + ": " + failedTold + ")");
+    }
+
+    /**
+     * A run that waited for its confirmation at a restart (BIR-08, section 12.1): it keeps waiting, with a new token (the owner's drawer has it; the run
+     * object carries it) until the end of its {@code confirm.ttl} from when it was asked. Past that, or when its question cannot be asked again as its runner,
+     * it is cancelled quietly ({@code DRS-9083}, the reason in words) with no bell: nothing ran and nobody confirmed, so nothing failed.
+     */
+    private void keepAwaiting(Run r) {
+        Instant now = clock.instant();
+        Instant by = (r.submittedAt() == null ? now : r.submittedAt()).plus(props.confirmTtl());
+        Optional<Question> q = r.state() == RunState.AWAITING_CONFIRM && now.isBefore(by) ? replay.of(r) : Optional.empty();
+        if (q.isEmpty()) {
+            String why = r.state() == RunState.AWAITING_CONFIRM && !now.isBefore(by)
+                    ? "not confirmed within " + props.confirmTtl().toMinutes() + " min"
+                    : "the confirmation lapsed when the server restarted; nothing ran";
+            Run cancelled = r.moveTo(RunState.CANCELLED, ErrorCode.RUN_NOT_DONE.code(), why, now);
+            records.save(cancelled);
+            publish(cancelled);
+            return;
+        }
+        Run.Builder rb = r.toBuilder();
+        rb.signature = q.get().signature();
+        rb.node = node;
+        rb.leaseUntil = now.plus(props.lease().ttl());
+        Run kept = rb.build();
+        Flight f = new Flight(r.fingerprint(), q.get(), kept);
+        f.background = true;
+        f.visible = true;
+        f.confirmToken = Long.toHexString(random.nextLong()) + Long.toHexString(random.nextLong());
+        f.confirmBy = by;
+        byRun.put(r.id(), f);
+        records.save(kept);
+        publish(kept);
     }
 
     // ---- the cluster: leases and adoption (section 13.3) --------------------------------------------------------------

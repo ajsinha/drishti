@@ -270,6 +270,41 @@ class RunServiceTest {
         assertThat(told).anyMatch(s -> s.startsWith("viewer: Your run")).anyMatch(s -> s.startsWith("bob: Run failed"));
     }
 
+    /** BIR-08: a run waiting for its confirmation at a restart keeps waiting (and can be confirmed); a lapsed or unreplayable one is cancelled quietly. */
+    @Test
+    void aRunWaitingForConfirmationAtARestartKeepsWaitingAndNothingRingsTheBell() throws Exception {
+        Instant t = Instant.now();
+        Run waiting = Run.planned(RunId.next("java-2", t, new java.util.SplittableRandom(4)), "viewer", "viewer", "mq", "{\"q\":5}", "d".repeat(64), "sig-v",
+                Tier.AD_HOC_HEAVY, "local", "{}", "java-2", t).moveTo(RunState.AWAITING_CONFIRM, null, "the estimate asks for a confirmation", t);
+        Instant old = t.minus(Duration.ofDays(1));
+        Run lapsed = Run.planned(RunId.next("java-2", old, new java.util.SplittableRandom(5)), "viewer", "viewer", "mq", "{\"q\":6}", "e".repeat(64), "sig-v",
+                Tier.AD_HOC_HEAVY, "local", "{}", "java-2", old).moveTo(RunState.AWAITING_CONFIRM, null, "the estimate asks for a confirmation", old);
+        Run unreplayable = Run.planned(RunId.next("java-2", t, new java.util.SplittableRandom(6)), "bob", "bob", "report", "{\"q\":7}", "f".repeat(64), "sig-b",
+                Tier.AD_HOC_HEAVY, "local", "{}", "java-2", t).moveTo(RunState.AWAITING_CONFIRM, null, "the estimate asks for a confirmation", t);
+        records.save(waiting);
+        records.save(lapsed);
+        records.save(unreplayable);
+        AtomicInteger calls = new AtomicInteger();
+        runs.replay(r -> r.owner().equals("viewer") ? Optional.of(question(VIEWER, "sig-v", null, calls, 10, "1")) : Optional.empty());
+        assertThat(runs.recover()).isEqualTo(3);
+        assertThat(records.get(waiting.id()).orElseThrow().state()).isEqualTo(RunState.AWAITING_CONFIRM);
+        String token = runs.confirmToken(waiting.id(), "viewer");
+        assertThat(token).isNotBlank();
+        assertThat(calls).hasValue(0);
+        Run gone = records.get(lapsed.id()).orElseThrow();
+        assertThat(gone.state()).isEqualTo(RunState.CANCELLED);
+        assertThat(gone.code()).isEqualTo("DRS-9083");
+        assertThat(gone.reason()).contains("not confirmed within");
+        Run quiet = records.get(unreplayable.id()).orElseThrow();
+        assertThat(quiet.state()).isEqualTo(RunState.CANCELLED);
+        assertThat(quiet.reason()).isEqualTo("the confirmation lapsed when the server restarted; nothing ran");
+        assertThat(told).as("nothing ran, so no bell").isEmpty();
+        // confirmed after the restart: it runs
+        runs.confirm(waiting.id(), "viewer", token);
+        waitFor(waiting.id(), RunState.DONE);
+        assertThat(calls).hasValue(1);
+    }
+
     @Test
     void aPersonPastTheirQueueLimitIsRefusedWithDrs9081() {
         for (int i = 0; i < 5; i++) {

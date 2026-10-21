@@ -26,6 +26,8 @@
   BIR-06: report visuals are planned under `Prefer` as model queries are: a heavy visual asks to confirm (`409 DRS-9082`), a slicer on it
   needs a run (`409 DRS-9089`), ad-hoc heavy goes to the background at once; a visual of unknown size waits inline as before (no confirmation
   asked of every visual of a page); without `Prefer` nothing changes (`ModelAcceptanceTest` order 19, `RunServiceTest`).
+  BIR-08: a run waiting for confirmation at a restart keeps waiting (a new token in its run object) until its `confirm.ttl`, instead of
+  failing `DRS-9085` with a bell; a lapsed or unreplayable one is cancelled quietly (`DRS-9083`, the reason in words, no notice).
 
 - **BI runs in the console: sharing, schedules, export and rollup suggestions (2.6.7, BI_RUNS_GUIDE.md).** The run drawer's **Share…**
   takes people and roles from the people picker (chips; names typed comma separated work too) and lists each recipient with the mode the
