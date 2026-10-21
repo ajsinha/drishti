@@ -199,6 +199,19 @@ public final class DatasetService {
             return java.util.Optional.empty();
         }
 
+        /**
+         * The reader's access profile on the item's model (BI_RUNS.md section 18.2b): their security signature (row part and mask part), the model view's hash
+         * and whether the model reads answers asked as the reader. Empty when it cannot be told (a version-1 dataset, no model layer): keep answers personal.
+         */
+        default java.util.Optional<AccessProfile> accessProfile(Principal p, BiStore.Item item) {
+            return java.util.Optional.empty();
+        }
+
+        /** As {@link #accessProfile(Principal, BiStore.Item)} for a model named by reference, through a consumer (or none). */
+        default java.util.Optional<AccessProfile> accessProfileModel(Principal p, String model, String consumer) {
+            return java.util.Optional.empty();
+        }
+
         /** The model's parameters by name (what-if and field parameters), as the caller (or the consumer's envelope) reads the model; empty when it has none. */
         default Map<String, com.ash.drishti.server.bi.layer.ModelDef.Parameter> parameters(Principal p, String model, String consumer) {
             return Map.of();
@@ -480,6 +493,21 @@ public final class DatasetService {
             return java.util.Optional.empty();
         }
         return isModelRef(item) ? g.footprintModel(p, item.id(), consumerOf(item), defineOf(item), paramsOf(item), q) : g.footprint(p, item, q);
+    }
+
+    /**
+     * A reader's access profile on a model: their security signature (the row part and the mask part, BI_RUNS.md section 9.3), the hash of the model view
+     * they read and whether the model reads answers asked as them ({@code personal}: the signature is then theirs alone).
+     */
+    public record AccessProfile(String signature, String view, boolean personal) {}
+
+    /** The caller's access profile on what {@link #asked} would read; empty when it cannot be told (answers then stay personal). */
+    public java.util.Optional<AccessProfile> accessProfile(Principal p, BiStore.Item item) {
+        ModelGateway g = gateway;
+        if (g == null) {
+            return java.util.Optional.empty();
+        }
+        return isModelRef(item) ? g.accessProfileModel(p, item.id(), consumerOf(item)) : g.accessProfile(p, item);
     }
 
     public QueryService.Result ask(Principal p, BiStore.Item item, QueryRequest q, boolean explain) {

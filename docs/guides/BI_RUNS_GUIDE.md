@@ -127,6 +127,14 @@ server decides what each person may do with a run, and the drawer shows only tho
 
 An expired run says when its result was removed, and offers both re-runs.
 
+## The same answer for the same access profile
+
+A report visual's answer is shared between everyone with the same **access profile**: the same roles, masks and row rules on the
+model it reads. When a colleague with your access profile has already drawn the visual on the same data and dates, you get their
+answer at once (**Reused**), or wait for the same run if it is still going; nothing is computed twice. Someone with another mask or
+row rule never gets your answer, and you never get theirs. A visual that depends on who is looking (a filter or value naming you,
+such as `user.name` or `me`, a row rule by your user name, a personal model) stays yours alone.
+
 ## Sharing a run
 
 ![The drawer of a shared, scheduled run in the Terminal theme: bob re-masked, dave sees the same, carol recomputed as them with her own run; the schedule business-days 07:30 with its next firing, and the schedule form set to weekly on Monday at 08:00](img/bi-runs/run-share-schedule.png)
@@ -278,7 +286,7 @@ times this week: a rollup would answer it at once. Review the suggested rollups"
 | `running` | Running, with progress | reading and computing |
 | `storing` | Storing | writing the result |
 | `done` | Done | the result is stored |
-| `reused` | Reused | the same question on the same data was already answered: nothing ran |
+| `reused` | Reused | the same question on the same data was already answered, by you or by someone with the same access profile: nothing ran |
 | `failed` | Failed: *reason* (code) | ended with a problem; the reason says what to do |
 | `cancelled` | Cancelled: *by whom* | by you, an administrator, a newer selection, or the page closing |
 | `expired` | Expired | the result was removed by retention or the storage budget |

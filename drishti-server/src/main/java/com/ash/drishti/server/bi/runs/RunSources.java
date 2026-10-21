@@ -185,8 +185,11 @@ public final class RunSources {
     }
 
     /**
-     * A report visual. Its signature is personal (the caller's name and roles): a report's result is reused only by the same person, never across
-     * people whose row rules could differ by attribute. It has no data version, so it is stored for its runner and never served for another submit.
+     * A report visual. Its answer is shared between viewers with the same <b>access profile</b> (BI_RUNS.md section 18.2b): keyed by their security
+     * signature on the model it reads (row part and mask part), the report's definition, the data version and the resolved dates, so a second viewer with
+     * the same roles, masks and row rules reuses or joins the first one's run. A visual that depends on who views it ({@link BiReportService#accessProfile}:
+     * a filter, parameter or value naming the viewer, a model of personal answers, a live or version-1 dataset), or one that cannot be sized from metadata,
+     * keeps a personal signature (the caller's name and roles) and no data version: stored for its runner, never served for another submit.
      */
     public RunService.Question report(Principal p, String id, String page, String visual, JsonNode state, boolean interaction, String supersedes, String title) {
         Map<String, Object> canon = new LinkedHashMap<>();
@@ -202,9 +205,17 @@ public final class RunSources {
         if (planned != null) {
             canon.put("dates", planned.dates().stream().map(String::valueOf).toList());   // the resolved dates: a reused answer is for the same dates (2.6.7 patch)
         }
+        String version = null;
+        if (planned != null && planned.data().complete()) {
+            Optional<BiReportService.Shared> shared = reports.accessProfile(p, id, page, visual, state);
+            if (shared.isPresent()) {                                         // the access profile, not the person (18.2b)
+                signature = shared.get().signature();
+                version = "dv:" + planned.data().hash() + ":" + shared.get().definition() + ":" + planned.dates();
+            }
+        }
         BiReportService.Titles titles = reports == null ? new BiReportService.Titles(null, null) : reports.titles(p, id, page, visual);
         String named = title != null && !title.isBlank() ? title : titles.visual() != null ? titles.visual() : titles.report();   // BIR-10 (14.2)
-        return new RunService.Question(p, "report", id, page + "/" + visual, named, null, null, canonical(canon), params, signature, null, interaction,
+        return new RunService.Question(p, "report", id, page + "/" + visual, named, null, null, canonical(canon), params, signature, version, interaction,
                 supersedes, () -> {
                     Map<String, Object> body = reports.query(p, id, null, page, visual, state, false);
                     Object rc = body.get("rowCount");
