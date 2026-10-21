@@ -53,17 +53,46 @@ public class RunsConfiguration {
         return p;
     }
 
+    /**
+     * Where run rows, shares, schedules and results are kept: the content store ({@code drishti.bi.runs.store: content}, the default; every node of a
+     * cluster reads the same runs, and the lease is a compare-and-set there), or {@code local}: the identity database and {@code store.dir} of this
+     * node (docs/architecture/CONTENT_STORE.md section 9). Null when local.
+     */
+    static com.ash.drishti.identity.content.ContentStore content(Environment env, ObjectProvider<com.ash.drishti.identity.content.ContentStore> store) {
+        String kind = env.getProperty("drishti.bi.runs.store", "content").trim().toLowerCase(java.util.Locale.ROOT);
+        if ("local".equals(kind)) {
+            return null;
+        }
+        if (!"content".equals(kind)) {
+            throw new IllegalStateException("drishti.bi.runs.store is '" + kind + "': use content (the default) or local");
+        }
+        return store.getIfAvailable();
+    }
+
     @Bean(destroyMethod = "close")
     RunService runService(RunsProperties props, ObjectProvider<HikariDataSource> identity, ObjectProvider<ExecProperties> exec,
             ObjectProvider<MeterRegistry> meters, ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> queries,
-            ObjectProvider<com.ash.drishti.server.net.NetService> net) {
+            ObjectProvider<com.ash.drishti.server.net.NetService> net, Environment env,
+            ObjectProvider<com.ash.drishti.identity.content.ContentStore> contentStore) {
         HikariDataSource ds = identity.getIfAvailable();
-        RunRecords records = ds == null ? new RunRecords.Memory() : new RunRecords.Jdbc(ds);
+        com.ash.drishti.identity.content.ContentStore content = content(env, contentStore);
+        RunRecords records;
+        RunStore results;
+        if (content != null) {
+            RunImport.run(content, ds == null ? null : new RunRecords.Jdbc(ds), ds == null ? null : new RunShares.Jdbc(ds),
+                    ds == null ? null : new RunSchedules.Jdbc(ds), props.store().dir());
+            records = new ContentRunRecords(content, org.springframework.boot.convert.DurationStyle.detectAndParse(
+                    env.getProperty("drishti.bi.store-list-ttl", "1s")).toMillis());
+            results = new ContentRunStore(props, content);
+        } else {
+            records = ds == null ? new RunRecords.Memory() : new RunRecords.Jdbc(ds);
+            results = new RunStore(props);
+        }
         ExecProperties e = exec.getIfAvailable();
         com.ash.drishti.server.net.NetService cluster = net.getIfAvailable();
         String member = cluster == null ? "" : cluster.plannedNodeId();          // in a cluster, runs are named after the member (r-<node>-...): 13.2
         String node = !member.isBlank() ? member : e == null || e.node().isBlank() ? "local" : e.node();
-        RunService runs = new RunService(props, records, new RunStore(props), Clock.systemUTC(), node, RunMetrics.of(meters.getIfAvailable()));
+        RunService runs = new RunService(props, records, results, Clock.systemUTC(), node, RunMetrics.of(meters.getIfAvailable()));
         RunMetrics.gauges(meters.getIfAvailable(), runs);                       // queue, running, store.bytes (17.1)
         runs.planner(new RunPlanner(props.planner(), new RunRates(props.planner())));      // the planner (section 4), its rates learnt from runs
         com.ash.drishti.server.bi.engine.QueryService q = queries.getIfAvailable();
@@ -112,11 +141,13 @@ public class RunsConfiguration {
     /** Scheduled runs (14.1): the owner's question asked again on a schedule, as the owner now; checked every 30 s. */
     @Bean(destroyMethod = "close")
     RunSchedules runSchedules(RunService runs, RunSources sources, ObjectProvider<HikariDataSource> identity, ObjectProvider<Principals> principals,
-            ObjectProvider<com.ash.drishti.engine.time.BusinessDates> dates) {
+            ObjectProvider<com.ash.drishti.engine.time.BusinessDates> dates, Environment env,
+            ObjectProvider<com.ash.drishti.identity.content.ContentStore> contentStore) {
         HikariDataSource ds = identity.getIfAvailable();
+        com.ash.drishti.identity.content.ContentStore content = content(env, contentStore);
         Principals who = principals.getIfAvailable();
         com.ash.drishti.engine.time.BusinessDates d = dates.getIfAvailable();
-        RunSchedules s = new RunSchedules(runs, ds == null ? new RunSchedules.Memory() : new RunSchedules.Jdbc(ds),
+        RunSchedules s = new RunSchedules(runs, content != null ? new ContentRunRecords.Schedules(content) : ds == null ? new RunSchedules.Memory() : new RunSchedules.Jdbc(ds),
                 r -> who == null ? Optional.empty() : sources.replay(r, who.of(r.runner())), d == null ? null : d.zone(),
                 d == null ? com.ash.drishti.common.BusinessCalendar.of("WEEKENDS") : d.calendar(), Clock.systemUTC());
         s.start(java.time.Duration.ofSeconds(30));
@@ -146,9 +177,11 @@ public class RunsConfiguration {
     /** Sharing (section 9.3): share rows in the identity database, recipients bound as themselves, roles expanded to their members when shared. */
     @Bean
     RunSharing runSharing(RunService runs, RunSources sources, ModelCatalog catalog, MqService mq, ObjectProvider<HikariDataSource> identity,
-            ObjectProvider<Principals> principals, ObjectProvider<com.ash.drishti.server.collab.DirectoryService> directory) {
+            ObjectProvider<Principals> principals, ObjectProvider<com.ash.drishti.server.collab.DirectoryService> directory, Environment env,
+            ObjectProvider<com.ash.drishti.identity.content.ContentStore> contentStore) {
         HikariDataSource ds = identity.getIfAvailable();
-        RunShares shares = ds == null ? new RunShares.Memory() : new RunShares.Jdbc(ds);
+        com.ash.drishti.identity.content.ContentStore content = content(env, contentStore);
+        RunShares shares = content != null ? new ContentRunRecords.Shares(content) : ds == null ? new RunShares.Memory() : new RunShares.Jdbc(ds);
         Principals who = principals.getIfAvailable();
         com.ash.drishti.server.collab.DirectoryService dir = directory.getIfAvailable();
         return new RunSharing(runs, shares, catalog::bind, mq,

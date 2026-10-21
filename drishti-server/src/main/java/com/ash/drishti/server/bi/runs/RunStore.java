@@ -51,7 +51,7 @@ import java.util.stream.Stream;
  * <p>As built, the rows are stored as JSON inside {@code answer.json}, not as {@code result.parquet} (section 8.1): the engine's answer is
  * already in memory when the run ends, under {@code store.max-result-rows}.
  */
-public final class RunStore {
+public class RunStore {
 
     /** Guards the snapshot versions (promote, rewrite). */
     private final java.util.concurrent.locks.ReentrantLock snapshots = new java.util.concurrent.locks.ReentrantLock();

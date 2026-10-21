@@ -86,6 +86,15 @@ public final class RunSchedules {
         void delete(String id);
 
         List<Schedule> all();
+
+        /**
+         * Takes a due schedule for this node: writes {@code next} only while the stored schedule is still {@code due} (a store every node shares
+         * lets exactly one node fire it); true when this node took it.
+         */
+        default boolean claim(Schedule due, Schedule next) {
+            save(next);
+            return true;
+        }
     }
 
     /** In memory: tests and a server without an identity database. */
@@ -284,6 +293,9 @@ public final class RunSchedules {
         for (Schedule s : store.all()) {
             if (!s.enabled() || s.nextAt() == null || s.nextAt().isAfter(now)) {
                 continue;
+            }
+            if (!store.claim(s, s.with(s.schedule(), s.enabled(), s.lastRun(), next(s.schedule(), now)))) {
+                continue;                                                       // another node fired it
             }
             String last;
             try {
