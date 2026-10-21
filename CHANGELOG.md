@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **New: data loads overrides saved through Admin apply on every node** (`loads/config/<pack>.yaml` in the content store, read on every
+  use; the old `<data>/loads/config` files imported once and kept; `drishti.loads.config-store: file` for one node). Nothing under
+  `config/bi` is written by the UI any more (BI content is already in the store), so there is nothing to share there.
+
 - **New: connectors catch up with their pack's template.** A connector file generated from an older template (for example `macro-store`
   without `region-economy`, `risk-store` without `trade-valuation`) is compared with the pack's current template at start and every
   minute: missing kinds and settings are added automatically, keeping every edit (`template-updates: additive`, the default, in

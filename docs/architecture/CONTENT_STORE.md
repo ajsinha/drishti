@@ -320,7 +320,7 @@ store every time. A decision is a compare-and-set: two approvers on two nodes ca
 `loads/<pack>.json` (the announcements and late flags of one pack), read every time and changed by compare-and-set with a retry on a
 fresh read, so two nodes receiving announcements at once lose none, a batch announced on one node is a duplicate on the other, and
 a late notice goes out once. A pack's old file `<data>/loads/<pack>.json` is imported the first time the pack is read (the document's
-existence is the marker) and left in place. Per-pack overrides (`<data>/loads/config/<pack>.yaml`) are configuration: section 10.
+existence is the marker) and left in place. Per-pack overrides saved through Admin are the shared documents `loads/config/<pack>.yaml` (section 11; `drishti.loads.config-store`: `content`, default, or `file`); the folder `<data>/loads/config` is imported once (`system/imports/loads-config.json`) and kept.
 
 ### 10.7 Left on each node, on purpose
 

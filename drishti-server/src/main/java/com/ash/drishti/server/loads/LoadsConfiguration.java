@@ -49,8 +49,11 @@ public class LoadsConfiguration {
     }
 
     @Bean
-    public LoadsConfig.Overrides loadsOverrides(LoadsProperties props) {
-        return new LoadsConfig.Overrides(Path.of(props.dir()), props.defaultNotifyRoles(), props.smokeMax());
+    public LoadsConfig.Overrides loadsOverrides(LoadsProperties props, com.ash.drishti.identity.content.ContentStore content,
+            org.springframework.core.env.Environment env) {
+        // an override saved through Admin applies on every node (CONTENT_STORE.md section 11); "file" keeps it in this node's folder
+        boolean files = "file".equalsIgnoreCase(env.getProperty("drishti.loads.config-store", "content").trim());
+        return new LoadsConfig.Overrides(Path.of(props.dir()), props.defaultNotifyRoles(), props.smokeMax(), files ? null : content);
     }
 
     @Bean
