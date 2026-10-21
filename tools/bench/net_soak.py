@@ -36,7 +36,9 @@ through the console and compares: an answer equal to the reference is right, an 
 History (HISTORY_QUERIES.md, 2.6.5): the load's users ask ``/v/{kind}/{id}/history`` (--history-share of their requests: 30 and 60 days,
 3M, DIFF, now and then "known at"), and the checked set holds history requests of trades of every system (MUREX ones only c holds), of
 counterparties and of --equities, asked as the administrator and as a viewer (masked fields), compared row by row (dates, values, changed
-flags, masked columns) with the reference (tools/bench/soak_check.py). While a node is down an answer may be partial or refused only naming
+flags, masked columns) with the reference (tools/bench/soak_check.py). Every range is asked in both roles, and the checker asks the twin
+(the same entity and range in the other role) of the same node at once, so the administrator and the viewer meet in both orders within
+the history cache's life (SOAK2-01; ``maskPairs`` in the report counts the pairs per order, peer-held or not, and their wrong answers). While a node is down an answer may be partial or refused only naming
 it (DRS-5052) or a time-out (DRS-1014); a short answer not marked partial, or DRS-1013, is wrong.
 
 Long runs: every --sample-every seconds each process's resident memory, heap (used, and live data after the last collection), open files
@@ -237,6 +239,7 @@ class Soak:
             self.dates = trades.business_days(self.dates[-1], a.days)
         self.known_at = None                               # the instant "known at" history requests name: set once the lakes are built
         self.mask_coverage: dict | None = None             # the reference's viewer histories and how many mask what they must
+        self.pairs: dict = {}                              # admin/viewer pairs asked back to back (SOAK2-01), see pair_count
 
     def url(self, name: str) -> str:
         return f"http://{HOST}:{self.port[name]}"
@@ -348,8 +351,9 @@ class Soak:
 
     def history_requests(self, r: random.Random) -> list[dict]:
         """History of --history-sample trades of every system (MUREX ones only c holds: peer-only from a and b), half as many
-        counterparties and the --equities, each asked twice, as the administrator and as a viewer (masked fields), with two different
-        ranges of HISTORY_ASKS, so every range is asked in both roles; all to the last date."""
+        counterparties and the --equities, each with two different ranges of HISTORY_ASKS, each range as the administrator and as a viewer
+        (masked fields), so every range is asked in both roles; all to the last date. The two roles of one range share a ``pair`` key: the
+        checker asks the twin straight after (SOAK2-01: the history cache served one role's answer to the other)."""
         if self.a.history_share <= 0:
             return []
         n = max(1, self.a.history_sample)
@@ -358,10 +362,36 @@ class Soak:
         ids += [("equity", e.strip()) for e in self.a.equities.split(",") if e.strip()]
         out = []
         for k, (kind, ident) in enumerate(ids):
-            for j, role in enumerate(("admin", "viewer")):
-                out.append({"what": "history", "kind": kind, "id": ident, "params": self.history_params(HISTORY_ASKS[(k + 3 * j) % len(HISTORY_ASKS)]),
-                            "role": role, "date": self.dates[-1]})
+            for j in range(2):
+                params = self.history_params(HISTORY_ASKS[(k + 3 * j) % len(HISTORY_ASKS)])
+                for role in ("admin", "viewer"):
+                    out.append({"what": "history", "kind": kind, "id": ident, "params": dict(params), "role": role,
+                                "date": self.dates[-1], "pair": f"{k}:{j}"})
         return out
+
+    @staticmethod
+    def twins(reqs: list[dict]) -> dict:
+        """(pair, role) -> the request: a history request's twin is the same entity and range in the other role."""
+        return {(q["pair"], q["role"]): q for q in reqs if q.get("pair")}
+
+    @staticmethod
+    def peer_held(node: str, q: dict) -> bool:
+        """The node holds none of the entity: its history comes through a peer (MUREX trades only on c; ENDUR and CALYPSO trades only
+        on a and b; counterparties on a and c)."""
+        if q.get("kind") == "trade":
+            return (node != "c") if str(q.get("id", "")).startswith("MX-") else node == "c"
+        return node == "b" if q.get("kind") == "counterparty" else False
+
+    def pair_count(self, node: str, first: dict, verdicts: tuple[str, str]) -> None:
+        """Count one pair asked back to back: per order (adminFirst, viewerFirst), how many peer-held, and wrong answers of each."""
+        order = "adminFirst" if first.get("role") == "admin" else "viewerFirst"
+        c = self.pairs.setdefault(order, {"pairs": 0, "peerHeld": 0, "wrongFirst": 0, "wrongSecond": 0, "wrongSecondPeerHeld": 0})
+        peer = self.peer_held(node, first)
+        c["pairs"] += 1
+        c["peerHeld"] += peer
+        c["wrongFirst"] += verdicts[0] == "wrong"
+        c["wrongSecond"] += verdicts[1] == "wrong"
+        c["wrongSecondPeerHeld"] += verdicts[1] == "wrong" and peer
 
     def history_params(self, ask: dict) -> dict:
         """An ask of HISTORY_ASKS with "now" and "day:i" filled in (from and to in order)."""
@@ -477,6 +507,7 @@ class Soak:
 
     def checker(self, stop_at: float, stats: dict, wrong: soak_check.WrongLog) -> None:
         r = random.Random(7)
+        twins = self.twins(self.reqs)
         while time.time() < stop_at:
             q = r.choice(self.reqs)
             up = [n for n in NODES if n in self.procs]
@@ -484,17 +515,25 @@ class Soak:
                 time.sleep(0.5)
                 continue
             n = r.choice(up)
-            status, body = self.ask(self.url(n), q)
-            verdict, why = self.judge_why(q, status, body)     # partial only when it names a node that is down (killed by then)
-            if verdict == "unavailable" and n in self.down:
-                verdict = "asked-a-node-going-down"
-            key = f"{q['what']}:{verdict}"
-            stats[key] = stats.get(key, 0) + 1
-            if verdict in soak_check.ERRORS:
-                self.errors.append({"t": round(time.time() - self.t0, 1), "what": f"checker {q['what']}", "verdict": verdict})
-            if verdict == "wrong":                             # every one: time, node, request, rule; the first 200 with body and diff
-                wrong.add(round(time.time() - self.t0, 1), n, q, status, body, why, self.essence(q, body), q["ref"])
+            first = self.check_one(n, q, stats, wrong)
+            twin = twins.get((q.get("pair"), "viewer" if q.get("role") == "admin" else "admin")) if q.get("pair") else None
+            if twin is not None and n in self.procs:       # the other role, same node, same range, at once (SOAK2-01)
+                self.pair_count(n, q, (first, self.check_one(n, twin, stats, wrong)))
             time.sleep(self.a.check_every)
+
+    def check_one(self, n: str, q: dict, stats: dict, wrong: soak_check.WrongLog) -> str:
+        """Ask one request of node n, judge it, count it; the verdict."""
+        status, body = self.ask(self.url(n), q)
+        verdict, why = self.judge_why(q, status, body)     # partial only when it names a node that is down (killed by then)
+        if verdict == "unavailable" and n in self.down:
+            verdict = "asked-a-node-going-down"
+        key = f"{q['what']}:{verdict}"
+        stats[key] = stats.get(key, 0) + 1
+        if verdict in soak_check.ERRORS:
+            self.errors.append({"t": round(time.time() - self.t0, 1), "what": f"checker {q['what']}", "verdict": verdict})
+        if verdict == "wrong":                             # every one: time, node, request, rule; the first 200 with body and diff
+            wrong.add(round(time.time() - self.t0, 1), n, q, status, body, why, self.essence(q, body), q["ref"])
+        return verdict
 
     # -- the console ------------------------------------------------------------------------------------------------------------
     def signed_in(self):
@@ -683,6 +722,7 @@ class Soak:
         except (ValueError, IndexError):
             out["users"] = users_out[-2000:]
         out["checker"] = stats
+        out["maskPairs"] = self.pairs
         out["wrong"] = wrong.report()                      # every wrong answer (SOAK-08): byKind, all, samples
         out["wrongAnswers"] = sum(v for k, v in stats.items() if k.endswith(":wrong"))
         out["checked"] = sum(stats.values())

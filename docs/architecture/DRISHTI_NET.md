@@ -492,7 +492,10 @@ The soak also exercises history queries ([HISTORY_QUERIES.md](HISTORY_QUERIES.md
   from **a** and **b**), half as many counterparties and the `--equities`: about 140 distinct entities, each asked twice, as the
   administrator and as a **viewer**, with two different ranges, so that each of ten ranges (`days` 5, 30, 60, `range` 1M and 3M,
   `diff=true` over 10 and 30 days, an explicit `from`/`to` with and without `diff`, `knownAt` an instant taken after the lakes were
-  built) is asked in both roles. The soak's servers mask fields its synthetic data really has (`--drishti.security.redact=PRICE,
+  built) is asked in both roles. Since soak 3 (SOAK2-01) each entity's two ranges are each asked in **both** roles, and whenever the
+  checker picks one of them it asks the twin (the same entity and range in the other role) of the same node at once, so the administrator
+  and the viewer meet back to back in both orders, well within the history cache's life; `soak.json` `maskPairs` counts the pairs per
+  order (`adminFirst`, `viewerFirst`), how many were peer-held on the node asked, and the wrong first and second answers. The soak's servers mask fields its synthetic data really has (`--drishti.security.redact=PRICE,
   TRADER_ID,NAME`; the default list names fields such as `trader` that these trades do not hold, DRS-6011): a viewer's trade history
   must show `PRICE` (it moves when a trade is amended) and a counterparty's `NAME` masked, as a masked column, the mask on every row
   and never a value in a diff; otherwise the answer is wrong (SOAK-09: the 2026-10-20 soak checked 35 distinct histories, none of
