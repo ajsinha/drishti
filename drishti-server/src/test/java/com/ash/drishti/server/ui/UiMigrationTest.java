@@ -20,6 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.engine.search.SearchQuery;
@@ -186,5 +187,31 @@ class UiMigrationTest {
                 .andReturn().getResponse().getHeader("X-Drishti-Board")).isNull();
         mvc.perform(put("/api/v1/ui/packs/trading").header("Authorization", as("bo", "boss")).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"screens\":\"tiles\"}")).andExpect(status().isBadRequest());
+    }
+
+    /** P4b: the designer's "Open as board" and "Export Sutra" through P5's converter, and the board-local chips as Chip Store candidates. */
+    @Test
+    @Order(5)
+    void theDesignerConvertsOneSutraAndListsTheCandidates() throws Exception {
+        String sutra = java.nio.file.Files.readString(java.nio.file.Path.of("../config/packs/trading/sutras/pages/counterparty-trades.v1.sutra.yaml"));
+        String body = json.writeValueAsString(Map.of("sutra", sutra));
+        JsonNode r = json.readTree(mvc.perform(post("/api/v1/ui/convert/sutra").header("Authorization", as("bo", "boss"))
+                .contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+        assertThat(r.path("pack").asText()).isEqualTo("trading");
+        assertThat(r.path("document").path("board").asText()).isEqualTo("trading-counterparty-trades");
+        assertThat(r.path("document").path("params").path("id").path("of").asText()).isEqualTo("trading/counterparty-trades");
+        assertThat(r.path("locals").toString()).contains("local-pay30");
+        JsonNode back = json.readTree(mvc.perform(post("/api/v1/ui/convert/board").header("Authorization", as("bo", "boss"))
+                .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of("document", r.path("document")))))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+        assertThat(back.path("yaml").asText()).contains("sutra: trading-counterparty-trades").contains("Payments, next 30 days");
+        mvc.perform(post("/api/v1/ui/convert/sutra").header("Authorization", as("bo", "boss")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"sutra\":\"block: x\"}")).andExpect(status().isBadRequest());
+        JsonNode list = json.readTree(mvc.perform(get("/api/v1/ui/candidates").param("pack", "trading").header("Authorization", as("bo", "boss")))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+        assertThat(list.toString()).contains("\"chip\":\"local-pay30\"").doesNotContain("local-header");
+        mvc.perform(get("/api/v1/ui/candidates/trading/trading-counterparty-trades/local-pay30").header("Authorization", as("bo", "boss")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.document.chip").value("local-pay30"));
+        mvc.perform(get("/api/v1/ui/candidates").header("Authorization", as("max", "masked"))).andExpect(status().isForbidden());
     }
 }

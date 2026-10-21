@@ -137,6 +137,25 @@ public final class PackScreens {
         modes.put(pack, mode);
     }
 
+    /** The packs on disk (a folder with a {@code pack.yaml}), by folder name: the Chip Store's candidate list reads every one (P4b). */
+    public List<String> packs() {
+        try (var s = Files.list(packsDir)) {
+            return s.filter(d -> Files.isRegularFile(d.resolve("pack.yaml"))).map(d -> d.getFileName().toString()).sorted().toList();
+        } catch (IOException e) {
+            return List.of();
+        }
+    }
+
+    /** One Sutra's text converted as a screen of {@code pack} by P5's converter (the designer's "Open as board", P4b); null when it is no Sutra. */
+    public Conversion convert(String pack, String text) {
+        return new com.ash.drishti.rachana.ui.migrate.PageConverter(chips).convert(pack, text);
+    }
+
+    /** The Sutra a board paints as (P5's {@link BoardSutra}), unchecked: the designer's "Export Sutra" (P4b); empty for a board with no entity id. */
+    public Optional<ObjectNode> sutraOf(BoardDoc b) {
+        return BoardSutra.toSutra(b, ref -> chips.find(ref).map(ChipCatalog.Entry::doc));
+    }
+
     /** The pack owning a kind, or null. */
     public String packOf(String kind) {
         Map<String, String> m = kindPack;
