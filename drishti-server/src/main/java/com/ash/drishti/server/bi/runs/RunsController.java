@@ -211,16 +211,15 @@ public class RunsController {
         Instant from = since(since, Instant.now());
         java.util.Set<String> states = state == null || state.isBlank() ? java.util.Set.of()
                 : java.util.Arrays.stream(state.split(",")).map(String::strip).filter(s -> !s.isEmpty()).collect(java.util.stream.Collectors.toSet());
-        List<Run> all = new java.util.ArrayList<>(runs().list(p.user(), before, 500));
+        // mine: the caller's own runs; shared: the runs shared with them (the Runs tab's "Who" filter, BIR-03)
+        List<Run> all = new java.util.ArrayList<>(mine ? runs().list(p.user(), before, 500) : List.of());
         java.util.Set<String> seen = new java.util.HashSet<>(all.stream().map(Run::id).toList());
         final Instant until = before;
-        for (RunShares.Share s : sharing.shares().to(p.user(), 200)) {         // runs shared with the caller (marked in the console)
+        for (RunShares.Share s : shared ? sharing.shares().to(p.user(), 200) : List.<RunShares.Share>of()) {   // marked in the console
             runs().get(s.runId()).filter(r -> seen.add(r.id())).filter(r -> until == null || r.submittedAt().isBefore(until)).ifPresent(all::add);
         }
         all.sort(java.util.Comparator.comparing(Run::submittedAt).reversed().thenComparing(Run::id, java.util.Comparator.reverseOrder()));
         List<Run> page = all.stream()
-        // every listed run is the caller's own until runs are shared (R6): mine=false (the Runs tab's "Shared with me") lists none (BIR-03)
-        List<Run> page = !mine ? List.of() : runs().list(p.user(), before, 500).stream()
                 .filter(r -> from == null || !r.submittedAt().isBefore(from))
                 .filter(r -> states.isEmpty() || states.contains(r.state().wire()))
                 .filter(r -> source == null || source.isBlank() || r.sourceType().equals(source))
