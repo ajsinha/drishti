@@ -69,6 +69,31 @@ public final class ConsumerQueries implements DatasetService.ModelGateway {
     }
 
     @Override
+    public java.util.Optional<com.ash.drishti.server.bi.engine.Footprints.Footprint> footprint(Principal p, BiStore.Item item, QueryRequest q) {
+        try {
+            if (catalog.isVersion1(p, item)) {
+                return java.util.Optional.empty();
+            }
+            MqService.Bound b = catalog.bindItem(p, item);
+            return mq.footprint(b, of(b.view(), q));
+        } catch (RuntimeException e) {
+            return java.util.Optional.empty();                               // not sized: it runs as before and says why if it fails
+        }
+    }
+
+    @Override
+    public java.util.Optional<com.ash.drishti.server.bi.engine.Footprints.Footprint> footprintModel(Principal p, String model, String consumer, Map<String, String> define,
+            Map<String, Object> params, QueryRequest q) {
+        try {
+            MqService.Bound b = consumer == null ? catalog.bind(p, model) : catalog.bindVia(p, model, consumer);
+            ModelQuery mq0 = withDefine(of(b.view(), q).withModel(model), define);
+            return mq.footprint(b, params == null || params.isEmpty() ? mq0 : withParams(mq0, params));
+        } catch (RuntimeException e) {
+            return java.util.Optional.empty();
+        }
+    }
+
+    @Override
     public Dataset dataset(Principal p, String model) {
         return catalog.bind(p, model).view().flat();
     }

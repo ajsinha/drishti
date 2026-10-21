@@ -82,6 +82,7 @@ class ModelAcceptanceTest {
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
     @Autowired StandingQueries standing;
+    @Autowired com.ash.drishti.server.bi.runs.RunService runService;
     final ObjectMapper json = new ObjectMapper();
 
     static void day(String day, double scale) throws Exception {
@@ -932,5 +933,35 @@ class ModelAcceptanceTest {
         assertThat(again.path("version").asInt()).isEqualTo(2);
         assertThat(again.path("dataset").path("item").asText()).isEqualTo(dataset);
         assertThat(ok(call("GET", "/api/v1/bi/runs/" + id, reader("wes"), null)).path("promotedTo").asText()).isEqualTo(name + "@2");
+    }
+    /**
+     * BIR-06: a report visual is planned under {@code Prefer} as a model query is (BI_RUNS 5, 6): sized as ad-hoc heavy above the confirm threshold it
+     * answers {@code 409 DRS-9082} with the estimate and a token, and confirmed it draws what the synchronous call draws; as an interaction it answers
+     * {@code 409 DRS-9089} and nothing runs; without {@code Prefer} it answers {@code 200} as before. Settings tightened so this lake's day is "heavy".
+     */
+    @Test @Order(19)
+    void aHeavyReportVisualAsksToConfirmAndASlicerOnItNeedsARun() throws Exception {
+        String visual = "{\"page\":\"main\",\"visual\":\"by-desk\",\"state\":{\"dates\":{\"from\":\"" + DAY + "\",\"to\":\"" + DAY + "\"}}}";
+        JsonNode sync = reportVisual("rita", "by-desk");                         // its layers are built: the planner knows its size
+        com.ash.drishti.server.bi.runs.RunPlanner before = runService.planner();
+        var tight = new com.ash.drishti.server.bi.runs.PlannerSettings(10, 0, 2, 0, 0, true, 5_000_000_000L, 0.5, 2.0, 20, 50_000_000, 300_000, 2_000, 0.05, 32);
+        runService.planner(new com.ash.drishti.server.bi.runs.RunPlanner(tight, new com.ash.drishti.server.bi.runs.RunRates(tight)));
+        try {
+            var first = callPrefer("/api/v1/bi/reports/" + REPORT + "/query", reader("rita"), visual).andReturn().getResponse();
+            assertThat(first.getStatus()).as(first.getContentAsString()).isEqualTo(409);
+            JsonNode problem = json.readTree(first.getContentAsString());
+            assertThat(problem.toString()).contains("DRS-9082");
+            assertThat(problem.path("estimate").path("basis").asText()).isNotEqualTo("unknown");
+            assertThat(byDesk(viaRunFrom(first, reader("rita")))).isEqualTo(byDesk(sync));
+            // a slicer on it: needs a background run, refused at once
+            String slicer = visual.replace("{\"page\"", "{\"interaction\":true,\"page\"");
+            var sel = callPrefer("/api/v1/bi/reports/" + REPORT + "/query", reader("rita"), slicer).andReturn().getResponse();
+            assertThat(sel.getStatus()).as(sel.getContentAsString()).isEqualTo(409);
+            assertThat(sel.getContentAsString()).contains("DRS-9089");
+            // without Prefer: unchanged
+            assertThat(byDesk(reportVisual("rita", "by-desk"))).isEqualTo(byDesk(sync));
+        } finally {
+            runService.planner(before);
+        }
     }
 }

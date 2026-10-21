@@ -513,6 +513,20 @@ public final class BiReportService {
     }
 
     /**
+     * What one visual of a stored report would read under the page's state, from metadata only (BI runs' planner, BI_RUNS.md sections 4 to 6; BIR-06): the
+     * visual's main question as {@link #query} asks it. Empty when it cannot be sized without reading (a staged table, a top filter, a version-1 dataset) or
+     * the visual does not prepare (the run then fails with the reason, as the synchronous call would).
+     */
+    public java.util.Optional<com.ash.drishti.server.bi.engine.Footprints.Footprint> footprint(Principal p, String id, String pageId, String visualId, JsonNode stateJson) {
+        try {
+            Prepared pre = prepare(p, id, null, pageId, visualId, stateJson);
+            return datasets.footprint(p, pre.dsItem(), pre.built().query());
+        } catch (RuntimeException e) {
+            return java.util.Optional.empty();
+        }
+    }
+
+    /**
      * Every row of one table-like visual (a table, a matrix, a multi-row card) up to {@code maxRows} + 1, for a statement's band and an export's table: the
      * visual's query asked with that limit and answered past {@code drishti.bi.query.json-max-rows}, so nothing is cut at what one screen shows (QA2-01). The
      * row past {@code maxRows} tells the caller the table goes on, so it says so.

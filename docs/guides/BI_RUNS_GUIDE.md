@@ -64,7 +64,9 @@ A question that would read a great deal of data (above a minute, or 500 million 
 * **Not now** leaves it. Nothing was read. `Esc` does the same.
 
 When the size of a table is not known, the card says "We cannot estimate this yet: it reads tables whose size we do not know. It may take a
-long time." Such a question always asks first.
+long time." Such a question always asks first, when you ask it yourself (a model query, SQL, the CLI). A report's visual of unknown size does
+not ask: it draws as usual and becomes a run card if it takes longer than the inline wait, so a page on such a source never asks for every
+visual. A report's visual whose size is known asks as any question does.
 
 ## A selection that needs a run
 

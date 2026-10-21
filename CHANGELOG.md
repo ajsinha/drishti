@@ -23,6 +23,9 @@
   hash differently after a restart; the hash is now taken of a canonical text (datasets by alias, masks sorted) and the masks keep their
   order (`ModelViewHashTest`, fresh JVMs included). The hash of every model with masks changes once with this release: its layers and stored
   results are built again once.
+  BIR-06: report visuals are planned under `Prefer` as model queries are: a heavy visual asks to confirm (`409 DRS-9082`), a slicer on it
+  needs a run (`409 DRS-9089`), ad-hoc heavy goes to the background at once; a visual of unknown size waits inline as before (no confirmation
+  asked of every visual of a page); without `Prefer` nothing changes (`ModelAcceptanceTest` order 19, `RunServiceTest`).
 
 - **BI runs in the console: sharing, schedules, export and rollup suggestions (2.6.7, BI_RUNS_GUIDE.md).** The run drawer's **Share…**
   takes people and roles from the people picker (chips; names typed comma separated work too) and lists each recipient with the mode the

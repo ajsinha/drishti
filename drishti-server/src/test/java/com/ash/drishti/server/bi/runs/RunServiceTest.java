@@ -357,6 +357,24 @@ class RunServiceTest {
         assertThat(calls).hasValue(0);
     }
 
+    /** BIR-06: a report visual sized as heavy keeps its decision; one of unknown size waits inline (no confirmation asked of every visual of a page). */
+    @Test
+    void aReportVisualOfUnknownSizeWaitsInlineAndAKnownHeavyOneKeepsItsDecision() {
+        RunPlanner.Planned known = heavy(true, java.util.Optional.empty());
+        assertThat(RunSources.reportPlan(known)).isSameAs(known);
+        RunEstimate unknown = new RunEstimate(null, null, null, null, null, null, RunEstimate.Basis.UNKNOWN, 2, 2, false, 0, "the connector cannot count");
+        RunPlanner.Planned u = RunSources.reportPlan(new RunPlanner.Planned(unknown, new RunEstimator.Decision(Tier.AD_HOC_HEAVY, true, java.util.Optional.empty()),
+                new DataVersionVector(), List.of(), null));
+        assertThat(u.tier()).isEqualTo(Tier.INTERACTIVE);
+        assertThat(u.confirm()).isFalse();
+        assertThat(u.refusal()).isEmpty();
+        AtomicInteger calls = new AtomicInteger();
+        RunService.Outcome o = runs.submit(planned(calls, u, false), inline(2000));
+        assertThat(o.inline()).isTrue();
+        assertThat(calls).hasValue(1);
+        assertThat(RunSources.reportPlan(null)).isNull();
+    }
+
     Run waitFor(String id, RunState state) throws InterruptedException {
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
         while (System.nanoTime() < deadline) {
