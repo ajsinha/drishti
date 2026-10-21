@@ -155,6 +155,28 @@ public final class ModelCatalog {
 
     private volatile SqlViews sqlViews;
 
+    /**
+     * Where a promoted run's snapshot is read (docs/architecture/BI_RUNS.md 9.4; set by the runs module: the model layer does not depend on it). The rows are
+     * the promoter's view, masks included, read-only; a snapshot is served only to the dataset it was promoted to (the same name and token).
+     */
+    public interface Snapshots {
+        /** The snapshot's rows; DRS-9108 when there is none, or it was promoted to another dataset. */
+        Snapshot read(String dataset, String name, String version, String token);
+    }
+
+    /** A snapshot's rows (columns named as the run's answer), the business date they are as of (null: none) and the version read. */
+    public record Snapshot(QueryService.Result result, java.time.LocalDate asOf, int version) {}
+
+    private volatile Snapshots snapshots;
+
+    public void snapshots(Snapshots s) {
+        this.snapshots = s;
+    }
+
+    public Snapshots snapshots() {
+        return snapshots;
+    }
+
     public void sqlViews(SqlViews views) {
         this.sqlViews = views;
     }

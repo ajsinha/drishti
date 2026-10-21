@@ -49,7 +49,7 @@ public final class DatasetDefParser {
 
     static final Set<String> TOP = Set.of("rachana", "expressions", "dataset", "version", "id", "source", "grain", "columns", "time", "refresh", "security", "ai", "tests", "extends",
             "derive", "group",
-            "where", "rollups", "layout", "title", "description", "owner", "tags", "endorsement", "endorsedBy", "audience", "sample", "generated");
+            "where", "rollups", "layout", "title", "description", "owner", "tags", "endorsement", "endorsedBy", "audience", "sample", "generated", "provenance");
     private static final Set<String> COLUMN_KEYS = Set.of("type", "path", "expr", "role", "meaning", "references", "of", "unit", "additive", "aggregate", "format", "id",
             "description", "title", "term", "means", "sign");
 
@@ -315,6 +315,18 @@ public final class DatasetDefParser {
             y.error("DRS-9100", "source", "`source:` is a mapping");
             return null;
         }
+        if (s.has("run")) {                                                    // a promoted run's snapshot (BI_RUNS.md 9.4)
+            y.unknownKeys(s, Set.of("run", "version", "token"), "DRS-9100", "source");
+            String name = LayerYaml.text(s, "run", "");
+            if (!name.matches("[a-z0-9][a-z0-9._-]{0,127}")) {
+                y.error("DRS-9100", "source.run", "a run snapshot's name is lower-case letters, digits, dot, dash or underscore, not '" + name + "'");
+            }
+            String version = s.path("version").isMissingNode() ? "latest" : s.path("version").asText("latest");
+            if (!version.equals("latest") && !version.matches("[1-9][0-9]{0,8}")) {
+                y.error("DRS-9100", "source.version", "a run snapshot's version is a number (1, 2, ...) or latest, not '" + version + "'");
+            }
+            return DatasetDef.Source.ofRun(name, version, LayerYaml.text(s, "token", ""));
+        }
         boolean sqlView = s.has("sql");
         boolean model = s.has("model") && !sqlView;
         boolean query = s.has("query") && !s.has("model");               // a model source's `query:` is its model query, not a connector's SQL
@@ -322,7 +334,7 @@ public final class DatasetDefParser {
         boolean kind = s.has("kind");
         int n = (query ? 1 : 0) + (python ? 1 : 0) + (model ? 1 : 0) + (kind ? 1 : 0) + (sqlView ? 1 : 0);
         if (n != 1) {
-            y.error("DRS-9100", "source", n == 0 ? "`source:` names a `kind` (with an optional pack and connector), a connector `query`, a `python` Transform, a `model` or a SQL view (`sql` and `model`)"
+            y.error("DRS-9100", "source", n == 0 ? "`source:` names a `kind` (with an optional pack and connector), a connector `query`, a `python` Transform, a `model`, a SQL view (`sql` and `model`) or a promoted run (`run`)"
                     : "a dataset has exactly one source; this one names " + n + " (kind, query, python, model, sql)");
             return null;
         }

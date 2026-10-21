@@ -28,7 +28,7 @@ is executed: it is parsed, validated, compiled to SQL with **bound values**, and
 Contents: [1](#1-the-file) the file · [2](#2-tables-and-columns) tables and columns · [3](#3-relationships-and-how-queries-join) relationships ·
 [4](#4-measures-and-the-expression-language) measures and expressions (4.1: time intelligence, 4.2: Python measures) · [5](#5-hierarchies) hierarchies · [6](#6-security-row-rules-and-masks) security ·
 [7](#7-modes-layers-and-rollups) modes, layers and rollups (7.2: scheduled refresh) · [8](#8-the-query) the query · [9](#9-problems-and-drs-codes) problems and codes ·
-[10](#10-what-is-not-built) what is not built (live tables: [7.1](#71-live-tables-phase-5)) · [11](#11-composed-and-derived-datasets) composed and derived datasets · [12](#12-build-a-dataset-in-the-browser-the-wizard) the wizard · [13](#13-model-layer-datasets-rachana-2-wave-w1) model-layer datasets (W1) · [14](#14-derivation-subset-filter-grain-derive-group-22-wave-a) derivation: subset, filter, grain, derive, group · [15](#15-the-dataset-wizard-version-2-wave-a) the dataset wizard v2, SQL views (wave A).
+[10](#10-what-is-not-built) what is not built (live tables: [7.1](#71-live-tables-phase-5)) · [11](#11-composed-and-derived-datasets) composed and derived datasets · [12](#12-build-a-dataset-in-the-browser-the-wizard) the wizard · [13](#13-model-layer-datasets-rachana-2-wave-w1) model-layer datasets (W1) · [14](#14-derivation-subset-filter-grain-derive-group-22-wave-a) derivation: subset, filter, grain, derive, group · [15](#15-the-dataset-wizard-version-2-wave-a) the dataset wizard v2, SQL views (wave A) · [16](#16-a-runs-result-as-a-dataset-snapshot-source-run) a run's result as a snapshot.
 Expressions (measures, derived columns, filters, row rules) are DEL v2 since 2.2.0: [EXPRESSIONS.md](EXPRESSIONS.md); the older syntax in the examples
 below is refused since 2.2.0 (`DRS-9100`, with the DEL v2 text as the fix); `drishti.py bi migrate --expressions` converts a file.
 
@@ -670,9 +670,7 @@ Validation never throws: it returns every problem with its code and the path of 
 
 ## 10. What is not built
 
-**A run's result promoted to a dataset snapshot** (`source: {run: <name>, version: N}`, a draft dataset over `<data>/bi-runs/snapshots/<name>/v<N>/`,
-[BI_RUNS.md section 9.4](../architecture/BI_RUNS.md#94-promoting-to-a-dataset-snapshot)) is designed, not built in 2.6.7's server lane yet:
-`POST /api/v1/bi/runs/{id}/promote` answers `400` saying so. A run's result can be exported (CSV, Excel) and shared meanwhile; a rollup a
+**A run's result promoted to a dataset snapshot is built (2.6.7)**: see [section 16](#16-a-runs-result-as-a-dataset-snapshot-source-run). A rollup a
 repeated heavy question needs is suggested in Admin → BI → Runs and added to the model's draft when accepted (see [section 7](#7-modes-layers-and-rollups)).
 
 Marked so nothing is mistaken for working: a Python measure **inside a query** (a python visual runs it: 4.2);
@@ -1115,3 +1113,45 @@ Credit trading               360,552,941.89
 The console calls: `POST /bi/model-api/dataset-yaml` (the document to YAML and the server's Check, `POST /api/v1/bi/models/validate`),
 `POST /bi/api/expr/validate` (each formula, with `model: dataset:<base>` and `alias`), `POST /bi/api/sql/validate` (the SQL view), and for the preview the
 draft's implicit model asked with `shape: rows` (`POST /bi/api/mq`).
+
+## 16. A run's result as a dataset snapshot (`source: {run}`)
+
+A finished BI run (a model query or a SQL statement, [BI_RUNS.md section 9.4](../architecture/BI_RUNS.md#94-promoting-to-a-dataset-snapshot))
+can be **promoted**: its result is frozen as a snapshot and becomes a draft dataset you can build models and reports on.
+
+**Through the API** (the run object's `can.promote` is true when you ran it, hold `bi-author` and it is a finished model query or SQL
+run; the drafts then appear in your workspace's Items):
+
+```bash
+curl -X POST "$DRISHTI/api/v1/bi/runs/r-java-1-01JA…/promote" -H "Authorization: Bearer $TOKEN" \
+     -H 'Content-Type: application/json' -d '{"name": "desk-pnl-2026", "to": "report"}'
+# 201 {"snapshot": "desk-pnl-2026", "version": 1, "dataset": {"name": "desk-pnl-2026", "item": "bi-…"}, "report": {"item": "bi-…"}, "yaml": "…"}
+```
+
+**The YAML it writes** (edit the title, description and columns' roles before you publish; keep `source:` as it is):
+
+```yaml
+rachana: 2
+dataset: desk-pnl-2026
+version: 1.0.0
+title: "Desk P&L 2026 (snapshot of run r-java-1-01JA…, as of 2026-09-30)"
+source: { run: desk-pnl-2026, version: 1, token: 9f3c… }   # the snapshot, pinned to a version; the token binds it to this dataset
+columns:
+  desk:   { type: string, path: "trades.desk", role: dimension }
+  pnl:    { type: decimal, path: "PnL", role: amount, aggregate: sum }
+  trader: { type: string, path: "trades.trader", role: dimension }
+grain: { keys: [desk, trader] }
+security:
+  masked: [trader]          # masked for the promoter: masked always
+provenance: { run: "r-java-1-01JA…", computedAs: "ajsinha", signature: "…", dataVersion: "…", asOf: "2026-09-30", question: "…" }
+```
+
+* **The rows are what you could see.** A column masked for you holds the mask in the snapshot and is declared `masked`, so it stays masked
+  for every reader. Row rules you had are baked in: the snapshot never holds rows you could not read.
+* **It is a draft**, yours only, until it is reviewed and published like any dataset. The reviewer sees `provenance` (whose rights computed
+  it), so publishing data computed with broad rights to narrow readers is a visible decision. Add `security: rows:` for readers on top.
+* **Only this dataset reads the snapshot.** The snapshot is kept under `<data>/bi-runs/snapshots/<name>/v<N>/` with the dataset's name and
+  the token; another dataset pointing at it gets `DRS-9108`.
+* **Promote again** (after a re-run) under the same name: version N+1, a new draft of the same dataset item. The newest
+  `promote.versions-keep` (5, `config/runs/runs.yaml`) versions are kept. Snapshots are outside the result store's budget and sweeper.
+* `promote.enabled: false` turns promotion off.

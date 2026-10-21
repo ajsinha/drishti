@@ -55,11 +55,14 @@ public class RunsConfiguration {
 
     @Bean(destroyMethod = "close")
     RunService runService(RunsProperties props, ObjectProvider<HikariDataSource> identity, ObjectProvider<ExecProperties> exec,
-            ObjectProvider<MeterRegistry> meters, ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> queries) {
+            ObjectProvider<MeterRegistry> meters, ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> queries,
+            ObjectProvider<com.ash.drishti.server.net.NetService> net) {
         HikariDataSource ds = identity.getIfAvailable();
         RunRecords records = ds == null ? new RunRecords.Memory() : new RunRecords.Jdbc(ds);
         ExecProperties e = exec.getIfAvailable();
-        String node = e == null || e.node().isBlank() ? "local" : e.node();
+        com.ash.drishti.server.net.NetService cluster = net.getIfAvailable();
+        String member = cluster == null ? "" : cluster.plannedNodeId();          // in a cluster, runs are named after the member (r-<node>-...): 13.2
+        String node = !member.isBlank() ? member : e == null || e.node().isBlank() ? "local" : e.node();
         RunService runs = new RunService(props, records, new RunStore(props), Clock.systemUTC(), node, RunMetrics.of(meters.getIfAvailable()));
         RunMetrics.gauges(meters.getIfAvailable(), runs);                       // queue, running, store.bytes (17.1)
         runs.planner(new RunPlanner(props.planner(), new RunRates(props.planner())));      // the planner (section 4), its rates learnt from runs
@@ -73,9 +76,14 @@ public class RunsConfiguration {
     @Bean
     RunSources runSources(RunService runs, ModelCatalog catalog, MqService mq, SqlService sql, BiReportService reports, com.ash.drishti.server.bi.BiService bi,
             ObjectProvider<BiNotifier> notifier,
-            ObjectProvider<Principals> principals, ObjectProvider<com.ash.drishti.server.bi.DatasetController> datasets) {
+            ObjectProvider<Principals> principals, ObjectProvider<com.ash.drishti.server.bi.DatasetController> datasets,
+            ObjectProvider<com.ash.drishti.server.dist.StatementService> statements, ObjectProvider<com.ash.drishti.identity.AuditLog> audit) {
         datasets.ifAvailable(c -> c.runs(runs::engineStats));               // GET /api/v1/bi/engine reports runs
         RunSources sources = new RunSources(runs, catalog, mq, sql, reports);
+        sources.statements((p, body, kind) -> {                                // a statement run after a restart is made again as its runner
+            com.ash.drishti.server.dist.StatementController c = new com.ash.drishti.server.dist.StatementController(statements.getObject(), audit.getObject());
+            return "file".equals(kind) ? c.fileAsRun(body, p) : c.preview(body, p);
+        });
         BiNotifier n = notifier.getIfAvailable();
         if (n != null) {
             runs.notifier((user, run, summary) -> n.tell(List.of(user), "bi-run", run.id(), summary, "drishti"));
@@ -113,6 +121,26 @@ public class RunsConfiguration {
                 d == null ? com.ash.drishti.common.BusinessCalendar.of("WEEKENDS") : d.calendar(), Clock.systemUTC());
         s.start(java.time.Duration.ofSeconds(30));
         return s;
+    }
+
+    /** Promotion (section 9.4): snapshots under {@code store.dir}/snapshots, read by the model layer as the dataset's staged rows; drafts through BI. */
+    @Bean
+    RunPromotion runPromotion(RunService runs, ModelCatalog catalog, com.ash.drishti.server.bi.BiService bi) {
+        RunPromotion p = new RunPromotion(runs);
+        catalog.snapshots(p);
+        p.drafter((who, itemId, kind, title, body) -> {
+            if (itemId != null) {
+                try {
+                    bi.updateItem(who, itemId, java.util.Map.of("body", body, "message", "promoted again from a run (BI runs 9.4)"));
+                    return itemId;
+                } catch (com.ash.drishti.common.DrishtiException e) {
+                    // the item was deleted or moved out of reach: a new draft
+                }
+            }
+            return String.valueOf(bi.createItem(who, "me", java.util.Map.of("kind", kind, "title", title, "body", body,
+                    "message", "promoted from a run (BI runs 9.4)")).get("id"));
+        });
+        return p;
     }
 
     /** Sharing (section 9.3): share rows in the identity database, recipients bound as themselves, roles expanded to their members when shared. */

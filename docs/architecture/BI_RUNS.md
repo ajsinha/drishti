@@ -716,18 +716,23 @@ Sharing never hands over the runner's result as such. For each recipient, `RunSh
  the row part equal? (SecuritySignature.Alias rules, denied, hidden: the same for every alias the plan reads)
  and the recipient's masked columns ⊇ the runner's?
  and the canonical question validates as the recipient (MqValidator: no DRS-9161 MQ_MASKED, no DRS-9163 MQ_NOT_FOR_ROLE)?
+ and every measure is additive, with no limit, top filter or totals (when an extra masked column is a grouping field)?
           │
-          ├── yes ─► RE-MASK: the stored result is served with the recipient's extra masked columns
-          │          replaced by the mask (null + masked flag), as the engine masks today; no recomputation
+          ├── yes ─► RE-MASK: the stored result is served with the recipient's extra masked columns replaced by the mask
+          │          (the value + masked flag); a masked grouping field also COLLAPSES its groups into one, the
+          │          additive measures summed, exactly as the engine answers that recipient; no recomputation
           │
           └── no  ─► RECOMPUTE: a new run in the recipient's name (runner = recipient, shared_from = the original,
                      BACKGROUND class), with the same question, as-of dates and data versions; it is visible to the
                      recipient and notifies them when done; its estimate is the original's actuals
 ```
 
-* **Re-mask** is sound only when the rows are identical (the same row rules) and the recipient masks *more* columns. Masking is then
-  column-wise on output, which is what the engine does for that recipient anyway. A measure whose input column is masked for the
-  recipient is refused by validation (`MqValidator`), so such a question takes the *recompute* path and is never re-masked.
+* **Re-mask** is sound only when the rows are identical (the same row rules) and the recipient masks *more* columns. It is not purely
+  column-wise: the engine does not group by a masked column, so for that recipient the groups of a masked grouping field collapse into
+  one. Re-masking therefore masks the value **and** collapses those groups, **summing the additive measures**; that is exact only when every
+  measure is additive and the question has no limit, top filter or totals. **Anything else is recomputed** (a non-additive measure, a
+  limit, a top filter, totals), as is a measure whose input column is masked for the recipient (refused by `MqValidator`), a SQL statement
+  and a report visual (`same` or `recomputed` only). As built: 18.2b, R6.
 * **Recompute** is the bursting pattern of `StatementService`: one computation per recipient as that recipient.
 * Sharing to a role (`role:risk-team`) expands to its members when the share is made, like `SubscriptionService.expand`. Each member
   gets a share row. Members with equal signatures share one recomputation (the key is the same), so ten readers of one desk cost one
@@ -759,6 +764,49 @@ provenance: {run: r-java-2-01JA…, computedAs: ajsinha, signature: 5c1e…, dat
   narrow readers is a visible, reviewed decision, never an accident.
 * Promotion needs the `bi-author` power and `runs.promote.enabled` (true).
 * A new version (re-promote after a re-run) writes `v<N+1>`. Earlier versions are kept for `runs.promote.versions-keep` (5).
+
+**As built (2.6.7).** `POST /api/v1/bi/runs/{id}/promote {name?, title?, to: dataset|report}` (`RunPromotion`):
+
+* Only the run's **runner** promotes it (it holds their view), with `bi-author` and `promote.enabled`; a share's recipient cannot. Only a
+  model query or a SQL statement's table is promoted (a report visual or a statement is refused, `400`). The run object's `can.promote` says so.
+* The snapshot is `snapshots/<name>/v<N>/answer.json` under `store.dir`: the stored answer **as the promoter reads it** (`RunService.result`
+  with their signature), so a column masked for them holds the mask in every row, never a value. The rows are stored as JSON (as results
+  are, 18.2b R5), not `result.parquet`.
+* The draft dataset (`rachana: 2`, one table, the dataset's own alias) is created in the promoter's personal workspace through the BI
+  items, so its review and publish are the normal ones:
+
+  ```yaml
+  rachana: 2
+  dataset: desk-pnl-2026
+  version: 1.0.0
+  title: "Desk P&L (snapshot of run r-java-2-01JA…, as of 2026-01-02 to 2026-09-30)"
+  source: { run: desk-pnl-2026, version: 3, token: 5c1e… }
+  columns:
+    desk: { type: string, path: "trades.desk", role: dimension }
+    pnl:  { type: decimal, path: "PnL", role: amount, aggregate: sum }
+    trader: { type: string, path: "trades.trader", role: dimension }
+  grain: { keys: [desk, trader] }
+  security:
+    masked: [trader]          # masked for the promoter: masked always
+  provenance: { run: r-java-2-01JA…, computedAs: ajsinha, signature: …, dataVersion: …, asOf: …, question: … }
+  ```
+
+  Column names are the answer's last part, lower-cased (`trades.desk` is `desk`), with `path:` naming the answer's column; fields are
+  dimensions and the grain's keys, additive measures `amount`/`sum`, others `ratio`/`avg`.
+* **`Layers` reading `snapshots/` is built as a staged table** (the mechanism of model and SQL-view sources): `DatasetSources` reads the
+  snapshot through `ModelCatalog.Snapshots` and stages it like any inner answer; the model's relationships, measures, the dataset's own
+  rules and masks then apply on top. The version is part of the staged fingerprint, so a new version is never served from an old cache.
+* **Who may read a snapshot:** only the dataset it was promoted to. The snapshot keeps the dataset's name and a random **token**, written in
+  that dataset's `source:`; a dataset of another name, or without the token, gets `DRS-9108` ("this dataset may not read it"), so another
+  author cannot point a dataset of theirs at someone else's snapshot. The draft is the promoter's only until it is published through
+  review, where `provenance.computedAs` is visible. A snapshot name belongs to its first promoter (`409 DRS-9004` for anyone else).
+* Promoting again under the same name writes `v<N+1>`, saves a new draft of **the same dataset item** pinned to it, and keeps the newest
+  `promote.versions-keep`. The run's `promotedTo` is `name@N`.
+* `to: report` also makes a draft report on `model: dataset:<name>` with one table of every column.
+
+Tests: `RunPromotionTest` (masked stored as the mask and declared masked; the YAML parses; only the promoted dataset reads it; versions
+and the same item; a report run refused) and `ModelAcceptanceTest` order 18 (end to end: run, promote to a report, the report's table
+equals the run's result, another reader cannot open the draft, promoted again is version 2 of the same item).
 
 ## 10. Fairness and admission
 
@@ -916,6 +964,34 @@ forwarded to the run's node and streamed back.
 the first: a new row for its own runner, in state `running`, which follows the first and turns `reused` when it finishes. This is
 single-flight, the rule `Layers` already applies to partition builds.
 
+### 13.4 As built (2.6.7)
+
+* **Names.** In a cluster a run is named after the Drishti*net member (`r-<node id>-<ulid>`, `NetService.plannedNodeId`, known before
+  the node joins), so its id names its node. Outside a cluster, as before (`drishti.bi.exec.node`, else `local`).
+* **Owner** (`RunCluster`): `ShardDirectory` over every member known, a member that is not `alive` owning nothing; both nodes agree
+  without talking. A submit (`POST /runs`) that is ad-hoc heavy, or asks `wait: 0`, for a model another node owns is sent whole to the owner
+  for the caller (signed, `X-Drishti-Net-Hop: 1`, an on-behalf-of token: computed there with the caller's roles, row rules and masks);
+  its answer comes back as it is (`202 {run}` with the owner's id). An owner that cannot be reached, or answers `502`/`503`, leaves the run
+  here (runs are reads: running it here is correct). Interactive and known heavy questions are answered where asked.
+* **A run's own calls** (`/runs/{id}/result`, `cancel`, `export`, `share`, `promote`, every action) go to the node that holds the run
+  (`RunForwardFilter`): the row's `node` when the row is readable here (a shared identity database), else the node the id names. `GET
+  /runs/{id}` is answered here when the row is readable here. A node that does not answer gives `502 DRS-5052` ("its state is unknown
+  until it returns; re-run it here"). A forwarded request is answered from its node only.
+* **The list** (`GET /runs`) is scattered to the other members alive and merged by `submittedAt` (de-duplicated by id, so a shared
+  database lists each run once); a node that does not answer is in `nodes.failed` with the reason. **Events:** `/runs/events` relays the
+  `run` events of the caller's runs on every other member alive when the stream opens.
+* **Leases and adoption** (13.3): a run becoming visible takes `lease_until = now + lease.ttl`; every `lease.renew` the node renews its
+  runs (`RunRecords.renew`, a conditional update on `node`); a run whose row another node holds now is abandoned (its work interrupted,
+  nothing saved). With a shared database, each node adopts the runs of members that are not alive whose lease lapsed and whose model it
+  owns now, by one conditional update (`RunRecords.adopt`: `node`, `attempt + 1`, `queued`, `WHERE node = <dead> AND lease_until < now`),
+  then starts them again under 12.1 (attempts, access as the runner now), the reason "started again on <node> after <dead> stopped".
+  With a per-node database nobody else sees the row: its state is unknown (above) until the node returns.
+* Not built: the event relay does not pick up a member that joins after the stream opened (the console reopens the stream); with S6 the
+  owner as coordinator (13.1, `engine: split`).
+* `RunClusterTest` (two servers in one JVM over one identity database, ports from `-Ddrishti.net.it.ports`): a heavy run submitted on the
+  node that does not own the model runs on the owner and its status, result and list answer from either node; a masked reader's run keeps
+  the mask across the forward; the owner stopped with an unfinished run of its: the other node adopts it once (attempt 2) and finishes it.
+
 ## 14. API and CLI
 
 ### 14.1 Endpoints
@@ -937,7 +1013,7 @@ All are under `/api/v1/bi/runs`, as the token's user, with the `bi:write` scope 
 | `POST` | `/api/v1/bi/runs/{id}/export` | `{format: "csv"\|"xlsx"\|"parquet"\|"pdf"}` | `200` the file (`Content-Disposition`) |
 | `POST` | `/api/v1/bi/runs/{id}/share` | `{to: ["bob", "role:risk-team"]}` | `200` `{shares: [{recipient, mode: "same"\|"re-masked"\|"recomputed", recipientRun}]}` |
 | `DELETE` | `/api/v1/bi/runs/{id}/share/{recipient}` | | `204` |
-| `POST` | `/api/v1/bi/runs/{id}/promote` | `{as: "snapshot"\|"report", name, workspace?, title?}` | `201` `{item: {id, kind, workspace, status: "draft"}, snapshot?: {name, version}}` |
+| `POST` | `/api/v1/bi/runs/{id}/promote` | `{name?, title?, to: "dataset"\|"report"}` (as built, 9.4) | `201` `{snapshot, version, dataset: {name, item}, report: {item}\|null, yaml}` |
 | `POST` | `/api/v1/bi/runs/{id}/keep` | `{until}` or `{days}` | `200` `run` |
 | `DELETE` | `/api/v1/bi/runs/{id}/result` | | `204` (the row stays, `expired`) |
 | `POST` | `/api/v1/bi/runs/{id}/schedule` | `{schedule: "business-days 07:30", data: "latest"}` | `201` `schedule` |
@@ -1273,9 +1349,9 @@ Targeted tests only between steps, on the 10K-trade lake at most, one heavy proc
 | R3 | built | `RunPlanner` (footprint → `RunEstimator` estimate → decision), `RunRates` (scan and build rates and the actual ÷ estimate ratios per engine, learnt from finished runs; the range factors narrow after `minRatioSamples`), `RunHistory` (rows per day per table, an exponentially weighted mean of the built partitions the planner peeks at; in memory, learnt again after a start); `Layers.peek` and `peekRollup` (`meta.json` only, nothing built, no data file opened); `SourcePlugin.rowEstimate(kind, date)` (default empty) with `RowEstimate(rows, basis)` in drishti-api, Delta from the add actions of the current snapshot (`numRecords` of their statistics, files without statistics by bytes ÷ the bytes per row of those with), Iceberg from the manifests' `record_count` of the date's data files (an upper bound when there are delete files), `SourceGateway.rowEstimate` summing a union's connectors; `QueryService.footprint` (`Footprints`: tables, dates, rows with their basis, built or not, the rollup the optimiser would choose and its valid partitions, the data version vector), reached from `MqService.footprint` (a `top` filter, which needs data to compile, and staged tables give no footprint). **The synchronous `DRS-9029` now comes from the footprint before any layer build** (the check after the build stays, for dates nobody can size); it covers the question's own range, not the extra ranges a time-intelligence measure compiles. Tiers, `DRS-9082` (a visible `awaiting-confirm` row and a token; `POST /runs/{id}/confirm`, or the question asked again with `confirmToken`), `DRS-9086` and `DRS-9089` at plan time; an ad-hoc heavy run without confirmation answers `202` at once. An interaction whose size is unknown is not refused `DRS-9089`: it runs interactively, bounded by the interactive limit (refusing every first slicer on a connector that cannot count would break dashboards). Report visuals are not planned (their question is the report's, not an MQ yet): they wait inline as before. `RunPlannerTest`; `rowEstimate` tests in `DeltaLayoutTest` and `IcebergSourcePluginTest` |
 | R4 | built | `RunService` (submit, inline wait, visibility, `supersedes`, cancel by interrupt, single-flight join, `interaction`), `RunQueue` (fair share, `workers`, `queue.max`), `RunRecords` (JDBC over the identity database, or memory), `RunSources` (mq, sql and report questions computed as the caller), `Prefer: respond-async` on `MqController` (both endpoints), `SqlController`, `BiReportController` (JSON; Arrow, EXPLAIN and an MQ with `options.explain` stay synchronous). Without `Prefer` every endpoint is unchanged (`ModelAcceptanceTest` order 17 asks all four endpoints both ways and compares the answers, for a raw and a masked reader). **Gone caller:** when the request thread waiting for an invisible run is interrupted, the run is cancelled and its work thread interrupted (`cancel.release` metric); Spring MVC does not tell a blocked request that its connection closed, so a closed browser tab is noticed only when the container interrupts the request (an async timeout), not at once. A superseded twin that already finished no longer fails the newer question with `DRS-9080` (the fault behind the console's parameter-slicer test). `StatementController` (preview and file) takes `Prefer` too: a statement is a run with a personal signature; inside the wait the same answer (the file, with `Drishti-Run`), past it `202` and a result of `{format, filename, contentType, pages, bytes}` (`StatementApiTest`) |
 | R5 | built, JSON results | `RunStore`: `results/<xx>/<key>/answer.json` (the answer with its rows, the signature it was computed for) and `owner.txt` (whose budget it counts against) under `store.dir`, written beside their names and moved with `FileSwap`; served only to the same signature; paging; `sweep` (retention by last open, **`store.max-bytes-per-user`: a person's least recently opened results go first, nobody else's**, `store.max-bytes`, stale temporary files) every `retention.sweep`; `usage()` gives bytes, count, the oldest open and the five largest users. The key is `sha256(question \| signature \| data version \| v1)`. **The data version of a planned MQ or SQL question is the hash of its data version vector** (every table and date read, `SourcePlugin.dataVersion(kind, date)`) with the model's hash, so a stored result is reused after a restart while the data is unchanged and never once a date is restated; a source without a version or a live table makes it not reusable. Questions without a footprint keep the in-process generation (a boot id is part of it). Report visuals have a personal signature (user and roles) and no data version: stored for their runner, never reused. Not built: Parquet via `COPY TO`, Arrow results |
-| R6 | built, except promotion | **Sharing** (`RunSharing`, `RunShares` over `drishti_bi_run_share`): `SecuritySignature.rowPart` (rules, denied layers, hidden columns, denied kinds; the reader for a personal model) and `maskPart` (`alias.column`) decide per recipient: `same` (equal signature), `re-masked` (equal row part, the recipient's masks ⊇ the runner's, the question validates as the recipient) or `recomputed` (a new run as the recipient, `shared_from` the original, the background class; equal signatures join one computation). **Corrected while building:** masking on output is *not* what the engine does for a grouping field: the engine does not group by a masked column, so its groups collapse into one. Re-masking therefore masks the value **and** collapses the groups, summing the measures, which is exact only when every measure is additive and there is no limit, top filter or totals; otherwise the share is recomputed. A SQL statement or a report visual is `same` or `recomputed`. **The decision is taken again at every read** as the recipient is now, so a recipient whose rights narrowed is refused `DRS-9021` ("re-run it"), never shown the wider answer. `role:x` expands to its members when shared; a person who may not read the model gets no share. The recipient sees the run in their list and `GET` (`asRecipient`), reads `/result` and exports their own version; the owner's run object lists `shared.with`. Notices name the sharer and the title only (`RunSharingTest`, 19.3: an admin sharing with a viewer is re-masked and equals the viewer's direct query; a viewer sharing with an admin is recomputed as the admin; other desks recomputed with no row of the runner's; a role of three, two alike, computes twice). **Export:** `POST /runs/{id}/export {format: csv|xlsx}` through `BiExporter.ofAnswer`, `CsvWriter`, `XlsxWriter` (`RunExportTest`). **Schedules** (`RunSchedules` over `drishti_bi_run_schedule`, `SubscriptionSchedule`'s grammar without `after-load`): each firing asks again as the owner now; an owner who lost access gets a failure and a notice; checked every 30 s; the run object's `schedule` (`RunSchedulesTest`). **Not built:** promotion (`DatasetDef.Source.RUN`, `Layers` reading `snapshots/`, promote to a report): `POST /runs/{id}/promote` answers `400` saying so |
-| R7 | restart only | `RunService.recover` at start: every unfinished row of this node is replayed as its runner (`Principals.of`, attempt + 1, up to `restart.max-attempts`) or failed `DRS-9085` with a reason; each change is published and told. Not built: leases, `ShardDirectory` wiring, forwarding, scatter, adoption |
-| R8 | mostly | `bi-run` notices through `BiNotifier.tell` on done, failed and cancelled-by-others (names and counts only, tested); metrics `drishti.bi.runs.submitted`, `finished`, `inline`, `reuse`, `seconds`, `estimate.ratio` (distribution, tags `basis`, `engine`), `cancel.release` (timer); `GET /api/v1/bi/admin/runs` in the shape of 14.5 (`RunAdmin`); the gauges `drishti.bi.runs.queue` (class), `running` (engine), `store.bytes` (kind `results`, `snapshots`); `GET /api/v1/bi/engine` adds `runs` (workers, running, queued, the engine runs execute on: `shared`, no second instance yet); `now.admissionWaitP95Ms` (`Admission.interactiveWaitP95Ms`), `accuracy.basis` and `storage.snapshots*` filled (`RunGaugesTest`). **8.3a suggestions built** (`RunSuggestions`): finished ad-hoc heavy model queries counted per model, grain and filters' shape (field and operator, never a value) in `suggest.window`; past `suggest.min-runs` with a median of `suggest.min-seconds` a suggestion with its rollup drafted; accept adds the rollup to the model's draft under `rollups:` (comments kept, reviewed as any change), dismiss; decisions in `<store.dir>/suggestions.json`; `built` once the model has a rollup over that table at that grain (`RunSuggestionsTest`). The console lists them with Accept and Dismiss in Admin → BI → Runs and shows a notice in the model designer of a model with open ones (2.6.7, console follow-up) |
+| R6 | built | **Sharing** (`RunSharing`, `RunShares` over `drishti_bi_run_share`): `SecuritySignature.rowPart` (rules, denied layers, hidden columns, denied kinds; the reader for a personal model) and `maskPart` (`alias.column`) decide per recipient: `same` (equal signature), `re-masked` (equal row part, the recipient's masks ⊇ the runner's, the question validates as the recipient) or `recomputed` (a new run as the recipient, `shared_from` the original, the background class; equal signatures join one computation). **Corrected while building:** masking on output is *not* what the engine does for a grouping field: the engine does not group by a masked column, so its groups collapse into one. Re-masking therefore masks the value **and** collapses the groups, summing the measures, which is exact only when every measure is additive and there is no limit, top filter or totals; otherwise the share is recomputed. A SQL statement or a report visual is `same` or `recomputed`. **The decision is taken again at every read** as the recipient is now, so a recipient whose rights narrowed is refused `DRS-9021` ("re-run it"), never shown the wider answer. `role:x` expands to its members when shared; a person who may not read the model gets no share. The recipient sees the run in their list and `GET` (`asRecipient`), reads `/result` and exports their own version; the owner's run object lists `shared.with`. Notices name the sharer and the title only (`RunSharingTest`, 19.3: an admin sharing with a viewer is re-masked and equals the viewer's direct query; a viewer sharing with an admin is recomputed as the admin; other desks recomputed with no row of the runner's; a role of three, two alike, computes twice). **Export:** `POST /runs/{id}/export {format: csv|xlsx}` through `BiExporter.ofAnswer`, `CsvWriter`, `XlsxWriter` (`RunExportTest`). **Schedules** (`RunSchedules` over `drishti_bi_run_schedule`, `SubscriptionSchedule`'s grammar without `after-load`): each firing asks again as the owner now; an owner who lost access gets a failure and a notice; checked every 30 s; the run object's `schedule` (`RunSchedulesTest`). **Promotion** (9.4 as built): `DatasetDef.Source.RUN` (`source: {run, version, token}`) and its parser, the snapshot read as a staged table through `ModelCatalog.Snapshots`, `POST /runs/{id}/promote` to a draft dataset and optionally a draft report, the snapshot bound to its dataset by name and token, versions kept per `promote.versions-keep` (`RunPromotionTest`, `ModelAcceptanceTest` order 18) |
+| R7 | built (13.4) | **Cluster:** `RunCluster` (`ShardDirectory` over Drishti*net members), forwarding of submit to the owner and of a run's calls to its node (`RunForwardFilter`), the list scattered and merged, events relayed, leases renewed and adoption by conditional update (`RunClusterTest`). **Restart:** `RunService.recover` at start: every unfinished row of this node is replayed as its runner (`Principals.of`, attempt + 1, up to `restart.max-attempts`) or failed `DRS-9085` with a reason; each change is published and told. **Statement runs replay too** (2.6.7 A4): the preview or file is made again as its runner from the request it was asked with (`RunSources.statements`, `StatementController.fileAsRun`), no longer `DRS-9085`; a replayed run's signature is the runner's now, so its result reads back (`StatementReplayTest`) |
+| R8 | mostly | `bi-run` notices through `BiNotifier.tell` on done, failed and cancelled-by-others (names and counts only, tested); metrics `drishti.bi.runs.submitted`, `finished`, `inline`, `reuse`, `seconds`, `estimate.ratio` (distribution, tags `basis`, `engine`), `cancel.release` (timer); `GET /api/v1/bi/admin/runs` in the shape of 14.5 (`RunAdmin`); the gauges `drishti.bi.runs.queue` (class), `running` (engine), `store.bytes` (kind `results`, `snapshots`); `GET /api/v1/bi/engine` adds `runs` (workers, running, queued, the engine runs execute on: `shared`, no second instance yet); `now.admissionWaitP95Ms` (`Admission.interactiveWaitP95Ms`), `accuracy.basis` and `storage.snapshots*` filled (`RunGaugesTest`). **8.3a suggestions built** (`RunSuggestions`): finished ad-hoc heavy model queries counted per model, grain and filters' shape (field and operator, never a value) in `suggest.window`; past `suggest.min-runs` with a median of `suggest.min-seconds` a suggestion with its rollup drafted; accept adds the rollup to the model's draft under `rollups:` (comments kept, reviewed as any change), dismiss; decisions in `<store.dir>/suggestions.json`; `built` once the model has a rollup over that table at that grain (`RunSuggestionsTest`). Not shown in the model designer yet (console lane) |
 
 ### 18.3 Together
 

@@ -52,7 +52,8 @@ final class DatasetSources implements StagedTables {
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final int DEPTH = 8;
     private static final ThreadLocal<Set<String>> ASKING = ThreadLocal.withInitial(HashSet::new);
-    private static final Set<String> STAGED = Set.of(DatasetDef.Source.MODEL, DatasetDef.Source.CONNECTOR, DatasetDef.Source.PYTHON, DatasetDef.Source.SQL);
+    private static final Set<String> STAGED = Set.of(DatasetDef.Source.MODEL, DatasetDef.Source.CONNECTOR, DatasetDef.Source.PYTHON, DatasetDef.Source.SQL,
+            DatasetDef.Source.RUN);
     private static final java.util.regex.Pattern PARAM = java.util.regex.Pattern.compile("(?<![:\\w]):([A-Za-z][A-Za-z0-9_]*)");
 
     private final ModelCatalog catalog;
@@ -115,6 +116,7 @@ final class DatasetSources implements StagedTables {
                 switch (s.type()) {
                     case DatasetDef.Source.MODEL -> b.append(innerKey(inner(alias, s.model())));
                     case DatasetDef.Source.SQL -> b.append(innerKey(inner(alias, s.model()))).append('#').append(ModelCatalog.hash(s.query()));
+                    case DatasetDef.Source.RUN -> b.append("run:").append(s.runName()).append('@').append(snapshot(view.datasets().get(alias).def()).version());
                     case DatasetDef.Source.PYTHON -> {
                         b.append(s.python()).append(s.pythonParams());
                         s.inputs().forEach((name, q) -> {
@@ -143,6 +145,7 @@ final class DatasetSources implements StagedTables {
         return switch (d.source().type()) {
             case DatasetDef.Source.MODEL -> fromModel(table, d);
             case DatasetDef.Source.SQL -> fromSql(table, d);
+            case DatasetDef.Source.RUN -> fromRun(table, d);
             case DatasetDef.Source.PYTHON -> fromPython(table, d);
             default -> fromConnector(table, d);
         };
@@ -320,6 +323,30 @@ final class DatasetSources implements StagedTables {
         List<ArrowIpcWriter.Column> cols = r.columns().stream().map(c -> new ArrowIpcWriter.Column(c.name().startsWith(alias + ".") ? c.name().substring(alias.length() + 1) : c.name(),
                 c.kind(), c.values())).toList();
         return new QueryService.Result(cols, r.rows(), r.meta());
+    }
+
+    // ---- a promoted run's snapshot -------------------------------------------------------------------------------------
+
+    private final Map<String, ModelCatalog.Snapshot> snapshots = new LinkedHashMap<>();
+
+    /** The snapshot a dataset reads, once per query (the fingerprint and the rows agree on the version). */
+    private ModelCatalog.Snapshot snapshot(DatasetDef d) {
+        return snapshots.computeIfAbsent(d.name(), n -> {
+            ModelCatalog.Snapshots s = catalog.snapshots();
+            if (s == null) {
+                throw new MqException(MqException.Problem.of("DRS-9108", "source.run", "run snapshots are not available on this server (BI runs are off)"));
+            }
+            return s.read(d.name(), d.source().runName(), d.source().runVersion(), d.source().runToken());
+        });
+    }
+
+    /**
+     * A promoted run's rows (BI_RUNS.md 9.4): the promoter's view as stored, masks included (a masked value is stored as the mask, never the value); the
+     * dataset's own rules and masks then apply to its readers on top, as on any table.
+     */
+    private Answer fromRun(String table, DatasetDef d) {
+        ModelCatalog.Snapshot s = snapshot(d);
+        return new Answer(s.result(), columns(table, d, s.result(), "the run snapshot"), s.asOf() != null ? s.asOf() : outerDate());
     }
 
     // ---- a SQL view ---------------------------------------------------------------------------------------------------

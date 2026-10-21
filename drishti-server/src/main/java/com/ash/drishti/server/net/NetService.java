@@ -441,6 +441,22 @@ public final class NetService implements AutoCloseable {
         return loaded.config();
     }
 
+    /**
+     * The id this node has, or will have once it joins, while config/net/ switches the cluster on; empty while it is off. The BI runs name their runs
+     * after it ({@code r-<node>-...}) from the start, before the node joins.
+     */
+    public String plannedNodeId() {
+        NetConfig c = config();
+        if (!c.enabled()) {
+            return "";
+        }
+        try {
+            return node != null ? node.id : NodeIdentity.resolve(c.node().nodeId(), state.resolve("node-id"));
+        } catch (RuntimeException e) {
+            return "";
+        }
+    }
+
     public NetFolder.Loaded loaded() {
         return loaded;
     }

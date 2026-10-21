@@ -29,6 +29,25 @@
   and shows the run card past it. CLI: `bi runs unshare`, `bi runs schedules edit`, `bi runs suggestions [list|accept|dismiss]`, `bi runs
   export --format csv|xlsx`, and completion. Help cards `run-share`, `run-schedule`, `run-export`, `run-suggestions`. Not yet: Analyse's
   SQL cells keep asking synchronously.
+- **BI runs on a Drishti*net cluster (2.6.7, BI_RUNS.md 13.4, DRISHTI_NET.md).** Runs are named after the member (`r-<node id>-…`).
+  `ShardDirectory` is wired to the members alive (`RunCluster`): a heavy run of a model another member owns is submitted there for the
+  caller (signed, one hop, on-behalf-of, so their masks hold); a run's result, cancel and actions go to the member that holds it
+  (`RunForwardFilter`, `502 DRS-5052` while it cannot be reached); `GET /runs` is scattered and merged (`nodes.failed`); run events are
+  relayed. Leases are renewed every `lease.renew`; with one identity database a dead member's unfinished runs are adopted by the model's
+  new owner once their lease lapsed, by one conditional update, and started again (attempt + 1); a node whose run was adopted abandons its
+  copy. `RunClusterTest` (two servers in one JVM).
+
+- **BI runs: a statement run interrupted by a restart is made again** as its runner from the request it was asked with (preview or
+  file), instead of failing with `DRS-9085` (BI_RUNS.md 12.1, 18.2b R7). A replayed run keeps the runner's current signature, so its
+  result reads back. `StatementReplayTest`.
+
+- **BI runs: promotion to a dataset snapshot (2.6.7, BI_RUNS.md 9.4, DATASETS.md section 16).** `POST /api/v1/bi/runs/{id}/promote
+  {name?, title?, to: dataset|report}`: the runner (with `bi-author`) freezes a finished model query or SQL run as
+  `<data>/bi-runs/snapshots/<name>/v<N>/` and gets a draft dataset `source: {run: <name>, version: N, token}` (and a draft report on it).
+  The rows are the promoter's view: a column masked for them holds the mask and is declared `masked` for every reader. The snapshot is read
+  as a staged table of the model layer, only by the dataset it was promoted to (name and token, else `DRS-9108`); promoting again is the
+  next version of the same draft; `promote.versions-keep` versions are kept. `RunPromotionTest`, `ModelAcceptanceTest` order 18.
+
 - **BI runs: sharing, rollup suggestions, export, schedules, statements and the Admin numbers (2.6.7, BI_RUNS.md 18.2b).** **Sharing
   (R6, 9.3):** `POST /api/v1/bi/runs/{id}/share {to: [bob, role:risk-team]}` decides per person from the row part and the mask part of the
   security signature: `same` (equal rights: the stored result), `re-masked` (the same rows, more masks: the extra columns masked as the engine

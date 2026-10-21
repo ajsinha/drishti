@@ -82,16 +82,7 @@ public class StatementController {
         if (r == null) {
             return file(body, p);
         }
-        ResponseEntity<?> out = r.submit(r.statement(p, body, "file", "Statement " + body.path("report").asText(""), () -> {
-            ResponseEntity<byte[]> f = file(body, p);
-            Map<String, Object> m = new java.util.LinkedHashMap<>();
-            m.put("format", body.path("format").asText("pdf"));
-            m.put("filename", f.getHeaders().getContentDisposition().getFilename());
-            m.put("contentType", String.valueOf(f.getHeaders().getContentType()));
-            m.put("pages", Integer.parseInt(f.getHeaders().getFirst("X-Statement-Pages")));
-            m.put("bytes", java.util.Base64.getEncoder().encodeToString(f.getBody()));
-            return m;
-        }), prefer, "json", p);
+        ResponseEntity<?> out = r.submit(r.statement(p, body, "file", "Statement " + body.path("report").asText(""), () -> fileAsRun(body, p)), prefer, "json", p);
         if (out.getStatusCode().value() == 200 && out.getBody() instanceof Map<?, ?> m && m.get("bytes") instanceof String b) {
             return ResponseEntity.ok().contentType(MediaType.parseMediaType(String.valueOf(m.get("contentType"))))
                     .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(String.valueOf(m.get("filename")), StandardCharsets.UTF_8).build().toString())
@@ -99,6 +90,18 @@ public class StatementController {
                     .body(java.util.Base64.getDecoder().decode(b));
         }
         return out;
+    }
+
+    /** The file as a run's result: {@code {format, filename, contentType, pages, bytes}} (the file in base64); also what a replayed statement run makes. */
+    public Map<String, Object> fileAsRun(JsonNode body, Principal p) {
+        ResponseEntity<byte[]> f = file(body, p);
+        Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("format", body.path("format").asText("pdf"));
+        m.put("filename", f.getHeaders().getContentDisposition().getFilename());
+        m.put("contentType", String.valueOf(f.getHeaders().getContentType()));
+        m.put("pages", Integer.parseInt(f.getHeaders().getFirst("X-Statement-Pages")));
+        m.put("bytes", java.util.Base64.getEncoder().encodeToString(f.getBody()));
+        return m;
     }
 
     /**

@@ -255,6 +255,23 @@ public class NetConfiguration {
         return r;
     }
 
+    /** BI runs on the cluster (BI_RUNS.md 13): the model owners over the members alive, calls for a person, the lease and adoption loop. */
+    @Bean(destroyMethod = "close")
+    public RunCluster runCluster(NetService net, com.ash.drishti.server.bi.runs.RunService runs, com.ash.drishti.server.bi.runs.RunsProperties props) {
+        RunCluster c = new RunCluster(net, runs, props);
+        c.start();
+        return c;
+    }
+
+    /** After the caller is known: a run's own calls go to the node that holds it (BI_RUNS.md 13.2). */
+    @Bean
+    public FilterRegistrationBean<RunForwardFilter> runForwardFilter(RunCluster cluster, com.ash.drishti.server.bi.runs.RunService runs, ForwardLog log) {
+        FilterRegistrationBean<RunForwardFilter> r = new FilterRegistrationBean<>(new RunForwardFilter(cluster, runs, log));
+        r.addUrlPatterns("/api/v1/bi/runs/*");
+        r.setOrder(4);
+        return r;
+    }
+
     /** After the path guard and the size limit, before the token filter: a node's call is verified here and needs no bearer token. */
     @Bean
     public FilterRegistrationBean<NetCallFilter> netCallFilter(NetService net) {
