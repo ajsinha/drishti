@@ -44,8 +44,20 @@ class SeedChipsTest {
         assertThat(versions).isEqualTo(86);
         assertThat(seeds.keySet().stream().filter(n -> n.startsWith("panel-")).count()).isEqualTo(22);
         assertThat(seeds.keySet().stream().filter(n -> n.startsWith("bi-")).count()).isEqualTo(34);
-        assertThat(seeds.keySet().stream().filter(n -> n.startsWith("record-")).count()).isEqualTo(18);    // the generic record chips (12.4)
-        assertThat(seeds.keySet()).contains("record-table", "record-fields", "record-line", "record-hbar", "record-metric", "record-links");
+        // the 18 generic record chips (12.4): named for what they show, a category of the fixed list, domain-neutral tags and a 'fits' hint
+        List<String> generic = List.of("list-table", "dated-steps-ladder", "value-grid-surface", "series-line", "ranked-bar-list", "area-series",
+                "cross-tab-grid", "price-candles", "point-scatter", "step-waterfall", "distribution-histogram", "relation-graph", "kv-list",
+                "kv-summary", "headline-figure", "field-note", "map-highlight", "linked-entities");
+        assertThat(seeds.keySet()).containsAll(generic);
+        for (String g : generic) {
+            Map<String, Object> doc = seeds.get(g).get(1).doc();
+            assertThat(List.of("header", "table", "chart", "ladder", "map", "kv", "timeline", "feed", "text", "control", "layout"))
+                    .as(g).contains(String.valueOf(doc.get("category")));
+            assertThat(String.valueOf(doc.get("tags"))).as(g).contains("generic");
+            assertThat(String.valueOf(UiDocs.map(doc.get("manual")).get("fits"))).as(g).isNotBlank().isNotEqualTo("null");
+        }
+        assertThat(store.list(null, null, "time-series", null, ChipStoreContract.DAVE))
+                .extracting(m -> m.get("chip")).contains("series-line", "price-candles");
         assertThat(seeds.keySet()).contains("deal-ticket", "legs", "flow-schedule", "events", "payments", "deal-footer", "entity-card",
                 "filterable-table", "cashflow-ladder", "search-box", "date-range");
         List<String> problems = new ArrayList<>();

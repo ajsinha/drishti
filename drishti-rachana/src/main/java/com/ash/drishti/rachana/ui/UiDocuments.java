@@ -381,7 +381,9 @@ public final class UiDocuments {
         if (n.isMissingNode() || n.isNull()) {
             return null;
         }
-        unknownKeys(n, Set.copyOf(ChipManual.KEYS), at, p);
+        Set<String> keys = new java.util.HashSet<>(ChipManual.KEYS);
+        keys.addAll(ChipManual.OPTIONAL);
+        unknownKeys(n, keys, at, p);
         Map<String, String> pins = new LinkedHashMap<>();
         n.path("pins").fields().forEachRemaining(e -> pins.put(e.getKey(), e.getValue().asText()));
         List<ChipManual.Example> examples = new ArrayList<>();

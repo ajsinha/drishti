@@ -893,8 +893,13 @@ The two failures: `report:python-desk-risk/risk` (BC-03, the `python` visual's r
 pages from panels, not blocks, so every page needs board-local chips: those 240 chips are the Chip Store's candidate list (14.1 decision 5).
 
 **P5 follow-up: the record chips (every pack on Chip Store chips).** The 240 board-local chips were clustered by shape: the same panel kind
-with different fields, labels or lists is one chip. Eighteen generic **record chips** (`record-<shape>@1`, written by
-`tools/ui_record_chips.py` through `tools/ui_seed_chips.py`, each with a full manual and passing CP-01..05) now carry them. A record chip
+with different fields, labels or lists is one chip. Eighteen generic **record chips** (written by `tools/ui_record_chips.py` through
+`tools/ui_seed_chips.py`, each with a full manual and passing CP-01..05) now carry them. Each is **named for what it shows**, never where
+it came from (`series-line`, `ranked-bar-list`, `kv-summary`: no pack name, no `local-`, no number), and is findable: a human `title`, a
+one-line `purpose`, a `category` from the fixed list (header, table, chart, ladder, map, kv, timeline, feed, text, control, layout),
+domain-neutral `tags` (time-series, ranking, geo, ...) and the new optional manual key **`fits`**, a one-line hint of the data it fits
+("rows with a label and a measure"). The Chip Store's text search (`GET /api/v1/ui/chips?q=`) now matches the name, title, purpose,
+category, tags and `fits`. A record chip
 reads the page's record through its document pin `doc` and one list of it through a rowset pin; it names no field. The board carries the
 names: `map: { rows: POINTS, rows.x: TENOR, rows.y: ZERO_RATE }` for a curve, `controls: { columns: [...] }` for a table. New in the
 model and the converter for this:
@@ -905,7 +910,8 @@ model and the converter for this:
   value that reads the record is written `@doc.X` in the board and painted `$.X`;
 * the frame controls every record chip shares: `panel-id` (an old page's camelCase panel id, kept so drill links and saved layouts still
   find the panel), `key`, `code`, `area`;
-* `PageConverter` tries `record-<kind>` (for `kv`: `record-kv`, then `record-fields`), then `panel-<kind>`, and keeps a choice only when
+* `PageConverter` tries the record chips of the panel kind (`RECORD_CHIPS`: `line` is `series-line`; `kv` is `kv-list`, then
+  `kv-summary`), then `panel-<kind>`, and keeps a choice only when
   `BoardSutra` paints it back into exactly the panel; the board-local reason now says why a panel is a true one-off;
 * every `bi-*` seed chip has optional controls for the report's own visual settings (`format`, `alt`, `filters`, `sort`, `limit`,
   `hierarchy`, `alert`, `drillthrough`), so `ReportConverter` sets them as constants instead of copying the chip; a text, image, button or
@@ -915,24 +921,24 @@ The clusters (panels in the six packs other than trading, then trading's that mo
 
 | Chip | Panel kind and shape | Mapped pins (the names in the board) | Spec and other controls | Panels |
 |---|---|---|---|---|
-| `record-links` | `links` over the record | (none) | `code`, `area` | 49 |
-| `record-table` | `table` over a list, with or without a pivot or a row filter | `rows` | `columns` (spec), `pivot` (spec), `where` | 47 (5 stay one-offs) |
-| `record-line` | `line` over a list | `rows`, `rows.x`, `rows.y` | `fmt` | 32 (1) |
-| `record-fields` | `kv` over named fields of the record | (the binds are in `columns`) | `columns` (spec), `when` | 4 (1) + 7 trading |
-| `record-kv` | `kv` over a list of label and value | `rows` | | 26 |
-| `record-hbar` | `hbar` over a list | `rows`, `rows.label`, `rows.value` | `fmt`, `tone`, `on-select` (spec) | 19 (2) |
-| `record-surface` | `surface` grid | `rows`, `rows.y` | `columns` (spec) | 5 |
-| `record-markdown` | `markdown` quoting the record | | `text`, `when` | 4 |
-| `record-ladder` | `ladder` over a list | `rows` | `columns` (spec) | 3 |
-| `record-pivot` | `pivot` over a list | `rows`, `rows.by`, `rows.across`, `rows.value` | `agg`, `fmt`, `tone`, `heat` | 2 |
-| `record-area` | `area` series over a list | `rows`, `rows.x` | `series` (spec), `limit` | 2 |
-| `record-candlestick` | `candlestick` over a list | `rows`, `rows.x`, `rows.volume` | `fmt` | 2 |
-| `record-map` | `map` with the record's place | | `highlight`, `link` (spec), `shade` (spec), `height` | 2 |
-| `record-scatter` | `scatter` over a list | `rows`, `rows.x`, `rows.y`, `rows.label`, `rows.size`, `rows.group` | `fmt`, `xFmt`, `xLabel`, `yLabel` | 1 |
-| `record-waterfall` | `waterfall` over a list | `rows`, `rows.label`, `rows.value` | `fmt`, `sum`, `unit` | 1 |
-| `record-histogram` | `histogram` over a list | `rows` | `fmt`, `unit`, `markers` (spec) | 1 |
-| `record-graph` | `graph` from two lists | `nodes`, `edges`, `nodes.label`, `nodes.group` | `layout` | 1 |
-| `record-metric` | one figure of the record | `value` | `fmt`, `tone`, `caption`, `span` | 12 trading |
+| `linked-entities` | `links` over the record | (none) | `code`, `area` | 49 |
+| `list-table` | `table` over a list, with or without a pivot or a row filter | `rows` | `columns` (spec), `pivot` (spec), `where` | 47 (5 stay one-offs) |
+| `series-line` | `line` over a list | `rows`, `rows.x`, `rows.y` | `fmt` | 32 (1) |
+| `kv-summary` | `kv` over named fields of the record | (the binds are in `columns`) | `columns` (spec), `when` | 4 (1) + 7 trading |
+| `kv-list` | `kv` over a list of label and value | `rows` | | 26 |
+| `ranked-bar-list` | `hbar` over a list | `rows`, `rows.label`, `rows.value` | `fmt`, `tone`, `on-select` (spec) | 19 (2) |
+| `value-grid-surface` | `surface` grid | `rows`, `rows.y` | `columns` (spec) | 5 |
+| `field-note` | `markdown` quoting the record | | `text`, `when` | 4 |
+| `dated-steps-ladder` | `ladder` over a list | `rows` | `columns` (spec) | 3 |
+| `cross-tab-grid` | `pivot` over a list | `rows`, `rows.by`, `rows.across`, `rows.value` | `agg`, `fmt`, `tone`, `heat` | 2 |
+| `area-series` | `area` series over a list | `rows`, `rows.x` | `series` (spec), `limit` | 2 |
+| `price-candles` | `candlestick` over a list | `rows`, `rows.x`, `rows.volume` | `fmt` | 2 |
+| `map-highlight` | `map` with the record's place | | `highlight`, `link` (spec), `shade` (spec), `height` | 2 |
+| `point-scatter` | `scatter` over a list | `rows`, `rows.x`, `rows.y`, `rows.label`, `rows.size`, `rows.group` | `fmt`, `xFmt`, `xLabel`, `yLabel` | 1 |
+| `step-waterfall` | `waterfall` over a list | `rows`, `rows.label`, `rows.value` | `fmt`, `sum`, `unit` | 1 |
+| `distribution-histogram` | `histogram` over a list | `rows` | `fmt`, `unit`, `markers` (spec) | 1 |
+| `relation-graph` | `graph` from two lists | `nodes`, `edges`, `nodes.label`, `nodes.group` | `layout` | 1 |
+| `headline-figure` | one figure of the record | `value` | `fmt`, `tone`, `caption`, `span` | 12 trading |
 
 Every record chip also has the frame controls `panel-id`, `key`, `code` and `area`. The 26 BI report visuals that were board-local copies
 are now instances of their `bi-*` seed chips with constants.
@@ -981,7 +987,7 @@ the packs so the other pages and links are refused; up to 3 records a page; the 
 The first run found a gap in the proof, not in the boards: for a person who may not open the page's kind, the old page is a refusal and
 the board's supplier refuses, but the two were compared as views. `BoardProof` now proves such a pair by "both refuse" (and reports
 `(access)` if the board painted a record the person may not open). The broken-chip check of `UiMigrationTest` now changes the title of the
-`pay30` instance (a `record-metric@1`) and still fails at `panels[1].title`.
+`pay30` instance (a `headline-figure@1`) and still fails at `panels[1].title`.
 
 **Ready to switch** (`packs.<pack>: boards`; every one stays on `sutras` until the product owner says so): core, counterparty-risk,
 market-data, market-risk and world-economy (every entity page proven; their pages on Chip Store chips, the one netting-set one-off

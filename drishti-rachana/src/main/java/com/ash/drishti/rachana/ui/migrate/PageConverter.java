@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
  * the board-local header chip. Each panel becomes:
  * <ul>
  * <li>a block use ({@code use: deal-ticket@1}) the instance of the seed chip of that block, its {@code with} as the instance's controls;</li>
- * <li>a panel a generic record chip ({@code record-<kind>}, UI_BOARD.md 12.4) or the seed chip {@code panel-<kind>} carries whole (every option
+ * <li>a panel a generic record chip ({@link #RECORD_CHIPS}, UI_BOARD.md 12.4) or the seed chip {@code panel-<kind>} carries whole (every option
  * a pin or a constant of it) an instance of that chip, the field names in its pin mapping and controls;</li>
  * <li>anything else a board-local chip wrapping the panel, its record reads written over the document pin ({@code $.X} as {@code @doc.X}).</li>
  * </ul>
@@ -145,7 +145,7 @@ public final class PageConverter {
                                 + " (a chip names no source, CP-02; on a board that is a second supply)"
                         : p.path("rows").isTextual() && !PATH.matcher(p.path("rows").asText()).matches()
                                 ? "its rows are computed over the record (" + abbrev(p.path("rows").asText()) + "), not a path a pin maps"
-                        : "no Chip Store chip (record-" + p.path("kind").asText("?") + ", panel-" + p.path("kind").asText("?")
+                        : "no Chip Store chip (" + String.join(", ", RECORD_CHIPS.getOrDefault(p.path("kind").asText(""), List.of())) + ", panel-" + p.path("kind").asText("?")
                                 + ") carries every option of the panel";
             }
             String chip = "local-" + inst;
@@ -309,7 +309,7 @@ public final class PageConverter {
             return null;
         }
         String kind = p.path("kind").asText();
-        for (String name : RECORD_CHIPS.getOrDefault(kind, List.of("record-" + kind))) {
+        for (String name : RECORD_CHIPS.getOrDefault(kind, List.of())) {
             ObjectNode i = chips.find(new ChipRef(name, 1)).map(e -> fit(e.doc(), p, supply, inst)).orElse(null);
             if (i != null && paintsBack(i, inst, p)) {
                 return i;
@@ -320,10 +320,20 @@ public final class PageConverter {
     }
 
     /**
-     * The record chips a panel kind may become, tried in order (UI_BOARD.md 12.4, P5 follow-up): a kind whose panels come in more than one shape
-     * has a chip per shape ({@code kv} over the rows of a path or over named fields of the record).
+     * The generic record chips a panel kind may become, tried in order (UI_BOARD.md 12.4, P5 follow-up); each chip is named for what it shows,
+     * not for the kind. A kind whose panels come in more than one shape has a chip per shape ({@code kv} over the rows of a path, or over named
+     * fields of the record). Then the seed chip {@code panel-<kind>}.
      */
-    static final java.util.Map<String, List<String>> RECORD_CHIPS = java.util.Map.of("kv", List.of("record-kv", "record-fields"));
+    static final java.util.Map<String, List<String>> RECORD_CHIPS = java.util.Map.ofEntries(
+            java.util.Map.entry("table", List.of("list-table")), java.util.Map.entry("ladder", List.of("dated-steps-ladder")),
+            java.util.Map.entry("surface", List.of("value-grid-surface")), java.util.Map.entry("line", List.of("series-line")),
+            java.util.Map.entry("hbar", List.of("ranked-bar-list")), java.util.Map.entry("area", List.of("area-series")),
+            java.util.Map.entry("pivot", List.of("cross-tab-grid")), java.util.Map.entry("candlestick", List.of("price-candles")),
+            java.util.Map.entry("scatter", List.of("point-scatter")), java.util.Map.entry("waterfall", List.of("step-waterfall")),
+            java.util.Map.entry("histogram", List.of("distribution-histogram")), java.util.Map.entry("graph", List.of("relation-graph")),
+            java.util.Map.entry("kv", List.of("kv-list", "kv-summary")), java.util.Map.entry("metric", List.of("headline-figure")),
+            java.util.Map.entry("markdown", List.of("field-note")), java.util.Map.entry("map", List.of("map-highlight")),
+            java.util.Map.entry("links", List.of("linked-entities")));
 
     /**
      * The instance of {@code chip} that carries panel {@code p}: each option of the panel lands on the slot the chip's body gives it, a

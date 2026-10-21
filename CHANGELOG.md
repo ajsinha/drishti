@@ -18,15 +18,15 @@
 ## Unreleased
 
 - **UI Board P5 follow-up: every pack on Chip Store chips (2.7.0).** The ~240 board-local chips of the packs other than trading were
-  clustered by shape into 18 generic **record chips** (`record-table`, `record-line`, `record-fields`, `record-kv`, `record-hbar`,
-  `record-links`, `record-metric`, ... in `config/ui/chips`, written by the new `tools/ui_record_chips.py`): each reads the page's record
+  clustered by shape into 18 generic **record chips** (`list-table`, `series-line`, `kv-summary`, `kv-list`, `ranked-bar-list`,
+  `linked-entities`, `headline-figure`, ... in `config/ui/chips`, written by the new `tools/ui_record_chips.py`): each reads the page's record
   and one list of it, names no field, and has a full manual; the board's pin mapping and controls carry the field names. New pin type
   `spec` (a structured setting such as a column list); body slot `%{pin.column}`. Every `bi-*` seed chip takes the report's own visual
   settings (`format`, `alt`, `filters`, `sort`, `limit`, `hierarchy`, `alert`, `drillthrough`) as optional controls. The two BC-03
   failures are fixed (`bi-python` no longer requires `columns`, a Python measure gives only `values`; a text visual's `text` is the chip's
   `content`). Dry run: 0 failures in every pack; board-local chips 240 to 9 outside trading (core, market-data, market-risk and
   world-economy fully clean) and 47 to 24 in trading, every one left a true one-off with its reason (page controls, `source:` to another
-  record, computed rows). Proof for three people per pack in the new `UiMigrationPacksTest`. No pack is switched; seed chips 68 to 86.
+  record, computed rows). Proof for three people per pack in the new `UiMigrationPacksTest`. Each chip is named for what it shows and findable (title, one-line purpose, a category of the fixed list, domain-neutral tags, the new optional manual key `fits`); the Chip Store text search also matches category, tags and `fits`. No pack is switched; seed chips 68 to 86.
   [UI_BOARD.md 12.4](docs/architecture/UI_BOARD.md#124-as-built-p5).
 
 - **UI Board P5: the converter and its proof (2.7.0).** Entity pages (Sutras) convert into boards: block uses become the trading

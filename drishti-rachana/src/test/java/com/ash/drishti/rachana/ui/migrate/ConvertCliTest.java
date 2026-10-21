@@ -70,7 +70,7 @@ class ConvertCliTest {
         }
         assertThat(callnot).isNotNull();
         assertThat(callnot.path("chips").toString()).contains("deal-ticket@1", "legs@1", "flow-schedule@1", "events@1", "payments@1", "deal-footer@1");
-        assertThat(callnot.path("chips").toString()).contains("record-fields@1");      // the deposit panel: a generic chip since the record chips
+        assertThat(callnot.path("chips").toString()).contains("kv-summary@1");      // the deposit panel: a generic chip since the record chips
         assertThat(callnot.path("localChips")).isEmpty();
         assertThat(Files.readString(out.resolve("trading-endur-callnot.board.yaml"))).contains("use: \"deal-ticket@1\"", "board: \"trading-endur-callnot\"");
         Ran text = run(args("trading"));
@@ -79,7 +79,7 @@ class ConvertCliTest {
     }
 
     /**
-     * Every pack converts with no failure, its panels on Chip Store chips (the record-* chips, UI_BOARD.md 12.4): the board-local chips left are
+     * Every pack converts with no failure, its panels on Chip Store chips (the generic record chips, UI_BOARD.md 12.4): the board-local chips left are
      * the true one-offs, each listed with its reason, and no more than the counts the docs give.
      */
     @Test
@@ -133,11 +133,11 @@ class ConvertCliTest {
         Conversion c = new PageConverter(chips).convert("market-data", text);
         assertThat(c.status()).isEqualTo(Conversion.Status.CLEAN);
         JsonNode curve = c.document().path("chips").path("curve");
-        assertThat(curve.path("use").asText()).isEqualTo("record-line@1");
+        assertThat(curve.path("use").asText()).isEqualTo("series-line@1");
         assertThat(curve.path("map").path("rows").asText()).isEqualTo("POINTS");
         assertThat(curve.path("map").path("rows.x").asText()).isEqualTo("TENOR");
-        assertThat(c.document().path("chips").path("points").path("use").asText()).isEqualTo("record-table@1");
-        String chip = Files.readString(ROOT.resolve("config/ui/chips/record-line.v1.chip.yaml"));
+        assertThat(c.document().path("chips").path("points").path("use").asText()).isEqualTo("list-table@1");
+        String chip = Files.readString(ROOT.resolve("config/ui/chips/series-line.v1.chip.yaml"));
         assertThat(chip.substring(chip.indexOf("body:"))).doesNotContain("TENOR", "POINTS", "ZERO_RATE");
         var board = UiDocuments.readBoard(c.document().toString());
         JsonNode sutra = BoardSutra.toSutra(board, ref -> chips.find(ref).map(e -> e.doc())).orElseThrow();
