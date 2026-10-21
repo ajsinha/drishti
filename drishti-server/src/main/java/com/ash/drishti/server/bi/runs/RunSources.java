@@ -185,8 +185,11 @@ public final class RunSources {
     }
 
     /**
-     * A report visual. Its signature is personal (the caller's name and roles): a report's result is reused only by the same person, never across
-     * people whose row rules could differ by attribute. It has no data version, so it is stored for its runner and never served for another submit.
+     * A report visual. Its answer is shared between viewers with the same <b>access profile</b> (BI_RUNS.md section 18.2b): keyed by their security
+     * signature on the model it reads (row part and mask part), the report's definition, the data version and the resolved dates, so a second viewer with
+     * the same roles, masks and row rules reuses or joins the first one's run. A visual that depends on who views it ({@link BiReportService#accessProfile}:
+     * a filter, parameter or value naming the viewer, a model of personal answers, a live or version-1 dataset), or one that cannot be sized from metadata,
+     * keeps a personal signature (the caller's name and roles) and no data version: stored for its runner, never served for another submit.
      */
     public RunService.Question report(Principal p, String id, String page, String visual, JsonNode state, boolean interaction, String supersedes, String title) {
         Map<String, Object> canon = new LinkedHashMap<>();
@@ -202,9 +205,17 @@ public final class RunSources {
         if (planned != null) {
             canon.put("dates", planned.dates().stream().map(String::valueOf).toList());   // the resolved dates: a reused answer is for the same dates (2.6.7 patch)
         }
+        String version = null;
+        if (planned != null && planned.data().complete()) {
+            Optional<BiReportService.Shared> shared = reports.accessProfile(p, id, page, visual, state);
+            if (shared.isPresent()) {                                         // the access profile, not the person (18.2b)
+                signature = shared.get().signature();
+                version = "dv:" + planned.data().hash() + ":" + shared.get().definition() + ":" + planned.dates();
+            }
+        }
         BiReportService.Titles titles = reports == null ? new BiReportService.Titles(null, null) : reports.titles(p, id, page, visual);
         String named = title != null && !title.isBlank() ? title : titles.visual() != null ? titles.visual() : titles.report();   // BIR-10 (14.2)
-        return new RunService.Question(p, "report", id, page + "/" + visual, named, null, null, canonical(canon), params, signature, null, interaction,
+        return new RunService.Question(p, "report", id, page + "/" + visual, named, null, null, canonical(canon), params, signature, version, interaction,
                 supersedes, () -> {
                     Map<String, Object> body = reports.query(p, id, null, page, visual, state, false);
                     Object rc = body.get("rowCount");
@@ -280,16 +291,37 @@ public final class RunSources {
 
     /** Replays a stored run as its runner after a restart: a model query, a SQL statement, a report visual or a statement (preview or file). */
     public Optional<RunService.Question> replay(Run r, Principal runner) {
+        return replay(r, runner, null);
+    }
+
+    /**
+     * As {@link #replay(Run, Principal)} for a rerun (BI_RUNS.md 14.1): {@code data} {@code same} asks a one-date model query or report visual as of the
+     * run's resolved date ({@code time.as-of}, the state's dates); {@code latest} drops that one date, so the as-of is resolved again now through the
+     * same rule (the newest date each table holds, a report's {@code as-of} setting); null asks the question as it was asked. A range, a SQL statement
+     * (its {@code AS OF} is in its text) and a statement are asked as they were.
+     */
+    public Optional<RunService.Question> replay(Run r, Principal runner, String data) {
         Object q = RunJson.parse(r.question());
         if (!(q instanceof Map<?, ?> m) || runner == null) {
             return Optional.empty();
         }
+        String pinned = oneDate(r.asOf());
         try {
             return switch (String.valueOf(m.get("type"))) {
-                case "mq" -> m.get("mq") == null ? Optional.empty() : Optional.of(mq(runner, MqParser.parse(CANON.valueToTree(m.get("mq"))),
-                        CANON.valueToTree(m.get("mq")), String.valueOf(m.get("model")), false, null, r.title()));
-                case "report" -> Optional.of(report(runner, String.valueOf(m.get("id")), String.valueOf(m.get("page")), String.valueOf(m.get("visual")),
-                        m.get("state") == null ? null : CANON.valueToTree(m.get("state")), false, null, r.title()));
+                case "mq" -> {
+                    if (m.get("mq") == null) {
+                        yield Optional.empty();
+                    }
+                    ObjectNode raw = (ObjectNode) CANON.valueToTree(m.get("mq"));
+                    dated(raw, "time", data, pinned, true);
+                    yield Optional.of(mq(runner, MqParser.parse(raw), raw, String.valueOf(m.get("model")), false, null, r.title()));
+                }
+                case "report" -> {
+                    ObjectNode state = m.get("state") == null ? CANON.createObjectNode() : (ObjectNode) CANON.valueToTree(m.get("state"));
+                    dated(state, "dates", data, pinned, false);
+                    yield Optional.of(report(runner, String.valueOf(m.get("id")), String.valueOf(m.get("page")), String.valueOf(m.get("visual")),
+                            m.get("state") == null && state.isEmpty() ? null : state, false, null, r.title()));
+                }
                 case "sql" -> Optional.of(sql(runner, String.valueOf(m.get("model")), String.valueOf(m.get("sql")), false, null, r.title()));
                 case "statement" -> {                                           // made again as its runner, from the request it was asked with
                     StatementWork w = statements;
@@ -302,6 +334,42 @@ public final class RunSources {
             };
         } catch (RuntimeException e) {
             return Optional.empty();
+        }
+    }
+
+    /** The run's one resolved date ({@code asOf} of one date), else null (none, or several: a range is asked as it was). */
+    static String oneDate(String asOf) {
+        Map<String, Object> a = RunJson.asOf(asOf);
+        return a != null && a.get("from") != null && a.get("from").equals(a.get("to")) ? String.valueOf(a.get("from")) : null;
+    }
+
+    /**
+     * Sets a question's date for a rerun: {@code same} pins the one resolved date, {@code latest} removes a one-date as-of so it resolves again now. A
+     * model query keeps it as {@code time.as-of} ({@code mq}), a report's state as {@code dates.from = dates.to}. A range is left as asked.
+     */
+    static void dated(ObjectNode o, String field, String data, String pinned, boolean mq) {
+        if (data == null || pinned == null) {
+            return;
+        }
+        JsonNode t = o.path(field);
+        boolean range = mq ? t.has("from") || t.has("to") || t.has("last")
+                : t.path("from").isTextual() && t.path("to").isTextual() && !t.path("from").asText().equals(t.path("to").asText());
+        if (range) {
+            return;
+        }
+        if ("latest".equals(data)) {
+            if (mq && t.isObject()) {
+                ((ObjectNode) t).remove("as-of");
+                if (t.isEmpty()) {
+                    o.remove(field);
+                }
+            } else {
+                o.remove(field);
+            }
+        } else if (mq) {
+            (t.isObject() ? (ObjectNode) t : o.putObject(field)).put("as-of", pinned);
+        } else {
+            o.putObject(field).put("from", pinned).put("to", pinned);
         }
     }
 

@@ -465,7 +465,8 @@ A `slicer` visual lists the values of its field (from the dataset, under the rea
 
 For each visual the server builds one dataset query ([DATASETS.md](DATASETS.md) section 8) from the visual and the state of the page, in this order of authority: the report's filters, the page's, the
 visual's, the slicers in scope, the marks selected on **other** visuals of the page, the values carried by a drill-through, the drill-down path. Then it runs it through the engine **as the person looking**: their
-row rules, their masks, the layer the planner chooses.
+row rules, their masks, the layer the planner chooses. A finished answer is shared with everyone of the same **access profile** (the same roles, masks and row rules),
+unless the visual depends on who is looking ([BI_RUNS_GUIDE.md](BI_RUNS_GUIDE.md#the-same-answer-for-the-same-access-profile)).
 
 | Part | Rule |
 |---|---|

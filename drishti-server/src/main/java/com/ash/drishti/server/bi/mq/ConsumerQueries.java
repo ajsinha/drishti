@@ -94,6 +94,28 @@ public final class ConsumerQueries implements DatasetService.ModelGateway {
     }
 
     @Override
+    public java.util.Optional<DatasetService.AccessProfile> accessProfile(Principal p, BiStore.Item item) {
+        try {
+            return catalog.isVersion1(p, item) ? java.util.Optional.empty() : java.util.Optional.of(profile(catalog.bindItem(p, item)));
+        } catch (RuntimeException e) {
+            return java.util.Optional.empty();                               // not told: the answer stays personal
+        }
+    }
+
+    @Override
+    public java.util.Optional<DatasetService.AccessProfile> accessProfileModel(Principal p, String model, String consumer) {
+        try {
+            return java.util.Optional.of(profile(consumer == null ? catalog.bind(p, model) : catalog.bindVia(p, model, consumer)));
+        } catch (RuntimeException e) {
+            return java.util.Optional.empty();
+        }
+    }
+
+    private static DatasetService.AccessProfile profile(MqService.Bound b) {
+        return new DatasetService.AccessProfile(b.signature(), b.view().hash(), b.personal());
+    }
+
+    @Override
     public Dataset dataset(Principal p, String model) {
         return catalog.bind(p, model).view().flat();
     }

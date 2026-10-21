@@ -117,10 +117,12 @@ public final class LiveTables implements AutoCloseable {
             if (e != null) {
                 closeEntry(key, e);
             }
-            if (sources.plugin(t.connector(), t.kind()).isEmpty()) {
+            java.util.Optional<com.ash.drishti.api.SourcePlugin> plugin = sources.plugin(t.connector(), t.kind());
+            if (plugin.isEmpty()) {
                 throw new DrishtiException(ErrorCode.QUERY_SOURCE,
                         "no running connector serves kind '" + t.kind() + "'" + (t.connector().isBlank() ? "" : " under the name '" + t.connector() + "'") + ": check Admin, Connectors");
             }
+            TableBuilder.requireServes(t, plugin.get());                     // said as a build says it, never a live table that stays empty ("No data")
             String sqlName = "live_" + names.incrementAndGet();
             List<LiveAggregate> kept = new ArrayList<>();
             if (props.incrementalAggregates()) {

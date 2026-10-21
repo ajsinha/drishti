@@ -58,7 +58,7 @@ import org.junit.jupiter.api.io.TempDir;
 public class LiveTablesTest {
 
     /** The lake's trades as pushable entities. */
-    public static final class LiveLake extends TestLake {
+    public static class LiveLake extends TestLake {
         public final Map<EntityRef, EntityDocument> docs = new ConcurrentHashMap<>();
         final Map<EntityRef, List<Consumer<EntityDocument>>> listeners = new ConcurrentHashMap<>();
         final AtomicLong generation = new AtomicLong(1);
@@ -439,5 +439,25 @@ public class LiveTablesTest {
         service.live().drop(ds.key());
         assertThat(service.live().tables(ds.key())).isEmpty();
         assertThat(lake.listeners.values().stream().mapToInt(List::size).sum()).as("subscriptions given back").isZero();
+    }
+
+    /** A named connector whose kinds leave the live table's out: the query and the tick say so (as a build does), never a live table that stays empty. */
+    @Test
+    void aNamedConnectorThatDoesNotServeTheKindIsSaidNotALiveTableWithNoData() {
+        com.ash.drishti.api.SourcePlugin other = org.mockito.Mockito.mock(com.ash.drishti.api.SourcePlugin.class);
+        org.mockito.Mockito.when(other.manifest()).thenReturn(new com.ash.drishti.api.PluginManifest("trading-lake", "1", Set.of("var", "pnl-explain"),
+                new com.ash.drishti.api.SourceCapabilities(false, false, false, true)));
+        lake = new LiveLake() {
+            @Override
+            public java.util.Optional<com.ash.drishti.api.SourcePlugin> plugin(String connector, String kind) {
+                return "trading-lake".equals(connector) ? java.util.Optional.of(other) : super.plugin(connector, kind);
+            }
+        };
+        QueryService.Loaded ds = start("");
+        assertThatThrownBy(() -> run(ds, "{\"measures\":[\"Trades\"]}", who("rita", true, "", "risk"))).isInstanceOf(DrishtiException.class)
+                .hasMessageContaining("connector 'trading-lake' does not serve kind 'trade' (its kinds: pnl-explain, var)")
+                .hasMessageContaining("config/connectors/trading-lake.yaml");
+        assertThatThrownBy(() -> service.liveTick(ds)).hasMessageContaining("does not serve kind 'trade'");
+        assertThat(service.live().tables(ds.key())).as("no live table was started").isEmpty();
     }
 }

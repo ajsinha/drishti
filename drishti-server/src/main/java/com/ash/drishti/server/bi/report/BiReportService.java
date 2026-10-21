@@ -526,6 +526,30 @@ public final class BiReportService {
         }
     }
 
+    /**
+     * The access profile one visual's answer may be shared under (docs/architecture/BI_RUNS.md section 18.2b): the reader's security signature on the model
+     * the visual reads (row part and mask part), and the definition the answer is made from (the report as parsed, the dataset item with its parameter values,
+     * the model view's hash). Empty, so the answer stays the viewer's own, when the visual depends on who views it ({@link ViewerIdentity}: a filter,
+     * parameter, measure or value naming the viewer), the model reads answers asked as the viewer, the dataset is version 1 or live, the visual is a python
+     * one, or anything cannot be told.
+     */
+    public record Shared(String signature, String definition) {}
+
+    public java.util.Optional<Shared> accessProfile(Principal p, String id, String pageId, String visualId, JsonNode stateJson) {
+        try {
+            Prepared pre = prepare(p, id, null, pageId, visualId, stateJson);
+            if (pre.visual().type().startsWith("python") || liveOf(p, pre) != null || ViewerIdentity.dependent(pre.report().toMap(), pre.visual().wells(),
+                    stateJson, String.valueOf(pre.built().query()), pre.built().highlight() == null ? null : String.valueOf(pre.built().highlight()))) {
+                return java.util.Optional.empty();
+            }
+            BiStore.Item ds = pre.dsItem();
+            return datasets.accessProfile(p, ds).filter(a -> !a.personal()).map(a -> new Shared(a.signature(), com.ash.drishti.server.bi.plan.SecuritySignature.sha(
+                    String.join("|", String.valueOf(pre.report().toMap()), ds.id(), String.valueOf(ds.tags()), ds.body() == null ? "" : ds.body(), a.view())).substring(0, 16)));
+        } catch (RuntimeException e) {
+            return java.util.Optional.empty();
+        }
+    }
+
     /** A report's title and one visual's (BIR-10: a run's title and {@code source.title}); either null when it has none or cannot be read. */
     public record Titles(String report, String visual) {}
 

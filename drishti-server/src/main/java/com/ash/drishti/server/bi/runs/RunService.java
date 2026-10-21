@@ -104,8 +104,13 @@ public final class RunService {
      * @param background run as ad-hoc heavy in the background class at once
      * @param confirmed  the confirmation is given in advance ({@code options.confirm}, the CLI's {@code --yes}): no {@code DRS-9082}
      * @param sharedFrom the run this one recomputes for a share's recipient (section 9.3), else null
+     * @param fresh      compute a new answer: no stored result is reused and no running twin joined (a rerun with {@code fresh: true}, its owner only)
      */
-    public record Options(Duration inlineWait, boolean background, boolean confirmed, String sharedFrom) {
+    public record Options(Duration inlineWait, boolean background, boolean confirmed, String sharedFrom, boolean fresh) {
+        public Options(Duration inlineWait, boolean background, boolean confirmed, String sharedFrom) {
+            this(inlineWait, background, confirmed, sharedFrom, false);
+        }
+
         public Options(Duration inlineWait, boolean background) {
             this(inlineWait, background, false, null);
         }
@@ -313,11 +318,11 @@ public final class RunService {
         }
         Tier tier = plan != null ? plan.tier() : o.background() ? Tier.AD_HOC_HEAVY : Tier.INTERACTIVE;
         if (plan != null && tier == Tier.AD_HOC_HEAVY && !o.background()) {
-            o = new Options(Duration.ZERO, true, o.confirmed(), o.sharedFrom());               // its estimate says it will not finish inline: 202 at once (6.1)
+            o = new Options(Duration.ZERO, true, o.confirmed(), o.sharedFrom(), o.fresh());             // its estimate says it will not finish inline: 202 at once (6.1)
         }
         Run base = planned(q, key, reusable, tier, now, o.sharedFrom());
         // 1. the same key's result is stored: reused at once, nothing runs (8.3)
-        if (reusable) {
+        if (reusable && !o.fresh()) {                                           // a fresh rerun computes anew: nothing reused, nothing joined
             Optional<Map<String, Object>> hit = store.read(key, q.signature());
             if (hit.isPresent()) {
                 Run r = base.moveTo(RunState.REUSED, null, null, now);
@@ -330,7 +335,7 @@ public final class RunService {
             }
         }
         // 2. a running twin with the same key: join it (single-flight, 13.3)
-        Flight twin = reusable ? byKey.get(key) : null;
+        Flight twin = reusable && !o.fresh() ? byKey.get(key) : null;
         if (twin != null && !twin.done.isDone()) {
             metrics.reuse("joined");
             Run r = base.moveTo(RunState.RUNNING, null, null, now);
@@ -536,7 +541,7 @@ public final class RunService {
         } catch (ExecutionException e) {
             Throwable c = e.getCause();
             if (twin == null && c instanceof DrishtiException d && d.errorCode() == ErrorCode.QUERY_COST && !q.interaction()) {
-                return submit(q, new Options(Duration.ZERO, true, false, o.sharedFrom()));       // too large for an interactive answer: a background run (6.1)
+                return submit(q, new Options(Duration.ZERO, true, false, o.sharedFrom(), o.fresh()));     // too large for an interactive answer: a background run (6.1)
             }
             if (c instanceof DrishtiException d && d.errorCode() == ErrorCode.QUERY_COST && q.interaction()) {
                 throw new RunProblem(ErrorCode.RUN_NEEDED, "this selection needs a background run: " + d.getMessage(),

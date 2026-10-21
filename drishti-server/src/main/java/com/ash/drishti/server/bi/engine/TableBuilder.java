@@ -86,6 +86,19 @@ final class TableBuilder {
      * metadata) runs holding {@code lockOf}'s lock for the partition's folder, so two builds of one partition never write at once and a
      * build's temporary file is never another's to clean up (QA3B-07: {@code part.parquet.….tmp is gone}).
      */
+    /**
+     * A named connector whose kinds leave the table's out reads nothing, on any date: said ({@code QUERY_SOURCE}, the file and the fix), never an empty
+     * table built for today nor a live table that never fills (a connector file generated from an older pack template that lacks the kind: risk-store
+     * without trade-valuation).
+     */
+    static void requireServes(Dataset.Table t, SourcePlugin p) {
+        if (!t.connector().isBlank() && !p.manifest().serves(t.kind())) {
+            throw new DrishtiException(ErrorCode.QUERY_SOURCE, "connector '" + p.manifest().name() + "' does not serve kind '" + t.kind()
+                    + "' (its kinds: " + String.join(", ", new java.util.TreeSet<>(p.manifest().kinds())) + "): add the kind to the connector's file"
+                    + " (config/connectors/" + p.manifest().name() + ".yaml), or take its pack's template again (Admin, Connectors)");
+        }
+    }
+
     private Built build(Dataset.Table t, LocalDate date, java.util.function.Function<LocalDate, Path> partitionFor,
             java.util.function.Function<Path, java.util.concurrent.locks.Lock> lockOf, java.util.function.Consumer<Built> commit, boolean newFile) {
         List<SourcePlugin> plugins = sources.plugins(t.connector(), t.kind());
@@ -95,13 +108,7 @@ final class TableBuilder {
         }
         SourcePlugin plugin = plugins.get(0);
         for (SourcePlugin p : plugins) {
-            // a named connector whose kinds leave the table's out reads nothing, on any date: said, never an empty table built for today
-            // (a connector file generated from an older pack template that lacks the kind: risk-store without trade-valuation)
-            if (!t.connector().isBlank() && !p.manifest().serves(t.kind())) {
-                throw new DrishtiException(ErrorCode.QUERY_SOURCE, "connector '" + p.manifest().name() + "' does not serve kind '" + t.kind()
-                        + "' (its kinds: " + String.join(", ", new java.util.TreeSet<>(p.manifest().kinds())) + "): add the kind to the connector's file"
-                        + " (config/connectors/" + p.manifest().name() + ".yaml), or take its pack's template again (Admin, Connectors)");
-            }
+            requireServes(t, p);
         }
         List<Dataset.Column> cols = t.physical();
         List<String> warnings = new ArrayList<>();

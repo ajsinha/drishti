@@ -287,6 +287,7 @@ class ModelAcceptanceTest {
     String reader(String name) {
         return switch (name) {
             case "rita" -> as("rita", "bi-risk");
+            case "rob" -> as("rob", "bi-risk");
             case "hana" -> as("hana", "desk-head");
             case "wes" -> as("wes", "report-author");
             default -> as("ann", "bi-analyst");
@@ -299,7 +300,7 @@ class ModelAcceptanceTest {
         role("desk-head", true);
         role("bi-analyst", false);
         role("report-author", true);
-        for (String u : List.of("rita:bi-risk:", "hana:desk-head:DESK-A", "ann:bi-analyst:", "wes:report-author:")) {
+        for (String u : List.of("rita:bi-risk:", "rob:bi-risk:", "hana:desk-head:DESK-A", "ann:bi-analyst:", "wes:report-author:")) {
             String[] n = u.split(":", -1);
             mvc.perform(post("/api/v1/admin/users").header("Authorization", admin()).contentType(MediaType.APPLICATION_JSON)
                     .content(json.writeValueAsString(Map.of("username", n[0], "displayName", n[0], "email", n[0] + "@desk.test", "desk", n[2], "roles", List.of(n[1]),
@@ -973,5 +974,53 @@ class ModelAcceptanceTest {
         } finally {
             runService.planner(before);
         }
+    }
+
+    @Autowired com.ash.drishti.server.bi.report.BiReportService reportService;
+
+    /**
+     * BI_RUNS 18.2b: the access profile a report visual's answer is shared under, on the real model: rob has rita's role, so her profile; ann (MTM
+     * masked) and hana (her desk only) each have their own; a state naming the viewer has none (the answer stays personal). The reuse itself is
+     * {@code RunSourcesReportTest} (this lake's connector gives no data version, so nothing over it is ever reused).
+     */
+    @Test @Order(20)
+    void aReportVisualsAccessProfileIsTheSameForTheSameRolesMasksAndRowRulesOnly() throws Exception {
+        JsonNode state = json.readTree("{\"dates\":{\"from\":\"" + DAY + "\",\"to\":\"" + DAY + "\"}}");
+        Map<String, String> profile = new TreeMap<>();
+        for (String[] who : new String[][] {{"rita", "bi-risk"}, {"rob", "bi-risk"}, {"ann", "bi-analyst"}, {"hana", "desk-head"}}) {
+            var shared = reportService.accessProfile(new com.ash.drishti.server.security.Principal(who[0], List.of(who[1])), REPORT, "main", "by-desk", state);
+            assertThat(shared).as(who[0]).isPresent();
+            profile.put(who[0], shared.get().signature());
+        }
+        assertThat(profile.get("rob")).isEqualTo(profile.get("rita"));
+        assertThat(profile.get("ann")).isNotEqualTo(profile.get("rita"));
+        assertThat(profile.get("hana")).isNotEqualTo(profile.get("rita")).isNotEqualTo(profile.get("ann"));
+        JsonNode mine = json.readTree("{\"dates\":{\"from\":\"" + DAY + "\",\"to\":\"" + DAY + "\"},\"selections\":[{\"visual\":\"total\",\"field\":\"trades.desk\",\"values\":[\"@me\"]}]}");
+        assertThat(reportService.accessProfile(new com.ash.drishti.server.security.Principal("rita", List.of("bi-risk")), REPORT, "main", "by-desk", mine)).isEmpty();
+    }
+
+    /** BI_RUNS 14.1: a rerun as of the same resolved date (the default) or the latest held now, and fresh (computed anew, never reused); its owner only. */
+    @Test @Order(21)
+    void aRerunIsAskedAsOfTheSameDateOrTheLatestAndFreshComputesAnew() throws Exception {
+        Map<String, Object> q = Map.of("mq", 1, "model", "acc-trades", "select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional")),
+                "time", Map.of("as-of", "2026-10-07"));
+        String id = ok(call("POST", "/api/v1/bi/runs", reader("rita"), Map.of("source", Map.of("type", "mq", "mq", q), "options", Map.of("wait", 0, "confirm", true))))
+                .path("run").path("id").asText();
+        for (int i = 0; i < 200 && !ok(call("GET", "/api/v1/bi/runs/" + id, reader("rita"), null)).path("state").asText().equals("done"); i++) {
+            Thread.sleep(50);
+        }
+        JsonNode same = ok(call("POST", "/api/v1/bi/runs/" + id + "/rerun", reader("rita"), Map.of("wait", "PT10S"))).path("run");
+        assertThat(same.path("rerunOf").asText()).isEqualTo(id);
+        assertThat(same.path("data").asText()).isEqualTo("same");
+        assertThat(same.path("fresh").asBoolean()).isFalse();
+        assertThat(same.path("asOf").path("to").asText()).as(same.toString()).isEqualTo("2026-10-07");
+        JsonNode latest = ok(call("POST", "/api/v1/bi/runs/" + id + "/rerun", reader("rita"), Map.of("wait", "PT10S", "data", "latest", "fresh", true))).path("run");
+        assertThat(latest.path("data").asText()).isEqualTo("latest");
+        assertThat(latest.path("fresh").asBoolean()).isTrue();
+        assertThat(latest.path("state").asText()).isNotEqualTo("reused");
+        assertThat(latest.path("asOf").path("to").asText()).as(latest.toString()).isEqualTo(DAY);
+        // another reader never reruns it, fresh or not; a bad data is refused
+        assertThat(call("POST", "/api/v1/bi/runs/" + id + "/rerun", reader("rob"), Map.of("fresh", true)).andReturn().getResponse().getStatus()).isIn(403, 404);
+        call("POST", "/api/v1/bi/runs/" + id + "/rerun", reader("rita"), Map.of("data", "yesterday")).andExpect(status().isBadRequest());
     }
 }
