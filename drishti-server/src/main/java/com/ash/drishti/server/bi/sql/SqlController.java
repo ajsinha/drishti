@@ -53,8 +53,11 @@ public class SqlController {
     private final ModelCatalog catalog;
     private final SqlService sql;
     private final AuditLog audit;
+    private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs;
 
-    public SqlController(BiService bi, ModelCatalog catalog, SqlService sql, AuditLog audit) {
+    public SqlController(BiService bi, ModelCatalog catalog, SqlService sql, AuditLog audit,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs) {
+        this.runs = runs;
         this.bi = bi;
         this.catalog = catalog;
         this.sql = sql;
@@ -63,12 +66,19 @@ public class SqlController {
 
     /** Body {@code {model, sql, format?}}: the answer (or the plan, for {@code EXPLAIN}); a refusal is {@code 422} with the code, {@code fix} and position. */
     @PostMapping
-    public ResponseEntity<?> run(@RequestBody Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public ResponseEntity<?> run(@RequestBody Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p,
+            @org.springframework.web.bind.annotation.RequestHeader(value = "Prefer", required = false) String prefer) {
         bi.requirePower(p, BiAccess.BI);
         enabled();
         String model = text(body, "model");
         String statement = text(body, "sql");
         String format = body.get("format") == null ? "json" : String.valueOf(body.get("format"));
+        com.ash.drishti.server.bi.runs.RunSources r = runs == null ? null : runs.getIfAvailable();
+        if (r != null && r.async(prefer) && !"csv".equalsIgnoreCase(format) && !statement.strip().toUpperCase(java.util.Locale.ROOT).startsWith("EXPLAIN")) {
+            audit.record(p.user(), "bi-sql", model, "run: " + (statement.length() > AUDIT_TEXT ? statement.substring(0, AUDIT_TEXT) + "..." : statement));
+            return r.submit(r.sql(p, model, statement, Boolean.TRUE.equals(body.get("interaction")),
+                    body.get("supersedes") == null ? null : String.valueOf(body.get("supersedes")), null), prefer, format, p);
+        }
         MqService.Bound b = catalog.bind(p, model);
         SqlService.Compiled c;
         try {

@@ -1,0 +1,68 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.server.bi.runs;
+
+import io.micrometer.core.instrument.MeterRegistry;
+import java.time.Duration;
+
+/** The metrics of BI runs (docs/architecture/BI_RUNS.md section 17.1), beside {@code BiMetrics}. */
+public interface RunMetrics {
+
+    default void submitted(String source) {}
+
+    default void finished(String tier, String outcome, String code) {}
+
+    default void inline(boolean inline) {}
+
+    default void reuse(String mode) {}
+
+    default void seconds(String tier, double seconds) {}
+
+    RunMetrics NONE = new RunMetrics() {};
+
+    /** Micrometer counters and timers: {@code drishti.bi.runs.*}. */
+    static RunMetrics of(MeterRegistry m) {
+        if (m == null) {
+            return NONE;
+        }
+        return new RunMetrics() {
+            @Override
+            public void submitted(String source) {
+                m.counter("drishti.bi.runs.submitted", "source", source == null ? "" : source).increment();
+            }
+
+            @Override
+            public void finished(String tier, String outcome, String code) {
+                m.counter("drishti.bi.runs.finished", "tier", tier, "outcome", outcome, "code", code == null ? "" : code).increment();
+            }
+
+            @Override
+            public void inline(boolean inline) {
+                m.counter("drishti.bi.runs.inline", "result", inline ? "inline" : "job").increment();
+            }
+
+            @Override
+            public void reuse(String mode) {
+                m.counter("drishti.bi.runs.reuse", "mode", mode).increment();
+            }
+
+            @Override
+            public void seconds(String tier, double seconds) {
+                m.timer("drishti.bi.runs.seconds", "tier", tier, "engine", "local").record(Duration.ofNanos((long) (seconds * 1e9)));
+            }
+        };
+    }
+}

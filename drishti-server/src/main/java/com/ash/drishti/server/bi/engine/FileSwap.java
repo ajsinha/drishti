@@ -33,7 +33,7 @@ import java.util.UUID;
  * with a sharing violation, which used to fail the report with DRS-9027 (QA 2026-10-20, the product owner's Windows machine). The move
  * is now tried again for a few seconds, as such holders let go within moments; past that the answer says plainly what held it.
  */
-final class FileSwap {
+public final class FileSwap {
 
     /** Tries and the pause before each retry: about five seconds in all. */
     static final int TRIES = 20;
@@ -53,7 +53,7 @@ final class FileSwap {
      * A temporary file beside {@code file}, unique to this build (removed on failure by {@link #replace}). Temporary files of the same
      * partition older than an hour (a build the process was stopped in the middle of) are removed first.
      */
-    static Path temp(Path file) {
+    public static Path temp(Path file) {
         String prefix = file.getFileName() + ".";
         try (var old = Files.newDirectoryStream(file.getParent(), prefix + "*.tmp")) {
             long hourAgo = System.currentTimeMillis() - 3_600_000L;
@@ -69,7 +69,7 @@ final class FileSwap {
     }
 
     /** Moves {@code tmp} over {@code file}, retrying while the old file is held open. */
-    static void replace(Path tmp, Path file) {
+    public static void replace(Path tmp, Path file) {
         replace(tmp, file, ATOMIC, TRIES, PAUSE_MS);
     }
 

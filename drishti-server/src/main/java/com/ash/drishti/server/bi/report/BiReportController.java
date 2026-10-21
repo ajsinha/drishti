@@ -58,7 +58,16 @@ public class BiReportController {
     private final AtomicInteger streams = new AtomicInteger();
     private final Map<String, AtomicInteger> perUser = new ConcurrentHashMap<>();
 
+    private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs;
+
     public BiReportController(BiReportService reports, BiLiveProperties live, ExecutorService executor) {
+        this(reports, live, executor, null);
+    }
+
+    /** With BI runs: {@code Prefer: respond-async} on a visual's query answers as {@code POST /api/v1/bi/runs} does (docs/architecture/BI_RUNS.md section 6). */
+    public BiReportController(BiReportService reports, BiLiveProperties live, ExecutorService executor,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs) {
+        this.runs = runs;
         this.reports = reports;
         this.live = live;
         this.executor = executor;
@@ -116,7 +125,13 @@ public class BiReportController {
      */
     @PostMapping("/{id}/query")
     public ResponseEntity<?> query(@PathVariable String id, @RequestBody JsonNode body, @RequestParam(defaultValue = "false") boolean explain,
-            @RequestParam(defaultValue = "json") String format, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(defaultValue = "json") String format, @RequestAttribute(Principal.ATTRIBUTE) Principal p,
+            @org.springframework.web.bind.annotation.RequestHeader(value = "Prefer", required = false) String prefer) {
+        com.ash.drishti.server.bi.runs.RunSources r = runs == null ? null : runs.getIfAvailable();
+        if (r != null && r.async(prefer) && !explain && !"arrow".equalsIgnoreCase(format)) {
+            return r.submit(r.report(p, id, body.path("page").asText(""), body.path("visual").asText(""), body.get("state"), body.path("interaction").asBoolean(false),
+                    body.path("supersedes").isTextual() ? body.path("supersedes").asText() : null, null), prefer, "json", p);
+        }
         if ("arrow".equalsIgnoreCase(format)) {
             BiReportService.ArrowAnswer a = reports.queryArrow(p, id, body.path("page").asText(""), body.path("visual").asText(""), body.get("state"));
             Object masked = a.meta().get("masked");

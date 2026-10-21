@@ -68,8 +68,16 @@ public class MqController {
     private final BiLiveProperties live;
     private final ExecutorService executor;
     private final ObjectMapper json = new ObjectMapper();
+    private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs;
 
     public MqController(ModelCatalog catalog, MqService mq, StandingQueries standing, BiService bi, Entitlements entitlements, BiLiveProperties live, ExecutorService executor) {
+        this(catalog, mq, standing, bi, entitlements, live, executor, null);
+    }
+
+    /** With BI runs: {@code Prefer: respond-async} answers as {@code POST /api/v1/bi/runs} does (docs/architecture/BI_RUNS.md section 6). */
+    public MqController(ModelCatalog catalog, MqService mq, StandingQueries standing, BiService bi, Entitlements entitlements, BiLiveProperties live, ExecutorService executor,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs) {
+        this.runs = runs;
         this.catalog = catalog;
         this.mq = mq;
         this.standing = standing;
@@ -88,18 +96,40 @@ public class MqController {
     }
 
     @PostMapping("/mq")
-    public ResponseEntity<?> ask(@RequestBody JsonNode body, @RequestParam(required = false) String format, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public ResponseEntity<?> ask(@RequestBody JsonNode body, @RequestParam(required = false) String format, @RequestAttribute(Principal.ATTRIBUTE) Principal p,
+            @org.springframework.web.bind.annotation.RequestHeader(value = "Prefer", required = false) String prefer) {
         bi.requirePower(p, BiAccess.BI);
+        com.ash.drishti.server.bi.runs.RunSources r = runs == null ? null : runs.getIfAvailable();
+        if (r != null && r.async(prefer)) {
+            return asRun(r, p, body, null, format, prefer);
+        }
         return answer(p, query(body), format);
+    }
+
+    /** A model query as a BI run: inline within the wait, else a visible run ({@code 202}). */
+    private ResponseEntity<?> asRun(com.ash.drishti.server.bi.runs.RunSources r, Principal p, JsonNode body, String model, String format, String prefer) {
+        JsonNode b = body != null && body.isObject() ? body.deepCopy() : body;
+        boolean interaction = b != null && b.path("interaction").asBoolean(false);
+        String supersedes = b != null && b.path("supersedes").isTextual() ? b.path("supersedes").asText() : null;
+        if (b != null && b.isObject()) {
+            ((com.fasterxml.jackson.databind.node.ObjectNode) b).remove(java.util.List.of("interaction", "supersedes"));
+        }
+        ModelQuery q = query(b);
+        String f = format == null ? q.options().format() : format;
+        return r.submit(r.mq(p, q, b != null && b.has("yaml") ? null : b, model, interaction, supersedes, null), prefer, f, p);
     }
 
     @PostMapping("/models/{id}/query")
     public ResponseEntity<?> askModel(@PathVariable String id, @RequestBody JsonNode body, @RequestParam(required = false) String format,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p, @org.springframework.web.bind.annotation.RequestHeader(value = "Prefer", required = false) String prefer) {
         bi.requirePower(p, BiAccess.BI);
         JsonNode b = body;
         if (b != null && b.isObject() && !b.has("mq")) {
             b = ((com.fasterxml.jackson.databind.node.ObjectNode) b.deepCopy()).put("mq", 1);
+        }
+        com.ash.drishti.server.bi.runs.RunSources r = runs == null ? null : runs.getIfAvailable();
+        if (r != null && r.async(prefer)) {
+            return asRun(r, p, b, id, format, prefer);
         }
         ModelQuery q = query(b);
         if (!q.model().isBlank() && !q.model().equals(id)) {

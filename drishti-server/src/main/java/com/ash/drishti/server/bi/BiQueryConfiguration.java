@@ -137,8 +137,9 @@ public class BiQueryConfiguration {
     }
 
     @Bean
-    public BiReportController biReportController(BiReportService reports, BiLiveProperties live, java.util.concurrent.ExecutorService drishtiVirtualExecutor) {
-        return new BiReportController(reports, live, drishtiVirtualExecutor);
+    public BiReportController biReportController(BiReportService reports, BiLiveProperties live, java.util.concurrent.ExecutorService drishtiVirtualExecutor,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs) {
+        return new BiReportController(reports, live, drishtiVirtualExecutor, runs);
     }
 
     @Bean

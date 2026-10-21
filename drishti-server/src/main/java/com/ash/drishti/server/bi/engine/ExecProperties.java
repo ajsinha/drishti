@@ -43,12 +43,6 @@ public record ExecProperties(Double perModelShare, Duration queue, Duration inte
         Integer breakerFailures, Duration breakerOpen, Map<String, Map<String, Object>> connectors, String node, Map<String, String> nodes,
         Double backgroundShare, Double standingShare, Double fragmentsShare) {
 
-    /** The settings without the class shares (their defaults). */
-    public ExecProperties(Double perModelShare, Duration queue, Duration interactive, Duration background, Long maxEstimatedRows, Integer maxFragments,
-            Integer breakerFailures, Duration breakerOpen, Map<String, Map<String, Object>> connectors, String node, Map<String, String> nodes) {
-        this(perModelShare, queue, interactive, background, maxEstimatedRows, maxFragments, breakerFailures, breakerOpen, connectors, node, nodes, null, null, null);
-    }
-
     public ExecProperties {
         perModelShare = perModelShare == null || perModelShare <= 0 || perModelShare > 1 ? 0.5 : perModelShare;
         queue = positive(queue, Duration.ofMillis(2000));
@@ -90,6 +84,6 @@ public record ExecProperties(Double perModelShare, Duration queue, Duration inte
     }
 
     public static ExecProperties defaults() {
-        return new ExecProperties(null, null, null, null, null, null, null, null, null, null, null);
+        return new ExecProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 }

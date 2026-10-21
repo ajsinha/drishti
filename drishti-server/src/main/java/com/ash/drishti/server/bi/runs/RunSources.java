@@ -1,0 +1,244 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.server.bi.runs;
+
+import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.server.bi.DatasetController;
+import com.ash.drishti.server.bi.engine.ArrowIpcWriter;
+import com.ash.drishti.server.bi.mq.ModelCatalog;
+import com.ash.drishti.server.bi.mq.ModelQuery;
+import com.ash.drishti.server.bi.mq.MqParser;
+import com.ash.drishti.server.bi.mq.MqService;
+import com.ash.drishti.server.bi.plan.SecuritySignature;
+import com.ash.drishti.server.bi.report.BiReportService;
+import com.ash.drishti.server.bi.sql.DsqlException;
+import com.ash.drishti.server.bi.sql.SqlService;
+import com.ash.drishti.server.security.Principal;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.net.URI;
+import java.time.Duration;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+
+/**
+ * Turns a BI question (a model query, a SQL statement, a report visual) into a {@link RunService.Question} computed as its caller, and a run's
+ * outcome into the HTTP answer (docs/architecture/BI_RUNS.md sections 6.1 and 14): {@code 200} with today's body when it finished inside the wait,
+ * {@code 202 {run}} when it became a visible job. Used by {@code POST /api/v1/bi/runs} and by the existing endpoints when the caller sends
+ * {@code Prefer: respond-async}; without that header the existing endpoints answer exactly as before.
+ */
+public final class RunSources {
+
+    /** This process: an engine generation is only a data version within one process (generations start again at every start). */
+    static final String BOOT = UUID.randomUUID().toString().substring(0, 8);
+    private static final Pattern WAIT = Pattern.compile("(?i)\\bwait\\s*=\\s*(\\d+(?:\\.\\d+)?)");
+    private static final ObjectMapper CANON = new ObjectMapper().configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+
+    private final RunService runs;
+    private final ModelCatalog catalog;
+    private final MqService mq;
+    private final SqlService sql;
+    private final BiReportService reports;
+
+    public RunSources(RunService runs, ModelCatalog catalog, MqService mq, SqlService sql, BiReportService reports) {
+        this.runs = runs;
+        this.catalog = catalog;
+        this.mq = mq;
+        this.sql = sql;
+        this.reports = reports;
+    }
+
+    public RunService runs() {
+        return runs;
+    }
+
+    /** Whether a request asked for an asynchronous answer ({@code Prefer: respond-async}) and runs are on. */
+    public boolean async(String prefer) {
+        return runs.properties().enabled() && prefer != null && prefer.toLowerCase(java.util.Locale.ROOT).contains("respond-async");
+    }
+
+    /** The inline wait a {@code Prefer} header asks for ({@code wait=<seconds>}), capped by {@code inline.max-wait}; the default otherwise. */
+    public Duration waitOf(String prefer) {
+        Matcher m = WAIT.matcher(prefer == null ? "" : prefer);
+        Duration d = m.find() ? Duration.ofMillis((long) (Double.parseDouble(m.group(1)) * 1000)) : runs.properties().inline().inlineWait();
+        return d.compareTo(runs.properties().inline().maxWait()) > 0 ? runs.properties().inline().maxWait() : d;
+    }
+
+    static String canonical(Object o) {
+        try {
+            return CANON.writeValueAsString(CANON.convertValue(o, Object.class));
+        } catch (Exception e) {
+            return String.valueOf(o);
+        }
+    }
+
+    /** A data version from the model's generation within this process, or null (not reusable) when the model has none. */
+    static String version(MqService.Bound b) {
+        if (b.generation() == null) {
+            return null;
+        }
+        return "gen:" + BOOT + ":" + b.generation().getAsLong() + ":" + Integer.toHexString(b.view().flat().hashCode());
+    }
+
+    /** The interaction flags of a body ({@code interaction}, {@code supersedes}), removed from it so the question parses as before. */
+    record Flags(boolean interaction, String supersedes, String title) {
+        static Flags take(JsonNode body) {
+            if (body == null || !body.isObject()) {
+                return new Flags(false, null, null);
+            }
+            ObjectNode o = (ObjectNode) body;
+            boolean i = o.path("interaction").asBoolean(false);
+            String s = o.path("supersedes").isTextual() ? o.path("supersedes").asText() : null;
+            o.remove("interaction");
+            o.remove("supersedes");
+            return new Flags(i, s, null);
+        }
+    }
+
+    // ---- questions ----------------------------------------------------------------------------------------------------
+
+    public RunService.Question mq(Principal p, ModelQuery q, JsonNode raw, String modelRef, boolean interaction, String supersedes, String title) {
+        String model = modelRef != null ? modelRef : q.model();
+        ModelQuery query = modelRef != null ? q.withModel(modelRef) : q;
+        MqService.Bound b = catalog.bind(p, model);
+        Map<String, Object> canon = new LinkedHashMap<>();
+        canon.put("type", "mq");
+        canon.put("model", model);
+        canon.put("query", query.toString());
+        if (raw != null) {
+            canon.put("mq", CANON.convertValue(raw, Object.class));        // replayable after a restart
+        }
+        return new RunService.Question(p, "mq", model, null, title, null, model, canonical(canon), null, b.signature(), version(b), interaction, supersedes,
+                () -> {
+                    MqService.Answer a = mq.ask(b, query, false);
+                    return new RunService.Answer(a.body(), a.result().columns(), a.result().rows());
+                });
+    }
+
+    public RunService.Question sql(Principal p, String model, String statement, boolean interaction, String supersedes, String title) {
+        MqService.Bound b = catalog.bind(p, model);
+        SqlService.Compiled c;
+        try {
+            c = sql.compile(b, model, statement);
+        } catch (DsqlException e) {
+            throw e.toMq();
+        }
+        if (c.explain()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "EXPLAIN answers at once; ask it without Prefer: respond-async");
+        }
+        Map<String, Object> canon = Map.of("type", "sql", "model", model, "sql", statement.strip());
+        return new RunService.Question(p, "sql", model, null, title, null, model, canonical(canon), null, b.signature(), version(b), interaction, supersedes,
+                () -> {
+                    SqlService.Answer a = sql.run(b, c);
+                    return new RunService.Answer(a.body(), a.columns(), a.rows());
+                });
+    }
+
+    /**
+     * A report visual. Its signature is personal (the caller's name and roles): a report's result is reused only by the same person, never across
+     * people whose row rules could differ by attribute. It has no data version, so it is stored for its runner and never served for another submit.
+     */
+    public RunService.Question report(Principal p, String id, String page, String visual, JsonNode state, boolean interaction, String supersedes, String title) {
+        Map<String, Object> canon = new LinkedHashMap<>();
+        canon.put("type", "report");
+        canon.put("id", id);
+        canon.put("page", page);
+        canon.put("visual", visual);
+        canon.put("state", state == null ? null : CANON.convertValue(state, Object.class));
+        String signature = SecuritySignature.sha("personal|" + p.user() + "|" + p.securitySignature());
+        String params = state == null ? null : canonical(state);
+        return new RunService.Question(p, "report", id, page + "/" + visual, title, null, null, canonical(canon), params, signature, null, interaction,
+                supersedes, () -> {
+                    Map<String, Object> body = reports.query(p, id, null, page, visual, state, false);
+                    Object rc = body.get("rowCount");
+                    Object rows = body.get("rows");
+                    int n = rc instanceof Number x ? x.intValue() : rows instanceof List<?> l ? l.size() : 0;
+                    return new RunService.Answer(body, null, n);
+                });
+    }
+
+    /** The question of {@code POST /api/v1/bi/runs}'s {@code source} (14.2). */
+    public RunService.Question of(Principal p, JsonNode source, JsonNode options) {
+        String type = source.path("type").asText("");
+        boolean interaction = options.path("interaction").asBoolean(false);
+        String supersedes = options.path("supersedes").isTextual() ? options.path("supersedes").asText() : null;
+        String title = options.path("title").isTextual() ? options.path("title").asText() : null;
+        return switch (type) {
+            case "mq" -> {
+                JsonNode q = source.path("mq");
+                ModelQuery query = q.isTextual() ? MqParser.parse(q.asText()) : MqParser.parse(q);
+                yield mq(p, query, q.isTextual() ? null : q, null, interaction, supersedes, title);
+            }
+            case "sql" -> sql(p, source.path("model").asText(""), source.path("sql").asText(""), interaction, supersedes, title);
+            case "report", "board" -> report(p, source.path("id").asText(""), source.path("page").asText(""), source.path("visual").asText(""),
+                    source.get("state"), interaction, supersedes, title);
+            default -> throw new DrishtiException(ErrorCode.BAD_REQUEST, "source.type is mq, sql, report or board, not '" + type + "'");
+        };
+    }
+
+    /** Replays a stored run as its runner after a restart (mq and sql only; a report visual is asked again by its page). */
+    public Optional<RunService.Question> replay(Run r, Principal runner) {
+        Object q = RunJson.parse(r.question());
+        if (!(q instanceof Map<?, ?> m) || runner == null) {
+            return Optional.empty();
+        }
+        try {
+            return switch (String.valueOf(m.get("type"))) {
+                case "mq" -> m.get("mq") == null ? Optional.empty() : Optional.of(mq(runner, MqParser.parse(CANON.valueToTree(m.get("mq"))),
+                        CANON.valueToTree(m.get("mq")), String.valueOf(m.get("model")), false, null, r.title()));
+                case "report" -> Optional.of(report(runner, String.valueOf(m.get("id")), String.valueOf(m.get("page")), String.valueOf(m.get("visual")),
+                        m.get("state") == null ? null : CANON.valueToTree(m.get("state")), false, null, r.title()));
+                case "sql" -> Optional.of(sql(runner, String.valueOf(m.get("model")), String.valueOf(m.get("sql")), false, null, r.title()));
+                default -> Optional.empty();
+            };
+        } catch (RuntimeException e) {
+            return Optional.empty();
+        }
+    }
+
+    // ---- answers ------------------------------------------------------------------------------------------------------
+
+    /** The HTTP answer of an outcome: {@code 200} today's body (JSON or Arrow) with {@code X-Bi-Run}, or {@code 202 {run}} with {@code Location}. */
+    public ResponseEntity<?> respond(RunService.Outcome o, String format, Principal p) {
+        if (o.inline()) {
+            RunService.Answer a = o.answer();
+            if ("arrow".equalsIgnoreCase(format) && a.columns() != null) {
+                return ResponseEntity.ok().contentType(MediaType.parseMediaType(DatasetController.ARROW)).header("X-Bi-Rows", Integer.toString(a.rows()))
+                        .header("X-Bi-Run", o.run().id()).header(HttpHeaders.CACHE_CONTROL, "no-store").body(ArrowIpcWriter.write(a.columns(), a.rows()));
+            }
+            return ResponseEntity.ok().header("X-Bi-Run", o.run().id()).header(HttpHeaders.CACHE_CONTROL, "no-store").body(a.body());
+        }
+        return ResponseEntity.accepted().location(URI.create("/api/v1/bi/runs/" + o.run().id())).header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .body(Map.of("run", RunJson.of(o.run(), RunJson.View.of(p.user()), java.time.Instant.now())));
+    }
+
+    /** Submits and answers in one step (the existing endpoints with {@code Prefer: respond-async}). */
+    public ResponseEntity<?> submit(RunService.Question q, String prefer, String format, Principal p) {
+        Duration wait = waitOf(prefer);
+        return respond(runs.submit(q, new RunService.Options(wait, wait.isZero())), format, p);
+    }
+}
