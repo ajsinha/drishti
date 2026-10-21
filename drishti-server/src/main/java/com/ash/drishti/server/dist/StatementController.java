@@ -40,10 +40,65 @@ public class StatementController {
 
     private final StatementService statements;
     private final AuditLog audit;
+    private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs;
 
-    public StatementController(StatementService statements, AuditLog audit) {
+    /** With BI runs: {@code Prefer: respond-async} answers as {@code POST /api/v1/bi/runs} does (docs/architecture/BI_RUNS.md 14.1); without it, as before. */
+    @org.springframework.beans.factory.annotation.Autowired
+    public StatementController(StatementService statements, AuditLog audit,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs) {
         this.statements = statements;
         this.audit = audit;
+        this.runs = runs;
+    }
+
+    public StatementController(StatementService statements, AuditLog audit) {
+        this(statements, audit, null);
+    }
+
+    private com.ash.drishti.server.bi.runs.RunSources async(String prefer) {
+        com.ash.drishti.server.bi.runs.RunSources r = runs == null ? null : runs.getIfAvailable();
+        return r != null && r.async(prefer) ? r : null;
+    }
+
+    /** {@code Prefer: respond-async}: the preview as a run; 200 today's body inside the wait, else 202 {run}. */
+    @PostMapping(path = "/api/v1/bi/reports/statement/preview", headers = "Prefer")
+    public ResponseEntity<?> previewAsync(@RequestBody JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p,
+            @org.springframework.web.bind.annotation.RequestHeader("Prefer") String prefer) {
+        com.ash.drishti.server.bi.runs.RunSources r = async(prefer);
+        if (r == null) {
+            return ResponseEntity.ok(preview(body, p));
+        }
+        return r.submit(r.statement(p, body, "preview", "Statement preview " + body.path("report").asText(""), () -> preview(body, p)), prefer, "json", p);
+    }
+
+    /**
+     * {@code Prefer: respond-async}: the file as a run. Inside the wait it is the file, as without the header (with {@code Drishti-Run}); past it, 202 {run}
+     * and the run's result is {@code {format, filename, contentType, pages, bytes}} (the file in base64).
+     */
+    @PostMapping(path = "/api/v1/bi/reports/statement/file", headers = "Prefer")
+    public ResponseEntity<?> fileAsync(@RequestBody JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p,
+            @org.springframework.web.bind.annotation.RequestHeader("Prefer") String prefer) {
+        com.ash.drishti.server.bi.runs.RunSources r = async(prefer);
+        if (r == null) {
+            return file(body, p);
+        }
+        ResponseEntity<?> out = r.submit(r.statement(p, body, "file", "Statement " + body.path("report").asText(""), () -> {
+            ResponseEntity<byte[]> f = file(body, p);
+            Map<String, Object> m = new java.util.LinkedHashMap<>();
+            m.put("format", body.path("format").asText("pdf"));
+            m.put("filename", f.getHeaders().getContentDisposition().getFilename());
+            m.put("contentType", String.valueOf(f.getHeaders().getContentType()));
+            m.put("pages", Integer.parseInt(f.getHeaders().getFirst("X-Statement-Pages")));
+            m.put("bytes", java.util.Base64.getEncoder().encodeToString(f.getBody()));
+            return m;
+        }), prefer, "json", p);
+        if (out.getStatusCode().value() == 200 && out.getBody() instanceof Map<?, ?> m && m.get("bytes") instanceof String b) {
+            return ResponseEntity.ok().contentType(MediaType.parseMediaType(String.valueOf(m.get("contentType"))))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(String.valueOf(m.get("filename")), StandardCharsets.UTF_8).build().toString())
+                    .header("X-Statement-Pages", String.valueOf(m.get("pages"))).header("Drishti-Run", out.getHeaders().getFirst("Drishti-Run"))
+                    .body(java.util.Base64.getDecoder().decode(b));
+        }
+        return out;
     }
 
     /**

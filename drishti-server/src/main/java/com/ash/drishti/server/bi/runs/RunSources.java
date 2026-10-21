@@ -205,6 +205,24 @@ public final class RunSources {
                 });
     }
 
+    /**
+     * A statement (a preview, or its PDF or Excel file) made for the caller: a personal signature and no data version, as a report visual (stored for its
+     * runner, never served to another). {@code work} answers the JSON body (the preview, or the file as base64 with its name and type).
+     */
+    public RunService.Question statement(Principal p, JsonNode body, String kind, String title, java.util.function.Supplier<Map<String, Object>> work) {
+        Map<String, Object> canon = new LinkedHashMap<>();
+        canon.put("type", "statement");
+        canon.put("kind", kind);
+        canon.put("request", body == null ? null : CANON.convertValue(body, Object.class));
+        String id = body == null ? null : body.path("report").asText(null);
+        String signature = SecuritySignature.sha("personal|" + p.user() + "|" + p.securitySignature());
+        return new RunService.Question(p, "statement", id, kind, title, null, null, canonical(canon), null, signature, null, false, null, () -> {
+            Map<String, Object> b = work.get();
+            Object rows = b.get("pages");
+            return new RunService.Answer(b, null, rows instanceof List<?> l ? l.size() : rows instanceof Number n ? n.intValue() : 0);
+        });
+    }
+
     /** The question of {@code POST /api/v1/bi/runs}'s {@code source} (14.2). */
     public RunService.Question of(Principal p, JsonNode source, JsonNode options) {
         String type = source.path("type").asText("");

@@ -483,6 +483,25 @@ class StatementApiTest {
         assertThat(pdf.getResponse().getHeader("X-Statement-Pages")).isEqualTo(String.valueOf(read(pdf.getResponse().getContentAsByteArray()).pages().size()));
     }
 
+    @Test @Order(2)
+    void withPreferRespondAsyncAStatementIsARunInsideTheWaitTheSameFileElseA202() throws Exception {
+        Map<String, Object> body = Map.of("report", REPORT, "format", "xlsx", "state", Map.of("dates", Map.of("from", "2026-10-01", "to", "2026-10-01")));
+        MvcResult plain = call("POST", "/api/v1/bi/reports/statement/file", as("hfx1", "st-head"), body);
+        var req = post("/api/v1/bi/reports/statement/file").header("Authorization", as("hfx1", "st-head")).header("Prefer", "respond-async, wait=10")
+                .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        MvcResult async = mvc.perform(req).andReturn();
+        assertThat(async.getResponse().getStatus()).as(async.getResponse().getContentAsString()).isEqualTo(200);
+        assertThat(async.getResponse().getHeader("Drishti-Run")).startsWith("r-");
+        assertThat(async.getResponse().getHeader("Content-Disposition")).isEqualTo(plain.getResponse().getHeader("Content-Disposition"));
+        assertThat(async.getResponse().getHeader("X-Statement-Pages")).isEqualTo(plain.getResponse().getHeader("X-Statement-Pages"));
+        assertThat(async.getResponse().getContentAsByteArray()).startsWith((byte) 'P', (byte) 'K');
+        var job = post("/api/v1/bi/reports/statement/preview").header("Authorization", as("hfx1", "st-head")).header("Prefer", "respond-async, wait=0")
+                .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of("report", REPORT)));
+        MvcResult accepted = mvc.perform(job).andReturn();
+        assertThat(accepted.getResponse().getStatus()).as(accepted.getResponse().getContentAsString()).isEqualTo(202);
+        assertThat(json.readTree(accepted.getResponse().getContentAsString()).path("run").path("source").path("type").asText()).isEqualTo("statement");
+    }
+
     @Test @Order(3)
     void anAuthorPreviewsDraftYamlPageByPageAndTheSchemaChecksAStatement() throws Exception {
         String draft = STATEMENT.replace("report: monthly-statement", "report: draft-statement").replace("orientation: portrait", "orientation: landscape")
