@@ -52,3 +52,6 @@ external_lib/python/*
 net-key
 # the AWS scripts' settings (deploy/aws/env, copied from deploy/aws/env.example): account ids and resource names, never committed
 /deploy/aws/env
+
+# downloaded test tools (the MinIO server binary for the S3 tests): tools/cache, never committed
+/tools/cache/

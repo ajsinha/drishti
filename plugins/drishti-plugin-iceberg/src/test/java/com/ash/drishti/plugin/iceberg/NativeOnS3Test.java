@@ -66,11 +66,16 @@ class NativeOnS3Test {
             .withExposedPorts(9090).waitingFor(Wait.forHttp("/").forPort(9090).forStatusCodeMatching(c -> c < 500));
 
     static Map<String, String> settings(GenericContainer<?> c, int port, String user, String secret) {
+        return settings("http://" + c.getHost() + ":" + c.getMappedPort(port), user, secret);
+    }
+
+    /** The connector settings for a table root in bucket {@code lake} at this S3 endpoint. */
+    static Map<String, String> settings(String endpoint, String user, String secret) {
         Map<String, String> s = new HashMap<>();
         s.put("root", "s3://lake/warehouse");
         s.put("domain", "desk");
         s.put("engine", "native");
-        s.put("s3.endpoint", "http://" + c.getHost() + ":" + c.getMappedPort(port));
+        s.put("s3.endpoint", endpoint);
         s.put("s3.access-key", user);
         s.put("s3.secret-key", secret);
         s.put("s3.region", "us-east-1");

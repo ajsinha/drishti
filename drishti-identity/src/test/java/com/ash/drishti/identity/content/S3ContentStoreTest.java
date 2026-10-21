@@ -15,19 +15,24 @@
  */
 package com.ash.drishti.identity.content;
 
-import java.util.UUID;
+import com.ash.drishti.testkit.s3.S3Endpoint;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
-/** The S3 backend: the contract, against an in-process S3 stand-in that honours the conditional headers (MinIO: {@link MinioContentStoreTest}). */
-class S3ContentStoreTest extends ContentStoreContract {
+/**
+ * The S3 backend: the contract, against an in-process S3 stand-in that honours the conditional headers, so it covers every case
+ * a simulator skips (S3Mock: {@link S3MockContentStoreTest}; MinIO: {@link MinioContentStoreTest}).
+ */
+class S3ContentStoreTest extends S3ContentStoreCases {
 
     private static FakeS3 s3;
-    private String prefix;
+    private static S3Endpoint endpoint;
 
     @BeforeAll
     static void up() throws Exception {
         s3 = new FakeS3();
+        endpoint = new S3Endpoint("in-process stand-in (FakeS3)", s3.endpoint(), "key", "secret");
+        probe(endpoint, "content");
     }
 
     @AfterAll
@@ -36,13 +41,7 @@ class S3ContentStoreTest extends ContentStoreContract {
     }
 
     @Override
-    protected ContentStore open() {
-        prefix = "t-" + UUID.randomUUID();
-        return reopen();
-    }
-
-    @Override
-    protected ContentStore reopen() {
-        return new S3ContentStore(new S3ContentStore.Settings("bucket", prefix, "us-east-1", s3.endpoint(), true, "key", "secret"));
+    protected S3Endpoint endpoint() {
+        return endpoint;
     }
 }

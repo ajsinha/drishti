@@ -97,6 +97,10 @@
     <rabbitmq.version>5.36.0</rabbitmq.version>
     <avro.version>1.12.0</avro.version>
     <awssdk.version>2.55.9</awssdk.version>
+    <!-- in-process S3 simulator for tests; 4.12.x is the last line on Spring Boot 3.5 (5.x needs Boot 4) -->
+    <s3mock.version>4.12.4</s3mock.version>
+    <!-- Kotlin is used only by S3Mock (tests): its runtime needs the stdlib it was built with, not Boot 3.5's 1.9 -->
+    <kotlin.version>2.2.21</kotlin.version>
     <rocksdb.version>11.0.4</rocksdb.version>
     <aerospike.version>10.5.0</aerospike.version>
     <!-- the Apache Cassandra Java driver (also ScyllaDB, Astra, Keyspaces): pure Java, no native library -->

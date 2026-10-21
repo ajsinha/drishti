@@ -15,55 +15,36 @@
  */
 package com.ash.drishti.identity.content;
 
-import java.net.URI;
-import java.util.UUID;
+import com.ash.drishti.testkit.s3.MinioServer;
+import com.ash.drishti.testkit.s3.S3Endpoint;
+import java.nio.file.Path;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Client;
 
-/** The S3 backend against real MinIO (Testcontainers), opt-in: {@code DRISHTI_TEST_MINIO=1} and the {@code minio/minio} image pullable. */
-@EnabledIfEnvironmentVariable(named = "DRISHTI_TEST_MINIO", matches = "1|true")
-class MinioContentStoreTest extends ContentStoreContract {
+/**
+ * The S3 backend's contract against the real MinIO server binary: Linux only, and skipped with the reason on Windows, offline,
+ * or when no binary can be had (see {@link MinioServer}).
+ */
+class MinioContentStoreTest extends S3ContentStoreCases {
 
-    private static GenericContainer<?> minio;
-    private String prefix;
+    private static MinioServer minio;
 
     @BeforeAll
-    @SuppressWarnings("resource")
-    static void up() {
-        minio = new GenericContainer<>(System.getenv().getOrDefault("DRISHTI_TEST_MINIO_IMAGE", "minio/minio:latest"))
-                .withEnv("MINIO_ROOT_USER", "drishti").withEnv("MINIO_ROOT_PASSWORD", "drishti-secret").withCommand("server", "/data")
-                .withExposedPorts(9000).waitingFor(Wait.forHttp("/minio/health/live").forPort(9000));
-        minio.start();
-        try (S3Client c = S3Client.builder().endpointOverride(URI.create(endpoint())).region(Region.US_EAST_1).forcePathStyle(true)
-                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("drishti", "drishti-secret"))).build()) {
-            c.createBucket(b -> b.bucket("content"));
-        }
+    static void up() throws Exception {
+        minio = MinioServer.startOrSkip(Path.of("target", "minio-content", "data"));
+        minio.endpoint().bucket("content");
+        probe(minio.endpoint(), "content");
     }
 
     @AfterAll
     static void down() {
-        minio.stop();
-    }
-
-    private static String endpoint() {
-        return "http://" + minio.getHost() + ":" + minio.getMappedPort(9000);
-    }
-
-    @Override
-    protected ContentStore open() {
-        prefix = "t-" + UUID.randomUUID();
-        return reopen();
+        if (minio != null) {
+            minio.close();
+        }
     }
 
     @Override
-    protected ContentStore reopen() {
-        return new S3ContentStore(new S3ContentStore.Settings("content", prefix, "us-east-1", endpoint(), true, "drishti", "drishti-secret"));
+    protected S3Endpoint endpoint() {
+        return minio.endpoint();
     }
 }

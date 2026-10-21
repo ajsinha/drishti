@@ -588,7 +588,34 @@ publish for the dates asked.
 
 `deploy/aws/delta-lake/load-day.sh` runs the three steps per table under a per-table lock; the whole AWS setup, sizing past 200 TB
 and the runbooks are [AWS_DELTA_LAKE.md](../architecture/AWS_DELTA_LAKE.md). Tested by `tools/lake/test_publish.py` (a local
-folder stands in for S3).
+folder stands in for S3) and on S3 simulators by `tools/lake/test_s3_simulators.py` (§4.12). With `--storage-option
+AWS_ENDPOINT_URL=…` (MinIO, an S3-compatible store) the file check goes to that endpoint with those keys, as the commit does.
+
+### 4.12 The S3 tests: S3Mock, moto and MinIO
+
+Three S3 simulators, none needing Docker. Each suite prints which conditional writes its simulator covered
+(`[S3 conditional writes] …: create-only covered, update-if-match covered, delete-if-match covered, racing writers …`) and skips,
+with the reason, what the simulator does not honour.
+
+| Simulator | What it tests | Runs on |
+|---|---|---|
+| Adobe S3Mock 4.12.4, in the test JVM (Maven test dependency) | the content store's S3 contract; the Iceberg native engine's table on S3 | Linux and Windows |
+| moto 5.2.3 (`moto[server]`, pure Python, started with the venv's own python) | Delta on S3 through deltalake's storage options; `lake publish` on S3 (new table, a day restated, a missing file refused, three publishes at once) | Linux and Windows |
+| the MinIO server binary | all of the above, the most faithful | Linux only: skipped on Windows, offline, or when no binary can be had |
+
+```bash
+# Java: the content store and the Iceberg table on S3Mock (and MinIO when it can run)
+./mvnw -q -pl drishti-identity,plugins/drishti-plugin-iceberg -am test \
+  -Dtest='S3ContentStoreTest,S3MockContentStoreTest,MinioContentStoreTest,NativeOnS3SimulatorTest' -Dsurefire.failIfNoSpecifiedTests=false
+# Python: moto (once: drishti-console/.venv/bin/python -m pip install "moto[server]==5.2.3", or uv pip install --python …)
+drishti-console/.venv/bin/python -m unittest -v tools/lake/test_s3_simulators.py
+```
+
+On Windows: `mvnw.cmd` and `drishti-console\.venv\Scripts\python.exe` instead (see the QA guide). MinIO: give the tests a binary
+with `DRISHTI_MINIO_BIN=/path/to/minio` or put one in `tools/cache/minio/` (git-ignored); MinIO no longer serves its community
+binaries, so the default download answers `410 Gone` and the MinIO tests skip saying so. The drill runs all three (the Java ones in its
+verify, the Python one with uv). Results found so far: S3Mock honours create-only, update-if-match and delete-if-match but lets two
+racing creates both win; moto honours all three and its racing creates have one winner.
 
 ## 5. The other `drishti.py` groups
 

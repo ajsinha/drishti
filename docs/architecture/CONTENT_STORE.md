@@ -70,7 +70,7 @@ Drishti database itself (the usual choice) or at a database of its own. The vers
 create, `If-Match: <etag>` for an update; `412` or `409` answers `DRS-5057`. A delete compares the ETag (a HEAD, then `If-Match`)
 and writes a tombstone `<prefix>/tombstones/<key>`. `changes` lists by LastModified (second resolution). Works with AWS S3
 (conditional writes) and compatible stores that honour the headers, such as MinIO; tested against an in-process S3 stand-in
-that honours the conditional headers, and against MinIO when `DRISHTI_TEST_MINIO=1` (Testcontainers, image `minio/minio`).
+that honours the conditional headers, Adobe S3Mock in the test JVM, and the MinIO server binary on Linux (section 7).
 
 **Delta / Iceberg: not primary, design only.** They are poor at single-key compare-and-set and at small hot documents. Later they
 may be an optional **history/audit sink**: a writer tails `changes`, appends `(key, version, bytes or hash, at, by)` to a Delta or
@@ -138,7 +138,27 @@ the root in the Drishti*net capability digest and compare it there). Postgres an
 `ContentStoreContract` (drishti-identity tests) runs against every backend: concurrent creates and concurrent updates of one key
 (exactly one wins, the rest `DRS-5057`), conflict codes, list by prefix, delete (stale and current), changes (puts and deletes),
 binary-safe content (every byte value), a large item (6 MB), Unicode keys, bad keys (`DRS-5058`), and reopening the store keeps
-everything. Backends: filesystem, sqlite, postgres (Testcontainers), s3 (stand-in; MinIO opt-in).
+everything. Backends: filesystem, sqlite, postgres (Testcontainers), s3 on three S3 simulators:
+
+| Test | Simulator | Runs where | Conditional writes covered |
+|---|---|---|---|
+| `S3ContentStoreTest` | `FakeS3`, an in-process stand-in | everywhere | create-only, update-if-match, delete-if-match, racing writers |
+| `S3MockContentStoreTest` | Adobe S3Mock 4.12.4 in the test JVM (a Maven test dependency: no Docker, no binary) | everywhere, Windows QA included | create-only, update-if-match, delete-if-match; racing creates are **not** atomic on S3Mock, so the race case is skipped there |
+| `MinioContentStoreTest` | the MinIO server binary | Linux only | all, when the binary can be had (below) |
+
+Each suite first probes its simulator (`com.ash.drishti.testkit.s3.ConditionalWrites`: a second `If-None-Match: *` create, a stale
+`If-Match` put, a stale `If-Match` delete, then eight racing creates five times) and prints one line, for example
+`[S3 conditional writes] S3Mock 4.12.4 (in-process): create-only covered, update-if-match covered, delete-if-match covered, racing
+writers NOT atomic (skipped)`; a contract case that needs what the simulator does not honour is skipped with that reason, and the
+stand-in still covers it. The Iceberg native engine's table on S3 has the same pair (`NativeOnS3SimulatorTest`: S3Mock in-process,
+MinIO binary), beside the Docker-based `NativeOnS3Test`.
+
+MinIO: the test (`com.ash.drishti.testkit.s3.MinioServer`) takes the binary from `DRISHTI_MINIO_BIN`, else from the git-ignored tools
+cache (`DRISHTI_TOOLS_CACHE`, default `tools/cache/minio/`), else downloads it from `DRISHTI_MINIO_URL` (default: the official
+release) and checks it against `DRISHTI_MINIO_SHA256` or the published `.sha256sum`. It starts it on a free port in 18750-18759 with
+its data under `target/` and stops it by PID. It skips with the reason on Windows, offline, or when no binary is served: MinIO stopped
+serving its community binaries (dl.min.io answers `410 Gone`), so put a binary you trust in `tools/cache/minio/` or point
+`DRISHTI_MINIO_BIN` at it. How to run all S3 tests: [TOOLS.md §4.12](../guides/TOOLS.md#412-the-s3-tests-s3mock-moto-and-minio).
 `ContentDesignStoreTest`: two in-process nodes on one filesystem root (a Design saved through A is read and updated through B;
 concurrent saves give one conflict; owners stay isolated) and the import (idempotent, folder renamed, marker for the database).
 

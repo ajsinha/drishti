@@ -15,3 +15,6 @@ scipy>=1.13
 # too: `python -m playwright install chromium`.
 playwright>=1.45
 pytest-xdist>=3.5      # the drill runs the suite in parallel (tools/drill.sh)
+# Test-only: the S3 simulator for the lake tools' S3 tests (tools/lake/test_s3_simulators.py). Pure Python, so it runs on the
+# Windows QA machine; pinned.
+moto[server]==5.2.3

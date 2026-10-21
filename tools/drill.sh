@@ -110,6 +110,10 @@ python_tool_tests() {
     timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_maintain.py tools/lake/test_maintain_admin.py 2>&1 | grep -v '^{"at"'
     timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_demo.py
     timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_publish.py
+    # the lake tools on S3 simulators (Delta on S3, lake publish's conditional-PUT commit): moto, and the MinIO server binary
+    # on Linux (DRISHTI_MINIO_BIN or tools/cache/minio; it skips, printing why, when no binary can be had). Each prints which
+    # conditional writes its simulator covered. The Java S3Mock and MinIO suites run in the Java verify.
+    timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml --with "moto[server]==5.2.3" python -m unittest -q tools/lake/test_s3_simulators.py 2>&1 | grep -v '^{"at"'
     # the real-data tools (tools/realdata) are pytest-style functions on recorded fixtures: no network, a few seconds
     timeout --kill-after=30 600 uv run -q --with pytest --with pyyaml python -m pytest -q -p no:cacheprovider tools/realdata/tests
   fi

@@ -17,6 +17,19 @@
 
 ## Unreleased
 
+- **Tests: S3 on three simulators, no Docker.** Adobe S3Mock 4.12.4 in the test JVM (a Maven test dependency; Windows QA included)
+  runs the content store's S3 contract (`S3MockContentStoreTest`) and the Iceberg native engine's table on S3
+  (`NativeOnS3SimulatorTest`); moto 5.2.3 (`moto[server]`, pinned in `drishti-console/requirements-test.txt`) runs Delta on S3 and
+  `lake publish` on S3 (`tools/lake/test_s3_simulators.py`); the MinIO server binary runs both on Linux (`MinioContentStoreTest`, no
+  longer Testcontainers), from `DRISHTI_MINIO_BIN` or the git-ignored `tools/cache/minio/`, checksum-verified when downloaded, and
+  skips with the reason on Windows, offline, or while MinIO serves no community binary (`410 Gone` today). Every suite probes and
+  prints which conditional writes its simulator covers (create-only, update-if-match, delete-if-match, racing writers) and skips
+  what it does not: S3Mock's racing creates are not atomic. The drill runs the Python suite too. Shared helpers:
+  `com.ash.drishti.testkit.s3` (Java), `tools/lake/s3sim.py` (Python). Docs: CONTENT_STORE.md §7, TOOLS.md §4.12, the Windows QA
+  guide §6e.
+- **Fix: `lake publish` checked the files on AWS, not on the store it commits to.** With `--storage-option AWS_ENDPOINT_URL=…`
+  (MinIO, an S3-compatible store) the file check now uses that endpoint and the keys given, as the commit does; before, it asked
+  AWS S3 and failed (`ACCESS_DENIED`).
 - **New: collaboration, notes, embed apps, pack switches, the audit trail, Sutra proposals and load history on every node of a cluster.** They moved
   into the content store (docs/architecture/CONTENT_STORE.md section 9): one document per comment thread (its comments, sealed revision
   chain, mentions, followers), shares, per-user inbox documents, outbox deliveries claimed by compare-and-set (sent once across nodes),

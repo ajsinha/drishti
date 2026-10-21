@@ -605,6 +605,22 @@ Two servers on Windows: the heartbeat port is picked free at start (`gossip-port
 fixed `gossip-port` in `config/net/node.yaml` and allow that port. A blocked heartbeat port falls back to the server port with one warning
 in the log, so the cluster still works.
 
+## 6e. Optional: the S3 tests (10 minutes)
+
+The S3 code (the content store, the Iceberg table on S3, Delta on S3 and `lake publish`) is tested against S3 simulators that need no
+`.exe` and no Docker: S3Mock runs inside the Java tests, moto is a Python package. In PowerShell, in the project folder:
+
+```powershell
+drishti-console\.venv\Scripts\python.exe -m pip install "moto[server]==5.2.3"
+.\mvnw.cmd -q -pl drishti-identity,plugins/drishti-plugin-iceberg -am test "-Dtest=S3ContentStoreTest,S3MockContentStoreTest,MinioContentStoreTest,NativeOnS3SimulatorTest" "-Dsurefire.failIfNoSpecifiedTests=false"
+drishti-console\.venv\Scripts\python.exe -m unittest -v tools\lake\test_s3_simulators.py
+```
+
+You should see: Maven ends without errors and prints `[S3 conditional writes] S3Mock 4.12.4 (in-process): create-only covered,
+update-if-match covered, delete-if-match covered, racing writers NOT atomic (skipped)`; Python ends `OK (skipped=…)` and prints the
+same kind of line for moto. The MinIO tests are **skipped on Windows** (they run the MinIO server binary, on Linux only), with the line
+`MinIO (server binary): skipped: MinIO tests run on Linux only`. Skipped is expected, not a failure.
+
 ---
 
 ## 7. If something goes wrong
