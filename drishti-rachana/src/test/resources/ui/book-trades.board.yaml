@@ -1,0 +1,83 @@
+#   Project Drishti · Any data. Any domain. One grammar.
+#
+#   Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+#   All rights reserved.
+#
+#   PROPRIETARY AND CONFIDENTIAL.
+#
+#   This file is the confidential and proprietary property of Ashutosh Sinha.
+#   Unauthorised copying, use, modification, distribution or disclosure of this
+#   file, via any medium, is strictly prohibited except with the express prior
+#   written permission of the copyright holder.
+#
+#   See the LICENSE file in the root of this repository for the full terms.
+
+rachana: 1
+board: book-trades
+version: 7
+title: Book trades
+description: A book's trades over a date range; the selected trade's ticket and its cash flows beside it.
+
+params:
+  as-of:  { type: date, default: today }
+  book:   { type: id, of: trading/book, default: "FX-LDN-01" }
+
+chips:
+  trades:
+    use: filterable-table@2
+    title: Trades
+    supply:
+      connector: trading/trade-search          # the pack's search over trades, as the viewer
+      query: { book: "%{board.params.book}" }
+    map:
+      rows.id:       TRADE_ID
+      rows.date:     TRADE_DATE
+      rows.label:    COUNTERPARTY_NAME
+      rows.measures: [NOTIONAL, MTM_USD]
+    controls:
+      page-size: 25
+
+  ticket:
+    use: entity-card@1
+    title: Trade ticket
+    supply:
+      connector: trading/trade                 # the trade entity, opened by id
+    map:
+      doc.id:      TRADE_ID
+      doc.title:   DEAL_NUMBER
+      doc.fields:  [INSTRUMENT_TYPE, BUY_SELL, CCY, NOTIONAL, START_DATE, MATURITY_DATE, STATUS]
+
+  flows:
+    use: cashflow-ladder@1
+    title: Cash flows
+    supply:
+      model: trading-risk                      # a BI model as the regulator
+      query:
+        measures: [FLOW_AMOUNT]
+        dimensions: [cashflows.PAY_DATE, cashflows.CCY]
+    map:
+      rows.date:    cashflows.PAY_DATE
+      rows.group:   cashflows.CCY
+      rows.amount:  FLOW_AMOUNT
+      rows.trade:   cashflows.TRADE_ID          # the column the trace filters on
+
+traces:
+  - from: trades.selected                      # master to detail: the ticket follows the selection
+    to:   ticket.id
+  - from: trades.selected                      # and the ladder shows only that trade's flows
+    to:   flows.filter
+    transform: { filter-on: rows.trade }        # an id becomes the filter rows.trade = <id>
+  - from: board.params.as-of
+    to:   trades.date-to
+
+layout:
+  theme: terminal-dark
+  desktop:
+    columns: 12
+    areas:
+      - { chip: trades, at: [1, 1], span: [7, 8] }      # [column, row], [columns wide, rows high]
+      - { chip: ticket, at: [8, 1], span: [5, 4] }
+      - { chip: flows,  at: [8, 5], span: [5, 4] }
+  phone:
+    order: [trades, ticket, flows]                      # one column, in this order
+    collapsed: [flows]                                  # shown as a heading the person opens

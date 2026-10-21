@@ -1689,13 +1689,16 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-2007 | 403 | four eyes | the author may not approve their own proposal |
 | DRS-2060 | 422 | form invalid | a search form that is not valid YAML or names a field path, type or operator wrongly; the Form tab lists each problem, `pack check` reports the pack's |
 | DRS-2061 | 422 | history invalid | a pack's `history:` block names a shape, chart field, headline or limit wrongly; `sutra lint` and the deploy check list each problem |
-| DRS-2070 | 400 | UI document invalid | a board or chip document is not YAML or JSON, or misses a required key (`/api/v1/ui`) |
-| DRS-2071 | 422 | UI check failed | the board check or a chip's publish check failed; the message lists each problem by rule (BC-01, BC-02, BC-11, ...) |
-| DRS-2072 | 404 | no such chip | no such chip or version, or one you may not see yet (a draft in review is seen by its author and the governors) |
-| DRS-2073 | 404 | no such board | no such board, or not one you may open (a personal board is private until shared with you) |
-| DRS-2074 | 403 | UI power missing | you may not do this (save boards, author, review or certify chips) |
-| DRS-2075 | 413 | UI over a limit | a board over its size, chip or trace limit, or one saved board too many (`config/ui/ui.yaml`) |
-| DRS-2078 | 409 | chip lifecycle order | a Chip Store step out of order: publish before approval, certify before publish, change a published version, or a `compatible-with` claim the server could not verify |
+| DRS-2070 | 400 | ui document invalid | a board or chip document is not YAML or JSON, or misses a required key (`rachana`, `board`, `chips`; for a chip `chip`, `version`, `title`, `category`, `manual`, `pins`, `body`); the body lists each problem with its path (rule BC-01) |
+| DRS-2071 | 422 | ui check failed | the board check (BC-01 to BC-11) or a chip's publish check (CP-01 to CP-05) failed; the body lists each problem by rule, path, message and fix |
+| DRS-2072 | 404 | ui chip not found | no such chip in the Chip Store, or no such version of it |
+| DRS-2073 | 404 | ui board not found | no such saved board, or not one the caller may open |
+| DRS-2074 | 403 | ui forbidden | the caller lacks the power (`ui.board.render-dynamic`, `ui.board.save`, `ui.chip.author`, review or certify) |
+| DRS-2075 | 413 | ui too large | a board over a size limit (64 KB, 40 chips, 120 traces, module depth 3, 500 saved boards a person) |
+| DRS-2076 | 429 | ui rate limited | over the render rate limit (30 dynamic renders a minute, 4 at once); `Retry-After` is set |
+| DRS-2077 | 504 | ui supplier timeout | a chip's supplier did not answer within the render budget; sent as a `chip` error event, the board goes on |
+| DRS-2078 | 409 | ui lifecycle order | a Chip Store lifecycle step out of order (publish without approval, certify a draft, change a published version, an unverifiable `compatible-with`) |
+| DRS-2079 | 410 | ui render ended | the render session ended (idle, or the board changed); render again |
 | DRS-2101 | 422 | el syntax | a Rachana-EL expression does not parse (alert rules, Sutra expressions, search conditions) |
 | DRS-2102 | 422 | el eval | a Rachana-EL expression failed while evaluating |
 | DRS-3001 | 500 | inference failed | reserved: the code exists, but nothing in this release raises it (a document with no Sutra is laid out by inference, which does not fail) |

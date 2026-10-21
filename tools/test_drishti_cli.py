@@ -53,7 +53,7 @@ class Wiring(unittest.TestCase):
                [("data", "ingest"), ("data", "load"), ("data", "landed"), ("data", "loads"),("server", "smoke"), ("view", "get"), ("view", "explain"), ("server", "health"), ("server", "packs"), ("docs", "shots"), ("bi", "workspace"), ("bi", "catalogue")] + \
                [("lake", c) for c in ("build", "scan", "status", "maintain")] + \
                [("design", c) for c in ("list", "create", "get", "save", "check", "propose", "approve", "reject", "proposals", "export", "import",
-                                        "bind", "autodesign", "delete")]
+                                        "bind", "autodesign", "delete")] + [("ui", "check")]
 
     def test_every_command_has_help(self):
         for group, cmd in self.COMMANDS:
@@ -118,6 +118,15 @@ class Tools(unittest.TestCase):
         self.assertIn("--each", self.calls()[0])
         self.assertIn("--kind ticket", self.calls()[0])
         self.assertTrue(self.calls()[0].endswith("--future-flag x"))
+
+    def test_ui_check_runs_the_jar_with_absolute_paths_and_returns_its_exit_code(self):
+        board, chips, sup = self.tmp / "b.yaml", self.tmp / "chips", self.tmp / "s.yaml"
+        code, _, _ = run("ui", "check", board, "--chips", chips, "--suppliers", sup, "--shared", "--certified-only", "--json", *self.jvm(), env=self.env)
+        self.assertEqual(0, code)
+        self.assertEqual([f"-Djava.io.tmpdir={(self.tmp / 'jvm').resolve()} -jar {self.jar} ui check {board} --chips {chips} --suppliers {sup} "
+                          f"--shared --certified-only --json"], self.calls())
+        self.assertEqual(1, run("ui", "check", board, *self.jvm(), env={**self.env, "FAKE_EXIT": "1"})[0])   # errors found
+        self.assertEqual(2, run("ui", "check", *self.jvm(), env=self.env)[0])                                   # no file: usage
 
     def test_a_missing_jar_is_a_usage_error_with_the_fix(self):
         code, _, err = run("sutra", "lint", self.pack, "--jar", self.tmp / "none.jar", "--java", self.java, env=self.env)

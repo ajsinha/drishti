@@ -17,6 +17,16 @@
 
 ## Unreleased
 
+- **UI Board P1: chips, pins, boards, the board check and `ui check` (2.7.0).** A new package `com.ash.drishti.rachana.ui`
+  (drishti-rachana) reads chip documents (header, manual, pins, Rachana body) and board documents from YAML or JSON into one
+  model (`ChipDoc`, `BoardDoc`); the pin types and the compatibility table of UI_BOARD.md 4.2 (`PinCompatibility`); the board
+  check `BC-01` to `BC-11` with the warnings `BC-W1` to `BC-W5` (`BoardCheck`), each problem with its rule, path, message and
+  fix; the chip publish checks `CP-01` to `CP-05` (manual complete, the body reads only its pins, every out pin driven,
+  deterministic, every manual example passes the board check). `ChipCatalog` and `SupplierCatalog` are the seams the Chip
+  Store (P2) and the render API (P3) fill. New codes `DRS-2070` to `DRS-2079` in `ErrorCode`, API_GUIDE and TROUBLESHOOTING.
+  New command `drishti.py ui check FILE... [--chips DIR] [--suppliers FILE] [--shared] [--certified-only] [--json]`
+  (CLI_GUIDE, TOOLS), run by the exec jar without a server. Tests: one failing board per rule, the compatibility table as a
+  parameterised test, YAML and JSON giving the same model, the UI_BOARD.md 2.1 and 3.1 examples passing, the command line.
 - **Design: the UI Board (2.7.0).** [UI_BOARD.md](docs/architecture/UI_BOARD.md): chips (pure Sutras with typed pins and their
   manual inside), boards, pin mappings, traces, the board check, the streaming render API (`DRS-2070` to `DRS-2079` proposed), the
   Chip Store lifecycle and pinned versions, the Board Designer, the converter with its same-screen, same-data proof, and six build
