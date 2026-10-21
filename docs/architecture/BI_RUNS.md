@@ -1132,7 +1132,7 @@ drishti.py bi runs cancel RUN
 drishti.py bi runs rerun RUN [--data same|latest] [--wait 2s]
 drishti.py bi runs export RUN --format xlsx --out FILE
 drishti.py bi runs share RUN --to bob --to role:risk-team
-drishti.py bi runs promote RUN --as snapshot|report --name NAME [--workspace W]
+drishti.py bi runs promote RUN [--to dataset|report] [--name NAME] [--title TITLE]
 drishti.py bi runs keep RUN --days 90
 drishti.py bi runs schedule RUN "business-days 07:30" [--data latest]
 drishti.py bi runs schedules [list|disable ID|enable ID|delete ID]

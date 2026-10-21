@@ -159,7 +159,7 @@ class BiRuns(unittest.TestCase):
             ("POST", base + "/cancel"): (202, dict(RUN, state="cancelled", reason="cancelled by you")),
             ("POST", base + "/rerun"): (202, {"run": dict(RUN, id="r-9", state="reused")}),
             ("POST", base + "/share"): (200, {"shares": [{"recipient": "bob", "mode": "re-masked"}, {"recipient": "carol", "mode": "recomputed", "recipientRun": "r-c"}]}),
-            ("POST", base + "/promote"): (201, {"item": {"id": "bi-7", "kind": "dataset", "workspace": "me", "status": "draft"}, "snapshot": {"name": "desk-pnl-2026", "version": 3}}),
+            ("POST", base + "/promote"): (201, {"snapshot": "desk-pnl-2026", "version": 3, "dataset": {"name": "desk-pnl-2026", "item": "bi-7"}, "report": {"item": "bi-8"}, "yaml": "rachana: 2\n"}),
             ("POST", base + "/keep"): (200, dict(RUN, expiresAt="2027-01-18T00:00:00Z")),
             ("POST", base + "/schedule"): (201, {"id": "sch-1", "schedule": "business-days 07:30", "data": "latest", "nextAt": "2026-10-22T07:30:00Z"})})
         code, out, _ = self.go("bi", "runs", "cancel", RID)
@@ -171,9 +171,13 @@ class BiRuns(unittest.TestCase):
         self.assertEqual({"to": ["bob", "role:risk-team"]}, self.sent())
         self.assertIn("bob: re-masked (your result with their extra masks)", out)
         self.assertIn("carol: recomputed as them (their rights differ: a run of their own) (run r-c)", out)
-        code, out, _ = self.go("bi", "runs", "promote", RID, "--as", "snapshot", "--name", "desk-pnl-2026")
-        self.assertEqual({"as": "snapshot", "name": "desk-pnl-2026"}, self.sent())
-        self.assertIn("(snapshot desk-pnl-2026 v3)", out)
+        code, out, _ = self.go("bi", "runs", "promote", RID, "--to", "report", "--name", "desk-pnl-2026", "--title", "Desk P&L 2026")
+        self.assertEqual({"to": "report", "name": "desk-pnl-2026", "title": "Desk P&L 2026"}, self.sent())
+        self.assertIn("snapshot desk-pnl-2026 version 3: draft dataset bi-7 (desk-pnl-2026), draft report bi-8 in your workspace", out)
+        code, out, _ = self.go("bi", "runs", "promote", RID)                                  # the default: a dataset snapshot, the server names it
+        self.assertEqual({"to": "dataset"}, self.sent())
+        code, out, _ = self.go("bi", "runs", "promote", RID, "--as", "snapshot", "--name", "desk-pnl-2026")      # the earlier spelling still works
+        self.assertEqual({"to": "dataset", "name": "desk-pnl-2026"}, self.sent())
         code, out, _ = self.go("bi", "runs", "keep", RID, "--days", "90")
         self.assertEqual({"days": 90}, self.sent())
         self.assertIn("kept until 2027-01-18", out)

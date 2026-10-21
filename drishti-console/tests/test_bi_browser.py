@@ -195,12 +195,16 @@ def test_a_workspace_is_created_and_shared_from_the_page(stack, browser):
     ann.fill('[data-new-workspace] [name="description"]', "Counterparty credit")
     ann.click('[data-new-workspace] button[type="submit"]')
     expect(ann.locator('[data-ws="credit-desk"]')).to_be_visible()
-    ann.goto(CONSOLE_URL + "/bi/w/credit-desk")
+    expect(ann.locator("[data-ws-next-link]")).to_have_attribute("href", "/bi/w/credit-desk?tab=members")      # the next step: share it (BIR-14)
+    ann.click("[data-ws-next-link]")
     expect(ann.locator("[data-ws-name]")).to_have_text("Credit Desk")
+    expect(ann.locator('[data-ws-tab="members"]')).to_have_attribute("aria-selected", "true")
     ann.fill('[data-add-member] [name="user"]', "cat")
     ann.select_option('[data-add-member] [name="role"]', "viewer")
     ann.click('[data-add-member] button[type="submit"]')
     expect(ann.locator('[data-members] tr[data-user="cat"]')).to_contain_text("viewer")
+    ann.click('[data-ws-tab="items"]')
+    expect(ann.locator("[data-share-hint]")).to_be_hidden()                              # cat is in it now: no "only you" line
     ann.fill('[data-new-item] [name="title"]', "Exposure by name")
     new_item(ann)
     expect(ann.locator("[data-title]")).to_have_text("Exposure by name")
@@ -211,6 +215,8 @@ def test_a_workspace_is_created_and_shared_from_the_page(stack, browser):
     expect(cat.locator('[data-ws="credit-desk"]')).to_contain_text("viewer")
     cat.goto(CONSOLE_URL + "/bi/w/credit-desk")
     expect(cat.locator("[data-new-item]")).to_be_hidden()
+    cat.click('[data-ws-tab="members"]')
+    expect(cat.locator('[data-members] tr[data-user="ann"]')).to_be_visible()               # a viewer sees who is in it, and cannot add anyone
     expect(cat.locator("[data-add-member]")).to_be_hidden()
     assert cat.goto(CONSOLE_URL + "/bi/api/workspaces/credit-desk").status == 200          # members read the workspace through the page's JSON, the server decides
     clean(ann)
@@ -218,9 +224,10 @@ def test_a_workspace_is_created_and_shared_from_the_page(stack, browser):
 
 def test_review_before_publish_needs_a_second_person(stack, browser):
     ann = sign_in(browser, "ann")
-    ann.goto(CONSOLE_URL + "/bi/w/credit-desk")
+    ann.goto(CONSOLE_URL + "/bi/w/credit-desk?tab=members")                              # the settings sit on the Members tab (BIR-14)
     ann.check("[data-review]")
     expect(ann.locator("[data-msg]")).to_contain_text("Review before publishing is on")
+    ann.click('[data-ws-tab="items"]')
     ann.fill('[data-new-item] [name="title"]', "Limits report")
     new_item(ann)
     expect(ann.locator('[data-actions] button:has-text("Publish")')).to_have_count(0)
@@ -231,6 +238,7 @@ def test_review_before_publish_needs_a_second_person(stack, browser):
     expect(ann.locator('[data-actions] button:has-text("Approve")')).to_have_count(0)
     bob_ws = sign_in(browser, "ann")                                                      # bob must be a member to approve
     bob_ws.goto(CONSOLE_URL + "/bi/w/credit-desk")
+    bob_ws.click('[data-ws-tab="members"]')
     bob_ws.fill('[data-add-member] [name="user"]', "bob")
     bob_ws.select_option('[data-add-member] [name="role"]', "member")
     bob_ws.click('[data-add-member] button[type="submit"]')

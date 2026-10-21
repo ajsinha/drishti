@@ -214,6 +214,12 @@ name packs in its audience, and the API filters by `pack`, but no page offers it
 
 **The Items table.** Each row shows the title, a short id and the created time (two items with one title are told apart by them), the kind, status, version, endorsement and when it was updated. Rows you may delete (the server's own rule, `can.delete`: your own items, or any item if you are a member of a shared workspace; never shipped content) have a checkbox and a **Delete** button; **Select all** ticks every such row and **Delete selected (N)** opens one confirmation listing the titles. The items are deleted one by one with the ordinary delete rule, and the message says which were **deleted** and which were **skipped** with the reason the server gave (a refused item stays in the list). A new item left without a title is named with its kind and the time (*Report 2026-10-12 11:32*). The **New item** form asks a **report** for its dataset and opens it in the designer; a **board** is stored as a report with board pages and opens in the same designer (no model needed); a dataset, a notebook or a Python item starts on the Datasets page or in Analyse (the form says so and takes you there). Without the `bi-author` power the form is replaced by a line telling you to ask an admin for it.
 
+**Items · Runs · Members.** A shared workspace's page has three tabs. **Members** lists the members and, for its admins, the **Add a member**
+form (type part of a name to pick a person, choose the role, **Add or change**) and the settings (*Require review before publishing*,
+*Delete workspace*). After **Create workspace**, the Workspaces page offers *Next: add the people who share it*, which opens the new
+workspace on its Members tab; while you are its only member, the Items tab says so with a link to **Add members**. `?tab=members` in the
+address opens that tab.
+
 A person who is not a member does not learn that a workspace exists (`404 DRS-9001`). The last admin cannot be demoted or
 removed. A workspace can **require review before publishing**: then *Publish* is not offered and an item is *proposed* and approved.
 A `bi-admin` is an admin of every shared workspace (but cannot read anyone's personal workspace).

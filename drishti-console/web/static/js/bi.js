@@ -191,12 +191,18 @@
     var box = q('[data-cards]'), form = q('[data-new-workspace]');
     function load() { api('GET', '/workspaces').then(function (list) { clear(box); list.forEach(function (w) { box.appendChild(wsCard(w)); }); }).catch(fail); }
     form.hidden = !me.mayCreateWorkspace;
+    /** After a workspace is made, the next step is to share it: a link to its Members tab (BIR-14: the member form lives there). */
+    function next(w) {
+      var p = q('[data-ws-next]'), a = q('[data-ws-next-link]');
+      if (!p || !a || !w || !w.id) { return; }
+      a.href = '/bi/w/' + encodeURIComponent(w.id) + '?tab=members'; a.textContent = 'add the people who share ' + w.name; p.hidden = false;
+    }
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var go = form.querySelector('[type=submit]');
       busy(go, function () {
         return api('POST', '/workspaces', { name: form.elements.name.value, description: form.elements.description.value, reviewRequired: form.elements.reviewRequired.checked })
-          .then(function (w) { near(go, 'Created ' + w.name + '.', false); form.reset(); load(); }).catch(function (err) { near(go, err.message, true); });
+          .then(function (w) { near(go, 'Created ' + w.name + '.', false); form.reset(); load(); next(w); }).catch(function (err) { near(go, err.message, true); });
       });
     });
     load();
@@ -296,6 +302,8 @@
         tb.appendChild(h('tr', { 'data-user': m.username }, h('th', { scope: 'row', text: m.username }), h('td', { text: m.role }), h('td', { text: m.addedBy }), h('td', {}, admin ? del : '')));
       });
       q('[data-add-member]').hidden = !admin;
+      var hint = q('[data-share-hint]');                                            // a shared workspace with only you in it: say where people are added
+      if (hint) { hint.hidden = !(admin && (ws.members || []).length <= 1); }
       q('[data-review]').checked = !!ws.reviewRequired;
     }
     // What each kind needs before it is useful: a report needs a dataset (then opens in the designer), a board is a report with board pages (2.4.0) and opens in the designer too; datasets, notebooks and

@@ -53,6 +53,8 @@
     'DRS-9087': 'The server that owns this run is not answering. Try later, or re-run it elsewhere.',
     'DRS-9088': 'The result store is full. An administrator can free space.',
     'DRS-9089': 'This selection needs a background run.',
+    'DRS-9004': 'That snapshot name is taken by another person\'s promotion: choose another name.',
+    'DRS-9108': 'This dataset may not read that run snapshot: a snapshot is read only by the dataset it was promoted to. Promote the run again to make your own.',
     'DRS-9021': 'You no longer have access to what this run reads.',
     'DRS-9024': 'It took longer than its time limit.',
     'DRS-9025': 'The server was busy: try again in a moment.',
@@ -64,19 +66,43 @@
   R.FIX = {
     'DRS-9024': 'narrow it, or ask an administrator for a longer limit', 'DRS-9028': 'narrow the dates or add a rollup', 'DRS-9081': 'wait for one to finish, or cancel one',
     'DRS-9084': 're-run it on the same data or the newest data', 'DRS-9085': 're-run it; if it happens again, narrow it', 'DRS-9086': 'aggregate it, narrow the dates or add a rollup',
-    'DRS-9087': 'try later, or re-run it elsewhere', 'DRS-9088': 'an administrator can free space'
+    'DRS-9087': 'try later, or re-run it elsewhere', 'DRS-9088': 'an administrator can free space', 'DRS-9004': 'choose another name', 'DRS-9108': 'promote the run again to make your own'
   };
   /** A problem in words, with its code after it in brackets (for support), never the code alone: the run's own reason and the fix, else the code's words. */
   R.words = function (code, reason) {
     let text;
     if (reason) {
-      const r = String(reason).replace(/[.\s]+$/, '');
-      const fix = R.FIX[code] && r.indexOf(R.FIX[code]) < 0 ? ': ' + R.FIX[code] : '';
+      let r = String(reason).replace(/[.\s]+$/, '');
+      const f = R.FIX[code] || '';
+      let fix = f && r.toLowerCase().indexOf(f.toLowerCase()) < 0 ? ': ' + f : '';
+      // BIR-13: a reason that already ends with the start of the fix ("...could not be started again: re-run it") is finished by it, never said twice
+      if (fix) {
+        const lr = r.toLowerCase(), lf = f.toLowerCase();
+        const cuts = [];
+        for (let i = 0; i < lf.length; i++) { if (lf[i] === ';' || lf[i] === ',') { cuts.push(i); } }
+        const head = cuts.map((i) => lf.slice(0, i).trim()).filter((x) => x && lr.endsWith(x)).sort((a, b) => b.length - a.length)[0];
+        if (head) { r = r.slice(0, r.length - head.length) + f; fix = ''; }
+      }
       text = r.charAt(0).toUpperCase() + r.slice(1) + fix + '.';
     } else {
       text = R.CODES[code] || 'Something went wrong.';
     }
     return code ? text + ' (' + code + ')' : text;
+  };
+
+  /**
+   * How long a run's result is kept, as the server says it (BIR-12): its date when it has one; "kept (promoted)" or "kept (pinned)" only when the run says so;
+   * a finished result without a date follows the retention rule (the run's own retentionDays, else the settings'); a run with no result says nothing.
+   */
+  R.keptUntil = function (run, days, when) {
+    const r = run || {}, n = r.retentionDays || days || 30;
+    if (r.expiresAt) { return when ? when(r.expiresAt) : String(r.expiresAt).slice(0, 10); }
+    if (R.active(r.state) || r.state === 'awaiting-confirm') { return 'it finishes, then ' + n + ' days after it was last opened'; }
+    if (r.state === 'expired') { return 'removed'; }
+    if (!R.finished(r.state)) { return ''; }
+    if (r.promotedTo) { return 'kept (promoted)'; }
+    if (r.pinned) { return 'kept (pinned)'; }
+    return n + ' days after it was last opened';
   };
 
   /** 41 s, 4 min 12 s, 1 h 3 min. */
@@ -113,13 +139,39 @@
     while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
     return (i ? Math.round(v * 10) / 10 : v) + ' ' + u[i];
   };
+  /** A name from an id when the server gave no title (BIR-10): file:report:counterparty-risk is "Counterparty risk". */
+  R.nameOfId = function (id) {
+    const last = String(id || '').split(':').pop().replace(/[-_]+/g, ' ').trim();
+    return last ? last.charAt(0).toUpperCase() + last.slice(1) : '';
+  };
+  /** The report a run came from, by name: its source title, else the name its id gives. */
+  R.reportName = (s) => (s && (s.title || R.nameOfId(s.id))) || '';
+  /**
+   * A run's title as people read it (BIR-10): the server's title, unless it is only the source's id (a report visual's run titled
+   * file:report:counterparty-risk), then the visual and the report by name.
+   */
+  R.titleOf = function (run) {
+    const r = run || {}, s = r.source || {};
+    if (r.title && r.title !== s.id) { return r.title; }
+    if (s.type === 'report' || s.type === 'board') {
+      return [s.visual ? R.nameOfId(s.visual) : '', R.reportName(s)].filter(Boolean).join(' · ') || r.title || r.id || '';
+    }
+    return r.title || s.model || R.nameOfId(s.id) || r.id || '';
+  };
+  /** The data a run read, in words (BIR-09): the server's words, else its tables and versions, else nothing (the caller draws a dash). */
+  R.dataWords = function (run) {
+    const d = (run && run.data) || {};
+    if (d.words) { return d.words; }
+    const tables = Array.isArray(d.tables) ? d.tables : [];
+    return tables.map((t) => [t.table, t.versions].filter(Boolean).join(' ')).filter(Boolean).join(' · ');
+  };
   R.BASIS = { layers: 'built layers', 'delta-stats': 'Delta statistics', 'iceberg-manifests': 'Iceberg manifests', 'store-stats': 'the store\'s statistics', history: 'past runs', unknown: 'no size known' };
   R.basis = (b) => R.BASIS[b] || String(b || '');
   R.TIERS = { interactive: 'interactive', 'known-heavy': 'known heavy (answered from products)', 'ad-hoc-heavy': 'ad-hoc heavy' };
   /** "MTM by desk and month" and the line under it: "Desk P&L · page Overview" or "mq · trading". */
   R.sourceLine = function (run) {
     const s = run.source || {};
-    if (s.type === 'report' || s.type === 'board') { return [s.title || s.id, s.page ? 'page ' + s.page : ''].filter(Boolean).join(' · '); }
+    if (s.type === 'report' || s.type === 'board') { return [R.reportName(s), s.page ? 'page ' + s.page : ''].filter(Boolean).join(' · '); }
     return [s.type, s.model || s.title || s.id].filter(Boolean).join(' · ');
   };
   R.asOf = function (run) {
@@ -205,7 +257,7 @@
         if (!res.ok) { return res.json().catch(() => ({})).then((d) => { throw Object.assign(new Error(d.detail || res.statusText), { code: d.code, detail: d.detail || res.statusText }); }); }
         const cd = res.headers.get('Content-Disposition') || '', m = /filename="?([^";]+)"?/.exec(cd);
         return res.blob().then((blob) => {
-          const name = m ? m[1] : ((B.slug && B.slug(run.title || run.id)) || run.id) + '.' + fmt;
+          const name = m ? m[1] : ((B.slug && B.slug(R.titleOf(run))) || run.id) + '.' + fmt;
           const a = h('a', { href: URL.createObjectURL(blob), download: name, hidden: true });
           document.body.appendChild(a); a.click(); a.remove();
           window.setTimeout(() => URL.revokeObjectURL(a.href), 4000);
@@ -453,7 +505,7 @@
       if (!run.source || run.source.visual !== visualId) { return null; }
       usedPinned.add(visualId);                                        // once: a later filter on this visual asks again
       if (!R.finished(run.state)) {
-        if (banner) { say(banner, 'The run ' + (run.title || run.id) + ' has no result to draw: ' + R.line(run)); }
+        if (banner) { say(banner, 'The run ' + R.titleOf(run) + ' has no result to draw: ' + R.line(run)); }
         return null;
       }
       return B.api('GET', '/runs/' + encodeURIComponent(run.id) + '/result?format=json').then((answer) => {

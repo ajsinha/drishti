@@ -99,6 +99,8 @@ class RunsBackend(BiBackend):
         self.cancelled_by: dict[str, str] = {}
         self.schedules: dict[str, dict] = {}
         self.suggestions = copy.deepcopy(SUGGESTIONS)
+        self.snapshots: dict[str, dict] = {}     # a promoted snapshot name: its owner and newest version ("taken" belongs to someone else)
+        self.promotions: list[dict] = []         # each promote body, with its run
         if seed:
             self._seed()
 
@@ -154,7 +156,7 @@ class RunsBackend(BiBackend):
         mine = run["runner"] == self.user or run["owner"] == self.user
         active = run["state"] in ("queued", "running", "storing", "awaiting-confirm")
         has = run["state"] in ("done", "reused")
-        return {"open": has, "cancel": active and mine, "rerun": mine and not active, "export": has, "share": has and mine, "promote": has and mine,
+        return {"open": has, "cancel": active and mine, "rerun": mine and not active, "export": has, "share": has and mine, "promote": has and mine and run["source"].get("type") in ("mq", "sql"),
                 "schedule": mine, "keep": has and mine, "delete": has and mine}
 
     def tick(self):
@@ -384,10 +386,21 @@ class RunsBackend(BiBackend):
             if tail == "keep":
                 r["expiresAt"] = "2027-01-18T09:14:00Z"
                 return self.view_of(r)
-            if tail == "promote":
+            if tail == "promote":                                                          # as RunPromotion (BI_RUNS 9.4 as built)
                 b = body or {}
-                return {"item": {"id": "bi-snap-1", "kind": "dataset" if b.get("as") == "snapshot" else "report", "workspace": "me", "status": "draft"},
-                        "snapshot": {"name": b.get("name"), "version": 1} if b.get("as") == "snapshot" else None}
+                name, to = b.get("name") or r["id"], b.get("to") or "dataset"
+                if to not in ("dataset", "report"):
+                    raise BackendError(400, "DRS-0400", f"to is dataset or report, not '{to}'")
+                if r["source"].get("type") not in ("mq", "sql"):
+                    raise BackendError(400, "DRS-0400", f"a {r['source'].get('type')} run cannot be promoted: only a model query or a SQL statement's table")
+                owner = self.snapshots.setdefault(name, {"owner": "someone-else" if name == "taken" else self.user, "version": 0})
+                if owner["owner"] != self.user:
+                    raise BackendError(409, "DRS-9004", f"the snapshot name '{name}' is taken by another person's promotion: choose another name")
+                owner["version"] += 1
+                self.promotions.append(dict(b, run=rid))
+                r["promotedTo"] = f"{name}@{owner['version']}"
+                return {"snapshot": name, "version": owner["version"], "dataset": {"name": name, "item": f"bi-ds-{name}"},
+                        "report": {"item": f"bi-rpt-{name}"} if to == "report" else None, "yaml": f"rachana: 2\ndataset: {name}\n"}
             if tail == "schedule":
                 b = body or {}
                 self._check_schedule(b.get("schedule"))

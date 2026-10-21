@@ -62,12 +62,12 @@ user's cluster and the repository's `data/` were not touched.
 | BIR-06 | Medium | Report visuals are never planned, so a report never shows the confirm or *needs a run* card | open: design gap, for the server lane |
 | BIR-07 | Medium | Reuse after a restart sometimes fails: the model part of the data version changed across one restart | open: server lane |
 | BIR-08 | Low | A run waiting for confirmation fails `DRS-9085` at a restart and rings the bell | open: server lane |
-| BIR-09 | Low | The run object leaves `data.words` null and `data.tables` empty, so *Data* is "–" everywhere | open: server lane |
-| BIR-10 | Low | A report visual's run is titled with the report's id (`file:report:counterparty-risk`), not the visual's title; `source.title` null | open: server lane |
+| BIR-09 | Low | The run object leaves `data.words` null and `data.tables` empty, so *Data* is "–" everywhere | open: server lane; console draws it gracefully (2.6.7 console fixes) |
+| BIR-10 | Low | A report visual's run is titled with the report's id (`file:report:counterparty-risk`), not the visual's title; `source.title` null | open: server lane; console falls back to the names (2.6.7 console fixes) |
 | BIR-11 | Low | `can.share` and `can.export` are true on done runs while sharing and export answer `DRS-5001` (R6 not built) | open: server lane |
-| BIR-12 | Low | A done run with `expiresAt` null reads *Kept until: kept (promoted or pinned)* in the drawer | open |
-| BIR-13 | Low | A DRS-9085 row reads "…could not be started again: re-run it: re-run it; if it happens again, narrow it" | open |
-| BIR-14 | Medium | The workspace page's member form is hidden behind the new Members tab: three browser tests fail | open: console lane |
+| BIR-12 | Low | A done run with `expiresAt` null reads *Kept until: kept (promoted or pinned)* in the drawer | fixed (console) |
+| BIR-13 | Low | A DRS-9085 row reads "…could not be started again: re-run it: re-run it; if it happens again, narrow it" | fixed (console; server half separate) |
+| BIR-14 | Medium | The workspace page's member form is hidden behind the new Members tab: three browser tests fail | fixed (console: Members tab, next-step links, tests) |
 
 ### BIR-01 A run card stays Queued for ever (high, fixed)
 

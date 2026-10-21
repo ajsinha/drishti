@@ -43,6 +43,7 @@
     if (name === 'runs' && !runsStarted) { runsStarted = true; startRuns(); }
   }
   tabs.forEach((t) => t.addEventListener('click', (e) => { e.preventDefault(); show(t.getAttribute('data-ws-tab'), true); }));
+  qa('[data-ws-goto]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); show(a.getAttribute('data-ws-goto'), true); const t = q('[data-ws-tab="' + a.getAttribute('data-ws-goto') + '"]'); if (t) { t.focus(); } }));
   // Members is a tab only where the workspace has members (bi.js shows its section for a shared workspace)
   const members = q('[data-members-section]'), membersTab = q('[data-ws-tab="members"]');
   const syncMembers = () => { membersTab.hidden = members.hidden; if (params.get('tab') === 'members' && !members.hidden && membersTab.getAttribute('aria-selected') !== 'true') { show('members'); } };
@@ -87,16 +88,17 @@
     const st = R.stateOf(r.state), est = r.estimate || {}, act = r.actual || {};
     const shared = r.shared && r.shared.from;
     const q1 = h('th', { scope: 'row' },
-      h('span', { class: 'bi-run-q', text: r.title || '(untitled)' }),
+      h('span', { class: 'bi-run-q', text: R.titleOf(r) || '(untitled)' }),
       shared ? h('span', { class: 'bi-run-shared', title: 'Shared with you by ' + shared, text: ' ⇄ shared by ' + shared }) : null,
       h('small', { class: 'bi-run-src', text: R.sourceLine(r) }));
     const status = h('td', { class: 'bi-run-status bi-run-' + r.state },
       h('span', { text: st.label + (r.reuse ? ' ⇄' : '') }),
       R.active(r.state) && r.progress != null ? h('small', { text: Math.round(r.progress * 100) + ' %' }) : null);
-    const data = td((r.data && r.data.words) || '–', { title: r.data && r.data.tables ? r.data.tables.map((t) => t.table + ' ' + t.versions).join('\n') : '' });
+    const tables = r.data && Array.isArray(r.data.tables) ? r.data.tables : [];
+    const data = td(R.dataWords(r) || '–', { title: tables.length ? tables.map((t) => t.table + ' ' + t.versions).join('\n') : 'The server did not say which data versions this run read' });
     const took = R.took(r);
     const estTip = est.seconds ? 'estimated ' + R.range(est).replace(/^about /, '') + (R.finished(r.state) && took != null ? ', took ' + R.duration(took) : '') : '';
-    const open = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-run-more', 'aria-label': 'Open the run ' + (r.title || r.id), 'data-run-open': r.id, text: '⋯' });
+    const open = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-run-more', 'aria-label': 'Open the run ' + R.titleOf(r), 'data-run-open': r.id, text: '⋯' });
     const tr = h('tr', { 'data-run-row': r.id, 'data-run-state': r.state, tabindex: '0', class: 'bi-run-row' },
       h('td', { class: 'bi-run-glyph bi-run-' + r.state, 'aria-label': st.label, text: st.glyph }), q1, status,
       td(R.asOfShort(r) || '–', { title: R.asOf(r) }), data, td(took != null ? R.duration(took) : '–'), td(act.rowsOut != null ? R.count(act.rowsOut) : '–', { class: 'num' }),
@@ -135,7 +137,7 @@
     byId[d.id] = r;
     replaceRow(r);
     if (was !== r.state) {
-      say((r.title || r.id) + ': ' + R.line(r));
+      say(R.titleOf(r) + ': ' + R.line(r));
       if (!R.active(r.state)) {
         B.api('GET', '/runs/' + encodeURIComponent(r.id)).then((full) => { byId[full.id] = full; replaceRow(full); if (openId === full.id) { drawDrawer(full); } }).catch(() => {});
       }
@@ -225,7 +227,7 @@
   function drawDrawer(r) {
     const can = r.can || {}, est = r.estimate || {}, act2 = r.actual || {}, s = r.source || {}, p = r.params || {};
     const enc = encodeURIComponent(r.id);
-    q('[data-run-drawer-title]').textContent = r.title || r.id;
+    q('[data-run-drawer-title]').textContent = R.titleOf(r);
     B.clear(dBody);
     dBody.appendChild(h('p', { class: 'bi-run-dstate bi-run-' + r.state, 'data-run-drawer-state': r.state, role: 'status' }, h('span', { 'aria-hidden': 'true', text: R.stateOf(r.state).glyph + ' ' }), R.line(r)
       + (act2.bytesOut != null ? ' · ' + R.bytes(act2.bytesOut) : '')));
@@ -260,11 +262,7 @@
     }
     const ex = R.exportButtons(r, (t, bad, b) => said(b, t, bad));          // CSV and Excel, from the stored result as the caller's own version
     if (ex) { ex.setAttribute('data-run-act', 'export'); acts.appendChild(ex); }
-    if (can.promote) {
-      const m = menu('Promote', { 'data-run-act': 'promote' }, [['snapshot', 'to a dataset snapshot'], ['report', 'to a report']]);
-      m.addEventListener('change', () => { const as = m.value; m.value = ''; if (as) { promote(r, as, m); } });
-      acts.appendChild(m);
-    }
+    if (can.promote) { acts.appendChild(act('Promote…', { 'data-run-act': 'promote' }, (b) => promote(r, b))); }
     dBody.appendChild(acts);
     const msg = h('p', { class: 'bi-run-dmsg', 'data-run-drawer-msg': '', hidden: !(note && note.id === r.id) });
     if (note && note.id === r.id) { msg.textContent = note.text; msg.classList.toggle('bi-run-bad', note.bad); }
@@ -274,14 +272,14 @@
     const filters = [].concat(p.filters || []).map((f) => f.field + ' ' + (f.op === '!=' ? '≠' : f.op || 'in') + ' ' + [].concat(f.values || []).join(', '));
     Object.keys(p.slicers || {}).forEach((k) => { filters.unshift(k + ' in (' + [].concat(p.slicers[k]).join(', ') + ')'); });
     const parms = Object.keys(p.params || {}).map((k) => k + ' = ' + p.params[k]);
-    const src = s.type === 'report' || s.type === 'board' ? 'Report "' + (s.title || s.id) + '"' + (s.page ? ', page ' + s.page : '') + (s.visual ? ', visual "' + (r.title || s.visual) + '"' : '') : (s.type || '') + (s.id ? ' ' + s.id : '');
+    const src = s.type === 'report' || s.type === 'board' ? 'Report "' + R.reportName(s) + '"' + (s.page ? ', page ' + s.page : '') + (s.visual ? ', visual "' + (r.title && r.title !== s.id ? r.title : R.nameOfId(s.visual)) + '"' : '') : (s.type || '') + (s.id ? ' ' + s.id : '');
     const facts = h('dl', { class: 'bi-run-facts' },
       fact('Source', src, s.href ? h('a', { href: s.href, class: 'bi-run-link', text: ' (open the report)' }) : null),
       fact('Run by', r.runner + (r.owner && r.owner !== r.runner ? ' for ' + r.owner : '') + ', computed as ' + r.runner + ' · ' + when(r.submittedAt) + (r.node ? ' on node ' + r.node : '') + (r.attempt > 1 ? ' · attempt ' + r.attempt : '')),
       fact('Filters', filters.join(' · ')),
       fact('Parameters', parms.join(' · ')),
       fact('As of', R.asOf(r)),
-      fact('Data', (r.data && r.data.words) || '', r.data && r.data.tables && r.data.tables.length ? h('details', { class: 'bi-run-versions' }, h('summary', { text: 'all versions' }),
+      fact('Data', R.dataWords(r), r.data && Array.isArray(r.data.tables) && r.data.tables.length ? h('details', { class: 'bi-run-versions' }, h('summary', { text: 'all versions' }),
         h('ul', {}, r.data.tables.map((t) => h('li', { text: t.table + (t.connector ? ' (' + t.connector + ')' : '') + ': ' + t.versions })))) : null),
       fact('Estimate', (R.range(est) || '') + (est.readRows != null ? ', ' + R.count(est.readRows) + ' rows read' : '') + (est.basis ? ' (' + R.basis(est.basis) + ')' : '')
         + (R.finished(r.state) && act2.seconds != null ? ' · actual ' + R.duration(act2.seconds) + (act2.rowsRead != null ? ', ' + R.count(act2.rowsRead) + ' rows' : '') : '')),
@@ -289,11 +287,11 @@
       fact('Tier', [R.TIERS[r.tier] || r.tier, r.engine ? r.engine + ' engine' : '', r['class'] || ''].filter(Boolean).join(' · ')),
       r.reuse ? fact('Reused', 'the result of ' + r.reuse.of + (r.reuse.mode === 're-masked' ? ', with your masks applied' : '')) : null,
       r.rerunOf ? fact('Re-run of', r.rerunOf) : null,
-      r.promotedTo ? fact('Promoted to', String(r.promotedTo.id || r.promotedTo)) : null);
+      r.promotedTo ? fact('Promoted to', String(r.promotedTo.id || r.promotedTo), promotedLinks(r)) : null);
     dBody.appendChild(facts);
 
     // kept until · keep longer · delete the result
-    const keepRow = h('div', { class: 'bi-run-drow' }, h('strong', { text: 'Kept until ' }), h('span', { 'data-run-expires': '', text: r.expiresAt ? when(r.expiresAt).slice(0, 10) : R.active(r.state) ? 'it finishes, then ' + q('[data-runs-retention]').textContent + ' days' : 'kept (promoted or pinned)' }));
+    const keepRow = h('div', { class: 'bi-run-drow' }, h('strong', { text: 'Kept until ' }), h('span', { 'data-run-expires': '', text: R.keptUntil(r, Number(q('[data-runs-retention]').textContent) || 30, (t) => when(t).slice(0, 10)) || '–' }));
     if (can.keep) {
       const m = menu('Keep longer', { 'data-run-act': 'keep' }, [['90', '90 days'], ['180', '180 days'], ['365', 'a year']]);
       m.addEventListener('change', () => { const days = Number(m.value); m.value = ''; if (days) { B.api('POST', '/runs/' + enc + '/keep', { days }).then((x) => { refresh(x); said(m, 'Kept for ' + days + ' days.'); }).catch(failed(m)); } });
@@ -412,14 +410,33 @@
     sync();
     f.setAttribute('data-run-sched-form', '');
   }
-  function promote(r, as, anchor) {
-    const name = B.slug(r.title || 'run') || 'run';
-    inlineForm(anchor, as === 'snapshot' ? 'Promote to a dataset snapshot' : 'Promote to a report', [h('label', {}, 'Name ', h('input', { name: 'name', class: 'studio-in', required: true, value: name, autocomplete: 'off', pattern: '[A-Za-z0-9_.-]+' }))], 'Promote', (f, b) => {
-      B.busy(b, () => B.api('POST', '/runs/' + encodeURIComponent(r.id) + '/promote', { as, name: f.elements.name.value.trim() }).then((d) => {
+  // Promote (BI_RUNS 9.4 as built): POST /runs/{id}/promote {name, title?, to: dataset|report} makes a draft dataset over a snapshot of the result (and a draft
+  // report on it with `to: report`) in the runner's personal workspace. The items it made are remembered here so "Promoted to" links them after a redraw.
+  const promoted = {};
+  function promotedLinks(r) {
+    const made = promoted[r.id];
+    const link = (href, text, attr) => h('a', Object.assign({ href, class: 'bi-run-link', text }, attr));
+    if (!made) { return h('span', {}, ' · a draft in ', link('/bi/w/me', 'My workspace', { 'data-run-promoted-where': '' })); }
+    return h('span', {}, made.dataset ? [' · ', link('/bi/i/' + B.id2path(made.dataset), 'the draft dataset', { 'data-run-promoted-dataset': made.dataset })] : null,
+      made.report ? [' · ', link('/bi/i/' + B.id2path(made.report), 'the draft report', { 'data-run-promoted-report': made.report })] : null);
+  }
+  function promote(r, anchor) {
+    const name = B.slug(R.titleOf(r) || 'run') || 'run';
+    const to = h('select', { name: 'to', class: 'studio-select', 'aria-label': 'Promote to' }, h('option', { value: 'dataset', text: 'a dataset snapshot' }), h('option', { value: 'report', text: 'a report on it (and its dataset)' }));
+    inlineForm(anchor, 'Promote this result', [
+      h('label', {}, 'Name ', h('input', { name: 'name', class: 'studio-in', required: true, value: name, autocomplete: 'off', pattern: '[A-Za-z0-9_.-]+', title: 'letters, digits, dot, dash or underscore' })),
+      h('label', {}, 'Title ', h('input', { name: 'title', class: 'studio-in', value: R.titleOf(r), autocomplete: 'off', maxlength: '200', placeholder: 'Left empty: the run\'s title and dates' })),
+      h('label', {}, 'To ', to),
+      h('small', { class: 'text-muted-d', text: 'The rows are kept as you see them (masked columns stay masked for every reader). It is a draft in My workspace: review it before you publish.' })
+    ], 'Promote', (f, b) => {
+      const body = { name: f.elements.name.value.trim(), to: f.elements.to.value };
+      if (f.elements.title.value.trim()) { body.title = f.elements.title.value.trim(); }
+      B.busy(b, () => B.api('POST', '/runs/' + encodeURIComponent(r.id) + '/promote', body).then((d) => {
         f.remove();
-        const it = d.item || {};
-        said(anchor, (as === 'snapshot' ? 'Snapshot ' + ((d.snapshot && d.snapshot.name) || '') + (d.snapshot && d.snapshot.version ? ' v' + d.snapshot.version : '') + ' made as a draft dataset' : 'Draft report made') + '. Review it before you publish.');
-        if (it.id) { anchor.parentNode.appendChild(h('a', { href: '/bi/i/' + B.id2path(it.id), class: 'btn-pill btn-ghost', text: 'Open the draft' })); }
+        const ds = (d && d.dataset) || {}, rep = (d && d.report) || null;
+        promoted[r.id] = { dataset: ds.item || null, report: rep && rep.item ? rep.item : null };
+        said(anchor, 'Promoted: snapshot ' + (d.snapshot || body.name) + ' version ' + (d.version || 1) + ', a draft dataset' + (rep ? ' and a draft report on it' : '') + ' in My workspace. Review it before you publish.');
+        return B.api('GET', '/runs/' + encodeURIComponent(r.id)).then(refresh, () => refresh(Object.assign({}, r, { promotedTo: (d.snapshot || body.name) + '@' + (d.version || 1) })));
       }).catch(failed(b)));
     });
   }

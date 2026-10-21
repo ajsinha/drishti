@@ -17,6 +17,17 @@
 
 ## Unreleased
 
+- **BI runs integration findings, console side (BIR-09, BIR-10, BIR-12, BIR-13, BIR-14) and Promote in the drawer (2.6.7).** BIR-14: the
+  workspace's *Add a member* form and settings live on its **Members** tab; after **Create workspace** the Workspaces page offers *Next: add
+  the people who share it* (opens `/bi/w/<id>?tab=members`), and a shared workspace with only you in it says so on its Items tab with an
+  **Add members** link; the three browser tests open the Members tab. BIR-12: *Kept until* says *kept (promoted)* or *kept (pinned)* only when
+  the run says so; a done run without a date reads "30 days after it was last opened" (the run's or the settings' retention); a run without
+  a result says nothing. BIR-13: a reason that already ends with the start of the fix ("…: re-run it") is finished by it, never said twice.
+  BIR-09, BIR-10: no data words and no tables draw a dash (or the tables' versions when only those are given), and a report visual's run
+  titled with the report's id reads by the visual's and the report's names. **Promote…** (`can.promote`) asks for the name, title and *a
+  dataset snapshot* or *a report on it*, sends `POST /runs/{id}/promote {name, title, to}`, then shows *Promoted to name@N* with links to
+  the drafts; DRS-9004 and DRS-9108 are said in words. `drishti.py bi runs promote RUN --to dataset|report [--name] [--title]` follows the
+  server as built (`--as snapshot` still works). BI_GUIDE.md, BI_RUNS_GUIDE.md, BI_RUNS.md 14.4, tutorial 13.
 - **BI runs in the console: sharing, schedules, export and rollup suggestions (2.6.7, BI_RUNS_GUIDE.md).** The run drawer's **Share…**
   takes people and roles from the people picker (chips; names typed comma separated work too) and lists each recipient with the mode the
   server decided: *sees the same*, *re-masked* or *recomputed as them* (their run named), a refusal said in words with its code; **Unshare**

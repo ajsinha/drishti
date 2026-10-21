@@ -363,3 +363,70 @@ def test_a_rollup_suggestion_is_accepted_and_another_dismissed(ctx, stack):
     page.click('[data-sugg-dismiss="sg-2"]')
     page.wait_for_selector('[data-sugg="sg-2"][data-sugg-status="dismissed"]', timeout=10000)
     assert not page.errors, page.errors
+
+
+def test_a_run_says_what_the_server_said_kept_reason_data_and_title(ctx, stack):
+    """BIR-12: a done run without a date is not "kept (promoted or pinned)"; BIR-13: a reason ending with the fix is not told it twice; BIR-09, BIR-10:
+    no data words and no tables draw a dash, and a report visual's run titled with the report's id reads by the visual's and the report's names."""
+    url, backend = stack
+    done = backend._new("Exposure by tenor", "done")
+    done.update(progress=1.0, startedAt=done["submittedAt"], finishedAt=done["submittedAt"], expiresAt=None, actual={"rowsOut": 3, "seconds": 9})
+    stopped = backend._new("Cash ladder by currency", "failed")
+    stopped.update(code="DRS-9085", reason="the server stopped while the run was running and it could not be started again: re-run it", finishedAt=stopped["submittedAt"])
+    src = {"type": "report", "id": "file:report:counterparty-risk", "title": None, "page": "p1", "visual": "exposure-by-name"}
+    bare = backend._new("file:report:counterparty-risk", "done", source=src)
+    bare.update(progress=1.0, startedAt=bare["submittedAt"], finishedAt=bare["submittedAt"], data={"version": None, "words": None, "tables": []}, actual={"rowsOut": 1, "seconds": 3})
+    page = open_page(ctx, stack, "/bi/w/me?tab=runs", f'[data-run-row="{bare["id"]}"]')
+    table = page.inner_text("[data-runs-table]")
+    assert "re-run it: re-run it" not in table and table.count("re-run it; if it happens again, narrow it") == 1, table
+    row = page.inner_text(f'[data-run-row="{bare["id"]}"]')
+    assert "Exposure by name · Counterparty risk" in row and "file:report:" not in row and "–" in row, row
+    page.click(f'[data-run-open="{done["id"]}"]')
+    page.wait_for_selector("[data-run-drawer]:not([hidden]) [data-run-expires]")
+    assert page.inner_text("[data-run-expires]") == "30 days after it was last opened"
+    page.click("[data-run-drawer-close]")
+    page.wait_for_selector("[data-run-drawer]", state="hidden")
+    page.click(f'[data-run-open="{bare["id"]}"]')
+    page.wait_for_function("document.querySelector('[data-run-drawer-title]').textContent === 'Exposure by name · Counterparty risk'")
+    assert 'Report "Counterparty risk"' in page.inner_text("[data-run-drawer]")
+    R = "window.drishtiBi.runs"
+    assert page.evaluate(f"{R}.keptUntil({{state: 'done', promotedTo: 'desk-pnl@1'}}, 30)") == "kept (promoted)"
+    assert page.evaluate(f"{R}.keptUntil({{state: 'done', pinned: true}}, 30)") == "kept (pinned)"
+    assert page.evaluate(f"{R}.keptUntil({{state: 'done', retentionDays: 7}}, 30)") == "7 days after it was last opened"
+    assert page.evaluate(f"{R}.keptUntil({{state: 'failed'}}, 30)") == ""
+    assert page.evaluate(f"{R}.words('DRS-9028', 'the run ran out of its memory budget (4 GB)')") == "The run ran out of its memory budget (4 GB): narrow the dates or add a rollup. (DRS-9028)"
+    assert not page.errors, page.errors
+
+
+def test_promote_asks_name_title_and_kind_then_links_the_drafts(ctx, stack):
+    url, backend = stack
+    mq = backend._new("Notional by desk", "done", source={"type": "mq", "model": "trading"})
+    mq.update(progress=1.0, startedAt=mq["submittedAt"], finishedAt=mq["submittedAt"], expiresAt="2026-11-19T09:14:00Z", actual={"rowsOut": 4, "seconds": 20})
+    visual = backend._new("MTM by desk, to promote", "done")
+    visual.update(progress=1.0, startedAt=visual["submittedAt"], finishedAt=visual["submittedAt"], actual={"rowsOut": 4, "seconds": 20})
+    page = open_page(ctx, stack, "/bi/w/me?tab=runs", f'[data-run-row="{mq["id"]}"]')
+    page.click(f'[data-run-open="{visual["id"]}"]')                                        # a report visual's run: the server says no (can.promote)
+    page.wait_for_selector("[data-run-drawer]:not([hidden]) [data-run-drawer-state]")
+    assert page.locator('[data-run-act="promote"]').count() == 0
+    page.click("[data-run-drawer-close]")
+    page.wait_for_selector("[data-run-drawer]", state="hidden")
+    page.click(f'[data-run-open="{mq["id"]}"]')
+    page.click('[data-run-act="promote"]')
+    form = '[data-run-form][aria-label="Promote this result"]'
+    assert page.input_value(form + ' [name="name"]') == "notional-by-desk" and page.input_value(form + ' [name="title"]') == "Notional by desk"
+    page.fill(form + ' [name="name"]', "taken")
+    page.click(form + ' [type="submit"]')
+    page.wait_for_function("document.querySelector('[data-run-drawer]').innerText.includes('(DRS-9004)')", timeout=10000)
+    assert "taken by another person's promotion: choose another name." in page.inner_text("[data-run-drawer]")
+    page.fill(form + ' [name="name"]', "desk-notional")
+    page.fill(form + ' [name="title"]', "Desk notional, end of September")
+    page.select_option(form + ' [name="to"]', "report")
+    page.click(form + ' [type="submit"]')
+    page.wait_for_selector("[data-run-promoted-report]", timeout=10000)
+    assert backend.promotions[-1] == {"name": "desk-notional", "title": "Desk notional, end of September", "to": "report", "run": mq["id"]}
+    text = page.inner_text("[data-run-drawer]")
+    assert "desk-notional@1" in text and "draft dataset and a draft report" in text
+    assert page.get_attribute("[data-run-promoted-dataset]", "href") == "/bi/i/bi-ds-desk-notional"
+    assert page.get_attribute("[data-run-promoted-report]", "href") == "/bi/i/bi-rpt-desk-notional"
+    assert "read only by the dataset it was promoted to" in page.evaluate("window.drishtiBi.runs.words('DRS-9108')")
+    assert not page.errors, page.errors

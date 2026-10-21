@@ -302,7 +302,11 @@ def test_a_member_is_found_by_typing_part_of_a_name(stack, page):
     s, ws = api("POST", "/bi/workspaces", *WES, {"name": "People Desk", "description": ""})
     assert s in (200, 201), ws
     page.goto(f"{CONSOLE_URL}/bi/w/{ws['id']}")
+    page.click("[data-share-hint] a")                                                       # a workspace with only you in it says where people are added (BIR-14)
+    page.wait_for_selector('[data-ws-tab="members"][aria-selected="true"]')
+    assert "tab=members" in page.url
     page.wait_for_selector("[data-add-member]:not([hidden])")
+    expect(page.locator("[data-member-user]")).to_be_visible()
     page.fill("[data-member-user]", "ri")
     page.wait_for_selector("#wMemberList li", timeout=10000)
     page.click("#wMemberList li:has-text('rita')")

@@ -84,6 +84,7 @@ h1 .bi-soon, h2 .bi-soon { margin-left: .5rem; vertical-align: middle; }
 .bi-approvers { flex: 1 1 100%; margin: 0; }
 .bi-count { font-size: .75rem; color: var(--d-muted); }
 .bi-empty, .bi-placeholder { color: var(--d-muted); padding: .75rem 0; }
+.bi-next { color: var(--d-muted); margin: .5rem 0; }                                                                     /* the next step after a change: e.g. add members to a new workspace (BIR-14) */
 .bi-placeholder { border: 1px dashed var(--d-border); border-radius: var(--d-radius); padding: 1rem; }
 .bi-tbl th[scope="row"] { text-align: left; font-weight: 600; }
 .bi-keys { background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: 1rem 1.25rem; max-width: min(26rem, 94vw); }

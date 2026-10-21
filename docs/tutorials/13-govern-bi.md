@@ -89,7 +89,8 @@ Sign in as **ann**. Choose **Workspaces** and create **Rates desk**, ticking **R
 ![New workspace: Rates desk, a description, and the box requiring review ticked](img/t13/02-workspace.jpg)
 
 You should see the form with the box ticked. In a workspace that requires review nobody publishes their own work: the author **proposes** and someone else
-approves. Add sue as a member of the workspace (its page lists members; over the API: `PUT /api/v1/bi/workspaces/rates-desk/members/sue` with
+approves. Add sue as a member of the workspace: after **Create workspace** follow *Next: add the people who share it* (or open the workspace and choose its
+**Members** tab), type `sue`, choose the role `member` and press **Add or change** (over the API: `PUT /api/v1/bi/workspaces/rates-desk/members/sue` with
 `{"role": "member"}`). Then put the dataset and the model in it, **the dataset first**: a model reads published datasets, so it can only be checked
 once its dataset is through review. **In the UI** that is **My workspace → New item** (or the workspace's own **New item**), kind *dataset* then
 *model*, **Paste YAML**, in `Rates desk`; **on the command line**, as ann (`bi item new` reads the kind from the file name):

@@ -180,12 +180,13 @@ def register(bi, srv, ctx) -> None:
     us = sub("unshare", "stop sharing a run with someone (a run recomputed as them stays theirs)", "  drishti.py bi runs unshare r-java-2-01JA... bob", cmd_unshare)
     us.add_argument("run")
     us.add_argument("who", nargs="+", help="the recipients to remove")
-    pr = sub("promote", "promote a result to a dataset snapshot or a report (a draft)", "  drishti.py bi runs promote r-java-2-01JA... --as snapshot --name desk-pnl-2026", cmd_promote)
+    pr = sub("promote", "promote a model query's or SQL run's result to a draft dataset snapshot, or a draft report on it (in your workspace)",
+             "  drishti.py bi runs promote r-java-2-01JA... --name desk-pnl-2026\n  drishti.py bi runs promote r-java-2-01JA... --to report --name desk-pnl-2026 --title 'Desk P&L 2026'", cmd_promote)
     pr.add_argument("run")
-    pr.add_argument("--as", dest="as_", choices=("snapshot", "report"), required=True)
-    pr.add_argument("--name", required=True)
-    pr.add_argument("--workspace")
-    pr.add_argument("--title")
+    pr.add_argument("--to", choices=("dataset", "report"), default="dataset", help="a dataset snapshot (default), or a report on it and its dataset")
+    pr.add_argument("--as", dest="as_", choices=("snapshot", "report"), help=argparse.SUPPRESS)          # the earlier spelling: snapshot is --to dataset
+    pr.add_argument("--name", help="the snapshot's and the dataset's name (the server makes one when left out); the same name again is its next version")
+    pr.add_argument("--title", help="the dataset's title (the server's default names the run and its dates)")
     kp = sub("keep", "keep a result longer than the retention", "  drishti.py bi runs keep r-java-2-01JA... --days 90", cmd_keep)
     kp.add_argument("run")
     kp.add_argument("--days", type=int, required=True)
@@ -472,16 +473,19 @@ def cmd_unshare(a, ctx) -> int:
 
 
 def cmd_promote(a, ctx) -> int:
-    body = {"as": a.as_, "name": a.name}
-    for k in ("workspace", "title"):
+    """POST /runs/{id}/promote {name?, title?, to} (BI_RUNS 9.4 as built): 201 {snapshot, version, dataset: {name, item}, report: {item}|null, yaml}."""
+    to = {"snapshot": "dataset", "report": "report"}.get(a.as_ or "", a.to)
+    body = {"to": to}
+    for k in ("name", "title"):
         if getattr(a, k):
             body[k] = getattr(a, k)
     r = _api(a, ctx).json("POST", "/api/v1/bi/runs/" + _rid(a) + "/promote", body)
     if a.json:
         ctx["say_json"](r)
         return 0
-    it, snap = r.get("item") or {}, r.get("snapshot") or {}
-    print(f"{it.get('id')}  {it.get('kind')}  {it.get('status')} in {it.get('workspace')}" + (f"  (snapshot {snap.get('name')} v{snap.get('version')})" if snap else ""))
+    ds, rep = r.get("dataset") or {}, r.get("report") or {}
+    print(f"snapshot {r.get('snapshot')} version {r.get('version')}: draft dataset {ds.get('item')} ({ds.get('name')})" + (f", draft report {rep.get('item')}" if rep.get("item") else "")
+          + " in your workspace")
     print("  review it before you publish it")
     return 0
 

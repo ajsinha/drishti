@@ -116,7 +116,7 @@ server decides what each person may do with a run, and the drawer shows only tho
 | **Re-run ▾ on the newest data** | The same question with relative dates (this year, latest) worked out again. |
 | **Cancel** | Stops a queued or running run. Its row says *Cancelled: cancelled by you*. |
 | **Export CSV** · **Export Excel** | The stored result as a file, your own version of it: nothing is computed again, masked cells stay masked (see [Export](#export)). |
-| **Promote ▾** | To a dataset snapshot or a report, as a draft for review (see [Promote a run](#promote-a-run)). |
+| **Promote…** | A model query's or SQL run's result to a dataset snapshot or a report on it, as a draft for review (see [Promote a run](#promote-a-run)). Offered only when the server says you may (`can.promote`). |
 | **Keep longer** | 90 days, 180 days or a year, instead of the 30 days after the last open. |
 | **Delete result** | Removes the stored result now. The run stays listed, as expired. |
 | **Share…** · **Unshare** | See [Sharing a run](#sharing-a-run). |
@@ -183,9 +183,16 @@ limit, with a note saying so. Parquet and PDF are not offered for runs yet.
 
 ## Promote a run
 
-**Promote ▾ → to a dataset snapshot** keeps the result as a read-only table and makes a draft dataset in your workspace (`source: {run: …}`,
-[DATASETS.md](DATASETS.md)). **→ to a report** makes a draft report with the question as a table visual. Both follow the normal review
-before publishing, and the reviewer sees as whom the data was computed. Promoting needs the bi-author power.
+**Promote…** in the drawer asks for a **Name** (the snapshot's and the dataset's, prefilled from the run's title), a **Title**, and **To**:
+*a dataset snapshot* keeps the result as a read-only table and makes a draft dataset in My workspace (`source: {run: …}`,
+[DATASETS.md](DATASETS.md)); *a report on it* also makes a draft report with one table of every column. The rows are kept as you see them:
+a column masked for you stays masked for every reader. The drawer then says *Promoted to name@1* with links to **the draft dataset** and
+**the draft report**. Both follow the normal review before publishing, and the reviewer sees as whom the data was computed.
+Only the runner promotes, with the bi-author power, and only a model query or a SQL run (not a report visual): the button appears only when
+the server allows it. The same name again is version 2 of the same draft. A name another person promoted is refused: *That snapshot name is
+taken by another person's promotion: choose another name (DRS-9004)*. A dataset that points at a snapshot it was not promoted to reads
+*This dataset may not read that run snapshot (DRS-9108)*: promote the run again to make your own. On the command line:
+`drishti.py bi runs promote RUN --to report --name desk-pnl-2026 --title "Desk P&L 2026"`.
 
 ## The bell and the inbox
 
