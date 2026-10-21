@@ -714,7 +714,16 @@ Reading the code on `develop` changed the agreed outline in these places:
    path asks the engine for the measure at the chart's grain, and only fields get an aggregation menu.
 
 ## 22. Decisions on the open questions (product owner, 2026-10-20)
-**C1 as built (`table-chart-engine.js`, ahead of the wiring).** Coding the engine settled these points:
+
+1. **Chart all N on searches without `pivot:`:** not in 2.6.7. The pack owner's opt-in stays; the rows on screen are always chartable.
+2. **Open in BI for Sutra tables:** not offered in 2.6.7.
+3. **Live tables:** a snapshot with *Refresh*.
+4. **Saved charts for `dom` tables** (admin lists): not saved.
+5. **Saved charts per table:** one per table in 2.6.7; named charts may come later.
+
+## 23. C1 as built (`table-chart-engine.js`, ahead of the wiring)
+
+Coding the engine settled these points:
 
 * **Count of rows needs a column.** `pivot-engine.js` `normalise` drops a value whose field is not a record field, so *Rows* cannot be
   `{field: null, agg: count}` beside other values. `prepare` adds a derived `·rows` column (1 per kept row) and counts it, so a count is
@@ -727,11 +736,3 @@ Reading the code on `develop` changed the agreed outline in these places:
 * **The summary's numbers use `pivot-engine.js` `format(v, 'compact')`** (`−300k`, `4.1m`), not the section 14 example's `−0.3m`.
 * **Bad enums are fixes, not problems.** `normalise` returns `{settings, problems, fixes}`: only a removed or masked field (or another
   `v`) is a problem that sets a saved document aside; a bad `type` or `agg` is replaced and listed in `fixes`.
-
-## 22. Open questions
-
-1. **Chart all N on searches without `pivot:`:** not in 2.6.7. The pack owner's opt-in stays; the rows on screen are always chartable.
-2. **Open in BI for Sutra tables:** not offered in 2.6.7.
-3. **Live tables:** a snapshot with *Refresh*.
-4. **Saved charts for `dom` tables** (admin lists): not saved.
-5. **Saved charts per table:** one per table in 2.6.7; named charts may come later.
