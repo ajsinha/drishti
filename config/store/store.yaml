@@ -1,0 +1,36 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+#
+# The content store (docs/architecture/CONTENT_STORE.md): where user content (Build workbench Designs today) is kept so that every
+# node of a Drishti*net cluster reaches it. The server reads this file at start (drishti.store.file in application.yaml); a missing
+# file or key means the value shown here. Every node of a cluster must use the same settings. Examples: config/store.examples/.
+backend: filesystem                # filesystem | sqlite | postgres | s3
+filesystem:
+  # A folder; on a cluster it must be a SHARED mount (NFS, EFS, SMB) at the same path on every node. DRISHTI_STORE_ROOT overrides it.
+  root: ${drishti.data.dir:./data}/fstore
+sqlite:
+  url: jdbc:sqlite:${drishti.data.dir:./data}/identity/drishti.db   # the Drishti database itself (one node)
+postgres:
+  url: ""                          # e.g. jdbc:postgresql://db:5432/drishti (the Drishti database)
+  user: drishti
+  password: ${DRISHTI_STORE_PASSWORD:}
+  pool: 4
+s3:
+  bucket: ""
+  prefix: ""
+  region: us-east-1
+  endpoint: ""                     # empty for AWS; MinIO or another S3-compatible store that honours If-Match / If-None-Match
+  path-style: false
+  access-key: ${DRISHTI_STORE_ACCESS_KEY:}   # empty: the AWS default credentials chain
+  secret-key: ${DRISHTI_STORE_SECRET_KEY:}

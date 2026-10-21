@@ -305,6 +305,15 @@ backend:
 - **Without Drishti*net** `backend.urls` still works as a plain list of identical servers (same packs, same lakes), but
   answers are only the same on each when they hold the same data; with Drishti*net any server answers for all.
 
+### 11.2 Content every node reaches: the content store (Unreleased)
+
+Build workbench Designs are kept in the **content store** ([CONTENT_STORE.md](CONTENT_STORE.md)), so a console that fails over to another
+member still finds them (before, the other member answered `404 DRS-5006 no design`). **Every member must use the same
+`config/store/store.yaml`.** The default filesystem store on a cluster needs a **shared mount** (NFS, EFS, SMB) at the same path on every
+member; a local `data/fstore` per member gives each member its own Designs again. PostgreSQL or S3 need no shared disk. A member that
+finds another member recorded with a different store root logs `content store roots differ`. Two members saving the same Design at
+once give one success and one `409 DRS-5057`. The rest of the per-node content moves next (CONTENT_STORE.md section 8).
+
 ## 12. Failure
 
 | Event | What happens |

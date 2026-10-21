@@ -481,3 +481,13 @@ CREATE TABLE IF NOT EXISTS drishti_bi_run_schedule (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 CREATE INDEX IF NOT EXISTS ix_bi_run_schedule_owner ON drishti_bi_run_schedule (owner);
+
+-- The content store (docs/architecture/CONTENT_STORE.md): user content as keyed documents with a compare-and-set version; deleted = 1 is a tombstone.
+CREATE TABLE IF NOT EXISTS drishti_content (
+    k          VARCHAR(2048) PRIMARY KEY,
+    v          BYTEA,
+    version    BIGINT  NOT NULL,
+    updated_ms BIGINT  NOT NULL,
+    deleted    INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS ix_content_updated ON drishti_content (updated_ms);

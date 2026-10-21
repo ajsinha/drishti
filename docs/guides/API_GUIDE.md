@@ -1728,6 +1728,9 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-5054 | 403 | net not reachable | the caller's roles may not reach the node (`access.yaml`), or the node is drained (then `503`) |
 | DRS-5055 | 409 | net file refused | a `config/net/` file changed since it was read (`If-Match`), or has an error (`problems`) |
 | DRS-5056 | 400 | net bad request | an unknown member, removing one that is alive, a malformed seed, a file that is not one of the folder |
+| DRS-5057 | 409 | content conflict | a Design (or other content-store item) changed on another node since it was read: reload and try again |
+| DRS-5058 | 400 | content bad key | a content-store key that is not valid |
+| DRS-5059 | 503 | content unavailable | the content store's database, bucket or shared folder could not be reached |
 | DRS-6001 | 404 | user not found | no such user |
 | DRS-6002 | 409 | user exists | a user with that name already exists |
 | DRS-6003 | 422 | weak password | the password does not meet the password rules |

@@ -185,7 +185,7 @@ public final class FileDesignStore implements DesignStore {
     }
 
     /** A sample's file name: a hash of its name, so a name never becomes part of a path. */
-    private static String fileOf(String name) {
+    static String fileOf(String name) {
         try {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(name.getBytes(StandardCharsets.UTF_8)), 0, 16) + ".json";
         } catch (NoSuchAlgorithmException e) {

@@ -21,8 +21,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * {@code drishti.builder.designs.*}: where Designs are kept and how much of it one user may use.
  *
- * @param store {@code file} (default: {@code dir}, files readable by the server only) or {@code jpa} (the identity database)
- * @param dir the file store's directory
+ * @param store {@code content} (default: the content store, {@code config/store/store.yaml}, reached by every node of a cluster), or, for one
+ *     node only, {@code file} ({@code dir}, files readable by the server only) or {@code jpa} (the identity database)
+ * @param dir the file store's directory; with {@code content}, what it holds is imported once at start
  * @param maxPerUser most Designs one user keeps
  * @param maxSamples most samples in one Design
  * @param maxMb most megabytes of sample documents in one Design
@@ -44,7 +45,7 @@ public record DesignProperties(String store, String dir, Integer maxPerUser, Int
 
 
     public DesignProperties {
-        store = store == null || store.isBlank() ? "file" : store.trim().toLowerCase();
+        store = store == null || store.isBlank() ? "content" : store.trim().toLowerCase();
         dir = dir == null || dir.isBlank() ? "./data/designs" : dir;
         maxPerUser = positive(maxPerUser, 50);
         maxSamples = positive(maxSamples, 50);
@@ -63,6 +64,10 @@ public record DesignProperties(String store, String dir, Integer maxPerUser, Int
 
     public static DesignProperties defaults() {
         return new DesignProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    }
+
+    public boolean content() {
+        return "content".equals(store);
     }
 
     public boolean jpa() {

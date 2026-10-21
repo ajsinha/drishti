@@ -57,7 +57,7 @@ There is no second store to back up, secure, size or switch.
 |---|---|
 | Identity: users, roles, packs per user, preferences, API tokens, sessions, the audit trail | **DuckDB**, the BI engine: it is compute over the lakes and BI files, rebuilt from them, never a system of record |
 | Collaboration: notes, shares, threads, comments, mentions, inbox and outbox | The **lakes** (Delta, Iceberg): source data, written only by the loader (`lake build`, `lake publish`) |
-| BI workspaces, items, versions, usage | **Caches** (RocksDB, layout and fingerprint caches): derived, safe to delete |
+| BI workspaces, items, versions, usage; the content store's table `drishti_content` when `config/store/store.yaml` says `sqlite` or `postgres` ([CONTENT_STORE.md](CONTENT_STORE.md)) | **Caches** (RocksDB, layout and fingerprint caches): derived, safe to delete |
 | Write-back (2.7.0): `drishti_edit_lane`, `drishti_edit_log`, overlays, Drishti-owned kinds ([WRITE_BACK.md](WRITE_BACK.md) sections 5, 7, 11) | **Source systems** (ENDUR, CALYPSO, MUREX, connector databases): Drishti reads them, and writes to them only through a connector's `writes:` |
 | Anything relational added later | Files that are documents by nature (Sutras, packs, connector and net configuration): they stay files under `config/` |
 

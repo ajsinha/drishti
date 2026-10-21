@@ -95,7 +95,14 @@ public final class DesignService {
         StoredDesign d = get(user, id);
         if (clock.getAsLong() - d.updated > 3_600_000L) {
             d.updated = clock.getAsLong();
-            store.save(d);
+            try {
+                store.save(d);
+            } catch (DrishtiException e) {
+                if (e.errorCode() != ErrorCode.CONTENT_CONFLICT) {
+                    throw e;
+                }
+                return get(user, id);                                   // another node touched or changed it meanwhile: theirs is newer
+            }
         }
         return d;
     }
