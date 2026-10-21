@@ -1090,7 +1090,9 @@ run's estimate (`RunDataWords`; no new column), so a question that was not plann
 As built (BIR-10), a report visual's run is titled with the visual's title (else the report's) unless `title` was given, and its
 `source.title` is the report's title, kept with the row at submit (`BiReportService.titles`).
 
-`can` is computed by the server for the caller, so the console never decides rights. As built (R1), `can` also carries `confirm`
+`can` is computed by the server for the caller, so the console never decides rights. As built (BIR-11) it offers only what this server can
+do now: `share`, `export` and `promote` are built; `export` is false when distribution is off and for a statement run (its result is its
+file); `rerun` is offered for mq, sql, report and statement runs (what can be asked again), `schedule` for mq, sql and report runs. As built (R1), `can` also carries `confirm`
 (true for the runner of an `awaiting-confirm` run), an added field. Fields are never removed. A new field may be
 added, and the console ignores fields it does not know.
 

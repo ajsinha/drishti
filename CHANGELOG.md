@@ -32,6 +32,8 @@
   (`RunDataWords`, kept with the estimate, no new column), so the Runs tab's *Data* column says what was read (`RunDataWordsTest`).
   BIR-10: a report visual's run is titled with the visual's title and its `source.title` is the report's, no longer the report's id
   (`ModelAcceptanceTest` order 19).
+  BIR-11: `can` offers only what the server can do now: share, export (not when distribution is off, not for a statement's file) and
+  promote; rerun only for runs that can be asked again, schedule only for mq, sql and report runs (`RunCanTest`).
 
 - **BI runs in the console: sharing, schedules, export and rollup suggestions (2.6.7, BI_RUNS_GUIDE.md).** The run drawer's **Share…**
   takes people and roles from the people picker (chips; names typed comma separated work too) and lists each recipient with the mode the
