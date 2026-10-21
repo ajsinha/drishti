@@ -74,3 +74,13 @@
 .conn-dialog .ds-actions .conn-problems:empty, .conn-dialog .ds-actions .conn-edit-msg:empty { display: none; }
 .conn-dialog [aria-invalid="true"] { outline: 2px solid var(--d-bad, #c0392b); outline-offset: 1px; }
 .conn-dialog [hidden] { display: none !important; }
+
+/* Template updates: one card per drifted connector, its text and the pack's template side by side (stacked on a phone). */
+.tu-card { border: 1px solid var(--d-border); border-radius: 8px; padding: .8rem 1rem; margin: 0 0 1rem; }
+.tu-classes { list-style: none; padding: 0; margin: .4rem 0; display: grid; gap: .3rem; }
+.tu-notices { margin: .2rem 0 1rem; padding-left: 1.2rem; }
+.tu-diff { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+.tu-diff figure { margin: 0; min-width: 0; }
+.tu-diff figcaption { color: var(--d-muted); font-size: .8rem; margin-bottom: .2rem; }
+.tu-diff pre { margin: 0; padding: .5rem; max-height: 22rem; overflow: auto; border: 1px solid var(--d-border); border-radius: 6px; color: var(--d-ink); font-size: .78rem; white-space: pre; }
+@media (max-width: 720px) { .tu-diff { grid-template-columns: 1fr; } }

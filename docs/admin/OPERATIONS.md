@@ -262,6 +262,14 @@ anything does (`DRS-5041`) and offers *Disable instead*, and otherwise **moves**
 once a day, so **back up `data/uninstalled` with `data/`** if you want longer. A pack named in `DRISHTI_PACKS` is not uninstalled here (take it out of the setting and
 restart, or disable it). Every action and every refusal is in the audit log as `artifact-*`.
 
+### Connectors behind their pack's template
+
+After a pack upgrade a connector file generated from the older template can lack the kinds the pack serves now. With
+`template-updates: additive` (the default, `config/connectors-settings.yaml`) the server adds the missing kinds and settings itself,
+keeping every edit, and logs it; with `notify` it only lists them. Either way **Admin → Connectors → Template updates** shows each
+drifted connector beside its template with *Add missing kinds*, *Regenerate from template*, *Remove obsolete kinds* and *Fix all
+additive*. See [CONNECTOR_FILES.md, Template updates](../connectors/CONNECTOR_FILES.md#template-updates).
+
 ### What changes live (no restart)
 
 Drishti is meant to run for months. Anything you can write as a file or set on an Admin page is noticed while the server runs; only the

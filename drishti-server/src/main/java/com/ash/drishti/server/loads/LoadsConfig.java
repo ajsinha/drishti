@@ -112,10 +112,57 @@ public record LoadsConfig(List<String> notifyRoles, List<String> notifyUsers, bo
         private final ObjectMapper yaml = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
                 .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES).enable(YAMLGenerator.Feature.ALWAYS_QUOTE_NUMBERS_AS_STRINGS));
 
+        /** The shared overrides ({@code loads/config/<pack>.yaml} in the content store, CONTENT_STORE.md section 11), or null for the files. */
+        private final com.ash.drishti.identity.content.ContentStore store;
+        static final String PREFIX = "loads/config/";
+        static final String MARKER = "system/imports/loads-config.json";
+        private static final String HEADER = "# Data loads override, written from Admin > Packs > Data loads. The pack's own files are unchanged;\n"
+                + "# delete this file (or press Reset) to use the pack's own loads: section again.\n";
+
         public Overrides(Path dir, List<String> defaultRoles, int smokeMax) {
+            this(dir, defaultRoles, smokeMax, null);
+        }
+
+        /**
+         * With a store, an override saved through Admin is a document every node reads ({@code drishti.loads.config-store: content});
+         * the folder's files are imported once (marker {@code system/imports/loads-config.json}) and left in place.
+         */
+        public Overrides(Path dir, List<String> defaultRoles, int smokeMax, com.ash.drishti.identity.content.ContentStore store) {
             this.dir = dir.toAbsolutePath().normalize();
             this.defaultRoles = defaultRoles;
             this.smokeMax = smokeMax;
+            this.store = store;
+            if (store != null) {
+                importFiles();
+            }
+        }
+
+        private void importFiles() {
+            try {
+                store.put(MARKER, ("{\"at\":\"" + java.time.Instant.now() + "\"}").getBytes(java.nio.charset.StandardCharsets.UTF_8), null);
+            } catch (com.ash.drishti.common.DrishtiException e) {
+                return;                                                   // imported before (or by another node now)
+            }
+            Path folder = dir.resolve("config");
+            if (!Files.isDirectory(folder)) {
+                return;
+            }
+            try (var files = Files.list(folder)) {
+                for (Path f : files.filter(x -> x.getFileName().toString().endsWith(".yaml")).toList()) {
+                    String pack = f.getFileName().toString().replaceAll("\\.yaml$", "");
+                    if (NAME.matcher(pack).matches() && store.get(PREFIX + pack + ".yaml").isEmpty()) {
+                        store.put(PREFIX + pack + ".yaml", Files.readAllBytes(f), null);
+                        org.slf4j.LoggerFactory.getLogger(Overrides.class).info("data loads override {} imported into the content store ({} is kept)", pack, f);
+                    }
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException("cannot import " + folder, e);
+            }
+        }
+
+        private String key(String pack) {
+            file(pack);                                                   // checks the name
+            return PREFIX + pack + ".yaml";
         }
 
         public Path file(String pack) {
@@ -126,10 +173,22 @@ public record LoadsConfig(List<String> notifyRoles, List<String> notifyUsers, bo
         }
 
         public boolean overridden(String pack) {
-            return Files.isRegularFile(file(pack));
+            return store != null ? store.get(key(pack)).isPresent() : Files.isRegularFile(file(pack));
         }
 
         private Map<String, Object> overrideDoc(String pack) {
+            if (store != null) {
+                var item = store.get(key(pack));
+                if (item.isEmpty()) {
+                    return Map.of();
+                }
+                try {
+                    Map<String, Object> m = yaml.readValue(item.get().bytes(), new TypeReference<Map<String, Object>>() {});
+                    return m == null ? Map.of() : m;
+                } catch (IOException e) {
+                    throw new UncheckedIOException("cannot read " + key(pack) + " in the content store", e);
+                }
+            }
             Path f = file(pack);
             if (!Files.isRegularFile(f)) {
                 return Map.of();
@@ -239,12 +298,21 @@ public record LoadsConfig(List<String> notifyRoles, List<String> notifyUsers, bo
 
         /** Saves the whole override (only what it says replaces the pack's own sections). */
         public void write(String pack, Map<String, Object> doc) {
+            if (store != null) {
+                try {
+                    String text = HEADER + yaml.writeValueAsString(doc);
+                    String version = store.get(key(pack)).map(com.ash.drishti.identity.content.ContentStore.Item::version).orElse(null);
+                    store.put(key(pack), text.getBytes(java.nio.charset.StandardCharsets.UTF_8), version);   // another node's save meanwhile: 409 DRS-5057
+                    return;
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            }
             try {
                 Path f = file(pack);
                 Files.createDirectories(f.getParent());
                 Path tmp = com.ash.drishti.common.TempFiles.createFile(f.getParent(), pack + "-", ".tmp");
-                Files.writeString(tmp, "# Data loads override, written from Admin > Packs > Data loads. The pack's own files are unchanged;\n"
-                        + "# delete this file (or press Reset) to use the pack's own loads: section again.\n" + yaml.writeValueAsString(doc));
+                Files.writeString(tmp, HEADER + yaml.writeValueAsString(doc));
                 Files.move(tmp, f, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
@@ -252,6 +320,9 @@ public record LoadsConfig(List<String> notifyRoles, List<String> notifyUsers, bo
         }
 
         public boolean reset(String pack) {
+            if (store != null) {
+                return store.deleteLatest(key(pack));
+            }
             try {
                 return Files.deleteIfExists(file(pack));
             } catch (IOException e) {

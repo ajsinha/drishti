@@ -119,6 +119,8 @@ public final class ConnectorManager {
             seen.put(n, t == null ? "" : ConnectorFiles.etag(t));
             LOG.warn("connector file {}.yaml is not usable: {}", n, m);
         });
+        // the start-up properties came from the files alone: a shared edit (or a shared delete) is applied by the first scan
+        files.overlaid().forEach(n -> seen.put(n, "shared"));
         files.misnamed().forEach(f -> LOG.warn("{} in {} is not a connector file (names are lower case letters, digits and hyphens, ending .yaml); it is ignored", f, files.dir()));
         bootstrapMessages.forEach(m -> LOG.info("connectors: {}", m));
         warnDeprecated();
@@ -421,7 +423,7 @@ public final class ConnectorManager {
     }
 
     @SuppressWarnings("unchecked")
-    private String templateText(Template t) {
+    public String templateText(Template t) {
         Map<String, Object> d = t.definition();
         Map<String, Object> flat = new LinkedHashMap<>();
         PackLoader.flatten("", d.get("settings") instanceof Map<?, ?> s ? (Map<String, Object>) s : Map.of(), flat);
@@ -566,6 +568,8 @@ public final class ConnectorManager {
         m.put("template", t.map(Template::pack).orElse(null));
         TemplateChange tc = templateChange(name);
         m.put("templateChanged", tc == null ? null : tc.message());
+        String source = files.source(name);
+        m.put("source", source == null ? origin(name) : source);       // file, shared (an Admin edit every node applies), shared-hidden
         return m;
     }
 
@@ -995,7 +999,7 @@ public final class ConnectorManager {
                 requireUnused(name, "disabling", confirm);
             }
             List<String> changed = diff(before, next);
-            files.write(name, text);
+            files.write(name, text, current);
             scan();
             return new Change(detail(name), changed, warnings);
         } finally {
@@ -1095,6 +1099,21 @@ public final class ConnectorManager {
 
     /** Puts a pack's template back as the connector's file. */
     public Change reset(String name, String ifMatch) {
+        String source = files.source(name);
+        if (source != null && source.startsWith("shared")) {      // a shared edit: Reset removes it, the file (or the pack's template) counts again
+            scanLock.lock();
+            try {
+                String now = files.text(name);
+                if (ifMatch != null && now != null && !ifMatch.equals(ConnectorFiles.etag(now))) {
+                    throw new DrishtiException(ErrorCode.CONNECTOR_CONFLICT, "connector '" + name + "' changed since you read it; reload it");
+                }
+                files.overlay().remove(name, now);
+                scan();
+                return new Change(defined(name) ? detail(name) : Map.of("name", name, "deleted", true), List.of("shared edit removed"), List.of());
+            } finally {
+                scanLock.unlock();
+            }
+        }
         Template t = template(name).orElseThrow(() -> new DrishtiException(ErrorCode.CONNECTOR_CONFLICT,
                 "connector '" + name + "' has no pack default to go back to; delete it, or edit it"));
         String text = templateText(t);

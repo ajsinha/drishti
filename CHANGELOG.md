@@ -30,6 +30,24 @@
 - **Fix: `lake publish` checked the files on AWS, not on the store it commits to.** With `--storage-option AWS_ENDPOINT_URL=…`
   (MinIO, an S3-compatible store) the file check now uses that endpoint and the keys given, as the commit does; before, it asked
   AWS S3 and failed (`ACCESS_DENIED`).
+- **New: data loads overrides saved through Admin apply on every node** (`loads/config/<pack>.yaml` in the content store, read on every
+  use; the old `<data>/loads/config` files imported once and kept; `drishti.loads.config-store: file` for one node). Nothing under
+  `config/bi` is written by the UI any more (BI content is already in the store), so there is nothing to share there.
+
+- **New: connectors catch up with their pack's template.** A connector file generated from an older template (for example `macro-store`
+  without `region-economy`, `risk-store` without `trade-valuation`) is compared with the pack's current template at start and every
+  minute: missing kinds and settings are added automatically, keeping every edit (`template-updates: additive`, the default, in
+  `config/connectors-settings.yaml`; `notify` only lists; `off`), as a shared edit with the old text in the history, one log line and an
+  audit entry. Settings an administrator changed and kinds no pack serves are never changed automatically. **Admin → Connectors →
+  Template updates** lists every drifted connector beside its template with *Add missing kinds*, *Regenerate from template*, *Remove
+  obsolete kinds* and *Fix all additive*; the Connectors tab shows a count. [CONNECTOR_FILES.md](docs/connectors/CONNECTOR_FILES.md#template-updates).
+
+- **New: connector edits made through Admin reach every node of a cluster.** Files in `config/connectors` stay the base (GitOps); an
+  Admin create, edit, enable or disable, restore or delete is a shared edit in the content store (`config/connectors/<name>.yaml`, with
+  history) that every node applies over its file within `drishti.store.watch-ms` (2 s), hot-reloading as for a file edit. Admin →
+  Connectors marks it *shared edit*; Reset removes it. Placeholders stay unresolved in the store. Two nodes editing one connector get one
+  `409 DRS-5032`. `drishti.connectors.store: file` for one node. [CONNECTOR_FILES.md](docs/connectors/CONNECTOR_FILES.md#shared-edits-on-a-cluster), CONTENT_STORE.md section 11.
+
 - **New: collaboration, notes, embed apps, pack switches, the audit trail, Sutra proposals and load history on every node of a cluster.** They moved
   into the content store (docs/architecture/CONTENT_STORE.md section 9): one document per comment thread (its comments, sealed revision
   chain, mentions, followers), shares, per-user inbox documents, outbox deliveries claimed by compare-and-set (sent once across nodes),

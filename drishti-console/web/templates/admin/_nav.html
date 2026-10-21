@@ -19,7 +19,7 @@
   <a href="/admin/packs"{% if tab == 'packs' %} aria-current="page"{% endif %}><i class="bi bi-box-seam" aria-hidden="true"></i> Packs</a>
   <a href="/admin/tokens"{% if tab == 'tokens' %} aria-current="page"{% endif %}><i class="bi bi-key" aria-hidden="true"></i> Tokens</a>
   <a href="/admin/access"{% if tab == 'access' %} aria-current="page"{% endif %}><i class="bi bi-eye" aria-hidden="true"></i> Access</a>
-  <a href="/admin/connectors"{% if tab == 'connectors' %} aria-current="page"{% endif %}><i class="bi bi-plug" aria-hidden="true"></i> Connectors</a>
+  <a href="/admin/connectors"{% if tab == 'connectors' %} aria-current="page"{% endif %}><i class="bi bi-plug" aria-hidden="true"></i> Connectors{% if status and status.connectorTemplateDrift %} <span class="adm-badge" data-drift-badge title="{{ status.connectorTemplateDrift }} connector(s) differ from their pack's template: see Template updates">{{ status.connectorTemplateDrift }}<span class="visually-hidden"> connectors differ from their pack's template</span></span>{% endif %}</a>
   <a href="/admin/artifacts"{% if tab == 'artifacts' %} aria-current="page"{% endif %}><i class="bi bi-archive" aria-hidden="true"></i> Artifacts</a>
   <a href="/admin/ai"{% if tab == 'ai' %} aria-current="page"{% endif %}><i class="bi bi-stars" aria-hidden="true"></i> AI</a>
   <a href="/admin/loads"{% if tab == 'loads' %} aria-current="page"{% endif %}><i class="bi bi-cloud-upload" aria-hidden="true"></i> Data loads</a>

@@ -446,6 +446,40 @@ file by hand while the pack still suggests it, it is written again at the next s
 with the default lake (`<data>/delta`) nothing changes; with `--lake DIR` each file that points elsewhere is rewritten to point there
 (its earlier text kept in `<data dir>/connectors/history/`), and a missing one is written from the pack's template.
 
+### Template updates
+
+A connector file generated once from an older pack template can lack kinds the pack serves now (seen in the field: `macro-store`
+without `region-economy` and `country-group`, `civic-store` without `office-holder`, `risk-store` without `trade-valuation`, and old
+files still naming `central-bank-decision`, `trade-flow` and `price-basket`, which no pack uses any more). The server compares every
+connector that has text (a file or a shared edit) with its pack's current template, at start and every
+`drishti.connectors.template-check-ms` (60 s), and sorts the difference into three parts:
+
+| Part | What | Applied automatically |
+|---|---|---|
+| **Missing** (additive) | kinds the template serves that the connector lacks; settings keys the template has and the connector does not (the layout entries for those kinds among them) | with `additive` |
+| **Changed** (conflicting) | settings both have with different values: an administrator's edit | never |
+| **Obsolete** | kinds in the connector that no loaded pack serves | never |
+
+`template-updates` in the connectors settings file, `config/connectors-settings.yaml` (named by `drishti.connectors.settings-file`;
+`drishti.connectors.template-updates` overrides it), chooses what happens on its own:
+
+```yaml
+# config/connectors-settings.yaml
+template-updates: additive    # additive (the default): add missing kinds and settings, keeping every edit | notify: only list | off
+```
+
+With `additive` the missing part is merged into the connector, every other value kept as it is, written as a shared edit (every node
+applies it, section 8) with the previous text in the history; the server logs one line, records `connector-template-update` in the
+audit trail and lists it under *Recent automatic updates*. Changed and obsolete parts are only ever changed by an administrator.
+
+**Admin → Connectors → Template updates** (`/admin/connectors/template-updates`; the Connectors tab shows a count when anything
+drifted, and the Connectors page links to it) lists every drifted connector with its three parts and its text beside the template's
+(stacked on a phone), and the buttons: **Add missing kinds** (merge the missing part, keep edits), **Regenerate from template** (the
+template's text replaces the connector's; asks first), **Remove obsolete kinds** (asks first) and **Fix all additive**. Every button
+keeps the old text in the history (Restore on the connector's page puts it back) and sends the version read, so a change made
+meanwhile is a `409 DRS-5032`. REST: `GET /api/v1/admin/connectors/template-updates`, `POST …/template-updates/<name>/add-missing`,
+`…/regenerate`, `…/remove-obsolete`, `POST …/template-updates/fix-all`.
+
 ### A pack names a connector nobody defined
 
 The pack loads. Its kinds say so, in three places:
@@ -550,6 +584,21 @@ The list shows each connector's **origin** (`file`, `pack` for a template with n
 configuration), plugin, kinds, **status** with the plugin's own health beside it, which packs use it (and for which kinds), and when it
 last changed. Filter by text, status or origin. `n` creates a connector and `/` focuses the filter. A connector defined in
 `application.yaml` is flagged with the file that would replace it; a bad file shows its problem on its row.
+
+### Shared edits on a cluster
+
+Every edit made here (create, edit, enable or disable, restore, reset, delete) is a **shared edit**: it is kept in the content store at
+`config/connectors/<name>.yaml` (a delete of a connector the files define is `config/connectors/<name>.hidden`), with every earlier text
+under `config/connectors-history/<name>/`, and every node of the cluster applies it over its own file within
+`drishti.store.watch-ms` (2 s), hot-reloading the connector as it does for a file edit. The file in `config/connectors` stays the
+base, deployed with the release (GitOps): it is never rewritten by Admin. The effective text is the shared edit if there is one,
+else the file. The list and the connector's page mark a shared edit **shared edit**; **Reset to file** (or **Reset to pack default**
+for a connector a pack's template names) removes it, and every node goes back to the file (or the template). To make an edit
+permanent, copy its text into the file and Reset. The text is kept exactly as saved: `${VAR}` placeholders stay unresolved in the
+store, masked credentials are never written, and a credential is only ever an environment or `file:` reference, as in a file. Two
+administrators saving one connector on two nodes get one `409 DRS-5032`. `drishti.connectors.store: file` keeps edits in the folder
+of the node that made them (one node, as before). There is nothing to import: the files were and stay the base.
+[CONTENT_STORE.md section 11](../architecture/CONTENT_STORE.md).
 
 ### One connector: its own page
 

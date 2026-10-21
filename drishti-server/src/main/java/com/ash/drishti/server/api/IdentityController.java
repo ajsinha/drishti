@@ -202,7 +202,22 @@ public class IdentityController {
     @GetMapping("/admin/status")
     public Map<String, Object> status(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
+        com.ash.drishti.server.connectors.TemplateUpdates t = templateUpdates == null ? null : templateUpdates.getIfAvailable();
+        int drift = 0;
+        try {
+            drift = t == null ? 0 : t.drifts().size();
+        } catch (RuntimeException e) {
+            // the badge is a hint: a connector folder that cannot be read never closes the Admin pages
+        }
         return Map.of("defaultAdminPasswordInUse", users.defaultAdminPasswordInUse(), "users", users.list("").size(),
-                "forceChangeOnCreate", users.forceChangeOnCreate(), "installedPacks", packAccess.installed());
+                "forceChangeOnCreate", users.forceChangeOnCreate(), "installedPacks", packAccess.installed(), "connectorTemplateDrift", drift);
+    }
+
+    private org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.connectors.TemplateUpdates> templateUpdates;
+
+    /** Connectors drifted from their pack's template: the count the Admin menu's Connectors badge shows. */
+    @org.springframework.beans.factory.annotation.Autowired
+    void templateUpdates(org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.connectors.TemplateUpdates> t) {
+        this.templateUpdates = t;
     }
 }

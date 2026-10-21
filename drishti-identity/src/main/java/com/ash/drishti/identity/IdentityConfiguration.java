@@ -98,6 +98,16 @@ public class IdentityConfiguration {
     }
 
     /**
+     * The node's one poller of the content store's changes (CONTENT_STORE.md section 11): the shared configuration overlays and the
+     * pack state listen to it, so an edit made on one node is applied on every node within {@code drishti.store.watch-ms}.
+     */
+    @Bean(destroyMethod = "close")
+    public com.ash.drishti.identity.content.ContentWatch contentWatch(com.ash.drishti.identity.content.ContentStore store,
+            org.springframework.core.env.Environment env) {
+        return new com.ash.drishti.identity.content.ContentWatch(store, env.getProperty("drishti.store.watch-ms", Long.class, 2000L)).start();
+    }
+
+    /**
      * The Build workbench's Designs: the content store ({@code drishti.builder.designs.store=content}, the default; the old file folder and
      * database rows are imported once at start), or, one node only, files ({@code file}) or this database ({@code jpa}).
      */
