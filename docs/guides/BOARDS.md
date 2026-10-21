@@ -43,6 +43,10 @@ A **board** is a wall of tiles for a screen on the wall of a trading desk, a ris
 * A board is a **report** with board pages: a BI item of kind `report`, stored, versioned, reviewed and published like any report, or **shipped** read-only in `config/bi/reports` (watched live). A report whose pages are all board pages of tiles needs no `model:` (it reads no data of its own).
 * A board **sends nothing by itself**. Colouring a tile is what an `alert:` does; a tile tells people only when its alert says `notify:` (section 4, *Notifications*).
 
+
+Since 2.6.7 a tile asks with the inline wait like any report visual: a tile whose question takes longer shows the run card and is drawn
+when its run finishes; live tiles stay streams and never become runs. See [BI_RUNS_GUIDE.md](BI_RUNS_GUIDE.md).
+
 ## 2. The file
 
 `config/bi/reports/<id>.report.yaml`, or the body of a `report` item. The sample, `desk-wall` ([config/bi/reports/desk-wall.report.yaml](../../config/bi/reports/desk-wall.report.yaml)), is the reference; the keys:
