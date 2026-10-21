@@ -19,7 +19,6 @@ import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.content.ContentStore;
 import com.ash.drishti.server.security.Principal;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -100,19 +99,19 @@ public class UiController {
         return boards.list(workspace, p);
     }
 
-    /** The store's part of the board check (parse, sizes, chip versions; BC-01, BC-02, BC-09, BC-11): the problems, empty when it passes. */
+    /** The board check of an unsaved document (UI_BOARD.md section 5) as if saved there: {@code {ok, problems: [{rule, level, path, message, fix}]}}. */
     @PostMapping("/boards/check")
     public Map<String, Object> check(@RequestBody String body, @RequestParam(required = false) String workspace,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        List<String> problems = new ArrayList<>();
+        String name = "scratch";
         try {
-            Map<String, Object> doc = UiDocs.read(body);
-            String name = doc.get("board") == null ? "scratch" : String.valueOf(doc.get("board"));
-            boards.checked(ref(name, null, workspace, p), body, p);
+            Object n = UiDocs.read(body).get("board");
+            name = n == null ? name : UiDocs.name(String.valueOf(n), "board");
         } catch (DrishtiException e) {
-            problems.add(e.getMessage());
+            // reported by the check
         }
-        return Map.of("ok", problems.isEmpty(), "problems", problems);
+        List<com.ash.drishti.rachana.ui.UiProblem> problems = boards.check(ref(name, null, workspace, p), body, p);
+        return Map.of("ok", !com.ash.drishti.rachana.ui.BoardCheck.failed(problems), "problems", problems);
     }
 
     @GetMapping("/boards/{name}")

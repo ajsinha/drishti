@@ -27,7 +27,6 @@ manual:
   pins:
     columns: The columns the text filters on, comma-separated. Default id,label.
     filter-out: 'Out. The filter built from the text (never free text): column contains value, or-ed over the columns.'
-    title: The chip's title. Empty shows the default title.
   behaviour: Typing sends 'filter-out' after a short pause; Escape clears it.
   defaults: 'Empty box: no filter.'
   limits: Up to 200 characters.
@@ -50,9 +49,6 @@ pins:
       role: control
       type: text
       default: id,label
-    title:
-      role: control
-      type: text
   out:
     filter-out:
       type: filter

@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * The seed chips of {@code config/ui/chips} (UI_BOARD.md 9.4): one per panel kind, BI visual type and trading pack block, and the
- * composites; each passes the publish checks (the grammar's reading, a complete manual, every out pin driven, a pure body) and every
+ * composites; each passes the grammar's publish check (CP-01 to CP-05, its manual examples through the board check) and every
  * manual example reads as a board fragment whose chip uses all resolve in the store.
  */
 class SeedChipsTest {
@@ -50,7 +50,8 @@ class SeedChipsTest {
         for (Map.Entry<String, TreeMap<Integer, ChipStore.Version>> e : seeds.entrySet()) {
             for (ChipStore.Version v : e.getValue().values()) {
                 String at = e.getKey() + "@" + v.state().version();
-                UiDocs.publishProblems(v.doc()).forEach(p -> problems.add(at + ": " + p));
+                com.ash.drishti.rachana.ui.ChipPublishCheck.check(v.text(), store).stream().filter(com.ash.drishti.rachana.ui.UiProblem::error)
+                        .forEach(p -> problems.add(at + ": " + p));
                 for (Object ex : UiDocs.list(UiDocs.map(v.doc().get("manual")).get("examples"))) {
                     Map<String, Object> board = UiDocs.read(String.valueOf(UiDocs.map(ex).get("board")));
                     UiDocs.uses(board).values().stream().filter(u -> store.find(com.ash.drishti.rachana.ui.ChipRef.parse(u).orElseThrow()).isEmpty())

@@ -29,7 +29,6 @@ manual:
     doc: The trade document. Required; the block reads its legs, flows and parties.
     legs: The legs to show. Empty shows every leg.
     when: The dates to show. Empty shows every date.
-    title: The chip's title. Empty shows the default title.
   behaviour: 'As the block on today''s trade pages: tables sort, sections open and close.'
   defaults: Every leg and date; rates as price4.
   limits: 'As the block''s panels: tables page past 10,000 rows.'
@@ -50,15 +49,21 @@ pins:
       type: document
       of: trading/trade
       required: true
+      shape:
+        id:
+          type: id
+          required: true
+        title:
+          type: text
+        fields:
+          type: dimension
+          many: true
     legs:
       role: control
       type: selection
     when:
       role: control
       type: period
-    title:
-      role: control
-      type: text
 body:
   panels:
   - id: events

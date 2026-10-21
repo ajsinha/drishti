@@ -908,7 +908,7 @@ Check: `curl -s localhost:18480/api/v1/studio/settings` returns `{"approve":…,
 Chips and boards themselves live in the content store (`ui/…` keys, [CONTENT_STORE.md](../architecture/CONTENT_STORE.md)), so every
 node of a cluster sees them. Who may do what follows the existing roles: saving boards needs `layout`, authoring chips `author`,
 reviewing chips `approve`, certifying chips `bi-steward` (an administrator holds all); workspace boards follow the BI workspace
-membership (contributor and above save). See [UI_BOARD.md](../architecture/UI_BOARD.md) section 12.1.
+membership (contributor and above save). See [UI_BOARD.md](../architecture/UI_BOARD.md) section 12.2.
 
 ### `drishti.branding` — the product's name and notices
 

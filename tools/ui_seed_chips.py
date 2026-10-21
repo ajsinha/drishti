@@ -61,8 +61,6 @@ MODEL_MAP = {"axis": "trades.DESK", "legend": "trades.CCY", "split": "trades.BOO
              "latitude": "trades.LAT", "longitude": "trades.LON", "columns": ["trades.DESK", "MTM_USD"], "rows": ["trades.DESK"],
              "field": "trades.DESK", "key": "trades.TRADE_ID", "id": "trades.TRADE_ID"}
 
-TITLE_PIN = {"role": "control", "type": "text"}
-TITLE_TEXT = "The chip's title. Empty shows the default title."
 A11Y_TABLE = "Arrow keys move the row cursor and Enter selects; the selection is announced; column headers are buttons that sort."
 A11Y_CHART = "The chart has a text alternative (its rows as a table) reached with the keyboard; a selected point is announced."
 A11Y_RECORD = "Read in document order; each label is tied to its value for screen readers."
@@ -88,8 +86,6 @@ def rowset(cols, required=True):
 def chip(name, title, category, tags, purpose, pins_in, pins_out, pin_text, behaviour, defaults, limits, not_for, a11y, panel, example,
          version=1, compatible=None, chip_limits=None):
     """A chip document: header, manual, pins, body (one panel)."""
-    pins_in = {**pins_in, "title": TITLE_PIN} if "title" not in pins_in else pins_in
-    pin_text = {**pin_text, "title": TITLE_TEXT}
     doc = {"rachana": 1, "chip": name, "version": version, "title": title, "category": category, "tags": tags}
     if compatible:
         doc["compatible-with"] = compatible
@@ -148,13 +144,14 @@ def board_example(title, chip_ref, pins_in, pins_out, model=False):
 
 
 SELECT_OUT = {"selected": {"type": "id"}}
+DOC_SHAPE = {"id": {"type": "id", "required": True}, "title": {"type": "text"}, "fields": {"type": "dimension", "many": True}}
 
 
 # ---- panel kinds -------------------------------------------------------------------------------------------------------------
 
 def panel_kinds():
     out = []
-    doc_pin = {"doc": {"role": "data", "type": "document", "required": True}}
+    doc_pin = {"doc": {"role": "data", "type": "document", "required": True, "shape": DOC_SHAPE}}
     doc_text = {"doc": "The record to show. Required; its fields are the rows of the panel."}
     rows_text = "The rows to show. Required. Each row must give the required columns; the others are optional."
     specs = [
@@ -185,7 +182,7 @@ def panel_kinds():
          "Clicking a row selects it and sends 'selected'; typing in the search box filters; 'visible' carries the rows after the filter."),
         ("ladder", "Ladder", "tables", ["ladder", "schedule"], "A list where one row matters most (the next payment): every row shown, the important one highlighted.",
          {"rows": rowset({"id": col("id", True), "date": col("date", True), "amount": col("measure")})}, {"rows": rows_text}, SELECT_OUT,
-         {"rows": "@rows", "highlight": "@.date >= today()", "on-select": {"emits": "selected", "value": "@.id"}},
+         {"rows": "@rows", "on-select": {"emits": "selected", "value": "@.id"}},
          "Rows to filter and page (use panel-table).", A11Y_TABLE, "Clicking a row selects it and sends 'selected'."),
         ("tabs", "Tabs", "layout", ["tabs", "legs"], "Two to four similar objects (legs, tranches), one tab each, each tab showing that object's fields.",
          {"rows": rowset({"id": col("id", True), "label": col("dimension")})}, {"rows": "The objects, one tab each. Required."}, SELECT_OUT,
@@ -381,7 +378,7 @@ def pack_blocks():
     ]
     out = []
     for block, title, purpose, params in specs:
-        pins_in = {"doc": {"role": "data", "type": "document", "of": "trading/trade", "required": True}}
+        pins_in = {"doc": {"role": "data", "type": "document", "of": "trading/trade", "required": True, "shape": DOC_SHAPE}}
         texts = {"doc": "The trade document. Required; the block reads its legs, flows and parties."}
         controls = {}
         for p, (ty, values, default) in params.items():
@@ -411,7 +408,7 @@ def pack_blocks():
 def composites():
     out = []
     # entity-card
-    pins_in = {"doc": {"role": "data", "type": "document", "required": True}, "id": {"role": "control", "type": "id"}}
+    pins_in = {"doc": {"role": "data", "type": "document", "required": True, "shape": DOC_SHAPE}, "id": {"role": "control", "type": "id"}}
     out.append(chip("entity-card", "Entity card", "records", ["entity", "record", "detail"],
                     "One entity as a card: its title and chosen fields, opened by id. The detail side of a master-detail board.",
                     pins_in, {}, {"doc": "The entity document, read by the supplier for the id. Required.",
@@ -485,7 +482,7 @@ def composites():
                     "Clicking a date sends 'selected'.", "Every flow, grouped by the group column, dates ascending.",
                     "Paints at most 10,000 flows.", "Flows of one trade with resets (use the flow-schedule chip).", A11Y_TABLE,
                     {"id": "ladder", "kind": "ladder", "title": "%{title|Cash flows}", "rows": "@rows", "where": ["%{filter|true}"],
-                     "highlight": "@.date >= today()", "on-select": {"emits": "selected", "value": "@.date"}},
+                     "on-select": {"emits": "selected", "value": "@.date"}},
                     {"title": "The selected trade's flows", "board": yaml.safe_dump({
                         "chips": {"trades": {"use": "filterable-table@2", "supply": {"connector": "trading/trade-search"}, "map": {"rows.id": "TRADE_ID"}},
                                   "flows": {"use": "cashflow-ladder@1", "supply": {"model": "trading-risk", "query": {

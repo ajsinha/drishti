@@ -26,7 +26,6 @@ manual:
   purpose: A note for the reader, in Markdown. The grammar's 'markdown' panel kind as a chip.
   pins:
     text: The note, in Markdown. Empty shows nothing.
-    title: The chip's title. Empty shows the default title.
   behaviour: Read-only; links open.
   defaults: 'No control input: the panel kind''s own defaults (PANELS.md).'
   limits: Paints at most 10,000 rows; the server pages the rest and the footer says so.
@@ -44,9 +43,6 @@ pins:
       type: text
       required: true
       default: ''
-    title:
-      role: control
-      type: text
 body:
   panels:
   - id: markdown

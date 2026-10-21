@@ -27,7 +27,6 @@ manual:
   pins:
     rows: 'The rows of the wells: field (dimension, required). Required.'
     filter-out: Out. The filter the person chose (field in values), for other chips to share.
-    title: The chip's title. Empty shows the default title.
   behaviour: Choosing values sends 'filter-out'.
   defaults: The visual type's defaults (REPORTS.md section 3); no control input.
   limits: Paints at most 10,000 rows; the BI engine aggregates before painting. A question that runs long becomes a BI run card.
@@ -61,9 +60,6 @@ pins:
         field:
           type: dimension
           required: true
-    title:
-      role: control
-      type: text
   out:
     filter-out:
       type: filter

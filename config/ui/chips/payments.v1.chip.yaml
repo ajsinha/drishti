@@ -27,7 +27,6 @@ manual:
     a chip; its GenUI slots are its control pins.
   pins:
     doc: The trade document. Required; the block reads its legs, flows and parties.
-    title: The chip's title. Empty shows the default title.
   behaviour: 'As the block on today''s trade pages: tables sort, sections open and close.'
   defaults: Every leg and date; rates as price4.
   limits: 'As the block''s panels: tables page past 10,000 rows.'
@@ -48,9 +47,15 @@ pins:
       type: document
       of: trading/trade
       required: true
-    title:
-      role: control
-      type: text
+      shape:
+        id:
+          type: id
+          required: true
+        title:
+          type: text
+        fields:
+          type: dimension
+          many: true
 body:
   panels:
   - id: payments

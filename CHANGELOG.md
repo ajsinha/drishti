@@ -17,6 +17,16 @@
 
 ## Unreleased
 
+- **UI Board P2: the Chip Store and saved boards (2.7.0).** `com.ash.drishti.server.ui`: chips and boards in the content store
+  (`ui/…` keys, so every node sees them); the chip lifecycle draft, submit, approve or reject, publish, certify, deprecate and withdraw
+  on the existing roles (author, approver, `bi-steward`), never your own approval (`DRS-2007`), out of order `DRS-2078`; P1's
+  `ChipPublishCheck` as the publish gate and `BoardCheck` on every board save; `compatible-with` verified, and boards using the earlier
+  version follow it as a new revision; the where-used index; personal boards private by default, shared by link with named people,
+  copied to a workspace; workspace boards under BI membership; revisions (last 50) and compare-and-set saves (`DRS-5057`). The
+  `/api/v1/ui` routes except render. 68 seed chips in `config/ui/chips` (22 panel kinds, 34 BI visual types, six trading blocks and
+  five composites), written by `tools/ui_seed_chips.py`, each passing its manual's example. New settings `drishti.ui.dir` and
+  `config/ui/ui.yaml`. Tests on the filesystem and SQLite stores, including two nodes. Docs: UI_BOARD.md 12.2, API_GUIDE,
+  CONFIGURATION.
 - **UI Board P1: chips, pins, boards, the board check and `ui check` (2.7.0).** A new package `com.ash.drishti.rachana.ui`
   (drishti-rachana) reads chip documents (header, manual, pins, Rachana body) and board documents from YAML or JSON into one
   model (`ChipDoc`, `BoardDoc`); the pin types and the compatibility table of UI_BOARD.md 4.2 (`PinCompatibility`); the board

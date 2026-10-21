@@ -27,7 +27,6 @@ manual:
   pins:
     content: The button's label.
     action: Out. The action, sent when the person presses the button.
-    title: The chip's title. Empty shows the default title.
   behaviour: Pressing the button sends 'action'.
   defaults: The visual type's defaults (REPORTS.md section 3); no control input.
   limits: Paints at most 10,000 rows; the BI engine aggregates before painting. A question that runs long becomes a BI run card.
@@ -45,9 +44,6 @@ pins:
       type: text
       required: true
       default: ''
-    title:
-      role: control
-      type: text
   out:
     action:
       type: text

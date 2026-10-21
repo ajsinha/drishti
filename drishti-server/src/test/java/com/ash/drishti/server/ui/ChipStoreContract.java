@@ -93,7 +93,7 @@ abstract class ChipStoreContract {
                     - title: A book's P&L
                       board: |
                         chips:
-                          s: { use: pnl-strip@%d, supply: { connector: trading/trade-search }, map: { rows.id: TRADE_ID, rows.value: PNL } }
+                          s: { use: pnl-strip@%d, supply: { connector: trading/trade-search }, map: { rows.id: TRADE_ID, rows.value: PNL }%s }
                   not-for: A table (use filterable-table).
                   accessibility: Announced as a list.
                 pins:
@@ -105,7 +105,8 @@ abstract class ChipStoreContract {
                 body:
                   panels:
                     - { id: strip, kind: hbar, rows: "@rows", label: "@.id", value: "@.value", on-select: { emits: selected, value: "@.id" } }
-                """.formatted(version, compat, extraPins.isEmpty() ? "" : ", extra: \"An extra pin.\"", version, extraPins);
+                """.formatted(version, compat, extraPins.isEmpty() ? "" : ", extra: \"An extra pin.\"", version,
+                        extraPins.isEmpty() ? "" : ", controls: { extra: x }", extraPins);
     }
 
     static final String EXTRA_REQUIRED = "    extra: { role: control, type: text, required: true }";
@@ -129,6 +130,12 @@ abstract class ChipStoreContract {
                   ticket: { use: entity-card@1, supply: { connector: trading/trade }, map: { doc.id: TRADE_ID } }
                 traces:
                   - { from: strip.selected, to: ticket.id }
+                layout:
+                  desktop:
+                    columns: 12
+                    areas:
+                      - { chip: strip, at: [1, 1], span: [7, 4] }
+                      - { chip: ticket, at: [8, 1], span: [5, 4] }
                 """.formatted(use);
     }
 

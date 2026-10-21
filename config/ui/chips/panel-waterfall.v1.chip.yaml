@@ -26,7 +26,6 @@ manual:
   purpose: A start value, signed contributions and an end value, with the running total. The grammar's 'waterfall' panel kind as a chip.
   pins:
     rows: The rows to show. Required. Each row must give the required columns; the others are optional.
-    title: The chip's title. Empty shows the default title.
   behaviour: Hover shows each step and the running total.
   defaults: 'No control input: the panel kind''s own defaults (PANELS.md).'
   limits: Paints at most 10,000 rows; the server pages the rest and the footer says so.
@@ -53,9 +52,6 @@ pins:
         value:
           type: measure
           required: true
-    title:
-      role: control
-      type: text
 body:
   panels:
   - id: waterfall

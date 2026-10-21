@@ -26,7 +26,6 @@ manual:
   purpose: Prices with open, high, low and close by date. The grammar's 'candlestick' panel kind as a chip.
   pins:
     rows: The rows to show. Required. Each row must give the required columns; the others are optional.
-    title: The chip's title. Empty shows the default title.
   behaviour: Hover shows the day's prices.
   defaults: 'No control input: the panel kind''s own defaults (PANELS.md).'
   limits: Paints at most 10,000 rows; the server pages the rest and the footer says so.
@@ -64,9 +63,6 @@ pins:
           required: true
         volume:
           type: measure
-    title:
-      role: control
-      type: text
 body:
   panels:
   - id: candlestick

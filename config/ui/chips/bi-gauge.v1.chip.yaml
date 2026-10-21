@@ -26,7 +26,6 @@ manual:
   purpose: A dial with its range by format. The BI 'gauge' visual type as a chip; its wells are its pins.
   pins:
     rows: 'The rows of the wells: values (measure, required), target (measure). Required.'
-    title: The chip's title. Empty shows the default title.
   behaviour: Read-only; hover shows the values.
   defaults: The visual type's defaults (REPORTS.md section 3); no control input.
   limits: Paints at most 10,000 rows; the BI engine aggregates before painting. A question that runs long becomes a BI run card.
@@ -56,9 +55,6 @@ pins:
           required: true
         target:
           type: measure
-    title:
-      role: control
-      type: text
 body:
   panels:
   - id: visual

@@ -15,7 +15,7 @@
 -->
 # The UI Board: screens as circuit boards of certified chips
 
-Status: **release 2.7.0, being built: P1 (the model and the board check) is built** ([12.1](#121-as-built-p1)); the rest is design. Decided by the product owner on 2026-10-21 (the north star of
+Status: **release 2.7.0, being built: P1 (the model and the board check) and P2 (the Chip Store and saved boards) are built** ([12.1](#121-as-built-p1), [12.2](#122-as-built-p2)); the rest is design. Decided by the product owner on 2026-10-21 (the north star of
 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)). Related: [GENUI.md](GENUI.md) (typed slots on blocks, the composer; its
 fragment catalogue becomes the Chip Store, its composer becomes the 2.9.0 AI author of board documents),
 [CONTENT_STORE.md](CONTENT_STORE.md) (where chips and boards live), [BI_RUNS.md](BI_RUNS.md) section 9 (access profiles,
@@ -664,7 +664,7 @@ at most in local tests. Each phase ends with its tests green, its docs updated a
 | Phase | Builder | Deliverables | Tests |
 |---|---|---|---|
 | **P1. Chips, pins, boards: the model and the check** (built, [12.1](#121-as-built-p1)) | A | `drishti-rachana`: the chip document parser (header, manual, pins, body), pin types and the compatibility table (4.2), the board document parser (YAML and JSON to one model), the board check BC-01 to BC-11 and BC-W1 to BC-W5, chip publish checks (purity, out pins driven, manual complete); `drishti.py ui check` | unit tests per rule, good and bad (each rule at least one failing board); the compatibility table as a parameterised test; YAML and JSON of the same board give the same model; the section 2.1 and 3.1 examples pass |
-| **P2. The Chip Store and saved boards** | B | content-store keys (section 8), the lifecycle (9.1) with powers, versions and `compatible-with` verification (9.3), where-used index, board save, revisions, delete with compare-and-set; the REST API of 6.1 except render; seed chips from panel kinds, BI visual types and pack blocks (9.4) with manuals | store contract tests on the filesystem and SQLite backends; lifecycle order (`DRS-2078`); a reviewer may not approve their own chip; where-used after save and delete; two nodes saving the same board (`DRS-5057`); every seed chip passes its own manual examples |
+| **P2. The Chip Store and saved boards** (built, [12.2](#122-as-built-p2)) | B | content-store keys (section 8), the lifecycle (9.1) with powers, versions and `compatible-with` verification (9.3), where-used index, board save, revisions, delete with compare-and-set; the REST API of 6.1 except render; seed chips from panel kinds, BI visual types and pack blocks (9.4) with manuals | store contract tests on the filesystem and SQLite backends; lifecycle order (`DRS-2078`); a reviewer may not approve their own chip; where-used after save and delete; two nodes saving the same board (`DRS-5057`); every seed chip passes its own manual examples |
 | **P3. The render API** | A | `POST /ui/render`, `GET /ui/boards/{id}/render`, pin changes, sessions; layout-first SSE; suppliers through `ViewPipeline.preview` and `QueryService` as the caller; traces at runtime; BI run cards; live frames on the channel; limits and audit (7.3, 7.4) | render as three users (full, masked, row-restricted) and compare masks; trace ordering (detail after master); one failing supplier leaves the others painted; every limit hit gives its code; audit row has no values; access-profile reuse (second viewer `reused`) |
 | **P4. The board viewer and the Board Designer** | B | console: the board viewer (any saved board, phone and desktop, themes), the Designer (palette, canvas, pins, traces, mapping sheet, live data, red problems, YAML/JSON tab, save, history, modules), the chip editor and test bench | Playwright: build the 3.1 board by drag and wire, see red on a bad wire, fix, save, reopen, YAML edit reflected on canvas; phone layout; keyboard-only path; console unit tests for the mapping matcher |
 | **P5. The converter and its proof** | A | dry run, board-local chips, the proof (data, screen, behaviour), Admin pages for reports, per-pack switch; trading pack first, then the others pack by pack | trading: every entity page, report page and board page proven for the three users on the 10K-trade sample; a deliberately broken chip makes the proof fail with the right path; switching back restores the old pages |
@@ -713,6 +713,58 @@ without a server ([CLI_GUIDE.md](../guides/CLI_GUIDE.md#ui-check-the-ui-board-ch
 * **Manual examples are fragments:** `rachana`, `board` and `layout` may be left out; `BC-11` and `BC-W3` do not apply.
 * **The examples:** 2.1 passes unchanged. 3.1 passes unchanged; it needs `entity-card@1` and `cashflow-ladder@1`, written as test
   chips until P2's seed chips replace them. With the test supplier file its one finding is `BC-W5` (`MTM_USD` masked).
+
+### 12.2 As built: P2
+
+**Where.** Package `com.ash.drishti.server.ui` in `drishti-server`: `ChipStore` (drafts, versions, the lifecycle, the seed chips;
+it implements P1's `ChipCatalog`), `BoardStore` (saved boards, revisions, sharing, copies, where-used, following compatible
+upgrades), `UiController` (`/api/v1/ui`, every route of 6.1 except render), `UiAccess` (the powers), `UiSettings`
+(`config/ui/ui.yaml`), `UiDocs` (documents as maps, the `compatible-with` verification), `UiConfiguration`. Seed chips:
+`config/ui/chips/*.chip.yaml`, written by `tools/ui_seed_chips.py`. Settings: `drishti.ui.dir` ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
+Routes: [API_GUIDE.md](../guides/API_GUIDE.md#ui-boards-and-the-chip-store-apiv1ui-270). No database table: everything is in the
+content store.
+
+**Corrections and precisions the code forced:**
+
+* **Keys.** As section 8, with every user and workspace segment escaped as BI's are (`BiDocs.seg`) and version, revision and event
+  numbers padded to ten digits: `ui/chips/<chip>/versions/0000000002.yaml` and `.state.json`, `ui/chips/<chip>/events/<n>.json`
+  (numbered by `ui/chips/<chip>/events.seq`), `ui/where-used/<chip>/<n>.json` (`{boards: [{scope, space, board}]}`), a board's
+  revisions `<board>.revisions/<n>.yaml` keyed by the revision they were, and two new ones for sharing: `<board>.share.json` beside a
+  personal board (who it is shared with) and `ui/shared/<person>/<owner>/<board>.json` (the shared-with-me index).
+* **Powers on the existing roles (14.1 item 4):** `ui.board.view` is any signed-in caller; `ui.board.save` a role with `layout`;
+  `ui.chip.author` a role with `author`; `ui.chip.review` a role with `approve` (the Sutra approver); `ui.chip.certify` the
+  `bi-steward` power; an administrator holds all. Workspace boards follow the BI workspace membership: viewers open, contributors
+  and above save, the board's owner or a workspace admin deletes.
+* **Lifecycle steps.** `submit` takes the chip's current draft (one draft per chip, owned by whoever drafted it first) at its
+  `version:`, which must be new; `reject` needs a comment and deletes the submitted version, so the draft can be submitted again
+  with the same number; `publish` is the author's or a reviewer's, after approval, and refuses a version whose text changed since
+  submission. Nobody approves or rejects their own chip: `403 DRS-2007` (the Sutra four-eyes code), not `DRS-2074`. `withdraw` is
+  the emergency stop: allowed from published, certified or deprecated (not only deprecated as drawn in 9.1), by a reviewer or
+  certifier, with a comment naming the fault. Every step is an event and an audit row.
+* **The publish gate** is P1's `ChipPublishCheck` (CP-01 to CP-05, examples through `BoardCheck` against the store), at submit and
+  again at publish; its errors are `422 DRS-2071`. Then `compatible-with` is verified against each named earlier version
+  (`DRS-2078` with the reasons when it does not hold).
+* **Boards follow (14.1 item 3):** after a verified publish, every board in where-used of an earlier compatible version moves to
+  the new one as a new revision, saved as the system with compare-and-set, unless the instance says `follow: pinned` or the board is
+  in a certified-only workspace (it waits for certification). `ChipCatalog.Entry.newerCompatible` reports the newest such version for
+  BC-W2.
+* **Board save** runs P1's `BoardCheck` against the Chip Store plus the caller's own current draft (as state `draft`), as a personal
+  or a shared board (certified-only from `ui.yaml`), with the limits of `ui.yaml`; then the store's rule that a version before
+  publish is usable only on its author's personal boards (BC-11). The bytes, chips, traces and boards-per-person limits answer
+  `413 DRS-2075` before the check. The store sets `rachana`, `board`, `version` (the revision), `owner` and `workspace`, whatever
+  the body says.
+* **Addressing a board:** `{name}` plus `owner` (a personal board shared with you; your own by default) or `workspace`; the id in
+  answers and where-used is `user:<owner>:<board>` or `workspace:<ws>:<board>`. Sharing a personal board (14.1 item 1) is read-only
+  for the people named; copying into a workspace makes a new board owned by the copier.
+* **Where-used** names only the boards the caller may open and counts the rest, per version.
+* **Seed chips:** 68 versions of 67 chips, certified and read-only (a store chip of the same name and version is refused; a lifecycle
+  step on one is `DRS-2078`): `panel-<kind>` for the 22 grammar panel kinds, `bi-<type>` for the 34 BI visual types of REPORTS.md
+  section 3, the trading pack's six blocks under their own names, and `entity-card`, `filterable-table` (versions 1 and 2, the 2.1
+  example, 2 compatible with 1), `cashflow-ladder`, `search-box`, `date-range`. A document pin carries the shape `{id, title,
+  fields}`. Each passes `ChipPublishCheck` with its manual's example. A seed body is the chip's painting contract for P3; the panel
+  options in it are P3's to honour.
+* **Not in P2:** render (P3), `ui/dynamic` and `ui/usage` (P3, P6), modules (P6), restoring a revision from the API (the Designer,
+  P4; a revision can be read and saved again).
 
 ## 13. Later releases
 

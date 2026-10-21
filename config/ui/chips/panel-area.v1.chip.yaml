@@ -26,7 +26,6 @@ manual:
   purpose: Several bands over one axis against a limit. The grammar's 'area' panel kind as a chip.
   pins:
     rows: The rows to show. Required. Each row must give the required columns; the others are optional.
-    title: The chip's title. Empty shows the default title.
   behaviour: Hover shows each band's value.
   defaults: 'No control input: the panel kind''s own defaults (PANELS.md).'
   limits: Paints at most 10,000 rows; the server pages the rest and the footer says so.
@@ -57,9 +56,6 @@ pins:
           required: true
         limit:
           type: measure
-    title:
-      role: control
-      type: text
 body:
   panels:
   - id: area

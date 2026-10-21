@@ -20,6 +20,9 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.bi.BiDocs;
 import com.ash.drishti.identity.content.ContentDocs;
 import com.ash.drishti.identity.content.ContentStore;
+import com.ash.drishti.rachana.ui.BoardCheck;
+import com.ash.drishti.rachana.ui.BoardCheckContext;
+import com.ash.drishti.rachana.ui.UiProblem;
 import com.ash.drishti.server.security.Principal;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -223,10 +226,6 @@ public class BoardStore implements ChipStore.PublishListener {
         }
         doc.putIfAbsent("rachana", 1);
         doc.put("board", r.board());
-        List<String> bc01 = UiDocs.boardParseProblems(UiDocs.write(doc), false);
-        if (!bc01.isEmpty()) {
-            throw new DrishtiException(ErrorCode.UI_CHECK_FAILED, "the board check failed: " + String.join("; ", bc01));
-        }
         Map<String, Object> instances = UiDocs.map(doc.get("chips"));
         if (instances.size() > settings.chips()) {
             throw new DrishtiException(ErrorCode.UI_TOO_LARGE, "the board has " + instances.size() + " chips; at most " + settings.chips());
@@ -235,11 +234,46 @@ public class BoardStore implements ChipStore.PublishListener {
         if (traces > settings.traces()) {
             throw new DrishtiException(ErrorCode.UI_TOO_LARGE, "the board has " + traces + " traces; at most " + settings.traces());
         }
-        List<String> problems = useProblems(r, doc, p);
-        if (!problems.isEmpty()) {
-            throw new DrishtiException(ErrorCode.UI_CHECK_FAILED, "the board check failed: " + String.join("; ", problems));
+        List<String> errors = problems(r, doc, p).stream().filter(UiProblem::error).map(Object::toString).toList();
+        if (!errors.isEmpty()) {
+            throw new DrishtiException(ErrorCode.UI_CHECK_FAILED, "the board check failed: " + String.join("; ", errors));
         }
         return doc;
+    }
+
+    /**
+     * The board check (the grammar's {@code BoardCheck}, BC-01 to BC-11 and the warnings) against the Chip Store and the caller's own
+     * drafts, as a personal or a shared board, with the limits of {@code ui.yaml}; then the store's own rule that a chip version before
+     * publish is for its author's personal boards only. Problems, errors and warnings.
+     */
+    List<UiProblem> problems(Ref r, Map<String, Object> doc, Principal p) {
+        boolean shared = WORKSPACE.equals(r.scope());
+        BoardCheckContext ctx = new BoardCheckContext(chips.then(chips.draftsOf(p)), null,
+                new BoardCheckContext.Limits(settings.boardBytes(), settings.chips(), settings.traces(), 3), shared,
+                shared && settings.certifiedOnly().contains(r.space()), null, false);
+        List<UiProblem> out = new ArrayList<>(BoardCheck.check(UiDocs.write(doc), ctx));
+        if (!BoardCheck.failed(out)) {
+            for (String m : useProblems(r, doc, p)) {
+                out.add(UiProblem.error(m.substring(0, 5), "chips", m.substring(6), null));
+            }
+        }
+        return out;
+    }
+
+    /** The check of an unsaved document as if saved at {@code r} (the check endpoint): every problem; an unreadable document is BC-01. */
+    public List<UiProblem> check(Ref r, String text, Principal p) {
+        if (!access.mayView(p)) {
+            throw ChipStore.forbidden(p, "check boards");
+        }
+        Map<String, Object> doc;
+        try {
+            doc = UiDocs.read(text);
+        } catch (DrishtiException e) {
+            return List.of(UiProblem.error("BC-01", "", e.getMessage(), null));
+        }
+        doc.putIfAbsent("rachana", 1);
+        doc.put("board", r.board());
+        return problems(r, doc, p);
     }
 
     /** BC-02 and BC-11 against the store: every use resolves, none is withdrawn, drafts only on the author's own boards. */

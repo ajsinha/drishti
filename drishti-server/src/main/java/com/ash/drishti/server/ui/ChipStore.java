@@ -186,6 +186,21 @@ public class ChipStore implements com.ash.drishti.rachana.ui.ChipCatalog {
         return Optional.of(new Entry(doc, com.ash.drishti.rachana.ui.ChipState.valueOf(v.get().state().state().toUpperCase(Locale.ROOT).replace('-', '_')), newer));
     }
 
+    /** The caller's own current draft as a catalogue (state draft), so their personal boards may use it before it is submitted. */
+    public com.ash.drishti.rachana.ui.ChipCatalog draftsOf(Principal p) {
+        return ref -> {
+            Optional<Meta> m = meta(ref.name());
+            if (m.isEmpty() || !p.user().equals(m.get().owner())) {
+                return Optional.empty();
+            }
+            return store.get(base(ref.name()) + "draft.yaml").flatMap(it -> {
+                com.ash.drishti.rachana.ui.UiDocuments.Read<com.ash.drishti.rachana.ui.ChipDoc> r = com.ash.drishti.rachana.ui.UiDocuments.parseChip(it.text());
+                return r.doc() != null && r.doc().version() == ref.version()
+                        ? Optional.of(new Entry(r.doc(), com.ash.drishti.rachana.ui.ChipState.DRAFT, null)) : Optional.empty();
+            });
+        };
+    }
+
     /** Whether {@code p} may read this version: released ones by anyone who may view; earlier states by the author and the governors. */
     boolean mayRead(Version v, Principal p) {
         State s = v.state();
@@ -356,10 +371,7 @@ public class ChipStore implements com.ash.drishti.rachana.ui.ChipCatalog {
         if (UiDocs.version(doc) != n) {
             throw new DrishtiException(ErrorCode.UI_LIFECYCLE_ORDER, "the draft of " + chip + " is version " + UiDocs.version(doc) + ", not " + n);
         }
-        List<String> problems = UiDocs.publishProblems(doc);
-        if (!problems.isEmpty()) {
-            throw new DrishtiException(ErrorCode.UI_CHECK_FAILED, chip + "@" + n + " fails the chip check: " + String.join("; ", problems));
-        }
+        publishCheck(chip, n, d.text());
         if (find(chip, n).isPresent()) {
             throw new DrishtiException(ErrorCode.UI_LIFECYCLE_ORDER, chip + "@" + n + " was submitted already");
         }
@@ -372,6 +384,16 @@ public class ChipStore implements com.ash.drishti.rachana.ui.ChipCatalog {
             throw e;
         }
         return st;
+    }
+
+    /** The publish gate (CP-01 to CP-05 with the board check over the manual's examples, against this store); errors are {@code DRS-2071}. */
+    public List<com.ash.drishti.rachana.ui.UiProblem> publishCheck(String chip, int n, String text) {
+        List<com.ash.drishti.rachana.ui.UiProblem> problems = com.ash.drishti.rachana.ui.ChipPublishCheck.check(text, this);
+        List<String> errors = problems.stream().filter(com.ash.drishti.rachana.ui.UiProblem::error).map(Object::toString).toList();
+        if (!errors.isEmpty()) {
+            throw new DrishtiException(ErrorCode.UI_CHECK_FAILED, chip + "@" + n + " fails the chip publish check: " + String.join("; ", errors));
+        }
+        return problems;
     }
 
     private State review(String chip, int n, boolean approve, String comment, Principal p) {
@@ -410,10 +432,7 @@ public class ChipStore implements com.ash.drishti.rachana.ui.ChipCatalog {
         if (!UiDocs.sha256(v.text()).equals(v.state().sha256())) {
             throw new DrishtiException(ErrorCode.UI_LIFECYCLE_ORDER, chip + "@" + n + " changed after it was submitted; submit it again");
         }
-        List<String> problems = UiDocs.publishProblems(v.doc());
-        if (!problems.isEmpty()) {
-            throw new DrishtiException(ErrorCode.UI_CHECK_FAILED, chip + "@" + n + " fails the chip check: " + String.join("; ", problems));
-        }
+        publishCheck(chip, n, v.text());
         List<Integer> compat = UiDocs.compatibleWith(v.doc());
         for (int c : compat) {
             Version prev = find(chip, c).filter(x -> x.state().released())

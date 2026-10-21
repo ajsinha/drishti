@@ -26,7 +26,6 @@ manual:
   purpose: The entities a record refers to, each a link to its own board. The grammar's 'links' panel kind as a chip.
   pins:
     doc: The record to show. Required; its fields are the rows of the panel.
-    title: The chip's title. Empty shows the default title.
   behaviour: Each link opens the entity.
   defaults: 'No control input: the panel kind''s own defaults (PANELS.md).'
   limits: Paints at most 10,000 rows; the server pages the rest and the footer says so.
@@ -46,9 +45,15 @@ pins:
       role: data
       type: document
       required: true
-    title:
-      role: control
-      type: text
+      shape:
+        id:
+          type: id
+          required: true
+        title:
+          type: text
+        fields:
+          type: dimension
+          many: true
 body:
   panels:
   - id: links

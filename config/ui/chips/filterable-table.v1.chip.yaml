@@ -33,7 +33,6 @@ manual:
     selected: Out. The id of the row the person selected; empty until they select one.
     visible: Out. The rows after every filter, for a chart or a total chip to follow.
     filter-out: Out. The filter the person typed, for other chips to share.
-    title: The chip's title. Empty shows the default title.
   behaviour: Clicking a row selects it (one at a time) and sends 'selected'. Typing in the search box filters on the label and id columns and
     sends 'filter-out'. Column headers sort. Measure columns are totalled.
   defaults: No filter, 50 rows a page, sorted by id.
@@ -83,9 +82,6 @@ pins:
       min: 10
       max: 200
       default: 50
-    title:
-      role: control
-      type: text
   out:
     selected:
       type: id

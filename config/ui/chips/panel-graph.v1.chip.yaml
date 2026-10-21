@@ -27,7 +27,6 @@ manual:
   pins:
     rows: The edges. Required.
     selected: Out. The id of what the person selected; empty until they select one.
-    title: The chip's title. Empty shows the default title.
   behaviour: Clicking a node selects it and sends 'selected'.
   defaults: 'No control input: the panel kind''s own defaults (PANELS.md).'
   limits: Paints at most 10,000 rows; the server pages the rest and the footer says so.
@@ -62,9 +61,6 @@ pins:
           required: true
         label:
           type: dimension
-    title:
-      role: control
-      type: text
   out:
     selected:
       type: id

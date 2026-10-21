@@ -30,7 +30,6 @@ manual:
     from: Out. The first date.
     to: Out. The last date.
     period: Out. The range as one period.
-    title: The chip's title. Empty shows the default title.
   behaviour: Picking a date sends 'from', 'to' and 'period'.
   defaults: The default dates, else no bounds.
   limits: Dates from 1900 to 2199.
@@ -56,9 +55,6 @@ pins:
     default-to:
       role: control
       type: date
-    title:
-      role: control
-      type: text
   out:
     from:
       type: date

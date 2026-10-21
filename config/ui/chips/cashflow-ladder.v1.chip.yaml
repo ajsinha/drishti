@@ -28,7 +28,6 @@ manual:
     rows: 'The flows. Required: a date and an amount; a group (currency, leg) and the trade id are optional.'
     filter: A filter, usually a trade id traced from a table (transform filter-on rows.trade). Empty shows every flow.
     selected: Out. The date the person clicked.
-    title: The chip's title. Empty shows the default title.
   behaviour: Clicking a date sends 'selected'.
   defaults: Every flow, grouped by the group column, dates ascending.
   limits: Paints at most 10,000 flows.
@@ -74,9 +73,6 @@ pins:
     filter:
       role: control
       type: filter
-    title:
-      role: control
-      type: text
   out:
     selected:
       type: date
@@ -88,7 +84,6 @@ body:
     rows: '@rows'
     where:
     - '%{filter|true}'
-    highlight: '@.date >= today()'
     on-select:
       emits: selected
       value: '@.date'

@@ -27,7 +27,6 @@ manual:
   pins:
     rows: 'The rows of the wells: details (dimension, required), x (measure, required), y (measure, required), size (measure, required). Required.'
     selected: Out. The value of the first field the person clicked (a bar, a row, a point); empty until they click.
-    title: The chip's title. Empty shows the default title.
   behaviour: Clicking a mark selects it and sends 'selected', which may cross-filter other chips.
   defaults: The visual type's defaults (REPORTS.md section 3); no control input.
   limits: Paints at most 10,000 rows; the BI engine aggregates before painting. A question that runs long becomes a BI run card.
@@ -64,9 +63,6 @@ pins:
         size:
           type: measure
           required: true
-    title:
-      role: control
-      type: text
   out:
     selected:
       type: dimension

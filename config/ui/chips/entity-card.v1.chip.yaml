@@ -27,7 +27,6 @@ manual:
   pins:
     doc: The entity document, read by the supplier for the id. Required.
     id: The id to open (usually traced from a table's 'selected'). Empty shows a prompt to select one.
-    title: The chip's title. Empty shows the default title.
   behaviour: Read-only; the title links to the entity's own board.
   defaults: 'No id: a prompt to select a row.'
   limits: One entity; at most 60 fields.
@@ -53,12 +52,18 @@ pins:
       role: data
       type: document
       required: true
+      shape:
+        id:
+          type: id
+          required: true
+        title:
+          type: text
+        fields:
+          type: dimension
+          many: true
     id:
       role: control
       type: id
-    title:
-      role: control
-      type: text
 body:
   panels:
   - id: card

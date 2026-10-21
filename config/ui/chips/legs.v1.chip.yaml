@@ -28,7 +28,6 @@ manual:
   pins:
     doc: The trade document. Required; the block reads its legs, flows and parties.
     rate-fmt: 'How rates are shown: pct4 for rates (a fraction a year), price4 for prices per unit. Default price4.'
-    title: The chip's title. Empty shows the default title.
   behaviour: 'As the block on today''s trade pages: tables sort, sections open and close.'
   defaults: Every leg and date; rates as price4.
   limits: 'As the block''s panels: tables page past 10,000 rows.'
@@ -49,6 +48,15 @@ pins:
       type: document
       of: trading/trade
       required: true
+      shape:
+        id:
+          type: id
+          required: true
+        title:
+          type: text
+        fields:
+          type: dimension
+          many: true
     rate-fmt:
       role: control
       type: enum
@@ -56,9 +64,6 @@ pins:
       - price4
       - pct4
       default: price4
-    title:
-      role: control
-      type: text
 body:
   panels:
   - id: legs

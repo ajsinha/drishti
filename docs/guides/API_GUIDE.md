@@ -3067,7 +3067,7 @@ Writes are compare-and-set: send back the `ETag` you read as `If-Match`; a stale
 | Method | Path | What it does |
 |---|---|---|
 | `GET` | `/ui/boards?workspace=` | the boards you may open: `[{id, scope, owner or workspace, board, access: mine, shared or workspace, title, version, chips, etag}]`; a workspace's only when named |
-| `POST` | `/ui/boards/check?workspace=` | the store's part of the board check (reading, sizes, chip versions: BC-01, BC-02, BC-09, BC-11) over the body: `{ok, problems}`; the full check (pins, types, traces) comes with P1's checker |
+| `POST` | `/ui/boards/check?workspace=` | the board check (BC-01 to BC-11, BC-W1 to BC-W5) of the body as if saved there (personal, or that workspace): `{ok, problems: [{rule, level, path, message, fix}]}`, against the Chip Store and your own drafts |
 | `GET` | `/ui/boards/{name}?owner=&workspace=` | `{id, board, scope, owner or workspace, etag, sharedWith, document, yaml}` and the `ETag` header |
 | `PUT` | `/ui/boards/{name}?workspace=` | saves the body: no `If-Match` (or `If-None-Match: *`) creates, `If-Match` updates. The store sets `owner`, `workspace` and `version` (the board's revision) and keeps the earlier save. Your own personal boards, or a workspace's as a contributor or above. `422 DRS-2071` lists the problems; `413 DRS-2075` past a limit |
 | `DELETE` | `/ui/boards/{name}?workspace=` | with `If-Match`: the owner, or a workspace admin; its revisions and shares go too |
@@ -3083,8 +3083,8 @@ Writes are compare-and-set: send back the `ETag` you read as `If-Match`; a stale
 | `GET` / `PUT` | `/ui/chips/{name}/draft` | your draft (the `author` role); the first save with no `If-Match`. A version number already submitted or published is `409 DRS-2078` |
 | `POST` | `/ui/chips/{name}/{version}/{action}` | `{comment?}`; `submit` (the author), `approve` and `reject` (a reviewer other than the author: `403 DRS-2007` for your own; a reject needs a comment and frees the number), `publish` (the author or a reviewer, after approval), `certify` (`bi-steward`), `deprecate`, `withdraw` (a reviewer or certifier, with a comment naming the fault). Out of order is `409 DRS-2078` |
 
-Publishing runs the chip checks again (the grammar's reading, a complete manual, every out pin driven, nothing but pins read, every
-example a board fragment that uses the chip) and verifies `compatible-with`: every in pin of the earlier version still accepts what it
+Submitting and publishing run the chip publish check (CP-01 to CP-05: a complete manual, a pure and deterministic body, every out pin
+driven, every manual example passing the board check) and publishing verifies `compatible-with`: every in pin of the earlier version still accepts what it
 took, no required pin was added without a default, every out pin kept its type. Boards using the earlier version then move to the new
 one by themselves, as a new revision (an instance with `follow: pinned` stays; a certified-only workspace waits for certification).
 
