@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **Fixed (QA4-02): a map panel on a node that reads its kind only from a peer is drawn.** Its listing asked this node's sources only,
+  so the map was empty and said *no economy entity matches ECON-{iso3}* though the entities exist. The listing now asks the peers a
+  search of the kind asks (`GET /api/v1/net/list/{kind}`, for the caller, one hop), merged with this node's; the documents come through
+  the peers, masked there for the caller, and both stay keyed per security signature. DRISHTI_NET.md N5. NetMapPanelTest (two servers,
+  viewer and risk in both orders; it failed before the fix).
 - **Fixed (QA4-01, QA3B-03, P2): a moved Iceberg table is DEGRADED on Java 25 too.** The plugin carries a failed load as a quiet
   cancellation and looked for it by type when the load was joined; Java 25's `CompletableFuture.join()` throws a new
   `CancellationException("join")` with it as the cause, so on Java 25 (QA's server; the tests ran on 21) no failure reached the

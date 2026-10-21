@@ -128,7 +128,8 @@ public final class MapSupport {
         // per partition: in a cluster the listing and the documents come partly from peers, listed and masked there for the caller (SOAK2-01)
         return listings.get(kind + "|" + asOf.businessDate() + "|" + router.partition(), k -> {
             Duration budget = Duration.ofMillis(limits.mapBudgetMillis());
-            List<EntityHit> hits = router.list(kind, "", limits.mapEntities(), budget, asOf, new SourceFailures()).hits();
+            // with the peers' entities: a node that reads the kind only from a peer lists it too (QA4-02)
+            List<EntityHit> hits = router.listAcross(kind, limits.mapEntities(), budget, asOf, new SourceFailures()).hits();
             List<EntityRef> refs = new ArrayList<>();
             hits.forEach(h -> refs.add(h.ref()));
             return refs;
