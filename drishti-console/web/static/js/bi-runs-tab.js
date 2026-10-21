@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* The workspace's tabs (Items · Runs · Members, ?tab=) and the Runs tab (docs/architecture/BI_RUNS.md section 7): the list with its filters, rows that change as
-   the runs do (/bi/api/runs/events, no polling), and the drawer of one run with every action its `can` allows (open, cancel, re-run on the same or the newest
+   the runs do (the live channel's biruns subscription, no polling), and the drawer of one run with every action its `can` allows (open, cancel, re-run on the same or the newest
    data, export, share, promote, keep longer, delete the result, schedule, confirm or discard). Keyboard: the tabs take the arrow keys (bi-lib.js), the rows
    ↑ ↓ and Enter, the drawer Esc. Uses drishtiBi.runs (bi-runs.js) for the words. */
 (function () {

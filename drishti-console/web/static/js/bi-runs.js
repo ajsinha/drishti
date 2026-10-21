@@ -175,31 +175,29 @@
     return isFinite(n) ? n : 2;
   };
 
+  // the person's runs arrive on the browser's one live channel (channel.js, subscription `biruns`: the server's GET /api/v1/bi/runs/events), never a stream
+  // of this page's own: a browser allows six connections per site and every live feature shares one
   const subs = new Set();
-  let es = null;
+  let off = null;
   R.streaming = false;
   function deliver(d) { subs.forEach((fn) => { try { fn(d); } catch (e) { /* one listener's fault never stops the others */ } }); }
   function open() {
-    if (es || !window.EventSource) { return; }
-    es = new EventSource('/bi/api/runs/events');
-    es.addEventListener('hello', (e) => {
-      R.streaming = true;
-      let d = {};
-      try { d = JSON.parse(e.data); } catch (x) { return; }
-      (d.runs || []).forEach(deliver);
-      deliver({ hello: true });
+    if (off || !window.DrishtiChannel) { return; }
+    off = window.DrishtiChannel.subscribe('biruns', {
+      hello(d) { R.streaming = true; ((d && d.runs) || []).forEach(deliver); deliver({ hello: true }); },
+      run(d) { R.streaming = true; if (d) { deliver(d); } },
+      status() { R.streaming = true; },
+      gone() { R.streaming = false; deliver({ gone: true }); },
+      error() { R.streaming = false; },
+      paused() { R.streaming = false; }
     });
-    es.addEventListener('run', (e) => { R.streaming = true; try { deliver(JSON.parse(e.data)); } catch (x) { /* not JSON: ignored */ } });
-    es.addEventListener('gone', () => { R.streaming = false; if (es) { es.close(); es = null; } deliver({ gone: true }); });
-    es.onerror = () => { R.streaming = false; };
   }
   /** Listens to the person's runs: fn({id, state, progress, phase, rowsOut, code}) for every change. Returns the function that stops listening. */
   R.listen = function (fn) {
     subs.add(fn);
     open();
-    return () => { subs.delete(fn); if (!subs.size && es) { es.close(); es = null; } };
+    return () => { subs.delete(fn); if (!subs.size && off) { off(); off = null; } };
   };
-  window.addEventListener('pagehide', () => { if (es) { es.close(); es = null; } });
 
   /**
    * Follows one run until it ends: onChange(run) on every change (the event merged into the run), then the whole run asked again when it ends. Without the event

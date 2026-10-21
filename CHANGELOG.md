@@ -20,7 +20,7 @@
 - **BI runs, the console lane (2.6.7, R1c to R6c of docs/architecture/BI_RUNS.md section 18.2).** A BI workspace has three tabs,
   **Items · Runs · Members** (`?tab=`); the Runs tab lists your runs and the ones shared with you with their status, as-of dates, data
   version, duration, rows and estimate, filtered by status, source, who and since, with a search; rows change live from
-  `/bi/api/runs/events` (no polling) and each change is announced. A run's drawer shows its source, who ran it, filters, parameters, data
+  the browser's one live channel (subscription `biruns`, relaying `GET /api/v1/bi/runs/events`; no polling) and each change is announced. A run's drawer shows its source, who ran it, filters, parameters, data
   versions, estimate and actual, tier, retention, shares and schedule, with every action its `can` allows: open (`/bi/run/<id>` opens the
   report with `?run=<id>`, drawn from the stored result), re-run on the same or the newest data, cancel, export (CSV, Excel, Parquet, PDF),
   share (same, re-masked, recomputed), promote to a snapshot or a report, keep longer, delete the result, schedule, confirm or discard.
