@@ -30,8 +30,13 @@ public final class QueryContext {
     }
 
     /** The context of one piece of work. */
-    public record Ctx(WorkClass workClass, Long budgetRows, Long budgetMillis) {
+    public record Ctx(WorkClass workClass, Long budgetRows, Long budgetMillis, java.time.Duration admissionWait) {
         public static final Ctx INTERACTIVE = new Ctx(WorkClass.INTERACTIVE, null, null);
+
+        /** A context that waits for a place as long as the query settings say ({@code drishti.bi.query.admission}). */
+        public Ctx(WorkClass workClass, Long budgetRows, Long budgetMillis) {
+            this(workClass, budgetRows, budgetMillis, null);
+        }
     }
 
     private static final ThreadLocal<Ctx> CURRENT = new ThreadLocal<>();

@@ -283,7 +283,7 @@ public final class QueryService implements AutoCloseable {
         QueryContext.Ctx ctx = QueryContext.current();
         Admission.Ticket ticket;
         try {
-            ticket = admission.enter(who.user(), ds.key(), ctx.workClass(), props.admission());   // work classes, a person's and a model's share (wave B)
+            ticket = admission.enter(who.user(), ds.key(), ctx.workClass(), ctx.admissionWait() != null ? ctx.admissionWait() : props.admission());   // work classes, a person's and a model's share (wave B)
         } catch (DrishtiException e) {
             rejected.incrementAndGet();
             events.refusal(e.errorCode().code());

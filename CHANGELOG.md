@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **Fixed: a report's visuals failed `DRS-9025` ("you already have 3 queries running") once they became runs.** A report of eight visuals is eight runs and a person's cap (`drishti.bi.query.max-concurrent-per-user`, 3) admits three at once; the others waited the ad-hoc query's 2 s for a place and failed. A run now waits for its place as long as it may run (`max-duration`), so the rest queue and draw in turn.
+
 ## 2.6.7 — BI runs, chart any table, Delta and Iceberg side by side, gossip on its own port and HTTP/2; with 2.6.6, the QA release (2026-10-21)
 
 - **Fixed: an oversize upload over HTTP/2 was refused by the client** (`Prohibited header name 'connection'`, Java 25's HttpClient): the 413 now sends `Connection: close` only on HTTP/1.x (2.6.7 turned HTTP/2 on).

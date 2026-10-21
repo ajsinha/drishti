@@ -630,9 +630,12 @@ public final class RunService {
             if (f.background) {
                 move(f, RunState.RUNNING, null, null);
             }
+            // a run waits for its place in admission as long as it may run, never the 2 s an ad-hoc query waits: a report of eight
+            // visuals is eight runs, and the person's cap (max-concurrent-per-user) lets three in at once; the rest queue (was DRS-9025)
             QueryContext.Ctx ctx = f.background
-                    ? new QueryContext.Ctx(QueryContext.WorkClass.BACKGROUND, props.engine().maxReadRows(), props.maxDuration().toMillis())
-                    : QueryContext.Ctx.INTERACTIVE;
+                    ? new QueryContext.Ctx(QueryContext.WorkClass.BACKGROUND, props.engine().maxReadRows(), props.maxDuration().toMillis(),
+                            props.maxDuration())
+                    : new QueryContext.Ctx(QueryContext.WorkClass.INTERACTIVE, null, null, props.maxDuration());
             Answer a = QueryContext.with(ctx, () -> f.q.work().run());
             if (Thread.interrupted()) {
                 throw new CancellationException();
