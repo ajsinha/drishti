@@ -8,7 +8,7 @@
 
 *Revision 1.2 · 2026-10-11 · Author: Ashutosh Sinha · Companion to [ARCHITECTURE.md](ARCHITECTURE.md)*
 
-**Where things stand.** Every wave in this plan is done. The current release is **2.6.5** (history queries); next are **2.6.6** (QA clean), **2.6.7** (BI runs, [BI_RUNS.md](BI_RUNS.md); gossip off the busy path and HTTP/2 between nodes, [DRISHTI_NET.md](DRISHTI_NET.md#planned-267-the-transport-between-nodes); chart any table, [TABLE_CHARTS.md](TABLE_CHARTS.md); mixed Delta and Iceberg storage per source system, [DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage)), **2.7.0** (write-back) and **2.8.0** (AI and the Sajha MCP connector)
+**Where things stand.** Every wave in this plan is done. The current release is **2.6.7** (BI runs, [BI_RUNS.md](BI_RUNS.md); chart any table, [TABLE_CHARTS.md](TABLE_CHARTS.md); mixed Delta and Iceberg storage, [DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage); gossip on its own port and HTTP/2 between nodes; with 2.6.6, the QA release); next are **2.7.0** (write-back) and **2.8.0** (AI and the Sajha MCP connector; easy UI on packs: pages over one or several packs, saved in a workspace and reopened, and pages an AI client asks for, composed at runtime from Sutra and Rachana fragments, bound to the packs as the asking user and streamed back, so the UI is no longer limited to predefined pages)
 ([CHANGELOG.md](../../CHANGELOG.md), [RELEASE_NOTES.md](../../RELEASE_NOTES.md)). The table below maps each release to
 the waves it shipped; [What shipped after the waves](#what-shipped-after-the-waves-1100) and [Since 1.10](#since-110) list the work done since
 the last numbered wave, and [Known gaps](#known-gaps) lists what is still open. The wave sections themselves are
