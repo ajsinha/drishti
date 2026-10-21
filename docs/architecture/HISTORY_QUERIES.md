@@ -600,7 +600,7 @@ restart, as `SearchProperties`), with its defaults in drishti-server's `applicat
 | `drishti.history.timeout` | `10s` | the whole request; days not read by then are `problems` and the answer is `partial` |
 | `drishti.history.parallel-days` | `8` | days read at once per request by the default loop |
 | `drishti.history.max-concurrent` | `16` | history requests running at once on this server; the next waits, then `DRS-1014` |
-| `drishti.history.cache-mb` | `64` | memory for cached answers (by size) |
+| `drishti.history.cache-mb` | `64` | heap for cached answers, one budget for every key and caller signature; the least recently used go first |
 
 **Cache.** `HistoryCache` keeps unmasked, unformatted rows keyed by `(kind, id, from, to, fields, knownAt, dataVersion)`, where
 `dataVersion` is `SourceRouter.dataVersion(kind, AsOf.LATEST)` (Delta: the table's version and commit time; a connector that holds
@@ -620,6 +620,18 @@ the shared key, and a lookup tries the shared key first, then the caller's. A ca
 is never cached when a peer answered. Before, the first caller's masked days were served to everyone for the life of the entry: in soak 2,
 77 administrator histories of peer-held trades showed `PRICE` as `•••` in a column marked `masked: false`, with the price's changes
 missing. `purgeCaches` (Admin → Cache) empties it.
+
+**One budget, in real heap** (after the 2.6.6 soak 3, SOAK3-02). The cache is one `HistoryCache` per server: every key, shared or signed,
+counts against the same `cache-mb`, and the least recently used entries are dropped to stay under it (`HistoryCacheBoundTest`: forty
+signatures of a hundred peer-held trades each stay under the budget). An answer over a quarter of the budget is never kept. The size of an
+entry is the heap its days take on a 64-bit JVM (`HistoryCache.estimate`: 56 bytes a field of an object, its value's box and a string's
+characters, the day's records; within a few per cent of the measured heap). Before, it counted 48 bytes a node, 2.3 to 3.2 times under
+the heap, so `cache-mb: 64` held 150 to 210 MB. What a steady server looks like: the cache grows while new entities and ranges are asked,
+then stays at `cache-mb` (Admin → Cache: `bytes` near the budget, `entries` flat); a new load on any node changes the data version and
+the old entries leave as new ones come. The other caches a cluster keeps per caller signature are bounded by count: a view's shape
+(`drishti.engine.fingerprint-cache-size`, 100,000 entries of about 300 bytes, about 30 MB at most), the effective layouts
+(`layout-cache-size`, 10,000, keyed by shape and not by caller), and the map panels' listings and documents (32 and 8 entries, kept
+`drishti.panels.map-cache-seconds`, 60 s).
 
 **Docs and test.** Every setting goes into `docs/admin/CONFIGURATION.md`; `drishti-console/tests/test_docs_settings.py` already fails when
 a key of `application.yaml` or a `@ConfigurationProperties` binding is not in that document.

@@ -97,29 +97,45 @@ public final class HistoryCache {
         }
     }
 
-    /** About 48 bytes per node of each document, plus the day's own record. */
+    /**
+     * The heap the days take, as a 64-bit JVM with compressed references lays them out: an object's map and its entries (56 bytes a field,
+     * the field names being shared, as a parser and a table's columns share them), an array's slots, each value's box and a string's
+     * characters, and the day's records (within a few per cent of the measured heap). SOAK3-02: the earlier estimate (48 bytes a node)
+     * was 2.3 to 3.2 times under the real heap, so {@code cache-mb: 64} held 150 to 210 MB.
+     */
     static long estimate(List<HistoryDay> days) {
         long n = 0;
         for (HistoryDay d : days) {
-            n += 96 + 48L * nodes(d.document().data(), 0);
+            n += 160 + bytes(d.document().data(), 0);
         }
         return n;
     }
 
-    private static long nodes(DataNode n, int depth) {
+    private static long bytes(DataNode n, int depth) {
         if (depth > 64) {
-            return 1;
+            return 16;
         }
-        long c = 1;
         if (n instanceof DataNode.Obj o) {
+            long c = 112 + 56L * o.fields().size();
             for (DataNode v : o.fields().values()) {
-                c += nodes(v, depth + 1);
+                c += bytes(v, depth + 1);
             }
-        } else if (n instanceof DataNode.Arr a) {
-            for (int i = 0; i < a.size(); i++) {
-                c += nodes(a.get(i), depth + 1);
-            }
+            return c;
         }
-        return c;
+        if (n instanceof DataNode.Arr a) {
+            long c = 32 + 8L * a.size();
+            for (int i = 0; i < a.size(); i++) {
+                c += bytes(a.get(i), depth + 1);
+            }
+            return c;
+        }
+        if (n instanceof DataNode.Val v) {
+            Object x = v.value();
+            if (x instanceof String s) {
+                return 56 + ((s.length() + 7) & ~7L);
+            }
+            return x instanceof Number ? 32 : 16;
+        }
+        return 16;
     }
 }
