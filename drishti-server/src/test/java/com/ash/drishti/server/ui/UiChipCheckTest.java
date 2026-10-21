@@ -74,4 +74,51 @@ class UiChipCheckTest {
         check(retyped.replace("compatible-with: [1]", ""), "alice").andExpect(jsonPath("$.ok").value(true))
                 .andExpect(jsonPath("$.claimsCompatible").value(false));
     }
+
+    static final String COMPOSITE = """
+            rachana: 1
+            chip: book-search
+            version: 1
+            title: Book search
+            category: modules
+            manual:
+              purpose: A search box over a filterable table.
+              pins: { rows: "The rows. Required.", selected: "Out. The id selected." }
+              behaviour: Typing filters the table; clicking a row sends selected.
+              defaults: No filter.
+              limits: As the table.
+              examples:
+                - title: Trades
+                  board: |
+                    chips:
+                      m: { use: book-search@1, supply: { connector: trading/trade-search }, map: { rows.id: TRADE_ID } }
+              not-for: One record.
+              accessibility: As its chips.
+            pins:
+              in:
+                rows: { role: data, type: rowset, required: true, shape: { id: { type: id, required: true }, label: { type: dimension } } }
+              out:
+                selected: { type: id }
+            body:
+              board:
+                chips:
+                  s: { use: search-box@1 }
+                  t: { use: filterable-table@2 SUPPLY}
+                traces:
+                  - { from: s.filter-out, to: t.filter }
+              wires: { rows: t.rows }
+              exposes: { selected: t.selected }
+            """;
+
+    /** CP-07: a composite chip is a board with no connectors; every required inner pin fed; types match; at most three levels. */
+    @Test
+    void aCompositeChipIsABoardWithNoConnectors() throws Exception {
+        check(COMPOSITE.replace(" SUPPLY", ""), "alice").andExpect(jsonPath("$.ok").value(true));
+        check(COMPOSITE.replace(" SUPPLY", ", supply: { connector: trading/trade-search }"), "alice").andExpect(jsonPath("$.ok").value(false))
+                .andExpect(jsonPath("$.problems[0].rule").value("CP-07")).andExpect(jsonPath("$.problems[0].path").value("body.board.chips.t.supply"));
+        check(COMPOSITE.replace(" SUPPLY", "").replace("wires: { rows: t.rows }", "wires: {}"), "alice").andExpect(jsonPath("$.ok").value(false))
+                .andExpect(jsonPath("$.problems[?(@.path == 'body.board.chips.t.rows')].rule").value("CP-07"));
+        check(COMPOSITE.replace(" SUPPLY", "").replace("selected: { type: id }", "selected: { type: date }"), "alice")
+                .andExpect(jsonPath("$.problems[?(@.path == 'pins.out.selected')].rule").value("CP-07"));
+    }
 }
