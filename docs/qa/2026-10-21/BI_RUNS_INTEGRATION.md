@@ -59,14 +59,14 @@ user's cluster and the repository's `data/` were not touched.
 | BIR-03 | Medium | *Who: Shared with me* lists the person's own runs | fixed `6530df136` |
 | BIR-04 | Medium | The Runs tab's storage line is the node's total and names the largest users to everyone | fixed `6530df136` |
 | BIR-05 | Low | `bi mq --async` / `bi sql --async` refuse a large question with "add --yes" but have no `--yes` | fixed `93a608630` |
-| BIR-06 | Medium | Report visuals are never planned, so a report never shows the confirm or *needs a run* card | open: design gap, for the server lane |
-| BIR-07 | Medium | Reuse after a restart sometimes fails: the model part of the data version changed across one restart | open: server lane |
-| BIR-08 | Low | A run waiting for confirmation fails `DRS-9085` at a restart and rings the bell | open: server lane |
-| BIR-09 | Low | The run object leaves `data.words` null and `data.tables` empty, so *Data* is "–" everywhere | open: server lane |
-| BIR-10 | Low | A report visual's run is titled with the report's id (`file:report:counterparty-risk`), not the visual's title; `source.title` null | open: server lane |
-| BIR-11 | Low | `can.share` and `can.export` are true on done runs while sharing and export answer `DRS-5001` (R6 not built) | open: server lane |
+| BIR-06 | Medium | Report visuals are never planned, so a report never shows the confirm or *needs a run* card | fixed `4a168468b` |
+| BIR-07 | Medium | Reuse after a restart sometimes fails: the model part of the data version changed across one restart | fixed `303e22966` |
+| BIR-08 | Low | A run waiting for confirmation fails `DRS-9085` at a restart and rings the bell | fixed `8b626b135` |
+| BIR-09 | Low | The run object leaves `data.words` null and `data.tables` empty, so *Data* is "–" everywhere | fixed `381efcced` |
+| BIR-10 | Low | A report visual's run is titled with the report's id (`file:report:counterparty-risk`), not the visual's title; `source.title` null | fixed `a4c1b4937` |
+| BIR-11 | Low | `can.share` and `can.export` are true on done runs while sharing and export answer `DRS-5001` (R6 not built) | fixed `42f5f5280` (R6 is built now; `can` follows what the server can do) |
 | BIR-12 | Low | A done run with `expiresAt` null reads *Kept until: kept (promoted or pinned)* in the drawer | open |
-| BIR-13 | Low | A DRS-9085 row reads "…could not be started again: re-run it: re-run it; if it happens again, narrow it" | open |
+| BIR-13 | Low | A DRS-9085 row reads "…could not be started again: re-run it: re-run it; if it happens again, narrow it" | server side fixed `4ff724649` (a plain reason); console lane: its fix line |
 | BIR-14 | Medium | The workspace page's member form is hidden behind the new Members tab: three browser tests fail | open: console lane |
 
 ### BIR-01 A run card stays Queued for ever (high, fixed)
@@ -106,7 +106,7 @@ user's cluster and the repository's `data/` were not touched.
 * **Actual:** `unrecognized arguments: --yes`.
 * **Fix:** `--yes` on `bi mq` and `bi sql`, sending `confirm: true` (14.5 point 1). `test_cli_biruns`; TOOLS, CLI_GUIDE, BI_RUNS 14.4, BI_RUNS_GUIDE.
 
-### BIR-06 Reports never show the confirm or the needs-a-run card (medium, open)
+### BIR-06 Reports never show the confirm or the needs-a-run card (medium, fixed)
 
 * **Steps:** a heavy report visual with `Prefer`, first draw or `interaction: true` (a slicer).
 * **Expected (BI_RUNS_GUIDE, *Confirming a large run* and *A selection that needs a run*; BI_RUNS 19.6 steps 2 and 4):** `409 DRS-9082` or `DRS-9089`.
@@ -114,7 +114,7 @@ user's cluster and the repository's `data/` were not touched.
   and 4 drew them from the real server's MQ answers) but no report reaches them. A heavy report visual becomes a run card only when it takes longer than the
   inline wait. Either plan report visuals (their MQ is known after the report's compile) or say so in the guide.
 
-### BIR-07 Reuse after a restart is not reliable (medium, open)
+### BIR-07 Reuse after a restart is not reliable (medium, fixed)
 
 * **Steps:** ask an MQ (`trades.COUNTERPARTY` × `MTM`, 2026-07-13), restart, ask again; repeat over several restarts.
 * **Expected:** `reused` while the data is unchanged (14.5, 18.2b R5).
@@ -123,7 +123,12 @@ user's cluster and the repository's `data/` were not touched.
   `b.view().hash()`, `ModelCatalog.view`) different for that one boot. The run computed again (safe, but the reuse promise fails). Look for an input of
   the view hash that depends on start-up order (a dataset resolved before the packs or masks were complete).
 
-### BIR-08 Waiting for confirmation becomes Failed at a restart (low, open)
+* **Root cause and fix (`303e22966`):** the model view's hash was taken of `ResolvedDataset.masked`, a `Set.copyOf`. Its iteration order is
+  salted per JVM (`ImmutableCollections.SALT`), so a model with two or more masked columns could hash differently after a restart while
+  nothing changed. The hash is now taken of a canonical text (datasets by alias, masks sorted) and the masks keep their order.
+  `ModelViewHashTest` compares the hash across four fresh JVMs (it fails with the old code) and across shuffled load orders.
+
+### BIR-08 Waiting for confirmation becomes Failed at a restart (low, fixed)
 
 `RunService.recover` fails `awaiting-confirm` and `planned` runs with `DRS-9085` "…while this run waited, and it could not be started again", and tells the
 bell *Run failed*. Nothing ran and nobody confirmed: discarding it quietly (cancelled, "the confirmation lapsed at a restart") reads better.
@@ -165,3 +170,10 @@ inline is invisible, so its `Drishti-Run` id is `404` (by design, 6.1); pages lo
 | `4baed349f` | console: BIR-01 (run card), BIR-02 (`/bi/run/<id>`); `test_bi_runs_browser.py`, `test_bi_runs_page.py` |
 | `93a608630` | CLI: BIR-05 (`--yes` on `bi mq` and `bi sql --async`); `test_cli_biruns.py`; docs |
 | `6530df136` | server (`RunsController.list`, `RunStore.usageOf` only): BIR-03, BIR-04; `RunStoreTest`, `ModelAcceptanceTest` |
+| `303e22966` | server: BIR-07 (the model view's hash canonical); `ModelViewHashTest` |
+| `4a168468b` | server: BIR-06 (report visuals planned under `Prefer`; unknown size waits inline); `ModelAcceptanceTest` order 19, `RunServiceTest` |
+| `8b626b135` | server: BIR-08 (awaiting-confirm kept across a restart, else cancelled quietly); `RunServiceTest` |
+| `381efcced` | server: BIR-09 (`data.tables`, `data.words`); `RunDataWordsTest` |
+| `a4c1b4937` | server: BIR-10 (the visual's title, `source.title`); `ModelAcceptanceTest` order 19 |
+| `42f5f5280` | server: BIR-11 (`can` follows what is built); `RunCanTest` |
+| `4ff724649` | server: BIR-13 server side (a plain `DRS-9085` reason); `RunServiceTest` |
