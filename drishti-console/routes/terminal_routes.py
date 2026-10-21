@@ -64,7 +64,7 @@ BI_WORDS = ("BI", "RUPAKA")   # reserved command words: the BI page, RUPAKA bein
 
 
 async def rupaka(request: Request, rest: str):
-    """``BI <GO>`` (or RUPAKA) the BI home; ``BI WORKSPACE`` my workspace; ``BI CATALOGUE`` the catalogue; ``BI <report-or-board>`` a published report
+    """``BI <GO>`` (or RUPAKA) the BI home; ``BI WORKSPACE`` my workspace; ``BI RUNS`` my runs; ``BI CATALOGUE`` the catalogue; ``BI <report-or-board>`` a published report
     by id or title (one match opens it, several open the catalogue searched for what was typed). Any case."""
     if not request.app.state.bi_on or not (getattr(request.state, "bi_me", None) or {}).get("enabled"):
         why = ("Rupaka (business intelligence) is not available to you: it needs the bi power on one of your roles, and BI switched on."
@@ -75,6 +75,8 @@ async def rupaka(request: Request, rest: str):
         return RedirectResponse("/bi", status_code=303)
     if word in ("WORKSPACE", "WORKSPACES"):
         return RedirectResponse("/bi/w/me", status_code=303)
+    if word in ("RUNS", "RUN"):                                       # BI RUNS <GO>: my runs (docs/architecture/BI_RUNS.md section 7.1)
+        return RedirectResponse("/bi/w/me?tab=runs", status_code=303)
     if word in ("CATALOGUE", "CATALOG"):
         return RedirectResponse("/bi/catalogue", status_code=303)
     if word in ("SETTINGS",):

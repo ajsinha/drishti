@@ -20,6 +20,13 @@
   <p class="text-muted-d" data-ws-desc></p>
   <p class="bi-facts" data-ws-meta></p></header>
 <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+{# BI runs (docs/architecture/BI_RUNS.md section 7): three tabs, Items · Runs · Members; ?tab= keeps the one shown. bi-runs-tab.js turns them. #}
+<nav class="bi-tabs bi-ws-tabs" role="tablist" aria-label="Workspace" data-ws-tabs>
+  <a role="tab" href="?tab=items" id="wTabItems" aria-controls="wPanelItems" aria-selected="true" data-ws-tab="items"><i class="bi bi-collection" aria-hidden="true"></i> Items</a>
+  <a role="tab" href="?tab=runs" id="wTabRuns" aria-controls="wPanelRuns" aria-selected="false" data-ws-tab="runs"><i class="bi bi-activity" aria-hidden="true"></i> Runs <small class="bi-runs-count" data-runs-tab-count hidden></small></a>
+  <a role="tab" href="?tab=members" id="wTabMembers" aria-controls="wPanelMembers" aria-selected="false" data-ws-tab="members" hidden><i class="bi bi-people" aria-hidden="true"></i> Members</a>
+</nav>
+<div role="tabpanel" id="wPanelItems" aria-labelledby="wTabItems" data-ws-panel="items">
 <section class="bi-sec" aria-labelledby="wItems"><h2 id="wItems">Items</h2>
   <div class="tbl-wrap"><table class="tbl bi-tbl" data-items data-plain>
     <caption class="visually-hidden">Items in this workspace</caption>
@@ -54,6 +61,29 @@
     <p class="text-muted-d">An item is a YAML body that is stored, versioned and published; open a dataset to query it, a report or a board to see it drawn. A notebook opens in Analyse.</p>
   </form>
 </section>
+</div>
+<div role="tabpanel" id="wPanelRuns" aria-labelledby="wTabRuns" data-ws-panel="runs" hidden>
+<section class="bi-sec bi-runs" data-runs aria-labelledby="wRuns"><h2 id="wRuns">Runs <span class="bi-runs-live" data-runs-live-state title="Rows change as the runs do: no reload needed">⟳ live</span>
+    <a class="bi-runs-help" href="/help/runs-tab" data-runs-help><i class="bi bi-question-circle" aria-hidden="true"></i> How runs work</a></h2>
+  <p class="text-muted-d">Questions that took longer than a moment run in the background: you can keep working, and the bell says when each is ready. A result is kept
+    <span data-runs-retention>30</span> days after it was last opened, unless you keep it longer or promote it.</p>
+  <form class="bi-runs-filters" data-runs-filters role="search" aria-label="Filter the runs">
+    <label>Status<select name="state" class="studio-select"><option value="">All</option><option value="queued,running,storing">Active</option><option value="awaiting-confirm">Waiting for you</option><option value="done,reused">Done</option><option value="failed">Failed</option><option value="cancelled">Cancelled</option><option value="expired">Expired</option></select></label>
+    <label>Source<select name="source" class="studio-select"><option value="">All</option><option value="report">Reports</option><option value="board">Boards</option><option value="mq">Model queries</option><option value="sql">SQL</option><option value="statement">Statements</option><option value="schedule">Schedules</option></select></label>
+    <label>Who<select name="who" class="studio-select"><option value="both">Mine and shared with me</option><option value="mine">Mine</option><option value="shared">Shared with me</option></select></label>
+    <label>Since<select name="since" class="studio-select"><option value="1d">1 day</option><option value="7d">7 days</option><option value="30d" selected>30 days</option><option value="90d">90 days</option></select></label>
+    <label class="bi-runs-find">Search<input type="search" name="q" class="studio-in" autocomplete="off" placeholder="desk pnl" aria-label="Search the runs"></label>
+  </form>
+  <span class="visually-hidden" data-runs-say role="status" aria-live="polite"></span>
+  <div class="tbl-wrap"><table class="tbl bi-tbl bi-runs-tbl" data-runs-table data-plain>
+    <caption class="visually-hidden">Runs: the questions that ran in the background, newest first. Press Enter on a row to open it.</caption>
+    <thead><tr><th scope="col"><span class="visually-hidden">State</span></th><th scope="col">Question</th><th scope="col">Status</th><th scope="col">As of</th><th scope="col">Data</th><th scope="col">Duration</th><th scope="col" class="num">Rows</th><th scope="col">Est.</th><th scope="col"><span class="visually-hidden">Open</span></th></tr></thead>
+    <tbody></tbody></table></div>
+  <p class="bi-empty" data-runs-empty hidden>No runs here. A report visual, a model query or SQL that takes longer than a couple of seconds becomes a run, and appears here.</p>
+  <p class="bi-runs-foot"><span data-runs-storage></span> <button type="button" class="btn-pill btn-ghost" data-runs-more hidden>More</button></p>
+</section>
+</div>
+<div role="tabpanel" id="wPanelMembers" aria-labelledby="wTabMembers" data-ws-panel="members" hidden>
 <section class="bi-sec" data-members-section hidden aria-labelledby="wMembers"><h2 id="wMembers">Members</h2>
   <div class="tbl-wrap"><table class="tbl bi-tbl" data-members data-plain>
     <caption class="visually-hidden">Members and their roles</caption>
@@ -70,6 +100,16 @@
   <label class="bi-checkrow"><input type="checkbox" data-review> Require review before publishing</label>
   <button type="button" class="btn-pill btn-ghost bi-danger" data-delete-workspace>Delete workspace</button>
 </section>
+</div>
+<aside class="bi-run-drawer" data-run-drawer role="dialog" aria-modal="true" aria-labelledby="runDrawerH" hidden>
+  <header class="bi-run-drawer-head"><h2 id="runDrawerH" data-run-drawer-title>Run</h2>
+    <button type="button" class="btn-pill btn-ghost" data-run-drawer-close aria-label="Close (Esc)">✕</button></header>
+  <div data-run-drawer-body></div>
+</aside>
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/collab.css?v={{ ASSET_V }}">{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/people.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-extras.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block bi_keys %}
+    <dt><kbd>g</kbd> <kbd>r</kbd></dt><dd>Runs</dd>
+    <dt><kbd>&uarr;</kbd> <kbd>&darr;</kbd></dt><dd>In Runs: the previous or next run; <kbd>Enter</kbd> opens it</dd>
+{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/collab.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-runs.css?v={{ ASSET_V }}">{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/people.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-extras.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-runs.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-runs-tab.js?v={{ ASSET_V }}"></script>{% endblock %}

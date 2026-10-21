@@ -672,7 +672,7 @@
     } else if (e.key === '?' && keys) {
       e.preventDefault(); if (!keys.open) { keys.showModal(); }
     } else if (pendingG && Date.now() - pendingG < 1500) {
-      var to = { h: '/bi', c: '/bi/catalogue', w: '/bi/w/me' }[e.key];
+      var to = { h: '/bi', c: '/bi/catalogue', w: '/bi/w/me', r: '/bi/w/me?tab=runs' }[e.key];
       pendingG = 0;
       if (to) { e.preventDefault(); window.location.href = to; }
     } else if (e.key === 'g') {
@@ -683,8 +683,19 @@
   if (keysBtn) { keysBtn.addEventListener('click', function () { document.getElementById('biKeys').showModal(); }); }
 
   // -- start ------------------------------------------------------------------------------------------------------------
+  /** The rail's Runs count: the person's runs queued or running (BI_RUNS.md section 7.1); bi-runs-tab.js keeps it live on the Runs tab. Quiet on an older server. */
+  function runsCount() {
+    var badge = q('[data-runs-count]');
+    if (!badge) { return; }
+    api('GET', '/runs?mine=true&state=queued,running,storing&limit=50').then(function (d) {
+      var n = (d && Array.isArray(d.runs)) ? d.runs.length : 0;
+      badge.textContent = n >= 50 ? '50+' : String(n); badge.hidden = n === 0;
+      badge.setAttribute('aria-label', n + (n === 1 ? ' run' : ' runs') + ' queued or running');
+    }).catch(function () { badge.hidden = true; });
+  }
   api('GET', '/me').then(function (m) {
     me = m;
+    runsCount();
     ({ home: home, catalogue: catalogue, workspaces: workspaces, workspace: workspace, item: item, settings: settings }[page] || function () {})();
   }).catch(fail);
 })();

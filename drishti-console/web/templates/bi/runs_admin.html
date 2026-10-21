@@ -1,0 +1,50 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{#
+  Admin → BI → Runs (docs/architecture/BI_RUNS.md section 17.2): the engine's gate now, what runs and waits, the result store, how honest the estimates are and
+  how often the inline wait was enough. A shell: bi-runs-admin.js draws it from GET /api/v1/bi/admin/runs. State, sizes and nodes only, never a value.
+#}
+{% extends "base.html" %}
+{% block title %}BI runs · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-runs.css?v={{ ASSET_V }}">{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm" data-bi-runs-admin>
+  {% with tab='bi' %}{% include "admin/_nav.html" %}{% endwith %}
+  <h1 class="ws-h">BI runs <span class="bi-runs-live" data-admin-live title="Asked again every 5 seconds while this page is open">⟳ live</span></h1>
+  <p class="text-muted-d">Every BI question goes through one bounded pipeline. Long ones run in the background with their own slots, memory and threads, so they never
+    slow the people reading dashboards. This page shows the gate, the queue, the result store and how honest the estimates were. It shows state, sizes and nodes, never a
+    value. <a href="/admin/bi">BI settings</a> · <a href="/admin/bi/usage">BI usage</a></p>
+  <form class="bi-runs-filters bi-runs-admin-filters" data-admin-filters aria-label="Which server">
+    <label>Node<select name="node" class="studio-select" data-admin-node><option value="">all</option></select></label>
+  </form>
+  <p class="adm-msg" data-admin-msg role="status" aria-live="polite"></p>
+  <dl class="bi-run-facts bi-runs-admin-facts" data-admin-facts></dl>
+  <h2 class="ws-h">Running</h2>
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-admin-running data-plain>
+    <caption class="visually-hidden">Runs executing now</caption>
+    <thead><tr><th scope="col">Run</th><th scope="col">Who</th><th scope="col">Question</th><th scope="col">Node</th><th scope="col">Phase</th><th scope="col">For</th><th scope="col"><span class="visually-hidden">Cancel</span></th></tr></thead>
+    <tbody></tbody></table></div>
+  <h2 class="ws-h">Repeated heavy questions</h2>
+  <p class="text-muted-d">Questions asked many times that a rollup would make instant (section 8.3a). The model's owner sees the same suggestion in the model designer.</p>
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-admin-suggest data-plain>
+    <caption class="visually-hidden">Repeated heavy questions</caption>
+    <thead><tr><th scope="col">Model</th><th scope="col">Grain</th><th scope="col" class="num">Runs (7 days)</th><th scope="col">Typical time</th><th scope="col">Suggestion</th></tr></thead>
+    <tbody></tbody></table></div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-runs.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-runs-admin.js?v={{ ASSET_V }}"></script>{% endblock %}

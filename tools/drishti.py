@@ -195,7 +195,12 @@ class Api:
                 code, detail = j.get("code"), j.get("detail") or j.get("message") or j.get("title")
             except ValueError:
                 pass
-            raise ApiError(e.code, code, detail or raw[:200].decode("utf-8", "replace") or str(e.reason)) from None
+            err = ApiError(e.code, code, detail or raw[:200].decode("utf-8", "replace") or str(e.reason))
+            try:
+                err.body = json.loads(raw)                                      # the whole problem (a 409 DRS-9082 carries the estimate and its confirm token)
+            except ValueError:
+                err.body = None
+            raise err from None
         except urllib.error.URLError as e:
             raise CliError(f"cannot reach {self.base}: {e.reason}; is the server running? (--server / DRISHTI_SERVER)", 1) from None
         except OSError as e:
@@ -1258,8 +1263,10 @@ def build_parser() -> argparse.ArgumentParser:
                 p.add_argument("--body", action="store_true", help="also print the YAML body")
             if noun == "catalogue" and act == "publish":
                 p.add_argument("--note", help="why this version")
-    load_module("bilang", "bilang.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})   # bi expr, bi migrate, bi sql
-    load_module("bimodel", "bimodel.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})  # bi model, bi mq
+    runs = load_module("biruns", "biruns.py")                                                                         # bi runs (2.6.7, BI_RUNS.md)
+    load_module("bilang", "bilang.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json, "runs": runs})   # bi expr, bi migrate, bi sql
+    load_module("bimodel", "bimodel.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json, "runs": runs})  # bi model, bi mq
+    runs.register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})
     load_module("biitem", "biitem.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})    # bi item, bi dataset
     load_module("bitransform", "bitransform.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})   # bi transform
     load_module("bistatement", "bistatement.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})   # bi statement (2.6.0)

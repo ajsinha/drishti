@@ -84,6 +84,33 @@
     }));
   };
 
+  /**
+   * A question asked as a run (BI_RUNS.md section 6): POST with `Prefer: respond-async, wait=<seconds>`. The server waits that long and answers 200 with the
+   * answer (drawn as today, no run is visible) or 202 with the run that goes on in the background. Resolves with one of
+   *   {answer}            done in time
+   *   {run}               a visible run (202): draw a run card and follow it
+   *   {confirm: problem}  409 DRS-9082: an ad-hoc heavy question above the confirm threshold (the estimate, the confirm token)
+   *   {needed: problem}   409 DRS-9089: a dashboard interaction that would need a background run (nothing ran)
+   * and rejects as B.api does for anything else. A 200 shaped {run, answer} (POST /runs) gives its answer.
+   */
+  B.ask = function (path, body, waitSeconds) {
+    path = B.viewPath(path);
+    const wait = waitSeconds == null ? 2 : Math.max(0, Number(waitSeconds) || 0);
+    const opt = { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json', 'Content-Type': 'application/json', Prefer: 'respond-async, wait=' + wait }, body: JSON.stringify(body || {}) };
+    return fetch('/bi/api' + path, opt).then((r) => r.json().catch(() => ({})).then((data) => {
+      if (r.status === 202) { return { run: data && data.run ? data.run : data }; }
+      if (r.status === 409 && data.code === 'DRS-9082') { return { confirm: data }; }
+      if (r.status === 409 && data.code === 'DRS-9089') { return { needed: data }; }
+      if (!r.ok) {
+        const e = new Error((data.code ? data.code + ' ' : '') + (data.detail || r.statusText));
+        e.code = data.code; e.status = r.status; e.detail = data.detail || r.statusText;
+        if (data.fix) { e.fix = data.fix; }
+        throw e;
+      }
+      return { answer: data && data.answer && data.run && !data.columns ? data.answer : data };
+    }));
+  };
+
   /** On a page opened with ?as=published: says which version is shown, or that nothing is published, with a way back to the draft. */
   B.publishedBanner = function (id, canvas) {
     if (!B.asPublished || !canvas) { return; }
