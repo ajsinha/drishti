@@ -17,6 +17,18 @@
 
 ## Unreleased
 
+- **UI Board P4: boards in the designer and the viewer (2.7.0).** Build's designer gains a **Board** mode (and a **Chip** mode beside it,
+  a placeholder for the chip designer of P4b): the Chip Store as its palette (search, certified only, each chip's manual), chips dragged
+  onto a 12-column grid, pins drawn on every box, traces drawn from an out pin to an in pin (only compatible pins light up), a mapping sheet
+  per instance offering only compatible supplier attributes, live data as you through the render API, the board check's problems in red on
+  the box, pin or wire, a YAML / JSON tab over the same document (comments kept), Undo/Redo, save with revisions and conflicts (`409
+  DRS-5057`: changed elsewhere, reload), share by link to named people, copy to a workspace, the phone layout. One entry point: Build →
+  **Designer** starts a board, a chip or a screen; Build → **Boards** lists boards and screen designs together; a screen design opens as a
+  board (*Open as board*, a thin adapter until the P5 converter) and a board exports its panel chips as a Sutra (*Export Sutra*). The viewer
+  (`/ui/b/<board>`) paints the layout first, then each chip (waiting, a run card, an error with its reason, or its data through the BI
+  visual renderers and the console's tables, with Chart on every table chip), sends selections so the chips that follow repaint, and
+  takes live frames; desktop and phone. Guide: [UI_BOARD_GUIDE.md](docs/guides/UI_BOARD_GUIDE.md); design: UI_BOARD.md 12.4.
+
 - **UI Board P3: the render API (2.7.0).** `POST /api/v1/ui/render` (an unsaved board; analyst and above, never an embed token),
   `GET /api/v1/ui/boards/{name}/render` (a saved one), `POST /api/v1/ui/renders/{id}/pins` and `DELETE /api/v1/ui/renders/{id}`. The
   board check first (`DRS-2071` with the problems, `DRS-2075` past a size); then an SSE stream: the layout before any data, each chip's

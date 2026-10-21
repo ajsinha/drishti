@@ -592,7 +592,7 @@ list it. Depth is limited (7.3).
 
 ## 10. The Board Designer
 
-A new console page, *Boards*, beside the BI Workspace; maya UX tokens, the Terminal themes.
+As built (12.4): Build's designer in its **Board** mode (beside a **Chip** mode), not a new page; *Boards* is Build's one list of boards and designs. Maya UX tokens, the Terminal themes.
 
 * **Palette (left):** the Chip Store by category, search, a *certified* filter; each chip shows its manual's purpose on
   hover and its full manual in a side sheet. Suppliers in a second tab: the packs' kinds and searches, BI models and
@@ -822,6 +822,53 @@ Settings: [CONFIGURATION.md](../admin/CONFIGURATION.md).
   and `UiRenderApiTest` (the whole stack with security on over a file-connector lake: the 3.1 board on a BI model with row rules and a
   mask and the ticket over the lake's trade entity, rendered as rita, ann and hana; a selection on the open stream; access-profile reuse;
   `DRS-2071` before any stream).
+
+### 12.4 As built: P4
+
+**One designer (the product owner, during P4: "we do not want two versions of the same functionality").** The Board Designer is not a
+second tool: it is Build's designer in **Board mode**, under `/build` beside the screen designer, reached from **Build → Designer**
+(`/build/new`, which now offers *New board* and *New chip*), and **Build → Boards** (`/build`) is the one list of boards and screen
+designs. The designer has two modes in one shell (one palette area, one YAML / JSON tab): **Board** (this phase) and **Chip** (a
+placeholder that P4b's chip designer fills). The viewer is `/ui/b/<name>`. The guide is [UI_BOARD_GUIDE.md](../guides/UI_BOARD_GUIDE.md).
+
+**Where (drishti-console).** `routes/ui_routes.py` (the pages; `/ui/api/...` passed on to `/api/v1/ui/...` as the caller with the document as
+sent, `If-Match` / `If-None-Match` on and `ETag` back; the two render streams relayed event by event, a refusal before the stream answered
+as JSON with its problems; `/ui/api-yaml/dump` and `/load` for the YAML tab, the dump a minimal patch that keeps the person's comments
+(`core/yaml_roundtrip.py`); `/ui/api-suppliers` for the mapping sheet), `core/backend.py` (`ui()`, `ui_events()`), `core/sutra_board.py`
+(the adapter below), `web/templates/ui/` (`_shell`, `design`, `view`), `web/static/js/ui-board-paint.js` (a ViewModel to HTML),
+`ui-board-view.js` (the stream, the layout, chip states, pins), `ui-board-canvas.js` (palette, canvas, pins, traces),
+`ui-board-design.js` (the document, the mapping sheet, check, live data, YAML tab, Undo/Redo, save, revisions, share, copy, modes),
+`ui-chip-editor.js` (Chip mode's placeholder), `ui-boards.js` (the Boards list, keys), `web/static/css/ui-board.css`.
+
+**Corrections and precisions the code forced:**
+
+* **Painting reuses the renderers.** A `visual` body (the `bi-*` chips) and the chart panel kinds (`line`, `area`, `hbar`, `waterfall`,
+  `gauge`, `metric` as a card) go to the BI visual renderers (`drishtiBi.visuals.draw`) with the chip's columns as wells; every table-like
+  body is a `table.tbl`, so `tables.js` pages, filters and gives it **Chart** (Chart any table); `kv` is a definition list. The panel
+  kinds' own ECharts builders (`charts.js`) need the server's computed panel view models, which a chip's rows are not; they are not used.
+* **Selections** send the row's `keys` entry (the id, or the masked-id token) to `POST /ui/renders/{id}/pins`; a chart mark sends its value.
+* **Live data in the designer** is a dynamic render (`POST /ui/render`) after each change (debounced), painted into the canvas boxes; it
+  waits while the board check has errors.
+* **Supplier attributes** for the mapping sheet: a pack's kind from its search form (`/forms/<pack>?kind=`), a BI model's measures and
+  columns; offered only where the pin column's type accepts them. No server-side supplier catalogue exists yet (12.3), so when the
+  console cannot list them the sheet takes typed names.
+* **Compatibility while dragging** is a small client table (4.2 simplified) that only lights the pins; the board check decides. A selection
+  traced into a `filter` pin gets `transform: {filter-on: <the target's id column>}` by itself.
+* **Problem paths** paint: `traces[i]…` the wire and its target pin, `chips.<instance>…` the box and the named pin.
+* **Screen designs as boards: a thin adapter until P5.** `core/sutra_board.py` maps a design's Sutra to a board of `panel-<kind>@1`
+  instances (ids, titles, two columns from `area:`); bindings are listed as notes, not converted. *Export Sutra* writes a board's panel
+  chips back as a Sutra (until 3.0). When P5's converter is merged, both functions call it; the routes (`/build/board-api/from-design/<id>`,
+  `/build/board-api/to-sutra`) stay.
+* **Chip mode plugs in** at `ui-chip-editor.js`: the mode (`designer.setMode('chip')`, `/build/chip/<name>`, the `ub:mode` event), the
+  shared YAML tab (the chip's document while in Chip mode), the palette (`designer.onChipPick(ref)`) and the test bench (`[data-ce-bench]`,
+  each manual example rendered through `POST /ui/render`).
+* **Not in P4:** modules (P6); the full chip designer (P4b); restoring a revision is "load it in the YAML tab, then save"; the BI report
+  designer stays separate (folding it in: a report is a board of `bi-*` chips; it needs the converter for report pages, the BI
+  interactions (cross-filter, drill, slicers) as traces and pins, the Format pane as chip controls, and bookmarks as board params).
+* **Tests.** `tests/test_ui_board.py` (the routes, against the stand-in `tests/ui_board_backend.py`, whose stream has P3's event shapes)
+  and `tests/test_ui_board_browser.py` (Chromium: the 3.1 board built by drag, map and wire; a bad wire in red; save, reopen, a 409; the
+  YAML tab and Undo; live data; the viewer, a selection, Chart, a live frame, a failing chip; the phone layout; keyboard only; Chip mode;
+  ten themes). Pictures: `tests/ui_board_shots.py` → `docs/guides/img/ui-board/`.
 
 ## 13. Later releases
 
