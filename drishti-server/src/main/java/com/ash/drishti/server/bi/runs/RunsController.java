@@ -200,7 +200,8 @@ public class RunsController {
     @GetMapping("/runs")
     public ResponseEntity<?> list(@RequestParam(required = false) String state, @RequestParam(required = false) String source,
             @RequestParam(required = false) String q, @RequestParam(defaultValue = "50") int limit, @RequestParam(required = false) String after,
-            @RequestParam(required = false) String since, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(required = false) String since, @RequestParam(defaultValue = "true") boolean mine,
+            @RequestParam(defaultValue = "true") boolean shared, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.BI);
         int n = Math.max(1, Math.min(limit, 200));
         Instant before = null;
@@ -218,6 +219,8 @@ public class RunsController {
         }
         all.sort(java.util.Comparator.comparing(Run::submittedAt).reversed().thenComparing(Run::id, java.util.Comparator.reverseOrder()));
         List<Run> page = all.stream()
+        // every listed run is the caller's own until runs are shared (R6): mine=false (the Runs tab's "Shared with me") lists none (BIR-03)
+        List<Run> page = !mine ? List.of() : runs().list(p.user(), before, 500).stream()
                 .filter(r -> from == null || !r.submittedAt().isBefore(from))
                 .filter(r -> states.isEmpty() || states.contains(r.state().wire()))
                 .filter(r -> source == null || source.isBlank() || r.sourceType().equals(source))
@@ -228,7 +231,7 @@ public class RunsController {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("runs", shown.stream().map(r -> json(r, p)).toList());
         m.put("next", more ? shown.get(shown.size() - 1).id() : null);
-        m.put("storage", runs().store().usage());
+        m.put("storage", runs().store().usageOf(p.user()));          // the caller's own results; the node's, with the largest users, is Admin's (BIR-04)
         m.put("nodes", Map.of("failed", List.of()));
         return noStore(200, m);
     }

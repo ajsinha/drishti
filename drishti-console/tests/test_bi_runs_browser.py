@@ -96,6 +96,22 @@ def test_run_in_background_shows_progress_then_draws_the_chart(ctx, stack):
     assert not page.errors, page.errors
 
 
+def test_a_run_that_ended_before_its_card_listens_still_draws(ctx, stack):
+    """BIR-01 (the real server, 2026-10-21): a quick run is done before the card subscribes, so no event comes for it and hello lists only unfinished runs;
+    the card asks once (at hello, or at once when the stream is already open) and draws the result instead of saying Queued for ever."""
+    page = open_page(ctx, stack, REPORT, HEAVY)
+    draw = """(a) => { const host = document.createElement('div'); host.setAttribute('data-early', a.tag); document.body.prepend(host);
+        drishtiBi.runs.card(host, { id: a.id, state: 'queued', can: { cancel: true } }, { onAnswer: (r) => host.setAttribute('data-answered', String((r.rows || []).length)) }); }"""
+    for tag in ("first", "streaming"):
+        if tag == "streaming":
+            page.wait_for_function("drishtiBi.runs.streaming === true", timeout=15000)
+        done = stack[1]._new("Done before the card", "done")
+        done.update(progress=1.0, startedAt=done["submittedAt"], finishedAt=done["submittedAt"], actual={"rowsOut": 4, "seconds": 0})
+        page.evaluate(draw, {"id": done["id"], "tag": tag})
+        page.wait_for_selector(f'[data-early="{tag}"][data-answered]', timeout=10000)
+    assert not page.errors, page.errors
+
+
 def test_the_bell_counts_the_finished_run_and_its_notice_opens_the_stored_result(ctx, stack):
     url, backend = stack
     before = len(backend.notices)

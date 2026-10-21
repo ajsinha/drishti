@@ -42,6 +42,12 @@
   run object's `schedule`. **Statements** take `Prefer: respond-async` (preview and file). **Admin and metrics (R8):** the gauges
   `drishti.bi.runs.queue`, `running`, `store.bytes`; `/api/v1/bi/engine` `runs`; `admissionWaitP95Ms`, `accuracy.basis` and the snapshot
   storage filled. Not built yet: promotion to a dataset snapshot or a report, and the cluster (R7: leases, forwarding, scatter, adoption).
+- **BI runs: the console and the real server together (2.6.7, docs/qa/2026-10-21/BI_RUNS_INTEGRATION.md).** Fixes: a run card whose run
+  ended before the card listened now draws the result (it said *Queued* for ever on the real server, BIR-01); *Open* and the inbox notice of
+  an MQ or SQL run open it in the Runs tab instead of a 404 (BIR-02); *Who: Shared with me* lists nothing until runs can be shared (BIR-03);
+  the Runs tab's storage line is the person's own results, no longer the node's with the largest users' names (BIR-04); `bi mq --async` and
+  `bi sql --async` take `--yes` (BIR-05). Open for the server lane: report visuals are not planned, so reports never show the confirm card
+  (BIR-06); reuse after a restart failed once of four (BIR-07); a run waiting for confirmation fails `DRS-9085` at a restart (BIR-08).
 - **BI runs, the server continued (2.6.7, BI_RUNS.md 18.2b and 14.5).** **The planner (R3):** an MQ or SQL question is sized from metadata
   only (built layers' `meta.json`, the new `SourcePlugin.rowEstimate`: Delta add-action `numRecords`, Iceberg manifest `record_count`; then
   rows per day learnt from builds), never a scan: tiers from the estimate, `409 DRS-9082` with the estimate, a `confirmToken` and the run

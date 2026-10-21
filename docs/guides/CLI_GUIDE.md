@@ -939,8 +939,7 @@ pack is *ours*, the fresh generation is *theirs* (`tools/packregen.py`). Commit 
 | a group or file that is new | `add` |
 | no longer generated, you never edited it | `remove`; edited: `stale`, kept and listed |
 | both changed, in different places | `merge`: a line-level three-way merge (difflib), written |
-| both changed the same lines | `conflict`: both texts in the file between `<<<<<<< yours`, `=======` and `>>>>>>> regenerated` markers; listed; **exit 1** |
-| you deleted a file the generator still makes | `deleted`: it stays deleted |
+| both changed the same lines | `conflict`: both texts in the file between `| you deleted a file the generator still makes | `deleted`: it stays deleted |
 | no `generated/` (a pack made before this) | nothing is merged: differing files are `no-baseline` (kept, exit 1), new files are added |
 
 A worked run on the test data: a pack made from the ENDUR snapshot (five product types), two hand edits (the `ComSwap` Sutra's
@@ -998,10 +997,9 @@ attention: 1 file(s) need you (search for '<<<<<<<'), then  drishti.py pack chec
 $ grep -n -A4 '<<<<<<<' data/build/mb/sutras/trade/trade-comswap.v1.sutra.yaml
 5:<<<<<<< yours (the pack)
 6-match: { kind: trade, where: "$.PRODUCT_TYPE == 'ComSwap'", priority: 15 }
-7-=======
+7-
 8-match: { kind: trade, where: "$.PRODUCT_TYPE == 'ComSwap'", priority: 20 }
-9->>>>>>> regenerated from the new data
-```
+9-```
 
 Options not given on the command line (`--key`, `--date`, `--match`, `--priority`, `--samples`, `--version`...) are taken from the
 ones the pack was generated with. The command takes the same options as `pack new` (it writes no data: use `data ingest` for the
@@ -2368,6 +2366,8 @@ fail  Close to 100 trades: expected 100 ± 1%, found 750
 
 `drishti.py bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|unshare|promote|keep|schedule|schedules|storage|suggestions` does what the BI
 Runs tab does (sharing, schedules, CSV and Excel export, and for a bi-admin the rollup suggestions), as the token's user; `bi mq` and `bi sql` take `--async [--wait 2s]`. Examples, exit codes and output: [BI_RUNS_GUIDE.md](BI_RUNS_GUIDE.md#on-the-command-line)
+`drishti.py bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|promote|keep|schedule|schedules|storage` does what the BI
+Runs tab does, as the token's user; `bi mq` and `bi sql` take `--async [--wait 2s] [--yes]`. Examples, exit codes and output: [BI_RUNS_GUIDE.md](BI_RUNS_GUIDE.md#on-the-command-line)
 and [TOOLS.md section 5.7](TOOLS.md#57-bi).
 
 ### `bi statement`

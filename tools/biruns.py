@@ -598,5 +598,7 @@ def cmd_storage(a, ctx) -> int:
 def asked(a, ctx, path: str, body: dict) -> int:
     """`bi mq --async` and `bi sql --async`: the question with `Prefer: respond-async, wait=<--wait>`; the answer when it is done in time, else the run."""
     wait = seconds(a.wait)
+    if getattr(a, "yes", False):                                          # --yes: confirmed in advance, as POST /runs options.confirm (BI_RUNS 14.5, BIR-05)
+        body = dict(body, confirm=True)
     status, r = ask_async(_api(a, ctx), ctx, "POST", path, body, wait)
     return show_outcome(a, ctx, status, r)

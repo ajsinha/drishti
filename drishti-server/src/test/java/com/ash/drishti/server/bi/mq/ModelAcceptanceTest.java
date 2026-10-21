@@ -888,5 +888,8 @@ class ModelAcceptanceTest {
         JsonNode list = ok(call("GET", "/api/v1/bi/runs?since=7d&state=done,reused,queued", reader("rita"), null));
         assertThat(list.path("runs").isArray()).isTrue();
         call("GET", "/api/v1/bi/runs?since=yesterday", reader("rita"), null).andExpect(status().isBadRequest());
+        // the storage line is the caller's own (never the largest users), and "shared with me" lists nothing until runs are shared (BIR-03, BIR-04)
+        assertThat(list.path("storage").has("topUsers")).isFalse();
+        assertThat(ok(call("GET", "/api/v1/bi/runs?mine=false&shared=true", reader("rita"), null)).path("runs")).isEmpty();
     }
 }

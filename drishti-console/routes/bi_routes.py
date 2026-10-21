@@ -271,7 +271,9 @@ async def open_run(request: Request, run_id: str):
     except BackendError:
         return RedirectResponse(fallback, status_code=303)
     href = str(((run or {}).get("source") or {}).get("href") or "")
-    ok = href.startswith("/bi/") and not href.startswith("//")             # a console path the server made, never a full URL
+    # a report's or a board's page with ?run=, never a full URL; the server's href of an MQ or SQL run (/bi/runs/<id>, the result grid of BI_RUNS.md 7.3)
+    # is not a console page yet, so such a run opens in the Runs tab with its drawer (BIR-02)
+    ok = href.startswith(("/bi/r/", "/bi/b/")) and "//" not in href
     return RedirectResponse(href if ok else fallback, status_code=303)
 
 

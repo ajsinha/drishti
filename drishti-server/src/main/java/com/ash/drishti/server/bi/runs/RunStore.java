@@ -230,6 +230,26 @@ public final class RunStore {
         return m;
     }
 
+    /** One person's stored results (the Runs tab's storage line, 14.1): their bytes and count, never anyone else's (BIR-04). */
+    public Map<String, Object> usageOf(String user) {
+        long bytes = 0;
+        int count = 0;
+        for (Path f : answers()) {
+            try {
+                if (owner(f).equals(user)) {
+                    bytes += Files.size(f);
+                    count++;
+                }
+            } catch (IOException ignored) {
+                // removed meanwhile
+            }
+        }
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("bytes", bytes);
+        m.put("results", count);
+        return m;
+    }
+
     /** The owner a result counts against: its {@code owner.txt}; "" when it has none (written before the budget per person). */
     private static String owner(Path answer) {
         try {

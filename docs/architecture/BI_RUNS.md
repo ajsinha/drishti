@@ -1063,7 +1063,7 @@ drishti.py bi runs schedules [list|disable ID|enable ID|delete ID]
 drishti.py bi runs storage                                            # bi-admin: Admin's storage numbers
 ```
 
-`drishti.py bi mq FILE` and `drishti.py bi sql` gain `--async [--wait 2s]`, which sends `Prefer: respond-async` and prints the run id
+`drishti.py bi mq FILE` and `drishti.py bi sql` gain `--async [--wait 2s] [--yes]`, which sends `Prefer: respond-async` (and with `--yes` `confirm: true`) and prints the run id
 when the answer is `202`.
 
 ## 15. Settings: `config/runs/runs.yaml`
