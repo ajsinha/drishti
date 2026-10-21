@@ -107,7 +107,8 @@
         if (data.fix) { e.fix = data.fix; }
         throw e;
       }
-      return { answer: data && data.answer && data.run && !data.columns ? data.answer : data };
+      const inline = data && data.answer && data.run && !data.columns;
+      return { answer: inline ? data.answer : data, ranAs: inline ? data.run : undefined };      // ranAs: the run an answer given at once was recorded as
     }));
   };
 

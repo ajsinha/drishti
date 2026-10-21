@@ -53,6 +53,7 @@
   // ---- the list ---------------------------------------------------------------------------------------------------------------------------------------
   const tbody = q('[data-runs-table] tbody'), form = q('[data-runs-filters]'), sayBox = q('[data-runs-say]');
   const byId = {};
+  const fresh = new Set();                      // the runs a "Run again" made on this page: highlighted at the top of the list
   let next = null;
   const say = (text) => { sayBox.textContent = ''; window.setTimeout(() => { sayBox.textContent = text; }, 30); };
 
@@ -90,6 +91,7 @@
     const q1 = h('th', { scope: 'row' },
       h('span', { class: 'bi-run-q', text: R.titleOf(r) || '(untitled)' }),
       shared ? h('span', { class: 'bi-run-shared', title: 'Shared with you by ' + shared, text: ' ⇄ shared by ' + shared }) : null,
+      supersededBy(r),
       h('small', { class: 'bi-run-src', text: R.sourceLine(r) }));
     const status = h('td', { class: 'bi-run-status bi-run-' + r.state },
       h('span', { text: st.label + (r.reuse ? ' ⇄' : '') }),
@@ -99,7 +101,7 @@
     const took = R.took(r);
     const estTip = est.seconds ? 'estimated ' + R.range(est).replace(/^about /, '') + (R.finished(r.state) && took != null ? ', took ' + R.duration(took) : '') : '';
     const open = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-run-more', 'aria-label': 'Open the run ' + R.titleOf(r), 'data-run-open': r.id, text: '⋯' });
-    const tr = h('tr', { 'data-run-row': r.id, 'data-run-state': r.state, tabindex: '0', class: 'bi-run-row' },
+    const tr = h('tr', { 'data-run-row': r.id, 'data-run-state': r.state, tabindex: '0', class: 'bi-run-row' + (fresh.has(r.id) ? ' bi-run-new' : '') },
       h('td', { class: 'bi-run-glyph bi-run-' + r.state, 'aria-label': st.label, text: st.glyph }), q1, status,
       td(R.asOfShort(r) || '–', { title: R.asOf(r) }), data, td(took != null ? R.duration(took) : '–'), td(act.rowsOut != null ? R.count(act.rowsOut) : '–', { class: 'num' }),
       td(R.shortRange(est) || '–', { title: estTip }), h('td', {}, open));
@@ -109,6 +111,14 @@
       frag.appendChild(h('tr', { class: 'bi-run-whyrow', 'data-run-why-of': r.id }, h('td', {}), h('td', { colspan: '8', class: 'bi-run-bad', text: R.line(r) })));
     }
     return frag;
+  }
+  /** The run that a "Run again" of this one made (the newest), as a link that opens it: "superseded by <run>". */
+  function supersededBy(r) {
+    const by = Object.keys(byId).map((k) => byId[k]).filter((x) => x.rerunOf === r.id).sort((a, b) => String(b.submittedAt || '').localeCompare(String(a.submittedAt || '')))[0];
+    if (!by) { return null; }
+    const a = h('a', { href: '?tab=runs&run=' + encodeURIComponent(by.id), class: 'bi-run-link', 'data-run-goto': by.id, text: R.titleOf(by) + ' (' + R.stateOf(by.state).label.toLowerCase() + ', ' + when(by.submittedAt).slice(11) + ')' });
+    a.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openDrawer(by.id, a); });
+    return h('small', { class: 'bi-run-superseded', 'data-run-superseded': by.id }, 'superseded by ', a);
   }
   function replaceRow(r) {
     const old = tbody.querySelector('[data-run-row="' + CSS.escape(r.id) + '"]');
@@ -207,6 +217,49 @@
     b.addEventListener('click', (e) => fn(e.currentTarget));
     return b;
   }
+  // "Run again" (BI_RUNS.md section 7.3): a labelled choice of how, and the button that does it. Changing the choice does nothing on its own. While the new
+  // run goes, the drawer shows that run with the button busy (a spinner and "Running…"); when it ends the button is itself again.
+  let rerunning = null;
+  function runAgain(r, busy) {
+    const enc = encodeURIComponent(r.id), id = 'runAgainAs-' + String(r.id).replace(/[^A-Za-z0-9_-]/g, '');
+    const asof = R.asOfShort(r);
+    const sel = h('select', { class: 'studio-select', id, 'data-run-again-as': '' },
+      h('option', { value: 'same', text: 'Same as before' + (asof ? ' (as of ' + asof + ')' : '') }), h('option', { value: 'latest', text: 'With the latest data' }));
+    const go = h('button', { type: 'button', class: 'btn-pill btn-accent bi-run-again-go', 'data-run-act': 'rerun' });
+    const label = (on) => {
+      B.clear(go);
+      go.disabled = on; sel.disabled = on;
+      go.setAttribute('aria-busy', on ? 'true' : 'false');
+      if (on) { go.appendChild(h('span', { class: 'bi-spin', 'data-run-spinner': '', 'aria-hidden': 'true' })); }
+      go.appendChild(document.createTextNode(on ? 'Running…' : 'Run again'));
+    };
+    label(busy);
+    go.addEventListener('click', () => {
+      const data = sel.value;
+      label(true);
+      B.ask('/runs/' + enc + '/rerun', { data }, 0).then((g) => {
+        const nr = g.run || (g.confirm && g.confirm.run) || g.ranAs || null;
+        if (!nr || !nr.id) { label(false); said(go, g.answer !== undefined ? 'Done at once.' : 'Run again: asked.'); return; }
+        byId[nr.id] = Object.assign({}, byId[nr.id] || {}, nr);
+        const from = nr.reuse && nr.reuse.of ? byId[nr.reuse.of] : null;
+        const reused = g.answer !== undefined || nr.state === 'reused' || !!nr.reuse;
+        const text = reused ? 'Done at once: reused the answer from ' + (from && from.finishedAt ? when(from.finishedAt) : nr.reuse && nr.reuse.of ? nr.reuse.of : 'an earlier run') + '.'
+          : g.confirm ? 'Run again needs your confirmation: it is in the list, waiting for you.' : 'Running again' + (data === 'same' ? ' as before.' : ' with the latest data.');
+        if (R.active(nr.state) && !g.confirm) { rerunning = nr.id; }
+        note = { id: nr.id, text, bad: false, href: reused ? '/bi/run/' + encodeURIComponent(nr.id) : null };
+        say(text);
+        fresh.add(nr.id);
+        return load().then(() => {
+          const row = tbody.querySelector('[data-run-row="' + CSS.escape(nr.id) + '"]');
+          if (!row) { replaceRow(byId[nr.id]); }
+          if (byId[r.id]) { replaceRow(byId[r.id]); }                 // the old row says "superseded by"
+          openDrawer(nr.id, tbody.querySelector('[data-run-row="' + CSS.escape(nr.id) + '"]'));
+        });
+      }).catch((e) => { label(false); failed(go)(e); });
+    });
+    return h('div', { class: 'bi-run-again', role: 'group', 'aria-label': 'Run again', 'data-run-again': '' },
+      h('label', { for: id, text: 'Run again as' }), h('div', { class: 'bi-run-again-row' }, sel, go));
+  }
   function menu(label, attrs, items) {
     const sel = h('select', Object.assign({ class: 'studio-select', 'aria-label': label }, attrs || {}), h('option', { value: '', text: label + ' ▾' }), items.map((i) => h('option', { value: i[0], text: i[1] })));
     return sel;
@@ -246,26 +299,17 @@
     if (can.cancel && R.active(r.state) && r.state !== 'awaiting-confirm') {
       acts.appendChild(act('Cancel', { 'data-run-act': 'cancel' }, (b) => B.busy(b, () => B.api('POST', '/runs/' + enc + '/cancel').then((x) => { refresh(x); said(b, 'Cancelled. Everything it held is freed.'); }).catch(failed(b)))));
     }
-    if (can.rerun) {
-      const m = menu('Re-run', { 'data-run-act': 'rerun' }, [['same', 'on the same data'], ['latest', 'on the newest data']]);
-      m.addEventListener('change', () => {
-        const data = m.value;
-        if (!data) { return; }
-        m.disabled = true;
-        B.ask('/runs/' + enc + '/rerun', { data }, 0).then((g) => {
-          const nr = g.run || (g.confirm && g.confirm.run) || null;
-          said(m, g.answer !== undefined ? 'Re-ran it: done at once (the result was there).' : g.confirm ? 'The re-run needs your confirmation: it is in the list, waiting for you.' : 'Re-run started' + (data === 'same' ? ' on the same data.' : ' on the newest data.'));
-          load().then(() => { if (nr && nr.id) { openDrawer(nr.id, null); } });
-        }).catch(failed(m)).then(() => { m.disabled = false; m.value = ''; });
-      });
-      acts.appendChild(m);
-    }
+    if (can.rerun || (rerunning === r.id && R.active(r.state))) { acts.appendChild(runAgain(r, rerunning === r.id && R.active(r.state))); }
+    if (rerunning === r.id && !R.active(r.state)) { rerunning = null; }
     const ex = R.exportButtons(r, (t, bad, b) => said(b, t, bad));          // CSV and Excel, from the stored result as the caller's own version
     if (ex) { ex.setAttribute('data-run-act', 'export'); acts.appendChild(ex); }
     if (can.promote) { acts.appendChild(act('Promote…', { 'data-run-act': 'promote' }, (b) => promote(r, b))); }
     dBody.appendChild(acts);
     const msg = h('p', { class: 'bi-run-dmsg', 'data-run-drawer-msg': '', hidden: !(note && note.id === r.id) });
-    if (note && note.id === r.id) { msg.textContent = note.text; msg.classList.toggle('bi-run-bad', note.bad); }
+    if (note && note.id === r.id) {
+      msg.textContent = note.text; msg.classList.toggle('bi-run-bad', note.bad);
+      if (note.href) { msg.appendChild(document.createTextNode(' ')); msg.appendChild(h('a', { class: 'btn-pill btn-ghost', href: note.href, 'data-run-open-result': '', text: 'Open result' })); }
+    }
     dBody.appendChild(msg);
 
     // what it is

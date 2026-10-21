@@ -123,6 +123,26 @@
 .bi-runs-help { font-weight: 400; margin-left: auto; }
 @media (prefers-reduced-motion: reduce) { .bi-run-fill { transition: none; } }
 
+/* Run again: the labelled choice of how and the button, one control group of one height; the busy button spins (a still dot when motion is reduced).
+   The run it made is highlighted at the top of the list; the old run's row says "superseded by" it. */
+.bi-run-again { display: flex; flex-direction: column; gap: .2rem; flex: 1 1 100%; }
+.bi-run-again > label { font-size: .8rem; font-weight: 600; color: var(--d-muted); }
+.bi-run-again-row { display: flex; align-items: stretch; flex-wrap: wrap; gap: 0; }
+.bi-run-again-row select { flex: 0 1 auto; min-width: 14rem; height: 2.5rem; min-height: 2.5rem; margin: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.bi-run-again-row .btn-pill { height: 2.5rem; min-height: 2.5rem; margin: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; }
+.bi-run-again-go[disabled] { opacity: .85; cursor: progress; }
+.bi-spin { display: inline-block; width: .95em; height: .95em; box-sizing: border-box; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: bi-spin .75s linear infinite; }
+@keyframes bi-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .bi-spin { animation: none; border: 0; width: .55em; height: .55em; background: currentColor; } }
+.bi-run-row.bi-run-new > td, .bi-run-row.bi-run-new > th { background: var(--d-highlight); }
+.bi-run-row.bi-run-new > td:first-child { box-shadow: inset 3px 0 0 var(--d-accent); }
+.bi-run-superseded { display: block; font-size: .78rem; color: var(--d-muted); font-weight: 400; }
+.bi-run-dmsg .btn-pill { margin-left: .4rem; min-height: 2.25rem; }
+@media (max-width: 640px) {
+  .bi-run-again-row { flex-direction: column; gap: .4rem; }
+  .bi-run-again-row select, .bi-run-again-row .btn-pill { width: 100%; min-width: 0; min-height: 44px; height: auto; border-radius: var(--d-radius); justify-content: center; }
+}
+
 /* a phone (16 px gutters): filters stack, the table scrolls inside its wrap, the drawer is the whole screen */
 @media (max-width: 640px) {
   .bi-runs-filters { grid-template-columns: 1fr 1fr; }

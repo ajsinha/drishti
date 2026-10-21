@@ -114,8 +114,7 @@ server decides what each person may do with a run, and the drawer shows only tho
 | Action | What it does |
 |---|---|
 | **Open** | A report's run opens the report with `?run=<id>`: the visual is drawn from the stored result and a line says so. Any other run opens its result. |
-| **Re-run ▾ on the same data** | The same question on the same dates and data versions. When the result is still stored, it is **reused** at once. |
-| **Re-run ▾ on the newest data** | The same question with relative dates (this year, latest) worked out again. |
+| **Run again** (choose how in **Run again as**, then press the button) | *Same as before (as of D)*: the same question on the same dates and data versions; when the result is still stored it is **reused** at once and the drawer says *Done at once: reused the answer from <time>* with **Open result**. *With the latest data*: relative dates (this year, latest) worked out again. Changing the choice does nothing on its own. While the new run goes the button says *Running…* with a spinner (a still dot with reduced motion); the new run is highlighted at the top of the list, the drawer switches to it and follows it to Done or Failed, and the old run's row says *superseded by* the new run, with a link. |
 | **Cancel** | Stops a queued or running run. Its row says *Cancelled: cancelled by you*. |
 | **Export CSV** · **Export Excel** | The stored result as a file, your own version of it: nothing is computed again, masked cells stay masked (see [Export](#export)). |
 | **Promote…** | A model query's or SQL run's result to a dataset snapshot or a report on it, as a draft for review (see [Promote a run](#promote-a-run)). Offered only when the server says you may (`can.promote`). |
@@ -125,7 +124,7 @@ server decides what each person may do with a run, and the drawer shows only tho
 | **Schedule…** · **Edit** · **Pause** · **Remove** | See [Schedules](#schedules). |
 | **Run in background / Discard** | For a run waiting for your confirmation. |
 
-An expired run says when its result was removed, and offers both re-runs.
+An expired run says when its result was removed, and offers Run again.
 
 ## Sharing a run
 

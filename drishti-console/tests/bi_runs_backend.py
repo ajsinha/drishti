@@ -263,6 +263,12 @@ class RunsBackend(BiBackend):
                 r.update(reuse={"of": rid, "mode": "same"}, rerunOf=rid, progress=1.0, startedAt=iso(time.time()), finishedAt=iso(time.time()), actual=dict(old["actual"]))
                 self._event(r)
                 return 202, {"run": self.view_of(r)}
+            if body.get("data") == "same" and getattr(self, "reuse_of", None):          # the answer was there: given at once, with the run it was recorded as
+                was = self.runs[self.reuse_of]
+                r = self._new(old["title"], "reused", source=old["source"])
+                r.update(reuse={"of": was["id"], "mode": "same"}, rerunOf=rid, progress=1.0, startedAt=iso(time.time()), finishedAt=iso(time.time()), actual=dict(was["actual"]))
+                self._event(r)
+                return 200, {"run": self.view_of(r), "answer": answer()}
             r = self._new(old["title"], source=old["source"])
             r["rerunOf"] = rid
             return 202, {"run": self.view_of(r)}

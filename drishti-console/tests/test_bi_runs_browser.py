@@ -156,7 +156,8 @@ def test_the_runs_tab_lists_reuses_on_the_same_data_and_cancels(ctx, stack):
     page.wait_for_selector("[data-run-drawer]:not([hidden]) [data-run-drawer-state]")
     text = page.inner_text("[data-run-drawer]")
     assert "Estimate" in text and "actual 41 s" in text and "Delta statistics" in text and "DESK in (DESK-FX, DESK-FI)" in text
-    page.select_option('[data-run-act="rerun"]', "same")
+    page.select_option('[data-run-again-as]', "same")
+    page.click('[data-run-act="rerun"]')
     page.wait_for_function("document.querySelector('[data-runs-table]').innerText.includes('Reused')", timeout=10000)
     page.keyboard.press("Escape")
     # a second run, cancelled from its row's drawer
