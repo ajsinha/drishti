@@ -21,10 +21,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 
-/** The compliance contract with the record in the identity database (the default store). */
+/** The compliance contract with the record in the identity database (drishti.collab.store=jpa). */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
-        "drishti.identity.database-url=jdbc:sqlite:target/compliance-jpa-${random.uuid}/identity.db",
+        "drishti.collab.store=jpa", "drishti.identity.database-url=jdbc:sqlite:target/compliance-jpa-${random.uuid}/identity.db",
         "drishti.packs.overlay=target/compliance-jpa-overlay/added.yaml", "drishti.collab.limits.comments-per-minute=1000",
         "drishti.collab.limits.shares-per-minute=1000", "drishti.collab.limits.shares-per-day=1000", "drishti.collab.retention.keep-days=1",
         "drishti.collab.retention.interval=1h", "drishti.collab.inbox.poll=100ms"})

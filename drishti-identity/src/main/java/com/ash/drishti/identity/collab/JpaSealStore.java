@@ -46,4 +46,13 @@ public final class JpaSealStore implements Seal.Store {
             seals.save(e);
         });
     }
+
+    @Override
+    public java.util.Map<String, Seal> all() {
+        return tx.execute(s -> {
+            java.util.Map<String, Seal> out = new java.util.LinkedHashMap<>();
+            seals.findAll().forEach(e -> out.put(e.key, new Seal(e.count, e.hash)));
+            return out;
+        });
+    }
 }

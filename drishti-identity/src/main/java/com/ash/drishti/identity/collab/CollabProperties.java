@@ -25,7 +25,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * a default here and in {@code application.yaml}; {@code packs} overrides some of them per pack, by pack name in configuration.
  *
  * @param enabled shares, threads and the inbox are on
- * @param store {@code jpa} (the identity database, default) or {@code file}
+ * @param store {@code content} (the content store, every node of a cluster; default), or, one node only, {@code jpa} (the identity
+ *     database) or {@code file}
  * @param dir the file store's directory, and exports
  * @param consoleUrl the console's address for links in emails; empty turns email off
  * @param directory the people picker
@@ -51,7 +52,7 @@ public record CollabProperties(Boolean enabled, String store, String dir, String
 
     public CollabProperties {
         enabled = enabled == null || enabled;
-        store = store == null || store.isBlank() ? "jpa" : store.trim().toLowerCase();
+        store = store == null || store.isBlank() ? "content" : store.trim().toLowerCase();
         dir = dir == null || dir.isBlank() ? "./data/collab" : dir;
         consoleUrl = consoleUrl == null ? "" : consoleUrl.trim();
         directory = directory == null ? new Directory(null, null, null) : directory;
@@ -71,8 +72,14 @@ public record CollabProperties(Boolean enabled, String store, String dir, String
         snapshots = snapshots == null ? new Snapshots(null, null, null, null, null, null, null, null, null, null) : snapshots;
     }
 
+    /** The identity database ({@code store: jpa}). */
     public boolean jpa() {
-        return !"file".equals(store);
+        return "jpa".equals(store);
+    }
+
+    /** The content store ({@code store: content}, the default): every node of a cluster sees the same collaboration. */
+    public boolean content() {
+        return !"jpa".equals(store) && !"file".equals(store);
     }
 
     /** Whether {@code role} may be addressed as a group. */

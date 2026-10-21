@@ -78,9 +78,18 @@ public final class NoteFacade {
         String commentId = posted.comment().id();
         ids.lock();
         try {
-            long noteId = store.linkedNotes().stream().mapToLong(Long::longValue).max().orElse(0) + 1;
-            store.linkNote(noteId, commentId);
-            return note(p, noteId, store.thread(posted.threadId()).orElseThrow(), store.comment(commentId).orElseThrow());
+            for (int attempt = 0; ; attempt++) {
+                long noteId = store.linkedNotes().stream().mapToLong(Long::longValue).max().orElse(0) + 1;
+                try {
+                    store.linkNote(noteId, commentId);              // the content store refuses a number another node just took (DRS-5057)
+                } catch (DrishtiException e) {
+                    if (e.errorCode() == ErrorCode.CONTENT_CONFLICT && attempt < 20) {
+                        continue;
+                    }
+                    throw e;
+                }
+                return note(p, noteId, store.thread(posted.threadId()).orElseThrow(), store.comment(commentId).orElseThrow());
+            }
         } finally {
             ids.unlock();
         }

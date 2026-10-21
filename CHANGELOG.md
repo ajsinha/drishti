@@ -17,6 +17,17 @@
 
 ## Unreleased
 
+- **New: collaboration, notes, embed apps, pack switches, the audit trail, Sutra proposals and load history on every node of a cluster.** They moved
+  into the content store (docs/architecture/CONTENT_STORE.md section 9): one document per comment thread (its comments, sealed revision
+  chain, mentions, followers), shares, per-user inbox documents, outbox deliveries claimed by compare-and-set (sent once across nodes),
+  holds and seals; `admin/embed-apps/`, `admin/pack-state.json`; the audit trail as per-node day segments merged when read, each node's
+  lines hash-chained; `governance/proposals/` decided by compare-and-set; `loads/<pack>.json` (no announcement lost, a late notice sent once). Multi-document changes run as content transactions
+  (`TxContentStore`): buffered, version-checked, applied in order with an intent record under `system/tx/` that any node finishes after a
+  crash. Each store imports its old tables and files once (a marker under `system/imports/`; the old data is kept). Switches back, one
+  node only: `drishti.collab.store` (`jpa`, `file`), `drishti.audit.store`, `drishti.embed.store`, `drishti.packs.state-store` (`jpa`),
+  `drishti.governance.store`, `drishti.loads.store` (`file`). Two nodes editing the same item get one `409 DRS-5057`. The backup is now the store root. Options
+  for sharing UI-written configuration (`config/connectors`, `config/bi`) are listed for a decision (section 10); nothing built.
+
 - **Changed: Raw document opens on the page, in a viewer, not as raw JSON in a new tab.** In a number's "over time" window, *Where it comes from … Raw document* now opens a dialog with the document as a foldable tree (theme colours, the document's key order, long lists cut at 50 with *Show all*), the field's path highlighted and scrolled to, Search (keys and values), Copy JSON / Copy node and Download (`<kind>-<id>-<date>.json`). Masked values stay `•••` as the server sends them; Esc closes it and returns focus; full screen on a phone. F9's drawer draws the same tree and opens the viewer. The `/api/raw/...` address still works (Ctrl/middle click). No other raw-JSON links were found in the console (provenance, Explain and the history page link none). Test: `tests/test_raw_viewer_browser.py`.
 
 - **Fixed: the console set a healthy server aside because a live stream broke** (`server ... set aside after 2 failed requests in a row: stream broke (ReadError)`, then `console moved from ... to ...`, again and again). A stream that opened and then ended (a server restart, an idle or proxy timeout) no longer counts toward `backend.fail_after`; the console checks that server's health at once, and only a failed check or request counts. A session that moved because its server restarted returns to it once it has been healthy for a minute, instead of staying moved for good (`core/cluster.py`, `core/backend.py`; docs/admin/NET.md, DRISHTI_NET.md). After such a move a screen-designer draft saved on the old server showed `DRS-5006: no design`: drafts and other per-user content are kept on the node that saved them until the central content store.

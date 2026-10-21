@@ -70,4 +70,9 @@ public final class FileSealStore implements Seal.Store {
             appending.unlock();
         }
     }
+
+    @Override
+    public Map<String, Seal> all() {
+        return Map.copyOf(seals);
+    }
 }

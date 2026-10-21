@@ -304,6 +304,12 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_ACCESS_LOG` | `drishti.access-log.enabled` | `true` | Record who looked at what (Admin → Access). |
 | `DRISHTI_COLLAB_ENABLED` | `drishti.collab.enabled` | `true` | Share with a note, the directory and the inbox ([COLLABORATION.md](../architecture/COLLABORATION.md)). |
 | `DRISHTI_COLLAB_DIR` | `drishti.collab.dir` | `./data/collab` | Where the file store keeps shares and inbox rows (`drishti.collab.store: file`), and exports. |
+| (no variable) | `drishti.collab.store` | `content` | Where threads, notes, shares, the inbox, the outbox, holds and seals are kept: `content` (the content store, every node of a cluster; the database tables and `drishti.collab.dir` files are imported once), or one node only `jpa` (the identity database) or `file`. [CONTENT_STORE.md section 9](../architecture/CONTENT_STORE.md). |
+| (no variable) | `drishti.audit.store` | `content` | The audit trail: `content` (per-node day segments in the content store, merged when read; `drishti_audit` imported once) or `jpa` (the identity database, one node). |
+| (no variable) | `drishti.embed.store` | `content` | Embed applications: `content` (`admin/embed-apps/`, `drishti_embed_app` imported once) or `jpa`. |
+| (no variable) | `drishti.packs.state-store` | `content` | Packs switched off in Admin: `content` (`admin/pack-state.json`, `drishti_pack_state` imported once) or `jpa`. |
+| (no variable) | `drishti.loads.store` | `content` | Load history: `content` (`loads/<pack>.json`, each pack's `drishti.loads.dir` file imported on first read) or `file` (one node). |
+| (no variable) | `drishti.governance.store` | `content` | Sutra proposals: `content` (`governance/proposals/`, the `drishti.governance.dir` folder imported once) or `file` (one node). |
 | `DRISHTI_CONSOLE_URL` | `drishti.collab.console-url` | empty | The console's address, put in front of `/share/sh_…` in the links shares carry; email stays off while it is empty. |
 | `DRISHTI_MAIL_FROM` | `drishti.collab.email.from` | `drishti@localhost` | The From address of collaboration email. |
 | `DRISHTI_MASK_COPIES` | `drishti.security.mask-copies` | `false` | Also scrub exact copies of a masked value inside other text of the same document. |
@@ -338,7 +344,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_STUDIO_SAVE` | `drishti.rachana.studio-save` | `false` | Let Sutra Studio save files (authors only). |
 | `DRISHTI_SUTRA_REVIEW` | `drishti.governance.enabled` | `true` | A Studio save is a proposal an approver makes live. |
 | `DRISHTI_SUTRA_FOUR_EYES` | `drishti.governance.four-eyes` | `true` | Nobody approves their own proposal (with security on). |
-| `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `./data/governance` | Where proposals are kept. |
+| `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `./data/governance` | Where proposals are kept with `drishti.governance.store: file`; with `content` (the default) the folder is imported once and left in place. |
 | `DRISHTI_DATA_DIR` | `drishti.data.dir` | `./data` | The data folder: the umbrella every runtime path below defaults under (see [The data folder](#the-data-folder-and-the-config-folder)). |
 | `DRISHTI_STORE_FILE` | `drishti.store.file` | `./config/store/store.yaml` | The content store's settings file ([The content store](#the-content-store-configstorestoreyaml)); a missing file means the filesystem store under the data folder. |
 | `DRISHTI_STORE_ROOT` | `drishti.store.root` | empty | The filesystem content store's root, over the file's `filesystem.root` (empty: the file's, else `<data folder>/fstore`). |
@@ -1197,8 +1203,8 @@ Sample documents are never logged; deleting a Design deletes its samples at once
 
 ### The content store: `config/store/store.yaml`
 
-User content that every node of a Drishti*net cluster must reach (Build workbench Designs today; BI items, workspaces, runs, shares,
-schedules and settings next) is kept in the **content store** ([CONTENT_STORE.md](../architecture/CONTENT_STORE.md)). Its settings are
+User content that every node of a Drishti*net cluster must reach (Build workbench Designs; comment threads, notes, shares, the inbox and
+outbox, legal holds; embed apps, pack switches, the audit trail and Sutra proposals; BI items, workspaces and runs next) is kept in the **content store** ([CONTENT_STORE.md](../architecture/CONTENT_STORE.md)). Its settings are
 in their own file, named by `drishti.store.file` (`DRISHTI_STORE_FILE`, default `./config/store/store.yaml`), never in
 `application.yaml`. A missing file or key means the default. Ready-made variants: `config/store.examples/` (`laptop.yaml`,
 `cluster-nfs.yaml`, `postgres.yaml`, `s3.yaml`).

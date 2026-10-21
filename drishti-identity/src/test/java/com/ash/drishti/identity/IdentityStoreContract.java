@@ -60,6 +60,11 @@ abstract class IdentityStoreContract {
         props.put("drishti.identity.iterations", "1000");
         props.put("drishti.identity.seed-admin", "true");
         props.put("drishti.alerts.keep", "60");
+        props.put("drishti.store.root", "target/identity-contract-" + System.nanoTime() + "/fstore");
+        props.put("drishti.collab.store", "jpa");                  // this contract is the database stores'; the content stores have their own tests
+        props.put("drishti.audit.store", "jpa");
+        props.put("drishti.embed.store", "jpa");
+        props.put("drishti.packs.state-store", "jpa");
         props.put("drishti.identity.users-file", "target/no-legacy-" + System.nanoTime() + "/users.json");
         c.getEnvironment().getPropertySources().addFirst(new MapPropertySource("test", props));
         c.registerBean(RoleNames.class, () -> RoleNames.of(Set.of("admin", "trader", "risk")));

@@ -480,7 +480,7 @@ drishti:
     queue: 100000                    # events waiting to be written at most; beyond it they are dropped and counted
   collab:                            # share with a note, comment threads, the inbox (docs/architecture/COLLABORATION.md)
     enabled: ${DRISHTI_COLLAB_ENABLED:true}
-    store: jpa                       # jpa: the identity database (default) | file: one server only, refused beside PostgreSQL
+    store: content                   # content: the content store, every cluster node (default) | jpa: the identity database, one node | file: one server only
     dir: ${DRISHTI_COLLAB_DIR:${drishti.data.dir}/collab}   # the file store, and exports
     console-url: ${DRISHTI_CONSOLE_URL:}       # links in emails and shares; empty turns email off
     directory:                       # the people picker

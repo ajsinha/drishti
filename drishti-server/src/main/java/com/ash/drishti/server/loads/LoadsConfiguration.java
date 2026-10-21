@@ -42,8 +42,10 @@ import org.springframework.context.annotation.Configuration;
 public class LoadsConfiguration {
 
     @Bean
-    public LoadStore loadStore(LoadsProperties props) {
-        return new LoadStore(Path.of(props.dir()), props.keep());
+    public LoadStore loadStore(LoadsProperties props, com.ash.drishti.identity.content.ContentStore content,
+            org.springframework.core.env.Environment env) {
+        boolean files = "file".equalsIgnoreCase(env.getProperty("drishti.loads.store", "content").trim());
+        return new LoadStore(Path.of(props.dir()), props.keep(), files ? null : content);
     }
 
     @Bean

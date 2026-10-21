@@ -15,7 +15,7 @@
 -->
 # The content store: user content every node can reach
 
-Status: **built (first user: Build workbench Designs), Unreleased.** Front-loaded from 2.7.0 item 0. Related:
+Status: **built (Designs; collaboration and notes; embed apps, pack switches and audit; governance proposals; load history), Unreleased.** Front-loaded from 2.7.0 item 0. Related:
 [DATABASE.md](DATABASE.md) (the one Drishti database), [DRISHTI_NET.md](DRISHTI_NET.md) (several servers),
 [CONFIGURATION.md](../admin/CONFIGURATION.md) (`config/store/store.yaml`).
 
@@ -147,20 +147,23 @@ concurrent saves give one conflict; owners stay isolated) and the import (idempo
 Already shared between nodes, not through this store: users, roles and API tokens (IdentitySync); `drishti_preference` (settings,
 saved searches, layouts, pivots, workspaces) and sessions (StateSync, ReplicatedPreferences).
 
-The ordered migration list (the inventory of content kept on one node only, 2026-10-21). Items 1 to 3 are done; the rest move one at a
-time behind the same interface:
+The ordered migration list (the inventory of content kept on one node only, 2026-10-21). Items marked done are in the content store
+(sections 5, 9 and 10); the rest move one at a time behind the same interface:
 
 1. **Designer drafts** (Designs): done, section 5. Versions, About, form and share live inside the record; ids are random 12-hex.
 2. **BI workspaces and items:** done, section 9. `BiStore`, the `drishti_bi_*` tables (workspace, member, item, version, revision, event,
    user_item, usage, setting).
 3. **BI runs:** done, section 9. The `drishti_bi_run*` rows, and results and snapshots under `<data>/bi-runs`.
-4. **Notes:** `drishti_note`.
-5. **Collaboration:** threads, comments, mentions, follows, shares, inbox, outbox, holds and seals, access (JPA or `<data>/collab`).
+4. **Notes:** done (section 10.2). `drishti_note` is only the source of the one-time note import; notes live in comment threads.
+5. **Collaboration:** done (section 10.3): threads, comments, revisions, mentions, follows, note links, shares and recipients, inbox,
+   outbox, holds and seals. Still per node: the access log (`drishti_access`, who read what), next.
 6. **Alerts and monitors:** NOT copied, on purpose (each node evaluates its own).
-7. **Embed apps** (`drishti_embed_app`), **pack switches** (`drishti_pack_state`), **audit** (`drishti_audit` and `audit.jsonl`).
-8. **Files:** governance proposals (`<data>/governance`); designer bound files (`<data>/dev-sutras`); report outputs
-   (`<data>/reports`); load history (`<data>/loads`); pack admin state (`<data>/packs/*`, `uninstalled`, `admin/bi-hidden.txt`);
-   UI-written config (`config/connectors`, `config/bi`).
+7. **Embed apps** (`drishti_embed_app`), **pack switches** (`drishti_pack_state`), **audit** (`drishti_audit` and `audit.jsonl`):
+   done (section 10.4).
+8. **Files:** governance proposals (`<data>/governance`): done (section 10.5); load history (`<data>/loads`): done (section 10.6).
+   Next, in this order: report outputs (`<data>/reports`), designer bound files (`<data>/dev-sutras`), pack admin state (`<data>/packs/*`, `uninstalled`,
+   `admin/bi-hidden.txt`; a pack jar stays a local file materialised from the store, the store being the truth). UI-written config
+   (`config/connectors`, `config/bi`): design only, section 10.
 9. **BI store Parquet:** a derived cache. Never migrated.
 
 Then: a read cache driven by `changes`, push for Postgres and S3, the root in the Drishti*net capability digest (section 6), and
@@ -235,3 +238,115 @@ the import (once; a deleted item stays deleted; nothing counted twice; the rows 
 A has its status and result read on B (never across signatures); a dead node's run adopted by exactly one of two nodes through the lease and
 finished; renew only by the holder and a loser's late save dropped; a share made on A seen on B; a schedule claimed once; the import of rows
 and the result folder. `RunClusterTest` runs its two servers on one content store root.
+
+## 10. Collaboration, notes and the admin data
+
+Each moved store keeps its interface, so the services above it (rights, limits, retention, holds, seals) are unchanged; a switch per
+type names the old store for one node only. At start each runs a **one-time import** of the old rows and files: every item keeps its
+id, number and hashes, an item already in the store is skipped, a marker `system/imports/<what>.json` records the import (so
+something deleted later does not come back), and the old tables and files are left in place.
+
+### 10.1 Several documents, one change: `TxContentStore`
+
+Collaboration writes several documents for one action (a share, its recipients' indexes, their inbox rows; a comment, its index
+entries). Two choices were open: one document per aggregate, or ordered compare-and-set writes with a recoverable intent record. Both
+are used:
+
+- **One document per thread** (`collab/threads/<id>.json`: the thread, its comments, the sealed revision chain, mentions, followers and
+  note links). A reply is one compare-and-set of that document, so the hash chain can never fork between two nodes, and a conflict is
+  retried on a fresh read (the work has no outside effect).
+- **Transactions across documents** (`com.ash.drishti.identity.content.TxContentStore`, what `CollabTx` runs on). Inside `run` every
+  write is buffered and reads see it; a failure writes nothing. The commit checks each document still has the version the work read
+  (else `409 DRS-5057`, nothing written), writes an **intent record** `system/tx/<time>-<uuid>.json` holding every write (key, expected
+  version, bytes) when there is more than one, applies the writes in order (each a compare-and-set), and removes the record. When
+  another node wins one of the writes, the writes already applied are put back and the commit is `409 DRS-5057`. A process that dies
+  mid-commit leaves the record; `recover()` (at start and every `drishti.identity.refresh-seconds`, on any node) rolls it forward after
+  60 s: a write whose document still has the expected version is applied, one already there is skipped, one changed since by someone
+  else is left out and logged.
+- Index documents (`collab/entities/…`, `collab/comments/…`, `collab/mentions/…`, `collab/shares-sent/…`, `collab/shares-to/…`,
+  `collab/inbox-seq/…`) are written in the same transaction, and readers check every entry against the document it points to, so an
+  index without its document changes nothing.
+- **Sequences** (inbox rows, outbox deliveries, holds, proposals) are counter documents (`…/counters/<name>`) advanced by
+  compare-and-set outside any transaction: cluster-wide, never reused, never rolled back (a failed transaction leaves a gap).
+
+### 10.2 Notes
+
+Notes already live in comment threads (the deprecated `/notes` API is a facade over them), so they moved with collaboration. A note's
+number is a create of `collab/note-links/<number>`: two nodes adding a note at once cannot take one number (the loser takes the next).
+
+### 10.3 Collaboration (`drishti.collab.store`: `content`, default; `jpa` or `file` for one node)
+
+| Key | Holds |
+|---|---|
+| `collab/threads/<thread>.json` | the thread document (above) |
+| `collab/entities/<kind>/<sha1 of entity>/<thread>` | an entity's threads |
+| `collab/comments/<comment>` | the comment's thread |
+| `collab/mentions/<sha1 of target>/<comment>` | who was mentioned where |
+| `collab/note-links/<note, 19 digits>` | legacy note number to comment |
+| `collab/shares/<share>.json` | a share and its recipients |
+| `collab/shares-sent/<sha1 of sender>/<share>`, `collab/shares-to/<sha1 of user>/<share>` | sent and received lists |
+| `collab/inbox/<sha1 of user>.json` | a user's inbox rows (newest `inbox.keep`), one read for the bell |
+| `collab/inbox-seq/<seq, 19 digits>` | the user of each row, for another node's live hub (`after(seq)`) |
+| `collab/outbox/<seq, 19 digits>.json` | one delivery; a claim is a compare-and-set to `sending` with a lease, so two nodes' dispatchers send it once; an expired lease makes it due again |
+| `collab/holds/<id, 19 digits>.json` | a legal hold; a release is a compare-and-set |
+| `collab/seals/<seal key>-<hash>.json` | tamper-evidence seals (thread heads, comment rows, holds) |
+| `collab/counters/inbox`, `outbox`, `holds` | the sequences |
+
+The import reads the identity database's collaboration tables (marker `system/imports/collab-jpa.json`) and, when present, the files
+under `drishti.collab.dir` (`collab-file.json`). The revision chains keep their hashes, so `GET /admin/collab/verify` still holds.
+
+### 10.4 Admin data in the identity database
+
+| Data | Switch | Key |
+|---|---|---|
+| Embed apps (`drishti_embed_app`) | `drishti.embed.store` (`content` / `jpa`) | `admin/embed-apps/<id>.json`; a save is a compare-and-set against the version read, so two administrators editing one application on two nodes get one `409 DRS-5057` |
+| Pack switches (`drishti_pack_state`) | `drishti.packs.state-store` (`content` / `jpa`) | `admin/pack-state.json` (every pack's state; nodes re-read it every refresh interval) |
+| Audit (`drishti_audit`, and `audit.jsonl` through the earlier import into it) | `drishti.audit.store` (`content` / `jpa`) | `audit/<yyyy-MM-dd>/<node>-<nnnn>.jsonl` and `audit-heads/<node>.json` |
+
+**Audit is append-only**, so no two nodes write one document: each node appends to its own per-day segments (a new segment past
+512 KB), one JSON line per event, each chained by hash to that node's previous line; `audit-heads/<node>.json` holds the node's count
+and newest hash, so removed newest lines show. A read merges every node's segments newest first; the compliance verifier walks each
+node's chain. The node is `drishti.net.node-id` (else host and port). The table's rows are imported once (marker
+`system/imports/audit-jpa.json`, written first so only one node copies).
+
+### 10.5 Governance proposals (`drishti.governance.store`: `content`, default; `file` for one node)
+
+`governance/proposals/P-NNNNNN.json`, numbered from `governance/counters/proposals` (raised past the imported numbers), read from the
+store every time. A decision is a compare-and-set: two approvers on two nodes cannot both decide one proposal (the second gets
+`PROPOSAL_CONFLICT`). The folder `<data>/governance` is imported once (`system/imports/governance-files.json`).
+
+### 10.6 Load history (`drishti.loads.store`: `content`, default; `file` for one node)
+
+`loads/<pack>.json` (the announcements and late flags of one pack), read every time and changed by compare-and-set with a retry on a
+fresh read, so two nodes receiving announcements at once lose none, a batch announced on one node is a duplicate on the other, and
+a late notice goes out once. A pack's old file `<data>/loads/<pack>.json` is imported the first time the pack is read (the document's
+existence is the marker) and left in place. Per-pack overrides (`<data>/loads/config/<pack>.yaml`) are configuration: section 10.
+
+### 10.7 Left on each node, on purpose
+
+Alerts and monitors (each node evaluates its own); the BI store's Parquet (a derived cache); users, roles, tokens and preferences
+(IdentitySync and StateSync already share them).
+
+### 10.8 Backup
+
+The content store root (`data/fstore`, or the `drishti_content` table, or the bucket) is now the backup of everything above, together
+with the identity database for what is still there (users, roles, tokens, preferences, access log). Copy it with the server stopped,
+or take a filesystem snapshot: every item is one file written by rename, so a copy taken while it runs holds whole items, but a
+multi-document change may be half in (its intent record under `system/tx/` is copied too, and the next start finishes it).
+
+## 11. UI-written configuration: design only (needs a decision)
+
+Admin writes `config/connectors/*.yaml` (connector edits) and `config/bi/*` (BI settings). Configuration files are the operator's
+(GitOps, reviewed, deployed with the release), so moving them is a decision for the user, not a migration. The options:
+
+1. **Keep files, one writer.** Admin edits are accepted on one designated node (the Drishti*net leader) and refused elsewhere with a
+   link to it; the operator's deployment copies the files to every node. Simple; edits wait for a deploy to reach other nodes.
+2. **Overlay in the content store.** The files stay the base; an Admin edit is an overlay document `config-overlay/connectors/<name>.yaml`
+   (compare-and-set, audited) applied on every node over the file, with "Export to file" for GitOps. Every node sees edits at once; the
+   effective config is two layers.
+3. **Content store is the truth for UI-managed config.** The file is imported once and then the store owns it; files become an export.
+   Cleanest on a cluster; changes the operator's GitOps workflow.
+4. **Shared config folder.** `config/` on the same shared mount as the store. No code; every node must restart or watch to see a change,
+   and two writers can still race (needs the same lock files the filesystem store uses).
+
+Recommended: option 2 (keeps GitOps, gives every node the edit). Nothing is built until the user chooses.

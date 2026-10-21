@@ -31,6 +31,31 @@ public final class JpaAuditLog implements AuditLog {
 
     private final com.ash.drishti.identity.collab.Seal.Store seals;
 
+    /** When set ({@code drishti.audit.store=content}, the default), events are kept in the content store instead of this table. */
+    private volatile ContentAuditLog content;
+
+    /** Keeps the trail in the content store from now on (CONTENT_STORE.md section 9); the table's rows are imported once beforehand. */
+    public void useContent(ContentAuditLog c) {
+        this.content = c;
+    }
+
+    /** Copies every row of the table, oldest first, into {@code to}; returns how many. */
+    public int copyTo(ContentAuditLog to) {
+        int n = 0;
+        long after = 0;
+        for (;;) {
+            List<AuditEventEntity> page = audit.findByIdGreaterThanOrderByIdAsc(after, PageRequest.of(0, 500));
+            if (page.isEmpty()) {
+                return n;
+            }
+            for (AuditEventEntity e : page) {
+                after = e.id;
+                to.recordAt(new Event(e.at, e.actor, e.action, e.subject, e.detail));
+                n++;
+            }
+        }
+    }
+
     public JpaAuditLog(IdentityRepositories.Audit audit) {
         this(audit, null);
     }
@@ -60,6 +85,9 @@ public final class JpaAuditLog implements AuditLog {
 
     /** What the audit trail's seals say is wrong (empty when it holds); rows from before sealing began are not judged. */
     public List<String> verify(int max) {
+        if (content != null) {
+            return content.verify(max);
+        }
         List<String> problems = new java.util.ArrayList<>();
         if (seals == null) {
             return problems;
@@ -100,6 +128,14 @@ public final class JpaAuditLog implements AuditLog {
 
     @Override
     public void record(String actor, String action, String subject, String detail) {
+        if (content != null) {
+            try {
+                content.record(actor, action, subject, detail);
+            } catch (RuntimeException ex) {
+                LOG.error("audit write failed for {} {}", action, subject, ex);
+            }
+            return;
+        }
         AuditEventEntity e = new AuditEventEntity();
         e.at = Instant.now();
         e.actor = actor == null ? "" : actor;
@@ -116,6 +152,10 @@ public final class JpaAuditLog implements AuditLog {
 
     /** Records an event that happened earlier (importing an older audit file). */
     void recordAt(Event ev) {
+        if (content != null) {
+            content.recordAt(ev);
+            return;
+        }
         AuditEventEntity e = new AuditEventEntity();
         e.at = ev.at();
         e.actor = ev.actor();
@@ -127,6 +167,9 @@ public final class JpaAuditLog implements AuditLog {
 
     @Override
     public List<Event> recent(int limit, String subject) {
+        if (content != null) {
+            return content.recent(limit, subject);
+        }
         PageRequest page = PageRequest.of(0, Math.max(1, limit));
         List<AuditEventEntity> rows = subject == null || subject.isBlank() ? audit.findAllByOrderByIdDesc(page)
                 : audit.findBySubjectOrActorOrderByIdDesc(subject, subject, page);

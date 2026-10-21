@@ -37,6 +37,16 @@ public interface CollabTx {
         };
     }
 
+    /** The content store: one multi-document transaction ({@link com.ash.drishti.identity.content.TxContentStore#run}). */
+    static CollabTx of(com.ash.drishti.identity.content.TxContentStore store) {
+        return new CollabTx() {
+            @Override
+            public <T> T run(Supplier<T> work) {
+                return store.run(work);
+            }
+        };
+    }
+
     /** Files: no transaction exists, so work is serialised and a failure leaves what was written (each file write is atomic). */
     static CollabTx serial() {
         ReentrantLock lock = new ReentrantLock();
