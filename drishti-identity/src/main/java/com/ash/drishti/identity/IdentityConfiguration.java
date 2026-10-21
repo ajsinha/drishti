@@ -163,12 +163,31 @@ public class IdentityConfiguration {
         }
     }
 
-    /** Business intelligence (Rupaka): workspaces, items, versions and marks in the identity database. */
+    /**
+     * Business intelligence (Rupaka): workspaces, items, versions and marks. {@code drishti.bi.store: content} (the default) keeps them in the content
+     * store, which every node of a cluster reaches, importing the identity database's {@code drishti_bi_*} rows once; {@code jpa} keeps them in
+     * this node's identity database (docs/architecture/CONTENT_STORE.md section 9).
+     */
     @Bean
     public com.ash.drishti.identity.bi.BiStore biStore(IdentityRepositories.BiWorkspaces workspaces, IdentityRepositories.BiMembers members,
             IdentityRepositories.BiItems items, IdentityRepositories.BiVersions versions, IdentityRepositories.BiRevisions revisions,
-            IdentityRepositories.BiEvents events, IdentityRepositories.BiUserItems marks, IdentityRepositories.BiUsages usage, IdentityRepositories.BiSettings settings, TransactionTemplate identityTransactions) {
-        return new com.ash.drishti.identity.bi.BiStore(workspaces, members, items, versions, revisions, events, marks, usage, settings, identityTransactions);
+            IdentityRepositories.BiEvents events, IdentityRepositories.BiUserItems marks, IdentityRepositories.BiUsages usage, IdentityRepositories.BiSettings settings,
+            TransactionTemplate identityTransactions, com.ash.drishti.identity.content.ContentStore content, org.springframework.core.env.Environment env) {
+        com.ash.drishti.identity.bi.JpaBiStore jpa = new com.ash.drishti.identity.bi.JpaBiStore(workspaces, members, items, versions, revisions, events, marks,
+                usage, settings, identityTransactions);
+        String kind = env.getProperty("drishti.bi.store", "content").trim().toLowerCase(java.util.Locale.ROOT);
+        if ("jpa".equals(kind)) {
+            return jpa;
+        }
+        if (!"content".equals(kind)) {
+            throw new IllegalStateException("drishti.bi.store is '" + kind + "': use content (the default) or jpa");
+        }
+        String node = env.getProperty("drishti.net.node-id", "");
+        com.ash.drishti.identity.bi.ContentBiStore store = new com.ash.drishti.identity.bi.ContentBiStore(content,
+                node.isBlank() ? com.ash.drishti.identity.content.ContentStoreNodes.localName(env.getProperty("server.port", "")) : node,
+                org.springframework.boot.convert.DurationStyle.detectAndParse(env.getProperty("drishti.bi.store-list-ttl", "1s")).toMillis());
+        com.ash.drishti.identity.bi.BiImport.fromDatabase(jpa, store);
+        return store;
     }
 
     @Bean
