@@ -30,22 +30,33 @@ import java.util.Map;
  * @param weights peer choice weights: {@code latency} (how much a peer's latency counts against the stable choice by entity id)
  * @param userState {@code replicate} (saved searches, layouts and pivots written on one node are copied to the others) or {@code off}
  *     (state stays on the node it was written on, as with one shared identity database)
+ * @param joinWait longest a read that no source here holds waits, on a node still joining, for its peers' first digests (2 s); then it is
+ *     answered from the peers, or {@code 502 DRS-5052} "still joining", never {@code 404 DRS-1001} (SOAK3-01)
+ * @param joinGrace longest a node counts as joining after it joined (30 s): when its peers' digests have not all come by then (every peer
+ *     down), it answers as a node alone does
  */
 public record RoutingSettings(Duration forwardTimeout, Duration scatterBudget, Duration suggestBudget, int maxHops, Map<String, Double> weights,
-        String userState, Duration linkBudget) {
+        String userState, Duration linkBudget, Duration joinWait, Duration joinGrace) {
 
     public static final RoutingSettings DEFAULTS = new RoutingSettings(Duration.ofSeconds(5), Duration.ofSeconds(3), Duration.ofMillis(150), 1,
-            Map.of("latency", 1.0), "replicate", Duration.ofSeconds(1));
+            Map.of("latency", 1.0), "replicate", Duration.ofSeconds(1), Duration.ofSeconds(2), Duration.ofSeconds(30));
 
     public RoutingSettings {
         weights = weights == null ? Map.of() : Map.copyOf(weights);
         userState = userState == null || userState.isBlank() ? "replicate" : userState;
         linkBudget = linkBudget == null ? Duration.ofSeconds(1) : linkBudget;
+        joinWait = joinWait == null ? Duration.ofSeconds(2) : joinWait;
+        joinGrace = joinGrace == null ? Duration.ofSeconds(30) : joinGrace;
+    }
+
+    public RoutingSettings(Duration forwardTimeout, Duration scatterBudget, Duration suggestBudget, int maxHops, Map<String, Double> weights,
+            String userState, Duration linkBudget) {
+        this(forwardTimeout, scatterBudget, suggestBudget, maxHops, weights, userState, linkBudget, null, null);
     }
 
     public RoutingSettings(Duration forwardTimeout, Duration scatterBudget, Duration suggestBudget, int maxHops, Map<String, Double> weights,
             String userState) {
-        this(forwardTimeout, scatterBudget, suggestBudget, maxHops, weights, userState, null);
+        this(forwardTimeout, scatterBudget, suggestBudget, maxHops, weights, userState, null, null, null);
     }
 
     public boolean forwarding() {

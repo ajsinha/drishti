@@ -341,6 +341,21 @@ public final class NetRouting {
         return tableFor(p).kindOfMnemonic(code);
     }
 
+    /** True while this node is still joining the cluster and does not know yet what its peers hold ({@link DigestService#joining()}). */
+    public boolean joining() {
+        return digests.joining();
+    }
+
+    /**
+     * Waits, on a node still joining (SOAK3-01), for its peers' first digests: routing.yaml's {@code join-wait}, never more than half the
+     * {@code forward-timeout}, so the request still has time to go to the peer. True when it is no longer joining.
+     */
+    public boolean awaitJoined() {
+        var r = net.config().routing();
+        java.time.Duration half = r.forwardTimeout().dividedBy(2);
+        return digests.awaitJoined(r.joinWait().compareTo(half) < 0 ? r.joinWait() : half);
+    }
+
     public NetService net() {
         return net;
     }

@@ -168,6 +168,14 @@ A server joins only once it is ready (since the 2.6.5 soak): its web server answ
 last saw it, so a restarting node is never routed to before its port opens (before, it joined 12 to 19 s early and its peers got
 `ConnectException`).
 
+A node that has just joined is *joining* until it has its peers' digests, usually a few tenths of a second (since the 2.6.6 soak 3,
+SOAK3-01). Meanwhile a read of something none of its own sources holds waits for them, up to routing.yaml's `join-wait` (2 s), and is
+then answered from the peer; if they are still not in, the answer is `502 DRS-5052` "this node is still joining Drishti*net …; try again
+in a moment", which the console retries once on another server. It never says "no source holds" (`404 DRS-1001`) for what a peer may
+hold. A node with no seeds and no saved members (a single server, the first node) is never joining. The log line is
+`net: node n-1ace3ceb60 has joined: it has its peers' digests (2), 270 ms after joining`, and Admin → Health → Drishti*net says
+`state: joining` until then.
+
 **Step 4 · check.** On any node, **Admin → Net → Members** lists the three, each `alive`, with its version, tags and the latency this node
 measured to it. From a terminal (an administrator's token in `DRISHTI_TOKEN`), `drishti.py net members --server http://192.168.1.20:18784` prints the same
 table: one line per member with its node id (this node marked), state, address, version, tags, the latency this node measured and its
@@ -482,6 +490,8 @@ Routing's traffic, and in the metrics `drishti_net_forwarded_total{peer,kind,out
 | `scatter-budget` | `3s` | Longest a peer's share of a scattered search may take |
 | `suggest-budget` | `150ms` | The same for type-ahead |
 | `link-budget` | `1s` | Longest a view waits for a linked entity that only a peer holds (this node's own sources: `drishti.graph.link-budget`, 40 ms) |
+| `join-wait` | `2s` | Longest a read that nothing on this node holds waits, while the node is still joining, for its peers' digests; then `502 DRS-5052` "still joining" (never `404`). At most half of `forward-timeout`; `0s`: answer at once |
+| `join-grace` | `30s` | Longest a node counts as joining after it joined: with every peer down it then answers as a node alone does. `0s`: never joining (the behaviour before 2.6.6) |
 | `max-hops` | `1` | `0` switches forwarding off (gossip and digests only) |
 | `weights.latency` | `1.0` | How much latency counts when choosing between peers (steps of 10 ms times the weight; `0`: by the entity's hash only) |
 | `user-state` | `replicate` | Saved searches, layouts, pivots and console sign-in sessions copied to the other nodes, or `off` |

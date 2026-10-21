@@ -54,6 +54,14 @@ public final class NetHealth {
         }
     }
 
+    private volatile java.util.function.BooleanSupplier joining = () -> false;
+
+    /** Tells whether the node is still joining (it has not had its peers' first digests; SOAK3-01), for the summary's {@code state}. */
+    public NetHealth joining(java.util.function.BooleanSupplier j) {
+        this.joining = j == null ? () -> false : j;
+        return this;
+    }
+
     private double count(MemberState s) {
         return net.node().map(n -> n.table().entries().stream().filter(m -> m.state() == s).count()).orElse(0L);
     }
@@ -64,6 +72,8 @@ public final class NetHealth {
         out.put("enabled", net.config().enabled());
         out.put("running", net.running());
         out.put("nodeId", net.nodeId());
+        // joining: a member that does not know yet what its peers hold (a read nothing here holds waits, then says DRS-5052, never 404)
+        out.put("state", !net.config().enabled() ? "off" : joining.getAsBoolean() ? "joining" : net.running() ? "member" : "not joined");
         Map<String, Long> states = new LinkedHashMap<>();
         for (MemberState s : MemberState.values()) {
             states.put(s.wire(), (long) count(s));

@@ -59,6 +59,9 @@ class Stand:
             return httpx.Response(503, json={"code": "DRS-5003", "detail": "service unavailable"})
         if mode == "peer-down":                       # the server answers: the node that holds the data is down
             return httpx.Response(502, json={"code": "DRS-5052", "detail": "the node drishti-c that holds trade failed reading trade/MX-1"})
+        if mode == "joining":                         # just rejoined: it has not heard from its peers yet (SOAK3-01)
+            return httpx.Response(502, json={"code": "DRS-5052", "detail": "no source here holds trade/MX-1, and this node is still joining "
+                                             "Drishti*net and does not know yet which nodes hold trade; try again in a moment"})
         if mode == "peer-history":                    # histories while the node that holds the data dies or restarts (SOAK-02)
             if request.url.params.get("n") == "1":
                 return httpx.Response(504, json={"code": "DRS-1014", "detail": "the node drishti-c did not answer the history of trade/MX-1"})
@@ -142,6 +145,24 @@ def test_a_history_about_another_node_never_sets_aside_the_server_that_answered(
             assert e.value.status in (502, 504) and "drishti-c" in e.value.detail
     assert p.entries[A].healthy and p.current() == A and not p.snapshot()["failovers"]
     assert {b for b, _, _ in stand.calls} == {A}
+
+
+def test_a_read_on_a_node_still_joining_is_tried_once_on_another_server_without_setting_it_aside(tmp_path):
+    # SOAK3-01: a node just restarted answers DRS-5052 "still joining" for what only its peers hold; another server knows
+    stand, p = Stand(), pool(tmp_path, f"{A},{B}")
+    c = client(stand, p)
+    stand.mode[A] = "joining"
+    for _ in range(3):
+        assert run(c._get("/views/trade/MX-1"))["served_by"] == B
+    assert p.entries[A].healthy and p.current() == A and not p.snapshot()["failovers"]
+    stand.calls.clear()
+    with pytest.raises(BackendError):                  # a write is never tried elsewhere
+        run(c._send("POST", "/views/trade/MX-1", None))
+    assert {b for b, m, _ in stand.calls if m == "POST"} == {A}
+    stand.mode[B] = "joining"                          # both joining: the answer is the 502, said once
+    with pytest.raises(BackendError) as e:
+        run(c._get("/views/trade/MX-1"))
+    assert e.value.status == 502 and "still joining" in e.value.detail
 
 
 def test_a_502_of_the_servers_own_failure_still_counts(tmp_path):

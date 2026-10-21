@@ -175,6 +175,9 @@ public final class DigestService implements AutoCloseable {
         CapabilityTable next = CapabilityTable.of(n.id(), mine, n.table().byId().values(), Map.copyOf(peers), latency);
         boolean statesMoved = !sameStates(table, next);
         table = next;
+        if (settledFor != n && firstDigestsIn(n)) {
+            settled(n, "it has its peers' digests (" + peers.size() + ")");
+        }
         if (changed || statesMoved) {
             listeners.forEach(r -> {
                 try {
@@ -183,6 +186,102 @@ public final class DigestService implements AutoCloseable {
                     LOG.warn("net: capability listener failed: {}", e.toString());
                 }
             });
+        }
+    }
+
+    // -- joining (SOAK3-01) ---------------------------------------------------------------------------------------------
+
+    /** The running node that has had its first membership and digest exchange (or gave up waiting for it). */
+    private volatile NetService.Node settledFor;
+    private final java.util.concurrent.locks.ReentrantLock joinLock = new java.util.concurrent.locks.ReentrantLock();
+    private final java.util.concurrent.locks.Condition joinMoved = joinLock.newCondition();
+
+    /**
+     * True while this node is part of a cluster but does not yet know what its peers hold: node.yaml has it on and the server is still
+     * starting (it has not joined), or it has joined with seeds or saved members and has not had their digests yet, for at most
+     * routing.yaml's {@code join-grace} after it joined. A read that no source here holds must not then say "no source holds" (SOAK3-01:
+     * a node just restarted answered 404 DRS-1001 for trades only its peers hold). False for a single server and for a node with no seeds
+     * and no saved members.
+     */
+    public boolean joining() {
+        if (!net.config().enabled()) {
+            return false;
+        }
+        NetService.Node n = net.node().orElse(null);
+        if (n == null) {
+            return net.awaitingJoin();
+        }
+        if (n.leaving || settledFor == n) {
+            return false;
+        }
+        if (!n.expectsPeers()) {
+            settled(n, "it has no seeds and no saved members");
+            return false;
+        }
+        if (System.currentTimeMillis() - n.started().toEpochMilli() >= net.config().routing().joinGrace().toMillis()) {
+            settled(n, "join-grace (" + net.config().routing().joinGrace().toSeconds() + " s) passed without every peer's digest");
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Waits while this node is {@link #joining()}, at most {@code max}; true when it is no longer joining. A read none of this node's sources
+     * holds calls it before asking the peers, so its answer comes from them a moment later instead of "not found".
+     */
+    public boolean awaitJoined(Duration max) {
+        long end = System.nanoTime() + (max == null ? 0 : max.toNanos());
+        while (joining()) {
+            long left = end - System.nanoTime();
+            if (left <= 0) {
+                return false;
+            }
+            joinLock.lock();
+            try {
+                joinMoved.awaitNanos(Math.min(left, java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(50)));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return !joining();
+            } finally {
+                joinLock.unlock();
+            }
+        }
+        return true;
+    }
+
+    /**
+     * The first exchange is done: some other member is known, and every other member that is alive and gossips a digest has had its
+     * digest pulled (a peer that just started and has none yet is not waited for).
+     */
+    private boolean firstDigestsIn(NetService.Node n) {
+        boolean any = false;
+        for (MemberTable.Known k : n.table().others()) {
+            Member m = k.member();
+            if (m.state().gone()) {
+                continue;
+            }
+            any = true;
+            if (m.state() == com.ash.drishti.net.member.MemberState.ALIVE && m.protocol() == Member.PROTOCOL && !m.digestHash().isBlank()
+                    && !peers.containsKey(m.nodeId())) {
+                return false;
+            }
+        }
+        return any;
+    }
+
+    private void settled(NetService.Node n, String why) {
+        joinLock.lock();
+        try {
+            if (settledFor == n) {
+                return;
+            }
+            settledFor = n;
+            joinMoved.signalAll();
+        } finally {
+            joinLock.unlock();
+        }
+        if (n.expectsPeers()) {
+            LOG.info("net: node {} has joined: {}, {} ms after joining", n.id(), why, System.currentTimeMillis() - n.started().toEpochMilli());
         }
     }
 

@@ -119,6 +119,19 @@ carried over HTTP instead of UDP:
   (after the 2.6.5 soak, SOAK-03). Until then its peers keep it as they last saw it (dead, after a restart) and answer `DRS-5052` naming it; before,
   a restarting node joined 12 to 19 s before its port opened and peers got `ConnectException`. The log says `net: Drishti*net is on;
   this node joins once the server is ready`, then `joined Drishti*net` right after `Tomcat started`.
+- **Joining until the first digests (after the 2.6.6 soak 3, SOAK3-01):** a node that joined with seeds or saved members is *joining*
+  until it has the digest of every alive peer that gossips one (`DigestService.joining()`), at most routing.yaml's `join-grace` (30 s)
+  after it joined; it is joining too while node.yaml has it on and the server has not joined yet (its port may already answer). Then it
+  does not know which peers hold a kind, so a read that none of its sources holds waits up to `join-wait` (2 s, never more than half the
+  `forward-timeout`) for the digests and is answered from the peer; still joining, it answers `502 DRS-5052` "this node is still joining
+  Drishti*net and does not know yet which nodes hold <kind>; try again in a moment", never `404 DRS-1001`. A history's days nothing here
+  holds are so too (all of them: `DRS-5052`; some: the answer is partial naming the node joining), and a view of a kind whose pack is not
+  here waits the same way before `ViewForwardFilter` routes it. The console tries such a read once on another server and does not count
+  it against the node (section 11.1). A single server, and a node with no seeds and no saved members, are never joining. The log says
+  `net: node … has joined: it has its peers' digests (2), 270 ms after joining`; Admin → Health's Drishti*net section says `state:
+  joining` until then (`member` after). In soak 3, a node 0.1 to 0.7 s after its `joined Drishti*net` line answered three reads
+  `404 DRS-1001` for trades only its peers held; `NetRejoinMissTest` asked a restarted node 408 times from its first open port: 81 were
+  404 before, none after (every answer 200, held until the digests were in, about 0.3 s).
 - **Forgetting:** `dead` and `left` entries are kept `forget-after` (24 h) so a stale table cannot resurrect them, then
   dropped.
 
@@ -274,6 +287,8 @@ backend:
   aside, and the console moves to the next healthy one. A 502/503 that is the server's own answer about **another** node is not
   counted: `DRS-5050` to `DRS-5059` (a peer that holds the data is down, refuses the connection or failed), and from a server of 2.6.5 or
   older a `DRS-1003` whose detail names a peer (`net:<node> failed reading …`). A peer's time-out is `504 DRS-1014`, never counted.
+  A `502 DRS-5052` "this node is still joining Drishti*net" (a node just started or rejoined, section 5; SOAK3-01) is not counted either,
+  and a read that gets it is tried once on another server, which knows the peers' digests (`backend.joining_problem`).
   In the 2.6.5 soak the console set healthy servers aside 43 times on histories a dying peer could not answer (SOAK-02). A **read** that failed on the way is retried once on the new
   server, so the person sees the page, not an error; a **write** (save a layout, a search, a pivot) is never retried
   automatically: the page says it did not save and offers to try again.

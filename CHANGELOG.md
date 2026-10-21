@@ -17,6 +17,13 @@
 
 ## Unreleased
 
+- **Fixed (SOAK3-01, P2): a node that has just started or rejoined never says "no source holds" (`404 DRS-1001`) for what only its peers
+  hold.** Until it has the digests of its alive peers (or for at most routing.yaml's new `join-grace`, 30 s) a node with seeds or saved
+  members is *joining*; a read none of its sources holds then waits up to the new `join-wait` (2 s) for the digests and is answered from
+  the peer, or says `502 DRS-5052` "this node is still joining Drishti*net …; try again in a moment". Histories and views of a kind not
+  here do the same. The console tries such a read once on another server without counting it against the node. Admin → Health shows
+  `state: joining`; a single server and a node with no seeds are never joining. NetRejoinMissTest (a restarted node asked 408 times from
+  its first open port: 81 × 404 before, 0 after); NetFolderTest; test_cluster_failover; NET.md, DRISHTI_NET.md section 5.
 - **Soak: the checker asks the administrator and the viewer back to back, in both orders (SOAK2-01).** Each checked history range is
   asked in both roles, and the checker asks a history's twin (same entity, range and node, the other role) straight after it, so the
   class of SOAK2-01 is exercised every few seconds; `soak.json` `maskPairs` counts the pairs per order, peer-held, and wrong answers.

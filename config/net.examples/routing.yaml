@@ -16,7 +16,10 @@ forward-timeout: 5s                  # a forwarded view or a peer fetch
 scatter-budget: 3s                   # a peer's share of a scattered search; later, the answer is partial and names the peer
 suggest-budget: 150ms                # the same for type-ahead
 link-budget: 1s                      # a view's linked entity that only a peer holds (the local ones: drishti.graph.link-budget, 40ms)
-max-hops: 1                          # a forwarded request is never forwarded again; 0 switches forwarding off
+join-wait: 2s                        # a node just started or rejoined holds a read nothing here holds this long for its peers' digests,
+                                     # then says DRS-5052 "still joining" (never 404); at most half the forward-timeout
+join-grace: 30s                      # a node counts as joining at most this long after it joined (every peer down: it answers alone)
+max-hops: 1                         # a forwarded request is never forwarded again; 0 switches forwarding off
 weights:
   latency: 1.0                       # how much a peer's latency counts when choosing between peers that can answer
 user-state: replicate                # saved searches, layouts, pivots copied to the other nodes (off: kept where written)

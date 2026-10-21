@@ -171,6 +171,14 @@ class NetFolderTest {
         assertThat(l.config().gossip()).isEqualTo(first.gossip());
         f.write("routing.yaml", "max-hops: 2\n", null);
         assertThat(f.load(first).refused("routing.yaml")).isTrue();
+        // SOAK3-01: how long a joining node holds a miss for its peers' digests, and how long it counts as joining at most
+        assertThat(first.routing().joinWait()).isEqualTo(Duration.ofSeconds(2));
+        assertThat(first.routing().joinGrace()).isEqualTo(Duration.ofSeconds(30));
+        f.write("routing.yaml", "join-wait: 500ms\njoin-grace: 0s\n", null);
+        assertThat(f.load(first).config().routing().joinWait()).isEqualTo(Duration.ofMillis(500));
+        assertThat(f.load(first).config().routing().joinGrace()).isZero();
+        f.write("routing.yaml", "join-wait: 1m\n", null);
+        assertThat(f.load(first).refused("routing.yaml")).isTrue();
         f.write("access.yaml", "roles:\n  risk:\n    nodes: [n-a, region:emea]\n  trader: {}\n", null);
         assertThat(f.load(first).config().access().roles()).containsEntry("risk", List.of("n-a", "region:emea")).containsEntry("trader", List.of());
         f.write("routing.yaml", "this: [is not\n", null);
