@@ -17,6 +17,12 @@
 
 ## Unreleased
 
+- **Fixed (QA4-03): statements: notes wrap whole, and a date after the business date reads no misleading 0.** A card's note was cut
+  (*Not available: DRS-9020 the as-of date 202…*) and a masked reader's table note too on paper (*Not sorted: 'MTM' is masked fo…*); notes
+  now wrap over lines on the preview and the PDF, never cut. For a date later than the business date the Trades card read `0` above *Not
+  available*: nothing was counted, so every card reads `–` there (a count still reads `0` on a day the data could hold). The preview's
+  `rows` and the CLI's *N rows* are `0` when every band is empty, not the three empty cards. STATEMENTS.md. StatementApiTest,
+  StatementLayoutTest.
 - **Fixed (QA4-04): a connector file's `enabled` placeholder is listed as it resolves, and one that resolves to neither true nor false
   is refused.** `"${DRISHTI_LAKE_ENABLED:true}"` with the variable `false` read `enabled: true` beside `DISABLED` (the list used the
   file's text); `"${VAR:nope}"` switched the connector off silently while a literal `"nope"` was refused. Now the list, the form's

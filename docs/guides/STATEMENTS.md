@@ -116,8 +116,12 @@ The server lays the pages out (`StatementLayout`), so the PDF, the preview and t
 * A table **sorted by a measure masked for the reader** is drawn in the query's own order, with the note *Not sorted: 'MTM' is masked for you, and its order
   would tell the masked figures* (never *No rows.*).
 * A **card** with no value follows one rule in the preview, the PDF and Excel: **a count of nothing is `0`**, a value of nothing (a sum of no rows, a day
-  with no data, a date later than the business date) is `–`, as a masked one reads its mask. A count is a measure that is one `count(...)` or
-  `distinct(...)`; in Excel the `0` is a number and the dash a text cell.
+  with no data) is `–`, as a masked one reads its mask. A count is a measure that is one `count(...)` or `distinct(...)`; in Excel the `0` is a number and
+  the dash a text cell. A date **later than the business date** is not read at all: every card, a count too, reads `–` under its whole note
+  (*Not available: DRS-9020 the as-of date … is later than the business date …*), never a `0` that would read as "no trades".
+* **Notes are never cut.** A card's note and a table's note (*Masked for you: MTM. Not sorted: …*) wrap over as many lines as they need, on the preview and
+  the PDF; the card or the table grows to hold them.
+* The preview's `rows` (and `drishti.py bi statement`'s *N rows*) counts the rows read: `0` when no band has data (the hint), not the empty cards.
 * When **no band has data** for the run's dates, the preview's `hint`, the file's notes (and `X-Statement-Hint`) and `drishti.py bi statement`'s `hint:`
   line say which dates were read and where data is: *No data is held for 2026-10-25, the date this October 2026 statement reads: every band is empty. The
   nearest date with data is 2026-10-20 (before). Choose a date the data covers.* With `dates: end` only the period's last day is read, so the hint names

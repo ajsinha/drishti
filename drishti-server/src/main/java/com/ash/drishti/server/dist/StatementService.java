@@ -288,7 +288,8 @@ public final class StatementService {
         m.put("period", r.period());
         m.put("paper", Map.of("size", r.spec().paper(), "orientation", r.spec().landscape() ? "landscape" : "portrait", "margins", r.spec().margins()));
         m.put("tokens", r.tokens());
-        m.put("rows", r.doc().rowCount());
+        // no data for the run's dates (the hint): 0 rows, not the empty cards' dashes counted as rows (QA4-03: "3 rows" beside "every band is empty")
+        m.put("rows", r.hint() == null ? r.doc().rowCount() : 0);
         m.put("cut", r.cut());                                         // the tables that stop at max-rows, in words (QA2-01)
         m.put("hint", r.hint());                                       // no data is held for the run's dates, in words (QA2-12); null when there is
         return m;
@@ -479,14 +480,15 @@ public final class StatementService {
 
     /**
      * A card's answer with its empty value made one rule for the preview, the PDF and Excel (QA3B-08): a count of nothing is 0, any other value of nothing (a
-     * sum of no rows) is a dash; whether no row came back, one empty row, or the date was refused as later than the business date (DRS-9020: no data is held
-     * for it, so nothing is counted). A masked value stays the mask; a card that failed for another reason keeps its "Not available" note and its dash.
+     * sum of no rows) is a dash; whether no row came back or one empty row. A date refused as later than the business date (DRS-9020) was not counted at all:
+     * every card reads a dash beside its "Not available" note, a count too (QA4-03: a 0 above "Not available" read as "no trades"). A masked value stays the
+     * mask; a card that failed for another reason keeps its "Not available" note and its dash.
      */
     static BiExporter.Built carded(Report.Visual v, BiExporter.Built b, java.util.Set<String> counts) {
         if (b != null && "card".equals(v.type()) && b.section().columns().isEmpty() && b.section().note() != null && b.section().note().contains("DRS-9020")
                 && !v.well("values").isEmpty()) {
             String measure = BiExporter.shortName(v.well("values").get(0));
-            List<Object> row = new ArrayList<>(List.of(counts.contains(measure) ? (Object) 0L : "–"));
+            List<Object> row = new ArrayList<>(List.of((Object) "–"));
             ExportDoc.Section s = b.section();
             return new BiExporter.Built(new ExportDoc.Section(s.id(), s.title(), ExportDoc.CARD, List.of(measure), List.of(row), s.note(), List.of(), v.type()), b.asOf());
         }

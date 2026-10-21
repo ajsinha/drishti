@@ -239,7 +239,7 @@ final class StatementLayout {
             wrapped.add(lines);
             CardText ct = "text".equals(b.kind()) ? null : cardText(b, cw * b.w() - (i < row.size() - 1 ? PAD * 2 : 0));
             values.add(ct);
-            h = Math.max(h, "text".equals(b.kind()) ? lines.size() * textSize(b) * 1.35 + 2 : cardHeight(b, ct));
+            h = Math.max(h, "text".equals(b.kind()) ? lines.size() * textSize(b) * 1.35 + 2 : cardHeight(b, ct, cw * b.w() - (i < row.size() - 1 ? PAD * 2 : 0)));
         }
         if (h > room() && !atTop()) {
             newPage();
@@ -292,12 +292,17 @@ final class StatementLayout {
         return new CardText(floor, v, null);                                // text may be cut with an ellipsis
     }
 
-    private double cardHeight(Band b, CardText ct) {
-        return fs * 1.3 + (fs + 7) * 1.3 + (b.note() == null ? 0 : fs * 1.3) + (ct != null && ct.exact() != null ? fs * 1.3 : 0) + 10;
+    private double cardHeight(Band b, CardText ct, double w) {
+        return fs * 1.3 + (fs + 7) * 1.3 + cardNote(b, w).size() * fs * 1.3 + (ct != null && ct.exact() != null ? fs * 1.3 : 0) + 10;
+    }
+
+    /** A card's note in whole lines (it wraps, never cut: QA4-03). */
+    private List<String> cardNote(Band b, double w) {
+        return b.note() == null ? List.of() : wrapWhole(b.note(), w - 2 * PAD, fs - 1.5, false);
     }
 
     private void card(Band b, CardText ct, double x, double w, double top0) {
-        double h = cardHeight(b, ct);
+        double h = cardHeight(b, ct, w);
         ops.add(new StatementPages.Fill(x, top0 - h, w, h, GROUP_FILL));
         double yy = top0 - 4 - fs;
         double avail = w - 2 * PAD;
@@ -324,9 +329,9 @@ final class StatementLayout {
             valueCut |= !exact.equals(whole);
             ops.add(new StatementPages.Text(x + PAD + 2, yy, size, false, GREY, exact, "exact"));
         }
-        if (b.note() != null) {
+        for (String line : cardNote(b, w)) {
             yy -= fs * 1.3;
-            ops.add(new StatementPages.Text(x + PAD + 2, yy, fs - 1.5, false, GREY, fit(b.note(), avail, fs - 1.5, false), "note"));
+            ops.add(new StatementPages.Text(x + PAD + 2, yy, fs - 1.5, false, GREY, line, "note"));
         }
         if (valueCut) {
             cut.add((b.title() == null || b.title().isBlank() ? b.id() : b.title()) + ": " + CUT_NOTE);
@@ -415,7 +420,8 @@ final class StatementLayout {
 
     private void part(Band b, Table t, double[] cols) {
         boolean hasTitle = b.title() != null && !b.title().isBlank();
-        double head = (hasTitle ? titleH() : 0) + (b.note() == null ? 0 : fs * 1.4) + trh;
+        List<String> noteLines = b.note() == null ? List.of() : wrapWhole(b.note(), right - left, fs - 1, false);   // whole, never cut (QA4-03)
+        double head = (hasTitle ? titleH() : 0) + noteLines.size() * fs * 1.4 + trh;
         double whole = head + rowsHeight(t, 0, t.rows().size());
         if (b.keepTogether() && whole <= capacity() && whole > room() && !atTop()) {
             newPage();
@@ -429,9 +435,9 @@ final class StatementLayout {
             y -= titleH();
             ops.add(new StatementPages.Text(left, y + fs * 0.55, fs + 2, true, INK, fit(b.title(), right - left, fs + 2, true), "title"));
         }
-        if (b.note() != null) {
+        for (String line : noteLines) {
             y -= fs * 1.4;
-            ops.add(new StatementPages.Text(left, y + fs * 0.35, fs - 1, false, GREY, fit(b.note(), right - left, fs - 1, false), "note"));
+            ops.add(new StatementPages.Text(left, y + fs * 0.35, fs - 1, false, GREY, line, "note"));
         }
         headRow(t, cols);
         if (t.rows().isEmpty()) {
@@ -584,6 +590,34 @@ final class StatementLayout {
             out.add(line.toString());
         }
         return out;
+    }
+
+    /**
+     * A note in lines no wider than {@code max} points, never cut (QA4-03: a card's "Not available: DRS-9020 the as-of date 202…" lost its reason): broken at
+     * spaces, and a word wider than a line (a long path or code) broken where it must.
+     */
+    static List<String> wrapWhole(String text, double max, double size, boolean bold) {
+        StringBuilder spaced = new StringBuilder();
+        for (String para : (text == null ? "" : text).split("\n", -1)) {
+            if (!spaced.isEmpty()) {
+                spaced.append('\n');
+            }
+            StringBuilder words = new StringBuilder();
+            for (String word : para.split(" ")) {
+                String w = word;
+                while (Metrics.width(w, size, bold) > max && w.length() > 1) {
+                    int n = 1;
+                    while (n < w.length() && Metrics.width(w.substring(0, n + 1), size, bold) <= max) {
+                        n++;
+                    }
+                    words.append(words.isEmpty() ? "" : " ").append(w, 0, n);
+                    w = w.substring(n);
+                }
+                words.append(words.isEmpty() ? "" : " ").append(w);
+            }
+            spaced.append(words);
+        }
+        return wrap(spaced.toString(), max, size, bold);
     }
 
     /** The advance widths of Helvetica and Helvetica-Bold (the standard PDF fonts), in 1/1000 of the font size, for the printable ASCII characters. */

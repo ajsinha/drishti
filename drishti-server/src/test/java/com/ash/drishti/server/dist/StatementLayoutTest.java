@@ -234,6 +234,20 @@ class StatementLayoutTest {
                 .isInstanceOf(DrishtiException.class).hasMessageContaining("more than 2 pages");
     }
 
+    /** QA4-03: a note wraps over as many lines as it needs, never cut with an ellipsis, a word wider than a line broken where it must. */
+    @Test
+    void aNoteWrapsWholeAndIsNeverCut() {
+        String note = "Not available: DRS-9020 the as-of date 2026-10-25 is later than the business date 2026-10-20; no data is held for it";
+        List<String> lines = StatementLayout.wrapWhole(note, 120, 8, false);
+        assertThat(lines).hasSizeGreaterThan(2).noneMatch(l -> l.contains("…"));
+        assertThat(String.join(" ", lines)).isEqualTo(note);
+        lines.forEach(l -> assertThat(StatementLayout.Metrics.width(l, 8, false)).isLessThanOrEqualTo(120));
+        List<String> path = StatementLayout.wrapWhole("see /a/very/long/folder/name/that/is/wider/than/the/card/itself.parquet", 60, 8, false);
+        assertThat(path).noneMatch(l -> l.contains("…"));
+        assertThat(String.join("", path).replace(" ", "")).isEqualTo("see/a/very/long/folder/name/that/is/wider/than/the/card/itself.parquet");
+        path.forEach(l -> assertThat(StatementLayout.Metrics.width(l, 8, false)).isLessThanOrEqualTo(60));
+    }
+
     @Test
     void thePeriodAStatementCoversAndItsTokens() {
         LocalDate d = LocalDate.of(2026, 10, 1);

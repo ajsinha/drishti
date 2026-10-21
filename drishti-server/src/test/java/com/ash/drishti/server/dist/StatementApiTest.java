@@ -549,7 +549,18 @@ class StatementApiTest {
             List<String> cards = texts(preview, "value");
             assertThat(cards).as(date + ": Notional, MTM, Trades").hasSize(3).noneMatch(String::isBlank);
             assertThat(cards.subList(0, 2)).as("a sum of nothing").containsExactly("–", "–");
-            assertThat(cards.get(2)).as("a count of nothing is 0, on every date (QA3B-08)").isEqualTo("0");
+            assertThat(preview.path("rows").asInt()).as(date + ": every band is empty, so no rows (QA4-03), not the empty cards").isZero();
+            if (date.startsWith("9999")) {
+                // QA4-03: a date after the business date was not counted: the count reads a dash beside its note, never a 0 that reads "no trades",
+                // and each card's note is whole (it wraps), never "Not available: DRS-9020 the as-of date 202…"
+                assertThat(cards.get(2)).as("not counted").isEqualTo("–");
+                List<String> notes = texts(preview, "note");
+                assertThat(notes).as(notes.toString()).isNotEmpty().noneMatch(n -> n.endsWith("…"));
+                String joined = String.join(" ", notes);
+                assertThat(joined).contains("Not available: DRS-9020").contains("9999-11-30");
+            } else {
+                assertThat(cards.get(2)).as("a count of nothing is 0 on a date the data could hold (QA3B-08)").isEqualTo("0");
+            }
         }
         // QA3B-02: a date inside a month the data holds (a month's statement, its last day read) names that date, not the month, and the nearest day held
         String monthly = STATEMENT.replace("report: monthly-statement", "report: month-statement").replace("period: previous-month", "period: month");
@@ -566,7 +577,7 @@ class StatementApiTest {
         String about = sheets.get("xl/worksheets/sheet1.xml");
         assertThat(about).contains("· 2 pages<").contains(hints.get("9999-12-31"));          // the matrix starts its own page; "1 page" in StatementLayoutTest
         assertThat(sheets.get("xl/worksheets/sheet2.xml")).as("Notional").contains(">–<");
-        assertThat(sheets.get("xl/worksheets/sheet4.xml")).as("Trades").contains("<v>0</v>").doesNotContain(">–<");
+        assertThat(sheets.get("xl/worksheets/sheet4.xml")).as("Trades, not counted after the business date (QA4-03)").contains(">–<").doesNotContain("<v>0</v>");
         JsonNode held = ok(call("POST", "/api/v1/bi/reports/statement/preview", as("hfx1", "st-head"), Map.of("report", REPORT, "page", "statement",
                 "state", Map.of("dates", Map.of("from", "2026-10-01", "to", "2026-10-01")))));
         assertThat(held.path("hint").isNull()).as("a date with data has no hint").isTrue();
@@ -615,6 +626,9 @@ class StatementApiTest {
         String all = String.join(" ", texts(preview, null));
         assertThat(tradeIds(all)).as("every trade, drawn unsorted rather than No rows.").isEqualTo(expectedIds(""));
         assertThat(all).contains("Not sorted: 'MTM' is masked for you").doesNotContain("No rows.");
+        // QA4-03: the note is whole on paper (it wraps over lines), never cut with an ellipsis
+        assertThat(texts(preview, "note")).noneMatch(n -> n.endsWith("…"));
+        assertThat(String.join(" ", texts(preview, "note"))).contains("Not sorted: 'MTM' is masked for you, and its order would tell the masked figures.");
         // QA3B-10: the analyst's Excel file carries every note the PDF draws: on the About sheet and next to each table
         MvcResult x = call("POST", "/api/v1/bi/reports/statement/file", as("ana1", "st-analyst"), Map.of("report", sorted, "page", "statement", "format", "xlsx",
                 "state", Map.of("dates", Map.of("from", "2026-10-01", "to", "2026-10-01"))));
