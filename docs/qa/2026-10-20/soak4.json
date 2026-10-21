@@ -1,0 +1,11723 @@
+{
+ "trades": {
+  "perSystemPerDay": 1500,
+  "dates": [
+   "2026-10-02",
+   "2026-10-05",
+   "2026-10-06",
+   "2026-10-07",
+   "2026-10-08",
+   "2026-10-09",
+   "2026-10-13",
+   "2026-10-14",
+   "2026-10-15",
+   "2026-10-16"
+  ],
+  "distinct": 4500
+ },
+ "serverLaunch": {
+  "jvm": [
+   "-Xmx2g",
+   "-XX:MaxDirectMemorySize=256m",
+   "-XX:TrimNativeHeapInterval=60000"
+  ],
+  "env": {
+   "MALLOC_ARENA_MAX": "2"
+  }
+ },
+ "requests": 2860,
+ "maskCoverage": {
+  "viewerHistories": 420,
+  "masked": 420,
+  "problems": [],
+  "distinctHistories": 210,
+  "historyRequests": 840
+ },
+ "clusterUp": 37.5,
+ "consoleLearntAllIn": 1.9,
+ "kill-c": {
+  "consoleNextGoodPage": 0.03,
+  "searchAfter": [
+   200,
+   true
+  ],
+  "suspectOrDeadEverywhere": 2.6
+ },
+ "restart-c": {
+  "started": 18.4,
+  "rejoinedAllAlive": 18.5
+ },
+ "kill-a": {
+  "consoleNextGoodPage": 0.25,
+  "searchAfter": [
+   200,
+   true
+  ],
+  "suspectOrDeadEverywhere": 2.5
+ },
+ "a-peers.json": {
+  "nodeId": "drishti-a",
+  "savedAt": 1792548479370,
+  "self": {
+   "nodeId": "drishti-a",
+   "url": "http://192.168.2.77:18710",
+   "incarnation": 1,
+   "heartbeat": 1815,
+   "state": "alive",
+   "digestHash": "6465e359ca54340a",
+   "version": "2.6.5",
+   "protocol": 1,
+   "tags": [],
+   "since": 1792546659932,
+   "drained": false
+  },
+  "members": [
+   {
+    "nodeId": "drishti-b",
+    "url": "http://192.168.2.77:18711",
+    "incarnation": 1,
+    "heartbeat": 1802,
+    "state": "alive",
+    "digestHash": "fce8a91a80909539",
+    "version": "2.6.5",
+    "protocol": 1,
+    "tags": [],
+    "since": 1792546672556,
+    "drained": false
+   },
+   {
+    "nodeId": "drishti-c",
+    "url": "http://192.168.2.77:18712",
+    "incarnation": 2,
+    "heartbeat": 573,
+    "state": "alive",
+    "digestHash": "df27ff51b5da2847",
+    "version": "2.6.5",
+    "protocol": 1,
+    "tags": [],
+    "since": 1792547906588,
+    "drained": false
+   }
+  ]
+ },
+ "restart-a": {
+  "started": 21.8,
+  "rejoinedAllAlive": 21.8
+ },
+ "users": {
+  "target": "console",
+  "users": 20,
+  "seconds": 7200,
+  "requests": 1459157,
+  "perSecond": 202.7,
+  "bucket": 10.0,
+  "failedBuckets": {
+   "history": {
+    "1792547580": 39,
+    "1792547590": 224,
+    "1792547600": 234,
+    "1792547610": 232,
+    "1792547620": 233,
+    "1792547630": 237,
+    "1792547640": 207,
+    "1792547650": 233,
+    "1792547660": 257,
+    "1792547670": 250,
+    "1792547680": 224,
+    "1792547690": 249,
+    "1792547700": 234,
+    "1792547710": 264,
+    "1792547720": 244,
+    "1792547730": 267,
+    "1792547740": 235,
+    "1792547750": 240,
+    "1792547760": 241,
+    "1792547770": 239,
+    "1792547780": 217,
+    "1792547790": 219,
+    "1792547800": 241,
+    "1792547810": 245,
+    "1792547820": 239,
+    "1792547830": 218,
+    "1792547840": 251,
+    "1792547850": 220,
+    "1792547860": 222,
+    "1792547870": 236,
+    "1792547880": 231,
+    "1792547890": 181,
+    "1792547900": 109
+   },
+   "trade": {
+    "1792547580": 64,
+    "1792547590": 579,
+    "1792547600": 477,
+    "1792547610": 515,
+    "1792547620": 516,
+    "1792547630": 569,
+    "1792547640": 502,
+    "1792547650": 551,
+    "1792547660": 562,
+    "1792547670": 596,
+    "1792547680": 600,
+    "1792547690": 552,
+    "1792547700": 545,
+    "1792547710": 548,
+    "1792547720": 565,
+    "1792547730": 519,
+    "1792547740": 520,
+    "1792547750": 509,
+    "1792547760": 527,
+    "1792547770": 555,
+    "1792547780": 538,
+    "1792547790": 513,
+    "1792547800": 555,
+    "1792547810": 562,
+    "1792547820": 482,
+    "1792547830": 570,
+    "1792547840": 559,
+    "1792547850": 539,
+    "1792547860": 525,
+    "1792547870": 590,
+    "1792547880": 513,
+    "1792547890": 420,
+    "1792547900": 241
+   }
+  },
+  "ctrd": {
+   "n": 102129,
+   "failed": 0,
+   "p50": 0.075,
+   "p95": 0.184,
+   "p99": 0.475
+  },
+  "history": {
+   "n": 438249,
+   "failed": 7412,
+   "p50": 0.104,
+   "p95": 0.205,
+   "p99": 0.338
+  },
+  "netting-set": {
+   "n": 51298,
+   "failed": 0,
+   "p50": 0.09,
+   "p95": 0.185,
+   "p99": 0.335
+  },
+  "search": {
+   "n": 51248,
+   "failed": 0,
+   "p50": 0.075,
+   "p95": 0.205,
+   "p99": 0.401
+  },
+  "trade": {
+   "n": 816233,
+   "failed": 16978,
+   "p50": 0.07,
+   "p95": 0.176,
+   "p99": 0.371
+  }
+ },
+ "checker": {
+  "trade:right": 69965,
+  "search:right": 7511,
+  "history:right": 65268,
+  "ctrd:right": 726,
+  "search:partial": 412,
+  "trade:partial": 1118,
+  "trade:right-links-pending": 243,
+  "history:partial": 926,
+  "ctrd:partial": 33,
+  "trade:asked-a-node-going-down": 142,
+  "history:asked-a-node-going-down": 134,
+  "search:asked-a-node-going-down": 18,
+  "ctrd:asked-a-node-going-down": 2
+ },
+ "maskPairs": {
+  "adminFirst": {
+   "pairs": 16508,
+   "peerHeld": 7043,
+   "wrongFirst": 0,
+   "wrongSecond": 0,
+   "wrongSecondPeerHeld": 0
+  },
+  "viewerFirst": {
+   "pairs": 16656,
+   "peerHeld": 7180,
+   "wrongFirst": 0,
+   "wrongSecond": 0,
+   "wrongSecondPeerHeld": 0
+  }
+ },
+ "wrong": {
+  "count": 0,
+  "byKind": {},
+  "all": [],
+  "allCut": false,
+  "samples": []
+ },
+ "wrongAnswers": 0,
+ "checked": 146498,
+ "console": {
+  "ok": 6599,
+  "failed": 0,
+  "signedOut": 0
+ },
+ "consoleFailovers": [],
+ "events": [
+  {
+   "t": 324.3,
+   "what": "reference",
+   "requests": 2860,
+   "notOk": 0,
+   "sample": [],
+   "masks": {
+    "viewerHistories": 420,
+    "masked": 420,
+    "problems": [],
+    "distinctHistories": 210,
+    "historyRequests": 840
+   }
+  },
+  {
+   "t": 363.7,
+   "what": "console learnt the cluster",
+   "seconds": 1.9,
+   "servers": [
+    "http://192.168.2.77:18710",
+    "http://192.168.2.77:18711",
+    "http://192.168.2.77:18712"
+   ]
+  },
+  {
+   "t": 900.3,
+   "what": "killed c",
+   "pid": "by PID"
+  },
+  {
+   "t": 902.9,
+   "what": "after killing c",
+   "consoleNextGoodPage": 0.03,
+   "searchAfter": [
+    200,
+    true
+   ],
+   "suspectOrDeadEverywhere": 2.6
+  },
+  {
+   "t": 1219.0,
+   "what": "restarted c",
+   "started": 18.4,
+   "rejoinedAllAlive": 18.5
+  },
+  {
+   "t": 1800.5,
+   "what": "killed a",
+   "pid": "by PID"
+  },
+  {
+   "t": 1803.1,
+   "what": "after killing a",
+   "consoleNextGoodPage": 0.25,
+   "searchAfter": [
+    200,
+    true
+   ],
+   "suspectOrDeadEverywhere": 2.5
+  },
+  {
+   "t": 2122.6,
+   "what": "restarted a",
+   "started": 21.8,
+   "rejoinedAllAlive": 21.8
+  }
+ ],
+ "resources": [
+  {
+   "t": 0.0,
+   "node": "a",
+   "rssMb": 1044.2,
+   "threads": 96,
+   "openFiles": 80,
+   "heapMb": 124.2,
+   "liveMb": 110.3,
+   "jvmThreads": 57
+  },
+  {
+   "t": 0.0,
+   "node": "b",
+   "rssMb": 1021.2,
+   "threads": 93,
+   "openFiles": 70,
+   "heapMb": 378.4,
+   "liveMb": 107.9,
+   "jvmThreads": 55
+  },
+  {
+   "t": 0.0,
+   "node": "c",
+   "rssMb": 988.6,
+   "threads": 109,
+   "openFiles": 63,
+   "heapMb": 229.5,
+   "liveMb": 0.0,
+   "jvmThreads": 64
+  },
+  {
+   "t": 0.0,
+   "node": "console",
+   "rssMb": 782.8,
+   "threads": 23,
+   "openFiles": 107,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 71.4,
+     "threads": 3,
+     "openFiles": 17
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 71.6,
+     "threads": 3,
+     "openFiles": 17
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 76.7,
+     "threads": 4,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 71.9,
+     "threads": 3,
+     "openFiles": 17
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 60.1,
+   "node": "a",
+   "rssMb": 1675.9,
+   "threads": 141,
+   "openFiles": 147,
+   "heapMb": 419.4,
+   "liveMb": 280.9,
+   "jvmThreads": 104
+  },
+  {
+   "t": 60.1,
+   "node": "b",
+   "rssMb": 937.5,
+   "threads": 117,
+   "openFiles": 86,
+   "heapMb": 339.0,
+   "liveMb": 122.2,
+   "jvmThreads": 79
+  },
+  {
+   "t": 60.1,
+   "node": "c",
+   "rssMb": 1282.5,
+   "threads": 120,
+   "openFiles": 127,
+   "heapMb": 291.6,
+   "liveMb": 203.0,
+   "jvmThreads": 82
+  },
+  {
+   "t": 60.1,
+   "node": "console",
+   "rssMb": 847.8,
+   "threads": 23,
+   "openFiles": 139,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 85.7,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 92.0,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 88.5,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 90.4,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 120.2,
+   "node": "a",
+   "rssMb": 1710.4,
+   "threads": 139,
+   "openFiles": 156,
+   "heapMb": 908.7,
+   "liveMb": 295.7,
+   "jvmThreads": 102
+  },
+  {
+   "t": 120.2,
+   "node": "b",
+   "rssMb": 1015.6,
+   "threads": 117,
+   "openFiles": 87,
+   "heapMb": 333.5,
+   "liveMb": 163.5,
+   "jvmThreads": 80
+  },
+  {
+   "t": 120.2,
+   "node": "c",
+   "rssMb": 1420.6,
+   "threads": 121,
+   "openFiles": 137,
+   "heapMb": 701.1,
+   "liveMb": 264.8,
+   "jvmThreads": 84
+  },
+  {
+   "t": 120.2,
+   "node": "console",
+   "rssMb": 860.3,
+   "threads": 23,
+   "openFiles": 140,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 88.8,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 95.1,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 92.2,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 93.0,
+     "threads": 3,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 180.2,
+   "node": "a",
+   "rssMb": 1724.5,
+   "threads": 141,
+   "openFiles": 155,
+   "heapMb": 790.7,
+   "liveMb": 328.7,
+   "jvmThreads": 104
+  },
+  {
+   "t": 180.2,
+   "node": "b",
+   "rssMb": 1086.6,
+   "threads": 119,
+   "openFiles": 81,
+   "heapMb": 486.6,
+   "liveMb": 174.8,
+   "jvmThreads": 78
+  },
+  {
+   "t": 180.2,
+   "node": "c",
+   "rssMb": 1486.4,
+   "threads": 116,
+   "openFiles": 130,
+   "heapMb": 357.5,
+   "liveMb": 291.5,
+   "jvmThreads": 79
+  },
+  {
+   "t": 180.2,
+   "node": "console",
+   "rssMb": 862.6,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 89.2,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 96.0,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 92.9,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 93.3,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 240.2,
+   "node": "a",
+   "rssMb": 1716.4,
+   "threads": 142,
+   "openFiles": 159,
+   "heapMb": 808.3,
+   "liveMb": 342.3,
+   "jvmThreads": 105
+  },
+  {
+   "t": 240.2,
+   "node": "b",
+   "rssMb": 1121.7,
+   "threads": 114,
+   "openFiles": 85,
+   "heapMb": 398.9,
+   "liveMb": 193.5,
+   "jvmThreads": 76
+  },
+  {
+   "t": 240.2,
+   "node": "c",
+   "rssMb": 1566.5,
+   "threads": 125,
+   "openFiles": 135,
+   "heapMb": 622.4,
+   "liveMb": 327.2,
+   "jvmThreads": 88
+  },
+  {
+   "t": 240.2,
+   "node": "console",
+   "rssMb": 863.6,
+   "threads": 23,
+   "openFiles": 145,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 90.3,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 96.0,
+     "threads": 3,
+     "openFiles": 35
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 92.4,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 93.7,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 300.3,
+   "node": "a",
+   "rssMb": 1731.1,
+   "threads": 140,
+   "openFiles": 148,
+   "heapMb": 699.5,
+   "liveMb": 351.7,
+   "jvmThreads": 103
+  },
+  {
+   "t": 300.3,
+   "node": "b",
+   "rssMb": 1123.7,
+   "threads": 115,
+   "openFiles": 80,
+   "heapMb": 345.8,
+   "liveMb": 191.0,
+   "jvmThreads": 78
+  },
+  {
+   "t": 300.3,
+   "node": "c",
+   "rssMb": 1580.6,
+   "threads": 116,
+   "openFiles": 127,
+   "heapMb": 554.7,
+   "liveMb": 347.6,
+   "jvmThreads": 79
+  },
+  {
+   "t": 300.3,
+   "node": "console",
+   "rssMb": 862.7,
+   "threads": 23,
+   "openFiles": 139,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 91.1,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 96.0,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 91.5,
+     "threads": 4,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 92.9,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 360.3,
+   "node": "a",
+   "rssMb": 1744.4,
+   "threads": 142,
+   "openFiles": 159,
+   "heapMb": 842.0,
+   "liveMb": 377.0,
+   "jvmThreads": 105
+  },
+  {
+   "t": 360.3,
+   "node": "b",
+   "rssMb": 1133.5,
+   "threads": 117,
+   "openFiles": 85,
+   "heapMb": 399.1,
+   "liveMb": 208.3,
+   "jvmThreads": 80
+  },
+  {
+   "t": 360.3,
+   "node": "c",
+   "rssMb": 1677.1,
+   "threads": 123,
+   "openFiles": 141,
+   "heapMb": 814.6,
+   "liveMb": 382.6,
+   "jvmThreads": 86
+  },
+  {
+   "t": 360.3,
+   "node": "console",
+   "rssMb": 868.1,
+   "threads": 23,
+   "openFiles": 139,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 91.1,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 98.6,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 93.4,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 93.8,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 420.3,
+   "node": "a",
+   "rssMb": 1725.4,
+   "threads": 141,
+   "openFiles": 156,
+   "heapMb": 846.8,
+   "liveMb": 365.3,
+   "jvmThreads": 104
+  },
+  {
+   "t": 420.3,
+   "node": "b",
+   "rssMb": 1119.3,
+   "threads": 116,
+   "openFiles": 84,
+   "heapMb": 401.6,
+   "liveMb": 193.1,
+   "jvmThreads": 79
+  },
+  {
+   "t": 420.3,
+   "node": "c",
+   "rssMb": 1752.9,
+   "threads": 118,
+   "openFiles": 135,
+   "heapMb": 573.6,
+   "liveMb": 393.6,
+   "jvmThreads": 81
+  },
+  {
+   "t": 420.3,
+   "node": "console",
+   "rssMb": 869.4,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 91.1,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 98.6,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 94.4,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 94.1,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 480.3,
+   "node": "a",
+   "rssMb": 1704.7,
+   "threads": 141,
+   "openFiles": 154,
+   "heapMb": 773.1,
+   "liveMb": 376.6,
+   "jvmThreads": 104
+  },
+  {
+   "t": 480.3,
+   "node": "b",
+   "rssMb": 1118.1,
+   "threads": 117,
+   "openFiles": 82,
+   "heapMb": 321.3,
+   "liveMb": 198.2,
+   "jvmThreads": 80
+  },
+  {
+   "t": 480.3,
+   "node": "c",
+   "rssMb": 1771.9,
+   "threads": 122,
+   "openFiles": 133,
+   "heapMb": 499.0,
+   "liveMb": 376.0,
+   "jvmThreads": 85
+  },
+  {
+   "t": 480.3,
+   "node": "console",
+   "rssMb": 876.1,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 91.1,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 98.6,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 97.4,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 540.4,
+   "node": "a",
+   "rssMb": 1705.3,
+   "threads": 141,
+   "openFiles": 158,
+   "heapMb": 763.0,
+   "liveMb": 385.0,
+   "jvmThreads": 104
+  },
+  {
+   "t": 540.4,
+   "node": "b",
+   "rssMb": 1149.8,
+   "threads": 118,
+   "openFiles": 83,
+   "heapMb": 244.0,
+   "liveMb": 199.0,
+   "jvmThreads": 81
+  },
+  {
+   "t": 540.4,
+   "node": "c",
+   "rssMb": 1774.4,
+   "threads": 123,
+   "openFiles": 139,
+   "heapMb": 1040.9,
+   "liveMb": 397.9,
+   "jvmThreads": 86
+  },
+  {
+   "t": 540.4,
+   "node": "console",
+   "rssMb": 876.6,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 91.6,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 98.6,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 97.4,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 600.4,
+   "node": "a",
+   "rssMb": 1708.1,
+   "threads": 143,
+   "openFiles": 158,
+   "heapMb": 568.4,
+   "liveMb": 378.4,
+   "jvmThreads": 106
+  },
+  {
+   "t": 600.4,
+   "node": "b",
+   "rssMb": 1136.4,
+   "threads": 114,
+   "openFiles": 85,
+   "heapMb": 478.0,
+   "liveMb": 205.0,
+   "jvmThreads": 77
+  },
+  {
+   "t": 600.4,
+   "node": "c",
+   "rssMb": 1778.3,
+   "threads": 124,
+   "openFiles": 138,
+   "heapMb": 501.5,
+   "liveMb": 386.5,
+   "jvmThreads": 87
+  },
+  {
+   "t": 600.4,
+   "node": "console",
+   "rssMb": 877.4,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 91.9,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 98.6,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 97.9,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 660.4,
+   "node": "a",
+   "rssMb": 1710.7,
+   "threads": 141,
+   "openFiles": 159,
+   "heapMb": 535.9,
+   "liveMb": 369.9,
+   "jvmThreads": 104
+  },
+  {
+   "t": 660.4,
+   "node": "b",
+   "rssMb": 1169.6,
+   "threads": 116,
+   "openFiles": 85,
+   "heapMb": 509.1,
+   "liveMb": 214.8,
+   "jvmThreads": 79
+  },
+  {
+   "t": 660.4,
+   "node": "c",
+   "rssMb": 1778.0,
+   "threads": 124,
+   "openFiles": 140,
+   "heapMb": 740.1,
+   "liveMb": 380.7,
+   "jvmThreads": 87
+  },
+  {
+   "t": 660.4,
+   "node": "console",
+   "rssMb": 877.3,
+   "threads": 23,
+   "openFiles": 140,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 91.8,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 98.6,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 97.9,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 720.4,
+   "node": "a",
+   "rssMb": 1731.8,
+   "threads": 141,
+   "openFiles": 159,
+   "heapMb": 938.5,
+   "liveMb": 393.7,
+   "jvmThreads": 104
+  },
+  {
+   "t": 720.4,
+   "node": "b",
+   "rssMb": 1152.8,
+   "threads": 117,
+   "openFiles": 86,
+   "heapMb": 402.6,
+   "liveMb": 220.4,
+   "jvmThreads": 80
+  },
+  {
+   "t": 720.4,
+   "node": "c",
+   "rssMb": 1796.3,
+   "threads": 124,
+   "openFiles": 139,
+   "heapMb": 987.0,
+   "liveMb": 402.0,
+   "jvmThreads": 87
+  },
+  {
+   "t": 720.4,
+   "node": "console",
+   "rssMb": 877.8,
+   "threads": 23,
+   "openFiles": 140,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 92.2,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 98.6,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.0,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 780.5,
+   "node": "a",
+   "rssMb": 1730.9,
+   "threads": 143,
+   "openFiles": 162,
+   "heapMb": 477.7,
+   "liveMb": 380.7,
+   "jvmThreads": 106
+  },
+  {
+   "t": 780.5,
+   "node": "b",
+   "rssMb": 1132.4,
+   "threads": 115,
+   "openFiles": 87,
+   "heapMb": 556.5,
+   "liveMb": 207.0,
+   "jvmThreads": 78
+  },
+  {
+   "t": 780.5,
+   "node": "c",
+   "rssMb": 1782.7,
+   "threads": 125,
+   "openFiles": 141,
+   "heapMb": 553.4,
+   "liveMb": 403.9,
+   "jvmThreads": 88
+  },
+  {
+   "t": 780.5,
+   "node": "console",
+   "rssMb": 878.3,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 92.7,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 98.6,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.0,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 840.5,
+   "node": "a",
+   "rssMb": 1754.7,
+   "threads": 144,
+   "openFiles": 156,
+   "heapMb": 903.8,
+   "liveMb": 379.9,
+   "jvmThreads": 106
+  },
+  {
+   "t": 840.5,
+   "node": "b",
+   "rssMb": 1150.7,
+   "threads": 116,
+   "openFiles": 83,
+   "heapMb": 377.1,
+   "liveMb": 228.7,
+   "jvmThreads": 79
+  },
+  {
+   "t": 840.5,
+   "node": "c",
+   "rssMb": 1839.9,
+   "threads": 118,
+   "openFiles": 131,
+   "heapMb": 493.9,
+   "liveMb": 388.9,
+   "jvmThreads": 81
+  },
+  {
+   "t": 840.5,
+   "node": "console",
+   "rssMb": 881.3,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 92.7,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.5,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.0,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.9,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 900.5,
+   "node": "a",
+   "rssMb": 1755.6,
+   "threads": 159,
+   "openFiles": 148,
+   "heapMb": 728.9,
+   "liveMb": 377.9,
+   "jvmThreads": 112
+  },
+  {
+   "t": 900.5,
+   "node": "b",
+   "rssMb": 1160.9,
+   "threads": 121,
+   "openFiles": 77,
+   "heapMb": 430.8,
+   "liveMb": 198.8,
+   "jvmThreads": 79
+  },
+  {
+   "t": 900.5,
+   "node": "console",
+   "rssMb": 882.6,
+   "threads": 23,
+   "openFiles": 145,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 94.0,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.5,
+     "threads": 3,
+     "openFiles": 35
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.0,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.9,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 960.5,
+   "node": "a",
+   "rssMb": 1732.3,
+   "threads": 133,
+   "openFiles": 144,
+   "heapMb": 738.2,
+   "liveMb": 377.5,
+   "jvmThreads": 96
+  },
+  {
+   "t": 960.5,
+   "node": "b",
+   "rssMb": 1151.3,
+   "threads": 113,
+   "openFiles": 77,
+   "heapMb": 428.1,
+   "liveMb": 197.5,
+   "jvmThreads": 76
+  },
+  {
+   "t": 960.5,
+   "node": "console",
+   "rssMb": 882.8,
+   "threads": 23,
+   "openFiles": 139,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 94.0,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 30
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.1,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.9,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 1020.5,
+   "node": "a",
+   "rssMb": 1739.7,
+   "threads": 133,
+   "openFiles": 144,
+   "heapMb": 945.3,
+   "liveMb": 387.3,
+   "jvmThreads": 96
+  },
+  {
+   "t": 1020.5,
+   "node": "b",
+   "rssMb": 1172.3,
+   "threads": 114,
+   "openFiles": 77,
+   "heapMb": 283.2,
+   "liveMb": 195.4,
+   "jvmThreads": 76
+  },
+  {
+   "t": 1020.5,
+   "node": "console",
+   "rssMb": 882.8,
+   "threads": 23,
+   "openFiles": 141,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 94.0,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.1,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.9,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 1080.6,
+   "node": "a",
+   "rssMb": 1742.6,
+   "threads": 134,
+   "openFiles": 144,
+   "heapMb": 502.1,
+   "liveMb": 383.0,
+   "jvmThreads": 97
+  },
+  {
+   "t": 1080.6,
+   "node": "b",
+   "rssMb": 1153.1,
+   "threads": 113,
+   "openFiles": 78,
+   "heapMb": 500.7,
+   "liveMb": 188.3,
+   "jvmThreads": 76
+  },
+  {
+   "t": 1080.6,
+   "node": "console",
+   "rssMb": 882.8,
+   "threads": 23,
+   "openFiles": 140,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 94.0,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.1,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.9,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 1140.6,
+   "node": "a",
+   "rssMb": 1739.3,
+   "threads": 134,
+   "openFiles": 139,
+   "heapMb": 678.0,
+   "liveMb": 389.0,
+   "jvmThreads": 97
+  },
+  {
+   "t": 1140.6,
+   "node": "b",
+   "rssMb": 1158.2,
+   "threads": 112,
+   "openFiles": 77,
+   "heapMb": 381.6,
+   "liveMb": 188.8,
+   "jvmThreads": 75
+  },
+  {
+   "t": 1140.6,
+   "node": "console",
+   "rssMb": 885.1,
+   "threads": 23,
+   "openFiles": 136,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 94.0,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 29
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.4,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.9,
+     "threads": 3,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 1200.6,
+   "node": "a",
+   "rssMb": 1719.7,
+   "threads": 135,
+   "openFiles": 142,
+   "heapMb": 587.0,
+   "liveMb": 395.0,
+   "jvmThreads": 98
+  },
+  {
+   "t": 1200.6,
+   "node": "b",
+   "rssMb": 1135.4,
+   "threads": 113,
+   "openFiles": 77,
+   "heapMb": 575.2,
+   "liveMb": 185.2,
+   "jvmThreads": 76
+  },
+  {
+   "t": 1200.6,
+   "node": "console",
+   "rssMb": 885.1,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 94.0,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 34
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.4,
+     "threads": 4,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.9,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 1260.8,
+   "node": "a",
+   "rssMb": 1763.3,
+   "threads": 144,
+   "openFiles": 157,
+   "heapMb": 745.5,
+   "liveMb": 382.0,
+   "jvmThreads": 107
+  },
+  {
+   "t": 1260.8,
+   "node": "b",
+   "rssMb": 1150.3,
+   "threads": 116,
+   "openFiles": 87,
+   "heapMb": 278.4,
+   "liveMb": 186.5,
+   "jvmThreads": 79
+  },
+  {
+   "t": 1260.8,
+   "node": "console",
+   "rssMb": 885.1,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 94.0,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 35
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.4,
+     "threads": 4,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.9,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 1260.8,
+   "node": "c",
+   "rssMb": 1122.6,
+   "threads": 123,
+   "openFiles": 129,
+   "heapMb": 227.3,
+   "liveMb": 199.0,
+   "jvmThreads": 84
+  },
+  {
+   "t": 1320.9,
+   "node": "a",
+   "rssMb": 1770.9,
+   "threads": 148,
+   "openFiles": 161,
+   "heapMb": 593.5,
+   "liveMb": 372.5,
+   "jvmThreads": 109
+  },
+  {
+   "t": 1320.9,
+   "node": "b",
+   "rssMb": 1168.6,
+   "threads": 114,
+   "openFiles": 85,
+   "heapMb": 361.3,
+   "liveMb": 212.9,
+   "jvmThreads": 77
+  },
+  {
+   "t": 1320.9,
+   "node": "console",
+   "rssMb": 885.5,
+   "threads": 23,
+   "openFiles": 144,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 94.4,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 34
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.4,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.9,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 1320.9,
+   "node": "c",
+   "rssMb": 1229.2,
+   "threads": 117,
+   "openFiles": 133,
+   "heapMb": 308.2,
+   "liveMb": 253.7,
+   "jvmThreads": 80
+  },
+  {
+   "t": 1380.9,
+   "node": "a",
+   "rssMb": 1730.0,
+   "threads": 146,
+   "openFiles": 155,
+   "heapMb": 576.4,
+   "liveMb": 346.1,
+   "jvmThreads": 109
+  },
+  {
+   "t": 1380.9,
+   "node": "b",
+   "rssMb": 1166.8,
+   "threads": 119,
+   "openFiles": 85,
+   "heapMb": 525.5,
+   "liveMb": 198.5,
+   "jvmThreads": 80
+  },
+  {
+   "t": 1380.9,
+   "node": "console",
+   "rssMb": 885.9,
+   "threads": 23,
+   "openFiles": 141,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 94.8,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.4,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.9,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 1380.9,
+   "node": "c",
+   "rssMb": 1370.4,
+   "threads": 124,
+   "openFiles": 133,
+   "heapMb": 389.8,
+   "liveMb": 288.1,
+   "jvmThreads": 87
+  },
+  {
+   "t": 1440.9,
+   "node": "a",
+   "rssMb": 1755.9,
+   "threads": 145,
+   "openFiles": 156,
+   "heapMb": 579.8,
+   "liveMb": 382.7,
+   "jvmThreads": 108
+  },
+  {
+   "t": 1440.9,
+   "node": "b",
+   "rssMb": 1162.3,
+   "threads": 119,
+   "openFiles": 86,
+   "heapMb": 376.1,
+   "liveMb": 199.2,
+   "jvmThreads": 82
+  },
+  {
+   "t": 1440.9,
+   "node": "console",
+   "rssMb": 885.9,
+   "threads": 23,
+   "openFiles": 139,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 94.8,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.4,
+     "threads": 4,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.9,
+     "threads": 3,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 1440.9,
+   "node": "c",
+   "rssMb": 1450.2,
+   "threads": 126,
+   "openFiles": 140,
+   "heapMb": 527.6,
+   "liveMb": 320.1,
+   "jvmThreads": 89
+  },
+  {
+   "t": 1501.0,
+   "node": "a",
+   "rssMb": 1726.2,
+   "threads": 144,
+   "openFiles": 154,
+   "heapMb": 652.3,
+   "liveMb": 389.4,
+   "jvmThreads": 107
+  },
+  {
+   "t": 1501.0,
+   "node": "b",
+   "rssMb": 1152.7,
+   "threads": 118,
+   "openFiles": 79,
+   "heapMb": 589.4,
+   "liveMb": 203.0,
+   "jvmThreads": 81
+  },
+  {
+   "t": 1501.0,
+   "node": "console",
+   "rssMb": 887.8,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 94.8,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.4,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 99.8,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 1501.0,
+   "node": "c",
+   "rssMb": 1561.2,
+   "threads": 120,
+   "openFiles": 130,
+   "heapMb": 746.4,
+   "liveMb": 354.8,
+   "jvmThreads": 83
+  },
+  {
+   "t": 1561.0,
+   "node": "a",
+   "rssMb": 1756.7,
+   "threads": 145,
+   "openFiles": 152,
+   "heapMb": 625.0,
+   "liveMb": 376.0,
+   "jvmThreads": 107
+  },
+  {
+   "t": 1561.0,
+   "node": "b",
+   "rssMb": 1178.4,
+   "threads": 117,
+   "openFiles": 84,
+   "heapMb": 575.6,
+   "liveMb": 214.8,
+   "jvmThreads": 80
+  },
+  {
+   "t": 1561.0,
+   "node": "console",
+   "rssMb": 888.4,
+   "threads": 23,
+   "openFiles": 144,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 94.8,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 101.0,
+     "threads": 4,
+     "openFiles": 28
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 99.8,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 1561.0,
+   "node": "c",
+   "rssMb": 1652.3,
+   "threads": 123,
+   "openFiles": 138,
+   "heapMb": 570.5,
+   "liveMb": 379.0,
+   "jvmThreads": 86
+  },
+  {
+   "t": 1621.0,
+   "node": "a",
+   "rssMb": 1750.3,
+   "threads": 145,
+   "openFiles": 160,
+   "heapMb": 710.1,
+   "liveMb": 372.6,
+   "jvmThreads": 108
+  },
+  {
+   "t": 1621.0,
+   "node": "b",
+   "rssMb": 1178.8,
+   "threads": 118,
+   "openFiles": 81,
+   "heapMb": 323.6,
+   "liveMb": 212.3,
+   "jvmThreads": 81
+  },
+  {
+   "t": 1621.0,
+   "node": "console",
+   "rssMb": 892.1,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 98.5,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 101.0,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 99.8,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 1621.0,
+   "node": "c",
+   "rssMb": 1712.2,
+   "threads": 124,
+   "openFiles": 138,
+   "heapMb": 586.8,
+   "liveMb": 374.0,
+   "jvmThreads": 87
+  },
+  {
+   "t": 1681.0,
+   "node": "a",
+   "rssMb": 1731.3,
+   "threads": 144,
+   "openFiles": 148,
+   "heapMb": 650.1,
+   "liveMb": 370.1,
+   "jvmThreads": 107
+  },
+  {
+   "t": 1681.0,
+   "node": "b",
+   "rssMb": 1161.9,
+   "threads": 118,
+   "openFiles": 82,
+   "heapMb": 324.5,
+   "liveMb": 210.0,
+   "jvmThreads": 81
+  },
+  {
+   "t": 1681.0,
+   "node": "console",
+   "rssMb": 892.1,
+   "threads": 23,
+   "openFiles": 140,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 98.5,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 101.0,
+     "threads": 4,
+     "openFiles": 28
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 99.8,
+     "threads": 3,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 1681.0,
+   "node": "c",
+   "rssMb": 1727.8,
+   "threads": 121,
+   "openFiles": 132,
+   "heapMb": 919.9,
+   "liveMb": 378.0,
+   "jvmThreads": 84
+  },
+  {
+   "t": 1741.1,
+   "node": "a",
+   "rssMb": 1733.7,
+   "threads": 143,
+   "openFiles": 154,
+   "heapMb": 528.3,
+   "liveMb": 378.3,
+   "jvmThreads": 106
+  },
+  {
+   "t": 1741.1,
+   "node": "b",
+   "rssMb": 1135.2,
+   "threads": 121,
+   "openFiles": 86,
+   "heapMb": 286.6,
+   "liveMb": 204.6,
+   "jvmThreads": 81
+  },
+  {
+   "t": 1741.1,
+   "node": "console",
+   "rssMb": 892.1,
+   "threads": 23,
+   "openFiles": 146,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 98.5,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 101.0,
+     "threads": 4,
+     "openFiles": 30
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 99.8,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 1741.1,
+   "node": "c",
+   "rssMb": 1740.0,
+   "threads": 127,
+   "openFiles": 138,
+   "heapMb": 739.5,
+   "liveMb": 381.4,
+   "jvmThreads": 90
+  },
+  {
+   "t": 1801.1,
+   "node": "b",
+   "rssMb": 1196.7,
+   "threads": 127,
+   "openFiles": 89,
+   "heapMb": 457.4,
+   "liveMb": 245.4,
+   "jvmThreads": 80
+  },
+  {
+   "t": 1801.1,
+   "node": "console",
+   "rssMb": 879.9,
+   "threads": 23,
+   "openFiles": 150,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 98.5,
+     "threads": 3,
+     "openFiles": 22
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 35
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 95.4,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 93.2,
+     "threads": 3,
+     "openFiles": 29
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 1801.1,
+   "node": "c",
+   "rssMb": 1766.3,
+   "threads": 148,
+   "openFiles": 152,
+   "heapMb": 849.8,
+   "liveMb": 387.3,
+   "jvmThreads": 105
+  },
+  {
+   "t": 1861.1,
+   "node": "b",
+   "rssMb": 1427.3,
+   "threads": 120,
+   "openFiles": 110,
+   "heapMb": 683.2,
+   "liveMb": 229.0,
+   "jvmThreads": 83
+  },
+  {
+   "t": 1861.1,
+   "node": "console",
+   "rssMb": 876.0,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 93.8,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 95.4,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 94.0,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 1861.1,
+   "node": "c",
+   "rssMb": 1790.2,
+   "threads": 148,
+   "openFiles": 145,
+   "heapMb": 606.7,
+   "liveMb": 373.5,
+   "jvmThreads": 111
+  },
+  {
+   "t": 1921.1,
+   "node": "b",
+   "rssMb": 1445.0,
+   "threads": 120,
+   "openFiles": 134,
+   "heapMb": 691.6,
+   "liveMb": 252.5,
+   "jvmThreads": 83
+  },
+  {
+   "t": 1921.1,
+   "node": "console",
+   "rssMb": 879.6,
+   "threads": 23,
+   "openFiles": 141,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 93.8,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 97.1,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 95.9,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 1921.1,
+   "node": "c",
+   "rssMb": 1800.0,
+   "threads": 148,
+   "openFiles": 153,
+   "heapMb": 519.7,
+   "liveMb": 388.2,
+   "jvmThreads": 111
+  },
+  {
+   "t": 1981.1,
+   "node": "b",
+   "rssMb": 1460.9,
+   "threads": 121,
+   "openFiles": 136,
+   "heapMb": 772.9,
+   "liveMb": 274.2,
+   "jvmThreads": 84
+  },
+  {
+   "t": 1981.1,
+   "node": "console",
+   "rssMb": 879.6,
+   "threads": 23,
+   "openFiles": 141,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 93.8,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 97.1,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 95.9,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 1981.1,
+   "node": "c",
+   "rssMb": 1768.0,
+   "threads": 147,
+   "openFiles": 148,
+   "heapMb": 542.8,
+   "liveMb": 381.8,
+   "jvmThreads": 110
+  },
+  {
+   "t": 2041.2,
+   "node": "b",
+   "rssMb": 1473.7,
+   "threads": 126,
+   "openFiles": 139,
+   "heapMb": 400.5,
+   "liveMb": 296.6,
+   "jvmThreads": 89
+  },
+  {
+   "t": 2041.2,
+   "node": "console",
+   "rssMb": 883.2,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 93.8,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.7,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 95.9,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 2041.2,
+   "node": "c",
+   "rssMb": 1771.7,
+   "threads": 151,
+   "openFiles": 150,
+   "heapMb": 744.2,
+   "liveMb": 374.2,
+   "jvmThreads": 114
+  },
+  {
+   "t": 2101.2,
+   "node": "b",
+   "rssMb": 1520.9,
+   "threads": 126,
+   "openFiles": 151,
+   "heapMb": 780.7,
+   "liveMb": 312.4,
+   "jvmThreads": 89
+  },
+  {
+   "t": 2101.2,
+   "node": "console",
+   "rssMb": 883.9,
+   "threads": 23,
+   "openFiles": 144,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 94.5,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 101.6,
+     "threads": 3,
+     "openFiles": 35
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.7,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 95.9,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 2101.2,
+   "node": "c",
+   "rssMb": 1774.6,
+   "threads": 151,
+   "openFiles": 163,
+   "heapMb": 509.3,
+   "liveMb": 376.9,
+   "jvmThreads": 114
+  },
+  {
+   "t": 2101.2,
+   "node": "a",
+   "rssMb": 51.3,
+   "threads": 21,
+   "openFiles": 5
+  },
+  {
+   "t": 2161.2,
+   "node": "b",
+   "rssMb": 1508.3,
+   "threads": 123,
+   "openFiles": 134,
+   "heapMb": 719.6,
+   "liveMb": 323.0,
+   "jvmThreads": 86
+  },
+  {
+   "t": 2161.2,
+   "node": "console",
+   "rssMb": 884.6,
+   "threads": 23,
+   "openFiles": 146,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 94.5,
+     "threads": 3,
+     "openFiles": 21
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 102.3,
+     "threads": 3,
+     "openFiles": 35
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.7,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 95.9,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 2161.2,
+   "node": "c",
+   "rssMb": 1771.0,
+   "threads": 153,
+   "openFiles": 151,
+   "heapMb": 976.0,
+   "liveMb": 396.5,
+   "jvmThreads": 116
+  },
+  {
+   "t": 2161.2,
+   "node": "a",
+   "rssMb": 974.6,
+   "threads": 122,
+   "openFiles": 134,
+   "heapMb": 354.2,
+   "liveMb": 176.4,
+   "jvmThreads": 82
+  },
+  {
+   "t": 2221.3,
+   "node": "b",
+   "rssMb": 1532.0,
+   "threads": 125,
+   "openFiles": 140,
+   "heapMb": 476.4,
+   "liveMb": 333.4,
+   "jvmThreads": 88
+  },
+  {
+   "t": 2221.3,
+   "node": "console",
+   "rssMb": 884.6,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 94.5,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 102.3,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.7,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 95.9,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 2221.3,
+   "node": "c",
+   "rssMb": 1777.7,
+   "threads": 151,
+   "openFiles": 160,
+   "heapMb": 680.5,
+   "liveMb": 397.5,
+   "jvmThreads": 114
+  },
+  {
+   "t": 2221.3,
+   "node": "a",
+   "rssMb": 1089.7,
+   "threads": 119,
+   "openFiles": 138,
+   "heapMb": 480.9,
+   "liveMb": 215.9,
+   "jvmThreads": 82
+  },
+  {
+   "t": 2281.3,
+   "node": "b",
+   "rssMb": 1531.7,
+   "threads": 129,
+   "openFiles": 140,
+   "heapMb": 785.3,
+   "liveMb": 330.3,
+   "jvmThreads": 92
+  },
+  {
+   "t": 2281.3,
+   "node": "console",
+   "rssMb": 884.6,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 94.5,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 102.3,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.7,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 95.9,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 2281.3,
+   "node": "c",
+   "rssMb": 1773.1,
+   "threads": 149,
+   "openFiles": 160,
+   "heapMb": 543.1,
+   "liveMb": 389.6,
+   "jvmThreads": 112
+  },
+  {
+   "t": 2281.3,
+   "node": "a",
+   "rssMb": 1137.8,
+   "threads": 120,
+   "openFiles": 140,
+   "heapMb": 460.8,
+   "liveMb": 216.5,
+   "jvmThreads": 80
+  },
+  {
+   "t": 2341.3,
+   "node": "b",
+   "rssMb": 1534.5,
+   "threads": 128,
+   "openFiles": 139,
+   "heapMb": 399.4,
+   "liveMb": 323.3,
+   "jvmThreads": 91
+  },
+  {
+   "t": 2341.3,
+   "node": "console",
+   "rssMb": 884.6,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 94.5,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 102.3,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.7,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 95.9,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 2341.3,
+   "node": "c",
+   "rssMb": 1779.7,
+   "threads": 150,
+   "openFiles": 160,
+   "heapMb": 502.7,
+   "liveMb": 417.2,
+   "jvmThreads": 113
+  },
+  {
+   "t": 2341.3,
+   "node": "a",
+   "rssMb": 1188.6,
+   "threads": 120,
+   "openFiles": 143,
+   "heapMb": 516.7,
+   "liveMb": 229.4,
+   "jvmThreads": 83
+  },
+  {
+   "t": 2401.4,
+   "node": "b",
+   "rssMb": 1543.2,
+   "threads": 127,
+   "openFiles": 140,
+   "heapMb": 879.1,
+   "liveMb": 329.3,
+   "jvmThreads": 90
+  },
+  {
+   "t": 2401.4,
+   "node": "console",
+   "rssMb": 888.3,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 98.2,
+     "threads": 3,
+     "openFiles": 21
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 102.3,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.7,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 95.9,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 2401.4,
+   "node": "c",
+   "rssMb": 1784.6,
+   "threads": 150,
+   "openFiles": 162,
+   "heapMb": 627.6,
+   "liveMb": 398.0,
+   "jvmThreads": 113
+  },
+  {
+   "t": 2401.4,
+   "node": "a",
+   "rssMb": 1222.0,
+   "threads": 119,
+   "openFiles": 142,
+   "heapMb": 328.7,
+   "liveMb": 245.7,
+   "jvmThreads": 82
+  },
+  {
+   "t": 2461.4,
+   "node": "b",
+   "rssMb": 1533.4,
+   "threads": 128,
+   "openFiles": 136,
+   "heapMb": 780.4,
+   "liveMb": 328.6,
+   "jvmThreads": 91
+  },
+  {
+   "t": 2461.4,
+   "node": "console",
+   "rssMb": 892.5,
+   "threads": 23,
+   "openFiles": 139,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 102.3,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.7,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 99.0,
+     "threads": 3,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 2461.4,
+   "node": "c",
+   "rssMb": 1785.8,
+   "threads": 151,
+   "openFiles": 159,
+   "heapMb": 727.4,
+   "liveMb": 433.0,
+   "jvmThreads": 114
+  },
+  {
+   "t": 2461.4,
+   "node": "a",
+   "rssMb": 1219.9,
+   "threads": 122,
+   "openFiles": 146,
+   "heapMb": 643.1,
+   "liveMb": 237.2,
+   "jvmThreads": 82
+  },
+  {
+   "t": 2521.4,
+   "node": "b",
+   "rssMb": 1541.2,
+   "threads": 130,
+   "openFiles": 140,
+   "heapMb": 435.4,
+   "liveMb": 331.8,
+   "jvmThreads": 93
+  },
+  {
+   "t": 2521.4,
+   "node": "console",
+   "rssMb": 893.6,
+   "threads": 23,
+   "openFiles": 144,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 102.3,
+     "threads": 3,
+     "openFiles": 34
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.7,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 100.1,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 2521.4,
+   "node": "c",
+   "rssMb": 1785.3,
+   "threads": 152,
+   "openFiles": 163,
+   "heapMb": 475.3,
+   "liveMb": 385.9,
+   "jvmThreads": 115
+  },
+  {
+   "t": 2521.4,
+   "node": "a",
+   "rssMb": 1221.0,
+   "threads": 117,
+   "openFiles": 142,
+   "heapMb": 336.4,
+   "liveMb": 238.2,
+   "jvmThreads": 80
+  },
+  {
+   "t": 2581.4,
+   "node": "b",
+   "rssMb": 1535.8,
+   "threads": 130,
+   "openFiles": 141,
+   "heapMb": 932.7,
+   "liveMb": 336.8,
+   "jvmThreads": 93
+  },
+  {
+   "t": 2581.4,
+   "node": "console",
+   "rssMb": 888.5,
+   "threads": 23,
+   "openFiles": 141,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 102.3,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.7,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 95.0,
+     "threads": 3,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 2581.4,
+   "node": "c",
+   "rssMb": 1783.5,
+   "threads": 152,
+   "openFiles": 162,
+   "heapMb": 806.3,
+   "liveMb": 397.0,
+   "jvmThreads": 115
+  },
+  {
+   "t": 2581.4,
+   "node": "a",
+   "rssMb": 1225.1,
+   "threads": 122,
+   "openFiles": 143,
+   "heapMb": 483.9,
+   "liveMb": 239.4,
+   "jvmThreads": 85
+  },
+  {
+   "t": 2641.5,
+   "node": "b",
+   "rssMb": 1573.1,
+   "threads": 128,
+   "openFiles": 133,
+   "heapMb": 529.7,
+   "liveMb": 336.0,
+   "jvmThreads": 90
+  },
+  {
+   "t": 2641.5,
+   "node": "console",
+   "rssMb": 889.6,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 102.3,
+     "threads": 3,
+     "openFiles": 34
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.7,
+     "threads": 4,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 96.1,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 2641.5,
+   "node": "c",
+   "rssMb": 1786.9,
+   "threads": 153,
+   "openFiles": 154,
+   "heapMb": 641.9,
+   "liveMb": 413.9,
+   "jvmThreads": 116
+  },
+  {
+   "t": 2641.5,
+   "node": "a",
+   "rssMb": 1225.4,
+   "threads": 123,
+   "openFiles": 141,
+   "heapMb": 363.2,
+   "liveMb": 243.9,
+   "jvmThreads": 86
+  },
+  {
+   "t": 2701.5,
+   "node": "b",
+   "rssMb": 1583.5,
+   "threads": 128,
+   "openFiles": 134,
+   "heapMb": 535.7,
+   "liveMb": 347.9,
+   "jvmThreads": 91
+  },
+  {
+   "t": 2701.5,
+   "node": "console",
+   "rssMb": 890.8,
+   "threads": 23,
+   "openFiles": 141,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 102.3,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.7,
+     "threads": 4,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.3,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 2701.5,
+   "node": "c",
+   "rssMb": 1791.8,
+   "threads": 155,
+   "openFiles": 149,
+   "heapMb": 891.5,
+   "liveMb": 433.5,
+   "jvmThreads": 118
+  },
+  {
+   "t": 2701.5,
+   "node": "a",
+   "rssMb": 1226.7,
+   "threads": 123,
+   "openFiles": 139,
+   "heapMb": 323.0,
+   "liveMb": 234.0,
+   "jvmThreads": 86
+  },
+  {
+   "t": 2761.5,
+   "node": "b",
+   "rssMb": 1650.8,
+   "threads": 130,
+   "openFiles": 135,
+   "heapMb": 432.6,
+   "liveMb": 334.4,
+   "jvmThreads": 93
+  },
+  {
+   "t": 2761.5,
+   "node": "console",
+   "rssMb": 893.2,
+   "threads": 23,
+   "openFiles": 141,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 102.3,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.7,
+     "threads": 4,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 99.7,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 2761.5,
+   "node": "c",
+   "rssMb": 1783.5,
+   "threads": 151,
+   "openFiles": 149,
+   "heapMb": 874.0,
+   "liveMb": 386.8,
+   "jvmThreads": 114
+  },
+  {
+   "t": 2761.5,
+   "node": "a",
+   "rssMb": 1242.5,
+   "threads": 121,
+   "openFiles": 137,
+   "heapMb": 571.3,
+   "liveMb": 241.8,
+   "jvmThreads": 83
+  },
+  {
+   "t": 2821.5,
+   "node": "b",
+   "rssMb": 1666.7,
+   "threads": 130,
+   "openFiles": 134,
+   "heapMb": 459.2,
+   "liveMb": 336.0,
+   "jvmThreads": 93
+  },
+  {
+   "t": 2821.5,
+   "node": "console",
+   "rssMb": 893.2,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 102.3,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.7,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 99.7,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 2821.5,
+   "node": "c",
+   "rssMb": 1791.0,
+   "threads": 152,
+   "openFiles": 153,
+   "heapMb": 663.3,
+   "liveMb": 404.6,
+   "jvmThreads": 115
+  },
+  {
+   "t": 2821.5,
+   "node": "a",
+   "rssMb": 1248.9,
+   "threads": 124,
+   "openFiles": 141,
+   "heapMb": 438.8,
+   "liveMb": 234.9,
+   "jvmThreads": 87
+  },
+  {
+   "t": 2881.6,
+   "node": "b",
+   "rssMb": 1701.7,
+   "threads": 128,
+   "openFiles": 138,
+   "heapMb": 838.3,
+   "liveMb": 329.5,
+   "jvmThreads": 91
+  },
+  {
+   "t": 2881.6,
+   "node": "console",
+   "rssMb": 888.7,
+   "threads": 23,
+   "openFiles": 145,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.7,
+     "threads": 4,
+     "openFiles": 30
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 99.7,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 2881.6,
+   "node": "c",
+   "rssMb": 1787.3,
+   "threads": 150,
+   "openFiles": 152,
+   "heapMb": 1090.0,
+   "liveMb": 380.5,
+   "jvmThreads": 113
+  },
+  {
+   "t": 2881.6,
+   "node": "a",
+   "rssMb": 1257.8,
+   "threads": 121,
+   "openFiles": 137,
+   "heapMb": 356.2,
+   "liveMb": 238.0,
+   "jvmThreads": 84
+  },
+  {
+   "t": 2941.6,
+   "node": "b",
+   "rssMb": 1754.6,
+   "threads": 128,
+   "openFiles": 136,
+   "heapMb": 815.3,
+   "liveMb": 330.5,
+   "jvmThreads": 91
+  },
+  {
+   "t": 2941.6,
+   "node": "console",
+   "rssMb": 888.7,
+   "threads": 23,
+   "openFiles": 144,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 21
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 34
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.7,
+     "threads": 4,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 99.7,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 2941.6,
+   "node": "c",
+   "rssMb": 1797.3,
+   "threads": 152,
+   "openFiles": 151,
+   "heapMb": 629.2,
+   "liveMb": 375.7,
+   "jvmThreads": 115
+  },
+  {
+   "t": 2941.6,
+   "node": "a",
+   "rssMb": 1254.7,
+   "threads": 123,
+   "openFiles": 139,
+   "heapMb": 299.0,
+   "liveMb": 236.5,
+   "jvmThreads": 86
+  },
+  {
+   "t": 3001.6,
+   "node": "b",
+   "rssMb": 1741.2,
+   "threads": 130,
+   "openFiles": 135,
+   "heapMb": 952.9,
+   "liveMb": 330.5,
+   "jvmThreads": 93
+  },
+  {
+   "t": 3001.6,
+   "node": "console",
+   "rssMb": 889.4,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 98.5,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.7,
+     "threads": 4,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 99.7,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 3001.6,
+   "node": "c",
+   "rssMb": 1792.0,
+   "threads": 152,
+   "openFiles": 154,
+   "heapMb": 760.0,
+   "liveMb": 462.2,
+   "jvmThreads": 115
+  },
+  {
+   "t": 3001.6,
+   "node": "a",
+   "rssMb": 1256.1,
+   "threads": 123,
+   "openFiles": 142,
+   "heapMb": 585.8,
+   "liveMb": 241.9,
+   "jvmThreads": 86
+  },
+  {
+   "t": 3061.6,
+   "node": "b",
+   "rssMb": 1762.9,
+   "threads": 127,
+   "openFiles": 139,
+   "heapMb": 688.3,
+   "liveMb": 389.2,
+   "jvmThreads": 90
+  },
+  {
+   "t": 3061.6,
+   "node": "console",
+   "rssMb": 889.4,
+   "threads": 23,
+   "openFiles": 141,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 98.5,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.7,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 99.7,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 3061.6,
+   "node": "c",
+   "rssMb": 1804.6,
+   "threads": 153,
+   "openFiles": 156,
+   "heapMb": 1077.0,
+   "liveMb": 456.5,
+   "jvmThreads": 116
+  },
+  {
+   "t": 3061.6,
+   "node": "a",
+   "rssMb": 1257.9,
+   "threads": 123,
+   "openFiles": 142,
+   "heapMb": 565.0,
+   "liveMb": 233.4,
+   "jvmThreads": 86
+  },
+  {
+   "t": 3121.6,
+   "node": "b",
+   "rssMb": 1782.6,
+   "threads": 128,
+   "openFiles": 136,
+   "heapMb": 895.7,
+   "liveMb": 341.0,
+   "jvmThreads": 91
+  },
+  {
+   "t": 3121.6,
+   "node": "console",
+   "rssMb": 889.4,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 98.5,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.7,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 99.7,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 3121.6,
+   "node": "c",
+   "rssMb": 1807.8,
+   "threads": 151,
+   "openFiles": 150,
+   "heapMb": 955.7,
+   "liveMb": 392.2,
+   "jvmThreads": 114
+  },
+  {
+   "t": 3121.6,
+   "node": "a",
+   "rssMb": 1257.5,
+   "threads": 120,
+   "openFiles": 137,
+   "heapMb": 559.5,
+   "liveMb": 241.1,
+   "jvmThreads": 83
+  },
+  {
+   "t": 3181.6,
+   "node": "b",
+   "rssMb": 1795.6,
+   "threads": 128,
+   "openFiles": 136,
+   "heapMb": 740.4,
+   "liveMb": 339.0,
+   "jvmThreads": 91
+  },
+  {
+   "t": 3181.6,
+   "node": "console",
+   "rssMb": 889.8,
+   "threads": 23,
+   "openFiles": 140,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 98.5,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 101.1,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 99.7,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 3181.6,
+   "node": "c",
+   "rssMb": 1805.2,
+   "threads": 153,
+   "openFiles": 155,
+   "heapMb": 904.5,
+   "liveMb": 528.9,
+   "jvmThreads": 116
+  },
+  {
+   "t": 3181.6,
+   "node": "a",
+   "rssMb": 1260.9,
+   "threads": 121,
+   "openFiles": 144,
+   "heapMb": 491.2,
+   "liveMb": 236.2,
+   "jvmThreads": 84
+  },
+  {
+   "t": 3241.7,
+   "node": "b",
+   "rssMb": 1813.2,
+   "threads": 128,
+   "openFiles": 136,
+   "heapMb": 1105.4,
+   "liveMb": 342.4,
+   "jvmThreads": 91
+  },
+  {
+   "t": 3241.7,
+   "node": "console",
+   "rssMb": 889.8,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 21
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 98.5,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 101.1,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 99.7,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 3241.7,
+   "node": "c",
+   "rssMb": 1868.6,
+   "threads": 151,
+   "openFiles": 152,
+   "heapMb": 673.3,
+   "liveMb": 558.0,
+   "jvmThreads": 114
+  },
+  {
+   "t": 3241.7,
+   "node": "a",
+   "rssMb": 1260.8,
+   "threads": 123,
+   "openFiles": 140,
+   "heapMb": 307.0,
+   "liveMb": 238.9,
+   "jvmThreads": 85
+  },
+  {
+   "t": 3301.7,
+   "node": "b",
+   "rssMb": 1816.5,
+   "threads": 126,
+   "openFiles": 132,
+   "heapMb": 1084.8,
+   "liveMb": 345.8,
+   "jvmThreads": 89
+  },
+  {
+   "t": 3301.7,
+   "node": "console",
+   "rssMb": 890.5,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 98.5,
+     "threads": 3,
+     "openFiles": 34
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 101.1,
+     "threads": 4,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 100.4,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 3301.7,
+   "node": "c",
+   "rssMb": 1867.4,
+   "threads": 153,
+   "openFiles": 148,
+   "heapMb": 955.0,
+   "liveMb": 546.4,
+   "jvmThreads": 116
+  },
+  {
+   "t": 3301.7,
+   "node": "a",
+   "rssMb": 1267.2,
+   "threads": 119,
+   "openFiles": 136,
+   "heapMb": 514.1,
+   "liveMb": 234.8,
+   "jvmThreads": 82
+  },
+  {
+   "t": 3361.7,
+   "node": "b",
+   "rssMb": 1818.7,
+   "threads": 126,
+   "openFiles": 134,
+   "heapMb": 909.4,
+   "liveMb": 347.9,
+   "jvmThreads": 89
+  },
+  {
+   "t": 3361.7,
+   "node": "console",
+   "rssMb": 885.4,
+   "threads": 23,
+   "openFiles": 144,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 98.6,
+     "threads": 3,
+     "openFiles": 34
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 101.1,
+     "threads": 4,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 95.2,
+     "threads": 3,
+     "openFiles": 28
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 3361.7,
+   "node": "c",
+   "rssMb": 1875.7,
+   "threads": 154,
+   "openFiles": 161,
+   "heapMb": 667.4,
+   "liveMb": 451.9,
+   "jvmThreads": 117
+  },
+  {
+   "t": 3361.7,
+   "node": "a",
+   "rssMb": 1262.6,
+   "threads": 121,
+   "openFiles": 147,
+   "heapMb": 422.5,
+   "liveMb": 240.5,
+   "jvmThreads": 84
+  },
+  {
+   "t": 3421.8,
+   "node": "b",
+   "rssMb": 1834.9,
+   "threads": 127,
+   "openFiles": 132,
+   "heapMb": 972.0,
+   "liveMb": 336.4,
+   "jvmThreads": 90
+  },
+  {
+   "t": 3421.8,
+   "node": "console",
+   "rssMb": 886.6,
+   "threads": 23,
+   "openFiles": 141,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 98.6,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 101.1,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 96.4,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 3421.8,
+   "node": "c",
+   "rssMb": 1871.9,
+   "threads": 149,
+   "openFiles": 150,
+   "heapMb": 972.9,
+   "liveMb": 487.5,
+   "jvmThreads": 112
+  },
+  {
+   "t": 3421.8,
+   "node": "a",
+   "rssMb": 1264.1,
+   "threads": 122,
+   "openFiles": 139,
+   "heapMb": 493.6,
+   "liveMb": 237.7,
+   "jvmThreads": 85
+  },
+  {
+   "t": 3481.8,
+   "node": "b",
+   "rssMb": 1853.1,
+   "threads": 129,
+   "openFiles": 135,
+   "heapMb": 656.0,
+   "liveMb": 331.6,
+   "jvmThreads": 92
+  },
+  {
+   "t": 3481.8,
+   "node": "console",
+   "rssMb": 882.3,
+   "threads": 23,
+   "openFiles": 147,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 23
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 98.6,
+     "threads": 3,
+     "openFiles": 34
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 95.2,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 98.0,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 3481.8,
+   "node": "c",
+   "rssMb": 1879.7,
+   "threads": 151,
+   "openFiles": 161,
+   "heapMb": 1187.1,
+   "liveMb": 524.0,
+   "jvmThreads": 114
+  },
+  {
+   "t": 3481.8,
+   "node": "a",
+   "rssMb": 1260.9,
+   "threads": 118,
+   "openFiles": 142,
+   "heapMb": 609.5,
+   "liveMb": 234.2,
+   "jvmThreads": 81
+  },
+  {
+   "t": 3541.8,
+   "node": "b",
+   "rssMb": 1830.1,
+   "threads": 128,
+   "openFiles": 136,
+   "heapMb": 968.8,
+   "liveMb": 423.7,
+   "jvmThreads": 91
+  },
+  {
+   "t": 3541.8,
+   "node": "console",
+   "rssMb": 882.8,
+   "threads": 23,
+   "openFiles": 144,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.1,
+     "threads": 3,
+     "openFiles": 34
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 95.2,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 98.0,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 3541.8,
+   "node": "c",
+   "rssMb": 1890.4,
+   "threads": 152,
+   "openFiles": 161,
+   "heapMb": 579.0,
+   "liveMb": 452.0,
+   "jvmThreads": 115
+  },
+  {
+   "t": 3541.8,
+   "node": "a",
+   "rssMb": 1262.2,
+   "threads": 121,
+   "openFiles": 142,
+   "heapMb": 481.0,
+   "liveMb": 235.1,
+   "jvmThreads": 84
+  },
+  {
+   "t": 3601.8,
+   "node": "b",
+   "rssMb": 1837.8,
+   "threads": 128,
+   "openFiles": 141,
+   "heapMb": 741.1,
+   "liveMb": 339.4,
+   "jvmThreads": 91
+  },
+  {
+   "t": 3601.8,
+   "node": "console",
+   "rssMb": 884.7,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.1,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 97.1,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 98.0,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 3601.8,
+   "node": "c",
+   "rssMb": 1892.3,
+   "threads": 150,
+   "openFiles": 160,
+   "heapMb": 622.3,
+   "liveMb": 422.3,
+   "jvmThreads": 113
+  },
+  {
+   "t": 3601.8,
+   "node": "a",
+   "rssMb": 1264.1,
+   "threads": 119,
+   "openFiles": 144,
+   "heapMb": 692.0,
+   "liveMb": 240.5,
+   "jvmThreads": 82
+  },
+  {
+   "t": 3661.9,
+   "node": "b",
+   "rssMb": 1829.5,
+   "threads": 129,
+   "openFiles": 140,
+   "heapMb": 769.6,
+   "liveMb": 342.6,
+   "jvmThreads": 92
+  },
+  {
+   "t": 3661.9,
+   "node": "console",
+   "rssMb": 884.7,
+   "threads": 23,
+   "openFiles": 144,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.1,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 97.1,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 98.0,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 3661.9,
+   "node": "c",
+   "rssMb": 1921.8,
+   "threads": 152,
+   "openFiles": 161,
+   "heapMb": 824.8,
+   "liveMb": 466.5,
+   "jvmThreads": 115
+  },
+  {
+   "t": 3661.9,
+   "node": "a",
+   "rssMb": 1262.8,
+   "threads": 120,
+   "openFiles": 143,
+   "heapMb": 547.1,
+   "liveMb": 242.1,
+   "jvmThreads": 83
+  },
+  {
+   "t": 3721.9,
+   "node": "b",
+   "rssMb": 1849.8,
+   "threads": 128,
+   "openFiles": 138,
+   "heapMb": 1013.1,
+   "liveMb": 337.4,
+   "jvmThreads": 91
+  },
+  {
+   "t": 3721.9,
+   "node": "console",
+   "rssMb": 885.6,
+   "threads": 23,
+   "openFiles": 144,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 100.0,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 97.1,
+     "threads": 4,
+     "openFiles": 28
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 98.0,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 3721.9,
+   "node": "c",
+   "rssMb": 1932.0,
+   "threads": 150,
+   "openFiles": 160,
+   "heapMb": 1062.8,
+   "liveMb": 453.3,
+   "jvmThreads": 113
+  },
+  {
+   "t": 3721.9,
+   "node": "a",
+   "rssMb": 1277.1,
+   "threads": 121,
+   "openFiles": 144,
+   "heapMb": 412.2,
+   "liveMb": 237.6,
+   "jvmThreads": 84
+  },
+  {
+   "t": 3781.9,
+   "node": "b",
+   "rssMb": 1834.7,
+   "threads": 128,
+   "openFiles": 141,
+   "heapMb": 909.0,
+   "liveMb": 335.0,
+   "jvmThreads": 91
+  },
+  {
+   "t": 3781.9,
+   "node": "console",
+   "rssMb": 885.9,
+   "threads": 23,
+   "openFiles": 140,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 100.3,
+     "threads": 3,
+     "openFiles": 30
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 97.1,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 98.0,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 3781.9,
+   "node": "c",
+   "rssMb": 1923.5,
+   "threads": 149,
+   "openFiles": 151,
+   "heapMb": 578.3,
+   "liveMb": 454.5,
+   "jvmThreads": 112
+  },
+  {
+   "t": 3781.9,
+   "node": "a",
+   "rssMb": 1265.9,
+   "threads": 121,
+   "openFiles": 133,
+   "heapMb": 581.5,
+   "liveMb": 232.3,
+   "jvmThreads": 84
+  },
+  {
+   "t": 3842.0,
+   "node": "b",
+   "rssMb": 1859.1,
+   "threads": 130,
+   "openFiles": 137,
+   "heapMb": 978.1,
+   "liveMb": 335.0,
+   "jvmThreads": 93
+  },
+  {
+   "t": 3842.0,
+   "node": "console",
+   "rssMb": 885.9,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 100.3,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 97.1,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 98.0,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 3842.0,
+   "node": "c",
+   "rssMb": 1953.3,
+   "threads": 151,
+   "openFiles": 153,
+   "heapMb": 1253.8,
+   "liveMb": 519.0,
+   "jvmThreads": 114
+  },
+  {
+   "t": 3842.0,
+   "node": "a",
+   "rssMb": 1266.6,
+   "threads": 121,
+   "openFiles": 135,
+   "heapMb": 437.2,
+   "liveMb": 240.2,
+   "jvmThreads": 84
+  },
+  {
+   "t": 3902.0,
+   "node": "b",
+   "rssMb": 1857.4,
+   "threads": 129,
+   "openFiles": 141,
+   "heapMb": 832.7,
+   "liveMb": 337.5,
+   "jvmThreads": 92
+  },
+  {
+   "t": 3902.0,
+   "node": "console",
+   "rssMb": 885.9,
+   "threads": 23,
+   "openFiles": 144,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 100.3,
+     "threads": 3,
+     "openFiles": 34
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 97.1,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 98.0,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 3902.0,
+   "node": "c",
+   "rssMb": 1963.3,
+   "threads": 154,
+   "openFiles": 162,
+   "heapMb": 591.4,
+   "liveMb": 397.4,
+   "jvmThreads": 117
+  },
+  {
+   "t": 3902.0,
+   "node": "a",
+   "rssMb": 1268.4,
+   "threads": 121,
+   "openFiles": 140,
+   "heapMb": 392.3,
+   "liveMb": 234.8,
+   "jvmThreads": 84
+  },
+  {
+   "t": 3962.0,
+   "node": "b",
+   "rssMb": 1853.0,
+   "threads": 126,
+   "openFiles": 140,
+   "heapMb": 1083.6,
+   "liveMb": 352.6,
+   "jvmThreads": 89
+  },
+  {
+   "t": 3962.0,
+   "node": "console",
+   "rssMb": 885.9,
+   "threads": 23,
+   "openFiles": 144,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 100.3,
+     "threads": 3,
+     "openFiles": 35
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 97.1,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 98.0,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 3962.0,
+   "node": "c",
+   "rssMb": 1965.8,
+   "threads": 153,
+   "openFiles": 158,
+   "heapMb": 1075.0,
+   "liveMb": 402.7,
+   "jvmThreads": 116
+  },
+  {
+   "t": 3962.0,
+   "node": "a",
+   "rssMb": 1267.9,
+   "threads": 119,
+   "openFiles": 148,
+   "heapMb": 462.6,
+   "liveMb": 223.6,
+   "jvmThreads": 82
+  },
+  {
+   "t": 4022.0,
+   "node": "b",
+   "rssMb": 1857.0,
+   "threads": 130,
+   "openFiles": 141,
+   "heapMb": 507.5,
+   "liveMb": 350.0,
+   "jvmThreads": 93
+  },
+  {
+   "t": 4022.0,
+   "node": "console",
+   "rssMb": 889.6,
+   "threads": 23,
+   "openFiles": 145,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 100.3,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.0,
+     "threads": 4,
+     "openFiles": 29
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 100.8,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 4022.0,
+   "node": "c",
+   "rssMb": 1959.6,
+   "threads": 150,
+   "openFiles": 154,
+   "heapMb": 894.0,
+   "liveMb": 392.0,
+   "jvmThreads": 113
+  },
+  {
+   "t": 4022.0,
+   "node": "a",
+   "rssMb": 1269.5,
+   "threads": 119,
+   "openFiles": 138,
+   "heapMb": 563.6,
+   "liveMb": 219.0,
+   "jvmThreads": 82
+  },
+  {
+   "t": 4082.0,
+   "node": "b",
+   "rssMb": 1855.0,
+   "threads": 130,
+   "openFiles": 136,
+   "heapMb": 614.3,
+   "liveMb": 338.8,
+   "jvmThreads": 93
+  },
+  {
+   "t": 4082.0,
+   "node": "console",
+   "rssMb": 889.6,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 100.3,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.0,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 100.8,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 4082.0,
+   "node": "c",
+   "rssMb": 1964.4,
+   "threads": 151,
+   "openFiles": 151,
+   "heapMb": 542.0,
+   "liveMb": 420.0,
+   "jvmThreads": 114
+  },
+  {
+   "t": 4082.0,
+   "node": "a",
+   "rssMb": 1269.3,
+   "threads": 119,
+   "openFiles": 138,
+   "heapMb": 475.7,
+   "liveMb": 231.8,
+   "jvmThreads": 82
+  },
+  {
+   "t": 4142.1,
+   "node": "b",
+   "rssMb": 1869.4,
+   "threads": 128,
+   "openFiles": 142,
+   "heapMb": 733.2,
+   "liveMb": 338.8,
+   "jvmThreads": 91
+  },
+  {
+   "t": 4142.1,
+   "node": "console",
+   "rssMb": 889.6,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 100.3,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.0,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 100.8,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 4142.1,
+   "node": "c",
+   "rssMb": 1971.6,
+   "threads": 152,
+   "openFiles": 157,
+   "heapMb": 678.8,
+   "liveMb": 381.8,
+   "jvmThreads": 115
+  },
+  {
+   "t": 4142.1,
+   "node": "a",
+   "rssMb": 1268.7,
+   "threads": 120,
+   "openFiles": 140,
+   "heapMb": 448.0,
+   "liveMb": 220.2,
+   "jvmThreads": 83
+  },
+  {
+   "t": 4202.1,
+   "node": "b",
+   "rssMb": 1888.0,
+   "threads": 128,
+   "openFiles": 139,
+   "heapMb": 975.0,
+   "liveMb": 352.5,
+   "jvmThreads": 91
+  },
+  {
+   "t": 4202.1,
+   "node": "console",
+   "rssMb": 884.0,
+   "threads": 23,
+   "openFiles": 145,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 100.3,
+     "threads": 3,
+     "openFiles": 35
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.2,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 95.0,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 4202.1,
+   "node": "c",
+   "rssMb": 1961.4,
+   "threads": 152,
+   "openFiles": 153,
+   "heapMb": 496.8,
+   "liveMb": 388.6,
+   "jvmThreads": 115
+  },
+  {
+   "t": 4202.1,
+   "node": "a",
+   "rssMb": 1269.2,
+   "threads": 122,
+   "openFiles": 139,
+   "heapMb": 608.5,
+   "liveMb": 229.5,
+   "jvmThreads": 85
+  },
+  {
+   "t": 4262.1,
+   "node": "b",
+   "rssMb": 1887.3,
+   "threads": 129,
+   "openFiles": 133,
+   "heapMb": 598.9,
+   "liveMb": 445.4,
+   "jvmThreads": 92
+  },
+  {
+   "t": 4262.1,
+   "node": "console",
+   "rssMb": 884.8,
+   "threads": 23,
+   "openFiles": 141,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 100.3,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.2,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 95.8,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 4262.1,
+   "node": "c",
+   "rssMb": 1961.0,
+   "threads": 151,
+   "openFiles": 150,
+   "heapMb": 558.3,
+   "liveMb": 387.4,
+   "jvmThreads": 114
+  },
+  {
+   "t": 4262.1,
+   "node": "a",
+   "rssMb": 1268.6,
+   "threads": 121,
+   "openFiles": 141,
+   "heapMb": 265.9,
+   "liveMb": 230.6,
+   "jvmThreads": 84
+  },
+  {
+   "t": 4322.2,
+   "node": "b",
+   "rssMb": 1871.2,
+   "threads": 129,
+   "openFiles": 145,
+   "heapMb": 1164.3,
+   "liveMb": 335.3,
+   "jvmThreads": 92
+  },
+  {
+   "t": 4322.2,
+   "node": "console",
+   "rssMb": 887.1,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 100.3,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.2,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 98.1,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 4322.2,
+   "node": "c",
+   "rssMb": 1962.3,
+   "threads": 150,
+   "openFiles": 167,
+   "heapMb": 1052.0,
+   "liveMb": 392.5,
+   "jvmThreads": 113
+  },
+  {
+   "t": 4322.2,
+   "node": "a",
+   "rssMb": 1270.5,
+   "threads": 123,
+   "openFiles": 146,
+   "heapMb": 310.0,
+   "liveMb": 222.4,
+   "jvmThreads": 84
+  },
+  {
+   "t": 4382.2,
+   "node": "b",
+   "rssMb": 1869.9,
+   "threads": 128,
+   "openFiles": 135,
+   "heapMb": 965.9,
+   "liveMb": 335.3,
+   "jvmThreads": 91
+  },
+  {
+   "t": 4382.2,
+   "node": "console",
+   "rssMb": 887.1,
+   "threads": 23,
+   "openFiles": 144,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 100.3,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.2,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 98.1,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 4382.2,
+   "node": "c",
+   "rssMb": 1963.5,
+   "threads": 153,
+   "openFiles": 148,
+   "heapMb": 752.0,
+   "liveMb": 423.0,
+   "jvmThreads": 116
+  },
+  {
+   "t": 4382.2,
+   "node": "a",
+   "rssMb": 1270.2,
+   "threads": 118,
+   "openFiles": 136,
+   "heapMb": 671.8,
+   "liveMb": 223.1,
+   "jvmThreads": 81
+  },
+  {
+   "t": 4442.2,
+   "node": "b",
+   "rssMb": 1881.7,
+   "threads": 129,
+   "openFiles": 136,
+   "heapMb": 736.6,
+   "liveMb": 347.8,
+   "jvmThreads": 92
+  },
+  {
+   "t": 4442.2,
+   "node": "console",
+   "rssMb": 887.1,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 100.3,
+     "threads": 3,
+     "openFiles": 34
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.2,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 98.1,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 4442.2,
+   "node": "c",
+   "rssMb": 1965.0,
+   "threads": 152,
+   "openFiles": 155,
+   "heapMb": 969.2,
+   "liveMb": 401.2,
+   "jvmThreads": 115
+  },
+  {
+   "t": 4442.2,
+   "node": "a",
+   "rssMb": 1268.5,
+   "threads": 121,
+   "openFiles": 144,
+   "heapMb": 386.0,
+   "liveMb": 229.2,
+   "jvmThreads": 84
+  },
+  {
+   "t": 4502.2,
+   "node": "b",
+   "rssMb": 1885.3,
+   "threads": 130,
+   "openFiles": 132,
+   "heapMb": 878.9,
+   "liveMb": 426.7,
+   "jvmThreads": 93
+  },
+  {
+   "t": 4502.2,
+   "node": "console",
+   "rssMb": 887.1,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 100.3,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.2,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 98.1,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 4502.2,
+   "node": "c",
+   "rssMb": 1965.0,
+   "threads": 153,
+   "openFiles": 149,
+   "heapMb": 1127.1,
+   "liveMb": 383.1,
+   "jvmThreads": 116
+  },
+  {
+   "t": 4502.2,
+   "node": "a",
+   "rssMb": 1270.0,
+   "threads": 121,
+   "openFiles": 143,
+   "heapMb": 646.0,
+   "liveMb": 234.7,
+   "jvmThreads": 84
+  },
+  {
+   "t": 4562.2,
+   "node": "b",
+   "rssMb": 1885.9,
+   "threads": 131,
+   "openFiles": 141,
+   "heapMb": 1043.5,
+   "liveMb": 415.2,
+   "jvmThreads": 94
+  },
+  {
+   "t": 4562.2,
+   "node": "console",
+   "rssMb": 887.1,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 100.3,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.2,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 98.1,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 4562.2,
+   "node": "c",
+   "rssMb": 1966.3,
+   "threads": 152,
+   "openFiles": 157,
+   "heapMb": 847.2,
+   "liveMb": 411.2,
+   "jvmThreads": 115
+  },
+  {
+   "t": 4562.2,
+   "node": "a",
+   "rssMb": 1283.1,
+   "threads": 122,
+   "openFiles": 139,
+   "heapMb": 338.7,
+   "liveMb": 251.1,
+   "jvmThreads": 85
+  },
+  {
+   "t": 4622.2,
+   "node": "b",
+   "rssMb": 1884.8,
+   "threads": 127,
+   "openFiles": 138,
+   "heapMb": 703.8,
+   "liveMb": 344.8,
+   "jvmThreads": 90
+  },
+  {
+   "t": 4622.2,
+   "node": "console",
+   "rssMb": 887.1,
+   "threads": 23,
+   "openFiles": 149,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 21
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 100.3,
+     "threads": 3,
+     "openFiles": 34
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.2,
+     "threads": 4,
+     "openFiles": 30
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 98.1,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 4622.2,
+   "node": "c",
+   "rssMb": 1963.2,
+   "threads": 153,
+   "openFiles": 148,
+   "heapMb": 639.4,
+   "liveMb": 390.9,
+   "jvmThreads": 116
+  },
+  {
+   "t": 4622.2,
+   "node": "a",
+   "rssMb": 1293.7,
+   "threads": 119,
+   "openFiles": 137,
+   "heapMb": 575.5,
+   "liveMb": 227.3,
+   "jvmThreads": 82
+  },
+  {
+   "t": 4682.3,
+   "node": "b",
+   "rssMb": 1904.3,
+   "threads": 127,
+   "openFiles": 141,
+   "heapMb": 868.4,
+   "liveMb": 344.8,
+   "jvmThreads": 90
+  },
+  {
+   "t": 4682.3,
+   "node": "console",
+   "rssMb": 887.1,
+   "threads": 23,
+   "openFiles": 144,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 100.3,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.2,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 98.1,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 4682.3,
+   "node": "c",
+   "rssMb": 1967.6,
+   "threads": 152,
+   "openFiles": 152,
+   "heapMb": 560.0,
+   "liveMb": 380.6,
+   "jvmThreads": 115
+  },
+  {
+   "t": 4682.3,
+   "node": "a",
+   "rssMb": 1295.0,
+   "threads": 118,
+   "openFiles": 137,
+   "heapMb": 374.6,
+   "liveMb": 222.7,
+   "jvmThreads": 81
+  },
+  {
+   "t": 4742.3,
+   "node": "b",
+   "rssMb": 1912.5,
+   "threads": 129,
+   "openFiles": 141,
+   "heapMb": 449.5,
+   "liveMb": 356.8,
+   "jvmThreads": 92
+  },
+  {
+   "t": 4742.3,
+   "node": "console",
+   "rssMb": 887.1,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 100.3,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.2,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 98.1,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 4742.3,
+   "node": "c",
+   "rssMb": 1966.6,
+   "threads": 150,
+   "openFiles": 156,
+   "heapMb": 975.1,
+   "liveMb": 403.6,
+   "jvmThreads": 113
+  },
+  {
+   "t": 4742.3,
+   "node": "a",
+   "rssMb": 1294.2,
+   "threads": 118,
+   "openFiles": 144,
+   "heapMb": 576.3,
+   "liveMb": 229.5,
+   "jvmThreads": 81
+  },
+  {
+   "t": 4802.3,
+   "node": "b",
+   "rssMb": 1890.4,
+   "threads": 130,
+   "openFiles": 138,
+   "heapMb": 800.8,
+   "liveMb": 356.8,
+   "jvmThreads": 93
+  },
+  {
+   "t": 4802.3,
+   "node": "console",
+   "rssMb": 889.6,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 102.8,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.2,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 98.1,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 4802.3,
+   "node": "c",
+   "rssMb": 1971.8,
+   "threads": 152,
+   "openFiles": 153,
+   "heapMb": 686.2,
+   "liveMb": 445.8,
+   "jvmThreads": 115
+  },
+  {
+   "t": 4802.3,
+   "node": "a",
+   "rssMb": 1297.1,
+   "threads": 121,
+   "openFiles": 141,
+   "heapMb": 619.5,
+   "liveMb": 235.5,
+   "jvmThreads": 84
+  },
+  {
+   "t": 4862.3,
+   "node": "b",
+   "rssMb": 1894.0,
+   "threads": 130,
+   "openFiles": 140,
+   "heapMb": 658.5,
+   "liveMb": 340.0,
+   "jvmThreads": 93
+  },
+  {
+   "t": 4862.3,
+   "node": "console",
+   "rssMb": 893.2,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 102.8,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.2,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 101.7,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 4862.3,
+   "node": "c",
+   "rssMb": 1964.3,
+   "threads": 152,
+   "openFiles": 157,
+   "heapMb": 772.4,
+   "liveMb": 600.9,
+   "jvmThreads": 115
+  },
+  {
+   "t": 4862.3,
+   "node": "a",
+   "rssMb": 1296.0,
+   "threads": 121,
+   "openFiles": 140,
+   "heapMb": 365.8,
+   "liveMb": 228.2,
+   "jvmThreads": 84
+  },
+  {
+   "t": 4922.4,
+   "node": "b",
+   "rssMb": 1895.9,
+   "threads": 128,
+   "openFiles": 137,
+   "heapMb": 559.0,
+   "liveMb": 340.0,
+   "jvmThreads": 91
+  },
+  {
+   "t": 4922.4,
+   "node": "console",
+   "rssMb": 884.1,
+   "threads": 23,
+   "openFiles": 139,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 98.3,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.2,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.1,
+     "threads": 3,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 4922.4,
+   "node": "c",
+   "rssMb": 1997.6,
+   "threads": 154,
+   "openFiles": 149,
+   "heapMb": 631.3,
+   "liveMb": 430.6,
+   "jvmThreads": 117
+  },
+  {
+   "t": 4922.4,
+   "node": "a",
+   "rssMb": 1306.3,
+   "threads": 122,
+   "openFiles": 137,
+   "heapMb": 401.1,
+   "liveMb": 241.1,
+   "jvmThreads": 85
+  },
+  {
+   "t": 4982.4,
+   "node": "b",
+   "rssMb": 1915.6,
+   "threads": 129,
+   "openFiles": 132,
+   "heapMb": 859.3,
+   "liveMb": 344.8,
+   "jvmThreads": 92
+  },
+  {
+   "t": 4982.4,
+   "node": "console",
+   "rssMb": 885.1,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 98.2,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.1,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 4982.4,
+   "node": "c",
+   "rssMb": 1999.0,
+   "threads": 151,
+   "openFiles": 152,
+   "heapMb": 661.4,
+   "liveMb": 591.7,
+   "jvmThreads": 114
+  },
+  {
+   "t": 4982.4,
+   "node": "a",
+   "rssMb": 1303.6,
+   "threads": 118,
+   "openFiles": 137,
+   "heapMb": 652.4,
+   "liveMb": 238.8,
+   "jvmThreads": 81
+  },
+  {
+   "t": 5042.4,
+   "node": "b",
+   "rssMb": 1901.5,
+   "threads": 130,
+   "openFiles": 140,
+   "heapMb": 986.0,
+   "liveMb": 344.8,
+   "jvmThreads": 93
+  },
+  {
+   "t": 5042.4,
+   "node": "console",
+   "rssMb": 885.3,
+   "threads": 23,
+   "openFiles": 140,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 97.7,
+     "threads": 4,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 5042.4,
+   "node": "c",
+   "rssMb": 1992.8,
+   "threads": 150,
+   "openFiles": 160,
+   "heapMb": 1111.5,
+   "liveMb": 514.2,
+   "jvmThreads": 113
+  },
+  {
+   "t": 5042.4,
+   "node": "a",
+   "rssMb": 1304.6,
+   "threads": 122,
+   "openFiles": 143,
+   "heapMb": 453.8,
+   "liveMb": 222.5,
+   "jvmThreads": 85
+  },
+  {
+   "t": 5102.4,
+   "node": "b",
+   "rssMb": 1899.1,
+   "threads": 130,
+   "openFiles": 139,
+   "heapMb": 871.6,
+   "liveMb": 336.7,
+   "jvmThreads": 93
+  },
+  {
+   "t": 5102.4,
+   "node": "console",
+   "rssMb": 885.3,
+   "threads": 23,
+   "openFiles": 144,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 97.7,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 5102.4,
+   "node": "c",
+   "rssMb": 1993.2,
+   "threads": 152,
+   "openFiles": 163,
+   "heapMb": 1298.0,
+   "liveMb": 628.2,
+   "jvmThreads": 115
+  },
+  {
+   "t": 5102.4,
+   "node": "a",
+   "rssMb": 1304.6,
+   "threads": 120,
+   "openFiles": 142,
+   "heapMb": 314.4,
+   "liveMb": 228.8,
+   "jvmThreads": 83
+  },
+  {
+   "t": 5162.5,
+   "node": "b",
+   "rssMb": 1906.3,
+   "threads": 130,
+   "openFiles": 135,
+   "heapMb": 561.6,
+   "liveMb": 336.7,
+   "jvmThreads": 91
+  },
+  {
+   "t": 5162.5,
+   "node": "console",
+   "rssMb": 889.0,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 97.7,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 101.4,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 5162.5,
+   "node": "c",
+   "rssMb": 1998.9,
+   "threads": 151,
+   "openFiles": 153,
+   "heapMb": 1254.9,
+   "liveMb": 575.9,
+   "jvmThreads": 114
+  },
+  {
+   "t": 5162.5,
+   "node": "a",
+   "rssMb": 1306.2,
+   "threads": 120,
+   "openFiles": 138,
+   "heapMb": 304.9,
+   "liveMb": 226.1,
+   "jvmThreads": 83
+  },
+  {
+   "t": 5222.5,
+   "node": "b",
+   "rssMb": 1900.2,
+   "threads": 130,
+   "openFiles": 139,
+   "heapMb": 1100.9,
+   "liveMb": 341.3,
+   "jvmThreads": 93
+  },
+  {
+   "t": 5222.5,
+   "node": "console",
+   "rssMb": 889.0,
+   "threads": 23,
+   "openFiles": 139,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 29
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 97.7,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 101.4,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 5222.5,
+   "node": "c",
+   "rssMb": 2013.3,
+   "threads": 151,
+   "openFiles": 162,
+   "heapMb": 870.9,
+   "liveMb": 515.9,
+   "jvmThreads": 114
+  },
+  {
+   "t": 5222.5,
+   "node": "a",
+   "rssMb": 1331.3,
+   "threads": 122,
+   "openFiles": 144,
+   "heapMb": 265.7,
+   "liveMb": 230.7,
+   "jvmThreads": 85
+  },
+  {
+   "t": 5282.5,
+   "node": "b",
+   "rssMb": 1922.3,
+   "threads": 131,
+   "openFiles": 135,
+   "heapMb": 901.4,
+   "liveMb": 430.6,
+   "jvmThreads": 94
+  },
+  {
+   "t": 5282.5,
+   "node": "console",
+   "rssMb": 889.0,
+   "threads": 23,
+   "openFiles": 141,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 97.7,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 101.4,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 5282.5,
+   "node": "c",
+   "rssMb": 2014.5,
+   "threads": 154,
+   "openFiles": 157,
+   "heapMb": 968.5,
+   "liveMb": 746.7,
+   "jvmThreads": 117
+  },
+  {
+   "t": 5282.5,
+   "node": "a",
+   "rssMb": 1305.7,
+   "threads": 121,
+   "openFiles": 141,
+   "heapMb": 429.8,
+   "liveMb": 226.3,
+   "jvmThreads": 84
+  },
+  {
+   "t": 5342.6,
+   "node": "b",
+   "rssMb": 1903.7,
+   "threads": 130,
+   "openFiles": 132,
+   "heapMb": 1102.7,
+   "liveMb": 375.2,
+   "jvmThreads": 93
+  },
+  {
+   "t": 5342.6,
+   "node": "console",
+   "rssMb": 885.8,
+   "threads": 23,
+   "openFiles": 141,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 101.3,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 94.6,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 5342.6,
+   "node": "c",
+   "rssMb": 2024.8,
+   "threads": 154,
+   "openFiles": 146,
+   "heapMb": 1253.2,
+   "liveMb": 554.2,
+   "jvmThreads": 117
+  },
+  {
+   "t": 5342.6,
+   "node": "a",
+   "rssMb": 1304.4,
+   "threads": 118,
+   "openFiles": 134,
+   "heapMb": 652.2,
+   "liveMb": 226.9,
+   "jvmThreads": 81
+  },
+  {
+   "t": 5402.6,
+   "node": "b",
+   "rssMb": 1910.0,
+   "threads": 130,
+   "openFiles": 142,
+   "heapMb": 572.8,
+   "liveMb": 441.2,
+   "jvmThreads": 93
+  },
+  {
+   "t": 5402.6,
+   "node": "console",
+   "rssMb": 887.1,
+   "threads": 23,
+   "openFiles": 145,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 21
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 35
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 101.3,
+     "threads": 4,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 95.9,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 5402.6,
+   "node": "c",
+   "rssMb": 2023.8,
+   "threads": 154,
+   "openFiles": 164,
+   "heapMb": 925.2,
+   "liveMb": 548.8,
+   "jvmThreads": 117
+  },
+  {
+   "t": 5402.6,
+   "node": "a",
+   "rssMb": 1305.9,
+   "threads": 121,
+   "openFiles": 142,
+   "heapMb": 555.7,
+   "liveMb": 246.7,
+   "jvmThreads": 84
+  },
+  {
+   "t": 5462.6,
+   "node": "b",
+   "rssMb": 1899.1,
+   "threads": 130,
+   "openFiles": 142,
+   "heapMb": 791.0,
+   "liveMb": 344.7,
+   "jvmThreads": 93
+  },
+  {
+   "t": 5462.6,
+   "node": "console",
+   "rssMb": 882.8,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 34
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 95.1,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 5462.6,
+   "node": "c",
+   "rssMb": 2052.6,
+   "threads": 152,
+   "openFiles": 163,
+   "heapMb": 922.1,
+   "liveMb": 487.6,
+   "jvmThreads": 115
+  },
+  {
+   "t": 5462.6,
+   "node": "a",
+   "rssMb": 1307.9,
+   "threads": 122,
+   "openFiles": 138,
+   "heapMb": 276.4,
+   "liveMb": 234.9,
+   "jvmThreads": 85
+  },
+  {
+   "t": 5522.6,
+   "node": "b",
+   "rssMb": 1900.4,
+   "threads": 131,
+   "openFiles": 141,
+   "heapMb": 1052.5,
+   "liveMb": 352.4,
+   "jvmThreads": 94
+  },
+  {
+   "t": 5522.6,
+   "node": "console",
+   "rssMb": 883.1,
+   "threads": 23,
+   "openFiles": 141,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 95.4,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 5522.6,
+   "node": "c",
+   "rssMb": 2048.9,
+   "threads": 151,
+   "openFiles": 155,
+   "heapMb": 839.9,
+   "liveMb": 567.2,
+   "jvmThreads": 114
+  },
+  {
+   "t": 5522.6,
+   "node": "a",
+   "rssMb": 1307.7,
+   "threads": 119,
+   "openFiles": 135,
+   "heapMb": 557.7,
+   "liveMb": 226.7,
+   "jvmThreads": 82
+  },
+  {
+   "t": 5582.7,
+   "node": "b",
+   "rssMb": 1903.2,
+   "threads": 131,
+   "openFiles": 140,
+   "heapMb": 727.7,
+   "liveMb": 352.4,
+   "jvmThreads": 94
+  },
+  {
+   "t": 5582.7,
+   "node": "console",
+   "rssMb": 884.0,
+   "threads": 23,
+   "openFiles": 145,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 34
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 96.3,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 5582.7,
+   "node": "c",
+   "rssMb": 2060.4,
+   "threads": 152,
+   "openFiles": 167,
+   "heapMb": 1140.2,
+   "liveMb": 476.7,
+   "jvmThreads": 115
+  },
+  {
+   "t": 5582.7,
+   "node": "a",
+   "rssMb": 1309.7,
+   "threads": 121,
+   "openFiles": 145,
+   "heapMb": 398.7,
+   "liveMb": 226.8,
+   "jvmThreads": 84
+  },
+  {
+   "t": 5642.7,
+   "node": "b",
+   "rssMb": 1900.0,
+   "threads": 129,
+   "openFiles": 139,
+   "heapMb": 597.1,
+   "liveMb": 358.7,
+   "jvmThreads": 92
+  },
+  {
+   "t": 5642.7,
+   "node": "console",
+   "rssMb": 887.7,
+   "threads": 23,
+   "openFiles": 141,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.0,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 5642.7,
+   "node": "c",
+   "rssMb": 2059.4,
+   "threads": 152,
+   "openFiles": 161,
+   "heapMb": 893.1,
+   "liveMb": 615.7,
+   "jvmThreads": 115
+  },
+  {
+   "t": 5642.7,
+   "node": "a",
+   "rssMb": 1311.1,
+   "threads": 119,
+   "openFiles": 143,
+   "heapMb": 312.8,
+   "liveMb": 230.0,
+   "jvmThreads": 82
+  },
+  {
+   "t": 5702.7,
+   "node": "b",
+   "rssMb": 1901.6,
+   "threads": 130,
+   "openFiles": 137,
+   "heapMb": 1034.7,
+   "liveMb": 443.7,
+   "jvmThreads": 93
+  },
+  {
+   "t": 5702.7,
+   "node": "console",
+   "rssMb": 887.7,
+   "threads": 23,
+   "openFiles": 145,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 34
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.0,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 5702.7,
+   "node": "c",
+   "rssMb": 2063.3,
+   "threads": 152,
+   "openFiles": 158,
+   "heapMb": 902.0,
+   "liveMb": 580.6,
+   "jvmThreads": 115
+  },
+  {
+   "t": 5702.7,
+   "node": "a",
+   "rssMb": 1309.0,
+   "threads": 120,
+   "openFiles": 139,
+   "heapMb": 413.0,
+   "liveMb": 229.0,
+   "jvmThreads": 83
+  },
+  {
+   "t": 5762.7,
+   "node": "b",
+   "rssMb": 1914.4,
+   "threads": 130,
+   "openFiles": 139,
+   "heapMb": 843.6,
+   "liveMb": 380.3,
+   "jvmThreads": 93
+  },
+  {
+   "t": 5762.7,
+   "node": "console",
+   "rssMb": 887.7,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.0,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 5762.7,
+   "node": "c",
+   "rssMb": 2062.6,
+   "threads": 153,
+   "openFiles": 161,
+   "heapMb": 1089.8,
+   "liveMb": 417.0,
+   "jvmThreads": 116
+  },
+  {
+   "t": 5762.7,
+   "node": "a",
+   "rssMb": 1303.3,
+   "threads": 121,
+   "openFiles": 146,
+   "heapMb": 639.5,
+   "liveMb": 229.0,
+   "jvmThreads": 84
+  },
+  {
+   "t": 5822.7,
+   "node": "b",
+   "rssMb": 1912.2,
+   "threads": 133,
+   "openFiles": 141,
+   "heapMb": 1158.3,
+   "liveMb": 349.8,
+   "jvmThreads": 96
+  },
+  {
+   "t": 5822.7,
+   "node": "console",
+   "rssMb": 891.4,
+   "threads": 23,
+   "openFiles": 141,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 103.1,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.0,
+     "threads": 4,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 5822.7,
+   "node": "c",
+   "rssMb": 2060.8,
+   "threads": 151,
+   "openFiles": 158,
+   "heapMb": 939.7,
+   "liveMb": 528.8,
+   "jvmThreads": 114
+  },
+  {
+   "t": 5822.7,
+   "node": "a",
+   "rssMb": 1299.7,
+   "threads": 122,
+   "openFiles": 143,
+   "heapMb": 642.9,
+   "liveMb": 234.1,
+   "jvmThreads": 85
+  },
+  {
+   "t": 5882.7,
+   "node": "b",
+   "rssMb": 1923.1,
+   "threads": 131,
+   "openFiles": 142,
+   "heapMb": 1047.7,
+   "liveMb": 365.6,
+   "jvmThreads": 94
+  },
+  {
+   "t": 5882.7,
+   "node": "console",
+   "rssMb": 891.4,
+   "threads": 23,
+   "openFiles": 147,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 103.1,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.0,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 30
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 5882.7,
+   "node": "c",
+   "rssMb": 2062.3,
+   "threads": 150,
+   "openFiles": 163,
+   "heapMb": 1171.1,
+   "liveMb": 498.1,
+   "jvmThreads": 113
+  },
+  {
+   "t": 5882.7,
+   "node": "a",
+   "rssMb": 1300.9,
+   "threads": 122,
+   "openFiles": 145,
+   "heapMb": 688.6,
+   "liveMb": 226.6,
+   "jvmThreads": 85
+  },
+  {
+   "t": 5942.8,
+   "node": "b",
+   "rssMb": 1922.6,
+   "threads": 131,
+   "openFiles": 138,
+   "heapMb": 730.8,
+   "liveMb": 360.8,
+   "jvmThreads": 94
+  },
+  {
+   "t": 5942.8,
+   "node": "console",
+   "rssMb": 891.4,
+   "threads": 23,
+   "openFiles": 141,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 103.1,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.0,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 5942.8,
+   "node": "c",
+   "rssMb": 2062.2,
+   "threads": 153,
+   "openFiles": 154,
+   "heapMb": 844.7,
+   "liveMb": 617.1,
+   "jvmThreads": 116
+  },
+  {
+   "t": 5942.8,
+   "node": "a",
+   "rssMb": 1314.6,
+   "threads": 119,
+   "openFiles": 145,
+   "heapMb": 310.4,
+   "liveMb": 229.4,
+   "jvmThreads": 82
+  },
+  {
+   "t": 6002.8,
+   "node": "b",
+   "rssMb": 1914.4,
+   "threads": 132,
+   "openFiles": 139,
+   "heapMb": 1136.9,
+   "liveMb": 385.4,
+   "jvmThreads": 95
+  },
+  {
+   "t": 6002.8,
+   "node": "console",
+   "rssMb": 886.6,
+   "threads": 23,
+   "openFiles": 145,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 98.3,
+     "threads": 3,
+     "openFiles": 36
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.0,
+     "threads": 4,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 6002.8,
+   "node": "c",
+   "rssMb": 2059.3,
+   "threads": 155,
+   "openFiles": 159,
+   "heapMb": 1090.4,
+   "liveMb": 482.5,
+   "jvmThreads": 118
+  },
+  {
+   "t": 6002.8,
+   "node": "a",
+   "rssMb": 1302.6,
+   "threads": 121,
+   "openFiles": 147,
+   "heapMb": 577.8,
+   "liveMb": 224.9,
+   "jvmThreads": 84
+  },
+  {
+   "t": 6062.8,
+   "node": "b",
+   "rssMb": 1917.5,
+   "threads": 132,
+   "openFiles": 138,
+   "heapMb": 961.8,
+   "liveMb": 338.6,
+   "jvmThreads": 95
+  },
+  {
+   "t": 6062.8,
+   "node": "console",
+   "rssMb": 887.7,
+   "threads": 23,
+   "openFiles": 141,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.0,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 6062.8,
+   "node": "c",
+   "rssMb": 2060.5,
+   "threads": 151,
+   "openFiles": 149,
+   "heapMb": 861.7,
+   "liveMb": 617.2,
+   "jvmThreads": 114
+  },
+  {
+   "t": 6062.8,
+   "node": "a",
+   "rssMb": 1305.4,
+   "threads": 119,
+   "openFiles": 141,
+   "heapMb": 528.5,
+   "liveMb": 220.5,
+   "jvmThreads": 82
+  },
+  {
+   "t": 6122.8,
+   "node": "b",
+   "rssMb": 1916.1,
+   "threads": 131,
+   "openFiles": 140,
+   "heapMb": 776.0,
+   "liveMb": 338.6,
+   "jvmThreads": 94
+  },
+  {
+   "t": 6122.8,
+   "node": "console",
+   "rssMb": 887.7,
+   "threads": 23,
+   "openFiles": 140,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.0,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 6122.8,
+   "node": "c",
+   "rssMb": 2093.5,
+   "threads": 153,
+   "openFiles": 159,
+   "heapMb": 1373.2,
+   "liveMb": 476.4,
+   "jvmThreads": 116
+  },
+  {
+   "t": 6122.8,
+   "node": "a",
+   "rssMb": 1300.6,
+   "threads": 120,
+   "openFiles": 149,
+   "heapMb": 354.7,
+   "liveMb": 223.6,
+   "jvmThreads": 83
+  },
+  {
+   "t": 6182.8,
+   "node": "b",
+   "rssMb": 1933.9,
+   "threads": 132,
+   "openFiles": 141,
+   "heapMb": 1134.0,
+   "liveMb": 392.4,
+   "jvmThreads": 95
+  },
+  {
+   "t": 6182.8,
+   "node": "console",
+   "rssMb": 887.7,
+   "threads": 23,
+   "openFiles": 140,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.0,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 25
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 6182.8,
+   "node": "c",
+   "rssMb": 2091.4,
+   "threads": 154,
+   "openFiles": 161,
+   "heapMb": 1188.3,
+   "liveMb": 602.8,
+   "jvmThreads": 117
+  },
+  {
+   "t": 6182.8,
+   "node": "a",
+   "rssMb": 1309.5,
+   "threads": 118,
+   "openFiles": 148,
+   "heapMb": 389.1,
+   "liveMb": 226.6,
+   "jvmThreads": 81
+  },
+  {
+   "t": 6242.9,
+   "node": "b",
+   "rssMb": 1933.7,
+   "threads": 133,
+   "openFiles": 140,
+   "heapMb": 987.4,
+   "liveMb": 429.9,
+   "jvmThreads": 96
+  },
+  {
+   "t": 6242.9,
+   "node": "console",
+   "rssMb": 887.7,
+   "threads": 23,
+   "openFiles": 144,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 22
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.0,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 6242.9,
+   "node": "c",
+   "rssMb": 2089.0,
+   "threads": 153,
+   "openFiles": 159,
+   "heapMb": 733.9,
+   "liveMb": 511.9,
+   "jvmThreads": 116
+  },
+  {
+   "t": 6242.9,
+   "node": "a",
+   "rssMb": 1306.6,
+   "threads": 120,
+   "openFiles": 147,
+   "heapMb": 498.7,
+   "liveMb": 229.4,
+   "jvmThreads": 83
+  },
+  {
+   "t": 6302.9,
+   "node": "b",
+   "rssMb": 1929.9,
+   "threads": 134,
+   "openFiles": 138,
+   "heapMb": 1149.8,
+   "liveMb": 338.8,
+   "jvmThreads": 97
+  },
+  {
+   "t": 6302.9,
+   "node": "console",
+   "rssMb": 887.7,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.0,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 6302.9,
+   "node": "c",
+   "rssMb": 2088.0,
+   "threads": 152,
+   "openFiles": 157,
+   "heapMb": 771.5,
+   "liveMb": 599.8,
+   "jvmThreads": 115
+  },
+  {
+   "t": 6302.9,
+   "node": "a",
+   "rssMb": 1306.3,
+   "threads": 121,
+   "openFiles": 146,
+   "heapMb": 270.2,
+   "liveMb": 230.3,
+   "jvmThreads": 84
+  },
+  {
+   "t": 6362.9,
+   "node": "b",
+   "rssMb": 1930.5,
+   "threads": 132,
+   "openFiles": 136,
+   "heapMb": 972.5,
+   "liveMb": 338.8,
+   "jvmThreads": 95
+  },
+  {
+   "t": 6362.9,
+   "node": "console",
+   "rssMb": 887.7,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.0,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 6362.9,
+   "node": "c",
+   "rssMb": 2091.9,
+   "threads": 153,
+   "openFiles": 152,
+   "heapMb": 1414.3,
+   "liveMb": 685.8,
+   "jvmThreads": 116
+  },
+  {
+   "t": 6362.9,
+   "node": "a",
+   "rssMb": 1306.3,
+   "threads": 118,
+   "openFiles": 140,
+   "heapMb": 393.2,
+   "liveMb": 241.6,
+   "jvmThreads": 81
+  },
+  {
+   "t": 6422.9,
+   "node": "b",
+   "rssMb": 1935.7,
+   "threads": 132,
+   "openFiles": 135,
+   "heapMb": 545.4,
+   "liveMb": 341.0,
+   "jvmThreads": 95
+  },
+  {
+   "t": 6422.9,
+   "node": "console",
+   "rssMb": 887.7,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.0,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 6422.9,
+   "node": "c",
+   "rssMb": 2090.5,
+   "threads": 153,
+   "openFiles": 153,
+   "heapMb": 839.1,
+   "liveMb": 512.1,
+   "jvmThreads": 116
+  },
+  {
+   "t": 6422.9,
+   "node": "a",
+   "rssMb": 1304.8,
+   "threads": 121,
+   "openFiles": 143,
+   "heapMb": 692.7,
+   "liveMb": 234.4,
+   "jvmThreads": 84
+  },
+  {
+   "t": 6483.0,
+   "node": "b",
+   "rssMb": 1933.2,
+   "threads": 129,
+   "openFiles": 142,
+   "heapMb": 1112.5,
+   "liveMb": 368.0,
+   "jvmThreads": 92
+  },
+  {
+   "t": 6483.0,
+   "node": "console",
+   "rssMb": 887.7,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.0,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 6483.0,
+   "node": "c",
+   "rssMb": 2092.0,
+   "threads": 154,
+   "openFiles": 163,
+   "heapMb": 962.9,
+   "liveMb": 712.4,
+   "jvmThreads": 117
+  },
+  {
+   "t": 6483.0,
+   "node": "a",
+   "rssMb": 1306.9,
+   "threads": 121,
+   "openFiles": 148,
+   "heapMb": 550.9,
+   "liveMb": 224.0,
+   "jvmThreads": 84
+  },
+  {
+   "t": 6543.0,
+   "node": "b",
+   "rssMb": 1943.9,
+   "threads": 132,
+   "openFiles": 140,
+   "heapMb": 1030.9,
+   "liveMb": 405.8,
+   "jvmThreads": 95
+  },
+  {
+   "t": 6543.0,
+   "node": "console",
+   "rssMb": 887.7,
+   "threads": 23,
+   "openFiles": 144,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 34
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.0,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 97.8,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 6543.0,
+   "node": "c",
+   "rssMb": 2090.8,
+   "threads": 156,
+   "openFiles": 166,
+   "heapMb": 1122.2,
+   "liveMb": 519.1,
+   "jvmThreads": 119
+  },
+  {
+   "t": 6543.0,
+   "node": "a",
+   "rssMb": 1320.1,
+   "threads": 123,
+   "openFiles": 149,
+   "heapMb": 362.7,
+   "liveMb": 230.2,
+   "jvmThreads": 86
+  },
+  {
+   "t": 6603.0,
+   "node": "b",
+   "rssMb": 1933.5,
+   "threads": 131,
+   "openFiles": 139,
+   "heapMb": 490.7,
+   "liveMb": 353.6,
+   "jvmThreads": 94
+  },
+  {
+   "t": 6603.0,
+   "node": "console",
+   "rssMb": 891.1,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.4,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.0,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 101.2,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 6603.0,
+   "node": "c",
+   "rssMb": 2096.7,
+   "threads": 153,
+   "openFiles": 162,
+   "heapMb": 1027.0,
+   "liveMb": 678.5,
+   "jvmThreads": 116
+  },
+  {
+   "t": 6603.0,
+   "node": "a",
+   "rssMb": 1319.0,
+   "threads": 121,
+   "openFiles": 144,
+   "heapMb": 668.0,
+   "liveMb": 230.7,
+   "jvmThreads": 84
+  },
+  {
+   "t": 6663.0,
+   "node": "b",
+   "rssMb": 1932.4,
+   "threads": 131,
+   "openFiles": 141,
+   "heapMb": 754.2,
+   "liveMb": 353.6,
+   "jvmThreads": 94
+  },
+  {
+   "t": 6663.0,
+   "node": "console",
+   "rssMb": 891.2,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.5,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.0,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 101.2,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 6663.0,
+   "node": "c",
+   "rssMb": 2100.0,
+   "threads": 155,
+   "openFiles": 159,
+   "heapMb": 1009.3,
+   "liveMb": 519.8,
+   "jvmThreads": 118
+  },
+  {
+   "t": 6663.0,
+   "node": "a",
+   "rssMb": 1320.8,
+   "threads": 120,
+   "openFiles": 145,
+   "heapMb": 313.7,
+   "liveMb": 221.3,
+   "jvmThreads": 83
+  },
+  {
+   "t": 6723.0,
+   "node": "b",
+   "rssMb": 1957.8,
+   "threads": 133,
+   "openFiles": 139,
+   "heapMb": 941.9,
+   "liveMb": 357.4,
+   "jvmThreads": 96
+  },
+  {
+   "t": 6723.0,
+   "node": "console",
+   "rssMb": 891.2,
+   "threads": 23,
+   "openFiles": 145,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 21
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.5,
+     "threads": 3,
+     "openFiles": 34
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.0,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 101.2,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 6723.0,
+   "node": "c",
+   "rssMb": 2100.0,
+   "threads": 153,
+   "openFiles": 163,
+   "heapMb": 926.2,
+   "liveMb": 622.7,
+   "jvmThreads": 116
+  },
+  {
+   "t": 6723.0,
+   "node": "a",
+   "rssMb": 1319.0,
+   "threads": 122,
+   "openFiles": 148,
+   "heapMb": 483.8,
+   "liveMb": 239.8,
+   "jvmThreads": 85
+  },
+  {
+   "t": 6783.1,
+   "node": "b",
+   "rssMb": 1940.5,
+   "threads": 130,
+   "openFiles": 133,
+   "heapMb": 562.7,
+   "liveMb": 357.4,
+   "jvmThreads": 93
+  },
+  {
+   "t": 6783.1,
+   "node": "console",
+   "rssMb": 886.3,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.5,
+     "threads": 3,
+     "openFiles": 31
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 95.1,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 101.2,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 6783.1,
+   "node": "c",
+   "rssMb": 2101.6,
+   "threads": 153,
+   "openFiles": 153,
+   "heapMb": 1384.8,
+   "liveMb": 463.5,
+   "jvmThreads": 116
+  },
+  {
+   "t": 6783.1,
+   "node": "a",
+   "rssMb": 1319.5,
+   "threads": 121,
+   "openFiles": 145,
+   "heapMb": 563.0,
+   "liveMb": 225.0,
+   "jvmThreads": 84
+  },
+  {
+   "t": 6843.1,
+   "node": "b",
+   "rssMb": 1942.0,
+   "threads": 133,
+   "openFiles": 146,
+   "heapMb": 476.7,
+   "liveMb": 346.0,
+   "jvmThreads": 96
+  },
+  {
+   "t": 6843.1,
+   "node": "console",
+   "rssMb": 887.0,
+   "threads": 23,
+   "openFiles": 142,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.5,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 95.8,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 101.2,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 6843.1,
+   "node": "c",
+   "rssMb": 2099.8,
+   "threads": 155,
+   "openFiles": 168,
+   "heapMb": 1096.5,
+   "liveMb": 570.4,
+   "jvmThreads": 118
+  },
+  {
+   "t": 6843.1,
+   "node": "a",
+   "rssMb": 1320.5,
+   "threads": 123,
+   "openFiles": 150,
+   "heapMb": 621.4,
+   "liveMb": 227.1,
+   "jvmThreads": 81
+  },
+  {
+   "t": 6903.1,
+   "node": "b",
+   "rssMb": 1950.1,
+   "threads": 131,
+   "openFiles": 136,
+   "heapMb": 921.5,
+   "liveMb": 458.0,
+   "jvmThreads": 94
+  },
+  {
+   "t": 6903.1,
+   "node": "console",
+   "rssMb": 890.9,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.5,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 99.7,
+     "threads": 4,
+     "openFiles": 28
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 101.2,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 6903.1,
+   "node": "c",
+   "rssMb": 2101.4,
+   "threads": 154,
+   "openFiles": 157,
+   "heapMb": 1081.8,
+   "liveMb": 689.3,
+   "jvmThreads": 117
+  },
+  {
+   "t": 6903.1,
+   "node": "a",
+   "rssMb": 1320.5,
+   "threads": 122,
+   "openFiles": 146,
+   "heapMb": 663.5,
+   "liveMb": 242.6,
+   "jvmThreads": 85
+  },
+  {
+   "t": 6963.1,
+   "node": "b",
+   "rssMb": 1945.1,
+   "threads": 135,
+   "openFiles": 138,
+   "heapMb": 1174.2,
+   "liveMb": 352.4,
+   "jvmThreads": 98
+  },
+  {
+   "t": 6963.1,
+   "node": "console",
+   "rssMb": 892.0,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.5,
+     "threads": 3,
+     "openFiles": 34
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.8,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 101.2,
+     "threads": 3,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 6963.1,
+   "node": "c",
+   "rssMb": 2100.0,
+   "threads": 155,
+   "openFiles": 157,
+   "heapMb": 959.7,
+   "liveMb": 479.3,
+   "jvmThreads": 118
+  },
+  {
+   "t": 6963.1,
+   "node": "a",
+   "rssMb": 1319.6,
+   "threads": 120,
+   "openFiles": 146,
+   "heapMb": 338.6,
+   "liveMb": 234.3,
+   "jvmThreads": 83
+  },
+  {
+   "t": 7023.1,
+   "node": "b",
+   "rssMb": 1951.6,
+   "threads": 133,
+   "openFiles": 134,
+   "heapMb": 1222.3,
+   "liveMb": 474.3,
+   "jvmThreads": 96
+  },
+  {
+   "t": 7023.1,
+   "node": "console",
+   "rssMb": 892.0,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.5,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 100.8,
+     "threads": 4,
+     "openFiles": 26
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 101.2,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 7023.1,
+   "node": "c",
+   "rssMb": 2106.8,
+   "threads": 154,
+   "openFiles": 147,
+   "heapMb": 845.6,
+   "liveMb": 571.1,
+   "jvmThreads": 117
+  },
+  {
+   "t": 7023.1,
+   "node": "a",
+   "rssMb": 1320.3,
+   "threads": 118,
+   "openFiles": 137,
+   "heapMb": 455.6,
+   "liveMb": 235.3,
+   "jvmThreads": 81
+  },
+  {
+   "t": 7083.1,
+   "node": "b",
+   "rssMb": 1942.5,
+   "threads": 129,
+   "openFiles": 136,
+   "heapMb": 1029.3,
+   "liveMb": 358.8,
+   "jvmThreads": 92
+  },
+  {
+   "t": 7083.1,
+   "node": "console",
+   "rssMb": 895.7,
+   "threads": 23,
+   "openFiles": 143,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 19
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 99.5,
+     "threads": 3,
+     "openFiles": 33
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 104.5,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 101.2,
+     "threads": 3,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 7083.1,
+   "node": "c",
+   "rssMb": 2102.7,
+   "threads": 152,
+   "openFiles": 156,
+   "heapMb": 987.2,
+   "liveMb": 796.4,
+   "jvmThreads": 115
+  },
+  {
+   "t": 7083.1,
+   "node": "a",
+   "rssMb": 1318.9,
+   "threads": 122,
+   "openFiles": 142,
+   "heapMb": 267.2,
+   "liveMb": 221.3,
+   "jvmThreads": 85
+  },
+  {
+   "t": 7143.2,
+   "node": "b",
+   "rssMb": 1963.8,
+   "threads": 129,
+   "openFiles": 137,
+   "heapMb": 1321.2,
+   "liveMb": 358.8,
+   "jvmThreads": 92
+  },
+  {
+   "t": 7143.2,
+   "node": "console",
+   "rssMb": 899.0,
+   "threads": 23,
+   "openFiles": 144,
+   "processes": 10,
+   "workers": [
+    {
+     "pid": 3041181,
+     "rssMb": 14.9,
+     "threads": 1,
+     "openFiles": 4
+    },
+    {
+     "pid": 3041182,
+     "rssMb": 99.3,
+     "threads": 3,
+     "openFiles": 20
+    },
+    {
+     "pid": 3041183,
+     "rssMb": 102.8,
+     "threads": 3,
+     "openFiles": 32
+    },
+    {
+     "pid": 3041184,
+     "rssMb": 104.5,
+     "threads": 4,
+     "openFiles": 27
+    },
+    {
+     "pid": 3041185,
+     "rssMb": 101.2,
+     "threads": 3,
+     "openFiles": 28
+    },
+    {
+     "pid": 3041203,
+     "rssMb": 105.9,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041205,
+     "rssMb": 106.0,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041204,
+     "rssMb": 106.5,
+     "threads": 2,
+     "openFiles": 3
+    },
+    {
+     "pid": 3041206,
+     "rssMb": 106.4,
+     "threads": 2,
+     "openFiles": 3
+    }
+   ]
+  },
+  {
+   "t": 7143.2,
+   "node": "c",
+   "rssMb": 2107.9,
+   "threads": 154,
+   "openFiles": 159,
+   "heapMb": 1307.3,
+   "liveMb": 531.3,
+   "jvmThreads": 117
+  },
+  {
+   "t": 7143.2,
+   "node": "a",
+   "rssMb": 1321.9,
+   "threads": 122,
+   "openFiles": 148,
+   "heapMb": 381.9,
+   "liveMb": 234.6,
+   "jvmThreads": 85
+  }
+ ],
+ "killWindows": [
+  {
+   "node": "c",
+   "from": 900.0,
+   "to": 1249.0
+  },
+  {
+   "node": "a",
+   "from": 1800.0,
+   "to": 2152.6
+  }
+ ],
+ "memory": {
+  "a": {
+   "samples": 74,
+   "steadySamples": 74,
+   "measure": "liveMb",
+   "slopeMbPerHour": -6.4,
+   "wholeRunSlopeMbPerHour": -6.4,
+   "rssSlopeMbPerHour": 61.7,
+   "steadySpans": [
+    [
+     2761.5,
+     7143.2
+    ]
+   ],
+   "ok": true
+  },
+  "b": {
+   "samples": 110,
+   "steadySamples": 79,
+   "measure": "liveMb",
+   "slopeMbPerHour": 32.2,
+   "wholeRunSlopeMbPerHour": 99.9,
+   "rssSlopeMbPerHour": 492.8,
+   "steadySpans": [
+    [
+     600.4,
+     900.0
+    ],
+    [
+     2752.6,
+     7143.2
+    ]
+   ],
+   "ok": true
+  },
+  "c": {
+   "samples": 89,
+   "steadySamples": 74,
+   "measure": "liveMb",
+   "slopeMbPerHour": 165.5,
+   "wholeRunSlopeMbPerHour": 156.3,
+   "rssSlopeMbPerHour": 265.8,
+   "steadySpans": [
+    [
+     2752.6,
+     7143.2
+    ]
+   ],
+   "ok": false
+  },
+  "console": {
+   "samples": 110,
+   "steadySamples": 79,
+   "measure": "rssMb",
+   "slopeMbPerHour": 2.1,
+   "wholeRunSlopeMbPerHour": 3.5,
+   "rssSlopeMbPerHour": 3.5,
+   "steadySpans": [
+    [
+     600.4,
+     900.0
+    ],
+    [
+     2752.6,
+     7143.2
+    ]
+   ],
+   "ok": true
+  }
+ },
+ "table": "action                n  failed   p50 s   p95 s   p99 s\nctrd             102129       0   0.075   0.184   0.475\nhistory          438249    7412   0.104   0.205   0.338\nnetting-set       51298       0   0.090   0.185   0.335\nsearch            51248       0   0.075   0.205   0.401\ntrade            816233   16978   0.070   0.176   0.371\n\nchecked            right   partial   timeout   unavail     wrong\nctrd                 726        33         0         2         0\nhistory            65268       926         0       134         0\nsearch              7511       412         0        18         0\ntrade              70208      1118         0       142         0",
+ "verdict": {
+  "pass": false,
+  "noWrongAnswers": {
+   "ok": true,
+   "wrong": 0
+  },
+  "errorsOnlyInKillWindows": {
+   "ok": true,
+   "outside": 0,
+   "first": [],
+   "windows": [
+    {
+     "node": "c",
+     "from": 900.0,
+     "to": 1249.0
+    },
+    {
+     "node": "a",
+     "from": 1800.0,
+     "to": 2152.6
+    }
+   ]
+  },
+  "latency": {
+   "ok": true,
+   "perAction": {
+    "ctrd": {
+     "p95": 0.184,
+     "p99": 0.475
+    },
+    "history": {
+     "p95": 0.205,
+     "p99": 0.338
+    },
+    "netting-set": {
+     "p95": 0.185,
+     "p99": 0.335
+    },
+    "search": {
+     "p95": 0.205,
+     "p99": 0.401
+    },
+    "trade": {
+     "p95": 0.176,
+     "p99": 0.371
+    }
+   },
+   "maxP99": null,
+   "over": []
+  },
+  "memoryFlat": {
+   "ok": false,
+   "growing": [
+    "c"
+   ],
+   "perProcess": {
+    "a": {
+     "samples": 74,
+     "steadySamples": 74,
+     "measure": "liveMb",
+     "slopeMbPerHour": -6.4,
+     "wholeRunSlopeMbPerHour": -6.4,
+     "rssSlopeMbPerHour": 61.7,
+     "steadySpans": [
+      [
+       2761.5,
+       7143.2
+      ]
+     ],
+     "ok": true
+    },
+    "b": {
+     "samples": 110,
+     "steadySamples": 79,
+     "measure": "liveMb",
+     "slopeMbPerHour": 32.2,
+     "wholeRunSlopeMbPerHour": 99.9,
+     "rssSlopeMbPerHour": 492.8,
+     "steadySpans": [
+      [
+       600.4,
+       900.0
+      ],
+      [
+       2752.6,
+       7143.2
+      ]
+     ],
+     "ok": true
+    },
+    "c": {
+     "samples": 89,
+     "steadySamples": 74,
+     "measure": "liveMb",
+     "slopeMbPerHour": 165.5,
+     "wholeRunSlopeMbPerHour": 156.3,
+     "rssSlopeMbPerHour": 265.8,
+     "steadySpans": [
+      [
+       2752.6,
+       7143.2
+      ]
+     ],
+     "ok": false
+    },
+    "console": {
+     "samples": 110,
+     "steadySamples": 79,
+     "measure": "rssMb",
+     "slopeMbPerHour": 2.1,
+     "wholeRunSlopeMbPerHour": 3.5,
+     "rssSlopeMbPerHour": 3.5,
+     "steadySpans": [
+      [
+       600.4,
+       900.0
+      ],
+      [
+       2752.6,
+       7143.2
+      ]
+     ],
+     "ok": true
+    }
+   }
+  },
+  "masksExercised": {
+   "ok": true,
+   "viewerHistories": 420,
+   "masked": 420,
+   "problems": [],
+   "distinctHistories": 210,
+   "historyRequests": 840
+  }
+ }
+}
