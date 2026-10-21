@@ -70,7 +70,8 @@ public class RunsConfiguration {
     }
 
     @Bean
-    RunSources runSources(RunService runs, ModelCatalog catalog, MqService mq, SqlService sql, BiReportService reports, ObjectProvider<BiNotifier> notifier,
+    RunSources runSources(RunService runs, ModelCatalog catalog, MqService mq, SqlService sql, BiReportService reports, com.ash.drishti.server.bi.BiService bi,
+            ObjectProvider<BiNotifier> notifier,
             ObjectProvider<Principals> principals) {
         RunSources sources = new RunSources(runs, catalog, mq, sql, reports);
         BiNotifier n = notifier.getIfAvailable();
@@ -79,6 +80,16 @@ public class RunsConfiguration {
         }
         Principals who = principals.getIfAvailable();
         runs.replay(r -> who == null ? Optional.empty() : sources.replay(r, who.of(r.runner())));
+        runs.suggestions().drafter((admin, model, rollup) -> {                 // an accepted suggestion: the rollup joins the model's draft (8.3a)
+            Optional<String> id = catalog.itemId(admin, model);
+            if (id.isEmpty()) {
+                return Optional.empty();
+            }
+            com.ash.drishti.identity.bi.BiStore.Item item = bi.readableItem(admin, id.get());
+            bi.updateItem(admin, id.get(), java.util.Map.of("body", RunSuggestions.withRollup(item.body(), rollup),
+                    "message", "rollup " + rollup.get("name") + " suggested by repeated heavy runs (BI runs 8.3a)"));
+            return id;
+        });
         runs.startSweeper();
         try {
             runs.recover();

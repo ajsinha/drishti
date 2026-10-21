@@ -30,7 +30,8 @@ final class RunAdmin {
     private RunAdmin() {}
 
     @SuppressWarnings("unchecked")
-    static Map<String, Object> of(RunService runs, Map<String, Object> admission, Double admissionWaitP95Ms, List<Map<String, Object>> running) {
+    static Map<String, Object> of(RunService runs, Map<String, Object> admission, Double admissionWaitP95Ms, List<Map<String, Object>> running,
+            List<Map<String, Object>> suggestions) {
         RunsProperties props = runs.properties();
         Map<String, Object> raw = runs.admin();
         Map<String, Object> m = new LinkedHashMap<>();
@@ -111,7 +112,7 @@ final class RunAdmin {
         m.put("settings", settings);
 
         m.put("nodes", List.of(Map.of("node", runs.node(), "alive", true)));
-        m.put("suggestions", null);                                            // rollup suggestions from repeated heavy runs: not built yet (8.3a)
+        m.put("suggestions", suggestions);                                     // rollup suggestions from repeated heavy runs (8.3a)
         return m;
     }
 

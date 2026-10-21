@@ -244,6 +244,22 @@ public final class RunSources {
         }
     }
 
+    /** Whether a model already has a rollup over the drafted table at the drafted grain (a suggestion is then {@code built}, 8.3a). */
+    public java.util.function.BiPredicate<String, Map<String, Object>> rollupBuilt(Principal p) {
+        return (model, rollup) -> {
+            try {
+                java.util.Set<String> by = new java.util.TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+                if (rollup.get("by") instanceof List<?> l) {
+                    l.forEach(x -> by.add(String.valueOf(x)));
+                }
+                return catalog.bind(p, model).view().def().rollups().stream().anyMatch(r -> r.table().equals(rollup.get("table")) && r.by().size() == by.size()
+                        && by.containsAll(r.by()));
+            } catch (RuntimeException e) {
+                return false;
+            }
+        };
+    }
+
     // ---- answers ------------------------------------------------------------------------------------------------------
 
     /** The HTTP answer of an outcome: {@code 200} today's body (JSON or Arrow) with {@code X-Bi-Run}, or {@code 202 {run}} with {@code Location}. */

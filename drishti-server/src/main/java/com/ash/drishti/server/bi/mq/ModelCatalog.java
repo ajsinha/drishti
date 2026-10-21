@@ -405,6 +405,12 @@ public final class ModelCatalog {
     /** A model found for a caller: its view and, for a version-1 file, the item it runs through. */
     record Found(ModelView view, BiStore.Item item) {}
 
+    /** The id of the workspace item behind a model reference, when it is one (a pack's or an implicit model has none). */
+    public java.util.Optional<String> itemId(Principal p, String ref) {
+        Found f = find(p, ref);
+        return f.item() == null ? java.util.Optional.empty() : java.util.Optional.of(f.item().id());
+    }
+
     Found find(Principal p, String ref) {
         if (ref == null || ref.isBlank()) {
             throw new MqException(MqException.Problem.of("DRS-9151", "model", "the query names no model (model: <name>@<major>, or dataset:<name> for one dataset)"));

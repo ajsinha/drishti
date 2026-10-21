@@ -177,6 +177,19 @@ public final class RunService {
         this.node = node == null || node.isBlank() ? "local" : node;
         this.metrics = metrics == null ? RunMetrics.NONE : metrics;
         this.queue = new RunQueue(props.workers(), props.queue().max(), this::execute);
+        this.suggestions = new RunSuggestions(props.suggest(), props.store().dir());
+    }
+
+    private final RunSuggestions suggestions;
+
+    /** Repeated heavy questions as rollup suggestions (section 8.3a). */
+    public RunSuggestions suggestions() {
+        return suggestions;
+    }
+
+    /** The run log the suggestions count: finished runs, newest first. */
+    public List<Run> finishedLog() {
+        return records.inStates(List.of(RunState.DONE, RunState.REUSED, RunState.EXPIRED), 5000);
     }
 
     public RunsProperties properties() {

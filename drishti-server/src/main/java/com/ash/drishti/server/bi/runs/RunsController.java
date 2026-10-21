@@ -426,7 +426,22 @@ public class RunsController {
         List<Run> running = (List<Run>) raw.get("running");
         com.ash.drishti.server.bi.engine.QueryService q = queries == null ? null : queries.getIfAvailable();
         Map<String, Object> admission = q == null || q.admission() == null ? null : q.admission().stats();
-        return noStore(200, RunAdmin.of(runs(), admission, null, running.stream().map(r -> json(r, p)).toList()));
+        List<Map<String, Object>> suggestions = runs().suggestions().of(runs().finishedLog(), Instant.now(), sources.rollupBuilt(p)).stream()
+                .map(RunSuggestions.Suggestion::toMap).toList();
+        return noStore(200, RunAdmin.of(runs(), admission, null, running.stream().map(r -> json(r, p)).toList(), suggestions));
+    }
+
+    /** Accepts a rollup suggestion (8.3a): the rollup is added to the model's draft, reviewed and published as any change. */
+    @PostMapping("/admin/runs/suggestions/{sid}/accept")
+    public ResponseEntity<?> acceptSuggestion(@PathVariable String sid, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        bi.requirePower(p, BiAccess.ADMIN);
+        return noStore(200, runs().suggestions().accept(sid, runs().finishedLog(), Instant.now(), p).toMap());
+    }
+
+    @PostMapping("/admin/runs/suggestions/{sid}/dismiss")
+    public ResponseEntity<?> dismissSuggestion(@PathVariable String sid, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        bi.requirePower(p, BiAccess.ADMIN);
+        return noStore(200, runs().suggestions().dismiss(sid, runs().finishedLog(), Instant.now(), p.user()).toMap());
     }
 
     @PostMapping("/admin/runs/{id}/cancel")
