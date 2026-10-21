@@ -51,6 +51,10 @@ public final class NetHealth {
             }
             FunctionCounter.builder("drishti.net.gossip.rounds", net, n -> n.node().map(x -> x.gossiper().rounds()).orElse(0L))
                     .description("Gossip rounds this node has run").register(meters);
+            io.micrometer.core.instrument.FunctionTimer.builder("drishti.net.gossip.exchange", net,
+                    n -> n.node().map(x -> x.gossiper().exchangesDone()).orElse(0L),
+                    n -> n.node().map(x -> x.gossiper().exchangeNanos()).orElse(0L).doubleValue(), java.util.concurrent.TimeUnit.NANOSECONDS)
+                    .description("Gossip exchanges this node made that answered, and their time (the control lane, 2.6.7)").register(meters);
         }
     }
 
@@ -80,6 +84,9 @@ public final class NetHealth {
         }
         out.put("members", states);
         out.put("drained", net.node().map(n -> n.table().self()).map(Member::drained).orElse(false));
+        // 2.6.7: gossip on its own port (0: the server's port) and the protocol peer data goes over
+        out.put("gossipPort", net.node().map(n -> n.table().self().gossipPort()).orElse(0));
+        out.put("peerProtocol", net.config().routing().peerProtocol());
         out.put("last10Minutes", log.totals(10));
         IdentitySync id = identity.get();
         out.put("warnings", id == null ? java.util.List.of() : id.warnings());

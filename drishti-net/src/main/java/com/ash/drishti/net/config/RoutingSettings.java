@@ -34,12 +34,15 @@ import java.util.Map;
  *     answered from the peers, or {@code 502 DRS-5052} "still joining", never {@code 404 DRS-1001} (SOAK3-01)
  * @param joinGrace longest a node counts as joining after it joined (30 s): when its peers' digests have not all come by then (every peer
  *     down), it answers as a node alone does
+ * @param peerProtocol {@code http2} (the default, 2.6.7: forwarded reads, scatter-gather, peer history and the live relay multiplexed over
+ *     one HTTP/2 connection per peer, {@code h2c} by the upgrade on plain HTTP, ALPN on TLS; a peer that does not speak it is answered in
+ *     HTTP/1.1) or {@code http1} (a connection per request in flight, as before 2.6.7). Gossip never uses it: it has its own HTTP/1.1 client
  */
 public record RoutingSettings(Duration forwardTimeout, Duration scatterBudget, Duration suggestBudget, int maxHops, Map<String, Double> weights,
-        String userState, Duration linkBudget, Duration joinWait, Duration joinGrace) {
+        String userState, Duration linkBudget, Duration joinWait, Duration joinGrace, String peerProtocol) {
 
     public static final RoutingSettings DEFAULTS = new RoutingSettings(Duration.ofSeconds(5), Duration.ofSeconds(3), Duration.ofMillis(150), 1,
-            Map.of("latency", 1.0), "replicate", Duration.ofSeconds(1), Duration.ofSeconds(2), Duration.ofSeconds(30));
+            Map.of("latency", 1.0), "replicate", Duration.ofSeconds(1), Duration.ofSeconds(2), Duration.ofSeconds(30), "http2");
 
     public RoutingSettings {
         weights = weights == null ? Map.of() : Map.copyOf(weights);
@@ -47,6 +50,12 @@ public record RoutingSettings(Duration forwardTimeout, Duration scatterBudget, D
         linkBudget = linkBudget == null ? Duration.ofSeconds(1) : linkBudget;
         joinWait = joinWait == null ? Duration.ofSeconds(2) : joinWait;
         joinGrace = joinGrace == null ? Duration.ofSeconds(30) : joinGrace;
+        peerProtocol = peerProtocol == null || peerProtocol.isBlank() ? "http2" : peerProtocol;
+    }
+
+    public RoutingSettings(Duration forwardTimeout, Duration scatterBudget, Duration suggestBudget, int maxHops, Map<String, Double> weights,
+            String userState, Duration linkBudget, Duration joinWait, Duration joinGrace) {
+        this(forwardTimeout, scatterBudget, suggestBudget, maxHops, weights, userState, linkBudget, joinWait, joinGrace, null);
     }
 
     public RoutingSettings(Duration forwardTimeout, Duration scatterBudget, Duration suggestBudget, int maxHops, Map<String, Double> weights,
@@ -57,6 +66,11 @@ public record RoutingSettings(Duration forwardTimeout, Duration scatterBudget, D
     public RoutingSettings(Duration forwardTimeout, Duration scatterBudget, Duration suggestBudget, int maxHops, Map<String, Double> weights,
             String userState) {
         this(forwardTimeout, scatterBudget, suggestBudget, maxHops, weights, userState, null, null, null);
+    }
+
+    /** True when peer data travels over HTTP/2 ({@code peer-protocol: http2}). */
+    public boolean http2() {
+        return "http2".equals(peerProtocol);
     }
 
     public boolean forwarding() {

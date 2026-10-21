@@ -42,9 +42,10 @@ SECRET_REF = re.compile(r"\$\{[A-Za-z_][A-Za-z0-9_.]*(:)?}")
 DURATION = re.compile(r"(\d+(?:\.\d+)?)\s*(ms|s|m|h|d)")
 TAG = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*(:[A-Za-z0-9._-]+)?")
 KNOWN = {
-    "node.yaml": {"enabled", "node-id", "advertise-url", "tags", "peer-only-packs", "secret", "previous-secret", "tls"},
+    "node.yaml": {"enabled", "node-id", "advertise-url", "tags", "peer-only-packs", "secret", "previous-secret", "tls", "gossip-port"},
     "gossip.yaml": {"interval", "fanout", "suspect-after", "indirect-probes", "dead-after", "forget-after", "persist-every"},
-    "routing.yaml": {"forward-timeout", "scatter-budget", "suggest-budget", "link-budget", "max-hops", "weights", "user-state"},
+    "routing.yaml": {"forward-timeout", "scatter-budget", "suggest-budget", "link-budget", "max-hops", "weights", "user-state",
+                     "join-wait", "join-grace", "peer-protocol"},
     "access.yaml": {"roles"},
     "peer": {"url", "tags", "tls"},
 }
@@ -163,6 +164,13 @@ def check_text(cli, fid: str, text: str) -> list[dict]:
                     "this machine has no address but loopback to advertise")
         if secret and len(secret.encode()) < 32:
             err("secret", "the cluster key must be at least 32 bytes")
+        if "gossip-port" in m:                                       # auto (default), off, or a port (2.6.7); YAML reads a bare off as false
+            gp = str(resolve(m["gossip-port"])).strip().lower()
+            if gp not in ("auto", "off", "false", ""):
+                if not gp.isdigit():
+                    err("gossip-port", f"'{gp}' is not auto, off or a port number")
+                elif not 1 <= int(gp) <= 65535:
+                    err("gossip-port", f"{gp} is outside 1 to 65535")
     elif fid == "gossip.yaml":
         dur("interval", 50, 60_000)
         integer("fanout", 1, 16)
@@ -179,6 +187,10 @@ def check_text(cli, fid: str, text: str) -> list[dict]:
         integer("max-hops", 0, 1)
         if "user-state" in m and str(m["user-state"]) not in ("replicate", "off"):
             err("user-state", f"'{m['user-state']}' is not replicate or off")
+        dur("join-wait", 0, 30_000)
+        dur("join-grace", 0, 600_000)
+        if "peer-protocol" in m and str(m["peer-protocol"]).lower() not in ("http2", "http1"):
+            err("peer-protocol", f"'{m['peer-protocol']}' is not http2 or http1")
     elif fid == "access.yaml":
         roles = m.get("roles")
         if roles is not None and not isinstance(roles, dict):

@@ -217,6 +217,7 @@ Ready-made files, with every setting explained, are in [config/net.examples/](..
 | `secret` | none (needed with `enabled: true`) | The cluster key, **only** as `${DRISHTI_NET_SECRET}`; at least 32 bytes | the next call |
 | `previous-secret` | none | A second key also accepted (never used to sign), during a key rollover | the next call |
 | `tls.*` | none | Mutual TLS between nodes: the shared TLS settings ([TLS.md](../connectors/TLS.md)) for an `https://` peer | the next call |
+| `gossip-port` | `auto` | The **gossip port** (2.6.7, [section 4](#4-membership-how-the-nodes-find-each-other)): gossip, probes and digests on a port of their own with their own threads. `auto`: a free port, chosen when the node joins and advertised through gossip; a number (`18490`): that port, for a firewall that must name it; `off`: the server's port, as before 2.6.7 | the port is opened again and gossiped at once |
 
 ### peers/&lt;name&gt;.yaml: the seeds
 
@@ -253,7 +254,7 @@ Applied to the next request, and told to the other nodes in the digest.
 
 ### routing.yaml
 
-Budgets, the hop limit, the peer choice weights and user state: in [section 7](#7-routing-where-a-request-goes).
+Budgets, the hop limit, the peer choice weights, user state and `peer-protocol` (HTTP/2 between nodes): in [section 7](#7-routing-where-a-request-goes).
 
 ## 4. Membership: how the nodes find each other
 
@@ -278,6 +279,30 @@ SWIM-style membership, carried over HTTP:
 Every call between nodes is signed with the cluster key (an HMAC over the method, the path and query, the time, the calling node and the body)
 and refused outside a 60 s window: a node without the key cannot join, gossip or read, and each refused call is listed on Admin → Net with the
 address and the reason (`401 DRS-5051`).
+
+**Gossip off the busy path (2.6.7).** A server busy with queries is never wrongly suspected:
+
+- **Its own port.** Each node opens a **gossip port** as it joins (node.yaml `gossip-port`, `auto` by default: a free port) and advertises it in
+  its member entry; peers send gossip, probes and digest pulls there. The port is a second connector of the same server with its own acceptor,
+  its own connection limit and **eight platform threads of its own**, and it serves nothing else (any other path: `404`). So a server whose
+  request threads are all taken by slow reads, whose virtual-thread carriers are held by CPU-bound work, whose connection limit is reached or
+  whose admission slots (read slots, BI admission, `max-concurrent`) are full, still answers its peers at once. The log says `net: gossip port
+  41234 open (8 platform threads of its own; gossip, probes and digests only)` and Admin → Health shows `gossipPort`.
+- **The priority path.** On either port, gossip, probes and the digest are answered by the server's very first filter, from memory: the
+  cluster key is checked and the answer written; no token check, request accounting, view forwarding or admission gate runs.
+- **The sender.** The gossip round runs on one platform thread of its own, its exchanges and probes on a pool of eight more, through an HTTP
+  client of their own (HTTP/1.1, two platform threads, a connect timeout of half the gossip timeout), never the client, connections or
+  timeouts that forwarded data uses. routing.yaml's `forward-timeout` never touches suspicion.
+- **The firewall.** With `gossip-port: auto` the port changes at each start; between machines behind a firewall, set a number and open it
+  between the nodes. A gossip port that refuses while the server's port answers is not tried again for 5 minutes (gossip uses the server's
+  port meanwhile) and the log says `net: the gossip port ... cannot be reached ... but ... answers: gossip goes to the server port for 5 min`.
+- **Rolling upgrade.** A node of before 2.6.7 advertises no gossip port: its peers gossip with it on its server port, where the priority path
+  answers. Seeds are always called on their server port first.
+
+Measured (`NetGossipBusyTest`, three servers in one JVM, each with six platform request threads, forty two-second requests in flight per node
+for twelve seconds, a third of them forwarded reads from a peer): the server's port answered nothing; with the gossip port no node suspected
+another and every heartbeat rose; with `gossip-port: off` every node suspected both of its peers. A node that then died (both ports closed,
+no word to anyone) was suspect everywhere after 3.0 s and dead after 7.0 s (`suspect-after: 3s`, `dead-after: 4s`).
 
 ## 5. What each node offers: the capability digest
 
@@ -495,6 +520,13 @@ Routing's traffic, and in the metrics `drishti_net_forwarded_total{peer,kind,out
 | `max-hops` | `1` | `0` switches forwarding off (gossip and digests only) |
 | `weights.latency` | `1.0` | How much latency counts when choosing between peers (steps of 10 ms times the weight; `0`: by the entity's hash only) |
 | `user-state` | `replicate` | Saved searches, layouts, pivots and console sign-in sessions copied to the other nodes, or `off` |
+| `peer-protocol` | `http2` | How peer data travels (2.6.7): forwarded views, peer documents, scattered searches, peer history and the live relay over **HTTP/2**, many requests multiplexed over one connection per peer (`h2c` by the upgrade on plain HTTP, ALPN on TLS). A peer that does not speak it (a node of before 2.6.7, or `server.http2.enabled: false`) is answered in HTTP/1.1 on the same call. `http1`: a connection per request in flight, as before. Gossip never uses it |
+
+**HTTP/2 between nodes (2.6.7).** The server's port speaks HTTP/2 as well as HTTP/1.1 (`server.http2.enabled: true` in `application.yaml`,
+`DRISHTI_HTTP2`; a peer may have 1,000 streams open and executing on one connection). The first call to a peer, and the first after 30 s of
+quiet, is a signed `GET /api/v1/net/ping` made alone: the upgrade happens once and every call after it shares that connection. Measured
+(`NetPeerProtocolBench`, 64 users at once asking B for trade views that A holds, 4,000 requests, warm): HTTP/1.1 used up to 227 connections
+from B to A, p50 76 ms, p99 370 ms; HTTP/2 used **1**, p50 68 ms, p99 117 ms ([DRISHTI_NET.md](../architecture/DRISHTI_NET.md#the-transport-between-nodes-as-built-267)).
 
 ## 8. The console and several servers
 
@@ -618,7 +650,8 @@ declaring a node that paused (a long garbage collection) dead and having it refu
 | Admin → Health shows *Last administrator kept* (audit action `last-admin-kept`) | The audit log: which change would have left no enabled administrator, and which administrator was kept | Nothing to repair: the cluster kept one enabled administrator ([section 7](#7-routing-where-a-request-goes)); review who disabled whom |
 | `401 DRS-5051 cluster credential refused: bad signature` in a node's log, the caller listed on Admin → Net | The two nodes' `DRISHTI_NET_SECRET` | The same key on every node (during a rollover, the three steps of [section 6](#6-security-the-key-mutual-tls-nodes-per-role)) |
 | `... signed 75 s away from this node's clock` | The two machines' clocks | NTP on every node |
-| A member flaps between `alive` and `suspect` | The latency on Admin → Net, the log of the flapping node (long pauses) | Raise `suspect-after`, or fix the network or the pauses |
+| A member flaps between `alive` and `suspect` | The latency on Admin → Net, the log of the flapping node (long pauses); Admin → Health `gossipPort` (0: gossip shares the server's port) | Leave `gossip-port` on `auto` or a number (not `off`); raise `suspect-after`, or fix the network or the pauses |
+| `net: the gossip port http://...:41234 cannot be reached ... but ... answers` | A firewall between the nodes | Set `gossip-port` to a number on every node and open it between them; meanwhile gossip uses the server's port |
 | `404 DRS-5050 Drishti*net is off on this node` | The node's `node.yaml` | `enabled: true` (and the node is not left: Rejoin) |
 | A page says `502 DRS-5052 ... cannot be reached now: n-a (left)` | Admin → Net → Members: the node that holds the data | Start it (or Rejoin it); the page works again by itself |
 | While a node is down the log has `WARN request refused: DRS-5052 … n-a (dead) …; repeats are counted and logged once a minute`, then `request refused 6000 times in the last 60 s naming n-a (dead)` | Nothing: these are the expected answers, one line for each thing said about the node in a minute (`not answering`, `failed`, `suspect`, `dead`: a line each from the first refusal, however they alternate) and a count a minute (since the 2.6.5 soak; before, every refusal was a WARN with a stack trace, about 11 MB a minute). A node that has just come back but whose digest has not arrived yet is named `(rejoining)`, never `(alive)` | Start the node; a `request failed:` line with a stack trace is a real fault of this server |

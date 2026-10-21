@@ -22,6 +22,9 @@ advertise-url: https://drishti-b.internal:8480   # the address peers and console
 tags: [region:emea, tier:risk]       # for nodes per role (access.yaml)
 peer-only-packs: []                  # packs served to peers only, hidden from this node's own users
 secret: ${DRISHTI_NET_SECRET}        # the cluster key: an environment reference only, at least 32 bytes, the same on every node
+gossip-port: auto                    # gossip, probes and digests on a port of their own with their own platform threads, so a server busy
+                                     # with queries is never wrongly suspected (2.6.7): auto (a free port, advertised through gossip), a
+                                     # number (a firewall that must name it: open it between the nodes), or off (the server's port)
 # previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}   # also accepted during a key rollover (NET.md, "Rotating the key")
 # tls:                               # mutual TLS between nodes, the shared tls settings (docs/connectors/TLS.md)
 #   keystore: /etc/drishti/net/node.p12

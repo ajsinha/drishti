@@ -30,11 +30,23 @@ import java.util.Map;
  * @param secret the cluster key (resolved), or empty
  * @param previousSecret the previous cluster key, accepted (never used to sign) during a rollover, or empty
  * @param tls mutual TLS settings ({@code tls.keystore.path}, ...), flattened; empty for none
+ * @param gossipPort the port of the node's own gossip connector (2.6.7): {@link #GOSSIP_AUTO} (0, the default: a free port chosen when the
+ *     node joins, advertised through gossip), {@link #GOSSIP_OFF} (-1: gossip on the server's port, as before 2.6.7) or a port number
  */
 public record NodeSettings(boolean enabled, String nodeId, String advertiseUrl, List<String> tags, List<String> peerOnlyPacks, String secret,
-        String previousSecret, Map<String, String> tls) {
+        String previousSecret, Map<String, String> tls, int gossipPort) {
+
+    /** {@code gossip-port: auto}: a free port chosen when the node joins. */
+    public static final int GOSSIP_AUTO = 0;
+    /** {@code gossip-port: off}: gossip on the server's own port. */
+    public static final int GOSSIP_OFF = -1;
 
     public static final NodeSettings OFF = new NodeSettings(false, "", "", List.of(), List.of(), "", "", Map.of());
+
+    public NodeSettings(boolean enabled, String nodeId, String advertiseUrl, List<String> tags, List<String> peerOnlyPacks, String secret,
+            String previousSecret, Map<String, String> tls) {
+        this(enabled, nodeId, advertiseUrl, tags, peerOnlyPacks, secret, previousSecret, tls, GOSSIP_AUTO);
+    }
 
     public NodeSettings {
         nodeId = nodeId == null ? "" : nodeId.trim();
@@ -44,6 +56,7 @@ public record NodeSettings(boolean enabled, String nodeId, String advertiseUrl, 
         secret = secret == null ? "" : secret;
         previousSecret = previousSecret == null ? "" : previousSecret;
         tls = tls == null ? Map.of() : Map.copyOf(tls);
+        gossipPort = gossipPort < GOSSIP_OFF || gossipPort > 65535 ? GOSSIP_AUTO : gossipPort;
     }
 
     /** Never prints the keys. */
@@ -51,6 +64,6 @@ public record NodeSettings(boolean enabled, String nodeId, String advertiseUrl, 
     public String toString() {
         return "NodeSettings[enabled=" + enabled + ", nodeId=" + nodeId + ", advertiseUrl=" + advertiseUrl + ", tags=" + tags
                 + ", peerOnlyPacks=" + peerOnlyPacks + ", secret=" + (secret.isEmpty() ? "unset" : "set")
-                + ", previousSecret=" + (previousSecret.isEmpty() ? "unset" : "set") + ", tls=" + tls.keySet() + "]";
+                + ", previousSecret=" + (previousSecret.isEmpty() ? "unset" : "set") + ", tls=" + tls.keySet() + ", gossipPort=" + gossipPort + "]";
     }
 }

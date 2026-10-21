@@ -118,7 +118,12 @@ public final class NetService implements AutoCloseable {
     private final NetClock clock;
     private final PeersFile peersFile;
     private final ReentrantLock lock = new ReentrantLock();
-    private final ExecutorService exchanges = Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("drishti-net-io-", 0).factory());
+    /**
+     * Gossip exchanges and probes: a small pool of platform threads of their own (2.6.7, gossip off the busy path), never virtual threads,
+     * whose carriers CPU-bound work on a busy server can hold, nor the common pool. Eight covers a round's fanout exchanges and its probes;
+     * a call waiting longer than a round is cut by the round anyway.
+     */
+    private final ExecutorService exchanges = Executors.newFixedThreadPool(8, Thread.ofPlatform().daemon().name("drishti-net-gossip-io-", 0).factory());
     private final Deque<Refusal> refusals = new ArrayDeque<>();
     private final List<Consumer<NetService>> listeners = new CopyOnWriteArrayList<>();
     private final AtomicLong lastSaved = new AtomicLong();
@@ -137,7 +142,43 @@ public final class NetService implements AutoCloseable {
         this.clock = clock;
         this.peersFile = new PeersFile(this.state.resolve("peers.json"));
         this.key = new ClusterKey("", "", clock);
-        this.http = new PeerHttp(() -> key, this::nodeId, () -> config().gossip().interval().multipliedBy(2).plusMillis(500), this::tlsFor);
+        this.http = new PeerHttp(() -> key, this::nodeId, () -> config().gossip().interval().multipliedBy(2).plusMillis(500), this::tlsFor)
+                .http2(() -> config().routing().http2()).gossipAddress(this::gossipAddress);
+    }
+
+    /** Opens this node's gossip port: node.yaml's {@code gossip-port} in, the bound port out (0: none, gossip on the server port). */
+    private volatile java.util.function.IntUnaryOperator gossipPorts = wanted -> 0;
+    /** What node.yaml asked for when the gossip port was last opened. */
+    private volatile int gossipWanted = Integer.MIN_VALUE;
+
+    /** How the gossip port is opened (the server's {@link GossipConnector}); called before {@link #start()}. */
+    public void gossipPorts(java.util.function.IntUnaryOperator open) {
+        this.gossipPorts = open == null ? wanted -> 0 : open;
+    }
+
+    private int openGossipPort(NetConfig c) {
+        int wanted = c.node().gossipPort();
+        gossipWanted = wanted;
+        try {
+            return gossipPorts.applyAsInt(wanted);
+        } catch (RuntimeException e) {
+            LOG.warn("net: the gossip port could not be opened ({}); gossip goes to the server's port", e.toString());
+            return 0;
+        }
+    }
+
+    /** A member's gossip address from its server address: its own gossip port when it advertises one, else the address itself. */
+    String gossipAddress(String url) {
+        Node n = node;
+        if (n == null || url == null) {
+            return url;
+        }
+        for (Member m : n.table.entries()) {
+            if (url.equals(m.url())) {
+                return m.gossipUrl();
+            }
+        }
+        return url;
     }
 
     // -- life cycle ---------------------------------------------------------------------------------------------------
@@ -243,7 +284,8 @@ public final class NetService implements AutoCloseable {
                     stopNode("node-id changed");
                     startNode(c);
                 } else {
-                    n.table.updateSelf(m -> m.withAdvert(advertiseUrl(), c.node().tags()));
+                    int gp = c.node().gossipPort() != gossipWanted ? openGossipPort(c) : n.table.self().gossipPort();
+                    n.table.updateSelf(m -> m.withAdvert(advertiseUrl(), c.node().tags()).withGossipPort(gp));
                 }
             }
         } catch (RuntimeException e) {
@@ -266,7 +308,7 @@ public final class NetService implements AutoCloseable {
             return;
         }
         Member self = new Member(id, advert, incarnation, 0, MemberState.ALIVE, digestHash, version, Member.PROTOCOL,
-                c.node().tags(), clock.millis(), false);
+                c.node().tags(), clock.millis(), false, openGossipPort(c));
         MemberTable table = new MemberTable(self, clock);
         Gossiper g = new Gossiper(table, () -> config().gossip(), http, clock, new java.security.SecureRandom(), exchanges);
         List<String> rejoin = saved.map(PeersFile.Saved::rejoinUrls).orElse(List.of());
@@ -290,12 +332,13 @@ public final class NetService implements AutoCloseable {
             }
             listeners.forEach(x -> x.accept(this));
         });
-        Thread loop = Thread.ofVirtual().name("drishti-net-gossip").unstarted(() -> loop(table, g));
+        // one platform thread of its own (2.6.7): a round never waits for a carrier that CPU-bound work on a busy server holds
+        Thread loop = Thread.ofPlatform().daemon().name("drishti-net-gossip").unstarted(() -> loop(table, g));
         boolean expectsPeers = java.util.stream.Stream.concat(c.seedUrls().stream(), rejoin.stream()).anyMatch(u -> !u.equals(advert));
         node = new Node(id, table, g, loop, expectsPeers);
         loop.start();
-        LOG.info("net: node {} joined Drishti*net at {} (incarnation {}, seeds {}, {} saved members)", id, self.url(), incarnation,
-                c.seedUrls(), rejoin.size());
+        LOG.info("net: node {} joined Drishti*net at {} (incarnation {}, seeds {}, {} saved members, {})", id, self.url(), incarnation,
+                c.seedUrls(), rejoin.size(), self.gossipPort() > 0 ? "gossip on port " + self.gossipPort() : "gossip on the server's port");
     }
 
     private void loop(MemberTable table, Gossiper g) {
@@ -336,6 +379,12 @@ public final class NetService implements AutoCloseable {
         save();
         n.loop.interrupt();
         node = null;
+        try {
+            gossipPorts.applyAsInt(com.ash.drishti.net.config.NodeSettings.GOSSIP_OFF);   // the gossip port closes with the node
+        } catch (RuntimeException e) {
+            LOG.debug("net: closing the gossip port: {}", e.toString());
+        }
+        gossipWanted = Integer.MIN_VALUE;
         LOG.info("net: node {} left Drishti*net ({})", n.id, why);
     }
 
@@ -359,6 +408,19 @@ public final class NetService implements AutoCloseable {
             lock.unlock();
         }
         exchanges.shutdownNow();
+        http.close();
+    }
+
+    /**
+     * Stops gossiping at once without telling anyone, as a node that died does (tests: the failure detector must still find it). The
+     * caller closes the ports.
+     */
+    void halt() {
+        Node n = node;
+        if (n != null) {
+            node = null;
+            n.loop.interrupt();
+        }
     }
 
     // -- what the rest of the server reads ---------------------------------------------------------------------------

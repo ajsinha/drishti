@@ -71,7 +71,7 @@ public final class NetSchema {
     // -- node.yaml ----------------------------------------------------------------------------------------------------
 
     public Parsed<NodeSettings> node(String file, Map<String, Object> m, String text) {
-        Ctx c = new Ctx(file, text, m, Set.of("enabled", "node-id", "advertise-url", "tags", "peer-only-packs", "secret", "previous-secret", "tls"));
+        Ctx c = new Ctx(file, text, m, Set.of("enabled", "node-id", "advertise-url", "tags", "peer-only-packs", "secret", "previous-secret", "tls", "gossip-port"));
         boolean enabled = c.bool("enabled", false);
         String nodeId = c.string("node-id", "");
         if (!nodeId.isEmpty() && !NodeIdentity.ID.matcher(nodeId).matches()) {
@@ -90,6 +90,17 @@ public final class NetSchema {
         String secret = c.secret("secret");
         String previous = c.secret("previous-secret");
         Map<String, String> tls = c.flat("tls");
+        int gossipPort = NodeSettings.GOSSIP_AUTO;
+        String gp = c.string("gossip-port", "auto").toLowerCase(Locale.ROOT);
+        if ("off".equals(gp) || "false".equals(gp)) {                // YAML reads a bare off as false
+            gossipPort = NodeSettings.GOSSIP_OFF;
+        } else if (!"auto".equals(gp) && !gp.isEmpty()) {
+            if (gp.matches("\\d{1,5}")) {
+                gossipPort = c.integer("gossip-port", NodeSettings.GOSSIP_AUTO, 1, 65535);
+            } else {
+                c.error("gossip-port", "'" + gp + "' is not auto, off or a port number");
+            }
+        }
         if (enabled) {
             if (secret.isEmpty()) {
                 c.error("secret", "enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least "
@@ -106,7 +117,7 @@ public final class NetSchema {
         if (!previous.isEmpty() && previous.equals(secret)) {
             c.warning("previous-secret", "is the same as secret: remove it once every node has the new key");
         }
-        return c.done(new NodeSettings(enabled, nodeId, url, tags, peerOnly, secret, previous, tls));
+        return c.done(new NodeSettings(enabled, nodeId, url, tags, peerOnly, secret, previous, tls, gossipPort));
     }
 
     // -- peers/<name>.yaml --------------------------------------------------------------------------------------------
@@ -146,7 +157,7 @@ public final class NetSchema {
     public Parsed<RoutingSettings> routing(String file, Map<String, Object> m, String text) {
         RoutingSettings d = RoutingSettings.DEFAULTS;
         Ctx c = new Ctx(file, text, m, Set.of("forward-timeout", "scatter-budget", "suggest-budget", "max-hops", "weights", "user-state",
-                "link-budget", "join-wait", "join-grace"));
+                "link-budget", "join-wait", "join-grace", "peer-protocol"));
         Map<String, Double> weights = new LinkedHashMap<>(d.weights());
         if (m.get("weights") instanceof Map<?, ?> w) {
             w.forEach((k, v) -> {
@@ -163,13 +174,18 @@ public final class NetSchema {
         if (!Set.of("replicate", "off").contains(state)) {
             c.error("user-state", "'" + state + "' is not replicate or off");
         }
+        String protocol = c.string("peer-protocol", d.peerProtocol()).toLowerCase(Locale.ROOT);
+        if (!Set.of("http2", "http1").contains(protocol)) {
+            c.error("peer-protocol", "'" + protocol + "' is not http2 or http1");
+            protocol = d.peerProtocol();
+        }
         return c.done(new RoutingSettings(c.duration("forward-timeout", d.forwardTimeout(), Duration.ofMillis(50), Duration.ofMinutes(5)),
                 c.duration("scatter-budget", d.scatterBudget(), Duration.ofMillis(50), Duration.ofMinutes(5)),
                 c.duration("suggest-budget", d.suggestBudget(), Duration.ofMillis(10), Duration.ofSeconds(10)),
                 c.integer("max-hops", d.maxHops(), 0, 1), weights, state,
                 c.duration("link-budget", d.linkBudget(), Duration.ofMillis(10), Duration.ofSeconds(30)),
                 c.duration("join-wait", d.joinWait(), Duration.ZERO, Duration.ofSeconds(30)),
-                c.duration("join-grace", d.joinGrace(), Duration.ZERO, Duration.ofMinutes(10))));
+                c.duration("join-grace", d.joinGrace(), Duration.ZERO, Duration.ofMinutes(10)), protocol));
     }
 
     // -- access.yaml --------------------------------------------------------------------------------------------------

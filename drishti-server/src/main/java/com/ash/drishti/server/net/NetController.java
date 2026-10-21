@@ -37,6 +37,10 @@ import org.springframework.web.bind.annotation.RestController;
  * The membership endpoints of Drishti*net (DRISHTI_NET.md section 15): the push-pull exchange and the probes, which only another
  * node may call (the call filter checks the cluster credential first), and the member list, which a node, an administrator
  * (everything) or any signed-in caller such as the console's discovery (the alive members' addresses, tags and packs) may read.
+ *
+ * <p>Since 2.6.7 the exchange, the probes and the digest are answered before any of this, on either port, by the priority path
+ * {@link GossipPath} (the same answers, without the filter chain or the dispatcher); the mappings here are the API of record and answer
+ * only if that filter is not registered.
  */
 @RestController
 @RequestMapping("/api/v1/net")

@@ -32,10 +32,13 @@ import java.util.List;
  * @param tags the member's tags ({@code region:emea}), for nodes per role
  * @param since when the state began (epoch milliseconds, the clock of the node that set it)
  * @param drained true while the member takes no forwarded work (maintenance): it still gossips and serves its own users
+ * @param gossipPort the port of the member's own gossip connector (2.6.7), on the host of {@code url}; 0 when it has none (an older
+ *     node, or {@code gossip-port: off}): gossip then goes to {@code url}. A member that does not know the field drops it, so a peer may
+ *     hear of a member without it for a while; gossip goes to {@code url} until it hears the member itself again
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Member(String nodeId, String url, long incarnation, long heartbeat, MemberState state, String digestHash, String version,
-        int protocol, List<String> tags, long since, boolean drained) {
+        int protocol, List<String> tags, long since, boolean drained, int gossipPort) {
 
     /** The protocol this build speaks. A member with a different one is listed but never routed to. */
     public static final int PROTOCOL = 1;
@@ -46,30 +49,62 @@ public record Member(String nodeId, String url, long incarnation, long heartbeat
         digestHash = digestHash == null ? "" : digestHash;
         version = version == null ? "" : version;
         tags = tags == null ? List.of() : List.copyOf(tags);
+        gossipPort = gossipPort < 0 || gossipPort > 65535 ? 0 : gossipPort;
+    }
+
+    /** A member without a gossip port (a seed, an older node, a test). */
+    public Member(String nodeId, String url, long incarnation, long heartbeat, MemberState state, String digestHash, String version,
+            int protocol, List<String> tags, long since, boolean drained) {
+        this(nodeId, url, incarnation, heartbeat, state, digestHash, version, protocol, tags, since, drained, 0);
+    }
+
+    /** Where gossip and probes go: {@code url}'s scheme and host with {@link #gossipPort()}, or {@code url} itself when there is none. */
+    public String gossipUrl() {
+        return gossipUrl(url, gossipPort);
+    }
+
+    /** {@code url}'s scheme and host with {@code port}; {@code url} itself when the port is 0 or the url cannot be read. */
+    public static String gossipUrl(String url, int port) {
+        if (port <= 0 || url == null || url.isEmpty()) {
+            return url;
+        }
+        try {
+            java.net.URI u = java.net.URI.create(url);
+            if (u.getHost() == null) {
+                return url;
+            }
+            return new java.net.URI(u.getScheme(), null, u.getHost(), port, null, null, null).toString();
+        } catch (IllegalArgumentException | java.net.URISyntaxException e) {
+            return url;
+        }
     }
 
     public Member withState(MemberState s, long at) {
-        return new Member(nodeId, url, incarnation, heartbeat, s, digestHash, version, protocol, tags, at, drained);
+        return new Member(nodeId, url, incarnation, heartbeat, s, digestHash, version, protocol, tags, at, drained, gossipPort);
     }
 
     public Member withHeartbeat(long beat) {
-        return new Member(nodeId, url, incarnation, beat, state, digestHash, version, protocol, tags, since, drained);
+        return new Member(nodeId, url, incarnation, beat, state, digestHash, version, protocol, tags, since, drained, gossipPort);
     }
 
     public Member withIncarnation(long inc) {
-        return new Member(nodeId, url, inc, heartbeat, state, digestHash, version, protocol, tags, since, drained);
+        return new Member(nodeId, url, inc, heartbeat, state, digestHash, version, protocol, tags, since, drained, gossipPort);
     }
 
     public Member withDigestHash(String hash) {
-        return new Member(nodeId, url, incarnation, heartbeat, state, hash, version, protocol, tags, since, drained);
+        return new Member(nodeId, url, incarnation, heartbeat, state, hash, version, protocol, tags, since, drained, gossipPort);
     }
 
     public Member withDrained(boolean d) {
-        return new Member(nodeId, url, incarnation, heartbeat, state, digestHash, version, protocol, tags, since, d);
+        return new Member(nodeId, url, incarnation, heartbeat, state, digestHash, version, protocol, tags, since, d, gossipPort);
     }
 
     public Member withAdvert(String u, List<String> t) {
-        return new Member(nodeId, u, incarnation, heartbeat, state, digestHash, version, protocol, t, since, drained);
+        return new Member(nodeId, u, incarnation, heartbeat, state, digestHash, version, protocol, t, since, drained, gossipPort);
+    }
+
+    public Member withGossipPort(int port) {
+        return new Member(nodeId, url, incarnation, heartbeat, state, digestHash, version, protocol, tags, since, drained, port);
     }
 
     /** Alive, speaking our protocol and not drained: a member a request may be sent to. */

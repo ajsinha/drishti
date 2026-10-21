@@ -61,6 +61,8 @@ public final class Gossiper {
     private volatile Listener listener = c -> { };
     private final AtomicLong rounds = new AtomicLong();
     private final AtomicLong exchangesFailed = new AtomicLong();
+    private final AtomicLong exchangesDone = new AtomicLong();
+    private final AtomicLong exchangeNanos = new AtomicLong();
 
     public Gossiper(MemberTable table, Supplier<GossipSettings> settings, GossipTransport transport, NetClock clock, Random random, Executor executor) {
         this.table = table;
@@ -90,6 +92,16 @@ public final class Gossiper {
 
     public long exchangesFailed() {
         return exchangesFailed.get();
+    }
+
+    /** Exchanges that answered, for {@code drishti_net_gossip_exchange_seconds}. */
+    public long exchangesDone() {
+        return exchangesDone.get();
+    }
+
+    /** Their total time in nanoseconds. */
+    public long exchangeNanos() {
+        return exchangeNanos.get();
     }
 
     /** One gossip round. Never throws: a failing peer is counted, the round goes on. */
@@ -220,7 +232,10 @@ public final class Gossiper {
         long t0 = System.nanoTime();
         try {
             List<Member> theirs = transport.exchange(target.url(), mine);
-            double ms = (System.nanoTime() - t0) / 1e6;
+            long took = System.nanoTime() - t0;
+            exchangesDone.incrementAndGet();
+            exchangeNanos.addAndGet(took);
+            double ms = took / 1e6;
             changes.add(table.merge(theirs));
             String id = target.nodeId().isBlank() ? idOf(theirs, target.url()) : target.nodeId();
             if (id != null) {
