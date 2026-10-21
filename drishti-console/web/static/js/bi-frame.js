@@ -75,6 +75,9 @@
           foot.textContent = '';
           foot.appendChild(h('span', { class: 'bi-vis-ms', 'data-ms': String(m.millis), text: res.rowCount + (res.rowCount === 1 ? ' row' : ' rows') + ' · ' + (m.cached ? 'from the cache' : (Math.round(m.millis * 10) / 10) + ' ms') + ' · ' + m.layer + (m.rollup ? ' (' + m.rollup + ')' : '') }));
           if (m.masked && m.masked.length) { foot.appendChild(h('span', { class: 'bi-vis-masked', title: 'Masked for you: ' + m.masked.join(', '), text: ' · masked' })); }
+          if (m.dataAsOf && m.dataAsOf.aligned === false && B.visuals && B.visuals.asOfLine) {   // its tables stand at different dates (2.6.7 patch): said on the visual
+            foot.appendChild(h('span', { class: 'bi-asof-foot', role: 'note', 'data-asof-mixed': '', text: ' · ' + B.visuals.asOfLine(m, '') }));
+          }
           if (res.period) {                                                     // a time series asked by period so the whole range fits
             foot.appendChild(h('span', { class: 'bi-vis-period', 'data-period': res.period, title: 'Too many days to draw one by one: each point is a ' + res.period + ' (the whole range is here).', text: ' · by ' + res.period }));
           }

@@ -46,6 +46,8 @@
 .bi-vis-body { flex: 1 1 auto; min-height: 0; position: relative; padding: 0 .4rem; overflow: hidden; }
 .bi-vis-bare .bi-vis-body { padding: .4rem; }
 .bi-vis-foot { flex: 0 0 auto; font-size: .68rem; color: var(--d-muted); padding: .1rem .65rem .25rem; min-height: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bi-asof-foot { color: var(--d-warn, var(--d-muted)); }                         /* its tables stand at different dates (2.6.7 patch) */
+[data-asof-note][data-asof-aligned="false"] { color: var(--d-warn, var(--d-muted)); }
 .bi-vis-showall { font: inherit; font-weight: 600; color: var(--d-accent, currentColor); background: none; border: 1px solid currentColor; border-radius: 4px; padding: 0 .4rem; margin-left: .2rem; cursor: pointer; }
 .bi-vis-cut { color: var(--d-warn); }
 @media (pointer: coarse) { .bi-vis-showall { min-height: 44px; min-width: 44px; } }

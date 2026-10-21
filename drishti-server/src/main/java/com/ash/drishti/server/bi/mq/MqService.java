@@ -225,7 +225,7 @@ public final class MqService {
             List<String> all = new ArrayList<>(warnings);
             m.warnings().stream().filter(w -> !all.contains(w)).forEach(all::add);
             return new QueryService.Result(shown.columns(), shown.rows(), new QueryService.Meta(m.layer(), m.rollup(), m.rows(), m.millis(), m.cached(), m.dates(), m.tables(),
-                    m.masked(), all, m.sql(), m.generation()));
+                    m.masked(), all, m.sql(), m.generation(), m.tableDates()));
         }
 
         /** The canonical query that ran (section 5.2 {@code meta.query}). */
@@ -334,10 +334,24 @@ public final class MqService {
     }
 
     /** An engine result served from the result cache: marked cached, no time spent, no SQL. */
+    /**
+     * The dates the answer's tables were read at (2.6.7 patch): {@code asked}, the date asked (the business date when none was), {@code tables}
+     * each table's date, and {@code aligned}, whether they all stand at one date. Each table reads its latest date on or before the asked one,
+     * so a fact and a dimension may differ; the console says so in one line.
+     */
+    public static Map<String, Object> dataAsOf(java.time.LocalDate asked, QueryService.Meta mm) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        Map<String, String> tables = mm == null ? Map.of() : mm.tableDates();
+        out.put("asked", asked == null ? null : asked.toString());
+        out.put("tables", tables);
+        out.put("aligned", new java.util.HashSet<>(tables.values()).size() <= 1);
+        return out;
+    }
+
     private static QueryService.Result servedAgain(QueryService.Result r) {
         QueryService.Meta m = r.meta();
         return m == null ? r : new QueryService.Result(r.columns(), r.rows(), new QueryService.Meta(m.layer(), m.rollup(), m.rows(), 0, true, m.dates(), m.tables(), m.masked(),
-                m.warnings(), null, m.generation()));
+                m.warnings(), null, m.generation(), m.tableDates()));
     }
 
     /** The values a {@code top} filter found (data: two generations of the same plan may find others, and they are part of the answer's key). */
@@ -369,6 +383,7 @@ public final class MqService {
         boolean timed = q.time().asOf() != null || q.time().from() != null;
         meta.put("asOf", !timed && mm != null && !mm.dates().isEmpty() ? mm.dates().get(mm.dates().size() - 1) : compiled.asOf() == null ? null : compiled.asOf().toString());
         meta.put("dates", mm == null ? List.of() : mm.dates());
+        meta.put("dataAsOf", dataAsOf(compiled.asOf(), mm));
         meta.put("layer", mm == null ? null : mm.layer());
         meta.put("rollup", mm == null ? null : mm.rollup());
         meta.put("parts", Math.max(1, r.meta() == null ? 1 : factCount(b.view(), c)));

@@ -777,4 +777,26 @@
     return fn ? fn(host, spec, ctx, res) : null;
   };
   V.isChart = (type) => !!CHARTS[type];
+
+  /**
+   * The data-as-of line of an answer (2.6.7 patch): each table reads its latest date on or before the asked one, so a fact and a dimension
+   * may stand at different dates. One date: "Data as of D", with "(asked A: no later data)" when the asked date A is later. Several:
+   * "Data as of: trades D1, prices D2 (asked A)". meta: the answer's meta ({dataAsOf: {asked, tables}, dates}); asked: the page's date,
+   * used when the answer does not say it. Empty when nothing dated was read.
+   */
+  V.asOfLine = function (meta, asked) {
+    const m = meta || {};
+    const da = m.dataAsOf || {};
+    const tables = da.tables || {};
+    const ask = da.asked || asked || '';
+    const days = Array.from(new Set(Object.values(tables))).sort();
+    if (days.length > 1) {
+      const each = Object.keys(tables).sort().map((t) => t + ' ' + tables[t]).join(', ');
+      return 'Data as of: ' + each + (ask ? ' (asked ' + ask + ')' : '');
+    }
+    const ds = m.dates || [];
+    const day = days[0] || ds[ds.length - 1];
+    if (!day) { return ''; }
+    return 'Data as of ' + day + (ask && ask > day ? ' (asked ' + ask + ': no later data)' : '');
+  };
 })();

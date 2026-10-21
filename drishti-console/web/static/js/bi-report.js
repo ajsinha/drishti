@@ -257,7 +257,8 @@
     if (entry.follow) { entry.follow.close(); entry.follow = null; }
     entry.followKey = key;
     if (!mq) { chip.el.remove(); entry.chip = null; return; }
-    if (!B.consume.followable(state.time)) { chip.set('asof', 'A past day never changes: it was asked once.', state.time); return; }
+    const at = B.consume.pinned(mq) || state.time;                                  // a report's as-of rule may pin a past date (2.6.7 patch)
+    if (!B.consume.followable(at)) { chip.set('asof', 'A past day never changes: it was asked once.', at); return; }
     const following = Array.from(frames.values()).filter((e) => e.follow).length;
     if (following >= MAX_FOLLOW) { chip.set('once', 'This page follows ' + MAX_FOLLOW + ' visuals already; this one was asked once.'); return; }
     chip.set('connecting');
@@ -272,11 +273,11 @@
 
   function asOfNote(res) {
     const note = q('[data-asof-note]');
-    const ds = res && res.meta && res.meta.dates;
-    if (!note || !ds || !ds.length) { return; }
-    const day = ds[ds.length - 1];
+    if (!note || !res || !res.meta) { return; }
     const top = document.querySelector('form[data-asof] input[type="date"]');
-    note.textContent = 'Data as of ' + day + (top && top.value && top.value !== day && !state.dates ? ' (the top bar says ' + top.value + ': no later data)' : '');
+    const asked = state.dates ? '' : (state.time && state.time.mode === 'asof' && state.time.asOf) || (top && top.value) || '';
+    const line = B.visuals.asOfLine(state.dates ? { dates: res.meta.dates } : res.meta, asked);   // a window of the report's own dates: the last day read
+    if (line) { note.textContent = line; note.setAttribute('data-asof-aligned', String(!(res.meta.dataAsOf && res.meta.dataAsOf.aligned === false))); }
   }
 
   /** A python visual (bi-python.js): the Python item runs on the rows this person may see, on the server or in the browser, and what it returns is drawn. */

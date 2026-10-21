@@ -130,7 +130,8 @@
       if (entry.follow) { entry.follow.close(); entry.follow = null; }
       entry.followKey = k;
       if (!entry.mq) { chip.el.remove(); entry.chip = null; return; }
-      if (!B.consume.followable(o.time())) { chip.set('asof', 'A past day never changes: it was asked once.', o.time()); return; }
+      const at = B.consume.pinned(entry.mq) || o.time();                           // a report's as-of rule may pin a past date (2.6.7 patch)
+      if (!B.consume.followable(at)) { chip.set('asof', 'A past day never changes: it was asked once.', at); return; }
       chip.set('connecting');
       entry.follow = B.consume.follow(entry.mq, {
         throttle: Math.max(250, Number(o.canvas.getAttribute('data-live-min')) || 250) + 'ms', deliver: 'rows', staleSeconds: Number(o.canvas.getAttribute('data-live-stale')) || 30,

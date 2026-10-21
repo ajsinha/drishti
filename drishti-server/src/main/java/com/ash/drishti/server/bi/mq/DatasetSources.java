@@ -262,7 +262,7 @@ final class DatasetSources implements StagedTables {
         }
         QueryService.Meta m = shown.meta();
         QueryService.Result result = new QueryService.Result(shown.columns(), shown.rows(), m == null ? null
-                : new QueryService.Meta(m.layer(), m.rollup(), m.rows(), m.millis(), m.cached(), m.dates(), m.tables(), m.masked(), warnings, m.sql(), m.generation()));
+                : new QueryService.Meta(m.layer(), m.rollup(), m.rows(), m.millis(), m.cached(), m.dates(), m.tables(), m.masked(), warnings, m.sql(), m.generation(), m.tableDates()));
         return new Answer(result, columns(table, d, result, "the source query"), ran[0].compiled().asOf());
     }
 

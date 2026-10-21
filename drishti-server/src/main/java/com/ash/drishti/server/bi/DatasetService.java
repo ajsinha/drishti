@@ -980,6 +980,7 @@ public final class DatasetService {
         out.put("millis", m.millis());
         out.put("cached", m.cached());
         out.put("dates", m.dates());
+        out.put("dataAsOf", com.ash.drishti.server.bi.mq.MqService.dataAsOf(null, m));   // each table's date (2.6.7 patch); the asked date is the page's
         out.put("tables", m.tables());
         out.put("masked", m.masked());
         out.put("warnings", m.warnings());

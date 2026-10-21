@@ -664,7 +664,7 @@ public final class BiReportService {
         QueryService.Meta m = r.meta();
         List<String> masked = m.masked().stream().map(x -> x.startsWith(prefix) ? x.substring(prefix.length()) : x).toList();
         return new QueryService.Result(cols, r.rows(), new QueryService.Meta(m.layer(), m.rollup(), m.rows(), m.millis(), m.cached(), m.dates(), m.tables(), masked, m.warnings(), m.sql(),
-                m.generation()));
+                m.generation(), m.tableDates()));
     }
 
     /** A visual's query, built and ready to run. */

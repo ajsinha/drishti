@@ -63,8 +63,22 @@ public final class QueryService implements AutoCloseable {
     }
 
     /** What was done, for the preview and the access log. */
+    /**
+     * @param tableDates the business date each table was read at, for an answer as of one date (or the latest): a fact and a dimension may each
+     *        stand at their own latest date on or before the asked one (2.6.7 patch); empty for a window or when nothing dated was read
+     */
     public record Meta(String layer, String rollup, int rows, double millis, boolean cached, List<String> dates, List<String> tables, List<String> masked,
-            List<String> warnings, String sql, long generation) {}
+            List<String> warnings, String sql, long generation, Map<String, String> tableDates) {
+
+        public Meta {
+            tableDates = tableDates == null ? Map.of() : java.util.Collections.unmodifiableMap(new java.util.TreeMap<>(tableDates));
+        }
+
+        public Meta(String layer, String rollup, int rows, double millis, boolean cached, List<String> dates, List<String> tables, List<String> masked,
+                List<String> warnings, String sql, long generation) {
+            this(layer, rollup, rows, millis, cached, dates, tables, masked, warnings, sql, generation, Map.of());
+        }
+    }
 
     /** The answer: columns (typed) and what was done. */
     public record Result(List<ArrowIpcWriter.Column> columns, int rows, Meta meta) {}
@@ -277,7 +291,7 @@ public final class QueryService implements AutoCloseable {
             if (hit != null) {
                 hits.incrementAndGet();
                 Meta m = hit.meta();
-                return new Result(hit.columns(), hit.rows(), new Meta(m.layer(), m.rollup(), m.rows(), 0, true, m.dates(), m.tables(), m.masked(), m.warnings(), null, m.generation()));
+                return new Result(hit.columns(), hit.rows(), new Meta(m.layer(), m.rollup(), m.rows(), 0, true, m.dates(), m.tables(), m.masked(), m.warnings(), null, m.generation(), m.tableDates()));
             }
         }
         QueryContext.Ctx ctx = QueryContext.current();
@@ -539,6 +553,11 @@ public final class QueryService implements AutoCloseable {
             }
         }));
         java.util.Collections.sort(dates);
+        Map<String, String> tableDates = new java.util.TreeMap<>();
+        if (q.to() == null || q.to().equals(q.from())) {                       // as of one date (or the latest): the date each table stands at
+            cols.forEach((t, l) -> l.partitions().stream().filter(p -> p.date() != null && p.rows() > 0).map(Layers.Partition::date)
+                    .max(java.util.Comparator.naturalOrder()).ifPresent(x -> tableDates.put(t, x.toString())));
+        }
         SqlCompiler.MoreSources more = (t, lo, hi) -> {
             if (from.containsKey(t) && java.util.Objects.equals(lo, q.from()) && java.util.Objects.equals(hi, q.to()) && rollup == null) {
                 return from.get(t);
@@ -564,7 +583,10 @@ public final class QueryService implements AutoCloseable {
         };
         SqlCompiler.Compiled c = probe.compile(plan, reader, from, cap, components, timeContext(d, q, dates), more);
         AnalyticEngine.Answer a = engine.query(c.sql(), c.params(), cap, timeout());
-        return finish(ds, q, c, a, layerName, rollup == null ? null : rollup.name(), dates, warnings, explain);
+        Result done = finish(ds, q, c, a, layerName, rollup == null ? null : rollup.name(), dates, warnings, explain);
+        Meta m = done.meta();
+        return new Result(done.columns(), done.rows(), new Meta(m.layer(), m.rollup(), m.rows(), m.millis(), m.cached(), m.dates(), m.tables(), m.masked(),
+                m.warnings(), m.sql(), m.generation(), tableDates));
     }
 
     /** The compiled query and its answer, from a connection that holds the staging tables. */

@@ -72,6 +72,8 @@
   C.datesOf = (t) => (t && t.mode === 'asof' ? { from: t.asOf, to: t.asOf } : t && t.mode === 'window' ? { from: t.from, to: t.to } : null);
   /** Whether a time can be followed: a past day never changes (the server refuses DRS-9183), now and a window can. */
   C.followable = (t) => !t || t.mode !== 'asof' || t.asOf >= today();
+  /** The date a visual's query is pinned to by its report's as-of rule (aligned, a date, a name: 2.6.7 patch), as a time; null when it is not. */
+  C.pinned = (mq) => (mq && mq.time && mq.time['as-of'] ? { mode: 'asof', asOf: mq.time['as-of'] } : null);
 
   // ---- parameters and calculation groups -------------------------------------------------------------------------------------
   /**
