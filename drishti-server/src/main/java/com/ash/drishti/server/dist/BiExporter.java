@@ -171,6 +171,36 @@ public final class BiExporter {
         }
     }
 
+    /**
+     * A stored answer (a BI run's result, docs/architecture/BI_RUNS.md section 14.1 export) as a one-table document: its columns, its rows up to
+     * {@code drishti.distribution.export.max-rows} (cut with a note, never silently), its masked columns named. The answer is already the reader's own
+     * version (masks applied), so nothing is computed here.
+     */
+    @SuppressWarnings("unchecked")
+    public ExportDoc ofAnswer(String title, String subtitle, Map<String, Object> answer) {
+        List<Map<String, Object>> cols = answer.get("columns") instanceof List<?> l ? (List<Map<String, Object>>) l : List.of();
+        List<List<Object>> rows = answer.get("rows") instanceof List<?> l ? (List<List<Object>>) l : List.of();
+        List<String> names = new ArrayList<>();
+        List<String> masked = new ArrayList<>();
+        for (Map<String, Object> c : cols) {
+            String n = shortName(String.valueOf(c.get("name")));
+            names.add(n);
+            if (Boolean.TRUE.equals(c.get("masked"))) {
+                masked.add(n);
+            }
+        }
+        String note = null;
+        List<List<Object>> kept = rows;
+        if (rows.size() > limits.maxRows()) {
+            kept = new ArrayList<>(rows.subList(0, limits.maxRows()));
+            note = "Cut at " + limits.maxRows() + " of " + rows.size() + " rows (drishti.distribution.export.max-rows).";
+        }
+        if (!masked.isEmpty()) {
+            note = (note == null ? "" : note + " ") + "Masked for you: " + String.join(", ", masked) + ".";
+        }
+        return new ExportDoc(title, subtitle, List.of(), List.of(new ExportDoc.Section("result", title, ExportDoc.TABLE, names, typed(kept), note, masked, "table")));
+    }
+
     /** {@code trade.trader} reads as {@code trader}: the table prefix means nothing to a reader of the file. */
     static String shortName(String name) {
         int dot = name.lastIndexOf('.');

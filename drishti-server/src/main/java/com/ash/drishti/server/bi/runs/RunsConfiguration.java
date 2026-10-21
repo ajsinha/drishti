@@ -99,6 +99,20 @@ public class RunsConfiguration {
         return sources;
     }
 
+    /** Scheduled runs (14.1): the owner's question asked again on a schedule, as the owner now; checked every 30 s. */
+    @Bean(destroyMethod = "close")
+    RunSchedules runSchedules(RunService runs, RunSources sources, ObjectProvider<HikariDataSource> identity, ObjectProvider<Principals> principals,
+            ObjectProvider<com.ash.drishti.engine.time.BusinessDates> dates) {
+        HikariDataSource ds = identity.getIfAvailable();
+        Principals who = principals.getIfAvailable();
+        com.ash.drishti.engine.time.BusinessDates d = dates.getIfAvailable();
+        RunSchedules s = new RunSchedules(runs, ds == null ? new RunSchedules.Memory() : new RunSchedules.Jdbc(ds),
+                r -> who == null ? Optional.empty() : sources.replay(r, who.of(r.runner())), d == null ? null : d.zone(),
+                d == null ? com.ash.drishti.common.BusinessCalendar.of("WEEKENDS") : d.calendar(), Clock.systemUTC());
+        s.start(java.time.Duration.ofSeconds(30));
+        return s;
+    }
+
     /** Sharing (section 9.3): share rows in the identity database, recipients bound as themselves, roles expanded to their members when shared. */
     @Bean
     RunSharing runSharing(RunService runs, RunSources sources, ModelCatalog catalog, MqService mq, ObjectProvider<HikariDataSource> identity,

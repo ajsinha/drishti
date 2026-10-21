@@ -61,11 +61,16 @@ public class RunsController {
 
     private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> queries;
     private final RunSharing sharing;
+    private final RunSchedules schedules;
+    private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.dist.BiExporter> exporter;
 
     public RunsController(RunsProperties props, BiService bi, BiAccess access, RunSources sources, ExecutorService drishtiVirtualExecutor,
-            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> queries, RunSharing sharing) {
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> queries, RunSharing sharing,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.dist.BiExporter> exporter, RunSchedules schedules) {
+        this.schedules = schedules;
         this.queries = queries;
         this.sharing = sharing;
+        this.exporter = exporter;
         this.props = props;
         this.bi = bi;
         this.access = access;
@@ -125,7 +130,7 @@ public class RunsController {
         }
         Map<String, Object> m = RunJson.of(r, v, Instant.now());
         m.put("confirmToken", runs().confirmToken(r.id(), p.user()));          // the owner's, while it awaits confirmation (the drawer confirms with it)
-        m.put("schedule", null);
+        m.put("schedule", mine(r, p) ? schedules.ofRun(r.id(), p.user()) : null);   // the owner's schedule of this run
         return m;
     }
 
@@ -237,19 +242,22 @@ public class RunsController {
     @GetMapping("/runs/schedules")
     public ResponseEntity<?> schedules(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.BI);
-        return noStore(200, Map.of("schedules", List.of()));
+        return noStore(200, Map.of("schedules", schedules.of(p.user()).stream().map(RunSchedules.Schedule::toMap).toList()));
     }
 
     @PutMapping("/runs/schedules/{id}")
     public ResponseEntity<?> changeSchedule(@PathVariable String id, @RequestBody(required = false) JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.BI);
-        throw new DrishtiException(ErrorCode.RUN_NOT_FOUND, "no run schedule '" + id + "' of yours");
+        String text = body != null && body.path("schedule").isTextual() ? body.path("schedule").asText() : null;
+        Boolean on = body != null && body.path("enabled").isBoolean() ? body.path("enabled").asBoolean() : null;
+        return noStore(200, schedules.change(id, p.user(), text, on).toMap());
     }
 
     @DeleteMapping("/runs/schedules/{id}")
     public ResponseEntity<?> deleteSchedule(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.BI);
-        throw new DrishtiException(ErrorCode.RUN_NOT_FOUND, "no run schedule '" + id + "' of yours");
+        schedules.delete(id, p.user());
+        return ResponseEntity.noContent().build();
     }
 
     /** {@code hello} (the caller's active runs), then a {@code run} event per change, and {@code status} every 15 s. */
@@ -373,7 +381,30 @@ public class RunsController {
 
     @PostMapping("/runs/{id}/export")
     public ResponseEntity<?> export(@PathVariable String id, @RequestBody(required = false) JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return notYet(id, "export", p);
+        bi.requirePower(p, BiAccess.BI);
+        Run r = runs().get(id).orElseThrow(() -> notFound(id));
+        boolean own = mine(r, p);
+        if (!own && !recipient(r, p)) {
+            throw notFound(id);
+        }
+        String format = body != null && body.path("format").isTextual() ? body.path("format").asText().toLowerCase(java.util.Locale.ROOT) : "csv";
+        if (!format.equals("csv") && !format.equals("xlsx")) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "a run's result exports as csv or xlsx, not '" + format + "'");
+        }
+        com.ash.drishti.server.dist.BiExporter x = exporter.getIfAvailable();
+        if (x == null) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "exports are not available on this server (distribution is off)");
+        }
+        Map<String, Object> answer = own ? runs().result(r, r.signature()) : sharing.read(r, p);       // the reader's own version, masks applied
+        String title = RunService.title(r);
+        com.ash.drishti.server.dist.ExportDoc doc = x.ofAnswer(title, "Run " + r.id() + (r.asOf() == null ? "" : " · as of " + r.asOf()), answer);
+        byte[] bytes = format.equals("csv") ? com.ash.drishti.server.dist.CsvWriter.write(doc) : com.ash.drishti.server.dist.XlsxWriter.write(doc);
+        String file = title.replaceAll("[^A-Za-z0-9._-]+", "-").replaceAll("^-+|-+$", "") + "." + format;
+        return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "no-store").header("X-Bi-Run", r.id())
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + (file.startsWith(".") ? "run" + file : file) + "\"")
+                .contentType(format.equals("csv") ? MediaType.parseMediaType("text/csv; charset=utf-8")
+                        : MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(bytes);
     }
 
     @PostMapping("/runs/{id}/share")
@@ -399,7 +430,18 @@ public class RunsController {
 
     @PostMapping("/runs/{id}/schedule")
     public ResponseEntity<?> schedule(@PathVariable String id, @RequestBody(required = false) JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return notYet(id, "schedule", p);
+        bi.requirePower(p, BiAccess.BI);
+        enabled();
+        Run r = own(id, p);
+        if (!"mq".equals(r.sourceType()) && !"sql".equals(r.sourceType()) && !"report".equals(r.sourceType())) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "a " + r.sourceType() + " run cannot be scheduled");
+        }
+        String text = body != null && body.path("schedule").isTextual() ? body.path("schedule").asText() : "";
+        if (text.isBlank()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "schedule: when to run it (daily 07:30, business-days 07:30, weekly mon 08:00, monthly last 18:00)");
+        }
+        String data = body.path("data").isTextual() ? body.path("data").asText() : "latest";
+        return noStore(201, schedules.create(r, p, text, data).toMap());
     }
 
     private ResponseEntity<?> notYet(String id, String action, Principal p) {
