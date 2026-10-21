@@ -255,8 +255,19 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
          */
         List<SourcePlugin> peers(EntityRef ref, AsOf asOf);
 
-        /** Why the entity cannot be read although a peer holds the kind (that peer is down or suspect), or empty. */
+        /**
+         * Why the entity cannot be read although a peer holds the kind (that peer is down or suspect), or this node cannot tell yet (it is
+         * still joining the cluster), or empty.
+         */
         default Optional<DrishtiException> unreachable(EntityRef ref) {
+            return Optional.empty();
+        }
+
+        /**
+         * Why this node cannot yet tell which peers hold a kind: it is still joining the cluster and has not had its peers' digests (SOAK3-01).
+         * A read nothing here holds is then not "not found". Empty once it has them, and always for a single server.
+         */
+        default Optional<String> joining(String kind) {
             return Optional.empty();
         }
 

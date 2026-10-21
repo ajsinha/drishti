@@ -192,7 +192,7 @@ drishti:
     timeout: 10s                            # the whole request; days not read by then make the answer partial (DRS-1014)
     parallel-days: 8                        # days read at once per request by the default per-day loop
     max-concurrent: 16                      # history requests running at once on this server
-    cache-mb: 64                            # memory for cached answers (keyed by the data's version)
+    cache-mb: 64                            # heap for cached answers (keyed by the data's version), one budget for every caller
   security:
     # Off for local development. Production: enabled: true and DRISHTI_TOKEN_SECRET (>= 32 bytes, shared with the console).
     enabled: ${DRISHTI_SECURITY_ENABLED:false}
@@ -718,7 +718,7 @@ drishti:
     dir: ${DRISHTI_GOVERNANCE_DIR:${drishti.data.dir}/governance}
   engine:
     layout-cache-size: 10000        # effective layouts, one per (Sutra version, kind, data shape)
-    fingerprint-cache-size: 100000  # one per (entity, generation)
+    fingerprint-cache-size: 100000  # one per (entity, generation; in a cluster, caller signature): about 30 MB full
     bind-parallelism: 0             # 0 = one binding thread per core
   db:
     pool:                            # connection pools of every database connector and the identity database (docs/connectors/CONNECTOR_FILES.md)

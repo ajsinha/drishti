@@ -70,6 +70,12 @@ def peer_problem(status: int, content_type: str, text: str) -> bool:
     return bool(re.search(r'"code"\s*:\s*"DRS-1003"', text or "") and re.search(r'"detail"\s*:\s*"(DRS-1003\s+)?net:', text or ""))
 
 
+def joining_problem(status: int, text: str) -> bool:
+    """The server's ``502 DRS-5052`` "this node is still joining Drishti*net": it has just started or rejoined and does not know yet which
+    peers hold the data (SOAK3-01). It is not counted against the server; a read is tried once on another server, which knows."""
+    return status == 502 and bool(re.search(r'"code"\s*:\s*"DRS-5052"', text or "")) and "still joining Drishti*net" in (text or "")
+
+
 class BackendError(Exception):
     """The server answered with a problem (RFC 7807) or could not be reached."""
 
@@ -158,6 +164,11 @@ class BackendClient:
                 r = await self._client.request(method, base + "/api/v1" + path, headers=headers, **kw)
                 if r.status_code not in (502, 503) or peer_problem(r.status_code, r.headers.get("content-type", ""), r.text):
                     self._servers.answered(base, (_time.perf_counter() - t0) * 1000)
+                    if read and attempt == 0 and joining_problem(r.status_code, r.text):
+                        other = self._servers.another(base)   # a node just rejoined that has not heard from its peers yet (SOAK3-01)
+                        if other and other != base:
+                            base = other
+                            continue
                     return r
                 why = f"HTTP {r.status_code}"
                 err = r

@@ -92,7 +92,7 @@ public final class ViewForwardFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !RequestPaths.routed(request).startsWith("/api/v1/") || !routing.forwarding() || NetCaller.fromPeer()
+        return !RequestPaths.routed(request).startsWith("/api/v1/") || (!routing.forwarding() && !routing.joining()) || NetCaller.fromPeer()
                 || request.getAttribute(NetCallFilter.PEER) != null;
     }
 
@@ -154,6 +154,18 @@ public final class ViewForwardFilter extends OncePerRequestFilter {
             } else {
                 chain.doFilter(req, res);
             }
+            return;
+        }
+        if (routing.joining() && !t.get().pack() && routing.localPack(t.get().kind()).isEmpty()) {
+            // SOAK3-01: still joining, so which node renders a kind not here is not known yet: wait briefly for the peers' digests, and
+            // when they are still not in, say so (DRS-5052, which the console tries once on another server), never "no such kind"
+            if (!routing.awaitJoined()) {
+                NetCallFilter.problem(res, 502, "DRS-5052", PeerSources.JOINING + t.get().kind() + "; try again in a moment");
+                return;
+            }
+        }
+        if (!routing.forwarding()) {
+            chain.doFilter(req, res);                    // the node joined alone, or the cluster is off now
             return;
         }
         NetRouting.Plan plan = t.get().pack() ? packPlan(t.get().kind(), p, req) : routing.view(t.get().kind(), p, dated(req), t.get().id());

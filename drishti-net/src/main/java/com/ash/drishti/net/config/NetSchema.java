@@ -146,7 +146,7 @@ public final class NetSchema {
     public Parsed<RoutingSettings> routing(String file, Map<String, Object> m, String text) {
         RoutingSettings d = RoutingSettings.DEFAULTS;
         Ctx c = new Ctx(file, text, m, Set.of("forward-timeout", "scatter-budget", "suggest-budget", "max-hops", "weights", "user-state",
-                "link-budget"));
+                "link-budget", "join-wait", "join-grace"));
         Map<String, Double> weights = new LinkedHashMap<>(d.weights());
         if (m.get("weights") instanceof Map<?, ?> w) {
             w.forEach((k, v) -> {
@@ -167,7 +167,9 @@ public final class NetSchema {
                 c.duration("scatter-budget", d.scatterBudget(), Duration.ofMillis(50), Duration.ofMinutes(5)),
                 c.duration("suggest-budget", d.suggestBudget(), Duration.ofMillis(10), Duration.ofSeconds(10)),
                 c.integer("max-hops", d.maxHops(), 0, 1), weights, state,
-                c.duration("link-budget", d.linkBudget(), Duration.ofMillis(10), Duration.ofSeconds(30))));
+                c.duration("link-budget", d.linkBudget(), Duration.ofMillis(10), Duration.ofSeconds(30)),
+                c.duration("join-wait", d.joinWait(), Duration.ZERO, Duration.ofSeconds(30)),
+                c.duration("join-grace", d.joinGrace(), Duration.ZERO, Duration.ofMinutes(10))));
     }
 
     // -- access.yaml --------------------------------------------------------------------------------------------------

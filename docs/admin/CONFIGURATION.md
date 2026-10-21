@@ -794,7 +794,7 @@ without a restart. A pack's `history:` block can lower `max-days` and set `defau
 | `drishti.history.timeout` | `10s` | The whole request. Days not read by then are listed in `problems` and the answer is `partial` (`DRS-1014` when no day was read). |
 | `drishti.history.parallel-days` | `8` | Days read at once per request by the default per-day loop (connectors with a fast path read their own way). |
 | `drishti.history.max-concurrent` | `16` | History requests running at once on this server; the next waits up to `timeout`, then `DRS-1014`. |
-| `drishti.history.cache-mb` | `64` | Memory for cached answers. An entry is keyed by the kind's data version, so a new load never serves stale rows; a kind whose connector gives no version is not cached. Admin → Cache → `history` empties it. |
+| `drishti.history.cache-mb` | `64` | Heap for cached answers, one budget for every key and caller signature (the least recently used go first; since 2.6.6 an entry counts the heap it really takes, about 2.3 to 3.2 times the earlier estimate). An entry is keyed by the kind's data version, so a new load never serves stale rows; a kind whose connector gives no version is not cached. Admin → Cache → `history` empties it. |
 
 ### `drishti.packs` — domain packs
 
@@ -1082,7 +1082,7 @@ Users, passwords, lockout, the audit log and the identity database are configure
 | Key | Default | Meaning |
 |---|---|---|
 | `layout-cache-size` | `10000` | Effective layouts kept, one per (Sutra version, kind, data shape). |
-| `fingerprint-cache-size` | `100000` | Data-shape fingerprints kept, one per (entity, generation). |
+| `fingerprint-cache-size` | `100000` | Data-shape fingerprints kept, one per (entity, generation; in a cluster also the caller's security signature), a few hundred bytes each (about 30 MB full). |
 | `bind-parallelism` | `0` (one thread per CPU core) | Threads binding panels. `0` or a negative value means one per core. |
 
 Raise the cache sizes when many distinct entities are viewed and the cache hit rates in **Admin → Health** are

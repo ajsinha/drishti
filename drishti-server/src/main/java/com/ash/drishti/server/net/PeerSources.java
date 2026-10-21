@@ -48,7 +48,9 @@ public final class PeerSources implements SourceRouter.Fallback {
         this.net = net;
         this.codec = codec;
         this.log = log;
-        Runnable apply = () -> router.fallback(net.running() ? this : null);
+        // set from the moment node.yaml has the node on, before it joins: a read the server answers while still starting then waits for the
+        // peers' digests or says the node is joining, instead of "no source holds" (SOAK3-01)
+        Runnable apply = () -> router.fallback(net.running() || net.awaitingJoin() ? this : null);
         net.onChange(n -> apply.run());
         apply.run();
     }
@@ -115,6 +117,7 @@ public final class PeerSources implements SourceRouter.Fallback {
         if (c == null || c.principal() == null) {
             return List.of();
         }
+        awaitJoined();
         List<SourcePlugin> out = new ArrayList<>();
         for (String id : routing.dataPeers(ref.kind(), c.principal(), asOf == null ? null : asOf.businessDate(), asOf == null || asOf.live(), ref.id())) {
             out.add(source(id));
@@ -187,8 +190,31 @@ public final class PeerSources implements SourceRouter.Fallback {
                 .map(k -> k.sources().isEmpty() || k.sources().stream().anyMatch(s -> s.mayHold(date))).orElse(true);
     }
 
+    /** What a read nothing here holds says while this node is joining; the console tries such a read once on another server. */
+    public static final String JOINING = "this node is still joining Drishti*net and does not know yet which nodes hold ";
+
+    /**
+     * On a node still joining (SOAK3-01), a read that none of its sources holds waits for its peers' first digests: routing.yaml's
+     * {@code join-wait}, never more than half the {@code forward-timeout}, so the read still has time to ask the peer. A forwarded request
+     * asks no peer and does not wait.
+     */
+    private void awaitJoined() {
+        if (!NetCaller.fromPeer()) {
+            routing.awaitJoined();
+        }
+    }
+
+    @Override
+    public Optional<String> joining(String kind) {
+        return !NetCaller.fromPeer() && routing.joining() ? Optional.of(JOINING + kind) : Optional.empty();
+    }
+
     @Override
     public Optional<DrishtiException> unreachable(EntityRef ref) {
+        if (!NetCaller.fromPeer() && routing.joining()) {
+            return Optional.of(new DrishtiException(ErrorCode.NET_PEER_FAILED, "no source here holds " + ref + ", and " + JOINING + ref.kind()
+                    + "; try again in a moment"));
+        }
         if (!routing.forwarding()) {
             return Optional.empty();                      // a forwarded request asks no peer, but may still say which holder is down
         }

@@ -71,14 +71,31 @@ public final class NetService implements AutoCloseable {
         final Gossiper gossiper;
         final Thread loop;
         final Instant started;
+        /** True when it joined with seeds other than itself or members saved in peers.json: it is joining until it has their digests. */
+        final boolean expectsPeers;
         volatile boolean leaving;
 
         Node(String id, MemberTable table, Gossiper gossiper, Thread loop) {
+            this(id, table, gossiper, loop, false);
+        }
+
+        Node(String id, MemberTable table, Gossiper gossiper, Thread loop, boolean expectsPeers) {
             this.id = id;
             this.table = table;
             this.gossiper = gossiper;
             this.loop = loop;
             this.started = Instant.now();
+            this.expectsPeers = expectsPeers;
+        }
+
+        /** When it joined. */
+        public Instant started() {
+            return started;
+        }
+
+        /** True when it has seeds other than itself or saved members to join: a cluster member, not a node alone. */
+        public boolean expectsPeers() {
+            return expectsPeers;
         }
 
         public String id() {
@@ -159,8 +176,13 @@ public final class NetService implements AutoCloseable {
     /** The server is ready (its web server answers, its connectors have started): the node joins now if node.yaml says so. */
     public void ready() {
         if (!mayJoin) {
-            mayJoin = true;
-            reload();
+            starting = true;                         // awaitingJoin() stays true until the node is made (SOAK3-01)
+            try {
+                mayJoin = true;
+                reload();
+            } finally {
+                starting = false;
+            }
         }
     }
 
@@ -168,6 +190,17 @@ public final class NetService implements AutoCloseable {
     public boolean mayJoin() {
         return mayJoin;
     }
+
+    /**
+     * True while node.yaml says the node is a member but it has not joined yet: the server is still starting and its port may already
+     * answer. A read then cannot know what its peers hold (SOAK3-01).
+     */
+    public boolean awaitingJoin() {
+        return node == null && (!mayJoin || starting) && config().enabled();
+    }
+
+    /** True while {@link #ready()} is making the node: no gap between "not joined yet" and "joined". */
+    private volatile boolean starting;
 
     /** Reads the folder once and starts watching it. */
     public void start() {
@@ -258,7 +291,8 @@ public final class NetService implements AutoCloseable {
             listeners.forEach(x -> x.accept(this));
         });
         Thread loop = Thread.ofVirtual().name("drishti-net-gossip").unstarted(() -> loop(table, g));
-        node = new Node(id, table, g, loop);
+        boolean expectsPeers = java.util.stream.Stream.concat(c.seedUrls().stream(), rejoin.stream()).anyMatch(u -> !u.equals(advert));
+        node = new Node(id, table, g, loop, expectsPeers);
         loop.start();
         LOG.info("net: node {} joined Drishti*net at {} (incarnation {}, seeds {}, {} saved members)", id, self.url(), incarnation,
                 c.seedUrls(), rejoin.size());

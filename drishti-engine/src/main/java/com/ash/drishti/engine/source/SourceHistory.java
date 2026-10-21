@@ -185,6 +185,14 @@ public final class SourceHistory {
                     }
                 }
             }
+            // this node is still joining: it does not know yet which peers hold the kind, so the days nothing answered may be held there
+            // (SOAK3-01: a node just restarted answered 404 DRS-1001 for a trade only its peers held)
+            java.util.Optional<String> joining = remaining.isEmpty() ? java.util.Optional.empty() : fb.joining(kind);
+            if (joining.isPresent()) {
+                Set<LocalDate> failed = new HashSet<>();
+                failures.forEach(f -> failed.add(f.date()));
+                remaining.stream().filter(d -> !failed.contains(d)).forEach(d -> failures.add(new Failure(UNREACHABLE, d, joining.get())));
+            }
         }
         List<HistoryDay> out = new ArrayList<>(days.values());
         if (r.lastDays() > 0 && out.size() > r.lastDays()) {

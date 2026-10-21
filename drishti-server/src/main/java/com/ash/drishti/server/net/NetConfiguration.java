@@ -148,8 +148,8 @@ public class NetConfiguration {
 
     @Bean
     public NetHealth netHealth(NetService net, ForwardLog log, io.micrometer.core.instrument.MeterRegistry meters,
-            ObjectProvider<IdentitySync> identity) {
-        return new NetHealth(net, log, meters, identity::getIfAvailable);
+            ObjectProvider<IdentitySync> identity, DigestService digests) {
+        return new NetHealth(net, log, meters, identity::getIfAvailable).joining(digests::joining);
     }
 
     @Bean
