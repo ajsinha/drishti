@@ -1240,6 +1240,7 @@ Targeted tests only between steps, on the 10K-trade lake at most, one heavy proc
 | Step | Status | What was built |
 |---|---|---|
 | R1 | built | `RunsProperties` (reads `config/runs/runs.yaml`, every key defaulted; examples in `config/runs.examples/`: `laptop.yaml`, `cluster.yaml`, `off.yaml`), `RunsConfiguration`, `RunJson` (14.3), `RunProblem` (a problem with extra properties and `Retry-After`), `RunsController` (every endpoint of 14.1), the three tables in both schema files, `SchemaParityTest`; `Run` gained `title`, `reuseOf`, `rowsRead` and a `Builder` |
+| R2 | built, except the run engine | `Admission` class caps (`classCap`, `background-share` and `standing-share` from `drishti.bi.exec`, `byClass` in its stats; an interrupted waiter leaves the line at once, which is how a cancelled run's waiter is removed); `ExecProperties` `backgroundShare`, `standingShare`, `fragmentsShare`; `QueryService.refreshInBackground` (the `BACKGROUND` class, through admission), used by `DatasetRefresher`; `FragmentPools` gives background work at most `fragments-share` of a connector's pool. **Not built:** the second DuckDB instance for runs (section 10.3): runs execute on the one engine, bounded by the class cap and `workers` |
 
 ### 18.3 Together
 

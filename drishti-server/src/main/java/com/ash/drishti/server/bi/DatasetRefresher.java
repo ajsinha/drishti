@@ -304,7 +304,7 @@ public final class DatasetRefresher implements AutoCloseable {
         Instant started = clock.instant();
         String ended = null;                                   // shown once the run is over (running cleared): a retry looks at both
         try {
-            QueryService.Refreshed r = j.readers() == null ? queries.refresh(j.ds(), j.tables(), date) : across(j.readers(), date);
+            QueryService.Refreshed r = j.readers() == null ? queries.refreshInBackground(j.ds(), j.tables(), date) : across(j.readers(), date);
             if (j.ds().dataset() != null && j.ds().dataset().framed()) {
                 framed.refreshed(j.ds());
             }
@@ -471,7 +471,7 @@ public final class DatasetRefresher implements AutoCloseable {
         List<String> tables = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
         for (DatasetService.ModelGateway.Reader r : readers) {
-            QueryService.Refreshed one = queries.refresh(r.loaded(), r.tables(), date);
+            QueryService.Refreshed one = queries.refreshInBackground(r.loaded(), r.tables(), date);
             queries.layers().bump(r.loaded().key());                                // a Python or staged table has no layer: its answers are asked again
             rows += one.rows();
             millis += one.millis();

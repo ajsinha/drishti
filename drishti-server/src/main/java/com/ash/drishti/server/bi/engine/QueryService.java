@@ -139,7 +139,7 @@ public final class QueryService implements AutoCloseable {
     public void exec(ExecProperties e) {
         this.exec = e;
         this.pools = new FragmentPools(e, Clock.systemUTC());
-        this.admission = new Admission(props.maxConcurrent(), props.maxConcurrentPerUser(), e.perModelShare());
+        this.admission = new Admission(props.maxConcurrent(), props.maxConcurrentPerUser(), e.perModelShare(), e.backgroundShare(), e.standingShare());
         Events now = this.events;
         this.pools.onFragment((c, x) -> now.fragment(c, "source", x));
     }
@@ -843,6 +843,20 @@ public final class QueryService implements AutoCloseable {
      *
      * @param only the tables to rebuild, or null for every cached table of the dataset
      */
+    /**
+     * {@link #refresh} as background work (docs/architecture/BI_RUNS.md section 10.1): in the {@code BACKGROUND} class and through admission, under
+     * its cap ({@code drishti.bi.exec.background-share}), so a scheduled or after-load refresh never holds the places interactive questions need.
+     * It waits for a place as long as background work may run ({@code drishti.bi.exec.background}).
+     */
+    public Refreshed refreshInBackground(Loaded ds, java.util.Collection<String> only, LocalDate date) {
+        QueryContext.Ctx ctx = new QueryContext.Ctx(QueryContext.WorkClass.BACKGROUND, null, null);
+        return QueryContext.with(ctx, () -> {
+            try (Admission.Ticket t = admission.enter("refresh", ds.key(), QueryContext.WorkClass.BACKGROUND, exec.background())) {
+                return refresh(ds, only, date);
+            }
+        });
+    }
+
     public Refreshed refresh(Loaded ds, java.util.Collection<String> only, LocalDate date) {
         long t0 = System.nanoTime();
         List<Dataset.Table> tables = ds.dataset().tables().values().stream()

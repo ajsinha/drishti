@@ -47,6 +47,7 @@ public final class FragmentPools {
     static final class Pool {
         final String connector;
         final Semaphore permits;
+        final Semaphore background;                                     // background work's share of the permits (fragments-share)
         final ReentrantLock lock = new ReentrantLock();
         State state = State.CLOSED;
         int failures;
@@ -57,9 +58,10 @@ public final class FragmentPools {
         final AtomicLong nanos = new AtomicLong();
         volatile String lastError;
 
-        Pool(String connector, int permits) {
+        Pool(String connector, int permits, double backgroundShare) {
             this.connector = connector;
             this.permits = new Semaphore(permits, true);
+            this.background = new Semaphore(Math.max(1, (int) Math.floor(permits * backgroundShare)), true);
         }
     }
 
@@ -79,11 +81,38 @@ public final class FragmentPools {
     }
 
     private Pool pool(String connector) {
-        return pools.computeIfAbsent(connector, c -> new Pool(c, props.fragmentsOf(c)));
+        return pools.computeIfAbsent(connector, c -> new Pool(c, props.fragmentsOf(c), props.fragmentsShare()));
     }
 
-    /** Runs one source fragment of {@code connector} within its pool and breaker. */
+    /**
+     * Runs one source fragment of {@code connector} within its pool and breaker. Background work (BI runs, refresh: docs/architecture/BI_RUNS.md
+     * section 10.3) takes at most {@code drishti.bi.exec.fragments-share} of the pool, so an interactive build of one date always finds a place,
+     * and it waits for its share as long as background work may run. Every wait is interruptible: a cancelled run leaves at once.
+     */
     public <T> T run(String connector, Supplier<T> fragment) {
+        if (QueryContext.current().workClass() != QueryContext.WorkClass.BACKGROUND) {
+            return runIn(connector, fragment);
+        }
+        Pool p = pool(connector);
+        boolean got = false;
+        try {
+            got = p.background.tryAcquire(props.background().toMillis(), TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        if (!got) {
+            p.refused.incrementAndGet();
+            throw new DrishtiException(ErrorCode.QUERY_BUSY, "connector '" + connector + "' is running background fragments already"
+                    + " (drishti.bi.exec.fragments-share): the run was cancelled or waited too long");
+        }
+        try {
+            return runIn(connector, fragment);
+        } finally {
+            p.background.release();
+        }
+    }
+
+    private <T> T runIn(String connector, Supplier<T> fragment) {
         Pool p = pool(connector);
         enter(p);
         boolean got = false;

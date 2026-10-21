@@ -34,10 +34,20 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param connectors per connector name: overrides of {@code max-fragments} ({@code connectors.trading-store.max-fragments: 4})
  * @param node this Java node's name (several nodes: the shard owner of a model; empty: one node)
  * @param nodes every Java node of the site: name to its base URL ({@code java-1: http://10.0.0.5:18480}); empty: one node
+ * @param backgroundShare BI runs (docs/architecture/BI_RUNS.md 10.1): the most of the slots background work (runs, refresh) holds at once (0.25)
+ * @param standingShare the most of the slots standing-query maintenance holds at once (0.25)
+ * @param fragmentsShare the most of a connector's {@code max-fragments} the layer builds of background runs hold (0.5)
  */
 @ConfigurationProperties("drishti.bi.exec")
 public record ExecProperties(Double perModelShare, Duration queue, Duration interactive, Duration background, Long maxEstimatedRows, Integer maxFragments,
-        Integer breakerFailures, Duration breakerOpen, Map<String, Map<String, Object>> connectors, String node, Map<String, String> nodes) {
+        Integer breakerFailures, Duration breakerOpen, Map<String, Map<String, Object>> connectors, String node, Map<String, String> nodes,
+        Double backgroundShare, Double standingShare, Double fragmentsShare) {
+
+    /** The settings without the class shares (their defaults). */
+    public ExecProperties(Double perModelShare, Duration queue, Duration interactive, Duration background, Long maxEstimatedRows, Integer maxFragments,
+            Integer breakerFailures, Duration breakerOpen, Map<String, Map<String, Object>> connectors, String node, Map<String, String> nodes) {
+        this(perModelShare, queue, interactive, background, maxEstimatedRows, maxFragments, breakerFailures, breakerOpen, connectors, node, nodes, null, null, null);
+    }
 
     public ExecProperties {
         perModelShare = perModelShare == null || perModelShare <= 0 || perModelShare > 1 ? 0.5 : perModelShare;
@@ -51,6 +61,13 @@ public record ExecProperties(Double perModelShare, Duration queue, Duration inte
         connectors = connectors == null ? Map.of() : Map.copyOf(connectors);
         node = node == null ? "" : node.strip();
         nodes = nodes == null ? Map.of() : Map.copyOf(nodes);
+        backgroundShare = share(backgroundShare, 0.25);
+        standingShare = share(standingShare, 0.25);
+        fragmentsShare = share(fragmentsShare, 0.5);
+    }
+
+    private static Double share(Double v, double dflt) {
+        return v == null || v <= 0 || v > 1 ? dflt : v;
     }
 
     private static Duration positive(Duration d, Duration dflt) {

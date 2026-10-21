@@ -32,7 +32,10 @@ import java.util.concurrent.locks.ReentrantLock;
  * The engine's admission (docs/architecture/BI_DESIGN.md section 6.3): {@code slots} queries run at once; a waiting query is served by its <b>work class</b>
  * (interactive before standing before background, then by arrival), within its person's share ({@code per-user}: standing and background work do not count
  * against it) and its model's share ({@code per-model-share} of the slots: one hot model cannot take the server). A query that waited {@code wait} is refused
- * {@code DRS-9025} (busy, retry). Thread-safe.
+ * {@code DRS-9025} (busy, retry). Each class but interactive also has a cap (docs/architecture/BI_RUNS.md section 10.1: {@code background-share},
+ * {@code standing-share} of the slots), so background work (runs, dataset refresh) never holds the slots interactive work needs: with 8 slots and
+ * both shares at 0.25, at least 4 are always left for interactive questions. A waiter leaves the line at once when its thread is interrupted
+ * (a cancelled run). Thread-safe.
  */
 public final class Admission {
 
@@ -91,12 +94,39 @@ public final class Admission {
     private final AtomicLong seq = new AtomicLong();
     private final AtomicLong refused = new AtomicLong();
     private final AtomicLong waitedNanos = new AtomicLong();
+    private final Map<QueryContext.WorkClass, Integer> byClass = new java.util.EnumMap<>(QueryContext.WorkClass.class);
+    private final int backgroundCap;
+    private final int standingCap;
     private int running;
 
+    /** No class caps: every class may take every slot (the gate before 2.6.7). */
     public Admission(int slots, int perUser, double perModelShare) {
+        this(slots, perUser, perModelShare, 1.0, 1.0);
+    }
+
+    /**
+     * @param backgroundShare the most of the slots {@code BACKGROUND} work holds at once (at least one slot)
+     * @param standingShare   the most of the slots {@code STANDING} work holds at once (at least one slot)
+     */
+    public Admission(int slots, int perUser, double perModelShare, double backgroundShare, double standingShare) {
         this.slots = Math.max(1, slots);
         this.perUser = Math.max(1, perUser);
         this.perModel = Math.max(1, (int) Math.floor(this.slots * perModelShare));
+        this.backgroundCap = cap(this.slots, backgroundShare);
+        this.standingCap = cap(this.slots, standingShare);
+    }
+
+    private static int cap(int slots, double share) {
+        return share <= 0 || share >= 1 ? slots : Math.max(1, (int) Math.floor(slots * share));
+    }
+
+    /** The most slots a class may hold at once. */
+    public int classCap(QueryContext.WorkClass cls) {
+        return switch (cls) {
+            case BACKGROUND -> backgroundCap;
+            case STANDING -> standingCap;
+            case INTERACTIVE -> slots;
+        };
     }
 
     /** Takes a place for a query of {@code user} on {@code model} in its work class, waiting at most {@code wait}; {@code DRS-9025} otherwise. */
@@ -122,6 +152,7 @@ public final class Admission {
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     waiting.remove(w);
+                    changed.signalAll();
                     throw new DrishtiException(ErrorCode.QUERY_BUSY, "the query was interrupted while it waited for a place");
                 }
             }
@@ -141,7 +172,8 @@ public final class Admission {
             }
             boolean userOk = x.cls != QueryContext.WorkClass.INTERACTIVE || byUser.getOrDefault(x.user, 0) < perUser;
             boolean modelOk = byModel.getOrDefault(x.model, 0) < perModel;
-            if (userOk && modelOk) {
+            boolean classOk = byClass.getOrDefault(x.cls, 0) < classCap(x.cls);
+            if (userOk && modelOk && classOk) {
                 waiting.remove(x);
                 x.admitted = true;
                 x.granted = System.nanoTime();
@@ -150,6 +182,7 @@ public final class Admission {
                     byUser.merge(x.user, 1, Integer::sum);
                 }
                 byModel.merge(x.model, 1, Integer::sum);
+                byClass.merge(x.cls, 1, Integer::sum);
                 changed.signalAll();
             }
         }
@@ -161,6 +194,7 @@ public final class Admission {
             byUser.merge(w.user, -1, Integer::sum);
         }
         byModel.merge(w.model, -1, Integer::sum);
+        byClass.merge(w.cls, -1, Integer::sum);
         grant();
         changed.signalAll();
     }
@@ -169,6 +203,9 @@ public final class Admission {
         String why;
         if (running >= slots) {
             why = "the server is running " + slots + " queries already (drishti.bi.query.max-concurrent)";
+        } else if (byClass.getOrDefault(w.cls, 0) >= classCap(w.cls)) {
+            why = "background work holds its share of the server already (" + classCap(w.cls) + " of " + slots + " places, drishti.bi.exec."
+                    + (w.cls == QueryContext.WorkClass.STANDING ? "standing" : "background") + "-share)";
         } else if (w.cls == QueryContext.WorkClass.INTERACTIVE && byUser.getOrDefault(w.user, 0) >= perUser) {
             why = "you already have " + perUser + " queries running (drishti.bi.query.max-concurrent-per-user)";
         } else {
@@ -189,6 +226,12 @@ public final class Admission {
             m.put("perModel", perModel);
             m.put("refused", refused.get());
             m.put("waitedSeconds", waitedNanos.get() / 1e9);
+            Map<String, Object> classes = new LinkedHashMap<>();
+            for (QueryContext.WorkClass c : QueryContext.WorkClass.values()) {
+                long queued = waiting.stream().filter(x -> x.cls == c).count();
+                classes.put(c.name().toLowerCase(java.util.Locale.ROOT), Map.of("running", byClass.getOrDefault(c, 0), "cap", classCap(c), "waiting", queued));
+            }
+            m.put("byClass", classes);
             return m;
         } finally {
             lock.unlock();
