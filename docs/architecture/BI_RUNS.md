@@ -1082,6 +1082,11 @@ answer as today.
 }
 ```
 
+As built (BIR-09), `data.tables` has one entry per table the planned question reads, `{table, connector, dates, rows, versions}` (`rows` null
+when a date's size is unknown; `versions` like `v411, v412 (2 dates)`, `no version (1 date)`), and `data.words` puts them in one line
+(`trades 13 K rows, v411, v412 (2 dates) · desks, no version (1 date)`). They come from the footprint at plan time and are kept with the
+run's estimate (`RunDataWords`; no new column), so a question that was not planned has `words` null and `tables` empty.
+
 `can` is computed by the server for the caller, so the console never decides rights. As built (R1), `can` also carries `confirm`
 (true for the runner of an `awaiting-confirm` run), an added field. Fields are never removed. A new field may be
 added, and the console ignores fields it does not know.

@@ -219,8 +219,7 @@ public final class RunSources {
         if (planned == null || planned.estimate().known()) {
             return planned;
         }
-        return new RunPlanner.Planned(planned.estimate(), new RunEstimator.Decision(Tier.INTERACTIVE, false, Optional.empty()), planned.data(), planned.dates(),
-                planned.buildPath());
+        return planned.with(new RunEstimator.Decision(Tier.INTERACTIVE, false, Optional.empty()));
     }
 
     /**

@@ -97,10 +97,18 @@ public final class RunJson {
         m.put("workspace", r.workspace());
         m.put("params", parse(r.params()));
         m.put("asOf", asOf(r.asOf()));
+        Object estimate = parse(r.estimate());
+        List<Map<String, Object>> tables = view.dataTables() != null && !view.dataTables().isEmpty() ? view.dataTables()
+                : RunDataWords.of(estimate).orElse(List.of());                  // kept with the estimate at plan time (BIR-09)
+        if (estimate instanceof Map<?, ?> e && e.containsKey(RunDataWords.KEY)) {
+            Map<Object, Object> clean = new LinkedHashMap<>(e);
+            clean.remove(RunDataWords.KEY);
+            estimate = clean;
+        }
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("version", r.dataVersion());
-        data.put("words", view.dataWords());
-        data.put("tables", view.dataTables() == null ? List.of() : view.dataTables());
+        data.put("words", view.dataWords() != null ? view.dataWords() : RunDataWords.words(tables));
+        data.put("tables", tables);
         m.put("data", data);
         m.put("tier", r.tier().wire());
         m.put("engine", r.engine());
@@ -108,7 +116,7 @@ public final class RunJson {
         m.put("state", r.state().wire());
         m.put("progress", r.progress());
         m.put("phase", r.phase());
-        m.put("estimate", parse(r.estimate()));
+        m.put("estimate", estimate);
         Map<String, Object> actual = new LinkedHashMap<>();
         actual.put("rowsRead", r.rowsRead());
         actual.put("rowsOut", r.rowsOut());

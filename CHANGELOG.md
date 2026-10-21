@@ -28,6 +28,8 @@
   asked of every visual of a page); without `Prefer` nothing changes (`ModelAcceptanceTest` order 19, `RunServiceTest`).
   BIR-08: a run waiting for confirmation at a restart keeps waiting (a new token in its run object) until its `confirm.ttl`, instead of
   failing `DRS-9085` with a bell; a lapsed or unreplayable one is cancelled quietly (`DRS-9083`, the reason in words, no notice).
+  BIR-09: the run object's `data.tables` (table, connector, dates, rows, versions) and `data.words` are filled from the planned footprint
+  (`RunDataWords`, kept with the estimate, no new column), so the Runs tab's *Data* column says what was read (`RunDataWordsTest`).
 
 - **BI runs in the console: sharing, schedules, export and rollup suggestions (2.6.7, BI_RUNS_GUIDE.md).** The run drawer's **Share…**
   takes people and roles from the people picker (chips; names typed comma separated work too) and lists each recipient with the mode the

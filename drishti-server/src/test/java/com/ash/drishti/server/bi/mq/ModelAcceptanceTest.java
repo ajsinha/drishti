@@ -952,6 +952,10 @@ class ModelAcceptanceTest {
             JsonNode problem = json.readTree(first.getContentAsString());
             assertThat(problem.toString()).contains("DRS-9082");
             assertThat(problem.path("estimate").path("basis").asText()).isNotEqualTo("unknown");
+            // BIR-09: what it reads, in words, from its footprint
+            assertThat(problem.path("run").path("data").path("tables").size()).as(problem.toString()).isPositive();
+            assertThat(problem.path("run").path("data").path("words").asText()).contains("trades");
+            assertThat(problem.path("run").path("estimate").has("data")).isFalse();
             assertThat(byDesk(viaRunFrom(first, reader("rita")))).isEqualTo(byDesk(sync));
             // a slicer on it: needs a background run, refused at once
             String slicer = visual.replace("{\"page\"", "{\"interaction\":true,\"page\"");

@@ -299,8 +299,7 @@ public final class RunService {
         }
         if (plan != null && plan.refusal().filter(c -> c == ErrorCode.RUN_NEEDED).isPresent() && !plan.estimate().known()) {
             // an interaction of unknown size is not refused: it runs interactively, bounded by the interactive limit, and never becomes a job (5.3)
-            plan = new RunPlanner.Planned(plan.estimate(), new RunEstimator.Decision(Tier.INTERACTIVE, false, Optional.empty()), plan.data(), plan.dates(),
-                    plan.buildPath());
+            plan = plan.with(new RunEstimator.Decision(Tier.INTERACTIVE, false, Optional.empty()));
             q = withPlan(q, plan);
         }
         if (plan != null && plan.refusal().isPresent()) {
@@ -474,6 +473,9 @@ public final class RunService {
     private Run planned(Question q, String key, boolean reusable, Tier tier, Instant now, String sharedFrom) {
         Map<String, Object> estimate = q.planned() != null ? q.planned().estimate().toMap() : new RunEstimate(null, null, null, null, null, null,
                 RunEstimate.Basis.UNKNOWN, 0, 0, false, 0, tier == Tier.AD_HOC_HEAVY ? "a background run: its size is learnt as it runs" : "an interactive question").toMap();
+        if (q.planned() != null && !q.planned().tables().isEmpty()) {
+            estimate.put(RunDataWords.KEY, q.planned().tables());              // what it reads, in words (the run object's data; BIR-09)
+        }
         Run r = Run.planned(RunId.next(node, now, random), q.caller().user(), q.caller().user(), q.sourceType(), q.question(), key, q.signature(), tier,
                 "local", RunJson.write(estimate), node, now);
         Run.Builder b = r.toBuilder();
