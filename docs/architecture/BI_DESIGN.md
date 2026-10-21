@@ -1023,7 +1023,7 @@ drill** → tag. The server lane publishes request/response types on day one of 
 against them.
 
 **Release order (product owner, 2026-10-20):** 2.6.6 (QA clean) → **2.6.7 BI runs** (wave R, [BI_RUNS.md](BI_RUNS.md), with gossip off the busy path, HTTP/2 between nodes, chart any table,
-[TABLE_CHARTS.md](TABLE_CHARTS.md), and mixed Delta and Iceberg storage, [DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage-planned-267)) →
+[TABLE_CHARTS.md](TABLE_CHARTS.md), and mixed Delta and Iceberg storage, [DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage)) →
 2.7.0 write-back (item 0 the one Drishti database, [DATABASE.md](DATABASE.md)) → 2.8.0 AI and Sajha → the real-life QA → 2.9.0 →
 3.0.0.
 
@@ -1297,7 +1297,7 @@ the bell, `drishti.py bi runs`, Admin → BI → Runs, help cards and the browse
   lists, history, BI tables), one shared `table-chart.js` over the pivot engine and ECharts; chart all N through the panel records, the
   search pivot or a BI run; save, export, Promote to Sutra as a new `chart` panel kind, Open in BI. Build steps C1–C10, one console and
   one server builder.
-* **Mixed Delta and Iceberg storage** ([DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage-planned-267)): each source system's trades in Delta or
+* **Mixed Delta and Iceberg storage** ([DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage)): each source system's trades in Delta or
   Iceberg, chosen per system by `build_demo_lakes.py --store <system>=delta|iceberg`, proven by an equality test against all-Delta.
 
 **Accepted when:** (1) a question answered within the inline wait looks exactly as in 2.6.6; (2) a burst of heavy runs leaves

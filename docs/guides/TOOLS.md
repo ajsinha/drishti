@@ -115,9 +115,9 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 `tools/dataprofile.py`, `tools/packmake.py`, `tools/packregen.py`, `tools/packdiff.py`, `tools/packcatalogue.py`, `tools/packi18n.py`,
 `tools/packform.py` (the `form:` section a pack check reads), `tools/schemapack.py` (`--schema`), `tools/sutragen.py` (`sutra gen`),
 `tools/ingest_jsonl.py` and `tools/ingest_watch.py` (`data ingest`), `tools/packbundle.py` (`pack bundle|verify|deploy|rollback`),
-`tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/servernet.py` (`net`), `tools/hostaddr.py` (this machine's real address for Drishti*net members), `tools/build_demo_lakes.py` (every demo lake start to finish: `lake demo` over all sixty days, then your own ENDUR files one per date, `--dry-run` to look first; the Windows QA guide's step 3.0), `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
+`tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/servernet.py` (`net`), `tools/hostaddr.py` (this machine's real address for Drishti*net members), `tools/build_demo_lakes.py` (every demo lake start to finish: `lake demo` over all sixty days, then your own ENDUR files one per date, `--store calypso=iceberg` for a source system in Iceberg, `--dry-run` to look first; the Windows QA guide's step 3.0), `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
 `tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, `tools/bistatement.py` (`bi statement preview|file`), `tools/historycmd.py` (`history`), and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
-`tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/demo.py` (`lake demo`) and `tools/lake/laketables.py` (the tables `lake status` lists).
+`tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/demo.py` (`lake demo`), `tools/lake/stores.py` (a source system's trades copied into Iceberg, its connector file switched; `build_demo_lakes.py --store`) and `tools/lake/laketables.py` (the tables `lake status` lists).
 
 ## 4. lake build: a large JSON export into a Delta lake
 
@@ -480,6 +480,33 @@ each table and date (what `tools/build_demo_lakes.py --server URL` uses; a runni
 summary says how many signals the server took, how many it **refused** (an HTTP error; the token hint only for 401 and 403) and how
 many it **did not answer** within 30 s (busy, not a refusal), and how long the signals took beside the build (`built in 193 s, the
 server told in 12 s`). `tools/build_demo_lakes.py` tells no server unless `--server` names one (QA3A-05). Its closing line says what came of the signals: *was told once per table it reads* only when every signal was taken; *was not told: nothing answered there* (with the stamp left for its next start), *was not told: it refused the signals* (a token with `loads:write`), *did not answer the signals in time* (busy) or *was told of only some tables* otherwise, and *would be told* in a dry run (QA4-06). Everything about the data and the five-step quick start is in [data/testdata/README.md](../../data/testdata/README.md).
+
+**Each source system in Delta or Iceberg (2.6.7).** `tools/build_demo_lakes.py --store <system>=delta|iceberg` (repeatable; `all=`
+first, then each system over it) chooses where each source system's trades are stored:
+
+```bash
+drishti-console/.venv/bin/python tools/build_demo_lakes.py --store calypso=iceberg                     # CALYPSO in Iceberg, ENDUR and MUREX in Delta
+drishti-console/.venv/bin/python tools/build_demo_lakes.py --store all=iceberg                         # every system in Iceberg
+drishti-console/.venv/bin/python tools/build_demo_lakes.py --only trades/calypso --store calypso=iceberg --as-of 2026-10-16
+drishti-console/.venv/bin/python tools/build_demo_lakes.py --source-dir ~/calypso --system calypso --files-only --store calypso=iceberg
+drishti-console/.venv/bin/python tools/build_demo_lakes.py --store all=delta                           # every system back in Delta
+```
+
+A system in Iceberg is built as Delta first (`lake demo`, or `lake build` of your files into `<data>/build/iceberg-stage`), so its
+documents and promoted columns are exactly a Delta build's, then copied by `tools/lake/stores.py` with Drishti's own Iceberg loader
+(`IcebergLoader`, `engine: native`, from the server's exec jar: build it first; `DRISHTI_LOADER_HEAP`, default 2g) into
+`<data>/iceberg/trading/trade_<system>` (beside `--lake`'s folder; `DRISHTI_ICEBERG_ROOT` moves it). Its Delta table is removed, and its
+connector file `trade-<system>.yaml` is written with `plugin: iceberg`, `engine: native` and `table: {trade: trade_<system>}` (back to the
+pack's Delta template when the system returns to Delta; the replaced text is kept in `<data>/connectors/history/`), so one connector
+serves each system, never two. A full build without `--store` puts every system in Delta, as before; a partial one (`--only`,
+`--files-only`) keeps each system it does not name in the store it has, and `--only` with a `--store` that moves another system adds that
+system's `trades/<system>` to the rebuild. `--files-only` cannot move a system it does not load (it says to use `--only trades/<system>`
+first). The loader's own progress lines (`iceberg: … rows read`, `written in … s`) and the 30-second heartbeat show while it copies; the
+closing lines list the store and table of every system and what was done to each connector file. A running server restarts a switched
+connector by itself (live reload); with `--server` it is also told once (trading, `trade`, the newest date). The equality test,
+`tools/lake/stores_equality.py --work <empty folder> --port <port>`, builds the same synthetic days all-Delta and mixed and compares
+trade pages, `TRD <id> 10`, counterparty-trades pages, searches and a BI query through a running server
+([DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage)).
 
 `drishti.py testdata capture-market` refreshes the committed market snapshot that `lake demo` builds for offline demos
 (`data/testdata/news-and-markets/{quote,news}`): it starts a scratch server (or uses `--server`) and fetches the twenty companies'

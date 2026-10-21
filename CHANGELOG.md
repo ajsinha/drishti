@@ -17,6 +17,25 @@
 
 ## Unreleased
 
+- **Mixed Delta and Iceberg storage: each source system's trades in Delta Lake or Apache Iceberg (2.6.7).**
+  `tools/build_demo_lakes.py --store <system>=delta|iceberg` (repeatable, `all=` for every system; default every system in Delta, as
+  before): `--store endur=delta --store calypso=iceberg` keeps ENDUR in Delta and puts CALYPSO in `data/iceberg/trading/trade_calypso`
+  (beside `--lake`; `DRISHTI_ICEBERG_ROOT` moves it). The system is built as Delta (so its documents and promoted columns are a Delta
+  build's), then streamed by the new `tools/lake/stores.py` into `IcebergLoader` (`engine: native`, started from the server's exec jar:
+  no Maven, works on Windows), and its Delta table is removed. Its connector file `trade-<system>.yaml` is switched to `plugin: iceberg`
+  with `table: {trade: trade_<system>}` (or back to the pack's Delta template; the old text kept in `<data>/connectors/history/`), so one
+  connector serves each system; the closing lines list every system's store and what was done to each connector file. Works with
+  `--only` (a `--store` moving a system the run does not rebuild adds `trades/<system>`), `--files-only` and `--source-dir --system`
+  (your files staged as Delta under `<data>/build/iceberg-stage`, then copied), `--server` (told once, `trade`, the newest date) and
+  `--dry-run`; a partial run keeps each system it does not name in its store; `lake demo` leaves a non-Delta connector file as it is.
+  The Iceberg connector gained `table.<kind>` (a kind read from a named table, as the Delta connector's), BI's column `scan`,
+  `dataVersion` (snapshot id and time; a day's files' fingerprint) and `latestDate`/`earliestDate`/`heldDates`, so BI reads a mixed union
+  as columns (it fell back to reading documents one by one) and the history cache works on Iceberg trades (it was off).
+  **Equality test** `tools/lake/stores_equality.py`: five synthetic days of 1,000 trades a system built all-Delta and mixed (ENDUR Delta,
+  CALYPSO and MUREX Iceberg), one server on each in turn: six trade pages, `TRD <id> 10` for each, two counterparty-trades pages, three
+  searches and a BI model query, **18 answers the same**. IcebergNamedTableTest; tools/lake/test_stores.py; test_build_demo_lakes.py;
+  DEMO_DATA.md, ICEBERG_CONNECTOR.md, TOOLS.md 4.9, CLI_GUIDE.md, QA_ON_WINDOWS_WITH_CUSTOM_DATA.md step 3.3.
+
 - **History cache default 64 → 256 MB (SOAK4-02).** Counted in real heap since SOAK3-02, 64 MB held only 63 to 208 answers, and the busiest soak node hit the cache 1 % of the time; `drishti.history.cache-mb` lowers it on a small heap.
 
 - **Fixed (SOAK3-01, P2): a node that has just started or rejoined never says "no source holds" (`404 DRS-1001`) for what only its peers

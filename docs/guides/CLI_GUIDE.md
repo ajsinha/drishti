@@ -1533,6 +1533,20 @@ files: wrote 17,910 rows into 460 files under data/demo-files in 0 s
 files: wrote 200 rows into 1 files under data/demo-files in 1 s
 ```
 
+**The demo lakes with a source system in Iceberg (2.6.7).** `tools/build_demo_lakes.py` (the demo lakes from start to finish) takes
+`--store <system>=delta|iceberg`, repeatable, with `all=` for every system; the default is every system in Delta:
+
+```bash
+drishti-console/.venv/bin/python tools/build_demo_lakes.py --store endur=delta --store calypso=iceberg    # the mixed case
+drishti-console/.venv/bin/python tools/build_demo_lakes.py --store all=iceberg --dry-run                 # look first
+drishti-console/.venv/bin/python tools/build_demo_lakes.py --store all=delta                             # back to Delta
+```
+
+An Iceberg system's trades go to `data/iceberg/trading/trade_<system>` and its connector file `trade-<system>.yaml` is switched to
+`plugin: iceberg` (one connector per system, never two); the closing lines list each system's store. It works with `--only`,
+`--files-only`, `--source-dir --system`, `--server` and `--dry-run`, and needs the server's exec jar (it writes Iceberg with it). The
+details: [TOOLS.md, section 4.9](TOOLS.md#49-the-demo-lakes-lake-demo) and [DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage).
+
 ## 7. `server`: health and packs
 
 **`drishti.py server health --help`**
