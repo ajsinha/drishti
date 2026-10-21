@@ -96,6 +96,11 @@ public final class DatasetService {
         return sources.currentDate();
     }
 
+    /** The newest date on or before {@code d} every table of the dataset holds (a report's {@code as-of: aligned}); null when they cannot say. */
+    public java.time.LocalDate alignedDate(Dataset ds, java.time.LocalDate d) {
+        return queries.layers().aligned(ds, d);
+    }
+
     public com.ash.drishti.common.BusinessCalendar calendar() {
         return sources.calendar();
     }

@@ -473,13 +473,42 @@ row rules, their masks, the layer the planner chooses.
 | measures | the `values`, `secondary`, `target`, `x`, `y`, `size` wells |
 | order | a date axis in date order; else the first measure, largest first; a table, matrix, heatmap or slicer has no explicit order (the engine's, which never sorts on a masked column); `sort` overrides |
 | rows | `limit`, else the chart, table or slicer default of section 11; a chart says when it was cut |
-| dates | the person's business date, else the report's `dates`, else the latest business date |
+| dates | the person's business date, else the report's `dates`, else the latest business date; one date is read *as of* it, each table at its latest date on or before it, as the report's `as-of` says (section 7.1) |
 | selections | a selected mark on another visual filters this one (`in` on the mark's field); with highlight on, a bar or column chart asks twice, the whole answer and the highlighted one; other types are filtered. A visual with `interacts: false`, and a slicer, is not touched |
 | drill-down | the first axis field moves down the visual's hierarchy one level per value clicked, and the values clicked become `eq` filters (past the last level: `DRS-9035`) |
 | dataset | the visual's own `dataset:` if it has one, else the report's; a choice made on another dataset reaches the visual only through a `link` (section 16) |
 | show the rows | the visual's own filters and selection, and every column of the table it reads (`id` and `index` too), up to the "show rows" limit |
 
 A visual whose query is refused shows the server's code and words in its frame, with a Retry button, and the others carry on.
+
+### 7.1 Which date a report reads: `as-of` (2.6.7 patch)
+
+"As of D" (a day in the time picker, or **Now**, which is the current business date) means: **each table at its latest business date on
+or before D**. Facts and dimensions alike, live or not, on a weekend or a holiday, and before today's load: a report never shows an
+empty table for today while yesterday's data is there. An empty partition built for a date that has no data is never kept as the answer.
+
+A report may choose otherwise with the top-level key `as-of`:
+
+| `as-of:` | Each visual reads |
+|---|---|
+| `per-table` (the default) | each table at its own latest date on or before D; a fact and a dimension may stand at different dates |
+| `aligned` | every table at the newest date on or before D that **all** of the visual's tables hold (a reconciliation: no mixing of days) |
+| `2026-09-30` | always that date (a month-end pack), whatever the reader picks |
+| a relative name | the end of its window at D: `last-business-day` (D, or the business day before when D is a weekend or holiday), `previous-month` (the last day of the month before), `previous-quarter`, `last-5-business-days`, `this-month` (D), ... (section 6.1 lists the names) |
+
+```yaml
+report: month-end-reconciliation
+model: trading-risk
+as-of: aligned
+```
+
+A window the reader picks (two dates) is read as it is. Anything else is `DRS-9030` at `as-of` (in the designer, in `bi lint` and at
+publish). A visual pinned to a past date by its rule is asked once, never followed live.
+
+Every answer says the date each table was read at (`meta.dataAsOf`: `{asked, tables: {trades: "2026-10-16", prices: "2026-10-20"},
+aligned: false}`). The report's line under the toolbar reads **Data as of 2026-10-16** (with *asked 2026-10-21: no later data* when
+the data is older than the date asked) or, when the tables differ, **Data as of: prices 2026-10-20, trades 2026-10-16 (asked
+2026-10-21)**; a visual (and a board tile) whose tables differ says the same under it, in the theme's warning colour.
 
 ## 8. What people can do with a report
 

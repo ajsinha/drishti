@@ -45,6 +45,10 @@
   cache is sized in real heap and defaults to 256 MB (`drishti.history.cache-mb`).
 - **Known open:** SOAK4-01 (the busiest soak node's live heap rose 165 MB/h over 73 minutes; not the caches; not yet diagnosed);
   Analyse does not use runs yet; runs' Parquet/Arrow results and the second run engine; a real-crash test of run adoption.
+- **Patched after the tag** (CHANGELOG, Unreleased): a fact table whose connector file lacked its kind showed no rows (now said, with
+  the fix); as of a date each table reads its latest date on or before it, and the answer and the report say each table's date when
+  they differ; a report's `as-of` setting (`per-table`, `aligned`, a date, a relative name); a report's visuals no longer fail
+  `DRS-9025` when they queue as runs.
 - **Tested:** the drill passed licence headers, Java 21, Java 25, the tools and the console; failures on the way were fixed (an
   undeclared Iceberg setting, two token scopes, a test race, and an HTTP/2 bug: a 413 carried `Connection: close`, which Java 25's
   client refuses). QA reports in `docs/qa/2026-10-20/` and `docs/qa/2026-10-21/`.

@@ -449,6 +449,11 @@ The toolbar holds the **business date** (empty: the latest the data has), **Book
 chips under the page tabs. Every visual has a header with its title and the buttons that fit it, and a line under it that says how many rows came back, the milliseconds the query took (or "from the cache")
 and the layer that answered (`columns`, `rollup`, `direct`, `live`); *masked* is added when the server masked a column for you.
 
+**Which date a report reads** (2.6.7 patch): as of a date, each table reads its latest business date on or before it, so a weekend, a
+holiday or a load not yet in never empties a visual. The line under the toolbar says the date the data is as of, and names each table's
+date when they differ (*Data as of: prices 2026-10-20, trades 2026-10-16 (asked 2026-10-21)*). A report can ask instead for one date all
+its tables hold (`as-of: aligned`), a fixed date, or a relative one such as `previous-month`: [REPORTS.md](REPORTS.md) section 7.1.
+
 * **Click a mark.** The other visuals filter to it. Here DESK-COMM was clicked: the cards, the line and the table are that desk's, the bar keeps all desks but dims the others, and a chip says what is selected.
   Click it again, press `Esc`, or use the visual's clear button to let go; Ctrl or Shift adds marks. With **highlight** the bar and column charts keep the whole answer and draw the chosen share over it.
 

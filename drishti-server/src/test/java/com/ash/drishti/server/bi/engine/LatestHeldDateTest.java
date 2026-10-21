@@ -150,6 +150,68 @@ class LatestHeldDateTest {
     }
 
     @Test
+    void theAnswerSaysTheDateEachTableWasReadAtAndAlignedFindsTheDateAllHold() throws Exception {
+        TestLake lake = new TestLake(false) {
+            final SourcePlugin trades = connector(this, Set.of("trade"));
+            final SourcePlugin desks = new SourcePlugin() {              // the desks hold DAY2 only (their own load came first)
+                @Override
+                public PluginManifest manifest() {
+                    return new PluginManifest("desk-lake", "1", Set.of("desk"), new SourceCapabilities(false, false, false, false));
+                }
+
+                @Override
+                public void start(SourceContext context) {}
+
+                @Override
+                public Optional<EntityDocument> fetch(EntityRef ref) {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<java.util.NavigableSet<LocalDate>> heldDates(String kind) {
+                    return Optional.of(new java.util.TreeSet<>(Set.of(TestLake.DAY1, TestLake.DAY2)));
+                }
+
+                @Override
+                public Set<String> columnar(String kind) {
+                    return deskLake.columnar(kind);
+                }
+
+                @Override
+                public Optional<com.ash.drishti.api.ColumnSet> columns(String kind, java.util.Collection<String> paths, com.ash.drishti.api.AsOf asOf) throws Exception {
+                    return deskLake.columns(kind, paths, asOf);
+                }
+
+                @Override
+                public Optional<com.ash.drishti.api.ArrowScan> scan(com.ash.drishti.api.ScanRequest request) {
+                    return com.ash.drishti.api.ColumnScans.over(this, request);
+                }
+            };
+
+            @Override
+            public Optional<SourcePlugin> plugin(String connector, String kind) {
+                return "trading-lake".equals(connector) ? Optional.of(trades) : "desk-lake".equals(connector) ? Optional.of(desks) : super.plugin(connector, kind);
+            }
+        };
+        lake.trades.remove(TestLake.DAY2);
+        QueryProperties props = QueryProperties.defaults(store.toString());
+        try (QueryService service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC())) {
+            var ds = dataset();
+            String asOf = "{\"fields\": [\"desks.region\"], \"measures\": [\"Trades\"], \"dates\": {\"from\": \"" + TestLake.DAY2 + "\"}}";
+            var answer = service.query(ds, QueryRequest.of(new ObjectMapper().readTree(asOf)), WHO, true);
+            assertThat(answer.meta().tableDates()).containsEntry("trades", TestLake.DAY1.toString()).containsEntry("desks", TestLake.DAY2.toString());
+            var said = com.ash.drishti.server.bi.mq.MqService.dataAsOf(TestLake.DAY2, answer.meta());
+            assertThat(said).containsEntry("asked", TestLake.DAY2.toString()).containsEntry("aligned", false);
+            assertThat(service.layers().aligned(ds.dataset(), TestLake.DAY2)).as("the newest date both hold").isEqualTo(TestLake.DAY1);
+            assertThat(service.layers().aligned(ds.dataset(), TestLake.DAY1.minusDays(1))).as("none in common").isNull();
+            String aligned = asOf.replace(TestLake.DAY2.toString(), TestLake.DAY1.toString());
+            var both = service.query(ds, QueryRequest.of(new ObjectMapper().readTree(aligned)), WHO, true);
+            assertThat(both.meta().tableDates()).containsEntry("trades", TestLake.DAY1.toString()).containsEntry("desks", TestLake.DAY1.toString());
+            assertThat(com.ash.drishti.server.bi.mq.MqService.dataAsOf(TestLake.DAY1, both.meta())).containsEntry("aligned", true);
+        }
+    }
+
+    @Test
     void anEmptyLatestIsNeverCachedAsTheAnswer() throws Exception {
         TestLake lake = new TestLake(true);
         var day2 = lake.trades.remove(TestLake.DAY2);           // the source answers 'the latest' with nothing: built for today, empty

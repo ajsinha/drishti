@@ -41,7 +41,14 @@ import java.util.Map;
  */
 public record Report(String name, int version, String title, String description, boolean sample, String dataset, Map<String, String> theme, Dates dates, List<Filter> filters,
         List<Page> pages, List<Bookmark> bookmarks, Map<String, Map<String, PhonePage>> layouts, List<Link> links, List<com.ash.drishti.server.bi.dataset.ExpectedValue> tests,
-        Map<String, LocalMeasure> measures, String perspective, Map<String, Object> board, Map<String, Object> statement) {
+        Map<String, LocalMeasure> measures, String perspective, Map<String, Object> board, Map<String, Object> statement, String asOf) {
+
+    /** A report without an {@code as-of} rule: each table at its own latest date on or before the asked one. */
+    public Report(String name, int version, String title, String description, boolean sample, String dataset, Map<String, String> theme, Dates dates, List<Filter> filters,
+            List<Page> pages, List<Bookmark> bookmarks, Map<String, Map<String, PhonePage>> layouts, List<Link> links, List<com.ash.drishti.server.bi.dataset.ExpectedValue> tests,
+            Map<String, LocalMeasure> measures, String perspective, Map<String, Object> board, Map<String, Object> statement) {
+        this(name, version, title, description, sample, dataset, theme, dates, filters, pages, bookmarks, layouts, links, tests, measures, perspective, board, statement, AsOfRule.PER_TABLE);
+    }
 
     /**
      * A report's own measure (docs/architecture/BI_MODEL_SPEC.md section 4.2): a DEL aggregate over the model's fields and measures, used by this report only,

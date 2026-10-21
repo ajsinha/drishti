@@ -726,8 +726,9 @@ public final class BiReportService {
         if (blocked != null) {
             throw new DrishtiException(ErrorCode.REPORT_DATASET, "this visual has errors, so it cannot be drawn (the others are not affected): " + blocked);
         }
-        ReportState state = relative(report, ReportState.of(stateJson));
         DatasetSet.Entry own = l.of(visual) == null ? new DatasetSet.Entry(l.datasetItem(), l.dataset()) : l.of(visual);       // the visual's own dataset, else the report's
+        ReportState state = AsOfRule.apply(report, relative(report, ReportState.of(stateJson)), datasets::currentDate, datasets.calendar(),
+                d -> datasets.alignedDate(own.dataset(), d));                  // the report's as-of rule (2.6.7 patch): per-table, aligned, a date or a name
         Report.Visual drawn = FieldParams.resolve(visual, l.params(), state.params());     // the reader's field-parameter choices (2.6.0)
         BiStore.Item dsItem = DatasetService.withParams(own.item(), state.params());        // and their what-if values, as MQ v2 params
         VisualQueries.Built built = VisualQueries.build(report, page, drawn, state, own.dataset(), props, (field, n, by, desc, context, from, to) -> top(p, dsItem, field, n, by, desc, context, from, to),

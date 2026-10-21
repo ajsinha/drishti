@@ -113,6 +113,11 @@ public record ReportState(Map<String, JsonNode> slicers, List<Selection> selecti
                 dates.path("to").isTextual() ? dates.path("to").asText() : null, rows, limit, since, params);
     }
 
+    /** The same state at other dates (a report's as-of rule worked out). */
+    public ReportState withDates(String from, String to) {
+        return new ReportState(slicers, selections, drill, carry, from, to, rows, limit, since, params);
+    }
+
     /** The same state with other slicer values (the relative-date choices worked out into dates). */
     public ReportState withSlicers(Map<String, JsonNode> other) {
         return new ReportState(other, selections, drill, carry, from, to, rows, limit, since, params);

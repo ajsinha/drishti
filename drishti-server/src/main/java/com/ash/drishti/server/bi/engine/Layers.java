@@ -257,6 +257,34 @@ public final class Layers {
         return said ? best : null;
     }
 
+    /**
+     * The newest business date on or before {@code d} that every cached table of the dataset holds (a report's {@code as-of: aligned}, for a
+     * reconciliation), from the sources' metadata; null when none of them can say or they hold no date in common. A table whose source cannot say
+     * does not constrain it.
+     */
+    public LocalDate aligned(Dataset ds, LocalDate d) {
+        List<Dataset.Table> tables = ds.tables().values().stream().filter(t -> "cached".equals(t.mode()) && t.kind() != null && !t.kind().isBlank()).toList();
+        LocalDate c = d;
+        boolean said = false;
+        for (int i = 0; c != null && i < MAX_RANGE_DAYS * 4; i++) {
+            LocalDate next = c;
+            for (Dataset.Table t : tables) {
+                LocalDate h = heldOnOrBefore(t, next);
+                if (h != null) {
+                    said = true;
+                    next = h.isBefore(next) ? h : next;
+                } else if (heldOnOrBefore(t, d) != null) {
+                    return null;                                             // it holds dates, none on or before this one: nothing in common
+                }
+            }
+            if (next.equals(c)) {
+                return said ? c : null;
+            }
+            c = next;
+        }
+        return null;
+    }
+
     private void invalidateQuietly(Path dir, LocalDate d) {
         try {
             Files.deleteIfExists(partitionDir(dir, d).resolve("meta.json"));

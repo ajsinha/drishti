@@ -73,7 +73,7 @@ public final class ReportParser {
     private static final Pattern ID = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_-]{0,39}");
     private static final Pattern DAY = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
     private static final Set<String> TOP = Set.of("rachana", "report", "version", "title", "description", "sample", "dataset", "model", "perspective", "measures", "theme", "dates", "filters", "bookmarks", "layouts", "links", "tests", "pages",
-            "owner", "tags", "endorsement", "endorsedBy", "audience", "board", "statement");
+            "owner", "tags", "endorsement", "endorsedBy", "audience", "board", "statement", "as-of");
     private static final Set<String> PAGE = Set.of("id", "title", "filters", "drillthrough", "visuals", "layout", "tooltip", "interactions");
     private static final Set<String> VISUAL_KEYS = Set.of("id", "type", "title", "at", "wells", "filters", "sort", "limit", "hierarchy", "drillthrough", "format", "text", "src", "alt",
             "interacts", "action", "dataset", "tooltip", "from", "alert");
@@ -147,7 +147,8 @@ public final class ReportParser {
             out.add(error("DRS-9140", local.isEmpty() ? "perspective" : "measures", "a report's own measures and its perspective belong to a report on a model (`model:`)"));
         }
         Report r = new Report(name, root.path("version").asInt(1), text(root, "title", name), text(root, "description", ""), root.path("sample").asBoolean(false), dataset,
-                theme, dates, filters, pages, bookmarks, layouts(root.path("layouts"), out), links(root.path("links"), out), tests, local, perspective, board, statement);
+                theme, dates, filters, pages, bookmarks, layouts(root.path("layouts"), out), links(root.path("links"), out), tests, local, perspective, board, statement,
+                AsOfRule.parse(root.path("as-of"), out));
         out.addAll(com.ash.drishti.server.bi.board.ReportBoards.check(r));
         out.addAll(StatementSpec.check(r));                                     // statement pages and their paper (2.6.0, DRS-9038)
         pageReferences(r, out);
