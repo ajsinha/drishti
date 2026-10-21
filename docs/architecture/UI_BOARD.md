@@ -665,7 +665,7 @@ at most in local tests. Each phase ends with its tests green, its docs updated a
 |---|---|---|---|
 | **P1. Chips, pins, boards: the model and the check** (built, [12.1](#121-as-built-p1)) | A | `drishti-rachana`: the chip document parser (header, manual, pins, body), pin types and the compatibility table (4.2), the board document parser (YAML and JSON to one model), the board check BC-01 to BC-11 and BC-W1 to BC-W5, chip publish checks (purity, out pins driven, manual complete); `drishti.py ui check` | unit tests per rule, good and bad (each rule at least one failing board); the compatibility table as a parameterised test; YAML and JSON of the same board give the same model; the section 2.1 and 3.1 examples pass |
 | **P2. The Chip Store and saved boards** (built, [12.2](#122-as-built-p2)) | B | content-store keys (section 8), the lifecycle (9.1) with powers, versions and `compatible-with` verification (9.3), where-used index, board save, revisions, delete with compare-and-set; the REST API of 6.1 except render; seed chips from panel kinds, BI visual types and pack blocks (9.4) with manuals | store contract tests on the filesystem and SQLite backends; lifecycle order (`DRS-2078`); a reviewer may not approve their own chip; where-used after save and delete; two nodes saving the same board (`DRS-5057`); every seed chip passes its own manual examples |
-| **P3. The render API** | A | `POST /ui/render`, `GET /ui/boards/{id}/render`, pin changes, sessions; layout-first SSE; suppliers through `ViewPipeline.preview` and `QueryService` as the caller; traces at runtime; BI run cards; live frames on the channel; limits and audit (7.3, 7.4) | render as three users (full, masked, row-restricted) and compare masks; trace ordering (detail after master); one failing supplier leaves the others painted; every limit hit gives its code; audit row has no values; access-profile reuse (second viewer `reused`) |
+| **P3. The render API** (built, [12.3](#123-as-built-p3)) | A | `POST /ui/render`, `GET /ui/boards/{id}/render`, pin changes, sessions; layout-first SSE; suppliers through `ViewPipeline.preview` and `QueryService` as the caller; traces at runtime; BI run cards; live frames on the channel; limits and audit (7.3, 7.4) | render as three users (full, masked, row-restricted) and compare masks; trace ordering (detail after master); one failing supplier leaves the others painted; every limit hit gives its code; audit row has no values; access-profile reuse (second viewer `reused`) |
 | **P4. The board viewer and the Board Designer** | B | console: the board viewer (any saved board, phone and desktop, themes), the Designer (palette, canvas, pins, traces, mapping sheet, live data, red problems, YAML/JSON tab, save, history, modules), the chip editor and test bench | Playwright: build the 3.1 board by drag and wire, see red on a bad wire, fix, save, reopen, YAML edit reflected on canvas; phone layout; keyboard-only path; console unit tests for the mapping matcher |
 | **P5. The converter and its proof** | A | dry run, board-local chips, the proof (data, screen, behaviour), Admin pages for reports, per-pack switch; trading pack first, then the others pack by pack | trading: every entity page, report page and board page proven for the three users on the 10K-trade sample; a deliberately broken chip makes the proof fail with the right path; switching back restores the old pages |
 | **P6. Modules, observability, docs and QA** | A and B | modules (9.5), `ui/usage` counts and the Admin view of chip and board use, the Boards guide, the Board Designer tutorial (UI, CLI and YAML at every step), help pages, the QA pass of the release | module round trip (make, publish, use, where-used); usage counts across two nodes; docs reviewed against the built behaviour; the release QA checklist |
@@ -765,6 +765,63 @@ content store.
   options in it are P3's to honour.
 * **Not in P2:** render (P3), `ui/dynamic` and `ui/usage` (P3, P6), modules (P6), restoring a revision from the API (the Designer,
   P4; a revision can be read and saved again).
+
+### 12.3 As built: P3
+
+**Where.** Package `com.ash.drishti.server.ui`: `UiRenderController` (the four render routes), `RenderService` (check, powers, limits,
+sessions, audit), `BoardRender` (one session: layout, trace order, pin mapping, pin changes), `BoardSuppliers` and
+`ServerBoardSuppliers` (every supplier as the caller), `IdTokens` (masked ids), `RenderSettings` (the `render:` section of
+`config/ui/ui.yaml`, beside P2's `limits:`), `UiRenderConfiguration`. Saved boards come from P2's `BoardStore` and chips from its
+`ChipStore` (plus the caller's own drafts on personal boards). Routes: [API_GUIDE.md](../guides/API_GUIDE.md#rendering-a-board-270-p3).
+Settings: [CONFIGURATION.md](../admin/CONFIGURATION.md).
+
+**Corrections and precisions the code forced:**
+
+* **Routes.** The saved-board render is `GET /ui/boards/{name}/render` with `owner=` or `workspace=` as P2's routes address a board;
+  the audit row names it `user:<owner>:<board>` or `workspace:<ws>:<board>`. `POST /ui/boards/check` is P2's. `stream: once` (or
+  `?stream=once`) ends the stream at `done`, for hosts without pin changes and the command line; otherwise it stays open (`: hb` every
+  15 s) for pin changes. `POST /ui/renders/{id}/pins` answers `{renderId, chips, errors, ms}` once the chips downstream are painted;
+  their events go on the render's own stream. A session closed by the limit or by idle gets an `ended` event (`DRS-2079`).
+* **Format.** Both formats send the chip's ViewModel: `{chip, title, body, pins, controls, keys}`, the pins holding the supplier's rows
+  in the chip's own column names (a `many` column as `[{name, value}]`, a `document` pin as one row). Turning a body into HTML is
+  the console's (P4); the server does not paint HTML.
+* **Order.** Chips are painted on virtual threads, each after every chip upstream of it by a trace (a selection cycle's back edge is
+  dropped). A detail whose required control pin has no value, or an entity supply (`connector: <pack>/<kind>`, not `-search`) with no
+  id yet, is sent as `state: waiting` naming the pin: the ticket of 3.1 waits for a selection instead of listing every trade. A pin
+  change repaints the transitive dependants of that out pin only, never the master. An out pin with `shape-of` (`visible`) is the
+  rows as painted; a selection is whatever the browser sends; out pins reset to their defaults when their chip is painted again.
+* **Suppliers.** `connector: <pack>/<kind>` with an id: `SourceRouter.fetch` and the caller's `Entitlements.redact`, a kind they may not
+  open being `DRS-2074`; `<pack>/<kind>-search` (or a kind with no id): `StructuredSearch` with the query's keys as `field = 'value'`
+  and the trace filters; `model:` a BI run through `RunSources` and `RunService` as the caller, asked as an interaction (an unknown
+  size runs interactively, no confirmation), waiting `chip-budget` inline, then the run card; the board query's `dimensions` and
+  `measures` (or a `select` as written), `where`, `time`, `sort`, `params`, with `filter-on` traces as `eq` filters; `live:
+  <pack>/<kind>` the record by id, then the live hub's versions as `frame`s, redacted per frame. A `dataset:` supply is refused in
+  2.7.0 (name its model). Board parameters are substituted into the supply query as text.
+* **Masks.** A masked attribute is painted `•••` on the chip; the chip event's `meta.masked` names the chip columns masked. A required
+  shape column the caller's rule hides (absent, not masked) is the chip's `DRS-2074` error.
+* **Masked ids (14.1 #10).** Where the column an id out pin carries (`of: rows.id`) is masked, the row's `keys` entry is a random
+  `tok_…` token held by `IdTokens` for the same person (six idle periods); a pin value or filter that is a token is resolved only for
+  that person, anyone else (or an expired token) being `DRS-2074`. A model row has no entity reference, so a masked model id is not
+  selectable (its key is null).
+* **Access-profile reuse.** A model answer is kept for `render.reuse` (30 s) under the caller's access profile
+  (`DatasetService.accessProfile`: roles, row rules and masks; never a personal one) and the model query; a second viewer of the same
+  profile gets it with `meta.reused: true`. A `REUSED` BI run is reported the same way.
+* **Limits.** Bytes, chips and traces are P2's `limits:` (a BC-09 problem is `413 DRS-2075`, not `422`); `render:` holds rows per chip,
+  the chip and board budgets, the per-person dynamic rate (sliding minute) and concurrency, sessions per person, the idle time, the reuse
+  time and `keep-dynamic`. A non-BI supplier past the chip budget is that chip's `DRS-2077`; the board budget turns every chip not yet
+  painted into `DRS-2077` and sends `done`.
+* **Powers.** `ui.board.render-dynamic` is `UiAccess.mayRenderDynamic`: a role that may save boards (`layout`), never an embed token
+  (14.1 #8); a saved render needs `ui.board.view` and read access.
+* **Audit.** One row per render at its first `done`: action `ui.render` or `ui.render.dynamic`, subject the board id or
+  `dynamic:sha256:<hash>`, detail `chips=<instance>=<name@version>,…; suppliers=<kind:name>,…; ms=…; failed=n`. Dynamic documents are
+  kept as `<data folder>/ui/dynamic/<hash>.board` for `keep-dynamic` (7 days; this node only, not the content store).
+* **Not in P3:** traces' `when:`, the `first`/`date` transforms beyond passing the value, HTML painting (P4), the `ui/usage` counts (P6),
+  a server-side supplier catalogue for the check's attribute rules (the check runs without one; a missing attribute is found at read).
+* **Tests.** `RenderServiceTest` (seed chips, the 3.1 board, suppliers per person: order, a selection repainting only the details, masks
+  and absent rows, the masked-id token, one failing chip, the chip budget, every limit's code, the audit row without values, embed tokens)
+  and `UiRenderApiTest` (the whole stack with security on over a file-connector lake: the 3.1 board on a BI model with row rules and a
+  mask and the ticket over the lake's trade entity, rendered as rita, ann and hana; a selection on the open stream; access-profile reuse;
+  `DRS-2071` before any stream).
 
 ## 13. Later releases
 

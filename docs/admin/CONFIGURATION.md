@@ -904,6 +904,15 @@ Check: `curl -s localhost:18480/api/v1/studio/settings` returns `{"approve":…,
 | `limits.boards-per-person` | `500` | Saved personal boards per person; one more is `DRS-2075`. |
 | `limits.revisions` | `50` | Earlier saves kept per board (the oldest go first). |
 | `workspaces.<ws>.certified-only` | `false` | Boards of that workspace take certified chips only (`DRS-2071`, rule BC-11); by default a workspace takes published chips. |
+| `render.rows-per-chip` | `10000` | Rows painted per chip; past it the chip's `meta` says `truncated` with the `total`. |
+| `render.chip-budget` | `10s` | A chip's first paint. A non-BI supplier past it is that chip's `DRS-2077`; a BI question past it shows its run card (`state: running`) and the chip follows when the run is done. |
+| `render.board-budget` | `30s` | The whole board to `done`; chips not painted by then report `DRS-2077`. |
+| `render.dynamic-per-minute` | `30` | Unsaved (dynamic) renders per person a minute; past it `429 DRS-2076` with `Retry-After`. |
+| `render.dynamic-at-once` | `4` | Unsaved renders per person painting at once (`DRS-2076`). |
+| `render.sessions-per-person` | `8` | Open render sessions per person; one more closes the oldest (its stream gets `ended`, its pin changes `410 DRS-2079`). |
+| `render.session-idle` | `10m` | A render session ends after this long without a pin change. |
+| `render.reuse` | `30s` | How long a model answer is shared with viewers of the same access profile (same roles, row rules and masks); `0` never. |
+| `render.keep-dynamic` | `7d` | Unsaved documents kept by their SHA-256 under `<data folder>/ui/dynamic` for an auditor; `0` not kept. |
 
 Chips and boards themselves live in the content store (`ui/…` keys, [CONTENT_STORE.md](../architecture/CONTENT_STORE.md)), so every
 node of a cluster sees them. Who may do what follows the existing roles: saving boards needs `layout`, authoring chips `author`,

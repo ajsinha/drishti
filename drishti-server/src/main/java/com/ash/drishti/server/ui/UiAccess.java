@@ -30,6 +30,14 @@ public interface UiAccess {
 
     boolean mayAuthor(Principal p);
 
+    /**
+     * {@code ui.board.render-dynamic} (UI_BOARD.md 7.1): render an unsaved board document. A role that may save boards (analyst and above); never an
+     * embed token in 2.7.0 (14.1 item 8), which renders saved boards only.
+     */
+    default boolean mayRenderDynamic(Principal p) {
+        return p != null && p.embedApp() == null && maySave(p);
+    }
+
     boolean mayReview(Principal p);
 
     boolean mayCertify(Principal p);

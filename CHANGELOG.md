@@ -17,6 +17,15 @@
 
 ## Unreleased
 
+- **UI Board P3: the render API (2.7.0).** `POST /api/v1/ui/render` (an unsaved board; analyst and above, never an embed token),
+  `GET /api/v1/ui/boards/{name}/render` (a saved one), `POST /api/v1/ui/renders/{id}/pins` and `DELETE /api/v1/ui/renders/{id}`. The
+  board check first (`DRS-2071` with the problems, `DRS-2075` past a size); then an SSE stream: the layout before any data, each chip's
+  ViewModel as its supplier answers, a detail after its master (or `waiting` until a selection), a pin change repainting only the chips
+  downstream. Every supplier is read as the caller: entities and searches with their redactor, models as BI runs with their roles, row
+  rules and masks (run cards for slow questions), live records as frames; masked values paint `•••`, hidden rows are absent, a masked id
+  travels as a token only its person resolves. A model answer is shared for 30 s by access profile. Limits in the `render:` section of
+  `config/ui/ui.yaml` (`DRS-2076` per person a minute and at once, `DRS-2077` budgets, `DRS-2079` sessions); one audit row per render
+  with no values. Docs: UI_BOARD.md 12.3, API_GUIDE, CONFIGURATION.
 - **UI Board P2: the Chip Store and saved boards (2.7.0).** `com.ash.drishti.server.ui`: chips and boards in the content store
   (`ui/…` keys, so every node sees them); the chip lifecycle draft, submit, approve or reject, publish, certify, deprecate and withdraw
   on the existing roles (author, approver, `bi-steward`), never your own approval (`DRS-2007`), out of order `DRS-2078`; P1's

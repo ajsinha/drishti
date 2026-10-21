@@ -3098,3 +3098,39 @@ curl -s localhost:18480/api/v1/ui/chips/filterable-table/2/manual -H "Authorizat
 Sixty-eight seed chips ship in `config/ui/chips` (certified, read-only): `panel-<kind>` for each of the 22 grammar panel kinds,
 `bi-<type>` for each of the 34 BI visual types, the six trading pack blocks (`deal-ticket`, `legs`, `flow-schedule`, `events`,
 `payments`, `deal-footer`), and `entity-card`, `filterable-table` (versions 1 and 2), `cashflow-ladder`, `search-box`, `date-range`.
+
+### Rendering a board (2.7.0, P3)
+
+| Method | Path | Does |
+|---|---|---|
+| `POST` | `/ui/render` | renders an **unsaved** board: `{board: <document, or its YAML as text>, params: {…}, device: desktop\|tablet\|phone, stream?: "once"}`. Needs `ui.board.render-dynamic` (a role that may save boards); an embed token is `403 DRS-2074` (saved boards only in 2.7.0) |
+| `GET` | `/ui/boards/{name}/render?owner=&workspace=&device=&params.<p>=…&stream=once` | renders a **saved** board you may open (`404 DRS-2073` otherwise); embed tokens may |
+| `POST` | `/ui/renders/{renderId}/pins` | `{instance, pin, value}`: an out pin changed in the browser (a selection, a typed filter); the chips downstream are painted again **on the render's stream**; answers `{renderId, chips, errors, ms}` once they are. Owner only (`403 DRS-2074`); an ended render is `410 DRS-2079` |
+| `DELETE` | `/ui/renders/{renderId}` | ends the render (it also ends after 10 min idle, or when you open more than 8) |
+
+Before any stream the document is read (`400 DRS-2070`), sized (`413 DRS-2075`: bytes, chips, traces) and checked (`422 DRS-2071`, the
+problems in `problems`); an unsaved render past 30 a minute or 4 at once per person is `429 DRS-2076` with `Retry-After`. Then the
+answer is `text/event-stream`:
+
+| Event | Data |
+|---|---|
+| `render` | `{renderId, board, boardHash, chips: {instance: "name@version"}}` |
+| `layout` | the grid for the device (`columns`, `areas`) or the phone `order` and `collapsed`, the `theme`, and each chip's frame (`title`, `chip`, `skeleton`), before any data is read |
+| `chip` | `{instance, state: "data", viewmodel: {chip, title, body, pins, controls, keys?}, meta: {rows, truncated, total?, runId?, reused, masked}}`: `pins` hold the supplier's rows in the chip's own column names; `keys`, per row, what a selection of it sends |
+| `chip` | `{instance, state: "waiting", waiting: [pins]}`: a detail with nothing to show until its master sends a value |
+| `chip` | `{instance, state: "running", runId}`: a BI question became a run; the chip's `data` event follows |
+| `chip` | `{instance, state: "error", code, message}`: this chip failed (the supplier's own code, or `DRS-2077` past its budget); the others go on |
+| `frame` | `{instance, patch}`: a live chip's record changed |
+| `done` | `{ms, chips, errors}`: after the first paint and after each pin change |
+| `ended` | `{code: "DRS-2079", message}`: the session was closed (idle, too many open) |
+
+Every supplier is read as you: a masked value paints as `•••`, rows a rule hides are absent, and where a row's id is masked its `keys`
+entry is an opaque `tok_…` token that only you can send back. A model answer is shared for 30 s with viewers of the same access profile
+(`meta.reused: true`). Each render writes one audit row (`ui.render` or `ui.render.dynamic`) naming the board (or the document's hash),
+the chips and the suppliers, never a value. Limits: [CONFIGURATION.md](../admin/CONFIGURATION.md) (`render:` in `config/ui/ui.yaml`).
+
+```
+curl -sN localhost:18480/api/v1/ui/boards/book-trades/render?stream=once -H "Authorization: Bearer $TOKEN"
+curl -s localhost:18480/api/v1/ui/renders/rnd-…/pins -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+     -d '{"instance":"trades","pin":"selected","value":"1000015"}'
+```
