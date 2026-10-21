@@ -163,7 +163,7 @@ The ordered migration list (the inventory of content kept on one node only, 2026
 8. **Files:** governance proposals (`<data>/governance`): done (section 10.5); load history (`<data>/loads`): done (section 10.6).
    Next, in this order: report outputs (`<data>/reports`), designer bound files (`<data>/dev-sutras`), pack admin state (`<data>/packs/*`, `uninstalled`,
    `admin/bi-hidden.txt`; a pack jar stays a local file materialised from the store, the store being the truth). UI-written config
-   (`config/connectors`, `config/bi`): design only, section 10.
+   (`config/connectors`, `config/bi`): done for connectors and data loads overrides, section 11.
 9. **BI store Parquet:** a derived cache. Never migrated.
 
 Then: a read cache driven by `changes`, push for Postgres and S3, the root in the Drishti*net capability digest (section 6), and
@@ -334,19 +334,38 @@ with the identity database for what is still there (users, roles, tokens, prefer
 or take a filesystem snapshot: every item is one file written by rename, so a copy taken while it runs holds whole items, but a
 multi-document change may be half in (its intent record under `system/tx/` is copied too, and the next start finishes it).
 
-## 11. UI-written configuration: design only (needs a decision)
+## 11. UI-written configuration: shared overlays (as built for connectors and load overrides)
 
-Admin writes `config/connectors/*.yaml` (connector edits) and `config/bi/*` (BI settings). Configuration files are the operator's
-(GitOps, reviewed, deployed with the release), so moving them is a decision for the user, not a migration. The options:
+The decision (2026-10-21): **Admin updates are shared across the cluster; the files stay the base (GitOps), and every edit made
+through Admin or the UI is an overlay in the content store that every node reads.** (Option 2 of the four that were listed: one
+writer node, overlay, store as the truth, a shared config folder.)
 
-1. **Keep files, one writer.** Admin edits are accepted on one designated node (the Drishti*net leader) and refused elsewhere with a
-   link to it; the operator's deployment copies the files to every node. Simple; edits wait for a deploy to reach other nodes.
-2. **Overlay in the content store.** The files stay the base; an Admin edit is an overlay document `config-overlay/connectors/<name>.yaml`
-   (compare-and-set, audited) applied on every node over the file, with "Export to file" for GitOps. Every node sees edits at once; the
-   effective config is two layers.
-3. **Content store is the truth for UI-managed config.** The file is imported once and then the store owns it; files become an export.
-   Cleanest on a cluster; changes the operator's GitOps workflow.
-4. **Shared config folder.** `config/` on the same shared mount as the store. No code; every node must restart or watch to see a change,
-   and two writers can still race (needs the same lock files the filesystem store uses).
+**One poller per node.** `ContentWatch` (drishti-identity) calls `changes(cursor)` every `drishti.store.watch-ms` (2 s) and hands the
+changed keys to the listeners whose prefix they start with; the window overlaps the last one by 2 s of clock skew, and a key is handed
+over only when its version moved. One walk of the store per interval, however many areas listen.
 
-Recommended: option 2 (keeps GitOps, gives every node the edit). Nothing is built until the user chooses.
+**Connectors** (`drishti.connectors.store`: `content`, default; `file`). `ConnectorFiles` reads through a `ConnectorOverlay`:
+
+| Key | Holds |
+|---|---|
+| `config/connectors/<name>.yaml` | the text saved through Admin, exactly as saved (`${VAR}` unresolved, masked credentials never written) |
+| `config/connectors/<name>.hidden` | an Admin delete of a connector the files define (the file stays on disk, hidden on every node) |
+| `config/connectors-history/<name>/<yyyyMMddTHHmmssSSS>.yaml` | every earlier effective text (Restore lists them with the file history) |
+
+The effective text is the overlay if present, else the file. Every node's `ConnectorManager` gets the change from the watch and
+hot-reloads as for a file edit; at start the overlaid names are applied by the first scan (the start-up properties come from the
+files alone). A save compares the etag the edit was based on with the store's current effective text and writes by compare-and-set,
+so two administrators on two nodes get one `409 DRS-5032`. Reset removes the overlay. There is nothing to import (the files were and
+stay the base). Pack template updates (CONNECTOR_FILES.md, "Template updates") write through the same overlay.
+
+**Data loads overrides** (`drishti.loads.config-store`: `content`, default; `file`): `loads/config/<pack>.yaml`, read on every use,
+saved by compare-and-set; the folder `<data>/loads/config` imported once (`system/imports/loads-config.json`) and kept.
+
+**`config/bi`**: nothing is written there by the UI (BI content is in the store, section 9), so there is nothing to share.
+
+**Not built yet (next):** the pack admin state (`packs/added.yaml`, `packs/installed/` archives materialised to a local cache on each
+node, `packs/settings/`, `packs/deploy-history.jsonl`, `packs/samples-mode`, `<data>/uninstalled/`, `<data>/admin/bi-hidden.txt`), with
+the in-place restart (`Restarter`) triggered on every node when another node installs or uninstalls a pack; report outputs
+(`<data>/reports`), designer bound files (`<data>/dev-sutras`) and the collaboration access log (`drishti_access`, per-node day segments
+merged when read, like the audit). The pack state needs the store opened in the environment post-processor (packs load before the
+Spring context), so each node materialises the shared state to its local folders before the packs are read.

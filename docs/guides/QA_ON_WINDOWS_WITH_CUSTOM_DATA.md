@@ -56,6 +56,8 @@ Names used below:
 
 ---
 
+On a cluster, a connector edit made in Admin is a shared edit (Admin → Connectors marks it); it does not change the file in `config\connectors`. Reset removes it.
+
 ## 1. Copy the project — nothing to unzip
 
 1. Copy everything from GitHub into `C:\Users\asinh09\IdeaProjects\drishti-orig` (a `git clone`, or the ZIP from
