@@ -481,18 +481,29 @@ public class RunsController {
         bi.requirePower(p, BiAccess.BI);
         enabled();
         Run r = own(id, p);
-        RunService.Question q = sources.replay(r, p).orElseThrow(() -> new DrishtiException(ErrorCode.BAD_REQUEST, "this run cannot be asked again here"));
+        String data = body == null || body.path("data").isMissingNode() || body.path("data").isNull() ? "same" : body.path("data").asText();
+        if (!"same".equals(data) && !"latest".equals(data)) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "data is same (as of the run's resolved date, the default) or latest (resolved again now)");
+        }
+        boolean fresh = body != null && body.path("fresh").asBoolean(false);
+        if (fresh && !p.user().equals(r.owner())) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, "only the run's owner may ask for a fresh run");
+        }
+        RunService.Question q = sources.replay(r, p, data).orElseThrow(() -> new DrishtiException(ErrorCode.BAD_REQUEST, "this run cannot be asked again here"));
         Duration wait = body != null && body.path("wait").isTextual() ? Duration.parse(body.path("wait").asText()) : props.inline().inlineWait();
-        RunService.Outcome o = runs().submit(q, new RunService.Options(wait, wait.isZero()));
+        RunService.Outcome o = runs().submit(q, new RunService.Options(wait, wait.isZero(), false, null, fresh));
         Run.Builder b = o.run().toBuilder();
         b.rerunOf = r.id();
         Run linked = b.build();
+        Map<String, Object> m = new LinkedHashMap<>();
+        Map<String, Object> run = new LinkedHashMap<>(json(linked, p));
+        run.put("data", data);                                                  // what was done (14.1): as of the same date or the latest, fresh or reusable
+        run.put("fresh", fresh);
+        m.put("run", run);
         if (!o.inline()) {
             runs().records().save(linked);
-            return sources.respond(new RunService.Outcome(null, linked), "json", p);
+            return ResponseEntity.accepted().location(java.net.URI.create("/api/v1/bi/runs/" + linked.id())).header(HttpHeaders.CACHE_CONTROL, "no-store").body(m);
         }
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("run", json(linked, p));
         m.put("answer", o.answer().body());
         return noStore(200, m);
     }

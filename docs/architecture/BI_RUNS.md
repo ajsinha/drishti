@@ -1027,7 +1027,7 @@ All are under `/api/v1/bi/runs`, as the token's user, with the `bi:write` scope 
 | `GET` | `/api/v1/bi/runs/events` | SSE | `hello` (the person's active runs), then `run` events `{id, state, progress, phase, rowsOut, code}`; `status` heartbeat every `drishti.bi.live.status` |
 | `POST` | `/api/v1/bi/runs/{id}/confirm` | `{confirmToken}` | `202` `run` (queued) |
 | `POST` | `/api/v1/bi/runs/{id}/cancel` | | `202` `run` |
-| `POST` | `/api/v1/bi/runs/{id}/rerun` | `{data: "same"\|"latest", wait?}` | as `POST /runs` |
+| `POST` | `/api/v1/bi/runs/{id}/rerun` | `{data: "same"\|"latest", fresh?, wait?}` | as `POST /runs`; the run object adds `rerunOf`, `data` and `fresh`. As built: `same` (the default) asks a one-date MQ or report visual as of the run's resolved date, `latest` drops that date so it resolves again now through the same as-of rule (a range, a SQL statement and a statement are asked as they were); `fresh: true` skips reuse and the single-flight join (the key, and so the access profile, is unchanged: it never shares across profiles), the run's owner only (`403 DRS-5002`) |
 | `POST` | `/api/v1/bi/runs/{id}/export` | `{format: "csv"\|"xlsx"\|"parquet"\|"pdf"}` | `200` the file (`Content-Disposition`) |
 | `POST` | `/api/v1/bi/runs/{id}/share` | `{to: ["bob", "role:risk-team"]}` | `200` `{shares: [{recipient, mode: "same"\|"re-masked"\|"recomputed", recipientRun}]}` |
 | `DELETE` | `/api/v1/bi/runs/{id}/share/{recipient}` | | `204` |

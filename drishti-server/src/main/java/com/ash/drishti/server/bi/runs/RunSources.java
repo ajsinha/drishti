@@ -291,16 +291,37 @@ public final class RunSources {
 
     /** Replays a stored run as its runner after a restart: a model query, a SQL statement, a report visual or a statement (preview or file). */
     public Optional<RunService.Question> replay(Run r, Principal runner) {
+        return replay(r, runner, null);
+    }
+
+    /**
+     * As {@link #replay(Run, Principal)} for a rerun (BI_RUNS.md 14.1): {@code data} {@code same} asks a one-date model query or report visual as of the
+     * run's resolved date ({@code time.as-of}, the state's dates); {@code latest} drops that one date, so the as-of is resolved again now through the
+     * same rule (the newest date each table holds, a report's {@code as-of} setting); null asks the question as it was asked. A range, a SQL statement
+     * (its {@code AS OF} is in its text) and a statement are asked as they were.
+     */
+    public Optional<RunService.Question> replay(Run r, Principal runner, String data) {
         Object q = RunJson.parse(r.question());
         if (!(q instanceof Map<?, ?> m) || runner == null) {
             return Optional.empty();
         }
+        String pinned = oneDate(r.asOf());
         try {
             return switch (String.valueOf(m.get("type"))) {
-                case "mq" -> m.get("mq") == null ? Optional.empty() : Optional.of(mq(runner, MqParser.parse(CANON.valueToTree(m.get("mq"))),
-                        CANON.valueToTree(m.get("mq")), String.valueOf(m.get("model")), false, null, r.title()));
-                case "report" -> Optional.of(report(runner, String.valueOf(m.get("id")), String.valueOf(m.get("page")), String.valueOf(m.get("visual")),
-                        m.get("state") == null ? null : CANON.valueToTree(m.get("state")), false, null, r.title()));
+                case "mq" -> {
+                    if (m.get("mq") == null) {
+                        yield Optional.empty();
+                    }
+                    ObjectNode raw = (ObjectNode) CANON.valueToTree(m.get("mq"));
+                    dated(raw, "time", data, pinned, true);
+                    yield Optional.of(mq(runner, MqParser.parse(raw), raw, String.valueOf(m.get("model")), false, null, r.title()));
+                }
+                case "report" -> {
+                    ObjectNode state = m.get("state") == null ? CANON.createObjectNode() : (ObjectNode) CANON.valueToTree(m.get("state"));
+                    dated(state, "dates", data, pinned, false);
+                    yield Optional.of(report(runner, String.valueOf(m.get("id")), String.valueOf(m.get("page")), String.valueOf(m.get("visual")),
+                            m.get("state") == null && state.isEmpty() ? null : state, false, null, r.title()));
+                }
                 case "sql" -> Optional.of(sql(runner, String.valueOf(m.get("model")), String.valueOf(m.get("sql")), false, null, r.title()));
                 case "statement" -> {                                           // made again as its runner, from the request it was asked with
                     StatementWork w = statements;
@@ -313,6 +334,42 @@ public final class RunSources {
             };
         } catch (RuntimeException e) {
             return Optional.empty();
+        }
+    }
+
+    /** The run's one resolved date ({@code asOf} of one date), else null (none, or several: a range is asked as it was). */
+    static String oneDate(String asOf) {
+        Map<String, Object> a = RunJson.asOf(asOf);
+        return a != null && a.get("from") != null && a.get("from").equals(a.get("to")) ? String.valueOf(a.get("from")) : null;
+    }
+
+    /**
+     * Sets a question's date for a rerun: {@code same} pins the one resolved date, {@code latest} removes a one-date as-of so it resolves again now. A
+     * model query keeps it as {@code time.as-of} ({@code mq}), a report's state as {@code dates.from = dates.to}. A range is left as asked.
+     */
+    static void dated(ObjectNode o, String field, String data, String pinned, boolean mq) {
+        if (data == null || pinned == null) {
+            return;
+        }
+        JsonNode t = o.path(field);
+        boolean range = mq ? t.has("from") || t.has("to") || t.has("last")
+                : t.path("from").isTextual() && t.path("to").isTextual() && !t.path("from").asText().equals(t.path("to").asText());
+        if (range) {
+            return;
+        }
+        if ("latest".equals(data)) {
+            if (mq && t.isObject()) {
+                ((ObjectNode) t).remove("as-of");
+                if (t.isEmpty()) {
+                    o.remove(field);
+                }
+            } else {
+                o.remove(field);
+            }
+        } else if (mq) {
+            (t.isObject() ? (ObjectNode) t : o.putObject(field)).put("as-of", pinned);
+        } else {
+            o.putObject(field).put("from", pinned).put("to", pinned);
         }
     }
 

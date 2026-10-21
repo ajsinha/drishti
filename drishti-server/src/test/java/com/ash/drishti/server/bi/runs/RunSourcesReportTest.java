@@ -163,4 +163,38 @@ class RunSourcesReportTest {
         assertThat(computed("rita")).isEqualTo(1);
         assertThat(computed("rob")).isEqualTo(1);
     }
+
+    @Test
+    void aFreshRunIsComputedAnewThenReusedAgain() throws Exception {
+        Run rita = first("rita", "bi-risk");
+        RunService.Outcome fresh = runs.submit(sources.report(new Principal("rita", List.of("bi-risk")), "rep-1", "main", "by-desk", null, false, null, null),
+                new RunService.Options(Duration.ofSeconds(10), false, false, null, true));
+        assertThat(fresh.run().state()).isNotEqualTo(RunState.REUSED);
+        assertThat(computed("rita")).isEqualTo(2);
+        assertThat(ask("rob", "bi-risk").run().state()).isEqualTo(RunState.REUSED);
+        assertThat(rita.id()).isNotNull();
+    }
+
+    @Test
+    void aRerunPinsTheSameDateOrDropsItForTheLatest() {
+        com.fasterxml.jackson.databind.ObjectMapper m = new com.fasterxml.jackson.databind.ObjectMapper();
+        var mq = m.createObjectNode();
+        mq.putObject("time").put("as-of", "latest");
+        RunSources.dated(mq, "time", "same", "2026-10-08", true);
+        assertThat(mq.path("time").path("as-of").asText()).isEqualTo("2026-10-08");
+        RunSources.dated(mq, "time", "latest", "2026-10-08", true);
+        assertThat(mq.has("time")).isFalse();
+        var state = m.createObjectNode();
+        RunSources.dated(state, "dates", "same", "2026-10-08", false);
+        assertThat(state.path("dates").path("from").asText()).isEqualTo("2026-10-08");
+        assertThat(state.path("dates").path("to").asText()).isEqualTo("2026-10-08");
+        RunSources.dated(state, "dates", "latest", "2026-10-08", false);
+        assertThat(state.has("dates")).isFalse();
+        var range = m.createObjectNode();
+        range.putObject("time").put("from", "2026-10-01").put("to", "2026-10-08");
+        RunSources.dated(range, "time", "latest", "2026-10-08", true);
+        assertThat(range.path("time").path("from").asText()).as("a range is asked as it was").isEqualTo("2026-10-01");
+        assertThat(RunSources.oneDate("2026-10-08")).isEqualTo("2026-10-08");
+        assertThat(RunSources.oneDate("[\"2026-10-07\",\"2026-10-08\"]")).isNull();
+    }
 }

@@ -998,4 +998,29 @@ class ModelAcceptanceTest {
         JsonNode mine = json.readTree("{\"dates\":{\"from\":\"" + DAY + "\",\"to\":\"" + DAY + "\"},\"selections\":[{\"visual\":\"total\",\"field\":\"trades.desk\",\"values\":[\"@me\"]}]}");
         assertThat(reportService.accessProfile(new com.ash.drishti.server.security.Principal("rita", List.of("bi-risk")), REPORT, "main", "by-desk", mine)).isEmpty();
     }
+
+    /** BI_RUNS 14.1: a rerun as of the same resolved date (the default) or the latest held now, and fresh (computed anew, never reused); its owner only. */
+    @Test @Order(21)
+    void aRerunIsAskedAsOfTheSameDateOrTheLatestAndFreshComputesAnew() throws Exception {
+        Map<String, Object> q = Map.of("mq", 1, "model", "acc-trades", "select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional")),
+                "time", Map.of("as-of", "2026-10-07"));
+        String id = ok(call("POST", "/api/v1/bi/runs", reader("rita"), Map.of("source", Map.of("type", "mq", "mq", q), "options", Map.of("wait", 0, "confirm", true))))
+                .path("run").path("id").asText();
+        for (int i = 0; i < 200 && !ok(call("GET", "/api/v1/bi/runs/" + id, reader("rita"), null)).path("state").asText().equals("done"); i++) {
+            Thread.sleep(50);
+        }
+        JsonNode same = ok(call("POST", "/api/v1/bi/runs/" + id + "/rerun", reader("rita"), Map.of("wait", "PT10S"))).path("run");
+        assertThat(same.path("rerunOf").asText()).isEqualTo(id);
+        assertThat(same.path("data").asText()).isEqualTo("same");
+        assertThat(same.path("fresh").asBoolean()).isFalse();
+        assertThat(same.path("asOf").path("to").asText()).as(same.toString()).isEqualTo("2026-10-07");
+        JsonNode latest = ok(call("POST", "/api/v1/bi/runs/" + id + "/rerun", reader("rita"), Map.of("wait", "PT10S", "data", "latest", "fresh", true))).path("run");
+        assertThat(latest.path("data").asText()).isEqualTo("latest");
+        assertThat(latest.path("fresh").asBoolean()).isTrue();
+        assertThat(latest.path("state").asText()).isNotEqualTo("reused");
+        assertThat(latest.path("asOf").path("to").asText()).as(latest.toString()).isEqualTo(DAY);
+        // another reader never reruns it, fresh or not; a bad data is refused
+        assertThat(call("POST", "/api/v1/bi/runs/" + id + "/rerun", reader("rob"), Map.of("fresh", true)).andReturn().getResponse().getStatus()).isIn(403, 404);
+        call("POST", "/api/v1/bi/runs/" + id + "/rerun", reader("rita"), Map.of("data", "yesterday")).andExpect(status().isBadRequest());
+    }
 }
