@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **Changed: a re-run says how it was asked in `rerunData` (`same` or `latest`)**, not `data`, which kept being overwritten: the new run's drawer showed Data "—" instead of its data versions.
+
 - **Fixed (2.6.7 patch): Run again said only "Something went wrong."** A rerun the server answers at once (200 `{run, answer}`) is not kept as a row, so the reloaded list lacked it and the drawer failed in the page. The drawer now shows the new run from the reply (*Done at once: asked again with the latest data / as before, N rows*) and the old row says *superseded by* it; a fault in the page says *Run again failed in the page: <message>* and is logged to the browser console, never a bare "Something went wrong.". The test stand-in answers reruns in the real server's shape. [BI_RUNS_GUIDE.md](docs/guides/BI_RUNS_GUIDE.md).
 - **Fixed: the top bar's business date was unreadable in the Blue, Green and Crimson themes** (dark figures on the coloured gradient); it is now a white field with dark figures, like the command line.
 

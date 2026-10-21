@@ -1011,11 +1011,11 @@ class ModelAcceptanceTest {
         }
         JsonNode same = ok(call("POST", "/api/v1/bi/runs/" + id + "/rerun", reader("rita"), Map.of("wait", "PT10S"))).path("run");
         assertThat(same.path("rerunOf").asText()).isEqualTo(id);
-        assertThat(same.path("data").asText()).isEqualTo("same");
+        assertThat(same.path("rerunData").asText()).isEqualTo("same");
         assertThat(same.path("fresh").asBoolean()).isFalse();
         assertThat(same.path("asOf").path("to").asText()).as(same.toString()).isEqualTo("2026-10-07");
         JsonNode latest = ok(call("POST", "/api/v1/bi/runs/" + id + "/rerun", reader("rita"), Map.of("wait", "PT10S", "data", "latest", "fresh", true))).path("run");
-        assertThat(latest.path("data").asText()).isEqualTo("latest");
+        assertThat(latest.path("rerunData").asText()).isEqualTo("latest");
         assertThat(latest.path("fresh").asBoolean()).isTrue();
         assertThat(latest.path("state").asText()).isNotEqualTo("reused");
         assertThat(latest.path("asOf").path("to").asText()).as(latest.toString()).isEqualTo(DAY);

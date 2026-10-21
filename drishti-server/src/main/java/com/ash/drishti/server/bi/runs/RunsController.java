@@ -497,7 +497,7 @@ public class RunsController {
         Run linked = b.build();
         Map<String, Object> m = new LinkedHashMap<>();
         Map<String, Object> run = new LinkedHashMap<>(json(linked, p));
-        run.put("data", data);                                                  // what was done (14.1): as of the same date or the latest, fresh or reusable
+        run.put("rerunData", data);                                                  // what was done (14.1): as of the same date or the latest, fresh or reusable
         run.put("fresh", fresh);
         m.put("run", run);
         if (!o.inline()) {

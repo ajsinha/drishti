@@ -260,8 +260,8 @@ class RunsBackend(BiBackend):
             old = self.runs[rid]
             data, fresh = body.get("data") or "same", bool(body.get("fresh"))
 
-            def said(r):                              # as RunsController.rerun: the run's view with `data` (same|latest, a string) and `fresh` put over it
-                return dict(self.view_of(r), data=data, fresh=fresh)
+            def said(r):                              # as RunsController.rerun: the run's view with `rerunData` (same|latest) and `fresh` beside its `data`
+                return dict(self.view_of(r), rerunData=data, fresh=fresh)
             if getattr(self, "at_once", False):      # done inside the inline wait (the real server's 200 {run, answer}): no row of it is kept or listed
                 r = self._new(old["title"], "done", source=old["source"], _visible=False)
                 r.update(rerunOf=rid, progress=1.0, startedAt=iso(time.time()), finishedAt=iso(time.time()), actual={"rowsRead": None, "rowsOut": 1, "bytesOut": None, "seconds": 0})
