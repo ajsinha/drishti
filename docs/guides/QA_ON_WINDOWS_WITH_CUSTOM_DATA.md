@@ -586,6 +586,25 @@ Also try `TRD <id> YTD`, `TRD <id> FROM 2026-10-07 TO 2026-10-16`, `CPTY CP-NORT
 
 ---
 
+## 6d. What is new in 2.6.7: check these (15 minutes)
+
+| # | Do | You should see |
+|---|---|---|
+| 1 | Open any trade page, a counterparty page (`CPTY CP-NORTHPLAINS`), a search or an admin list → **Chart** in the table's heading (or click the table and press **K**) | a chart already drawn from the table, a type switcher (1–6), X / series / split pickers, and a sentence saying what was charted and what was left out |
+| 2 | In the chart: switch to bars, stacked, donut; **Top N** on a big table | the chart redraws at once; a big table starts at the top 20 plus *Others* |
+| 3 | Sign in as a role that masks a field (e.g. PRICE) and chart that table | the masked column is greyed in every picker and never plotted |
+| 4 | **Export** → PNG, SVG, CSV or Excel | the file holds only what is drawn |
+| 5 | `TRD 1000279 60` → **Shift+K** | the history table as a chart (plain k still steps to the previous day) |
+| 6 | Switch theme (Terminal, light) with the chart open | it redraws in the theme's own colours |
+| 7 | If you did step 3.3: open a CALYPSO trade and `TRD <CLY id> 10` | the same page and history as from Delta; Admin → Connectors shows `trade-calypso` as iceberg |
+| 8 | If you run two servers (6a): Admin → Health → Drishti*net | `gossipPort` (heartbeats on a port of their own, so a busy server is never taken for dead) and `peerProtocol: http2` |
+
+Two servers on Windows: the heartbeat port is picked free at start (`gossip-port: auto`). If Windows Firewall asks, allow Java; or set a
+fixed `gossip-port` in `config/net/node.yaml` and allow that port. A blocked heartbeat port falls back to the server port with one warning
+in the log, so the cluster still works.
+
+---
+
 ## 7. If something goes wrong
 
 | What you see | Do this |
@@ -630,6 +649,7 @@ Also try `TRD <id> YTD`, `TRD <id> FROM 2026-10-07 TO 2026-10-16`, `CPTY CP-NORT
 - [ ] Step 6: walk through the ten pages once.
 - [ ] Step 6b: the 2.6.0 checks (themes, statement, field parameters, Iceberg in a separate copy).
 - [ ] Step 6c (2.6.5): `TRD 1000279 60`, `TRD <your id> 60` and `EQ EQ-CSCA 3M` show their history.
+- [ ] Step 6d (2.6.7): **Chart** (or K) on a table, a masked field never plotted, an export.
 
 **After the demo:**
 
