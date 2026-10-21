@@ -38,7 +38,7 @@ public record ResolvedDataset(DatasetDef def, List<List<DatasetDef.Rule>> layers
     public ResolvedDataset {
         layers = layers.stream().map(List::copyOf).toList();
         filters = List.copyOf(filters);
-        masked = Set.copyOf(masked);
+        masked = java.util.Collections.unmodifiableSet(new LinkedHashSet<>(masked));   // a stable order (BIR-07): Set.copyOf iterates in a per-JVM salted order
         chain = List.copyOf(chain);
     }
 

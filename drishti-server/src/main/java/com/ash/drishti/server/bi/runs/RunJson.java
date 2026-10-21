@@ -49,40 +49,45 @@ public final class RunJson {
      * @param dataTables  one entry per table read: {@code {table, connector, versions}}
      * @param shares      the run's shares as the runner sees them: {@code {recipient, mode, recipientRun}}
      * @param hasResult   the stored result is there (not expired, not removed)
+     * @param exports     this server can export (distribution is on)
      */
     public record View(String caller, boolean admin, boolean author, boolean recipient, boolean promote, String sourceTitle, String dataWords,
-                       List<Map<String, Object>> dataTables, List<Map<String, Object>> shares, boolean hasResult) {
+                       List<Map<String, Object>> dataTables, List<Map<String, Object>> shares, boolean hasResult, boolean exports) {
 
         public static View of(String caller) {
-            return new View(caller, false, false, false, true, null, null, List.of(), List.of(), false);
+            return new View(caller, false, false, false, true, null, null, List.of(), List.of(), false, true);
         }
 
         public View withResult(boolean has) {
-            return new View(caller, admin, author, recipient, promote, sourceTitle, dataWords, dataTables, shares, has);
+            return new View(caller, admin, author, recipient, promote, sourceTitle, dataWords, dataTables, shares, has, exports);
         }
 
         public View withShares(List<Map<String, Object>> s) {
-            return new View(caller, admin, author, recipient, promote, sourceTitle, dataWords, dataTables, s, hasResult);
+            return new View(caller, admin, author, recipient, promote, sourceTitle, dataWords, dataTables, s, hasResult, exports);
         }
 
         public View withPowers(boolean isAdmin, boolean isAuthor) {
-            return new View(caller, isAdmin, isAuthor, recipient, promote, sourceTitle, dataWords, dataTables, shares, hasResult);
+            return new View(caller, isAdmin, isAuthor, recipient, promote, sourceTitle, dataWords, dataTables, shares, hasResult, exports);
         }
 
         public View asRecipient(boolean r) {
-            return new View(caller, admin, author, r, promote, sourceTitle, dataWords, dataTables, shares, hasResult);
+            return new View(caller, admin, author, r, promote, sourceTitle, dataWords, dataTables, shares, hasResult, exports);
         }
 
         public View withData(String words, List<Map<String, Object>> tables) {
-            return new View(caller, admin, author, recipient, promote, sourceTitle, words, tables, shares, hasResult);
+            return new View(caller, admin, author, recipient, promote, sourceTitle, words, tables, shares, hasResult, exports);
         }
 
         public View withSourceTitle(String t) {
-            return new View(caller, admin, author, recipient, promote, t, dataWords, dataTables, shares, hasResult);
+            return new View(caller, admin, author, recipient, promote, t, dataWords, dataTables, shares, hasResult, exports);
+        }
+
+        public View withExports(boolean e) {
+            return new View(caller, admin, author, recipient, promote, sourceTitle, dataWords, dataTables, shares, hasResult, e);
         }
 
         public View withPromote(boolean p) {
-            return new View(caller, admin, author, recipient, p, sourceTitle, dataWords, dataTables, shares, hasResult);
+            return new View(caller, admin, author, recipient, p, sourceTitle, dataWords, dataTables, shares, hasResult, exports);
         }
     }
 
@@ -91,16 +96,29 @@ public final class RunJson {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id", r.id());
         m.put("title", r.title() == null || r.title().isBlank() ? defaultTitle(r) : r.title());
-        m.put("source", source(r, view));
+        m.put("source", null);                                                  // after the estimate is read: it may carry the source's title
         m.put("runner", r.runner());
         m.put("owner", r.owner());
         m.put("workspace", r.workspace());
         m.put("params", parse(r.params()));
         m.put("asOf", asOf(r.asOf()));
+        Object estimate = parse(r.estimate());
+        List<Map<String, Object>> tables = view.dataTables() != null && !view.dataTables().isEmpty() ? view.dataTables()
+                : RunDataWords.of(estimate).orElse(List.of());                  // kept with the estimate at plan time (BIR-09)
+        if (estimate instanceof Map<?, ?> e && (e.containsKey(RunDataWords.KEY) || e.containsKey(RunDataWords.SOURCE_TITLE))) {
+            if (view.sourceTitle() == null && e.get(RunDataWords.SOURCE_TITLE) instanceof String t) {
+                view = view.withSourceTitle(t);                                 // the report's title, kept with the row at submit (BIR-10)
+            }
+            Map<Object, Object> clean = new LinkedHashMap<>(e);
+            clean.remove(RunDataWords.KEY);
+            clean.remove(RunDataWords.SOURCE_TITLE);
+            estimate = clean;
+        }
+        m.put("source", source(r, view));
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("version", r.dataVersion());
-        data.put("words", view.dataWords());
-        data.put("tables", view.dataTables() == null ? List.of() : view.dataTables());
+        data.put("words", view.dataWords() != null ? view.dataWords() : RunDataWords.words(tables));
+        data.put("tables", tables);
         m.put("data", data);
         m.put("tier", r.tier().wire());
         m.put("engine", r.engine());
@@ -108,7 +126,7 @@ public final class RunJson {
         m.put("state", r.state().wire());
         m.put("progress", r.progress());
         m.put("phase", r.phase());
-        m.put("estimate", parse(r.estimate()));
+        m.put("estimate", estimate);
         Map<String, Object> actual = new LinkedHashMap<>();
         actual.put("rowsRead", r.rowsRead());
         actual.put("rowsOut", r.rowsOut());
@@ -151,7 +169,14 @@ public final class RunJson {
         return v.caller() != null && (v.caller().equals(r.owner()) || v.caller().equals(r.runner()));
     }
 
-    /** What the caller may do with the run now (section 7.3's table). */
+    /** The source types a run of can be asked again (rerun, a share's recomputation, a restart) and scheduled. */
+    static final java.util.Set<String> REPLAYABLE = java.util.Set.of("mq", "sql", "report", "statement");
+    static final java.util.Set<String> SCHEDULABLE = java.util.Set.of("mq", "sql", "report");
+
+    /**
+     * What the caller may do with the run now (section 7.3's table): only what this server can do (BIR-11): share, export (when distribution is on) and
+     * promote are built; a run that cannot be asked again offers no rerun, and one that cannot be scheduled no schedule.
+     */
     static Map<String, Object> can(Run r, View v) {
         boolean own = isOwner(r, v);
         boolean seeResult = own || v.recipient();
@@ -160,11 +185,11 @@ public final class RunJson {
         Map<String, Object> c = new LinkedHashMap<>();
         c.put("open", seeResult && finishedOk && v.hasResult());
         c.put("cancel", active && (own || v.admin()));
-        c.put("rerun", own && !active);
-        c.put("export", seeResult && finishedOk && v.hasResult());
+        c.put("rerun", own && !active && REPLAYABLE.contains(r.sourceType()));          // what can be asked again (BIR-11)
+        c.put("export", seeResult && finishedOk && v.hasResult() && v.exports() && !"statement".equals(r.sourceType()));   // a statement's result is its file
         c.put("share", own && finishedOk && v.hasResult());
         c.put("promote", own && finishedOk && v.hasResult() && v.author() && v.promote());
-        c.put("schedule", own);
+        c.put("schedule", own && SCHEDULABLE.contains(r.sourceType()));
         c.put("keep", own && finishedOk && v.hasResult());
         c.put("delete", (own || v.admin()) && finishedOk && v.hasResult());
         c.put("confirm", own && r.state() == RunState.AWAITING_CONFIRM);

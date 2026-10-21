@@ -39,8 +39,23 @@ public final class RunPlanner {
      * @param decision the tier, confirmation and refusal
      * @param data     the data version vector of what it reads
      * @param dates    the business dates it reads
+     * @param tables   what it reads in words, one entry per table (the run object's {@code data.tables}, BIR-09)
      */
-    public record Planned(RunEstimate estimate, RunEstimator.Decision decision, DataVersionVector data, List<LocalDate> dates, String buildPath) {
+    public record Planned(RunEstimate estimate, RunEstimator.Decision decision, DataVersionVector data, List<LocalDate> dates, String buildPath,
+                          List<java.util.Map<String, Object>> tables) {
+
+        public Planned {
+            tables = tables == null ? List.of() : List.copyOf(tables);
+        }
+
+        public Planned(RunEstimate estimate, RunEstimator.Decision decision, DataVersionVector data, List<LocalDate> dates, String buildPath) {
+            this(estimate, decision, data, dates, buildPath, List.of());
+        }
+
+        /** The same plan with another decision. */
+        public Planned with(RunEstimator.Decision d) {
+            return new Planned(estimate, d, data, dates, buildPath, tables);
+        }
 
         public Tier tier() {
             return decision.tier();
@@ -84,7 +99,7 @@ public final class RunPlanner {
         RunEstimator.Rates now = rates.now();
         RunEstimate e = RunEstimator.estimate(f.plan(), now, factors, settings);
         RunEstimator.Decision d = RunEstimator.decide(f.plan(), now, factors, interaction, biggerEngine, settings);
-        return new Planned(e, d, f.data(), f.dates(), buildPath(f.plan()));
+        return new Planned(e, d, f.data(), f.dates(), buildPath(f.plan()), RunDataWords.tables(f));
     }
 
     /** The {@code connector/path} of the table with the most rows to build (what a finished run's build time teaches), or null. */

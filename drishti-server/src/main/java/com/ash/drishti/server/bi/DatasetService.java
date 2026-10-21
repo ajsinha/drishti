@@ -180,6 +180,20 @@ public final class DatasetService {
             return askModel(p, model, consumer, define, q, explain);
         }
 
+        /**
+         * What the item's question would read, from metadata only (BI runs' planner, BI_RUNS.md section 4): the question as the model query {@link #ask} would
+         * run, sized; empty when it cannot be sized without reading (BIR-06: a report visual is planned through this).
+         */
+        default java.util.Optional<com.ash.drishti.server.bi.engine.Footprints.Footprint> footprint(Principal p, BiStore.Item item, QueryRequest q) {
+            return java.util.Optional.empty();
+        }
+
+        /** As {@link #footprint(Principal, BiStore.Item, QueryRequest)} for a model named by reference, as {@link #askModel(Principal, String, String, Map, Map, QueryRequest, boolean)} asks it. */
+        default java.util.Optional<com.ash.drishti.server.bi.engine.Footprints.Footprint> footprintModel(Principal p, String model, String consumer, Map<String, String> define,
+                Map<String, Object> params, QueryRequest q) {
+            return java.util.Optional.empty();
+        }
+
         /** The model's parameters by name (what-if and field parameters), as the caller (or the consumer's envelope) reads the model; empty when it has none. */
         default Map<String, com.ash.drishti.server.bi.layer.ModelDef.Parameter> parameters(Principal p, String model, String consumer) {
             return Map.of();
@@ -452,6 +466,15 @@ public final class DatasetService {
         }
         ModelGateway g = gateway;
         return g == null ? new Asked(queryItem(p, item, q, explain), null) : g.ask(p, item, q, explain);
+    }
+
+    /** What {@link #asked} would read, from metadata only; empty when the model layer is not running or the question cannot be sized without reading. */
+    public java.util.Optional<com.ash.drishti.server.bi.engine.Footprints.Footprint> footprint(Principal p, BiStore.Item item, QueryRequest q) {
+        ModelGateway g = gateway;
+        if (g == null) {
+            return java.util.Optional.empty();
+        }
+        return isModelRef(item) ? g.footprintModel(p, item.id(), consumerOf(item), defineOf(item), paramsOf(item), q) : g.footprint(p, item, q);
     }
 
     public QueryService.Result ask(Principal p, BiStore.Item item, QueryRequest q, boolean explain) {

@@ -513,6 +513,38 @@ public final class BiReportService {
     }
 
     /**
+     * What one visual of a stored report would read under the page's state, from metadata only (BI runs' planner, BI_RUNS.md sections 4 to 6; BIR-06): the
+     * visual's main question as {@link #query} asks it. Empty when it cannot be sized without reading (a staged table, a top filter, a version-1 dataset) or
+     * the visual does not prepare (the run then fails with the reason, as the synchronous call would).
+     */
+    public java.util.Optional<com.ash.drishti.server.bi.engine.Footprints.Footprint> footprint(Principal p, String id, String pageId, String visualId, JsonNode stateJson) {
+        try {
+            Prepared pre = prepare(p, id, null, pageId, visualId, stateJson);
+            return datasets.footprint(p, pre.dsItem(), pre.built().query());
+        } catch (RuntimeException e) {
+            return java.util.Optional.empty();
+        }
+    }
+
+    /** A report's title and one visual's (BIR-10: a run's title and {@code source.title}); either null when it has none or cannot be read. */
+    public record Titles(String report, String visual) {}
+
+    public Titles titles(Principal p, String id, String pageId, String visualId) {
+        try {
+            Report report = loadItem(p, id).parsed().report();
+            if (report == null) {
+                return new Titles(null, null);
+            }
+            Report.Page page = report.page(pageId);
+            String visual = page == null ? null : page.visuals().stream().filter(v -> v.id().equals(visualId)).map(Report.Visual::title)
+                    .filter(t -> t != null && !t.isBlank()).findFirst().orElse(null);
+            return new Titles(report.title() == null || report.title().isBlank() ? null : report.title(), visual);
+        } catch (RuntimeException e) {
+            return new Titles(null, null);
+        }
+    }
+
+    /**
      * Every row of one table-like visual (a table, a matrix, a multi-row card) up to {@code maxRows} + 1, for a statement's band and an export's table: the
      * visual's query asked with that limit and answered past {@code drishti.bi.query.json-max-rows}, so nothing is cut at what one screen shows (QA2-01). The
      * row past {@code maxRows} tells the caller the table goes on, so it says so.

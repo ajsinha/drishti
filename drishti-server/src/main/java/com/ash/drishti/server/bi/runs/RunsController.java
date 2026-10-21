@@ -201,7 +201,7 @@ public class RunsController {
 
     Map<String, Object> json(Run r, Principal p) {
         boolean has = (r.state() == RunState.DONE || r.state() == RunState.REUSED) && runs().store().has(r.fingerprint());
-        RunJson.View v = RunJson.View.of(p.user()).withResult(has).withPowers(access.has(p, BiAccess.ADMIN), access.has(p, BiAccess.AUTHOR))
+        RunJson.View v = RunJson.View.of(p.user()).withResult(has).withPowers(access.has(p, BiAccess.ADMIN), access.has(p, BiAccess.AUTHOR)).withExports(exporter.getIfAvailable() != null)
                 .withPromote(props.promote().enabled() && has && mine(r, p) && p.user().equals(r.runner()) && ("mq".equals(r.sourceType())
                         || "sql".equals(r.sourceType())) && access.has(p, BiAccess.AUTHOR)).asRecipient(recipient(r, p));
         if (mine(r, p)) {

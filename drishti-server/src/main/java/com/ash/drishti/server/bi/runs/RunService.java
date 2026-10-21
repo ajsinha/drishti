@@ -82,12 +82,18 @@ public final class RunService {
      */
     public record Question(Principal caller, String sourceType, String sourceId, String sourceRef, String title, String workspace, String model,
                            String question, String params, String signature, String dataVersion, boolean interaction, String supersedes, Work work,
-                           RunPlanner.Planned planned) {
+                           RunPlanner.Planned planned, String sourceTitle) {
+
+        /** A question without its source's title (a model's or a statement's: the run object's {@code source.title} is then null). */
+        public Question(Principal caller, String sourceType, String sourceId, String sourceRef, String title, String workspace, String model, String question,
+                        String params, String signature, String dataVersion, boolean interaction, String supersedes, Work work, RunPlanner.Planned planned) {
+            this(caller, sourceType, sourceId, sourceRef, title, workspace, model, question, params, signature, dataVersion, interaction, supersedes, work, planned, null);
+        }
 
         /** A question the planner has not sized (its estimate says {@code basis: unknown}; it waits inline as before 2.6.7's planner). */
         public Question(Principal caller, String sourceType, String sourceId, String sourceRef, String title, String workspace, String model, String question,
                         String params, String signature, String dataVersion, boolean interaction, String supersedes, Work work) {
-            this(caller, sourceType, sourceId, sourceRef, title, workspace, model, question, params, signature, dataVersion, interaction, supersedes, work, null);
+            this(caller, sourceType, sourceId, sourceRef, title, workspace, model, question, params, signature, dataVersion, interaction, supersedes, work, null, null);
         }
     }
 
@@ -299,8 +305,7 @@ public final class RunService {
         }
         if (plan != null && plan.refusal().filter(c -> c == ErrorCode.RUN_NEEDED).isPresent() && !plan.estimate().known()) {
             // an interaction of unknown size is not refused: it runs interactively, bounded by the interactive limit, and never becomes a job (5.3)
-            plan = new RunPlanner.Planned(plan.estimate(), new RunEstimator.Decision(Tier.INTERACTIVE, false, Optional.empty()), plan.data(), plan.dates(),
-                    plan.buildPath());
+            plan = plan.with(new RunEstimator.Decision(Tier.INTERACTIVE, false, Optional.empty()));
             q = withPlan(q, plan);
         }
         if (plan != null && plan.refusal().isPresent()) {
@@ -368,7 +373,7 @@ public final class RunService {
 
     private static Question withPlan(Question q, RunPlanner.Planned p) {
         return new Question(q.caller(), q.sourceType(), q.sourceId(), q.sourceRef(), q.title(), q.workspace(), q.model(), q.question(), q.params(),
-                q.signature(), q.dataVersion(), q.interaction(), q.supersedes(), q.work(), p);
+                q.signature(), q.dataVersion(), q.interaction(), q.supersedes(), q.work(), p, q.sourceTitle());
     }
 
     /** A refusal at plan time, with the estimate and the way forward (sections 4.3 and 5.3). */
@@ -474,6 +479,12 @@ public final class RunService {
     private Run planned(Question q, String key, boolean reusable, Tier tier, Instant now, String sharedFrom) {
         Map<String, Object> estimate = q.planned() != null ? q.planned().estimate().toMap() : new RunEstimate(null, null, null, null, null, null,
                 RunEstimate.Basis.UNKNOWN, 0, 0, false, 0, tier == Tier.AD_HOC_HEAVY ? "a background run: its size is learnt as it runs" : "an interactive question").toMap();
+        if (q.planned() != null && !q.planned().tables().isEmpty()) {
+            estimate.put(RunDataWords.KEY, q.planned().tables());              // what it reads, in words (the run object's data; BIR-09)
+        }
+        if (q.sourceTitle() != null) {
+            estimate.put(RunDataWords.SOURCE_TITLE, q.sourceTitle());          // the report's title (source.title; BIR-10), kept with the row
+        }
         Run r = Run.planned(RunId.next(node, now, random), q.caller().user(), q.caller().user(), q.sourceType(), q.question(), key, q.signature(), tier,
                 "local", RunJson.write(estimate), node, now);
         Run.Builder b = r.toBuilder();
@@ -946,7 +957,7 @@ public final class RunService {
             boolean wasRunning = r.state() == RunState.RUNNING || r.state() == RunState.STORING;
             resume(r, wasRunning, false, "started again after the server restarted at " + at + " UTC (attempt " + (r.attempt() + 1) + " of "
                     + props.restart().maxAttempts() + ")", "the server restarted at " + at + " UTC while this run " + (wasRunning ? "ran" : "waited")
-                    + ", and it could not be started again: re-run it", "Your run %s was started again after a server restart", "the server restarted");
+                    + ", and it could not be started again", "Your run %s was started again after a server restart", "the server restarted");
         }
         if (n > 0) {
             LOG.info("BI runs: {} unfinished run(s) of node {} recovered after the start", n, node);
@@ -959,6 +970,10 @@ public final class RunService {
      * fails it with DRS-9085 and {@code failedWhy}. A running row is moved to queued (attempt + 1) with {@code again}.
      */
     private void resume(Run r, boolean wasRunning, boolean adopted, String again, String failedWhy, String told, String failedTold) {
+        if (r.state() == RunState.AWAITING_CONFIRM || r.state() == RunState.PLANNED) {
+            keepAwaiting(r);                                                    // nothing ran and nobody confirmed: not a failure (BIR-08)
+            return;
+        }
         int before = adopted ? r.attempt() - 1 : r.attempt();                   // an adopted row was counted again by the conditional update
         Optional<Question> q = props.restart().resumeRunning() && before < props.restart().maxAttempts() ? replay.of(r) : Optional.empty();
         if (q.isPresent() && r.state() != RunState.AWAITING_CONFIRM && r.state() != RunState.PLANNED) {
@@ -982,12 +997,45 @@ public final class RunService {
             return;
         }
         String why = before >= props.restart().maxAttempts() && (wasRunning || adopted)
-                ? "the server stopped while this ran, " + r.attempt() + " times; it may be too large for this server: narrow it or ask an administrator"
+                ? "the server stopped while this ran, " + r.attempt() + " times; it may be too large for this server"
                 : failedWhy;
         Run failed = r.moveTo(RunState.FAILED, ErrorCode.RUN_INTERRUPTED.code(), why, clock.instant());
         records.save(failed);
         publish(failed);
         tell(failed, "Run failed: " + title(failed) + " (" + ErrorCode.RUN_INTERRUPTED.code() + ": " + failedTold + ")");
+    }
+
+    /**
+     * A run that waited for its confirmation at a restart (BIR-08, section 12.1): it keeps waiting, with a new token (the owner's drawer has it; the run
+     * object carries it) until the end of its {@code confirm.ttl} from when it was asked. Past that, or when its question cannot be asked again as its runner,
+     * it is cancelled quietly ({@code DRS-9083}, the reason in words) with no bell: nothing ran and nobody confirmed, so nothing failed.
+     */
+    private void keepAwaiting(Run r) {
+        Instant now = clock.instant();
+        Instant by = (r.submittedAt() == null ? now : r.submittedAt()).plus(props.confirmTtl());
+        Optional<Question> q = r.state() == RunState.AWAITING_CONFIRM && now.isBefore(by) ? replay.of(r) : Optional.empty();
+        if (q.isEmpty()) {
+            String why = r.state() == RunState.AWAITING_CONFIRM && !now.isBefore(by)
+                    ? "not confirmed within " + props.confirmTtl().toMinutes() + " min"
+                    : "the confirmation lapsed when the server restarted; nothing ran";
+            Run cancelled = r.moveTo(RunState.CANCELLED, ErrorCode.RUN_NOT_DONE.code(), why, now);
+            records.save(cancelled);
+            publish(cancelled);
+            return;
+        }
+        Run.Builder rb = r.toBuilder();
+        rb.signature = q.get().signature();
+        rb.node = node;
+        rb.leaseUntil = now.plus(props.lease().ttl());
+        Run kept = rb.build();
+        Flight f = new Flight(r.fingerprint(), q.get(), kept);
+        f.background = true;
+        f.visible = true;
+        f.confirmToken = Long.toHexString(random.nextLong()) + Long.toHexString(random.nextLong());
+        f.confirmBy = by;
+        byRun.put(r.id(), f);
+        records.save(kept);
+        publish(kept);
     }
 
     // ---- the cluster: leases and adoption (section 13.3) --------------------------------------------------------------
@@ -1059,7 +1107,7 @@ public final class RunService {
             n++;
             LOG.info("BI runs: run {} of node {} adopted by {} (attempt {})", r.id(), r.node(), node, adopted.attempt());
             resume(adopted, false, true, why, r.node() + " stopped while this run " + (r.state() == RunState.QUEUED ? "waited" : "ran")
-                    + ", and it could not be started again here: re-run it", "Your run %s was " + why, r.node() + " stopped");
+                    + ", and it could not be started again here", "Your run %s was " + why, r.node() + " stopped");
         }
         return n;
     }

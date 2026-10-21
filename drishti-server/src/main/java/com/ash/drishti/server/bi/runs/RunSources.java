@@ -196,14 +196,32 @@ public final class RunSources {
         canon.put("state", state == null ? null : CANON.convertValue(state, Object.class));
         String signature = SecuritySignature.sha("personal|" + p.user() + "|" + p.securitySignature());
         String params = state == null ? null : canonical(state);
-        return new RunService.Question(p, "report", id, page + "/" + visual, title, null, null, canonical(canon), params, signature, null, interaction,
+        RunPlanner pl = runs.planner();
+        RunPlanner.Planned planned = pl == null || reports == null ? null : reportPlan(reports.footprint(p, id, page, visual, state).map(f -> pl.plan(f, interaction)).orElse(null));
+        BiReportService.Titles titles = reports == null ? new BiReportService.Titles(null, null) : reports.titles(p, id, page, visual);
+        String named = title != null && !title.isBlank() ? title : titles.visual() != null ? titles.visual() : titles.report();   // BIR-10 (14.2)
+        return new RunService.Question(p, "report", id, page + "/" + visual, named, null, null, canonical(canon), params, signature, null, interaction,
                 supersedes, () -> {
                     Map<String, Object> body = reports.query(p, id, null, page, visual, state, false);
                     Object rc = body.get("rowCount");
                     Object rows = body.get("rows");
                     int n = rc instanceof Number x ? x.intValue() : rows instanceof List<?> l ? l.size() : 0;
                     return new RunService.Answer(body, null, n);
-                });
+                }, planned, titles.report());
+    }
+
+    /**
+     * The plan of a report visual (BIR-06, sections 5 and 6): a visual sized as ad-hoc heavy is a background run at once, asks to confirm above the
+     * thresholds ({@code DRS-9082}) and, as an interaction, needs a run ({@code DRS-9089}); one past every engine is refused {@code DRS-9086}. A visual whose
+     * size is not known (a connector that cannot count, nothing built yet) is not asked to confirm and not refused: it waits inline and becomes a run card
+     * past the wait, as before (asking to confirm every visual of a page on such a source would break dashboards), the same rule as an interaction of
+     * unknown size.
+     */
+    static RunPlanner.Planned reportPlan(RunPlanner.Planned planned) {
+        if (planned == null || planned.estimate().known()) {
+            return planned;
+        }
+        return planned.with(new RunEstimator.Decision(Tier.INTERACTIVE, false, Optional.empty()));
     }
 
     /**

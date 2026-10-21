@@ -28,6 +28,26 @@
   dataset snapshot* or *a report on it*, sends `POST /runs/{id}/promote {name, title, to}`, then shows *Promoted to name@N* with links to
   the drafts; DRS-9004 and DRS-9108 are said in words. `drishti.py bi runs promote RUN --to dataset|report [--name] [--title]` follows the
   server as built (`--as snapshot` still works). BI_GUIDE.md, BI_RUNS_GUIDE.md, BI_RUNS.md 14.4, tutorial 13.
+- **BI runs: the server findings of the integration round (2.6.7, docs/qa/2026-10-21/BI_RUNS_INTEGRATION.md, BI_RUNS.md 18.2b).**
+  BIR-07: a stored result is reused after every restart while the data is unchanged. The model part of the data version (the model view's
+  hash) was taken of `ResolvedDataset.masked`, a `Set.copyOf` whose iteration order is salted per JVM, so a model with masked columns could
+  hash differently after a restart; the hash is now taken of a canonical text (datasets by alias, masks sorted) and the masks keep their
+  order (`ModelViewHashTest`, fresh JVMs included). The hash of every model with masks changes once with this release: its layers and stored
+  results are built again once.
+  BIR-06: report visuals are planned under `Prefer` as model queries are: a heavy visual asks to confirm (`409 DRS-9082`), a slicer on it
+  needs a run (`409 DRS-9089`), ad-hoc heavy goes to the background at once; a visual of unknown size waits inline as before (no confirmation
+  asked of every visual of a page); without `Prefer` nothing changes (`ModelAcceptanceTest` order 19, `RunServiceTest`).
+  BIR-08: a run waiting for confirmation at a restart keeps waiting (a new token in its run object) until its `confirm.ttl`, instead of
+  failing `DRS-9085` with a bell; a lapsed or unreplayable one is cancelled quietly (`DRS-9083`, the reason in words, no notice).
+  BIR-09: the run object's `data.tables` (table, connector, dates, rows, versions) and `data.words` are filled from the planned footprint
+  (`RunDataWords`, kept with the estimate, no new column), so the Runs tab's *Data* column says what was read (`RunDataWordsTest`).
+  BIR-10: a report visual's run is titled with the visual's title and its `source.title` is the report's, no longer the report's id
+  (`ModelAcceptanceTest` order 19).
+  BIR-11: `can` offers only what the server can do now: share, export (not when distribution is off, not for a statement's file) and
+  promote; rerun only for runs that can be asked again, schedule only for mq, sql and report runs (`RunCanTest`).
+  BIR-13 (server side): a `DRS-9085` row's reason is a plain reason ("…and it could not be started again"), no longer ending with "re-run
+  it", which the console's fix line repeated.
+
 - **BI runs in the console: sharing, schedules, export and rollup suggestions (2.6.7, BI_RUNS_GUIDE.md).** The run drawer's **Share…**
   takes people and roles from the people picker (chips; names typed comma separated work too) and lists each recipient with the mode the
   server decided: *sees the same*, *re-masked* or *recomputed as them* (their run named), a refusal said in words with its code; **Unshare**

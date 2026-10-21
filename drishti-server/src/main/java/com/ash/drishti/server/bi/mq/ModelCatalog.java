@@ -531,9 +531,7 @@ public final class ModelCatalog {
             throw new MqException(MqException.Problem.of("DRS-9109", "model", x));
         });
         Flattener.Flat flat = Flattener.flatten(m, resolved, packs::ofKind);
-        StringBuilder text = new StringBuilder(body);
-        resolved.values().forEach(r -> text.append('|').append(r.def().name()).append('@').append(r.def().version()).append(r.layers()).append(r.masked()));
-        return new ModelView(id, Layers.key(id), hash(text.toString()), m, flat.dataset(), resolved, flat.unbuilt(), false);
+        return new ModelView(id, Layers.key(id), hash(fingerprint(body, resolved, false)), m, flat.dataset(), resolved, flat.unbuilt(), false);
     }
 
     /** As {@link #view} for an earlier major's text read after a new major was published: its layers are kept apart from the new major's. */
@@ -564,9 +562,7 @@ public final class ModelCatalog {
         ImplicitModels.Implicit im = ImplicitModels.of(d, kind -> packs.ofKind(kind).map(ResolvedDataset::of));
         Flattener.Flat flat = Flattener.flatten(im.model(), im.datasets(), packs::ofKind);
         String id = im.model().id();
-        StringBuilder text = new StringBuilder();
-        im.datasets().values().forEach(r -> text.append(r.def().name()).append('@').append(r.def().version()).append(r.def().columns().keySet()).append(r.layers()));
-        return new Found(new ModelView(id, Layers.key(id), hash(text.toString()), im.model(), flat.dataset(), im.datasets(), flat.unbuilt(), false), null);
+        return new Found(new ModelView(id, Layers.key(id), hash(fingerprint("", im.datasets(), true)), im.model(), flat.dataset(), im.datasets(), flat.unbuilt(), false), null);
     }
 
     /** Whether the caller may read a published {@code rachana: 2} dataset item of this name (or id). */
@@ -1277,6 +1273,27 @@ public final class ModelCatalog {
             out.add(e);
         }
         return out;
+    }
+
+    /**
+     * The canonical text a model view's hash is taken of (BIR-07): the model's text, then each resolved dataset by alias in sorted order with its name,
+     * version, row-rule layers and masked columns sorted. Nothing in it depends on the order things were loaded or on a JVM's iteration order (a
+     * {@code Set.copyOf} iterates in an order salted per JVM, which once changed the hash across a restart and lost the reuse of stored results).
+     * An implicit model adds each dataset's columns, sorted, and leaves out its masks, as before.
+     */
+    static String fingerprint(String body, Map<String, ResolvedDataset> resolved, boolean implicit) {
+        StringBuilder text = new StringBuilder(body);
+        new java.util.TreeMap<>(resolved).forEach((alias, r) -> {
+            text.append('|').append(alias).append('=').append(r.def().name()).append('@').append(r.def().version());
+            if (implicit) {
+                text.append(new java.util.TreeSet<>(r.def().columns().keySet()));
+            }
+            text.append(r.layers());
+            if (!implicit) {
+                text.append(new java.util.TreeSet<>(r.masked()));
+            }
+        });
+        return text.toString();
     }
 
     static String hash(String text) {
