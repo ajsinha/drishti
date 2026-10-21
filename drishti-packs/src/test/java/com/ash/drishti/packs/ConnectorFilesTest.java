@@ -85,6 +85,34 @@ class ConnectorFilesTest {
     }
 
     @Test
+    void aPlaceholderThatResolvesToNeitherIsRefusedWithTheSameWords(@TempDir Path dir) throws Exception {
+        // QA4-04: "${X:nope}" switched the connector off silently while a literal "nope" was refused
+        ConnectorFiles files = new ConnectorFiles(dir);
+        var d = files.parse("a", "plugin: file\nenabled: \"${QA4_UNSET:nope}\"\n");
+        assertThat(d.enabledRefusal("nope")).hasValueSatisfying(m -> assertThat(m).contains("'enabled' is true or false").contains("not 'nope'")
+                .contains("${QA4_UNSET:nope} resolves to it"));
+        assertThat(d.enabledRefusal("FaLsE")).isEmpty();
+        assertThat(d.enabledRefusal(" true ")).isEmpty();
+        // at start-up too: the file is refused (a file problem), not bound as a boolean
+        java.nio.file.Files.writeString(dir.resolve("a.yaml"), "plugin: file\nenabled: \"${QA4_UNSET:nope}\"\n");
+        java.nio.file.Files.writeString(dir.resolve("b.yaml"), "plugin: file\nenabled: \"${QA4_UNSET:false}\"\n");
+        var env = new org.springframework.core.env.StandardEnvironment();
+        env.getPropertySources().addFirst(new org.springframework.core.env.MapPropertySource("test", Map.of("drishti.sources.connectors-dir", dir.toString(),
+                "drishti.packs.dir", dir.resolve("no-packs").toString(), "drishti.data.dir", dir.resolve("data").toString(), "drishti.packs.enabled", " ")));
+        String dataDir = System.getProperty(com.ash.drishti.api.DataDir.PROPERTY);
+        try {
+            new PackEnvironmentPostProcessor().postProcessEnvironment(env, null);
+        } finally {
+            if (dataDir == null) {
+                System.clearProperty(com.ash.drishti.api.DataDir.PROPERTY);    // the post-processor hands plugins the data folder: not this test's
+            }
+        }
+        assertThat(env.getProperty("drishti.sources.connector-file-problems.a")).contains("'enabled' is true or false").contains("not 'nope'");
+        assertThat(env.getProperty("drishti.sources.connectors.a.plugin")).isNull();
+        assertThat(env.getProperty("drishti.sources.connectors.b.enabled", Boolean.class)).isFalse();
+    }
+
+    @Test
     void writesAreAtomicAndKeepEveryEarlierTextInHistory(@TempDir Path dir) throws Exception {
         ConnectorFiles files = new ConnectorFiles(dir.resolve("config/connectors"));          // created on first write
         assertThat(files.names()).isEmpty();

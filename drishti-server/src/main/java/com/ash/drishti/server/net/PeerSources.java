@@ -41,6 +41,7 @@ public final class PeerSources implements SourceRouter.Fallback {
     private final ForwardLog log;
     private final Map<String, PeerSource> byNode = new ConcurrentHashMap<>();
     private volatile GroupGather groups;
+    private volatile SearchScatter scatter;
 
     public PeerSources(NetRouting routing, NetService net, JsonCodec codec, ForwardLog log, SourceRouter router) {
         this.routing = routing;
@@ -50,6 +51,43 @@ public final class PeerSources implements SourceRouter.Fallback {
         Runnable apply = () -> router.fallback(net.running() ? this : null);
         net.onChange(n -> apply.run());
         apply.run();
+    }
+
+    /** Sets what asks the peers for a listing (the configuration does: the search's scatter). */
+    public void scatter(SearchScatter s) {
+        this.scatter = s;
+    }
+
+    /**
+     * The entities of the kind the peers hold, for the caller (QA4-02): the peers a search of the kind asks ({@link SearchScatter#targets}),
+     * each listing its own data for the on-behalf-of user ({@code GET /api/v1/net/list/{kind}}). A peer that cannot answer is named in
+     * {@code failures}. None while forwarding is off, for a forwarded request, or with no caller.
+     */
+    @Override
+    public List<com.ash.drishti.api.EntityHit> list(String kind, int limit, java.time.Duration budget, AsOf asOf,
+            com.ash.drishti.engine.source.SourceFailures failures) {
+        SearchScatter s = scatter;
+        NetCaller.Caller c = NetCaller.current().orElse(null);
+        if (s == null || c == null || c.principal() == null) {
+            return List.of();
+        }
+        List<String> nodes = s.targets(kind, c.principal());
+        if (nodes.isEmpty()) {
+            return List.of();
+        }
+        String path = "/api/v1/net/list/" + java.net.URLEncoder.encode(kind, java.nio.charset.StandardCharsets.UTF_8) + "?limit=" + limit;
+        List<com.ash.drishti.api.EntityHit> out = new ArrayList<>();
+        for (SearchScatter.Share share : s.ask(nodes, path, asOf, c.principal(), budget, "list", kind)) {
+            if (share.answer() == null) {
+                failures.add("node " + share.nodeId(), share.failure());
+                continue;
+            }
+            for (var h : share.answer().path("hits")) {
+                out.add(new com.ash.drishti.api.EntityHit(EntityRef.of(kind, h.path("id").asText()), h.path("title").asText(null),
+                        h.path("subtitle").asText(null)));
+            }
+        }
+        return out;
     }
 
     /** Sets what gathers grouped pages across the nodes (the configuration does). */

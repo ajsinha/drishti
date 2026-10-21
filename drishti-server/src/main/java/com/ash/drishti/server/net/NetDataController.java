@@ -157,6 +157,35 @@ public class NetDataController {
         return searches.getObject().share(q, asOf, forUser(p, claims));
     }
 
+    /**
+     * This node's listing of a kind for a peer ({@code GET /api/v1/net/list/{kind}?limit=}, QA4-02): the entities its own sources list, for
+     * the on-behalf-of user who may open the kind, asking no other node (one hop): {@code {"hits": [{id, title, subtitle}], "failed": {...}}}.
+     * A map panel on a node that reads the kind only from peers lists its countries with it.
+     */
+    @GetMapping("/list/{kind}")
+    public Map<String, Object> list(@PathVariable String kind, @RequestParam(defaultValue = "1000") int limit, AsOf asOf,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestAttribute(value = NetCallFilter.CLAIMS, required = false) Object claims) {
+        Principal user = forUser(p, claims);
+        entitlements.requireOpen(user, kind);
+        var failures = new com.ash.drishti.engine.source.SourceFailures();
+        var listing = router.list(kind, "", Math.max(1, Math.min(limit, LIST_MAX)), java.time.Duration.ofSeconds(5), asOf, failures);
+        java.util.List<Map<String, Object>> hits = new java.util.ArrayList<>();
+        for (var h : listing.hits()) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", h.ref().id());
+            m.put("title", h.title());
+            m.put("subtitle", h.subtitle());
+            hits.add(m);
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("hits", hits);
+        out.put("failed", listing.failed());
+        return out;
+    }
+
+    /** The most entities one listing for a peer gives. */
+    private static final int LIST_MAX = 10_000;
+
     static Principal forUser(Principal p, Object claims) {
         if (!(claims instanceof OnBehalfOf.Claims)) {
             throw new DrishtiException(ErrorCode.NET_REFUSED, "this endpoint is called by a node for a user: an on-behalf-of token is needed");

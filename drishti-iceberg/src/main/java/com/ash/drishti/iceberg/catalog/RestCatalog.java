@@ -90,7 +90,7 @@ public final class RestCatalog implements Catalog {
             props = merged;
         } catch (IOException e) {
             io.close();
-            throw new java.io.UncheckedIOException("cannot reach the REST catalog at " + uri + ": " + e.getMessage(), e);
+            throw new java.io.UncheckedIOException("cannot reach the REST catalog at " + uri + ": " + com.ash.drishti.iceberg.io.Reasons.of(e), e);   // never ": null" (QA4-07)
         }
         String prefix = !s.getOrDefault("prefix", "").isBlank() ? s.get("prefix") : props.getOrDefault("prefix", "");
         String ns = s.getOrDefault("namespace", "").isBlank() ? domain : s.get("namespace");

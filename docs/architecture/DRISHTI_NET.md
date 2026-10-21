@@ -661,7 +661,7 @@ console's `backend.urls` (`core/cluster.py`): one server per session, health eve
 names (shards, never a replica of a node already asked; the fewest nodes that cover every table, fastest first), asked in parallel through
 `GET /api/v1/net/search` within `scatter-budget`, and merges them (rows by kind and id, this node's first; re-sorted by the order-by value or the id;
 cut to the limit; sums; `failed`, `partial`, and `nodes` for administrators). A search of a kind whose pack is not here is scattered by the forwarding
-filter and merged on the asking node. The type-ahead asks every reachable node within `suggest-budget` and interleaves the answers. Measured on trades
+filter and merged on the asking node. The type-ahead asks every reachable node within `suggest-budget` and interleaves the answers. A map panel's listing of a kind (which countries have a page, which entities shade it) asks the same scatter targets for the caller (`GET /api/v1/net/list/{kind}`, each node its own sources) and interleaves them with this node's, so a node that reads the kind only from a peer draws the same map (QA4-02); the documents then come through the peers as a view's links do, keyed per caller signature. Measured on trades
 split three ways with one shared: every node answers the same union, the shared trade once, ordered and cut exactly as the sorted union. Changes from
 the design:
 

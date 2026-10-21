@@ -137,4 +137,42 @@ class IcebergMovedTableTest {
             p.close();
         }
     }
+
+    /**
+     * QA4-01: on JDK 25 {@code join()} throws a new {@code CancellationException("join")} carrying the load's quiet failure; on JDK 21 the
+     * failure itself. Both are found, so the table problem is recorded whichever JDK runs the server; a cancellation of another kind is not.
+     */
+    @Test
+    void aQuietFailureIsFoundAsJoinThrowsItOnEveryJdk() {
+        var q = new IcebergSourcePlugin.QuietFailure(new java.io.UncheckedIOException(new java.nio.file.NoSuchFileException("/x/metadata/snap-1.avro")));
+        var jdk25 = new java.util.concurrent.CancellationException("join");
+        jdk25.initCause(q);
+        assertThat(IcebergSourcePlugin.QuietFailure.in(q)).isSameAs(q);
+        assertThat(IcebergSourcePlugin.QuietFailure.in(jdk25)).isSameAs(q);
+        assertThat(IcebergSourcePlugin.QuietFailure.in(new java.util.concurrent.CompletionException(q))).isSameAs(q);
+        assertThat(IcebergSourcePlugin.QuietFailure.in(new java.util.concurrent.CancellationException("cancelled"))).isNull();
+        assertThat(IcebergSourcePlugin.QuietFailure.in(new IllegalStateException(q))).isNull();
+    }
+
+    /** QA4-01: the moved table lists nothing, and says why (the connector's Test and a search's partial note), without a folder. */
+    @Test
+    void aMovedTableSaysWhyItListsNothing() throws Exception {
+        IcebergSourcePlugin p = start("native", null);
+        try {
+            assertThat(p.listingProblem("trade")).hasValueSatisfying(why -> assertThat(why)
+                    .startsWith("the table trade names files that are not there").doesNotContain(moved.toString()));
+        } finally {
+            p.close();
+        }
+    }
+
+    /** QA4-05: a start refused for a relocate it cannot read closes without a NullPointerException (the lake was never opened). */
+    @Test
+    void aStartRefusedForItsRelocateClosesQuietly() {
+        IcebergSourcePlugin p = new IcebergSourcePlugin();
+        Map<String, String> s = new HashMap<>(Map.of("root", moved.toString(), "domain", "desk", "engine", "native", "kinds", "trade",
+                "relocate", "/no/arrow/here"));
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> p.start(context(s))).hasMessageContaining("relocate: '/no/arrow/here' cannot be read");
+        org.assertj.core.api.Assertions.assertThatCode(p::close).doesNotThrowAnyException();
+    }
 }

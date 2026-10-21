@@ -21,6 +21,45 @@
   asked in both roles, and the checker asks a history's twin (same entity, range and node, the other role) straight after it, so the
   class of SOAK2-01 is exercised every few seconds; `soak.json` `maskPairs` counts the pairs per order, peer-held, and wrong answers.
   `net_soak.py`; test_net_soak; DRISHTI_NET.md 17.1.
+- **Fixed (QA4-07): `load-iceberg.sh`'s one-line error gives the real reason, never `: null`.** A REST catalog that could not be reached
+  read *cannot reach the REST catalog at http://127.0.0.1:1: null (ClosedChannelException …)*: the exception has no message. The line
+  (and the REST catalog's own error) now gives the first message in the cause chain that says something, else the cause in words: *(the
+  connection was refused or closed before an answer (ClosedChannelException))* (`Reasons`). ICEBERG_CONNECTOR section 6.
+  IcebergLoaderFailureTest.
+- **Fixed (QA4-06): `build_demo_lakes.py --server` ends with what came of the signals.** It said *The server … was told* when nothing
+  listened or every signal was refused (403); it now reads lake demo's own report of the server and says *was not told: nothing
+  answered there*, *was not told: it refused the signals* (and the token to give), *did not answer in time*, *was told of only some
+  tables*, or *was told* when every signal was taken; a dry run says *would be told*. TOOLS.md. test_build_demo_lakes.
+- **Fixed (QA4-03): statements: notes wrap whole, and a date after the business date reads no misleading 0.** A card's note was cut
+  (*Not available: DRS-9020 the as-of date 202…*) and a masked reader's table note too on paper (*Not sorted: 'MTM' is masked fo…*); notes
+  now wrap over lines on the preview and the PDF, never cut. For a date later than the business date the Trades card read `0` above *Not
+  available*: nothing was counted, so every card reads `–` there (a count still reads `0` on a day the data could hold). The preview's
+  `rows` and the CLI's *N rows* are `0` when every band is empty, not the three empty cards. STATEMENTS.md. StatementApiTest,
+  StatementLayoutTest.
+- **Fixed (QA4-04): a connector file's `enabled` placeholder is listed as it resolves, and one that resolves to neither true nor false
+  is refused.** `"${DRISHTI_LAKE_ENABLED:true}"` with the variable `false` read `enabled: true` beside `DISABLED` (the list used the
+  file's text); `"${VAR:nope}"` switched the connector off silently while a literal `"nope"` was refused. Now the list, the form's
+  checks and the disable confirmation use the resolved value, and `${VAR:nope}` is refused with the literal's message (`… not 'nope'
+  (${VAR:nope} resolves to it)`) on a hot reload and at start. CONNECTOR_FILES.md. ConnectorManagerTest, ConnectorFilesTest.
+- **Fixed (QA4-02): a map panel on a node that reads its kind only from a peer is drawn.** Its listing asked this node's sources only,
+  so the map was empty and said *no economy entity matches ECON-{iso3}* though the entities exist. The listing now asks the peers a
+  search of the kind asks (`GET /api/v1/net/list/{kind}`, for the caller, one hop), merged with this node's; the documents come through
+  the peers, masked there for the caller, and both stay keyed per security signature. DRISHTI_NET.md N5. NetMapPanelTest (two servers,
+  viewer and risk in both orders; it failed before the fix).
+- **Fixed (QA4-01, QA3B-03, P2): a moved Iceberg table is DEGRADED on Java 25 too.** The plugin carries a failed load as a quiet
+  cancellation and looked for it by type when the load was joined; Java 25's `CompletableFuture.join()` throws a new
+  `CancellationException("join")` with it as the cause, so on Java 25 (QA's server; the tests ran on 21) no failure reached the
+  table problems: Admin → Connectors said `UP`, Test found no dates, and every read answered a generic `502 DRS-1003` with a 36-line
+  stack trace. The failure is now found through the join's wrappers on every JDK: the badge and Health say *degraded* with the moved
+  table and the `relocate` to copy, a read answers *the table … names files that are not there* with one log line, and the connector's
+  Test is not ok with the same text, each kind reading `cannot read: …` instead of *nothing found* (`listingProblem`). ICEBERG_CONNECTOR
+  section 14. IcebergMovedConnectorFileTest now loads several domains and tables over ten dates with the loader, moves the folder and
+  serves it through a connector file at start and one hot-added (it failed on Java 25 before the fix); IcebergMovedTableTest.
+- **Fixed (QA3B-04): a `relocate` whose old folder matches nothing is said in Health** (for example a Windows pair on a Linux lake),
+  also when several tables moved together are one sentence.
+- **Fixed (QA4-05): an Iceberg connector whose `relocate` cannot be read no longer logs a NullPointerException at each retry**; the
+  half-started connector closes quietly and the start's refusal is the one problem, logged in one line (a connector whose start refuses a
+  setting no longer logs a stack trace). IcebergMovedTableTest, IcebergMovedConnectorFileTest.
 - **Fixed: `build_demo_lakes.py` run with a Python that lacks `deltalake` failed every table with "no engine"**; it now stops at once and names the console's environment to use.
 - **Fixed (SOAK2-01, P1): an administrator's history of a peer-held entity no longer shows a viewer's masks.** The history cache kept
   the days a peer answered (masked there for the first caller) as if they were unmasked, and served them to every later caller: after a

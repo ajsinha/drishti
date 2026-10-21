@@ -309,6 +309,15 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         default boolean mayHold(SourcePlugin peer, String kind, java.time.LocalDate date) {
             return true;
         }
+
+        /**
+         * The entities of the kind the peers hold, listed there for the caller (the peers a search of the kind asks: not a replica of what
+         * this node reads), at most {@code limit} from each, within {@code budget}; a peer that cannot answer is added to {@code failures}.
+         * None while the cluster is off or for a forwarded request (QA4-02: a map panel on a node that reads its kind only from a peer).
+         */
+        default List<EntityHit> list(String kind, int limit, Duration budget, AsOf asOf, SourceFailures failures) {
+            return List.of();
+        }
     }
 
     /** {@link Fallback#version} of the peers a read of {@code ref} would ask: an empty string while the cluster is off. */
@@ -678,6 +687,24 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             }
         }
         return new Listing(interleave(parts.stream().map(CompletableFuture::join).toList(), limit), failures.asMap());
+    }
+
+    /**
+     * As {@link #list}, and in a cluster the entities the peers hold too (listed there for the caller), merged as one list of at most
+     * {@code limit}, this node's first: what a listing that reads documents through {@link #fetchAll} needs (a map panel's countries).
+     * A structured search does not use it: its controller scatters the whole search (DRISHTI_NET.md section 8).
+     */
+    public Listing listAcross(String kind, int limit, Duration budget, AsOf asOf, SourceFailures failures) {
+        Listing local = list(kind, "", limit, budget, asOf, failures);
+        Fallback fb = fallback;
+        if (fb == null) {
+            return local;
+        }
+        List<EntityHit> theirs = fb.list(kind, limit, budget, asOf, failures);
+        if (theirs.isEmpty()) {
+            return local;
+        }
+        return new Listing(interleave(List.of(local.hits(), theirs), limit), failures.asMap());
     }
 
     /**

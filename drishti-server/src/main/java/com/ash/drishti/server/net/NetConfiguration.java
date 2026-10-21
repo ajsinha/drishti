@@ -182,6 +182,7 @@ public class NetConfiguration {
         router.partition(partition);           // the map panels' cache of documents read through peers (SOAK2-01)
         PeerSources sources = new PeerSources(routing, net, codec, log, router);
         sources.groups(new GroupGather(router, routing, scatter, codec));   // grouped pages gathered across the nodes (section 8)
+        sources.scatter(scatter);                                          // the map panels' listing asks the peers too (QA4-02)
         return sources;
     }
 

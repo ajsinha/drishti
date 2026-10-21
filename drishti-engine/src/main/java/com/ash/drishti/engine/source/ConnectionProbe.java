@@ -133,7 +133,8 @@ public final class ConnectionProbe {
                 return new KindRows(kind, List.of(new DateRows(null, hits.size())), hits.size() < SEARCH_CAP,
                         hits.size() < SEARCH_CAP ? "latest data only; this connector does not list its dates" : "at least " + SEARCH_CAP + "; this connector does not list its dates");
             }
-            return new KindRows(kind, List.of(), true, "nothing found for this kind");
+            // a table the source cannot read finds nothing too: say why rather than "nothing found" (QA4-01)
+            return new KindRows(kind, List.of(), true, p.listingProblem(kind).map(why -> "cannot read: " + why).orElse("nothing found for this kind"));
         } catch (RuntimeException e) {
             return new KindRows(kind, List.of(), true, "cannot read: " + (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));
         }

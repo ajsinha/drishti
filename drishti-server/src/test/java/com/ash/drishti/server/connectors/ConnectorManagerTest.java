@@ -374,6 +374,32 @@ class ConnectorManagerTest {
         assertThatThrownBy(() -> manager.revisionText("lake", "20200101T000000000")).hasMessageContaining("no kept version");
     }
 
+    /**
+     * QA4-04: an {@code enabled} placeholder is listed as it resolves (it read {@code enabled: true} beside DISABLED), and one that resolves
+     * to neither true nor false is refused with the message a literal value gets, keeping the last good configuration.
+     */
+    @Test
+    void anEnabledPlaceholderIsListedAsItResolvesAndABadOneIsRefused(@TempDir Path dir) throws Exception {
+        build(dir, PACK, "other", "plugin: fake\nsettings:\n  url: db://good\n", Map.of());
+        files.write("other", "plugin: fake\nenabled: \"${QA4_UNSET:false}\"\nsettings:\n  url: db://good\n");
+        manager.scan();
+        assertThat(manager.summary("other")).containsEntry("state", "DISABLED").containsEntry("enabled", false);
+        assertThat(registry.plugin("other")).isEmpty();
+
+        files.write("other", "plugin: fake\nenabled: \"${QA4_UNSET:TRUE}\"\nsettings:\n  url: db://good\n");
+        manager.scan();
+        assertThat(manager.summary("other")).containsEntry("state", "RUNNING").containsEntry("enabled", true);
+
+        files.write("other", "plugin: fake\nenabled: \"${QA4_UNSET:nope}\"\nsettings:\n  url: db://good\n");
+        manager.scan();
+        assertThat(manager.fileProblems().get("other")).contains("'enabled' is true or false").contains("not 'nope'")
+                .contains("${QA4_UNSET:nope} resolves to it");
+        assertThat(registry.plugin("other")).as("the last good configuration keeps running, not silently off").isPresent();
+        assertThat(manager.validate(files.read("other"), false)).extracting(ConnectorManager.Problem::field).contains("enabled");
+        assertThatThrownBy(() -> files.parse("other", "plugin: fake\nenabled: \"nope\"\n")).hasMessageContaining("'enabled' is true or false")
+                .hasMessageContaining("not 'nope'");                                       // the same words for a literal value
+    }
+
     @Test
     void disablingOrDeletingAConnectorPacksUseNeedsConfirmation(@TempDir Path dir) throws Exception {
         build(dir, PACK, "solo", "plugin: fake\nsettings:\n  url: u\n", Map.of());

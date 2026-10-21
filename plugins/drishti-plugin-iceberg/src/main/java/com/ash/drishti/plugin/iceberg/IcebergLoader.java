@@ -126,7 +126,7 @@ public final class IcebergLoader {
         for (Throwable c = e; c != null; c = c.getCause() == c ? null : c.getCause()) {
             root = c;
             String m = c.getMessage();
-            if (m != null && !m.isBlank() && chain.indexOf(m) < 0) {
+            if (m != null && !m.isBlank() && !m.strip().equals("null") && chain.indexOf(m) < 0) {
                 chain.append(chain.length() == 0 ? "" : " / ").append(m);
             }
         }
@@ -139,14 +139,19 @@ public final class IcebergLoader {
             return "the bucket " + bucket + " does not exist at " + endpoint + (catalog.isBlank() ? "" : " (said by the REST catalog at " + catalog + ")")
                     + ": create it, or check --warehouse, --set s3.endpoint and the catalog's own warehouse setting [" + first(all, 300) + "]";
         }
-        if (!catalog.isBlank() && root instanceof java.net.ConnectException) {
-            return "cannot reach the REST catalog at " + catalog + " (" + root.getClass().getSimpleName() + ": " + root.getMessage() + "): check --uri and that "
+        Throwable refused = null;
+        for (Throwable c = e; c != null && refused == null; c = c.getCause() == c ? null : c.getCause()) {
+            refused = c instanceof java.net.ConnectException ? c : null;
+        }
+        if (!catalog.isBlank() && refused != null) {
+            // the reason in words, never ": null" (QA4-07: a ConnectException over a ClosedChannelException has no message)
+            return "cannot reach the REST catalog at " + catalog + " (" + com.ash.drishti.iceberg.io.Reasons.of(refused) + "): check --uri and that "
                     + "the catalog runs";
         }
         if (root instanceof java.net.ConnectException && !settings.getOrDefault("s3.endpoint", "").isBlank()) {
             return "cannot reach the object store at " + endpoint + " (" + root.getMessage() + "): check --set s3.endpoint and that the store runs";
         }
-        return "the load failed: " + first(all.isEmpty() ? root.getClass().getName() : all, 600) + " (" + root.getClass().getSimpleName()
+        return "the load failed: " + first(all.isEmpty() ? com.ash.drishti.iceberg.io.Reasons.of(e) : all, 600) + " (" + root.getClass().getSimpleName()
                 + "; -Ddrishti.loader.trace=true prints the stack trace)";
     }
 

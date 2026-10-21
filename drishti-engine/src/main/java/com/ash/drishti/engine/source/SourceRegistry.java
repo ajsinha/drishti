@@ -545,7 +545,10 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
                     return status(name, "IDLE", e.getMessage());
                 }
                 failures.put(name, String.valueOf(e.getMessage()));
-                if (!retry.failing(name)) {
+                if (!retry.failing(name) && e instanceof IllegalArgumentException) {
+                    // a setting it refuses (QA4-05: a relocate it cannot read): the refusal names it, so one line, no stack trace
+                    LOG.error("connector {} failed to start: {}", name, e.getMessage());
+                } else if (!retry.failing(name)) {
                     LOG.error("connector {} failed to start", name, e);
                 }
                 retry.failed(name, String.valueOf(e.getMessage()), com.ash.drishti.common.RetryPolicy.looksPermanent(e));

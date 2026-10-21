@@ -353,10 +353,32 @@ public final class ConnectorManager {
     private SourcesProperties.ConnectorSettings resolved(ConnectorFiles.Definition d) {
         Map<String, String> settings = new LinkedHashMap<>();
         d.settings().forEach((k, v) -> settings.put(k, resolve(d.name(), k, v)));
-        String enabled = resolve(d.name(), "enabled", d.enabled());
+        boolean enabled = enabled(d);
         List<String> kinds = new ArrayList<>();
         d.kinds().forEach(k -> kinds.add(resolve(d.name(), "kinds", k)));
-        return new SourcesProperties.ConnectorSettings(d.plugin(), Boolean.parseBoolean(enabled.trim()), kinds, settings);
+        return new SourcesProperties.ConnectorSettings(d.plugin(), enabled, kinds, settings);
+    }
+
+    /**
+     * The file's {@code enabled} with its placeholder resolved: true or false in any case, else the file is refused with the message a
+     * literal value gets, naming what it resolved to (QA4-04: {@code ${VAR:nope}} switched the connector off without a word).
+     */
+    private boolean enabled(ConnectorFiles.Definition d) {
+        String v = resolve(d.name(), "enabled", d.enabled()).trim();
+        Optional<String> refused = d.enabledRefusal(v);
+        if (refused.isPresent()) {
+            throw new IllegalArgumentException(refused.get());
+        }
+        return Boolean.parseBoolean(v);
+    }
+
+    /** {@code enabled} as the connector runs it: the placeholder resolved; the file's own text when it cannot be (the file is refused). */
+    private boolean shownEnabled(ConnectorFiles.Definition d) {
+        try {
+            return enabled(d);
+        } catch (IllegalArgumentException e) {
+            return d.isEnabled();
+        }
     }
 
     private String resolve(String name, String key, String raw) {
@@ -510,7 +532,8 @@ public final class ConnectorManager {
         m.put("kinds", kinds);
         m.put("description", d == null ? "" : d.description());
         var status = registry.connectorStatuses().get(name);
-        boolean enabled = d != null ? d.isEnabled() : live.map(SourcesProperties.ConnectorSettings::enabled).orElse(startup.map(SourcesProperties.ConnectorSettings::enabled).orElse(true));
+        // the resolved value (QA4-04: "${DRISHTI_LAKE_ENABLED:true}" with the variable false was listed as on while DISABLED)
+        boolean enabled = d != null ? shownEnabled(d) : live.map(SourcesProperties.ConnectorSettings::enabled).orElse(startup.map(SourcesProperties.ConnectorSettings::enabled).orElse(true));
         m.put("enabled", enabled);
         m.put("state", status == null ? (fileProblems.containsKey(name) ? "NOT_LOADED" : enabled ? "NOT_LOADED" : "DISABLED") : status.state());
         String health = null;
@@ -785,7 +808,14 @@ public final class ConnectorManager {
                 out.add(new Problem("warning", "kinds", "kind '" + k + "' is not owned by a loaded pack (loaded: " + String.join(", ", known.stream().limit(8).toList()) + (known.size() > 8 ? ", and " + (known.size() - 8) + " more" : "") + ")"));
             }
         }
-        boolean on = d.isEnabled();
+        boolean on = shownEnabled(d);
+        try {
+            enabled(d);
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage().contains("'enabled' is true or false")) {     // a placeholder that resolves to neither (QA4-04)
+                out.add(new Problem("error", "enabled", e.getMessage().substring(e.getMessage().indexOf("'enabled'"))));
+            }
+        }
         for (Map.Entry<String, String> e : d.settings().entrySet()) {
             String key = e.getKey();
             String v = e.getValue();
@@ -961,7 +991,7 @@ public final class ConnectorManager {
                         : "connector '" + name + "' changed since you read it (now " + current + ", you have " + ifMatch + "); reload it and apply your edit again");
             }
             ConnectorFiles.Definition before = safeRead(name);
-            if (before != null && before.isEnabled() && !next.isEnabled()) {
+            if (before != null && shownEnabled(before) && !shownEnabled(next)) {
                 requireUnused(name, "disabling", confirm);
             }
             List<String> changed = diff(before, next);

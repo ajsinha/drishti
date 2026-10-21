@@ -66,6 +66,23 @@ class IcebergLoaderFailureTest {
         List<String> said = err.lines().filter(l -> l.startsWith("iceberg: ") && !l.contains("rows read")).toList();
         assertThat(said).as(err).hasSize(1);
         assertThat(said.get(0)).startsWith("iceberg: ").contains("127.0.0.1:" + port);
+        assertThat(said.get(0)).as("the reason in words, never ': null' (QA4-07)").doesNotContain(": null").doesNotContain("(null");
         assertThat(err).as("no stack trace").doesNotContain("Exception in thread").doesNotContain("\tat ");
+    }
+
+    /** QA4-07: a connection failure without a message (a ConnectException over a ClosedChannelException) reads as words, never ": null". */
+    @Test
+    void aFailureWithoutAMessageIsSaidInWords() {
+        var refused = new java.net.ConnectException();
+        refused.initCause(new java.nio.channels.ClosedChannelException());
+        Throwable qa = new UncheckedIOException("cannot reach the REST catalog at http://127.0.0.1:1: " + com.ash.drishti.iceberg.io.Reasons.of(new IOException(refused)),
+                new IOException(refused));
+        String line = IcebergLoader.oneLine(qa, Map.of("catalog", "rest", "uri", "http://127.0.0.1:1"));
+        assertThat(line).startsWith("cannot reach the REST catalog at http://127.0.0.1:1 (the connection was refused or closed before an answer "
+                + "(ClosedChannelException)): check --uri").doesNotContain("null");
+        assertThat(com.ash.drishti.iceberg.io.Reasons.of(new IOException(refused))).isEqualTo("the connection was refused or closed before an answer (ClosedChannelException)");
+        assertThat(com.ash.drishti.iceberg.io.Reasons.of(new RuntimeException("null", new IllegalStateException("the real reason")))).isEqualTo("the real reason");
+        assertThat(IcebergLoader.oneLine(new java.nio.channels.ClosedChannelException(), Map.of())).startsWith("the load failed: the connection was closed")
+                .doesNotContain("null");
     }
 }
