@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **BI runs: a statement run interrupted by a restart is made again** as its runner from the request it was asked with (preview or
+  file), instead of failing with `DRS-9085` (BI_RUNS.md 12.1, 18.2b R7). A replayed run keeps the runner's current signature, so its
+  result reads back. `StatementReplayTest`.
+
 - **BI runs: promotion to a dataset snapshot (2.6.7, BI_RUNS.md 9.4, DATASETS.md section 16).** `POST /api/v1/bi/runs/{id}/promote
   {name?, title?, to: dataset|report}`: the runner (with `bi-author`) freezes a finished model query or SQL run as
   `<data>/bi-runs/snapshots/<name>/v<N>/` and gets a draft dataset `source: {run: <name>, version: N, token}` (and a draft report on it).

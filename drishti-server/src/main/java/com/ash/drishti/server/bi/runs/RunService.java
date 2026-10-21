@@ -945,6 +945,9 @@ public final class RunService {
             if (q.isPresent() && r.state() != RunState.AWAITING_CONFIRM && r.state() != RunState.PLANNED) {
                 Run again = wasRunning ? r.moveTo(RunState.QUEUED, null, "started again after the server restarted at " + at + " UTC (attempt "
                         + (r.attempt() + 1) + " of " + props.restart().maxAttempts() + ")", clock.instant()) : r;
+                Run.Builder rb = again.toBuilder();
+                rb.signature = q.get().signature();                            // computed as the runner now: the result is read with this signature
+                again = rb.build();
                 Flight f = new Flight(r.fingerprint(), q.get(), again);
                 f.background = true;
                 f.visible = true;

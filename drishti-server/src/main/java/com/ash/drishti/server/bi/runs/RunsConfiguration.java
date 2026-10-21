@@ -73,9 +73,14 @@ public class RunsConfiguration {
     @Bean
     RunSources runSources(RunService runs, ModelCatalog catalog, MqService mq, SqlService sql, BiReportService reports, com.ash.drishti.server.bi.BiService bi,
             ObjectProvider<BiNotifier> notifier,
-            ObjectProvider<Principals> principals, ObjectProvider<com.ash.drishti.server.bi.DatasetController> datasets) {
+            ObjectProvider<Principals> principals, ObjectProvider<com.ash.drishti.server.bi.DatasetController> datasets,
+            ObjectProvider<com.ash.drishti.server.dist.StatementService> statements, ObjectProvider<com.ash.drishti.identity.AuditLog> audit) {
         datasets.ifAvailable(c -> c.runs(runs::engineStats));               // GET /api/v1/bi/engine reports runs
         RunSources sources = new RunSources(runs, catalog, mq, sql, reports);
+        sources.statements((p, body, kind) -> {                                // a statement run after a restart is made again as its runner
+            com.ash.drishti.server.dist.StatementController c = new com.ash.drishti.server.dist.StatementController(statements.getObject(), audit.getObject());
+            return "file".equals(kind) ? c.fileAsRun(body, p) : c.preview(body, p);
+        });
         BiNotifier n = notifier.getIfAvailable();
         if (n != null) {
             runs.notifier((user, run, summary) -> n.tell(List.of(user), "bi-run", run.id(), summary, "drishti"));

@@ -38,6 +38,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -223,6 +224,19 @@ public final class RunSources {
         });
     }
 
+    /** Makes a statement again as its runner (a replayed statement run): the preview, or the file as {@link #statement} stores it. */
+    @FunctionalInterface
+    public interface StatementWork {
+        Map<String, Object> make(Principal p, JsonNode body, String kind);
+    }
+
+    private volatile StatementWork statements;
+
+    /** How a statement run is made again after a restart (the statement module sets it; without it such a run fails DRS-9085 as before). */
+    public void statements(StatementWork w) {
+        this.statements = w;
+    }
+
     /** The question of {@code POST /api/v1/bi/runs}'s {@code source} (14.2). */
     public RunService.Question of(Principal p, JsonNode source, JsonNode options) {
         String type = source.path("type").asText("");
@@ -242,7 +256,7 @@ public final class RunSources {
         };
     }
 
-    /** Replays a stored run as its runner after a restart (mq and sql only; a report visual is asked again by its page). */
+    /** Replays a stored run as its runner after a restart: a model query, a SQL statement, a report visual or a statement (preview or file). */
     public Optional<RunService.Question> replay(Run r, Principal runner) {
         Object q = RunJson.parse(r.question());
         if (!(q instanceof Map<?, ?> m) || runner == null) {
@@ -255,6 +269,13 @@ public final class RunSources {
                 case "report" -> Optional.of(report(runner, String.valueOf(m.get("id")), String.valueOf(m.get("page")), String.valueOf(m.get("visual")),
                         m.get("state") == null ? null : CANON.valueToTree(m.get("state")), false, null, r.title()));
                 case "sql" -> Optional.of(sql(runner, String.valueOf(m.get("model")), String.valueOf(m.get("sql")), false, null, r.title()));
+                case "statement" -> {                                           // made again as its runner, from the request it was asked with
+                    StatementWork w = statements;
+                    JsonNode body = m.get("request") == null ? null : CANON.valueToTree(m.get("request"));
+                    String kind = String.valueOf(m.get("kind"));
+                    yield w == null || body == null || !Set.of("preview", "file").contains(kind) ? Optional.empty()
+                            : Optional.of(statement(runner, body, kind, r.title(), () -> w.make(runner, body, kind)));
+                }
                 default -> Optional.empty();
             };
         } catch (RuntimeException e) {
