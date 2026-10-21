@@ -138,6 +138,7 @@ def test_a_run_opens_on_its_report_or_in_the_runs_tab(bi):
     r = client.get("/bi/run/" + report_run["id"], follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == f"/bi/r/{REPORT_ID}/overview?run={report_run['id']}"
     mq_run = next(r for r in backend.runs.values() if r["source"]["type"] == "mq")
+    mq_run["source"] = dict(mq_run["source"], href="/bi/runs/" + mq_run["id"])       # what the real server says for an MQ run: not a console page
     r = client.get("/bi/run/" + mq_run["id"], follow_redirects=False)
     assert r.headers["location"] == "/bi/w/me?tab=runs&run=" + mq_run["id"]
     r = client.get("/bi/run/r-nope", follow_redirects=False)

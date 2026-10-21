@@ -212,12 +212,17 @@
       timer = window.setTimeout(() => { if (!R.streaming) { refetch().catch(() => {}).then(poll); } else { poll(); } }, 3000);
     };
     const off = R.listen((d) => {
-      if (stopped || !d || d.id !== live.id) { return; }
+      if (stopped || !d) { return; }
+      if (d.hello) { refetch().catch(() => {}); return; }              // (re)connected: a change made while the stream was away is not sent again
+      if (d.id !== live.id) { return; }
       const was = live.state;
       live = Object.assign({}, live, d, { actual: Object.assign({}, live.actual, d.rowsOut != null ? { rowsOut: d.rowsOut } : {}) });
       onChange(live);
       if (R.active(was) && ended()) { refetch().catch(() => {}); }
     });
+    // asked once now: a run that ended between its 202 and this listener (a quick run on a real server) sends no event any more, and `hello` lists only
+    // unfinished runs, so without this the card would say Queued for ever (BIR-01)
+    if (R.streaming) { refetch().catch(() => {}); }
     poll();
     return () => { stopped = true; off(); if (timer) { window.clearTimeout(timer); } };
   };
