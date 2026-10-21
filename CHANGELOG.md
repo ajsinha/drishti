@@ -17,6 +17,7 @@
 
 ## Unreleased
 
+- **Fixed (2.6.7 patch): Run again said only "Something went wrong."** A rerun the server answers at once (200 `{run, answer}`) is not kept as a row, so the reloaded list lacked it and the drawer failed in the page. The drawer now shows the new run from the reply (*Done at once: asked again with the latest data / as before, N rows*) and the old row says *superseded by* it; a fault in the page says *Run again failed in the page: <message>* and is logged to the browser console, never a bare "Something went wrong.". The test stand-in answers reruns in the real server's shape. [BI_RUNS_GUIDE.md](docs/guides/BI_RUNS_GUIDE.md).
 - **Fixed: the top bar's business date was unreadable in the Blue, Green and Crimson themes** (dark figures on the coloured gradient); it is now a white field with dark figures, like the command line.
 
 - **Fixed (2.6.7 patch): Run again from a run's drawer looked like it did nothing.** The `Re-run ▾` select is now a labelled choice (*Run again as*: same as before, as of D; with the latest data) and a primary **Run again** button. While the new run goes the button spins and says *Running…*, the new run is highlighted at the top of the list and the drawer switches to it and follows it live; an answer given at once says *Done at once: reused the answer from <time>* with **Open result** (the console lost the run of an inline answer before); the old row says *superseded by* the new run. [BI_RUNS_GUIDE.md](docs/guides/BI_RUNS_GUIDE.md).

@@ -188,9 +188,10 @@
     drawer.classList.add('bi-run-drawer-open');
     const known = byId[id];
     if (known) { drawDrawer(known); }
+    window.setTimeout(() => { const f = drawer.querySelector('[data-run-drawer-close]'); if (f) { f.focus(); } }, 0);
+    if (known && known.atOnce) { return; }                            // answered at once: the server has no row to ask for
     B.api('GET', '/runs/' + encodeURIComponent(id)).then((r) => { if (openId === id) { byId[id] = r; drawDrawer(r); } })
       .catch((e) => { if (openId === id && !known) { q('[data-run-drawer-title]').textContent = 'Run'; B.clear(dBody).appendChild(h('p', { class: 'bi-run-bad', role: 'alert', text: R.words(e.code, e.detail) })); } });
-    window.setTimeout(() => { const f = drawer.querySelector('[data-run-drawer-close]'); if (f) { f.focus(); } }, 0);
   }
   function closeDrawer() {
     drawer.hidden = true;
@@ -240,22 +241,28 @@
       B.ask('/runs/' + enc + '/rerun', { data }, 0).then((g) => {
         const nr = g.run || (g.confirm && g.confirm.run) || g.ranAs || null;
         if (!nr || !nr.id) { label(false); said(go, g.answer !== undefined ? 'Done at once.' : 'Run again: asked.'); return; }
-        byId[nr.id] = Object.assign({}, byId[nr.id] || {}, nr);
+        const got = byId[nr.id] = Object.assign({}, byId[nr.id] || {}, nr);
         const from = nr.reuse && nr.reuse.of ? byId[nr.reuse.of] : null;
-        const reused = g.answer !== undefined || nr.state === 'reused' || !!nr.reuse;
-        const text = reused ? 'Done at once: reused the answer from ' + (from && from.finishedAt ? when(from.finishedAt) : nr.reuse && nr.reuse.of ? nr.reuse.of : 'an earlier run') + '.'
+        const reused = nr.state === 'reused' || !!nr.reuse;
+        // answered inside the inline wait and computed anew (the real server's 200 {run, answer}): the server keeps no row of it (BI_RUNS.md 6)
+        const atOnce = !reused && g.answer !== undefined;
+        const text = atOnce ? 'Done at once: asked again ' + (data === 'same' ? 'as before' : 'with the latest data') + (nr.actual && nr.actual.rowsOut != null ? ', ' + R.count(nr.actual.rowsOut) + (nr.actual.rowsOut === 1 ? ' row' : ' rows') : '') + '.'
+          : reused ?'Done at once: reused the answer from ' + (from && from.finishedAt ? when(from.finishedAt) : nr.reuse && nr.reuse.of ? nr.reuse.of : 'an earlier run') + '.'
           : g.confirm ? 'Run again needs your confirmation: it is in the list, waiting for you.' : 'Running again' + (data === 'same' ? ' as before.' : ' with the latest data.');
+        if (atOnce) { got.atOnce = true; }                                   // no row on the server: its drawer is drawn from the reply only
         if (R.active(nr.state) && !g.confirm) { rerunning = nr.id; }
         note = { id: nr.id, text, bad: false, href: reused ? '/bi/run/' + encodeURIComponent(nr.id) : null };
         say(text);
         fresh.add(nr.id);
         return load().then(() => {
+          // the list reloads from the server, and a run answered at once (200 {run, answer}) is not in it: its row and drawer come from the reply
+          if (!byId[nr.id]) { byId[nr.id] = got; }
           const row = tbody.querySelector('[data-run-row="' + CSS.escape(nr.id) + '"]');
           if (!row) { replaceRow(byId[nr.id]); }
           if (byId[r.id]) { replaceRow(byId[r.id]); }                 // the old row says "superseded by"
           openDrawer(nr.id, tbody.querySelector('[data-run-row="' + CSS.escape(nr.id) + '"]'));
         });
-      }).catch((e) => { label(false); failed(go)(e); });
+      }).catch((e) => { label(false); failed(go, 'Run again')(e); });
     });
     return h('div', { class: 'bi-run-again', role: 'group', 'aria-label': 'Run again', 'data-run-again': '' },
       h('label', { for: id, text: 'Run again as' }), h('div', { class: 'bi-run-again-row' }, sel, go));
@@ -274,7 +281,16 @@
     const box = noteBox();
     if (box && note) { box.textContent = text; box.classList.toggle('bi-run-bad', note.bad); box.hidden = false; }
   };
-  const failed = (anchor) => (e) => said(anchor, R.words(e.code, e.detail), true);
+  // a server's problem in words; a fault of this page (an exception, no code and no detail) says its own message and goes to the console, never a bare
+  // "Something went wrong."
+  const failed = (anchor, what) => (e) => {
+    if (e && !e.code && !e.detail) {
+      if (window.console) { window.console.error((what || 'A run action') + ' failed in the page', e); }
+      said(anchor, (what || 'The action') + ' failed in the page: ' + ((e && e.message) || String(e)), true);
+      return;
+    }
+    said(anchor, R.words(e.code, e.detail), true);
+  };
   const refresh = (r) => { if (r && r.id) { byId[r.id] = r; replaceRow(r); if (openId === r.id) { drawDrawer(r); } } };
 
   function drawDrawer(r) {

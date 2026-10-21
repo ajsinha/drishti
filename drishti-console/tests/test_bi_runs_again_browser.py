@@ -127,6 +127,30 @@ def test_an_answer_that_was_there_says_it_reused_and_offers_the_result(browser, 
         c.close()
 
 
+@pytest.mark.parametrize("data", ["latest", "same"])
+def test_a_run_again_answered_at_once_shows_the_new_run_not_something_went_wrong(browser, stack, data):
+    """The real server answers a quick rerun 200 {run, answer} and keeps no row of it, so the reloaded list lacks it (the cause of a bare "Something went
+    wrong." in 2.6.7): the drawer shows the new run from the reply and says what happened; the old row says superseded by it."""
+    url, backend = stack
+    backend.reuse_of, backend.at_once = None, True
+    old = failed_run(backend, "Cashflow ladder at once " + data)
+    c, page = open_drawer(browser, stack, old["id"])
+    try:
+        page.select_option("[data-run-again-as]", data)
+        page.click('[data-run-drawer] [data-run-act="rerun"]')
+        page.wait_for_selector("[data-run-drawer] [data-run-drawer-state='done']", timeout=10000)
+        new = next(r for r in backend.runs.values() if r.get("rerunOf") == old["id"])
+        msg = page.inner_text("[data-run-drawer] [data-run-drawer-msg]")
+        assert msg == "Done at once: asked again " + ("with the latest data" if data == "latest" else "as before") + ", 1 row.", msg
+        assert "went wrong" not in page.inner_text("[data-run-drawer]") and "failed in the page" not in msg
+        assert page.locator(f'[data-run-row="{old["id"]}"] [data-run-superseded="{new["id"]}"]').count() == 1
+        assert page.locator('[data-run-drawer] [data-run-act="rerun"]').inner_text().strip() == "Run again"
+        assert not page.errors, page.errors
+    finally:
+        backend.at_once = False
+        c.close()
+
+
 @pytest.mark.parametrize("theme", THEMES)
 def test_every_theme_draws_the_run_again_group(browser, stack, theme):
     old = failed_run(stack[1], "Raw trades " + theme)

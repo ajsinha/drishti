@@ -258,20 +258,28 @@ class RunsBackend(BiBackend):
         if path.startswith("/runs/") and path.endswith("/rerun"):
             rid = path.split("/")[2]
             old = self.runs[rid]
-            if body.get("data") == "same" and old["state"] in ("done", "reused"):
+            data, fresh = body.get("data") or "same", bool(body.get("fresh"))
+
+            def said(r):                              # as RunsController.rerun: the run's view with `data` (same|latest, a string) and `fresh` put over it
+                return dict(self.view_of(r), data=data, fresh=fresh)
+            if getattr(self, "at_once", False):      # done inside the inline wait (the real server's 200 {run, answer}): no row of it is kept or listed
+                r = self._new(old["title"], "done", source=old["source"], _visible=False)
+                r.update(rerunOf=rid, progress=1.0, startedAt=iso(time.time()), finishedAt=iso(time.time()), actual={"rowsRead": None, "rowsOut": 1, "bytesOut": None, "seconds": 0})
+                return 200, {"run": said(r), "answer": answer()}
+            if data == "same" and old["state"] in ("done", "reused"):
                 r = self._new(old["title"], "reused", source=old["source"])
                 r.update(reuse={"of": rid, "mode": "same"}, rerunOf=rid, progress=1.0, startedAt=iso(time.time()), finishedAt=iso(time.time()), actual=dict(old["actual"]))
                 self._event(r)
-                return 202, {"run": self.view_of(r)}
-            if body.get("data") == "same" and getattr(self, "reuse_of", None):          # the answer was there: given at once, with the run it was recorded as
+                return 202, {"run": said(r)}
+            if data == "same" and getattr(self, "reuse_of", None):          # the answer was there: given at once, with the run it was recorded as
                 was = self.runs[self.reuse_of]
                 r = self._new(old["title"], "reused", source=old["source"])
                 r.update(reuse={"of": was["id"], "mode": "same"}, rerunOf=rid, progress=1.0, startedAt=iso(time.time()), finishedAt=iso(time.time()), actual=dict(was["actual"]))
                 self._event(r)
-                return 200, {"run": self.view_of(r), "answer": answer()}
+                return 200, {"run": said(r), "answer": answer()}
             r = self._new(old["title"], source=old["source"])
             r["rerunOf"] = rid
-            return 202, {"run": self.view_of(r)}
+            return 202, {"run": said(r)}
         if path.startswith("/reports/") and path.endswith("/query"):
             return 200, answer()
         return 200, await self.bi(method, path, ident, body, **params)
