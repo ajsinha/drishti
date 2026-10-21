@@ -794,7 +794,7 @@ without a restart. A pack's `history:` block can lower `max-days` and set `defau
 | `drishti.history.timeout` | `10s` | The whole request. Days not read by then are listed in `problems` and the answer is `partial` (`DRS-1014` when no day was read). |
 | `drishti.history.parallel-days` | `8` | Days read at once per request by the default per-day loop (connectors with a fast path read their own way). |
 | `drishti.history.max-concurrent` | `16` | History requests running at once on this server; the next waits up to `timeout`, then `DRS-1014`. |
-| `drishti.history.cache-mb` | `64` | Heap for cached answers, one budget for every key and caller signature (the least recently used go first; since 2.6.6 an entry counts the heap it really takes, about 2.3 to 3.2 times the earlier estimate). An entry is keyed by the kind's data version, so a new load never serves stale rows; a kind whose connector gives no version is not cached. Admin → Cache → `history` empties it. |
+| `drishti.history.cache-mb` | `256` | Heap for cached answers, one budget for every key and caller signature (256 since 2.6.6, after soak 4: 64 MB held so few answers that the busiest server hit 1 %; lower it on a small heap; the least recently used go first; since 2.6.6 an entry counts the heap it really takes, about 2.3 to 3.2 times the earlier estimate). An entry is keyed by the kind's data version, so a new load never serves stale rows; a kind whose connector gives no version is not cached. Admin → Cache → `history` empties it. |
 
 ### `drishti.packs` — domain packs
 

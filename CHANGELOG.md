@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **History cache default 64 → 256 MB (SOAK4-02).** Counted in real heap since SOAK3-02, 64 MB held only 63 to 208 answers, and the busiest soak node hit the cache 1 % of the time; `drishti.history.cache-mb` lowers it on a small heap.
+
 - **Fixed (SOAK3-01, P2): a node that has just started or rejoined never says "no source holds" (`404 DRS-1001`) for what only its peers
   hold.** Until it has the digests of its alive peers (or for at most routing.yaml's new `join-grace`, 30 s) a node with seeds or saved
   members is *joining*; a read none of its sources holds then waits up to the new `join-wait` (2 s) for the digests and is answered from

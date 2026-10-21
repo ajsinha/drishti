@@ -54,7 +54,7 @@ public final class HistoryProperties implements com.ash.drishti.common.LiveSetti
     public HistoryProperties(Boolean enabled, Integer defaultDays, Integer maxDays, Integer maxRows, Integer maxColumns, Duration timeout,
             Integer parallelDays, Integer maxConcurrent, Integer cacheMb) {
         this.limits = new Limits(enabled == null || enabled, n(defaultDays), n(maxDays), n(maxRows), n(maxColumns), timeout, n(parallelDays),
-                n(maxConcurrent), cacheMb == null ? 64 : cacheMb);
+                n(maxConcurrent), cacheMb == null ? 256 : cacheMb);
     }
 
     /** The defaults of section 11. */

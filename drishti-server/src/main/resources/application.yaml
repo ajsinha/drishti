@@ -192,7 +192,7 @@ drishti:
     timeout: 10s                            # the whole request; days not read by then make the answer partial (DRS-1014)
     parallel-days: 8                        # days read at once per request by the default per-day loop
     max-concurrent: 16                      # history requests running at once on this server
-    cache-mb: 64                            # heap for cached answers (keyed by the data's version), one budget for every caller
+    cache-mb: 256                           # heap for cached answers (keyed by the data's version), one budget for every caller
   security:
     # Off for local development. Production: enabled: true and DRISHTI_TOKEN_SECRET (>= 32 bytes, shared with the console).
     enabled: ${DRISHTI_SECURITY_ENABLED:false}

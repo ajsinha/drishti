@@ -600,7 +600,7 @@ restart, as `SearchProperties`), with its defaults in drishti-server's `applicat
 | `drishti.history.timeout` | `10s` | the whole request; days not read by then are `problems` and the answer is `partial` |
 | `drishti.history.parallel-days` | `8` | days read at once per request by the default loop |
 | `drishti.history.max-concurrent` | `16` | history requests running at once on this server; the next waits, then `DRS-1014` |
-| `drishti.history.cache-mb` | `64` | heap for cached answers, one budget for every key and caller signature; the least recently used go first |
+| `drishti.history.cache-mb` | `256` | heap for cached answers, one budget for every key and caller signature; the least recently used go first |
 
 **Cache.** `HistoryCache` keeps unmasked, unformatted rows keyed by `(kind, id, from, to, fields, knownAt, dataVersion)`, where
 `dataVersion` is `SourceRouter.dataVersion(kind, AsOf.LATEST)` (Delta: the table's version and commit time; a connector that holds
