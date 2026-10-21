@@ -42,8 +42,9 @@
   function onNotice(n) {
     count++; show();
     var alertPath = n.type === 'alert' && typeof n.id === 'string' && n.id.charAt(0) === '/' && n.id.charAt(1) !== '/' ? n.id : '';       // an alert on a number: the path it opens
-    var href = alertPath ? alertPath : n.shareId ? '/share/' + encodeURIComponent(n.shareId) : (n.access && n.kind && n.id ? '/v/' + encodeURIComponent(n.kind) + '/' + encodeURIComponent(n.id) : '/inbox');
-    toast('toast-a sev-info notice', href, '<b>' + esc(n.type || 'notice') + '</b> ' + esc(n.title) + (n.excerpt ? ' <span class="toast-x">\u201c' + esc(n.excerpt) + '\u201d</span>' : ''));
+    var run = n.type === 'bi-run' ? String(n.entityId || n.id || '') : '';                 // a BI run finished (BI_RUNS.md 3.5): it opens where its result is drawn
+    var href = run ? '/bi/run/' + encodeURIComponent(run) : alertPath ? alertPath : n.shareId ? '/share/' + encodeURIComponent(n.shareId) : (n.access && n.kind && n.id ? '/v/' + encodeURIComponent(n.kind) + '/' + encodeURIComponent(n.id) : '/inbox');
+    toast('toast-a sev-info notice', href, '<b>' + esc(run ? 'Run' : n.type || 'notice') + '</b> ' + esc(n.title) + (n.excerpt ? ' <span class="toast-x">\u201c' + esc(n.excerpt) + '\u201d</span>' : ''));
     if (window.Notification && Notification.permission === 'granted') {
       try { new Notification((document.body.getAttribute('data-product') || document.title) + ' \u00b7 ' + (n.type || 'notice'), { body: n.title }); } catch (err) { /* not available */ }
     }

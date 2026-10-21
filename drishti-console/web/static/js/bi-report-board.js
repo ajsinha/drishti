@@ -96,8 +96,16 @@
       }
       if (!quiet) { entry.frame.busy(); }
       const dates = B.consume.datesOf(o.time());
-      return B.enqueue(() => B.api('POST', '/reports/' + B.id2path(i.report) + '/query', { page: i.page, visual: spec.__source, state: dates ? { dates } : {} })).then((res) => {
-        if (token !== entry.token) { return; }
+      const path = '/reports/' + B.id2path(i.report) + '/query', body = { page: i.page, visual: spec.__source, state: dates ? { dates } : {} };
+      // a tile asks with the inline wait (BI_RUNS.md section 6): a slow one shows the run card and is drawn when its run finishes; a live redraw asks as before
+      const R = B.runs;
+      const asked = !R || !B.ask || quiet ? B.enqueue(() => B.api('POST', path, body))
+        : R.settings().then((st) => {
+          const again = (wait, extra) => B.enqueue(() => B.ask(path, Object.assign({}, body, { supersedes: i.report + '/' + i.page + '/' + spec.__source }, extra || {}), wait));
+          return again(R.seconds(st.inlineWait)).then((got) => R.settle(got, entry.frame, { title: spec.title, reask: again, alive: () => token === entry.token }));
+        });
+      return asked.then((res) => {
+        if (!res || token !== entry.token) { return; }
         entry.res = res;
         entry.mq = res.mq || null;
         if (!quiet) { follow(entry, pageId, tile); }

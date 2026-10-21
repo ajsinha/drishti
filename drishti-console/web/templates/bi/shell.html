@@ -33,6 +33,7 @@
     {{ rail_link('/bi', 'house', 'Home', 'home') }}
     {{ rail_link('/bi/catalogue', 'collection', 'Catalogue', 'catalogue') }}
     <a href="/bi/w/me" class="bi-rail-link"{% if bi_page == 'workspace' and workspace == 'me' %} aria-current="page"{% endif %}><i class="bi bi-person-workspace" aria-hidden="true"></i><span>My workspace</span></a>
+    <a href="/bi/w/me?tab=runs" class="bi-rail-link" data-rail-runs><i class="bi bi-activity" aria-hidden="true"></i><span>Runs</span><small class="bi-runs-count" data-runs-count title="Your runs queued or running" hidden></small></a>
     {{ rail_link('/bi/workspaces', 'diagram-3', 'Workspaces', 'workspaces') }}
     {{ rail_link('/bi/models', 'boxes', 'Models', 'models') }}
     {{ rail_link('/bi/datasets', 'hdd-stack', 'Datasets', 'datasets') }}
@@ -57,6 +58,7 @@
     <dt><kbd>g</kbd> <kbd>h</kbd></dt><dd>Home</dd>
     <dt><kbd>g</kbd> <kbd>c</kbd></dt><dd>Catalogue</dd>
     <dt><kbd>g</kbd> <kbd>w</kbd></dt><dd>My workspace</dd>
+    <dt><kbd>g</kbd> <kbd>r</kbd></dt><dd>My runs</dd>
     {% block bi_keys %}{% endblock %}
     <dt><kbd>?</kbd></dt><dd>This list</dd>
     <dt><kbd>Esc</kbd></dt><dd>Close this list</dd>

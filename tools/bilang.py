@@ -95,6 +95,8 @@ def register(bi, srv, ctx) -> None:
     s.add_argument("--model", required=True, help="the model (name@major) or dataset:<name>")
     s.add_argument("--explain", action="store_true", help="the plan instead of the answer")
     s.add_argument("--format", choices=["table", "json", "csv"], default="table")
+    s.add_argument("--async", dest="as_run", action="store_true", help="ask it as a run (BI_RUNS.md): the answer if done within --wait, else the run's id")
+    s.add_argument("--wait", default="2s", help="with --async: how long to wait inline (default 2s; 0 returns the run at once)")
     s.set_defaults(func=lambda a, extra: sql(a, ctx))
 
 
@@ -348,6 +350,8 @@ def sql(a, ctx) -> int:
     if a.explain and not text.lstrip().upper().startswith("EXPLAIN"):
         text = "EXPLAIN " + text
     fmt = "json" if a.format == "table" else a.format
+    if getattr(a, "as_run", False):                                       # bi sql --async: Prefer: respond-async (tools/biruns.py says the outcome)
+        return ctx["runs"].asked(a, ctx, "/api/v1/bi/sql", {"model": a.model, "sql": text, "format": "json"})
     api = ctx["Api"].from_args(a)
     if fmt == "csv":
         _, raw = api.request("POST", "/api/v1/bi/sql", {"model": a.model, "sql": text, "format": "csv"})

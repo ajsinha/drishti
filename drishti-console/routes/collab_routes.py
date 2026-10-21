@@ -30,7 +30,7 @@ from routes.common import ident, local_zone, localise, problem, render
 router = APIRouter(include_in_schema=False)
 
 # what the inbox page filters by: the tab, and the server's row type it means
-TABS = (("all", "All", ""), ("share", "Shares", "share"), ("mention", "Mentions", "mention"), ("reply", "Replies", "reply"), ("alert", "Alerts", "alert"))
+TABS = (("all", "All", ""), ("share", "Shares", "share"), ("mention", "Mentions", "mention"), ("reply", "Replies", "reply"), ("alert", "Alerts", "alert"), ("run", "Runs", "bi-run"))
 
 
 def collab(request: Request):
@@ -152,8 +152,12 @@ async def inbox(request: Request, tab: str = "all", unread: int = 0, before: int
         error = e.detail
     for r in rows:
         r["href"] = _row_href(r)
+        r["typeLabel"] = TYPE_LABELS.get(str(r.get("type", "")), str(r.get("type", "")).capitalize())
     return render(request, "inbox.html", rows=rows, tabs=TABS, tab=chosen[0], unread=bool(unread), error=error, screen="inbox",
                   more=(rows[-1]["seq"] if len(rows) >= 50 else 0))
+
+
+TYPE_LABELS = {"bi-run": "Run"}            # a row type said in words where its own name would read oddly ("Bi-run")
 
 
 def _row_href(r: dict) -> str:
@@ -163,6 +167,9 @@ def _row_href(r: dict) -> str:
     if r.get("type") == "alert":                            # an alert on a number: the id is the console path it opens (made by the server, never a full URL)
         path = str(r.get("id") or "")
         return path if path.startswith("/") and not path.startswith("//") else ""
+    if r.get("type") == "bi-run":                           # a BI run finished, failed or was started again (BI_RUNS.md section 3.5): id is the run
+        run = r.get("entityId") or r.get("id")
+        return f"/bi/run/{quote(str(run), safe='')}" if run else "/bi/w/me?tab=runs"
     if str(r.get("type", "")).startswith("bi-"):            # a BI governance notice: id is the item
         return f"/bi/i/{quote(r['id'], safe=':')}" if r.get("id") else ""
     if r.get("shareId"):

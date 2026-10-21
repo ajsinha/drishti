@@ -186,8 +186,8 @@
     if (VGROUP[spec.type] === 'static' || VGROUP[spec.type] === 'entity') { entry.frame.result(null, (host) => B.visuals.draw(host, themed(spec), ctxFor(spec), null)); return Promise.resolve(); }
     if (VGROUP[spec.type] === 'python') { return loadPython(spec, entry, token, quiet); }
     if (!quiet) { entry.frame.busy(); }
-    return B.enqueue(() => B.api('POST', '/reports/' + B.id2path(reportId) + '/query', { page: pageId, visual: spec.id, state: stateFor(spec) })).then((res) => {
-      if (token !== entry.token) { return null; }
+    return ask(spec, entry, token, quiet).then((res) => {
+      if (!res || token !== entry.token) { return null; }
       entry.mq = res.mq || null;
       // parameter values and Show as items ride on the model query (MQ v2): the report's own answer gave the query, the server answers it with them
       const asked = askedMq(entry);
@@ -209,6 +209,25 @@
       if (token !== entry.token) { return; }
       if (quiet && entry.res) { B.live.markStale(entry.frame, true, e.code ? e.code + ' ' + e.detail : e.message); } else { entry.frame.error(e); }
     });
+  }
+
+  /**
+   * A visual's question (BI_RUNS.md section 6): asked with the inline wait, so a slow one becomes a run card and frees its place in the queue at once; a live
+   * redraw asks as before (live views stay streams). The first draw of a page is not an interaction; a later ask (a slicer, a cross-filter, a drill) is, and an
+   * interaction that would need a background run is refused at once with the way forward. A ?run=<id> in the address draws its visual from the stored result.
+   */
+  function ask(spec, entry, token, quiet) {
+    const path = '/reports/' + B.id2path(reportId) + '/query';
+    const body = { page: pageId, visual: spec.id, state: stateFor(spec) };
+    const R = B.runs;
+    if (!R || !B.ask || quiet) { return B.enqueue(() => B.api('POST', path, body)); }
+    const interaction = !!entry.asked;
+    entry.asked = true;
+    return R.fromUrl(spec.id, q('[data-run-banner]')).then((stored) => stored || R.settings().then((st) => {
+      const again = (wait, extra) => B.enqueue(() => B.ask(path, Object.assign({}, body, { interaction, supersedes: reportId + '/' + pageId + '/' + spec.id }, extra || {}), wait));
+      return again(R.seconds(st.inlineWait)).then((got) => R.settle(got, entry.frame, { title: spec.title, reask: again, alive: () => token === entry.token,
+        narrow: () => { const d = q('[data-date]'); if (d) { d.focus(); } } }));
+    }));
   }
 
   /** The date the data is as of, beside the Business date control: what the engine read (the newest date of the answer), which may be older than the day in the top bar. */

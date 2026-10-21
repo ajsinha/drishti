@@ -1,0 +1,105 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* BI runs (docs/architecture/BI_RUNS.md sections 6 and 7): the workspace tabs, the Runs list, the drawer of one run, the run card of a visual and the confirm
+   card. Colours come from the theme tokens only, so every theme (the three Terminal ones too) draws them; every state also has its word and its glyph. */
+.bi-ws-tabs { display: flex; gap: .25rem; border-bottom: 1px solid var(--d-border); margin: .5rem 0 1rem; overflow-x: auto; }
+.bi-ws-tabs [role="tab"] { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem .9rem; min-height: 2.75rem; box-sizing: border-box; color: var(--d-muted); text-decoration: none;
+  border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; font-weight: 500; }
+.bi-ws-tabs [role="tab"]:hover { color: var(--d-ink); background: var(--d-highlight); }
+.bi-ws-tabs [role="tab"][aria-selected="true"] { color: var(--d-accent-strong); border-bottom-color: var(--d-accent); font-weight: 600; }
+.bi-ws-tabs [role="tab"]:focus-visible { outline: 2px solid var(--d-link); outline-offset: -2px; }
+.bi-runs-count { display: inline-block; min-width: 1.3rem; padding: 0 .35rem; border-radius: 999px; background: var(--d-accent); color: var(--d-on-accent); font-size: .72rem; font-weight: 700;
+  text-align: center; line-height: 1.25rem; font-family: var(--d-font-mono); margin-left: auto; }
+.bi-ws-tabs .bi-runs-count { margin-left: .2rem; }
+
+.bi-runs h2 { gap: .6rem; }
+.bi-runs-live { font-size: .75rem; font-weight: 600; color: var(--d-ok); border: 1px solid var(--d-ok); border-radius: 999px; padding: 0 .5rem; font-family: var(--d-font-mono); }
+.bi-runs-filters { display: grid; grid-template-columns: repeat(4, minmax(8rem, 1fr)) minmax(12rem, 2fr); gap: .6rem; align-items: end; margin: .5rem 0 .75rem; }
+.bi-runs-filters label { display: flex; flex-direction: column; gap: .2rem; font-size: .8rem; color: var(--d-muted); }
+.bi-runs-filters select, .bi-runs-filters input { width: 100%; box-sizing: border-box; min-height: 2.5rem; }
+.bi-runs-tbl { font-variant-numeric: tabular-nums; }
+.bi-runs-tbl td, .bi-runs-tbl th { vertical-align: top; }
+.bi-runs-tbl .num { text-align: right; }
+.bi-runs-tbl td:nth-child(4), .bi-runs-tbl td:nth-child(6), .bi-runs-tbl td:nth-child(8) { font-family: var(--d-font-mono); font-size: .85rem; white-space: nowrap; }
+.bi-runs-tbl td:nth-child(5) { font-family: var(--d-font-mono); font-size: .8rem; color: var(--d-muted); min-width: 10rem; }
+.bi-run-row { cursor: pointer; }
+.bi-run-row:hover { background: var(--d-highlight); }
+.bi-run-row:focus-visible { outline: 2px solid var(--d-link); outline-offset: -2px; background: var(--d-highlight); }
+.bi-run-q { display: block; font-weight: 600; color: var(--d-ink); overflow-wrap: anywhere; }
+.bi-run-src { display: block; color: var(--d-muted); font-weight: 400; font-size: .8rem; }
+.bi-run-shared { color: var(--d-link); font-weight: 400; font-size: .8rem; }
+.bi-run-status span { font-weight: 600; }
+.bi-run-status small { display: block; color: var(--d-muted); font-family: var(--d-font-mono); }
+.bi-run-glyph { font-family: var(--d-font-mono); font-size: 1.05rem; text-align: center; width: 1.6rem; }
+.bi-run-running, .bi-run-storing, .bi-run-queued, .bi-run-planned { color: var(--d-accent-strong); }
+.bi-run-awaiting-confirm { color: var(--d-warn); }
+.bi-run-done, .bi-run-reused { color: var(--d-ok); }
+.bi-run-failed { color: var(--d-bad); }
+.bi-run-cancelled, .bi-run-expired { color: var(--d-muted); }
+.bi-run-whyrow td { border-top: 0; padding-top: 0; font-size: .85rem; }
+.bi-run-bad { color: var(--d-bad); }
+.bi-run-more { min-width: 2.75rem; min-height: 2.75rem; font-size: 1.1rem; line-height: 1; }
+.bi-runs-foot { display: flex; justify-content: space-between; align-items: center; gap: .75rem; color: var(--d-muted); font-size: .85rem; flex-wrap: wrap; }
+
+/* the drawer of one run */
+.bi-run-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(46rem, 100vw); box-sizing: border-box; overflow-y: auto; z-index: 1100; background: var(--d-surface);
+  color: var(--d-ink); border-left: 1px solid var(--d-border); box-shadow: var(--d-shadow); padding: 1rem 1.25rem 2rem; }
+.bi-run-drawer-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; border-bottom: 1px solid var(--d-border); padding-bottom: .6rem; margin-bottom: .75rem; }
+.bi-run-drawer-head h2 { font-size: 1.2rem; margin: 0; overflow-wrap: anywhere; }
+.bi-run-drawer-head button { min-width: 2.75rem; min-height: 2.75rem; }
+.bi-run-dstate { font-weight: 600; margin: 0 0 .5rem; }
+.bi-run-dacts { display: flex; flex-wrap: wrap; gap: .45rem; margin: .5rem 0 1rem; }
+.bi-run-dacts select, .bi-run-drow select { width: auto; min-height: 2.5rem; }
+.bi-run-dacts .btn-pill, .bi-run-drow .btn-pill { min-height: 2.5rem; }
+.bi-run-facts { display: grid; grid-template-columns: 8rem minmax(0, 1fr); gap: .35rem .9rem; margin: 0 0 1rem; }
+.bi-run-facts dt { color: var(--d-muted); font-size: .85rem; }
+.bi-run-facts dd { margin: 0; overflow-wrap: anywhere; }
+.bi-run-versions summary { cursor: pointer; color: var(--d-link); display: inline; }
+.bi-run-drow { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .55rem 0; border-top: 1px solid var(--d-border); }
+.bi-run-shares { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .25rem; flex-basis: 100%; }
+.bi-run-form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: end; flex-basis: 100%; padding: .6rem; border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface-2); }
+.bi-run-form label { display: flex; flex-direction: column; gap: .2rem; font-size: .85rem; color: var(--d-muted); }
+.bi-run-form small { flex-basis: 100%; }
+
+/* the run card in a visual, and the confirm card */
+.bi-run-card { display: flex; flex-direction: column; gap: .4rem; justify-content: center; height: 100%; min-height: 8rem; box-sizing: border-box; padding: .75rem 1rem; font-size: .92rem;
+  border: 1px dashed var(--d-border); border-radius: var(--d-radius); background: var(--d-surface-2); overflow: auto; }
+.bi-run-card p { margin: 0; }
+.bi-run-head { display: flex; align-items: center; gap: .5rem; font-size: 1rem; }
+.bi-run-head .bi-run-glyph { width: auto; font-size: 1.3rem; }
+.bi-run-why, .bi-run-note, .bi-run-title { color: var(--d-muted); font-size: .85rem; }
+.bi-run-progress { display: grid; grid-template-columns: auto minmax(4rem, 1fr) auto; align-items: center; gap: .6rem; font-family: var(--d-font-mono); font-size: .82rem; }
+.bi-run-bar { display: block; position: relative; height: .55rem; border-radius: 999px; background: var(--d-bg-2); border: 1px solid var(--d-border); overflow: hidden; min-width: 4rem; }
+.bi-run-drawer .bi-run-bar { margin: .25rem 0 .5rem; }
+.bi-run-fill { display: block; height: 100%; background: var(--d-accent); transition: width .4s ease; }
+.bi-run-acts { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .3rem !important; }
+.bi-run-acts .btn-pill { min-height: 2.5rem; }
+.bi-run-banner { margin: .25rem 0 .75rem; }
+.bi-run-help, .bi-runs-help { align-self: center; font-size: .82rem; color: var(--d-link); }
+.bi-runs-help { font-weight: 400; margin-left: auto; }
+@media (prefers-reduced-motion: reduce) { .bi-run-fill { transition: none; } }
+
+/* a phone (16 px gutters): filters stack, the table scrolls inside its wrap, the drawer is the whole screen */
+@media (max-width: 640px) {
+  .bi-runs-filters { grid-template-columns: 1fr 1fr; }
+  .bi-runs-filters .bi-runs-find { grid-column: 1 / -1; }
+  .bi-run-drawer { width: 100vw; padding: .75rem 16px 2rem; }
+  .bi-run-facts { grid-template-columns: 1fr; gap: .1rem; }
+  .bi-run-facts dd { margin-bottom: .35rem; }
+  .bi-runs-tbl th:nth-child(5), .bi-runs-tbl td:nth-child(5), .bi-runs-tbl th:nth-child(8), .bi-runs-tbl td:nth-child(8) { display: none; }
+  .bi-run-progress { grid-template-columns: 1fr auto; }
+  .bi-run-phase { grid-column: 1 / -1; }
+}
