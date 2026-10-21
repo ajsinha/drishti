@@ -25,7 +25,9 @@ import org.springframework.context.annotation.Configuration;
 public class GovernanceConfiguration {
 
     @Bean
-    public ProposalStore proposalStore(GovernanceProperties props) {
-        return new ProposalStore(Path.of(props.dir()));
+    public ProposalStore proposalStore(GovernanceProperties props, com.ash.drishti.identity.content.ContentStore content,
+            org.springframework.core.env.Environment env) {
+        boolean files = "file".equalsIgnoreCase(env.getProperty("drishti.governance.store", "content").trim());
+        return new ProposalStore(Path.of(props.dir()), files ? null : content);
     }
 }

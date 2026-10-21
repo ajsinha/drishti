@@ -61,9 +61,81 @@ public final class LoadStore {
     private final ReentrantLock lock = new ReentrantLock();
     private long sequence;
 
+    private final com.ash.drishti.identity.content.ContentStore content;
+
     public LoadStore(Path dir, int keep) {
+        this(dir, keep, null);
+    }
+
+    /**
+     * With {@code content} ({@code drishti.loads.store=content}, the default; CONTENT_STORE.md section 9) each pack's history is the document
+     * {@code loads/<pack>.json} there, read every time and changed by compare-and-set, so every node of a cluster sees every announcement
+     * and a late flag goes out once. A pack's file {@code <dir>/<pack>.json} is imported the first time the pack is read (its document's
+     * existence is the marker) and left in place.
+     */
+    public LoadStore(Path dir, int keep, com.ash.drishti.identity.content.ContentStore content) {
         this.dir = dir.toAbsolutePath().normalize();
         this.keep = keep;
+        this.content = content;
+    }
+
+    private String key(String pack) {
+        file(pack);                                                         // checks the name
+        return "loads/" + pack + ".json";
+    }
+
+    private Optional<com.ash.drishti.identity.content.ContentStore.Item> item(String pack) {
+        Optional<com.ash.drishti.identity.content.ContentStore.Item> it = content.get(key(pack));
+        if (it.isEmpty() && Files.isRegularFile(file(pack))) {
+            try {
+                content.put(key(pack), Files.readAllBytes(file(pack)), null);
+            } catch (IOException e) {
+                throw new UncheckedIOException("cannot read " + file(pack), e);
+            } catch (com.ash.drishti.common.DrishtiException e) {
+                if (e.errorCode() != com.ash.drishti.common.ErrorCode.CONTENT_CONFLICT) {
+                    throw e;                                                // another node imported it first
+                }
+            }
+            it = content.get(key(pack));
+        }
+        return it;
+    }
+
+    private Doc read(byte[] bytes) {
+        try {
+            return json.readValue(bytes, Doc.class);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /** Runs {@code change} on the pack's history and keeps the result: under the lock (files) or as a compare-and-set, retried (content). */
+    private <R> R change(String pack, java.util.function.Function<Doc, R> change) {
+        if (content == null) {
+            lock.lock();
+            try {
+                R r = change.apply(doc(pack));
+                save(pack);
+                return r;
+            } finally {
+                lock.unlock();
+            }
+        }
+        for (int attempt = 0; ; attempt++) {
+            Optional<com.ash.drishti.identity.content.ContentStore.Item> it = item(pack);
+            Doc d = it.map(i -> read(i.bytes())).orElseGet(() -> new Doc(null, null));
+            R r = change.apply(d);
+            try {
+                content.put(key(pack), json.writeValueAsBytes(d), it.map(com.ash.drishti.identity.content.ContentStore.Item::version).orElse(null));
+                return r;
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            } catch (com.ash.drishti.common.DrishtiException e) {
+                if (e.errorCode() != com.ash.drishti.common.ErrorCode.CONTENT_CONFLICT || attempt >= 20) {
+                    throw e;
+                }
+            }
+        }
     }
 
     public Path dir() {
@@ -78,6 +150,9 @@ public final class LoadStore {
     }
 
     private Doc doc(String pack) {
+        if (content != null) {
+            return item(pack).map(i -> read(i.bytes())).orElseGet(() -> new Doc(null, null));
+        }
         return packs.computeIfAbsent(pack, p -> {
             Path f = file(p);
             try {
@@ -109,9 +184,8 @@ public final class LoadStore {
      */
     public Begun begin(String pack, String kind, LocalDate date, String status, Long rows, Long rejected, String source, String batch,
             String note, Instant now, String by) {
-        lock.lock();
-        try {
-            Doc d = doc(pack);
+        String suffix = content == null ? "" : "-" + Long.toString(java.util.concurrent.ThreadLocalRandom.current().nextLong(1L << 40), 36);
+        return change(pack, d -> {
             String key = LoadRecord.key(pack, kind, date, batch);
             List<LoadRecord> same = d.loads().stream().filter(r -> r.key().equals(key)).toList();
             if (!same.isEmpty()) {
@@ -122,34 +196,28 @@ public final class LoadStore {
             }
             boolean reload = LoadRecord.READY.equals(status) && d.loads().stream().anyMatch(r -> r.kind().equals(kind)
                     && r.businessDate().equals(date) && LoadRecord.READY.equals(r.status()));
-            String id = Long.toString(now.toEpochMilli(), 36) + "-" + Long.toString(++sequence, 36);
+            String id = Long.toString(now.toEpochMilli(), 36) + "-" + Long.toString(++sequence, 36) + suffix;
             LoadRecord r = new LoadRecord(id, pack, kind, date, status, rows, rejected, source, batch, note, now, by, same.size() + 1, reload, null,
                     null, 0, 0, List.of(), 0, false);
             d.loads().add(r);
             while (d.loads().size() > keep) {
                 d.loads().remove(0);
             }
-            save(pack);
             return new Begun(r, false);
-        } finally {
-            lock.unlock();
-        }
+        });
     }
 
     /** Replaces the record with the same id (its steps are done). */
     public void update(LoadRecord r) {
-        lock.lock();
-        try {
-            List<LoadRecord> ls = doc(r.pack()).loads();
+        change(r.pack(), d -> {
+            List<LoadRecord> ls = d.loads();
             for (int i = 0; i < ls.size(); i++) {
                 if (ls.get(i).id().equals(r.id())) {
                     ls.set(i, r);
                 }
             }
-            save(r.pack());
-        } finally {
-            lock.unlock();
-        }
+            return null;
+        });
     }
 
     /** Newest first; any filter may be null. */
@@ -188,30 +256,18 @@ public final class LoadStore {
 
     /** Flags the load as announced late; false when it already was (so the notice goes out once). */
     public boolean flagLate(String pack, String kind, LocalDate date, Instant now) {
-        lock.lock();
-        try {
-            boolean first = doc(pack).late().putIfAbsent(lateKey(kind, date), now) == null;
-            if (first) {
-                save(pack);
-            }
-            return first;
-        } finally {
-            lock.unlock();
+        if (doc(pack).late().containsKey(lateKey(kind, date))) {
+            return false;
         }
+        return change(pack, d -> d.late().putIfAbsent(lateKey(kind, date), now) == null);
     }
 
     /** Clears the flag; true when there was one. */
     public boolean clearLate(String pack, String kind, LocalDate date) {
-        lock.lock();
-        try {
-            boolean had = doc(pack).late().remove(lateKey(kind, date)) != null;
-            if (had) {
-                save(pack);
-            }
-            return had;
-        } finally {
-            lock.unlock();
+        if (!doc(pack).late().containsKey(lateKey(kind, date))) {
+            return false;
         }
+        return change(pack, d -> d.late().remove(lateKey(kind, date)) != null);
     }
 
     public Map<String, Instant> lateFlags(String pack) {
