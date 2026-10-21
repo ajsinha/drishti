@@ -17,6 +17,13 @@
 
 ## Unreleased
 
+- **BI runs: the server findings of the integration round (2.6.7, docs/qa/2026-10-21/BI_RUNS_INTEGRATION.md, BI_RUNS.md 18.2b).**
+  BIR-07: a stored result is reused after every restart while the data is unchanged. The model part of the data version (the model view's
+  hash) was taken of `ResolvedDataset.masked`, a `Set.copyOf` whose iteration order is salted per JVM, so a model with masked columns could
+  hash differently after a restart; the hash is now taken of a canonical text (datasets by alias, masks sorted) and the masks keep their
+  order (`ModelViewHashTest`, fresh JVMs included). The hash of every model with masks changes once with this release: its layers and stored
+  results are built again once.
+
 - **BI runs in the console: sharing, schedules, export and rollup suggestions (2.6.7, BI_RUNS_GUIDE.md).** The run drawer's **Share…**
   takes people and roles from the people picker (chips; names typed comma separated work too) and lists each recipient with the mode the
   server decided: *sees the same*, *re-masked* or *recomputed as them* (their run named), a refusal said in words with its code; **Unshare**
