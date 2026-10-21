@@ -123,11 +123,14 @@
   function reset(name) {
     fetchDetail(name).then(function (d) {
       if (!d.ok) { say(msg, why(d), true); return; }
-      ask('Reset ' + name + ' to the default of pack ' + d.body.template + '?', 'The file is replaced by the pack\'s suggestion; your current text is kept in the history and can be restored.', usesOf(d.body), 'Reset').then(function (yes) {
+      var shared = d.body.source === 'shared' || d.body.source === 'shared-hidden';
+      ask(shared ? 'Remove the shared edit of ' + name + '?' : 'Reset ' + name + ' to the default of pack ' + d.body.template + '?',
+        shared ? 'Every node goes back to ' + (d.body.file || name + '.yaml') + (d.body.template ? ' (or the pack\'s default when there is no file)' : '') + '; the edit is kept in the history and can be restored.'
+          : 'The file is replaced by the pack\'s suggestion; your current text is kept in the history and can be restored.', usesOf(d.body), 'Reset').then(function (yes) {
         if (!yes) { return; }
         call('POST', '/' + q(name) + '/reset', null, d.body.etag ? { 'If-Match': d.body.etag } : {}).then(function (r) {
           if (!r.ok) { say(msg, why(r), true); return; }
-          say(msg, name + ' is back to the pack\'s default.');
+          say(msg, shared ? name + ': the shared edit is removed.' : name + ' is back to the pack\'s default.');
           reloadSoon();
         });
       });

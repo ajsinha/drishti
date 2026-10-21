@@ -309,6 +309,8 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | (no variable) | `drishti.embed.store` | `content` | Embed applications: `content` (`admin/embed-apps/`, `drishti_embed_app` imported once) or `jpa`. |
 | (no variable) | `drishti.packs.state-store` | `content` | Packs switched off in Admin: `content` (`admin/pack-state.json`, `drishti_pack_state` imported once) or `jpa`. |
 | (no variable) | `drishti.loads.store` | `content` | Load history: `content` (`loads/<pack>.json`, each pack's `drishti.loads.dir` file imported on first read) or `file` (one node). |
+| (no variable) | `drishti.connectors.store` | `content` | Connector edits made through Admin: `content` (a shared overlay `config/connectors/<name>.yaml` in the content store that every node applies over its file) or `file` (written into the node's own `config/connectors`, one node). |
+| (no variable) | `drishti.store.watch-ms` | `2000` | How often each node asks the content store what changed, to apply another node's shared edits (connectors, load overrides, pack state). |
 | (no variable) | `drishti.governance.store` | `content` | Sutra proposals: `content` (`governance/proposals/`, the `drishti.governance.dir` folder imported once) or `file` (one node). |
 | `DRISHTI_CONSOLE_URL` | `drishti.collab.console-url` | empty | The console's address, put in front of `/share/sh_…` in the links shares carry; email stays off while it is empty. |
 | `DRISHTI_MAIL_FROM` | `drishti.collab.email.from` | `drishti@localhost` | The From address of collaboration email. |

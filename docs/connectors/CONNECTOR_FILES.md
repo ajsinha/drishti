@@ -551,6 +551,21 @@ configuration), plugin, kinds, **status** with the plugin's own health beside it
 last changed. Filter by text, status or origin. `n` creates a connector and `/` focuses the filter. A connector defined in
 `application.yaml` is flagged with the file that would replace it; a bad file shows its problem on its row.
 
+### Shared edits on a cluster
+
+Every edit made here (create, edit, enable or disable, restore, reset, delete) is a **shared edit**: it is kept in the content store at
+`config/connectors/<name>.yaml` (a delete of a connector the files define is `config/connectors/<name>.hidden`), with every earlier text
+under `config/connectors-history/<name>/`, and every node of the cluster applies it over its own file within
+`drishti.store.watch-ms` (2 s), hot-reloading the connector as it does for a file edit. The file in `config/connectors` stays the
+base, deployed with the release (GitOps): it is never rewritten by Admin. The effective text is the shared edit if there is one,
+else the file. The list and the connector's page mark a shared edit **shared edit**; **Reset to file** (or **Reset to pack default**
+for a connector a pack's template names) removes it, and every node goes back to the file (or the template). To make an edit
+permanent, copy its text into the file and Reset. The text is kept exactly as saved: `${VAR}` placeholders stay unresolved in the
+store, masked credentials are never written, and a credential is only ever an environment or `file:` reference, as in a file. Two
+administrators saving one connector on two nodes get one `409 DRS-5032`. `drishti.connectors.store: file` keeps edits in the folder
+of the node that made them (one node, as before). There is nothing to import: the files were and stay the base.
+[CONTENT_STORE.md section 11](../architecture/CONTENT_STORE.md).
+
 ### One connector: its own page
 
 Every connector name in the list is a link (Tab to it, Enter opens it) to `/admin/connectors/<name>`; the packs in *Used by* link to
