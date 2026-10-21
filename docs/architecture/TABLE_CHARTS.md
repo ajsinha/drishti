@@ -714,6 +714,21 @@ Reading the code on `develop` changed the agreed outline in these places:
    path asks the engine for the measure at the chart's grain, and only fields get an aggregation menu.
 
 ## 22. Decisions on the open questions (product owner, 2026-10-20)
+**C1 as built (`table-chart-engine.js`, ahead of the wiring).** Coding the engine settled these points:
+
+* **Count of rows needs a column.** `pivot-engine.js` `normalise` drops a value whose field is not a record field, so *Rows* cannot be
+  `{field: null, agg: count}` beside other values. `prepare` adds a derived `·rows` column (1 per kept row) and counts it, so a count is
+  of the rows that reached the chart (masked X or split cells drop their row first).
+* **A masked X or split cell drops its row; a masked Y cell is only left out of that series.** The section 10 rule ("left out of every
+  aggregate") needs that split: a row cannot be placed without its X.
+* **Top N does not apply to a time axis** (it would cut dates out of a line); the engine notes it and keeps every date.
+* **Scatter's aggregation `none`** is a seventh value of the series' `agg`, allowed only for `type: scatter`; `normalise` turns it into
+  `sum` for every other type.
+* **The summary's numbers use `pivot-engine.js` `format(v, 'compact')`** (`−300k`, `4.1m`), not the section 14 example's `−0.3m`.
+* **Bad enums are fixes, not problems.** `normalise` returns `{settings, problems, fixes}`: only a removed or masked field (or another
+  `v`) is a problem that sets a saved document aside; a bad `type` or `agg` is replaced and listed in `fixes`.
+
+## 22. Open questions
 
 1. **Chart all N on searches without `pivot:`:** not in 2.6.7. The pack owner's opt-in stays; the rows on screen are always chartable.
 2. **Open in BI for Sutra tables:** not offered in 2.6.7.

@@ -1205,6 +1205,28 @@ Targeted tests only between steps, on the 10K-trade lake at most, one heavy proc
 | **R5c** Admin and help | `/admin/bi/runs` (17.2); help cards in `drishti-console/config/help.yaml` for the Runs tab, the run card and the confirm dialog | `test_help.py`, `test_help_links.py` |
 | **R6c** browser test | section 19.6 | passes in the drill |
 
+### 18.2a Built early (R1 types and the R3 maths, not wired)
+
+`com.ash.drishti.server.bi.runs` holds `Run`, `RunState`, `Tier`, `RunId`, `DataVersionVector`, `ResultKey`, `PlannerSettings`,
+`RunEstimate`, `RunEstimator` and `QuestionNormaliser`, with `RunStateTest`, `ResultKeyTest`, `RunEstimatorTest` and
+`QuestionNormaliserTest`; `DRS-9080`..`9089` are in `ErrorCode`. Coding them corrected the design in these places:
+
+* **Transitions the diagram of 3.3 lacks:** `planned → running` and `running → reused | failed` (a twin joining a running run, 13.3);
+  `storing → cancelled` (section 11 cancels while storing); `storing → queued` (12.1 restarts `storing` rows); `reused → expired` (the
+  shared result is swept); `queued → failed` and `awaiting-confirm → failed` (DRS-9085 at restart); `running → done` for an inline answer
+  that is not stored. 12.1's "queued (or awaiting-confirm) → back in RunQueue" is wrong for an unconfirmed run: it stays
+  `awaiting-confirm` (or fails), it is never queued without its confirmation.
+* **The basis** of a partly built plan is the source behind the most *unbuilt* rows (built partitions are certain), which gives
+  `delta-stats` in 4.4's example; *layers* only when nothing is to build.
+* **"Divided by its fragment share"** in 4.2 is read as: build seconds per table ÷ the fragments a run may use at once
+  (`max-fragments × fragments-share`, at least 1).
+* **`rowsOut`** is also capped by `readRows` (the product of grain cardinalities can pass the rows read), and saturates.
+* **Relative dates are RelativeDates' names** (`this-year`, `previous-month`, `last-5-business-days`): 8.3a's "last month" is
+  `previous-month`. A `relative` filter normalises to `between [from, to]` exactly as `MqCompiler` compiles it; `all` to no filter.
+* **Normalising sorts the grain and the measures,** so the stored result's column order (and its row order when the question has no
+  `sort`) can differ from the asker's: the result reader must project the asker's own order. `between` bounds, `sort` and
+  `totals.levels` keep their order; `mq` (the language version) is dropped.
+
 ### 18.3 Together
 
 **R9:** the load test (19.5), the docs of section 20, the tutorial, then the experience QA round and one drill.

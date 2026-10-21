@@ -272,6 +272,26 @@ public enum ErrorCode {
     PYTHON_TESTS("DRS-9076", 422),
     /** BI: a Vega-Lite specification could not be drawn (a url or loader in it, a library that did not load); raised by the page, in the visual's frame, and listed here so the code has one home. */
     VEGA_FAILED("DRS-9077", 422),
+    /** BI runs (docs/architecture/BI_RUNS.md): no such run, or not one the caller may see. */
+    RUN_NOT_FOUND("DRS-9080", 404),
+    /** BI runs: the caller has {@code queue.per-user} runs queued or running, or the node's queue is at {@code queue.max} (Retry-After). */
+    RUN_QUEUE_FULL("DRS-9081", 429),
+    /** BI runs: an ad-hoc heavy question above the confirm threshold; the body carries the estimate and a confirm token. */
+    RUN_CONFIRM("DRS-9082", 409),
+    /** BI runs: the result of a run that is queued, running, failed or cancelled was asked for. */
+    RUN_NOT_DONE("DRS-9083", 409),
+    /** BI runs: the run's result was removed by retention or the storage budget (the run row stays, expired). */
+    RUN_EXPIRED("DRS-9084", 410),
+    /** BI runs: the server or node stopped while the run waited or ran, and it could not start again (attempts, access, a changed model). */
+    RUN_INTERRUPTED("DRS-9085", 503),
+    /** BI runs: the estimate exceeds every available engine's limits, or the result exceeds the store's per-result rows or bytes. */
+    RUN_TOO_LARGE("DRS-9086", 413),
+    /** BI runs: the node that owns the run did not answer. */
+    RUN_NODE_UNREACHABLE("DRS-9087", 503),
+    /** BI runs: the result store is at its budget and nothing can be removed. */
+    RUN_STORE_FULL("DRS-9088", 507),
+    /** BI runs: a dashboard interaction would need a background run; nothing ran; the body carries the estimate. */
+    RUN_NEEDED("DRS-9089", 409),
     /** The model layer: a {@code rachana: 2} dataset that is not valid (its Check lists every problem); publishing it is refused. */
     LAYER_DATASET_INVALID("DRS-9100", 422),
     /** The model layer: a dataset source the server cannot use when it is read (a connector that is not running or has no SQL target, a query that fails). */
