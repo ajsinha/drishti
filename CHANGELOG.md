@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **Fixed: the console set a healthy server aside because a live stream broke** (`server ... set aside after 2 failed requests in a row: stream broke (ReadError)`, then `console moved from ... to ...`, again and again). A stream that opened and then ended (a server restart, an idle or proxy timeout) no longer counts toward `backend.fail_after`; the console checks that server's health at once, and only a failed check or request counts. A session that moved because its server restarted returns to it once it has been healthy for a minute, instead of staying moved for good (`core/cluster.py`, `core/backend.py`; docs/admin/NET.md, DRISHTI_NET.md). After such a move a screen-designer draft saved on the old server showed `DRS-5006: no design`: drafts and other per-user content are kept on the node that saved them until the central content store.
+
 - **Changed: a re-run says how it was asked in `rerunData` (`same` or `latest`)**, not `data`, which kept being overwritten: the new run's drawer showed Data "—" instead of its data versions.
 
 - **Fixed (2.6.7 patch): Run again said only "Something went wrong."** A rerun the server answers at once (200 `{run, answer}`) is not kept as a row, so the reloaded list lacked it and the drawer failed in the page. The drawer now shows the new run from the reply (*Done at once: asked again with the latest data / as before, N rows*) and the old row says *superseded by* it; a fault in the page says *Run again failed in the page: <message>* and is logged to the browser console, never a bare "Something went wrong.". The test stand-in answers reruns in the real server's shape. [BI_RUNS_GUIDE.md](docs/guides/BI_RUNS_GUIDE.md).

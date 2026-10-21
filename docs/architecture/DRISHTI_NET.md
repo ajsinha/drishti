@@ -718,6 +718,9 @@ console's `backend.urls` (`core/cluster.py`): one server per session, health eve
 - A kind whose pack is not on the asking node is not refused there by role: the node that renders it knows the pack's roles and decides.
 - A digest of a member that left or died is kept (never routed to) until the member is forgotten, so an answer can name the node that holds the
   data and is down (`502 DRS-5052`).
+- A console live stream that opened and then broke (a restart, an idle or proxy timeout) is not counted toward `fail_after`; it starts a health
+  check, which counts as usual when it fails. A session moved because its server restarted (streams broke, then requests failed) returns to that
+  server once it is usable again (healthy for a minute); other moved sessions stay where they are.
 - The console's settings are `backend.urls`, `discover`, `discover_every`, `check_every`, `fail_after` (the console's own style, with underscores) and
   `backend.data_dir`; a failover is reported to the server it moved to (`POST /api/v1/net/console-event`, audited `net-console-failover`).
 - `routing.yaml` also has `user-state` (N7). The administrators' line in *How this view was built* naming the node is built since the

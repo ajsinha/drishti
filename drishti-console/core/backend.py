@@ -656,13 +656,16 @@ class BackendClient:
             yield pair
 
     async def _events(self, path: str, params: dict | None, headers: dict, opened: list | None, node: str | None = None):
-        """An SSE stream's ``(event, data)`` pairs. Through the server pool a stream that cannot open, or breaks, counts against its server, so
-        the browser's reconnect (it reconnects by itself) opens the stream on the next server once that one is set aside. A refusal is raised
+        """An SSE stream's ``(event, data)`` pairs. Through the server pool a stream that cannot open counts against its server, so the
+        browser's reconnect (it reconnects by itself) opens the stream on the next server once that one is set aside. A stream that opened and
+        then broke (a restart, an idle or proxy timeout) does not count: the pool checks the server's health instead. A refusal is raised
         with the server's own code and reason (DRS-9180 "you hold no standing query", say), never a bare "stream refused"."""
         pinned = self._servers.for_node(node) if self._servers is not None and node and hasattr(self._servers, "for_node") else None
         base = pinned or self._base()
+        started = False
         try:
             async with self._client.stream("GET", base + path, params=params, timeout=None, headers=headers) as r:
+                started = True
                 if opened is not None:
                     opened.append(r)
                 if r.status_code >= 400:
@@ -685,7 +688,10 @@ class BackendClient:
         except httpx.TransportError as e:
             if self._servers is None:
                 raise
-            self._servers.failed(base, f"stream broke ({type(e).__name__})")
+            if started and hasattr(self._servers, "stream_broke"):
+                self._servers.stream_broke(base, f"stream broke ({type(e).__name__})")
+            else:
+                self._servers.failed(base, f"stream broke ({type(e).__name__})")
             raise BackendError(503, "DRS-5003", f"backend unreachable: {e}") from e
 
     # -- Rupaka phase 1: the BI shell and catalogue (docs/architecture/RUPAKA.md) ---------------------------------------------

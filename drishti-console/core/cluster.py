@@ -26,7 +26,11 @@ Drishti*net on the console learns the rest of the cluster from the server it is 
   loopback or wildcard address is never discovered or kept (only the configured ``urls`` may name one: that is the console's choice). The list is saved to
   ``<console data dir>/net/servers.json`` (atomically, and at shutdown), so a console restarted while its configured server is down still knows
   where else to go.
-* **Coming back.** A set-aside server is checked every ``check_every``; once healthy for a minute it is used again, for new sessions only.
+* **A live stream that ends is not a failure.** A stream that opened and then broke (a server restart, an idle or proxy timeout) is not counted
+  toward setting its server aside: the browser reconnects by itself, and the server's health is checked at once. Only a request (or a stream's
+  opening) that is refused, times out or answers 502/503 counts.
+* **Coming back.** A set-aside server is checked every ``check_every``; once healthy for a minute it is used again, for new sessions only, and
+  for a session that moved because its server restarted (its streams broke, then it stopped answering): that session returns to it.
 
 Every failover is logged and kept for the last hour (Admin -> Net and Admin -> Health show them). Without ``backend.urls`` nothing here runs and the
 console uses ``backend.url`` exactly as before. The pool is per console process; nothing in it is a secret.
@@ -85,6 +89,8 @@ class Entry:
     latency_ms: float | None = None
     last_error: str = ""
     checked: float = 0.0
+    stream_breaks: int = 0                        # live streams that broke since the last answered request
+    restarted: bool = False                       # set aside after its streams broke: its sessions return to it once it is usable
 
     def usable(self, now: float) -> bool:
         """Healthy, and (when it was set aside) healthy again for a minute."""
@@ -106,6 +112,8 @@ class ServerPool:
         self.file = Path(data_dir) / "net" / "servers.json"
         self.entries: dict[str, Entry] = {u: Entry(u, "configured") for u in urls}
         self.pins: dict[str, str] = {}
+        self.homes: dict[str, str] = {}                  # session -> the server it left because that server restarted
+        self._checks: set = set()                        # health checks started by a broken stream, kept until done
         self.failovers: deque = deque(maxlen=200)
         self._load()
 
@@ -156,15 +164,28 @@ class ServerPool:
         """The server this session uses: its pin while that server is not set aside, else the preferred one (a failover)."""
         sid = SESSION.get()
         url = self.pins.get(sid)
+        home = self.homes.get(sid)
+        if home and home != url:
+            h = self.entries.get(home)
+            if h is None:
+                self.homes.pop(sid, None)
+            elif h.usable(time.time()):
+                self.homes.pop(sid, None)
+                self.pins[sid] = home
+                self._failover(url or "", home, "back to its server: it restarted and has answered for a minute")
+                return home
         if url and url in self.entries and self.entries[url].healthy:
             return url
         nxt = self.preferred()
         if url and url != nxt:
+            if url in self.entries and self.entries[url].restarted:
+                self.homes.setdefault(sid, url)
             self._failover(url, nxt, self.entries[url].last_error if url in self.entries else "removed from the list")
         self.pins[sid] = nxt
         if len(self.pins) > 10_000:                           # sessions come and go: forget the oldest pins
             for k in list(self.pins)[:5_000]:
                 self.pins.pop(k, None)
+                self.homes.pop(k, None)
         return nxt
 
     on_failover = None                                   # set by the app: tells the new server, which records it in its audit log
@@ -188,16 +209,36 @@ class ServerPool:
         e.fails += 1
         e.last_error = why
         if e.healthy and e.fails >= self.fail_after:
-            e.healthy = False
-            e.set_aside_at = time.time()
+            self._set_aside(e)
             LOG.warning("server %s set aside after %d failed requests in a row: %s", url, e.fails, why)
             return True
         return not e.healthy
+
+    def _set_aside(self, e: Entry) -> None:
+        e.healthy = False
+        e.set_aside_at = time.time()
+        e.restarted = e.stream_breaks > 0
+
+    def stream_broke(self, url: str, why: str) -> None:
+        """A live stream from ``url`` that had opened broke (a restart, an idle or proxy timeout): not a failed request, so it is not counted
+        toward setting the server aside; the server's health is checked now, and a check that fails counts as usual."""
+        e = self.entries.get(url)
+        if e is None:
+            return
+        e.stream_breaks += 1
+        LOG.info("live stream from %s ended: %s (not counted against it; checking its health)", url, why)
+        try:
+            task = asyncio.get_running_loop().create_task(self.check(e))
+            self._checks.add(task)
+            task.add_done_callback(self._checks.discard)
+        except RuntimeError:                              # no running loop: the periodic check looks at it
+            pass
 
     def answered(self, url: str, ms: float) -> None:
         e = self.entries.get(url)
         if e is not None:
             e.fails = 0
+            e.stream_breaks = 0
             e.latency_ms = ms if e.latency_ms is None else round(0.7 * e.latency_ms + 0.3 * ms, 1)
 
     def for_node(self, node: str | None) -> str | None:
@@ -241,8 +282,7 @@ class ServerPool:
             if e.healthy:
                 e.fails += 1
                 if e.fails >= self.fail_after:
-                    e.healthy = False
-                    e.set_aside_at = now
+                    self._set_aside(e)
                     LOG.warning("server %s set aside: it does not answer its health check (%s)", e.url, e.last_error)
         e.checked = now
 

@@ -564,7 +564,10 @@ backend:
   the next. A 502 or 503 that is the server's own answer about another node (a problem with a code from `DRS-5050` to `DRS-5059`, such as
   `DRS-5052` while the node holding a trade is down, and from a server of 2.6.5 or older a `DRS-1003` naming a peer, `net:<node> failed reading …`)
   is not a failure of the server: the console stays, and the page shows the answer. A peer's time-out (`504 DRS-1014`) never counts. A **read** that failed on the way is tried once on another server, so the person sees the page, not an error; a **write** (a layout, a
-  search, a pivot) never is: the page says it did not save, and saving again works on the new server.
+  search, a pivot) never is: the page says it did not save, and saving again works on the new server. A **live stream that opened and then broke**
+  (the server restarted, an idle or proxy timeout closed it) is not a failed request: it never counts toward `fail_after`; the console checks the
+  server's health at once instead, and only a check or a request that fails counts. A session that moved because its server restarted (its streams
+  broke, then it refused requests) **returns to that server** once it has answered its health check for a minute.
 - **Nothing to sign in again.** Every node accepts the same tokens (one token secret, or one OIDC issuer), and every node knows the console's
   sign-in sessions (copied with the user's state, section 7), so the session carries over. An open
   page's live view carries on with no reload: when its stream from the old server breaks, or ends because that server stopped, the console opens it

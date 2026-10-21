@@ -72,9 +72,19 @@ class Stand:
                                              "nodes that hold trade cannot be reached now: drishti-c (not answering: the connection failed)"})
         if request.url.path == "/api/v1/net/members":
             return httpx.Response(200, json={"running": True, "members": self.members})
+        if request.url.path.endswith("/stream") and mode == "breaks":   # opens, sends a frame, then the connection drops (a restart, a proxy)
+            return httpx.Response(200, headers={"content-type": "text/event-stream"}, stream=Breaks())
         if request.url.path.endswith("/stream"):
             return httpx.Response(200, headers={"content-type": "text/event-stream"}, content=b"event: view\ndata: {}\n\n")
         return httpx.Response(200, json={"served_by": base, "path": request.url.path})
+
+
+class Breaks(httpx.AsyncByteStream):
+    """A live stream that delivers one frame and then breaks (ReadError), as an idle or proxy timeout or a server restart does."""
+
+    async def __aiter__(self):
+        yield b"event: view\ndata: {}\n\n"
+        raise httpx.ReadError("connection reset")
 
 
 def client(stand, p):
@@ -301,3 +311,58 @@ def test_a_discovered_member_on_any_spelling_of_this_machine_is_refused():
         resolved = set()
     if resolved and all(a.startswith("127.") or a == "::1" for a in resolved):
         assert cluster.loopback_url(f"http://{name}:1")
+
+
+def _drain(c):
+    async def go():
+        gen = c.stream("trade", "X")
+        try:
+            async for _ in gen:
+                pass
+        finally:
+            await gen.aclose()
+    return go()
+
+
+def test_a_live_stream_that_breaks_after_it_opened_does_not_set_its_server_aside(tmp_path, monkeypatch):
+    stand, p = Stand(), pool(tmp_path, f"{A},{B}")
+    c = client(stand, p)
+    monkeypatch.setattr(p, "probe", lambda url: _ok())         # the server answers its health check: it is up
+    cluster.SESSION.set("s1")
+    assert p.current() == A
+    stand.mode[A] = "breaks"
+    for _ in range(5):
+        with pytest.raises(BackendError):
+            run(_drain(c))
+    assert p.entries[A].healthy, "a stream that ended is not a failed request"
+    assert p.current() == A, "the session stays on its server"
+    assert not p.failovers
+    # a server that really does not answer normal requests is still set aside
+    stand.mode[A] = "down"
+    run(c._get("/x"))
+    run(c._get("/x"))
+    assert not p.entries[A].healthy
+    assert p.current() == B
+    cluster.SESSION.set("")
+
+
+def test_a_session_moved_after_its_streams_broke_returns_to_its_server_once_it_is_healthy(tmp_path, monkeypatch):
+    stand, p = Stand(), pool(tmp_path, f"{A},{B}")
+    c = client(stand, p)
+    cluster.SESSION.set("s1")
+    assert p.current() == A
+    stand.mode[A] = "breaks"                                   # the server restarts: its stream breaks, then it refuses for a moment
+    with pytest.raises(BackendError):
+        run(_drain(c))
+    stand.mode[A] = "down"
+    run(c._get("/x"))
+    run(c._get("/x"))
+    assert p.current() == B
+    stand.mode[A] = "ok"
+    monkeypatch.setattr(p, "probe", lambda url: _ok())
+    run(p.check(p.entries[A]))
+    assert p.current() == B, "back for less than a minute: not yet"
+    p.entries[A].healthy_since = time.time() - 61
+    assert p.current() == A, "moved only because its server restarted: it returns there"
+    assert p.failovers[-1]["to"] == A
+    cluster.SESSION.set("")
