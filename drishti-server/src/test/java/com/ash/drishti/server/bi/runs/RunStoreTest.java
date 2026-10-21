@@ -63,6 +63,17 @@ class RunStoreTest {
     }
 
     @Test
+    void aPersonsUsageCountsTheirOwnResultsOnly() {
+        RunStore s = new RunStore(RunsProperties.defaults(data));
+        s.write("aa".repeat(32), "s", "r1", "rita", ANSWER, 3);
+        s.write("bb".repeat(32), "s", "r2", "ann", ANSWER, 3);
+        s.write("cc".repeat(32), "s", "r3", "rita", ANSWER, 3);
+        assertThat(s.usageOf("rita")).containsEntry("results", 2).containsOnlyKeys("bytes", "results");
+        assertThat(s.usageOf("ann")).containsEntry("results", 1);
+        assertThat(s.usageOf("nobody")).containsEntry("results", 0).containsEntry("bytes", 0L);
+    }
+
+    @Test
     void theKeyChangesWithTheQuestionTheSignatureAndTheData() {
         Principal p = new Principal("u", List.of("r"));
         RunService.Question base = new RunService.Question(p, "mq", null, null, null, null, null, "{q}", null, "sig", "v1", false, null, () -> null);
