@@ -859,7 +859,7 @@ Work through this list for every shared installation. Each item says how to chec
 8. **Network.** Only the proxy reaches the console; only the console reaches the server's `/api`; only monitoring
    reaches `/actuator`. `SERVER_ADDRESS=127.0.0.1` when they share a host.
 9. **TLS** at the proxy, `DRISHTI_SECURE_COOKIE` left at `true`.
-10. **Backups** of `data/identity`, `data/governance`, your Sutra directories and your configuration (section 10),
+10. **Backups** of the content store root (`data/fstore`: Designs, collaboration, audit, embed apps, pack switches, proposals), `data/identity`, your Sutra directories and your configuration (section 10),
     and of `data/state/<connector>` if you run ActiveMQ or RabbitMQ connectors (their only copy of what the queues
     delivered; copied with the server stopped).
 11. **Lake maintenance** scheduled (section 11).
@@ -1027,7 +1027,9 @@ thread's hashes proves history was rewritten (the chain is evidence of tampering
 `kind` and `id`) it checks every thread and share, in bounded memory, and reports the failures (`problems`, capped by `maxProblems`), and also checks the legal holds and the audit trail, each sealed in `drishti_collab_seal` (or `seals.log` with the file store); rows that cannot be read are reported, never a 500. Seals are evidence, not prevention. A failure
 names the revision that was changed or no longer follows the one before it.
 
-**Backups.** Every collaboration table (`drishti_share`, `drishti_share_recipient`, `drishti_inbox`, `drishti_outbox`, `drishti_thread`,
+**Backups.** With `drishti.collab.store: content` (the default) the whole record (threads with their revision chains, shares, inbox,
+outbox, holds and seals) is in the content store, so **the backup of the store root** (`data/fstore`, the `drishti_content` table, or the
+bucket) is the backup of the record ([CONTENT_STORE.md section 9.8](../architecture/CONTENT_STORE.md)). With `drishti.collab.store: jpa` every collaboration table (`drishti_share`, `drishti_share_recipient`, `drishti_inbox`, `drishti_outbox`, `drishti_thread`,
 `drishti_comment`, `drishti_comment_revision`, `drishti_mention`, `drishti_follow`, `drishti_collab_hold`, `drishti_note_link`) is in the identity
 database, so the backup of that database is the backup of the record, and it is the only copy of what the hash chains protect. With
 `drishti.collab.store: file` (one server) the same records are the JSON-lines files under `drishti.collab.dir`; copy that folder, except
