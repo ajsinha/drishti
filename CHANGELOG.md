@@ -17,6 +17,19 @@
 
 ## Unreleased
 
+- **BI runs: sharing, rollup suggestions, export, schedules, statements and the Admin numbers (2.6.7, BI_RUNS.md 18.2b).** **Sharing
+  (R6, 9.3):** `POST /api/v1/bi/runs/{id}/share {to: [bob, role:risk-team]}` decides per person from the row part and the mask part of the
+  security signature: `same` (equal rights: the stored result), `re-masked` (the same rows, more masks: the extra columns masked as the engine
+  masks them, a masked grouping field collapsing its groups) or `recomputed` (a new run as the recipient; equal rights share one
+  computation). The decision is taken again at every read, so a recipient never sees more than their rights allow now; a person who may not
+  read the model gets no share; notices carry names only. `DELETE /runs/{id}/share/{recipient}`. **Rollup suggestions (8.3a):** repeated
+  heavy questions of one model, grain and filters' shape (never values) past `suggest.min-runs` in `suggest.window` and `suggest.min-seconds`
+  appear in `GET /api/v1/bi/admin/runs` `suggestions` with the rollup drafted; an administrator accepts (the rollup joins the model's draft
+  for review) or dismisses; `built` once the model has it. **Export:** `POST /runs/{id}/export {format: csv|xlsx}`. **Schedules:**
+  `POST /runs/{id}/schedule {schedule: "business-days 07:30"}`, `GET/PUT/DELETE /runs/schedules`; each firing runs as the owner now; the
+  run object's `schedule`. **Statements** take `Prefer: respond-async` (preview and file). **Admin and metrics (R8):** the gauges
+  `drishti.bi.runs.queue`, `running`, `store.bytes`; `/api/v1/bi/engine` `runs`; `admissionWaitP95Ms`, `accuracy.basis` and the snapshot
+  storage filled. Not built yet: promotion to a dataset snapshot or a report, and the cluster (R7: leases, forwarding, scatter, adoption).
 - **BI runs, the server continued (2.6.7, BI_RUNS.md 18.2b and 14.5).** **The planner (R3):** an MQ or SQL question is sized from metadata
   only (built layers' `meta.json`, the new `SourcePlugin.rowEstimate`: Delta add-action `numRecords`, Iceberg manifest `record_count`; then
   rows per day learnt from builds), never a scan: tiers from the estimate, `409 DRS-9082` with the estimate, a `confirmToken` and the run

@@ -1512,7 +1512,7 @@ Its settings have their own file; `application.yaml` holds only the pointer `dri
 | `workspace-visibility` | `owner-and-shared` | `members`: workspace members see others' run rows, never results. |
 | `promote.enabled`, `versions-keep` | `true`, `5` | Promotion to a snapshot dataset. |
 | `notify.on` | `[done, failed]` | Which ends of a visible run put a `bi-run` notice on the bell. |
-| `suggest.min-runs`, `window`, `min-seconds` | `5`, `7d`, `60` | Repeated heavy questions become rollup suggestions. |
+| `suggest.min-runs`, `window`, `min-seconds` | `5`, `7d`, `60` | Repeated heavy questions become rollup suggestions: a model, grain and filters' shape asked as an ad-hoc heavy run at least `min-runs` times in `window`, with a median of at least `min-seconds`, is listed in Admin → BI → Runs with its rollup drafted. Accepting adds it to the model's draft; the decisions are kept in `<store.dir>/suggestions.json`. |
 
 ### `drishti.bi.plan` — the logical plan, the result cache and the guards
 

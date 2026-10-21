@@ -670,6 +670,11 @@ Validation never throws: it returns every problem with its code and the path of 
 
 ## 10. What is not built
 
+**A run's result promoted to a dataset snapshot** (`source: {run: <name>, version: N}`, a draft dataset over `<data>/bi-runs/snapshots/<name>/v<N>/`,
+[BI_RUNS.md section 9.4](../architecture/BI_RUNS.md#94-promoting-to-a-dataset-snapshot)) is designed, not built in 2.6.7's server lane yet:
+`POST /api/v1/bi/runs/{id}/promote` answers `400` saying so. A run's result can be exported (CSV, Excel) and shared meanwhile; a rollup a
+repeated heavy question needs is suggested in Admin → BI → Runs and added to the model's draft when accepted (see [section 7](#7-modes-layers-and-rollups)).
+
 Marked so nothing is mistaken for working: a Python measure **inside a query** (a python visual runs it: 4.2);
 a refresh of **an earlier date** than the current business date (a schedule refreshes today; a load refreshes the date it names); a **measure that mixes two unrelated fact tables** in one expression (several facts in one query are built: 3.1);
 a window function **in a filter**, with the measures of another fact, or **inside a rollup** other than a plain `rank` (4.3);

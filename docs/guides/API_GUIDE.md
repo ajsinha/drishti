@@ -2313,7 +2313,9 @@ when it ends. `wait=0` submits it as a background run at once. Without the heade
 `409 DRS-9089`) and `supersedes: "<report>/<page>/<visual>"` (a newer question with the same key cancels the older) are taken off the body
 before it is read, as are `confirm: true` (the confirmation given in advance; also the re-ask after a `DRS-9089` with `interaction: false`)
 and `confirmToken` (confirms the waiting run it was given for). A question too large for an interactive answer (`DRS-9029`) without
-`interaction` becomes a background run (`202`). An MQ with `options.explain` and SQL `EXPLAIN` answer at once.
+`interaction` becomes a background run (`202`). An MQ with `options.explain` and SQL `EXPLAIN` answer at once. The statement endpoints
+(`POST /api/v1/bi/reports/statement/preview` and `/file`) take the same header: inside the wait the same answer as without it (the file, with
+`Drishti-Run`); past it `202 {run}`, and the run's result is the preview, or `{format, filename, contentType, pages, bytes}` (the file in base64).
 
 **The planner** sizes an MQ or SQL question from metadata before anything runs (built layers' `meta.json`, the connector's row statistics:
 Delta add actions, Iceberg manifests; then what earlier builds taught): an *interactive* or *known heavy* question waits inline; an *ad-hoc
@@ -2332,21 +2334,23 @@ either order). Results are kept under `<data>/bi-runs` (`store.dir`) for `retent
 | `POST` | `/api/v1/bi/runs/estimate` | body `{source}`: `{tier, engine, estimate, reuse: {key, runId} \| null, confirm, refusal}`; runs nothing and reads no data. The estimate is a range with its `basis` (`layers`, `delta-stats`, `iceberg-manifests`, `history`, `unknown`) and `why` |
 | `GET` | `/api/v1/bi/runs` | `?state=done,reused&source=&q=&since=7d&limit=50&after=<run id>` (`state` comma-separated; `since` `7d`, `30d`, `12h` or an ISO date or instant): `{runs: [run], next, storage: {bytes, results}, nodes: {failed: []}}`, the caller's runs newest first |
 | `GET` | `/api/v1/bi/runs/{id}` | the run object (below); the runner and owner, and a bi-admin (state only) |
-| `GET` | `/api/v1/bi/runs/{id}/result` | `?format=json&offset=0&limit=5000`: the stored answer (the endpoint's own body shape) with `page: {offset, limit, total}`, for the runner only; `409 DRS-9083` not done, `410 DRS-9084` removed. *As built:* JSON only |
+| `GET` | `/api/v1/bi/runs/{id}/result` | `?format=json&offset=0&limit=5000`: the stored answer (the endpoint's own body shape) with `page: {offset, limit, total}`, for the runner, and for a recipient of a share as their own version (see share); `409 DRS-9083` not done, `410 DRS-9084` removed. *As built:* JSON only |
 | `GET` | `/api/v1/bi/runs/events` | server-sent events: `hello` (the caller's unfinished runs), then `run` `{id, state, progress, phase, rowsOut, code}` per change, `status` every 15 s |
 | `POST` | `/api/v1/bi/runs/{id}/cancel` | `202 run` (`cancelled`, reason "cancelled by you"); the run's thread is interrupted, which frees its admission place and connector reads at once |
 | `POST` | `/api/v1/bi/runs/{id}/rerun` | body `{wait?}`: the same question again as the caller, as `POST /runs` answers; the new run has `rerunOf` |
 | `POST` | `/api/v1/bi/runs/{id}/keep` | body `{days}` (at most `retention.max-days`): `200 run` with `expiresAt` |
 | `DELETE` | `/api/v1/bi/runs/{id}/result` | `204`; the row stays, `expired` |
 | `POST` | `/api/v1/bi/runs/{id}/confirm` | `{confirmToken}`: queues an `awaiting-confirm` run (`202 run`); a wrong token is `400`, a run past `confirm.ttl` is cancelled |
-| `POST` | `/api/v1/bi/runs/{id}/export` | body `{format}`. *Not built yet (step R6):* `400 DRS-5001` saying so |
-| `POST` | `/api/v1/bi/runs/{id}/share` | body `{to: ["bob", "role:risk-team"]}`. *Not built yet (step R6)* |
-| `DELETE` | `/api/v1/bi/runs/{id}/share/{recipient}` | *Not built yet (step R6)* |
-| `POST` | `/api/v1/bi/runs/{id}/promote` | body `{as, name}`. *Not built yet (step R6)* |
-| `POST` | `/api/v1/bi/runs/{id}/schedule` | body `{schedule, data}`. *Not built yet (step R6)* |
-| `GET` | `/api/v1/bi/runs/schedules` | `{schedules: []}`; `PUT` / `DELETE /api/v1/bi/runs/schedules/{id}` answer `404 DRS-9080` until schedules are built |
+| `POST` | `/api/v1/bi/runs/{id}/export` | body `{format: "csv" \| "xlsx"}` (default `csv`): the result as a file (`Content-Disposition`), through the BI exporter: the caller's own version (a recipient's re-masked or recomputed answer), masked columns named in the note, cut at `drishti.distribution.export.max-rows` with a note. `parquet` and `pdf` are `400` |
+| `POST` | `/api/v1/bi/runs/{id}/share` | body `{to: ["bob", "role:risk-team"]}` (the owner; a finished run): `{shares: [{recipient, mode, recipientRun}]}`, one per person (`role:x` expands to its members now). `mode`: `same` (equal security signature: the stored result), `re-masked` (the same row rules and more masks: the stored result with the extra columns masked as the engine masks them), `recomputed` (anything else: a new run as the recipient, `shared.from` the original; `recipientRun` is its id; recipients with equal rights share one computation). A person who may not read the model gets `mode: null` with `code` and no share. The recipient sees the run in their list and `GET`, and reads its result as their own version, decided again at every read: rights narrowed since the share answer `403 DRS-9021` "re-run it", never the wider answer. The notice names the sharer and the title only |
+| `DELETE` | `/api/v1/bi/runs/{id}/share/{recipient}` | `204`; the recipient's own recomputed run stays theirs |
+| `POST` | `/api/v1/bi/runs/{id}/promote` | body `{as, name}`. *Not built yet (step R6):* `400` saying so |
+| `POST` | `/api/v1/bi/runs/{id}/schedule` | body `{schedule: "business-days 07:30", data: "latest"}` (the subscription grammar: `daily HH:MM`, `weekdays HH:MM`, `business-days HH:MM`, `weekly mon 08:00`, `monthly last 18:00 [business]`; not `after-load`): `201 {id, runId, title, source, schedule, data, enabled, lastRun, nextAt, createdAt}`. Each firing asks the question again as the owner **now** (an owner who lost access gets a failure and a notice, never someone else's rights): a visible background run, confirmed in advance. The run object's `schedule` is this |
+| `GET` | `/api/v1/bi/runs/schedules` | `{schedules: [schedule]}` (the caller's); `PUT /api/v1/bi/runs/schedules/{id}` `{schedule?, enabled?}` answers the schedule, `DELETE` `204` |
+| `POST` | `/api/v1/bi/admin/runs/suggestions/{id}/accept` | bi-admin: a rollup suggestion (below) accepted: the drafted rollup is added to the model's draft under `rollups:` (comments kept; reviewed and published as any change); `{id, model, grain, …, status: "accepted", item}`. A pack's model is accepted with the YAML to add by hand (`item: null`) |
+| `POST` | `/api/v1/bi/admin/runs/suggestions/{id}/dismiss` | bi-admin: `status: "dismissed"` |
 | `GET` | `/api/v1/bi/runs/settings` | `{enabled, inlineWait: "PT2S", maxWait: "PT10S", confirmAboveSeconds: 60, retentionDays: 30, eventsUrl}` (what the console needs) |
-| `GET` | `/api/v1/bi/admin/runs` | bi-admin: `{now: {slots: {interactive, standing, background: {used, cap}}, admissionWaitP95Ms}, queue: {byClass, byUser, oldestSeconds, oldestUser, queued, workers}, running: [run], storage: {resultsBytes, maxBytes, results, oldest, snapshotsBytes, snapshots, topUsers}, accuracy: {medianRatio, p10, p90, samples, basis, unknownShare}, inline: {inlineShare, jobMedianSeconds}, settings: {file, inlineWait, confirmAboveSeconds, retentionDays}, nodes: [{node, alive}], suggestions}`; null where not built yet ([BI_RUNS.md 14.5](../architecture/BI_RUNS.md#145-the-console-contract-as-built-server-lane-267)) |
+| `GET` | `/api/v1/bi/admin/runs` | bi-admin: `{now: {slots: {interactive, standing, background: {used, cap}}, admissionWaitP95Ms}, queue: {byClass, byUser, oldestSeconds, oldestUser, queued, workers}, running: [run], storage: {resultsBytes, maxBytes, results, oldest, snapshotsBytes, snapshots, topUsers}, accuracy: {medianRatio, p10, p90, samples, basis, unknownShare}, inline: {inlineShare, jobMedianSeconds}, settings: {file, inlineWait, confirmAboveSeconds, retentionDays}, nodes: [{node, alive}], suggestions}` ([BI_RUNS.md 14.5](../architecture/BI_RUNS.md#145-the-console-contract-as-built-server-lane-267)). `admissionWaitP95Ms` is the interactive admission wait over the last 5 minutes (null when none); `accuracy.basis` is `{<basis>: {medianRatio, samples}}`; `suggestions` are repeated heavy questions as rollups ([BI_RUNS.md 8.3a](../architecture/BI_RUNS.md#83a-fewer-duplicate-runs-product-owner-2026-10-20)): `[{id, model, grain, filters, runs, medianSeconds, status (suggested, accepted, dismissed, built), rollup {name, table, by, measures}, yaml, words, decidedBy, item}]`, counted per model, grain and filters' shape (never a value) past `suggest.min-runs` in `suggest.window` with a median of `suggest.min-seconds` |
 | `POST` | `/api/v1/bi/admin/runs/{id}/cancel` | bi-admin: `202 run` (reason "cancelled by an administrator (name)") |
 
 The run object (the contract with the console, [BI_RUNS.md section 14.3](../architecture/BI_RUNS.md#143-the-run-object-the-contract-between-the-two-builders)):
@@ -2355,7 +2359,7 @@ The run object (the contract with the console, [BI_RUNS.md section 14.3](../arch
 `queued`, `running`, `storing`, `done`, `reused`, `failed`, `cancelled`, `expired`), `progress`, `phase`, `estimate`, `actual {rowsRead, rowsOut,
 bytesOut, seconds}`, `code`, `reason`, `node`, `attempt`, `submittedAt`, `startedAt`, `finishedAt`, `expiresAt`, `reuse {of, mode} | null`,
 `shared {from, with}`, `group`, `rerunOf`, `promotedTo`, `can {open, cancel, rerun, export, share, promote, schedule, keep, delete, confirm, discard}` (computed
-for the caller), `links {self, result, events}`, `schedule` (null until schedules are built) and `confirmToken` (the owner's, while
+for the caller), `links {self, result, events}`, `schedule` (the owner's schedule of the run, else null) and `confirmToken` (the owner's, while
 `awaiting-confirm`). Fields are never removed. Submitting and estimating are open to a read-only token; the other
 changes need the `bi:write` scope (the administrator's cancel `bi:admin`). Every answer has `Cache-Control: no-store`.
 

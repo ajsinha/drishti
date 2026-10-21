@@ -1460,7 +1460,14 @@ waiting run and whose), the result store (bytes against `store.max-bytes`, the f
 10th to 90th percentile of actual ÷ estimated seconds, the share of questions the planner could not size) and how often the inline wait was
 enough. Metrics: `drishti.bi.runs.submitted`, `finished`, `inline`, `reuse`, `seconds`, `estimate.ratio` (by `basis`) and
 `cancel.release`. Results live under `<data>/bi-runs` (back it up with the data folder or not at all: a missing result only makes its run
-`expired`). Settings: `config/runs/runs.yaml`.
+`expired`). Settings: `config/runs/runs.yaml`. Also on the page (the same answer): the interactive admission wait p95 over the last 5
+minutes (the fairness signal: it should stay in milliseconds while background runs are busy), accuracy by estimate basis, promoted
+snapshots' size, and **rollup suggestions**: a question asked as an ad-hoc heavy run `suggest.min-runs` times in `suggest.window`, each about
+`suggest.min-seconds` or more, is listed with its rollup drafted; *Accept* (`POST /api/v1/bi/admin/runs/suggestions/{id}/accept`) adds the
+rollup to the model's draft for review, *Dismiss* hides it; the decisions are kept in `<data>/bi-runs/suggestions.json`. Gauges:
+`drishti.bi.runs.queue`, `drishti.bi.runs.running`, `drishti.bi.runs.store.bytes` (`kind` results, snapshots); `GET /api/v1/bi/engine` has a
+`runs` part. Shared runs are re-decided at every read (a recipient whose rights narrowed is refused, never shown the wider answer); scheduled
+runs fire every 30 s at most as their owner, and an owner who lost access gets a failed firing and a notice.
 
 ### 13.1 The endpoints
 
