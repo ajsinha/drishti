@@ -347,6 +347,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_BI_TRANSFORM_CONSOLE_URL` | `drishti.bi.transform.console-url` | empty | (wave B) The console's Py-node endpoint base URL (`http://console:17480`): Transforms and Python measures run there (`/internal/py/*`). Empty: the server starts `transform_cli.py` itself. |
 | `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` | `drishti.bi.transform.console-token` | empty | (wave B) The shared secret sent as `X-Drishti-Runner-Token` on every Py-node call; the console refuses a call without it. |
 | `DRISHTI_BI_NODE` | `drishti.bi.exec.node` | empty | (wave B) This Java node's name when several Java nodes serve the site (`drishti.bi.exec.nodes` lists them); empty: one node. |
+| `DRISHTI_BI_RUNS_FILE` | `drishti.bi.runs.file` | `./config/runs/runs.yaml` | (2.6.7) The BI runs settings file ([BI runs](#bi-runs-configrunsrunsyaml)); a missing file means the defaults. |
 | `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | At start, converts stored items once: old-syntax expressions to DEL v2, then `rachana: 1` datasets to datasets and models with their reports rebound (each change audited, the text before kept in the item's history). `false`: a bi-admin runs `drishti.py bi migrate` instead ([drishti.bi.migrate](#drishtibimigrate--migrations-of-stored-bi-items)). |
 | `DRISHTI_BI_STORE` | `drishti.bi.query.store-dir` | `./data/bi-store` | The BI store: the typed Parquet layers (columns, rollups, live snapshots) the dataset query engine writes and reads, and DuckDB's spill folder. Rebuildable from the connectors; never commit it. |
 | `DRISHTI_PACKS_DIR` | `drishti.packs.dir` | `./config/packs` | The packs directory. If it does not exist and the old `./packs` does, `./packs` is used with a warning (one release). |
@@ -1476,6 +1477,41 @@ more than one ([OPERATIONS.md, Scale](OPERATIONS.md#bi-scale-wave-b)).
 | `connectors.<name>.max-fragments` | (`max-fragments`) | Per connector (its manifest name): the fragments it runs at once. |
 | `node` (`DRISHTI_BI_NODE`) | empty | This Java node's name when several Java nodes serve the site; empty: one node. |
 | `nodes.<name>` | (none) | Every Java node of the site, name to base URL (`nodes.java-1: http://10.0.0.5:18480`). Each model's shard (its live tables and standing queries) is owned by one node, chosen by consistent hashing over the names; another node forwards subscriptions to the owner (`503 DRS-9184` while the owner cannot be reached) and takes over a lost node's shards. *As built in 2.3.0:* the directory, forwarding and failover are proven with two nodes in one process; the HTTP transport between Java nodes is not built yet, so run one Java node. |
+| `background-share` | `0.25` | (2.6.7, BI runs) The most of the slots **background** work (BI runs, dataset refresh) holds at once: with 8 slots, 2. Refresh enters admission as background work. A waiting background run is never refused for busy; it waits its turn. |
+| `standing-share` | `0.25` | The most of the slots standing-query maintenance holds at once. With both shares at 0.25, at least half the slots are always free for interactive questions ([BI_RUNS.md section 10](../architecture/BI_RUNS.md#10-fairness-and-admission)). |
+| `fragments-share` | `0.5` | The most of a connector's `max-fragments` the layer builds of background work hold at once, so an interactive build of one date always finds a place. |
+
+### BI runs: `config/runs/runs.yaml`
+
+Every BI question can run as a bounded, visible job ([BI_RUNS.md](../architecture/BI_RUNS.md), API in [API_GUIDE.md](../guides/API_GUIDE.md#bi-runs-apiv1biruns-267)).
+Its settings have their own file; `application.yaml` holds only the pointer `drishti.bi.runs.file` (`DRISHTI_BI_RUNS_FILE`, default
+`./config/runs/runs.yaml`). Every key has its default, so a missing file or key means the default. Ready-made variants are in
+`config/runs.examples/` (`laptop.yaml`, `cluster.yaml`, `off.yaml`). Read at start; a change needs a restart.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` | `false`: `Prefer: respond-async` is ignored and every question answers synchronously as before 2.6.7; `POST /api/v1/bi/runs` answers `DRS-9006`. |
+| `inline.wait` | `2s` | How long a request waits before its run becomes a visible job. |
+| `inline.max-wait` | `10s` | The most a caller may ask for (`Prefer: wait=`). |
+| `interactive.max-seconds`, `max-rows`, `max-build-dates` | `10`, `50000000`, `2` | The bounds of the interactive tier (the planner, section 5). |
+| `confirm.above-seconds`, `above-rows`, `unknown`, `ttl` | `60`, `500000000`, `true`, `15m` | When an ad-hoc heavy run asks for confirmation first. |
+| `queue.per-user` | `5` | A person's background runs queued or running (`429 DRS-9081`). |
+| `queue.max` | `200` | All queued runs on this node (`DRS-9081`). |
+| `workers` | `2` | Background runs executing at once on this node (fair share: the next is the oldest of the person with the fewest running). |
+| `run.max-duration` | `4h` | A background run's own time budget (the engine's `drishti.bi.query.timeout` and `drishti.bi.exec.background` still apply). |
+| `engine.*` | `2GB`, `2`, `20GB`, `5000000000`, `0` | The run engine: `memory-limit`, `threads`, `max-spill`, `max-read-rows` (a background run's row budget), `prefer-external-above-seconds`. |
+| `store.dir` | `${drishti.data.dir}/bi-runs` | Where results are kept (`results/<xx>/<key>/answer.json`), under the data folder. On AWS a shared EFS folder at the same path on every node. |
+| `store.max-bytes`, `max-bytes-per-user` | `20GB`, `2GB` | The budget of unpromoted results (the sweeper removes the least recently opened first). |
+| `store.max-result-rows`, `max-result-bytes` | `50000000`, `2GB` | One result's limits (`413 DRS-9086`). |
+| `store.min-seconds`, `keep-interactive` | `1`, `true` | An interactive answer that took at least this long is stored for reuse by the same rights. |
+| `retention.days`, `max-days`, `sweep` | `30`, `365`, `1h` | A result is kept this long after its last open; *Keep longer* allows up to `max-days`; the sweeper runs at start and this often. |
+| `restart.resume-running`, `max-attempts`, `requeue-changed-model` | `true`, `2`, `false` | After a restart a queued or running run starts again as its runner, or fails `DRS-9085` with a reason. |
+| `lease.renew`, `lease.ttl` | `10s`, `45s` | The running node's lease on a run (a cluster). |
+| `cancel.grace` | `5s` | Admin flags a cancelled run whose resources are not released by then. |
+| `workspace-visibility` | `owner-and-shared` | `members`: workspace members see others' run rows, never results. |
+| `promote.enabled`, `versions-keep` | `true`, `5` | Promotion to a snapshot dataset. |
+| `notify.on` | `[done, failed]` | Which ends of a visible run put a `bi-run` notice on the bell. |
+| `suggest.min-runs`, `window`, `min-seconds` | `5`, `7d`, `60` | Repeated heavy questions become rollup suggestions. |
 
 ### `drishti.bi.plan` — the logical plan, the result cache and the guards
 

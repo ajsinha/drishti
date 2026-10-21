@@ -678,8 +678,34 @@ public final class RunService {
         return n;
     }
 
-    /** Stops the workers (shutdown); unfinished runs are recovered at the next start. */
+    private volatile Thread sweeper;
+
+    /** Sweeps the result store at start and every {@code retention.sweep} (section 8.4); removed results turn their runs {@code expired} when opened. */
+    public void startSweeper() {
+        Duration every = props.retention().sweep();
+        sweeper = Thread.ofVirtual().name("bi-runs-sweeper").start(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    List<String> removed = store.sweep(clock.instant());
+                    if (!removed.isEmpty()) {
+                        LOG.info("BI runs: the sweeper removed {} result(s) past retention or the budget", removed.size());
+                    }
+                    Thread.sleep(every.toMillis());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } catch (RuntimeException e) {
+                    LOG.warn("BI runs: the sweep failed: {}", e.getMessage());
+                }
+            }
+        });
+    }
+
+    /** Stops the workers and the sweeper (shutdown); unfinished runs are recovered at the next start. */
     public void close() {
         queue.close();
+        Thread t = sweeper;
+        if (t != null) {
+            t.interrupt();
+        }
     }
 }

@@ -308,9 +308,27 @@ public class RunsController {
         throw new DrishtiException(ErrorCode.RUN_NOT_DONE, "the run is " + r.state().wire() + ": nothing to confirm");
     }
 
-    @PostMapping("/runs/{id}/{action:export|share|promote|schedule}")
-    public ResponseEntity<?> notYet(@PathVariable String id, @PathVariable String action, @RequestBody(required = false) JsonNode body,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    @PostMapping("/runs/{id}/export")
+    public ResponseEntity<?> export(@PathVariable String id, @RequestBody(required = false) JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return notYet(id, "export", p);
+    }
+
+    @PostMapping("/runs/{id}/share")
+    public ResponseEntity<?> share(@PathVariable String id, @RequestBody(required = false) JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return notYet(id, "share", p);
+    }
+
+    @PostMapping("/runs/{id}/promote")
+    public ResponseEntity<?> promote(@PathVariable String id, @RequestBody(required = false) JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return notYet(id, "promote", p);
+    }
+
+    @PostMapping("/runs/{id}/schedule")
+    public ResponseEntity<?> schedule(@PathVariable String id, @RequestBody(required = false) JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return notYet(id, "schedule", p);
+    }
+
+    private ResponseEntity<?> notYet(String id, String action, Principal p) {
         bi.requirePower(p, BiAccess.BI);
         own(id, p);
         throw new DrishtiException(ErrorCode.BAD_REQUEST, "run " + action + " is not built yet (2.6.7 step R6): open the result and export it from the grid");

@@ -17,6 +17,22 @@
 
 ## Unreleased
 
+- **BI runs, the server (2.6.7, docs/architecture/BI_RUNS.md; steps R1, R2, R4, R5 and parts of R3, R7 and R8 as built in its section
+  18.2b).** Every BI question can be a bounded, visible job. `POST /api/v1/bi/mq`, `/models/{id}/query`, `/bi/sql` and `/reports/{id}/query`
+  accept `Prefer: respond-async[, wait=N]`: done within the wait (2 s) the answer is today's, with `X-Bi-Run`; otherwise `202 {run}` and the
+  run continues, visible, with a `bi-run` notice when it ends. Without the header nothing changes. New `/api/v1/bi/runs` endpoints (submit,
+  estimate, list, get, result, events, cancel, rerun, keep, delete result, settings, Admin's list and cancel); the run object of section 14.3.
+  A run is computed as its runner; its result is reused, and a running twin joined, only under the same key (question, security signature,
+  data version), so a result never crosses signatures (both orders tested). Background runs queue fairly (`workers`, `queue.per-user`,
+  `DRS-9081`) and run in the `BACKGROUND` class; a question too large for an interactive answer becomes a background run, and a dashboard
+  interaction that would need one is `DRS-9089`. Results are kept under `<data>/bi-runs` (FileSwap, retention and budget sweeper). At start
+  every unfinished run is started again as its runner or failed `DRS-9085` with a reason, and told. Admission gains class caps
+  (`drishti.bi.exec.background-share`, `standing-share`), dataset refresh enters it as background work, and background fragments take at most
+  `fragments-share` of a connector's pool. Settings in their own file `config/runs/runs.yaml` (examples in `config/runs.examples/`); the
+  `drishti_bi_run`, `drishti_bi_run_share` and `drishti_bi_run_schedule` tables in both identity schema files, kept identical by the new
+  `SchemaParityTest`. Metrics `drishti.bi.runs.*`. Not yet: the metadata planner and confirmation, the run engine (a second DuckDB),
+  Parquet and Arrow results, sharing, promotion, export, schedules and the cluster (forwarding, leases). `RunStateTest`, `RunsContractTest`,
+  `AdmissionClassCapTest`, `RunServiceTest`, `RunStoreTest`, `RunRecordsJdbcTest`.
 - **Chart any table (2.6.7, the console wiring; docs/architecture/TABLE_CHARTS.md section 24).** Every table can be drawn as a chart: a
   chart button in each table's heading and `K` on a focused table (`Shift`+`K` on a history page, where `k` is the previous day; `K` on a
   focused BI table or matrix, while `K` elsewhere on a report still toggles kiosk) open a wide dialog (full screen on a phone) with the

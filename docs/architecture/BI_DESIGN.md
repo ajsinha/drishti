@@ -756,6 +756,11 @@ signature (the report's visuals for its top signatures), so the first reader of 
 
 ### 6.3 Concurrency, fairness and memory
 
+*2.6.7 (BI runs, [BI_RUNS.md section 10](BI_RUNS.md#10-fairness-and-admission)):* admission has a cap per work class
+(`drishti.bi.exec.background-share`, `standing-share`, 0.25 each), so background work (runs, dataset refresh, which now enters admission as
+`BACKGROUND`) never holds the slots interactive questions need; background fragments take at most `fragments-share` of a connector's pool. A busy
+interactive question is `DRS-9025`.
+
 | Control | Setting (default) | Behaviour |
 |---|---|---|
 | global query slots | `drishti.bi.exec.slots` (2 × cores) | fragments beyond wait in a fair queue |

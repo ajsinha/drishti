@@ -73,6 +73,7 @@ public class RunsConfiguration {
         }
         Principals who = principals.getIfAvailable();
         runs.replay(r -> who == null ? Optional.empty() : sources.replay(r, who.of(r.runner())));
+        runs.startSweeper();
         try {
             runs.recover();
         } catch (RuntimeException ex) {
