@@ -71,8 +71,9 @@ final class RunAdmin {
         storage.put("maxBytes", props.store().maxBytes());
         storage.put("results", usage.get("results"));
         storage.put("oldest", usage.get("oldest"));
-        storage.put("snapshotsBytes", null);
-        storage.put("snapshots", null);
+        Map<String, Object> snaps = runs.store().snapshotsUsage();
+        storage.put("snapshotsBytes", snaps.get("bytes"));
+        storage.put("snapshots", snaps.get("snapshots"));
         storage.put("topUsers", usage.get("topUsers"));
         m.put("storage", storage);
 
@@ -90,7 +91,16 @@ final class RunAdmin {
             accuracy.put("p90", round(RunEstimator.percentile(ratios, 0.9)));
         }
         accuracy.put("samples", ratios.size());
-        accuracy.put("basis", null);
+        Map<String, Object> byBasis = new LinkedHashMap<>();                    // {basis: {medianRatio, samples}}: which estimates to trust
+        runs.stats.ratios().forEach((basis, rs) -> {
+            List<Double> sorted = new ArrayList<>(rs);
+            sorted.sort(Double::compare);
+            Map<String, Object> b = new LinkedHashMap<>();
+            b.put("medianRatio", sorted.isEmpty() ? null : round(RunEstimator.percentile(sorted, 0.5)));
+            b.put("samples", sorted.size());
+            byBasis.put(basis, b);
+        });
+        accuracy.put("basis", byBasis);
         long planned = runs.stats.planned.get();
         accuracy.put("unknownShare", planned == 0 ? null : round((double) runs.stats.unknown.get() / planned));
         m.put("accuracy", accuracy);

@@ -470,7 +470,8 @@ public class RunsController {
         Map<String, Object> admission = q == null || q.admission() == null ? null : q.admission().stats();
         List<Map<String, Object>> suggestions = runs().suggestions().of(runs().finishedLog(), Instant.now(), sources.rollupBuilt(p)).stream()
                 .map(RunSuggestions.Suggestion::toMap).toList();
-        return noStore(200, RunAdmin.of(runs(), admission, null, running.stream().map(r -> json(r, p)).toList(), suggestions));
+        Double p95 = q == null || q.admission() == null ? null : q.admission().interactiveWaitP95Ms(Duration.ofMinutes(5));
+        return noStore(200, RunAdmin.of(runs(), admission, p95, running.stream().map(r -> json(r, p)).toList(), suggestions));
     }
 
     /** Accepts a rollup suggestion (8.3a): the rollup is added to the model's draft, reviewed and published as any change. */

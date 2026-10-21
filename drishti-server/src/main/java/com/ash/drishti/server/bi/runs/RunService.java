@@ -234,6 +234,23 @@ public final class RunService {
         synchronized List<Double> jobSeconds() {
             return List.copyOf(jobSeconds);
         }
+
+        private final Map<String, java.util.ArrayDeque<Double>> byBasis = new LinkedHashMap<>();
+
+        /** A finished run's actual ÷ estimated seconds under its estimate's basis (Admin's accuracy by basis). */
+        synchronized void ratio(String basis, double r) {
+            java.util.ArrayDeque<Double> d = byBasis.computeIfAbsent(basis, b -> new java.util.ArrayDeque<>());
+            d.addLast(r);
+            while (d.size() > 200) {
+                d.removeFirst();
+            }
+        }
+
+        synchronized Map<String, List<Double>> ratios() {
+            Map<String, List<Double>> out = new LinkedHashMap<>();
+            byBasis.forEach((k, v) -> out.put(k, List.copyOf(v)));
+            return out;
+        }
     }
 
     final Stats stats = new Stats();
@@ -671,6 +688,7 @@ public final class RunService {
         if (p != null && f.q.planned() != null) {
             Double ratio = p.rates().finished(RunPlanner.LOCAL, f.q.planned().estimate(), seconds, f.q.planned().buildPath());   // the rates learn (4.4)
             if (ratio != null) {
+                stats.ratio(f.q.planned().estimate().basis().wire(), ratio);
                 metrics.estimateRatio(f.q.planned().estimate().basis().wire(), RunPlanner.LOCAL, ratio);
             }
         }
@@ -828,6 +846,29 @@ public final class RunService {
     public List<Run> list(String user, Instant before, int limit) {
         List<Run> out = new ArrayList<>(records.owned(user, before, limit));
         return out;
+    }
+
+    /** Runs queued on this node (the {@code drishti.bi.runs.queue} gauge). */
+    public int queued() {
+        Object q = queue.stats().get("queued");
+        return q instanceof Number n ? n.intValue() : 0;
+    }
+
+    /** Runs executing on this node now (the {@code drishti.bi.runs.running} gauge). */
+    public int running() {
+        Object q = queue.stats().get("running");
+        return q instanceof Number n ? n.intValue() : 0;
+    }
+
+    /** What {@code GET /api/v1/bi/engine} adds for runs: the queue, the workers and the engine runs execute on. */
+    public Map<String, Object> engineStats() {
+        Map<String, Object> m = new LinkedHashMap<>(queue.stats());
+        m.remove("byUser");                                                     // names stay in Admin → Runs
+        m.put("engine", "shared");                                              // no second DuckDB instance yet: the interactive engine, bounded by the class cap
+        m.put("memoryLimit", props.engine().memoryLimitBytes());
+        m.put("threads", props.engine().threads());
+        m.put("enabled", props.enabled());
+        return m;
     }
 
     /** The queue and the runs now (Admin). */

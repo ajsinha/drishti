@@ -94,6 +94,29 @@ public final class Admission {
     private final AtomicLong seq = new AtomicLong();
     private final AtomicLong refused = new AtomicLong();
     private final AtomicLong waitedNanos = new AtomicLong();
+    private final java.util.ArrayDeque<long[]> recent = new java.util.ArrayDeque<>();      // {when, waited} of interactive admissions, under the lock
+
+    /** The 95th percentile of the interactive admission wait over the last {@code window}, in milliseconds; null when none was admitted then. */
+    public Double interactiveWaitP95Ms(java.time.Duration window) {
+        long from = System.nanoTime() - window.toNanos();
+        List<Long> waits = new ArrayList<>();
+        lock.lock();
+        try {
+            for (long[] r : recent) {
+                if (r[0] - from >= 0) {
+                    waits.add(r[1]);
+                }
+            }
+        } finally {
+            lock.unlock();
+        }
+        if (waits.isEmpty()) {
+            return null;
+        }
+        waits.sort(Long::compare);
+        long p = waits.get(Math.min(waits.size() - 1, (int) Math.ceil(waits.size() * 0.95) - 1));
+        return Math.round(p / 1e5) / 10.0;
+    }
     private final Map<QueryContext.WorkClass, Integer> byClass = new java.util.EnumMap<>(QueryContext.WorkClass.class);
     private final int backgroundCap;
     private final int standingCap;
@@ -157,6 +180,12 @@ public final class Admission {
                 }
             }
             waitedNanos.addAndGet(w.granted - w.arrived);
+            if (w.cls == QueryContext.WorkClass.INTERACTIVE) {
+                recent.addLast(new long[] {System.nanoTime(), w.granted - w.arrived});   // the fairness signal (BI_RUNS 17.2)
+                while (recent.size() > 4096) {
+                    recent.removeFirst();
+                }
+            }
             return new Ticket(w);
         } finally {
             lock.unlock();

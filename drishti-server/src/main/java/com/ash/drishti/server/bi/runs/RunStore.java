@@ -178,6 +178,31 @@ public final class RunStore {
     }
 
     /** The bytes and count of stored results, the oldest open, and the five people whose results take most room (Admin, 17.2). */
+    /** The promoted snapshots under {@code snapshots/} (outside the budget, section 8.4): {@code {bytes, snapshots}}, a snapshot being one version folder. */
+    public Map<String, Object> snapshotsUsage() {
+        Path dir = root.resolve("snapshots");
+        long bytes = 0;
+        long versions = 0;
+        if (java.nio.file.Files.isDirectory(dir)) {
+            try (java.util.stream.Stream<Path> files = java.nio.file.Files.walk(dir)) {
+                for (Path f : (Iterable<Path>) files::iterator) {
+                    if (java.nio.file.Files.isRegularFile(f)) {
+                        bytes += java.nio.file.Files.size(f);
+                        if (f.getFileName().toString().equals("answer.json")) {
+                            versions++;
+                        }
+                    }
+                }
+            } catch (java.io.IOException e) {
+                // a folder removed while it was read: counted as it was
+            }
+        }
+        Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("bytes", bytes);
+        m.put("snapshots", versions);
+        return m;
+    }
+
     public Map<String, Object> usage() {
         long bytes = 0;
         int count = 0;

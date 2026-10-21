@@ -197,6 +197,17 @@ public class DatasetController {
     public Map<String, Object> engine(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.ADMIN);
         Map<String, Object> m = new LinkedHashMap<>(datasets.engine());
+        java.util.function.Supplier<Map<String, Object>> r = runs;
+        if (r != null) {
+            m.put("runs", r.get());                                               // BI runs: the queue, workers and the engine they run on (BI_RUNS 17.2)
+        }
         return m;
+    }
+
+    private volatile java.util.function.Supplier<Map<String, Object>> runs;
+
+    /** What {@code /engine} reports for BI runs (set by the runs wiring when runs are on). */
+    public void runs(java.util.function.Supplier<Map<String, Object>> stats) {
+        this.runs = stats;
     }
 }

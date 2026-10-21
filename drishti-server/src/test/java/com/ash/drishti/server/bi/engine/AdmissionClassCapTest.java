@@ -127,4 +127,16 @@ class AdmissionClassCapTest {
         assertThat(a.stats()).containsEntry("waiting", 0);
         held.close();
     }
+
+    @Test
+    void theInteractiveWaitP95IsMeasuredOverTheWindowAndBackgroundWaitsDoNotCount() {
+        Admission a = new Admission(8, 3, 1.0, 0.25, 0.25);
+        assertThat(a.interactiveWaitP95Ms(Duration.ofMinutes(5))).isNull();          // none admitted yet
+        a.enter("bg", "m", QueryContext.WorkClass.BACKGROUND, Duration.ofSeconds(1)).close();
+        assertThat(a.interactiveWaitP95Ms(Duration.ofMinutes(5))).isNull();
+        for (int i = 0; i < 20; i++) {
+            a.enter("u" + i, "m" + i, QueryContext.WorkClass.INTERACTIVE, Duration.ofSeconds(1)).close();
+        }
+        assertThat(a.interactiveWaitP95Ms(Duration.ofMinutes(5))).isNotNull().isGreaterThanOrEqualTo(0.0).isLessThan(1000.0);
+    }
 }

@@ -61,6 +61,7 @@ public class RunsConfiguration {
         ExecProperties e = exec.getIfAvailable();
         String node = e == null || e.node().isBlank() ? "local" : e.node();
         RunService runs = new RunService(props, records, new RunStore(props), Clock.systemUTC(), node, RunMetrics.of(meters.getIfAvailable()));
+        RunMetrics.gauges(meters.getIfAvailable(), runs);                       // queue, running, store.bytes (17.1)
         runs.planner(new RunPlanner(props.planner(), new RunRates(props.planner())));      // the planner (section 4), its rates learnt from runs
         com.ash.drishti.server.bi.engine.QueryService q = queries.getIfAvailable();
         if (q != null) {
@@ -72,7 +73,8 @@ public class RunsConfiguration {
     @Bean
     RunSources runSources(RunService runs, ModelCatalog catalog, MqService mq, SqlService sql, BiReportService reports, com.ash.drishti.server.bi.BiService bi,
             ObjectProvider<BiNotifier> notifier,
-            ObjectProvider<Principals> principals) {
+            ObjectProvider<Principals> principals, ObjectProvider<com.ash.drishti.server.bi.DatasetController> datasets) {
+        datasets.ifAvailable(c -> c.runs(runs::engineStats));               // GET /api/v1/bi/engine reports runs
         RunSources sources = new RunSources(runs, catalog, mq, sql, reports);
         BiNotifier n = notifier.getIfAvailable();
         if (n != null) {

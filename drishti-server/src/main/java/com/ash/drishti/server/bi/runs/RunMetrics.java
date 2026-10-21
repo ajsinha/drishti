@@ -39,6 +39,23 @@ public interface RunMetrics {
 
     RunMetrics NONE = new RunMetrics() {};
 
+    /** The gauges of 17.1: {@code drishti.bi.runs.queue} (class), {@code drishti.bi.runs.running} (engine), {@code drishti.bi.runs.store.bytes} (kind). */
+    static void gauges(MeterRegistry m, RunService runs) {
+        if (m == null || runs == null) {
+            return;
+        }
+        io.micrometer.core.instrument.Gauge.builder("drishti.bi.runs.queue", runs, r -> r.queued()).tag("class", "background").register(m);
+        io.micrometer.core.instrument.Gauge.builder("drishti.bi.runs.running", runs, r -> r.running()).tag("engine", "local").register(m);
+        io.micrometer.core.instrument.Gauge.builder("drishti.bi.runs.store.bytes", runs, r -> number(r.store().usage().get("bytes"))).tag("kind", "results")
+                .register(m);
+        io.micrometer.core.instrument.Gauge.builder("drishti.bi.runs.store.bytes", runs, r -> number(r.store().snapshotsUsage().get("bytes")))
+                .tag("kind", "snapshots").register(m);
+    }
+
+    private static double number(Object o) {
+        return o instanceof Number n ? n.doubleValue() : 0;
+    }
+
     /** Micrometer counters and timers: {@code drishti.bi.runs.*}. */
     static RunMetrics of(MeterRegistry m) {
         if (m == null) {
