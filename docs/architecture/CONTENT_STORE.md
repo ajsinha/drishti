@@ -147,13 +147,13 @@ concurrent saves give one conflict; owners stay isolated) and the import (idempo
 Already shared between nodes, not through this store: users, roles and API tokens (IdentitySync); `drishti_preference` (settings,
 saved searches, layouts, pivots, workspaces) and sessions (StateSync, ReplicatedPreferences).
 
-The ordered migration list (the inventory of content kept on one node only, 2026-10-21). Item 1 is done; the rest move one at a time
-behind the same interface:
+The ordered migration list (the inventory of content kept on one node only, 2026-10-21). Items 1 to 3 are done; the rest move one at a
+time behind the same interface:
 
 1. **Designer drafts** (Designs): done, section 5. Versions, About, form and share live inside the record; ids are random 12-hex.
-2. **BI workspaces and items:** `BiStore`, the `drishti_bi_*` tables (workspace, member, item, version, revision, event, user_item,
-   usage, setting).
-3. **BI runs:** the `drishti_bi_run*` rows, and results under `<data>/bi-runs`. Already forwarded by node id.
+2. **BI workspaces and items:** done, section 9. `BiStore`, the `drishti_bi_*` tables (workspace, member, item, version, revision, event,
+   user_item, usage, setting).
+3. **BI runs:** done, section 9. The `drishti_bi_run*` rows, and results and snapshots under `<data>/bi-runs`.
 4. **Notes:** `drishti_note`.
 5. **Collaboration:** threads, comments, mentions, follows, shares, inbox, outbox, holds and seals, access (JPA or `<data>/collab`).
 6. **Alerts and monitors:** NOT copied, on purpose (each node evaluates its own).
@@ -165,3 +165,73 @@ behind the same interface:
 
 Then: a read cache driven by `changes`, push for Postgres and S3, the root in the Drishti*net capability digest (section 6), and
 the optional Delta/Iceberg history sink (section 3).
+
+## 9. BI content and BI runs
+
+`drishti.bi.store` and `drishti.bi.runs.store` are `content` by default: BI workspaces, items and their history, and BI runs with their
+results, live in the content store, so every node of a cluster sees the same BI content and the same runs. `ContentBiStore` implements
+`BiStore` (now an interface; `JpaBiStore` is the old identity-database store), so `BiService` (workspace membership, item visibility,
+audiences, governance) is unchanged; `ContentRunRecords`, `ContentRunRecords.Shares`, `ContentRunRecords.Schedules` and `ContentRunStore`
+implement the runs' `RunRecords`, `RunShares`, `RunSchedules.Store` and `RunStore`, so run visibility, shares and the signature rule on
+results are unchanged.
+
+**Key layout.** Every segment is escaped (letters, digits, `-` and `.` kept, other bytes `_xx`; past 100 bytes a prefix and a hash);
+numbers are zero-padded to ten digits so keys sort.
+
+| Key | What |
+|---|---|
+| `bi/workspaces/<ws>.json` | a workspace |
+| `bi/members/<ws>/<user>.json` | one member of a shared workspace |
+| `bi/items/<item>.json` | an item with its draft body and catalogue fields |
+| `bi/history/<item>/versions/<n>.json` | a published version |
+| `bi/history/<item>/revisions/<seq>.json` | a saved state (every save, restore, publish, import) |
+| `bi/history/<item>/events/<seq>.json` | a governance event (request, approve, certify, ...) |
+| `bi/users/<user>/marks.json` | a person's favourites and last opens, by item |
+| `bi/usage/<yyyy-mm-dd>/<node>.json` | the views one node counted that day, by item (`imported.json`: the import's) |
+| `bi/settings/<name>.json` | a BI setting |
+| `bi/runs/rows/<run id>.json` | a run (the old `drishti_bi_run` row) |
+| `bi/runs/shares/<run id>/<recipient>.json` | a share of a run |
+| `bi/runs/schedules/<id>.json` | a scheduled run |
+| `bi/runs/results/<result key>/answer.json` | a result, with the signature it was computed for |
+| `bi/runs/results/<result key>/meta.json` | its owner, size and last open (the budget and the sweeper read only these) |
+| `bi/runs/snapshots/<name>/<version>.json` | a promoted snapshot |
+
+Item documents sit apart from their history (`bi/history/`) so listing the items reads item documents only.
+
+**Safe concurrent edits.** A read of an item or workspace remembers, for the request's thread, the version it returned (30 s); the save
+that follows is a compare-and-set against it. Two nodes (or two requests) saving the same item give one success and one `409 DRS-5057`
+(changed elsewhere: reload and try again), beside BI's own `baseEtag` check. A save of a key the thread has not read lately writes over
+what is there, as the database did. New revision and event numbers, and new snapshot versions, are taken by a create that must not exist
+yet, so two nodes never take the same number. Marks and the day's views are read-change-write loops on compare-and-set.
+
+**Listing and search.** The catalogue's listings (all items, a workspace's items, the published ones, all workspaces, the runs lists) come
+from a per-node snapshot of the prefix at most `drishti.bi.store-list-ttl` old (default `1s`); documents whose version did not change are not
+parsed again, and this node's own writes drop the snapshot at once. A single item, workspace or run is always read from the store. A
+listing on another node may lag by the TTL; an edit never does (the compare-and-set decides). Next: a snapshot refreshed from `changes`
+instead of a re-list, once `changes` is cheap on every backend (section 8).
+
+**Events and usage.** Governance events are per-item documents (`events/<seq>`): they are rare, belong to the item's audit trail, and must
+be the same on every node. Views are append-heavy, so each node counts into its own document per day (`bi/usage/<day>/<node>.json`): no two
+nodes write the same document, a write is a small compare-and-set on this node's segment, and `views` sums the segments of the days asked.
+
+**Runs across nodes.** A run's status and result read from any node (the row and the result are in the store); `RunForwardFilter` still
+sends a run's actions to the node that holds it, and is kept for nodes whose runs store is `local`. The lease is a compare-and-set on the
+run's document: `renew` writes only while the row still names this node, `adopt` only while it is still the dead node's with its lease
+lapsed, so exactly one node wins (BI_RUNS.md 13.3). A late save from a node that lost a run (a higher attempt on another node) is dropped.
+A due schedule is taken by one node (`claim`: a compare-and-set on its `nextAt`), so a schedule fires once in a cluster.
+
+**One-time import at start.** With `content`, the server imports, once, the identity database's `drishti_bi_*` rows (marker
+`system/imports/bi-jpa.json`) and the `drishti_bi_run`, `drishti_bi_run_share`, `drishti_bi_run_schedule` rows with the results and snapshots
+under `store.dir` (`<data>/bi-runs`; marker `system/imports/bi-runs.json`). Every document is created with "must be absent" (a rerun is
+harmless; a person's marks already in the store win); the marker keeps an item or run deleted later from coming back. The rows and the files
+are left in place.
+
+**One node back on the old stores.** `drishti.bi.store: jpa` and `drishti.bi.runs.store: local` put one node back on its identity database
+and `store.dir`; it then sees only its own BI content and runs (forwarding by node id still reaches the others' runs).
+
+**Tests.** `ContentBiStoreTest` (drishti-identity): two nodes on one filesystem root (a workspace and an item made on A are read, edited and
+published on B; marks, views and settings; delete), two saves of one item give one conflict, concurrent revisions never share a number, and
+the import (once; a deleted item stays deleted; nothing counted twice; the rows kept). `ContentRunsTest` (drishti-server): a run submitted on
+A has its status and result read on B (never across signatures); a dead node's run adopted by exactly one of two nodes through the lease and
+finished; renew only by the holder and a loser's late save dropped; a share made on A seen on B; a schedule claimed once; the import of rows
+and the result folder. `RunClusterTest` runs its two servers on one content store root.

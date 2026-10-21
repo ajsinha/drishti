@@ -971,7 +971,11 @@ forwarded to the run's node and streamed back.
   node = ? AND lease_until < now`) means exactly one node wins. The run starts again under the rules of 12.1 (attempts, access,
   model), and the runner is told "started again on java-1 after java-3 stopped". Only one node can own a run at a time: a node that
   comes back with a lapsed lease finds the row is no longer its own and abandons its copy (its `tmp/` is swept).
-* **Per-node database:** nobody else can see the row. The run's state is reported as unknown (13.2) until the node returns, and
+* **Shared content store (the default since the content store, CONTENT_STORE.md section 9):** the row is a document every node reads
+  (`bi/runs/rows/<id>.json`). The lease is a compare-and-set on it: `renew` writes only while the row names this node, `adopt` only while
+  it is still the dead node's with `lease_until` past, so exactly one node wins without a shared database. A late save from the node that
+  lost the run (another node holds a higher attempt) is dropped. Results are in the store too, so a run's status and result read from any node.
+* **Per-node database** (`drishti.bi.runs.store: local` on a node whose identity database is its own): nobody else can see the row. The run's state is reported as unknown (13.2) until the node returns, and
   12.1 then applies. The person can re-run it at once from another node ("Re-run elsewhere" on an unreachable run: a new run on
   the current owner, with `rerun_of` set).
 * A forwarded submit whose owner dies before answering is retried once on the new owner within the caller's wait. Runs are reads, so
@@ -1003,7 +1007,9 @@ single-flight, the rule `Layers` already applies to partition builds.
   nothing saved). With a shared database, each node adopts the runs of members that are not alive whose lease lapsed and whose model it
   owns now, by one conditional update (`RunRecords.adopt`: `node`, `attempt + 1`, `queued`, `WHERE node = <dead> AND lease_until < now`),
   then starts them again under 12.1 (attempts, access as the runner now), the reason "started again on <node> after <dead> stopped".
-  With a per-node database nobody else sees the row: its state is unknown (above) until the node returns.
+  With a per-node database nobody else sees the row: its state is unknown (above) until the node returns. With the content store (the
+  default) the same steps are compare-and-sets on the run's document (`ContentRunRecords`), and `RunForwardFilter` is kept for nodes whose
+  runs store is `local`.
 * Not built: the event relay does not pick up a member that joins after the stream opened (the console reopens the stream); with S6 the
   owner as coordinator (13.1, `engine: split`).
 * `RunClusterTest` (two servers in one JVM over one identity database, ports from `-Ddrishti.net.it.ports`): a heavy run submitted on the
