@@ -55,11 +55,14 @@ public class RunsConfiguration {
 
     @Bean(destroyMethod = "close")
     RunService runService(RunsProperties props, ObjectProvider<HikariDataSource> identity, ObjectProvider<ExecProperties> exec,
-            ObjectProvider<MeterRegistry> meters, ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> queries) {
+            ObjectProvider<MeterRegistry> meters, ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> queries,
+            ObjectProvider<com.ash.drishti.server.net.NetService> net) {
         HikariDataSource ds = identity.getIfAvailable();
         RunRecords records = ds == null ? new RunRecords.Memory() : new RunRecords.Jdbc(ds);
         ExecProperties e = exec.getIfAvailable();
-        String node = e == null || e.node().isBlank() ? "local" : e.node();
+        com.ash.drishti.server.net.NetService cluster = net.getIfAvailable();
+        String member = cluster == null ? "" : cluster.plannedNodeId();          // in a cluster, runs are named after the member (r-<node>-...): 13.2
+        String node = !member.isBlank() ? member : e == null || e.node().isBlank() ? "local" : e.node();
         RunService runs = new RunService(props, records, new RunStore(props), Clock.systemUTC(), node, RunMetrics.of(meters.getIfAvailable()));
         RunMetrics.gauges(meters.getIfAvailable(), runs);                       // queue, running, store.bytes (17.1)
         runs.planner(new RunPlanner(props.planner(), new RunRates(props.planner())));      // the planner (section 4), its rates learnt from runs

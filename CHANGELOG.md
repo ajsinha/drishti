@@ -17,6 +17,14 @@
 
 ## Unreleased
 
+- **BI runs on a Drishti*net cluster (2.6.7, BI_RUNS.md 13.4, DRISHTI_NET.md).** Runs are named after the member (`r-<node id>-…`).
+  `ShardDirectory` is wired to the members alive (`RunCluster`): a heavy run of a model another member owns is submitted there for the
+  caller (signed, one hop, on-behalf-of, so their masks hold); a run's result, cancel and actions go to the member that holds it
+  (`RunForwardFilter`, `502 DRS-5052` while it cannot be reached); `GET /runs` is scattered and merged (`nodes.failed`); run events are
+  relayed. Leases are renewed every `lease.renew`; with one identity database a dead member's unfinished runs are adopted by the model's
+  new owner once their lease lapsed, by one conditional update, and started again (attempt + 1); a node whose run was adopted abandons its
+  copy. `RunClusterTest` (two servers in one JVM).
+
 - **BI runs: a statement run interrupted by a restart is made again** as its runner from the request it was asked with (preview or
   file), instead of failing with `DRS-9085` (BI_RUNS.md 12.1, 18.2b R7). A replayed run keeps the runner's current signature, so its
   result reads back. `StatementReplayTest`.

@@ -599,6 +599,9 @@ public final class RunService {
 
     private void becomeVisible(Flight f) {
         f.visible = true;
+        Run.Builder lb = f.run.toBuilder();
+        lb.leaseUntil = clock.instant().plus(props.lease().ttl());                // the lease a node renews while it holds the run (13.3)
+        f.run = lb.build();
         records.save(f.run);
         publish(f.run);
     }
@@ -941,33 +944,122 @@ public final class RunService {
         for (Run r : records.onNode(node, UNFINISHED)) {
             n++;
             boolean wasRunning = r.state() == RunState.RUNNING || r.state() == RunState.STORING;
-            Optional<Question> q = props.restart().resumeRunning() && r.attempt() < props.restart().maxAttempts() ? replay.of(r) : Optional.empty();
-            if (q.isPresent() && r.state() != RunState.AWAITING_CONFIRM && r.state() != RunState.PLANNED) {
-                Run again = wasRunning ? r.moveTo(RunState.QUEUED, null, "started again after the server restarted at " + at + " UTC (attempt "
-                        + (r.attempt() + 1) + " of " + props.restart().maxAttempts() + ")", clock.instant()) : r;
-                Run.Builder rb = again.toBuilder();
-                rb.signature = q.get().signature();                            // computed as the runner now: the result is read with this signature
-                again = rb.build();
-                Flight f = new Flight(r.fingerprint(), q.get(), again);
-                f.background = true;
-                f.visible = true;
-                byRun.put(r.id(), f);
-                records.save(again);
-                publish(again);
-                tell(again, "Your run " + title(again) + " was started again after a server restart");
-                queue.offer(f, r.runner());
-                continue;
-            }
-            String why = r.attempt() >= props.restart().maxAttempts() && wasRunning
-                    ? "the server stopped while this ran, " + r.attempt() + " times; it may be too large for this server: narrow it or ask an administrator"
-                    : "the server restarted at " + at + " UTC while this run " + (wasRunning ? "ran" : "waited") + ", and it could not be started again: re-run it";
-            Run failed = r.moveTo(RunState.FAILED, ErrorCode.RUN_INTERRUPTED.code(), why, clock.instant());
-            records.save(failed);
-            publish(failed);
-            tell(failed, "Run failed: " + title(failed) + " (" + ErrorCode.RUN_INTERRUPTED.code() + ": the server restarted)");
+            resume(r, wasRunning, false, "started again after the server restarted at " + at + " UTC (attempt " + (r.attempt() + 1) + " of "
+                    + props.restart().maxAttempts() + ")", "the server restarted at " + at + " UTC while this run " + (wasRunning ? "ran" : "waited")
+                    + ", and it could not be started again: re-run it", "Your run %s was started again after a server restart", "the server restarted");
         }
         if (n > 0) {
             LOG.info("BI runs: {} unfinished run(s) of node {} recovered after the start", n, node);
+        }
+        return n;
+    }
+
+    /**
+     * Starts a row again on this node (a restart, 12.1, or an adoption, 13.3), when its question replays as its runner and it has attempts left; else
+     * fails it with DRS-9085 and {@code failedWhy}. A running row is moved to queued (attempt + 1) with {@code again}.
+     */
+    private void resume(Run r, boolean wasRunning, boolean adopted, String again, String failedWhy, String told, String failedTold) {
+        int before = adopted ? r.attempt() - 1 : r.attempt();                   // an adopted row was counted again by the conditional update
+        Optional<Question> q = props.restart().resumeRunning() && before < props.restart().maxAttempts() ? replay.of(r) : Optional.empty();
+        if (q.isPresent() && r.state() != RunState.AWAITING_CONFIRM && r.state() != RunState.PLANNED) {
+            Run moved = wasRunning ? r.moveTo(RunState.QUEUED, null, again, clock.instant()) : r;
+            Run.Builder rb = moved.toBuilder();
+            rb.signature = q.get().signature();                                // computed as the runner now: the result is read with this signature
+            rb.node = node;
+            rb.leaseUntil = clock.instant().plus(props.lease().ttl());
+            if (adopted) {
+                rb.reason = again;
+            }
+            moved = rb.build();
+            Flight f = new Flight(r.fingerprint(), q.get(), moved);
+            f.background = true;
+            f.visible = true;
+            byRun.put(r.id(), f);
+            records.save(moved);
+            publish(moved);
+            tell(moved, String.format(told, title(moved)));
+            queue.offer(f, r.runner());
+            return;
+        }
+        String why = before >= props.restart().maxAttempts() && (wasRunning || adopted)
+                ? "the server stopped while this ran, " + r.attempt() + " times; it may be too large for this server: narrow it or ask an administrator"
+                : failedWhy;
+        Run failed = r.moveTo(RunState.FAILED, ErrorCode.RUN_INTERRUPTED.code(), why, clock.instant());
+        records.save(failed);
+        publish(failed);
+        tell(failed, "Run failed: " + title(failed) + " (" + ErrorCode.RUN_INTERRUPTED.code() + ": " + failedTold + ")");
+    }
+
+    // ---- the cluster: leases and adoption (section 13.3) --------------------------------------------------------------
+
+    /**
+     * Renews the lease of every visible unfinished run this node holds; a run whose row another node holds now (it adopted it while this node was taken
+     * for dead) is abandoned here: its work stops and nothing of it is saved. The runs abandoned.
+     */
+    public int renewLeases() {
+        int abandoned = 0;
+        Instant until = clock.instant().plus(props.lease().ttl());
+        for (Flight f : List.copyOf(byRun.values())) {
+            if (!f.visible || f.run.state().finished() || !node.equals(f.run.node())) {
+                continue;
+            }
+            if (records.renew(f.run.id(), node, until)) {
+                f.lock.lock();
+                try {
+                    Run.Builder b = f.run.toBuilder();
+                    b.leaseUntil = until;
+                    f.run = b.build();
+                } finally {
+                    f.lock.unlock();
+                }
+                continue;
+            }
+            Optional<Run> row = records.get(f.run.id());
+            if (row.isPresent() && !node.equals(row.get().node())) {
+                abandoned++;
+                f.cancelReason = "adopted by " + row.get().node();
+                queue.remove(f);
+                Thread t = f.thread;
+                if (t != null) {
+                    t.interrupt();
+                }
+                f.done.cancel(false);
+                byKey.remove(f.key, f);
+                byRun.remove(f.run.id(), f);
+                LOG.info("BI runs: run {} is held by node {} now; this node abandons its copy", f.run.id(), row.get().node());
+            }
+        }
+        return abandoned;
+    }
+
+    /**
+     * Adopts the runs of nodes that are gone (section 13.3, a shared identity database): a run in queued, running or storing whose node is not alive and
+     * whose lease lapsed, and whose model this node owns now, is taken by one conditional update (exactly one node wins) and started again here under the
+     * rules of 12.1. The runs adopted.
+     */
+    public int adoptOrphans(java.util.function.Predicate<String> alive, java.util.function.Function<String, String> ownerOf) {
+        int n = 0;
+        Instant now = clock.instant();
+        for (Run r : records.inStates(RunRecords.LEASED, 500)) {
+            if (node.equals(r.node()) || alive.test(r.node()) || r.leaseUntil() == null || !r.leaseUntil().isBefore(now)) {
+                continue;
+            }
+            String key = ("mq".equals(r.sourceType()) || "sql".equals(r.sourceType())) && r.sourceId() != null ? r.sourceId() : r.id();
+            if (!node.equals(ownerOf.apply(key))) {
+                continue;
+            }
+            String why = "started again on " + node + " after " + r.node() + " stopped";
+            if (!records.adopt(r.id(), r.node(), node, now, why)) {
+                continue;                                                       // another node won, or the old one renewed in time
+            }
+            Run adopted = records.get(r.id()).orElse(null);
+            if (adopted == null) {
+                continue;
+            }
+            n++;
+            LOG.info("BI runs: run {} of node {} adopted by {} (attempt {})", r.id(), r.node(), node, adopted.attempt());
+            resume(adopted, false, true, why, r.node() + " stopped while this run " + (r.state() == RunState.QUEUED ? "waited" : "ran")
+                    + ", and it could not be started again here: re-run it", "Your run %s was " + why, r.node() + " stopped");
         }
         return n;
     }

@@ -637,6 +637,17 @@ stack, pictures of the real pages), as the product owner asked:
 - **Decided (product owner, 2026-10-18):** (4) a search, type-ahead or forwarded request goes **only to nodes the
   user's role may reach** (section 9).
 
+### BI runs on the cluster (2.6.7)
+
+A BI run ([BI_RUNS.md section 13](BI_RUNS.md#13-the-cluster)) is named after its member (`r-<node id>-…`). A heavy run of a model goes to
+the model's owner (rendezvous hashing over the members alive, `RunCluster`), sent for the caller like a forwarded view (signed, one hop,
+on-behalf-of: the owner computes it with the caller's rights). A run's result, cancel and other actions go to the node that holds it
+(`RunForwardFilter`); the person's run list is scattered to the members alive and merged, a node that does not answer listed in
+`nodes.failed`; run events are relayed. With one identity database for the cluster, a member that dies leaves its unfinished runs to the
+model's new owner once their lease lapsed (`config/runs/runs.yaml` `lease.renew`, `lease.ttl`): one conditional update decides which
+node adopts each. With a database per node, a dead member's runs are "unknown" until it returns. Members are always called at the
+address they advertise, never a loopback one. Tested by `RunClusterTest`.
+
 ## 19. As built
 
 Each phase as it was built, with anything that differs from the design above. The operator's guide is [NET.md](../admin/NET.md).

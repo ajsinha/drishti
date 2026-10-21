@@ -528,6 +528,15 @@ quiet, is a signed `GET /api/v1/net/ping` made alone: the upgrade happens once a
 (`NetPeerProtocolBench`, 64 users at once asking B for trade views that A holds, 4,000 requests, warm): HTTP/1.1 used up to 227 connections
 from B to A, p50 76 ms, p99 370 ms; HTTP/2 used **1**, p50 68 ms, p99 117 ms ([DRISHTI_NET.md](../architecture/DRISHTI_NET.md#the-transport-between-nodes-as-built-267)).
 
+### BI runs on the cluster (2.6.7)
+
+A heavy BI run ([BI_RUNS.md section 13](../architecture/BI_RUNS.md#13-the-cluster)) runs on its model's owner, chosen among the members
+alive; the console may ask any node. The run's id names its node (`r-<node id>-…`); its result and actions are answered by that node from
+any node, and the Runs tab lists your runs of every node (a node that does not answer is named in `nodes.failed`). To have a dead
+node's unfinished runs adopted by another, give the cluster **one identity database** (PostgreSQL); the lease is
+`config/runs/runs.yaml` `lease.renew` (10 s) and `lease.ttl` (45 s). With a database per node, a dead node's runs show as unknown until
+it returns: re-run them on another node.
+
 ## 8. The console and several servers
 
 With the cluster on, give the console several servers instead of one, so it always has one to fall back to

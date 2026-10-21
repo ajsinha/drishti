@@ -54,6 +54,18 @@ public interface RunRecords {
     /** The newest {@code done} run with this result key, if any. */
     Optional<Run> doneWithKey(String resultKey);
 
+    /** Unfinished rows whose node is {@code node}: queued, running or storing, the rows a lease covers (section 13.3). */
+    List<RunState> LEASED = List.of(RunState.QUEUED, RunState.RUNNING, RunState.STORING);
+
+    /** Renews the lease of a row this node still holds; false when the row is gone or another node holds it now (this node then abandons its copy). */
+    boolean renew(String id, String node, Instant until);
+
+    /**
+     * Adopts a dead node's run (section 13.3): one conditional update ({@code node = to, attempt + 1, state queued} where the row is still {@code from}'s, its
+     * lease lapsed and it is unfinished), so exactly one node wins; true for the winner.
+     */
+    boolean adopt(String id, String from, String to, Instant now, String reason);
+
     /** Runs in memory: tests and a server without an identity database. */
     final class Memory implements RunRecords {
         private final Map<String, Run> rows = new ConcurrentHashMap<>();
@@ -91,6 +103,34 @@ public interface RunRecords {
         @Override
         public Optional<Run> doneWithKey(String resultKey) {
             return where(r -> resultKey.equals(r.resultKey()) && r.state() == RunState.DONE, 1).stream().findFirst();
+        }
+
+        @Override
+        public synchronized boolean renew(String id, String node, Instant until) {
+            Run r = rows.get(id);
+            if (r == null || !node.equals(r.node())) {
+                return false;
+            }
+            Run.Builder b = r.toBuilder();
+            b.leaseUntil = until;
+            rows.put(id, b.build());
+            return true;
+        }
+
+        @Override
+        public synchronized boolean adopt(String id, String from, String to, Instant now, String reason) {
+            Run r = rows.get(id);
+            if (r == null || !from.equals(r.node()) || !LEASED.contains(r.state()) || r.leaseUntil() == null || !r.leaseUntil().isBefore(now)) {
+                return false;
+            }
+            Run moved = r.state() == RunState.QUEUED ? r : r.moveTo(RunState.QUEUED, null, reason, now);     // running or storing: attempt + 1
+            Run.Builder b = moved.toBuilder();
+            b.node = to;
+            b.attempt = r.attempt() + 1;
+            b.reason = reason;
+            b.leaseUntil = null;
+            rows.put(id, b.build());
+            return true;
         }
     }
 
@@ -229,6 +269,28 @@ public interface RunRecords {
         @Override
         public Optional<Run> doneWithKey(String resultKey) {
             return query("result_key = ? AND state = 'done'", 1, resultKey).stream().findFirst();
+        }
+
+        private int update(String sql, Object... args) {
+            try (Connection c = ds.getConnection(); PreparedStatement st = c.prepareStatement(sql)) {
+                for (int i = 0; i < args.length; i++) {
+                    set(st, i + 1, args[i]);
+                }
+                return st.executeUpdate();
+            } catch (SQLException e) {
+                throw new IllegalStateException("could not change a BI run: " + e.getMessage(), e);
+            }
+        }
+
+        @Override
+        public boolean renew(String id, String node, Instant until) {
+            return update("UPDATE drishti_bi_run SET lease_until = ? WHERE id = ? AND node = ?", ts(until), id, node) > 0;
+        }
+
+        @Override
+        public boolean adopt(String id, String from, String to, Instant now, String reason) {
+            return update("UPDATE drishti_bi_run SET node = ?, attempt = attempt + 1, state = 'queued', reason = ?, lease_until = NULL WHERE id = ? AND node = ?"
+                    + " AND lease_until < ? AND state IN (" + in(LEASED) + ")", to, reason, id, from, ts(now)) == 1;
         }
     }
 }

@@ -63,11 +63,87 @@ public class RunsController {
     private final RunSharing sharing;
     private final RunSchedules schedules;
     private final RunPromotion promotion;
+    private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.net.RunCluster> cluster;
+    private static final com.fasterxml.jackson.databind.ObjectMapper JSON = new com.fasterxml.jackson.databind.ObjectMapper();
+
+    /** The cluster when this node is a member of a running one and the request is this node's own client's (a forwarded one is answered here only). */
+    private com.ash.drishti.server.net.RunCluster cluster() {
+        com.ash.drishti.server.net.RunCluster c = cluster == null ? null : cluster.getIfAvailable();
+        return c != null && c.on() && !com.ash.drishti.server.net.NetCaller.fromPeer() ? c : null;
+    }
+
+    /**
+     * A heavy run of a model another node owns goes to that node (13.1): the same submit, for the caller (their rights there); its answer comes back as
+     * it is. A node that cannot be reached leaves the run here (runs are reads: running it here is always correct). Empty: run it here.
+     */
+    private Optional<ResponseEntity<?>> toOwner(RunService.Question q, JsonNode body, Duration wait, Principal p) {
+        com.ash.drishti.server.net.RunCluster c = cluster();
+        if (c == null || q.model() == null || q.model().isBlank()) {
+            return Optional.empty();
+        }
+        boolean heavy = q.planned() != null ? q.planned().tier() == Tier.AD_HOC_HEAVY : wait.isZero();
+        if (!heavy && !wait.isZero()) {
+            return Optional.empty();                                            // interactive and known heavy: answered here (asked queries are stateless)
+        }
+        String owner = c.owner(q.model());
+        if (owner.equals(c.self())) {
+            return Optional.empty();
+        }
+        try {
+            com.ash.drishti.net.transport.PeerHttp.Answer a = c.call(owner, "POST", "/api/v1/bi/runs", JSON.writeValueAsBytes(body), p, c.timeout());
+            if (a.status() == 502 || a.status() == 503) {
+                return Optional.empty();
+            }
+            String type = a.header("content-type");
+            return Optional.of(ResponseEntity.status(a.status()).header(HttpHeaders.CACHE_CONTROL, "no-store")
+                    .contentType(MediaType.parseMediaType(type == null ? "application/json" : type)).body(a.body()));
+        } catch (IOException e) {
+            return Optional.empty();                                            // the owner died before answering: this node runs it (13.3)
+        }
+    }
+
+    /** The caller's runs on the other nodes (13.2, a per-node database), each page as it answers; the nodes that did not answer in {@code failed}. */
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> scatter(String pathAndQuery, Principal p, List<String> failed) {
+        com.ash.drishti.server.net.RunCluster c = cluster();
+        List<Map<String, Object>> out = new java.util.ArrayList<>();
+        if (c == null) {
+            return out;
+        }
+        List<java.util.concurrent.Future<Map<String, Object>>> asks = new java.util.ArrayList<>();
+        List<String> peers = c.peers();
+        for (String peer : peers) {
+            asks.add(executor.submit(() -> {
+                com.ash.drishti.net.transport.PeerHttp.Answer a = c.call(peer, "GET", pathAndQuery, null, p, c.timeout());
+                if (a.status() != 200) {
+                    throw new IOException(peer + " answered " + a.status());
+                }
+                return JSON.readValue(a.body(), Map.class);
+            }));
+        }
+        for (int i = 0; i < peers.size(); i++) {
+            try {
+                Map<String, Object> page = asks.get(i).get(c.timeout().toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS);
+                if (page.get("runs") instanceof List<?> l) {
+                    l.forEach(x -> out.add((Map<String, Object>) x));
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                failed.add(peers.get(i));
+            } catch (java.util.concurrent.ExecutionException | java.util.concurrent.TimeoutException e) {
+                asks.get(i).cancel(true);
+                failed.add(peers.get(i));
+            }
+        }
+        return out;
+    }
     private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.dist.BiExporter> exporter;
 
     public RunsController(RunsProperties props, BiService bi, BiAccess access, RunSources sources, ExecutorService drishtiVirtualExecutor,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> queries, RunSharing sharing,
-            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.dist.BiExporter> exporter, RunSchedules schedules, RunPromotion promotion) {
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.dist.BiExporter> exporter, RunSchedules schedules, RunPromotion promotion,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.net.RunCluster> cluster) {
+        this.cluster = cluster;
         this.schedules = schedules;
         this.promotion = promotion;
         this.queries = queries;
@@ -171,6 +247,10 @@ public class RunsController {
         RunService.Question q = sources.of(p, body.path("source"), options);
         Duration wait = options.path("wait").isTextual() ? Duration.parse(options.path("wait").asText())
                 : options.path("wait").isNumber() ? Duration.ofMillis((long) (options.path("wait").asDouble() * 1000)) : props.inline().inlineWait();
+        Optional<ResponseEntity<?>> forwarded = toOwner(q, body, wait, p);
+        if (forwarded.isPresent()) {
+            return forwarded.get();
+        }
         RunService.Outcome o = runs().submit(q, new RunService.Options(wait, wait.isZero(), options.path("confirm").asBoolean(false)));
         if (o.inline()) {
             Map<String, Object> m = new LinkedHashMap<>();
@@ -203,7 +283,7 @@ public class RunsController {
     @GetMapping("/runs")
     public ResponseEntity<?> list(@RequestParam(required = false) String state, @RequestParam(required = false) String source,
             @RequestParam(required = false) String q, @RequestParam(defaultValue = "50") int limit, @RequestParam(required = false) String after,
-            @RequestParam(required = false) String since, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(required = false) String since, @RequestAttribute(Principal.ATTRIBUTE) Principal p, jakarta.servlet.http.HttpServletRequest req) {
         bi.requirePower(p, BiAccess.BI);
         int n = Math.max(1, Math.min(limit, 200));
         Instant before = null;
@@ -228,11 +308,26 @@ public class RunsController {
                 .limit(n + 1).toList();
         boolean more = page.size() > n;
         List<Run> shown = more ? page.subList(0, n) : page;
+        List<Map<String, Object>> rows = new java.util.ArrayList<>(shown.stream().map(r -> json(r, p)).toList());
+        List<String> failed = new java.util.ArrayList<>();
+        if (cluster() != null) {                                                // the person's runs on every node, merged by submittedAt (13.2)
+            java.util.Set<Object> have = new java.util.HashSet<>(rows.stream().map(r -> r.get("id")).toList());
+            for (Map<String, Object> r : scatter(req.getRequestURI() + (req.getQueryString() == null ? "" : "?" + req.getQueryString()), p, failed)) {
+                if (have.add(r.get("id"))) {
+                    rows.add(r);
+                }
+            }
+            rows.sort(java.util.Comparator.comparing((Map<String, Object> r) -> String.valueOf(r.get("submittedAt"))).reversed()
+                    .thenComparing(r -> String.valueOf(r.get("id")), java.util.Comparator.reverseOrder()));
+            more = more || rows.size() > n;
+            rows = new java.util.ArrayList<>(rows.subList(0, Math.min(n, rows.size())));
+        }
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("runs", shown.stream().map(r -> json(r, p)).toList());
-        m.put("next", more ? shown.get(shown.size() - 1).id() : null);
+        m.put("runs", rows);
+        m.put("next", more && !rows.isEmpty() ? rows.get(rows.size() - 1).get("id") : null);
         m.put("storage", runs().store().usage());
-        m.put("nodes", Map.of("failed", List.of()));
+        m.put("nodes", Map.of("failed", failed.stream().map(f -> Map.of("node", f, "reason", "node " + f
+                + " is not reachable: its runs' state is unknown until it returns")).toList()));
         return noStore(200, m);
     }
 
@@ -278,6 +373,7 @@ public class RunsController {
                 open.set(false);
             }
         });
+        relay(e, open, p);                                                      // the person's runs on the other nodes too (13.2)
         e.onCompletion(() -> {
             open.set(false);
             stop.run();
@@ -301,6 +397,38 @@ public class RunsController {
             }
         });
         return e;
+    }
+
+    /** Relays the {@code run} events of the caller's runs on every other node alive now into this stream, until it closes. */
+    private void relay(SseEmitter e, java.util.concurrent.atomic.AtomicBoolean open, Principal p) {
+        com.ash.drishti.server.net.RunCluster c = cluster();
+        if (c == null) {
+            return;
+        }
+        for (String peer : c.peers()) {
+            executor.execute(() -> {
+                try {
+                    java.net.http.HttpResponse<java.io.InputStream> s = c.stream(peer, "/api/v1/bi/runs/events", p);
+                    if (s.statusCode() != 200) {
+                        s.body().close();
+                        return;
+                    }
+                    try (java.io.BufferedReader in = new java.io.BufferedReader(new java.io.InputStreamReader(s.body(), java.nio.charset.StandardCharsets.UTF_8))) {
+                        String event = null;
+                        String line;
+                        while (open.get() && (line = in.readLine()) != null) {
+                            if (line.startsWith("event:")) {
+                                event = line.substring(6).strip();
+                            } else if (line.startsWith("data:") && "run".equals(event)) {
+                                e.send(SseEmitter.event().name("run").data(line.substring(5).strip()));
+                            }
+                        }
+                    }
+                } catch (IOException | IllegalStateException x) {
+                    // the peer or the client went away: the relay ends
+                }
+            });
+        }
     }
 
     @GetMapping("/runs/{id}")
