@@ -22,6 +22,14 @@
 - **The answer says each table's date (2.6.7 patch).** Answers carry `meta.dataAsOf` (`asked`, each table's date, `aligned`; `meta.asOf` is unchanged); the report's line says *Data as of D* (with *asked A: no later data*) or, when the tables differ, *Data as of: trades D1, prices D2 (asked A)*, and a visual or board tile whose tables differ says it in its foot, in the theme's warning colour.
 - **A report's `as-of` setting (2.6.7 patch):** `per-table` (the default), `aligned` (the newest date all of the visual's tables hold, for reconciliations), a fixed date, or a relative name (`last-business-day`, `previous-month`, ...); checked as `DRS-9030`; REPORTS.md section 7.1. A visual pinned to a past date is asked once, not followed.
 
+- **Fixed (2.6.7 patch): on a console of several servers every followed visual said "Not updating · old: stream refused".** A standing query is held
+  by the node that took `POST /api/v1/bi/mq/subscribe`, but the stream (`GET /mq/stream`) went to whichever server the console worker that holds
+  the browser's channel used, and that node refused it (`DRS-9180`); the console dropped the server's answer and said "stream refused". Now a
+  subscription's id names its node (`sq-<node>-<hex>`, as a run's `r-<node>-...`): the console opens the stream on that node's server, and any
+  node relays the stream (and a close) from the holder, as the subscriber. A refusal reaches the page with the server's code and reason; on
+  `DRS-9180` (the holder restarted) the page subscribes again once and reconnects. The visual's foot says *Reconnecting*, or *Not updating*
+  with the reason in words (no "old:").
+
 - **Fixed: a report's visuals failed `DRS-9025` ("you already have 3 queries running") once they became runs.** A report of eight visuals is eight runs and a person's cap (`drishti.bi.query.max-concurrent-per-user`, 3) admits three at once; the others waited the ad-hoc query's 2 s for a place and failed. A run now waits for its place as long as it may run (`max-duration`), so the rest queue and draw in turn.
 
 ## 2.6.7 — BI runs, chart any table, Delta and Iceberg side by side, gossip on its own port and HTTP/2; with 2.6.6, the QA release (2026-10-21)

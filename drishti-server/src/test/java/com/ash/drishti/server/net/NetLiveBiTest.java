@@ -74,6 +74,27 @@ class NetLiveBiTest {
                       - { id: total, type: card, title: Notional, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }
                       - { id: by-desk, type: bar, title: Notional by desk, at: { x: 0, y: 2, w: 6, h: 4 }, wells: { axis: [trades.DESK], values: [Notional] } }
                 """);
+        Files.createDirectories(folder.resolve("models"));
+        Files.writeString(folder.resolve("datasets/lake-trade.dataset.yaml"), """
+                rachana: 2
+                dataset: lake-trade
+                version: 1.0.0
+                source: { connector: rep-lake, kind: trade }
+                grain: { keys: [TRADE_ID] }
+                columns:
+                  TRADE_ID: { type: string }
+                  DESK:     { type: string }
+                  NOTIONAL: { type: decimal, aggregate: sum }
+                """);
+        Files.writeString(folder.resolve("models/lake-model.model.yaml"), """
+                rachana: 2
+                model: lake-model
+                version: 1.0.0
+                datasets:
+                  trades: { dataset: lake-trade, role: fact }
+                measures:
+                  Notional: { expr: "sum(trades.NOTIONAL)" }
+                """);
         List<String> lines = new ArrayList<>();
         for (int i = 0; i < 30; i++) {
             lines.add("{\"TRADE_ID\":\"LK-" + i + "\",\"DESK\":\"DESK-" + (i % 3) + "\",\"NOTIONAL\":" + 1000.0 * (i + 1) + ",\"LEGAL_ENTITY\":\"LE-NORTH\"}");
@@ -145,6 +166,34 @@ class NetLiveBiTest {
         assertThat(framed).as("events seen: %s; B sent: %s", events, cluster.node("b").bean(ForwardLog.class).recent()).isTrue();
         long relays = cluster.node("b").bean(ForwardLog.class).recent().stream().filter(c -> c.what().equals("stream") && c.outcome().equals("ok")).count();
         assertThat(relays).isPositive();
+    }
+
+    /** The console subscribes through one server and opens the stream through another (its workers fail over apart): the stream is relayed from the holder. */
+    @Test
+    void aStandingQuerySubscribedOnAStreamsOnBAndOneNoLongerHeldSaysDrs9180() throws Exception {
+        String q = "{\"query\":{\"mq\":1,\"model\":\"lake-model\",\"select\":{\"measures\":[\"Notional\"]}},\"throttle\":\"250ms\"}";
+        var sub = cluster.call("POST", cluster.node("a").url() + "/api/v1/bi/mq/subscribe", q);
+        assertThat(sub.statusCode()).as(sub.body()).isEqualTo(200);
+        String id = JSON.readTree(sub.body()).path("subscription").asText();
+        String nodeA = cluster.node("a").net().nodeId();
+        assertThat(id).startsWith("sq-" + nodeA + "-");
+
+        HttpClient http = HttpClient.newHttpClient();
+        HttpResponse<java.io.InputStream> r = http.send(HttpRequest.newBuilder(URI.create(cluster.node("b").url() + "/api/v1/bi/mq/stream?ids=" + id))
+                .header("Accept", "text/event-stream").build(), HttpResponse.BodyHandlers.ofInputStream());
+        assertThat(r.statusCode()).as("the stream of A's subscription opened on B").isEqualTo(200);
+        try (var lines = new BufferedReader(new InputStreamReader(r.body(), StandardCharsets.UTF_8))) {
+            assertThat(lines.readLine()).isEqualTo("event:status");
+            assertThat(lines.readLine()).contains(id);
+        }
+
+        var drop = cluster.call("DELETE", cluster.node("b").url() + "/api/v1/bi/mq/subscribe/" + id, null);      // closed through B: closed on A
+        assertThat(drop.statusCode()).isEqualTo(204);
+        var again = cluster.call("GET", cluster.node("b").url() + "/api/v1/bi/mq/stream?ids=" + id, null);        // as after A restarted: A holds it no more
+        assertThat(again.statusCode()).as(again.body()).isEqualTo(404);
+        assertThat(JSON.readTree(again.body()).path("code").asText()).isEqualTo("DRS-9180");
+        var onA = cluster.call("GET", cluster.node("a").url() + "/api/v1/bi/mq/stream?ids=" + id, null);
+        assertThat(onA.statusCode()).isEqualTo(404);
     }
 
     @Test

@@ -646,26 +646,33 @@ class BackendClient:
         """The server's business date: current, selected (rolled back to a business day), live, holidays."""
         return await self._get("/business-date", ident)
 
-    async def sse(self, path: str, ident=None, opened: list | None = None):
+    async def sse(self, path: str, ident=None, opened: list | None = None, node: str | None = None):
         """Yields ``(event, data)`` from any server SSE endpoint under /api/v1. The open response is appended to
-        ``opened`` when given, so a caller can close it from another task to end the stream."""
+        ``opened`` when given, so a caller can close it from another task to end the stream. ``node``: the cluster node the stream belongs
+        to (a standing query's holder, named in its id): opened on that server while the pool has it usable, so a subscription and its stream
+        go through the same server whichever console worker serves them."""
         headers = {"Accept": "text/event-stream", **(ident.headers() if ident is not None else {}), **asof.headers()}
-        async for pair in self._events("/api/v1" + path, None, headers, opened):
+        async for pair in self._events("/api/v1" + path, None, headers, opened, node=node):
             yield pair
 
-    async def _events(self, path: str, params: dict | None, headers: dict, opened: list | None):
+    async def _events(self, path: str, params: dict | None, headers: dict, opened: list | None, node: str | None = None):
         """An SSE stream's ``(event, data)`` pairs. Through the server pool a stream that cannot open, or breaks, counts against its server, so
-        the browser's reconnect (it reconnects by itself) opens the stream on the next server once that one is set aside."""
-        base = self._base()
+        the browser's reconnect (it reconnects by itself) opens the stream on the next server once that one is set aside. A refusal is raised
+        with the server's own code and reason (DRS-9180 "you hold no standing query", say), never a bare "stream refused"."""
+        pinned = self._servers.for_node(node) if self._servers is not None and node and hasattr(self._servers, "for_node") else None
+        base = pinned or self._base()
         try:
             async with self._client.stream("GET", base + path, params=params, timeout=None, headers=headers) as r:
                 if opened is not None:
                     opened.append(r)
                 if r.status_code >= 400:
-                    text = (await r.aread()).decode("utf-8", "replace") if r.status_code in (502, 503) else ""
+                    text = (await r.aread()).decode("utf-8", "replace")
                     if self._servers is not None and r.status_code in (502, 503) and not peer_problem(r.status_code, r.headers.get("content-type", ""), text):
                         self._servers.failed(base, f"HTTP {r.status_code}")
-                    raise BackendError(r.status_code, "DRS-5003", "stream refused")
+                    err = _error(r, text)
+                    if err.code.startswith("HTTP-"):
+                        err.code, err.detail = "DRS-5003", f"the server refused the stream (HTTP {r.status_code})"
+                    raise err
                 event, data = None, []
                 async for line in r.aiter_lines():
                     if line.startswith("event:"):

@@ -18,12 +18,10 @@ package com.ash.drishti.server.bi.mq;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.server.bi.engine.GenerationBus;
 import com.ash.drishti.server.security.Principal;
-import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,8 +79,6 @@ public final class StandingQueries implements AutoCloseable {
             };
         }
     }
-
-    private static final SecureRandom RANDOM = new SecureRandom();
 
     private final Models catalog;
     private final MqService mq;
@@ -172,7 +168,14 @@ public final class StandingQueries implements AutoCloseable {
 
     /** Subscribes the caller to a query: the first answer and the cursor it is at (the group's, when another reader of the same signature holds it already). */
     public Map<String, Object> subscribe(Principal p, ModelQuery q, Duration throttle, String deliver) {
-        return subscribe(p, q, throttle, deliver, "sq_" + HexFormat.of().formatHex(bytes()));
+        return subscribe(p, q, throttle, deliver, StandingId.next(node));
+    }
+
+    private volatile String node;
+
+    /** The name of this node on a cluster (its subscriptions' ids name it, so any node relays their stream from here); null off a cluster. */
+    public void node(String name) {
+        this.node = name;
     }
 
     /**
@@ -237,12 +240,6 @@ public final class StandingQueries implements AutoCloseable {
         out.put("mode", g.mode());
         out.put("subscribers", g.members());
         return out;
-    }
-
-    private static byte[] bytes() {
-        byte[] b = new byte[8];
-        RANDOM.nextBytes(b);
-        return b;
     }
 
     static String cursor(long g) {

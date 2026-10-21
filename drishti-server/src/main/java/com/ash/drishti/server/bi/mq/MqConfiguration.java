@@ -102,7 +102,8 @@ public class MqConfiguration {
 
     @Bean
     public MqController mqController(ModelCatalog catalog, MqService mq, StandingQueries standing, BiService bi, Entitlements entitlements, BiLiveProperties live,
-            ExecutorService drishtiVirtualExecutor, org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs) {
-        return new MqController(catalog, mq, standing, bi, entitlements, live, drishtiVirtualExecutor, runs);
+            ExecutorService drishtiVirtualExecutor, org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs,
+            org.springframework.beans.factory.ObjectProvider<StandingHolders> holders) {
+        return new MqController(catalog, mq, standing, bi, entitlements, live, drishtiVirtualExecutor, runs, holders);
     }
 }

@@ -21,7 +21,7 @@
                                             dates, yes or no) and its calculation groups as "Show as"; the values ride on the query as MQ v2 `params` and `calc`.
      B.consume.follow(mq, o)                a standing query (POST /mq/subscribe) whose answers the server PUSHES over the console's one channel (GET /mq/stream as
                                             `mq:<id>`): nothing polls. o.onAnswer gets {rows | diff | value, cursor, mode}; o.onState the state.
-     B.consume.chip(frame)                  the state chip under a visual: Live, Throttled, Every few seconds (tick), Stale, Not updating, or As of a date. Words and an
+     B.consume.chip(frame)                  the state chip under a visual: Live, Throttled, Every few seconds (tick), Stale, Reconnecting, Not updating, or As of a date. Words and an
                                             icon, never colour alone.
      B.consume.explain(frame, mq)           the Explain panel under a visual: the plan's tiers (source, Java, console), each scan's layer, the timings and the plan as
                                             text, from the server's options.explain (masked predicates and other readers' rules are never shown).
@@ -165,32 +165,54 @@
    * States: connecting, live, throttled, tick, stale, failed. @returns {close(), id()}
    */
   C.follow = function (mq, o) {
-    let sq = null, off = null, closed = false, heard = Date.now(), state = 'connecting', changed = 0;
+    let sq = null, off = null, closed = false, heard = Date.now(), state = 'connecting', changed = 0, again = false;
     const set = (s, why, info) => { state = s; if (o.onState) { o.onState(s, why || '', info || {}); } };
     const stale = (o.staleSeconds || 30) * 1000;
     const timer = window.setInterval(() => {
       if (!closed && sq && (state === 'live' || state === 'quiet' || state === 'throttled' || state === 'tick') && Date.now() - heard > stale) { set('stale', 'nothing heard for ' + Math.round((Date.now() - heard) / 1000) + ' s'); }
       else if (!closed && sq && state === 'live' && Date.now() - changed > LIVE_FOR) { set('quiet', 'Following: no change for ' + Math.round((Date.now() - changed) / 1000) + ' s'); }
     }, 1000);
-    B.api('POST', '/mq/subscribe', { query: mq, throttle: o.throttle || '1s', deliver: o.deliver || 'rows' }).then((r) => {
-      if (closed) { drop(r.subscription); return; }
-      sq = r.subscription;
-      heard = Date.now();
-      set(r.mode === 'tick' ? 'tick' : 'quiet', '', r);                 // Live only once changes flow: subscribed and waiting is Listening
-      if (!window.DrishtiChannel) { set('failed', 'the console\'s live channel did not load'); return; }
-      off = window.DrishtiChannel.subscribe('mq:' + sq, {
-        answer(d) { heard = changed = Date.now(); if (state !== 'throttled') { set(d && d.mode === 'tick' ? 'tick' : 'live', '', d); } if (o.onAnswer) { o.onAnswer(d || {}); } },
-        status(d) { heard = Date.now(); d = d || {}; set(d.state === 'failed' ? 'failed' : d.state === 'throttled' ? 'throttled' : d.state === 'tick' || d.mode === 'tick' ? 'tick' : Date.now() - changed < LIVE_FOR ? 'live' : 'quiet', d.error || d.reason || '', d); },
-        gone(d) { set('failed', (d && d.detail) || 'the stream ended'); },
-        error() { set('stale', 'the connection to the console dropped; trying again'); }
-      });
-    }, (e) => (FULL[e.code] ? set('full', FULL[e.code], { code: e.code }) : set('failed', e.detail || e.message, { code: e.code })));
+    /** The server no longer holds the subscription (DRS-9180: it restarted, or the node that held it left): subscribed again, once, then reconnected. */
+    const lost = (d) => {
+      if (closed) { return; }
+      if (d && d.code === 'DRS-9180' && !again) {
+        again = true;
+        if (off) { off(); off = null; }
+        sq = null;
+        set('reconnecting', 'The server no longer held this live query (it restarted?); asking it again');
+        subscribe();
+        return;
+      }
+      set('failed', C.reason(d), { code: d && d.code });
+    };
+    function subscribe() {
+      B.api('POST', '/mq/subscribe', { query: mq, throttle: o.throttle || '1s', deliver: o.deliver || 'rows' }).then((r) => {
+        if (closed) { drop(r.subscription); return; }
+        sq = r.subscription;
+        heard = Date.now();
+        set(r.mode === 'tick' ? 'tick' : 'quiet', '', r);                 // Live only once changes flow: subscribed and waiting is Listening
+        if (!window.DrishtiChannel) { set('failed', 'the console\'s live channel did not load'); return; }
+        off = window.DrishtiChannel.subscribe('mq:' + sq, {
+          answer(d) { again = false; heard = changed = Date.now(); if (state !== 'throttled') { set(d && d.mode === 'tick' ? 'tick' : 'live', '', d); } if (o.onAnswer) { o.onAnswer(d || {}); } },
+          status(d) { again = false; heard = Date.now(); d = d || {}; set(d.state === 'failed' ? 'failed' : d.state === 'throttled' ? 'throttled' : d.state === 'tick' || d.mode === 'tick' ? 'tick' : Date.now() - changed < LIVE_FOR ? 'live' : 'quiet', d.error || d.reason || '', d); },
+          gone: lost,
+          error() { set('stale', 'the connection to the console dropped; trying again'); }
+        });
+      }, (e) => (FULL[e.code] ? set('full', FULL[e.code], { code: e.code }) : set('failed', C.reason(e), { code: e.code })));
+    }
+    subscribe();
     return { close() { closed = true; window.clearInterval(timer); if (off) { off(); } if (sq) { drop(sq); } }, id: () => sq, state: () => state };
+  };
+  /** Why a followed visual stopped, in words: the server's reason without its code, never a bare code or "stream refused". */
+  C.reason = function (e) {
+    const code = (e && e.code) || '', text = String((e && (e.detail || e.message)) || '').replace(/^DRS-\d{4}\s+/, '').trim();
+    if (code === 'DRS-9180') { return 'the server no longer holds this live query; reload the page to follow it again'; }
+    return text || 'the stream ended';
   };
 
   // ---- the state chip --------------------------------------------------------------------------------------------------------
-  const WORDS = { connecting: 'Connecting', live: 'Live', quiet: 'Listening', throttled: 'Throttled', tick: 'Every few seconds', stale: 'Stale', failed: 'Not updating', full: 'Too many live queries: close a tab', asof: 'As of', window: 'Window', once: 'Asked once' };
-  const ICONS = { connecting: 'hourglass-split', live: 'broadcast', quiet: 'pause-circle', throttled: 'speedometer2', tick: 'clock-history', stale: 'exclamation-triangle', failed: 'x-octagon', full: 'stack', asof: 'calendar-event', window: 'calendar-range', once: 'check2' };
+  const WORDS = { connecting: 'Connecting', reconnecting: 'Reconnecting', live: 'Live', quiet: 'Listening', throttled: 'Throttled', tick: 'Every few seconds', stale: 'Stale', failed: 'Not updating', full: 'Too many live queries: close a tab', asof: 'As of', window: 'Window', once: 'Asked once' };
+  const ICONS = { connecting: 'hourglass-split', reconnecting: 'arrow-repeat', live: 'broadcast', quiet: 'pause-circle', throttled: 'speedometer2', tick: 'clock-history', stale: 'exclamation-triangle', failed: 'x-octagon', full: 'stack', asof: 'calendar-event', window: 'calendar-range', once: 'check2' };
   /** The chip under a visual (in its frame's foot); `set(state, why, info)`. */
   C.chip = function (frame) {
     let el = frame.foot.querySelector('.bi-state-chip');

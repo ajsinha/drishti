@@ -69,6 +69,7 @@ public class MqController {
     private final ExecutorService executor;
     private final ObjectMapper json = new ObjectMapper();
     private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs;
+    private final org.springframework.beans.factory.ObjectProvider<StandingHolders> holders;
 
     public MqController(ModelCatalog catalog, MqService mq, StandingQueries standing, BiService bi, Entitlements entitlements, BiLiveProperties live, ExecutorService executor) {
         this(catalog, mq, standing, bi, entitlements, live, executor, null);
@@ -77,6 +78,14 @@ public class MqController {
     /** With BI runs: {@code Prefer: respond-async} answers as {@code POST /api/v1/bi/runs} does (docs/architecture/BI_RUNS.md section 6). */
     public MqController(ModelCatalog catalog, MqService mq, StandingQueries standing, BiService bi, Entitlements entitlements, BiLiveProperties live, ExecutorService executor,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs) {
+        this(catalog, mq, standing, bi, entitlements, live, executor, runs, null);
+    }
+
+    /** On a cluster: a standing query's stream or close asked of a node that does not hold it is relayed from the one that does ({@link StandingHolders}). */
+    public MqController(ModelCatalog catalog, MqService mq, StandingQueries standing, BiService bi, Entitlements entitlements, BiLiveProperties live, ExecutorService executor,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.runs.RunSources> runs,
+            org.springframework.beans.factory.ObjectProvider<StandingHolders> holders) {
+        this.holders = holders;
         this.runs = runs;
         this.catalog = catalog;
         this.mq = mq;
@@ -295,13 +304,109 @@ public class MqController {
         if (body.has("throttle") && throttle == null) {
             throw new MqException(MqException.Problem.of("DRS-9150", "throttle", "a throttle such as 250ms or 1s"));
         }
+        StandingHolders h = holders();
+        standing.node(h == null ? null : h.self());                          // on a cluster the id names this node: any node relays its stream from here
         return standing.subscribe(p, query, throttle, body.path("deliver").asText("rows"));
     }
 
     @DeleteMapping("/mq/subscribe/{id}")
-    public ResponseEntity<Void> unsubscribe(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public ResponseEntity<Void> unsubscribe(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p, jakarta.servlet.http.HttpServletRequest req) {
+        String node = heldElsewhere(List.of(id), req);
+        if (node != null) {
+            try {
+                holders().delete(node, "/api/v1/bi/mq/subscribe/" + java.net.URLEncoder.encode(id, java.nio.charset.StandardCharsets.UTF_8), p);
+            } catch (IOException e) {
+                // the holder is gone, and the subscription with it
+            }
+            return ResponseEntity.noContent().build();
+        }
         standing.unsubscribe(p, id);
         return ResponseEntity.noContent().build();
+    }
+
+    private StandingHolders holders() {
+        StandingHolders h = holders == null ? null : holders.getIfAvailable();
+        return h == null || h.self() == null ? null : h;
+    }
+
+    /** The node that holds every one of {@code ids} when that is another node (and this request is not itself relayed); null when they are asked here. */
+    private String heldElsewhere(List<String> ids, jakarta.servlet.http.HttpServletRequest req) {
+        StandingHolders h = holders();
+        if (h == null || ids.isEmpty() || h.forwarded(req)) {
+            return null;
+        }
+        java.util.Set<String> nodes = new java.util.HashSet<>();
+        for (String id : ids) {
+            nodes.add(StandingId.node(id).orElse(""));
+        }
+        String node = nodes.size() == 1 ? nodes.iterator().next() : "";
+        return node.isEmpty() || node.equals(h.self()) ? null : node;
+    }
+
+    /**
+     * The stream of subscriptions another node holds, relayed from it as the caller (the holder checks they are the subscriber's). A holder that cannot be
+     * reached, or no longer holds them (it restarted), answers {@code DRS-9180}: the console subscribes again.
+     */
+    private SseEmitter relay(String node, List<String> ids, Principal p) {
+        StandingHolders h = holders();
+        String gone = "the node that holds this standing query (" + node + ") cannot be reached: subscribe again";
+        if (!h.alive(node)) {
+            throw new MqException(MqException.Problem.of("DRS-9180", "ids", gone));
+        }
+        java.net.http.HttpResponse<java.io.InputStream> r;
+        try {
+            r = h.stream(node, "/api/v1/bi/mq/stream?ids=" + java.net.URLEncoder.encode(String.join(",", ids), java.nio.charset.StandardCharsets.UTF_8), p);
+        } catch (IOException e) {
+            throw new MqException(MqException.Problem.of("DRS-9180", "ids", gone));
+        }
+        if (r.statusCode() != 200) {
+            String code = "DRS-9180";
+            String detail = "node " + node + " does not hold this standing query any more (it restarted?): subscribe again";
+            try (java.io.InputStream in = r.body()) {
+                JsonNode j = json.readTree(in.readNBytes(64 * 1024));
+                code = j.path("code").asText(code);
+                detail = j.path("detail").asText(detail);
+            } catch (IOException | RuntimeException e) {
+                // not a problem body: the default words stand
+            }
+            throw new MqException(MqException.Problem.of(code, "ids", detail));
+        }
+        SseEmitter emitter = new SseEmitter(0L);
+        java.io.InputStream body = r.body();
+        emitter.onCompletion(() -> close(body));
+        emitter.onTimeout(() -> close(body));
+        emitter.onError(x -> close(body));
+        executor.execute(() -> {
+            try (java.io.BufferedReader in = new java.io.BufferedReader(new java.io.InputStreamReader(body, java.nio.charset.StandardCharsets.UTF_8))) {
+                String event = null;
+                StringBuilder data = new StringBuilder();
+                String line;
+                while ((line = in.readLine()) != null) {
+                    if (line.startsWith("event:")) {
+                        event = line.substring(6).strip();
+                    } else if (line.startsWith("data:")) {
+                        String v = line.substring(5);
+                        data.append(data.isEmpty() ? "" : "\n").append(v.startsWith(" ") ? v.substring(1) : v);
+                    } else if (line.isEmpty() && event != null) {
+                        emitter.send(SseEmitter.event().name(event).data(data.toString()));
+                        event = null;
+                        data.setLength(0);
+                    }
+                }
+                emitter.complete();                                         // the holder ended the stream (every subscription closed)
+            } catch (IOException | IllegalStateException e) {
+                emitter.completeWithError(e);                              // the holder or the client went away: the console opens it again
+            }
+        });
+        return emitter;
+    }
+
+    private static void close(java.io.InputStream in) {
+        try {
+            in.close();
+        } catch (IOException e) {
+            // already closed
+        }
     }
 
     /**
@@ -309,9 +414,14 @@ public class MqController {
      * data moved on (at most one per its throttle; the latest state wins), {@code status} every {@code drishti.bi.live.status} (also the heartbeat).
      */
     @GetMapping(path = "/mq/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter stream(@RequestParam(required = false) String ids, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public SseEmitter stream(@RequestParam(required = false) String ids, @RequestAttribute(Principal.ATTRIBUTE) Principal p, jakarta.servlet.http.HttpServletRequest req) {
         bi.requirePower(p, BiAccess.BI);
-        List<String> wanted = standing.mine(p, ids == null || ids.isBlank() ? List.of() : Arrays.stream(ids.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());
+        List<String> asked = ids == null || ids.isBlank() ? List.of() : Arrays.stream(ids.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList();
+        String node = heldElsewhere(asked, req);
+        if (node != null) {
+            return relay(node, asked, p);
+        }
+        List<String> wanted = standing.mine(p, asked);
         SseEmitter emitter = new SseEmitter(0L);
         long beat = live.status().toMillis();
         executor.execute(() -> {

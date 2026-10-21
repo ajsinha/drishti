@@ -263,6 +263,38 @@ public class NetConfiguration {
         return c;
     }
 
+    /** A standing query's stream or close asked of a node that does not hold it is relayed from the one that does (its id names it). */
+    @Bean
+    public com.ash.drishti.server.bi.mq.StandingHolders standingHolders(RunCluster cluster) {
+        return new com.ash.drishti.server.bi.mq.StandingHolders() {
+            @Override
+            public String self() {
+                return cluster.on() ? cluster.self() : null;
+            }
+
+            @Override
+            public boolean forwarded(jakarta.servlet.http.HttpServletRequest request) {
+                return NetCaller.fromPeer() || request.getAttribute(NetCallFilter.PEER) != null;
+            }
+
+            @Override
+            public boolean alive(String node) {
+                return cluster.alive(node);
+            }
+
+            @Override
+            public java.net.http.HttpResponse<java.io.InputStream> stream(String node, String pathAndQuery, com.ash.drishti.server.security.Principal p)
+                    throws java.io.IOException {
+                return cluster.stream(node, pathAndQuery, p);
+            }
+
+            @Override
+            public int delete(String node, String path, com.ash.drishti.server.security.Principal p) throws java.io.IOException {
+                return cluster.call(node, "DELETE", path, new byte[0], p, cluster.timeout()).status();
+            }
+        };
+    }
+
     /** After the caller is known: a run's own calls go to the node that holds it (BI_RUNS.md 13.2). */
     @Bean
     public FilterRegistrationBean<RunForwardFilter> runForwardFilter(RunCluster cluster, com.ash.drishti.server.bi.runs.RunService runs, ForwardLog log) {

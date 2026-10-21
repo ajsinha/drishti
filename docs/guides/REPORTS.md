@@ -666,7 +666,7 @@ Nothing in a report says "live". A report whose dataset has a **live table** ([D
 
 * **coalesces**: a redraw round runs at most every `bi.live.min_interval_ms` (250 ms) and never two at once; a burst of ticks is one round, and a slow server is not queued behind (back-pressure is "the next round starts when the last one is done");
 * **asks three queries at a time** (the per-person limit) for the visuals of the current page, and **quietly**: a visual is not greyed, its picture is drawn over in place (a chart keeps its instance and its keyboard cursor; a table keeps its scroll position; a card flashes when its number changes, unless the person asks for reduced motion);
-* keeps the old picture when an update fails, with a dashed border and "old: <reason>" in the line under it, and draws it again on the next good answer;
+* keeps the old picture when an update fails, with a dashed border and the reason in words in the line under it (*Not updating · the server no longer holds this live query*), and draws it again on the next good answer; a followed visual whose server restarted says *Reconnecting* while it subscribes again;
 * redraws everything when a stream (re)connects (`hello` carries the generation: a page that has the latest does not ask again).
 
 A real stream, first events (abridged; the table's counters are in `tables`):

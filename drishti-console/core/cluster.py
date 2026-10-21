@@ -200,6 +200,17 @@ class ServerPool:
             e.fails = 0
             e.latency_ms = ms if e.latency_ms is None else round(0.7 * e.latency_ms + 0.3 * ms, 1)
 
+    def for_node(self, node: str | None) -> str | None:
+        """The usable server of cluster node ``node`` (its id as discovery learnt it), or None: a stream then goes to the session's server,
+        which relays it from the node that holds it."""
+        if not node:
+            return None
+        now = time.time()
+        for e in self.ordered():
+            if e.node_id == node and e.usable(now):
+                return e.url
+        return None
+
     def another(self, url: str) -> str | None:
         """A server to try a failed read on once: the preferred one other than ``url``."""
         other = self.preferred(avoid=url)

@@ -25,6 +25,7 @@ import asyncio
 import contextlib
 import contextvars
 import json
+import re
 import secrets
 import time
 from typing import AsyncIterator, Awaitable, Callable
@@ -36,6 +37,16 @@ from core.backend import BackendError
 Render = Callable[[str, str], str]      # (event, data) -> data as the caller wants it (panel patches as HTML)
 RESUME_TRIES = 12                       # with several servers: how many times in a row a broken upstream is opened again
 RESUME_BACKOFF = 1.0                    # seconds before the first try, growing by this much per try (at most 5 s)
+
+
+_HOLDER = re.compile(r"sq-([A-Za-z0-9._-]+)-[0-9a-f]{16}")
+
+
+def holder(ids: str) -> str | None:
+    """The cluster node that holds a standing query, from its id (``sq-<node>-<16 hex>``, as a BI run's ``r-<node>-...``); None for an id
+    that names none (one server, or a server older than 2.6.7)."""
+    m = _HOLDER.fullmatch((ids or "").split(",")[0].strip())
+    return m.group(1) if m else None
 
 
 class ChannelSession:
@@ -100,7 +111,8 @@ class ChannelSession:
         if sub.startswith("bilive:"):                        # Rupaka phase 5: a report's live tables changed (tick), how they are doing (status); no data
             return self.backend.sse(f"/bi/reports/{quote(sub[7:], safe='')}/live", self.me, opened=responses), False
         if sub.startswith("mq:") and len(sub) > 3:              # wave B: a standing query's pushed answers (answer) and its state (status)
-            return self.backend.sse(f"/bi/mq/stream?ids={quote(sub[3:], safe='')}", self.me, opened=responses), False
+            node = holder(sub[3:])                            # the node that holds it (sq-<node>-<hex>): the stream goes to its server when usable
+            return self.backend.sse(f"/bi/mq/stream?ids={quote(sub[3:], safe='')}", self.me, opened=responses, **({"node": node} if node else {})), False
         if sub == "biruns":                                   # BI runs (BI_RUNS.md 3.5): the person's runs as they change (hello, run, status); no data
             return self.backend.sse("/bi/runs/events", self.me, opened=responses), False
         if sub.startswith("monitor:"):
