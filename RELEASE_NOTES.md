@@ -13,6 +13,42 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.6.7 — release notes
+
+*2026-10-21.* **BI runs: every heavy question becomes a visible, shareable run; chart any table; Delta and Iceberg side by side.**
+2.6.7 also carries 2.6.6, the QA release that was never tagged on its own (see below).
+
+- **BI runs** ([BI_RUNS.md](docs/architecture/BI_RUNS.md), [BI_RUNS_GUIDE.md](docs/guides/BI_RUNS_GUIDE.md)):
+  - **Planned before it runs:** a planner sizes every question from metadata only (Delta's row counts, Iceberg's manifests, built
+    layers; tested to read no data). A cheap question answers at once; a heavy one becomes a run; a very heavy one asks to confirm; an
+    impossible one is refused before anything runs. Report visuals, MQ, SQL and statements all take `Prefer: respond-async`; without it
+    nothing changes.
+  - **The Runs tab** in each workspace: live list, filters, a drawer per run (open, cancel, rerun, export CSV/Excel, share, schedule,
+    promote to a dataset snapshot or a report); run cards on reports and boards; a bell notice when a run ends; `biruns.py` and
+    `bi mq|sql --async` on the command line; Admin → BI → Runs.
+  - **Fewer duplicate runs:** an identical question joins the run already going; a finished answer is reused while the data is
+    unchanged, also after a restart; repeated heavy questions produce **rollup suggestions** an admin accepts into the model's draft.
+  - **Masks hold:** a run computes as its runner; a shared run is *the same*, *re-masked* (groups on a masked field collapse) or
+    *recomputed as the recipient*, decided at every read. Tested in both directions.
+  - **Across the cluster:** a heavy run executes on the node that owns the model; the list is merged from every node; a dead owner's
+    unfinished runs are adopted by the next owner.
+- **Chart any table** ([TABLE_CHARTS.md](docs/architecture/TABLE_CHARTS.md)): a Chart button (and K; Shift+K on history) on view
+  tables, searches, pick lists, admin lists, history and BI table visuals; six types, Top N, stacking, two axes, PNG/SVG/CSV/Excel;
+  masked columns are never plotted; every theme and a phone.
+- **Delta and Iceberg side by side:** `build_demo_lakes.py --store endur=delta --store calypso=iceberg` (or `all=iceberg`); the right
+  connector is switched per system; the same pages, histories, searches and BI answers either way (equality test). Windows QA guide 3.3.
+- **Drishti*net:** heartbeats on a port of their own (`gossip-port`), so a busy server is never taken for dead; HTTP/2 between servers
+  (one connection per peer; p99 117 ms against 370 ms on HTTP/1.1), falling back to HTTP/1.1 for an older peer.
+- **2.6.6, the QA release:** a six-hour adversarial QA, four rounds and four soaks fixed about 100 findings, among them five P1s:
+  masked values leaking across the history cache through a peer, a signal storm stalling the server, stale pages across console
+  workers, a moved Iceberg table reading as healthy (a Java 25 difference), a rejoining node answering *not found*. The history
+  cache is sized in real heap and defaults to 256 MB (`drishti.history.cache-mb`).
+- **Known open:** SOAK4-01 (the busiest soak node's live heap rose 165 MB/h over 73 minutes; not the caches; not yet diagnosed);
+  Analyse does not use runs yet; runs' Parquet/Arrow results and the second run engine; a real-crash test of run adoption.
+- **Tested:** the drill passed licence headers, Java 21, Java 25, the tools and the console; failures on the way were fixed (an
+  undeclared Iceberg setting, two token scopes, a test race, and an HTTP/2 bug: a 413 carried `Connection: close`, which Java 25's
+  client refuses). QA reports in `docs/qa/2026-10-20/` and `docs/qa/2026-10-21/`.
+
 # Drishti 2.6.5 — release notes
 
 *2026-10-20.* **History queries: type a range after an id and see the entity over time.** ([HISTORY_QUERIES.md](docs/architecture/HISTORY_QUERIES.md),

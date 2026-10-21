@@ -253,7 +253,7 @@ Two tasks on one node's folders would open the same RocksDB stores and DuckDB fi
 after `./mvnw -q package -DskipTests`:
 
 ```bash
-docker build -f deploy/docker/ecs/server.Dockerfile -t drishti-server-ecs:2.6.5 .     # Java 25: --build-arg BASE_IMAGE=eclipse-temurin:25-jre
+docker build -f deploy/docker/ecs/server.Dockerfile -t drishti-server-ecs:2.6.7 .     # Java 25: --build-arg BASE_IMAGE=eclipse-temurin:25-jre
 ```
 
 The image: the server jar, the shipped packs in `/opt/drishti/shipped/packs` (outside the EFS paths, so a mount never hides
@@ -298,7 +298,7 @@ container); outside ECS the container's host name stands in.
 [`deploy/docker/ecs/console-entrypoint.sh`](../../deploy/docker/ecs/console-entrypoint.sh):
 
 ```bash
-docker build -f deploy/docker/ecs/console.Dockerfile -t drishti-console-ecs:2.6.5 .
+docker build -f deploy/docker/ecs/console.Dockerfile -t drishti-console-ecs:2.6.7 .
 ```
 
 Calc's Python runtime (Pyodide) and DuckDB-Wasm are fetched in a first stage (pinned, SHA-256 checked), so a running
