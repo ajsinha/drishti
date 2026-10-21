@@ -104,13 +104,35 @@ def source_files(src, dates: list[str]) -> list[dict]:
     return out
 
 
+def _opt(opts: dict, *names: str) -> str | None:
+    """The first of these settings given in --storage-option, else in the environment."""
+    for n in names:
+        if opts.get(n):
+            return opts[n]
+    for n in names:
+        if os.environ.get(n):
+            return os.environ[n]
+    return None
+
+
 def check_files(target: str, files: list[dict], opts: dict) -> list[str]:
     """Paths missing from the target or of another size (the copy to S3 failed or is incomplete)."""
     import pyarrow.fs as pafs
 
     if "://" in target and not target.startswith("file://"):
-        region = opts.get("AWS_REGION") or opts.get("AWS_DEFAULT_REGION") or os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION")
-        fs = pafs.S3FileSystem(region=region) if target.startswith(("s3://", "s3a://")) and region else None
+        region = _opt(opts, "AWS_REGION", "AWS_DEFAULT_REGION")
+        endpoint = _opt(opts, "AWS_ENDPOINT_URL_S3", "AWS_ENDPOINT_URL")
+        fs = None
+        if target.startswith(("s3://", "s3a://")) and (region or endpoint):
+            # the same store the commit goes to: its endpoint (MinIO, an S3-compatible store) and keys from --storage-option
+            kw: dict = {"region": region} if region else {}
+            if endpoint:
+                scheme, _, host = endpoint.partition("://")
+                kw.update(endpoint_override=host.rstrip("/") if host else scheme, scheme=scheme if host else "https")
+            key, secret = _opt(opts, "AWS_ACCESS_KEY_ID"), _opt(opts, "AWS_SECRET_ACCESS_KEY")
+            if key and secret:
+                kw.update(access_key=key, secret_key=secret, session_token=_opt(opts, "AWS_SESSION_TOKEN"))
+            fs = pafs.S3FileSystem(**kw)
         base = target.split("://", 1)[1].rstrip("/") if fs else None
         if fs is None:
             fs, base = pafs.FileSystem.from_uri(target)
