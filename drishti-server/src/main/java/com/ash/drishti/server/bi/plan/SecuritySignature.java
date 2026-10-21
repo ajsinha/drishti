@@ -85,6 +85,38 @@ public final class SecuritySignature {
         return "s_" + sha(b.toString()).substring(0, 16);
     }
 
+    /**
+     * The <b>row part</b> of the signature (docs/architecture/BI_RUNS.md section 9.3): everything that decides which rows a reader sees, and nothing about
+     * masks. Two readers with an equal row part read the same rows of every alias: their rule predicates, denied layers, hidden columns and denied kinds are
+     * the same (and, for a model of personal answers, they are the same reader). Readable text, compared and never shown.
+     */
+    public static String rowPart(Dataset flat, Reader reader, boolean personal) {
+        StringBuilder b = new StringBuilder("enforce=").append(reader.enforce()).append(';');
+        if (reader.enforce() && !flat.security().rows().isEmpty()) {
+            List<String> v1 = new ArrayList<>();
+            flat.security().rows().stream().filter(r -> reader.roles().contains(r.role())).forEach(r -> v1.add(resolved(r.where(), reader.attributes())));
+            b.append("v1=").append(new TreeSet<>(v1)).append(v1.isEmpty() ? "DENY" : "").append(';');
+        }
+        for (String t : new TreeSet<>(flat.tables().keySet())) {
+            Alias a = alias(flat, t, reader);
+            b.append(t).append("=rules").append(a.rules()).append(",denied=").append(a.denied()).append(",hidden=").append(a.hidden()).append(';');
+        }
+        b.append("deniedKinds=").append(new TreeSet<>(reader.denied()));
+        if (personal || flat.framed()) {
+            b.append(";reader=").append(reader.user()).append(new TreeSet<>(reader.roles())).append(new TreeMap<>(reader.attributes()));
+        }
+        return b.toString();
+    }
+
+    /** The <b>mask part</b>: every column masked for the reader, as {@code alias.column}, sorted. */
+    public static Set<String> maskPart(Dataset flat, Reader reader) {
+        TreeSet<String> out = new TreeSet<>();
+        for (String t : flat.tables().keySet()) {
+            alias(flat, t, reader).masked().forEach(c -> out.add(t + "." + c));
+        }
+        return out;
+    }
+
     /** One alias's effective security for the reader. */
     public static Alias alias(Dataset flat, String table, Reader reader) {
         List<String> rules = new ArrayList<>();

@@ -60,10 +60,12 @@ public class RunsController {
     private final ExecutorService executor;
 
     private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> queries;
+    private final RunSharing sharing;
 
     public RunsController(RunsProperties props, BiService bi, BiAccess access, RunSources sources, ExecutorService drishtiVirtualExecutor,
-            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> queries) {
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> queries, RunSharing sharing) {
         this.queries = queries;
+        this.sharing = sharing;
         this.props = props;
         this.bi = bi;
         this.access = access;
@@ -93,10 +95,14 @@ public class RunsController {
         return p.user().equals(r.owner()) || p.user().equals(r.runner());
     }
 
-    /** The run when the caller may see it: their own, or any for a bi-admin (state only). */
+    private boolean recipient(Run r, Principal p) {
+        return !mine(r, p) && sharing.shareOf(r.id(), p.user()).isPresent();
+    }
+
+    /** The run when the caller may see it: their own, one shared with them, or any for a bi-admin (state only). */
     private Run visible(String id, Principal p) {
         Run r = runs().get(id).orElseThrow(() -> notFound(id));
-        if (!mine(r, p) && !access.has(p, BiAccess.ADMIN)) {
+        if (!mine(r, p) && !access.has(p, BiAccess.ADMIN) && !recipient(r, p)) {
             throw notFound(id);
         }
         return r;
@@ -113,7 +119,10 @@ public class RunsController {
     Map<String, Object> json(Run r, Principal p) {
         boolean has = (r.state() == RunState.DONE || r.state() == RunState.REUSED) && runs().store().has(r.fingerprint());
         RunJson.View v = RunJson.View.of(p.user()).withResult(has).withPowers(access.has(p, BiAccess.ADMIN), access.has(p, BiAccess.AUTHOR))
-                .withPromote(false);
+                .withPromote(false).asRecipient(recipient(r, p));
+        if (mine(r, p)) {
+            v = v.withShares(sharing.shares().of(r.id()).stream().map(RunShares.Share::toMap).toList());
+        }
         Map<String, Object> m = RunJson.of(r, v, Instant.now());
         m.put("confirmToken", runs().confirmToken(r.id(), p.user()));          // the owner's, while it awaits confirmation (the drawer confirms with it)
         m.put("schedule", null);
@@ -196,7 +205,14 @@ public class RunsController {
         Instant from = since(since, Instant.now());
         java.util.Set<String> states = state == null || state.isBlank() ? java.util.Set.of()
                 : java.util.Arrays.stream(state.split(",")).map(String::strip).filter(s -> !s.isEmpty()).collect(java.util.stream.Collectors.toSet());
-        List<Run> page = runs().list(p.user(), before, 500).stream()
+        List<Run> all = new java.util.ArrayList<>(runs().list(p.user(), before, 500));
+        java.util.Set<String> seen = new java.util.HashSet<>(all.stream().map(Run::id).toList());
+        final Instant until = before;
+        for (RunShares.Share s : sharing.shares().to(p.user(), 200)) {         // runs shared with the caller (marked in the console)
+            runs().get(s.runId()).filter(r -> seen.add(r.id())).filter(r -> until == null || r.submittedAt().isBefore(until)).ifPresent(all::add);
+        }
+        all.sort(java.util.Comparator.comparing(Run::submittedAt).reversed().thenComparing(Run::id, java.util.Comparator.reverseOrder()));
+        List<Run> page = all.stream()
                 .filter(r -> from == null || !r.submittedAt().isBefore(from))
                 .filter(r -> states.isEmpty() || states.contains(r.state().wire()))
                 .filter(r -> source == null || source.isBlank() || r.sourceType().equals(source))
@@ -287,11 +303,16 @@ public class RunsController {
     public ResponseEntity<?> result(@PathVariable String id, @RequestParam(defaultValue = "json") String format, @RequestParam(defaultValue = "0") long offset,
             @RequestParam(defaultValue = "5000") int limit, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.BI);
-        Run r = own(id, p);
+        Run r = runs().get(id).orElseThrow(() -> notFound(id));
+        boolean own = mine(r, p);
+        if (!own && !recipient(r, p)) {
+            throw notFound(id);
+        }
         if (!"json".equalsIgnoreCase(format)) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "a stored run result is served as json (format=json); arrow is not built yet");
         }
-        Map<String, Object> answer = RunStore.page(runs().result(r, r.signature()), offset, Math.max(1, Math.min(limit, 50_000)));
+        Map<String, Object> full = own ? runs().result(r, r.signature()) : sharing.read(r, p);      // a recipient reads their own version (9.3)
+        Map<String, Object> answer = RunStore.page(full, offset, Math.max(1, Math.min(limit, 50_000)));
         return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "no-store").header("X-Bi-Run", r.id()).body(answer);
     }
 
@@ -357,7 +378,18 @@ public class RunsController {
 
     @PostMapping("/runs/{id}/share")
     public ResponseEntity<?> share(@PathVariable String id, @RequestBody(required = false) JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return notYet(id, "share", p);
+        bi.requirePower(p, BiAccess.BI);
+        Run r = own(id, p);
+        List<String> to = new java.util.ArrayList<>();
+        if (body != null && body.path("to").isArray()) {
+            body.path("to").forEach(n -> to.add(n.asText()));
+        } else if (body != null && body.path("to").isTextual()) {
+            to.add(body.path("to").asText());
+        }
+        if (to.isEmpty()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "to: name the people (bob) or roles (role:risk-team) to share this run with");
+        }
+        return noStore(200, Map.of("shares", sharing.share(r, p, to)));
     }
 
     @PostMapping("/runs/{id}/promote")
@@ -380,7 +412,10 @@ public class RunsController {
     public ResponseEntity<?> unshare(@PathVariable String id, @PathVariable String recipient, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.BI);
         own(id, p);
-        throw notFound(id + "/share/" + recipient);
+        if (!sharing.unshare(id, recipient)) {
+            throw notFound(id + "/share/" + recipient);
+        }
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/admin/runs")

@@ -110,7 +110,12 @@ public final class MqService {
 
         /** The reader's security signature on this model (opaque). */
         public String signature() {
-            return SecuritySignature.of(view.flat(), security, !view.unbuilt().isEmpty() || !DatasetSources.aliases(view).isEmpty());
+            return SecuritySignature.of(view.flat(), security, personal());
+        }
+
+        /** The model reads answers asked as the reader (unbuilt or other-model sources): its signature, and its row part, are the reader's own. */
+        public boolean personal() {
+            return !view.unbuilt().isEmpty() || !DatasetSources.aliases(view).isEmpty();
         }
     }
 

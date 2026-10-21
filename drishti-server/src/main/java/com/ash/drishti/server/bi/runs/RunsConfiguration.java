@@ -87,4 +87,18 @@ public class RunsConfiguration {
         }
         return sources;
     }
+
+    /** Sharing (section 9.3): share rows in the identity database, recipients bound as themselves, roles expanded to their members when shared. */
+    @Bean
+    RunSharing runSharing(RunService runs, RunSources sources, ModelCatalog catalog, MqService mq, ObjectProvider<HikariDataSource> identity,
+            ObjectProvider<Principals> principals, ObjectProvider<com.ash.drishti.server.collab.DirectoryService> directory) {
+        HikariDataSource ds = identity.getIfAvailable();
+        RunShares shares = ds == null ? new RunShares.Memory() : new RunShares.Jdbc(ds);
+        Principals who = principals.getIfAvailable();
+        com.ash.drishti.server.collab.DirectoryService dir = directory.getIfAvailable();
+        return new RunSharing(runs, shares, catalog::bind, mq,
+                u -> who == null ? new com.ash.drishti.server.security.Principal(u, List.of()) : who.of(u),
+                role -> dir == null ? List.of() : dir.members(role).stream().map(com.ash.drishti.identity.User::username).toList(),
+                sources::replay, Clock.systemUTC());
+    }
 }

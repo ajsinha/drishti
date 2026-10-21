@@ -97,10 +97,15 @@ public final class RunService {
      * @param inlineWait the inline wait (0: fire and forget)
      * @param background run as ad-hoc heavy in the background class at once
      * @param confirmed  the confirmation is given in advance ({@code options.confirm}, the CLI's {@code --yes}): no {@code DRS-9082}
+     * @param sharedFrom the run this one recomputes for a share's recipient (section 9.3), else null
      */
-    public record Options(Duration inlineWait, boolean background, boolean confirmed) {
+    public record Options(Duration inlineWait, boolean background, boolean confirmed, String sharedFrom) {
         public Options(Duration inlineWait, boolean background) {
-            this(inlineWait, background, false);
+            this(inlineWait, background, false, null);
+        }
+
+        public Options(Duration inlineWait, boolean background, boolean confirmed) {
+            this(inlineWait, background, confirmed, null);
         }
     }
 
@@ -273,9 +278,9 @@ public final class RunService {
         }
         Tier tier = plan != null ? plan.tier() : o.background() ? Tier.AD_HOC_HEAVY : Tier.INTERACTIVE;
         if (plan != null && tier == Tier.AD_HOC_HEAVY && !o.background()) {
-            o = new Options(Duration.ZERO, true, o.confirmed());               // its estimate says it will not finish inline: 202 at once (6.1)
+            o = new Options(Duration.ZERO, true, o.confirmed(), o.sharedFrom());               // its estimate says it will not finish inline: 202 at once (6.1)
         }
-        Run base = planned(q, key, reusable, tier, now);
+        Run base = planned(q, key, reusable, tier, now, o.sharedFrom());
         // 1. the same key's result is stored: reused at once, nothing runs (8.3)
         if (reusable) {
             Optional<Map<String, Object>> hit = store.read(key, q.signature());
@@ -436,7 +441,7 @@ public final class RunService {
         return f.run;
     }
 
-    private Run planned(Question q, String key, boolean reusable, Tier tier, Instant now) {
+    private Run planned(Question q, String key, boolean reusable, Tier tier, Instant now, String sharedFrom) {
         Map<String, Object> estimate = q.planned() != null ? q.planned().estimate().toMap() : new RunEstimate(null, null, null, null, null, null,
                 RunEstimate.Basis.UNKNOWN, 0, 0, false, 0, tier == Tier.AD_HOC_HEAVY ? "a background run: its size is learnt as it runs" : "an interactive question").toMap();
         Run r = Run.planned(RunId.next(node, now, random), q.caller().user(), q.caller().user(), q.sourceType(), q.question(), key, q.signature(), tier,
@@ -453,6 +458,7 @@ public final class RunService {
         }
         b.resultKey = reusable ? key : null;
         b.expiresAt = null;
+        b.sharedFrom = sharedFrom;
         return b.build();
     }
 
@@ -489,7 +495,7 @@ public final class RunService {
         } catch (ExecutionException e) {
             Throwable c = e.getCause();
             if (twin == null && c instanceof DrishtiException d && d.errorCode() == ErrorCode.QUERY_COST && !q.interaction()) {
-                return submit(q, new Options(Duration.ZERO, true));       // too large for an interactive answer: a background run (6.1)
+                return submit(q, new Options(Duration.ZERO, true, false, o.sharedFrom()));       // too large for an interactive answer: a background run (6.1)
             }
             if (c instanceof DrishtiException d && d.errorCode() == ErrorCode.QUERY_COST && q.interaction()) {
                 throw new RunProblem(ErrorCode.RUN_NEEDED, "this selection needs a background run: " + d.getMessage(),
@@ -848,6 +854,15 @@ public final class RunService {
         }
     }
 
+    /** Tells {@code user} about a run (a share: "anna shared a run with you"); names only, never a value. */
+    public void tellAbout(String user, Run r, String summary) {
+        try {
+            notifier.tell(user, r, summary);
+        } catch (RuntimeException e) {
+            LOG.warn("could not tell {} about run {}: {}", user, r.id(), e.getMessage());
+        }
+    }
+
     private void tell(Run r, String summary) {
         try {
             notifier.tell(r.owner(), r, summary);
@@ -856,7 +871,7 @@ public final class RunService {
         }
     }
 
-    private static String title(Run r) {
+    static String title(Run r) {
         return r.title() == null || r.title().isBlank() ? r.sourceType() + (r.sourceId() == null ? "" : " " + r.sourceId()) : r.title();
     }
 
