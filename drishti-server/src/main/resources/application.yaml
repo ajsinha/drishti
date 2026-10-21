@@ -93,6 +93,10 @@ drishti:
     # The umbrella folder every runtime path below defaults under (identity database, caches, loads, collab, designs, reports, the
     # pack overlay and settings, governance, the sample feeds). Each path's own setting still overrides its default.
     dir: ${DRISHTI_DATA_DIR:./data}
+  store:
+    # The content store (docs/architecture/CONTENT_STORE.md): user content every node of a cluster can reach. Its settings are in their own file.
+    file: ${DRISHTI_STORE_FILE:./config/store/store.yaml}
+    root: ${DRISHTI_STORE_ROOT:}   # the filesystem backend's root, over the file's filesystem.root (empty: the file's, else <data folder>/fstore)
   index:
     # Where the connectors' multi-day type-ahead index keeps closed days as block-compressed segment files (one subfolder per
     # connector). Blank: <data dir>/index, i.e. ./data/index. Size is capped per connector by its index.max-disk; a day that
@@ -796,8 +800,8 @@ drishti:
     code-names: [year, version, seq, sequence, no, num, number, code, zip, postcode]   # words in a whole-number field's name that make it a code (shown as a label, never summed or formatted as an amount)
     designs:
       # The Build workbench's Designs (/api/v1/builder/designs): samples, a Sutra and notes kept per user. Limits answer DRS-5005.
-      store: file   # file (dir below, readable by the server only) or jpa (the identity database)
-      dir: ${drishti.data.dir}/designs
+      store: content   # content (the content store, config/store/store.yaml: every node of a cluster sees them; docs/architecture/CONTENT_STORE.md), or, one node only: file (dir below) or jpa (the identity database)
+      dir: ${drishti.data.dir}/designs   # the old file store: with store content, what is here is imported once at start and the folder renamed designs-imported-<time>
       max-per-user: 50              # named designs one user keeps (scratch ones: max-scratch)
       max-samples: 50               # samples in one design
       max-mb: 25                    # megabytes of samples, Sutra, notes and tests in one design

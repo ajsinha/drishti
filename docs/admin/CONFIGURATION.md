@@ -340,6 +340,8 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_SUTRA_FOUR_EYES` | `drishti.governance.four-eyes` | `true` | Nobody approves their own proposal (with security on). |
 | `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `./data/governance` | Where proposals are kept. |
 | `DRISHTI_DATA_DIR` | `drishti.data.dir` | `./data` | The data folder: the umbrella every runtime path below defaults under (see [The data folder](#the-data-folder-and-the-config-folder)). |
+| `DRISHTI_STORE_FILE` | `drishti.store.file` | `./config/store/store.yaml` | The content store's settings file ([The content store](#the-content-store-configstorestoreyaml)); a missing file means the filesystem store under the data folder. |
+| `DRISHTI_STORE_ROOT` | `drishti.store.root` | empty | The filesystem content store's root, over the file's `filesystem.root` (empty: the file's, else `<data folder>/fstore`). |
 | `DRISHTI_INDEX_DIR` | `drishti.index.dir` | empty | The multi-day type-ahead index's segment files, one folder per connector; empty means `<data dir>/index` (`./data/index`). See [`drishti.index`](#drishtiindex--the-multi-day-type-ahead-index). |
 | `DRISHTI_BI_DIR` | `drishti.bi.dir` | `./config/bi` | Where Rupaka (BI) files live: `datasets/`, `reports/`, `boards/`, `notebooks/`, `python/`. Never inside a pack. |
 | `DRISHTI_BI_TRANSFORM_PYTHON` | `drishti.bi.transform.python` | empty | The Python that runs a derived dataset's Transform: it needs `pandas` and `pyarrow`, normally the console's `drishti-console/.venv/bin/python`. Empty: that file when it exists, else `python3`. |
@@ -1174,8 +1176,8 @@ Sample documents are never logged; deleting a Design deletes its samples at once
 
 | Key | Default | Meaning |
 |---|---|---|
-| `store` | `file` | `file`: `data/designs/<user>/<id>/design.json` and `samples/`, created readable by the server's account only (`rwx------`). `jpa`: the identity database (`drishti_design`, `drishti_design_sample`), for several server replicas. |
-| `dir` | `./data/designs` | The file store's directory. |
+| `store` | `content` | `content` (default): the content store ([below](#the-content-store-configstorestoreyaml)), `designs/<user>/<id>/design.json` and `samples/`, reached by every node of a cluster; a save changed by another node meanwhile answers `409 DRS-5057`. One node only: `file` (`data/designs/<user>/<id>/design.json` and `samples/`, readable by the server's account only) or `jpa` (the identity database, `drishti_design`, `drishti_design_sample`). |
+| `dir` | `./data/designs` | The old file store's directory. With `content`, what it holds is imported once at start and the folder renamed `designs-imported-<time>` (kept; delete it when you are happy). |
 | `max-per-user` | `50` | Named Designs one user keeps. Scratch (unnamed) Designs do not count toward it. |
 | `max-samples` | `50` | Samples in one Design. |
 | `max-mb` | `25` | Megabytes in one Design: its sample documents, Sutra, notes and tests (a reference to a stored entity counts nothing). |
@@ -1189,6 +1191,26 @@ Sample documents are never logged; deleting a Design deletes its samples at once
 | `warn-after` | `75d` | A named Design untouched this long is listed with a warning that it will expire. |
 | `sweep-interval` | `1h` | How often expired Designs are deleted. |
 | `max-ops` | `100` | Steps of the operation log a Design keeps for undo and redo (the oldest are dropped). |
+
+### The content store: `config/store/store.yaml`
+
+User content that every node of a Drishti*net cluster must reach (Build workbench Designs today; BI items, workspaces, runs, shares,
+schedules and settings next) is kept in the **content store** ([CONTENT_STORE.md](../architecture/CONTENT_STORE.md)). Its settings are
+in their own file, named by `drishti.store.file` (`DRISHTI_STORE_FILE`, default `./config/store/store.yaml`), never in
+`application.yaml`. A missing file or key means the default. Ready-made variants: `config/store.examples/` (`laptop.yaml`,
+`cluster-nfs.yaml`, `postgres.yaml`, `s3.yaml`).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `backend` | `filesystem` | `filesystem`, `sqlite`, `postgres` or `s3`. |
+| `filesystem.root` | `<data folder>/fstore` | The folder (`data/fstore`). On a cluster it must be a **shared mount** (NFS, EFS, SMB) at the same path on every node. `DRISHTI_STORE_ROOT` overrides it. |
+| `sqlite.url` | `jdbc:sqlite:<data folder>/identity/drishti.db` | The Drishti database itself (one node). The table `drishti_content` is in its complete schema file. |
+| `postgres.url`, `user`, `password`, `pool` | none, `drishti`, `${DRISHTI_STORE_PASSWORD:}`, `4` | Usually the Drishti database. Needed for `backend: postgres`. |
+| `s3.bucket`, `prefix`, `region`, `endpoint`, `path-style`, `access-key`, `secret-key` | none, empty, `us-east-1`, empty (AWS), `false`, `${DRISHTI_STORE_ACCESS_KEY:}`, `${DRISHTI_STORE_SECRET_KEY:}` | S3 or a compatible store that honours `If-Match` / `If-None-Match` (MinIO: `endpoint` and `path-style: true`). Empty keys: the AWS default credentials chain. |
+
+Every node of a cluster must use the same settings; a node that finds another node recorded with a different root logs
+`content store roots differ`. Writes are compare-and-set: an item changed elsewhere since it was read answers `409 DRS-5057`.
+The start logs `content store: <backend> <root> (settings <file>)`.
 
 ### `drishti.builder.file-binding` and `dev-dir` — development file binding
 

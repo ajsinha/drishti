@@ -47,12 +47,43 @@ public class IdentityConfiguration {
         return new JpaPreferenceStore(prefs, identityTransactions, 64 * 1024, 50);
     }
 
-    /** The Build workbench's Designs: files ({@code drishti.builder.designs.store=file}, the default) or this database ({@code jpa}). */
+    /**
+     * The content store (docs/architecture/CONTENT_STORE.md): user content every node of a cluster can reach, configured in its own file
+     * ({@code drishti.store.file}, {@code config/store/store.yaml}).
+     */
+    @Bean(destroyMethod = "close")
+    public com.ash.drishti.identity.content.ContentStore contentStore(org.springframework.core.env.Environment env) {
+        java.nio.file.Path file = java.nio.file.Path.of(env.getProperty("drishti.store.file", "./config/store/store.yaml"));
+        java.nio.file.Path data = java.nio.file.Path.of(env.getProperty("drishti.data.dir", "./data"));
+        com.ash.drishti.identity.content.ContentStoreSettings s = com.ash.drishti.identity.content.ContentStoreSettings.load(file, data, env::resolvePlaceholders);
+        String root = env.getProperty("drishti.store.root", "");
+        if (!root.isBlank()) {
+            s = s.withFsRoot(java.nio.file.Path.of(root));
+        }
+        com.ash.drishti.identity.content.ContentStore store = s.open();
+        String node = env.getProperty("drishti.net.node-id", "");
+        com.ash.drishti.identity.content.ContentStoreNodes.announce(store,
+                node.isBlank() ? com.ash.drishti.identity.content.ContentStoreNodes.localName(env.getProperty("server.port", "")) : node);
+        org.slf4j.LoggerFactory.getLogger(IdentityConfiguration.class).info("content store: {} (settings {})", store.root(), s.origin());
+        return store;
+    }
+
+    /**
+     * The Build workbench's Designs: the content store ({@code drishti.builder.designs.store=content}, the default; the old file folder and
+     * database rows are imported once at start), or, one node only, files ({@code file}) or this database ({@code jpa}).
+     */
     @Bean
     public com.ash.drishti.identity.design.DesignStore designStore(com.ash.drishti.identity.design.DesignProperties props,
-            IdentityRepositories.Designs designs, IdentityRepositories.DesignSamples samples, TransactionTemplate identityTransactions) {
-        return props.jpa() ? new com.ash.drishti.identity.design.JpaDesignStore(designs, samples, identityTransactions)
-                : new com.ash.drishti.identity.design.FileDesignStore(java.nio.file.Path.of(props.dir()));
+            IdentityRepositories.Designs designs, IdentityRepositories.DesignSamples samples, TransactionTemplate identityTransactions,
+            com.ash.drishti.identity.content.ContentStore content) {
+        com.ash.drishti.identity.design.JpaDesignStore jpa = new com.ash.drishti.identity.design.JpaDesignStore(designs, samples, identityTransactions);
+        if (props.content()) {
+            com.ash.drishti.identity.design.ContentDesignStore store = new com.ash.drishti.identity.design.ContentDesignStore(content);
+            com.ash.drishti.identity.design.DesignImport.fromFiles(java.nio.file.Path.of(props.dir()), store);
+            com.ash.drishti.identity.design.DesignImport.fromDatabase(jpa, store);
+            return store;
+        }
+        return props.jpa() ? jpa : new com.ash.drishti.identity.design.FileDesignStore(java.nio.file.Path.of(props.dir()));
     }
 
     @Bean

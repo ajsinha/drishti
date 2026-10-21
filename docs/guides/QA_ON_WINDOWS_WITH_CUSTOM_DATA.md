@@ -508,6 +508,8 @@ trades.
 
 ## 6a. Optional: a second server with Drishti*net (15 minutes)
 
+Designs (Build → My designs) now live in `data\fstore` (the content store); an existing `data\designs` folder is imported at the first start and renamed `designs-imported-<time>`.
+
 Only if the demo should show two servers acting as one ([tutorial 19](../tutorials/19-a-cluster-of-three.md)). Nothing here changes the
 single server of section 4: without a `config\net` folder Drishti*net is off.
 

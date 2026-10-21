@@ -1,0 +1,25 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+#
+# A cluster on S3 or an S3-compatible store that honours conditional writes (If-Match / If-None-Match), such as MinIO.
+# Copy to config/store/store.yaml on every node. Empty keys: the AWS default credentials chain (instance role, environment).
+backend: s3
+s3:
+  bucket: drishti-content
+  prefix: prod
+  region: us-east-1
+  endpoint: ""                     # e.g. http://minio.example.internal:9000 for MinIO
+  path-style: false                # true for MinIO
+  access-key: ${DRISHTI_STORE_ACCESS_KEY:}
+  secret-key: ${DRISHTI_STORE_SECRET_KEY:}

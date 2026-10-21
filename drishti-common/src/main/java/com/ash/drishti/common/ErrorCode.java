@@ -395,7 +395,13 @@ public enum ErrorCode {
     /** Drishti*net: a file of config/net/ was changed since it was read (If-Match), or a setting is refused; nothing was written. */
     NET_FILE_REFUSED("DRS-5055", 409),
     /** Drishti*net: a management request that cannot be done (an unknown member, removing a member that is alive, a malformed seed). */
-    NET_BAD_REQUEST("DRS-5056", 400);
+    NET_BAD_REQUEST("DRS-5056", 400),
+    /** Content store (docs/architecture/CONTENT_STORE.md): the item changed elsewhere since it was read (or already exists): reload and try again. */
+    CONTENT_CONFLICT("DRS-5057", 409),
+    /** Content store: a key that is not a valid content key (empty, too long, a {@code ..} segment, control characters). */
+    CONTENT_BAD_KEY("DRS-5058", 400),
+    /** Content store: the backing store (database, bucket, shared folder) could not be reached or answered with an error. */
+    CONTENT_UNAVAILABLE("DRS-5059", 503);
 
     private final String code;
     private final int httpStatus;

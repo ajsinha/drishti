@@ -1411,6 +1411,9 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 | `DRS-5054` | the caller's roles may not reach that node (`access.yaml`), or the node is drained and takes no forwarded work (HTTP 403 or 503) |
 | `DRS-5055` | a file of `config/net/` was not written (HTTP 409): it changed since you read it (read it again), or it has an error (the problems are listed, with their lines) |
 | `DRS-5056` | a Drishti*net management request that cannot be done (HTTP 400): an unknown member, removing a member that is alive or suspect, a seed that is not `host:port` or an address, a file that is not one of `config/net/` |
+| `DRS-5057` | content conflict (HTTP 409): the item (a Design) was changed by another node or tab since you read it, or it already exists. Reload and make the change again (docs/architecture/CONTENT_STORE.md) |
+| `DRS-5058` | a content-store key that is not valid (HTTP 400): empty, too long, a `..` segment or control characters |
+| `DRS-5059` | the content store could not be reached (HTTP 503): its database, bucket or shared folder failed; see the server log and `config/store/store.yaml` |
 | `DRS-6001`–`DRS-6010` | user management (see [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)); `DRS-6005` is a locked account |
 | `DRS-6011` | a start-up warning in the server log, not an answer: a `drishti.security.redact` entry names no field of the loaded packs' samples, so it masks nothing. Write the field as the data spells it (masks match in any case and convention) or remove the entry; Admin → Health lists such entries under `masksMatchingNothing` |
 | `DRS-7001` | a share link that is not yours, or does not exist (HTTP 404; the two look the same on purpose). Ask the sender to share it with you again |
