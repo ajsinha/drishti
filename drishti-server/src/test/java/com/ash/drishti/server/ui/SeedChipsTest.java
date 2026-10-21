@@ -41,9 +41,11 @@ class SeedChipsTest {
         ChipStore store = new ChipStore(new FileContentStore(root), ChipStoreContract.ACCESS, Path.of("../config/ui/chips"));
         Map<String, TreeMap<Integer, ChipStore.Version>> seeds = store.seeds();
         int versions = seeds.values().stream().mapToInt(Map::size).sum();
-        assertThat(versions).isEqualTo(68);
+        assertThat(versions).isEqualTo(86);
         assertThat(seeds.keySet().stream().filter(n -> n.startsWith("panel-")).count()).isEqualTo(22);
         assertThat(seeds.keySet().stream().filter(n -> n.startsWith("bi-")).count()).isEqualTo(34);
+        assertThat(seeds.keySet().stream().filter(n -> n.startsWith("record-")).count()).isEqualTo(18);    // the generic record chips (12.4)
+        assertThat(seeds.keySet()).contains("record-table", "record-fields", "record-line", "record-hbar", "record-metric", "record-links");
         assertThat(seeds.keySet()).contains("deal-ticket", "legs", "flow-schedule", "events", "payments", "deal-footer", "entity-card",
                 "filterable-table", "cashflow-ladder", "search-box", "date-range");
         List<String> problems = new ArrayList<>();

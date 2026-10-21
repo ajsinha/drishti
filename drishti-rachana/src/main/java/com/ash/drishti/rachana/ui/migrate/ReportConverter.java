@@ -41,6 +41,8 @@ import java.util.Set;
 public final class ReportConverter {
 
     private static final Set<String> CARRIED = Set.of("id", "type", "title", "at", "wells");
+    /** The report keys a text, image, button or tile visual gives its content by (the chip's {@code content} pin). */
+    private static final Set<String> CONTENT = Set.of("text", "src", "from", "label");
 
     private final ChipCatalog chips;
 
@@ -126,11 +128,22 @@ public final class ReportConverter {
                 }
             }
             List<String> extra = new ArrayList<>();
+            ObjectNode controls = BoardSutra.JSON.createObjectNode();
             v.fieldNames().forEachRemaining(k -> {
-                if (!CARRIED.contains(k)) {
+                if (CARRIED.contains(k)) {
+                    return;
+                }
+                String pin = CONTENT.contains(k) && chip.inPins().containsKey("content") ? "content" : k;
+                PinSpec ps = chip.inPins().get(pin);
+                if (ps != null && ps.role() == PinSpec.PinRole.CONTROL && !controls.has(pin)) {
+                    controls.set(pin, v.get(k).deepCopy());       // a setting of the report's visual: a constant of the chip's control pin
+                } else {
                     extra.add(k);
                 }
             });
+            if (!controls.isEmpty()) {
+                in.set("controls", controls);
+            }
             if (misfit.isPresent() || !extra.isEmpty()) {
                 String local = "local-" + inst;
                 locals.add(localCopy(chip, local, v, extra));

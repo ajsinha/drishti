@@ -43,7 +43,8 @@ import java.util.regex.Pattern;
  * the board-local header chip. Each panel becomes:
  * <ul>
  * <li>a block use ({@code use: deal-ticket@1}) the instance of the seed chip of that block, its {@code with} as the instance's controls;</li>
- * <li>a panel the seed chip {@code panel-<kind>} carries whole (every option a pin or a constant of it) an instance of that chip;</li>
+ * <li>a panel a generic record chip ({@code record-<kind>}, UI_BOARD.md 12.4) or the seed chip {@code panel-<kind>} carries whole (every option
+ * a pin or a constant of it) an instance of that chip, the field names in its pin mapping and controls;</li>
  * <li>anything else a board-local chip wrapping the panel, its record reads written over the document pin ({@code $.X} as {@code @doc.X}).</li>
  * </ul>
  * A chip choice is accepted only when {@link BoardSutra} paints it back into exactly the panel it came from. A panel that reads a page control
@@ -53,8 +54,9 @@ public final class PageConverter {
 
     private static final Pattern CTL = Pattern.compile("ctl\\.([A-Za-z0-9_-]+)");
     private static final Pattern LINK = Pattern.compile("link\\(");
-    private static final Pattern WHOLE = Pattern.compile("%\\{([A-Za-z0-9_-]+)(?:\\|[^}]*)?}");
-    private static final Pattern PATH = Pattern.compile("\\$\\.([A-Za-z_][A-Za-z0-9_]*)");
+    private static final Pattern WHOLE = Pattern.compile("%\\{([A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+)?)(?:\\|[^}]*)?}");
+    private static final Pattern AT_PIN = Pattern.compile("@([A-Za-z][A-Za-z0-9_-]*)");
+    private static final Pattern PATH = Pattern.compile("\\$\\.([A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*)");
     static final String HEADER = "header";
 
     private final ChipCatalog chips;
@@ -131,15 +133,20 @@ public final class PageConverter {
                 }
             }
             String why = reads.isEmpty() ? null : "it reads the page control" + (reads.size() > 1 ? "s " : " ") + String.join(", ", reads);
-            ObjectNode seed = why == null ? seedInstance(p, supply) : null;
-            if (seed != null && paintsBack(seed, inst, p)) {
+            ObjectNode seed = why == null ? seedInstance(p, supply, inst) : null;
+            if (seed != null) {
                 instances.set(inst, seed);
                 seeds.add(seed.path("use").asText());
                 continue;
             }
             if (why == null) {
                 why = p.has("use") ? "no seed chip carries the block use " + p.path("use").asText() + " with these parameters"
-                        : "the seed chip panel-" + p.path("kind").asText("?") + " does not carry every option of the panel";
+                        : p.has("source") ? "it reads another record through source: " + p.path("source").asText()
+                                + " (a chip names no source, CP-02; on a board that is a second supply)"
+                        : p.path("rows").isTextual() && !PATH.matcher(p.path("rows").asText()).matches()
+                                ? "its rows are computed over the record (" + abbrev(p.path("rows").asText()) + "), not a path a pin maps"
+                        : "no Chip Store chip (record-" + p.path("kind").asText("?") + ", panel-" + p.path("kind").asText("?")
+                                + ") carries every option of the panel";
             }
             String chip = "local-" + inst;
             locals.add(localChip(inst, "Panel '" + inst + "' of the page " + sutra + ", converted as it was.", supply, reads, Set.of(),
@@ -272,8 +279,8 @@ public final class PageConverter {
         return c;
     }
 
-    /** The instance of a seed chip that carries {@code p} whole, or null. */
-    private ObjectNode seedInstance(JsonNode p, String supply) {
+    /** The instance of a Chip Store chip that carries {@code p} whole and paints back into it exactly, or null. */
+    private ObjectNode seedInstance(JsonNode p, String supply, String inst) {
         if (p.has("use")) {
             ChipRef ref;
             try {
@@ -295,13 +302,37 @@ public final class PageConverter {
                 }
                 controls.set(e.getKey(), e.getValue().deepCopy());
             }
-            return instance(ref.toString(), null, supply, controls);
+            ObjectNode i = instance(ref.toString(), null, supply, controls);
+            return paintsBack(i, inst, p) ? i : null;
         }
         if (!p.hasNonNull("kind")) {
             return null;
         }
-        ChipDoc chip = chips.find(new ChipRef("panel-" + p.path("kind").asText(), 1)).map(ChipCatalog.Entry::doc).orElse(null);
-        JsonNode body = chip == null ? null : chip.body().path("panels");
+        String kind = p.path("kind").asText();
+        for (String name : RECORD_CHIPS.getOrDefault(kind, List.of("record-" + kind))) {
+            ObjectNode i = chips.find(new ChipRef(name, 1)).map(e -> fit(e.doc(), p, supply, inst)).orElse(null);
+            if (i != null && paintsBack(i, inst, p)) {
+                return i;
+            }
+        }
+        ObjectNode i = chips.find(new ChipRef("panel-" + kind, 1)).map(e -> fit(e.doc(), p, supply, inst)).orElse(null);
+        return i != null && paintsBack(i, inst, p) ? i : null;
+    }
+
+    /**
+     * The record chips a panel kind may become, tried in order (UI_BOARD.md 12.4, P5 follow-up): a kind whose panels come in more than one shape
+     * has a chip per shape ({@code kv} over the rows of a path or over named fields of the record).
+     */
+    static final java.util.Map<String, List<String>> RECORD_CHIPS = java.util.Map.of("kv", List.of("record-kv", "record-fields"));
+
+    /**
+     * The instance of {@code chip} that carries panel {@code p}: each option of the panel lands on the slot the chip's body gives it, a
+     * {@code %{control}} as a constant (its record reads written as {@code @doc.X}), an {@code @data} pin as the record path it reads
+     * ({@code rows: $.POINTS} as {@code map: {rows: POINTS}}), a {@code %{pin.column}} as the column's mapped attribute ({@code x: TENOR} as
+     * {@code map: {rows.x: TENOR}}), a literal only when equal. Null when an option has no slot. The field names stay in the board, never the chip.
+     */
+    private static ObjectNode fit(ChipDoc chip, JsonNode p, String supply, String inst) {
+        JsonNode body = chip.body() == null ? null : chip.body().path("panels");
         if (body == null || body.size() != 1 || !chip.inPins().containsKey(BoardSutra.DOC) && hasDocRead(body)) {
             return null;
         }
@@ -313,30 +344,56 @@ public final class PageConverter {
         while (it.hasNext()) {
             var e = it.next();
             String k = e.getKey();
+            JsonNode v = e.getValue();
             if (k.equals("id") || k.equals("kind")) {
                 continue;
             }
             if (k.equals("title")) {
-                title = e.getValue().asText();
+                if (!v.isTextual()) {
+                    return null;
+                }
+                title = BoardSutra.toPin(v.asText());
                 continue;
             }
-            Matcher m = WHOLE.matcher(b.path(k).asText(""));
-            if (!m.matches()) {
+            JsonNode slot = b.get(k);
+            if (slot == null) {
                 return null;
             }
-            PinSpec pin = chip.inPins().get(m.group(1));
+            String st = slot.asText("");
+            Matcher m = WHOLE.matcher(st);
+            Matcher at = AT_PIN.matcher(st);
+            String pinName = m.matches() ? m.group(1) : at.matches() ? at.group(1) : null;
+            if (pinName == null) {
+                if (!slot.equals(v)) {
+                    return null;
+                }
+                continue;
+            }
+            if (pinName.contains(".")) {
+                if (!v.isTextual() || !chip.inPins().containsKey(pinName.substring(0, pinName.indexOf('.')))) {
+                    return null;
+                }
+                map.put(pinName, v.asText());
+                continue;
+            }
+            PinSpec pin = chip.inPins().get(pinName);
             if (pin == null) {
                 return null;
             }
-            if (pin.role() == PinSpec.PinRole.CONTROL) {
-                controls.set(pin.name(), e.getValue().deepCopy());
-            } else {
-                Matcher pm = PATH.matcher(e.getValue().asText(""));
-                if (!pm.matches() || pin.shape() != null && !pin.shape().isEmpty()) {
+            if (pin.role() == PinSpec.PinRole.CONTROL && m.matches()) {
+                controls.set(pin.name(), BoardSutra.mapText(v, BoardSutra::toPin));
+            } else if (pin.role() == PinSpec.PinRole.DATA) {
+                Matcher pm = PATH.matcher(v.asText(""));
+                if (!pm.matches()) {
                     return null;
                 }
                 map.put(pin.name(), pm.group(1));
+            } else {
+                return null;
             }
+        }
+        if (chip.inPins().containsKey(BoardSutra.PANEL_ID) && p.hasNonNull("id") && !p.path("id").asText().equals(inst)) {
+            controls.put(BoardSutra.PANEL_ID, p.path("id").asText());
         }
         ObjectNode i = instance(chip.ref().toString(), title, supply, controls);
         if (!chip.inPins().containsKey(BoardSutra.DOC)) {
@@ -347,6 +404,10 @@ public final class PageConverter {
             i.remove("map");
         }
         return i;
+    }
+
+    private static String abbrev(String s) {
+        return s.length() > 40 ? s.substring(0, 40) + "..." : s;
     }
 
     private static boolean hasDocRead(JsonNode body) {

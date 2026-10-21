@@ -190,6 +190,11 @@ public final class BoardProof {
         } catch (RuntimeException e) {
             board = JSON.createObjectNode().put("error", String.valueOf(e.getMessage()));
         }
+        if (!entitlements.mayOpen(who, ref.kind())) {
+            // a person who may not open the kind: the old page is a refusal and the board's supplier must refuse too (no record painted)
+            return board.has("error") ? null : JSON.createObjectNode().put("user", who.user()).put("record", ref.kind() + "/" + ref.id())
+                    .put("path", "(access)").put("page", "refused").put("board", "painted");
+        }
         String path = firstDifference(old, board, "");
         if (path == null) {
             return null;

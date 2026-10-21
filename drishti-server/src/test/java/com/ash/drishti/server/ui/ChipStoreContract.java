@@ -299,7 +299,7 @@ abstract class ChipStoreContract {
 
     @Test
     void theListingOffersReleasedChipsAndTheAuthorsOwn() {
-        assertThat(chips.list(null, null, null, null, DAVE)).hasSize(67);       // 68 seed versions, filterable-table has two
+        assertThat(chips.list(null, null, null, null, DAVE)).hasSize(85);       // 86 seed versions, filterable-table has two
         chips.saveDraft("pnl-strip", chipYaml(1, "", ""), null, ALICE);
         assertThat(chips.list(null, null, "strip", null, ALICE)).extracting(m -> m.get("mine")).containsExactly(true);
         assertThat(chips.list(null, null, "strip", null, DAVE)).isEmpty();

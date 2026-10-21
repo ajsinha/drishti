@@ -316,6 +316,7 @@ and phone. Note `trades.selected` feeds two traces: an out pin may drive any num
 | `selection` | a set of ids of one kind | the many-select form of `id` |
 | `document` | one entity document of a kind (`of:`) | for record chips (kv, entity card) |
 | `rowset` | rows of a declared `shape` (column name: type, `required`, `many`) | `many: true` takes several columns as a list |
+| `spec` | a structured setting in the form of the panel or visual it configures (a list of columns, series or markers, a pivot, a BI `format`) | a control constant only, never data or a trace target from another type; added in P5 for the record chips (12.4) |
 
 ### 4.2 Compatibility: may this source feed this pin?
 
@@ -890,6 +891,106 @@ headers aside):
 The two failures: `report:python-desk-risk/risk` (BC-03, the `python` visual's required `rows.columns` has no well) and
 `report:region-economics/regions` (BC-03, the `text` visual's required `content` pin is not given). Packs other than trading build their
 pages from panels, not blocks, so every page needs board-local chips: those 240 chips are the Chip Store's candidate list (14.1 decision 5).
+
+**P5 follow-up: the record chips (every pack on Chip Store chips).** The 240 board-local chips were clustered by shape: the same panel kind
+with different fields, labels or lists is one chip. Eighteen generic **record chips** (`record-<shape>@1`, written by
+`tools/ui_record_chips.py` through `tools/ui_seed_chips.py`, each with a full manual and passing CP-01..05) now carry them. A record chip
+reads the page's record through its document pin `doc` and one list of it through a rowset pin; it names no field. The board carries the
+names: `map: { rows: POINTS, rows.x: TENOR, rows.y: ZERO_RATE }` for a curve, `controls: { columns: [...] }` for a table. New in the
+model and the converter for this:
+
+* the pin type **`spec`** (4.1): a structured setting in the panel's own form (columns, series, markers, a pivot, a BI `format`), a control
+  constant only;
+* a body slot **`%{pin.column}`** paints the attribute mapped to that column by its bare name (`x: '%{rows.x}'` paints `x: TENOR`); a control
+  value that reads the record is written `@doc.X` in the board and painted `$.X`;
+* the frame controls every record chip shares: `panel-id` (an old page's camelCase panel id, kept so drill links and saved layouts still
+  find the panel), `key`, `code`, `area`;
+* `PageConverter` tries `record-<kind>` (for `kv`: `record-kv`, then `record-fields`), then `panel-<kind>`, and keeps a choice only when
+  `BoardSutra` paints it back into exactly the panel; the board-local reason now says why a panel is a true one-off;
+* every `bi-*` seed chip has optional controls for the report's own visual settings (`format`, `alt`, `filters`, `sort`, `limit`,
+  `hierarchy`, `alert`, `drillthrough`), so `ReportConverter` sets them as constants instead of copying the chip; a text, image, button or
+  tile visual's `text`, `src`, `label` or `from` is its `content` pin.
+
+The clusters (panels in the six packs other than trading, then trading's that moved too):
+
+| Chip | Panel kind and shape | Mapped pins (the names in the board) | Spec and other controls | Panels |
+|---|---|---|---|---|
+| `record-links` | `links` over the record | (none) | `code`, `area` | 49 |
+| `record-table` | `table` over a list, with or without a pivot or a row filter | `rows` | `columns` (spec), `pivot` (spec), `where` | 47 (5 stay one-offs) |
+| `record-line` | `line` over a list | `rows`, `rows.x`, `rows.y` | `fmt` | 32 (1) |
+| `record-fields` | `kv` over named fields of the record | (the binds are in `columns`) | `columns` (spec), `when` | 4 (1) + 7 trading |
+| `record-kv` | `kv` over a list of label and value | `rows` | | 26 |
+| `record-hbar` | `hbar` over a list | `rows`, `rows.label`, `rows.value` | `fmt`, `tone`, `on-select` (spec) | 19 (2) |
+| `record-surface` | `surface` grid | `rows`, `rows.y` | `columns` (spec) | 5 |
+| `record-markdown` | `markdown` quoting the record | | `text`, `when` | 4 |
+| `record-ladder` | `ladder` over a list | `rows` | `columns` (spec) | 3 |
+| `record-pivot` | `pivot` over a list | `rows`, `rows.by`, `rows.across`, `rows.value` | `agg`, `fmt`, `tone`, `heat` | 2 |
+| `record-area` | `area` series over a list | `rows`, `rows.x` | `series` (spec), `limit` | 2 |
+| `record-candlestick` | `candlestick` over a list | `rows`, `rows.x`, `rows.volume` | `fmt` | 2 |
+| `record-map` | `map` with the record's place | | `highlight`, `link` (spec), `shade` (spec), `height` | 2 |
+| `record-scatter` | `scatter` over a list | `rows`, `rows.x`, `rows.y`, `rows.label`, `rows.size`, `rows.group` | `fmt`, `xFmt`, `xLabel`, `yLabel` | 1 |
+| `record-waterfall` | `waterfall` over a list | `rows`, `rows.label`, `rows.value` | `fmt`, `sum`, `unit` | 1 |
+| `record-histogram` | `histogram` over a list | `rows` | `fmt`, `unit`, `markers` (spec) | 1 |
+| `record-graph` | `graph` from two lists | `nodes`, `edges`, `nodes.label`, `nodes.group` | `layout` | 1 |
+| `record-metric` | one figure of the record | `value` | `fmt`, `tone`, `caption`, `span` | 12 trading |
+
+Every record chip also has the frame controls `panel-id`, `key`, `code` and `area`. The 26 BI report visuals that were board-local copies
+are now instances of their `bi-*` seed chips with constants.
+
+**The two BC-03 failures, fixed in the converter and the seed chips, not in the reports:** `report:python-desk-risk/risk`: the
+`bi-python` chip had `rows.columns` required by the generator's "first well is required" rule, but a Python *measure* visual takes only
+`values`; neither well is required now. `report:region-economics/regions`: the text visual gives its text as `text:`, which the converter
+now sets as the chip's `content` pin. Both reports were right.
+
+**The dry run after** (`ConvertCliTest`, 2026-10-21; before: the table above):
+
+| Pack | Screens | Clean | With board-local chips | Board-local chips (before) | Fail (before) |
+|---|---|---|---|---|---|
+| trading | 136 | 132 | 4 | 24 (47) | 0 (0) |
+| core | 10 | 10 | 0 | 0 (22) | 0 (0) |
+| counterparty-risk | 10 | 9 | 1 | 1 (26) | 0 (0) |
+| market-data | 20 | 20 | 0 | 0 (58) | 0 (0) |
+| market-risk | 14 | 14 | 0 | 0 (44) | 0 (1) |
+| news-and-markets | 4 | 2 | 2 | 8 (22) | 0 (0) |
+| world-economy | 15 | 15 | 0 | 0 (68) | 0 (1) |
+
+**The true one-offs left (33)**, each with its reason in the dry run:
+
+* `counterparty-risk` `netting-set` `trades` (1): the table reads four page controls (`asset`, `product`, `status`, `minNotional`) in its
+  title and row filter; a generic chip has no page-control pins (the header's `ctl-*` out pins are per page).
+* `news-and-markets` `listed-company` and `news-topic` (8): each panel reads another record through `source: link($.QUOTE_ID, 'quote')`;
+  a chip body may not name a source (CP-02). On a board that is a second supply (the linked record), a later step.
+* `trading` `counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades` (24): per page the `trades` table reads the
+  page control `status`, and five panels compute their rows over the record (`group($.TRADES, 'PRODUCT_TYPE', 'NOTIONAL')`,
+  `flatten($.TRADES[*].EVENTS)[...]`), which is a computation, not a path a pin maps. On a board these become a model query.
+
+**The proof of every pack** (`UiMigrationPacksTest`, every pack enabled on its committed samples, at most 765 rows a kind; three people:
+`full` every kind raw, `masked` every kind with `MTM`, `NOTIONAL`, `PRICE` and `GDP_PER_CAPITA` masked, `restricted` eleven kinds across
+the packs so the other pages and links are refused; up to 3 records a page; the full set, not a sample):
+
+| Pack | Entity pages proven | Comparisons | Differences | No sample |
+|---|---|---|---|---|
+| trading (`UiMigrationTest`) | 134 of 134 | 1,206 | 0 | 0 |
+| core | 10 of 10 | 90 | 0 | 0 |
+| counterparty-risk | 10 of 10 | 90 | 0 | 0 |
+| market-data | 20 of 20 | 180 | 0 | 0 |
+| market-risk | 6 of 6 | 54 | 0 | 0 |
+| news-and-markets | 2 of 4 | 18 | 0 | 2 (`news`, `quote`: live kinds with no committed sample; their pages convert clean) |
+| world-economy | 13 of 13 | 117 | 0 | 0 |
+
+The first run found a gap in the proof, not in the boards: for a person who may not open the page's kind, the old page is a refusal and
+the board's supplier refuses, but the two were compared as views. `BoardProof` now proves such a pair by "both refuse" (and reports
+`(access)` if the board painted a record the person may not open). The broken-chip check of `UiMigrationTest` now changes the title of the
+`pay30` instance (a `record-metric@1`) and still fails at `panels[1].title`.
+
+**Ready to switch** (`packs.<pack>: boards`; every one stays on `sutras` until the product owner says so): core, counterparty-risk,
+market-data, market-risk and world-economy (every entity page proven; their pages on Chip Store chips, the one netting-set one-off
+included); trading (proven, 24 one-offs); news-and-markets is ready for `listed-company` and `news-topic` and convertible for `news` and
+`quote`, unproven there for want of a sample record.
+
+**Still not done:** the data proof of BI report pages (both BI runs as each person, same data): the 10 report pages of these packs
+convert clean and pass the board check, but their data is not compared; publishing the record chips through review (they ship as
+certified seeds); boards for computed rows and `source:` panels (a model query, a second supply).
 
 ## 13. Later releases
 

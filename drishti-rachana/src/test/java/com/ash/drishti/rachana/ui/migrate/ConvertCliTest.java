@@ -26,7 +26,9 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -68,21 +70,78 @@ class ConvertCliTest {
         }
         assertThat(callnot).isNotNull();
         assertThat(callnot.path("chips").toString()).contains("deal-ticket@1", "legs@1", "flow-schedule@1", "events@1", "payments@1", "deal-footer@1");
-        assertThat(callnot.path("localChips").toString()).contains("local-deposit");
+        assertThat(callnot.path("chips").toString()).contains("record-fields@1");      // the deposit panel: a generic chip since the record chips
+        assertThat(callnot.path("localChips")).isEmpty();
         assertThat(Files.readString(out.resolve("trading-endur-callnot.board.yaml"))).contains("use: \"deal-ticket@1\"", "board: \"trading-endur-callnot\"");
         Ran text = run(args("trading"));
         System.out.println(text.out());
         assertThat(text.out()).startsWith("pack trading: ");
     }
 
+    /**
+     * Every pack converts with no failure, its panels on Chip Store chips (the record-* chips, UI_BOARD.md 12.4): the board-local chips left are
+     * the true one-offs, each listed with its reason, and no more than the counts the docs give.
+     */
     @Test
-    void everyPackDryRuns() throws Exception {
-        for (String pack : List.of("core", "counterparty-risk", "market-data", "market-risk", "news-and-markets", "world-economy")) {
-            Ran r = run(args(pack));
-            System.out.println(r.out());
+    void everyPackConvertsOnChipStoreChipsWithOnlyTrueOneOffsLeft() throws Exception {
+        Map<String, Integer> oneOffs = new LinkedHashMap<>();
+        oneOffs.put("core", 0);
+        oneOffs.put("counterparty-risk", 1);              // netting-set trades: it reads four page controls
+        oneOffs.put("market-data", 0);
+        oneOffs.put("market-risk", 0);
+        oneOffs.put("news-and-markets", 8);               // panels reading another record through source: (a chip names no source, CP-02)
+        oneOffs.put("world-economy", 0);
+        oneOffs.put("trading", 24);                       // computed rows (group, flatten) and the page-control tables
+        for (Map.Entry<String, Integer> e : oneOffs.entrySet()) {
+            Ran r = run(args(e.getKey(), "--json"));
             assertThat(r.err()).isEmpty();
-            assertThat(r.out()).startsWith("pack " + pack + ": ");
+            JsonNode rep = UiDocuments.tree(r.out());
+            System.out.println("pack " + e.getKey() + ": screens " + rep.path("screens") + ", clean " + rep.path("clean") + ", local " + rep.path("local")
+                    + ", local chips " + rep.path("localChips") + ", fails " + rep.path("fails"));
+            for (JsonNode i : rep.path("items")) {
+                i.path("localChips").forEach(l -> System.out.println("  " + i.path("screen").asText() + " " + l.path("chip").asText() + ": "
+                        + l.path("reason").asText()));
+                if (i.path("status").asText().equals("fails")) {
+                    System.out.println("  FAILS " + i);
+                }
+            }
+            assertThat(rep.path("fails").asInt()).as(e.getKey()).isZero();
+            assertThat(r.code()).isEqualTo(UiCli.OK);
+            assertThat(rep.path("localChips").asInt()).as(e.getKey()).isLessThanOrEqualTo(e.getValue());
         }
+    }
+
+    @Test
+    void theFormerBoardCheckFailuresConvert() throws Exception {
+        Ran r = run(args("market-risk", "--json"));
+        JsonNode rep = UiDocuments.tree(r.out());
+        Ran w = run(args("world-economy", "--json"));
+        String all = r.out() + w.out();
+        assertThat(all).contains("report:python-desk-risk/risk", "report:region-economics/regions");
+        for (JsonNode i : rep.path("items")) {
+            assertThat(i.path("status").asText()).as(i.toString()).isNotEqualTo("fails");
+        }
+        for (JsonNode i : UiDocuments.tree(w.out()).path("items")) {
+            assertThat(i.path("status").asText()).as(i.toString()).isNotEqualTo("fails");
+        }
+    }
+
+    @Test
+    void aRecordPanelBecomesAGenericChipWithTheFieldNamesInTheBoard() throws Exception {
+        var chips = UiCli.folder(ROOT.resolve("config/ui/chips"), ChipState.CERTIFIED);
+        String text = Files.readString(ROOT.resolve("config/packs/market-data/sutras/market-data/ir-curve.v1.sutra.yaml"));
+        Conversion c = new PageConverter(chips).convert("market-data", text);
+        assertThat(c.status()).isEqualTo(Conversion.Status.CLEAN);
+        JsonNode curve = c.document().path("chips").path("curve");
+        assertThat(curve.path("use").asText()).isEqualTo("record-line@1");
+        assertThat(curve.path("map").path("rows").asText()).isEqualTo("POINTS");
+        assertThat(curve.path("map").path("rows.x").asText()).isEqualTo("TENOR");
+        assertThat(c.document().path("chips").path("points").path("use").asText()).isEqualTo("record-table@1");
+        String chip = Files.readString(ROOT.resolve("config/ui/chips/record-line.v1.chip.yaml"));
+        assertThat(chip.substring(chip.indexOf("body:"))).doesNotContain("TENOR", "POINTS", "ZERO_RATE");
+        var board = UiDocuments.readBoard(c.document().toString());
+        JsonNode sutra = BoardSutra.toSutra(board, ref -> chips.find(ref).map(e -> e.doc())).orElseThrow();
+        assertThat(sutra.path("panels")).isEqualTo(UiDocuments.tree(text).path("panels"));
     }
 
     @Test

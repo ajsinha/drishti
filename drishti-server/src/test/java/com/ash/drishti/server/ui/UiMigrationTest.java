@@ -143,14 +143,8 @@ class UiMigrationTest {
         String sutra = "counterparty-trades";
         PackScreens.Served good = boards.get(sutra);
         ObjectNode doc = good.conversion().document().deepCopy();
-        int at = -1;
-        for (int i = 0; i < doc.path("local-chips").size(); i++) {
-            if (doc.path("local-chips").get(i).path("chip").asText().equals("local-pay30")) {
-                at = i;
-            }
-        }
-        assertThat(at).isGreaterThanOrEqualTo(0);
-        ((ObjectNode) doc.path("local-chips").get(at).path("body").path("panels").get(0)).put("title", "Payments, next 31 days");   // the fault
+        assertThat(doc.path("chips").path("pay30").path("use").asText()).isEqualTo("record-metric@1");   // a Chip Store chip since 12.4
+        ((ObjectNode) doc.path("chips").path("pay30")).put("title", "Payments, next 31 days");   // the fault
         Conversion c = good.conversion();
         Conversion broken = new Conversion(c.screen(), c.pack(), c.kind(), c.board(), doc, c.status(), c.seeds(), c.locals(), c.links(), c.traces(),
                 c.reason(), c.problems());

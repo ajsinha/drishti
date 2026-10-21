@@ -445,6 +445,9 @@ public final class BoardCheck {
                 case ID, TEXT, DIMENSION, DATETIME -> {
                     return v.isValueNode() && !v.isNull() ? null : "is not a single value";
                 }
+                case SPEC -> {
+                    return v.isNull() ? "is empty" : null;
+                }
                 case ROWSET, DOCUMENT -> {
                     return "cannot be a constant: rows and documents come from a supply or a trace";
                 }
