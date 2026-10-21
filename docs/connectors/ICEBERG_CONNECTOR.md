@@ -241,7 +241,8 @@ The loader's heap is `DRISHTI_LOADER_HEAP` (default `4g`; Windows: `-Heap`), and
 (`DRISHTI_DATA_DIR`) and removed after the load. A load that fails ends with one line and status 1, never a Java stack trace (both
 scripts): `iceberg: the bucket 'warehouse' does not exist at http://localhost:9000 (said by the REST catalog at http://localhost:8181):
 create it, or check --warehouse, --set s3.endpoint and the catalog's own warehouse setting […]`, `iceberg: cannot reach the REST
-catalog at …: check --uri …`, or `iceberg: the load failed: <why>`; `-Ddrishti.loader.trace=true` (in `JAVA_TOOL_OPTIONS`) prints the
+catalog at … (the connection was refused or closed before an answer (ClosedChannelException)): check --uri …`, or `iceberg: the load
+failed: <why>`, where the reason is the first message in the failure's chain that says something, never `null`; `-Ddrishti.loader.trace=true` (in `JAVA_TOOL_OPTIONS`) prints the
 stack trace as well.
 
 Measured (10,000 trades x 3 days, two writer threads; before 2.6.6 the samples and the book were two loads):

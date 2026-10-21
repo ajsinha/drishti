@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **Fixed (QA4-07): `load-iceberg.sh`'s one-line error gives the real reason, never `: null`.** A REST catalog that could not be reached
+  read *cannot reach the REST catalog at http://127.0.0.1:1: null (ClosedChannelException …)*: the exception has no message. The line
+  (and the REST catalog's own error) now gives the first message in the cause chain that says something, else the cause in words: *(the
+  connection was refused or closed before an answer (ClosedChannelException))* (`Reasons`). ICEBERG_CONNECTOR section 6.
+  IcebergLoaderFailureTest.
 - **Fixed (QA4-06): `build_demo_lakes.py --server` ends with what came of the signals.** It said *The server … was told* when nothing
   listened or every signal was refused (403); it now reads lake demo's own report of the server and says *was not told: nothing
   answered there*, *was not told: it refused the signals* (and the token to give), *did not answer in time*, *was told of only some
