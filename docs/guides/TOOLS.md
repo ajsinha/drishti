@@ -1197,3 +1197,5 @@ What grows with the input, and what does not:
   dozen values (`lake scan` shows the counts) and compact with `lake maintain`.
 * **The console's page** streams the upload to its temporary folder (`DRISHTI_CONSOLE_TMP_DIR`: room for the file) and runs the
   same builder; `lakes.jobs` (2) bounds the builds at once, so plan memory for two batches.
+
+**Also in `tools/`:** `ui_seed_chips.py` writes the UI Board's seed chips into `config/ui/chips` ([UI_BOARD.md](../architecture/UI_BOARD.md)); `lake/s3sim.py` starts the S3 simulators (moto, MinIO) for the S3 tests (section 4.12).

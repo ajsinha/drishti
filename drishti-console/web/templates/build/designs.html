@@ -17,12 +17,23 @@
 {% block title %}My designs · {{ PRODUCT }}{% endblock %}
 {% block screen %}build{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/ui-board.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm bs" data-designs>
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/help/screen-designer">Screen designer guide</a></nav>
-  <h1>My designs</h1>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/help/ui-board-guide">Board designer guide</a> · <a href="/help/screen-designer">Screen designer guide</a></nav>
+  <h1>Boards</h1>
+  <p class="text-muted-d">Everything you design in one list: boards (screens wired from certified chips, read as whoever opens them) and screen designs
+    (a Sutra over your data, which opens as a board too). Build → Designer starts either.</p>
+  <p class="bs-actions"><a class="btn-pill btn-accent" href="/build/board/new" data-ub-new><i class="bi bi-plus-lg" aria-hidden="true"></i> New board</a>
+    <a class="btn-pill btn-ghost" href="/build/chip/new"><i class="bi bi-cpu" aria-hidden="true"></i> New chip</a></p>
+  <section class="ub-boards-sec" data-ub-boards aria-labelledby="ubMine">
+    <div class="ub-row"><h2 id="ubMine" class="bs-h">Boards</h2>
+      <label class="ub-field-inline">Workspace <input class="studio-in" data-ub-ws placeholder="also list a workspace's" aria-label="Workspace whose boards to list"></label></div>
+    <p class="bs-status" data-ub-status role="status" aria-live="polite"></p>
+    <div class="tbl-wrap"><table class="tbl" data-no-chart data-ub-list aria-labelledby="ubMine"><thead><tr><th scope="col">Board</th><th scope="col">Title</th><th scope="col">Where</th><th scope="col">Revision</th><th scope="col">Chips</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead><tbody></tbody></table></div>
+  </section>
+  <h2 class="bs-h">Screen designs</h2>
   <p class="text-muted-d">A design is your work on one screen: the data you brought, the Sutra, notes. Only you can open yours. They are kept on
     the server{% if limits %}: up to {{ limits.maxPerUser }} named designs (and {{ limits.maxScratch }} scratch ones; the oldest scratch design makes room for a new one), {{ limits.maxSamples }} samples and {{ limits.maxMb }} MB each; an unnamed design is
     forgotten after {{ limits.scratchHours }} hours, a named one after {{ limits.namedDays }} days untouched{% endif %}.</p>
@@ -50,6 +61,7 @@
         <td><time data-ms="{{ d.expiresAt }}"></time>{% if d.expiryWarning %} <span class="bs-role conflict" title="Open it, or edit it, to keep it">expires soon</span>{% endif %}</td>
         <td class="bs-actions">
           <a class="btn-pill btn-ghost" href="/build/d/{{ d.id }}">Open</a>
+          <a class="btn-pill btn-ghost" href="/build/board/new?design={{ d.id | urlencode }}" title="Open this design in the designer's Board mode (not saved until you save it)">Open as board</a>
           <button type="button" class="btn-pill btn-ghost" data-rename>Rename</button>
           <button type="button" class="btn-pill btn-ghost" data-duplicate>Duplicate</button>
           <button type="button" class="btn-pill btn-ghost" data-delete>Delete</button>
@@ -58,4 +70,4 @@
   {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/build-designs.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/build-designs.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-paint.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-boards.js?v={{ ASSET_V }}"></script>{% endblock %}

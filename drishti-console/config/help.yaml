@@ -138,6 +138,7 @@ moved:
   bi-tutorial: docs-tutorials-10-first-bi-report
   build-workbench-tutorial: docs-tutorials-06-design-a-screen
   screen-builder: screen-designer
+  ui-board-guide: docs-guides-ui-board-guide        # the Board designer guide (2.7.0), linked from Build's menu and the designer
   panel-kinds: panels
   panel-developer-guide: panels#developing-a-panel-kind
   nested-data: docs-guides-nested-documents
@@ -191,6 +192,9 @@ moved:
 
 # F1 opens the guide for the current screen.
 contextual:
+  ui-boards: docs-guides-ui-board-guide            # the board viewer's F1 (2.7.0)
+  ui-designer: docs-guides-ui-board-guide          # the designer in Board mode
+  ui-chip-designer: docs-guides-ui-board-guide#chip-mode   # the designer in Chip mode (P4b fills it)
   landing: user-guide
   bi: bi-guide
   terminal: user-guide

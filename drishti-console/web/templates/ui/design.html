@@ -1,0 +1,105 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# UI Board P4: Build's designer in its two modes (UI_BOARD.md section 10). One shell, one palette area (the Chip Store), one YAML tab.
+   Board mode: the canvas with pins and traces, the mapping sheet, live data, the Problems of the board check (ui-board-canvas.js,
+   ui-board-design.js). Chip mode: the place the chip designer (P4b) fills; for now a chip's document, its draft and its examples on the
+   test bench (ui-chip-editor.js). Screen designs (/build/d/<id>) open here as boards through the adapter (?design=<id>). #}
+{% extends "ui/_shell.html" %}
+{% block ub_title %}Designer{% endblock %}
+{% block ub_keys %}
+    <dt><kbd>Enter</kbd></dt><dd>On a chip in the store: add it. On a box: open its mapping sheet</dd>
+    <dt><kbd>&larr;</kbd> <kbd>&rarr;</kbd> <kbd>&uarr;</kbd> <kbd>&darr;</kbd></dt><dd>Move the box; with <kbd>Shift</kbd>: resize it</dd>
+    <dt><kbd>Enter</kbd> on an out pin, then on an in pin</dt><dd>Draw a trace (<kbd>Esc</kbd> cancels)</dd>
+    <dt><kbd>Delete</kbd></dt><dd>Remove the box, or the selected trace</dd>
+    <dt><kbd>Ctrl</kbd> <kbd>Z</kbd> · <kbd>Ctrl</kbd> <kbd>Y</kbd></dt><dd>Undo · Redo</dd>
+    <dt><kbd>Ctrl</kbd> <kbd>S</kbd></dt><dd>Save</dd>
+{% endblock %}
+{% block ub_main %}
+<div class="wb ub-design" data-ub-design data-mode="{{ mode }}" data-board="{{ board }}" data-chip="{{ chip }}" data-design="{{ design }}"
+     data-owner="{{ where.owner | default('') }}" data-workspace="{{ where.workspace | default('') }}" data-user="{{ me.user if me else '' }}">
+  <div class="wb-head">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">Boards</a> · <a href="/help/ui-board-guide">Board designer guide</a></nav>
+    <h1 class="wb-title" data-ub-heading>{% if mode == 'chip' %}Chip{% else %}Board{% endif %} designer</h1>
+    <span class="ub-modes" role="tablist" aria-label="Mode">
+      <button type="button" role="tab" class="btn-pill btn-ghost" data-ub-mode="board" aria-selected="{{ 'true' if mode == 'board' else 'false' }}"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> Board</button>
+      <button type="button" role="tab" class="btn-pill btn-ghost" data-ub-mode="chip" aria-selected="{{ 'true' if mode == 'chip' else 'false' }}"><i class="bi bi-cpu" aria-hidden="true"></i> Chip</button></span>
+    <span class="ub-tabs" role="tablist" aria-label="Editors"><button type="button" role="tab" class="btn-pill btn-ghost" data-ub-tab="canvas" aria-selected="true">Design</button><button type="button" role="tab" class="btn-pill btn-ghost" data-ub-tab="yaml" aria-selected="false">YAML / JSON</button></span>
+    <button type="button" class="btn-pill btn-ghost" data-bi-keys aria-label="Keyboard shortcuts (?)"><i class="bi bi-keyboard" aria-hidden="true"></i> Keys</button>
+  </div>
+
+  <header class="ub-toolbar" role="toolbar" aria-label="Board" data-mode-only="board">
+    <label class="ub-field-inline">Name <input class="studio-in mono" data-ub-name placeholder="book-trades" aria-label="Board name" value="{{ board }}"></label>
+    <label class="ub-field-inline">Title <input class="studio-in" data-ub-title aria-label="Board title"></label>
+    <button type="button" class="btn-pill btn-ghost" data-ub-undo title="Undo (Ctrl+Z)" disabled><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Undo</button>
+    <button type="button" class="btn-pill btn-ghost" data-ub-redo title="Redo (Ctrl+Y)" disabled><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Redo</button>
+    <button type="button" class="btn-pill btn-ghost" data-ub-device aria-pressed="false"><i class="bi bi-phone" aria-hidden="true"></i> Phone</button>
+    <label class="ub-field-inline"><input type="checkbox" data-ub-live> Live data</label>
+    <select class="studio-select" data-ub-revisions aria-label="Revisions"><option value="">Revisions…</option></select>
+    <button type="button" class="btn-pill btn-ghost" data-ub-share><i class="bi bi-share" aria-hidden="true"></i> Share</button>
+    <button type="button" class="btn-pill btn-ghost" data-ub-copy><i class="bi bi-files" aria-hidden="true"></i> Copy to workspace</button>
+    <button type="button" class="btn-pill btn-ghost" data-ub-export title="Write the panel chips of this board as a Sutra, for a pack (until 3.0)"><i class="bi bi-filetype-yml" aria-hidden="true"></i> Export Sutra</button>
+    <a class="btn-pill btn-ghost" data-ub-open href="{% if board %}/ui/b/{{ board }}{% endif %}"{% if not board %} hidden{% endif %}><i class="bi bi-eye" aria-hidden="true"></i> View</a>
+    <button type="button" class="btn-pill btn-accent" data-ub-save disabled><i class="bi bi-save" aria-hidden="true"></i> Save</button>
+  </header>
+  <header class="ub-toolbar" role="toolbar" aria-label="Chip" data-mode-only="chip">
+    <label class="ub-field-inline">Chip <input class="studio-in mono" data-ce-name placeholder="my-chip" aria-label="Chip name" value="{{ chip }}"></label>
+    <button type="button" class="btn-pill btn-ghost" data-ce-open>Open my draft</button>
+    <button type="button" class="btn-pill btn-accent" data-ce-save>Save draft</button>
+    <button type="button" class="btn-pill btn-ghost" data-ce-run>Run examples</button>
+    <button type="button" class="btn-pill btn-ghost" data-ce-submit>Submit for review</button>
+  </header>
+  <p class="bi-msg" data-ub-status role="status" aria-live="polite"></p>
+  <p class="bi-warn ub-conflict" data-ub-conflict role="alert" hidden>Changed elsewhere: someone saved a newer revision. <button type="button" class="btn-pill btn-accent" data-ub-reload>Reload</button></p>
+
+  <div class="ub-work">
+    <aside class="ub-palette" aria-labelledby="ubPal">
+      <h2 id="ubPal" class="bs-h">Chip Store</h2>
+      <input type="search" class="studio-in" data-ub-palette-q placeholder="Search chips" aria-label="Search the Chip Store">
+      <label class="ub-field-inline"><input type="checkbox" data-ub-certified> Certified only</label>
+      <ul class="ub-pal-list" data-ub-palette aria-label="Chips"></ul>
+    </aside>
+    <section class="ub-centre">
+      <div data-ub-pane="canvas" role="tabpanel" aria-label="Design">
+        <div class="ub-canvas-wrap" data-mode-only="board">
+          <div class="ub-params" data-ub-params aria-label="Board parameters" hidden></div>
+          <div class="ub-canvas" data-ub-canvas aria-label="Canvas: a 12-column grid"></div>
+          <svg class="ub-wires" data-ub-wires aria-hidden="true"></svg>
+        </div>
+        <section class="ub-chip-mode" data-mode-only="chip" data-ub-chip-mode aria-labelledby="ubChipH">
+          <h2 id="ubChipH" class="bs-h">Chip</h2>
+          <p class="text-muted-d" data-ub-chip-placeholder>The chip designer (its manual form, pin table and body editor) comes here. For now: write the chip's document in the
+            YAML / JSON tab, save it as your draft, and run its manual's examples on the test bench below. A chip in the store on the left opens as a copy to start from.</p>
+          <h3 class="bs-h">Test bench</h3><div data-ce-bench></div>
+        </section>
+      </div>
+      <div data-ub-pane="yaml" role="tabpanel" aria-label="YAML / JSON" hidden>
+        <p class="text-muted-d" data-ub-yaml-help>The same document as the design view: edit either. The text is read on pause (YAML, or JSON, which is YAML too).</p>
+        <textarea class="studio-in mono ub-yaml" data-ub-yaml rows="28" spellcheck="false" aria-label="The document"></textarea>
+        <p class="text-muted-d" data-ub-yaml-note role="status" aria-live="polite"></p>
+      </div>
+      <section class="ub-problems-box" aria-labelledby="ubProb" data-mode-only="board"><h2 id="ubProb" class="bs-h">Problems <small class="text-muted-d" data-ub-problem-count></small></h2><ul class="ub-problems" data-ub-problems></ul></section>
+    </section>
+    <aside class="ub-sheet" data-ub-sheet aria-label="Mapping sheet" data-mode-only="board"></aside>
+  </div>
+  <dialog class="ub-dlg ub-manual" data-ub-manual aria-labelledby="ubManT"><h2 id="ubManT" data-ub-manual-title>Manual</h2><div data-ub-manual-body></div><form method="dialog"><button class="btn-pill btn-accent">Close</button></form></dialog>
+  <dialog class="ub-dlg" data-ub-share-dlg aria-labelledby="ubShT"><form><h2 id="ubShT">Share by link</h2><p class="text-muted-d">Named people open it read-only, as themselves (their own masks). An empty list makes it private again.</p>
+    <label class="ub-field">People (user names, commas) <input class="studio-in" name="people"></label><div class="ub-row"><button class="btn-pill btn-accent">Share</button><button type="button" class="btn-pill btn-ghost" data-cancel>Cancel</button></div></form></dialog>
+  <dialog class="ub-dlg" data-ub-copy-dlg aria-labelledby="ubCpT"><form><h2 id="ubCpT">Copy to a workspace</h2>
+    <label class="ub-field">Workspace <input class="studio-in" name="workspace" required></label><label class="ub-field">New name (optional) <input class="studio-in mono" name="name"></label>
+    <div class="ub-row"><button class="btn-pill btn-accent">Copy</button><button type="button" class="btn-pill btn-ghost" data-cancel>Cancel</button></div></form></dialog>
+</div>
+{% endblock %}
+{% block ub_scripts %}<script src="/static/js/build/palette.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-canvas.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-design.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-chip-editor.js?v={{ ASSET_V }}"></script>{% endblock %}
