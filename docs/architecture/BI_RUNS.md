@@ -716,18 +716,23 @@ Sharing never hands over the runner's result as such. For each recipient, `RunSh
  the row part equal? (SecuritySignature.Alias rules, denied, hidden: the same for every alias the plan reads)
  and the recipient's masked columns ⊇ the runner's?
  and the canonical question validates as the recipient (MqValidator: no DRS-9161 MQ_MASKED, no DRS-9163 MQ_NOT_FOR_ROLE)?
+ and every measure is additive, with no limit, top filter or totals (when an extra masked column is a grouping field)?
           │
-          ├── yes ─► RE-MASK: the stored result is served with the recipient's extra masked columns
-          │          replaced by the mask (null + masked flag), as the engine masks today; no recomputation
+          ├── yes ─► RE-MASK: the stored result is served with the recipient's extra masked columns replaced by the mask
+          │          (the value + masked flag); a masked grouping field also COLLAPSES its groups into one, the
+          │          additive measures summed, exactly as the engine answers that recipient; no recomputation
           │
           └── no  ─► RECOMPUTE: a new run in the recipient's name (runner = recipient, shared_from = the original,
                      BACKGROUND class), with the same question, as-of dates and data versions; it is visible to the
                      recipient and notifies them when done; its estimate is the original's actuals
 ```
 
-* **Re-mask** is sound only when the rows are identical (the same row rules) and the recipient masks *more* columns. Masking is then
-  column-wise on output, which is what the engine does for that recipient anyway. A measure whose input column is masked for the
-  recipient is refused by validation (`MqValidator`), so such a question takes the *recompute* path and is never re-masked.
+* **Re-mask** is sound only when the rows are identical (the same row rules) and the recipient masks *more* columns. It is not purely
+  column-wise: the engine does not group by a masked column, so for that recipient the groups of a masked grouping field collapse into
+  one. Re-masking therefore masks the value **and** collapses those groups, **summing the additive measures**; that is exact only when every
+  measure is additive and the question has no limit, top filter or totals. **Anything else is recomputed** (a non-additive measure, a
+  limit, a top filter, totals), as is a measure whose input column is masked for the recipient (refused by `MqValidator`), a SQL statement
+  and a report visual (`same` or `recomputed` only). As built: 18.2b, R6.
 * **Recompute** is the bursting pattern of `StatementService`: one computation per recipient as that recipient.
 * Sharing to a role (`role:risk-team`) expands to its members when the share is made, like `SubscriptionService.expand`. Each member
   gets a share row. Members with equal signatures share one recomputation (the key is the same), so ten readers of one desk cost one
