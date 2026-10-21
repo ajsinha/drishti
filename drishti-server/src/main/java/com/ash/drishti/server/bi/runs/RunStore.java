@@ -53,6 +53,9 @@ import java.util.stream.Stream;
  */
 public final class RunStore {
 
+    /** Guards the snapshot versions (promote, rewrite). */
+    private final java.util.concurrent.locks.ReentrantLock snapshots = new java.util.concurrent.locks.ReentrantLock();
+
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final String ANSWER = "answer.json";
     static final String OWNER = "owner.txt";
@@ -204,7 +207,16 @@ public final class RunStore {
      * Writes a promoted snapshot as the next version of {@code name} ({@code snapshots/<name>/v<N>/answer.json}, outside the budget and the sweeper) and
      * keeps the newest {@code keep} versions; the version written. {@code doc} is the stored document (the answer, the promoter, the token, provenance).
      */
-    public synchronized int promote(String name, Map<String, Object> doc, int keep) {
+    public int promote(String name, Map<String, Object> doc, int keep) {
+        snapshots.lock();                                    // a lock, not synchronized: the body writes files (virtual threads)
+        try {
+            return promoteLocked(name, doc, keep);
+        } finally {
+            snapshots.unlock();
+        }
+    }
+
+    private int promoteLocked(String name, Map<String, Object> doc, int keep) {
         List<Integer> versions = snapshotVersions(name);
         int next = versions.isEmpty() ? 1 : versions.get(versions.size() - 1) + 1;
         Path dir = snapshotDir(name).resolve("v" + next);
@@ -247,7 +259,16 @@ public final class RunStore {
     }
 
     /** Replaces a kept snapshot version's document (the dataset item it drafted is written back after the draft is made). */
-    public synchronized void rewriteSnapshot(String name, int version, Map<String, Object> doc) {
+    public void rewriteSnapshot(String name, int version, Map<String, Object> doc) {
+        snapshots.lock();
+        try {
+            rewriteSnapshotLocked(name, version, doc);
+        } finally {
+            snapshots.unlock();
+        }
+    }
+
+    private void rewriteSnapshotLocked(String name, int version, Map<String, Object> doc) {
         Path file = snapshotDir(name).resolve("v" + version).resolve(ANSWER);
         try {
             Path tmp = FileSwap.temp(file);

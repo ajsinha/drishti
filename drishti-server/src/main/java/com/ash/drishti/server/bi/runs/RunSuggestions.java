@@ -47,6 +47,9 @@ import java.util.function.BiPredicate;
  */
 public final class RunSuggestions {
 
+    /** Guards the decisions file. */
+    private final java.util.concurrent.locks.ReentrantLock saving = new java.util.concurrent.locks.ReentrantLock();
+
     private static final ObjectMapper JSON = new ObjectMapper();
 
     /** One shape of question. */
@@ -122,7 +125,16 @@ public final class RunSuggestions {
         }
     }
 
-    private synchronized void save() {
+    private void save() {
+        saving.lock();                                       // a lock, not synchronized: the body writes a file (virtual threads)
+        try {
+            saveLocked();
+        } finally {
+            saving.unlock();
+        }
+    }
+
+    private void saveLocked() {
         if (file == null) {
             return;
         }
