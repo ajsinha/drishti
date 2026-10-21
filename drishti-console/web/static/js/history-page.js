@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* The history page (TRD 1000015 30 <GO>), keyboard first: ↑↓ (j k) move the selected day, ←→ the column, Enter opens the day's view
-   as it was, C changes only, D diff, E export, R a new range, 1 3 6 Y T the market ranges, P the next chart field, Alt+S copies a
+   as it was, C changes only, D diff, E export, Shift+K a chart of the days, R a new range, 1 3 6 Y T the market ranges, P the next chart field, Alt+S copies a
    link, ? the keys, Esc closes or goes back to today's view. Keys are ignored while typing in a field. The market shape draws its
    chart with ECharts in the theme's own colours (read from the tokens at draw time); the chart's crosshair follows the selected row. */
 (function () {
@@ -173,6 +173,16 @@
     box.addEventListener('dblclick', function (e) { if (e.target.closest('[data-row]') && !e.target.closest('a')) { open(); } });
   }
 
+  // Chart any table (TABLE_CHARTS.md): the days on the page as a chart, any column by date; Shift+K (lowercase k is the previous day)
+  var chartBtn = root.querySelector('[data-hx-chart-open]');
+  function chartDays() {
+    var T = (window.drishtiModules || {}).tables, data;
+    if (!T || !chartBtn) { return; }
+    try { data = JSON.parse(chartBtn.getAttribute('data-hx-chart-rows')); } catch (err) { return; }
+    T.openChart(function (S) { return S.history(data, { title: (data.id || '') + ' over time' }); }, chartBtn);
+  }
+  if (chartBtn) { chartBtn.addEventListener('click', chartDays); }
+
   document.addEventListener('keydown', function (e) {
     var tag = (e.target.tagName || '').toLowerCase();
     if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) { return; }
@@ -185,6 +195,7 @@
     switch (k) {
       case 'ArrowDown': case 'j': select(sel + 1); break;
       case 'ArrowUp': case 'k': select(sel - 1); break;
+      case 'K': if (chartBtn) { chartDays(); } else { handled = false; } break;
       case 'Home': select(0); break;
       case 'End': select(rows().length - 1); break;
       case 'PageDown': select(sel + page); break;

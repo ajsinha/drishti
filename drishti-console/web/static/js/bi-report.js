@@ -125,8 +125,16 @@
     if (key) { out.push(mk('bi-toterm', 'terminal', 'Open ' + key.value + ' in the terminal', () => { window.location.href = '/v/' + encodeURIComponent(key.kind) + '/' + encodeURIComponent(String(key.value)); }, { 'data-act': 'open-terminal' })); }
     out.push(mk('bi-rows', 'list-ul', state.rows[spec.id] ? 'Back to the visual' : 'Show the rows behind this visual', () => toggleRows(spec, current()), { 'data-act': 'rows', 'aria-pressed': state.rows[spec.id] ? 'true' : 'false' }));
     out.push(mk('bi-astable', 'table', state.asTable[spec.id] ? 'Show as a chart' : 'Show as a table', () => { state.asTable[spec.id] = !state.asTable[spec.id]; redraw(spec.id); }, { 'data-act': 'as-table', 'aria-pressed': state.asTable[spec.id] ? 'true' : 'false' }));
+    if (chartable(spec)) { out.push(mk('bi-chart', 'bar-chart-line', 'Chart this table (K)', (ev) => chartOf(spec, ev.currentTarget), { 'data-act': 'chart', 'aria-keyshortcuts': 'K' })); }
     if (sel) { out.push(mk('bi-clear', 'x-circle', 'Clear the selection', () => { clearSelection(spec.id); }, { 'data-act': 'clear' })); }
     return out;
+  }
+  /** Chart any table (TABLE_CHARTS.md): a table or matrix visual, or any visual shown as a table or as its rows, charts its last answer. */
+  function chartable(spec) { return spec.type === 'table' || spec.type === 'matrix' || !!state.asTable[spec.id] || !!state.rows[spec.id]; }
+  function chartOf(spec, opener) {
+    const T = (window.drishtiModules || {}).tables, e = frames.get(spec.id);
+    if (!T || !e || !e.res || !e.res.columns) { return; }
+    T.openChart((S) => S.bi(e.res, { title: spec.title || spec.id, identity: 'bi:' + reportId + '/' + pageId + '/' + spec.id }), opener || e.frame.el);
   }
   /** Opens the alert form for this visual with the report, page, visual and the filters on the screen filled in. */
   function alertButton(spec, mk) {
@@ -380,6 +388,7 @@
     if (e.target.closest('input,select,textarea') || e.ctrlKey || e.metaKey || e.altKey) { return; }
     if (e.key === 'Escape') { clearSelection(spec.id); } else if (e.key === 't' || e.key === 'T') { state.asTable[spec.id] = !state.asTable[spec.id]; redraw(spec.id); }
     else if (e.key === 'r' || e.key === 'R') { toggleRows(spec, state.selections.find((s) => s.visual === spec.id)); }
+    else if ((e.key === 'k' || e.key === 'K') && chartable(spec)) { e.preventDefault(); chartOf(spec, e.currentTarget); }          // before the board's kiosk K, which then stands aside
     else if (e.key === 'd' && levels(spec)) { drill(spec, 'down'); } else if (e.key === 'u' && levels(spec)) { drill(spec, 'up'); }
   }
 

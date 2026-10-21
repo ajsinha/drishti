@@ -28,7 +28,7 @@ from fastapi.responses import Response
 
 from core.backend import BackendError, drs_message
 from core.export import filename, to_csv, to_xlsx
-from core.history_rows import build_page, export_rows, range_label
+from core.history_rows import build_page, chart_data, export_rows, range_label
 from routes.common import ident, render
 
 router = APIRouter(include_in_schema=False)
@@ -102,7 +102,7 @@ async def history(request: Request, kind: str, id_: str):
                   diff_href=f"?{page_query(params, diff=None if 'diff' in params else '1')}",
                   ranges=[(label, f"?{page_query(params, **{**{'days': None, 'range': None, 'from_': None, 'to': None}, key: value})}",
                            params.get(key) == value) for label, key, value in page["ranges"]],
-                  range_text=range_label(params), only=only)
+                  range_text=range_label(params), only=only, chart=chart_data(page, kind, id_))
 
 
 async def _data(request: Request, kind: str, id_: str):

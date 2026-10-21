@@ -173,7 +173,7 @@ A board page is a page of the **report viewer**, `/bi/r/<id>/<page>` (from the c
 
 | Key | Does |
 |---|---|
-| `k` | enter or leave kiosk |
+| `k` | enter or leave kiosk; on a focused table or matrix visual `k` opens its chart instead ([Chart any table](USER_GUIDE.md#chart-any-table)) |
 | `Esc` | leave kiosk |
 | `p` | in kiosk: pause or resume the updates, and the turning of pages |
 | `←` `→` | in kiosk: the previous or next board page |

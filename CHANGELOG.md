@@ -17,6 +17,20 @@
 
 ## Unreleased
 
+- **Chart any table (2.6.7, the console wiring; docs/architecture/TABLE_CHARTS.md section 24).** Every table can be drawn as a chart: a
+  chart button in each table's heading and `K` on a focused table (`Shift`+`K` on a history page, where `k` is the previous day; `K` on a
+  focused BI table or matrix, while `K` elsewhere on a report still toggles kiosk) open a wide dialog (full screen on a phone) with the
+  chart already drawn from smart defaults: line, bar (grouped, stacked, 100%), area, pie or donut, scatter and combo; X with date buckets
+  and gaps; up to six series with their aggregation and left or right axis; split by a column (12 at most); sort; Top N with Others.
+  Search results, history and BI tables chart the server's raw values; a table with a Pivot tab its raw records; any other table its
+  cells as displayed, said so. Masked columns are offered greyed and never charted (a crafted choice is refused); partly masked cells
+  are left out and counted. **Chart all N** aggregates every match of a search on the server through its pack's search pivot, or reads
+  every record of a table with a Pivot tab. View as table, PNG, SVG, CSV and Excel of the data as drawn; the summary sentence is the
+  chart's accessible name and caption; points step with the arrow keys and are read out; every console theme (Terminal hues and light
+  included), redrawn on a theme change, with a palette that never gives two series one colour. The scripts load at the first chart.
+  Not yet: saved charts, Promote to Sutra, Open in BI and Chart all through BI runs (the server steps). `test_table_chart.py`,
+  `test_table_chart_browser.py`; USER_GUIDE *Chart any table* with pictures; the `table-chart` help address.
+
 - **History cache default 64 → 256 MB (SOAK4-02).** Counted in real heap since SOAK3-02, 64 MB held only 63 to 208 answers, and the busiest soak node hit the cache 1 % of the time; `drishti.history.cache-mb` lowers it on a small heap.
 
 - **Fixed (SOAK3-01, P2): a node that has just started or rejoined never says "no source holds" (`404 DRS-1001`) for what only its peers

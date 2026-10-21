@@ -202,12 +202,47 @@ async def search(request: Request, q: str = "", vs: str = "", words: str = ""):
                     cells.append((_shown(v), isinstance(v, (int, float)) and not isinstance(v, bool)))
             rows.append({"ref": r["ref"], "title": r.get("title") or r["ref"]["id"], "cells": cells, "status": r.get("status")})
     titled = any(r["title"] != r["ref"]["id"] for r in rows)       # a title that only repeats the id is left out
+    chart_rows = search_chart_rows(data, q, titled) if data and rows and not vs else None
     pivot_saved = None
     if data and data.get("pivot") and not vs:                      # the kind's pack opts its results into a Pivot tab
         state = await request.app.state.pivots.state(request.app.state.backend, ident(request))
         pivot_saved = request.app.state.pivots.saved_search(state, data.get("kind", ""))
     return render(request, "terminal/search.html", q=q, vs=vs, words=words, phrase=phrase, data=data, rows=rows, error=error, titled=titled,
-                  screen="search", pivot_saved=pivot_saved, hq=hq)
+                  screen="search", pivot_saved=pivot_saved, hq=hq, chart_rows=chart_rows)
+
+
+def _chart_value(v):
+    """A search value as the chart reads it: numbers, text and booleans as they are, a list or an object as its shown text."""
+    if v is None or isinstance(v, (int, float, str)):
+        return v
+    return _shown(v)
+
+
+def search_chart_rows(data: dict, q: str, titled: bool) -> dict:
+    """The raw values of a search's shown rows for Chart any table (TABLE_CHARTS.md section 8.4, the search adapter): the id, the
+    title when shown, then each column, in the table's order; masked values stay the server's mask. ``pivot`` lists the fields
+    the kind's pack offers to the search pivot (Chart all N), when it does."""
+    cols = data.get("columns", [])
+    labels = data.get("labels") or {}
+    first = data.get("mnemonic") or data.get("kind") or "Id"
+    fields = [{"name": first, "label": first, "id": True, "kind": data.get("kind")}]
+    if titled:
+        fields.append({"name": "Title", "label": "Title", "type": "text"})
+    seen = {f["name"] for f in fields}
+    for c in cols:                                   # named by their labels, as the table heads them (unique); the path for the pivot
+        name = labels.get(c) or c
+        while name in seen:
+            name += " "
+        seen.add(name)
+        fields.append({"name": name, "label": labels.get(c) or c, "path": c})
+    out = []
+    for r in data.get("rows", []):
+        line = [r["ref"]["id"]] + ([r.get("title") or r["ref"]["id"]] if titled else [])
+        line += [_chart_value(r["values"].get(c)) for c in cols]
+        out.append(line)
+    pivot = data.get("pivot") or {}
+    return {"kind": data.get("kind"), "q": q, "matched": data.get("matched"), "fields": fields, "rows": out,
+            "pivot": [f.get("name") if isinstance(f, dict) else f for f in (pivot.get("fields") or [])] if isinstance(pivot, dict) else []}
 
 
 @router.post("/s/watch")

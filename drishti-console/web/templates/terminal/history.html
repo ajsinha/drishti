@@ -80,6 +80,7 @@
           </div>
         </span>
         <button type="button" class="fk" data-hx-key="s" aria-keyshortcuts="Alt+S" title="Copy a link to these rows: the end date is pinned, so it shows the same days later"><b>⧉</b> <span data-hx-share-label>Link</span></button>
+        {% if not params.get('diff') and page.rows %}<button type="button" class="fk" data-hx-key="K" data-hx-chart-open aria-keyshortcuts="Shift+K" title="Chart these days: any column, by date (Shift+K)" data-hx-chart-rows="{{ chart | tojson | forceescape }}"><b>K</b> Chart</button>{% endif %}
         <button type="button" class="fk" data-hx-key="?" aria-keyshortcuts="?"><b>?</b> Keys</button>
       </span>
     </div>
@@ -165,7 +166,7 @@
       {% if page.carried %}<span class="hx-li" data-legend="carried"><span class="hx-carry">↧</span> no change that day: carried forward</span>{% endif %}
       {% if page.masked %}<span class="hx-li" data-legend="masked"><i class="bi bi-eye-slash" aria-hidden="true"></i> masked for you</span>{% endif %}
     </p>{% endif %}
-    <p class="hx-keyline"><kbd>↑</kbd><kbd>↓</kbd> day <kbd>←</kbd><kbd>→</kbd> column <kbd>Enter</kbd> open the day {% if not page.market %}<kbd>C</kbd> changes only {% else %}<kbd>1</kbd><kbd>3</kbd><kbd>6</kbd><kbd>Y</kbd><kbd>T</kbd> range {% endif %}<kbd>D</kbd> diff <kbd>E</kbd> export <kbd>R</kbd> range <kbd>?</kbd> keys <kbd>Esc</kbd> today’s view</p>
+    <p class="hx-keyline"><kbd>↑</kbd><kbd>↓</kbd> day <kbd>←</kbd><kbd>→</kbd> column <kbd>Enter</kbd> open the day {% if not page.market %}<kbd>C</kbd> changes only {% else %}<kbd>1</kbd><kbd>3</kbd><kbd>6</kbd><kbd>Y</kbd><kbd>T</kbd> range {% endif %}<kbd>D</kbd> diff <kbd>E</kbd> export <kbd>Shift</kbd>+<kbd>K</kbd> chart <kbd>R</kbd> range <kbd>?</kbd> keys <kbd>Esc</kbd> today’s view</p>
   </footer>
   <dialog class="hx-help" data-hx-help aria-label="History keys">
     <header><h3>Keys</h3><button type="button" class="fk" data-hx-help-close aria-label="Close"><b>Esc</b></button></header>
@@ -175,6 +176,7 @@
       <tr><td><kbd>C</kbd></td><td>changes only, on and off</td><td><kbd>D</kbd></td><td>diff: what changed, day by day</td></tr>
       <tr><td><kbd>R</kbd></td><td>type a range (30, 3M, YTD, FROM …)</td><td><kbd>1</kbd> <kbd>3</kbd> <kbd>6</kbd> <kbd>Y</kbd> <kbd>T</kbd></td><td>1M, 3M, 6M, 1Y, YTD</td></tr>
       <tr><td><kbd>P</kbd></td><td>next chart field</td><td><kbd>E</kbd></td><td>export: CSV, Excel, JSON</td></tr>
+      <tr><td><kbd>Shift</kbd>+<kbd>K</kbd></td><td>chart these days (any column)</td><td></td><td></td></tr>
       <tr><td><kbd>Alt</kbd>+<kbd>S</kbd></td><td>copy a link to these rows</td><td><kbd>Esc</kbd></td><td>close, else today’s view</td></tr>
     </tbody></table>
   </dialog>

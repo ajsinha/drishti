@@ -437,6 +437,7 @@ there is nowhere to go.
 | `PgDn` / `PgUp` | Move the selection one page down / up |
 | `Home` / `End` | Select the first / last row (of all pages) |
 | `Enter` | Open the selected row's link (its id) |
+| `K` | Chart the table ([Chart any table](#chart-any-table)) |
 
 Worked example:
 
@@ -554,6 +555,89 @@ in it is at least 44 pixels high.
 | `Enter` | OK |
 | `Esc` | Cancel and close the menu, and nothing more: a zoomed panel or a drawer stays; a second `Esc` leaves them |
 | `Alt`+`Shift`+`X` | Clear all filters of the panel that has the focus |
+
+## Chart any table
+
+Every table can be drawn as a chart: the tables inside a view, search results and pick lists, admin lists, the days of a
+history page, and a BI report's table and matrix visuals. Press the **chart button** in the table's heading (the bar-chart
+icon beside the page size), or focus the table and press `K` (`Shift`+`K` on a history page, where `k` is *previous day*;
+`K` on a focused BI table, while `K` elsewhere on a report still toggles kiosk). A wide dialog opens with the chart
+**already drawn**; it is full screen on a phone. Close it with `Esc` or ✕: the focus goes back to the button.
+
+![A line chart of a swap's cash flows by month, two series on two axes, in the Terminal theme: the chart, its summary, what was charted, and the settings beside it](img/table-chart/line-by-month-terminal.png)
+
+**What it draws first.** X is the first date column (a time axis), else the first text column (categories), else a number;
+Y is the first numeric column that is not an id, summed (averaged for percentages, prices and rates); with no number at all
+it counts rows. A date X is a line, a text X a bar chart, two numbers a scatter. With more than 30 categories it starts at the
+top 20 and *Others*.
+
+**The settings** sit beside the chart (under it on a phone, in a *Settings* section that folds away); every change redraws at
+once, there is no Apply.
+
+| Setting | Choices |
+|---|---|
+| Type | Line, Bar, Area, Pie (or donut), Scatter, Combo (bars and lines together); `1` to `6` pick them when the focus is not in a box. A type the columns cannot make is greyed with the reason (*A scatter needs two numeric columns*) |
+| X | Any column; a date column also takes **Dates** (automatic, by day, week, month, quarter, year; automatic keeps days up to 500 points) and **Gaps** (connect across missing days, or break where a business day has no data) |
+| Y series | Up to six: the column (or *Rows (count)*), the aggregation for a repeated X (sum, average, count, min, max; a scatter can plot the points themselves), the left or right axis (two axes for different units), and in a combo bar, line or area |
+| Split by | A text or date column makes one series per value: at most 12 (the 11 largest and *Others*) |
+| Sort | By X or by value, either way |
+| Top N | Keep the N largest categories, with or without *Others* (a pie has at most 12 slices). Not on a time axis: it would cut dates out of a line |
+| Stacked, 100%, Donut, Labels | Stack bars (and 100% of each stack), a donut instead of a pie, values on the marks |
+
+![Bars of amounts by desk, stacked by currency, in the light theme](img/table-chart/stacked-bars-light.png)
+
+**What it charts.** The rows the table holds, after its filters (the filter box and every column filter), on the page's
+business date; paging is ignored, so a table on page 2 charts all its filtered rows. The line under the chart says what was
+charted: *Showing 30 of 500 rows*, *after the table's filters*, anything left out. Search results, history and BI tables
+chart the **raw values** the server sent; other tables read the cells as displayed, and the line says *figures as displayed
+(rounded)* (`1.5m` is charted as 1,500,000). A table whose panel also has a Pivot tab charts its raw rows.
+
+**Masked values are never charted.** A column hidden for your role is listed greyed in every picker, *(hidden for your
+role)*, and cannot be X, a series or a split; the status line names it. In a column only partly masked, the masked cells
+are left out of every sum, average and count, and the line says how many. Exports carry only what is drawn.
+
+**Chart all N.** When the table shows fewer rows than exist, **Chart all N rows** (or `A`) charts every row: a search whose
+pack offers its Pivot tab is aggregated on the server over every match of the business date (on the pack's pivot fields,
+a date by day); a view's table with a Pivot tab reads all its rows (up to the server's limit, said if reached). Otherwise the
+button is absent or greyed with the reason. **Chart the shown rows** goes back.
+
+![A combo of bars and a line on two axes, by quarter, in the light theme](img/table-chart/combo-two-axes-light.png)
+
+**Edges.** A table with no rows (or whose filters leave none) opens with *No rows to chart* and the settings still usable; a
+single row draws one bar, point or a full pie, and the summary says *one row*; a pie refuses negative values and offers a bar
+chart or the absolute values; a table with only identifiers or only hidden columns says *Nothing to chart* and why.
+
+**Read it without the picture.** The sentence under the chart is the chart's summary (and what a screen reader reads):
+*Line chart of Amount (sum) by Pay date (month), 12 months, from 2027-01 to 2027-12, highest 2027-02 4.3m, lowest 2027-01
+−290.1k, trend down; 40 rows.* **View as table** (`T`) shows the chart's data as a table. Focus the chart and use `←` `→` to
+step through the points (each one is read out), `↑` `↓` to change series, `Home` / `End` for the first and last.
+
+**Export.** **PNG** and **SVG** save the picture in the theme's colours (no round trip to the server); **CSV** and **Excel**
+save the chart's data as drawn: X, then one column per series, *Others* as a row. `E` moves to the export buttons.
+**Defaults** puts back the chart the table opens with. Your settings are kept per table until you close the browser tab
+(saving them for next time is planned).
+
+![A donut of amounts by currency in the Terminal theme](img/table-chart/donut-terminal.png)
+
+**Themes.** Every colour is the theme's: all ten themes, the three Terminal hues and the light theme included; changing
+the theme redraws an open chart. Two series never share a colour, and past eight series lines get dashes and bars patterns.
+
+**On a phone** the dialog fills the screen: the chart on top, its summary, then *Settings*; buttons are finger-sized and the
+page never scrolls sideways.
+
+![The chart on a phone in the Terminal Blue theme](img/table-chart/phone-terminal-blue.png)
+
+| Key | Does |
+|---|---|
+| `K` | On a focused table: open its chart (`Shift`+`K` on a history page) |
+| `1`…`6` | Line, bar, area, pie, scatter, combo |
+| `←` `→`, `Home` `End` | On the chart: the previous, next, first, last point, read out |
+| `↑` `↓` | On the chart: the previous, next series |
+| `T` | View as table, and back |
+| `A` | Chart all N rows, and back (when offered) |
+| `E` | Go to the export buttons |
+| `?` | This section |
+| `Esc` | Close; the focus returns to the chart button |
 
 ## Controls on a screen: choose what a panel shows
 
@@ -1071,6 +1155,7 @@ first*).
   GBP · Equity barrier option*) with every field, ids as links that open the entity. `Esc` closes it.
 - **Chart.** Choose **Bar chart**, **Line chart** or **Heatmap** in the toolbar (and which value, when there are
   several): a chart of the grid as it is now, in the theme's colours, redrawn when you change anything.
+  To chart the table itself, with more types and two axes, use its chart button or `K` ([Chart any table](#chart-any-table)).
 - **CSV** and **Excel** download the grid as shown: one column per row field, then one per column group and value, the
   subtotal and total rows labelled, numbers as numbers. The Excel file has a bold, frozen header row.
 - **Print** prints the pivot and its chart alone, in the print palette.
@@ -1151,6 +1236,7 @@ keys than shown*); a search's drill-down shows 50 rows a page. An administrator 
 | `Esc` | Close the suggestions, a menu (a column's filter menu included), the raw JSON drawer, About this page or Calc; then restore a [zoomed panel](#zoom-a-panel) |
 | `Z` | On a focused panel: [zoom](#zoom-a-panel) it, or restore it; `Shift`+`Z` also asks for full screen |
 | `Alt`+`Shift`+`X` | Clear all [column filters](#filter-a-table-like-excel) (and the filter box) of the panel that has the focus |
+| `K` | On a focused table: [chart it](#chart-any-table); `Shift`+`K` on a history page, where `k` is the previous day |
 | `F1` | Help for the page you are on. On a view it opens [About this page](#about-this-page); `F1` again goes to the guide |
 | `?` | On a view (focus not in a text field): open or close [About this page](#about-this-page) |
 | `F2`–`F6` | Jump to the panel that shows that key in its header |
@@ -1351,6 +1437,7 @@ and the one before) and *Open the day*.
 | `C` | changes only: hide the days on which nothing moved (*7 of 30 days*) | `D` | diff, on and off |
 | `R` | type a new range (`30`, `3M`, `YTD`, `FROM 2026-09-01`) | `1` `3` `6` `Y` `T` | 1M, 3M, 6M, 1Y, YTD |
 | `E` | export: CSV, Excel, JSON | `Alt+S` | copy a link to these rows |
+| `Shift`+`K` | chart these days: any column by date ([Chart any table](#chart-any-table)) | | |
 | `?` | the keys | `Esc` | back to today's view |
 
 **Open the day.** `Enter` opens `/v/trade/1000015?asOf=2026-10-15&gen=59&via=history`: the normal view as of that day, with the pinned

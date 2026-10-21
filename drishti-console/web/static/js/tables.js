@@ -24,7 +24,9 @@
      lists), in the panel's heading bar or a strip above a table without one; a Sutra turns it off with search: false.
    - Page: first, previous, next, last (greyed when there is nowhere to go) and rows per page (remembered per
      browser, 25 by default); ▲ ▼ move a row. All of these sit in the heading too, never under the table.
-   - Keys: focus the table (or click a row), then ↑ ↓ move (turning pages), PgUp/PgDn page, Home/End jump, Enter opens.
+   - Keys: focus the table (or click a row), then ↑ ↓ move (turning pages), PgUp/PgDn page, Home/End jump, Enter opens, K charts.
+   - Chart (TABLE_CHARTS.md): a chart button in the heading and K open the table as a chart (table-chart.js, loaded at the first
+     use with its engine and ECharts, so a page with tables pays nothing until then). A table with data-no-chart has none.
    Tables that live updates re-render keep their sort, filters, page and selection. A table with data-plain is left as
    it is (a form laid out as a table). */
 (function () {
@@ -34,6 +36,51 @@
   var SIZES = [25, 50, 100, 250];
   var MIN_FIT = 5;
   var KEY = 'drishti.tableRows';
+  var VER = me && /[?&]v=([^&]+)/.exec(me.src || '') ? /[?&]v=([^&]+)/.exec(me.src)[1] : '';
+
+  // ---- Chart any table: the dialog and its scripts, loaded at the first use ------------------------------------------------
+  var kit = null;
+  function script(src) {
+    return new Promise(function (ok, fail) {
+      var x = document.createElement('script');
+      x.src = '/static/' + src + (VER ? '?v=' + VER : '');
+      x.onload = ok; x.onerror = function () { fail(new Error('could not load ' + src)); };
+      document.head.appendChild(x);
+    });
+  }
+  /** The chart kit {open, sources}: echarts, the pivot and chart engines, the adapters, the dialog and its stylesheet. */
+  function chartKit() {
+    if (kit) { return kit; }
+    if (!document.querySelector('link[data-table-chart-css]')) {
+      var l = document.createElement('link');
+      l.rel = 'stylesheet'; l.href = '/static/css/table-chart.css' + (VER ? '?v=' + VER : ''); l.setAttribute('data-table-chart-css', '');
+      document.head.appendChild(l);
+    }
+    var steps = [];
+    if (!window.echarts) { steps.push('vendor/echarts/echarts.min.js'); }
+    if (!window.drishtiPivotEngine && !((window.drishtiModules || {}).pivotEngine)) { steps.push('js/pivot-engine.js'); }
+    if (!window.drishtiTableChartEngine) { steps.push('js/table-chart-engine.js'); }
+    if (!window.drishtiTableChartSources) { steps.push('js/table-chart-sources.js'); }
+    if (!window.drishtiTableChart) { steps.push('js/table-chart.js'); }
+    kit = steps.reduce(function (p, src) { return p.then(function () { return script(src); }); }, Promise.resolve()).then(function () {
+      if (!window.drishtiPivotEngine && window.drishtiModules && window.drishtiModules.pivotEngine) { window.drishtiPivotEngine = window.drishtiModules.pivotEngine; }
+      return { open: window.drishtiTableChart.open, sources: window.drishtiTableChartSources };
+    });
+    kit.catch(function () { kit = null; });
+    return kit;
+  }
+  function fetchJson(url, init) {
+    init = init || {};
+    var o = { method: init.method || 'GET', credentials: 'same-origin', headers: { 'Accept': 'application/json' } };
+    if (init.body) { o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(init.body); }
+    return fetch(url, o).then(function (r) { return r.json().catch(function () { return {}; }); });
+  }
+  /** Opens a source (an adapter, or a function of the kit that makes one) as a chart; opener gets the focus back. */
+  function openChart(make, opener) {
+    return chartKit().then(function (k) { return k.open(typeof make === 'function' ? make(k.sources) : make, { opener: opener }); }, function (e) {
+      window.alert('The chart could not open: ' + e.message);
+    });
+  }
   /** init(root, options): sort, filter and page every table under root (the document or a ShadowRoot), now and as panels are
       swapped in. options.scope names the page for remembered state (default: the path). Returns {scan, dispose}. */
   function init(root, options) {
@@ -227,6 +274,18 @@
     clearBtn.classList.add('tbl-clear'); clearBtn.textContent = '✕ Clear filters'; clearBtn.hidden = true;
     if (searchable) { bar.appendChild(quick); bar.appendChild(funnel); bar.appendChild(clearBtn); }
     [nav, up, down, sizeSel].forEach(function (x) { bar.appendChild(x); });
+    var chartable = inDoc && !t.hasAttribute('data-no-chart') && !t.closest('[data-no-chart], dialog, .pv-host') && heads.length > 0;   // the Pivot tab has its own chart
+    function chart() {
+      if (!chartable) { return; }
+      openChart(function (S) { return S.forTable(t, { visible: visible, filtered: filtered() }, fetchJson); }, chartBtn);
+    }
+    var chartBtn = null;
+    if (chartable) {
+      chartBtn = button('', 'Chart this table (K)', chart);
+      chartBtn.classList.add('tbl-chart-b'); chartBtn.setAttribute('aria-keyshortcuts', 'K'); chartBtn.setAttribute('data-table-chart', '');
+      var ci = el('i', 'bi bi-bar-chart-line'); ci.setAttribute('aria-hidden', 'true'); chartBtn.appendChild(ci);
+      bar.appendChild(chartBtn);
+    }
     var wrap = t.closest('.tbl-wrap') || t;
     var head = panel && panel.querySelector(':scope > .pnl-h');
     if (head && panel.querySelectorAll('table.tbl').length === 1) {
@@ -304,7 +363,7 @@
     if (zoomFit) { scheduleFit(); }
 
     t.tabIndex = 0;
-    t.setAttribute('aria-label', (t.getAttribute('aria-label') || 'Table') + ': ↑ ↓ to move, Enter to open; click a heading to sort');
+    t.setAttribute('aria-label', (t.getAttribute('aria-label') || 'Table') + ': ↑ ↓ to move, Enter to open' + (chartable ? ', K to chart' : '') + '; click a heading to sort');
     t.addEventListener('click', function (e) {
       var tr = e.target.closest('tbody tr');
       if (tr) { st.sel = visible().indexOf(tr); render(); }
@@ -320,6 +379,7 @@
         case 'Home': select(0, true); break;
         case 'End': select(visible().length - 1, true); break;
         case 'Enter': if (st.sel >= 0) { open(); } else { handled = false; } break;
+        case 'k': case 'K': if (chartable && !e.altKey && !e.ctrlKey && !e.metaKey) { chart(); } else { handled = false; } break;
         default: handled = false;
       }
       if (handled) { e.preventDefault(); }
@@ -391,6 +451,6 @@
   return { scan: scan, dispose: function () { mo.disconnect(); root.removeEventListener('drishti:table-fit', onFit); root.removeEventListener('keydown', onClearKey); CF.close(); unwatchFit(); if (fitTimer) { clearTimeout(fitTimer); } } };
   }
   var reg = (window.drishtiModules = window.drishtiModules || {});
-  reg.tables = { init: init };
+  reg.tables = { init: init, chartKit: chartKit, openChart: openChart, fetchJson: fetchJson };
   if (!(me && me.hasAttribute('data-manual'))) { init(document); }
 })();

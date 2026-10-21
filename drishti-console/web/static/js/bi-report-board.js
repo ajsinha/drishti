@@ -190,7 +190,7 @@
       btn.addEventListener('click', () => setKiosk(!kiosk));
       document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && kiosk) { setKiosk(false, true); } });
       document.addEventListener('keydown', (e) => {
-        if (e.target.closest('input,select,textarea') || e.ctrlKey || e.metaKey || e.altKey) { return; }
+        if (e.target.closest('input,select,textarea') || e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented) { return; }   // a table visual took K for its chart
         const pages = o.pages(), i = pages.indexOf(o.current());
         if (e.key === 'Escape' && kiosk) { setKiosk(false, true); } else if ((e.key === 'k' || e.key === 'K') && pages.length) { setKiosk(!kiosk); }
         else if (kiosk && (e.key === 'ArrowRight' || e.key === 'ArrowLeft') && pages.length > 1 && i >= 0) { o.go(pages[(i + (e.key === 'ArrowRight' ? 1 : pages.length - 1)) % pages.length]); }

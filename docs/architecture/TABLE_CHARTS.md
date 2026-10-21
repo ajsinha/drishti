@@ -15,7 +15,11 @@
 -->
 # Chart any table
 
-Status: **design, not built.** Release **2.6.7** (decided by the product owner, 2026-10-20), beside BI runs
+Status: **console wiring built (2.6.7, unreleased):** the engine (C1), the dialog with the `dom`, `records`, `search`, `history` and
+`bi` adapters, the Chart button and the keys (C3, C6, and C7 without its BI-runs path), exports, themes, the browser test and the
+docs; see [section 24](#24-the-console-wiring-as-built-c3-c6-c7). **Not built yet (server lane):** `for=chart` on the records
+endpoint (C2), saved charts (C4, C5), the `chart` panel kind and Promote (C8), Open in BI (C9), Chart all N through BI runs.
+Release **2.6.7** (decided by the product owner, 2026-10-20), beside BI runs
 ([BI_RUNS.md](BI_RUNS.md)) and the two Drishti\*net transport items ([DRISHTI_NET.md](DRISHTI_NET.md), *Planned, 2.6.7*). Written
 2026-10-20 from the agreed feature, checked against the console and server code on `develop`. Builds on the Pivot tab
 (`pivot.js`, `pivot-engine.js`, `pivot-grid.js`; [USER_GUIDE › The Pivot tab](../guides/USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)),
@@ -32,7 +36,8 @@ history queries ([HISTORY_QUERIES.md](HISTORY_QUERIES.md)).
 13. [Keys](#13-keys) · 14. [Themes and accessibility](#14-themes-and-accessibility) · 15. [Edge cases](#15-edge-cases) ·
 16. [Endpoints](#16-endpoints) · 17. [Settings](#17-settings) · 18. [Build steps C1..C10](#18-build-steps-c1c10) · 19. [Tests](#19-tests) ·
 20. [Docs to update when it is built](#20-docs-to-update-when-it-is-built) · 21. [What the real code changed](#21-what-the-real-code-changed) ·
-22. [Decisions on the open questions](#22-decisions-on-the-open-questions-product-owner-2026-10-20)
+22. [Decisions on the open questions](#22-decisions-on-the-open-questions-product-owner-2026-10-20) ·
+23. [C1 as built](#23-c1-as-built-table-chart-enginejs-ahead-of-the-wiring) · 24. [The console wiring as built](#24-the-console-wiring-as-built-c3-c6-c7)
 
 ## 1. The ask
 
@@ -736,3 +741,53 @@ Coding the engine settled these points:
 * **The summary's numbers use `pivot-engine.js` `format(v, 'compact')`** (`−300k`, `4.1m`), not the section 14 example's `−0.3m`.
 * **Bad enums are fixes, not problems.** `normalise` returns `{settings, problems, fixes}`: only a removed or masked field (or another
   `v`) is a problem that sets a saved document aside; a bad `type` or `agg` is replaced and listed in `fixes`.
+
+## 24. The console wiring as built (C3, C6, C7)
+
+Built on `develop` for 2.6.7 in the console only; the server steps (C2, C4, C5, C8, C9) are still to come, and the dialog leaves
+their buttons out (section 5.1: absent, not disabled) until they are.
+
+| File | What | Lines |
+|---|---|---|
+| `web/static/js/table-chart.js` | the dialog (`window.drishtiTableChart.open(source, {opener, root, exports})`): chart, caption, status line, Chart all N, settings, keys, View as table, PNG, SVG, CSV, Excel, Defaults | ~560 |
+| `web/static/js/table-chart-sources.js` | the adapters `dom`, `records`, `search`, `history`, `bi`, and `forTable(t, …)` that picks one for a table | ~215 |
+| `web/static/css/table-chart.css` | the dialog, the phone sheet (`max-width: 760px`), print; tokens only | ~100 |
+| `tables.js` | the chart button in every enhanced table's heading, `K` on the focused table, and `chartKit()`: ECharts, `pivot-engine.js`, the engine, the adapters, the dialog and the stylesheet loaded at the first use | +70 |
+| `history-page.js`, `terminal/history.html` | **K Chart** in the key bar, `Shift`+`K`, the key line and the `?` card; `core/history_rows.chart_data` writes the days' raw values in `data-hx-chart-rows` | |
+| `terminal/search.html`, `routes/terminal_routes.py` | `search_chart_rows`: the shown rows' raw values in `data-chart-rows`, each `<tr data-i>` so the table's filters and sort map back to them | |
+| `bi-report.js`, `bi-report-board.js` | a **Chart** button (`data-act="chart"`) on table and matrix visuals and on any visual shown as a table or as its rows; `K` on the focused visual with `preventDefault`, and the kiosk's `K` stands aside when `defaultPrevented` | |
+| `charts.js` | exports `tokens`, `palette`, `compact` and `axis` on `window.drishtiCharts` | |
+
+What building it settled:
+
+* **Fields are named as the table heads them.** The engine's summary, legend and axis names use a column's *name*; the search's
+  paths (`notional`) and a records answer's field names (`mtm`) would read as code, so the search and records adapters name each field
+  by its label (made unique) and keep the path for the search pivot (`asPivot`). Records rows are positional, so only names change.
+* **Records only where the server already gives them.** Without C2 the records endpoint answers only for panels whose Sutra says
+  `pivot:`, and only the pivot's fields: those tables (the panel holds a `[data-pivot-panel]` host) chart their raw records, cut to
+  the rows the table shows, and **Chart all N** charts every record. While the reader has a filter on, the cells are charted instead
+  (the filters are on the cells), with *figures as displayed*. Every other table uses the `dom` adapter.
+* **Chart all on a search** is offered only when the kind's pack says `pivot:`, the table has no filter on, and every field of the
+  chart (X, split, each series) is a pivot field, a date X by day; otherwise the button is greyed with the reason in its title. A change
+  of settings while charting all asks the server again. *Rows (count)* is sent as a count of the X field.
+* **The palette drops repeats.** Crimson gives `link` and `accent` one colour, so two series would have shared it; the dialog passes
+  the engine a palette without repeats (at least six colours remain in every theme, `test_table_chart.py`).
+* **The X axis name sits under its labels** (`nameLocation: middle`) and the grid leaves room for the Y axis names: at the end of the
+  axis it collided with a right axis's labels.
+* **Keys inside the dialog stop there** (`stopPropagation`): the history page's `Esc` (back to today's view), the zoom's `Z` and the
+  kiosk's `K` never see them. `Esc` is the dialog's own cancel.
+* **Settings are kept per table identity for the tab's life** (in memory); **Defaults** forgets them. Saving (C4, C5) adds Save and Reset.
+* **Nothing to chart is said in the dialog, not on the button.** Knowing that every column is hidden or an identifier needs the rows,
+  which the button does not read until it is pressed (the scripts load lazily); the dialog then says *Nothing to chart: …* and why.
+* **Embedded views** (`<drishti-view>`) have no chart button yet: the lazy loading reads the console's own `/static` paths.
+* **Not wired yet:** a Sutra `pivot` table with `by: [a, b]` (a tree table, `data-plain`, drawn by `tree-rows.js`) and the Pivot tab's
+  own grid (which keeps its own chart menu) have no chart button.
+
+Tests: `tests/test_table_chart.py` (the raw rows of search and history pages, masks kept, the button and keys on those pages, the help
+address, the lazy loading, the BI K beside kiosk, the palette's contrast in all ten themes) and `tests/test_table_chart_browser.py`
+(Chromium against a stand-in server with synthetic data, `tests/table_chart_backend.py`: the button and K on a view's table, the type
+switcher, X, split, a second series on the right axis, Top N with Others, a masked column greyed and refused even when forced, a search
+charting raw values and Chart all through the search pivot, a table with a Pivot tab reading its records, Shift+K on history, View as
+table, CSV, PNG and SVG downloads, point navigation, empty, single-row and 600-row tables, a phone, and every theme drawing with its own
+tokens only). Pictures: `tests/table_chart_shots.py` makes `docs/guides/img/table-chart/`.
+

@@ -411,10 +411,10 @@
     return { draw: again, dispose: function () { undo.splice(0).forEach(function (f) { f(); }); } };
   }
   var reg = (window.drishtiModules = window.drishtiModules || {});
-  reg.charts = { init: init, draw: draw, options: BUILD, labelFit: labelFit };
+  reg.charts = { init: init, draw: draw, options: BUILD, labelFit: labelFit, tokens: tokens, palette: palette, compact: compact, axis: axis };
   var me = document.currentScript;
   if (!(me && me.hasAttribute('data-manual'))) {
     init(document);
-    window.drishtiCharts = { draw: draw, options: BUILD, labelFit: labelFit };   // options: the builders, for tests and tools
+    window.drishtiCharts = { draw: draw, options: BUILD, labelFit: labelFit, tokens: tokens, palette: palette, compact: compact, axis: axis };   // options: the builders, for tests and tools; tokens..axis: for the table chart
   }
 })();

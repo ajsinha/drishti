@@ -520,8 +520,11 @@
       : model.axis === 'value' ? Object.assign({ type: 'value', name: model.xLabel, scale: true }, ax)
         : Object.assign({ type: 'category', name: model.xLabel, data: model.x }, ax, { axisLabel: Object.assign({}, ax.axisLabel, { hideOverlap: true }) });
     var yAxis = right ? [valueAxis('left'), valueAxis('right')] : [valueAxis('left')];
-    if (model.horizontal) { base.xAxis = yAxis[0]; base.yAxis = Object.assign(xAxis, { inverse: true }); } else { base.xAxis = xAxis; base.yAxis = yAxis; }
-    base.grid = { left: model.horizontal ? 140 : 56, right: right ? 56 : 20, top: model.series.length > 1 ? 32 : 16, bottom: 40, containLabel: true };
+    if (model.horizontal) { base.xAxis = yAxis[0]; base.yAxis = Object.assign(xAxis, { inverse: true }); } else {
+      base.xAxis = Object.assign(xAxis, { nameLocation: 'middle', nameGap: 28 });          // the X's name under its labels, clear of a right axis
+      base.yAxis = yAxis;
+    }
+    base.grid = { left: model.horizontal ? 140 : 56, right: right ? 56 : 20, top: model.series.length > 1 ? 40 : 28, bottom: model.horizontal ? 40 : 48, containLabel: true };
     var signTone = model.series.length === 1 && model.series[0].type === 'bar' && model.series[0].data.some(function (v) { return num(v) && v < 0; });
     base.series = model.series.map(function (d, i) {
       var color = colorOf(d, i), type = d.type === 'area' ? 'line' : d.type;

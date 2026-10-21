@@ -187,3 +187,32 @@ def export_rows(data: dict, only_changed: bool = False) -> tuple[list, list[list
         line.append(" ".join(r.get("changed") or []))
         rows.append(line)
     return header, rows
+
+
+MASK = "\u2022\u2022\u2022"
+
+
+def chart_data(page: dict, kind: str, id_: str) -> dict:
+    """The rows of the history table for Chart any table (TABLE_CHARTS.md section 8.4, the history adapter), oldest first: the
+    date, then each column the table shows, raw numbers as numbers and anything else its shown text; a masked column is declared
+    masked and its cells are the mask, so it is never charted."""
+    data = page.get("data") or {}
+    columns = page.get("columns") or []
+    fields = [{"name": "DATE", "label": "Date", "type": "date"}]
+    for c in columns:
+        fields.append({"name": c["path"], "label": c.get("label") or c["path"], "type": c.get("type") or None,
+                       "fmt": c.get("format") or None, "masked": True if c.get("masked") else None})
+    rows = []
+    for r in data.get("rows") or []:
+        values, disp = r.get("values") or {}, r.get("display") or {}
+        line = [r["date"]]
+        for c in columns:
+            v = values.get(c["path"])
+            if c.get("masked"):
+                line.append(MASK)
+            elif v is None or _num(v) or isinstance(v, str):
+                line.append(v)
+            else:
+                line.append(disp.get(c["path"], shown(v)))
+        rows.append(line)
+    return {"kind": kind, "id": id_, "shape": "market" if page.get("market") else "document", "fields": fields, "rows": rows}
