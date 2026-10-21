@@ -161,6 +161,8 @@ class UiMigrationTest {
     @Order(4)
     void theSwitchServesBoardsAndSwitchesBackAtOnce() throws Exception {
         String id = search.run(SearchQuery.parse("trade limit 1"), AsOf.LATEST, UnaryOperator.identity()).rows().get(0).ref().id();
+        mvc.perform(put("/api/v1/ui/packs/trading").header("Authorization", as("bo", "boss")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"screens\":\"sutras\"}")).andExpect(status().isOk());      // whatever ui.yaml ships (every pack on boards since 2026-10-21)
         MockHttpServletResponse old = mvc.perform(get("/api/v1/views/trade/" + id).header("Authorization", as("max", "masked")))
                 .andExpect(status().isOk()).andReturn().getResponse();
         assertThat(old.getHeader("X-Drishti-Board")).isNull();

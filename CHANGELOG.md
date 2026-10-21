@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **Every pack is served as UI Boards by default** (`config/ui/ui.yaml` `packs:`): core, trading, counterparty-risk, market-data, market-risk, world-economy, news-and-markets. A page that did not convert stays on its Sutra; `sutras` switches a pack back at once.
+
 - **UI Board P5 follow-up: every pack on Chip Store chips (2.7.0).** The ~240 board-local chips of the packs other than trading were
   clustered by shape into 18 generic **record chips** (`list-table`, `series-line`, `kv-summary`, `kv-list`, `ranked-bar-list`,
   `linked-entities`, `headline-figure`, ... in `config/ui/chips`, written by the new `tools/ui_record_chips.py`): each reads the page's record
