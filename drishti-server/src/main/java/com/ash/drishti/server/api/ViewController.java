@@ -59,14 +59,32 @@ public class ViewController {
         entitlements.requireOpen(principal, kind);
         EntityRef ref = EntityRef.of(kind, id);
         long started = System.nanoTime();
-        ViewModel v = entitlements.restrict(principal, timer.record(() -> pipeline.view(ref, asOf, entitlements.redactor(principal), k -> entitlements.mayOpen(principal, k),
-                ControlValues.of(request.getParameterMap()))));
+        ControlValues values = ControlValues.of(request.getParameterMap());
+        com.ash.drishti.server.ui.PackScreens ps = screens == null ? null : screens.getIfAvailable();
+        java.util.Optional<com.ash.drishti.server.ui.PackScreens.Board> board = ps == null ? java.util.Optional.empty()
+                : timer.record(() -> ps.view(ref, asOf, entitlements.redactor(principal), k -> entitlements.mayOpen(principal, k), values));
+        board.ifPresent(b -> {                                  // UI Board P5: the pack is switched to boards; say which board served the page
+            if (org.springframework.web.context.request.RequestContextHolder.getRequestAttributes()
+                    instanceof org.springframework.web.context.request.ServletRequestAttributes a && a.getResponse() != null) {
+                a.getResponse().setHeader("X-Drishti-Board", b.board());
+            }
+        });
+        ViewModel v = entitlements.restrict(principal, board.map(com.ash.drishti.server.ui.PackScreens.Board::view)
+                .orElseGet(() -> timer.record(() -> pipeline.view(ref, asOf, entitlements.redactor(principal), k -> entitlements.mayOpen(principal, k), values))));
         pageTimes.record(kind, System.nanoTime() - started);
         String subtitle = v.title().pill() == null ? kind : v.title().pill().replace("Trade · ", "")
                 + (v.title().with() == null ? "" : " · " + v.title().with().text());
         recents.touch(principal.user(), new EntityHit(ref, v.title().id(), subtitle));
         com.ash.drishti.server.net.NetServedBy sb = servedBy == null ? null : servedBy.getIfAvailable();
         return sb == null ? v : sb.annotate(principal, v);       // Drishti*net: the node that answered, for administrators only
+    }
+
+    /** The per-pack switch to converted boards (UI_BOARD.md 11.3; absent in a test that makes the controller itself). */
+    private org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.ui.PackScreens> screens;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void screens(org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.ui.PackScreens> s) {
+        this.screens = s;
     }
 
     /** Drishti*net's line naming the node that answered (absent in a test that makes the controller itself). */

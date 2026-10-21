@@ -37,3 +37,9 @@ render:
   session-idle: 10m           # a render session ends after this long without a pin change
   reuse: 30s                  # a model answer is shared this long by access profile (0 never)
   keep-dynamic: 7d            # dynamic documents kept by hash for an auditor under <data>/ui/dynamic (0 not kept)
+
+# Converted screens (UI_BOARD.md 11.3; phase P5): per pack, 'boards' serves the pack's entity pages from their converted boards, 'sutras'
+# (the default) from the Sutras as before. Switch only a pack whose proof passed (POST /api/v1/ui/migrate/proof); switching back is
+# immediate. An administrator may also switch at run time (PUT /api/v1/ui/packs/<pack>, this node, until the next start).
+packs: {}
+#  trading: boards

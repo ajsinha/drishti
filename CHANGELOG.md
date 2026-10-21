@@ -17,6 +17,18 @@
 
 ## Unreleased
 
+- **UI Board P5: the converter and its proof (2.7.0).** Entity pages (Sutras) convert into boards: block uses become the trading
+  blocks' seed chips, a panel a `panel-<kind>` seed chip carries whole becomes that chip, anything else a board-local chip (a Chip
+  Store candidate), the page header a board-local chip, page controls traces into the panels that read them; BI report pages become
+  boards of `bi-*` chips over the report's model with the page layout. `drishti.py ui convert --pack P --dry-run` (no server) and
+  `POST /api/v1/ui/migrate/dry-run` report per screen clean, local or fails with the reason; `POST /api/v1/ui/migrate/proof`
+  compares each old page with its board for test people (values, masks, totals, links, panel tree, order, titles) and names the
+  first difference by path; reports kept under `ui/migration/<pack>/`. The per-pack switch `packs.<pack>: boards | sutras` in
+  `config/ui/ui.yaml` (and `PUT /api/v1/ui/packs/{pack}`, instant) serves a pack's pages from its boards (`X-Drishti-Board`
+  header); no pack is switched by default. Trading proven: 134 of 134 entity pages for three people (1,206 comparisons on the
+  pack's sample trades). UI_BOARD.md 12.4 (as built, the dry-run table of every pack), CLI_GUIDE, TOOLS, API_GUIDE,
+  CONFIGURATION, OPERATIONS.
+
 - **UI Board P3: the render API (2.7.0).** `POST /api/v1/ui/render` (an unsaved board; analyst and above, never an embed token),
   `GET /api/v1/ui/boards/{name}/render` (a saved one), `POST /api/v1/ui/renders/{id}/pins` and `DELETE /api/v1/ui/renders/{id}`. The
   board check first (`DRS-2071` with the problems, `DRS-2075` past a size); then an SSE stream: the layout before any data, each chip's

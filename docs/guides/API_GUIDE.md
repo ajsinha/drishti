@@ -3134,3 +3134,25 @@ curl -sN localhost:18480/api/v1/ui/boards/book-trades/render?stream=once -H "Aut
 curl -s localhost:18480/api/v1/ui/renders/rnd-…/pins -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
      -d '{"instance":"trades","pin":"selected","value":"1000015"}'
 ```
+
+### Migration to boards (2.7.0, P5)
+
+Administrators only (`403` otherwise). The design is [UI_BOARD.md](../architecture/UI_BOARD.md) section 11; the switch is in
+[OPERATIONS.md](../admin/OPERATIONS.md#switching-a-pack-to-boards-270).
+
+| Method | Path | Does |
+|---|---|---|
+| `POST` | `/ui/migrate/dry-run` | `{pack}`: every entity page and BI report page of the pack converted in memory; answers the report (`{pack, run, screens, clean, local, fails, entityPages, reportPages, localChips, items: [{screen, board, status, chips, localChips: [{chip, from, reason}], links, traces, reason, warnings}]}`, as `drishti.py ui convert --json`) and keeps it as `ui/migration/<pack>/<run>.json`. Nothing else is saved |
+| `POST` | `/ui/migrate/proof` | `{pack, users: [{user, roles}], samples?: 20, ids?: {<kind>: [ids]}}`: for each entity page, up to `samples` records found per kind (plus `ids`, which a derived kind with no search of its own needs) and each person, the old page and its board built and compared (values, masks, totals, links, the panel tree, order and titles). Answers `{pack, users, proven, differs, noSample, comparisons, screens: [{screen, board, result: proven\|differs\|no sample\|not converted, records, compared, difference?: {user, record, path, page, board}}]}`, kept as `ui/migration/<pack>/<run>.proof.json` |
+| `GET` | `/ui/migrate/{pack}` | the pack's kept reports (`<run>.json`, `<run>.proof.json`), oldest first |
+| `GET` | `/ui/migrate/{pack}/{report}` | one kept report |
+| `GET` | `/ui/packs` | each pack's screens: `{"trading": "boards"}` (a pack not listed is on `sutras`) |
+| `PUT` | `/ui/packs/{pack}` | `{screens: "boards"\|"sutras"}`: the switch, at once, on this node until the next start (`400` for another value or an unknown pack) |
+
+A page served from a board answers as before (`GET /api/v1/views/{kind}/{id}`, the same ViewModel) with the header
+`X-Drishti-Board: <board>`.
+
+```
+curl -s localhost:18480/api/v1/ui/migrate/proof -H "Authorization: Bearer $ADMIN" -H 'Content-Type: application/json' \
+     -d '{"pack":"trading","samples":3,"users":[{"user":"fay","roles":["full"]},{"user":"max","roles":["masked"]},{"user":"ria","roles":["restricted"]}]}'
+```

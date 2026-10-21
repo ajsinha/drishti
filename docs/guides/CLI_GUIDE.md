@@ -33,6 +33,7 @@ and how to run it all from PyCharm.
   - [`connector`: list, get, apply, delete, test, plugins, enable, disable, reset, history](#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history)
 - [8. `design`: the Screen Designer over REST](#8-design-the-screen-designer-over-rest)
   - [`ui check`: the UI Board check (2.7.0)](#ui-check-the-ui-board-check-270)
+  - [`ui convert`: the dry run of a pack's conversion to boards (2.7.0)](#ui-convert-the-dry-run-of-a-packs-conversion-to-boards-270)
 - [9. `docs`: screenshots](#9-docs-screenshots)
 - [10. Recipes](#10-recipes)
 - [11. JSON output formats](#11-json-output-formats)
@@ -2688,6 +2689,50 @@ broken.yaml: board book-trades: 3 error(s), 0 warning(s)
 Each problem names its rule, its path in the document (`chips.<instance>.map.<pin>.<column>`, `traces[<n>].to`,
 `layout.desktop.areas[<n>]`) and a fix where one is obvious. The server answers the same problems on save and render
 (`422 DRS-2071`; a document that cannot be read is `400 DRS-2070`, [API_GUIDE.md](API_GUIDE.md)).
+
+### `ui convert`: the dry run of a pack's conversion to boards (2.7.0)
+
+`ui convert` converts every screen of a pack into a board in memory and reports on each ([UI_BOARD.md](../architecture/UI_BOARD.md)
+section 11): the entity pages (each Sutra of the pack) and the BI report pages whose model reads the pack's kinds. A screen is
+**clean** when every panel became a Chip Store chip (the page header aside), **local** when some panels needed a board-local chip
+(each listed with the reason, a Chip Store candidate), and **fails** when the board does not pass the board check or a visual
+type has no chip (with the reason). Nothing is saved and nothing changes for anyone; like `ui check` it runs the exec jar and
+needs no server.
+
+```bash
+drishti.py ui convert --pack PACK --dry-run [--json] [--out DIR] [--packs DIR] [--bi DIR] [--chips DIR] [--jar JAR] [--java JAVA]
+```
+
+| Option | Meaning |
+|---|---|
+| `--pack PACK` | the pack to convert |
+| `--dry-run` | required in 2.7.0: a pack's boards are served by the per-pack switch, not saved ([OPERATIONS.md](../admin/OPERATIONS.md#switching-a-pack-to-boards-270)) |
+| `--json` | `{ pack, screens, clean, local, fails, entityPages, reportPages, localChips, items: [ { screen, board, status, chips, localChips: [ { chip, from, reason } ], links, traces, reason, warnings } ] }` |
+| `--out DIR` | also write each board as `DIR/<board>.board.yaml`, to read or to check with `ui check` |
+| `--packs DIR`, `--bi DIR`, `--chips DIR` | the packs folder, the BI folder and the seed chips (defaults `config/packs`, `config/bi`, `config/ui/chips`) |
+
+Exit `0` no screen fails, `1` a screen fails, `2` usage (no pack, no `--dry-run`, an unknown pack).
+
+The trading pack (real output):
+
+```
+$ drishti.py ui convert --pack trading --dry-run
+pack trading: 136 screen(s) (134 entity pages, 2 report pages): 125 clean, 11 with board-local chips (47 chips), 0 fail
+  local  sutra:endur-callnot@1 -> board trading-endur-callnot: 1 local chip(s)
+  local  sutra:endur-cash@1 -> board trading-endur-cash: 1 local chip(s)
+  local  sutra:endur-comfut@1 -> board trading-endur-comfut: 1 local chip(s)
+  local  sutra:endur-commodity@1 -> board trading-endur-commodity: 2 local chip(s)
+  local  sutra:endur-comswap@1 -> board trading-endur-comswap: 2 local chip(s)
+  local  sutra:counterparty-trades@1 -> board trading-counterparty-trades: 9 local chip(s)
+  local  sutra:index-trades@1 -> board trading-index-trades: 9 local chip(s)
+  local  sutra:legal-entity-trades@1 -> board trading-legal-entity-trades: 9 local chip(s)
+  local  sutra:portfolio-trades@1 -> board trading-portfolio-trades: 9 local chip(s)
+  local  report:cashflow-ladder/ladder -> board cashflow-ladder-ladder: 3 local chip(s)
+  local  report:cashflow-ladder/legs -> board cashflow-ladder-legs: 1 local chip(s)
+```
+
+Clean screens are not listed in the text; `--json` lists every screen with its chips. The proof that a converted pack shows the
+same pages, and the switch, need a server: `POST /api/v1/ui/migrate/proof` ([API_GUIDE.md](API_GUIDE.md#migration-to-boards-270-p5)).
 
 ## 9. `docs`: screenshots
 

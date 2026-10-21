@@ -49,6 +49,21 @@ public class UiRenderConfiguration {
         return new ServerBoardSuppliers(router, search, entitlements, runs, datasets.getIfAvailable(), hub.getIfAvailable(), settings, drishtiVirtualExecutor);
     }
 
+    /** Phase P5: the per-pack switch of converted screens ({@code packs:} of ui.yaml) and the converted boards. */
+    @Bean
+    public PackScreens packScreens(Environment env, com.ash.drishti.server.bi.BiProperties bi, ChipStore chips,
+            com.ash.drishti.rachana.SutraRegistry registry, com.ash.drishti.rachana.SutraMatcher matcher, com.ash.drishti.engine.ViewPipeline pipeline) {
+        return new PackScreens(Path.of(env.getProperty("drishti.ui.dir", "./config/ui")), Path.of(com.ash.drishti.packs.PackPaths.packsDir(env)),
+                Path.of(bi.dir()), chips, registry, matcher, pipeline);
+    }
+
+    /** Phase P5: the proof that a converted pack shows the same screens. */
+    @Bean
+    public BoardProof boardProof(PackScreens screens, com.ash.drishti.engine.ViewPipeline pipeline, com.ash.drishti.rachana.SutraMatcher matcher,
+            StructuredSearch search, Entitlements entitlements, BoardSuppliers suppliers) {
+        return new BoardProof(screens, pipeline, matcher, search, entitlements, suppliers);
+    }
+
     @Bean(destroyMethod = "close")
     public RenderService renderService(ChipStore chips, BoardStore boards, UiAccess access, UiSettings ui, RenderSettings settings, BoardSuppliers suppliers,
             IdTokens tokens, ExecutorService drishtiVirtualExecutor, Environment env) {

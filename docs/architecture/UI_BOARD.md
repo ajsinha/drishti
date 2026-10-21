@@ -634,7 +634,7 @@ Goal: every existing screen becomes a board with nothing broken, pack by pack.
 
 ### 11.2 The dry run
 
-`POST /ui/migrate/dry-run { pack }` (and `drishti.py ui migrate --dry-run --pack trading`) converts every screen of the
+`POST /ui/migrate/dry-run { pack }` (and `drishti.py ui convert --pack trading --dry-run`) converts every screen of the
 pack in memory and writes a report (`ui/migration/<pack>/<run>.json`, shown in Admin): per screen, the board it would
 make, the chips used (store or board-local), the board check result, and anything it could not convert with the reason.
 Nothing is saved and nothing changes for anyone.
@@ -667,7 +667,7 @@ at most in local tests. Each phase ends with its tests green, its docs updated a
 | **P2. The Chip Store and saved boards** (built, [12.2](#122-as-built-p2)) | B | content-store keys (section 8), the lifecycle (9.1) with powers, versions and `compatible-with` verification (9.3), where-used index, board save, revisions, delete with compare-and-set; the REST API of 6.1 except render; seed chips from panel kinds, BI visual types and pack blocks (9.4) with manuals | store contract tests on the filesystem and SQLite backends; lifecycle order (`DRS-2078`); a reviewer may not approve their own chip; where-used after save and delete; two nodes saving the same board (`DRS-5057`); every seed chip passes its own manual examples |
 | **P3. The render API** (built, [12.3](#123-as-built-p3)) | A | `POST /ui/render`, `GET /ui/boards/{id}/render`, pin changes, sessions; layout-first SSE; suppliers through `ViewPipeline.preview` and `QueryService` as the caller; traces at runtime; BI run cards; live frames on the channel; limits and audit (7.3, 7.4) | render as three users (full, masked, row-restricted) and compare masks; trace ordering (detail after master); one failing supplier leaves the others painted; every limit hit gives its code; audit row has no values; access-profile reuse (second viewer `reused`) |
 | **P4. The board viewer and the Board Designer** | B | console: the board viewer (any saved board, phone and desktop, themes), the Designer (palette, canvas, pins, traces, mapping sheet, live data, red problems, YAML/JSON tab, save, history, modules), the chip editor and test bench | Playwright: build the 3.1 board by drag and wire, see red on a bad wire, fix, save, reopen, YAML edit reflected on canvas; phone layout; keyboard-only path; console unit tests for the mapping matcher |
-| **P5. The converter and its proof** | A | dry run, board-local chips, the proof (data, screen, behaviour), Admin pages for reports, per-pack switch; trading pack first, then the others pack by pack | trading: every entity page, report page and board page proven for the three users on the 10K-trade sample; a deliberately broken chip makes the proof fail with the right path; switching back restores the old pages |
+| **P5. The converter and its proof** (built, [12.4](#124-as-built-p5)) | A | dry run, board-local chips, the proof (data, screen, behaviour), Admin pages for reports, per-pack switch; trading pack first, then the others pack by pack | trading: every entity page, report page and board page proven for the three users on the 10K-trade sample; a deliberately broken chip makes the proof fail with the right path; switching back restores the old pages |
 | **P6. Modules, observability, docs and QA** | A and B | modules (9.5), `ui/usage` counts and the Admin view of chip and board use, the Boards guide, the Board Designer tutorial (UI, CLI and YAML at every step), help pages, the QA pass of the release | module round trip (make, publish, use, where-used); usage counts across two nodes; docs reviewed against the built behaviour; the release QA checklist |
 
 P1 and P2 run in parallel (P2 uses P1's model through an interface agreed on day one); P3 needs P1; P4 needs P2 and P3's
@@ -822,6 +822,74 @@ Settings: [CONFIGURATION.md](../admin/CONFIGURATION.md).
   and `UiRenderApiTest` (the whole stack with security on over a file-connector lake: the 3.1 board on a BI model with row rules and a
   mask and the ticket over the lake's trade entity, rendered as rita, ann and hana; a selection on the open stream; access-profile reuse;
   `DRS-2071` before any stream).
+
+### 12.4 As built: P5
+
+**Where.** The converter is in `drishti-rachana`, package `com.ash.drishti.rachana.ui.migrate`, no Spring: `PageConverter` (a Sutra to a
+board), `ReportConverter` (a BI report to a board per page), `BoardSutra` (a converted board painted back into the grammar), `PackDryRun`
+(a pack's screens and the report), `Conversion`, `ConvertCli` (`ui convert`). On the server, package `com.ash.drishti.server.ui`:
+`PackScreens` (the per-pack switch, the converted boards, serving a page from its board), `BoardProof`, `UiMigrationController`
+(routes: [API_GUIDE.md](../guides/API_GUIDE.md#migration-to-boards-270-p5)); `ViewController` asks `PackScreens` first.
+CLI: [CLI_GUIDE.md](../guides/CLI_GUIDE.md#ui-convert-the-dry-run-of-a-packs-conversion-to-boards-270). The switch:
+[OPERATIONS.md](../admin/OPERATIONS.md#switching-a-pack-to-boards-270).
+
+**Corrections and precisions the code forced:**
+
+* **An entity page's board.** `board: <pack>-<sutra>` with the parameter `id: { type: id, of: <pack>/<kind>, required: true }`; every
+  chip reads the record through `connector: <pack>/<kind>` with `query: { id: "%{board.params.id}" }` and maps `doc.id: id`. A document
+  pin of a converted board carries the **whole record** as the viewer may see it (the panels read it by path), not only the mapped shape.
+* **The page header is a board-local chip** (`local-header`): the Sutra's `title`, `strip`, `controls` and `keys` in its body under
+  `page:`; its out pins `ctl-<control>` carry the page controls. A panel that reads `ctl.x` gets the in pin `ctl-x` and a trace from the
+  header: that is follow-the-selection. The header is not counted when a screen is classed: **clean** means every panel is a Chip Store
+  chip. Drill-through links (`link(...)`) stay as navigation to other pages, counted, not drawn as traces (a trace joins chips on one board).
+* **Which chip.** A block use (`use: deal-ticket@1, with: {...}`) is the seed chip of that block, its `with` as the instance's controls
+  (an unset control stays the block's own default). Any other panel is the seed chip `panel-<kind>` only when that chip carries every option
+  of the panel (each a pin or a constant); otherwise it is a board-local chip `local-<panel>` wrapping the panel, its record paths written
+  over the document pin (`$.X` as `@doc.X`, so the chip is pure and can be submitted to the Chip Store as it is). A choice is accepted only
+  when `BoardSutra` paints it back into exactly the panel it came from. In practice the generic `panel-*` seed chips carry only the
+  simplest panels (the provenance panel); pages built from the trading blocks convert clean.
+* **A report page's board.** `board: <report>-<page>`; each visual an instance of `bi-<type>@1` supplied by `model: <the report's model>`, its
+  wells the query (a field with a dot is a dimension, else a measure) and the pin map (`rows.<well>`), its `at` the desktop area. A visual with
+  options the seed chip has no pin for (`format`, `filters`, `hierarchy`, `alt`, ...) is a board-local copy of the seed chip with those
+  options in its body; a visual type with no seed chip (`python`, `tile`, `text`, ...) or a board that fails the check fails the page.
+  Cross-filtering is **not** drawn: the `bi-*` seed chips have no `filter` in pin (a P6 item). A report belongs to the pack whose kinds its
+  model's first dataset reads; a report over no pack's kind is in no pack's dry run.
+* **The proof** (`BoardProof`) compares, per page, sample record and person: the old page as `GET /views/{kind}/{id}` builds it, and the
+  board painted by `BoardSutra` and bound over the record **as the board's supplier reads it for that person**
+  (`ServerBoardSuppliers.document`, the caller's masks), with the same link rule. Both ViewModels are compared as JSON trees after dropping
+  what names the builder (`provenance`, `timings`, the data of a `provenance` panel); the first difference is reported by path
+  (`panels[1].title`) with both values. Samples: up to `samples` records per page found by the kind's search, plus `ids` per kind (a derived
+  kind such as `counterparty-trades` has no search of its own). BI report pages are converted and their structure checked by the board
+  check, but their data proof (both BI runs as the person) is not in P5.
+* **The switch** is `packs.<pack>: boards | sutras` (or `{screens: ...}`) in `ui.yaml`, read at start, plus `PUT /api/v1/ui/packs/{pack}`
+  for an administrator (this node, until the next start: instant). On `boards` the record is matched to its Sutra as before and the
+  Sutra's converted board serves the page; a screen whose conversion fails stays on its Sutra. Converted boards are made in memory from
+  the pack's files on first use and again after any Sutra changes; they are not saved in the Board store in P5.
+* **Not in P5:** the Admin page for the reports (the reports are JSON from the routes; the console page is P6 with the usage view), the
+  data proof of BI report pages, BI board (tile) files (none are shipped), Terminal pages, traces for report cross-filters, publishing the
+  board-local candidates.
+
+**Proof, trading** (`UiMigrationTest`, the pack's committed sample trades, 765, three people: `full` every kind raw, `masked` every kind
+with `NOTIONAL` and `TRADER_ID` masked, `restricted` the trade kinds only so links to counterparties and books are refused): **134 of 134
+entity pages proven**, 3 records per page, 1,206 comparisons, no difference. A board-local chip with one title changed fails its page at
+`panels[1].title` (`Payments, next 30 days` against `Payments, next 31 days`).
+
+**The dry run of every pack** (`drishti.py ui convert --pack <pack> --dry-run`, 2026-10-21; "chips" counts the board-local chips, the
+headers aside):
+
+| Pack | Screens | Entity pages | Report pages | Clean | With board-local chips | Board-local chips | Fail |
+|---|---|---|---|---|---|---|---|
+| trading | 136 | 134 | 2 | 125 | 11 | 47 | 0 |
+| core | 10 | 10 | 0 | 0 | 10 | 22 | 0 |
+| counterparty-risk | 10 | 10 | 0 | 0 | 10 | 26 | 0 |
+| market-data | 20 | 20 | 0 | 0 | 20 | 58 | 0 |
+| market-risk | 14 | 6 | 8 | 0 | 13 | 44 | 1 |
+| news-and-markets | 4 | 4 | 0 | 0 | 4 | 22 | 0 |
+| world-economy | 15 | 13 | 2 | 0 | 14 | 68 | 1 |
+
+The two failures: `report:python-desk-risk/risk` (BC-03, the `python` visual's required `rows.columns` has no well) and
+`report:region-economics/regions` (BC-03, the `text` visual's required `content` pin is not given). Packs other than trading build their
+pages from panels, not blocks, so every page needs board-local chips: those 240 chips are the Chip Store's candidate list (14.1 decision 5).
 
 ## 13. Later releases
 

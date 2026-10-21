@@ -44,6 +44,7 @@ public final class UiCli {
 
     static final String USAGE_TEXT = """
             usage: ui check <board-or-chip file>... [options]
+                   ui convert --pack <pack> --dry-run [--json] [--out DIR]   (see ui convert --help)
               checks a board document (BC-01 to BC-11, warnings BC-W1 to BC-W5) or a chip document (the publish checks CP-01 to CP-05)
             options: --chips DIR        more chips (*.chip.yaml, *.chip.json), as published versions; config/ui/chips is read when present
                      --suppliers FILE   the suppliers as the author sees them (fields, types, masks); without it BC-05's attribute check, BC-08 and BC-W5 are skipped
@@ -67,6 +68,9 @@ public final class UiCli {
         boolean shared = false;
         boolean certified = false;
         boolean json = false;
+        if (args.length >= 2 && "convert".equals(args[1])) {
+            return com.ash.drishti.rachana.ui.migrate.ConvertCli.run(args, out, err);
+        }
         if (args.length < 2 || !"check".equals(args[1])) {
             err.println("ui: " + (args.length < 2 ? "give a command" : "unknown command '" + args[1] + "'"));
             err.println(USAGE_TEXT);

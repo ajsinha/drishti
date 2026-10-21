@@ -913,6 +913,7 @@ Check: `curl -s localhost:18480/api/v1/studio/settings` returns `{"approve":…,
 | `render.session-idle` | `10m` | A render session ends after this long without a pin change. |
 | `render.reuse` | `30s` | How long a model answer is shared with viewers of the same access profile (same roles, row rules and masks); `0` never. |
 | `render.keep-dynamic` | `7d` | Unsaved documents kept by their SHA-256 under `<data folder>/ui/dynamic` for an auditor; `0` not kept. |
+| `packs.<pack>` | `sutras` | `boards` serves the pack's entity pages from their converted boards (UI_BOARD.md 11.3, phase P5); `sutras` from the Sutras. Also written `packs.<pack>.screens`. Switch a pack only after its proof passed ([OPERATIONS.md](OPERATIONS.md#switching-a-pack-to-boards-270)). |
 
 Chips and boards themselves live in the content store (`ui/…` keys, [CONTENT_STORE.md](../architecture/CONTENT_STORE.md)), so every
 node of a cluster sees them. Who may do what follows the existing roles: saving boards needs `layout`, authoring chips `author`,

@@ -133,6 +133,19 @@ public final class ServerBoardSuppliers implements BoardSuppliers {
     }
 
     private Rows entity(Principal who, String kind, String id) {
+        return rowsOf(who, fetch(who, kind, id));
+    }
+
+    /**
+     * The record an entity supply reads, with the caller's masks applied (UI_BOARD.md 7.2): the document a converted page's chips paint. Phase P5's
+     * proof reads it here, so a converted page goes through the same supplier as a render.
+     */
+    public EntityDocument document(Principal who, String kind, String id) {
+        EntityDocument doc = fetch(who, kind, id);
+        return new EntityDocument(doc.ref(), entitlements.redact(who, doc.data()), doc.provenance(), doc.deleted());
+    }
+
+    private EntityDocument fetch(Principal who, String kind, String id) {
         if (!entitlements.mayOpen(who, kind)) {
             throw new DrishtiException(ErrorCode.UI_FORBIDDEN, "you may not open " + kind);
         }
@@ -150,7 +163,7 @@ public final class ServerBoardSuppliers implements BoardSuppliers {
         if (doc == null || doc.deleted()) {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no " + kind + " " + id);
         }
-        return rowsOf(who, doc);
+        return doc;
     }
 
     private Rows rowsOf(Principal who, EntityDocument doc) {
