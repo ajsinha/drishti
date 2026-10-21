@@ -94,6 +94,15 @@ final class TableBuilder {
                     + (t.connector().isBlank() ? "" : " under the name '" + t.connector() + "'") + ": check Admin, Connectors");
         }
         SourcePlugin plugin = plugins.get(0);
+        for (SourcePlugin p : plugins) {
+            // a named connector whose kinds leave the table's out reads nothing, on any date: said, never an empty table built for today
+            // (a connector file generated from an older pack template that lacks the kind: risk-store without trade-valuation)
+            if (!t.connector().isBlank() && !p.manifest().serves(t.kind())) {
+                throw new DrishtiException(ErrorCode.QUERY_SOURCE, "connector '" + p.manifest().name() + "' does not serve kind '" + t.kind()
+                        + "' (its kinds: " + String.join(", ", new java.util.TreeSet<>(p.manifest().kinds())) + "): add the kind to the connector's file"
+                        + " (config/connectors/" + p.manifest().name() + ".yaml), or take its pack's template again (Admin, Connectors)");
+            }
+        }
         List<Dataset.Column> cols = t.physical();
         List<String> warnings = new ArrayList<>();
         String stage = "bi_stage_" + STAGE.incrementAndGet();

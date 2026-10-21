@@ -160,7 +160,8 @@ public final class RunSources {
         if (planned == null) {
             return version(b);
         }
-        return planned.data().complete() ? "dv:" + planned.data().hash() + ":" + b.view().hash() : null;
+        // the dates each table resolves to (as of D: each its latest on or before D, 2.6.7 patch) are part of the key: a reused answer is for the same dates
+        return planned.data().complete() ? "dv:" + planned.data().hash() + ":" + b.view().hash() + ":" + planned.dates() : null;
     }
 
     public RunService.Question sql(Principal p, String model, String statement, boolean interaction, String supersedes, String title) {
@@ -198,6 +199,9 @@ public final class RunSources {
         String params = state == null ? null : canonical(state);
         RunPlanner pl = runs.planner();
         RunPlanner.Planned planned = pl == null || reports == null ? null : reportPlan(reports.footprint(p, id, page, visual, state).map(f -> pl.plan(f, interaction)).orElse(null));
+        if (planned != null) {
+            canon.put("dates", planned.dates().stream().map(String::valueOf).toList());   // the resolved dates: a reused answer is for the same dates (2.6.7 patch)
+        }
         BiReportService.Titles titles = reports == null ? new BiReportService.Titles(null, null) : reports.titles(p, id, page, visual);
         String named = title != null && !title.isBlank() ? title : titles.visual() != null ? titles.visual() : titles.report();   // BIR-10 (14.2)
         return new RunService.Question(p, "report", id, page + "/" + visual, named, null, null, canonical(canon), params, signature, null, interaction,

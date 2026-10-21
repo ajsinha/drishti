@@ -495,7 +495,7 @@ public final class QueryService implements AutoCloseable {
                 }
                 continue;
             }
-            Layers.Layer layer = "live".equals(table.mode()) ? layers.live(ds.key(), table) : pools.run(connectorOf(table), () -> layers.columns(ds.key(), table, q.from(), q.to()));
+            Layers.Layer layer = "live".equals(table.mode()) ? layers.live(ds.key(), table) : pools.run(connectorOf(table), () -> layers.columnsAsOf(ds.key(), table, q.from(), q.to()));
             cols.put(t, layer);
             warnings.addAll(layer.warnings());
         }
@@ -558,7 +558,7 @@ public final class QueryService implements AutoCloseable {
                 LiveTable lt = liveTables.ensure(ds.key(), d, table.isHistory() ? d.tables().get(table.of()) : table, sampler(ds));
                 return table.isHistory() ? lt.history().orElseThrow().source(d, Dialect.DUCKDB) : lt.source(d, Dialect.DUCKDB);
             }
-            Layers.Layer layer = "live".equals(table.mode()) ? layers.live(ds.key(), table) : pools.run(connectorOf(table), () -> layers.columns(ds.key(), table, lo, hi));
+            Layers.Layer layer = "live".equals(table.mode()) ? layers.live(ds.key(), table) : pools.run(connectorOf(table), () -> layers.columnsAsOf(ds.key(), table, lo, hi));
             layer.warnings().forEach(w -> warnings.add(t + (sameDates ? "" : " at " + lo) + ": " + w));
             return TableRelations.cached(d, table, layer.files(), Dialect.DUCKDB);
         };

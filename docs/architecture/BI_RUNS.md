@@ -629,12 +629,15 @@ Everything is under the configurable data folder, with visible names only:
 
 ```
  resultKey = sha256( planHash                      -- Canonicalizer.hash(LogicalPlan): question, model at its fingerprint
-                   | resolvedTime                  -- the dates actually read ("latest" resolved)
+                   | resolvedTime                  -- the dates actually read ("latest" resolved; as of D, each table's latest date on or before D)
                    | dataVersionVector             -- sorted (connector, kind, date) → SourcePlugin.dataVersion(kind, date)
                    | securitySignature             -- SecuritySignature.of(flat model, reader)
                    | engineSemantics )             -- "v1": bumped if an engine change alters answers (approximate sketches, rounding)
 ```
 
+* **The resolved dates are in the key** (2.6.7 patch): as of D each table reads its latest date on or before D (a report's `as-of`
+  may align them or pin a date: REPORTS.md section 7.1), and the dates the planner resolves for each table are part of the key (an
+  MQ or SQL question's version, a report question's canonical text), so a reused answer is always for the same dates.
 * The **data version vector** replaces the generation for durable keys (section 2.3). A restated date has a new version, so a new
   key, so the old result is never served for new data.
 * Two readers with the **same signature** (the same rows, masks and denied tables) share a result. That is the decision's

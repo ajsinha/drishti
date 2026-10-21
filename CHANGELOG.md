@@ -17,6 +17,9 @@
 
 ## Unreleased
 
+- **Fixed (2.6.7 patch): a report's fact table showed no rows ("No data for this selection") while its dimensions showed the latest held date.** A table whose connector does not serve its kind (a connector file generated from an older pack template: `config/connectors/risk-store.yaml` without `trade-valuation`) read nothing and was built, empty, for today; the build now says `connector 'risk-store' does not serve kind 'trade-valuation' (its kinds: ...)` with the fix (add the kind, or take the pack's template again). An empty build for "the latest" is served once and never kept or remembered (no `meta.json`), so the next read asks the source again.
+- **As of a date, each table reads its latest business date on or before it (2.6.7 patch).** Facts and dimensions alike, live or not, on a weekend, a holiday or before today's load; an empty partition of a date is never the answer while an earlier date has rows (one whose source cannot say its data version is read again). The BI runs planner's footprint resolves the same dates, and they are part of the run result key (a reused answer is for the same dates). A refresh, a rebuild and a window still read their exact dates.
+
 - **Fixed: a report's visuals failed `DRS-9025` ("you already have 3 queries running") once they became runs.** A report of eight visuals is eight runs and a person's cap (`drishti.bi.query.max-concurrent-per-user`, 3) admits three at once; the others waited the ad-hoc query's 2 s for a place and failed. A run now waits for its place as long as it may run (`max-duration`), so the rest queue and draw in turn.
 
 ## 2.6.7 — BI runs, chart any table, Delta and Iceberg side by side, gossip on its own port and HTTP/2; with 2.6.6, the QA release (2026-10-21)

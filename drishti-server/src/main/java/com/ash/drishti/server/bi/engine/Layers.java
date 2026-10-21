@@ -173,14 +173,105 @@ public final class Layers {
             }
             java.util.concurrent.atomic.AtomicReference<Partition> made = new java.util.concurrent.atomic.AtomicReference<>();
             // the read under the latest's lock; the write of the date's partition under that partition's own lock (QA3B-07)
+            // an empty answer for 'the latest' (the source said no date, so the build fell back to today) is served but never made valid nor
+            // remembered: the next read asks the source again, and the date's own build (an as-of query) is not pre-empted by it
             TableBuilder.Built b = lock(dir.toString() + "|latest", () -> builder.build(t, null, d -> partitionDir(dir, d), this::partitionLock,
-                    x -> made.set(finish(dir, x, sig, version(t, x.date()), -1))));
+                    x -> made.set(x.rows() == 0 ? unkept(dir, x) : finish(dir, x, sig, version(t, x.date()), -1))));
             Partition p = made.get();
-            latest.put(lk, new Latest(b.date(), now));
+            if (b.rows() > 0) {
+                latest.put(lk, new Latest(b.date(), now));
+            }
             builds.incrementAndGet();
             warnings.addAll(b.warnings());
             return new Layer(List.of(p), warnings, 1);
         }
+        return range(key, t, from, to);
+    }
+
+    /**
+     * The partitions a query reads (2.6.7 patch): as {@link #columns}, except that one date asked ({@code to} null or equal) is "as of" it,
+     * each table at its own latest date on or before it ({@link #asOf}). A refresh, a rebuild and a window read their exact dates.
+     */
+    public Layer columnsAsOf(String key, Dataset.Table t, LocalDate from, LocalDate to) {
+        return from != null && (to == null || to.equals(from)) ? asOf(key, t, from) : columns(key, t, from, to);
+    }
+
+    /**
+     * The table as of one business date: its latest date on or before it (2.6.7 patch: "as of D" is, per table, the newest date the table's
+     * source holds up to D, so a fact and a dimension each show their latest data on a weekend, a holiday or before today's load). The
+     * date's own partition answers when it has rows; else the newest date the source says it holds on or before D; else (the source cannot
+     * say) the date is built and, when that is empty, the table's latest is used if it is not after D. An empty partition is never the answer
+     * while an earlier date has rows; one whose source cannot say its data version is read again rather than trusted.
+     */
+    private Layer asOf(String key, Dataset.Table t, LocalDate d) {
+        Path dir = tableDir(key, t.name());
+        String sig = signature(t);
+        String ver = version(t, d);
+        Partition own = valid(dir, d, sig, ver);
+        if (own != null && own.rows() > 0) {
+            return new Layer(List.of(own), List.of(), 0);
+        }
+        LocalDate held = heldOnOrBefore(t, d);
+        if (held != null && held.isBefore(d)) {
+            return range(key, t, held, held);
+        }
+        if (own != null && ver == null) {
+            invalidateQuietly(dir, d);                                       // an empty partition its source cannot vouch for: read again
+        }
+        Layer at = range(key, t, d, d);
+        if (held == null && at.partitions().stream().allMatch(p -> p.rows() == 0)) {
+            Layer latest = columns(key, t, null, null);
+            if (latest.partitions().stream().anyMatch(p -> p.rows() > 0 && p.date() != null && p.date().isBefore(d))) {
+                return new Layer(latest.partitions(), latest.warnings(), at.built() + latest.built());
+            }
+        }
+        return at;
+    }
+
+    /** The newest business date on or before {@code d} the table's source says it holds (any of its connectors), or null when it cannot say. Metadata only. */
+    LocalDate heldOnOrBefore(Dataset.Table t, LocalDate d) {
+        if (d == null || t.kind() == null || t.kind().isBlank()) {
+            return null;
+        }
+        LocalDate best = null;
+        boolean said = false;
+        try {
+            for (com.ash.drishti.api.SourcePlugin p : sources.plugins(t.connector(), t.kind())) {
+                Optional<java.util.NavigableSet<LocalDate>> all = p.heldDates(t.kind());
+                LocalDate x;
+                if (all.isPresent()) {
+                    x = all.get().floor(d);
+                } else {
+                    Optional<LocalDate> last = p.latestDate(t.kind());
+                    if (last.isEmpty() || last.get().isAfter(d)) {
+                        return null;                                         // cannot say what it holds on or before d
+                    }
+                    x = last.get();
+                }
+                said = true;
+                best = x == null ? best : best == null || x.isAfter(best) ? x : best;
+            }
+        } catch (RuntimeException e) {
+            return null;
+        }
+        return said ? best : null;
+    }
+
+    private void invalidateQuietly(Path dir, LocalDate d) {
+        try {
+            Files.deleteIfExists(partitionDir(dir, d).resolve("meta.json"));
+        } catch (IOException e) {
+            // read as it stands
+        }
+    }
+
+    /** Every date of {@code from..to}, each its own partition, building the ones that are missing. */
+    private Layer range(String key, Dataset.Table t, LocalDate from, LocalDate to) {
+        Path dir = tableDir(key, t.name());
+        String sig = signature(t);
+        List<Partition> out = new ArrayList<>();
+        List<String> warnings = new ArrayList<>();
+        int built = 0;
         LocalDate end = to == null ? from : to;
         int days = 0;
         for (LocalDate d = from; !d.isAfter(end); d = d.plusDays(1)) {
@@ -276,6 +367,16 @@ public final class Layers {
             out.add(unbuilt(key, t, d, d == null ? null : version(t, d), h));
             return out;
         }
+        if (to == null || to.equals(from)) {                              // as of one date: the date the query reads (asOf), as metadata says
+            Partition own = valid(dir, from, sig, version(t, from));
+            if (own == null || own.rows() == 0) {
+                LocalDate held = heldOnOrBefore(t, from);
+                if (held != null && held.isBefore(from)) {
+                    from = held;
+                    to = held;
+                }
+            }
+        }
         LocalDate end = to == null ? from : to;
         int days = 0;
         for (LocalDate d = from; !d.isAfter(end) && ++days <= MAX_RANGE_DAYS; d = d.plusDays(1)) {
@@ -345,6 +446,18 @@ public final class Layers {
             }
         }
         return out;
+    }
+
+    /**
+     * An empty build for 'the latest', served once and never made valid: no metadata is written (a valid partition of the date, if any,
+     * stays as it is), and older unnamed files of a folder without metadata are swept, so repeated reads do not pile them up.
+     */
+    private Partition unkept(Path dir, TableBuilder.Built b) {
+        Path pd = partitionDir(dir, b.date());
+        if (!Files.isRegularFile(pd.resolve("meta.json"))) {
+            FileSwap.sweep(pd, b.file().getFileName().toString());
+        }
+        return new Partition(b.date(), b.file(), 0, "empty-" + Long.toHexString(System.nanoTime()));
     }
 
     /**
