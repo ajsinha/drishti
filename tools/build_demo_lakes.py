@@ -105,11 +105,12 @@ def lake_progress(lake: Path, now: float | None = None) -> str:
     return f"{total / 1e6:,.0f} MB in the lake{where}"
 
 
-def run(cmd: list[str], dry: bool, step: str = "", lake: Path | None = None) -> None:
-    """Runs one command; while it runs, a heartbeat every HEARTBEAT_SECONDS says it is alive and how far the lake has grown."""
+def run(cmd: list[str], dry: bool, step: str = "", lake: Path | None = None, capture: bool = False) -> str:
+    """Runs one command; while it runs, a heartbeat every HEARTBEAT_SECONDS says it is alive and how far the lake has grown. With
+    {capture}, its output is shown as it comes and also returned (what lake demo says of the server: QA4-06)."""
     print("  $ " + " ".join(f'"{c}"' if " " in c else c for c in cmd), flush=True)
     if dry:
-        return
+        return ""
     import threading
     t0, done = time.time(), threading.Event()
 
@@ -119,9 +120,50 @@ def run(cmd: list[str], dry: bool, step: str = "", lake: Path | None = None) -> 
             print(f"  … {step} still running: {time.time() - t0:,.0f} s{extra}", flush=True)
     threading.Thread(target=beat, daemon=True).start()
     try:
-        subprocess.run(cmd, check=True, cwd=ROOT)
+        if not capture:
+            subprocess.run(cmd, check=True, cwd=ROOT)
+            return ""
+        lines = []
+        with subprocess.Popen(cmd, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",
+                              errors="replace", bufsize=1) as proc:
+            for line in proc.stdout:
+                print(line, end="", flush=True)
+                lines.append(line)
+        if proc.returncode:
+            raise subprocess.CalledProcessError(proc.returncode, cmd)
+        return "".join(lines)
     finally:
         done.set()
+
+
+def outcome(said: str) -> str:
+    """What a line about the server says happened: told, dry (a dry run), none (nothing listening), refused, busy (no answer in time),
+    partly (some taken), or ''."""
+    s = said.strip()
+    if not s:
+        return ""
+    if s.startswith("not sent (dry run)"):
+        return "dry"
+    if s == "told" or " told: " in s:
+        return "told"
+    if s.startswith("no server at") or s.startswith("no answer"):
+        return "none"
+    if s.startswith("refused"):
+        return "refused"
+    m = re.search(r"took (\d+) of (\d+) data-load signals", s)
+    if m:
+        if m.group(1) == "0":
+            return "refused" if "refused" in s else "busy"            # reachable, but no answer in time
+        return "partly"
+    return ""
+
+
+def server_said(out: str) -> str:
+    """lake demo's line about the server (its summary's "Server: ..."), or ''."""
+    for line in out.splitlines():
+        if line.startswith("Server: "):
+            return line[len("Server: "):]
+    return ""
 
 
 def first_trade(path: Path) -> str | None:
@@ -209,6 +251,7 @@ def main(argv: list[str] | None = None) -> int:
     as_of = a.as_of or (files[-1][0] if files else "today")
     lake = a.lake.expanduser().resolve()
     t0 = time.time()
+    outcomes: list[str] = []                             # what each step's signals came to (QA4-06): the closing line says it
 
     if a.files_only:
         print(f"1/3 the demo lakes: kept as they are (--files-only)")
@@ -225,7 +268,9 @@ def main(argv: list[str] | None = None) -> int:
             cmd += ["--only", a.only]
         if a.connectors_dir:
             cmd += ["--connectors-dir", str(a.connectors_dir.expanduser().resolve())]
-        run(cmd, a.dry_run, "1/3 lake demo", lake)
+        said = server_said(run(cmd, a.dry_run, "1/3 lake demo", lake, capture=bool(a.server)))
+        if a.server:
+            outcomes.append(outcome(said) or ("dry" if a.dry_run else ""))
 
     if files:
         table = lake / "trading" / f"trade_{system}"
@@ -246,17 +291,36 @@ def main(argv: list[str] | None = None) -> int:
     if files and a.server:                               # your files: one signal, their table on its newest date
         told = tell(a.server, token, "trading", "trade", files[-1][0], a.dry_run)
         print(f"  the server: {told}")
+        outcomes.append(outcome(told))
     print(f"3/3 done in {time.time() - t0:.0f} s{' (dry run: nothing changed)' if a.dry_run else ''}.")
-    for line in closing(a, system, files, told):
+    for line in closing(a, system, files, outcomes):
         print(line)
     return 0
 
 
-def closing(a, system: str, files: list[tuple[str, Path]], told: str | None) -> list[str]:
-    """What to do next, for the run that was made (QA3A-08): the system loaded, whether a server was told, and ids that exist."""
+def closing(a, system: str, files: list[tuple[str, Path]], outcomes: list[str] | None = None) -> list[str]:
+    """What to do next, for the run that was made (QA3A-08): the system loaded, what came of telling the server (QA4-06: it said "was told"
+    when nothing listened or every signal was refused), and ids that exist."""
     out = []
-    if a.server:
+    got = [o for o in (outcomes or []) if o]
+    if a.server and got and all(o == "dry" for o in got):
+        out.append(f"  The server at {a.server} would be told once per table it reads (dry run: nothing was sent).")
+    elif a.server and got and all(o == "told" for o in got):
         out.append(f"  The server at {a.server} was told once per table it reads (see the lines above); it reads the new data now.")
+    elif a.server and got and all(o == "none" for o in got):
+        out.append(f"  The server at {a.server} was not told: nothing answered there. Start it (it clears its stored BI columns at start, from the")
+        out.append("  stamp left above) or check --server; a running server picks the new tables up by itself at its next refresh.")
+    elif a.server and got and all(o == "busy" for o in got):
+        out.append(f"  The server at {a.server} did not answer the signals in time (see the lines above): it is busy, and re-reads a rebuilt")
+        out.append("  table by itself; restart it to be sure it reads all the new data.")
+    elif a.server and got and all(o in ("refused", "none") for o in got):
+        out.append(f"  The server at {a.server} was not told: it refused the signals (see the lines above). Give a token with loads:write")
+        out.append("  (--token-file or DRISHTI_TOKEN) and run again, or restart the server; a running server also re-reads a rebuilt table by itself.")
+    elif a.server and got:
+        out.append(f"  The server at {a.server} was told of only some tables (see the lines above): restart it to be sure it reads all the")
+        out.append("  new data; a running server also re-reads a rebuilt table by itself.")
+    elif a.server:
+        out.append(f"  The server at {a.server}: see the lines above for what it was told; restart it to be sure it reads the new data.")
     elif a.files_only:
         out.append("  A running server reads the replaced table by itself within about 10 s (its refresh-seconds): no restart is needed.")
     else:

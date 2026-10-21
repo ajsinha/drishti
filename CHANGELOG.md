@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Fixed (QA4-06): `build_demo_lakes.py --server` ends with what came of the signals.** It said *The server … was told* when nothing
+  listened or every signal was refused (403); it now reads lake demo's own report of the server and says *was not told: nothing
+  answered there*, *was not told: it refused the signals* (and the token to give), *did not answer in time*, *was told of only some
+  tables*, or *was told* when every signal was taken; a dry run says *would be told*. TOOLS.md. test_build_demo_lakes.
 - **Fixed (QA4-03): statements: notes wrap whole, and a date after the business date reads no misleading 0.** A card's note was cut
   (*Not available: DRS-9020 the as-of date 202…*) and a masked reader's table note too on paper (*Not sorted: 'MTM' is masked fo…*); notes
   now wrap over lines on the preview and the PDF, never cut. For a date later than the business date the Trades card read `0` above *Not

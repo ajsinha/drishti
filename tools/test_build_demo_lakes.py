@@ -69,7 +69,37 @@ def test_server_tells_once_per_table_at_the_end(tmp_path):
     out = run("--only", "trades/murex", "--as-of", "2026-10-16", "--lake", str(tmp_path / "lake"), "--server", "http://10.0.0.5:18480").stdout
     cmd = [line for line in out.splitlines() if "lake demo" in line][0]
     assert "--server http://10.0.0.5:18480 --signal-once" in cmd and "--no-signal" not in cmd
-    assert "was told once per table" in out
+    assert "would be told once per table" in out and "dry run: nothing was sent" in out     # a dry run tells nobody (QA4-06)
+
+
+def test_the_closing_line_says_what_came_of_the_signals():
+    """QA4-06: it said "The server ... was told" when nothing listened or every signal was refused."""
+    import argparse
+    import sys as _sys
+    _sys.path.insert(0, str(ROOT / "tools"))
+    import build_demo_lakes as b
+    a = argparse.Namespace(server="http://10.0.0.5:18629", files_only=False)
+    said = {
+        "none": "no server at http://10.0.0.5:18629: left /x/bi-store/lake-rebuilt.json, so a server clears its stored BI columns and rollups at its next start",
+        "refused": "http://10.0.0.5:18620 took 0 of 2 data-load signals in 0 s, refused 2 (403 {\"code\":\"DRS-5002\"}; a token with loads:write: "
+                   "--token-file or DRISHTI_TOKEN): left /x/lake-rebuilt.json for its next start; a running server also re-reads a rebuilt table by itself",
+        "told": "http://10.0.0.5:18620 told: 2 data-load signals in 0 s (each table once, its newest date); it reads them again",
+        "partly": "http://10.0.0.5:18620 took 1 of 2 data-load signals in 0 s, refused 1 (403 x): left /x for its next start; a running server ...",
+        "busy": "http://10.0.0.5:18620 took 0 of 2 data-load signals in 60 s, did not answer 2 within 30 s (timed out; the server is busy: it reads the new data)",
+    }
+    for want, line in said.items():
+        assert b.outcome(line) == want, (want, line)
+    assert b.outcome("refused: 403 nope") == "refused" and b.outcome("no answer: [Errno 111]") == "none" and b.outcome("told") == "told"
+    assert b.server_said("Feeds: x\nServer: " + said["none"] + "\nConnector files:") == said["none"]
+
+    def last(outcomes):
+        return " ".join(b.closing(a, "endur", [], outcomes))
+    assert "was not told: nothing answered there" in last(["none"]) and "was told" not in last(["none"]).replace("was not told", "")
+    assert "was not told: it refused the signals" in last(["refused"]) and "loads:write" in last(["refused"])
+    assert "was not told: it refused" in last(["refused", "none"])
+    assert "was told once per table it reads" in last(["told"]) and "it reads the new data now" in last(["told"])
+    assert "was told of only some tables" in last(["told", "refused"]) and "was told of only some tables" in last(["partly"])
+    assert "did not answer the signals in time" in last(["busy"])
 
 
 def test_files_only_for_calypso_names_a_calypso_trade_and_needs_no_restart(tmp_path):

@@ -479,7 +479,7 @@ there, the stamp of section 4.7; `--no-signal` does neither, and `--signal-once`
 each table and date (what `tools/build_demo_lakes.py --server URL` uses; a running server reads the older dates again by itself). The
 summary says how many signals the server took, how many it **refused** (an HTTP error; the token hint only for 401 and 403) and how
 many it **did not answer** within 30 s (busy, not a refusal), and how long the signals took beside the build (`built in 193 s, the
-server told in 12 s`). `tools/build_demo_lakes.py` tells no server unless `--server` names one (QA3A-05). Everything about the data and the five-step quick start is in [data/testdata/README.md](../../data/testdata/README.md).
+server told in 12 s`). `tools/build_demo_lakes.py` tells no server unless `--server` names one (QA3A-05). Its closing line says what came of the signals: *was told once per table it reads* only when every signal was taken; *was not told: nothing answered there* (with the stamp left for its next start), *was not told: it refused the signals* (a token with `loads:write`), *did not answer the signals in time* (busy) or *was told of only some tables* otherwise, and *would be told* in a dry run (QA4-06). Everything about the data and the five-step quick start is in [data/testdata/README.md](../../data/testdata/README.md).
 
 `drishti.py testdata capture-market` refreshes the committed market snapshot that `lake demo` builds for offline demos
 (`data/testdata/news-and-markets/{quote,news}`): it starts a scratch server (or uses `--server`) and fetches the twenty companies'
