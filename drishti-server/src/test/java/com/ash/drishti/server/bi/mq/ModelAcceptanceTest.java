@@ -889,4 +889,45 @@ class ModelAcceptanceTest {
         assertThat(list.path("runs").isArray()).isTrue();
         call("GET", "/api/v1/bi/runs?since=yesterday", reader("rita"), null).andExpect(status().isBadRequest());
     }
+
+    /** BI_RUNS 9.4: a run promoted to a snapshot dataset and a report, read through the model layer; only an author who ran it may promote it. */
+    @Test @Order(18)
+    void aRunPromotedToASnapshotIsReadThroughItsDraftDatasetAndReport() throws Exception {
+        Map<String, Object> q = Map.of("mq", 1, "model", "acc-model@1", "select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional")),
+                "time", Map.of("as-of", "2026-10-07"));
+        JsonNode submitted = ok(call("POST", "/api/v1/bi/runs", reader("wes"), Map.of("source", Map.of("type", "mq", "mq", q), "options", Map.of("wait", 0, "confirm", true))));
+        String id = submitted.path("run").path("id").asText();
+        JsonNode result = null;
+        for (int i = 0; i < 200 && result == null; i++) {
+            JsonNode run = ok(call("GET", "/api/v1/bi/runs/" + id, reader("wes"), null));
+            if (run.path("state").asText().equals("done")) {
+                assertThat(run.path("can").path("promote").asBoolean()).as(run.toString()).isTrue();
+                result = ok(call("GET", "/api/v1/bi/runs/" + id + "/result", reader("wes"), null));
+            } else {
+                Thread.sleep(50);
+            }
+        }
+        assertThat(result).as("the run finished").isNotNull();
+        // a reader without bi-author, and anyone but the runner, cannot promote it
+        assertThat(call("POST", "/api/v1/bi/runs/" + id + "/promote", reader("rita"), Map.of()).andReturn().getResponse().getStatus()).isIn(403, 404);
+        String name = "acc-desk-" + Long.toString(System.nanoTime(), 36);           // the test data folder is kept between builds
+        JsonNode promoted = ok(call("POST", "/api/v1/bi/runs/" + id + "/promote", reader("wes"), Map.of("name", name, "to", "report")));
+        assertThat(promoted.path("version").asInt()).isEqualTo(1);
+        assertThat(promoted.path("yaml").asText()).contains("source: { run: " + name + ", version: 1").contains("computedAs: \"wes\"");
+        String report = promoted.path("report").path("item").asText();
+        JsonNode drawn = ok(call("POST", "/api/v1/bi/reports/" + report + "/query", reader("wes"), "{\"page\":\"main\",\"visual\":\"rows\"}"));
+        Map<String, Double> fromRun = new TreeMap<>();
+        result.path("rows").forEach(r -> fromRun.put(r.get(0).asText(), r.get(1).asDouble()));
+        Map<String, Double> fromSnapshot = new TreeMap<>();
+        drawn.path("rows").forEach(r -> fromSnapshot.put(r.get(0).asText(), r.get(1).asDouble()));
+        assertThat(fromSnapshot).as(drawn.toString()).isEqualTo(fromRun).isNotEmpty();
+        // the draft dataset is the promoter's: another reader cannot read it
+        String dataset = promoted.path("dataset").path("item").asText();
+        assertThat(call("GET", "/api/v1/bi/items/" + dataset, reader("rita"), null).andReturn().getResponse().getStatus()).isIn(403, 404);
+        // promoted again: the next version of the same draft dataset
+        JsonNode again = ok(call("POST", "/api/v1/bi/runs/" + id + "/promote", reader("wes"), Map.of("name", name)));
+        assertThat(again.path("version").asInt()).isEqualTo(2);
+        assertThat(again.path("dataset").path("item").asText()).isEqualTo(dataset);
+        assertThat(ok(call("GET", "/api/v1/bi/runs/" + id, reader("wes"), null)).path("promotedTo").asText()).isEqualTo(name + "@2");
+    }
 }

@@ -159,11 +159,37 @@ public record DatasetDef(String name, String version, String id, String title, S
         public static final String MODEL = "model";
         /** A SQL view: a reviewed Drishti SQL statement over a model ({@code source: { sql, model }}); its answer is the table. */
         public static final String SQL = "sql";
+        /**
+         * A promoted run's result (docs/architecture/BI_RUNS.md section 9.4): {@code source: { run: <snapshot>, version: N, token: <t> }}, the rows of
+         * {@code <store.dir>/snapshots/<snapshot>/v<N>/answer.json}, read-only. Kept in {@code model} (the snapshot's name), {@code query} (the version, or
+         * {@code latest}) and {@code each} (the token that binds the snapshot to the dataset promoted from it).
+         */
+        public static final String RUN = "run";
 
         public Source {
             params = params == null ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(params));
             inputs = inputs == null ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(inputs));
             pythonParams = pythonParams == null ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(pythonParams));
+        }
+
+        /** A promoted run's snapshot: its name, version ({@code latest} or a number) and binding token. */
+        public static Source ofRun(String name, String version, String token) {
+            return new Source(RUN, null, null, null, token, version, null, null, null, null, name, null, null);
+        }
+
+        /** The snapshot's name of a {@link #RUN} source. */
+        public String runName() {
+            return model;
+        }
+
+        /** The snapshot's version of a {@link #RUN} source: a number, or {@code latest}. */
+        public String runVersion() {
+            return query == null || query.isBlank() ? "latest" : query;
+        }
+
+        /** The token that binds a {@link #RUN} source's snapshot to the dataset promoted from it. */
+        public String runToken() {
+            return each == null ? "" : each;
         }
 
         /** A pack kind's source. */

@@ -17,6 +17,13 @@
 
 ## Unreleased
 
+- **BI runs: promotion to a dataset snapshot (2.6.7, BI_RUNS.md 9.4, DATASETS.md section 16).** `POST /api/v1/bi/runs/{id}/promote
+  {name?, title?, to: dataset|report}`: the runner (with `bi-author`) freezes a finished model query or SQL run as
+  `<data>/bi-runs/snapshots/<name>/v<N>/` and gets a draft dataset `source: {run: <name>, version: N, token}` (and a draft report on it).
+  The rows are the promoter's view: a column masked for them holds the mask and is declared `masked` for every reader. The snapshot is read
+  as a staged table of the model layer, only by the dataset it was promoted to (name and token, else `DRS-9108`); promoting again is the
+  next version of the same draft; `promote.versions-keep` versions are kept. `RunPromotionTest`, `ModelAcceptanceTest` order 18.
+
 - **BI runs: sharing, rollup suggestions, export, schedules, statements and the Admin numbers (2.6.7, BI_RUNS.md 18.2b).** **Sharing
   (R6, 9.3):** `POST /api/v1/bi/runs/{id}/share {to: [bob, role:risk-team]}` decides per person from the row part and the mask part of the
   security signature: `same` (equal rights: the stored result), `re-masked` (the same rows, more masks: the extra columns masked as the engine

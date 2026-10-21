@@ -47,7 +47,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
  * The BI runs API (docs/architecture/BI_RUNS.md section 14.1). A run is seen by its runner and owner; a bi-admin sees its state, never its result.
- * Sharing, promotion, export and schedules (R6) are not built yet and answer {@code DRS-5001} saying so.
+ * Sharing, promotion (section 9.4), export and schedules are built (R6).
  */
 @RestController
 @RequestMapping("/api/v1/bi")
@@ -62,12 +62,14 @@ public class RunsController {
     private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> queries;
     private final RunSharing sharing;
     private final RunSchedules schedules;
+    private final RunPromotion promotion;
     private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.dist.BiExporter> exporter;
 
     public RunsController(RunsProperties props, BiService bi, BiAccess access, RunSources sources, ExecutorService drishtiVirtualExecutor,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> queries, RunSharing sharing,
-            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.dist.BiExporter> exporter, RunSchedules schedules) {
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.dist.BiExporter> exporter, RunSchedules schedules, RunPromotion promotion) {
         this.schedules = schedules;
+        this.promotion = promotion;
         this.queries = queries;
         this.sharing = sharing;
         this.exporter = exporter;
@@ -124,7 +126,8 @@ public class RunsController {
     Map<String, Object> json(Run r, Principal p) {
         boolean has = (r.state() == RunState.DONE || r.state() == RunState.REUSED) && runs().store().has(r.fingerprint());
         RunJson.View v = RunJson.View.of(p.user()).withResult(has).withPowers(access.has(p, BiAccess.ADMIN), access.has(p, BiAccess.AUTHOR))
-                .withPromote(false).asRecipient(recipient(r, p));
+                .withPromote(props.promote().enabled() && has && mine(r, p) && p.user().equals(r.runner()) && ("mq".equals(r.sourceType())
+                        || "sql".equals(r.sourceType())) && access.has(p, BiAccess.AUTHOR)).asRecipient(recipient(r, p));
         if (mine(r, p)) {
             v = v.withShares(sharing.shares().of(r.id()).stream().map(RunShares.Share::toMap).toList());
         }
@@ -423,9 +426,22 @@ public class RunsController {
         return noStore(200, Map.of("shares", sharing.share(r, p, to)));
     }
 
+    /**
+     * Promotes the caller's finished run (section 9.4): {@code {name?, title?, to: dataset|report}}; the snapshot as the caller sees it and a draft dataset
+     * (and report) in their workspace. Needs {@code bi-author} and {@code promote.enabled}; a share's recipient cannot promote another's run.
+     */
     @PostMapping("/runs/{id}/promote")
     public ResponseEntity<?> promote(@PathVariable String id, @RequestBody(required = false) JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return notYet(id, "promote", p);
+        bi.requirePower(p, BiAccess.AUTHOR);
+        enabled();
+        Run r = own(id, p);
+        if (!p.user().equals(r.runner())) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "only the person the run was computed as may promote it (it holds their view of the data)");
+        }
+        String name = body != null && body.path("name").isTextual() ? body.path("name").asText() : null;
+        String title = body != null && body.path("title").isTextual() ? body.path("title").asText() : null;
+        String to = body != null && body.path("to").isTextual() ? body.path("to").asText() : "dataset";
+        return noStore(201, promotion.promote(r, p, name, title, to).toMap());
     }
 
     @PostMapping("/runs/{id}/schedule")
@@ -442,12 +458,6 @@ public class RunsController {
         }
         String data = body.path("data").isTextual() ? body.path("data").asText() : "latest";
         return noStore(201, schedules.create(r, p, text, data).toMap());
-    }
-
-    private ResponseEntity<?> notYet(String id, String action, Principal p) {
-        bi.requirePower(p, BiAccess.BI);
-        own(id, p);
-        throw new DrishtiException(ErrorCode.BAD_REQUEST, "run " + action + " is not built yet (2.6.7 step R6): open the result and export it from the grid");
     }
 
     @DeleteMapping("/runs/{id}/share/{recipient}")

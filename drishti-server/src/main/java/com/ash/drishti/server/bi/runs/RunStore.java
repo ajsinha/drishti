@@ -177,7 +177,97 @@ public final class RunStore {
         }
     }
 
-    /** The bytes and count of stored results, the oldest open, and the five people whose results take most room (Admin, 17.2). */
+    // ---- snapshots (section 9.4) ----------------------------------------------------------------------------------------
+
+    private Path snapshotDir(String name) {
+        if (name == null || !name.matches("[a-z0-9][a-z0-9._-]{0,127}") || name.contains("..")) {
+            throw new IllegalArgumentException("not a snapshot name: " + name);
+        }
+        return root.resolve("snapshots").resolve(name);
+    }
+
+    /** The versions of a snapshot kept now, oldest first. */
+    public List<Integer> snapshotVersions(String name) {
+        Path dir = snapshotDir(name);
+        if (!Files.isDirectory(dir)) {
+            return List.of();
+        }
+        try (Stream<Path> s = Files.list(dir)) {
+            return s.map(p -> p.getFileName().toString()).filter(n -> n.matches("v[1-9][0-9]{0,8}")).map(n -> Integer.parseInt(n.substring(1)))
+                    .filter(v -> Files.isRegularFile(dir.resolve("v" + v).resolve(ANSWER))).sorted().toList();
+        } catch (IOException e) {
+            return List.of();
+        }
+    }
+
+    /**
+     * Writes a promoted snapshot as the next version of {@code name} ({@code snapshots/<name>/v<N>/answer.json}, outside the budget and the sweeper) and
+     * keeps the newest {@code keep} versions; the version written. {@code doc} is the stored document (the answer, the promoter, the token, provenance).
+     */
+    public synchronized int promote(String name, Map<String, Object> doc, int keep) {
+        List<Integer> versions = snapshotVersions(name);
+        int next = versions.isEmpty() ? 1 : versions.get(versions.size() - 1) + 1;
+        Path dir = snapshotDir(name).resolve("v" + next);
+        Map<String, Object> out = new LinkedHashMap<>(doc);
+        out.put("name", name);
+        out.put("version", next);
+        out.put("created", Instant.now().toString());
+        try {
+            Files.createDirectories(dir);
+            Path file = dir.resolve(ANSWER);
+            Path tmp = FileSwap.temp(file);
+            Files.write(tmp, JSON.writeValueAsBytes(out));
+            FileSwap.replace(tmp, file);
+        } catch (IOException e) {
+            throw new DrishtiException(ErrorCode.RUN_STORE_FULL, "the snapshot could not be written under " + root + ": " + e.getMessage());
+        }
+        List<Integer> now = snapshotVersions(name);
+        for (int i = 0; i < now.size() - Math.max(1, keep); i++) {           // promote.versions-keep: the oldest go first
+            deleteTree(snapshotDir(name).resolve("v" + now.get(i)));
+        }
+        return next;
+    }
+
+    /** A snapshot's stored document: {@code version} a number, or {@code latest}; empty when there is none (or it was not kept). */
+    public Optional<Map<String, Object>> snapshot(String name, String version) {
+        List<Integer> versions = snapshotVersions(name);
+        if (versions.isEmpty()) {
+            return Optional.empty();
+        }
+        int v = version == null || version.isBlank() || "latest".equals(version) ? versions.get(versions.size() - 1) : Integer.parseInt(version);
+        Path file = snapshotDir(name).resolve("v" + v).resolve(ANSWER);
+        if (!Files.isRegularFile(file)) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(JSON.readValue(file.toFile(), new TypeReference<Map<String, Object>>() {}));
+        } catch (IOException e) {
+            throw new UncheckedIOException("could not read the snapshot " + name + " v" + v + ": " + e.getMessage(), e);
+        }
+    }
+
+    /** Replaces a kept snapshot version's document (the dataset item it drafted is written back after the draft is made). */
+    public synchronized void rewriteSnapshot(String name, int version, Map<String, Object> doc) {
+        Path file = snapshotDir(name).resolve("v" + version).resolve(ANSWER);
+        try {
+            Path tmp = FileSwap.temp(file);
+            Files.write(tmp, JSON.writeValueAsBytes(doc));
+            FileSwap.replace(tmp, file);
+        } catch (IOException e) {
+            throw new DrishtiException(ErrorCode.RUN_STORE_FULL, "the snapshot could not be written under " + root + ": " + e.getMessage());
+        }
+    }
+
+    private static void deleteTree(Path dir) {
+        try (Stream<Path> files = Files.exists(dir) ? Files.walk(dir) : Stream.empty()) {
+            for (Path p : files.sorted(Comparator.reverseOrder()).toList()) {
+                Files.deleteIfExists(p);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("could not remove " + dir + ": " + e.getMessage(), e);
+        }
+    }
+
     /** The promoted snapshots under {@code snapshots/} (outside the budget, section 8.4): {@code {bytes, snapshots}}, a snapshot being one version folder. */
     public Map<String, Object> snapshotsUsage() {
         Path dir = root.resolve("snapshots");
@@ -203,6 +293,7 @@ public final class RunStore {
         return m;
     }
 
+    /** The bytes and count of stored results, the oldest open, and the five people whose results take most room (Admin, 17.2). */
     public Map<String, Object> usage() {
         long bytes = 0;
         int count = 0;

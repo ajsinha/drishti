@@ -115,6 +115,26 @@ public class RunsConfiguration {
         return s;
     }
 
+    /** Promotion (section 9.4): snapshots under {@code store.dir}/snapshots, read by the model layer as the dataset's staged rows; drafts through BI. */
+    @Bean
+    RunPromotion runPromotion(RunService runs, ModelCatalog catalog, com.ash.drishti.server.bi.BiService bi) {
+        RunPromotion p = new RunPromotion(runs);
+        catalog.snapshots(p);
+        p.drafter((who, itemId, kind, title, body) -> {
+            if (itemId != null) {
+                try {
+                    bi.updateItem(who, itemId, java.util.Map.of("body", body, "message", "promoted again from a run (BI runs 9.4)"));
+                    return itemId;
+                } catch (com.ash.drishti.common.DrishtiException e) {
+                    // the item was deleted or moved out of reach: a new draft
+                }
+            }
+            return String.valueOf(bi.createItem(who, "me", java.util.Map.of("kind", kind, "title", title, "body", body,
+                    "message", "promoted from a run (BI runs 9.4)")).get("id"));
+        });
+        return p;
+    }
+
     /** Sharing (section 9.3): share rows in the identity database, recipients bound as themselves, roles expanded to their members when shared. */
     @Bean
     RunSharing runSharing(RunService runs, RunSources sources, ModelCatalog catalog, MqService mq, ObjectProvider<HikariDataSource> identity,

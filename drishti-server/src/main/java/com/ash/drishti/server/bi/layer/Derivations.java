@@ -171,6 +171,7 @@ public final class Derivations {
             }
             case DatasetDef.Source.MODEL -> out.add(Map.of("kind", "model", "name", s.model()));
             case DatasetDef.Source.SQL -> out.add(Map.of("kind", "sql-view", "name", s.model()));
+            case DatasetDef.Source.RUN -> out.add(Map.of("kind", "run-snapshot", "name", s.runName(), "version", s.runVersion()));
             default -> problems.add(error("DRS-9110", "source", "the root of '" + r.def().name() + "' cannot be traced: an unknown source '" + s.type() + "'"));
         }
         return out;
