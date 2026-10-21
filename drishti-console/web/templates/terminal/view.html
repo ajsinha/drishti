@@ -111,8 +111,8 @@
   <p class="about-live" role="status" data-about-status></p>
 </aside>
 <aside class="raw" id="rawDrawer" aria-label="Raw JSON" hidden>
-  <header><strong>Raw JSON</strong> <span class="mono" data-raw-meta></span><button type="button" class="raw-x" data-raw-close aria-label="Close">×</button></header>
-  <pre class="mono" data-raw-body>Loading…</pre>
+  <header><strong>Raw JSON</strong> <span class="mono" data-raw-meta></span><button type="button" class="fk raw-full" data-raw-full title="Open in the viewer: search, copy, download">Search · copy · download</button><button type="button" class="raw-x" data-raw-close aria-label="Close">×</button></header>
+  <div class="mono raw-tree" data-raw-body>Loading…</div>
 </aside>
 {% if calc and calc.offered and calc.allowed %}{% include "terminal/_calc.html" %}{% endif %}
 {% endblock %}
@@ -137,6 +137,7 @@
 <script src="/static/js/pivot.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/tree-rows.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drill.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/raw-viewer.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/history.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/people.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/share.js?v={{ ASSET_V }}"></script>

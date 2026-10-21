@@ -1261,7 +1261,8 @@ The keys a view offers are also buttons along the bottom of the screen, so you c
 
 Press `F9` in `TRD MX-20000001`. A drawer opens on the right with the full document, starting
 `{"SOURCE_SYSTEM": "MUREX", "SOURCE_UPDATE_TIME": "2026-10-07T18:30:00Z", "TRADE_DATE": "2025-07-25", …, "TRADE_ID": "MX-20000001", …}`, and its
-source (`trade-murex`) and generation. Press `Esc` to close it. If your role does not have raw access, fields such as `TRADER_ID` read `•••`, here
+source (`trade-murex`) and generation, as the same foldable tree as the Raw document viewer (see [A number over time](#a-number-over-time));
+**Search · copy · download** at its top opens that viewer. Press `Esc` to close it. If your role does not have raw access, fields such as `TRADER_ID` read `•••`, here
 and everywhere else
 (see [Masked fields](#masked-fields)).
 
@@ -1477,7 +1478,12 @@ Click a number in a view (a strip value, a field, a cell of a table) and a windo
 business days: a line chart, and the values day by day with the date the data is for and the connector it came from.
 Choose 10, 30, 90 or 250 days at the top. Links still open what they name; a number that is a link opens the link.
 The first line says where the value comes from: the path in the document, the connector, the business date the data
-is for and the source's generation, with a link to the raw document.
+is for and the source's generation, with a link to the raw document. **Raw document** opens the document on the same page, in
+a viewer: a tree you fold and unfold, with the field you clicked highlighted and scrolled to (`$.SLOPE_2S_10S` for the 2s10s of
+`CRV-USD-OIS`). Search filters keys and values; **Copy JSON** copies the whole document and **Copy node** the selected one;
+**Download** saves `<kind>-<id>-<date>.json` (`ir-curve-CRV-USD-OIS-2026-10-19.json`). Long lists show their first 50 items and a
+*Show all*. Masked values read `•••`, as everywhere. `Esc` closes it and puts you back on the link; on a phone it fills the screen.
+`Ctrl`+click (or a middle click) still opens the plain JSON in a new tab, and the `/api/raw/...` address keeps working.
 
 Worked example: open `TVAL TVAL-MX-20000001`, click the MTM in the strip. You see *MTM (USD) · TVAL-MX-20000001 over time*, a line
 over 30 business days, and below it the values, newest first, each with *Data for* and *Source* (`risk-store`, the demo lake of the

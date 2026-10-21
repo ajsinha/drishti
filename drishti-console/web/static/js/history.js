@@ -56,6 +56,13 @@
       if (window.drishtiDiscussion) { window.drishtiDiscussion.open({ path: current.path }); }
     });
     dlg.querySelector('[data-days]').addEventListener('change', function () { load(); });
+    // Raw document opens the viewer on this page at the field (raw-viewer.js); a Ctrl/⌘ or middle click still opens the JSON in a tab
+    dlg.querySelector('[data-origin]').addEventListener('click', function (e) {
+      var a = e.target.closest('[data-raw-open]');
+      if (!a || !window.DrishtiRaw || e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) { return; }
+      e.preventDefault();
+      window.DrishtiRaw.open({ kind: kind, id: id, path: current.path, date: a.getAttribute('data-date') || null, opener: a });
+    });
     dlg.addEventListener('close', function () { if (chart) { chart.dispose(); chart = null; } });
   }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -74,7 +81,7 @@
             + '</b> at <span class="mono">' + esc(res.body.path) + '</span> in ' + esc(kind) + ' <span class="mono">' + esc(id) + '</span>, from <b class="mono">'
             + esc(latest.source) + '</b>' + (latest.dataDate ? ', data for <span class="mono">' + esc(latest.dataDate) + '</span>' : ', undated (current data)')
             + (latest.generation != null ? ', generation <span class="mono">' + esc(latest.generation) + '</span>' : '') + '. '
-            + '<a class="lnk" href="/api/raw/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id) + '" target="_blank" rel="noopener">Raw document</a>'
+            + '<a class="lnk" data-raw-open href="/api/raw/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id) + '" data-date="' + esc(latest.dataDate || '') + '" title="Open the document on this page, at this field">Raw document</a>'
           : '';
         msg.textContent = res.body.dated ? numeric.length + ' of ' + pts.length + ' business days have a value.'
           : 'No source keeps history for this entity: the value is today’s, the same every day.';

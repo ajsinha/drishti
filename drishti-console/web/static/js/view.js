@@ -253,11 +253,21 @@
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (d.provenance) { meta.textContent = d.provenance.source + ' · gen ' + d.provenance.generation; }
-        body.textContent = JSON.stringify(d.data !== undefined ? d.data : d, null, 2);
+        var data = d.data !== undefined ? d.data : d;
+        // the same structured tree as the Raw document viewer (raw-viewer.js); plain text where it is not loaded
+        if (window.DrishtiRaw) { window.DrishtiRaw.render(body, data); } else { body.textContent = JSON.stringify(data, null, 2); }
       })
       .catch(function (e) { body.textContent = 'Could not load: ' + e; });
   }
   if (raw) { raw.querySelector('[data-raw-close]').addEventListener('click', toggleRaw); }
+  var rawFull = raw && raw.querySelector('[data-raw-full]');
+  if (rawFull) {   // F9's drawer opens the full viewer: search, copy, download
+    rawFull.addEventListener('click', function () {
+      if (!window.DrishtiRaw || !view) { return; }
+      raw.hidden = true;
+      window.DrishtiRaw.open({ kind: view.dataset.kind, id: view.dataset.id, opener: document.querySelector('[data-fkey][data-action="raw"]') });
+    });
+  }
 
   // ---- embedded in a workspace pane: entity links become selections the workspace routes ------------
   if (view && view.hasAttribute('data-embed') && window.parent !== window) {
