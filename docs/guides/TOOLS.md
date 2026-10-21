@@ -846,11 +846,14 @@ Transform's inputs as you see them, masked columns and a profile of each column,
 `tools/bitransform.py`, loaded by `drishti.py`; [PYTHON_BI.md section 17](PYTHON_BI.md#17-data-prep-the-transform-editor-240)). A write needs the
 `bi:write` scope.
 
-**BI runs (2.6.7, `tools/biruns.py`)**: `bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|promote|keep|schedule|schedules|storage`,
+**BI runs (2.6.7, `tools/biruns.py`)**: `bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|unshare|promote|keep|schedule|schedules|storage|suggestions`,
 and `--async [--wait 2s]` on `bi mq` and `bi sql`, which send `Prefer: respond-async` and print the run's id when the answer is a `202`.
 `bi runs wait` exits 0 done, 3 failed, 4 cancelled and 5 when its `--timeout` passes with the run still going; `bi runs submit` without
 `--yes` exits 2 on a large question and prints its estimate; `bi runs storage` is the bi-admin's view of the result store and the queue.
-The guide with output: [BI_RUNS_GUIDE.md](BI_RUNS_GUIDE.md#on-the-command-line).
+`bi runs share RUN --to WHO` prints each recipient's mode (sees the same, re-masked, recomputed as them; a refusal on stderr) and `unshare
+RUN WHO...` removes recipients; `bi runs schedule RUN "weekly mon 08:00"` and `schedules [list|edit ID WHEN|disable|enable|delete ID]`
+use the subscription grammar; `bi runs export RUN --format csv|xlsx --out FILE`; `bi runs suggestions [--model M] [accept|dismiss ID]`
+is the bi-admin's list of rollup suggestions. The guide with output: [BI_RUNS_GUIDE.md](BI_RUNS_GUIDE.md#on-the-command-line).
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py bi runs submit --mq year.mq.json --yes --wait 0

@@ -26,8 +26,9 @@ is ready. A slicer, a cross-filter or a drill on a dashboard never becomes a run
 
 1. [The run card](#the-run-card) · 2. [Confirming a large run](#confirming-a-large-run) · 3. [A selection that needs a run](#a-selection-that-needs-a-run) ·
 4. [The Runs tab](#the-runs-tab) · 5. [One run: the drawer](#one-run-the-drawer) · 6. [Sharing a run](#sharing-a-run) ·
-7. [Promote a run](#promote-a-run) · 8. [The bell and the inbox](#the-bell-and-the-inbox) · 9. [On the command line](#on-the-command-line) ·
-10. [The Admin page for runs](#the-admin-page-for-runs) · 11. [The words for each state](#the-words-for-each-state)
+7. [Schedules](#schedules) · 8. [Export](#export) · 9. [Promote a run](#promote-a-run) · 10. [The bell and the inbox](#the-bell-and-the-inbox) ·
+11. [On the command line](#on-the-command-line) · 12. [The Admin page for runs](#the-admin-page-for-runs) ·
+13. [Rollup suggestions](#rollup-suggestions) · 14. [The words for each state](#the-words-for-each-state)
 
 ## The run card
 
@@ -42,6 +43,7 @@ The card says:
 * **Progress**, as a bar with its percentage and what is happening ("building 12 of 41 dates"). Progress is measured, never guessed. When the
   server cannot measure it, the card says "progress is not measured for this one" and shows no bar.
 * **Cancel** stops the run and frees everything it holds at once. **Open in Runs** opens the run in the [Runs tab](#the-runs-tab).
+* **Export CSV** and **Export Excel**, once the run is done (see [Export](#export)).
 
 When the run finishes while the page is open, the card turns into the chart without a reload. If you have left the page, the bell counts
 the run (see [the bell](#the-bell-and-the-inbox)).
@@ -113,26 +115,71 @@ server decides what each person may do with a run, and the drawer shows only tho
 | **Re-run ▾ on the same data** | The same question on the same dates and data versions. When the result is still stored, it is **reused** at once. |
 | **Re-run ▾ on the newest data** | The same question with relative dates (this year, latest) worked out again. |
 | **Cancel** | Stops a queued or running run. Its row says *Cancelled: cancelled by you*. |
-| **Export ▾** | CSV, Excel, Parquet, and PDF for a report visual, from the stored result: nothing is computed again. Masked cells stay masked. |
+| **Export CSV** · **Export Excel** | The stored result as a file, your own version of it: nothing is computed again, masked cells stay masked (see [Export](#export)). |
 | **Promote ▾** | To a dataset snapshot or a report, as a draft for review (see [Promote a run](#promote-a-run)). |
 | **Keep longer** | 90 days, 180 days or a year, instead of the 30 days after the last open. |
 | **Delete result** | Removes the stored result now. The run stays listed, as expired. |
-| **Share…** | See [Sharing a run](#sharing-a-run). |
-| **Schedule…** | The same question on a schedule (`daily 07:00`, `business-days 07:30`, `monthly last 18:00 business`, `after-load TRD`), on the newest data or the same dates. Each firing is a run and a notice. |
+| **Share…** · **Unshare** | See [Sharing a run](#sharing-a-run). |
+| **Schedule…** · **Edit** · **Pause** · **Remove** | See [Schedules](#schedules). |
 | **Run in background / Discard** | For a run waiting for your confirmation. |
 
 An expired run says when its result was removed, and offers both re-runs.
 
 ## Sharing a run
 
-**Share…** takes names and roles (`bob, role:risk-team`). A share never hands over your result as such. Each recipient gets what their own
-rights allow, and the drawer says which:
+![The drawer of a shared, scheduled run in the Terminal theme: bob re-masked, dave sees the same, carol recomputed as them with her own run; the schedule business-days 07:30 with its next firing, and the schedule form set to weekly on Monday at 08:00](img/bi-runs/run-share-schedule.png)
 
-* **sees your result**: they have exactly your rights;
-* **re-masked**: they see the same rows with their own extra masks applied (a masked column shows the mask, never a value);
-* **their own run**: their rights differ, so the question runs again as them, and they are told when it is ready.
+**Share…** opens a box with the people picker: type two letters of a name or a role and choose it (`↑` `↓`, `Enter`), and it becomes a
+chip; `×` takes it off. You can also type names, comma separated (`bob, role:risk-team`). A role is expanded to its members when you share.
+**Share** sends it. A share never hands over your result as such. The server decides, for each person, what their own rights allow, and
+the drawer lists each recipient with that decision:
 
-Ten people of one desk with equal rights cost one recomputation, not ten. **Remove** stops sharing with one person.
+| Shown as | Meaning |
+|---|---|
+| **sees the same** | they have exactly your rights: they read your stored result |
+| **re-masked** | the same rows with their own extra masks applied: a masked column shows the mask, never a value |
+| **recomputed as them** | their rights differ, so the question runs again as them (the drawer names their run), and they are told when it is ready |
+
+A person who may not read the model gets no share, and the drawer says so in words with the code ("Not shared with eve (DRS-9021)").
+Ten people of one desk with equal rights cost one recomputation, not ten. The decision is taken again each time they read it, so a
+recipient whose rights narrowed since is told to re-run it, never shown the wider answer.
+
+**Unshare** beside a recipient stops sharing with that person. A run recomputed as them stays theirs.
+
+**What a recipient sees.** The run is in their own Runs tab (**Who** set to *shared with me* or *both*), marked **⇄ shared by anna**. Its
+drawer says "Shared with you by anna. Masks hold: you see what your own rights allow." They can open and export it (their own version);
+sharing on, scheduling and deleting stay with the owner. The bell tells them when it was shared.
+
+## Schedules
+
+**Schedule…** in the drawer asks the same question again on a schedule, as you, at the time it fires (if you lose access, the firing fails
+and you are told; it never borrows anyone's rights). Choose how often from the presets and the form writes the schedule for you, shown
+under it ("Writes `weekly mon 08:00`"):
+
+| Preset | Writes |
+|---|---|
+| Daily at | `daily 07:00` |
+| Weekdays at | `weekdays 07:30` (Monday to Friday) |
+| Business days at | `business-days 07:30` (the calendar's business days) |
+| Weekly on | `weekly mon 08:00` |
+| Monthly, the last day at | `monthly last 18:00` |
+| Monthly, the last business day at | `monthly last 18:00 business` |
+| Written out | anything in the same grammar, typed |
+
+The grammar is the subscriptions' one ([API_GUIDE.md](API_GUIDE.md), `POST /api/v1/bi/runs/{id}/schedule`); `after-load` is not offered
+for runs. **On** chooses the newest data (relative dates worked out again at each firing) or the same dates. Times are the server's zone.
+
+Once scheduled, the drawer's **Schedule** line says what it is and when it fires next ("business-days 07:30 on the newest data · next
+2026-10-22 07:30 UTC"). **Edit** opens the form on it, **Pause** stops the firings until you **Resume**, and **Remove** deletes the
+schedule (the runs it made stay listed). Each firing is a visible background run, confirmed in advance, and a notice on the bell.
+
+## Export
+
+**Export CSV** and **Export Excel** download a finished run's result as a file. They are in the drawer, on the run card while a finished
+run's result is drawn, and on the line above a report drawn from a run (`?run=<id>`, "Drawn from the run of…"). The file is made by the
+server from the stored result, so nothing is computed again, and it is **your** version: a recipient of a share gets their re-masked or
+recomputed answer, and masked cells stay masked (the file's note names the masked columns). A very large result is cut at the export row
+limit, with a note saying so. Parquet and PDF are not offered for runs yet.
 
 ## Promote a run
 
@@ -161,7 +208,21 @@ r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5  queued  (expected 3 to 6 min)
   follow it:  drishti.py bi runs wait r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5
 $ python3 tools/drishti.py bi runs wait r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5 --timeout 30m      # exit 0 done, 3 failed, 4 cancelled, 5 still running
 $ python3 tools/drishti.py bi runs result r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5 --format csv --out pnl.csv
-$ python3 tools/drishti.py bi runs share r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5 --to bob --to role:risk-team
+$ python3 tools/drishti.py bi runs share r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5 --to bob --to carol --to eve
+bob: re-masked (your result with their extra masks)
+carol: recomputed as them (their rights differ: a run of their own) (run r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W6)
+eve: not shared: eve may not read the model trading (DRS-9021)                      (on stderr)
+$ python3 tools/drishti.py bi runs unshare r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5 carol
+carol: no longer shared
+$ python3 tools/drishti.py bi runs schedule r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5 "weekly mon 08:00" --data latest
+sch-1  weekly mon 08:00  on latest data  next 2026-10-26 08:00
+$ python3 tools/drishti.py bi runs schedules edit sch-1 "business-days 07:30"     # also: schedules [list] | disable | enable | delete ID
+$ python3 tools/drishti.py bi runs export r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5 --format xlsx --out pnl.xlsx
+$ python3 tools/drishti.py bi runs suggestions --model trading                    # bi-admin
+sg-1  trading  desk x month  suggested  37 runs, about 4 min each
+    asked 37 times this week, about 4 min each: make it a rollup refreshed at load
+$ python3 tools/drishti.py bi runs suggestions accept sg-1                         # or: dismiss sg-1
+sg-1  accepted: the rollup is in the draft of trading (bi-model-...); review it and publish it
 ```
 
 `bi runs estimate` gives the tier, the engine and the estimate and runs nothing. A large question without `--yes` is refused with its estimate
@@ -174,8 +235,30 @@ and exit 2. `drishti.py bi mq FILE --async` and `drishti.py bi sql "…" --model
 standing and background, with the background cap), the interactive admission wait (the sign that background work is not slowing anyone),
 the queue per person, what runs now (with **Cancel**: the person is told an administrator cancelled it), the result store (results and
 snapshots, the biggest users), how accurate the estimates were, how many questions were answered inline, the settings file, and the heavy
-questions asked often enough that a rollup would answer them at once. It shows state, sizes and nodes, never a value.
-`drishti.py bi runs storage` prints the same.
+questions asked often enough that a rollup would answer them at once (see [Rollup suggestions](#rollup-suggestions)). It shows
+state, sizes and nodes, never a value. `drishti.py bi runs storage` prints the same.
+
+## Rollup suggestions
+
+The same heavy question asked again and again is better answered by a rollup in the model: then it is instant for everyone. The server
+counts the finished heavy model queries per model, grain and the shape of their filters (the field and the operator, never a value). When
+one is asked often enough (by default 5 times in 7 days, with a median of a minute or more), it becomes a suggestion with the rollup drafted.
+
+![Admin → BI → Runs, Repeated heavy questions in the light theme: desk × month on the trading model asked 37 times, about 4 min each, its rollup by_desk_month open, with Accept and Dismiss; counterparty asked 6 times](img/bi-runs/rollup-suggestions.png)
+
+**Repeated heavy questions** on `/admin/bi/runs` lists each one: the model, the grain and filters, how many runs, the typical time, its
+status, and **The rollup** (open it to read the YAML that would be added). For a BI administrator:
+
+* **Accept** adds the drafted rollup to the model's **draft**, under `rollups:` (the model's comments and order are kept). Nothing is
+  published: the change is reviewed and published like any other, and the message links to the model. For a model shipped in a pack the
+  suggestion is accepted with the YAML for you to add by hand.
+* **Dismiss** stops suggesting it.
+
+Once the model has a rollup at that grain the status says **Built**, and those questions are answered at once instead of becoming runs.
+While a model has open suggestions, its **model designer** shows a notice under the toolbar ("A heavy question on this model was asked 37
+times this week: a rollup would answer it at once. Review the suggested rollups") that opens this list for that model
+(`/admin/bi/runs?model=trading#suggestions`). The notice shows to BI administrators, who can accept. On the command line:
+`drishti.py bi runs suggestions [--model M]`, `suggestions accept ID`, `suggestions dismiss ID`.
 
 ## The words for each state
 

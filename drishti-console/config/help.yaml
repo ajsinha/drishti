@@ -129,6 +129,10 @@ moved:
   run-confirm: docs-guides-bi-runs-guide#confirming-a-large-run                              # the confirm card of a large run (2.6.7)
   run-needed: docs-guides-bi-runs-guide#a-selection-that-needs-a-run                         # a selection that needs a background run, DRS-9089 (2.6.7)
   snapshot-dataset: docs-guides-bi-runs-guide#promote-a-run                                  # a run promoted to a dataset snapshot (2.6.7)
+  run-share: docs-guides-bi-runs-guide#sharing-a-run                                         # sharing a run: each recipient's mode, unshare (2.6.7)
+  run-schedule: docs-guides-bi-runs-guide#schedules                                          # a run on a schedule: presets, edit, pause, remove (2.6.7)
+  run-export: docs-guides-bi-runs-guide#export                                               # a run's result as CSV or Excel (2.6.7)
+  run-suggestions: docs-guides-bi-runs-guide#rollup-suggestions                              # Admin → BI → Runs, repeated heavy questions as rollups (2.6.7)
   table-chart: user-guide#chart-any-table                                 # the chart dialog's ? (Chart any table, 2.6.7)
   using-the-terminal: user-guide
   bi-tutorial: docs-tutorials-10-first-bi-report

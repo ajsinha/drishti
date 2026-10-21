@@ -17,6 +17,18 @@
 
 ## Unreleased
 
+- **BI runs in the console: sharing, schedules, export and rollup suggestions (2.6.7, BI_RUNS_GUIDE.md).** The run drawer's **Share…**
+  takes people and roles from the people picker (chips; names typed comma separated work too) and lists each recipient with the mode the
+  server decided: *sees the same*, *re-masked* or *recomputed as them* (their run named), a refusal said in words with its code; **Unshare**
+  per recipient. A recipient sees the run in their Runs tab marked *shared by* its owner, opens and exports their own version. **Schedule…**
+  has presets (daily, weekdays, business days, weekly on a day, monthly on the last day or business day, or written out) that write the
+  subscription grammar, shows it before saving, and the drawer shows the schedule with its next firing, **Edit**, **Pause**/**Resume** and
+  **Remove**. **Export CSV** and **Export Excel** in the drawer, on the run card and above a report drawn from a run. **Admin → BI → Runs**
+  lists the rollup suggestions with their YAML, **Accept** (into the model's draft, for review) and **Dismiss**; the **model designer**
+  shows a notice linking to its model's open suggestions. **Run as SQL** in the report designer's query panel asks with the inline wait
+  and shows the run card past it. CLI: `bi runs unshare`, `bi runs schedules edit`, `bi runs suggestions [list|accept|dismiss]`, `bi runs
+  export --format csv|xlsx`, and completion. Help cards `run-share`, `run-schedule`, `run-export`, `run-suggestions`. Not yet: Analyse's
+  SQL cells keep asking synchronously.
 - **BI runs: sharing, rollup suggestions, export, schedules, statements and the Admin numbers (2.6.7, BI_RUNS.md 18.2b).** **Sharing
   (R6, 9.3):** `POST /api/v1/bi/runs/{id}/share {to: [bob, role:risk-team]}` decides per person from the row part and the mask part of the
   security signature: `same` (equal rights: the stored result), `re-masked` (the same rows, more masks: the extra columns masked as the engine
