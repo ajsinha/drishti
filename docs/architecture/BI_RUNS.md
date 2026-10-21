@@ -15,7 +15,7 @@
 -->
 # BI runs: every BI query as a bounded, visible job
 
-Status: **design, not built.** Release **2.6.7** (decided by the product owner, 2026-10-20), between 2.6.6 (QA clean) and 2.7.0
+Status: **being built** (the steps as built are in section 18.2b). Release **2.6.7** (decided by the product owner, 2026-10-20), between 2.6.6 (QA clean) and 2.7.0
 (write-back). Builds on [BI_DESIGN.md](BI_DESIGN.md) (sections 4.1 the pipeline, 6.1 caches, 6.3 concurrency, 6.5 horizontal scale, 6.7
 cost controls), [RUPAKA.md](RUPAKA.md) section 7 (the query engine), [SUPER_SCALE.md](SUPER_SCALE.md) (S4 products and rollups, S5 slices
 and owners, S6 split queries), [DRISHTI_NET.md](DRISHTI_NET.md) (several servers), [DATABASE.md](DATABASE.md) (where relational state
@@ -267,6 +267,13 @@ CREATE TABLE IF NOT EXISTS drishti_bi_run_schedule (
     data TEXT NOT NULL DEFAULT 'latest',      -- latest | the same as-of rule as the run it was made from
     enabled INTEGER NOT NULL DEFAULT 1, last_run TEXT, next_at TIMESTAMP, created_at TIMESTAMP NOT NULL);
 ```
+
+As built (R1), the tables also hold: `drishti_bi_run.title` (shown in Runs), `rows_read` (the actual rows read), `last_opened`
+(retention counts from the last open, 8.4) and `reuse_of` (the run whose stored result a reused or joined run reads);
+`drishti_bi_run_share.mode` (`same`, `re-masked`, `recomputed`); `drishti_bi_run_schedule.run_id` and `title` (the run it was made
+from). The index names follow the file's `ix_` convention (`ix_bi_run_owner`, `ix_bi_run_state`, `ix_bi_run_key`,
+`ix_bi_run_share_recipient`, `ix_bi_run_schedule_owner`). `SchemaParityTest` (drishti-it) keeps the two schema files identical in
+tables, columns, nullability and indexes.
 
 No data value is ever written to these tables. `question` and `params` hold names, operators and the values the reader typed into
 filters, which the run's owner already knows. `params` is shown only to people who may see the run.
@@ -999,7 +1006,8 @@ answer as today.
 }
 ```
 
-`can` is computed by the server for the caller, so the console never decides rights. Fields are never removed. A new field may be
+`can` is computed by the server for the caller, so the console never decides rights. As built (R1), `can` also carries `confirm`
+(true for the runner of an `awaiting-confirm` run), an added field. Fields are never removed. A new field may be
 added, and the console ignores fields it does not know.
 
 ### 14.4 CLI
@@ -1226,6 +1234,12 @@ Targeted tests only between steps, on the 10K-trade lake at most, one heavy proc
 * **Normalising sorts the grain and the measures,** so the stored result's column order (and its row order when the question has no
   `sort`) can differ from the asker's: the result reader must project the asker's own order. `between` bounds, `sort` and
   `totals.levels` keep their order; `mq` (the language version) is dropped.
+
+### 18.2b As built (server lane)
+
+| Step | Status | What was built |
+|---|---|---|
+| R1 | built | `RunsProperties` (reads `config/runs/runs.yaml`, every key defaulted; examples in `config/runs.examples/`: `laptop.yaml`, `cluster.yaml`, `off.yaml`), `RunsConfiguration`, `RunJson` (14.3), `RunProblem` (a problem with extra properties and `Retry-After`), `RunsController` (every endpoint of 14.1), the three tables in both schema files, `SchemaParityTest`; `Run` gained `title`, `reuseOf`, `rowsRead` and a `Builder` |
 
 ### 18.3 Together
 

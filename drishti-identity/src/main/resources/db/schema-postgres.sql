@@ -409,3 +409,75 @@ CREATE INDEX IF NOT EXISTS ix_bi_usage_item ON drishti_bi_usage (item_id);
 CREATE TABLE IF NOT EXISTS drishti_bi_setting (
     name VARCHAR(255) PRIMARY KEY, value TEXT NOT NULL DEFAULT ''
 );
+-- BI runs (docs/architecture/BI_RUNS.md section 3.4): every visible BI run, its shares and its schedules. Names and counts only, never a data value.
+CREATE TABLE IF NOT EXISTS drishti_bi_run (
+    id VARCHAR(255) PRIMARY KEY,
+    runner VARCHAR(255) NOT NULL,
+    owner VARCHAR(255) NOT NULL,
+    workspace VARCHAR(255),
+    source_type VARCHAR(32) NOT NULL,
+    source_id VARCHAR(255),
+    source_ref TEXT,
+    title TEXT,
+    question TEXT NOT NULL,
+    params TEXT,
+    as_of TEXT,
+    data_version VARCHAR(255),
+    fingerprint VARCHAR(255) NOT NULL,
+    signature VARCHAR(255) NOT NULL,
+    result_key VARCHAR(255),
+    tier VARCHAR(32) NOT NULL,
+    engine VARCHAR(255) NOT NULL,
+    state VARCHAR(32) NOT NULL,
+    progress DOUBLE PRECISION,
+    phase TEXT,
+    estimate TEXT NOT NULL,
+    rows_read BIGINT,
+    rows_out BIGINT,
+    bytes_out BIGINT,
+    code VARCHAR(32),
+    reason TEXT,
+    node VARCHAR(255) NOT NULL,
+    attempt INTEGER NOT NULL DEFAULT 1,
+    lease_until TIMESTAMP WITH TIME ZONE,
+    submitted_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    started_at TIMESTAMP WITH TIME ZONE,
+    finished_at TIMESTAMP WITH TIME ZONE,
+    expires_at TIMESTAMP WITH TIME ZONE,
+    last_opened TIMESTAMP WITH TIME ZONE,
+    rerun_of VARCHAR(255),
+    shared_from VARCHAR(255),
+    reuse_of VARCHAR(255),
+    group_id VARCHAR(255),
+    promoted_to VARCHAR(255)
+);
+CREATE INDEX IF NOT EXISTS ix_bi_run_owner ON drishti_bi_run (owner, submitted_at);
+CREATE INDEX IF NOT EXISTS ix_bi_run_state ON drishti_bi_run (node, state);
+CREATE INDEX IF NOT EXISTS ix_bi_run_key ON drishti_bi_run (result_key);
+CREATE TABLE IF NOT EXISTS drishti_bi_run_share (
+    run_id VARCHAR(255) NOT NULL,
+    recipient VARCHAR(255) NOT NULL,
+    mode VARCHAR(32) NOT NULL,
+    recipient_run VARCHAR(255),
+    shared_by VARCHAR(255) NOT NULL,
+    shared_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    PRIMARY KEY (run_id, recipient)
+);
+CREATE INDEX IF NOT EXISTS ix_bi_run_share_recipient ON drishti_bi_run_share (recipient);
+CREATE TABLE IF NOT EXISTS drishti_bi_run_schedule (
+    id VARCHAR(255) PRIMARY KEY,
+    owner VARCHAR(255) NOT NULL,
+    run_id VARCHAR(255),
+    title TEXT,
+    question TEXT NOT NULL,
+    params TEXT,
+    source_type VARCHAR(32) NOT NULL,
+    source_id VARCHAR(255),
+    schedule VARCHAR(255) NOT NULL,
+    data VARCHAR(255) NOT NULL DEFAULT 'latest',
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    last_run VARCHAR(255),
+    next_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_bi_run_schedule_owner ON drishti_bi_run_schedule (owner);

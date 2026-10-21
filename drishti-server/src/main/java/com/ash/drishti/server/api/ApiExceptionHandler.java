@@ -88,6 +88,19 @@ public class ApiExceptionHandler {
         return p;
     }
 
+    /** A BI run refusal (docs/architecture/BI_RUNS.md section 16): its extra properties (estimate, confirmToken, run hint) and {@code Retry-After}. */
+    @ExceptionHandler(com.ash.drishti.server.bi.runs.RunProblem.class)
+    org.springframework.http.ResponseEntity<ProblemDetail> run(com.ash.drishti.server.bi.runs.RunProblem e) {
+        ProblemDetail p = drishti(e);
+        e.properties().forEach(p::setProperty);
+        var b = org.springframework.http.ResponseEntity.status(p.getStatus()).contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
+                .header(org.springframework.http.HttpHeaders.CACHE_CONTROL, "no-store");
+        if (e.retryAfterSeconds() > 0) {
+            b.header(org.springframework.http.HttpHeaders.RETRY_AFTER, Long.toString(e.retryAfterSeconds()));
+        }
+        return b.body(p);
+    }
+
     @ExceptionHandler(DrishtiException.class)
     ProblemDetail drishti(DrishtiException e) {
         HttpStatus status = HttpStatus.valueOf(e.errorCode().httpStatus());

@@ -406,3 +406,75 @@ CREATE INDEX IF NOT EXISTS ix_bi_usage_item ON drishti_bi_usage (item_id);
 CREATE TABLE IF NOT EXISTS drishti_bi_setting (
     name TEXT PRIMARY KEY, value TEXT NOT NULL DEFAULT ''
 );
+-- BI runs (docs/architecture/BI_RUNS.md section 3.4): every visible BI run, its shares and its schedules. Names and counts only, never a data value.
+CREATE TABLE IF NOT EXISTS drishti_bi_run (
+    id TEXT PRIMARY KEY,
+    runner TEXT NOT NULL,
+    owner TEXT NOT NULL,
+    workspace TEXT,
+    source_type TEXT NOT NULL,
+    source_id TEXT,
+    source_ref TEXT,
+    title TEXT,
+    question TEXT NOT NULL,
+    params TEXT,
+    as_of TEXT,
+    data_version TEXT,
+    fingerprint TEXT NOT NULL,
+    signature TEXT NOT NULL,
+    result_key TEXT,
+    tier TEXT NOT NULL,
+    engine TEXT NOT NULL,
+    state TEXT NOT NULL,
+    progress REAL,
+    phase TEXT,
+    estimate TEXT NOT NULL,
+    rows_read INTEGER,
+    rows_out INTEGER,
+    bytes_out INTEGER,
+    code TEXT,
+    reason TEXT,
+    node TEXT NOT NULL,
+    attempt INTEGER NOT NULL DEFAULT 1,
+    lease_until TIMESTAMP,
+    submitted_at TIMESTAMP NOT NULL,
+    started_at TIMESTAMP,
+    finished_at TIMESTAMP,
+    expires_at TIMESTAMP,
+    last_opened TIMESTAMP,
+    rerun_of TEXT,
+    shared_from TEXT,
+    reuse_of TEXT,
+    group_id TEXT,
+    promoted_to TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_bi_run_owner ON drishti_bi_run (owner, submitted_at);
+CREATE INDEX IF NOT EXISTS ix_bi_run_state ON drishti_bi_run (node, state);
+CREATE INDEX IF NOT EXISTS ix_bi_run_key ON drishti_bi_run (result_key);
+CREATE TABLE IF NOT EXISTS drishti_bi_run_share (
+    run_id TEXT NOT NULL,
+    recipient TEXT NOT NULL,
+    mode TEXT NOT NULL,
+    recipient_run TEXT,
+    shared_by TEXT NOT NULL,
+    shared_at TIMESTAMP NOT NULL,
+    PRIMARY KEY (run_id, recipient)
+);
+CREATE INDEX IF NOT EXISTS ix_bi_run_share_recipient ON drishti_bi_run_share (recipient);
+CREATE TABLE IF NOT EXISTS drishti_bi_run_schedule (
+    id TEXT PRIMARY KEY,
+    owner TEXT NOT NULL,
+    run_id TEXT,
+    title TEXT,
+    question TEXT NOT NULL,
+    params TEXT,
+    source_type TEXT NOT NULL,
+    source_id TEXT,
+    schedule TEXT NOT NULL,
+    data TEXT NOT NULL DEFAULT 'latest',
+    enabled INTEGER NOT NULL DEFAULT 1,
+    last_run TEXT,
+    next_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_bi_run_schedule_owner ON drishti_bi_run_schedule (owner);

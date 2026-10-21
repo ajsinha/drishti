@@ -1,0 +1,81 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+#
+# BI runs (docs/architecture/BI_RUNS.md section 15): every BI question as a bounded, visible job. The server reads this file at start
+# (drishti.bi.runs.file in application.yaml); every key has its default, so a missing key or file means the value shown here.
+# Ready-made variants are in config/runs.examples/.
+enabled: true                      # false: every question runs as before 2.6.7 (synchronous), no Runs tab
+inline:
+  wait: 2s                         # how long a request waits before its run becomes a visible job
+  max-wait: 10s                    # the most a caller may ask for (Prefer: wait=)
+interactive:                       # the bounds of the interactive tier
+  max-seconds: 10                  # the estimate's high end
+  max-rows: 50000000               # rows read
+  max-build-dates: 2               # partitions it may build from the source
+confirm:
+  above-seconds: 60                # ad-hoc heavy runs above this ask first
+  above-rows: 500000000
+  unknown: true                    # an estimate with basis unknown asks first
+  ttl: 15m                         # an unconfirmed run is discarded after this
+queue:
+  per-user: 5                      # a person's visible runs queued + running (DRS-9081)
+  max: 200                         # all queued runs on this node (DRS-9081)
+workers: 2                         # runs executing at once on this node
+run:
+  max-duration: 4h                 # a run's time limit (DRS-9024)
+engine:                            # the run engine: a second DuckDB instance for ad-hoc heavy runs
+  memory-limit: 2GB
+  threads: 2
+  max-spill: 20GB
+  max-read-rows: 5000000000        # past it, and no split or external engine: DRS-9086
+  prefer-external-above-seconds: 0 # 0: never prefer an external engine while local fits
+engines: {}                        # external engines (3.0 groundwork): athena: {...}, trino: {...}, spark: {...}
+estimate:
+  low-factor: 0.5                  # the range before 20 runs of history narrow it
+  high-factor: 2.0
+  rates:                           # seeds, replaced by measured rates
+    scan-rows-per-second: 50000000      # DuckDB over Parquet layers
+    build-rows-per-second: 300000       # a connector's column scan into a layer
+    record-rows-per-second: 2000        # the record-by-record path
+store:
+  dir: ${drishti.data.dir:./data}/bi-runs
+  max-bytes: 20GB                  # unpromoted results on this node
+  max-bytes-per-user: 2GB
+  max-result-rows: 50000000        # DRS-9086
+  max-result-bytes: 2GB            # DRS-9086
+  min-seconds: 1                   # an interactive answer faster than this is not stored
+  keep-interactive: true
+retention:
+  days: 30                         # after the last open, unless promoted or kept
+  max-days: 365                    # the most "Keep longer" allows
+  sweep: 1h
+restart:
+  resume-running: true             # a run interrupted by a restart starts again
+  max-attempts: 2                  # then it fails with DRS-9085
+  requeue-changed-model: false     # a queued run whose model changed fails instead of running on the new model
+lease:
+  renew: 10s
+  ttl: 45s
+cancel:
+  grace: 5s                        # Admin flags a cancelled run whose resources are not released by then
+workspace-visibility: owner-and-shared   # owner-and-shared | members (members see others' run rows, never results)
+promote:
+  enabled: true
+  versions-keep: 5
+notify:
+  on: [done, failed]               # also: cancelled-by-others (always on), started-again (always on)
+suggest:                           # repeated heavy questions become rollup suggestions (section 8.3a)
+  min-runs: 5                      # ad-hoc heavy runs of one shape ...
+  window: 7d                       # ... within this window ...
+  min-seconds: 60                  # ... each at least this long
