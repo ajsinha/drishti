@@ -811,4 +811,82 @@ class ModelAcceptanceTest {
         assertThat(byDesk).as(a.toString()).isEqualTo(Map.of("DESK-A", 8, "DESK-B", 8, "DESK-C", 8));
         a.path("rows").forEach(r -> assertThat(r.get(1).asText()).startsWith("TR-"));
     }
+
+    // ---- BI runs: Prefer: respond-async end to end (BI_RUNS.md 6.1, 14.1) ------------------------------------------------
+
+    /** A question asked with {@code Prefer}: 200 (inline, today's body), or 202 then the stored result, or 409 DRS-9082 then confirm. */
+    ResultActions callPrefer(String path, String who, Object body) throws Exception {
+        return mvc.perform(post(java.net.URI.create(path)).header("Authorization", who).header("Prefer", "respond-async, wait=10")
+                .contentType(MediaType.APPLICATION_JSON).content(body instanceof String s ? s : json.writeValueAsString(body)));
+    }
+
+    JsonNode prefer(String path, String who, Object body) throws Exception {
+        var r = callPrefer(path, who, body).andReturn().getResponse();
+        if (r.getStatus() == 200) {
+            assertThat(r.getHeader("Drishti-Run")).isNotBlank();
+            return json.readTree(r.getContentAsString());
+        }
+        return viaRunFrom(r, who);
+    }
+
+    JsonNode viaRunFrom(org.springframework.mock.web.MockHttpServletResponse r, String who) throws Exception {
+        String id;
+        if (r.getStatus() == 409) {
+            JsonNode problem = json.readTree(r.getContentAsString());
+            assertThat(problem.toString()).contains("DRS-9082");
+            id = problem.path("runId").asText();
+            assertThat(problem.path("run").path("id").asText()).isEqualTo(id);
+            ok(call("POST", "/api/v1/bi/runs/" + id + "/confirm", who, Map.of("confirmToken", problem.path("confirmToken").asText())));
+        } else {
+            assertThat(r.getStatus()).as(r.getContentAsString()).isEqualTo(202);
+            id = json.readTree(r.getContentAsString()).path("run").path("id").asText();
+        }
+        for (int i = 0; i < 200; i++) {
+            JsonNode run = ok(call("GET", "/api/v1/bi/runs/" + id, who, null));
+            String state = run.path("state").asText();
+            if (state.equals("done") || state.equals("reused")) {
+                return ok(call("GET", "/api/v1/bi/runs/" + id + "/result", who, null));
+            }
+            assertThat(state).as(run.toString()).isIn("queued", "running", "storing");
+            Thread.sleep(50);
+        }
+        throw new AssertionError("run " + id + " did not finish");
+    }
+
+    @Test @Order(17)
+    void preferRespondAsyncAnswersAsARunAndWithoutItEveryEndpointIsUnchanged() throws Exception {
+        Map<String, Object> slice = Map.of("mq", 1, "model", "acc-trades", "select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional", "MTM")),
+                "time", Map.of("as-of", DAY));
+        for (String who : List.of("rita", "ann")) {
+            JsonNode sync = ok(call("POST", "/api/v1/bi/mq", reader(who), slice));
+            assertThat(byDesk(prefer("/api/v1/bi/mq", reader(who), slice))).as(who + " /bi/mq").isEqualTo(byDesk(sync));
+            Map<String, Object> modelBody = Map.of("select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional", "MTM")), "time", Map.of("as-of", DAY));
+            JsonNode syncModel = ok(call("POST", "/api/v1/bi/models/acc-trades/query", reader(who), modelBody));
+            assertThat(byDesk(syncModel)).isEqualTo(byDesk(sync));
+            assertThat(byDesk(prefer("/api/v1/bi/models/acc-trades/query", reader(who), modelBody))).as(who + " /models/{id}/query").isEqualTo(byDesk(sync));
+            String visual = "{\"page\":\"main\",\"visual\":\"by-desk\",\"state\":{\"dates\":{\"from\":\"" + DAY + "\",\"to\":\"" + DAY + "\"}}}";
+            JsonNode syncVisual = reportVisual(who, "by-desk");
+            assertThat(byDesk(prefer("/api/v1/bi/reports/" + REPORT + "/query", reader(who), visual))).as(who + " report visual").isEqualTo(byDesk(syncVisual));
+            // a slicer's re-ask (interaction, supersedes) twice on the same visual: both answer (the second never trips over the first's finished run)
+            String slicer = "{\"page\":\"main\",\"visual\":\"by-desk\",\"interaction\":true,\"supersedes\":\"acc/main/by-desk\",\"state\":{\"dates\":{\"from\":\"" + DAY
+                    + "\",\"to\":\"" + DAY + "\"}}}";
+            for (int i = 0; i < 2; i++) {
+                assertThat(byDesk(prefer("/api/v1/bi/reports/" + REPORT + "/query", reader(who), slicer))).isEqualTo(byDesk(syncVisual));
+            }
+        }
+        String statement = "SELECT trades.desk AS desk, MEASURE('Notional') AS notional FROM trades GROUP BY trades.desk ORDER BY desk AS OF DATE '" + DAY + "'";
+        JsonNode syncSql = ok(call("POST", "/api/v1/bi/sql", reader("rita"), Map.of("model", "acc-trades", "sql", statement)));
+        JsonNode asyncSql = prefer("/api/v1/bi/sql", reader("rita"), Map.of("model", "acc-trades", "sql", statement));
+        assertThat(asyncSql.path("rows").toString()).isEqualTo(syncSql.path("rows").toString());
+        // an MQ asking for EXPLAIN answers at once with its SQL, Prefer or not (the explain panel)
+        Map<String, Object> explain = Map.of("mq", 1, "model", "acc-trades", "select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional")),
+                "time", Map.of("as-of", DAY), "options", Map.of("explain", true));
+        var ex = callPrefer("/api/v1/bi/mq", reader("rita"), explain).andReturn().getResponse();
+        assertThat(ex.getStatus()).as(ex.getContentAsString()).isEqualTo(200);
+        assertThat(ex.getHeader("Drishti-Run")).isNull();
+        // the run list filters by since and by several states
+        JsonNode list = ok(call("GET", "/api/v1/bi/runs?since=7d&state=done,reused,queued", reader("rita"), null));
+        assertThat(list.path("runs").isArray()).isTrue();
+        call("GET", "/api/v1/bi/runs?since=yesterday", reader("rita"), null).andExpect(status().isBadRequest());
+    }
 }

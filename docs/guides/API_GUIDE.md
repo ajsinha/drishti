@@ -2306,22 +2306,31 @@ The answer of an MQ-shaped statement and of a composite one are shown in [SQL.md
 Every BI question can be a bounded, visible job ([BI_RUNS.md](../architecture/BI_RUNS.md)). The existing query endpoints
 (`POST /api/v1/bi/mq`, `POST /api/v1/bi/models/{id}/query`, `POST /api/v1/bi/sql`, `POST /api/v1/bi/reports/{id}/query`) accept the
 standard header `Prefer: respond-async[, wait=<seconds>]` (RFC 7240). With it the question is submitted as a run computed as the caller and
-the server waits up to `wait` (default `inline.wait`, 2 s; at most `inline.max-wait`, 10 s): done in time, `200` with today's body and an
-`X-Bi-Run` header; not done, `202 {run}` with `Location`, and the run keeps going, visible in the Runs tab, with a `bi-run` notice on the bell
+the server waits up to `wait` (default `inline.wait`, 2 s; at most `inline.max-wait`, 10 s): done in time, `200` with today's body and the run's id in the
+`Drishti-Run` header (also `X-Bi-Run`); not done, `202 {run}` with `Location`, and the run keeps going, visible in the Runs tab, with a `bi-run` notice on the bell
 when it ends. `wait=0` submits it as a background run at once. Without the header every endpoint answers exactly as before. The body fields
 `interaction: true` (a slicer, cross-filter or drill: never becomes a job; a question too large for an interactive answer is refused
 `409 DRS-9089`) and `supersedes: "<report>/<page>/<visual>"` (a newer question with the same key cancels the older) are taken off the body
-before it is read. A question too large for an interactive answer (`DRS-9029`) without `interaction` becomes a background run (`202`).
+before it is read, as are `confirm: true` (the confirmation given in advance; also the re-ask after a `DRS-9089` with `interaction: false`)
+and `confirmToken` (confirms the waiting run it was given for). A question too large for an interactive answer (`DRS-9029`) without
+`interaction` becomes a background run (`202`). An MQ with `options.explain` and SQL `EXPLAIN` answer at once.
+
+**The planner** sizes an MQ or SQL question from metadata before anything runs (built layers' `meta.json`, the connector's row statistics:
+Delta add actions, Iceberg manifests; then what earlier builds taught): an *interactive* or *known heavy* question waits inline; an *ad-hoc
+heavy* one answers `202` at once, or `409 DRS-9082` with `{estimate, confirmToken, runId, run, confirm}` when its estimate passes
+`confirm.above-seconds` or `confirm.above-rows` or its size is unknown; past the local engine's `engine.max-read-rows` it is refused
+`413 DRS-9086`. Without `Prefer`, the synchronous `DRS-9029` now comes from the same metadata, before any layer is built.
 
 A result is reused only under the same key: the canonical question, the caller's **security signature**, the data version and the
-engine semantics. A stored or running result is never served across signatures (a viewer never reads an administrator's answer, in
+engine semantics. The data version is the hash of the version of every table and date the question reads, so a stored result is reused
+after a server restart while the data is unchanged, and never once a date is restated. A stored or running result is never served across signatures (a viewer never reads an administrator's answer, in
 either order). Results are kept under `<data>/bi-runs` (`store.dir`) for `retention.days` (30) after the last open.
 
 | Method | Path | What it does |
 |---|---|---|
-| `POST` | `/api/v1/bi/runs` | body `{source, options}`: `source` `{type: mq, mq}`, `{type: sql, model, sql}` or `{type: report, id, page, visual, state}`; `options` `{wait ("PT2S", or seconds; 0: background at once), interaction, supersedes, title}`. `200 {run, answer}` done within the wait; `202 {run}` (with `Location`) |
-| `POST` | `/api/v1/bi/runs/estimate` | body `{source}`: `{tier, engine, estimate, reuse: {key, runId} \| null, confirm}`; runs nothing. *As built:* the estimate's basis is `unknown` (the metadata planner is not built yet) |
-| `GET` | `/api/v1/bi/runs` | `?state=&source=&q=&limit=50&after=<run id>`: `{runs: [run], next, storage: {bytes, results}, nodes: {failed: []}}`, the caller's runs newest first |
+| `POST` | `/api/v1/bi/runs` | body `{source, options}`: `source` `{type: mq, mq}`, `{type: sql, model, sql}` or `{type: report, id, page, visual, state}`; `options` `{wait ("PT2S", or seconds; 0: background at once), interaction, supersedes, title, confirm, confirmToken}`. `200 {run, answer}` done within the wait; `202 {run}` (with `Location`); `409 DRS-9082` (above) |
+| `POST` | `/api/v1/bi/runs/estimate` | body `{source}`: `{tier, engine, estimate, reuse: {key, runId} \| null, confirm, refusal}`; runs nothing and reads no data. The estimate is a range with its `basis` (`layers`, `delta-stats`, `iceberg-manifests`, `history`, `unknown`) and `why` |
+| `GET` | `/api/v1/bi/runs` | `?state=done,reused&source=&q=&since=7d&limit=50&after=<run id>` (`state` comma-separated; `since` `7d`, `30d`, `12h` or an ISO date or instant): `{runs: [run], next, storage: {bytes, results}, nodes: {failed: []}}`, the caller's runs newest first |
 | `GET` | `/api/v1/bi/runs/{id}` | the run object (below); the runner and owner, and a bi-admin (state only) |
 | `GET` | `/api/v1/bi/runs/{id}/result` | `?format=json&offset=0&limit=5000`: the stored answer (the endpoint's own body shape) with `page: {offset, limit, total}`, for the runner only; `409 DRS-9083` not done, `410 DRS-9084` removed. *As built:* JSON only |
 | `GET` | `/api/v1/bi/runs/events` | server-sent events: `hello` (the caller's unfinished runs), then `run` `{id, state, progress, phase, rowsOut, code}` per change, `status` every 15 s |
@@ -2329,7 +2338,7 @@ either order). Results are kept under `<data>/bi-runs` (`store.dir`) for `retent
 | `POST` | `/api/v1/bi/runs/{id}/rerun` | body `{wait?}`: the same question again as the caller, as `POST /runs` answers; the new run has `rerunOf` |
 | `POST` | `/api/v1/bi/runs/{id}/keep` | body `{days}` (at most `retention.max-days`): `200 run` with `expiresAt` |
 | `DELETE` | `/api/v1/bi/runs/{id}/result` | `204`; the row stays, `expired` |
-| `POST` | `/api/v1/bi/runs/{id}/confirm` | `{confirmToken}`: for an `awaiting-confirm` run. *As built:* no run asks for confirmation yet (`409 DRS-9083`) |
+| `POST` | `/api/v1/bi/runs/{id}/confirm` | `{confirmToken}`: queues an `awaiting-confirm` run (`202 run`); a wrong token is `400`, a run past `confirm.ttl` is cancelled |
 | `POST` | `/api/v1/bi/runs/{id}/export` | body `{format}`. *Not built yet (step R6):* `400 DRS-5001` saying so |
 | `POST` | `/api/v1/bi/runs/{id}/share` | body `{to: ["bob", "role:risk-team"]}`. *Not built yet (step R6)* |
 | `DELETE` | `/api/v1/bi/runs/{id}/share/{recipient}` | *Not built yet (step R6)* |
@@ -2337,16 +2346,17 @@ either order). Results are kept under `<data>/bi-runs` (`store.dir`) for `retent
 | `POST` | `/api/v1/bi/runs/{id}/schedule` | body `{schedule, data}`. *Not built yet (step R6)* |
 | `GET` | `/api/v1/bi/runs/schedules` | `{schedules: []}`; `PUT` / `DELETE /api/v1/bi/runs/schedules/{id}` answer `404 DRS-9080` until schedules are built |
 | `GET` | `/api/v1/bi/runs/settings` | `{enabled, inlineWait: "PT2S", maxWait: "PT10S", confirmAboveSeconds: 60, retentionDays: 30, eventsUrl}` (what the console needs) |
-| `GET` | `/api/v1/bi/admin/runs` | bi-admin: `{queue: {workers, running, queued, byUser, byClass}, running: [run], storage: {results}, accuracy, nodes}` |
+| `GET` | `/api/v1/bi/admin/runs` | bi-admin: `{now: {slots: {interactive, standing, background: {used, cap}}, admissionWaitP95Ms}, queue: {byClass, byUser, oldestSeconds, oldestUser, queued, workers}, running: [run], storage: {resultsBytes, maxBytes, results, oldest, snapshotsBytes, snapshots, topUsers}, accuracy: {medianRatio, p10, p90, samples, basis, unknownShare}, inline: {inlineShare, jobMedianSeconds}, settings: {file, inlineWait, confirmAboveSeconds, retentionDays}, nodes: [{node, alive}], suggestions}`; null where not built yet ([BI_RUNS.md 14.5](../architecture/BI_RUNS.md#145-the-console-contract-as-built-server-lane-267)) |
 | `POST` | `/api/v1/bi/admin/runs/{id}/cancel` | bi-admin: `202 run` (reason "cancelled by an administrator (name)") |
 
 The run object (the contract with the console, [BI_RUNS.md section 14.3](../architecture/BI_RUNS.md#143-the-run-object-the-contract-between-the-two-builders)):
-`id` (`r-<node>-<ulid>`), `title`, `source {type, id, title, page, visual, href}`, `runner`, `owner`, `workspace`, `params`, `asOf {from, to, dates}`,
+`id` (`r-<node>-<ulid>`), `title`, `source {type, id, title, model, page, visual, href}`, `runner`, `owner`, `workspace`, `params`, `asOf {from, to, dates}`,
 `data {version, words, tables}`, `tier` (`interactive`, `known-heavy`, `ad-hoc-heavy`), `engine`, `class`, `state` (`planned`, `awaiting-confirm`,
 `queued`, `running`, `storing`, `done`, `reused`, `failed`, `cancelled`, `expired`), `progress`, `phase`, `estimate`, `actual {rowsRead, rowsOut,
 bytesOut, seconds}`, `code`, `reason`, `node`, `attempt`, `submittedAt`, `startedAt`, `finishedAt`, `expiresAt`, `reuse {of, mode} | null`,
-`shared {from, with}`, `group`, `rerunOf`, `promotedTo`, `can {open, cancel, rerun, export, share, promote, schedule, keep, delete, confirm}` (computed
-for the caller) and `links {self, result, events}`. Fields are never removed. Submitting and estimating are open to a read-only token; the other
+`shared {from, with}`, `group`, `rerunOf`, `promotedTo`, `can {open, cancel, rerun, export, share, promote, schedule, keep, delete, confirm, discard}` (computed
+for the caller), `links {self, result, events}`, `schedule` (null until schedules are built) and `confirmToken` (the owner's, while
+`awaiting-confirm`). Fields are never removed. Submitting and estimating are open to a read-only token; the other
 changes need the `bi:write` scope (the administrator's cancel `bi:admin`). Every answer has `Cache-Control: no-store`.
 
 After a restart, every queued or running run of the node is started again as its runner (attempt + 1, up to `restart.max-attempts`) or failed

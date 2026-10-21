@@ -198,6 +198,28 @@ public final class RunService {
         this.replay = r == null ? Replay.NONE : r;
     }
 
+    /** What Admin shows beside the metrics: how often the inline wait was enough, how long jobs take, how often the size was unknown. */
+    static final class Stats {
+        final java.util.concurrent.atomic.AtomicLong inlined = new java.util.concurrent.atomic.AtomicLong();
+        final java.util.concurrent.atomic.AtomicLong jobs = new java.util.concurrent.atomic.AtomicLong();
+        final java.util.concurrent.atomic.AtomicLong planned = new java.util.concurrent.atomic.AtomicLong();
+        final java.util.concurrent.atomic.AtomicLong unknown = new java.util.concurrent.atomic.AtomicLong();
+        private final java.util.ArrayDeque<Double> jobSeconds = new java.util.ArrayDeque<>();
+
+        synchronized void job(double seconds) {
+            jobSeconds.addLast(seconds);
+            while (jobSeconds.size() > 200) {
+                jobSeconds.removeFirst();
+            }
+        }
+
+        synchronized List<Double> jobSeconds() {
+            return List.copyOf(jobSeconds);
+        }
+    }
+
+    final Stats stats = new Stats();
+
     private volatile RunPlanner planner;
 
     /** The planner whose rates learn from finished runs (section 4.4); the sources plan questions with it before submitting them. */
@@ -224,11 +246,28 @@ public final class RunService {
         metrics.submitted(q.sourceType());
         if (q.supersedes() != null && !q.supersedes().isBlank()) {
             String older = superseded.put(q.caller().user() + "|" + q.supersedes(), "pending");
-            if (older != null && !"pending".equals(older)) {
-                cancel(older, q.caller().user(), false, "replaced by a newer selection");
+            Flight running = older == null || "pending".equals(older) ? null : byRun.get(older);
+            if (running != null && !running.run.state().finished()) {
+                try {
+                    cancel(older, q.caller().user(), false, "replaced by a newer selection");
+                } catch (DrishtiException e) {
+                    // it finished (an invisible run leaves no row) or was cancelled meanwhile: nothing to replace
+                }
             }
         }
         RunPlanner.Planned plan = q.planned();
+        if (plan != null) {
+            stats.planned.incrementAndGet();
+            if (!plan.estimate().known()) {
+                stats.unknown.incrementAndGet();
+            }
+        }
+        if (plan != null && plan.refusal().filter(c -> c == ErrorCode.RUN_NEEDED).isPresent() && !plan.estimate().known()) {
+            // an interaction of unknown size is not refused: it runs interactively, bounded by the interactive limit, and never becomes a job (5.3)
+            plan = new RunPlanner.Planned(plan.estimate(), new RunEstimator.Decision(Tier.INTERACTIVE, false, Optional.empty()), plan.data(), plan.dates(),
+                    plan.buildPath());
+            q = withPlan(q, plan);
+        }
         if (plan != null && plan.refusal().isPresent()) {
             refuse(q, plan);                                                    // DRS-9086 past every engine, DRS-9089 an interaction: nothing ran
         }
@@ -284,11 +323,17 @@ public final class RunService {
                 throw new RunProblem(ErrorCode.RUN_QUEUE_FULL, "the server's run queue is full (queue.max " + props.queue().max() + ")", Map.of(), 30);
             }
             metrics.inline(false);
+            stats.jobs.incrementAndGet();
             return new Outcome(null, f.run);
         }
         f.run = base.moveTo(RunState.RUNNING, null, null, now);
         Thread.ofVirtual().name("bi-run-" + base.id()).start(() -> execute(f));
         return await(f, null, q, o, now);
+    }
+
+    private static Question withPlan(Question q, RunPlanner.Planned p) {
+        return new Question(q.caller(), q.sourceType(), q.sourceId(), q.sourceRef(), q.title(), q.workspace(), q.model(), q.question(), q.params(),
+                q.signature(), q.dataVersion(), q.interaction(), q.supersedes(), q.work(), p);
     }
 
     /** A refusal at plan time, with the estimate and the way forward (sections 4.3 and 5.3). */
@@ -331,8 +376,27 @@ public final class RunService {
         extra.put("estimate", plan.estimate().toMap());
         extra.put("confirmToken", f.confirmToken);
         extra.put("runId", f.run.id());
+        Map<String, Object> run = RunJson.of(f.run, RunJson.View.of(f.run.owner()), now);
+        run.put("confirmToken", f.confirmToken);
+        extra.put("run", run);
         extra.put("confirm", "POST /api/v1/bi/runs/" + f.run.id() + "/confirm");
         throw new RunProblem(ErrorCode.RUN_CONFIRM, "this is a background run of " + words(plan.estimate()) + ": confirm it to start", extra);
+    }
+
+    /** The confirm token of an {@code awaiting-confirm} run, for its owner only (the run object carries it so the drawer can confirm); else null. */
+    public String confirmToken(String id, String user) {
+        Flight f = byRun.get(id);
+        return f != null && f.run.state() == RunState.AWAITING_CONFIRM && f.run.owner().equals(user) ? f.confirmToken : null;
+    }
+
+    /** Confirms the {@code awaiting-confirm} run of {@code user} that {@code token} was given for (a question asked again with its token). */
+    public Optional<Run> confirmByToken(String user, String token) {
+        for (Flight f : byRun.values()) {
+            if (token.equals(f.confirmToken) && f.run.owner().equals(user) && f.run.state() == RunState.AWAITING_CONFIRM) {
+                return Optional.of(confirm(f.run.id(), user, token));
+            }
+        }
+        return Optional.empty();
     }
 
     /** Confirms an {@code awaiting-confirm} run with its token: it is queued as a background run. */
@@ -410,6 +474,7 @@ public final class RunService {
             Answer a = wait.isZero() ? null : f.done.get(wait.toMillis(), TimeUnit.MILLISECONDS);
             if (a != null) {
                 metrics.inline(true);
+                stats.inlined.incrementAndGet();
                 Run r = twin == null ? f.run : twin.moveTo(RunState.REUSED, null, null, clock.instant());
                 return new Outcome(a, r);
             }
@@ -417,6 +482,9 @@ public final class RunService {
             // not done in time: it becomes a visible job (below)
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            if (twin == null) {
+                goneCaller(f);                                              // the caller left inside the inline wait: its invisible run stops
+            }
             throw new DrishtiException(ErrorCode.QUERY_BUSY, "the request was interrupted while it waited for its answer");
         } catch (ExecutionException e) {
             Throwable c = e.getCause();
@@ -438,6 +506,7 @@ public final class RunService {
             return awaitInteraction(f);                                     // an interaction never becomes a visible job (5.3)
         }
         metrics.inline(false);
+        stats.jobs.incrementAndGet();
         if (twin != null) {
             records.save(twin);
             publish(twin);
@@ -460,14 +529,36 @@ public final class RunService {
             return new Outcome(f.done.get(), f.run);                      // bounded by the interactive time limit (DRS-9024)
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            f.done.cancel(true);
+            goneCaller(f);
             throw new DrishtiException(ErrorCode.QUERY_BUSY, "the request was interrupted while it waited for its answer");
+        } catch (CancellationException e) {
+            throw new DrishtiException(ErrorCode.RUN_NOT_DONE, "the question was cancelled: " + (f.cancelReason == null ? "cancelled" : f.cancelReason));
         } catch (ExecutionException e) {
             if (e.getCause() instanceof RuntimeException re) {
                 throw re;
             }
             throw new IllegalStateException(e.getCause());
         }
+    }
+
+    /**
+     * The caller of an invisible run is gone (its request thread was interrupted: the connection closed, the proxy gave up): the run is cancelled and
+     * its work let go at once (section 11). A visible run is never cancelled by its caller leaving.
+     */
+    private void goneCaller(Flight f) {
+        if (f.visible) {
+            return;
+        }
+        long t0 = System.nanoTime();
+        f.cancelReason = "the page was closed";
+        Thread t = f.thread;
+        if (t != null) {
+            t.interrupt();
+        }
+        f.done.cancel(false);
+        byKey.remove(f.key, f);
+        byRun.remove(f.run.id(), f);
+        metrics.cancelRelease((System.nanoTime() - t0) / 1e9);
     }
 
     private void becomeVisible(Flight f) {
@@ -554,6 +645,9 @@ public final class RunService {
             f.lock.unlock();
         }
         metrics.finished(f.run.tier().wire(), "done", "");
+        if (f.visible) {
+            stats.job(seconds);
+        }
         RunPlanner p = planner;
         if (p != null && f.q.planned() != null) {
             Double ratio = p.rates().finished(RunPlanner.LOCAL, f.q.planned().estimate(), seconds, f.q.planned().buildPath());   // the rates learn (4.4)

@@ -1455,6 +1455,13 @@ HTTP and answers requests for packs and data the others hold ([NET.md](NET.md), 
 
 ## 13. Monitoring
 
+**BI runs (2.6.7).** Admin → BI → Runs (`GET /api/v1/bi/admin/runs`, bi-admin) shows the slots by work class, the run queue (oldest
+waiting run and whose), the result store (bytes against `store.max-bytes`, the five largest users), how honest the estimates are (median and
+10th to 90th percentile of actual ÷ estimated seconds, the share of questions the planner could not size) and how often the inline wait was
+enough. Metrics: `drishti.bi.runs.submitted`, `finished`, `inline`, `reuse`, `seconds`, `estimate.ratio` (by `basis`) and
+`cancel.release`. Results live under `<data>/bi-runs` (back it up with the data folder or not at all: a missing result only makes its run
+`expired`). Settings: `config/runs/runs.yaml`.
+
 ### 13.1 The endpoints
 
 | URL | Auth | Answers | Use it for |

@@ -1494,14 +1494,15 @@ Its settings have their own file; `application.yaml` holds only the pointer `dri
 | `inline.wait` | `2s` | How long a request waits before its run becomes a visible job. |
 | `inline.max-wait` | `10s` | The most a caller may ask for (`Prefer: wait=`). |
 | `interactive.max-seconds`, `max-rows`, `max-build-dates` | `10`, `50000000`, `2` | The bounds of the interactive tier (the planner, section 5). |
-| `confirm.above-seconds`, `above-rows`, `unknown`, `ttl` | `60`, `500000000`, `true`, `15m` | When an ad-hoc heavy run asks for confirmation first. |
+| `confirm.above-seconds`, `above-rows`, `unknown`, `ttl` | `60`, `500000000`, `true`, `15m` | When an ad-hoc heavy run asks for confirmation first (`409 DRS-9082`); `unknown: true` also asks when the planner cannot size it (a connector without row statistics, nothing built yet). An unconfirmed run is cancelled after `ttl`. |
+| `estimate.low-factor`, `high-factor`, `rates.*` | `0.5`, `2.0`, seeds | The estimate's range and the seed rates the planner starts from; finished runs replace them with measured ones (in memory, learnt again after a start). |
 | `queue.per-user` | `5` | A person's background runs queued or running (`429 DRS-9081`). |
 | `queue.max` | `200` | All queued runs on this node (`DRS-9081`). |
 | `workers` | `2` | Background runs executing at once on this node (fair share: the next is the oldest of the person with the fewest running). |
 | `run.max-duration` | `4h` | A background run's own time budget (the engine's `drishti.bi.query.timeout` and `drishti.bi.exec.background` still apply). |
 | `engine.*` | `2GB`, `2`, `20GB`, `5000000000`, `0` | The run engine: `memory-limit`, `threads`, `max-spill`, `max-read-rows` (a background run's row budget), `prefer-external-above-seconds`. |
 | `store.dir` | `${drishti.data.dir}/bi-runs` | Where results are kept (`results/<xx>/<key>/answer.json`), under the data folder. On AWS a shared EFS folder at the same path on every node. |
-| `store.max-bytes`, `max-bytes-per-user` | `20GB`, `2GB` | The budget of unpromoted results (the sweeper removes the least recently opened first). |
+| `store.max-bytes`, `max-bytes-per-user` | `20GB`, `2GB` | The budget of unpromoted results (the sweeper removes the least recently opened first). Over `max-bytes-per-user`, that person's least recently opened results go first and nobody else's (each result's `owner.txt` names whose it is). |
 | `store.max-result-rows`, `max-result-bytes` | `50000000`, `2GB` | One result's limits (`413 DRS-9086`). |
 | `store.min-seconds`, `keep-interactive` | `1`, `true` | An interactive answer that took at least this long is stored for reuse by the same rights. |
 | `retention.days`, `max-days`, `sweep` | `30`, `365`, `1h` | A result is kept this long after its last open; *Keep longer* allows up to `max-days`; the sweeper runs at start and this often. |

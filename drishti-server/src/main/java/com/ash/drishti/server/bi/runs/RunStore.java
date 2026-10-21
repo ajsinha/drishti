@@ -55,6 +55,7 @@ public final class RunStore {
 
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final String ANSWER = "answer.json";
+    static final String OWNER = "owner.txt";
 
     /** What is kept beside the rows. */
     public record Stored(String key, String signature, String runId, String owner, Instant created, long bytes, int rows) {}
@@ -106,6 +107,10 @@ public final class RunStore {
             Path tmp = FileSwap.temp(file);
             Files.write(tmp, bytes);
             FileSwap.replace(tmp, file);
+            Path who = dir.resolve(OWNER);                                          // whose budget it counts against (8.4), without reading the answer
+            Path whoTmp = FileSwap.temp(who);
+            Files.writeString(whoTmp, owner == null ? "" : owner, java.nio.charset.StandardCharsets.UTF_8);
+            FileSwap.replace(whoTmp, who);
             return bytes.length;
         } catch (IOException e) {
             throw new DrishtiException(ErrorCode.RUN_STORE_FULL, "the result could not be written under " + root + ": " + e.getMessage());
@@ -172,19 +177,42 @@ public final class RunStore {
         }
     }
 
-    /** The bytes and count of stored results. */
+    /** The bytes and count of stored results, the oldest open, and the five people whose results take most room (Admin, 17.2). */
     public Map<String, Object> usage() {
         long bytes = 0;
         int count = 0;
+        Instant oldest = null;
+        Map<String, Long> byUser = new java.util.HashMap<>();
         for (Path f : answers()) {
             try {
-                bytes += Files.size(f);
+                long b = Files.size(f);
+                Instant t = Files.getLastModifiedTime(f).toInstant();
+                bytes += b;
                 count++;
+                oldest = oldest == null || t.isBefore(oldest) ? t : oldest;
+                byUser.merge(owner(f), b, Long::sum);
             } catch (IOException ignored) {
                 // removed meanwhile
             }
         }
-        return Map.of("bytes", bytes, "results", count);
+        List<Map<String, Object>> top = byUser.entrySet().stream().sorted(Map.Entry.<String, Long>comparingByValue().reversed()).limit(5)
+                .map(e -> Map.<String, Object>of("user", e.getKey(), "bytes", e.getValue())).toList();
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("bytes", bytes);
+        m.put("results", count);
+        m.put("oldest", oldest == null ? null : oldest.toString());
+        m.put("topUsers", top);
+        return m;
+    }
+
+    /** The owner a result counts against: its {@code owner.txt}; "" when it has none (written before the budget per person). */
+    private static String owner(Path answer) {
+        try {
+            Path who = answer.resolveSibling(OWNER);
+            return Files.isRegularFile(who) ? Files.readString(who, java.nio.charset.StandardCharsets.UTF_8).strip() : "";
+        } catch (IOException e) {
+            return "";
+        }
     }
 
     private List<Path> answers() {
@@ -205,11 +233,11 @@ public final class RunStore {
      */
     public List<String> sweep(Instant now) {
         List<String> removed = new ArrayList<>();
-        record Entry(Path file, String key, Instant opened, long bytes) {}
+        record Entry(Path file, String key, Instant opened, long bytes, String owner) {}
         List<Entry> all = new ArrayList<>();
         for (Path f : answers()) {
             try {
-                all.add(new Entry(f, f.getParent().getFileName().toString(), Files.getLastModifiedTime(f).toInstant(), Files.size(f)));
+                all.add(new Entry(f, f.getParent().getFileName().toString(), Files.getLastModifiedTime(f).toInstant(), Files.size(f), owner(f)));
             } catch (IOException ignored) {
                 // removed meanwhile
             }
@@ -227,6 +255,18 @@ public final class RunStore {
             }
         }
         kept.sort(Comparator.comparing(Entry::opened));
+        Map<String, Long> perUser = new java.util.HashMap<>();                  // store.max-bytes-per-user: a person's oldest go first, nobody else's
+        kept.forEach(e -> perUser.merge(e.owner(), e.bytes(), Long::sum));
+        for (java.util.Iterator<Entry> it = kept.iterator(); it.hasNext();) {
+            Entry e = it.next();
+            if (!e.owner().isEmpty() && perUser.get(e.owner()) > settings.maxBytesPerUser()) {
+                delete(e.key());
+                removed.add(e.key());
+                perUser.merge(e.owner(), -e.bytes(), Long::sum);
+                total -= e.bytes();
+                it.remove();
+            }
+        }
         for (Entry e : kept) {
             if (total <= settings.maxBytes()) {
                 break;

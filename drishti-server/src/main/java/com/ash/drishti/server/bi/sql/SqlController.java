@@ -77,7 +77,8 @@ public class SqlController {
         if (r != null && r.async(prefer) && !"csv".equalsIgnoreCase(format) && !statement.strip().toUpperCase(java.util.Locale.ROOT).startsWith("EXPLAIN")) {
             audit.record(p.user(), "bi-sql", model, "run: " + (statement.length() > AUDIT_TEXT ? statement.substring(0, AUDIT_TEXT) + "..." : statement));
             return r.submit(r.sql(p, model, statement, Boolean.TRUE.equals(body.get("interaction")),
-                    body.get("supersedes") == null ? null : String.valueOf(body.get("supersedes")), null), prefer, format, p);
+                    body.get("supersedes") == null ? null : String.valueOf(body.get("supersedes")), null), prefer, format, p,
+                    Boolean.TRUE.equals(body.get("confirm")), body.get("confirmToken") == null ? null : String.valueOf(body.get("confirmToken")));
         }
         MqService.Bound b = catalog.bind(p, model);
         SqlService.Compiled c;

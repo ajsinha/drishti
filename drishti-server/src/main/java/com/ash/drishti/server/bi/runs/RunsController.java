@@ -28,6 +28,7 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -58,7 +59,11 @@ public class RunsController {
     private final RunSources sources;
     private final ExecutorService executor;
 
-    public RunsController(RunsProperties props, BiService bi, BiAccess access, RunSources sources, ExecutorService drishtiVirtualExecutor) {
+    private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> queries;
+
+    public RunsController(RunsProperties props, BiService bi, BiAccess access, RunSources sources, ExecutorService drishtiVirtualExecutor,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> queries) {
+        this.queries = queries;
         this.props = props;
         this.bi = bi;
         this.access = access;
@@ -109,7 +114,30 @@ public class RunsController {
         boolean has = (r.state() == RunState.DONE || r.state() == RunState.REUSED) && runs().store().has(r.fingerprint());
         RunJson.View v = RunJson.View.of(p.user()).withResult(has).withPowers(access.has(p, BiAccess.ADMIN), access.has(p, BiAccess.AUTHOR))
                 .withPromote(false);
-        return RunJson.of(r, v, Instant.now());
+        Map<String, Object> m = RunJson.of(r, v, Instant.now());
+        m.put("confirmToken", runs().confirmToken(r.id(), p.user()));          // the owner's, while it awaits confirmation (the drawer confirms with it)
+        m.put("schedule", null);
+        return m;
+    }
+
+    /** {@code since}: {@code 7d}, {@code 30d}, {@code 12h}, or an ISO instant or date; null when absent or unreadable. */
+    static Instant since(String since, Instant now) {
+        if (since == null || since.isBlank()) {
+            return null;
+        }
+        String s = since.strip();
+        try {
+            if (s.matches("\\d+[dh]")) {
+                long n = Long.parseLong(s.substring(0, s.length() - 1));
+                return now.minus(s.endsWith("d") ? Duration.ofDays(n) : Duration.ofHours(n));
+            }
+            if (s.length() == 10) {
+                return java.time.LocalDate.parse(s).atStartOfDay(java.time.ZoneOffset.UTC).toInstant();
+            }
+            return Instant.parse(s);
+        } catch (RuntimeException e) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "since is 7d, 30d, 12h or an ISO date or instant, not '" + since + "'");
+        }
     }
 
     @PostMapping("/runs")
@@ -117,6 +145,12 @@ public class RunsController {
         bi.requirePower(p, BiAccess.BI);
         enabled();
         JsonNode options = body.path("options").isObject() ? body.path("options") : JsonNodeFactory.instance.objectNode();
+        if (options.path("confirmToken").isTextual()) {                       // the question asked again with the token of its DRS-9082
+            Optional<Run> confirmed = runs().confirmByToken(p.user(), options.path("confirmToken").asText());
+            if (confirmed.isPresent()) {
+                return sources.respond(new RunService.Outcome(null, confirmed.get()), "json", p);
+            }
+        }
         RunService.Question q = sources.of(p, body.path("source"), options);
         Duration wait = options.path("wait").isTextual() ? Duration.parse(options.path("wait").asText())
                 : options.path("wait").isNumber() ? Duration.ofMillis((long) (options.path("wait").asDouble() * 1000)) : props.inline().inlineWait();
@@ -152,18 +186,22 @@ public class RunsController {
     @GetMapping("/runs")
     public ResponseEntity<?> list(@RequestParam(required = false) String state, @RequestParam(required = false) String source,
             @RequestParam(required = false) String q, @RequestParam(defaultValue = "50") int limit, @RequestParam(required = false) String after,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(required = false) String since, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.BI);
         int n = Math.max(1, Math.min(limit, 200));
         Instant before = null;
         if (after != null && !after.isBlank()) {
             before = runs().get(after).map(Run::submittedAt).orElse(null);
         }
-        List<Run> page = runs().list(p.user(), before, n + 1).stream()
-                .filter(r -> state == null || state.isBlank() || r.state().wire().equals(state))
+        Instant from = since(since, Instant.now());
+        java.util.Set<String> states = state == null || state.isBlank() ? java.util.Set.of()
+                : java.util.Arrays.stream(state.split(",")).map(String::strip).filter(s -> !s.isEmpty()).collect(java.util.stream.Collectors.toSet());
+        List<Run> page = runs().list(p.user(), before, 500).stream()
+                .filter(r -> from == null || !r.submittedAt().isBefore(from))
+                .filter(r -> states.isEmpty() || states.contains(r.state().wire()))
                 .filter(r -> source == null || source.isBlank() || r.sourceType().equals(source))
                 .filter(r -> q == null || q.isBlank() || String.valueOf(r.title()).toLowerCase(java.util.Locale.ROOT).contains(q.toLowerCase(java.util.Locale.ROOT)))
-                .toList();
+                .limit(n + 1).toList();
         boolean more = page.size() > n;
         List<Run> shown = more ? page.subList(0, n) : page;
         Map<String, Object> m = new LinkedHashMap<>();
@@ -349,15 +387,11 @@ public class RunsController {
     public ResponseEntity<?> admin(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.ADMIN);
         Map<String, Object> raw = runs().admin();
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("queue", raw.get("queue"));
         @SuppressWarnings("unchecked")
         List<Run> running = (List<Run>) raw.get("running");
-        m.put("running", running.stream().map(r -> json(r, p)).toList());
-        m.put("storage", raw.get("storage"));
-        m.put("accuracy", Map.of());
-        m.put("nodes", List.of(Map.of("name", runs().node())));
-        return noStore(200, m);
+        com.ash.drishti.server.bi.engine.QueryService q = queries == null ? null : queries.getIfAvailable();
+        Map<String, Object> admission = q == null || q.admission() == null ? null : q.admission().stats();
+        return noStore(200, RunAdmin.of(runs(), admission, null, running.stream().map(r -> json(r, p)).toList()));
     }
 
     @PostMapping("/admin/runs/{id}/cancel")

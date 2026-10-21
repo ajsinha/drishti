@@ -281,6 +281,82 @@ class RunServiceTest {
                 .isInstanceOf(RunProblem.class).satisfies(e -> assertThat(((RunProblem) e).errorCode()).isEqualTo(ErrorCode.RUN_QUEUE_FULL));
     }
 
+    /** The data version the sources give a planned question: the vector's hash (RunSources.version), the same after a restart for unchanged data. */
+    static String dv(String day2) {
+        DataVersionVector v = new DataVersionVector().put("trade-endur", "trade", java.time.LocalDate.of(2026, 10, 8), "v1")
+                .put("trade-endur", "trade", java.time.LocalDate.of(2026, 10, 9), day2);
+        return "dv:" + v.hash() + ":model-hash";
+    }
+
+    @Test
+    void aStoredResultIsReusedAfterARestartWhileTheDataIsUnchangedAndNeverWhenItChanged() throws Exception {
+        AtomicInteger calls = new AtomicInteger();
+        RunService.Outcome first = runs.submit(question(VIEWER, "sig-v", dv("v1"), calls, 10, "10"), new RunService.Options(Duration.ZERO, true));
+        waitFor(first.run().id(), RunState.DONE);
+        runs.close();
+        // a new process: new in-memory flights, the same result store and records
+        RunsProperties p = RunsProperties.defaults(data);
+        runs = new RunService(p, records, new RunStore(p), Clock.systemUTC(), "java-2", RunMetrics.NONE);
+        RunService.Outcome again = runs.submit(question(VIEWER, "sig-v", dv("v1"), calls, 10, "10"), inline(1000));
+        assertThat(again.run().state()).isEqualTo(RunState.REUSED);
+        assertThat(calls).hasValue(1);
+        // 2026-10-09 restated: another key, so it runs
+        RunService.Outcome restated = runs.submit(question(VIEWER, "sig-v", dv("v2"), calls, 10, "11"), inline(1000));
+        assertThat(restated.run().state()).isEqualTo(RunState.DONE);
+        assertThat(calls).hasValue(2);
+    }
+
+    static RunPlanner.Planned heavy(boolean confirm, java.util.Optional<ErrorCode> refusal) {
+        RunEstimate e = new RunEstimate(80L, 80L, 2560L, 3L, 1.0, 4.0, RunEstimate.Basis.DELTA_STATS, 2, 2, false, 0, "2 business dates of trades");
+        return new RunPlanner.Planned(e, new RunEstimator.Decision(Tier.AD_HOC_HEAVY, confirm, refusal), new DataVersionVector(), List.of(), null);
+    }
+
+    static RunService.Question planned(AtomicInteger calls, RunPlanner.Planned plan, boolean interaction) {
+        return new RunService.Question(VIEWER, "mq", "trading", null, "Desk P&L", null, "trading", "{\"q\":2}", null, "sig-v", null, interaction, null, () -> {
+            calls.incrementAndGet();
+            return new RunService.Answer(Map.of("rowCount", 1, "rows", List.of()), null, 1);
+        }, plan);
+    }
+
+    @Test
+    void anAdHocHeavyQuestionAboveTheThresholdAsksFirstAndRunsOnceConfirmed() throws Exception {
+        AtomicInteger calls = new AtomicInteger();
+        RunProblem asked = org.assertj.core.api.Assertions.catchThrowableOfType(RunProblem.class,
+                () -> runs.submit(planned(calls, heavy(true, java.util.Optional.empty()), false), inline(1000)));
+        assertThat(asked.errorCode()).isEqualTo(ErrorCode.RUN_CONFIRM);
+        String id = String.valueOf(asked.properties().get("runId"));
+        String token = String.valueOf(asked.properties().get("confirmToken"));
+        assertThat(((Map<?, ?>) asked.properties().get("run")).get("id")).isEqualTo(id);
+        assertThat(((Map<?, ?>) asked.properties().get("estimate")).get("basis")).isEqualTo("delta-stats");
+        assertThat(records.get(id).orElseThrow().state()).isEqualTo(RunState.AWAITING_CONFIRM);
+        assertThat(runs.confirmToken(id, "viewer")).isEqualTo(token);
+        assertThat(runs.confirmToken(id, "someone-else")).isNull();
+        assertThat(calls).hasValue(0);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> runs.confirm(id, "viewer", "wrong")).isInstanceOf(DrishtiException.class);
+        // the question asked again with its token confirms the waiting run (no second run)
+        Run queued = runs.confirmByToken("viewer", token).orElseThrow();
+        assertThat(queued.id()).isEqualTo(id);
+        waitFor(id, RunState.DONE);
+        assertThat(calls).hasValue(1);
+        // confirmed in advance (options.confirm, the re-ask after DRS-9089 with interaction false): 202 at once, no question
+        RunService.Outcome o = runs.submit(planned(calls, heavy(true, java.util.Optional.empty()), false), new RunService.Options(Duration.ofSeconds(1), false, true));
+        assertThat(o.inline()).isFalse();
+        waitFor(o.run().id(), RunState.DONE);
+    }
+
+    @Test
+    void refusalsComeAtPlanTimeAndNothingRuns() {
+        AtomicInteger calls = new AtomicInteger();
+        RunProblem big = org.assertj.core.api.Assertions.catchThrowableOfType(RunProblem.class,
+                () -> runs.submit(planned(calls, heavy(false, java.util.Optional.of(ErrorCode.RUN_TOO_LARGE)), false), inline(1000)));
+        assertThat(big.errorCode()).isEqualTo(ErrorCode.RUN_TOO_LARGE);
+        RunProblem needed = org.assertj.core.api.Assertions.catchThrowableOfType(RunProblem.class,
+                () -> runs.submit(planned(calls, heavy(false, java.util.Optional.of(ErrorCode.RUN_NEEDED)), true), inline(1000)));
+        assertThat(needed.errorCode()).isEqualTo(ErrorCode.RUN_NEEDED);
+        assertThat(needed.properties()).containsKey("estimate");
+        assertThat(calls).hasValue(0);
+    }
+
     Run waitFor(String id, RunState state) throws InterruptedException {
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
         while (System.nanoTime() < deadline) {

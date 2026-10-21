@@ -130,7 +130,8 @@ public class BiReportController {
         com.ash.drishti.server.bi.runs.RunSources r = runs == null ? null : runs.getIfAvailable();
         if (r != null && r.async(prefer) && !explain && !"arrow".equalsIgnoreCase(format)) {
             return r.submit(r.report(p, id, body.path("page").asText(""), body.path("visual").asText(""), body.get("state"), body.path("interaction").asBoolean(false),
-                    body.path("supersedes").isTextual() ? body.path("supersedes").asText() : null, null), prefer, "json", p);
+                    body.path("supersedes").isTextual() ? body.path("supersedes").asText() : null, null), prefer, "json", p, body.path("confirm").asBoolean(false),
+                    body.path("confirmToken").isTextual() ? body.path("confirmToken").asText() : null);
         }
         if ("arrow".equalsIgnoreCase(format)) {
             BiReportService.ArrowAnswer a = reports.queryArrow(p, id, body.path("page").asText(""), body.path("visual").asText(""), body.get("state"));

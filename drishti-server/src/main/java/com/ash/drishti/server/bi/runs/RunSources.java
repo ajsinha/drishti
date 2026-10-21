@@ -252,9 +252,10 @@ public final class RunSources {
             RunService.Answer a = o.answer();
             if ("arrow".equalsIgnoreCase(format) && a.columns() != null) {
                 return ResponseEntity.ok().contentType(MediaType.parseMediaType(DatasetController.ARROW)).header("X-Bi-Rows", Integer.toString(a.rows()))
-                        .header("X-Bi-Run", o.run().id()).header(HttpHeaders.CACHE_CONTROL, "no-store").body(ArrowIpcWriter.write(a.columns(), a.rows()));
+                        .header("X-Bi-Run", o.run().id()).header("Drishti-Run", o.run().id()).header(HttpHeaders.CACHE_CONTROL, "no-store").body(ArrowIpcWriter.write(a.columns(), a.rows()));
             }
-            return ResponseEntity.ok().header("X-Bi-Run", o.run().id()).header(HttpHeaders.CACHE_CONTROL, "no-store").body(a.body());
+            return ResponseEntity.ok().header("X-Bi-Run", o.run().id()).header("Drishti-Run", o.run().id()).header(HttpHeaders.CACHE_CONTROL, "no-store")
+                    .body(a.body());
         }
         return ResponseEntity.accepted().location(URI.create("/api/v1/bi/runs/" + o.run().id())).header(HttpHeaders.CACHE_CONTROL, "no-store")
                 .body(Map.of("run", RunJson.of(o.run(), RunJson.View.of(p.user()), java.time.Instant.now())));
@@ -262,7 +263,22 @@ public final class RunSources {
 
     /** Submits and answers in one step (the existing endpoints with {@code Prefer: respond-async}). */
     public ResponseEntity<?> submit(RunService.Question q, String prefer, String format, Principal p) {
+        return submit(q, prefer, format, p, false, null);
+    }
+
+    /**
+     * As {@link #submit(RunService.Question, String, String, Principal)}, with the body's {@code confirm} (accepted in advance: no {@code DRS-9082}; also
+     * the re-ask after a {@code DRS-9089} with {@code interaction: false}) and {@code confirmToken} (confirms the {@code awaiting-confirm} run it was given
+     * for, instead of starting another).
+     */
+    public ResponseEntity<?> submit(RunService.Question q, String prefer, String format, Principal p, boolean confirm, String confirmToken) {
+        if (confirmToken != null && !confirmToken.isBlank()) {
+            Optional<Run> confirmed = runs.confirmByToken(p.user(), confirmToken);
+            if (confirmed.isPresent()) {
+                return respond(new RunService.Outcome(null, confirmed.get()), format, p);
+            }
+        }
         Duration wait = waitOf(prefer);
-        return respond(runs.submit(q, new RunService.Options(wait, wait.isZero())), format, p);
+        return respond(runs.submit(q, new RunService.Options(wait, wait.isZero(), confirm || confirmToken != null && !confirmToken.isBlank())), format, p);
     }
 }

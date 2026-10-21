@@ -111,12 +111,17 @@ public class MqController {
         JsonNode b = body != null && body.isObject() ? body.deepCopy() : body;
         boolean interaction = b != null && b.path("interaction").asBoolean(false);
         String supersedes = b != null && b.path("supersedes").isTextual() ? b.path("supersedes").asText() : null;
+        boolean confirm = b != null && b.path("confirm").asBoolean(false);
+        String token = b != null && b.path("confirmToken").isTextual() ? b.path("confirmToken").asText() : null;
         if (b != null && b.isObject()) {
-            ((com.fasterxml.jackson.databind.node.ObjectNode) b).remove(java.util.List.of("interaction", "supersedes"));
+            ((com.fasterxml.jackson.databind.node.ObjectNode) b).remove(java.util.List.of("interaction", "supersedes", "confirm", "confirmToken"));
         }
         ModelQuery q = query(b);
+        if (q.options().explain()) {
+            return answer(p, model == null ? q : q.withModel(model), format);   // EXPLAIN answers at once, as before (the explain panel)
+        }
         String f = format == null ? q.options().format() : format;
-        return r.submit(r.mq(p, q, b != null && b.has("yaml") ? null : b, model, interaction, supersedes, null), prefer, f, p);
+        return r.submit(r.mq(p, q, b != null && b.has("yaml") ? null : b, model, interaction, supersedes, null), prefer, f, p, confirm, token);
     }
 
     @PostMapping("/models/{id}/query")

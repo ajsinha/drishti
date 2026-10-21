@@ -460,6 +460,15 @@ averaged over 5,000 lookups after warm-up):
 Both are far below the 30 ms type-ahead budget; the cost of several days is memory or disk, not latency
 ([OPERATIONS.md section 12.2](OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)).
 
+## BI runs: sized before anything is read (2.6.7)
+
+A BI question asked with `Prefer: respond-async` is sized from metadata first (BI_RUNS.md section 4): a built partition's `meta.json`, the
+connector's own row statistics (Delta add-action `numRecords`, Iceberg manifest `record_count`), then the rows per day earlier builds showed.
+No data file is opened and nothing is built to estimate (`RunPlannerTest` counts connector reads: 0). The synchronous cost refusal
+(`DRS-9029`, `drishti.bi.exec.max-estimated-rows`) uses the same metadata **before** any layer is built, so refusing a year of raw trades
+costs a log read, not a year of builds. A question too large to answer inline becomes a background run (`workers` at a time, the
+`BACKGROUND` admission class, at most `background-share` of the slots), so it never holds the slots interactive questions need.
+
 ## Tuning knobs
 
 Set any of these in `application.local.yaml` next to the server jar, as an environment variable, or as a

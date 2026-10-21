@@ -42,11 +42,11 @@ class RunsContractTest {
         Map<String, Object> m = RunJson.of(r, RunJson.View.of("ajsinha"), T0.plusSeconds(113));
         assertThat(m.keySet()).containsExactly("id", "title", "source", "runner", "owner", "workspace", "params", "asOf", "data", "tier", "engine", "class",
                 "state", "progress", "phase", "estimate", "actual", "code", "reason", "node", "attempt", "submittedAt", "startedAt", "finishedAt",
-                "expiresAt", "reuse", "shared", "group", "rerunOf", "promotedTo", "can", "links");
+                "expiresAt", "reuse", "shared", "group", "rerunOf", "promotedTo", "can", "links", "schedule", "confirmToken");
         assertThat(m.get("state")).isEqualTo("running");
         assertThat(m.get("class")).isEqualTo("background");
         assertThat(((Map<?, ?>) m.get("actual")).get("seconds")).isEqualTo(112L);
-        assertThat(keys(m, "source")).containsExactly("type", "id", "title", "page", "visual", "href");
+        assertThat(keys(m, "source")).containsExactly("type", "id", "title", "model", "page", "visual", "href");
         assertThat(keys(m, "data")).containsExactly("version", "words", "tables");
         assertThat(keys(m, "can")).contains("open", "cancel", "rerun", "export", "share", "promote", "schedule", "keep", "delete");
         assertThat(((Map<?, ?>) m.get("can")).get("cancel")).isEqualTo(true);

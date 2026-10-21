@@ -17,6 +17,21 @@
 
 ## Unreleased
 
+- **BI runs, the server continued (2.6.7, BI_RUNS.md 18.2b and 14.5).** **The planner (R3):** an MQ or SQL question is sized from metadata
+  only (built layers' `meta.json`, the new `SourcePlugin.rowEstimate`: Delta add-action `numRecords`, Iceberg manifest `record_count`; then
+  rows per day learnt from builds), never a scan: tiers from the estimate, `409 DRS-9082` with the estimate, a `confirmToken` and the run
+  (confirm with `POST /runs/{id}/confirm` or by asking again with the token), `413 DRS-9086` past the local engine's read limit and `409
+  DRS-9089` for an interaction that would need a run, all before anything runs; estimates carry a real `basis` (`layers`, `delta-stats`,
+  `iceberg-manifests`, `history`, `unknown`); measured rates and the `estimate.ratio` metric learn from finished runs. The synchronous
+  `DRS-9029` now comes from the same metadata before any layer is built. **Data version:** a planned question's result is keyed by the
+  version of every table and date it reads, so it is reused after a restart while the data is unchanged and never once a date is restated.
+  **Store:** `store.max-bytes-per-user` is enforced (a person's oldest results go first). **The console contract (14.5):** `Drishti-Run`
+  header on inline answers, `can.discard`, `confirmToken`, `schedule` and `source.model` on the run object, `since=` and comma-separated
+  `state=` on the list, Admin's `/admin/runs` in the console's shape. **Fixes:** a slicer's second re-ask on the same visual no longer
+  fails `DRS-9080`; an MQ with `options.explain` answers at once with its SQL under `Prefer`; a superseded interaction answers `409
+  DRS-9083`, not `500`; an interrupted wait cancels its invisible run (`cancel.release`). `RunPlannerTest`, `RunServiceTest` (restart
+  reuse, confirm, refusals), `ModelAcceptanceTest` (all four endpoints with and without `Prefer`), `rowEstimate` in `DeltaLayoutTest` and
+  `IcebergSourcePluginTest`.
 - **BI runs, the server (2.6.7, docs/architecture/BI_RUNS.md; steps R1, R2, R4, R5 and parts of R3, R7 and R8 as built in its section
   18.2b).** Every BI question can be a bounded, visible job. `POST /api/v1/bi/mq`, `/models/{id}/query`, `/bi/sql` and `/reports/{id}/query`
   accept `Prefer: respond-async[, wait=N]`: done within the wait (2 s) the answer is today's, with `X-Bi-Run`; otherwise `202 {run}` and the

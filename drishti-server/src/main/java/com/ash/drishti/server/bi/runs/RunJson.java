@@ -142,6 +142,8 @@ public final class RunJson {
         m.put("can", can(r, view));
         String self = "/api/v1/bi/runs/" + r.id();
         m.put("links", Map.of("self", self, "result", self + "/result", "events", "/api/v1/bi/runs/events"));
+        m.put("schedule", null);                                                // the run's schedule; filled where schedules are known
+        m.put("confirmToken", null);                                            // the owner's, while awaiting-confirm (filled by the service)
         return m;
     }
 
@@ -166,6 +168,7 @@ public final class RunJson {
         c.put("keep", own && finishedOk && v.hasResult());
         c.put("delete", (own || v.admin()) && finishedOk && v.hasResult());
         c.put("confirm", own && r.state() == RunState.AWAITING_CONFIRM);
+        c.put("discard", own && r.state() == RunState.AWAITING_CONFIRM);
         return c;
     }
 
@@ -174,6 +177,7 @@ public final class RunJson {
         s.put("type", r.sourceType());
         s.put("id", r.sourceId());
         s.put("title", v.sourceTitle());
+        s.put("model", "mq".equals(r.sourceType()) || "sql".equals(r.sourceType()) ? r.sourceId() : null);
         String page = null;
         String visual = null;
         if (r.sourceRef() != null && !r.sourceRef().isBlank()) {

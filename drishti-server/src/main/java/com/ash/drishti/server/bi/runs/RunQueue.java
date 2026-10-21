@@ -96,6 +96,10 @@ final class RunQueue {
         waiting.forEach(e -> byUser.merge(e.user(), 1, Integer::sum));
         m.put("byUser", byUser);
         m.put("byClass", Map.of("background", waiting.size()));
+        Entry oldest = waiting.stream().min(java.util.Comparator.comparingLong(Entry::seq)).orElse(null);
+        java.time.Instant at = oldest == null ? null : oldest.flight().run.submittedAt();
+        m.put("oldestSeconds", at == null ? null : Math.max(0, java.time.Duration.between(at, java.time.Instant.now()).toSeconds()));
+        m.put("oldestUser", oldest == null ? null : oldest.user());
         return m;
     }
 
