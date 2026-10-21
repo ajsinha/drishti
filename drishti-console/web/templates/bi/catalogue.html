@@ -19,10 +19,16 @@
 <header class="bi-head"><h1>Catalogue</h1>
   <p class="text-muted-d">Every published item you may open. Certified items come first. <kbd>/</kbd> searches.</p></header>
 <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+{# The catalogue by kind: one tab per kind, ?kind= keeps the one shown (core/bi_catalogue_tabs.py maps each item kind to its tab). bi.js turns them. #}
+<nav class="bi-tabs bi-ws-tabs bi-cat-tabs" role="tablist" aria-label="Kinds of item" data-cat-tabs>
+  {% for key, label, icon in [('reports', 'Reports', 'bar-chart-line'), ('boards', 'Boards', 'speedometer2'), ('models', 'Models', 'boxes'), ('datasets', 'Datasets', 'hdd-stack'), ('python', 'Python', 'code-slash'), ('all', 'All', 'grid')] %}
+  <a role="tab" href="?kind={{ key }}" id="cTab-{{ key }}" aria-controls="cPanel" aria-selected="{{ 'true' if loop.first else 'false' }}" data-cat-tab="{{ key }}"><i class="bi bi-{{ icon }}" aria-hidden="true"></i> {{ label }} <small class="bi-cat-count" data-cat-count></small></a>
+  {% endfor %}
+</nav>
+<div role="tabpanel" id="cPanel" aria-labelledby="cTab-reports" data-cat-panel>
 <form class="bi-filters" data-catalogue-form role="search" aria-label="Search the catalogue" autocomplete="off">
   <label class="bi-find"><span class="visually-hidden">Search</span>
-    <input type="search" name="q" class="studio-in" placeholder="Search title, description, tags, owner" data-search></label>
-  <label>Kind<select name="kind" class="studio-select" data-filter="kind"><option value="">any</option></select></label>
+    <input type="search" name="q" class="studio-in" placeholder="Search this tab: title, description, tags, owner" data-search></label>
   <label>Workspace<select name="workspace" class="studio-select" data-filter="workspace"><option value="">any</option></select></label>
   <label>Owner<select name="owner" class="studio-select" data-filter="owner"><option value="">any</option></select></label>
   <label>Endorsement<select name="endorsement" class="studio-select" data-filter="endorsement"><option value="">any</option></select></label>
@@ -33,5 +39,8 @@
 </form>
 <p class="bi-count" data-count role="status" aria-live="polite"></p>
 <div class="bi-cards" data-cards></div>
-<p class="bi-empty" data-empty hidden>Nothing matches. Clear a filter, or check the spelling.</p>
+<div data-groups></div>
+<p class="bi-empty" data-empty hidden>Nothing of this kind matches. Try the All tab, clear a filter, or check the spelling.</p>
+</div>
 {% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-runs.css?v={{ ASSET_V }}">{% endblock %}

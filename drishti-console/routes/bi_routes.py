@@ -313,6 +313,17 @@ async def runs_suggestion(request: Request, suggestion_id: str, verb: str):
     return JSONResponse(answer, headers={"Cache-Control": "no-store"})
 
 
+@router.get("/bi/api/catalogue-tabs")
+async def catalogue_tabs(request: Request):
+    """The catalogue for one of its tabs (Reports · Boards · Models · Datasets · Python · All) with every tab's count (core/bi_catalogue_tabs.py)."""
+    from core.bi_catalogue_tabs import tabbed
+    try:
+        answer = await tabbed(request.app.state.backend, ident(request), dict(request.query_params))
+    except BackendError as e:
+        return _problem(e)
+    return JSONResponse(answer, headers={"Cache-Control": "no-store"})
+
+
 @router.api_route("/bi/api/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def proxy(request: Request, path: str):
     """One call of the page script, passed on to the server under the caller's identity (the server enforces everything)."""

@@ -197,3 +197,15 @@ h1 .bi-soon, h2 .bi-soon { margin-left: .5rem; vertical-align: middle; }
   .bi-shell summary { display: flex; align-items: center; }
   .bi-shell .bi-layer-picks .bi-checkrow, .bi-shell .bi-roles .bi-checkrow { min-height: 44px; display: flex; align-items: center; }
 }
+
+/* The catalogue by kind: the tabs take the workspace tabs' look (bi-runs.css .bi-ws-tabs); their counts, and the kind headings of the All tab. */
+.bi-cat-count { font-family: var(--d-font-mono); font-size: .75rem; font-weight: 600; color: var(--d-muted); background: var(--d-highlight); border-radius: 999px; padding: 0 .4rem; }
+.bi-cat-tabs [aria-selected="true"] .bi-cat-count { color: var(--d-accent-strong); }
+.bi-cat-group { margin: 0 0 1.1rem; }
+.bi-cat-group-h { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--d-muted); margin: .9rem 0 .45rem; padding-bottom: .25rem; border-bottom: 1px solid var(--d-border); }
+.bi-cat-group-h small { font-family: var(--d-font-mono); font-weight: 600; }
+@media (max-width: 760px) {
+  .bi-shell:has([data-cat-tabs]) { padding-left: 16px; padding-right: 16px; }
+  .bi-cat-tabs { flex-wrap: nowrap; overscroll-behavior-x: contain; scrollbar-width: thin; }
+  .bi-cat-tabs [role="tab"] { flex: 0 0 auto; padding: .5rem .7rem; }
+}

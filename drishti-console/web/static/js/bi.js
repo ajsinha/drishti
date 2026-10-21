@@ -132,18 +132,36 @@
   }
 
   // -- Catalogue --------------------------------------------------------------------------------------------------------
+  // The catalogue by kind (core/bi_catalogue_tabs.py): Reports · Boards · Models · Datasets · Python · All, ?kind= in the address. A tab switches in place
+  // and is a history entry (back and forward walk the tabs); search, filters and sort work inside the tab and replace the address. The tab last used is
+  // remembered per person in this browser (localStorage; Reports when there is none or storage is blocked).
+  var CAT_TABS = ['reports', 'boards', 'models', 'datasets', 'python', 'all'];
+  var CAT_ALIAS = { report: 'reports', board: 'boards', model: 'models', dataset: 'datasets', notebook: 'python', transform: 'python', transforms: 'python' };
+  function catTab(k) { k = String(k || '').toLowerCase(); k = CAT_ALIAS[k] || k; return CAT_TABS.indexOf(k) >= 0 ? k : ''; }
   function catalogue() {
     var form = q('[data-catalogue-form]');
     var params = new URLSearchParams(location.search);
-    var cards = q('[data-cards]'), empty = q('[data-empty]'), count = q('[data-count]');
+    var cards = q('[data-cards]'), groups = q('[data-groups]'), empty = q('[data-empty]'), count = q('[data-count]'), panel = q('[data-cat-panel]');
+    var tabs = qa('[data-cat-tab]');
     var timer = null, seq = 0;
-    var FILTERS = ['kind', 'workspace', 'owner', 'endorsement', 'tag'];
+    var FILTERS = ['workspace', 'owner', 'endorsement', 'tag'], FIELDS = ['q', 'workspace', 'owner', 'endorsement', 'tag', 'fresh', 'sort'];
+    var user = (q('#biCanvas') && q('#biCanvas').getAttribute('data-user')) || 'anon', KEY = 'drishti.bi.catalogue.tab.' + user;
+    function remembered() { try { return catTab(window.localStorage.getItem(KEY)); } catch (e) { return ''; } }
+    function remember(t) { try { window.localStorage.setItem(KEY, t); } catch (e) { /* storage blocked: the tab is not remembered */ } }
+    var tab = catTab(params.get('kind')) || remembered() || 'reports';
+    function fromParams() { FIELDS.forEach(function (k) { form.elements[k].value = params.get(k) || (k === 'sort' ? 'use' : ''); }); }
     ['q', 'fresh', 'sort'].forEach(function (k) { if (params.get(k)) { form.elements[k].value = params.get(k); } });
 
     function state() {
       var s = new URLSearchParams();
-      ['q', 'kind', 'workspace', 'owner', 'endorsement', 'tag', 'fresh', 'sort'].forEach(function (k) { if (form.elements[k].value) { s.set(k, form.elements[k].value); } });
+      s.set('kind', tab);
+      FIELDS.forEach(function (k) { if (form.elements[k].value) { s.set(k, form.elements[k].value); } });
       return s;
+    }
+    function select() {
+      tabs.forEach(function (t) { var on = t.getAttribute('data-cat-tab') === tab; t.setAttribute('aria-selected', on ? 'true' : 'false'); t.tabIndex = on ? 0 : -1; });
+      panel.setAttribute('aria-labelledby', 'cTab-' + tab);
+      panel.setAttribute('data-cat-shown', tab);
     }
     function facets(f, names) {
       FILTERS.forEach(function (k) {
@@ -159,23 +177,56 @@
         sel.value = keep;
       });
     }
-    function run() {
+    function again() { run(false); }
+    function run(push) {
       var mine = ++seq, s = state();
-      history.replaceState(null, '', location.pathname + (s.toString() ? '?' + s.toString() : ''));
-      api('GET', '/catalogue?' + s.toString()).then(function (d) {
+      select();
+      var url = location.pathname + '?' + s.toString();
+      if (push) { history.pushState({ kind: tab }, '', url); } else { history.replaceState({ kind: tab }, '', url); }
+      api('GET', '/catalogue-tabs?' + s.toString()).then(function (d) {
         if (mine !== seq) { return; }
-        facets(d.facets, d.workspaceNames || {});
-        fillCards(cards, d.items, run);
-        count.textContent = d.total === 1 ? '1 item' : d.total + ' items' + (d.total > d.items.length ? ', showing ' + d.items.length : '');
+        facets(d.facets || {}, d.workspaceNames || {});
+        (d.tabs || []).forEach(function (t) {
+          var a = q('[data-cat-tab="' + t.key + '"]');
+          if (!a) { return; }
+          q('[data-cat-count]', a).textContent = String(t.count);
+          a.setAttribute('aria-label', t.label + ', ' + t.count + (t.count === 1 ? ' item' : ' items'));
+        });
+        clear(groups);
+        clear(cards);
+        if (d.groups) {
+          d.groups.forEach(function (g) {
+            var box = h('div', { class: 'bi-cards' });
+            fillCards(box, g.items, again);
+            groups.appendChild(h('section', { class: 'bi-cat-group', 'data-cat-group': g.key, 'aria-labelledby': 'cG-' + g.key },
+              h('h2', { class: 'bi-cat-group-h', id: 'cG-' + g.key }, g.label, h('small', { text: ' ' + g.items.length })), box));
+          });
+        } else {
+          fillCards(cards, d.items, again);
+        }
+        count.textContent = (d.total === 1 ? '1 item' : d.total + ' items') + (d.more ? '; the list stops at the server\'s limit: narrow the search to see the rest' : '');
         empty.hidden = d.items.length > 0;
         say('');
       }).catch(fail);
     }
-    form.addEventListener('submit', function (e) { e.preventDefault(); run(); });
-    form.addEventListener('input', function (e) { if (e.target.name === 'q') { clearTimeout(timer); timer = setTimeout(run, 180); } });
-    form.addEventListener('change', function (e) { if (e.target.name !== 'q') { run(); } });
-    q('[data-clear]').addEventListener('click', function () { qa('input, select', form).forEach(function (el) { el.value = el.name === 'sort' ? 'use' : ''; }); params = new URLSearchParams(); run(); });
-    run();
+    function show(t, push) {
+      tab = catTab(t) || 'reports';
+      remember(tab);
+      run(push);
+    }
+    tabs.forEach(function (t) { t.addEventListener('click', function (e) { e.preventDefault(); if (t.getAttribute('data-cat-tab') !== tab) { show(t.getAttribute('data-cat-tab'), true); } }); });
+    window.addEventListener('popstate', function () {
+      params = new URLSearchParams(location.search);
+      fromParams();
+      tab = catTab(params.get('kind')) || 'reports';
+      run(false);
+    });
+    form.addEventListener('submit', function (e) { e.preventDefault(); run(false); });
+    form.addEventListener('input', function (e) { if (e.target.name === 'q') { clearTimeout(timer); timer = setTimeout(again, 180); } });
+    form.addEventListener('change', function (e) { if (e.target.name !== 'q') { run(false); } });
+    q('[data-clear]').addEventListener('click', function () { qa('input, select', form).forEach(function (el) { el.value = el.name === 'sort' ? 'use' : ''; }); params = new URLSearchParams(); run(false); });
+    remember(tab);
+    run(false);
     if (params.get('focus')) { q('[data-search]').focus(); }
   }
 

@@ -185,11 +185,18 @@ last 30 days.
 
 ![The catalogue](img/bi/04-catalogue.jpg)
 
-It lists every **published** item you may open (section 9). Typing in the search box searches title, description, tags, owner,
-kind and workspace name (every word must match); the filters narrow by kind, workspace, owner, endorsement, tag and how recently
-it was published; sort is *most used* (the default), *newest* or *title*. **Certified items are pinned first** except when sorted
-by title. The address keeps the state (`?q=daily&kind=report`), so a link reproduces the list. The filter lists show only values that
-exist, with counts.
+It lists every **published** item you may open (section 9), **split by kind into tabs**: **Reports · Boards · Models · Datasets · Python · All**,
+each with its count (*Reports 24*). Boards holds boards and reports with board pages; Python holds Python items (measures, visuals and
+Transforms) and notebooks; All shows everything, grouped by kind under small headings. A tab switches in place; the address names it
+(`/bi/catalogue?kind=reports&sort=use`), so a link opens the same tab and back and forward walk the tabs. With no `kind` in the address
+the catalogue opens on the tab you used last (remembered in this browser), else Reports. The arrow keys move along the tabs; on a
+phone the tabs scroll sideways.
+
+Search, filters and sort work **inside the chosen tab**, and every tab's count follows the search. Typing in the search box searches
+title, description, tags, owner, kind and workspace name (every word must match); the filters narrow by workspace, owner, endorsement,
+tag and how recently it was published; sort is *most used* (the default), *newest* or *title*. **Certified items are pinned first**
+except when sorted by title. The address keeps the state (`?kind=python&q=daily`; the older `?kind=report` still opens Reports), so a
+link reproduces the list. The filter lists show only values that exist, with counts.
 
 ![A filtered catalogue](img/bi/05-catalogue-filtered.jpg)
 
