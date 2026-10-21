@@ -163,3 +163,48 @@ def test_a_python_without_deltalake_is_told_which_python_to_use(tmp_path):
     env = {**os.environ, "PYTHONPATH": str(stub)}
     r = subprocess.run([sys.executable, str(SCRIPT), "--dry-run"], capture_output=True, text=True, env=env)
     assert r.returncode != 0 and "lacks deltalake" in r.stderr and ".venv" in r.stderr
+
+
+def test_store_puts_a_system_in_iceberg_and_says_where_each_system_is(tmp_path):
+    """2.6.7 mixed storage: CALYPSO copied into Iceberg after lake demo, its connector file switched; the closing lines name every store."""
+    out = run("--store", "endur=delta", "--store", "calypso=iceberg", "--as-of", "2026-10-16", "--lake", str(tmp_path / "data" / "delta"),
+              "--connectors-dir", str(tmp_path / "connectors")).stdout
+    assert "lake demo --as-of 2026-10-16" in out
+    assert "CALYPSO into Iceberg" in out and "stores.py --from" in out and str(tmp_path / "data" / "iceberg") in out
+    assert "ENDUR into Iceberg" not in out and "MUREX into Iceberg" not in out
+    stores_part = out.split("Stores (each source system's trades):", 1)[1]
+    assert "CALYPSO  iceberg" in stores_part and "ENDUR    delta" in stores_part and "MUREX    delta" in stores_part
+    assert "trade-calypso: would be written to read iceberg" in out and "trade-endur: reads delta already" in out
+    assert not (tmp_path / "connectors").exists()                                      # a dry run writes nothing
+
+
+def test_store_all_and_wrong_values(tmp_path):
+    out = run("--store", "all=iceberg", "--only", "trades/endur", "--as-of", "2026-10-16", "--lake", str(tmp_path / "data" / "delta"),
+              "--connectors-dir", str(tmp_path / "connectors")).stdout
+    # a partial build moving systems it does not rebuild rebuilds them too
+    assert "--only trades/endur,trades/calypso,trades/murex" in out
+    assert all(f"{s} into Iceberg" in out for s in ("ENDUR", "CALYPSO", "MUREX"))
+    assert "--store" in run("--store", "calypso=parquet").stderr and "delta or iceberg" in run("--store", "calypso=parquet").stderr
+
+
+def test_store_with_files_only_loads_the_files_into_iceberg_through_a_staging_lake(tmp_path):
+    out = run("--source-dir", str(files(tmp_path)), "--system", "murex", "--files-only", "--store", "murex=iceberg",
+              "--lake", str(tmp_path / "data" / "delta"), "--connectors-dir", str(tmp_path / "connectors")).stdout
+    assert "lake demo" not in out and out.count("lake build --from") == 2
+    assert str(tmp_path / "data" / "build" / "iceberg-stage") in out and "MUREX into Iceberg" in out
+    assert "trade-murex: would be written to read iceberg" in out
+    # a system the run does not rebuild is not moved by --files-only: it says how
+    err = run("--source-dir", str(tmp_path / "src"), "--system", "murex", "--files-only", "--store", "calypso=iceberg",
+              "--lake", str(tmp_path / "data" / "delta"), "--connectors-dir", str(tmp_path / "connectors")).stderr
+    assert "--only trades/calypso --store calypso=iceberg" in err
+
+
+def test_a_partial_build_keeps_the_store_each_system_has(tmp_path):
+    conn = tmp_path / "connectors"
+    conn.mkdir()
+    (conn / "trade-calypso.yaml").write_text("plugin: iceberg\nkinds: [trade]\n")
+    out = run("--only", "trades/endur", "--as-of", "2026-10-16", "--lake", str(tmp_path / "data" / "delta"), "--connectors-dir", str(conn)).stdout
+    assert "--only trades/endur " in out + " " and "into Iceberg" not in out
+    assert "CALYPSO  iceberg" in out and "trade-calypso: reads iceberg already" in out
+    full = run("--as-of", "2026-10-16", "--lake", str(tmp_path / "data" / "delta"), "--connectors-dir", str(conn)).stdout
+    assert "CALYPSO  delta" in full and "trade-calypso: would be written to read delta" in full    # a full build: Delta unless named

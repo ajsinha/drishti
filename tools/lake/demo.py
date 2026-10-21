@@ -479,6 +479,9 @@ class DemoLake:
                 continue
             text = f.read_text(encoding="utf-8")
             doc = yaml.safe_load(text) or {}
+            if str(doc.get("plugin") or "delta") != "delta":      # a system stored elsewhere (build_demo_lakes.py --store calypso=iceberg)
+                notes.append(f"{name}: reads {doc.get('plugin')}, left as it is ({f})")
+                continue
             root = str((doc.get("settings") or {}).get("root", DEFAULT_ROOT))
             if self.resolve(root) == self.lake:
                 notes.append(f"{name}: already reads {self.lake}")

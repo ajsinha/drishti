@@ -235,6 +235,16 @@ tools/load-iceberg.sh --catalog rest --uri http://polaris:8181/api/catalog --war
 tools/load-iceberg.sh s3a://risk-lake/iceberg --set s3.region=us-east-1 --spill-dir /data/tmp
 ```
 
+**The demo lakes, a source system in Iceberg (2.6.7).** `tools/build_demo_lakes.py --store calypso=iceberg` (or `all=iceberg`)
+puts a source system's trades in Iceberg beside the others in Delta: the system is built as Delta, then its rows (id, document, every
+promoted column) are streamed into `IcebergLoader` with `--engine native` from the server's exec jar (`java -Dloader.main=com.ash.drishti.plugin.iceberg.IcebergLoader -jar drishti-server-*-exec.jar - <root> …`,
+no Maven needed, so it runs on Windows) as the table `<data>/iceberg/trading/trade_<system>`, and the connector file
+`trade-<system>.yaml` becomes `plugin: iceberg`, `engine: native`, `table: {trade: trade_<system>}`. The connector then reads the trades
+exactly as the Delta connector does, including BI's column scan (`scan`), the data version the BI store and the history cache key by
+(`dataVersion`: the snapshot id and its time; a day's files' fingerprint) and the held dates (`latestDate`, `earliestDate`,
+`heldDates`). An equality test against all-Delta (`tools/lake/stores_equality.py`) gives the same trade pages, histories, grouped pages,
+searches and BI answers: [DEMO_DATA.md](DEMO_DATA.md#mixed-delta-and-iceberg-storage).
+
 The samples and the book go to the loader as **one input**, so each business day of a table is written once and holds both: a load
 replaces the days it writes, so two loads of the same days (the samples, then a book) would leave only the book's trades on them.
 The loader's heap is `DRISHTI_LOADER_HEAP` (default `4g`; Windows: `-Heap`), and its input file is written under the data folder
@@ -706,6 +716,7 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 | `catalog.<key>` | — | `rest`: any other catalog property (`catalog.rest.sigv4-enabled` …) |
 | `s3.endpoint`, `s3.access-key`, `s3.secret-key`, `s3.region`, `s3.path-style` | — | object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint) |
 | `hadoop.<key>` | — | `library`: passed to Hadoop as `<key>` |
+| `table.<kind>` | the kind | the table a kind is read from, a name under the domain (never a path): `table: {trade: trade_calypso}` serves kind `trade` from `<root>/trading/trade_calypso`, so several connectors serve one kind from tables side by side, one per source system, as the Delta connector's `table.<kind>` (what `build_demo_lakes.py --store calypso=iceberg` writes) |
 | `metadata-location.<kind>` | none | `native`: the kind's table named by its metadata file (`s3://…/v12.metadata.json`), read-only |
 | `relocate` | none | `native`: `<old folder> -> <new folder>; …` reads a table copied elsewhere (an S3 table synced to a laptop, a folder moved after loading: Health gives the pair to copy, [section 14](#14-diagnosing)). Each side is a plain folder (`/data/ice1`, `C:\lake` or `C:/lake`, `\\fs\share\lake`) or a URI (`file:/data/ice1`, `file:///C:/lake`, `s3://bucket/wh`; `s3a://` and `s3n://` are the same bucket): both are read into the `file:` form the metadata names its files in, so the plain form and the `file:` form are the same pair. A folder matches whole folders (`/data/ice1` is not `/data/ice10`). Quote the value in YAML when it holds a backslash: `relocate: 'C:\old -> D:\new'`. A pair that cannot be read fails the start, naming it. The library engine does not read it, and Health says so |
 | `vended-credentials` | `true` | `native`, `rest`: ask the catalog for each table's own S3 credentials (`X-Iceberg-Access-Delegation`), renewed before they expire |

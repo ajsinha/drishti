@@ -56,7 +56,79 @@ interface LakeTables extends Closeable {
 
     static LakeTables open(Map<String, String> settings) {
         IcebergEngine e = IcebergEngine.of(settings);
-        return e == IcebergEngine.NATIVE ? new Native(Catalogs.open(settings), settings) : new Library(IcebergLake.of(settings));
+        LakeTables lake = e == IcebergEngine.NATIVE ? new Native(Catalogs.open(settings), settings) : new Library(IcebergLake.of(settings));
+        Map<String, String> names = Named.of(settings);
+        return names.isEmpty() ? lake : new Named(lake, names);
+    }
+
+    /**
+     * Tables named in the connector's settings rather than after their kinds, as the Delta connector's: {@code table: {trade: trade_calypso}}
+     * (flattened {@code table.trade}) reads kind {@code trade} from the table {@code trade_calypso} of the domain, so one source system's
+     * trades can be stored in Iceberg beside the others' in Delta ({@code build_demo_lakes.py --store calypso=iceberg}). Only the named kinds
+     * are this lake's tables; a kind without a name keeps its own table.
+     */
+    record Named(LakeTables lake, Map<String, String> names) implements LakeTables {
+
+        /** The {@code table.<kind>} settings: kind to table name. */
+        static Map<String, String> of(Map<String, String> settings) {
+            Map<String, String> out = new java.util.LinkedHashMap<>();
+            settings.forEach((k, v) -> {
+                if (k.startsWith("table.") && v != null && !v.isBlank()) {
+                    String table = v.trim();
+                    if (table.contains("/") || table.contains("\\") || table.contains("..")) {
+                        throw new IllegalArgumentException(k + ": a table is a name under the domain, not a path: " + table);
+                    }
+                    out.put(k.substring("table.".length()), table);
+                }
+            });
+            return out;
+        }
+
+        /** The table a kind is read from. */
+        String tableOf(String kind) {
+            return names.getOrDefault(kind, kind);
+        }
+
+        @Override
+        public KindTable table(String kind, ExecutorService pool) {
+            return lake.table(tableOf(kind), pool);
+        }
+
+        @Override
+        public List<String> kinds() throws IOException {
+            List<String> tables = lake.kinds();
+            return names.entrySet().stream().filter(e -> tables.contains(e.getValue())).map(Map.Entry::getKey).sorted().toList();
+        }
+
+        @Override
+        public boolean reachable() {
+            return lake.reachable();
+        }
+
+        @Override
+        public String describe() {
+            return lake.describe() + " " + names;
+        }
+
+        @Override
+        public IcebergEngine engine() {
+            return lake.engine();
+        }
+
+        @Override
+        public TlsMaterial tls() {
+            return lake.tls();
+        }
+
+        @Override
+        public ProxySettings proxy() {
+            return lake.proxy();
+        }
+
+        @Override
+        public void close() throws IOException {
+            lake.close();
+        }
     }
 
     /** Apache Iceberg Java. */

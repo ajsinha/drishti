@@ -277,6 +277,74 @@ Good to know:
   read them without opening the trade. A table that already exists keeps its columns, which is one more reason for step 3.2
   point 1 (delete `trade_endur` first).
 
+### 3.3 Optional (2.6.7): a source system in Iceberg, the others in Delta
+
+The same lakes can keep **one source system's trades in Apache Iceberg** and the others in Delta Lake (for example your ENDUR
+trades in Delta and the synthetic CALYPSO trades in Iceberg); every page, history, search and BI report must answer exactly as with
+everything in Delta. Iceberg is written by Drishti's own engine from the server jar, so **build the jar first** (step 2.3: the file
+`drishti-server\target\drishti-server-2.6.5-exec.jar` must exist). Stop the server first, as for 3.0.
+
+1. **Look first** (changes nothing, prints every step):
+
+   ```
+   C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\build_demo_lakes.py --endur-dir C:\Users\asinh09\drishti-private\endur --store endur=delta --store calypso=iceberg --dry-run
+   ```
+
+2. **Build** (the same line without `--dry-run`):
+
+   ```
+   C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\build_demo_lakes.py --endur-dir C:\Users\asinh09\drishti-private\endur --store endur=delta --store calypso=iceberg
+   ```
+
+   Or, when the lakes are already built (step 3.0), move only CALYPSO, in about two minutes (give the lakes' last date):
+
+   ```
+   C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\build_demo_lakes.py --only trades/calypso --store calypso=iceberg --as-of 2026-10-16
+   ```
+
+**What you should see.** The three steps of 3.0, and after `lake demo` a line `CALYPSO into Iceberg: …\data\delta\trading\trade_calypso →
+…\data\iceberg\trading\trade_calypso`, the loader's own lines (`iceberg: 249,830 rows read in … s; 60 business days of 1 tables to
+write`, `iceberg: written in … s`) and `trading/trade_calypso: 249,830 rows in Iceberg, newest business date …`. The closing lines say
+where each system is and what happened to its connector file:
+
+```
+  Stores (each source system's trades):
+    ENDUR    delta    C:\Users\asinh09\IdeaProjects\drishti-orig\data\delta\trading\trade_endur
+    CALYPSO  iceberg  C:\Users\asinh09\IdeaProjects\drishti-orig\data\iceberg\trading\trade_calypso
+    MUREX    delta    C:\Users\asinh09\IdeaProjects\drishti-orig\data\delta\trading\trade_murex
+  Connector files:
+    trade-endur: reads delta already (…\config\connectors\trade-endur.yaml)
+    trade-calypso: now reads iceberg, was delta (…\config\connectors\trade-calypso.yaml; a running server restarts this connector by itself)
+    trade-murex: reads delta already (…\config\connectors\trade-murex.yaml)
+```
+
+Then start the server (section 4) and check:
+
+- **Admin → Connectors:** `trade-calypso` shows plugin **iceberg**, `UP (engine: native)`; `trade-endur` and `trade-murex` **delta**.
+- `data\iceberg\trading\trade_calypso` exists and `data\delta\trading` has no `trade_calypso` folder (each system is in one store).
+- `TRD CLY-3000157 60` shows the bond's sixty days, `CTRD CP-NORTHPLAINS` lists its trades of all three systems, and a BI report over
+  trades by source system has the same CALYPSO totals as before the switch.
+
+**Other choices** (the same `python.exe …\tools\build_demo_lakes.py` with):
+
+| You want | Add |
+|---|---|
+| every system in Iceberg (your ENDUR files too) | `--endur-dir C:\Users\asinh09\drishti-private\endur --store all=iceberg` |
+| CALYPSO and MUREX in Iceberg, ENDUR in Delta | `--endur-dir C:\Users\asinh09\drishti-private\endur --store calypso=iceberg --store murex=iceberg` |
+| your newest ENDUR files again, ENDUR staying where it is | `--endur-dir C:\Users\asinh09\drishti-private\endur --files-only` (a partial run keeps each system's store) |
+
+**Switch back to Delta** (stop the server first, start it after):
+
+```
+C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\build_demo_lakes.py --only trades/calypso --store calypso=delta --as-of 2026-10-16
+```
+
+(or the full build of 3.0 again: without `--store` every system goes back to Delta). The closing lines then say `CALYPSO  delta` and
+`trade-calypso: now reads delta, was iceberg`; `data\iceberg\trading\trade_calypso` is removed, and the connector file's Iceberg text is
+kept in `data\connectors\history\`.
+
+If it stops with *Iceberg is written by the server's exec jar: build it first*, do step 2.3 and run it again.
+
 ---
 
 ## 4. Start the server (IntelliJ) and the console (PyCharm)
@@ -556,6 +624,7 @@ Also try `TRD <id> YTD`, `TRD <id> FROM 2026-10-07 TO 2026-10-16`, `CPTY CP-NORT
 
 - [ ] Step 2 done once (Python environment, PyCharm, IntelliJ, jar built).
 - [ ] Step 3.0 (`build_demo_lakes.py --endur-dir …`): three steps, every file `rejected=0`; or steps 3.1 and 3.2 by hand.
+- [ ] Optional, step 3.3 (2.6.7): CALYPSO in Iceberg (`--store calypso=iceberg`); Admin → Connectors shows `trade-calypso` as iceberg; switched back with `--store calypso=delta`.
 - [ ] Step 4: server and console start; sign-in works.
 - [ ] Step 5: Lakes, Connectors, Health as described.
 - [ ] Step 6: walk through the ten pages once.

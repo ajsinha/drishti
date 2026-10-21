@@ -33,6 +33,18 @@ One part only, the rest of the lakes kept as they are::
     python tools/build_demo_lakes.py --only trades/endur --as-of 2026-10-16          # only the synthetic ENDUR table
     python tools/build_demo_lakes.py --only trades/calypso,trades/murex             # several datasets (folders of data/testdata)
 
+Each source system's trades in Delta Lake (the default) or Apache Iceberg, chosen per system::
+
+    python tools/build_demo_lakes.py --store calypso=iceberg                          # CALYPSO in Iceberg, ENDUR and MUREX in Delta
+    python tools/build_demo_lakes.py --store endur=delta --store calypso=iceberg --store murex=iceberg
+    python tools/build_demo_lakes.py --store all=iceberg                              # every system in Iceberg
+    python tools/build_demo_lakes.py --only trades/calypso --store calypso=iceberg --as-of 2026-10-16   # one system moved
+
+An Iceberg system's table is <data>/iceberg/trading/trade_<system> (DRISHTI_ICEBERG_ROOT moves it), written by Drishti's own Iceberg
+engine from the server's exec jar; its connector file trade-<system>.yaml is switched to plugin iceberg (and back to delta), so one
+connector serves each system. A full build without --store puts every system in Delta, as before; a partial one (--only, --files-only)
+keeps each system it does not name in the store it has.
+
 A server that reads the lake::
 
     python tools/build_demo_lakes.py --only trades/murex --server http://192.168.2.77:18480 --token-file ~/drishti-token.txt
@@ -61,6 +73,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DRISHTI = ROOT / "tools" / "drishti.py"
+STORES_PY = ROOT / "tools" / "lake" / "stores.py"
+sys.path.insert(0, str(ROOT / "tools" / "lake"))
+import stores  # noqa: E402  (tools/lake/stores.py: Delta or Iceberg per source system)
 DATED = re.compile(r"^(\d{4}-\d{2}-\d{2})\.(jsonl|json)(\.gz)?$")
 
 
@@ -217,6 +232,10 @@ def main(argv: list[str] | None = None) -> int:
                                      "date), not per table and day. Default: no server is told; restart yours, or let it pick the "
                                      "tables up at its next refresh")
     ap.add_argument("--token-file", type=Path, help="with --server: the API token (loads:write) for the signals (default: DRISHTI_TOKEN)")
+    ap.add_argument("--store", action="append", metavar="SYSTEM=delta|iceberg",
+                    help="where a source system's trades are stored: endur=delta, calypso=iceberg, all=iceberg (repeatable; all first, then "
+                         "each system over it). Default: every system in Delta on a full build; a partial build (--only, --files-only) keeps "
+                         "the store each system it does not name has. The connector file trade-<system>.yaml is switched to match")
     ap.add_argument("--dry-run", action="store_true", help="say every step, change nothing")
     a = ap.parse_args(argv)
 
@@ -250,6 +269,16 @@ def main(argv: list[str] | None = None) -> int:
         token = (a.token_file.expanduser().read_text(encoding="utf-8").strip() if a.token_file else None) or os.environ.get("DRISHTI_TOKEN")
     as_of = a.as_of or (files[-1][0] if files else "today")
     lake = a.lake.expanduser().resolve()
+    try:
+        named = stores.parse(a.store)
+    except ValueError as e:
+        ap.error(str(e))
+    plan = StorePlan(a, named, lake, system if files else None)
+    if plan.problem:
+        ap.error(plan.problem)
+    if plan.added:
+        a.only = ",".join([x for x in (a.only or "").split(",") if x.strip()] + plan.added)
+        print(f"  --store moves {', '.join(x.split('/')[1].upper() for x in plan.added)} to another store: rebuilt too (--only {a.only})")
     t0 = time.time()
     outcomes: list[str] = []                             # what each step's signals came to (QA4-06): the closing line says it
 
@@ -271,31 +300,121 @@ def main(argv: list[str] | None = None) -> int:
         said = server_said(run(cmd, a.dry_run, "1/3 lake demo", lake, capture=bool(a.server)))
         if a.server:
             outcomes.append(outcome(said) or ("dry" if a.dry_run else ""))
+        for s in sorted(plan.rebuilt):
+            if plan.target[s] == "iceberg" and not (files and s == system and not a.keep_synthetic_endur):
+                plan.to_iceberg(s, lake / "trading" / f"trade_{s}", replace=True)
 
     if files:
-        table = lake / "trading" / f"trade_{system}"
-        print(f"2/3 your {system.upper()} files ({len(files)}: {files[0][0]} … {files[-1][0]}) into {table}")
+        iceberg = plan.target[system] == "iceberg"
+        into = plan.stage if iceberg else lake                 # Iceberg: built as Delta in a staging folder, then copied
+        table = stores.table(plan.target[system], system, lake, plan.ice)
+        print(f"2/3 your {system.upper()} files ({len(files)}: {files[0][0]} … {files[-1][0]}) into {table}" + (" (Iceberg)" if iceberg else ""))
         if not a.keep_synthetic_endur:
             print(f"  the synthetic {system.upper()} table is removed first: {table}")
             if not a.dry_run and table.exists():
                 shutil.rmtree(table)
+        if iceberg and not a.dry_run:
+            shutil.rmtree(into, ignore_errors=True)
         for day, path in files:
             run([py, str(DRISHTI), "lake", "build", "--from", str(path), "--as-of", day,
                  "--pack", str(ROOT / "config" / "packs" / "trading"), "--connector", f"trade-{system}", "--key", "TRADE_ID",
-                 "--partition-by", "PRODUCT_TYPE", "--mode", "overwrite-dates", "--lake", str(lake)], a.dry_run,
-                f"2/3 {path.name} ({day})", lake / "trading" / f"trade_{system}")
+                 "--partition-by", "PRODUCT_TYPE", "--mode", "overwrite-dates", "--lake", str(into)], a.dry_run,
+                f"2/3 {path.name} ({day})", into / "trading" / f"trade_{system}")
+        if iceberg:
+            plan.to_iceberg(system, into / "trading" / f"trade_{system}", replace=False)
+            if not a.dry_run:
+                shutil.rmtree(into, ignore_errors=True)
+                plan.tidy_stage()
     else:
         print("2/3 no --endur-dir or --source-dir: the synthetic trades stay")
+    plan.finish()
 
     told = None
-    if files and a.server:                               # your files: one signal, their table on its newest date
-        told = tell(a.server, token, "trading", "trade", files[-1][0], a.dry_run)
+    if a.server and (files or plan.copied):              # your files, or trades copied into Iceberg: one signal, the trades' newest date
+        told = tell(a.server, token, "trading", "trade", files[-1][0] if files else (plan.newest or as_of), a.dry_run)
         print(f"  the server: {told}")
         outcomes.append(outcome(told))
     print(f"3/3 done in {time.time() - t0:.0f} s{' (dry run: nothing changed)' if a.dry_run else ''}.")
-    for line in closing(a, system, files, outcomes):
+    for line in plan.lines() + closing(a, system, files, outcomes):
         print(line)
     return 0
+
+
+class StorePlan:
+    """Where each source system's trades go in this run (``--store``), what is rebuilt, and the switch of the connector files."""
+
+    def __init__(self, a, named: dict[str, str], lake: Path, files_system: str | None):
+        import demo
+        self.a, self.lake, self.dry = a, lake, a.dry_run
+        self.data = demo.demo_data_dir(argparse.Namespace(data_dir=None), lake)
+        self.ice = stores.iceberg_root(lake)
+        self.stage = self.data / "build" / "iceberg-stage"
+        self.folder = stores.connectors_dir(a.connectors_dir)
+        self.now = stores.current(self.folder)
+        self.copied: list[str] = []
+        self.newest: str | None = None
+        self.notes: list[str] = []
+        self.problem, self.added = "", []
+        only = [x.strip() for x in (a.only or "").split(",") if x.strip()]
+        full = not a.files_only and not only
+        if a.files_only:
+            self.rebuilt = {files_system} if files_system else set()
+        elif full:
+            self.rebuilt = set(stores.SYSTEMS)
+        else:
+            self.rebuilt = {s for s in stores.SYSTEMS if any(f"trades/{s}".startswith(x) or x == "trading" for x in only)}
+        self.target = {s: named.get(s) or ("delta" if full else self.now[s]) for s in stores.SYSTEMS}
+        for s in stores.SYSTEMS:
+            if self.target[s] == self.now[s] or (s in self.rebuilt and not (a.files_only and a.keep_synthetic_endur)):
+                continue
+            if a.files_only:
+                keep = "with --keep-synthetic " if s in self.rebuilt else ""
+                self.problem = (f"--store {s}={self.target[s]}: {s.upper()}'s trades are in {self.now[s]} now and --files-only {keep}does not "
+                                f"rebuild them: move them first (--only trades/{s} --store {s}={self.target[s]}), then load your files")
+                return
+            self.added.append(f"trades/{s}")
+            self.rebuilt.add(s)
+
+    def to_iceberg(self, s: str, delta_table: Path, replace: bool) -> None:
+        """Copies a system's Delta table into Iceberg (a heartbeat while it runs), then removes the Delta table."""
+        print(f"  {s.upper()} into Iceberg: {delta_table} → {stores.table('iceberg', s, self.lake, self.ice)}", flush=True)
+        cmd = [sys.executable, str(STORES_PY), "--from", str(delta_table), "--root", str(self.ice), "--table", f"trade_{s}",
+               "--data-dir", str(self.data)] + (["--replace"] if replace else [])
+        out = run(cmd, self.dry, f"{s.upper()} into Iceberg", None, capture=True)   # the loader says its own progress
+        m = re.search(r"newest business date (\d{4}-\d{2}-\d{2})", out)
+        if m and (self.newest is None or m.group(1) > self.newest):
+            self.newest = m.group(1)
+        self.copied.append(s)
+        if not self.dry and delta_table.is_relative_to(self.lake):
+            shutil.rmtree(delta_table, ignore_errors=True)        # one store per system: the Delta copy goes
+
+    def tidy_stage(self) -> None:
+        for p in (self.stage, self.stage.parent):
+            try:
+                p.rmdir()
+            except OSError:
+                pass
+
+    def finish(self) -> None:
+        """Each rebuilt system's table in the other store removed, and the connector files switched to the store each system uses."""
+        for s in sorted(self.rebuilt):
+            gone = "delta" if self.target[s] == "iceberg" else "iceberg"
+            other = stores.table(gone, s, self.lake, self.ice)
+            if other.exists():
+                print(f"  {s.upper()} is in {self.target[s]} now: its {gone} table is removed ({other})")
+                if not self.dry:
+                    shutil.rmtree(other)
+        self.notes = [stores.switch(self.folder, s, self.target[s], self.lake, self.ice, self.data, self.dry) for s in stores.SYSTEMS]
+
+    def lines(self) -> list[str]:
+        """The closing lines on storage: which store each system uses, and its connector file."""
+        out = ["  Stores (each source system's trades):"]
+        for s in stores.SYSTEMS:
+            out.append(f"    {s.upper():8} {self.target[s]:8} {stores.table(self.target[s], s, self.lake, self.ice)}")
+        out += ["  Connector files:"] + [f"    {n}" for n in self.notes]
+        if any(self.target[s] != self.now[s] for s in stores.SYSTEMS) and not self.dry:
+            out.append("  A running server restarts the switched connectors by itself (live reload); its pages then read the new stores.")
+        return out
 
 
 def closing(a, system: str, files: list[tuple[str, Path]], outcomes: list[str] | None = None) -> list[str]:

@@ -78,7 +78,8 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * <p>Settings: {@code catalog} ({@code hadoop}|{@code rest}), {@code root} ({@code ./data/iceberg}), {@code domain},
  * {@code uri}, {@code warehouse}, {@code credential}, {@code token}, {@code namespace}, {@code kinds} (default: every
- * table found), {@code mode.<kind>}, {@code lookback-days} (10), {@code max-load-rows} (200000), {@code reverse-index}
+ * table found), {@code mode.<kind>}, {@code table.<kind>} (the table a kind is read from, default the kind: {@code trade_calypso} for kind
+ * {@code trade}), {@code lookback-days} (10), {@code max-load-rows} (200000), {@code reverse-index}
  * (true), {@code cache-mb} (512), {@code source-name} ({@code iceberg}); object storage as {@link IcebergLake} says.
  */
 public final class IcebergSourcePlugin implements SourcePlugin {
@@ -147,7 +148,8 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         String root = ctx.setting("root", "").replaceAll("/+$", "");
         String domain = ctx.setting("domain", "");
         this.problems = new TableProblems(sourceName, kind -> root.isBlank() || !ctx.setting("uri", "").isBlank() ? null
-                : root + (domain.isBlank() ? "" : "/" + domain) + "/" + kind, relocation(ctx.setting("relocate", "")));
+                : root + (domain.isBlank() ? "" : "/" + domain) + "/" + (lake instanceof LakeTables.Named n ? n.tableOf(kind) : kind),
+                relocation(ctx.setting("relocate", "")));
         if (!ctx.setting("relocate", "").isBlank() && lake.engine() == IcebergEngine.LIBRARY) {
             relocateIgnored = "relocate is read by engine: native only; engine: library ignores it";
             java.lang.System.getLogger(IcebergSourcePlugin.class.getName()).log(java.lang.System.Logger.Level.WARNING, "{0}: {1}",
@@ -600,6 +602,69 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     @Override
     public Instant lastUpdate() {
         return lastUpdate;
+    }
+
+    /**
+     * BI's column scan from the promoted columns ({@link com.ash.drishti.api.ColumnScans}), as the Delta connector's: a table of a union
+     * whose source systems are stored part in Delta, part in Iceberg ({@code build_demo_lakes.py --store calypso=iceberg}) is read as columns,
+     * never document by document.
+     */
+    @Override
+    public Optional<com.ash.drishti.api.ArrowScan> scan(com.ash.drishti.api.ScanRequest request) {
+        return com.ash.drishti.api.ColumnScans.over(this, request);
+    }
+
+    /** The table's snapshot id and commit time: what the BI store and the history cache key their answers by. */
+    @Override
+    public Optional<String> dataVersion(String kind) {
+        try {
+            return safeLayout(kind).map(l -> l.snapshotId() + "@" + l.timestamp());
+        } catch (RuntimeException e) {
+            return Optional.empty();                           // unreadable now: the caller keeps what it has
+        }
+    }
+
+    /** One business date's files (their fingerprint, which survives commits of other dates), or {@code none}. */
+    @Override
+    public Optional<String> dataVersion(String kind, LocalDate date) {
+        if (date == null) {
+            return dataVersion(kind);
+        }
+        try {
+            return safeLayout(kind).map(l -> {
+                Day d = l.days().get(date);
+                return d == null ? "none" : Long.toHexString(d.fingerprint());
+            });
+        } catch (RuntimeException e) {
+            return Optional.empty();
+        }
+    }
+
+    /** The newest business date of the kind's table, from its current snapshot's plan (cached; no data read). */
+    @Override
+    public Optional<LocalDate> latestDate(String kind) {
+        return safeLayout(kind).filter(l -> !l.days().isEmpty()).map(l -> l.days().lastKey());
+    }
+
+    @Override
+    public Optional<LocalDate> earliestDate(String kind) {
+        return safeLayout(kind).filter(l -> !l.days().isEmpty()).map(l -> l.days().firstKey());
+    }
+
+    @Override
+    public Optional<java.util.NavigableSet<LocalDate>> heldDates(String kind) {
+        return safeLayout(kind).map(l -> java.util.Collections.unmodifiableNavigableSet(new TreeSet<>(l.days().keySet())));
+    }
+
+    private Optional<Layout> safeLayout(String kind) {
+        if (!tables.containsKey(kind)) {
+            return Optional.empty();
+        }
+        try {
+            return layout(kind, null);
+        } catch (RuntimeException e) {
+            return Optional.empty();
+        }
     }
 
     @Override

@@ -61,30 +61,62 @@ the data-load signal for each table and date, or, when none is reachable, finds 
 and clears its stored BI columns and rollups; a running server also sees each rebuilt Delta date by itself. The test data itself is
 regenerated with `python3 tools/testdata/make_testdata.py` (deterministic, the same bytes on every Python version: `tools/testdata/test_testdata.py` and `test_deterministic.py` guard it).
 
-## Mixed Delta and Iceberg storage (planned, 2.6.7)
+## Mixed Delta and Iceberg storage
 
-Decided by the product owner on 2026-10-20, to be built in 2.6.7: each source system's trades can be stored in **Delta Lake or Apache
-Iceberg**, chosen per system when the demo lakes are built, so one installation proves that the connectors, history, search, the
-grouped pages and BI answer the same whatever the storage. This section is the design; the Windows QA guide, TOOLS.md and CLI_GUIDE.md
-describe the commands once they are built.
+Since 2.6.7 (decided by the product owner on 2026-10-20) each source system's trades can be stored in **Delta Lake or Apache Iceberg**,
+chosen per system when the demo lakes are built, so one installation proves that the connectors, history, search, the grouped pages and
+BI answer the same whatever the storage. Every other dataset stays in Delta.
 
-| Command (planned) | Result |
+| Command (`drishti-console/.venv/bin/python tools/build_demo_lakes.py …`; Windows `drishti-console\.venv\Scripts\python.exe tools\build_demo_lakes.py …`) | Result |
 |---|---|
-| `build_demo_lakes.py` | everything in Delta, as today |
-| `build_demo_lakes.py --store calypso=iceberg` | CALYPSO in Iceberg, ENDUR and MUREX in Delta (the mixed case) |
-| `build_demo_lakes.py --store endur=delta --store calypso=iceberg --store murex=iceberg` | any mix, one `--store` per system |
-| `build_demo_lakes.py --store all=iceberg` | every system in Iceberg |
-| `build_demo_lakes.py --only trades/calypso --store calypso=iceberg --as-of <date>` | one system rebuilt, in its store |
-| `build_demo_lakes.py --source-dir <folder> --system calypso --store calypso=iceberg --files-only` | your own CALYPSO files into Iceberg |
+| (no `--store`) | everything in Delta, as before |
+| `--store calypso=iceberg` | CALYPSO in Iceberg, ENDUR and MUREX in Delta (the mixed case) |
+| `--store endur=delta --store calypso=iceberg --store murex=iceberg` | any mix, one `--store` per system |
+| `--store all=iceberg` | every system in Iceberg (`all=` first, then each system over it: `--store all=iceberg --store endur=delta`) |
+| `--store all=delta` | every system back in Delta |
+| `--only trades/calypso --store calypso=iceberg --as-of <date>` | one system rebuilt and moved; the others kept as they are |
+| `--source-dir <folder> --system calypso --files-only --store calypso=iceberg` | your own CALYPSO files into Iceberg |
+| any of these with `--dry-run` | every step said, nothing changed |
 
-- **Where:** Iceberg tables under `<data>/iceberg/trading/trade_<system>` (`DRISHTI_ICEBERG_ROOT` moves them), written by Drishti's own
-  Iceberg engine (`engine: native`): no Hadoop, so it works on Windows.
-- **Connector files:** the build writes `trade-<system>.yaml` with `plugin: delta` or `plugin: iceberg` to match; the trading pack's
-  union of the three systems is unchanged. Restart the server after a build.
-- **Proof:** an equality test builds the same data all-Delta and mixed and compares trade pages, 60-day history, search, the grouped
-  counterparty pages and a BI report row by row; QA runs the browser tests on the mixed lake.
-- **Maintenance:** `lake maintain` for the Delta tables; Iceberg's own maintenance (expire snapshots, compaction) for the Iceberg ones.
-- **Default:** an option first; the demo default becomes mixed once 2.6.7's QA is clean on it.
+- **Where:** an Iceberg system's table is `<data>/iceberg/trading/trade_<system>`, beside the Delta lake (`data/iceberg` for the default
+  `data/delta`; `--lake /srv/data/delta` gives `/srv/data/iceberg`; `DRISHTI_ICEBERG_ROOT` moves it). Its Delta table is removed: each
+  system is in one store.
+- **How it is written:** the system is built as Delta first (by `lake demo`, or by `lake build` of your files into a staging folder,
+  `<data>/build/iceberg-stage`, removed after), so its documents and promoted columns are exactly those of a Delta build; then
+  `tools/lake/stores.py` streams the rows into Drishti's own Iceberg loader (`IcebergLoader`, `engine: native`: no Hadoop, so it works on
+  Windows), started from the server's exec jar (`drishti-server/target/drishti-server-*-exec.jar` or `DRISHTI_JAR`: build the server first;
+  heap `DRISHTI_LOADER_HEAP`, default 2g). The loader's progress lines (`iceberg: … rows read`, `iceberg: written in … s`) and the usual
+  30-second heartbeat show while it copies.
+- **Connector files:** the build writes `trade-<system>.yaml` (in `config/connectors`, or `--connectors-dir`) from the trading pack's
+  template with `plugin: iceberg`, `engine: native` and `table: {trade: trade_<system>}` (the Iceberg connector's `table.<kind>` setting,
+  as the Delta connector's), or back with `plugin: delta` when the system returns to Delta; the text it replaces is kept in
+  `<data>/connectors/history/`. One connector serves each system, never two; the trading pack's union of the three systems is unchanged.
+  A running server restarts a switched connector by itself (live reload); `lake demo` leaves an Iceberg file as it is.
+- **What a run keeps:** a full build without `--store` puts every system in Delta. A partial build (`--only`, `--files-only`) keeps each
+  system it does not name in the store it has; `--only` with a `--store` that moves another system rebuilds that system too (it says so);
+  `--files-only` cannot move a system whose trades it does not load, and says to run `--only trades/<system> --store …` first.
+- **The closing lines** list every system's store and table, and what was done to each connector file:
+
+  ```text
+    Stores (each source system's trades):
+      ENDUR    delta    …/data/delta/trading/trade_endur
+      CALYPSO  iceberg  …/data/iceberg/trading/trade_calypso
+      MUREX    delta    …/data/delta/trading/trade_murex
+    Connector files:
+      trade-endur: reads delta already (…/config/connectors/trade-endur.yaml)
+      trade-calypso: now reads iceberg, was delta (…/config/connectors/trade-calypso.yaml; a running server restarts this connector by itself)
+      trade-murex: reads delta already (…/config/connectors/trade-murex.yaml)
+  ```
+
+- **With a server:** `--server URL` tells it once at the end (pack trading, kind `trade`, the newest date), as for your files.
+- **Proof:** `tools/lake/stores_equality.py --work <an empty folder> --port <a free port>` builds the same five synthetic business days
+  (1,000 trades a system a day from the committed test data) all-Delta and mixed (ENDUR Delta, CALYPSO and MUREX Iceberg) and asks a server
+  over each, one after the other: six trade pages, `TRD <id> 10` for each, two counterparty-trades pages, three searches and a BI model query
+  (sum of `QUANTITY` by source system, currency and product type). Measured on 2026-10-21: **18 answers, the same** (only timings, the
+  data-version stamps and the table generation in the provenance panel differ, as they name the storage).
+- **Maintenance:** `lake maintain` for the Delta tables; the Iceberg tables with `IcebergLoader --keep-days` or the Iceberg maintenance of
+  [ICEBERG_CONNECTOR.md, section 9](ICEBERG_CONNECTOR.md#9-retention-and-maintenance).
+- **Default:** an option for now; the demo default becomes mixed once 2.6.7's QA is clean on it.
 
 ## The sizes
 
@@ -144,7 +176,8 @@ tools/load-iceberg.sh ./data/iceberg --trades 10000        # and a book, for a l
 SPRING_PROFILES_ACTIVE=iceberg DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
-Design: [ICEBERG_CONNECTOR.md](ICEBERG_CONNECTOR.md). (Not on Windows: it needs Hadoop's file systems.)
+Design: [ICEBERG_CONNECTOR.md](ICEBERG_CONNECTOR.md). (`load-iceberg.sh` builds the plugin with Maven; on Windows use
+`tools\windows\load-iceberg.ps1`, or put the demo lakes' trades in Iceberg with `build_demo_lakes.py --store`: [above](#mixed-delta-and-iceberg-storage).)
 
 ## DuckDB
 
