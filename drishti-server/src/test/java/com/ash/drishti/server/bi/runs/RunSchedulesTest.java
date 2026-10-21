@@ -103,6 +103,9 @@ class RunSchedulesTest {
             Thread.sleep(20);
         }
         assertThat(asked.get()).isEqualTo(1);
+        for (int i = 0; i < 250 && !runs.get(started.get(0)).map(r -> r.state().finished()).orElse(true); i++) {
+            Thread.sleep(20);                                                          // the run stores its result before the temp folder goes
+        }
         RunSchedules.Schedule after = schedules.of("ann").get(0);
         assertThat(after.lastRun()).isEqualTo(started.get(0));
         assertThat(after.nextAt()).isEqualTo(Instant.parse("2026-10-22T07:30:00Z"));
