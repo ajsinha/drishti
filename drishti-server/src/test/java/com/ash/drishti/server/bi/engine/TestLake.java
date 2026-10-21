@@ -58,7 +58,9 @@ public class TestLake implements SourceGateway {
     public final AtomicInteger scanPeak = new AtomicInteger();
     /** The trades' data version per business date (a Delta date's files); empty: the connector cannot tell, as before. */
     public final Map<LocalDate, String> versions = new java.util.concurrent.ConcurrentHashMap<>();
-    final AtomicInteger recordReads = new AtomicInteger();
+    public final AtomicInteger recordReads = new AtomicInteger();
+    /** The trades' rows per business date as the connector's metadata says (BI runs' rowEstimate); empty: it cannot say, as before. */
+    public final Map<LocalDate, Long> rowCounts = new java.util.concurrent.ConcurrentHashMap<>();
     volatile long scanDelayMillis;
     final boolean promoted;
     final LocalDate current = DAY2;
@@ -159,6 +161,14 @@ public class TestLake implements SourceGateway {
                 return Optional.empty();
             }
             return Optional.of(date == null ? new java.util.TreeMap<>(versions).toString() : versions.getOrDefault(date, "none"));
+        }
+
+        @Override
+        public Optional<com.ash.drishti.api.RowEstimate> rowEstimate(String kind, LocalDate date) {
+            if (rowCounts.isEmpty() || date == null) {
+                return Optional.empty();
+            }
+            return Optional.of(new com.ash.drishti.api.RowEstimate(rowCounts.getOrDefault(date, 0L), com.ash.drishti.api.RowEstimate.DELTA_STATS));
         }
 
         @Override

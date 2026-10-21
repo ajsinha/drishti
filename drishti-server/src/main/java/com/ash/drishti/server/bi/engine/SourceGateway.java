@@ -63,6 +63,35 @@ public interface SourceGateway {
         return v.isEmpty() ? null : String.join(",", v);
     }
 
+    /**
+     * The rows a table holds on a business date, from its connectors' metadata ({@link SourcePlugin#rowEstimate}) summed, or empty when any of them
+     * cannot say. Reads no data (docs/architecture/BI_RUNS.md section 4.1). The basis is the first connector's when they differ.
+     */
+    default Optional<com.ash.drishti.api.RowEstimate> rowEstimate(String connector, String kind, LocalDate date) {
+        long rows = 0;
+        String basis = null;
+        List<SourcePlugin> ps;
+        try {
+            ps = plugins(connector, kind);
+        } catch (RuntimeException e) {
+            return Optional.empty();
+        }
+        for (SourcePlugin p : ps) {
+            Optional<com.ash.drishti.api.RowEstimate> e;
+            try {
+                e = p.rowEstimate(kind, date);
+            } catch (RuntimeException x) {
+                return Optional.empty();
+            }
+            if (e.isEmpty()) {
+                return Optional.empty();
+            }
+            rows = rows + e.get().rows() < 0 ? Long.MAX_VALUE : rows + e.get().rows();
+            basis = basis == null ? e.get().basis() : basis;
+        }
+        return basis == null ? Optional.empty() : Optional.of(new com.ash.drishti.api.RowEstimate(rows, basis));
+    }
+
     /** Ids of the kind on the business date (null for the latest), at most {@code limit}; the slow path for sources that cannot scan columns. */
     List<EntityRef> ids(String kind, LocalDate date, int limit);
 

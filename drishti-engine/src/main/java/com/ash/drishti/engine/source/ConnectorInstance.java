@@ -237,6 +237,11 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public java.util.Optional<com.ash.drishti.api.RowEstimate> rowEstimate(String kind, java.time.LocalDate date) {
+        return delegate.rowEstimate(kind, date);
+    }
+
+    @Override
     public String health() {
         return delegate.health();
     }

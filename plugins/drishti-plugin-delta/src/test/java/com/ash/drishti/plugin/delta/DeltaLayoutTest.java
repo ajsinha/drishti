@@ -74,6 +74,19 @@ class DeltaLayoutTest {
         return p;
     }
 
+    /** BI runs' planner (BI_RUNS.md 4.1): a date's rows from the add actions' numRecords, equal to the true count; a date without files is 0. */
+    @Test
+    void rowEstimateSumsTheAddActionsRecordCounts() throws Exception {
+        DeltaSourcePlugin p = plugin(true);
+        for (LocalDate d : List.of(LocalDate.of(2026, 9, 29), LocalDate.of(2026, 9, 30))) {
+            com.ash.drishti.api.RowEstimate e = p.rowEstimate("trade", d).orElseThrow();
+            assertThat(e.basis()).isEqualTo("delta-stats");
+            assertThat(e.rows()).isEqualTo(p.columns("trade", List.of("mtm"), AsOf.of(d)).orElseThrow().size());
+        }
+        assertThat(p.rowEstimate("trade", LocalDate.of(2026, 9, 27)).orElseThrow().rows()).isZero();
+        assertThat(p.rowEstimate("no-such-kind", LocalDate.of(2026, 9, 29))).isEmpty();
+    }
+
     @Test
     void oneEntityIsReadFromItsFileOnEachDate() throws Exception {
         DeltaSourcePlugin p = plugin(true);

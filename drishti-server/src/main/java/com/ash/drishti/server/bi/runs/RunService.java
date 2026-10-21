@@ -81,15 +81,28 @@ public final class RunService {
      * @param supersedes  a newer question with the same key (of the same caller) cancels the older at once
      */
     public record Question(Principal caller, String sourceType, String sourceId, String sourceRef, String title, String workspace, String model,
-                           String question, String params, String signature, String dataVersion, boolean interaction, String supersedes, Work work) {}
+                           String question, String params, String signature, String dataVersion, boolean interaction, String supersedes, Work work,
+                           RunPlanner.Planned planned) {
+
+        /** A question the planner has not sized (its estimate says {@code basis: unknown}; it waits inline as before 2.6.7's planner). */
+        public Question(Principal caller, String sourceType, String sourceId, String sourceRef, String title, String workspace, String model, String question,
+                        String params, String signature, String dataVersion, boolean interaction, String supersedes, Work work) {
+            this(caller, sourceType, sourceId, sourceRef, title, workspace, model, question, params, signature, dataVersion, interaction, supersedes, work, null);
+        }
+    }
 
     /**
      * How the caller waits.
      *
      * @param inlineWait the inline wait (0: fire and forget)
      * @param background run as ad-hoc heavy in the background class at once
+     * @param confirmed  the confirmation is given in advance ({@code options.confirm}, the CLI's {@code --yes}): no {@code DRS-9082}
      */
-    public record Options(Duration inlineWait, boolean background) {}
+    public record Options(Duration inlineWait, boolean background, boolean confirmed) {
+        public Options(Duration inlineWait, boolean background) {
+            this(inlineWait, background, false);
+        }
+    }
 
     /** What submit answers: an answer inline (with the invisible run), or a visible run. */
     public record Outcome(Answer answer, Run run) {
@@ -125,6 +138,8 @@ public final class RunService {
         volatile Thread thread;
         volatile boolean background;
         volatile String cancelReason;
+        volatile String confirmToken;
+        volatile Instant confirmBy;
         final java.util.concurrent.locks.ReentrantLock lock = new java.util.concurrent.locks.ReentrantLock();
 
         Flight(String key, Question q, Run run) {
@@ -183,6 +198,17 @@ public final class RunService {
         this.replay = r == null ? Replay.NONE : r;
     }
 
+    private volatile RunPlanner planner;
+
+    /** The planner whose rates learn from finished runs (section 4.4); the sources plan questions with it before submitting them. */
+    public void planner(RunPlanner p) {
+        this.planner = p;
+    }
+
+    public RunPlanner planner() {
+        return planner;
+    }
+
     /** The result key of a question (section 8.2): question, signature, data version and engine semantics. */
     public static String key(Question q) {
         return SecuritySignature.sha(String.join("|", q.question(), q.signature(), q.dataVersion() == null ? "unversioned:" + q.caller().user()
@@ -202,7 +228,15 @@ public final class RunService {
                 cancel(older, q.caller().user(), false, "replaced by a newer selection");
             }
         }
-        Run base = planned(q, key, reusable, o.background() ? Tier.AD_HOC_HEAVY : Tier.INTERACTIVE, now);
+        RunPlanner.Planned plan = q.planned();
+        if (plan != null && plan.refusal().isPresent()) {
+            refuse(q, plan);                                                    // DRS-9086 past every engine, DRS-9089 an interaction: nothing ran
+        }
+        Tier tier = plan != null ? plan.tier() : o.background() ? Tier.AD_HOC_HEAVY : Tier.INTERACTIVE;
+        if (plan != null && tier == Tier.AD_HOC_HEAVY && !o.background()) {
+            o = new Options(Duration.ZERO, true, o.confirmed());               // its estimate says it will not finish inline: 202 at once (6.1)
+        }
+        Run base = planned(q, key, reusable, tier, now);
         // 1. the same key's result is stored: reused at once, nothing runs (8.3)
         if (reusable) {
             Optional<Map<String, Object>> hit = store.read(key, q.signature());
@@ -238,6 +272,9 @@ public final class RunService {
         if (q.supersedes() != null && !q.supersedes().isBlank()) {
             superseded.put(q.caller().user() + "|" + q.supersedes(), base.id());
         }
+        if (o.background() && plan != null && plan.confirm() && !o.confirmed()) {
+            return awaitConfirm(f, plan, now);                                  // 409 DRS-9082 with the estimate and a token (4.3, 6.1)
+        }
         if (o.background()) {
             f.background = true;
             f.run = base.moveTo(RunState.QUEUED, null, null, now);
@@ -254,9 +291,90 @@ public final class RunService {
         return await(f, null, q, o, now);
     }
 
+    /** A refusal at plan time, with the estimate and the way forward (sections 4.3 and 5.3). */
+    private void refuse(Question q, RunPlanner.Planned plan) {
+        ErrorCode code = plan.refusal().get();
+        Map<String, Object> extra = new LinkedHashMap<>();
+        extra.put("estimate", plan.estimate().toMap());
+        extra.put("tier", plan.tier().wire());
+        metrics.finished(plan.tier().wire(), "failed", code.code());
+        if (code == ErrorCode.RUN_NEEDED) {
+            extra.put("run", Map.of("submit", "POST /api/v1/bi/runs"));
+            throw new RunProblem(code, "this selection needs a background run (" + words(plan.estimate()) + "): run it in the background, or ask for a rollup at this grain",
+                    extra);
+        }
+        throw new RunProblem(code, "this question is too large for this server (" + words(plan.estimate()) + "; the local engine reads at most "
+                + (planner == null ? "its" : String.valueOf(planner.settings().engineMaxReadRows())) + " rows): narrow the dates, ask at a rollup's grain, or configure a larger engine", extra);
+    }
+
+    /** The estimate in words: "about 80 rows over 2 business dates (delta-stats)". */
+    static String words(RunEstimate e) {
+        if (!e.known()) {
+            return "its size is not known: " + e.why();
+        }
+        return "about " + RunEstimator.words(e.readRows()) + " rows over " + e.dates() + (e.dates() == 1 ? " business date" : " business dates") + ", "
+                + Math.round(e.secondsLow()) + " to " + Math.round(Math.max(e.secondsHigh(), 1)) + " s, " + e.basis().wire();
+    }
+
+    /**
+     * An ad-hoc heavy run above the confirm threshold: a visible row in {@code awaiting-confirm}, a token, and {@code 409 DRS-9082} with the estimate.
+     * {@link #confirm} queues it; it is discarded after {@code confirm.ttl}.
+     */
+    private Outcome awaitConfirm(Flight f, RunPlanner.Planned plan, Instant now) {
+        f.background = true;
+        f.confirmToken = Long.toHexString(random.nextLong()) + Long.toHexString(random.nextLong());
+        f.confirmBy = now.plus(props.confirmTtl());
+        f.run = f.run.moveTo(RunState.AWAITING_CONFIRM, null, "the estimate asks for a confirmation: " + plan.estimate().why(), now);
+        byKey.remove(f.key, f);
+        becomeVisible(f);
+        Map<String, Object> extra = new LinkedHashMap<>();
+        extra.put("estimate", plan.estimate().toMap());
+        extra.put("confirmToken", f.confirmToken);
+        extra.put("runId", f.run.id());
+        extra.put("confirm", "POST /api/v1/bi/runs/" + f.run.id() + "/confirm");
+        throw new RunProblem(ErrorCode.RUN_CONFIRM, "this is a background run of " + words(plan.estimate()) + ": confirm it to start", extra);
+    }
+
+    /** Confirms an {@code awaiting-confirm} run with its token: it is queued as a background run. */
+    public Run confirm(String id, String by, String token) {
+        Flight f = byRun.get(id);
+        if (f == null || f.run.state() != RunState.AWAITING_CONFIRM || !by.equals(f.run.owner())) {
+            Run r = records.get(id).orElseThrow(() -> new DrishtiException(ErrorCode.RUN_NOT_FOUND, "no run '" + id + "' that you may see"));
+            throw new DrishtiException(ErrorCode.RUN_NOT_DONE, "the run is " + r.state().wire() + ": nothing to confirm");
+        }
+        f.lock.lock();
+        try {
+            if (clock.instant().isAfter(f.confirmBy)) {
+                f.run = f.run.moveTo(RunState.CANCELLED, "DRS-9083", "not confirmed within " + props.confirmTtl().toMinutes() + " min", clock.instant());
+                f.done.cancel(false);
+                records.save(f.run);
+                publish(f.run);
+                byRun.remove(id, f);
+                throw new DrishtiException(ErrorCode.RUN_NOT_DONE, "the run was not confirmed in time: submit it again");
+            }
+            if (token == null || !token.equals(f.confirmToken)) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the confirmToken does not match this run's");
+            }
+            checkQueue(by);
+            f.confirmToken = null;
+            f.run = f.run.moveTo(RunState.QUEUED, null, null, clock.instant());
+            records.save(f.run);
+            publish(f.run);
+        } finally {
+            f.lock.unlock();
+        }
+        if (f.key != null && f.run.resultKey() != null) {
+            byKey.putIfAbsent(f.key, f);
+        }
+        if (!queue.offer(f, f.q.caller().user())) {
+            fail(f, new DrishtiException(ErrorCode.RUN_QUEUE_FULL, "the server's run queue is full (queue.max " + props.queue().max() + "): try again later"));
+        }
+        return f.run;
+    }
+
     private Run planned(Question q, String key, boolean reusable, Tier tier, Instant now) {
-        Map<String, Object> estimate = new RunEstimate(null, null, null, null, null, null, RunEstimate.Basis.UNKNOWN, 0, 0, false, 0,
-                tier == Tier.AD_HOC_HEAVY ? "a background run: its size is learnt as it runs" : "an interactive question").toMap();
+        Map<String, Object> estimate = q.planned() != null ? q.planned().estimate().toMap() : new RunEstimate(null, null, null, null, null, null,
+                RunEstimate.Basis.UNKNOWN, 0, 0, false, 0, tier == Tier.AD_HOC_HEAVY ? "a background run: its size is learnt as it runs" : "an interactive question").toMap();
         Run r = Run.planned(RunId.next(node, now, random), q.caller().user(), q.caller().user(), q.sourceType(), q.question(), key, q.signature(), tier,
                 "local", RunJson.write(estimate), node, now);
         Run.Builder b = r.toBuilder();
@@ -266,6 +384,9 @@ public final class RunService {
         b.title = q.title();
         b.params = q.params();
         b.dataVersion = q.dataVersion();
+        if (q.planned() != null && !q.planned().dates().isEmpty()) {
+            b.asOf = RunJson.asOfText(q.planned().dates().stream().filter(d -> !java.time.LocalDate.MIN.equals(d)).toList());
+        }
         b.resultKey = reusable ? key : null;
         b.expiresAt = null;
         return b.build();
@@ -433,6 +554,13 @@ public final class RunService {
             f.lock.unlock();
         }
         metrics.finished(f.run.tier().wire(), "done", "");
+        RunPlanner p = planner;
+        if (p != null && f.q.planned() != null) {
+            Double ratio = p.rates().finished(RunPlanner.LOCAL, f.q.planned().estimate(), seconds, f.q.planned().buildPath());   // the rates learn (4.4)
+            if (ratio != null) {
+                metrics.estimateRatio(f.q.planned().estimate().basis().wire(), RunPlanner.LOCAL, ratio);
+            }
+        }
         for (String twin : f.twins) {
             records.get(twin).ifPresent(t -> {
                 if (!t.state().finished()) {

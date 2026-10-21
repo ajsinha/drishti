@@ -158,6 +158,28 @@ public final class QueryService implements AutoCloseable {
         return sources.plugin(t.connector(), t.kind()).map(p -> p.manifest().name()).orElse(t.connector().isBlank() ? t.kind() : t.connector());
     }
 
+    /** Whether a table's connector keeps columns for its kind (a column scan builds its layer, not record by record). */
+    boolean columnar(Dataset.Table t) {
+        return sources.plugin(t.connector(), t.kind()).map(p -> !p.columnar(t.kind()).isEmpty()).orElse(false);
+    }
+
+    private final Footprints footprints = new Footprints(this);
+    private volatile Layers.RowHistory history = Layers.RowHistory.NONE;
+
+    /** The learned rows per day of tables (BI runs' {@code RunHistory}): the estimate's third source after built layers and the source's metadata. */
+    public void history(Layers.RowHistory h) {
+        this.history = h == null ? Layers.RowHistory.NONE : h;
+    }
+
+    /**
+     * What a question would read, from metadata only (docs/architecture/BI_RUNS.md section 4.1): its tables' dates and rows, the rollup the optimiser
+     * would choose, the data versions. Builds nothing, opens no data file and takes no admission place.
+     */
+    public Footprints.Footprint footprint(Loaded ds, QueryRequest q, Caller who) {
+        syncVersions(ds.key(), ds.dataset());
+        return footprints.of(ds, q, who, history);
+    }
+
     /** The capability descriptor of the connector a table reads (null when none runs). */
     public ConnectorCapabilities capabilities(Dataset.Table t) {
         return sources.plugin(t.connector(), t.kind()).map(p -> ConnectorCapabilities.of(p, t.kind(), exec)).orElse(null);
@@ -313,11 +335,34 @@ public final class QueryService implements AutoCloseable {
         QueryContext.Ctx ctx = QueryContext.current();
         long budget = ctx.budgetRows() != null && ctx.budgetRows() > 0 ? ctx.budgetRows() : exec.maxEstimatedRows();
         if (rows > budget) {
-            String rollups = d.rollups().stream().filter(r -> plan.tables().contains(r.table())).map(r -> r.name() + " " + r.by()).toList().toString();
-            throw new DrishtiException(ErrorCode.QUERY_COST, "the query would read about " + rows + " rows, over its budget of " + budget
-                    + (ctx.budgetRows() != null ? " (options.budget.rows)" : " (drishti.bi.exec.max-estimated-rows)") + ": add a date filter or a narrower window"
-                    + ("[]".equals(rollups) ? "" : ", or ask only the fields of a rollup " + rollups));
+            refuse(d, plan, rows, budget, ctx);
         }
+    }
+
+    /**
+     * The synchronous cost refusal ({@code DRS-9029}) from the question's footprint, before any build: the rows its tables hold by their built
+     * partitions' metadata and their sources' row estimates. Dates nobody can size count nothing here; {@link #estimate} after the build still
+     * covers them. A question a rollup answers is never refused here.
+     */
+    private void preEstimate(Loaded ds, QueryRequest q, Caller who, Dataset d, SqlCompiler.Plan plan) {
+        long rows;
+        try {
+            rows = Footprints.knownRows(footprints.of(ds, q, who, history));
+        } catch (RuntimeException e) {
+            return;                                                             // metadata that cannot be read now: the check after the build stands
+        }
+        QueryContext.Ctx ctx = QueryContext.current();
+        long budget = ctx.budgetRows() != null && ctx.budgetRows() > 0 ? ctx.budgetRows() : exec.maxEstimatedRows();
+        if (rows > budget) {
+            refuse(d, plan, rows, budget, ctx);
+        }
+    }
+
+    private static void refuse(Dataset d, SqlCompiler.Plan plan, long rows, long budget, QueryContext.Ctx ctx) {
+        String rollups = d.rollups().stream().filter(r -> plan.tables().contains(r.table())).map(r -> r.name() + " " + r.by()).toList().toString();
+        throw new DrishtiException(ErrorCode.QUERY_COST, "the query would read about " + rows + " rows, over its budget of " + budget
+                + (ctx.budgetRows() != null ? " (options.budget.rows)" : " (drishti.bi.exec.max-estimated-rows)") + ": add a date filter or a narrower window"
+                + ("[]".equals(rollups) ? "" : ", or ask only the fields of a rollup " + rollups));
     }
 
     /** What the history of a live table asks the engine with: the system, no row rules, no masks (the history holds raw values and readers' masks apply when they read it). */
@@ -410,6 +455,9 @@ public final class QueryService implements AutoCloseable {
                 }
             }
             return direct(ds, q, plan, reader, who, explain);
+        }
+        if (staged.isEmpty() && !explain) {
+            preEstimate(ds, q, who, d, plan);                                   // the cost budget from metadata, before any layer is built (BI_RUNS 2.3)
         }
         List<String> warnings = new ArrayList<>();
         Map<String, Layers.Layer> cols = new LinkedHashMap<>();

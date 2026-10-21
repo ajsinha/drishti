@@ -753,6 +753,57 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         }
     }
 
+    /** Per kind: the snapshot version its counts are of, and the counts (one log read per new version). */
+    private record Counted(long version, java.util.NavigableMap<LocalDate, DeltaTable.DayCount> days, double bytesPerRow) {}
+
+    private final Map<String, Counted> counted = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * The date's rows from the add actions of the current snapshot (docs/architecture/BI_RUNS.md section 4.1): the sum of {@code numRecords} in
+     * their statistics; a file without statistics counts its bytes ÷ the bytes per row of the files that have both. No data file is read. A date
+     * without files holds 0 rows. Empty when the log cannot be read now, or no file of the table has a record count to learn from.
+     */
+    @Override
+    public Optional<com.ash.drishti.api.RowEstimate> rowEstimate(String kind, LocalDate date) {
+        DeltaTable t = tables.get(kind);
+        if (t == null || date == null) {
+            return Optional.empty();
+        }
+        try {
+            Optional<DeltaTable.Layout> l = layout(kind, null);
+            if (l.isEmpty()) {
+                return Optional.empty();
+            }
+            long version = l.get().version();
+            Counted c = counted.get(kind);
+            if (c == null || c.version() != version) {
+                java.util.NavigableMap<LocalDate, DeltaTable.DayCount> days = t.counts(version);
+                long records = 0;
+                long bytes = 0;
+                for (DeltaTable.DayCount d : days.values()) {
+                    records += d.records();
+                    bytes += d.bytes();
+                }
+                c = new Counted(version, days, records == 0 ? 0 : (double) bytes / records);
+                counted.put(kind, c);
+            }
+            DeltaTable.DayCount d = c.days().get(date);
+            if (d == null) {
+                return Optional.of(new com.ash.drishti.api.RowEstimate(0, com.ash.drishti.api.RowEstimate.DELTA_STATS));
+            }
+            long rows = d.records();
+            if (d.filesUncounted() > 0) {
+                if (c.bytesPerRow() <= 0) {
+                    return Optional.empty();
+                }
+                rows += Math.round(d.bytesUncounted() / c.bytesPerRow());
+            }
+            return Optional.of(new com.ash.drishti.api.RowEstimate(rows, com.ash.drishti.api.RowEstimate.DELTA_STATS));
+        } catch (RuntimeException e) {
+            return Optional.empty();
+        }
+    }
+
     @Override
     public Optional<String> dataVersion(String kind) {
         try {

@@ -640,6 +640,22 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         }
     }
 
+    /**
+     * The date's rows from the current snapshot's manifests: the sum of the {@code record_count} of its data files (docs/architecture/BI_RUNS.md
+     * section 4.1). The plan is the cached one the reads use; no data file is read. A date without files holds 0 rows. With delete files the
+     * count is an upper bound (the deleted rows are still counted), which an estimate may be.
+     */
+    @Override
+    public Optional<com.ash.drishti.api.RowEstimate> rowEstimate(String kind, LocalDate date) {
+        if (date == null) {
+            return Optional.empty();
+        }
+        return safeLayout(kind).map(l -> {
+            Day d = l.days().get(date);
+            return new com.ash.drishti.api.RowEstimate(d == null ? 0 : d.rows(), com.ash.drishti.api.RowEstimate.ICEBERG_MANIFESTS);
+        });
+    }
+
     /** The newest business date of the kind's table, from its current snapshot's plan (cached; no data read). */
     @Override
     public Optional<LocalDate> latestDate(String kind) {

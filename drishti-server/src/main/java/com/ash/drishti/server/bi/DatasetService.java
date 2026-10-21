@@ -849,6 +849,11 @@ public final class DatasetService {
         return r;
     }
 
+    /** What a model's request would read, from metadata only, as the reader (BI runs' planner); builds nothing and records no audit row. */
+    public com.ash.drishti.server.bi.engine.Footprints.Footprint footprint(Principal p, String id, String key, Dataset ds, String hash, QueryRequest q) {
+        return queries.footprint(new QueryService.Loaded(id, key, ds, hash), q, caller(p, ds));
+    }
+
     /** The data generation of a dataset's layers and live tables (starting its live tables): what a standing query watches. */
     /** The generation bus of the query engine (wave B: live batches, loads and refreshes pushed to standing queries). */
     public com.ash.drishti.server.bi.engine.GenerationBus bus() {

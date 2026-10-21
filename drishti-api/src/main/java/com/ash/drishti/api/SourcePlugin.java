@@ -133,6 +133,15 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
+     * How many rows one business date of the kind holds, from the source's metadata only (a Delta table's add-action statistics, an Iceberg
+     * snapshot's manifests), or empty when it cannot say without reading data (the default). Must read no data file: the BI runs planner asks it
+     * for every date of a question before anything runs (docs/architecture/BI_RUNS.md section 4.1).
+     */
+    default Optional<RowEstimate> rowEstimate(String kind, java.time.LocalDate date) {
+        return Optional.empty();
+    }
+
+    /**
      * Where this source keeps the kind's data, written so that every server reading the same data says the same (a Delta table's id
      * from its log, else its location), or empty when it cannot say. Drishti*net calls two servers whose sources name the same identity
      * <em>replicas</em> of the kind (a search asks one of them) and different identities <em>shards</em> (a search asks all). Must be cheap.

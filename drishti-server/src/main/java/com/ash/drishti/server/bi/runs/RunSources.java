@@ -132,11 +132,34 @@ public final class RunSources {
         if (raw != null) {
             canon.put("mq", CANON.convertValue(raw, Object.class));        // replayable after a restart
         }
-        return new RunService.Question(p, "mq", model, null, title, null, model, canonical(canon), null, b.signature(), version(b), interaction, supersedes,
-                () -> {
+        RunPlanner.Planned planned = plan(b, query, interaction);
+        return new RunService.Question(p, "mq", model, null, title, null, model, canonical(canon), null, b.signature(), version(b, planned), interaction,
+                supersedes, () -> {
                     MqService.Answer a = mq.ask(b, query, false);
                     return new RunService.Answer(a.body(), a.result().columns(), a.result().rows());
-                });
+                }, planned);
+    }
+
+    /** The planner's view of a model query (section 4), from metadata only; null when it cannot be sized without reading (a top filter, staged tables). */
+    RunPlanner.Planned plan(MqService.Bound b, ModelQuery q, boolean interaction) {
+        RunPlanner pl = runs.planner();
+        if (pl == null) {
+            return null;
+        }
+        return mq.footprint(b, q).map(f -> pl.plan(f, interaction)).orElse(null);
+    }
+
+    /**
+     * The data version of a planned question (section 8.2): the hash of the data version vector of every table and date it reads, with the model's
+     * definition. It is the same after a restart while the data is unchanged, so a stored result is reused then, and it moves when a date is restated,
+     * so it is never reused over changed data. Null (not reusable) when a source cannot tell its version or a live table is read. Unplanned
+     * questions keep the process's generation (reused within this process only).
+     */
+    static String version(MqService.Bound b, RunPlanner.Planned planned) {
+        if (planned == null) {
+            return version(b);
+        }
+        return planned.data().complete() ? "dv:" + planned.data().hash() + ":" + b.view().hash() : null;
     }
 
     public RunService.Question sql(Principal p, String model, String statement, boolean interaction, String supersedes, String title) {
@@ -151,11 +174,12 @@ public final class RunSources {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "EXPLAIN answers at once; ask it without Prefer: respond-async");
         }
         Map<String, Object> canon = Map.of("type", "sql", "model", model, "sql", statement.strip());
-        return new RunService.Question(p, "sql", model, null, title, null, model, canonical(canon), null, b.signature(), version(b), interaction, supersedes,
-                () -> {
+        RunPlanner.Planned planned = c.leaf() == null ? null : plan(b, c.leaf().query(), interaction);   // a composite reads several questions
+        return new RunService.Question(p, "sql", model, null, title, null, model, canonical(canon), null, b.signature(), version(b, planned), interaction,
+                supersedes, () -> {
                     SqlService.Answer a = sql.run(b, c);
                     return new RunService.Answer(a.body(), a.columns(), a.rows());
-                });
+                }, planned);
     }
 
     /**

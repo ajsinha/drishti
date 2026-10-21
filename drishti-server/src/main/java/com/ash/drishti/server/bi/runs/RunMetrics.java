@@ -31,6 +31,12 @@ public interface RunMetrics {
 
     default void seconds(String tier, double seconds) {}
 
+    /** A finished run's actual ÷ estimated seconds (how honest the estimates are, section 4.4). */
+    default void estimateRatio(String basis, String engine, double ratio) {}
+
+    /** The time from a cancel to every resource of the run let go (section 11). */
+    default void cancelRelease(double seconds) {}
+
     RunMetrics NONE = new RunMetrics() {};
 
     /** Micrometer counters and timers: {@code drishti.bi.runs.*}. */
@@ -62,6 +68,17 @@ public interface RunMetrics {
             @Override
             public void seconds(String tier, double seconds) {
                 m.timer("drishti.bi.runs.seconds", "tier", tier, "engine", "local").record(Duration.ofNanos((long) (seconds * 1e9)));
+            }
+
+            @Override
+            public void estimateRatio(String basis, String engine, double ratio) {
+                io.micrometer.core.instrument.DistributionSummary.builder("drishti.bi.runs.estimate.ratio").tag("basis", basis).tag("engine", engine)
+                        .register(m).record(ratio);
+            }
+
+            @Override
+            public void cancelRelease(double seconds) {
+                m.timer("drishti.bi.runs.cancel.release").record(Duration.ofNanos((long) (seconds * 1e9)));
             }
         };
     }

@@ -120,7 +120,7 @@ public class RunsController {
         RunService.Question q = sources.of(p, body.path("source"), options);
         Duration wait = options.path("wait").isTextual() ? Duration.parse(options.path("wait").asText())
                 : options.path("wait").isNumber() ? Duration.ofMillis((long) (options.path("wait").asDouble() * 1000)) : props.inline().inlineWait();
-        RunService.Outcome o = runs().submit(q, new RunService.Options(wait, wait.isZero()));
+        RunService.Outcome o = runs().submit(q, new RunService.Options(wait, wait.isZero(), options.path("confirm").asBoolean(false)));
         if (o.inline()) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("run", json(o.run(), p));
@@ -133,16 +133,19 @@ public class RunsController {
     @PostMapping("/runs/estimate")
     public ResponseEntity<?> estimate(@RequestBody JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.BI);
-        RunService.Question q = sources.of(p, body.path("source"), JsonNodeFactory.instance.objectNode());     // binds as the caller; reads no data
+        RunService.Question q = sources.of(p, body.path("source"), body.path("options").isObject() ? body.path("options")
+                : JsonNodeFactory.instance.objectNode());                     // binds as the caller and plans from metadata; reads no data
         String key = RunService.key(q);
         boolean reusable = q.dataVersion() != null && runs().store().has(key);
+        RunPlanner.Planned plan = q.planned();
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("tier", Tier.INTERACTIVE.wire());
-        m.put("engine", "local");
-        m.put("estimate", new RunEstimate(null, null, null, null, null, null, RunEstimate.Basis.UNKNOWN, 0, 0, false, 0,
-                "the planner's metadata estimate is not built yet: the size is learnt as the question runs").toMap());
+        m.put("tier", plan == null ? Tier.INTERACTIVE.wire() : plan.tier().wire());
+        m.put("engine", RunPlanner.LOCAL);
+        m.put("estimate", plan != null ? plan.estimate().toMap() : new RunEstimate(null, null, null, null, null, null, RunEstimate.Basis.UNKNOWN, 0, 0,
+                false, 0, "this question cannot be sized from metadata (it reads other questions' answers, or compiling it reads data)").toMap());
         m.put("reuse", reusable ? Map.of("key", key, "runId", runs().records().doneWithKey(key).map(Run::id).orElse("")) : null);
-        m.put("confirm", false);
+        m.put("confirm", plan != null && plan.confirm());
+        m.put("refusal", plan == null ? null : plan.refusal().map(ErrorCode::code).orElse(null));
         return noStore(200, m);
     }
 
@@ -304,8 +307,9 @@ public class RunsController {
     @PostMapping("/runs/{id}/confirm")
     public ResponseEntity<?> confirm(@PathVariable String id, @RequestBody(required = false) JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.BI);
-        Run r = own(id, p);
-        throw new DrishtiException(ErrorCode.RUN_NOT_DONE, "the run is " + r.state().wire() + ": nothing to confirm");
+        own(id, p);
+        String token = body != null && body.path("confirmToken").isTextual() ? body.path("confirmToken").asText() : null;
+        return noStore(202, json(runs().confirm(id, p.user(), token), p));
     }
 
     @PostMapping("/runs/{id}/export")

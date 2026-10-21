@@ -211,6 +211,75 @@ final class DeltaTable {
         }
     }
 
+    /**
+     * One business date's size from the add actions of a snapshot (no data file is read).
+     *
+     * @param records         the sum of {@code numRecords} of the files whose statistics carry it
+     * @param bytes           the bytes of those files
+     * @param bytesUncounted  the bytes of the files without a record count
+     * @param filesUncounted  how many files have no record count
+     */
+    record DayCount(long records, long bytes, long bytesUncounted, int filesUncounted) {}
+
+    private static final java.util.regex.Pattern NUM_RECORDS = java.util.regex.Pattern.compile("\"numRecords\"\\s*:\\s*(\\d+)");
+
+    /**
+     * Every business date's size at a snapshot version, from the log's add actions and their statistics (docs/architecture/BI_RUNS.md section
+     * 4.1: {@code SourcePlugin.rowEstimate}). Reads the log only, as {@link #layout} does, with the statistics column asked for.
+     */
+    NavigableMap<LocalDate, DayCount> counts(long version) {
+        Snapshot s;
+        try {
+            s = Table.forPath(engine, path).getSnapshotAsOfVersion(engine, version);
+        } catch (TableNotFoundException e) {
+            return new TreeMap<>();
+        }
+        Scan scan = s.getScanBuilder().withReadSchema(new StructType().add(idColumn, StringType.STRING)).build();
+        NavigableMap<LocalDate, long[]> sums = new TreeMap<>();
+        CloseableIterator<FilteredColumnarBatch> files = scan instanceof io.delta.kernel.internal.ScanImpl si ? si.getScanFiles(engine, true) : scan.getScanFiles(engine);
+        try (CloseableIterator<FilteredColumnarBatch> it = files) {
+            while (it.hasNext()) {
+                try (CloseableIterator<Row> rows = it.next().getRows()) {
+                    while (rows.hasNext()) {
+                        Row r = rows.next();
+                        String d = InternalScanFileUtils.getPartitionValues(r).get(dateColumn);
+                        LocalDate date = d == null ? LocalDate.MIN : LocalDate.parse(d);
+                        long size = InternalScanFileUtils.getAddFileStatus(r).getSize();
+                        long[] sum = sums.computeIfAbsent(date, k -> new long[4]);
+                        Long n = numRecords(r);
+                        if (n == null) {
+                            sum[2] += size;
+                            sum[3]++;
+                        } else {
+                            sum[0] += n;
+                            sum[1] += size;
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        NavigableMap<LocalDate, DayCount> out = new TreeMap<>();
+        sums.forEach((d, v) -> out.put(d, new DayCount(v[0], v[1], v[2], (int) v[3])));
+        return out;
+    }
+
+    /** {@code numRecords} of a scan file's add action statistics, or null when it has none. */
+    private static Long numRecords(Row scanFile) {
+        try {
+            Row add = scanFile.getStruct(InternalScanFileUtils.ADD_FILE_ORDINAL);
+            int at = add.getSchema().indexOf("stats");
+            if (at < 0 || add.isNullAt(at)) {
+                return null;
+            }
+            java.util.regex.Matcher m = NUM_RECORDS.matcher(add.getString(at));
+            return m.find() ? Long.parseLong(m.group(1)) : null;
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
     /** The latest snapshot's layout, or the one as known at {@code knownAt}; empty if the table does not exist. */
     Optional<Layout> layout(Instant knownAt) {
         Snapshot s;

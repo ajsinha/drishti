@@ -55,12 +55,18 @@ public class RunsConfiguration {
 
     @Bean(destroyMethod = "close")
     RunService runService(RunsProperties props, ObjectProvider<HikariDataSource> identity, ObjectProvider<ExecProperties> exec,
-            ObjectProvider<MeterRegistry> meters) {
+            ObjectProvider<MeterRegistry> meters, ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> queries) {
         HikariDataSource ds = identity.getIfAvailable();
         RunRecords records = ds == null ? new RunRecords.Memory() : new RunRecords.Jdbc(ds);
         ExecProperties e = exec.getIfAvailable();
         String node = e == null || e.node().isBlank() ? "local" : e.node();
-        return new RunService(props, records, new RunStore(props), Clock.systemUTC(), node, RunMetrics.of(meters.getIfAvailable()));
+        RunService runs = new RunService(props, records, new RunStore(props), Clock.systemUTC(), node, RunMetrics.of(meters.getIfAvailable()));
+        runs.planner(new RunPlanner(props.planner(), new RunRates(props.planner())));      // the planner (section 4), its rates learnt from runs
+        com.ash.drishti.server.bi.engine.QueryService q = queries.getIfAvailable();
+        if (q != null) {
+            q.history(new RunHistory());                                        // rows per day learnt from built partitions: the estimate's third source
+        }
+        return runs;
     }
 
     @Bean

@@ -35,6 +35,7 @@ import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
@@ -220,6 +221,130 @@ public final class Layers {
             }
         }
         return new Layer(out, warnings.stream().distinct().toList(), built);
+    }
+
+    // ---- peek: the metadata of a range without building it (BI runs, section 4.1) -------------------------------------
+
+    /**
+     * One date of a table as the metadata knows it.
+     *
+     * @param rows    the rows; null when unknown
+     * @param basis   {@code layers} (a valid built partition), the source's ({@code delta-stats}, {@code iceberg-manifests}, …), {@code history}
+     *                or {@code unknown}
+     * @param built   the partition is valid (nothing to build)
+     * @param buildId the built partition's id (a rollup partition is valid only over it); null when not built
+     * @param version the source's data version of the date; null when the source cannot tell
+     */
+    public record Peeked(LocalDate date, Long rows, String basis, boolean built, String buildId, String version) {}
+
+    /** A table's learned rows per business day (BI runs' {@code RunHistory}); null when nothing is known. */
+    @FunctionalInterface
+    public interface RowHistory {
+        Long rowsPerDay(String key, String table);
+
+        default void saw(String key, String table, long rows) {}
+
+        RowHistory NONE = (k, t) -> null;
+    }
+
+    /**
+     * The dates of a table a query over {@code from..to} reads (null: the latest), each from metadata only: a valid partition's {@code meta.json},
+     * else the source's {@link SourceGateway#rowEstimate}, else {@code history}, else unknown. Builds nothing and opens no data file; asks each date's
+     * data version, which sources answer cheaply by contract. A built partition's rows teach {@code history}.
+     */
+    public List<Peeked> peek(String key, Dataset.Table t, LocalDate from, LocalDate to, RowHistory history) {
+        Path dir = tableDir(key, t.name());
+        String sig = signature(t);
+        RowHistory h = history == null ? RowHistory.NONE : history;
+        List<Peeked> out = new ArrayList<>();
+        if (from == null) {
+            LocalDate current = sources.currentDate();
+            Latest l = latest.get(key + "|" + t.name());
+            for (LocalDate d : new LocalDate[] {current, l == null ? null : l.date()}) {
+                if (d != null) {
+                    String ver = version(t, d);
+                    Partition p = valid(dir, d, sig, ver);
+                    if (p != null && p.rows() > 0) {
+                        h.saw(key, t.name(), p.rows());
+                        out.add(new Peeked(d, p.rows(), "layers", true, p.buildId(), ver));
+                        return out;
+                    }
+                }
+            }
+            LocalDate held = latestHeld(t);
+            LocalDate d = held != null ? held : current;
+            out.add(unbuilt(key, t, d, d == null ? null : version(t, d), h));
+            return out;
+        }
+        LocalDate end = to == null ? from : to;
+        int days = 0;
+        for (LocalDate d = from; !d.isAfter(end) && ++days <= MAX_RANGE_DAYS; d = d.plusDays(1)) {
+            String ver = version(t, d);
+            Partition p = valid(dir, d, sig, ver);
+            if (p != null) {
+                if (p.rows() > 0) {
+                    h.saw(key, t.name(), p.rows());
+                }
+                out.add(new Peeked(d, p.rows(), "layers", true, p.buildId(), ver));
+            } else {
+                out.add(unbuilt(key, t, d, ver, h));
+            }
+        }
+        return out;
+    }
+
+    private Peeked unbuilt(String key, Dataset.Table t, LocalDate d, String ver, RowHistory h) {
+        if (d != null && t.kind() != null && !t.kind().isBlank()) {
+            Optional<com.ash.drishti.api.RowEstimate> e = sources.rowEstimate(t.connector(), t.kind(), d);
+            if (e.isPresent()) {
+                return new Peeked(d, e.get().rows(), e.get().basis(), false, null, ver);
+            }
+        }
+        Long perDay = h.rowsPerDay(key, t.name());
+        return perDay != null ? new Peeked(d, perDay, "history", false, null, ver) : new Peeked(d, null, "unknown", false, null, ver);
+    }
+
+    /** The newest business date the table's source holds (metadata), or null when it cannot say. */
+    private LocalDate latestHeld(Dataset.Table t) {
+        try {
+            for (com.ash.drishti.api.SourcePlugin p : sources.plugins(t.connector(), t.kind())) {
+                Optional<LocalDate> d = p.latestDate(t.kind());
+                if (d.isPresent()) {
+                    return d.get();
+                }
+            }
+        } catch (RuntimeException e) {
+            // the source cannot say now: the current business date stands
+        }
+        return null;
+    }
+
+    /**
+     * The rows of a rollup's valid partitions over the peeked dates of its table (a rollup partition is valid only over the columns partition it was
+     * built from). Dates whose columns are not built, or whose rollup is not, are absent. Reads metadata only.
+     */
+    public Map<LocalDate, Long> peekRollup(String key, Dataset ds, Dataset.Rollup r, List<Peeked> columns) {
+        Path dir = root.resolve("rollups").resolve(key).resolve(r.name());
+        String sig = signature(ds.tables().get(r.table())) + "/" + r.by() + r.measures() + Rollups.class.getSimpleName();
+        Map<LocalDate, Long> out = new java.util.TreeMap<>();
+        for (Peeked c : columns) {
+            if (!c.built() || c.date() == null) {
+                continue;
+            }
+            Path pd = partitionDir(dir, c.date());
+            try {
+                Path meta = pd.resolve("meta.json");
+                if (Files.isRegularFile(meta)) {
+                    JsonNode m = JSON.readTree(Files.readString(meta));
+                    if (Files.isRegularFile(dataFile(pd, m)) && sig.equals(m.path("signature").asText()) && c.buildId().equals(m.path("sourceBuild").asText())) {
+                        out.put(c.date(), m.path("rows").asLong());
+                    }
+                }
+            } catch (IOException e) {
+                // not valid: absent
+            }
+        }
+        return out;
     }
 
     /**

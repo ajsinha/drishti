@@ -42,6 +42,34 @@ public final class MqService {
     /** Runs one engine request against a dataset as the bound reader (the model's dataset, or it with local and guard measures). */
     public interface Runner {
         QueryService.Result run(Dataset ds, QueryRequest q, boolean explain);
+
+        /** What the request would read, from metadata only (BI runs' planner); empty when this runner cannot say (staged or compatibility models). */
+        default java.util.Optional<com.ash.drishti.server.bi.engine.Footprints.Footprint> footprint(Dataset ds, QueryRequest q) {
+            return java.util.Optional.empty();
+        }
+    }
+
+    /** Asked of a query that needs data to compile (a {@code top} filter): its footprint is not known without reading. */
+    private static final class NeedsData extends RuntimeException {
+        NeedsData() {
+            super("this question reads data to compile", null, false, false);
+        }
+    }
+
+    /**
+     * What a query would read, from metadata only (docs/architecture/BI_RUNS.md section 4): validated and compiled as the bound reader, its main request's
+     * footprint. Empty when compiling it needs data (a {@code top} filter), when the runner cannot say, or when it does not validate (the run reports why).
+     */
+    public java.util.Optional<com.ash.drishti.server.bi.engine.Footprints.Footprint> footprint(Bound b, ModelQuery q) {
+        Runner refuse = (ds, tq, explain) -> {
+            throw new NeedsData();
+        };
+        try {
+            Prepared p = prepare(new Bound(b.view(), refuse, b.context(), b.security(), b.generation(), b.envelope(), b.generationAt()), q, false);
+            return b.runner().footprint(p.compiled().dataset(), p.main());
+        } catch (RuntimeException e) {
+            return java.util.Optional.empty();
+        }
     }
 
     /**

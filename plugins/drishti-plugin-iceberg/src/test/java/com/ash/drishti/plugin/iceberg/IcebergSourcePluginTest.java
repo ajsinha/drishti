@@ -107,6 +107,23 @@ class IcebergSourcePluginTest extends DatedSourceContract {
         assertThat(p.cacheStats()).containsEntry("partitions", 0L);   // no whole day of documents was read
     }
 
+    /** BI runs' planner (BI_RUNS.md 4.1): a date's rows from the manifests' record_count, equal to the rows written; a date without files is 0. */
+    @Test
+    void rowEstimateSumsTheManifestsRecordCounts() throws Exception {
+        SourcePlugin p = plugin();
+        Map<String, java.util.Set<String>> written = new java.util.TreeMap<>();
+        for (Row r : ROWS) {
+            written.computeIfAbsent(r.kind() + "|" + r.date(), k -> new java.util.TreeSet<>()).add(r.id());
+        }
+        written.forEach((k, ids) -> {
+            String[] kd = k.split("\\|");
+            com.ash.drishti.api.RowEstimate e = p.rowEstimate(kd[0], LocalDate.parse(kd[1])).orElseThrow();
+            assertThat(e.basis()).isEqualTo("iceberg-manifests");
+            assertThat(e.rows()).as(k).isEqualTo(ids.size());
+        });
+        assertThat(p.rowEstimate("trade", LocalDate.of(1999, 1, 4)).orElseThrow().rows()).isZero();
+    }
+
     @Test
     void manifestAndLastUpdate() throws Exception {
         SourcePlugin p = plugin();

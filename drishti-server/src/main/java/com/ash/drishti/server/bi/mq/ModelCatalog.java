@@ -23,6 +23,7 @@ import com.ash.drishti.server.bi.DatasetService;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.engine.Layers;
+import com.ash.drishti.server.bi.engine.QueryRequest;
 import com.ash.drishti.server.bi.engine.QueryService;
 import com.ash.drishti.server.bi.layer.Contracts;
 import com.ash.drishti.server.bi.layer.DatasetDef;
@@ -351,9 +352,20 @@ public final class ModelCatalog {
             BiStore.Item item = f.item();
             run = (ds, q, explain) -> ds == v.flat() ? datasets.queryItem(p, item, q, explain) : datasets.queryWith(p, item, ds, salt(v.flat(), ds), q, explain);
         } else {
-            run = (ds, q, explain) -> {                             // connector, Python and model-answer datasets are staged for the query, as the reader
-                DatasetSources staged = DatasetSources.aliases(v).isEmpty() ? null : new DatasetSources(this, p, v, q);
-                return datasets.queryModel(p, v.id(), v.key(), ds, v.hash() + "|" + salt(v.flat(), ds), q, explain, staged);
+            run = new MqService.Runner() {
+                @Override
+                public QueryService.Result run(Dataset ds, QueryRequest q, boolean explain) {   // connector, Python and model-answer datasets are staged, as the reader
+                    DatasetSources staged = DatasetSources.aliases(v).isEmpty() ? null : new DatasetSources(ModelCatalog.this, p, v, q);
+                    return datasets.queryModel(p, v.id(), v.key(), ds, v.hash() + "|" + salt(v.flat(), ds), q, explain, staged);
+                }
+
+                @Override
+                public java.util.Optional<com.ash.drishti.server.bi.engine.Footprints.Footprint> footprint(Dataset ds, QueryRequest q) {
+                    if (!DatasetSources.aliases(v).isEmpty()) {
+                        return java.util.Optional.empty();              // staged tables are other questions' answers: not sized by metadata
+                    }
+                    return java.util.Optional.of(datasets.footprint(p, v.id(), v.key(), ds, v.hash() + "|" + salt(v.flat(), ds), q));
+                }
             };
         }
         java.util.Set<String> hidden = ObjectSecurity.hidden(v, who.roles());
