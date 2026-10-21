@@ -146,3 +146,7 @@ body {
 :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public :is(.btn-ghost, .theme-btn) { border-color: rgba(255, 255, 255, .7); background: transparent; }
 :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public .pub-user-btn:hover { background: rgba(255, 255, 255, .16); }
 :root[data-theme="crimson-dark"] .nav-public .links > a.btn-accent { color: #6e1120; -webkit-text-fill-color: #6e1120; }   /* the dark theme's accent is light pink: too faint on white */
+/* the business date on the coloured bar: a white field with dark figures, like the command line (blue, green and crimson drew it
+   unreadable on the gradient) */
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .asof-date { background: #fff; color: #1b2433; -webkit-text-fill-color: #1b2433; border-color: rgba(255, 255, 255, .85); color-scheme: light; }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .asof-past .asof-date { background: #fff7d6; color: #6b4a00; -webkit-text-fill-color: #6b4a00; border-color: #ffd34d; }
