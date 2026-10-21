@@ -48,6 +48,26 @@ public enum ErrorCode {
     FORM_INVALID("DRS-2060", 422),
     /** The history: section of a pack names a field, shape or limit wrongly. */
     HISTORY_INVALID("DRS-2061", 422),
+    /** UI Board: a board or chip document that cannot be read (not YAML or JSON, or a required key missing or wrong). */
+    UI_DOCUMENT_INVALID("DRS-2070", 400),
+    /** UI Board: the board check (or a chip's publish check) failed; the body lists the problems by rule, path and fix. */
+    UI_CHECK_FAILED("DRS-2071", 422),
+    /** UI Board: no such chip, or no such version of it. */
+    UI_CHIP_NOT_FOUND("DRS-2072", 404),
+    /** UI Board: no such board, or not one the caller may open. */
+    UI_BOARD_NOT_FOUND("DRS-2073", 404),
+    /** UI Board: the caller lacks the power (render an unsaved board, save, author, review, certify). */
+    UI_FORBIDDEN("DRS-2074", 403),
+    /** UI Board: a board over a size limit (bytes, chips, traces, module depth, saved boards). */
+    UI_TOO_LARGE("DRS-2075", 413),
+    /** UI Board: over the render rate limit; Retry-After is set. */
+    UI_RATE_LIMITED("DRS-2076", 429),
+    /** UI Board: a chip's supplier did not answer within the render budget (the board goes on). */
+    UI_SUPPLIER_TIMEOUT("DRS-2077", 504),
+    /** UI Board: a Chip Store lifecycle step out of order (publish without approval, certify a draft, change a published version). */
+    UI_LIFECYCLE_ORDER("DRS-2078", 409),
+    /** UI Board: the render session ended (idle, or the board changed); render again. */
+    UI_RENDER_ENDED("DRS-2079", 410),
     EL_SYNTAX("DRS-2101", 422),
     EL_EVAL("DRS-2102", 422),
     INFERENCE_FAILED("DRS-3001", 500),
