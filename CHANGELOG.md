@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Design: the UI Board (2.7.0).** [UI_BOARD.md](docs/architecture/UI_BOARD.md): chips (pure Sutras with typed pins and their
+  manual inside), boards, pin mappings, traces, the board check, the streaming render API (`DRS-2070` to `DRS-2079` proposed), the
+  Chip Store lifecycle and pinned versions, the Board Designer, the converter with its same-screen, same-data proof, and six build
+  phases. Design only, no code. Linked from IMPLEMENTATION_PLAN.md and the docs index.
 - **Tests: S3 on three simulators, no Docker.** Adobe S3Mock 4.12.4 in the test JVM (a Maven test dependency; Windows QA included)
   runs the content store's S3 contract (`S3MockContentStoreTest`) and the Iceberg native engine's table on S3
   (`NativeOnS3SimulatorTest`); moto 5.2.3 (`moto[server]`, pinned in `drishti-console/requirements-test.txt`) runs Delta on S3 and
