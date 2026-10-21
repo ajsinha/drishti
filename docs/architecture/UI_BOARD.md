@@ -15,7 +15,7 @@
 -->
 # The UI Board: screens as circuit boards of certified chips
 
-Status: **design, release 2.7.0, not built.** Decided by the product owner on 2026-10-21 (the north star of
+Status: **release 2.7.0, being built: P1 (the model and the board check) is built** ([12.1](#121-as-built-p1)); the rest is design. Decided by the product owner on 2026-10-21 (the north star of
 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)). Related: [GENUI.md](GENUI.md) (typed slots on blocks, the composer; its
 fragment catalogue becomes the Chip Store, its composer becomes the 2.9.0 AI author of board documents),
 [CONTENT_STORE.md](CONTENT_STORE.md) (where chips and boards live), [BI_RUNS.md](BI_RUNS.md) section 9 (access profiles,
@@ -428,7 +428,7 @@ A chip downstream of a trace is painted after its upstream chip's out pin has a 
 master and its detail arrive in order. `POST /ui/renders/{renderId}/pins` with `{ "instance": "trades", "pin": "selected",
 "value": "1000015" }` repaints `ticket` and `flows` only, on the same stream.
 
-### 6.3 Errors (proposed codes)
+### 6.3 Errors (in `ErrorCode` since P1)
 
 The range **DRS-2070 to DRS-2079** is free: checked against `ErrorCode.java` (2.6.7: 20xx holds 2001 to 2007, 2060, 2061)
 and against every code the architecture documents propose (GenUI reserves 2048 to 2054). The numbers are confirmed again
@@ -663,7 +663,7 @@ at most in local tests. Each phase ends with its tests green, its docs updated a
 
 | Phase | Builder | Deliverables | Tests |
 |---|---|---|---|
-| **P1. Chips, pins, boards: the model and the check** | A | `drishti-rachana`: the chip document parser (header, manual, pins, body), pin types and the compatibility table (4.2), the board document parser (YAML and JSON to one model), the board check BC-01 to BC-11 and BC-W1 to BC-W5, chip publish checks (purity, out pins driven, manual complete); `drishti.py ui check` | unit tests per rule, good and bad (each rule at least one failing board); the compatibility table as a parameterised test; YAML and JSON of the same board give the same model; the section 2.1 and 3.1 examples pass |
+| **P1. Chips, pins, boards: the model and the check** (built, [12.1](#121-as-built-p1)) | A | `drishti-rachana`: the chip document parser (header, manual, pins, body), pin types and the compatibility table (4.2), the board document parser (YAML and JSON to one model), the board check BC-01 to BC-11 and BC-W1 to BC-W5, chip publish checks (purity, out pins driven, manual complete); `drishti.py ui check` | unit tests per rule, good and bad (each rule at least one failing board); the compatibility table as a parameterised test; YAML and JSON of the same board give the same model; the section 2.1 and 3.1 examples pass |
 | **P2. The Chip Store and saved boards** | B | content-store keys (section 8), the lifecycle (9.1) with powers, versions and `compatible-with` verification (9.3), where-used index, board save, revisions, delete with compare-and-set; the REST API of 6.1 except render; seed chips from panel kinds, BI visual types and pack blocks (9.4) with manuals | store contract tests on the filesystem and SQLite backends; lifecycle order (`DRS-2078`); a reviewer may not approve their own chip; where-used after save and delete; two nodes saving the same board (`DRS-5057`); every seed chip passes its own manual examples |
 | **P3. The render API** | A | `POST /ui/render`, `GET /ui/boards/{id}/render`, pin changes, sessions; layout-first SSE; suppliers through `ViewPipeline.preview` and `QueryService` as the caller; traces at runtime; BI run cards; live frames on the channel; limits and audit (7.3, 7.4) | render as three users (full, masked, row-restricted) and compare masks; trace ordering (detail after master); one failing supplier leaves the others painted; every limit hit gives its code; audit row has no values; access-profile reuse (second viewer `reused`) |
 | **P4. The board viewer and the Board Designer** | B | console: the board viewer (any saved board, phone and desktop, themes), the Designer (palette, canvas, pins, traces, mapping sheet, live data, red problems, YAML/JSON tab, save, history, modules), the chip editor and test bench | Playwright: build the 3.1 board by drag and wire, see red on a bad wire, fix, save, reopen, YAML edit reflected on canvas; phone layout; keyboard-only path; console unit tests for the mapping matcher |
@@ -672,6 +672,47 @@ at most in local tests. Each phase ends with its tests green, its docs updated a
 
 P1 and P2 run in parallel (P2 uses P1's model through an interface agreed on day one); P3 needs P1; P4 needs P2 and P3's
 check and render endpoints (it may start on the check alone); P5 needs P3; P6 last. One drill at the end of 2.7.0.
+
+### 12.1 As built: P1
+
+**Where.** Package `com.ash.drishti.rachana.ui` in `drishti-rachana`, no Spring: `UiDocuments` (the reader: YAML or JSON to
+one model), `ChipDoc`, `ChipManual`, `PinSpec`, `TypeRef`, `PinType`, `ChipRef`, `BoardDoc` (with its `Instance`, `Supply`,
+`Mapping`, `Trace`, `Transform`, `Layout`), `PinCompatibility` (4.2), `BoardCheck` (section 5), `ChipPublishCheck`,
+`UiProblem` (rule, level, path, message, fix), `ChipState` (9.1), and the two seams P2 and P3 fill: `ChipCatalog` (find
+`name@version` with its state and any newer compatible version) and `SupplierCatalog` (a supplier's fields, types and masks
+as the author sees them). The codes of 6.3 are in `ErrorCode` as `UI_DOCUMENT_INVALID` (2070), `UI_CHECK_FAILED`,
+`UI_CHIP_NOT_FOUND`, `UI_BOARD_NOT_FOUND`, `UI_FORBIDDEN`, `UI_TOO_LARGE`, `UI_RATE_LIMITED`, `UI_SUPPLIER_TIMEOUT`,
+`UI_LIFECYCLE_ORDER`, `UI_RENDER_ENDED` (2079). `drishti.py ui check` runs `UiCli` in the exec jar (`java -jar … ui check`),
+without a server ([CLI_GUIDE.md](../guides/CLI_GUIDE.md#ui-check-the-ui-board-check-270)).
+
+**Corrections and precisions the code forced:**
+
+* **Publish rules got names:** `CP-01` manual complete (every key, a line per pin, at least one example), `CP-02` pure (no
+  `source`, `connector`, `model`, `dataset`, `live`, `url`, `fetch`, `sql` key; a `bind:` starts with `@` or `%{`; every
+  `%{x}` and `@x` names an in pin), `CP-03` every out pin driven and every `emits:` / `exposes:` declared, `CP-04`
+  deterministic (no `now(`, `today(`, `random(`, `%{viewer}`, `@user`), `CP-05` every manual example passes the board check.
+* **Built-in names in a body:** `%{title}` is the instance's frame title (2.1 uses `%{title|Rows}`, and `title` is no pin);
+  `@name`, `@value`, `@filtered`, `@row`, `@index`, `@count`, `@total` and `@.column` (the current row) are not pins.
+* **`of:` has two meanings, told apart by a slash:** `of: trading/trade` is a kind; on an out pin `of: rows.id` (no slash)
+  names the column whose supplier kind the id carries (resolved through the instance's map and the supplier's field kind).
+* **A `document` pin may carry a `shape:`** (3.1 maps `doc.id`, `doc.title`, `doc.fields` onto `entity-card`).
+* **What a supply feeds:** every data in pin of the instance that no trace feeds. A map key is `<pin>.<column>`, or `<pin>`
+  alone (a scalar pin, or `rows: <path>` reading a document's array). A required shape column left unmapped is `BC-03`.
+* **Two sources:** a trace plus a map entry, or a trace plus a `controls` constant, on one pin is `BC-06`, as two traces are.
+  A `%{board.params.x}` in a supply query must name a declared parameter (`BC-06`).
+* **`BC-01` also refuses unknown keys** at every level (a typo is a problem, not silently ignored).
+* **`BC-07`:** a cycle is an error when any of its traces ends at a data pin, or when none of them carries a `selection`.
+* **`BC-W3` is per instance:** no out pin of it drives anything *and* an optional in pin is empty with no default.
+* **A plain `number` feeding a `measure` with a `ccy`** (4.2: "warning if the pin wants a ccy") is reported as `BC-W1`, the
+  warning for a refinement that cannot be checked.
+* **Constants:** a `date` constant is `yyyy-mm-dd` or an AsOf word (`today`, `T-1`, `EOM`); a `rowset` or `document` is never a
+  constant.
+* **Suppliers need a catalogue:** the attribute half of `BC-05`, `BC-08`, `BC-W5` and an out pin's kind via `of:` run only when
+  a `SupplierCatalog` is given (P3: the packs and models as the caller; the command line: `--suppliers FILE`). Without one they
+  are skipped, never guessed.
+* **Manual examples are fragments:** `rachana`, `board` and `layout` may be left out; `BC-11` and `BC-W3` do not apply.
+* **The examples:** 2.1 passes unchanged. 3.1 passes unchanged; it needs `entity-card@1` and `cashflow-ladder@1`, written as test
+  chips until P2's seed chips replace them. With the test supplier file its one finding is `BC-W5` (`MTM_USD` masked).
 
 ## 13. Later releases
 

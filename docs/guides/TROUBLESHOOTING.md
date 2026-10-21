@@ -1364,6 +1364,16 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 | `DRS-2048` | a shared panel block cannot be used: `use:` names no block or version, `with:` names a parameter the block does not declare, a block uses another block, or a block file is misnamed ([Shared panel blocks](RACHANA_REFERENCE.md#shared-panel-blocks-use)) |
 | `DRS-2060` | A search form (the `form:` section of a pack, or a design's Form tab) is not valid YAML or names a field path, type or operator wrongly; the message says which field and what is allowed |
 | `DRS-2061` | A pack's `history:` block is wrong (an unknown shape, more than 4 chart fields, a `headline` not among `chart`, a `max-days` above `drishti.history.max-days`, a column with both `path` and `expr`); the message names the key. The kind keeps the default history meanwhile. Fix it and run `sutra lint <pack-dir>` |
+| `DRS-2070` | A board or chip document cannot be read (not YAML or JSON, a required key missing, an unknown key or pin type, a badly formed name); every problem is listed with its path. Fix them and run `drishti.py ui check <file>` |
+| `DRS-2071` | The board check or a chip's publish check found errors (an unconnected required pin, an incompatible wire, a broken trace, a cycle, a bad layout, a draft chip on a shared board); each problem names its rule, path and fix. `drishti.py ui check <file>` lists the same |
+| `DRS-2072` | A board names a chip or version the Chip Store does not have; `use:` always names `<chip>@<version>` |
+| `DRS-2073` | A saved board that does not exist, or one you may not open |
+| `DRS-2074` | You lack the power for this UI Board action (render an unsaved board, save, author, review or certify a chip); ask an administrator for the role |
+| `DRS-2075` | A board is over a size limit (bytes, chips, traces, module depth, saved boards); split it or group chips into a module |
+| `DRS-2076` | Too many board renders; wait for `Retry-After` |
+| `DRS-2077` | One chip's supplier was too slow for the render budget; the other chips are painted. Retry, or ask for a BI run |
+| `DRS-2078` | A Chip Store step out of order (publish before approval, certify a draft, change a published version); follow draft, review, approve, publish, certify |
+| `DRS-2079` | The board's render session ended (idle 10 minutes, or the board changed); open or render the board again |
 | `DRS-2101` / `DRS-2102` | expression syntax (or past the size limits) / evaluation error |
 | `DRS-3001` | reserved; nothing raises it in this release |
 | `DRS-4001` | command not understood |

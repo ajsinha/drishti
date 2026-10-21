@@ -44,7 +44,7 @@ import java.util.Set;
  * Reads chip and board documents (UI_BOARD.md sections 2 and 3) from YAML or JSON into one model: the same document in
  * either syntax gives equal {@link ChipDoc} and {@link BoardDoc} values. Every problem is collected with its path (rule
  * {@code BC-01}), so a person sees them all at once; {@link #readBoard} and {@link #readChip} throw
- * {@link UiDocumentException} ({@code DRS-2070}) when there is any.
+ * {@link UiDocumentException} ({@link com.ash.drishti.common.ErrorCode#UI_DOCUMENT_INVALID}) when there is any.
  */
 public final class UiDocuments {
 
@@ -121,12 +121,12 @@ public final class UiDocuments {
         }
     }
 
-    /** Reads a board. @throws UiDocumentException ({@code DRS-2070}) with every problem */
+    /** Reads a board. @throws UiDocumentException ({@link com.ash.drishti.common.ErrorCode#UI_DOCUMENT_INVALID}) with every problem */
     public static BoardDoc readBoard(String text) {
         return orThrow(parseBoard(text), "the board document cannot be read");
     }
 
-    /** Reads a chip. @throws UiDocumentException ({@code DRS-2070}) with every problem */
+    /** Reads a chip. @throws UiDocumentException ({@link com.ash.drishti.common.ErrorCode#UI_DOCUMENT_INVALID}) with every problem */
     public static ChipDoc readChip(String text) {
         return orThrow(parseChip(text), "the chip document cannot be read");
     }

@@ -104,6 +104,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `connector` | `connector list`, `connector get`, `connector apply`, `connector delete`, `connector test`, `connector plugins`, `connector enable`, `connector disable`, `connector reset`, `connector history` | [5.5](#55-connector) |
 | `net` | `net list`, `net check`, `net add-peer`, `net set`, `net members` | [5.9](#59-net) |
 | `design` | `design list`, `design create`, `design get`, `design save`, `design check`, `design propose`, `design approve`, `design reject`, `design proposals`, `design export`, `design import`, `design bind`, `design autodesign`, `design delete` | [5.6](#56-design) |
+| `ui` | `ui check`: the UI Board check of a board or chip document (2.7.0, no server needed) | [CLI_GUIDE.md](CLI_GUIDE.md#ui-check-the-ui-board-check-270) |
 | `docs` | `docs shots` | [9](#9-developer-tools) |
 | `doctor` | `drishti.py doctor` | [5.4](#54-server-and-doctor) |
 | `bi` | `bi workspace`, `bi catalogue`, `bi expr`, `bi migrate`, `bi sql`, `bi model`, `bi mq`, `bi item`, `bi dataset`, `bi transform`, `bi statement` | [5.7](#57-bi) |

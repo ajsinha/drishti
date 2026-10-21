@@ -19,7 +19,7 @@ import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import java.util.List;
 
-/** A chip or board document that cannot be read ({@code DRS-2070}): not YAML or JSON, or a required key missing or wrong. */
+/** A chip or board document that cannot be read ({@link com.ash.drishti.common.ErrorCode#UI_DOCUMENT_INVALID}): not YAML or JSON, or a required key missing or wrong. */
 public final class UiDocumentException extends DrishtiException {
 
     private final transient List<UiProblem> problems;

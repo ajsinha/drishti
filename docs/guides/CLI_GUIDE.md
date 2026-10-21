@@ -32,6 +32,7 @@ and how to run it all from PyCharm.
   - [`history`: an entity over time](#history-an-entity-over-time)
   - [`connector`: list, get, apply, delete, test, plugins, enable, disable, reset, history](#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history)
 - [8. `design`: the Screen Designer over REST](#8-design-the-screen-designer-over-rest)
+  - [`ui check`: the UI Board check (2.7.0)](#ui-check-the-ui-board-check-270)
 - [9. `docs`: screenshots](#9-docs-screenshots)
 - [10. Recipes](#10-recipes)
 - [11. JSON output formats](#11-json-output-formats)
@@ -2638,6 +2639,55 @@ server connection:
                         (default: DRISHTI_USER)
   --timeout TIMEOUT     seconds to wait for the server (default 60)
 ```
+
+### `ui check`: the UI Board check (2.7.0)
+
+A UI Board is a screen built of certified chips wired by traces ([UI_BOARD.md](../architecture/UI_BOARD.md)). `ui check`
+runs the **board check** on a board document (rules `BC-01` to `BC-11`, warnings `BC-W1` to `BC-W5`, UI_BOARD.md section 5)
+or, for a chip document (it has `chip:`), the **publish checks** (`CP-01` manual complete, `CP-02` the body reads only its
+pins, `CP-03` every out pin driven, `CP-04` deterministic, `CP-05` every manual example passes the board check). It needs no
+server: it runs the exec jar (`java -jar drishti-server-*-exec.jar ui check …`) and reads YAML or JSON, which give the same
+model.
+
+```bash
+drishti.py ui check FILE... [--chips DIR]... [--suppliers FILE] [--shared] [--certified-only] [--json] [--jar JAR] [--java JAVA]
+```
+
+| Option | Meaning |
+|---|---|
+| `FILE...` | board or chip documents, YAML or JSON |
+| `--chips DIR` | a folder of `*.chip.yaml` / `*.chip.json`, read as published chips (repeatable); `config/ui/chips` (the seed chips, certified) is read too when it exists |
+| `--suppliers FILE` | the suppliers as you see them: `suppliers: { "connector:trading/trade-search": { fields: { TRADE_ID: { type: id, of: trading/trade }, TRADE_DATE: date }, masked: [MTM_USD] } }`; without it the supplier rules (an attribute exists, `BC-08`, `BC-W5`) are skipped |
+| `--shared` | check as a board shared in a workspace (`BC-11`: published chips only) |
+| `--certified-only` | with `--shared`: the workspace accepts certified chips only |
+| `--json` | `{ ok, files: [ { file, document, name, ok, errors, warnings, problems: [ { rule, level, path, message, fix } ] } ] }` |
+
+Exit `0` no errors (warnings allowed), `1` errors, `2` usage (no file, an unknown option, a file that cannot be read).
+
+The board of UI_BOARD.md section 3.1, its chips in `chips/`, the suppliers in `suppliers.yaml` (real output):
+
+```
+$ drishti.py ui check book-trades.board.yaml --chips chips --suppliers suppliers.yaml
+book-trades.board.yaml: board book-trades: 0 error(s), 1 warning(s)
+  BC-W5 warning chips.trades.map.rows.measures: MTM_USD is masked for you; viewers like you will see •••
+```
+
+The same board with a trace to a pin that does not exist and a page size out of range:
+
+```
+$ drishti.py ui check broken.yaml --chips chips
+broken.yaml: board book-trades: 3 error(s), 0 warning(s)
+  BC-06 error traces[0].to: entity-card@1 has no in pin 'ids'
+      fix: in pins: [id, doc]
+  BC-04 error chips.trades.controls.page-size: the constant 500 is outside 10 to 200
+      fix: give a number value the pin takes
+  BC-03 error chips.ticket.id: required control pin 'id' (id) is not connected
+      fix: set controls.id, or draw a trace to ticket.id
+```
+
+Each problem names its rule, its path in the document (`chips.<instance>.map.<pin>.<column>`, `traces[<n>].to`,
+`layout.desktop.areas[<n>]`) and a fix where one is obvious. The server answers the same problems on save and render
+(`422 DRS-2071`; a document that cannot be read is `400 DRS-2070`, [API_GUIDE.md](API_GUIDE.md)).
 
 ## 9. `docs`: screenshots
 
