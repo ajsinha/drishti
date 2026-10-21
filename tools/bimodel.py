@@ -56,6 +56,7 @@ def register(bi, srv, ctx) -> None:
     q.add_argument("file", nargs="?", help="a YAML or JSON model query")
     q.add_argument("--async", dest="as_run", action="store_true", help="ask it as a run (BI_RUNS.md): the answer if done within --wait, else the run's id")
     q.add_argument("--wait", default="2s", help="with --async: how long to wait inline (default 2s; 0 returns the run at once)")
+    q.add_argument("--yes", action="store_true", help="with --async: accept the confirmation of a large run in advance (DRS-9082)")
     q.add_argument("--model", help="the model (name@major) or dataset:<name>")
     q.add_argument("--select", default="", help="fields, comma-separated")
     q.add_argument("--measures", default="", help="measures, comma-separated")

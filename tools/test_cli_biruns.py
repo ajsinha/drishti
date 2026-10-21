@@ -219,6 +219,12 @@ class BiRuns(unittest.TestCase):
         self.assertEqual(0, code)
         self.assertEqual("respond-async, wait=2", Recording.prefer[-1])
         self.assertEqual("SELECT 1", self.sent()["sql"])
+        self.assertNotIn("confirm", self.sent())
+        code, out, _ = self.go("bi", "mq", str(f), "--async", "--yes")            # the hint of a DRS-9082 refusal ("add --yes") works here too (BIR-05)
+        self.assertEqual(0, code)
+        self.assertIs(True, self.sent()["confirm"])
+        code, out, _ = self.go("bi", "sql", "SELECT 1", "--model", "trading", "--async", "--yes")
+        self.assertIs(True, self.sent()["confirm"])
 
     def test_bi_mq_without_async_is_synchronous_as_before(self):
         FakeServer.routes[("POST", "/api/v1/bi/mq")] = (200, {"columns": [{"name": "desk"}], "rows": [["FX"]], "meta": {}})

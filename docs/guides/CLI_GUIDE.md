@@ -2367,7 +2367,7 @@ fail  Close to 100 trades: expected 100 ± 1%, found 750
 ### `bi runs`, `bi mq --async`, `bi sql --async`: BI runs (2.6.7)
 
 `drishti.py bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|promote|keep|schedule|schedules|storage` does what the BI
-Runs tab does, as the token's user; `bi mq` and `bi sql` take `--async [--wait 2s]`. Examples, exit codes and output: [BI_RUNS_GUIDE.md](BI_RUNS_GUIDE.md#on-the-command-line)
+Runs tab does, as the token's user; `bi mq` and `bi sql` take `--async [--wait 2s] [--yes]`. Examples, exit codes and output: [BI_RUNS_GUIDE.md](BI_RUNS_GUIDE.md#on-the-command-line)
 and [TOOLS.md section 5.7](TOOLS.md#57-bi).
 
 ### `bi statement`

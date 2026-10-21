@@ -847,7 +847,7 @@ Transform's inputs as you see them, masked columns and a profile of each column,
 `bi:write` scope.
 
 **BI runs (2.6.7, `tools/biruns.py`)**: `bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|promote|keep|schedule|schedules|storage`,
-and `--async [--wait 2s]` on `bi mq` and `bi sql`, which send `Prefer: respond-async` and print the run's id when the answer is a `202`.
+and `--async [--wait 2s] [--yes]` on `bi mq` and `bi sql`, which send `Prefer: respond-async` and print the run's id when the answer is a `202`.
 `bi runs wait` exits 0 done, 3 failed, 4 cancelled and 5 when its `--timeout` passes with the run still going; `bi runs submit` without
 `--yes` exits 2 on a large question and prints its estimate; `bi runs storage` is the bi-admin's view of the result store and the queue.
 The guide with output: [BI_RUNS_GUIDE.md](BI_RUNS_GUIDE.md#on-the-command-line).
