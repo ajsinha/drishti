@@ -265,7 +265,8 @@ class RunServiceTest {
         assertThat(failed.reason()).contains("2 times");
         Run notReplayable = records.get(queuedOther.id()).orElseThrow();
         assertThat(notReplayable.state()).isEqualTo(RunState.FAILED);
-        assertThat(notReplayable.reason()).contains("re-run it");
+        assertThat(notReplayable.reason()).endsWith("it could not be started again").doesNotContain("re-run");   // a plain reason: the console adds the fix (BIR-13)
+        assertThat(failed.reason()).doesNotContain("narrow it");
         assertThat(records.inStates(List.of(RunState.RUNNING, RunState.QUEUED, RunState.STORING), 10)).isEmpty();
         assertThat(told).anyMatch(s -> s.startsWith("viewer: Your run")).anyMatch(s -> s.startsWith("bob: Run failed"));
     }

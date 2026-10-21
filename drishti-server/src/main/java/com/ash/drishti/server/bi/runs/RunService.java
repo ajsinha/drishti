@@ -957,7 +957,7 @@ public final class RunService {
             boolean wasRunning = r.state() == RunState.RUNNING || r.state() == RunState.STORING;
             resume(r, wasRunning, false, "started again after the server restarted at " + at + " UTC (attempt " + (r.attempt() + 1) + " of "
                     + props.restart().maxAttempts() + ")", "the server restarted at " + at + " UTC while this run " + (wasRunning ? "ran" : "waited")
-                    + ", and it could not be started again: re-run it", "Your run %s was started again after a server restart", "the server restarted");
+                    + ", and it could not be started again", "Your run %s was started again after a server restart", "the server restarted");
         }
         if (n > 0) {
             LOG.info("BI runs: {} unfinished run(s) of node {} recovered after the start", n, node);
@@ -997,7 +997,7 @@ public final class RunService {
             return;
         }
         String why = before >= props.restart().maxAttempts() && (wasRunning || adopted)
-                ? "the server stopped while this ran, " + r.attempt() + " times; it may be too large for this server: narrow it or ask an administrator"
+                ? "the server stopped while this ran, " + r.attempt() + " times; it may be too large for this server"
                 : failedWhy;
         Run failed = r.moveTo(RunState.FAILED, ErrorCode.RUN_INTERRUPTED.code(), why, clock.instant());
         records.save(failed);
@@ -1107,7 +1107,7 @@ public final class RunService {
             n++;
             LOG.info("BI runs: run {} of node {} adopted by {} (attempt {})", r.id(), r.node(), node, adopted.attempt());
             resume(adopted, false, true, why, r.node() + " stopped while this run " + (r.state() == RunState.QUEUED ? "waited" : "ran")
-                    + ", and it could not be started again here: re-run it", "Your run %s was " + why, r.node() + " stopped");
+                    + ", and it could not be started again here", "Your run %s was " + why, r.node() + " stopped");
         }
         return n;
     }
