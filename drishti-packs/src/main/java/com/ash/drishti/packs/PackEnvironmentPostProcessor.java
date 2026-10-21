@@ -72,6 +72,21 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         java.util.Map<String, String> problems = new java.util.LinkedHashMap<>();
         java.util.Map<String, ConnectorFiles.Definition> defs = new java.util.LinkedHashMap<>(files.readAll(problems));
         suppressed.forEach(defs::remove);
+        // an enabled placeholder that resolves to neither true nor false refuses the file, as a hot reload does (QA4-04)
+        for (var it = defs.entrySet().iterator(); it.hasNext();) {
+            var e = it.next();
+            String raw = e.getValue().enabled();
+            if (raw.contains("${")) {
+                String v = env.resolvePlaceholders(raw);
+                if (!v.contains("${")) {                                 // a variable not set is the server's own refusal
+                    var refused = e.getValue().enabledRefusal(v);
+                    if (refused.isPresent()) {
+                        problems.put(e.getKey(), refused.get());
+                        it.remove();
+                    }
+                }
+            }
+        }
         java.util.Map<String, Object> fileProps = new java.util.LinkedHashMap<>(ConnectorFiles.properties(defs));
         int si = 0;
         for (String n : suppressed) {

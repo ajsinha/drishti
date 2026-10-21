@@ -34,6 +34,7 @@ import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -99,6 +100,19 @@ public final class ConnectorFiles {
         /** True unless the file says {@code enabled: false} (a placeholder counts as on: it is resolved by the server). */
         public boolean isEnabled() {
             return !"false".equalsIgnoreCase(enabled.trim());
+        }
+
+        /**
+         * Why {@code enabled}, with its placeholder resolved to {@code resolved}, is refused: anything but true or false in any case, said
+         * as a literal value is (QA4-04: {@code ${VAR:nope}} switched the connector off without a word). Empty when it is a switch.
+         */
+        public Optional<String> enabledRefusal(String resolved) {
+            String v = resolved == null ? "" : resolved.trim();
+            if (v.equalsIgnoreCase("true") || v.equalsIgnoreCase("false")) {
+                return Optional.empty();
+            }
+            return Optional.of(name + ".yaml: 'enabled' is true or false (or a \"${VARIABLE:true}\" placeholder), not '" + v + "'"
+                    + (enabled.contains("${") ? " (" + enabled.trim() + " resolves to it)" : ""));
         }
     }
 

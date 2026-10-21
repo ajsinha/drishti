@@ -112,7 +112,10 @@ settings:                         # the plugin's settings; nesting is flattened 
   else is an error that names the key.
 - `enabled` is `true` or `false`, quoted or not (`enabled: "false"` switches the connector off, as `${VAR:false}` resolves to the
   same text), or a `${ENV_VAR:default}` placeholder. Anything else (`maybe`, `"off"`) refuses the file with `'enabled' is true or false
-  (or a "${VARIABLE:true}" placeholder), not 'maybe'`.
+  (or a "${VARIABLE:true}" placeholder), not 'maybe'`. A placeholder is held to the same rule once resolved, at start and on a hot
+  reload: `${VAR:nope}` refuses the file with `… not 'nope' (${VAR:nope} resolves to it)` (the last good configuration keeps running)
+  rather than switching the connector off. Admin → Connectors and `GET /api/v1/admin/connectors` list `enabled` as it resolves, so
+  `"${DRISHTI_LAKE_ENABLED:true}"` with `DRISHTI_LAKE_ENABLED=false` reads `enabled: false` beside `DISABLED`.
 - A `name:` inside the file must equal the file name. A file `a.yaml` that says `name: b` is an error: rename the file or remove the
   line. The file name always wins as the identity.
 - `${ENV_VAR}` and `${ENV_VAR:default}` placeholders are resolved when the connector starts, exactly as everywhere else in Drishti's

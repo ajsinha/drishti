@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **Fixed (QA4-04): a connector file's `enabled` placeholder is listed as it resolves, and one that resolves to neither true nor false
+  is refused.** `"${DRISHTI_LAKE_ENABLED:true}"` with the variable `false` read `enabled: true` beside `DISABLED` (the list used the
+  file's text); `"${VAR:nope}"` switched the connector off silently while a literal `"nope"` was refused. Now the list, the form's
+  checks and the disable confirmation use the resolved value, and `${VAR:nope}` is refused with the literal's message (`… not 'nope'
+  (${VAR:nope} resolves to it)`) on a hot reload and at start. CONNECTOR_FILES.md. ConnectorManagerTest, ConnectorFilesTest.
 - **Fixed (QA4-02): a map panel on a node that reads its kind only from a peer is drawn.** Its listing asked this node's sources only,
   so the map was empty and said *no economy entity matches ECON-{iso3}* though the entities exist. The listing now asks the peers a
   search of the kind asks (`GET /api/v1/net/list/{kind}`, for the caller, one hop), merged with this node's; the documents come through
