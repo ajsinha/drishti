@@ -709,3 +709,17 @@ check and render endpoints (it may start on the check alone); P5 needs P3; P6 la
     right behaviour, or should such a column be refused as a trace source?
 11. **Release numbering:** the implementation plan's release table still lists 2.7.0 as write-back in places; confirm the
     order UI Board 2.7.0, write-back 2.8.0, AI 2.9.0, and that GENUI.md is folded into 2.9.0.
+
+### 14.1 Decisions (product owner, 2026-10-21: "Go ahead" on the suggested answers)
+
+1. Personal boards are private by default and shareable by link to named people (and copyable to a workspace).
+2. Shared workspaces accept published chips by default; certified-only is a per-workspace option.
+3. Boards follow compatible chip upgrades automatically when the board check passes; a breaking version needs a click.
+4. The existing reviewer and certifier roles review and certify chips; no new role.
+5. The converter's board-local chips are listed to designers as Chip Store candidates.
+6. The proof bar to switch a pack is same data plus structure; no pixel comparison.
+7. Old pages are kept until 3.0, with a per-pack switch back.
+8. Embed tokens render saved boards only in 2.7.0; unsaved boards come with 2.9.0.
+9. Default limits: 40 chips, 120 traces, 64 KB, 30 dynamic renders a minute per person; all configurable.
+10. A masked id as a trace source passes an opaque token resolved only for the same person.
+11. Release order: UI Board 2.7.0, write-back 2.8.0, AI 2.9.0 with GENUI.md folded in.
