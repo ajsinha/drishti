@@ -19,6 +19,8 @@ with the signed-in user's identity; the server decides what that person may see 
 nothing about access except what to show (the BI menu needs the ``bi`` power)."""
 from __future__ import annotations
 
+import json
+import re
 from urllib.parse import quote
 
 from fastapi import APIRouter, Request
@@ -31,7 +33,7 @@ from routes.common import ident, render
 router = APIRouter(include_in_schema=False)
 
 # the server paths the page script may reach: nothing else is passed on
-_ALLOWED = ("me", "home", "catalogue", "settings", "workspaces", "items", "datasets", "model", "engine", "reports", "bundle", "boards", "python", "ai", "imports", "mq", "models", "pack-datasets", "expr", "sql", "layer-datasets", "lineage", "themes")
+_ALLOWED = ("me", "home", "catalogue", "settings", "workspaces", "items", "datasets", "model", "engine", "reports", "bundle", "boards", "python", "ai", "imports", "mq", "models", "pack-datasets", "expr", "sql", "layer-datasets", "lineage", "themes", "runs")
 _NO_BODY = {"GET", "DELETE"}
 # A query (a visual's, a model query, SQL) may run on the server up to drishti.bi.query.timeout (30 s): the console waits that long and a little
 # more, not its usual 5 s, so a query a loaded server answers in 6 s is drawn, not refused with DRS-1004 while the server still works on it.
@@ -46,12 +48,31 @@ def _query_wait(head: str, path: str) -> dict:
     return {"wait": QUERY_WAIT_SECONDS} if path.endswith("/query") or head in ("mq", "sql") else {}
 
 
-_KEPT = ("mq", "problems", "path", "fix", "at")    # what a refusal carries for the page: the model query a 410 names, the problems with their fixes
+# what a refusal carries for the page: the model query a 410 names, the problems with their fixes; and for BI runs (BI_RUNS.md section 6) the estimate and the
+# token of a run that asks to be confirmed (409 DRS-9082), the estimate of a selection that needs a background run (409 DRS-9089), the run itself
+_KEPT = ("mq", "problems", "path", "fix", "at", "estimate", "confirmToken", "run", "runId", "tier", "reuse")
 
 
 def _problem(e: BackendError) -> JSONResponse:
     extra = {k: e.extra[k] for k in _KEPT if isinstance(e.extra, dict) and k in e.extra}
-    return JSONResponse({"code": e.code, "detail": e.detail, **extra}, status_code=e.status)
+    headers = {"Retry-After": str(e.retry_after)} if getattr(e, "retry_after", None) else None      # DRS-9081: a full run queue says when to try again
+    return JSONResponse({"code": e.code, "detail": e.detail, **extra}, status_code=e.status, headers=headers)
+
+
+# BI runs (BI_RUNS.md section 6.1): the page asks with ``Prefer: respond-async, wait=<seconds>``; the console passes it on and waits that long and 5 s more
+# (never the 35 s of a synchronous query), so a 202 with the run reaches the page as soon as the server stops waiting inline.
+MAX_INLINE_WAIT = 10.0
+_WAIT = re.compile(r"wait\s*=\s*([0-9]+(?:\.[0-9]+)?)", re.I)
+
+
+def async_prefer(request: Request) -> tuple[str, float] | None:
+    """``(the Prefer header to pass on, the console's wait)`` when the page asked for an asynchronous answer, else None."""
+    prefer = request.headers.get("prefer") or ""
+    if "respond-async" not in prefer.lower():
+        return None
+    m = _WAIT.search(prefer)
+    wait = min(MAX_INLINE_WAIT, float(m.group(1))) if m else 2.0
+    return f"respond-async, wait={wait:g}", wait + 5.0
 
 
 def _page(request: Request, template: str, page: str, **context):
@@ -205,6 +226,78 @@ async def settings_page(request: Request):
     return render(request, "bi/settings.html", screen="admin", bi_files=files)
 
 
+@router.get("/bi/api/runs/events")
+async def run_events(request: Request):
+    """The person's runs as they change (BI_RUNS.md section 3.5): the server's SSE ``GET /api/v1/bi/runs/events`` relayed, ``hello`` then ``run`` events and
+    the ``status`` heartbeat. The Runs tab, a run card and the rail's count listen to it; one stream per browser tab."""
+    from fastapi.responses import StreamingResponse
+    backend, me = request.app.state.backend, ident(request)
+
+    async def events():
+        try:
+            async for event, data in backend.sse("/bi/runs/events", me):
+                if await request.is_disconnected():
+                    break
+                yield f"event: {event}\ndata: {data}\n\n"
+        except BackendError as e:
+            yield f"event: gone\ndata: {json.dumps({'code': e.code, 'detail': e.detail})}\n\n"
+
+    return StreamingResponse(events(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+@router.post("/bi/api/runs/{run_id}/export")
+async def run_export(request: Request, run_id: str):
+    """A run's result as a file (CSV, Excel, Parquet, PDF), made by the server from the stored result: the bytes and their name passed through unchanged."""
+    body = await json_body(request)
+    try:
+        content, headers = await request.app.state.backend.bi_file("POST", f"/runs/{quote(run_id, safe='')}/export", ident(request), body, wait=QUERY_WAIT_SECONDS)
+    except BackendError as e:
+        return _problem(e)
+    kept = {k: v for k, v in headers.items() if k.lower() == "content-disposition"}
+    kept["Cache-Control"] = "no-store"
+    return Response(content, media_type=headers.get("content-type", "application/octet-stream"), headers=kept)
+
+
+@router.get("/bi/run/{run_id}")
+async def open_run(request: Request, run_id: str):
+    """Where a run opens (the inbox's notice, Open in the Runs tab): a report's run on its report with ``?run=<id>`` (the visual drawn from the stored result), any
+    other in the Runs tab with its drawer open. A run the person may not see opens the Runs tab, which says so."""
+    me = getattr(request.state, "bi_me", None) or {}
+    if not me.get("enabled"):
+        return render(request, "bi/denied.html", status_code=403, screen="bi", bi_page="workspace")
+    fallback = "/bi/w/me?tab=runs&run=" + quote(run_id, safe="")
+    try:
+        run = await request.app.state.backend.bi("GET", "/runs/" + quote(run_id, safe=""), ident(request))
+    except BackendError:
+        return RedirectResponse(fallback, status_code=303)
+    href = str(((run or {}).get("source") or {}).get("href") or "")
+    ok = href.startswith("/bi/") and not href.startswith("//")             # a console path the server made, never a full URL
+    return RedirectResponse(href if ok else fallback, status_code=303)
+
+
+@router.get("/admin/bi/runs")
+async def runs_admin(request: Request):
+    """Admin → BI → Runs (BI_RUNS.md section 17.2): the gate now, what runs and waits, the result store, how honest the estimates are, how often the inline wait
+    was enough. Drawn by ``bi-runs-admin.js`` from ``GET /api/v1/bi/admin/runs``; bi-admin only. State, sizes and nodes, never a value."""
+    me = getattr(request.state, "bi_me", None) or {}
+    if "bi-admin" not in (me.get("powers") or []):
+        return render(request, "admin/forbidden.html", status_code=403)
+    return render(request, "bi/runs_admin.html", screen="admin")
+
+
+@router.get("/bi/api/admin/runs")
+@router.post("/bi/api/admin/runs/{run_id}/cancel")
+async def runs_admin_api(request: Request, run_id: str = ""):
+    """The two administrator calls of Admin → BI → Runs, passed on as the signed-in user (the server checks bi-admin)."""
+    params = {k: v for k, v in request.query_params.items() if k in ("node", "state", "user")}
+    path = "/admin/runs" + (f"/{quote(run_id, safe='')}/cancel" if run_id else "")
+    try:
+        answer = await request.app.state.backend.bi(request.method, path, ident(request), {} if run_id else None, **params)
+    except BackendError as e:
+        return _problem(e)
+    return JSONResponse(answer, status_code=202 if run_id else 200, headers={"Cache-Control": "no-store"})
+
+
 @router.api_route("/bi/api/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def proxy(request: Request, path: str):
     """One call of the page script, passed on to the server under the caller's identity (the server enforces everything)."""
@@ -226,6 +319,13 @@ async def proxy(request: Request, path: str):
         kept = {k: v for k, v in headers.items() if k.lower() in ("x-bi-rows", "x-bi-masked", "x-bi-live")}
         kept["Cache-Control"] = "no-store"
         return Response(content, media_type="application/vnd.apache.arrow.stream", headers=kept)
+    asked = async_prefer(request) if request.method == "POST" else None
+    if asked is not None:                                    # a question asked as a run: 200 the answer in time, 202 the run (BI_RUNS.md section 6)
+        try:
+            status, answer = await request.app.state.backend.bi_async("POST", "/" + path, ident(request), body, asked[0], wait=asked[1], **params)
+        except BackendError as e:
+            return _problem(e)
+        return Response(status_code=204) if answer is None else JSONResponse(answer, status_code=status, headers={"Cache-Control": "no-store"})
     try:
         answer = await request.app.state.backend.bi(request.method, "/" + path, ident(request), body, **_query_wait(head, path), **params)
     except BackendError as e:

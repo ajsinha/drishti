@@ -123,6 +123,12 @@ moved:
   workspaces: user-guide#workspaces
   layout-mode: user-guide#layout-mode-arrange-a-view-your-way
   pivot-tab: user-guide#the-pivot-tab-slice-a-table-your-way
+  bi-runs: docs-guides-bi-runs-guide                                       # BI runs, the guide (docs/guides/BI_RUNS_GUIDE.md, 2.6.7)
+  runs-tab: docs-guides-bi-runs-guide#the-runs-tab                                           # the Runs tab of a BI workspace (2.6.7)
+  run-card: docs-guides-bi-runs-guide#the-run-card                                           # a visual's run card (2.6.7)
+  run-confirm: docs-guides-bi-runs-guide#confirming-a-large-run                              # the confirm card of a large run (2.6.7)
+  run-needed: docs-guides-bi-runs-guide#a-selection-that-needs-a-run                         # a selection that needs a background run, DRS-9089 (2.6.7)
+  snapshot-dataset: docs-guides-bi-runs-guide#promote-a-run                                  # a run promoted to a dataset snapshot (2.6.7)
   table-chart: user-guide#chart-any-table                                 # the chart dialog's ? (Chart any table, 2.6.7)
   using-the-terminal: user-guide
   bi-tutorial: docs-tutorials-10-first-bi-report

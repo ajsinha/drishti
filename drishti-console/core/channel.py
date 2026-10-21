@@ -101,6 +101,8 @@ class ChannelSession:
             return self.backend.sse(f"/bi/reports/{quote(sub[7:], safe='')}/live", self.me, opened=responses), False
         if sub.startswith("mq:") and len(sub) > 3:              # wave B: a standing query's pushed answers (answer) and its state (status)
             return self.backend.sse(f"/bi/mq/stream?ids={quote(sub[3:], safe='')}", self.me, opened=responses), False
+        if sub == "biruns":                                   # BI runs (BI_RUNS.md 3.5): the person's runs as they change (hello, run, status); no data
+            return self.backend.sse("/bi/runs/events", self.me, opened=responses), False
         if sub.startswith("monitor:"):
             return self.backend.sse(f"/me/monitors/{quote(sub[8:])}/stream", self.me, opened=responses), False
         return None, False

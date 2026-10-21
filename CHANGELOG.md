@@ -33,6 +33,26 @@
   `SchemaParityTest`. Metrics `drishti.bi.runs.*`. Not yet: the metadata planner and confirmation, the run engine (a second DuckDB),
   Parquet and Arrow results, sharing, promotion, export, schedules and the cluster (forwarding, leases). `RunStateTest`, `RunsContractTest`,
   `AdmissionClassCapTest`, `RunServiceTest`, `RunStoreTest`, `RunRecordsJdbcTest`.
+- **BI runs, the console lane (2.6.7, R1c to R6c of docs/architecture/BI_RUNS.md section 18.2).** A BI workspace has three tabs,
+  **Items · Runs · Members** (`?tab=`); the Runs tab lists your runs and the ones shared with you with their status, as-of dates, data
+  version, duration, rows and estimate, filtered by status, source, who and since, with a search; rows change live from
+  the browser's one live channel (subscription `biruns`, relaying `GET /api/v1/bi/runs/events`; no polling) and each change is announced. A run's drawer shows its source, who ran it, filters, parameters, data
+  versions, estimate and actual, tier, retention, shares and schedule, with every action its `can` allows: open (`/bi/run/<id>` opens the
+  report with `?run=<id>`, drawn from the stored result), re-run on the same or the newest data, cancel, export (CSV, Excel, Parquet, PDF),
+  share (same, re-masked, recomputed), promote to a snapshot or a report, keep longer, delete the result, schedule, confirm or discard.
+  The rail's **Runs** link counts your active runs; `BI RUNS <GO>` and `g r` open the tab. Report visuals and board tiles ask with
+  `Prefer: respond-async, wait=<inline wait>` (`B.ask` in bi-lib.js; the proxy passes it on and waits that plus 5 s): an answer in time is
+  drawn as before; a slower one shows the **run card** (the estimate as a range, why, measured progress, Cancel, Open in Runs) and turns
+  into the chart when its run finishes; a large question shows the **confirm card** (rows, days, basis, expected time; Run in background,
+  Narrow the dates, Not now); a slicer, cross-filter or drill that would need a run says so at once (`DRS-9089`) with Run in background.
+  Every state and code is said in words, the code in brackets. The bell and the inbox (a **Runs** tab) carry `bi-run` notices linking to
+  the run. Admin → BI → **Runs** (`/admin/bi/runs`): the gate's slots per class, the queue per person, what runs (with Cancel), the result
+  store, estimate accuracy, the inline rate and the rollup suggestions. CLI: `tools/biruns.py`, `drishti.py bi runs
+  list|get|submit|estimate|wait|result|cancel|rerun|export|share|promote|keep|schedule|schedules|storage`, and `bi mq --async`,
+  `bi sql --async`; completion follows. Help: `bi-runs` (docs/guides/BI_RUNS_GUIDE.md, with three pictures) and the addresses `runs-tab`,
+  `run-card`, `run-confirm`, `run-needed`, `snapshot-dataset`. Tests against a stand-in server (`tests/bi_runs_backend.py`):
+  `test_bi_runs_page.py`, `test_bi_runs_inline.py`, `test_bi_runs_browser.py` (section 19.6, every theme, a phone),
+  `tools/test_cli_biruns.py`. Works against the server's runs endpoints as they land; until then a page asks as before.
 - **Chart any table (2.6.7, the console wiring; docs/architecture/TABLE_CHARTS.md section 24).** Every table can be drawn as a chart: a
   chart button in each table's heading and `K` on a focused table (`Shift`+`K` on a history page, where `k` is the previous day; `K` on a
   focused BI table or matrix, while `K` elsewhere on a report still toggles kiosk) open a wide dialog (full screen on a phone) with the

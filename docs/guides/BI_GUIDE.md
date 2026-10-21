@@ -29,6 +29,7 @@ Rūpaka is Drishti's business-intelligence layer, called **BI** in the top bar a
 | Write or read a dataset (tables, relationships, measures, row rules, masks, live tables) | [DATASETS.md](DATASETS.md) |
 | Write or read a report (visuals, filters, slicers, live visuals) | [REPORTS.md](REPORTS.md) |
 | Put a wall of live tiles on a screen (a board page of a report) | [BOARDS.md](BOARDS.md) |
+| Follow a long question that runs in the background: the run card, confirming a large run, the Runs tab (`BI RUNS <GO>`), sharing, promoting and scheduling a run (2.6.7) | [BI_RUNS_GUIDE.md](BI_RUNS_GUIDE.md) |
 | Author in BI Studio: the Explorer, tabs, the Problems and Query dock, formatting, conditional formatting, themes, interactions, tooltip pages | section 26, [REPORTS.md section 5](REPORTS.md#5-format) |
 | Prepare data in Python step by step; run your own Python on a masked extract in the browser | [PYTHON_BI.md section 17](PYTHON_BI.md#17-data-prep-the-transform-editor-240), [ANALYSE.md section 16](ANALYSE.md#16-the-browser-python-console) |
 | Export a report or view as PDF, PNG, Excel or CSV; subscribe people by email | [DISTRIBUTION.md](DISTRIBUTION.md) |

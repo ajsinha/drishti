@@ -133,6 +133,7 @@ class BackendClient:
         headers.update(kw.pop("headers", {}))
         raw = kw.pop("raw", False)
         with_headers = kw.pop("with_headers", False)
+        with_status = kw.pop("with_status", False)
         if self._servers is not None:
             r = await self._send_pooled(method, path, headers, kw)
         else:
@@ -145,6 +146,9 @@ class BackendClient:
                 raise BackendError(503, "DRS-5003", f"backend unreachable: {e}") from e
         if r.status_code >= 400:
             raise _error(r, r.text)
+        if with_status:                                   # an answer whose status matters (BI runs: 200 inline, 202 a run): (status, body, headers)
+            body = None if r.status_code == 204 or not r.content else (r.json() if "json" in r.headers.get("content-type", "") else r.text)
+            return r.status_code, body, r.headers
         if r.status_code == 204:
             return None
         if raw:
@@ -686,6 +690,28 @@ class BackendClient:
             kw["timeout"] = wait
         if params:
             kw["params"] = params
+        if body is not None:
+            kw["json"] = body
+        return await self._send(method, "/bi" + path, ident, **kw)
+
+    async def bi_async(self, method: str, path: str, ident, body: dict | None, prefer: str, wait: float | None = None, **params):
+        """A BI question asked as a run (BI_RUNS.md section 6): ``Prefer: respond-async, wait=N`` is passed on and the answer comes back as
+        ``(status, body)``: 200 the answer (done within the wait), 202 the run that goes on. A refusal (409 DRS-9082, 409 DRS-9089) raises."""
+        kw: dict = {"with_status": True, "headers": {"Prefer": prefer}}
+        if wait:
+            kw["timeout"] = wait
+        if params:
+            kw["params"] = params
+        if body is not None:
+            kw["json"] = body
+        status, answer, _ = await self._send(method, "/bi" + path, ident, **kw)
+        return status, answer
+
+    async def bi_file(self, method: str, path: str, ident, body: dict | None = None, wait: float | None = None):
+        """A BI answer that is a file (a run's export): ``(bytes, response headers)``, passed through unchanged."""
+        kw: dict = {"raw": True, "with_headers": True}
+        if wait:
+            kw["timeout"] = wait
         if body is not None:
             kw["json"] = body
         return await self._send(method, "/bi" + path, ident, **kw)
