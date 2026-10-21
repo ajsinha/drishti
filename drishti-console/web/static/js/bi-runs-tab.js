@@ -323,7 +323,7 @@
     if (can.schedule && !sc) { schedRow.appendChild(act('Schedule…', { 'data-run-act': 'schedule' }, (b) => scheduleForm(r, b, null))); }
     if (can.schedule && sc) {
       const sid = encodeURIComponent(sc.id);
-      const after = (b, text) => (s2) => { said(b, text); r.schedule = s2 || null; return B.api('GET', '/runs/' + enc).then(refresh, () => refresh(r)); };
+      const after = (b, text) => (s2) => { said(b, text); refresh(Object.assign({}, r, { schedule: s2 || null })); };   // the answer is the schedule: no second read that could redraw over a form opened meanwhile
       schedRow.appendChild(act('Edit', { 'data-run-sched-edit': sc.id }, (b) => scheduleForm(r, b, sc)));
       schedRow.appendChild(act(sc.enabled === false ? 'Resume' : 'Pause', { 'data-run-sched-toggle': sc.id }, (b) => B.busy(b, () => B.api('PUT', '/runs/schedules/' + sid, { enabled: sc.enabled === false })
         .then((s2) => after(b, s2.enabled === false ? 'Paused: it does not fire until you resume it.' : 'Resumed' + (s2.nextAt ? ': next ' + when(s2.nextAt) + ' UTC.' : '.'))(s2)).catch(failed(b)))));
@@ -404,8 +404,7 @@
       B.busy(b, () => call.then((s2) => {
         form.remove();
         said(anchor, (sc ? 'Schedule changed: ' : 'Scheduled: ') + R.scheduleWords(s2) + '.');
-        r.schedule = s2;
-        return B.api('GET', '/runs/' + encodeURIComponent(r.id)).then(refresh, () => refresh(r));
+        refresh(Object.assign({}, r, { schedule: s2 }));
       }).catch(failed(b)));
     });
     [kind, day, time, text].forEach((x) => x.addEventListener('input', sync));
