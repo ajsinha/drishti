@@ -956,6 +956,12 @@ class ModelAcceptanceTest {
             assertThat(problem.path("run").path("data").path("tables").size()).as(problem.toString()).isPositive();
             assertThat(problem.path("run").path("data").path("words").asText()).contains("trades");
             assertThat(problem.path("run").path("estimate").has("data")).isFalse();
+            // BIR-10: titled with the visual's title, its source with the report's
+            assertThat(problem.path("run").path("title").asText()).isEqualTo("By desk");
+            assertThat(problem.path("run").path("source").path("title").asText()).isEqualTo("Acceptance report");
+            assertThat(problem.path("run").path("estimate").has("sourceTitle")).isFalse();
+            JsonNode listed = ok(call("GET", "/api/v1/bi/runs/" + problem.path("runId").asText(), reader("rita"), null));
+            assertThat(listed.path("source").path("title").asText()).isEqualTo("Acceptance report");
             assertThat(byDesk(viaRunFrom(first, reader("rita")))).isEqualTo(byDesk(sync));
             // a slicer on it: needs a background run, refused at once
             String slicer = visual.replace("{\"page\"", "{\"interaction\":true,\"page\"");

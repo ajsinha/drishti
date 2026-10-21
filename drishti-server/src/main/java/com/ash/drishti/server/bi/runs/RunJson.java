@@ -91,7 +91,7 @@ public final class RunJson {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id", r.id());
         m.put("title", r.title() == null || r.title().isBlank() ? defaultTitle(r) : r.title());
-        m.put("source", source(r, view));
+        m.put("source", null);                                                  // after the estimate is read: it may carry the source's title
         m.put("runner", r.runner());
         m.put("owner", r.owner());
         m.put("workspace", r.workspace());
@@ -100,11 +100,16 @@ public final class RunJson {
         Object estimate = parse(r.estimate());
         List<Map<String, Object>> tables = view.dataTables() != null && !view.dataTables().isEmpty() ? view.dataTables()
                 : RunDataWords.of(estimate).orElse(List.of());                  // kept with the estimate at plan time (BIR-09)
-        if (estimate instanceof Map<?, ?> e && e.containsKey(RunDataWords.KEY)) {
+        if (estimate instanceof Map<?, ?> e && (e.containsKey(RunDataWords.KEY) || e.containsKey(RunDataWords.SOURCE_TITLE))) {
+            if (view.sourceTitle() == null && e.get(RunDataWords.SOURCE_TITLE) instanceof String t) {
+                view = view.withSourceTitle(t);                                 // the report's title, kept with the row at submit (BIR-10)
+            }
             Map<Object, Object> clean = new LinkedHashMap<>(e);
             clean.remove(RunDataWords.KEY);
+            clean.remove(RunDataWords.SOURCE_TITLE);
             estimate = clean;
         }
+        m.put("source", source(r, view));
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("version", r.dataVersion());
         data.put("words", view.dataWords() != null ? view.dataWords() : RunDataWords.words(tables));

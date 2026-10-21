@@ -34,6 +34,9 @@ public final class RunDataWords {
     /** The key in the estimate JSON the tables are kept under (taken out of {@code estimate} when the run object is written). */
     static final String KEY = "data";
 
+    /** The key the source's title is kept under in the estimate JSON (BIR-10), taken out as {@link #KEY} is. */
+    static final String SOURCE_TITLE = "sourceTitle";
+
     private RunDataWords() {}
 
     /** One entry per table the footprint reads. */

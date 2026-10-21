@@ -30,6 +30,8 @@
   failing `DRS-9085` with a bell; a lapsed or unreplayable one is cancelled quietly (`DRS-9083`, the reason in words, no notice).
   BIR-09: the run object's `data.tables` (table, connector, dates, rows, versions) and `data.words` are filled from the planned footprint
   (`RunDataWords`, kept with the estimate, no new column), so the Runs tab's *Data* column says what was read (`RunDataWordsTest`).
+  BIR-10: a report visual's run is titled with the visual's title and its `source.title` is the report's, no longer the report's id
+  (`ModelAcceptanceTest` order 19).
 
 - **BI runs in the console: sharing, schedules, export and rollup suggestions (2.6.7, BI_RUNS_GUIDE.md).** The run drawer's **Share…**
   takes people and roles from the people picker (chips; names typed comma separated work too) and lists each recipient with the mode the

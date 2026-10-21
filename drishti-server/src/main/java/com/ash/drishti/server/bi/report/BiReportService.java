@@ -526,6 +526,24 @@ public final class BiReportService {
         }
     }
 
+    /** A report's title and one visual's (BIR-10: a run's title and {@code source.title}); either null when it has none or cannot be read. */
+    public record Titles(String report, String visual) {}
+
+    public Titles titles(Principal p, String id, String pageId, String visualId) {
+        try {
+            Report report = loadItem(p, id).parsed().report();
+            if (report == null) {
+                return new Titles(null, null);
+            }
+            Report.Page page = report.page(pageId);
+            String visual = page == null ? null : page.visuals().stream().filter(v -> v.id().equals(visualId)).map(Report.Visual::title)
+                    .filter(t -> t != null && !t.isBlank()).findFirst().orElse(null);
+            return new Titles(report.title() == null || report.title().isBlank() ? null : report.title(), visual);
+        } catch (RuntimeException e) {
+            return new Titles(null, null);
+        }
+    }
+
     /**
      * Every row of one table-like visual (a table, a matrix, a multi-row card) up to {@code maxRows} + 1, for a statement's band and an export's table: the
      * visual's query asked with that limit and answered past {@code drishti.bi.query.json-max-rows}, so nothing is cut at what one screen shows (QA2-01). The

@@ -82,12 +82,18 @@ public final class RunService {
      */
     public record Question(Principal caller, String sourceType, String sourceId, String sourceRef, String title, String workspace, String model,
                            String question, String params, String signature, String dataVersion, boolean interaction, String supersedes, Work work,
-                           RunPlanner.Planned planned) {
+                           RunPlanner.Planned planned, String sourceTitle) {
+
+        /** A question without its source's title (a model's or a statement's: the run object's {@code source.title} is then null). */
+        public Question(Principal caller, String sourceType, String sourceId, String sourceRef, String title, String workspace, String model, String question,
+                        String params, String signature, String dataVersion, boolean interaction, String supersedes, Work work, RunPlanner.Planned planned) {
+            this(caller, sourceType, sourceId, sourceRef, title, workspace, model, question, params, signature, dataVersion, interaction, supersedes, work, planned, null);
+        }
 
         /** A question the planner has not sized (its estimate says {@code basis: unknown}; it waits inline as before 2.6.7's planner). */
         public Question(Principal caller, String sourceType, String sourceId, String sourceRef, String title, String workspace, String model, String question,
                         String params, String signature, String dataVersion, boolean interaction, String supersedes, Work work) {
-            this(caller, sourceType, sourceId, sourceRef, title, workspace, model, question, params, signature, dataVersion, interaction, supersedes, work, null);
+            this(caller, sourceType, sourceId, sourceRef, title, workspace, model, question, params, signature, dataVersion, interaction, supersedes, work, null, null);
         }
     }
 
@@ -367,7 +373,7 @@ public final class RunService {
 
     private static Question withPlan(Question q, RunPlanner.Planned p) {
         return new Question(q.caller(), q.sourceType(), q.sourceId(), q.sourceRef(), q.title(), q.workspace(), q.model(), q.question(), q.params(),
-                q.signature(), q.dataVersion(), q.interaction(), q.supersedes(), q.work(), p);
+                q.signature(), q.dataVersion(), q.interaction(), q.supersedes(), q.work(), p, q.sourceTitle());
     }
 
     /** A refusal at plan time, with the estimate and the way forward (sections 4.3 and 5.3). */
@@ -475,6 +481,9 @@ public final class RunService {
                 RunEstimate.Basis.UNKNOWN, 0, 0, false, 0, tier == Tier.AD_HOC_HEAVY ? "a background run: its size is learnt as it runs" : "an interactive question").toMap();
         if (q.planned() != null && !q.planned().tables().isEmpty()) {
             estimate.put(RunDataWords.KEY, q.planned().tables());              // what it reads, in words (the run object's data; BIR-09)
+        }
+        if (q.sourceTitle() != null) {
+            estimate.put(RunDataWords.SOURCE_TITLE, q.sourceTitle());          // the report's title (source.title; BIR-10), kept with the row
         }
         Run r = Run.planned(RunId.next(node, now, random), q.caller().user(), q.caller().user(), q.sourceType(), q.question(), key, q.signature(), tier,
                 "local", RunJson.write(estimate), node, now);

@@ -1087,6 +1087,9 @@ when a date's size is unknown; `versions` like `v411, v412 (2 dates)`, `no versi
 (`trades 13 K rows, v411, v412 (2 dates) · desks, no version (1 date)`). They come from the footprint at plan time and are kept with the
 run's estimate (`RunDataWords`; no new column), so a question that was not planned has `words` null and `tables` empty.
 
+As built (BIR-10), a report visual's run is titled with the visual's title (else the report's) unless `title` was given, and its
+`source.title` is the report's title, kept with the row at submit (`BiReportService.titles`).
+
 `can` is computed by the server for the caller, so the console never decides rights. As built (R1), `can` also carries `confirm`
 (true for the runner of an `awaiting-confirm` run), an added field. Fields are never removed. A new field may be
 added, and the console ignores fields it does not know.
