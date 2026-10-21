@@ -54,7 +54,8 @@
 - **Fixed (QA3B-04): a `relocate` whose old folder matches nothing is said in Health** (for example a Windows pair on a Linux lake),
   also when several tables moved together are one sentence.
 - **Fixed (QA4-05): an Iceberg connector whose `relocate` cannot be read no longer logs a NullPointerException at each retry**; the
-  half-started connector closes quietly and the start's refusal is the one problem. IcebergMovedTableTest.
+  half-started connector closes quietly and the start's refusal is the one problem, logged in one line (a connector whose start refuses a
+  setting no longer logs a stack trace). IcebergMovedTableTest, IcebergMovedConnectorFileTest.
 - **Fixed: `build_demo_lakes.py` run with a Python that lacks `deltalake` failed every table with "no engine"**; it now stops at once and names the console's environment to use.
 - **Fixed (SOAK2-01, P1): an administrator's history of a peer-held entity no longer shows a viewer's masks.** The history cache kept
   the days a peer answered (masked there for the first caller) as if they were unmasked, and served them to every later caller: after a

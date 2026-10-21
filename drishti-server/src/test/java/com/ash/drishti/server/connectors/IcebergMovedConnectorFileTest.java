@@ -177,5 +177,20 @@ class IcebergMovedConnectorFileTest {
                 .andExpect(status().isBadGateway())
                 .andExpect(jsonPath("$.detail").value(containsString("the table bond names files that are not there")));
         assertThat(out.getAll().substring(before)).as("no stack trace").doesNotContain("\tat ");
+
+        // QA4-05: a relocate it cannot read fails the start naming the pair, in one line; each retry closes the half-started connector quietly
+        before = out.getAll().length();
+        Files.writeString(Path.of(CONNECTORS).resolve("qa-ice-bad.yaml"), "plugin: iceberg\nkinds: [bond]\nsettings:\n  root: " + base.resolve("ice2")
+                + "\n  domain: market\n  engine: native\n  relocate: '/no/arrow/here'\n");
+        long deadline = System.currentTimeMillis() + 30_000;
+        while (!out.getAll().substring(before).contains("connector 'qa-ice-bad' failed (attempt 2)") && System.currentTimeMillis() < deadline) {
+            Thread.sleep(200);                                                   // the start, then the RetryBoard's first retry
+        }
+        String bad = out.getAll().substring(before);
+        assertThat(bad).contains("connector qa-ice-bad failed to start: relocate: '/no/arrow/here' cannot be read").contains("(attempt 2)");
+        assertThat(bad).as("no NullPointerException on close, no stack trace").doesNotContain("NullPointerException").doesNotContain("closing qa-ice-bad failed")
+                .doesNotContain("\tat ");
+        mvc.perform(get("/api/v1/admin/connectors")).andExpect(jsonPath("$.connectors[?(@.name == 'qa-ice-bad')].problems[0]")
+                .value(hasItem(startsWith("relocate: '/no/arrow/here' cannot be read"))));
     }
 }
