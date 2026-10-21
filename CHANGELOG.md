@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **Fixed: an oversize upload over HTTP/2 was refused by the client** (`Prohibited header name 'connection'`, Java 25's HttpClient): the 413 now sends `Connection: close` only on HTTP/1.x (2.6.7 turned HTTP/2 on).
+
 - **BI runs integration findings, console side (BIR-09, BIR-10, BIR-12, BIR-13, BIR-14) and Promote in the drawer (2.6.7).** BIR-14: the
   workspace's *Add a member* form and settings live on its **Members** tab; after **Create workspace** the Workspaces page offers *Next: add
   the people who share it* (opens `/bi/w/<id>?tab=members`), and a shared workspace with only you in it says so on its Items tab with an

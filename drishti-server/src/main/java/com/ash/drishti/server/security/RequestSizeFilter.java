@@ -51,7 +51,7 @@ public final class RequestSizeFilter extends OncePerRequestFilter {
         }
         long declared = req.getContentLengthLong();
         if (declared > limit) {
-            refuse(res, limit, declared, false);
+            refuse(req, res, limit, declared, false);
             return;
         }
         Counting counting = new Counting(req, limit);
@@ -63,7 +63,7 @@ public final class RequestSizeFilter extends OncePerRequestFilter {
             }
         }
         if (counting.overflow && !res.isCommitted()) {
-            refuse(res, limit, counting.seen.get(), true);
+            refuse(req, res, limit, counting.seen.get(), true);
         }
     }
 
@@ -76,12 +76,14 @@ public final class RequestSizeFilter extends OncePerRequestFilter {
         return 0;
     }
 
-    private static void refuse(HttpServletResponse res, long limit, long size, boolean atLeast) throws IOException {
+    private static void refuse(HttpServletRequest req, HttpServletResponse res, long limit, long size, boolean atLeast) throws IOException {
         res.reset();
         res.setStatus(413);
         res.setContentType("application/problem+json");
         res.setCharacterEncoding("UTF-8");
-        res.setHeader("Connection", "close");
+        if (!"HTTP/2.0".equals(req.getProtocol())) {
+            res.setHeader("Connection", "close");                // HTTP/1.1 only: HTTP/2 forbids the header (a client refuses the answer); it ends the stream instead
+        }
         String have = (atLeast ? "at least " : "") + mb(size);
         res.getWriter().write("{\"title\":\"payload too large\",\"status\":413,\"code\":\"" + com.ash.drishti.common.ErrorCode.PAYLOAD_TOO_LARGE.code()
                 + "\",\"detail\":\"the request body is " + have + ", over the limit of " + mb(limit)
