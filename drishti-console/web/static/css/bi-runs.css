@@ -73,6 +73,37 @@
 .bi-run-form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: end; flex-basis: 100%; padding: .6rem; border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface-2); }
 .bi-run-form label { display: flex; flex-direction: column; gap: .2rem; font-size: .85rem; color: var(--d-muted); }
 .bi-run-form small { flex-basis: 100%; }
+/* sharing: the picker, the chips, each recipient's mode; schedules: the presets; export: CSV and Excel */
+.bi-run-picker { position: relative; display: flex; flex-direction: column; min-width: min(16rem, 100%); }
+.bi-run-picker .shr-list { z-index: 20; min-width: 100%; }
+.bi-run-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .35rem; flex-basis: 100%; }
+.bi-run-chips:empty { display: none; }
+.bi-run-chip { display: inline-flex; align-items: center; gap: .3rem; padding: .1rem .2rem .1rem .6rem; border: 1px solid var(--d-border); border-radius: 999px; background: var(--d-surface);
+  font-family: var(--d-font-mono); font-size: .82rem; color: var(--d-ink); }
+.bi-run-chip-x { border: 0; background: transparent; color: var(--d-muted); min-width: 2rem; min-height: 2rem; cursor: pointer; font-size: 1rem; }
+.bi-run-chip-x:hover, .bi-run-chip-x:focus-visible { color: var(--d-bad); }
+.bi-run-shares li { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; }
+.bi-run-who { font-family: var(--d-font-mono); font-weight: 600; }
+.bi-run-mode { font-size: .78rem; padding: 0 .5rem; border-radius: 999px; border: 1px solid currentColor; line-height: 1.4rem; }
+.bi-run-mode-same { color: var(--d-ok); }
+.bi-run-mode-re-masked { color: var(--d-warn); }
+.bi-run-mode-recomputed { color: var(--d-link); }
+.bi-run-when { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+.bi-run-when select, .bi-run-when input { width: auto; min-height: 2.5rem; }
+.bi-run-when [hidden] { display: none; }
+.bi-run-dmsg { margin: -.5rem 0 .75rem; padding: .4rem .6rem; border-left: 3px solid var(--d-accent); background: var(--d-surface-2); font-size: .9rem; overflow-wrap: anywhere; }
+.bi-run-dmsg.bi-run-bad { border-left-color: var(--d-bad); }
+.bi-run-export { display: inline-flex; flex-wrap: wrap; gap: .45rem; }
+.bi-run-export .btn-pill { min-height: 2.5rem; }
+/* Admin → BI → Runs: the rollup suggestions */
+.bi-sugg-yaml { margin: .35rem 0 0; padding: .5rem .6rem; background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: var(--d-radius); font-family: var(--d-font-mono);
+  font-size: .8rem; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--d-ink); }
+.bi-sugg-acts { display: flex; flex-wrap: wrap; gap: .4rem; }
+.bi-sugg-acts .btn-pill { min-height: 2.5rem; }
+.bi-sugg-status { font-weight: 600; }
+.bi-sugg-status-accepted, .bi-sugg-status-built { color: var(--d-ok); }
+.bi-sugg-status-dismissed { color: var(--d-muted); }
+.bi-md-suggest { margin: .25rem 0 .5rem; }
 
 /* the run card in a visual, and the confirm card */
 .bi-run-card { display: flex; flex-direction: column; gap: .4rem; justify-content: center; height: 100%; min-height: 8rem; box-sizing: border-box; padding: .75rem 1rem; font-size: .92rem;

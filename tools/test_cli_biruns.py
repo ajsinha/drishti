@@ -169,8 +169,8 @@ class BiRuns(unittest.TestCase):
         self.assertIn("r-9  reused", out)
         code, out, _ = self.go("bi", "runs", "share", RID, "--to", "bob", "--to", "role:risk-team")
         self.assertEqual({"to": ["bob", "role:risk-team"]}, self.sent())
-        self.assertIn("bob: sees it with their own masks", out)
-        self.assertIn("carol: gets their own run, as them (run r-c)", out)
+        self.assertIn("bob: re-masked (your result with their extra masks)", out)
+        self.assertIn("carol: recomputed as them (their rights differ: a run of their own) (run r-c)", out)
         code, out, _ = self.go("bi", "runs", "promote", RID, "--as", "snapshot", "--name", "desk-pnl-2026")
         self.assertEqual({"as": "snapshot", "name": "desk-pnl-2026"}, self.sent())
         self.assertIn("(snapshot desk-pnl-2026 v3)", out)
@@ -188,6 +188,47 @@ class BiRuns(unittest.TestCase):
         self.assertEqual(0, code)
         self.assertEqual(b"PK\x03\x04xlsx", f.read_bytes())
         self.assertEqual({"format": "xlsx"}, self.sent())
+
+    def test_a_refused_recipient_is_said_on_stderr_and_unshare_deletes_each(self):
+        base = f"/api/v1/bi/runs/{RID}"
+        FakeServer.routes[("POST", base + "/share")] = (200, {"shares": [{"recipient": "bob", "mode": "same"}, {"recipient": "eve", "mode": None, "code": "DRS-9021", "detail": "eve may not read the model trading"}]})
+        code, out, err = self.go("bi", "runs", "share", RID, "--to", "bob", "--to", "eve")
+        self.assertEqual(0, code)
+        self.assertIn("bob: sees the same", out)
+        self.assertIn("eve: not shared: eve may not read the model trading (DRS-9021)", err)
+        FakeServer.routes[("DELETE", base + "/share/bob")] = (204, None)
+        FakeServer.routes[("DELETE", base + "/share/role%3Arisk-team")] = (204, None)
+        code, out, _ = self.go("bi", "runs", "unshare", RID, "bob", "role:risk-team")
+        self.assertEqual(0, code)
+        self.assertIn("bob: no longer shared", out)
+        self.assertEqual(["DELETE", "DELETE"], [r[0] for r in FakeServer.requests[-2:]])
+        self.assertTrue(FakeServer.requests[-1][1].endswith("/share/role%3Arisk-team"))
+
+    def test_schedules_edit_sends_the_new_schedule(self):
+        FakeServer.routes[("PUT", "/api/v1/bi/runs/schedules/sch-1")] = (200, {"id": "sch-1", "schedule": "weekly mon 08:00", "data": "same", "enabled": True, "nextAt": "2026-10-26T08:00:00Z"})
+        code, out, _ = self.go("bi", "runs", "schedules", "edit", "sch-1", "weekly mon 08:00", "--data", "same")
+        self.assertEqual(0, code)
+        self.assertEqual({"schedule": "weekly mon 08:00", "data": "same"}, self.sent())
+        self.assertIn("sch-1  weekly mon 08:00  on  on same data  next 2026-10-26 08:00", out)
+        code, _, err = self.go("bi", "runs", "schedules", "edit", "sch-1")
+        self.assertEqual(2, code)
+
+    def test_suggestions_list_accept_and_dismiss(self):
+        sugg = [{"id": "sg-1", "model": "trading", "grain": ["desk", "month"], "runs": 37, "medianSeconds": 240, "status": "suggested", "words": "asked 37 times this week"},
+                {"id": "sg-9", "model": "credit", "grain": ["book"], "runs": 5, "medianSeconds": 70, "status": "dismissed", "decidedBy": "ops1"}]
+        FakeServer.routes[("GET", "/api/v1/bi/admin/runs")] = (200, {"suggestions": sugg})
+        code, out, _ = self.go("bi", "runs", "suggestions", "--model", "trading")
+        self.assertEqual(0, code)
+        self.assertIn("sg-1  trading  desk x month  suggested  37 runs, about 4 min each", out)
+        self.assertNotIn("sg-9", out)
+        FakeServer.routes[("POST", "/api/v1/bi/admin/runs/suggestions/sg-1/accept")] = (200, dict(sugg[0], status="accepted", item="bi-model-trading"))
+        code, out, _ = self.go("bi", "runs", "suggestions", "accept", "sg-1")
+        self.assertIn("accepted: the rollup is in the draft of trading (bi-model-trading)", out)
+        FakeServer.routes[("POST", "/api/v1/bi/admin/runs/suggestions/sg-1/dismiss")] = (200, dict(sugg[0], status="dismissed"))
+        code, out, _ = self.go("bi", "runs", "suggestions", "dismiss", "sg-1")
+        self.assertIn("sg-1  dismissed", out)
+        code, _, err = self.go("bi", "runs", "suggestions", "accept")
+        self.assertEqual(2, code)
 
     def test_schedules_list_and_disable(self):
         FakeServer.routes[("GET", "/api/v1/bi/runs/schedules")] = (200, {"schedules": [{"id": "sch-1", "schedule": "daily 07:00", "enabled": True}]})
@@ -231,7 +272,7 @@ class BiRuns(unittest.TestCase):
     def test_completion_knows_the_runs_commands(self):
         code, out, _ = self.go("completion", "bash")
         self.assertEqual(0, code)
-        self.assertIn('"bi runs") subs="list get submit estimate wait result cancel rerun export share promote keep schedule schedules storage"', out)
+        self.assertIn('"bi runs") subs="list get submit estimate wait result cancel rerun export share unshare promote keep schedule schedules storage suggestions"', out)
         self.assertIn("--async", out)
 
 

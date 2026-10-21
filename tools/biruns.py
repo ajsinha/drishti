@@ -21,9 +21,10 @@ token's user. Loaded by drishti.py; the server decides who may see and do what (
   bi runs estimate (the same source options)                                         tier, engine and estimate; runs nothing
   bi runs wait RUN [--timeout 30m]                                                   until it ends: exit 0 done, 3 failed, 4 cancelled
   bi runs result RUN [--format csv|json|arrow|parquet] [--out FILE]
-  bi runs cancel|rerun|export|share|promote|keep|schedule RUN ...
-  bi runs schedules [list|disable ID|enable ID|delete ID]
+  bi runs cancel|rerun|export|share|unshare|promote|keep|schedule RUN ...
+  bi runs schedules [list|edit ID WHEN|disable ID|enable ID|delete ID]
   bi runs storage                                                                    bi-admin: the result store, the queue, what runs
+  bi runs suggestions [list|accept ID|dismiss ID]                                    bi-admin: repeated heavy questions as rollups (8.3a)
 """
 from __future__ import annotations
 
@@ -112,7 +113,7 @@ def as_of(r: dict) -> str:
 
 def register(bi, srv, ctx) -> None:
     """Adds `bi runs` to the `bi` subcommands; ctx holds Api, CliError and say_json of drishti.py."""
-    rs = bi.add_parser("runs", help="bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|promote|keep|schedule|schedules|storage: BI runs",
+    rs = bi.add_parser("runs", help="bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|unshare|promote|keep|schedule|schedules|storage|suggestions: BI runs",
                        description="BI runs (BI_RUNS.md): questions that run in the background, as you.")
     ra = rs.add_subparsers(dest="action", metavar="ACTION", required=True)
     ex = argparse.RawDescriptionHelpFormatter
@@ -168,13 +169,17 @@ def register(bi, srv, ctx) -> None:
     re_.add_argument("run")
     re_.add_argument("--data", choices=("same", "latest"), default="same")
     re_.add_argument("--wait", type=seconds, default=2.0)
-    xp = sub("export", "the stored result as a file (masked cells stay masked)", "  drishti.py bi runs export r-java-2-01JA... --format xlsx --out pnl.xlsx", cmd_export)
+    xp = sub("export", "the stored result as a CSV or Excel file, your own version of it (masked cells stay masked)",
+             "  drishti.py bi runs export r-java-2-01JA... --format xlsx --out pnl.xlsx", cmd_export)
     xp.add_argument("run")
-    xp.add_argument("--format", choices=("csv", "xlsx", "parquet", "pdf"), required=True)
+    xp.add_argument("--format", choices=("csv", "xlsx"), default="csv")
     xp.add_argument("--out", metavar="FILE", required=True)
     sh = sub("share", "share a run: each recipient sees it with their own rights", "  drishti.py bi runs share r-java-2-01JA... --to bob --to role:risk-team", cmd_share)
     sh.add_argument("run")
     sh.add_argument("--to", action="append", required=True, metavar="WHO", help="a user, or role:<name> (repeatable)")
+    us = sub("unshare", "stop sharing a run with someone (a run recomputed as them stays theirs)", "  drishti.py bi runs unshare r-java-2-01JA... bob", cmd_unshare)
+    us.add_argument("run")
+    us.add_argument("who", nargs="+", help="the recipients to remove")
     pr = sub("promote", "promote a result to a dataset snapshot or a report (a draft)", "  drishti.py bi runs promote r-java-2-01JA... --as snapshot --name desk-pnl-2026", cmd_promote)
     pr.add_argument("run")
     pr.add_argument("--as", dest="as_", choices=("snapshot", "report"), required=True)
@@ -185,14 +190,22 @@ def register(bi, srv, ctx) -> None:
     kp.add_argument("run")
     kp.add_argument("--days", type=int, required=True)
     sc = sub("schedule", "run the same question on a schedule (each firing is a run and a notice)",
-             "  drishti.py bi runs schedule r-java-2-01JA... \"business-days 07:30\"\n  drishti.py bi runs schedule r-java-2-01JA... \"after-load TRD\" --data latest", cmd_schedule)
+             "  drishti.py bi runs schedule r-java-2-01JA... \"business-days 07:30\"\n  drishti.py bi runs schedule r-java-2-01JA... \"weekly mon 08:00\" --data same", cmd_schedule)
     sc.add_argument("run")
-    sc.add_argument("when", help="daily 07:00 · business-days 07:30 · monthly last 18:00 business · after-load TRD")
+    sc.add_argument("when", help="daily 07:00 · weekdays 07:30 · business-days 07:30 · weekly mon 08:00 · monthly last 18:00 [business]")
     sc.add_argument("--data", choices=("latest", "same"), default="latest")
-    ss = sub("schedules", "your scheduled runs: list, disable, enable or delete one", "  drishti.py bi runs schedules\n  drishti.py bi runs schedules disable sch-1", cmd_schedules)
-    ss.add_argument("verb", nargs="?", choices=("list", "disable", "enable", "delete"), default="list")
+    ss = sub("schedules", "your scheduled runs: list, edit, disable, enable or delete one",
+             "  drishti.py bi runs schedules\n  drishti.py bi runs schedules edit sch-1 \"daily 06:30\"\n  drishti.py bi runs schedules disable sch-1", cmd_schedules)
+    ss.add_argument("verb", nargs="?", choices=("list", "edit", "disable", "enable", "delete"), default="list")
     ss.add_argument("id", nargs="?")
+    ss.add_argument("when", nargs="?", help="edit: the new schedule (daily 07:00, weekly mon 08:00, ...)")
+    ss.add_argument("--data", choices=("latest", "same"), help="edit: on the newest data or the same dates")
     sub("storage", "bi-admin: the result store, the queue and what runs now", "  drishti.py bi runs storage", cmd_storage)
+    sg = sub("suggestions", "bi-admin: repeated heavy questions a rollup would answer; accept (adds the rollup to the model's draft) or dismiss",
+             "  drishti.py bi runs suggestions\n  drishti.py bi runs suggestions accept sg-1\n  drishti.py bi runs suggestions dismiss sg-2", cmd_suggestions)
+    sg.add_argument("verb", nargs="?", choices=("list", "accept", "dismiss"), default="list")
+    sg.add_argument("id", nargs="?")
+    sg.add_argument("--model", help="list: only this model's suggestions")
 
 
 def _api(a, ctx):
@@ -431,7 +444,8 @@ def cmd_export(a, ctx) -> int:
     return 0
 
 
-MODES = {"same": "sees your result (same rights)", "re-masked": "sees it with their own masks", "recomputed": "gets their own run, as them"}
+MODES = {"same": "sees the same (equal rights: your stored result)", "re-masked": "re-masked (your result with their extra masks)",
+         "recomputed": "recomputed as them (their rights differ: a run of their own)"}
 
 
 def cmd_share(a, ctx) -> int:
@@ -439,8 +453,21 @@ def cmd_share(a, ctx) -> int:
     if a.json:
         ctx["say_json"](r)
         return 0
+    refused = 0
     for s in r.get("shares") or []:
+        if not s.get("mode"):
+            refused += 1
+            print(f"{s.get('recipient')}: not shared: {s.get('detail') or CODES.get(s.get('code'), '')} ({s.get('code')})", file=sys.stderr)
+            continue
         print(f"{s.get('recipient')}: {MODES.get(s.get('mode'), s.get('mode'))}" + (f" (run {s['recipientRun']})" if s.get("recipientRun") else ""))
+    return 0 if refused < len(r.get("shares") or []) or not refused else 1
+
+
+def cmd_unshare(a, ctx) -> int:
+    api = _api(a, ctx)
+    for who in a.who:
+        api.request("DELETE", "/api/v1/bi/runs/" + _rid(a) + "/share/" + quote(who, safe=""))
+        print(f"{who}: no longer shared")
     return 0
 
 
@@ -483,6 +510,16 @@ def cmd_schedules(a, ctx) -> int:
         if not a.id:
             raise ctx["CliError"](f"bi runs schedules {a.verb} needs the schedule's id", 2)
         path = "/api/v1/bi/runs/schedules/" + quote(a.id, safe="")
+        if a.verb == "edit":
+            if not a.when and not a.data:
+                raise ctx["CliError"]("bi runs schedules edit ID needs the new schedule (\"daily 06:30\") or --data", 2)
+            body = {k: v for k, v in (("schedule", a.when), ("data", a.data)) if v}
+            r = api.json("PUT", path, body)
+            if a.json:
+                ctx["say_json"](r)
+            else:
+                print(schedule_line(r))
+            return 0
         if a.verb == "delete":
             api.request("DELETE", path)
             print(f"{a.id}  deleted")
@@ -498,8 +535,44 @@ def cmd_schedules(a, ctx) -> int:
     if not rows:
         print("no schedules")
     for s in rows:
-        print(f"{s.get('id')}  {s.get('schedule')}  {'on' if s.get('enabled', True) else 'off'}" + (f"  next {str(s['nextAt'])[:16].replace('T', ' ')}" if s.get("nextAt") else "")
-              + (f"  last run {s['lastRun']}" if s.get("lastRun") else ""))
+        print(schedule_line(s))
+    return 0
+
+
+def schedule_line(s: dict) -> str:
+    return (f"{s.get('id')}  {s.get('schedule')}  {'on' if s.get('enabled', True) else 'off'}" + (f"  on {s['data']} data" if s.get("data") else "")
+            + (f"  next {str(s['nextAt'])[:16].replace('T', ' ')}" if s.get("nextAt") else "") + (f"  last run {s['lastRun']}" if s.get("lastRun") else "")
+            + (f"  ({s['title']})" if s.get("title") else ""))
+
+
+def cmd_suggestions(a, ctx) -> int:
+    api = _api(a, ctx)
+    if a.verb != "list":
+        if not a.id:
+            raise ctx["CliError"](f"bi runs suggestions {a.verb} needs the suggestion's id", 2)
+        r = api.json("POST", "/api/v1/bi/admin/runs/suggestions/" + quote(a.id, safe="") + "/" + a.verb, {})
+        if a.json:
+            ctx["say_json"](r)
+        elif a.verb == "dismiss":
+            print(f"{r.get('id', a.id)}  dismissed")
+        elif r.get("item"):
+            print(f"{r.get('id', a.id)}  accepted: the rollup is in the draft of {r.get('model')} ({r['item']}); review it and publish it")
+        else:
+            print(f"{r.get('id', a.id)}  accepted: {r.get('model')} is a pack's model; add this to it by hand:\n{r.get('yaml') or ''}")
+        return 0
+    r = api.json("GET", "/api/v1/bi/admin/runs")
+    rows = [s for s in r.get("suggestions") or [] if not a.model or s.get("model") == a.model]
+    if a.json:
+        ctx["say_json"](rows)
+        return 0
+    if not rows:
+        print("no suggestions: no heavy question was asked often enough")
+    for s in rows:
+        grain = " x ".join(s.get("grain") or [])
+        print(f"{s.get('id')}  {s.get('model')}  {grain}  {s.get('status')}  {s.get('runs')} runs, about {duration(s.get('medianSeconds'))} each"
+              + (f"  (by {s['decidedBy']})" if s.get("decidedBy") else ""))
+        if s.get("words"):
+            print(f"    {s['words']}")
     return 0
 
 

@@ -39,11 +39,14 @@
     <caption class="visually-hidden">Runs executing now</caption>
     <thead><tr><th scope="col">Run</th><th scope="col">Who</th><th scope="col">Question</th><th scope="col">Node</th><th scope="col">Phase</th><th scope="col">For</th><th scope="col"><span class="visually-hidden">Cancel</span></th></tr></thead>
     <tbody></tbody></table></div>
-  <h2 class="ws-h">Repeated heavy questions</h2>
-  <p class="text-muted-d">Questions asked many times that a rollup would make instant (section 8.3a). The model's owner sees the same suggestion in the model designer.</p>
+  <h2 class="ws-h" id="suggestions">Repeated heavy questions</h2>
+  <p class="text-muted-d">Heavy questions asked often enough that a rollup would make them instant (counted per model, grain and the shape of the filters, never a value).
+    <strong>Accept</strong> adds the drafted rollup to the model's draft, to be reviewed and published like any change; <strong>Dismiss</strong> stops suggesting it.
+    The model designer shows a notice while a model has open suggestions. <a href="/help/run-suggestions">How suggestions work</a></p>
+  <p class="adm-msg" data-admin-suggest-msg role="status" aria-live="polite"></p>
   <div class="tbl-wrap"><table class="tbl adm-tbl" data-admin-suggest data-plain>
     <caption class="visually-hidden">Repeated heavy questions</caption>
-    <thead><tr><th scope="col">Model</th><th scope="col">Grain</th><th scope="col" class="num">Runs (7 days)</th><th scope="col">Typical time</th><th scope="col">Suggestion</th></tr></thead>
+    <thead><tr><th scope="col">Model</th><th scope="col">Grain and filters</th><th scope="col" class="num">Runs (7 days)</th><th scope="col">Typical time</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Accept or dismiss</span></th></tr></thead>
     <tbody></tbody></table></div>
 </div>
 {% endblock %}

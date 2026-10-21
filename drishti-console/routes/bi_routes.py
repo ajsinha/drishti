@@ -298,6 +298,19 @@ async def runs_admin_api(request: Request, run_id: str = ""):
     return JSONResponse(answer, status_code=202 if run_id else 200, headers={"Cache-Control": "no-store"})
 
 
+@router.post("/bi/api/admin/runs/suggestions/{suggestion_id}/{verb}")
+async def runs_suggestion(request: Request, suggestion_id: str, verb: str):
+    """Accept or dismiss a rollup suggestion of Admin → BI → Runs (BI_RUNS.md section 8.3a), passed on as the signed-in user (the server checks bi-admin):
+    accepting adds the drafted rollup to the model's draft, for review."""
+    if verb not in ("accept", "dismiss"):
+        return JSONResponse({"code": "DRS-9001", "detail": "no such BI path"}, status_code=404)
+    try:
+        answer = await request.app.state.backend.bi("POST", f"/admin/runs/suggestions/{quote(suggestion_id, safe='')}/{verb}", ident(request), {})
+    except BackendError as e:
+        return _problem(e)
+    return JSONResponse(answer, headers={"Cache-Control": "no-store"})
+
+
 @router.api_route("/bi/api/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def proxy(request: Request, path: str):
     """One call of the page script, passed on to the server under the caller's identity (the server enforces everything)."""

@@ -16,14 +16,16 @@
 the run object of 14.3, moves a run queued -> running (progress 0 to 1, a phase) -> done on a clock, publishes every change on
 ``/bi/runs/events`` (and a ``bi-run`` notice on the bell's stream when a visible run ends), and answers a report visual's question with
 ``Prefer: respond-async`` as 200 (in time), 202 (a run), 409 DRS-9082 (confirm first) or 409 DRS-9089 (an interaction that needs a run).
-Cancel, re-run (same data reuses), share (same / re-masked / recomputed), keep, delete, promote, schedule, export, the settings and the
-Admin view are there too. Used by test_bi_runs_*.py and bi_runs_shots.py."""
+Cancel, re-run (same data reuses), share (same / re-masked / recomputed / refused, a role expanded, the recipient's own view of a run shared
+with them), unshare, keep, delete, promote, schedules (the subscription grammar, list, edit, remove), export (CSV, Excel), the directory the people
+picker reads, the settings, the Admin view and its rollup suggestions (accept, dismiss) are there too. Used by test_bi_runs_*.py and bi_runs_shots.py."""
 from __future__ import annotations
 
 import asyncio
 import copy
 import itertools
 import json
+import re
 import threading
 import time
 
@@ -33,6 +35,19 @@ from core.backend import BackendError
 REPORT_ID = "file:report:desk-pnl"
 DESKS = ["DESK-FX", "DESK-FI", "DESK-EQD", "DESK-RATES"]
 MASK_FOR = {"bob": ["MTM"]}                  # the viewer's extra masks: a re-masked share shows the mask in this column
+SHARE_MODE = {"bob": "re-masked", "carol": "recomputed", "eve": None}      # anyone else sees the same; eve may not read the model
+ROLES = {"risk-team": ["dave", "erin"]}
+DIRECTORY = [{"type": "user", "name": "bob", "displayName": "Bob Viewer", "desk": "DESK-FX"}, {"type": "user", "name": "carol", "displayName": "Carol Risk", "desk": "DESK-FI"},
+             {"type": "user", "name": "eve", "displayName": "Eve Outside", "desk": ""}, {"type": "role", "name": "risk-team", "size": 2}]
+SCHEDULE = re.compile(r"(daily|weekdays|business-days) ([01]\d|2[0-3]):[0-5]\d|weekly (mon|tue|wed|thu|fri|sat|sun) ([01]\d|2[0-3]):[0-5]\d|monthly last ([01]\d|2[0-3]):[0-5]\d( business)?")
+SUGGESTIONS = [{"id": "sg-1", "model": "trading", "grain": ["desk", "month"], "filters": ["region in"], "runs": 37, "medianSeconds": 240, "status": "suggested",
+                "rollup": {"name": "by_desk_month", "table": "trade", "by": ["desk", "tradeDate.month"], "measures": ["MTM", "NOTIONAL"]},
+                "yaml": "rollups:\n  by_desk_month:\n    table: trade\n    by: [desk, tradeDate.month]\n    measures: [MTM, NOTIONAL]\n",
+                "words": "asked 37 times this week, about 4 min each: make it a rollup refreshed at load", "decidedBy": None, "item": None},
+               {"id": "sg-2", "model": "trading", "grain": ["counterparty"], "filters": [], "runs": 6, "medianSeconds": 75, "status": "suggested",
+                "rollup": {"name": "by_counterparty", "table": "trade", "by": ["counterparty"], "measures": ["NOTIONAL"]},
+                "yaml": "rollups:\n  by_counterparty:\n    table: trade\n    by: [counterparty]\n    measures: [NOTIONAL]\n",
+                "words": "asked 6 times this week, about 1 min each", "decidedBy": None, "item": None}]
 
 REPORT_MODEL = {"rachana": 1, "report": "desk-pnl", "version": 1, "title": "Desk P&L", "dataset": "trades-basic",
                 "pages": [{"id": "overview", "title": "Overview", "visuals": [
@@ -82,6 +97,8 @@ class RunsBackend(BiBackend):
         self.asked: list[tuple] = []             # (path, body, prefer) of every asynchronous question
         self.lock = threading.Lock()
         self.cancelled_by: dict[str, str] = {}
+        self.schedules: dict[str, dict] = {}
+        self.suggestions = copy.deepcopy(SUGGESTIONS)
         if seed:
             self._seed()
 
@@ -129,6 +146,10 @@ class RunsBackend(BiBackend):
         for i, r in enumerate(list(self.runs.values())[::-1]):          # the seeded runs are older than anything asked while the stand-in runs
             r["_t0"] -= 7200 + 60 * i
 
+    def recipient(self, run):
+        """True when the current user sees the run because it was shared with them (not their own)."""
+        return run["runner"] != self.user and run["owner"] != self.user and any(x["recipient"] == self.user for x in run["shared"]["with"])
+
     def can(self, run):
         mine = run["runner"] == self.user or run["owner"] == self.user
         active = run["state"] in ("queued", "running", "storing", "awaiting-confirm")
@@ -170,9 +191,16 @@ class RunsBackend(BiBackend):
             self.notices.append({"type": "bi-run", "kind": "bi", "id": r["id"], "entityId": r["id"], "title": title, "access": True})
 
     def view_of(self, r):
-        out = {k: v for k, v in r.items() if not k.startswith("_")}
+        out = {k: copy.deepcopy(v) for k, v in r.items() if not k.startswith("_")}
+        out.setdefault("schedule", None)
         out["can"] = self.can(r)
+        if self.recipient(r):                    # the recipient's own view: shared by the runner, nothing of the runner's other shares
+            out.update(shared={"from": r["runner"], "with": []}, schedule=None)
+            out["can"] = {k: k in ("open", "export") and r["state"] in ("done", "reused") for k in out["can"]}
         return out
+
+    def sees(self, r):
+        return r.get("_visible") and (r["runner"] == self.user or r["owner"] == self.user or self.recipient(r))
 
     # ---- the stand-in's answers ----------------------------------------------------------------------------------------------------------------------
     async def sse(self, path, ident=None, opened=None):
@@ -203,6 +231,9 @@ class RunsBackend(BiBackend):
     async def _send(self, method, path, ident=None, **kw):
         if path.endswith("/inbox/count"):
             return {"unread": len(self.notices)}
+        if path == "/directory":
+            q = str((kw.get("params") or {}).get("q") or "").lower()
+            return [e for e in DIRECTORY if q in e["name"] or q in e.get("displayName", "").lower()]
         if path == "/me/inbox":
             return [dict(n, seq=i + 1, read=False, createdAt=iso(time.time()), sender="drishti") for i, n in enumerate(self.notices)]
         return await super()._send(method, path, ident, **kw)
@@ -240,7 +271,13 @@ class RunsBackend(BiBackend):
     async def bi_file(self, method, path, ident, body=None, wait=None):
         rid = path.split("/")[2]
         fmt = (body or {}).get("format", "csv")
-        return b"DESK,MTM\nDESK-FX,1250000\n", {"content-type": "text/csv", "content-disposition": f'attachment; filename="{rid}.{fmt}"'}
+        self.bi_calls.append((method, path, body, {}))
+        if fmt not in ("csv", "xlsx"):
+            raise BackendError(400, "DRS-9060", f"a run exports as csv or xlsx, not {fmt}")
+        if fmt == "xlsx":
+            return b"PK\x03\x04 stand-in workbook", {"content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                                    "content-disposition": f'attachment; filename="{rid}.xlsx"'}
+        return b"DESK,MTM\nDESK-FX,1250000\n", {"content-type": "text/csv", "content-disposition": f'attachment; filename="{rid}.csv"'}
 
     async def bi(self, method, path, ident, body=None, **params):
         self.bi_calls.append((method, path, body, params))
@@ -259,7 +296,7 @@ class RunsBackend(BiBackend):
             return {"inlineWait": "PT2S", "maxWait": "PT10S", "confirmAboveSeconds": 60, "retentionDays": 30, "eventsUrl": "/api/v1/bi/runs/events"}
         if path == "/runs":
             states = [s for s in str(params.get("state") or "").split(",") if s]
-            rows = [self.view_of(r) for r in sorted(self.runs.values(), key=lambda r: -r["_t0"]) if r.get("_visible")]
+            rows = [self.view_of(r) for r in sorted(self.runs.values(), key=lambda r: -r["_t0"]) if self.sees(r)]
             if states:
                 rows = [r for r in rows if r["state"] in states]
             if params.get("source"):
@@ -280,14 +317,44 @@ class RunsBackend(BiBackend):
                     "accuracy": {"medianRatio": 1.08, "p10": 0.6, "p90": 1.9, "basis": "delta-stats", "unknownShare": 0.14},
                     "inline": {"inlineShare": 0.81, "jobMedianSeconds": 220}, "settings": {"file": "config/runs/runs.yaml", "inlineWait": "PT2S", "confirmAboveSeconds": 60, "retentionDays": 30},
                     "nodes": [{"node": "java-1", "alive": True}, {"node": "java-2", "alive": True}],
-                    "suggestions": [{"model": "trading", "grain": ["desk", "month"], "runs": 37, "medianSeconds": 240, "status": "rollup drafted for review"}]}
+                    "suggestions": copy.deepcopy(self.suggestions)}
+        if path.startswith("/admin/runs/suggestions/"):
+            sid, verb = path.split("/")[4:6]
+            s = next((x for x in self.suggestions if x["id"] == sid), None)
+            if s is None:
+                raise BackendError(404, "DRS-9001", "no such suggestion")
+            if s["status"] != "suggested":
+                raise BackendError(409, "DRS-9004", f"the suggestion is {s['status']} already")
+            s.update(status="accepted" if verb == "accept" else "dismissed", decidedBy=self.user, item="bi-model-trading" if verb == "accept" else None)
+            return copy.deepcopy(s)
         if path.startswith("/admin/runs/") and path.endswith("/cancel"):
             rid = path.split("/")[3]
             return self._cancel(rid, "cancelled by an administrator (ops1)")
+        if path == "/runs/schedules" and method == "GET":
+            return {"schedules": [{k: v for k, v in x.items() if k != "owner"} for x in self.schedules.values() if x["owner"] == self.user]}
+        if path.startswith("/runs/schedules/"):
+            sid = path.split("/")[3]
+            if sid not in self.schedules:
+                raise BackendError(404, "DRS-9061", "no such schedule")
+            sch = self.schedules[sid]
+            if method == "DELETE":
+                del self.schedules[sid]
+                self.runs[sch["runId"]]["schedule"] = None
+                return None
+            b = body or {}
+            if b.get("schedule"):
+                self._check_schedule(b["schedule"])
+                sch.update(schedule=b["schedule"], nextAt=self._next_at(b["schedule"]))
+            if "enabled" in b:
+                sch.update(enabled=bool(b["enabled"]), nextAt=self._next_at(sch["schedule"]) if b["enabled"] else None)
+            if b.get("data"):
+                sch["data"] = b["data"]
+            self.runs[sch["runId"]]["schedule"] = {k: v for k, v in sch.items() if k != "owner"}
+            return {k: v for k, v in sch.items() if k != "owner"}
         if path.startswith("/runs/"):
             parts = path.split("/")
             rid = parts[2]
-            if rid not in self.runs:
+            if rid not in self.runs or not self.sees(self.runs[rid]):
                 raise BackendError(404, "DRS-9080", "no such run")
             r = self.runs[rid]
             tail = "/".join(parts[3:])
@@ -310,10 +377,7 @@ class RunsBackend(BiBackend):
                 self._event(r)
                 return self.view_of(r)
             if tail == "share":
-                mode = {"bob": "re-masked", "carol": "recomputed"}
-                shares = [{"recipient": t, "mode": mode.get(t, "same"), "recipientRun": None} for t in (body or {}).get("to", [])]
-                r["shared"]["with"] = [s for s in r["shared"]["with"] if s["recipient"] not in {x["recipient"] for x in shares}] + shares
-                return {"shares": shares}
+                return {"shares": self._share(r, (body or {}).get("to", []))}
             if tail.startswith("share/") and method == "DELETE":
                 r["shared"]["with"] = [s for s in r["shared"]["with"] if s["recipient"] != parts[4]]
                 return None
@@ -325,8 +389,45 @@ class RunsBackend(BiBackend):
                 return {"item": {"id": "bi-snap-1", "kind": "dataset" if b.get("as") == "snapshot" else "report", "workspace": "me", "status": "draft"},
                         "snapshot": {"name": b.get("name"), "version": 1} if b.get("as") == "snapshot" else None}
             if tail == "schedule":
-                return {"id": "sch-1", "schedule": (body or {}).get("schedule"), "data": (body or {}).get("data"), "nextAt": "2026-10-22T07:30:00Z"}
+                b = body or {}
+                self._check_schedule(b.get("schedule"))
+                sid = f"sch-{len(self.schedules) + 1}"
+                sch = {"id": sid, "runId": rid, "title": r["title"], "source": copy.deepcopy(r["source"]), "schedule": b["schedule"], "data": b.get("data") or "latest",
+                       "enabled": True, "lastRun": None, "nextAt": self._next_at(b["schedule"]), "createdAt": iso(time.time()), "owner": self.user}
+                self.schedules[sid] = sch
+                r["schedule"] = {k: v for k, v in sch.items() if k != "owner"}
+                return copy.deepcopy(r["schedule"])
         return await super().bi(method, path, ident, body, **params)
+
+    def _share(self, r, to):
+        """One share per person (a role expanded to its members now): same, re-masked, recomputed (a run of their own) or refused (mode null with its code)."""
+        people = []
+        for t in to:
+            people += ROLES.get(t[5:], []) if t.startswith("role:") else [t]
+        shares = []
+        for who in dict.fromkeys(people):
+            mode = SHARE_MODE.get(who, "same")
+            if mode is None:
+                shares.append({"recipient": who, "mode": None, "code": "DRS-9021", "detail": f"{who} may not read the model trading", "recipientRun": None})
+                continue
+            run = None
+            if mode == "recomputed":
+                run = self._new(r["title"], "queued", source=r["source"], runner=who)
+                run["shared"] = {"from": self.user, "with": []}
+            shares.append({"recipient": who, "mode": mode, "recipientRun": run["id"] if run else None})
+        kept = [x for x in shares if x["mode"]]
+        r["shared"]["with"] = [x for x in r["shared"]["with"] if x["recipient"] not in {k["recipient"] for k in kept}] + kept
+        return shares
+
+    @staticmethod
+    def _check_schedule(text):
+        if not text or not SCHEDULE.fullmatch(str(text).strip()):
+            raise BackendError(422, "DRS-9061", f"not a schedule: {text!r} (daily HH:MM, weekdays HH:MM, business-days HH:MM, weekly mon HH:MM, monthly last HH:MM [business])")
+
+    @staticmethod
+    def _next_at(text):
+        hhmm = re.search(r"(\d\d):(\d\d)", text).group(0)
+        return ("2026-10-31T" if text.startswith("monthly") else "2026-10-22T") + hhmm + ":00Z"
 
     def _cancel(self, rid, why):
         r = self.runs[rid]
@@ -337,8 +438,9 @@ class RunsBackend(BiBackend):
     def share_as_viewer(self, rid, viewer="bob"):
         """What the viewer sees after a share: the run listed as shared with them (the stand-in answers as them from now on)."""
         r = self.runs[rid]
+        if not any(x["recipient"] == viewer for x in r["shared"]["with"]):
+            r["shared"]["with"].append({"recipient": viewer, "mode": SHARE_MODE.get(viewer) or "same", "recipientRun": None})
         self.user = viewer
-        r.update(shared={"from": r["runner"], "with": []}, owner=viewer)
 
 
 def serve(backend=None):

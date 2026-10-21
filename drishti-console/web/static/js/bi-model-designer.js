@@ -664,6 +664,21 @@
     void body;
   }
 
+  /** BI runs' rollup suggestions for this model (BI_RUNS.md section 8.3a), as a small notice linking to Admin → BI → Runs. Only a bi-admin can read them (and
+   *  accept them), so for anyone else the notice simply never shows. */
+  function rollupNotice(model) {
+    if (!model) { return; }
+    fetch('/bi/api/admin/runs', { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then((res) => (res.ok ? res.json() : null)).then((d) => {
+      const open = ((d && d.suggestions) || []).filter((s) => s.model === model && (s.status || 'suggested') === 'suggested');
+      if (!open.length) { return; }
+      const runs = open.reduce((n, s) => n + (Number(s.runs) || 0), 0);
+      const p = h('p', { class: 'bi-warn bi-md-suggest', role: 'note', 'data-md-suggest': String(open.length) },
+        (open.length === 1 ? 'A heavy question on this model was' : open.length + ' heavy questions on this model were') + ' asked ' + runs + ' times this week: a rollup would answer '
+        + (open.length === 1 ? 'it' : 'them') + ' at once. ', h('a', { href: '/admin/bi/runs?model=' + encodeURIComponent(model) + '#suggestions', text: 'Review the suggested rollups' }));
+      q('[data-msg]').after(p);
+    }).catch(() => {});
+  }
+
   B.api('GET', '/items/' + B.id2path(itemId)).then((it) => {
     if (it.kind !== 'model') { throw new Error('This item is not a model (it is a ' + it.kind + ').'); }
     M.item = it;
@@ -678,6 +693,7 @@
   }).then((r) => {
     M.doc = r.doc;
     M.savedDoc = B.clone(r.doc);
+    rollupNotice(M.doc.model || (M.item && M.item.name));
     M.doc.datasets = M.doc.datasets || {};
     const lay = (M.doc.layout = M.doc.layout || {});
     lay.positions = lay.positions || {};

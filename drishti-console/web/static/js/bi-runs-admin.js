@@ -15,7 +15,7 @@
  */
 /* Admin → BI → Runs (docs/architecture/BI_RUNS.md section 17.2), drawn from GET /bi/api/admin/runs every 5 seconds while the page is shown: the gate (slots
    per work class), the queue, what runs (with Cancel), the result store, the estimates' accuracy, the inline rate, the settings, and the repeated heavy
-   questions a rollup would answer. Every part is optional: what the server does not report is left out, never shown as zero. */
+   questions a rollup would answer, each accepted (the rollup added to the model's draft for review) or dismissed. Every part is optional: what the server does not report is left out, never shown as zero. */
 (function () {
   'use strict';
   const B = window.drishtiBi, R = B && B.runs;
@@ -61,13 +61,54 @@
     });
     if (!running.children.length) { running.appendChild(h('tr', {}, h('td', { colspan: '7', class: 'text-muted-d', text: 'Nothing runs in the background now.' }))); }
 
-    B.clear(suggest);
-    (d.suggestions || []).forEach((s) => suggest.appendChild(h('tr', {}, h('th', { scope: 'row', class: 'mono', text: s.model || '' }), h('td', { text: [].concat(s.grain || []).join(' × ') }), h('td', { class: 'num', text: String(s.runs || 0) }),
-      h('td', { text: s.medianSeconds != null ? R.duration(s.medianSeconds) : '' }), h('td', { text: s.status || 'a rollup at this grain would answer it at once' }))));
-    if (!suggest.children.length) { suggest.appendChild(h('tr', {}, h('td', { colspan: '5', class: 'text-muted-d', text: 'No heavy question was asked often enough to suggest a rollup.' }))); }
+    drawSuggestions(d.suggestions || []);
 
     const nodes = (d.nodes || []).map((n) => (typeof n === 'string' ? { node: n } : n));
     if (nodes.length && nodeSel.options.length === 1) { nodes.forEach((n) => nodeSel.appendChild(h('option', { value: n.node, text: n.node + (n.alive === false ? ' (not reachable)' : '') }))); }
+  }
+
+  // the rollup suggestions (section 8.3a): redrawn only when they change, so an open YAML or the focus survives the 5-second refresh
+  const STATUS = { suggested: 'Suggested', accepted: 'Accepted: in the model\'s draft for review', dismissed: 'Dismissed', built: 'Built: these questions are instant now' };
+  const sMsg = q('[data-admin-suggest-msg]');
+  const onlyModel = new URLSearchParams(window.location.search).get('model');
+  let shownSig = null;
+  function decide(s, verb, b) {
+    B.busy(b, () => fetch('/bi/api/admin/runs/suggestions/' + encodeURIComponent(s.id) + '/' + verb, { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json', 'Content-Type': 'application/json' }, body: '{}' })
+      .then((res) => res.json().catch(() => ({})).then((j) => {
+        if (!res.ok) { throw j; }
+        B.clear(sMsg);
+        if (verb === 'dismiss') { sMsg.textContent = 'Dismissed: the rollup for ' + s.model + ' at ' + [].concat(s.grain || []).join(' × ') + ' is no longer suggested.'; } else if (j.item) {
+          sMsg.append('Accepted: the rollup ' + ((j.rollup || s.rollup || {}).name || '') + ' is in the draft of ' + s.model + '. Review it and publish it as any change. ',
+            h('a', { href: '/bi/i/' + B.id2path(j.item), 'data-sugg-open': j.item, text: 'Open the model' }));
+        } else { sMsg.textContent = 'Accepted. ' + s.model + ' is a pack\'s model: add the YAML shown under the suggestion to it by hand.'; }
+        shownSig = null;
+        return load();
+      })).catch((e) => { sMsg.textContent = R.words(e.code, e.detail); }));
+  }
+  function drawSuggestions(list) {
+    list = onlyModel ? list.filter((s) => s.model === onlyModel) : list;
+    const sig = JSON.stringify(list);
+    if (sig === shownSig) { return; }
+    shownSig = sig;
+    B.clear(suggest);
+    list.forEach((s) => {
+      const st = s.status || 'suggested';
+      const grain = [].concat(s.grain || []).join(' × ') + ((s.filters || []).length ? ' · filters: ' + [].concat(s.filters).join(', ') : '');
+      const acts = h('div', { class: 'bi-sugg-acts' });
+      if (st === 'suggested') {
+        const acc = h('button', { type: 'button', class: 'btn-pill btn-accent', 'data-sugg-accept': s.id, 'aria-label': 'Accept: add the rollup to the draft of ' + s.model, text: 'Accept' });
+        const dis = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-sugg-dismiss': s.id, 'aria-label': 'Dismiss the suggestion for ' + s.model, text: 'Dismiss' });
+        acc.addEventListener('click', () => decide(s, 'accept', acc));
+        dis.addEventListener('click', () => decide(s, 'dismiss', dis));
+        acts.append(acc, dis);
+      } else if (s.item) { acts.appendChild(h('a', { class: 'btn-pill btn-ghost', href: '/bi/i/' + B.id2path(s.item), text: 'Open the model' })); }
+      const yaml = s.yaml ? h('details', {}, h('summary', { text: 'The rollup' + (s.rollup && s.rollup.name ? ' ' + s.rollup.name : '') }), h('pre', { class: 'bi-sugg-yaml', text: s.yaml })) : null;
+      suggest.appendChild(h('tr', { 'data-sugg': s.id, 'data-sugg-status': st }, h('th', { scope: 'row', class: 'mono', text: s.model || '' }),
+        h('td', {}, h('span', { text: grain }), s.words ? h('small', { class: 'text-muted-d', text: ' ' + s.words }) : null, yaml),
+        h('td', { class: 'num', text: String(s.runs || 0) }), h('td', { text: s.medianSeconds != null ? R.duration(s.medianSeconds) : '' }),
+        h('td', { class: 'bi-sugg-status bi-sugg-status-' + st, text: (STATUS[st] || st) + (s.decidedBy && st !== 'suggested' ? ' (' + s.decidedBy + ')' : '') }), h('td', {}, acts)));
+    });
+    if (!suggest.children.length) { suggest.appendChild(h('tr', {}, h('td', { colspan: '6', class: 'text-muted-d', text: 'No heavy question was asked often enough to suggest a rollup.' }))); }
   }
 
   let timer = null;

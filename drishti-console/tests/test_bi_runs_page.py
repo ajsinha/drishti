@@ -189,3 +189,70 @@ def test_every_runs_script_has_the_licence_and_no_markup_strings():
         assert "PROPRIETARY AND CONFIDENTIAL" in text[:600], name
         assert "innerHTML" not in text and "insertAdjacentHTML" not in text, name            # text only, never markup (the strict policy)
         assert len(text.splitlines()) < 1500, name
+
+
+def test_share_answers_each_mode_a_role_expanded_and_a_refusal_and_the_recipient_sees_it(bi):
+    client, backend = bi
+    done = next(r for r in backend.runs.values() if r["state"] == "done")
+    s = client.post(f"/bi/api/runs/{done['id']}/share", json={"to": ["bob", "carol", "eve", "role:risk-team"]}).json()["shares"]
+    modes = {x["recipient"]: x["mode"] for x in s}
+    assert modes == {"bob": "re-masked", "carol": "recomputed", "eve": None, "dave": "same", "erin": "same"}
+    assert next(x for x in s if x["recipient"] == "carol")["recipientRun"] and next(x for x in s if x["recipient"] == "eve")["code"] == "DRS-9021"
+    backend.user = "bob"
+    mine = client.get("/bi/api/runs", params={"mine": "false", "shared": "true"}).json()["runs"]
+    shared = next(r for r in mine if r["id"] == done["id"])
+    assert shared["shared"] == {"from": "ajsinha", "with": []} and shared["can"]["export"] and not shared["can"]["share"]
+    backend.user = "ajsinha"
+    assert client.delete(f"/bi/api/runs/{done['id']}/share/bob").status_code == 204
+    backend.user = "bob"
+    assert client.get(f"/bi/api/runs/{done['id']}").status_code == 404
+
+
+def test_schedules_are_made_listed_edited_and_removed_in_the_subscription_grammar(bi):
+    client, backend = bi
+    done = next(r for r in backend.runs.values() if r["state"] == "done")
+    bad = client.post(f"/bi/api/runs/{done['id']}/schedule", json={"schedule": "after-load TRD", "data": "latest"})
+    assert bad.status_code == 422 and bad.json()["code"] == "DRS-9061"
+    made = client.post(f"/bi/api/runs/{done['id']}/schedule", json={"schedule": "weekly mon 08:00", "data": "same"}).json()
+    assert made["schedule"] == "weekly mon 08:00" and made["nextAt"] and made["runId"] == done["id"]
+    assert client.get(f"/bi/api/runs/{done['id']}").json()["schedule"]["id"] == made["id"]
+    assert [x["id"] for x in client.get("/bi/api/runs/schedules").json()["schedules"]] == [made["id"]]
+    edited = client.put(f"/bi/api/runs/schedules/{made['id']}", json={"schedule": "daily 06:30", "enabled": False}).json()
+    assert edited["schedule"] == "daily 06:30" and edited["enabled"] is False
+    assert client.delete(f"/bi/api/runs/schedules/{made['id']}").status_code == 204
+    assert client.get(f"/bi/api/runs/{done['id']}").json()["schedule"] is None
+
+
+def test_export_is_csv_or_excel(bi):
+    client, backend = bi
+    done = next(r for r in backend.runs.values() if r["state"] == "done")
+    x = client.post(f"/bi/api/runs/{done['id']}/export", json={"format": "xlsx"})
+    assert x.status_code == 200 and x.content.startswith(b"PK") and x.headers["content-disposition"].endswith('.xlsx"')
+    assert client.post(f"/bi/api/runs/{done['id']}/export", json={"format": "pdf"}).status_code == 400
+
+
+def test_suggestions_are_accepted_or_dismissed_through_the_console():
+    client, backend = make()
+    page = client.get("/admin/bi/runs")
+    assert 'id="suggestions"' in page.text and "data-admin-suggest-msg" in page.text
+    listed = client.get("/bi/api/admin/runs").json()["suggestions"]
+    assert {s["id"] for s in listed} == {"sg-1", "sg-2"} and listed[0]["yaml"].startswith("rollups:")
+    a = client.post("/bi/api/admin/runs/suggestions/sg-1/accept", json={})
+    assert a.status_code == 200 and a.json()["status"] == "accepted" and a.json()["item"] == "bi-model-trading"
+    assert client.post("/bi/api/admin/runs/suggestions/sg-1/dismiss", json={}).status_code == 409
+    assert client.post("/bi/api/admin/runs/suggestions/sg-2/dismiss", json={}).json()["status"] == "dismissed"
+    assert client.post("/bi/api/admin/runs/suggestions/sg-2/other", json={}).status_code == 404
+    assert ("POST", "/admin/runs/suggestions/sg-1/accept", {}, {}) in backend.bi_calls
+
+
+def test_the_query_panel_asks_sql_with_the_inline_wait_when_runs_are_on_the_page():
+    text = (CONSOLE / "web/static/js/bi-query-panel.js").read_text(encoding="utf-8")
+    assert "B.ask('/sql', body, 2)" in text and "B.runs.settle(" in text
+    page = (CONSOLE / "web/templates/bi/design.html").read_text(encoding="utf-8")
+    scripts = re.findall(r"/static/js/([a-z-]+)\.js", page)
+    assert scripts.index("bi-lib") < scripts.index("bi-runs") < scripts.index("bi-query-panel") and "bi-runs.css" in page
+
+
+def test_the_model_designer_links_to_open_rollup_suggestions():
+    text = (CONSOLE / "web/static/js/bi-model-designer.js").read_text(encoding="utf-8")
+    assert "function rollupNotice(model)" in text and "'/admin/bi/runs?model=' + encodeURIComponent(model) + '#suggestions'" in text and "data-md-suggest" in text

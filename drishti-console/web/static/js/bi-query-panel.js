@@ -154,14 +154,24 @@
     run.addEventListener('click', () => {
       const mq = opts.current();
       if (!mq) { return; }
-      B.busy(run, () => B.sql(B.mq.sql(mq, opts.fields()), opts.ref, mq.limit).then((a) => {
-        const plan = (a.meta || {}).plan || (a.meta || {}).planHash || '';
-        const mine = (opts.lastMeta && opts.lastMeta()) || {};
-        const same = plan && (mine.plan || mine.planHash) ? plan === (mine.plan || mine.planHash) : null;
-        B.clear(out).append(h('span', { 'data-qp-rows': String(a.rowCount != null ? a.rowCount : (a.rows || []).length), text: (a.rowCount != null ? a.rowCount : (a.rows || []).length) + ' rows from the server' + ((a.meta || {}).millis != null ? ' in ' + a.meta.millis + ' ms' : '') + '. ' }),
-          plan ? h('span', { 'data-qp-plan': plan, text: 'Plan ' + String(plan).slice(0, 12) + (same === true ? ': the same plan as the visual\'s query.' : same === false ? ': a different plan from the visual\'s query.' : '.') }) : null);
+      const body = { sql: B.mq.sql(mq, opts.fields()), model: opts.ref, limit: mq.limit || undefined };
+      // with BI runs on the page (bi-runs.js), the SQL is asked with the inline wait: done in time it answers as before, longer it shows the run card here
+      const asked = () => (B.runs && B.ask ? B.ask('/sql', body, 2) : B.sql(body.sql, body.model, body.limit).then((a) => ({ answer: a })));
+      B.busy(run, () => asked().then((g) => {
+        if (g.answer !== undefined) { return drawAnswer(g.answer); }
+        const host = h('div', { class: 'bi-qp-run', 'data-qp-run-card': '' });
+        B.clear(out).appendChild(host);
+        B.runs.settle(g, { el: host, body: host }, { title: 'Run as SQL', reask: (w, extra) => B.ask('/sql', Object.assign({}, body, extra || {}), w) }).then((a) => { if (a) { drawAnswer(a); } });
+        return null;
       }).catch((e) => { B.clear(out).appendChild(h('span', { class: 'bi-bad', 'data-qp-error': e.code || '', text: e.status === 404 ? 'This server does not run Drishti SQL yet.' : e.message })); }));
     });
+    function drawAnswer(a) {
+      const plan = (a.meta || {}).plan || (a.meta || {}).planHash || '';
+      const mine = (opts.lastMeta && opts.lastMeta()) || {};
+      const same = plan && (mine.plan || mine.planHash) ? plan === (mine.plan || mine.planHash) : null;
+      B.clear(out).append(h('span', { 'data-qp-rows': String(a.rowCount != null ? a.rowCount : (a.rows || []).length), text: (a.rowCount != null ? a.rowCount : (a.rows || []).length) + ' rows from the server' + ((a.meta || {}).millis != null ? ' in ' + a.meta.millis + ' ms' : '') + '. ' }),
+        plan ? h('span', { 'data-qp-plan': plan, text: 'Plan ' + String(plan).slice(0, 12) + (same === true ? ': the same plan as the visual\'s query.' : same === false ? ': a different plan from the visual\'s query.' : '.') }) : null);
+    }
     // a visual's answer (its query) can arrive after it was selected, or after a field was dropped on it: 'query' redraws then
     if (opts.on) { opts.on('select', draw); opts.on('query', draw); opts.on('model', () => window.setTimeout(draw, 600)); }
     draw();

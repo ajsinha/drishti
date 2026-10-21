@@ -159,6 +159,71 @@
     return bits.join(' · ');
   };
 
+  // ---- sharing, schedules and export (section 9.3 as built in 18.2b, 14.1) ------------------------------------------------------------------------------
+  /** What a recipient gets, as the server decided it: the words, and the sentence that explains them. */
+  R.MODES = {
+    same: ['sees the same', 'the same rights as you: they read your stored result'],
+    're-masked': ['re-masked', 'the same rows with their own extra masks applied: a masked column shows the mask, never a value'],
+    recomputed: ['recomputed as them', 'their rights differ: the question runs again as them, and they are told when it is ready']
+  };
+  R.mode = (m) => (R.MODES[m] || [String(m || 'not shared'), ''])[0];
+  R.modeWhy = (m) => (R.MODES[m] || ['', ''])[1];
+  /** The schedule grammar (SubscriptionSchedule's, without after-load) from the friendly presets, and back. */
+  R.DAYS = [['mon', 'Monday'], ['tue', 'Tuesday'], ['wed', 'Wednesday'], ['thu', 'Thursday'], ['fri', 'Friday'], ['sat', 'Saturday'], ['sun', 'Sunday']];
+  R.PRESETS = [['daily', 'Daily at'], ['weekdays', 'Weekdays at'], ['business-days', 'Business days at'], ['weekly', 'Weekly on'], ['monthly', 'Monthly, the last day at'],
+    ['monthly-business', 'Monthly, the last business day at'], ['custom', 'Written out']];
+  R.scheduleText = function (p) {
+    const t = /^\d\d:\d\d$/.test(p.time || '') ? p.time : '07:00';
+    if (p.kind === 'custom') { return String(p.text || '').trim(); }
+    if (p.kind === 'weekly') { return 'weekly ' + (p.day || 'mon') + ' ' + t; }
+    if (p.kind === 'monthly' || p.kind === 'monthly-business') { return 'monthly last ' + t + (p.kind === 'monthly-business' ? ' business' : ''); }
+    return p.kind + ' ' + t;
+  };
+  R.parseSchedule = function (text) {
+    const s = String(text || '').trim();
+    let m = /^(daily|weekdays|business-days) (\d\d:\d\d)$/.exec(s);
+    if (m) { return { kind: m[1], time: m[2] }; }
+    m = /^weekly (mon|tue|wed|thu|fri|sat|sun) (\d\d:\d\d)$/.exec(s);
+    if (m) { return { kind: 'weekly', day: m[1], time: m[2] }; }
+    m = /^monthly last (\d\d:\d\d)( business)?$/.exec(s);
+    if (m) { return { kind: m[2] ? 'monthly-business' : 'monthly', time: m[1] }; }
+    return { kind: s ? 'custom' : 'business-days', time: '07:30', text: s };
+  };
+  /** "business-days 07:30 on the newest data · next 2026-10-22 07:30" (or "paused"). */
+  R.scheduleWords = function (s) {
+    if (!s) { return ''; }
+    if (typeof s === 'string') { return s; }
+    const when = (t) => String(t || '').replace('T', ' ').replace(/:00Z$|Z$/, '').slice(0, 16);
+    return s.schedule + ' on ' + (s.data === 'same' ? 'the same dates' : 'the newest data') + (s.enabled === false ? ' · paused' : s.nextAt ? ' · next ' + when(s.nextAt) + ' UTC' : '')
+      + (s.lastRun ? ' · last run ' + s.lastRun : '');
+  };
+  /** A finished run's result as a file (CSV or Excel), made by the server from the stored result as the caller's own version: masked cells stay masked. */
+  R.exportRun = function (run, fmt, tell) {
+    tell('Preparing the ' + (fmt === 'xlsx' ? 'Excel' : 'CSV') + ' file…', false);
+    return fetch('/bi/api/runs/' + encodeURIComponent(run.id) + '/export', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: '*/*' }, body: JSON.stringify({ format: fmt }) })
+      .then((res) => {
+        if (!res.ok) { return res.json().catch(() => ({})).then((d) => { throw Object.assign(new Error(d.detail || res.statusText), { code: d.code, detail: d.detail || res.statusText }); }); }
+        const cd = res.headers.get('Content-Disposition') || '', m = /filename="?([^";]+)"?/.exec(cd);
+        return res.blob().then((blob) => {
+          const name = m ? m[1] : ((B.slug && B.slug(run.title || run.id)) || run.id) + '.' + fmt;
+          const a = h('a', { href: URL.createObjectURL(blob), download: name, hidden: true });
+          document.body.appendChild(a); a.click(); a.remove();
+          window.setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+          tell('Downloaded ' + name + '. Masked cells stay masked.', false);
+        });
+      }).catch((e) => tell(R.words(e.code, e.detail), true));
+  };
+  /** The two export buttons (CSV, Excel) of a finished run the caller may export. */
+  R.exportButtons = function (run, tell) {
+    if (!(run.can || {}).export || !R.finished(run.state)) { return null; }
+    const b = (fmt, label) => {
+      const x = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-run-export': fmt, text: label });
+      x.addEventListener('click', () => { x.disabled = true; R.exportRun(run, fmt, (t, bad) => tell(t, bad, x)).then(() => { x.disabled = false; }); });
+      return x;
+    };
+    return h('span', { class: 'bi-run-export', role: 'group', 'aria-label': 'Export the result' }, b('csv', 'Export CSV'), b('xlsx', 'Export Excel'));
+  };
+
   // ---- settings and the event stream ------------------------------------------------------------------------------------------------------------------
   let settingsP = null;
   /** GET /runs/settings once per page (the inline wait, the retention); a server without runs answers the defaults of section 15. */
@@ -273,7 +338,11 @@
           .catch((x) => B.near(e.currentTarget, R.words(x.code, x.detail), true)))));
       }
       if (!R.active(r.state) && !R.finished(r.state) && can.rerun && o.onRerun) { acts.appendChild(btn('Run again', { 'data-run-again': '' }, () => o.onRerun(r), true)); }
+      const said = h('span', { class: 'bi-run-note', role: 'status' });
+      const ex = R.exportButtons(r, (t, bad) => { said.textContent = t; said.classList.toggle('bi-run-bad', !!bad); });
+      if (ex) { acts.appendChild(ex); }
       acts.appendChild(h('a', { class: 'btn-pill btn-ghost', href: R.runsHref(r.id), 'data-run-open-runs': '', text: 'Open in Runs' }));
+      acts.appendChild(said);
       acts.appendChild(h('a', { class: 'bi-run-help', href: '/help/run-card', 'data-run-help': '', text: 'What is this?' }));
       el.appendChild(acts);
     };
@@ -383,14 +452,17 @@
         return null;
       }
       return B.api('GET', '/runs/' + encodeURIComponent(run.id) + '/result?format=json').then((answer) => {
-        if (banner) { say(banner, 'Drawn from the run of ' + (run.submittedAt || '').replace('T', ' ').slice(0, 16) + ' (' + (R.asOf(run) || 'as of its dates') + '). Change a filter to ask again.'); }
+        if (banner) { say(banner, 'Drawn from the run of ' + (run.submittedAt || '').replace('T', ' ').slice(0, 16) + ' (' + (R.asOf(run) || 'as of its dates') + '). Change a filter to ask again.', run); }
         return answer;
       }, (e) => { if (banner) { say(banner, R.words(e.code, e.detail)); } return null; });
     });
   };
-  function say(box, text) {
+  function say(box, text, run) {
     box.hidden = false;
     B.clear(box).appendChild(document.createTextNode(text + ' '));
     box.appendChild(h('a', { href: R.runsHref(pinned), text: 'Open in Runs' }));
+    const said = h('span', { class: 'bi-run-note', role: 'status' });
+    const ex = run ? R.exportButtons(run, (t, bad) => { said.textContent = ' ' + t; said.classList.toggle('bi-run-bad', !!bad); }) : null;
+    if (ex) { box.appendChild(document.createTextNode(' ')); box.appendChild(ex); box.appendChild(said); }
   }
 })();

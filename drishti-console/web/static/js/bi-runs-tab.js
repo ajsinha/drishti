@@ -169,6 +169,7 @@
   const drawer = q('[data-run-drawer]'), dBody = q('[data-run-drawer-body]');
   let openId = null, returnTo = null;
   function openDrawer(id, from) {
+    if (note && note.id !== id) { note = null; }
     returnTo = from || document.activeElement;
     openId = id;
     drawer.hidden = false;
@@ -208,7 +209,16 @@
     const sel = h('select', Object.assign({ class: 'studio-select', 'aria-label': label }, attrs || {}), h('option', { value: '', text: label + ' ▾' }), items.map((i) => h('option', { value: i[0], text: i[1] })));
     return sel;
   }
-  const said = (anchor, text, bad) => { B.near(anchor, text, bad); say(text); };
+  // what the last action said stays in the drawer (a redraw replaces the button it was said beside) until another run is opened
+  let note = null;
+  const noteBox = () => dBody.querySelector('[data-run-drawer-msg]');
+  const said = (anchor, text, bad) => {
+    if (anchor && anchor.isConnected && (anchor.closest('[data-run-form]') || !dBody.contains(anchor))) { B.near(anchor, text, bad); }
+    say(text);
+    note = openId ? { id: openId, text, bad: !!bad } : null;
+    const box = noteBox();
+    if (box && note) { box.textContent = text; box.classList.toggle('bi-run-bad', note.bad); box.hidden = false; }
+  };
   const failed = (anchor) => (e) => said(anchor, R.words(e.code, e.detail), true);
   const refresh = (r) => { if (r && r.id) { byId[r.id] = r; replaceRow(r); if (openId === r.id) { drawDrawer(r); } } };
 
@@ -248,18 +258,17 @@
       });
       acts.appendChild(m);
     }
-    if (can.export) {
-      const formats = [['csv', 'CSV'], ['xlsx', 'Excel'], ['parquet', 'Parquet']].concat(s.type === 'report' || s.type === 'board' ? [['pdf', 'PDF']] : []);
-      const m = menu('Export', { 'data-run-act': 'export' }, formats);
-      m.addEventListener('change', () => { const f = m.value; m.value = ''; if (f) { exportRun(r, f, m); } });
-      acts.appendChild(m);
-    }
+    const ex = R.exportButtons(r, (t, bad, b) => said(b, t, bad));          // CSV and Excel, from the stored result as the caller's own version
+    if (ex) { ex.setAttribute('data-run-act', 'export'); acts.appendChild(ex); }
     if (can.promote) {
       const m = menu('Promote', { 'data-run-act': 'promote' }, [['snapshot', 'to a dataset snapshot'], ['report', 'to a report']]);
       m.addEventListener('change', () => { const as = m.value; m.value = ''; if (as) { promote(r, as, m); } });
       acts.appendChild(m);
     }
     dBody.appendChild(acts);
+    const msg = h('p', { class: 'bi-run-dmsg', 'data-run-drawer-msg': '', hidden: !(note && note.id === r.id) });
+    if (note && note.id === r.id) { msg.textContent = note.text; msg.classList.toggle('bi-run-bad', note.bad); }
+    dBody.appendChild(msg);
 
     // what it is
     const filters = [].concat(p.filters || []).map((f) => f.field + ' ' + (f.op === '!=' ? '≠' : f.op || 'in') + ' ' + [].concat(f.values || []).join(', '));
@@ -297,36 +306,33 @@
     }
     dBody.appendChild(keepRow);
 
-    // shared with
+    // shared with: each recipient's mode as the server decided it (sees the same, re-masked, recomputed as them), and Unshare
     const sh = (r.shared && r.shared.with) || [];
-    const MODE = { same: 'sees your result (same rights)', 're-masked': 're-masked: their masks applied', recomputed: 'their own recomputation' };
     const shareRow = h('div', { class: 'bi-run-drow' }, h('strong', { text: 'Shared with ' }), sh.length ? null : h('span', { text: '—' }));
-    const list = h('ul', { class: 'bi-run-shares' }, sh.map((x) => h('li', { 'data-run-share': x.recipient }, x.recipient + ' (' + (MODE[x.mode] || x.mode) + ') ',
-      can.share ? act('Remove', { 'aria-label': 'Stop sharing with ' + x.recipient }, (b) => B.api('DELETE', '/runs/' + enc + '/share/' + encodeURIComponent(x.recipient)).then(() => { said(b, 'No longer shared with ' + x.recipient + '.'); return B.api('GET', '/runs/' + enc).then(refresh); }).catch(failed(b))) : null)));
+    const list = h('ul', { class: 'bi-run-shares' }, sh.map((x) => h('li', { 'data-run-share': x.recipient, 'data-run-share-mode': x.mode || '' },
+      h('span', { class: 'bi-run-who', text: x.recipient }), ' ', h('span', { class: 'bi-run-mode bi-run-mode-' + (x.mode || 'none'), title: R.modeWhy(x.mode), text: R.mode(x.mode) }),
+      x.recipientRun ? h('small', { class: 'text-muted-d', text: ' (their run ' + x.recipientRun.slice(-6) + ')' }) : null, ' ',
+      can.share ? act('Unshare', { 'data-run-unshare': x.recipient, 'aria-label': 'Stop sharing with ' + x.recipient }, (b) => B.api('DELETE', '/runs/' + enc + '/share/' + encodeURIComponent(x.recipient)).then(() => { said(b, 'No longer shared with ' + x.recipient + '. A run of their own stays theirs.'); return B.api('GET', '/runs/' + enc).then(refresh); }).catch(failed(b))) : null)));
     if (sh.length) { shareRow.appendChild(list); }
     if (can.share) { shareRow.appendChild(act('Share…', { 'data-run-act': 'share' }, (b) => shareForm(r, b))); }
     dBody.appendChild(shareRow);
 
-    // schedule
-    const schedRow = h('div', { class: 'bi-run-drow' }, h('strong', { text: 'Schedule ' }), h('span', { text: r.schedule ? r.schedule : '—' }));
-    if (can.schedule) { schedRow.appendChild(act('Schedule…', { 'data-run-act': 'schedule' }, (b) => scheduleForm(r, b))); }
+    // schedule: the run's own (the owner's), with its next firing; edit, pause or resume, remove
+    const sc = r.schedule && typeof r.schedule === 'object' ? r.schedule : null;
+    const schedRow = h('div', { class: 'bi-run-drow' }, h('strong', { text: 'Schedule ' }), h('span', { 'data-run-schedule': sc ? sc.id : '', text: sc ? R.scheduleWords(sc) : r.schedule || '—' }));
+    if (can.schedule && !sc) { schedRow.appendChild(act('Schedule…', { 'data-run-act': 'schedule' }, (b) => scheduleForm(r, b, null))); }
+    if (can.schedule && sc) {
+      const sid = encodeURIComponent(sc.id);
+      const after = (b, text) => (s2) => { said(b, text); r.schedule = s2 || null; return B.api('GET', '/runs/' + enc).then(refresh, () => refresh(r)); };
+      schedRow.appendChild(act('Edit', { 'data-run-sched-edit': sc.id }, (b) => scheduleForm(r, b, sc)));
+      schedRow.appendChild(act(sc.enabled === false ? 'Resume' : 'Pause', { 'data-run-sched-toggle': sc.id }, (b) => B.busy(b, () => B.api('PUT', '/runs/schedules/' + sid, { enabled: sc.enabled === false })
+        .then((s2) => after(b, s2.enabled === false ? 'Paused: it does not fire until you resume it.' : 'Resumed' + (s2.nextAt ? ': next ' + when(s2.nextAt) + ' UTC.' : '.'))(s2)).catch(failed(b)))));
+      schedRow.appendChild(act('Remove', { 'data-run-sched-remove': sc.id, class: 'btn-pill btn-ghost bi-danger' }, (b) => B.confirm(b, 'Remove this schedule? Runs it made stay listed.', 'Remove').then((yes) => {
+        if (yes) { B.api('DELETE', '/runs/schedules/' + sid).then(() => after(b, 'Schedule removed.')(null)).catch(failed(b)); }
+      })));
+    }
     dBody.appendChild(schedRow);
     if (r.shared && r.shared.from) { dBody.appendChild(h('p', { class: 'bi-run-note', text: 'Shared with you by ' + r.shared.from + '. Masks hold: you see what your own rights allow.' })); }
-  }
-
-  function exportRun(r, fmt, anchor) {
-    said(anchor, 'Preparing the ' + fmt.toUpperCase() + ' file…', false);
-    fetch('/bi/api/runs/' + encodeURIComponent(r.id) + '/export', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: '*/*' }, body: JSON.stringify({ format: fmt }) })
-      .then((res) => {
-        if (!res.ok) { return res.json().catch(() => ({})).then((d) => { throw Object.assign(new Error(d.detail || res.statusText), { code: d.code, detail: d.detail || res.statusText }); }); }
-        const cd = res.headers.get('Content-Disposition') || '', m = /filename="?([^";]+)"?/.exec(cd);
-        return res.blob().then((blob) => {
-          const a = h('a', { href: URL.createObjectURL(blob), download: m ? m[1] : (B.slug(r.title || r.id) + '.' + fmt) });
-          document.body.appendChild(a); a.click(); a.remove();
-          window.setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-          said(anchor, 'Downloaded ' + (m ? m[1] : fmt.toUpperCase()) + '. Masked cells stay masked.', false);
-        });
-      }).catch(failed(anchor));
   }
 
   function inlineForm(anchor, label, fields, okText, onOk) {
@@ -343,23 +349,69 @@
     return f;
   }
   function shareForm(r, anchor) {
-    inlineForm(anchor, 'Share this run', [h('label', {}, 'With (names or role:<name>, comma separated) ', h('input', { name: 'to', class: 'studio-in', required: true, autocomplete: 'off', placeholder: 'bob, role:risk-team' }))], 'Share', (f, b) => {
-      const to = f.elements.to.value.split(',').map((x) => x.trim()).filter(Boolean);
-      B.busy(b, () => B.api('POST', '/runs/' + encodeURIComponent(r.id) + '/share', { to }).then((d) => {
-        const words = (d.shares || []).map((x) => x.recipient + ': ' + ({ same: 'sees your result', 're-masked': 'sees it with their masks', recomputed: 'gets their own run' }[x.mode] || x.mode)).join('; ');
-        f.remove(); said(anchor, 'Shared. ' + words + '.');
+    // the people picker (people.js, the directory the share dialog uses) adds a user or role:<name> as a chip; typing names, comma separated, works too
+    const chips = h('ul', { class: 'bi-run-chips', 'data-run-share-chips': '', 'aria-label': 'Share with' });
+    const picked = [];
+    const addChip = (who) => {
+      if (!who || picked.indexOf(who) >= 0) { return; }
+      picked.push(who);
+      const x = h('button', { type: 'button', class: 'bi-run-chip-x', 'aria-label': 'Remove ' + who, text: '×' });
+      const li = h('li', { class: 'bi-run-chip', 'data-run-share-chip': who }, who, ' ', x);
+      x.addEventListener('click', () => { picked.splice(picked.indexOf(who), 1); li.remove(); });
+      chips.appendChild(li);
+    };
+    const input = h('input', { name: 'to', class: 'studio-in', autocomplete: 'off', placeholder: 'a name, or role:risk-team', role: 'combobox', 'aria-autocomplete': 'list', 'aria-expanded': 'false', 'aria-controls': 'runSharePick', 'aria-describedby': 'runShareHint' });
+    const pick = h('ul', { id: 'runSharePick', class: 'shr-list bi-run-pick', role: 'listbox', hidden: true, 'aria-label': 'People and roles' });
+    const f = inlineForm(anchor, 'Share this run', [h('span', { class: 'bi-run-picker' }, h('label', {}, 'With ', input), pick), chips,
+      h('small', { id: 'runShareHint', class: 'text-muted-d', text: 'Each person gets what their own rights allow: the same result, your result re-masked for them, or the question recomputed as them. The server decides and says which.' })], 'Share', (form, b) => {
+      input.value.split(',').map((x) => x.trim()).filter(Boolean).forEach(addChip);
+      input.value = '';
+      if (!picked.length) { said(input, 'Choose at least one person or role.', true); input.focus(); return; }
+      B.busy(b, () => B.api('POST', '/runs/' + encodeURIComponent(r.id) + '/share', { to: picked.slice() }).then((d) => {
+        const shares = d.shares || [];
+        const ok = shares.filter((x) => x.mode), refused = shares.filter((x) => !x.mode);
+        form.remove();
+        said(anchor, (ok.length ? 'Shared. ' + ok.map((x) => x.recipient + ' ' + R.mode(x.mode)).join('; ') + '.' : 'Not shared.')
+          + (refused.length ? ' Not shared with ' + refused.map((x) => x.recipient + ' (' + R.words(x.code, x.detail) + ')').join('; ') + '.' : ''), !ok.length);
         return B.api('GET', '/runs/' + encodeURIComponent(r.id)).then(refresh);
       }).catch(failed(b)));
     });
+    if (window.DrishtiPeople) { window.DrishtiPeople.attach(input, pick, { minQuery: 1, onPick: (e) => addChip(e.type === 'role' ? 'role:' + e.name : e.name), taken: () => { const t = {}; picked.forEach((p) => { t[p.indexOf('role:') === 0 ? 'role:' + p.slice(5) : 'user:' + p] = true; }); return t; } }); }
+    input.addEventListener('keydown', (e) => { if (e.key === ',' || (e.key === 'Enter' && input.value.trim() && pick.hidden)) { e.preventDefault(); addChip(input.value.replace(/,$/, '').trim()); input.value = ''; } });
+    f.setAttribute('data-run-share-form', '');
   }
-  function scheduleForm(r, anchor) {
-    inlineForm(anchor, 'Schedule this run', [h('label', {}, 'When ', h('input', { name: 'schedule', class: 'studio-in', required: true, value: 'business-days 07:30', autocomplete: 'off', 'aria-describedby': 'runSchedHint' })),
-      h('label', {}, 'On ', h('select', { name: 'data', class: 'studio-select' }, h('option', { value: 'latest', text: 'the newest data' }), h('option', { value: 'same', text: 'the same dates' }))),
-      h('small', { id: 'runSchedHint', class: 'text-muted-d', text: 'daily 07:00 · business-days 07:30 · monthly last 18:00 business · after-load TRD. Each firing is a background run and a notice.' })], 'Schedule', (f, b) => {
-      B.busy(b, () => B.api('POST', '/runs/' + encodeURIComponent(r.id) + '/schedule', { schedule: f.elements.schedule.value.trim(), data: f.elements.data.value }).then((s) => {
-        f.remove(); said(anchor, 'Scheduled: ' + (s.schedule || f.elements.schedule.value) + (s.nextAt ? ', next ' + when(s.nextAt) : '') + '.');
+  function scheduleForm(r, anchor, sc) {
+    // friendly presets that write the SubscriptionSchedule grammar (daily, weekdays, business-days, weekly <day>, monthly last [business]); "Written out" takes it as text
+    const p = R.parseSchedule(sc ? sc.schedule : 'business-days 07:30');
+    const kind = h('select', { name: 'kind', class: 'studio-select', 'aria-label': 'How often' }, R.PRESETS.map((x) => h('option', { value: x[0], text: x[1], selected: x[0] === p.kind })));
+    const day = h('select', { name: 'day', class: 'studio-select', 'aria-label': 'Day of the week' }, R.DAYS.map((x) => h('option', { value: x[0], text: x[1], selected: x[0] === (p.day || 'mon') })));
+    const time = h('input', { name: 'time', type: 'time', class: 'studio-in', value: p.time || '07:30', 'aria-label': 'Time (the server\'s zone)', required: true });
+    const text = h('input', { name: 'text', class: 'studio-in', value: p.kind === 'custom' ? p.text : '', autocomplete: 'off', placeholder: 'monthly last 18:00 business', 'aria-label': 'The schedule, written out' });
+    const data = h('select', { name: 'data', class: 'studio-select' }, h('option', { value: 'latest', text: 'the newest data', selected: !sc || sc.data !== 'same' }), h('option', { value: 'same', text: 'the same dates', selected: !!sc && sc.data === 'same' }));
+    const preview = h('code', { 'data-run-sched-preview': '' });
+    const sync = () => {
+      const k = kind.value;
+      day.hidden = k !== 'weekly';
+      time.hidden = k === 'custom';
+      text.hidden = k !== 'custom';
+      preview.textContent = R.scheduleText({ kind: k, day: day.value, time: time.value, text: text.value }) || '…';
+    };
+    const f = inlineForm(anchor, sc ? 'Change the schedule' : 'Schedule this run', [h('span', { class: 'bi-run-when' }, kind, ' ', day, ' ', time, text),
+      h('label', {}, 'On ', data), h('small', { class: 'text-muted-d' }, 'Writes ', preview, '. Each firing asks again as you, now: a background run and a notice.')], sc ? 'Save' : 'Schedule', (form, b) => {
+      const schedule = R.scheduleText({ kind: kind.value, day: day.value, time: time.value, text: text.value });
+      if (!schedule) { said(text, 'Write the schedule, for example monthly last 18:00 business.', true); text.focus(); return; }
+      const call = sc ? B.api('PUT', '/runs/schedules/' + encodeURIComponent(sc.id), { schedule, data: data.value }) : B.api('POST', '/runs/' + encodeURIComponent(r.id) + '/schedule', { schedule, data: data.value });
+      B.busy(b, () => call.then((s2) => {
+        form.remove();
+        said(anchor, (sc ? 'Schedule changed: ' : 'Scheduled: ') + R.scheduleWords(s2) + '.');
+        r.schedule = s2;
+        return B.api('GET', '/runs/' + encodeURIComponent(r.id)).then(refresh, () => refresh(r));
       }).catch(failed(b)));
     });
+    [kind, day, time, text].forEach((x) => x.addEventListener('input', sync));
+    kind.addEventListener('change', sync);
+    sync();
+    f.setAttribute('data-run-sched-form', '');
   }
   function promote(r, as, anchor) {
     const name = B.slug(r.title || 'run') || 'run';
