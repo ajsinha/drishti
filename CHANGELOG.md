@@ -17,6 +17,23 @@
 
 ## Unreleased
 
+- **Drishti\*net: gossip off the busy path (2.6.7).** A server busy with queries is never wrongly suspected. Each node opens a **gossip
+  port** as it joins (node.yaml's new `gossip-port`: `auto` by default, a port number, or `off`), a second Tomcat connector with its own
+  acceptor, connection limit and eight platform threads, advertised in its member entry (`gossipPort`) and serving only gossip, probes and
+  digests. On both ports those three are answered by the first filter, from memory, past every guard and admission gate. The sender's
+  round runs on a platform thread of its own, its exchanges and probes on a platform pool, through an HTTP/1.1 client of its own (two
+  platform threads, short connect timeout), never the data client or its timeouts. A gossip port blocked by a firewall falls back to the
+  server's port for 5 minutes with one warning; older nodes are gossiped with on their server port. New metric
+  `drishti_net_gossip_exchange_seconds`; Admin → Health shows `gossipPort` and `peerProtocol`. NetGossipBusyTest: with every node's request
+  threads saturated for 12 s, no suspicion (with `gossip-port: off`, every node suspected both peers); a node that died was suspect after
+  3.0 s and dead after 7.0 s. TransportSettingsTest; DRISHTI_NET.md, NET.md, CONFIGURATION.md, API_GUIDE.md, config/net.examples/node.yaml.
+- **Drishti\*net: HTTP/2 for peer data (2.6.7).** Forwarded views, peer documents, scatter-gather, peer history, state sync and the live
+  relay are multiplexed over one HTTP/2 connection per peer (routing.yaml's new `peer-protocol: http2 | http1`, default `http2`): `h2c` by
+  the upgrade on plain HTTP, ALPN on TLS, the server's port speaking both (`server.http2.enabled: true`, `DRISHTI_HTTP2`; 1,000 streams per
+  connection). The first call to a peer is a lone signed ping so the upgrade happens once. A peer without HTTP/2 answers in HTTP/1.1 on
+  the same call. NetHttp2Test; NetPeerProtocolBench (64 users, forwarded views, warm): 1 connection instead of 227, p99 117 ms instead of
+  370 ms. DRISHTI_NET.md, NET.md, CONFIGURATION.md, config/net.examples/routing.yaml; `drishti.py net check` knows `gossip-port`,
+  `peer-protocol`, `join-wait` and `join-grace`.
 - **History cache default 64 → 256 MB (SOAK4-02).** Counted in real heap since SOAK3-02, 64 MB held only 63 to 208 answers, and the busiest soak node hit the cache 1 % of the time; `drishti.history.cache-mb` lowers it on a small heap.
 
 - **Fixed (SOAK3-01, P2): a node that has just started or rejoined never says "no source holds" (`404 DRS-1001`) for what only its peers

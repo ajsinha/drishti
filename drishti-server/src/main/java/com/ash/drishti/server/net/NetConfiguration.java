@@ -35,8 +35,49 @@ import org.springframework.core.env.Environment;
 @EnableConfigurationProperties(NetProperties.class)
 public class NetConfiguration {
 
+    /** The gossip port (2.6.7): a connector of its own with platform threads, opened when the node joins. */
     @Bean(destroyMethod = "close")
-    public NetService netService(NetProperties props, Environment env, ObjectProvider<org.springframework.boot.info.BuildProperties> build) {
+    public GossipConnector gossipConnector(org.springframework.context.ApplicationContext context,
+            ObjectProvider<org.springframework.boot.autoconfigure.web.ServerProperties> server, ObjectProvider<org.springframework.boot.ssl.SslBundles> bundles) {
+        return new GossipConnector(context, server, bundles);
+    }
+
+    /**
+     * The priority path (2.6.7): gossip, probes and digests answered by the very first filter, on either port, before request activity, the
+     * guards, the token filter and any admission gate.
+     */
+    @Bean
+    public FilterRegistrationBean<GossipPath> gossipPath(NetService net, ObjectProvider<DigestService> digests, GossipConnector port) {
+        FilterRegistrationBean<GossipPath> r = new FilterRegistrationBean<>(new GossipPath(net, digests::getIfAvailable, port));
+        r.addUrlPatterns("/*");
+        r.setOrder(org.springframework.core.Ordered.HIGHEST_PRECEDENCE);
+        return r;
+    }
+
+    /**
+     * HTTP/2 between nodes (2.6.7): {@code server.http2.enabled} (on in application.yaml) adds Tomcat's HTTP/2 to the server's port ({@code h2c}
+     * by the upgrade on plain HTTP, ALPN on TLS). A peer multiplexes all its forwarded reads over one connection, so the per-connection
+     * limits are raised from Tomcat's 20 streams executing at once to what the server's own admission bounds anyway.
+     */
+    @Bean
+    public org.springframework.boot.web.server.WebServerFactoryCustomizer<org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory> peerHttp2Limits() {
+        return factory -> factory.addConnectorCustomizers(connector -> {
+            for (org.apache.coyote.UpgradeProtocol u : connector.findUpgradeProtocols()) {
+                if (u instanceof org.apache.coyote.http2.Http2Protocol h2) {
+                    h2.setMaxConcurrentStreams(PEER_STREAMS);
+                    h2.setMaxConcurrentStreamExecution(PEER_STREAMS);
+                    h2.setKeepAliveTimeout(60_000);              // a peer's connection outlives a quiet spell (PeerHttp primes after 30 s)
+                }
+            }
+        });
+    }
+
+    /** Streams a peer may have open, and executing, on one HTTP/2 connection. */
+    static final int PEER_STREAMS = 1000;
+
+    @Bean(destroyMethod = "close")
+    public NetService netService(NetProperties props, Environment env, ObjectProvider<org.springframework.boot.info.BuildProperties> build,
+            GossipConnector gossipPort) {
         Path state = Path.of(env.getProperty("drishti.data.dir", "./data"), "net");
         // ${ENV} references in the files are read from the environment, then from the server's own properties (a test, a run configuration)
         NetSchema schema = new NetSchema(name -> {
@@ -48,6 +89,7 @@ public class NetConfiguration {
         NetService net = new NetService(folder, state, props, version, NetClock.SYSTEM);
         net.advertiseDefault("true".equalsIgnoreCase(env.getProperty("server.ssl.enabled")) ? "https" : "http",
                 env.getProperty("server.port", Integer.class, 8080));
+        net.gossipPorts(gossipPort::open);        // 2.6.7: the gossip port opens as the node joins
         net.joinWhenReady();                      // SOAK-03: gossip "alive" only once the port answers and the connectors have started
         net.start();
         return net;

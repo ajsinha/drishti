@@ -300,7 +300,7 @@ public final class DigestService implements AutoCloseable {
 
     private Digest pull(Member m) {
         try {
-            PeerHttp.Answer a = net.http().send(m.url(), "GET", "/api/v1/net/digest", Map.of(), null, Duration.ofSeconds(3));
+            PeerHttp.Answer a = net.http().control(m.url(), "GET", "/api/v1/net/digest", Map.of(), null, Duration.ofSeconds(3));   // the control lane
             if (a.status() != 200) {
                 LOG.debug("net: digest of {} refused: HTTP {}", m.nodeId(), a.status());
                 return null;

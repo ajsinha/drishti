@@ -270,6 +270,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 |---|---|---|---|
 | `DRISHTI_PACKS_OVERLAY` | `spring.config.import` | `./data/packs/added.yaml` | The file of packs an administrator loaded from Admin → Packs; imported at start (`spring.config.import`) and named again by `drishti.packs.overlay`. Written by the server, not by hand. |
 | `DRISHTI_PORT` | `server.port` | `18480` | The server's HTTP port. |
+| `DRISHTI_HTTP2` | `server.http2.enabled` | `true` | HTTP/2 on the server's port as well as HTTP/1.1 (2.6.7): Drishti*net peers multiplex their forwarded reads over one connection (`h2c` by the upgrade on plain HTTP, ALPN on TLS; up to 1,000 streams per connection), and browsers over TLS get it too. `false`: HTTP/1.1 only; peers then fall back to it on the same call ([NET.md section 7](NET.md#7-routing-where-a-request-goes)). |
 | `DRISHTI_PRODUCT` | `drishti.branding.product` | `Drishti` | The product name shown in pages and messages. |
 | `DRISHTI_PLUGIN_DIR` | `drishti.sources.plugin-dir` | empty | A directory of extra plugin jars; empty: none. |
 | `DRISHTI_HTTP_PROXY_URL` | `drishti.http.proxy.url` | empty | The site's outbound HTTP proxy (`http://host:port`); empty: none. See [`drishti.http.proxy`](#drishtihttpproxy--the-sites-outbound-http-proxy). |
@@ -543,10 +544,10 @@ The files, each checked against its schema (a refused file keeps the previous se
 
 | File | Settings (default) |
 |---|---|
-| `node.yaml` | `enabled` (`false`), `node-id` (generated once, kept in `<data dir>/net/node-id`), `advertise-url` (this machine's primary IPv4 address with `server.port`; never `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` or `::`), `tags` (`[]`), `peer-only-packs` (`[]`), `secret: ${DRISHTI_NET_SECRET}` and `previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}` (environment references only, at least 32 bytes), `tls.*` (mutual TLS) |
+| `node.yaml` | `enabled` (`false`), `node-id` (generated once, kept in `<data dir>/net/node-id`), `advertise-url` (this machine's primary IPv4 address with `server.port`; never `localhost`, `127.x.x.x`, `::1`, `0.0.0.0` or `::`), `tags` (`[]`), `peer-only-packs` (`[]`), `secret: ${DRISHTI_NET_SECRET}` and `previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}` (environment references only, at least 32 bytes), `tls.*` (mutual TLS), `gossip-port` (`auto`: a free port of its own for gossip, probes and digests, advertised through gossip; a port number; or `off`: the server's port. 2.6.7, [NET.md section 4](NET.md#4-membership-how-the-nodes-find-each-other)) |
 | `peers/<name>.yaml` | `url` (a real address, as `advertise-url`), `tags`, `tls.*` (one file per seed) |
 | `gossip.yaml` | `interval` (`1s`), `fanout` (`3`), `suspect-after` (`5s`), `indirect-probes` (`2`), `dead-after` (`30s`), `forget-after` (`24h`), `persist-every` (`10m`) |
-| `routing.yaml` | `forward-timeout` (`5s`), `scatter-budget` (`3s`), `suggest-budget` (`150ms`), `link-budget` (`1s`: a view's linked entity that only a peer holds), `max-hops` (`1`; `0` forwards nothing), `weights.latency` (`1.0`), `user-state` (`replicate` or `off`: user state and console sign-in sessions) |
+| `routing.yaml` | `forward-timeout` (`5s`), `scatter-budget` (`3s`), `suggest-budget` (`150ms`), `link-budget` (`1s`: a view's linked entity that only a peer holds), `max-hops` (`1`; `0` forwards nothing), `weights.latency` (`1.0`), `user-state` (`replicate` or `off`: user state and console sign-in sessions), `join-wait` (`2s`), `join-grace` (`30s`), `peer-protocol` (`http2`: peer data multiplexed over one HTTP/2 connection per peer, a peer without it answered in HTTP/1.1; or `http1`. 2.6.7) |
 | `access.yaml` | `roles: { <role>: { nodes: [<node id or tag>, ...] } }` (a role not listed reaches every node) |
 
 `enabled: true` without the key is refused at start and at every reload, as the server refuses a missing token secret with security on; so is

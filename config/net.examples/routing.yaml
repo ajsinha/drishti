@@ -23,3 +23,6 @@ max-hops: 1                         # a forwarded request is never forwarded aga
 weights:
   latency: 1.0                       # how much a peer's latency counts when choosing between peers that can answer
 user-state: replicate                # saved searches, layouts, pivots copied to the other nodes (off: kept where written)
+peer-protocol: http2                 # forwarded reads, scatter-gather, peer history and the live relay multiplexed over one HTTP/2
+                                     # connection per peer (h2c by the upgrade, ALPN on TLS; a peer without it answers in HTTP/1.1);
+                                     # http1: a connection per request in flight, as before 2.6.7. Gossip has its own HTTP/1.1 client

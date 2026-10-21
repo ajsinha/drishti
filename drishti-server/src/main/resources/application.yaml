@@ -64,6 +64,10 @@ logging:
 server:
   port: ${DRISHTI_PORT:18480}
   shutdown: graceful
+  http2:
+    # HTTP/2 on the server's port (2.6.7): Drishti*net peers multiplex their forwarded reads over one connection (h2c by the upgrade on
+    # plain HTTP, ALPN on TLS); browsers over TLS get it too. false: HTTP/1.1 only (peers then fall back to it on the same call).
+    enabled: ${DRISHTI_HTTP2:true}
   tomcat:
     # After a 413 for an oversized body, Tomcat drains up to this much of the rest so the client reads the answer, not a reset.
     max-swallow-size: ${DRISHTI_MAX_SWALLOW:64MB}

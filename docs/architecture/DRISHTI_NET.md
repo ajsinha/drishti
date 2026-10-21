@@ -112,6 +112,10 @@ carried over HTTP instead of UDP:
   (`GET /api/v1/net/ping` **(new)**) and indirectly through `indirect-probes` (2) other members; still silent, it becomes
   `suspect`; after `dead-after` (30 s) as suspect it becomes `dead`. A suspected node that hears of it raises its
   incarnation and gossips `alive`.
+- **Off the busy path (2.6.7):** gossip, probes and digest pulls go to a member's own **gossip port** (`gossipPort` in its entry; node.yaml
+  `gossip-port`, `auto` by default), a second connector with eight platform threads that serves nothing else, and are answered there (and
+  on the server's port) by the first filter, from memory; the sender uses a client and threads of its own. A server whose request
+  handling is saturated is never wrongly suspected ([as built](#the-transport-between-nodes-as-built-267)).
 - **Leaving:** a node stopping cleanly gossips `left` for a few rounds (in the shutdown hook) so peers drop it at once.
 - **Joining:** a new node contacts its configured `seeds`, and failing those the peers saved in `peers.json`; one
   successful exchange gives it the whole table. With no seeds and no file it is a cluster of one. A server joins (gossips itself
@@ -363,10 +367,10 @@ The folder (new):
 
 | File | What it holds | A change |
 |---|---|---|
-| `node.yaml` | this node: `enabled` (false), `node-id` (empty: generated once, kept in `<data dir>/net/node-id`), `advertise-url`, `tags`, `peer-only-packs`, the cluster key as `secret: ${DRISHTI_NET_SECRET}` and `previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}` (environment references only, as connector passwords are), `tls.*` for mutual TLS | applied live; `enabled` false → true joins, true → false leaves cleanly |
+| `node.yaml` | this node: `enabled` (false), `node-id` (empty: generated once, kept in `<data dir>/net/node-id`), `advertise-url`, `tags`, `peer-only-packs`, the cluster key as `secret: ${DRISHTI_NET_SECRET}` and `previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}` (environment references only, as connector passwords are), `tls.*` for mutual TLS, `gossip-port` (`auto`, a port, or `off`; 2.6.7) | applied live; `enabled` false → true joins, true → false leaves cleanly |
 | `peers/<name>.yaml` | one file per seed peer, the file name its logical name: `url`, optional `tags` it is expected to carry, `tls.*` overrides | a new file is contacted at once, a deleted one is no longer a seed (gossip may still know the node) |
 | `gossip.yaml` | the protocol's timings: `interval` (1s), `fanout` (3), `suspect-after` (5s), `indirect-probes` (2), `dead-after` (30s), `forget-after` (24h), `persist-every` (10m) | applied on the next round |
-| `routing.yaml` | `forward-timeout` (5s), `scatter-budget` (3s), `suggest-budget` (150ms), `max-hops` (1), peer choice weights | applied to the next request |
+| `routing.yaml` | `forward-timeout` (5s), `scatter-budget` (3s), `suggest-budget` (150ms), `max-hops` (1), peer choice weights, `peer-protocol` (`http2`; 2.6.7) | applied to the next request |
 | `access.yaml` | nodes per role: `roles: { <role>: { nodes: [<node id or tag>, …] } }` (empty: every node) | applied to the next request; gossiped in the digest |
 
 ```yaml
@@ -410,7 +414,7 @@ All new, all under `/api/v1/net`, cluster credential required:
 
 | Endpoint | Purpose |
 |---|---|
-| `POST /gossip` | push-pull of member tables |
+| `POST /gossip` | push-pull of member tables (2.6.7: on the gossip port too, answered by the first filter) |
 | `GET /ping` | direct and indirect probes (`?target=` for an indirect one) |
 | `GET /digest` | this node's capability digest |
 | `GET /fetch/{kind}/{id}` | one entity document as the on-behalf-of user may see it (`X-Drishti-As-Of`, `X-Drishti-Known-At`) |
@@ -433,42 +437,82 @@ View forwarding reuses the ordinary `/api/v1/**` endpoints with the hop header a
 
 All of N1–N7 are planned for 2.5.0, in this order; N1–N5 come first and are the minimum for the release.
 
-### Planned, 2.6.7: the transport between nodes
+<a id="planned-267-the-transport-between-nodes"></a>
+
+### The transport between nodes (as built, 2.6.7)
 
 Decided by the product owner on 2026-10-20, built in 2.6.7 beside BI runs ([BI_RUNS.md](BI_RUNS.md)) and chart any table
-([TABLE_CHARTS.md](TABLE_CHARTS.md)). The transport stays **HTTP** (signed as in N3, through `PeerHttp`). Connections are already
-persistent: the JDK client keeps them alive and reuses them, so neither item is about keep-alive.
+([TABLE_CHARTS.md](TABLE_CHARTS.md)). The transport stays **HTTP**, signed as in N3, through `PeerHttp`, which now has two lanes: a
+**control lane** for gossip, probes and digests and a **data lane** for everything else.
 
-**1. Gossip off the busy path.** Today every node-to-node call shares one JDK `HttpClient` per scheme and TLS settings in `PeerHttp`:
-gossip, probes, digest pulls, state sync and data forwarding alike; the round loop (`drishti-net-gossip`) and the exchanges
-(`drishti-net-io-*`) run on virtual threads. Under a heavy BI load a gossip exchange can wait behind forwarded data on the same client,
-and CPU-bound work holding the virtual-thread carriers can delay the round itself, so a healthy node can miss `suspect-after` (5 s) and
-be marked *suspect*. The change:
+**1. Gossip off the busy path.** Before 2.6.7 every node-to-node call shared one JDK `HttpClient` per scheme and TLS settings: gossip,
+probes, digest pulls, state sync and data forwarding alike; the round loop and the exchanges ran on virtual threads; and a peer's gossip was
+served on the server's port by a request thread, behind the filter chain, like any read. A server whose request handling was saturated could
+then miss `suspect-after` and be marked *suspect* while healthy.
 
-- **Sender:** gossip and probes (`POST /api/v1/net/gossip`, `GET /api/v1/net/ping` and the indirect probes) get **their own small client
-  pool** (a separate `HttpClient` with its own executor of two platform threads, HTTP/1.1, short timeouts), and the round runs on **one
-  dedicated platform thread**, so neither depends on the virtual-thread scheduler or on data traffic. Digest pulls, state sync and
-  forwarding keep the shared client.
-- **Receiver:** **reserved handling of `/api/v1/net/gossip` and the probes**: the cluster key is checked first (`NetCallFilter`) and the
-  request skips every later filter and gate (tokens, request activity, BI admission); the answer is built from memory with no blocking
-  I/O. Heavy BI work runs in BI runs' background class on bounded pools (BI_RUNS section 10), which keeps carriers free for it.
-- **Accepted when** a heavy BI burst on one node (the BI_RUNS 19.5 load) gives **no false *suspect* anywhere** in a three-node cluster,
-  with the gossip round time and exchange latency recorded per node (`drishti_net_gossip_rounds_total` plus a new
-  `drishti_net_gossip_exchange_seconds`).
+- **Receiver: a gossip port of its own (`GossipConnector`), and a priority path (`GossipPath`).** The receiver options were a dedicated
+  connector, a dedicated Tomcat executor for `/api/v1/net/gossip`, or a priority path past admission. Tomcat binds an executor to a
+  connector, not to a path, so a per-path executor is not possible without reading the request first; and a priority path alone (a filter
+  that answers first) still needs a request thread, which is exactly what is exhausted: in `NetGossipBusyTest` with `gossip-port: off`
+  (the priority path on, gossip on the server's port) every node suspected both of its peers. With virtual threads (the default) the same
+  happens when CPU-bound work holds the carriers, and both share the connection limit. So the node opens **a second Tomcat connector** as
+  it joins: its own acceptor, its own connection limit (4,096), its own pool of **eight platform threads**, the server's TLS
+  (`server.ssl.*`, client authentication included) when it has any, and nothing served on it but `POST /api/v1/net/gossip`,
+  `GET /api/v1/net/ping` and `GET /api/v1/net/digest` (anything else: `404`). node.yaml's `gossip-port` is `auto` (a free port, the
+  default), a number (a firewall that names it) or `off`. The node advertises it in its member entry (`gossipPort`, a new field: an older
+  node ignores it and its peers call it on its server port). On both ports the three endpoints are answered by **the first filter**
+  (`GossipPath`, highest precedence): the cluster key is checked and the answer written from memory; request activity, the path and size
+  guards, the token filter, view forwarding, the dispatcher and every admission gate are never reached. The controller mappings stay as
+  the API of record.
+- **Sender: the control lane.** Gossip exchanges, direct and indirect probes and digest pulls go through a client of their own (HTTP/1.1,
+  its own connections, an executor of **two platform threads**, a connect timeout of half the gossip timeout, at most 2 s), to the member's
+  gossip port. The round runs on **one platform thread** (`drishti-net-gossip`) and its exchanges and probes on a pool of **eight
+  platform threads** (`drishti-net-gossip-io-*`): never the virtual-thread scheduler, the common pool or a request thread. The data lane's
+  timeouts (`forward-timeout`, the budgets) never touch suspicion. A gossip port that refuses while the server's port answers (a firewall)
+  is skipped for 5 minutes, with one warning; a node that is down fails on both and is never so marked.
+- **Metrics:** `drishti_net_gossip_rounds_total` and the new `drishti_net_gossip_exchange_seconds` (count and sum of the exchanges that
+  answered); Admin → Health's Drishti*net section shows `gossipPort` and `peerProtocol`.
+- **Tested** (`NetGossipBusyTest`, three servers in one JVM, `suspect-after: 3s`, `dead-after: 4s`): each server runs six platform request
+  threads and a hook holding `/api/v1/test/slow` for 2 s; forty such requests per node are kept in flight for 12 s, from outside and, for
+  half of A's and C's, as B's forwarded reads over its data lane. The server's port answered nothing (a health read timed out after 1 s).
+  With the gossip port: **no suspicion anywhere**, and every heartbeat rose by at least six as each node saw it. With `gossip-port: off`, the
+  same load: **every node suspected both of its peers** (the failure removed). A node that then died (gossip stopped, both ports closed,
+  no word to anyone) was **suspect everywhere after 3.0 s and dead after 7.0 s**, as configured.
 
-**2. HTTP/2 for peer data forwarding.** `PeerHttp` builds its clients with `HttpClient.Version.HTTP_1_1` today. Data forwarding (views
-and their sub-paths, raw documents, history, searches and their scatter, `PeerSource` fetches, the live relay's streams) moves to
-**HTTP/2**: many requests multiplexed over one connection per peer instead of a connection each, with header compression for the signed
-headers. Over TLS it is negotiated by ALPN; over plain HTTP by the `h2c` upgrade, which the JDK client attempts only on a request without
-a body, so the first call to a peer is a `GET` (the digest pull). The servers enable HTTP/2 (`server.http2.enabled`). Gossip stays on its
-own HTTP/1.1 client (item 1), so a congested data connection never delays it. A node that cannot speak HTTP/2 is answered in HTTP/1.1, as
-the protocol falls back.
+**2. HTTP/2 for peer data.** The data lane (views and their sub-paths forwarded whole, raw documents and `PeerSource` fetches, history,
+searches and their scatter, state sync, the live relay's streams) speaks **HTTP/2** when routing.yaml's `peer-protocol` is `http2`
+(the default; `http1` as before 2.6.7, switched live): many requests multiplexed over **one connection per peer**, with header compression
+for the signed headers.
 
-- **Tests:** forwarded views, history (`TRD <id> 30` on a peer), searches with scatter-gather, and the live relay (a ticking entity on A
-  watched on B) over HTTP/2, plain and with mutual TLS; a peer limited to HTTP/1.1; and a **soak comparison** (the 17.1 soak run once on
-  HTTP/1.1 and once on HTTP/2: errors, p95 and connections per peer).
-- **Arrow streaming over HTTP/2** (split queries returning Arrow between owners) comes with [SUPER_SCALE.md](SUPER_SCALE.md) **S6**, not
-  in 2.6.7.
+- **Negotiation.** The JDK client does not do `h2c` with prior knowledge, only by the upgrade, and only on a request without a body. The
+  servers enable HTTP/2 with `server.http2.enabled: true` (application.yaml, `DRISHTI_HTTP2`), which gives Tomcat's `Http2Protocol` as an
+  upgrade protocol: `h2c` by the upgrade on plain HTTP, ALPN on TLS. `PeerHttp` primes each peer: the first call (and the first after
+  30 s of quiet; Tomcat keeps an idle HTTP/2 connection 60 s here) is a signed `GET /api/v1/net/ping` made alone while the calls behind it
+  wait, so the upgrade happens once. Without priming, a burst of first calls opened a connection each, every one upgraded: 20 to 40
+  connections in the benchmark below instead of one.
+- **Limits.** Tomcat allows 100 streams open and 20 executing per HTTP/2 connection by default; with one connection per peer that would
+  queue the 21st forwarded read. Both are raised to 1,000 (`NetConfiguration.peerHttp2Limits`): the server's own admission bounds the work.
+- **Fallback.** A peer that does not speak HTTP/2 (a node of before 2.6.7 during a rolling upgrade, or `server.http2.enabled: false`)
+  ignores the upgrade and answers in HTTP/1.1 on the same call; the client then keeps HTTP/1.1 connections to it.
+- **Tested** (`NetHttp2Test`): two nodes negotiate HTTP/2 (`HttpResponse.version()` is `HTTP_2` on every call, a user's forwarded view
+  answers); a node with `server.http2.enabled: false` is answered in HTTP/1.1; a node with `peer-protocol: http1` sends HTTP/1.1 and a
+  user's view through it is forwarded as before; every node's gossip port is advertised, known to its peers, answers a signed probe and
+  refuses everything else. The Net* suite passes on HTTP/2.
+- **Benchmark** (`NetPeerProtocolBench`, run on demand with `-Ddrishti.net.bench=true`): two servers in one JVM, 64 users at once asking B
+  for trade views that A holds (each view forwarded to A), 4,000 requests per run, the two protocols alternated twice; *connections* is the
+  most A held from B at once (sampled every 20 ms):
+
+  | Run | Protocol | p50 | p99 | Requests/s | Connections B → A |
+  |---|---|---|---|---|---|
+  | 1 (cold) | HTTP/1.1 | 144 ms | 1,037 ms | 331 | 312 |
+  | 1 (cold) | HTTP/2 | 112 ms | 277 ms | 535 | **1** |
+  | 2 (warm) | HTTP/1.1 | 76 ms | 370 ms | 753 | 227 |
+  | 2 (warm) | HTTP/2 | 68 ms | **117 ms** | 939 | **1** |
+
+  One connection instead of hundreds, and a p99 a third of HTTP/1.1's; the median is about the same (the work is the view, not the wire).
+- **Not in 2.6.7:** the soak comparison (17.1 run once per protocol) is for the 2.6.7 QA soak; mutual TLS between nodes is configured as
+  before and was not re-measured here. **Arrow streaming over HTTP/2** (split queries returning Arrow between owners) comes with
+  [SUPER_SCALE.md](SUPER_SCALE.md) **S6**.
 
 ## 17. Tests
 
