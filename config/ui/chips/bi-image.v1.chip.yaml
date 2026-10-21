@@ -26,6 +26,14 @@ manual:
   purpose: An image with its alternative text. The BI 'image' visual type as a chip; its wells are its pins.
   pins:
     content: The image address (src); the title is its alternative text.
+    format: 'The visual''s format block as the report writes it (colours, labels, run, spec). Empty: defaults.'
+    alt: 'The text alternative read to screen readers. Empty: the title.'
+    filters: 'Filters on this visual only, as the report writes them. Empty: none.'
+    sort: 'The sort, {by, order}. Empty: the visual type''s default.'
+    limit: 'At most this many members (top N after the sort). Empty: no limit.'
+    hierarchy: 'The drill levels of the axis. Empty: no drill.'
+    alert: 'The alert colours by threshold. Empty: none.'
+    drillthrough: 'The page a right-click drills through to, with the fields it carries. Empty: none.'
   behaviour: Read-only; hover shows the values.
   defaults: The visual type's defaults (REPORTS.md section 3); no control input.
   limits: Paints at most 10,000 rows; the BI engine aggregates before painting. A question that runs long becomes a BI run card.
@@ -43,6 +51,30 @@ pins:
       type: text
       required: true
       default: ''
+    format:
+      role: control
+      type: spec
+    alt:
+      role: control
+      type: text
+    filters:
+      role: control
+      type: spec
+    sort:
+      role: control
+      type: spec
+    limit:
+      role: control
+      type: number
+    hierarchy:
+      role: control
+      type: spec
+    alert:
+      role: control
+      type: spec
+    drillthrough:
+      role: control
+      type: spec
 body:
   panels:
   - id: visual
@@ -50,3 +82,11 @@ body:
     type: image
     title: '%{title|Image}'
     content: '%{content}'
+    format: '%{format}'
+    alt: '%{alt}'
+    filters: '%{filters}'
+    sort: '%{sort}'
+    limit: '%{limit}'
+    hierarchy: '%{hierarchy}'
+    alert: '%{alert}'
+    drillthrough: '%{drillthrough}'

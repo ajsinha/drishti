@@ -260,6 +260,19 @@ def panel_kinds():
 
 # ---- BI visual types ---------------------------------------------------------------------------------------------------------
 
+# the settings a report gives a visual besides its wells (REPORTS.md section 3), as optional controls of every bi-* chip (12.4, P5 follow-up)
+BI_OPTIONS = {
+    "format": ({"role": "control", "type": "spec"}, "The visual's format block as the report writes it (colours, labels, run, spec). Empty: defaults."),
+    "alt": ({"role": "control", "type": "text"}, "The text alternative read to screen readers. Empty: the title."),
+    "filters": ({"role": "control", "type": "spec"}, "Filters on this visual only, as the report writes them. Empty: none."),
+    "sort": ({"role": "control", "type": "spec"}, "The sort, {by, order}. Empty: the visual type's default."),
+    "limit": ({"role": "control", "type": "number"}, "At most this many members (top N after the sort). Empty: no limit."),
+    "hierarchy": ({"role": "control", "type": "spec"}, "The drill levels of the axis. Empty: no drill."),
+    "alert": ({"role": "control", "type": "spec"}, "The alert colours by threshold. Empty: none."),
+    "drillthrough": ({"role": "control", "type": "spec"}, "The page a right-click drills through to, with the fields it carries. Empty: none."),
+}
+
+
 def bi_visuals():
     D, M = "dimension", "measure"
     # type: (title, category, wells {name: (type, required, many)}, out pins, purpose)
@@ -322,7 +335,7 @@ def bi_visuals():
         outs = {}
         if wells:
             shape = {w: col(ty, req, many) for w, (ty, req, many) in wells.items()}
-            if not any(c.get("required") for c in shape.values()):
+            if not any(c.get("required") for c in shape.values()) and t != "python":   # python: columns (a visual) or values (a measure)
                 first = next(iter(shape))
                 shape[first]["required"] = True
             pins_in["rows"] = rowset(shape)
@@ -349,6 +362,10 @@ def bi_visuals():
                 outs = {"selected": {"type": "dimension"}}
                 texts["selected"] = "Out. The value of the first field the person clicked (a bar, a row, a point); empty until they click."
                 panel["on-select"] = {"emits": "selected", "value": f"@.{first_dim}"}
+        for o, (decl, text) in BI_OPTIONS.items():                 # the report's own settings of a visual, each an optional constant
+            pins_in[o] = decl
+            texts[o] = text
+            panel[o] = f"%{{{o}}}"
         ex = board_example(f"The {title.lower()} over the trading-risk model", f"{name}@1", pins_in, outs, model=True)
         if outs.get("selected", {}).get("type") == "dimension":
             ex = board_example(f"The {title.lower()} over the trading-risk model", f"{name}@1", pins_in, {}, model=True)
@@ -521,7 +538,8 @@ def composites():
 def main():
     root = sys.argv[1] if len(sys.argv) > 1 else "config/ui/chips"
     os.makedirs(root, exist_ok=True)
-    chips = panel_kinds() + bi_visuals() + pack_blocks() + composites()
+    from ui_record_chips import record_chips                         # the generic record chips (UI_BOARD.md 12.4)
+    chips = panel_kinds() + bi_visuals() + pack_blocks() + composites() + record_chips()
     for c in chips:
         path = os.path.join(root, f"{c['chip']}.v{c['version']}.chip.yaml")
         with open(path, "w", encoding="utf-8") as f:

@@ -39,7 +39,8 @@ import java.util.regex.Pattern;
  * the viewer and compares the result with the old page; the per-pack switch serves it. Stateless.
  *
  * <p>Filling a body: {@code %{title|D}} is the instance's title (else D); {@code %{pin}} and {@code %{pin|d}} a control pin's constant (else its
- * default, else d; an empty value leaves the key out) or a scalar data pin's mapped attribute as {@code $.ATTR}; {@code @doc} (a document pin over
+ * default, else d; an empty value leaves the key out; its record reads {@code @doc.X} as {@code $.X}) or a scalar data pin's mapped attribute as
+ * {@code $.ATTR}; {@code %{pin.column}} the attribute mapped to that column, by its bare name ({@code x: TENOR}); {@code @doc} (a document pin over
  * the page's record) is the record root {@code $}; {@code of: '@doc'} is dropped (the record is the page's root); a block use's {@code params} are
  * its {@code with}. A single-panel body of a seed chip takes the instance's name as its panel id. A body's {@code page:} part (the board-local
  * header chip) gives the Sutra's title, strip, controls and keys.
@@ -49,7 +50,9 @@ public final class BoardSutra {
     static final ObjectMapper JSON = new ObjectMapper();
     /** The document pin name a converted chip reads the page's record through. */
     public static final String DOC = "doc";
-    private static final Pattern WHOLE = Pattern.compile("%\\{([A-Za-z0-9_-]+)(?:\\|([^}]*))?}");
+    /** The control a record chip names its painted panel by when the page's panel id is not the instance's name (a camelCase id). */
+    public static final String PANEL_ID = "panel-id";
+    private static final Pattern WHOLE = Pattern.compile("%\\{([A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+)?)(?:\\|([^}]*))?}");
     private static final Pattern DOC_REF = Pattern.compile("@doc(?=[.\\[])");
     private static final Pattern ROOT_REF = Pattern.compile("(?<![\\w$@])\\$(?=[.\\[])");
 
@@ -134,7 +137,7 @@ public final class BoardSutra {
             }
             JsonNode f = fill(p, chip, in);
             if (f instanceof ObjectNode o) {
-                if (!local && body.size() == 1 && o.has("id")) {
+                if (!local && body.size() == 1 && p.has("id") && !in.controls().containsKey(PANEL_ID)) {
                     o.put("id", in.name());
                 }
                 out.add(o);
@@ -228,13 +231,21 @@ public final class BoardSutra {
     /** A pin's value in a body: null leaves the key out. */
     private static JsonNode value(String pin, String dflt, ChipDoc chip, BoardDoc.Instance in) {
         if ("title".equals(pin)) {
-            return in.title() != null ? TextNode.valueOf(in.title()) : dflt == null || dflt.isEmpty() ? null : TextNode.valueOf(dflt);
+            return in.title() != null ? TextNode.valueOf(toRoot(in.title())) : dflt == null || dflt.isEmpty() ? null : TextNode.valueOf(dflt);
+        }
+        if (pin.contains(".")) {                                 // %{rows.x}: the attribute mapped to a column, by its bare name
+            BoardDoc.Mapping m = in.map().get(pin);
+            return m == null || m.attributes().isEmpty() ? dflt == null || dflt.isEmpty() ? null : TextNode.valueOf(dflt)
+                    : TextNode.valueOf(m.attributes().get(0));
         }
         PinSpec p = chip.inPins().get(pin);
         if (p != null && p.role() == PinSpec.PinRole.DATA && in.map().containsKey(pin)) {
             return TextNode.valueOf("$." + in.map().get(pin).attributes().get(0));
         }
         JsonNode v = in.controls().get(pin);
+        if (v != null) {
+            v = mapText(v, BoardSutra::toRoot);                  // a setting that reads the record does so as @doc.X
+        }
         if (v == null && p != null && p.hasDefault()) {
             v = p.defaultValue();
         }

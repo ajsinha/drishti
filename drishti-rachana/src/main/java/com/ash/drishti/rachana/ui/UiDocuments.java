@@ -381,7 +381,9 @@ public final class UiDocuments {
         if (n.isMissingNode() || n.isNull()) {
             return null;
         }
-        unknownKeys(n, Set.copyOf(ChipManual.KEYS), at, p);
+        Set<String> keys = new java.util.HashSet<>(ChipManual.KEYS);
+        keys.addAll(ChipManual.OPTIONAL);
+        unknownKeys(n, keys, at, p);
         Map<String, String> pins = new LinkedHashMap<>();
         n.path("pins").fields().forEachRemaining(e -> pins.put(e.getKey(), e.getValue().asText()));
         List<ChipManual.Example> examples = new ArrayList<>();
@@ -442,7 +444,7 @@ public final class UiDocuments {
         PinType t = PinType.of(type).orElse(null);
         if (t == null) {
             p.add(UiProblem.error("BC-01", path(at, "type"), type == null ? "no type" : "unknown type '" + type + "'",
-                    "use one of id, text, number, bool, enum, date, datetime, period, measure, dimension, filter, selection, document, rowset"));
+                    "use one of id, text, number, bool, enum, date, datetime, period, measure, dimension, filter, selection, document, rowset, spec"));
             return null;
         }
         if (n.isTextual()) {

@@ -18,9 +18,12 @@ package com.ash.drishti.rachana.ui;
 import java.util.Locale;
 import java.util.Optional;
 
-/** The pin types of UI_BOARD.md section 4.1, by their document names ({@code id}, {@code rowset}, ...). */
+/**
+ * The pin types of UI_BOARD.md section 4.1, by their document names ({@code id}, {@code rowset}, ...). {@code spec} (2.7.0 P5) is a structured
+ * setting in the form of the panel or visual it configures (a list of columns, series or markers, a pivot, a format): a control constant only.
+ */
 public enum PinType {
-    ID, TEXT, NUMBER, BOOL, ENUM, DATE, DATETIME, PERIOD, MEASURE, DIMENSION, FILTER, SELECTION, DOCUMENT, ROWSET;
+    ID, TEXT, NUMBER, BOOL, ENUM, DATE, DATETIME, PERIOD, MEASURE, DIMENSION, FILTER, SELECTION, DOCUMENT, ROWSET, SPEC;
 
     /** The name as written in a chip or board document. */
     public String yamlName() {

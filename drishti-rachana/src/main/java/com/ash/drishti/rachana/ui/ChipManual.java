@@ -37,6 +37,8 @@ public record ChipManual(String purpose, Map<String, String> pins, String behavi
 
     /** The manual's keys, as written. */
     public static final List<String> KEYS = List.of("purpose", "pins", "behaviour", "defaults", "limits", "examples", "not-for", "accessibility");
+    /** Manual keys a chip may give and search reads: {@code fits}, a one-line hint of the data the chip fits ("rows with a date and a measure"). */
+    public static final List<String> OPTIONAL = List.of("fits");
 
     public ChipManual {
         pins = pins == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(pins));

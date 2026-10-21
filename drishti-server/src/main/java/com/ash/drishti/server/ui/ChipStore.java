@@ -227,7 +227,7 @@ public class ChipStore implements com.ash.drishti.rachana.ui.ChipCatalog {
 
     /**
      * The Chip Store listing: chips with a released version (deprecated and withdrawn ones are not offered), and the caller's own chips
-     * in progress; filtered by category, tag, text (name, title, purpose) and certified.
+     * in progress; filtered by category, tag, text (name, title, purpose, category, tags and the manual's {@code fits} hint) and certified.
      */
     public List<Map<String, Object>> list(String category, String tag, String q, Boolean certified, Principal p) {
         requireView(p);
@@ -257,7 +257,9 @@ public class ChipStore implements com.ash.drishti.rachana.ui.ChipCatalog {
             if (category != null && !category.equals(cat) || tag != null && !tags.contains(tag) || Boolean.TRUE.equals(certified) && cert == null) {
                 continue;
             }
-            if (needle != null && !(name + " " + doc.get("title") + " " + purpose).toLowerCase(Locale.ROOT).contains(needle)) {
+            String fits = UiDocs.str(UiDocs.map(doc.get("manual")).get("fits"));
+            if (needle != null && !(name + " " + doc.get("title") + " " + purpose + " " + cat + " " + String.join(" ", tags) + " " + fits)
+                    .toLowerCase(Locale.ROOT).contains(needle)) {
                 continue;
             }
             Map<String, Object> m = new LinkedHashMap<>();
