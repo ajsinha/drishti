@@ -17,6 +17,19 @@
 
 ## Unreleased
 
+- **Fixed (QA4-01, QA3B-03, P2): a moved Iceberg table is DEGRADED on Java 25 too.** The plugin carries a failed load as a quiet
+  cancellation and looked for it by type when the load was joined; Java 25's `CompletableFuture.join()` throws a new
+  `CancellationException("join")` with it as the cause, so on Java 25 (QA's server; the tests ran on 21) no failure reached the
+  table problems: Admin → Connectors said `UP`, Test found no dates, and every read answered a generic `502 DRS-1003` with a 36-line
+  stack trace. The failure is now found through the join's wrappers on every JDK: the badge and Health say *degraded* with the moved
+  table and the `relocate` to copy, a read answers *the table … names files that are not there* with one log line, and the connector's
+  Test is not ok with the same text, each kind reading `cannot read: …` instead of *nothing found* (`listingProblem`). ICEBERG_CONNECTOR
+  section 14. IcebergMovedConnectorFileTest now loads several domains and tables over ten dates with the loader, moves the folder and
+  serves it through a connector file at start and one hot-added (it failed on Java 25 before the fix); IcebergMovedTableTest.
+- **Fixed (QA3B-04): a `relocate` whose old folder matches nothing is said in Health** (for example a Windows pair on a Linux lake),
+  also when several tables moved together are one sentence.
+- **Fixed (QA4-05): an Iceberg connector whose `relocate` cannot be read no longer logs a NullPointerException at each retry**; the
+  half-started connector closes quietly and the start's refusal is the one problem. IcebergMovedTableTest.
 - **Fixed: `build_demo_lakes.py` run with a Python that lacks `deltalake` failed every table with "no engine"**; it now stops at once and names the console's environment to use.
 - **Fixed (SOAK2-01, P1): an administrator's history of a peer-held entity no longer shows a viewer's masks.** The history cache kept
   the days a peer answered (masked there for the first caller) as if they were unmasked, and served them to every later caller: after a

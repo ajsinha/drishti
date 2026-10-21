@@ -374,11 +374,14 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             });
             return out;
         });
+        V v;
         try {
-            V v = f.join();
-            problems.ok(kind);
-            return v;
-        } catch (QuietFailure q) {
+            v = f.join();
+        } catch (RuntimeException e) {
+            QuietFailure q = QuietFailure.in(e);
+            if (q == null) {
+                throw e;
+            }
             Throwable given = problems.failed(kind, q.getCause());
             if (given instanceof RuntimeException re) {
                 throw re;
@@ -388,13 +391,32 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             }
             throw new CompletionException(given);
         }
+        problems.ok(kind);
+        return v;
     }
 
     /** A failed load, carried as a cancellation so the cache drops it without logging it (its cause is what the caller gets). */
-    private static final class QuietFailure extends java.util.concurrent.CancellationException {
+    static final class QuietFailure extends java.util.concurrent.CancellationException {
         QuietFailure(Throwable cause) {
             super(cause.toString());
             initCause(cause);
+        }
+
+        /**
+         * The quiet failure {@code e} is or carries. {@code join()} throws it as it is on JDK 21, but newer JDKs (25) throw a new
+         * {@code CancellationException("join")} with it as the cause: catching the type alone missed every failed load there, so a
+         * moved table was never recorded (Health UP) and each read answered a generic 502 with a stack trace (QA4-01).
+         */
+        static QuietFailure in(Throwable e) {
+            for (Throwable c = e; c != null; c = c.getCause() == c ? null : c.getCause()) {
+                if (c instanceof QuietFailure q) {
+                    return q;
+                }
+                if (!(c instanceof java.util.concurrent.CancellationException || c instanceof CompletionException)) {
+                    return null;          // only the future's own wrappers are looked through
+                }
+            }
+            return null;
         }
     }
 
@@ -666,6 +688,12 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         }
     }
 
+    /** A table that cannot be read lists none of its entities: searches and the connector's Test say why (QA4-01). */
+    @Override
+    public Optional<String> listingProblem(String kind) {
+        return problems.forReaders(kind);
+    }
+
     /** Why the kind's table cannot be read now (Health's words), or empty. */
     Optional<String> problem(String kind) {
         return problems.of(kind);
@@ -677,6 +705,9 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             refreshTask.cancel(false);
         }
         loaders.shutdownNow();               // loads in flight are abandoned; their callers get an error, not a hang
+        if (lake == null) {
+            return;                          // the start failed before the lake was opened (a relocate it cannot read: QA4-05)
+        }
         try {
             lake.close();
         } catch (IOException e) {

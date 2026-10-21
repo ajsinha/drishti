@@ -70,8 +70,7 @@ final class TableProblems {
         }
         if (missing(e).isPresent()) {
             missingFiles.add(kind);
-            return new com.ash.drishti.api.UnreadableData("the table " + kind + " names files that are not there (it was moved or copied after it "
-                    + "was written, or its files were removed); Admin → Health says where they were and the relocate that reads it", e);
+            return new com.ash.drishti.api.UnreadableData(movedWords(kind), e);
         }
         missingFiles.remove(kind);
         return e;
@@ -88,6 +87,22 @@ final class TableProblems {
 
     Optional<String> of(String kind) {
         return Optional.ofNullable(byKind.get(kind));
+    }
+
+    /**
+     * The kind's problem in words without a folder, for a reader (the 502, a search's partial note, the connector's Test): a table that
+     * names files that are not there says so; any other problem says the table cannot be read and that Health says why.
+     */
+    Optional<String> forReaders(String kind) {
+        if (!byKind.containsKey(kind)) {
+            return Optional.empty();
+        }
+        return Optional.of(missingFiles.contains(kind) ? movedWords(kind) : "the table " + kind + " cannot be read now; Admin → Health says why");
+    }
+
+    private static String movedWords(String kind) {
+        return "the table " + kind + " names files that are not there (it was moved or copied after it was written, or its files were removed); "
+                + "Admin → Health says where they were and the relocate that reads it";
     }
 
     boolean isEmpty() {
@@ -122,7 +137,8 @@ final class TableProblems {
                 List<String> kinds = byPair.get(pair);
                 parts.add(String.join(", ", kinds) + ": their metadata names files under the folder they were written in, which is not there now: "
                         + "the tables were moved or copied after they were written. Write them again where they are now, or read them with "
-                        + "engine: native and relocate: '" + pair + "'");
+                        + "engine: native and relocate: '" + pair + "'" + (relocate.isEmpty() ? ""
+                                : " (relocate " + relocate + " is set, but no old folder in it holds " + pair.substring(0, pair.indexOf(" -> ")) + ")"));
             }
         });
         return String.join("; ", parts);
@@ -143,7 +159,7 @@ final class TableProblems {
                 String shownOld = com.ash.drishti.iceberg.io.Relocation.shown(old);
                 // the pair to copy: the folders where the two differ, in the plain form the setting reads (QA3B-04)
                 String pair = now == null ? null : com.ash.drishti.iceberg.io.Relocation.suggest(old, now).orElse(null);
-                if (pair != null) {
+                if (pair != null && !relocate.targets(old)) {
                     movedBy.put(kind, pair);
                 } else {
                     movedBy.remove(kind);
