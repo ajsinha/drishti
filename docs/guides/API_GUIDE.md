@@ -74,6 +74,7 @@ covered in depth in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 25. [Scheduled reports](#scheduled-reports)
 26. [The access log (administrators)](#the-access-log-administrators)
 27. [A phrase as a search](#a-phrase-as-a-search)
+28. [UI Boards and the Chip Store: `/api/v1/ui` (2.7.0)](#ui-boards-and-the-chip-store-apiv1ui-270)
 
 ## Before you start
 
@@ -1688,6 +1689,13 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-2007 | 403 | four eyes | the author may not approve their own proposal |
 | DRS-2060 | 422 | form invalid | a search form that is not valid YAML or names a field path, type or operator wrongly; the Form tab lists each problem, `pack check` reports the pack's |
 | DRS-2061 | 422 | history invalid | a pack's `history:` block names a shape, chart field, headline or limit wrongly; `sutra lint` and the deploy check list each problem |
+| DRS-2070 | 400 | UI document invalid | a board or chip document is not YAML or JSON, or misses a required key (`/api/v1/ui`) |
+| DRS-2071 | 422 | UI check failed | the board check or a chip's publish check failed; the message lists each problem by rule (BC-01, BC-02, BC-11, ...) |
+| DRS-2072 | 404 | no such chip | no such chip or version, or one you may not see yet (a draft in review is seen by its author and the governors) |
+| DRS-2073 | 404 | no such board | no such board, or not one you may open (a personal board is private until shared with you) |
+| DRS-2074 | 403 | UI power missing | you may not do this (save boards, author, review or certify chips) |
+| DRS-2075 | 413 | UI over a limit | a board over its size, chip or trace limit, or one saved board too many (`config/ui/ui.yaml`) |
+| DRS-2078 | 409 | chip lifecycle order | a Chip Store step out of order: publish before approval, certify before publish, change a published version, or a `compatible-with` claim the server could not verify |
 | DRS-2101 | 422 | el syntax | a Rachana-EL expression does not parse (alert rules, Sutra expressions, search conditions) |
 | DRS-2102 | 422 | el eval | a Rachana-EL expression failed while evaluating |
 | DRS-3001 | 500 | inference failed | reserved: the code exists, but nothing in this release raises it (a document with no Sutra is laid out by inference, which does not fail) |
@@ -3045,3 +3053,45 @@ A schedule that does not parse, a query that does not parse, or a webhook outsid
 problem}`: the structured search the words make (it does not run it; send `query` to `/search`), how each part was
 read, the words not understood, and `problem` when the words name no kind. The vocabulary is the kinds the caller
 may open and each kind's fields, learned from a sample of its documents (kept five minutes).
+
+## UI Boards and the Chip Store: `/api/v1/ui` (2.7.0)
+
+The design is [UI_BOARD.md](../architecture/UI_BOARD.md). Phase P2 is built: saved boards and the Chip Store; rendering (`POST /ui/render`,
+`GET /ui/boards/{id}/render`) comes with phase P3. Documents are YAML or JSON (sent as the request body, any content type); a board is
+named by its name plus `owner` (a personal board shared with you; your own when left out) or `workspace` (a BI workspace's board).
+Writes are compare-and-set: send back the `ETag` you read as `If-Match`; a stale one is `409 DRS-5057` (changed elsewhere: reload).
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/ui/boards?workspace=` | the boards you may open: `[{id, scope, owner or workspace, board, access: mine, shared or workspace, title, version, chips, etag}]`; a workspace's only when named |
+| `POST` | `/ui/boards/check?workspace=` | the store's part of the board check (reading, sizes, chip versions: BC-01, BC-02, BC-09, BC-11) over the body: `{ok, problems}`; the full check (pins, types, traces) comes with P1's checker |
+| `GET` | `/ui/boards/{name}?owner=&workspace=` | `{id, board, scope, owner or workspace, etag, sharedWith, document, yaml}` and the `ETag` header |
+| `PUT` | `/ui/boards/{name}?workspace=` | saves the body: no `If-Match` (or `If-None-Match: *`) creates, `If-Match` updates. The store sets `owner`, `workspace` and `version` (the board's revision) and keeps the earlier save. Your own personal boards, or a workspace's as a contributor or above. `422 DRS-2071` lists the problems; `413 DRS-2075` past a limit |
+| `DELETE` | `/ui/boards/{name}?workspace=` | with `If-Match`: the owner, or a workspace admin; its revisions and shares go too |
+| `PUT` | `/ui/boards/{name}/share` | `{people: [...]}`: shares one of your personal boards by link with named people (the list replaces the old one; `[]` makes it private again). They open it with `?owner=<you>`, read-only |
+| `POST` | `/ui/boards/{name}/copy?owner=&workspace=` | `{workspace, name?}`: copies a board you may open into a workspace, owned by you |
+| `GET` | `/ui/boards/{name}/revisions` and `/revisions/{n}` | the earlier saves, newest first; one as `{yaml}` |
+| `GET` | `/ui/chips?category=&tag=&q=&certified=` | the Chip Store: `[{chip, title, category, tags, purpose, latest, certified, seed, mine}]`: chips with a published version (deprecated and withdrawn ones are not offered) and your own in progress |
+| `GET` | `/ui/chips/{name}` | its versions you may see, each with its state (`in-review`, `approved`, `published`, `certified`, `deprecated`, `withdrawn`), author, reviewer, certifier and dates |
+| `GET` | `/ui/chips/{name}/{version}` | `{chip, version, state, document, yaml}` |
+| `GET` | `/ui/chips/{name}/{version}/manual` | `{chip, version, title, state, pins, manual}`: the technical manual alone, for people and agents |
+| `GET` | `/ui/chips/{name}/where-used` | per version, `{version, boards: [ids you may open], others: n}` |
+| `GET` | `/ui/chips/{name}/events` | the lifecycle events, oldest first |
+| `GET` / `PUT` | `/ui/chips/{name}/draft` | your draft (the `author` role); the first save with no `If-Match`. A version number already submitted or published is `409 DRS-2078` |
+| `POST` | `/ui/chips/{name}/{version}/{action}` | `{comment?}`; `submit` (the author), `approve` and `reject` (a reviewer other than the author: `403 DRS-2007` for your own; a reject needs a comment and frees the number), `publish` (the author or a reviewer, after approval), `certify` (`bi-steward`), `deprecate`, `withdraw` (a reviewer or certifier, with a comment naming the fault). Out of order is `409 DRS-2078` |
+
+Publishing runs the chip checks again (the grammar's reading, a complete manual, every out pin driven, nothing but pins read, every
+example a board fragment that uses the chip) and verifies `compatible-with`: every in pin of the earlier version still accepts what it
+took, no required pin was added without a default, every out pin kept its type. Boards using the earlier version then move to the new
+one by themselves, as a new revision (an instance with `follow: pinned` stays; a certified-only workspace waits for certification).
+
+```
+curl -s -X PUT localhost:18480/api/v1/ui/boards/book-trades -H "Authorization: Bearer $TOKEN" --data-binary @book-trades.yaml -D - | grep -i etag
+ETag: "6f1c…"
+curl -s -X PUT localhost:18480/api/v1/ui/boards/book-trades -H 'If-Match: "6f1c…"' -H "Authorization: Bearer $TOKEN" --data-binary @book-trades.yaml
+curl -s localhost:18480/api/v1/ui/chips/filterable-table/2/manual -H "Authorization: Bearer $TOKEN"
+```
+
+Sixty-eight seed chips ship in `config/ui/chips` (certified, read-only): `panel-<kind>` for each of the 22 grammar panel kinds,
+`bi-<type>` for each of the 34 BI visual types, the six trading pack blocks (`deal-ticket`, `legs`, `flow-schedule`, `events`,
+`payments`, `deal-footer`), and `entity-card`, `filterable-table` (versions 1 and 2), `cashflow-ladder`, `search-box`, `date-range`.

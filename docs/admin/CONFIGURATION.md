@@ -889,6 +889,27 @@ The token scope that opens these writes to a personal API token is `packs:admin`
 
 Check: `curl -s localhost:18480/api/v1/studio/settings` returns `{"approve":…,"review":…,"save":…}`.
 
+### `drishti.ui` — the UI Board: Chip Store and saved boards (2.7.0)
+
+| Key | Default | Meaning |
+|---|---|---|
+| `dir` | `./config/ui` (`DRISHTI_UI_DIR`) | The UI Board's folder: `ui.yaml` (below) and `chips/`, the seed chips (`<chip>.v<n>.chip.yaml`, shipped certified and read-only). |
+
+`config/ui/ui.yaml`, read at start; a missing file or key means the default:
+
+| Key | Default | Meaning |
+|---|---|---|
+| `limits.board-bytes` | `65536` | The largest board document; larger is `413 DRS-2075`. |
+| `limits.chips` / `limits.traces` | `40` / `120` | Chip instances and traces per board; more is `DRS-2075`. |
+| `limits.boards-per-person` | `500` | Saved personal boards per person; one more is `DRS-2075`. |
+| `limits.revisions` | `50` | Earlier saves kept per board (the oldest go first). |
+| `workspaces.<ws>.certified-only` | `false` | Boards of that workspace take certified chips only (`DRS-2071`, rule BC-11); by default a workspace takes published chips. |
+
+Chips and boards themselves live in the content store (`ui/…` keys, [CONTENT_STORE.md](../architecture/CONTENT_STORE.md)), so every
+node of a cluster sees them. Who may do what follows the existing roles: saving boards needs `layout`, authoring chips `author`,
+reviewing chips `approve`, certifying chips `bi-steward` (an administrator holds all); workspace boards follow the BI workspace
+membership (contributor and above save). See [UI_BOARD.md](../architecture/UI_BOARD.md) section 12.1.
+
 ### `drishti.branding` — the product's name and notices
 
 | Key | Default | Meaning |
