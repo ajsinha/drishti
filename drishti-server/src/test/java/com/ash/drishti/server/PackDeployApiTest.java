@@ -143,6 +143,7 @@ class PackDeployApiTest {
 
     @Autowired MockMvc mvc;
     @Autowired AuditLog audit;
+    @Autowired com.ash.drishti.packs.ConnectorFiles connectorFiles;
 
     private static Map<String, String> files(String version, boolean thing, String sutra) {
         Map<String, String> f = new LinkedHashMap<>();
@@ -206,12 +207,12 @@ class PackDeployApiTest {
         assertThat(JSON.convertValue(c.path("missing"), java.util.List.class)).containsExactly("new-lake");
         assertThat(JSON.convertValue(c.path("creatable"), java.util.List.class)).containsExactly("new-lake");
         assertThat(c.path("names").findValuesAsText("name")).contains("item-store", "new-lake");
-        assertThat(root.resolve("connectors/new-lake.yaml")).doesNotExist();                       // a preview changes nothing
+        assertThat(connectorFiles.exists("new-lake")).isFalse();                                  // a preview changes nothing
         mvc.perform(post("/api/v1/admin/packs/deploy/" + r.path("uploadId").asText() + "/connectors")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.created[0]").value("new-lake"));
-        assertThat(Files.readString(root.resolve("connectors/new-lake.yaml"))).contains("plugin: file").contains("kinds:");
+        assertThat(connectorFiles.text("new-lake")).contains("plugin: file").contains("kinds:");     // a shared edit on a cluster (CONTENT_STORE.md 11)
         mvc.perform(post("/api/v1/admin/packs/deploy/" + r.path("uploadId").asText() + "/connectors")).andExpect(jsonPath("$.created.length()").value(0));   // never overwritten
-        Files.deleteIfExists(root.resolve("connectors/new-lake.yaml"));
+        connectorFiles.delete("new-lake");
         mvc.perform(delete("/api/v1/admin/packs/deploy/" + r.path("uploadId").asText()));
     }
 

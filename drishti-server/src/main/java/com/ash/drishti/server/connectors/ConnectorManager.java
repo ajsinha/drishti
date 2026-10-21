@@ -423,7 +423,7 @@ public final class ConnectorManager {
     }
 
     @SuppressWarnings("unchecked")
-    private String templateText(Template t) {
+    public String templateText(Template t) {
         Map<String, Object> d = t.definition();
         Map<String, Object> flat = new LinkedHashMap<>();
         PackLoader.flatten("", d.get("settings") instanceof Map<?, ?> s ? (Map<String, Object>) s : Map.of(), flat);

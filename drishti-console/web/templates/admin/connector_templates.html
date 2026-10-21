@@ -1,0 +1,62 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Template updates · Connectors · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-connectors.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm" data-template-updates>
+  {% with tab='connectors' %}{% include "admin/_nav.html" %}{% endwith %}
+  <p class="adm-crumb"><a href="/admin/connectors">Connectors</a> <span aria-hidden="true">/</span> Template updates</p>
+  <h1 class="ws-h" id="tuTitle">Template updates <a class="emb-help" href="/help/connector-files#template-updates" aria-label="Help: template updates" title="Help: template updates">?</a></h1>
+  <details class="adm-about" open><summary>About this page</summary>
+  <p class="text-muted-d">Connectors whose text differs from their pack's current template. <b>Missing</b>: kinds or settings the template has and the
+    connector lacks (a file generated from an older template). <b>Changed</b>: settings an administrator edited; never changed for you.
+    <b>Obsolete</b>: kinds no loaded pack serves. Automatic updates: <span class="mono" data-mode>{{ updates.mode }}</span>
+    ({{ 'missing kinds and settings are added for you, keeping every edit' if updates.mode == 'additive' else 'only listed here' if updates.mode == 'notify' else 'off' }}).
+    Every change is kept in the connector's history and applies on every node.</p>
+  </details>
+  <p class="adm-actions"><button type="button" class="fk" data-fix-all{% if not updates.additive %} disabled{% endif %}>Fix all additive ({{ updates.additive or 0 }})</button>
+    <span data-msg role="status" aria-live="polite"></span></p>
+  {% if updates.notices %}<section aria-labelledby="tuRecent"><h2 class="ws-h2" id="tuRecent">Recent automatic updates</h2>
+    <ul class="tu-notices">{% for n in updates.notices[:10] %}<li><span class="mono">{{ n.name }}</span>: {{ n.what }} <span class="text-muted-d mono">{{ n.at }}</span></li>{% endfor %}</ul></section>{% endif %}
+  {% for d in drifts %}
+  <section class="tu-card" data-drift="{{ d.name }}" data-etag="{{ d.etag }}" aria-labelledby="tu-{{ d.name }}">
+    <h2 class="ws-h2" id="tu-{{ d.name }}"><a class="mono" href="/admin/connectors/{{ d.name }}">{{ d.name }}</a>{% if d.pack %} <span class="text-muted-d">pack {{ d.pack }}</span>{% endif %}</h2>
+    <ul class="tu-classes">
+      {% if d.missingKinds or d.newSettings %}<li><span class="st st-warn">missing</span>
+        {% if d.missingKinds %}kinds <span class="mono">{{ d.missingKinds | join(', ') }}</span>{% endif %}
+        {% if d.newSettings %}{{ '; ' if d.missingKinds }}settings <span class="mono">{{ d.newSettings | join(', ') }}</span>{% endif %}</li>{% endif %}
+      {% if d.conflicting %}<li><span class="st">changed</span>
+        {% for c in d.conflicting %}<span class="mono">{{ c.key }}</span>: <span class="mono">{{ c.connector }}</span> (template <span class="mono">{{ c.template }}</span>){{ '; ' if not loop.last }}{% endfor %}</li>{% endif %}
+      {% if d.obsoleteKinds %}<li><span class="st st-bad">obsolete</span> kinds <span class="mono">{{ d.obsoleteKinds | join(', ') }}</span></li>{% endif %}
+    </ul>
+    <div class="tu-diff">
+      <figure><figcaption>Now</figcaption><pre class="mono" tabindex="0" aria-label="{{ d.name }} now">{{ d.text }}</pre></figure>
+      <figure><figcaption>Pack template</figcaption><pre class="mono" tabindex="0" aria-label="{{ d.name }}: the pack's template">{{ d.templateText or '(no template)' }}</pre></figure>
+    </div>
+    <p class="adm-actions">
+      {% if d.additive %}<button type="button" class="fk" data-act="add-missing" aria-label="Add the missing kinds and settings to {{ d.name }}, keeping its edits">Add missing kinds</button>{% endif %}
+      {% if d.templateText %}<button type="button" class="fk" data-act="regenerate" aria-label="Regenerate {{ d.name }} from its pack's template">Regenerate from template</button>{% endif %}
+      {% if d.obsoleteKinds %}<button type="button" class="fk emb-danger" data-act="remove-obsolete" aria-label="Remove the obsolete kinds from {{ d.name }}">Remove obsolete kinds</button>{% endif %}
+    </p>
+  </section>
+  {% else %}<p class="text-muted-d" data-none>Every connector matches its pack's template.</p>{% endfor %}
+</div>
+<script src="/static/js/admin-connector-templates.js?v={{ ASSET_V }}" defer></script>
+{% endblock %}

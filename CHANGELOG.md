@@ -17,6 +17,14 @@
 
 ## Unreleased
 
+- **New: connectors catch up with their pack's template.** A connector file generated from an older template (for example `macro-store`
+  without `region-economy`, `risk-store` without `trade-valuation`) is compared with the pack's current template at start and every
+  minute: missing kinds and settings are added automatically, keeping every edit (`template-updates: additive`, the default, in
+  `config/connectors-settings.yaml`; `notify` only lists; `off`), as a shared edit with the old text in the history, one log line and an
+  audit entry. Settings an administrator changed and kinds no pack serves are never changed automatically. **Admin → Connectors →
+  Template updates** lists every drifted connector beside its template with *Add missing kinds*, *Regenerate from template*, *Remove
+  obsolete kinds* and *Fix all additive*; the Connectors tab shows a count. [CONNECTOR_FILES.md](docs/connectors/CONNECTOR_FILES.md#template-updates).
+
 - **New: connector edits made through Admin reach every node of a cluster.** Files in `config/connectors` stay the base (GitOps); an
   Admin create, edit, enable or disable, restore or delete is a shared edit in the content store (`config/connectors/<name>.yaml`, with
   history) that every node applies over its file within `drishti.store.watch-ms` (2 s), hot-reloading as for a file edit. Admin →

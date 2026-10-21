@@ -24,6 +24,10 @@
 <div class="adm" data-connectors data-zone="{{ (business_date or {}).get('zone') or CLOCK_TZ or 'America/New_York' }}" data-watch="/admin/connectors/api/stamp" data-kinds="{{ (listing.knownKinds or []) | join(',') }}" data-directory="{{ listing.directory }}">
   {% with tab='connectors' %}{% include "admin/_nav.html" %}{% endwith %}
   <h1 class="ws-h">Connectors <a class="emb-help" href="/help/connector-files" aria-label="Help: connector files and this page" title="Help: connector files and this page">?</a></h1>
+  {% if status and status.connectorTemplateDrift %}<p class="adm-warn" role="status" data-drift-note><i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+    {{ status.connectorTemplateDrift }} connector{{ '' if status.connectorTemplateDrift == 1 else 's' }} differ{{ 's' if status.connectorTemplateDrift == 1 }} from {{ 'its' if status.connectorTemplateDrift == 1 else 'their' }} pack's template.
+    <a href="/admin/connectors/template-updates">Template updates</a></p>
+  {% else %}<p class="text-muted-d"><a href="/admin/connectors/template-updates">Template updates</a>: every connector matches its pack's template.</p>{% endif %}
   <details class="adm-about" open><summary>About this page</summary>
   <p class="text-muted-d">Where {{ PRODUCT }} reads its data. Each connector is one file in <span class="mono">{{ listing.directory }}</span>, and the file name is the
     connector's name; packs refer to connectors by that name. A saved change restarts only that connector, in place, and the previous text is kept so you can

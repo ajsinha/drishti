@@ -71,6 +71,42 @@ async def page(request: Request):
     return render(request, "admin/connectors.html", connectors=listing.get("connectors", []), listing=listing, plugins=plugins.get("plugins", []), status=status)
 
 
+@router.get("/template-updates")
+async def template_updates_page(request: Request):
+    """Template updates: connectors that differ from their pack's current template (kinds or settings the template has and the
+    connector lacks, settings an administrator changed, kinds no pack serves), side by side, with the buttons that fix them."""
+    me = ident(request)
+    if not me.is_admin:
+        return render(request, "admin/forbidden.html", status_code=403)
+    try:
+        updates = await _server(request, "GET", "/template-updates")
+        status = await request.app.state.backend.admin("GET", "/status", me)
+    except BackendError as e:
+        return render(request, "admin/forbidden.html", status_code=e.page_status, error=e)
+    return render(request, "admin/connector_templates.html", updates=updates, drifts=updates.get("drifts", []), status=status)
+
+
+_TEMPLATE_ACTIONS = ("add-missing", "regenerate", "remove-obsolete")
+
+
+@router.post("/api/template-updates/fix-all")
+async def api_template_fix_all(request: Request):
+    try:
+        return await _server(request, "POST", "/template-updates/fix-all", timeout=60.0)
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.post("/api/template-updates/{name}/{action}")
+async def api_template_action(request: Request, name: str, action: str):
+    if action not in _TEMPLATE_ACTIONS:
+        return JSONResponse({"code": "DRS-4040", "detail": "no such action"}, status_code=404)
+    try:
+        return await _server(request, "POST", f"/template-updates/{quote(name)}/{action}", headers=_match(request), timeout=60.0)
+    except BackendError as e:
+        return _problem(e)
+
+
 @router.get("/{name}")
 async def detail_page(request: Request, name: str):
     """One connector's page: what it is, how it is doing, who uses it, its settings (secrets masked), its file and history, and the
