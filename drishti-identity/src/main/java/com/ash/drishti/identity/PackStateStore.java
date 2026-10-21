@@ -40,10 +40,34 @@ public final class PackStateStore {
     private final ReentrantLock writes = new ReentrantLock();
     private volatile Map<String, State> snapshot;
 
+    /** The content store document of every pack's state ({@code drishti.packs.state-store=content}, the default). */
+    public static final class Doc {
+        public java.util.TreeMap<String, State> packs = new java.util.TreeMap<>();
+    }
+
+    static final String KEY = "admin/pack-state.json";
+    private final com.ash.drishti.identity.content.ContentDocs content;
+
     public PackStateStore(IdentityRepositories.PackStates states, TransactionTemplate tx, AuditLog audit) {
+        this(states, tx, audit, null);
+    }
+
+    /**
+     * With {@code content}, the states are one document in the content store, {@code admin/pack-state.json} (CONTENT_STORE.md section 9),
+     * so every node of a cluster sees a switch within the refresh interval; the table's rows are imported once (the document's existence
+     * is the marker), and left in place.
+     */
+    public PackStateStore(IdentityRepositories.PackStates states, TransactionTemplate tx, AuditLog audit,
+            com.ash.drishti.identity.content.ContentStore content) {
         this.states = states;
         this.tx = tx;
         this.audit = audit;
+        this.content = content == null ? null : new com.ash.drishti.identity.content.ContentDocs(content);
+        if (this.content != null && content.get(KEY).isEmpty()) {
+            Doc d = new Doc();
+            tx.execute(s -> states.findAll()).forEach(e -> d.packs.put(e.name, new State(e.name, e.enabled, e.updatedAt, e.updatedBy)));
+            this.content.create(KEY, d);
+        }
         reload();
     }
 
@@ -66,6 +90,10 @@ public final class PackStateStore {
 
     private void reload() {
         version.incrementAndGet();
+        if (content != null) {
+            snapshot = Map.copyOf(content.value(KEY, Doc.class).map(d -> d.packs).orElse(new java.util.TreeMap<>()));
+            return;
+        }
         snapshot = tx.execute(s -> states.findAll().stream().map(e -> new State(e.name, e.enabled, e.updatedAt, e.updatedBy))
                 .collect(Collectors.toUnmodifiableMap(State::name, Function.identity())));
     }
@@ -83,14 +111,22 @@ public final class PackStateStore {
     public State set(String pack, boolean enabled, String actor) {
         writes.lock();
         try {
-            tx.executeWithoutResult(s -> {
-                PackStateEntity e = states.findById(pack).orElseGet(PackStateEntity::new);
-                e.name = pack;
-                e.enabled = enabled;
-                e.updatedAt = Instant.now();
-                e.updatedBy = actor;
-                states.save(e);
-            });
+            if (content != null) {
+                content.update(KEY, Doc.class, d -> {
+                    Doc out = d == null ? new Doc() : d;
+                    out.packs.put(pack, new State(pack, enabled, Instant.now(), actor));
+                    return out;
+                });
+            } else {
+                tx.executeWithoutResult(s -> {
+                    PackStateEntity e = states.findById(pack).orElseGet(PackStateEntity::new);
+                    e.name = pack;
+                    e.enabled = enabled;
+                    e.updatedAt = Instant.now();
+                    e.updatedBy = actor;
+                    states.save(e);
+                });
+            }
             reload();
             audit.record(actor, enabled ? "pack-enabled" : "pack-disabled", pack, "");
             return snapshot.get(pack);

@@ -97,7 +97,7 @@ public final class EmbedAppStore {
 
     private record Row(App app, String secretHash, String prevHash, Instant prevUntil) {}
 
-    private final IdentityRepositories.EmbedApps apps;
+    private final EmbedAppRows apps;
     private final TransactionTemplate tx;
     private final AuditLog audit;
     private final boolean wildcards;
@@ -111,6 +111,12 @@ public final class EmbedAppStore {
     private volatile Map<String, Row> configured = Map.of();
 
     public EmbedAppStore(IdentityRepositories.EmbedApps apps, TransactionTemplate tx, AuditLog audit, boolean wildcards, int maxSeconds,
+            int defaultCalls, int defaultUserCalls) {
+        this(EmbedAppRows.of(apps), tx, audit, wildcards, maxSeconds, defaultCalls, defaultUserCalls);
+    }
+
+    /** With the rows kept where {@code apps} says (the content store by default, CONTENT_STORE.md section 9). */
+    public EmbedAppStore(EmbedAppRows apps, TransactionTemplate tx, AuditLog audit, boolean wildcards, int maxSeconds,
             int defaultCalls, int defaultUserCalls) {
         this.apps = apps;
         this.tx = tx;

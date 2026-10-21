@@ -32,9 +32,37 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Import(IdentityDatabase.class)
 public class IdentityConfiguration {
 
+    /**
+     * The audit trail: the content store ({@code drishti.audit.store=content}, the default; per-node day segments merged when read,
+     * CONTENT_STORE.md section 9; the table's rows are imported once) or, one node only, the identity database ({@code jpa}).
+     */
     @Bean
-    public JpaAuditLog auditLog(IdentityRepositories.Audit audit, com.ash.drishti.identity.collab.Seal.Store seals) {
-        return new JpaAuditLog(audit, seals);
+    public JpaAuditLog auditLog(IdentityRepositories.Audit audit, com.ash.drishti.identity.collab.Seal.Store seals,
+            com.ash.drishti.identity.content.ContentStore content, org.springframework.core.env.Environment env) {
+        JpaAuditLog log = new JpaAuditLog(audit, seals);
+        if (!"jpa".equalsIgnoreCase(env.getProperty("drishti.audit.store", "content").trim())) {
+            ContentAuditLog c = new ContentAuditLog(content, nodeName(env));
+            String marker = "system/imports/audit-jpa.json";
+            if (new com.ash.drishti.identity.content.ContentDocs(content).create(marker, java.util.Map.of("at", System.currentTimeMillis()))) {
+                try {
+                    int n = log.copyTo(c);                               // the marker first: only one node copies
+                    if (n > 0) {
+                        org.slf4j.LoggerFactory.getLogger(IdentityConfiguration.class).info("audit: imported {} events into the content store", n);
+                    }
+                } catch (RuntimeException e) {
+                    content.deleteLatest(marker);
+                    throw e;
+                }
+            }
+            log.useContent(c);
+        }
+        return log;
+    }
+
+    /** This node's name: {@code drishti.net.node-id}, else host and port. */
+    static String nodeName(org.springframework.core.env.Environment env) {
+        String node = env.getProperty("drishti.net.node-id", "");
+        return node.isBlank() ? com.ash.drishti.identity.content.ContentStoreNodes.localName(env.getProperty("server.port", "")) : node;
     }
 
     @Bean
@@ -269,15 +297,23 @@ public class IdentityConfiguration {
     }
 
     @Bean
-    public PackStateStore packStateStore(IdentityRepositories.PackStates states, TransactionTemplate identityTransactions, JpaAuditLog auditLog) {
-        return new PackStateStore(states, identityTransactions, auditLog);
+    public PackStateStore packStateStore(IdentityRepositories.PackStates states, TransactionTemplate identityTransactions, JpaAuditLog auditLog,
+            com.ash.drishti.identity.content.ContentStore content, org.springframework.core.env.Environment env) {
+        boolean jpa = "jpa".equalsIgnoreCase(env.getProperty("drishti.packs.state-store", "content").trim());
+        return new PackStateStore(states, identityTransactions, auditLog, jpa ? null : content);
     }
 
     /** Host applications for embedded views (Drishti Elements); the limits are the defaults a new registration gets. */
     @Bean
     public EmbedAppStore embedAppStore(IdentityRepositories.EmbedApps apps, TransactionTemplate identityTransactions, JpaAuditLog auditLog,
-            org.springframework.core.env.Environment env) {
-        return new EmbedAppStore(apps, identityTransactions, auditLog,
+            org.springframework.core.env.Environment env, com.ash.drishti.identity.content.ContentStore content) {
+        EmbedAppRows rows = EmbedAppRows.of(apps);
+        if (!"jpa".equalsIgnoreCase(env.getProperty("drishti.embed.store", "content").trim())) {
+            EmbedAppRows.Content c = new EmbedAppRows.Content(content);
+            c.importFrom(apps);
+            rows = c;
+        }
+        return new EmbedAppStore(rows, identityTransactions, auditLog,
                 Boolean.parseBoolean(env.getProperty("drishti.embed.allow-wildcard-origins", "false")),
                 Integer.parseInt(env.getProperty("drishti.embed.token-max-seconds", "900")),
                 Integer.parseInt(env.getProperty("drishti.embed.limits.views-per-minute", "600")),
