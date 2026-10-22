@@ -34,7 +34,8 @@ CHIP = {"rachana": 1, "chip": "pnl-strip", "version": 1, "title": "P&L strip", "
 def ui():
     from core.app import create_app
     from core.config import load_settings
-    app = create_app(load_settings(CONSOLE / "config"))
+    from ui_board_backend import boards_on
+    app = boards_on(create_app(load_settings(CONSOLE / "config")))
     app.state.backend = UiChipBackend()
     with TestClient(app) as c:
         yield c, app.state.backend

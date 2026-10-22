@@ -80,6 +80,9 @@ ui:
     DRS-4003: Pick another business date (Reset in the date menu returns to live).
     DRS-4004: The search could not be read. Check its fields and syntax.
     default: Go back to the terminal and try again, or type part of an identifier in the command line.
+  # The Board and Chip designer (UI Board, 2.7.0; docs/guides/UI_BOARD_GUIDE.md). OFF by default: Build is the screen (Sutra) designer, Build -> Boards
+  # is "My designs", and /build/board, /build/chip and /ui/b answer "not enabled". The engine (the server's /api/v1/ui) is unchanged either way.
+  boards: ${DRISHTI_UI_BOARDS:false}
   studio_example: all-panels-showcase   # the example Studio opens on (a name under studio.examples_dir); blank or missing: the first pack example
   default_theme: terminal        # terminal | light | wallstreet | blue | green | crimson | crimson-dark | terminal-green | terminal-crimson | terminal-blue
   # The product's name and legal notices on every page; nothing user-visible names them in code. The server has the

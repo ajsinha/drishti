@@ -107,6 +107,11 @@ def test_how_this_view_was_built_links_its_sutra_to_the_designer_and_its_source_
     assert "data-prov-sutra" not in h and "inferred from the shape of the document" in h
     fields[0]["text"] = "Board trading-irs-fixfloat (from Sutra irs-fixfloat v1)"      # a page served from its converted board (12.4)
     h = t.render(p={"id": "built", "kind": "provenance", "title": "How this view was built", "data": {"fields": fields}})
+    assert "data-prov-board" not in h and "/build/board/" not in h and "Board trading-irs-fixfloat (from Sutra irs-fixfloat v1)" in h   # ui.boards off
+    env = Environment(loader=FileSystemLoader(str(CONSOLE / "web" / "templates")), extensions=["jinja2.ext.do"])   # ui.boards on
+    env.globals["UI_BOARDS"] = True
+    t = env.from_string('{% from "_macros/panels.html" import panel %}{{ panel(p) }}')
+    h = t.render(p={"id": "built", "kind": "provenance", "title": "How this view was built", "data": {"fields": fields}})
     assert '<a data-prov-board href="/build/board/trading-irs-fixfloat"' in h and "(from Sutra irs-fixfloat v1)" in h
     assert "studio?sutra=trading-irs-fixfloat" not in h
 
@@ -118,6 +123,12 @@ def test_the_about_layout_of_a_board_served_page_opens_the_board_and_its_sutra()
     t = env.from_string('{% from "_macros/about.html" import layer_layout %}{{ layer_layout(ex, True) }}')
     ex = {"ref": {"kind": "trade", "id": "MX-1"}, "layout": {"label": "Board trading-irs-fixfloat (from Sutra irs-fixfloat v1)",
           "board": "trading-irs-fixfloat", "sutra": {"name": "irs-fixfloat", "version": 1, "priority": 10}}}
+    h = t.render(ex=ex)
+    assert "data-about-board" not in h and '<b class="mono">trading-irs-fixfloat</b>' in h          # ui.boards off: the board is named, not linked
+    assert 'href="/studio?sutra=irs-fixfloat%401&kind=trade&id=MX-1"' in h
+    env = Environment(loader=FileSystemLoader(str(CONSOLE / "web" / "templates")), extensions=["jinja2.ext.do"])   # ui.boards on
+    env.globals["UI_BOARDS"] = True
+    t = env.from_string('{% from "_macros/about.html" import layer_layout %}{{ layer_layout(ex, True) }}')
     h = t.render(ex=ex)
     assert 'data-about-board href="/build/board/trading-irs-fixfloat"' in h
     assert 'href="/studio?sutra=irs-fixfloat%401&kind=trade&id=MX-1"' in h and "trading-irs-fixfloat%401" not in h

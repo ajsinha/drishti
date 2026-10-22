@@ -32,16 +32,18 @@
       ('/alerts', 'bell', 'Alerts', 'Rules checked on every change', '/alerts')])]),
   ('Build', 'braces', [
     ('Create', [
-      ('/build/new', 'plus-square', 'Designer', 'A new board of certified chips, a new chip, or a screen from JSON files, a schema or stored entities', '/build/new'),
+      ('/build/new', 'plus-square', 'Designer', 'A new board of certified chips, a new chip, or a screen from JSON files, a schema or stored entities', '/build/new') if UI_BOARDS else
+      ('/build/new', 'plus-square', 'New screen', 'Bring JSON files, a schema or stored entities, then design', '/build/new'),
       ('/build/pack/new', 'box-seam', 'New pack', 'Schema files and/or a folder of JSON Lines in, a pack to download or deploy out', '/build/pack/new'),
-      ('/build', 'collection', 'Boards', 'Your boards and screen designs in one list: open, design, rename, duplicate, delete', '/build/d/'),
+      ('/build', 'collection', 'Boards', 'Your boards and screen designs in one list: open, design, rename, duplicate, delete', '/build/d/') if UI_BOARDS else
+      ('/build', 'collection', 'My designs', 'Your saved work: open, rename, duplicate, delete', '/build/d/'),
       ('/build/new#examples', 'journal-richtext', 'Examples', 'Every example opens as your own copy', None)]),
     ('Govern', [
       ('/build/reviews', 'patch-check', 'Reviews', 'Proposed Sutras waiting for approval', '/build/reviews')]),
     ('Learn', [
       ('/help/tutorials', 'mortarboard', 'Tutorials', TUTORIALS_WORD ~ ' hands-on tutorials, a picture of every step', None),
-      ('/help/schema-to-pack', 'diagram-3', 'Schema to pack', 'Every rule that turns a JSON Schema into a pack, with examples', None),
-      ('/help/ui-board-guide', 'grid-3x3-gap', 'Board designer guide', 'Boards of chips: pins, traces, live data, step by step', None),
+      ('/help/schema-to-pack', 'diagram-3', 'Schema to pack', 'Every rule that turns a JSON Schema into a pack, with examples', None)]
+      + ([('/help/ui-board-guide', 'grid-3x3-gap', 'Board designer guide', 'Boards of chips: pins, traces, live data, step by step', None)] if UI_BOARDS else []) + [
       ('/help/screen-designer', 'bounding-box', 'Screen designer guide', 'From JSON files to a screen: the canvas, step by step', None),
       ('/help/sutra-developer-guide', 'journal-code', 'Sutra developer guide', 'Writing a layout end to end, by example', None),
       ('/help/panels', 'grid-1x2', 'Panel kinds', 'The 22 panel kinds, one entry each', None),

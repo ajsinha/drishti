@@ -389,6 +389,13 @@ class UiBoardBackend(FakeBackend):
 
 
 
+def boards_on(app):
+    """Switches the Board and Chip designer on for a test console (ui.boards, off by default)."""
+    app.state.ui_boards = True
+    app.state.templates.env.globals["UI_BOARDS"] = True
+    return app
+
+
 def serve(backend=None):
     """Starts the console in this process against the stand-in server; returns (url, backend, stop)."""
     import uvicorn
@@ -397,7 +404,7 @@ def serve(backend=None):
     from core.config import load_settings
     from test_live_tabs_browser import _free_port
 
-    app = create_app(load_settings(CONSOLE / "config"))
+    app = boards_on(create_app(load_settings(CONSOLE / "config")))
     app.state.backend = backend or UiBoardBackend()
     port = _free_port()
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", timeout_graceful_shutdown=2))
