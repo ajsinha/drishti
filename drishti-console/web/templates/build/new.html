@@ -14,7 +14,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {% extends "base.html" %}
-{% block title %}{{ "Designer" if UI_BOARDS else "New screen" }} · {{ PRODUCT }}{% endblock %}
+{% block title %}New screen · {{ PRODUCT }}{% endblock %}
 {% block screen %}build{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}">{% endblock %}
@@ -22,20 +22,10 @@
 {% block content %}
 <div class="adm bs" data-new data-max-samples="{{ limits.maxSamples }}" data-max-file-mb="{{ limits.maxFileMb }}" data-max-total-mb="{{ limits.maxTotalMb }}">
   <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/help/screen-designer">Screen designer guide</a></nav>
-  <h1>{{ "Designer" if UI_BOARDS else "New screen" }}</h1>
+  <h1>New screen</h1>
   <p class="text-muted-d">Two steps: <b>bring data</b> (any mix of the five ways below), then choose what to <b>start from</b>. What you bring is
     kept on the server in a <i>design</i> that only you can open, so you can leave and come back (see <a href="/build">My designs</a>).
     An unnamed design is forgotten after a day; a named one after 90 days untouched.</p>
-
-  {% if UI_BOARDS %}{# ui.boards: the Board and Chip designer (off by default: this page is the screen designer's New, as before 2.7.0) #}
-  <section class="pnl" id="board" aria-labelledby="bsBoardH"><div class="pnl-b">
-    <h3 id="bsBoardH">Or design a board, or a chip</h3>
-    <p class="text-muted-d">A board is a screen of certified chips from the Chip Store, wired pin to pin, with live data as you design. A chip is a part for boards.</p>
-    <p class="bs-actions"><a class="btn-pill btn-accent" href="/build/board/start" data-new-board><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> New board</a>
-      <a class="btn-pill btn-ghost" href="/build/board/new" title="An empty board in the designer, no steps">Blank board</a>
-      <a class="btn-pill btn-ghost" href="/build/chip/new"><i class="bi bi-cpu" aria-hidden="true"></i> New chip</a>
-      <a class="btn-pill btn-ghost" href="/build">Boards</a></p></div></section>
-  {% endif %}
 
   <h2 class="bs-h">1. Bring data</h2>
 
@@ -81,40 +71,17 @@
     </div>
   </div></section>
 
-  {% if UI_BOARDS %}
-  <section class="pnl" id="examples" aria-labelledby="bsUiExH"><div class="pnl-b">
-    <h3 id="bsUiExH" class="bs-h2">Board and chip examples</h3>
-    <p class="text-muted-d">Each opens as <b>your own copy</b>, unsaved, in the designer: a board in Board mode (Save keeps it among your boards),
-      a chip in Chip mode (Save draft keeps it as your draft). The examples themselves never change.</p>
-    <ul class="bs-cards" data-ui-examples>
-      {% for e in ui_examples %}
-      <li class="bs-card" data-ui-example-card="{{ e.name }}" data-kind="{{ e.kind }}">
-        <h4 class="bs-card-t">{{ e.title }}</h4>
-        <p class="text-muted-d">{{ e.summary }}</p>
-        <p><span class="bs-role">{{ e.kind }}</span>
-          <a class="btn-pill btn-accent" data-ui-example="{{ e.name }}" href="/build/{{ e.kind }}/new?example={{ e.name | urlencode }}">Open as a copy</a></p>
-      </li>{% endfor %}
-    </ul>
-  </div></section>
-
-  <section class="pnl" id="screen-examples" aria-labelledby="bsExH"><div class="pnl-b">
-    <h3 id="bsExH" class="bs-h2">Screen (Sutra) examples, open as a board</h3>
-    <p class="text-muted-d">Each opens as <b>your own copy</b> (its Sutra, its JSON as a sample, its README as notes), converted into a board, or
-      in the screen designer to work on the Sutra itself. The example files themselves are never changed.</p>
-  {% else %}
   <section class="pnl" id="examples" aria-labelledby="bsExH"><div class="pnl-b">
     <h3 id="bsExH" class="bs-h2">Examples</h3>
     <p class="text-muted-d">Every example opens as <b>your own copy</b>: its Sutra, its JSON as a sample and its README as notes. The
       example files themselves are never changed.</p>
-  {% endif %}
     <ul class="bs-cards" data-examples>
       {% for e in examples %}
       <li class="bs-card">
         <h4 class="bs-card-t">{{ e.title }}</h4>
         <p class="text-muted-d">{{ e.summary }}</p>
         <p><span class="bs-role">{{ e.kind }}</span>
-          {% if UI_BOARDS %}<button type="button" class="btn-pill btn-accent" data-example="{{ e.name }}" data-as="board">Open as a board</button>
-          <button type="button" class="btn-pill btn-ghost" data-example="{{ e.name }}" data-as="screen">Screen designer</button>{% else %}<button type="button" class="btn-pill btn-accent" data-example="{{ e.name }}" data-as="screen">Open as my copy</button>{% endif %}</p>
+          <button type="button" class="btn-pill btn-accent" data-example="{{ e.name }}">Open as my copy</button></p>
       </li>{% endfor %}
     </ul>
     {% if not examples %}<p class="text-muted-d">No examples are installed (studio.examples_dir).</p>{% endif %}

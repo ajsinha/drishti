@@ -231,7 +231,7 @@ def create_app(settings: Settings) -> FastAPI:
     from routes import (admin_routes, alert_routes, api_routes, asof_routes, auth_routes, build_routes, pack_routes, calc_routes, export_routes, help_routes, home_routes,
                         dist_routes, layout_routes, monitor_routes, pivot_routes, report_routes, review_routes, server_routes, ship_routes, studio_routes, terminal_routes,
                         workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes,
-                        ai_routes, ui_routes)
+                        ai_routes)
 
     from routes import artifact_routes, history_routes, lake_maint_routes, lake_routes, net_routes
 
@@ -371,10 +371,6 @@ def create_app(settings: Settings) -> FastAPI:
 
     app.state.bi_me = BiMe(user_ttl, stamps)
     app.state.bi_on = str(settings.get("bi.enabled", True)).lower() in ("true", "1", "yes", "on")      # false: no BI menu, no /bi pages
-    # ui.boards (DRISHTI_UI_BOARDS), off by default: the Board and Chip designer, the board viewer and their menu entries; off, Build is the
-    # screen (Sutra) designer as before the UI Board work and /build/board, /build/chip and /ui/b answer "not enabled"
-    app.state.ui_boards = str(settings.get("ui.boards", False)).lower() in ("true", "1", "yes", "on")
-    templates.env.globals["UI_BOARDS"] = app.state.ui_boards
     console_dir = WEB.parent
     docs_dir = Path(settings.get("help.docs_dir", "../docs"))
     from core.packs import Packs
@@ -464,7 +460,6 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(lake_maint_routes.router)
     app.include_router(form_routes.router)
     app.include_router(ai_routes.router)
-    app.include_router(ui_routes.router)              # 2.7.0 UI Board P4: Boards, the viewer, the Board Designer
     if app.state.bi_on:
         from core.explore import Limits
         from routes import bi_routes, explore_routes, model_routes, pynode_routes, pyconsole_routes, python_routes, transform_routes, wizard_routes

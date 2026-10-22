@@ -74,7 +74,7 @@ def browser():
 def test_new_examples_showcase_opens_a_design_page_with_all_21_panels(console_url, browser):
     page = browser.new_page()
     page.goto(console_url + "/build/new#examples")
-    page.locator('[data-example="all-panels-showcase"][data-as="screen"]').click()
+    page.locator('[data-example="all-panels-showcase"]').click()
     page.wait_for_url("**/build/d/*")
     page.locator("[data-preview] [data-panel]").first.wait_for()
     assert page.locator("[data-preview] [data-panel]").count() == 23

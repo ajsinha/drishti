@@ -707,46 +707,6 @@ class BackendClient:
             kw["json"] = body
         return await self._send(method, "/bi" + path, ident, **kw)
 
-    async def ui(self, method: str, path: str, ident, content: bytes | None = None, content_type: str | None = None,
-                 headers: dict | None = None, wait: float | None = None, **params):
-        """``/api/v1/ui/...`` (UI_BOARD.md 6.1) as the signed-in user: a board or chip document goes as sent (YAML or JSON), the compare-and-set
-        headers (``If-Match``, ``If-None-Match``) are passed on, and the answer comes back as ``(status, body, etag)``."""
-        kw: dict = {"with_status": True, "headers": dict(headers or {})}
-        if wait:
-            kw["timeout"] = wait
-        if params:
-            kw["params"] = {k: v for k, v in params.items() if v not in (None, "")}
-        if content is not None:
-            kw["content"] = content
-            kw["headers"]["Content-Type"] = content_type or "application/json"
-        status, answer, got = await self._send(method, "/ui" + path, ident, **kw)
-        return status, answer, got.get("etag") if got is not None else None
-
-    async def ui_events(self, method: str, path: str, ident, body: dict | None = None, params: dict | None = None, opened: list | None = None):
-        """A board's render stream (UI_BOARD.md 6.2): ``(event, data)`` pairs from ``GET /ui/boards/{name}/render`` or ``POST /ui/render``. A
-        refusal before the stream (400 DRS-2070, 413 DRS-2075, 422 DRS-2071 with its problems, 429 DRS-2076) is raised with the server's body."""
-        headers = {"Accept": "text/event-stream", **(ident.headers() if ident is not None else {}), **asof.headers()}
-        kw: dict = {"params": params or None, "timeout": None, "headers": headers}
-        if body is not None:
-            kw["json"] = body
-        try:
-            async with self._client.stream(method, self._base() + "/api/v1/ui" + path, **kw) as r:
-                if opened is not None:
-                    opened.append(r)
-                if r.status_code >= 400:
-                    raise _error(r, (await r.aread()).decode("utf-8", "replace"))
-                event, data = None, []
-                async for line in r.aiter_lines():
-                    if line.startswith("event:"):
-                        event = line[6:].strip()
-                    elif line.startswith("data:"):
-                        data.append(line[5:].lstrip(" ") if not data else line[5:])
-                    elif line == "" and event:
-                        yield event, "\n".join(data)
-                        event, data = None, []
-        except httpx.TransportError as e:
-            raise BackendError(503, "DRS-5003", f"backend unreachable: {e}") from e
-
     async def bi_async(self, method: str, path: str, ident, body: dict | None, prefer: str, wait: float | None = None, **params):
         """A BI question asked as a run (BI_RUNS.md section 6): ``Prefer: respond-async, wait=N`` is passed on and the answer comes back as
         ``(status, body)``: 200 the answer (done within the wait), 202 the run that goes on. A refusal (409 DRS-9082, 409 DRS-9089) raises."""
