@@ -215,23 +215,7 @@ public final class BiReportService {
     private Loaded loadItem(Principal p, String id) {
         BiStore.Item item = reportItem(p, id);
         String body = bi.bodyFor(p, item);
-        boolean published = body.equals(bi.publishedBody(item));                     // the published text reads with its publisher's grants; a draft only with the caller's own
-        return load(p, item, served(body).yaml(), published);
-    }
-
-    /** A report's text as served: its pages from their converted boards when its pack or model is on boards (UI_BOARD.md 12.4), else as written. */
-    public record Served(String yaml, Map<String, String> boards) {}
-
-    private volatile java.util.function.Function<String, Served> screens;
-
-    /** Registers the per-pack switch of converted screens ({@code com.ash.drishti.server.ui.PackScreens}). */
-    public void screens(java.util.function.Function<String, Served> s) {
-        this.screens = s;
-    }
-
-    private Served served(String body) {
-        java.util.function.Function<String, Served> s = screens;
-        return s == null ? new Served(body, Map.of()) : s.apply(body);
+        return load(p, item, body, body.equals(bi.publishedBody(item)));            // the published text reads with its publisher's grants; a draft only with the caller's own
     }
 
     private static boolean ok(List<ReportParser.Problem> problems) {
@@ -250,10 +234,6 @@ public final class BiReportService {
         m.put("status", l.item().status());
         m.put("shipped", com.ash.drishti.server.bi.BiFolder.isShipped(l.item().id()));
         m.put("sample", l.item().tags().contains(com.ash.drishti.server.bi.BiFolder.SAMPLE_TAG));
-        Map<String, String> boards = served(bi.bodyFor(p, l.item())).boards();
-        if (!boards.isEmpty()) {
-            m.put("servedFrom", boards);                                     // the pages served from their converted boards, by page id
-        }
         List<ReportParser.Problem> all = new ArrayList<>(l.problems());
         TileCheck tc = tiles == null || l.parsed().report() == null || !l.parsed().report().hasBoard() ? null : tiles.apply(p, l.parsed().report());
         if (tc != null) {

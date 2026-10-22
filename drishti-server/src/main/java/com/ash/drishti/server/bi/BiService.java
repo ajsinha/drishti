@@ -201,15 +201,6 @@ public final class BiService {
         return store.workspace(id).orElseThrow(() -> new DrishtiException(ErrorCode.BI_NOT_FOUND, "no workspace '" + id + "'"));
     }
 
-    /** The caller's role in a workspace by id ({@code viewer} to {@code admin}), or null when none or no such workspace (the UI Board's boards). */
-    public String workspaceRole(String id, Principal p) {
-        try {
-            return roleIn(workspaceOf(id), p);
-        } catch (DrishtiException e) {
-            return null;
-        }
-    }
-
     /** The caller's role in the workspace, or null: the owner of a personal one and a bi-admin are admins; the shipped one is viewable by all. */
     String roleIn(BiStore.Workspace w, Principal p) {
         if (BiFolder.WORKSPACE.equals(w.id())) {

@@ -64,19 +64,7 @@ public class ExplainController {
                 k -> entitlements.mayOpen(principal, k), v -> entitlements.restrict(principal, v));
         PageContext c = explain.explain(EntityRef.of(kind, id), asOf, caller, panel, generation, languages(locale, acceptLanguage));
         boolean askOn = c.about() != null && c.about().pack() != null && ask.enabledFor(c.about().pack().name());
-        com.ash.drishti.server.ui.PackScreens ps = screens == null ? null : screens.getIfAvailable();
-        if (ps != null) {                                  // a page served from its converted board: the About names the board too (12.4)
-            c = c.withBoard(ps.boardOf(EntityRef.of(kind, id), asOf).orElse(null));
-        }
         return c.withAsk(askOn);                       // configuration, not derived data: never part of the cached answer
-    }
-
-    /** The per-pack switch to converted boards (absent in a test that makes the controller itself). */
-    private org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.ui.PackScreens> screens;
-
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
-    void screens(org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.ui.PackScreens> s) {
-        this.screens = s;
     }
 
     /** The caller's languages, best first: {@code ?locale=}, then the {@code Accept-Language} tags by quality. */

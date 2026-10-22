@@ -175,28 +175,11 @@ public record ViewModel(
      */
     public record Provenance(String layout, String fingerprint, String source, long generation, String fetchedAt, boolean live,
             String businessDate, String updatedAt, String staleAfter, boolean stale, String sutra, int masked, List<String> maskedPanels,
-            @JsonInclude(JsonInclude.Include.NON_DEFAULT) boolean partial, @JsonInclude(JsonInclude.Include.NON_EMPTY) List<String> missing,
-            @JsonInclude(JsonInclude.Include.NON_NULL) String board) {
+            @JsonInclude(JsonInclude.Include.NON_DEFAULT) boolean partial, @JsonInclude(JsonInclude.Include.NON_EMPTY) List<String> missing) {
 
         public Provenance {
             maskedPanels = maskedPanels == null ? List.of() : List.copyOf(maskedPanels);
             missing = missing == null ? List.of() : List.copyOf(missing);
-        }
-
-        public Provenance(String layout, String fingerprint, String source, long generation, String fetchedAt, boolean live, String businessDate,
-                String updatedAt, String staleAfter, boolean stale, String sutra, int masked, List<String> maskedPanels, boolean partial,
-                List<String> missing) {
-            this(layout, fingerprint, source, generation, fetchedAt, live, businessDate, updatedAt, staleAfter, stale, sutra, masked, maskedPanels,
-                    partial, missing, null);
-        }
-
-        /**
-         * The same provenance for a page served from its converted board (UI_BOARD.md 12.4): {@code board} names it and the layout reads
-         * "Board X (from Sutra Y vN)"; {@code sutra} stays the Sutra it was converted from.
-         */
-        public Provenance withBoard(String board, String layoutLabel) {
-            return new Provenance(layoutLabel, fingerprint, source, generation, fetchedAt, live, businessDate, updatedAt, staleAfter, stale, sutra,
-                    masked, maskedPanels, partial, missing, board);
         }
 
         public Provenance(String layout, String fingerprint, String source, long generation, String fetchedAt, boolean live,
@@ -216,7 +199,7 @@ public record ViewModel(
          */
         public Provenance withPartial(List<String> what) {
             return new Provenance(layout, fingerprint, source, generation, fetchedAt, live, businessDate, updatedAt, staleAfter, stale, sutra, masked,
-                    maskedPanels, true, what, board);
+                    maskedPanels, true, what);
         }
 
         public Provenance(String layout, String fingerprint, String source, long generation, String fetchedAt, boolean live, String businessDate) {
@@ -226,7 +209,7 @@ public record ViewModel(
         /** The same provenance with the mask counts of a built view. */
         public Provenance withMasked(int count, List<String> panels) {
             return new Provenance(layout, fingerprint, source, generation, fetchedAt, live, businessDate, updatedAt, staleAfter, stale, sutra, count, panels,
-                    partial, missing, board);
+                    partial, missing);
         }
     }
 

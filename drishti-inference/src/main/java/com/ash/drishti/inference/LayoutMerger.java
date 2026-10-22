@@ -64,9 +64,7 @@ public final class LayoutMerger {
                 : new StripItem(labelOf(i.bind()), i.bind(), i.fmt(), i.tone(), i.emphasis(), i.location())).toList();
         boolean inferred = !why.isEmpty() || panels.stream().anyMatch(p -> p.kind() == PanelKind.LINKS);
         Sutra effective = new Sutra(s.name(), s.version(), s.domain(), s.match(), s.title(), strip, panels, s.keys(), s.location(), s.description(), s.controls());
-        String sutraLabel = "Sutra " + s.name() + " v" + s.version();
-        String label = s.board() == null ? sutraLabel : "Board " + s.board() + " (from " + sutraLabel + ")";   // a page served from its board (12.4)
-        return new EffectiveLayout(effective, label + (inferred ? " + inference" : ""), inferred, why);
+        return new EffectiveLayout(effective, "Sutra " + s.name() + " v" + s.version() + (inferred ? " + inference" : ""), inferred, why);
     }
 
     @SuppressWarnings("ReferenceEquality")   // unchanged parts are the same objects: reuse the panel as it is
