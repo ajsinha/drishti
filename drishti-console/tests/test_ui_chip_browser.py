@@ -231,3 +231,23 @@ def test_a_candidate_opens_in_chip_mode_and_a_design_opens_as_a_converted_board(
     assert d["board"] == "core-book" and d["chips"]["limits"]["use"] == "local-limits@1" and d["params"]["id"]["of"] == "core/book"
     assert "candidate" in page.locator("[data-ub-status]").text_content()
     assert page.errors == []
+
+
+def test_build_new_offers_board_and_chip_examples_that_open_in_their_mode(page, stack):
+    url, be = stack
+    page.goto(url + "/build/new")
+    kinds = page.eval_on_selector_all("[data-ui-example-card]", "cs => cs.map(c => c.dataset.kind)")
+    assert "board" in kinds and "chip" in kinds
+    assert "open as a board" in page.locator("#bsExH").text_content().lower()           # the screen examples are one list, opening as boards
+    page.locator('[data-ui-example="master-detail"]').click()
+    page.wait_for_url("**/build/board/**")
+    page.wait_for_function("window.drishtiUiBoard && window.drishtiUiBoard.designer && window.drishtiUiBoard.designer.mode === 'board' && window.drishtiUiBoard.designer.doc.chips && window.drishtiUiBoard.designer.doc.chips.card")
+    assert page.locator("[data-ub-canvas]").is_visible() and page.input_value("[data-ub-name]") == "master-detail"
+    page.goto(url + "/build/new")
+    page.locator('[data-ui-example="entity-list"]').click()
+    page.wait_for_url("**/build/chip/**")
+    page.wait_for_function("window.drishtiUiBoard && window.drishtiUiBoard.chipEditor && window.drishtiUiBoard.designer.mode === 'chip' && window.drishtiUiBoard.chipEditor.doc.chip === 'entity-list'")
+    assert page.locator("[data-ub-chip-mode]").is_visible() and "board" in page.evaluate("window.drishtiUiBoard.chipEditor.doc.body")
+    page.goto(url + "/build/chip/new?example=filterable-table")
+    page.wait_for_function("window.drishtiUiBoard.chipEditor.doc.chip === 'filterable-table-mine'")
+    assert page.errors == []

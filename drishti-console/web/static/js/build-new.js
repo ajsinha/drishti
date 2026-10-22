@@ -98,7 +98,7 @@
       say(createStatus, 'Opening a copy of ' + b.dataset.example + '...');
       json('POST', '/build/examples/' + encodeURIComponent(b.dataset.example) + '/open', {}).then(function (r) {
         if (!r.ok) { b.disabled = false; say(createStatus, why(r), true); return; }
-        window.location.href = r.body.url;
+        window.location.href = b.dataset.as === 'board' ? '/build/board/new?design=' + encodeURIComponent(r.body.id) : r.body.url;   // a screen example opens as a board (P5's converter)
       }, function () { b.disabled = false; say(createStatus, 'The console could not be reached. Try again.', true); });
     });
   });
@@ -106,7 +106,7 @@
   // /build/new?example=<name> (the help centre's "Open as a design"): the same as clicking that example's card
   try {
     var asked = new URLSearchParams(window.location.search).get('example');
-    var card = asked && root.querySelector('[data-example="' + (window.CSS && CSS.escape ? CSS.escape(asked) : asked) + '"]');
+    var card = asked && root.querySelector('[data-example="' + (window.CSS && CSS.escape ? CSS.escape(asked) : asked) + '"][data-as="screen"]');
     if (card) { card.click(); }
   } catch (e) { /* no query string support: the card stays there to click */ }
 

@@ -78,17 +78,33 @@
     </div>
   </div></section>
 
-  <section class="pnl" id="examples" aria-labelledby="bsExH"><div class="pnl-b">
-    <h3 id="bsExH" class="bs-h2">Examples</h3>
-    <p class="text-muted-d">Every example opens as <b>your own copy</b>: its Sutra, its JSON as a sample and its README as notes. The
-      example files themselves are never changed.</p>
+  <section class="pnl" id="examples" aria-labelledby="bsUiExH"><div class="pnl-b">
+    <h3 id="bsUiExH" class="bs-h2">Board and chip examples</h3>
+    <p class="text-muted-d">Each opens as <b>your own copy</b>, unsaved, in the designer: a board in Board mode (Save keeps it among your boards),
+      a chip in Chip mode (Save draft keeps it as your draft). The examples themselves never change.</p>
+    <ul class="bs-cards" data-ui-examples>
+      {% for e in ui_examples %}
+      <li class="bs-card" data-ui-example-card="{{ e.name }}" data-kind="{{ e.kind }}">
+        <h4 class="bs-card-t">{{ e.title }}</h4>
+        <p class="text-muted-d">{{ e.summary }}</p>
+        <p><span class="bs-role">{{ e.kind }}</span>
+          <a class="btn-pill btn-accent" data-ui-example="{{ e.name }}" href="/build/{{ e.kind }}/new?example={{ e.name | urlencode }}">Open as a copy</a></p>
+      </li>{% endfor %}
+    </ul>
+  </div></section>
+
+  <section class="pnl" id="screen-examples" aria-labelledby="bsExH"><div class="pnl-b">
+    <h3 id="bsExH" class="bs-h2">Screen (Sutra) examples, open as a board</h3>
+    <p class="text-muted-d">Each opens as <b>your own copy</b> (its Sutra, its JSON as a sample, its README as notes), converted into a board, or
+      in the screen designer to work on the Sutra itself. The example files themselves are never changed.</p>
     <ul class="bs-cards" data-examples>
       {% for e in examples %}
       <li class="bs-card">
         <h4 class="bs-card-t">{{ e.title }}</h4>
         <p class="text-muted-d">{{ e.summary }}</p>
         <p><span class="bs-role">{{ e.kind }}</span>
-          <button type="button" class="btn-pill btn-accent" data-example="{{ e.name }}">Open as my copy</button></p>
+          <button type="button" class="btn-pill btn-accent" data-example="{{ e.name }}" data-as="board">Open as a board</button>
+          <button type="button" class="btn-pill btn-ghost" data-example="{{ e.name }}" data-as="screen">Screen designer</button></p>
       </li>{% endfor %}
     </ul>
     {% if not examples %}<p class="text-muted-d">No examples are installed (studio.examples_dir).</p>{% endif %}

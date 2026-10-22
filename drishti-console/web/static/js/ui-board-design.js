@@ -382,7 +382,14 @@
 
   // ---- load, save, revisions, share, copy ---------------------------------------------------------------------------------------------------
   function load() {
-    const fromDesign = root.getAttribute('data-design');
+    const fromDesign = root.getAttribute('data-design'), example = root.getAttribute('data-example');
+    if (!D.name && example && D.mode === 'board') {        // a board example as your unsaved copy (/build/new#examples)
+      return D.api('GET', '/build/board-api/example/' + encodeURIComponent(example)).then((r) => {
+        D.doc = r.document; D.doc.chips = D.doc.chips || {}; D.doc.traces = D.doc.traces || []; D.doc.layout = D.doc.layout || {};
+        nameIn.value = D.doc.board || ''; titleIn.value = D.doc.title || '';
+        return fetchAll().then(() => { C.draw(); fillSheet(); writeYaml(); check(); snap(); D.say('Your copy of the example ' + (r.title || example) + ' (not saved yet).' + ((r.notes || []).length ? ' ' + r.notes.join('; ') : '')); });
+      }).catch((e) => D.say(e.code + ': ' + e.detail, true));
+    }
     if (!D.name && fromDesign) {                  // a screen design opened as a board (the adapter until P5's converter)
       return D.api('GET', '/build/board-api/from-design/' + encodeURIComponent(fromDesign)).then((r) => {
         D.doc = r.document; nameIn.value = D.doc.board || ''; titleIn.value = D.doc.title || '';

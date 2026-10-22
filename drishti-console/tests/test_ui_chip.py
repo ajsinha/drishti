@@ -72,6 +72,25 @@ def test_candidates_and_the_chip_yaml_tab(ui):
     assert out.startswith("# my chip") and "title: X" in out and out.index("title:") < out.index("pins:")
 
 
+def test_build_new_lists_board_and_chip_examples_and_each_opens_as_a_copy(ui):
+    c, be = ui
+    page = c.get("/build/new").text
+    for name in ("book-trades", "master-detail", "curve-page", "counterparty-page", "economy-map", "filterable-table", "entity-list", "chart-by-spec"):
+        assert f'data-ui-example="{name}"' in page
+    assert 'href="/build/board/new?example=master-detail"' in page and 'href="/build/chip/new?example=entity-list"' in page
+    assert "Screen (Sutra) examples, open as a board" in page
+    got = c.get("/build/board-api/example/entity-list").json()
+    assert got["kind"] == "chip" and got["document"]["body"]["wires"] == {"doc": "header.doc", "rows": "list.rows"}
+    assert c.post("/ui/api/chips/check", json=got["document"]).json()["ok"] is True                 # the composite example passes the check
+    assert c.post("/ui/api/chips/check", json=c.get("/build/board-api/example/chart-by-spec").json()["document"]).json()["ok"] is True
+    mine = c.get("/build/board-api/example/filterable-table").json()["document"]
+    assert mine["chip"] == "filterable-table-mine" and mine["version"] == 1 and "compatible-with" not in mine
+    conv = c.get("/build/board-api/example/curve-page").json()
+    assert conv["kind"] == "board" and conv["document"]["board"] and ("ui", "POST", "/convert/sutra", {}) in be.calls
+    assert c.get("/build/board-api/example/nope").status_code == 404
+    assert 'data-example="master-detail"' in c.get("/build/board/new?example=master-detail").text
+
+
 def test_open_as_board_and_export_sutra_go_through_the_converter(ui):
     c, be = ui
     sutra = "rachana: 1\nsutra: book\nversion: 1\ndescription: Book\nmatch: { kind: book, priority: 10 }\npanels:\n  - { id: limits, kind: table, rows: $.LIMITS }\n"

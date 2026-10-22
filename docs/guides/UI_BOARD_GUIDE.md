@@ -28,6 +28,12 @@ screen designs. A board opens at `/build/board/<name>`; its viewer at `/ui/b/<na
 
 ![The designer in Board mode with the book-trades board](img/ui-board/designer.png)
 
+**Examples:** Build → Designer → **Examples** (`/build/new#examples`, or *Examples* on the Boards list) lists board examples (this guide's
+`book-trades`, a small master-detail board, and one converted page per pack: a curve, a counterparty's trades, an economy with its map) and
+chip examples (`filterable-table`, a composite chip, a chip with a `spec` control). **Open as a copy** opens one unsaved in Board or Chip
+mode, yours to save. The screen (Sutra) examples below them open as boards through the converter (or in the screen designer). The list is
+`drishti-console/config/ui-examples.yaml`.
+
 ## 1. One designer, two modes
 
 The designer has two modes in one shell, one palette area (the Chip Store) and one YAML / JSON tab:

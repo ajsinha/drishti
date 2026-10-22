@@ -29,7 +29,7 @@
     <dt><kbd>Ctrl</kbd> <kbd>S</kbd></dt><dd>Save</dd>
 {% endblock %}
 {% block ub_main %}
-<div class="wb ub-design" data-ub-design data-mode="{{ mode }}" data-board="{{ board }}" data-chip="{{ chip }}" data-design="{{ design }}"
+<div class="wb ub-design" data-ub-design data-mode="{{ mode }}" data-board="{{ board }}" data-chip="{{ chip }}" data-design="{{ design }}" data-example="{{ example | default('') }}"
      data-owner="{{ where.owner | default('') }}" data-workspace="{{ where.workspace | default('') }}" data-user="{{ me.user if me else '' }}">
   <div class="wb-head">
     <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">Boards</a> · <a href="/help/ui-board-guide">Board designer guide</a></nav>
