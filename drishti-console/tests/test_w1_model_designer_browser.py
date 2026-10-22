@@ -57,7 +57,8 @@ SECRET = "w1-model-scratch-secret-0123456789abcdef"
 PASSWORD = "long-enough-pass-1"
 DESKS = [("DESK-FX", "Foreign exchange"), ("DESK-FI", "Fixed income"), ("DESK-EQD", "Equity derivatives")]
 # The packs' own routes replaced by file connectors of the same names over this stack's synthetic data, in the 2.3.0 UPPER_SNAKE names: the trading
-# pack's trade-endur (kind trade) and the core pack's reference-store (kind desk). The test's trades also carry DESK and MTM (as the market-risk valuation
+# pack's trade-endur (kind trade) and the core pack's reference-store (kinds desk and book: a dataset's implicit model brings the kinds its references
+# name, DESK and PORTFOLIO, and a table whose connector does not serve its kind is DRS-9026). The test's trades also carry DESK and MTM (as the market-risk valuation
 # does) so one fact answers every question; DESK is a pack reference to the desk kind, which the model designer suggests.
 TRADES = """plugin: file
 kinds: [trade]
@@ -69,13 +70,15 @@ settings:
       columns: [TRADE_ID, SOURCE_SYSTEM, DESK, PORTFOLIO, PRODUCT_TYPE, CURRENCY, TRADE_STATUS, NOTIONAL, MTM, PNL_1D, TRADE_DATE]
 """
 DESKS_CONNECTOR = """plugin: file
-kinds: [desk]
+kinds: [desk, book]
 settings:
   root: {root}
   rescan-seconds: 3600
   layout:
     desk:
       columns: [DESK_ID, NAME, HEAD]
+    book:
+      columns: [BOOK_ID, NAME, DESK_NAME]
 """
 # the market-risk valuations the shipped sample model trades-basic reads (risk-store), the same rows
 VALUATIONS = """plugin: file
@@ -117,7 +120,7 @@ def trade(day: str, i: int) -> dict:
 
 
 def write_lake(root: Path, days=("2026-10-07", "2026-10-08"), rows=60) -> None:
-    """Three folders: trade/ (trade-endur), risk/ (risk-store: the same trades as valuations) and ref/ (reference-store: the desks)."""
+    """Three folders: trade/ (trade-endur), risk/ (risk-store: the same trades as valuations) and ref/ (reference-store: the desks and books)."""
     for day in days:
         for sub in ("trade", "risk", "ref"):
             (root / sub / day).mkdir(parents=True, exist_ok=True)
@@ -129,6 +132,9 @@ def write_lake(root: Path, days=("2026-10-07", "2026-10-08"), rows=60) -> None:
         with open(root / "ref" / day / "desk.jsonl", "w") as f:
             for desk, name in DESKS:
                 f.write(json.dumps({"id": desk, "DESK_ID": desk, "NAME": name, "HEAD": "H. " + name.split()[0]}) + "\n")
+        with open(root / "ref" / day / "book.jsonl", "w") as f:
+            for i, (_desk, name) in enumerate(DESKS):                                      # the trades' PORTFOLIO is BOOK-0, BOOK-1, BOOK-2
+                f.write(json.dumps({"id": f"BOOK-{i}", "BOOK_ID": f"BOOK-{i}", "NAME": f"Book {i}", "DESK_NAME": name}) + "\n")
 
 
 class Stack:

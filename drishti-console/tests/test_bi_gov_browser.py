@@ -162,14 +162,14 @@ def test_a_steward_reviews_with_the_diff_check_and_preview_and_approves(stack, b
 
 def test_the_certified_badge_shows_in_the_catalogue_and_search(stack, browser):
     cat = sign_in(browser, "cat")
-    cat.goto(CONSOLE_URL + "/bi/catalogue")
+    cat.goto(CONSOLE_URL + "/bi/catalogue?kind=all")                                   # the All tab: every kind (the catalogue is split by kind)
     expect(cat.locator(".bi-card")).to_have_count(3)
     expect(cat.locator(".bi-card").first.locator(".bi-certified")).to_be_visible()      # certified items are pinned first
     cat.select_option("select[name=endorsement]", "certified")
     cards = cat.locator(".bi-card")
     expect(cards).to_have_count(2)
     expect(cards.first.locator(".bi-certified")).to_contain_text("certified")
-    cat.goto(CONSOLE_URL + "/bi/catalogue?q=trades")
+    cat.goto(CONSOLE_URL + "/bi/catalogue?kind=all&q=trades")
     expect(cat.locator(".bi-card").first.locator(".bi-certified")).to_be_visible()      # certified first in search
     clean(cat)
 

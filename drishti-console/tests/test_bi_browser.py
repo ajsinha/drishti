@@ -148,7 +148,7 @@ def test_home_shows_certified_recent_favourites_and_shared(stack, browser):
 
 def test_the_catalogue_shows_only_what_the_audience_allows_and_searches_filters_sorts(stack, browser):
     cat = sign_in(browser, "cat")
-    cat.goto(CONSOLE_URL + "/bi/catalogue")
+    cat.goto(CONSOLE_URL + "/bi/catalogue?kind=all")                                  # the All tab: every kind, grouped (reports first)
     titles = lambda p: p.locator(".bi-card h3").all_inner_texts()                      # noqa: E731
     expect(cat.locator(".bi-card").first).to_contain_text("Desk P&L")                  # certified first
     got = titles(cat)
@@ -160,19 +160,23 @@ def test_the_catalogue_shows_only_what_the_audience_allows_and_searches_filters_
     expect(cat.locator("[data-count]")).to_have_text("1 item")
     assert "q=exposure" in cat.url
     cat.fill("[data-search]", "")
-    cat.select_option('[name="kind"]', "dataset")
-    expect(cat.locator(".bi-card")).to_have_count(1)
-    cat.click("[data-clear]")
+    cat.click('[data-cat-tab="datasets"]')                                             # the kind is a tab since the catalogue split by kind
+    expect(cat.locator('[data-cat-panel]')).to_have_attribute("data-cat-shown", "datasets")
+    expect(cat.locator(".bi-card h3").filter(has_text="Trades (shipped)")).to_have_count(1)
+    assert "Desk P&L" not in titles(cat) and "kind=datasets" in cat.url
+    cat.click('[data-cat-tab="all"]')
     cat.select_option('[name="endorsement"]', "certified")
     expect(cat.locator(".bi-card")).to_have_count(1)
     cat.click("[data-clear]")
+    cat.click('[data-cat-tab="reports"]')
+    expect(cat.locator('[data-cat-panel]')).to_have_attribute("data-cat-shown", "reports")
     cat.select_option('[name="sort"]', "title")
-    expect(cat.locator(".bi-card h3").first).to_have_text("Counterparty exposure")
+    expect(cat.locator(".bi-card h3")).to_have_text(["Desk P&L", "Liquidity daily", "Risk ladder"])   # by title (the exposure board is under Boards)
     cat.fill("[data-search]", "zzzz-nothing")
     expect(cat.locator("[data-empty]")).to_be_visible()
     # sue is a steward outside the workspace: she sees only what its audience names her in
     sue = sign_in(browser, "sue")
-    sue.goto(CONSOLE_URL + "/bi/catalogue")
+    sue.goto(CONSOLE_URL + "/bi/catalogue?kind=all")
     expect(sue.locator(".bi-card").first).to_be_visible()
     names = titles(sue)
     assert "Desk P&L" in names and "Risk ladder" in names and "Counterparty exposure" not in names
