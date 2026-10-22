@@ -37,34 +37,12 @@
   U.Canvas = function (D) {
     const root = D.root;
     const canvas = root.querySelector('[data-ub-canvas]'), svg = root.querySelector('[data-ub-wires]'), strip = root.querySelector('[data-ub-params]');
-    const palList = root.querySelector('[data-ub-palette]'), palQ = root.querySelector('[data-ub-palette-q]'), palCert = root.querySelector('[data-ub-certified]');
     const manual = root.querySelector('[data-ub-manual]');
     const C = { boxes: {}, from: null, selectedTrace: -1 };
 
     // ---- the palette ----------------------------------------------------------------------------------------------------------------------
-    let palTimer = 0;
-    function loadPalette() {
-      const q = new URLSearchParams();
-      if (palQ.value.trim()) { q.set('q', palQ.value.trim()); }
-      if (palCert.checked) { q.set('certified', 'true'); }
-      D.api('GET', '/ui/api/chips?' + q.toString()).then((list) => {
-        clear(palList);
-        (list || []).forEach((c) => {
-          const ref = c.chip + '@' + c.latest;
-          const kind = /^panel-/.test(c.chip) && ((window.DrishtiWB || {}).palette || { kinds: [] }).kinds.find((k) => 'panel-' + k.kind === c.chip);
-          const add = h('button', { type: 'button', class: 'ub-pal-add', 'data-chip': c.chip, draggable: 'true', title: (c.purpose || '') + ' (drag onto the canvas, or Enter to add)' },
-            kind ? h('i', { class: 'bi bi-' + kind.icon, 'aria-hidden': 'true' }) : null, h('span', { class: 'ub-pal-name', text: ' ' + (c.title || c.chip) }), h('small', { class: 'text-muted-d', text: ' ' + ref + (c.certified ? ' · certified' : '') }));
-          add.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/x-ub-chip', ref); e.dataTransfer.setData('text/plain', ref); e.dataTransfer.effectAllowed = 'copy'; });
-          add.addEventListener('click', () => D.pick(ref, null));
-          const info = h('button', { type: 'button', class: 'btn-pill btn-ghost ub-pal-info', 'aria-label': 'Manual of ' + c.chip, title: 'The datasheet and manual' }, h('i', { class: 'bi bi-journal-text', 'aria-hidden': 'true' }));
-          info.addEventListener('click', () => openManual(c.chip, c.latest, info));
-          palList.appendChild(h('li', { class: 'ub-pal-item', 'data-category': c.category || '' }, add, info));
-        });
-        if (!palList.childNodes.length) { palList.appendChild(h('li', { class: 'text-muted-d', text: 'No chip matches.' })); }
-      }).catch((e) => D.say(e.code + ': ' + e.detail, true));
-    }
-    palQ.addEventListener('input', () => { clearTimeout(palTimer); palTimer = setTimeout(loadPalette, 250); });
-    palCert.addEventListener('change', loadPalette);
+    /** The Chip Store palette is ui-board-palette.js (search, categories, "Fits this data", recent and favourites, keys); this asks it to load. */
+    function loadPalette() { if (U.palette) { U.palette.load(); } }
 
     function openManual(chip, version, opener) {
       D.api('GET', '/ui/api/chips/' + encodeURIComponent(chip) + '/' + encodeURIComponent(version) + '/manual').then((m) => {
@@ -326,6 +304,8 @@
     C.marks = marks;
     C.wires = wires;
     C.loadPalette = loadPalette;
+    C.openManual = openManual;
+    C.typeOf = typeOf;
     C.boxOf = (inst) => C.boxes[inst] || null;
     C.focusPath = (path) => {
       const m = /^traces\[(\d+)\]/.exec(path || '');

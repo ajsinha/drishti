@@ -20,6 +20,7 @@
 {% extends "ui/_shell.html" %}
 {% block ub_title %}Designer{% endblock %}
 {% block ub_keys %}
+    <dt><kbd>/</kbd></dt><dd>Search the Chip Store; <kbd>&darr;</kbd> <kbd>&uarr;</kbd> move through the results</dd>
     <dt><kbd>Enter</kbd></dt><dd>On a chip in the store: add it. On a box: open its mapping sheet</dd>
     <dt><kbd>&larr;</kbd> <kbd>&rarr;</kbd> <kbd>&uarr;</kbd> <kbd>&darr;</kbd></dt><dd>Move the box; with <kbd>Shift</kbd>: resize it</dd>
     <dt><kbd>Enter</kbd> on an out pin, then on an in pin</dt><dd>Draw a trace (<kbd>Esc</kbd> cancels)</dd>
@@ -73,8 +74,11 @@
   <div class="ub-work">
     <aside class="ub-palette" aria-labelledby="ubPal">
       <h2 id="ubPal" class="bs-h">Chip Store</h2>
-      <input type="search" class="studio-in" data-ub-palette-q placeholder="Search chips" aria-label="Search the Chip Store">
+      <input type="search" class="studio-in" data-ub-palette-q placeholder="Search chips: words, pin types (/)" aria-label="Search the Chip Store (press / to focus)" aria-keyshortcuts="/">
+      <div class="ub-cats" data-ub-cats role="group" aria-label="Categories"></div>
       <label class="ub-field-inline"><input type="checkbox" data-ub-certified> Certified only</label>
+      <label class="ub-field-inline" data-mode-only="board"><input type="checkbox" data-ub-fits> Fits this data</label>
+      <p class="text-muted-d ub-fits-note" data-ub-fits-note role="status"></p>
       <ul class="ub-pal-list" data-ub-palette aria-label="Chips"></ul>
       <section class="ub-cands" data-mode-only="chip" aria-labelledby="ceCandH"><h2 id="ceCandH" class="bs-h">Candidates</h2>
         <p class="text-muted-d">Board-local chips the converter made from pack screens: open one to make it generic.</p>
@@ -151,4 +155,4 @@
     <div class="ub-row"><button class="btn-pill btn-accent">Copy</button><button type="button" class="btn-pill btn-ghost" data-cancel>Cancel</button></div></form></dialog>
 </div>
 {% endblock %}
-{% block ub_scripts %}<script src="/static/js/studio-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/studio-assist.js?v={{ ASSET_V }}"></script>{% for f in ["ops", "yamlmodel", "drag", "palette", "expr", "forms", "inspector"] %}<script src="/static/js/build/{{ f }}.js?v={{ ASSET_V }}"></script>{% endfor %}<script src="/static/js/ui-board-canvas.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-design.js?v={{ ASSET_V }}"></script>{% for f in ["ui-chip-model", "ui-chip-editor", "ui-chip-pins", "ui-chip-body", "ui-chip-bench", "ui-chip-release", "ui-chip-module"] %}<script src="/static/js/{{ f }}.js?v={{ ASSET_V }}"></script>{% endfor %}{% endblock %}
+{% block ub_scripts %}<script src="/static/js/studio-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/studio-assist.js?v={{ ASSET_V }}"></script>{% for f in ["ops", "yamlmodel", "drag", "palette", "expr", "forms", "inspector"] %}<script src="/static/js/build/{{ f }}.js?v={{ ASSET_V }}"></script>{% endfor %}<script src="/static/js/ui-board-canvas.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-design.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-palette.js?v={{ ASSET_V }}"></script>{% for f in ["ui-chip-model", "ui-chip-editor", "ui-chip-pins", "ui-chip-body", "ui-chip-bench", "ui-chip-release", "ui-chip-module"] %}<script src="/static/js/{{ f }}.js?v={{ ASSET_V }}"></script>{% endfor %}{% endblock %}

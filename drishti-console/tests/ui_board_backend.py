@@ -62,6 +62,16 @@ def _t(spec) -> str:
     return str(t or "").split("<")[0]
 
 
+def pin_summary(c: dict) -> dict:
+    """The pins as P2's listing gives them for the palette (ChipStore.pinSummary)."""
+    out = {}
+    for d in ("in", "out"):
+        out[d] = [dict({"name": n, "type": _t(s)}, **{k: s[k] for k in ("role", "required", "of") if isinstance(s, dict) and k in s},
+                       **({"columns": {col: {"type": _t(cs), "required": bool(cs.get("required"))} for col, cs in s["shape"].items()}} if isinstance(s, dict) and s.get("shape") else {}))
+                  for n, s in ((c.get("pins") or {}).get(d) or {}).items()]
+    return out
+
+
 def load_chips() -> dict:
     out = {}
     for f in sorted(CHIPS.glob("*.chip.yaml")):
@@ -199,7 +209,7 @@ class UiBoardBackend(FakeBackend):
                     if c["chip"] not in latest or c["version"] > latest[c["chip"]]["version"]:
                         latest[c["chip"]] = c
                 return 200, [{"chip": c["chip"], "title": c.get("title"), "category": c.get("category"), "tags": c.get("tags"), "purpose": c["manual"]["purpose"],
-                              "latest": c["version"], "certified": True, "seed": True, "mine": False} for c in latest.values()], None
+                              "latest": c["version"], "certified": True, "seed": True, "mine": False, "pins": pin_summary(c)} for c in latest.values()], None
             ref = f"{parts[1]}@{parts[2]}" if len(parts) >= 3 else ""
             if len(parts) == 3 and parts[2] == "draft":
                 if method == "PUT":

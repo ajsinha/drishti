@@ -249,6 +249,7 @@
 
   // ---- the mapping sheet ------------------------------------------------------------------------------------------------------------------
   const attrCache = {};
+  D.attributes = (supply) => attributes(supply);
   function attributes(supply) {
     const key = JSON.stringify(supply || {});
     if (!supply || !(supply.connector || supply.model || supply.live)) { return Promise.resolve(null); }
@@ -266,6 +267,7 @@
     D.selected = inst;
     root.querySelectorAll('.ub-box').forEach((b) => b.classList.toggle('ub-selected', b.getAttribute('data-instance') === inst));
     fillSheet();
+    root.dispatchEvent(new CustomEvent('ub:select', { detail: inst }));          // the palette's "Fits this data" follows the selection
   };
   D.openSheet = (inst) => { D.select(inst); const f = sheet.querySelector('input, select, textarea, button'); if (f) { f.focus(); } };
 
@@ -523,6 +525,7 @@
   window.addEventListener('pagehide', () => { if (current) { current.close(); } });
 
   const C = U.Canvas(D);
+  U.canvas = C;
   U.designer = D;
   C.loadPalette();
   load();
