@@ -13,7 +13,10 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# UI Board P4: Build's designer in its two modes (UI_BOARD.md section 10). One shell, one palette area (the Chip Store), one YAML tab.
+{# Concept A, "Edit the live page" (UI_BOARD_GUIDE.md "The designer"): a slim top bar, the board as the live page (ui-board-page.js) with three
+   pills on each block (Swap chip, Its data, Follows…, ui-board-pick.js), a plain-words side panel, and an Advanced drawer, closed by default,
+   holding the power tools below. A Page | Wiring view switch: other views plug in through drishtiUiBoard.view.
+   UI Board P4: Build's designer in its two modes (UI_BOARD.md section 10). One shell, one palette area (the Chip Store), one YAML tab.
    Board mode: the canvas with pins and traces, the mapping sheet, live data, the Problems of the board check (ui-board-canvas.js,
    ui-board-design.js). Chip mode (P4b): the pin table, the body (panels with the screen designer's tools, or chips: a composite
    chip, a board with no connectors), the manual, the test bench and the release steps (ui-chip-*.js). Screen designs (/build/d/<id>) open here as boards through P5's converter (?design=<id>). #}
@@ -28,9 +31,48 @@
     <dt><kbd>Ctrl</kbd> <kbd>Z</kbd> · <kbd>Ctrl</kbd> <kbd>Y</kbd></dt><dd>Undo · Redo</dd>
     <dt><kbd>Ctrl</kbd> <kbd>S</kbd></dt><dd>Save</dd>
 {% endblock %}
+{% block head %}{{ super() }}<link rel="stylesheet" href="/static/css/ui-board-page.css?v={{ ASSET_V }}">{% endblock %}
 {% block ub_main %}
-<div class="wb ub-design" data-ub-design data-mode="{{ mode }}" data-board="{{ board }}" data-chip="{{ chip }}" data-design="{{ design }}" data-example="{{ example | default('') }}"
+<div class="wb ub-design" data-ub-design data-view="page" data-mode="{{ mode }}" data-board="{{ board }}" data-chip="{{ chip }}" data-design="{{ design }}" data-example="{{ example | default('') }}"
      data-owner="{{ where.owner | default('') }}" data-workspace="{{ where.workspace | default('') }}" data-user="{{ me.user if me else '' }}">
+  <header class="ub-bar" role="toolbar" aria-label="Designer" data-mode-only="board">
+    <a class="ub-icon" href="/build" aria-label="Back to Boards" title="Boards"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+    <span class="ub-bar-what"><span class="ub-bar-kicker">Designer ·</span><input class="ub-bar-title" data-ub-title aria-label="What you are designing (the board's title)" placeholder="Untitled board"></span>
+    <span class="ub-views" role="tablist" aria-label="View" data-ub-views>
+      <button type="button" role="tab" class="ub-seg" data-ub-view="page" aria-selected="true">Page</button><button type="button" role="tab" class="ub-seg" data-ub-view="wiring" aria-selected="false" hidden>Wiring</button></span>
+    <span class="ub-bar-gap"></span>
+    <span class="ub-bar-live" data-ub-page-status role="status" aria-live="polite"></span>
+    <button type="button" class="ub-icon" data-ub-undo title="Undo (Ctrl+Z)" aria-label="Undo" disabled><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button>
+    <button type="button" class="ub-icon" data-ub-redo title="Redo (Ctrl+Y)" aria-label="Redo" disabled><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
+    <button type="button" class="ub-icon" data-ub-device aria-pressed="false" title="Phone preview" aria-label="Phone preview"><i class="bi bi-phone" aria-hidden="true"></i></button>
+    <button type="button" class="ub-btn" data-ub-preview-as>Preview as another user</button>
+    <button type="button" class="ub-btn ub-btn-accent" data-ub-save disabled>Save</button>
+    <span class="ub-more"><button type="button" class="ub-icon" data-ub-more aria-haspopup="menu" aria-expanded="false" aria-label="More" title="More"><i class="bi bi-three-dots" aria-hidden="true"></i></button>
+      <span class="ub-menu" role="menu" data-ub-menu hidden>
+        <button type="button" role="menuitem" data-ub-share><i class="bi bi-share" aria-hidden="true"></i> Share</button>
+        <button type="button" role="menuitem" data-ub-copy><i class="bi bi-files" aria-hidden="true"></i> Copy to workspace</button>
+        <button type="button" role="menuitem" data-ub-export title="Write the panel chips of this board as a Sutra, for a pack (until 3.0)"><i class="bi bi-filetype-yml" aria-hidden="true"></i> Export Sutra</button>
+        <label class="ub-menu-rev"><i class="bi bi-clock-history" aria-hidden="true"></i> <select class="studio-select" data-ub-revisions aria-label="Revisions"><option value="">Revisions…</option></select></label>
+        <a role="menuitem" data-ub-open href="{% if board %}/ui/b/{{ board }}{% endif %}"{% if not board %} hidden{% endif %}><i class="bi bi-eye" aria-hidden="true"></i> Open the page</a>
+        <button type="button" role="menuitem" data-ub-adv-open><i class="bi bi-tools" aria-hidden="true"></i> Advanced tools</button>
+        <button type="button" role="menuitem" data-bi-keys><i class="bi bi-keyboard" aria-hidden="true"></i> Keyboard shortcuts</button>
+      </span></span>
+  </header>
+  <p class="bi-msg ub-status" data-ub-status role="status" aria-live="polite"></p>
+  <details class="ub-notes" data-ub-notes hidden><summary>Details</summary><div class="ub-notes-body" data-ub-notes-body></div></details>
+  <p class="bi-warn ub-conflict" data-ub-conflict role="alert" hidden>Changed elsewhere: someone saved a newer revision. <button type="button" class="btn-pill btn-accent" data-ub-reload>Reload</button></p>
+  <div class="ub-pagewrap" data-ub-pageview data-mode-only="board">
+    <section class="ub-page" data-ub-page aria-label="The page, live: click a block to change it"></section>
+    <aside class="ub-side" data-ub-side aria-label="The selected block"></aside>
+  </div>
+  <div class="ub-view-slot" data-ub-view-slot="wiring" data-mode-only="board" hidden></div>
+  <div class="ub-pop" data-ub-pop role="dialog" aria-modal="false" hidden></div>
+  <dialog class="ub-dlg" data-ub-as-dlg aria-labelledby="ubAsT"><h2 id="ubAsT">Preview as another user</h2>
+    <p>A board always renders as the person who opens it: their own permissions, their own masks (a field they may not read shows as •••). This page is the live page as you, <b data-ub-as-me></b>.</p>
+    <p class="text-muted-d">To see it as someone else, save it and share it with them; they open the same link and see their own data.</p>
+    <div class="ub-row"><button type="button" class="btn-pill btn-accent" data-ub-as-share>Share it</button><form method="dialog"><button class="btn-pill btn-ghost">Close</button></form></div></dialog>
+  <details class="ub-advanced" data-ub-advanced>
+    <summary data-ub-adv-summary><i class="bi bi-tools" aria-hidden="true"></i> Advanced <small class="text-muted-d">pins and wires, mapping sheet, board parameters, YAML / JSON, board check</small></summary>
   <div class="wb-head">
     <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">Boards</a> · <a href="/help/ui-board-guide">Board designer guide</a></nav>
     <h1 class="wb-title" data-ub-heading>{% if mode == 'chip' %}Chip{% else %}Board{% endif %} designer</h1>
@@ -38,24 +80,13 @@
       <button type="button" role="tab" class="btn-pill btn-ghost" data-ub-mode="board" aria-selected="{{ 'true' if mode == 'board' else 'false' }}"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> Board</button>
       <button type="button" role="tab" class="btn-pill btn-ghost" data-ub-mode="chip" aria-selected="{{ 'true' if mode == 'chip' else 'false' }}"><i class="bi bi-cpu" aria-hidden="true"></i> Chip</button></span>
     <span class="ub-tabs" role="tablist" aria-label="Editors"><button type="button" role="tab" class="btn-pill btn-ghost" data-ub-tab="canvas" aria-selected="true">Design</button><button type="button" role="tab" class="btn-pill btn-ghost" data-ub-tab="yaml" aria-selected="false">YAML / JSON</button></span>
-    <button type="button" class="btn-pill btn-ghost" data-bi-keys aria-label="Keyboard shortcuts (?)"><i class="bi bi-keyboard" aria-hidden="true"></i> Keys</button>
   </div>
 
-  <header class="ub-toolbar" role="toolbar" aria-label="Board" data-mode-only="board">
+  <header class="ub-toolbar" role="toolbar" aria-label="Board (advanced)" data-mode-only="board">
     <label class="ub-field-inline">Name <input class="studio-in mono" data-ub-name placeholder="book-trades" aria-label="Board name" value="{{ board }}"></label>
-    <label class="ub-field-inline">Title <input class="studio-in" data-ub-title aria-label="Board title"></label>
-    <button type="button" class="btn-pill btn-ghost" data-ub-undo title="Undo (Ctrl+Z)" disabled><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Undo</button>
-    <button type="button" class="btn-pill btn-ghost" data-ub-redo title="Redo (Ctrl+Y)" disabled><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Redo</button>
-    <button type="button" class="btn-pill btn-ghost" data-ub-device aria-pressed="false"><i class="bi bi-phone" aria-hidden="true"></i> Phone</button>
     <label class="ub-field-inline"><input type="checkbox" data-ub-live> Live data</label><span class="ub-live-status text-muted-d" data-ub-live-status role="status" aria-live="polite"></span>
     <label class="ub-field-inline" title="A faint grid of dots, as on a circuit board"><input type="checkbox" data-ub-grid checked> Grid</label>
-    <select class="studio-select" data-ub-revisions aria-label="Revisions"><option value="">Revisions…</option></select>
-    <button type="button" class="btn-pill btn-ghost" data-ub-share><i class="bi bi-share" aria-hidden="true"></i> Share</button>
-    <button type="button" class="btn-pill btn-ghost" data-ub-copy><i class="bi bi-files" aria-hidden="true"></i> Copy to workspace</button>
-    <button type="button" class="btn-pill btn-ghost" data-ub-export title="Write the panel chips of this board as a Sutra, for a pack (until 3.0)"><i class="bi bi-filetype-yml" aria-hidden="true"></i> Export Sutra</button>
     <button type="button" class="btn-pill btn-ghost" data-ub-make-chip title="Put the chips you choose inside one new chip: a board with no connectors, its free pins the chip's pins"><i class="bi bi-cpu" aria-hidden="true"></i> Make a chip</button>
-    <a class="btn-pill btn-ghost" data-ub-open href="{% if board %}/ui/b/{{ board }}{% endif %}"{% if not board %} hidden{% endif %}><i class="bi bi-eye" aria-hidden="true"></i> View</a>
-    <button type="button" class="btn-pill btn-accent" data-ub-save disabled><i class="bi bi-save" aria-hidden="true"></i> Save</button>
   </header>
   <header class="ub-toolbar" role="toolbar" aria-label="Chip" data-mode-only="chip">
     <label class="ub-field-inline">Chip <input class="studio-in mono" data-ce-name placeholder="my-chip" aria-label="Chip name" value="{{ chip }}"></label>
@@ -69,9 +100,6 @@
   </header>
   <p class="bi-warn ub-composite-banner" data-ub-composite role="status" hidden><i class="bi bi-cpu" aria-hidden="true"></i> Inside the chip <b class="mono" data-ub-composite-name></b>: a board with no connectors (its data enters through the chip's pins).
     <button type="button" class="btn-pill btn-accent" data-ub-composite-done>Done</button> <button type="button" class="btn-pill btn-ghost" data-ub-composite-cancel>Cancel</button></p>
-  <p class="bi-msg ub-status" data-ub-status role="status" aria-live="polite"></p>
-  <details class="ub-notes" data-ub-notes hidden><summary>Details</summary><div class="ub-notes-body" data-ub-notes-body></div></details>
-  <p class="bi-warn ub-conflict" data-ub-conflict role="alert" hidden>Changed elsewhere: someone saved a newer revision. <button type="button" class="btn-pill btn-accent" data-ub-reload>Reload</button></p>
 
   <div class="ub-work">
     <aside class="ub-palette" aria-labelledby="ubPal">
@@ -146,6 +174,7 @@
     </section>
     <aside class="ub-sheet" data-ub-sheet aria-label="Mapping sheet" data-mode-only="board"></aside>
   </div>
+  </details>
   <dialog class="ub-dlg ub-manual" data-ub-manual aria-labelledby="ubManT"><h2 id="ubManT" data-ub-manual-title>Manual</h2><div data-ub-manual-body></div><form method="dialog"><button class="btn-pill btn-accent">Close</button></form></dialog>
   <dialog class="ub-dlg" data-ub-share-dlg aria-labelledby="ubShT"><form><h2 id="ubShT">Share by link</h2><p class="text-muted-d">Named people open it read-only, as themselves (their own masks). An empty list makes it private again.</p>
     <label class="ub-field">People (user names, commas) <input class="studio-in" name="people"></label><div class="ub-row"><button class="btn-pill btn-accent">Share</button><button type="button" class="btn-pill btn-ghost" data-cancel>Cancel</button></div></form></dialog>
@@ -157,4 +186,4 @@
     <div class="ub-row"><button class="btn-pill btn-accent">Copy</button><button type="button" class="btn-pill btn-ghost" data-cancel>Cancel</button></div></form></dialog>
 </div>
 {% endblock %}
-{% block ub_scripts %}<script src="/static/js/studio-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/studio-assist.js?v={{ ASSET_V }}"></script>{% for f in ["ops", "yamlmodel", "drag", "palette", "expr", "forms", "inspector"] %}<script src="/static/js/build/{{ f }}.js?v={{ ASSET_V }}"></script>{% endfor %}<script src="/static/js/ui-board-route.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-canvas.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-design.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-palette.js?v={{ ASSET_V }}"></script>{% for f in ["ui-chip-model", "ui-chip-editor", "ui-chip-pins", "ui-chip-body", "ui-chip-bench", "ui-chip-release", "ui-chip-module"] %}<script src="/static/js/{{ f }}.js?v={{ ASSET_V }}"></script>{% endfor %}{% endblock %}
+{% block ub_scripts %}<script src="/static/js/studio-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/studio-assist.js?v={{ ASSET_V }}"></script>{% for f in ["ops", "yamlmodel", "drag", "palette", "expr", "forms", "inspector"] %}<script src="/static/js/build/{{ f }}.js?v={{ ASSET_V }}"></script>{% endfor %}<script src="/static/js/ui-board-route.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-canvas.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-design.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-palette.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-words.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-pick.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-page.js?v={{ ASSET_V }}"></script>{% for f in ["ui-chip-model", "ui-chip-editor", "ui-chip-pins", "ui-chip-body", "ui-chip-bench", "ui-chip-release", "ui-chip-module"] %}<script src="/static/js/{{ f }}.js?v={{ ASSET_V }}"></script>{% endfor %}{% endblock %}

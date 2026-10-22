@@ -75,7 +75,7 @@
     const miss = D.missingParams();
     if (miss.length) {
       const p = miss[0], inp = h('input', { class: 'studio-in mono ub-param-quick', 'data-ub-param-quick': p, placeholder: p, 'aria-label': 'Board parameter ' + p });
-      inp.addEventListener('change', () => { if (inp.value.trim()) { D.params[p] = inp.value.trim(); D.autoLive(); C.draw(); fillSheet(); liveRender(); } });
+      inp.addEventListener('change', () => { if (inp.value.trim()) { D.params[p] = inp.value.trim(); D.autoLive(); C.draw(); fillSheet(); D.liveRender(); } });
       return h('div', { class: 'ub-hint ub-empty-state' }, h('span', { class: 'text-muted-d' }, 'Set board parameter ', h('code', { text: p }), ' to see data '), inp);
     }
     return h('p', { class: 'text-muted-d ub-hint ub-empty-state', text: 'Turn on Live data to see data.' });
@@ -188,6 +188,7 @@
     saveBtn.disabled = errors.length > 0 || !nameIn.value.trim();
     saveBtn.title = errors.length ? 'Fix the errors first (the Problems list below)' : '';
     C.marks();
+    root.dispatchEvent(new CustomEvent('ub:checked'));
   }
   let checkTimer = 0, checkSeq = 0;
   function check() {
@@ -211,6 +212,9 @@
       onEvent: (ev, d) => { if ((ev === 'chip' || ev === 'frame') && d && d.instance && (ev === 'frame' || d.state === 'data')) { C.flow(d.instance); } },
       onRefused: (b) => { if (b.problems) { D.problems = b.problems; showProblems(); } } });
   }
+
+  D.liveRender = liveRender;            // the Page view (ui-board-page.js) takes the paint while the pin view is closed
+  D.docForServer = () => docForServer();
 
   // ---- one document, two editors ---------------------------------------------------------------------------------------------------------
   let yamlTimer = 0, fromYaml = false;
@@ -263,7 +267,7 @@
     }
     if (!fromYaml) { writeYaml(); }
     clearTimeout(checkTimer);
-    checkTimer = setTimeout(() => check().then(() => { clearTimeout(liveTimer); liveTimer = setTimeout(liveRender, 400); }), 300);
+    checkTimer = setTimeout(() => check().then(() => { clearTimeout(liveTimer); liveTimer = setTimeout(() => D.liveRender(), 400); }), 300);
   };
   function writeYaml() {
     return D.api('POST', '/ui/api-yaml/dump', { document: docForServer(), yaml: D.yaml }).then((r) => {
@@ -407,7 +411,7 @@
       x.addEventListener('click', () => { delete ps[p]; delete D.params[p]; if (!Object.keys(ps).length) { delete D.doc.params; } D.changed('params'); });
       const val = h('input', { class: 'studio-in mono', 'data-ub-param-value': p, value: D.params[p] != null ? D.params[p] : '', placeholder: spec.default != null ? String(spec.default) : (spec.required ? 'required' : 'optional'),
         'aria-label': 'Preview value of ' + p });
-      val.addEventListener('change', () => { if (val.value.trim()) { D.params[p] = val.value.trim(); } else { delete D.params[p]; } D.autoLive(); C.draw(); liveRender(); });
+      val.addEventListener('change', () => { if (val.value.trim()) { D.params[p] = val.value.trim(); } else { delete D.params[p]; } D.autoLive(); C.draw(); D.liveRender(); });
       const what = (spec.type || 'text') + (spec.of ? ' of ' + spec.of : '') + (spec.required ? ', required' : '') + (spec.default != null ? ', default ' + spec.default : '');
       pfs.appendChild(h('div', { class: 'ub-param', 'data-ub-param': p }, h('label', { class: 'ub-field' }, h('span', { class: 'ub-field-l' }, h('b', { class: 'mono', text: p }), ' · ' + what), h('span', { class: 'ub-row' }, val, x))));
     });
@@ -434,14 +438,14 @@
       return D.api('GET', '/build/board-api/example/' + encodeURIComponent(example)).then((r) => {
         D.doc = r.document; D.doc.chips = D.doc.chips || {}; D.doc.traces = D.doc.traces || []; D.doc.layout = D.doc.layout || {};
         nameIn.value = D.doc.board || ''; titleIn.value = D.doc.title || '';
-        return fetchAll().then(() => { D.autoLive(); C.draw(); fillSheet(); writeYaml(); check().then(liveRender); snap(); D.notes('Your copy of the example ' + (r.title || example) + ' (not saved yet).', [], r.notes); });
+        return fetchAll().then(() => { D.autoLive(); C.draw(); fillSheet(); writeYaml(); check().then(() => D.liveRender()); snap(); D.notes('Your copy of the example ' + (r.title || example) + ' (not saved yet).', [], r.notes); });
       }).catch((e) => D.say(e.code + ': ' + e.detail, true));
     }
     if (!D.name && fromDesign) {                  // a screen design opened as a board (the adapter until P5's converter)
       return D.api('GET', '/build/board-api/from-design/' + encodeURIComponent(fromDesign)).then((r) => {
         D.doc = r.document; nameIn.value = D.doc.board || ''; titleIn.value = D.doc.title || '';
         D.params = Object.assign({}, r.params || {});            // the id of the design's sample, so data shows at once
-        return fetchAll().then(() => { D.autoLive(); C.draw(); fillSheet(); writeYaml(); check().then(liveRender); snap(); D.notes('Opened as a board (not saved).', r.locals, r.notes); });
+        return fetchAll().then(() => { D.autoLive(); C.draw(); fillSheet(); writeYaml(); check().then(() => D.liveRender()); snap(); D.notes('Opened as a board (not saved).', r.locals, r.notes); });
       }).catch((e) => D.say(e.code + ': ' + e.detail, true));
     }
     if (!D.name) { nameIn.value = ''; C.draw(); fillSheet(); writeYaml(); check(); snap(); return Promise.resolve(); }
@@ -455,7 +459,7 @@
       nameIn.value = D.name; nameIn.readOnly = true;
       titleIn.value = D.doc.title || '';
       root.setAttribute('data-revision', String(D.doc.version || ''));
-      return fetchAll().then(() => { D.autoLive(); C.draw(); fillSheet(); check().then(liveRender); revisions(); undo.list = []; undo.at = -1; snap(); D.say('Opened ' + D.name + ', revision ' + (D.doc.version || 1)); root.removeAttribute('data-dirty'); });
+      return fetchAll().then(() => { D.autoLive(); C.draw(); fillSheet(); check().then(() => D.liveRender()); revisions(); undo.list = []; undo.at = -1; snap(); D.say('Opened ' + D.name + ', revision ' + (D.doc.version || 1)); root.removeAttribute('data-dirty'); });
     }).catch((e) => D.say(e.code + ': ' + e.detail, true));
   }
 
@@ -571,10 +575,10 @@
     b.setAttribute('aria-pressed', String(phone));
     D.device = phone ? 'phone' : 'desktop';
     C.draw();
-    if (!phone) { liveRender(); }
+    D.liveRender();
   });
   $('[data-ub-grid]').addEventListener('change', (e) => { D.grid = e.target.checked; C.draw(); });
-  $('[data-ub-live]').addEventListener('change', (e) => { D.live = e.target.checked; C.draw(); liveRender(); });
+  $('[data-ub-live]').addEventListener('change', (e) => { D.live = e.target.checked; C.draw(); D.liveRender(); });
   nameIn.addEventListener('input', () => { showProblems(); });
   nameIn.addEventListener('change', () => { D.doc.board = nameIn.value.trim(); writeYaml(); });
   titleIn.addEventListener('change', () => { D.doc.title = titleIn.value.trim(); writeYaml(); check(); });
