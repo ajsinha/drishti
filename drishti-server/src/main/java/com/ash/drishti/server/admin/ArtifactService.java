@@ -18,6 +18,7 @@ package com.ash.drishti.server.admin;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
+import com.ash.drishti.packs.ConnectorFiles;
 import com.ash.drishti.packs.Pack;
 import com.ash.drishti.packs.PackRegistry;
 import com.ash.drishti.server.PackOverlay;
@@ -300,8 +301,16 @@ public final class ArtifactService {
                 yield archive.archive("pack", "", name, f.area(), f.dir().getFileName().toString(), f.dir(), actor, summary);
             }
             case "connector" -> {
-                Path file = connectors.files().file(name);
-                yield archive.archive("connector", "", name, "connectors", file.getFileName().toString(), file, actor, summary);
+                ConnectorFiles files = connectors.files();
+                Path file = files.file(name);
+                if (!"shared".equals(files.source(name))) {
+                    yield archive.archive("connector", "", name, "connectors", file.getFileName().toString(), file, actor, summary);
+                }
+                // created or edited through Admin: the text in force is the shared overlay in the content store, not (only) a file
+                String rel = file.getFileName().toString();
+                ArtifactArchive.Entry e = archive.archiveText("connector", "", name, "connectors", rel, rel, files.text(name), actor, summary);
+                files.removeEverywhere(name);
+                yield e;
             }
             default -> {
                 Path file = paths.biFile(subtype, name);

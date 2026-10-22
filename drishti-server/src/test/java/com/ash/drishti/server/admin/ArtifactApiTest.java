@@ -351,7 +351,7 @@ class ArtifactApiTest {
         JsonNode off = JSON.readTree(act("/disable", "{\"kind\":\"connector\",\"name\":\"art-used\"}"));
         assertThat(off.path("ok").asBoolean()).isTrue();
         assertThat(find(json("/api/v1/admin/artifacts").path("artifacts"), "connector", "art-used").path("state").asText()).isEqualTo("off");
-        assertThat(root.resolve("connectors/art-used.yaml")).exists();
+        mvc.perform(get("/api/v1/admin/connectors/art-used")).andExpect(status().isOk());      // kept (made through the API: the shared overlay, not a file)
         act("/enable", "{\"kind\":\"connector\",\"name\":\"art-used\"}");
     }
 

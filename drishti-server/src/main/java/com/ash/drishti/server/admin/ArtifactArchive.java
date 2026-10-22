@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -86,6 +87,22 @@ public final class ArtifactArchive {
 
     /** Moves {@code source} (a folder or a file) into a new archive and returns its entry. */
     public Entry archive(String kind, String subtype, String name, String area, String rel, Path source, String by, String summary) {
+        return store(kind, subtype, name, area, rel, source.getFileName().toString(), target -> moveTree(source, target), by, summary);
+    }
+
+    /**
+     * Archives {@code text} as the file {@code fileName}: for an artifact that lives in the content store (a connector edited
+     * through Admin) rather than as a file, so restoring it puts the file back.
+     */
+    public Entry archiveText(String kind, String subtype, String name, String area, String rel, String fileName, String text, String by, String summary) {
+        return store(kind, subtype, name, area, rel, fileName, target -> Files.writeString(target, text, StandardCharsets.UTF_8), by, summary);
+    }
+
+    private interface Fill {
+        void into(Path target) throws IOException;
+    }
+
+    private Entry store(String kind, String subtype, String name, String area, String rel, String fileName, Fill fill, String by, String summary) {
         lock.lock();
         try {
             Instant now = clock.instant();
@@ -96,8 +113,8 @@ public final class ArtifactArchive {
             }
             Path folder = dir.resolve(id);
             Files.createDirectories(folder.resolve(PAYLOAD));
-            Path target = folder.resolve(PAYLOAD).resolve(source.getFileName().toString());
-            moveTree(source, target);
+            Path target = folder.resolve(PAYLOAD).resolve(fileName);
+            fill.into(target);
             Entry e = new Entry(id, kind, subtype == null ? "" : subtype, name, area, rel, now, by == null ? "" : by, summary == null ? "" : summary, size(target));
             Map<String, Object> meta = new LinkedHashMap<>();
             meta.put("kind", e.kind());

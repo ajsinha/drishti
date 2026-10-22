@@ -304,22 +304,25 @@ public final class TemplateUpdates implements AutoCloseable {
     /** Runs {@link #check()} now and then every {@code intervalMs} on a virtual thread. */
     public synchronized TemplateUpdates start(long intervalMs) {
         if (thread == null && mode == Mode.ADDITIVE) {
-            thread = Thread.ofVirtual().name("drishti-connector-template-updates").start(() -> {
-                while (!Thread.currentThread().isInterrupted()) {
-                    try {
-                        check();
-                    } catch (RuntimeException e) {
-                        LOG.warn("connector template updates: {}", e.getMessage());
-                    }
-                    try {
-                        Thread.sleep(Math.max(1000, intervalMs));
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                }
-            });
+            thread = Thread.ofVirtual().name("drishti-connector-template-updates").start(() -> loop(intervalMs));
         }
         return this;
+    }
+
+    /** The background loop: runs on its own virtual thread, never under this object's monitor. */
+    private void loop(long intervalMs) {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                check();
+            } catch (RuntimeException e) {
+                LOG.warn("connector template updates: {}", e.getMessage());
+            }
+            try {
+                Thread.sleep(Math.max(1000, intervalMs));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     @Override

@@ -493,6 +493,32 @@ public final class ConnectorFiles {
         }
     }
 
+    /**
+     * Takes a connector out for an uninstall: removes its shared overlay, if any (the text stays in the shared history), and the
+     * file of that name, if any (its text kept in the file history). True when there was something to remove.
+     */
+    public boolean removeEverywhere(String name) {
+        requireName(name);
+        String now = text(name);
+        Path f = file(name);
+        boolean gone = false;
+        try {
+            if (Files.isRegularFile(f)) {
+                backup(name);
+                Files.delete(f);
+                gone = true;
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        ConnectorOverlay o = overlay;
+        if (o != null && o.get(name) != null) {
+            o.remove(name, now == null ? "" : now);
+            gone = true;
+        }
+        return gone;
+    }
+
     private void backup(String name) throws IOException {
         Path f = dir.resolve(name + ".yaml");
         if (!Files.isRegularFile(f)) {

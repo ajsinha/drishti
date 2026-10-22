@@ -274,7 +274,11 @@ public class IdentityConfiguration {
             TransactionTemplate identityTransactions, com.ash.drishti.identity.content.ContentStore content, org.springframework.core.env.Environment env) {
         com.ash.drishti.identity.bi.JpaBiStore jpa = new com.ash.drishti.identity.bi.JpaBiStore(workspaces, members, items, versions, revisions, events, marks,
                 usage, settings, identityTransactions);
-        String kind = env.getProperty("drishti.bi.store", "content").trim().toLowerCase(java.util.Locale.ROOT);
+        String raw = env.getProperty("drishti.bi.store", "content").trim();
+        if (raw.equals(System.getenv("DRISHTI_BI_STORE")) && !"jpa".equalsIgnoreCase(raw) && !"content".equalsIgnoreCase(raw)) {
+            raw = "content";        // DRISHTI_BI_STORE is the BI store folder (drishti.bi.query.store-dir); relaxed binding also offers it here
+        }
+        String kind = raw.toLowerCase(java.util.Locale.ROOT);
         if ("jpa".equals(kind)) {
             return jpa;
         }

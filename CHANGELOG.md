@@ -18,6 +18,17 @@
 ## Unreleased
 
 - The UI Board work is kept on branch ui-board-preview; not in this release.
+- **Fix: uninstalling a connector made through Admin** no longer fails with `cannot archive ... NoSuchFileException`: since connector
+  edits are a shared overlay in the content store there is no file to move, so the text in force is archived (`ArtifactArchive.archiveText`),
+  the overlay removed (kept in the shared history) with any file under it (`ConnectorFiles.removeEverywhere`), and Restore writes it back.
+- **Fix: a server started with `DRISHTI_BI_STORE` (the BI store folder) failed at start** with `drishti.bi.store is '<path>': use
+  content (the default) or jpa`: Spring's relaxed binding offered the folder as the BI content store's kind too. That value is now
+  read as the default (`content`); `drishti.bi.store: jpa` still works.
+- **Fix: the connector template updater's loop** sleeps on its own thread, outside the `synchronized` start (NoBlockingUnderSynchronizedTest).
+- **Tests: the BI catalogue browser tests follow the catalogue's kind tabs** (`?kind=all`, the Datasets tab instead of the old kind filter).
+- **Tests: the W1 model designer stack's reference-store serves book as well as desk** (with three books): a dataset's implicit model
+  brings the kinds its references name (DESK, PORTFOLIO), and a connector file without book made every query DRS-9026. The shipped
+  `reference-store` template and examples already list book.
 - **Fix: a table repainted away before its toolbar was placed** no longer throws in the console (`tables.js`: the strip above the table is
   added only while the table is still on the page).
 - **Tests: S3 on three simulators, no Docker.** Adobe S3Mock 4.12.4 in the test JVM (a Maven test dependency; Windows QA included)
