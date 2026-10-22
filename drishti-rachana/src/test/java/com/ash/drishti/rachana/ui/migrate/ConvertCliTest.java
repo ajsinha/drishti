@@ -86,12 +86,12 @@ class ConvertCliTest {
     void everyPackConvertsOnChipStoreChipsWithOnlyTrueOneOffsLeft() throws Exception {
         Map<String, Integer> oneOffs = new LinkedHashMap<>();
         oneOffs.put("core", 0);
-        oneOffs.put("counterparty-risk", 1);              // netting-set trades: it reads four page controls
+        oneOffs.put("counterparty-risk", 0);              // netting-set trades reads four page controls: the 'page' pin (12.4)
         oneOffs.put("market-data", 0);
         oneOffs.put("market-risk", 0);
-        oneOffs.put("news-and-markets", 8);               // panels reading another record through source: (a chip names no source, CP-02)
+        oneOffs.put("news-and-markets", 0);               // panels reading another record: a second supply (id-from)
         oneOffs.put("world-economy", 0);
-        oneOffs.put("trading", 24);                       // computed rows (group, flatten) and the page-control tables
+        oneOffs.put("trading", 0);                        // computed rows (=group, =flatten) and the 'page' pin
         for (Map.Entry<String, Integer> e : oneOffs.entrySet()) {
             Ran r = run(args(e.getKey(), "--json"));
             assertThat(r.err()).isEmpty();
@@ -173,14 +173,41 @@ class ConvertCliTest {
         var chips = UiCli.folder(ROOT.resolve("config/ui/chips"), ChipState.CERTIFIED);
         String text = Files.readString(ROOT.resolve("config/packs/trading/sutras/pages/counterparty-trades.v1.sutra.yaml"));
         Conversion c = new PageConverter(chips).convert("trading", text);
-        assertThat(c.status()).isEqualTo(Conversion.Status.LOCAL);
-        assertThat(c.traces()).isEqualTo(1);              // the status control into the trades table
+        assertThat(c.status()).isEqualTo(Conversion.Status.CLEAN);
+        assertThat(c.traces()).isEqualTo(1);              // the header's page controls into the trades table's 'page' pin
+        assertThat(c.document().path("traces").toString()).contains("\"from\":\"header.page\",\"to\":\"trades.page\"");
+        assertThat(c.document().path("chips").path("by-product").path("map").path("rows").asText())
+                .isEqualTo("=group(@doc.TRADES, 'PRODUCT_TYPE', 'NOTIONAL')");     // computed rows over the record
+        paintsBack(chips, text, "trading");
+    }
+
+    /** The former one-offs: page controls (netting set), a second supply (listed company), computed rows (the trades pages) (12.4). */
+    @Test
+    void theFormerOneOffsAreGenericChipsAndPaintBack() throws Exception {
+        var chips = UiCli.folder(ROOT.resolve("config/ui/chips"), ChipState.CERTIFIED);
+        String company = Files.readString(ROOT.resolve("config/packs/news-and-markets/sutras/listed-company.v1.sutra.yaml"));
+        Conversion c = paintsBack(chips, company, "news-and-markets");
+        JsonNode quote = c.document().path("chips").path("quote").path("supply");
+        assertThat(quote.path("connector").asText()).isEqualTo("news-and-markets/quote");
+        assertThat(quote.path("query").path("id-from").asText()).isEqualTo("QUOTE_ID");
+        paintsBack(chips, Files.readString(ROOT.resolve("config/packs/news-and-markets/sutras/news-topic.v1.sutra.yaml")), "news-and-markets");
+        paintsBack(chips, Files.readString(ROOT.resolve("config/packs/counterparty-risk/sutras/exposure-and-capital/netting-set.v1.sutra.yaml")),
+                "counterparty-risk");
+        for (String p : List.of("portfolio", "legal-entity", "index")) {
+            paintsBack(chips, Files.readString(ROOT.resolve("config/packs/trading/sutras/pages/" + p + "-trades.v1.sutra.yaml")), "trading");
+        }
+    }
+
+    private static Conversion paintsBack(com.ash.drishti.rachana.ui.ChipCatalog chips, String text, String pack) {
+        Conversion c = new PageConverter(chips).convert(pack, text);
+        assertThat(c.status()).as(c.screen() + " " + c.locals()).isEqualTo(Conversion.Status.CLEAN);
         var board = UiDocuments.readBoard(c.document().toString());
         JsonNode sutra = BoardSutra.toSutra(board, ref -> chips.find(ref).map(e -> e.doc())).orElseThrow();
         JsonNode original = UiDocuments.tree(text);
-        assertThat(sutra.path("panels")).isEqualTo(original.path("panels"));
+        assertThat(sutra.path("panels")).as(c.screen()).isEqualTo(original.path("panels"));
         assertThat(sutra.path("strip")).isEqualTo(original.path("strip"));
         assertThat(sutra.path("title")).isEqualTo(original.path("title"));
         assertThat(sutra.path("controls")).isEqualTo(original.path("controls"));
+        return c;
     }
 }

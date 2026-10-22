@@ -118,6 +118,7 @@ public final class PageConverter {
         int links = count(LINK, s.toString());
 
         Set<String> used = new LinkedHashSet<>(List.of(HEADER));
+        List<String> pageTraces = new ArrayList<>();
         for (JsonNode p : s.path("panels")) {
             String base = name(p.hasNonNull("id") ? p.path("id").asText() : p.hasNonNull("use") ? p.path("use").asText().replaceAll("@.*", "") : "panel");
             String inst = base;
@@ -133,10 +134,17 @@ public final class PageConverter {
                 }
             }
             String why = reads.isEmpty() ? null : "it reads the page control" + (reads.size() > 1 ? "s " : " ") + String.join(", ", reads);
-            ObjectNode seed = why == null ? seedInstance(p, supply, inst) : null;
+            ObjectNode seed = linked(p, supply, inst);
+            if (seed != null && !reads.isEmpty()) {
+                seed = ChipRef.parse(seed.path("use").asText()).flatMap(chips::find).map(e -> e.doc().inPins().containsKey(PAGE)).orElse(false)
+                        ? seed : null;                           // a generic chip reads the page controls through its 'page' pin
+            }
             if (seed != null) {
                 instances.set(inst, seed);
                 seeds.add(seed.path("use").asText());
+                if (!reads.isEmpty()) {
+                    pageTraces.add(inst);
+                }
                 continue;
             }
             if (why == null) {
@@ -156,6 +164,12 @@ public final class PageConverter {
             for (String c : reads) {
                 traces.addObject().put("from", HEADER + "." + ctlPin(c)).put("to", inst + "." + ctlPin(c));
             }
+        }
+        if (!pageTraces.isEmpty()) {                             // the header's page controls, as one 'page' out pin, into the generic chips
+            ObjectNode pins = (ObjectNode) header.path("pins");
+            (pins.get("out") instanceof ObjectNode o ? o : pins.putObject("out")).putObject(PAGE).put("type", "spec");
+            ((ObjectNode) header.path("manual").path("pins")).put(PAGE, "Out. Every page control as the person sets it, by id (ctl.<id>).");
+            pageTraces.forEach(i -> traces.addObject().put("from", HEADER + "." + PAGE).put("to", i + "." + PAGE));
         }
         if (!traces.isEmpty()) {
             b.set("traces", traces);
@@ -279,6 +293,32 @@ public final class PageConverter {
         return c;
     }
 
+    /** The generic chips' pin for the page controls (traced from the header's out pin of the same name): settings read them as {@code ctl.<id>}. */
+    static final String PAGE = "page";
+    private static final Pattern LINK_SOURCE = Pattern.compile("link\\(\\$\\.([A-Za-z_][A-Za-z0-9_]*), '([a-z0-9-]+)'\\)");
+
+    /**
+     * As {@link #seedInstance}; a panel reading the record its record links to ({@code source: link($.QUOTE_ID, 'quote')}) is the chip with a
+     * second supply: the linked kind's connector, the id from the page record's field ({@code query: {id-from: QUOTE_ID}}) (12.4).
+     */
+    private ObjectNode linked(JsonNode p, String supply, String inst) {
+        if (!p.has("source")) {
+            return seedInstance(p, supply, inst);
+        }
+        Matcher m = LINK_SOURCE.matcher(p.path("source").asText(""));
+        if (!m.matches()) {
+            return null;
+        }
+        ObjectNode bare = p.deepCopy();
+        bare.remove("source");
+        String second = supply.substring(0, supply.indexOf('/') + 1) + m.group(2);
+        ObjectNode i = seedInstance(bare, second, inst);
+        if (i != null) {
+            ((ObjectNode) i.path("supply")).putObject("query").put(BoardSutra.ID_FROM, m.group(1));
+        }
+        return i;
+    }
+
     /** The instance of a Chip Store chip that carries {@code p} whole and paints back into it exactly, or null. */
     private ObjectNode seedInstance(JsonNode p, String supply, String inst) {
         if (p.has("use")) {
@@ -394,10 +434,13 @@ public final class PageConverter {
                 controls.set(pin.name(), BoardSutra.mapText(v, BoardSutra::toPin));
             } else if (pin.role() == PinSpec.PinRole.DATA) {
                 Matcher pm = PATH.matcher(v.asText(""));
-                if (!pm.matches()) {
+                if (pm.matches()) {
+                    map.put(pin.name(), pm.group(1));
+                } else if (v.isTextual() && v.asText().contains("$")) {
+                    map.put(pin.name(), "=" + BoardSutra.toPin(v.asText()));     // computed rows over the record: group(...), flatten(...) (12.4)
+                } else {
                     return null;
                 }
-                map.put(pin.name(), pm.group(1));
             } else {
                 return null;
             }

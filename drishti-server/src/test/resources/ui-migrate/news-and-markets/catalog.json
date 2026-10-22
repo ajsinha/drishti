@@ -1,0 +1,14 @@
+[
+ {
+  "kind": "quote",
+  "id": "QUOTE-SYNX",
+  "title": "QUOTE-SYNX",
+  "subtitle": "Synthetic quote · SYNX · invented for the board proof, not market data"
+ },
+ {
+  "kind": "news",
+  "id": "NEWS-Synthetic_Example",
+  "title": "NEWS-Synthetic_Example",
+  "subtitle": "Synthetic headlines · invented for the board proof, not news"
+ }
+]

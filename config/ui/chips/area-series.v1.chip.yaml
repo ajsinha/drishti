@@ -36,6 +36,8 @@ manual:
     key: 'The function key that jumps to the panel (F2 to F12). Empty: no key.'
     code: 'The terminal mnemonic that opens the panel (REFS, CRV). Empty: none.'
     area: 'The page column: main (the default) or right.'
+    page: 'The page controls, traced from the page header''s ''page'' pin: the settings read them as ctl.<id> (a row filter, a title). Empty:
+      the page has none.'
   behaviour: The grammar's 'area' panel over the page's record (PANELS.md); the board names every field. Read-only unless a setting says otherwise.
   defaults: Every empty setting is left out of the panel, so the kind's own default applies.
   limits: Paints at most 10,000 rows of the list; the record is read once per page.
@@ -94,6 +96,9 @@ pins:
     area:
       role: control
       type: text
+    page:
+      role: control
+      type: spec
 body:
   panels:
   - id: '%{panel-id}'

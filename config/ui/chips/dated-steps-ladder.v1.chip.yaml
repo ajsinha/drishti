@@ -31,10 +31,13 @@ manual:
     doc: The page's record as the viewer may see it (masks applied). Required; settings may read its fields as @doc.FIELD.
     rows: 'The rows of one list in the record: map rows: <the list''s field>, and its columns id (id) to the row fields. Required.'
     columns: 'The columns, each {label, bind: ''@.FIELD'', fmt}. Required.'
+    empty: 'What the ladder says when the list is empty. Empty: the kind''s own words.'
     panel-id: 'The panel''s id on the page when it is not the instance name (an old page''s camelCase id). Empty: the instance name.'
     key: 'The function key that jumps to the panel (F2 to F12). Empty: no key.'
     code: 'The terminal mnemonic that opens the panel (REFS, CRV). Empty: none.'
     area: 'The page column: main (the default) or right.'
+    page: 'The page controls, traced from the page header''s ''page'' pin: the settings read them as ctl.<id> (a row filter, a title). Empty:
+      the page has none.'
   behaviour: The grammar's 'ladder' panel over the page's record (PANELS.md); the board names every field. Read-only unless a setting says otherwise.
   defaults: Every empty setting is left out of the panel, so the kind's own default applies.
   limits: Paints at most 10,000 rows of the list; the record is read once per page.
@@ -78,6 +81,9 @@ pins:
       role: control
       type: spec
       required: true
+    empty:
+      role: control
+      type: text
     panel-id:
       role: control
       type: text
@@ -90,6 +96,9 @@ pins:
     area:
       role: control
       type: text
+    page:
+      role: control
+      type: spec
 body:
   panels:
   - id: '%{panel-id}'
@@ -97,6 +106,7 @@ body:
     title: '%{title|Dated steps ladder}'
     rows: '@rows'
     columns: '%{columns}'
+    empty: '%{empty}'
     key: '%{key}'
     code: '%{code}'
     area: '%{area}'

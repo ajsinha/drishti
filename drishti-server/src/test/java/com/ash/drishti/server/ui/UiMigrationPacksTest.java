@@ -40,6 +40,9 @@ import org.springframework.boot.test.context.SpringBootTest;
         "drishti.security.redact=MTM,NOTIONAL,PRICE,GDP_PER_CAPITA", "drishti.ui.dir=../config/ui",
         "drishti.identity.database-url=jdbc:sqlite:target/ui-migrate-packs-${random.uuid}/identity.db",
         "drishti.data.dir=target/ui-migrate-packs-data/${random.uuid}", "drishti.bi.dir=../config/bi",
+        "drishti.sources.plugins.demo.settings.dirs=../config/packs/trading/samples,../config/packs/core/samples,../config/packs/counterparty-risk/samples,"
+                + "../config/packs/market-data/samples,../config/packs/market-risk/samples,../config/packs/news-and-markets/samples,"
+                + "../config/packs/world-economy/samples,src/test/resources/ui-migrate/news-and-markets",
         "drishti.bi.query.store-dir=target/ui-migrate-packs-bi/${random.uuid}", "drishti.security.roles.full.bi[0]=bi",
         "drishti.security.roles.masked.bi[0]=bi", "drishti.security.roles.restricted.bi[0]=bi",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true",
@@ -55,6 +58,9 @@ class UiMigrationPacksTest {
     static final List<String> PACKS = List.of("core", "counterparty-risk", "market-data", "market-risk", "news-and-markets", "world-economy");
     static final List<Principal> PEOPLE = List.of(new Principal("fay", List.of("full")), new Principal("max", List.of("masked")),
             new Principal("ria", List.of("restricted")));
+
+    /** The committed synthetic quote and headlines (src/test/resources/ui-migrate/news-and-markets: invented, not market data or news). */
+    static final Map<String, List<String>> SYNTHETIC = Map.of("quote", List.of("QUOTE-SYNX"), "news", List.of("NEWS-Synthetic_Example"));
 
     @Autowired BoardProof proof;
     @Autowired ReportProof reports;
@@ -89,7 +95,7 @@ class UiMigrationPacksTest {
     void everyPackIsProvenForThreePeople() {
         Map<String, JsonNode> results = new LinkedHashMap<>();
         for (String pack : PACKS) {
-            ObjectNode r = proof.prove(pack, PEOPLE, 3, null, null);
+            ObjectNode r = proof.prove(pack, PEOPLE, 3, "news-and-markets".equals(pack) ? SYNTHETIC : null, null);
             results.put(pack, r);
             System.out.println("P5 proof, " + pack + ": proven " + r.path("proven") + ", differs " + r.path("differs") + ", no sample "
                     + r.path("noSample") + ", comparisons " + r.path("comparisons"));

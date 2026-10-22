@@ -35,6 +35,9 @@ FRAME = {
     "key": ({"role": "control", "type": "text"}, "The function key that jumps to the panel (F2 to F12). Empty: no key."),
     "code": ({"role": "control", "type": "text"}, "The terminal mnemonic that opens the panel (REFS, CRV). Empty: none."),
     "area": ({"role": "control", "type": "text"}, "The page column: main (the default) or right."),
+    "page": ({"role": "control", "type": "spec"},
+             "The page controls, traced from the page header's 'page' pin: the settings read them as ctl.<id> (a row filter, a title). "
+             "Empty: the page has none."),
 }
 
 
@@ -65,7 +68,8 @@ SPECS = {
                      "Rows from a search or a model (use panel-table or filterable-table); one record's fields (use kv-summary).", A11Y_TABLE),
     "dated-steps-ladder": ("Dated steps ladder", "ladder", "ladder", "The rows of one list in the record as a ladder (dated steps, newest first).",
                       {"rows": {"id": col("id")}}, {},
-                      {"columns": ctl(SPEC, "The columns, each {label, bind: '@.FIELD', fmt}. Required.", True)},
+                      {"columns": ctl(SPEC, "The columns, each {label, bind: '@.FIELD', fmt}. Required.", True),
+                       "empty": ctl("text", "What the ladder says when the list is empty. Empty: the kind's own words.")},
                       {"connector": "counterparty-risk/margin-call", "map": {"rows": "EVENTS"},
                        "controls": {"columns": [{"label": "Time", "bind": "@.AT"}, {"label": "Event", "bind": "@.EVENT"}]}},
                       "Rows without an order that matters (use list-table).", A11Y_TABLE),
@@ -82,8 +86,8 @@ SPECS = {
                      "controls": {"fmt": "price2"}},
                     "Several series (use area-series); amounts by label (use ranked-bar-list).", A11Y_CHART),
     "ranked-bar-list": ("Ranked bar list", "chart", "hbar", "Horizontal bars over one list in the record: a bar per label, as long as the value.",
-                    {"rows": {"label": col(D, True), "value": col(M, True)}}, {"label": "rows.label", "value": "rows.value"},
-                    {"fmt": FMT, "tone": TONE,
+                    {"rows": {"label": col(D), "value": col(M)}}, {"label": "rows.label", "value": "rows.value"},
+                    {"fmt": FMT, "tone": TONE, "shape": ctl("text", "The shape: bars (the default) or donut."),
                      "on-select": ctl(SPEC, "What a click does: {by, field, filter: [panel ids]} filters other panels of the page. Empty: nothing.")},
                     {"connector": "counterparty-risk/simm", "map": {"rows": "RISK_CLASSES", "rows.label": "RISK_CLASS", "rows.value": "IM"},
                      "controls": {"fmt": "compact"}},
@@ -207,7 +211,7 @@ def record_chips():
         for c, (decl, text) in {**controls, **FRAME}.items():
             pins_in[c] = decl
             texts[c] = text
-            if c != "panel-id":
+            if c not in ("panel-id", "page"):
                 panel[BODY_KEYS.get(c, c)] = f"%{{{c}}}"
         inst = {"use": f"{name}@1", "supply": {"connector": ex["connector"]}, "map": {"doc.id": "id", **ex["map"]}}
         if ex["controls"]:
