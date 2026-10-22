@@ -256,7 +256,8 @@ def node_env(stack: dict, node: dict, keys: dict) -> tuple[dict, Path]:
     env["DRISHTI_STACK_HOST"] = stack_host(stack)
     env["DRISHTI_PACKS"] = node["packs"]
     env.setdefault("MALLOC_ARENA_MAX", "2")                 # glibc: two malloc arenas, not one per busy thread (PERFORMANCE.md, Resident memory)
-    env.setdefault("DRISHTI_STORE_ROOT", str(ROOT / "data" / "fstore"))   # one content store for every node of this machine's cluster (CONTENT_STORE.md)
+    env.setdefault("DRISHTI_STORE_ROOT", str(ROOT / "data" / "fstore"))
+    env.setdefault("DRISHTI_UI_KIT_DIR", str(ROOT / "config" / "ui-kit"))   # the platform UI kit for every node, whatever its working folder   # one content store for every node of this machine's cluster (CONTENT_STORE.md)
     if node.get("home") == "repo":
         return env, ROOT
     home = STACK_DATA / "nodes" / node["name"]
