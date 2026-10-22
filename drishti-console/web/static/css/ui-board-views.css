@@ -1,0 +1,120 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* The designer's Wiring view (ui-board-wiring.js, concept B) and the guided New board (ui-board-guided.js, concept C). Theme tokens only (--d-*):
+   colour 1 of a wire is --d-accent (data from a connector), colour 2 --d-ok (a selection passed on). Touch targets 44 px. */
+
+/* ---- Wiring ---------------------------------------------------------------------------------------------------------------------------------- */
+.ub-view-switch { display: inline-flex; border: 1px solid var(--d-border); border-radius: 18px; overflow: hidden; }
+.ub-view-switch > button { min-height: 36px; padding: 0 16px; border: 0; border-radius: 0; background: transparent; color: var(--d-muted); }
+.ub-view-switch > button[aria-selected="true"] { background: var(--d-accent); color: var(--d-on-accent, var(--d-bg)); font-weight: 600; }
+/* the Wiring view takes the width: the Chip Store and the mapping sheet belong to the Page view */
+.ub-design.ubw-on .ub-work { grid-template-columns: minmax(0, 1fr); }
+.ub-design.ubw-on .ub-palette, .ub-design.ubw-on .ub-sheet, .ub-design.ubw-on .ub-problems-box { display: none; }
+.ubw { display: flex; flex-direction: column; gap: 8px; }
+.ubw-say { min-height: 1.2em; margin: 0; color: var(--d-muted); font-size: 13px; }
+.ubw-scroll { overflow: auto; max-width: 100%; border: 1px solid var(--d-border); border-radius: var(--d-radius, 8px); background-color: var(--d-bg);
+  background-image: radial-gradient(color-mix(in srgb, var(--d-muted) 35%, transparent) 1px, transparent 1px); background-size: 20px 20px; min-height: 360px; }
+.ubw-stage { position: relative; min-width: 100%; }
+.ubw-svg { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.ubw-box { position: absolute; width: 240px; height: 110px; box-sizing: border-box; padding: 14px; border: 1px solid var(--d-border); border-radius: 8px;
+  background: var(--d-surface); color: var(--d-ink); cursor: grab; touch-action: none; user-select: none; z-index: 1; }
+.ubw-box.ubw-chip { border-color: var(--d-accent); }
+.ubw-box:focus-visible { outline: 2px solid var(--d-link); outline-offset: 2px; }
+.ubw-tag { font-size: 11px; letter-spacing: .5px; color: var(--d-muted); }
+.ubw-title { font-weight: 600; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ubw-sub { font-size: 12px; color: var(--d-muted); margin-top: 6px; line-height: 1.35; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.ubw-grip { position: absolute; right: -22px; top: 50%; width: 44px; height: 44px; margin-top: -22px; border: 0; padding: 0; background: transparent; cursor: crosshair; }
+.ubw-grip::after { content: ""; position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%;
+  background: var(--d-surface); border: 2px solid var(--d-accent); }
+.ubw-grip:hover::after, .ubw-grip:focus-visible::after { background: var(--d-accent); }
+.ubw-linking .ubw-box.ubw-ok { border-color: var(--d-ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--d-ok) 35%, transparent); cursor: copy; }
+.ubw-linking .ubw-box.ubw-dim { opacity: .45; }
+.ubw-wire { cursor: pointer; pointer-events: auto; outline: none; }
+.ubw-hit { fill: none; stroke: transparent; stroke-width: 14; pointer-events: stroke; }
+.ubw-line { fill: none; stroke-width: 2; stroke-linejoin: miter; stroke-linecap: square; }
+.ubw-data .ubw-line { stroke: var(--d-accent); }
+.ubw-sel .ubw-line { stroke: var(--d-ok); }
+.ubw-wire:hover .ubw-line, .ubw-wire:focus-visible .ubw-line { stroke-width: 3.5; }
+.ubw-label { font-size: 12px; paint-order: stroke; stroke: var(--d-bg); stroke-width: 4px; stroke-linejoin: round; }
+.ubw-data .ubw-label { fill: var(--d-accent); }
+.ubw-sel .ubw-label { fill: var(--d-ok); }
+.ubw-junction { fill: var(--d-accent); }
+.ubw-tmp { fill: none; stroke: var(--d-ok); stroke-width: 2; stroke-dasharray: 5 4; }
+.ubw-pop { position: absolute; z-index: 5; width: 280px; max-width: calc(100vw - 48px); padding: 12px; border: 1px solid var(--d-border); border-radius: 10px;
+  background: var(--d-surface); color: var(--d-ink); box-shadow: var(--d-shadow, 0 6px 24px rgba(0, 0, 0, .35)); }
+.ubw-pop p { margin: 0 0 10px; font-size: 13px; }
+.ubw-row { display: flex; gap: 8px; align-items: center; }
+.ubw-pop .btn-pill { min-height: 44px; }
+.ubw-x { margin-left: auto; }
+.ubw-choice { display: block; width: 100%; min-height: 44px; margin: 0 0 6px; padding: 8px 12px; text-align: left; border: 1px solid var(--d-border); border-radius: 8px;
+  background: transparent; color: var(--d-ink); cursor: pointer; }
+.ubw-choice:hover, .ubw-choice:focus-visible { border-color: var(--d-accent); }
+.ubw-key { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0; font-size: 13px; color: var(--d-muted); }
+.ubw-swatch { display: inline-block; width: 18px; height: 3px; vertical-align: middle; border-radius: 2px; }
+.ubw-swatch.ubw-data { background: var(--d-accent); }
+.ubw-swatch.ubw-sel { background: var(--d-ok); }
+
+/* ---- New board, guided ------------------------------------------------------------------------------------------------------------------- */
+.ubg { padding: 0 24px 24px; }
+.ubg-steps { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0 0 16px; padding: 0; }
+.ubg-step { min-height: 44px; padding: 6px 16px; border: 0; border-radius: 22px; background: var(--d-surface-2, var(--d-surface)); color: var(--d-muted); font-size: 14px; cursor: pointer; }
+.ubg-step[aria-current="true"] { background: var(--d-accent); color: var(--d-on-accent, var(--d-bg)); font-weight: 600; }
+.ubg-step:disabled { cursor: default; opacity: .7; }
+.ubg-main { display: flex; gap: 24px; align-items: stretch; min-height: 540px; }
+.ubg-left { width: 520px; flex: none; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.ubg-left .bs-h { margin: 0 0 8px; outline: none; }
+.ubg-note { margin: 0 0 4px; font-size: 13px; color: var(--d-muted); }
+.ubg-search { width: 100%; min-height: 44px; margin-bottom: 12px; }
+.ubg-cards { display: flex; flex-direction: column; gap: 12px; list-style: none; margin: 0; padding: 0; }
+.ubg-card { display: flex; flex-direction: column; gap: 4px; width: 100%; box-sizing: border-box; min-height: 44px; padding: 14px; text-align: left; border: 1px solid var(--d-border);
+  border-radius: 10px; background: var(--d-surface); color: var(--d-ink); cursor: pointer; font: inherit; }
+.ubg-card:hover { border-color: color-mix(in srgb, var(--d-accent) 60%, var(--d-border)); }
+.ubg-card[aria-pressed="true"], .ubg-card.ubg-on, .ubg-check:has(input:checked) { border-color: var(--d-accent); }
+.ubg-check { flex-direction: row; gap: 12px; align-items: flex-start; }
+.ubg-check input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; accent-color: var(--d-accent); }
+.ubg-check > span { display: flex; flex-direction: column; gap: 2px; }
+.ubg-line { font-size: 13px; color: var(--d-muted); }
+.ubg-follows { font-size: 12px; color: var(--d-ok); }
+.ubg-ask { display: flex; gap: 10px; align-items: center; margin: 8px 0 0 14px; font-size: 13px; color: var(--d-muted); }
+.ubg-ask input { min-height: 40px; flex: 1; }
+.ubg-link { align-self: flex-start; min-height: 44px; padding: 0; border: 0; background: none; color: var(--d-link); font-size: 13px; cursor: pointer; }
+.ubg-arr { flex-direction: row; align-items: center; gap: 10px; flex-wrap: wrap; cursor: default; }
+.ubg-arr .btn-pill { min-width: 44px; min-height: 44px; }
+.ubg-num { width: 24px; color: var(--d-muted); }
+.ubg-grow { flex: 1; }
+.ubg-seg { display: inline-flex; border: 1px solid var(--d-border); border-radius: 22px; overflow: hidden; }
+.ubg-seg > button { min-height: 44px; padding: 0 14px; border: 0; background: transparent; color: var(--d-muted); cursor: pointer; }
+.ubg-seg > button[aria-pressed="true"] { background: var(--d-accent); color: var(--d-on-accent, var(--d-bg)); font-weight: 600; }
+.ubg-where { border: 0; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 10px; }
+.ubg-where legend { font-size: 13px; color: var(--d-muted); margin-bottom: 6px; }
+.ubg-where input[type="text"], .ubg-where [data-ubg-ws] { min-height: 44px; }
+.ubg-status { min-height: 1.2em; margin: 0; }
+.ubg-nav { display: flex; gap: 10px; margin-top: auto; }
+.ubg-nav .btn-pill { min-height: 44px; padding: 0 20px; border-radius: 22px; }
+.ubg-preview { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--d-border); border-radius: 12px; background: var(--d-surface); }
+.ubg-pv-h { font-size: 12px; letter-spacing: .5px; color: var(--d-muted); }
+.ubg-pv-status { margin-left: 8px; letter-spacing: 0; }
+.ubg-pv { overflow: auto; }
+.ubg-empty { grid-column: 1 / -1; margin: 0; }
+.ubg-browse { width: min(560px, calc(100vw - 32px)); }
+.ubg-browse .ubg-cards { max-height: 60vh; overflow: auto; margin: 12px 0; }
+
+@media (max-width: 900px) {
+  .ubg { padding: 0 16px 16px; }
+  .ubg-main { flex-direction: column; }
+  .ubg-left { width: auto; }
+  .ubg-preview { min-height: 320px; }
+}
