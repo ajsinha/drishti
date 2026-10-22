@@ -82,7 +82,7 @@ async def new_page(request: Request):
     except BackendError:
         sutras = []
     from routes.ui_routes import ui_examples
-    return render(request, "build/new.html", limits=request.app.state.builder_limits.as_dict(), examples=cards, sutras=sutras, ui_examples=ui_examples(),
+    return render(request, "build/new.html", limits=request.app.state.builder_limits.as_dict(), examples=cards, sutras=sutras, ui_examples=ui_examples() if getattr(request.app.state, "ui_boards", False) else [],
                   studio_kind=_studio_kind(request), screen="build")
 
 

@@ -32,7 +32,8 @@ BOOK = (Path(__file__).resolve().parent / "fixtures" / "ui_book_trades.yaml").re
 def ui():
     from core.app import create_app
     from core.config import load_settings
-    app = create_app(load_settings(CONSOLE / "config"))
+    from ui_board_backend import boards_on
+    app = boards_on(create_app(load_settings(CONSOLE / "config")))
     app.state.backend = UiBoardBackend()
     with TestClient(app) as c:
         yield c, app.state.backend

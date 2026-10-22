@@ -15,6 +15,10 @@
 -->
 # The Board designer (2.7.0)
 
+> **Off by default.** The Board and Chip designer is shown only when the console setting `ui.boards` is `true` (`DRISHTI_UI_BOARDS=true`,
+> [CONFIGURATION.md](../admin/CONFIGURATION.md)). Off, Build is the screen (Sutra) designer: Build → *New screen* and *My designs*
+> ([SCREEN_DESIGNER.md](SCREEN_DESIGNER.md)), and the board pages below answer *not enabled*. Everything in this guide assumes it is on.
+
 A **board** is a screen wired from certified **chips** of the Chip Store: each chip has typed **pins**, a **supplier** feeds its data pins,
 and **traces** carry one chip's out pin (a selection, a filter) into another chip's in pin. A board reads its data as whoever opens it:
 their roles, row rules and masks, always. The design is [UI_BOARD.md](../architecture/UI_BOARD.md); the server routes are in

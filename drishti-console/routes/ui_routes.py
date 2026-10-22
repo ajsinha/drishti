@@ -28,7 +28,7 @@ from pathlib import Path
 from urllib.parse import quote
 
 import yaml
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response, StreamingResponse
 
 from core.backend import BackendError
@@ -64,28 +64,37 @@ def _where(request: Request) -> dict:
 # One designer (the product owner, 2.7.0): the Board Designer is the Build designer's Board mode, under /build like the screen designer, with a
 # Chip mode beside it (P4b builds the chip designer there). "Boards" is Build's one list of boards and designs (/build). The viewer is /ui/b/<name>.
 
+def _enabled(request: Request) -> None:
+    """The pages below answer only with ``ui.boards`` on (DRISHTI_UI_BOARDS, off by default); off, they are the console's 404 page saying so."""
+    if not getattr(request.app.state, "ui_boards", False):
+        raise HTTPException(404, "Boards and chips are not enabled on this console (ui.boards). Build -> Designer opens the screen designer.")
+
+
+_ON = [Depends(_enabled)]
+
+
 def _q(request: Request) -> str:
     return ("?" + request.url.query) if request.url.query else ""
 
 
-@router.get("/ui")
+@router.get("/ui", dependencies=_ON)
 async def boards_page(request: Request):
     """The Boards list is Build's list of boards and designs."""
     return RedirectResponse("/build" + _q(request), status_code=307)
 
 
-@router.get("/ui/new")
-@router.get("/ui/design/{name}")
+@router.get("/ui/new", dependencies=_ON)
+@router.get("/ui/design/{name}", dependencies=_ON)
 async def old_design_page(request: Request, name: str = ""):
     return RedirectResponse(("/build/board/" + quote(name, safe="") if name else "/build/board/new") + _q(request), status_code=307)
 
 
-@router.get("/ui/chip-editor")
+@router.get("/ui/chip-editor", dependencies=_ON)
 async def old_chip_page(request: Request):
     return RedirectResponse("/build/chip/new", status_code=307)
 
 
-@router.get("/ui/b/{name}")
+@router.get("/ui/b/{name}", dependencies=_ON)
 async def view_page(request: Request, name: str):
     """The board viewer on a saved board (``?owner=`` or ``?workspace=``, ``?device=phone``)."""
     if not _NAME.match(name):
@@ -93,8 +102,8 @@ async def view_page(request: Request, name: str):
     return render(request, "ui/view.html", screen="ui-boards", board=name, where=_where(request))
 
 
-@router.get("/build/board/new")
-@router.get("/build/board/{name}")
+@router.get("/build/board/new", dependencies=_ON)
+@router.get("/build/board/{name}", dependencies=_ON)
 async def design_page(request: Request, name: str = ""):
     """The designer in Board mode: a new board (``?design=<id>`` starts from a screen design, converted by P5's converter), or a saved one."""
     name = "" if name == "new" else name                 # FastAPI may match /new as {name}
@@ -104,8 +113,8 @@ async def design_page(request: Request, name: str = ""):
                   design=str(request.query_params.get("design") or "")[:80], example=str(request.query_params.get("example") or "")[:80])
 
 
-@router.get("/build/chip/new")
-@router.get("/build/chip/{name}")
+@router.get("/build/chip/new", dependencies=_ON)
+@router.get("/build/chip/{name}", dependencies=_ON)
 async def chip_page(request: Request, name: str = ""):
     """The designer in Chip mode (P4b): the pin table, the body editor, the manual form, the test bench and the release steps of one chip."""
     name = "" if name == "new" else name
@@ -121,7 +130,7 @@ async def _convert(request: Request, path: str, body: dict):
     return answer if isinstance(answer, dict) else {}
 
 
-@router.get("/build/board-api/from-design/{id_}")
+@router.get("/build/board-api/from-design/{id_}", dependencies=_ON)
 async def from_design(request: Request, id_: str):
     """A screen design's Sutra converted into a board by P5's converter (``POST /api/v1/ui/convert/sutra``): the seed chips where a panel fits one,
     board-local chips (with their bindings written over the record's pins) where none does, the header chip and its control traces. Opened in
@@ -172,7 +181,7 @@ async def _sample_params(request: Request, id_: str, design: dict, board: dict) 
     return {}
 
 
-@router.post("/build/board-api/to-sutra")
+@router.post("/build/board-api/to-sutra", dependencies=_ON)
 async def to_sutra(request: Request):
     """Export Sutra: the board painted back into a Sutra by P5's ``BoardSutra`` (``POST /api/v1/ui/convert/board``), so pack authors keep shipping
     Sutras until 3.0. Only a board of one record (a parameter ``id`` of a kind) has one; otherwise ``yaml`` is null and the notes say why."""
@@ -201,12 +210,12 @@ def ui_examples() -> list[dict]:
     return [e for e in got.get("examples") or [] if isinstance(e, dict) and e.get("name") and e.get("kind") in ("board", "chip")]
 
 
-@router.get("/build/board-api/examples")
+@router.get("/build/board-api/examples", dependencies=_ON)
 async def examples_list(request: Request):
     return JSONResponse([{k: e.get(k) for k in ("name", "kind", "title", "summary")} for e in ui_examples()])
 
 
-@router.get("/build/board-api/example/{name}")
+@router.get("/build/board-api/example/{name}", dependencies=_ON)
 async def example_open(request: Request, name: str):
     """One example as YOUR unsaved copy: ``{name, kind, document, notes}``. A ``from:`` chip is copied as ``<name>-mine`` version 1; a ``sutra:``
     page is read from the server and converted by P5's converter, as you."""

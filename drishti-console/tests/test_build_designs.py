@@ -87,7 +87,7 @@ def test_new_page_offers_the_five_ways_to_bring_data_and_the_start_choices(app_c
 def test_the_build_menu_has_create_my_designs_and_examples(app_client):
     page = app_client.get("/build").text
     assert 'href="/build/new"' in page and 'href="/build"' in page and 'href="/build/new#examples"' in page
-    assert "Designer" in page and "Boards" in page and "Examples" in page
+    assert "New screen" in page and "My designs" in page and "Examples" in page   # ui.boards off (the default)
     assert 'href="/build/reviews"' in page and "Govern" in page and "Rachana reference" in page and "Screen designer guide" in page
     assert 'href="/studio"' not in page and "Sutra Studio" not in page                    # no separate Studio entry any more
 

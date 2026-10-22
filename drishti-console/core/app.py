@@ -371,6 +371,10 @@ def create_app(settings: Settings) -> FastAPI:
 
     app.state.bi_me = BiMe(user_ttl, stamps)
     app.state.bi_on = str(settings.get("bi.enabled", True)).lower() in ("true", "1", "yes", "on")      # false: no BI menu, no /bi pages
+    # ui.boards (DRISHTI_UI_BOARDS), off by default: the Board and Chip designer, the board viewer and their menu entries; off, Build is the
+    # screen (Sutra) designer as before the UI Board work and /build/board, /build/chip and /ui/b answer "not enabled"
+    app.state.ui_boards = str(settings.get("ui.boards", False)).lower() in ("true", "1", "yes", "on")
+    templates.env.globals["UI_BOARDS"] = app.state.ui_boards
     console_dir = WEB.parent
     docs_dir = Path(settings.get("help.docs_dir", "../docs"))
     from core.packs import Packs
