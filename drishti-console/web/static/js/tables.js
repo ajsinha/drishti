@@ -293,7 +293,7 @@
       if (old) { old.remove(); }
       bar.classList.add('in-head');
       head.insertBefore(bar, head.querySelector('.pnl-code'));
-    } else {
+    } else if (wrap.parentNode) {                   // (a table repainted away before this ran is left alone)
       wrap.parentNode.insertBefore(bar, wrap);      // a strip above the table (pick lists, admin lists, tabs)
     }
 

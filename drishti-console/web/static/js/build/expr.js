@@ -24,13 +24,22 @@
   var WB = window.DrishtiWB = window.DrishtiWB || {};
   var seq = 0;
 
-  function token(input) {
+  function token(input, src) {
     var v = input.value, pos = input.selectionStart == null ? v.length : input.selectionStart, i = pos;
-    while (i > 0 && /[\w$@.\[\]'-]/.test(v[i - 1])) { i--; }
+    var word = src && src.pins ? /[\w$@.\[\]'%{-]/ : /[\w$@.\[\]'-]/;          // a chip body (UI Board P4b) also completes %{pin}
+    while (i > 0 && word.test(v[i - 1])) { i--; }
     return { from: i, to: pos, text: v.slice(i, pos) };
   }
   function candidates(t, src) {
-    var out = [], q = t.text, lq = q.toLowerCase();                 // paths match in any case: $.sch offers $.SCHEDULE (UPPER_SNAKE since 2.3.0)
+    var out = [], q = t.text, lq = q.toLowerCase();
+    if (src.pins && (q[0] === '@' || q[0] === '%')) {               // a chip body reads only its pins: @pin, @.column of a rowset pin, %{pin}
+      src.pins().forEach(function (p) {
+        [q[0] === '%' ? '%{' + p.name + '}' : '@' + p.name].concat(q[0] === '@' ? (p.columns || []).map(function (c) { return '@.' + c; }) : []).forEach(function (c) {
+          if (c.toLowerCase().indexOf(lq) === 0 && c !== q && out.every(function (o) { return o.text !== c; })) { out.push({ text: c, hint: p.type + ' pin' }); }
+        });
+      });
+      return out.slice(0, 40);
+    }                 // paths match in any case: $.sch offers $.SCHEDULE (UPPER_SNAKE since 2.3.0)
     if (q[0] === '$') {
       var seen = {};
       src.paths().forEach(function (p) {
@@ -67,7 +76,7 @@
       if (box.children[sel]) { input.setAttribute('aria-activedescendant', box.children[sel].id); box.children[sel].scrollIntoView({ block: 'nearest' }); }
     }
     function show() {
-      var t = token(input);
+      var t = token(input, src);
       items = t.text ? candidates(t, src) : [];
       box.textContent = '';
       if (!items.length) { hide(); return; }
@@ -82,7 +91,7 @@
       box.hidden = false; input.setAttribute('aria-expanded', 'true'); paint();
     }
     function take(i) {
-      var t = token(input), c = items[i];
+      var t = token(input, src), c = items[i];
       if (!c) { return; }
       input.value = input.value.slice(0, t.from) + c.text + input.value.slice(t.to);
       var at = t.from + c.text.length;

@@ -58,6 +58,7 @@
     if (!m) { return Promise.resolve(null); }
     return D.api('GET', '/ui/api/chips/' + m[1] + '/' + m[2]).then((c) => { D.chips[ref] = c; return c; }).catch(() => null);
   }
+  D.fetchChip = fetchChip;
   const fetchAll = () => Promise.all(Object.keys(D.doc.chips || {}).map((n) => fetchChip(D.doc.chips[n].use)));
 
   // ---- editing the document ---------------------------------------------------------------------------------------------------------------
@@ -148,6 +149,7 @@
   }
   let checkTimer = 0, checkSeq = 0;
   function check() {
+    if (D.composite) { D.problems = D.composite.problems ? D.composite.problems() : []; showProblems(); return Promise.resolve(); }   // the chip's own check
     const seq = ++checkSeq;
     return D.api('POST', '/ui/api/boards/check' + (D.where.workspace ? '?workspace=' + encodeURIComponent(D.where.workspace) : ''), docForServer())
       .then((r) => { if (seq === checkSeq) { D.problems = (r && r.problems) || []; showProblems(); } })
@@ -159,11 +161,12 @@
   let liveTimer = 0, current = null;
   function liveRender() {
     if (current) { current.close(); current = null; }
-    if (!D.live || D.device === 'phone' || !Object.keys(D.doc.chips).length || D.problems.some((p) => p.level !== 'warning')) {
+    if (D.composite || !D.live || D.device === 'phone' || !Object.keys(D.doc.chips).length || D.problems.some((p) => p.level !== 'warning')) {
       if (D.live && D.problems.some((p) => p.level !== 'warning')) { D.say('Live data waits until the board check passes.'); }
       return;
     }
     current = U.render($('[data-ub-canvas]'), { board: docForServer() }, { device: 'desktop', status, bodyOf: (inst) => C.boxOf(inst),
+      onEvent: (ev, d) => { if ((ev === 'chip' || ev === 'frame') && d && d.instance && (ev === 'frame' || d.state === 'data')) { C.flow(d.instance); } },
       onRefused: (b) => { if (b.problems) { D.problems = b.problems; showProblems(); } } });
   }
 
@@ -205,6 +208,8 @@
     if (D.mode !== 'board' || !(e.ctrlKey || e.metaKey) || /input|textarea/i.test(e.target.tagName)) { return; }
     if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); step(-1); } else if (e.key === 'y' || (e.key === 'z' && e.shiftKey) || e.key === 'Z') { e.preventDefault(); step(1); }
   });
+  /** Inside a composite chip (P4b): the canvas edits the chip's inner board; ui-chip-module.js enters and leaves. */
+  D.edit = (doc) => { D.doc = doc; D.doc.chips = D.doc.chips || {}; D.doc.traces = D.doc.traces || []; D.doc.layout = D.doc.layout || {}; undo.list = []; undo.at = -1; return fetchAll().then(() => { D.changed('chips'); }); };
   D.changed = (what) => {
     root.setAttribute('data-dirty', 'true');
     if (!restoring) { snap(); }
@@ -245,6 +250,7 @@
 
   // ---- the mapping sheet ------------------------------------------------------------------------------------------------------------------
   const attrCache = {};
+  D.attributes = (supply) => attributes(supply);
   function attributes(supply) {
     const key = JSON.stringify(supply || {});
     if (!supply || !(supply.connector || supply.model || supply.live)) { return Promise.resolve(null); }
@@ -262,6 +268,7 @@
     D.selected = inst;
     root.querySelectorAll('.ub-box').forEach((b) => b.classList.toggle('ub-selected', b.getAttribute('data-instance') === inst));
     fillSheet();
+    root.dispatchEvent(new CustomEvent('ub:select', { detail: inst }));          // the palette's "Fits this data" follows the selection
   };
   D.openSheet = (inst) => { D.select(inst); const f = sheet.querySelector('input, select, textarea, button'); if (f) { f.focus(); } };
 
@@ -295,7 +302,8 @@
         D.changed('chips');
       };
       [ks, sn, sq].forEach((x) => x.addEventListener('change', setSupply));
-      sheet.appendChild(h('fieldset', { class: 'ub-fs' }, h('legend', { text: 'Supply (read as the viewer)' }), field('Supplier', ks), field('Name', sn), field('Query (JSON, optional)', sq)));
+      if (D.composite) { [ks, sn, sq].forEach((x) => { x.disabled = true; }); }      // inside a composite chip: no connectors, data enters through its pins
+      sheet.appendChild(h('fieldset', { class: 'ub-fs' }, h('legend', { text: D.composite ? 'Supply: none inside a chip (its data enters through the chip\'s pins)' : 'Supply (read as the viewer)' }), field('Supplier', ks), field('Name', sn), field('Query (JSON, optional)', sq)));
       // the map: supplier attribute -> pin column
       const fed = new Set((D.doc.traces || []).filter((t) => t.to.split('.')[0] === inst).map((t) => t.to.split('.').slice(1).join('.')));
       const mapFs = h('fieldset', { class: 'ub-fs', 'data-ub-map': true }, h('legend', { text: 'Map: supplier attribute → pin' }));
@@ -510,6 +518,7 @@
     C.draw();
     if (!phone) { liveRender(); }
   });
+  $('[data-ub-grid]').addEventListener('change', (e) => { D.grid = e.target.checked; C.draw(); });
   $('[data-ub-live]').addEventListener('change', (e) => { D.live = e.target.checked; C.draw(); liveRender(); });
   nameIn.addEventListener('input', () => { showProblems(); });
   nameIn.addEventListener('change', () => { D.doc.board = nameIn.value.trim(); writeYaml(); });
@@ -518,6 +527,7 @@
   window.addEventListener('pagehide', () => { if (current) { current.close(); } });
 
   const C = U.Canvas(D);
+  U.canvas = C;
   U.designer = D;
   C.loadPalette();
   load();

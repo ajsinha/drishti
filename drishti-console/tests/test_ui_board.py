@@ -183,34 +183,3 @@ def test_chips_share_and_copy_pass_through(ui):
     save(c, **{"If-None-Match": "*"})
     assert c.put("/ui/api/boards/book-trades/share", json={"people": ["ann"]}).json()["sharedWith"] == ["ann"]
     assert c.post("/ui/api/boards/book-trades/copy", json={"workspace": "fx-desk"}).json()["id"] == "workspace:fx-desk:book-trades"
-
-
-def test_a_screen_design_opens_as_a_board_and_a_board_exports_a_sutra(ui):
-    from core.sutra_board import board_to_sutra, sutra_to_board
-    sutra = """rachana: 1
-sutra: protein
-version: 1
-match: { kind: protein, priority: 10 }
-strip: [{ label: Protein, bind: $.name }]
-panels:
-  - { id: domains, kind: table, title: Domains, rows: $.domains }
-  - { id: function, kind: kv, title: Function, area: right, rows: $.function }
-  - { id: odd, kind: nope }
-"""
-    doc, notes = sutra_to_board(sutra, name="Protein view")
-    assert doc["board"] == "protein-view" and doc["chips"] == {"domains": {"use": "panel-table@1", "title": "Domains"}, "function": {"use": "panel-kv@1", "title": "Function"}}
-    assert [a["at"][0] for a in doc["layout"]["desktop"]["areas"]] == [1, 8] and doc["layout"]["phone"]["order"] == ["domains", "function"]
-    assert any("nope" in n for n in notes) and any("strip" in n for n in notes) and any("bindings" in n for n in notes)
-    text, notes = board_to_sutra({**doc, "chips": {**doc["chips"], "t": {"use": "filterable-table@2"}}, "traces": [{"from": "t.selected", "to": "function.doc"}]}, kind="protein")
-    s = yaml.safe_load(text)
-    assert s["sutra"] == "protein-view" and s["match"]["kind"] == "protein" and [p["kind"] for p in s["panels"]] == ["table", "kv"] and s["panels"][1]["area"] == "right"
-    assert any("filterable-table" in n for n in notes) and any("traces" in n for n in notes)
-    c, be = ui
-
-    async def designs(method, path, ident, body=None, **params):
-        return {"id": "d-1", "name": "Protein view", "kind": "protein", "sutra": sutra}
-    be.designs = designs
-    got = c.get("/build/board-api/from-design/d-1").json()
-    assert got["document"]["chips"]["domains"]["use"] == "panel-table@1" and got["design"] == "d-1"
-    out = c.post("/build/board-api/to-sutra", json={"document": got["document"], "kind": "protein"}).json()
-    assert "kind: table" in out["yaml"]

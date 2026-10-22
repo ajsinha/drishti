@@ -194,7 +194,7 @@ moved:
 contextual:
   ui-boards: docs-guides-ui-board-guide            # the board viewer's F1 (2.7.0)
   ui-designer: docs-guides-ui-board-guide          # the designer in Board mode
-  ui-chip-designer: docs-guides-ui-board-guide#chip-mode   # the designer in Chip mode (P4b fills it)
+  ui-chip-designer: docs-guides-ui-board-guide#chip-mode   # the designer in Chip mode: the chip designer (P4b)
   landing: user-guide
   bi: bi-guide
   terminal: user-guide

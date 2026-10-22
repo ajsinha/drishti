@@ -3135,6 +3135,23 @@ curl -s localhost:18480/api/v1/ui/renders/rnd-…/pins -H "Authorization: Bearer
      -d '{"instance":"trades","pin":"selected","value":"1000015"}'
 ```
 
+### The chip designer's calls (2.7.0, P4b)
+
+The Chip mode of Build's designer ([UI_BOARD_GUIDE.md](UI_BOARD_GUIDE.md#chip-mode)) uses these beside the routes above. The listing
+`GET /ui/chips` also carries each chip's `pins` (`{in: [{name, type, role?, required?, of?, columns?}], out: [...]}`) for the palette's search.
+
+| Method | Path | Does |
+|---|---|---|
+| `POST` | `/ui/chips/check` | the body is a chip document (YAML or JSON; the `author` role): the publish check without saving or refusing, `{ok, problems, whereUsed, previous?, breaking?, claimsCompatible?}`: CP-01 to CP-05 (your own drafts usable in the examples), CP-07 for a composite chip, and against the latest released earlier version what breaks (a pin removed or retyped); claiming `compatible-with` it anyway adds `CP-06` |
+| `POST` | `/ui/convert/sutra` | `{sutra, pack?, kind?}` (a role that may save boards): one Sutra converted by P5's converter, `{document, status: clean\|local\|fails, pack, screen, seeds, locals, traces, links, reason, problems}`; the pack is the one owning the Sutra's kind unless named. Not a Sutra (a block): `400 DRS-2070` |
+| `POST` | `/ui/convert/board` | `{document}`: the board painted back into a Sutra by P5's `BoardSutra`, `{yaml, notes}`; `yaml` is null for a board without an `id` parameter of a kind |
+| `GET` | `/ui/candidates?pack=` | the converter's board-local chips of every pack (or one), the Chip Store candidates: `[{pack, board, screen, chip, from, reason}]` |
+| `GET` | `/ui/candidates/{pack}/{board}/{chip}` | one candidate as `{pack, board, chip, document, yaml}`, to open in Chip mode and make generic |
+
+A **composite chip** is a board with no connectors: its body is `{board: {chips, traces, layout}, wires: {<chip in pin>: <instance>.<pin>},
+exposes: {<chip out pin>: <instance>.<pin>}}`. CP-07 refuses a supply inside, a chip pin wired to a missing inner pin or one of another type,
+a required inner pin nothing feeds, and chips nested more than three levels deep.
+
 ### Migration to boards (2.7.0, P5)
 
 Administrators only (`403` otherwise). The design is [UI_BOARD.md](../architecture/UI_BOARD.md) section 11; the switch is in

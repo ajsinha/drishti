@@ -37,34 +37,12 @@
   U.Canvas = function (D) {
     const root = D.root;
     const canvas = root.querySelector('[data-ub-canvas]'), svg = root.querySelector('[data-ub-wires]'), strip = root.querySelector('[data-ub-params]');
-    const palList = root.querySelector('[data-ub-palette]'), palQ = root.querySelector('[data-ub-palette-q]'), palCert = root.querySelector('[data-ub-certified]');
     const manual = root.querySelector('[data-ub-manual]');
     const C = { boxes: {}, from: null, selectedTrace: -1 };
 
     // ---- the palette ----------------------------------------------------------------------------------------------------------------------
-    let palTimer = 0;
-    function loadPalette() {
-      const q = new URLSearchParams();
-      if (palQ.value.trim()) { q.set('q', palQ.value.trim()); }
-      if (palCert.checked) { q.set('certified', 'true'); }
-      D.api('GET', '/ui/api/chips?' + q.toString()).then((list) => {
-        clear(palList);
-        (list || []).forEach((c) => {
-          const ref = c.chip + '@' + c.latest;
-          const kind = /^panel-/.test(c.chip) && ((window.DrishtiWB || {}).palette || { kinds: [] }).kinds.find((k) => 'panel-' + k.kind === c.chip);
-          const add = h('button', { type: 'button', class: 'ub-pal-add', 'data-chip': c.chip, draggable: 'true', title: (c.purpose || '') + ' (drag onto the canvas, or Enter to add)' },
-            kind ? h('i', { class: 'bi bi-' + kind.icon, 'aria-hidden': 'true' }) : null, h('span', { class: 'ub-pal-name', text: ' ' + (c.title || c.chip) }), h('small', { class: 'text-muted-d', text: ' ' + ref + (c.certified ? ' · certified' : '') }));
-          add.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/x-ub-chip', ref); e.dataTransfer.setData('text/plain', ref); e.dataTransfer.effectAllowed = 'copy'; });
-          add.addEventListener('click', () => D.pick(ref, null));
-          const info = h('button', { type: 'button', class: 'btn-pill btn-ghost ub-pal-info', 'aria-label': 'Manual of ' + c.chip, title: 'The datasheet and manual' }, h('i', { class: 'bi bi-journal-text', 'aria-hidden': 'true' }));
-          info.addEventListener('click', () => openManual(c.chip, c.latest, info));
-          palList.appendChild(h('li', { class: 'ub-pal-item', 'data-category': c.category || '' }, add, info));
-        });
-        if (!palList.childNodes.length) { palList.appendChild(h('li', { class: 'text-muted-d', text: 'No chip matches.' })); }
-      }).catch((e) => D.say(e.code + ': ' + e.detail, true));
-    }
-    palQ.addEventListener('input', () => { clearTimeout(palTimer); palTimer = setTimeout(loadPalette, 250); });
-    palCert.addEventListener('change', loadPalette);
+    /** The Chip Store palette is ui-board-palette.js (search, categories, "Fits this data", recent and favourites, keys); this asks it to load. */
+    function loadPalette() { if (U.palette) { U.palette.load(); } }
 
     function openManual(chip, version, opener) {
       D.api('GET', '/ui/api/chips/' + encodeURIComponent(chip) + '/' + encodeURIComponent(version) + '/manual').then((m) => {
@@ -224,27 +202,57 @@
       return 'M' + a[0] + ',' + a[1] + ' C' + (a[0] + dx) + ',' + a[1] + ' ' + (b[0] - dx) + ',' + b[1] + ' ' + b[0] + ',' + b[1];
     }
 
-    /** Draws every trace; a trace with a problem is red with its message as its title. */
+    /** Draws every trace as on a schematic (ui-board-route.js: 90° bends, hops at crossings, junction dots at fan-outs); a trace with a problem is
+        red and dashed with its message as its title. Called again whenever a box moves, so the wires re-route as chips are dragged. */
+    const SVG = 'http://www.w3.org/2000/svg';
     function wires() {
       while (svg.firstChild) { svg.removeChild(svg.firstChild); }
       if (D.device === 'phone') { return; }
-      const r = canvas.getBoundingClientRect();
+      const r = canvas.getBoundingClientRect(), s = svg.getBoundingClientRect();
       svg.setAttribute('width', r.width); svg.setAttribute('height', Math.max(r.height, canvas.scrollHeight) + (strip.offsetHeight || 0));
+      const boxes = {};
+      root.querySelectorAll('.ub-box[data-instance]').forEach((el) => {
+        const b = el.getBoundingClientRect();
+        boxes[el.getAttribute('data-instance')] = { left: b.left - s.left, top: b.top - s.top, right: b.right - s.left, bottom: b.bottom - s.top };
+      });
+      const list = [];
       (D.doc.traces || []).forEach((t, i) => {
         const a = pinEl(t.from), b = pinEl(t.to);
         if (!a || !b) { return; }
-        const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const ca = centre(a, 'out'), cb = centre(b, 'in');
+        list.push({ i, a: [Math.round(ca[0]), Math.round(ca[1])], b: [Math.round(cb[0]), Math.round(cb[1])], from: t.from,
+          fromBox: t.from.split('.').slice(0, t.from.indexOf('board.params.') === 0 ? 2 : 1).join('.'), toBox: t.to.split('.')[0] });
+      });
+      const plan = U.route.plan(list, boxes);
+      plan.wires.forEach((w) => {
+        const t = D.doc.traces[w.i], i = w.i;
+        const p = document.createElementNS(SVG, 'path');
         const bad = D.problemAt('traces[' + i + ']');
-        p.setAttribute('d', curve(centre(a, 'out'), centre(b, 'in')));
-        p.setAttribute('class', 'ub-wire' + (bad ? ' ub-bad' : '') + (C.selectedTrace === i ? ' ub-sel' : ''));
+        p.setAttribute('d', w.d);
+        p.setAttribute('class', 'ub-wire' + (bad ? ' ub-bad' : '') + (C.selectedTrace === i ? ' ub-sel' : '') + (C.flowing[t.to.split('.')[0]] ? ' ub-flow' : ''));
         p.setAttribute('data-trace', String(i));
-        const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+        p.setAttribute('data-to', t.to.split('.')[0]);
+        if (w.hops.length) { p.setAttribute('data-hops', String(w.hops.length)); }
+        const title = document.createElementNS(SVG, 'title');
         title.textContent = t.from + ' → ' + t.to + (bad ? ' · ' + bad.rule + ': ' + bad.message : '');
         p.appendChild(title);
         p.addEventListener('click', () => { C.selectedTrace = i; wires(); D.say('Trace ' + t.from + ' → ' + t.to + ' selected: Delete removes it.'); });
         svg.appendChild(p);
       });
+      plan.junctions.forEach((j) => {
+        const c = document.createElementNS(SVG, 'circle');
+        c.setAttribute('cx', j[0]); c.setAttribute('cy', j[1]); c.setAttribute('r', '3.2'); c.setAttribute('class', 'ub-junction');
+        svg.appendChild(c);
+      });
     }
+    /** Live data "current": the wires into a chip that just got new data flow for a moment (none with prefers-reduced-motion, by CSS). */
+    C.flowing = {};
+    C.flow = (inst) => {
+      C.flowing[inst] = true;
+      svg.querySelectorAll('.ub-wire[data-to="' + CSS.escape(inst) + '"]').forEach((p) => p.classList.add('ub-flow'));
+      clearTimeout(C.flowing['t:' + inst]);
+      C.flowing['t:' + inst] = setTimeout(() => { delete C.flowing[inst]; svg.querySelectorAll('.ub-wire[data-to="' + CSS.escape(inst) + '"]').forEach((p) => p.classList.remove('ub-flow')); }, 1600);
+    };
     window.addEventListener('keydown', (e) => {
       if ((e.key === 'Delete' || e.key === 'Backspace') && C.selectedTrace >= 0 && !/input|textarea|select/i.test(e.target.tagName) && !e.target.closest('.ub-box')) {
         e.preventDefault(); D.removeTrace(C.selectedTrace); C.selectedTrace = -1;
@@ -284,6 +292,7 @@
       C.boxes = {};
       params();
       canvas.classList.toggle('ub-canvas-phone', D.device === 'phone');
+      canvas.classList.toggle('ub-grid-dots', D.grid !== false && D.device !== 'phone');
       if (D.device === 'phone') { phone(); wires(); return; }
       canvas.style.gridTemplateColumns = 'repeat(' + cols() + ', minmax(0, 1fr))';
       Object.keys(D.doc.chips || {}).forEach((inst) => {
@@ -326,6 +335,8 @@
     C.marks = marks;
     C.wires = wires;
     C.loadPalette = loadPalette;
+    C.openManual = openManual;
+    C.typeOf = typeOf;
     C.boxOf = (inst) => C.boxes[inst] || null;
     C.focusPath = (path) => {
       const m = /^traces\[(\d+)\]/.exec(path || '');

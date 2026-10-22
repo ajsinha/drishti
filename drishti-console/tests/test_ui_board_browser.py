@@ -272,6 +272,7 @@ def test_chip_mode_shares_the_shell_the_palette_and_the_yaml_tab(page, stack):
     page.locator("[data-ce-save]").click()
     page.wait_for_function("document.querySelector('[data-ub-status]').textContent.indexOf('Saved your draft') >= 0")
     page.locator("[data-ub-tab='canvas']").click()
+    page.locator("[data-ce-step='bench']").click()
     page.locator("[data-ce-run]").click()
     page.wait_for_selector("[data-ce-bench] .ub-chip[data-instance='c']")
     page.locator("[data-ub-mode='board']").click()

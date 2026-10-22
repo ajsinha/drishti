@@ -33,12 +33,14 @@ screen designs. A board opens at `/build/board/<name>`; its viewer at `/ui/b/<na
 The designer has two modes in one shell, one palette area (the Chip Store) and one YAML / JSON tab:
 
 * **Board**: the canvas, pins and traces, the mapping sheet, live data, the Problems list. This guide.
-* **Chip**: authoring a chip. In 2.7.0 it holds the chip's document in the YAML tab, *Save draft*, *Run examples* (the test bench)
-  and *Submit for review*; the full chip designer (manual form, pin table, body editor) comes in phase P4b. See [Chip mode](#chip-mode).
+* **Chip**: authoring a chip: its pins, its body (panels, or chips inside), its manual, the test bench and the release steps. See
+  [Chip mode](#chip-mode).
 
-A screen design (`/build/d/<id>`) opens as a board with **Open as board** (in its header, or in the Boards list): each panel becomes a
-`panel-<kind>` chip. Its bindings are not converted yet (the status line says which); map them in the mapping sheet. **Export Sutra**
-writes a board's panel chips back as a Sutra for a pack, until 3.0.
+A screen design (`/build/d/<id>`) opens as a board with **Open as board** (in its header, or in the Boards list), converted by P5's converter
+(`POST /api/v1/ui/convert/sutra`): a panel a seed chip carries whole becomes that chip, anything else a board-local chip (`local-<panel>`,
+its bindings written over the record's pins, and a Chip Store candidate), the page header a board-local chip whose controls are traced
+into the panels that read them; the status line names the board-local chips. **Export Sutra** paints a board of one record (a parameter
+`id` of a kind) back into a Sutra for a pack (`POST /api/v1/ui/convert/board`), until 3.0.
 
 ## 2. Name the board
 
@@ -52,7 +54,7 @@ title: Book trades
 
 ## 3. Add chips from the Chip Store
 
-UI: search the **Chip Store** on the left (*Certified only* narrows it); the journal button opens a chip's datasheet and manual (pins, types,
+UI: search the **Chip Store** on the left (see [Finding chips](#finding-chips); *Certified only* narrows it); the journal button opens a chip's datasheet and manual (pins, types,
 behaviour, limits, examples). **Drag** a chip onto the grid, or focus it and press **Enter** (it goes below the others). In the mapping sheet
 on the right, rename the instance (`trades`).
 
@@ -93,7 +95,8 @@ takes typed names; the board check and the render have the last word.
 
 ## 5. Draw traces
 
-UI: pins are drawn on each box: in pins on the left edge, out pins on the right, coloured by type. **Drag from an out pin to an in pin**; while
+UI: pins are square pads on each box: in pins on the left edge, out pins on the right, coloured by type; wires are routed as on a
+circuit (see [A board looks like a circuit](#a-board-looks-like-a-circuit)). **Drag from an out pin to an in pin**; while
 you drag, only the compatible in pins light up. By keyboard: Enter on the out pin, then Enter on the in pin (Esc cancels). A selection traced
 into a `filter` pin gets its `filter-on` column by itself (the target's id column). Board parameters are out pins on the strip above the grid.
 
@@ -156,19 +159,172 @@ chips that follow it repaint. Every table chip has **Chart** (K). **Phone layout
 
 ## Chip mode
 
-The **Chip** button (or `/build/chip/<name>`, Build → Designer → **New chip**) switches the same designer to a chip: its document in the YAML /
-JSON tab (`chip`, `version`, `manual`, `pins`, `body`), **Open my draft**, **Save draft**, **Run examples** (each example of the manual
-rendered on the test bench, as you) and **Submit for review**. A chip picked in the Chip Store opens as a copy to start from. The full chip
-designer arrives with phase P4b.
+A chip is a Rachana-grammar Sutra with typed pins and its own manual: a pure function that paints UI. **Chip mode** is the same designer
+(the **Chip** button, `/build/chip/<name>`, or Build → Designer → **New chip**), in five steps, with the chip's whole document in the
+YAML / JSON tab. Any step's mistakes are red at once (the browser checks as you type) and listed under **Chip problems**, each a link to
+where it is; the server's publish check runs on every pause and adds what only it can tell (CP-05, CP-06).
+
+![Chip mode: the body built with the panel tools over the chip's pins](img/ui-board/chip-mode.png)
+
+### Name it
+
+UI: **Chip** (the name), **Version**, **Title** and **Category** in the toolbar; **New** starts over, **Open my draft** reads your saved
+draft, **Save draft** (Ctrl+S) keeps it (compare-and-set: a draft saved elsewhere meanwhile is `409 DRS-5057`).
+
+```yaml
+rachana: 1
+chip: pnl-bars
+version: 1
+title: P&L bars
+category: charts
+```
+
+### 1. Pins
+
+UI: **Add in pin** / **Add out pin**, then per row: the name, the role (**data**: rows or a document; **control**: filters, ids, dates,
+numbers), the type (`id`, `text`, `number`, `bool`, `enum`, `date`, `datetime`, `period`, `measure`, `dimension`, `filter`, `selection`,
+`document`, `rowset`), the columns of a rowset or document (`label:dimension!, value:measure`: `!` required, `*` many), the values of an
+enum, the kind of an id (`of: trading/book`), **Required** and the default. A rowset pin without columns, an enum without values, a default
+of the wrong type or outside the values: red, with why.
+
+```yaml
+pins:
+  in:
+    rows:  { role: data, type: rowset, required: true, shape: { label: { type: dimension, required: true }, value: { type: measure, required: true } } }
+    order: { role: control, type: enum, values: [asc, desc], default: desc }
+  out:
+    selected: { type: dimension }
+```
+
+### 2. Body: panels
+
+UI: **Body: panels** is the screen designer's own panel palette and inspector. **Panel kinds** adds a panel (a table, an hbar, a kv...);
+its rows are your first data pin (`@rows`). The inspector's fields complete pins, not document paths: type `@` (`@rows`, `@.label` for a
+column of the rowset) or `%{` (`%{order}`), or click a pin under **Pins** to put it in the field you were in. A reference that names no pin
+is red (CP-02: `@trades` names no in pin), as is a source key (`connector`, `model`, `sql`...). **Body: Rachana YAML** is the body alone,
+in the grammar, to edit as text.
+
+```yaml
+body:
+  panels:
+    - id: bars
+      kind: hbar
+      rows: "@rows"
+      label: "@.label"
+      value: "@.value"
+      on-select: { emits: selected, value: "@.label" }    # drives the out pin (CP-03)
+```
+
+### 2b. Body: chips (a composite chip: a board with no connectors)
+
+A chip can be built from other chips, like an electronic chip with chips inside. Its body **is a board, with no connector**: no supply
+anywhere inside; its data enters only through its own pins.
+
+UI: **Body: chips** → **Build the body from chips** → **Edit the inner board**: the designer shows Board mode's own canvas (the palette,
+traces, the mapping sheet) for the inner board, with a banner *Inside the chip …*; the supplier pickers are disabled. Place and wire the inner
+chips, then **Done**. Back in **Body: chips**, the table lists every inner pin: what feeds it (a trace, a constant, a chip pin) and
+**Expose as the chip's pin**: name it and it becomes a chip pin of the same type. A required inner pin that nothing feeds is red (CP-07).
+Adding a supply inside is refused at **Done** and by the publish check (CP-07: *a composite chip has no connector*). Chips nest three levels
+deep at most.
+
+```yaml
+body:
+  board:
+    chips:
+      search-box:       { use: search-box@1 }
+      filterable-table: { use: filterable-table@2 }
+    traces:
+      - { from: search-box.filter-out, to: filterable-table.filter }
+  wires:   { rows: filterable-table.rows }          # chip in pin  <- inner in pin
+  exposes: { selected: filterable-table.selected }  # chip out pin <- inner out pin
+pins:
+  in:  { rows: { role: data, type: rowset, required: true, shape: { id: { type: id, required: true } } } }
+  out: { selected: { type: id } }
+```
+
+### 3. Manual
+
+UI: a field per manual key with the prompt of what it needs (purpose, behaviour, defaults, limits, not-for, accessibility), a line per pin,
+and **Add example**, which writes a board fragment using this chip with its required columns mapped, to edit. Anything missing is red
+(CP-01).
+
+```yaml
+manual:
+  purpose: Horizontal bars of a value per label.
+  pins: { rows: "The rows; empty shows nothing.", order: "asc or desc.", selected: "Out. The label clicked." }
+  behaviour: Clicking a bar sends selected.
+  defaults: All rows, descending.
+  limits: Up to 50 bars.
+  examples:
+    - title: A book's P&L
+      board: |
+        chips:
+          c: { use: pnl-bars@1, supply: { connector: trading/trade-search }, map: { rows.label: COUNTERPARTY_NAME, rows.value: NOTIONAL } }
+  not-for: Time series (use a line).
+  accessibility: Read as a list.
+```
+
+### 4. Test bench
+
+UI: **Sample data, per pin**: rows or a document as JSON (made up from the pin's columns to start), a scalar typed; **Use a supplier** renders
+the first example as you and takes its rows (your masks). The chip paints at once from the samples; **Theme** paints it in any theme, **Every
+theme** in all ten in turn, **Phone** at a phone's width. Clicking in the chip shows the values on its out pins. **Pins in use** lists the
+in pins the body never reads and the out pins nothing drives (CP-03). **Run examples** saves the draft, then runs each manual example as a
+test: the board check (CP-05) and a real render, *passes* or *fails* with why. A composite chip is painted chip by chip through its pins.
+
+![The test bench: samples, the chip in a theme, its out pins and the examples as tests](img/ui-board/test-bench.png)
+
+### 5. Release
+
+UI: the versions and their states, **Where used** (the boards on each version), and **Compatibility** against the latest released version:
+what breaks (a pin removed or retyped). Then the steps of P2's lifecycle: **Submit** (the publish check runs on the server), **Approve** or
+**Reject** by a reviewer other than you (four eyes: approving your own chip is `403 DRS-2007`), **Publish**, **Certify**. A compatible
+version may claim `compatible-with` the earlier one, and boards follow it by themselves; a **breaking change is a new major version**: it may
+not claim it (CP-06 at the check, `DRS-2078` at publish), so boards stay on their version until their owner moves them.
+
+```yaml
+version: 2
+compatible-with: [1]     # only when nothing in 1 was removed or retyped
+```
+
+### Make a chip, and the candidates
+
+* **Make a chip** (Board mode's toolbar): tick the wired chips to put inside and name the new chip. They become a composite chip draft;
+  on the board they are replaced by one instance of it, **their supply staying outside** on that instance (its map renamed to the chip's
+  pins) and the traces to the rest of the board rewired to its pins. Their unconnected pins are the new chip's pins.
+* **Candidates** (Chip mode's palette): the board-local chips P5's converter made from pack screens (`local-*`). One opens as
+  `<pack>-<name>@1` to be made generic: its pins named for any supplier, its manual completed, then submitted like any chip.
+* A store chip picked in Chip mode opens as a copy (`<name>-mine@1`) to start from.
+
+## Finding chips
+
+The Chip Store palette searches the id, title, purpose, category and tags, and the pin types: `date`, `measure`, `rowset of trade`,
+`id of book`; every word must match, title and id matches first. The category chips (header, table, chart, ladder, map, kv, timeline,
+feed, text, control, layout) filter at once. **Fits this data** (Board mode): with a chip that has a supply selected, only the chips whose
+required data pins its attributes can feed. Starred chips and your recent ones come first (kept in this browser). Each result shows its
+title, a line of purpose, its pins, the certified badge and the manual button. `/` focuses the search, the arrows move, Enter adds.
+
+## A board looks like a circuit
+
+Traces are routed as on a schematic: straight runs with 90° bends round the boxes, a **hop** where two wires cross (they are not joined), a
+**junction dot** where one out pin fans out to several in pins. Wires are thin, in the theme's accent; hover or select one to highlight it;
+a bad wire is red and dashed. Pins are square pads on the box edge; **Grid** shows a faint grid of dots. With **Live data**, the wires into a
+chip that just got new data show the current flowing for a moment (not when the system asks for reduced motion). Wires re-route as you move
+a chip.
+
+![The book-trades board as a circuit, dark](img/ui-board/circuit-dark.png)
+
+![The same board in the light theme](img/ui-board/circuit-light.png)
 
 ## Keys
 
 | Keys | Does |
 |---|---|
+| / | Search the Chip Store; the arrows move through the results |
 | Enter on a chip in the store | Adds it (Board mode) or opens a copy (Chip mode) |
 | Arrows, Shift+arrows on a box | Move, resize |
 | Enter on an out pin, then on an in pin | Draw a trace (Esc cancels) |
 | Delete | Remove the box or the selected wire |
-| Ctrl+Z, Ctrl+Y, Ctrl+S | Undo, Redo, Save |
+| Ctrl+Z, Ctrl+Y, Ctrl+S | Undo, Redo, Save (Save draft in Chip mode) |
 | g b, g n, g c | Boards, a new board, a new chip |
 | ? | The keys |

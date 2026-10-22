@@ -30,6 +30,20 @@
   world-economy fully clean) and 47 to 24 in trading, every one left a true one-off with its reason (page controls, `source:` to another
   record, computed rows). Proof for three people per pack in the new `UiMigrationPacksTest`. Each chip is named for what it shows and findable (title, one-line purpose, a category of the fixed list, domain-neutral tags, the new optional manual key `fits`); the Chip Store text search also matches category, tags and `fits`. No pack is switched; seed chips 68 to 86.
   [UI_BOARD.md 12.4](docs/architecture/UI_BOARD.md#124-as-built-p5).
+- **UI Board P4b: the chip designer (2.7.0).** Chip mode of Build's one designer authors a chip in five steps, each also in the YAML tab:
+  the pin table (types, roles, a rowset's columns, enums, defaults, checked as you type), the body built with the screen designer's panel
+  palette and inspector over the pins (a reference that is no pin red, CP-02) or from chips, the manual form with prompts (CP-01), the test
+  bench (samples per pin or from a supplier, every theme, a phone, the manual's examples as tests, unused pins and undriven outputs) and the
+  release steps (submit, approve by another person, publish, certify; where used; a breaking change is a new major version, CP-06).
+  **Composite chips** are boards with no connectors: chips inside, data only through the chip's pins (CP-07: no supply inside, exposed pins
+  of the same type, required inner pins fed, three levels at most). **Make a chip** turns wired chips of a board into one, the supplies
+  staying outside. The converter's board-local chips are **Candidates** in the palette. *Open as board* and *Export Sutra* go through P5's
+  converter (`POST /api/v1/ui/convert/sutra`, `/convert/board`); new `POST /api/v1/ui/chips/check` and `GET /api/v1/ui/candidates`.
+  [UI_BOARD_GUIDE.md](docs/guides/UI_BOARD_GUIDE.md#chip-mode), [UI_BOARD.md 12.6](docs/architecture/UI_BOARD.md).
+- **Finding chips.** The Chip Store palette searches ids, titles, purposes, categories, tags and pin types (`rowset of trade`), title
+  matches first; category chips; *Fits this data* for the selected supplier; favourites and recent chips first; `/`, arrows, Enter.
+- **A board looks like a circuit.** Traces with 90° bends round the boxes, hops at crossings, junction dots at fan-outs, square pin pads,
+  a dot grid, live data current along the wires (not under reduced motion).
 
 - **UI Board P5: the converter and its proof (2.7.0).** Entity pages (Sutras) convert into boards: block uses become the trading
   blocks' seed chips, a panel a `panel-<kind>` seed chip carries whole becomes that chip, anything else a board-local chip (a Chip

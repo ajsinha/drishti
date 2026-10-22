@@ -34,6 +34,7 @@ from conftest import CONSOLE, FakeBackend
 from core.backend import BackendError
 
 CHIPS = CONSOLE.parent / "config" / "ui" / "chips"
+SCHEMA = json.loads((Path(__file__).resolve().parent / "fixtures" / "rachana_schema.json").read_text())    # RachanaSchema.build: the chip body's inspector
 MASK = "•••"
 CCY = ["USD", "EUR", "GBP", "JPY"]
 TRADES = [{"TRADE_ID": str(1000010 + i), "DEAL_NUMBER": f"D-{5000 + i}", "TRADE_DATE": f"2026-0{1 + i % 9}-1{i % 10}",
@@ -59,6 +60,16 @@ COMPAT = {"id": {"id", "filter", "dimension", "text"}, "dimension": {"dimension"
 def _t(spec) -> str:
     t = spec.get("type") if isinstance(spec, dict) else spec
     return str(t or "").split("<")[0]
+
+
+def pin_summary(c: dict) -> dict:
+    """The pins as P2's listing gives them for the palette (ChipStore.pinSummary)."""
+    out = {}
+    for d in ("in", "out"):
+        out[d] = [dict({"name": n, "type": _t(s)}, **{k: s[k] for k in ("role", "required", "of") if isinstance(s, dict) and k in s},
+                       **({"columns": {col: {"type": _t(cs), "required": bool(cs.get("required"))} for col, cs in s["shape"].items()}} if isinstance(s, dict) and s.get("shape") else {}))
+                  for n, s in ((c.get("pins") or {}).get(d) or {}).items()]
+    return out
 
 
 def load_chips() -> dict:
@@ -198,7 +209,7 @@ class UiBoardBackend(FakeBackend):
                     if c["chip"] not in latest or c["version"] > latest[c["chip"]]["version"]:
                         latest[c["chip"]] = c
                 return 200, [{"chip": c["chip"], "title": c.get("title"), "category": c.get("category"), "tags": c.get("tags"), "purpose": c["manual"]["purpose"],
-                              "latest": c["version"], "certified": True, "seed": True, "mine": False} for c in latest.values()], None
+                              "latest": c["version"], "certified": True, "seed": True, "mine": False, "pins": pin_summary(c)} for c in latest.values()], None
             ref = f"{parts[1]}@{parts[2]}" if len(parts) >= 3 else ""
             if len(parts) == 3 and parts[2] == "draft":
                 if method == "PUT":
@@ -221,6 +232,9 @@ class UiBoardBackend(FakeBackend):
                 r["queue"].put_nowait(None)
             return 204, None, None
         self._refuse(404, "DRS-9001", f"no stand-in route {method} {path}")
+
+    async def rachana_schema(self, ident=None):
+        return SCHEMA
 
     async def form(self, pack, kind="", ident=None):
         if pack != "trading":

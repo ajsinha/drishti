@@ -272,9 +272,45 @@ public class ChipStore implements com.ash.drishti.rachana.ui.ChipCatalog {
             m.put("certified", cert == null ? null : cert.state().version());
             m.put("seed", seeds.containsKey(name));
             m.put("mine", mine);
+            m.put("pins", pinSummary(doc));
             out.add(m);
         }
         out.sort(Comparator.comparing(m -> String.valueOf(m.get("chip"))));
+        return out;
+    }
+
+    /**
+     * The pins as the palette searches and shows them: {@code {in: [{name, type, role, required, of, columns}], out: [...]}}, a type's kind
+     * ({@code of}) included so "id of book" and "rowset of trade" find it.
+     */
+    static Map<String, Object> pinSummary(Map<String, Object> doc) {
+        Map<String, Object> pins = UiDocs.map(doc.get("pins")), out = new LinkedHashMap<>();
+        for (String dir : List.of("in", "out")) {
+            List<Map<String, Object>> list = new ArrayList<>();
+            UiDocs.map(pins.get(dir)).forEach((name, v) -> {
+                Map<String, Object> s = UiDocs.map(v), e = new LinkedHashMap<>();
+                e.put("name", name);
+                e.put("type", s.get("type"));
+                if (s.get("role") != null) {
+                    e.put("role", s.get("role"));
+                }
+                if (Boolean.TRUE.equals(s.get("required"))) {
+                    e.put("required", true);
+                }
+                if (s.get("of") != null) {
+                    e.put("of", s.get("of"));
+                }
+                Map<String, Object> shape = UiDocs.map(s.get("shape"));
+                if (!shape.isEmpty()) {
+                    Map<String, Object> cols = new LinkedHashMap<>();
+                    shape.forEach((c, cs) -> cols.put(c, Map.of("type", String.valueOf(UiDocs.map(cs).get("type")),
+                            "required", Boolean.TRUE.equals(UiDocs.map(cs).get("required")))));
+                    e.put("columns", cols);
+                }
+                list.add(e);
+            });
+            out.put(dir, list);
+        }
         return out;
     }
 

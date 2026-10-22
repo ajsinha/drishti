@@ -31,7 +31,10 @@ import java.util.regex.Pattern;
  *   <li>{@code CP-02} pure: the body reads only its pins, never a source, model, document path or URL by name;</li>
  *   <li>{@code CP-03} every out pin is driven by an {@code emits:} or {@code exposes:}, and every one names a declared out pin;</li>
  *   <li>{@code CP-04} deterministic: no clock, no random, no viewer name in the body;</li>
- *   <li>{@code CP-05} every manual example passes the board check.</li>
+ *   <li>{@code CP-05} every manual example passes the board check;</li>
+ *   <li>{@code CP-07} a composite chip (its body a board of chips, {@code body: {board, wires, exposes}}) is a board with no connectors: no
+ *       supply inside, every chip pin wired to an inner pin of the same type, every required inner in pin fed (an inner trace, a chip pin, a
+ *       constant or a default), at most {@value #MAX_DEPTH} levels of chips in chips (P4b).</li>
  * </ul>
  * Stateless and thread-safe.
  */
@@ -43,6 +46,9 @@ public final class ChipPublishCheck {
     static final Set<String> SLOT_BUILTINS = Set.of("title");
     /** {@code @...} names that are not pins: the current row's name and value, the filtered rows, the row index. */
     static final Set<String> AT_BUILTINS = Set.of("name", "value", "filtered", "row", "index", "count", "total");
+
+    /** How deep chips may sit in chips (a composite inside a composite inside a composite). */
+    public static final int MAX_DEPTH = 3;
 
     private static final Pattern SLOT = Pattern.compile("%\\{([A-Za-z][\\w-]*)");
     private static final Pattern AT = Pattern.compile("(?<![\\w@.])@([A-Za-z][\\w-]*)");
@@ -66,6 +72,7 @@ public final class ChipPublishCheck {
         manual(chip, p);
         Set<String> emitted = new LinkedHashSet<>();
         body(chip, chip.body(), "body", p, emitted);
+        composite(chip, others, p);
         for (String out : chip.outPins().keySet()) {
             if (!emitted.contains(out)) {
                 p.add(UiProblem.error("CP-03", "pins.out." + out, "out pin '" + out + "' is never driven by the body",
@@ -93,6 +100,82 @@ public final class ChipPublishCheck {
             }
         }
         return p;
+    }
+
+    /** CP-07: the rules of a composite chip, "a board with no connectors". */
+    static void composite(ChipDoc chip, ChipCatalog others, List<UiProblem> p) {
+        JsonNode body = chip.body();
+        if (body == null || !body.path("board").isObject()) {
+            return;
+        }
+        JsonNode inner = body.path("board").path("chips"), wires = body.path("wires"), exposes = body.path("exposes");
+        Set<String> fed = new LinkedHashSet<>();
+        body.path("board").path("traces").forEach(t -> fed.add(t.path("to").asText()));
+        wires.fields().forEachRemaining(e -> fed.add(e.getValue().asText()));
+        ChipCatalog cat = others == null ? ChipCatalog.empty() : others;
+        inner.fields().forEachRemaining(e -> {
+            String inst = e.getKey(), at = "body.board.chips." + inst;
+            JsonNode i = e.getValue();
+            if (i.has("supply")) {
+                p.add(UiProblem.error("CP-07", at + ".supply", "a composite chip has no connector: " + inst + " names a supply, but data enters a chip only through its pins",
+                        "remove the supply and expose the pin as a chip pin (body.wires)"));
+            }
+            ChipDoc c = ChipRef.parse(i.path("use").asText(null)).flatMap(cat::find).map(ChipCatalog.Entry::doc).orElse(null);
+            if (c == null) {
+                p.add(UiProblem.error("CP-07", at + ".use", "no chip " + i.path("use").asText() + " in the Chip Store", "use a published chip, or your own draft"));
+                return;
+            }
+            c.inPins().forEach((pin, s) -> {
+                if (s.required() && !s.hasDefault() && !fed.contains(inst + "." + pin) && !i.path("controls").has(pin)) {
+                    p.add(UiProblem.error("CP-07", at + "." + pin, "the required pin " + inst + "." + pin + " is not fed: expose it as a chip pin, or trace it from an inner chip",
+                            "add body.wires.<chip pin>: " + inst + "." + pin));
+                }
+            });
+            if (depth(c, cat, 1) >= MAX_DEPTH) {
+                p.add(UiProblem.error("CP-07", at + ".use", "chips go " + MAX_DEPTH + " levels deep at most: " + i.path("use").asText() + " already holds chips "
+                        + (MAX_DEPTH - 1) + " levels deep", null));
+            }
+        });
+        wired(chip, wires, inner, cat, true, p);
+        wired(chip, exposes, inner, cat, false, p);
+    }
+
+    private static void wired(ChipDoc chip, JsonNode map, JsonNode inner, ChipCatalog cat, boolean in, List<UiProblem> p) {
+        String dir = in ? "in" : "out";
+        map.fields().forEachRemaining(e -> {
+            String at = "pins." + dir + "." + e.getKey(), ref = e.getValue().asText();
+            int dot = ref.indexOf('.');
+            JsonNode i = dot < 0 ? null : inner.get(ref.substring(0, dot));
+            if (i == null) {
+                p.add(UiProblem.error("CP-07", at, e.getKey() + " is wired to " + ref + ", which is not an inner chip", "write <instance>.<pin>"));
+                return;
+            }
+            ChipDoc c = ChipRef.parse(i.path("use").asText(null)).flatMap(cat::find).map(ChipCatalog.Entry::doc).orElse(null);
+            if (c == null) {
+                return;
+            }
+            PinSpec inner2 = (in ? c.inPins() : c.outPins()).get(ref.substring(dot + 1));
+            PinSpec own = (in ? chip.inPins() : chip.outPins()).get(e.getKey());
+            if (inner2 == null) {
+                p.add(UiProblem.error("CP-07", at, e.getKey() + " is wired to " + ref + ", which is no " + dir + " pin of " + c.ref(), null));
+            } else if (own == null) {
+                p.add(UiProblem.error("CP-07", at, "the chip pin " + e.getKey() + " is wired but not declared under pins." + dir, null));
+            } else if (own.type() != null && inner2.type() != null && own.type().type() != inner2.type().type()) {
+                p.add(UiProblem.error("CP-07", at, "the chip pin " + e.getKey() + " is " + own.type().type() + " but " + ref + " is " + inner2.type().type(),
+                        "give it the inner pin's type"));
+            }
+        });
+    }
+
+    /** How many levels of chips a chip holds (1 for a chip of panels). */
+    static int depth(ChipDoc c, ChipCatalog cat, int level) {
+        if (c.body() == null || !c.body().path("board").isObject() || level > MAX_DEPTH + 1) {
+            return level;
+        }
+        int[] max = {level};
+        c.body().path("board").path("chips").forEach(i -> ChipRef.parse(i.path("use").asText(null)).flatMap(cat::find)
+                .ifPresent(x -> max[0] = Math.max(max[0], depth(x.doc(), cat, level + 1))));
+        return max[0];
     }
 
     private static void manual(ChipDoc chip, List<UiProblem> p) {
@@ -145,6 +228,9 @@ public final class ChipPublishCheck {
                 String k = e.getKey();
                 JsonNode v = e.getValue();
                 String here = at + "." + k;
+                if (k.equals("supply") && at.matches("body\\.board\\.chips\\.[^.]+")) {
+                    return;                                              // CP-07 says it: a composite chip has no connector
+                }
                 if (SOURCE_KEYS.contains(k)) {
                     p.add(UiProblem.error("CP-02", here, "a chip body may not name a " + k + "; it reads only its pins", "add a data pin and let the board supply it"));
                     return;
