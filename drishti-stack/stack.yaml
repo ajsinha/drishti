@@ -72,4 +72,5 @@ console:
   servers: [drishti-main]          # the console is given these alone and learns the other servers from the cluster
   settings:
     DRISHTI_CONSOLE_HOST: 0.0.0.0
+    DRISHTI_UI_BOARDS: "true"           # the Board designer (UI_BOARD_GUIDE.md); pages stay on their Sutras (config/ui/ui.yaml)
     DRISHTI_PACKS: core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets
