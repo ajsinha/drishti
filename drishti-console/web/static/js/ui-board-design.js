@@ -166,6 +166,7 @@
       return;
     }
     current = U.render($('[data-ub-canvas]'), { board: docForServer() }, { device: 'desktop', status, bodyOf: (inst) => C.boxOf(inst),
+      onEvent: (ev, d) => { if ((ev === 'chip' || ev === 'frame') && d && d.instance && (ev === 'frame' || d.state === 'data')) { C.flow(d.instance); } },
       onRefused: (b) => { if (b.problems) { D.problems = b.problems; showProblems(); } } });
   }
 
@@ -517,6 +518,7 @@
     C.draw();
     if (!phone) { liveRender(); }
   });
+  $('[data-ub-grid]').addEventListener('change', (e) => { D.grid = e.target.checked; C.draw(); });
   $('[data-ub-live]').addEventListener('change', (e) => { D.live = e.target.checked; C.draw(); liveRender(); });
   nameIn.addEventListener('input', () => { showProblems(); });
   nameIn.addEventListener('change', () => { D.doc.board = nameIn.value.trim(); writeYaml(); });

@@ -48,6 +48,7 @@
     <button type="button" class="btn-pill btn-ghost" data-ub-redo title="Redo (Ctrl+Y)" disabled><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Redo</button>
     <button type="button" class="btn-pill btn-ghost" data-ub-device aria-pressed="false"><i class="bi bi-phone" aria-hidden="true"></i> Phone</button>
     <label class="ub-field-inline"><input type="checkbox" data-ub-live> Live data</label>
+    <label class="ub-field-inline" title="A faint grid of dots, as on a circuit board"><input type="checkbox" data-ub-grid checked> Grid</label>
     <select class="studio-select" data-ub-revisions aria-label="Revisions"><option value="">Revisions…</option></select>
     <button type="button" class="btn-pill btn-ghost" data-ub-share><i class="bi bi-share" aria-hidden="true"></i> Share</button>
     <button type="button" class="btn-pill btn-ghost" data-ub-copy><i class="bi bi-files" aria-hidden="true"></i> Copy to workspace</button>
@@ -155,4 +156,4 @@
     <div class="ub-row"><button class="btn-pill btn-accent">Copy</button><button type="button" class="btn-pill btn-ghost" data-cancel>Cancel</button></div></form></dialog>
 </div>
 {% endblock %}
-{% block ub_scripts %}<script src="/static/js/studio-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/studio-assist.js?v={{ ASSET_V }}"></script>{% for f in ["ops", "yamlmodel", "drag", "palette", "expr", "forms", "inspector"] %}<script src="/static/js/build/{{ f }}.js?v={{ ASSET_V }}"></script>{% endfor %}<script src="/static/js/ui-board-canvas.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-design.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-palette.js?v={{ ASSET_V }}"></script>{% for f in ["ui-chip-model", "ui-chip-editor", "ui-chip-pins", "ui-chip-body", "ui-chip-bench", "ui-chip-release", "ui-chip-module"] %}<script src="/static/js/{{ f }}.js?v={{ ASSET_V }}"></script>{% endfor %}{% endblock %}
+{% block ub_scripts %}<script src="/static/js/studio-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/studio-assist.js?v={{ ASSET_V }}"></script>{% for f in ["ops", "yamlmodel", "drag", "palette", "expr", "forms", "inspector"] %}<script src="/static/js/build/{{ f }}.js?v={{ ASSET_V }}"></script>{% endfor %}<script src="/static/js/ui-board-route.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-canvas.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-design.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-palette.js?v={{ ASSET_V }}"></script>{% for f in ["ui-chip-model", "ui-chip-editor", "ui-chip-pins", "ui-chip-body", "ui-chip-bench", "ui-chip-release", "ui-chip-module"] %}<script src="/static/js/{{ f }}.js?v={{ ASSET_V }}"></script>{% endfor %}{% endblock %}

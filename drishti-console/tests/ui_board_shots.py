@@ -13,7 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The UI Board guide's pictures (docs/guides/img/ui-board/), synthetic data only, from the stand-in server of ui_board_backend.py:
-the designer in Board mode with the book-trades board, a rendered board after a selection, and a bad wire in red.
+the designer in Board mode with the book-trades board, a rendered board after a selection, a bad wire in red, the board as a
+circuit in a dark and a light theme, and (P4b) the chip designer's Chip mode and its test bench.
 
     python tests/ui_board_shots.py"""
 import sys
@@ -27,13 +28,24 @@ from playwright.sync_api import sync_playwright  # noqa: E402
 
 import test_ui_board_browser as T  # noqa: E402
 from ui_board_backend import serve  # noqa: E402
+from ui_chip_backend import UiChipBackend  # noqa: E402
 
 OUT = HERE.parent.parent / "docs" / "guides" / "img" / "ui-board"
 
 
+CHIP = {"rachana": 1, "chip": "pnl-bars", "version": 1, "title": "P&L bars", "category": "charts", "tags": ["pnl", "bars"],
+        "manual": {"purpose": "Horizontal bars of a value per label.", "pins": {"rows": "The rows; empty shows nothing.", "selected": "Out. The label clicked."},
+                   "behaviour": "Clicking a bar sends selected.", "defaults": "All rows.", "limits": "Up to 50 bars.",
+                   "examples": [{"title": "A book's P&L", "board": "chips:\n  c: { use: pnl-bars@1, supply: { connector: trading/trade-search }, map: { rows.label: COUNTERPARTY_NAME, rows.value: NOTIONAL } }\n"}],
+                   "not-for": "Time series (use a line).", "accessibility": "Read as a list."},
+        "pins": {"in": {"rows": {"role": "data", "type": "rowset", "required": True, "shape": {"label": {"type": "dimension", "required": True}, "value": {"type": "measure", "required": True}}}},
+                 "out": {"selected": {"type": "dimension"}}},
+        "body": {"panels": [{"id": "bars", "kind": "hbar", "title": "%{title}", "rows": "@rows", "label": "@.label", "value": "@.value", "on-select": {"emits": "selected", "value": "@.label"}}]}}
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    url, be, stop = serve()
+    url, be, stop = serve(UiChipBackend())
     try:
         with sync_playwright() as p:
             b = p.chromium.launch()
@@ -59,6 +71,26 @@ def main():
             page.wait_for_selector('.ub-chip[data-instance="ticket"] .ub-kv')
             page.wait_for_timeout(300)
             page.screenshot(path=str(OUT / "rendered-board.png"))
+            T.put_board(be, "book-circuit", T.BOOK)
+            for theme, name in (("terminal", "circuit-dark.png"), ("light", "circuit-light.png")):
+                page.goto(url + "/build/board/book-circuit")
+                page.wait_for_selector("svg[data-ub-wires] path.ub-wire[data-trace]", state="attached")
+                page.evaluate("t => { document.documentElement.setAttribute('data-theme', t); window.drishtiUiBoard.canvas.wires(); }", theme)
+                page.wait_for_timeout(300)
+                page.screenshot(path=str(OUT / name))
+            page.evaluate("document.documentElement.setAttribute('data-theme', 'terminal')")
+            page.goto(url + "/build/chip/new")
+            page.wait_for_selector("[data-ce-add-pin='in']")
+            page.evaluate("d => window.drishtiUiBoard.chipEditor.load(d, 'A chip: pins, body, manual.')", CHIP)
+            page.locator("[data-ce-step='body']").click()
+            page.locator("[data-ce-panel='bars']").click()
+            page.wait_for_selector("[data-ce-inspector] .wb-field")
+            page.wait_for_timeout(400)
+            page.screenshot(path=str(OUT / "chip-mode.png"))
+            page.locator("[data-ce-step='bench']").click()
+            page.wait_for_selector("[data-ce-preview] .ub-body *")
+            page.wait_for_timeout(400)
+            page.screenshot(path=str(OUT / "test-bench.png"))
             b.close()
     finally:
         stop()
