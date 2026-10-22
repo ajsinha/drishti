@@ -59,6 +59,8 @@ public final class RachanaSchema {
         p.put("domain", text("The folder it belongs to (defaults to its parent folder)"));
         p.put("description", text("One paragraph: what this layout shows and for which entities"));
         p.put("notes", text("Longer notes for authors and reviewers (plain text)"));
+        p.put("doc", Map.of("type", "object", "description", "The docstring a component browser and an AI agent read: summary, description, params, emits, "
+                + "expects, examples, since (SUTRA_NEXT.md); lint warns when it is missing or incomplete (DRS-2055)"));
         p.put("match", object(Map.of(
                 "kind", kinds.isEmpty() ? text("The entity kind") : Map.of("type", "string", "enum", List.copyOf(new TreeSet<>(kinds)),
                         "description", "The entity kind"),

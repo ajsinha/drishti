@@ -1,0 +1,60 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The shared fragment library (SUTRA_NEXT.md): hand-written, versioned, used as { use: ranked-bars@1, with: {...} }.
+rachana: 1
+fragment: ranked-bars
+version: 1
+description: "Horizontal bars, one a row, labelled and sized by a value: the largest contributors at a glance."
+params:
+  id: bars
+  title: By contribution
+  rows: $.ROWS
+  label: LABEL
+  value: VALUE
+  fmt: signed0
+  code: ''
+  key: ''
+  area: ''
+doc:
+  summary: "Horizontal bars, one a row, labelled and sized by a value: the largest contributors at a glance."
+  description: >-
+    One horizontal bar a row of a list, labelled by one field and sized by another (P&L by book, add-on by asset class,
+    expected dividends by year). Bars keep the order of the list, so sort the rows upstream for a ranking.
+  params:
+    id: { type: id, default: bars, meaning: "The panel id, unique on the screen" }
+    title: { type: text, default: By contribution, meaning: "The title over the bars" }
+    rows: { type: expression, default: $.ROWS, meaning: "The list of rows, one bar each" }
+    label: { type: field, default: LABEL, meaning: "The field of a row naming its bar" }
+    value: { type: field, default: VALUE, meaning: "The field of a row giving its bar length" }
+    fmt: { type: format, default: signed0, meaning: "The named format of the value" }
+    code: { type: key, default: '', meaning: "The panel's mnemonic code (CRV, REFS), typed in the command line to jump to it; none when empty" }
+    key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
+  emits: []
+  expects: []
+  examples:
+    - { use: ranked-bars@1, with: { id: by-book, title: "P&L by book", rows: $.BY_BOOK, label: BOOK, value: PNL, key: F2 } }
+  since: "2.7.0"
+panels:
+  - id: %{id}
+    kind: hbar
+    title: "%{title}"
+    code: %{code}
+    key: %{key}
+    area: %{area}
+    rows: %{rows}
+    label: %{label}
+    value: %{value}
+    fmt: %{fmt}

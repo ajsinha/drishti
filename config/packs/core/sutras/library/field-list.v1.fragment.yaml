@@ -1,0 +1,52 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The shared fragment library (SUTRA_NEXT.md): hand-written, versioned, used as { use: field-list@1, with: {...} }.
+rachana: 1
+fragment: field-list
+version: 1
+description: "Every field of one object as label and value pairs, in the order the record holds them."
+params:
+  id: fields
+  title: Details
+  rows: $
+  code: ''
+  key: ''
+  area: ''
+doc:
+  summary: "Every field of one object as label and value pairs, in the order the record holds them."
+  description: >-
+    A list of labels and values for one object of the record (conventions, terms, settings): every field it holds,
+    labelled from the pack's vocabulary and formatted by its inferred format. Use it where the fields vary by record and a
+    fixed column list would go stale.
+  params:
+    id: { type: id, default: fields, meaning: "The panel id, unique on the screen" }
+    title: { type: text, default: Details, meaning: "The title over the list" }
+    rows: { type: expression, default: $, meaning: "The object whose fields are listed, e.g. $.CONVENTIONS" }
+    code: { type: key, default: '', meaning: "The panel's mnemonic code (CRV, REFS), typed in the command line to jump to it; none when empty" }
+    key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
+  emits: []
+  expects: []
+  examples:
+    - { use: field-list@1, with: { id: pair, title: Conventions, rows: $.CONVENTIONS, area: right } }
+  since: "2.7.0"
+panels:
+  - id: %{id}
+    kind: kv
+    title: "%{title}"
+    code: %{code}
+    key: %{key}
+    area: %{area}
+    rows: %{rows}

@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
- * Shared panel blocks: panels written once in a block file ({@code <name>.v<N>.block.yaml} beside the Sutras) and used by many
+ * Shared panel blocks and the fragment library: panels written once in a block file ({@code <name>.v<N>.block.yaml} beside the Sutras) and used by many
  * Sutras, so a pack whose products share a layout (a deal ticket, legs side by side, events) keeps it in one place.
  *
  * <pre>
@@ -53,7 +53,9 @@ import java.util.stream.Stream;
  * </pre>
  *
  * A use is replaced by the block's panels, in order, before the Sutra is checked, so the panels are linted, matched and drawn as if
- * they had been written in place. {@code @1} names the block's version (without one, the newest); {@code with} sets its parameters
+ * they had been written in place. A fragment ({@code <name>.v<N>.fragment.yaml}, {@code fragment: <name>}, the shared library in
+ * the core pack's {@code sutras/library}) is a block whose {@code doc:} is complete ({@link SutraDocstring}, {@code DRS-2055}); it is
+ * used the same way. {@code @1} names the block's version (without one, the newest); {@code with} sets its parameters
  * (an unknown one, an unknown block or a block that uses another is {@code DRS-2048}). The library is a snapshot replaced whole when
  * the Sutra folders are read again; a parse reads the snapshot of that moment. Thread-safe.
  */
@@ -62,7 +64,7 @@ public final class SutraBlocks {
     /** A block's problem: unknown, badly written, a parameter it does not declare. */
     public static final String BLOCK = "DRS-2048";
     private static final Pattern PARAM = Pattern.compile("%\\{([a-z][a-z0-9-]*)}");
-    private static final Pattern FILE = Pattern.compile("(.+)\\.v(\\d+)\\.block\\.yaml");
+    private static final Pattern FILE = Pattern.compile("(.+)\\.v(\\d+)\\.(block|fragment)\\.yaml");
     private static final PositionalYamlReader READER = new PositionalYamlReader();
 
     /**
@@ -85,6 +87,20 @@ public final class SutraBlocks {
             }
         }
 
+        /** Whether it is a fragment of the library ({@code <name>.v<N>.fragment.yaml}, {@code fragment: <name>}): its doc is checked strictly. */
+        public boolean fragment() {
+            return file != null && file.endsWith(".fragment.yaml") || text.startsWith("fragment:") || text.contains("\nfragment:");
+        }
+
+        /** Its {@code doc:} as plain maps, lists and text (empty when it has none). */
+        public Map<String, Object> doc() {
+            try {
+                return SutraDocstring.plain(parse(text.replace("%{", "pXq{"), file));
+            } catch (SutraException e) {
+                return Map.of();
+            }
+        }
+
         /** {@code name@version}. */
         public String ref() {
             return name + "@" + version;
@@ -93,18 +109,21 @@ public final class SutraBlocks {
 
     private static final AtomicReference<Map<String, TreeMap<Integer, Block>>> LIBRARY = new AtomicReference<>(Map.of());
     private static final AtomicReference<List<SutraProblem>> PROBLEMS = new AtomicReference<>(List.of());
+    private static final AtomicReference<List<SutraProblem>> WARNINGS = new AtomicReference<>(List.of());
 
     private SutraBlocks() {}
 
-    /** Whether a file is a block file. */
+    /** Whether a file is a block file ({@code .block.yaml}) or a fragment of the library ({@code .fragment.yaml}). */
     public static boolean isBlockFile(Path f) {
-        return f.getFileName() != null && f.getFileName().toString().endsWith(".block.yaml");
+        String n = f.getFileName() == null ? "" : f.getFileName().toString();
+        return n.endsWith(".block.yaml") || n.endsWith(".fragment.yaml");
     }
 
     /** Reads every block file under the folders (the library becomes exactly these); returns the problems of the files that are not blocks. */
     public static List<SutraProblem> load(Collection<Path> dirs) {
         Map<String, TreeMap<Integer, Block>> next = new TreeMap<>();
         List<SutraProblem> problems = new ArrayList<>();
+        List<SutraProblem> warnings = new ArrayList<>();
         for (Path dir : dirs) {
             if (!Files.isDirectory(dir)) {
                 continue;
@@ -114,6 +133,9 @@ public final class SutraBlocks {
                     try {
                         Block b = read(Files.readString(f, StandardCharsets.UTF_8), f.getFileName().toString(), f.toString());
                         next.computeIfAbsent(b.name(), k -> new TreeMap<>()).put(b.version(), b);   // a later folder (a more specific pack) wins
+                        if (!b.fragment()) {                           // an older block: its doc is a warning today
+                            warnings.addAll(SutraDocstring.checkSutra(parse(b.text().replace("%{", "pXq{"), b.file()), "block " + b.name(), f.toString()));
+                        }
                     } catch (SutraException e) {
                         problems.addAll(e.problems());
                     } catch (IOException e) {
@@ -125,7 +147,17 @@ public final class SutraBlocks {
             }
         }
         LIBRARY.set(Map.copyOf(next));
+        for (TreeMap<Integer, Block> versions : next.values()) {
+            for (Block b : versions.values()) {
+                if (b.fragment() && b.text().contains("use:")) {
+                    List<SutraProblem> inner = new ArrayList<>();
+                    expand(List.of(new PNode(Map.of("use", new PNode(b.ref(), 1, 1)), 1, 1)), b.path(), inner);
+                    problems.addAll(inner);
+                }
+            }
+        }
         PROBLEMS.set(List.copyOf(problems));
+        WARNINGS.set(List.copyOf(warnings));
         return problems;
     }
 
@@ -139,6 +171,11 @@ public final class SutraBlocks {
         return PROBLEMS.get();
     }
 
+    /** The warnings of the block files read last: an older block without a complete {@code doc:} ({@code DRS-2055}). */
+    public static List<SutraProblem> warnings() {
+        return WARNINGS.get();
+    }
+
     /** One block file's content, checked: {@code rachana: 1}, {@code block}, {@code version}, {@code panels} (a list), {@code params} (scalars). */
     public static Block read(String text, String file) {
         return read(text, file, file);
@@ -149,28 +186,47 @@ public final class SutraBlocks {
         PNode root = parse(text.replace("%{", "pXq{"), file);         // parameters are filled later; read the shape with them masked
         Map<String, PNode> m = root.map();
         Matcher fm = FILE.matcher(file);
-        String name = m.get("block") == null ? null : m.get("block").text();
+        boolean fragment = file.endsWith(".fragment.yaml") || m.containsKey("fragment");
+        String head = fragment ? "fragment" : "block";
+        String name = m.get(head) == null ? null : m.get(head).text();
         if (name == null || !name.matches("[a-z][a-z0-9-]{1,63}")) {
-            throw new SutraException(List.of(problem("a block file names its block: block: <lower-case-kebab name>", file, 1, 1)));
+            throw new SutraException(List.of(problem("a " + head + " file names its " + head + ": " + head + ": <lower-case-kebab name>", file, 1, 1)));
         }
         int version = m.get("version") == null || m.get("version").text() == null ? 1 : Integer.parseInt(m.get("version").text());
         if (fm.matches() && (!fm.group(1).equals(name) || Integer.parseInt(fm.group(2)) != version)) {
             throw new SutraException(List.of(problem("the file " + file + " holds block " + name + " version " + version
-                    + ": name it " + name + ".v" + version + ".block.yaml", file, 1, 1)));
+                    + ": name it " + name + ".v" + version + "." + head + ".yaml", file, 1, 1)));
         }
         PNode panels = m.get("panels");
         if (panels == null || !panels.isList() || panels.list().isEmpty()) {
             throw new SutraException(List.of(problem("block " + name + " needs panels: a list of panels", file, 1, 1)));
         }
+        List<String> inner = new ArrayList<>();
         for (PNode p : panels.list()) {
             if (p.map().containsKey("use")) {
-                throw new SutraException(List.of(problem("block " + name + " uses another block: a block holds panels only", file, p.line(), p.column())));
+                String ref = p.map().get("use").text() == null ? "" : p.map().get("use").text().trim();
+                if (!fragment) {
+                    throw new SutraException(List.of(problem("block " + name + " uses another block: a block holds panels only (a fragment may use fragments)",
+                            file, p.line(), p.column())));
+                }
+                if (!ref.matches("[a-z][a-z0-9-]{1,63}@[0-9]+")) {
+                    throw new SutraException(List.of(problem("fragment " + name + " uses " + ref + " without a version: a composite pins its inner "
+                            + "fragments (use: name@N)", file, p.line(), p.column())));
+                }
+                inner.add(ref);
             }
         }
         Map<String, String> params = new LinkedHashMap<>();
         PNode ps = m.get("params");
         if (ps != null) {
             ps.map().forEach((k, v) -> params.put(k, v.text() == null ? "" : v.text().replace("pXq{", "%{")));
+        }
+        if (fragment) {                                                // a fragment of the library carries a complete doc: (strict)
+            List<SutraProblem> doc = new ArrayList<>(SutraDocstring.checkFragment(root, name, params, file));
+            doc.addAll(SutraDocstring.checkUses(root, name, inner, file));
+            if (!doc.isEmpty()) {
+                throw new SutraException(doc);
+            }
         }
         return new Block(name, version, text, Map.copyOf(params), file, path);
     }
@@ -208,6 +264,13 @@ public final class SutraBlocks {
      * without a use comes back as it is.
      */
     public static List<PNode> expand(List<PNode> panels, String file, List<SutraProblem> problems) {
+        return expand(panels, file, problems, new ArrayList<>());
+    }
+
+    /** The deepest a use may nest: a Sutra's use of a composite fragment that uses fragments that use fragments. */
+    public static final int MAX_DEPTH = 3;
+
+    private static List<PNode> expand(List<PNode> panels, String file, List<SutraProblem> problems, List<String> chain) {
         if (panels.stream().noneMatch(p -> p.map().containsKey("use"))) {
             return panels;
         }
@@ -224,6 +287,14 @@ public final class SutraBlocks {
             Block b = null;
             if (versions != null) {
                 b = ref.contains("@") ? versions.get(parseVersion(ref.substring(ref.indexOf('@') + 1))) : versions.lastEntry().getValue();
+            }
+            if (b != null && chain.contains(b.name())) {
+                problems.add(problem("fragment " + b.name() + " uses itself through " + String.join(" > ", chain) + " > " + b.name(), file, p.line(), p.column()));
+                continue;
+            }
+            if (b != null && chain.size() >= MAX_DEPTH) {
+                problems.add(problem("fragments nest at most " + MAX_DEPTH + " deep: " + String.join(" > ", chain) + " > " + b.name(), file, p.line(), p.column()));
+                continue;
             }
             if (b == null) {
                 problems.add(problem("no block " + ref + (LIBRARY.get().isEmpty() ? " (no block files are loaded)" : " (blocks: "
@@ -259,7 +330,10 @@ public final class SutraBlocks {
             }
             pm.appendTail(filled);
             try {
-                out.addAll(parse(filled.toString(), b.file()).map().get("panels").list());
+                List<PNode> brought = parse(filled.toString(), b.file()).map().get("panels").list();
+                List<String> deeper = new ArrayList<>(chain);
+                deeper.add(b.name());
+                out.addAll(expand(brought, b.file(), problems, deeper));         // a composite fragment's own uses, one level down
             } catch (SutraException e) {
                 problems.addAll(e.problems());
             }

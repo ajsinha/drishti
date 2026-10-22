@@ -1,0 +1,66 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The shared fragment library (SUTRA_NEXT.md): hand-written, versioned, used as { use: cashflow-ladder@1, with: {...} }.
+rachana: 1
+fragment: cashflow-ladder
+version: 1
+description: "Cash flows down a ladder by date: payment date, type, amount and currency."
+params:
+  id: flows
+  title: Cash flows
+  rows: $.CASHFLOWS
+  date: PAYMENT_DATE
+  type: FLOW_TYPE
+  amount: AMOUNT
+  amount-fmt: signed0
+  currency: CURRENCY
+  code: ''
+  key: ''
+  area: ''
+doc:
+  summary: "Cash flows down a ladder by date: payment date, type, amount and currency."
+  description: >-
+    A trade's or a portfolio's cash flows, one rung a flow in date order: the payment date, its type (coupon, notional,
+    fee), the signed amount and its currency. The field names are parameters, so any source's flows fit.
+  params:
+    id: { type: id, default: flows, meaning: "The panel id, unique on the screen" }
+    title: { type: text, default: Cash flows, meaning: "The title over the ladder" }
+    rows: { type: expression, default: $.CASHFLOWS, meaning: "The list of flows" }
+    date: { type: field, default: PAYMENT_DATE, meaning: "The field holding the payment date" }
+    type: { type: field, default: FLOW_TYPE, meaning: "The field naming the kind of flow" }
+    amount: { type: field, default: AMOUNT, meaning: "The field holding the signed amount" }
+    amount-fmt: { type: format, default: signed0, meaning: "The named format of the amount" }
+    currency: { type: field, default: CURRENCY, meaning: "The field holding the currency" }
+    code: { type: key, default: '', meaning: "The panel's mnemonic code (CRV, REFS), typed in the command line to jump to it; none when empty" }
+    key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
+  emits: []
+  expects: []
+  examples:
+    - { use: cashflow-ladder@1, with: { rows: $.FLOWS, date: PAY_DATE, type: TYPE, key: F4 } }
+  since: "2.7.0"
+panels:
+  - id: %{id}
+    kind: ladder
+    title: "%{title}"
+    code: %{code}
+    key: %{key}
+    area: %{area}
+    rows: %{rows}
+    columns:
+      - { label: Date, bind: "@.%{date}", fmt: date }
+      - { label: Type, bind: "@.%{type}" }
+      - { label: Amount, bind: "@.%{amount}", fmt: "%{amount-fmt}", tone: sign }
+      - { label: Currency, bind: "@.%{currency}" }

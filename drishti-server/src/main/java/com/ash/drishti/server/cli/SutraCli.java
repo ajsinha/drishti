@@ -178,6 +178,7 @@ public final class SutraCli {
         boolean bad = false;
         List<Unit> units = units(a.paths());
         List<Sutra> parsed = new ArrayList<>();
+        int undocumented = 0;
         for (Unit u : units) {
             if (problems(u) == null) {
                 parsed.add(s.sutras().check(u.text()));
@@ -193,6 +194,10 @@ public final class SutraCli {
                 continue;
             }
             bad |= helpWarnings(u, s.sutras().check(u.text()), parsed, a, cases);
+            undocumented += docWarnings(u);
+        }
+        if (undocumented > 0) {          // a warning only, even with --strict, until the Sutras carry their docstrings
+            err.println("warning DRS-2055 " + undocumented + " of " + units.size() + " Sutras have no doc: block (SUTRA_NEXT.md, The doc: docstring)");
         }
         bad |= historyBlocks(a.paths(), cases);
         return bad ? PROBLEMS : OK;
@@ -231,6 +236,29 @@ public final class SutraCli {
 
     /** The server's default {@code drishti.history.max-days}: the bound a pack's {@code max-days} is checked against offline. */
     static final int HISTORY_MAX_DAYS = 366;
+
+    /**
+     * The docstring warnings (DRS-2055) of one Sutra: an incomplete {@code doc:} is printed line by line; a missing one is counted
+     * (1) and summed into one line, so a pack without docstrings yet is not drowned in warnings.
+     */
+    private int docWarnings(Unit u) {
+        com.ash.drishti.rachana.parse.PNode root;
+        try {
+            root = new com.ash.drishti.rachana.parse.PositionalYamlReader().read(u.text(), new ArrayList<>());
+        } catch (IOException | RuntimeException e) {
+            return 0;
+        }
+        if (root == null || !root.isMap()) {
+            return 0;
+        }
+        if (!root.map().containsKey("doc")) {
+            return 1;
+        }
+        for (com.ash.drishti.rachana.SutraProblem w : com.ash.drishti.rachana.parse.SutraDocstring.checkSutra(root, "sutra " + u.stem(), u.file().toString())) {
+            err.println(u.file() + ":" + w.location().line() + " warning " + w.code() + " " + w.message());
+        }
+        return 0;
+    }
 
     /** The help warnings (DRS-2045 to 2047) of one Sutra; true when they fail the run (only with {@code --strict}). */
     private boolean helpWarnings(Unit u, Sutra sutra, List<Sutra> run, CliArgs a, List<Case> cases) throws IOException {
@@ -585,9 +613,23 @@ public final class SutraCli {
                 dirs.add(Files.isDirectory(abs) ? abs : abs.getParent());
             }
         }
+        java.util.Set<Path> library = new java.util.LinkedHashSet<>();   // the shared fragment library (core pack) every pack may use
+        for (Path d : dirs) {
+            Path lib = d == null || d.getParent() == null || d.getParent().getParent() == null ? null
+                    : d.getParent().getParent().resolve("core").resolve("sutras").resolve("library");
+            if (lib != null && Files.isDirectory(lib) && dirs.stream().noneMatch(x -> x != null && lib.startsWith(x))) {
+                library.add(lib);
+            }
+        }
+        library.addAll(dirs);
+        dirs.clear();
+        dirs.addAll(library);
         if (dirs.stream().anyMatch(d -> d != null && hasBlocks(d))) {
             for (com.ash.drishti.rachana.SutraProblem p : com.ash.drishti.rachana.parse.SutraBlocks.load(dirs.stream().filter(java.util.Objects::nonNull).toList())) {
                 err.println(p.location().file() + ":" + p.location().line() + " " + p.code() + " " + p.message());   // a block that does not read
+            }
+            for (com.ash.drishti.rachana.SutraProblem w : com.ash.drishti.rachana.parse.SutraBlocks.warnings()) {
+                err.println(w.location().file() + ":" + w.location().line() + " warning " + w.code() + " " + w.message());   // an older block's doc
             }
         }
     }

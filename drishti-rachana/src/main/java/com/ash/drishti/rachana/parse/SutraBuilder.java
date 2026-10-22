@@ -51,7 +51,7 @@ final class SutraBuilder {
     private static final Pattern FKEY = Pattern.compile("F([1-9]|1[0-2])");
     private static final int LANGUAGE = SutraParser.LANGUAGE;
     private static final Set<String> TOP = Set.of("rachana", "sutra", "version", "domain", "match", "title", "strip", "panels", "keys",
-            "description", "notes", "controls");
+            "description", "notes", "controls", "doc");
     private static final Set<String> PANEL = Set.of("id", "kind", "title", "key", "code", "area", "infer", "columns", "body", "panels", "description",
             Panel.SPAN, Panel.HEIGHT);
     private static final Set<String> STRIP = Set.of("label", "bind", "fmt", "tone", "emphasis");

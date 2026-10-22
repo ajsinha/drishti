@@ -1,0 +1,74 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The shared fragment library (SUTRA_NEXT.md): hand-written, versioned, used as { use: curve-table@1, with: {...} }.
+rachana: 1
+fragment: curve-table
+version: 1
+description: "A curve's pillars as a table: tenor, instrument, market quote, zero rate and discount factor."
+params:
+  id: points
+  title: Pillars
+  rows: $.POINTS
+  tenor: TENOR
+  instrument: INSTRUMENT
+  quote: QUOTE
+  quote-fmt: pct4
+  zero: ZERO_RATE
+  zero-fmt: price2
+  df: DF
+  df-fmt: df4
+  code: ''
+  key: ''
+  area: ''
+doc:
+  summary: "A curve's pillars as a table: tenor, instrument, market quote, zero rate and discount factor."
+  description: >-
+    The pillars a rate curve is built from, one row a pillar, in the order of the list: the tenor, the instrument quoted,
+    its market quote, the zero rate and the discount factor. The field names and formats are parameters, so OIS, IBOR,
+    government, repo and basis curves of any source share it.
+  params:
+    id: { type: id, default: points, meaning: "The panel id, unique on the screen" }
+    title: { type: text, default: Pillars, meaning: "The title over the table" }
+    rows: { type: expression, default: $.POINTS, meaning: "The list of pillars, e.g. $.POINTS" }
+    tenor: { type: field, default: TENOR, meaning: "The field of a pillar holding its tenor (1M, 2Y)" }
+    instrument: { type: field, default: INSTRUMENT, meaning: "The field naming the instrument quoted (deposit, future, swap)" }
+    quote: { type: field, default: QUOTE, meaning: "The field holding the market quote" }
+    quote-fmt: { type: format, default: pct4, meaning: "The named format of the quote" }
+    zero: { type: field, default: ZERO_RATE, meaning: "The field holding the zero rate" }
+    zero-fmt: { type: format, default: price2, meaning: "The named format of the zero rate" }
+    df: { type: field, default: DF, meaning: "The field holding the discount factor" }
+    df-fmt: { type: format, default: df4, meaning: "The named format of the discount factor" }
+    code: { type: key, default: '', meaning: "The panel's mnemonic code (CRV, REFS), typed in the command line to jump to it; none when empty" }
+    key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
+  emits: []
+  expects: []
+  examples:
+    - { use: curve-table@1, with: { rows: $.POINTS, key: F3 } }
+  since: "2.7.0"
+panels:
+  - id: %{id}
+    kind: table
+    title: "%{title}"
+    code: %{code}
+    key: %{key}
+    area: %{area}
+    rows: %{rows}
+    columns:
+      - { label: Tenor, bind: "@.%{tenor}" }
+      - { label: Instrument, bind: "@.%{instrument}" }
+      - { label: Quote, bind: "@.%{quote}", fmt: "%{quote-fmt}" }
+      - { label: Zero, bind: "@.%{zero}", fmt: "%{zero-fmt}" }
+      - { label: DF, bind: "@.%{df}", fmt: "%{df-fmt}" }

@@ -1,0 +1,63 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The shared fragment library (SUTRA_NEXT.md): hand-written, versioned, used as { use: event-timeline@1, with: {...} }.
+rachana: 1
+fragment: event-timeline
+version: 1
+description: "Dated events along a timeline: what happened, when, with a detail line and a status."
+params:
+  id: events
+  title: Events
+  rows: $.EVENTS
+  date: DATE
+  label: EVENT
+  detail: DETAIL
+  status: STATUS
+  code: ''
+  key: ''
+  area: ''
+doc:
+  summary: "Dated events along a timeline: what happened, when, with a detail line and a status."
+  description: >-
+    The life of an entity as events in date order (a margin call's workflow, a trade's amendments, a curve's rebuilds):
+    each with its date, a label, a detail line and a status. Use it where the sequence matters more than the numbers.
+  params:
+    id: { type: id, default: events, meaning: "The panel id, unique on the screen" }
+    title: { type: text, default: Events, meaning: "The title over the timeline" }
+    rows: { type: expression, default: $.EVENTS, meaning: "The list of events" }
+    date: { type: field, default: DATE, meaning: "The field holding the date of an event" }
+    label: { type: field, default: EVENT, meaning: "The field naming the event" }
+    detail: { type: field, default: DETAIL, meaning: "The field holding its detail line" }
+    status: { type: field, default: STATUS, meaning: "The field holding its status" }
+    code: { type: key, default: '', meaning: "The panel's mnemonic code (CRV, REFS), typed in the command line to jump to it; none when empty" }
+    key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
+  emits: []
+  expects: []
+  examples:
+    - { use: event-timeline@1, with: { rows: $.EVENTS, date: AT, label: EVENT, key: F5 } }
+  since: "2.7.0"
+panels:
+  - id: %{id}
+    kind: timeline
+    title: "%{title}"
+    code: %{code}
+    key: %{key}
+    area: %{area}
+    rows: %{rows}
+    date: %{date}
+    label: %{label}
+    detail: %{detail}
+    status: %{status}

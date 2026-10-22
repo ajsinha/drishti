@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-/** Every pack's Sutras load with no problems: grammar, expressions and unique name@version. */
+/** Every pack's Sutras load with no problems (with the core pack's fragment library): grammar, expressions and unique name@version. */
 class PackSutrasTest {
 
     static Stream<Path> packs() throws Exception {
@@ -41,7 +41,11 @@ class PackSutrasTest {
         try (Stream<Path> s = Files.walk(pack.resolve("sutras"))) {
             files = s.filter(p -> p.toString().endsWith(".sutra.yaml")).count();
         }
-        try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(pack.resolve("sutras").toString()), false,
+        // every pack extends core, whose sutras/library holds the shared fragments a Sutra may use (Sutra Next phase 1)
+        Path library = Path.of("..", "config", "packs", "core", "sutras", "library");
+        List<String> dirs = pack.getFileName().toString().equals("core") ? List.of(pack.resolve("sutras").toString())
+                : List.of(library.toString(), pack.resolve("sutras").toString());
+        try (SutraRegistry r = new SutraRegistry(new RachanaProperties(dirs, false,
                 null, null, null, null, null, null, null, null), new ElCompiler())) {
             assertThat(r.problems()).as(pack.getFileName() + " problems").isEmpty();
             assertThat(r.all()).hasSize((int) files);

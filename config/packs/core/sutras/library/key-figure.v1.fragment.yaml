@@ -1,0 +1,60 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The shared fragment library (SUTRA_NEXT.md): hand-written, versioned, used as { use: key-figure@1, with: {...} }.
+rachana: 1
+fragment: key-figure
+version: 1
+description: "One headline number, large, with its label and a caption: the figure a reader looks for first."
+params:
+  id: figure
+  title: Key figure
+  value: $.VALUE
+  label: Value
+  fmt: amount2
+  caption: ''
+  code: ''
+  key: ''
+  area: ''
+doc:
+  summary: "One headline number, large, with its label and a caption: the figure a reader looks for first."
+  description: >-
+    A single figure shown large (a total exposure, a 10Y rate, a VaR), with its label, its format and a caption saying
+    what it is measured against. Use one per figure that deserves a panel of its own; the strip holds the smaller ones.
+  params:
+    id: { type: id, default: figure, meaning: "The panel id, unique on the screen" }
+    title: { type: text, default: Key figure, meaning: "The title over the figure" }
+    value: { type: expression, default: $.VALUE, meaning: "The expression giving the number" }
+    label: { type: text, default: Value, meaning: "The label under the number" }
+    fmt: { type: format, default: amount2, meaning: "The named format of the number" }
+    caption: { type: text, default: '', meaning: "A short line under it (as of, unit, against what); none when empty" }
+    code: { type: key, default: '', meaning: "The panel's mnemonic code (CRV, REFS), typed in the command line to jump to it; none when empty" }
+    key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
+  emits: []
+  expects: []
+  examples:
+    - { use: key-figure@1, with: { id: ten-y, title: 10Y zero, value: $.TEN_Y, label: 10Y, fmt: pct4, area: right } }
+  since: "2.7.0"
+panels:
+  - id: %{id}
+    kind: metric
+    title: "%{title}"
+    code: %{code}
+    key: %{key}
+    area: %{area}
+    value: "%{value}"
+    label: "%{label}"
+    fmt: %{fmt}
+    caption: %{caption}

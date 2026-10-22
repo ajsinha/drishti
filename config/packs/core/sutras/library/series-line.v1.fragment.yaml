@@ -1,0 +1,62 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The shared fragment library (SUTRA_NEXT.md): hand-written, versioned, used as { use: series-line@1, with: {...} }.
+rachana: 1
+fragment: series-line
+version: 1
+description: "A line chart of one series read from a list of rows: x along the bottom, y up the side."
+params:
+  id: series
+  title: Series
+  rows: $.POINTS
+  x: TENOR
+  y: VALUE
+  fmt: price2
+  code: ''
+  key: ''
+  area: ''
+doc:
+  summary: "A line chart of one series read from a list of rows: x along the bottom, y up the side."
+  description: >-
+    Draws one series (a curve's zero rates, a price history, forward points) from a list of rows, one point a row, in the
+    order of the list. Use it for anything that is a value against a tenor, a date or a step. Two series of the same
+    record are two uses with different ids.
+  params:
+    id: { type: id, default: series, meaning: "The panel id, unique on the screen (a second use needs another)" }
+    title: { type: text, default: Series, meaning: "The title over the chart; say the unit in it, e.g. Zero rates (%)" }
+    rows: { type: expression, default: $.POINTS, meaning: "The list of rows to draw, e.g. $.POINTS" }
+    x: { type: field, default: TENOR, meaning: "The field of a row along the x axis, e.g. TENOR or DATE" }
+    y: { type: field, default: VALUE, meaning: "The field of a row drawn up the y axis, e.g. ZERO_RATE" }
+    fmt: { type: format, default: price2, meaning: "The named format of the y values (price2, pct4, rate5)" }
+    code: { type: key, default: '', meaning: "The panel's mnemonic code (CRV, REFS), typed in the command line to jump to it; none when empty" }
+    key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
+  emits: []
+  expects: []
+  examples:
+    - { use: series-line@1, with: { id: curve, title: "Zero rates (%)", rows: $.POINTS, x: TENOR, y: ZERO_RATE, fmt: price2, code: CRV, key: F2 } }
+    - { use: series-line@1, with: { id: history, title: Last 30 days, rows: $.HISTORY, x: DATE, y: MID, fmt: rate5 } }
+  since: "2.7.0"
+panels:
+  - id: %{id}
+    kind: line
+    title: "%{title}"
+    code: %{code}
+    key: %{key}
+    area: %{area}
+    rows: %{rows}
+    x: %{x}
+    y: %{y}
+    fmt: %{fmt}

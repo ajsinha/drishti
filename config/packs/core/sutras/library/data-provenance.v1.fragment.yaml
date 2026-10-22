@@ -1,0 +1,48 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The shared fragment library (SUTRA_NEXT.md): hand-written, versioned, used as { use: data-provenance@1, with: {...} }.
+rachana: 1
+fragment: data-provenance
+version: 1
+description: "How this view was built: the source, its freshness, the layout used and the rules that applied."
+params:
+  id: built
+  title: How this view was built
+  code: ''
+  key: ''
+  area: ''
+doc:
+  summary: "How this view was built: the source, its freshness, the layout used and the rules that applied."
+  description: >-
+    The honest footer of a screen: which source answered, when the record was fetched and whether it is live, which
+    Sutra and version laid it out, and what was masked or inferred. Put it on every screen; readers and auditors rely on it.
+  params:
+    id: { type: id, default: built, meaning: "The panel id, unique on the screen" }
+    title: { type: text, default: How this view was built, meaning: "The title over the panel" }
+    code: { type: key, default: '', meaning: "The panel's mnemonic code (CRV, REFS), typed in the command line to jump to it; none when empty" }
+    key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
+  emits: []
+  expects: []
+  examples:
+    - { use: data-provenance@1 }
+  since: "2.7.0"
+panels:
+  - id: %{id}
+    kind: provenance
+    title: "%{title}"
+    code: %{code}
+    key: %{key}
+    area: %{area}

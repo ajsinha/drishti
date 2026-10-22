@@ -1,0 +1,61 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The shared fragment library (SUTRA_NEXT.md): a composite fragment, made of other fragments at pinned versions.
+rachana: 1
+fragment: curve-overview
+version: 1
+description: "A curve at a glance: its line, then its pillars as a table, from the same list of rows."
+params:
+  rows: $.POINTS
+  tenor: TENOR
+  zero: ZERO_RATE
+  zero-fmt: price2
+  curve-id: curve
+  curve-title: Zero rates (%)
+  curve-code: ''
+  curve-key: ''
+  table-id: points
+  table-title: Pillars
+  table-key: ''
+doc:
+  summary: "A curve at a glance: its line, then its pillars as a table, from the same list of rows."
+  description: >-
+    A composite of two fragments: series-line draws the zero rates against the tenor, curve-table lists the pillars
+    (instrument, quote, zero, discount factor) right below it. Every parameter is passed to the inner fragments explicitly;
+    the instrument, quote and discount-factor fields keep curve-table's defaults. Use it for any rate, repo or basis curve
+    whose pillars read like an OIS curve's.
+  params:
+    rows: { type: expression, default: $.POINTS, meaning: "The list of pillars, drawn and listed" }
+    tenor: { type: field, default: TENOR, meaning: "The field of a pillar holding its tenor" }
+    zero: { type: field, default: ZERO_RATE, meaning: "The field of a pillar holding its zero rate" }
+    zero-fmt: { type: format, default: price2, meaning: "The named format of the zero rate, in the line and in the table" }
+    curve-id: { type: id, default: curve, meaning: "The id of the line panel" }
+    curve-title: { type: text, default: Zero rates (%), meaning: "The title over the line" }
+    curve-code: { type: key, default: '', meaning: "The line's mnemonic code; none when empty" }
+    curve-key: { type: key, default: '', meaning: "The function key of the line; none when empty" }
+    table-id: { type: id, default: points, meaning: "The id of the table panel" }
+    table-title: { type: text, default: Pillars, meaning: "The title over the table" }
+    table-key: { type: key, default: '', meaning: "The function key of the table; none when empty" }
+  uses: [series-line@1, curve-table@1]
+  emits: []
+  expects: []
+  examples:
+    - { use: curve-overview@1, with: { curve-code: CRV, curve-key: F2, table-key: F3 } }
+  since: "2.7.0"
+panels:
+  - use: series-line@1
+    with: { id: "%{curve-id}", title: "%{curve-title}", code: "%{curve-code}", key: "%{curve-key}", rows: "%{rows}", x: "%{tenor}", y: "%{zero}", fmt: "%{zero-fmt}" }
+  - use: curve-table@1
+    with: { id: "%{table-id}", title: "%{table-title}", key: "%{table-key}", rows: "%{rows}", tenor: "%{tenor}", zero: "%{zero}", zero-fmt: "%{zero-fmt}" }
