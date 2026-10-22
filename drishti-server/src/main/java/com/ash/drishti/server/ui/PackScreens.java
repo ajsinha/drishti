@@ -30,9 +30,12 @@ import com.ash.drishti.rachana.model.Sutra;
 import com.ash.drishti.rachana.ui.BoardDoc;
 import com.ash.drishti.rachana.ui.ChipCatalog;
 import com.ash.drishti.rachana.ui.UiDocuments;
+import com.ash.drishti.rachana.ui.migrate.BoardReport;
 import com.ash.drishti.rachana.ui.migrate.BoardSutra;
 import com.ash.drishti.rachana.ui.migrate.Conversion;
 import com.ash.drishti.rachana.ui.migrate.PackDryRun;
+import com.ash.drishti.rachana.ui.migrate.ReportConverter;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -87,6 +90,10 @@ public final class PackScreens {
     private final SutraMatcher matcher;
     private final ViewPipeline pipeline;
     private final Map<String, Mode> modes = new ConcurrentHashMap<>();
+    private final Map<String, Mode> models = new ConcurrentHashMap<>();
+    private final Map<String, ServedReport> reports = new ConcurrentHashMap<>();
+    /** The proof's override on this thread: serve a report as its old pages ({@code SUTRAS}) or its boards ({@code BOARDS}), whatever the switch. */
+    static final ThreadLocal<Mode> FORCE = new ThreadLocal<>();
     private final Map<String, Map<String, Served>> converted = new ConcurrentHashMap<>();
     private volatile Map<String, String> kindPack;
 
@@ -98,17 +105,23 @@ public final class PackScreens {
         this.matcher = matcher;
         this.pipeline = pipeline;
         modes.putAll(load(uiDir.resolve("ui.yaml")));
+        models.putAll(load(uiDir.resolve("ui.yaml"), "models"));
         registry.onChange(changed -> converted.clear());       // a Sutra changed: convert again on next use
     }
 
     /** {@code packs:} of ui.yaml: {@code <pack>: boards|sutras} or {@code <pack>: {screens: boards|sutras}}. */
     static Map<String, Mode> load(Path f) {
+        return load(f, "packs");
+    }
+
+    /** {@code packs:} or {@code models:} of ui.yaml (a model's own switch for the reports on it, over its pack's). */
+    static Map<String, Mode> load(Path f, String key) {
         Map<String, Mode> m = new LinkedHashMap<>();
         if (!Files.isRegularFile(f)) {
             return m;
         }
         try {
-            UiDocs.map(UiDocs.read(Files.readString(f)).get("packs")).forEach((pack, v) -> {
+            UiDocs.map(UiDocs.read(Files.readString(f)).get(key)).forEach((pack, v) -> {
                 Object s = v instanceof Map<?, ?> mm ? mm.get("screens") : v;
                 m.put(pack, Mode.of(s == null ? null : String.valueOf(s)));
             });
@@ -217,7 +230,47 @@ public final class PackScreens {
             return new Served(c, null, null);
         }
         BoardDoc b = UiDocuments.readBoard(c.document().toString());
-        return new Served(c, b, paint(b));
+        return new Served(c, b, paint(b, c.screen()));
+    }
+
+    /**
+     * As {@link #paint(BoardDoc)}, named as the Sutra it was converted from ({@code sutra:<name>@<version>}) and marked with the board, so the
+     * page's provenance says "Board X (from Sutra Y vN)" and links resolve to the loaded Sutra, not to the board's name.
+     */
+    public Sutra paint(BoardDoc b, String screen) {
+        Sutra s = paint(b);
+        if (screen == null || !screen.startsWith("sutra:")) {
+            return s.fromBoard(b.board());
+        }
+        String[] nv = screen.substring("sutra:".length()).split("@", 2);
+        int version = nv.length > 1 && nv[1].matches("[0-9]+") ? Integer.parseInt(nv[1]) : s.version();
+        return new Sutra(nv[0], version, s.domain(), s.match(), s.title(), s.strip(), s.panels(), s.keys(), s.location(), s.description(), s.controls())
+                .fromBoard(b.board());
+    }
+
+    /** The converted board a page of {@code pack}'s kinds is served from, by board name, when the pack is on boards. */
+    public Optional<Served> converted(String board) {
+        for (Map.Entry<String, Mode> m : modes.entrySet()) {
+            if (m.getValue() == Mode.BOARDS) {
+                for (Served s : boards(m.getKey()).values()) {
+                    if (s.board() != null && board.equals(s.conversion().board())) {
+                        return Optional.of(s);
+                    }
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    /** The board the page of {@code ref} is served from, or empty when it is served from its Sutra. */
+    public Optional<String> boardOf(EntityRef ref, AsOf asOf) {
+        String pack = packOf(ref.kind());
+        if (pack == null || mode(pack) != Mode.BOARDS) {
+            return Optional.empty();
+        }
+        EntityDocument doc = pipeline.document(ref, asOf);
+        return matcher.match(ref.kind(), doc.data()).map(x -> boards(pack).get(x.name())).filter(s -> s.painted() != null)
+                .map(s -> s.conversion().board());
     }
 
     /** The Sutra a board paints as, checked by the grammar (the chips from the Chip Store, the board's own first). */
@@ -246,9 +299,98 @@ public final class PackScreens {
         if (s == null || s.painted() == null) {
             return Optional.empty();
         }
-        return Optional.of(new Board(s.conversion().board(), pipeline.preview(s.painted(), ref, asOf, redact, mayOpen, values)));
+        ViewModel v = pipeline.preview(s.painted(), ref, asOf, redact, mayOpen, values);
+        if (v.provenance() != null) {
+            v = v.withProvenance(v.provenance().withBoard(s.conversion().board(), v.provenance().layout()));
+        }
+        return Optional.of(new Board(s.conversion().board(), v));
     }
 
     /** A page served from a board. */
     public record Board(String board, ViewModel view) {}
+
+    /**
+     * A BI report as served: its text with each converted page painted from its board, and the boards by page id (empty when the report is
+     * served as written).
+     */
+    public record ServedReport(String yaml, Map<String, String> boards) {}
+
+    /** How a report on {@code model} in {@code pack} is served: the model's own switch, else its pack's. */
+    public Mode reportMode(String pack, String model) {
+        Mode forced = FORCE.get();
+        if (forced != null) {
+            return forced;
+        }
+        Mode m = model == null ? null : models.get(model);
+        return m != null ? m : pack == null ? Mode.SUTRAS : mode(pack);
+    }
+
+    /** Switches the reports on a model (this node, until the next start). */
+    public void setModel(String model, Mode mode) {
+        models.put(model, mode);
+    }
+
+    /**
+     * A BI report's pages from their converted boards (12.4) when its pack, or its model, is on boards: each page whose conversion passes is
+     * painted back from its board ({@link BoardReport}); a page that fails stays as written. The report's other keys are kept.
+     */
+    public ServedReport report(String yaml) {
+        JsonNode r;
+        try {
+            r = BoardReport.tree(yaml);
+        } catch (RuntimeException e) {
+            return new ServedReport(yaml, Map.of());
+        }
+        String model = r.path("model").asText("").replaceAll("@.*", "").trim();
+        String pack;
+        try {
+            pack = Files.isDirectory(biDir) ? PackDryRun.packOf(r, biDir, PackDryRun.kindPacks(packsDir)) : "(bi)";
+        } catch (IOException e) {
+            pack = "(bi)";
+        }
+        if (reportMode("(bi)".equals(pack) ? null : pack, model.isEmpty() ? null : model) != Mode.BOARDS) {
+            return new ServedReport(yaml, Map.of());
+        }
+        if (reports.size() > 256) {
+            reports.clear();
+        }
+        String p = pack;
+        return reports.computeIfAbsent(yaml, y -> {
+            List<Conversion> cs = new ReportConverter(chips).convert(p, r);
+            ObjectNode out = r.deepCopy();
+            com.fasterxml.jackson.databind.node.ArrayNode pages = out.putArray("pages");
+            Map<String, String> boards = new LinkedHashMap<>();
+            int i = 0;
+            for (JsonNode page : r.path("pages")) {
+                Conversion c = i < cs.size() ? cs.get(i) : null;
+                i++;
+                if (c == null || c.status() == Conversion.Status.FAILS || c.document() == null) {
+                    pages.add(page.deepCopy());
+                    continue;
+                }
+                pages.add(BoardReport.paint(c.document(), page, ref -> chips.find(ref).map(ChipCatalog.Entry::doc)));
+                boards.put(page.path("id").asText(), c.board());
+            }
+            try {
+                return new ServedReport(new ObjectMapper(new YAMLFactory()).writeValueAsString(out), boards);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
+    }
+
+    /** Runs {@code work} with every report served as {@code mode} on this thread (the proof's two runs). */
+    public static <T> T as(Mode mode, java.util.function.Supplier<T> work) {
+        Mode before = FORCE.get();
+        FORCE.set(mode);
+        try {
+            return work.get();
+        } finally {
+            if (before == null) {
+                FORCE.remove();
+            } else {
+                FORCE.set(before);
+            }
+        }
+    }
 }

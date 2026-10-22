@@ -140,10 +140,35 @@ public final class BoardSutra {
                 if (!local && body.size() == 1 && p.has("id") && !in.controls().containsKey(PANEL_ID)) {
                     o.put("id", in.name());
                 }
+                String via = linkOf(in);
+                if (via != null) {
+                    o.put("source", via);                          // a second supply: the record the page's record links to
+                }
                 out.add(o);
             }
         }
         return out;
+    }
+
+    /** The query key of a second supply: the id of the linked record is the page record's field ({@code id-from: QUOTE_ID}). */
+    public static final String ID_FROM = "id-from";
+
+    /**
+     * {@code link($.<field>, '<kind>')} when the instance is supplied with the record the page's record links to (a connector whose query is
+     * {@code {id-from: <field>}}), else null (12.4).
+     */
+    static String linkOf(BoardDoc.Instance in) {
+        if (in.supply() == null || in.supply().kind() != BoardDoc.SupplyKind.CONNECTOR || in.supply().query() == null
+                || !in.supply().query().path(ID_FROM).isTextual()) {
+            return null;
+        }
+        String name = in.supply().name();
+        return "link($." + in.supply().query().path(ID_FROM).asText() + ", '" + name.substring(name.indexOf('/') + 1) + "')";
+    }
+
+    /** A data pin's mapping as a panel's rows: {@code TRADES} is {@code $.TRADES}; {@code =<expression>} computed rows over the record. */
+    static String rowsOf(String attribute) {
+        return attribute.startsWith("=") ? toRoot(attribute.substring(1)) : "$." + attribute;
     }
 
     /**
@@ -223,7 +248,7 @@ public final class BoardSutra {
         String s = toRoot(sb.toString());
         PinSpec data = s.startsWith("@") ? chip.inPins().get(s.substring(1)) : null;
         if (data != null && data.role() == PinSpec.PinRole.DATA && in.map().containsKey(data.name())) {
-            return TextNode.valueOf("$." + in.map().get(data.name()).attributes().get(0));
+            return TextNode.valueOf(rowsOf(in.map().get(data.name()).attributes().get(0)));
         }
         return TextNode.valueOf(s);
     }
@@ -240,7 +265,7 @@ public final class BoardSutra {
         }
         PinSpec p = chip.inPins().get(pin);
         if (p != null && p.role() == PinSpec.PinRole.DATA && in.map().containsKey(pin)) {
-            return TextNode.valueOf("$." + in.map().get(pin).attributes().get(0));
+            return TextNode.valueOf(rowsOf(in.map().get(pin).attributes().get(0)));
         }
         JsonNode v = in.controls().get(pin);
         if (v != null) {

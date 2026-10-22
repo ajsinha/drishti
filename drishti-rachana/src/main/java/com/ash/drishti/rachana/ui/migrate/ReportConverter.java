@@ -36,7 +36,8 @@ import java.util.Set;
  * {@code bi-<type>} supplied by the report's model, its wells as the model query and the pin map, its place on the page as the desktop layout.
  * A visual with options the seed chip has no pin for ({@code format}, {@code filters}, {@code hierarchy}, ...) becomes a board-local copy of the
  * seed chip with those options written into its body. A visual type with no seed chip ({@code python}, {@code tile}, ...) fails the page, with
- * the reason. Cross-filtering is not drawn as traces in P5 (the {@code bi-*} seed chips have no filter in pin); see the as-built note.
+ * the reason. The page's cross-filters, slicers and drill are traces into the chips' {@code filter} pins, and a page is accepted only when
+ * {@link BoardReport} paints its board back into exactly the page (12.4).
  */
 public final class ReportConverter {
 
@@ -54,21 +55,19 @@ public final class ReportConverter {
     public List<Conversion> convert(String pack, JsonNode report) {
         String name = report.path("report").asText("?");
         String model = report.path("model").asText("").replaceAll("@.*", "").trim();
+        String dataset = report.path("dataset").asText("").trim();
+        String[] supply = !model.isEmpty() ? new String[] {"model", model} : !dataset.isEmpty() ? new String[] {"dataset", dataset} : null;
         List<Conversion> out = new ArrayList<>();
         for (JsonNode page : report.path("pages")) {
             String pid = page.path("id").asText("page");
             String screen = "report:" + name + "/" + pid;
             String board = PageConverter.name(name + "-" + pid);
-            if (model.isEmpty()) {
-                out.add(PageConverter.failed(screen, pack, null, board, "the report names no model"));
-                continue;
-            }
-            out.add(page(screen, pack, board, report, page, model));
+            out.add(page(screen, pack, board, report, page, supply));    // no supply: a board page, its tiles ask their own reports
         }
         return out;
     }
 
-    private Conversion page(String screen, String pack, String board, JsonNode report, JsonNode page, String model) {
+    private Conversion page(String screen, String pack, String board, JsonNode report, JsonNode page, String[] source) {
         ObjectNode b = BoardSutra.JSON.createObjectNode();
         b.put("rachana", 1).put("board", board).put("title", report.path("title").asText(board) + " · " + page.path("title").asText(""));
         b.put("description", "Converted from the page '" + page.path("id").asText() + "' of the BI report " + report.path("report").asText()
@@ -97,12 +96,18 @@ public final class ReportConverter {
             if (v.hasNonNull("title")) {
                 in.put("title", v.path("title").asText());
             }
-            ObjectNode supply = in.putObject("supply");
-            supply.put("model", model);
-            ObjectNode query = supply.putObject("query");
+            if (source == null && v.path("wells").size() > 0) {
+                return PageConverter.failed(screen, pack, null, board, "visual '" + inst + "' reads data, but the report names no model or dataset");
+            }
+            ObjectNode query = BoardSutra.JSON.createObjectNode();
+            if (source != null && rows != null) {
+                ObjectNode supply = in.putObject("supply");
+                supply.put(source[0], source[1]);
+                supply.set("query", query);
+            }
             ArrayNode measures = query.putArray("measures");
             ArrayNode dims = query.putArray("dimensions");
-            ObjectNode map = in.putObject("map");
+            ObjectNode map = rows == null ? BoardSutra.JSON.createObjectNode() : in.putObject("map");
             Optional<String> misfit = Optional.empty();
             var wells = v.path("wells").fields();
             while (wells.hasNext()) {
@@ -163,6 +168,7 @@ public final class ReportConverter {
         if (!locals.isEmpty()) {
             b.set("local-chips", locals);
         }
+        int traces = crossFilters(b, instances);
         ObjectNode layout = b.putObject("layout");
         if (!areas.isEmpty()) {
             ObjectNode d = layout.putObject("desktop");
@@ -172,10 +178,49 @@ public final class ReportConverter {
         ArrayNode order = layout.putObject("phone").putArray("order");
         used.forEach(order::add);
         List<UiProblem> problems = BoardCheck.check(b.toString(), BoardCheckContext.personal(chips));
-        Optional<UiProblem> error = problems.stream().filter(UiProblem::error).findFirst();
+        Optional<String> error = problems.stream().filter(UiProblem::error).findFirst()
+                .map(e -> "board check " + e.rule() + " at " + e.path() + ": " + e.message());
+        if (error.isEmpty()) {                                           // accepted only when the board serves exactly the page it came from
+            error = BoardReport.difference(page, BoardReport.paint(b, page, r -> chips.find(r).map(ChipCatalog.Entry::doc)))
+                    .map(d -> "does not paint back: " + d);
+        }
         Conversion.Status st = error.isPresent() ? Conversion.Status.FAILS : made.isEmpty() ? Conversion.Status.CLEAN : Conversion.Status.LOCAL;
-        return new Conversion(screen, pack, null, board, b, st, seeds, made, 0, 0,
-                error.map(e -> "board check " + e.rule() + " at " + e.path() + ": " + e.message()).orElse(null), problems);
+        return new Conversion(screen, pack, null, board, b, st, seeds, made, 0, traces, error.orElse(null), problems);
+    }
+
+    /**
+     * The page's cross-filters, slicers and drill as traces: every chip that emits a filter (a slicer's {@code filter-out}, a clicked or
+     * drilled mark's {@code selected}) into the {@code filter} pin of every other chip on the page, as the BI engine filters a page.
+     */
+    private int crossFilters(ObjectNode b, ObjectNode instances) {
+        List<String[]> from = new ArrayList<>();
+        List<String> to = new ArrayList<>();
+        instances.fields().forEachRemaining(e -> {
+            ChipDoc c = ChipRef.parse(e.getValue().path("use").asText("")).flatMap(chips::find).map(ChipCatalog.Entry::doc).orElse(null);
+            if (c == null) {
+                return;                                                  // a board-local copy: no traces of its own
+            }
+            for (String out : List.of("filter-out", "selected")) {
+                if (c.outPins().containsKey(out)) {
+                    from.add(new String[] {e.getKey(), out});
+                }
+            }
+            if (c.inPins().containsKey("filter")) {
+                to.add(e.getKey());
+            }
+        });
+        ArrayNode traces = BoardSutra.JSON.createArrayNode();
+        for (String[] f : from) {
+            for (String t : to) {
+                if (!t.equals(f[0])) {
+                    traces.addObject().put("from", f[0] + "." + f[1]).put("to", t + ".filter");
+                }
+            }
+        }
+        if (!traces.isEmpty()) {
+            b.set("traces", traces);
+        }
+        return traces.size();
     }
 
     /** A board-local copy of a seed chip with the visual's own options written into its body. */

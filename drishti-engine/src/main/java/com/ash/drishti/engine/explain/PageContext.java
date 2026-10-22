@@ -115,7 +115,28 @@ public record PageContext(ViewModel.Ref ref, String mnemonic, String locale, lon
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public record Layout(String label, String fingerprint, Chosen sutra, boolean inferred, List<Candidate> candidates,
             List<InferredPanel> inferredPanels, List<NoData> noData, List<PanelError> errors, List<MaskedField> masked,
-            List<NoAccess> noAccess) {}
+            List<NoAccess> noAccess, String board) {
+
+        public Layout(String label, String fingerprint, Chosen sutra, boolean inferred, List<Candidate> candidates, List<InferredPanel> inferredPanels,
+                List<NoData> noData, List<PanelError> errors, List<MaskedField> masked, List<NoAccess> noAccess) {
+            this(label, fingerprint, sutra, inferred, candidates, inferredPanels, noData, errors, masked, noAccess, null);
+        }
+    }
+
+    /**
+     * The same answer for a page served from its converted board (UI_BOARD.md 12.4): {@code layout.board} names the board, the label says
+     * "Board X (from Sutra Y vN)"; {@code layout.sutra} stays the Sutra it was converted from.
+     */
+    public PageContext withBoard(String board) {
+        if (board == null || layout == null) {
+            return this;
+        }
+        Chosen s = layout.sutra();
+        String label = "Board " + board + (s == null ? "" : " (from Sutra " + s.name() + " v" + s.version() + ")");
+        Layout l = new Layout(label, layout.fingerprint(), s, layout.inferred(), layout.candidates(), layout.inferredPanels(), layout.noData(),
+                layout.errors(), layout.masked(), layout.noAccess(), board);
+        return new PageContext(ref, mnemonic, locale, generation, newer, about, glossary, data, l, next, timings, ask);
+    }
 
     /** The Sutra the page is built from: its {@code where} (source text) and priority explain the choice. */
     @JsonInclude(JsonInclude.Include.NON_EMPTY)

@@ -16,7 +16,7 @@
 rachana: 1
 chip: panel-links
 version: 1
-title: Links
+title: Linked entities
 category: relationships
 tags:
 - panel
@@ -30,7 +30,7 @@ manual:
   defaults: 'No control input: the panel kind''s own defaults (PANELS.md).'
   limits: Paints at most 10,000 rows; the server pages the rest and the footer says so.
   examples:
-  - title: A links of the trading pack
+  - title: A linked entities of the trading pack
     board: |
       chips:
         c:
@@ -58,5 +58,5 @@ body:
   panels:
   - id: links
     kind: links
-    title: '%{title|Links}'
+    title: '%{title|Linked entities}'
     of: '@doc'

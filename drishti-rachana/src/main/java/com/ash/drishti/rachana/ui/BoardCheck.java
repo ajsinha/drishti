@@ -94,6 +94,7 @@ public final class BoardCheck {
         private final Map<String, ChipDoc> resolved = new LinkedHashMap<>();
         /** in pin ({@code inst.pin}) to the places feeding it. */
         private final Map<String, List<String>> feeds = new HashMap<>();
+        private final java.util.Set<String> traced = new java.util.HashSet<>();
         /** out pins ({@code inst.pin}) that drive at least one trace. */
         private final Set<String> driving = new HashSet<>();
 
@@ -240,7 +241,9 @@ public final class BoardCheck {
                         + (target.outPins().containsKey(to[1]) ? " ('" + to[1] + "' is an out pin; a trace ends at an in pin)" : ""), "in pins: " + target.inPins().keySet()));
                 return;
             }
-            feed(t.to(), at, at + ".to");
+            if (pin.type().type() != PinType.FILTER || traced.add(t.to())) {
+                feed(t.to(), at, at + ".to");                              // filters combine: a filter pin takes several traces (12.4), counted once
+            }
             if (t.transform() != null && t.transform().kind() == TransformKind.FILTER_ON) {
                 String col = t.transform().column();
                 String[] c = split(col);
@@ -487,7 +490,8 @@ public final class BoardCheck {
                 if (src == null || dst == null) {
                     continue;
                 }
-                boolean selection = src.type().type() == PinType.SELECTION || dst.type().type() == PinType.SELECTION;
+                boolean selection = src.type().type() == PinType.SELECTION || dst.type().type() == PinType.SELECTION
+                        || src.type().type() == PinType.FILTER && dst.type().type() == PinType.FILTER;   // a cross-filter: set by a person's click, it settles (12.4)
                 out.computeIfAbsent(f[0], k -> new ArrayList<>()).add(new Edge(i, f[0], to[0], dst.role() == PinRole.DATA, selection));
             }
             for (Set<String> comp : Tarjan.components(b.chips().keySet(), out)) {

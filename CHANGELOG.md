@@ -17,6 +17,22 @@
 
 ## Unreleased
 
+- **Everything on chips and boards (UI Board P5, final; UI_BOARD.md 12.4).** BI report pages, board-layout (tile) pages included, are
+  served from their converted boards when the report's pack is on boards, or its model (`models.<model>: boards` in `ui.yaml`, new);
+  `GET /api/v1/bi/reports/{id}` says which pages in `servedFrom`. Each page's cross-filters, slicers and drill are drawn as traces from the
+  `selected` / `filter-out` out pins into the new `filter` in pin of every `bi-*` chip (a filter pin takes several traces, which combine;
+  a cross-filter cycle settles), and a page converts only when its board paints back into exactly the page. The data proof of report
+  pages (`ReportProof`): every visual of all 20 report pages asked as each of three people, the report as written against the report from
+  its boards, the same answers. The 33 one-offs are generic chips: page controls through the record chips' new `page` pin (traced from
+  the header), a linked record (`source: link($.QUOTE_ID, 'quote')`) as a second supply (`query: {id-from: QUOTE_ID}`), computed rows
+  (`group(...)`, `flatten(...)`) as a computed mapping (`map: {rows: "=group(@doc.TRADES, ...)"}`). Dry run: 0 board-local chips and 0
+  failures in every pack. The news and quote pages are proven on a small committed synthetic sample (test resources, invented data).
+  Friendlier seed chip titles (`panel-hbar` "Bar list", `panel-kv` "Label and value list", `bi-table` "Table", ...; ids unchanged).
+- **Fix: a page served from its board named the board as its Sutra** ("Layout: Sutra trading-irs-fixfloat v1"; Open in designer failed
+  with DRS-2003). It now says "Board trading-irs-fixfloat (from Sutra irs-fixfloat v1)": `provenance.sutra` is the loaded Sutra,
+  `provenance.board` (and the About's `layout.board`) the board, which opens in Build's Board mode (`/build/board/<name>`; the board API
+  answers a pack's converted board).
+
 - **Every pack is served as UI Boards by default** (`config/ui/ui.yaml` `packs:`): core, trading, counterparty-risk, market-data, market-risk, world-economy, news-and-markets. A page that did not convert stays on its Sutra; `sutras` switches a pack back at once.
 
 - **UI Board P5 follow-up: every pack on Chip Store chips (2.7.0).** The ~240 board-local chips of the packs other than trading were

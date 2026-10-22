@@ -264,6 +264,7 @@ public final class BoardRender implements AutoCloseable {
             Map<String, Object> inputs = new LinkedHashMap<>();
             Map<String, Object> filters = new LinkedHashMap<>();
             Map<String, Object> traced = new LinkedHashMap<>();
+            Map<String, Boolean> combined = new HashMap<>();
             chip.inPins().forEach((n, p) -> {
                 if (p.hasDefault()) {
                     inputs.put(n, JSON.convertValue(p.defaultValue(), Object.class));
@@ -289,8 +290,22 @@ public final class BoardRender implements AutoCloseable {
                     inputs.put(pin, Map.of("on", t.transform().column(), "value", v));
                 } else if (t.transform() != null && t.transform().kind() == BoardDoc.TransformKind.FIRST && v instanceof List<?> l) {
                     inputs.put(pin, l.isEmpty() ? null : l.get(0));
+                } else if (chip.in(pin).map(p -> p.type().type() == PinType.FILTER).orElse(false) && combined.containsKey(pin)) {
+                    List<Object> all = new ArrayList<>();                     // filters combine: every trace into a filter pin holds (12.4)
+                    Object had = inputs.get(pin);
+                    if (had instanceof List<?> l && combined.get(pin) == Boolean.TRUE) {
+                        all.addAll(l);
+                    } else if (had != null) {
+                        all.add(had);
+                    }
+                    all.add(v);
+                    inputs.put(pin, all);
+                    combined.put(pin, Boolean.TRUE);
                 } else {
                     inputs.put(pin, v);
+                    if (chip.in(pin).map(p -> p.type().type() == PinType.FILTER).orElse(false)) {
+                        combined.put(pin, Boolean.FALSE);
+                    }
                 }
                 if (chip.in(pin).map(p -> p.role() == PinSpec.PinRole.DATA).orElse(false)) {
                     traced.put(pin, v);

@@ -16,7 +16,7 @@
 rachana: 1
 chip: bi-python
 version: 1
-title: Python visual
+title: Python chart
 category: python
 tags:
 - bi
@@ -26,7 +26,10 @@ manual:
   purpose: What a Python item returns for the rows this person may see. The BI 'python' visual type as a chip; its wells are its pins.
   pins:
     rows: 'The rows of the wells: columns (dimension, several), values (measure). Required.'
-    selected: Out. The value of the first field the person clicked (a bar, a row, a point); empty until they click.
+    selected: Out. The mark the person clicked (a bar, a row, a point) as a filter on its first field; empty until they click. Traced into other
+      chips' filter pins it is the page's cross-filter; a drill down the hierarchy sends the level clicked.
+    filter: 'The filters other chips send: a slicer''s choice or a clicked mark (their ''filter-out'' or ''selected''). Several traces may feed
+      it; they combine (all must hold). Empty: no cross-filter.'
     format: 'The visual''s format block as the report writes it (colours, labels, run, spec). Empty: defaults.'
     alt: 'The text alternative read to screen readers. Empty: the title.'
     filters: 'Filters on this visual only, as the report writes them. Empty: none.'
@@ -39,7 +42,7 @@ manual:
   defaults: The visual type's defaults (REPORTS.md section 3); no control input.
   limits: Paints at most 10,000 rows; the BI engine aggregates before painting. A question that runs long becomes a BI run card.
   examples:
-  - title: The python visual over the trading-risk model
+  - title: The python chart over the trading-risk model
     board: |
       chips:
         c:
@@ -52,6 +55,18 @@ manual:
           map:
             rows.columns: [trades.DESK, MTM_USD]
             rows.values: MTM_USD
+        other:
+          use: bi-python@1
+          supply:
+            model: trading-risk
+            query:
+              measures: [MTM_USD]
+              dimensions: []
+          map:
+            rows.columns: [trades.DESK, MTM_USD]
+            rows.values: MTM_USD
+      traces:
+      - {from: c.selected, to: other.filter}
   not-for: A grammar panel over entity data (use the panel-* chips).
   accessibility: Arrow keys move the row cursor and Enter selects; the selection is announced; column headers are buttons that sort.
 pins:
@@ -66,6 +81,9 @@ pins:
           many: true
         values:
           type: measure
+    filter:
+      role: control
+      type: filter
     format:
       role: control
       type: spec
@@ -92,13 +110,13 @@ pins:
       type: spec
   out:
     selected:
-      type: dimension
+      type: filter
 body:
   panels:
   - id: visual
     kind: visual
     type: python
-    title: '%{title|Python visual}'
+    title: '%{title|Python chart}'
     rows: '@rows'
     wells:
       columns: '@rows.columns'

@@ -16,7 +16,7 @@
 rachana: 1
 chip: panel-metric
 version: 1
-title: Metric
+title: Single figure
 category: records
 tags:
 - panel
@@ -31,7 +31,7 @@ manual:
   defaults: 'No control input: the panel kind''s own defaults (PANELS.md).'
   limits: Paints at most 10,000 rows; the server pages the rest and the footer says so.
   examples:
-  - title: A metric of the trading pack
+  - title: A single figure of the trading pack
     board: |
       chips:
         c:
@@ -53,6 +53,6 @@ body:
   panels:
   - id: metric
     kind: metric
-    title: '%{title|Metric}'
+    title: '%{title|Single figure}'
     value: '%{value}'
     delta: '%{delta|}'
