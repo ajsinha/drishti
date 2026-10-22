@@ -61,10 +61,13 @@ def spec() -> PB.PackSpec:
     e, p = _upper(ECO.spec()), _upper(POL.spec())
     return dataclasses.replace(
         e, name="world-economy", code="WRLD", title="World economy", generator="tools/packgen/world/make.py",
+        requires=["core"],          # its economics screens use the shared fragment library (core pack, sutras/library): every pack extends core
         description=e.description.rstrip(".") + "; and governments and societies: government type, office holders, elections, parties with seats, "
                     "and social and governance indicators (CIA World Factbook, World Bank, UNDP).",
         domains={**e.domains, **p.domains}, examples=e.examples + p.examples, columns={**e.columns, **p.columns},
         form_overrides={**e.form_overrides, **p.form_overrides}, roles={**e.roles, **p.roles},
+        # the economics screens, written by hand from the core pack's fragment library since Sutra Next phase 1 (SutraNextEquivalenceTest)
+        hand_written={"country-group", "economic-forecast", "economy", "fiscal-position", "labour-market", "macro-indicator", "region-economy"},
         # the columns the shipped BI models read (config/bi/datasets/world-economics-economies, region-economics-regions): promoted, so a
         # report reads them as columns instead of opening every document
         layouts={"economy": ["NAME", "ISO3", "REGION_NAME", "INCOME_NAME", "GDP_USD_BN", "GDP_PER_CAPITA", "GROWTH", "INFLATION", "UNEMPLOYMENT", "POPULATION_M"],

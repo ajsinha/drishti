@@ -15,8 +15,8 @@
 -->
 # Sutra Next: one grammar for every screen
 
-Status: **phase 1 built (2.7.0)**: the fragment library, the `doc:` docstring and its lint, composite fragments, one migrated
-screen (ir-curve) and the library read API. Phases 2 to 8 are **design, not built**. Direction of the product owner, 2026-10-22:
+Status: **phase 1 built (2.7.0)**: the fragment library, the `doc:` docstring and its lint, composite fragments, migrated
+screens (ir-curve and the seven world-economy economics screens) and the library read API. Phases 2 to 8 are **design, not built**. Direction of the product owner, 2026-10-22:
 the board/chip paradigm (UI_BOARD.md, parked on branch `ui-board-preview`) is dropped; Sutra itself grows from an entity browser
 into the UI library, in ONE grammar, built on what Sutras already have (panels, shared blocks, `use:`/`with:`, controls, masks).
 
@@ -97,7 +97,7 @@ panels:
 (`series-line.v2.fragment.yaml`); Sutras move one at a time. Since the doc's `since:` and the file's version travel together, a
 browser can show "since 2.7.0, v1".
 
-**Phase 1 library** (11 fragments, all `@1`):
+**Phase 1 library** (14 fragments, all `@1`; the last three arrived with the economics screens below):
 
 | Fragment | Panel kind | What it shows |
 |---|---|---|
@@ -112,6 +112,9 @@ browser can show "since 2.7.0, v1".
 | `linked-entities` | links | what the record refers to and what refers to it |
 | `data-provenance` | provenance | how the view was built: source, freshness, layout, masks |
 | `explainer-note` | markdown | a short note telling the reader how to read the figures |
+| `measure-table` | table | a name column and two measures, the first totalled |
+| `region-map` | map | the record's country on a world map, every country shaded by one figure |
+| `source-footer` | composite | data source and licence, how the view was built, linked entities |
 
 **The migrated screen.** `market-data/ir-curve` (the test page `/v/ir-curve/CRV-USD-OIS`) is the first screen built from the
 library: `curve-overview` (line and pillars), `series-line` (1Y forwards, right), `data-provenance`, `linked-entities`. It was chosen
@@ -119,6 +122,25 @@ because it is small, used daily, uses five panel kinds' worth of generic shapes 
 cases (zero rates, instruments) and its fragments fit a dozen other market-data screens. `SutraNextEquivalenceTest` draws it with
 the old inline layout and with the fragments, for a full and a masked reader, and the view models are identical (values, masks,
 titles, order); only the layout's own version in "How this view was built" differs.
+
+**The economics screens (phase 1 progress).** The world-economy pack's seven economics Sutras (`country-group`,
+`economic-forecast`, `economy`, `fiscal-position`, `labour-market`, `macro-indicator`, `region-economy`) are built from the library
+too, each with a complete `doc:`. They needed three more generic shapes, added to the library:
+
+| Fragment | Panel kind | What it shows |
+|---|---|---|
+| `measure-table` | table | a list as a table: a name column and two measures, the first totalled at the foot, the second toned by sign when asked |
+| `region-map` | map | a world map with the record's country highlighted and every country shaded by one figure, each a click away |
+| `source-footer` | composite | `field-list` (data source and licence, right), then `data-provenance` and `linked-entities`: the foot of any screen over published data |
+
+Every economics screen ends with `source-footer`; lines and paths use `series-line`, bars `ranked-bars`, facts `field-list`, the
+economy's map `region-map`, the largest economies and the jobs by sector `measure-table`. One panel stays written in place: the IMF
+projections table (nine columns), because a fragment's columns are fixed (a parameter is text, not a list). `EconomicsSutraNextEquivalenceTest`
+draws all seven on the pack's committed samples (`ECG-SAS`, `FCST-JPN-WEO`, `ECON-IND`, `FISC-USA`, `LABR-NGA`,
+`MACRO-BRA-GDP-GROWTH`, `REGE-AU-NSW`) with the old generated layouts (test data, as version 2) and with the fragments, for a full
+reader and a masked one (`GDP_USD_BN`, `GROWTH`, `DEBT`, `UNEMPLOYMENT`, `LATEST`, `ISO3` redacted): identical but for the layout's
+own version. The generator leaves them alone (`hand_written` in `tools/packgen/world/make.py`), and world-economy now extends core
+so the library loads wherever the pack does.
 
 ## 4. The doc: docstring
 
@@ -481,7 +503,7 @@ picking from `emits`; show lint as you type; save a dynamic screen to the worksp
 
 | Phase | What | Release |
 |---|---|---|
-| 1 | The fragment library (core pack `sutras/library`), the `doc:` docstring and its lint, composite fragments, one migrated screen (ir-curve, proved identical), `GET /api/v1/sutras/library` | 2.7.0 (**built**) |
+| 1 | The fragment library (core pack `sutras/library`), the `doc:` docstring and its lint, composite fragments, migrated screens (ir-curve and the seven economics screens, proved identical), `GET /api/v1/sutras/library` | 2.7.0 (**built**) |
 | 2 | Events (`emits`, `@panel.event.path`) and multi-pack sources (`source:`) | 2.7.x |
 | 3 | Nested children (`children:`, `place`, `show`, lazy, depth 3) | 2.7.x |
 | 4 | Refresh control and freshness per panel | 2.7.x |

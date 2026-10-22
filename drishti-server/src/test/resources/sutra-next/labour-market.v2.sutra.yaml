@@ -1,0 +1,55 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The labour-market Sutra as tools/packgen/world/make.py generated it before Sutra Next phase 1 (written inline, no fragments), as
+# version 2 so it wins while SutraNextEquivalenceTest draws the "before" view. Test data only.
+rachana: 1
+sutra: labour-market
+version: 2
+description: "Unemployment, participation, youth and female labour, and employment and output by sector."
+match: { kind: labour-market, priority: 10 }
+title: { pill: Economics · Labour market, id: $.LABOUR_ID }
+strip:
+  - { label: Economy, bind: $.ECONOMY_NAME }
+  - { label: Unemployment, bind: $.UNEMPLOYMENT, fmt: pc2, emphasis: true }
+  - { label: Participation, bind: $.PARTICIPATION, fmt: pc1 }
+  - { label: Youth unemployment, bind: $.YOUTH_UNEMPLOYMENT, fmt: pc1 }
+  - { label: Employment ratio, bind: $.EMPLOYMENT_RATIO, fmt: pc1 }
+  - { label: Female participation, bind: $.FEMALE_PARTICIPATION, fmt: pc1 }
+panels:
+  - id: unemploymentPath
+    kind: line
+    title: "Unemployment rate, % of labour force"
+    key: F2
+    rows: $.UNEMPLOYMENT_PATH
+    x: YEAR
+    y: RATE
+    fmt: pc2
+  - id: bySector
+    kind: table
+    title: Employment and output by sector
+    key: F3
+    rows: $.BY_SECTOR
+    columns:
+      - { label: Sector, bind: "@.SECTOR" }
+      - { label: "Share of jobs, %", bind: "@.EMPLOYMENT_SHARE", fmt: pc1, total: true }
+      - { label: "Share of GDP, %", bind: "@.VALUE_ADDED_SHARE", fmt: pc1 }
+  - id: source
+    kind: kv
+    title: Data source and licence
+    area: right
+    rows: $.PROVENANCE
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.ECONOMY, 'economy')", F8: impact, F9: raw }

@@ -71,6 +71,8 @@ class PackSpec:
     compact_json: bool = False                      # write the sample documents without indentation (large generated packs)
     form_overrides: dict[str, dict[str, dict]] = field(default_factory=dict)   # kind -> field path -> {type:, label:} replacing the name-derived ones
     retired: bool = False                           # an example pack: written under examples/packs, not config/packs
+    # kinds whose Sutra is written by hand since Sutra Next phase 1 (built from the core pack's fragment library): never written or removed here
+    hand_written: set[str] = field(default_factory=set)
 
     @property
     def kinds(self) -> list[Kind]:
@@ -189,7 +191,8 @@ def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
     out[base / "pack.yaml"] = (f"{YAML_HEADER}\n\n# {_generated(spec, 'file')}\n# {spec.title} pack for Drishti.\n"
                                + yaml.safe_dump(manifest(spec, known_fields), sort_keys=False, allow_unicode=True, width=140))
     for k in spec.kinds:
-        out[base / "sutras" / MS.slug(k.group) / f"{k.kind}.v1.sutra.yaml"] = sutra(spec, k)
+        if k.kind not in spec.hand_written:
+            out[base / "sutras" / MS.slug(k.group) / f"{k.kind}.v1.sutra.yaml"] = sutra(spec, k)
     catalog = []
     for k in spec.kinds:
         for id_, d in sorted(docs.get(k.kind, {}).items()):
@@ -226,7 +229,8 @@ def main(spec: PackSpec, docs: dict, known_fields: dict, lake_kinds_by_domain=No
         raise SystemExit(f"{spec.name} data is inconsistent:\n  " + "\n  ".join(problems[:30]))
     want = files(spec, docs, known_fields)
     base = pack_dir(spec)
-    existing = {f for sub in ("samples", "sutras") if (base / sub).exists() for f in (base / sub).rglob("*") if f.is_file()}
+    existing = {f for sub in ("samples", "sutras") if (base / sub).exists() for f in (base / sub).rglob("*") if f.is_file()
+                and f.name.removesuffix(".v1.sutra.yaml") not in spec.hand_written}
     if "--check" in sys.argv:
         stale = [str(f) for f, t in want.items() if not f.exists() or f.read_text(encoding="utf-8") != t]
         extra = [str(f) for f in existing - set(want)]

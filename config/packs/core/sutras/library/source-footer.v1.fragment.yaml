@@ -1,0 +1,47 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The shared fragment library (SUTRA_NEXT.md): a composite fragment, made of other fragments at pinned versions.
+rachana: 1
+fragment: source-footer
+version: 1
+description: "The foot of a screen over published data: its source and licence, how the view was built, and its links."
+params:
+  source-id: source
+  source-title: Data source and licence
+  source-rows: $.PROVENANCE
+  source-area: right
+doc:
+  summary: "The foot of a screen over published data: its source and licence, how the view was built, and its links."
+  description: >-
+    A composite of three fragments, in this order: field-list lists the record's source object (publisher, dataset,
+    retrieval date, licence), data-provenance says how the view was built, and linked-entities gives the record's links.
+    Put it last on any screen whose documents name their source; the built and links panels keep their own defaults.
+  params:
+    source-id: { type: id, default: source, meaning: "The id of the source panel" }
+    source-title: { type: text, default: Data source and licence, meaning: "The title over the source panel" }
+    source-rows: { type: expression, default: $.PROVENANCE, meaning: "The object of the record naming its source and licence" }
+    source-area: { type: area, default: right, meaning: "Where the source panel sits: right (the default) or main" }
+  uses: [field-list@1, data-provenance@1, linked-entities@1]
+  emits: []
+  expects: []
+  examples:
+    - { use: source-footer@1 }
+    - { use: source-footer@1, with: { source-rows: $.SOURCE, source-title: Source } }
+  since: "2.7.0"
+panels:
+  - use: field-list@1
+    with: { id: "%{source-id}", title: "%{source-title}", rows: "%{source-rows}", area: "%{source-area}" }
+  - use: data-provenance@1
+  - use: linked-entities@1

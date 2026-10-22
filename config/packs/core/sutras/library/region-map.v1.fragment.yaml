@@ -1,0 +1,78 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The shared fragment library (SUTRA_NEXT.md): hand-written, versioned, used as { use: region-map@1, with: {...} }.
+rachana: 1
+fragment: region-map
+version: 1
+description: "A world map with this record's country highlighted and every country shaded by one figure, each a click away."
+params:
+  id: geography
+  title: Where it is
+  highlight: $.ISO3
+  link-kind: country
+  link-id: "{iso3}"
+  shade-kind: country
+  shade-field: $.VALUE
+  shade-by: $.ISO3
+  shade-fmt: amount0
+  shade-label: Value
+  height: '11'
+  code: ''
+  key: ''
+  area: ''
+doc:
+  summary: "A world map with this record's country highlighted and every country shaded by one figure, each a click away."
+  description: >-
+    Puts the record on the map: its country (an ISO 3166 alpha-3 code) highlighted, every country shaded by one field of
+    the documents of a kind (GDP per head, exposure, a rating score), and a click on a country opening that country's page.
+    Use it on any per-country screen; the kind and the id pattern of the pages it opens are parameters.
+  params:
+    id: { type: id, default: geography, meaning: "The panel id, unique on the screen" }
+    title: { type: text, default: Where it is, meaning: "The title over the map" }
+    highlight: { type: expression, default: $.ISO3, meaning: "The expression giving the record's ISO alpha-3 country code" }
+    link-kind: { type: kind, default: country, meaning: "The kind of page a click on a country opens" }
+    link-id: { type: text, default: "{iso3}", meaning: "The id of that page, {iso3} standing for the clicked country's code, e.g. CTRY-{iso3}" }
+    shade-kind: { type: kind, default: country, meaning: "The kind whose documents shade the countries" }
+    shade-field: { type: expression, default: $.VALUE, meaning: "The field of those documents that sets the shade" }
+    shade-by: { type: expression, default: $.ISO3, meaning: "The field of those documents holding their country code" }
+    shade-fmt: { type: format, default: amount0, meaning: "The named format of the shading figure in the legend and tooltips" }
+    shade-label: { type: text, default: Value, meaning: "The name of the shading figure in the legend, with its unit" }
+    height: { type: number, default: '11', meaning: "The map's height in grid rows" }
+    code: { type: key, default: '', meaning: "The panel's mnemonic code (CRV, REFS), typed in the command line to jump to it; none when empty" }
+    key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
+  emits: []
+  expects: []
+  examples:
+    - { use: region-map@1, with: { highlight: $.COUNTRY_ISO3, link-kind: country-risk, link-id: "CR-{iso3}", shade-kind: country-risk, shade-field: $.SCORE, shade-label: Risk score } }
+  since: "2.7.0"
+panels:
+  - id: %{id}
+    kind: map
+    title: "%{title}"
+    code: %{code}
+    key: %{key}
+    area: %{area}
+    highlight: %{highlight}
+    link:
+      kind: %{link-kind}
+      id: "%{link-id}"
+    shade:
+      kind: %{shade-kind}
+      field: %{shade-field}
+      by: %{shade-by}
+      fmt: %{shade-fmt}
+      label: "%{shade-label}"
+    height: %{height}

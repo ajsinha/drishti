@@ -1,0 +1,51 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The macro-indicator Sutra as tools/packgen/world/make.py generated it before Sutra Next phase 1 (written inline, no fragments), as
+# version 2 so it wins while SutraNextEquivalenceTest draws the "before" view. Test data only.
+rachana: 1
+sutra: macro-indicator
+version: 2
+description: "One headline statistic of one economy: the series, the latest value, the change and the rank among economies."
+match: { kind: macro-indicator, priority: 10 }
+title: { pill: Economics · Macro indicator, id: $.INDICATOR_ID }
+strip:
+  - { label: Indicator, bind: $.NAME }
+  - { label: Latest, bind: $.LATEST, fmt: price2, emphasis: true }
+  - { label: Unit, bind: $.UNIT }
+  - { label: Year, bind: $.LATEST_YEAR }
+  - { label: Previous, bind: $.PREVIOUS, fmt: price2 }
+  - { label: Rank, bind: $.RANK, fmt: amount0 }
+panels:
+  - id: history
+    kind: line
+    title: History
+    key: F2
+    rows: $.HISTORY
+    x: YEAR
+    y: VALUE
+    fmt: price2
+  - id: facts
+    kind: kv
+    title: About this series
+    area: right
+    rows: $.FACTS
+  - id: source
+    kind: kv
+    title: Data source and licence
+    area: right
+    rows: $.PROVENANCE
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.ECONOMY, 'economy')", F8: impact, F9: raw }

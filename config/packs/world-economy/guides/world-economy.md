@@ -24,7 +24,7 @@ The data is published data, not samples: the CIA World Factbook (public domain) 
 
 A counterparty of the core pack names its country of risk (`COUNTRY_OF_RISK`) and links to that country's economy (`ECONOMY`), so `CPTY CP-NORTHBRIDGE` opens the United States economy in one click.
 
-**Extends:** nothing · **Kinds:** 13
+**Extends:** `core` · **Kinds:** 13
 
 Enable it with `DRISHTI_PACKS=world-economy` (the packs it extends come with it).
 

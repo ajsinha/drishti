@@ -21,8 +21,9 @@
 - **Sutra Next, phase 1 (2.7.0): the fragment library and docstrings** ([SUTRA_NEXT.md](docs/architecture/SUTRA_NEXT.md)). The
   board/chip paradigm is dropped; Sutra itself becomes the UI library, in one grammar. Built on the shared blocks (`use:`/`with:`):
   - **Fragments**: `<name>.v<N>.fragment.yaml` with `fragment: <name>`, used like blocks. The shared library is the core pack's
-    `sutras/library` (eleven, all `@1`): `series-line`, `curve-table`, `curve-overview`, `field-list`, `ranked-bars`,
-    `cashflow-ladder`, `event-timeline`, `key-figure`, `linked-entities`, `data-provenance`, `explainer-note`. An empty optional
+    `sutras/library` (fourteen, all `@1`): `series-line`, `curve-table`, `curve-overview`, `field-list`, `ranked-bars`,
+    `cashflow-ladder`, `event-timeline`, `key-figure`, `linked-entities`, `data-provenance`, `explainer-note`, `measure-table`,
+    `region-map`, `source-footer`. An empty optional
     parameter (`code`, `key`, `area`) leaves the key out. `sutra lint|test` on a pack finds the library beside it.
   - **The `doc:` docstring**: summary, description, every parameter with type, default and meaning, emits, expects, examples, since.
     Strict for fragments (`DRS-2055`: not loaded without a complete one); a warning for Sutras and older blocks (`sutra lint --docs` prints
@@ -32,6 +33,16 @@
   - **ir-curve migrated** (`/v/ir-curve/CRV-USD-OIS`): `curve-overview`, `series-line`, `data-provenance`, `linked-entities`, and a
     `doc:`. `SutraNextEquivalenceTest` proves the view model identical to the generated inline layout's (values, masks, titles,
     order) for a full and a masked reader. The Sutra is hand-written now (`HAND_WRITTEN` in `tools/packgen/banking/make_sutras.py`).
+  - **The world-economy pack's seven economics screens migrated** (`country-group`, `economic-forecast`, `economy`, `fiscal-position`,
+    `labour-market`, `macro-indicator`, `region-economy`), each with a complete `doc:`, from `series-line`, `ranked-bars`,
+    `field-list` and three new generic fragments (the library is fourteen): **`measure-table`** (a list as a table: a name column and
+    two measures, the first totalled), **`region-map`** (a world map with the record's country highlighted and every country shaded by
+    one figure, each a click away) and the composite **`source-footer`** (`field-list` for the data source and licence, then
+    `data-provenance` and `linked-entities`, on all seven). The IMF projections table (nine columns) stays written in place: a
+    fragment's columns are fixed. `EconomicsSutraNextEquivalenceTest` proves all seven identical to the generated layouts on the
+    pack's committed samples for a full and a masked reader. They are hand-written now (`hand_written` in
+    `tools/packgen/world/make.py`, honoured by `tools/packgen/common/packbuild.py`), and **world-economy extends core** (as every
+    other pack does), so the library comes with it when it is enabled alone.
   - **`GET /api/v1/sutras/library`** (and `/{name}/{version}` with the text) lists the fragments with their docstrings for a
     component browser or an AI agent; `?blocks=true` adds the older blocks. No UI yet.
   - IMPLEMENTATION_PLAN: 2.7.0 is now "Sutra Next, phase 1+"; the UI Board stays parked on its branch. Docs: SUTRA_NEXT.md (with the

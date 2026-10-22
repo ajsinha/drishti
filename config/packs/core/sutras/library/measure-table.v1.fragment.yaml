@@ -1,0 +1,82 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The shared fragment library (SUTRA_NEXT.md): hand-written, versioned, used as { use: measure-table@1, with: {...} }.
+rachana: 1
+fragment: measure-table
+version: 1
+description: "A list as a table: a name column and two measures, the first totalled at the foot."
+params:
+  id: measures
+  title: Measures
+  rows: $.ROWS
+  name-label: Name
+  name: NAME
+  first-label: Value
+  first: VALUE
+  first-fmt: amount0
+  first-total: 'true'
+  second-label: Change
+  second: CHANGE
+  second-fmt: pc2
+  second-tone: ''
+  code: ''
+  key: ''
+  area: ''
+doc:
+  summary: "A list as a table: a name column and two measures, the first totalled at the foot."
+  description: >-
+    One row an item of a list (the largest economies of a group, jobs and output by sector, exposure and limit by desk): its
+    name, a first measure (summed at the foot when first-total is true) and a second measure, toned by sign when asked. Rows
+    keep the order of the list. For more columns write the table in place; a fragment's columns are fixed.
+  params:
+    id: { type: id, default: measures, meaning: "The panel id, unique on the screen" }
+    title: { type: text, default: Measures, meaning: "The title over the table" }
+    rows: { type: expression, default: $.ROWS, meaning: "The list of rows, one an item" }
+    name-label: { type: text, default: Name, meaning: "The heading of the name column" }
+    name: { type: field, default: NAME, meaning: "The field of a row naming it" }
+    first-label: { type: text, default: Value, meaning: "The heading of the first measure, with its unit" }
+    first: { type: field, default: VALUE, meaning: "The field holding the first measure" }
+    first-fmt: { type: format, default: amount0, meaning: "The named format of the first measure" }
+    first-total: { type: boolean, default: 'true', meaning: "Whether the first measure is summed at the foot of the table" }
+    second-label: { type: text, default: Change, meaning: "The heading of the second measure, with its unit" }
+    second: { type: field, default: CHANGE, meaning: "The field holding the second measure" }
+    second-fmt: { type: format, default: pc2, meaning: "The named format of the second measure" }
+    second-tone: { type: text, default: '', meaning: "How the second measure is coloured: sign (green up, red down); plain when empty" }
+    code: { type: key, default: '', meaning: "The panel's mnemonic code (CRV, REFS), typed in the command line to jump to it; none when empty" }
+    key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
+  emits: []
+  expects: []
+  examples:
+    - { use: measure-table@1, with: { id: by-desk, title: Exposure by desk, rows: $.BY_DESK, name-label: Desk, name: DESK, first-label: Exposure, first: EXPOSURE, second-label: "Limit used, %", second: USED, key: F3 } }
+  since: "2.7.0"
+panels:
+  - id: %{id}
+    kind: table
+    title: "%{title}"
+    code: %{code}
+    key: %{key}
+    area: %{area}
+    rows: %{rows}
+    columns:
+      - { label: "%{name-label}", bind: "@.%{name}" }
+      - label: "%{first-label}"
+        bind: "@.%{first}"
+        fmt: "%{first-fmt}"
+        total: %{first-total}
+      - label: "%{second-label}"
+        bind: "@.%{second}"
+        fmt: "%{second-fmt}"
+        tone: %{second-tone}

@@ -1,0 +1,62 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The fiscal-position Sutra as tools/packgen/world/make.py generated it before Sutra Next phase 1 (written inline, no fragments), as
+# version 2 so it wins while SutraNextEquivalenceTest draws the "before" view. Test data only.
+rachana: 1
+sutra: fiscal-position
+version: 2
+description: "Government debt and net lending (IMF) with revenue, expense and military spending (World Bank), as shares of GDP."
+match: { kind: fiscal-position, priority: 10 }
+title: { pill: Economics · Fiscal position, id: $.FISCAL_ID }
+strip:
+  - { label: Economy, bind: $.ECONOMY_NAME }
+  - { label: Debt / GDP, bind: $.DEBT, fmt: pc1 }
+  - { label: Net lending / GDP, bind: $.BALANCE, fmt: pc2, tone: sign, emphasis: true }
+  - { label: Revenue / GDP, bind: $.REVENUE, fmt: pc1 }
+  - { label: Expense / GDP, bind: $.SPENDING, fmt: pc1 }
+  - { label: Military / GDP, bind: $.MILITARY, fmt: pc2 }
+panels:
+  - id: ratios
+    kind: hbar
+    title: "Central government, % of GDP"
+    key: F2
+    rows: $.RATIOS
+    label: ITEM
+    value: VALUE
+    fmt: pc1
+  - id: debtPath
+    kind: line
+    title: "General government gross debt, % of GDP"
+    area: right
+    rows: $.DEBT_PATH
+    x: YEAR
+    y: DEBT
+    fmt: pc1
+  - id: balancePath
+    kind: line
+    title: "Net lending / borrowing, % of GDP"
+    key: F3
+    rows: $.BALANCE_PATH
+    x: YEAR
+    y: BALANCE
+    fmt: pc2
+  - id: source
+    kind: kv
+    title: Data source and licence
+    area: right
+    rows: $.PROVENANCE
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.ECONOMY, 'economy')", F8: impact, F9: raw }

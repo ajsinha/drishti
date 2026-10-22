@@ -57,18 +57,20 @@ class SutraFragmentsTest {
         var fragments = SutraBlocks.library().values().stream().flatMap(v -> v.values().stream()).toList();
         assertThat(fragments).hasSizeBetween(8, 15).allMatch(SutraBlocks.Block::fragment);
         assertThat(fragments).extracting(SutraBlocks.Block::name).contains("series-line", "curve-table", "field-list", "ranked-bars",
-                "cashflow-ladder", "linked-entities", "data-provenance", "key-figure");
+                "cashflow-ladder", "linked-entities", "data-provenance", "key-figure", "measure-table", "region-map", "source-footer");
         for (SutraBlocks.Block b : fragments) {
+            int inner = b.text().split("\n  - use:", -1).length - 1;             // a composite draws one panel per inner (one-panel) fragment
+            int drawn = inner == 0 ? 1 : inner;
             Map<String, Object> doc = b.doc();
             assertThat(doc).as(b.ref()).containsKeys("summary", "description", "params", "emits", "expects", "examples", "since");
             Sutra s = new SutraParser().parse(sutra("  - { use: " + b.ref() + " }\n"), "probe.v1.sutra.yaml", "x");
-            assertThat(s.panels()).as(b.ref() + " with its defaults").hasSize(b.text().contains("\n  - use:") ? 2 : 1);
+            assertThat(s.panels()).as(b.ref() + " with its defaults").hasSize(drawn);
             @SuppressWarnings("unchecked")
             List<Object> examples = (List<Object>) doc.get("examples");
             for (Object example : examples) {
                 String yaml = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(example);   // JSON is YAML
                 assertThat(new SutraParser().parse(sutra("  - " + yaml + "\n"), "probe.v1.sutra.yaml", "x").panels())
-                        .as(b.ref() + " example " + yaml).hasSize(b.text().contains("\n  - use:") ? 2 : 1);
+                        .as(b.ref() + " example " + yaml).hasSize(drawn);
             }
         }
     }

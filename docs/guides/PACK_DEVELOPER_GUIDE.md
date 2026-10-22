@@ -1755,7 +1755,9 @@ panels:
 ```
 
 The library today: `series-line`, `curve-table`, `curve-overview` (a composite of the two), `field-list`, `ranked-bars`,
-`cashflow-ladder`, `event-timeline`, `key-figure`, `linked-entities`, `data-provenance`, `explainer-note`. What each one shows, its
+`cashflow-ladder`, `event-timeline`, `key-figure`, `linked-entities`, `data-provenance`, `explainer-note`, `measure-table`,
+`region-map`, `source-footer` (a composite: data source, how the view was built, linked entities). The world-economy economics
+screens are worked examples. What each one shows, its
 parameters with their types and defaults, and examples are in its docstring; read them all with
 `curl -s localhost:8080/api/v1/sutras/library | jq '.fragments[] | {ref, summary}'`.
 
