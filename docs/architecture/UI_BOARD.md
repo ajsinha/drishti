@@ -998,6 +998,63 @@ included); trading (proven, 24 one-offs); news-and-markets is ready for `listed-
 convert clean and pass the board check, but their data is not compared; publishing the record chips through review (they ship as
 certified seeds); boards for computed rows and `source:` panels (a model query, a second supply).
 
+**Final: everything on chips and boards** (2026-10-21; supersedes "Still not done" above, except publishing the record chips).
+
+* **Report pages served as boards.** `PackScreens.report` serves a BI report with each page painted from its board (`BoardReport`) when
+  the report's pack is on boards, or its model (`models.<model>: boards | sutras` in `ui.yaml`, over the pack's). `BiReportService` reads
+  the served text for `get`, `query` and every other use, so the page and its BI runs are the board's; `GET /bi/reports/{id}` adds
+  `servedFrom: {<page>: <board>}`. The page's frame (`id`, `title`, `layout: board`, `drillthrough`) stays the report's: a board has no
+  key for it. A report on a dataset converts with `supply: {dataset: ...}`; a board-layout page (tiles) with no supply, its pack the pack
+  of the report its first tile shows; `bi-tile`'s `content` is a `spec` (`{report, page, visual}`). A page converts only when
+  `BoardReport` paints its board back into exactly the page (wells compared as lists).
+* **Cross-filters, slicers and drill as traces.** Every `bi-*` chip with wells has the in pin `filter` (type `filter`); a visual with a
+  dimension emits `selected` (now a `filter`, the clicked or drilled mark), a slicer `filter-out`. `ReportConverter` draws, per page, a
+  trace from every emitter to every other chip's `filter` (what the BI engine does by default; reports declare no other interactions).
+  Two rules of the board check changed for it: a `filter` in pin takes several traces (they combine, all must hold; `BoardRender` passes
+  them as a list), and a cycle of filter-to-filter traces settles (a person's click, like a selection, is not recomputed). Drill-through
+  stays a constant (navigation), as `link(...)` on entity pages.
+* **The 33 one-offs, now generic chips.** Page controls: every record chip has the frame pin `page` (`spec`), traced from the header's out
+  pin `page`; the settings keep `ctl.<id>` as written. A linked record: `source: link($.QUOTE_ID, 'quote')` is the chip supplied by the
+  linked kind, `supply: {connector: news-and-markets/quote, query: {id-from: QUOTE_ID}}`, and `BoardSutra` paints the `source:` back.
+  Computed rows: a data pin's mapping may be an expression over the record, `map: {rows: "=group(@doc.TRADES, 'PRODUCT_TYPE', 'NOTIONAL')"}`
+  (painted as `rows: group($.TRADES, ...)`); `dated-steps-ladder` gained `empty`, `ranked-bar-list` `shape` and optional `label`/`value`.
+  The computed mapping and `id-from` are painted by `BoardSutra` (served pages); a board rendered natively by the render service does not
+  evaluate them yet.
+* **Names.** A page served from its board is painted under its original Sutra name and version (marked `board:<name>` in its location):
+  provenance `sutra` is the loaded Sutra, `provenance.board` and the explain answer's `layout.board` the board, the layout label
+  "Board X (from Sutra Y vN)". `GET /api/v1/ui/boards/{name}` answers a pack's converted board (`scope: pack`) when no saved board has the
+  name, so `/build/board/<name>` opens it; saving makes it the person's own.
+
+**The dry run, final** (`ConvertCliTest`; report pages now include dataset and board-layout reports, 20 in all):
+
+| Pack | Screens | Entity pages | Report pages | Clean | Board-local chips | Fail |
+|---|---|---|---|---|---|---|
+| trading | 136 | 134 | 2 | 136 | 0 | 0 |
+| core | 10 | 10 | 0 | 10 | 0 | 0 |
+| counterparty-risk | 11 | 10 | 1 | 11 | 0 | 0 |
+| market-data | 20 | 20 | 0 | 20 | 0 | 0 |
+| market-risk | 21 | 6 | 15 | 21 | 0 | 0 |
+| news-and-markets | 4 | 4 | 0 | 4 | 0 | 0 |
+| world-economy | 15 | 13 | 2 | 15 | 0 | 0 |
+
+**The proof, final** (three people as above; entity pages by `BoardProof`, report pages by `ReportProof`: per page and person the report
+opened and every visual that reads data asked, as written and from its boards, compared after dropping run-naming keys such as `millis`):
+
+| Pack | Entity pages proven | Comparisons | Report pages proven | Comparisons (answers with rows) | Differences |
+|---|---|---|---|---|---|
+| trading | 134 of 134 | 1,206 | 2 of 2 | 36 (26) | 0 |
+| core | 10 of 10 | 90 | — | — | 0 |
+| counterparty-risk | 10 of 10 | 90 | 1 of 1 | 21 (18) | 0 |
+| market-data | 20 of 20 | 180 | — | — | 0 |
+| market-risk | 6 of 6 | 54 | 15 of 15 | 213 (64) | 0 |
+| news-and-markets | 4 of 4 | 24 | — | — | 0 |
+| world-economy | 13 of 13 | 117 | 2 of 2 | 45 (12) | 0 |
+
+`news` and `quote` are proven on a committed synthetic sample (`drishti-server/src/test/resources/ui-migrate/news-and-markets`: one
+invented quote `QUOTE-SYNX` and one invented headline set, never market data), added to the demo source's folders by the test only, so
+the demo's captured snapshot is untouched. The report proof asks each visual as a BI run computes it (`BiReportService.query`, the
+caller's row rules and masks), not through the run queue.
+
 ### 12.5 As built: P4
 
 **One designer (the product owner, during P4: "we do not want two versions of the same functionality").** The Board Designer is not a
