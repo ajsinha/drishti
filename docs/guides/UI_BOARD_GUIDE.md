@@ -38,6 +38,53 @@ chip examples (`filterable-table`, a composite chip, a chip with a `spec` contro
 mode, yours to save. The screen (Sutra) examples below them open as boards through the converter (or in the screen designer). The list is
 `drishti-console/config/ui-examples.yaml`.
 
+## New board
+
+Build → Designer → **New board** (or **New board** on the Boards list) opens the guided start, `/build/board/start`: four steps in plain
+words on the left, a **live preview** on the right that paints the board with your own data as you go (the render API, as you). On a phone
+the steps stack and the preview sits below them. **Blank board** (beside it) opens an empty board in the designer instead.
+
+![New board: what to show, with the live preview](img/ui-board/concept-c.png)
+
+1. **What data.** Pick the data in words: *Trades*, *Trades of one book*, *One trade*, *One curve*, ... one card per kind of every pack you
+   have switched on (each kind's search, its search narrowed by a key column such as the book, and one record by id), with a search box.
+   *Trades of one book* asks *Which book?*; *One trade* starts on the kind's example. The list is `GET /build/board-api/sources`.
+2. **Pick what to show.** The chips that suit that data, as checkbox cards: a line of purpose, and what each **follows** ("Follows the trade
+   you click in Filterable table"). They are the Chip Store's chips whose required columns your data can feed (the palette's *Fits this
+   data*), the best of each category first; the table and a detail are ticked for you. The wiring is done for you: a detail (one record)
+   follows the table's chosen row; another table or ladder follows it by filter. **Browse all chips…** opens the whole Chip Store.
+3. **Arrange.** The order, top to bottom (the arrows), and each chip **Full width** or **Half** (two halves share a row).
+4. **Save.** A name (lower-case letters, digits and dashes), a title, and **Just me** or **A workspace**. **Create the board** saves it and
+   opens it in the designer.
+
+Each chip's columns are matched to the data's attributes for you (by type, then by name: a label takes a name, an amount a notional); change
+any of them later in the designer.
+
+## The Wiring view
+
+**Page | Wiring** at the top of the designer switches between the page (the boxes as the board lays them out) and **Wiring**: what feeds
+what, in words. No pins, no type names, no YAML.
+
+![The Wiring view of the book-trades board](img/ui-board/concept-b.png)
+
+* **Boxes.** A **DATA** box for each place the data comes from ("Trades (trading)", "connector · trade-search"; "Board settings" for the
+  board's parameters) and a **CHIP** box for each chip, with one line: "follows: chosen trade · gives: chosen trade".
+* **Wires** are drawn as circuit traces (straight runs, 90° bends, hops and junction dots) and **labelled in words**: "trades", "chosen
+  trade", "as of". Two colours, explained in the key below the wiring: **data from a connector** (the theme's accent) and **a selection
+  passed on** (green).
+* **Click a wire** (or Tab to it and press Enter): a sentence says what it does ("Cash flows follows the trade chosen in Trades"), with
+  **Change** (what else could feed it, in words) and **Remove**.
+* **Connect:** drag from a box's right edge (the round handle) to another box, or click the handle and then a box. Only the boxes that can
+  take something light up. When there is more than one thing to pass, the designer asks in words ("the chosen trade, to filter by it").
+  From a DATA box, the chip reads that data and its columns are matched for you.
+* **Layout:** data on the left, chips flowing right by what they follow. Drag a box to move it; its place is kept in the board's layout
+  (`layout.wiring`, which the page never shows).
+
+```yaml
+layout:
+  wiring: { ticket: [800, 200] }     # the Wiring view's box places, [x, y] in pixels
+```
+
 ## 1. One designer, two modes
 
 The designer has two modes in one shell, one palette area (the Chip Store) and one YAML / JSON tab:

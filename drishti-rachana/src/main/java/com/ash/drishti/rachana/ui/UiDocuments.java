@@ -288,7 +288,7 @@ public final class UiDocuments {
         if (n.isMissingNode() || n.isNull()) {
             return Layout.EMPTY;
         }
-        unknownKeys(n, Set.of("theme", "desktop", "tablet", "phone"), at, p);
+        unknownKeys(n, Set.of("theme", "desktop", "tablet", "phone", "wiring"), at, p);   // wiring: the designer's Wiring view box places, not rendered
         Phone phone = null;
         JsonNode ph = n.path("phone");
         if (ph.isObject()) {

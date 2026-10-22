@@ -102,6 +102,54 @@ async def view_page(request: Request, name: str):
     return render(request, "ui/view.html", screen="ui-boards", board=name, where=_where(request))
 
 
+@router.get("/build/board/start", dependencies=_ON)
+async def guided_page(request: Request):
+    """New board, guided (concept C): what data, what to show, arrange, save; a live preview beside the steps; the result opens in the designer."""
+    return render(request, "ui/new_board.html", screen="ui-new-board", where=_where(request))
+
+
+def _plural(word: str) -> str:
+    return word if word.endswith("s") else (word[:-1] + "ies" if word.endswith("y") and word[-2:-1] not in "aeiou" else word + "s")
+
+
+@router.get("/build/board-api/sources", dependencies=_ON)
+async def board_sources(request: Request):
+    """The data a new board can start from, in words, from the kinds of the person's active packs (their overviews): "One trade" (the entity by
+    id), "Trades" (the kind's search) and "Trades of one book" for each of the kind's key columns. Each: ``{id, title, hint, pack, kind, shape:
+    one|many, supply, params}``; a parameter with ``ask`` is asked for in words when the source is chosen."""
+    backend, me, out = request.app.state.backend, ident(request), []
+    try:
+        packs = await backend.packs(me)
+    except BackendError:
+        packs = []
+    for p in packs or []:
+        if not isinstance(p, dict) or not p.get("name") or p.get("active") is False:
+            continue
+        try:
+            ov = await backend.pack_overview(p["name"], me)
+        except BackendError:
+            continue
+        pack = str(ov.get("name") or p["name"])
+        for k in (ov or {}).get("kinds") or []:
+            kind = str(k.get("kind") or "")
+            if not kind:
+                continue
+            one = str(k.get("label") or kind.replace("-", " ")).lower()
+            many, example = _plural(one), k.get("example")
+            out.append({"id": f"{pack}/{kind}:many", "title": many[:1].upper() + many[1:], "hint": f"Every {one}, searched and sorted", "pack": pack, "kind": kind,
+                        "shape": "many", "supply": {"connector": f"{pack}/{kind}-search"}, "params": {}})
+            for col in list(k.get("columns") or [])[:3]:
+                c = str(col).replace("_", " ").replace("-", " ").lower()
+                param = re.sub(r"[^a-z0-9]+", "-", c).strip("-") or "key"
+                out.append({"id": f"{pack}/{kind}:by:{param}", "title": f"{many[:1].upper() + many[1:]} of one {c}", "hint": f"The {many} of the {c} you name",
+                            "pack": pack, "kind": kind, "shape": "many", "supply": {"connector": f"{pack}/{kind}-search", "query": {str(col): f"%{{board.params.{param}}}"}},
+                            "params": {param: {"type": "id", "required": True, "ask": f"Which {c}?"}}})
+            out.append({"id": f"{pack}/{kind}:one", "title": f"One {one}", "hint": f"A single {one}, by its id" + (f", e.g. {example}" if example else ""),
+                        "pack": pack, "kind": kind, "shape": "one", "supply": {"connector": f"{pack}/{kind}", "query": {"id": "%{board.params.id}"}},
+                        "params": {"id": {"type": "id", "of": f"{pack}/{kind}", "required": True, "ask": f"Which {one}?", **({"default": example, "example": example} if example else {})}}})
+    return JSONResponse({"sources": out})
+
+
 @router.get("/build/board/new", dependencies=_ON)
 @router.get("/build/board/{name}", dependencies=_ON)
 async def design_page(request: Request, name: str = ""):
