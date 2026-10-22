@@ -271,6 +271,20 @@ class SutraCliTest {
         assertThat(CliLauncher.launch(new String[] {"sutra", "bogus"}, new PrintStream(o, true), new PrintStream(o, true))).isEqualTo(2);
     }
 
+    /**
+     * Sutra Next phase 1: `sutra lint --docs` on a pack finds the core pack's fragment library beside it (ir-curve uses it), counts the
+     * Sutras without a doc: as one warning (DRS-2055), and still passes; without --docs nothing about docstrings is printed.
+     */
+    @Test
+    void lintWithDocsWarnsAboutSutrasWithoutADocstringAndStillPasses() {
+        Run r = run("lint", ROOT.resolve("config/packs/market-data").toString(), "--docs");
+        assertThat(r.code()).as(r.err()).isZero();
+        assertThat(r.err()).contains("warning DRS-2055").contains("Sutras have no doc: block").doesNotContain("ir-curve.v1.sutra.yaml");
+        Run quiet = run("lint", ROOT.resolve("config/packs/market-data").toString());
+        assertThat(quiet.code()).isZero();
+        assertThat(quiet.err()).doesNotContain("DRS-2055");
+    }
+
     /** Every shipped pack that has a tests/ folder, and the examples: `sutra test` is green. */
     @Test
     void sutraTestPassesOverEveryShippedPacksTestsAndTheExamples() throws IOException {

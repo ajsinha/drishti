@@ -85,6 +85,7 @@ public final class SutraCli {
                                                    the kind is --kind, else the subfolder's one-line 'kind' file, else the folder name
             options: --junit file   JUnit XML report     --out dir   write results here
                      --strict       lint: help warnings (DRS-2045 to 2047) fail the run
+                     --docs         lint: the docstring warnings (DRS-2055): Sutras and blocks without a complete doc:
                      --samples path JSON samples to use instead of the pack's tests/ folder or the Sutra's sibling .json
             exit codes: 0 ok, 1 problems, 2 usage""";
 
@@ -194,7 +195,11 @@ public final class SutraCli {
                 continue;
             }
             bad |= helpWarnings(u, s.sutras().check(u.text()), parsed, a, cases);
-            undocumented += docWarnings(u);
+            undocumented += a.docs() ? docWarnings(u) : 0;
+        }
+        if (a.docs()) {
+            com.ash.drishti.rachana.parse.SutraBlocks.warnings().forEach(w -> err.println(w.location().file() + ":"
+                    + w.location().line() + " warning " + w.code() + " " + w.message()));   // an older block's doc
         }
         if (undocumented > 0) {          // a warning only, even with --strict, until the Sutras carry their docstrings
             err.println("warning DRS-2055 " + undocumented + " of " + units.size() + " Sutras have no doc: block (SUTRA_NEXT.md, The doc: docstring)");
@@ -627,9 +632,6 @@ public final class SutraCli {
         if (dirs.stream().anyMatch(d -> d != null && hasBlocks(d))) {
             for (com.ash.drishti.rachana.SutraProblem p : com.ash.drishti.rachana.parse.SutraBlocks.load(dirs.stream().filter(java.util.Objects::nonNull).toList())) {
                 err.println(p.location().file() + ":" + p.location().line() + " " + p.code() + " " + p.message());   // a block that does not read
-            }
-            for (com.ash.drishti.rachana.SutraProblem w : com.ash.drishti.rachana.parse.SutraBlocks.warnings()) {
-                err.println(w.location().file() + ":" + w.location().line() + " warning " + w.code() + " " + w.message());   // an older block's doc
             }
         }
     }

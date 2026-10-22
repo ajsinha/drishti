@@ -1321,7 +1321,7 @@ java -jar drishti-server/target/drishti-server-<version>-exec.jar sutra <command
 
 | Command | Takes | Does |
 |---|---|---|
-| `lint` | a pack folder, a folder of Sutras or one `.sutra.yaml` | parses and checks every Sutra (with its blocks expanded); problems print with file, line and DRS code; `--strict` makes the help warnings (`DRS-2045` to `DRS-2047`) fail the run |
+| `lint` | a pack folder, a folder of Sutras or one `.sutra.yaml` | parses and checks every Sutra (with its blocks expanded); problems print with file, line and DRS code; `--strict` makes the help warnings (`DRS-2045` to `DRS-2047`) fail the run; `--docs` adds the docstring warnings (`DRS-2055`, a Sutra or block without a complete `doc:`; never fails the run) |
 | `test` | the same | renders each Sutra against its samples, checks `expect.yaml`, and reports the help coverage of the fields it shows |
 | `preview` | the same | renders the samples; with `--out dir` writes one HTML snapshot per Sutra and sample |
 | `shape` | JSON sample files or a folder | infers the JSON Schema with roles (to the console, or `--out dir/shape.json`) |

@@ -556,6 +556,13 @@ panels.
 - Mistakes are `DRS-2048`: `no block deal-ticket@3 (blocks: deal-footer, deal-ticket, events, legs, flow-schedule, payments)`,
   `block 'legs' has no parameter 'colour'`, `block 'nested' uses another block`, `name it legs.v1.block.yaml`.
 
+**Fragments (2.7.0, Sutra Next phase 1).** A fragment is a block of the shared library, `<name>.v<N>.fragment.yaml` with
+`fragment: <name>` (the core pack's `sutras/library`, which every pack extends), used exactly like a block (`{ use: series-line@1,
+with: {...} }`). It carries a complete `doc:` docstring, checked strictly (`DRS-2055`: a fragment without one is not loaded), and may
+`use:` other fragments at a pinned version (`name@N`), passing parameters explicitly (`with: { title: "%{title}" }`), at most three
+fragments deep and without a cycle. A Sutra may carry a `doc:` too; without one `sutra lint --docs` warns. See
+[Fragments and docstrings](PACK_DEVELOPER_GUIDE.md#fragments-and-docstrings) and [SUTRA_NEXT.md](../architecture/SUTRA_NEXT.md).
+
 ### Folders mean nothing
 
 A Sutra directory is read recursively. Sub-folders (`sutras/common/`, `sutras/endur/`, `sutras/calypso/`, `sutras/murex/`,
@@ -2322,8 +2329,8 @@ Common reasons:
 A Sutra file that fails any check is not loaded (or keeps its last good version, see
 [Hot reload](#hot-reload-the-workbench-and-governance)), and each problem is reported as `<file>:<line>:<column> <code> <message>`
 (`sutra lint`: `<file>:<line> <code> <message>`). All problems of a file are reported at once. The grammar's own codes run
-`DRS-2010` to `DRS-2039`; around them are YAML and file problems (`DRS-2001`, `DRS-2004`, `DRS-2009`, `DRS-2032`, `DRS-2033`), the pack about-file
-family (`DRS-2040` to `DRS-2047`), shared blocks (`DRS-2048`) and expressions (`DRS-2101`).
+`DRS-2010` to `DRS-2055`; around them are YAML and file problems (`DRS-2001`, `DRS-2004`, `DRS-2009`, `DRS-2032`, `DRS-2033`), the pack about-file
+family (`DRS-2040` to `DRS-2047`), shared blocks (`DRS-2048`), docstrings (`DRS-2055`) and expressions (`DRS-2101`).
 
 | Code | Message (exact form) | Cause | Fix |
 |---|---|---|---|
@@ -2361,6 +2368,7 @@ family (`DRS-2040` to `DRS-2047`), shared blocks (`DRS-2048`) and expressions (`
 | `DRS-2045` | `F1 is bound in keys: it opens About this page on a view, and this binding wins on this view (the drawer stays on '?'); bind another key to keep F1 for help` | a lint warning (`sutra lint`), not a load error: a Sutra binds `F1` | bind a key from `F2` to `F12`, or accept that `F1` runs your binding on this view |
 | `DRS-2046` | `about text for panel 'ghost' of kind 'widget' matches no panel of any Sutra for the kind` | a lint warning: `panels.<id>` in `about.yaml` names no panel | correct the id or delete the entry |
 | `DRS-2048` | `no block legs@3 (blocks: deal-ticket, legs, events)` | a `use:` names no block, a `with:` names no parameter, a block uses another or its file is misnamed | write the block, fix the name or version, or drop the parameter ([Shared panel blocks](#shared-panel-blocks-use)) |
+| `DRS-2055` | `fragment series-line: doc.params.fmt is missing (type, default, meaning)` | a fragment's `doc:` is missing or incomplete (strict: the fragment is not loaded); for a Sutra or an older block, a warning of `sutra lint` | complete the docstring ([Fragments and docstrings](PACK_DEVELOPER_GUIDE.md#fragments-and-docstrings)) |
 | `DRS-2047` | `field 'colour' is shown but has no glossary entry (kinds.widget.glossary in config/about.yaml, or a vocabulary entry)` | a lint warning: a field a Sutra shows has no glossary entry; fails `sutra lint --strict` | add the entry to the kind's `glossary:` or to `vocabulary:` |
 | `DRS-2101` | `expression '…': <reason> at <offset>`, `template '…': <reason> at <offset>` | an expression or template does not compile, or is beyond the [size limits](#size-limits) | see [Expression errors](#expression-errors) |
 

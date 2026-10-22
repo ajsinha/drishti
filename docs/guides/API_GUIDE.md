@@ -1034,6 +1034,7 @@ curl -s $B/calc/settings
 | `GET` | `/sutras/problems` | `{file: [{code, message, location}]}` for Sutras that failed to load, and for files in a Sutra folder that are not Sutras (`DRS-2004`); `{}` when all is well |
 | `GET` | `/rachana/schema` | the JSON Schema (draft 2020-12, `application/schema+json`) of a Sutra in Rachana language 1, generated from the grammar, with this server's entity kinds and formats filled in and the Rachana-EL functions under `x-rachana-functions`; for editor completion and checking |
 | `GET` | `/rachana/blocks`, `/rachana/blocks/{name}/{version}` | the shared panel blocks loaded (`<name>.v<N>.block.yaml`): name, version, description, params, file; one block adds its `text` (404 `DRS-2003` when unknown) |
+| `GET` | `/sutras/library`, `/sutras/library/{name}/{version}` | the fragment library with its docstrings (Sutra Next phase 1, [SUTRA_NEXT.md](../architecture/SUTRA_NEXT.md)): `{fragments: [{ref, name, version, fragment, summary, params, doc: {summary, description, params, uses, emits, expects, examples, since}, source}], count}`; `?blocks=true` adds the older shared blocks (`fragment: false`, their `doc` may be empty); one fragment adds its `text` (404 `DRS-2003` when unknown). For a component browser or an AI agent; read-only |
 
 ```bash
 curl -s $B/packs | jq -c '.[0:2][] | {name, version, title, kinds: .kinds[0:3], assigned, active}'

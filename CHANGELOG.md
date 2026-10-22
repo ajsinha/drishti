@@ -18,6 +18,25 @@
 ## Unreleased
 
 - The UI Board work is kept on branch ui-board-preview; not in this release.
+- **Sutra Next, phase 1 (2.7.0): the fragment library and docstrings** ([SUTRA_NEXT.md](docs/architecture/SUTRA_NEXT.md)). The
+  board/chip paradigm is dropped; Sutra itself becomes the UI library, in one grammar. Built on the shared blocks (`use:`/`with:`):
+  - **Fragments**: `<name>.v<N>.fragment.yaml` with `fragment: <name>`, used like blocks. The shared library is the core pack's
+    `sutras/library` (eleven, all `@1`): `series-line`, `curve-table`, `curve-overview`, `field-list`, `ranked-bars`,
+    `cashflow-ladder`, `event-timeline`, `key-figure`, `linked-entities`, `data-provenance`, `explainer-note`. An empty optional
+    parameter (`code`, `key`, `area`) leaves the key out. `sutra lint|test` on a pack finds the library beside it.
+  - **The `doc:` docstring**: summary, description, every parameter with type, default and meaning, emits, expects, examples, since.
+    Strict for fragments (`DRS-2055`: not loaded without a complete one); a warning for Sutras and older blocks (`sutra lint --docs` prints
+    an incomplete one and counts those without one; never fails on it). `doc:` is a known top-level key of a Sutra and in the schema.
+  - **Composite fragments**: a fragment may `use:` other fragments at a pinned version (`name@N`), passing parameters explicitly,
+    listed under `doc.uses`; at most three deep, no cycles (`DRS-2048`, found when the library loads). Blocks still may not.
+  - **ir-curve migrated** (`/v/ir-curve/CRV-USD-OIS`): `curve-overview`, `series-line`, `data-provenance`, `linked-entities`, and a
+    `doc:`. `SutraNextEquivalenceTest` proves the view model identical to the generated inline layout's (values, masks, titles,
+    order) for a full and a masked reader. The Sutra is hand-written now (`HAND_WRITTEN` in `tools/packgen/banking/make_sutras.py`).
+  - **`GET /api/v1/sutras/library`** (and `/{name}/{version}` with the text) lists the fragments with their docstrings for a
+    component browser or an AI agent; `?blocks=true` adds the older blocks. No UI yet.
+  - IMPLEMENTATION_PLAN: 2.7.0 is now "Sutra Next, phase 1+"; the UI Board stays parked on its branch. Docs: SUTRA_NEXT.md (with the
+    layout grid and composite fragments designed), PACK_DEVELOPER_GUIDE "Fragments and docstrings", RACHANA_REFERENCE, API_GUIDE,
+    TROUBLESHOOTING (`DRS-2055`).
 - **Fix: uninstalling a connector made through Admin** no longer fails with `cannot archive ... NoSuchFileException`: since connector
   edits are a shared overlay in the content store there is no file to move, so the text in force is archived (`ArtifactArchive.archiveText`),
   the overlay removed (kept in the shared history) with any file under it (`ConnectorFiles.removeEverywhere`), and Restore writes it back.

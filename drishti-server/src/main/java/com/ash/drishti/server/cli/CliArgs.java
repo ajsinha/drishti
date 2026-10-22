@@ -20,8 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-/** The parsed command line of {@code sutra <command> <path>... [--junit file] [--out dir] [--kind k] [--samples path] [--strict]}. */
-record CliArgs(String command, List<Path> paths, Path junit, Path out, String kind, List<Path> samples, boolean strict, boolean each) {
+/** The parsed command line of {@code sutra <command> <path>... [--junit file] [--out dir] [--kind k] [--samples path] [--strict] [--docs]}. */
+record CliArgs(String command, List<Path> paths, Path junit, Path out, String kind, List<Path> samples, boolean strict, boolean each, boolean docs) {
 
     static final Set<String> COMMANDS = Set.of("lint", "test", "shape", "design", "preview");
 
@@ -41,6 +41,7 @@ record CliArgs(String command, List<Path> paths, Path junit, Path out, String ki
         String kind = null;
         boolean strict = false;
         boolean each = false;
+        boolean docs = false;
         for (int i = 1; i < args.size(); i++) {
             String a = args.get(i);
             switch (a) {
@@ -48,6 +49,7 @@ record CliArgs(String command, List<Path> paths, Path junit, Path out, String ki
                 case "--out" -> out = Path.of(value(args, ++i, a));
                 case "--strict" -> strict = true;
                 case "--each" -> each = true;
+                case "--docs" -> docs = true;
                 case "--kind" -> kind = value(args, ++i, a);
                 case "--samples" -> samples.add(Path.of(value(args, ++i, a)));
                 default -> {
@@ -61,7 +63,7 @@ record CliArgs(String command, List<Path> paths, Path junit, Path out, String ki
         if (paths.isEmpty()) {
             throw new UsageException(command + " needs a path");
         }
-        return new CliArgs(command, paths, junit, out, kind, samples, strict, each);
+        return new CliArgs(command, paths, junit, out, kind, samples, strict, each, docs);
     }
 
     private static String value(List<String> args, int i, String option) {

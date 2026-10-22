@@ -40,7 +40,8 @@ Contents:
    [several source systems for one kind](#several-source-systems-for-one-kind-the-trading-pack) ·
    [derived kinds](#derived-kinds-entities-computed-from-other-kinds) · [samples](#samples) · [deep documents](#modelling-deep-documents-legs-cashflows-and-fixings) ·
    [vocabulary](#vocabulary-labels-formats-and-inference-hints) · [About text](#about-text-and-glossary) · [guides and help](#guides-and-help) ·
-   [roles and field masks](#roles-and-field-masks) · [Calc snippets](#calc-python-snippets) · [inheritance](#inheritance)
+   [roles and field masks](#roles-and-field-masks) · [fragments and docstrings](#fragments-and-docstrings) ·
+   [Calc snippets](#calc-python-snippets) · [inheritance](#inheritance)
 5. Around the pack: [tests](#testing-a-pack) · [generators](#how-the-shipped-packs-are-generated) ·
    [from JSON Lines](#generating-a-pack-from-json-lines) · [versioning](#versioning-a-pack) ·
    [the signed registry](#a-signed-pack-registry-publishing-and-installing) ·
@@ -1737,6 +1738,97 @@ put in `redact`. The shipped setting masks the trader's identity on a trade (`TR
 counterparty's identifier (`counterpartyId`, which matches `COUNTERPARTY_ID`), and the `trader`, `patientName` and
 `lifecycle.timeline.description` of the camelCase example packs, for exactly this reason. Names match in any case and convention (`counterpartyId`
 masks `COUNTERPARTY_ID`); an entry that names no field of the loaded packs is logged at start-up as `DRS-6011`.
+
+## Fragments and docstrings
+
+A Sutra's panels need not be written out. The **fragment library** (2.7.0, [SUTRA_NEXT.md](../architecture/SUTRA_NEXT.md)) holds
+generic, parameterised panels named after what they show, in the core pack's `sutras/library` folder; every pack extends core, so
+every Sutra may use them, exactly like a shared block:
+
+```yaml
+# config/packs/market-data/sutras/market-data/ir-curve.v1.sutra.yaml (the first screen built from fragments)
+panels:
+  - { use: curve-overview@1, with: { curve-code: CRV, curve-key: F2, table-key: F3 } }    # the zero-rate line, then the pillars
+  - { use: series-line@1, with: { id: forwards, title: "1Y forward rates (%)", area: right, rows: $.FORWARDS, x: TENOR, y: RATE, fmt: price2 } }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
+```
+
+The library today: `series-line`, `curve-table`, `curve-overview` (a composite of the two), `field-list`, `ranked-bars`,
+`cashflow-ladder`, `event-timeline`, `key-figure`, `linked-entities`, `data-provenance`, `explainer-note`. What each one shows, its
+parameters with their types and defaults, and examples are in its docstring; read them all with
+`curl -s localhost:8080/api/v1/sutras/library | jq '.fragments[] | {ref, summary}'`.
+
+**Writing a fragment.** A file `<name>.v<N>.fragment.yaml` (in the library, or in your pack's `sutras/` for a pack's own) with
+`fragment: <name>`, `version`, `params:` (each with its default; an empty default `''` leaves an optional key such as `code`, `key`
+or `area` out), `panels:` whose text reads `%{param}`, and a complete **`doc:`**:
+
+```yaml
+rachana: 1
+fragment: ranked-bars
+version: 1
+description: "Horizontal bars, one a row, labelled and sized by a value: the largest contributors at a glance."
+params: { id: bars, title: By contribution, rows: $.ROWS, label: LABEL, value: VALUE, fmt: signed0, code: '', key: '', area: '' }
+doc:
+  summary: "Horizontal bars, one a row, labelled and sized by a value: the largest contributors at a glance."
+  description: >-
+    One horizontal bar a row of a list, labelled by one field and sized by another. Bars keep the order of the list.
+  params:
+    id:    { type: id, default: bars, meaning: "The panel id, unique on the screen" }
+    title: { type: text, default: By contribution, meaning: "The title over the bars" }
+    rows:  { type: expression, default: $.ROWS, meaning: "The list of rows, one bar each" }
+    label: { type: field, default: LABEL, meaning: "The field of a row naming its bar" }
+    value: { type: field, default: VALUE, meaning: "The field of a row giving its bar length" }
+    fmt:   { type: format, default: signed0, meaning: "The named format of the value" }
+    code:  { type: key, default: '', meaning: "The panel's mnemonic code; none when empty" }
+    key:   { type: key, default: '', meaning: "The function key that brings the panel forward; none when empty" }
+    area:  { type: area, default: '', meaning: "main (the default when empty) or right" }
+  emits: []
+  expects: []
+  examples:
+    - { use: ranked-bars@1, with: { id: by-book, title: "P&L by book", rows: $.BY_BOOK, label: BOOK, value: PNL, key: F2 } }
+  since: "2.7.0"
+panels:
+  - id: %{id}
+    kind: hbar
+    title: "%{title}"
+    code: %{code}
+    key: %{key}
+    area: %{area}
+    rows: %{rows}
+    label: %{label}
+    value: %{value}
+    fmt: %{fmt}
+```
+
+The docstring is checked strictly (`DRS-2055`; a fragment without a complete one is not loaded, so its uses fail with `DRS-2048`):
+a one-line `summary` (at most 120 characters), a `description`, every parameter under `doc.params` with `type` (`text`,
+`expression`, `field`, `format`, `key`, `area`, `id`, `number`, `boolean`, `kind`), `default` (the same as under `params:`) and
+`meaning`, and none it does not declare; `emits` and `expects` (`[]` until events and children arrive); at least one example that
+is a use of this fragment with declared parameters; `since`.
+
+**Composite fragments.** A fragment may use other fragments at a **pinned** version and pass parameters explicitly; it lists them
+under `doc.uses`. At most three fragments deep, no cycles (`DRS-2048`):
+
+```yaml
+fragment: curve-overview
+params: { rows: $.POINTS, curve-title: Zero rates (%), ... }
+doc: { uses: [series-line@1, curve-table@1], ... }
+panels:
+  - use: series-line@1
+    with: { title: "%{curve-title}", rows: "%{rows}", ... }
+  - use: curve-table@1
+    with: { rows: "%{rows}", ... }
+```
+
+**A Sutra's docstring.** A Sutra carries a `doc:` too (`summary`, `description`, `params` for its controls, `emits`, `expects`,
+`examples` as URLs or commands that open it, `since`). Today it is a warning, shown on request: `sutra lint <pack> --docs` prints an incomplete one line by
+line and counts the Sutras without one (`warning DRS-2055 19 of 20 Sutras have no doc: block`); an older `.block.yaml` without a
+docstring is a warning too. The run still passes, with or without `--strict`. Write one whenever you touch a Sutra.
+
+**Changing a fragment.** Never change what a released version draws: write `name.v2.fragment.yaml` and move Sutras one at a time.
+To prove a migration changes nothing, compare the view models before and after, as `SutraNextEquivalenceTest` does for ir-curve
+(full and masked reader).
 
 ## Calc: Python snippets
 
