@@ -352,7 +352,6 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `./data/governance` | Where proposals are kept with `drishti.governance.store: file`; with `content` (the default) the folder is imported once and left in place. |
 | `DRISHTI_DATA_DIR` | `drishti.data.dir` | `./data` | The data folder: the umbrella every runtime path below defaults under (see [The data folder](#the-data-folder-and-the-config-folder)). |
 | `DRISHTI_STORE_FILE` | `drishti.store.file` | `./config/store/store.yaml` | The content store's settings file ([The content store](#the-content-store-configstorestoreyaml)); a missing file means the filesystem store under the data folder. |
-| `DRISHTI_UI_DIR` | `drishti.ui.dir` | `./config/ui` | The UI Board's folder: `ui.yaml` (limits, render, the per-pack switch) and `chips/`, the seed chips ([UI_BOARD.md](../architecture/UI_BOARD.md)). |
 | `DRISHTI_STORE_ROOT` | `drishti.store.root` | empty | The filesystem content store's root, over the file's `filesystem.root` (empty: the file's, else `<data folder>/fstore`). |
 | `DRISHTI_BI_STORE` | `drishti.bi.store` | `content` | Where BI workspaces, items, versions, revisions, events, marks, views and settings live: `content` (the content store, every node of a cluster; the identity database's `drishti_bi_*` rows are imported once) or `jpa` (this node's identity database only). See CONTENT_STORE.md section 9. |
 | `DRISHTI_BI_RUNS_STORE` | `drishti.bi.runs.store` | `content` | Where BI runs, their shares, schedules, results and snapshots live: `content` (every node reads them; leases are compare-and-sets in the store; the `drishti_bi_run*` rows and `<data>/bi-runs` are imported once) or `local` (this node's identity database and `store.dir`). |
@@ -404,7 +403,6 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_EXTERNAL_LIB` | `external_lib` | empty | Base of the external library folder (empty: `external_lib` in the repository root); `<base>/python` is importable. The server reads the same variable for `<base>/java`. |
 | `DRISHTI_PRODUCT` | `ui.product` | `Drishti` | The product name shown in pages. |
 | `DRISHTI_USER` | `ui.user` | `ash` | The acting user while sign-in is off. |
-| `DRISHTI_UI_BOARDS` | `ui.boards` | `false` | Offer the Board and Chip designer and the board viewer ([UI_BOARD_GUIDE.md](../guides/UI_BOARD_GUIDE.md)). Off: Build is the screen (Sutra) designer (*New screen*, *My designs*) and `/build/board/*`, `/build/chip/*` and `/ui/b/*` answer *not enabled*. |
 | `DRISHTI_ABOUT_PREFETCH` | `ui.about_prefetch` | `true` | Fetch *About this page* when a view goes idle, so labels with a glossary entry are underlined at once; costs one explain per page view. |
 | `DRISHTI_EMBED_ENABLED` | `embed.enabled` | `false` | Serve `/embed/v1/` for host applications registered at the server (ELEMENTS.md). |
 | `DRISHTI_AUTH_ENABLED` | `auth.enabled` | `false` | Turn console sign-in on. |
@@ -890,37 +888,6 @@ The token scope that opens these writes to a personal API token is `packs:admin`
 | `dir` | `./data/governance` (`DRISHTI_GOVERNANCE_DIR`) | Where proposals and their history are kept. Back it up. |
 
 Check: `curl -s localhost:18480/api/v1/studio/settings` returns `{"approve":…,"review":…,"save":…}`.
-
-### `drishti.ui` — the UI Board: Chip Store and saved boards (2.7.0)
-
-| Key | Default | Meaning |
-|---|---|---|
-| `dir` | `./config/ui` (`DRISHTI_UI_DIR`) | The UI Board's folder: `ui.yaml` (below) and `chips/`, the seed chips (`<chip>.v<n>.chip.yaml`, shipped certified and read-only). |
-
-`config/ui/ui.yaml`, read at start; a missing file or key means the default:
-
-| Key | Default | Meaning |
-|---|---|---|
-| `limits.board-bytes` | `65536` | The largest board document; larger is `413 DRS-2075`. |
-| `limits.chips` / `limits.traces` | `40` / `120` | Chip instances and traces per board; more is `DRS-2075`. |
-| `limits.boards-per-person` | `500` | Saved personal boards per person; one more is `DRS-2075`. |
-| `limits.revisions` | `50` | Earlier saves kept per board (the oldest go first). |
-| `workspaces.<ws>.certified-only` | `false` | Boards of that workspace take certified chips only (`DRS-2071`, rule BC-11); by default a workspace takes published chips. |
-| `render.rows-per-chip` | `10000` | Rows painted per chip; past it the chip's `meta` says `truncated` with the `total`. |
-| `render.chip-budget` | `10s` | A chip's first paint. A non-BI supplier past it is that chip's `DRS-2077`; a BI question past it shows its run card (`state: running`) and the chip follows when the run is done. |
-| `render.board-budget` | `30s` | The whole board to `done`; chips not painted by then report `DRS-2077`. |
-| `render.dynamic-per-minute` | `30` | Unsaved (dynamic) renders per person a minute; past it `429 DRS-2076` with `Retry-After`. |
-| `render.dynamic-at-once` | `4` | Unsaved renders per person painting at once (`DRS-2076`). |
-| `render.sessions-per-person` | `8` | Open render sessions per person; one more closes the oldest (its stream gets `ended`, its pin changes `410 DRS-2079`). |
-| `render.session-idle` | `10m` | A render session ends after this long without a pin change. |
-| `render.reuse` | `30s` | How long a model answer is shared with viewers of the same access profile (same roles, row rules and masks); `0` never. |
-| `render.keep-dynamic` | `7d` | Unsaved documents kept by their SHA-256 under `<data folder>/ui/dynamic` for an auditor; `0` not kept. |
-| `packs.<pack>` | `sutras` | `boards` serves the pack's entity pages from their converted boards (UI_BOARD.md 11.3, phase P5); `sutras` from the Sutras. Also written `packs.<pack>.screens`. Switch a pack only after its proof passed ([OPERATIONS.md](OPERATIONS.md#switching-a-pack-to-boards-270)). |
-
-Chips and boards themselves live in the content store (`ui/…` keys, [CONTENT_STORE.md](../architecture/CONTENT_STORE.md)), so every
-node of a cluster sees them. Who may do what follows the existing roles: saving boards needs `layout`, authoring chips `author`,
-reviewing chips `approve`, certifying chips `bi-steward` (an administrator holds all); workspace boards follow the BI workspace
-membership (contributor and above save). See [UI_BOARD.md](../architecture/UI_BOARD.md) section 12.2.
 
 ### `drishti.branding` — the product's name and notices
 
@@ -2685,7 +2652,6 @@ sign-on settings (`auth.oidc`) apply to every server; each server verifies the I
 | `product` / `tagline` | `Drishti` / `Any data. Any domain. One grammar.` | Shown in the top bar and sign-in page. |
 | `user`, `user_display`, `desk` | `ash` (`DRISHTI_USER`), `Ash`, `Rates desk` | The acting user when `auth.enabled` is false (local development only). |
 | `user_cache_seconds` | `10` | How long a console worker reuses what the server said about a user (settings, packs, view layouts, saved pivots, BI powers) before asking again. A change made on this console is seen at once by all its workers (the user stamps, see `server.workers`); this bounds how long another console behind the same address shows the old choice. |
-| `boards` | `false` (`DRISHTI_UI_BOARDS`) | The Board and Chip designer (UI Board, 2.7.0; [UI_BOARD_GUIDE.md](../guides/UI_BOARD_GUIDE.md)). Off, the default: Build → *New screen* (`/build/new`) is the screen (Sutra) designer with its screen examples, Build → *My designs* lists your designs, the screen designer has no *Open as board*, the Build menu has no *Board designer guide*, a page's provenance names a board without linking it, and `/build/board/*`, `/build/chip/*`, `/build/board-api/*`, `/ui` and `/ui/b/*` answer the console's 404 page saying boards are not enabled. On: Build → *Designer* and *Boards* as the guide describes. The server's `/api/v1/ui` (the engine) and the per-pack switch in `config/ui/ui.yaml` are unchanged either way. |
 | `about_prefetch` | `true` (`DRISHTI_ABOUT_PREFETCH`) | Fetch the page's *About this page* answer once the view is idle, so table headers, strip and key-value labels that have a glossary entry are underlined (with a hint) before the drawer is opened. It costs the server one explain per page view: the view is derived again for the caller and kept `drishti.explain.cache-ttl`, so opening the drawer afterwards is free. Set `false` on a busy installation; the labels are then underlined when the drawer is first opened ([PERFORMANCE.md](PERFORMANCE.md#about-this-page-and-its-cost)). |
 | `clock_tz` / `clock_label` | `America/New_York` / `NY` | The top-bar clock. |
 | `landing_examples` | `4` | How many example commands the landing page plays. They are the example commands (`console.examples`) of the packs switched on, so the landing page never names an entity of a pack that is not installed; with none, it shows the form `<MNEMONIC> <ID> <GO>`. Studio's first preview is the first of these examples too. |

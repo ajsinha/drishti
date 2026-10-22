@@ -262,25 +262,6 @@ anything does (`DRS-5041`) and offers *Disable instead*, and otherwise **moves**
 once a day, so **back up `data/uninstalled` with `data/`** if you want longer. A pack named in `DRISHTI_PACKS` is not uninstalled here (take it out of the setting and
 restart, or disable it). Every action and every refusal is in the audit log as `artifact-*`.
 
-### Switching a pack to boards (2.7.0)
-
-The UI Board (2.7.0) can serve a pack's entity pages from boards converted from its Sutras ([UI_BOARD.md](../architecture/UI_BOARD.md)
-section 11). Nothing switches by default. For a pack:
-
-1. **Dry run.** `drishti.py ui convert --pack trading --dry-run` (no server), or `POST /api/v1/ui/migrate/dry-run {"pack":"trading"}`
-   as an administrator: every screen is converted in memory; the report lists the screens that need board-local chips and any that fail,
-   with the reason. A failing screen stays on its Sutra after the switch.
-2. **Proof.** `POST /api/v1/ui/migrate/proof` with at least one test person per access profile (full, masked, row-restricted; see
-   [API_GUIDE.md](../guides/API_GUIDE.md#migration-to-boards-270-p5)): every page of the pack is built both ways for a sample of records and
-   compared. Switch only when `differs` is `0`; a difference names the person, the record and the path (`panels[1].title`).
-3. **Switch.** Add `packs: { trading: boards }` to `config/ui/ui.yaml` (read at start, every node), or switch one node at once with
-   `PUT /api/v1/ui/packs/trading {"screens":"boards"}`. Pages served from a board carry the response header `X-Drishti-Board`.
-4. **Switch back** at any moment: `{"screens":"sutras"}` (or remove the line): the next page opened is the Sutra's. The Sutras are
-   never removed by the switch (they stay until 3.0), and editing a Sutra converts its board again.
-
-Reports are kept in the content store under `ui/migration/<pack>/`. BI report pages are converted and listed by the dry run but stay on
-their BI pages in 2.7.0 (their data proof is still to come).
-
 ### Connectors behind their pack's template
 
 After a pack upgrade a connector file generated from the older template can lack the kinds the pack serves now. With

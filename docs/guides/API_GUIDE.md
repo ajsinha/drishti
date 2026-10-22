@@ -74,7 +74,6 @@ covered in depth in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 25. [Scheduled reports](#scheduled-reports)
 26. [The access log (administrators)](#the-access-log-administrators)
 27. [A phrase as a search](#a-phrase-as-a-search)
-28. [UI Boards and the Chip Store: `/api/v1/ui` (2.7.0)](#ui-boards-and-the-chip-store-apiv1ui-270)
 
 ## Before you start
 
@@ -1689,16 +1688,6 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-2007 | 403 | four eyes | the author may not approve their own proposal |
 | DRS-2060 | 422 | form invalid | a search form that is not valid YAML or names a field path, type or operator wrongly; the Form tab lists each problem, `pack check` reports the pack's |
 | DRS-2061 | 422 | history invalid | a pack's `history:` block names a shape, chart field, headline or limit wrongly; `sutra lint` and the deploy check list each problem |
-| DRS-2070 | 400 | ui document invalid | a board or chip document is not YAML or JSON, or misses a required key (`rachana`, `board`, `chips`; for a chip `chip`, `version`, `title`, `category`, `manual`, `pins`, `body`); the body lists each problem with its path (rule BC-01) |
-| DRS-2071 | 422 | ui check failed | the board check (BC-01 to BC-11) or a chip's publish check (CP-01 to CP-05) failed; the body lists each problem by rule, path, message and fix |
-| DRS-2072 | 404 | ui chip not found | no such chip in the Chip Store, or no such version of it |
-| DRS-2073 | 404 | ui board not found | no such saved board, or not one the caller may open |
-| DRS-2074 | 403 | ui forbidden | the caller lacks the power (`ui.board.render-dynamic`, `ui.board.save`, `ui.chip.author`, review or certify) |
-| DRS-2075 | 413 | ui too large | a board over a size limit (64 KB, 40 chips, 120 traces, module depth 3, 500 saved boards a person) |
-| DRS-2076 | 429 | ui rate limited | over the render rate limit (30 dynamic renders a minute, 4 at once); `Retry-After` is set |
-| DRS-2077 | 504 | ui supplier timeout | a chip's supplier did not answer within the render budget; sent as a `chip` error event, the board goes on |
-| DRS-2078 | 409 | ui lifecycle order | a Chip Store lifecycle step out of order (publish without approval, certify a draft, change a published version, an unverifiable `compatible-with`) |
-| DRS-2079 | 410 | ui render ended | the render session ended (idle, or the board changed); render again |
 | DRS-2101 | 422 | el syntax | a Rachana-EL expression does not parse (alert rules, Sutra expressions, search conditions) |
 | DRS-2102 | 422 | el eval | a Rachana-EL expression failed while evaluating |
 | DRS-3001 | 500 | inference failed | reserved: the code exists, but nothing in this release raises it (a document with no Sutra is laid out by inference, which does not fail) |
@@ -3056,120 +3045,3 @@ A schedule that does not parse, a query that does not parse, or a webhook outsid
 problem}`: the structured search the words make (it does not run it; send `query` to `/search`), how each part was
 read, the words not understood, and `problem` when the words name no kind. The vocabulary is the kinds the caller
 may open and each kind's fields, learned from a sample of its documents (kept five minutes).
-
-## UI Boards and the Chip Store: `/api/v1/ui` (2.7.0)
-
-The design is [UI_BOARD.md](../architecture/UI_BOARD.md). Phase P2 is built: saved boards and the Chip Store; rendering (`POST /ui/render`,
-`GET /ui/boards/{id}/render`) comes with phase P3. Documents are YAML or JSON (sent as the request body, any content type); a board is
-named by its name plus `owner` (a personal board shared with you; your own when left out) or `workspace` (a BI workspace's board).
-Writes are compare-and-set: send back the `ETag` you read as `If-Match`; a stale one is `409 DRS-5057` (changed elsewhere: reload).
-
-| Method | Path | What it does |
-|---|---|---|
-| `GET` | `/ui/boards?workspace=` | the boards you may open: `[{id, scope, owner or workspace, board, access: mine, shared or workspace, title, version, chips, etag}]`; a workspace's only when named |
-| `POST` | `/ui/boards/check?workspace=` | the board check (BC-01 to BC-11, BC-W1 to BC-W5) of the body as if saved there (personal, or that workspace): `{ok, problems: [{rule, level, path, message, fix}]}`, against the Chip Store and your own drafts |
-| `GET` | `/ui/boards/{name}?owner=&workspace=` | `{id, board, scope, owner or workspace, etag, sharedWith, document, yaml}` and the `ETag` header |
-| `PUT` | `/ui/boards/{name}?workspace=` | saves the body: no `If-Match` (or `If-None-Match: *`) creates, `If-Match` updates. The store sets `owner`, `workspace` and `version` (the board's revision) and keeps the earlier save. Your own personal boards, or a workspace's as a contributor or above. `422 DRS-2071` lists the problems; `413 DRS-2075` past a limit |
-| `DELETE` | `/ui/boards/{name}?workspace=` | with `If-Match`: the owner, or a workspace admin; its revisions and shares go too |
-| `PUT` | `/ui/boards/{name}/share` | `{people: [...]}`: shares one of your personal boards by link with named people (the list replaces the old one; `[]` makes it private again). They open it with `?owner=<you>`, read-only |
-| `POST` | `/ui/boards/{name}/copy?owner=&workspace=` | `{workspace, name?}`: copies a board you may open into a workspace, owned by you |
-| `GET` | `/ui/boards/{name}/revisions` and `/revisions/{n}` | the earlier saves, newest first; one as `{yaml}` |
-| `GET` | `/ui/chips?category=&tag=&q=&certified=` | the Chip Store: `[{chip, title, category, tags, purpose, latest, certified, seed, mine}]`: chips with a published version (deprecated and withdrawn ones are not offered) and your own in progress |
-| `GET` | `/ui/chips/{name}` | its versions you may see, each with its state (`in-review`, `approved`, `published`, `certified`, `deprecated`, `withdrawn`), author, reviewer, certifier and dates |
-| `GET` | `/ui/chips/{name}/{version}` | `{chip, version, state, document, yaml}` |
-| `GET` | `/ui/chips/{name}/{version}/manual` | `{chip, version, title, state, pins, manual}`: the technical manual alone, for people and agents |
-| `GET` | `/ui/chips/{name}/where-used` | per version, `{version, boards: [ids you may open], others: n}` |
-| `GET` | `/ui/chips/{name}/events` | the lifecycle events, oldest first |
-| `GET` / `PUT` | `/ui/chips/{name}/draft` | your draft (the `author` role); the first save with no `If-Match`. A version number already submitted or published is `409 DRS-2078` |
-| `POST` | `/ui/chips/{name}/{version}/{action}` | `{comment?}`; `submit` (the author), `approve` and `reject` (a reviewer other than the author: `403 DRS-2007` for your own; a reject needs a comment and frees the number), `publish` (the author or a reviewer, after approval), `certify` (`bi-steward`), `deprecate`, `withdraw` (a reviewer or certifier, with a comment naming the fault). Out of order is `409 DRS-2078` |
-
-Submitting and publishing run the chip publish check (CP-01 to CP-05: a complete manual, a pure and deterministic body, every out pin
-driven, every manual example passing the board check) and publishing verifies `compatible-with`: every in pin of the earlier version still accepts what it
-took, no required pin was added without a default, every out pin kept its type. Boards using the earlier version then move to the new
-one by themselves, as a new revision (an instance with `follow: pinned` stays; a certified-only workspace waits for certification).
-
-```
-curl -s -X PUT localhost:18480/api/v1/ui/boards/book-trades -H "Authorization: Bearer $TOKEN" --data-binary @book-trades.yaml -D - | grep -i etag
-ETag: "6f1c…"
-curl -s -X PUT localhost:18480/api/v1/ui/boards/book-trades -H 'If-Match: "6f1c…"' -H "Authorization: Bearer $TOKEN" --data-binary @book-trades.yaml
-curl -s localhost:18480/api/v1/ui/chips/filterable-table/2/manual -H "Authorization: Bearer $TOKEN"
-```
-
-Sixty-eight seed chips ship in `config/ui/chips` (certified, read-only): `panel-<kind>` for each of the 22 grammar panel kinds,
-`bi-<type>` for each of the 34 BI visual types, the six trading pack blocks (`deal-ticket`, `legs`, `flow-schedule`, `events`,
-`payments`, `deal-footer`), and `entity-card`, `filterable-table` (versions 1 and 2), `cashflow-ladder`, `search-box`, `date-range`.
-
-### Rendering a board (2.7.0, P3)
-
-| Method | Path | Does |
-|---|---|---|
-| `POST` | `/ui/render` | renders an **unsaved** board: `{board: <document, or its YAML as text>, params: {…}, device: desktop\|tablet\|phone, stream?: "once"}`. Needs `ui.board.render-dynamic` (a role that may save boards); an embed token is `403 DRS-2074` (saved boards only in 2.7.0) |
-| `GET` | `/ui/boards/{name}/render?owner=&workspace=&device=&params.<p>=…&stream=once` | renders a **saved** board you may open (`404 DRS-2073` otherwise); embed tokens may |
-| `POST` | `/ui/renders/{renderId}/pins` | `{instance, pin, value}`: an out pin changed in the browser (a selection, a typed filter); the chips downstream are painted again **on the render's stream**; answers `{renderId, chips, errors, ms}` once they are. Owner only (`403 DRS-2074`); an ended render is `410 DRS-2079` |
-| `DELETE` | `/ui/renders/{renderId}` | ends the render (it also ends after 10 min idle, or when you open more than 8) |
-
-Before any stream the document is read (`400 DRS-2070`), sized (`413 DRS-2075`: bytes, chips, traces) and checked (`422 DRS-2071`, the
-problems in `problems`); an unsaved render past 30 a minute or 4 at once per person is `429 DRS-2076` with `Retry-After`. Then the
-answer is `text/event-stream`:
-
-| Event | Data |
-|---|---|
-| `render` | `{renderId, board, boardHash, chips: {instance: "name@version"}}` |
-| `layout` | the grid for the device (`columns`, `areas`) or the phone `order` and `collapsed`, the `theme`, and each chip's frame (`title`, `chip`, `skeleton`), before any data is read |
-| `chip` | `{instance, state: "data", viewmodel: {chip, title, body, pins, controls, keys?}, meta: {rows, truncated, total?, runId?, reused, masked}}`: `pins` hold the supplier's rows in the chip's own column names; `keys`, per row, what a selection of it sends |
-| `chip` | `{instance, state: "waiting", waiting: [pins]}`: a detail with nothing to show until its master sends a value |
-| `chip` | `{instance, state: "running", runId}`: a BI question became a run; the chip's `data` event follows |
-| `chip` | `{instance, state: "error", code, message}`: this chip failed (the supplier's own code, or `DRS-2077` past its budget); the others go on |
-| `frame` | `{instance, patch}`: a live chip's record changed |
-| `done` | `{ms, chips, errors}`: after the first paint and after each pin change |
-| `ended` | `{code: "DRS-2079", message}`: the session was closed (idle, too many open) |
-
-Every supplier is read as you: a masked value paints as `•••`, rows a rule hides are absent, and where a row's id is masked its `keys`
-entry is an opaque `tok_…` token that only you can send back. A model answer is shared for 30 s with viewers of the same access profile
-(`meta.reused: true`). Each render writes one audit row (`ui.render` or `ui.render.dynamic`) naming the board (or the document's hash),
-the chips and the suppliers, never a value. Limits: [CONFIGURATION.md](../admin/CONFIGURATION.md) (`render:` in `config/ui/ui.yaml`).
-
-```
-curl -sN localhost:18480/api/v1/ui/boards/book-trades/render?stream=once -H "Authorization: Bearer $TOKEN"
-curl -s localhost:18480/api/v1/ui/renders/rnd-…/pins -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-     -d '{"instance":"trades","pin":"selected","value":"1000015"}'
-```
-
-### The chip designer's calls (2.7.0, P4b)
-
-The Chip mode of Build's designer ([UI_BOARD_GUIDE.md](UI_BOARD_GUIDE.md#chip-mode)) uses these beside the routes above. The listing
-`GET /ui/chips` also carries each chip's `pins` (`{in: [{name, type, role?, required?, of?, columns?}], out: [...]}`) for the palette's search.
-
-| Method | Path | Does |
-|---|---|---|
-| `POST` | `/ui/chips/check` | the body is a chip document (YAML or JSON; the `author` role): the publish check without saving or refusing, `{ok, problems, whereUsed, previous?, breaking?, claimsCompatible?}`: CP-01 to CP-05 (your own drafts usable in the examples), CP-07 for a composite chip, and against the latest released earlier version what breaks (a pin removed or retyped); claiming `compatible-with` it anyway adds `CP-06` |
-| `POST` | `/ui/convert/sutra` | `{sutra, pack?, kind?}` (a role that may save boards): one Sutra converted by P5's converter, `{document, status: clean\|local\|fails, pack, screen, seeds, locals, traces, links, reason, problems}`; the pack is the one owning the Sutra's kind unless named. Not a Sutra (a block): `400 DRS-2070` |
-| `POST` | `/ui/convert/board` | `{document}`: the board painted back into a Sutra by P5's `BoardSutra`, `{yaml, notes}`; `yaml` is null for a board without an `id` parameter of a kind |
-| `GET` | `/ui/candidates?pack=` | the converter's board-local chips of every pack (or one), the Chip Store candidates: `[{pack, board, screen, chip, from, reason}]` |
-| `GET` | `/ui/candidates/{pack}/{board}/{chip}` | one candidate as `{pack, board, chip, document, yaml}`, to open in Chip mode and make generic |
-
-A **composite chip** is a board with no connectors: its body is `{board: {chips, traces, layout}, wires: {<chip in pin>: <instance>.<pin>},
-exposes: {<chip out pin>: <instance>.<pin>}}`. CP-07 refuses a supply inside, a chip pin wired to a missing inner pin or one of another type,
-a required inner pin nothing feeds, and chips nested more than three levels deep.
-
-### Migration to boards (2.7.0, P5)
-
-Administrators only (`403` otherwise). The design is [UI_BOARD.md](../architecture/UI_BOARD.md) section 11; the switch is in
-[OPERATIONS.md](../admin/OPERATIONS.md#switching-a-pack-to-boards-270).
-
-| Method | Path | Does |
-|---|---|---|
-| `POST` | `/ui/migrate/dry-run` | `{pack}`: every entity page and BI report page of the pack converted in memory; answers the report (`{pack, run, screens, clean, local, fails, entityPages, reportPages, localChips, items: [{screen, board, status, chips, localChips: [{chip, from, reason}], links, traces, reason, warnings}]}`, as `drishti.py ui convert --json`) and keeps it as `ui/migration/<pack>/<run>.json`. Nothing else is saved |
-| `POST` | `/ui/migrate/proof` | `{pack, users: [{user, roles}], samples?: 20, ids?: {<kind>: [ids]}}`: for each entity page, up to `samples` records found per kind (plus `ids`, which a derived kind with no search of its own needs) and each person, the old page and its board built and compared (values, masks, totals, links, the panel tree, order and titles). Answers `{pack, users, proven, differs, noSample, comparisons, screens: [{screen, board, result: proven\|differs\|no sample\|not converted, records, compared, difference?: {user, record, path, page, board}}]}`, kept as `ui/migration/<pack>/<run>.proof.json` |
-| `GET` | `/ui/migrate/{pack}` | the pack's kept reports (`<run>.json`, `<run>.proof.json`), oldest first |
-| `GET` | `/ui/migrate/{pack}/{report}` | one kept report |
-| `GET` | `/ui/packs` | each pack's screens: `{"trading": "boards"}` (a pack not listed is on `sutras`) |
-| `PUT` | `/ui/packs/{pack}` | `{screens: "boards"\|"sutras"}`: the switch, at once, on this node until the next start (`400` for another value or an unknown pack) |
-
-A page served from a board answers as before (`GET /api/v1/views/{kind}/{id}`, the same ViewModel) with the header
-`X-Drishti-Board: <board>`.
-
-```
-curl -s localhost:18480/api/v1/ui/migrate/proof -H "Authorization: Bearer $ADMIN" -H 'Content-Type: application/json' \
-     -d '{"pack":"trading","samples":3,"users":[{"user":"fay","roles":["full"]},{"user":"max","roles":["masked"]},{"user":"ria","roles":["restricted"]}]}'
-```
