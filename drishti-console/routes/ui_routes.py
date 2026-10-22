@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import re
+from pathlib import Path
 from urllib.parse import quote
 
 import yaml
@@ -100,7 +101,7 @@ async def design_page(request: Request, name: str = ""):
     if name and not _NAME.match(name):
         return render(request, "ui/design.html", status_code=404, screen="ui-designer", board="", where={}, mode="board", chip="", design="")
     return render(request, "ui/design.html", screen="ui-designer", board=name, where=_where(request), mode="board", chip="",
-                  design=str(request.query_params.get("design") or "")[:80])
+                  design=str(request.query_params.get("design") or "")[:80], example=str(request.query_params.get("example") or "")[:80])
 
 
 @router.get("/build/chip/new")
@@ -108,7 +109,8 @@ async def design_page(request: Request, name: str = ""):
 async def chip_page(request: Request, name: str = ""):
     """The designer in Chip mode (P4b): the pin table, the body editor, the manual form, the test bench and the release steps of one chip."""
     name = "" if name == "new" else name
-    return render(request, "ui/design.html", screen="ui-chip-designer", board="", where={}, mode="chip", chip=name if _NAME.match(name or "") else "", design="")
+    return render(request, "ui/design.html", screen="ui-chip-designer", board="", where={}, mode="chip", chip=name if _NAME.match(name or "") else "", design="",
+                  example=str(request.query_params.get("example") or "")[:80])
 
 
 # ---- existing designs as boards, and back: P5's converter on the server (UI_BOARD.md 12.4, 12.6) ---------------------------------------------
@@ -149,6 +151,57 @@ async def to_sutra(request: Request):
     except BackendError as e:
         return _problem(e)
     return JSONResponse({"yaml": got.get("yaml"), "notes": got.get("notes") or []})
+
+
+# ---- board and chip examples (Build → Designer → New, config/ui-examples.yaml) --------------------------------------------------------------
+
+EXAMPLES_FILE = Path(__file__).resolve().parent.parent / "config" / "ui-examples.yaml"
+
+
+def ui_examples() -> list[dict]:
+    """The board and chip examples: ``[{name, kind, title, summary, ...}]`` (read on each call: a small file)."""
+    try:
+        got = yaml.safe_load(EXAMPLES_FILE.read_text()) or {}
+    except (OSError, yaml.YAMLError):
+        return []
+    return [e for e in got.get("examples") or [] if isinstance(e, dict) and e.get("name") and e.get("kind") in ("board", "chip")]
+
+
+@router.get("/build/board-api/examples")
+async def examples_list(request: Request):
+    return JSONResponse([{k: e.get(k) for k in ("name", "kind", "title", "summary")} for e in ui_examples()])
+
+
+@router.get("/build/board-api/example/{name}")
+async def example_open(request: Request, name: str):
+    """One example as YOUR unsaved copy: ``{name, kind, document, notes}``. A ``from:`` chip is copied as ``<name>-mine`` version 1; a ``sutra:``
+    page is read from the server and converted by P5's converter, as you."""
+    ex = next((e for e in ui_examples() if e["name"] == name), None)
+    if ex is None:
+        return JSONResponse({"code": "DRS-9001", "detail": f"no example {name}"}, status_code=404)
+    backend, me, notes = request.app.state.backend, ident(request), []
+    try:
+        if ex.get("document"):
+            doc = json.loads(json.dumps(ex["document"]))
+        elif ex.get("from"):
+            ref = str(ex["from"])
+            chip, _, version = ref.partition("@")
+            _, got, _ = await backend.ui("GET", f"/chips/{quote(chip, safe='')}/{quote(version, safe='')}", me)
+            doc = json.loads(json.dumps((got or {}).get("document") or {}))
+            doc.update(chip=f"{chip}-mine", version=1)
+            doc.pop("compatible-with", None)
+            notes.append(f"a copy of {ref}: change it, then Save draft")
+        elif ex.get("sutra"):
+            s = ex["sutra"]
+            text = await backend.sutra_source(str(s.get("name")), int(s.get("version") or 1), me)
+            got = await _convert(request, "/convert/sutra", {"sutra": text})
+            doc = got.get("document") or {}
+            notes += [f"{x['chip']} is a board-local chip: a Chip Store candidate" for x in got.get("locals") or []]
+        else:
+            return JSONResponse({"code": "DRS-2070", "detail": f"the example {name} has no document"}, status_code=500)
+    except BackendError as e:
+        return _problem(e)
+    return JSONResponse({"name": name, "kind": ex["kind"], "title": ex.get("title"), "document": doc, "notes": notes})
 
 
 # ---- the YAML tab -------------------------------------------------------------------------------------------------------------------------------

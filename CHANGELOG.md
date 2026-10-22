@@ -29,6 +29,9 @@
   [UI_BOARD_GUIDE.md](docs/guides/UI_BOARD_GUIDE.md#chip-mode), [UI_BOARD.md 12.6](docs/architecture/UI_BOARD.md).
 - **Finding chips.** The Chip Store palette searches ids, titles, purposes, categories, tags and pin types (`rowset of trade`), title
   matches first; category chips; *Fits this data* for the selected supplier; favourites and recent chips first; `/`, arrows, Enter.
+- **Board and chip examples** on Build → Designer → Examples: boards (book-trades, master-detail, a converted curve, counterparty and
+  economy page) and chips (filterable-table, a composite chip, a chip with a `spec` control), each opened as your copy in Board or Chip
+  mode; the screen (Sutra) examples open as boards through the converter.
 - **A board looks like a circuit.** Traces with 90° bends round the boxes, hops at crossings, junction dots at fan-outs, square pin pads,
   a dot grid, live data current along the wires (not under reduced motion).
 

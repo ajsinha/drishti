@@ -31,7 +31,7 @@ def test_the_notes_are_visible_editable_and_the_licence_comment_is_not_shown(liv
 
 def test_an_example_copy_has_notes_without_the_licence_comment(live_console, page):
     page.goto(live_console + "/build/new#examples")
-    page.locator('[data-example="tree-table"]').click()
+    page.locator('[data-example="tree-table"][data-as="screen"]').click()
     page.wait_for_url("**/build/d/*")
     notes = page.request.get(page.url.replace("/build/d/", "/build/designs/")).json()["notes"]
     assert notes.strip() and "PROPRIETARY" not in notes and not notes.lstrip().startswith("<!--")

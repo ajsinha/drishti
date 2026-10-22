@@ -225,6 +225,9 @@
   if (D.mode === 'chip') {
     loadCandidates();
     const cand = (qs.get('candidate') || '').split('/');
-    if (cand.length === 3) { CE.openCandidate(cand[0], cand[1], cand[2]); } else if (start) { CE.open(start).catch(() => D.say('No draft of ' + start + ' yet: this is a new chip.')); }
+    const example = root.getAttribute('data-example');
+    if (example) {                                          // a chip example as your copy (/build/new#examples)
+      D.api('GET', '/build/board-api/example/' + encodeURIComponent(example)).then((r) => { CE.load(r.document, 'Your copy of the example ' + (r.title || example) + ': Save draft keeps it.' + ((r.notes || []).length ? ' ' + r.notes.join('; ') : '')); }).catch(CE.fail);
+    } else if (cand.length === 3) { CE.openCandidate(cand[0], cand[1], cand[2]); } else if (start) { CE.open(start).catch(() => D.say('No draft of ' + start + ' yet: this is a new chip.')); }
   }
 })();
