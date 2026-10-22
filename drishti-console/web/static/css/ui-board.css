@@ -125,6 +125,42 @@
 .ub-design[data-mode="board"] [data-mode-only="chip"], .ub-design[data-mode="chip"] [data-mode-only="board"] { display: none !important; }
 .ub-design[data-mode="chip"] .ub-work { grid-template-columns: 15rem minmax(0, 1fr); }
 .ub-modes [aria-selected="true"] { border-color: var(--d-accent); color: var(--d-accent); }
+
+/* ---- P4b: the chip designer (Chip mode) ----------------------------------------------------------------------------------------------- */
+.ub-ce-steps { display: flex; flex-wrap: wrap; gap: .35rem; margin: 0 0 .6rem; }
+.ub-ce-steps [aria-selected="true"], .ub-chip-mode [data-ce-body-tab][aria-selected="true"] { border-color: var(--d-accent); color: var(--d-accent); }
+.ub-count { display: inline-block; min-width: 1.2em; padding: 0 .3em; border-radius: 1em; background: var(--d-bad); color: var(--d-bg, #000); font-size: .72rem; text-align: center; }
+.ub-ce-scroll { overflow-x: auto; }
+.ub-ce-pins td { vertical-align: top; padding: .2rem .3rem; }
+.ub-ce-pins input.studio-in, .ub-ce-pins select { min-width: 6rem; }
+.ub-ce-dir { font-size: .75rem; padding: 0 .35em; border-radius: var(--d-radius); border: 1px solid var(--d-border); }
+.ub-ce-out { color: var(--d-accent); }
+.ub-chip-mode .ub-bad, .ub-chip-mode input.ub-bad, .ub-chip-mode textarea.ub-bad { border-color: var(--d-bad) !important; box-shadow: 0 0 0 1px var(--d-bad); }
+.ub-bad-row td:first-child { box-shadow: inset 3px 0 0 var(--d-bad); }
+.ub-ce-msg { font-size: .78rem; }
+.ub-ok { color: var(--d-ok); }
+.ub-num { width: 4.5rem; }
+.ub-ce-body { display: grid; grid-template-columns: 11rem minmax(0, 1fr) minmax(0, 1.3fr); gap: .75rem; }
+.ub-ce-kinds, .ub-ce-list, .ub-ce-pinrefs, .ub-make-list, .ub-ce-themes { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 3px; }
+.ub-ce-themes { flex-direction: row; flex-wrap: wrap; gap: .5rem; font-size: .8rem; }
+.ub-ce-kind { width: 100%; justify-content: flex-start; }
+.ub-ce-menu { display: flex; flex-direction: column; gap: 2px; margin-top: .3rem; }
+.ub-ce-manual textarea { width: 100%; }
+.ub-ce-example { display: flex; flex-direction: column; gap: .25rem; margin: 0 0 .6rem; }
+.ub-ce-bench { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: .75rem; }
+.ub-ce-preview { margin: .5rem 0; padding: .5rem; border: 1px dashed var(--d-border); border-radius: var(--d-radius); background: var(--d-bg); }
+.ub-ce-preview.ub-ce-phone { max-width: 390px; margin-left: auto; margin-right: auto; }
+.ub-ce-composite { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: .5rem; }
+.ub-ce-phone .ub-ce-composite { grid-template-columns: 1fr; }
+.ub-cands { margin-top: .8rem; }
+.ub-cand { width: 100%; justify-content: flex-start; flex-wrap: wrap; text-align: left; }
+.ub-composite-banner { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+.ub-composite-banner[hidden], .ub-ce-body[hidden] { display: none; }
+.ub-design[data-composite] [data-ub-save], .ub-design[data-composite] [data-ub-share], .ub-design[data-composite] [data-ub-copy], .ub-design[data-composite] [data-ub-export],
+.ub-design[data-composite] [data-ub-revisions], .ub-design[data-composite] [data-ub-make-chip], .ub-design[data-composite] [data-ub-mode="chip"] { display: none !important; }
+@media (max-width: 900px) {
+  .ub-ce-body, .ub-ce-bench { grid-template-columns: minmax(0, 1fr); }
+}
 .ub-keys { display: grid; grid-template-columns: max-content 1fr; gap: .3rem .8rem; }
 .ub-boards-sec { margin-bottom: 1rem; }
 

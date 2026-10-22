@@ -75,7 +75,7 @@
     }
     function exprSource(panel) {
       return { paths: function () { return ctx.paths(); }, rows: function () { var m = WB.model(store.state.yaml).panels.filter(function (p) { return p.id === panel; })[0]; return m && typeof m.values.rows === 'string' ? m.values.rows : ''; },
-               functions: schema.fns };
+               functions: schema.fns, pins: ctx.pins };
     }
     /** The control for one option of a panel. */
     function control(panelId, name, value, p, req, kind) {
@@ -96,7 +96,7 @@
         var made = WB.Forms.edit(p.type || p.oneOf ? p : {}, value, function (v) { set(v === undefined ? null : v, true); }, name, enums);
         return made.tagName === 'FIELDSET' ? made : (made.tagName === 'INPUT' || made.tagName === 'SELECT' ? label(name, made) : WB.Forms.captioned(name, made));
       }
-      var t = textInput(value, set, isExpr || /^(rows|source|children|each|x|y|label|value|mark|max|text)$/.test(name), exprSource(panelId));
+      var t = textInput(value, set, isExpr || !!ctx.pins || /^(rows|source|children|each|x|y|label|value|mark|max|text)$/.test(name), exprSource(panelId));
       var wrap = label(name + (req ? ' *' : ''), t.input);
       t.mount(wrap);
       if (desc) { t.input.setAttribute('aria-description', desc); t.input.title = desc; }

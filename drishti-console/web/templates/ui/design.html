@@ -15,8 +15,8 @@
 #}
 {# UI Board P4: Build's designer in its two modes (UI_BOARD.md section 10). One shell, one palette area (the Chip Store), one YAML tab.
    Board mode: the canvas with pins and traces, the mapping sheet, live data, the Problems of the board check (ui-board-canvas.js,
-   ui-board-design.js). Chip mode: the place the chip designer (P4b) fills; for now a chip's document, its draft and its examples on the
-   test bench (ui-chip-editor.js). Screen designs (/build/d/<id>) open here as boards through the adapter (?design=<id>). #}
+   ui-board-design.js). Chip mode (P4b): the pin table, the body (panels with the screen designer's tools, or chips: a composite
+   chip, a board with no connectors), the manual, the test bench and the release steps (ui-chip-*.js). Screen designs (/build/d/<id>) open here as boards through P5's converter (?design=<id>). #}
 {% extends "ui/_shell.html" %}
 {% block ub_title %}Designer{% endblock %}
 {% block ub_keys %}
@@ -51,16 +51,22 @@
     <button type="button" class="btn-pill btn-ghost" data-ub-share><i class="bi bi-share" aria-hidden="true"></i> Share</button>
     <button type="button" class="btn-pill btn-ghost" data-ub-copy><i class="bi bi-files" aria-hidden="true"></i> Copy to workspace</button>
     <button type="button" class="btn-pill btn-ghost" data-ub-export title="Write the panel chips of this board as a Sutra, for a pack (until 3.0)"><i class="bi bi-filetype-yml" aria-hidden="true"></i> Export Sutra</button>
+    <button type="button" class="btn-pill btn-ghost" data-ub-make-chip title="Put the chips you choose inside one new chip: a board with no connectors, its free pins the chip's pins"><i class="bi bi-cpu" aria-hidden="true"></i> Make a chip</button>
     <a class="btn-pill btn-ghost" data-ub-open href="{% if board %}/ui/b/{{ board }}{% endif %}"{% if not board %} hidden{% endif %}><i class="bi bi-eye" aria-hidden="true"></i> View</a>
     <button type="button" class="btn-pill btn-accent" data-ub-save disabled><i class="bi bi-save" aria-hidden="true"></i> Save</button>
   </header>
   <header class="ub-toolbar" role="toolbar" aria-label="Chip" data-mode-only="chip">
     <label class="ub-field-inline">Chip <input class="studio-in mono" data-ce-name placeholder="my-chip" aria-label="Chip name" value="{{ chip }}"></label>
+    <label class="ub-field-inline">Version <input class="studio-in ub-num" type="number" min="1" data-ce-version aria-label="Version" value="1"></label>
+    <label class="ub-field-inline">Title <input class="studio-in" data-ce-title aria-label="Chip title"></label>
+    <label class="ub-field-inline">Category <input class="studio-in" data-ce-category aria-label="Category" list="ceCats"></label>
+    <datalist id="ceCats"><option value="header"><option value="tables"><option value="charts"><option value="ladders"><option value="maps"><option value="kv"><option value="timeline"><option value="feed"><option value="text"><option value="controls"><option value="layout"><option value="modules"></datalist>
+    <button type="button" class="btn-pill btn-ghost" data-ce-new>New</button>
     <button type="button" class="btn-pill btn-ghost" data-ce-open>Open my draft</button>
-    <button type="button" class="btn-pill btn-accent" data-ce-save>Save draft</button>
-    <button type="button" class="btn-pill btn-ghost" data-ce-run>Run examples</button>
-    <button type="button" class="btn-pill btn-ghost" data-ce-submit>Submit for review</button>
+    <button type="button" class="btn-pill btn-accent" data-ce-save title="Save draft (Ctrl+S)">Save draft</button>
   </header>
+  <p class="bi-warn ub-composite-banner" data-ub-composite role="status" hidden><i class="bi bi-cpu" aria-hidden="true"></i> Inside the chip <b class="mono" data-ub-composite-name></b>: a board with no connectors (its data enters through the chip's pins).
+    <button type="button" class="btn-pill btn-accent" data-ub-composite-done>Done</button> <button type="button" class="btn-pill btn-ghost" data-ub-composite-cancel>Cancel</button></p>
   <p class="bi-msg" data-ub-status role="status" aria-live="polite"></p>
   <p class="bi-warn ub-conflict" data-ub-conflict role="alert" hidden>Changed elsewhere: someone saved a newer revision. <button type="button" class="btn-pill btn-accent" data-ub-reload>Reload</button></p>
 
@@ -70,6 +76,9 @@
       <input type="search" class="studio-in" data-ub-palette-q placeholder="Search chips" aria-label="Search the Chip Store">
       <label class="ub-field-inline"><input type="checkbox" data-ub-certified> Certified only</label>
       <ul class="ub-pal-list" data-ub-palette aria-label="Chips"></ul>
+      <section class="ub-cands" data-mode-only="chip" aria-labelledby="ceCandH"><h2 id="ceCandH" class="bs-h">Candidates</h2>
+        <p class="text-muted-d">Board-local chips the converter made from pack screens: open one to make it generic.</p>
+        <input type="search" class="studio-in" data-ce-cand-q placeholder="Filter candidates" aria-label="Filter the candidates"><ul class="ub-pal-list" data-ce-candidates aria-label="Candidates"></ul></section>
     </aside>
     <section class="ub-centre">
       <div data-ub-pane="canvas" role="tabpanel" aria-label="Design">
@@ -79,10 +88,47 @@
           <svg class="ub-wires" data-ub-wires aria-hidden="true"></svg>
         </div>
         <section class="ub-chip-mode" data-mode-only="chip" data-ub-chip-mode aria-labelledby="ubChipH">
-          <h2 id="ubChipH" class="bs-h">Chip</h2>
-          <p class="text-muted-d" data-ub-chip-placeholder>The chip designer (its manual form, pin table and body editor) comes here. For now: write the chip's document in the
-            YAML / JSON tab, save it as your draft, and run its manual's examples on the test bench below. A chip in the store on the left opens as a copy to start from.</p>
-          <h3 class="bs-h">Test bench</h3><div data-ce-bench></div>
+          <h2 id="ubChipH" class="visually-hidden">Chip</h2>
+          <div class="ub-ce-steps" role="tablist" aria-label="Chip steps">
+            <button type="button" role="tab" class="btn-pill btn-ghost" data-ce-step="pins" aria-selected="true">1 Pins <span class="ub-count" data-ce-count hidden></span></button>
+            <button type="button" role="tab" class="btn-pill btn-ghost" data-ce-step="body" aria-selected="false">2 Body <span class="ub-count" data-ce-count hidden></span></button>
+            <button type="button" role="tab" class="btn-pill btn-ghost" data-ce-step="manual" aria-selected="false">3 Manual <span class="ub-count" data-ce-count hidden></span></button>
+            <button type="button" role="tab" class="btn-pill btn-ghost" data-ce-step="bench" aria-selected="false">4 Test bench <span class="ub-count" data-ce-count hidden></span></button>
+            <button type="button" role="tab" class="btn-pill btn-ghost" data-ce-step="release" aria-selected="false">5 Release <span class="ub-count" data-ce-count hidden></span></button>
+          </div>
+          <div data-ce-pane="pins" role="tabpanel" aria-label="Pins">
+            <p class="text-muted-d">The chip reads only its pins. In pins: <b>data</b> (rows of a shape, a document) or <b>control</b> (filters, ids, dates, numbers). Out pins: what the person did or what the chip holds.</p>
+            <div class="ub-ce-scroll"><table class="tbl ub-ce-pins" data-ce-pins aria-label="Pin table"></table></div>
+            <div class="ub-row"><button type="button" class="btn-pill btn-ghost" data-ce-add-pin="in">Add in pin</button><button type="button" class="btn-pill btn-ghost" data-ce-add-pin="out">Add out pin</button></div>
+          </div>
+          <div data-ce-pane="body" role="tabpanel" aria-label="Body" hidden>
+            <div class="ub-row" role="tablist" aria-label="Body editors">
+              <button type="button" role="tab" class="btn-pill btn-ghost" data-ce-body-tab="panels" aria-selected="true">Body: panels</button>
+              <button type="button" role="tab" class="btn-pill btn-ghost" data-ce-body-tab="chips" aria-selected="false">Body: chips</button>
+              <button type="button" role="tab" class="btn-pill btn-ghost" data-ce-body-tab="yaml" aria-selected="false">Body: Rachana YAML</button></div>
+            <div class="ub-ce-body" data-ce-body-pane="panels">
+              <div><h3 class="bs-h">Panel kinds</h3><ul class="ub-ce-kinds" data-ce-kinds aria-label="Panel kinds"></ul></div>
+              <div><h3 class="bs-h">Panels</h3><ul class="ub-ce-list" data-ce-panels aria-label="The body's panels"></ul>
+                <h3 class="bs-h">Pins</h3><p class="text-muted-d">Click a pin to put it in the field you were in; in a field, type <kbd>@</kbd> or <kbd>%{</kbd>.</p><ul class="ub-ce-pinrefs" data-ce-pin-list></ul></div>
+              <div class="wb-inspector ub-ce-inspector" data-ce-inspector aria-label="Inspector"></div>
+            </div>
+            <div data-ce-body-pane="chips" hidden></div>
+            <div data-ce-body-pane="yaml" hidden><textarea class="studio-in mono ub-yaml" data-ce-body-yaml rows="18" spellcheck="false" aria-label="The body in the Rachana grammar"></textarea><p class="text-muted-d" data-ce-body-note role="status"></p></div>
+          </div>
+          <div data-ce-pane="manual" role="tabpanel" aria-label="Manual" hidden><div class="ub-ce-manual" data-ce-manual></div></div>
+          <div data-ce-pane="bench" role="tabpanel" aria-label="Test bench" hidden>
+            <div class="ub-ce-bench">
+              <div><h3 class="bs-h">Sample data, per pin</h3><div data-ce-samples></div>
+                <div class="ub-row"><button type="button" class="btn-pill btn-ghost" data-ce-reset-samples>Made-up samples</button><button type="button" class="btn-pill btn-ghost" data-ce-supplier title="Render the first example as you and take its rows">Use a supplier</button></div></div>
+              <div><div class="ub-row"><label class="ub-field-inline">Theme <select class="studio-select" data-ce-theme></select></label><button type="button" class="btn-pill btn-ghost" data-ce-all-themes>Every theme</button><button type="button" class="btn-pill btn-ghost" data-ce-phone aria-pressed="false"><i class="bi bi-phone" aria-hidden="true"></i> Phone</button></div>
+                <div class="ub-ce-preview" data-ce-preview></div>
+                <h3 class="bs-h">Out pins</h3><ul data-ce-outs></ul><ul class="ub-ce-themes" data-ce-themes-done></ul>
+                <h3 class="bs-h">Pins in use</h3><ul data-ce-usage></ul></div>
+            </div>
+            <h3 class="bs-h">The manual's examples as tests <button type="button" class="btn-pill btn-accent" data-ce-run>Run examples</button></h3><div data-ce-bench></div>
+          </div>
+          <div data-ce-pane="release" role="tabpanel" aria-label="Release" hidden><div data-ce-release></div></div>
+          <section class="ub-problems-box" aria-labelledby="ceProb"><h2 id="ceProb" class="bs-h">Chip problems <small class="text-muted-d" data-ce-problem-count></small></h2><ul class="ub-problems" data-ce-problems></ul></section>
         </section>
       </div>
       <div data-ub-pane="yaml" role="tabpanel" aria-label="YAML / JSON" hidden>
@@ -97,9 +143,12 @@
   <dialog class="ub-dlg ub-manual" data-ub-manual aria-labelledby="ubManT"><h2 id="ubManT" data-ub-manual-title>Manual</h2><div data-ub-manual-body></div><form method="dialog"><button class="btn-pill btn-accent">Close</button></form></dialog>
   <dialog class="ub-dlg" data-ub-share-dlg aria-labelledby="ubShT"><form><h2 id="ubShT">Share by link</h2><p class="text-muted-d">Named people open it read-only, as themselves (their own masks). An empty list makes it private again.</p>
     <label class="ub-field">People (user names, commas) <input class="studio-in" name="people"></label><div class="ub-row"><button class="btn-pill btn-accent">Share</button><button type="button" class="btn-pill btn-ghost" data-cancel>Cancel</button></div></form></dialog>
+  <dialog class="ub-dlg" data-ub-make-dlg aria-labelledby="ubMkT"><form><h2 id="ubMkT">Make a chip</h2><p class="text-muted-d">The chips you choose go inside one new chip (a board with no connectors). Their supplies stay on this board, on the new chip; their free pins become its pins.</p>
+    <ul class="ub-make-list" data-ub-make-list></ul><label class="ub-field">Name of the new chip <input class="studio-in mono" data-ub-make-name required></label>
+    <div class="ub-row"><button class="btn-pill btn-accent">Make it</button><button type="button" class="btn-pill btn-ghost" data-cancel>Cancel</button></div></form></dialog>
   <dialog class="ub-dlg" data-ub-copy-dlg aria-labelledby="ubCpT"><form><h2 id="ubCpT">Copy to a workspace</h2>
     <label class="ub-field">Workspace <input class="studio-in" name="workspace" required></label><label class="ub-field">New name (optional) <input class="studio-in mono" name="name"></label>
     <div class="ub-row"><button class="btn-pill btn-accent">Copy</button><button type="button" class="btn-pill btn-ghost" data-cancel>Cancel</button></div></form></dialog>
 </div>
 {% endblock %}
-{% block ub_scripts %}<script src="/static/js/build/palette.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-canvas.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-design.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-chip-editor.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block ub_scripts %}<script src="/static/js/studio-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/studio-assist.js?v={{ ASSET_V }}"></script>{% for f in ["ops", "yamlmodel", "drag", "palette", "expr", "forms", "inspector"] %}<script src="/static/js/build/{{ f }}.js?v={{ ASSET_V }}"></script>{% endfor %}<script src="/static/js/ui-board-canvas.js?v={{ ASSET_V }}"></script><script src="/static/js/ui-board-design.js?v={{ ASSET_V }}"></script>{% for f in ["ui-chip-model", "ui-chip-editor", "ui-chip-pins", "ui-chip-body", "ui-chip-bench", "ui-chip-release", "ui-chip-module"] %}<script src="/static/js/{{ f }}.js?v={{ ASSET_V }}"></script>{% endfor %}{% endblock %}

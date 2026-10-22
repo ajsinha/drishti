@@ -38,10 +38,11 @@ from routes.common import ident, render
 router = APIRouter(include_in_schema=False)
 
 # the server paths the page scripts may reach below /api/v1/ui: nothing else is passed on
-_ALLOWED = ("boards", "chips", "renders", "render")
+_ALLOWED = ("boards", "chips", "renders", "render", "candidates")
 _NAME = re.compile(r"^[a-z0-9][a-z0-9-]{0,62}$")
 _KEPT = ("problems", "retryAfter")
 BOARD_ORDER = ("rachana", "board", "version", "title", "description", "owner", "workspace", "params", "chips", "traces", "layout")
+CHIP_ORDER = ("rachana", "chip", "version", "title", "category", "tags", "compatible-with", "manual", "pins", "limits", "body")
 WAIT = 35.0
 MAX_DOC = 256 * 1024                       # the console's own cap on a document it relays; the server's limits (64 KB by default) answer first
 
@@ -94,7 +95,8 @@ async def view_page(request: Request, name: str):
 @router.get("/build/board/new")
 @router.get("/build/board/{name}")
 async def design_page(request: Request, name: str = ""):
-    """The designer in Board mode: a new board (``?design=<id>`` starts from a screen design through the adapter), or a saved one."""
+    """The designer in Board mode: a new board (``?design=<id>`` starts from a screen design, converted by P5's converter), or a saved one."""
+    name = "" if name == "new" else name                 # FastAPI may match /new as {name}
     if name and not _NAME.match(name):
         return render(request, "ui/design.html", status_code=404, screen="ui-designer", board="", where={}, mode="board", chip="", design="")
     return render(request, "ui/design.html", screen="ui-designer", board=name, where=_where(request), mode="board", chip="",
@@ -104,34 +106,49 @@ async def design_page(request: Request, name: str = ""):
 @router.get("/build/chip/new")
 @router.get("/build/chip/{name}")
 async def chip_page(request: Request, name: str = ""):
-    """The designer in Chip mode, the place P4b's chip designer fills: for now a chip's document, its draft and its examples on the test bench."""
+    """The designer in Chip mode (P4b): the pin table, the body editor, the manual form, the test bench and the release steps of one chip."""
+    name = "" if name == "new" else name
     return render(request, "ui/design.html", screen="ui-chip-designer", board="", where={}, mode="chip", chip=name if _NAME.match(name or "") else "", design="")
 
 
-# ---- existing designs as boards, and back (the thin adapter until P5's converter) ----------------------------------------------------------
+# ---- existing designs as boards, and back: P5's converter on the server (UI_BOARD.md 12.4, 12.6) ---------------------------------------------
+
+async def _convert(request: Request, path: str, body: dict):
+    content = json.dumps(body).encode()
+    _, answer, _ = await request.app.state.backend.ui("POST", path, ident(request), content, "application/json", {}, wait=WAIT)
+    return answer if isinstance(answer, dict) else {}
+
 
 @router.get("/build/board-api/from-design/{id_}")
 async def from_design(request: Request, id_: str):
-    """A screen design's Sutra as a board document of panel-* chips (core/sutra_board.py), opened in Board mode unsaved."""
-    from core.sutra_board import sutra_to_board
+    """A screen design's Sutra converted into a board by P5's converter (``POST /api/v1/ui/convert/sutra``): the seed chips where a panel fits one,
+    board-local chips (with their bindings written over the record's pins) where none does, the header chip and its control traces. Opened in
+    Board mode unsaved; the notes name the board-local chips (Chip Store candidates) and any check finding."""
     try:
         design = await request.app.state.backend.designs("GET", f"/{quote(id_, safe='')}", ident(request))
+        got = await _convert(request, "/convert/sutra", {"sutra": str(design.get("sutra") or ""), "kind": design.get("kind") or None})
     except BackendError as e:
         return _problem(e)
-    doc, notes = sutra_to_board(str(design.get("sutra") or ""), name=str(design.get("name") or ""), kind=str(design.get("kind") or ""))
-    return JSONResponse({"document": doc, "notes": notes, "design": id_})
+    notes = [f"{x['chip']} is a board-local chip ({x.get('reason') or 'no seed chip fits'}): a Chip Store candidate" for x in got.get("locals") or []]
+    notes += [f"{p.get('rule')} {p.get('path')}: {p.get('message')}" for p in got.get("problems") or []]
+    if got.get("reason"):
+        notes.append(str(got["reason"]))
+    return JSONResponse({"document": got.get("document") or {}, "status": got.get("status"), "notes": notes, "design": id_})
 
 
 @router.post("/build/board-api/to-sutra")
 async def to_sutra(request: Request):
-    """Export Sutra: a board of panel-* chips written as a Sutra, so pack authors keep working until 3.0 (core/sutra_board.py)."""
-    from core.sutra_board import board_to_sutra
+    """Export Sutra: the board painted back into a Sutra by P5's ``BoardSutra`` (``POST /api/v1/ui/convert/board``), so pack authors keep shipping
+    Sutras until 3.0. Only a board of one record (a parameter ``id`` of a kind) has one; otherwise ``yaml`` is null and the notes say why."""
     body = await json_body(request, limit=MAX_DOC)
     doc = body.get("document")
     if not isinstance(doc, dict):
         return JSONResponse({"code": "DRS-2070", "detail": "document is an object"}, status_code=400)
-    text, notes = board_to_sutra(doc, kind=str(body.get("kind") or ""))
-    return JSONResponse({"yaml": text, "notes": notes})
+    try:
+        got = await _convert(request, "/convert/board", {"document": doc})
+    except BackendError as e:
+        return _problem(e)
+    return JSONResponse({"yaml": got.get("yaml"), "notes": got.get("notes") or []})
 
 
 # ---- the YAML tab -------------------------------------------------------------------------------------------------------------------------------
@@ -151,6 +168,8 @@ async def yaml_dump(request: Request):
     doc = body.get("document")
     if not isinstance(doc, dict):
         return JSONResponse({"code": "DRS-2070", "detail": "document is an object"}, status_code=400)
+    if body.get("kind") == "chip":                 # Chip mode's YAML tab: the chip's own key order, the pins merged by name
+        return JSONResponse({"yaml": merge(str(body.get("yaml") or ""), doc, CHIP_ORDER, _write_key, ("pins",), _plain)})
     return JSONResponse({"yaml": merge(str(body.get("yaml") or ""), doc, BOARD_ORDER, _write_key, ("chips",), _plain)})
 
 

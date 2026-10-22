@@ -58,6 +58,7 @@
     if (!m) { return Promise.resolve(null); }
     return D.api('GET', '/ui/api/chips/' + m[1] + '/' + m[2]).then((c) => { D.chips[ref] = c; return c; }).catch(() => null);
   }
+  D.fetchChip = fetchChip;
   const fetchAll = () => Promise.all(Object.keys(D.doc.chips || {}).map((n) => fetchChip(D.doc.chips[n].use)));
 
   // ---- editing the document ---------------------------------------------------------------------------------------------------------------
@@ -148,6 +149,7 @@
   }
   let checkTimer = 0, checkSeq = 0;
   function check() {
+    if (D.composite) { D.problems = D.composite.problems ? D.composite.problems() : []; showProblems(); return Promise.resolve(); }   // the chip's own check
     const seq = ++checkSeq;
     return D.api('POST', '/ui/api/boards/check' + (D.where.workspace ? '?workspace=' + encodeURIComponent(D.where.workspace) : ''), docForServer())
       .then((r) => { if (seq === checkSeq) { D.problems = (r && r.problems) || []; showProblems(); } })
@@ -159,7 +161,7 @@
   let liveTimer = 0, current = null;
   function liveRender() {
     if (current) { current.close(); current = null; }
-    if (!D.live || D.device === 'phone' || !Object.keys(D.doc.chips).length || D.problems.some((p) => p.level !== 'warning')) {
+    if (D.composite || !D.live || D.device === 'phone' || !Object.keys(D.doc.chips).length || D.problems.some((p) => p.level !== 'warning')) {
       if (D.live && D.problems.some((p) => p.level !== 'warning')) { D.say('Live data waits until the board check passes.'); }
       return;
     }
@@ -205,6 +207,8 @@
     if (D.mode !== 'board' || !(e.ctrlKey || e.metaKey) || /input|textarea/i.test(e.target.tagName)) { return; }
     if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); step(-1); } else if (e.key === 'y' || (e.key === 'z' && e.shiftKey) || e.key === 'Z') { e.preventDefault(); step(1); }
   });
+  /** Inside a composite chip (P4b): the canvas edits the chip's inner board; ui-chip-module.js enters and leaves. */
+  D.edit = (doc) => { D.doc = doc; D.doc.chips = D.doc.chips || {}; D.doc.traces = D.doc.traces || []; D.doc.layout = D.doc.layout || {}; undo.list = []; undo.at = -1; return fetchAll().then(() => { D.changed('chips'); }); };
   D.changed = (what) => {
     root.setAttribute('data-dirty', 'true');
     if (!restoring) { snap(); }
@@ -295,7 +299,8 @@
         D.changed('chips');
       };
       [ks, sn, sq].forEach((x) => x.addEventListener('change', setSupply));
-      sheet.appendChild(h('fieldset', { class: 'ub-fs' }, h('legend', { text: 'Supply (read as the viewer)' }), field('Supplier', ks), field('Name', sn), field('Query (JSON, optional)', sq)));
+      if (D.composite) { [ks, sn, sq].forEach((x) => { x.disabled = true; }); }      // inside a composite chip: no connectors, data enters through its pins
+      sheet.appendChild(h('fieldset', { class: 'ub-fs' }, h('legend', { text: D.composite ? 'Supply: none inside a chip (its data enters through the chip\'s pins)' : 'Supply (read as the viewer)' }), field('Supplier', ks), field('Name', sn), field('Query (JSON, optional)', sq)));
       // the map: supplier attribute -> pin column
       const fed = new Set((D.doc.traces || []).filter((t) => t.to.split('.')[0] === inst).map((t) => t.to.split('.').slice(1).join('.')));
       const mapFs = h('fieldset', { class: 'ub-fs', 'data-ub-map': true }, h('legend', { text: 'Map: supplier attribute → pin' }));

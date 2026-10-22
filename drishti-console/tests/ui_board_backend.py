@@ -34,6 +34,7 @@ from conftest import CONSOLE, FakeBackend
 from core.backend import BackendError
 
 CHIPS = CONSOLE.parent / "config" / "ui" / "chips"
+SCHEMA = json.loads((Path(__file__).resolve().parent / "fixtures" / "rachana_schema.json").read_text())    # RachanaSchema.build: the chip body's inspector
 MASK = "•••"
 CCY = ["USD", "EUR", "GBP", "JPY"]
 TRADES = [{"TRADE_ID": str(1000010 + i), "DEAL_NUMBER": f"D-{5000 + i}", "TRADE_DATE": f"2026-0{1 + i % 9}-1{i % 10}",
@@ -221,6 +222,9 @@ class UiBoardBackend(FakeBackend):
                 r["queue"].put_nowait(None)
             return 204, None, None
         self._refuse(404, "DRS-9001", f"no stand-in route {method} {path}")
+
+    async def rachana_schema(self, ident=None):
+        return SCHEMA
 
     async def form(self, pack, kind="", ident=None):
         if pack != "trading":
