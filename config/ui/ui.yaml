@@ -41,11 +41,11 @@ render:
 # Converted screens (UI_BOARD.md 11.3; phase P5): per pack, 'boards' serves the pack's entity pages from their converted boards, 'sutras'
 # (the default) from the Sutras as before. Switch only a pack whose proof passed (POST /api/v1/ui/migrate/proof); switching back is
 # immediate. An administrator may also switch at run time (PUT /api/v1/ui/packs/<pack>, this node, until the next start).
-packs:                             # every pack served as boards (product owner, 2026-10-21: "convert everything"); sutras switches one back
-  core: boards
-  trading: boards
-  counterparty-risk: boards
-  market-data: boards
-  market-risk: boards
-  world-economy: boards
-  news-and-markets: boards
+packs:                             # every pack on its Sutra pages (product owner, 2026-10-21: boards wait for a better designer); boards switches one on
+  core: sutras
+  trading: sutras
+  counterparty-risk: sutras
+  market-data: sutras
+  market-risk: sutras
+  world-economy: sutras
+  news-and-markets: sutras
