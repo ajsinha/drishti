@@ -71,7 +71,7 @@ class PackSpec:
     compact_json: bool = False                      # write the sample documents without indentation (large generated packs)
     form_overrides: dict[str, dict[str, dict]] = field(default_factory=dict)   # kind -> field path -> {type:, label:} replacing the name-derived ones
     retired: bool = False                           # an example pack: written under examples/packs, not config/packs
-    # kinds whose Sutra is written by hand since Sutra Next phase 1 (built from the core pack's fragment library): never written or removed here
+    # kinds whose Sutra is written by hand since Sutra Next phase 1 (built from the Drishti UI kit, config/ui-kit/fragments): never written or removed here
     hand_written: set[str] = field(default_factory=set)
 
     @property

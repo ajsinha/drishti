@@ -145,6 +145,7 @@ class SutraNextEquivalenceTest {
             assertThat(f.path("doc").path("summary").asText()).isNotBlank();
             assertThat(f.path("doc").path("examples")).isNotEmpty();
             assertThat(f.path("source").asText()).doesNotStartWith("/");
+            assertThat(f.path("origin").asText()).as("a Drishti UI kit fragment").isEqualTo("kit");
             if (f.path("ref").asText().equals("series-line@1")) {
                 line = f;
             }

@@ -347,6 +347,8 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_API_DOCS` | `springdoc.api-docs.enabled`, `springdoc.swagger-ui.enabled` | `true` | The OpenAPI description and its UI; set explicitly so a start does not warn they are on by default. |
 | `DRISHTI_SUTRAS` | `drishti.rachana.dirs` | `./sutras` | Site Sutra directories, scanned recursively, beside the packs' Sutras. |
 | `DRISHTI_STUDIO_SAVE` | `drishti.rachana.studio-save` | `false` | Let Sutra Studio save files (authors only). |
+| `DRISHTI_UI_KIT_DIR` | `drishti.ui-kit.dir` | `./config/ui-kit` | The Drishti UI kit: fragments, assets, brand; loaded whatever packs are enabled. |
+| `DRISHTI_UI_KIT_SITE_DIR` | `drishti.ui-kit.site-dir` | `./data/ui-kit` | The site's UI kit overrides: `brand.yaml` and `assets/`. |
 | `DRISHTI_SUTRA_REVIEW` | `drishti.governance.enabled` | `true` | A Studio save is a proposal an approver makes live. |
 | `DRISHTI_SUTRA_FOUR_EYES` | `drishti.governance.four-eyes` | `true` | Nobody approves their own proposal (with security on). |
 | `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `./data/governance` | Where proposals are kept with `drishti.governance.store: file`; with `content` (the default) the folder is imported once and left in place. |
@@ -878,6 +880,21 @@ The token scope that opens these writes to a personal API token is `packs:admin`
 | `max-expression-depth` | `200` | The deepest a Rachana-EL expression may nest (parentheses, calls, and each operand of a chain such as `a + b + c`). Deeper is `DRS-2101`: a Sutra is not loaded, an alert rule or search condition is refused. It keeps parsing and evaluation within the stack; raise it only for a real need. Applies to Sutras, alert rules, search conditions, history paths and derived kinds. |
 | `max-expression-length` | `10000` | The longest a Rachana-EL expression may be, in characters. Longer is `DRS-2101`. |
 | `studio-save` | `false` (`DRISHTI_STUDIO_SAVE`) | Let Sutra Studio save files (authors only). Turn on in authoring environments. With it off, a save returns 403 `saving from Studio is disabled (drishti.rachana.studio-save)`. |
+
+### `drishti.ui-kit` — the Drishti UI kit
+
+Platform UI vocabulary the server always loads, whatever packs are enabled ([SUTRA_NEXT.md, The Drishti UI
+kit](../architecture/SUTRA_NEXT.md#3a-the-drishti-ui-kit)): the fragments every Sutra may use (`{ use: series-line@1 }`), the
+icons, images and logos, and the brand. Read with `GET /api/v1/ui-kit` and `GET /api/v1/ui-kit/assets/{path}`
+([API_GUIDE.md](../guides/API_GUIDE.md)).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `dir` | `./config/ui-kit` (`DRISHTI_UI_KIT_DIR`) | The kit folder: `fragments/` (`<name>.v<N>.fragment.yaml`, read with the Sutras at start and at every Sutra reload), `assets/icons`, `assets/images`, `assets/logos`, `brand.yaml`. The CLI (`sutra lint|test`) reads the same setting (system property or environment variable), else `./config/ui-kit`, else a `config/ui-kit` above the paths it checks. When the folder has no `fragments/`, the server logs a warning and screens that use a kit fragment do not draw (`DRS-2048`). |
+| `site-dir` | `<data folder>/ui-kit` (`DRISHTI_UI_KIT_SITE_DIR`) | The site's overrides, never the kit itself: `brand.yaml` (its keys win over the kit's, map by map: `name: Acme Risk`, `themes: { light: { accent: "#0b5" } }`) and `assets/` (a file wins over the kit's file of the same path, e.g. `assets/logos/acme.svg`). Read at each request. |
+
+A pack's own fragments stay in its Sutra folders, namespaced by the pack (`trading/deal-ticket@1`); one named like a kit fragment
+loses the plain name to the kit, with a `DRS-2048` warning in the log.
 
 ### `drishti.governance` — reviewing Sutra changes
 
@@ -2777,6 +2794,7 @@ Server (S), console (C), or both.
 | `DRISHTI_CALENDAR` | S | `drishti.business-date.calendar` |
 | `DRISHTI_SUTRAS` | S | `drishti.rachana.dirs` |
 | `DRISHTI_STUDIO_SAVE` | S | `drishti.rachana.studio-save` |
+| `DRISHTI_UI_KIT_DIR`, `DRISHTI_UI_KIT_SITE_DIR` | S | `drishti.ui-kit.dir`, `drishti.ui-kit.site-dir` |
 | `DRISHTI_SUTRA_REVIEW`, `DRISHTI_SUTRA_FOUR_EYES`, `DRISHTI_GOVERNANCE_DIR` | S | `drishti.governance.*` |
 | `DRISHTI_SECURITY_ENABLED` | S | `drishti.security.enabled` |
 | `DRISHTI_CALC_ENABLED` | S, C | `drishti.calc.enabled`, `calc.enabled` |

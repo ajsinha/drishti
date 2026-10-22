@@ -31,13 +31,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Sutra Next phase 1: the fragment library of the core pack (sutras/library) loads, every fragment carries a complete doc:
+ * Sutra Next phase 1: the fragment library (the Drishti UI kit, config/ui-kit/fragments) loads, every fragment carries a complete doc:
  * (DRS-2055, strict), every fragment and every example of its doc expands into panels a Sutra accepts, parameters are filled, and
  * the migrated ir-curve Sutra is built from them.
  */
 class SutraFragmentsTest {
 
-    static final Path LIBRARY = Path.of("../config/packs/core/sutras/library");
+    static final Path LIBRARY = Path.of("../config/ui-kit/fragments");
     static final Path MARKET = Path.of("../config/packs/market-data/sutras");
 
     @TempDir Path dir;

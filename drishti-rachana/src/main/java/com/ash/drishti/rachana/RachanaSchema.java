@@ -93,8 +93,8 @@ public final class RachanaSchema {
     /** A use of a shared block in a panels list: {@code { use: legs@1, with: { rate-fmt: pct4 } }} (DRS-2048 when it does not resolve). */
     private static Map<String, Object> use() {
         Map<String, Object> props = new LinkedHashMap<>();
-        props.put("use", Map.of("type", "string", "pattern", "^[a-z][a-z0-9-]{1,63}(@[0-9]+)?$",
-                "description", "A shared block (<name>.v<N>.block.yaml in a pack's sutras folder) as name@version: its panels go here"));
+        props.put("use", Map.of("type", "string", "pattern", "^([a-z][a-z0-9-]{0,63}/)?[a-z][a-z0-9-]{1,63}(@[0-9]+)?$",
+                "description", "A Drishti UI kit fragment (name@version) or a pack's own block or fragment (pack/name@version, or its plain name): its panels go here"));
         props.put("with", Map.of("type", "object", "description", "The block's parameters (its params:), each one value; the block's defaults otherwise"));
         Map<String, Object> u = new LinkedHashMap<>();
         u.put("type", "object");

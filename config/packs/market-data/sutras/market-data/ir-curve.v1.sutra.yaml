@@ -13,8 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 
-# Hand-written since 2.7.0 (Sutra Next phase 1): the first screen built from the shared fragment library (core pack,
-# sutras/library). tools/packgen/banking/make_sutras.py leaves it alone (HAND_WRITTEN); SutraNextEquivalenceTest proves it
+# Hand-written since 2.7.0 (Sutra Next phase 1): the first screen built from the Drishti UI kit (config/ui-kit/fragments,
+# loaded by every server). tools/packgen/banking/make_sutras.py leaves it alone (HAND_WRITTEN); SutraNextEquivalenceTest proves it
 # draws exactly what the generated layout drew.
 rachana: 1
 sutra: ir-curve

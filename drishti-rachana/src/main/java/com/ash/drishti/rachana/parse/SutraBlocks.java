@@ -54,8 +54,9 @@ import java.util.stream.Stream;
  *
  * A use is replaced by the block's panels, in order, before the Sutra is checked, so the panels are linted, matched and drawn as if
  * they had been written in place. A fragment ({@code <name>.v<N>.fragment.yaml}, {@code fragment: <name>}, the shared library in
- * the core pack's {@code sutras/library}) is a block whose {@code doc:} is complete ({@link SutraDocstring}, {@code DRS-2055}); it is
- * used the same way. {@code @1} names the block's version (without one, the newest); {@code with} sets its parameters
+ * the Drishti UI kit) is a block whose {@code doc:} is complete ({@link SutraDocstring}, {@code DRS-2055}); it is
+ * used the same way. The platform's fragments are the Drishti UI kit ({@code config/ui-kit/fragments}, {@link #kit(Path)}), read by every
+ * load whatever packs are enabled; a pack's own blocks are namespaced by the pack ({@code trading/legs@1}). {@code @1} names the block's version (without one, the newest); {@code with} sets its parameters
  * (an unknown one, an unknown block or a block that uses another is {@code DRS-2048}). The library is a snapshot replaced whole when
  * the Sutra folders are read again; a parse reads the snapshot of that moment. Thread-safe.
  */
@@ -110,6 +111,8 @@ public final class SutraBlocks {
     private static final AtomicReference<Map<String, TreeMap<Integer, Block>>> LIBRARY = new AtomicReference<>(Map.of());
     private static final AtomicReference<List<SutraProblem>> PROBLEMS = new AtomicReference<>(List.of());
     private static final AtomicReference<List<SutraProblem>> WARNINGS = new AtomicReference<>(List.of());
+    private static final AtomicReference<List<SutraProblem>> CLASHES = new AtomicReference<>(List.of());
+    private static final AtomicReference<Path> KIT = new AtomicReference<>();
 
     private SutraBlocks() {}
 
@@ -119,22 +122,105 @@ public final class SutraBlocks {
         return n.endsWith(".block.yaml") || n.endsWith(".fragment.yaml");
     }
 
-    /** Reads every block file under the folders (the library becomes exactly these); returns the problems of the files that are not blocks. */
+    /**
+     * Where the Drishti UI kit is ({@code drishti.ui-kit.dir}, its {@code fragments/} folder read by every {@link #load}), or null for
+     * none (a unit test of blocks alone). The server and the CLI set it before the first load.
+     */
+    public static void kit(Path dir) {
+        KIT.set(dir == null ? null : dir.toAbsolutePath().normalize());
+    }
+
+    /** The Drishti UI kit folder set by {@link #kit(Path)}, if any. */
+    public static java.util.Optional<Path> kit() {
+        return java.util.Optional.ofNullable(KIT.get());
+    }
+
+    /** Whether a block was read from the Drishti UI kit (an unqualified platform fragment) rather than a pack or a site folder. */
+    public static boolean fromKit(Block b) {
+        Path k = KIT.get();
+        if (k == null || b.path() == null) {
+            return false;
+        }
+        try {
+            return Path.of(b.path()).toAbsolutePath().normalize().startsWith(k);
+        } catch (java.nio.file.InvalidPathException e) {
+            return false;
+        }
+    }
+
+    /**
+     * The pack a Sutra folder belongs to: the {@code name:} of the {@code pack.yaml} beside it ({@code <pack>/sutras}), else the pack
+     * folder's name; null for a site folder (its blocks stay unqualified, as before packs were namespaced).
+     */
+    public static String packOf(Path dir) {
+        Path parent = dir == null ? null : dir.toAbsolutePath().normalize().getParent();
+        if (parent == null || !Files.isRegularFile(parent.resolve("pack.yaml"))) {
+            return null;
+        }
+        try (Stream<String> lines = Files.lines(parent.resolve("pack.yaml"), StandardCharsets.UTF_8)) {
+            String name = lines.filter(l -> l.startsWith("name:")).map(l -> l.substring(5).trim().replace("'", "").replace("\"", ""))
+                    .findFirst().orElse("");
+            if (name.matches("[a-z][a-z0-9-]{0,63}")) {
+                return name;
+            }
+        } catch (IOException | java.io.UncheckedIOException e) {
+            // the folder's name below
+        }
+        String folder = parent.getFileName().toString();
+        return folder.matches("[a-z][a-z0-9-]{0,63}") ? folder : null;
+    }
+
+    /**
+     * Reads the Drishti UI kit's fragments (when a kit is set) and every block file under the folders: the library becomes exactly
+     * these. Kit fragments are unqualified ({@code series-line@1}); a pack's blocks are namespaced by the pack ({@code trading/legs@1})
+     * and also answer to their plain name unless the kit has that name: on a clash the kit wins and the pack's stays reachable only
+     * qualified, with a warning ({@link #clashes()}). Among folders, a later one (a more specific pack) wins a plain name. Returns the
+     * problems of the files that are not blocks.
+     */
     public static List<SutraProblem> load(Collection<Path> dirs) {
         Map<String, TreeMap<Integer, Block>> next = new TreeMap<>();
         List<SutraProblem> problems = new ArrayList<>();
         List<SutraProblem> warnings = new ArrayList<>();
-        for (Path dir : dirs) {
+        List<SutraProblem> clashes = new ArrayList<>();
+        java.util.Set<String> kitNames = new java.util.HashSet<>();
+        Path kit = KIT.get() == null ? null : KIT.get().resolve("fragments");
+        List<Path> all = new ArrayList<>();
+        if (kit != null) {
+            all.add(kit);
+        }
+        for (Path d : dirs) {
+            Path n = d.toAbsolutePath().normalize();
+            if (kit == null || !(n.startsWith(kit) || kit.startsWith(n))) {   // the kit is read once, first (a caller may still name it)
+                all.add(d);
+            }
+        }
+        for (Path dir : all) {
             if (!Files.isDirectory(dir)) {
                 continue;
             }
+            boolean isKit = dir == kit;
+            String pack = isKit ? null : packOf(dir);
             try (Stream<Path> s = Files.walk(dir)) {
                 for (Path f : s.filter(SutraBlocks::isBlockFile).sorted().toList()) {
                     try {
                         Block b = read(Files.readString(f, StandardCharsets.UTF_8), f.getFileName().toString(), f.toString());
-                        next.computeIfAbsent(b.name(), k -> new TreeMap<>()).put(b.version(), b);   // a later folder (a more specific pack) wins
+                        String plain = b.name();
+                        if (pack != null) {                            // namespaced by its pack: trading/deal-ticket
+                            b = new Block(pack + "/" + plain, b.version(), b.text(), b.params(), b.file(), b.path());
+                            next.computeIfAbsent(b.name(), k -> new TreeMap<>()).put(b.version(), b);
+                        }
+                        if (isKit) {
+                            kitNames.add(plain);
+                            next.computeIfAbsent(plain, k -> new TreeMap<>()).put(b.version(), b);
+                        } else if (kitNames.contains(plain)) {
+                            clashes.add(new SutraProblem(BLOCK, (pack == null ? "the site block " : "pack " + pack + "'s ") + plain
+                                    + " has the name of a Drishti UI kit fragment: the kit's wins" + (pack == null ? " (rename it)"
+                                    : "; use " + pack + "/" + plain + "@" + b.version() + " for the pack's"), new SourceLocation(f.toString(), 1, 1)));
+                        } else {
+                            next.computeIfAbsent(plain, k -> new TreeMap<>()).put(b.version(), b);   // a later folder (a more specific pack) wins
+                        }
                         if (!b.fragment()) {                           // an older block: its doc is a warning today
-                            warnings.addAll(SutraDocstring.checkSutra(parse(b.text().replace("%{", "pXq{"), b.file()), "block " + b.name(), f.toString()));
+                            warnings.addAll(SutraDocstring.checkSutra(parse(b.text().replace("%{", "pXq{"), b.file()), "block " + plain, f.toString()));
                         }
                     } catch (SutraException e) {
                         problems.addAll(e.problems());
@@ -147,9 +233,10 @@ public final class SutraBlocks {
             }
         }
         LIBRARY.set(Map.copyOf(next));
+        java.util.Set<Block> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
         for (TreeMap<Integer, Block> versions : next.values()) {
             for (Block b : versions.values()) {
-                if (b.fragment() && b.text().contains("use:")) {
+                if (seen.add(b) && b.fragment() && b.text().contains("use:")) {
                     List<SutraProblem> inner = new ArrayList<>();
                     expand(List.of(new PNode(Map.of("use", new PNode(b.ref(), 1, 1)), 1, 1)), b.path(), inner);
                     problems.addAll(inner);
@@ -158,7 +245,22 @@ public final class SutraBlocks {
         }
         PROBLEMS.set(List.copyOf(problems));
         WARNINGS.set(List.copyOf(warnings));
+        CLASHES.set(List.copyOf(clashes));
         return problems;
+    }
+
+    /** Each block once (a pack's block is listed under its qualified and its plain name), in name order. */
+    public static List<Block> blocks() {
+        java.util.Set<Block> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        List<Block> out = new ArrayList<>();
+        LIBRARY.get().values().forEach(vs -> vs.values().stream().filter(seen::add).forEach(out::add));
+        out.sort(java.util.Comparator.comparing(Block::name).thenComparing(Block::version));
+        return out;
+    }
+
+    /** The names a pack or site block shares with a Drishti UI kit fragment, read last: the kit's won ({@code DRS-2048}, a warning). */
+    public static List<SutraProblem> clashes() {
+        return CLASHES.get();
     }
 
     /** The blocks known now: name to versions. */
@@ -209,7 +311,7 @@ public final class SutraBlocks {
                     throw new SutraException(List.of(problem("block " + name + " uses another block: a block holds panels only (a fragment may use fragments)",
                             file, p.line(), p.column())));
                 }
-                if (!ref.matches("[a-z][a-z0-9-]{1,63}@[0-9]+")) {
+                if (!ref.matches("([a-z][a-z0-9-]{0,63}/)?[a-z][a-z0-9-]{1,63}@[0-9]+")) {
                     throw new SutraException(List.of(problem("fragment " + name + " uses " + ref + " without a version: a composite pins its inner "
                             + "fragments (use: name@N)", file, p.line(), p.column())));
                 }

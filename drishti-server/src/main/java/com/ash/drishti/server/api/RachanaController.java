@@ -61,7 +61,7 @@ public class RachanaController {
     @GetMapping("/blocks")
     public Map<String, Object> blocks() {
         List<Map<String, Object>> out = new ArrayList<>();
-        SutraBlocks.library().values().forEach(vs -> vs.values().forEach(b -> out.add(describe(b, false))));
+        SutraBlocks.blocks().forEach(b -> out.add(describe(b, false)));     // each once (a pack's block answers to two names)
         return Map.of("blocks", out);
     }
 

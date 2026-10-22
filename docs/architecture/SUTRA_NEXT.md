@@ -25,6 +25,7 @@ into the UI library, in ONE grammar, built on what Sutras already have (panels, 
 1. [Principles](#1-principles)
 2. [Where we start: today's Sutra and blocks](#2-where-we-start-todays-sutra-and-blocks)
 3. [Fragments: the library](#3-fragments-the-library)
+   - [3a. The Drishti UI kit](#3a-the-drishti-ui-kit)
 4. [The doc: docstring](#4-the-doc-docstring)
 5. [Composite fragments](#5-composite-fragments)
 6. [Sources over several packs](#6-sources-over-several-packs)
@@ -66,14 +67,14 @@ built from six blocks. Sutra Next builds on exactly this mechanism: a fragment i
 
 ## 3. Fragments: the library
 
-A **fragment** is `<name>.v<N>.fragment.yaml` with `fragment: <name>`; it is used like a block. The shared library lives in the
-**core pack's `sutras/library`** folder (every pack extends core, so every Sutra may use it; the server loads it with the pack Sutra
-folders, the CLI `sutra lint|test` finds it beside the pack). A site or a pack may add its own fragments in its Sutra folders; a
-later (more specific) folder wins for the same `name@version`. Later the content store (CONTENT_STORE.md) holds workspace fragments
-the same way (phase 7).
+A **fragment** is `<name>.v<N>.fragment.yaml` with `fragment: <name>`; it is used like a block. The shared library is the
+**Drishti UI kit**'s `fragments/` folder (`config/ui-kit/fragments`, [section 3a](#3a-the-drishti-ui-kit)): platform UI vocabulary,
+not domain content, which the server and the CLI `sutra lint|test` ALWAYS load whatever packs are enabled, so every Sutra may use
+it. A pack may add its own fragments in its Sutra folders, namespaced by the pack (`trading/deal-ticket@1`); kit fragments are
+unqualified (`series-line@1`). Later the content store (CONTENT_STORE.md) holds workspace fragments the same way (phase 7).
 
 ```yaml
-# config/packs/core/sutras/library/series-line.v1.fragment.yaml
+# config/ui-kit/fragments/series-line.v1.fragment.yaml
 rachana: 1
 fragment: series-line
 version: 1
@@ -139,13 +140,62 @@ projections table (nine columns), because a fragment's columns are fixed (a para
 draws all seven on the pack's committed samples (`ECG-SAS`, `FCST-JPN-WEO`, `ECON-IND`, `FISC-USA`, `LABR-NGA`,
 `MACRO-BRA-GDP-GROWTH`, `REGE-AU-NSW`) with the old generated layouts (test data, as version 2) and with the fragments, for a full
 reader and a masked one (`GDP_USD_BN`, `GROWTH`, `DEBT`, `UNEMPLOYMENT`, `LATEST`, `ISO3` redacted): identical but for the layout's
-own version. The generator leaves them alone (`hand_written` in `tools/packgen/world/make.py`), and world-economy now extends core
-so the library loads wherever the pack does.
+own version. The generator leaves them alone (`hand_written` in `tools/packgen/world/make.py`). world-economy extends nothing:
+the fragments come from the Drishti UI kit, which loads whatever packs are enabled (the test enables world-economy alone).
+
+## 3a. The Drishti UI kit
+
+**Decision (product owner, 2026-10-22).** The fragment library is platform UI vocabulary, not domain content. It is the **Drishti
+UI kit**, which the server always loads whatever packs are enabled, so any screen, dynamic screen or Gen UI stream can rely on it.
+It also holds the assets and the brand Gen UI decorates with. Built in 2.7.0: the folder, the loaders, the read API; Gen UI
+streaming of the kit comes later (2.9.0, AI).
+
+```
+config/ui-kit/                       drishti.ui-kit.dir (DRISHTI_UI_KIT_DIR), default ./config/ui-kit
+  fragments/                         <name>.v<N>.fragment.yaml: series-line, curve-table, key-figure, source-footer, ... (14)
+  assets/
+    icons/                           favicon.svg, favicon-32.png, icon-192.png, icon-512.png
+    images/                          pictures a screen or a Gen UI answer may show
+    logos/                           drishti-logo.png, drishti-mark.svg, drishti-icon.png
+  brand.yaml                         name, tagline, logo and icon refs, colours per theme
+<data folder>/ui-kit/                drishti.ui-kit.site-dir (DRISHTI_UI_KIT_SITE_DIR): the site's overrides
+  brand.yaml                         its keys win over the kit's, map by map
+  assets/                            a file here wins over the kit's file of the same path
+```
+
+| Part | What it is | How it is read |
+|---|---|---|
+| **Fragments** | the generic panels of section 3, unqualified (`series-line@1`) | loaded first by every Sutra load (server: `SutraRegistry`; CLI: `sutra lint|test`, which finds `config/ui-kit` from the working folder or above the paths it checks) |
+| **Theme tokens** | the colours of the console's base themes (`terminal`, `light`), named after its `--d-*` tokens (`bg`, `surface`, `ink`, `muted`, `accent`, `link`, `pos`, `neg`) | `brand.yaml` `themes:`; a Gen UI renderer maps them onto its own surface |
+| **Icons, images, logos** | files under `assets/` | `GET /api/v1/ui-kit/assets/{path}`, content-hash URLs |
+| **Brand** | `name`, `tagline`, `logos: {full, mark, icon}`, `icons: {...}`, `themes:` | `GET /api/v1/ui-kit` `brand` (with `urls`: each logo and icon's versioned URL, and `overridden`) |
+
+**Pack-namespaced fragments.** A pack may still ship fragments (and the older blocks) in its Sutra folders. Each is namespaced by
+its pack's name (`trading/deal-ticket@1`) and also answers to its plain name (`deal-ticket@1`), so today's pack Sutras keep working.
+On a clash with a kit fragment's name the kit wins: the plain name is the kit's, the pack's answers only qualified, and the load
+warns (`DRS-2048`, a warning: in the server log and on the CLI's error output). A composite may pin a qualified inner fragment
+(`use: trading/legs@1`). Between packs, a later (more specific) pack folder still wins a plain name.
+
+**Brand overrides.** A site does not edit the kit: it writes `<data folder>/ui-kit/brand.yaml` with the keys it changes
+(`name: Acme Risk`, `themes: { light: { accent: "#0b5" } }`); maps merge key by key and anything else is the site's value. A site
+logo goes in `<data folder>/ui-kit/assets/logos/` and `brand.yaml` points at it. The data folder (not the content store) is used
+because the brand is per deployment and read at every request; a cluster gives each node the same data folder or the same file.
+
+**The read API.** `GET /api/v1/ui-kit` returns `{fragments, packFragments, assets, brand, streaming}`: the kit's fragments with
+their docstrings (`origin: kit`), the enabled packs' own (`origin: <pack>`), every asset (`path`, `kind`, `type`, `size`, `hash`,
+`origin: kit|site`, `url`), the merged brand. `GET /api/v1/ui-kit/assets/{path}` serves one file with a strong ETag (its SHA-256)
+and a 304 for a matching `If-None-Match`; the URL the listing gives carries the hash (`?v=<16 hex>`) and is cached for a year
+(`immutable`), any other URL for five minutes. A path with `..`, a hidden name, a backslash or a link out of the folder is a 404; an
+SVG is served with a sandboxing Content-Security-Policy. `GET /api/v1/sutras/library` stays as the fragments-only alias.
+
+**Gen UI streaming (later).** A Gen UI answer (AI_PROVIDERS.md, 2.9.0) will stream screens as fragment uses (`{ use: key-figure@1,
+with: {...} }`) checked by the same lint and masks, decorated with the kit's brand and assets by URL; the kit is what the model is
+told it may use (the docstrings), and `streaming: false` in the summary says it is not yet on.
 
 ## 4. The doc: docstring
 
 Every fragment and every Sutra carries a `doc:` block, like a Python docstring. The component browser (phase 8) and an AI agent
-(2.9.0) read it through `GET /api/v1/sutras/library`; nothing else is needed to use a fragment correctly.
+(2.9.0) read it through `GET /api/v1/ui-kit` (or its fragments-only alias `GET /api/v1/sutras/library`); nothing else is needed to use a fragment correctly.
 
 ```yaml
 doc:
@@ -182,7 +232,7 @@ doc:
 A fragment's `panels:` may `use:` other library fragments (built in phase 1; blocks still may not use blocks).
 
 ```yaml
-# config/packs/core/sutras/library/curve-overview.v1.fragment.yaml
+# config/ui-kit/fragments/curve-overview.v1.fragment.yaml
 fragment: curve-overview
 version: 1
 params: { rows: $.POINTS, tenor: TENOR, zero: ZERO_RATE, zero-fmt: price2, curve-id: curve, curve-title: Zero rates (%),
@@ -503,7 +553,7 @@ picking from `emits`; show lint as you type; save a dynamic screen to the worksp
 
 | Phase | What | Release |
 |---|---|---|
-| 1 | The fragment library (core pack `sutras/library`), the `doc:` docstring and its lint, composite fragments, migrated screens (ir-curve and the seven economics screens, proved identical), `GET /api/v1/sutras/library` | 2.7.0 (**built**) |
+| 1 | The fragment library (the Drishti UI kit, `config/ui-kit`, with its assets, brand and `GET /api/v1/ui-kit`), the `doc:` docstring and its lint, composite fragments, migrated screens (ir-curve and the seven economics screens, proved identical), `GET /api/v1/sutras/library` | 2.7.0 (**built**) |
 | 2 | Events (`emits`, `@panel.event.path`) and multi-pack sources (`source:`) | 2.7.x |
 | 3 | Nested children (`children:`, `place`, `show`, lazy, depth 3) | 2.7.x |
 | 4 | Refresh control and freshness per panel | 2.7.x |
@@ -516,8 +566,9 @@ Each phase migrates screens only where the equivalence test proves the view unch
 
 ## 18. Open questions
 
-1. **Library home.** The library is the core pack's `sutras/library` (it loads everywhere core does). Should it become its own
-   folder (`config/sutra-library`) with its own setting, so a site without core still has it?
+1. **Library home.** *Answered (product owner, 2026-10-22):* the library is platform vocabulary, the Drishti UI kit
+   (`config/ui-kit`, `drishti.ui-kit.dir`), loaded whatever packs are enabled; packs keep their own fragments, namespaced by pack
+   ([section 3a](#3a-the-drishti-ui-kit)).
 2. **Docstrings for today's Sutras.** 180 pack Sutras have no `doc:` (warning only). Generate them from the taxonomy (packgen) or
    write them by hand as screens migrate? When does `--strict` start failing on them?
 3. **Strip fragments.** The strip (key figures in the title band) is not a panel list, so fragments cannot fill it yet. Extend `use:`

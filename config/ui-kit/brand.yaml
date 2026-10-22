@@ -1,0 +1,53 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The Drishti UI kit's brand (SUTRA_NEXT.md, "The Drishti UI kit"): the name, the logos and the colours per theme that a screen,
+# a dynamic screen or a Gen UI stream may use. A site overrides any key in <data folder>/ui-kit/brand.yaml
+# (drishti.ui-kit.brand-override): its keys win over these, map by map. Logo and icon values are paths under the kit's assets/
+# folder (a site's <data folder>/ui-kit/assets/ is looked in first); GET /api/v1/ui-kit gives each its versioned URL.
+name: Drishti
+tagline: Any data. Any domain. One grammar.
+logos:
+  full: logos/drishti-logo.png
+  mark: logos/drishti-mark.svg
+  icon: logos/drishti-icon.png
+icons:
+  favicon: icons/favicon.svg
+  favicon-png: icons/favicon-32.png
+  app-192: icons/icon-192.png
+  app-512: icons/icon-512.png
+# The colours of the console's two base themes (drishti-console/web/static/css/tokens.css), named after its --d-* tokens.
+themes:
+  terminal:
+    bg: "#0e1628"
+    surface: "#16213a"
+    border: "#26345a"
+    ink: "#e7ecf5"
+    muted: "#93a0b8"
+    accent: "#e8a33a"
+    on-accent: "#14100a"
+    link: "#7fb2ff"
+    pos: "#7fb2ff"
+    neg: "#f2955a"
+  light:
+    bg: "#f7f5f0"
+    surface: "#ffffff"
+    border: "#e2dcd0"
+    ink: "#172440"
+    muted: "#55607a"
+    accent: "#985b0a"
+    on-accent: "#ffffff"
+    link: "#1f5fc4"
+    pos: "#1f5fc4"
+    neg: "#b4491a"

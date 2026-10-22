@@ -557,7 +557,8 @@ panels.
   `block 'legs' has no parameter 'colour'`, `block 'nested' uses another block`, `name it legs.v1.block.yaml`.
 
 **Fragments (2.7.0, Sutra Next phase 1).** A fragment is a block of the shared library, `<name>.v<N>.fragment.yaml` with
-`fragment: <name>` (the core pack's `sutras/library`, which every pack extends), used exactly like a block (`{ use: series-line@1,
+`fragment: <name>` (the Drishti UI kit, `config/ui-kit/fragments`, loaded whatever packs are enabled; a pack's own are namespaced,
+`use: trading/legs@1`), used exactly like a block (`{ use: series-line@1,
 with: {...} }`). It carries a complete `doc:` docstring, checked strictly (`DRS-2055`: a fragment without one is not loaded), and may
 `use:` other fragments at a pinned version (`name@N`), passing parameters explicitly (`with: { title: "%{title}" }`), at most three
 fragments deep and without a cycle. A Sutra may carry a `doc:` too; without one `sutra lint --docs` warns. See

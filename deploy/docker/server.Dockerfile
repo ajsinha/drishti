@@ -7,6 +7,7 @@ RUN useradd --system --uid 10001 drishti
 WORKDIR /opt/drishti
 COPY drishti-server/target/drishti-server-*-exec.jar app.jar
 COPY config/packs/ config/packs/
+COPY config/ui-kit/ config/ui-kit/
 # the server's temp base (<data dir>/tmp/server), made here so the JVM's temp folder exists from its first start
 RUN mkdir -p /opt/drishti/data/tmp/server && chown -R drishti /opt/drishti/data
 USER drishti

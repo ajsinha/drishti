@@ -42,8 +42,19 @@ public class RachanaConfiguration {
         return Formats.load(props.formatsFile(), props.packFormatsFiles());
     }
 
+    /**
+     * The Sutras, with the Drishti UI kit ({@code drishti.ui-kit.dir}, SUTRA_NEXT.md) set first: its fragments load whatever packs are
+     * enabled, so any screen may use them.
+     */
     @Bean(destroyMethod = "close")
-    public SutraRegistry sutraRegistry(RachanaProperties props, ElCompiler elCompiler) {
+    public SutraRegistry sutraRegistry(RachanaProperties props, ElCompiler elCompiler,
+            @org.springframework.beans.factory.annotation.Value("${drishti.ui-kit.dir:./config/ui-kit}") String uiKitDir) {
+        java.nio.file.Path kit = java.nio.file.Path.of(uiKitDir).toAbsolutePath().normalize();
+        if (!java.nio.file.Files.isDirectory(kit.resolve("fragments"))) {
+            org.slf4j.LoggerFactory.getLogger(RachanaConfiguration.class).warn("the Drishti UI kit has no fragments folder at {} (drishti.ui-kit.dir, "
+                    + "DRISHTI_UI_KIT_DIR): screens that use its fragments do not draw", kit);
+        }
+        com.ash.drishti.rachana.parse.SutraBlocks.kit(kit);
         return new SutraRegistry(props, elCompiler);
     }
 

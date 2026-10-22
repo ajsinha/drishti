@@ -1742,8 +1742,9 @@ masks `COUNTERPARTY_ID`); an entry that names no field of the loaded packs is lo
 ## Fragments and docstrings
 
 A Sutra's panels need not be written out. The **fragment library** (2.7.0, [SUTRA_NEXT.md](../architecture/SUTRA_NEXT.md)) holds
-generic, parameterised panels named after what they show, in the core pack's `sutras/library` folder; every pack extends core, so
-every Sutra may use them, exactly like a shared block:
+generic, parameterised panels named after what they show. They are the **Drishti UI kit** (`config/ui-kit/fragments`,
+`drishti.ui-kit.dir`): platform vocabulary the server and `sutra lint|test` always load, whatever packs are enabled, so every
+Sutra may use them exactly like a shared block, and a pack needs to extend nothing for them:
 
 ```yaml
 # config/packs/market-data/sutras/market-data/ir-curve.v1.sutra.yaml (the first screen built from fragments)
@@ -1759,9 +1760,17 @@ The library today: `series-line`, `curve-table`, `curve-overview` (a composite o
 `region-map`, `source-footer` (a composite: data source, how the view was built, linked entities). The world-economy economics
 screens are worked examples. What each one shows, its
 parameters with their types and defaults, and examples are in its docstring; read them all with
-`curl -s localhost:8080/api/v1/sutras/library | jq '.fragments[] | {ref, summary}'`.
+`curl -s localhost:8080/api/v1/ui-kit | jq '.fragments[] | {ref, summary}'` (`/api/v1/sutras/library` is the older alias). The
+kit also holds icons, images, logos and the brand (`config/ui-kit/assets`, `brand.yaml`; [SUTRA_NEXT.md, The Drishti UI
+kit](../architecture/SUTRA_NEXT.md#3a-the-drishti-ui-kit)).
 
-**Writing a fragment.** A file `<name>.v<N>.fragment.yaml` (in the library, or in your pack's `sutras/` for a pack's own) with
+**Your pack's own fragments are namespaced.** A fragment or block in your pack's `sutras/` is `<pack>/<name>@N`
+(`trading/deal-ticket@1`) and also answers to its plain name (`deal-ticket@1`) as before. Do not name one like a kit fragment: the
+kit's wins the plain name, yours answers only qualified, and loading warns (`DRS-2048 warning: pack trading's key-figure has the
+name of a Drishti UI kit fragment: the kit's wins; use trading/key-figure@1 for the pack's`).
+
+**Writing a fragment.** A file `<name>.v<N>.fragment.yaml` (in the kit's `fragments/` for platform vocabulary, or in your pack's
+`sutras/` for a pack's own) with
 `fragment: <name>`, `version`, `params:` (each with its default; an empty default `''` leaves an optional key such as `code`, `key`
 or `area` out), `panels:` whose text reads `%{param}`, and a complete **`doc:`**:
 

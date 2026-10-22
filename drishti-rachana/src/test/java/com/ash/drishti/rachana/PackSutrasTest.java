@@ -18,15 +18,22 @@ package com.ash.drishti.rachana;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.rachana.el.ElCompiler;
+import com.ash.drishti.rachana.parse.SutraBlocks;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-/** Every pack's Sutras load with no problems (with the core pack's fragment library): grammar, expressions and unique name@version. */
+/**
+ * Every pack's Sutras load with no problems, each pack ALONE with the Drishti UI kit (config/ui-kit, loaded whatever packs are
+ * enabled; no pack needs to extend another for its fragments): grammar, expressions and unique name@version.
+ */
 class PackSutrasTest {
+
+    static final Path KIT = Path.of("..", "config", "ui-kit");
 
     static Stream<Path> packs() throws Exception {
         try (Stream<Path> s = Files.list(Path.of("..", "config", "packs"))) {
@@ -34,21 +41,26 @@ class PackSutrasTest {
         }
     }
 
+    @AfterEach
+    void noKit() {
+        SutraBlocks.kit(null);
+        SutraBlocks.load(List.of());
+    }
+
     @ParameterizedTest
     @MethodSource("packs")
-    void packSutrasLoadWithoutProblems(Path pack) throws Exception {
+    void packSutrasLoadWithoutProblemsWithTheUiKitAndNoOtherPack(Path pack) throws Exception {
         long files;
         try (Stream<Path> s = Files.walk(pack.resolve("sutras"))) {
             files = s.filter(p -> p.toString().endsWith(".sutra.yaml")).count();
         }
-        // every pack extends core, whose sutras/library holds the shared fragments a Sutra may use (Sutra Next phase 1)
-        Path library = Path.of("..", "config", "packs", "core", "sutras", "library");
-        List<String> dirs = pack.getFileName().toString().equals("core") ? List.of(pack.resolve("sutras").toString())
-                : List.of(library.toString(), pack.resolve("sutras").toString());
-        try (SutraRegistry r = new SutraRegistry(new RachanaProperties(dirs, false,
+        SutraBlocks.kit(KIT);
+        try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(pack.resolve("sutras").toString()), false,
                 null, null, null, null, null, null, null, null), new ElCompiler())) {
             assertThat(r.problems()).as(pack.getFileName() + " problems").isEmpty();
             assertThat(r.all()).hasSize((int) files);
+            assertThat(SutraBlocks.find("series-line@1")).as("the kit's fragments load with " + pack.getFileName()).isPresent();
+            assertThat(SutraBlocks.clashes()).as(pack.getFileName() + " names no block like a kit fragment").isEmpty();
         }
     }
 }

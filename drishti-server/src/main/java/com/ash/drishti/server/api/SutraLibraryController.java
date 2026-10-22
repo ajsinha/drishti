@@ -30,7 +30,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The fragment library with its docstrings, for a component browser or an AI agent (Sutra Next phase 1, SUTRA_NEXT.md):
+ * The fragment library with its docstrings, for a component browser or an AI agent (Sutra Next phase 1, SUTRA_NEXT.md): the Drishti
+ * UI kit's fragments (unqualified, {@code origin: kit}) and the enabled packs' own (namespaced, {@code trading/legs}); kept as an alias
+ * beside {@code GET /api/v1/ui-kit} ({@link UiKitController}), which adds the assets and the brand.
  * {@code GET /api/v1/sutras/library} lists every fragment ({@code <name>.v<N>.fragment.yaml}) with its {@code doc:}, its
  * parameters and defaults and its source file; {@code ?blocks=true} adds the older shared blocks (their doc may be empty).
  * {@code GET /api/v1/sutras/library/{name}/{version}} reads one with its text. Read-only; a fragment is edited in its file.
@@ -48,9 +50,7 @@ public class SutraLibraryController {
     @GetMapping
     public Map<String, Object> library(@RequestParam(name = "blocks", defaultValue = "false") boolean blocks) {
         List<Map<String, Object>> out = new ArrayList<>();
-        SutraBlocks.library().values().forEach(vs -> vs.values().stream()
-                .filter(b -> blocks || b.fragment())
-                .forEach(b -> out.add(describe(b, false))));
+        SutraBlocks.blocks().stream().filter(b -> blocks || b.fragment()).forEach(b -> out.add(describe(b, false)));
         return Map.of("fragments", out, "count", out.size());
     }
 
@@ -60,7 +60,8 @@ public class SutraLibraryController {
                 .orElseThrow(() -> new DrishtiException(ErrorCode.SUTRA_NOT_FOUND, "no fragment " + name + "@" + version));
     }
 
-    private Map<String, Object> describe(SutraBlocks.Block b, boolean text) {
+    /** One block or fragment for a listing: its ref, docstring, parameters, origin ({@code kit}, a pack's name, or {@code site}) and source. */
+    Map<String, Object> describe(SutraBlocks.Block b, boolean text) {
         Map<String, Object> doc = b.doc();
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("ref", b.ref());
@@ -70,6 +71,7 @@ public class SutraLibraryController {
         m.put("summary", doc.getOrDefault("summary", b.description()));
         m.put("params", b.params());
         m.put("doc", doc);
+        m.put("origin", SutraBlocks.fromKit(b) ? "kit" : b.name().contains("/") ? b.name().substring(0, b.name().indexOf('/')) : "site");
         m.put("source", sutras.relative(b.path()));
         if (text) {
             m.put("text", b.text());

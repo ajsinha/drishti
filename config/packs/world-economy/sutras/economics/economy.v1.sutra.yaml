@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 
-# Hand-written since 2.7.0 (Sutra Next phase 1): built from the shared fragment library (core pack, sutras/library).
+# Hand-written since 2.7.0 (Sutra Next phase 1): built from the Drishti UI kit (config/ui-kit/fragments, loaded by every server).
 # tools/packgen/world/make.py leaves it alone (hand_written); SutraNextEquivalenceTest proves it draws exactly what the generated
 # layout drew.
 rachana: 1

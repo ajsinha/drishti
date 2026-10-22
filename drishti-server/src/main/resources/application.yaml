@@ -741,6 +741,12 @@ drishti:
     max-expression-length: 10000
     # Let Sutra Studio save files (authors only). Off by default; turn on in authoring environments.
     studio-save: ${DRISHTI_STUDIO_SAVE:false}
+  ui-kit:
+    # The Drishti UI kit (docs/architecture/SUTRA_NEXT.md, "The Drishti UI kit"): platform UI vocabulary loaded whatever packs are
+    # enabled: fragments/ (used by any Sutra as { use: series-line@1 }), assets/ (icons, images, logos) and brand.yaml.
+    dir: ${DRISHTI_UI_KIT_DIR:./config/ui-kit}
+    # The site's overrides: brand.yaml (its keys win over the kit's) and assets/ (a file wins over the kit's of the same path).
+    site-dir: ${DRISHTI_UI_KIT_SITE_DIR:${drishti.data.dir}/ui-kit}
   governance:
     # With review on, a Studio save is a proposal; an approver (role flag approve, or an admin) makes it live.
     enabled: ${DRISHTI_SUTRA_REVIEW:true}

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The shared fragment library (SUTRA_NEXT.md): hand-written, versioned, used as { use: event-timeline@1, with: {...} }.
+# The Drishti UI kit (SUTRA_NEXT.md): platform UI vocabulary every server loads, hand-written, versioned, used as { use: event-timeline@1, with: {...} }.
 rachana: 1
 fragment: event-timeline
 version: 1

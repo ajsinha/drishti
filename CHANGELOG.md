@@ -20,11 +20,11 @@
 - The UI Board work is kept on branch ui-board-preview; not in this release.
 - **Sutra Next, phase 1 (2.7.0): the fragment library and docstrings** ([SUTRA_NEXT.md](docs/architecture/SUTRA_NEXT.md)). The
   board/chip paradigm is dropped; Sutra itself becomes the UI library, in one grammar. Built on the shared blocks (`use:`/`with:`):
-  - **Fragments**: `<name>.v<N>.fragment.yaml` with `fragment: <name>`, used like blocks. The shared library is the core pack's
-    `sutras/library` (fourteen, all `@1`): `series-line`, `curve-table`, `curve-overview`, `field-list`, `ranked-bars`,
+  - **Fragments**: `<name>.v<N>.fragment.yaml` with `fragment: <name>`, used like blocks. The shared library is the Drishti UI kit's
+    `fragments/` (fourteen, all `@1`; see below): `series-line`, `curve-table`, `curve-overview`, `field-list`, `ranked-bars`,
     `cashflow-ladder`, `event-timeline`, `key-figure`, `linked-entities`, `data-provenance`, `explainer-note`, `measure-table`,
     `region-map`, `source-footer`. An empty optional
-    parameter (`code`, `key`, `area`) leaves the key out. `sutra lint|test` on a pack finds the library beside it.
+    parameter (`code`, `key`, `area`) leaves the key out.
   - **The `doc:` docstring**: summary, description, every parameter with type, default and meaning, emits, expects, examples, since.
     Strict for fragments (`DRS-2055`: not loaded without a complete one); a warning for Sutras and older blocks (`sutra lint --docs` prints
     an incomplete one and counts those without one; never fails on it). `doc:` is a known top-level key of a Sutra and in the schema.
@@ -41,9 +41,22 @@
     `data-provenance` and `linked-entities`, on all seven). The IMF projections table (nine columns) stays written in place: a
     fragment's columns are fixed. `EconomicsSutraNextEquivalenceTest` proves all seven identical to the generated layouts on the
     pack's committed samples for a full and a masked reader. They are hand-written now (`hand_written` in
-    `tools/packgen/world/make.py`, honoured by `tools/packgen/common/packbuild.py`), and **world-economy extends core** (as every
-    other pack does), so the library comes with it when it is enabled alone.
-  - **`GET /api/v1/sutras/library`** (and `/{name}/{version}` with the text) lists the fragments with their docstrings for a
+    `tools/packgen/world/make.py`, honoured by `tools/packgen/common/packbuild.py`). world-economy extends nothing (as before): the
+    fragments come from the UI kit.
+  - **The Drishti UI kit** (product owner, 2026-10-22: the library is platform UI vocabulary, not domain content). The fragments
+    moved from the core pack's `sutras/library` to **`config/ui-kit/fragments`** (names and versions kept), which the server and
+    `sutra lint|test` ALWAYS load whatever packs are enabled (`drishti.ui-kit.dir`, `DRISHTI_UI_KIT_DIR`, default
+    `./config/ui-kit`), so any screen, dynamic screen or Gen UI stream may rely on them. A pack's own fragments and blocks are
+    **namespaced by the pack** (`trading/deal-ticket@1`) and still answer to their plain name; one named like a kit fragment loses
+    the plain name to the kit, with a `DRS-2048` warning. The kit also holds **`assets/`** (`icons/`, `images/`, `logos/`, seeded with
+    the console's Drishti logo, mark, icon and favicons) and **`brand.yaml`** (name, tagline, logo and icon refs, the colours of the
+    `terminal` and `light` themes); a site overrides both under `drishti.ui-kit.site-dir` (default `<data folder>/ui-kit`):
+    `brand.yaml` keys win map by map, `assets/` files win by path. **`GET /api/v1/ui-kit`** (fragments with docs, the packs' own
+    fragments, assets with content-hash URLs, the merged brand) and **`GET /api/v1/ui-kit/assets/{path}`** (strong ETag, 304, a
+    year's `immutable` cache on a `?v=<hash>` URL, path traversal refused, SVG sandboxed). Gen UI streaming of the kit comes later.
+    `PackSutrasTest` loads every pack ALONE with the kit; `UiKitBlocksTest`, `UiKitApiTest` (no pack enabled). Docs: SUTRA_NEXT.md
+    "The Drishti UI kit" (open question 1 answered), PACK_DEVELOPER_GUIDE, RACHANA_REFERENCE, CONFIGURATION, API_GUIDE.
+  - **`GET /api/v1/sutras/library`** (kept as the fragments-only alias of `/api/v1/ui-kit`; each entry now says its `origin`) (and `/{name}/{version}` with the text) lists the fragments with their docstrings for a
     component browser or an AI agent; `?blocks=true` adds the older blocks. No UI yet.
   - IMPLEMENTATION_PLAN: 2.7.0 is now "Sutra Next, phase 1+"; the UI Board stays parked on its branch. Docs: SUTRA_NEXT.md (with the
     layout grid and composite fragments designed), PACK_DEVELOPER_GUIDE "Fragments and docstrings", RACHANA_REFERENCE, API_GUIDE,

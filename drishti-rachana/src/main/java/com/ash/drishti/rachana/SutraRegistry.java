@@ -193,6 +193,10 @@ public final class SutraRegistry implements AutoCloseable {
                 out = out.replace(root + java.io.File.separator, "").replace(root, ".");
             }
         }
+        java.util.Optional<Path> kit = com.ash.drishti.rachana.parse.SutraBlocks.kit();   // the Drishti UI kit: ui-kit/fragments/x
+        if (kit.isPresent() && kit.get().getParent() != null) {
+            out = out.replace(kit.get().getParent().toString() + java.io.File.separator, "");
+        }
         return out;
     }
 
@@ -254,6 +258,8 @@ public final class SutraRegistry implements AutoCloseable {
         for (SutraProblem p : com.ash.drishti.rachana.parse.SutraBlocks.load(props.allDirs().stream().map(d -> Path.of(d).toAbsolutePath().normalize()).toList())) {
             problems.computeIfAbsent(p.location() == null ? "blocks" : p.location().file(), k -> new ArrayList<>()).add(p);
         }
+        // a pack (or site) block named like a Drishti UI kit fragment: the kit's wins, the pack's answers only to pack/name
+        com.ash.drishti.rachana.parse.SutraBlocks.clashes().forEach(c -> LOG.warn("{}: {} {}", c.location().file(), c.code(), c.message()));
         for (Path f : files) {
             Sutra s;
             String fname = f.getFileName().toString();

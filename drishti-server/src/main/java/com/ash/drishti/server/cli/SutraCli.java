@@ -618,22 +618,42 @@ public final class SutraCli {
                 dirs.add(Files.isDirectory(abs) ? abs : abs.getParent());
             }
         }
-        java.util.Set<Path> library = new java.util.LinkedHashSet<>();   // the shared fragment library (core pack) every pack may use
-        for (Path d : dirs) {
-            Path lib = d == null || d.getParent() == null || d.getParent().getParent() == null ? null
-                    : d.getParent().getParent().resolve("core").resolve("sutras").resolve("library");
-            if (lib != null && Files.isDirectory(lib) && dirs.stream().noneMatch(x -> x != null && lib.startsWith(x))) {
-                library.add(lib);
-            }
-        }
-        library.addAll(dirs);
-        dirs.clear();
-        dirs.addAll(library);
-        if (dirs.stream().anyMatch(d -> d != null && hasBlocks(d))) {
+        Path kit = uiKit(dirs);                                       // the Drishti UI kit: always loaded, whatever the paths
+        com.ash.drishti.rachana.parse.SutraBlocks.kit(kit);
+        if (kit != null || dirs.stream().anyMatch(d -> d != null && hasBlocks(d))) {
             for (com.ash.drishti.rachana.SutraProblem p : com.ash.drishti.rachana.parse.SutraBlocks.load(dirs.stream().filter(java.util.Objects::nonNull).toList())) {
                 err.println(p.location().file() + ":" + p.location().line() + " " + p.code() + " " + p.message());   // a block that does not read
             }
+            for (com.ash.drishti.rachana.SutraProblem p : com.ash.drishti.rachana.parse.SutraBlocks.clashes()) {
+                err.println(p.location().file() + ":" + p.location().line() + " " + p.code() + " warning: " + p.message());
+            }
         }
+    }
+
+    /**
+     * The Drishti UI kit folder: {@code drishti.ui-kit.dir} or {@code DRISHTI_UI_KIT_DIR} when set, else {@code ./config/ui-kit}, else the
+     * {@code config/ui-kit} (or {@code ui-kit}) beside an ancestor of a path being checked ({@code config/packs/trading} finds
+     * {@code config/ui-kit}); null when there is none.
+     */
+    static Path uiKit(java.util.Collection<Path> dirs) {
+        String set = System.getProperty("drishti.ui-kit.dir", System.getenv("DRISHTI_UI_KIT_DIR"));
+        if (set != null && !set.isBlank()) {
+            return Path.of(set).toAbsolutePath().normalize();
+        }
+        Path here = Path.of("config", "ui-kit").toAbsolutePath().normalize();
+        if (Files.isDirectory(here.resolve("fragments"))) {
+            return here;
+        }
+        for (Path d : dirs) {
+            for (Path up = d == null ? null : d.toAbsolutePath().normalize(); up != null; up = up.getParent()) {
+                for (Path kit : List.of(up.resolve("ui-kit"), up.resolve("config").resolve("ui-kit"))) {
+                    if (Files.isDirectory(kit.resolve("fragments"))) {
+                        return kit;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     private static boolean hasBlocks(Path dir) {

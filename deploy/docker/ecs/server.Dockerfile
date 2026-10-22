@@ -25,12 +25,14 @@ WORKDIR /opt/drishti
 COPY drishti-server/target/drishti-server-*-exec.jar app.jar
 # shipped packs live outside the EFS paths, so a mount never hides them; installed packs go to data/packs/installed (EFS)
 COPY config/packs/ shipped/packs/
+COPY config/ui-kit/ shipped/ui-kit/
 COPY deploy/docker/ecs/server-entrypoint.sh bin/entrypoint.sh
 # the mount points, owned by the user the EFS access points enforce (uid/gid 10001)
 RUN chmod 0555 bin/entrypoint.sh && mkdir -p data config sutras && chown drishti:drishti data config sutras
 USER drishti
 ENV DRISHTI_DATA_DIR=/opt/drishti/data \
     DRISHTI_PACKS_DIR=/opt/drishti/shipped/packs \
+    DRISHTI_UI_KIT_DIR=/opt/drishti/shipped/ui-kit \
     DRISHTI_CONNECTORS_DIR=/opt/drishti/config/connectors \
     DRISHTI_NET_DIR=/opt/drishti/config/net \
     DRISHTI_AI_DIR=/opt/drishti/config/ai \
