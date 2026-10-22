@@ -41,7 +41,7 @@ class SeedChipsTest {
         ChipStore store = new ChipStore(new FileContentStore(root), ChipStoreContract.ACCESS, Path.of("../config/ui/chips"));
         Map<String, TreeMap<Integer, ChipStore.Version>> seeds = store.seeds();
         int versions = seeds.values().stream().mapToInt(Map::size).sum();
-        assertThat(versions).isEqualTo(86);
+        assertThat(versions).isEqualTo(89);                    // + status-fields, figure-gauge, event-timeline (the showcase's record chips)
         assertThat(seeds.keySet().stream().filter(n -> n.startsWith("panel-")).count()).isEqualTo(22);
         assertThat(seeds.keySet().stream().filter(n -> n.startsWith("bi-")).count()).isEqualTo(34);
         // the 18 generic record chips (12.4): named for what they show, a category of the fixed list, domain-neutral tags and a 'fits' hint

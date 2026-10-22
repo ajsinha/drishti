@@ -153,8 +153,7 @@ public final class PageConverter {
                                 + " (a chip names no source, CP-02; on a board that is a second supply)"
                         : p.path("rows").isTextual() && !PATH.matcher(p.path("rows").asText()).matches()
                                 ? "its rows are computed over the record (" + abbrev(p.path("rows").asText()) + "), not a path a pin maps"
-                        : "no Chip Store chip (" + String.join(", ", RECORD_CHIPS.getOrDefault(p.path("kind").asText(""), List.of())) + ", panel-" + p.path("kind").asText("?")
-                                + ") carries every option of the panel";
+                        : unplaced(p);
             }
             String chip = "local-" + inst;
             locals.add(localChip(inst, "Panel '" + inst + "' of the page " + sutra + ", converted as it was.", supply, reads, Set.of(),
@@ -373,7 +372,31 @@ public final class PageConverter {
             java.util.Map.entry("histogram", List.of("distribution-histogram")), java.util.Map.entry("graph", List.of("relation-graph")),
             java.util.Map.entry("kv", List.of("kv-list", "kv-summary")), java.util.Map.entry("metric", List.of("headline-figure")),
             java.util.Map.entry("markdown", List.of("field-note")), java.util.Map.entry("map", List.of("map-highlight")),
-            java.util.Map.entry("links", List.of("linked-entities")));
+            java.util.Map.entry("links", List.of("linked-entities")), java.util.Map.entry("status", List.of("status-fields")),
+            java.util.Map.entry("gauge", List.of("figure-gauge")), java.util.Map.entry("timeline", List.of("event-timeline")));
+
+    /**
+     * Why no Chip Store chip carries panel {@code p}: the nearest chips (the record chips of its kind, then {@code panel-<kind>}) and the
+     * options of the panel the nearest one has no setting for; or, when it has one for every option, that a value does not fit its slot
+     * (a list where a pin maps one field, a literal the chip fixes).
+     */
+    private String unplaced(JsonNode p) {
+        String kind = p.path("kind").asText("?");
+        List<String> near = new ArrayList<>(RECORD_CHIPS.getOrDefault(kind, List.of()));
+        near.add("panel-" + kind);
+        JsonNode body = chips.find(new ChipRef(near.get(0), 1)).map(e -> e.doc().body()).map(b -> b.path("panels").path(0)).orElse(null);
+        List<String> missing = new ArrayList<>();
+        if (body != null && !body.isMissingNode()) {
+            p.fieldNames().forEachRemaining(k -> {
+                if (!Set.of("id", "kind", "title").contains(k) && !body.has(k)) {
+                    missing.add(k);
+                }
+            });
+        }
+        String chipsText = "no Chip Store chip (" + String.join(", ", near) + ")";
+        return missing.isEmpty() ? chipsText + " carries the panel's values as written (a list where a pin maps one field, or a setting the chip fixes)"
+                : chipsText + " has a setting for " + String.join(", ", missing);
+    }
 
     /**
      * The instance of {@code chip} that carries panel {@code p}: each option of the panel lands on the slot the chip's body gives it, a

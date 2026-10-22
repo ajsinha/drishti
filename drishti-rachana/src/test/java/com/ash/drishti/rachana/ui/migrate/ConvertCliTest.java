@@ -144,6 +144,21 @@ class ConvertCliTest {
         assertThat(sutra.path("panels")).isEqualTo(UiDocuments.tree(text).path("panels"));
     }
 
+    /** The showcase (every panel kind on one page) converts onto the Chip Store's generic chips; only the panels no generic chip can carry stay local. */
+    @Test
+    void theShowcaseConvertsOnGenericChips() throws Exception {
+        var chips = UiCli.folder(ROOT.resolve("config/ui/chips"), ChipState.CERTIFIED);
+        String text = Files.readString(ROOT.resolve("docs/guides/examples/all-panels-showcase.sutra.yaml"));
+        Conversion c = new PageConverter(chips).convert("examples", text);
+        assertThat(c.status()).isNotEqualTo(Conversion.Status.FAILS);
+        assertThat(c.locals()).extracting(Conversion.Local::chip).containsExactly("local-sets", "local-grid");   // tabs of nested panels; a pivot by two fields
+        assertThat(c.locals().get(0).reason()).contains("panel-tabs", "body");
+        assertThat(c.seeds()).contains("status-fields@1", "figure-gauge@1", "event-timeline@1", "headline-figure@1", "list-table@1");
+        var board = UiDocuments.readBoard(c.document().toString());
+        JsonNode sutra = BoardSutra.toSutra(board, ref -> chips.find(ref).map(e -> e.doc())).orElseThrow();
+        assertThat(sutra.path("panels")).isEqualTo(UiDocuments.tree(text).path("panels"));
+    }
+
     /** A report page's board draws its cross-filters and slicers as traces into the filter pins, and paints back into the page (12.4). */
     @Test
     void aReportPageDrawsItsCrossFiltersAndPaintsBack() throws Exception {

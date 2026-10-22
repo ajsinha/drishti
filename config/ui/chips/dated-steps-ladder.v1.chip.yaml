@@ -32,10 +32,13 @@ manual:
     rows: 'The rows of one list in the record: map rows: <the list''s field>, and its columns id (id) to the row fields. Required.'
     columns: 'The columns, each {label, bind: ''@.FIELD'', fmt}. Required.'
     empty: 'What the ladder says when the list is empty. Empty: the kind''s own words.'
+    highlight: 'The step to highlight, a condition over the row (#index == @doc.NEXT_INDEX). Empty: none.'
     panel-id: 'The panel''s id on the page when it is not the instance name (an old page''s camelCase id). Empty: the instance name.'
     key: 'The function key that jumps to the panel (F2 to F12). Empty: no key.'
     code: 'The terminal mnemonic that opens the panel (REFS, CRV). Empty: none.'
     area: 'The page column: main (the default) or right.'
+    span: 'How many of the page''s 12 columns the panel takes. Empty: the kind''s default.'
+    height: 'The panel''s height in rows. Empty: the kind''s default.'
     page: 'The page controls, traced from the page header''s ''page'' pin: the settings read them as ctl.<id> (a row filter, a title). Empty:
       the page has none.'
   behaviour: The grammar's 'ladder' panel over the page's record (PANELS.md); the board names every field. Read-only unless a setting says otherwise.
@@ -84,6 +87,9 @@ pins:
     empty:
       role: control
       type: text
+    highlight:
+      role: control
+      type: text
     panel-id:
       role: control
       type: text
@@ -96,6 +102,12 @@ pins:
     area:
       role: control
       type: text
+    span:
+      role: control
+      type: number
+    height:
+      role: control
+      type: number
     page:
       role: control
       type: spec
@@ -107,6 +119,9 @@ body:
     rows: '@rows'
     columns: '%{columns}'
     empty: '%{empty}'
+    highlight: '%{highlight}'
     key: '%{key}'
     code: '%{code}'
     area: '%{area}'
+    span: '%{span}'
+    height: '%{height}'

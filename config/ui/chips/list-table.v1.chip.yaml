@@ -34,10 +34,14 @@ manual:
     columns: 'The columns, each {label, bind: ''@.FIELD'', fmt, tone, total, link}. Required.'
     pivot: 'The pivot view the person may switch to: {fields, rows, columns, values, filters, heat}. Empty: none.'
     where: 'A row filter over the row (@.FIELD) and the page controls. Empty: every row.'
+    children: 'A tree: the row field that holds each row''s child rows (@.CHILDREN). Empty: a flat list.'
+    expand: 'A tree: how many levels open at first. Empty: the kind''s default.'
     panel-id: 'The panel''s id on the page when it is not the instance name (an old page''s camelCase id). Empty: the instance name.'
     key: 'The function key that jumps to the panel (F2 to F12). Empty: no key.'
     code: 'The terminal mnemonic that opens the panel (REFS, CRV). Empty: none.'
     area: 'The page column: main (the default) or right.'
+    span: 'How many of the page''s 12 columns the panel takes. Empty: the kind''s default.'
+    height: 'The panel''s height in rows. Empty: the kind''s default.'
     page: 'The page controls, traced from the page header''s ''page'' pin: the settings read them as ctl.<id> (a row filter, a title). Empty:
       the page has none.'
   behaviour: The grammar's 'table' panel over the page's record (PANELS.md); the board names every field. Read-only unless a setting says otherwise.
@@ -89,6 +93,12 @@ pins:
     where:
       role: control
       type: text
+    children:
+      role: control
+      type: text
+    expand:
+      role: control
+      type: number
     panel-id:
       role: control
       type: text
@@ -101,6 +111,12 @@ pins:
     area:
       role: control
       type: text
+    span:
+      role: control
+      type: number
+    height:
+      role: control
+      type: number
     page:
       role: control
       type: spec
@@ -113,6 +129,10 @@ body:
     columns: '%{columns}'
     pivot: '%{pivot}'
     where: '%{where}'
+    children: '%{children}'
+    expand: '%{expand}'
     key: '%{key}'
     code: '%{code}'
     area: '%{area}'
+    span: '%{span}'
+    height: '%{height}'

@@ -32,11 +32,12 @@ manual:
     highlight: The place to highlight, usually @doc.ISO3. Required.
     link: 'Where a click on a place goes: {kind, id: ''PREFIX-{iso3}''}. Empty: nowhere.'
     shade: 'Shading by a field of every record of a kind: {kind, field, by, fmt, label}. Empty: none.'
-    height: 'The map''s height in rows. Empty: the kind''s default.'
+    height: 'The panel''s height in rows. Empty: the kind''s default.'
     panel-id: 'The panel''s id on the page when it is not the instance name (an old page''s camelCase id). Empty: the instance name.'
     key: 'The function key that jumps to the panel (F2 to F12). Empty: no key.'
     code: 'The terminal mnemonic that opens the panel (REFS, CRV). Empty: none.'
     area: 'The page column: main (the default) or right.'
+    span: 'How many of the page''s 12 columns the panel takes. Empty: the kind''s default.'
     page: 'The page controls, traced from the page header''s ''page'' pin: the settings read them as ctl.<id> (a row filter, a title). Empty:
       the page has none.'
   behaviour: The grammar's 'map' panel over the page's record (PANELS.md); the board names every field. Read-only unless a setting says otherwise.
@@ -95,6 +96,9 @@ pins:
     area:
       role: control
       type: text
+    span:
+      role: control
+      type: number
     page:
       role: control
       type: spec
@@ -110,3 +114,4 @@ body:
     key: '%{key}'
     code: '%{code}'
     area: '%{area}'
+    span: '%{span}'

@@ -35,6 +35,8 @@ FRAME = {
     "key": ({"role": "control", "type": "text"}, "The function key that jumps to the panel (F2 to F12). Empty: no key."),
     "code": ({"role": "control", "type": "text"}, "The terminal mnemonic that opens the panel (REFS, CRV). Empty: none."),
     "area": ({"role": "control", "type": "text"}, "The page column: main (the default) or right."),
+    "span": ({"role": "control", "type": "number"}, "How many of the page's 12 columns the panel takes. Empty: the kind's default."),
+    "height": ({"role": "control", "type": "number"}, "The panel's height in rows. Empty: the kind's default."),
     "page": ({"role": "control", "type": "spec"},
              "The page controls, traced from the page header's 'page' pin: the settings read them as ctl.<id> (a row filter, a title). "
              "Empty: the page has none."),
@@ -50,7 +52,7 @@ def ctl(t, text, required=False):
 
 SPEC = "spec"
 # a pin name is lower case with hyphens; the panel option it fills keeps the grammar's own spelling
-BODY_KEYS = {"x-fmt": "xFmt", "x-label": "xLabel", "y-label": "yLabel"}
+BODY_KEYS = {"x-fmt": "xFmt", "x-label": "xLabel", "y-label": "yLabel", "delta-fmt": "deltaFmt"}
 FMT = ctl("text", "The number format of the values (price2, pct4, compact, signed0, ...). Empty: the kind's default.")
 TONE = ctl("text", "How values are coloured: sign (red below zero), status, or empty for none.")
 
@@ -62,21 +64,25 @@ SPECS = {
                      {"rows": {"id": col("id")}}, {},
                      {"columns": ctl(SPEC, "The columns, each {label, bind: '@.FIELD', fmt, tone, total, link}. Required.", True),
                       "pivot": ctl(SPEC, "The pivot view the person may switch to: {fields, rows, columns, values, filters, heat}. Empty: none."),
-                      "where": ctl("text", "A row filter over the row (@.FIELD) and the page controls. Empty: every row.")},
+                      "where": ctl("text", "A row filter over the row (@.FIELD) and the page controls. Empty: every row."),
+                      "children": ctl("text", "A tree: the row field that holds each row's child rows (@.CHILDREN). Empty: a flat list."),
+                      "expand": ctl("number", "A tree: how many levels open at first. Empty: the kind's default.")},
                      {"connector": "core/ccp", "map": {"rows": "ACCOUNTS"},
                       "controls": {"columns": [{"label": "Account", "bind": "@.ID"}, {"label": "IM", "bind": "@.IM", "fmt": "compact", "total": True}]}},
                      "Rows from a search or a model (use panel-table or filterable-table); one record's fields (use kv-summary).", A11Y_TABLE),
     "dated-steps-ladder": ("Dated steps ladder", "ladder", "ladder", "The rows of one list in the record as a ladder (dated steps, newest first).",
                       {"rows": {"id": col("id")}}, {},
                       {"columns": ctl(SPEC, "The columns, each {label, bind: '@.FIELD', fmt}. Required.", True),
-                       "empty": ctl("text", "What the ladder says when the list is empty. Empty: the kind's own words.")},
+                       "empty": ctl("text", "What the ladder says when the list is empty. Empty: the kind's own words."),
+                       "highlight": ctl("text", "The step to highlight, a condition over the row (#index == @doc.NEXT_INDEX). Empty: none.")},
                       {"connector": "counterparty-risk/margin-call", "map": {"rows": "EVENTS"},
                        "controls": {"columns": [{"label": "Time", "bind": "@.AT"}, {"label": "Event", "bind": "@.EVENT"}]}},
                       "Rows without an order that matters (use list-table).", A11Y_TABLE),
     "value-grid-surface": ("Value grid surface", "chart", "surface", "A grid of values (maturity by strike, expiry by tenor) from one list in the "
                        "record: a row per value of the row field, a column per setting.",
                        {"rows": {"y": col(D, True)}}, {"y": "rows.y"},
-                       {"columns": ctl(SPEC, "The grid's columns, each {label, bind: '@.FIELD', fmt}. Required.", True)},
+                       {"columns": ctl(SPEC, "The grid's columns, each {label, bind: '@.FIELD', fmt}. Required.", True),
+                        "view": ctl("text", "How the grid opens: grid or 3d. Empty: grid.")},
                        {"connector": "market-data/cap-vol-surface", "map": {"rows": "GRID", "rows.y": "MATURITY"},
                         "controls": {"columns": [{"label": "ATM", "bind": "@.ATM", "fmt": "price2"}]}},
                        "A curve (use series-line).", A11Y_CHART),
@@ -161,7 +167,10 @@ SPECS = {
                       "quote other fields.",
                       None, {},
                       {"fmt": FMT, "tone": TONE, "caption": ctl("text", "A line under the figure; ${@doc.FIELD} quotes a field. Empty: none."),
-                       "span": ctl("number", "How many of the 12 columns the figure takes. Empty: the kind's default.")},
+                       "label": ctl("text", "The label over the figure. Empty: the title."),
+                       "unit": ctl("text", "The unit shown with the figure (USD). Empty: none."),
+                       "delta": ctl("text", "A change shown beside the figure, usually a record field (@doc.PNL1D). Empty: none."),
+                       "delta-fmt": ctl("text", "The number format of the change (the panel's deltaFmt). Empty: as fmt.")},
                       {"connector": "trading/counterparty-trades", "map": {"value": "PAY_7D"}, "controls": {"fmt": "signed0", "tone": "sign"}},
                       "A figure against a maximum (use panel-gauge); several figures (use kv-summary).", A11Y_RECORD),
     "field-note": ("Note with fields", "text", "markdown", "A note in Markdown that may quote the record's fields, shown only when a "
@@ -181,6 +190,24 @@ SPECS = {
                    {"connector": "world-economy/jurisdiction", "map": {},
                     "controls": {"highlight": "@doc.ISO3", "link": {"kind": "jurisdiction", "id": "JUR-{iso3}"}}},
                    "Values by place from a model (use bi-map).", A11Y_CHART),
+    "status-fields": ("Status fields", "kv", "status", "Named state fields of the page's record (confirmed, cleared, settled), each "
+                      "coloured by its meaning.",
+                      None, {},
+                      {"fields": ctl(SPEC, "The fields, each {label, bind: '@doc.FIELD', tone}. Required.", True)},
+                      {"connector": "trading/trade", "map": {},
+                       "controls": {"fields": [{"label": "Confirmation", "bind": "@doc.CONFIRMATION.STATUS", "tone": "status"}]}},
+                      "Fields without a meaning per value (use kv-summary).", A11Y_RECORD),
+    "figure-gauge": ("Figure gauge", "chart", "gauge", "One figure of the record against a maximum, as a dial.",
+                     None, {},
+                     {"max": ctl("text", "The maximum of the dial: a number or a record field (@doc.LIMIT). Empty: 100.")},
+                     {"connector": "trading/trade", "map": {"value": "RISK.DV01"}, "controls": {"max": "250000"}},
+                     "A figure without a maximum (use headline-figure).", A11Y_RECORD),
+    "event-timeline": ("Event timeline", "timeline", "timeline", "The rows of one list in the record as events in order: a label and a "
+                       "detail per event.",
+                       {"rows": {"label": col(D, True), "detail": col(D)}}, {"label": "rows.label", "detail": "rows.detail"}, {},
+                       {"connector": "trading/trade", "map": {"rows": "LIFECYCLE.TIMELINE", "rows.label": "EVENT", "rows.detail": "DESCRIPTION"},
+                        "controls": {}},
+                       "Rows with many columns (use list-table); dated steps (use dated-steps-ladder).", A11Y_TABLE),
     "linked-entities": ("Linked entities", "feed", "links", "The entities the record refers to, each opening its own page.",
                      None, {}, {},
                      {"connector": "market-data/ir-curve", "map": {}, "controls": {"code": "REFS", "area": "right"}},
@@ -196,7 +223,7 @@ def record_chips():
         panel = {"id": "%{panel-id}", "kind": kind, "title": f"%{{title|{title}}}"}
         if kind == "links":
             panel["of"] = "@doc"
-        if kind == "metric":                                         # one field of the record: a scalar data pin, mapped value: <field>
+        if kind in ("metric", "gauge"):                                         # one field of the record: a scalar data pin, mapped value: <field>
             pins_in["value"] = {"role": "data", "type": "measure", "required": True}
             texts["value"] = "The figure: map value: <the record's field>. Required."
             panel["value"] = "@value"
@@ -250,5 +277,8 @@ FIND = {
     "headline-figure": (["figure", "kpi", "summary"], "one number of a record, with an optional caption"),
     "field-note": (["note", "narrative", "text"], "text that quotes fields of a record"),
     "map-highlight": (["geo", "choropleth", "places", "map"], "a record with a place code (ISO3)"),
+    "status-fields": (["status", "state", "workflow", "fields"], "state fields of one record with a meaning per value"),
+    "figure-gauge": (["gauge", "limit", "utilisation", "figure"], "one number of a record against a maximum"),
+    "event-timeline": (["timeline", "events", "lifecycle", "history"], "rows with an event and its detail"),
     "linked-entities": (["navigation", "references", "relations"], "a record that refers to other records"),
 }

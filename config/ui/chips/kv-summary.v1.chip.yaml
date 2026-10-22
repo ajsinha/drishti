@@ -35,6 +35,8 @@ manual:
     key: 'The function key that jumps to the panel (F2 to F12). Empty: no key.'
     code: 'The terminal mnemonic that opens the panel (REFS, CRV). Empty: none.'
     area: 'The page column: main (the default) or right.'
+    span: 'How many of the page''s 12 columns the panel takes. Empty: the kind''s default.'
+    height: 'The panel''s height in rows. Empty: the kind''s default.'
     page: 'The page controls, traced from the page header''s ''page'' pin: the settings read them as ctl.<id> (a row filter, a title). Empty:
       the page has none.'
   behaviour: The grammar's 'kv' panel over the page's record (PANELS.md); the board names every field. Read-only unless a setting says otherwise.
@@ -87,6 +89,12 @@ pins:
     area:
       role: control
       type: text
+    span:
+      role: control
+      type: number
+    height:
+      role: control
+      type: number
     page:
       role: control
       type: spec
@@ -100,3 +108,5 @@ body:
     key: '%{key}'
     code: '%{code}'
     area: '%{area}'
+    span: '%{span}'
+    height: '%{height}'
