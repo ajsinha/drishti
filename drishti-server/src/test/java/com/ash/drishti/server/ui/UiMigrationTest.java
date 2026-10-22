@@ -206,6 +206,8 @@ class UiMigrationTest {
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
         assertThat(list.toString()).doesNotContain("local-header");          // every pack is on generic chips now: no candidates expected
         mvc.perform(get("/api/v1/ui/candidates").header("Authorization", as("max", "masked"))).andExpect(status().isForbidden());
+    }
+
     /**
      * A page served from its board names both: provenance {@code sutra} is the loaded Sutra it was converted from (its studio link resolves,
      * no DRS-2003), {@code board} the board (it opens in the designer), the layout "Board X (from Sutra Y vN)"; the About says the same.
