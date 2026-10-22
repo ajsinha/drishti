@@ -925,18 +925,75 @@ as JSON with its problems; `/ui/api-yaml/dump` and `/load` for the YAML tab, the
 * **Problem paths** paint: `traces[i]…` the wire and its target pin, `chips.<instance>…` the box and the named pin.
 * **Screen designs as boards: a thin adapter until P5.** `core/sutra_board.py` maps a design's Sutra to a board of `panel-<kind>@1`
   instances (ids, titles, two columns from `area:`); bindings are listed as notes, not converted. *Export Sutra* writes a board's panel
-  chips back as a Sutra (until 3.0). When P5's converter is merged, both functions call it; the routes (`/build/board-api/from-design/<id>`,
-  `/build/board-api/to-sutra`) stay.
+  chips back as a Sutra (until 3.0). P4b replaced it with P5's converter (12.6); the routes (`/build/board-api/from-design/<id>`,
+  `/build/board-api/to-sutra`) stayed.
 * **Chip mode plugs in** at `ui-chip-editor.js`: the mode (`designer.setMode('chip')`, `/build/chip/<name>`, the `ub:mode` event), the
   shared YAML tab (the chip's document while in Chip mode), the palette (`designer.onChipPick(ref)`) and the test bench (`[data-ce-bench]`,
   each manual example rendered through `POST /ui/render`).
-* **Not in P4:** modules (P6); the full chip designer (P4b); restoring a revision is "load it in the YAML tab, then save"; the BI report
+* **Not in P4:** modules (P6); the full chip designer (P4b, 12.6); restoring a revision is "load it in the YAML tab, then save"; the BI report
   designer stays separate (folding it in: a report is a board of `bi-*` chips; it needs the converter for report pages, the BI
   interactions (cross-filter, drill, slicers) as traces and pins, the Format pane as chip controls, and bookmarks as board params).
 * **Tests.** `tests/test_ui_board.py` (the routes, against the stand-in `tests/ui_board_backend.py`, whose stream has P3's event shapes)
   and `tests/test_ui_board_browser.py` (Chromium: the 3.1 board built by drag, map and wire; a bad wire in red; save, reopen, a 409; the
   YAML tab and Undo; live data; the viewer, a selection, Chart, a live frame, a failing chip; the phone layout; keyboard only; Chip mode;
   ten themes). Pictures: `tests/ui_board_shots.py` → `docs/guides/img/ui-board/`.
+
+### 12.6 As built: P4b
+
+**The chip designer is Chip mode of the one designer** (the product owner: one designer, not two). A chip is a Rachana-grammar Sutra plus
+typed pins plus its own manual, a pure function that paints UI; the guide is [UI_BOARD_GUIDE.md](../guides/UI_BOARD_GUIDE.md#chip-mode).
+
+**Where (drishti-console).** `web/static/js/ui-chip-model.js` (the chip document checked in the browser: the pin table's rules, CP-01 to CP-04,
+CP-07, unused and undriven pins, what breaks against an earlier version, a module made from wired chips), `ui-chip-editor.js` (the document,
+the toolbar, the step tabs, the YAML tab in Chip mode, the problems, the palette's copy and the Candidates), `ui-chip-pins.js` (the pin table
+and the manual form), `ui-chip-body.js` (the body with the screen designer's `build/palette.js` and `build/inspector.js` over a small store
+of the body's panels; `build/expr.js` completes `@pin`, `@.column` and `%{pin}`), `ui-chip-bench.js`, `ui-chip-release.js`,
+`ui-chip-module.js` (composite chips and Make a chip), `ui-board-palette.js` (the Chip Store palette's search, both modes),
+`ui-board-route.js` (the circuit routing). Server (`com.ash.drishti.server.ui.UiChipToolsController`): `POST /ui/chips/check`,
+`POST /ui/convert/sutra`, `POST /ui/convert/board`, `GET /ui/candidates[/{pack}/{board}/{chip}]`
+([API_GUIDE.md](../guides/API_GUIDE.md#the-chip-designers-calls-270-p4b)); `PackScreens.packs()`, `convert()`, `sutraOf()`; the listing's
+`pins` summary (`ChipStore.pinSummary`).
+
+**Corrections and precisions the code forced:**
+* **Checked twice.** The browser checks every keystroke (rule `PIN` for the pin table: names, types, roles, a rowset's columns, an enum's
+  values, typed defaults; CP-01 to CP-04, CP-07); the server's `ChipPublishCheck` runs on each pause through `POST /ui/chips/check` and has the
+  last word (CP-05 needs the store, CP-06 the earlier versions). Submit runs it again (P2).
+* **CP-06** (new): a version that claims `compatible-with` an earlier released one while removing or retyping a pin. A breaking change is a
+  new major version: it may not claim compatibility, so boards stay on their version until their owner moves them (14.1 decision 3); P2's
+  publish refuses the same claim with `DRS-2078`.
+* **Composite chips: a board with no connectors** (the product owner, during P4b). A chip's body may be a board of chips:
+  `body: {board: {chips, traces, layout}, wires: {<chip in pin>: <instance>.<pin>}, exposes: {<chip out pin>: <instance>.<pin>}}`. Its data
+  enters only through its pins. **CP-07** (new, in `ChipPublishCheck`): no supply inside (`body.board.chips.<i>.supply`); every wired chip pin
+  names an inner pin of the same type; every required inner in pin is fed (an inner trace, a chip pin, a constant in `controls`, a default);
+  at most `MAX_DEPTH` = 3 levels of chips in chips. A supply inside is CP-07, not CP-02. In the designer, **Body: chips** edits the inner
+  board on Board mode's own canvas with the supplier pickers disabled, and an exposure table turns inner pins into chip pins. This is the
+  minimal form of 9.5's modules; P3's renderer paints a composite's body only on the bench (chip by chip, client side): rendering it on a
+  board through the render API is P6.
+* **Make a chip** (Board mode) makes such a composite from the chosen instances: their unconnected pins become `<instance>-<pin>` chip pins
+  (a pin set by a constant stays inside), the supplies stay on the outer board (one supply moves onto the new instance with its map renamed;
+  a second one is dropped with a message), traces to the rest of the board are rewired to the chip's pins, and the draft is saved.
+* **The bench paints locally**: the samples are the chip's ViewModel pins, painted by `ui-board-paint.js` as the viewer would; "Use a supplier"
+  renders the first example through `POST /ui/render` (`stream: once`) as the author and takes the chip's pins. The examples as tests are the
+  server's CP-05 per example plus a real render.
+* **Themes on the bench** switch the page's theme while the bench is open (themes are `:root` tokens), and restore it on leaving.
+* **Candidates** come from the converted boards P5 keeps in memory per pack (`PackScreens.boards`); one opens as `<pack>-<name>@1`, version 1.
+* **P4's thin adapter is gone** (`core/sutra_board.py`): `/build/board-api/from-design/<id>` calls `POST /ui/convert/sutra` and
+  `/build/board-api/to-sutra` calls `POST /ui/convert/board`; the console routes are unchanged.
+* **Finding chips** (the product owner, during P4b): the palette loads the listing once (and again on a mode switch) and searches it in the
+  browser: id, title, purpose, category, tags and pin types (`rowset of trade`), title and id first; category chips (from the category and
+  tags, else guessed from the name); "Fits this data" from the selected instance's supplier attributes; favourites and recent chips in
+  `localStorage`; `/`, arrows, Enter.
+* **A board looks like a circuit** (the product owner, during P4b): Manhattan routing with a clearance round the boxes and separate vertical
+  channels per source, hops (SVG arcs) where a later wire's horizontal run crosses an earlier one's vertical, junction dots where a fan-out
+  splits, square pads, a dot grid, the live "current" (none under `prefers-reduced-motion`).
+* **Not in P4b:** rendering composites through the render API and module where-used (P6); choosing which unwired pins become a module's pins
+  by name at Make a chip (they are all exposed, then renamed in the exposure table); the inspector's form for chip-only options (`on-select`,
+  `exposes`) is the Body YAML tab.
+* **Tests.** `UiChipCheckTest` (the check, CP-06, CP-07), `UiMigrationTest` (convert one Sutra, export, the candidates); console:
+  `test_ui_chip.py` (routes against `tests/ui_chip_backend.py`), `test_ui_chip_browser.py` (a chip authored from scratch with a CP-02 in red
+  and fixed, the bench in two themes and on a phone, submit, four eyes, publish, used on a board; a composite chip with one exposed in pin and
+  one out pin used on a board and a connector inside refused; Make a chip from two wired chips; a candidate; Open as board),
+  `test_ui_palette_browser.py`, `test_ui_circuit_browser.py`. Pictures: `tests/ui_board_shots.py`.
 
 ## 13. Later releases
 
