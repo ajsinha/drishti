@@ -117,7 +117,37 @@ public class UiController {
     @GetMapping("/boards/{name}")
     public ResponseEntity<Map<String, Object>> get(@PathVariable String name, @RequestParam(required = false) String owner,
             @RequestParam(required = false) String workspace, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return board(boards.get(ref(name, owner, workspace, p), p));
+        try {
+            return board(boards.get(ref(name, owner, workspace, p), p));
+        } catch (DrishtiException e) {
+            PackScreens ps = owner != null || workspace != null || screens == null ? null : screens.getIfAvailable();
+            var c = ps == null ? java.util.Optional.<PackScreens.Served>empty() : ps.converted(name);
+            if (c.isEmpty()) {
+                throw e;
+            }
+            Map<String, Object> m = new LinkedHashMap<>();       // a pack's converted board (12.4): opened in the designer; saving makes it the person's own
+            m.put("id", "pack:" + c.get().conversion().pack() + "/" + name);
+            m.put("board", name);
+            m.put("scope", "pack");
+            m.put("pack", c.get().conversion().pack());
+            m.put("converted", c.get().conversion().screen());
+            m.put("document", c.get().conversion().document());
+            try {
+                m.put("yaml", new com.fasterxml.jackson.databind.ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory())
+                        .writeValueAsString(c.get().conversion().document()));
+            } catch (java.io.IOException io) {
+                throw new java.io.UncheckedIOException(io);
+            }
+            return ResponseEntity.ok(m);
+        }
+    }
+
+    /** The per-pack switch, for a pack's converted boards (absent in a test that makes the controller itself). */
+    private org.springframework.beans.factory.ObjectProvider<PackScreens> screens;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void screens(org.springframework.beans.factory.ObjectProvider<PackScreens> s) {
+        this.screens = s;
     }
 
     /** Saves: create with {@code If-None-Match: *} (or no header), update with {@code If-Match: <etag>}. */

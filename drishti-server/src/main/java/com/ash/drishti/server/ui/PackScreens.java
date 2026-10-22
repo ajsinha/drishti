@@ -211,7 +211,47 @@ public final class PackScreens {
             return new Served(c, null, null);
         }
         BoardDoc b = UiDocuments.readBoard(c.document().toString());
-        return new Served(c, b, paint(b));
+        return new Served(c, b, paint(b, c.screen()));
+    }
+
+    /**
+     * As {@link #paint(BoardDoc)}, named as the Sutra it was converted from ({@code sutra:<name>@<version>}) and marked with the board, so the
+     * page's provenance says "Board X (from Sutra Y vN)" and links resolve to the loaded Sutra, not to the board's name.
+     */
+    public Sutra paint(BoardDoc b, String screen) {
+        Sutra s = paint(b);
+        if (screen == null || !screen.startsWith("sutra:")) {
+            return s.fromBoard(b.board());
+        }
+        String[] nv = screen.substring("sutra:".length()).split("@", 2);
+        int version = nv.length > 1 && nv[1].matches("[0-9]+") ? Integer.parseInt(nv[1]) : s.version();
+        return new Sutra(nv[0], version, s.domain(), s.match(), s.title(), s.strip(), s.panels(), s.keys(), s.location(), s.description(), s.controls())
+                .fromBoard(b.board());
+    }
+
+    /** The converted board a page of {@code pack}'s kinds is served from, by board name, when the pack is on boards. */
+    public Optional<Served> converted(String board) {
+        for (Map.Entry<String, Mode> m : modes.entrySet()) {
+            if (m.getValue() == Mode.BOARDS) {
+                for (Served s : boards(m.getKey()).values()) {
+                    if (s.board() != null && board.equals(s.conversion().board())) {
+                        return Optional.of(s);
+                    }
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    /** The board the page of {@code ref} is served from, or empty when it is served from its Sutra. */
+    public Optional<String> boardOf(EntityRef ref, AsOf asOf) {
+        String pack = packOf(ref.kind());
+        if (pack == null || mode(pack) != Mode.BOARDS) {
+            return Optional.empty();
+        }
+        EntityDocument doc = pipeline.document(ref, asOf);
+        return matcher.match(ref.kind(), doc.data()).map(x -> boards(pack).get(x.name())).filter(s -> s.painted() != null)
+                .map(s -> s.conversion().board());
     }
 
     /** The Sutra a board paints as, checked by the grammar (the chips from the Chip Store, the board's own first). */
@@ -240,7 +280,11 @@ public final class PackScreens {
         if (s == null || s.painted() == null) {
             return Optional.empty();
         }
-        return Optional.of(new Board(s.conversion().board(), pipeline.preview(s.painted(), ref, asOf, redact, mayOpen, values)));
+        ViewModel v = pipeline.preview(s.painted(), ref, asOf, redact, mayOpen, values);
+        if (v.provenance() != null) {
+            v = v.withProvenance(v.provenance().withBoard(s.conversion().board(), v.provenance().layout()));
+        }
+        return Optional.of(new Board(s.conversion().board(), v));
     }
 
     /** A page served from a board. */

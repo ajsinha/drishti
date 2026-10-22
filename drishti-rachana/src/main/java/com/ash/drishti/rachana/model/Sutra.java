@@ -47,6 +47,19 @@ public record Sutra(
 
     public static final int MAX_STRIP = 8;
 
+    /** The {@code location.file} prefix of a Sutra painted from a converted board ({@code board:<board name>}, UI_BOARD.md 12.4). */
+    public static final String BOARD_FILE = "board:";
+
+    /** The board this Sutra was painted from (a page served from its converted board), or null. */
+    public String board() {
+        return location != null && location.file() != null && location.file().startsWith(BOARD_FILE) ? location.file().substring(BOARD_FILE.length()) : null;
+    }
+
+    /** The same Sutra marked as painted from {@code board}. */
+    public Sutra fromBoard(String board) {
+        return new Sutra(name, version, domain, match, title, strip, panels, keys, new SourceLocation(BOARD_FILE + board, 0, 0), description, controls);
+    }
+
     /** A Sutra without a description. */
     public Sutra(String name, int version, String domain, Match match, Title title, List<StripItem> strip, List<Panel> panels,
             Map<String, String> keys, SourceLocation location) {

@@ -183,4 +183,41 @@ class UiMigrationTest {
         mvc.perform(put("/api/v1/ui/packs/trading").header("Authorization", as("bo", "boss")).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"screens\":\"tiles\"}")).andExpect(status().isBadRequest());
     }
+
+    /**
+     * A page served from its board names both: provenance {@code sutra} is the loaded Sutra it was converted from (its studio link resolves,
+     * no DRS-2003), {@code board} the board (it opens in the designer), the layout "Board X (from Sutra Y vN)"; the About says the same.
+     */
+    @Test
+    @Order(5)
+    void aBoardServedPageNamesItsBoardAndTheSutraItCameFrom() throws Exception {
+        String id = search.run(SearchQuery.parse("trade limit 1"), AsOf.LATEST, UnaryOperator.identity()).rows().get(0).ref().id();
+        mvc.perform(put("/api/v1/ui/packs/trading").header("Authorization", as("bo", "boss")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"screens\":\"boards\"}")).andExpect(status().isOk());
+        try {
+            JsonNode v = json.readTree(mvc.perform(get("/api/v1/views/trade/" + id).header("Authorization", as("fay", "full")))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+            JsonNode prov = v.path("provenance");
+            String board = prov.path("board").asText();
+            String sutra = prov.path("sutra").asText();
+            assertThat(board).startsWith("trading-");
+            assertThat(sutra).isNotEmpty().doesNotStartWith("trading-");
+            assertThat(board).isEqualTo("trading-" + sutra);
+            assertThat(prov.path("layout").asText()).startsWith("Board " + board + " (from Sutra " + sutra + " v");
+            String version = prov.path("layout").asText().replaceAll(".* v([0-9]+)\\).*", "$1");
+            mvc.perform(get("/api/v1/sutras/" + sutra + "/" + version + "/source").header("Authorization", as("bo", "boss")))
+                    .andExpect(status().isOk());                    // the studio link (?sutra=<sutra>@<v>) resolves
+            JsonNode opened = json.readTree(mvc.perform(get("/api/v1/ui/boards/" + board).header("Authorization", as("fay", "full")))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+            assertThat(opened.path("document").path("board").asText()).isEqualTo(board);     // the board link opens in the designer
+            assertThat(opened.path("scope").asText()).isEqualTo("pack");
+            JsonNode about = json.readTree(mvc.perform(get("/api/v1/views/trade/" + id + "/explain").header("Authorization", as("fay", "full")))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+            assertThat(about.path("layout").path("board").asText()).isEqualTo(board);
+            assertThat(about.path("layout").path("sutra").path("name").asText()).isEqualTo(sutra);
+        } finally {
+            mvc.perform(put("/api/v1/ui/packs/trading").header("Authorization", as("bo", "boss")).contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"screens\":\"sutras\"}")).andExpect(status().isOk());
+        }
+    }
 }
