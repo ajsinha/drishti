@@ -47,7 +47,7 @@
     <button type="button" class="btn-pill btn-ghost" data-ub-undo title="Undo (Ctrl+Z)" disabled><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Undo</button>
     <button type="button" class="btn-pill btn-ghost" data-ub-redo title="Redo (Ctrl+Y)" disabled><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Redo</button>
     <button type="button" class="btn-pill btn-ghost" data-ub-device aria-pressed="false"><i class="bi bi-phone" aria-hidden="true"></i> Phone</button>
-    <label class="ub-field-inline"><input type="checkbox" data-ub-live> Live data</label>
+    <label class="ub-field-inline"><input type="checkbox" data-ub-live> Live data</label><span class="ub-live-status text-muted-d" data-ub-live-status role="status" aria-live="polite"></span>
     <label class="ub-field-inline" title="A faint grid of dots, as on a circuit board"><input type="checkbox" data-ub-grid checked> Grid</label>
     <select class="studio-select" data-ub-revisions aria-label="Revisions"><option value="">Revisions…</option></select>
     <button type="button" class="btn-pill btn-ghost" data-ub-share><i class="bi bi-share" aria-hidden="true"></i> Share</button>
@@ -69,7 +69,8 @@
   </header>
   <p class="bi-warn ub-composite-banner" data-ub-composite role="status" hidden><i class="bi bi-cpu" aria-hidden="true"></i> Inside the chip <b class="mono" data-ub-composite-name></b>: a board with no connectors (its data enters through the chip's pins).
     <button type="button" class="btn-pill btn-accent" data-ub-composite-done>Done</button> <button type="button" class="btn-pill btn-ghost" data-ub-composite-cancel>Cancel</button></p>
-  <p class="bi-msg" data-ub-status role="status" aria-live="polite"></p>
+  <p class="bi-msg ub-status" data-ub-status role="status" aria-live="polite"></p>
+  <details class="ub-notes" data-ub-notes hidden><summary>Details</summary><div class="ub-notes-body" data-ub-notes-body></div></details>
   <p class="bi-warn ub-conflict" data-ub-conflict role="alert" hidden>Changed elsewhere: someone saved a newer revision. <button type="button" class="btn-pill btn-accent" data-ub-reload>Reload</button></p>
 
   <div class="ub-work">

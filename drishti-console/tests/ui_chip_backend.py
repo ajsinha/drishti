@@ -210,7 +210,7 @@ class UiChipBackend(UiBoardBackend):
             locals_.append({"rachana": 1, "chip": f"local-{inst}", "version": 1, "title": inst, "category": "local",
                             "pins": {"in": {"doc": {"role": "data", "type": "document", "required": True}}, "out": {}}, "body": {"panels": [panel]}})
             chips[inst] = {"use": f"local-{inst}@1", "supply": {"connector": f"{pack}/{kind}", "query": {"id": "%{board.params.id}"}}, "map": {"doc.id": "id"}}
-            made.append({"chip": f"local-{inst}", "from": inst, "reason": "no seed chip carries every option of the panel"})
+            made.append({"chip": f"local-{inst}", "from": inst, "reason": f"no Chip Store chip (panel-{p.get('kind')}) has a setting for {', '.join(k for k in p if k not in ('id', 'kind', 'title')) or 'title'}"})
         doc = {"rachana": 1, "board": board, "title": s.get("description") or board, "params": {"id": {"type": "id", "of": f"{pack}/{kind}", "required": True}},
                "chips": chips, "local-chips": locals_, "traces": [],
                "layout": {"desktop": {"columns": 12, "areas": [{"chip": k, "at": [1, 1 + 4 * i], "span": [12, 4]} for i, k in enumerate(chips)]}, "phone": {"order": list(chips), "collapsed": []}}}

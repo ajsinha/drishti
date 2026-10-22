@@ -17,6 +17,7 @@
 
 ## Unreleased
 
+- **The Board designer's first look.** A design opened as a board says one line ("Opened as a board (not saved). N chips are board-local: Chip Store candidates.") with a folded **Details** table (chip, nearest Chip Store chips, why it stays local) instead of a wall of notes; the page has the console's gutters (16 px on a phone); live data is on by default when the board can be fed, the `id` parameter prefilled from the design's sample, and a box that cannot be fed says why (*Map a supplier*, *Set board parameter id* with a field); the board parameters are a form, not raw JSON; the render's progress sits beside the Live data box; no sideways scroll in the mapping sheet; a box heading names its instance once. The record chips gained `span` and `height` (all), `children`/`expand` (`list-table`), `highlight` (`dated-steps-ladder`), `view` (`value-grid-surface`), `label`/`unit`/`delta`/`deltaFmt` (`headline-figure`), and three new chips `status-fields`, `figure-gauge`, `event-timeline`: the all-panels showcase converts with 2 board-local chips instead of 20 (`tabs`, and a pivot by two fields). 89 seed chips.
 - **Everything on chips and boards (UI Board P5, final; UI_BOARD.md 12.4).** BI report pages, board-layout (tile) pages included, are
   served from their converted boards when the report's pack is on boards, or its model (`models.<model>: boards` in `ui.yaml`, new);
   `GET /api/v1/bi/reports/{id}` says which pages in `servedFrom`. Each page's cross-filters, slicers and drill are drawn as traces from the

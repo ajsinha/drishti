@@ -260,13 +260,24 @@ class UiBoardBackend(FakeBackend):
             out.append(row)
         return out
 
+    def _chip(self, board: dict, use: str) -> dict:
+        """A chip of the store, or one of the board's own local chips (a converted page's, P5)."""
+        if use in self.chips:
+            return self.chips[use]
+        local = {f"{c.get('chip')}@{c.get('version', 1)}": c for c in board.get("local-chips") or [] if isinstance(c, dict)}
+        return local.get(use) or {"pins": {}, "title": use}
+
     def _paint(self, r: dict, name: str) -> dict:
-        inst, chip = r["board"]["chips"][name], self.chips[r["board"]["chips"][name]["use"]]
+        inst = r["board"]["chips"][name]
+        chip = self._chip(r["board"], inst["use"])
         sup = inst.get("supply") or {}
         traced = {t["to"].split(".", 1)[1]: t for t in r["board"].get("traces") or [] if t["to"].split(".")[0] == name}
         ins = chip["pins"].get("in") or {}
         if sup.get("connector") and not sup["connector"].endswith("-search"):
             sel = next((r["sel"].get(t["from"]) for p, t in traced.items() if p == "id"), None)
+            q = str((sup.get("query") or {}).get("id") or "")
+            if sel is None and q.startswith("%{board.params."):        # the board's parameter, as the designer previews it
+                sel = (r.get("params") or {}).get(q[len("%{board.params."):].rstrip("}"))
             if sel is None:
                 return {"instance": name, "state": "waiting", "waiting": ["id"]}
             src = [t for t in TRADES if t["TRADE_ID"] == sel]
@@ -308,7 +319,7 @@ class UiBoardBackend(FakeBackend):
         else:
             g = lay.get("desktop") or {}
             out.update(columns=g.get("columns", 12), areas=[{"chip": a["chip"], "at": a["at"], "span": a["span"]} for a in g.get("areas") or []])
-        out["frames"] = {n: {"title": i.get("title") or self.chips[i["use"]].get("title"), "chip": i["use"], "skeleton": self.chips[i["use"]].get("category") or "panel"}
+        out["frames"] = {n: {"title": i.get("title") or self._chip(board, i["use"]).get("title"), "chip": i["use"], "skeleton": self._chip(board, i["use"]).get("category") or "panel"}
                          for n, i in board["chips"].items()}
         return out
 
@@ -342,7 +353,7 @@ class UiBoardBackend(FakeBackend):
         if probs:
             self._refuse(422, "DRS-2071", "the board check failed", probs)
         rid = f"rnd-{len(self.renders) + 1:04d}"
-        r = self.renders[rid] = {"queue": asyncio.Queue(), "board": board, "sel": {}}
+        r = self.renders[rid] = {"queue": asyncio.Queue(), "board": board, "sel": {}, "params": (body or {}).get("params") or {}}
         yield "render", json.dumps({"renderId": rid, "board": board.get("board"), "boardHash": "sha256:stand-in", "chips": {n: i["use"] for n, i in board["chips"].items()}})
         yield "layout", json.dumps(self._layout(board, device))
         errors = 0

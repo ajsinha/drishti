@@ -38,6 +38,48 @@
   ['owner', 'workspace'].forEach((k) => { const v = root.getAttribute('data-' + k); if (v) { D.where[k] = v; } });
 
   D.say = (text, bad) => { status.textContent = text || ''; status.classList.toggle('bi-bad', !!bad); };
+  D.params = {};                                   // the values the designer previews the board with (board parameter -> value); never saved
+  /** One short line for what the board was opened from; the board-local chips (chip, nearest Chip Store chips, why) and any other notes
+      fold into a Details disclosure under it, so the canvas stays near the top. */
+  const notesBox = $('[data-ub-notes]');
+  D.notes = (line, locals, notes) => {
+    locals = locals || []; notes = notes || [];
+    const cands = locals.filter((l) => l.chip !== 'local-header');
+    D.say(line + (cands.length ? ' ' + cands.length + ' chip' + (cands.length > 1 ? 's are' : ' is') + ' board-local: Chip Store candidates.' : '')
+      + (notes.length ? ' ' + notes.length + ' note' + (notes.length > 1 ? 's' : '') + '.' : ''));
+    if (!notesBox) { return; }
+    const body = notesBox.querySelector('[data-ub-notes-body]');
+    clear(body);
+    notesBox.hidden = !cands.length && !notes.length;
+    notesBox.open = false;
+    if (cands.length) {
+      const tb = h('tbody');
+      cands.forEach((l) => tb.appendChild(h('tr', {}, h('td', { class: 'mono', text: l.chip }), h('td', { class: 'mono', text: (l.near || []).join(', ') || '-' }), h('td', { text: l.why || '' }))));
+      body.appendChild(h('table', { class: 'tbl ub-notes-tbl', 'data-no-chart': true }, h('thead', {}, h('tr', {}, h('th', { text: 'Chip' }), h('th', { text: 'Nearest Chip Store chips' }), h('th', { text: 'Why it stays local' }))), tb));
+    }
+    if (notes.length) { body.appendChild(h('ul', { class: 'ub-notes-list' }, notes.map((n) => h('li', { text: n })))); }
+  };
+  /** The required board parameters with no value to preview with (neither a default nor a value typed in the designer). */
+  D.missingParams = () => Object.keys(D.doc.params || {}).filter((p) => (D.doc.params[p] || {}).required && D.params[p] == null && (D.doc.params[p] || {}).default == null);
+  /** Live data on by default when the board can be fed: a chip has a supply and every required parameter has a value (the render API still
+      checks the person may read it). Otherwise each box says what is missing (D.emptyState). */
+  D.autoLive = () => {
+    const fed = Object.keys(D.doc.chips || {}).some((n) => { const s = D.doc.chips[n].supply || {}; return s.connector || s.model || s.live; });
+    D.live = fed && !D.missingParams().length;
+    $('[data-ub-live]').checked = D.live;
+  };
+  /** What a box shows while live data is off: why, and the shortest way to data. */
+  D.emptyState = (inst) => {
+    const i = D.doc.chips[inst] || {}, s = i.supply || {}, fedByTrace = (D.doc.traces || []).some((t) => t.to.split('.')[0] === inst);
+    if (!(s.connector || s.model || s.live) && !fedByTrace) { return h('p', { class: 'text-muted-d ub-hint ub-empty-state', text: 'Map a supplier to see data.' }); }
+    const miss = D.missingParams();
+    if (miss.length) {
+      const p = miss[0], inp = h('input', { class: 'studio-in mono ub-param-quick', 'data-ub-param-quick': p, placeholder: p, 'aria-label': 'Board parameter ' + p });
+      inp.addEventListener('change', () => { if (inp.value.trim()) { D.params[p] = inp.value.trim(); D.autoLive(); C.draw(); fillSheet(); liveRender(); } });
+      return h('div', { class: 'ub-hint ub-empty-state' }, h('span', { class: 'text-muted-d' }, 'Set board parameter ', h('code', { text: p }), ' to see data '), inp);
+    }
+    return h('p', { class: 'text-muted-d ub-hint ub-empty-state', text: 'Turn on Live data to see data.' });
+  };
   /** A same-origin call; rejects with the server's {code, detail, problems, status}. raw: send the body as it is (YAML). */
   D.api = (method, url, body, headers) => fetch(url, {
     method, credentials: 'same-origin', headers: Object.assign(body != null ? { 'Content-Type': 'application/json' } : {}, headers || {}),
@@ -165,7 +207,7 @@
       if (D.live && D.problems.some((p) => p.level !== 'warning')) { D.say('Live data waits until the board check passes.'); }
       return;
     }
-    current = U.render($('[data-ub-canvas]'), { board: docForServer() }, { device: 'desktop', status, bodyOf: (inst) => C.boxOf(inst),
+    current = U.render($('[data-ub-canvas]'), { board: docForServer() }, { device: 'desktop', status: $('[data-ub-live-status]') || status, params: D.params, bodyOf: (inst) => C.boxOf(inst),
       onEvent: (ev, d) => { if ((ev === 'chip' || ev === 'frame') && d && d.instance && (ev === 'frame' || d.state === 'data')) { C.flow(d.instance); } },
       onRefused: (b) => { if (b.problems) { D.problems = b.problems; showProblems(); } } });
   }
@@ -360,9 +402,14 @@
     const ps = D.doc.params || {};
     const pfs = h('fieldset', { class: 'ub-fs' }, h('legend', { text: 'Board parameters' }));
     Object.keys(ps).forEach((p) => {
+      const spec = ps[p] || {};
       const x = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'aria-label': 'Remove the parameter ' + p, text: '×' });
-      x.addEventListener('click', () => { delete ps[p]; if (!Object.keys(ps).length) { delete D.doc.params; } D.changed('params'); });
-      pfs.appendChild(h('p', { class: 'mono' }, p + ': ' + JSON.stringify(ps[p]) + ' ', x));
+      x.addEventListener('click', () => { delete ps[p]; delete D.params[p]; if (!Object.keys(ps).length) { delete D.doc.params; } D.changed('params'); });
+      const val = h('input', { class: 'studio-in mono', 'data-ub-param-value': p, value: D.params[p] != null ? D.params[p] : '', placeholder: spec.default != null ? String(spec.default) : (spec.required ? 'required' : 'optional'),
+        'aria-label': 'Preview value of ' + p });
+      val.addEventListener('change', () => { if (val.value.trim()) { D.params[p] = val.value.trim(); } else { delete D.params[p]; } D.autoLive(); C.draw(); liveRender(); });
+      const what = (spec.type || 'text') + (spec.of ? ' of ' + spec.of : '') + (spec.required ? ', required' : '') + (spec.default != null ? ', default ' + spec.default : '');
+      pfs.appendChild(h('div', { class: 'ub-param', 'data-ub-param': p }, h('label', { class: 'ub-field' }, h('span', { class: 'ub-field-l' }, h('b', { class: 'mono', text: p }), ' · ' + what), h('span', { class: 'ub-row' }, val, x))));
     });
     const pn = h('input', { class: 'studio-in mono', placeholder: 'as-of', 'aria-label': 'New parameter name' }), pt = h('select', { class: 'studio-select', 'aria-label': 'Its type' }, ['date', 'id', 'text', 'number'].map((t) => h('option', { value: t, text: t })));
     const pd = h('input', { class: 'studio-in', placeholder: 'default', 'aria-label': 'Its default' }), pa = h('button', { type: 'button', class: 'btn-pill btn-ghost', text: 'Add parameter' });
@@ -387,13 +434,14 @@
       return D.api('GET', '/build/board-api/example/' + encodeURIComponent(example)).then((r) => {
         D.doc = r.document; D.doc.chips = D.doc.chips || {}; D.doc.traces = D.doc.traces || []; D.doc.layout = D.doc.layout || {};
         nameIn.value = D.doc.board || ''; titleIn.value = D.doc.title || '';
-        return fetchAll().then(() => { C.draw(); fillSheet(); writeYaml(); check(); snap(); D.say('Your copy of the example ' + (r.title || example) + ' (not saved yet).' + ((r.notes || []).length ? ' ' + r.notes.join('; ') : '')); });
+        return fetchAll().then(() => { D.autoLive(); C.draw(); fillSheet(); writeYaml(); check().then(liveRender); snap(); D.notes('Your copy of the example ' + (r.title || example) + ' (not saved yet).', [], r.notes); });
       }).catch((e) => D.say(e.code + ': ' + e.detail, true));
     }
     if (!D.name && fromDesign) {                  // a screen design opened as a board (the adapter until P5's converter)
       return D.api('GET', '/build/board-api/from-design/' + encodeURIComponent(fromDesign)).then((r) => {
         D.doc = r.document; nameIn.value = D.doc.board || ''; titleIn.value = D.doc.title || '';
-        return fetchAll().then(() => { C.draw(); fillSheet(); writeYaml(); check(); snap(); D.say('Opened the design as a board (not saved yet).' + ((r.notes || []).length ? ' Notes: ' + r.notes.join('; ') : '')); });
+        D.params = Object.assign({}, r.params || {});            // the id of the design's sample, so data shows at once
+        return fetchAll().then(() => { D.autoLive(); C.draw(); fillSheet(); writeYaml(); check().then(liveRender); snap(); D.notes('Opened as a board (not saved).', r.locals, r.notes); });
       }).catch((e) => D.say(e.code + ': ' + e.detail, true));
     }
     if (!D.name) { nameIn.value = ''; C.draw(); fillSheet(); writeYaml(); check(); snap(); return Promise.resolve(); }
@@ -407,7 +455,7 @@
       nameIn.value = D.name; nameIn.readOnly = true;
       titleIn.value = D.doc.title || '';
       root.setAttribute('data-revision', String(D.doc.version || ''));
-      return fetchAll().then(() => { C.draw(); fillSheet(); check(); revisions(); undo.list = []; undo.at = -1; snap(); D.say('Opened ' + D.name + ', revision ' + (D.doc.version || 1)); root.removeAttribute('data-dirty'); });
+      return fetchAll().then(() => { D.autoLive(); C.draw(); fillSheet(); check().then(liveRender); revisions(); undo.list = []; undo.at = -1; snap(); D.say('Opened ' + D.name + ', revision ' + (D.doc.version || 1)); root.removeAttribute('data-dirty'); });
     }).catch((e) => D.say(e.code + ': ' + e.detail, true));
   }
 

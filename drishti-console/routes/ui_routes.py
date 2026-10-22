@@ -131,11 +131,45 @@ async def from_design(request: Request, id_: str):
         got = await _convert(request, "/convert/sutra", {"sutra": str(design.get("sutra") or ""), "kind": design.get("kind") or None})
     except BackendError as e:
         return _problem(e)
-    notes = [f"{x['chip']} is a board-local chip ({x.get('reason') or 'no seed chip fits'}): a Chip Store candidate" for x in got.get("locals") or []]
-    notes += [f"{p.get('rule')} {p.get('path')}: {p.get('message')}" for p in got.get("problems") or []]
+    locals_ = [_local(x) for x in got.get("locals") or [] if isinstance(x, dict)]
+    notes = [f"{p.get('rule')} {p.get('path')}: {p.get('message')}" for p in got.get("problems") or []]
     if got.get("reason"):
         notes.append(str(got["reason"]))
-    return JSONResponse({"document": got.get("document") or {}, "status": got.get("status"), "notes": notes, "design": id_})
+    return JSONResponse({"document": got.get("document") or {}, "status": got.get("status"), "locals": locals_, "notes": notes, "design": id_,
+                         "params": await _sample_params(request, id_, design, got.get("document") or {})})
+
+
+_NEAR = re.compile(r"no (?:Chip Store|seed) chip \(([^)]*)\)\s*(.*)")
+
+
+def _local(x: dict) -> dict:
+    """A board-local chip as the designer lists it: {chip, from, near (the nearest Chip Store chips), why}."""
+    reason = str(x.get("reason") or "no seed chip fits")
+    m = _NEAR.match(reason)
+    near = [n.strip() for n in m.group(1).split(",") if n.strip()] if m else []
+    return {"chip": x.get("chip"), "from": x.get("from"), "near": near, "why": (m.group(2) if m else reason) or reason}
+
+
+async def _sample_params(request: Request, id_: str, design: dict, board: dict) -> dict:
+    """The board parameter ``id`` prefilled from the design's first sample (a stored entity's id, or the id field of a brought document), so a
+    converted entity page shows data at once. Empty when the board has no ``id`` parameter or no sample names one."""
+    if "id" not in (board.get("params") or {}):
+        return {}
+    for s in design.get("samples") or []:
+        if not isinstance(s, dict):
+            continue
+        if isinstance(s.get("ref"), dict) and s["ref"].get("id"):
+            return {"id": str(s["ref"]["id"])}
+        try:
+            doc = await request.app.state.backend.designs("GET", f"/{quote(id_, safe='')}/samples/document", ident(request), name=s.get("name"))
+        except BackendError:
+            continue
+        kind = str(design.get("kind") or "").upper().replace("-", "_")
+        if isinstance(doc, dict):
+            for k in ([f"{kind}_ID"] if kind else []) + ["ID", "id"] + [k for k in doc if k.upper().endswith("_ID")]:
+                if isinstance(doc.get(k), (str, int)) and str(doc[k]):
+                    return {"id": str(doc[k])}
+    return {}
 
 
 @router.post("/build/board-api/to-sutra")

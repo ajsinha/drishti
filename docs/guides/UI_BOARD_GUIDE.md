@@ -132,6 +132,8 @@ traces:
 
 ## 7. Live data while you design
 
+Live data is **on by default** when a chip has a supplier and every required board parameter has a value; a design opened as a board gets its `id` from the design's sample, so data shows at once. Otherwise each box says what is missing (*Map a supplier to see data*, or *Set board parameter id to see data* with a field to type it in). The **Board parameters** in the mapping sheet are a small form: each parameter's type, what it is an id of, and the value the designer previews with (never saved).
+
 UI: tick **Live data**. Every box paints its chip with real data, read **as you** through the render API (the same masks and rules a viewer
 with your rights gets), after each change. A detail chip shows *Waiting for id* until its master has a selection; a BI question that becomes a
 run shows a run card; a failing chip says its code and reason. Live data waits while the board check has errors.

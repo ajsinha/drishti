@@ -99,11 +99,12 @@
 
     function box(inst) {
       const i = D.doc.chips[inst], chip = D.chipDoc(i.use) || {}, pins = chip.pins || { in: {}, out: {} };
-      const title = h('span', { class: 'ub-box-title', text: (i.title || chip.title || inst) }), name = h('small', { class: 'mono text-muted-d', text: ' ' + inst + ' · ' + i.use });
+      const shown = i.title || chip.title || inst;      // the heading names the instance once: "terms · kv-summary@1", not "terms terms · ..."
+      const title = h('span', { class: 'ub-box-title', text: shown, title: shown }), name = h('small', { class: 'mono text-muted-d', text: ' ' + (shown === inst ? '' : inst + ' · ') + i.use, title: inst + ' · ' + i.use });
       const head = h('header', { class: 'ub-box-head' }, h('i', { class: 'bi bi-grip-vertical', 'aria-hidden': 'true' }), title, name);
       const ins = h('div', { class: 'ub-pins ub-pins-in' }, Object.keys(pins.in || {}).map((p) => pinButton(inst, p, pins.in[p], 'in')));
       const outs = h('div', { class: 'ub-pins ub-pins-out' }, Object.keys(pins.out || {}).map((p) => pinButton(inst, p, pins.out[p], 'out')));
-      const body = h('div', { class: 'ub-body ub-box-body' }, h('p', { class: 'text-muted-d ub-hint', text: D.live ? 'Waiting for live data…' : 'Live data is off.' }));
+      const body = h('div', { class: 'ub-body ub-box-body' }, D.live ? h('p', { class: 'text-muted-d ub-hint', text: 'Waiting for live data…' }) : D.emptyState(inst));
       const state = h('span', { class: 'ub-state', role: 'status' });
       const grip = h('span', { class: 'ub-resize', 'aria-hidden': 'true', title: 'Drag to resize (Shift+arrows)' });
       const msg = h('p', { class: 'ub-box-problem', role: 'alert', hidden: true });

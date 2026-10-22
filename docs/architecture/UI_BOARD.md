@@ -938,9 +938,12 @@ The clusters (panels in the six packs other than trading, then trading's that mo
 | `step-waterfall` | `waterfall` over a list | `rows`, `rows.label`, `rows.value` | `fmt`, `sum`, `unit` | 1 |
 | `distribution-histogram` | `histogram` over a list | `rows` | `fmt`, `unit`, `markers` (spec) | 1 |
 | `relation-graph` | `graph` from two lists | `nodes`, `edges`, `nodes.label`, `nodes.group` | `layout` | 1 |
-| `headline-figure` | one figure of the record | `value` | `fmt`, `tone`, `caption`, `span` | 12 trading |
+| `headline-figure` | one figure of the record | `value` | `fmt`, `tone`, `caption`, `label`, `unit`, `delta`, `deltaFmt` | 12 trading |
+| `status-fields` | `status` over named state fields | (the binds are in `fields`) | `fields` (spec) | showcase |
+| `figure-gauge` | `gauge`, one figure against a maximum | `value` (a field, or computed: `=abs(@doc.RISK.DV01)`) | `max` | showcase |
+| `event-timeline` | `timeline` over a list | `rows`, `rows.label`, `rows.detail` | | showcase |
 
-Every record chip also has the frame controls `panel-id`, `key`, `code` and `area`. The 26 BI report visuals that were board-local copies
+Every record chip also has the frame controls `panel-id`, `key`, `code`, `area`, `span` and `height`; `list-table` also takes a tree (`children`, `expand`), `dated-steps-ladder` a `highlight` and `value-grid-surface` a `view`. With these the all-panels showcase (`docs/guides/examples/all-panels-showcase`) converts onto store chips except two true one-offs: `tabs` (each tab is a nested panel, a composite rather than a setting) and a `pivot` grouped `by` two fields (a pin column maps one field). A board-local chip's reason names the nearest store chips and the options none of them has a setting for. The 26 BI report visuals that were board-local copies
 are now instances of their `bi-*` seed chips with constants.
 
 **The two BC-03 failures, fixed in the converter and the seed chips, not in the reports:** `report:python-desk-risk/risk`: the

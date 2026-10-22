@@ -96,11 +96,15 @@ def test_open_as_board_and_export_sutra_go_through_the_converter(ui):
     sutra = "rachana: 1\nsutra: book\nversion: 1\ndescription: Book\nmatch: { kind: book, priority: 10 }\npanels:\n  - { id: limits, kind: table, rows: $.LIMITS }\n"
 
     async def designs(method, path, ident, body=None, **params):
-        return {"id": "d-1", "name": "Book", "kind": "book", "sutra": sutra}
+        if path.endswith("/samples/document"):
+            return {"BOOK_ID": "BK-7", "NAME": "Rates"}
+        return {"id": "d-1", "name": "Book", "kind": "book", "sutra": sutra, "samples": [{"name": "book.json", "type": "file"}]}
     be.designs = designs
     got = c.get("/build/board-api/from-design/d-1").json()
     assert got["document"]["board"] == "core-book" and got["document"]["chips"]["limits"]["use"] == "local-limits@1"
-    assert any("local-limits" in n and "candidate" in n for n in got["notes"])
+    # the board-local chips come as rows (chip, nearest store chips, why) for the designer's collapsed notes, not one sentence each
+    assert got["locals"][0]["chip"] == "local-limits" and got["locals"][0]["why"]
+    assert got["params"] == {"id": "BK-7"}                   # the id parameter prefilled from the design's sample, so data shows at once
     assert ("ui", "POST", "/convert/sutra", {}) in be.calls
     out = c.post("/build/board-api/to-sutra", json={"document": got["document"]}).json()
     assert yaml.safe_load(out["yaml"])["match"]["kind"] == "book"
