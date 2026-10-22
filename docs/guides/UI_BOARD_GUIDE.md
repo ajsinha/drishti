@@ -24,13 +24,13 @@ and **traces** carry one chip's out pin (a selection, a filter) into another chi
 their roles, row rules and masks, always. The design is [UI_BOARD.md](../architecture/UI_BOARD.md); the server routes are in
 [API_GUIDE.md](API_GUIDE.md#ui-boards-and-the-chip-store-apiv1ui-270).
 
-Every step below shows what you do in the console and the same thing in the board document (YAML), which the designer's
-**YAML / JSON** tab edits directly. Both are one document: change either and the other follows.
+The designer opens on the **live page** ([below](#the-designer-edit-the-live-page)): you change the page you see, in plain words. The
+engine's tools (pins and traces, the mapping sheet, board parameters, YAML / JSON, the board check) wait in its **Advanced** drawer, closed
+by default; the numbered sections further down describe them, each step with the same thing in the board document (YAML). Both are one
+document: change either and the other follows.
 
 **Where:** Build → **Designer** (`/build/new`) → **New board**, or Build → **Boards** (`/build`), the one list of your boards and your
 screen designs. A board opens at `/build/board/<name>`; its viewer at `/ui/b/<name>`.
-
-![The designer in Board mode with the book-trades board](img/ui-board/designer.png)
 
 **Examples:** Build → Designer → **Examples** (`/build/new#examples`, or *Examples* on the Boards list) lists board examples (this guide's
 `book-trades`, a small master-detail board, and one converted page per pack: a curve, a counterparty's trades, an economy with its map) and
@@ -60,6 +60,40 @@ the steps stack and the preview sits below them. **Blank board** (beside it) ope
 Each chip's columns are matched to the data's attributes for you (by type, then by name: a label takes a name, an amount a notional); change
 any of them later in the designer.
 
+## The designer: edit the live page
+
+A board opens in the designer (`/build/board/<name>`) as **the page itself**: rendered with live data as you (the render API, the same stream
+as the viewer), the blocks in reading order at their widths. There are no pins, no mapping sheets and no live-data switch; when a block
+cannot show data it says why in one sentence with one action (**Choose its data**, *Which book should the page show?* with a box, **Choose
+fields**). A block with something to fix leaves the render on its own, so the rest of the page keeps its data.
+
+![The designer: the live page, the ticket selected, its three pills and the side panel](img/ui-board/concept-a.png)
+
+![The same in the light theme](img/ui-board/concept-a-light.png)
+
+* **The top bar** is slim: what you are designing (the board's title, edit it in place; a new board's name follows it until it is saved),
+  **Page | Wiring**, Undo and Redo, the **phone preview**, **Preview as another user** (a board always renders as whoever opens it, with
+  their masks: share it to let someone see their own data), **Save**, and **⋯** for the rest: Share, Copy to workspace, Export Sutra,
+  Revisions, Open the page, Advanced tools, Keyboard shortcuts.
+* **Hover or click a block:** an outline and three pills on its top edge.
+  * **Swap chip**: a small searchable list of chips, the ones that fit the block's data first (the guided New board's ranking). A pick swaps
+    it at once, so the live page previews it; pick another to compare, Ctrl+Z to put it back. The fields both chips have stay mapped.
+  * **Its data**: where it gets its data, in words: the sources already on this page ("Trades of this book", "this trade", "the trading-risk
+    model"), *Only what it follows*, or **Another source…** (a connector or search, a BI model, a live topic). Its fields are matched for you.
+  * **Follows…**: the blocks whose selection it can follow, in words ("The trade you click in Trades"), or *Nothing*. This writes the trace
+    (and, into a filter, the column it filters on).
+* **The side panel** says, for the selected block: what it shows (its chip's purpose) and **Fed by**; **Follows**; **Shown fields** with
+  **Change fields** (a checklist of the supplier's fields for a column that takes many, a choice for one that takes one: this writes the pin
+  mapping underneath); **Half | Full** width and **Move earlier / later**; **Remove this block**; **Open in Advanced**.
+* **+ Add a block here:** the dashed zones between the rows and after the last open the same chip list, with the chips for this page's
+  data first; a suggested chip arrives fed by that data with its fields matched.
+* **Reorder and resize:** drag a block by its head onto another (before or after it); drag its right edge to make it half or full width.
+  The page is laid out again in reading order (`layout.desktop.areas`, and the phone order follows).
+* **Phone preview** (the phone icon): the page one column wide, in its phone order, rendered for a phone.
+
+Views plug into the same top bar: `drishtiUiBoard.view.get()`, `.set('page' | 'wiring')`, `.register(name, {show(host), hide()})`, and the
+`ub:view` event on the designer (`detail: {view, was}`). The Wiring view below registers itself this way.
+
 ## The Wiring view
 
 **Page | Wiring** at the top of the designer switches between the page (the boxes as the board lays them out) and **Wiring**: what feeds
@@ -84,6 +118,15 @@ what, in words. No pins, no type names, no YAML.
 layout:
   wiring: { ticket: [800, 200] }     # the Wiring view's box places, [x, y] in pixels
 ```
+
+## Advanced: pins, the mapping sheet, YAML
+
+**Advanced** at the foot of the designer (or **⋯ → Advanced tools**; `?advanced=1` on the address opens it at once) holds the engine's
+tools, closed by default: the Chip Store palette, the canvas with every chip's pins and the traces between them, the mapping sheet, the
+board parameters, the **YAML / JSON** tab, the Problems of the board check, Make a chip, and the Board | Chip modes. While it is open, the
+canvas with pins takes the live data. The sections 1 to 10 below are these tools.
+
+![Advanced: the pin view of the book-trades board](img/ui-board/designer.png)
 
 ## 1. One designer, two modes
 

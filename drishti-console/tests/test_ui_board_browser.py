@@ -108,7 +108,7 @@ def doc_of(page):
 
 
 def build_book_trades(page, url):
-    page.goto(url + "/build/board/new")
+    page.goto(url + "/build/board/new?advanced=1")
     page.wait_for_selector('.ub-pal-add[data-chip="filterable-table"]')
     page.fill("[data-ub-name]", "book-trades")
     page.locator("[data-ub-name]").dispatch_event("change")
@@ -147,7 +147,7 @@ def test_build_the_book_trades_board_catch_a_bad_wire_save_and_reopen(page, stac
     page.locator("[data-ub-save]").click()
     page.wait_for_function("document.querySelector('[data-ub-status]').textContent.indexOf('Saved book-trades') >= 0")
     assert be.boards["book-trades"]["version"] == 1 and len(be.boards["book-trades"]["doc"]["traces"]) == 2
-    page.goto(url + "/build/board/book-trades")
+    page.goto(url + "/build/board/book-trades?advanced=1")
     page.wait_for_selector('.ub-box[data-instance="flows"]')
     assert page.locator(".ub-box").count() == 3
     # the YAML tab edits the same document: a new title shows on the canvas
@@ -172,7 +172,7 @@ def test_build_the_book_trades_board_catch_a_bad_wire_save_and_reopen(page, stac
 def test_live_data_while_designing(page, stack):
     url, be = stack
     put_board(be, "live-design", BOOK)
-    page.goto(url + "/build/board/live-design")
+    page.goto(url + "/build/board/live-design?advanced=1")
     page.wait_for_selector('.ub-box[data-instance="trades"]')
     page.locator("[data-ub-live]").check()
     page.wait_for_selector('.ub-box[data-instance="trades"] table.ub-tbl tbody tr')
@@ -222,7 +222,7 @@ def test_the_phone_layout_one_column_collapsed_flows_no_sideways_scroll(browser,
     order = p.eval_on_selector_all(".ub-phone .ub-chip", "els => els.map(e => e.dataset.instance)")
     assert order == ["trades", "ticket", "flows"]
     assert p.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
-    p.goto(url + "/build/board/book-trades-p")
+    p.goto(url + "/build/board/book-trades-p?advanced=1")
     p.wait_for_selector('.ub-box[data-instance="trades"]')
     p.locator("[data-ub-device]").click()
     p.wait_for_selector(".ub-phone-list")
@@ -233,7 +233,7 @@ def test_the_phone_layout_one_column_collapsed_flows_no_sideways_scroll(browser,
 
 def test_keyboard_only_add_move_and_wire(page, stack):
     url, _ = stack
-    page.goto(url + "/build/board/new")
+    page.goto(url + "/build/board/new?advanced=1")
     page.wait_for_selector('.ub-pal-add[data-chip="filterable-table"]')
     page.locator('.ub-pal-add[data-chip="filterable-table"]').focus()
     page.keyboard.press("Enter")
@@ -262,7 +262,7 @@ def test_keyboard_only_add_move_and_wire(page, stack):
 
 def test_chip_mode_shares_the_shell_the_palette_and_the_yaml_tab(page, stack):
     url, _ = stack
-    page.goto(url + "/build/board/new")
+    page.goto(url + "/build/board/new?advanced=1")
     page.wait_for_selector('.ub-pal-add[data-chip="search-box"]')
     page.locator("[data-ub-mode='chip']").click()
     assert page.locator("[data-ub-chip-mode]").is_visible() and not page.locator("[data-ub-canvas]").is_visible()
@@ -283,7 +283,7 @@ def test_chip_mode_shares_the_shell_the_palette_and_the_yaml_tab(page, stack):
 def test_every_theme_paints_the_designer_and_the_viewer_from_its_tokens(page, stack):
     url, be = stack
     put_board(be, "book-trades-t", BOOK)
-    for path, sel in (("/ui/b/book-trades-t", '.ub-chip[data-instance="trades"] table'), ("/build/board/book-trades-t", '.ub-box[data-instance="trades"]')):
+    for path, sel in (("/ui/b/book-trades-t", '.ub-chip[data-instance="trades"] table'), ("/build/board/book-trades-t?advanced=1", '.ub-box[data-instance="trades"]')):
         page.goto(url + path)
         page.wait_for_selector(sel)
         seen = set()

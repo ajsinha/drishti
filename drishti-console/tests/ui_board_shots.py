@@ -73,7 +73,7 @@ def main():
             page.screenshot(path=str(OUT / "rendered-board.png"))
             T.put_board(be, "book-circuit", T.BOOK)
             for theme, name in (("terminal", "circuit-dark.png"), ("light", "circuit-light.png")):
-                page.goto(url + "/build/board/book-circuit")
+                page.goto(url + "/build/board/book-circuit?advanced=1")
                 page.wait_for_selector("svg[data-ub-wires] path.ub-wire[data-trace]", state="attached")
                 page.evaluate("t => { document.documentElement.setAttribute('data-theme', t); window.drishtiUiBoard.canvas.wires(); }", theme)
                 page.wait_for_timeout(300)

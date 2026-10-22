@@ -56,7 +56,7 @@ def wires(page):
 def test_wires_are_orthogonal_hop_at_crossings_and_join_with_a_dot(page, stack):
     url, be = stack
     put_board(be, "book-circuit", BOOK)
-    page.goto(url + "/build/board/book-circuit")
+    page.goto(url + "/build/board/book-circuit?advanced=1")
     page.wait_for_selector("svg[data-ub-wires] path.ub-wire[data-trace]", state="attached")
     page.wait_for_function("document.querySelectorAll('svg[data-ub-wires] path.ub-wire[data-trace]').length >= 2")
     for w in wires(page):
@@ -71,7 +71,7 @@ def test_wires_are_orthogonal_hop_at_crossings_and_join_with_a_dot(page, stack):
     page.keyboard.press("ArrowDown")
     page.wait_for_function("ds => Array.from(document.querySelectorAll('svg[data-ub-wires] path.ub-wire[data-trace]')).map(p => p.getAttribute('d')).join() !== ds.join()", arg=before)
     put_board(be, "crossing", CROSS)
-    page.goto(url + "/build/board/crossing")
+    page.goto(url + "/build/board/crossing?advanced=1")
     page.wait_for_function("document.querySelectorAll('svg[data-ub-wires] path.ub-wire[data-trace]').length >= 2")
     ws = wires(page)
     assert any(w["hops"] for w in ws), ws
@@ -85,7 +85,7 @@ def test_wires_are_orthogonal_hop_at_crossings_and_join_with_a_dot(page, stack):
 def test_live_current_flows_unless_motion_is_reduced(page, stack):
     url, be = stack
     put_board(be, "book-current", BOOK)
-    page.goto(url + "/build/board/book-current")
+    page.goto(url + "/build/board/book-current?advanced=1")
     page.wait_for_function("document.querySelectorAll('svg[data-ub-wires] path.ub-wire[data-trace]').length >= 2")
     page.evaluate("window.drishtiUiBoard.canvas.flow('ticket')")
     assert page.evaluate("getComputedStyle(document.querySelector('path.ub-wire.ub-flow')).animationName") == "ub-current"

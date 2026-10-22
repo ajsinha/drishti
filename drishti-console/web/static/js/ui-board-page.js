@@ -56,6 +56,8 @@
       root.querySelectorAll('[data-ub-view]').forEach((b) => b.setAttribute('aria-selected', String(b.getAttribute('data-ub-view') === name)));
       $('[data-ub-pageview]').hidden = name !== 'page';
       root.querySelectorAll('[data-ub-view-slot]').forEach((s) => { s.hidden = s.getAttribute('data-ub-view-slot') !== name; });
+      const slot = root.querySelector('[data-ub-view-slot="' + name + '"]'), pane = name === 'wiring' && root.querySelector('[data-ubw]');
+      if (slot && pane && pane.parentNode !== slot) { slot.appendChild(pane); }      // the Wiring view's pane moves out of the Advanced drawer
       if (name !== 'page' && views[name].show) { views[name].show(root.querySelector('[data-ub-view-slot="' + name + '"]'), D); }
       root.dispatchEvent(new CustomEvent('ub:view', { detail: { view: name, was } }));
       D.liveRender();

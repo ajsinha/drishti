@@ -35,7 +35,7 @@ def top(page):
 
 def test_the_chip_store_palette_finds_chips(page, stack):
     url, be = stack
-    page.goto(url + "/build/board/new")
+    page.goto(url + "/build/board/new?advanced=1")
     page.wait_for_selector('.ub-pal-add[data-chip="cashflow-ladder"]')
     page.fill("[data-ub-palette-q]", "running total per group")                   # words of the purpose
     page.wait_for_function("(document.querySelector('[data-ub-palette] .ub-pal-item') || {dataset: {}}).dataset.chipItem === 'cashflow-ladder'")

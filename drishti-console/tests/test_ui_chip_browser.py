@@ -187,7 +187,7 @@ def test_a_composite_chip_is_a_board_with_no_connectors(page, stack):
 
 def test_make_a_chip_from_two_wired_chips(page, stack):
     url, be = stack
-    page.goto(url + "/build/board/new")
+    page.goto(url + "/build/board/new?advanced=1")
     page.wait_for_selector('.ub-pal-add[data-chip="search-box"]')
     page.evaluate("window.drishtiUiBoard.designer.addInstance('search-box@1')")
     page.wait_for_function("window.drishtiUiBoard.designer.doc.chips['search-box']")
@@ -225,7 +225,7 @@ def test_a_candidate_opens_in_chip_mode_and_a_design_opens_as_a_converted_board(
     async def designs(method, path, ident, body=None, **params):
         return {"id": "d-9", "name": "Book", "kind": "book", "sutra": sutra}
     be.designs = designs
-    page.goto(url + "/build/board/new?design=d-9")
+    page.goto(url + "/build/board/new?design=d-9&advanced=1")
     page.wait_for_function("window.drishtiUiBoard.designer.doc.chips && window.drishtiUiBoard.designer.doc.chips.limits")
     d = doc_of(page)
     assert d["board"] == "core-book" and d["chips"]["limits"]["use"] == "local-limits@1" and d["params"]["id"]["of"] == "core/book"
@@ -242,7 +242,7 @@ def test_build_new_offers_board_and_chip_examples_that_open_in_their_mode(page, 
     page.locator('[data-ui-example="master-detail"]').click()
     page.wait_for_url("**/build/board/**")
     page.wait_for_function("window.drishtiUiBoard && window.drishtiUiBoard.designer && window.drishtiUiBoard.designer.mode === 'board' && window.drishtiUiBoard.designer.doc.chips && window.drishtiUiBoard.designer.doc.chips.card")
-    assert page.locator("[data-ub-canvas]").is_visible() and page.input_value("[data-ub-name]") == "master-detail"
+    assert page.locator("[data-ub-page]").is_visible() and page.input_value("[data-ub-name]") == "master-detail"   # the live page (concept A)
     page.goto(url + "/build/new")
     page.locator('[data-ui-example="entity-list"]').click()
     page.wait_for_url("**/build/chip/**")

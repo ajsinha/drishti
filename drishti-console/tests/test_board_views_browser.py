@@ -61,7 +61,7 @@ def open_wiring(p, url):
     p.goto(f"{url}/build/board/book-trades")
     p.wait_for_function("window.drishtiUiBoard.designer.doc.chips && Object.keys(window.drishtiUiBoard.designer.doc.chips).length === 3"
                         " && window.drishtiUiBoard.designer.chipDoc('cashflow-ladder@1')")
-    p.locator("[data-ub-view-to='wiring']").click()
+    p.locator("[data-ub-view='wiring']").click()
     p.wait_for_selector(".ubw-box[data-box='flows']")
 
 
@@ -124,8 +124,8 @@ def test_the_wiring_view_shows_boxes_and_wires_in_words_and_edits_the_board(brow
         p.mouse.move(b["x"] + 160, b["y"] + 120, steps=5)
         p.mouse.up()
         assert p.evaluate("window.drishtiUiBoard.designer.doc.layout.wiring.ticket") is not None
-        p.locator("[data-ub-view-to='page']").click()
-        assert p.locator(".ub-canvas-wrap").is_visible() and p.locator("[data-ubw]").is_hidden()
+        p.locator("[data-ub-view='page']").click()
+        assert p.locator(".ub-pagewrap").is_visible() and p.locator("[data-ubw]").is_hidden()
         assert p.errors == []
     finally:
         c.close()

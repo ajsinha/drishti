@@ -31,19 +31,13 @@
   const refOf = (c) => c.chip + '@' + (c.latest || c.version || 1);
   const fits = (attr, colSpec) => (PIN_TYPES[W.typeOf(colSpec) || 'text'] || [W.typeOf(colSpec)]).indexOf(attr.type) >= 0;
 
-  /** Matches the supplier's fields to a block's empty columns by type: required and many-valued columns first, one field each. */
+  /** Matches the supplier's fields to a block's empty columns (the guided flow's rule, drishtiUiBoard.suggest.autoMap): one field each. */
   function autoMap(inst) {
     const i = D.doc.chips[inst];
     return D.attributes(i.supply).then((attrs) => {
-      if (!attrs) { return; }
-      const used = new Set(W.shown(D, inst));
-      W.dataPins(D, inst).forEach((d) => d.cols.forEach(([k, cs]) => {
-        if ((i.map || {})[k] != null) { return; }
-        const ok = attrs.filter((a) => fits(a, cs) && !used.has(a.name));
-        if (!ok.length) { return; }
-        i.map = i.map || {};
-        if (cs.many) { i.map[k] = ok.slice(0, Math.min(4, cs.max || 4)).map((a) => a.name); i.map[k].forEach((a) => used.add(a)); } else if (cs.required || W.typeOf(cs) === 'id') { i.map[k] = ok[0].name; used.add(ok[0].name); }
-      }));
+      if (!attrs || !U.suggest) { return; }
+      const m = U.suggest.autoMap((W.chipOf(D, inst) || {}).pins, attrs), fed = new Set(W.dataPins(D, inst).map((d) => d.pin));
+      Object.keys(m).forEach((k) => { if (fed.has(k.split('.')[0]) && (i.map || {})[k] == null) { i.map = i.map || {}; i.map[k] = m[k]; } });
     });
   }
 
@@ -86,12 +80,16 @@
     const src = W.sources(D)[0];
     const want = kind === 'swap' ? W.mainType(W.chipOf(D, inst)) : (src ? (src.supply.connector && W.paramOf(src.supply.query) && !/search/.test(src.supply.connector) ? 'document' : 'rowset') : '');
     const current = kind === 'swap' ? D.doc.chips[inst].use.split('@')[0] : '';
-    chips().then((all) => {
+    const supply = kind === 'swap' ? D.doc.chips[inst].supply : (src || {}).supply;
+    Promise.all([chips(), D.attributes(supply)]).then(([all, attrs]) => {
+      // the chips that fit the data first, best first (drishtiUiBoard.suggest.rank, the guided flow's ranking)
+      const ranked = U.suggest && supply ? U.suggest.rank(all, attrs, want === 'document' ? 'one' : 'many').map((r) => r.chip) : null;
+      const isGood = (c) => (ranked ? ranked.indexOf(c.chip) >= 0 && ranked.indexOf(c.chip) < 12 : W.mainType(c) === want);
       const paint = () => {
         clear(list);
         const words = q.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
         const hit = all.filter((c) => c.chip !== current && words.every((w) => (c.chip + ' ' + (c.title || '') + ' ' + (c.purpose || '') + ' ' + (c.tags || []).join(' ')).toLowerCase().indexOf(w) >= 0));
-        const good = want ? hit.filter((c) => W.mainType(c) === want) : [], rest = hit.filter((c) => good.indexOf(c) < 0);
+        const good = (ranked || want) ? hit.filter(isGood).sort((x, y) => (ranked ? ranked.indexOf(x.chip) - ranked.indexOf(y.chip) : 0)) : [], rest = hit.filter((c) => good.indexOf(c) < 0);
         const group = (label, cs) => {
           if (!cs.length) { return; }
           list.appendChild(h('p', { class: 'ub-pick-group', text: label }));

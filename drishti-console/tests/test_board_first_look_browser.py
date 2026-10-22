@@ -49,7 +49,7 @@ def open_board(browser, url, design, width, height=900):
     p = c.new_page()
     p.errors = []
     p.on("pageerror", lambda e: p.errors.append(str(e)))
-    p.goto(f"{url}/build/board/new?design={design}")
+    p.goto(f"{url}/build/board/new?design={design}&advanced=1")
     p.wait_for_function("window.drishtiUiBoard.designer.doc.chips && Object.keys(window.drishtiUiBoard.designer.doc.chips).length > 3"
                         " && document.querySelector('[data-ub-status]').textContent.startsWith('Opened')")
     return c, p
@@ -73,7 +73,7 @@ def test_the_showcase_opens_as_a_board_with_a_short_note_gutters_live_data_and_a
         p.locator("[data-ub-notes] > summary").click()
         # the console's gutters: the breadcrumb and the toolbar sit inside the page, not on its edge
         assert p.locator(".ub-design .crumbs").bounding_box()["x"] >= 16
-        assert p.locator(".ub-toolbar[aria-label='Board']").bounding_box()["x"] >= 16
+        assert p.locator(".ub-toolbar[aria-label='Board (advanced)']").bounding_box()["x"] >= 16
         # live data on at once: the id parameter is the design's sample, and the boxes paint (the stand-in's render)
         assert p.evaluate("window.drishtiUiBoard.designer.params.id") == TRADE
         assert p.locator("[data-ub-live]").is_checked()
