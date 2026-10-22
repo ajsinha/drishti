@@ -16,7 +16,7 @@
 rachana: 1
 chip: bi-map
 version: 1
-title: Map visual
+title: Map
 category: geo
 tags:
 - bi
@@ -27,7 +27,10 @@ manual:
   pins:
     rows: 'The rows of the wells: location (dimension), latitude (dimension), longitude (dimension), details (dimension), values (measure, required).
       Required.'
-    selected: Out. The value of the first field the person clicked (a bar, a row, a point); empty until they click.
+    selected: Out. The mark the person clicked (a bar, a row, a point) as a filter on its first field; empty until they click. Traced into other
+      chips' filter pins it is the page's cross-filter; a drill down the hierarchy sends the level clicked.
+    filter: 'The filters other chips send: a slicer''s choice or a clicked mark (their ''filter-out'' or ''selected''). Several traces may feed
+      it; they combine (all must hold). Empty: no cross-filter.'
     format: 'The visual''s format block as the report writes it (colours, labels, run, spec). Empty: defaults.'
     alt: 'The text alternative read to screen readers. Empty: the title.'
     filters: 'Filters on this visual only, as the report writes them. Empty: none.'
@@ -40,7 +43,7 @@ manual:
   defaults: The visual type's defaults (REPORTS.md section 3); no control input.
   limits: Paints at most 10,000 rows; the BI engine aggregates before painting. A question that runs long becomes a BI run card.
   examples:
-  - title: The map visual over the trading-risk model
+  - title: The map over the trading-risk model
     board: |
       chips:
         c:
@@ -51,6 +54,16 @@ manual:
               measures: [MTM_USD]
               dimensions: [trades.COUNTRY, trades.LAT, trades.LON, trades.TRADE_ID]
           map: {rows.location: trades.COUNTRY, rows.latitude: trades.LAT, rows.longitude: trades.LON, rows.details: trades.TRADE_ID, rows.values: MTM_USD}
+        other:
+          use: bi-map@1
+          supply:
+            model: trading-risk
+            query:
+              measures: [MTM_USD]
+              dimensions: [trades.COUNTRY, trades.LAT, trades.LON, trades.TRADE_ID]
+          map: {rows.location: trades.COUNTRY, rows.latitude: trades.LAT, rows.longitude: trades.LON, rows.details: trades.TRADE_ID, rows.values: MTM_USD}
+      traces:
+      - {from: c.selected, to: other.filter}
   not-for: A grammar panel over entity data (use the panel-* chips).
   accessibility: Arrow keys move the row cursor and Enter selects; the selection is announced; column headers are buttons that sort.
 pins:
@@ -71,6 +84,9 @@ pins:
         values:
           type: measure
           required: true
+    filter:
+      role: control
+      type: filter
     format:
       role: control
       type: spec
@@ -97,13 +113,13 @@ pins:
       type: spec
   out:
     selected:
-      type: dimension
+      type: filter
 body:
   panels:
   - id: visual
     kind: visual
     type: map
-    title: '%{title|Map visual}'
+    title: '%{title|Map}'
     rows: '@rows'
     wells:
       location: '@rows.location'

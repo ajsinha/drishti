@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,7 +39,9 @@ import org.springframework.boot.test.context.SpringBootTest;
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.redact=MTM,NOTIONAL,PRICE,GDP_PER_CAPITA", "drishti.ui.dir=../config/ui",
         "drishti.identity.database-url=jdbc:sqlite:target/ui-migrate-packs-${random.uuid}/identity.db",
-        "drishti.data.dir=target/ui-migrate-packs-data/${random.uuid}",
+        "drishti.data.dir=target/ui-migrate-packs-data/${random.uuid}", "drishti.bi.dir=../config/bi",
+        "drishti.bi.query.store-dir=target/ui-migrate-packs-bi/${random.uuid}", "drishti.security.roles.full.bi[0]=bi",
+        "drishti.security.roles.masked.bi[0]=bi", "drishti.security.roles.restricted.bi[0]=bi",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true",
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
         "drishti.security.roles.restricted.kinds[0]=book", "drishti.security.roles.restricted.kinds[1]=desk",
@@ -54,6 +57,33 @@ class UiMigrationPacksTest {
             new Principal("ria", List.of("restricted")));
 
     @Autowired BoardProof proof;
+    @Autowired ReportProof reports;
+
+    /**
+     * Every BI report page of every pack (board-layout pages included) served from its converted board: opened and every visual asked as each
+     * of the three people, the report as written against the report from its boards; the same answers (UI_BOARD.md 12.4).
+     */
+    @Test
+    void everyReportPageIsProvenForThreePeople() {
+        int pages = 0;
+        int withRows = 0;
+        int differs = 0;
+        for (String pack : Stream.concat(Stream.of("trading"), PACKS.stream()).toList()) {
+            ObjectNode r = reports.prove(pack, PEOPLE);
+            System.out.println("Report proof, " + pack + ": proven " + r.path("proven") + ", differs " + r.path("differs") + ", comparisons "
+                    + r.path("comparisons") + ", answers with rows " + r.path("answersWithRows"));
+            for (JsonNode s : r.path("screens")) {
+                System.out.println("  " + s.path("screen").asText() + " " + s.path("result").asText() + " " + s.path("compared").asInt()
+                        + (s.has("difference") ? " " + s.path("difference") : "") + (s.has("reason") ? " " + s.path("reason") : ""));
+            }
+            differs += r.path("differs").asInt();
+            pages += r.path("proven").asInt();
+            withRows += r.path("answersWithRows").asInt();
+        }
+        assertThat(differs).isZero();
+        assertThat(pages).isGreaterThanOrEqualTo(20);
+        assertThat(withRows).as("answers that carried rows").isPositive();
+    }
 
     @Test
     void everyPackIsProvenForThreePeople() {

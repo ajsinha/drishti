@@ -20,6 +20,7 @@ name), and the composites the converter needs (entity-card, filterable-table, ca
 complete manual with one wiring example. Run it from the repository root: python3 tools/ui_seed_chips.py
 """
 
+import copy
 import os
 import sys
 
@@ -132,6 +133,9 @@ def board_example(title, chip_ref, pins_in, pins_out, model=False):
     if "selected" in pins_out and pins_out["selected"]["type"] in ("id", "dimension"):
         board["chips"]["detail"] = {"use": "entity-card@1", "supply": {"connector": "trading/trade"}, "map": {"doc.id": "TRADE_ID", "doc.title": "DEAL_NUMBER"}}
         board["traces"] = [{"from": "c.selected", "to": "detail.id"}]
+    elif "selected" in pins_out and "filter" in pins_in:            # a BI visual: its click cross-filters a second one (12.4)
+        board["chips"]["other"] = copy.deepcopy(inst)
+        board["traces"] = [{"from": "c.selected", "to": "other.filter"}]
     elif "filter-out" in pins_out:
         board["chips"]["trades"] = {"use": "filterable-table@2", "supply": {"connector": "trading/trade-search"},
                                     "map": {"rows.id": "TRADE_ID", "rows.label": "COUNTERPARTY_NAME"}}
@@ -156,15 +160,15 @@ def panel_kinds():
     rows_text = "The rows to show. Required. Each row must give the required columns; the others are optional."
     specs = [
         # kind, title, category, tags, purpose, data pins, pin text, outs, panel options, not-for, a11y, behaviour
-        ("kv", "Key values", "records", ["fields", "record"], "One object with named fields: label and value pairs in columns, each formatted by type.",
+        ("kv", "Label and value list", "records", ["fields", "record"], "One object with named fields: label and value pairs in columns, each formatted by type.",
          doc_pin, doc_text, {}, {"fields": "@doc.fields"}, "A list of similar rows (use panel-table); operational states (use panel-status).", A11Y_RECORD,
          "Read-only. Long values wrap; amounts are right-aligned."),
         ("status", "Status", "records", ["status", "state"], "Operational states (confirmed, cleared, settled), each value coloured by its meaning.",
          doc_pin, doc_text, {}, {"fields": "@doc.fields"}, "Plain fields without a meaning per value (use panel-kv).", A11Y_RECORD,
          "Read-only; each state shows its tone (good, warning, bad)."),
-        ("provenance", "Provenance", "records", ["lineage", "audit"], "Where the view came from: the sources read, their freshness and the Sutra version.",
+        ("provenance", "How this view was built", "records", ["lineage", "audit"], "Where the view came from: the sources read, their freshness and the Sutra version.",
          doc_pin, doc_text, {}, {"of": "@doc"}, "Business data (use panel-kv).", A11Y_RECORD, "Read-only; each source opens its details."),
-        ("metric", "Metric", "records", ["kpi", "number"], "The one number a screen is about, with its change, unit and caption.",
+        ("metric", "Single figure", "records", ["kpi", "number"], "The one number a screen is about, with its change, unit and caption.",
          {"value": {"role": "data", "type": "measure", "required": True}, "delta": {"role": "control", "type": "measure"}},
          {"value": "The number. Required.", "delta": "Its change, shown signed and coloured. Empty shows no change."}, {},
          {"value": "%{value}", "delta": "%{delta|}"}, "A number against a maximum (use panel-gauge).", A11Y_RECORD, "Read-only."),
@@ -201,7 +205,7 @@ def panel_kinds():
          {"rows": rowset({"x": col("dimension", True), "series": col("dimension"), "value": col("measure", True), "limit": col("measure")})},
          {"rows": rows_text}, {}, {"rows": "@rows", "x": "@.x", "series": "@.series", "limit": "@.limit"},
          "One series (use panel-line).", A11Y_CHART, "Hover shows each band's value."),
-        ("hbar", "Bars", "charts", ["bar", "ranking"], "A few labelled amounts as horizontal bars.",
+        ("hbar", "Bar list", "charts", ["bar", "ranking"], "A few labelled amounts as horizontal bars.",
          {"rows": rowset({"id": col("id"), "label": col("dimension", True), "value": col("measure", True)})}, {"rows": rows_text}, SELECT_OUT,
          {"rows": "@rows", "label": "@.label", "value": "@.value", "on-select": {"emits": "selected", "value": "@.id"}},
          "Amounts that add up to a total (use panel-waterfall).", A11Y_CHART, "Clicking a bar selects it and sends 'selected'."),
@@ -209,7 +213,7 @@ def panel_kinds():
          {"value": {"role": "data", "type": "measure", "required": True}, "max": {"role": "control", "type": "number"}},
          {"value": "The number. Required.", "max": "The maximum of the dial. Empty uses 100."}, {}, {"value": "%{value}", "max": "%{max|100}"},
          "A number without a maximum (use panel-metric).", A11Y_RECORD, "Read-only."),
-        ("surface", "Surface", "market", ["surface", "volatility"], "A grid of numbers over two axes (a volatility surface).",
+        ("surface", "Value grid", "market", ["surface", "volatility"], "A grid of numbers over two axes (a volatility surface).",
          {"rows": rowset({"x": col("dimension", True), "y": col("dimension", True), "value": col("measure", True)})}, {"rows": rows_text}, {},
          {"rows": "@rows", "y": "@.y", "view": "grid"}, "A grid aggregated from rows (use panel-pivot).", A11Y_CHART, "Switches between grid and 3D."),
         ("candlestick", "Candlestick", "market", ["prices", "ohlc"], "Prices with open, high, low and close by date.",
@@ -228,11 +232,11 @@ def panel_kinds():
          {"rows": rowset({"label": col("dimension", True), "value": col("measure", True)})}, {"rows": rows_text}, {},
          {"rows": "@rows", "label": "@.label", "value": "@.value", "total": True}, "Amounts that do not add up (use panel-hbar).", A11Y_CHART,
          "Hover shows each step and the running total."),
-        ("graph", "Graph", "relationships", ["graph", "network"], "Entities and how they relate, as nodes and edges.",
+        ("graph", "Relation graph", "relationships", ["graph", "network"], "Entities and how they relate, as nodes and edges.",
          {"rows": rowset({"from": col("id", True), "to": col("id", True), "label": col("dimension")})}, {"rows": "The edges. Required."}, SELECT_OUT,
          {"nodes": "@rows", "edges": "@rows", "on-select": {"emits": "selected", "value": "@.from"}},
          "References without structure (use panel-links).", A11Y_CHART, "Clicking a node selects it and sends 'selected'."),
-        ("links", "Links", "relationships", ["links", "references"], "The entities a record refers to, each a link to its own board.",
+        ("links", "Linked entities", "relationships", ["links", "references"], "The entities a record refers to, each a link to its own board.",
          doc_pin, doc_text, {}, {"of": "@doc"}, "Structure between entities (use panel-graph).", A11Y_RECORD, "Each link opens the entity."),
         ("timeline", "Timeline", "operations", ["events", "dates"], "Dated events in order, each with its status.",
          {"rows": rowset({"id": col("id"), "date": col("date", True), "label": col("dimension", True), "status": col("dimension")})},
@@ -299,15 +303,15 @@ def bi_visuals():
                       "How many members of the axis have a value of the measure in each band."),
         "box": ("Box plot", "charts", {"axis": (D, False, False), "details": (D, True, False), "values": (M, True, False)},
                 "Median, quartiles, whiskers and outliers of the measure over the members of details."),
-        "map": ("Map visual", "geo", {"location": (D, False, False), "latitude": (D, False, False), "longitude": (D, False, False),
+        "map": ("Map", "geo", {"location": (D, False, False), "latitude": (D, False, False), "longitude": (D, False, False),
                                       "details": (D, False, False), "values": (M, True, False)},
                 "Countries shaded by the measure, or a point at each latitude and longitude."),
         "card": ("Card", "cards", {"values": (M, True, False)}, "One number, coloured by conditional format."),
         "multirow-card": ("Multi-row card", "cards", {"axis": (D, False, False), "values": (M, True, True)}, "A row per value of the axis."),
         "kpi": ("KPI", "cards", {"values": (M, True, False), "target": (M, False, False), "axis": (D, False, False)},
                 "The value, how it stands against the target, a sparkline over the axis."),
-        "gauge": ("Gauge visual", "cards", {"values": (M, True, False), "target": (M, False, False)}, "A dial with its range by format."),
-        "table": ("Table visual", "tables", {"columns": (D, True, True)}, "The fields grouped, the measures added up, sortable, with totals."),
+        "gauge": ("Gauge", "cards", {"values": (M, True, False), "target": (M, False, False)}, "A dial with its range by format."),
+        "table": ("Table", "tables", {"columns": (D, True, True)}, "The fields grouped, the measures added up, sortable, with totals."),
         "matrix": ("Matrix", "tables", {"rows": (D, True, True), "columns": (D, False, False), "values": (M, True, True)},
                    "Rows by columns with subtotals at every level and true totals."),
         "slicer": ("Slicer", "slicers", {"field": (D, True, False)}, "A list of a field's values; the person's choice filters other chips."),
@@ -323,10 +327,10 @@ def bi_visuals():
                               "A 2.1 type kept so old reports open: drawn as Drishti's grid."),
         "vega-lite": ("Vega-Lite", "charts", {"axis": (D, False, True), "legend": (D, False, False), "values": (M, False, True)},
                       "A Vega-Lite specification drawn over the rows of the wells."),
-        "python": ("Python visual", "python", {"columns": (D, False, True), "values": (M, False, False)},
+        "python": ("Python chart", "python", {"columns": (D, False, True), "values": (M, False, False)},
                    "What a Python item returns for the rows this person may see."),
         "entity-view": ("Entity view", "entity", {"key": ("id", True, False)}, "The Drishti view of the entity whose key is selected on the page."),
-        "tile": ("Tile", "boards", {}, "A visual of another report on a board page, with its alert colours."),
+        "tile": ("Report tile", "boards", {}, "A visual of another report on a board page, with its alert colours."),
     }
     out = []
     for t, (title, cat, wells, purpose) in specs.items():
@@ -344,9 +348,10 @@ def bi_visuals():
             panel["rows"] = "@rows"
             panel["wells"] = {w: f"@rows.{w}" for w in wells}
         if t in ("text", "image", "button", "tile"):
-            pins_in["content"] = {"role": "control", "type": "text", "required": True, "default": ""}
+            pins_in["content"] = ({"role": "control", "type": "spec", "required": True, "default": {}} if t == "tile"
+                                  else {"role": "control", "type": "text", "required": True, "default": ""})
             texts["content"] = {"text": "The text.", "image": "The image address (src); the title is its alternative text.",
-                                "button": "The button's label.", "tile": "The report visual, as report/page/visual."}[t]
+                                "button": "The button's label.", "tile": "The report visual it shows, as the report writes it: {report, page, visual}."}[t]
             panel["content"] = "%{content}"
         if t == "slicer":
             outs = {"filter-out": {"type": "filter"}}
@@ -359,16 +364,20 @@ def bi_visuals():
         elif t not in ("text", "image", "tile", "card", "gauge", "kpi", "live-chart"):
             first_dim = next((w for w, (ty, _, _) in wells.items() if ty in (D, "id")), None)
             if first_dim:
-                outs = {"selected": {"type": "dimension"}}
-                texts["selected"] = "Out. The value of the first field the person clicked (a bar, a row, a point); empty until they click."
+                outs = {"selected": {"type": "filter"}}
+                texts["selected"] = ("Out. The mark the person clicked (a bar, a row, a point) as a filter on its first field; empty until they "
+                                     "click. Traced into other chips' filter pins it is the page's cross-filter; a drill down the hierarchy "
+                                     "sends the level clicked.")
                 panel["on-select"] = {"emits": "selected", "value": f"@.{first_dim}"}
+        if wells:                                                  # the page's cross-filters, slicers and drill arrive here (12.4)
+            pins_in["filter"] = {"role": "control", "type": "filter"}
+            texts["filter"] = ("The filters other chips send: a slicer's choice or a clicked mark (their 'filter-out' or 'selected'). Several "
+                               "traces may feed it; they combine (all must hold). Empty: no cross-filter.")
         for o, (decl, text) in BI_OPTIONS.items():                 # the report's own settings of a visual, each an optional constant
             pins_in[o] = decl
             texts[o] = text
             panel[o] = f"%{{{o}}}"
         ex = board_example(f"The {title.lower()} over the trading-risk model", f"{name}@1", pins_in, outs, model=True)
-        if outs.get("selected", {}).get("type") == "dimension":
-            ex = board_example(f"The {title.lower()} over the trading-risk model", f"{name}@1", pins_in, {}, model=True)
         behaviour = {"filter-out": "Choosing values sends 'filter-out'.", "action": "Pressing the button sends 'action'.",
                      "selected": "Clicking a mark selects it and sends 'selected', which may cross-filter other chips."}
         b = " ".join(behaviour[o] for o in outs) or "Read-only; hover shows the values."

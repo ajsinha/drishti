@@ -76,24 +76,50 @@ public final class PackDryRun {
     }
 
     /** The pack a report belongs to: the pack owning the kind its model's first dataset reads; {@code (bi)} when none does. */
-    static String packOf(JsonNode report, Path biDir, Map<String, String> kindPack) {
+    public static String packOf(JsonNode report, Path biDir, Map<String, String> kindPack) {
+        return packOf(report, biDir, kindPack, 0);
+    }
+
+    /**
+     * As above; a report on a dataset (no model) by the dataset's kind, a board report (its pages of tiles) by the report its first tile
+     * shows (2.7.0, UI_BOARD.md 12.4).
+     */
+    private static String packOf(JsonNode report, Path biDir, Map<String, String> kindPack, int depth) {
         String model = report.path("model").asText("").replaceAll("@.*", "").trim();
-        JsonNode m = read(biDir.resolve("models").resolve(model + ".model.yaml"));
-        if (m == null) {
-            return "(bi)";
+        List<String> datasets = new ArrayList<>();
+        JsonNode m = model.isEmpty() ? null : read(biDir.resolve("models").resolve(model + ".model.yaml"));
+        if (m != null) {
+            m.path("datasets").forEach(d -> datasets.add(d.path("dataset").asText("")));
+        } else if (model.isEmpty() && !report.path("dataset").asText("").isBlank()) {
+            datasets.add(report.path("dataset").asText());
         }
-        var it = m.path("datasets").elements();
-        while (it.hasNext()) {
-            JsonNode ds = read(biDir.resolve("datasets").resolve(it.next().path("dataset").asText("") + ".dataset.yaml"));
+        for (String d : datasets) {
+            JsonNode ds = read(biDir.resolve("datasets").resolve(d + ".dataset.yaml"));
             String kind = ds == null ? null : ds.path("source").path("kind").asText(null);
             if (kind != null && kindPack.containsKey(kind)) {
                 return kindPack.get(kind);
+            }
+            for (JsonNode src : ds == null || m != null ? List.<JsonNode>of() : ds.findValues("source")) {     // a dataset's tables
+                if (kindPack.containsKey(src.path("kind").asText(""))) {
+                    return kindPack.get(src.path("kind").asText());
+                }
+            }
+        }
+        if (model.isEmpty() && datasets.isEmpty() && depth == 0) {
+            for (JsonNode page : report.path("pages")) {
+                for (JsonNode v : page.path("visuals")) {
+                    String from = v.path("from").path("report").asText("");
+                    JsonNode r = from.isEmpty() ? null : read(biDir.resolve("reports").resolve(from + ".report.yaml"));
+                    if (r != null) {
+                        return packOf(r, biDir, kindPack, 1);
+                    }
+                }
             }
         }
         return "(bi)";
     }
 
-    static Map<String, String> kindPacks(Path packsDir) throws IOException {
+    public static Map<String, String> kindPacks(Path packsDir) throws IOException {
         Map<String, String> m = new HashMap<>();
         try (Stream<Path> s = Files.list(packsDir)) {
             for (Path d : s.sorted().toList()) {

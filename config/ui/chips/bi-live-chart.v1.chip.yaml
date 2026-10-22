@@ -27,6 +27,8 @@ manual:
     pins.'
   pins:
     rows: 'The rows of the wells: values (measure, several, required). Required.'
+    filter: 'The filters other chips send: a slicer''s choice or a clicked mark (their ''filter-out'' or ''selected''). Several traces may feed
+      it; they combine (all must hold). Empty: no cross-filter.'
     format: 'The visual''s format block as the report writes it (colours, labels, run, spec). Empty: defaults.'
     alt: 'The text alternative read to screen readers. Empty: the title.'
     filters: 'Filters on this visual only, as the report writes them. Empty: none.'
@@ -64,6 +66,9 @@ pins:
           type: measure
           required: true
           many: true
+    filter:
+      role: control
+      type: filter
     format:
       role: control
       type: spec

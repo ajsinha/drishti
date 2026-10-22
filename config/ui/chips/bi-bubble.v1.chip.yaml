@@ -26,7 +26,10 @@ manual:
   purpose: A scatter whose points are as large as the size measure. The BI 'bubble' visual type as a chip; its wells are its pins.
   pins:
     rows: 'The rows of the wells: details (dimension, required), x (measure, required), y (measure, required), size (measure, required). Required.'
-    selected: Out. The value of the first field the person clicked (a bar, a row, a point); empty until they click.
+    selected: Out. The mark the person clicked (a bar, a row, a point) as a filter on its first field; empty until they click. Traced into other
+      chips' filter pins it is the page's cross-filter; a drill down the hierarchy sends the level clicked.
+    filter: 'The filters other chips send: a slicer''s choice or a clicked mark (their ''filter-out'' or ''selected''). Several traces may feed
+      it; they combine (all must hold). Empty: no cross-filter.'
     format: 'The visual''s format block as the report writes it (colours, labels, run, spec). Empty: defaults.'
     alt: 'The text alternative read to screen readers. Empty: the title.'
     filters: 'Filters on this visual only, as the report writes them. Empty: none.'
@@ -50,6 +53,16 @@ manual:
               measures: [MTM_USD, NOTIONAL]
               dimensions: [trades.TRADE_ID]
           map: {rows.details: trades.TRADE_ID, rows.x: NOTIONAL, rows.y: MTM_USD, rows.size: NOTIONAL}
+        other:
+          use: bi-bubble@1
+          supply:
+            model: trading-risk
+            query:
+              measures: [MTM_USD, NOTIONAL]
+              dimensions: [trades.TRADE_ID]
+          map: {rows.details: trades.TRADE_ID, rows.x: NOTIONAL, rows.y: MTM_USD, rows.size: NOTIONAL}
+      traces:
+      - {from: c.selected, to: other.filter}
   not-for: A grammar panel over entity data (use the panel-* chips).
   accessibility: The chart has a text alternative (its rows as a table) reached with the keyboard; a selected point is announced.
 pins:
@@ -71,6 +84,9 @@ pins:
         size:
           type: measure
           required: true
+    filter:
+      role: control
+      type: filter
     format:
       role: control
       type: spec
@@ -97,7 +113,7 @@ pins:
       type: spec
   out:
     selected:
-      type: dimension
+      type: filter
 body:
   panels:
   - id: visual

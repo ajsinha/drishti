@@ -16,7 +16,7 @@
 rachana: 1
 chip: panel-surface
 version: 1
-title: Surface
+title: Value grid
 category: market
 tags:
 - panel
@@ -30,7 +30,7 @@ manual:
   defaults: 'No control input: the panel kind''s own defaults (PANELS.md).'
   limits: Paints at most 10,000 rows; the server pages the rest and the footer says so.
   examples:
-  - title: A surface of the trading pack
+  - title: A value grid of the trading pack
     board: |
       chips:
         c:
@@ -59,7 +59,7 @@ body:
   panels:
   - id: surface
     kind: surface
-    title: '%{title|Surface}'
+    title: '%{title|Value grid}'
     rows: '@rows'
     y: '@.y'
     view: grid

@@ -27,6 +27,8 @@ manual:
   pins:
     rows: 'The rows of the wells: field (dimension, required). Required.'
     filter-out: Out. The filter the person chose (field in values), for other chips to share.
+    filter: 'The filters other chips send: a slicer''s choice or a clicked mark (their ''filter-out'' or ''selected''). Several traces may feed
+      it; they combine (all must hold). Empty: no cross-filter.'
     format: 'The visual''s format block as the report writes it (colours, labels, run, spec). Empty: defaults.'
     alt: 'The text alternative read to screen readers. Empty: the title.'
     filters: 'Filters on this visual only, as the report writes them. Empty: none.'
@@ -68,6 +70,9 @@ pins:
         field:
           type: dimension
           required: true
+    filter:
+      role: control
+      type: filter
     format:
       role: control
       type: spec

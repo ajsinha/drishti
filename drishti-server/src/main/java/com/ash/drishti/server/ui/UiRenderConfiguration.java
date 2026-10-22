@@ -52,9 +52,21 @@ public class UiRenderConfiguration {
     /** Phase P5: the per-pack switch of converted screens ({@code packs:} of ui.yaml) and the converted boards. */
     @Bean
     public PackScreens packScreens(Environment env, com.ash.drishti.server.bi.BiProperties bi, ChipStore chips,
-            com.ash.drishti.rachana.SutraRegistry registry, com.ash.drishti.rachana.SutraMatcher matcher, com.ash.drishti.engine.ViewPipeline pipeline) {
-        return new PackScreens(Path.of(env.getProperty("drishti.ui.dir", "./config/ui")), Path.of(com.ash.drishti.packs.PackPaths.packsDir(env)),
+            com.ash.drishti.rachana.SutraRegistry registry, com.ash.drishti.rachana.SutraMatcher matcher, com.ash.drishti.engine.ViewPipeline pipeline,
+            ObjectProvider<com.ash.drishti.server.bi.report.BiReportService> reports) {
+        PackScreens screens = new PackScreens(Path.of(env.getProperty("drishti.ui.dir", "./config/ui")), Path.of(com.ash.drishti.packs.PackPaths.packsDir(env)),
                 Path.of(bi.dir()), chips, registry, matcher, pipeline);
+        reports.ifAvailable(r -> r.screens(yaml -> {                       // BI report pages from their converted boards (12.4)
+            PackScreens.ServedReport s = screens.report(yaml);
+            return new com.ash.drishti.server.bi.report.BiReportService.Served(s.yaml(), s.boards());
+        }));
+        return screens;
+    }
+
+    /** The data proof of a pack's BI report pages served from their boards (12.4). */
+    @Bean
+    public ReportProof reportProof(PackScreens screens, ObjectProvider<com.ash.drishti.server.bi.report.BiReportService> reports) {
+        return new ReportProof(screens, reports.getIfAvailable());
     }
 
     /** Phase P5: the proof that a converted pack shows the same screens. */

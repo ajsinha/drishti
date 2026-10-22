@@ -144,6 +144,23 @@ class ConvertCliTest {
         assertThat(sutra.path("panels")).isEqualTo(UiDocuments.tree(text).path("panels"));
     }
 
+    /** A report page's board draws its cross-filters and slicers as traces into the filter pins, and paints back into the page (12.4). */
+    @Test
+    void aReportPageDrawsItsCrossFiltersAndPaintsBack() throws Exception {
+        var chips = UiCli.folder(ROOT.resolve("config/ui/chips"), ChipState.CERTIFIED);
+        JsonNode report = UiDocuments.tree(Files.readString(ROOT.resolve("config/bi/reports/trades-overview.report.yaml")));
+        List<Conversion> pages = new ReportConverter(chips).convert("trading", report);
+        assertThat(pages).hasSize(2).allMatch(c -> c.status() == Conversion.Status.CLEAN);
+        JsonNode traces = pages.get(0).document().path("traces");
+        assertThat(traces.toString()).contains("\"from\":\"currency.filter-out\",\"to\":\"by-desk.filter\"",
+                "\"from\":\"by-desk.selected\",\"to\":\"rows.filter\"");
+        assertThat(pages.get(0).traces()).isEqualTo(traces.size());
+        JsonNode painted = BoardReport.paint(pages.get(0).document(), report.path("pages").path(0), r -> chips.find(r).map(e -> e.doc()));
+        assertThat(BoardReport.difference(report.path("pages").path(0), painted)).isEmpty();
+        JsonNode wall = UiDocuments.tree(Files.readString(ROOT.resolve("config/bi/reports/desk-wall.report.yaml")));
+        assertThat(new ReportConverter(chips).convert("market-risk", wall)).allMatch(c -> c.status() == Conversion.Status.CLEAN);
+    }
+
     @Test
     void usage() {
         assertThat(run("ui", "convert", "--pack", "trading").code()).isEqualTo(UiCli.USAGE);

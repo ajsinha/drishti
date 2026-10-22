@@ -16,7 +16,7 @@
 rachana: 1
 chip: panel-provenance
 version: 1
-title: Provenance
+title: How this view was built
 category: records
 tags:
 - panel
@@ -30,7 +30,7 @@ manual:
   defaults: 'No control input: the panel kind''s own defaults (PANELS.md).'
   limits: Paints at most 10,000 rows; the server pages the rest and the footer says so.
   examples:
-  - title: A provenance of the trading pack
+  - title: A how this view was built of the trading pack
     board: |
       chips:
         c:
@@ -58,5 +58,5 @@ body:
   panels:
   - id: provenance
     kind: provenance
-    title: '%{title|Provenance}'
+    title: '%{title|How this view was built}'
     of: '@doc'
