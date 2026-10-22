@@ -925,40 +925,6 @@ def cmd_docs_shots(a, extra) -> int:
     return subprocess.run(cmd, cwd=ROOT).returncode
 
 
-# ------------------------------------------------------------------------------------------------ ui (UI Board)
-
-def cmd_ui_check(a, extra) -> int:
-    """`java -jar <exec jar> ui check <file>...`: the board check (or a chip's publish check) without a server (UI_BOARD.md 5)."""
-    args = ["ui", "check", *[absolute(p) for p in a.files]]
-    for d in a.chips or []:
-        args += ["--chips", absolute(d)]
-    if a.suppliers:
-        args += ["--suppliers", absolute(a.suppliers)]
-    args += [flag for flag, on in (("--shared", a.shared), ("--certified-only", a.certified_only), ("--json", a.json)) if on]
-    cmd = java_cmd(find_java(a.java), ["-jar", find_jar(a.jar), *args], cwd=ROOT)
-    try:
-        return subprocess.run(cmd, cwd=ROOT).returncode
-    except FileNotFoundError as e:
-        raise CliError(f"cannot run {cmd[0]}: {e.strerror}; pass --java or set JAVA_HOME") from None
-
-
-def cmd_ui_convert(a, extra) -> int:
-    """`java -jar <exec jar> ui convert --pack P --dry-run`: the pack's pages converted to boards in memory, with a report (UI_BOARD.md 11.2)."""
-    args = ["ui", "convert", "--pack", a.pack]
-    if a.dry_run:
-        args.append("--dry-run")
-    for flag, val in (("--out", a.out), ("--packs", a.packs), ("--bi", a.bi), ("--chips", a.chips)):
-        if val:
-            args += [flag, absolute(val)]
-    if a.json:
-        args.append("--json")
-    cmd = java_cmd(find_java(a.java), ["-jar", find_jar(a.jar), *args], cwd=ROOT)
-    try:
-        return subprocess.run(cmd, cwd=ROOT).returncode
-    except FileNotFoundError as e:
-        raise CliError(f"cannot run {cmd[0]}: {e.strerror}; pass --java or set JAVA_HOME") from None
-
-
 # ------------------------------------------------------------------------------------------------ smoke, doctor, view, completion
 
 def cmd_server_smoke(a, extra) -> int:
@@ -1255,28 +1221,6 @@ def build_parser() -> argparse.ArgumentParser:
             p.add_argument("proposal", help="the proposal id (from `design proposals` or `design propose`)")
             p.add_argument("--comment", help="the reason (a rejection needs one)")
 
-    # ui ---------------------------------------------------------------------------------------------------
-    ug = group("ui", "UI Boards: check a board or chip document (docs/architecture/UI_BOARD.md)")
-    uc = add(ug, "check", cmd_ui_check, "ui check: the board check (BC-01..BC-11, warnings BC-W1..W5) or, for a chip, the publish checks (CP-01..CP-05); "
-             "each problem by rule, path and fix", [jvm, js],
-             "examples:\n  drishti.py ui check my-board.yaml\n  drishti.py ui check board.yaml --chips my-chips/ --suppliers suppliers.yaml --shared\n"
-             "  drishti.py ui check my-chip.v1.chip.yaml --chips config/ui/chips\nexit: 0 no errors (warnings allowed), 1 errors, 2 usage")
-    uc.add_argument("files", nargs="+", metavar="FILE", help="board or chip documents (YAML or JSON)")
-    uc.add_argument("--chips", action="append", metavar="DIR", help="a folder of *.chip.yaml / *.chip.json, as published chips (repeatable); config/ui/chips is read when present")
-    uc.add_argument("--suppliers", metavar="FILE", help="the suppliers as you see them (fields, types, masks); without it BC-05's attribute check, BC-08 and BC-W5 are skipped")
-    uc.add_argument("--shared", action="store_true", help="check as a board shared in a workspace (BC-11: published chips only)")
-    uc.add_argument("--certified-only", action="store_true", help="with --shared: the workspace demands certified chips")
-
-    uv = add(ug, "convert", cmd_ui_convert, "ui convert: the dry run of a pack's conversion to boards (entity pages and BI report pages): per screen clean, "
-             "with board-local chips (Chip Store candidates) or failing, and why; nothing is saved", [jvm, js],
-             "examples:\n  drishti.py ui convert --pack trading --dry-run\n  drishti.py ui convert --pack trading --dry-run --json --out build/boards\n"
-             "exit: 0 no screen fails, 1 a screen fails, 2 usage")
-    uv.add_argument("--pack", required=True, help="the pack to convert")
-    uv.add_argument("--dry-run", action="store_true", help="required in 2.7.0: convert in memory and report (switch a pack in config/ui/ui.yaml)")
-    uv.add_argument("--out", metavar="DIR", help="also write each board as DIR/<board>.board.yaml")
-    uv.add_argument("--packs", metavar="DIR", help="the packs folder (default config/packs)")
-    uv.add_argument("--bi", metavar="DIR", help="the BI folder for reports, models and datasets (default config/bi)")
-    uv.add_argument("--chips", metavar="DIR", help="the seed chips (default config/ui/chips)")
     # docs -------------------------------------------------------------------------------------------------
     dc = group("docs", "Documentation tooling")
     ss = add(dc, "shots", cmd_docs_shots, "docs shots: regenerate the guides' screenshots (Playwright, scratch ports; tools/docs/screenshots.py)")
