@@ -16,6 +16,21 @@ rachana: 1
 sutra: news-topic
 version: 1
 description: "A topic and the news about it: headlines (newest first) with their publishers and links, a count by source, and how the headlines were chosen. The headlines are computed on demand by the news connector."
+doc:
+  summary: "A news topic: its headlines newest first, a count by source, how they were chosen and everything the feed returned."
+  description: >-
+    One page per topic (a central bank, an economy, a theme): the headlines about it newest first with their publishers and
+    links, the count of headlines by source, how the headlines were chosen (each relevance step, what it kept and dropped),
+    everything the feed returned for the name with no relevance filter, a note on where the headlines come from, how the view
+    was built and its links (F7 opens the news page). The headlines are computed on demand by the news connector, or served
+    from the demo lake's snapshot while it is off. The strip gives the topic, its category, other names and edition.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/news-topic/TOPIC-FED"
+    - "TOPIC TOPIC-ECB"
+  since: "2.7.0"
 match: { kind: news-topic, priority: 10 }
 title: { pill: "News · Topic", id: $.TOPIC_ID }
 strip:
@@ -69,11 +84,9 @@ panels:
       - { label: Source, bind: "@.SOURCE" }
       - { label: Headline, bind: "@.TITLE" }
       - { label: Link, bind: "@.LINK" }
-  - id: note
-    kind: markdown
-    title: "About these headlines"
-    area: right
-    text: "Sample pack. Headlines are fetched when this page opens, by the news connector, from Google News; turning it on (Admin, Connectors: news) sends the name of this topic to Google. While the connector is off (its shipped state) or the server runs in offline mode (DRISHTI_OFFLINE=true), the demo lake serves a captured snapshot of the same headlines (the news page, F7, says when it was captured), and without a lake the tables above stay empty."
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - use: explainer-note@1
+    with: { title: "About these headlines", area: right,
+            text: "Sample pack. Headlines are fetched when this page opens, by the news connector, from Google News; turning it on (Admin, Connectors: news) sends the name of this topic to Google. While the connector is off (its shipped state) or the server runs in offline mode (DRISHTI_OFFLINE=true), the demo lake serves a captured snapshot of the same headlines (the news page, F7, says when it was captured), and without a lake the tables above stay empty." }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.NEWS_ID, 'news')", F9: raw }

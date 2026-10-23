@@ -16,6 +16,20 @@ rachana: 1
 sutra: listed-company
 version: 1
 description: "A listed company: its live quote and price history (yfinance connector) and its news headlines (news connector), both computed on demand."
+doc:
+  summary: "A listed company: its live quote, closing price history and news headlines, each computed on demand."
+  description: >-
+    One page per listed company: its quote (price, change, ranges, volume, market cap) and closing price history from the
+    yfinance connector, its headlines newest first and a count by source from the news connector, a note on where the data
+    comes from, how the view was built and its links (F7 the quote, F8 the news). With the connectors off or the server
+    offline the demo lake serves a captured snapshot. The strip gives the ticker, exchange, sector, country and other names.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/listed-company/CO-AAPL"
+    - "CO CO-MSFT"
+  since: "2.7.0"
 match: { kind: listed-company, priority: 10 }
 title: { pill: "Market watch · Company", id: $.COMPANY_ID, with: $.NAME }
 strip:
@@ -73,11 +87,9 @@ panels:
     label: SOURCE
     value: COUNT
     fmt: amount0
-  - id: note
-    kind: markdown
-    title: "About this page"
-    area: right
-    text: "Sample pack for internal demonstrations. The quote and history come from Yahoo Finance's unofficial public endpoint and the headlines from Google News, each by its own connector, both off until a site enables them (Admin, Connectors: yfinance and news). Turning them on sends this ticker to Yahoo and this company's name to Google. With the connectors off (their shipped state) or the server in offline mode (DRISHTI_OFFLINE=true), the demo lake serves a captured snapshot of the same quote, history and headlines: the quote's As of then ends in (snapshot captured <date>), and without a lake the panels above stay empty."
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - use: explainer-note@1
+    with: { title: "About this page", area: right,
+            text: "Sample pack for internal demonstrations. The quote and history come from Yahoo Finance's unofficial public endpoint and the headlines from Google News, each by its own connector, both off until a site enables them (Admin, Connectors: yfinance and news). Turning them on sends this ticker to Yahoo and this company's name to Google. With the connectors off (their shipped state) or the server in offline mode (DRISHTI_OFFLINE=true), the demo lake serves a captured snapshot of the same quote, history and headlines: the quote's As of then ends in (snapshot captured <date>), and without a lake the panels above stay empty." }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.QUOTE_ID, 'quote')", F8: "link($.NEWS_ID, 'news')", F9: raw }
