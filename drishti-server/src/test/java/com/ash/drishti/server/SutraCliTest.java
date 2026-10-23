@@ -272,15 +272,19 @@ class SutraCliTest {
     }
 
     /**
-     * Sutra Next phase 1: `sutra lint --docs` on a pack finds the core pack's fragment library beside it (ir-curve uses it), counts the
-     * Sutras without a doc: as one warning (DRS-2055), and still passes; without --docs nothing about docstrings is printed.
+     * Sutra Next phase 1: `sutra lint --docs` on a pack finds the Drishti UI kit, counts the Sutras without a doc: as one warning
+     * (DRS-2055), and still passes (news-and-markets: quote and news have none); a pack whose generator writes every doc: (market-data)
+     * gets no such warning; without --docs nothing about docstrings is printed.
      */
     @Test
     void lintWithDocsWarnsAboutSutrasWithoutADocstringAndStillPasses() {
-        Run r = run("lint", ROOT.resolve("config/packs/market-data").toString(), "--docs");
+        Run r = run("lint", ROOT.resolve("config/packs/news-and-markets").toString(), "--docs");
         assertThat(r.code()).as(r.err()).isZero();
-        assertThat(r.err()).contains("warning DRS-2055").contains("Sutras have no doc: block").doesNotContain("ir-curve.v1.sutra.yaml");
-        Run quiet = run("lint", ROOT.resolve("config/packs/market-data").toString());
+        assertThat(r.err()).contains("warning DRS-2055 2 of 4 Sutras have no doc: block").doesNotContain("news-topic.v1.sutra.yaml");
+        Run documented = run("lint", ROOT.resolve("config/packs/market-data").toString(), "--docs");
+        assertThat(documented.code()).as(documented.err()).isZero();
+        assertThat(documented.err()).doesNotContain("DRS-2055");
+        Run quiet = run("lint", ROOT.resolve("config/packs/news-and-markets").toString());
         assertThat(quiet.code()).isZero();
         assertThat(quiet.err()).doesNotContain("DRS-2055");
     }
