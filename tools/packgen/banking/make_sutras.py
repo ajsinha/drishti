@@ -477,18 +477,31 @@ ENDUR_PRODUCTS = [("ComSwap", "Commodity swap", "An Endur commodity swap: fixed 
                   ("Commodity", "Physical commodity", "An Endur physical commodity deal: a delivery leg in the commodity's unit and a payment leg.")]
 
 
+def sample_trades() -> dict[tuple[str, str], str]:
+    """(source system, product type) -> the first committed sample trade of it (the trading pack's samples/trade.jsonl): what a deal
+    Sutra's doc examples open."""
+    out: dict[tuple[str, str], str] = {}
+    f = PACKS / "trading" / "samples" / "trade.jsonl"
+    for line in f.read_text(encoding="utf-8").splitlines() if f.exists() else []:
+        if line.strip():
+            d = json.loads(line)
+            out.setdefault((d.get("SOURCE_SYSTEM"), d.get("PRODUCT_TYPE")), str(d.get("TRADE_ID")))
+    return out
+
+
 def files() -> dict[Path, str]:
     out: dict[Path, str] = {}
     trading = PACKS / "trading" / "sutras"
-    for name, text in TS.blocks().items():   # the blocks every deal screen is made of, written once (sutras/common)
-        out[trading / "common" / f"{name}.v1.block.yaml"] = sutra_file(text)
+    for name, text in TS.blocks().items():   # the trading pack's fragments every deal screen is made of, written once (sutras/common)
+        out[trading / "common" / f"{name}.v1.fragment.yaml"] = sutra_file(text)
+    trades = sample_trades()
     for p in T.PRODUCTS:          # a deal screen per product type of the taxonomy, in the folder of the system that books it
         system = BK.system_of(p.asset)
         out[trading / system.lower() / f"{product_name(p)}.v1.sutra.yaml"] = sutra_file(
-            TS.deal_yaml(p.code, p.name, p.asset, p.desc, system, product_name(p)))
+            TS.deal_yaml(p.code, p.name, p.asset, p.desc, system, product_name(p), sample=trades.get((system, p.code))))
     for code, name, desc in ENDUR_PRODUCTS:     # and per product type of the Endur commodity book, its sub types inside by when:
         out[trading / "endur" / f"endur-{slug(code)}.v1.sutra.yaml"] = sutra_file(
-            TS.deal_yaml(code, name, "Commodity", desc, "ENDUR", f"endur-{slug(code)}", TS.ENDUR_EXTRA.get(code)))
+            TS.deal_yaml(code, name, "Commodity", desc, "ENDUR", f"endur-{slug(code)}", TS.ENDUR_EXTRA.get(code), trades.get(("ENDUR", code))))
     for k in T.KINDS:
         if k.kind in HAND_WRITTEN:
             continue
@@ -497,7 +510,7 @@ def files() -> dict[Path, str]:
             k, pack in FRAGMENT_PACKS, KS.first_ids(PACKS / pack / "samples" / "catalog.json").get(k.kind))
     for k in TS.DERIVED:          # a counterparty's, portfolio's, legal entity's and index's trades from every source system
         out[PACKS / "trading" / "sutras" / "pages" / f"{k}.v1.sutra.yaml"] = sutra_file(TS.derived_yaml(k))
-    names = [f.name for f in out if not f.name.endswith(".block.yaml")]
+    names = [f.name for f in out if f.name.endswith(".sutra.yaml")]
     dupes = {n for n in names if names.count(n) > 1}
     if dupes:
         raise SystemExit(f"duplicate Sutra names: {dupes}")
@@ -509,7 +522,7 @@ def main() -> None:
     layout.check([k.kind for k in T.KINDS] + ["trade"])
     want = files()
     outs = [PACKS / n / "sutras" for n in layout.PACKS]
-    existing = [f for o in outs if o.exists() for pat in ("*.sutra.yaml", "*.block.yaml") for f in o.rglob(pat)
+    existing = [f for o in outs if o.exists() for pat in ("*.sutra.yaml", "*.block.yaml", "*.fragment.yaml") for f in o.rglob(pat)
                 if GENERATED in f.read_text(encoding="utf-8")]
     # the Markdown Sutras this generator wrote before 1.11 (Sutras are YAML now): removed when it writes
     legacy = [f for o in outs if o.exists() for f in o.rglob("*.sutra.md") if "make_sutras.py" in f.read_text(encoding="utf-8")]

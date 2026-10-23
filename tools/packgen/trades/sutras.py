@@ -30,6 +30,7 @@ Blank values (the empty strings extracts are full of) show as a dash; numbers th
 from __future__ import annotations
 
 import re
+import textwrap
 
 RATE_GROUPS = {"Rates", "Inflation", "Credit", "Money market", "Fixed income", "Securities financing"}
 DERIVED = {  # derived kind: (mnemonic, label, group-by expression, id field, what it is)
@@ -261,33 +262,91 @@ def _cut(lines: list[str]) -> dict[str, list[str]]:
     return out
 
 
+# Sutra Next: the shared pieces of a deal screen are the trading pack's own fragments (sutras/common/<name>.v1.fragment.yaml, used
+# as trading/<name>@1), each with a complete doc:; the footer of before (deal-footer) is the Drishti UI kit's data-provenance and
+# linked-entities. Per fragment: its doc description (what it shows, when to use it) and the product of its example use.
+FRAGMENT_DOCS = {
+    "deal-ticket": ("The deal ticket (DES) of a production-shaped trade, as a booking system's ticket groups it: the deal (trade id, "
+                    "version, status, source system, product type and sub type), the parties (counterparty, legal entity, trader, "
+                    "portfolio), the dates and the settlement, each a label and its value. Use it first on any deal screen of the "
+                    "trading pack's trade (the common UPPER_SNAKE trade schema).", "Interest rate swap"),
+    "legs": ("The legs of a trade side by side, one tab a leg: its terms, the notional profile over time (a step line), its "
+             "fixings and its cash flows, a flow opening to its resets. Use it on every deal screen after the ticket.", ""),
+    "flow-schedule": ("Every cash flow of every leg in one schedule. Use it where a trader reads the whole schedule at once rather "
+                      "than leg by leg.", ""),
+    "events": ("The trade's events by leg as a timeline (the event, its leg or the deal, its payment and amount), then as a table "
+               "filtered by the Sutra's Legs and Between controls (ctl.legs, ctl.when): a Sutra using it declares those two "
+               "controls with panel: event-list.", ""),
+    "payments": ("The netted payment ladder (cash events by date, paid below the line, received above) and the same payments by "
+                 "month, both on the right. Use it on any deal screen whose trade carries EVENTS with amounts and dates.", ""),
+}
+FOOTER = ["  - { use: data-provenance@1 }", "  - { use: linked-entities@1 }"]   # the deal-footer of before: the kit's two panels
+
+
+def _wrap(text: str, width: int = 124) -> list[str]:
+    return textwrap.wrap(text, width)
+
+
 def blocks() -> dict[str, str]:
-    """{block name: its YAML (after rachana: 1)}: the shared panels every deal Sutra uses, rate format a parameter."""
+    """{fragment name: its YAML (after rachana: 1)}: the trading pack's shared panels every deal Sutra uses, rate format (and the
+    ticket's product in words) a parameter, each with its complete doc:."""
     cut = _cut(_panels(RF))
     out = {}
     for name, _first, desc in BLOCKS:
-        lines = [f"block: {name}", "version: 1", f"description: {q(desc)}"]
+        if name not in FRAGMENT_DOCS:
+            continue
+        about, product = FRAGMENT_DOCS[name]
+        lines = [f"fragment: {name}", "version: 1", f"description: {q(desc)}"]
+        params, docs, example = {}, [], {}
         if any(RF in ln for ln in cut[name]):
-            extra = ", product: ''" if any("%{product}" in ln for ln in cut[name]) else ""
-            lines.append("params: { rate-fmt: price4" + extra + " }   # pct4 for rates (a fraction a year), price4 for prices per unit"
-                         + ("; product: the product type in words (the Sutra's)" if extra else ""))
+            params["rate-fmt"] = "price4"
+            docs.append("    rate-fmt: { type: format, default: price4, meaning: \"The named format of rates and prices: pct4 for rates "
+                        "(a fraction a year), price4 for prices per unit\" }")
+            example["rate-fmt"] = "pct4"
+        if any("%{product}" in ln for ln in cut[name]):
+            params["product"] = "''"
+            docs.append("    product: { type: text, default: '', meaning: \"The product type in words (the Sutra's), shown on the ticket\" }")
+            example["product"] = q(product)
+        if params:
+            lines.append("params: { " + ", ".join(f"{k}: {v}" for k, v in params.items()) + " }")
+        with_ = (", with: { " + ", ".join(f"{k}: {v}" for k, v in example.items()) + " }") if example else ""
+        lines += ["doc:", f"  summary: {q(desc)}", "  description: >-", *["    " + ln for ln in _wrap(about)],
+                  "  params:" if docs else "  params: {}", *docs, "  emits: []", "  expects: []", "  examples:",
+                  f"    - {{ use: {name}@1{with_} }}", "  since: \"2.7.0\""]
         lines += ["panels:"] + cut[name]
         out[name] = "\n".join(lines) + "\n"
     return out
 
 
-def deal_yaml(code: str, name: str, group: str, desc: str, system: str, sutra: str, extra: list[str] | None = None) -> str:
+def deal_doc(name: str, system: str, desc: str, sample: str | None) -> list[str]:
+    """A deal Sutra's generated doc: what it shows, its two controls, the URL and the command that open a committed sample trade."""
+    head = desc if len(desc) <= 120 else desc[:119].rsplit(" ", 1)[0].rstrip(",;:") + "…"
+    about = (f"{desc} One deal screen per {system} {name.replace(chr(34), '”')} trade (matched on SOURCE_SYSTEM and PRODUCT_TYPE): "
+             "the deal ticket (DES), the legs side by side, every cash flow in one schedule, the events by leg and as a table filtered "
+             "by the Legs and Between controls, the netted payment ladder and payments by month, how the view was built and the "
+             "linked entities (F7 opens the counterparty's trades). The strip gives the source, side, notional, quantity, trade "
+             "date, maturity, status and portfolio.")
+    examples = [f"/v/trade/{sample}", f"TRD {sample}"] if sample else ["TRD"]
+    return (["doc:", f"  summary: {q(head)}", "  description: >-", *["    " + ln for ln in _wrap(about)], "  params:",
+             "    legs: { type: text, default: all, meaning: \"The Legs control: the legs whose events the table lists\" }",
+             "    when: { type: text, default: '', meaning: \"The Between control: the dates whose events the table lists\" }",
+             "  emits: []", "  expects: []", "  examples:", *[f"    - {q(e)}" for e in examples], "  since: \"2.7.0\""])
+
+
+def deal_yaml(code: str, name: str, group: str, desc: str, system: str, sutra: str, extra: list[str] | None = None,
+              sample: str | None = None) -> str:
     """One product type's Sutra: the match, title and strip of a deal, the controls, and the shared blocks (with a product's own panels,
     shown by `when:` for one sub type, after the ticket)."""
     rate_fmt = "pct4" if group in RATE_GROUPS else "price4"
     pill = f"{group} · {name}"
     words = name.replace("'", "’").replace('"', "”")
     with_product = lambda b: f", product: {q(words)}" if any("%{product}" in ln for ln in _cut(_panels(RF))[b]) else ""  # noqa: E731
-    use = lambda b: f"  - {{ use: {b}@1, with: {{ rate-fmt: {rate_fmt}{with_product(b)} }} }}" if any(RF in ln for ln in _cut(_panels(RF))[b]) else f"  - {{ use: {b}@1 }}"  # noqa: E731
+    use = lambda b: f"  - {{ use: trading/{b}@1, with: {{ rate-fmt: {rate_fmt}{with_product(b)} }} }}" if any(RF in ln for ln in _cut(_panels(RF))[b]) else f"  - {{ use: trading/{b}@1 }}"  # noqa: E731
     lines = [
         f"sutra: {sutra}",
         "version: 1",
         f"description: {q(desc)}",
+        *deal_doc(name, system, desc, sample),
         f"match: {{ kind: trade, where: \"$.SOURCE_SYSTEM == '{system}' && $.PRODUCT_TYPE == '{code}'\", priority: 10 }}",
         f"title: {{ pill: {q(pill)}, id: $.TRADE_ID, with: \"link($.COUNTERPARTY, 'counterparty')\" }}",
         "strip:",
@@ -305,7 +364,8 @@ def deal_yaml(code: str, name: str, group: str, desc: str, system: str, sutra: s
         "panels:",
         use("deal-ticket"),
         *(extra or []),
-        *[use(b) for b, _, _ in BLOCKS[1:]],
+        *[use(b) for b, _, _ in BLOCKS[1:] if b in FRAGMENT_DOCS],
+        *FOOTER,
         "keys: { F7: \"link($.COUNTERPARTY, 'counterparty-trades')\", F8: impact, F9: raw }",
     ]
     return "\n".join(lines) + "\n"

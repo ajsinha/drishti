@@ -17,6 +17,23 @@ rachana: 1
 sutra: endur-comfut
 version: 1
 description: "An Endur exchange-traded commodity future: one leg, one settlement against the index."
+doc:
+  summary: "An Endur exchange-traded commodity future: one leg, one settlement against the index."
+  description: >-
+    An Endur exchange-traded commodity future: one leg, one settlement against the index. One deal screen per ENDUR Commodity
+    future trade (matched on SOURCE_SYSTEM and PRODUCT_TYPE): the deal ticket (DES), the legs side by side, every cash flow in
+    one schedule, the events by leg and as a table filtered by the Legs and Between controls, the netted payment ladder and
+    payments by month, how the view was built and the linked entities (F7 opens the counterparty's trades). The strip gives the
+    source, side, notional, quantity, trade date, maturity, status and portfolio.
+  params:
+    legs: { type: text, default: all, meaning: "The Legs control: the legs whose events the table lists" }
+    when: { type: text, default: '', meaning: "The Between control: the dates whose events the table lists" }
+  emits: []
+  expects: []
+  examples:
+    - "/v/trade/1000004"
+    - "TRD 1000004"
+  since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'ENDUR' && $.PRODUCT_TYPE == 'ComFut'", priority: 10 }
 title: { pill: "Commodity · Commodity future", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }
 strip:
@@ -32,7 +49,7 @@ controls:                       # the events by leg and by date: a trader's 'wha
   - { id: legs, kind: multi-select, label: Legs, options: "$.LEGS[*].LEG_ID", default: all, placement: header, panel: event-list, remember: user }
   - { id: when, kind: date-range, label: Between, placement: header, panel: event-list }
 panels:
-  - { use: deal-ticket@1, with: { rate-fmt: price4, product: "Commodity future" } }
+  - { use: trading/deal-ticket@1, with: { rate-fmt: price4, product: "Commodity future" } }
   - id: contract
     kind: kv
     title: "Exchange contract"
@@ -44,9 +61,10 @@ panels:
       - { label: "Index", bind: "nonblank(first($.LEGS).INDEX.NAME, '–')" }
       - { label: "Settles", bind: "first($.LEGS).CASH_FLOWS[0].PAYMENT_DATE", fmt: date }
       - { label: "Settlement", bind: "nonblank(first($.LEGS).SETTLEMENT_TYPE, '–')" }
-  - { use: legs@1, with: { rate-fmt: price4 } }
-  - { use: flow-schedule@1, with: { rate-fmt: price4 } }
-  - { use: events@1 }
-  - { use: payments@1 }
-  - { use: deal-footer@1 }
+  - { use: trading/legs@1, with: { rate-fmt: price4 } }
+  - { use: trading/flow-schedule@1, with: { rate-fmt: price4 } }
+  - { use: trading/events@1 }
+  - { use: trading/payments@1 }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.COUNTERPARTY, 'counterparty-trades')", F8: impact, F9: raw }

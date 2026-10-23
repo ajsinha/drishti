@@ -17,6 +17,23 @@ rachana: 1
 sutra: call-account
 version: 1
 description: "Overnight or call balance at an RFR-linked rate."
+doc:
+  summary: "Overnight or call balance at an RFR-linked rate."
+  description: >-
+    Overnight or call balance at an RFR-linked rate. One deal screen per CALYPSO Call account trade (matched on SOURCE_SYSTEM
+    and PRODUCT_TYPE): the deal ticket (DES), the legs side by side, every cash flow in one schedule, the events by leg and as a
+    table filtered by the Legs and Between controls, the netted payment ladder and payments by month, how the view was built and
+    the linked entities (F7 opens the counterparty's trades). The strip gives the source, side, notional, quantity, trade date,
+    maturity, status and portfolio.
+  params:
+    legs: { type: text, default: all, meaning: "The Legs control: the legs whose events the table lists" }
+    when: { type: text, default: '', meaning: "The Between control: the dates whose events the table lists" }
+  emits: []
+  expects: []
+  examples:
+    - "/v/trade/CLY-3000259"
+    - "TRD CLY-3000259"
+  since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'CALYPSO' && $.PRODUCT_TYPE == 'CALL_ACCOUNT'", priority: 10 }
 title: { pill: "Money market · Call account", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }
 strip:
@@ -32,10 +49,11 @@ controls:                       # the events by leg and by date: a trader's 'wha
   - { id: legs, kind: multi-select, label: Legs, options: "$.LEGS[*].LEG_ID", default: all, placement: header, panel: event-list, remember: user }
   - { id: when, kind: date-range, label: Between, placement: header, panel: event-list }
 panels:
-  - { use: deal-ticket@1, with: { rate-fmt: pct4, product: "Call account" } }
-  - { use: legs@1, with: { rate-fmt: pct4 } }
-  - { use: flow-schedule@1, with: { rate-fmt: pct4 } }
-  - { use: events@1 }
-  - { use: payments@1 }
-  - { use: deal-footer@1 }
+  - { use: trading/deal-ticket@1, with: { rate-fmt: pct4, product: "Call account" } }
+  - { use: trading/legs@1, with: { rate-fmt: pct4 } }
+  - { use: trading/flow-schedule@1, with: { rate-fmt: pct4 } }
+  - { use: trading/events@1 }
+  - { use: trading/payments@1 }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.COUNTERPARTY, 'counterparty-trades')", F8: impact, F9: raw }

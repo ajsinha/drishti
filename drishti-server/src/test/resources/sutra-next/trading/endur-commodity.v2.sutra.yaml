@@ -1,0 +1,67 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The endur-commodity Sutra as make_sutras.py generated it before Sutra Next (its blocks as old-<block>), as version 2 so it
+# wins while the trading equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: endur-commodity
+version: 2
+description: "An Endur physical commodity deal: a delivery leg in the commodity's unit and a payment leg."
+match: { kind: trade, where: "$.SOURCE_SYSTEM == 'ENDUR' && $.PRODUCT_TYPE == 'Commodity'", priority: 10 }
+title: { pill: "Commodity · Physical commodity", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }
+strip:
+  - { label: Source, bind: $.SOURCE_SYSTEM }
+  - { label: Side, bind: "$.BUY_SELL_CODE == 'B' ? 'Buy' : ($.BUY_SELL_CODE == 'S' ? 'Sell' : nonblank($.BUY_SELL_CODE, '–'))" }
+  - { label: Notional, bind: "$.CURRENCY + ' ' + fmt(first($.LEGS).NOTIONAL, 'amount0')", emphasis: true }
+  - { label: Quantity, bind: "fmt($.QUANTITY, 'amount0') + (nonblank(first($.LEGS).PRICE_UNIT) ? ' ' + first($.LEGS).PRICE_UNIT : '')" }
+  - { label: Trade date, bind: $.TRADE_DATE, fmt: date }
+  - { label: Maturity, bind: $.MATURITY_DATE, fmt: date }
+  - { label: Status, bind: "nonblank($.TRADE_STATUS, '–') + (nonblank($.TRADE_VERSION) ? ' v' + $.TRADE_VERSION : '')", tone: status }
+  - { label: Portfolio, bind: "link($.PORTFOLIO, 'book')" }
+controls:                       # the events by leg and by date: a trader's 'what is paid when, on which leg'
+  - { id: legs, kind: multi-select, label: Legs, options: "$.LEGS[*].LEG_ID", default: all, placement: header, panel: event-list, remember: user }
+  - { id: when, kind: date-range, label: Between, placement: header, panel: event-list }
+panels:
+  - { use: old-deal-ticket@1, with: { rate-fmt: price4, product: "Physical commodity" } }
+  - id: delivery
+    kind: kv
+    title: "Physical delivery at the hub"
+    code: DLV
+    when: "$.PRODUCT_SUB_TYPE == 'NGX-COMM-PHYS'"
+    columns:
+      - { label: "Hub", bind: "nonblank($.LEGS[?@.LEG_TYPE == 'PHYSICAL'][0].PHYSICAL_LOCATION_NAME, '–')" }
+      - { label: "Index location", bind: "nonblank($.LEGS[?@.LEG_TYPE == 'PHYSICAL'][0].INDEX_LOCATION_NAME, '–')" }
+      - { label: "Daily volume", bind: "$.LEGS[?@.LEG_TYPE == 'PHYSICAL'][0].DAILY_VOLUME", fmt: amount0 }
+      - { label: "Unit", bind: "nonblank($.LEGS[?@.LEG_TYPE == 'PHYSICAL'][0].PRICE_UNIT, '–')" }
+      - { label: "Delivery from", bind: "$.LEGS[?@.LEG_TYPE == 'PHYSICAL'][0].CASH_FLOWS[0].START_DATE", fmt: date }
+      - { label: "Delivery to", bind: "last($.LEGS[?@.LEG_TYPE == 'PHYSICAL'][0].CASH_FLOWS).END_DATE", fmt: date }
+      - { label: "Settlement", bind: "nonblank($.LEGS[?@.LEG_TYPE == 'PHYSICAL'][0].SETTLEMENT_TYPE, '–')" }
+  - id: inventory
+    kind: kv
+    title: "Warehouse warrants (inventory)"
+    code: INV
+    when: "$.PRODUCT_SUB_TYPE == 'COMM-WARRANTS-INV'"
+    columns:
+      - { label: "Vault", bind: "nonblank($.VAULT_LOCATION_ALLOCATION, '–')" }
+      - { label: "Registered", bind: "nonblank($.REGISTRY_DELIVERY_DATE, '–')" }
+      - { label: "Quantity", bind: "fmt($.QUANTITY, 'amount0') + ' ' + nonblank(first($.LEGS).PRICE_UNIT, '')" }
+      - { label: "Price", bind: "$.PRICE", fmt: price4 }
+      - { label: "Lease perpetuity", bind: "nonblank($.LEASE_PERPETUITY_FLAG, '–')" }
+      - { label: "Precious metal", bind: "nonblank($.PRECIOUS_METAL_FLAG, '–')" }
+  - { use: old-legs@1, with: { rate-fmt: price4 } }
+  - { use: old-flow-schedule@1, with: { rate-fmt: price4 } }
+  - { use: old-events@1 }
+  - { use: old-payments@1 }
+  - { use: old-deal-footer@1 }
+keys: { F7: "link($.COUNTERPARTY, 'counterparty-trades')", F8: impact, F9: raw }

@@ -77,26 +77,36 @@ abstract class PackSutraNextEquivalence {
         return Path.of("target", "test-data", "sutra-next-" + pack(), "sutras").toAbsolutePath();
     }
 
-    /** Each kind with an old layout, and the first committed sample of it. */
+    /** The old layouts and what they need (an old block a deal layout uses), copied beside the pack's Sutras for the "before" view. */
+    static Path resources(String pack) {
+        return Path.of("src", "test", "resources", "sutra-next", pack);
+    }
+
+    /** The Sutra names with an old layout ({@code <name>.v2.sutra.yaml}). */
+    List<String> names() throws Exception {
+        try (var s = Files.list(resources(pack()))) {
+            return s.map(f -> f.getFileName().toString()).filter(n -> n.endsWith(".v2.sutra.yaml")).sorted()
+                    .map(n -> n.replace(".v2.sutra.yaml", "")).toList();
+        }
+    }
+
+    /** Each Sutra with an old layout and the record it draws ({@code kind/id}): by default the first committed sample of the kind it is named after. */
     Map<String, String> screens() throws Exception {
         Map<String, String> first = new LinkedHashMap<>();
         for (JsonNode e : json.readTree(Path.of("..", "config", "packs", pack(), "samples", "catalog.json").toFile())) {
             first.putIfAbsent(e.path("kind").asText(), e.path("id").asText());
         }
         Map<String, String> out = new LinkedHashMap<>();
-        try (var s = Files.list(Path.of("src", "test", "resources", "sutra-next", pack()))) {
-            for (Path f : s.sorted().toList()) {
-                String kind = f.getFileName().toString().replace(".v2.sutra.yaml", "");
-                assertThat(first).as("a committed sample of " + kind).containsKey(kind);
-                out.put(kind, first.get(kind));
-            }
+        for (String kind : names()) {
+            assertThat(first).as("a committed sample of " + kind).containsKey(kind);
+            out.put(kind, kind + "/" + first.get(kind));
         }
         assertThat(out).isNotEmpty();
         return out;
     }
 
-    private JsonNode read(String kind, String id, String role) throws Exception {
-        String url = "/api/v1/views/" + kind + "/" + id;
+    private JsonNode read(String name, String record, String role) throws Exception {
+        String url = "/api/v1/views/" + record;
         return json.readTree(mvc.perform(get(url).header("Authorization", "Bearer " + tokens.mint("u-" + role, List.of(role), 300)))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
     }
@@ -135,10 +145,12 @@ abstract class PackSutraNextEquivalence {
         }
         Path site = siteDir();
         List<Path> inline = new ArrayList<>();
-        for (String kind : screens.keySet()) {
-            Path p = site.resolve(kind + ".v2.sutra.yaml");
-            Files.copy(Path.of("src", "test", "resources", "sutra-next", pack(), kind + ".v2.sutra.yaml"), p);
-            inline.add(p);
+        try (var s = Files.list(resources(pack()))) {
+            for (Path f : s.toList()) {
+                Path p = site.resolve(f.getFileName().toString());
+                Files.copy(f, p);
+                inline.add(p);
+            }
         }
         try {
             sutras.reload();
