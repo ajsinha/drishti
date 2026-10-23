@@ -339,7 +339,8 @@ async def view_panels(request: Request, kind: str, id_: str, panels: str = ""):
     ctl = controls.from_query(request.query_params)
     ids = [p for p in panels.split(",") if p and p != "-"] if panels else None
     try:
-        vm = await request.app.state.backend.view(kind, id_, ident(request), controls=ctl, panels=ids)
+        chosen = request.query_params.get("sutra")
+        vm = await request.app.state.backend.view(kind, id_, ident(request), controls=ctl, panels=ids, **({"sutra": chosen} if chosen else {}))
     except BackendError as e:
         return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.page_status)
     layout = await request.app.state.layouts.context(request, vm, False)
@@ -351,6 +352,55 @@ async def view_panels(request: Request, kind: str, id_: str, panels: str = ""):
                          "timings": vm.get("timings")})
 
 
+def _wired_html(request: Request, kind: str, id_: str, panel: dict) -> dict:
+    """A panel of a Sutra Next answer as ready HTML (the macro of first paint), with its id, kind and title."""
+    return {"id": panel["id"], "kind": panel["kind"], "title": panel.get("title") or "",
+            "html": api_routes._panel_html(request, panel, ref={"kind": kind, "id": id_})}
+
+
+def _children_html(request: Request, kind: str, id_: str, groups: list) -> list:
+    return [{**{k: g.get(k) for k in ("parent", "group", "place", "show", "hidden")},
+             "panels": [_wired_html(request, kind, id_, p) for p in (g.get("panels") or [])]} for g in (groups or [])]
+
+
+@router.post("/v/{kind}/{id_:path}/events")
+async def view_event(request: Request, kind: str, id_: str):
+    """A click on a row or bar of a Sutra Next screen (SUTRA_NEXT.md 7), relayed to the server, which evaluates it as the reader; the
+    listening panels and the clicked panel's children come back as ready HTML. Earlier selections travel as the server's tokens."""
+    try:
+        body = await json_body(request, limit=16384)
+    except BodyError as e:
+        return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
+    sels = [str(s) for s in (body.get("selections") or []) if isinstance(s, str)][:32]
+    try:
+        row = int(body.get("row"))
+    except (TypeError, ValueError):
+        return JSONResponse({"code": "DRS-5001", "detail": "a click names its row"}, status_code=400)
+    click = {"panel": str(body.get("panel") or ""), "event": str(body.get("event") or ""), "row": row, "selections": sels}
+    try:
+        r = await request.app.state.backend.view_event(kind, id_, ident(request), click, controls=controls.from_query(request.query_params),
+                                                       sutra=request.query_params.get("sutra") or None)
+    except BackendError as e:
+        return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.page_status)
+    return JSONResponse({"selection": r.get("selection") or {}, "cleared": r.get("cleared") or [],
+                         "panels": [_wired_html(request, kind, id_, p) for p in (r.get("panels") or [])],
+                         "children": _children_html(request, kind, id_, r.get("children"))})
+
+
+@router.get("/v/{kind}/{id_:path}/children/{panel}")
+async def view_children(request: Request, kind: str, id_: str, panel: str):
+    """The children of one panel (``?sel=<token>`` for each selection held), as ready HTML: what the page asks for when a group shows
+    always or is opened (SUTRA_NEXT.md 8)."""
+    sels = request.query_params.getlist("sel")[:32]
+    try:
+        groups = await request.app.state.backend.view_children(kind, id_, ident(request), panel, sels,
+                                                               controls=controls.from_query(request.query_params),
+                                                               sutra=request.query_params.get("sutra") or None)
+    except BackendError as e:
+        return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.page_status)
+    return JSONResponse({"children": _children_html(request, kind, id_, groups)})
+
+
 @router.get("/v/{kind}/{id_:path}")
 async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int = 0, share: str = ""):
     hist = history_routes.history_link(kind, id_, request.query_params)
@@ -360,6 +410,9 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
     pin = None                                      # how a pinned link (?asOf=&knownAt=&gen=) was honoured, for the banner
     ctl = controls.from_query(request.query_params)  # ?ctl.leg=L2: the controls' values, so a link reproduces what was seen
     more = {"controls": ctl} if ctl else {}
+    chosen = (request.query_params.get("sutra") or "").strip()     # ?sutra=book-desk: another Sutra of the kind draws the view
+    if chosen:
+        more["sutra"] = chosen
     try:
         try:
             vm = await request.app.state.backend.view(kind, id_, ident(request), **more)
@@ -388,7 +441,7 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
             shared = None                           # the banner is a courtesy: never fail the view for it
     calc = {"offered": False} if embed else await request.app.state.calc.context(request, await packs(request), vm["ref"]["kind"])
     return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed), share_url=share_url(request, kind, id_, (vm.get("provenance") or {}).get("generation"), ctl),
-                  pin=pin, pin_gen=gen or None, pin_via="history" if request.query_params.get("via") == "history" else None, ctl_query=controls.to_query(ctl), shared=shared, calc=calc, layout=layout, pivots=pivots, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")])
+                  pin=pin, pin_gen=gen or None, chosen_sutra=chosen, pin_via="history" if request.query_params.get("via") == "history" else None, ctl_query=controls.to_query(ctl), shared=shared, calc=calc, layout=layout, pivots=pivots, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")])
 
 
 def share_url(request: Request, kind: str, id_: str, generation=None, ctl: dict | None = None) -> str:

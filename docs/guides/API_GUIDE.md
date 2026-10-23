@@ -499,6 +499,35 @@ curl -s $B/views/trade/MX-20000001 | jq -c '.panels[] | {id, kind, title, key, a
 
 The full shape is in [The ViewModel in detail](#the-viewmodel-in-detail).
 
+`?sutra=<name>` draws the view with another Sutra of the entity's kind (the newest version; `400 DRS-5001` for one of another kind):
+`GET /api/v1/views/portfolio-trades/BOOK-RATES-2?sutra=book-desk`.
+
+### Events and child panels (Sutra Next)
+
+A Sutra Next screen's clicks are evaluated on the server, as the caller ([SUTRA_NEXT.md](../architecture/SUTRA_NEXT.md) sections 7, 8).
+A wired panel carries `wire` (`emits`, `children` with `place` and `show`, `source`, `parent`, and `waits` while it waits); a
+clickable row or bar carries `ev`, its place in the panel's data.
+
+```bash
+curl -s -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  "$DRISHTI/api/v1/views/portfolio-trades/BOOK-RATES-2/events?sutra=book-desk" \
+  -d '{"panel":"trades","event":"open","row":0,"selections":[]}'
+```
+
+```json
+{"selection": {"panel": "trades", "event": "open", "token": "tok_…", "payload": {"id": "1000017", "ref": "CP-SUMMIT"}},
+ "panels": [{"id": "counterparty", "...": "..."}, {"id": "limit"}, {"id": "buckets"}],
+ "children": [{"parent": "trades", "group": 0, "place": "expand-row", "show": "on-select", "hidden": false, "panels": [{"id": "flows"}]}],
+ "cleared": []}
+```
+
+`payload` is what the caller saw (a masked field `•••`); `panels` are only those that read the event; `cleared` the panels whose own
+selections the click made stale. Send every `token` you hold in `selections` with the next click, and as `sel` to
+`GET /api/v1/views/{kind}/{id}/panels/{panel}/children?sel=tok_…` (a panel's groups, lazily; `hidden` when its parent has no
+selection). A token resolves only for the person it was issued to, on the same screen, while it lives (`drishti.views.selection-ttl`,
+30 minutes, renewed on use); otherwise `403 DRS-5002`. A panel, event or row the screen does not have is `400 DRS-5001`. Tokens are
+held by the node that issued them. Controls travel as `ctl.<id>` query parameters, as for the view.
+
 ### Explaining a view
 
 `GET /views/{kind}/{id}/explain` answers *can I trust this page, and why does it look like this* (the data behind the

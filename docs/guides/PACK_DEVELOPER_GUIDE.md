@@ -1757,7 +1757,9 @@ panels:
 
 The library today: `series-line`, `curve-table`, `curve-overview` (a composite of the two), `field-list`, `ranked-bars`,
 `cashflow-ladder`, `event-timeline`, `key-figure`, `linked-entities`, `data-provenance`, `explainer-note`, `measure-table`,
-`region-map`, `source-footer` (a composite: data source, how the view was built, linked entities). The world-economy economics
+`region-map`, `source-footer` (a composite: data source, how the view was built, linked entities), `row-picker` (a table whose
+rows, clicked, fire an event: the master of a master-detail screen; a fragment whose panels emit lists the events in `doc.emits`, one
+whose panels read `@parent` says so in `doc.expects`; SUTRA_NEXT.md sections 6 to 8 wire them). The world-economy economics
 screens are worked examples. What each one shows, its
 parameters with their types and defaults, and examples are in its docstring; read them all with
 `curl -s localhost:8080/api/v1/ui-kit | jq '.fragments[] | {ref, summary}'` (`/api/v1/sutras/library` is the older alias). The

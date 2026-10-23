@@ -18,6 +18,36 @@
 ## Unreleased
 
 - The UI Board work is kept on branch ui-board-preview; not in this release.
+- **Sutra Next, phases 2 and 3 (2.7.0): events, sources over several packs, nested child panels**
+  ([SUTRA_NEXT.md](docs/architecture/SUTRA_NEXT.md) sections 6 to 8, 14, 15):
+  - **`source:` as a mapping** on any panel: `{ kind, id | where | search, limit, as-of, pack }`, read as the viewer (a kind the viewer
+    may not open is never fetched: "no access to <kind>"; documents masked before binding; a `where` over a masked field never
+    holds); `$src` in Rachana-EL is the record (or records) read. One read per source per request. The text form
+    (`source: "link(...)"`) is unchanged. A BI model source is refused (`DRS-2057`): not built yet.
+  - **Events**: `emits: [{ name, on: row-click | bar-click, payload: { field: "@.X" | { bind, type } } }]`; `@<panel>.<event>.<field>`
+    and `@parent.<event>.<field>` in Rachana-EL; `waits:` (what a panel waiting on an event says). Evaluated on the server per click:
+    `POST /api/v1/views/{kind}/{id}/events` `{panel, event, row, selections}` answers the selection's token and seen payload, the
+    panels that read it (only those), the clicked panel's children and the selections it cleared. The payload is kept twice: as the
+    viewer saw it (drawn, filtered) and as stored (only to look up a source, for the same person); selections travel as `IdTokens`
+    (ported from ui-board-preview) that only the same person resolves on the same screen (`403 DRS-5002` otherwise;
+    `drishti.views.selection-ttl`, default 30 minutes).
+  - **Children**: `children: [{ place: expand-row | detail-right | detail-below | tabs, show: on-select | always | on-expand, source,
+    waits, panels }]`; lazy (`GET /api/v1/views/{kind}/{id}/panels/{panel}/children?sel=...`); a new pick replaces them; depth 3.
+  - **Lint**: `DRS-2057` (unknown panel, event or payload field, a panel reading its own event, cycles, `$src` without a source, a
+    source id reading a number, date or bool field, triggers not built), `DRS-2056` (`@parent` without a parent, depth over 3,
+    expand-row under a panel without rows); `DRS-2055` for a fragment whose panels emit without `doc.emits` or read `@parent`
+    without `doc.expects`. A `use:` may carry `source`, `when`, `waits` and, for a one-panel fragment, `emits`, `children`, `span`,
+    `height`, `area` (anything else is `DRS-2048`).
+  - **`?sutra=<name>`** draws a view with another Sutra of the entity's kind (API and console, `DRS-5001` for one of another kind).
+  - A `kv` panel with `rows` and no columns lists the plain fields of the record it reads at bind time (`field-list@1` over `$src`).
+  - **Console**: `static/js/sutra-wire.js` and `static/css/wire.css`: rows and bars that fire (click, Enter, Space), the picked one
+    marked, listening panels swapped in place and announced, children under the row, beside, below or as tabs, a full-width sheet
+    with Back on a phone; theme tokens only.
+  - **UI kit**: `row-picker@1` (a table that emits on row-click with `{ id, ref }`). **Trading**: the `book-desk` Sutra
+    (`/v/portfolio-trades/<book>?sutra=book-desk`): trades; a click opens the trade's cash flows under the row (trading), the
+    counterparty (core) and its credit limit and tenor utilisation (counterparty-risk) beside.
+  - Tests: `SutraWiringTest` (grammar and lint), `SutraNextEventsTest` (multi-pack, events, lazy children, masks both ways, tokens),
+    `test_sutra_wire_browser.py` (the book desk: click, replace, Enter, placements, a phone, three themes).
 - **Sutra Next, phase 1 (2.7.0): the fragment library and docstrings** ([SUTRA_NEXT.md](docs/architecture/SUTRA_NEXT.md)). The
   board/chip paradigm is dropped; Sutra itself becomes the UI library, in one grammar. Built on the shared blocks (`use:`/`with:`):
   - **Fragments**: `<name>.v<N>.fragment.yaml` with `fragment: <name>`, used like blocks. The shared library is the Drishti UI kit's
