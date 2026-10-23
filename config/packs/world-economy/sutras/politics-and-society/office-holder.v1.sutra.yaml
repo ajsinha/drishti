@@ -17,6 +17,20 @@ rachana: 1
 sutra: office-holder
 version: 1
 description: "The chief of state or head of government of a country as the CIA World Factbook publishes them, with how the office is filled."
+doc:
+  summary: "The chief of state or head of government of a country as the CIA World Factbook publishes them, with how the office is…"
+  description: >-
+    The chief of state or head of government of a country as the CIA World Factbook publishes them, with how the office is
+    filled. One page per office holder, its panels: how the office is filled; data source and licence; how the view was built;
+    the entities it links to. The strip gives Country, Role, Holder, Since and Government. Linked entities: country
+    (jurisdiction).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/office-holder/OFFC-ABW-COS"
+    - "OFFC OFFC-ABW-COS"
+  since: "2.7.0"
 match: { kind: office-holder, priority: 10 }
 title: { pill: Politics and society · Office holder, id: $.OFFICE_ID }
 strip:
@@ -26,16 +40,6 @@ strip:
   - { label: Since, bind: $.SINCE }
   - { label: Government, bind: $.GOVERNMENT_TYPE }
 panels:
-  - id: mandate
-    kind: kv
-    title: How the office is filled
-    key: F2
-    rows: $.MANDATE
-  - id: source
-    kind: kv
-    title: Data source and licence
-    area: right
-    rows: $.PROVENANCE
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: field-list@1, with: { id: mandate, title: How the office is filled, key: F2, rows: $.MANDATE } }
+  - { use: source-footer@1 }
 keys: { F7: "link($.JURISDICTION, 'jurisdiction')", F8: impact, F9: raw }

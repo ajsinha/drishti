@@ -17,6 +17,21 @@ rachana: 1
 sutra: region
 version: 1
 description: "A World Bank region: its countries, population, life expectancy, women in parliament, Internet use and the government types found in it."
+doc:
+  summary: "A World Bank region:"
+  description: >-
+    A World Bank region: its countries, population, life expectancy, women in parliament, Internet use and the government types
+    found in it. One page per world region, its panels: government types (number of countries); life expectancy at birth, years;
+    internet users, % of population; data source and licence; how the view was built; the entities it links to. The strip gives
+    Region, Countries, Population (m), Life expectancy, Women in parliament, % and Internet users, %. Linked entities: countries
+    (jurisdiction).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/region/REGN-EAS"
+    - "REGN REGN-EAS"
+  since: "2.7.0"
 match: { kind: region, priority: 10 }
 title: { pill: Politics and society · World region, id: $.REGION_ID }
 strip:
@@ -27,35 +42,8 @@ strip:
   - { label: "Women in parliament, %", bind: $.WOMEN_PARLIAMENT, fmt: pc1 }
   - { label: "Internet users, %", bind: $.INTERNET, fmt: pc1 }
 panels:
-  - id: governmentTypes
-    kind: hbar
-    title: Government types (number of countries)
-    key: F2
-    rows: $.GOVERNMENT_TYPES
-    label: TYPE
-    value: COUNT
-    fmt: amount0
-  - id: lifeTrend
-    kind: line
-    title: "Life expectancy at birth, years"
-    area: right
-    rows: $.LIFE_TREND
-    x: YEAR
-    y: VALUE
-    fmt: price2
-  - id: internetTrend
-    kind: line
-    title: "Internet users, % of population"
-    key: F3
-    rows: $.INTERNET_TREND
-    x: YEAR
-    y: VALUE
-    fmt: pc1
-  - id: source
-    kind: kv
-    title: Data source and licence
-    area: right
-    rows: $.PROVENANCE
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: ranked-bars@1, with: { id: governmentTypes, title: Government types (number of countries), key: F2, rows: $.GOVERNMENT_TYPES, label: TYPE, value: COUNT, fmt: amount0 } }
+  - { use: series-line@1, with: { id: lifeTrend, title: "Life expectancy at birth, years", area: right, rows: $.LIFE_TREND, x: YEAR } }
+  - { use: series-line@1, with: { id: internetTrend, title: "Internet users, % of population", key: F3, rows: $.INTERNET_TREND, x: YEAR, fmt: pc1 } }
+  - { use: source-footer@1 }
 keys: { F7: "link($.MEMBER_STATES, 'jurisdiction')", F8: impact, F9: raw }

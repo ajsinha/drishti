@@ -67,6 +67,8 @@ def spec() -> PB.PackSpec:
         form_overrides={**e.form_overrides, **p.form_overrides}, roles={**e.roles, **p.roles},
         # the economics screens, written by hand from the Drishti UI kit (config/ui-kit/fragments) since Sutra Next phase 1 (SutraNextEquivalenceTest)
         hand_written={"country-group", "economic-forecast", "economy", "fiscal-position", "labour-market", "macro-indicator", "region-economy"},
+        # the politics-and-society screens: generated as kit fragment uses with a doc: (WorldEconomySutraNextEquivalenceTest)
+        fragments=True,
         # the columns the shipped BI models read (config/bi/datasets/world-economics-economies, region-economics-regions): promoted, so a
         # report reads them as columns instead of opening every document
         layouts={"economy": ["NAME", "ISO3", "REGION_NAME", "INCOME_NAME", "GDP_USD_BN", "GDP_PER_CAPITA", "GROWTH", "INFLATION", "UNEMPLOYMENT", "POPULATION_M"],

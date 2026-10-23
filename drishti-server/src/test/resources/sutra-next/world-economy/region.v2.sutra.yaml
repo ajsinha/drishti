@@ -1,0 +1,62 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The region Sutra as tools/packgen/world/make.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the world-economy equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: region
+version: 2
+description: "A World Bank region: its countries, population, life expectancy, women in parliament, Internet use and the government types found in it."
+match: { kind: region, priority: 10 }
+title: { pill: Politics and society · World region, id: $.REGION_ID }
+strip:
+  - { label: Region, bind: $.NAME, emphasis: true }
+  - { label: Countries, bind: $.COUNTRIES, fmt: amount0 }
+  - { label: Population (m), bind: $.POPULATION_M, fmt: price2 }
+  - { label: Life expectancy, bind: $.LIFE_EXPECTANCY, fmt: price2 }
+  - { label: "Women in parliament, %", bind: $.WOMEN_PARLIAMENT, fmt: pc1 }
+  - { label: "Internet users, %", bind: $.INTERNET, fmt: pc1 }
+panels:
+  - id: governmentTypes
+    kind: hbar
+    title: Government types (number of countries)
+    key: F2
+    rows: $.GOVERNMENT_TYPES
+    label: TYPE
+    value: COUNT
+    fmt: amount0
+  - id: lifeTrend
+    kind: line
+    title: "Life expectancy at birth, years"
+    area: right
+    rows: $.LIFE_TREND
+    x: YEAR
+    y: VALUE
+    fmt: price2
+  - id: internetTrend
+    kind: line
+    title: "Internet users, % of population"
+    key: F3
+    rows: $.INTERNET_TREND
+    x: YEAR
+    y: VALUE
+    fmt: pc1
+  - id: source
+    kind: kv
+    title: Data source and licence
+    area: right
+    rows: $.PROVENANCE
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.MEMBER_STATES, 'jurisdiction')", F8: impact, F9: raw }

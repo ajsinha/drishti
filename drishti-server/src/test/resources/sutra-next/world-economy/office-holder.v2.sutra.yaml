@@ -1,0 +1,42 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The office-holder Sutra as tools/packgen/world/make.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the world-economy equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: office-holder
+version: 2
+description: "The chief of state or head of government of a country as the CIA World Factbook publishes them, with how the office is filled."
+match: { kind: office-holder, priority: 10 }
+title: { pill: Politics and society · Office holder, id: $.OFFICE_ID }
+strip:
+  - { label: Country, bind: $.COUNTRY_NAME }
+  - { label: Role, bind: $.ROLE }
+  - { label: Holder, bind: $.HOLDER, emphasis: true }
+  - { label: Since, bind: $.SINCE }
+  - { label: Government, bind: $.GOVERNMENT_TYPE }
+panels:
+  - id: mandate
+    kind: kv
+    title: How the office is filled
+    key: F2
+    rows: $.MANDATE
+  - id: source
+    kind: kv
+    title: Data source and licence
+    area: right
+    rows: $.PROVENANCE
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.JURISDICTION, 'jurisdiction')", F8: impact, F9: raw }

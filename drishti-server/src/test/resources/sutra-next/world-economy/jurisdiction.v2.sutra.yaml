@@ -1,0 +1,74 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The jurisdiction Sutra as tools/packgen/world/make.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the world-economy equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: jurisdiction
+version: 2
+description: "A country: government type, capital, legislature and seats by party, office holders, elections and governance indicators, from the CIA World Factbook, World Bank and UNDP."
+match: { kind: jurisdiction, priority: 10 }
+title: { pill: Politics and society · Jurisdiction, id: $.JURISDICTION_ID }
+strip:
+  - { label: Country, bind: $.NAME, emphasis: true }
+  - { label: Capital, bind: $.CAPITAL }
+  - { label: Government, bind: $.GOVERNMENT_TYPE }
+  - { label: Population (m), bind: $.POPULATION_M, fmt: price2 }
+  - { label: Area (km2), bind: $.AREA_KM2, fmt: amount0 }
+  - { label: Currency, bind: $.CURRENCY }
+panels:
+  - id: geography
+    kind: map
+    title: Where it is
+    highlight: $.ISO3
+    link: { kind: jurisdiction, id: "JUR-{iso3}" }
+    height: 11
+  - id: legislature
+    kind: table
+    title: "Seats by party, lower chamber"
+    key: F2
+    rows: $.LEGISLATURE
+    columns:
+      - { label: Party, bind: "@.PARTY" }
+      - { label: Seats, bind: "@.SEATS", fmt: amount0, total: true }
+  - id: indicators
+    kind: table
+    title: Society and governance (latest)
+    key: F3
+    rows: $.INDICATORS
+    columns:
+      - { label: Indicator, bind: "@.INDICATOR" }
+      - { label: Value, bind: "@.VALUE", fmt: price2, total: true }
+      - { label: Year, bind: "@.YEAR" }
+      - { label: Unit, bind: "@.UNIT" }
+  - id: profile
+    kind: kv
+    title: Profile
+    area: right
+    rows: $.PROFILE
+  - id: partiesListed
+    kind: table
+    title: Political parties (as published)
+    key: F4
+    rows: $.PARTIES_LISTED
+    columns:
+      - { label: Party, bind: "@.PARTY" }
+  - id: source
+    kind: kv
+    title: Data source and licence
+    area: right
+    rows: $.PROVENANCE
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.REGION, 'region')", F8: impact, F9: raw }

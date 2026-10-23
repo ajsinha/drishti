@@ -414,13 +414,20 @@ def kind_yaml(k: Kind, kit: bool = False, sample: str | None = None) -> str:
     w.add_controls()
     a("panels:")
     uses = KS.panel_uses(k.panels, q, frozenset(w.tune)) if kit else [None] * len(k.panels)
+    # a screen over published data ends with its source and licence, how it was built and its links: one source-footer use
+    footer = KS.source_footer(k.panels[-1], q) if kit and k.links and k.panels and k.panels[-1].id not in w.tune else None
+    if footer:
+        uses[-1] = ""
     for p, u in zip(k.panels, uses):
         if u is None:
             w.panel(p)
-        elif u:                                   # "" is the pillars a curve-overview use already drew
+        elif u:                                   # "" is a panel a composite use draws (curve-overview, source-footer)
             a(u)
-    a("  - { use: data-provenance@1 }" if kit else "  - { id: built, kind: provenance, title: How this view was built }")
-    if k.links:   # a kind that refers to nothing gets no empty links panel
+    if footer:
+        a(footer)
+    else:
+        a("  - { use: data-provenance@1 }" if kit else "  - { id: built, kind: provenance, title: How this view was built }")
+    if k.links and not footer:   # a kind that refers to nothing gets no empty links panel
         a("  - { use: linked-entities@1 }" if kit else "  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }")
     first_link = next(iter(k.links), None)
     keys = {"F8": "impact", "F9": "raw"}

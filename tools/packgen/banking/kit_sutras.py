@@ -134,6 +134,14 @@ def panel_uses(panels, q, tuned=frozenset()) -> list[str | None]:
     return out
 
 
+def source_footer(p, q) -> str | None:
+    """A screen's last panel, its data source and licence as a field list, followed by how the view was built and its links: one
+    source-footer use, when the field list has no code or key of its own."""
+    if p.kind != "kv" or not _plain(p, "rows") or p.rows != defaults("source-footer")["source-rows"] or p.code or p.key:
+        return None
+    return use("source-footer", {"source-id": p.id, "source-title": p.title, "source-rows": p.rows, "source-area": _area(p)}, q)
+
+
 def summary(text: str) -> str:
     """One line of at most 120 characters: the text, or its first sentence, or the text cut at a word."""
     text = " ".join(text.split())

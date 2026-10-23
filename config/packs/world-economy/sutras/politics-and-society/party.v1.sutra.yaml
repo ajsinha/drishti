@@ -17,6 +17,20 @@ rachana: 1
 sutra: party
 version: 1
 description: "A political party that won seats in the lower chamber at the most recent election, with the chamber's full result."
+doc:
+  summary: "A political party that won seats in the lower chamber at the most recent election, with the chamber's full result."
+  description: >-
+    A political party that won seats in the lower chamber at the most recent election, with the chamber's full result. One page
+    per party, its panels: seats in the chamber; data source and licence; how the view was built; the entities it links to. The
+    strip gives Party, Country, Seats, Seat share, %, Chamber and Election. Linked entities: election (election) and country
+    (jurisdiction).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/party/PARTY-ARG-01"
+    - "PARTY PARTY-ARG-01"
+  since: "2.7.0"
 match: { kind: party, priority: 10 }
 title: { pill: Politics and society · Party, id: $.PARTY_ID }
 strip:
@@ -27,19 +41,6 @@ strip:
   - { label: Chamber, bind: $.CHAMBER }
   - { label: Election, bind: $.ELECTION_DATE }
 panels:
-  - id: results
-    kind: hbar
-    title: Seats in the chamber
-    key: F2
-    rows: $.RESULTS
-    label: PARTY
-    value: SEATS
-    fmt: amount0
-  - id: source
-    kind: kv
-    title: Data source and licence
-    area: right
-    rows: $.PROVENANCE
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: ranked-bars@1, with: { id: results, title: Seats in the chamber, key: F2, rows: $.RESULTS, label: PARTY, value: SEATS, fmt: amount0 } }
+  - { use: source-footer@1 }
 keys: { F7: "link($.ELECTION, 'election')", F8: impact, F9: raw }

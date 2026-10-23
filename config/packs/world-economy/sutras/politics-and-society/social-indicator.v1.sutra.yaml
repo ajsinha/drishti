@@ -17,6 +17,20 @@ rachana: 1
 sutra: social-indicator
 version: 1
 description: "A social or governance statistic of one country over time, with the regional comparison: health, education, inequality, rights and rule of law."
+doc:
+  summary: "A social or governance statistic of one country over time, with the regional comparison:"
+  description: >-
+    A social or governance statistic of one country over time, with the regional comparison: health, education, inequality,
+    rights and rule of law. One page per social indicator, its panels: series; region comparison (latest); what it measures;
+    data source and licence; how the view was built; the entities it links to. The strip gives Indicator, Latest, Unit, Year,
+    Change (5y) and Source. Linked entities: country (jurisdiction).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/social-indicator/SOCI-ABW-EDUCATION-SPEND"
+    - "SOCI SOCI-ABW-EDUCATION-SPEND"
+  since: "2.7.0"
 match: { kind: social-indicator, priority: 10 }
 title: { pill: Politics and society · Social indicator, id: $.INDICATOR_ID }
 strip:
@@ -27,32 +41,8 @@ strip:
   - { label: Change (5y), bind: $.CHANGE_5Y, fmt: signed2, tone: sign }
   - { label: Source, bind: $.SOURCE_NAME }
 panels:
-  - id: series
-    kind: line
-    title: Series
-    key: F2
-    rows: $.SERIES
-    x: YEAR
-    y: VALUE
-    fmt: price2
-  - id: byRegion
-    kind: hbar
-    title: Region comparison (latest)
-    area: right
-    rows: $.BY_REGION
-    label: COUNTRY
-    value: VALUE
-    fmt: price2
-  - id: meaning
-    kind: kv
-    title: What it measures
-    key: F3
-    rows: $.MEANING
-  - id: source
-    kind: kv
-    title: Data source and licence
-    area: right
-    rows: $.PROVENANCE
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: series-line@1, with: { key: F2, rows: $.SERIES, x: YEAR } }
+  - { use: ranked-bars@1, with: { id: byRegion, title: Region comparison (latest), area: right, rows: $.BY_REGION, label: COUNTRY, fmt: price2 } }
+  - { use: field-list@1, with: { id: meaning, title: What it measures, key: F3, rows: $.MEANING } }
+  - { use: source-footer@1 }
 keys: { F7: "link($.JURISDICTION, 'jurisdiction')", F8: impact, F9: raw }

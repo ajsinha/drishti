@@ -73,6 +73,9 @@ class PackSpec:
     retired: bool = False                           # an example pack: written under examples/packs, not config/packs
     # kinds whose Sutra is written by hand since Sutra Next phase 1 (built from the Drishti UI kit, config/ui-kit/fragments): never written or removed here
     hand_written: set[str] = field(default_factory=set)
+    # write the generated Sutras in the Sutra Next form: panels as Drishti UI kit fragment uses where one draws them exactly, and a
+    # generated doc: docstring (tools/packgen/banking/kit_sutras.py; proved by the pack's PackSutraNextEquivalence test)
+    fragments: bool = False
 
     @property
     def kinds(self) -> list[Kind]:
@@ -132,8 +135,9 @@ def manifest(spec: PackSpec, known_fields: dict[str, tuple[str, str]]) -> dict:
     return m
 
 
-def sutra(spec: PackSpec, k: Kind) -> str:
-    return MS.kind_doc(k).replace(MS.GENERATED, "# " + _generated(spec, "file"))
+def sutra(spec: PackSpec, k: Kind, sample: str | None = None) -> str:
+    """A kind's Sutra; in the Sutra Next form (kit fragment uses, a generated doc: opening `sample`) when the pack asks for it."""
+    return MS.kind_doc(k, spec.fragments, sample).replace(MS.GENERATED, "# " + _generated(spec, "file"))
 
 
 def overview(spec: PackSpec, docs: dict) -> str:
@@ -192,7 +196,7 @@ def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
                                + yaml.safe_dump(manifest(spec, known_fields), sort_keys=False, allow_unicode=True, width=140))
     for k in spec.kinds:
         if k.kind not in spec.hand_written:
-            out[base / "sutras" / MS.slug(k.group) / f"{k.kind}.v1.sutra.yaml"] = sutra(spec, k)
+            out[base / "sutras" / MS.slug(k.group) / f"{k.kind}.v1.sutra.yaml"] = sutra(spec, k, min(docs.get(k.kind) or [None], key=lambda x: x or ""))
     catalog = []
     for k in spec.kinds:
         for id_, d in sorted(docs.get(k.kind, {}).items()):

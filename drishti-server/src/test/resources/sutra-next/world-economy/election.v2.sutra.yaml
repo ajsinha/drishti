@@ -1,0 +1,51 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The election Sutra as tools/packgen/world/make.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the world-economy equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: election
+version: 2
+description: "The most recent election to a chamber or to the executive, with the system, term, seats by party and the date of the next one."
+match: { kind: election, priority: 10 }
+title: { pill: Politics and society · Election, id: $.ELECTION_ID }
+strip:
+  - { label: Election, bind: $.TITLE }
+  - { label: Held, bind: $.DATE_TEXT }
+  - { label: System, bind: $.SYSTEM }
+  - { label: Largest party, bind: $.WINNER, emphasis: true }
+  - { label: Next election, bind: $.NEXT_ELECTION }
+panels:
+  - id: results
+    kind: table
+    title: Seats by party
+    key: F2
+    rows: $.RESULTS
+    columns:
+      - { label: Party, bind: "@.PARTY" }
+      - { label: Seats, bind: "@.SEATS", fmt: amount0, total: true }
+      - { label: "Share, %", bind: "@.SHARE", fmt: pc1 }
+  - id: summary
+    kind: kv
+    title: Election facts (as published)
+    area: right
+    rows: $.SUMMARY
+  - id: source
+    kind: kv
+    title: Data source and licence
+    area: right
+    rows: $.PROVENANCE
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.JURISDICTION, 'jurisdiction')", F8: impact, F9: raw }

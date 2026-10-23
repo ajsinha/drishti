@@ -17,6 +17,22 @@ rachana: 1
 sutra: jurisdiction
 version: 1
 description: "A country: government type, capital, legislature and seats by party, office holders, elections and governance indicators, from the CIA World Factbook, World Bank and UNDP."
+doc:
+  summary: "A country:"
+  description: >-
+    A country: government type, capital, legislature and seats by party, office holders, elections and governance indicators,
+    from the CIA World Factbook, World Bank and UNDP. One page per jurisdiction, its panels: where it is; seats by party, lower
+    chamber; society and governance (latest); profile; political parties (as published); data source and licence; how the view
+    was built; the entities it links to. The strip gives Country, Capital, Government, Population (m), Area (km2) and Currency.
+    Linked entities: world region (region), chief of state (office-holder), head of government (office-holder), last election
+    (election), elections (election), parties with seats (party) and indicators (social-indicator).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/jurisdiction/JUR-ABW"
+    - "JUR JUR-ABW"
+  since: "2.7.0"
 match: { kind: jurisdiction, priority: 10 }
 title: { pill: Politics and society · Jurisdiction, id: $.JURISDICTION_ID }
 strip:
@@ -51,11 +67,7 @@ panels:
       - { label: Value, bind: "@.VALUE", fmt: price2, total: true }
       - { label: Year, bind: "@.YEAR" }
       - { label: Unit, bind: "@.UNIT" }
-  - id: profile
-    kind: kv
-    title: Profile
-    area: right
-    rows: $.PROFILE
+  - { use: field-list@1, with: { id: profile, title: Profile, area: right, rows: $.PROFILE } }
   - id: partiesListed
     kind: table
     title: Political parties (as published)
@@ -63,11 +75,5 @@ panels:
     rows: $.PARTIES_LISTED
     columns:
       - { label: Party, bind: "@.PARTY" }
-  - id: source
-    kind: kv
-    title: Data source and licence
-    area: right
-    rows: $.PROVENANCE
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: source-footer@1 }
 keys: { F7: "link($.REGION, 'region')", F8: impact, F9: raw }
