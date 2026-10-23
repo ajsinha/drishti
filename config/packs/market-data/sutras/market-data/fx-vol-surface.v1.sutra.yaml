@@ -17,6 +17,19 @@ rachana: 1
 sutra: fx-vol-surface
 version: 1
 description: "Implied vols by expiry and delta (ATM, 25D RR/BF)."
+doc:
+  summary: "Implied vols by expiry and delta (ATM, 25D RR/BF)."
+  description: >-
+    Implied vols by expiry and delta (ATM, 25D RR/BF). One page per fX volatility surface, its panels: smile surface (vol %);
+    ATM vol term structure; surface (vol %); how the view was built; the entities it links to. The strip gives Pair, 1M ATM, 1Y
+    ATM and 1Y 25D RR. Linked entities: spot (fx-spot).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/fx-vol-surface/FXV-AUDUSD"
+    - "FXV FXV-AUDUSD"
+  since: "2.7.0"
 match: { kind: fx-vol-surface, priority: 10 }
 title: { pill: Market data · FX volatility surface, id: $.SURFACE_ID }
 strip:
@@ -38,14 +51,7 @@ panels:
       - { label: ATM, bind: "@.ATM", fmt: price2 }
       - { label: "25D C", bind: "@.C_25", fmt: price2 }
       - { label: "10D C", bind: "@.C_10", fmt: price2 }
-  - id: atm
-    kind: line
-    title: ATM vol term structure
-    key: F2
-    rows: $.GRID
-    x: EXPIRY
-    y: ATM
-    fmt: price2
+  - { use: series-line@1, with: { id: atm, title: ATM vol term structure, key: F2, rows: $.GRID, x: EXPIRY, y: ATM } }
   - id: grid
     kind: table
     title: Surface (vol %)
@@ -58,6 +64,6 @@ panels:
       - { label: ATM, bind: "@.ATM", fmt: price2 }
       - { label: "25D C", bind: "@.C_25", fmt: price2 }
       - { label: "10D C", bind: "@.C_10", fmt: price2 }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.FX_SPOT, 'fx-spot')", F8: impact, F9: raw }

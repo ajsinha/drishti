@@ -17,6 +17,19 @@ rachana: 1
 sutra: equity-vol-surface
 version: 1
 description: Implied vols by expiry and moneyness.
+doc:
+  summary: "Implied vols by expiry and moneyness."
+  description: >-
+    Implied vols by expiry and moneyness. One page per equity volatility surface, its panels: implied vol by expiry × moneyness
+    (%); vol (%) by moneyness; ATM term structure; how the view was built. The strip gives Underlier, 1M ATM, 1Y ATM and 1Y skew
+    (90–110).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/equity-vol-surface/EQV-CSCA"
+    - "EQV EQV-CSCA"
+  since: "2.7.0"
 match: { kind: equity-vol-surface, priority: 10 }
 title: { pill: Market data · Equity volatility surface, id: $.SURFACE_ID }
 strip:
@@ -50,13 +63,6 @@ panels:
       - { label: "100%", bind: "@.M_100", fmt: price2 }
       - { label: "110%", bind: "@.M_110", fmt: price2 }
       - { label: "120%", bind: "@.M_120", fmt: price2 }
-  - id: atm
-    kind: line
-    title: ATM term structure
-    area: right
-    rows: $.GRID
-    x: EXPIRY
-    y: M_100
-    fmt: price2
-  - { id: built, kind: provenance, title: How this view was built }
+  - { use: series-line@1, with: { id: atm, title: ATM term structure, area: right, rows: $.GRID, x: EXPIRY, y: M_100 } }
+  - { use: data-provenance@1 }
 keys: { F8: impact, F9: raw }

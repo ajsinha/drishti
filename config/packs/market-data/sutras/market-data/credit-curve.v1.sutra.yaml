@@ -17,6 +17,19 @@ rachana: 1
 sutra: credit-curve
 version: 1
 description: "CDS par spreads by tenor, recovery and implied default probabilities."
+doc:
+  summary: "CDS par spreads by tenor, recovery and implied default probabilities."
+  description: >-
+    CDS par spreads by tenor, recovery and implied default probabilities. One page per credit curve, its panels: par spreads
+    (bp); term structure; how the view was built; the entities it links to. The strip gives Reference entity, 5Y spread,
+    Recovery, Seniority, Doc clause and 1Y PD. Linked entities: reference entity (issuer).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/credit-curve/CDS-BUND"
+    - "CDS CDS-BUND"
+  since: "2.7.0"
 match: { kind: credit-curve, priority: 10 }
 title: { pill: Market data · Credit curve, id: $.CURVE_ID }
 strip:
@@ -27,14 +40,7 @@ strip:
   - { label: Doc clause, bind: $.DOC_CLAUSE }
   - { label: "1Y PD", bind: $.PD_1Y, fmt: pct2 }
 panels:
-  - id: spreads
-    kind: line
-    title: Par spreads (bp)
-    key: F2
-    rows: $.POINTS
-    x: TENOR
-    y: SPREAD
-    fmt: price2
+  - { use: series-line@1, with: { id: spreads, title: Par spreads (bp), key: F2, y: SPREAD } }
   - id: points
     kind: table
     title: Term structure
@@ -45,6 +51,6 @@ panels:
       - { label: Spread (bp), bind: "@.SPREAD", fmt: price2 }
       - { label: Hazard, bind: "@.HAZARD", fmt: pct2 }
       - { label: Survival, bind: "@.SURVIVAL", fmt: df4 }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.ISSUER, 'issuer')", F8: impact, F9: raw }

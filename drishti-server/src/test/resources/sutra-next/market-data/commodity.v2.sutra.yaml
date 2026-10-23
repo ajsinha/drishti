@@ -1,0 +1,46 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The commodity Sutra as tools/packgen/banking/make_sutras.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the market-data equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: commodity
+version: 2
+description: "A traded commodity with its benchmark, unit and venue."
+match: { kind: commodity, priority: 10 }
+title: { pill: Market data · Commodity, id: $.COMMODITY_ID }
+strip:
+  - { label: Name, bind: $.NAME }
+  - { label: Front month, bind: $.FRONT, fmt: price2, emphasis: true }
+  - { label: Unit, bind: $.UNIT }
+  - { label: Exchange, bind: $.EXCHANGE }
+  - { label: Sector, bind: $.SECTOR }
+panels:
+  - id: spec
+    kind: kv
+    title: Contract specification
+    key: F2
+    rows: $.SPEC
+  - id: ohlc
+    kind: candlestick
+    title: "Front month (daily bars, last 60 days)"
+    code: OHLC
+    key: F3
+    rows: $.OHLC
+    x: DATE
+    fmt: price2
+    volume: VOLUME
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.COMMODITY_CURVE, 'commodity-curve')", F8: impact, F9: raw }

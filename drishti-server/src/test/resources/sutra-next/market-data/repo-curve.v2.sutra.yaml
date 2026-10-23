@@ -1,0 +1,45 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The repo-curve Sutra as tools/packgen/banking/make_sutras.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the market-data equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: repo-curve
+version: 2
+description: General-collateral or specials repo rates by term.
+match: { kind: repo-curve, priority: 10 }
+title: { pill: Market data · Repo curve, id: $.CURVE_ID }
+strip:
+  - { label: Currency, bind: $.CURRENCY }
+  - { label: Collateral, bind: $.COLLATERAL }
+  - { label: O/N, bind: $.OVERNIGHT, fmt: pct4, emphasis: true }
+  - { label: As of, bind: $.AS_OF, fmt: date }
+panels:
+  - id: curve
+    kind: line
+    title: Repo rates (%)
+    key: F2
+    rows: $.POINTS
+    x: TENOR
+    y: RATE
+    fmt: price2
+  - id: points
+    kind: table
+    title: Terms
+    rows: $.POINTS
+    columns:
+      - { label: Term, bind: "@.TENOR" }
+      - { label: Rate (%), bind: "@.RATE", fmt: price2 }
+  - { id: built, kind: provenance, title: How this view was built }
+keys: { F8: impact, F9: raw }

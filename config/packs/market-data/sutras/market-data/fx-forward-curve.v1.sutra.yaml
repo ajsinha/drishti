@@ -17,6 +17,19 @@ rachana: 1
 sutra: fx-forward-curve
 version: 1
 description: Forward points by tenor for a pair.
+doc:
+  summary: "Forward points by tenor for a pair."
+  description: >-
+    Forward points by tenor for a pair. One page per fX forward curve, its panels: forward points (pips); outrights; how the
+    view was built; the entities it links to. The strip gives Pair, Spot, 3M points and 1Y points. Linked entities: spot (fx-
+    spot).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/fx-forward-curve/FXF-AUDUSD"
+    - "FXF FXF-AUDUSD"
+  since: "2.7.0"
 match: { kind: fx-forward-curve, priority: 10 }
 title: { pill: Market data · FX forward curve, id: $.CURVE_ID }
 strip:
@@ -25,14 +38,7 @@ strip:
   - { label: "3M points", bind: $.POINTS_3M, fmt: pips1, tone: sign, emphasis: true }
   - { label: "1Y points", bind: $.POINTS_1Y, fmt: pips1, tone: sign }
 panels:
-  - id: points
-    kind: line
-    title: Forward points (pips)
-    key: F2
-    rows: $.POINTS
-    x: TENOR
-    y: PIPS
-    fmt: pips1
+  - { use: series-line@1, with: { id: points, title: Forward points (pips), key: F2, y: PIPS, fmt: pips1 } }
   - id: outright
     kind: table
     title: Outrights
@@ -41,6 +47,6 @@ panels:
       - { label: Tenor, bind: "@.TENOR" }
       - { label: Points, bind: "@.PIPS", fmt: pips1, tone: sign }
       - { label: Outright, bind: "@.OUTRIGHT", fmt: rate5 }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.FX_SPOT, 'fx-spot')", F8: impact, F9: raw }

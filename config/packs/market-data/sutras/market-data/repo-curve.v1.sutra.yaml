@@ -17,6 +17,18 @@ rachana: 1
 sutra: repo-curve
 version: 1
 description: General-collateral or specials repo rates by term.
+doc:
+  summary: "General-collateral or specials repo rates by term."
+  description: >-
+    General-collateral or specials repo rates by term. One page per repo curve, its panels: repo rates (%); terms; how the view
+    was built. The strip gives Currency, Collateral, O/N and As of.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/repo-curve/REPO-AUD"
+    - "REPO REPO-AUD"
+  since: "2.7.0"
 match: { kind: repo-curve, priority: 10 }
 title: { pill: Market data · Repo curve, id: $.CURVE_ID }
 strip:
@@ -25,14 +37,7 @@ strip:
   - { label: O/N, bind: $.OVERNIGHT, fmt: pct4, emphasis: true }
   - { label: As of, bind: $.AS_OF, fmt: date }
 panels:
-  - id: curve
-    kind: line
-    title: Repo rates (%)
-    key: F2
-    rows: $.POINTS
-    x: TENOR
-    y: RATE
-    fmt: price2
+  - { use: series-line@1, with: { id: curve, title: Repo rates (%), key: F2, y: RATE } }
   - id: points
     kind: table
     title: Terms
@@ -40,5 +45,5 @@ panels:
     columns:
       - { label: Term, bind: "@.TENOR" }
       - { label: Rate (%), bind: "@.RATE", fmt: price2 }
-  - { id: built, kind: provenance, title: How this view was built }
+  - { use: data-provenance@1 }
 keys: { F8: impact, F9: raw }

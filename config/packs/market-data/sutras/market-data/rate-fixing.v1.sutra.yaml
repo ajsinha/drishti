@@ -17,6 +17,18 @@ rachana: 1
 sutra: rate-fixing
 version: 1
 description: "Published overnight and term rate fixings (SOFR, €STR, SONIA…)."
+doc:
+  summary: "Published overnight and term rate fixings (SOFR, €STR, SONIA…)."
+  description: >-
+    Published overnight and term rate fixings (SOFR, €STR, SONIA…). One page per rate index fixings, its panels: recent fixings;
+    last 30 fixings; how the view was built. The strip gives Index, Latest, Administrator and Tenor.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/rate-fixing/FIX-AONIA"
+    - "FIX FIX-AONIA"
+  since: "2.7.0"
 match: { kind: rate-fixing, priority: 10 }
 title: { pill: Market data · Rate index fixings, id: $.INDEX_ID }
 strip:
@@ -34,13 +46,6 @@ panels:
       - { label: Date, bind: "@.DATE", fmt: date }
       - { label: Rate, bind: "@.RATE", fmt: pct4 }
       - { label: Volume (bn), bind: "@.VOLUME_BN", fmt: amount0 }
-  - id: chart
-    kind: line
-    title: Last 30 fixings
-    area: right
-    rows: $.FIXINGS
-    x: DATE
-    y: RATE_PCT
-    fmt: price2
-  - { id: built, kind: provenance, title: How this view was built }
+  - { use: series-line@1, with: { id: chart, title: Last 30 fixings, area: right, rows: $.FIXINGS, x: DATE, y: RATE_PCT } }
+  - { use: data-provenance@1 }
 keys: { F8: impact, F9: raw }

@@ -17,6 +17,19 @@ rachana: 1
 sutra: fx-spot
 version: 1
 description: Spot rate for a currency pair with bid/ask.
+doc:
+  summary: "Spot rate for a currency pair with bid/ask."
+  description: >-
+    Spot rate for a currency pair with bid/ask. One page per fX spot rate, its panels: last 30 days; conventions; how the view
+    was built; the entities it links to. The strip gives Pair, Mid, Bid, Ask, 1D change and Value date. Linked entities: forward
+    curve (fx-forward-curve) and vol surface (fx-vol-surface).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/fx-spot/FX-AUDUSD"
+    - "FX FX-AUDUSD"
+  since: "2.7.0"
 match: { kind: fx-spot, priority: 10 }
 title: { pill: Market data · FX spot rate, id: $.PAIR }
 strip:
@@ -27,19 +40,8 @@ strip:
   - { label: "1D change", bind: $.CHANGE_1D, fmt: pct2, tone: sign }
   - { label: Value date, bind: $.SPOT_DATE, fmt: date }
 panels:
-  - id: history
-    kind: line
-    title: Last 30 days
-    key: F2
-    rows: $.HISTORY
-    x: DATE
-    y: MID
-    fmt: rate5
-  - id: pair
-    kind: kv
-    title: Conventions
-    area: right
-    rows: $.CONVENTIONS
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: series-line@1, with: { id: history, title: Last 30 days, key: F2, rows: $.HISTORY, x: DATE, y: MID, fmt: rate5 } }
+  - { use: field-list@1, with: { id: pair, title: Conventions, area: right, rows: $.CONVENTIONS } }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.FX_FORWARD_CURVE, 'fx-forward-curve')", F8: impact, F9: raw }

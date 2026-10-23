@@ -17,6 +17,18 @@ rachana: 1
 sutra: commodity-vol-surface
 version: 1
 description: Implied vols by delivery month and moneyness.
+doc:
+  summary: "Implied vols by delivery month and moneyness."
+  description: >-
+    Implied vols by delivery month and moneyness. One page per commodity volatility surface, its panels: implied vol by contract
+    × moneyness (%); vol (%); ATM by month; how the view was built. The strip gives Commodity and Front ATM.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/commodity-vol-surface/CMDV-BRENT"
+    - "CMDV CMDV-BRENT"
+  since: "2.7.0"
 match: { kind: commodity-vol-surface, priority: 10 }
 title: { pill: Market data · Commodity volatility surface, id: $.SURFACE_ID }
 strip:
@@ -44,13 +56,6 @@ panels:
       - { label: "90%", bind: "@.M_90", fmt: price2 }
       - { label: ATM, bind: "@.M_100", fmt: price2 }
       - { label: "110%", bind: "@.M_110", fmt: price2 }
-  - id: atm
-    kind: line
-    title: ATM by month
-    area: right
-    rows: $.GRID
-    x: MONTH
-    y: M_100
-    fmt: price2
-  - { id: built, kind: provenance, title: How this view was built }
+  - { use: series-line@1, with: { id: atm, title: ATM by month, area: right, rows: $.GRID, x: MONTH, y: M_100 } }
+  - { use: data-provenance@1 }
 keys: { F8: impact, F9: raw }

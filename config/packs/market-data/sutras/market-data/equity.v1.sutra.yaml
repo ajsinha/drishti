@@ -17,6 +17,20 @@ rachana: 1
 sutra: equity
 version: 1
 description: "A listed stock: price, dividends, sector and identifiers."
+doc:
+  summary: "A listed stock: price, dividends, sector and identifiers."
+  description: >-
+    A listed stock: price, dividends, sector and identifiers. One page per equity, its panels: price, last 30 days; identifiers;
+    daily bars (last 60 days); how the view was built; the entities it links to. The strip gives Name, Price, 1D, Market cap,
+    Sector, Exchange, Currency and Beta. Linked entities: issuer (issuer), vol surface (equity-vol-surface), dividends
+    (dividend-curve) and index (equity-index).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/equity/EQ-CSCA"
+    - "EQ EQ-CSCA"
+  since: "2.7.0"
 match: { kind: equity, priority: 10 }
 title: { pill: Market data · Equity, id: $.TICKER }
 strip:
@@ -29,19 +43,8 @@ strip:
   - { label: Currency, bind: $.CURRENCY }
   - { label: Beta, bind: $.BETA, fmt: price2 }
 panels:
-  - id: history
-    kind: line
-    title: "Price, last 30 days"
-    key: F2
-    rows: $.HISTORY
-    x: DATE
-    y: CLOSE
-    fmt: price2
-  - id: ids
-    kind: kv
-    title: Identifiers
-    area: right
-    rows: $.IDENTIFIERS
+  - { use: series-line@1, with: { id: history, title: "Price, last 30 days", key: F2, rows: $.HISTORY, x: DATE, y: CLOSE } }
+  - { use: field-list@1, with: { id: ids, title: Identifiers, area: right, rows: $.IDENTIFIERS } }
   - id: ohlc
     kind: candlestick
     title: Daily bars (last 60 days)
@@ -51,6 +54,6 @@ panels:
     x: DATE
     fmt: price2
     volume: VOLUME
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.ISSUER, 'issuer')", F8: impact, F9: raw }

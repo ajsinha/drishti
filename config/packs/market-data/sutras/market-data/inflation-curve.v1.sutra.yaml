@@ -17,6 +17,19 @@ rachana: 1
 sutra: inflation-curve
 version: 1
 description: "Zero-coupon breakevens by tenor, with monthly seasonality."
+doc:
+  summary: "Zero-coupon breakevens by tenor, with monthly seasonality."
+  description: >-
+    Zero-coupon breakevens by tenor, with monthly seasonality. One page per inflation curve, its panels: ZC breakevens (%);
+    seasonality; how the view was built; the entities it links to. The strip gives Index, 5Y breakeven and 10Y breakeven. Linked
+    entities: index (inflation-index).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/inflation-curve/INFC-HICPX"
+    - "INFC INFC-HICPX"
+  since: "2.7.0"
 match: { kind: inflation-curve, priority: 10 }
 title: { pill: Market data · Inflation curve, id: $.CURVE_ID }
 strip:
@@ -24,22 +37,8 @@ strip:
   - { label: "5Y breakeven", bind: $.BE_5Y, fmt: pct2, emphasis: true }
   - { label: "10Y breakeven", bind: $.BE_10Y, fmt: pct2 }
 panels:
-  - id: curve
-    kind: line
-    title: ZC breakevens (%)
-    key: F2
-    rows: $.POINTS
-    x: TENOR
-    y: BREAKEVEN
-    fmt: price2
-  - id: seasonality
-    kind: hbar
-    title: Seasonality
-    area: right
-    rows: $.SEASONALITY
-    label: MONTH
-    value: FACTOR
-    fmt: price2
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: series-line@1, with: { id: curve, title: ZC breakevens (%), key: F2, y: BREAKEVEN } }
+  - { use: ranked-bars@1, with: { id: seasonality, title: Seasonality, area: right, rows: $.SEASONALITY, label: MONTH, value: FACTOR, fmt: price2 } }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.INFLATION_INDEX, 'inflation-index')", F8: impact, F9: raw }

@@ -17,20 +17,26 @@ rachana: 1
 sutra: dividend-curve
 version: 1
 description: Expected dividends by year (implied from dividend futures and forwards).
+doc:
+  summary: "Expected dividends by year (implied from dividend futures and forwards)."
+  description: >-
+    Expected dividends by year (implied from dividend futures and forwards). One page per dividend curve, its panels: expected
+    dividends; how the view was built; the entities it links to. The strip gives Underlier and Yield. Linked entities: underlier
+    (equity) and underlier (equity-index).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/dividend-curve/DIV-CSCA"
+    - "DIV DIV-CSCA"
+  since: "2.7.0"
 match: { kind: dividend-curve, priority: 10 }
 title: { pill: Market data · Dividend curve, id: $.CURVE_ID }
 strip:
   - { label: Underlier, bind: $.UNDERLIER }
   - { label: Yield, bind: $.DIVIDEND_YIELD, fmt: pct2, emphasis: true }
 panels:
-  - id: divs
-    kind: hbar
-    title: Expected dividends
-    key: F2
-    rows: $.POINTS
-    label: YEAR
-    value: AMOUNT
-    fmt: price2
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: ranked-bars@1, with: { id: divs, title: Expected dividends, key: F2, rows: $.POINTS, label: YEAR, value: AMOUNT, fmt: price2 } }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.UNDERLYING_EQUITY, 'equity')", F8: impact, F9: raw }

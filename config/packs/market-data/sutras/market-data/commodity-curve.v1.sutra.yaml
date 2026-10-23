@@ -17,6 +17,19 @@ rachana: 1
 sutra: commodity-curve
 version: 1
 description: Futures settlement prices by delivery month.
+doc:
+  summary: "Futures settlement prices by delivery month."
+  description: >-
+    Futures settlement prices by delivery month. One page per commodity forward curve, its panels: forward curve; settlements;
+    how the view was built; the entities it links to. The strip gives Commodity, Front, Shape and M1–M12. Linked entities:
+    commodity (commodity).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/commodity-curve/CMDC-BRENT"
+    - "CMDC CMDC-BRENT"
+  since: "2.7.0"
 match: { kind: commodity-curve, priority: 10 }
 title: { pill: Market data · Commodity forward curve, id: $.CURVE_ID }
 strip:
@@ -25,14 +38,7 @@ strip:
   - { label: Shape, bind: $.SHAPE }
   - { label: "M1–M12", bind: $.ROLL, fmt: price2, tone: sign }
 panels:
-  - id: curve
-    kind: line
-    title: Forward curve
-    key: F2
-    rows: $.POINTS
-    x: MONTH
-    y: PRICE
-    fmt: price2
+  - { use: series-line@1, with: { id: curve, title: Forward curve, key: F2, x: MONTH, y: PRICE } }
   - id: points
     kind: table
     title: Settlements
@@ -41,6 +47,6 @@ panels:
       - { label: Month, bind: "@.MONTH" }
       - { label: Price, bind: "@.PRICE", fmt: price2 }
       - { label: OI, bind: "@.OPEN_INTEREST", fmt: amount0 }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.COMMODITY_REF, 'commodity')", F8: impact, F9: raw }

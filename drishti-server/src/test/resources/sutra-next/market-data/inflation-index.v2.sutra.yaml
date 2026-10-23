@@ -1,0 +1,40 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The inflation-index Sutra as tools/packgen/banking/make_sutras.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the market-data equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: inflation-index
+version: 2
+description: "Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…)."
+match: { kind: inflation-index, priority: 10 }
+title: { pill: Market data · Inflation index, id: $.INDEX_ID }
+strip:
+  - { label: Name, bind: $.NAME }
+  - { label: Latest, bind: $.LATEST, fmt: price2, emphasis: true }
+  - { label: YoY, bind: $.YOY, fmt: pct2, tone: sign }
+  - { label: Publication lag, bind: $.LAG }
+panels:
+  - id: fixings
+    kind: ladder
+    title: Monthly fixings
+    key: F2
+    rows: $.FIXINGS
+    columns:
+      - { label: Month, bind: "@.MONTH" }
+      - { label: Index, bind: "@.VALUE", fmt: price2 }
+      - { label: YoY, bind: "@.YOY", fmt: pct2, tone: sign }
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.INFLATION_CURVE, 'inflation-curve')", F8: impact, F9: raw }

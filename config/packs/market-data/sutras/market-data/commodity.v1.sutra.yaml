@@ -17,6 +17,19 @@ rachana: 1
 sutra: commodity
 version: 1
 description: "A traded commodity with its benchmark, unit and venue."
+doc:
+  summary: "A traded commodity with its benchmark, unit and venue."
+  description: >-
+    A traded commodity with its benchmark, unit and venue. One page per commodity, its panels: contract specification; front
+    month (daily bars, last 60 days); how the view was built; the entities it links to. The strip gives Name, Front month, Unit,
+    Exchange and Sector. Linked entities: forward curve (commodity-curve) and vol surface (commodity-vol-surface).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/commodity/CMD-BRENT"
+    - "CMD CMD-BRENT"
+  since: "2.7.0"
 match: { kind: commodity, priority: 10 }
 title: { pill: Market data · Commodity, id: $.COMMODITY_ID }
 strip:
@@ -26,11 +39,7 @@ strip:
   - { label: Exchange, bind: $.EXCHANGE }
   - { label: Sector, bind: $.SECTOR }
 panels:
-  - id: spec
-    kind: kv
-    title: Contract specification
-    key: F2
-    rows: $.SPEC
+  - { use: field-list@1, with: { id: spec, title: Contract specification, key: F2, rows: $.SPEC } }
   - id: ohlc
     kind: candlestick
     title: "Front month (daily bars, last 60 days)"
@@ -40,6 +49,6 @@ panels:
     x: DATE
     fmt: price2
     volume: VOLUME
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.COMMODITY_CURVE, 'commodity-curve')", F8: impact, F9: raw }

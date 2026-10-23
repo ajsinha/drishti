@@ -24,6 +24,7 @@ params:
   label: LABEL
   value: VALUE
   fmt: signed0
+  tone: ''
   code: ''
   key: ''
   area: ''
@@ -39,6 +40,7 @@ doc:
     label: { type: field, default: LABEL, meaning: "The field of a row naming its bar" }
     value: { type: field, default: VALUE, meaning: "The field of a row giving its bar length" }
     fmt: { type: format, default: signed0, meaning: "The named format of the value" }
+    tone: { type: text, default: '', meaning: "How the bars are toned: sign (gains one colour, losses the other); untoned when empty" }
     code: { type: key, default: '', meaning: "The panel's mnemonic code (CRV, REFS), typed in the command line to jump to it; none when empty" }
     key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
     area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
@@ -58,3 +60,4 @@ panels:
     label: %{label}
     value: %{value}
     fmt: %{fmt}
+    tone: %{tone}

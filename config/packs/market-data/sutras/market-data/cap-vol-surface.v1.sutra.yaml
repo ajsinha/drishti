@@ -17,6 +17,18 @@ rachana: 1
 sutra: cap-vol-surface
 version: 1
 description: Cap vols by maturity and strike.
+doc:
+  summary: "Cap vols by maturity and strike."
+  description: >-
+    Cap vols by maturity and strike. One page per cap/floor volatility surface, its panels: cap vols by maturity × strike (bp);
+    cap vols (bp); ATM by maturity; how the view was built. The strip gives Currency and 5Y ATM.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/cap-vol-surface/CPV-AUD"
+    - "CPV CPV-AUD"
+  since: "2.7.0"
 match: { kind: cap-vol-surface, priority: 10 }
 title: { pill: Market data · Cap/floor volatility surface, id: $.SURFACE_ID }
 strip:
@@ -48,13 +60,6 @@ panels:
       - { label: "3%", bind: "@.K_3", fmt: price2 }
       - { label: "4%", bind: "@.K_4", fmt: price2 }
       - { label: "5%", bind: "@.K_5", fmt: price2 }
-  - id: atm
-    kind: line
-    title: ATM by maturity
-    area: right
-    rows: $.GRID
-    x: MATURITY
-    y: ATM
-    fmt: price2
-  - { id: built, kind: provenance, title: How this view was built }
+  - { use: series-line@1, with: { id: atm, title: ATM by maturity, area: right, rows: $.GRID, x: MATURITY, y: ATM } }
+  - { use: data-provenance@1 }
 keys: { F8: impact, F9: raw }

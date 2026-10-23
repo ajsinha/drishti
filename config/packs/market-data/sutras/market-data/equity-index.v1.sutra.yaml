@@ -17,6 +17,19 @@ rachana: 1
 sutra: equity-index
 version: 1
 description: Index level with its largest constituents.
+doc:
+  summary: "Index level with its largest constituents."
+  description: >-
+    Index level with its largest constituents. One page per equity index, its panels: top constituents; level, last 30 days; how
+    the view was built; the entities it links to. The strip gives Name, Level, 1D, Constituents and Currency. Linked entities:
+    vol surface (equity-vol-surface) and dividends (dividend-curve).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/equity-index/EQX-NDX"
+    - "EQX EQX-NDX"
+  since: "2.7.0"
 match: { kind: equity-index, priority: 10 }
 title: { pill: Market data · Equity index, id: $.INDEX_ID }
 strip:
@@ -34,14 +47,7 @@ panels:
     columns:
       - { label: Equity, bind: "@.EQUITY" }
       - { label: Weight, bind: "@.WEIGHT", fmt: pct2 }
-  - id: history
-    kind: line
-    title: "Level, last 30 days"
-    area: right
-    rows: $.HISTORY
-    x: DATE
-    y: CLOSE
-    fmt: price2
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: series-line@1, with: { id: history, title: "Level, last 30 days", area: right, rows: $.HISTORY, x: DATE, y: CLOSE } }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.EQUITY_VOL_SURFACE, 'equity-vol-surface')", F8: impact, F9: raw }

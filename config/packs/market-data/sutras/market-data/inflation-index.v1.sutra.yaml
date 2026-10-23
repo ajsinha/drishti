@@ -17,6 +17,19 @@ rachana: 1
 sutra: inflation-index
 version: 1
 description: "Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…)."
+doc:
+  summary: "Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…)."
+  description: >-
+    Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…). One page per inflation index, its panels: monthly fixings; how the
+    view was built; the entities it links to. The strip gives Name, Latest, YoY and Publication lag. Linked entities: inflation
+    curve (inflation-curve).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/inflation-index/INF-HICPX"
+    - "INF INF-HICPX"
+  since: "2.7.0"
 match: { kind: inflation-index, priority: 10 }
 title: { pill: Market data · Inflation index, id: $.INDEX_ID }
 strip:
@@ -34,6 +47,6 @@ panels:
       - { label: Month, bind: "@.MONTH" }
       - { label: Index, bind: "@.VALUE", fmt: price2 }
       - { label: YoY, bind: "@.YOY", fmt: pct2, tone: sign }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.INFLATION_CURVE, 'inflation-curve')", F8: impact, F9: raw }

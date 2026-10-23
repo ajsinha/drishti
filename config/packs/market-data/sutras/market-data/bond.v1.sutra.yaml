@@ -17,6 +17,19 @@ rachana: 1
 sutra: bond
 version: 1
 description: "A listed bond: terms, price, yield, spreads and analytics."
+doc:
+  summary: "A listed bond: terms, price, yield, spreads and analytics."
+  description: >-
+    A listed bond: terms, price, yield, spreads and analytics. One page per bond (security master), its panels: terms; coupons;
+    price, last 30 days; how the view was built; the entities it links to. The strip gives Issuer, Coupon, Maturity, Price,
+    Yield, Z-spread, Duration and Rating. Linked entities: issuer (issuer) and benchmark curve (ir-curve).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/bond/BND-BRVERD054608"
+    - "BND BND-BRVERD054608"
+  since: "2.7.0"
 match: { kind: bond, priority: 10 }
 title: { pill: Market data · Bond (security master), id: $.ISIN }
 strip:
@@ -29,11 +42,7 @@ strip:
   - { label: Duration, bind: $.MOD_DURATION, fmt: price2 }
   - { label: Rating, bind: $.RATING }
 panels:
-  - id: terms
-    kind: kv
-    title: Terms
-    key: F2
-    rows: $.TERMS
+  - { use: field-list@1, with: { id: terms, title: Terms, key: F2, rows: $.TERMS } }
   - id: coupons
     kind: table
     title: Coupons
@@ -42,14 +51,7 @@ panels:
     columns:
       - { label: Date, bind: "@.DATE", fmt: date }
       - { label: Coupon, bind: "@.AMOUNT", fmt: amount2 }
-  - id: history
-    kind: line
-    title: "Price, last 30 days"
-    area: right
-    rows: $.HISTORY
-    x: DATE
-    y: PRICE
-    fmt: price2
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: series-line@1, with: { id: history, title: "Price, last 30 days", area: right, rows: $.HISTORY, x: DATE, y: PRICE } }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.ISSUER, 'issuer')", F8: impact, F9: raw }

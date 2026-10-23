@@ -17,6 +17,19 @@ rachana: 1
 sutra: ir-vol-cube
 version: 1
 description: Normal (bp) swaption vols by expiry × tenor.
+doc:
+  summary: "Normal (bp) swaption vols by expiry × tenor."
+  description: >-
+    Normal (bp) swaption vols by expiry × tenor. One page per swaption volatility cube, its panels: normal vols by expiry ×
+    tenor (bp); ATM normal vols (bp); 10Y tenor by expiry; how the view was built. The strip gives Currency, Model, 1Y×10Y and
+    5Y×5Y.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/ir-vol-cube/IRV-AUD"
+    - "IRV IRV-AUD"
+  since: "2.7.0"
 match: { kind: ir-vol-cube, priority: 10 }
 title: { pill: Market data · Swaption volatility cube, id: $.CUBE_ID }
 strip:
@@ -50,13 +63,6 @@ panels:
       - { label: "5Y", bind: "@.T_5Y", fmt: price2 }
       - { label: "10Y", bind: "@.T_10Y", fmt: price2 }
       - { label: "30Y", bind: "@.T_30Y", fmt: price2 }
-  - id: row10y
-    kind: line
-    title: "10Y tenor by expiry"
-    area: right
-    rows: $.GRID
-    x: EXPIRY
-    y: T_10Y
-    fmt: price2
-  - { id: built, kind: provenance, title: How this view was built }
+  - { use: series-line@1, with: { id: row10y, title: "10Y tenor by expiry", area: right, rows: $.GRID, x: EXPIRY, y: T_10Y } }
+  - { use: data-provenance@1 }
 keys: { F8: impact, F9: raw }

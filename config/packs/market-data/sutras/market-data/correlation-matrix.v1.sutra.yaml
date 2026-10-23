@@ -17,6 +17,18 @@ rachana: 1
 sutra: correlation-matrix
 version: 1
 description: "Pairwise correlations used by basket, quanto and spread products."
+doc:
+  summary: "Pairwise correlations used by basket, quanto and spread products."
+  description: >-
+    Pairwise correlations used by basket, quanto and spread products. One page per correlation matrix, its panels: pairs; how
+    the view was built. The strip gives Name, Size and Average.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/correlation-matrix/CORR-EU-EQ"
+    - "CORR CORR-EU-EQ"
+  since: "2.7.0"
 match: { kind: correlation-matrix, priority: 10 }
 title: { pill: Market data · Correlation matrix, id: $.MATRIX_ID }
 strip:
@@ -33,5 +45,5 @@ panels:
       - { label: Factor 1, bind: "@.A" }
       - { label: Factor 2, bind: "@.B" }
       - { label: "ρ", bind: "@.RHO", fmt: price2, tone: sign }
-  - { id: built, kind: provenance, title: How this view was built }
+  - { use: data-provenance@1 }
 keys: { F8: impact, F9: raw }
