@@ -1,0 +1,53 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}New screen · {{ PRODUCT }}{% endblock %}
+{% block screen %}build{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/designer.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="dz-shell" data-describe>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/build/new">Other ways to start</a> · <a href="/help/screen-designer#31-the-sutra-designer-customize-and-describe">Designer guide</a></nav>
+  <h1>New screen</h1>
+  <nav class="dz-modes" aria-label="Designer modes">
+    {% for key, label, on in modes %}<a class="dz-btn" href="{{ '/designer/new' if key == 'describe' else '#' }}"{% if key == mode %} aria-current="page"{% endif %}{% if not on %} aria-disabled="true" title="{{ label }}: coming later"{% elif key == 'customize' %} title="Customize: open any page and press Customize"{% endif %}>{{ label }}</a>{% endfor %}
+  </nav>
+  <form class="dz-describe" data-describe-form autocomplete="off">
+    <label for="describe" class="text-muted-d">Describe the screen, the way you would type a command</label>
+    <div class="dz-line">
+      <input id="describe" name="text" value="{{ line or example }}" spellcheck="false" aria-describedby="describeHelp">
+      <button type="submit" class="dz-btn dz-primary">Build</button>
+    </div>
+    <p id="describeHelp" class="dz-note">Start with a command word and an id (TRD BOOK-RATES-2, CPTY CP-NORTHBRIDGE); separate parts with ·; say
+      <i>click a trade → cash flows + CPTY limits</i> for what a click opens (add <i>below</i>, <i>beside</i> or <i>as tabs</i>), and <i>refresh 30s</i>.</p>
+  </form>
+  <div class="dz-tokens" data-tokens aria-live="polite"></div>
+  <ul class="dz-messages" data-messages role="status"></ul>
+  <section class="dz-result" data-result hidden aria-label="Live result">
+    <div class="dz-result-h">Live result · as you · edit the sentence above to change it</div>
+    <iframe title="The screen as described" data-preview></iframe>
+    <div class="dz-actions">
+      <a class="dz-btn" data-open href="#">Open full page</a>
+      <button type="button" class="dz-btn" data-show-sutra aria-expanded="false">Show the Sutra</button>
+      <button type="button" class="dz-btn dz-primary" data-save>Save to my workspace</button>
+    </div>
+    <p class="dz-note" data-saved role="status"></p>
+    <pre class="dz-yaml mono" data-yaml hidden aria-label="The Sutra (read only)"></pre>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/designer-describe.js?v={{ ASSET_V }}"></script>{% endblock %}

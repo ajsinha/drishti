@@ -500,13 +500,15 @@ curl -s $B/views/trade/MX-20000001 | jq -c '.panels[] | {id, kind, title, key, a
 The full shape is in [The ViewModel in detail](#the-viewmodel-in-detail).
 
 `?sutra=<name>` draws the view with another Sutra of the entity's kind (the newest version; `400 DRS-5001` for one of another kind):
-`GET /api/v1/views/portfolio-trades/BOOK-RATES-2?sutra=book-desk`.
+`GET /api/v1/views/portfolio-trades/BOOK-RATES-2?sutra=book-desk`. `?design=<id>` draws it with one of the caller's own Designs (the
+Sutra designer's saved page, [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md#31-the-sutra-designer-customize-and-describe)): only the owner's
+(`404 DRS-5006` for anyone else's), and only of the entity's kind (`400 DRS-5001`). Events and child panels take it too.
 
 ### Events and child panels (Sutra Next)
 
 A Sutra Next screen's clicks are evaluated on the server, as the caller ([SUTRA_NEXT.md](../architecture/SUTRA_NEXT.md) sections 7, 8).
 A wired panel carries `wire` (`emits`, `children` with `place` and `show`, `source`, `parent`, and `waits` while it waits); a
-clickable row or bar carries `ev`, its place in the panel's data.
+clickable row or bar carries `ev`, its place in the panel's data. A click is `POST /api/v1/views/{kind}/{id}/events`:
 
 ```bash
 curl -s -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \

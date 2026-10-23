@@ -96,7 +96,7 @@ public class ViewEventController {
 
     /**
      * The Sutra that draws a view for this request: the reader's own Design ({@code ?design=<id>}, the Sutra designer's saved page,
-     * SUTRA_DESIGNER.md) when one is named, else the Sutra named by {@code ?sutra=}, else none (the matched Sutra). A Design is read
+     * SCREEN_DESIGNER.md section 31) when one is named, else the Sutra named by {@code ?sutra=}, else none (the matched Sutra). A Design is read
      * only by its owner (anyone else's is {@code 404 DRS-5006}); its Sutra is parsed and checked as Studio's preview is, and must
      * draw entities of the view's kind.
      *

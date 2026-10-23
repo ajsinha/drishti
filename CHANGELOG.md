@@ -18,6 +18,27 @@
 ## Unreleased
 
 - The UI Board work is kept on branch ui-board-preview; not in this release.
+- **The Sutra designer, modes 1 and 2: Customize and Describe** (behind `ui.designer`, off by default;
+  [SCREEN_DESIGNER.md](docs/guides/SCREEN_DESIGNER.md#31-the-sutra-designer-customize-and-describe) section 31): one shell with modes
+  (Outline and Grid shown, not yet enabled), every mode editing the same Sutra YAML as the user's own Design, never the pack's Sutra.
+  - **Customize** (a button on every entity page): the page edited in place with live data as the viewer, under a yellow
+    *Customizing · only you see changes until you share* bar (Cancel, Done); panels get a handle (drag or arrows), Hide/Show (hidden
+    panels kept in the design's notes) and, for tables, Columns from the record's fields (a used table is written out first);
+    *When I click a row in [table] show [the row's details] in [under the row / the right column / below / tabs]* writes `emits` and
+    `children`; *Add to this page* searches the UI kit by docstring, suggests what fits the record and guesses `with:` from its
+    fields (click or drop). Done keeps the design *My page · &lt;kind&gt;*, which then draws that page for that user only; *Your page*
+    links to the pack's page (`?pack=1`); Reset removes it; Share uses the design's read-only link; *Show the Sutra* shows the YAML.
+  - **Describe** (Build, New screen; and *Describe a change*): one command-style line
+    (`TRD BOOK-RATES-2 · click a trade → cash flows + CPTY limits · refresh 30s`) read by a deterministic parser over the command
+    line's mnemonics; *Understood as* tokens with fixes where unsure and plain messages for what was not understood; the live result
+    as the viewer; *Show the Sutra*; *Save to my workspace* (a named design).
+  - Server: `?design=<id>` on `GET /api/v1/views/{kind}/{id}`, its events and its children draws the view with the caller's own
+    Design (owner only, of the view's kind); a design's blocks answer each brought panel written out (`panel`); Rachana accepts
+    `refresh:` (whole seconds, checked; acted on from Sutra Next phase 4).
+  - Docs: SCREEN_DESIGNER.md section 31 (the UI and the YAML at each step), CONFIGURATION (`ui.designer`, `DRISHTI_UI_DESIGNER`),
+    API_GUIDE (`?design=`, the events endpoint). Tests: test_designer.py (parser phrasings, unsure and error lines, the steps, the
+    routes off and on), test_designer_browser.py (Customize on a trade page end to end, Describe's book desk saved, a phone, three
+    themes, the pictures), SutraNextEventsTest, SutraParserTest, BlockOpsTest.
 - **Sutra Next, phases 2 and 3 (2.7.0): events, sources over several packs, nested child panels**
   ([SUTRA_NEXT.md](docs/architecture/SUTRA_NEXT.md) sections 6 to 8, 14, 15):
   - **`source:` as a mapping** on any panel: `{ kind, id | where | search, limit, as-of, pack }`, read as the viewer (a kind the viewer

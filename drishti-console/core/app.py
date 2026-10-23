@@ -229,7 +229,7 @@ def create_app(settings: Settings) -> FastAPI:
 
     catalogue = Servers(settings)
     from routes import (admin_routes, alert_routes, api_routes, asof_routes, auth_routes, build_routes, pack_routes, calc_routes, export_routes, help_routes, home_routes,
-                        dist_routes, layout_routes, monitor_routes, pivot_routes, report_routes, review_routes, server_routes, ship_routes, studio_routes, terminal_routes,
+                        designer_routes, dist_routes, layout_routes, monitor_routes, pivot_routes, report_routes, review_routes, server_routes, ship_routes, studio_routes, terminal_routes,
                         workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes,
                         ai_routes)
 
@@ -379,6 +379,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.docs_dir = docs_dir if docs_dir.is_absolute() else (console_dir / docs_dir).resolve()
     from core.guides import tutorial_count_word
 
+    templates.env.globals["designer_on"] = lambda: bool(settings.get("ui.designer", False))   # the Sutra designer: Build -> New screen offers Describe
     templates.env.globals["TUTORIALS_WORD"] = tutorial_count_word(app.state.docs_dir)       # "Eighteen": the Tutorials card counts the written tutorials, it is never typed
     app.state.libraries = {}
     from core.examples import Examples
@@ -448,6 +449,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(dist_routes.router)
     app.include_router(calc_routes.router)
     app.include_router(layout_routes.router)
+    app.include_router(designer_routes.router)          # the Sutra designer (ui.designer, off by default)
     app.include_router(pivot_routes.router)
     app.include_router(collab_routes.router)
     app.include_router(thread_routes.router)

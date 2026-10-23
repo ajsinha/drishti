@@ -476,3 +476,37 @@ def file_binding(c: Ctx):
     c.page.wait_for_timeout(600)
     c.save("47-file-binding.jpg", clip={"x": 0, "y": 60, "width": 1440, "height": 190})
 
+
+
+# ---- the Sutra designer (docs/guides/SCREEN_DESIGNER.md, The Sutra designer): ui.designer must be on (DRISHTI_UI_DESIGNER=true) ----------
+
+def _designer_on(c: Ctx) -> None:
+    if not c.page.locator("[data-customize-open]").count():
+        raise RuntimeError("the Sutra designer is off: run with DRISHTI_UI_DESIGNER=true (tests/test_designer_browser.py makes the same pictures)")
+
+
+@shot("customize.jpg")
+def sutra_customize(c: Ctx):
+    c.page.goto(c.base + "/v/trade/MX-20000001")
+    _designer_on(c)
+    c.page.locator("[data-customize-open]").click()
+    c.until("document.querySelector('[data-dz-ready]')")
+    c.save("customize.jpg")
+    c.page.locator("[data-dz-cancel]").click()
+
+
+@shot("describe.jpg", also=("describe-light.jpg",))
+def sutra_describe(c: Ctx):
+    from urllib.parse import quote
+    c.page.goto(c.base + "/designer/new?q=" + quote("TRD BOOK-RATES-2 · click a trade → cash flows + CPTY limits · refresh 30s"))
+    c.until("document.querySelector('[data-result]') && !document.querySelector('[data-result]').hidden")
+    frame = c.page.frame_locator("[data-preview]")
+    frame.locator("#p-trades tbody tr[data-ev]").first.locator("td").nth(1).click()
+    frame.locator("#p-limit dd").first.wait_for()
+    c.page.evaluate("window.scrollTo(0, 0)")
+    c.save("describe.jpg")
+    c.page.evaluate("document.documentElement.setAttribute('data-theme', 'light')")
+    c.page.fill("#describe", "TRD BOOK-RATES-2 · click a trade → limits · pizza")
+    c.page.locator("[data-describe-form] button[type=submit]").click()
+    c.until("document.querySelectorAll('[data-token]').length === 3")
+    c.save("describe-light.jpg")

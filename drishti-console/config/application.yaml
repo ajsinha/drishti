@@ -70,6 +70,9 @@ ui:
   # the drawer opens. Costs the server one explain (a re-run of the view, cached for drishti.explain.cache-ttl) per page view;
   # set false on a busy installation and the labels are underlined when the drawer is first opened.
   about_prefetch: ${DRISHTI_ABOUT_PREFETCH:true}
+  # The Sutra designer (docs/guides/SCREEN_DESIGNER.md section 31): Customize on every entity page and Describe under Build -> New screen. A
+  # user's changes are their own Design, never the pack's Sutra. Off: pages and the screen designer are exactly as before.
+  designer: ${DRISHTI_UI_DESIGNER:false}
   # What an error page advises, by the DRS code the server answered with ({kind} and {id} fill in); "default" for any other
   error_advice:
     DRS-1001: Check the identifier, or type part of it in the command line to see what exists.

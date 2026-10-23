@@ -25,7 +25,7 @@ from core import about_index, asof, collab as collab_core, compare_side, control
 from core.settings import changed_at
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
-from routes import api_routes, history_routes
+from routes import api_routes, designer_routes, history_routes
 from routes.common import ident, packs, render
 
 router = APIRouter(include_in_schema=False)
@@ -340,7 +340,9 @@ async def view_panels(request: Request, kind: str, id_: str, panels: str = ""):
     ids = [p for p in panels.split(",") if p and p != "-"] if panels else None
     try:
         chosen = request.query_params.get("sutra")
-        vm = await request.app.state.backend.view(kind, id_, ident(request), controls=ctl, panels=ids, **({"sutra": chosen} if chosen else {}))
+        mine = await designer_routes.design_for(request, kind)          # the Sutra designer: the reader's own page or draft
+        vm = await request.app.state.backend.view(kind, id_, ident(request), controls=ctl, panels=ids, **({"sutra": chosen} if chosen else {}),
+                                                  **({"design": mine} if mine else {}))
     except BackendError as e:
         return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.page_status)
     layout = await request.app.state.layouts.context(request, vm, False)
@@ -379,7 +381,8 @@ async def view_event(request: Request, kind: str, id_: str):
     click = {"panel": str(body.get("panel") or ""), "event": str(body.get("event") or ""), "row": row, "selections": sels}
     try:
         r = await request.app.state.backend.view_event(kind, id_, ident(request), click, controls=controls.from_query(request.query_params),
-                                                       sutra=request.query_params.get("sutra") or None)
+                                                       sutra=request.query_params.get("sutra") or None,
+                                                       **(await designer_routes.design_kw(request, kind)))
     except BackendError as e:
         return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.page_status)
     return JSONResponse({"selection": r.get("selection") or {}, "cleared": r.get("cleared") or [],
@@ -395,7 +398,8 @@ async def view_children(request: Request, kind: str, id_: str, panel: str):
     try:
         groups = await request.app.state.backend.view_children(kind, id_, ident(request), panel, sels,
                                                                controls=controls.from_query(request.query_params),
-                                                               sutra=request.query_params.get("sutra") or None)
+                                                               sutra=request.query_params.get("sutra") or None,
+                                                               **(await designer_routes.design_kw(request, kind)))
     except BackendError as e:
         return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.page_status)
     return JSONResponse({"children": _children_html(request, kind, id_, groups)})
@@ -413,6 +417,9 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
     chosen = (request.query_params.get("sutra") or "").strip()     # ?sutra=book-desk: another Sutra of the kind draws the view
     if chosen:
         more["sutra"] = chosen
+    mine = await designer_routes.design_for(request, kind)          # the Sutra designer (ui.designer): the reader's own page, or the draft
+    if mine:
+        more["design"] = mine
     try:
         try:
             vm = await request.app.state.backend.view(kind, id_, ident(request), **more)
@@ -441,7 +448,8 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
             shared = None                           # the banner is a courtesy: never fail the view for it
     calc = {"offered": False} if embed else await request.app.state.calc.context(request, await packs(request), vm["ref"]["kind"])
     return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed), share_url=share_url(request, kind, id_, (vm.get("provenance") or {}).get("generation"), ctl),
-                  pin=pin, pin_gen=gen or None, chosen_sutra=chosen, pin_via="history" if request.query_params.get("via") == "history" else None, ctl_query=controls.to_query(ctl), shared=shared, calc=calc, layout=layout, pivots=pivots, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")])
+                  pin=pin, pin_gen=gen or None, chosen_sutra=chosen, pin_via="history" if request.query_params.get("via") == "history" else None, ctl_query=controls.to_query(ctl), shared=shared, calc=calc, layout=layout, pivots=pivots, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")],
+                  designer=designer_routes.view_context(request, mine))
 
 
 def share_url(request: Request, kind: str, id_: str, generation=None, ctl: dict | None = None) -> str:

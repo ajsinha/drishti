@@ -37,6 +37,7 @@
     var q = new URLSearchParams(location.search), out = new URLSearchParams();
     q.forEach(function (v, k) { if (k.indexOf('ctl.') === 0) { out.append(k, v); } });
     if (view.dataset.chosenSutra) { out.set('sutra', view.dataset.chosenSutra); }
+    if (view.dataset.design) { out.set('design', view.dataset.design); }       // the Sutra designer: the reader's own page or draft
     (extra || []).forEach(function (kv) { out.append(kv[0], kv[1]); });
     var s = out.toString();
     return s ? '?' + s : '';

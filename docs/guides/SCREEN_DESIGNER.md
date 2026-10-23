@@ -51,6 +51,7 @@ This guide goes step by step, with a picture of each step. The pictures are made
 - [28. Troubleshooting shipping](#28-troubleshooting-shipping)
 - [29. Limits of shipping](#29-limits-of-shipping)
 - [30. Keyboard reference for shipping](#30-keyboard-reference-for-shipping)
+- [31. The Sutra designer: Customize and Describe](#31-the-sutra-designer-customize-and-describe)
 
 ## 1. Start: bring data
 
@@ -675,3 +676,127 @@ If you edit Sutras in an IDE and keep them in git, bind the design to a file so 
 The shared page has no editing keys: the *Preview with a file…*, *Preview a stored entity* and *Copy the Sutra* controls are real buttons and fields in reading order.
 
 See also: [the Sutra command](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci), [Screen Builder design](../architecture/SCREEN_BUILDER.md), [the examples](examples/README.md), [the Rachana reference](RACHANA_REFERENCE.md), [panels in depth](PANELS.md).
+
+## 31. The Sutra designer: Customize and Describe
+
+The Sutra designer changes a screen in plain words, on the real page with real data, as you see it. It has one shell with modes:
+**Customize** (change the page you are on) and **Describe** (type a new screen in one line). **Outline** and **Grid** come later. Every
+mode edits the same thing: a Sutra (the YAML that lays out a screen, see [SUTRA_NEXT.md](../architecture/SUTRA_NEXT.md)), kept as
+**your own design**. The pack's Sutra is never changed, and nobody else sees your version until you share it.
+
+It is switched on by an administrator: `ui.designer: true` in the console's `application.yaml` (or `DRISHTI_UI_DESIGNER=true`;
+[CONFIGURATION.md](../admin/CONFIGURATION.md)). Off (the default), pages and the Build workbench are exactly as before.
+
+### Customize this page
+
+![Customize on a trade page](img/designer/customize.jpg)
+
+1. Open any entity page (for example `TRD MX-20000001 <GO>`) and press **Customize** in the page header. A yellow bar says
+   *Customizing · only you see changes until you share*, with **Cancel** and **Done**. Every panel gets a dashed outline, a handle
+   and its tools; a panel on the right lists what you can do. The data stays live, read as you (your roles and masks).
+2. **Move** a panel: drag its handle onto another panel, or use the ↑ and ↓ arrows. **Hide** it with *Hide*; it is listed under
+   *Hidden*, where *Show* brings it back as it was.
+3. **Columns** (tables): pick the fields to show, from the record's own fields. A table that comes from a shared part of the page is
+   first written out on the page (one click), then it takes your columns.
+4. **When I click** a row in *[table ▾]* show *[the row's details ▾]* in *[under the clicked row / the right column / below the
+   table / tabs ▾]*, then **Make it so**. Click a row: its details open where you said. **Stop** removes it.
+5. **Add to this page**: search the Drishti UI kit by what a part shows (*limits*, *chart*, *note*); what fits this record is listed
+   first, with its settings guessed from the record's fields. Click a card, or drag it onto a panel or onto *Drop here*.
+6. **Done** keeps it: the page now opens with your version, marked *Your page* in the header (that link opens the pack's page).
+   **Cancel** forgets the changes. Customize again to go on; **Reset to the pack's page** removes your version; **Share** makes a
+   read-only link to your design. **Describe a change** switches to Describe.
+
+What it writes, step by step (**Show the Sutra**, at the foot of the side panel, shows the whole text read-only):
+
+```yaml
+# My page, saved by the Sutra designer (Customize). Only I see it until I share it; Reset goes back to the pack's page.
+rachana: 1
+sutra: my-irs-fixfloat            # your page has its own name, so it never stands for the pack's Sutra
+version: 1
+match: { kind: trade }
+panels:
+  - { use: trading/legs@1, with: { rate-fmt: pct4 } }           # 2. moved above the deal ticket
+  - { use: trading/deal-ticket@1, with: { rate-fmt: pct4 } }
+  - id: flows                                                    # 3. written out from trading/flow-schedule@1, columns chosen
+    kind: table
+    title: Cash-flow schedule, every leg
+    rows: flatten($.LEGS[*].CASH_FLOWS)
+    columns:
+      - { label: Flow, bind: "@.FLOW_ID" }
+      - { label: Payment, bind: "@.PAYMENT_DATE", fmt: date }
+    emits:                                                       # 4. when I click a row ...
+      - name: open
+        on: row-click
+        payload: { FLOW_ID: { bind: "@.FLOW_ID", type: id }, PAYMENT_DATE: { bind: "@.PAYMENT_DATE", type: any } }
+    children:                                                    # ... show the row's details in the right column
+      - place: detail-right
+        waits: Pick a row of Cash-flow schedule, every leg to see it here
+        panels:
+          - id: flows-row
+            kind: kv
+            title: "Cash-flow schedule, every leg: ${@parent.open.FLOW_ID}"
+            columns:
+              - { label: Flow id, bind: "@parent.open.FLOW_ID" }
+              - { label: Payment date, bind: "@parent.open.PAYMENT_DATE" }
+  - { use: explainer-note@1, with: { id: note } }                # 5. added from the kit
+```
+
+A hidden panel (2) is kept in the design's notes, not in the Sutra, so *Show* restores it exactly. Your page is the design named
+*My page · trade* in **Build, My designs**; the server draws it with `?design=<id>` (only for you, only for its kind).
+
+### Describe it
+
+![Describe: the book desk from one line](img/designer/describe.jpg)
+
+**Build, New screen** offers *describe the screen in one line*, and Customize has **Describe a change**. Type the screen the way you
+would type a command, and press **Build**:
+
+```
+TRD BOOK-RATES-2 · click a trade → cash flows + CPTY limits · refresh 30s
+```
+
+- The first part says what the screen is about: a command word of the command line (`TRD`, `CPTY`, `PTRD`, `CTRD`, `CRV` ...) and an
+  id. `TRD` with a book (`BOOK-...`) or a counterparty (`CP-...`) means *the trades of* that book or counterparty.
+- Parts are separated by `·` (or `|` or `;`).
+- `click a trade → A + B` says what a click opens: *cash flows*, *trade details*, *CPTY* (the counterparty), *CPTY limits*. Add
+  *below*, *beside*, *under the row* or *as tabs* to say where. `->`, `=>` and *shows* work as well as `→`.
+- `refresh 30s` (or `2m`) is kept in the Sutra as `refresh: 30`. Pages act on it from a later release; the page says so.
+
+**Understood as** shows one token per part. A token the parser was unsure of (a bare id, a loose word such as *limits*) has a **fix…**
+list; anything it could not read is red, with a plain sentence saying why. The parser is deterministic: the same line always gives the
+same screen, and no AI is involved.
+
+The **live result** below draws the screen as you, with real data: click a trade and its cash flows open under the row, the
+counterparty's limits on the right. **Show the Sutra** shows the YAML read-only; **Save to my workspace** keeps it as a named design
+(*My screen · Trades of book BOOK-RATES-2*) in Build, My designs, personal until you share it.
+
+```yaml
+# My screen, written by the Sutra designer (Describe). Edit it in Build, or describe it again.
+rachana: 1
+sutra: my-portfolio-trades-book-rates-2
+version: 1
+description: TRD BOOK-RATES-2 · click a trade → cash flows + CPTY limits · refresh 30s
+match: { kind: portfolio-trades }
+refresh: 30
+title: { pill: Trades of book, id: $.PORTFOLIO }
+panels:
+  - use: row-picker@1
+    with: { id: trades, title: Trades, rows: $.TRADES, event: open, key: TRADE_ID, ref: COUNTERPARTY, ... }
+    children:
+      - place: expand-row
+        waits: Pick a trade to see its cash flows
+        source: { pack: trading, kind: trade, id: "@parent.open.id" }
+        panels:
+          - use: cashflow-ladder@1
+            with: { id: flows, title: "Cash flows of ${@parent.open.id}", rows: $src.EVENTS, date: EVENT_DATE, type: EVENT_TYPE, amount: AMOUNT }
+  - id: limit
+    kind: kv
+    title: Counterparty limits
+    area: right
+    waits: Pick a trade to see its counterparty's limits
+    source: { pack: counterparty-risk, kind: credit-limit, where: "@.COUNTERPARTY == @trades.open.ref", limit: 1 }
+    columns: [ ... ]
+  - { use: data-provenance@1 }
+```
+
+![Describe in the light theme: an unsure token and a part not understood](img/designer/describe-light.jpg)
