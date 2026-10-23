@@ -1747,7 +1747,7 @@ generic, parameterised panels named after what they show. They are the **Drishti
 Sutra may use them exactly like a shared block, and a pack needs to extend nothing for them:
 
 ```yaml
-# config/packs/market-data/sutras/market-data/ir-curve.v1.sutra.yaml (the first screen built from fragments)
+# config/packs/market-data/sutras/market-data/ir-curve.v1.sutra.yaml (the first screen built from fragments; now generated)
 panels:
   - { use: curve-overview@1, with: { curve-code: CRV, curve-key: F2, table-key: F3 } }    # the zero-rate line, then the pillars
   - { use: series-line@1, with: { id: forwards, title: "1Y forward rates (%)", area: right, rows: $.FORWARDS, x: TENOR, y: RATE, fmt: price2 } }
@@ -1836,6 +1836,34 @@ panels:
 `examples` as URLs or commands that open it, `since`). Today it is a warning, shown on request: `sutra lint <pack> --docs` prints an incomplete one line by
 line and counts the Sutras without one (`warning DRS-2055 19 of 20 Sutras have no doc: block`); an older `.block.yaml` without a
 docstring is a warning too. The run still passes, with or without `--strict`. Write one whenever you touch a Sutra.
+
+**Generated Sutras are fragment Sutras.** The pack generators write the Sutra Next form themselves (SUTRA_NEXT.md, open
+question 4): `tools/packgen/banking/make_sutras.py` for core, market-data, market-risk and counterparty-risk (`FRAGMENT_PACKS`),
+`tools/packgen/common/packbuild.py` for a pack whose spec sets `fragments=True` (world-economy's politics-and-society screens).
+The writer (`tools/packgen/banking/kit_sutras.py`) turns a panel into a kit fragment use only when the fragment draws it exactly:
+
+| The taxonomy's panel | Written as |
+|---|---|
+| a plain line (rows, x, y, format) | `series-line@1` |
+| plain horizontal bars (rows, label, value, format, tone) | `ranked-bars@1` |
+| a key/value list over an object (`rows:`, no columns) | `field-list@1` |
+| a curve's pillars (Tenor, Instrument, Quote, Zero, DF) | `curve-table@1`; after the zero-rate line over the same rows, one `curve-overview@1` |
+| how the view was built / linked entities | `data-provenance@1` / `linked-entities@1` |
+| the data source and licence (`$.PROVENANCE`) last, then provenance and links | one `source-footer@1` |
+
+Anything a fragment cannot say (a table's own columns, series, markers, pivots, controls that tune a panel) stays written in place.
+Parameters equal to the fragment's default are left out. Every generated Sutra carries a generated `doc:`: the summary from the
+kind's description (cut to 120 characters), a description listing its panels, strip and links, `params` for its controls, and two
+examples opening the kind's first committed sample (`/v/equity/EQ-CSCA`, `EQ EQ-CSCA`); `DOCS` in `make_sutras.py` replaces a
+generated docstring with a hand-written one (ir-curve). The trading pack's deal screens use the pack's own fragments
+(`trading/deal-ticket@1`, `trading/legs@1`, `trading/flow-schedule@1`, `trading/events@1`, `trading/payments@1`, written by
+`tools/packgen/trades/sutras.py` with complete docs) and the kit's footer. Lint such a pack per pack (`sutra lint
+config/packs/trading`): the qualified names resolve against the pack folder, not when linting the whole `config/packs` root.
+
+Each pack was moved only when its equivalence test (`PackSutraNextEquivalence` and one subclass per pack in drishti-server) drew
+every screen identically, for a full and a masked reader, against the old inline layouts kept as test data
+(`src/test/resources/sutra-next/<pack>/<name>.v2.sutra.yaml`). To move another generated pack: copy its current Sutras there as
+version 2, switch the generator on, regenerate, and add the subclass.
 
 **Changing a fragment.** Never change what a released version draws: write `name.v2.fragment.yaml` and move Sutras one at a time.
 To prove a migration changes nothing, compare the view models before and after, as `SutraNextEquivalenceTest` does for ir-curve

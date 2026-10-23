@@ -143,6 +143,32 @@ reader and a masked one (`GDP_USD_BN`, `GROWTH`, `DEBT`, `UNEMPLOYMENT`, `LATEST
 own version. The generator leaves them alone (`hand_written` in `tools/packgen/world/make.py`). world-economy extends nothing:
 the fragments come from the Drishti UI kit, which loads whatever packs are enabled (the test enables world-economy alone).
 
+**Migration progress (the generators emit fragments; open question 4).** The pack generators now write the Sutra Next form
+themselves: each panel a kit fragment draws exactly becomes its use (`series-line`, `ranked-bars`, which gained an optional
+`tone`, `field-list`, `curve-table` or `curve-overview`, `data-provenance`, `linked-entities`, `source-footer`), the rest stays
+written in place, and every Sutra gets a generated `doc:` (`tools/packgen/banking/kit_sutras.py`; PACK_DEVELOPER_GUIDE, Generated
+Sutras are fragment Sutras). ir-curve is generated again (its docstring kept by hand in `DOCS`, `HAND_WRITTEN` is empty). Each
+pack is proved by `PackSutraNextEquivalence` (one subclass per pack): every migrated screen drawn on the pack's committed samples
+with the old layout (test data, version 2) and the new, for a full and a masked reader, identical but for the layout's version.
+
+| Pack | Screens migrated | How | Layout lines before → after (no header, no doc) | Proof |
+|---|---|---|---|---|
+| market-data | 20 of 20 | generated (`make_sutras.py`) | 655 → 520 (19) + ir-curve | `MarketDataSutraNextEquivalenceTest`, `SutraNextEquivalenceTest` |
+| world-economy | 13 of 13 (7 economics by hand, 6 politics generated) | `packbuild.py` (`fragments=True`) | 238 → 144 (politics) | `WorldEconomySutraNextEquivalenceTest`, `EconomicsSutraNextEquivalenceTest` |
+| counterparty-risk | 10 of 10 | generated | 328 → 295 | `CounterpartyRiskSutraNextEquivalenceTest` |
+| market-risk | 6 of 6 | generated | 194 → 157 | `MarketRiskSutraNextEquivalenceTest` |
+| core | 10 of 10 (docs and footer; tables and lists stay in place) | generated | 330 → 330 | `CoreSutraNextEquivalenceTest` |
+| news-and-markets | 2 of 4 (news-topic, listed-company) | by hand | 134 → 130 | `NewsAndMarketsSutraNextEquivalenceTest` |
+| trading | 130 deal screens of 134 | generated (`trades/sutras.py`): the blocks are pack fragments `trading/<name>@1` with docs, the footer the kit's | 3,647 → 3,770 (the footer is two uses) | `TradingSutraNextEquivalenceTest` |
+
+Not migrated, and why: news-and-markets `quote` and `news` (no committed sample to prove them on: their records come only from
+the live connectors or the demo lake); the trading pack's four derived pages (`counterparty-trades`, `portfolio-trades`,
+`legal-entity-trades`, `index-trades`: metrics with `span:`, a paged table with `where:`, a ladder over a computed path, nothing a
+kit fragment says, and their derived records are not committed samples). Panels written in place inside migrated screens: tables
+with their own columns (a fragment's columns are fixed), surfaces, candlesticks, scatters, areas, graphs, waterfalls, pivots,
+panels with `source:` (another record; phase 2), `when:`, or a control's `where:`. `sutra lint --docs` now counts 6 Sutras of
+197 without a `doc:` (it was 180).
+
 ## 3a. The Drishti UI kit
 
 **Decision (product owner, 2026-10-22).** The fragment library is platform UI vocabulary, not domain content. It is the **Drishti
@@ -569,12 +595,13 @@ Each phase migrates screens only where the equivalence test proves the view unch
 1. **Library home.** *Answered (product owner, 2026-10-22):* the library is platform vocabulary, the Drishti UI kit
    (`config/ui-kit`, `drishti.ui-kit.dir`), loaded whatever packs are enabled; packs keep their own fragments, namespaced by pack
    ([section 3a](#3a-the-drishti-ui-kit)).
-2. **Docstrings for today's Sutras.** 180 pack Sutras have no `doc:` (warning only). Generate them from the taxonomy (packgen) or
-   write them by hand as screens migrate? When does `--strict` start failing on them?
+2. **Docstrings for today's Sutras.** *Partly answered (2.7.0):* the generators write them from the taxonomy (191 of 197 pack
+   Sutras now carry one; [migration progress](#3-fragments-the-library)). Still open: when does `--strict` start failing on them?
 3. **Strip fragments.** The strip (key figures in the title band) is not a panel list, so fragments cannot fill it yet. Extend `use:`
    to `strip:` (a `key-figures` fragment), or move headline figures into panels (`key-figure`)?
-4. **Generated screens and hand-written ones.** ir-curve is now hand-written (`HAND_WRITTEN` in make_sutras.py). Should the
-   generators emit fragment uses instead, so the other market-data screens migrate without leaving the generator?
+4. **Generated screens and hand-written ones.** *Answered (2.7.0):* the generators emit fragment uses and a `doc:`, so generated
+   screens migrate without leaving the generator; ir-curve is generated again (`HAND_WRITTEN` is empty). The seven economics
+   screens stay hand-written (their generator's panels carry options the fragments do not say one for one).
 5. **Event round trips.** Server-side events keep masks exact but cost a request per click. Is a client-side evaluation of
    payloads over already-masked view data acceptable for the simple cases (filtering a table already on screen)?
 6. **Events in the URL.** Should a shared link reproduce selections (and children opened), or only the record and controls?

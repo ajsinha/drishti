@@ -43,6 +43,21 @@
     pack's committed samples for a full and a masked reader. They are hand-written now (`hand_written` in
     `tools/packgen/world/make.py`, honoured by `tools/packgen/common/packbuild.py`). world-economy extends nothing (as before): the
     fragments come from the UI kit.
+  - **The generators emit fragment Sutras** (open question 4). `tools/packgen/banking/kit_sutras.py` writes a taxonomy panel as a
+    kit fragment use when the fragment draws it exactly (`series-line`, `ranked-bars`, `field-list`, `curve-table`, `curve-overview`,
+    `data-provenance`, `linked-entities`, `source-footer`) and gives every generated Sutra a generated `doc:` (summary, description,
+    params for its controls, examples opening the first committed sample). `make_sutras.py` does it for core, market-data,
+    market-risk and counterparty-risk (`FRAGMENT_PACKS`; ir-curve generated again, its docstring kept in `DOCS`, `HAND_WRITTEN`
+    empty), `packbuild.py` for world-economy's six politics-and-society screens (`PackSpec.fragments`). `ranked-bars@1` gained an
+    optional `tone` (empty: untoned, as before). The trading pack's five deal blocks are now its own fragments with complete docs
+    (`trading/deal-ticket@1`, `legs`, `flow-schedule`, `events`, `payments`; `sutras/common/*.v1.fragment.yaml`), its `deal-footer`
+    block the kit's `data-provenance` and `linked-entities`, and its 130 deal Sutras carry a generated `doc:`. news-and-markets'
+    `news-topic` and `listed-company` migrated by hand (`explainer-note`, the footer, a `doc:`). Proof: `PackSutraNextEquivalence`
+    with one test per pack (market-data, world-economy, counterparty-risk, market-risk, core, news-and-markets, trading) draws every
+    migrated screen with the old layout (kept as test data under `sutra-next/<pack>/`) and the new, for a full and a masked reader:
+    identical but for the layout's version. `sutra lint --docs`: 6 of 197 Sutras without a `doc:` (was 180). Not migrated:
+    news-and-markets `quote` and `news` (no committed sample), the four derived trade pages. `make_sutras.py --check` is up to
+    date again (the derived pages' generator writes the payments ladder over the computed `PAY_7D/30D/90D` fields, as committed).
   - **The Drishti UI kit** (product owner, 2026-10-22: the library is platform UI vocabulary, not domain content). The fragments
     moved from the core pack's `sutras/library` to **`config/ui-kit/fragments`** (names and versions kept), which the server and
     `sutra lint|test` ALWAYS load whatever packs are enabled (`drishti.ui-kit.dir`, `DRISHTI_UI_KIT_DIR`, default
