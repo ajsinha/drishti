@@ -2370,7 +2370,7 @@ Common reasons:
 A Sutra file that fails any check is not loaded (or keeps its last good version, see
 [Hot reload](#hot-reload-the-workbench-and-governance)), and each problem is reported as `<file>:<line>:<column> <code> <message>`
 (`sutra lint`: `<file>:<line> <code> <message>`). All problems of a file are reported at once. The grammar's own codes run
-`DRS-2010` to `DRS-2055`; around them are YAML and file problems (`DRS-2001`, `DRS-2004`, `DRS-2009`, `DRS-2032`, `DRS-2033`), the pack about-file
+`DRS-2010` to `DRS-2057`; around them are YAML and file problems (`DRS-2001`, `DRS-2004`, `DRS-2009`, `DRS-2032`, `DRS-2033`), the pack about-file
 family (`DRS-2040` to `DRS-2047`), shared blocks (`DRS-2048`), docstrings (`DRS-2055`) and expressions (`DRS-2101`).
 
 | Code | Message (exact form) | Cause | Fix |

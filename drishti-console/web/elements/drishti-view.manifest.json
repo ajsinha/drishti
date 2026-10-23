@@ -1,6 +1,6 @@
 {
-  "bytes": 136245,
-  "gzip": 25016,
+  "bytes": 136290,
+  "gzip": 25027,
   "iconFont": {
     "family": "bootstrap-icons",
     "registered": "FontFace API (the sheet has no @font-face)"
@@ -33,6 +33,9 @@
     "grid-3x3": [
       "templates/_macros/panels.html"
     ],
+    "hand-index": [
+      "templates/_macros/panels.html"
+    ],
     "hourglass-split": [
       "templates/_macros/view.html"
     ],
@@ -49,7 +52,7 @@
       "templates/_macros/panels.html"
     ]
   },
-  "sha256": "51abb804fc87822c88384087b5ebc3cf935521b9c2328f38c00fe4a5fbefeecb",
+  "sha256": "2a3cca5b4e21397cefc83b39ea710e954c00b64bb12cc0b8cb7309a09fb598ad",
   "sources": [
     "css/tokens.css",
     "css/theme.css",
@@ -63,5 +66,5 @@
     "css/touch.css",
     "vendor/bootstrap-icons/bootstrap-icons.css"
   ],
-  "version": "37a0cd58c051"
+  "version": "58e32db0e907"
 }
