@@ -1,0 +1,65 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The counterparty Sutra as tools/packgen/banking/make_sutras.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the core equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: counterparty
+version: 2
+description: "A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, country of risk and parent group."
+match: { kind: counterparty, priority: 10 }
+title: { pill: Counterparty and legal · Counterparty, id: $.COUNTERPARTY_ID }
+strip:
+  - { label: Name, bind: $.NAME }
+  - { label: LEI, bind: $.LEI }
+  - { label: Rating, bind: $.RATING, emphasis: true }
+  - { label: Sector, bind: $.SECTOR }
+  - { label: Country of risk, bind: $.COUNTRY_OF_RISK }
+  - { label: UEN, bind: $.UEN }
+  - { label: Type, bind: $.TYPE }
+  - { label: Net MTM, bind: $.NET_MTM, fmt: signed0, tone: sign }
+panels:
+  - id: nettingSets
+    kind: table
+    title: Netting sets
+    key: F2
+    rows: $.NETTING_SETS
+    columns:
+      - { label: Netting set, bind: "@.ID", link: true }
+      - { label: Agreement, bind: "@.AGREEMENT" }
+      - { label: Trades, bind: "@.TRADES", fmt: amount0, total: true }
+      - { label: Net MTM, bind: "@.NET_MTM", fmt: signed0, tone: sign, total: true }
+  - id: kyc
+    kind: kv
+    title: KYC and classification
+    area: right
+    columns:
+      - { label: Status, bind: $.KYC.STATUS, tone: status }
+      - { label: Risk rating, bind: $.KYC.RISK_RATING }
+      - { label: Last review, bind: $.KYC.LAST_REVIEW, fmt: date }
+      - { label: EMIR classification, bind: $.KYC.EMIR_CLASSIFICATION }
+      - { label: PD (1 year), bind: $.KYC.PD_1Y, fmt: pct2 }
+  - id: hierarchy
+    kind: graph
+    title: Group hierarchy (agreements and netting sets)
+    code: HIER
+    key: F3
+    nodes: $.HIERARCHY.NODES
+    edges: $.HIERARCHY.EDGES
+    label: LABEL
+    group: TYPE
+    layout: tree
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.GROUP, 'counterparty-group')", F8: impact, F9: raw }

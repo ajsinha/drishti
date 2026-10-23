@@ -17,6 +17,18 @@ rachana: 1
 sutra: ccp
 version: 1
 description: A clearing house with its default fund and margin model.
+doc:
+  summary: "A clearing house with its default fund and margin model."
+  description: >-
+    A clearing house with its default fund and margin model. One page per central counterparty, its panels: clearing accounts;
+    how the view was built. The strip gives Name, Default fund, IM posted and Model.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/ccp/CCP-CME"
+    - "CCP CCP-CME"
+  since: "2.7.0"
 match: { kind: ccp, priority: 10 }
 title: { pill: Counterparty and legal · Central counterparty, id: $.CCP_ID }
 strip:
@@ -33,5 +45,5 @@ panels:
     columns:
       - { label: Account, bind: "@.ID", link: true }
       - { label: IM, bind: "@.IM", fmt: compact, total: true }
-  - { id: built, kind: provenance, title: How this view was built }
+  - { use: data-provenance@1 }
 keys: { F8: impact, F9: raw }

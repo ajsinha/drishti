@@ -1,0 +1,48 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The clearing-account Sutra as tools/packgen/banking/make_sutras.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the core equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: clearing-account
+version: 2
+description: An account at a CCP holding cleared trades and margin.
+match: { kind: clearing-account, priority: 10 }
+title: { pill: Collateral and margin · Clearing account, id: $.ACCOUNT_ID }
+strip:
+  - { label: CCP, bind: $.CCP_NAME }
+  - { label: IM, bind: $.IM, fmt: compact, emphasis: true }
+  - { label: VM today, bind: $.VM_TODAY, fmt: signed0, tone: sign }
+  - { label: Excess, bind: $.EXCESS, fmt: compact }
+panels:
+  - id: trades
+    kind: table
+    title: Cleared trades
+    key: F2
+    rows: $.TRADES
+    pivot:
+      fields: [PRODUCT, ASSET_CLASS, CURRENCY, BOOK, MATURITY_BUCKET, { field: MATURITY, label: Maturity date }, { field: NOTIONAL, fmt: compact }, { field: MTM, label: MTM (USD), fmt: signed0 }, TRADE_ID]
+      rows: [PRODUCT]
+      columns: [MATURITY_BUCKET]
+      values: [{ field: NOTIONAL, agg: sum }]
+      filters: [CURRENCY, ASSET_CLASS]
+    columns:
+      - { label: Trade, bind: "@.TRADE_ID" }
+      - { label: Product, bind: "@.PRODUCT" }
+      - { label: Notional, bind: "@.NOTIONAL", fmt: compact }
+      - { label: Maturity, bind: "@.MATURITY", fmt: date }
+      - { label: MTM, bind: "@.MTM", fmt: signed0, tone: sign, total: true }
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.CCP, 'ccp')", F8: impact, F9: raw }

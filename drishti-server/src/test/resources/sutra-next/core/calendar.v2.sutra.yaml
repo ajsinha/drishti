@@ -1,0 +1,41 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The calendar Sutra as tools/packgen/banking/make_sutras.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the core equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: calendar
+version: 2
+description: "Business-day calendar (USNY, TARGET, GBLO, JPTO…)."
+match: { kind: calendar, priority: 10 }
+title: { pill: Market data · Holiday calendar, id: $.CALENDAR_ID }
+strip:
+  - { label: Name, bind: $.NAME }
+  - { label: Holidays 2026, bind: $.HOLIDAYS_2026, emphasis: true }
+  - { label: Holidays 2027, bind: $.HOLIDAYS_2027 }
+  - { label: Next holiday, bind: $.NEXT_HOLIDAY }
+  - { label: "On", bind: $.NEXT_HOLIDAY_DATE, fmt: date }
+panels:
+  - id: holidays
+    kind: table
+    title: Holidays
+    key: F2
+    rows: $.HOLIDAYS
+    columns:
+      - { label: Date, bind: "@.DATE", fmt: date }
+      - { label: Day, bind: "@.WEEKDAY" }
+      - { label: Holiday, bind: "@.NAME" }
+      - { label: Observed, bind: "@.OBSERVED" }
+  - { id: built, kind: provenance, title: How this view was built }
+keys: { F8: impact, F9: raw }

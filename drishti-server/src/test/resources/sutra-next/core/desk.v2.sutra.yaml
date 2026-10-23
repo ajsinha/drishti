@@ -1,0 +1,79 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The desk Sutra as tools/packgen/banking/make_sutras.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the core equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: desk
+version: 2
+description: "A trading desk: books, limits and risk results."
+match: { kind: desk, priority: 10 }
+title: { pill: Organisation · Desk, id: $.DESK_ID }
+strip:
+  - { label: Name, bind: $.NAME }
+  - { label: Head, bind: $.HEAD }
+  - { label: Books, bind: size($.BOOKS) }
+  - { label: VaR, bind: $.VAR_99, fmt: compact, emphasis: true }
+  - { label: MTM, bind: $.MTM, fmt: signed0, tone: sign }
+panels:
+  - id: books
+    kind: table
+    title: Books
+    key: F2
+    rows: $.BOOKS
+    columns:
+      - { label: Book, bind: "@.ID", link: true }
+      - { label: Trades, bind: "@.TRADES", fmt: amount0, total: true }
+      - { label: MTM, bind: "@.MTM", fmt: signed0, tone: sign, total: true }
+  - id: mtmGrid
+    kind: pivot
+    title: "MTM grid (by book and currency, USD)"
+    code: PIV
+    key: F3
+    rows: $.POSITIONS
+    fmt: compact
+    tone: sign
+    by: BOOK
+    across: CURRENCY
+    value: MTM
+    agg: sum
+    heat: true
+  - id: tradeCount
+    kind: pivot
+    title: Trades by book and product family
+    rows: $.POSITIONS
+    by: BOOK
+    across: FAMILY
+    agg: count
+  - id: positions
+    kind: table
+    title: Trades by book
+    code: TRD
+    key: F4
+    rows: $.POSITIONS
+    pivot:
+      rows: [BOOK]
+      columns: [CURRENCY]
+      values: [{ field: MTM, agg: sum }]
+      filters: [FAMILY]
+      heat: true
+    columns:
+      - { label: Trade, bind: "@.TRADE_ID" }
+      - { label: Book, bind: "@.BOOK" }
+      - { label: Currency, bind: "@.CURRENCY" }
+      - { label: Family, bind: "@.FAMILY" }
+      - { label: MTM, bind: "@.MTM", fmt: signed0, tone: sign, total: true }
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.LEGAL_ENTITY, 'legal-entity')", F8: impact, F9: raw }

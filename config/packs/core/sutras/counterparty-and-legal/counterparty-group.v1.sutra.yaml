@@ -17,6 +17,18 @@ rachana: 1
 sutra: counterparty-group
 version: 1
 description: Economic group of related counterparties (obligor group).
+doc:
+  summary: "Economic group of related counterparties (obligor group)."
+  description: >-
+    Economic group of related counterparties (obligor group). One page per counterparty group, its panels: members; how the view
+    was built. The strip gives Name, Members, Group limit and Utilisation.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/counterparty-group/GRP-ALDERSHOT"
+    - "GRP GRP-ALDERSHOT"
+  since: "2.7.0"
 match: { kind: counterparty-group, priority: 10 }
 title: { pill: Counterparty and legal · Counterparty group, id: $.GROUP_ID }
 strip:
@@ -34,5 +46,5 @@ panels:
       - { label: Counterparty, bind: "@.ID", link: true }
       - { label: Name, bind: "@.NAME" }
       - { label: Rating, bind: "@.RATING" }
-  - { id: built, kind: provenance, title: How this view was built }
+  - { use: data-provenance@1 }
 keys: { F8: impact, F9: raw }

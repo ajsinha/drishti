@@ -17,6 +17,18 @@ rachana: 1
 sutra: calendar
 version: 1
 description: "Business-day calendar (USNY, TARGET, GBLO, JPTO…)."
+doc:
+  summary: "Business-day calendar (USNY, TARGET, GBLO, JPTO…)."
+  description: >-
+    Business-day calendar (USNY, TARGET, GBLO, JPTO…). One page per holiday calendar, its panels: holidays; how the view was
+    built. The strip gives Name, Holidays 2026, Holidays 2027, Next holiday and On.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/calendar/CAL-EUTA"
+    - "CAL CAL-EUTA"
+  since: "2.7.0"
 match: { kind: calendar, priority: 10 }
 title: { pill: Market data · Holiday calendar, id: $.CALENDAR_ID }
 strip:
@@ -36,5 +48,5 @@ panels:
       - { label: Day, bind: "@.WEEKDAY" }
       - { label: Holiday, bind: "@.NAME" }
       - { label: Observed, bind: "@.OBSERVED" }
-  - { id: built, kind: provenance, title: How this view was built }
+  - { use: data-provenance@1 }
 keys: { F8: impact, F9: raw }

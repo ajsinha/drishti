@@ -17,6 +17,18 @@ rachana: 1
 sutra: book
 version: 1
 description: "A trading book: owner desk, trades and risk."
+doc:
+  summary: "A trading book: owner desk, trades and risk."
+  description: >-
+    A trading book: owner desk, trades and risk. One page per book, its panels: largest trades; how the view was built; the
+    entities it links to. The strip gives Name, Desk, Trades, MTM and DV01. Linked entities: desk (desk).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/book/BOOK-COMM-1"
+    - "BOOK BOOK-COMM-1"
+  since: "2.7.0"
 match: { kind: book, priority: 10 }
 title: { pill: Organisation · Book, id: $.BOOK_ID }
 strip:
@@ -44,6 +56,6 @@ panels:
       - { label: Notional, bind: "@.NOTIONAL", fmt: compact }
       - { label: Maturity, bind: "@.MATURITY", fmt: date }
       - { label: MTM, bind: "@.MTM", fmt: signed0, tone: sign, total: true }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.DESK, 'desk')", F8: impact, F9: raw }

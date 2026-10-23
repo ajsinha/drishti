@@ -17,6 +17,18 @@ rachana: 1
 sutra: legal-entity
 version: 1
 description: "The bank's own booking entity."
+doc:
+  summary: "The bank's own booking entity."
+  description: >-
+    The bank's own booking entity. One page per bank legal entity, its panels: desks; risk and return (books: VaR against
+    today's P&L, USD); how the view was built. The strip gives Name, LEI, Jurisdiction and Regulator.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/legal-entity/LE-FRA"
+    - "LE LE-FRA"
+  since: "2.7.0"
 match: { kind: legal-entity, priority: 10 }
 title: { pill: Organisation · Bank legal entity, id: $.ENTITY_ID }
 strip:
@@ -48,5 +60,5 @@ panels:
     xFmt: compact
     xLabel: VaR 99% 1D (USD)
     yLabel: "P&L 1D (USD)"
-  - { id: built, kind: provenance, title: How this view was built }
+  - { use: data-provenance@1 }
 keys: { F8: impact, F9: raw }

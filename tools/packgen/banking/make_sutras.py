@@ -47,7 +47,7 @@ HAND_WRITTEN: set[str] = set()
 # The packs whose kind Sutras are written in the Sutra Next form (docs/architecture/SUTRA_NEXT.md, open question 4): each panel a
 # use of a Drishti UI kit fragment (config/ui-kit/fragments) where one draws it exactly, and a generated doc: docstring. Each pack
 # moved once its equivalence test proved every screen unchanged (drishti-server PackSutraNextEquivalenceTest and its subclasses).
-FRAGMENT_PACKS = {"market-data", "counterparty-risk", "market-risk"}
+FRAGMENT_PACKS = {"market-data", "counterparty-risk", "market-risk", "core"}
 # Docstrings written by hand for a generated Sutra: their keys replace the generated ones.
 DOCS = {
     "ir-curve": {

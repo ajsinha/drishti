@@ -17,6 +17,18 @@ rachana: 1
 sutra: trader
 version: 1
 description: A trader and their books.
+doc:
+  summary: "A trader and their books."
+  description: >-
+    A trader and their books. One page per trader, its panels: books; how the view was built; the entities it links to. The
+    strip gives Name, Desk and Trades. Linked entities: desk (desk).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/trader/TRDR-ASHAH"
+    - "TRDR TRDR-ASHAH"
+  since: "2.7.0"
 match: { kind: trader, priority: 10 }
 title: { pill: Organisation · Trader, id: $.TRADER_ID }
 strip:
@@ -31,6 +43,6 @@ panels:
     rows: $.BOOKS
     columns:
       - { label: Book, bind: "@.ID", link: true }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.DESK, 'desk')", F8: impact, F9: raw }

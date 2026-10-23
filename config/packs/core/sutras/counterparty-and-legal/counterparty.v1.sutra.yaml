@@ -17,6 +17,20 @@ rachana: 1
 sutra: counterparty
 version: 1
 description: "A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, country of risk and parent group."
+doc:
+  summary: "A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, country of risk and parent group."
+  description: >-
+    A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, country of risk and parent group. One page per
+    counterparty, its panels: netting sets; KYC and classification; group hierarchy (agreements and netting sets); how the view
+    was built; the entities it links to. The strip gives Name, LEI, Rating, Sector, Country of risk, UEN, Type and Net MTM.
+    Linked entities: group (counterparty-group), credit limit (credit-limit) and credit curve (credit-curve).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/counterparty/CP-ALDERSHOT"
+    - "CPTY CP-ALDERSHOT"
+  since: "2.7.0"
 match: { kind: counterparty, priority: 10 }
 title: { pill: Counterparty and legal · Counterparty, id: $.COUNTERPARTY_ID }
 strip:
@@ -59,6 +73,6 @@ panels:
     label: LABEL
     group: TYPE
     layout: tree
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.GROUP, 'counterparty-group')", F8: impact, F9: raw }

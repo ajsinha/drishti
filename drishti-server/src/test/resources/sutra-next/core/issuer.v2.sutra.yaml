@@ -1,0 +1,40 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The issuer Sutra as tools/packgen/banking/make_sutras.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the core equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: issuer
+version: 2
+description: Issuer of bonds and reference entity for CDS.
+match: { kind: issuer, priority: 10 }
+title: { pill: Counterparty and legal · Issuer, id: $.ISSUER_ID }
+strip:
+  - { label: Name, bind: $.NAME }
+  - { label: Rating, bind: $.RATING, emphasis: true }
+  - { label: Sector, bind: $.SECTOR }
+  - { label: Country, bind: $.COUNTRY }
+panels:
+  - id: bonds
+    kind: table
+    title: Bonds outstanding
+    key: F2
+    rows: $.BONDS
+    columns:
+      - { label: ISIN, bind: "@.ISIN" }
+      - { label: Coupon, bind: "@.COUPON", fmt: pct2 }
+      - { label: Maturity, bind: "@.MATURITY", fmt: date }
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.CREDIT_CURVE, 'credit-curve')", F8: impact, F9: raw }

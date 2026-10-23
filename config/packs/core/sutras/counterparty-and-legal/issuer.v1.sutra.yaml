@@ -17,6 +17,19 @@ rachana: 1
 sutra: issuer
 version: 1
 description: Issuer of bonds and reference entity for CDS.
+doc:
+  summary: "Issuer of bonds and reference entity for CDS."
+  description: >-
+    Issuer of bonds and reference entity for CDS. One page per issuer, its panels: bonds outstanding; how the view was built;
+    the entities it links to. The strip gives Name, Rating, Sector and Country. Linked entities: credit curve (credit-curve) and
+    equity (equity).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/issuer/ISS-BUND"
+    - "ISS ISS-BUND"
+  since: "2.7.0"
 match: { kind: issuer, priority: 10 }
 title: { pill: Counterparty and legal · Issuer, id: $.ISSUER_ID }
 strip:
@@ -34,6 +47,6 @@ panels:
       - { label: ISIN, bind: "@.ISIN" }
       - { label: Coupon, bind: "@.COUPON", fmt: pct2 }
       - { label: Maturity, bind: "@.MATURITY", fmt: date }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.CREDIT_CURVE, 'credit-curve')", F8: impact, F9: raw }

@@ -17,6 +17,18 @@ rachana: 1
 sutra: clearing-account
 version: 1
 description: An account at a CCP holding cleared trades and margin.
+doc:
+  summary: "An account at a CCP holding cleared trades and margin."
+  description: >-
+    An account at a CCP holding cleared trades and margin. One page per clearing account, its panels: cleared trades; how the
+    view was built; the entities it links to. The strip gives CCP, IM, VM today and Excess. Linked entities: CCP (ccp).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/clearing-account/CLR-CME-1"
+    - "CLR CLR-CME-1"
+  since: "2.7.0"
 match: { kind: clearing-account, priority: 10 }
 title: { pill: Collateral and margin · Clearing account, id: $.ACCOUNT_ID }
 strip:
@@ -42,6 +54,6 @@ panels:
       - { label: Notional, bind: "@.NOTIONAL", fmt: compact }
       - { label: Maturity, bind: "@.MATURITY", fmt: date }
       - { label: MTM, bind: "@.MTM", fmt: signed0, tone: sign, total: true }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.CCP, 'ccp')", F8: impact, F9: raw }

@@ -17,6 +17,19 @@ rachana: 1
 sutra: desk
 version: 1
 description: "A trading desk: books, limits and risk results."
+doc:
+  summary: "A trading desk: books, limits and risk results."
+  description: >-
+    A trading desk: books, limits and risk results. One page per desk, its panels: books; MTM grid (by book and currency, USD);
+    trades by book and product family; trades by book; how the view was built; the entities it links to. The strip gives Name,
+    Head, Books, VaR and MTM. Linked entities: legal entity (legal-entity) and var (var).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/desk/DESK-COMM"
+    - "DESK DESK-COMM"
+  since: "2.7.0"
 match: { kind: desk, priority: 10 }
 title: { pill: Organisation · Desk, id: $.DESK_ID }
 strip:
@@ -73,6 +86,6 @@ panels:
       - { label: Currency, bind: "@.CURRENCY" }
       - { label: Family, bind: "@.FAMILY" }
       - { label: MTM, bind: "@.MTM", fmt: signed0, tone: sign, total: true }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.LEGAL_ENTITY, 'legal-entity')", F8: impact, F9: raw }
