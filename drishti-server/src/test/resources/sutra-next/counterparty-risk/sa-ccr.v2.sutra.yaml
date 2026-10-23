@@ -1,0 +1,49 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The sa-ccr Sutra as tools/packgen/banking/make_sutras.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the counterparty-risk equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: sa-ccr
+version: 2
+description: "Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier."
+match: { kind: sa-ccr, priority: 10 }
+title: { pill: Exposure and capital · SA-CCR exposure, id: $.CALC_ID }
+strip:
+  - { label: RC, bind: $.REPLACEMENT_COST, fmt: compact }
+  - { label: Add-on, bind: $.ADD_ON, fmt: compact }
+  - { label: Multiplier, bind: $.MULTIPLIER, fmt: df4 }
+  - { label: EAD, bind: $.EAD, fmt: compact, emphasis: true }
+  - { label: RWA, bind: $.RWA, fmt: compact }
+panels:
+  - id: addons
+    kind: hbar
+    title: Add-on by asset class
+    key: F2
+    rows: $.ADD_ONS
+    label: ASSET_CLASS
+    value: ADD_ON
+    fmt: compact
+  - id: hedging
+    kind: table
+    title: Hedging sets
+    rows: $.HEDGING_SETS
+    columns:
+      - { label: Asset class, bind: "@.ASSET_CLASS" }
+      - { label: Hedging set, bind: "@.HEDGING_SET" }
+      - { label: Effective notional, bind: "@.EFFECTIVE_NOTIONAL", fmt: compact }
+      - { label: SF, bind: "@.SF", fmt: pct2 }
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.NETTING_SET, 'netting-set')", F8: impact, F9: raw }

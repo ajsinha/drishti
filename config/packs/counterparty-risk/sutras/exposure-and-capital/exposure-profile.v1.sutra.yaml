@@ -17,6 +17,19 @@ rachana: 1
 sutra: exposure-profile
 version: 1
 description: "Simulated EE, EPE, ENE and PFE by time bucket for a netting set."
+doc:
+  summary: "Simulated EE, EPE, ENE and PFE by time bucket for a netting set."
+  description: >-
+    Simulated EE, EPE, ENE and PFE by time bucket for a netting set. One page per exposure profile, its panels: exposure (USD);
+    buckets; how the view was built; the entities it links to. The strip gives EPE, EEPE, PFE 95 peak, Paths and Run. Linked
+    entities: netting set (netting-set).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/exposure-profile/EXP-ALDERSHOT-FRA"
+    - "EXP EXP-ALDERSHOT-FRA"
+  since: "2.7.0"
 match: { kind: exposure-profile, priority: 10 }
 title: { pill: Exposure and capital · Exposure profile, id: $.PROFILE_ID }
 strip:
@@ -46,6 +59,6 @@ panels:
       - { label: ENE, bind: "@.ENE", fmt: compact }
       - { label: PFE 95, bind: "@.PFE_95", fmt: compact }
       - { label: PFE 99, bind: "@.PFE_99", fmt: compact }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.NETTING_SET, 'netting-set')", F8: impact, F9: raw }

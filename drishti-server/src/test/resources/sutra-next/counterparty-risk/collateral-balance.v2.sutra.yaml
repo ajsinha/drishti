@@ -1,0 +1,46 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The collateral-balance Sutra as tools/packgen/banking/make_sutras.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the counterparty-risk equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: collateral-balance
+version: 2
+description: "Collateral held and posted under a CSA, by asset, after haircuts."
+match: { kind: collateral-balance, priority: 10 }
+title: { pill: Collateral and margin · Collateral balance, id: $.BALANCE_ID }
+strip:
+  - { label: Held (we hold), bind: $.HELD, fmt: compact }
+  - { label: Posted (we posted), bind: $.POSTED, fmt: compact }
+  - { label: "Net (held − posted)", bind: $.NET, fmt: signed0, tone: sign, emphasis: true }
+  - { label: As of, bind: $.AS_OF, fmt: date }
+panels:
+  - id: positions
+    kind: table
+    title: Positions
+    key: F2
+    rows: $.POSITIONS
+    pivot:
+      rows: [DIRECTION]
+      values: [{ field: MARKET_VALUE, agg: sum }, { field: VALUE, agg: sum }]
+      filters: [ASSET]
+    columns:
+      - { label: Asset, bind: "@.ASSET" }
+      - { label: Direction, bind: "@.DIRECTION" }
+      - { label: Market value, bind: "@.MARKET_VALUE", fmt: amount0, total: true }
+      - { label: Haircut, bind: "@.HAIRCUT", fmt: pct2 }
+      - { label: Collateral value, bind: "@.VALUE", fmt: amount0, total: true }
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.CSA, 'csa')", F8: impact, F9: raw }

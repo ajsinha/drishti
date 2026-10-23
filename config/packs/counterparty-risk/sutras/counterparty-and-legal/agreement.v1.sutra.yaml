@@ -17,6 +17,19 @@ rachana: 1
 sutra: agreement
 version: 1
 description: "ISDA, GMRA or GMSLA master agreement with its key elections."
+doc:
+  summary: "ISDA, GMRA or GMSLA master agreement with its key elections."
+  description: >-
+    ISDA, GMRA or GMSLA master agreement with its key elections. One page per master agreement, its panels: elections; how the
+    view was built; the entities it links to. The strip gives Type, Counterparty, Governing law, Signed and Close-out netting.
+    Linked entities: counterparty (counterparty) and CSA (csa).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/agreement/AGR-ALDERSHOT-ISDA"
+    - "AGR AGR-ALDERSHOT-ISDA"
+  since: "2.7.0"
 match: { kind: agreement, priority: 10 }
 title: { pill: Counterparty and legal · Master agreement, id: $.AGREEMENT_ID }
 strip:
@@ -26,11 +39,7 @@ strip:
   - { label: Signed, bind: $.SIGNED, fmt: date }
   - { label: Close-out netting, bind: $.CLOSE_OUT_NETTING, emphasis: true }
 panels:
-  - id: elections
-    kind: kv
-    title: Elections
-    key: F2
-    rows: $.ELECTIONS
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: field-list@1, with: { id: elections, title: Elections, key: F2, rows: $.ELECTIONS } }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.COUNTERPARTY, 'counterparty')", F8: impact, F9: raw }

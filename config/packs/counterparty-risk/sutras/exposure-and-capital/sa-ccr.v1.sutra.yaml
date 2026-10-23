@@ -17,6 +17,19 @@ rachana: 1
 sutra: sa-ccr
 version: 1
 description: "Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier."
+doc:
+  summary: "Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier."
+  description: >-
+    Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier. One page per sA-CCR exposure, its panels: add-on
+    by asset class; hedging sets; how the view was built; the entities it links to. The strip gives RC, Add-on, Multiplier, EAD
+    and RWA. Linked entities: netting set (netting-set).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/sa-ccr/SACCR-ALDERSHOT-FRA"
+    - "SACCR SACCR-ALDERSHOT-FRA"
+  since: "2.7.0"
 match: { kind: sa-ccr, priority: 10 }
 title: { pill: Exposure and capital · SA-CCR exposure, id: $.CALC_ID }
 strip:
@@ -26,14 +39,7 @@ strip:
   - { label: EAD, bind: $.EAD, fmt: compact, emphasis: true }
   - { label: RWA, bind: $.RWA, fmt: compact }
 panels:
-  - id: addons
-    kind: hbar
-    title: Add-on by asset class
-    key: F2
-    rows: $.ADD_ONS
-    label: ASSET_CLASS
-    value: ADD_ON
-    fmt: compact
+  - { use: ranked-bars@1, with: { id: addons, title: Add-on by asset class, key: F2, rows: $.ADD_ONS, label: ASSET_CLASS, value: ADD_ON, fmt: compact } }
   - id: hedging
     kind: table
     title: Hedging sets
@@ -43,6 +49,6 @@ panels:
       - { label: Hedging set, bind: "@.HEDGING_SET" }
       - { label: Effective notional, bind: "@.EFFECTIVE_NOTIONAL", fmt: compact }
       - { label: SF, bind: "@.SF", fmt: pct2 }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.NETTING_SET, 'netting-set')", F8: impact, F9: raw }

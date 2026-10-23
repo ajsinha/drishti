@@ -17,6 +17,20 @@ rachana: 1
 sutra: csa
 version: 1
 description: "Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts."
+doc:
+  summary: "Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts."
+  description: >-
+    Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts. One page per credit support annex, its
+    panels: eligible collateral and haircuts; how the view was built; the entities it links to. The strip gives Margin,
+    Threshold (us), Threshold (them), MTA, IA, Frequency and MPoR. Linked entities: agreement (agreement), counterparty
+    (counterparty), collateral (collateral-balance) and netting set (netting-set).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/csa/CSA-ALDERSHOT"
+    - "CSA CSA-ALDERSHOT"
+  since: "2.7.0"
 match: { kind: csa, priority: 10 }
 title: { pill: Collateral and margin · Credit support annex, id: $.CSA_ID }
 strip:
@@ -36,6 +50,6 @@ panels:
     columns:
       - { label: Asset, bind: "@.ASSET" }
       - { label: Haircut, bind: "@.HAIRCUT", fmt: pct2 }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.AGREEMENT, 'agreement')", F8: impact, F9: raw }

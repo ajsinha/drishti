@@ -1,0 +1,81 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The netting-set Sutra as tools/packgen/banking/make_sutras.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the counterparty-risk equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: netting-set
+version: 2
+description: "Trades that net on close-out under one agreement and CSA, with exposure and collateral."
+match: { kind: netting-set, priority: 10 }
+title: { pill: Exposure and capital · Netting set, id: $.NETTING_SET_ID }
+strip:
+  - { label: Trades, bind: $.TRADE_COUNT }
+  - { label: Net MTM, bind: $.NET_MTM, fmt: signed0, tone: sign }
+  - { label: "Collateral (+ held, − posted)", bind: $.COLLATERAL, fmt: signed0 }
+  - { label: EE peak, bind: $.EE_PEAK, fmt: compact }
+  - { label: PFE 95 peak, bind: $.PFE_PEAK, fmt: compact, emphasis: true }
+  - { label: Limit, bind: $.LIMIT, fmt: compact }
+  - { label: Utilisation, bind: $.UTILISATION, fmt: pct0 }
+  - { label: CVA, bind: $.CVA, fmt: signed0, tone: sign }
+controls:
+  - { id: asset, kind: dropdown, label: Asset class, options: "$.BY_ASSET[*].ASSET", placement: header, panel: trades }
+  - { id: product, kind: multi-select, label: Product, options: "$.TRADES[*].PRODUCT", placement: header, panel: trades }
+  - { id: minNotional, kind: slider, label: Notional at least, min: 0, max: "max($.TRADES[*].NOTIONAL)", step: 1000000, placement: header, panel: trades }
+  - { id: status, kind: multi-select, label: Status, options: "$.TRADES[*].STATUS", default: all, placement: header, panel: trades }
+panels:
+  - id: exposure
+    kind: area
+    title: Exposure profile
+    code: EXP
+    key: F2
+    rows: $.PROFILE
+    x: TENOR
+    limit: $.LIMIT
+    series:
+      - { label: Expected exposure, value: EE, tone: link }
+      - { label: PFE 95, value: PFE, tone: accent }
+  - id: trades
+    kind: table
+    title: "Member trades (${size($.TRADES)} of ${$.TRADE_COUNT})${ctl.asset ? ' · ' + ctl.asset : ''}"
+    code: TRD
+    key: F3
+    rows: $.TRADES
+    where: "(ctl.asset == '' || @.ASSET_CLASS == ctl.asset) && oneOf(@.PRODUCT, ctl.product) && oneOf(@.STATUS, ctl.status) && (ctl.minNotional == '' || @.NOTIONAL >= ctl.minNotional)"
+    pivot:
+      fields: [PRODUCT, ASSET_CLASS, CURRENCY, BOOK, MATURITY_BUCKET, { field: MATURITY, label: Maturity date }, { field: NOTIONAL, fmt: compact }, { field: MTM, label: MTM (USD), fmt: signed0 }, TRADE_ID]
+      rows: [PRODUCT]
+      columns: [MATURITY_BUCKET]
+      values: [{ field: NOTIONAL, agg: sum }]
+      filters: [CURRENCY, ASSET_CLASS]
+    columns:
+      - { label: Trade, bind: "@.TRADE_ID" }
+      - { label: Status, bind: "@.STATUS", tone: status }
+      - { label: Product, bind: "@.PRODUCT" }
+      - { label: Notional, bind: "@.NOTIONAL", fmt: compact }
+      - { label: Maturity, bind: "@.MATURITY", fmt: date }
+      - { label: MTM, bind: "@.MTM", fmt: signed0, tone: sign, total: true }
+  - id: byAsset
+    kind: hbar
+    title: Net MTM by asset class
+    area: right
+    rows: $.BY_ASSET
+    on-select: { by: asset, field: ASSET, filter: [trades] }
+    label: ASSET
+    value: MTM
+    fmt: signed0
+    tone: sign
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.COUNTERPARTY, 'counterparty')", F8: impact, F9: raw }

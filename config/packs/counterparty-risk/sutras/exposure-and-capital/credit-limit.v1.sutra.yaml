@@ -17,6 +17,19 @@ rachana: 1
 sutra: credit-limit
 version: 1
 description: "PFE limit by tenor bucket for a counterparty, with utilisation."
+doc:
+  summary: "PFE limit by tenor bucket for a counterparty, with utilisation."
+  description: >-
+    PFE limit by tenor bucket for a counterparty, with utilisation. One page per credit limit, its panels: by tenor bucket;
+    utilisation; how the view was built; the entities it links to. The strip gives Counterparty, Measure, Limit, Used,
+    Utilisation and Status. Linked entities: counterparty (counterparty).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/credit-limit/LIM-ALDERSHOT"
+    - "LIM LIM-ALDERSHOT"
+  since: "2.7.0"
 match: { kind: credit-limit, priority: 10 }
 title: { pill: Exposure and capital · Credit limit, id: $.LIMIT_ID }
 strip:
@@ -37,14 +50,7 @@ panels:
       - { label: Limit, bind: "@.LIMIT", fmt: compact }
       - { label: Used, bind: "@.USED", fmt: compact }
       - { label: Utilisation, bind: "@.UTILISATION", fmt: pct0 }
-  - id: util
-    kind: hbar
-    title: Utilisation
-    area: right
-    rows: $.BUCKETS
-    label: BUCKET
-    value: UTILISATION
-    fmt: pct0
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: ranked-bars@1, with: { id: util, title: Utilisation, area: right, rows: $.BUCKETS, label: BUCKET, value: UTILISATION, fmt: pct0 } }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.COUNTERPARTY, 'counterparty')", F8: impact, F9: raw }

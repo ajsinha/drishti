@@ -1,0 +1,42 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The margin-call Sutra as tools/packgen/banking/make_sutras.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the counterparty-risk equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: margin-call
+version: 2
+description: A variation or initial margin call and its settlement status.
+match: { kind: margin-call, priority: 10 }
+title: { pill: Collateral and margin · Margin call, id: $.CALL_ID }
+strip:
+  - { label: Date, bind: $.CALL_DATE, fmt: date }
+  - { label: Type, bind: $.MARGIN_TYPE }
+  - { label: Direction, bind: $.DIRECTION }
+  - { label: Amount, bind: $.AMOUNT, fmt: amount0, emphasis: true }
+  - { label: Status, bind: $.STATUS, tone: status }
+  - { label: Dispute, bind: $.DISPUTE_AMOUNT, fmt: amount0 }
+panels:
+  - id: events
+    kind: ladder
+    title: Workflow
+    key: F2
+    rows: $.EVENTS
+    columns:
+      - { label: Time, bind: "@.AT" }
+      - { label: Event, bind: "@.EVENT" }
+      - { label: By, bind: "@.BY" }
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.NETTING_SET, 'netting-set')", F8: impact, F9: raw }

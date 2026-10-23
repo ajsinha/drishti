@@ -1,0 +1,42 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The csa Sutra as tools/packgen/banking/make_sutras.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the counterparty-risk equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: csa
+version: 2
+description: "Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts."
+match: { kind: csa, priority: 10 }
+title: { pill: Collateral and margin · Credit support annex, id: $.CSA_ID }
+strip:
+  - { label: Margin, bind: $.MARGIN_TYPE }
+  - { label: Threshold (us), bind: $.THRESHOLD_US, fmt: compact }
+  - { label: Threshold (them), bind: $.THRESHOLD_THEM, fmt: compact }
+  - { label: MTA, bind: $.MTA, fmt: compact }
+  - { label: IA, bind: $.INDEPENDENT_AMOUNT, fmt: compact }
+  - { label: Frequency, bind: $.FREQUENCY }
+  - { label: MPoR, bind: $.MPOR, emphasis: true }
+panels:
+  - id: eligible
+    kind: table
+    title: Eligible collateral and haircuts
+    key: F2
+    rows: $.ELIGIBLE
+    columns:
+      - { label: Asset, bind: "@.ASSET" }
+      - { label: Haircut, bind: "@.HAIRCUT", fmt: pct2 }
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.AGREEMENT, 'agreement')", F8: impact, F9: raw }

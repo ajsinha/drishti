@@ -1,0 +1,52 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The exposure-profile Sutra as tools/packgen/banking/make_sutras.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the counterparty-risk equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: exposure-profile
+version: 2
+description: "Simulated EE, EPE, ENE and PFE by time bucket for a netting set."
+match: { kind: exposure-profile, priority: 10 }
+title: { pill: Exposure and capital · Exposure profile, id: $.PROFILE_ID }
+strip:
+  - { label: EPE, bind: $.EPE, fmt: compact }
+  - { label: EEPE, bind: $.EEPE, fmt: compact }
+  - { label: PFE 95 peak, bind: $.PFE_PEAK, fmt: compact, emphasis: true }
+  - { label: Paths, bind: $.PATHS, fmt: amount0 }
+  - { label: Run, bind: $.RUN_DATE, fmt: date }
+panels:
+  - id: profile
+    kind: area
+    title: Exposure (USD)
+    key: F2
+    rows: $.BUCKETS
+    x: TENOR
+    series:
+      - { label: EE, value: EE, tone: link }
+      - { label: PFE 95, value: PFE_95, tone: accent }
+      - { label: ENE, value: ENE, tone: neg }
+  - id: buckets
+    kind: table
+    title: Buckets
+    rows: $.BUCKETS
+    columns:
+      - { label: Tenor, bind: "@.TENOR" }
+      - { label: EE, bind: "@.EE", fmt: compact }
+      - { label: ENE, bind: "@.ENE", fmt: compact }
+      - { label: PFE 95, bind: "@.PFE_95", fmt: compact }
+      - { label: PFE 99, bind: "@.PFE_99", fmt: compact }
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.NETTING_SET, 'netting-set')", F8: impact, F9: raw }

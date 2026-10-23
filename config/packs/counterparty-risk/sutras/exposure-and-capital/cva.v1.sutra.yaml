@@ -17,6 +17,19 @@ rachana: 1
 sutra: cva
 version: 1
 description: "Credit, debit and funding valuation adjustments with sensitivities."
+doc:
+  summary: "Credit, debit and funding valuation adjustments with sensitivities."
+  description: >-
+    Credit, debit and funding valuation adjustments with sensitivities. One page per cVA / XVA, its panels: adjustments;
+    sensitivities; how the view was built; the entities it links to. The strip gives CVA, DVA, FVA, KVA and CS01 (cpty). Linked
+    entities: netting set (netting-set) and counterparty curve (credit-curve).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/cva/CVA-ALDERSHOT-FRA"
+    - "CVA CVA-ALDERSHOT-FRA"
+  since: "2.7.0"
 match: { kind: cva, priority: 10 }
 title: { pill: Exposure and capital · CVA / XVA, id: $.RESULT_ID }
 strip:
@@ -26,15 +39,7 @@ strip:
   - { label: KVA, bind: $.KVA, fmt: signed0, tone: sign }
   - { label: CS01 (cpty), bind: $.CS01, fmt: signed0, tone: sign }
 panels:
-  - id: components
-    kind: hbar
-    title: Adjustments
-    key: F2
-    rows: $.COMPONENTS
-    label: NAME
-    value: AMOUNT
-    fmt: signed0
-    tone: sign
+  - { use: ranked-bars@1, with: { id: components, title: Adjustments, key: F2, rows: $.COMPONENTS, label: NAME, value: AMOUNT, tone: sign } }
   - id: sens
     kind: table
     title: Sensitivities
@@ -43,6 +48,6 @@ panels:
       - { label: Risk factor, bind: "@.FACTOR" }
       - { label: Bump, bind: "@.BUMP" }
       - { label: "Δ CVA", bind: "@.DELTA", fmt: signed0, tone: sign }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.NETTING_SET, 'netting-set')", F8: impact, F9: raw }

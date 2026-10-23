@@ -17,6 +17,25 @@ rachana: 1
 sutra: netting-set
 version: 1
 description: "Trades that net on close-out under one agreement and CSA, with exposure and collateral."
+doc:
+  summary: "Trades that net on close-out under one agreement and CSA, with exposure and collateral."
+  description: >-
+    Trades that net on close-out under one agreement and CSA, with exposure and collateral. One page per netting set, its
+    panels: exposure profile; member trades; net MTM by asset class; how the view was built; the entities it links to. The strip
+    gives Trades, Net MTM, Collateral (+ held, − posted), EE peak, PFE 95 peak, Limit, Utilisation and CVA. Linked entities:
+    counterparty (counterparty), agreement (agreement), CSA (csa), credit limit (credit-limit), exposure profile (exposure-
+    profile), CVA (cva), SA-CCR (sa-ccr), SIMM (simm) and collateral (collateral-balance).
+  params:
+    asset: { type: text, default: '', meaning: "The Asset class control" }
+    product: { type: text, default: '', meaning: "The Product control" }
+    minNotional: { type: text, default: '', meaning: "The Notional at least control" }
+    status: { type: text, default: '', meaning: "The Status control" }
+  emits: []
+  expects: []
+  examples:
+    - "/v/netting-set/NS-ALDERSHOT-FRA"
+    - "NSET NS-ALDERSHOT-FRA"
+  since: "2.7.0"
 match: { kind: netting-set, priority: 10 }
 title: { pill: Exposure and capital · Netting set, id: $.NETTING_SET_ID }
 strip:
@@ -75,6 +94,6 @@ panels:
     value: MTM
     fmt: signed0
     tone: sign
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.COUNTERPARTY, 'counterparty')", F8: impact, F9: raw }

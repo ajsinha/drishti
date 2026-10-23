@@ -17,6 +17,19 @@ rachana: 1
 sutra: margin-call
 version: 1
 description: A variation or initial margin call and its settlement status.
+doc:
+  summary: "A variation or initial margin call and its settlement status."
+  description: >-
+    A variation or initial margin call and its settlement status. One page per margin call, its panels: workflow; how the view
+    was built; the entities it links to. The strip gives Date, Type, Direction, Amount, Status and Dispute. Linked entities:
+    netting set (netting-set) and CSA (csa).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/margin-call/MC-ALDERSHOT-FRA-1"
+    - "MC MC-ALDERSHOT-FRA-1"
+  since: "2.7.0"
 match: { kind: margin-call, priority: 10 }
 title: { pill: Collateral and margin · Margin call, id: $.CALL_ID }
 strip:
@@ -36,6 +49,6 @@ panels:
       - { label: Time, bind: "@.AT" }
       - { label: Event, bind: "@.EVENT" }
       - { label: By, bind: "@.BY" }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.NETTING_SET, 'netting-set')", F8: impact, F9: raw }

@@ -17,6 +17,19 @@ rachana: 1
 sutra: collateral-balance
 version: 1
 description: "Collateral held and posted under a CSA, by asset, after haircuts."
+doc:
+  summary: "Collateral held and posted under a CSA, by asset, after haircuts."
+  description: >-
+    Collateral held and posted under a CSA, by asset, after haircuts. One page per collateral balance, its panels: positions;
+    how the view was built; the entities it links to. The strip gives Held (we hold), Posted (we posted), Net (held − posted)
+    and As of. Linked entities: CSA (csa) and netting set (netting-set).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/collateral-balance/COLL-ALDERSHOT-FRA"
+    - "COLL COLL-ALDERSHOT-FRA"
+  since: "2.7.0"
 match: { kind: collateral-balance, priority: 10 }
 title: { pill: Collateral and margin · Collateral balance, id: $.BALANCE_ID }
 strip:
@@ -40,6 +53,6 @@ panels:
       - { label: Market value, bind: "@.MARKET_VALUE", fmt: amount0, total: true }
       - { label: Haircut, bind: "@.HAIRCUT", fmt: pct2 }
       - { label: Collateral value, bind: "@.VALUE", fmt: amount0, total: true }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.CSA, 'csa')", F8: impact, F9: raw }
