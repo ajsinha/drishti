@@ -175,4 +175,13 @@ class SutraParserTest {
                     assertThat(e.problems()).extracting(SutraProblem::message).contains("'scatter' panel 's' needs option 'y'");
                 });
     }
+
+    /** {@code refresh:} (seconds) is accepted and checked; the runtime acts on it from SUTRA_NEXT.md phase 4 (the Sutra designer writes it). */
+    @Test
+    void refreshIsWholeSeconds() {
+        String ok = "rachana: 1\nsutra: my-desk\nversion: 1\nmatch: { kind: trade }\nrefresh: 30\ntitle: { id: $.id }\npanels:\n  - { id: refs, kind: links }\n";
+        assertThat(parser.parse(ok, "ok.yaml", "x").name()).isEqualTo("my-desk");
+        assertThatThrownBy(() -> parser.parse(ok.replace("refresh: 30", "refresh: soon"), "bad.yaml", "x"))
+                .isInstanceOfSatisfying(SutraException.class, e -> assertThat(e.problems()).extracting(SutraProblem::code).contains("DRS-2012"));
+    }
 }

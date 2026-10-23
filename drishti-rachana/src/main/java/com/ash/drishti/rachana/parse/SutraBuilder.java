@@ -51,7 +51,7 @@ final class SutraBuilder {
     private static final Pattern FKEY = Pattern.compile("F([1-9]|1[0-2])");
     private static final int LANGUAGE = SutraParser.LANGUAGE;
     private static final Set<String> TOP = Set.of("rachana", "sutra", "version", "domain", "match", "title", "strip", "panels", "keys",
-            "description", "notes", "controls", "doc");
+            "description", "notes", "controls", "doc", "refresh");
     private static final Set<String> PANEL = Set.of("id", "kind", "title", "key", "code", "area", "infer", "columns", "body", "panels", "description",
             Panel.SPAN, Panel.HEIGHT);
     private static final Set<String> STRIP = Set.of("label", "bind", "fmt", "tone", "emphasis");
@@ -86,6 +86,10 @@ final class SutraBuilder {
             if (d != null && !(d.value() instanceof String)) {
                 problem("DRS-2012", "'" + doc + "' is plain text", d);
             }
+        }
+        PNode refresh = m.get("refresh");          // seconds between refreshes (SUTRA_NEXT.md 9): accepted and checked, acted on from phase 4
+        if (refresh != null && !(refresh.value() instanceof Long r && r >= 1 && r <= 86_400)) {
+            problem("DRS-2012", "'refresh' is a whole number of seconds, 1 to 86400", refresh);
         }
         String name = requiredText(m, "sutra", root);
         if (name != null && !NAME.matcher(name).matches()) {

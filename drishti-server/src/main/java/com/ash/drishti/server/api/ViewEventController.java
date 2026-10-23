@@ -34,6 +34,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import com.ash.drishti.identity.design.DesignService;
+import com.ash.drishti.identity.design.StoredDesign;
 import com.ash.drishti.rachana.SutraRegistry;
 import com.ash.drishti.rachana.model.Sutra;
 import org.springframework.beans.factory.annotation.Value;
@@ -92,6 +94,38 @@ public class ViewEventController {
         return Optional.of(s);
     }
 
+    /**
+     * The Sutra that draws a view for this request: the reader's own Design ({@code ?design=<id>}, the Sutra designer's saved page,
+     * SUTRA_DESIGNER.md) when one is named, else the Sutra named by {@code ?sutra=}, else none (the matched Sutra). A Design is read
+     * only by its owner (anyone else's is {@code 404 DRS-5006}); its Sutra is parsed and checked as Studio's preview is, and must
+     * draw entities of the view's kind.
+     *
+     * @throws DrishtiException {@code DRS-5001} for a Design without a Sutra or of another kind
+     */
+    public static Optional<Sutra> chosen(SutraRegistry registry, DesignService designs, Principal who, String kind, HttpServletRequest request) {
+        String design = request.getParameter("design");
+        if (design == null || design.isBlank() || designs == null || registry == null || who == null) {
+            return chosen(registry, kind, request.getParameter("sutra"));
+        }
+        StoredDesign d = designs.get(who.user(), design.trim());
+        if (d.sutra == null || d.sutra.isBlank()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the design '" + design + "' has no Sutra yet");
+        }
+        Sutra s = registry.check(d.sutra);
+        if (!kind.equals(s.match().kind())) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the design '" + design + "' draws " + s.match().kind() + " entities, not " + kind);
+        }
+        return Optional.of(s);
+    }
+
+    /** The Designs, for a view drawn with the reader's own Design (absent in a test that makes the controller itself). */
+    private DesignService designs;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void designs(DesignService d) {
+        this.designs = d;
+    }
+
     /** The tokens' store (tests: another person's resolve). */
     IdTokens tokens() {
         return tokens;
@@ -107,7 +141,7 @@ public class ViewEventController {
         String scope = kind + "\u0000" + id;
         List<ScreenWire.Selection> fired = resolve(principal, scope, click.selections());
         ScreenWire.Result r = pipeline.event(EntityRef.of(kind, id), asOf, entitlements.redactor(principal), k -> entitlements.mayOpen(principal, k),
-                ControlValues.of(request.getParameterMap()), chosen(registry, kind, request.getParameter("sutra")), fired, click.panel(), click.event(),
+                ControlValues.of(request.getParameterMap()), chosen(registry, designs, principal, kind, request), fired, click.panel(), click.event(),
                 click.row());
         Map<String, Object> sel = new LinkedHashMap<>();
         sel.put("panel", r.selection().panel());
@@ -129,7 +163,7 @@ public class ViewEventController {
         entitlements.requireOpen(principal, kind);
         List<ScreenWire.Selection> fired = resolve(principal, kind + "\u0000" + id, sel);
         return pipeline.children(EntityRef.of(kind, id), asOf, entitlements.redactor(principal), k -> entitlements.mayOpen(principal, k),
-                ControlValues.of(request.getParameterMap()), chosen(registry, kind, request.getParameter("sutra")), fired, panel).stream().map(c -> children(principal, c)).toList();
+                ControlValues.of(request.getParameterMap()), chosen(registry, designs, principal, kind, request), fired, panel).stream().map(c -> children(principal, c)).toList();
     }
 
     private List<ScreenWire.Selection> resolve(Principal principal, String scope, List<String> tokenList) {

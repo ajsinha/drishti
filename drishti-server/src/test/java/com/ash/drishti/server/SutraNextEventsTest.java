@@ -184,4 +184,26 @@ class SutraNextEventsTest {
         assertThat(click(as("full"), DESK, "trades", 0, List.of("tok_forged"), 403)).contains("DRS-5002");
         mvc.perform(get(DESK).param("sutra", "ir-curve").header("Authorization", as("full"))).andExpect(status().isBadRequest());
     }
+
+    /** The Sutra designer's saved page: {@code ?design=<id>} draws the view, its events and its children with the reader's own Design. */
+    @Test
+    void aDesignOfTheReaderDrawsTheViewAndItsEventsAndNoOneElsesDoes() throws Exception {
+        String text = new String(getClass().getResourceAsStream("/book-desk-design.sutra.yaml").readAllBytes(), StandardCharsets.UTF_8);
+        String made = mvc.perform(post("/api/v1/builder/designs").header("Authorization", as("designer", "full")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(java.util.Map.of("name", "My page · portfolio-trades", "kind", "portfolio-trades", "sutra", text))))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        String id = json.readTree(made).path("id").asText();
+        JsonNode v = json.readTree(mvc.perform(get(DESK).param("design", id).header("Authorization", as("designer", "full"))).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+        assertThat(v.path("provenance").path("sutra").asText()).isEqualTo("my-book-page");
+        assertThat(v.path("panels")).extracting(p -> p.path("id").asText()).containsExactly("trades", "counterparty");
+        String body = json.writeValueAsString(java.util.Map.of("panel", "trades", "event", "open", "row", 0, "selections", List.of()));
+        JsonNode r = json.readTree(mvc.perform(post(DESK + "/events").param("design", id).header("Authorization", as("designer", "full"))
+                .contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+        assertThat(r.path("panels")).extracting(p -> p.path("id").asText()).containsExactly("counterparty");
+        assertThat(r.path("children").get(0).path("place").asText()).isEqualTo("detail-right");
+        mvc.perform(get(DESK).param("design", id).header("Authorization", as("someone-else", "full"))).andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/views/trade/MX-20000001").param("design", id).header("Authorization", as("designer", "full")))
+                .andExpect(status().isBadRequest());
+    }
 }
