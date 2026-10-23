@@ -1,0 +1,50 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The frtb-sensitivity Sutra as tools/packgen/banking/make_sutras.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the market-risk equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: frtb-sensitivity
+version: 2
+description: "Delta, vega and curvature by risk class and bucket (SBM)."
+match: { kind: frtb-sensitivity, priority: 10 }
+title: { pill: Market risk · FRTB sensitivities, id: $.RESULT_ID }
+strip:
+  - { label: Book, bind: $.BOOK }
+  - { label: Delta charge, bind: $.DELTA_CHARGE, fmt: compact }
+  - { label: Vega charge, bind: $.VEGA_CHARGE, fmt: compact }
+  - { label: Curvature, bind: $.CURVATURE_CHARGE, fmt: compact }
+  - { label: SBM total, bind: $.TOTAL, fmt: compact, emphasis: true }
+panels:
+  - id: buckets
+    kind: table
+    title: Sensitivities
+    key: F2
+    rows: $.SENSITIVITIES
+    columns:
+      - { label: Risk class, bind: "@.RISK_CLASS" }
+      - { label: Bucket, bind: "@.BUCKET" }
+      - { label: Measure, bind: "@.MEASURE" }
+      - { label: Value, bind: "@.VALUE", fmt: signed0, tone: sign }
+  - id: classes
+    kind: hbar
+    title: Charge by risk class
+    area: right
+    rows: $.BY_CLASS
+    label: RISK_CLASS
+    value: CHARGE
+    fmt: compact
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.BOOK, 'book')", F8: impact, F9: raw }

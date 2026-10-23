@@ -1,0 +1,51 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The pnl-explain Sutra as tools/packgen/banking/make_sutras.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the market-risk equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: pnl-explain
+version: 2
+description: "Daily P&L attributed to risk factors, new trades and residual."
+match: { kind: pnl-explain, priority: 10 }
+title: { pill: "Market risk · P&L explain", id: $.RESULT_ID }
+strip:
+  - { label: Date, bind: $.DATE, fmt: date }
+  - { label: Actual, bind: $.ACTUAL, fmt: signed0, tone: sign, emphasis: true }
+  - { label: Explained, bind: $.EXPLAINED, fmt: signed0, tone: sign }
+  - { label: Unexplained, bind: $.UNEXPLAINED, fmt: signed0, tone: sign }
+panels:
+  - id: attribution
+    kind: hbar
+    title: Attribution
+    key: F2
+    rows: $.ATTRIBUTION
+    label: FACTOR
+    value: PNL
+    fmt: signed0
+    tone: sign
+  - id: explain
+    kind: waterfall
+    title: "P&L waterfall (risk factors to actual, USD)"
+    code: PNLX
+    key: F3
+    rows: $.EXPLAIN_STEPS
+    label: STEP
+    value: PNL
+    fmt: signed0
+    sum: Actual
+    unit: USD
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.BOOK, 'book')", F8: impact, F9: raw }

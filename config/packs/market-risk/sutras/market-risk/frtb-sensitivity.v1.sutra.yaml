@@ -17,6 +17,19 @@ rachana: 1
 sutra: frtb-sensitivity
 version: 1
 description: "Delta, vega and curvature by risk class and bucket (SBM)."
+doc:
+  summary: "Delta, vega and curvature by risk class and bucket (SBM)."
+  description: >-
+    Delta, vega and curvature by risk class and bucket (SBM). One page per fRTB sensitivities, its panels: sensitivities; charge
+    by risk class; how the view was built; the entities it links to. The strip gives Book, Delta charge, Vega charge, Curvature
+    and SBM total. Linked entities: book (book).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/frtb-sensitivity/FRTB-COMM-1"
+    - "FRTB FRTB-COMM-1"
+  since: "2.7.0"
 match: { kind: frtb-sensitivity, priority: 10 }
 title: { pill: Market risk · FRTB sensitivities, id: $.RESULT_ID }
 strip:
@@ -36,14 +49,7 @@ panels:
       - { label: Bucket, bind: "@.BUCKET" }
       - { label: Measure, bind: "@.MEASURE" }
       - { label: Value, bind: "@.VALUE", fmt: signed0, tone: sign }
-  - id: classes
-    kind: hbar
-    title: Charge by risk class
-    area: right
-    rows: $.BY_CLASS
-    label: RISK_CLASS
-    value: CHARGE
-    fmt: compact
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: ranked-bars@1, with: { id: classes, title: Charge by risk class, area: right, rows: $.BY_CLASS, label: RISK_CLASS, value: CHARGE, fmt: compact } }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.BOOK, 'book')", F8: impact, F9: raw }

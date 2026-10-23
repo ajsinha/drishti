@@ -17,6 +17,19 @@ rachana: 1
 sutra: pnl-explain
 version: 1
 description: "Daily P&L attributed to risk factors, new trades and residual."
+doc:
+  summary: "Daily P&L attributed to risk factors, new trades and residual."
+  description: >-
+    Daily P&L attributed to risk factors, new trades and residual. One page per p&L explain, its panels: attribution; P&L
+    waterfall (risk factors to actual, USD); how the view was built; the entities it links to. The strip gives Date, Actual,
+    Explained and Unexplained. Linked entities: book (book).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/pnl-explain/PNL-COMM-1"
+    - "PNL PNL-COMM-1"
+  since: "2.7.0"
 match: { kind: pnl-explain, priority: 10 }
 title: { pill: "Market risk · P&L explain", id: $.RESULT_ID }
 strip:
@@ -25,15 +38,7 @@ strip:
   - { label: Explained, bind: $.EXPLAINED, fmt: signed0, tone: sign }
   - { label: Unexplained, bind: $.UNEXPLAINED, fmt: signed0, tone: sign }
 panels:
-  - id: attribution
-    kind: hbar
-    title: Attribution
-    key: F2
-    rows: $.ATTRIBUTION
-    label: FACTOR
-    value: PNL
-    fmt: signed0
-    tone: sign
+  - { use: ranked-bars@1, with: { id: attribution, title: Attribution, key: F2, rows: $.ATTRIBUTION, label: FACTOR, value: PNL, tone: sign } }
   - id: explain
     kind: waterfall
     title: "P&L waterfall (risk factors to actual, USD)"
@@ -45,6 +50,6 @@ panels:
     fmt: signed0
     sum: Actual
     unit: USD
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.BOOK, 'book')", F8: impact, F9: raw }

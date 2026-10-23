@@ -1,0 +1,53 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The trade-valuation Sutra as tools/packgen/banking/make_sutras.py generated it before Sutra Next (written inline, no fragments), as version 2 so it
+# wins while the market-risk equivalence test draws the "before" view. Test data only.
+rachana: 1
+sutra: trade-valuation
+version: 2
+description: "A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product)."
+match: { kind: trade-valuation, priority: 10 }
+title: { pill: Market risk · Trade valuation, id: $.VALUATION_ID }
+strip:
+  - { label: Trade, bind: "link($.TRADE_ID, 'trade')" }
+  - { label: Source, bind: $.SOURCE_SYSTEM }
+  - { label: MTM, bind: $.MTM, fmt: signed0, tone: sign, emphasis: true }
+  - { label: "P&L 1D", bind: $.PNL_1D, fmt: signed0, tone: sign }
+  - { label: DV01, bind: $.DV01, fmt: signed0, tone: sign }
+  - { label: Notional, bind: $.NOTIONAL, fmt: compact }
+  - { label: Valued, bind: $.VALUATION_DATE, fmt: date }
+panels:
+  - id: valuation
+    kind: kv
+    title: Valuation
+    key: F2
+    columns:
+      - { label: Trade, bind: "link($.TRADE_ID, 'trade')" }
+      - { label: Source system, bind: $.SOURCE_SYSTEM }
+      - { label: Product, bind: $.PRODUCT_TYPE }
+      - { label: Group, bind: $.PRODUCT_GROUP }
+      - { label: Portfolio, bind: "link($.PORTFOLIO, 'book')" }
+      - { label: Desk, bind: "link($.DESK, 'desk')" }
+      - { label: Counterparty, bind: "link($.COUNTERPARTY, 'counterparty')" }
+      - { label: Currency, bind: $.CURRENCY }
+      - { label: Notional, bind: $.NOTIONAL, fmt: amount0 }
+      - { label: MTM (USD), bind: $.MTM, fmt: signed0, tone: sign }
+      - { label: "P&L 1D (USD)", bind: $.PNL_1D, fmt: signed0, tone: sign }
+      - { label: DV01 (USD), bind: $.DV01, fmt: signed0, tone: sign }
+      - { label: Status, bind: $.TRADE_STATUS, tone: status }
+      - { label: Maturity, bind: $.MATURITY_DATE, fmt: date }
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.TRADE_ID, 'trade')", F8: impact, F9: raw }

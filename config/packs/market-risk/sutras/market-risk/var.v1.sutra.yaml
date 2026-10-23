@@ -17,6 +17,20 @@ rachana: 1
 sutra: var
 version: 1
 description: "Historical VaR and ES for a desk or portfolio, with backtesting."
+doc:
+  summary: "Historical VaR and ES for a desk or portfolio, with backtesting."
+  description: >-
+    Historical VaR and ES for a desk or portfolio, with backtesting. One page per vaR / expected shortfall, its panels:
+    hypothetical P&L, last 60 days; vaR contribution by book; scenario P&L distribution, 500 days (USD); how the view was built;
+    the entities it links to. The strip gives VaR 99% 1D, ES 97.5%, Stressed VaR, Limit and Exceptions (250d). Linked entities:
+    desk (desk).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/var/VAR-COMM"
+    - "VAR VAR-COMM"
+  since: "2.7.0"
 match: { kind: var, priority: 10 }
 title: { pill: Market risk · VaR / expected shortfall, id: $.RESULT_ID }
 strip:
@@ -26,22 +40,8 @@ strip:
   - { label: Limit, bind: $.LIMIT, fmt: compact }
   - { label: Exceptions (250d), bind: $.EXCEPTIONS }
 panels:
-  - id: pnl
-    kind: line
-    title: "Hypothetical P&L, last 60 days"
-    key: F2
-    rows: $.PNL_SERIES
-    x: DATE
-    y: PNL
-    fmt: signed0
-  - id: contrib
-    kind: hbar
-    title: VaR contribution by book
-    area: right
-    rows: $.CONTRIBUTIONS
-    label: BOOK
-    value: VAR
-    fmt: compact
+  - { use: series-line@1, with: { id: pnl, title: "Hypothetical P&L, last 60 days", key: F2, rows: $.PNL_SERIES, x: DATE, y: PNL, fmt: signed0 } }
+  - { use: ranked-bars@1, with: { id: contrib, title: VaR contribution by book, area: right, rows: $.CONTRIBUTIONS, label: BOOK, value: VAR, fmt: compact } }
   - id: scenarios
     kind: histogram
     title: "Scenario P&L distribution, 500 days (USD)"
@@ -54,6 +54,6 @@ panels:
       - { label: VaR 99%, value: "-$.VAR_99", tone: neg }
       - { label: ES 97.5%, value: "-$.ES_975", tone: bad }
       - { label: Mean, value: $.MEAN_PNL, tone: link }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.DESK, 'desk')", F8: impact, F9: raw }

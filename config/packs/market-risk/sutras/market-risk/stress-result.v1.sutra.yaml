@@ -17,6 +17,18 @@ rachana: 1
 sutra: stress-result
 version: 1
 description: "P&L of a desk under a scenario, by book."
+doc:
+  summary: "P&L of a desk under a scenario, by book."
+  description: >-
+    P&L of a desk under a scenario, by book. One page per stress result, its panels: P&L by book; how the view was built; the
+    entities it links to. The strip gives Scenario, P&L and Limit. Linked entities: scenario (stress-scenario) and desk (desk).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/stress-result/STR-COVID2020-COMM"
+    - "STR STR-COVID2020-COMM"
+  since: "2.7.0"
 match: { kind: stress-result, priority: 10 }
 title: { pill: Market risk · Stress result, id: $.RESULT_ID }
 strip:
@@ -24,15 +36,7 @@ strip:
   - { label: "P&L", bind: $.PNL, fmt: signed0, tone: sign, emphasis: true }
   - { label: Limit, bind: $.LIMIT, fmt: compact }
 panels:
-  - id: books
-    kind: hbar
-    title: "P&L by book"
-    key: F2
-    rows: $.BY_BOOK
-    label: BOOK
-    value: PNL
-    fmt: signed0
-    tone: sign
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: ranked-bars@1, with: { id: books, title: "P&L by book", key: F2, rows: $.BY_BOOK, label: BOOK, value: PNL, tone: sign } }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.SCENARIO, 'stress-scenario')", F8: impact, F9: raw }

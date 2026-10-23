@@ -17,6 +17,20 @@ rachana: 1
 sutra: trade-valuation
 version: 1
 description: "A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product)."
+doc:
+  summary: "A trade's valuation from the risk engine, for every source system:"
+  description: >-
+    A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source
+    system, portfolio, desk, product). One page per trade valuation, its panels: valuation; how the view was built; the entities
+    it links to. The strip gives Trade, Source, MTM, P&L 1D, DV01, Notional and Valued. Linked entities: trade (trade), desk
+    (desk) and netting set (netting-set).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/trade-valuation/TVAL-1000001"
+    - "TVAL TVAL-1000001"
+  since: "2.7.0"
 match: { kind: trade-valuation, priority: 10 }
 title: { pill: Market risk · Trade valuation, id: $.VALUATION_ID }
 strip:
@@ -47,6 +61,6 @@ panels:
       - { label: DV01 (USD), bind: $.DV01, fmt: signed0, tone: sign }
       - { label: Status, bind: $.TRADE_STATUS, tone: status }
       - { label: Maturity, bind: $.MATURITY_DATE, fmt: date }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.TRADE_ID, 'trade')", F8: impact, F9: raw }

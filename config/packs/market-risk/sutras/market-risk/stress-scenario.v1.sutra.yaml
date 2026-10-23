@@ -17,6 +17,18 @@ rachana: 1
 sutra: stress-scenario
 version: 1
 description: A named historical or hypothetical shock set.
+doc:
+  summary: "A named historical or hypothetical shock set."
+  description: >-
+    A named historical or hypothetical shock set. One page per stress scenario, its panels: shocks; how the view was built. The
+    strip gives Name, Type and Severity.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/stress-scenario/SCN-COVID2020"
+    - "SCN SCN-COVID2020"
+  since: "2.7.0"
 match: { kind: stress-scenario, priority: 10 }
 title: { pill: Market risk · Stress scenario, id: $.SCENARIO_ID }
 strip:
@@ -32,5 +44,5 @@ panels:
     columns:
       - { label: Risk factor, bind: "@.FACTOR" }
       - { label: Shock, bind: "@.SHOCK" }
-  - { id: built, kind: provenance, title: How this view was built }
+  - { use: data-provenance@1 }
 keys: { F8: impact, F9: raw }
