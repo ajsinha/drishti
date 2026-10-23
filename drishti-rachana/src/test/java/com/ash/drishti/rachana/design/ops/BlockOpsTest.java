@@ -94,6 +94,8 @@ class BlockOpsTest {
         assertThat(u.with()).containsEntry("rate-fmt", "pct4");
         assertThat(u.panels()).extracting(BlockUses.Brought::id).containsExactly("legs", "flows");
         assertThat(u.panels().get(1).when()).isEqualTo("$.FLOWS != null");
+        assertThat(u.panels().get(0).panel()).isInstanceOf(java.util.Map.class);         // written out, parameters filled: what "unpack" writes
+        assertThat(((java.util.Map<?, ?>) u.panels().get(0).panel()).get("id")).isEqualTo("legs");
         assertThat(u.problems()).isEmpty();
 
         BlockUses.Use bad = BlockUses.of(SUTRA.replace("legs@1", "legz@1").replace("rate-fmt: pct4", "rate: pct4")).get(0);

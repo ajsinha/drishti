@@ -30,8 +30,8 @@ import java.util.Map;
  */
 public final class BlockUses {
 
-    /** One panel a use brings. */
-    public record Brought(String id, String kind, String title, String when) {}
+    /** One panel a use brings; {@code panel} is the panel written out (plain maps, lists and scalars), what "unpack" writes in place of the use. */
+    public record Brought(String id, String kind, String title, String when, Object panel) {}
 
     /**
      * One use: {@code item} is its place among the Sutra's written panels (for a use inside a tabs panel, the tabs panel's place),
@@ -82,12 +82,30 @@ public final class BlockUses {
         List<Brought> brought = new ArrayList<>();
         for (PNode q : SutraBlocks.expand(List.of(p), "studio", problems)) {
             Map<String, PNode> m = q.isMap() ? q.map() : Map.of();
-            brought.add(new Brought(text(m.get("id")), text(m.get("kind")), text(m.get("title")), text(m.get("when"))));
+            brought.add(new Brought(text(m.get("id")), text(m.get("kind")), text(m.get("title")), text(m.get("when")), plain(q)));
         }
         SutraBlocks.Block b = SutraBlocks.find(ref).orElse(null);
         String name = ref.contains("@") ? ref.substring(0, ref.indexOf('@')) : ref;
         return new Use(item, at, p.line(), p.column(), ref, name, b == null ? null : b.version(), b == null ? null : b.file(), b == null ? null : b.path(),
                 b == null ? "" : b.description(), b == null ? Map.of() : b.params(), with, List.copyOf(brought), List.copyOf(problems));
+    }
+
+    /** A node as plain data: maps, lists and scalars, in order. */
+    public static Object plain(PNode n) {
+        if (n == null) {
+            return null;
+        }
+        if (n.isMap()) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            n.map().forEach((k, v) -> m.put(k, plain(v)));
+            return m;
+        }
+        if (n.isList()) {
+            List<Object> l = new ArrayList<>();
+            n.list().forEach(v -> l.add(plain(v)));
+            return l;
+        }
+        return n.value();
     }
 
     private static String text(PNode n) {

@@ -297,7 +297,8 @@ public class DesignController {
             n.set("params", mapper.valueToTree(u.params()));
             n.set("with", mapper.valueToTree(u.with()));
             ArrayNode ps = n.putArray("panels");
-            u.panels().forEach(p -> ps.addObject().put("id", p.id()).put("kind", p.kind()).put("title", p.title()).put("when", p.when()));
+            u.panels().forEach(p -> ps.addObject().put("id", p.id()).put("kind", p.kind()).put("title", p.title()).put("when", p.when())
+                    .set("panel", mapper.valueToTree(p.panel())));
             ArrayNode pr = n.putArray("problems");
             sutras.relative(u.problems()).forEach(p -> pr.addObject().put("code", p.code()).put("message", p.message())
                     .put("line", p.location() == null ? 0 : p.location().line()));
