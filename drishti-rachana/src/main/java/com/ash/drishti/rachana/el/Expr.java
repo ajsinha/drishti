@@ -103,6 +103,23 @@ public interface Expr {
         }
     }
 
+    /**
+     * {@code @<panel>}: what a panel of the screen emitted, a mapping of event name to payload ({@code @trades.open.trade});
+     * {@code @parent} is the parent panel's. Nothing (missing) until the event fires.
+     */
+    record Event(String panel) implements Expr {
+        public Object eval(EvalContext c) {
+            return c == null ? DataNode.missing() : c.event(panel);
+        }
+    }
+
+    /** {@code $src}: the record (or the records) the panel's {@code source:} names; nothing outside a sourced panel. */
+    record Src() implements Expr {
+        public Object eval(EvalContext c) {
+            return c == null || c.src() == null ? DataNode.missing() : c.src();
+        }
+    }
+
     record Index() implements Expr {
         public Object eval(EvalContext c) {
             return (long) c.index();

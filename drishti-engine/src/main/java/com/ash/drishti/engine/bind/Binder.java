@@ -210,7 +210,7 @@ public final class Binder {
      * The rows of {@code all} the panel's {@code where} keeps ({@code where: "within(@.payDate, ctl.when)"}, with {@code @} the row):
      * the indexes in {@code all}, or null when the panel has no {@code where}. A row whose condition is masked or fails is left out.
      */
-    int[] originals(Panel p, DataNode all, EvalContext ctx) {
+    public int[] originals(Panel p, DataNode all, EvalContext ctx) {
         if (!(p.options().get(Panel.WHERE) instanceof String where) || where.isBlank()) {
             return null;
         }
@@ -294,6 +294,14 @@ public final class Binder {
         for (Column col : p.columns()) {
             fields.add(cell(col, ctx, rows.isPresent() ? null : pathOf(col.bind())));
         }
+        if (p.columns().isEmpty() && rows.isPresent() && ctx.row() instanceof DataNode.Obj o) {
+            // a record read at bind time (a Sutra Next source, $src) that layout inference could not see: its plain fields, in order
+            o.fields().forEach((k, v) -> {
+                if (!k.startsWith("_") && !(v instanceof DataNode.Obj) && !(v instanceof DataNode.Arr)) {
+                    fields.add(cell(com.ash.drishti.inference.Semantics.humanize(k), v, null, null, false, null));
+                }
+            });
+        }
         return new PanelData.Fields(fields);
     }
 
@@ -325,7 +333,8 @@ public final class Binder {
         List<PanelData.Row> out = new ArrayList<>();
         double[] totals = new double[cols.size()];
         boolean[] masked = new boolean[cols.size()];          // a column with a masked value is never added up
-        String childrenExpr = p.option("children").orElse(null);
+        String childrenExpr = p.options().get("children") instanceof String ce ? ce : null;   // a tree
+        boolean emits = p.wiring().emits().stream().anyMatch(e -> "row-click".equals(e.on()));
         int[] budget = {limits.treeRows()};
         List<LevelSpec> levels = levelSpecs(p);
         if (!levels.isEmpty()) {
@@ -357,7 +366,8 @@ public final class Binder {
                 cells.add(cell(col, rc, null));
             }
             boolean hl = highlight != null && Values.truthy(eval(highlight, rc));
-            out.add(new PanelData.Row(cells, hl, rowPath, null, pick(rows.get(i), pickField)));
+            out.add(new PanelData.Row(cells, hl, rowPath, null, pick(rows.get(i), pickField), null, null,
+                    emits ? String.valueOf(origin == null ? i : origin[i]) : null));   // a click sends the row's place in the data back
         }
         PanelData.Row total = null;
         if (cols.stream().anyMatch(Column::total)) {
@@ -627,7 +637,7 @@ public final class Binder {
 
     /** The linked entity a panel reads its data from, when it names one with {@code source}. */
     public Optional<EntityRef> chartSource(Panel p, EvalContext ctx) {
-        return p.option("source").map(s -> Values.simplify(eval(s, ctx))).filter(Link.class::isInstance).map(Link.class::cast)
+        return (p.options().get("source") instanceof String str ? Optional.of(str) : Optional.<String>empty()).map(s -> Values.simplify(eval(s, ctx))).filter(Link.class::isInstance).map(Link.class::cast)
                 .map(this::linkView).map(lv -> lv == null ? null : EntityRef.of(lv.kind(), lv.id()));
     }
 
@@ -692,7 +702,10 @@ public final class Binder {
     }
 
     private PanelData bars(Panel p, BindContext c) {
-        DataNode rows = where(p, node(eval(p.option("rows").orElseThrow(), c.eval())), c.eval());
+        DataNode all = node(eval(p.option("rows").orElseThrow(), c.eval()));
+        int[] origin = originals(p, all, c.eval());
+        DataNode rows = origin == null ? all : keep(all, origin);
+        boolean emits = p.wiring().emits().stream().anyMatch(e -> "bar-click".equals(e.on()));
         String label = p.option("label").orElse("label");
         String value = p.option("value").orElse("value");
         String fmt = p.option("fmt").orElse(null);
@@ -707,7 +720,7 @@ public final class Binder {
             }
             total += v;
             bars.add(new PanelData.Bar(r.get(label).asText(), v, formats.format(fmt, Values.normalise(v)),
-                    tone == null ? (v < 0 ? "neg" : "pos") : Tones.resolve(tone, v)));
+                    tone == null ? (v < 0 ? "neg" : "pos") : Tones.resolve(tone, v), emits ? String.valueOf(origin == null ? i : origin[i]) : null));
         }
         String shape = p.option("shape").filter("donut"::equals).orElse(null);
         return new PanelData.Bars(bars, shape, shape == null ? null : formats.format(fmt, Values.normalise(total)));

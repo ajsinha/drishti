@@ -48,7 +48,14 @@ public record Panel(
         Panel body,
         Map<String, Object> options,
         SourceLocation location,
-        List<Panel> parts) {
+        List<Panel> parts,
+        Wiring wiring) {
+
+    /** A panel without Sutra Next wiring ({@code wiring}: {@code source:} as a mapping, {@code emits:}, {@code waits:}, {@code children:} as a list). */
+    public Panel(String id, PanelKind kind, String title, String key, String code, Area area, boolean infer, List<Column> columns,
+            Panel body, Map<String, Object> options, SourceLocation location, List<Panel> parts) {
+        this(id, kind, title, key, code, area, infer, columns, body, options, location, parts, Wiring.NONE);
+    }
 
     /** A panel with no nested panels. */
     public Panel(String id, PanelKind kind, String title, String key, String code, Area area, boolean infer, List<Column> columns,
@@ -59,6 +66,7 @@ public record Panel(
     public Panel {
         columns = List.copyOf(columns);
         parts = parts == null ? List.of() : List.copyOf(parts);
+        wiring = wiring == null ? Wiring.NONE : wiring;
         options = java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(options));
     }
 

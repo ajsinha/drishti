@@ -435,10 +435,51 @@ public final class SutraBlocks {
                 List<PNode> brought = parse(filled.toString(), b.file()).map().get("panels").list();
                 List<String> deeper = new ArrayList<>(chain);
                 deeper.add(b.name());
-                out.addAll(expand(brought, b.file(), problems, deeper));         // a composite fragment's own uses, one level down
+                out.addAll(wired(p, expand(brought, b.file(), problems, deeper), file, problems));   // a composite's own uses, one level down
             } catch (SutraException e) {
                 problems.addAll(e.problems());
             }
+        }
+        return out;
+    }
+
+    /** Keys a use may carry beside use and with (SUTRA_NEXT.md 6 to 8): put on every panel it brings. */
+    private static final java.util.Set<String> USE_ON_ALL = java.util.Set.of("source", "when", "waits");
+    /** Keys a use may carry only when it brings one panel: that panel's events, children and size. */
+    private static final java.util.Set<String> USE_ON_ONE = java.util.Set.of("emits", "children", "span", "height", "area");
+
+    /**
+     * The panels a use brings with the use's own wiring and size on them ({@code { use: series-line@1, with: {...}, source: {...} }}): source,
+     * when and waits on each, emits, children, span, height and area only on a use that brings one panel ({@code DRS-2048} otherwise).
+     */
+    private static List<PNode> wired(PNode use, List<PNode> brought, String file, List<SutraProblem> problems) {
+        Map<String, PNode> extra = new LinkedHashMap<>();
+        use.map().forEach((k, v) -> {
+            if ("use".equals(k) || "with".equals(k)) {
+                return;
+            }
+            if (!USE_ON_ALL.contains(k) && !USE_ON_ONE.contains(k)) {
+                problems.add(problem("a use takes use, with, and " + String.join(", ", new java.util.TreeSet<>(USE_ON_ALL)) + ", "
+                        + String.join(", ", new java.util.TreeSet<>(USE_ON_ONE)) + ", not '" + k + "'", file, v.line(), v.column()));
+            } else if (USE_ON_ONE.contains(k) && brought.size() != 1) {
+                problems.add(problem("'" + k + "' on a use that brings " + brought.size() + " panels: it wires one panel; write the panel, or use a fragment that brings one",
+                        file, v.line(), v.column()));
+            } else {
+                extra.put(k, v);
+            }
+        });
+        if (extra.isEmpty()) {
+            return brought;
+        }
+        List<PNode> out = new ArrayList<>(brought.size());
+        for (PNode q : brought) {
+            if (!q.isMap()) {
+                out.add(q);
+                continue;
+            }
+            Map<String, PNode> m = new LinkedHashMap<>(q.map());
+            m.putAll(extra);
+            out.add(new PNode(m, q.line(), q.column()));
         }
         return out;
     }

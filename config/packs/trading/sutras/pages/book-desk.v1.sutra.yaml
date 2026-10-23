@@ -1,0 +1,81 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written (SUTRA_NEXT.md phases 2 and 3: events, sources over several packs, nested children). Not generated: the generator
+# writes portfolio-trades only. Opened as /v/portfolio-trades/<book>?sutra=book-desk (portfolio-trades stays the book's page).
+rachana: 1
+sutra: book-desk
+version: 1
+description: "A book's desk: its trades; a click opens the trade's cash flows under its row, with the counterparty and its credit limit beside."
+doc:
+  summary: "A book's trades; a click opens a trade's cash flows under its row, its counterparty and credit limit beside"
+  description: >-
+    The trades of one book (portfolio) from every source system. Clicking a trade fires open with the trade's id and its
+    counterparty: the trade's cash flows open under the row (read from the trade itself, trading pack), and the counterparty
+    (core pack) and its credit limit with the utilisation by tenor bucket (counterparty-risk pack) fill the right column. A new
+    click replaces them; until the first click the right column says what to do. Everything is read as the reader: a counterparty
+    masked for the reader stays masked, is followed by a token only that reader can use, and never selects a limit.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk"
+  since: "2.7.0"
+match: { kind: portfolio-trades, priority: 1 }
+title: { pill: "Book desk", id: $.PORTFOLIO, with: "link($.PORTFOLIO, 'book')" }
+strip:
+  - { label: Trades, bind: $.TRADE_COUNT, emphasis: true }
+  - { label: Notional (all currencies), bind: $.NOTIONAL, fmt: compact }
+  - { label: Product types, bind: "size($.PRODUCT_TYPES)" }
+  - { label: Last maturity, bind: $.LAST_MATURITY, fmt: date }
+panels:
+  - use: row-picker@1
+    with: { id: trades, title: Trades of the book, rows: $.TRADES, event: open, key: TRADE_ID, key-label: Trade, ref: COUNTERPARTY,
+            a: PRODUCT_TYPE, a-label: Product, b: COUNTERPARTY, b-label: Counterparty, amount: NOTIONAL, amount-label: Notional,
+            date: MATURITY_DATE, date-label: Maturity, empty: No trades in this book, code: TRD }
+    children:
+      - place: expand-row
+        source: { pack: trading, kind: trade, id: "@parent.open.id" }
+        waits: Pick a trade to see its cash flows
+        panels:
+          - use: cashflow-ladder@1
+            with: { id: flows, title: "Cash flows of ${@parent.open.id}", rows: $src.EVENTS, date: EVENT_DATE, type: PAYMENT_TYPE, amount: AMOUNT }
+  - id: counterparty
+    kind: kv
+    title: Counterparty
+    area: right
+    waits: Pick a trade to see its counterparty and credit limit
+    source: { pack: core, kind: counterparty, id: "@trades.open.ref" }
+    columns:
+      - { label: Name, bind: $src.NAME }
+      - { label: Rating, bind: $src.RATING }
+      - { label: Sector, bind: $src.SECTOR }
+      - { label: Country, bind: $src.COUNTRY }
+  - id: limit
+    kind: kv
+    title: Credit limit
+    area: right
+    waits: Pick a trade to see its counterparty and credit limit
+    source: { pack: counterparty-risk, kind: credit-limit, where: "@.COUNTERPARTY == @trades.open.ref", limit: 1 }
+    columns:
+      - { label: Measure, bind: "$src[0].MEASURE" }
+      - { label: Limit, bind: "$src[0].LIMIT", fmt: compact }
+      - { label: Used, bind: "$src[0].USED", fmt: compact }
+      - { label: Utilisation, bind: "$src[0].UTILISATION", fmt: pct0 }
+      - { label: Status, bind: "$src[0].STATUS", tone: status }
+  - use: ranked-bars@1
+    with: { id: buckets, title: Utilisation by tenor, rows: "$src[0].BUCKETS", label: BUCKET, value: UTILISATION, fmt: pct0, area: right }
+    source: { pack: counterparty-risk, kind: credit-limit, where: "@.COUNTERPARTY == @trades.open.ref", limit: 1 }
+    waits: Pick a trade to see its counterparty and credit limit
+  - { use: data-provenance@1 }

@@ -108,6 +108,7 @@ public final class SutraDocstring {
                 out.add(problem("fragment " + name + ": doc." + key + " is a list (write " + key + ": [] for none)", file, doc.line(), doc.column()));
             }
         }
+        wiring(root, d, name, file, out);
         for (PNode ex : d.get("examples") == null ? List.<PNode>of() : d.get("examples").list()) {
             String use = ex.isMap() ? text(ex.map().get("use")) : null;
             String used = use == null ? null : use.contains("@") ? use.substring(0, use.indexOf('@')) : use;
@@ -214,6 +215,43 @@ public final class SutraDocstring {
 
     private static boolean blank(String s) {
         return s == null || s.isBlank();
+    }
+
+    /**
+     * A fragment whose panels fire events declares them in {@code doc.emits} (each { name, on, payload }), and one whose panels read
+     * {@code @parent} declares what it expects in {@code doc.expects} (SUTRA_NEXT.md 7, 8): the component browser and an agent wire
+     * from the doc, not from the panels.
+     */
+    private static void wiring(PNode root, Map<String, PNode> d, String name, String file, List<SutraProblem> out) {
+        PNode panels = root.map().get("panels");
+        if (panels == null || !panels.isList()) {
+            return;
+        }
+        boolean emits = false;
+        boolean parent = false;
+        for (PNode p : panels.list()) {
+            if (p.isMap()) {
+                emits |= p.map().containsKey("emits");
+                parent |= p.toString().contains("@parent");
+            }
+        }
+        PNode de = d.get("emits");
+        if (emits) {
+            if (de == null || !de.isList() || de.list().isEmpty()) {
+                out.add(problem("fragment " + name + ": its panels emit events, so doc.emits lists each { name, on, payload }", file, root.line(), 1));
+            } else {
+                for (PNode e : de.list()) {
+                    if (!e.isMap() || text(e.map().get("name")) == null || text(e.map().get("on")) == null) {
+                        out.add(problem("fragment " + name + ": each of doc.emits is { name, on, payload } (the payload's fields with their types)",
+                                file, e.line(), e.column()));
+                    }
+                }
+            }
+        }
+        PNode dx = d.get("expects");
+        if (parent && (dx == null || !dx.isList() || dx.list().isEmpty())) {
+            out.add(problem("fragment " + name + ": its panels read @parent, so doc.expects says which parent event and fields they read", file, root.line(), 1));
+        }
     }
 
     private static SutraProblem problem(String message, String file, int line, int column) {

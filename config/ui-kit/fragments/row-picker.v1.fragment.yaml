@@ -1,0 +1,89 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The Drishti UI kit (SUTRA_NEXT.md): platform UI vocabulary every server loads, hand-written, versioned, used as { use: row-picker@1, with: {...} }.
+rachana: 1
+fragment: row-picker
+version: 1
+description: "A table of records whose rows, clicked, fire an event with the row's key: the master of a master-detail screen."
+params:
+  id: picker
+  title: Records
+  rows: $.ROWS
+  event: select
+  key: ID
+  key-label: Id
+  ref: REF
+  a: NAME
+  a-label: Name
+  b: TYPE
+  b-label: Type
+  amount: AMOUNT
+  amount-label: Amount
+  amount-fmt: amount0
+  date: DATE
+  date-label: Date
+  empty: Nothing to list
+  code: ''
+  area: ''
+doc:
+  summary: "A table of records whose rows, clicked, fire an event with the row's key (master of a master-detail screen)"
+  description: >-
+    One row a record: its key, two descriptive fields, an amount (totalled at the foot) and a date. Clicking a row fires the event
+    named by the event parameter with a payload of two fields, id (the row's key) and ref (a second key, such as the counterparty),
+    both typed id. Other panels read them as @<id>.<event>.id and @<id>.<event>.ref, and children of this panel as
+    @parent.<event>.id; give the use a children: list to open detail under the clicked row (place: expand-row) or beside it. The
+    payload is evaluated on the server as the reader: a masked key travels as a token only the same reader can follow.
+  params:
+    id: { type: id, default: picker, meaning: "The panel id, unique on the screen; other panels read its event as @<id>.<event>" }
+    title: { type: text, default: Records, meaning: "The title over the table" }
+    rows: { type: expression, default: $.ROWS, meaning: "The list of records, one row each" }
+    event: { type: id, default: select, meaning: "The name of the event a row click fires (select, open, drill)" }
+    key: { type: field, default: ID, meaning: "The field holding each record's key: the payload's id and the first column" }
+    key-label: { type: text, default: Id, meaning: "The heading of the key column" }
+    ref: { type: field, default: REF, meaning: "A second key the payload carries as ref (a counterparty, a book); not shown" }
+    a: { type: field, default: NAME, meaning: "The first descriptive field" }
+    a-label: { type: text, default: Name, meaning: "The heading of the first descriptive column" }
+    b: { type: field, default: TYPE, meaning: "The second descriptive field" }
+    b-label: { type: text, default: Type, meaning: "The heading of the second descriptive column" }
+    amount: { type: field, default: AMOUNT, meaning: "The field holding an amount, totalled at the foot" }
+    amount-label: { type: text, default: Amount, meaning: "The heading of the amount column" }
+    amount-fmt: { type: format, default: amount0, meaning: "The named format of the amount" }
+    date: { type: field, default: DATE, meaning: "The field holding a date" }
+    date-label: { type: text, default: Date, meaning: "The heading of the date column" }
+    empty: { type: text, default: Nothing to list, meaning: "What the table says when there are no rows" }
+    code: { type: key, default: '', meaning: "The panel's mnemonic code (TRD, CPTY), typed in the command line to jump to it; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
+  emits:
+    - { name: "%{event}", on: row-click, payload: { id: id, ref: id } }
+  expects: []
+  examples:
+    - { use: row-picker@1, with: { id: trades, title: Trades, rows: $.TRADES, event: open, key: TRADE_ID, key-label: Trade, ref: COUNTERPARTY, a: PRODUCT_TYPE, a-label: Product, b: CURRENCY, b-label: Currency, amount: NOTIONAL, amount-label: Notional, date: MATURITY_DATE, date-label: Maturity } }
+  since: "2.7.0"
+panels:
+  - id: %{id}
+    kind: table
+    title: "%{title}"
+    code: %{code}
+    area: %{area}
+    rows: %{rows}
+    empty: "%{empty}"
+    columns:
+      - { label: "%{key-label}", bind: "@.%{key}" }
+      - { label: "%{a-label}", bind: "@.%{a}" }
+      - { label: "%{b-label}", bind: "@.%{b}" }
+      - { label: "%{amount-label}", bind: "@.%{amount}", fmt: "%{amount-fmt}", total: true }
+      - { label: "%{date-label}", bind: "@.%{date}", fmt: date }
+    emits:
+      - { name: "%{event}", on: row-click, payload: { id: { bind: "@.%{key}", type: id }, ref: { bind: "@.%{ref}", type: id } } }

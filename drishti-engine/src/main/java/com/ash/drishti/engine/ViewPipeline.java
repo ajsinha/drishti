@@ -35,6 +35,7 @@ import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.engine.view.ViewModel.Cell;
 import com.ash.drishti.engine.view.ViewModel.KeyView;
 import com.ash.drishti.engine.view.ViewModel.PanelView;
+import com.ash.drishti.engine.wire.ScreenWire;
 import com.ash.drishti.graph.GraphProperties;
 import com.ash.drishti.graph.LinkRef;
 import com.ash.drishti.graph.ReferenceCatalog;
@@ -127,6 +128,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
     private final Cache<GenKey, Fingerprint> fingerprints;
     private final BusinessDates dates;
     private final ControlResolver controls;
+    private final ScreenWire wire;
 
     /** The zone business dates and "known at" times are read in (what the console's top bar shows times in). */
     public java.time.ZoneId businessZone() {
@@ -150,6 +152,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         this.formats = formats;
         this.mnemonics = mnemonics;
         this.bindPool = bindPool;
+        this.wire = new ScreenWire(router, binder, el, graph.linkBudget());
         this.layouts = Caffeine.newBuilder().maximumSize(props.layoutCacheSize()).recordStats().build();
         this.fingerprints = Caffeine.newBuilder().maximumSize(props.fingerprintCacheSize()).build();
         registry.onChange(changed -> layouts.invalidateAll());
@@ -181,6 +184,18 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         long t0 = System.nanoTime();
         EntityDocument doc = fetch(ref, asOf);
         return assemble(doc, t0, System.nanoTime(), matcher.match(doc.ref().kind(), doc.data()), true, asOf, redact, mayOpen, values).view();
+    }
+
+    /**
+     * A view drawn with a Sutra of the entity's kind the reader names ({@code /v/portfolio-trades/BOOK-1?sutra=book-desk}) instead of the
+     * matched one; empty {@code chosen} is the matched one. The layout is cached as for a matched Sutra.
+     */
+    public ViewModel view(EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen, ControlValues values,
+            Optional<Sutra> chosen) {
+        long t0 = System.nanoTime();
+        EntityDocument doc = fetch(ref, asOf);
+        return assemble(doc, t0, System.nanoTime(), chosen.isPresent() ? chosen : matcher.match(doc.ref().kind(), doc.data()), true, asOf,
+                redact, mayOpen, values).view();
     }
 
     /** A stored entity with an unsaved Sutra and the control values of the request. */
@@ -336,6 +351,50 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         return binder.records(panel, ctx);
     }
 
+    /**
+     * A click on a row or bar of a Sutra Next screen (SUTRA_NEXT.md 7): the payload evaluated on the server as the caller, the panels
+     * that read the event rebound, the clicked panel's children filled (8). {@code fired} are the events fired before (the server's,
+     * resolved for this caller); the same document, Sutra, business date, masks and controls as the view.
+     */
+    public ScreenWire.Result event(EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen, ControlValues values,
+            Optional<Sutra> chosen, List<ScreenWire.Selection> fired, String panel, String event, int row) {
+        return wire.event(screen(ref, asOf, redact, mayOpen, values, chosen, fired), panel, event, row);
+    }
+
+    /** The children of one panel of a Sutra Next screen, given the events fired (lazy: asked for when they show, SUTRA_NEXT.md 8). */
+    public List<ScreenWire.ChildrenView> children(EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen,
+            ControlValues values, Optional<Sutra> chosen, List<ScreenWire.Selection> fired, String panel) {
+        return wire.children(screen(ref, asOf, redact, mayOpen, values, chosen, fired), panel);
+    }
+
+    /** {@code chosen}: a Sutra of the kind the reader asked for by name ({@code ?sutra=}), else the matched one. */
+    private ScreenWire.Screen screen(EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen, ControlValues values,
+            Optional<Sutra> chosen, List<ScreenWire.Selection> fired) {
+        EntityDocument doc = fetch(ref, asOf);
+        Optional<Sutra> sutra = chosen.isPresent() ? chosen : matcher.match(ref.kind(), doc.data());
+        Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation(), doc.provenance().businessDate(), router.partition()),
+                k -> fingerprinter.fingerprint(doc.data()));
+        EffectiveLayout layout = layouts.get(new LayoutKey(sutra.<Object>map(SutraIdentity::new).orElse("-"), ref.kind(), fp),
+                k -> merger.merge(sutra, doc.data(), ref.kind()));
+        EntityDocument seen = seen(doc, redact);
+        ControlResolver.Resolved resolved = controls.resolve(layout.sutra(), EvalContext.of(seen.data(), formats), values, asOf, mayOpen);
+        java.time.LocalDate today = doc.provenance() != null && doc.provenance().businessDate() != null ? doc.provenance().businessDate()
+                : asOf.businessDate() != null ? asOf.businessDate() : dates.current();
+        EvalContext eval = resolved.apply(EvalContext.of(seen.data(), formats)).withToday(today);
+        var nodes = com.ash.drishti.rachana.SutraWiring.nodes(layout.sutra());
+        Map<String, Map<String, ScreenWire.Selection>> byPanel = new LinkedHashMap<>();
+        for (ScreenWire.Selection f : fired) {
+            var n = nodes.get(f.panel());
+            if (n == null || n.panel().wiring().emit(f.event()).isEmpty()) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "this screen has no panel '" + f.panel() + "' emitting '" + f.event() + "'");
+            }
+            byPanel.computeIfAbsent(f.panel(), k -> new LinkedHashMap<>()).put(f.event(), f);
+        }
+        BindContext ctx = new BindContext(seen, layout, fp, eval, List.of(), Map.of(), Set.of());
+        return new ScreenWire.Screen(layout.sutra(), nodes, ctx, eval.withRoot(doc.data()), asOf.businessDate() == null ? dates.resolve(asOf) : asOf,
+                redact, mayOpen, byPanel, null);
+    }
+
     /** Builds a view from a document already in hand (live updates re-enter here; live is always current). */
     public ViewModel build(EntityDocument doc, long t0, long tFetched) {
         return build(doc, t0, tFetched, UnaryOperator.identity());
@@ -434,10 +493,13 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         Map<String, com.ash.drishti.engine.bind.MapSupport.Lookup> maps = mapSupport.resolve(layout.sutra().panels(), values::builds,
                 asOf.businessDate() == null ? dates.resolve(asOf) : asOf, redact, mayOpen);   // what a map's link and shade read across a kind
         BindContext ctx = new BindContext(seen, layout, fp, eval, links, linked, pending, denied, maps);
+        ScreenWire.Screen screen = new ScreenWire.Screen(layout.sutra(), com.ash.drishti.rachana.SutraWiring.nodes(layout.sutra()), ctx,
+                eval.withRoot(doc.data()), asOf.businessDate() == null ? dates.resolve(asOf) : asOf, redact, mayOpen, Map.of(), null);
         List<CompletableFuture<PanelView>> futures = new ArrayList<>();
         for (Panel p : layout.sutra().panels()) {
-            if (values.builds(p.id()) && binder.shown(p, eval)) {   // a control changed: only the panels that read it are built; when: false leaves it out
-                futures.add(CompletableFuture.supplyAsync(() -> binder.bind(p, ctx), bindPool));
+            boolean wired = ScreenWire.wired(p);            // Sutra Next: its own source, events, children (SUTRA_NEXT.md 6 to 8)
+            if (values.builds(p.id()) && (wired ? wire.shown(screen, p) : binder.shown(p, eval))) {   // a control changed: only the panels that read it; when: false leaves it out
+                futures.add(CompletableFuture.supplyAsync(() -> wired ? wire.bind(screen, p) : binder.bind(p, ctx), bindPool));
             }
         }
         List<PanelView> panels = futures.stream().map(CompletableFuture::join).toList();

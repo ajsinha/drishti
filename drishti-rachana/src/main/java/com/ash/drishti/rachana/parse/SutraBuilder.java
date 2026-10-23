@@ -118,6 +118,7 @@ final class SutraBuilder {
                 panels.add(panel);
             }
         }
+        childIds(panels, new HashSet<>(ids));
         ControlsReader controlsReader = new ControlsReader(file, problems);
         List<com.ash.drishti.rachana.model.Control> controls = controlsReader.read(m.get("controls"), ids);
         controlsReader.checkSelects(panels, controls);
@@ -268,7 +269,7 @@ final class SutraBuilder {
         size(m, Panel.HEIGHT, Panel.MAX_HEIGHT, "grid rows", nested, options);
         if (kind != null) {
             m.forEach((opt, val) -> {
-                if (PANEL.contains(opt)) {
+                if (PANEL.contains(opt) || WiringReader.isWiring(opt, val)) {
                     return;
                 }
                 if (!kind.accepts(opt)) {
@@ -296,8 +297,40 @@ final class SutraBuilder {
                 }
             }
         }
+        com.ash.drishti.rachana.model.Wiring wiring = com.ash.drishti.rachana.model.Wiring.NONE;
+        if (m.keySet().stream().anyMatch(k -> WiringReader.isWiring(k, m.get(k)))) {
+            if (nested) {
+                problem(WiringReader.EVENTS, "a panel inside a tab cannot have source:, emits:, waits: or children: of its own; wire the tabs panel", n);
+            } else {
+                wiring = wiring().read(m, kind);
+            }
+        }
         return new Panel(id, kind, text(m.get("title"), null), key, text(m.get("code"), null), area, bool(m.get("infer")),
-                columns, body, options, loc(n), parts);
+                columns, body, options, loc(n), parts, wiring);
+    }
+
+    private WiringReader wiringReader;
+
+    private WiringReader wiring() {
+        if (wiringReader == null) {
+            wiringReader = new WiringReader(file, problems, list -> listOf(list, "panels"), c -> panel(c, false));
+        }
+        return wiringReader;
+    }
+
+    /** Every panel id of the screen, children at any depth included, must be unique: an event names its panel by id. */
+    private void childIds(List<Panel> panels, Set<String> ids) {
+        for (Panel p : panels) {
+            for (var g : p.wiring().children()) {
+                for (Panel c : g.panels()) {
+                    if (!ids.add(c.id())) {
+                        problems.add(new SutraProblem("DRS-2024", "duplicate panel id '" + c.id() + "': a child panel's id is unique on the whole screen",
+                                c.location()));
+                    }
+                }
+                childIds(g.panels(), ids);
+            }
+        }
     }
 
     /**
