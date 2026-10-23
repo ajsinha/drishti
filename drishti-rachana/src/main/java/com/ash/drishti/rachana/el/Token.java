@@ -24,7 +24,7 @@ package com.ash.drishti.rachana.el;
  */
 record Token(Type type, String text, int pos) {
 
-    enum Type { NUMBER, STRING, IDENT, DOLLAR, AT, HASH_INDEX, OP, LPAREN, RPAREN, LBRACKET, FILTER, RBRACKET, DOT, COMMA, QUESTION, COLON, EOF }
+    enum Type { NUMBER, STRING, IDENT, DOLLAR, AT, EVENT, SRC, HASH_INDEX, OP, LPAREN, RPAREN, LBRACKET, FILTER, RBRACKET, DOT, COMMA, QUESTION, COLON, EOF }
 
     boolean is(Type t, String s) {
         return type == t && text.equals(s);

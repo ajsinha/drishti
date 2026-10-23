@@ -77,6 +77,21 @@ final class Lexer {
                     }
                     default -> { }
                 }
+                if (c == '@' && i + 1 < n && Character.isLetter(src.charAt(i + 1))) {
+                    int j = i + 1;                                   // @<panel>: the events of a panel of the screen (SUTRA_NEXT.md 7)
+                    while (j < n && (Character.isLetterOrDigit(src.charAt(j)) || src.charAt(j) == '_'
+                            || src.charAt(j) == '-' && j + 1 < n && Character.isLetterOrDigit(src.charAt(j + 1)))) {
+                        j++;
+                    }
+                    out.add(new Token(Type.EVENT, src.substring(i + 1, j), i));
+                    i = j;
+                    continue;
+                }
+                if (c == '$' && src.startsWith("$src", i) && (i + 4 >= n || !Character.isLetterOrDigit(src.charAt(i + 4)) && src.charAt(i + 4) != '_')) {
+                    out.add(new Token(Type.SRC, "$src", i));       // $src: the record the panel's source: names (SUTRA_NEXT.md 6)
+                    i += 4;
+                    continue;
+                }
                 if (c == '#' && src.startsWith("#index", i)) {
                     out.add(new Token(Type.HASH_INDEX, "#index", i));
                     i += 6;

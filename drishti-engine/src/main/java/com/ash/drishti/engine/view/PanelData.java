@@ -75,7 +75,12 @@ public sealed interface PanelData {
      */
     record Row(List<Cell> cells, boolean highlight, String path, @JsonInclude(JsonInclude.Include.NON_EMPTY) List<Row> children,
             @JsonInclude(JsonInclude.Include.NON_NULL) String pick, @JsonInclude(JsonInclude.Include.NON_NULL) String crumb,
-            @JsonInclude(JsonInclude.Include.NON_NULL) Row kidsTotal) {
+            @JsonInclude(JsonInclude.Include.NON_NULL) Row kidsTotal, @JsonInclude(JsonInclude.Include.NON_NULL) String ev) {
+
+        /** A row without an event key ({@code ev}: on a panel that emits on row-click, the row's place in the data, sent back by a click). */
+        public Row(List<Cell> cells, boolean highlight, String path, List<Row> children, String pick, String crumb, Row kidsTotal) {
+            this(cells, highlight, path, children, pick, crumb, kidsTotal, null);
+        }
 
         public Row(List<Cell> cells, boolean highlight, String path, List<Row> children, String pick) {
             this(cells, highlight, path, children, pick, null, null);
@@ -156,7 +161,13 @@ public sealed interface PanelData {
         }
     }
 
-    record Bar(String label, double value, String text, String tone) {}
+    record Bar(String label, double value, String text, String tone, @JsonInclude(JsonInclude.Include.NON_NULL) String ev) {
+
+        /** A bar without an event key ({@code ev}: on an hbar that emits on bar-click, the bar's row in the data). */
+        public Bar(String label, double value, String text, String tone) {
+            this(label, value, text, tone, null);
+        }
+    }
 
     /** {@code links}. */
     record Links(List<LinkItem> links) implements PanelData {}

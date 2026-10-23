@@ -59,14 +59,23 @@ public class ViewController {
         entitlements.requireOpen(principal, kind);
         EntityRef ref = EntityRef.of(kind, id);
         long started = System.nanoTime();
+        var chosen = ViewEventController.chosen(registry, kind, request.getParameter("sutra"));   // ?sutra=book-desk: another Sutra of the kind
         ViewModel v = entitlements.restrict(principal, timer.record(() -> pipeline.view(ref, asOf, entitlements.redactor(principal), k -> entitlements.mayOpen(principal, k),
-                ControlValues.of(request.getParameterMap()))));
+                ControlValues.of(request.getParameterMap()), chosen)));
         pageTimes.record(kind, System.nanoTime() - started);
         String subtitle = v.title().pill() == null ? kind : v.title().pill().replace("Trade · ", "")
                 + (v.title().with() == null ? "" : " · " + v.title().with().text());
         recents.touch(principal.user(), new EntityHit(ref, v.title().id(), subtitle));
         com.ash.drishti.server.net.NetServedBy sb = servedBy == null ? null : servedBy.getIfAvailable();
         return sb == null ? v : sb.annotate(principal, v);       // Drishti*net: the node that answered, for administrators only
+    }
+
+    /** The Sutras, for a view drawn with one the reader names (absent in a test that makes the controller itself). */
+    private com.ash.drishti.rachana.SutraRegistry registry;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void registry(com.ash.drishti.rachana.SutraRegistry r) {
+        this.registry = r;
     }
 
     /** Drishti*net's line naming the node that answered (absent in a test that makes the controller itself). */

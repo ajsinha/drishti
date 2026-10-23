@@ -120,7 +120,7 @@
   <thead><tr>{% for h in (d.columns or []) %}<th{% if (d.numeric or [])[loop.index0] %} class="num"{% endif %}>{{ h }}</th>{% endfor %}</tr></thead>
   <tbody>
   {% for r in (d.rows or []) %}
-    <tr{% if r.highlight %} class="hl"{% endif %}{% if r.path %} data-path="{{ r.path }}"{% endif %}{% if r.pick %} data-pick="{{ r.pick }}"{% endif %}>
+    <tr{% if r.highlight %} class="hl"{% endif %}{% if r.path %} data-path="{{ r.path }}"{% endif %}{% if r.pick %} data-pick="{{ r.pick }}"{% endif %}{% if r.ev %} data-ev="{{ r.ev }}" tabindex="0" aria-selected="false"{% endif %}>
       {% for c in (r.cells or []) %}<td class="mono{% if (d.numeric or [])[loop.index0] %} num{% endif %}{{ tone(c) }}"{% if c.path %} data-path="{{ c.path }}"{% endif %}>{{ cell_text(c) }}</td>{% endfor %}
     </tr>
   {% endfor %}
@@ -211,7 +211,7 @@
 {% set ok = (d.bars or []) | selectattr('value', 'number') | list %}
 {% set mx = (ok | map(attribute='value') | map('abs') | max) or 1 %}
 <ul class="bars">
-  {% for b in ok %}<li><span class="bl mono">{{ b.label }}</span>
+  {% for b in ok %}<li{% if b.ev %} data-ev="{{ b.ev }}" tabindex="0" role="button" aria-pressed="false"{% endif %}><span class="bl mono">{{ b.label }}</span>
     <span class="bt"><span class="bf bf-{{ b.tone or 'pos' }}" data-w="{{ ((b.value | abs) / mx * 100) | round(1) }}"></span></span>
     <span class="bv mono t-{{ b.tone or 'pos' }}">{{ b.text }}</span></li>{% endfor %}
 </ul>
@@ -349,7 +349,8 @@
 
 {# What a panel shows, by kind: the same for a panel of the view and for one inside a tab. #}
 {% macro pbody(p, ref=none) -%}
-  {% if p.empty or (p.data is none and p.kind != 'provenance') %}{{ no_data(p) }}
+  {% if p.wire and p.wire.waits %}<p class="pnl-empty pnl-wait" role="status" data-waits><i class="bi bi-hand-index" aria-hidden="true"></i> {{ p.wire.waits }}</p>
+  {% elif p.empty or (p.data is none and p.kind != 'provenance') %}{{ no_data(p) }}
   {% elif p.kind in ['kv', 'status'] %}{{ fields(p.data.fields, 4 if p.area == 'main' else 2) }}
   {% elif p.kind == 'provenance' %}<dl class="prov">{% for f in (p.data.fields or []) %}{% set w = (f.text or '').split(' ') %}<div><dt>{{ f.label }}</dt><dd class="mono">{% if f.label == 'Layout' and w | length > 2 and w[0] == 'Sutra' and w[2][:1] == 'v' %}{# "Sutra <name> v<N>[ + inference]": the Sutra opens in the designer #}Sutra <a data-prov-sutra href="/studio?sutra={{ (w[1] ~ '@' ~ w[2][1:]) | urlencode }}{% if ref and ref.kind and ref.id %}&amp;kind={{ ref.kind | urlencode }}&amp;id={{ ref.id | urlencode }}{% endif %}" title="Open this Sutra in the designer">{{ w[1] }} {{ w[2] }}</a>{{ (' ' ~ (w[3:] | join(' '))) if w | length > 3 else '' }}{% elif f.label == 'Source' and ', gen ' in (f.text or '') %}{% set src = f.text.split(', gen ') %}{# "<connector>, gen <N>": the connector opens on its page #}<a data-prov-source href="/admin/connectors/{{ src[0] | urlencode }}" title="Open this connector's page">{{ src[0] }}</a>, gen {{ src[1] }}{% else %}{{ f.text }}{% endif %}</dd></div>{% endfor %}</dl>
   {% elif p.kind in ['table', 'ladder'] %}{% if p.data.levels %}{{ drill(p) }}{% else %}{{ pivotable(p) }}{% endif %}
@@ -377,7 +378,7 @@
 {# span (1-12 columns) and height (grid rows) come from the Sutra, or the user's own layout (core/layouts.py); static/css/layout.css sizes them #}
 {% set span = p.span if (p.span is number and 1 <= p.span < 12) else none %}{% set rows = p.height if (p.height is number and 1 <= p.height <= 24) else none %}
 <section class="pnl{% if span %} c-span-{{ span }}{% endif %}{% if rows %} c-h-{{ rows }}{% endif %}{% if p.hidden %} pnl-off{% endif %}" id="p-{{ p.id }}" data-panel="{{ p.id }}" data-kind="{{ p.kind }}"{% if p.key %} data-key="{{ p.key }}"{% endif %}
-  data-span="{{ span or 12 }}" data-height="{{ rows or 0 }}" tabindex="-1" aria-labelledby="h-{{ p.id }}">
+  data-span="{{ span or 12 }}" data-height="{{ rows or 0 }}" tabindex="-1" aria-labelledby="h-{{ p.id }}"{% if p.wire %} data-wire="{{ p.wire | tojson | forceescape }}"{% endif %}>
   <header class="pnl-h"><h3 id="h-{{ p.id }}">{{ p.title or '' }}</h3>
     <span class="pnl-code">{% if p.code %}{{ p.code }}{% endif %}{% if p.code and p.key %} · {% endif %}{% if p.key %}{{ p.key }}{% endif %}
       {% if p.inferred %}<span class="inf" title="{{ p.explanation or 'completed by inference' }}">inferred</span>{% endif %}

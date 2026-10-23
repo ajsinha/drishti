@@ -1152,7 +1152,7 @@ What to know, in the order you will meet it:
 - The title line still reads this entity; only the panel's data moves.
 - A missing link (the field is empty, or the entity does not exist) leaves the panel empty with a reason, not a broken view. If the linked document is slow, the other panels draw first.
 - A `line` with a `source` also refreshes live when the linked entity changes; other kinds refresh with the view.
-- `links` and `provenance` do not take `source`.
+- `links` and `provenance` do not take `source`. **Sutra Next (2.7.0):** `source:` written as a mapping (`{ kind, id | where | search }`, read as `$src`, any enabled pack's kind), events (`emits:`, `@panel.event.field`, `waits:`, evaluated on the server per click) and child panels (`children:`: under the row, beside, below, as tabs) build master-detail screens across packs; see [SUTRA_NEXT.md sections 6 to 8](../architecture/SUTRA_NEXT.md#6-sources-over-several-packs) and [RACHANA_REFERENCE: Events, sources and children](RACHANA_REFERENCE.md#events-sources-and-children-sutra-next), worked through on the trading pack's book desk (`/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`).
 - Entities of a pack that is not enabled cannot be read: `sutra test` needs the same `DRISHTI_PACKS` as the server (section 15).
 
 ## 12. Expandable row groups: pivot `by` lists and tree tables

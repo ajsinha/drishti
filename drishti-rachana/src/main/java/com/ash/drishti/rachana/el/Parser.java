@@ -265,6 +265,10 @@ final class Parser {
                 return new Expr.Root();
             case AT:
                 return new Expr.Row();
+            case EVENT:
+                return new Expr.Event(t.text());
+            case SRC:
+                return new Expr.Src();
             case HASH_INDEX:
                 return new Expr.Index();
             case LPAREN: {

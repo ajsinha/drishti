@@ -225,6 +225,19 @@ public record ViewModel(
      * @param data kind-specific content
      * @param error set when binding this panel failed; the rest of the view is unaffected
      */
+    /**
+     * What the console needs of a panel's Sutra Next wiring (SUTRA_NEXT.md 7, 8): the events a click fires, the words shown while it waits on
+     * an event (set only while it waits), its groups of children (where and when they show) and the source it reads.
+     *
+     * @param emits the events, each {@code name} and {@code on}
+     * @param waits set while the panel waits on an event not fired: what it says instead of data
+     * @param children per group of child panels: {@code place} and {@code show}
+     * @param source the kind (and pack) of the source it reads, or null
+     * @param parent the parent panel's id for a child panel, or null
+     */
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public record Wire(List<Map<String, String>> emits, String waits, List<Map<String, String>> children, Map<String, String> source, String parent) {}
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     /**
      * @param empty nothing to show (the document lacks what the panel asks for); the console says "No data available"
@@ -233,7 +246,18 @@ public record ViewModel(
      */
     public record PanelView(
             String id, String kind, String title, String code, String key, String area, boolean inferred,
-            String explanation, PanelData data, String error, boolean empty, Integer span, Integer height, String denied) {
+            String explanation, PanelData data, String error, boolean empty, Integer span, Integer height, String denied, Wire wire) {
+
+        /** A panel without Sutra Next wiring. */
+        public PanelView(String id, String kind, String title, String code, String key, String area, boolean inferred,
+                String explanation, PanelData data, String error, boolean empty, Integer span, Integer height, String denied) {
+            this(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, null);
+        }
+
+        /** The same panel with its wiring for the console. */
+        public PanelView withWire(Wire next) {
+            return new PanelView(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, next);
+        }
 
         /** {@code denied} is set when the panel's {@code source} is an entity the caller may not open (no data, no error). */
         public PanelView(String id, String kind, String title, String code, String key, String area, boolean inferred,

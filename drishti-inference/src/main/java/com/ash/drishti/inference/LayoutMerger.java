@@ -87,7 +87,7 @@ public final class LayoutMerger {
         if (cols == p.columns() && body == p.body() && parts.equals(p.parts())) {
             return p;
         }
-        return new Panel(p.id(), p.kind(), p.title(), p.key(), p.code(), p.area(), p.infer(), cols, body, p.options(), p.location(), parts);
+        return new Panel(p.id(), p.kind(), p.title(), p.key(), p.code(), p.area(), p.infer(), cols, body, p.options(), p.location(), parts, p.wiring());
     }
 
     private Panel fillBody(Panel tabs, DataNode doc, Map<String, String> why) {
@@ -131,7 +131,7 @@ public final class LayoutMerger {
         List<Column> cols = p.columns().stream().map(c -> c.label() != null ? c
                 : new Column(labelOf(c.bind()), c.bind(), c.fmt(), c.tone(), c.total(), c.link())).toList();
         return new Panel(p.id(), p.kind(), p.title(), p.key(), p.code(), p.area(), p.infer(), cols, body, p.options(), p.location(),
-                p.parts().stream().map(LayoutMerger::labelled).toList());
+                p.parts().stream().map(LayoutMerger::labelled).toList(), p.wiring());
     }
 
     private DataNode rows(String expr, DataNode doc) {

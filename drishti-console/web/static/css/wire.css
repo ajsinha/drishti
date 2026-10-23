@@ -1,0 +1,58 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Sutra Next events and children (SUTRA_NEXT.md 7, 8; static/js/sutra-wire.js): a clickable row or bar, the picked one, the words a
+   panel shows while it waits, and the four places children open: under the row (expand-row), beside the panel (detail-right), under it
+   (detail-below), as tabs. Theme tokens only (tokens.css), so every theme draws them; below 700 px a detail opens as a full-width sheet
+   over the page with a Back button. */
+.pnl [data-ev] { cursor: pointer; }
+.pnl tr[data-ev]:hover > td, .pnl li[data-ev]:hover { background: var(--d-accent-tint); }
+.pnl tr[data-ev]:focus-visible, .pnl li[data-ev]:focus-visible { outline: 2px solid var(--d-accent); outline-offset: -2px; }
+.pnl tr[data-ev][aria-selected="true"] > td, .pnl li[data-ev][aria-pressed="true"] { background: var(--d-accent-tint); box-shadow: inset 3px 0 0 var(--d-accent); }
+.pnl tr[data-ev][aria-selected="true"] > td + td { box-shadow: none; }
+.pnl-wait { color: var(--d-muted); font-style: italic; }
+.pnl-wait .bi { color: var(--d-accent); font-style: normal; }
+.pnl.wire-busy { opacity: .6; transition: opacity .15s; }
+
+/* expand-row: a row under the picked one holding the children */
+tr.wire-kids > td { padding: .5rem .6rem .7rem 1.4rem; background: var(--d-surface-2); border-left: 3px solid var(--d-accent); }
+tr.wire-kids .pnl { box-shadow: none; border: 1px solid var(--d-border); margin: 0; }
+tr.wire-kids .pnl + .pnl { margin-top: .5rem; }
+tr.wire-kids .tbl-wrap { max-height: 22rem; overflow: auto; }
+
+/* detail-right and detail-below: a pane beside or under the parent panel, replaced on each pick */
+.wire-split { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: .8rem; align-items: start; min-width: 0; }
+.wire-detail { display: flex; flex-direction: column; gap: .6rem; min-width: 0; border-left: 3px solid var(--d-accent); padding-left: .6rem; }
+.wire-detail[data-place="detail-below"] { border-left: 0; border-top: 3px solid var(--d-accent); padding: .6rem 0 0; }
+.wire-back { display: none; }
+
+/* tabs: each child a tab of the pane */
+.wire-tabs { display: flex; gap: .25rem; border-bottom: 1px solid var(--d-border); flex-wrap: wrap; }
+.wire-tab { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--d-muted); padding: .3rem .7rem; font: inherit; min-height: 44px; }
+.wire-tab[aria-selected="true"] { color: var(--d-ink); border-bottom-color: var(--d-accent); }
+.wire-tab:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
+
+@media (max-width: 1100px) {
+  .wire-split { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  .pnl tr[data-ev] > td { padding-top: .7rem; padding-bottom: .7rem; }      /* a finger's height */
+  .wire-detail[data-place="detail-right"], .wire-detail[data-place="detail-below"], .wire-detail[data-place="tabs"] {
+    position: fixed; inset: 0; z-index: 1040; background: var(--d-bg); overflow: auto; padding: .8rem 16px; border: 0;
+  }
+  .wire-detail .wire-back { display: inline-flex; align-items: center; gap: .3rem; align-self: flex-start; min-height: 44px; padding: 0 .9rem;
+    background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius); font: inherit; }
+  tr.wire-kids > td { padding-left: .5rem; }
+}

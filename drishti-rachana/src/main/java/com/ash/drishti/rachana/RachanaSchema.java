@@ -143,6 +143,33 @@ public final class RachanaSchema {
         common.put("infer", Map.of("type", "boolean", "description", "Let inference fill the columns"));
         common.put("where", text(EL + " that must be true for a row to be shown (it may read ctl.<id>)"));
         common.put("on-select", Map.of("type", "object", "description", "A click on a row or bar sets a control: {filter: [panel ids], by: <control id>, field: <row field>}"));
+        // Sutra Next (SUTRA_NEXT.md 6 to 8): sources over any pack, events, waiting words, child panels
+        Map<String, Object> source = new LinkedHashMap<>();
+        source.put("kind", text("The entity kind read (any enabled pack's)"));
+        source.put("id", text(EL + " for one entity's id: $src is that record"));
+        source.put("where", text(EL + " over each entity of the kind (@): $src is the list it keeps"));
+        source.put("search", text(EL + " for the text searched in the kind: $src is the list found"));
+        source.put("limit", Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.Wiring.Source.MAX_LIMIT));
+        source.put("as-of", text(EL + " for the business date read"));
+        source.put("pack", text("The pack serving the kind"));
+        common.put("source", Map.of("description", "The record the panel reads: " + EL + " naming a linked entity (it reads as $), or {kind, id | where | search, limit, as-of, pack} (it reads as $src)",
+                "oneOf", List.of(Map.of("type", "string"), Map.of("type", "object", "properties", source, "required", List.of("kind")))));
+        Map<String, Object> emit = new LinkedHashMap<>();
+        emit.put("name", text("The event's name: select, open, drill, filter, change"));
+        emit.put("on", Map.of("type", "string", "enum", new TreeSet<>(com.ash.drishti.rachana.model.Wiring.TRIGGERS)));
+        emit.put("payload", Map.of("type", "object", "description", "field: " + EL + " over the clicked row (@), or {bind, type: "
+                + String.join("|", com.ash.drishti.rachana.model.Wiring.TYPES) + "}; read elsewhere as @<panel>.<event>.<field>"));
+        common.put("emits", Map.of("type", "array", "items", Map.of("type", "object", "properties", emit, "required", List.of("name", "on")),
+                "description", "Events a click fires (table, ladder: row-click; hbar: bar-click)"));
+        common.put("waits", text("What the panel says until an event it reads fires"));
+        Map<String, Object> group = new LinkedHashMap<>();
+        group.put("place", Map.of("type", "string", "enum", com.ash.drishti.rachana.model.Wiring.PLACES));
+        group.put("show", Map.of("type", "string", "enum", com.ash.drishti.rachana.model.Wiring.SHOWS));
+        group.put("source", Map.of("type", "object", "properties", source, "required", List.of("kind")));
+        group.put("waits", text("What the children say until their parent fires"));
+        group.put("panels", Map.of("type", "array", "items", Map.of("$ref", "#/$defs/panel")));
+        common.put("children", Map.of("description", "A tree table's child rows (" + EL + "), or groups of child panels filled when the panel fires (read @parent; three levels at most)",
+                "oneOf", List.of(Map.of("type", "string"), Map.of("type", "array", "items", Map.of("type", "object", "properties", group, "required", List.of("panels"))))));
         common.put("columns", Map.of("type", "array", "items", Map.of("$ref", "#/$defs/column")));
         common.put("body", Map.of("$ref", "#/$defs/panel"));
         common.put("panels", Map.of("type", "array", "items", Map.of("$ref", "#/$defs/panel"),
@@ -163,8 +190,16 @@ public final class RachanaSchema {
                     opts.add(shared);       // the row condition and the click-sets-a-control option: accepted by the kind, so offered by its schema
                 }
             }
+            if (k != PanelKind.LINKS && k != PanelKind.PROVENANCE) {
+                opts.add("waits");          // Sutra Next wiring (SUTRA_NEXT.md 6 to 8)
+                opts.add("children");
+                if (k == PanelKind.TABLE || k == PanelKind.LADDER || k == PanelKind.HBAR) {
+                    opts.add("emits");
+                }
+            }
             for (String o : opts) {
-                Object schema = o.equals("fmt") ? fmt(formats) : o.equals("tone") ? tone()
+                Object schema = List.of("source", "children", "emits", "waits").contains(o) ? common.get(o)
+                        : o.equals("fmt") ? fmt(formats) : o.equals("tone") ? tone()
                         : o.equals("search") ? Map.of("type", "boolean", "description", "false hides the table's filter")
                         : expr.contains(o) ? text(EL) : kindOption(k, o);
                 props.put(o, forKind(k, o, schema));

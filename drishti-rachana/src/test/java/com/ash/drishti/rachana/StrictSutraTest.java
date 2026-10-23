@@ -96,7 +96,6 @@ class StrictSutraTest {
             table search maybe   | { id: a, kind: table, rows: $.cashflows, search: maybe } | option 'search' of 'table' panels must be true or false
             ladder search maybe  | { id: a, kind: ladder, rows: $.cashflows, search: maybe } | option 'search' of 'ladder' panels must be true or false
             table children 5     | { id: a, kind: table, rows: $.cashflows, children: 5 }   | option 'children' of 'table' panels is an expression
-            ladder children list | { id: a, kind: ladder, rows: $.cashflows, children: [a] } | option 'children' of 'ladder' panels is an expression
             table expand zero    | { id: a, kind: table, rows: $.cashflows, expand: 0 }     | option 'expand' of 'table' panels must be a whole number
             ladder expand some   | { id: a, kind: ladder, rows: $.cashflows, expand: some } | option 'expand' of 'ladder' panels must be a whole number
             pivot expand -1      | { id: a, kind: pivot, rows: $.cashflows, by: x, across: y, expand: -1 } | option 'expand' of 'pivot' panels must be a whole number

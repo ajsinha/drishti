@@ -212,13 +212,31 @@ class BackendClient:
             raise _error(r, text)
         return r
 
-    async def view(self, kind: str, id_: str, ident, controls: dict | None = None, panels: list[str] | None = None) -> dict:
-        """The view; ``controls`` are the ``ctl.<id>`` values the reader set, ``panels`` the only panels to build (``[]`` builds none)."""
+    async def view(self, kind: str, id_: str, ident, controls: dict | None = None, panels: list[str] | None = None,
+                   sutra: str | None = None) -> dict:
+        """The view; ``controls`` are the ``ctl.<id>`` values the reader set, ``panels`` the only panels to build (``[]`` builds none),
+        ``sutra`` another Sutra of the kind to draw it with (``?sutra=book-desk``)."""
         where, q = entity_path(kind, id_)
         q = {**q, **(controls or {})}
         if panels is not None:
             q["panels"] = ",".join(panels) or "-"
+        if sutra:
+            q["sutra"] = sutra
         return await self._get(f"/views/{where}", ident, **q)
+
+    async def view_event(self, kind: str, id_: str, ident, click: dict, controls: dict | None = None, sutra: str | None = None) -> dict:
+        """A click on a Sutra Next screen (SUTRA_NEXT.md 7): ``{panel, event, row, selections}``, evaluated by the server as the reader;
+        the selection's token, the panels that read it, the clicked panel's children, the selections it cleared."""
+        where, q = entity_path(kind, id_)
+        q = {**q, **(controls or {}), **({"sutra": sutra} if sutra else {})}
+        return await self._send("POST", f"/views/{where}/events", ident, params=q, json=click)
+
+    async def view_children(self, kind: str, id_: str, ident, panel: str, selections: list[str], controls: dict | None = None,
+                            sutra: str | None = None) -> list:
+        """The children of one panel of a Sutra Next screen, given the reader's selections (tokens), lazily (SUTRA_NEXT.md 8)."""
+        where, q = entity_path(kind, id_)
+        params = [*q.items(), *(controls or {}).items(), *([("sutra", sutra)] if sutra else []), *[("sel", s) for s in selections]]
+        return await self._send("GET", f"/views/{where}/panels/{quote(panel, safe='')}/children", ident, params=params)
 
     async def view_on(self, kind: str, id_: str, ident, business_date: str) -> dict:
         """The view as of a business date, whatever date the reader's top bar holds (Compare's side by side)."""

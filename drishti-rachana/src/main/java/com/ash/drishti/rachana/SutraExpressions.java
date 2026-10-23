@@ -115,6 +115,7 @@ public final class SutraExpressions {
                 expr(a, s.location(), out);
             }
         });
+        SutraWiring.check(s).forEach(out::add);         // events, sources, children: SUTRA_NEXT.md 14
         return out.problems;
     }
 
@@ -177,6 +178,24 @@ public final class SutraExpressions {
             panel(p.body(), out);
         }
         p.parts().forEach(part -> panel(part, out));
+        wiring(p.wiring(), p.location(), out);
+    }
+
+    /** A panel's source and payload expressions, and its children's panels (SUTRA_NEXT.md 6 to 8). */
+    private void wiring(com.ash.drishti.rachana.model.Wiring w, SourceLocation at, Run out) {
+        if (w.source() != null) {
+            w.source().expressions().forEach(e -> expr(e, at, out));
+        }
+        w.emits().forEach(e -> e.payload().values().forEach(f -> expr(f.bind(), at, out)));
+        if (w.waits() != null) {
+            template(w.waits(), at, out);
+        }
+        for (var g : w.children()) {
+            if (g.source() != null) {
+                g.source().expressions().forEach(e -> expr(e, at, out));
+            }
+            g.panels().forEach(c -> panel(c, out));
+        }
     }
 
     private void expr(String src, SourceLocation at, Run out) {

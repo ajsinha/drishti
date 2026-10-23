@@ -483,7 +483,7 @@
   var base = '/v/' + encodeURIComponent(v.dataset.kind) + '/' + v.dataset.id.split('/').map(encodeURIComponent).join('/');
   init(document, {
     view: v, scope: v.getAttribute('data-view-sutra') || v.dataset.kind,
-    panelsUrl: function (q) { return base + '/panels?' + q; },
+    panelsUrl: function (q) { return base + '/panels?' + q + (v.dataset.chosenSutra ? '&sutra=' + encodeURIComponent(v.dataset.chosenSutra) : ''); },
     fetchJson: function (url) { return fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then(function (r) { if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.json(); }); },
     afterSwap: function (fresh) {
       if (window.drishtiLayout) { window.drishtiLayout.decorate(fresh); }

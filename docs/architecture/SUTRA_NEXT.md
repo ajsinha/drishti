@@ -15,8 +15,11 @@
 -->
 # Sutra Next: one grammar for every screen
 
-Status: **phase 1 built (2.7.0)**: the fragment library, the `doc:` docstring and its lint, composite fragments, migrated
-screens (ir-curve and the seven world-economy economics screens) and the library read API. Phases 2 to 8 are **design, not built**. Direction of the product owner, 2026-10-22:
+Status: **phases 1 to 3 built (2.7.0)**: the fragment library, the `doc:` docstring and its lint, composite fragments, migrated
+screens (ir-curve and the seven world-economy economics screens) and the library read API (phase 1); per-panel sources over any
+pack's kinds and events evaluated on the server (phase 2, [section 6](#6-sources-over-several-packs), [7](#7-events)); nested child
+panels (phase 3, [section 8](#8-nested-child-panels)); the worked screen is the trading pack's **book desk**. Phases 4 to 8 are
+**design, not built**. Direction of the product owner, 2026-10-22:
 the board/chip paradigm (UI_BOARD.md, parked on branch `ui-board-preview`) is dropped; Sutra itself grows from an entity browser
 into the UI library, in ONE grammar, built on what Sutras already have (panels, shared blocks, `use:`/`with:`, controls, masks).
 
@@ -117,6 +120,9 @@ browser can show "since 2.7.0, v1".
 | `region-map` | map | the record's country on a world map, every country shaded by one figure |
 | `source-footer` | composite | data source and licence, how the view was built, linked entities |
 
+Phase 2 added `row-picker` (table): a table of records whose rows, clicked, fire an event with `{ id, ref }` (both typed `id`), the
+master of a master-detail screen (section 7).
+
 **The migrated screen.** `market-data/ir-curve` (the test page `/v/ir-curve/CRV-USD-OIS`) is the first screen built from the
 library: `curve-overview` (line and pillars), `series-line` (1Y forwards, right), `data-provenance`, `linked-entities`. It was chosen
 because it is small, used daily, uses five panel kinds' worth of generic shapes (line, table, provenance, links), has masked-field
@@ -178,7 +184,7 @@ streaming of the kit comes later (2.9.0, AI).
 
 ```
 config/ui-kit/                       drishti.ui-kit.dir (DRISHTI_UI_KIT_DIR), default ./config/ui-kit
-  fragments/                         <name>.v<N>.fragment.yaml: series-line, curve-table, key-figure, source-footer, ... (14)
+  fragments/                         <name>.v<N>.fragment.yaml: series-line, curve-table, key-figure, source-footer, row-picker, ... (15)
   assets/
     icons/                           favicon.svg, favicon-32.png, icon-192.png, icon-512.png
     images/                          pictures a screen or a Gen UI answer may show
@@ -304,6 +310,35 @@ panels:
   kind; a source the viewer may not open (`kinds` of their role) leaves the panel out with "not available to your role".
 - `data-provenance` lists every source of the screen with its freshness.
 
+**As built (phase 2).** `source:` written as a mapping is the new form; written as text (`source: "link($.CURVE, 'ir-curve')"`) it
+is today's option, unchanged (the panel reads that linked entity as `$`).
+
+| Key | Meaning |
+|---|---|
+| `kind` | the entity kind read (required); any enabled pack's |
+| `id` | an expression for one entity's id: `$src` is that record |
+| `where` | instead of `id`: a condition over each entity of the kind (`@` the entity as the viewer sees it); `$src` is the list of those it keeps, at most `limit`; the first 500 entities of the kind are read (`ScreenWire.WHERE_SCAN`): use `search` for large kinds |
+| `search` | instead of `id`: an expression for the text searched in the kind; `$src` is the list of the entities found, at most `limit` |
+| `limit` | 1 to 200 (default 20), for `where` and `search` |
+| `as-of` | an expression for the business date read (`YYYY-MM-DD`); the screen's date when absent |
+| `pack` | the pack serving the kind: documentation and lint today (a kind is served by one connector; routing is by kind) |
+| `model` | a BI model source: refused (`DRS-2057`), not built yet |
+
+- **As the viewer.** A kind the viewer's roles may not open is never fetched: the panel says "no access to <kind>". The documents
+  are masked by the viewer's field masks before the panel binds them (`$src`), so a masked field reads `•••` in every cell, and a
+  `where` condition over a masked field never holds (a hidden value never selects a record).
+- **Once per request.** Panels naming the same source share one read (per kind, id or condition, date).
+- A **group of children** may name the source its panels read (section 8); a panel's own `source:` wins over its group's.
+- A **use** may carry the source: `{ use: field-list@1, with: { rows: $src }, source: { kind: credit-limit, id: "..." } }` puts it on
+  every panel the fragment brings (also `when` and `waits`; `emits`, `children`, `span`, `height` and `area` only on a use that brings
+  one panel, else `DRS-2048`).
+- A `kv` panel with `rows` and no columns lists the plain fields of the record its rows name at bind time (`field-list@1` over `$src`),
+  since layout inference cannot see a record read at bind time.
+- **Another Sutra of the kind.** `?sutra=<name>` on a view (`GET /api/v1/views/{kind}/{id}?sutra=book-desk`, the console's
+  `/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`) draws it with that Sutra (the newest version; it must match the kind,
+  else `DRS-5001`); the screen's events and children use the same one. This is how a screen that is not the kind's default is opened
+  before dynamic screens (section 12).
+
 ## 7. Events
 
 A panel **emits** named events with a payload; other panels on the screen read them as `@<panel>.<event>.<path>`. A child panel
@@ -333,6 +368,37 @@ panels:
   with `{panel, event, payload-ref}`), returns only the panels that read the event, and the URL keeps the last selection so a link
   reproduces the screen.
 - A fragment declares what it can emit in `doc.emits`; a Sutra may only wire events a fragment declares (lint).
+
+**As built (phase 2).**
+
+- **Grammar.** `emits: [{ name, on, payload }]` on a panel: `name` lower-case kebab (by convention `select`, `open`, `drill`,
+  `filter`, `change`), `on` one of `row-click` (a table or ladder) and `bar-click` (an hbar); `point-click`, `select`, `submit`,
+  `load` and `tick` are refused as later phases (`DRS-2057`). Each payload field is an expression over the clicked row
+  (`trade: "@.TRADE_ID"`) or `{ bind, type }` with `type` one of `id`, `text`, `number`, `date`, `bool` (`any` when unwritten).
+- **Reading.** Rachana-EL reads `@<panel>.<event>.<field>` (panel ids may be kebab: `@by-asset.select.ASSET`) and, in a child,
+  `@parent.<event>.<field>`; an event not fired reads as nothing. `$src` is the panel's source record (section 6).
+- **Waiting.** A panel that reads an event not yet fired is drawn waiting: no data, its `waits:` text (or its group's, else "Pick a
+  row in <panel> to fill this panel"). A `when:` over an event does not hide the panel at first paint; it waits, and after the event
+  a `when` that is not true makes it wait again.
+- **On the server, per click.** `POST /api/v1/views/{kind}/{id}/events` with `{panel, event, row, selections}` (`row` is the row's
+  `ev`: its place in the panel's data, drawn on each clickable row and bar). The server rebuilds the clicked panel as the viewer, checks
+  the row is one the viewer is shown (its `where` and controls), evaluates the payload twice: over the row as the viewer sees it
+  (**seen**: what titles, cells and `where` filters read, a masked field `•••`) and over the stored row (**raw**: kept on the server,
+  read only to look up a source's `id`, `where` or `search`). The answer: `selection` (`panel`, `event`, `token`, the seen
+  `payload`), `panels` (every panel that reads the event, directly or through another, rebound; nothing else), `children` (the
+  clicked panel's groups, section 8) and `cleared` (panels whose own selections the click made stale: their children close).
+- **Selections are tokens** (`IdTokens`, ported from the UI Board): the browser holds `tok_…` tokens, never a payload; each request
+  sends the tokens it holds; only the same person resolves a token, only on the same screen (kind and id), only while it lives
+  (`drishti.views.selection-ttl`, default 30 minutes, renewed on use). Anyone else, another screen, a forged or expired token:
+  `403 DRS-5002`. Tokens live in the memory of the node that issued them: a screen's requests go to the node that drew it.
+- **Lint** (`DRS-2057`, every Sutra at load): a read of a panel the screen does not have, of an event it does not emit or of a
+  payload field the event does not carry; a panel reading its own event; panels that wait on each other in a cycle (through events
+  or as parent and child); `$src` in a panel with no source; a source `id` reading a payload field typed `number`, `date` or `bool`;
+  a panel called `parent`. Fragments: a fragment whose panels emit lists each event in `doc.emits` (`{ name, on, payload }`), and
+  one whose panels read `@parent` says so in `doc.expects` (`DRS-2055`).
+- The console (`static/js/sutra-wire.js`, `static/css/wire.css`): a clickable row or bar takes a click, Enter or Space; the picked
+  one is marked (`aria-selected`, `aria-pressed`); the listening panels are swapped in place and announced; the clicked table is not
+  redrawn. The kit fragment `row-picker@1` is a table that emits on row-click with `{ id, ref }`, both typed `id`.
 
 ## 8. Nested child panels
 
@@ -367,6 +433,32 @@ panels:
 - **Placement**: `expand-row` (inside the parent table, under the clicked row), `detail-right` / `detail-below` (a pane beside or
   under the parent, replaced on each selection), `tabs` (each child a tab of the pane). Section 13 places these within the grid.
 - A fragment whose panels read `@parent` declares it in `doc.expects`; lint refuses using it where no parent provides the event.
+
+**As built (phase 3).**
+
+- **Grammar.** `children:` written as a list of groups `{ place, show, source, waits, panels }` (written as text it stays a tree
+  table's `children: "@.KIDS"`). `place` defaults to `detail-below`, `show` to `on-select`; `expand-row` only under a table or ladder
+  (`DRS-2056`). Child panels need ids, unique on the whole screen (`DRS-2024`), may use fragments, and may have their own sources,
+  events and children. A panel inside a tab cannot be wired.
+- **Lazy.** Nothing of a child is read at first paint. `on-select` groups are filled by the click's answer; `always` groups by
+  `GET /api/v1/views/{kind}/{id}/panels/{panel}/children?sel=<token>...` when the page loads; `on-expand` groups by the same call
+  when the reader opens the panel's Details button. A group whose parent has no selection comes back `hidden`.
+- **Replace and clear.** A new pick replaces the children; a pick that makes another panel's selection stale closes that panel's
+  children (`cleared`); closing a container forgets the selections of the panels inside it.
+- **Depth 3.** Screen panel, child, grandchild; a great-grandchild is `DRS-2056`; so is `@parent` in a panel that is not a child.
+- **Other packs.** A child reads any kind through its or its group's `source:` (the book desk's cash flows read the trade).
+- **Placement in the console.** `expand-row`: a row under the picked one holds the panels; `detail-right`: the parent and a detail
+  pane side by side (stacked below 1100 px); `detail-below`: a pane under the parent; `tabs`: a pane with one tab per panel (arrow
+  keys move between them). Below 700 px a pane opens as a full-width sheet with a Back button. Theme tokens only, so every theme
+  draws them.
+
+**The worked screen: the book desk** (`config/packs/trading/sutras/pages/book-desk.v1.sutra.yaml`, opened as
+`/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`): the book's trades (`row-picker@1`, `open` with the trade id and the
+counterparty); a click opens the trade's cash flows under the row (`cashflow-ladder@1` over the `trade` kind, trading pack) and fills
+the right column: the counterparty (core pack, by id) and its credit limit with utilisation by tenor (`ranked-bars@1`, counterparty-risk
+pack, by `where`). For a reader with `COUNTERPARTY` masked the payload's counterparty is `•••`, the counterparty panel still follows it
+(the same reader, by token; the id is never sent) and the limit panel shows nothing (a masked value selects no record).
+`SutraNextEventsTest` (server) and `test_sutra_wire_browser.py` (console) exercise it.
 
 ## 9. Live panels, refresh control and freshness
 
@@ -546,8 +638,9 @@ panels:
 | An older block (`.block.yaml`) without a complete doc | `DRS-2055` | warning | 1 (built) |
 | Every fragment and example expands into panels the Sutra parser accepts | `DRS-2048` and the panel codes | error (tests: `SutraFragmentsTest`) | 1 (built) |
 | An inner use without a version, deeper than 3, a cycle | `DRS-2048` | error | 1 (built) |
-| An event read (`@panel.event`) that no panel emits, or a fragment's undeclared emit | `DRS-2057` | error | 2 |
-| A child reading `@parent` where no parent provides it; children deeper than 3 | `DRS-2056` | error | 3 |
+| An event read (`@panel.event.field`) of a panel, event or field the screen does not have; a panel reading its own event; a cycle; `$src` without a source; a source id reading a `number`, `date` or `bool` field; a trigger not built; a source that names none or several of id, where, search | `DRS-2057` | error | 2 (built) |
+| A fragment whose panels emit without `doc.emits` entries (`{ name, on, payload }`), or read `@parent` without `doc.expects` | `DRS-2055` | error: the fragment is not loaded | 2, 3 (built) |
+| A child reading `@parent` where no parent provides it or an event it does not emit; children deeper than 3; `expand-row` under a panel without rows | `DRS-2056` | error | 3 (built) |
 | A form default reading a masked field; a write action naming a missing connector template | `DRS-2058` | warning / error | 5, 6 |
 | Layout: unknown areas, overlaps, spans over 12, non-rectangular areas | `DRS-2059` | error | 7 |
 
@@ -558,9 +651,14 @@ docstring warnings; neither fails on a docstring warning yet (it will, under `--
 
 - **Everything is bound as the viewer.** A panel, a source, a child and a dynamic screen are rendered by the server with the viewer's
   roles and masks; the browser never receives an unmasked value to hide.
-- **Events carry what the viewer saw.** A payload evaluated over a masked field is `•••`; a source or child keyed by a masked value
-  is not fetched ("not available to your role"), so an event cannot be used to look up through a masked id. The server keeps payloads
-  by reference (`payload-ref`), so a client cannot forge one the viewer was not shown.
+- **Events carry what the viewer saw** (as built, phase 2). A payload evaluated over a masked field is `•••` in everything drawn
+  (titles, cells, `where` filters: a masked value never selects a record). The stored value is kept on the server with the selection
+  and is read only to look up a source by `id`, `where` or `search`, for the same person only (the UI Board's rule for masked ids,
+  decision 14.1 #10): the person may follow a row they were shown to its detail without ever being sent the masked id, and the detail
+  is read as that person (kinds, masks). The browser holds an opaque token per selection (`IdTokens`) that no one else can resolve and
+  that names no value, so a client cannot forge a payload it was not shown. A pack that masks an id should mask the matching id field
+  of the kinds it leads to as well (the followed record's own id is shown unless masked). Where a source's id is itself masked at the
+  source, the panel says "not available to your role".
 - **Sources and children check `kinds`.** A source of a kind the viewer may not open leaves the panel out and says so; links to it are
   not drawn (as today's links panel).
 - **Forms and writes** never prefill or send masked values; an action is drawn only for a role it names, re-checked on the server when
@@ -580,8 +678,8 @@ picking from `emits`; show lint as you type; save a dynamic screen to the worksp
 | Phase | What | Release |
 |---|---|---|
 | 1 | The fragment library (the Drishti UI kit, `config/ui-kit`, with its assets, brand and `GET /api/v1/ui-kit`), the `doc:` docstring and its lint, composite fragments, migrated screens (ir-curve and the seven economics screens, proved identical), `GET /api/v1/sutras/library` | 2.7.0 (**built**) |
-| 2 | Events (`emits`, `@panel.event.path`) and multi-pack sources (`source:`) | 2.7.x |
-| 3 | Nested children (`children:`, `place`, `show`, lazy, depth 3) | 2.7.x |
+| 2 | Events (`emits`, `@panel.event.path`) and multi-pack sources (`source:`) | 2.7.0 (**built**) |
+| 3 | Nested children (`children:`, `place`, `show`, lazy, depth 3); the book desk | 2.7.0 (**built**) |
 | 4 | Refresh control and freshness per panel | 2.7.x |
 | 5 | Forms and validation | 2.8.0 |
 | 6 | Actions and write-back through connectors' `writes:` (WRITE_BACK.md) | 2.8.0 |

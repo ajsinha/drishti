@@ -1669,6 +1669,46 @@ Australia highlighted; every country with an economy page (`ECON-ABW`, `ECON-AFG
 and drills from the world to a country and its regions:
 [REPORTS.md](REPORTS.md#31-the-map-funnel-histogram-box-plot-and-bubble).
 
+### Events, sources and children (Sutra Next)
+
+Since 2.7.0 a panel may read its own record from any enabled pack, fire events when a row or bar is clicked, and hold child panels
+that fill when it fires. The design and the rules are [SUTRA_NEXT.md](../architecture/SUTRA_NEXT.md) sections 6 to 8 and 15; this
+is the reference of the keys.
+
+| Key | On | Value |
+|---|---|---|
+| `source:` (a mapping) | any panel that reads data, a group of children | `{ kind, id \| where \| search, limit, as-of, pack }`: `id` an expression for one entity (`$src` the record); `where` a condition over each entity of the kind (`@` the entity as the viewer sees it; at most `limit`, default 20, of the first 500); `search` an expression for the text searched (`$src` the list found); `as-of` a business date; `pack` the pack serving the kind. Written as text (`"link(...)"`) it is the older form: the panel reads that linked entity as `$`. |
+| `emits:` | table, ladder (`on: row-click`), hbar (`on: bar-click`) | a list of `{ name, on, payload }`; `payload` maps a field to an expression over the clicked row (`"@.TRADE_ID"`) or to `{ bind, type }`, `type` one of `id`, `text`, `number`, `date`, `bool` |
+| `waits:` | any wired panel | what the panel says while an event it reads has not fired (default: "Pick a row in <panel> to fill this panel") |
+| `children:` (a list) | any screen or child panel | groups `{ place, show, source, waits, panels }`: `place` `expand-row` (a table or ladder), `detail-right`, `detail-below` (the default), `tabs`; `show` `on-select` (the default), `always`, `on-expand`; `panels` panels or fragment uses with ids unique on the screen; three levels at most. Written as text it is a tree table's `children: "@.KIDS"`. |
+
+Rachana-EL reads `@<panel>.<event>.<field>` (`@trades.open.id`; panel ids may be kebab), `@parent.<event>.<field>` in a child,
+and `$src` (the panel's or its group's source). An event not fired reads as nothing, and a panel reading it waits.
+
+```yaml
+panels:
+  - use: row-picker@1
+    with: { id: trades, rows: $.TRADES, event: open, key: TRADE_ID, ref: COUNTERPARTY }
+    children:
+      - place: expand-row
+        source: { kind: trade, id: "@parent.open.id" }
+        panels:
+          - use: cashflow-ladder@1
+            with: { id: flows, title: "Cash flows of ${@parent.open.id}", rows: $src.EVENTS, date: EVENT_DATE, type: PAYMENT_TYPE }
+  - id: limit
+    kind: kv
+    area: right
+    waits: Pick a trade to see its counterparty's limit
+    source: { pack: counterparty-risk, kind: credit-limit, where: "@.COUNTERPARTY == @trades.open.ref", limit: 1 }
+    columns: [ { label: Utilisation, bind: "$src[0].UTILISATION", fmt: pct0 } ]
+```
+
+A click is evaluated on the server as the reader (`POST /api/v1/views/{kind}/{id}/events`, [API_GUIDE](API_GUIDE.md#events-and-child-panels-sutra-next));
+what is drawn reads the payload as the reader saw it (a masked field `•••`, which never selects a record), and only a source lookup
+reads the stored value, for the same reader, by an opaque token. `?sutra=<name>` opens a view with another Sutra of its kind
+(`/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`, the worked screen). Problems: `DRS-2057` (events and sources), `DRS-2056`
+(children), below.
+
 ## Controls
 
 A Sutra may declare **controls**: dropdowns, date ranges, a slider, a search box. The reader sets them on the screen; panels read their
@@ -2370,6 +2410,8 @@ family (`DRS-2040` to `DRS-2047`), shared blocks (`DRS-2048`), docstrings (`DRS-
 | `DRS-2046` | `about text for panel 'ghost' of kind 'widget' matches no panel of any Sutra for the kind` | a lint warning: `panels.<id>` in `about.yaml` names no panel | correct the id or delete the entry |
 | `DRS-2048` | `no block legs@3 (blocks: deal-ticket, legs, events)` | a `use:` names no block, a `with:` names no parameter, a block uses another or its file is misnamed | write the block, fix the name or version, or drop the parameter ([Shared panel blocks](#shared-panel-blocks-use)) |
 | `DRS-2055` | `fragment series-line: doc.params.fmt is missing (type, default, meaning)` | a fragment's `doc:` is missing or incomplete (strict: the fragment is not loaded); for a Sutra or an older block, a warning of `sutra lint` | complete the docstring ([Fragments and docstrings](PACK_DEVELOPER_GUIDE.md#fragments-and-docstrings)) |
+| `DRS-2057` | `panel 'limit' reads @trade, which is no panel of this screen (panels: trades, flows, limit)` | an event read of a panel, event or payload field the screen does not have; a panel reading its own event; panels waiting on each other in a cycle; `$src` without a source; a source id reading a `number`, `date` or `bool` field; a trigger not built; a source naming none or several of id, where, search; a BI model source | name a panel and event that exist ([Events, sources and children](#events-sources-and-children-sutra-next)) |
+| `DRS-2056` | `panel 'l4' is nested 4 deep: children nest at most 3` | `@parent` in a panel that is not a child, or of an event its parent does not emit; children deeper than three; `expand-row` under a panel without rows; a group without panels | move the panel up a level, or read the screen panel's event by its id |
 | `DRS-2047` | `field 'colour' is shown but has no glossary entry (kinds.widget.glossary in config/about.yaml, or a vocabulary entry)` | a lint warning: a field a Sutra shows has no glossary entry; fails `sutra lint --strict` | add the entry to the kind's `glossary:` or to `vocabulary:` |
 | `DRS-2101` | `expression '…': <reason> at <offset>`, `template '…': <reason> at <offset>` | an expression or template does not compile, or is beyond the [size limits](#size-limits) | see [Expression errors](#expression-errors) |
 
