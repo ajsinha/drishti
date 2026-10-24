@@ -38,6 +38,7 @@ import yaml
 HERE = Path(__file__).resolve().parent
 DATASET = HERE / "dataset"
 ENV_DATASET = "DRISHTI_REALDATA_DATASET"      # a build that must not touch the committed dataset (--no-imf) points the generators here
+ENV_SOURCES = "DRISHTI_REALDATA_SOURCES"      # a widened build (tools/publicdata/world_economy.py --years/--scope) reads its own sources.yaml
 
 
 def dataset_dir() -> Path:
@@ -52,7 +53,8 @@ INTERNET_TO_ISO2 = {"uk": "GB", "su": "RU", "an": "CW"}
 
 
 def load_config() -> dict:
-    return yaml.safe_load((HERE / "sources.yaml").read_text(encoding="utf-8"))
+    path = Path(os.environ[ENV_SOURCES]) if os.environ.get(ENV_SOURCES) else HERE / "sources.yaml"
+    return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
 def sig(v: float, digits: int = 6) -> float:

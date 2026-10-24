@@ -17,6 +17,18 @@
 
 ## Unreleased
 
+- **Public-data refresh scripts** ([PUBLIC_DATA.md](docs/guides/PUBLIC_DATA.md)): one script a pack in `tools/publicdata/`, each
+  with `status` and `refresh [SOURCE ...] --years/--since --scope --out --dry-run --internal-ok --offline`, a `.sh` and a
+  `tools/windows/publicdata-<pack>.ps1` wrapper. `world_economy.py` wraps `tools/realdata` (World Bank, IMF, UNDP, Factbook; a
+  committed refresh writes what `realdata.py all` writes, and is a no-op from an unchanged cache; `--scope` adds World Bank or IMF
+  indicators to a build in the data folder); `news_and_markets.py` wraps `capture-market` (more tickers and topics with `--scope`);
+  `official_market_data.py` captures ECB FX, the US Treasury par curve, SOFR and the euro short-term rate as `fx-spot`,
+  `ir-curve` and `rate-fixing` documents. Shared library `pdbase.py`: polite HTTP (User-Agent, pause, retries), a resumable download
+  cache with checksums under `<data>/publicdata/cache`, a manifest per pack, and the internal-only guard (IMF, Yahoo and news data
+  never go into a committed folder without `--internal-ok`, refused in words). Tests on recorded responses; one live smoke test
+  with `DRISHTI_LIVE_FETCH=1`. Fixed on the way: `realdata.py check` no longer reports the hand-kept `regions.json`;
+  `capture-market` can write to a folder without a `testdata.yaml`.
+
 - The UI Board work is kept on branch ui-board-preview; not in this release.
 - **Grid: `@` suggests the opened cells**: the formula bar's suggestions list the cells a click opens (`@A2a.`, `@A2a1.`) with
   their events and fields, and inside an opened cell offer `@parent.` with what its parent emits (`@parent.open.ref`).

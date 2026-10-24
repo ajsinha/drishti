@@ -50,6 +50,7 @@ import normalise as N  # noqa: E402
 import pack_tests as PT  # noqa: E402
 
 GENERATORS = {"world-economy": "tools/packgen/world/make.py"}
+HAND_KEPT = {"regions.json"}       # dataset files written by hand (illustrative region figures), not derived from the raw cache
 
 
 def generators(env: dict, check: bool = False) -> int:
@@ -75,7 +76,7 @@ def check_dataset(cache: Path, cfg: dict) -> list[str]:
         return []
     with tempfile.TemporaryDirectory() as tmp:
         N.run(cache, cfg, Path(tmp))
-        names = sorted({p.name for p in Path(tmp).iterdir()} | {p.name for p in N.DATASET.iterdir()})
+        names = sorted({p.name for p in Path(tmp).iterdir()} | {p.name for p in N.DATASET.iterdir()} - HAND_KEPT)
         return [n for n in names if not (N.DATASET / n).exists() or not (Path(tmp) / n).exists()
                 or (N.DATASET / n).read_bytes() != (Path(tmp) / n).read_bytes()]
 

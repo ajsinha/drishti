@@ -1,0 +1,37 @@
+{
+ "refRates": [
+  {
+   "effectiveDate": "2026-10-22",
+   "type": "SOFR",
+   "percentRate": 3.9,
+   "percentPercentile1": 3.83,
+   "percentPercentile25": 3.88,
+   "percentPercentile75": 3.95,
+   "percentPercentile99": 3.98,
+   "volumeInBillions": 2945,
+   "revisionIndicator": ""
+  },
+  {
+   "effectiveDate": "2026-10-21",
+   "type": "SOFR",
+   "percentRate": 3.88,
+   "percentPercentile1": 3.83,
+   "percentPercentile25": 3.86,
+   "percentPercentile75": 3.93,
+   "percentPercentile99": 3.96,
+   "volumeInBillions": 2942,
+   "revisionIndicator": ""
+  },
+  {
+   "effectiveDate": "2026-10-20",
+   "type": "SOFR",
+   "percentRate": 3.88,
+   "percentPercentile1": 3.83,
+   "percentPercentile25": 3.86,
+   "percentPercentile75": 3.93,
+   "percentPercentile99": 3.96,
+   "volumeInBillions": 2925,
+   "revisionIndicator": ""
+  }
+ ]
+}

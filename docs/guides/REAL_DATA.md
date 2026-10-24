@@ -254,6 +254,9 @@ about 260 Factbook files, and takes 10 to 20 minutes at the default pause; the W
 
 ### Refreshing
 
+The everyday way is the pack's own refresh script, `tools/publicdata/world_economy.py` (status, dry run, `--years`, `--scope`,
+the internal-only rule for the IMF data, Windows wrappers): see [PUBLIC_DATA.md](PUBLIC_DATA.md). It runs the commands below for you.
+
 ```
 python3 tools/realdata/realdata.py all --refresh      # download again, normalise, regenerate glossary, packs, tests and guide tables
 python3 tools/realdata/realdata.py check              # clean when everything committed matches

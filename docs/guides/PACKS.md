@@ -308,11 +308,11 @@ A demonstration often runs on a laptop with no internet. Both packs then work fu
   `lake demo` builds them into `news/quote` and `news/news`, which the pack's `news-store` connector serves beside the topics and
   companies. Every page reads the same documents it reads live (same Sutras, same panels); a quote's *As of* and the headlines'
   *Fetched* end in *(snapshot captured <date>)*, and the quote and headline pages add a **Snapshot** note. The data belongs to its
-  providers and is shown for demonstration only.
+  providers and is shown for demonstration only. Refresh it with `tools/publicdata/news_and_markets.py` ([PUBLIC_DATA](PUBLIC_DATA.md)).
 - **world-economy.** Already offline: all thirteen kinds (`economy`, `macro-indicator`, `economic-forecast`, `labour-market`,
   `fiscal-position`, `country-group`, `region-economy`, `jurisdiction`, `party`, `office-holder`, `election`, `region`,
   `social-indicator`) are the pack's samples (real World Bank, IMF, CIA World Factbook and UNDP figures captured when the pack was
-  built; [REAL_DATA](REAL_DATA.md)), served by `macro-store` and `civic-store` from the demo lake. The pack has no live connector.
+  built; [REAL_DATA](REAL_DATA.md); refresh with `tools/publicdata/world_economy.py`, [PUBLIC_DATA](PUBLIC_DATA.md)), served by `macro-store` and `civic-store` from the demo lake. The pack has no live connector.
 - **Offline mode.** Start the server with `DRISHTI_OFFLINE=true` (the run configuration **Drishti server (demo lakes)** sets it):
   the `news`, `yfinance` and public-data `feed` connectors never start, even when a file enables them, so nothing waits on the
   network and Admin → Connectors shows them **off (offline mode)** while `news-store`, `macro-store` and `civic-store` run

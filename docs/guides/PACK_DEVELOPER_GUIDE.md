@@ -1636,6 +1636,10 @@ shipped example is `config/packs/market-risk/config/about.fr.yaml` (the VaR page
 
 ### Generated packs
 
+A pack built on **public data** (world-economy, news-and-markets, market-data) has its own refresh script in
+`tools/publicdata/` (one a pack: fetch with a polite cached client, normalise, write, then the pack's check; licences and the
+internal-only rule in each source class). To add a source or a script for a new pack, see [PUBLIC_DATA.md](PUBLIC_DATA.md#adding-a-source).
+
 The shipped packs are generated (see [How the shipped packs are generated](#how-the-shipped-packs-are-generated)).
 Their `config/about.yaml` (and any `about.<lang>.yaml`) is copied from a hand-kept source in the generator folder
 (`tools/packgen/banking/about/<pack>.yaml`, `tools/packgen/<generator>/about.yaml`) by `make_packs.py` / `packbuild.py`: edit

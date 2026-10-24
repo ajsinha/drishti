@@ -290,7 +290,7 @@ def update_manifest(testdata: pathlib.Path) -> None:
     """testdata.yaml with the captured datasets in place of earlier entries for the same kinds (its header comment kept)."""
     import yaml
     path = testdata / "testdata.yaml"
-    text = path.read_text(encoding="utf-8")
+    text = path.read_text(encoding="utf-8") if path.is_file() else ""      # a capture outside data/testdata starts its own manifest
     lines = text.splitlines()
     i = 0
     while i < len(lines) and (lines[i].startswith("#") or not lines[i].strip()):
@@ -309,6 +309,8 @@ def run(a, say=print, sleep=time.sleep) -> int:
     pack_dir = pathlib.Path(a.packs) / PACK
     testdata = pathlib.Path(a.testdata)
     want = targets(pack_dir)
+    for kind, ids in (getattr(a, "extra", None) or {}).items():        # tools/publicdata/news_and_markets.py --scope: more tickers and topics
+        want[kind] += [i for i in ids if i not in want[kind]]
     kinds = [k for k in KINDS if not a.only or k in a.only.split(",")]
     total = sum(len(want[k]) for k in kinds)
     say(f"capture-market: {', '.join(f'{len(want[k])} {k}' for k in kinds)} ({total} calls, at least {a.delay:g} s apart)")
