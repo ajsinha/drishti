@@ -945,11 +945,12 @@ It is kept on the server, so it follows the user to any browser.
 
 | Method | Path | Notes |
 |---|---|---|
-| `GET` | `/me/settings` | `{theme, landing, clockZone, density, flash, searchLimit, pinned, notify: {email: {share, mention, reply}}}` with defaults filled in (the notify events are emailed when true) |
+| `GET` | `/me/settings` | `{theme, landing, clockZone, density, flash, searchLimit, pinned, designerMode, refresh, notify: {email: {share, mention, reply}}}` with defaults filled in (the notify events are emailed when true) |
 | `PATCH` | `/me/settings` | change only the fields named; `null` resets one; unknown field or bad value → `400 DRS-5001` |
 | `GET` | `/me/pages` | the Sutra designer's "my version of this page" flags: `{kind: designId}` (SCREEN_DESIGNER.md section 31) |
 | `PUT` | `/me/pages/{kind}` | body `{design}`: that Design draws the kind's pages for this user; renaming the Design keeps it; bad kind or id → `400 DRS-5001` |
 | `DELETE` | `/me/pages/{kind}` | clears the flag: the pack's page again |
+| `GET` · `PUT` · `DELETE` | `/me/arrange/{sutra}` | the caller's own arrangement of a screen with `layout:` (SUTRA_NEXT.md section 13): `{columns, collapsed, panels}` (the split's widths, the folded sections and panels, and, where the Sutra says `user-can-arrange: true`, each panel's area, width and order); never changes the shared Sutra; `DELETE` is *Reset layout* |
 | `GET` | `/admin/collab/shares?user=&kind=&id=&from=&to=&limit=&after=` · `/admin/collab/threads?…` | `admin` or `compliance`: search, metadata only (no note text), `{items[], next}` paged by id (`after` = the last id); `user` matches a sender or recipient, or a thread's writers |
 | `GET` | `/admin/collab/threads/{tid}` | `compliance`: the thread as the record has it (hidden and retracted comments, every revision, unscrubbed) with the chain result; audited |
 | `GET` | `/admin/collab/threads/hidden?limit=&after=` | `admin` or `compliance`: the hidden comments, `{items: [{commentId, threadId, kind, entityId, author, createdAt, reason}], next}` (never the text), paged in the scan order of `/admin/collab/threads` |

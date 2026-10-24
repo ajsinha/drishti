@@ -449,7 +449,7 @@ panels:
 
 - **Lazy.** A child is fetched only when its parent fires (`show: on-select`) or is expanded (`on-expand`); `always` loads with the
   parent. The console asks `GET /views/{kind}/{id}/panels/{panel}/children?event=...`; the result is an ordinary list of panel views.
-- **Depth limit 3** (screen panel, child, grandchild, great-grandchild refused, `DRS-2056` planned). A child of a composite counts
+- **Depth limit 3** (screen panel, child, grandchild, great-grandchild refused, `DRS-2056`). A child of a composite counts
   its own nesting, not the fragment depth.
 - **Placement**: `expand-row` (inside the parent table, under the clicked row), `detail-right` / `detail-below` (a pane beside or
   under the parent, replaced on each selection), `tabs` (each child a tab of the pane). Section 13 places these within the grid.
@@ -467,6 +467,8 @@ panels:
 - **Replace and clear.** A new pick replaces the children; a pick that makes another panel's selection stale closes that panel's
   children (`cleared`); closing a container forgets the selections of the panels inside it.
 - **Depth 3.** Screen panel, child, grandchild; a great-grandchild is `DRS-2056`; so is `@parent` in a panel that is not a child.
+- **Limitation: pack screens nest at most two levels** of panels a click opens (a child and its child). The designer's Grid
+  edits those two levels as cells (SCREEN_DESIGNER.md section 31, Grid); anything deeper is edited in Outline or Customize.
 - **Other packs.** A child reads any kind through its or its group's `source:` (the book desk's cash flows read the trade).
 - **Placement in the console.** `expand-row`: a row under the picked one holds the panels; `detail-right`: the parent and a detail
   pane side by side (stacked below 1100 px); `detail-below`: a pane under the parent; `tabs`: a pane with one tab per panel (arrow

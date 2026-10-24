@@ -2473,7 +2473,7 @@ Common reasons:
 A Sutra file that fails any check is not loaded (or keeps its last good version, see
 [Hot reload](#hot-reload-the-workbench-and-governance)), and each problem is reported as `<file>:<line>:<column> <code> <message>`
 (`sutra lint`: `<file>:<line> <code> <message>`). All problems of a file are reported at once. The grammar's own codes run
-`DRS-2010` to `DRS-2058`; around them are YAML and file problems (`DRS-2001`, `DRS-2004`, `DRS-2009`, `DRS-2032`, `DRS-2033`), the pack about-file
+`DRS-2010` to `DRS-2059`; around them are YAML and file problems (`DRS-2001`, `DRS-2004`, `DRS-2009`, `DRS-2032`, `DRS-2033`), the pack about-file
 family (`DRS-2040` to `DRS-2047`), shared blocks (`DRS-2048`), docstrings (`DRS-2055`) and expressions (`DRS-2101`).
 
 | Code | Message (exact form) | Cause | Fix |
@@ -2516,6 +2516,7 @@ family (`DRS-2040` to `DRS-2047`), shared blocks (`DRS-2048`), docstrings (`DRS-
 | `DRS-2058` | `rule 'notionl <= 30000000' reads 'notionl', which is not a field of the form`, `'form.edit' is beside (a form beside the table) or cells (edit in the table's cells), not 'inline'`, `field notional: min is a number`, `a form that edits records names the field that identifies one: key: <field id>` | a panel's `form:` that does not read | write the key or value the message names ([Forms](#forms-form-on-a-panel)) |
 | `DRS-2057` | `panel 'limit' reads @trade, which is no panel of this screen (panels: trades, flows, limit)` | an event read of a panel, event or payload field the screen does not have; a panel reading its own event; panels waiting on each other in a cycle; `$src` without a source; a source id reading a `number`, `date` or `bool` field; a trigger not built; a source naming none or several of id, where, search; a BI model source | name a panel and event that exist ([Events, sources and children](#events-sources-and-children-sutra-next)) |
 | `DRS-2056` | `panel 'l4' is nested 4 deep: children nest at most 3` | `@parent` in a panel that is not a child, or of an event its parent does not emit; children deeper than three; `expand-row` under a panel without rows; a group without panels | move the panel up a level, or read the screen panel's event by its id |
+| `DRS-2059` | `panel 'blotter' is placed in area 'side', which layout.areas does not have (…)`, `unknown key 'colums' in layout; expected one of areas, columns, split, tabs, sections, sticky, user-can-arrange, phone, tablet` | a `layout:` that does not read: an unknown key, columns that are not the 12-unit grid, an area or section a panel names that the picture does not have, a tablet picture with other areas, sections on a screen with areas | name the area in `layout.areas` (or the section in `layout.sections`); see [layout](#layout-the-grid-areas-split-tabs-sections) |
 | `DRS-2047` | `field 'colour' is shown but has no glossary entry (kinds.widget.glossary in config/about.yaml, or a vocabulary entry)` | a lint warning: a field a Sutra shows has no glossary entry; fails `sutra lint --strict` | add the entry to the kind's `glossary:` or to `vocabulary:` |
 | `DRS-2101` | `expression '…': <reason> at <offset>`, `template '…': <reason> at <offset>` | an expression or template does not compile, or is beyond the [size limits](#size-limits) | see [Expression errors](#expression-errors) |
 

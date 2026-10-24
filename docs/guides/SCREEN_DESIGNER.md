@@ -846,6 +846,9 @@ B2 = field-list@1(id: who, title: Counterparty, rows: $src; source: {pack: core,
   A2`, or the parent panel's id when A2 holds several); you may leave that out when you type. Pick it with a click, or **Down** from
   the parent cell (**Up** goes back); type its formula as any other; an empty formula removes it. To open it from another table, move
   it in Outline (a different `opens from` is refused, with that part in red). Another formula may name it, `@A2a.open.x`.
+- **Limitation: two levels of opened panels.** Grid shows the panels a click opens two levels deep as cells: a child under its
+  parent (`A2a`) and a child of that child (`A2a1`). Pack screens nest at most two levels, so every pack screen is whole in Grid.
+  Anything deeper is kept as it is, never dropped, and edited in Outline or Customize.
 - What a formula cannot say in one line (a table's columns, its events, a fragment's nested parameters) is **kept** when you type:
   the cell says *keeps columns, emits*. Change those in Customize or Outline. The cell's height, order and folding are the cell's,
   not the formula's.
