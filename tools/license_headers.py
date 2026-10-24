@@ -34,21 +34,27 @@ STYLES = {".java": "java", ".js": "java", ".css": "java", ".py": "hash", ".yaml"
 
 
 def ignored():
-    """Files git ignores (runtime data such as data/identity, data/packs): not source, so no header."""
+    """What git ignores (runtime data such as data/identity, data/packs): not source, so no header. With --directory git names
+    a wholly ignored folder once instead of listing its files, which matters when data/ holds millions of them (lakes, drill
+    copies); listing them all took longer than the timeout, the set came back empty and every ignored file was reported."""
     import subprocess
     try:
-        out = subprocess.run(["git", "ls-files", "--others", "--ignored", "--exclude-standard"], cwd=ROOT,
-                             capture_output=True, text=True, timeout=30).stdout
-    except (OSError, subprocess.SubprocessError):
-        return set()
-    return {ROOT / line for line in out.splitlines() if line}
+        out = subprocess.run(["git", "ls-files", "--others", "--ignored", "--exclude-standard", "--directory"], cwd=ROOT,
+                             capture_output=True, text=True, timeout=60, check=True).stdout
+    except (OSError, subprocess.SubprocessError) as e:
+        sys.exit(f"license_headers: cannot ask git what it ignores ({e}); refusing to guess")
+    return {ROOT / line.rstrip("/") for line in out.splitlines() if line}
 
 
 def files():
+    import os
     skip = ignored()
-    for p in ROOT.rglob("*"):
-        if p.is_file() and not (set(p.relative_to(ROOT).parts) & SKIP_DIRS) and p.name not in SKIP_FILES and p not in skip:
-            if STYLES.get(p.suffix):
+    for top, dirs, names in os.walk(ROOT):
+        here = pathlib.Path(top)
+        dirs[:] = sorted(d for d in dirs if d not in SKIP_DIRS and here / d not in skip)
+        for name in sorted(names):
+            p = here / name
+            if name not in SKIP_FILES and p not in skip and STYLES.get(p.suffix):
                 yield p
 
 
