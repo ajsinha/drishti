@@ -46,11 +46,19 @@ ROWS = {"TRADE_ID": "$.TRADE_ID", "SOURCE_SYSTEM": "$.SOURCE_SYSTEM", "PRODUCT_T
         "EVENTS": "$.EVENTS"}
 FIELDS = {"TRADE_COUNT": "count", "NOTIONAL": "sum first($.LEGS).NOTIONAL", "SOURCE_SYSTEMS": "distinct $.SOURCE_SYSTEM",
           "PRODUCT_TYPES": "distinct $.PRODUCT_TYPE", "CURRENCIES": "distinct $.CURRENCY", "LAST_MATURITY": "max $.MATURITY_DATE"}
+# the payments ladder over every member (the page lists at most MAX_MEMBERS rows): the 7, 30 and 90 day metrics of the page
+_PAID = "flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= {d}]"
+for _d in (7, 30, 90):
+    FIELDS[f"PAY_{_d}D"] = "sum sum(" + _PAID.format(d=_d) + ", 'AMOUNT')"
+    FIELDS[f"PAY_{_d}D_EVENTS"] = "sum size(" + _PAID.format(d=_d) + ")"
 
 
-# a page lists every trade of its counterparty, book, legal entity or index (the table pages through them); a group larger than this lists
-# its first MAX_MEMBERS and says so in the title (TRADES of TRADE_COUNT)
-MAX_MEMBERS = 20_000
+# the rows a page lists of its counterparty, book, legal entity or index; TRADE_COUNT and the totals count every member, and a group
+# larger than this says so in the title (TRADES of TRADE_COUNT)
+MAX_MEMBERS = 1000
+# the pages on disk (<data dir>/derived/trade-pages), the heap keeping each group's totals only: complete at any number of trades
+# (1.16 million a day measured in an 8 GB heap); heap keeps every page in memory, for small books
+STORE = "disk"
 
 
 def slug(s: str) -> str:
@@ -533,7 +541,7 @@ def derived_yaml(kind: str) -> str:
 
 def derived_connector() -> dict:
     """The derived connector's settings: one derived kind per axis, each with its rows (one per member trade) and totals."""
-    out: dict = {"refresh": "60s"}
+    out: dict = {"refresh": "60s", "store": STORE}
     for kind, (_m, _l, group, id_field, _t, _w) in DERIVED.items():
         out[kind] = {"from": "trade", "group-by": group, "id-field": id_field, "members": "TRADE_IDS", "max-members": MAX_MEMBERS,
                      "rows-field": "TRADES", "fields": dict(FIELDS), "rows": dict(ROWS)}

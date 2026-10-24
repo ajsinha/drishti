@@ -63,14 +63,6 @@ graph:
       trade: first($.LEGS).NOTIONAL
     formats:
       trade: compact
-# Read by drishti.py lake build (ignored by the server): each trade's key, and values inside its legs written as plain fields and
-# columns at load, so searches, totals and BI need no document (docs/architecture/SCALE_STRATEGY.md, phase 3)
-ingest:
-  trade:
-    key: TRADE_ID
-    flatten:
-      NOTIONAL: LEGS[0].NOTIONAL
-      INDEX_NAME: LEGS[0].INDEX.NAME
 connectors:
   trade-endur:
     plugin: delta
@@ -99,7 +91,7 @@ connectors:
           - LEGAL_ENTITY
           - PORTFOLIO
           - TRADER_ID
-          - NOTIONAL                 # flattened at load (ingest.trade.flatten)
+          - NOTIONAL
           - INDEX_NAME
           sort-by: id
           file-rows: 250000
@@ -135,7 +127,7 @@ connectors:
           - LEGAL_ENTITY
           - PORTFOLIO
           - TRADER_ID
-          - NOTIONAL                 # flattened at load (ingest.trade.flatten)
+          - NOTIONAL
           - INDEX_NAME
           sort-by: id
           file-rows: 250000
@@ -171,7 +163,7 @@ connectors:
           - LEGAL_ENTITY
           - PORTFOLIO
           - TRADER_ID
-          - NOTIONAL                 # flattened at load (ingest.trade.flatten)
+          - NOTIONAL
           - INDEX_NAME
           sort-by: id
           file-rows: 250000
@@ -205,15 +197,13 @@ connectors:
     - index-trades
     settings:
       refresh: 60s
-      # the pages on disk (<data dir>/derived/trade-pages), the heap keeping each group's totals only: complete at any number of
-      # trades (1.16 million a day measured in an 8 GB heap). heap keeps every page in memory, for small books.
       store: disk
       counterparty-trades:
         from: trade
         group-by: $.COUNTERPARTY
         id-field: COUNTERPARTY
         members: TRADE_IDS
-        max-members: 1000            # rows listed on the page; TRADE_COUNT and the totals count every member
+        max-members: 1000
         rows-field: TRADES
         fields:
           TRADE_COUNT: count
@@ -222,13 +212,18 @@ connectors:
           PRODUCT_TYPES: distinct $.PRODUCT_TYPE
           CURRENCIES: distinct $.CURRENCY
           LAST_MATURITY: max $.MATURITY_DATE
-          # the payments ladder over every member (the page lists at most max-members rows)
-          PAY_7D: "sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT')"
-          PAY_7D_EVENTS: "sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7])"
-          PAY_30D: "sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT')"
-          PAY_30D_EVENTS: "sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30])"
-          PAY_90D: "sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT')"
-          PAY_90D_EVENTS: "sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90])"
+          PAY_7D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 7], 'AMOUNT')
+          PAY_7D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 7])
+          PAY_30D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 30], 'AMOUNT')
+          PAY_30D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 30])
+          PAY_90D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 90], 'AMOUNT')
+          PAY_90D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 90])
         rows:
           TRADE_ID: $.TRADE_ID
           SOURCE_SYSTEM: $.SOURCE_SYSTEM
@@ -247,7 +242,7 @@ connectors:
         group-by: $.PORTFOLIO
         id-field: PORTFOLIO
         members: TRADE_IDS
-        max-members: 1000            # rows listed on the page; TRADE_COUNT and the totals count every member
+        max-members: 1000
         rows-field: TRADES
         fields:
           TRADE_COUNT: count
@@ -256,13 +251,18 @@ connectors:
           PRODUCT_TYPES: distinct $.PRODUCT_TYPE
           CURRENCIES: distinct $.CURRENCY
           LAST_MATURITY: max $.MATURITY_DATE
-          # the payments ladder over every member (the page lists at most max-members rows)
-          PAY_7D: "sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT')"
-          PAY_7D_EVENTS: "sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7])"
-          PAY_30D: "sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT')"
-          PAY_30D_EVENTS: "sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30])"
-          PAY_90D: "sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT')"
-          PAY_90D_EVENTS: "sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90])"
+          PAY_7D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 7], 'AMOUNT')
+          PAY_7D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 7])
+          PAY_30D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 30], 'AMOUNT')
+          PAY_30D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 30])
+          PAY_90D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 90], 'AMOUNT')
+          PAY_90D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 90])
         rows:
           TRADE_ID: $.TRADE_ID
           SOURCE_SYSTEM: $.SOURCE_SYSTEM
@@ -281,7 +281,7 @@ connectors:
         group-by: $.LEGAL_ENTITY
         id-field: LEGAL_ENTITY
         members: TRADE_IDS
-        max-members: 1000            # rows listed on the page; TRADE_COUNT and the totals count every member
+        max-members: 1000
         rows-field: TRADES
         fields:
           TRADE_COUNT: count
@@ -290,13 +290,18 @@ connectors:
           PRODUCT_TYPES: distinct $.PRODUCT_TYPE
           CURRENCIES: distinct $.CURRENCY
           LAST_MATURITY: max $.MATURITY_DATE
-          # the payments ladder over every member (the page lists at most max-members rows)
-          PAY_7D: "sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT')"
-          PAY_7D_EVENTS: "sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7])"
-          PAY_30D: "sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT')"
-          PAY_30D_EVENTS: "sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30])"
-          PAY_90D: "sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT')"
-          PAY_90D_EVENTS: "sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90])"
+          PAY_7D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 7], 'AMOUNT')
+          PAY_7D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 7])
+          PAY_30D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 30], 'AMOUNT')
+          PAY_30D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 30])
+          PAY_90D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 90], 'AMOUNT')
+          PAY_90D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 90])
         rows:
           TRADE_ID: $.TRADE_ID
           SOURCE_SYSTEM: $.SOURCE_SYSTEM
@@ -315,7 +320,7 @@ connectors:
         group-by: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME)
         id-field: INDEX_NAME
         members: TRADE_IDS
-        max-members: 1000            # rows listed on the page; TRADE_COUNT and the totals count every member
+        max-members: 1000
         rows-field: TRADES
         fields:
           TRADE_COUNT: count
@@ -324,13 +329,18 @@ connectors:
           PRODUCT_TYPES: distinct $.PRODUCT_TYPE
           CURRENCIES: distinct $.CURRENCY
           LAST_MATURITY: max $.MATURITY_DATE
-          # the payments ladder over every member (the page lists at most max-members rows)
-          PAY_7D: "sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT')"
-          PAY_7D_EVENTS: "sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7])"
-          PAY_30D: "sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT')"
-          PAY_30D_EVENTS: "sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30])"
-          PAY_90D: "sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT')"
-          PAY_90D_EVENTS: "sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90])"
+          PAY_7D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 7], 'AMOUNT')
+          PAY_7D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 7])
+          PAY_30D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 30], 'AMOUNT')
+          PAY_30D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 30])
+          PAY_90D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 90], 'AMOUNT')
+          PAY_90D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(),
+            @.EVENT_DATE) <= 90])
         rows:
           TRADE_ID: $.TRADE_ID
           SOURCE_SYSTEM: $.SOURCE_SYSTEM
@@ -574,6 +584,15 @@ roles:
     - clearing-account
     - desk-pnl
     calc: true
+
+# Read by drishti.py lake build (ignored by the server): each trade's key, and values inside its legs written as plain fields and
+# columns at load, so searches, totals and BI need no document (docs/architecture/SCALE_STRATEGY.md, phase 3)
+ingest:
+  trade:
+    key: TRADE_ID
+    flatten:
+      NOTIONAL: LEGS[0].NOTIONAL
+      INDEX_NAME: LEGS[0].INDEX.NAME
 # History queries (TRD 1000015 30, docs/architecture/HISTORY_QUERIES.md section 6): how this pack's kinds look over time.
 # Only the shape: any dated kind has a history without an entry here.
 history:

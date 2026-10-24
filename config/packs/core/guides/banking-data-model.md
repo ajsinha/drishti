@@ -40,6 +40,7 @@ desk ─► VaR ─► stress results ◄─ stress scenario        book ─► 
 | `CCP` | CCP | `ccp` | `core` | `reference` |
 | `CLEARING_ACCOUNT` | Clearing account | `clearing-account` | `core` | `reference` |
 | `COLLATERAL_BALANCE` | Collateral | `collateral-balance` | `counterparty-risk` | `collateral` |
+| `COLLATERAL_BALANCES` | Collateral | `collateral-balance` | `counterparty-risk` | `collateral` |
 | `COMMODITY_CURVE` | Commodity curve | `commodity-curve` | `market-data` | `market` |
 | `COMMODITY_REF` | Commodity | `commodity` | `market-data` | `market` |
 | `COMMODITY_VOL_SURFACE` | Commodity vol surface | `commodity-vol-surface` | `market-data` | `market` |
@@ -67,6 +68,7 @@ desk ─► VaR ─► stress results ◄─ stress scenario        book ─► 
 | `ISSUER` | Reference entity | `issuer` | `core` | `reference` |
 | `LEGAL_ENTITY` | Legal entity | `legal-entity` | `core` | `reference` |
 | `NETTING_SET` | Netting set | `netting-set` | `counterparty-risk` | `credit` |
+| `NETTING_SETS` | Netting set | `netting-set` | `counterparty-risk` | `credit` |
 | `ORIGINAL_COUNTERPARTY` | Original counterparty | `counterparty` | `core` | `reference` |
 | `PORTFOLIO` | Portfolio | `book` | `core` | `reference` |
 | `REPO_CURVE` | Repo curve | `repo-curve` | `market-data` | `market` |

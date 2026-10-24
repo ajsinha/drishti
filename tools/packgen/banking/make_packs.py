@@ -102,7 +102,8 @@ ROLES = {"trading": {"trader": {"kinds": TRADER_KINDS, "calc": True}}, "market-r
 # a business day, so the fields its pick lists, searches and screens filter on get columns of their own
 LAYOUTS = {"trading": {"trade": {"columns": ["TRADE_ID", "SOURCE_SYSTEM", "PRODUCT_TYPE", "PRODUCT_SUB_TYPE", "PRODUCT_GROUP", "TRADE_STATUS",
                                              "TRADE_VERSION", "BUY_SELL_CODE", "CURRENCY", "QUANTITY", "TRADE_DATE", "MATURITY_DATE", "COUNTERPARTY",
-                                             "LEGAL_ENTITY", "PORTFOLIO", "TRADER_ID"],
+                                             "LEGAL_ENTITY", "PORTFOLIO", "TRADER_ID",
+                                             "NOTIONAL", "INDEX_NAME"],          # flattened at load (the hand-kept ingest.trade.flatten)
                                  "sort-by": "id", "file-rows": 250000, "row-group-rows": 1000}},
            # a valuation a trade a day: the BI models (trades-basic, trading-risk, live-trading) read these columns without the documents
            "risk": {"trade-valuation": {"columns": ["VALUATION_ID", "TRADE_ID", "SOURCE_SYSTEM", "PRODUCT_TYPE", "PRODUCT_GROUP", "PORTFOLIO", "DESK",
@@ -250,11 +251,29 @@ class _Plain(yaml.SafeDumper):
         return True
 
 
+KEPT = Path(__file__).parent / "kept"
+
+
+def kept(name: str) -> str:
+    """The pack's hand-kept sections (``kept/<pack>.yaml``: ``history:``, ``ingest:``), appended to its manifest as written, comments
+    and all: top-level sections the taxonomy does not say, edited there and never lost when the manifest is written again."""
+    src = KEPT / f"{name}.yaml"
+    if not src.is_file():
+        return ""
+    text = src.read_text(encoding="utf-8")
+    text = (text.split("\n\n", 1)[1] if text.startswith("#") and "\n\n" in text else text).strip("\n")   # without its licence header
+    top = {k for k in (yaml.safe_load(text) or {})}
+    clash = top & set(manifest(name))
+    if clash:
+        raise SystemExit(f"{src}: {sorted(clash)} are generated; keep only sections the generator does not write")
+    return "\n" + text + "\n"
+
+
 def files() -> dict[Path, str]:
     out = {}
     for name in layout.PACKS:
         body = yaml.dump(manifest(name), Dumper=_Plain, sort_keys=False, allow_unicode=True, width=140)
-        out[PACKS / name / "pack.yaml"] = f"{HEADER}\n\n{GENERATED}\n# {layout.PACKS[name]['title']} pack for Drishti.\n{body}"
+        out[PACKS / name / "pack.yaml"] = f"{HEADER}\n\n{GENERATED}\n# {layout.PACKS[name]['title']} pack for Drishti.\n{body}{kept(name)}"
         out[PACKS / name / "config" / "formats.yaml"] = (f"{HEADER}\n\n{GENERATED}\n# Number formats the banking packs share.\n"
                                                          + yaml.safe_dump({"formats": FORMATS}, sort_keys=False))
         about_dir = Path(__file__).parent / "about"          # hand-written about text: see docs/architecture/CONTEXT_HELP.md
