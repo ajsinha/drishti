@@ -13,7 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The designer's Grid mode (SCREEN_DESIGNER.md section 31): the formula parser, the Sutra ⇄ cells ⇄ formulas round trip on every pack
-Sutra (and on screens with areas), the steps (a formula typed, merge, split, insert, delete, move, make it a grid) and the routes."""
+Sutra (and on screens with areas), the panels a click opens as cells of their own (A2a ... opens from A2), the column widths, the steps
+(a formula typed, merge, split, insert, delete, move, make it a grid) and the routes."""
 import copy
 import re
 from pathlib import Path
@@ -67,6 +68,19 @@ def test_every_pack_sutra_round_trips_as_a_one_column_grid(path):
         for i, f in zip(cell["panels"], cell["formulas"]):
             [call] = dg.parse(f)
             assert dg.apply_call(doc["panels"][i], call, dg.reader(doc, g)) == doc["panels"][i], f
+        for k in cell["kids"]:                                            # and every panel a click opens, from its own cell
+            child = doc["panels"][k["parent"]]["children"][k["group"]]["panels"][k["index"]]
+            assert k["formula"].endswith(" opens from " + cell["ref"]) and k["ref"].startswith(cell["ref"])
+            [call] = dg.parse(dg._opens(k["formula"], k))
+            assert dg.apply_call(child, call, dg.reader(doc, g)) == child, k["formula"]
+            again = copy.deepcopy(doc)
+            dg.set_formula(again, k["ref"], k["formula"])
+            assert designer.dump(again) == designer.dump(doc), k["ref"]
+
+
+def test_the_pack_sutras_have_panels_a_click_opens():
+    kids = [k for p in PACK_SUTRAS for c in dg.grid(designer.load(p.read_text()))["cells"] for k in c["kids"]]
+    assert kids and all(dg.KID.fullmatch(k["ref"]) for k in kids)
 
 
 def test_a_screen_with_areas_round_trips_and_reads_as_a_spreadsheet():
@@ -79,6 +93,74 @@ def test_a_screen_with_areas_round_trips_and_reads_as_a_spreadsheet():
     assert cells["A1:B1"]["formula"] == 'metric(id: pay7, title: "Payments, next 7 days", value: $.PAY_7D, fmt: signed0)'
     assert cells["B2"]["formulas"][0] == 'field-list@1(id: terms, rows: $src, title: "Terms, as booked"; id: terms, source: {kind: trade, id: @A2.open.trade})'
     assert cells["A2"]["kept"] == [["columns", "emits"]] and cells["A1:B1"]["grid"] == [{"span": 4}]
+
+
+KIDS = """rachana: 1
+sutra: qa-kids
+version: 1
+match: { kind: portfolio-trades }
+layout:
+  areas: ["trades side"]
+panels:
+  - id: trades
+    kind: table
+    area: trades
+    rows: $.TRADES
+    columns: [ { label: Trade, bind: "@.TRADE_ID" } ]
+    emits: [ { name: open, on: row-click, payload: { id: "@.TRADE_ID", ref: "@.COUNTERPARTY" } } ]
+    children:
+      - place: expand-row
+        source: { kind: trade, id: "@parent.open.id" }
+        panels:
+          - { use: cashflow-ladder@1, with: { id: flows, rows: $src.EVENTS, title: "Cash flows" } }
+          - { id: legs, kind: table, rows: $src.LEGS, columns: [ { bind: "@.LEG" } ] }
+  - { id: note, kind: markdown, area: side, text: "See @flows.open.x" }
+"""
+
+
+def test_a_panel_a_click_opens_is_a_cell_of_its_own():
+    doc = designer.load(KIDS)
+    assert roundtrip(doc) == designer.dump(doc)
+    g = dg.grid(doc)
+    a1 = next(c for c in g["cells"] if c["ref"] == "A1")
+    assert [k["ref"] for k in a1["kids"]] == ["A1a", "A1b"] and a1["kids"][0]["place"] == "expand-row"
+    assert a1["kids"][0]["formula"] == 'cashflow-ladder@1(id: flows, rows: $src.EVENTS, title: Cash flows) opens from A1'
+    assert a1["kids"][1]["kept"] == ["columns"]
+    b1 = next(c for c in g["cells"] if c["ref"] == "B1")
+    assert b1["formula"] == 'markdown(id: note, text: See @A1a.open.x)'           # a child named by its cell, read back to its id
+    dg.set_formula(doc, "A1a", "cashflow-ladder(id: flows, rows: $src.EVENTS, title: Flows of @parent.open.id) opens from A1",
+                   ["trading/cashflow-ladder@1"])
+    flows = doc["panels"][0]["children"][0]["panels"][0]
+    assert flows == {"use": "trading/cashflow-ladder@1", "with": {"id": "flows", "rows": "$src.EVENTS", "title": "Flows of @parent.open.id"}}
+    dg.set_formula(doc, "A1b", "table(id: legs, title: Legs, rows: $src.LEGS)")          # 'opens from' may be left out
+    assert doc["panels"][0]["children"][0]["panels"][1]["columns"] == [{"bind": "@.LEG"}]  # what the formula does not show is kept
+    before = copy.deepcopy(doc)
+    with pytest.raises(dg.FormulaError, match="move it there in Outline") as e:
+        dg.set_formula(doc, "A1b", "table(id: legs) opens from B1")
+    assert "table(id: legs) opens from B1"[e.value.start:e.value.end] == "B1"
+    with pytest.raises(dg.FormulaError, match="one line"):
+        dg.set_formula(doc, "A1b", "table(id: legs)\ntable(id: more)")
+    with pytest.raises(designer.DesignerError, match="no cell A1c"):
+        dg.set_formula(doc, "A1c", "table(id: x)")
+    assert doc == before
+    dg.set_formula(doc, "A1b", "")                                                         # emptied: the panel goes
+    dg.set_formula(doc, "A1a", "")
+    assert "children" not in doc["panels"][0]
+
+
+def test_column_widths_in_twelve_units_round_trip():
+    doc = designer.load(AREAS)
+    dg.set_widths(doc, [8, 4])
+    assert doc["layout"]["columns"] == [8, 4] and dg.grid(doc)["widths"] == [8, 4] and dg.grid(doc)["set"]
+    assert roundtrip(doc) == designer.dump(doc)
+    for bad, words in (([6, 5], "add up to 11"), ([12, 0], "at least 1"), ([6, 6, 0], "each of the 2"), ([6.5, 5.5], "whole units")):
+        with pytest.raises(designer.DesignerError, match=words):
+            dg.set_widths(doc, bad)
+    flow = designer.load(SUTRA)
+    with pytest.raises(designer.DesignerError, match="Make it a grid"):
+        dg.set_widths(flow, [12])
+    doc["layout"].pop("columns")
+    assert dg.grid(doc)["widths"] == [6, 6] and not dg.grid(doc)["set"]
 
 
 def test_the_parser_reads_values_exactly_and_points_at_the_part_to_fix():
@@ -179,9 +261,12 @@ def test_grid_routes(client, on):  # noqa: F811
     assert bad.status_code == 400 and bad.json()["start"] == 5 and "not closed" in bad.json()["detail"]
     assert client.post(f"/designer/grid/op/{draft}", json={**body, "op": "make-grid"}).json() == {"ok": True}
     assert client.post(f"/designer/grid/op/{draft}", json={**body, "op": "insert", "axis": "col", "at": 1}).json() == {"ok": True}
+    assert client.post(f"/designer/grid/op/{draft}", json={**body, "op": "widths", "widths": [9, 3]}).json() == {"ok": True}
+    assert "add up to" in client.post(f"/designer/grid/op/{draft}", json={**body, "op": "widths", "widths": [9, 9]}).json()["detail"]
     st = client.get(f"/designer/grid/state/{draft}").json()
     doc = yaml.safe_load(st["yaml"])
     assert doc["layout"]["areas"][0] == "deal-ticket ." and designer.find_panel(doc, "flows")["title"] == "Cash flows"
+    assert doc["layout"]["columns"] == [9, 3] and st["grid"]["widths"] == [9, 3]
     assert client.post(f"/designer/grid/op/{draft}", json={**body, "op": "nope"}).status_code == 400
 
 

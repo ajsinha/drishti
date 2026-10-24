@@ -14,8 +14,10 @@
 
 """The designer's Grid mode in a real browser (SCREEN_DESIGNER.md section 31), ui.designer on, a real server behind the console: a cell
 picked shows its formula, a changed parameter redraws the preview in place (no reload); a cell reading another's selection fills on a
-click in the preview; merge, split, insert a row, drag a cell; a bad formula says its red part and changes nothing; Outline and back with
-nothing lost; two themes and a phone; the screenshot docs/guides/img/designer/grid-mode.jpg. Skipped as the other browser tests are."""
+click in the preview; merge, split, insert a row, drag a cell; a bad formula says its red part and changes nothing; a column's width
+dragged at its header's edge, typed on the header and moved with the arrow keys (layout.columns); the panel a click opens as a cell of its
+own under its parent (A2a ... opens from A2), edited in place; Outline and back with nothing lost; two themes and a phone; the screenshot
+docs/guides/img/designer/grid-mode.jpg. Skipped as the other browser tests are."""
 from pathlib import Path
 
 import pytest
@@ -40,6 +42,12 @@ panels:
     with: { id: trades, title: Trades of the book, rows: $.TRADES, event: open, key: TRADE_ID, key-label: Trade, ref: COUNTERPARTY,
             a: PRODUCT_TYPE, a-label: Product, b: COUNTERPARTY, b-label: Counterparty, amount: NOTIONAL, amount-label: Notional }
     area: trades
+    children:
+      - place: expand-row
+        source: { pack: trading, kind: trade, id: "@parent.open.id" }
+        panels:
+          - use: cashflow-ladder@1
+            with: { id: flows, title: Cash flows, rows: $src.EVENTS, date: EVENT_DATE, type: PAYMENT_TYPE, amount: AMOUNT }
   - { id: book, kind: kv, title: The book, area: detail, columns: [ { label: Trades, bind: $.TRADE_COUNT } ] }
 """
 WHO = "field-list@1(id: who, title: Counterparty, rows: $src; source: {pack: core, kind: counterparty, id: @A2.open.ref})"
@@ -153,10 +161,59 @@ def test_merge_split_insert_drag_and_a_bad_formula(browser, stack):
     pg.close()
 
 
+def sutra_of(pg):
+    return yaml.safe_load(pg.locator("[data-gd-sutra]").text_content())
+
+
+def test_column_widths_and_a_panel_a_click_opens_as_its_own_cell(browser, stack):
+    pg = sheet(browser, stack)
+    assert pg.inner_text('[data-gd-width="0"]') == "7/12" and pg.inner_text('[data-gd-width="1"]') == "5/12"
+    edge = pg.locator('[data-gd-edge="0"]').bounding_box()
+    per = pg.locator('[data-gd-col="0"]').bounding_box()["width"] / 7
+    x, y = edge["x"] + edge["width"] / 2, edge["y"] + edge["height"] / 2
+    r = rev(pg)
+    pg.mouse.move(x, y)
+    pg.mouse.down()
+    pg.mouse.move(x + per * 2.1, y, steps=8)                                   # two units to the right
+    assert pg.inner_text('[data-gd-width="0"]') == "9/12"                       # shown as it is dragged
+    pg.mouse.up()
+    stepped(pg, r)
+    assert sutra_of(pg)["layout"]["columns"] == [9, 3]
+    r = rev(pg)
+    pg.click('[data-gd-width="1"]')                                            # a width typed: its neighbour gives the units
+    pg.fill('[data-gd-width-in="1"]', "4")
+    pg.press('[data-gd-width-in="1"]', "Enter")
+    stepped(pg, r)
+    assert sutra_of(pg)["layout"]["columns"] == [8, 4]
+    r = rev(pg)
+    pg.focus('[data-gd-edge="0"]')
+    pg.keyboard.press("ArrowLeft")
+    stepped(pg, r)
+    assert sutra_of(pg)["layout"]["columns"] == [7, 5] and pg.inner_text('[data-gd-width="0"]') == "7/12"
+    # the cash flows a click on a trade opens: a cell of their own, under the trades
+    kid = pg.locator('[data-gd-kid="A2a"]')
+    assert "↳ A2a" in kid.inner_text() and "opens from A2" in kid.inner_text()
+    pg.click('[data-gd-cell="A2"] > .gd-ref')
+    pg.keyboard.press("ArrowDown")
+    assert pg.inner_text("[data-gd-name]") == "A2a"
+    assert pg.input_value("[data-gd-formula]").startswith("cashflow-ladder@1(id: flows, title: Cash flows,")
+    pg.keyboard.press("ArrowUp")
+    assert pg.inner_text("[data-gd-name]") == "A2"
+    text = formula_of(pg, "A2a").replace("title: Cash flows", "title: Flows of the trade")
+    stepped(pg, typed(pg, "A2a", text))
+    child = sutra_of(pg)["panels"][1]["children"][0]["panels"][0]
+    assert child["with"]["title"] == "Flows of the trade" and child["with"]["amount"] == "AMOUNT"
+    assert "Flows of the trade" in pg.inner_text('[data-gd-kid="A2a"] .gd-f')
+    typed(pg, "A2a", text.replace("opens from A2", "opens from B2"))           # it stays under its table: said, nothing changes
+    wait(pg, "!document.querySelector('[data-gd-error]').hidden")
+    assert pg.inner_text("[data-gd-red]") == "B2" and "Outline" in pg.inner_text("[data-gd-why]")
+    pg.close()
+
+
 def test_outline_and_back_with_nothing_lost_the_screenshot_and_a_phone(browser, stack):
     pg = sheet(browser, stack)
     stepped(pg, typed(pg, "B2", WHO))
-    pg.click('[data-gd-cell="A2"]')
+    pg.click('[data-gd-cell="A2a"]')
     pg.evaluate("window.scrollTo(0, 0)")
     IMG.mkdir(parents=True, exist_ok=True)
     pg.screenshot(path=str(IMG / "grid-mode.jpg"), type="jpeg", quality=82, full_page=False)
