@@ -310,6 +310,12 @@
   // ---- the YAML tab --------------------------------------------------------------------------------------------------
   let editor = null, ignoreChange = false, yamlTimer = null, textTimer = null, yamlStale = false;
   const ta = q('[data-yaml]');
+  /** Whether the tab's text is behind the draft (a change's text still on its way): the YAML view says so (data-yaml-current yes/no), so a reader waits for it. */
+  function stale(on) {
+    yamlStale = on;
+    const view = q('[data-view="yaml"]');
+    if (view) { view.setAttribute('data-yaml-current', on ? 'no' : 'yes'); }
+  }
 
   function setYamlText(text) {
     ignoreChange = true;
@@ -323,7 +329,7 @@
   // so Save never saves a text that misses the last change.
   let yamlRev = 0, yamlShown = 0;
   function scheduleYaml() {
-    yamlStale = true;
+    stale(true);
     yamlRev++;
     clearTimeout(yamlTimer);
     yamlTimer = setTimeout(refreshYaml, 250);
@@ -335,7 +341,7 @@
       if (yamlStale && rev >= yamlShown) {
         setYamlText(r.yaml); D.lastYaml = r.yaml; showProblems([]);
         yamlShown = rev;
-        if (rev === yamlRev) { yamlStale = false; }                // else a newer change's text is still to come
+        if (rev === yamlRev) { stale(false); }                // else a newer change's text is still to come
       }
       dockProblems(r.yaml);
       return r.yaml;
@@ -363,7 +369,7 @@
       redo.length = 0;
       D.model = D.normalize(r.report);
       D.dirty = true;
-      yamlStale = false;
+      stale(false);
       yamlShown = yamlRev;                                          // the text typed is the draft now: an older answer on its way is dropped
       D.lastYaml = text;
       if (!D.model.pages.some((p) => p.id === D.pageId)) { D.pageId = D.model.pages[0].id; }
@@ -445,7 +451,7 @@
       showProblems(r.problems || []);
       const box = q('[data-yaml-problems]');
       const discard = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-yaml-discard': '', text: 'Discard my YAML edits and go to ' + name });
-      discard.addEventListener('click', () => { yamlStale = true; D.lastYaml = null; refreshYaml().then(() => showTab(name, true)); });
+      discard.addEventListener('click', () => { stale(true); D.lastYaml = null; refreshYaml().then(() => showTab(name, true)); });
       box.appendChild(h('li', { class: 'bi-problem bi-problem-error', 'data-yaml-blocked': '' }, 'The YAML has ' + errors.length + ' error' + (errors.length === 1 ? '' : 's') + ', so the ' + name + ' cannot show it. Fix them here, or ', discard, '.'));
       say('The YAML has errors: fix them, or discard the YAML edits to leave this tab.', true);
       return false;

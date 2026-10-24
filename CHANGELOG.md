@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **Drill fixes (2.7.0, console suite):** the report designer's YAML tab says whether its text is the draft's yet
+  (`data-yaml-current` on the YAML view, `no` while the server is still writing the last change), and the board designer's alert test
+  reads the YAML once it is (it read the text from before the alert was set; the WIP wait on the model is gone). A screen grid's
+  `data-sg-saved` is cleared when a new arrangement save starts, so an earlier save that lands during a drag no longer reads as the new
+  one being stored (`test_areas_split_tabs_and_arrange[light]` reloaded before the split was saved).
 - **Customize: a part's settings, Remove with Undo, one add per click** ([SCREEN_DESIGNER.md section 31](docs/guides/SCREEN_DESIGNER.md#31-the-sutra-designer-customize-describe-outline-and-grid)):
   a part added from the UI kit opens its settings in the side panel at once, one plain-word question per parameter of its docstring with
   choices from the record's real fields (*Which number? [NOTIONAL]*, *Which list?*, *Label*, *Format*; `core/designer_settings.py`,

@@ -42,6 +42,7 @@
       var body = {};
       ['columns', 'collapsed', 'panels'].forEach(function (k) { if (mine[k] !== undefined) { body[k] = mine[k]; } });
       clearTimeout(saving);
+      root.removeAttribute('data-sg-saved');               // saved means every change is stored: an earlier save that lands now does not count
       return new Promise(function (ok) {
         var ticket = ++seq;
         saving = setTimeout(function () {
