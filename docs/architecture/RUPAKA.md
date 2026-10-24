@@ -17,11 +17,11 @@
 # Drishti Rūpaka: business intelligence in Drishti, live and governed
 
 Status: design, **built in part**. Phases 0 to 7 and 9 of section 20 and the AI stage are built (summary at 2.1.0 in [section 20.15](#2015-as-built-at-210-and-what-is-still-not-built)); the proof of concept (phase 0) was removed in 2.2, and since 2.3.0 (wave B, every number computed on the servers) no BI page loads Perspective or DuckDB-Wasm. Waves A to C and later BI work follow [BI_DESIGN.md](BI_DESIGN.md). Owner: the BI package of the server (`com.ash.drishti.server.bi`, with `dataset`, `engine`, `report`, `board` and, until 2.2, `poc` beside it), the console's BI routes, templates and scripts (`routes/bi_routes.py`, `web/templates/bi/`, `web/static/js/bi*.js`), the existing source layer, identity, collaboration and Elements.
-Companion notes: [LIVE_BI.md](LIVE_BI.md) (streaming result producers: the heavy case this design leaves to a producer), [RUPAKA_POC.md](RUPAKA_POC.md) (the phase 0 proof of concept and later measurements), [QUANT_SERVICE.md](QUANT_SERVICE.md) (server-side pricing, proposed) and the Project Rūpaka SRS that this
+Companion notes: [LIVE_BI.md](LIVE_BI.md) (streaming result producers: the heavy case this design leaves to a producer), [RUPAKA_POC.md](../archive/RUPAKA_POC.md) (history, archived: the phase 0 proof of concept and later measurements), [QUANT_SERVICE.md](QUANT_SERVICE.md) (server-side pricing, proposed) and the Project Rūpaka SRS that this
 design adopts and adapts.
 
 **How to read this document.** Sections 1 to 19 are the **design**: they say what Rūpaka should be and, where building changed the design, say **As built** in place. Section 20 is the build plan and, for each of phases 1 to 5, a **"as built"** subsection that lists exactly what exists and what does not; when a design section and an "as built" subsection differ, the subsection is right. The user documents are
-[BI_GUIDE.md](../guides/BI_GUIDE.md) (start here), [tutorial 10](../tutorials/10-first-bi-report.md), [DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [BOARDS.md](../guides/BOARDS.md) and [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md). The module names of section 17 (`drishti-bi-core`, `-query`, `-live`, `-ai`) are the design's: the code is one server package, with the same one-way dependencies.
+[BI_GUIDE.md](../guides/BI_GUIDE.md) (start here), [tutorial 10](../tutorials/10-first-bi-report.md), [DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [BOARDS.md](../guides/BOARDS.md) and [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md). The module names of the 2.1 design (`drishti-bi-core`, `-query`, `-live`, `-ai`; its diagram was replaced and is archived, section 17) were never modules: the code is one server package, with the same one-way dependencies.
 
 **The goal.** Drishti becomes a business-intelligence platform as nimble and as capable as commercial BI products, with
 **Power BI** as the benchmark, while keeping what Drishti already does that they do not: live data at
@@ -284,20 +284,7 @@ config/bi/
 
 ## 7. The query engine
 
-- **Server-side DuckDB** (already a Drishti plugin) is the analytical engine: cached tables are DuckDB tables (on disk,
-  per dataset, refreshed atomically); direct tables are attached (`ATTACH` for PostgreSQL and Delta, scanners for Parquet
-  and Iceberg) or fetched through the connector when no attachment exists; live tables are an in-memory Arrow table kept
-  current from the live path.
-- **Compilation.** A visual's query (fields, measures, filters, the user's row rules) compiles to one SQL statement with
-  parameters, never string concatenation of user input. Row rules are added as predicates the user cannot remove.
-- **Delivery.** Results leave as **Apache Arrow IPC** (compact, typed, read without parsing by Perspective and
-  DuckDB-Wasm) with masks applied column by column; small results may also be JSON for simple visuals.
-- **Caching.** Results are cached per (dataset version, query, row-rule set, data generation); a data-load signal or a
-  refresh invalidates exactly what it changed.
-- **Limits.** Per-query timeout, row and byte caps, and a concurrency limit per user and per server, all in settings;
-  over a limit the visual says so with a `DRS-9xxx` code.
-- **In the browser,** DuckDB-Wasm is optional: it lets a user slice an extract they already received (pivot, filter,
-  re-aggregate) with no round trip. It never connects to a store.
+The engine is **DuckDB embedded in the server**: a model query compiles to one parameterised SQL statement, the reader's row rules are predicates they cannot remove, results are masked column by column and cached per reader, and every limit is a setting with its `DRS-9xxx` code. Since 2.3.0 every number is computed on the servers and the browser only draws. The current design is [BI_DESIGN.md section 4](BI_DESIGN.md#4-query-architecture); the 2.1 text (Arrow for Perspective and DuckDB-Wasm in the browser) was replaced and is history, archived in [RUPAKA_2_1_ENGINE.md](../archive/RUPAKA_2_1_ENGINE.md).
 
 ### 7.1 Data at scale: JSON in Delta and Kafka
 
@@ -325,7 +312,7 @@ a connector, with Drishti still adding row rules and applying masks to the resul
 
 **Sizing rule of thumb** (to be replaced by measurements, LOAD_AND_MEMORY.md): one DuckDB server for datasets whose
 *columns* layer fits a few terabytes and whose heavy queries run at modest concurrency; a distributed engine beyond that.
-The phase 0 POC measures the JSON, columns and rollup paths side by side (RUPAKA_POC.md).
+The phase 0 POC measured the JSON, columns and rollup paths side by side (history: docs/archive/RUPAKA_POC.md).
 
 ## 8. Reports and visuals
 
@@ -586,7 +573,7 @@ Phase 5 is built; section 20.5 lists exactly what, and this section says how it 
 - A `live` table is the current state of a live kind: the engine reads the kind once, subscribes to each entity through the **existing TopicHub** (the same topics live views use; a dataset that names a connector subscribes through it), and applies each change to an in-memory DuckDB table **by key**, in
   batches (100 ms, merged per entity), in one transaction with the retention. **As built:** a row whose declared columns did not change is skipped; every live table has `updateSeq` and `updatedAt`; a table that is not used for ten minutes is closed.
 - Visual updates are **coalesced** and **back-pressured**. **As built:** the server tells a browser only that a report's tables *changed* (`tick`, at most one per 250 ms, the latest state, never a queue; `status` every 5 s as the heartbeat); the page asks its visuals again, as the person looking, in one round at a time (at most every 250 ms, three
-  queries at a time), drawing over the old picture in place. The first design's per-visual frame rates (4 a second for charts, up to 30 for Perspective grids) became **one cadence for a report**; a Perspective grid applies its changed rows at the same cadence (the retest of RUPAKA_POC.md section 12 shows Perspective itself taking 1,000 updates a second at 60 frames).
+  queries at a time), drawing over the old picture in place. The first design's per-visual frame rates (4 a second for charts, up to 30 for Perspective grids) became **one cadence for a report**; a Perspective grid applies its changed rows at the same cadence (the retest, history now archived in docs/archive/RUPAKA_POC.md section 12, showed Perspective itself taking 1,000 updates a second at 60 frames).
   Per-reader row rules and masks apply to **every answer**, never to the stream: the stream carries no data.
 - Aggregations over live tables: **as built, measures are recomputed over the in-memory table on each query** (a few milliseconds at 10,000 rows), cached per live generation. The first design's **incrementally maintained aggregates** (sum, count, min, max by group adjusted by each change) are **built for the rollups a dataset declares** (20.11); heavy continuous
   aggregation belongs in a producer (Pravaha, Flink), per LIVE_BI.
@@ -707,32 +694,7 @@ an administrator can restrict which workspaces and roles may use each hook.
 
 ## 17. Architecture
 
-**No new server processes unless they are needed.** The BI modules run inside the existing Drishti server (Java) and the
-console (Python); DuckDB is embedded in the server. The only extra processes are the Python runner's short-lived worker
-subprocesses, started by the console when a Python transform, measure or visual runs (as built, one per call and gone when it ends, at most
-`bi.python.workers` at once, default 2: 20.8; no idle workers and no `idle-seconds`). When measured load calls for it (section 18,
-LOAD_AND_MEMORY), two scale-out options exist, both off by default: the runner as its own service on another host
-(`bi.python.runner-url`), and more Drishti servers behind a load balancer, as PERFORMANCE.md "Scaling out" describes.
-
-```
- browser (BI page)                                   console (FastAPI)                     server (Java 21)
- ─────────────────                                   ─────────────────                     ────────────────
- designer, catalogue, home     ── HTML over the wire ──  /bi routes, templates   ── REST ──  drishti-bi-core: datasets,
- visuals: ECharts, panels        Arrow (masked)           auth, CSRF, CORS                   reports, workspaces, catalogue,
- Perspective (on demand)       ◄─ live channel (SSE) ──   channel hub              ◄─ SSE ─   publish, endorsement, audit
- DuckDB-Wasm (on demand)                                  pyrunner pool  ◄── Arrow ──►      drishti-bi-query: compile,
- Graphic Walker (on demand)                               (sandboxed Python)                 DuckDB, caches, row rules,
- Pyodide / Calc (on demand)                                                                  masks, Arrow out
-                                                                                             drishti-bi-live: live tables,
-                                                                                             incremental aggregates
-                                                                                             sources: connectors by name,
-                                                                                             TopicHub, LIVE_BI producers
-                                                                                             drishti-bi-ai: provider SPI (off)
-```
-
-New server modules depend one way (bi-core → bi-query → engine and identity), no controller outside `drishti-server`,
-files under 1,500 lines, settings for every limit; the console adds `bi/` routes and templates, vendored assets loaded
-per page; the Python runner is a separate process family with its own health.
+**No new server processes unless they are needed.** The BI code runs inside the existing Drishti server (one package, `com.ash.drishti.server.bi`, with DuckDB embedded) and the console (its BI routes, templates and scripts); the only extra processes are the Python runner's short-lived, sandboxed worker subprocesses (one per call, at most `bi.python.workers` at once: 20.8). When measured load calls for it (section 18), two scale-out options exist, both off by default: the runner as its own service on another host (`bi.python.runner-url`), and more Drishti servers behind a load balancer (PERFORMANCE.md, "Scaling out"). The target architecture is [BI_DESIGN.md section 4](BI_DESIGN.md#4-query-architecture) and [section 3.5](BI_DESIGN.md#35-python-sandboxed-workers-on-the-console-backend). The 2.1 diagram (Perspective, DuckDB-Wasm, Graphic Walker, the module names `drishti-bi-core`, `-query`, `-live`, `-ai`) was replaced and is history, archived in [RUPAKA_2_1_ENGINE.md](../archive/RUPAKA_2_1_ENGINE.md#17-architecture).
 
 ## 18. Performance targets
 
@@ -794,7 +756,7 @@ since the server started and only the current body is kept. (Phases 2 to 5, belo
 ### 20.2 Phase 2, as built
 
 Phase 2 (datasets and the query engine) is built; the references are [DATASETS.md](../guides/DATASETS.md) (the YAML, the expression language, security), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 13, the walk-through
-[tutorial 10](../tutorials/10-first-bi-report.md), [API_GUIDE.md](../guides/API_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) (`drishti.bi.query`). Measurements are in [RUPAKA_POC.md](RUPAKA_POC.md) section 11.
+[tutorial 10](../tutorials/10-first-bi-report.md), [API_GUIDE.md](../guides/API_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) (`drishti.bi.query`). Measurements were in the proof of concept's notes, now history: [RUPAKA_POC.md](../archive/RUPAKA_POC.md) section 11 (archived).
 
 **Built.**
 
@@ -816,7 +778,7 @@ Phase 2 (datasets and the query engine) is built; the references are [DATASETS.m
 * **API and pages.** `/api/v1/bi/datasets`, `/{id}`, `/validate`, `/{id}/query`, `/{id}/layers`, `/{id}/refresh`, `/model/*`, `/engine`; the console's Datasets list, Start-from-packs and one dataset's page with a query preview grid. The phase 0 query endpoint now runs its typed
   and rollup layouts through this engine. Three **sample datasets** (`trades-basic`, `trading-risk`, `trading-cashflows`) with a tutorial (phase 5 added the two live ones).
 * **Phase 0 adjustments.** Static files are served compressed (gzip, Brotli when installed; the 36 MB wasm is 8 MB). The BI-page style policy is **decided**: strict `style-src 'self'` on every BI page, no `unsafe-inline`; the hash list the POC page needs for Perspective's `<style>`
-  elements stays on the POC page only, and phase 5 generated its list on the real pages (`tools/perspective-style-hashes.py`, removed with Perspective in 2.3.0: four hashes, not six) with a Chromium test that fails when a library update adds one. **Perspective retest: done in phase 5** (RUPAKA_POC.md section 12): the second-tab trap does not reproduce on the report page in Chromium 153, Chrome 155, Firefox 155 or WebKit 26.6; the fallback (Drishti's own table) stays in force for a tab where WebAssembly fails.
+  elements stays on the POC page only, and phase 5 generated its list on the real pages (`tools/perspective-style-hashes.py`, removed with Perspective in 2.3.0: four hashes, not six) with a Chromium test that fails when a library update adds one. **Perspective retest: done in phase 5** (history: docs/archive/RUPAKA_POC.md section 12): the second-tab trap does not reproduce on the report page in Chromium 153, Chrome 155, Firefox 155 or WebKit 26.6; the fallback (Drishti's own table) stays in force for a tab where WebAssembly fails.
 
 **Not built, and not faked.** *(Wave 3, 20.7, built what this list first deferred: refresh by schedule, and time intelligence with `running`; the window functions `lag` and `rank` are built in 20.11.)* Python measures **inside a query** (a python visual runs them: 20.8); (queries whose measures aggregate several unrelated fact tables are built: 20.11); filter direction `both`, many-to-many semantics and inactive relationships used by a measure; live tables as an incrementally updated in-memory table fed by the hot path
 (built in phase 5, section 20.5); the BI store as a configured connector (a folder today; mount S3 to put it there); engines other than DuckDB (the interface exists); pushdown of scan filters into Delta and file storage; lineage, impact and classification tags (phase 4); the designer, the Model diagram
@@ -879,7 +841,7 @@ Phase 4 (publishing and governance) is built; the reference is [BI_GOVERNANCE.md
 
 Phase 5 (streaming BI) is built; the references are [DATASETS.md 7.1](../guides/DATASETS.md#71-live-tables-phase-5), [REPORTS.md 13](../guides/REPORTS.md#13-live-visuals-and-perspective-phase-5), [BOARDS.md](../guides/BOARDS.md), [LIVE.md](LIVE.md#live-bi-a-reports-live-tables),
 [BI_GUIDE.md](../guides/BI_GUIDE.md) section 18, the walk-through [tutorial 12](../tutorials/12-live-bi-and-boards.md), the API [API_GUIDE.md](../guides/API_GUIDE.md), the settings `drishti.bi.live.*` and the console's `bi.live.*`, `bi.board.rotate_seconds` in [CONFIGURATION.md](../admin/CONFIGURATION.md),
-and the Perspective retest [RUPAKA_POC.md](RUPAKA_POC.md) section 12. Codes `DRS-9050` to `9053`.
+and the Perspective retest, history now archived: [RUPAKA_POC.md](../archive/RUPAKA_POC.md) section 12. Codes `DRS-9050` to `9053`.
 
 **Built.**
 
@@ -889,15 +851,15 @@ and the Perspective retest [RUPAKA_POC.md](RUPAKA_POC.md) section 12. Codes `DRS
 * **Live visuals.** A report over a live dataset has a stream (`GET /bi/reports/{id}/live`: `hello`, `tick`, `status`; per-server and per-person limits, `DRS-9051`) that reaches the browser over the console's one channel (`bilive:<report id>`). The viewer redraws the page's visuals in place (a chart keeps its instance, a table its scroll position, a card flashes), **coalesced** (one round at
   a time, at most every 250 ms) and **back-pressured** (the server sends the latest state, never a queue); a live indicator with the last update time, **Pause** and **Resume**, and the states **Stale**, **Feed failing**, **Disconnected** and **Paused (tab in background)**; a failed update keeps the old picture marked as old. Cards, KPIs, bars, columns, lines, tables and the rest update this way; a **rolling chart** (`live-chart`) collects a point per update in the browser.
 * **Perspective.** `perspective-grid` and `perspective-pivot` over the rows of one table: first read as **masked Arrow**, updates as the rows whose `updateSeq` is above the last answer's (JSON, by key; the whole set again when rows left), Perspective pivoting in the browser; a plain-table fallback when WebAssembly cannot start. **CSP resolved properly**: a report or board page that holds a Perspective visual
-  gets, in its own response only, `'wasm-unsafe-eval'` and the SHA-256 of the **four** styles Perspective 3.8.0 writes (`core/perspective_csp.py`); every other BI page keeps `style-src 'self'` and no WebAssembly; the engine's worker is a script of this origin; the hash list was measured on the real pages by `tools/perspective-style-hashes.py` and checked by a Chromium test (all removed in 2.3.0, when Perspective was no longer vendored). The retest: RUPAKA_POC.md section 12.
+  gets, in its own response only, `'wasm-unsafe-eval'` and the SHA-256 of the **four** styles Perspective 3.8.0 writes (`core/perspective_csp.py`); every other BI page keeps `style-src 'self'` and no WebAssembly; the engine's worker is a script of this origin; the hash list was measured on the real pages by `tools/perspective-style-hashes.py` and checked by a Chromium test (all removed in 2.3.0, when Perspective was no longer vendored). The retest (history): docs/archive/RUPAKA_POC.md section 12.
 * **Boards.** `config/bi/boards/<id>.board.yaml` and `board` items: pages of tiles, each a visual of a report on the report grid, per-tile **alert colouring** by threshold (warn and crit, in words as well as colour), **kiosk** (full screen, menus hidden) with **auto-rotating pages**, the live indicator and pause, Perspective and rolling-chart tiles; a parser with every problem coded (`DRS-9052`, reserved `notify` as `DRS-9053`); the publish check; the API (`GET /bi/boards/{id}`, `POST /bi/boards/validate`). No external notifications.
 * **Samples.** The live datasets `live-trading` and `live-exposure` (over the demo ticker's trades and netting sets), the reports **Live trading desk** and **Live exposure**, the board **Desk wall**; tutorial 12 with real screenshots.
-* **Measured** (this machine, the demo source changing 360 of 750 trades about twice a second, so about 800 row changes a second into one live table with queries answered at p50 15 ms and p95 24 ms over HTTP meanwhile; Perspective at 10,000 rows): RUPAKA_POC.md section 12.
+* **Measured** (this machine, the demo source changing 360 of 750 trades about twice a second, so about 800 row changes a second into one live table with queries answered at p50 15 ms and p95 24 ms over HTTP meanwhile; Perspective at 10,000 rows): docs/archive/RUPAKA_POC.md section 12 (history).
 
 **Not built, and not faked.**
 
 * **Incrementally maintained aggregates by group** (a change adjusting running sums, counts, minimums and maximums): built for the rollups a dataset declares over a live table (20.11); measures that are not plain stored aggregates are recomputed over the rows on each query and cached per live generation. Heavy continuous aggregation beyond that belongs in a producer ([LIVE_BI.md](LIVE_BI.md)).
-* **The "live targets met under the LOAD_AND_MEMORY capacity run"**: the done-when of the phase table. No million-row capacity run was made (local data stays at 10,000 rows a day); what was measured is in RUPAKA_POC.md section 12.
+* **The "live targets met under the LOAD_AND_MEMORY capacity run"**: the done-when of the phase table. No million-row capacity run was made (local data stays at 10,000 rows a day); what was measured is history in docs/archive/RUPAKA_POC.md section 12.
 * **A history of every update of a live table** (append mode): a live table holds current state with retention. A bounded history of its *aggregates* is built (20.12, `live.history`); the rolling chart's points still live in the browser from the moment the page opened. Time buckets (`second`, `minute`) on `updatedAt` are not date parts.
 * **Per-visual frame rates** (the design's 4 and 30 a second): one cadence for a report.
 * **Perspective charts** (d3fc) and the settings panel are built (20.13); not built: a Perspective visual over several tables, a Perspective visual in the designer's canvas (a note is shown).

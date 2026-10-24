@@ -365,7 +365,7 @@ class PyRunner:
             self._sem.release()
 
     async def run_steps(self, m: dict, arrows: list[bytes], names: list[str], *, params: dict | None = None) -> dict:
-        """The step-by-step run of a Transform (wave C, BI_PARITY_PLAN.md P1): ``run`` on frames (Arrow IPC streams, one per input, already masked for the
+        """The step-by-step run of a Transform (wave C, docs/archive/BI_PARITY_PLAN.md P1): ``run`` on frames (Arrow IPC streams, one per input, already masked for the
         reader), with the frame each step made described (rows, columns, first rows, profile) and the inputs profiled. Not kept in the result cache: an
         author runs it as they edit. Answers ``{kind: steps, inputs, keys, steps, planned, complete, failed?, ms}``; raises :class:`PyError` for what is not the
         code's own failure (a step's error is in ``failed``)."""
@@ -489,7 +489,7 @@ class PyRunner:
             raise PyError("DRS-9072", 504, f"'{m.get('name')}' ran longer than its {timeout} s limit and was stopped") from None
 
     async def warm(self) -> bool:
-        """Starts the fork-server now (wave C, BI_PARITY_PLAN.md P6: warm workers), so the first call of the day (a report, a Transform's step run) does not pay
+        """Starts the fork-server now (wave C, docs/archive/BI_PARITY_PLAN.md P6: warm workers), so the first call of the day (a report, a Transform's step run) does not pay
         for the interpreter and the pandas, numpy and pyarrow imports. Answers whether it is running; the console starts it at start-up (``bi.python.warm``)."""
         if not (self.enabled and self.use_fork) or self._fork_failed or any(importlib.util.find_spec(x) is None for x in ("pandas", "pyarrow")):
             return False

@@ -209,7 +209,7 @@ packs:
   extra_dirs: ${DRISHTI_PACKS_EXTRA_DIRS:}   # further pack folders, comma-separated (examples/packs: the retired example packs), as on the server
   enabled: ${DRISHTI_PACKS:core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets}   # used only when the server cannot be asked which packs are enabled
   deploy_max_mb: 50          # largest pack archive Admin → Packs → Deploy archive takes (the server's drishti.packs.deploy.max-archive-mb refuses the same way, 413)
-static:                      # the console's own static files (/static/...), served compressed (RUPAKA_POC.md, adjustment 2)
+static:                      # the console's own static files (/static/...), served compressed (docs/archive/RUPAKA_POC.md, adjustment 2)
   compress: true             # answer a request that accepts br or gzip with the compressed file (Brotli when the brotli package is installed); false: bytes as they are
   compress_min_bytes: 1024   # smaller files are sent as they are
   brotli_quality: 5          # 0 to 11; each file is compressed once per version and kept in cache_dir

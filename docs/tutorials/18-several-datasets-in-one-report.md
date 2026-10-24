@@ -490,7 +490,7 @@ You should see `Python visual draft saved in your workspace` **beside the button
 
 ## Step 9 · How this compares with Power BI
 
-You should see a short, honest table, not a scorecard (the claims about Power BI are the ones of [BI_PARITY_PLAN.md](../architecture/BI_PARITY_PLAN.md), whose own knowledge of Power BI may be stale; check before you quote it):
+You should see a short, honest table, not a scorecard (the claims about Power BI are the ones of [BI_DESIGN.md section 11](../architecture/BI_DESIGN.md#11-gap-check-against-power-bi), whose own knowledge of Power BI may be stale; check before you quote it):
 
 | | Power BI | Drishti (2.5.0) |
 |---|---|---|

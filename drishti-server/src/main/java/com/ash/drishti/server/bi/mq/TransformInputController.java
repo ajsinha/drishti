@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * One input of a Python Transform, as the caller (docs/guides/PYTHON_BI.md section 17, BI_PARITY_PLAN.md P1 and P5): what the Transform editor previews and
+ * One input of a Python Transform, as the caller (docs/guides/PYTHON_BI.md section 17, docs/archive/BI_PARITY_PLAN.md P1 and P5): what the Transform editor previews and
  * profiles, and what its step-by-step run starts from. {@code POST /api/v1/bi/python/input} with {@code {input, limit?, asOf?}}, where {@code input} is either
  * form a Python dataset's {@code source.inputs} takes (a model query, or a pack kind read through a connector); answers the rows as Arrow
  * ({@code ?format=arrow}, with {@code X-Bi-Rows}, {@code X-Bi-Masked}, {@code X-Bi-Model}) or JSON. The rows are cut to {@code limit} (default 1,000) and never

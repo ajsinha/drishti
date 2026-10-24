@@ -41,7 +41,7 @@ import org.duckdb.DuckDBConnection;
  * The embedded analytic engine: one in-process DuckDB (no extra server), a connection per query duplicated from the root so queries run side by
  * side, each with a watchdog that cancels it at the time limit. Memory and threads are settings ({@link QueryProperties}). Extensions are never
  * downloaded at run time: the JDBC jar links {@code parquet}, {@code json}, {@code core_functions} and {@code icu}, which is all the layers need;
- * Parquet and Delta data files are read directly (RUPAKA_POC.md section 7).
+ * Parquet and Delta data files are read directly (docs/archive/RUPAKA_POC.md section 7).
  */
 public final class DuckDbEngine implements AnalyticEngine {
 

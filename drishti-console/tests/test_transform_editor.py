@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave C (2.4.0) data prep on the console (docs/guides/PYTHON_BI.md section 17, BI_PARITY_PLAN.md P1 to P3 and P5) and the browser Python console's server
+"""Wave C (2.4.0) data prep on the console (docs/guides/PYTHON_BI.md section 17, docs/archive/BI_PARITY_PLAN.md P1 to P3 and P5) and the browser Python console's server
 side (docs/guides/ANALYSE.md section 15):
 
 * the snippets library: every snippet's own example is right in plain pandas **and** in the sandbox, a value is always a literal (never code), an

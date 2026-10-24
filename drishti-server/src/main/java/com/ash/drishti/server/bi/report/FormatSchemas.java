@@ -31,7 +31,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * The typed {@code format:} of a report visual (report schema v2, docs/architecture/BI_PARITY_PLAN.md R6): one JSON Schema per visual family, written in
+ * The typed {@code format:} of a report visual (report schema v2, docs/archive/BI_PARITY_PLAN.md R6): one JSON Schema per visual family, written in
  * YAML under {@code src/main/resources/bi/report/format/} ({@code common.yaml} holds the shared parts). {@link #check} validates a visual's format against
  * its family; {@link #toMap} serves the schemas, resolved and flattened per family, to the designer, whose Format pane is generated from them.
  *

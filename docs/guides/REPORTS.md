@@ -1001,7 +1001,7 @@ checks it).
 
 ## 20. Report schema v2 in one report (2.4.0)
 
-The parity tasks of a Power BI author (BI_PARITY_PLAN section 4, items 6 to 8 and 13) in one report on `trades-basic`, every part made in the designer (BI Studio) without
+The parity tasks of a Power BI author (items 6 to 8 and 13 of the 2.1 parity study, now history in docs/archive/BI_PARITY_PLAN.md section 4) in one report on `trades-basic`, every part made in the designer (BI Studio) without
 the YAML tab; the YAML is what the designer writes:
 
 ```yaml

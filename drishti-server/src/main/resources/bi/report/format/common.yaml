@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The typed `format:` of a report visual (report schema v2, docs/architecture/BI_PARITY_PLAN.md R6; docs/guides/REPORTS.md section 5): the parts every
+# The typed `format:` of a report visual (report schema v2, docs/archive/BI_PARITY_PLAN.md R6; docs/guides/REPORTS.md section 5): the parts every
 # visual family shares. Each family file (chart.yaml, card.yaml, table.yaml, ...) is a JSON Schema written in YAML whose `allOf` starts with
 # `common#/$defs/frame`. The server checks every visual's format against its family (FormatSchemas: a wrong type or range is DRS-9032, an unknown key
 # a warning) and serves the schemas at GET /api/v1/bi/reports/format-schemas; the designer's Format pane is generated from them (bi-format-pane.js).

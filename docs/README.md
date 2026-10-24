@@ -117,7 +117,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Design of the Screen Builder (JSON files → shape → visual designer → Sutra) | [SCREEN_BUILDER.md](architecture/SCREEN_BUILDER.md) |
 | The Build workbench: Designs, one page for data, canvas, YAML and tests, and the plan | [BUILD_WORKBENCH.md](architecture/BUILD_WORKBENCH.md) |
 | Design of *About this page*: context-aware help built from the page's data, pack glossaries, the explain API and the plan | [CONTEXT_HELP.md](architecture/CONTEXT_HELP.md) |
-| Design of Drishti Rūpaka, BI inside Drishti benchmarked against Power BI, and what its phase 0 proof of concept measured | [RUPAKA.md](architecture/RUPAKA.md), [RUPAKA_POC.md](architecture/RUPAKA_POC.md) |
+| Design of Drishti Rūpaka, BI inside Drishti benchmarked against Power BI | [BI_DESIGN.md](architecture/BI_DESIGN.md), [RUPAKA.md](architecture/RUPAKA.md) |
 | **The BI target design** (authoritative): principles, the four languages (YAML, the Python-like expression language, Drishti SQL, Python) and the one logical plan, query, security, scale, governance, authoring UX, AI, APIs, the Power BI gap check and the waves A, B, C | [BI_DESIGN.md](architecture/BI_DESIGN.md) |
 | Collaboration: share a view with a note, comment threads anchored to the data, the inbox, email, retention and legal hold; the design, what was built and the plan | [COLLABORATION.md](architecture/COLLABORATION.md) |
 | Show Drishti's live views and BI reports inside another web application without iframes (Drishti Elements: `<drishti-view>`, `<drishti-panel>`, `<drishti-report>`, token exchange, npm package) | [guides/ELEMENTS.md](guides/ELEMENTS.md) (developer guide), [architecture/ELEMENTS.md](architecture/ELEMENTS.md) (design) |
@@ -266,8 +266,6 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [BI_MODEL_ARCHITECTURE.md](architecture/BI_MODEL_ARCHITECTURE.md) | you want the agreed BI architecture after 2.1.0 (datasets, data models, one model per report, time modes, one model query language, AI through the model); its waves are replaced by BI_DESIGN.md |
 | [BI_DESIGN.md](architecture/BI_DESIGN.md) | you want the single authoritative BI target design: principles and non-goals, the Python-like expression language, Drishti SQL, Python and MQ meeting in one logical plan, query architecture, security at every tier, caching and scale, governance, the designers, AI, APIs, the Power BI gap check, W1 as built, the waves A (2.2.0), B (2.3.0), C (2.4.0) and the release order after them: N (2.5.0, Drishti\*net), D (2.6.0, sharing and integration), I (2.7.0, AI), E (2.8.0, QA findings and production readiness) |
 | [BI_MODEL_SPEC.md](architecture/BI_MODEL_SPEC.md) | you want the design specification of wave W1: the dataset and data model YAML, implicit models, how consumers bind to one model, the model query language v1 (validation, compilation, standing queries, ten worked examples), pack-generated datasets, the migration of every sample, the UX flows and the W1 build plan (design, not built) |
-| [BI_PARITY_PLAN.md](architecture/BI_PARITY_PLAN.md) | you want the proposed plan to bring Rūpaka to Power BI's feature depth: what Drishti already does better, the gaps ranked by value and effort, the redesigns and the phases 2.2 to 3.0 (its items are scheduled by BI_DESIGN.md section 12.2; R6 and R7 shipped in 2.4.0) |
-| [RUPAKA_POC.md](architecture/RUPAKA_POC.md) | you want what the Rūpaka phase 0 proof of concept built and measured (Perspective live grid, masked Arrow out of DuckDB, DuckDB-Wasm in the browser, CSP with WebAssembly, JSON vs typed vs rollup) and the go / adjust verdict for phase 1 (off by default); history: 2.3.0 took Perspective and the browser's engines out of BI |
 | [LIVE_BI.md](architecture/LIVE_BI.md) | you want Drishti as the live front end of a streaming BI producer: the result-stream contract, Kafka with no code, a `bi` plugin, boards, drill-down, consistency (design note) |
 | [ELEMENTS.md](architecture/ELEMENTS.md) | you want the design of Drishti Elements: live views and BI reports inside other web applications as Web Components, no iframes; the embed API, token exchange, host registration, `<drishti-report>`, and which build steps are done |
 | [guides/ELEMENTS.md](guides/ELEMENTS.md) | you are embedding Drishti in your own application: a five-minute start, the token exchange (Node, Java, Python), versions, SRI and npm, the element reference, a cookbook, troubleshooting by code |
@@ -430,6 +428,14 @@ Each run has a README (what was tested, findings by severity, how each was fixed
 | [qa/2026-10-03/ux/LOG.md](qa/2026-10-03/ux/LOG.md) | 2026-10-03/ux: the activity log |
 | [qa/2026-10-05/BEHAVIOUR.md](qa/2026-10-05/BEHAVIOUR.md) | 2026-10-05: behaviour pass: collaboration, About/Ask, time, failure modes |
 | [qa/2026-10-05/DATA_SAFETY.md](qa/2026-10-05/DATA_SAFETY.md) | 2026-10-05: data-safety pass: collaboration, explain, Ask, bridges, email, snapshots |
+
+### Archive (`archive/`)
+
+History only: designs that were replaced or removed, kept so old decisions and the item ids the code cites can be traced. Do not use them to learn how Drishti works today.
+
+| Document | Read this when… |
+|---|---|
+| [archive/README.md](archive/README.md) | you followed an old link to an archived design (history: the Rūpaka proof of concept, the 2.1 Power BI parity study, the replaced BI wave plan, the Screen Builder's build plan, the 2.1 composed and derived datasets) and want to know what replaced it |
 
 ### Records
 

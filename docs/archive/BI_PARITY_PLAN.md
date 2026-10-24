@@ -16,8 +16,10 @@
 
 # Drishti Rūpaka vs Microsoft Power BI: gap analysis and parity roadmap
 
+> **Archived: replaced by [BI_DESIGN.md](../architecture/BI_DESIGN.md) section 11 (the gap check against Power BI) and section 12 (the waves).** A study of 2.1.0; the item ids it gave (P1 to P10, R1 to R8, the numbered gaps) are still cited by the code, so it is kept here as history.
+
 History: a study of 2.1.0 (2026-10-12); Perspective and DuckDB-Wasm, named below as strengths, were removed in 2.3.0. The current plan is
-[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#roadmap)'s roadmap.
+[IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md#roadmap)'s roadmap.
 
 Status: the gap analysis behind the agreed plan in BI_MODEL_ARCHITECTURE.md (its roadmap section is superseded). Study date: 2026-10-12. Drishti version studied: 2.1.0 (`drishti-server/pom.xml`). Decisions already taken: no Power Query clone (Python is the data-prep path); breaking BI redesigns are acceptable before production; YAML, Python and datasets + data models stay the foundation.
 

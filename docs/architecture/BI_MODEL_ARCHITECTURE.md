@@ -13,16 +13,16 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Rūpaka next: the model architecture and the wave plan (2.2 to 3.0)
+# Rūpaka next: the model architecture (decisions D1 to D6)
 
 > **Superseded in part by [BI_DESIGN.md](BI_DESIGN.md), the single authoritative BI target design.** Decisions D1–D6
-> and sections 2, 2a, 2b, 2c and 3 below still stand. The **wave plan (section 4) and risks (section 5) are replaced**
-> by BI_DESIGN.md section 12 (waves A = 2.2.0, B = 2.3.0, C = 2.4.0), and the expression language is now Python-like
-> (BI_DESIGN.md section 3.3).
+> and sections 2, 2a, 2b, 2c and 3 below still stand. The **wave plan and risks were replaced**
+> by BI_DESIGN.md section 12 (waves A = 2.2.0, B = 2.3.0, C = 2.4.0 and the later ones) and are archived as history
+> (section 4), and the expression language is now Python-like (BI_DESIGN.md section 3.3).
 
 *Agreed with the product owner on 2026-10-12.* This settles the BI architecture before more features are added, and
-replaces the roadmap part of [BI_PARITY_PLAN.md](BI_PARITY_PLAN.md) (its gap analysis still stands). Nothing here is
-built yet. Drishti is not in production, so these are breaking changes on purpose; the foundation stays **YAML,
+replaced the roadmap part of the 2.1 parity study (history, archived: [BI_PARITY_PLAN.md](../archive/BI_PARITY_PLAN.md); the gap check is now [BI_DESIGN.md section 11](BI_DESIGN.md#11-gap-check-against-power-bi)). Most of it was
+built in 2.2.0 to 2.4.0 (BI_DESIGN.md section 12.2 records what). Drishti is not in production, so these are breaking changes on purpose; the foundation stays **YAML,
 Python, datasets and data models**. No Power Query-like tool: Python is the data-prep path. The design
 specification of wave W1 (the dataset and model YAML, the model query language v1, pack-generated datasets, the
 migration, the UX flows and the build plan) is [BI_MODEL_SPEC.md](BI_MODEL_SPEC.md).
@@ -131,7 +131,7 @@ and one model serves live and as-of answers.
 Every number is computed by the Java server, the console backend (FastAPI, Python) or the source behind a pack's
 connector; the browser only draws the answer it receives, so every device (an iPhone's Safari, a PC's Chrome) shows the
 same answer. Today's browser paths (Python visuals, measures and Analyse cells through Pyodide, DuckDB-Wasm slicing)
-move to the servers in W3. A personal Python console in the browser is future work, not scheduled. Details: BI_MODEL_SPEC.md section 12.
+were to move to the servers in W3 (wave B, 2.3.0; [BI_DESIGN.md section 12.2](BI_DESIGN.md#122-the-three-waves) says what moved); a personal Python console in the browser came in 2.4.0 ([ANALYSE.md section 16](../guides/ANALYSE.md#16-the-browser-python-console)). Details: BI_MODEL_SPEC.md section 12.
 
 ## 3. The experience comes first
 
@@ -152,67 +152,6 @@ rules, and judged by power users before it ships:
 Each release adds an **experience wave**: the adversarial QA by power users (designers, workspaces, packs,
 connectors) plus a usability review against these rules, and its findings are fixed before the drill.
 
-## 4. Waves
+## 4. Waves and risks
 
-> **Replaced** by [BI_DESIGN.md section 12](BI_DESIGN.md#12-w1-as-built-against-this-design-and-the-revised-wave-plan).
-> Kept below for the record only: the release numbers below are the old plan's. The order now (2026-10-20) is 2.5.0 Drishti\*net (released), 2.6.0
-> statements, field parameters, the Cassandra connector and drishti-iceberg, 2.7.0 write-back, 2.8.0 AI (GenUI, AI management, the Sajha MCP
-> connector), the real-life QA, 2.9.0 QA findings and production readiness, then 3.0; send and push and integration (W13 feeds among them) after
-> 3.0.0 ([section 12.2](BI_DESIGN.md#122-the-three-waves)).
-
-Each release: builders (at most two at once) → adversarial QA by power users → fixes → one drill → tag. Every wave
-updates its docs and tutorials with UI, CLI and YAML (never thinner) and migrates the shipped samples.
-
-### 2.2.0 — the model architecture
-
-| Wave | Scope | Accepted when |
-|---|---|---|
-| **W1 Layers and the query language** | the dataset and model item types; pack-generated datasets (D3); connector and Python datasets; implicit models; the model query language v1 (spec, validator, compiler to the engine) and its API; security at the dataset, model security only tighter | a report, an alert and an Analyse slice ask the same model through the same query language and get identical, per-reader masked answers |
-| **W2 The star, shared models and correctness** | dataset derivation: column subsets, row filters, explicit grain and de-duplication rules, per-row Drishti expressions and Python-derived columns (console backend) with declared meanings, grouping to a coarser grain; every dataset rooted in packs (Check refuses an untraceable root; lineage report → pack kinds); Used-by lists, delete/unpublish impact, Build-like read right, move a local measure to the model; field properties inherited by every report (display name, description, format, folder, hidden, sort-by, data category, default summarisation); perspectives; several facts with shared dimensions in one visual; additivity declarations; the currency guard; relationship suggestions from pack entity references; fan-out refusal at model level; model contracts with semver and breaking-change detection; stable ids | MTM and exposure per counterparty in one visual equal an independent per-grain computation; a breaking model change is refused without a major version |
-| **W3 Time modes, standing queries and the planner** | the MQ planner across source, Java server and console backend (browser draws only; report and Analyse Python and Wasm slicing moved to the servers); `live`/`snapshot`/`history` datasets; standing queries for every consumer; incremental rules per measure; throttling and back-pressure; as-of time travel; live and snapshot mixed in one model | a board, a report and an alert over one model tick live, answer as of a past date, and match a full recompute |
-| **W4 Consumers, designers and migration** | reports, boards, notebooks, alerts, subscriptions, exports and embeds bound to models; the dataset wizard (mostly automatic) and the **model designer** (the Model view becomes the editor of relationships, measures, security, tests); composed and derived datasets migrated into models and Python datasets; report links reduced (D2); every sample and tutorial 10–18 migrated | every shipped sample and tutorial runs on the new layers in the UI alone; nothing needs hand-written YAML |
-| **W5 AI grounding** | `ai:` metadata (synonyms, units, examples, hints); golden questions run as tests; AI ask/explain through the query language only; MCP tools `describe_model`, `query_model`, `explain_change` | golden questions pass on the mock and on one real provider; an AI answer can only use measures the user may see |
-
-### 2.3.0 — calculation depth
-
-| Wave | Scope |
-|---|---|
-| **W6 Filter context** | measure-level filter overrides (% of total, ignore a slicer, CALCULATE-style), calculation groups, what-if and field parameters |
-| **W7 Time and balances** | balance measures (closing, opening, last value), fiscal and holiday calendars per model, inactive relationships chosen per measure (trade, settle, value dates) |
-| **W8 AI measures** | a measure written in plain words becomes model YAML with tests, reviewed like any change |
-
-### 2.4.0 — authoring depth
-
-| Wave | Scope |
-|---|---|
-| **W9 Format and themes** | a full format pane, themes, conditional formatting (rules, scales, icons), a deeper matrix |
-| **W10 Interactions** | tooltip pages, small multiples, per-visual interaction control, drill-through improvements |
-| **W11 AI design** | "design a report for …" and "explain this change" (decomposition through hierarchies and as-of comparison) |
-
-### 2.5.0 — Python and outside tools
-
-| Wave | Scope |
-|---|---|
-| **W12 Python data prep** | step-by-step preview, a tested snippets library (as-of joins for prices and FX), a profiling view, AI-written Transforms, Transforms reading connectors directly, warm workers |
-| **W13 Feeds** | an Excel feed and a read-only SQL endpoint over models, both per-reader masked |
-
-### 2.6.0 — service and operations
-
-| Wave | Scope |
-|---|---|
-| **W14 Service** | comments on reports, usage metrics, sensitivity labels, deployment between environments |
-| **W15 Live AI** | AI narratives on live alerts and subscriptions, rate-limited, masked, suggest-only |
-
-### 2.7.0 and 3.0
-
-| Release | Scope |
-|---|---|
-| 2.7.0 | **W16** paginated reports and statements |
-| 3.0.0 | a scale test on a real server, a second query engine, an Excel add-in |
-
-## 5. Risks
-
-- The migration (W4) touches every sample, tutorial and BI test: it is its own wave and is drilled on its own.
-- Standing queries (W3) need care with memory and back-pressure: W3 includes a load test with many subscribers.
-- The query language (D5) is a contract for UI, AI, API and MCP at once: it is versioned from v1 and changed only by
-  a reviewed spec change.
+The wave plan W1 to W16 and its risks were replaced by [BI_DESIGN.md section 12](BI_DESIGN.md#12-w1-as-built-against-this-design-and-the-revised-wave-plan); the original is history, archived in [BI_MODEL_ARCHITECTURE_WAVES.md](../archive/BI_MODEL_ARCHITECTURE_WAVES.md) (the W numbers BI_MODEL_SPEC.md uses are defined there).

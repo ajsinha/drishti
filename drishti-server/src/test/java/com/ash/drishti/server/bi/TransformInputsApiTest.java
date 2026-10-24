@@ -48,7 +48,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
- * Wave C (2.4.0) data prep over the whole stack, security on (docs/guides/PYTHON_BI.md section 17, BI_PARITY_PLAN.md P5): a Transform's input may be a pack
+ * Wave C (2.4.0) data prep over the whole stack, security on (docs/guides/PYTHON_BI.md section 17, docs/archive/BI_PARITY_PLAN.md P5): a Transform's input may be a pack
  * kind read straight through a connector, as the reader. The input preview the Transform editor uses ({@code POST /api/v1/bi/python/input}) answers the
  * reader's rows (a role that may not read the kind gets none of it), filtered and cut; a bad input is refused with its path; a Python dataset whose input is a kind is checked
  * and, with the console's Python environment, run as the reader; its lineage reaches the kind and the connector.

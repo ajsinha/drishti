@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Wave C (2.4.0), Analyse's Profile tab (docs/guides/ANALYSE.md section 15; BI_PARITY_PLAN.md P3): the extract's profile, worked out by the console
+/* Wave C (2.4.0), Analyse's Profile tab (docs/guides/ANALYSE.md section 15; docs/archive/BI_PARITY_PLAN.md P3): the extract's profile, worked out by the console
    (POST /bi/explore/profile, in its sandbox, over the rows the reader may see) and drawn by the Transform editor's panel (bi-transform-view.js). The page
    adds nothing up. Asked when the tab opens, again after the extract changes. */
 (function () {

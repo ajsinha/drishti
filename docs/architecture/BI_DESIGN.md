@@ -22,10 +22,10 @@ Drishti's business intelligence (Rūpaka). Where it overlaps another document, t
 
 | Document | What still stands | What this design supersedes |
 |---|---|---|
-| [BI_MODEL_ARCHITECTURE.md](BI_MODEL_ARCHITECTURE.md) | decisions D1–D6, §2a shared models, §2b mini database rooted in packs, §2c servers compute, §3 experience rules | its wave plan (§4) and risks (§5): replaced by section 12 here |
+| [BI_MODEL_ARCHITECTURE.md](BI_MODEL_ARCHITECTURE.md) | decisions D1–D6, §2a shared models, §2b mini database rooted in packs, §2c servers compute, §3 experience rules | its wave plan and risks: replaced by section 12 here, archived as history in [BI_MODEL_ARCHITECTURE_WAVES.md](../archive/BI_MODEL_ARCHITECTURE_WAVES.md) |
 | [BI_MODEL_SPEC.md](BI_MODEL_SPEC.md) | the W1 formats (dataset, model, MQ v1, implicit models, codes 9100–9199), §12 tiers, §13 worked example | §5.4 "compilation to the existing engine" as the *end state* (it is the W1 path; section 4 is the target); §5.8's W3 promises are restated in 4.6 |
-| [BI_PARITY_PLAN.md](BI_PARITY_PLAN.md) | the gap analysis (§2), what we do not copy (§6) | its roadmap (§5): mapped to components and waves in sections 11 and 12 |
-| [RUPAKA.md](RUPAKA.md) | positioning, the BI page, as-built history (§20) | §7 query engine, §13.2 "two targets" (browser Python), §17 architecture diagram |
+| [BI_PARITY_PLAN.md](../archive/BI_PARITY_PLAN.md) (archived: history, a 2.1 study) | the item ids the code cites (P1–P10, R1–R8, numbered gaps) | everything else: its gap analysis is replaced by section 11, its roadmap (§5) by section 12 |
+| [RUPAKA.md](RUPAKA.md) | positioning, the BI page, as-built history (§20) | §7 query engine and §17 architecture diagram (replaced; the 2.1 text is history in [RUPAKA_2_1_ENGINE.md](../archive/RUPAKA_2_1_ENGINE.md)), §13.2 "two targets" (browser Python) |
 | [LIVE_BI.md](LIVE_BI.md) | the BI stream contract (producers own their arithmetic) | nothing; standing queries (4.6) consume what it produces |
 | Guides (DATASETS, REPORTS, BOARDS, BI_GOVERNANCE, PYTHON_BI, ANALYSE, BI_AI, DISTRIBUTION) | how 2.1/W1 behave today | the browser paths they describe (Pyodide, DuckDB-Wasm, console SQLite) end in B |
 
@@ -957,7 +957,7 @@ additive: a v1 query is a valid v2 query); DSQL by `sql:` (1); item formats by `
 
 ## 11. Gap check against Power BI
 
-From BI_PARITY_PLAN §2 and §4 (top gaps), mapped to the component of this design that delivers each, and the wave.
+From the 2.1 study's §2 and §4 (top gaps; the study is history, archived as docs/archive/BI_PARITY_PLAN.md), mapped to the component of this design that delivers each, and the wave.
 
 | Power BI capability | Drishti component | Wave | Better than Power BI because |
 |---|---|---|---|

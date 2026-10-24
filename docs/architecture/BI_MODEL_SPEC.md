@@ -23,7 +23,7 @@ compatibility reader; packages S1, S2, S3, S6 and the implicit models of S5); th
 "Layers and the query language"** of [BI_MODEL_ARCHITECTURE.md](BI_MODEL_ARCHITECTURE.md) (decisions D1 to D6, the
 experience rules of its section 3). It fixes the **formats** W1 introduces so that W2 to W5 extend them without a
 second breaking change: every key that a later wave fills is already named here, marked with the wave that gives it
-behaviour. The gap analysis it answers is [BI_PARITY_PLAN.md](BI_PARITY_PLAN.md); the current shapes it replaces are
+behaviour. The gap analysis it answers was the 2.1 study, archived as history ([BI_PARITY_PLAN.md](../archive/BI_PARITY_PLAN.md); today's gap check is [BI_DESIGN.md section 11](BI_DESIGN.md#11-gap-check-against-power-bi)); the current shapes it replaces are
 [DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [BOARDS.md](../guides/BOARDS.md),
 [ANALYSE.md](../guides/ANALYSE.md), [PYTHON_BI.md](../guides/PYTHON_BI.md), [BI_AI.md](../guides/BI_AI.md) and
 [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md).

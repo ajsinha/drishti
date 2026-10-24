@@ -1263,20 +1263,11 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 - **Cause:** the SQL engine cannot run Python (`DRS-9013`).
 - **Fix:** show the measure in a **python visual** (`wells: { values: [<the measure>] }`); see [PYTHON_BI.md](PYTHON_BI.md) section 5.
 
-### A composed or derived dataset will not answer
+### A Python dataset's Transform will not run
 
-*Composed and derived datasets were removed in 2.2: such a file now parses with `DRS-9190` and `drishti.py bi migrate --models` converts it
-(see the migration rows further down). The entries below are for 2.1; the `DRS-9074` one and the Transform cache apply to today's Python
-datasets (`source.python`) too.*
-
-* **`DRS-9014` or `DRS-9016` on the dataset page, and every query `DRS-9010`.** A composed dataset is checked against the datasets it is built from. `no dataset 'x'`: a source is named by catalogue id, file name or the dataset's own name; `source dataset 'x' has errors`: fix that one first; `the key 'k' of 'a' is date but 'k' of 'b' is string`: both sides of a join are of one type; `'k' is not a column of 'a'`: a join is made on the names the frame gives (`trade.desk as d` is `d`). `DRS-9016` names the loop.
-* **`DRS-9021` "the join key 'counterparty' ... is masked for you".** A source masks the column you join on (the server's redact list or the source's `masked:`). Join on an unmasked key (an id), or ask for the raw power. The refusal is the safe answer: joined on a mask, every row would meet every row.
-* **A composed measure is far too high.** `DRS-9015` on the dataset: a join repeats rows, and Check refuses it. Declare `key:` on each source, group the many side by the join key alone, swap the ends, or accept the repetition with `allow-repeat: true` on the join.
-* **A visual of a composed dataset shows less than the other datasets say.** Each source is asked as you, before the join: a desk-head's row rule cuts the trades first, and an inner join then drops the counterparties they have none with. A `left` join keeps the left source's rows.
-* **`DRS-9022` "source 'x' answers more than ... rows".** A source returned over `drishti.bi.transform.compose-source-max-rows`: group it by less in `from`, or filter it.
-* **A derived dataset answers `DRS-9074`.** The server starts the console's runner itself: set `drishti.bi.transform.python` to the Python with pandas and pyarrow (the console's `.venv/bin/python`) and `drishti.bi.transform.runner` to the console's `core/transform_cli.py`; with neither set it looks for `drishti-console/` from the working directory upwards. `DRS-9071`/`9072`/`9073` are the sandbox's, as for any Python item ([PYTHON_BI.md](PYTHON_BI.md) section 10); `DRS-9075` is a frame that lacks a declared column.
-* **A derived dataset says "the columns of the result are not known yet" and no field resolves.** It declares no `columns:` and has never run: press **Run the Transform now** on its page (or `POST /datasets/{id}/transform/run`); the columns of that result are kept, and the page checks again.
+* **A Python dataset (`source.python`) answers `DRS-9074`.** The server starts the console's runner itself: set `drishti.bi.transform.python` to the Python with pandas and pyarrow (the console's `.venv/bin/python`) and `drishti.bi.transform.runner` to the console's `core/transform_cli.py`; with neither set it looks for `drishti-console/` from the working directory upwards. `DRS-9071`/`9072`/`9073` are the sandbox's, as for any Python item ([PYTHON_BI.md](PYTHON_BI.md) section 10); `DRS-9075` is a frame that lacks a declared column.
 * **The Transform runs again for every person.** Its result is kept per reader and version of the inputs (`drishti.bi.transform.cache-ttl`, `cache-entries`): a different person has different rows and masks, so a different frame. After a data load the inputs' version changes and the next reader runs it again.
+* **A dataset with `from:` or `derived:` says `DRS-9190`.** It is a 2.1 composed or derived dataset, removed in 2.2: `drishti.py bi migrate --models` converts it (see the migration rows further down). The 2.1 entries for them were replaced and are history, archived in [DATASETS_2_1_COMPOSED_DERIVED.md](../archive/DATASETS_2_1_COMPOSED_DERIVED.md#troubleshooting-in-21).
 
 ## Drishti*net
 

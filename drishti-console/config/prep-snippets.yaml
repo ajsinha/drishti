@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The data-prep snippets of the Transform editor (docs/guides/PYTHON_BI.md section 17; BI_PARITY_PLAN.md P2), read by core/prep_snippets.py.
+# The data-prep snippets of the Transform editor (docs/guides/PYTHON_BI.md section 17; docs/archive/BI_PARITY_PLAN.md P2), read by core/prep_snippets.py.
 #
 # A snippet is one step of a Transform: pandas that works on `df` (the frame so far) and may read another input by its name. Its parameters are filled
 # in a form; each value is written into the code as a Python literal (a column name is a quoted string, a list a list), never as code, so a value cannot

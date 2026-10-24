@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Wave C (2.4.0), the Transform editor (docs/guides/PYTHON_BI.md section 17; BI_PARITY_PLAN.md P1, P2, P3, P5). The page holds the Transform as a spec
+/* Wave C (2.4.0), the Transform editor (docs/guides/PYTHON_BI.md section 17; docs/archive/BI_PARITY_PLAN.md P1, P2, P3, P5). The page holds the Transform as a spec
    ({name, title, inputs[{name, input}], steps[{label, code}], keys, columns}); every change asks the console to run the steps (POST /bi/transform/steps:
    the inputs are asked of the server as you, then run() runs once in the sandbox with each step's frame described) and to write the YAML it is saved as
    (POST /bi/transform/compose). Steps come from the snippets library (POST /bi/transform/snippet writes each value as a literal) or are written by hand.

@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * The inputs of a Python Transform (docs/architecture/BI_MODEL_SPEC.md section 1.2 C; BI_PARITY_PLAN.md P5). An input is a <b>model query</b>, as since 2.2,
+ * The inputs of a Python Transform (docs/architecture/BI_MODEL_SPEC.md section 1.2 C; docs/archive/BI_PARITY_PLAN.md P5). An input is a <b>model query</b>, as since 2.2,
  * or (2.4.0) a <b>pack kind read straight through a connector</b>, so raw rows can be cleaned before any dataset or model exists:
  *
  * <pre>

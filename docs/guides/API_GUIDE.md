@@ -2026,7 +2026,7 @@ unknown name is `422 DRS-9003`; a `PUT` that does not name `bi` keeps the powers
 ### The phase 0 proof of concept: removed
 
 The throw-away `/api/v1/bi/poc` endpoints (and `drishti.bi.poc`) were removed in 2.2: the model layer replaced what they proved
-([RUPAKA_POC.md](../architecture/RUPAKA_POC.md) keeps the findings).
+(its findings are history, archived in [RUPAKA_POC.md](../archive/RUPAKA_POC.md)).
 
 ## Datasets and the query engine: `/api/v1/bi` (phase 2)
 

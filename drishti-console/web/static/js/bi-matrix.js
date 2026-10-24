@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The matrix (2.4.0 matrix depth, BI_PARITY_PLAN gap 7): row fields at any depth as a tree that opens and closes at every level (Expand all, Collapse all, or
+/* The matrix (2.4.0 matrix depth, docs/archive/BI_PARITY_PLAN.md gap 7): row fields at any depth as a tree that opens and closes at every level (Expand all, Collapse all, or
    one group at a time), a subtotal for every group at every level and a total per row and per column, a stepped layout (one indented column) or a tabular one
    (a column per row field), the measures across the columns or down the rows, banded rows, data bars and conditional formatting. A total of a measure that
    adds up (sum, count) is the sum of the figures shown; one that does not (an average, a ratio, a maximum) is the engine's, worked out over the rows of the

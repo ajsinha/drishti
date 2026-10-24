@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The format of a matrix (the finance workhorse, BI_PARITY_PLAN gap 7): subtotals at every level of the rows and for the columns, a stepped (indented)
+# The format of a matrix (the finance workhorse, docs/archive/BI_PARITY_PLAN.md gap 7): subtotals at every level of the rows and for the columns, a stepped (indented)
 # or tabular layout, how far it opens, measures on columns or on rows, data bars and conditional formatting. See common.yaml.
 
 $id: matrix

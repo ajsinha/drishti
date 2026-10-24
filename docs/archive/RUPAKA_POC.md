@@ -16,11 +16,13 @@
 
 # Rūpaka phase 0: the proof of concept, built and measured
 
-History: written for the phase-0 proof of concept (2026-10-10, before 2.2.0); its code was deleted in 2.2. The current plan is
-[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#roadmap)'s roadmap.
+> **Archived: replaced by [BI_DESIGN.md](../architecture/BI_DESIGN.md) (the BI design) and [BI_GUIDE.md](../guides/BI_GUIDE.md) (how BI works today).** The proof of concept's code was deleted in 2.2 and Perspective and DuckDB-Wasm were removed in 2.3.0; this is history.
 
-Status: built and measured (2026-10-10); the follow-up of phase 2 is section 11, and the Perspective retest of phase 5 is section 12. **Removed in 2.2** (server and console: the `/bi/poc` page, its routes, `drishti.bi.poc` and `bi.poc_enabled`); this document keeps the findings, and the paths and switches below are history. Everything the real BI pages use was rebuilt in phases 1 to 5 ([RUPAKA.md](RUPAKA.md) section 20) and is documented in [BI_GUIDE.md](../guides/BI_GUIDE.md). **Throw-away code**, off by default, that tests the risky parts of
-[RUPAKA.md](RUPAKA.md) before the roadmap (section 20, phase 0) commits to them. Everything is marked `poc`: the server's
+History: written for the phase-0 proof of concept (2026-10-10, before 2.2.0); its code was deleted in 2.2. The current plan is
+[IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md#roadmap)'s roadmap.
+
+Status: built and measured (2026-10-10); the follow-up of phase 2 is section 11, and the Perspective retest of phase 5 is section 12. **Removed in 2.2** (server and console: the `/bi/poc` page, its routes, `drishti.bi.poc` and `bi.poc_enabled`); this document keeps the findings, and the paths and switches below are history. Everything the real BI pages use was rebuilt in phases 1 to 5 ([RUPAKA.md](../architecture/RUPAKA.md) section 20) and is documented in [BI_GUIDE.md](../guides/BI_GUIDE.md). **Throw-away code**, off by default, that tests the risky parts of
+[RUPAKA.md](../architecture/RUPAKA.md) before the roadmap (section 20, phase 0) commits to them. Everything is marked `poc`: the server's
 `com.ash.drishti.server.bi.poc` package and `/api/v1/bi/poc/**`, the console's `routes/bi_poc_routes.py`, `/bi/poc`,
 `bi-poc.js`. Switches (removed in 2.2): server `drishti.bi.poc.enabled`, console `bi.poc_enabled` (both were `false` by default; see
 [CONFIGURATION.md](../admin/CONFIGURATION.md)). With them off the paths answer 404 as if the code were absent.
@@ -55,7 +57,7 @@ in about 15 ms and DuckDB-Wasm re-slices it in about 4 ms; the strict CSP holds 
 | Arrow writer | `ArrowIpcWriter` | the Arrow IPC stream written from the format's own message classes (`arrow-format` and flatbuffers, Apache-2.0, 0.2 MB), 190 lines; text, 64-bit integer and double columns with nulls |
 | Engine | `PocQueryService` | embedded DuckDB (the duckdb plugin's JDBC driver) over a Parquet sample lake generated on first use: 10,000 trades a day, 2 days, a JSON document column plus typed columns, and a rollup |
 | Live feed | `GET /api/v1/bi/poc/rows` | 24 live demo trades through `TopicHub` (the path live views use); a `view` event (snapshot) then `row` events with the latest value of each row that changed, every 100 ms; masked by the caller's redactor |
-| Layout comparison | `GET /api/v1/bi/poc/bench` | section 7; the answer also carries `biDir` (the BI folder, `drishti.bi.dir`, default `./config/bi`) and `biDatasets` (the `*.dataset.yaml` files found in its `datasets/`), the one use phase 0 makes of the folder ([RUPAKA.md](RUPAKA.md), "Where BI files live") |
+| Layout comparison | `GET /api/v1/bi/poc/bench` | section 7; the answer also carries `biDir` (the BI folder, `drishti.bi.dir`, default `./config/bi`) and `biDatasets` (the `*.dataset.yaml` files found in its `datasets/`), the one use phase 0 makes of the folder ([RUPAKA.md](../architecture/RUPAKA.md), "Where BI files live") |
 | Console page | `/bi/poc` | an administrators-only entry under the **BI** menu, only when enabled. Since phase 1 `RUPAKA <GO>` opens the BI home ([BI_GUIDE.md](../guides/BI_GUIDE.md)), no longer this page; the POC's temporary keyword wiring is gone |
 | Cards | `bi-poc.js` | a. Perspective grid and pivot (group by desk, split by side) on the live feed plus a test publisher of 100, 500 or 1,000 updates/s; b. fetch the masked extract, load it into DuckDB-Wasm, re-slice by group-by and filter with timings; c. masks proven: the same query as you and as a user without `raw` |
 | Live transport | the console's one channel | one more subscription kind, `poc:rows`, relayed by `core/channel.py`; the page opens no stream of its own (`test_pages_never_open_their_own_event_streams` stays green) |
@@ -229,7 +231,7 @@ curl -s localhost:18480/api/v1/bi/poc/bench           # the layout comparison (a
 
 ## 11. After phase 2: the adjustments, and the same questions asked of the real engine
 
-Phase 2 ([RUPAKA.md](RUPAKA.md) section 20.2) acted on the four adjustments and re-measured the layers through the real query engine.
+Phase 2 ([RUPAKA.md](../architecture/RUPAKA.md) section 20.2) acted on the four adjustments and re-measured the layers through the real query engine.
 
 | Adjustment | Status |
 |---|---|
@@ -259,7 +261,7 @@ Arrow-ready arrays. The ordering is the same (JSON far behind typed, rollup no f
 
 ## 12. The Perspective retest (phase 5)
 
-Phase 5 ([RUPAKA.md](RUPAKA.md) section 20.5) put Perspective on real report pages, so the questions of sections 1, 4 and 5 were asked again, of **the page a person opens** (a report with a Perspective grid or pivot under the console's real policy), not of the throw-away page. Perspective is the same vendored **3.8.0**: the
+Phase 5 ([RUPAKA.md](../architecture/RUPAKA.md) section 20.5) put Perspective on real report pages, so the questions of sections 1, 4 and 5 were asked again, of **the page a person opens** (a report with a Perspective grid or pivot under the console's real policy), not of the throw-away page. Perspective is the same vendored **3.8.0**: the
 environment is offline, so no newer build could be fetched; the answers below are for 3.8.0 on current browsers. Reproduce with `python tools/bench/perspective_retest.py` (ports 18990 and 17990, a lake of 10,000 trades a day, one heavy job); the numbers are its output of 2026-10-11 on the laptop of the other measurements.
 
 ### Adjustment 1: the second-tab trap

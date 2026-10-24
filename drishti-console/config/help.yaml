@@ -182,6 +182,8 @@ moved:
   quant-service: docs-architecture-quant-service
   decisions: docs-architecture-adr-readme
   plan: docs-architecture-implementation-plan
+  docs-architecture-rupaka-poc: docs-archive-rupaka-poc            # archived (history): docs/archive/RUPAKA_POC.md, unlisted and not searched
+  docs-architecture-bi-parity-plan: docs-archive-bi-parity-plan    # archived (history): docs/archive/BI_PARITY_PLAN.md
   notices: third-party-notices
   sutra-guide: sutra-developer-guide
   rachana-guide: sutra-developer-guide

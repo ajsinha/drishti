@@ -162,7 +162,7 @@ async def slice_pivot(request: Request):
 
 @router.post("/bi/explore/profile")
 async def profile(request: Request):
-    """Body ``{extract: {...}}``: the profile of the reader's extract (wave C, BI_PARITY_PLAN.md P3: per column its type, what its text looks like, nulls,
+    """Body ``{extract: {...}}``: the profile of the reader's extract (wave C, docs/archive/BI_PARITY_PLAN.md P3: per column its type, what its text looks like, nulls,
     distinct values, a key hint, min and max, the most common values, a histogram), worked out in the console's sandbox, no author code; the same panel the
     Transform editor shows. ``{kind: profile, rows, columns, inputRows, masked}``."""
     body = await json_body(request)
