@@ -70,6 +70,8 @@ class Stand:
                                                  "ConnectException"})
             return httpx.Response(502, json={"code": "DRS-5052", "detail": "no node that answered holds the history of trade/MX-1, and the "
                                              "nodes that hold trade cannot be reached now: drishti-c (not answering: the connection failed)"})
+        if mode == "gone" and (request.url.path.endswith("/events") or request.url.path.endswith("/children")):   # the selections' node left
+            return httpx.Response(502, json={"code": "DRS-5052", "detail": "your selections were reset because server node-b went away: pick again"})
         if request.url.path == "/api/v1/net/members":
             return httpx.Response(200, json={"running": True, "members": self.members})
         if request.url.path.endswith("/stream") and mode == "breaks":   # opens, sends a frame, then the connection drops (a restart, a proxy)
@@ -366,3 +368,49 @@ def test_a_session_moved_after_its_streams_broke_returns_to_its_server_once_it_i
     assert p.current() == A, "moved only because its server restarted: it returns there"
     assert p.failovers[-1]["to"] == A
     cluster.SESSION.set("")
+
+
+def test_one_server_per_screen_a_screens_selections_go_to_the_node_that_issued_them(tmp_path):
+    """SUTRA_NEXT.md 7: a click and a panel's children that carry selection tokens go to the node the tokens name, whatever server the
+    session is on; when that node is gone the session's server says the selections were reset, and the page says so in words."""
+    from routes.terminal_routes import _selection_problem
+    stand, p = Stand(), pool(tmp_path, f"{A},{B}")
+    p.entries[A].node_id, p.entries[B].node_id = "node-a", "node-b"
+    c = client(stand, p)
+    cluster.SESSION.set("screen")
+    assert p.current() == A
+    held = ["tok_node-b~abc", "tok_node-b~def"]
+    run(c.view_event("trade", "T-1", None, {"panel": "trades", "event": "open", "row": 0, "selections": held}))
+    run(c.view_children("trade", "T-1", None, "trades", held))
+    run(c.view_event("trade", "T-1", None, {"panel": "trades", "event": "open", "row": 0, "selections": []}))
+    sent = [(base, path) for base, _, path in stand.calls]
+    assert sent[0][0] == B and sent[0][1].endswith("/events")
+    assert sent[1][0] == B and sent[1][1].endswith("/children")
+    assert sent[2][0] == A, "a first click (no selections yet) goes to the session's server"
+    assert p.current() == A, "the session itself did not move"
+    # the node that holds the selections goes away: the click goes to the session's server, which says they were reset
+    stand.mode[B] = "down"
+    stand.mode[A] = "gone"
+    with pytest.raises(BackendError) as e:
+        run(c.view_event("trade", "T-1", None, {"panel": "trades", "event": "open", "row": 1, "selections": held}))
+    assert e.value.code == "DRS-5052"
+    assert p.entries[A].healthy and p.entries[A].fails == 0, "the server's own answer about another node is not its failure"
+    body = json.loads(_selection_problem(e.value, held).body)
+    assert body["reset"] is True
+    assert body["message"] == "Your selections were reset because server node-b went away. Pick again."
+    # once the node is set aside the console does not try it first any more
+    with pytest.raises(BackendError):
+        run(c.view_event("trade", "T-1", None, {"panel": "trades", "event": "open", "row": 1, "selections": held}))
+    assert not p.entries[B].healthy
+    stand.calls.clear()
+    with pytest.raises(BackendError):
+        run(c.view_children("trade", "T-1", None, "trades", held))
+    assert stand.calls[0][0] == A
+    cluster.SESSION.set("")
+
+
+def test_a_selection_token_names_its_node_or_none():
+    assert cluster.token_node("tok_drishti-main~Zx-_9") == "drishti-main"
+    assert cluster.token_node("tok_Zx-_9abc") == ""
+    assert cluster.token_node("tok_bad node~x") == ""
+    assert cluster.token_node(None) == ""

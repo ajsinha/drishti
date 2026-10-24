@@ -25,6 +25,7 @@
 .pnl-wait { color: var(--d-muted); font-style: italic; }
 .pnl-wait .bi { color: var(--d-accent); font-style: normal; }
 .pnl.wire-busy { opacity: .6; transition: opacity .15s; }
+.wire-reset { margin: 0 0 .5rem; padding: .5rem .75rem; border-left: 3px solid var(--d-warn, var(--d-accent)); background: var(--d-accent-tint); color: var(--d-text, inherit); }
 
 /* expand-row: a row under the picked one holding the children */
 tr.wire-kids > td { padding: .5rem .6rem .7rem 1.4rem; background: var(--d-surface-2); border-left: 3px solid var(--d-accent); }

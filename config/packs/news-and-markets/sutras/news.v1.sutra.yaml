@@ -16,6 +16,21 @@ rachana: 1
 sutra: news
 version: 1
 description: "The headlines for one name, as the news connector computed them: newest first, filtered for relevance, duplicates removed."
+doc:
+  summary: "The headlines for one name: newest first, a count by source, how they were chosen, and a snapshot note."
+  description: >-
+    One page per name (a company, a person, a theme; any name works, not only the listed ones): the headlines newest first
+    with their publishers and links, the count of headlines by source, how the headlines were chosen (each relevance step, what
+    it kept and dropped), a note when they are served from the demo lake's snapshot, the data source and its terms, and how
+    the view was built. The headlines are computed on demand by the news connector, filtered for relevance and with duplicates
+    removed. The strip gives the entity, the edition, the relevance filter, the number of headlines and when they were fetched.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/news/NEWS-Bitcoin"
+    - "NEWS NEWS-Bitcoin"
+  since: "2.7.0"
 match: { kind: news, priority: 10 }
 title: { pill: "News · Headlines", id: $.NEWS_ID }
 strip:

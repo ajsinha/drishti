@@ -46,11 +46,19 @@ ROWS = {"TRADE_ID": "$.TRADE_ID", "SOURCE_SYSTEM": "$.SOURCE_SYSTEM", "PRODUCT_T
         "EVENTS": "$.EVENTS"}
 FIELDS = {"TRADE_COUNT": "count", "NOTIONAL": "sum first($.LEGS).NOTIONAL", "SOURCE_SYSTEMS": "distinct $.SOURCE_SYSTEM",
           "PRODUCT_TYPES": "distinct $.PRODUCT_TYPE", "CURRENCIES": "distinct $.CURRENCY", "LAST_MATURITY": "max $.MATURITY_DATE"}
+# the payments ladder over every member (the page lists at most MAX_MEMBERS rows): the 7, 30 and 90 day metrics of the page
+_PAID = "flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= {d}]"
+for _d in (7, 30, 90):
+    FIELDS[f"PAY_{_d}D"] = "sum sum(" + _PAID.format(d=_d) + ", 'AMOUNT')"
+    FIELDS[f"PAY_{_d}D_EVENTS"] = "sum size(" + _PAID.format(d=_d) + ")"
 
 
-# a page lists every trade of its counterparty, book, legal entity or index (the table pages through them); a group larger than this lists
-# its first MAX_MEMBERS and says so in the title (TRADES of TRADE_COUNT)
-MAX_MEMBERS = 20_000
+# the rows a page lists of its counterparty, book, legal entity or index; TRADE_COUNT and the totals count every member, and a group
+# larger than this says so in the title (TRADES of TRADE_COUNT)
+MAX_MEMBERS = 1000
+# the pages on disk (<data dir>/derived/trade-pages), the heap keeping each group's totals only: complete at any number of trades
+# (1.16 million a day measured in an 8 GB heap); heap keeps every page in memory, for small books
+STORE = "disk"
 
 
 def slug(s: str) -> str:
@@ -416,6 +424,26 @@ ENDUR_EXTRA = {
 }
 
 
+# a committed sample of each derived page, opened by its doc's examples (the book desk's book for the portfolio)
+DERIVED_SAMPLES = {"portfolio-trades": "BOOK-RATES-2"}
+
+
+def derived_doc(kind: str) -> list[str]:
+    """A derived page's generated doc: what it shows, its Status control, and the command (and a sample's URL) that opens one."""
+    mnemonic, label, _group, id_field, _target, what = DERIVED[kind]
+    about = (f"{what}, gathered by the derived connector from every member trade (the page lists at most {MAX_MEMBERS:,} of them; "
+             "the totals count every one). The strip gives the trade count, the notional in all currencies, and how many source "
+             "systems, product types and currencies they span, with the last maturity. Three metrics give the payments of the "
+             "next 7, 30 and 90 days; the trades table (filtered by the Status control, pivotable), the upcoming payments ladder, "
+             "notional by product type and by index, the maturity ladder and payments by month follow, then how the view was built.")
+    sample = DERIVED_SAMPLES.get(kind)
+    examples = ([f"/v/{kind}/{sample}", f"{mnemonic} {sample}"] if sample else [mnemonic])
+    return (["doc:", f"  summary: {q(what + ': trades, payments, notional and maturities')}", "  description: >-",
+             *["    " + ln for ln in _wrap(about)], "  params:",
+             "    status: { type: text, default: all, meaning: \"The Status control: the trade statuses the table lists\" }",
+             "  emits: []", "  expects: []", "  examples:", *[f"    - {q(e)}" for e in examples], "  since: \"2.7.0\""])
+
+
 def derived_yaml(kind: str) -> str:
     mnemonic, label, _group, id_field, _target, what = DERIVED[kind]
     target = DERIVED[kind][4]
@@ -425,6 +453,7 @@ def derived_yaml(kind: str) -> str:
         f"sutra: {kind}",
         "version: 1",
         f"description: {q(what + ': its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month.')}",
+        *derived_doc(kind),
         f"match: {{ kind: {kind}, priority: 10 }}",
         f"title: {{ pill: {q(label)}, id: $.{id_field}" + (f", with: \"link($.{id_field}, '{target}')\"" if target else "") + " }",
         "strip:",
@@ -533,7 +562,7 @@ def derived_yaml(kind: str) -> str:
 
 def derived_connector() -> dict:
     """The derived connector's settings: one derived kind per axis, each with its rows (one per member trade) and totals."""
-    out: dict = {"refresh": "60s"}
+    out: dict = {"refresh": "60s", "store": STORE}
     for kind, (_m, _l, group, id_field, _t, _w) in DERIVED.items():
         out[kind] = {"from": "trade", "group-by": group, "id-field": id_field, "members": "TRADE_IDS", "max-members": MAX_MEMBERS,
                      "rows-field": "TRADES", "fields": dict(FIELDS), "rows": dict(ROWS)}

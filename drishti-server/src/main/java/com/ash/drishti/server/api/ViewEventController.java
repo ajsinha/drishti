@@ -72,11 +72,15 @@ public class ViewEventController {
     private final SutraRegistry registry;
 
     public ViewEventController(ViewPipeline pipeline, Entitlements entitlements, SutraRegistry registry,
-            @Value("${drishti.views.selection-ttl:PT30M}") Duration ttl) {
+            @Value("${drishti.views.selection-ttl:PT30M}") Duration ttl,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.net.NetService> net) {
         this.pipeline = pipeline;
         this.entitlements = entitlements;
         this.registry = registry;
-        this.tokens = new IdTokens(Clock.systemUTC(), ttl);
+        this.tokens = new IdTokens(Clock.systemUTC(), ttl, () -> {     // in a cluster a token names its node (one server per screen)
+            com.ash.drishti.server.net.NetService n = net == null ? null : net.getIfAvailable();
+            return n != null && n.running() ? n.nodeId() : "";
+        });
     }
 
     /**

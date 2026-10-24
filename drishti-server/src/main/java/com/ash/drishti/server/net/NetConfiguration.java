@@ -251,6 +251,15 @@ public class NetConfiguration {
         FilterRegistrationBean<ViewForwardFilter> r = new FilterRegistrationBean<>(new ViewForwardFilter(routing, entitlements, log, access, mnemonics, scatter)
                 .withReports(reports));
         r.addUrlPatterns("/api/*");
+        r.setOrder(5);                                            // after the selections' own node (one server per screen)
+        return r;
+    }
+
+    /** After the caller is known, before view forwarding: a screen's clicks and children go to the node that holds its selections. */
+    @Bean
+    public FilterRegistrationBean<SelectionForwardFilter> selectionForwardFilter(RunCluster cluster, ForwardLog log) {
+        FilterRegistrationBean<SelectionForwardFilter> r = new FilterRegistrationBean<>(new SelectionForwardFilter(cluster, log));
+        r.addUrlPatterns("/api/v1/views/*");
         r.setOrder(3);
         return r;
     }

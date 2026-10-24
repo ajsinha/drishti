@@ -17,6 +17,22 @@ rachana: 1
 sutra: index-trades
 version: 1
 description: "Every trade with a leg on an index (the first leg that names one): its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month."
+doc:
+  summary: "Every trade with a leg on an index (the first leg that names one): trades, payments, notional and maturities"
+  description: >-
+    Every trade with a leg on an index (the first leg that names one), gathered by the derived connector from every member trade
+    (the page lists at most 1,000 of them; the totals count every one). The strip gives the trade count, the notional in all
+    currencies, and how many source systems, product types and currencies they span, with the last maturity. Three metrics give
+    the payments of the next 7, 30 and 90 days; the trades table (filtered by the Status control, pivotable), the upcoming
+    payments ladder, notional by product type and by index, the maturity ladder and payments by month follow, then how the view
+    was built.
+  params:
+    status: { type: text, default: all, meaning: "The Status control: the trade statuses the table lists" }
+  emits: []
+  expects: []
+  examples:
+    - "ITRD"
+  since: "2.7.0"
 match: { kind: index-trades, priority: 10 }
 title: { pill: "Index trades", id: $.INDEX_NAME }
 strip:

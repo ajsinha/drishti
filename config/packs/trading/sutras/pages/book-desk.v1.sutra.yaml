@@ -25,7 +25,7 @@ doc:
     counterparty: the trade's cash flows open under the row (read from the trade itself, trading pack), and the counterparty
     (core pack) and its credit limit with the utilisation by tenor bucket (counterparty-risk pack) fill the right column. A new
     click replaces them; until the first click the right column says what to do. Everything is read as the reader: a counterparty
-    masked for the reader stays masked, is followed by a token only that reader can use, and never selects a limit.
+    masked for the reader stays masked, and the counterparty and limit panels that would follow it say "hidden for you".
   params: {}
   emits: []
   expects: []

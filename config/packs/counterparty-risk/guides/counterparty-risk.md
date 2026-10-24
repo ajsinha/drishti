@@ -76,7 +76,7 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 
 **Fields its Sutra reads:** `MARGIN_TYPE`, `THRESHOLD_US`, `THRESHOLD_THEM`, `MTA`, `INDEPENDENT_AMOUNT`, `FREQUENCY`, `MPOR`, `ELIGIBLE`.
 
-**Links:** `AGREEMENT` → Agreement (`agreement`), `COUNTERPARTY` → Counterparty (`counterparty`).
+**Links:** `AGREEMENT` → Agreement (`agreement`), `COUNTERPARTY` → Counterparty (`counterparty`), `COLLATERAL_BALANCES` → Collateral (`collateral-balance`), `NETTING_SETS` → Netting set (`netting-set`).
 
 ### Netting set (`netting-set`)
 

@@ -1,0 +1,40 @@
+#   Project Drishti · Any data. Any domain. One grammar.
+#
+#   Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+#   All rights reserved.
+#
+#   PROPRIETARY AND CONFIDENTIAL.
+#
+#   This file is the confidential and proprietary property of Ashutosh Sinha.
+#   Unauthorised copying, use, modification, distribution or disclosure of this
+#   file, via any medium, is strictly prohibited except with the express prior
+#   written permission of the copyright holder.
+#
+#   See the LICENSE file in the root of this repository for the full terms.
+# Hand-kept sections of the trading pack's manifest: tools/packgen/banking/make_packs.py appends them to
+# config/packs/trading/pack.yaml as written. Edit them here, not there.
+
+# Read by drishti.py lake build (ignored by the server): each trade's key, and values inside its legs written as plain fields and
+# columns at load, so searches, totals and BI need no document (docs/architecture/SCALE_STRATEGY.md, phase 3)
+ingest:
+  trade:
+    key: TRADE_ID
+    flatten:
+      NOTIONAL: LEGS[0].NOTIONAL
+      INDEX_NAME: LEGS[0].INDEX.NAME
+# History queries (TRD 1000015 30, docs/architecture/HISTORY_QUERIES.md section 6): how this pack's kinds look over time.
+# Only the shape: any dated kind has a history without an entry here.
+history:
+  trade:
+    # what a trader reads first: the status and version, then the economics, then where it sits
+    columns: [TRADE_STATUS, TRADE_ACTION, TRADE_VERSION, QUANTITY, PRICE, BUY_SELL_CODE, CURRENCY, PORTFOLIO, COUNTERPARTY,
+              MATURITY_DATE, PRODUCT_TYPE, SOURCE_SYSTEM, TRADE_DATE]
+    exclude: [_meta]
+    ignore-changes: [SOURCE_UPDATE_TIME, INPUT_DATE]
+    parts: [LEGS, EVENTS]
+    default-days: 30
+  # derived kinds: their pages are rebuilt from every member trade per day (HISTORY_QUERIES.md open question 2)
+  counterparty-trades: {enabled: false}
+  portfolio-trades: {enabled: false}
+  legal-entity-trades: {enabled: false}
+  index-trades: {enabled: false}

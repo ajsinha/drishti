@@ -29,6 +29,10 @@ Drishti*net on the console learns the rest of the cluster from the server it is 
 * **A live stream that ends is not a failure.** A stream that opened and then broke (a server restart, an idle or proxy timeout) is not counted
   toward setting its server aside: the browser reconnects by itself, and the server's health is checked at once. Only a request (or a stream's
   opening) that is refused, times out or answers 502/503 counts.
+* **One server per screen.** A Sutra Next screen's selections are tokens held in the memory of the server that issued them, and each token
+  names its node (``tok_<node>~...``): a click or a panel's children that carry tokens go to that node while it is usable, whatever server the
+  session is on now (``for_tokens``). When it is not, the request goes to the session's server, which forwards it to the node or, when the
+  node is gone, answers that the selections were reset because that server went away; the page says so and the reader picks again.
 * **Coming back.** A set-aside server is checked every ``check_every``; once healthy for a minute it is used again, for new sessions only, and
   for a session that moved because its server restarted (its streams broke, then it stopped answering): that session returns to it.
 
@@ -42,6 +46,7 @@ import contextvars
 import json
 import logging
 import os
+import re
 import time
 from collections import deque
 from dataclasses import asdict, dataclass, field
@@ -74,6 +79,15 @@ def _seconds(v, default: float) -> float:
         return float(text)
     except ValueError:
         return float(default)
+
+
+def token_node(token) -> str:
+    """The node a selection token names (``tok_<node>~<random>``), or "" for a token of a single server."""
+    t = str(token or "")
+    if not t.startswith("tok_") or "~" not in t:
+        return ""
+    node = t[4:t.index("~")]
+    return node if re.fullmatch(r"[A-Za-z0-9._-]+", node) else ""
 
 
 @dataclass
@@ -250,6 +264,15 @@ class ServerPool:
         for e in self.ordered():
             if e.node_id == node and e.usable(now):
                 return e.url
+        return None
+
+    def for_tokens(self, tokens) -> str | None:
+        """The usable server of the node that issued a screen's selections (the first token naming one), or None: the request then goes to the
+        session's server, which forwards it there or says the selections were reset."""
+        for t in tokens or ():
+            node = token_node(t)
+            if node:
+                return self.for_node(node)
         return None
 
     def another(self, url: str) -> str | None:

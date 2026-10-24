@@ -134,8 +134,10 @@ class BackendClient:
         raw = kw.pop("raw", False)
         with_headers = kw.pop("with_headers", False)
         with_status = kw.pop("with_status", False)
+        tokens = kw.pop("tokens", None)                     # a screen's selections: to the node that issued them (one server per screen)
         if self._servers is not None:
-            r = await self._send_pooled(method, path, headers, kw)
+            r = await self._send_pooled(method, path, headers, kw, sticky=self._servers.for_tokens(tokens) if tokens else None,
+                                        retry=tokens is not None)
         else:
             try:
                 r = await self._client.request(method, "/api/v1" + path, headers=headers, **kw)
@@ -155,12 +157,14 @@ class BackendClient:
             return (r.content, r.headers) if with_headers else r.content
         return r.json() if "json" in r.headers.get("content-type", "") else r.text
 
-    async def _send_pooled(self, method: str, path: str, headers: dict, kw: dict) -> httpx.Response:
+    async def _send_pooled(self, method: str, path: str, headers: dict, kw: dict, sticky: str | None = None, retry: bool = False) -> httpx.Response:
         """One call through the server pool: refused, timed out or 502/503 counts against the server (``fail_after`` in a row set it
-        aside), and a read is tried once more on another server; a write never is, and says it did not save."""
+        aside), and a read is tried once more on another server; a write never is, and says it did not save. ``sticky``: the server
+        that holds the screen's selections, used instead of the session's; ``retry``: a click (a POST that writes nothing) is tried again
+        as a read is, so another server can say the selections were reset."""
         import time as _time
-        read = method in ("GET", "HEAD")
-        base = self._servers.current()
+        read = retry or method in ("GET", "HEAD")
+        base = sticky or self._servers.current()
         for attempt in (0, 1):
             t0 = _time.perf_counter()
             why = ""
@@ -232,14 +236,14 @@ class BackendClient:
         the selection's token, the panels that read it, the clicked panel's children, the selections it cleared."""
         where, q = entity_path(kind, id_)
         q = {**q, **(controls or {}), **({"sutra": sutra} if sutra else {}), **({"design": design} if design else {})}
-        return await self._send("POST", f"/views/{where}/events", ident, params=q, json=click)
+        return await self._send("POST", f"/views/{where}/events", ident, params=q, json=click, tokens=list(click.get("selections") or []))
 
     async def view_children(self, kind: str, id_: str, ident, panel: str, selections: list[str], controls: dict | None = None,
                             sutra: str | None = None, design: str | None = None) -> list:
         """The children of one panel of a Sutra Next screen, given the reader's selections (tokens), lazily (SUTRA_NEXT.md 8)."""
         where, q = entity_path(kind, id_)
         params = [*q.items(), *(controls or {}).items(), *([("sutra", sutra)] if sutra else []), *([("design", design)] if design else []), *[("sel", s) for s in selections]]
-        return await self._send("GET", f"/views/{where}/panels/{quote(panel, safe='')}/children", ident, params=params)
+        return await self._send("GET", f"/views/{where}/panels/{quote(panel, safe='')}/children", ident, params=params, tokens=list(selections))
 
     async def view_on(self, kind: str, id_: str, ident, business_date: str) -> dict:
         """The view as of a business date, whatever date the reader's top bar holds (Compare's side by side)."""

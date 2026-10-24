@@ -16,6 +16,21 @@ rachana: 1
 sutra: quote
 version: 1
 description: "A quote and recent price history for a ticker, as the yfinance connector computed them."
+doc:
+  summary: "A ticker's quote and recent price history: the closing price line, ranges and size, and every bar as a table."
+  description: >-
+    One page per ticker (any ticker works): the closing price over the recent history as a line, the ranges and size beside it
+    (day and year ranges, volume, market capitalisation), every bar of the history as a table, a note when the quote is served
+    from the demo lake's snapshot, the data source and its terms, and how the view was built. The quote is computed on demand by
+    the yfinance connector. The strip gives the price, its currency, the change and change in percent, the market's state
+    and the exchange.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/quote/QUOTE-MSFT"
+    - "QUOTE QUOTE-MSFT"
+  since: "2.7.0"
 match: { kind: quote, priority: 10 }
 title: { pill: "Market watch · Quote", id: $.QUOTE_ID, with: $.NAME }
 strip:
