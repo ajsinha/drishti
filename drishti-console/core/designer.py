@@ -41,8 +41,18 @@ def page_name(kind: str) -> str:
     return PAGE_PREFIX + kind
 
 
+class _Loader(yaml.SafeLoader):
+    """YAML as the server reads it: only true and false are booleans, so an event's ``on: row-click`` keeps its key ``on`` (YAML 1.1
+    would read on, off, yes and no as booleans and write ``true: row-click`` back)."""
+
+
+_Loader.yaml_implicit_resolvers = {k: [(tag, rx) for tag, rx in v if tag != "tag:yaml.org,2002:bool"]
+                                   for k, v in yaml.SafeLoader.yaml_implicit_resolvers.items()}
+_Loader.add_implicit_resolver("tag:yaml.org,2002:bool", re.compile(r"^(?:true|True|TRUE|false|False|FALSE)$"), list("tTfF"))
+
+
 def load(text: str) -> dict:
-    doc = yaml.safe_load(text or "") or {}
+    doc = yaml.load(text or "", Loader=_Loader) or {}  # noqa: S506 - a SafeLoader
     if not isinstance(doc, dict) or not isinstance(doc.get("panels"), list):
         raise DesignerError("this page's Sutra has no panels to customise")
     return doc

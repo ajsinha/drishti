@@ -18,6 +18,10 @@
 ## Unreleased
 
 - The UI Board work is kept on branch ui-board-preview; not in this release.
+- **Grid: a second level of opened panels** ([SCREEN_DESIGNER.md section 31](docs/guides/SCREEN_DESIGNER.md#grid)): a panel a
+  click in an opened panel opens is its own cell, `A2a1` (then `A2a2`...), drawn one step further in under `A2a`, its formula ending
+  in `opens from A2a` (optional when typing; another parent is refused with that part in red); `@A2a1.` names it, Up and Down walk
+  parent, child, grandchild, and an empty formula removes it. A third level is kept (*keeps children*) and edited in Outline or Customize.
 - **Docs refresh after Sutra Next and the designer**: new [tutorial 22](docs/tutorials/22-build-a-screen-with-the-designer.md),
   *Build a screen with the designer* (tutorial 6 points to it); SUTRA_DEVELOPER_GUIDE section 11a (fragments, events, children,
   refresh, forms); USER_GUIDE *Screens that respond*; `DRS-2059` in TROUBLESHOOTING and RACHANA_REFERENCE; `/me/arrange` and the

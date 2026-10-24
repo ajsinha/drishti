@@ -16,7 +16,8 @@
 picked shows its formula, a changed parameter redraws the preview in place (no reload); a cell reading another's selection fills on a
 click in the preview; merge, split, insert a row, drag a cell; a bad formula says its red part and changes nothing; a column's width
 dragged at its header's edge, typed on the header and moved with the arrow keys (layout.columns); the panel a click opens as a cell of its
-own under its parent (A2a ... opens from A2), edited in place; Outline and back with nothing lost; two themes and a phone; the screenshot
+own under its parent (A2a ... opens from A2), edited in place, and a panel a click in IT opens (A2a1 ... opens from A2a) that fills
+on a click in its parent's opened panel; Outline and back with nothing lost; two themes and a phone; the screenshot
 docs/guides/img/designer/grid-mode.jpg. Skipped as the other browser tests are."""
 from pathlib import Path
 
@@ -53,10 +54,10 @@ panels:
 WHO = "field-list@1(id: who, title: Counterparty, rows: $src; source: {pack: core, kind: counterparty, id: @A2.open.ref})"
 
 
-def sheet(browser, base, theme="dark", size=None):
+def sheet(browser, base, theme="dark", size=None, sutra=SUTRA):
     pg = page_in(browser, theme, size or {"width": 1500, "height": 950})
     pg.goto(base + "/")
-    r = post(pg, base + "/build/designs", {"name": "", "kind": "portfolio-trades", "sutra": SUTRA})
+    r = post(pg, base + "/build/designs", {"name": "", "kind": "portfolio-trades", "sutra": sutra})
     assert r["http"] == 201, r
     pg.goto(f"{base}/designer/grid?kind=portfolio-trades&id=BOOK-RATES-2&design={r['id']}")
     pg.draft = r["id"]
@@ -246,4 +247,67 @@ def test_the_sheet_in_two_themes_and_the_default_mode(browser, stack, theme):
     assert "/designer/grid" in pg.url
     pg.select_option("[data-dz-default]", "customize")                          # as it was, for the other tests
     wait(pg, "document.querySelector('[data-dz-default]').getAttribute('data-dz-saved') === 'customize'")
+    pg.close()
+
+
+DEEP = """rachana: 1
+sutra: qa-book-deep
+version: 1
+match: { kind: portfolio-trades }
+title: { pill: Book, id: $.PORTFOLIO }
+layout:
+  areas: ["trades detail"]
+  columns: [8, 4]
+panels:
+  - use: row-picker@1
+    with: { id: trades, title: Trades of the book, rows: $.TRADES, event: open, key: TRADE_ID, key-label: Trade, ref: COUNTERPARTY,
+            a: PRODUCT_TYPE, a-label: Product }
+    area: trades
+    children:
+      - place: detail-below
+        source: { pack: trading, kind: trade, id: "@parent.open.id" }
+        panels:
+          - id: flows
+            kind: table
+            title: Cash flows
+            rows: $src.EVENTS
+            columns: [ { label: Date, bind: "@.EVENT_DATE" }, { label: Amount, bind: "@.AMOUNT" } ]
+            emits: [ { name: open, on: row-click, payload: { when: "@.EVENT_DATE" } } ]
+            children:
+              - place: detail-below
+                panels:
+                  - { id: event, kind: kv, title: "The flow of ${@parent.open.when}", columns: [ { label: Picked, bind: "@parent.open.when" } ] }
+  - { id: book, kind: kv, title: The book, area: detail, columns: [ { label: Trades, bind: $.TRADE_COUNT } ] }
+"""
+
+
+def test_a_panel_a_click_in_an_opened_panel_opens_is_a_cell_one_step_further_in(browser, stack):
+    pg = sheet(browser, stack, sutra=DEEP)
+    kid = pg.locator('[data-gd-kid="A1a1"]')
+    assert "↳ A1a1" in kid.inner_text() and "opens from A1a" in kid.inner_text() and "gd-kid2" in kid.get_attribute("class")
+    assert "children" not in pg.inner_text('[data-gd-kid="A1a"]')              # its children show below it, as cells
+    pg.click('[data-gd-cell="A1"] > .gd-ref')                                  # Down: parent, child, grandchild; Up: back
+    for name in ("A1a", "A1a1"):
+        pg.keyboard.press("ArrowDown")
+        assert pg.inner_text("[data-gd-name]") == name
+    f = pg.input_value("[data-gd-formula]")
+    assert f.startswith("kv(id: event,") and f.endswith("opens from A1a"), f
+    pg.keyboard.press("ArrowUp")
+    pg.keyboard.press("ArrowUp")
+    assert pg.inner_text("[data-gd-name]") == "A1"
+    text = formula_of(pg, "A1a1").replace("The flow of", "Picked flow")
+    stepped(pg, typed(pg, "A1a1", text))
+    grand = sutra_of(pg)["panels"][0]["children"][0]["panels"][0]["children"][0]["panels"][0]
+    assert grand["title"] == "Picked flow ${@parent.open.when}" and grand["columns"] == [{"label": "Picked", "bind": "@parent.open.when"}]
+    typed(pg, "A1a1", text.replace("opens from A1a", "opens from A1"))         # it stays under its table: said, nothing changes
+    wait(pg, "!document.querySelector('[data-gd-error]').hidden")
+    assert pg.inner_text("[data-gd-red]") == "A1"
+    pg.press("[data-gd-formula]", "Escape")
+    # in the preview: a trade opens its cash flows, a click on a flow opens the grandchild, which fills
+    wait(pg, "!!(document.querySelector('[data-gd-preview]').contentWindow.drishtiWire && document.querySelector('[data-gd-preview]').contentDocument.querySelector('#p-trades tbody tr[data-ev]'))")
+    assert preview(pg).locator("#p-event").count() == 0
+    preview(pg).locator("#p-trades tbody tr[data-ev] td:nth-child(2)").first.click()
+    wait(pg, "!!document.querySelector('[data-gd-preview]').contentDocument.querySelector('#p-flows tbody tr[data-ev]')")
+    preview(pg).locator("#p-flows tbody tr[data-ev] td").first.click()
+    wait(pg, "/Picked flow \\d/.test((document.querySelector('[data-gd-preview]').contentDocument.querySelector('#p-event') || {}).textContent || '')")
     pg.close()
