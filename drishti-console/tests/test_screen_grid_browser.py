@@ -72,6 +72,20 @@ panels:
   - { id: book, kind: kv, title: The book, section: details, collapsible: true, columns: [ { label: Trades, bind: $.TRADE_COUNT } ] }
 """ + TABLE
 
+# The book page as the Outline test edits it: three metrics and a table written out (the pack's book page is now made of fragments,
+# trading/payments-metrics@1 and trading/trade-table@1, which Outline lists as one item each and does not nest under)
+OUTLINE = """rachana: 1
+sutra: qa-book-outline
+version: 1
+match: { kind: portfolio-trades }
+title: { pill: Book, id: $.PORTFOLIO }
+panels:
+  - { id: pay7, kind: metric, title: "Payments, next 7 days", value: $.PAY_7D, fmt: signed0, span: 4 }
+  - { id: pay30, kind: metric, title: "Payments, next 30 days", value: $.PAY_30D, fmt: signed0, span: 4 }
+  - { id: pay90, kind: metric, title: "Payments, next 90 days", value: $.PAY_90D, fmt: signed0, span: 4 }
+""" + TABLE + """  - { id: by-product, kind: hbar, title: Notional by product type, rows: "group($.TRADES, 'PRODUCT_TYPE', 'NOTIONAL')", fmt: compact }
+"""
+
 
 def design(pg, base, text):
     r = post(pg, base + "/build/designs", {"name": "", "kind": "portfolio-trades", "sutra": text})
@@ -164,7 +178,9 @@ def test_sections_and_a_phone(browser, stack):
 
 def test_outline_reorder_nest_unnest_and_add_a_section(browser, stack):
     pg = page_in(browser, "dark", {"width": 1500, "height": 950})
-    pg.goto(stack + "/designer/outline?kind=portfolio-trades&id=BOOK-RATES-2")
+    made = post(pg, stack + "/build/designs", {"name": "", "kind": "portfolio-trades", "sutra": OUTLINE})
+    assert made["http"] == 201, made
+    pg.goto(stack + "/designer/outline?kind=portfolio-trades&id=BOOK-RATES-2&design=" + made["id"])
     wait(pg, "document.querySelector('[data-ol-rev]')")
     titles = lambda: pg.evaluate("[...document.querySelectorAll('[data-ol-panel] > .ol-row .ol-title')].map(t => t.textContent)")  # noqa: E731
     first = titles()

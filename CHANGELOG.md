@@ -31,7 +31,10 @@
   `LiveStandingQueriesTest` (and `TwoNodesTest`) waited on the live table's generation alone, which cannot see pushed documents the feed
   has not batched yet: on a loaded machine the burst landed after the wait and the held answer looked stale. `LiveTables.idle(dsKey)`
   (no pushed document waits for the next batch, none is being applied) is now part of the wait. The board designer's alert test waits
-  for the alert to be written before it reads the YAML.
+  for the alert to be written before it reads the YAML. The UI kit is found beside the packs folder when the working folder holds none
+  (`UiKitDir`): a server started elsewhere with `DRISHTI_PACKS_DIR` (the embed, news and maps browser tests) loaded no kit, so every
+  screen on a kit fragment fell back to an inferred layout (DRS-2048; an embedded valuation's title read *trade-valuation*). The Outline
+  browser test edits a book page written out in its own design, since the pack's book page is now made of fragments.
 
 ## 2.7.0 — Sutra Next: the UI kit, events and children across packs, refresh, layout, forms and the four-mode Sutra designer; the us-equities and gleif packs (2026-10-24)
 

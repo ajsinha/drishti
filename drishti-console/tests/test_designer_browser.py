@@ -278,16 +278,23 @@ def test_a_key_figure_opens_its_settings_shows_the_chosen_number_and_is_removed_
     pg.close()
 
 
+def drawn(pg, action):
+    """Runs a step and waits for it to be drawn (this test counts panels: where the page scrolled is reloaded()'s business)."""
+    rev = pg.locator("[data-view]").get_attribute("data-dz-rev")
+    action()
+    wait(pg, "document.querySelector('[data-view]').getAttribute('data-dz-rev') !== %r" % rev)
+
+
 def test_a_double_click_or_clicks_in_a_burst_add_one_key_figure(stack, browser):
     pg = page_in(browser, "terminal", {"width": 1440, "height": 900})
     customizing(pg, stack)
     card = _figure_card(pg)
-    reloaded(pg, lambda: card.dblclick())
+    drawn(pg, lambda: card.dblclick())
     pg.wait_for_timeout(600)                                                                    # a second add would have landed by now
     wait(pg, "document.querySelector('[data-dz-settings-box]')")
     assert _figures(pg) == 1
     card = _figure_card(pg)
-    reloaded(pg, lambda: card.evaluate("c => { c.click(); c.click(); c.click(); }"))
+    drawn(pg, lambda: card.evaluate("c => { c.click(); c.click(); c.click(); }"))
     pg.wait_for_timeout(600)
     assert _figures(pg) == 2                                                                    # three clicks in one burst: one more panel
     pg.locator("[data-dz-cancel]").click()
