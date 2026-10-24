@@ -17,8 +17,10 @@
    A, B, C, rows 1, 2, 3, each cell (or merged range) an area of the screen holding panels written as formulas. Picking a cell shows its
    formula in the formula bar; Enter keeps a typed formula (the server reads it; a formula that does not read is shown with its red part
    and the cell keeps what it had); suggestions come from the UI kit, the panels on the page and what they emit. Merge, split, insert and
-   delete rows and columns, drag a cell onto another; arrows, Shift+arrows, Enter and Esc. After every step the live preview is drawn
-   again in place (its panels swapped, no reload) and the grid is read again. */
+   delete rows and columns, drag a cell onto another; arrows, Shift+arrows, Enter and Esc. A column's width (12 units across) is set by
+   dragging the edge of its header (or the arrow keys on the edge) or typing it on the header. A panel a click opens is a cell of its own
+   under its parent's cell (A2a, A2b...: "↳ opens from A2"), picked with a click or ArrowDown from the parent, its formula typed the same
+   way. After every step the live preview is drawn again in place (its panels swapped, no reload) and the grid is read again. */
 (function () {
   'use strict';
   var root = document.querySelector('[data-grid]');
@@ -28,7 +30,7 @@
   var nameBox = root.querySelector('[data-gd-name]'), list = root.querySelector('[data-gd-suggest]'), frame = root.querySelector('[data-gd-preview]');
   var errBox = root.querySelector('[data-gd-error]'), sutra = root.querySelector('[data-gd-sutra]'), info = root.querySelector('[data-gd-info]');
   var nest = root.querySelector('[data-gd-nest]'), nestWrap = root.querySelector('[data-gd-nest-wrap]');
-  var state = null, sel = { r: 0, c: 0 }, anchor = null, rev = 0, dragging = null, choices = [], pick = -1;
+  var state = null, sel = { r: 0, c: 0, kid: null }, anchor = null, rev = 0, dragging = null, choices = [], pick = -1;
 
   function el(tag, attrs, kids) {
     var e = document.createElement(tag);
@@ -51,7 +53,7 @@
     var out = state.grid.cells.slice();
     if (state.grid.mode === 'flow') {                                       // a row past the end: type a formula to add a panel
       var r = out.length;
-      out.push({ ref: ref(r, 0), range: ref(r, 0), r: r, c: 0, rs: 1, cs: 1, area: '', panels: [], formulas: [], formula: '', kept: [], ids: [], titles: [], grid: [], children: [] });
+      out.push({ ref: ref(r, 0), range: ref(r, 0), r: r, c: 0, rs: 1, cs: 1, area: '', panels: [], formulas: [], formula: '', kept: [], ids: [], titles: [], grid: [], children: [], kids: [] });
     }
     return out;
   }
@@ -59,9 +61,14 @@
   function cellAt(r, c) {
     return cells().filter(function (x) { return x.r <= r && r < x.r + x.rs && x.c <= c && c < x.c + x.cs; })[0];
   }
-  function current() { return cellAt(sel.r, sel.c); }
+  function current() {
+    var x = cellAt(sel.r, sel.c);
+    var k = sel.kid && (x.kids || []).filter(function (q) { return q.ref === sel.kid; })[0];
+    return k ? Object.assign({ range: k.ref, r: x.r, c: x.c, rs: x.rs, cs: x.cs, panels: [], kid: true }, k) : x;
+  }
+  function cellOf() { return cellAt(sel.r, sel.c); }
   function range() {
-    if (!anchor) { var x = current(); return { r0: x.r, c0: x.c, r1: x.r + x.rs - 1, c1: x.c + x.cs - 1 }; }
+    if (!anchor) { var x = cellOf(); return { r0: x.r, c0: x.c, r1: x.r + x.rs - 1, c1: x.c + x.cs - 1 }; }
     return { r0: Math.min(anchor.r, sel.r), c0: Math.min(anchor.c, sel.c), r1: Math.max(anchor.r, sel.r), c1: Math.max(anchor.c, sel.c) };
   }
 
@@ -72,7 +79,18 @@
     sheet.style.gridTemplateRows = '1.9rem repeat(' + n + ', minmax(5.2rem, auto))';
     sheet.appendChild(el('div', { 'class': 'gd-corner', 'aria-hidden': 'true' }));
     for (var c = 0; c < g.cols; c++) {
-      var h = el('div', { 'class': 'gd-colh', role: 'columnheader', 'data-gd-col': String(c) }, [letters(c), el('span', { 'class': 'gd-w', text: g.mode === 'areas' ? ' · ' + g.widths[c] + '/12' : '' })]);
+      var w = g.mode === 'areas' ? el('button', { type: 'button', 'class': 'gd-w', 'data-gd-width': String(c), title: 'Type this column\'s width, in twelfths of the screen',
+        'aria-label': 'Column ' + letters(c) + ' is ' + g.widths[c] + ' of 12 units wide: type a width', text: g.widths[c] + '/12' }) : null;
+      var h = el('div', { 'class': 'gd-colh', role: 'columnheader', 'data-gd-col': String(c) }, [letters(c), w ? ' · ' : '', w]);
+      if (w) { w.addEventListener('click', typeWidth.bind(null, c)); }
+      if (g.mode === 'areas' && c < g.cols - 1) {
+        var edge = el('span', { 'class': 'gd-edge', role: 'separator', tabindex: '0', 'aria-orientation': 'vertical', 'data-gd-edge': String(c),
+          'aria-label': 'Between columns ' + letters(c) + ' and ' + letters(c + 1) + ': drag, or Left and Right', 'aria-valuemin': '1',
+          'aria-valuemax': String(12 - 1), 'aria-valuenow': String(g.widths[c]) });
+        edge.addEventListener('pointerdown', dragEdge.bind(null, c));
+        edge.addEventListener('keydown', keyEdge.bind(null, c));
+        h.appendChild(edge);
+      }
       h.style.gridColumn = String(c + 2); h.style.gridRow = '1';
       sheet.appendChild(h);
     }
@@ -91,10 +109,20 @@
         body.push(el('strong', { 'class': 'gd-title', text: x.titles[k] }));
         body.push(el('code', { 'class': 'gd-f', text: x.formulas[k] }));
         var notes = [];
-        if ((x.kept[k] || []).length) { notes.push('keeps ' + x.kept[k].join(', ')); }
+        var keeps = (x.kept[k] || []).filter(function (n) { return n !== 'children' || !(x.kids || []).some(function (kd) { return kd.parent === p; }); });   // its children show below, as cells
+        if (keeps.length) { notes.push('keeps ' + keeps.join(', ')); }
         Object.keys(x.grid[k] || {}).forEach(function (key) { notes.push(key + ' ' + x.grid[k][key]); });
-        if ((x.children[k] || []).length) { notes.push('↳ a click opens ' + x.children[k].join(', ')); }
         if (notes.length) { body.push(el('span', { 'class': 'gd-notes', text: notes.join(' · ') })); }
+      });
+      (x.kids || []).forEach(function (kd) {                                  // a panel a click opens: a cell of its own, under its parent
+        var on = sel.kid === kd.ref && x.r <= sel.r && sel.r < x.r + x.rs && x.c <= sel.c && sel.c < x.c + x.cs;
+        var kid = el('div', { 'class': 'gd-kid' + (on ? ' gd-sel' : ''), role: 'gridcell', tabindex: on ? '0' : '-1', 'aria-selected': on ? 'true' : 'false',
+          'data-gd-cell': kd.ref, 'data-gd-kid': kd.ref, 'aria-label': kd.ref + ', opens from ' + kd.from + (kd.place ? ' (' + kd.place + ')' : '') }, [
+          el('span', { 'class': 'gd-ref', text: '↳ ' + kd.ref }), el('strong', { 'class': 'gd-title', text: kd.title }), el('code', { 'class': 'gd-f', text: kd.formula }),
+          (kd.kept || []).length ? el('span', { 'class': 'gd-notes', text: 'keeps ' + kd.kept.join(', ') }) : null]);
+        kid.addEventListener('click', function (e) { e.stopPropagation(); anchor = null; sel = { r: x.r, c: x.c, kid: kd.ref }; select(true); });
+        kid.addEventListener('dblclick', function (e) { e.stopPropagation(); edit(); });
+        body.push(kid);
       });
       var cell = el('div', { 'class': 'gd-cell' + (picked ? ' gd-sel' : '') + (inRange ? ' gd-in' : '') + (x.panels.length ? '' : ' gd-blank'), role: 'gridcell',
         tabindex: picked ? '0' : '-1', 'aria-selected': picked || inRange ? 'true' : 'false', 'data-gd-cell': x.ref, 'data-gd-range': x.range,
@@ -102,7 +130,7 @@
       cell.style.gridRow = (x.r + 2) + ' / span ' + x.rs; cell.style.gridColumn = (x.c + 2) + ' / span ' + x.cs;
       cell.addEventListener('click', function (e) {
         if (e.shiftKey && state.grid.mode === 'areas') { if (!anchor) { anchor = { r: sel.r, c: sel.c }; } } else { anchor = null; }
-        sel = { r: x.r, c: x.c }; select(true);
+        sel = { r: x.r, c: x.c, kid: null }; select(true);
       });
       cell.addEventListener('dblclick', function () { edit(); });
       cell.addEventListener('dragstart', function (e) { dragging = x.ref; e.dataTransfer.setData('text/x-gd', x.ref); e.dataTransfer.effectAllowed = 'move'; });
@@ -114,7 +142,7 @@
         if (!dragging) { return; }
         e.preventDefault();
         var from = dragging; dragging = null;
-        if (from !== x.ref) { sel = { r: x.r, c: x.c }; step({ op: 'move', from: from, to: x.ref }); }
+        if (from !== x.ref) { sel = { r: x.r, c: x.c, kid: null }; step({ op: 'move', from: from, to: x.ref }); }
       });
       sheet.appendChild(cell);
     });
@@ -128,7 +156,7 @@
 
   function select(focus) {
     var x = current(), rg = range();
-    sheet.querySelectorAll('.gd-cell').forEach(function (n) {
+    sheet.querySelectorAll('.gd-cell, .gd-kid').forEach(function (n) {
       var on = n.getAttribute('data-gd-cell') === x.ref;
       var a = anchor && (function () { var c = cells().filter(function (q) { return q.ref === n.getAttribute('data-gd-cell'); })[0];
         return c && c.r >= rg.r0 && c.r + c.rs - 1 <= rg.r1 && c.c >= rg.c0 && c.c + c.cs - 1 <= rg.c1; })();
@@ -141,13 +169,71 @@
     fit();
     hideError(); closeList();
     var tables = state.suggest.panels.filter(function (p) { return p.table && x.panels.indexOf(p.index) < 0; });
-    nestWrap.hidden = !(x.panels.length === 1 && tables.length);
+    nestWrap.hidden = !(!x.kid && x.panels.length === 1 && tables.length);
     nest.innerHTML = '';
     nest.appendChild(el('option', { value: '', text: '— (its own cell)' }));
     tables.forEach(function (p) { nest.appendChild(el('option', { value: p.id, text: (p.cell || p.id) + ' · ' + p.title })); });
   }
 
   function edit() { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
+
+  /* ---- column widths: 12 units across, a header's edge dragged (or Left and Right on it), or a width typed on the header ---------- */
+  function units() { return state.grid.widths.map(function (w) { return Math.max(1, Math.round(Number(w))); }); }
+  function balanced(ws, c, to) {                                          /* column c to `to` units, its neighbour giving or taking */
+    var out = ws.slice(), n = c < out.length - 1 ? c + 1 : c - 1;
+    to = Math.round(to);
+    if (n < 0 || to < 1) { return null; }
+    out[n] += out[c] - to; out[c] = to;
+    var sum = out.reduce(function (a, b) { return a + b; }, 0);
+    out[n] += 12 - sum;                                                    // the share of 12 kept whole
+    return out[n] >= 1 ? out : null;
+  }
+  function shown(ws) {
+    sheet.style.gridTemplateColumns = '2.6rem ' + ws.map(function (w) { return 'minmax(8.5rem, ' + w + 'fr)'; }).join(' ');
+    sheet.querySelectorAll('[data-gd-width]').forEach(function (b) { b.textContent = ws[Number(b.getAttribute('data-gd-width'))] + '/12'; });
+  }
+  function keep(ws) {
+    if (!ws || ws.join() === state.grid.widths.join()) { shown(state.grid.widths); return; }
+    step({ op: 'widths', widths: ws });
+  }
+  function dragEdge(c, e) {
+    e.preventDefault();
+    var start = e.clientX, ws = units(), per = sheet.querySelector('[data-gd-col="' + c + '"]').getBoundingClientRect().width / ws[c], now = ws;
+    var edge = e.currentTarget; edge.setPointerCapture && edge.setPointerCapture(e.pointerId);
+    root.setAttribute('data-gd-dragging', '');
+    function move(ev) { var d = Math.round((ev.clientX - start) / Math.max(per, 8)); now = balanced(ws, c, ws[c] + d) || now; shown(now); }
+    function up() {
+      edge.removeEventListener('pointermove', move); edge.removeEventListener('pointerup', up); edge.removeEventListener('pointercancel', up);
+      root.removeAttribute('data-gd-dragging'); keep(now);
+    }
+    edge.addEventListener('pointermove', move); edge.addEventListener('pointerup', up); edge.addEventListener('pointercancel', up);
+  }
+  function keyEdge(c, e) {
+    var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if (!d) { return; }
+    e.preventDefault(); e.stopPropagation();
+    var ws = balanced(units(), c, units()[c] + d);
+    if (!ws) { say('A column is at least 1 unit wide'); return; }
+    step({ op: 'widths', widths: ws }).then(function () { var n = sheet.querySelector('[data-gd-edge="' + c + '"]'); if (n) { n.focus(); } });
+  }
+  function typeWidth(c) {
+    var b = sheet.querySelector('[data-gd-width="' + c + '"]'), box = el('input', { type: 'number', min: '1', max: '11', step: '1', 'class': 'gd-w-in',
+      'data-gd-width-in': String(c), 'aria-label': 'Width of column ' + letters(c) + ', in twelfths', value: String(units()[c]) });
+    b.replaceWith(box); box.focus(); box.select();
+    var done = false;
+    function finish(ok) {
+      if (done) { return; }
+      done = true;
+      var ws = ok ? balanced(units(), c, Number(box.value)) : null;
+      if (ok && !ws) { say('A column is 1 to ' + (12 - (state.grid.cols - 1)) + ' units wide here: its neighbour keeps at least 1'); }
+      box.replaceWith(b);
+      if (ws) { keep(ws); } else { b.focus(); }
+    }
+    box.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); finish(true); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(false); }
+    });
+    box.addEventListener('blur', function () { finish(true); });
+  }
   function fit() { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight + 2, 190) + 'px'; }   /* the whole formula shows, up to about eight lines */
 
   /* ---- steps -------------------------------------------------------------------------------------------------------------------- */
@@ -200,6 +286,7 @@
       state = s;
       if (sel.r >= rows()) { sel.r = rows() - 1; }
       if (sel.c >= s.grid.cols) { sel.c = s.grid.cols - 1; }
+      if (sel.kid && !(cellAt(sel.r, sel.c).kids || []).some(function (k) { return k.ref === sel.kid; })) { sel.kid = null; }
       draw(); select(false);
     });
   }
@@ -208,8 +295,8 @@
   function context() {
     var v = input.value, at = input.selectionStart, start = at;
     while (start > 0 && /[\w@.\-\/$]/.test(v[start - 1])) { start--; }
-    var lineStart = v.lastIndexOf('\n', start - 1) + 1, before = v.slice(lineStart, start).replace(/^\s*[A-Z]{1,2}\d{1,3}\s*=\s*/, '').replace(/^\s*=/, '');
-    var head = (v.slice(lineStart).match(/^\s*(?:[A-Z]{1,2}\d{1,3}\s*=\s*)?=?\s*([\w@\/-]+)\(/) || [])[1] || '';
+    var lineStart = v.lastIndexOf('\n', start - 1) + 1, before = v.slice(lineStart, start).replace(/^\s*[A-Z]{1,2}\d{1,3}[a-z]?\s*=\s*/, '').replace(/^\s*=/, '');
+    var head = (v.slice(lineStart).match(/^\s*(?:[A-Z]{1,2}\d{1,3}[a-z]?\s*=\s*)?=?\s*([\w@\/-]+)\(/) || [])[1] || '';
     return { word: v.slice(start, at), start: start, end: at, first: !before.trim(), after: (before.match(/[(,;]\s*$/) || [''])[0], head: head };
   }
   function suggest() {
@@ -276,9 +363,20 @@
   /* ---- the keyboard on the sheet --------------------------------------------------------------------------------------------------- */
   sheet.addEventListener('keydown', function (e) {
     var moves = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] }, d = moves[e.key];
+    if (d && !e.shiftKey && d[1] === 0) {                                  // down into the panels a click opens, and back up
+      var cell = cellOf(), kids = cell.kids || [], at = sel.kid ? kids.map(function (k) { return k.ref; }).indexOf(sel.kid) : -1;
+      var to = at + d[0];
+      if (kids.length && (to >= 0 && to < kids.length || (at >= 0 && to === -1))) {
+        e.preventDefault(); anchor = null;
+        sel.kid = to >= 0 ? kids[to].ref : null;
+        select(true);
+        return;
+      }
+    }
     if (d) {
       e.preventDefault();
-      var x = current();
+      sel.kid = null;
+      var x = cellOf();
       if (e.shiftKey && state.grid.mode === 'areas') { if (!anchor) { anchor = { r: sel.r, c: sel.c }; } } else { anchor = null; }
       var r = d[0] > 0 ? x.r + x.rs : d[0] < 0 ? x.r - 1 : sel.r, c = d[1] > 0 ? x.c + x.cs : d[1] < 0 ? x.c - 1 : sel.c;
       if (e.shiftKey) { r = sel.r + d[0]; c = sel.c + d[1]; }
@@ -298,10 +396,10 @@
     anchor = null;
     step({ op: 'merge', from: ref(rg.r0, rg.c0), to: ref(rg.r1, rg.c1) });
   });
-  root.querySelector('[data-gd-split]').addEventListener('click', function () { step({ op: 'split', cell: current().ref }); });
+  root.querySelector('[data-gd-split]').addEventListener('click', function () { step({ op: 'split', cell: cellOf().ref }); });
   root.querySelectorAll('[data-gd-insert]').forEach(function (b) {
     b.addEventListener('click', function () {
-      var x = current(), how = b.getAttribute('data-gd-insert');
+      var x = cellOf(), how = b.getAttribute('data-gd-insert');
       var at = { 'row-above': x.r, 'row-below': x.r + x.rs, 'col-left': x.c, 'col-right': x.c + x.cs }[how];
       step({ op: 'insert', axis: how.indexOf('row') === 0 ? 'row' : 'col', at: at });
     });

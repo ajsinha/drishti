@@ -236,6 +236,7 @@ connectors:
           INDEX_NAME: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME, '')
           COUNTERPARTY: $.COUNTERPARTY
           PORTFOLIO: $.PORTFOLIO
+          LEGAL_ENTITY: $.LEGAL_ENTITY
           EVENTS: $.EVENTS
       portfolio-trades:
         from: trade
@@ -275,6 +276,7 @@ connectors:
           INDEX_NAME: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME, '')
           COUNTERPARTY: $.COUNTERPARTY
           PORTFOLIO: $.PORTFOLIO
+          LEGAL_ENTITY: $.LEGAL_ENTITY
           EVENTS: $.EVENTS
       legal-entity-trades:
         from: trade
@@ -314,6 +316,7 @@ connectors:
           INDEX_NAME: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME, '')
           COUNTERPARTY: $.COUNTERPARTY
           PORTFOLIO: $.PORTFOLIO
+          LEGAL_ENTITY: $.LEGAL_ENTITY
           EVENTS: $.EVENTS
       index-trades:
         from: trade
@@ -353,6 +356,7 @@ connectors:
           INDEX_NAME: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME, '')
           COUNTERPARTY: $.COUNTERPARTY
           PORTFOLIO: $.PORTFOLIO
+          LEGAL_ENTITY: $.LEGAL_ENTITY
           EVENTS: $.EVENTS
 routes:
   trade: trade-endur

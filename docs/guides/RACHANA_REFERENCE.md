@@ -1974,10 +1974,13 @@ A field:
 |---|---|---|
 | `id` | lower_snake (required) | read by rules and hints |
 | `label` | text | the field's words (the id when absent) |
-| `type` | `text` (default), `number`, `date`, `enum`, `bool`, `textarea`, `lookup` | a number takes `40,000,000`, `40m`, `1.5bn` |
+| `type` | `text` (default), `number`, `date`, `enum`, `bool`, `textarea`, `lookup`, `money`, `datetime`, `entity` | a number or money takes `40,000,000`, `40m`, `250k`, `1.5bn`; `datetime` is `2026-10-23T14:05` |
 | `bind` | a record field (`COUNTERPARTY`) | what it edits, and in `cells` the column whose `bind` names it (the id when absent) |
-| `required`, `min`, `max`, `pattern`, `max-length` | | `min`/`max` a number, or for a date a date or `today`; `pattern` a regular expression the whole text matches |
-| `options` | list, or a mapping for `lookup` | `enum`: values or `{value, label}`; `lookup`: `{source: {pack, kind, where \| search, limit}, value, label, carry}`, the choices read as the viewer may see them, `carry` the values hints read as `<field>.<VALUE>` |
+| `required`, `min`, `max`, `pattern`, `max-length` | | `min`/`max` a number (number, money), a date or `today` (date), a date and time or `today` (datetime); `pattern` a regular expression the whole text matches |
+| `currency` | a code (`USD`) or a field id | `money` only (required): the currency, fixed, or the one another field of the form holds (`currency: currency`); shown beside the amount |
+| `tz` | a time zone (`Europe/London`) | `datetime` only: the zone it is entered in and shown with (UTC when absent) |
+| `default` | a value, or `=<expression>` | what a new record starts with; `=notional * 0.001` is worked out from the other fields as people type, until they type over it, and by the server when a new record leaves it empty |
+| `options` | list, or a mapping for `lookup` and `entity` | `enum`: values or `{value, label}`; `lookup`: `{source: {pack, kind, where \| search, limit}, value, label, carry}`, the choices read as the viewer may see them, `carry` the values hints read as `<field>.<VALUE>`; `entity`: `{source: {pack, kind, where \| search, limit}, label, carry}`, a linked record of any pack's kind picked by search: its id is kept (or the field `value` names) and its `label` shown, a masked value never offered |
 | `editable-by` | list of roles | only these roles may change it; anyone else sees it locked ("locked: you can view, not change") |
 | `readonly`, `reason` | | shown, never changed once the record exists ("read-only: <reason>"); the New drawer may set it |
 | `step`, `placeholder`, `fmt`, `new` | | the drawer step, a hint in the empty input, the display format, `new: false` to leave it out of New |
@@ -1985,7 +1988,9 @@ A field:
 A field masked for the viewer is never shown as an input nor sent: the page says *Hidden for you*. Rules and hints are written in a small
 language the browser and the server share: the fields by id, a lookup's carried values, numbers, `'text'`, `true`, `false`, `null`,
 `today`; `+ - * /`; `== != < <= > >=`; `and or not`; brackets; `empty(x) len(x) abs(x) min(a, b) max(a, b)`. An empty value makes a sum or
-a comparison empty, and a rule that comes out empty holds. Problems are `DRS-2058`.
+a comparison empty, and a rule that comes out empty holds; so does a value that does not read (`lots` in a money field). Problems are
+`DRS-2058`: also a money field without its `currency`, a `currency` naming no field, a `tz` that is not a time zone, a `default` reading a
+field the form does not have.
 
 ## Pack search form (`form:` in `pack.yaml`)
 

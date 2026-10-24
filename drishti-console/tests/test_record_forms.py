@@ -90,12 +90,38 @@ def test_customize_lets_people_edit_a_table_beside_or_in_its_cells():
     by = {x["id"]: x for x in f["fields"]}
     assert by["bucket"]["readonly"] and by["limit"]["type"] == "number" and by["review_date"]["type"] == "date"
     assert by["owner"]["readonly"] and not by["limit"].get("readonly")
-    assert designer_forms.form_of(doc["panels"][0]) == {"mode": "cells", "new": True, "fields": ["LIMIT", "REVIEW_DATE"]}
+    assert designer_forms.form_of(doc["panels"][0]) == {"mode": "cells", "new": True, "fields": ["LIMIT", "REVIEW_DATE"],
+                                                        "types": {"BUCKET": "text", "LIMIT": "number", "REVIEW_DATE": "date", "OWNER": "text"}}
     designer_forms.edit(doc, "buckets", "off")
     assert "form" not in doc["panels"][0]
     for bad in (("buckets", "inline", None), ("nothing", "beside", None), ("buckets", "beside", [])):
         with pytest.raises(designer.DesignerError):
             designer_forms.edit(doc, *bad)
+
+
+def test_customize_guesses_or_takes_money_a_date_and_time_and_a_linked_record():
+    doc = {"panels": [{"id": "trades", "kind": "table", "rows": "$.TRADES",
+                       "columns": [{"bind": "@.TRADE_ID"}, {"bind": "@.NOTIONAL", "fmt": "compact"}, {"bind": "@.CURRENCY"},
+                                   {"bind": "@.EXECUTED_AT"}, {"bind": "@.COUNTERPARTY"}, {"bind": "@.QUANTITY"}]}]}
+    cat = {"links": {"COUNTERPARTY": {"kind": "counterparty", "label": "Counterparty"}}, "pack_of": {"counterparty": "core"},
+           "columns": {"counterparty": ["COUNTERPARTY_ID", "NAME"]}}
+    designer_forms.edit(doc, "trades", "beside", None, new=True, cat=cat)
+    by = {x["id"]: x for x in doc["panels"][0]["form"]["fields"]}
+    assert by["notional"]["type"] == "money" and by["notional"]["currency"] == "currency"       # the table's currency column
+    assert by["executed_at"]["type"] == "datetime" and by["quantity"]["type"] == "number"
+    assert by["counterparty"]["type"] == "entity"
+    assert by["counterparty"]["options"] == {"source": {"pack": "core", "kind": "counterparty"}, "label": "NAME"}
+    designer_forms.edit(doc, "trades", "cells", None, types={"QUANTITY": "money", "COUNTERPARTY": "text", "EXECUTED_AT": "date"}, cat=cat)
+    by = {x["id"]: x for x in doc["panels"][0]["form"]["fields"]}
+    assert (by["quantity"]["type"], by["counterparty"]["type"], by["executed_at"]["type"]) == ("money", "text", "date")
+    assert designer_forms.form_of(doc["panels"][0])["types"]["QUANTITY"] == "money"
+    with pytest.raises(designer.DesignerError, match="one of"):
+        designer_forms.edit(doc, "trades", "cells", None, types={"QUANTITY": "colour"})
+    doc["panels"][0]["columns"].pop(2)                                    # no currency column: a number, or money in a fixed currency
+    designer_forms.edit(doc, "trades", "beside", None, cat=cat)
+    assert {x["id"]: x for x in doc["panels"][0]["form"]["fields"]}["notional"]["type"] == "number"
+    designer_forms.edit(doc, "trades", "beside", None, types={"NOTIONAL": "money"})
+    assert {x["id"]: x for x in doc["panels"][0]["form"]["fields"]}["notional"]["currency"] == "USD"
 
 
 def test_describe_edits_trades_beside_or_in_cells_and_starts_new_ones_in_a_drawer():

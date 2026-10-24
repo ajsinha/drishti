@@ -62,6 +62,12 @@ class FormTest {
                     - { id: maturity, label: Maturity, type: date, min: today }
                     - { id: code, label: Code, pattern: "[A-Z]{3}" }
                     - { id: comment, label: Comment, type: textarea, max-length: 10 }
+                    - { id: ccy, label: Currency, type: enum, options: [USD, EUR] }
+                    - { id: fee, label: Fee, type: money, currency: ccy, min: 0, default: "=notional * 0.01" }
+                    - { id: premium, label: Premium, type: money, currency: USD, max: 5e6 }
+                    - { id: executed, label: Executed, type: datetime, tz: Europe/London, min: "2026-01-01T09:00" }
+                    - { id: guarantor, label: Guarantor, type: entity, default: CP-NONE,
+                        options: { source: { pack: core, kind: counterparty }, label: NAME, carry: [RATING] } }
                   rules:
                     - { rule: "notional <= 30000000", severity: warn, fields: [notional], message: "Above the desk limit: a second approver is needed" }
                     - { rule: "not (notional > 30000000 and empty(comment))", fields: [comment], message: "Say why" }
@@ -78,7 +84,8 @@ class FormTest {
         Form f = form();
         assertThat(f.edit()).isEqualTo("beside");
         assertThat(f.create()).isEqualTo("drawer");
-        assertThat(f.fields()).extracting(Form.Field::id).containsExactly("trade_id", "counterparty", "notional", "status", "maturity", "code", "comment");
+        assertThat(f.fields()).extracting(Form.Field::id).containsExactly("trade_id", "counterparty", "notional", "status", "maturity", "code", "comment", "ccy", "fee",
+                "premium", "executed", "guarantor");
         assertThat(f.field("counterparty").orElseThrow().lookup().source().where()).isEqualTo("nonblank(@.COUNTERPARTY)");
         assertThat(f.field("trade_id").orElseThrow().onNew()).isFalse();
         assertThat(f.rules()).extracting(Form.Rule::error).containsExactly(false, true);
@@ -89,7 +96,7 @@ class FormTest {
     void lintSaysWhatIsWrongInWords() {
         Map<String, String> bad = Map.of(
                 "edit: beside", "edit: inline",
-                "type: number, min: 0", "type: money, min: 0",
+                "type: number, min: 0", "type: currency, min: 0",
                 "\"notional <= 30000000\"", "\"notionl <= 30000000\"",
                 "severity: warn", "severity: maybe",
                 "step: what }", "step: later }",
@@ -153,8 +160,46 @@ class FormTest {
     }
 
     @Test
+    void moneyDatetimeEntityAndDefaults() {
+        Form f = form();
+        assertThat(f.field("fee").orElseThrow().currency()).isEqualTo("ccy");
+        assertThat(f.field("executed").orElseThrow().zone()).isEqualTo("Europe/London");
+        assertThat(f.field("guarantor").orElseThrow().lookup().value()).as("an entity keeps its own id").isNull();
+        assertThat(f.field("guarantor").orElseThrow().lookup().source().where()).isNull();
+        assertThat(Form.amount("1.5m")).isEqualByComparingTo("1500000");
+        assertThat(Form.amount("250k")).isEqualByComparingTo("250000");
+        assertThat(Form.amount("1,000,000")).isEqualByComparingTo("1000000");
+        assertThat(Form.amount("2bn")).isEqualByComparingTo("2000000000");
+        assertThat(Form.amount("lots")).isNull();
+        Set<String> c = Set.of("fee", "premium", "executed", "guarantor");
+        assertThat(f.check(Map.of("fee", "1.5m", "premium", "250k", "executed", "2026-03-02T10:30", "guarantor", "CP-X"), c, TODAY)).isEmpty();
+        assertThat(f.check(Map.of("fee", "-1", "premium", "6m", "executed", "2025-12-31T23:00"), c, TODAY)).extracting(Form.Issue::message)
+                .containsExactly("Fee is at least 0", "Premium is at most 5,000,000", "Executed is on or after 2026-01-01 09:00 Europe/London");
+        assertThat(f.check(Map.of("fee", "lots", "executed", "2026-03-02"), c, TODAY)).extracting(Form.Issue::message)
+                .containsExactly("Fee is an amount (1,000,000, 1.5m or 250k)", "Executed is a date and time (2026-12-31T17:00)");
+        Map<String, Object> filled = f.withDefaults(Map.of("notional", "40m"), Set.of("fee", "guarantor"), TODAY);
+        assertThat(filled.get("fee")).isEqualTo(new BigDecimal("4E+5"));
+        assertThat(filled.get("guarantor")).isEqualTo("CP-NONE");
+        assertThat(f.withDefaults(Map.of("notional", "40m", "fee", "7"), Set.of("fee"), TODAY).get("fee")).as("a value given stays").isEqualTo("7");
+        assertThat(f.withDefaults(Map.of("notional", "40m"), Set.of(), TODAY)).doesNotContainKey("fee");
+        Map<String, String> bad = Map.of(
+                "currency: ccy,", "currency: cash,",
+                "type: money, currency: USD,", "type: money,",
+                "tz: Europe/London", "tz: Mars/Olympus",
+                "min: \"2026-01-01T09:00\"", "min: \"soon\"",
+                "\"=notional * 0.01\"", "\"=notionl * 0.01\"",
+                "kind: counterparty }", "kind: counterparty, where: x, search: y }");
+        bad.forEach((from, to) -> assertThatThrownBy(() -> parser.parse(SUTRA.replace(from, to), "bad.yaml", "x")).as(to)
+                .isInstanceOfSatisfying(SutraException.class, e -> assertThat(e.problems()).extracting(SutraProblem::code).contains("DRS-2058")));
+        assertThatThrownBy(() -> parser.parse(SUTRA.replace("currency: ccy,", "currency: cash,"), "bad.yaml", "x"))
+                .isInstanceOfSatisfying(SutraException.class, e -> assertThat(e.problems()).extracting(SutraProblem::message)
+                        .anySatisfy(m -> assertThat(m).contains("currency is a code (USD) or the id of the field holding it")));
+    }
+
+    @Test
     void theJsonSchemaDescribesForms() {
         String schema = RachanaSchema.build(List.of("amount0"), List.of("trade")).toString();
-        assertThat(schema).contains("form=").contains("editable-by").contains("drawer");
+        assertThat(schema).contains("form=").contains("editable-by").contains("drawer").contains("money").contains("datetime").contains("entity")
+                .contains("tz=");
     }
 }

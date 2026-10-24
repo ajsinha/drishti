@@ -17,7 +17,8 @@
    with (drishti-rachana FormExpr.java), so a message shown here is the message the server gives. Fields by id, a lookup's carried value
    (counterparty.LIMIT), numbers, 'text', true, false, null, today; + - * /, == != < <= > >=, and or not, brackets; empty len abs min max.
    An empty value makes a sum or a comparison empty, and a rule that comes out empty holds. Also the field checks (type, required, min,
-   max, pattern, length, options) the server runs, with the same words. window.drishtiFormExpr. */
+   max, pattern, length, options) the server runs, with the same words: a money field is an amount (1,000,000, 1.5m, 250k), a datetime
+   field a date and a time (2026-12-31T17:00) in its time zone. window.drishtiFormExpr. */
 (function () {
   'use strict';
   var FN = { empty: 1, len: 1, abs: 1, min: 2, max: 2 };
@@ -145,7 +146,7 @@
   /* A typed value as the server reads it: a number for number fields (25,000,000 or 25m or 1.5bn), true/false for bool, else text. */
   function typed(f, v) {
     if (empty(v)) { return null; }
-    if (f.type === 'number') {
+    if (f.type === 'number' || f.type === 'money') {
       if (typeof v === 'number') { return v; }
       var m = /^\s*(-?[0-9][0-9,]*(?:\.[0-9]+)?)\s*(k|m|mm|bn|b)?\s*$/i.exec(String(v));
       if (!m) { return NaN; }
@@ -158,11 +159,13 @@
 
   function plain(n) { return Number(n).toLocaleString('en-US', { maximumFractionDigits: 6 }); }
   function isDate(s) { return /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(Date.parse(s + 'T00:00:00Z')); }
+  function isDateTime(s) { return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(s) && !isNaN(Date.parse(s + 'Z')); }
+  function stamp(s) { return s.length === 10 ? s + 'T00:00' : s; }
 
   function valueProblem(f, raw, t) {
     var s = String(raw);
-    if (f.type === 'number') {
-      if (typeof t !== 'number' || isNaN(t)) { return f.label + ' is a number'; }
+    if (f.type === 'number' || f.type === 'money') {
+      if (typeof t !== 'number' || isNaN(t)) { return f.label + (f.type === 'money' ? ' is an amount (1,000,000, 1.5m or 250k)' : ' is a number'); }
       if (f.min !== undefined && num(f.min) !== null && t < num(f.min)) { return f.label + ' is at least ' + plain(f.min); }
       if (f.max !== undefined && num(f.max) !== null && t > num(f.max)) { return f.label + ' is at most ' + plain(f.max); }
     } else if (f.type === 'date') {
@@ -170,6 +173,11 @@
       var lo = f.min === 'today' ? today() : f.min, hi = f.max === 'today' ? today() : f.max;
       if (lo && s < lo) { return f.label + ' is on or after ' + lo; }
       if (hi && s > hi) { return f.label + ' is on or before ' + hi; }
+    } else if (f.type === 'datetime') {
+      if (!isDateTime(s)) { return f.label + ' is a date and time (2026-12-31T17:00)'; }
+      var a = f.min === 'today' ? today() : f.min, b = f.max === 'today' ? today() : f.max, z = ' ' + (f.tz || 'UTC');
+      if (a && Date.parse(s + 'Z') < Date.parse(stamp(a) + 'Z')) { return f.label + ' is on or after ' + a.replace('T', ' ') + z; }
+      if (b && Date.parse(s + 'Z') > Date.parse(stamp(b) + 'Z')) { return f.label + ' is on or before ' + b.replace('T', ' ') + z; }
     } else if (f.type === 'enum') {
       if (!(f.options || []).some(function (o) { return String(o.value) === s; })) {
         return f.label + ' is one of ' + (f.options || []).map(function (o) { return o.label; }).join(', ');
@@ -187,7 +195,7 @@
     (form.fields || []).forEach(function (f) {
       var v = values[f.id], blank = empty(v) || (typeof v === 'string' && !v.trim());
       var t = blank ? null : typed(f, v);
-      vals[f.id] = t;
+      vals[f.id] = typeof t === 'number' && isNaN(t) ? null : t;           // a value that does not read: the rules cannot tell, as on the server
       if (!checked[f.id]) { return; }
       if (blank) { if (f.required) { out.push({ field: f.id, message: f.label + ' is required', severity: 'error' }); } return; }
       var why = valueProblem(f, v, t);

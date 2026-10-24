@@ -47,7 +47,7 @@ panels:
       fields:
         - { id: trade_id, label: Trade, bind: TRADE_ID, readonly: true, reason: "set by the booking system", new: false }
         - { id: counterparty, label: Counterparty, bind: COUNTERPARTY, type: lookup, readonly: true, required: true, options: { ... } }
-        - { id: notional, label: Notional, bind: NOTIONAL, type: number, min: 0, required: true, fmt: amount0 }
+        - { id: notional, label: Notional, bind: NOTIONAL, type: money, currency: currency, min: 0, required: true, fmt: amount0 }
         - { id: maturity_date, label: Maturity, bind: MATURITY_DATE, type: date, min: today, required: true }
         - { id: trade_status, label: Status, bind: TRADE_STATUS, type: enum, options: [PENDING, VALIDATED, AMENDED], editable-by: [middle-office] }
         - { id: comment, label: Comment, bind: COMMENT, type: textarea, max-length: 500, placeholder: Reason for the change }
@@ -60,7 +60,7 @@ panels:
 
 What people see:
 
-- **Typed fields.** A number takes `40,000,000`, `40m` or `1.5bn`; a date opens the date picker; an enum is a list; a lookup is a
+- **Typed fields.** A number or an amount of money takes `40,000,000`, `40m` or `1.5bn`; a date opens the date picker; an enum is a list; a lookup is a
   list of what its source offers; `textarea` is several lines.
 - **Locked fields say why.** `readonly: true` shows the value with "(read-only: set by the booking system)", or "(locked: you can
   view, not change)" when there is no `reason`. A field whose `editable-by` names roles the person does not hold is locked the same
@@ -69,6 +69,40 @@ What people see:
   said and kept with it, for example "Above the desk limit of 30,000,000: a second approver is needed."
 - **Draft · not saved** while there are changes; **Save draft** keeps them; **Discard** throws them away (and the saved draft too).
 - Leaving the page with changes not saved asks first. A panel being edited is not refreshed under the person's hands.
+
+### Money, a date and time, a linked record, a worked-out default
+
+The same form has four fields of the richer kinds (the book desk, `book-desk.v1.sutra.yaml`):
+
+```yaml
+        - id: legal_entity
+          label: Booked in
+          bind: LEGAL_ENTITY
+          type: entity                        # a linked record of another pack's kind
+          readonly: true
+          reason: "the booking entity is fixed once booked"
+          step: who
+          options: { source: { pack: core, kind: legal-entity }, label: NAME }
+        - { id: notional, label: Notional, bind: NOTIONAL, type: money, currency: currency, min: 0, required: true, fmt: amount0 }
+        - { id: currency, label: Currency, bind: CURRENCY, type: enum, options: [USD, EUR, GBP, JPY, CHF, CAD, AUD] }
+        - { id: upfront_fee, label: Upfront fee, bind: UPFRONT_FEE, type: money, currency: currency, min: 0, default: "=notional * 0.001" }
+        - { id: executed_at, label: Executed, bind: EXECUTED_AT, type: datetime, tz: Europe/London }
+```
+
+- **`money`** is an amount and its currency. People type `1.5m`, `250k`, `2bn` or `1,000,000`; it shows grouped (`1,500,000`) once
+  they leave the field. The currency sits beside it: fixed (`currency: USD`) or the one another field holds (`currency: currency`,
+  which changes as people pick a currency). `min` and `max` are numbers. A value that does not read says *Notional is an amount
+  (1,000,000, 1.5m or 250k)*.
+- **`datetime`** is a date and a time (`2026-10-23T14:05`), entered with the browser's date and time picker; the time zone (`tz`,
+  UTC when absent) is shown beside it and with the value (*2026-10-23 14:05 Europe/London*). `min` and `max` are a date and time or
+  `today`.
+- **`entity`** links the record to a record of any pack's kind: a search box over the records of `options.source` (a `where` or a
+  `search` narrows them), read as the viewer may see them. Type part of a name or an id, pick with the arrows and Enter (or a click);
+  the record's **id** is kept and its **label** shown (*Drishti Bank Europe AG · LE-FRA*), with **Open** beside it. A record whose
+  kept value is masked for the viewer is never offered, and a masked label shows the id.
+- **`default`** starts a new record: a value (`default: PENDING`), or an expression written `=...` over the other fields
+  (`=notional * 0.001`), worked out as people type (*Worked out: notional * 0.001 · type to change it*) until they type over it. The
+  server fills it too when a new record leaves the field empty, so a draft saved by a script is the same.
 
 ## 2. Editing in the cells
 
@@ -144,8 +178,11 @@ change to a field they may not edit, is refused; each save and discard is in the
 ## 5. With the Sutra designer
 
 - **Customize › Let people edit**: pick a table, *in a form beside it* or *in its cells* (or *not at all*), tick the columns people
-  may edit, and *start new ones in a guided drawer*; **Set** writes the `form:` (the first column names the record and is read-only;
-  a number format or a name like NOTIONAL makes a number field, a date format or `*_DATE` a date field).
+  may edit, and *start new ones in a guided drawer*; **Set** writes the `form:` (the first column names the record and is read-only).
+  Each column is *as guessed* or what you pick: text, a number, money, a date, a date and time, or a linked record (offered when the
+  packs say the column names one, such as COUNTERPARTY). The guess: a number format or a name like NOTIONAL is a number, money when
+  the table has a CURRENCY column too (in that currency); a date format or `*_DATE` a date; `*_AT` or `*_TIME` a date and time; a
+  column the packs link a linked record.
 - **Describe**: `TRD BOOK-RATES-2 · click a trade → cash flows · edit trades beside · new trade in a drawer` (or `edit trades in the
   cells`) gives the trades the form above, with the lookup and the limit hint.
 
@@ -164,5 +201,6 @@ checks it again when 2.8.0 writes.
 
 `sutra lint` and the editor check a form as `DRS-2058`, in words: an unknown key, a type, a `min` that is not a number for a number
 field, a `step` or `key` that names nothing, a rule that reads a field the form does not have (`rule 'notionl <= 30000000' reads
-'notionl', which is not a field of the form`), a pattern that is not a regular expression. The JSON schema
+'notionl', which is not a field of the form`), a pattern that is not a regular expression, a money field without its currency (or a
+`currency` that is neither a code nor a field), a `tz` that is not a time zone, a `default` expression that reads a missing field. The JSON schema
 (`/api/v1/rachana/schema`) describes `form:` for editors.

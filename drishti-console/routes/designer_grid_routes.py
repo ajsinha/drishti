@@ -97,6 +97,8 @@ def _step(doc: dict, keep: dict, body: dict, kit_refs: list) -> None:
         designer_grid.move(doc, str(body.get("from") or ""), str(body.get("to") or ""))
     elif what == "make-grid":
         designer_grid.make_grid(doc)
+    elif what == "widths":
+        designer_grid.set_widths(doc, body.get("widths"))
     elif what == "nest":
         designer_outline.nest(doc, keep, body.get("index"), str(body.get("under") or ""), str(body.get("place") or "detail-below"))
     elif what == "unnest":
@@ -107,9 +109,9 @@ def _step(doc: dict, keep: dict, body: dict, kit_refs: list) -> None:
 
 @router.post("/grid/op/{draft}")
 async def grid_op(request: Request, draft: str):
-    """One Grid step (``formula``, ``merge``, ``split``, ``insert``, ``delete``, ``move``, ``make-grid``, ``nest``, ``unnest``): the page is
-    drawn with it before it is kept; a step the server refuses is undone and said in plain words. A formula that cannot be read is said
-    with the part to fix (``start``, ``end``) and changes nothing."""
+    """One Grid step (``formula`` on a cell or a child cell, ``merge``, ``split``, ``insert``, ``delete``, ``move``, ``make-grid``,
+    ``widths``, ``nest``, ``unnest``): the page is drawn with it before it is kept; a step the server refuses is undone and said in plain
+    words. A formula that cannot be read is said with the part to fix (``start``, ``end``) and changes nothing."""
     if not enabled(request):
         return _off()
     body = await _body(request)

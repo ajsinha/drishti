@@ -19,7 +19,7 @@
 .fm-rows tbody > tr[data-frow] { cursor: pointer; }
 .fm-beside-open .pnl-b { display: grid; grid-template-columns: minmax(0, 1fr) minmax(17rem, 22rem); gap: .75rem; align-items: start; }
 .fm-beside-open .pnl-b > .fm-drafts { grid-column: 1 / -1; }
-.fm-side { position: sticky; top: .5rem; border: 1px solid var(--d-border); border-radius: var(--d-radius, 6px); background: var(--d-surface-2); padding: .6rem .75rem;
+.fm-side { position: sticky; top: 4.5rem; max-height: calc(100vh - 5rem); overflow-y: auto; border: 1px solid var(--d-border); border-radius: var(--d-radius, 6px); background: var(--d-surface-2); padding: .6rem .75rem;
   display: flex; flex-direction: column; gap: .5rem; }
 .fm-head { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
 .fm-head h4 { margin: 0; font-size: .95rem; font-weight: 650; color: var(--d-ink); }
@@ -97,8 +97,27 @@ tr.fm-why td { padding: .15rem .5rem .35rem; border-top: 0; background: var(--d-
 .fm-hint i { color: var(--d-accent); }
 .fm-hint-over { border-color: var(--d-warn); }
 .fm-drawer .fm-foot { margin-top: auto; }
+/* money and datetime: the currency or the time zone beside the value; entity: a search box over the records it may link to */
+.fm-adorn { display: flex; align-items: stretch; }
+.fm-adorn .fm-in { border-top-right-radius: 0; border-bottom-right-radius: 0; min-width: 0; }
+.fm-unit { display: inline-flex; align-items: center; padding: 0 .45rem; border: 1px solid var(--d-border); border-left: 0;
+  border-radius: 0 var(--d-radius, 4px) var(--d-radius, 4px) 0; background: var(--d-surface-2, var(--d-surface)); color: var(--d-muted);
+  font-size: .75rem; font-weight: 600; white-space: nowrap; }
+td .fm-adorn .fm-in { width: auto; flex: 1; }
+.fm-entity { position: relative; display: flex; align-items: center; gap: .4rem; }
+.fm-entity .fm-in { flex: 1; min-width: 0; }
+.fm-entity-open { font-size: .75rem; color: var(--d-link); white-space: nowrap; }
+.fm-entity-list { position: absolute; top: 100%; left: 0; right: 0; z-index: 30; margin: .15rem 0 0; padding: .2rem 0; list-style: none;
+  max-height: 14rem; overflow-y: auto; border: 1px solid var(--d-border); border-radius: var(--d-radius, 4px); background: var(--d-surface);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .18); font-size: .82rem; }
+.fm-entity-list li { padding: .3rem .55rem; cursor: pointer; color: var(--d-ink); }
+.fm-entity-list li.on, .fm-entity-list li:hover { background: var(--d-accent-tint); }
+.fm-entity-id { color: var(--d-muted); font-family: var(--d-mono, monospace); font-size: .75rem; }
+.fm-entity-none { color: var(--d-muted); font-style: italic; cursor: default !important; }
+.fm-auto { margin: 0; font-size: .72rem; color: var(--d-muted); }
 @media (max-width: 700px) {
   .fm-beside-open .pnl-b { grid-template-columns: minmax(0, 1fr); }
+  .fm-side { position: static; max-height: none; }
   .fm-in, .fm-new, .fm-btn { min-height: 2.5rem; }
   .fm-drawer { width: 100vw; }
   .fm-note { margin-left: 0; flex-basis: 100%; }

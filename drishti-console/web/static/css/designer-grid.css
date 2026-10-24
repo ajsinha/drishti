@@ -43,7 +43,20 @@
 .gd-sheet { display: grid; gap: 1px; background: var(--d-border); border: 1px solid var(--d-border); border-radius: 10px; overflow: auto; min-width: 0; }
 .gd-corner, .gd-colh, .gd-rowh { background: var(--d-surface-2, var(--d-bg-2)); color: var(--d-muted); font-size: .78rem; display: flex; align-items: center;
   justify-content: center; user-select: none; }
-.gd-w { color: var(--d-faint, var(--d-muted)); margin-left: .2rem; }
+.gd-colh { position: relative; }
+.gd-w { color: var(--d-muted); margin-left: .2rem; border: 1px dashed transparent; border-radius: 4px; background: none; font: inherit; padding: 0 .25rem;
+  cursor: text; }
+.gd-w:hover, .gd-w:focus-visible { border-color: var(--d-accent); color: var(--d-ink); outline: none; }
+.gd-w-in { width: 3.4rem; margin-left: .2rem; font: inherit; font-size: .78rem; padding: 0 .2rem; border: 1px solid var(--d-accent); border-radius: 4px;
+  background: var(--d-surface); color: var(--d-ink); }
+.gd-edge { position: absolute; top: 0; right: -4px; width: 8px; height: 100%; cursor: col-resize; z-index: 2; touch-action: none; }
+.gd-edge::after { content: ""; position: absolute; left: 3px; top: 20%; height: 60%; width: 2px; border-radius: 1px; background: var(--d-border); }
+.gd-edge:hover::after, .gd-edge:focus-visible::after, [data-gd-dragging] .gd-edge::after { background: var(--d-accent); }
+.gd-edge:focus-visible { outline: none; }
+.gd-kid { margin: .15rem 0 0 .6rem; padding: .25rem .4rem; border-left: 2px solid var(--d-accent); border-radius: 0 6px 6px 0; display: flex;
+  flex-direction: column; gap: .1rem; background: var(--d-surface-2, var(--d-bg-2)); cursor: cell; outline: none; min-width: 0; }
+.gd-kid.gd-sel { box-shadow: inset 0 0 0 2px var(--d-accent); }
+.gd-kid:focus-visible { box-shadow: inset 0 0 0 3px var(--d-accent); }
 .gd-cell { background: var(--d-surface); padding: .35rem .45rem .45rem; display: flex; flex-direction: column; gap: .15rem; min-width: 0; cursor: cell;
   outline: none; position: relative; }
 .gd-cell[draggable="true"] { cursor: grab; }

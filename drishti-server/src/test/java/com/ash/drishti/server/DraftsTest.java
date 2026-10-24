@@ -194,4 +194,35 @@ class DraftsTest {
                 "step", "who", "records", List.of(Map.of("values", Map.of("counterparty", "CP-ALDERSHOT"))));
         send("POST", "/api/v1/drafts", as("tia", "trader"), early, 201);          // a draft saved at the first step is checked up to it
     }
+
+    @Test
+    void moneyDatetimeEntityAndDefaults() throws Exception {
+        JsonNode form = panel(read(DESK, as("tia", "trader"), "book-desk"), "trades").path("form");
+        assertThat(field(form, "notional").path("type").asText()).isEqualTo("money");
+        assertThat(field(form, "notional").path("currency").asText()).isEqualTo("currency");
+        assertThat(field(form, "executed_at").path("tz").asText()).isEqualTo("Europe/London");
+        assertThat(field(form, "upfront_fee").path("default").asText()).isEqualTo("=notional * 0.001");
+        JsonNode le = field(form, "legal_entity");
+        assertThat(le.path("entity").path("kind").asText()).isEqualTo("legal-entity");
+        assertThat(le.path("options")).isNotEmpty();
+        assertThat(le.path("options").get(0).path("value").asText()).as("the entity's own id").startsWith("LE-");
+        assertThat(le.path("options").get(0).path("label").asText()).doesNotStartWith("LE-");
+        assertThat(form.path("rows").get(0).path("values").path("legal_entity").asText()).startsWith("LE-");
+        String tia = as("tia", "trader");
+        assertThat(send("POST", "/api/v1/drafts", tia, edit("T-1", Map.of("notional", "25m"), Map.of("notional", 20_000_000)), 201)).contains("\"25m\"");
+        JsonNode e = json.readTree(send("POST", "/api/v1/drafts", tia, edit("T-1", Map.of("notional", "lots"), Map.of("notional", 1)), 422));
+        assertThat(e.path("issues").get(0).path("message").asText()).isEqualTo("Notional is an amount (1,000,000, 1.5m or 250k)");
+        e = json.readTree(send("POST", "/api/v1/drafts", tia, edit("T-1", Map.of("executed_at", "tomorrow"), Map.of()), 422));
+        assertThat(e.path("issues").get(0).path("message").asText()).isEqualTo("Executed is a date and time (2026-12-31T17:00)");
+        Map<String, Object> values = new java.util.HashMap<>(Map.of("counterparty", "CP-ALDERSHOT", "product_type", "IRS", "notional", "10m",
+                "currency", "USD", "maturity_date", "2031-01-15", "executed_at", "2026-10-23T14:05", "legal_entity", "LE-NY"));
+        Map<String, Object> draft = Map.of("kind", "portfolio-trades", "id", "BOOK-RATES-2", "sutra", "book-desk", "panel", "trades", "mode", "new",
+                "step", "check", "records", List.of(Map.of("values", values)));
+        JsonNode d = json.readTree(send("POST", "/api/v1/drafts", tia, draft, 201));
+        assertThat(d.path("records").get(0).path("values").path("upfront_fee").decimalValue()).as("the default worked out: 10m * 0.001")
+                .isEqualByComparingTo("10000");
+        values.put("upfront_fee", 2_500);
+        d = json.readTree(send("POST", "/api/v1/drafts", tia, draft, 201));
+        assertThat(d.path("records").get(0).path("values").path("upfront_fee").asInt()).as("a value given stays").isEqualTo(2_500);
+    }
 }

@@ -102,3 +102,5 @@
 /* Let people edit (forms, designer-forms.js) */
 .dz-cols { display: flex; flex-wrap: wrap; gap: .25rem .75rem; }
 .dz-col { font-size: .85rem; display: inline-flex; gap: .3rem; align-items: center; }
+.dz-col-row { display: flex; align-items: center; justify-content: space-between; gap: .4rem; }
+.dz-col-type { font-size: .78rem; max-width: 9.5rem; }

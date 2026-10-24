@@ -31,6 +31,22 @@
   a panel with its own `source:` carries that source's provenance (`source`, `kind`, `fetchedAt`, `updatedAt`, `staleAfter`,
   `stale`) in the view model, on the panel and in the panels endpoint; its header says "updated N s ago", "stale" and "X isn't
   answering" of its own source, the other panels of the page's. `PanelProvenanceTest`, `test_refresh.py`, `test_refresh_browser.py`.
+- **Form fields: money, a date and time, a linked record, worked-out defaults**
+  ([SUTRA_FORMS_GUIDE.md](docs/guides/SUTRA_FORMS_GUIDE.md#money-a-date-and-time-a-linked-record-a-worked-out-default)): `type: money`
+  (typed as 1.5m, 250k or 1,000,000, shown grouped, its `currency` fixed or held by another field and shown beside it; min and max),
+  `type: datetime` (a date and a time with its time zone `tz` shown; min and max), `type: entity` (a linked record of any pack's kind
+  picked by search: its id kept, its label shown, Open beside it; read as the viewer, a masked value never offered), and `default:`
+  (a value, or `=notional * 0.001` worked out as people type until they type over it, and filled by the server in a new record).
+  Checked as DRS-2058 and in the JSON schema; the drafts API checks them again. Customize's *Let people edit* takes a type per column
+  (guessed: money beside a currency column, `*_AT` a date and time, a column the packs link a linked record). The book desk's trades
+  gain *Booked in* (the legal entity), the notional as money in the trade's currency, an upfront fee worked out from it and the time it
+  was executed (Europe/London); the derived trade rows carry `LEGAL_ENTITY`. The form beside a table stays below the top bar and
+  scrolls on its own when it is taller than the screen.
+- **Grid mode: column widths and the panels a click opens** ([SCREEN_DESIGNER.md section 31](docs/guides/SCREEN_DESIGNER.md#grid)):
+  drag the edge between two column headers, move it with Left and Right, or type a width on the header (`layout.columns`, 12 units
+  across, every column at least 1); a panel a click opens is a cell of its own under its parent's cell (`A2a = cashflow-ladder@1(...)
+  opens from A2`), picked with a click or Down, edited in place, emptied to remove it, named by other formulas as `@A2a.`; the round
+  trip stays exact on every pack Sutra.
 - **The Sutra designer's Grid mode** ([SCREEN_DESIGNER.md section 31](docs/guides/SCREEN_DESIGNER.md#grid)): the screen as a
   spreadsheet, columns A, B, C and rows 1, 2, 3 over the Sutra's `layout.areas` (a screen without areas is one column; *Make it a
   grid* gives it areas). A cell's panels are formulas (`B2 = field-list@1(id: who, rows: $src; source: {kind: counterparty, id:

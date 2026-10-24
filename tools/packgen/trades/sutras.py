@@ -43,6 +43,7 @@ DERIVED = {  # derived kind: (mnemonic, label, group-by expression, id field, wh
 ROWS = {"TRADE_ID": "$.TRADE_ID", "SOURCE_SYSTEM": "$.SOURCE_SYSTEM", "PRODUCT_TYPE": "$.PRODUCT_TYPE", "BUY_SELL_CODE": "$.BUY_SELL_CODE",
         "CURRENCY": "$.CURRENCY", "NOTIONAL": "first($.LEGS).NOTIONAL", "MATURITY_DATE": "$.MATURITY_DATE", "TRADE_STATUS": "$.TRADE_STATUS",
         "INDEX_NAME": "nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME, '')", "COUNTERPARTY": "$.COUNTERPARTY", "PORTFOLIO": "$.PORTFOLIO",
+        "LEGAL_ENTITY": "$.LEGAL_ENTITY",
         "EVENTS": "$.EVENTS"}
 FIELDS = {"TRADE_COUNT": "count", "NOTIONAL": "sum first($.LEGS).NOTIONAL", "SOURCE_SYSTEMS": "distinct $.SOURCE_SYSTEM",
           "PRODUCT_TYPES": "distinct $.PRODUCT_TYPE", "CURRENCIES": "distinct $.CURRENCY", "LAST_MATURITY": "max $.MATURITY_DATE"}

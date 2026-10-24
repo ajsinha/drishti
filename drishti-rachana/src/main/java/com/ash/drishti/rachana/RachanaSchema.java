@@ -121,14 +121,20 @@ public final class RachanaSchema {
         Map<String, Object> fp = new LinkedHashMap<>();
         fp.put("id", Map.of("type", "string", "pattern", "^[a-z][a-z0-9_]{0,39}$", "description", "The field's id, read by rules and hints"));
         fp.put("label", Map.of("type", "string"));
-        fp.put("type", Map.of("enum", com.ash.drishti.rachana.model.Form.TYPES, "description", "text (default), number, date, enum, bool, textarea or lookup"));
+        fp.put("type", Map.of("enum", com.ash.drishti.rachana.model.Form.TYPES, "description",
+                "text (default), number, date, enum, bool, textarea, lookup, money (an amount and its currency), datetime (a date and a time in a"
+                        + " time zone) or entity (a linked record of a kind, picked by search)"));
         fp.put("bind", Map.of("type", "string", "description", "The record's field it edits (COUNTERPARTY); the id when absent"));
         fp.put("required", Map.of("type", "boolean"));
-        fp.put("min", Map.of("description", "A number, or a date (2026-12-31) or today"));
-        fp.put("max", Map.of("description", "A number, or a date (2026-12-31) or today"));
+        fp.put("min", Map.of("description", "A number, or a date (2026-12-31), a date and time (2026-12-31T17:00) or today"));
+        fp.put("max", Map.of("description", "A number, or a date (2026-12-31), a date and time (2026-12-31T17:00) or today"));
+        fp.put("currency", Map.of("type", "string", "description", "money: a currency code (USD) or the id of the field holding it"));
+        fp.put("tz", Map.of("type", "string", "description", "datetime: the time zone it is entered in (Europe/London; UTC when absent)"));
+        fp.put("default", Map.of("description", "What a new record starts with: a value, or =<expression> over the other fields (=notional * 0.01)"));
         fp.put("pattern", Map.of("type", "string", "description", "A regular expression the whole text matches"));
         fp.put("max-length", Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.Form.MAX_TEXT));
-        fp.put("options", Map.of("description", "enum: a list of values or { value, label }; lookup: { source: { pack, kind, where }, value, label, carry }"));
+        fp.put("options", Map.of("description", "enum: a list of values or { value, label }; lookup: { source: { pack, kind, where }, value, label, carry };"
+                + " entity: { source: { pack, kind, where or search }, label, carry } (the entity's id is kept unless value names a field)"));
         fp.put("editable-by", roles);
         fp.put("readonly", Map.of("type", "boolean"));
         fp.put("reason", Map.of("type", "string", "description", "Why it is read-only, shown beside it"));

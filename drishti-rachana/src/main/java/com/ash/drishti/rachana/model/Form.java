@@ -17,6 +17,8 @@ package com.ash.drishti.rachana.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -31,7 +33,10 @@ import java.util.regex.PatternSyntaxException;
 /**
  * A panel's {@code form:} (SUTRA_NEXT.md 10): the typed fields people may edit, the rules they must keep (an error stops the
  * draft, a warning is said and kept), the hints computed as they type, and how the form opens: {@code edit: beside} (a form beside
- * the table for the clicked row), {@code edit: cells} (the table's cells), {@code new: drawer} (a guided drawer in steps). Masks
+ * the table for the clicked row), {@code edit: cells} (the table's cells), {@code new: drawer} (a guided drawer in steps). Besides text,
+ * numbers, dates, choices and lookups, a field may be {@code money} (an amount in a fixed currency or the currency another field holds),
+ * {@code datetime} (a date and a time in a named time zone) or {@code entity} (a linked record of any pack's kind, picked by search: its
+ * id is kept, its label shown); a field's {@code default} is a value or, written {@code =notional * 0.01}, an expression. Masks
  * and roles decide what each person may edit: a masked field is never editable or shown, a field with {@code editable-by} is
  * locked for anyone else, a {@code readonly} field says why. Saving keeps a draft only; 2.8.0 writes through connectors.
  *
@@ -50,7 +55,10 @@ public record Form(String title, String key, String edit, String create, String 
         List<Field> fields, List<Rule> rules, List<Hint> hints) {
 
     public static final String KEY = "form";
-    public static final List<String> TYPES = List.of("text", "number", "date", "enum", "bool", "textarea", "lookup");
+    public static final List<String> TYPES = List.of("text", "number", "date", "enum", "bool", "textarea", "lookup", "money",
+            "datetime", "entity");
+    /** The types whose {@code options} read a source. */
+    public static final List<String> SOURCED = List.of("lookup", "entity");
     public static final List<String> EDIT_MODES = List.of("beside", "cells");
     public static final List<String> NEW_MODES = List.of("drawer");
     public static final int MAX_FIELDS = 60;
@@ -61,7 +69,9 @@ public record Form(String title, String key, String edit, String create, String 
     private static final Pattern ROLE = Pattern.compile("^[a-z0-9][a-z0-9_-]{0,39}$");
     private static final Set<String> TOP = Set.of("title", "key", "edit", "new", "new-label", "roles", "steps", "fields", "rules", "hints");
     private static final Set<String> FIELD = Set.of("id", "label", "type", "bind", "required", "min", "max", "pattern", "max-length",
-            "options", "editable-by", "readonly", "reason", "step", "placeholder", "fmt", "new");
+            "options", "editable-by", "readonly", "reason", "step", "placeholder", "fmt", "new", "currency", "tz", "default");
+    private static final Pattern CURRENCY = Pattern.compile("^[A-Z]{3}$");
+    private static final Pattern AMOUNT = Pattern.compile("^\\s*(-?[0-9][0-9,]*(?:\\.[0-9]+)?)\\s*(k|m|mm|bn|b)?\\s*$", Pattern.CASE_INSENSITIVE);
     private static final Set<String> LOOKUP = Set.of("source", "value", "label", "carry");
     private static final Set<String> SOURCE = Set.of("pack", "kind", "where", "search", "limit");
     private static final Set<String> RULE = Set.of("rule", "message", "severity", "fields");
@@ -73,7 +83,10 @@ public record Form(String title, String key, String edit, String create, String 
     /** One choice of an enum field. */
     public record Option(String value, String label) {}
 
-    /** Where a lookup's choices come from: the entities of a kind a condition keeps, as the viewer may see them. */
+    /**
+     * Where a lookup's (or an entity field's) choices come from: the entities of a kind a condition keeps, as the viewer may see them.
+     * {@code value} names the field kept; an entity field may leave it out, and the entity's own id is kept.
+     */
     public record Lookup(Wiring.Source source, String value, String label, List<String> carry) {}
 
     /**
@@ -83,14 +96,27 @@ public record Form(String title, String key, String edit, String create, String 
      * @param editableBy the roles that may edit it (empty: the form's {@code roles})
      * @param readonly shown, never edited; {@code reason} says why
      * @param onNew whether the New drawer asks for it (default true)
+     * @param currency a money field's currency: a code (USD) or the id of the field holding it
+     * @param tz a datetime field's time zone (UTC when absent)
+     * @param defaultValue what a new record starts with: a value, or {@code =<expression>} over the other fields
      */
     public record Field(String id, String label, String type, String bind, boolean required, Object min, Object max, String pattern,
             Integer maxLength, List<Option> options, Lookup lookup, List<String> editableBy, boolean readonly, String reason, String step,
-            String placeholder, String fmt, boolean onNew) {
+            String placeholder, String fmt, boolean onNew, String currency, String tz, Object defaultValue) {
 
         /** The record's field this one edits. */
         public String recordField() {
             return bind != null ? bind : id;
+        }
+
+        /** The default's expression when it is written {@code =...}, else null. */
+        public FormExpr defaultExpr() {
+            return defaultValue instanceof String s && s.startsWith("=") ? FormExpr.parse(s.substring(1)) : null;
+        }
+
+        /** The time zone a datetime field is entered in. */
+        public String zone() {
+            return tz == null ? "UTC" : tz;
         }
     }
 
@@ -164,6 +190,18 @@ public record Form(String title, String key, String edit, String create, String 
             for (Object f : fl) {
                 field(f, steps, types, out);
             }
+            for (Object f : fl) {                               // what reads other fields: known once every field is
+                if (!(f instanceof Map<?, ?> fm)) {
+                    continue;
+                }
+                String id = String.valueOf(fm.get("id"));
+                if (fm.get("currency") instanceof String c && !CURRENCY.matcher(c).matches() && !types.containsKey(c)) {
+                    out.add("field " + id + ": currency is a code (USD) or the id of the field holding it, not '" + c + "'");
+                }
+                if (fm.get("default") instanceof String d && d.startsWith("=")) {
+                    expr(d.substring(1), types.keySet(), "field " + id + ": default", out);
+                }
+            }
         }
         Object key = m.get("key");
         if (key != null && !types.containsKey(key.toString())) {
@@ -214,18 +252,37 @@ public record Form(String title, String key, String edit, String create, String 
                 out.add("field " + id + ": " + b + " is true or false");
             }
         }
+        boolean numeric = type.equals("number") || type.equals("money");
         for (String lim : List.of("min", "max")) {
             Object v = m.get(lim);
             if (v == null) {
                 continue;
             }
-            if (type.equals("number") && !(v instanceof Number)) {
+            if (numeric && !(v instanceof Number)) {
                 out.add("field " + id + ": " + lim + " is a number");
             } else if (type.equals("date") && !(v.toString().equals("today") || isDate(v.toString()))) {
                 out.add("field " + id + ": " + lim + " is a date (2026-12-31) or today");
-            } else if (!type.equals("number") && !type.equals("date")) {
-                out.add("field " + id + ": " + lim + " applies to number and date fields");
+            } else if (type.equals("datetime") && !(v.toString().equals("today") || dateTime(v.toString()) != null)) {
+                out.add("field " + id + ": " + lim + " is a date and time (2026-12-31T17:00) or today");
+            } else if (!numeric && !type.equals("date") && !type.equals("datetime")) {
+                out.add("field " + id + ": " + lim + " applies to number, money, date and datetime fields");
             }
+        }
+        if (type.equals("money") && !(m.get("currency") instanceof String)) {
+            out.add("field " + id + ": a money field names its currency: currency: USD, or the field holding it (currency: ccy)");
+        } else if (!type.equals("money") && m.get("currency") != null) {
+            out.add("field " + id + ": currency applies to money fields");
+        }
+        if (m.get("tz") != null) {
+            if (!type.equals("datetime")) {
+                out.add("field " + id + ": tz applies to datetime fields");
+            } else if (!zone(m.get("tz").toString())) {
+                out.add("field " + id + ": tz is a time zone (Europe/London, America/New_York, UTC), not '" + m.get("tz") + "'");
+            }
+        }
+        Object def = m.get("default");
+        if (def != null && !(def instanceof String || def instanceof Number || def instanceof Boolean)) {
+            out.add("field " + id + ": default is a value, or =<expression> over the other fields (=notional * 0.01)");
         }
         if (m.get("pattern") != null) {
             try {
@@ -252,20 +309,24 @@ public record Form(String title, String key, String edit, String create, String 
                     }
                 }
             }
-        } else if (type.equals("lookup")) {
+        } else if (SOURCED.contains(type)) {
+            boolean entity = type.equals("entity");
             if (!(opts instanceof Map<?, ?> lm)) {
-                out.add("field " + id + ": a lookup reads its options from a source: options: { source: { kind, where }, value, label, carry }");
+                out.add(entity ? "field " + id + ": an entity field picks a record of a kind: options: { source: { pack, kind }, label, carry }"
+                        : "field " + id + ": a lookup reads its options from a source: options: { source: { kind, where }, value, label, carry }");
             } else {
                 unknown(lm, LOOKUP, "field " + id + " options", out);
                 if (!(lm.get("source") instanceof Map<?, ?> sm) || !(sm.get("kind") instanceof String)) {
                     out.add("field " + id + ": options.source names a kind: { pack, kind, where }");
                 } else {
                     unknown(sm, SOURCE, "field " + id + " options.source", out);
-                    if ((sm.get("where") == null) == (sm.get("search") == null)) {
+                    if (entity ? sm.get("where") != null && sm.get("search") != null : (sm.get("where") == null) == (sm.get("search") == null)) {
                         out.add("field " + id + ": options.source reads the entities a condition keeps (where) or a search (search): name one");
                     }
                 }
-                if (!(lm.get("value") instanceof String v) || !BIND.matcher(v).matches()) {
+                if (entity && lm.get("value") == null) {
+                    // the entity's own id is kept
+                } else if (!(lm.get("value") instanceof String v) || !BIND.matcher(v).matches()) {
                     out.add("field " + id + ": options.value names the field of each entity that is the value (COUNTERPARTY)");
                 }
                 if (lm.get("carry") != null && !(lm.get("carry") instanceof List<?>)) {
@@ -273,7 +334,7 @@ public record Form(String title, String key, String edit, String create, String 
                 }
             }
         } else if (opts != null) {
-            out.add("field " + id + ": options apply to enum and lookup fields");
+            out.add("field " + id + ": options apply to enum, lookup and entity fields");
         }
     }
 
@@ -342,6 +403,46 @@ public record Form(String title, String key, String edit, String create, String 
         }
     }
 
+    /** A date and time as written (2026-10-24T14:30, seconds optional), or null. */
+    static LocalDateTime dateTime(String s) {
+        try {
+            return s.length() >= 16 && s.charAt(10) == 'T' ? LocalDateTime.parse(s) : null;
+        } catch (DateTimeParseException e) {
+            return null;
+        }
+    }
+
+    private static boolean zone(String z) {
+        try {
+            ZoneId.of(z);
+            return true;
+        } catch (java.time.DateTimeException e) {
+            return false;
+        }
+    }
+
+    /** An amount as people type it: 1,000,000, 1.5m, 250k, 2bn (a Number as it is); null when it does not read. */
+    public static BigDecimal amount(Object v) {
+        if (v instanceof Number) {
+            return FormExpr.number(v);
+        }
+        if (v == null) {
+            return null;
+        }
+        var m = AMOUNT.matcher(v.toString());
+        if (!m.matches()) {
+            return null;
+        }
+        BigDecimal x = new BigDecimal(m.group(1).replace(",", ""));
+        String u = m.group(2) == null ? "" : m.group(2).toLowerCase(java.util.Locale.ROOT);
+        return switch (u) {
+            case "k" -> x.scaleByPowerOfTen(3);
+            case "m", "mm" -> x.scaleByPowerOfTen(6);
+            case "bn", "b" -> x.scaleByPowerOfTen(9);
+            default -> x;
+        };
+    }
+
     static boolean isDate(String s) {
         try {
             LocalDate.parse(s);
@@ -367,7 +468,7 @@ public record Form(String title, String key, String edit, String create, String 
                     options.add(op instanceof Map<?, ?> om ? new Option(str(om.get("value")), om.get("label") == null ? str(om.get("value")) : str(om.get("label")))
                             : new Option(str(op), str(op)));
                 }
-            } else if (type.equals("lookup")) {
+            } else if (SOURCED.contains(type)) {
                 Map<?, ?> lm = (Map<?, ?>) f.get("options");
                 Map<?, ?> sm = (Map<?, ?>) lm.get("source");
                 int limit = sm.get("limit") instanceof Number n ? Math.max(1, Math.min(Wiring.Source.MAX_LIMIT, n.intValue())) : Wiring.Source.MAX_LIMIT;
@@ -378,7 +479,8 @@ public record Form(String title, String key, String edit, String create, String 
             fields.add(new Field(str(f.get("id")), f.get("label") == null ? str(f.get("id")) : str(f.get("label")), type, str(f.get("bind")),
                     Boolean.TRUE.equals(f.get("required")), f.get("min"), f.get("max"), str(f.get("pattern")), maxLength, options, lookup,
                     strs(f.get("editable-by")), Boolean.TRUE.equals(f.get("readonly")), str(f.get("reason")), str(f.get("step")),
-                    str(f.get("placeholder")), str(f.get("fmt")), !Boolean.FALSE.equals(f.get("new"))));
+                    str(f.get("placeholder")), str(f.get("fmt")), !Boolean.FALSE.equals(f.get("new")), str(f.get("currency")), str(f.get("tz")),
+                    f.get("default")));
         }
         List<Rule> rules = new ArrayList<>();
         if (m.get("rules") instanceof List<?> l) {
@@ -409,6 +511,36 @@ public record Form(String title, String key, String edit, String create, String 
     }
 
     // ---- checking values ----------------------------------------------------------------------------------------------------------
+
+    /**
+     * A new record's values with the defaults filled in where nothing was given: a written value as it is, an expression worked out
+     * over the values (and the defaults before it). {@code fill} names the fields that may take a default (the ones the person may enter).
+     */
+    public Map<String, Object> withDefaults(Map<String, Object> values, Set<String> fill, LocalDate today) {
+        Map<String, Object> out = new LinkedHashMap<>(values);
+        Map<String, Object> typed = new LinkedHashMap<>();
+        for (Field f : fields) {
+            Object v = out.get(f.id());
+            typed.put(f.id(), v == null || v.toString().isBlank() ? null : typed(f, v));
+        }
+        for (Field f : fields) {
+            Object v = out.get(f.id());
+            if (f.defaultValue() == null || !fill.contains(f.id()) || v != null && !v.toString().isBlank()) {
+                continue;
+            }
+            FormExpr e = f.defaultExpr();
+            Object d = e == null ? f.defaultValue() : e.eval(typed, today);
+            if (d == null || d.toString().isBlank()) {
+                continue;
+            }
+            if (d instanceof BigDecimal b) {
+                d = b.setScale(Math.min(Math.max(b.scale(), 0), 6), java.math.RoundingMode.HALF_UP).stripTrailingZeros();
+            }
+            out.put(f.id(), d);
+            typed.put(f.id(), typed(f, d));
+        }
+        return out;
+    }
 
     public Optional<Field> field(String id) {
         return fields.stream().filter(f -> f.id().equals(id)).findFirst();
@@ -470,7 +602,7 @@ public record Form(String title, String key, String edit, String create, String 
 
     private static Object typed(Field f, Object v) {
         return switch (f.type()) {
-            case "number" -> FormExpr.number(v);
+            case "number", "money" -> amount(v);
             case "bool" -> v instanceof Boolean b ? b : Boolean.valueOf("true".equalsIgnoreCase(v.toString()));
             default -> v.toString();
         };
@@ -479,9 +611,9 @@ public record Form(String title, String key, String edit, String create, String 
     private String valueProblem(Field f, Object raw, Object t, LocalDate today) {
         String s = raw.toString();
         switch (f.type()) {
-            case "number" -> {
+            case "number", "money" -> {
                 if (!(t instanceof BigDecimal n)) {
-                    return f.label() + " is a number";
+                    return f.label() + (f.type().equals("money") ? " is an amount (1,000,000, 1.5m or 250k)" : " is a number");
                 }
                 BigDecimal min = FormExpr.number(f.min());
                 BigDecimal max = FormExpr.number(f.max());
@@ -503,6 +635,20 @@ public record Form(String title, String key, String edit, String create, String 
                 }
                 if (max != null && s.compareTo(max) > 0) {
                     return f.label() + " is on or before " + max;
+                }
+            }
+            case "datetime" -> {
+                LocalDateTime at = dateTime(s);
+                if (at == null) {
+                    return f.label() + " is a date and time (2026-12-31T17:00)";
+                }
+                String min = dateLimit(f.min(), today);
+                String max = dateLimit(f.max(), today);
+                if (min != null && at.isBefore(min.length() == 10 ? LocalDate.parse(min).atStartOfDay() : dateTime(min))) {
+                    return f.label() + " is on or after " + min.replace('T', ' ') + " " + f.zone();
+                }
+                if (max != null && at.isAfter(max.length() == 10 ? LocalDate.parse(max).atStartOfDay() : dateTime(max))) {
+                    return f.label() + " is on or before " + max.replace('T', ' ') + " " + f.zone();
                 }
             }
             case "bool" -> {

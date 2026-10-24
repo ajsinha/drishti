@@ -21,6 +21,9 @@
   red with the reason under the row; "N changes not saved", Review, Save draft, Undo all; a masked cell is Hidden for you;
 * C, New trade: a drawer over the dimmed page in steps, Next refusing a missing field, the limit after the trade computed from the
   chosen counterparty, Save as draft;
+* the richer fields: the booking entity picked by search (its id kept, its name shown, Open beside it), money typed as 1.5m with the
+  currency the currency field holds beside it, a fee worked out from the notional until it is typed over, a date and time with its
+  time zone;
 * two themes and a phone; the screenshots for the guide (docs/guides/img/designer/form-beside.jpg, form-cells.jpg, form-drawer.jpg).
 
 Skipped when Playwright, Chromium, the built server jar or a JDK is missing (wb_live.py)."""
@@ -74,6 +77,9 @@ def test_a_form_beside_the_table_with_words_a_draft_and_resuming_it(stack, brows
     side.wait_for()
     assert "locked: you can view, not change" in side.locator("[data-fm-field='counterparty'] .fm-why").inner_text()
     assert "read-only: set by the booking system" in side.locator("[data-fm-field='trade_id']").inner_text()
+    assert "· LE-" in side.locator("[data-fm-field='legal_entity'] .fm-ro").inner_text()      # an entity: its name, then its id
+    assert side.locator("[data-fm-field='notional'] .fm-unit").inner_text() == pg.evaluate(
+        "JSON.parse(document.querySelector('#p-trades').getAttribute('data-form')).rows[1].values.currency")
     assert side.locator("[data-fm-badge]").count() == 0
     pg.fill("[data-fm-side] [data-field='notional']", "40,000,000")
     warn = side.locator("[data-msgs='notional'] .fm-warn")
@@ -85,11 +91,12 @@ def test_a_form_beside_the_table_with_words_a_draft_and_resuming_it(stack, brows
     assert pg.evaluate("drishtiForms.state().trades.dirty")
     pg.fill("[data-fm-side] [data-field='comment']", "Client hedge for the Q4 roll")
     assert side.locator(".fm-error").count() == 0 and warn.count() == 1
+    pg.fill("[data-fm-side] [data-field='executed_at']", "2026-10-22T09:41")      # a date and time, in its time zone
     IMG.mkdir(parents=True, exist_ok=True)
     wait(pg, "document.querySelector('#p-trades tr.wire-kids')")
     pg.evaluate("document.querySelectorAll('#p-trades tr.wire-kids').forEach(n => n.remove())")   # the cash flows the click opened: not in the picture
-    pg.evaluate("document.querySelector('#p-trades').scrollIntoView({ block: 'start' }); window.scrollBy(0, -70)")
-    pg.screenshot(path=str(IMG / "form-beside.jpg"), type="jpeg", quality=84, clip={"x": 0, "y": 0, "width": 1500, "height": 760})
+    pg.evaluate("document.querySelector('#p-trades').scrollIntoView({ block: 'start' }); window.scrollBy(0, -70); document.activeElement.blur(); document.querySelector('[data-fm-side]').scrollTop = 0")
+    pg.screenshot(path=str(IMG / "form-beside.jpg"), type="jpeg", quality=84, clip={"x": 0, "y": 0, "width": 1500, "height": 900})
     pg.click("[data-fm-side] .fm-save")
     wait(pg, "document.querySelector('[data-fm-side] .fm-badge-saved')")
     assert pg.locator("[data-fm-drafts]").inner_text().count("draft") >= 1
@@ -214,6 +221,53 @@ def test_new_in_a_guided_drawer_with_a_live_hint(stack, browser):
     wait(pg, "document.querySelector('[data-fm-drafts]')")
     pg.click("[data-fm-drafts] .fm-link:text('Resume')")
     assert pg.locator("[data-fm-drawer] .fm-step.on").inner_text() == "2 · What"
+    forget_drafts(pg, stack)
+    pg.close()
+
+
+def test_an_entity_by_search_money_a_worked_out_default_and_a_time(stack, browser):
+    pg = page(browser, stack, DESK)
+    forget_drafts(pg, stack)
+    pg.click("[data-fm-new]")
+    dr = pg.locator("[data-fm-drawer]")
+    dr.wait_for()
+    pg.select_option("[data-fm-drawer] [data-field='counterparty']", index=1)
+    ent = "[data-fm-drawer] [data-field='legal_entity']"
+    pg.fill(ent, "europe")                                       # search by name: the list narrows as people type
+    opts = dr.locator(".fm-entity-list li[role='option']")
+    assert opts.count() >= 1 and all("europe" in t.lower() for t in opts.all_inner_texts())
+    assert pg.get_attribute(ent, "aria-expanded") == "true"
+    pg.keyboard.press("Enter")
+    kept = pg.get_attribute(ent, "data-value")
+    assert kept.startswith("LE-") and pg.input_value(ent).endswith("· " + kept)
+    assert dr.locator("[data-fm-open='legal_entity']").get_attribute("href") == "/v/legal-entity/" + kept
+    dr.locator(".fm-next").click()
+    pg.fill("[data-fm-drawer] [data-field='notional']", "lots")
+    assert dr.locator("[data-msgs='notional']").inner_text().strip() == "Notional is an amount (1,000,000, 1.5m or 250k)"
+    pg.fill("[data-fm-drawer] [data-field='notional']", "1.5m")
+    assert dr.locator("[data-fm-field='notional'] .fm-unit").inner_text() == "—"
+    pg.select_option("[data-fm-drawer] [data-field='currency']", "EUR")
+    assert dr.locator("[data-fm-field='notional'] .fm-unit").inner_text() == "EUR"           # the currency the currency field holds
+    fee = "[data-fm-drawer] [data-field='upfront_fee']"
+    assert pg.input_value(fee) == "1,500" and "Worked out: notional * 0.001" in dr.locator("[data-fm-auto]").inner_text()
+    pg.fill("[data-fm-drawer] [data-field='notional']", "2m")
+    assert pg.input_value(fee) == "2,000"                       # worked out again as people type
+    pg.fill(fee, "2.5k")
+    assert dr.locator("[data-fm-auto]").count() == 0             # typed over: no longer worked out
+    pg.locator("[data-fm-drawer] [data-field='executed_at']").focus()
+    assert pg.input_value(fee) == "2,500"                        # grouped once the field is left
+    assert dr.locator("[data-fm-field='executed_at'] .fm-unit").inner_text() == "Europe/London"
+    pg.fill("[data-fm-drawer] [data-field='executed_at']", "2026-10-23T14:05")
+    pg.fill("[data-fm-drawer] [data-field='maturity_date']", "2031-06-30")
+    pg.select_option("[data-fm-drawer] [data-field='product_type']", "IRS")
+    dr.locator(".fm-next").click()
+    summary = dr.locator(".fm-summary").inner_text()
+    assert "2,000,000 EUR" in summary and "2,500 EUR" in summary and "2026-10-23 14:05 Europe/London" in summary and kept in summary
+    dr.locator(".fm-save").click()
+    wait(pg, "document.querySelector('[data-fm-drawer] .fm-badge-saved')")
+    [d] = pg.request.get(stack + "/api/drafts?kind=portfolio-trades&id=BOOK-RATES-2").json()
+    v = d["records"][0]["values"]
+    assert (v["notional"], v["upfront_fee"], v["legal_entity"], v["executed_at"]) == (2000000, 2500, kept, "2026-10-23T14:05")
     forget_drafts(pg, stack)
     pg.close()
 

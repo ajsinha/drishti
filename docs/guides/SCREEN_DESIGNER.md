@@ -820,7 +820,7 @@ the YAML read-only. Outline, Grid, Customize and Describe edit the same Sutra: s
 
 ### Grid
 
-![Grid: the book page as a spreadsheet, the trades in A2 and a counterparty in B2 that fills on a click on a trade; the formula bar above, the live preview beside](img/designer/grid-mode.jpg)
+![Grid: the book page as a spreadsheet, the trades in A2 with the cash flows a click opens as cell A2a under it, a counterparty in B2 that fills on a click on a trade; the formula bar above, the live preview beside](img/designer/grid-mode.jpg)
 
 Grid is for spreadsheet-minded people. The screen is a sheet: columns **A, B, C** (each header says its width, such as *7/12*) and
 rows **1, 2, 3**. A cell, or a merged range such as *A1:B1*, is an area of the screen (the Sutra's `layout.areas`); the panels in it
@@ -832,6 +832,7 @@ Pick a cell: the **formula bar** shows its formula, one line a panel.
 ```
 A1 = metric(id: pay7, title: "Payments, next 7 days", value: $.PAY_7D, fmt: signed0)
 A2 = row-picker@1(id: trades, title: Trades of the book, rows: $.TRADES, event: open, key: TRADE_ID, ref: COUNTERPARTY)
+A2a = cashflow-ladder@1(id: flows, title: Cash flows, rows: $src.EVENTS, date: EVENT_DATE, amount: AMOUNT) opens from A2
 B2 = field-list@1(id: who, title: Counterparty, rows: $src; source: {pack: core, kind: counterparty, id: @A2.open.ref})
 ```
 
@@ -840,9 +841,17 @@ B2 = field-list@1(id: who, title: Counterparty, rows: $src; source: {pack: core,
 - **`@A2.open.ref`** reads what the panel in A2 emits when a row is clicked (`@trades.open.ref` in the Sutra): B2 waits until a
   trade is picked, then fills. `@parent.` is what a parent panel emitted, in a panel a click opens.
 - Values are written plainly (`$.TRADES`, `BOOK = 'X'`, `12`, `true`); put text with a comma or a `;` in double quotes.
-- What a formula cannot say in one line (a table's columns, its events, what a click opens, a fragment's nested parameters) is
-  **kept** when you type: the cell says *keeps columns, emits*. Change those in Customize or Outline. The cell's width, height,
-  order and folding are the cell's, not the formula's.
+- **A panel a click opens** (a table's `children`: the cash flows under a trade's row) is a cell of its own, drawn under its
+  parent's cell with ↳ and named after it with a letter: **A2a**, **A2b**... Its formula ends in where it opens from (`opens from
+  A2`, or the parent panel's id when A2 holds several); you may leave that out when you type. Pick it with a click, or **Down** from
+  the parent cell (**Up** goes back); type its formula as any other; an empty formula removes it. To open it from another table, move
+  it in Outline (a different `opens from` is refused, with that part in red). Another formula may name it, `@A2a.open.x`.
+- What a formula cannot say in one line (a table's columns, its events, a fragment's nested parameters) is **kept** when you type:
+  the cell says *keeps columns, emits*. Change those in Customize or Outline. The cell's height, order and folding are the cell's,
+  not the formula's.
+- **Column widths** are the screen's twelfths (`layout.columns`): drag the edge between two column headers (the neighbour gives or
+  takes the units; **Left** and **Right** on a focused edge move it one unit), or click a header's *7/12* and type a width (Enter
+  keeps it, Esc goes back). Every column keeps at least 1 unit, and the columns always share 12.
 - **Enter** keeps the formula (**Shift+Enter** adds a line: another panel in the cell; an empty formula clears the cell); **Esc**
   goes back to the cell as it was. A formula that does not read is shown with **its red part** and what to do (*the formula is
   not closed: add )*); the cell keeps what it had until it reads. A change the server refuses is said in plain words and not made.
