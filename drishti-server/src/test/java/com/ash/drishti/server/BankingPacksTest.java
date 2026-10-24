@@ -42,7 +42,7 @@ class BankingPacksTest {
         mvc.perform(get("/api/v1/sources"))
                 .andExpect(jsonPath("$.sources[*].name").value(hasItems("reference-store", "market-store", "trade-endur", "trade-calypso", "trade-murex", "trade-pages", "risk-store",
                         "legal-store", "credit-store", "collateral-store")));
-        mvc.perform(get("/api/v1/sutras")).andExpect(jsonPath("$.length()").value(180))
+        mvc.perform(get("/api/v1/sutras")).andExpect(jsonPath("$.length()").value(181))
                 .andExpect(jsonPath("$[*].name").value(hasItems("irs-fixfloat", "endur-comswap", "counterparty-trades", "netting-set", "var", "ir-curve", "counterparty")));
         mvc.perform(get("/api/v1/command/suggest").param("q", "NSE"))
                 .andExpect(jsonPath("$[*].mnemonic").value(hasItem("NSET")));

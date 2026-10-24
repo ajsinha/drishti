@@ -109,7 +109,7 @@ class CommonSchemaTest(unittest.TestCase):
         whens: dict[str, set[str]] = {}
         for f in sutras.rglob("*.sutra.yaml"):
             text = f.read_text(encoding="utf-8")
-            if "kind: trade," not in text:
+            if not re.search(r"^match:.*kind: trade,", text, re.M):     # a trade page, not a screen that reads trades (book-desk)
                 continue
             m = re.search(r"\$\.SOURCE_SYSTEM == '([A-Z]+)' && \$\.PRODUCT_TYPE == '([^']+)'", text)
             self.assertIsNotNone(m, f"{f.name} matches trades without naming a system and a product type")
