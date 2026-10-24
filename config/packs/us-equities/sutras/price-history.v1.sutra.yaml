@@ -1,0 +1,61 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written from the Drishti UI kit (config/ui-kit/fragments). Read live by the us-equities-prices connector (off as shipped).
+rachana: 1
+sutra: price-history
+version: 1
+description: "A company's quote and a year of daily prices, read live by the us-equities-prices connector: off as shipped, internal use only."
+doc:
+  summary: "A ticker's live quote and a year of daily closes; internal use only, off until a site turns it on."
+  description: >-
+    The quote (price, change, day and 52-week range, volume, as of) and the daily closing prices over a year, read on demand from
+    Yahoo Finance's public chart endpoint by the us-equities-prices connector (the yfinance plugin). Free price feeds forbid
+    redistribution: nothing is committed or stored by the pack, the connector is off as shipped, and it is for internal
+    demonstrations only. With the connector off the page has no data.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "PXH PX-AAPL"
+  since: "2.7.0"
+match: { kind: price-history, priority: 10 }
+title: { pill: US equities · Prices (internal use only), id: $.SYMBOL, with: $.NAME }
+strip:
+  - { label: Price, bind: $.PRICE, fmt: price2, emphasis: true }
+  - { label: Currency, bind: $.CURRENCY }
+  - { label: Change, bind: $.CHANGE, fmt: price2, tone: sign }
+  - { label: Change %, bind: $.CHANGE_PCT, fmt: growth1, tone: sign }
+  - { label: Exchange, bind: $.EXCHANGE }
+  - { label: As of, bind: $.AS_OF }
+panels:
+  - { use: series-line@1, with: { id: closes, title: "Daily close, one year", rows: $.HISTORY, x: DATE, y: CLOSE, fmt: price2, key: F2 } }
+  - id: quote
+    kind: kv
+    title: Quote
+    area: right
+    columns:
+      - { label: Day low, bind: $.DAY_LOW, fmt: price2 }
+      - { label: Day high, bind: $.DAY_HIGH, fmt: price2 }
+      - { label: 52-week low, bind: $.FIFTY_TWO_WEEK_LOW, fmt: price2 }
+      - { label: 52-week high, bind: $.FIFTY_TWO_WEEK_HIGH, fmt: price2 }
+      - { label: Volume, bind: $.VOLUME, fmt: amount0 }
+      - { label: Market, bind: $.MARKET_STATE }
+  - use: explainer-note@1
+    with:
+      title: Internal use only
+      area: right
+      text: "Prices are not part of the us-equities pack. This page reads them live from Yahoo Finance's public chart endpoint through the us-equities-prices connector, which is off as shipped (DRISHTI_US_EQUITIES_PRICES_ENABLED). Free price feeds forbid redistribution: use it for internal demonstrations only and raise it before any client or external use. Turning it on sends each ticker opened to Yahoo."
+  - { use: data-provenance@1 }
+keys: { F9: raw }

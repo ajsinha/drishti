@@ -18,6 +18,21 @@
 ## Unreleased
 
 - The UI Board work is kept on branch ui-board-preview; not in this release.
+- **The us-equities pack** ([its guide](config/packs/us-equities/guides/us-equities.md), [PACKS.md](docs/guides/PACKS.md#the-packs-that-ship)):
+  real public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500 as Wikidata records their membership (479 companies
+  with SEC filings): `us-company` (CIK, ticker, exchange and listing market, SIC with its description and division, LEI from GLEIF,
+  headquarters, founded, website, index memberships, ten years of annual 10-K XBRL financials, the latest 20 filings), `filing` (9,561,
+  metadata and EDGAR links only), `financial-fact` (3,275: one concept of one company by fiscal year), `index-membership`,
+  `sic-sector` (with `SIC ALL`), `filing-feed` (the filings browser) and `price-history` (live only, through the `us-equities-prices`
+  connector on the yfinance plugin, **off as shipped and for internal use only**; no prices are committed). Commands `USEQ AAPL`,
+  `IDX SP500`, `SIC 3674`, `EDGAR 8-K`, `FILING <accession>`, `FACT AAPL-REVENUE`, `PXH PX-AAPL`. Screens from UI-kit fragments plus
+  four pack fragments (`company-card`, `annual-financials`, `filing-list`, `filing-card`), each with a `doc:`: the company page (a click
+  on a filing opens it beside, with its EDGAR links), the index page (a click on a member opens its summary beside), the sector page,
+  the SIC directory, the filings browser, a filing, a fact. Links: company to filings, facts, sector, indexes, the US economy
+  (`world-economy`), its market watch page (`news-and-markets`) and a `core` legal entity whose LEI matches. Sources and licences: SEC
+  EDGAR (public domain), GLEIF and Wikidata (CC0), the Nasdaq Trader directory; no index weights or levels, no GICS. Off by default:
+  add `us-equities` to `DRISHTI_PACKS`. `tools/packgen/us_equities/fetch.py` refreshes the data (network, cached),
+  `make.py [--check]` builds it offline; `UsEquitiesPackTest`, `tools/test_us_equities_pack.py`.
 - **Grid: a second level of opened panels** ([SCREEN_DESIGNER.md section 31](docs/guides/SCREEN_DESIGNER.md#grid)): a panel a
   click in an opened panel opens is its own cell, `A2a1` (then `A2a2`...), drawn one step further in under `A2a`, its formula ending
   in `opens from A2a` (optional when typing; another parent is refused with that part in red); `@A2a1.` names it, Up and Down walk

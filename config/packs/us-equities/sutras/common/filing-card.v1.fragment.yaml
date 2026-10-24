@@ -1,0 +1,59 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The us-equities pack's own fragment (SUTRA_NEXT.md 3a), hand-written, used as { use: us-equities/filing-card@1 }.
+rachana: 1
+fragment: filing-card
+version: 1
+description: "One SEC filing's details: company, form, dates, 8-K items and its links on EDGAR."
+params: { id: filing, title: Filing, rec: $, code: '', key: '', area: '' }
+doc:
+  summary: "One SEC filing's details: company, form, dates, 8-K items and its links on EDGAR."
+  description: >-
+    A filing record as label and value pairs: the accession number (a link to the filing's page), the company (a link), the
+    form and what it is, the filing and report dates, the 8-K items it reports, the primary document and its size, and two
+    links that open on sec.gov: the document itself and the filing's EDGAR index (every exhibit). rec names the record: $ on
+    the filing's own page, $src in a child that reads the filing as its source.
+  params:
+    id: { type: id, default: filing, meaning: "The panel id, unique on the screen" }
+    title: { type: text, default: Filing, meaning: "The title over the list" }
+    rec: { type: expression, default: $, meaning: "The filing record: $ on its page, $src under a source" }
+    code: { type: key, default: '', meaning: "The panel's mnemonic code, typed in the command line to jump to it; none when empty" }
+    key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
+  emits: []
+  expects: []
+  examples:
+    - { use: filing-card@1, with: { key: F2 } }
+    - { use: filing-card@1, with: { id: picked, title: Filing, rec: $src } }
+  since: "2.7.0"
+panels:
+  - id: %{id}
+    kind: kv
+    title: "%{title}"
+    code: %{code}
+    key: %{key}
+    area: %{area}
+    columns:
+      - { label: Accession, bind: "link(%{rec}.ACCESSION, 'filing')" }
+      - { label: Company, bind: "link(%{rec}.COMPANY, 'us-company', %{rec}.COMPANY_NAME)" }
+      - { label: Form, bind: "%{rec}.FORM" }
+      - { label: What it is, bind: "%{rec}.FORM_NAME" }
+      - { label: Filed, bind: "%{rec}.FILED", fmt: date }
+      - { label: Report date, bind: "%{rec}.REPORT_DATE", fmt: date }
+      - { label: 8-K items, bind: "%{rec}.ITEMS_TEXT" }
+      - { label: Document, bind: "%{rec}.DOCUMENT_DESCRIPTION" }
+      - { label: Size (KB), bind: "%{rec}.SIZE_KB", fmt: amount0 }
+      - { label: Open on EDGAR, bind: "'https://www.sec.gov/Archives/edgar/data/' + %{rec}.PATH + '/' + %{rec}.PRIMARY_DOCUMENT" }
+      - { label: EDGAR filing index, bind: "'https://www.sec.gov/Archives/edgar/data/' + %{rec}.PATH + '/' + %{rec}.ACCESSION + '-index.htm'" }

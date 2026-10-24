@@ -1,0 +1,65 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written from the Drishti UI kit (config/ui-kit/fragments) and the pack's own fragments (sutras/common).
+rachana: 1
+sutra: filing-feed
+version: 1
+description: "The filings browser: the latest SEC filings of the covered companies, of every form or one; a click opens a filing beside."
+doc:
+  summary: "The latest SEC filings of the Dow 30, Nasdaq-100 and S&P 500 companies; a click opens the filing beside the table."
+  description: >-
+    The newest filings first (EDGAR ALL for every form; EDGAR 10-K, 10-Q, 8-K, 4 or DEF-14A for one): date, form, what it is,
+    company and accession number, every column filterable. Clicking a filing opens its details beside the table: company, dates,
+    8-K items, and links to the document and its EDGAR index on sec.gov. The right column counts the filings by form (all forms)
+    or by company (one form).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/filing-feed/ALL"
+    - "EDGAR 8-K"
+  since: "2.7.0"
+match: { kind: filing-feed, priority: 10 }
+title: { pill: US equities · EDGAR filings, id: $.FEED, with: $.NAME }
+strip:
+  - { label: Forms, bind: $.NAME }
+  - { label: Filings, bind: $.FILINGS, emphasis: true }
+  - { label: Companies, bind: $.COMPANIES }
+  - { label: Latest, bind: $.LATEST, fmt: date }
+  - { label: Earliest shown, bind: $.EARLIEST, fmt: date }
+panels:
+  - use: us-equities/filing-list@1
+    with: { id: feed, title: "Latest filings (a click opens one beside)", rows: $.ROWS, other: COMPANY_NAME, other-label: Company, ref: COMPANY, key: F2, code: FIL }
+    children:
+      - place: detail-right
+        source: { kind: filing, id: "@parent.open.id" }
+        waits: Pick a filing to see its details and EDGAR links
+        panels:
+          - { use: us-equities/filing-card@1, with: { id: picked, title: "Filing ${@parent.open.id}", rec: $src } }
+  - { use: ranked-bars@1, with: { id: by, title: Filings by form or company, rows: $.BY, fmt: amount0, area: right, key: F3 } }
+  - id: forms
+    kind: kv
+    title: Browse by form
+    area: right
+    columns:
+      - { label: Every form, bind: "link('ALL', 'filing-feed', 'EDGAR ALL')" }
+      - { label: Annual reports, bind: "link('10-K', 'filing-feed', 'EDGAR 10-K')" }
+      - { label: Quarterly reports, bind: "link('10-Q', 'filing-feed', 'EDGAR 10-Q')" }
+      - { label: Current reports, bind: "link('8-K', 'filing-feed', 'EDGAR 8-K')" }
+      - { label: Insider transactions, bind: "link('4', 'filing-feed', 'EDGAR 4')" }
+      - { label: Proxy statements, bind: "link('DEF-14A', 'filing-feed', 'EDGAR DEF-14A')" }
+  - { use: field-list@1, with: { id: source, title: Data source and licence, rows: $.PROVENANCE, area: right } }
+  - { use: data-provenance@1 }
+keys: { F9: raw }
