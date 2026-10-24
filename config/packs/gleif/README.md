@@ -78,101 +78,87 @@ Every kind the pack owns, read from its manifest, its samples and its Sutras: ho
 
 **LEI legal entity** · mnemonic `LEI`.
 
-**Id:** field `LEI`; pattern `^[0-9A-Z]{18}[0-9]{2}$`; for example `0292001381F1R1IB5B85`.
+**Id:** field `LEI`; pattern `^[0-9A-Z]{18}[0-9]{2}$`; for example `HWUPKR0MPOU8FGXBT394`.
 
-Fields, from 4000 sample documents:
+Fields, from 1 sample document:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `LEI` | string | `0292001381F1R1IB5B85` | Legal Entity Identifier (ISO 17442, 20 characters) |
-| `NAME` | string | `STANBIC IBTC STOCKBROKERS LIMITED` | Legal name |
-| `LEGAL_FORM` | string | `Public company limited by shares` | Legal form (the ELF code's name) |
-| `LEI_COUNTRY` | string | `NG` | Country of the legal address (ISO 3166 alpha-2), a link to its lei-country; link to `lei-country` |
-| `COUNTRY_NAME` | string | `Nigeria` | The country's name |
-| `LEGAL_ADDRESS` | string | `IBTC PLACE, WALTER CARRINGTON CRESCENT, …` | Legal address |
-| `LEGAL_CITY` | string | `LAGOS` | City of the legal address |
-| `REGISTERED_AS` | string | `85776` | Number at the business register (in 98%) |
+| `LEI` | string | `HWUPKR0MPOU8FGXBT394` | Legal Entity Identifier (ISO 17442, 20 characters) |
+| `NAME` | string | `Apple Inc.` | Legal name |
+| `OTHER_NAMES` | list of objects |  | Other and previous names, with their type |
+| `LEGAL_FORM` | string | `For-Profit Corporation General Stock` | Legal form (the ELF code's name) |
+| `JURISDICTION` | string | `US-CA` | Legal jurisdiction when it differs from the country |
+| `LEI_COUNTRY` | string | `US` | Country of the legal address (ISO 3166 alpha-2), a link to its lei-country; link to `lei-country` |
+| `COUNTRY_NAME` | string | `United States of America (the)` | The country's name |
+| `LEGAL_ADDRESS` | string | `C/O C T Corporation System, 330 N. Brand…` | Legal address |
+| `LEGAL_CITY` | string | `Glendale` | City of the legal address |
+| `HQ_ADDRESS` | string | `One Apple Park Way, 95014 Cupertino, US-…` | Headquarters address, when it differs from the legal address |
+| `REGISTERED_AS` | string | `806592` | Number at the business register |
 | `ENTITY_STATUS` | string | `ACTIVE` | Entity status (ACTIVE, INACTIVE) |
-| `CREATED` | date | `1986-06-26` | Date the entity was created (in 92%) |
+| `CREATED` | date | `1977-01-03` | Date the entity was created |
 | `REGISTRATION_STATUS` | string | `ISSUED` | LEI registration status (ISSUED, LAPSED, RETIRED, ...) |
-| `INITIAL_REGISTRATION` | date | `2016-07-14` | First registration of the LEI |
-| `LAST_UPDATE` | date | `2026-07-27` | Last update of the record |
-| `NEXT_RENEWAL` | date | `2027-07-13` | Next renewal date |
+| `INITIAL_REGISTRATION` | date | `2012-06-06` | First registration of the LEI |
+| `LAST_UPDATE` | date | `2026-03-03` | Last update of the record |
+| `NEXT_RENEWAL` | date | `2027-03-08` | Next renewal date |
 | `RENEWAL_LATE` | boolean | `false` | True when the registration lapsed or its renewal date has passed |
-| `MANAGING_LOU` | string | `Central Securities Clearing System PLC` | The LEI issuer (LOU) managing the record |
-| `BICS` | string | `STIKNGL2XXX` | Its BICs (GLEIF mapping file) (in 10%) |
-| `BIC_COUNT` | integer | `1` | Number of BICs (in 10%) |
-| `DIRECT_PARENT` | string | `2549003PEZXUT7MDBU41` | Direct accounting consolidation parent's LEI; link to `lei-entity` (in 81%) |
-| `LEI_GROUP` | string | `2549003PEZXUT7MDBU41` | The ownership group (its ultimate parent's LEI); link to `lei-group` |
-| `PARENTS` | list of objects |  | The parents chain, direct parent first (in 97%) |
-| `ISIN_COUNT` | integer | `2` | Number of ISINs mapped to it (GLEIF mapping file) (in 9%) |
-| `ULTIMATE_PARENT` | string | `2549003PEZXUT7MDBU41` | Ultimate parent's LEI, when it differs from the direct parent; link to `lei-entity` (in 35%) |
-| `CHILDREN` | list of objects |  | Entities it directly consolidates, in the pack (in 8%) |
-| `CHILD_COUNT` | integer | `1` | Number of children in the pack (in 8%) |
-| `DIRECT_CHILDREN_GLEIF` | integer | `1` | Number of direct children in GLEIF (in 11%) |
-| `OTHER_NAMES` | list of objects |  | Other and previous names, with their type (in 31%) |
-| `RENEWAL` | string | `Due in 12 days (2026-11-05)` | What the renewal says, when late or due within 30 days (in 22%) |
-| `OPENCORPORATES` | string | `nl/34153487` | OpenCorporates company id (in 40%) |
-| `JURISDICTION` | string | `US-DE` | Legal jurisdiction when it differs from the country (in 20%) |
-| `PARENT_EXCEPTIONS` | list of objects |  | Reporting exceptions (why no parent is reported) (in 18%) |
-| `ULTIMATE_CHILDREN_GLEIF` | integer | `9` | Number of entities naming it ultimate parent in GLEIF (in 3%) |
-| `MAPPING_IDS` | list of strings |  | Its identifier documents (lei-mapping); link to `lei-mapping` (in 3%) |
-| `SEGMENT` | string | `US equities` | Why it is a seed (US equities, G-SIB, bank, insurer, asset manager, market infrastructure) (in 3%) |
-| `US_COMPANY` | string | `WAB` | The us-equities company's ticker, a link to it (in 2%) |
-| `US_COMPANY_NAME` | string | `Wabtec` | The us-equities company's name (in 2%) |
-| `HQ_ADDRESS` | string | `1 Riverside Plaza, 43215 Columbus, US-OH…` | Headquarters address, when it differs from the legal address (in 32%) |
-| `HQ_COUNTRY` | string | `US` | Headquarters country, when it differs (in 5%) |
-| `MIC` | string | `MAQI` | Market identifier codes it operates (in 1%) |
-| `CATEGORY` | string | `Fund` | Entity category when not general (fund, branch, sole proprietor) (in 3%) |
-| `SUCCESSOR` | string | `724500ZSA7ZOZHUXBS53` | Successor entity's LEI; link to `lei-entity` (in 0%) |
+| `MANAGING_LOU` | string | `Bloomberg Finance L.P.` | The LEI issuer (LOU) managing the record |
+| `BICS` | string | `APLEUS66XXX` | Its BICs (GLEIF mapping file) |
+| `BIC_COUNT` | integer | `1` | Number of BICs |
+| `ISIN_COUNT` | integer | `949` | Number of ISINs mapped to it (GLEIF mapping file) |
+| `LEI_GROUP` | string | `HWUPKR0MPOU8FGXBT394` | The ownership group (its ultimate parent's LEI); link to `lei-group` |
+| `PARENT_EXCEPTIONS` | list of objects |  | Reporting exceptions (why no parent is reported) |
+| `CHILDREN` | list of objects |  | Entities it directly consolidates, in the pack |
+| `CHILD_COUNT` | integer | `8` | Number of children in the pack |
+| `DIRECT_CHILDREN_GLEIF` | integer | `8` | Number of direct children in GLEIF |
+| `ULTIMATE_CHILDREN_GLEIF` | integer | `20` | Number of entities naming it ultimate parent in GLEIF |
+| `MAPPING_IDS` | list of strings |  | Its identifier documents (lei-mapping); link to `lei-mapping` |
+| `SEGMENT` | string | `US equities` | Why it is a seed (US equities, G-SIB, bank, insurer, asset manager, market infrastructure) |
+| `US_COMPANY` | string | `AAPL` | The us-equities company's ticker, a link to it |
+| `US_COMPANY_NAME` | string | `Apple Inc.` | The us-equities company's name |
 
 Nested structures:
 
 | Path | Fields |
 |---|---|
-| `PARENTS[]` | `LEVEL` (integer), `LEI` (string), `NAME` (string), `RELATIONSHIP` (string) |
-| `CHILDREN[]` | `LEI` (string), `NAME` (string), `COUNTRY` (string), `KIDS` (integer) |
 | `OTHER_NAMES[]` | `NAME` (string), `TYPE` (string) |
 | `PARENT_EXCEPTIONS[]` | `LEVEL` (string), `REASON` (string), `MEANING` (string) |
+| `CHILDREN[]` | `LEI` (string), `NAME` (string), `COUNTRY` (string), `KIDS` (integer) |
 
-Links: `DIRECT_PARENT` → `lei-entity`, `LEI_COUNTRY` → `lei-country`, `LEI_GROUP` → `lei-group`, `MAPPING_IDS` → `lei-mapping`, `SUCCESSOR` → `lei-entity`, `ULTIMATE_PARENT` → `lei-entity`.
+Links: `LEI_COUNTRY` → `lei-country`, `LEI_GROUP` → `lei-group`, `MAPPING_IDS` → `lei-mapping`.
 
 ### `lei-group`
 
 **LEI ownership group** · mnemonic `LEIG`.
 
-**Id:** field `GROUP_ID`; for example `06BTX5UWZD0GQ5N5Y745`.
+**Id:** field `GROUP_ID`; for example `8I5DZWZKVSZI1NUHU748`.
 
-Fields, from 541 sample documents:
+Fields, from 1 sample document:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `GROUP_ID` | string | `06BTX5UWZD0GQ5N5Y745` | The ultimate parent's LEI (ALL for the browse document) |
-| `NAME` | string | `WESTINGHOUSE AIR BRAKE TECHNOLOGIES CORP…` | — |
-| `ENTITY_LEI` | string | `06BTX5UWZD0GQ5N5Y745` | The ultimate parent's entity; link to `lei-entity` (in 100%) |
-| `COUNTRY` | string | `US` | — (in 100%) |
-| `COUNTRY_NAME` | string | `United States of America (the)` | — (in 100%) |
-| `LEI_COUNTRY` | string | `US` | Country; link to `lei-country` (in 100%) |
-| `LEGAL_FORM` | string | `Corporation` | Legal form (in 100%) |
-| `SEGMENT` | string | `US equities` | Segment (in 100%) |
-| `MEMBERS` | integer | `12` | Members the pack keeps (in 100%) |
-| `MEMBERS_IN_GLEIF` | integer | `12` | Members GLEIF has (in 100%) |
-| `CAPPED` | boolean | `false` | True when GLEIF has more members than the pack keeps (in 100%) |
-| `LEVELS` | integer | `2` | Depth of the tree (in 100%) |
-| `COUNTRIES` | integer | `7` | Countries |
-| `LATE_RENEWALS` | integer | `4` | — |
-| `SEEDS` | list of objects |  | The seeds that brought the group in (in 100%) |
-| `US_COMPANY` | string | `WAB` | — (in 82%) |
-| `TREE` | list of objects |  | The tree from the ultimate parent (CHILDREN nested) (in 100%) |
+| `GROUP_ID` | string | `8I5DZWZKVSZI1NUHU748` | The ultimate parent's LEI (ALL for the browse document) |
+| `NAME` | string | `JPMORGAN CHASE & CO.` | — |
+| `ENTITY_LEI` | string | `8I5DZWZKVSZI1NUHU748` | The ultimate parent's entity; link to `lei-entity` |
+| `COUNTRY` | string | `US` | — |
+| `COUNTRY_NAME` | string | `United States of America (the)` | — |
+| `LEI_COUNTRY` | string | `US` | Country; link to `lei-country` |
+| `LEGAL_FORM` | string | `Corporation` | Legal form |
+| `SEGMENT` | string | `G-SIB, US equities` | Segment |
+| `MEMBERS` | integer | `50` | Members the pack keeps |
+| `MEMBERS_IN_GLEIF` | integer | `173` | Members GLEIF has |
+| `CAPPED` | boolean | `true` | True when GLEIF has more members than the pack keeps |
+| `CAP_NOTE` | string | `The group has 173 entities in GLEIF; the…` | The cap in words |
+| `LEVELS` | integer | `2` | Depth of the tree |
+| `COUNTRIES` | integer | `13` | Countries |
+| `LATE_RENEWALS` | integer | `5` | — |
+| `SEEDS` | list of objects |  | The seeds that brought the group in |
+| `US_COMPANY` | string | `JPM` | — |
+| `TREE` | list of objects |  | The tree from the ultimate parent (CHILDREN nested) |
 | `ROWS` | list of objects |  | Every member with its country and level |
 | `BY_COUNTRY` | list of objects |  | Members by country |
-| `BY_LEGAL_FORM` | list of objects |  | Members by legal form (in 100%) |
+| `BY_LEGAL_FORM` | list of objects |  | Members by legal form |
 | `PROVENANCE` | object |  | Source, retrieval date, licence and URL |
-| `CAP_NOTE` | string | `The group has 294 entities in GLEIF; the…` | The cap in words (in 16%) |
-| `GROUPS` | integer | `540` | Groups (in 0%) |
-| `ENTITIES` | integer | `9512` | Entities (in 0%) |
-| `CAPPED_GROUPS` | integer | `84` | Groups capped (in 0%) |
-| `BY_SEGMENT` | list of objects |  | Nested: see below (in 0%) |
 
 Nested structures:
 
@@ -181,12 +167,11 @@ Nested structures:
 | `SEEDS[]` | `LEI` (string), `LABEL` (string), `SEGMENT` (string), `TICKER` (string) |
 | `TREE[]` | `LEI` (string), `NAME` (string), `COUNTRY` (string), `CHILDREN` (list of objects) |
 | `TREE[].CHILDREN[]` | `LEI` (string), `NAME` (string), `COUNTRY` (string), `CHILDREN` (list of objects) |
-| `TREE[].CHILDREN[].CHILDREN[]` | `LEI` (string), `NAME` (string), `COUNTRY` (string), `CHILDREN` (list of objects) |
-| `ROWS[]` | `LEI` (string), `NAME` (string), `COUNTRY` (string), `LEVEL` (integer), `LATE` (string), `GROUP_ID` (string), `SEGMENT` (string), `MEMBERS` (integer), `MEMBERS_IN_GLEIF` (integer) |
+| `TREE[].CHILDREN[].CHILDREN[]` | `LEI` (string), `NAME` (string), `COUNTRY` (string) |
+| `ROWS[]` | `LEI` (string), `NAME` (string), `COUNTRY` (string), `LEVEL` (integer), `LATE` (string) |
 | `BY_COUNTRY[]` | `LABEL` (string), `VALUE` (integer) |
 | `BY_LEGAL_FORM[]` | `LABEL` (string), `VALUE` (integer) |
 | `PROVENANCE` | `SOURCE` (string), `RETRIEVED_AT` (date), `LICENCE` (string), `URL` (string) |
-| `BY_SEGMENT[]` | `LABEL` (string), `VALUE` (integer) |
 
 Links: `ENTITY_LEI` → `lei-entity`, `LEI_COUNTRY` → `lei-country`.
 
@@ -196,7 +181,7 @@ Links: `ENTITY_LEI` → `lei-entity`, `LEI_COUNTRY` → `lei-country`.
 
 **Id:** field `RELATIONSHIP_ID`; pattern `^LEIREL-`; for example `LEIREL-0292001381F1R1IB5B85-DIRECT`.
 
-Fields, from 4000 sample documents:
+Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
@@ -207,7 +192,7 @@ Fields, from 4000 sample documents:
 | `RELATIONSHIP_STATUS` | string | `ACTIVE` | ACTIVE or INACTIVE |
 | `START` | date | `2006-01-25` | Start of the relationship |
 | `PERIODS` | list of objects |  | Accounting and document filing periods |
-| `ACCOUNTING_STANDARD` | string | `IFRS` | Accounting standard of the consolidation (in 50%) |
+| `ACCOUNTING_STANDARD` | string | `IFRS` | Accounting standard of the consolidation |
 | `REGISTRATION_STATUS` | string | `PUBLISHED` | The relationship record's registration status |
 | `INITIAL_REGISTRATION` | date | `2016-07-14` | First registered |
 | `LAST_UPDATE` | date | `2026-07-27` | Last updated |
@@ -226,38 +211,35 @@ Links: `CHILD_ENTITY` → `lei-entity`, `LEI_GROUP` → `lei-group`, `PARENT_ENT
 
 **LEI country** · mnemonic `LEIC`.
 
-**Id:** field `COUNTRY`; for example `AE`.
+**Id:** field `COUNTRY`; for example `US`.
 
-Fields, from 133 sample documents:
+Fields, from 1 sample document:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `COUNTRY` | string | `AE` | ISO 3166 alpha-2 code (ALL for the directory) |
-| `NAME` | string | `United Arab Emirates (the)` | — |
-| `ENTITIES` | integer | `28` | Entities with a legal address there |
-| `GROUPS_PRESENT` | integer | `26` | Groups present (in 99%) |
-| `GROUPS_HEADQUARTERED` | integer | `0` | — (in 99%) |
-| `LAPSED` | integer | `9` | — (in 99%) |
-| `LATE_RENEWALS` | integer | `9` | — (in 99%) |
+| `COUNTRY` | string | `US` | ISO 3166 alpha-2 code (ALL for the directory) |
+| `NAME` | string | `United States of America (the)` | — |
+| `ENTITIES` | integer | `2624` | Entities with a legal address there |
+| `GROUPS_PRESENT` | integer | `502` | Groups present |
+| `GROUPS_HEADQUARTERED` | integer | `435` | — |
+| `LAPSED` | integer | `693` | — |
+| `LATE_RENEWALS` | integer | `703` | — |
 | `ROWS` | list of objects |  | The entities (the first 400 by name) |
-| `GROUP_ROWS` | list of objects |  | Groups present, with their entities there (in 99%) |
-| `BY_LEGAL_FORM` | list of objects |  | Entities by legal form (in 99%) |
-| `BY_CITY` | list of objects |  | Entities by city (in 99%) |
+| `ROWS_NOTE` | string | `The first 400 of 2,624 entities, by name` | — |
+| `GROUP_ROWS` | list of objects |  | Groups present, with their entities there |
+| `BY_LEGAL_FORM` | list of objects |  | Entities by legal form |
+| `BY_CITY` | list of objects |  | Entities by city |
 | `PROVENANCE` | object |  | Source, retrieval date, licence and URL |
-| `ROWS_NOTE` | string | `The first 400 of 424 entities, by name` | — (in 4%) |
-| `COUNTRIES` | integer | `132` | Countries (in 1%) |
-| `BY_COUNTRY` | list of objects |  | Nested: see below (in 1%) |
 
 Nested structures:
 
 | Path | Fields |
 |---|---|
-| `ROWS[]` | `LEI` (string), `NAME` (string), `CITY` (string), `GROUP` (string), `LATE` (string), `COUNTRY` (string), `ENTITIES` (integer), `GROUPS_HEADQUARTERED` (integer), `LAPSED` (integer) |
+| `ROWS[]` | `LEI` (string), `NAME` (string), `CITY` (string), `GROUP` (string), `LATE` (string) |
 | `GROUP_ROWS[]` | `GROUP_ID` (string), `NAME` (string), `HOME` (string), `HERE` (integer) |
 | `BY_LEGAL_FORM[]` | `LABEL` (string), `VALUE` (integer) |
 | `BY_CITY[]` | `LABEL` (string), `VALUE` (integer) |
 | `PROVENANCE` | `SOURCE` (string), `RETRIEVED_AT` (date), `LICENCE` (string), `URL` (string) |
-| `BY_COUNTRY[]` | `LABEL` (string), `VALUE` (integer) |
 
 ### `lei-mapping`
 
@@ -265,7 +247,7 @@ Nested structures:
 
 **Id:** field `IDENTIFIER`; for example `WABTUS3WXXX`.
 
-Fields, from 3011 sample documents:
+Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
@@ -276,7 +258,7 @@ Fields, from 3011 sample documents:
 | `COUNTRY` | string | `US` | — |
 | `LEI_GROUP` | string | `06BTX5UWZD0GQ5N5Y745` | link to `lei-group` |
 | `MAPPING_FILE` | string | `LEI-BIC-20260925.zip` | The GLEIF mapping file it came from |
-| `ISIN_COUNT` | integer | `909` | ISINs of the issuer (in 77%) |
+| `ISIN_COUNT` | integer | `909` | ISINs of the issuer (in 50%) |
 
 Links: `ENTITY_LEI` → `lei-entity`, `LEI_GROUP` → `lei-group`.
 

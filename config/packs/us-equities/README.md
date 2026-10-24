@@ -89,59 +89,59 @@ Every kind the pack owns, read from its manifest, its samples and its Sutras: ho
 
 **US company** · mnemonic `USEQ`.
 
-**Id:** field `TICKER`; for example `ABT`.
+**Id:** field `TICKER`; for example `AAPL`.
 
-Fields, from 479 sample documents:
+Fields, from 3 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `TICKER` | string | `ABT` | Ticker |
-| `NAME` | string | `Abbott Laboratories` | Company name |
-| `SEC_NAME` | string | `ABBOTT LABORATORIES` | Name as registered with the SEC |
-| `CIK` | string | `0000001800` | SEC Central Index Key (10 digits) |
-| `OTHER_TICKERS` | string | `UNMA` | Other tickers of the same company |
-| `EXCHANGE` | string | `NYSE` | Listing exchange code |
-| `LISTING` | string | `New York Stock Exchange` | Listing market name |
-| `SIC` | string | `2834` | SEC Standard Industrial Classification code |
-| `SIC_DESCRIPTION` | string | `Pharmaceutical Preparations` | Industry (SIC) |
+| `TICKER` | string | `AAPL` | Ticker |
+| `NAME` | string | `Apple Inc.` | Company name |
+| `SEC_NAME` | string | `Apple Inc.` | Name as registered with the SEC |
+| `CIK` | string | `0000320193` | SEC Central Index Key (10 digits) |
+| `OTHER_TICKERS` | string | `C-PN, C-PR` | Other tickers of the same company |
+| `EXCHANGE` | string | `Nasdaq` | Listing exchange code |
+| `LISTING` | string | `Nasdaq Global Select Market` | Listing market name |
+| `SIC` | string | `3571` | SEC Standard Industrial Classification code |
+| `SIC_DESCRIPTION` | string | `Electronic Computers` | Industry (SIC) |
 | `DIVISION` | string | `D` | SIC division letter |
 | `SECTOR` | string | `Manufacturing` | SIC division name |
-| `STATE_OF_INCORPORATION` | string | `IL` | State of incorporation |
-| `FISCAL_YEAR_END` | string | `12-31` | Fiscal year end (MM-DD) |
+| `STATE_OF_INCORPORATION` | string | `CA` | State of incorporation |
+| `FISCAL_YEAR_END` | string | `09-26` | Fiscal year end (MM-DD) |
 | `FILER_CATEGORY` | string | `Large accelerated filer` | SEC filer category |
-| `HEADQUARTERS` | string | `North Chicago` | Headquarters city (Wikidata) |
-| `BUSINESS_ADDRESS` | string | `ABBOTT PARK, IL` | Business address city and state (SEC) |
-| `FOUNDED` | date | `1888-01-01` | Founding date (Wikidata) |
-| `WEBSITE` | string | `https://abbott.com` | Official website |
-| `PHONE` | string | `2246676100` | Telephone number (SEC) |
-| `LEI` | string | `HQD377W2YR662HK5JX27` | Legal Entity Identifier (GLEIF) |
-| `LEI_LEGAL_NAME` | string | `ABBOTT LABORATORIES` | Legal name on the LEI record |
+| `HEADQUARTERS` | string | `Cupertino` | Headquarters city (Wikidata) |
+| `BUSINESS_ADDRESS` | string | `CUPERTINO, CA` | Business address city and state (SEC) |
+| `FOUNDED` | date | `1976-04-01` | Founding date (Wikidata) |
+| `WEBSITE` | string | `https://apple.com/qa/` | Official website |
+| `PHONE` | string | `(408) 996-1010` | Telephone number (SEC) |
+| `LEI` | string | `HWUPKR0MPOU8FGXBT394` | Legal Entity Identifier (GLEIF) |
+| `LEI_LEGAL_NAME` | string | `Apple Inc.` | Legal name on the LEI record |
 | `LEI_STATUS` | string | `ISSUED` | LEI registration status |
 | `LEI_SOURCE` | string | `GLEIF, LEI from Wikidata` | Where the LEI came from |
 | `INDEXES` | list of objects |  | Index memberships (index, name, since) |
-| `INDEX_TEXT` | string | `S&P 500` | The indexes, as text for searching |
+| `INDEX_TEXT` | string | `Dow Jones Industrial Average, Nasdaq-100…` | The indexes, as text for searching |
 | `FISCAL_YEAR` | integer | `2025` | Fiscal year |
-| `REVENUE` | integer | `44328000000` | Revenue |
-| `NET_INCOME` | integer | `6524000000` | Net income |
-| `NET_MARGIN` | number | `14.72` | Net margin |
-| `REVENUE_GROWTH` | number | `5.67` | Revenue growth |
-| `ASSETS` | integer | `86713000000` | Total assets, latest fiscal year (USD) |
-| `LIABILITIES` | integer | `33942000000` | Total liabilities, latest fiscal year (USD) |
-| `EQUITY` | integer | `52130000000` | Stockholders' equity, latest fiscal year (USD) |
-| `EPS_DILUTED` | number | `3.72` | Diluted EPS |
-| `SHARES_OUTSTANDING` | integer | `1737682887` | Shares outstanding |
+| `REVENUE` | integer | `416161000000` | Revenue |
+| `NET_INCOME` | integer | `112010000000` | Net income |
+| `NET_MARGIN` | number | `26.92` | Net margin |
+| `REVENUE_GROWTH` | number | `6.43` | Revenue growth |
+| `ASSETS` | integer | `359241000000` | Total assets, latest fiscal year (USD) |
+| `LIABILITIES` | integer | `285508000000` | Total liabilities, latest fiscal year (USD) |
+| `EQUITY` | integer | `73733000000` | Stockholders' equity, latest fiscal year (USD) |
+| `EPS_DILUTED` | number | `7.46` | Diluted EPS |
+| `SHARES_OUTSTANDING` | integer | `14776353000` | Shares outstanding |
 | `FINANCIALS` | list of objects |  | Ten fiscal years of annual figures |
 | `FACTS` | list of objects |  | The financial facts held for the company |
 | `FILINGS` | list of objects |  | Recent filings |
 | `INDEX_IDS` | list of strings |  | link to `index-membership` |
 | `FACT_IDS` | list of strings |  | link to `financial-fact` |
 | `FILING_IDS` | list of strings |  | link to `filing` |
-| `LATEST_FILING` | date | `2026-10-21` | Date of the latest filing |
-| `SIC_SECTOR` | string | `2834` | link to `sic-sector` |
-| `PRICE_HISTORY` | string | `PX-ABT` | Id of its price-history document (read live, internal only) |
+| `LATEST_FILING` | date | `2026-10-22` | Date of the latest filing |
+| `SIC_SECTOR` | string | `3571` | link to `sic-sector` |
+| `PRICE_HISTORY` | string | `PX-AAPL` | Id of its price-history document (read live, internal only) |
 | `PROVENANCE` | object |  | Source, retrieval date, licence and URL |
-| `ECONOMY` | string | `ECON-USA` | link to `economy` (in 94%) |
-| `MARKET_WATCH` | string | `CO-BA` | link to `listed-company` (in 4%) |
+| `ECONOMY` | string | `ECON-USA` | link to `economy` |
+| `MARKET_WATCH` | string | `CO-AAPL` | link to `listed-company` (in 33%) |
 
 Nested structures:
 
@@ -161,7 +161,7 @@ Links: `ECONOMY` → `economy`, `FACT_IDS` → `financial-fact`, `FILING_IDS` �
 
 **Id:** field `INDEX`; for example `DJIA`.
 
-Fields, from 3 sample documents:
+Fields, from 1 sample document:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
@@ -180,32 +180,29 @@ Nested structures:
 | Path | Fields |
 |---|---|
 | `BY_SECTOR[]` | `LABEL` (string), `VALUE` (integer) |
-| `ROWS[]` | `TICKER` (string), `NAME` (string), `SECTOR` (string), `SIC` (string), `SIC_DESCRIPTION` (string), `EXCHANGE` (string), `REVENUE` (integer), `NET_INCOME` (integer), `NET_MARGIN` (number), `FISCAL_YEAR` (integer), `SINCE` (date) |
+| `ROWS[]` | `TICKER` (string), `NAME` (string), `SECTOR` (string), `SIC` (string), `SIC_DESCRIPTION` (string), `EXCHANGE` (string), `REVENUE` (integer), `NET_INCOME` (integer), `NET_MARGIN` (number), `FISCAL_YEAR` (integer), `SINCE` (null) |
 | `PROVENANCE` | `SOURCE` (string), `LICENCE` (string), `NOTE` (string), `RETRIEVED_AT` (date) |
 
 ### `sic-sector`
 
 **SIC sector** · mnemonic `SIC`.
 
-**Id:** field `SIC`; for example `0100`.
+**Id:** field `SIC`; for example `3711`.
 
-Fields, from 180 sample documents:
+Fields, from 1 sample document:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `SIC` | string | `0100` | SIC |
-| `DESCRIPTION` | string | `Agricultural Production-Crops` | Industry |
-| `DIVISION` | string | `A` | SIC division letter |
-| `SECTOR` | string | `Agriculture, Forestry and Fishing` | Division |
-| `COMPANIES` | integer | `1` | Companies |
-| `REVENUE` | integer | `17401000000` | Revenue |
-| `NET_INCOME` | integer | `1094000000` | Net income |
-| `ROWS` | list of objects |  | The companies of the code (in 99%) |
-| `BY_REVENUE` | list of objects |  | Companies by revenue (in 99%) |
+| `SIC` | string | `3711` | SIC |
+| `DESCRIPTION` | string | `Motor Vehicles & Passenger Car Bodies` | Industry |
+| `DIVISION` | string | `D` | SIC division letter |
+| `SECTOR` | string | `Manufacturing` | Division |
+| `COMPANIES` | integer | `4` | Companies |
+| `REVENUE` | integer | `495557800000` | Revenue |
+| `NET_INCOME` | integer | `704800000` | Net income |
+| `ROWS` | list of objects |  | The companies of the code |
+| `BY_REVENUE` | list of objects |  | Companies by revenue |
 | `PROVENANCE` | object |  | Source and licence |
-| `CODES` | integer | `179` | SIC codes (in 1%) |
-| `CODES_LIST` | list of objects |  | The SIC codes covered (SIC ALL) (in 1%) |
-| `BY_DIVISION` | list of objects |  | Codes by division (in 1%) |
 
 Nested structures:
 
@@ -214,29 +211,27 @@ Nested structures:
 | `ROWS[]` | `TICKER` (string), `NAME` (string), `EXCHANGE` (string), `INDEX_TEXT` (string), `REVENUE` (integer), `NET_INCOME` (integer), `NET_MARGIN` (number), `FISCAL_YEAR` (integer) |
 | `BY_REVENUE[]` | `LABEL` (string), `VALUE` (integer) |
 | `PROVENANCE` | `SOURCE` (string), `RETRIEVED_AT` (date), `LICENCE` (string) |
-| `CODES_LIST[]` | `SIC` (string), `DESCRIPTION` (string), `SECTOR` (string), `COMPANIES` (integer), `REVENUE` (integer) |
-| `BY_DIVISION[]` | `LABEL` (string), `VALUE` (integer) |
 
 ### `filing-feed`
 
 **EDGAR filings browser** · mnemonic `EDGAR`.
 
-**Id:** field `FEED`; for example `ALL`.
+**Id:** field `FEED`; for example `8-K`.
 
-Fields, from 6 sample documents:
+Fields, from 1 sample document:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `FEED` | string | `ALL` | Feed id (a form type or ALL) |
-| `NAME` | string | `Every form` | Forms |
-| `FORM` | string | `10-K` | The form type |
+| `FEED` | string | `8-K` | Feed id (a form type or ALL) |
+| `NAME` | string | `Current reports` | Forms |
+| `FORM` | string | `8-K` | The form type |
 | `FILINGS` | integer | `300` | Filings |
-| `COMPANIES` | integer | `94` | Companies |
+| `COMPANIES` | integer | `214` | Companies |
 | `LATEST` | date | `2026-10-23` | Latest |
-| `EARLIEST` | date | `2026-10-22` | Earliest shown |
+| `EARLIEST` | date | `2026-09-30` | Earliest shown |
 | `ROWS` | list of objects |  | The filings |
 | `BY` | list of objects |  | Filings by form |
-| `BY_TITLE` | string | `Filings by form` | Filings by company |
+| `BY_TITLE` | string | `Filings by company` | Filings by company |
 | `PROVENANCE` | object |  | Source and licence |
 
 Nested structures:
@@ -253,7 +248,7 @@ Nested structures:
 
 **Id:** field `ACCESSION`; pattern `^[0-9]{10}-[0-9]{2}-[0-9]{6}$`; for example `0001104659-26-117587`.
 
-Fields, from 4000 sample documents:
+Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
@@ -285,7 +280,7 @@ Links: `COMPANY` → `us-company`.
 
 **Id:** field `FACT_ID`; for example `ABT-REVENUE`.
 
-Fields, from 3275 sample documents:
+Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
@@ -297,7 +292,7 @@ Fields, from 3275 sample documents:
 | `LABEL` | string | `Revenue` | Concept |
 | `UNIT` | string | `USD` | Unit |
 | `XBRL_TAG` | string | `RevenueFromContractWithCustomerExcluding…` | XBRL tags read |
-| `LATEST` | number | `44328000000` | Latest |
+| `LATEST` | integer | `44328000000` | Latest |
 | `LATEST_YEAR` | integer | `2025` | Fiscal year |
 | `CHANGE_PCT` | number | `5.67` | Change on the year |
 | `YEARS` | integer | `10` | Years |
@@ -307,7 +302,7 @@ Nested structures:
 
 | Path | Fields |
 |---|---|
-| `HISTORY[]` | `YEAR` (integer), `PERIOD_END` (date), `VALUE` (number), `CHANGE_PCT` (number), `FILED` (date), `ACCESSION` (string) |
+| `HISTORY[]` | `YEAR` (integer), `PERIOD_END` (date), `VALUE` (integer), `CHANGE_PCT` (number), `FILED` (date), `ACCESSION` (string) |
 
 Links: `COMPANY` → `us-company`.
 
