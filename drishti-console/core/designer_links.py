@@ -87,10 +87,12 @@ def _scalars(row) -> list:
 
 
 def targets(row, cat: dict) -> list:
-    """The fields of a row that name another entity: ``[(field, kind, label)]``, the row's own identity (``*_ID``) first."""
+    """The fields of a row that name another entity: ``[(field, kind, label)]``, the row's own identity (``*_ID``) first, then by field name.
+    Never by the row's own key order: rows of different sources order their fields differently, and the first row of a list is not always
+    of the same source, so the choices (and which links are sampled) would change from one reading to the next."""
     out = [(f, cat["links"][f]["kind"], cat["links"][f]["label"]) for f, v in (row or {}).items()
            if f in cat["links"] and isinstance(v, str) and v]
-    return sorted(out, key=lambda t: not t[0].endswith("_ID"))
+    return sorted(out, key=lambda t: (not t[0].endswith("_ID"), t[0]))
 
 
 def onward(samples: dict, cat: dict) -> list:

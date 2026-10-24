@@ -16,7 +16,8 @@
 /* The Sutra designer's Customize mode (docs/guides/SCREEN_DESIGNER.md section 31): the real page, with real data as the viewer, edited in place.
    Customize makes a draft of this page's Sutra; each change is one step the console applies to the draft, and only the panels it
    changed are drawn again (the page is fetched, panels the step did not touch stay as they are: no reload, no flicker, the scroll kept). Panels get a handle (drag, or the arrows), Hide and, for tables, Columns; the side panel holds "When I click", "Add to this
-   page" and what is hidden. Done keeps the draft as the user's own page; Cancel forgets it. Plain words only: no pins, wires or YAML
+   page" and what is hidden. A part added from the kit opens its settings at once and can be removed again, with Undo
+   (designer-settings.js); one click adds one panel (a step carries a nonce, and an add in flight ignores more clicks). Done keeps the draft as the user's own page; Cancel forgets it. Plain words only: no pins, wires or YAML
    unless "Show the Sutra" is asked for. */
 (function () {
   'use strict';
@@ -54,14 +55,32 @@
   function sig(text) { var h = 5381; for (var i = 0; i < text.length; i++) { h = ((h << 5) + h + text.charCodeAt(i)) | 0; } return String(h); }
   view.querySelectorAll('section.pnl[id]').forEach(function (s) { s.setAttribute('data-dz-sig', sig(s.outerHTML)); });
 
-  var draft = view.dataset.design, state = null, msg, side, rev = 0;
+  var draft = view.dataset.design, state = null, msg, side, rev = 0, opened = null, adding = false;
   function say(text, ok) { msg.textContent = text || ''; msg.className = 'dz-msg' + (ok ? ' dz-ok' : ''); }
+  function nonce() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
   function step(body) {
-    body.kind = kind; body.id = id;
+    body.kind = kind; body.id = id; body.nonce = body.nonce || nonce();   // the same step sent twice (a retry) is done once
     say('Saving…', true);
-    return api('POST', '/designer/op/' + encodeURIComponent(draft), body).then(redraw)
+    return api('POST', '/designer/op/' + encodeURIComponent(draft), body).then(function (r) { return redraw().then(function () { return r; }); })
       .catch(function (e) { say(e.message); throw e; });
   }
+  /* one action adds one panel: a click, a drop or a double click while the first add is on its way are the same add */
+  function addPart(k, at) {
+    if (adding) { return; }
+    adding = true;
+    side.querySelectorAll('[data-dz-add]').forEach(function (c) { c.setAttribute('aria-disabled', 'true'); });
+    var body = { op: 'add', ref: k.ref, 'with': k['with'] };
+    if (at != null) { body.at = at; }
+    step(body).then(function (r) { if (r && r.index != null) { openSettings(r.index, true); } })
+      .catch(function () {}).then(function () { adding = false; side.querySelectorAll('[data-dz-add]').forEach(function (c) { c.removeAttribute('aria-disabled'); }); });
+  }
+  function openSettings(index, focus) {
+    opened = index;
+    if (state) { sidePanel(focus); }
+  }
+  var settings = window.drishtiDesignerSettings ? window.drishtiDesignerSettings({
+    el: el, api: api, step: function (b) { return step(b); }, draft: draft, kind: kind, id: id, open: function (i, f) { openSettings(i, f); }
+  }) : null;
   function redraw() {
     var y = window.scrollY;
     return fetch(location.href, { credentials: 'same-origin', headers: { Accept: 'text/html' } }).then(function (r) {
@@ -164,6 +183,7 @@
     if (part.index === n - 1) { row.querySelector('[data-dz-down]').disabled = true; }
     sec.classList.add('dz-panel');
     sec.insertBefore(row, sec.firstChild);
+    if (settings) { settings.tools(part, row, sec, first); }
     if (sec.hasAttribute('data-dz-dnd')) { return; }                      // a panel kept across a step: its drop target is set already
     sec.setAttribute('data-dz-dnd', '');
     function here() { var t = sec.querySelector('.dz-tools'); return t ? +t.getAttribute('data-dz-part') : -1; }
@@ -171,9 +191,10 @@
     sec.addEventListener('dragleave', function () { sec.classList.remove('dz-over'); });
     sec.addEventListener('drop', function (e) {
       sec.classList.remove('dz-over');
+      e.stopPropagation();                                                // a panel inside a panel: the drop is the inner one's, once
       var from = e.dataTransfer.getData('text/x-dz-part'), kit = e.dataTransfer.getData('text/x-dz-kit');
       if (from !== '') { e.preventDefault(); if (+from !== here()) { step({ op: 'move', index: +from, to: here() }).catch(function () {}); } }
-      else if (kit) { e.preventDefault(); var k = JSON.parse(kit); step({ op: 'add', ref: k.ref, 'with': k['with'], at: here() }).catch(function () {}); }
+      else if (kit) { e.preventDefault(); addPart(JSON.parse(kit), here()); }
     });
   }
 
@@ -201,8 +222,10 @@
     return s;
   }
 
-  function sidePanel() {
+  function sidePanel(focus) {
     side.innerHTML = '';
+    var op = opened == null ? null : state.parts.filter(function (p) { return p.index === opened && p.used; })[0];
+    if (op && settings) { settings.box(side, op.index, focus); } else { opened = null; }
     /* When I click */
     var tables = state.tables.map(function (t) { return ['t:' + t.id, t.title]; });
     state.parts.forEach(function (p) { if (!p.table && p.tables.length) { tables.push(['u:' + p.index + ':' + p.tables[0], p.title]); } });
@@ -268,7 +291,7 @@
         var card = el('button', { type: 'button', 'class': 'dz-card' + (k.fit ? ' dz-fits' : ''), draggable: 'true', 'data-dz-add': k.ref, title: k.summary }, [
           el('strong', { text: k.title }), el('span', { text: ' · ' + k.summary })]);
         card.addEventListener('dragstart', function (e) { e.dataTransfer.setData('text/x-dz-kit', JSON.stringify(k)); });
-        card.addEventListener('click', function () { step({ op: 'add', ref: k.ref, 'with': k['with'] }).catch(function () {}); });
+        card.addEventListener('click', function () { addPart(k); });
         list.appendChild(card);
       });
     }
@@ -313,14 +336,14 @@
   drop.addEventListener('drop', function (e) {
     e.preventDefault(); drop.classList.remove('dz-over');
     var kit = e.dataTransfer.getData('text/x-dz-kit'), from = e.dataTransfer.getData('text/x-dz-part');
-    if (kit) { var k = JSON.parse(kit); step({ op: 'add', ref: k.ref, 'with': k['with'] }).catch(function () {}); }
+    if (kit) { e.stopPropagation(); addPart(JSON.parse(kit)); }
     else if (from !== '') { step({ op: 'move', index: +from, to: state.parts.length - 1 }).catch(function () {}); }
   });
 
   function load() {
     return api('GET', '/designer/state/' + encodeURIComponent(draft) + '?kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id)).then(function (s) {
       state = s;
-      view.querySelectorAll('.dz-tools').forEach(function (t) { t.remove(); });
+      view.querySelectorAll('.dz-tools, .dz-need').forEach(function (t) { t.remove(); });
       s.parts.forEach(function (part) { sectionsOf(part).forEach(function (sec, i) { tools(part, sec, i === 0); }); });
       sidePanel();
       view.setAttribute('data-dz-ready', '');

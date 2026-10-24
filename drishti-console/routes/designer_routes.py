@@ -18,6 +18,7 @@ the user's flag "my version of this page" for the kind, ``/me/pages`` on the ser
 ``?design=<id>``); **Describe** builds a screen from a command-style line read by a deterministic parser. Thin: the server keeps the Designs, checks the Sutra and draws every view as the viewer."""
 from __future__ import annotations
 
+import asyncio
 import re
 import time
 from urllib.parse import quote
@@ -25,7 +26,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core import describe, designer, designer_forms, designer_links, designer_outline, screen_grid
+from core import describe, designer, designer_forms, designer_links, designer_outline, designer_settings, screen_grid
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes.common import ident, render
@@ -34,6 +35,7 @@ router = APIRouter(prefix="/designer", include_in_schema=False)
 MODES = [("customize", "Customize", True), ("describe", "Describe", True), ("outline", "Outline", True), ("grid", "Grid", True)]
 _ALIASES: dict = {"at": 0.0, "table": {}, "cat": {}}
 _MIGRATED: set = set()                                # users whose "My page · <kind>" Designs were turned into flags
+_LOCKS: dict = {}                                     # one step at a time per draft: two quick clicks never read the same draft
 
 
 def enabled(request: Request) -> bool:
@@ -269,6 +271,7 @@ async def state(request: Request, draft: str, kind: str = "", id: str = ""):
         brought = (uses.get(i) or {}).get("panels") or []
         ids = [b["id"] for b in brought if b.get("id")] or [str(e.get("id") or "")]
         part = {"index": i, "ids": ids, "title": designer.entry_title(e, brought), "used": bool(e.get("use")), "refresh": designer.refresh_of(e),
+                "added": designer_settings.is_added(keep, e), "unset": [],
                 "span": e.get("span") or 12, "area": e.get("area") or "",
                 "tables": [b["id"] for b in brought if b.get("kind") == "table"] if e.get("use") else []}
         if not e.get("use") and e.get("kind") == "table" and isinstance(e.get("columns"), list):
@@ -282,11 +285,17 @@ async def state(request: Request, draft: str, kind: str = "", id: str = ""):
                            "links": [f for f in chosen if f and f in cat.get("links", {})],
                            "shows": await _shows(request, record, e.get("rows"), cat)})
         parts.append(part)
+    frags = await _fragments(request)
+    for part in parts:                                # a part the person added says what it still needs (never silently empty)
+        e = doc["panels"][part["index"]]
+        f = frags.get(str(e.get("use") or "").split("@")[0]) if part["added"] else None
+        if f:
+            part["unset"] = designer_settings.form(f, e, record)["unset"]
     for t in tables:                                  # an existing panel of the page, moved under the table
         t["shows"] += [{"label": f"the panel “{p['title']}” (moved here)", "spec": {"how": "panel", "index": p["index"]}}
                        for p in parts if not (p.get("table") or {}).get("id") == t["id"]]
     mine = await page_design(request, kind)
-    return {"parts": parts, "tables": tables, "hidden": [{"index": i, "title": h.get("title")} for i, h in enumerate(keep.get("hidden") or [])],
+    return {"undo": bool(keep.get("removed")), "parts": parts, "tables": tables, "hidden": [{"index": i, "title": h.get("title")} for i, h in enumerate(keep.get("hidden") or [])],
             "kit": designer.search(await _kit(request), "", record), "places": designer.PLACE_LABELS,
             "mine": {"id": mine["id"], "shared": mine.get("shared")} if mine else None, "yaml": full.get("sutra") or "",
             "grid": bool(doc.get("layout")), "areas": screen_grid.area_names(doc.get("layout"))}
@@ -299,6 +308,27 @@ async def kit(request: Request, draft: str, q: str = "", kind: str = "", id: str
     return {"results": designer.search(await _kit(request), q, await _record(request, kind, id))}
 
 
+async def _fragments(request: Request) -> dict:
+    """The kit's fragments by name (``key-figure``) and by ``pack/name``, without the version."""
+    return {str(f.get("ref", "")).split("@")[0]: f for f in await _kit(request)}
+
+
+@router.get("/settings/{draft}")
+async def settings(request: Request, draft: str, index: int = -1, kind: str = "", id: str = ""):
+    """The settings of one part from the UI kit, as plain-word questions with choices from the record's own fields."""
+    if not enabled(request):
+        return _off()
+    try:
+        _, doc, _ = await _draft(request, draft)
+        e = doc["panels"][designer._index(doc, index)]
+    except (BackendError, designer.DesignerError) as ex:
+        return _problem(ex) if isinstance(ex, BackendError) else _say(str(ex))
+    f = (await _fragments(request)).get(str(e.get("use") or "").split("@")[0])
+    if not f:
+        return _say("this panel has no settings here: a table takes Columns")
+    return {"index": index, **designer_settings.form(f, e, await _record(request, kind, id))}
+
+
 @router.post("/op/{draft}")
 async def op(request: Request, draft: str):
     """One Customize step on the draft (``move``, ``hide``, ``show``, ``unpack``, ``columns``, ``click``, ``unclick``, ``add``, ``refresh``, ``form``); the page is
@@ -308,10 +338,22 @@ async def op(request: Request, draft: str):
     body = await _body(request)
     if isinstance(body, JSONResponse):
         return body
+    lock = _LOCKS.setdefault(draft, asyncio.Lock())
+    if len(_LOCKS) > 500:                               # drafts come and go: forget the idle ones
+        for k in [k for k, v in _LOCKS.items() if not v.locked() and k != draft]:
+            _LOCKS.pop(k, None)
+    async with lock:
+        return await _op(request, draft, body)
+
+
+async def _op(request: Request, draft: str, body: dict):
     backend, me = request.app.state.backend, ident(request)
     kind, id_, what = str(body.get("kind") or ""), str(body.get("id") or ""), str(body.get("op") or "")
+    out: dict = {"ok": True}
     try:
         full, doc, keep = await _draft(request, draft)
+        if designer_settings.seen(keep, body.get("nonce")):
+            return {"ok": True, "repeat": True}        # the same click twice (a double click, a retry): done once
         if what == "move":
             designer.move(doc, body.get("index"), body.get("to", 0))
         elif what == "hide":
@@ -337,7 +379,20 @@ async def op(request: Request, draft: str):
         elif what == "refresh":
             designer.refresh(doc, body.get("index"), body.get("seconds", 0))
         elif what == "add":
-            designer.add(doc, str(body.get("ref") or ""), body.get("with") or {}, body.get("at"))
+            ref = str(body.get("ref") or "")
+            frag = (await _fragments(request)).get(ref.split("@")[0]) or {}
+            before = {id(x) for x in doc["panels"]}
+            designer.add(doc, ref, {**designer_settings.guess_value(frag, await _record(request, kind, id_)), **(body.get("with") or {})}, body.get("at"))
+            at = next(i for i, x in enumerate(doc["panels"]) if id(x) not in before)
+            designer_settings.mark_added(keep, doc["panels"][at])
+            out.update(index=at, settings=True)
+        elif what == "settings":                     # the part's settings, answered in plain words
+            frag = (await _fragments(request)).get(str((doc["panels"][designer._index(doc, body.get("index"))]).get("use") or "").split("@")[0])
+            designer_settings.set_with(doc, body.get("index"), body.get("values") or {}, frag or {})
+        elif what == "remove":                       # a part this person added (the pack's panels are hidden instead)
+            designer_settings.remove(doc, keep, body.get("index"))
+        elif what == "undo-remove":
+            designer_settings.undo_remove(doc, keep)
         elif what in ("span", "area"):                # layout handles on a grid screen (SUTRA_NEXT.md 13)
             designer_outline.setting(doc, body.get("index"), what, body.get("value"))
         else:
@@ -354,7 +409,7 @@ async def op(request: Request, draft: str):
         return _say("that step is missing something: reload the page")
     except BackendError as e:
         return _problem(e)
-    return {"ok": True}
+    return out
 
 
 @router.post("/done/{draft}")

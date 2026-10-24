@@ -104,3 +104,15 @@
 .dz-col { font-size: .85rem; display: inline-flex; gap: .3rem; align-items: center; }
 .dz-col-row { display: flex; align-items: center; justify-content: space-between; gap: .4rem; }
 .dz-col-type { font-size: .78rem; max-width: 9.5rem; }
+/* a part's settings (designer-settings.js): plain-word questions, what is still to choose, Remove's toast with Undo */
+.dz-settings { display: flex; flex-direction: column; gap: .5rem; padding: .7rem; border: 1px solid var(--d-accent); border-radius: var(--d-radius); background: var(--d-surface-2); }
+.dz-setting { display: flex; flex-direction: column; gap: .2rem; font-size: .85rem; text-transform: none; }
+.dz-setting.dz-unset span { color: var(--d-warn); font-weight: 600; }
+.dz-need-words { margin: 0; color: var(--d-warn); font-size: .85rem; }
+.dz-more summary { cursor: pointer; color: var(--d-link); font-size: .85rem; }
+.dz-need { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding: .5rem .7rem; margin-bottom: .4rem; border: 1px dashed var(--d-warn);
+  border-radius: var(--d-radius); color: var(--d-warn); font-size: .88rem; }
+.dz-toast { position: fixed; left: 50%; bottom: 1.2rem; transform: translateX(-50%); z-index: 60; display: flex; gap: .8rem; align-items: center;
+  max-width: calc(100vw - 2rem); padding: .6rem .9rem; border-radius: var(--d-radius); background: var(--d-surface); color: var(--d-ink);
+  border: 1px solid var(--d-border); box-shadow: var(--d-shadow); }
+.dz-card[aria-disabled="true"] { opacity: .55; cursor: progress; }

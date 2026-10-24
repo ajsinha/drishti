@@ -710,7 +710,18 @@ It is switched on by an administrator: `ui.designer: true` in the console's `app
    - **an existing panel on this page** (*the panel "Notional by product type" (moved here)*): the panel leaves the page and opens
      under the table on a click. Another sentence for the table, or **Stop**, puts it back where it was.
 5. **Add to this page**: search the Drishti UI kit by what a part shows (*limits*, *chart*, *note*); what fits this record is listed
-   first, with its settings guessed from the record's fields. Click a card, or drag it onto a panel or onto *Drop here*.
+   first, with its settings guessed from the record's fields. Click a card, or drag it onto a panel or onto *Drop here*. One click (or
+   one drop) adds one panel: a double click, clicks while the first add is on its way, or a request sent again are the same add (each
+   step carries a one-time token, and the console does a draft's steps one at a time).
+   - **Its settings open at once** in the side panel, *Settings · Key figure*: one plain-word question for each parameter of the part's
+     docstring, its choices taken from the record's real fields: *Which number? [NOTIONAL ▾]*, *Label*, *Format [amount2 · 1,234.56 ▾]*,
+     *Caption*; a list part asks *Which list?* (the record's lists of rows, with their counts) and then each field of those rows. The
+     panel's code, function key and area are under *More settings*. **Apply** writes them on the part's `with:`; **Settings** in a used
+     part's tools opens them again. Every part of the kit is set this way.
+   - **Never silently empty**: when a part you added has a setting that names nothing in this record (a figure whose number is not
+     there), the panel says *Choose which number to show data here.* with **Open its settings**.
+   - **Remove** is on the parts you added (the pack's panels have **Hide** instead): the part leaves the draft and a note at the foot of
+     the page offers **Undo** for a few seconds, which puts it back where it was.
 Each change is drawn at once and in place: only the panels it changed are drawn again (the others keep their state, charts and
 filters), the page does not reload or flicker and stays where you scrolled.
 
@@ -754,7 +765,9 @@ panels:
 ```
 
 A hidden panel (2) is kept in the design's notes, not in the Sutra, so *Show* restores it exactly (so is a panel moved under a
-table, so that *Stop* puts it back). Your page is a design in **Build, My designs** (first called *My page · trade*); which design is
+table, so that *Stop* puts it back; so are the ids of the parts you added, which only can be removed, and the last removal, for Undo).
+A key figure added and set (*Which number? NOTIONAL*, *Label* Notional) is written
+`- { use: key-figure@1, with: { id: figure, value: $.NOTIONAL, label: Notional } }`. Your page is a design in **Build, My designs** (first called *My page · trade*); which design is
 *my version of this page* is a flag of its own kept by the server for you (`/api/v1/me/pages`: `{trade: <design id>}`), so renaming
 the design keeps it your page. The server draws it with `?design=<id>` (only for you, only for its kind). Pages kept by name before
 this (2.7 previews) become flags the first time you open Drishti.

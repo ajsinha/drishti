@@ -227,3 +227,68 @@ def test_a_click_shows_a_linked_record_of_another_pack_and_a_moved_panel(stack, 
     wait(pg, f"document.querySelector('[data-wire-kids=\"{pid}\"] section.pnl')")          # ... it opens under the table on a click
     pg.locator("[data-dz-cancel]").click()
     pg.close()
+
+
+def _figures(pg):
+    return pg.evaluate("[...document.querySelectorAll('section.pnl[id]')].filter(s => /^p-figure(-\\d+)?$/.test(s.id)).length")
+
+
+def _figure_card(pg):
+    pg.fill("[data-dz-search]", "key figure")
+    wait(pg, "document.querySelector('[data-dz-add=\"key-figure@1\"]')")
+    return pg.locator("[data-dz-add='key-figure@1']")
+
+
+def test_a_key_figure_opens_its_settings_shows_the_chosen_number_and_is_removed_with_undo(stack, browser):
+    pg = page_in(browser, "terminal", {"width": 1440, "height": 900})
+    customizing(pg, stack)
+    assert pg.locator("#p-ticket [data-dz-remove]").count() == 0 and pg.locator("#p-ticket [data-dz-hide]").count() == 1   # the pack's: Hide
+    reloaded(pg, lambda: _figure_card(pg).click())
+    assert _figures(pg) == 1
+    wait(pg, "document.querySelector('[data-dz-settings-box] [data-dz-setting=\"value\"]')")       # its settings open at once
+    box = pg.locator("[data-dz-settings-box]")
+    assert "Which number?" in box.inner_text()
+    numbers = box.locator("[data-dz-setting='value'] option").evaluate_all("os => os.map(o => o.value)")
+    pick = "$.QUANTITY" if "$.QUANTITY" in numbers else numbers[-1]
+    box.locator("[data-dz-setting='value']").select_option(pick)
+    box.locator("[data-dz-setting='label']").fill("The chosen number")
+    reloaded(pg, lambda: box.locator("[data-dz-settings-apply]").click())
+    figure = pg.locator("#p-figure")
+    text = figure.inner_text()
+    assert "The chosen number" in text and "No data" not in text and any(ch.isdigit() for ch in text), text
+    assert pg.locator("#p-figure [data-dz-need]").count() == 0
+
+    index = int(pg.locator("#p-figure .dz-tools").get_attribute("data-dz-part"))              # a number the record does not hold ...
+    pg.evaluate("""([d, i]) => fetch('/designer/op/' + d, {method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json'},
+                   body: JSON.stringify({op: 'settings', index: i, values: {value: '$.NOT_IN_THIS_TRADE'}, kind: 'trade', id: 'MX-20000001'})})""",
+                [pg.locator("[data-view]").get_attribute("data-design"), index])
+    pg.reload()
+    wait(pg, "document.querySelector('[data-dz-ready]')")
+    pg.navigations = []
+    need = pg.locator("#p-figure [data-dz-need]")
+    assert "Choose which number" in need.inner_text()                                           # ... is said on the panel, never silently empty
+    need.locator("[data-dz-need-open]").click()
+    wait(pg, "document.querySelector('[data-dz-settings-box] [data-dz-settings-need]')")
+
+    reloaded(pg, lambda: pg.locator("#p-figure [data-dz-remove]").click())                    # Remove, then Undo
+    assert _figures(pg) == 0 and pg.locator("[data-dz-toast]").is_visible()
+    reloaded(pg, lambda: pg.locator("[data-dz-undo]").click())
+    assert _figures(pg) == 1 and pg.locator("[data-dz-toast]").count() == 0
+    pg.locator("[data-dz-cancel]").click()
+    pg.close()
+
+
+def test_a_double_click_or_clicks_in_a_burst_add_one_key_figure(stack, browser):
+    pg = page_in(browser, "terminal", {"width": 1440, "height": 900})
+    customizing(pg, stack)
+    card = _figure_card(pg)
+    reloaded(pg, lambda: card.dblclick())
+    pg.wait_for_timeout(600)                                                                    # a second add would have landed by now
+    wait(pg, "document.querySelector('[data-dz-settings-box]')")
+    assert _figures(pg) == 1
+    card = _figure_card(pg)
+    reloaded(pg, lambda: card.evaluate("c => { c.click(); c.click(); c.click(); }"))
+    pg.wait_for_timeout(600)
+    assert _figures(pg) == 2                                                                    # three clicks in one burst: one more panel
+    pg.locator("[data-dz-cancel]").click()
+    pg.close()
