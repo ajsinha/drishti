@@ -79,7 +79,7 @@ public final class NetServedBy {
             return v;
         }
         List<ViewModel.PanelView> panels = v.panels().stream().map(pv -> annotate(pv, line)).toList();
-        return new ViewModel(v.ref(), v.mnemonic(), v.title(), v.strip(), panels, v.keys(), v.provenance(), v.timings(), v.controls(), v.selects());
+        return new ViewModel(v.ref(), v.mnemonic(), v.title(), v.strip(), panels, v.keys(), v.provenance(), v.timings(), v.controls(), v.selects(), v.layout());
     }
 
     /** A live frame with {@code line} added to the provenance panels it carries whole (unchanged when {@code line} is null). */

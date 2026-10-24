@@ -51,9 +51,9 @@ final class SutraBuilder {
     private static final Pattern FKEY = Pattern.compile("F([1-9]|1[0-2])");
     private static final int LANGUAGE = SutraParser.LANGUAGE;
     private static final Set<String> TOP = Set.of("rachana", "sutra", "version", "domain", "match", "title", "strip", "panels", "keys",
-            "description", "notes", "controls", "doc", "refresh");
+            "description", "notes", "controls", "doc", "refresh", "layout");
     private static final Set<String> PANEL = Set.of("id", "kind", "title", "key", "code", "area", "infer", "columns", "body", "panels", "description",
-            Panel.SPAN, Panel.HEIGHT);
+            Panel.SPAN, Panel.HEIGHT, Panel.ORDER, Panel.SECTION, Panel.COLLAPSIBLE);
     private static final Set<String> STRIP = Set.of("label", "bind", "fmt", "tone", "emphasis");
     private static final Set<String> COLUMN = Set.of("label", "bind", "fmt", "tone", "total", "link");
 
@@ -123,6 +123,9 @@ final class SutraBuilder {
             }
         }
         childIds(panels, new HashSet<>(ids));
+        LayoutReader layoutReader = new LayoutReader(file, problems);          // layout: the grid, areas, split, tabs, sections (SUTRA_NEXT.md 13)
+        com.ash.drishti.rachana.model.ScreenLayout layout = layoutReader.read(m.get("layout"));
+        layoutReader.check(layout, panels, m.getOrDefault("layout", root));
         ControlsReader controlsReader = new ControlsReader(file, problems);
         List<com.ash.drishti.rachana.model.Control> controls = controlsReader.read(m.get("controls"), ids);
         controlsReader.checkSelects(panels, controls);
@@ -149,7 +152,7 @@ final class SutraBuilder {
             return null;
         }
         return new Sutra(name, version, text(m.get("domain"), domain), match, title, strip, panels, keyMap, loc(root),
-                text(m.get("description"), null), controls);
+                text(m.get("description"), null), controls, layout);
     }
 
     private Match match(PNode n, PNode root) {
@@ -231,12 +234,15 @@ final class SutraBuilder {
             problem("DRS-2025", "'" + key + "' is not a function key (F1-F12)", m.get("key"));
         }
         Area area = Area.MAIN;
+        String gridArea = null;
         String areaText = text(m.get("area"), null);
         if (areaText != null) {
-            try {
+            if ("main".equals(areaText) || "right".equals(areaText)) {
                 area = Area.valueOf(areaText.toUpperCase(Locale.ROOT));
-            } catch (IllegalArgumentException e) {
-                problem("DRS-2027", "area must be 'main' or 'right'", m.get("area"));
+            } else if (!nested && AREA_NAME.matcher(areaText).matches()) {
+                gridArea = areaText;                                       // a named area of layout.areas, checked with the layout
+            } else {
+                problem("DRS-2027", "area must be 'main', 'right' or an area named in layout.areas", m.get("area"));
             }
         }
         List<Column> columns = new ArrayList<>();
@@ -271,6 +277,7 @@ final class SutraBuilder {
         Map<String, Object> options = new LinkedHashMap<>();
         size(m, Panel.SPAN, Panel.MAX_SPAN, "columns of the 12-column grid", nested, options);
         size(m, Panel.HEIGHT, Panel.MAX_HEIGHT, "grid rows", nested, options);
+        placement(m, nested, gridArea, options);
         if (kind != null) {
             m.forEach((opt, val) -> {
                 if (PANEL.contains(opt) || WiringReader.isWiring(opt, val)) {
@@ -383,6 +390,43 @@ final class SutraBuilder {
             problem("DRS-2030", key + " must be a whole number from 1 to " + max + " (" + unit + "), not '" + n.value() + "'", n);
         } else {
             options.put(key, l);
+        }
+    }
+
+    private static final Pattern AREA_NAME = Pattern.compile("[a-z][a-z0-9-]{0,31}");
+
+    /**
+     * A panel's place in a screen's layout (SUTRA_NEXT.md 13), kept with its options: a named {@code area}, {@code order} (its sort key
+     * within the area or the flow), {@code section} and {@code collapsible}. Its height in grid rows stays {@code height} ({@code rows} is the rows a table reads).
+     */
+    private void placement(Map<String, PNode> m, boolean nested, String gridArea, Map<String, Object> options) {
+        if (gridArea != null) {
+            options.put(Panel.GRID_AREA, gridArea);
+        }
+        PNode order = m.get(Panel.ORDER);
+        if (order != null && order.value() != null) {
+            if (nested || !(order.value() instanceof Long l) || l < 0 || l > 999) {
+                problem(LayoutReader.CODE, nested ? "'order' places a whole panel; a tab keeps the order it is written in"
+                        : "order is a whole number from 0 to 999 (lower comes first), not '" + order.value() + "'", order);
+            } else {
+                options.put(Panel.ORDER, l);
+            }
+        }
+        PNode section = m.get(Panel.SECTION);
+        if (section != null && section.value() != null) {
+            if (nested || section.text() == null || !AREA_NAME.matcher(section.text()).matches()) {
+                problem(LayoutReader.CODE, "section names one of layout.sections by its id", section);
+            } else {
+                options.put(Panel.SECTION, section.text());
+            }
+        }
+        PNode collapsible = m.get(Panel.COLLAPSIBLE);
+        if (collapsible != null && collapsible.value() != null) {
+            if (!(collapsible.value() instanceof Boolean b)) {
+                problem(LayoutReader.CODE, "collapsible is true or false", collapsible);
+            } else if (b) {
+                options.put(Panel.COLLAPSIBLE, true);
+            }
         }
     }
 

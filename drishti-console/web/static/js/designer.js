@@ -82,6 +82,7 @@
       next.style.minHeight = grid.offsetHeight + 'px';                     // no jump while the new panels draw
       grid.replaceWith(next); grid = next;
       (view.querySelector('.vmain') || grid).appendChild(drop);
+      if (window.drishtiScreenGrid && next.hasAttribute('data-sgrid')) { window.drishtiScreenGrid.init(next); }   // a grid screen: its picture again
       added.forEach(function (s) {
         if (window.drishtiLayout) { window.drishtiLayout.decorate(s); }
         if (window.drishti && window.drishti.enhance) { window.drishti.enhance(s); }
@@ -99,6 +100,7 @@
     msg,
     el('span', { 'class': 'dz-grow' }),
     el('a', { 'class': 'dz-btn dz-quiet', href: '/designer/new', text: 'Describe a change' }),
+    el('a', { 'class': 'dz-btn dz-quiet', 'data-dz-outline': '', href: '/designer/outline?kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id) + '&design=' + encodeURIComponent(draft), text: 'Outline' }),
     el('button', { type: 'button', 'class': 'dz-btn', 'data-dz-cancel': '', text: 'Cancel', on: { click: function () {
       api('POST', '/designer/cancel/' + encodeURIComponent(draft)).finally(function () { location.href = page; }); } } }),
     el('button', { type: 'button', 'class': 'dz-btn dz-primary', 'data-dz-done': '', text: 'Done', on: { click: function () {
@@ -154,6 +156,7 @@
         if (part.table) { var old = sec.querySelector('.dz-cols'); if (old) { old.remove(); } else { columnsBox(part, sec); } return; }
         step({ op: 'unpack', index: part.index }).catch(function () {});              // a used table is written out first, then it takes columns
       } } }) : null,
+      first && state.grid ? layoutHandles(part) : null,
       first ? el('button', { type: 'button', 'class': 'dz-mini', 'data-dz-hide': '', text: 'Hide', on: { click: function () { step({ op: 'hide', index: part.index, title: part.title }).catch(function () {}); } } }) : null
     ]);
     if (part.index === 0) { row.querySelector('[data-dz-up]').disabled = true; }
@@ -171,6 +174,23 @@
       if (from !== '') { e.preventDefault(); if (+from !== here()) { step({ op: 'move', index: +from, to: here() }).catch(function () {}); } }
       else if (kit) { e.preventDefault(); var k = JSON.parse(kit); step({ op: 'add', ref: k.ref, 'with': k['with'], at: here() }).catch(function () {}); }
     });
+  }
+
+  /* layout handles on a grid screen (layout: in the Sutra): narrower / wider, and the area it sits in */
+  function layoutHandles(part) {
+    var span = part.span || 12, box = el('span', { 'class': 'dz-lay', role: 'group', 'aria-label': 'Size and place of ' + part.title }, [
+      el('button', { type: 'button', 'class': 'dz-mini', 'data-dz-narrower': '', 'aria-label': 'Narrower', title: 'Narrower (' + span + ' of 12 columns now)', text: '−', disabled: span <= 2 ? '' : null,
+                     on: { click: function () { step({ op: 'span', index: part.index, value: span - 1 }).catch(function () {}); } } }),
+      el('span', { 'class': 'dz-span', text: span + '/12' }),
+      el('button', { type: 'button', 'class': 'dz-mini', 'data-dz-wider': '', 'aria-label': 'Wider', title: 'Wider', text: '+', disabled: span >= 12 ? '' : null,
+                     on: { click: function () { step({ op: 'span', index: part.index, value: span + 1 }).catch(function () {}); } } })]);
+    if (state.areas && state.areas.length) {
+      var s = select('Area of ' + part.title, state.areas.map(function (a) { return [a, a.replace(/-/g, ' ')]; }), 'data-dz-area');
+      s.value = part.area && state.areas.indexOf(part.area) >= 0 ? part.area : state.areas[0];
+      s.addEventListener('change', function () { step({ op: 'area', index: part.index, value: s.value }).catch(function () {}); });
+      box.appendChild(s);
+    }
+    return box;
   }
 
   function select(label, options, attr) {

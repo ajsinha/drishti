@@ -33,6 +33,8 @@ import java.util.Map;
  * @param timings stage timings in milliseconds (fetch, layout, bind, links, total)
  * @param controls the Sutra's controls with their options and current values (empty when it declares none)
  * @param selects the panels whose rows or bars set a control when clicked
+ * @param layout the Sutra's {@code layout:} (SUTRA_NEXT.md 13: areas, columns, split, tabs, sections, sticky, arrange, phone) with each
+ *     top-level panel's place ({@code place: {id: {area, order, section, collapsible}}}), or null: the panels flow
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ViewModel(
@@ -45,7 +47,14 @@ public record ViewModel(
         Provenance provenance,
         Map<String, Double> timings,
         @JsonInclude(JsonInclude.Include.NON_EMPTY) List<ControlView> controls,
-        @JsonInclude(JsonInclude.Include.NON_EMPTY) List<SelectView> selects) {
+        @JsonInclude(JsonInclude.Include.NON_EMPTY) List<SelectView> selects,
+        Map<String, Object> layout) {
+
+    /** A view whose panels flow (no {@code layout:}). */
+    public ViewModel(Ref ref, String mnemonic, TitleView title, List<Cell> strip, List<PanelView> panels, List<KeyView> keys,
+            Provenance provenance, Map<String, Double> timings, List<ControlView> controls, List<SelectView> selects) {
+        this(ref, mnemonic, title, strip, panels, keys, provenance, timings, controls, selects, null);
+    }
 
     public ViewModel {
         controls = controls == null ? List.of() : List.copyOf(controls);
@@ -55,17 +64,22 @@ public record ViewModel(
     /** A view without controls. */
     public ViewModel(Ref ref, String mnemonic, TitleView title, List<Cell> strip, List<PanelView> panels, List<KeyView> keys,
             Provenance provenance, Map<String, Double> timings) {
-        this(ref, mnemonic, title, strip, panels, keys, provenance, timings, List.of(), List.of());
+        this(ref, mnemonic, title, strip, panels, keys, provenance, timings, List.of(), List.of(), null);
     }
 
     /** The same view with another provenance. */
     public ViewModel withProvenance(Provenance p) {
-        return new ViewModel(ref, mnemonic, title, strip, panels, keys, p, timings, controls, selects);
+        return new ViewModel(ref, mnemonic, title, strip, panels, keys, p, timings, controls, selects, layout);
     }
 
     /** The same view with its controls and selects. */
     public ViewModel withControls(List<ControlView> controls, List<SelectView> selects) {
-        return new ViewModel(ref, mnemonic, title, strip, panels, keys, provenance, timings, controls, selects);
+        return new ViewModel(ref, mnemonic, title, strip, panels, keys, provenance, timings, controls, selects, layout);
+    }
+
+    /** The same view with its screen layout (SUTRA_NEXT.md 13). */
+    public ViewModel withLayout(Map<String, Object> layout) {
+        return new ViewModel(ref, mnemonic, title, strip, panels, keys, provenance, timings, controls, selects, layout);
     }
 
     /** One option of a control: the value that is set and the text shown. */

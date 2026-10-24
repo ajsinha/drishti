@@ -1,0 +1,64 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Outline · {{ PRODUCT }}{% endblock %}
+{% block screen %}build{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/designer.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/designer-outline.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="dz-shell ol-shell" data-outline{% if draft %} data-draft="{{ draft }}"{% endif %} data-kind="{{ kind }}" data-id="{{ id }}">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a>{% if kind and id %} · <a href="/v/{{ kind | urlencode }}/{{ id | urlencode }}">Back to the page</a>{% endif %} · <a href="/help/screen-designer#31-the-sutra-designer-customize-and-describe">Designer guide</a></nav>
+  <h1>Outline</h1>
+  <nav class="dz-modes" aria-label="Designer modes">
+    {% for key, label, on in modes %}<a class="dz-btn" href="{{ '/designer/new' if key == 'describe' else ('/designer/outline' ~ (('?kind=' ~ (kind | urlencode) ~ '&id=' ~ (id | urlencode) ~ ('&design=' ~ draft if draft else '')) if kind else '')) if key == 'outline' else ('/v/' ~ (kind | urlencode) ~ '/' ~ (id | urlencode) if key == 'customize' and kind else '#') }}"{% if key == mode %} aria-current="page"{% endif %}{% if not on %} aria-disabled="true" title="{{ label }}: coming later"{% elif key == 'customize' %} title="Customize: open any page and press Customize"{% endif %}>{{ label }}</a>{% endfor %}
+  </nav>
+  {% if problem %}<p class="dz-note dz-problem" role="alert">{{ problem }}</p>{% endif %}
+  {% if not draft %}
+  <section class="ol-start" aria-label="Start">
+    <p>Outline shows a screen as a list you can rearrange: its sections, its panels, and what a click opens under a table. Open any page,
+      press <b>Customize</b>, then <b>Outline</b>; or describe a screen in <a href="/designer/new">Describe</a> and choose <b>Edit in Outline</b>.</p>
+    <form class="dz-line" method="get" action="/designer/outline">
+      <label class="visually-hidden" for="olKind">Kind</label><input id="olKind" name="kind" placeholder="kind (trade)" value="{{ kind }}" required>
+      <label class="visually-hidden" for="olId">Id</label><input id="olId" name="id" placeholder="id (MX-20000001)" value="{{ id }}" required>
+      <button type="submit" class="dz-btn dz-primary">Outline this page</button>
+    </form>
+  </section>
+  {% else %}
+  <div class="ol-bar" role="region" aria-label="Outline">
+    <span class="dz-msg" data-ol-msg role="status" aria-live="polite"></span>
+    <span class="dz-grow"></span>
+    <button type="button" class="dz-btn" data-ol-yaml aria-expanded="false">Show the Sutra</button>
+    <a class="dz-btn" data-ol-open href="/v/{{ kind | urlencode }}/{{ id | urlencode }}?design={{ draft }}">Open full page</a>
+    <button type="button" class="dz-btn" data-ol-cancel>Cancel</button>
+    <button type="button" class="dz-btn dz-primary" data-ol-done title="Keep it as your own version of this page: only you see it until you share">Keep as my page</button>
+  </div>
+  <div class="ol-wrap">
+    <div class="ol-left">
+      <ol class="ol-tree" data-ol-tree role="tree" aria-label="The screen, as an outline"></ol>
+      <button type="button" class="dz-btn ol-add" data-ol-add-section><i class="bi bi-plus-lg" aria-hidden="true"></i> Add a section</button>
+      <section class="ol-detail" data-ol-detail aria-live="polite" aria-label="The selected item"><p class="dz-note">Pick an item to see what it shows and change its settings. Drag an item to move it; drop it on a table's “opens on a click” line to nest it.</p></section>
+      <pre class="dz-yaml mono" data-ol-sutra hidden aria-label="The Sutra (read only)"></pre>
+    </div>
+    <section class="ol-preview" aria-label="Live preview">
+      <div class="dz-result-h">Live preview · as you · it changes as you edit the outline</div>
+      <iframe title="The screen as outlined" data-ol-preview src="/v/{{ kind | urlencode }}/{{ id | urlencode }}?design={{ draft }}&amp;embed=1"></iframe>
+    </section>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/designer-outline.js?v={{ ASSET_V }}"></script>{% endblock %}

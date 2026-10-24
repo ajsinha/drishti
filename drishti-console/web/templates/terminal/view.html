@@ -94,10 +94,11 @@
     </div>
     {{ strip(vm) }}
   </section>
+  {% if grid %}{% include "terminal/_grid.html" %}{% else %}
   <div class="vgrid">
     <div class="vmain">{{ panels(main, false, vm.ref) }}</div>
     <aside class="vright" aria-label="Context">{{ panels(right, false, vm.ref) }}</aside>
-  </div>
+  </div>{% endif %}
 </div>
 {% if not embed %}{% include "terminal/_share.html" %}{% endif %}
 <aside class="about side" id="aboutDrawer" role="dialog" aria-modal="false" aria-labelledby="aboutTitle" hidden data-tab="about" data-about-url="/v/{{ vm.ref.kind | urlencode }}/{{ vm.ref.id | urlencode }}/about"{% if ABOUT_PREFETCH %} data-about-prefetch{% endif %}>

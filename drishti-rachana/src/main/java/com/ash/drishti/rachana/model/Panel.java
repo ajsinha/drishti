@@ -75,6 +75,14 @@ public record Panel(
     /** The panel's height in grid rows ({@code height: 8}); absent: as tall as its content. */
     public static final String HEIGHT = "height";
     public static final int MAX_SPAN = 12;
+    /** A named area of the screen's {@code layout.areas} ({@code area: trades}); main and right stay {@link #area()}. */
+    public static final String GRID_AREA = "area";
+    /** The panel's sort key within its area or the flow ({@code order: 99}); absent: as written. */
+    public static final String ORDER = "order";
+    /** The collapsible section of {@code layout.sections} the panel sits in. */
+    public static final String SECTION = "section";
+    /** Whether the reader may fold the panel to its heading (remembered per reader). */
+    public static final String COLLAPSIBLE = "collapsible";
     /** A row or a bar that sets a control when clicked: {@code { filter: [panel ids], by: <control id>, field: <row field> }}. */
     public static final String ON_SELECT = "on-select";
     /** A condition on each row, read with the controls: {@code where: "oneOf(@.leg, ctl.legs)"}. */

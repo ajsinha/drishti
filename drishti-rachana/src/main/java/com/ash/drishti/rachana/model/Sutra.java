@@ -31,6 +31,8 @@ import java.util.Map;
  * @param keys function key to action ({@code link(...)}, {@code raw}, {@code impact}, or a panel id)
  * @param location the file it came from
  * @param description the author's one-paragraph plain text (never evaluated), or null
+ * @param controls the controls the reader sets
+ * @param layout the screen's grid, areas, split, tabs and sections (SUTRA_NEXT.md 13), or null: the panels flow
  */
 public record Sutra(
         String name,
@@ -43,20 +45,27 @@ public record Sutra(
         Map<String, String> keys,
         SourceLocation location,
         String description,
-        List<Control> controls) {
+        List<Control> controls,
+        ScreenLayout layout) {
 
     public static final int MAX_STRIP = 8;
+
+    /** A Sutra without a layout: its panels flow (SUTRA_NEXT.md 13). */
+    public Sutra(String name, int version, String domain, Match match, Title title, List<StripItem> strip, List<Panel> panels,
+            Map<String, String> keys, SourceLocation location, String description, List<Control> controls) {
+        this(name, version, domain, match, title, strip, panels, keys, location, description, controls, null);
+    }
 
     /** A Sutra without a description. */
     public Sutra(String name, int version, String domain, Match match, Title title, List<StripItem> strip, List<Panel> panels,
             Map<String, String> keys, SourceLocation location) {
-        this(name, version, domain, match, title, strip, panels, keys, location, null, List.of());
+        this(name, version, domain, match, title, strip, panels, keys, location, null, List.of(), null);
     }
 
     /** A Sutra without controls. */
     public Sutra(String name, int version, String domain, Match match, Title title, List<StripItem> strip, List<Panel> panels,
             Map<String, String> keys, SourceLocation location, String description) {
-        this(name, version, domain, match, title, strip, panels, keys, location, description, List.of());
+        this(name, version, domain, match, title, strip, panels, keys, location, description, List.of(), null);
     }
 
     public Sutra {
