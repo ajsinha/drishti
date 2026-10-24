@@ -119,11 +119,25 @@ public class CatalogController {
             m.put("console", p.manifest().getOrDefault("console", Map.of()));
             m.put("sample", p.sample());
             m.put("kinds", p.kinds());
+            m.put("links", links(p.manifest()));                   // graph.fields: which fields name which kinds (the designer's linked records)
             m.put("python", packRegistry.python(p.name()));        // Calc: enabled, and starter snippets (PYTHON_CALC.md)
             m.put("assigned", assigned.contains(p.name()));
             m.put("active", active.contains(p.name()));
             return m;
         }).toList();
+    }
+
+    /** A pack's {@code graph.fields} as {@code {FIELD: {kind, label}}}: the fields that name another entity. */
+    public static Map<String, Object> links(Map<String, Object> manifest) {
+        Map<String, Object> out = new java.util.LinkedHashMap<>();
+        if (manifest.get("graph") instanceof Map<?, ?> g && g.get("fields") instanceof Map<?, ?> f) {
+            f.forEach((k, v) -> {
+                if (v instanceof Map<?, ?> r && r.get("kind") != null) {
+                    out.put(String.valueOf(k), Map.of("kind", String.valueOf(r.get("kind")), "label", String.valueOf(r.get("label") == null ? k : r.get("label"))));
+                }
+            });
+        }
+        return out;
     }
 
     /** The caller's active packs; {@code PUT} chooses among the packs assigned to them. */
