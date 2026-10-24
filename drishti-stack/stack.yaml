@@ -73,4 +73,4 @@ console:
   servers: [drishti-main]          # the console is given these alone and learns the other servers from the cluster
   settings:
     DRISHTI_CONSOLE_HOST: 0.0.0.0
-    DRISHTI_PACKS: core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets
+    DRISHTI_PACKS: core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif
