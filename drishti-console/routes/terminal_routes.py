@@ -365,6 +365,19 @@ def _children_html(request: Request, kind: str, id_: str, groups: list) -> list:
              "panels": [_wired_html(request, kind, id_, p) for p in (g.get("panels") or [])]} for g in (groups or [])]
 
 
+def _selection_problem(e: BackendError, tokens: list) -> JSONResponse:
+    """A click's or children's refusal. When the selections cannot be used any more (the server that held them went away, or they expired),
+    the answer says so in words with ``reset``: the page forgets them and the reader picks again (one server per screen, SUTRA_NEXT.md 7)."""
+    from core.cluster import token_node
+    body = {"code": e.code, "detail": e.detail}
+    if e.code == "DRS-5052" and "selections were reset" in (e.detail or ""):
+        node = next((token_node(t) for t in tokens if token_node(t)), "")
+        body.update(reset=True, message=f"Your selections were reset because server {node or 'that held them'} went away. Pick again.")
+    elif e.code == "DRS-5002" and tokens:
+        body.update(reset=True, message="Your selections were reset: they expired, or the server that held them restarted. Pick again.")
+    return JSONResponse(body, status_code=e.page_status)
+
+
 @router.post("/v/{kind}/{id_:path}/events")
 async def view_event(request: Request, kind: str, id_: str):
     """A click on a row or bar of a Sutra Next screen (SUTRA_NEXT.md 7), relayed to the server, which evaluates it as the reader; the
@@ -384,7 +397,7 @@ async def view_event(request: Request, kind: str, id_: str):
                                                        sutra=request.query_params.get("sutra") or None,
                                                        **(await designer_routes.design_kw(request, kind)))
     except BackendError as e:
-        return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.page_status)
+        return _selection_problem(e, sels)
     return JSONResponse({"selection": r.get("selection") or {}, "cleared": r.get("cleared") or [],
                          "panels": [_wired_html(request, kind, id_, p) for p in (r.get("panels") or [])],
                          "children": _children_html(request, kind, id_, r.get("children"))})
@@ -401,7 +414,7 @@ async def view_children(request: Request, kind: str, id_: str, panel: str):
                                                                sutra=request.query_params.get("sutra") or None,
                                                                **(await designer_routes.design_kw(request, kind)))
     except BackendError as e:
-        return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.page_status)
+        return _selection_problem(e, sels)
     return JSONResponse({"children": _children_html(request, kind, id_, groups)})
 
 

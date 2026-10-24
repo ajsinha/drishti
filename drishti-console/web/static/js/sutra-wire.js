@@ -48,7 +48,10 @@
     return out;
   }
   function json(r) {
-    return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) { throw new Error((j && (j.detail || j.code)) || ('HTTP ' + r.status)); } return j; });
+    return r.json().catch(function () { return {}; }).then(function (j) {
+      if (!r.ok) { var e = new Error((j && (j.detail || j.code)) || ('HTTP ' + r.status)); e.reset = j && j.reset ? j.message : null; throw e; }
+      return j;
+    });
   }
   function fragment(html) {
     var t = document.createElement('template');
@@ -147,6 +150,8 @@
     enhance(fresh);
   }
   function apply(sec, picked, j) {
+    var note = view.querySelector('.wire-reset');
+    if (note) { note.remove(); }
     (j.cleared || []).forEach(function (id) { close(id); delete held[id]; });
     var s = j.selection || {};
     held[s.panel] = held[s.panel] || {};
@@ -174,10 +179,27 @@
       body: JSON.stringify({ panel: sec.getAttribute('data-panel'), event: em.name, row: Number(el.getAttribute('data-ev')), selections: tokens() })
     }).then(json).then(function (j) { apply(sec, el, j); })
       .catch(function (e) {
+        if (e.reset) { reset(e.reset); return; }                        // the server that held the selections went away: pick again
         say('The selection could not be applied: ' + e.message);
-        if (/DRS-5002/.test(e.message)) { held = {}; }                  // a token this server no longer knows: pick again
       })
       .then(function () { sec.classList.remove('wire-busy'); view.removeAttribute('aria-busy'); });
+  }
+  /** The selections cannot be used any more (one server per screen: its server went away): forget them, close what they opened, unmark the
+   *  picked rows, and say so in words above the panels until the next pick. */
+  function reset(message) {
+    Object.keys(held).forEach(close);
+    held = {};
+    view.querySelectorAll('[data-ev][aria-selected="true"], [data-ev][aria-pressed="true"]').forEach(function (r) {
+      r.setAttribute(r.tagName === 'TR' ? 'aria-selected' : 'aria-pressed', 'false');
+    });
+    var note = view.querySelector('.wire-reset');
+    if (!note) {
+      note = document.createElement('p');
+      note.className = 'wire-reset'; note.setAttribute('role', 'alert'); note.setAttribute('data-wire-reset', '');
+      view.insertBefore(note, view.firstChild);
+    }
+    note.textContent = message;
+    say(message);
   }
   function target(e) {
     if (e.target.closest('a, button, input, select, label, summary')) { return null; }   // a link in the row still opens its entity
@@ -200,7 +222,7 @@
   }
   view.querySelectorAll('section.pnl[data-wire]').forEach(function (sec) {
     var kids = wireOf(sec).children || [];
-    if (kids.some(function (g) { return g.show === 'always'; })) { load(sec).catch(function () {}); }
+    if (kids.some(function (g) { return g.show === 'always'; })) { load(sec).catch(function (e) { if (e.reset) { reset(e.reset); } }); }
     if (kids.some(function (g) { return g.show === 'on-expand'; })) {
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'wire-tab wire-open'; b.setAttribute('aria-expanded', 'false');
@@ -208,7 +230,7 @@
       b.addEventListener('click', function () {
         var opened = b.getAttribute('aria-expanded') === 'true';
         if (opened) { close(sec.getAttribute('data-panel')); b.setAttribute('aria-expanded', 'false'); return; }
-        load(sec).then(function () { b.setAttribute('aria-expanded', 'true'); }).catch(function (e) { say('The details could not be loaded: ' + e.message); });
+        load(sec).then(function () { b.setAttribute('aria-expanded', 'true'); }).catch(function (e) { if (e.reset) { reset(e.reset); } else { say('The details could not be loaded: ' + e.message); } });
       });
       (sec.querySelector('.pnl-b') || sec).appendChild(b);
     }

@@ -252,11 +252,36 @@ public final class ScreenWire {
         if (src == null) {
             return new Ctx(s.ctx().withEval(seenEval), rawEval, null);
         }
-        Pair got = read(s, src, rawEval);
+        Pair got = followsMasked(src, seenEval) ? new Pair(null, null, HIDDEN) : read(s, src, rawEval);
         if (got.denied() != null) {
             return new Ctx(s.ctx().withEval(seenEval), rawEval, got.denied());
         }
         return new Ctx(s.ctx().withEval(seenEval.withScope(seenScope.withSrc(got.seen()))), rawEval.withScope(rawScope.withSrc(got.raw())), null);
+    }
+
+    /** What a panel says when its source follows a value masked for the reader (SUTRA_NEXT.md 15: a followed masked id shows nothing). */
+    public static final String HIDDEN = "hidden for you";
+    /** An event read in a source's expression: {@code @<panel>.<event>.<field>} or {@code @parent.<event>.<field>}. */
+    private static final java.util.regex.Pattern EVENT_READ = java.util.regex.Pattern.compile("@[A-Za-z][A-Za-z0-9_-]*\\.[A-Za-z][A-Za-z0-9_-]*\\.[A-Za-z_][A-Za-z0-9_]*");
+
+    /**
+     * Whether a source reads an event value the reader was shown masked (the decided behaviour, SUTRA_NEXT.md 15): such a panel shows
+     * nothing and says "hidden for you", whether it would look the value up by id, by a condition or by a search.
+     */
+    private boolean followsMasked(Wiring.Source src, EvalContext seen) {
+        for (String expr : java.util.Arrays.asList(src.id(), src.where(), src.search(), src.asOf())) {
+            if (expr == null) {
+                continue;
+            }
+            var m = EVENT_READ.matcher(expr);
+            while (m.find()) {
+                String read = m.group();
+                if (Values.masked(soft(() -> Values.simplify(el.compile(read).eval(seen))))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /** The events a panel reads: every panel's ({@code @<id>}) and, for a child, its parent's ({@code @parent}). */

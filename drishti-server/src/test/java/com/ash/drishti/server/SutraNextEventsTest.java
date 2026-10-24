@@ -36,8 +36,8 @@ import org.springframework.test.web.servlet.MockMvc;
  * Sutra Next phases 2 and 3 end to end, on the book desk ({@code /v/portfolio-trades/<book>?sutra=book-desk}): panels reading other
  * packs' kinds (trade from trading, counterparty from core, credit-limit from counterparty-risk), a click evaluated on the server as the
  * reader, only the listening panels returned, children filled lazily under the clicked row, a new click replacing them; and masks in
- * both directions: a masked counterparty stays masked in the payload and the response (followed by a token, never sent), selects no
- * limit, and its token is refused to another person and on another screen.
+ * both directions: a masked counterparty stays masked in the payload and the response (never sent), a panel that follows it shows
+ * nothing but "hidden for you" (the counterparty and its limit), and its token is refused to another person and on another screen.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=trading,counterparty-risk",
@@ -157,8 +157,10 @@ class SutraNextEventsTest {
         JsonNode r = json.readTree(body);
         assertThat(r.path("selection").path("payload").path("ref").asText()).isEqualTo(MASK);
         assertThat(body).doesNotContain(raw);                                          // the id is never sent, in the payload or a panel
-        assertThat(field(panel(r.path("panels"), "counterparty"), "Name")).isNotBlank();   // the same reader follows it, by token
-        assertThat(panel(r.path("panels"), "limit").path("data").path("fields").get(0).path("text").asText()).isIn("", "—", "-");   // a hidden field selects nothing
+        for (String followed : List.of("counterparty", "limit")) {                     // a followed masked id shows nothing, in words (15)
+            assertThat(panel(r.path("panels"), followed).path("denied").asText()).as(followed).isEqualTo("hidden for you");
+            assertThat(panel(r.path("panels"), followed).path("data").isMissingNode()).as(followed).isTrue();
+        }
         String token = r.path("selection").path("token").asText();
         assertThat(token).startsWith("tok_").doesNotContain(raw);
         assertThat(click(as("ann", "masked"), DESK, "trades", 1, List.of(token), 200)).doesNotContain(raw);

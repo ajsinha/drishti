@@ -28,12 +28,15 @@ import java.util.concurrent.ConcurrentHashMap;
  * Opaque tokens for what a person selected on a Sutra Next screen (SUTRA_NEXT.md 7 and 15; ported from the UI Board's IdTokens): a
  * click's payload, which may hold an id that is masked for the person, stays on the server; the browser holds a random token that only
  * the same person resolves, on the same screen, and only for a while (each use renews it). Nothing of the payload is in the token.
- * Held in this node's memory: a token issued by one node is not known to another (a screen's requests go to the node that drew it).
- * Thread-safe.
+ * Held in this node's memory: a token issued by one node is not known to another. In a cluster the token names its node
+ * ({@code tok_<node>~<random>}): the console sends a screen's requests to that node, and any other node that receives one forwards it
+ * there ({@code SelectionForwardFilter}; SUTRA_NEXT.md 7, "one server per screen"). Thread-safe.
  */
 public final class IdTokens {
 
     public static final String PREFIX = "tok_";
+    /** Between a token's node and its random part (never in a node name or in URL-safe Base64). */
+    public static final char NODE_MARK = '~';
     private static final SecureRandom RANDOM = new SecureRandom();
     /** The most tokens held; past it the expired ones are swept, and failing that the oldest half. */
     static final int MAX_HELD = 100_000;
@@ -43,17 +46,35 @@ public final class IdTokens {
     private final Map<String, Held> held = new ConcurrentHashMap<>();
     private final Clock clock;
     private final Duration ttl;
+    private final java.util.function.Supplier<String> node;
 
     public IdTokens(Clock clock, Duration ttl) {
+        this(clock, ttl, () -> "");
+    }
+
+    /** {@code node}: this node's id in a cluster, empty when there is none (the token then names no node). */
+    public IdTokens(Clock clock, Duration ttl, java.util.function.Supplier<String> node) {
         this.clock = clock;
         this.ttl = ttl;
+        this.node = node;
+    }
+
+    /** The node that issued {@code token}, or null for a token that names none (a single server) or is not a token. */
+    public static String node(String token) {
+        if (token == null || !token.startsWith(PREFIX)) {
+            return null;
+        }
+        int at = token.indexOf(NODE_MARK);
+        String n = at > PREFIX.length() ? token.substring(PREFIX.length(), at) : null;
+        return n != null && n.matches("[A-Za-z0-9._-]+") ? n : null;
     }
 
     /** A new token standing for {@code value}, resolvable by {@code user} within {@code scope} (the screen: kind and id) only. */
     public String issue(String user, String scope, Object value) {
         byte[] b = new byte[18];
         RANDOM.nextBytes(b);
-        String t = PREFIX + Base64.getUrlEncoder().withoutPadding().encodeToString(b);
+        String self = node.get();
+        String t = PREFIX + (self == null || self.isBlank() ? "" : self + NODE_MARK) + Base64.getUrlEncoder().withoutPadding().encodeToString(b);
         long now = clock.millis();
         held.put(t, new Held(user, scope, value, now + ttl.toMillis()));
         if (held.size() % 512 == 0 || held.size() > MAX_HELD) {
