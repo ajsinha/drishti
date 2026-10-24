@@ -101,7 +101,7 @@ generator's two steps, which can also be run by hand:
 
 ```bash
 python3 tools/packgen/us_equities/fetch.py --cache data/cache/us-equities     # the network: about 1,100 SEC requests and 500 GLEIF lookups
-python3 tools/packgen/us_equities/make.py --cache data/cache/us-equities      # writes samples/ and this guide
+python3 tools/packgen/us_equities/make.py --cache data/cache/us-equities      # writes data/testdata/us-equities/, samples/ and this guide
 python3 tools/packgen/us_equities/make.py --check                              # no network: the pack matches its generator
 ```
 

@@ -14,12 +14,16 @@
 
 """Build the gleif pack's documents from the cache fetch.py fills (no network).
 
-    python3 tools/packgen/gleif/make.py [--cache DIR]           write config/packs/gleif/samples and its guide
+    python3 tools/packgen/gleif/make.py [--cache DIR]           write data/testdata/gleif/ and the pack's guide
     python3 tools/packgen/gleif/make.py --check [--cache DIR]   fail if what would be written differs from the pack
 
-With a cache, --check rebuilds every document from it. Without one (a fresh clone, CI), --check reads the committed samples back
-and rebuilds what is derived from them (the catalogue, the guide, the line format), so it needs no network either. The pack's
-manifest, Sutras, fragments and help are hand-written; this writes samples/ and guides/gleif.md.
+With a cache, --check rebuilds every document from it. Without one (a fresh clone, CI), --check reads the committed snapshot back
+(data/testdata/gleif/) and rebuilds what is derived from it (the reference samples, the guide, the README), so it needs no network.
+
+The documents follow Drishti's standard data pattern (tools/testdata/publicsnap.py): one gzipped JSON Lines snapshot per kind under
+data/testdata/gleif/<kind>/, listed in data/testdata/testdata.yaml, built into the lake by tools/build_demo_lakes.py and served by
+the pack's Delta connector. samples/ keeps only a few reference documents for the README and docs; nothing is served from it.
+The pack's manifest, Sutras, fragments and help are hand-written; this writes the snapshot, samples/ and guides/gleif.md.
 """
 from __future__ import annotations
 
@@ -36,6 +40,8 @@ import packsamples as PS  # noqa: E402
 import readme as README  # noqa: E402  (the pack README standard)
 sys.path.insert(0, str(HERE))
 import fetch as F  # noqa: E402
+sys.path.insert(0, str(ROOT / "tools" / "testdata"))
+import publicsnap as SNAP  # noqa: E402  (the standard data pattern: data/testdata/<pack>/<kind>/)
 
 PACK = ROOT / "config" / "packs" / "gleif"
 DEFAULT_CACHE = ROOT / "data" / "cache" / "gleif"
@@ -471,7 +477,7 @@ steps, which can also be run by hand:
 
 ```bash
 python3 tools/packgen/gleif/fetch.py --cache data/cache/gleif     # the network
-python3 tools/packgen/gleif/make.py --cache data/cache/gleif      # writes samples/ and this guide
+python3 tools/packgen/gleif/make.py --cache data/cache/gleif      # writes data/testdata/gleif/, samples/ and this guide
 python3 tools/packgen/gleif/make.py --check                       # no network: the pack matches its generator
 ```
 
@@ -504,7 +510,8 @@ def _rel(p: Path) -> str:
 
 
 def files(docs: dict[str, dict[str, dict]]) -> dict[Path, str]:
-    out = {PACK / "samples" / name: text for name, text in PS.files(docs, catalog(docs), catalog_indent=None).items()}
+    ref = SNAP.reference("gleif", docs)                     # a few reference documents: the data itself is in data/testdata
+    out = {PACK / "samples" / name: text for name, text in PS.files(ref, catalog(ref), catalog_indent=None).items()}
     out[PACK / "guides" / "gleif.md"] = guide(docs)
     out[PACK / "README.md"] = README.render_pack(PACK, files=out, intro=HERE / "readme" / "gleif.intro.md")
     return out
@@ -516,37 +523,23 @@ def main(argv: list[str], extra: list[str] | None = None, cap: int | None = None
     p.add_argument("--check", action="store_true")
     p.add_argument("--pack", type=Path, help="the pack folder to write or check (default config/packs/gleif; "
                                                "tools/publicdata/gleif.py points a widened build at the data folder)")
+    p.add_argument("--testdata", type=Path, help="the test data folder the snapshot goes to (default data/testdata for the committed "
+                                                  "pack; beside a widened build's pack folder otherwise)")
     a = p.parse_args(argv)
     global PACK
     PACK = a.pack.resolve() if a.pack else ROOT / "config" / "packs" / "gleif"
+    testdata = a.testdata.resolve() if a.testdata else SNAP.default_testdata(PACK, ROOT / "config" / "packs" / "gleif")
     F.reduce_rr(a.cache)                                     # offline: the relationship file from the downloaded golden copy
     if (a.cache / "reduced" / "rr.json").is_file():
         docs = build(a.cache, extra, cap)
     elif a.check:
-        docs = PS.read(PACK / "samples")
-        print(f"no cache at {a.cache}: checking the committed samples against what they derive")
+        docs = SNAP.read(testdata, "gleif")
+        if not docs:
+            raise SystemExit(f"no cache at {a.cache} and no snapshot in {testdata}/gleif: run tools/packgen/gleif/fetch.py first")
+        print(f"no cache at {a.cache}: checking the committed snapshot ({testdata}/gleif) against what it derives")
     else:
         raise SystemExit(f"no cache at {a.cache}: run tools/packgen/gleif/fetch.py first")
-    want = files(docs)
-    if a.check:
-        bad = [_rel(f) for f, text in want.items() if not f.is_file() or f.read_text(encoding="utf-8") != text]
-        have = {f for f in (PACK / "samples").glob("*") if f.is_file()}
-        bad += [_rel(f) + " (not written by the generator)" for f in have - set(want)]
-        if bad:
-            print("gleif pack differs from its generator:\n  " + "\n  ".join(bad))
-            return 1
-        print(f"gleif pack matches its generator ({sum(len(v) for v in docs.values())} documents)")
-        return 0
-    for f, text in want.items():
-        f.parent.mkdir(parents=True, exist_ok=True)
-        f.write_text(text, encoding="utf-8")
-    for f in (PACK / "samples").glob("*"):
-        if f.is_file() and f not in want:
-            f.unlink()
-    sizes = {k: len(v) for k, v in docs.items()}
-    total = sum(f.stat().st_size for f in (PACK / "samples").glob("*"))
-    print(f"wrote {_rel(PACK)}: {sizes}; samples {total / 1e6:.1f} MB")
-    return 0
+    return SNAP.generate("gleif", PACK, docs, files(docs), a.check, testdata)
 
 
 if __name__ == "__main__":

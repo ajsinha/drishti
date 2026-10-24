@@ -98,7 +98,7 @@ steps, which can also be run by hand:
 
 ```bash
 python3 tools/packgen/gleif/fetch.py --cache data/cache/gleif     # the network
-python3 tools/packgen/gleif/make.py --cache data/cache/gleif      # writes samples/ and this guide
+python3 tools/packgen/gleif/make.py --cache data/cache/gleif      # writes data/testdata/gleif/, samples/ and this guide
 python3 tools/packgen/gleif/make.py --check                       # no network: the pack matches its generator
 ```
 

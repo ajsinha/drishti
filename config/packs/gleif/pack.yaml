@@ -15,7 +15,8 @@
 
 # GLEIF · Legal Entity Identifiers and who owns whom, from the Global Legal Entity Identifier Foundation (CC0): the ownership groups
 # of the us-equities companies and of the large banks, insurers, asset managers and market infrastructures. Hand-written;
-# tools/packgen/gleif/make.py writes samples/ and guides/gleif.md from the cache tools/packgen/gleif/fetch.py fills.
+# tools/packgen/gleif/make.py writes the data (data/testdata/gleif/<kind>/, built into the lake by tools/build_demo_lakes.py and
+# served by the Delta connector gleif-store below), a few reference samples and guides/gleif.md from the cache tools/packgen/gleif/fetch.py fills.
 pack: gleif
 version: 1.0.0
 code: GLEIF            # typed alone, opens this pack's overview
@@ -85,3 +86,35 @@ columns:
   lei-relationship: [RELATIONSHIP_ID, LEVEL, CHILD_ENTITY, PARENT_ENTITY, RELATIONSHIP_STATUS]
   lei-country: [COUNTRY, NAME, ENTITIES]
   lei-mapping: [IDENTIFIER, TYPE, ENTITY_LEI, ENTITY_NAME]
+# The pack's data: the committed snapshot data/testdata/gleif/<kind>/ built into <lake>/gleif/<kind>/ by tools/build_demo_lakes.py
+# (drishti.py lake demo), one Delta table per kind keyed by its id field (LEI, GROUP_ID, RELATIONSHIP_ID, COUNTRY, IDENTIFIER). The
+# promoted columns answer the search form; the type-ahead also matches an entity's legal name (layout.<kind>.type-ahead).
+connectors:
+  gleif-store:
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds: [lei-entity, lei-group, lei-relationship, lei-country, lei-mapping]
+    settings:
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+      domain: gleif
+      layout:
+        lei-entity:
+          columns: [LEI, NAME, LEI_COUNTRY, LEGAL_CITY, LEGAL_FORM, REGISTRATION_STATUS, RENEWAL_LATE, SEGMENT, NEXT_RENEWAL, US_COMPANY]
+          type-ahead: [NAME, US_COMPANY]
+        lei-group:
+          columns: [GROUP_ID, NAME, LEI_COUNTRY, SEGMENT, MEMBERS]
+          type-ahead: [NAME]
+        lei-relationship:
+          columns: [RELATIONSHIP_ID, LEVEL, CHILD_ENTITY, PARENT_ENTITY, RELATIONSHIP_STATUS]
+        lei-country:
+          columns: [COUNTRY, NAME, ENTITIES]
+          type-ahead: [NAME]
+        lei-mapping:
+          columns: [IDENTIFIER, TYPE, ENTITY_LEI, ENTITY_NAME]
+          type-ahead: [ENTITY_NAME]
+routes:
+  lei-entity: gleif-store
+  lei-group: gleif-store
+  lei-relationship: gleif-store
+  lei-country: gleif-store
+  lei-mapping: gleif-store
