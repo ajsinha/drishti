@@ -18,6 +18,12 @@
 ## Unreleased
 
 - The UI Board work is kept on branch ui-board-preview; not in this release.
+- **Docs refresh after Sutra Next and the designer**: new [tutorial 22](docs/tutorials/22-build-a-screen-with-the-designer.md),
+  *Build a screen with the designer* (tutorial 6 points to it); SUTRA_DEVELOPER_GUIDE section 11a (fragments, events, children,
+  refresh, forms); USER_GUIDE *Screens that respond*; `DRS-2059` in TROUBLESHOOTING and RACHANA_REFERENCE; `/me/arrange` and the
+  `designerMode`/`refresh` settings in API_GUIDE; `sutra lint config/packs` in CLI_GUIDE; the content store in the backups
+  (OPERATIONS, tutorial 17); *Your selections were reset* explained; the nesting limitation (pack screens two levels; Grid edits two
+  levels of opened panels); the help centre's designer, forms and Rachana entries; SUTRA_NEXT's status and phases; dead anchors fixed.
 - **Every pack screen on UI-kit fragments** ([SUTRA_NEXT.md section 3](docs/architecture/SUTRA_NEXT.md)): the last six migrated, each
   proved identical to its inline layout. The trading pack's four derived pages (`counterparty-trades`, `portfolio-trades`,
   `legal-entity-trades`, `index-trades`) are generated from the new pack fragments `trading/payments-metrics@1` and

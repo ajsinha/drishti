@@ -42,6 +42,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Reading a view](#reading-a-view) | Title, strip, panels, links, provenance |
 | [About this page](#about-this-page) | `?`: what the page is, what each number means, where the data came from, why it looks like this |
 | [Layout mode](#layout-mode-arrange-a-view-your-way) | `Alt+L`: drag, resize and hide panels for yourself; promote your layout to the Sutra |
+| [Screens that respond](#screens-that-respond-clicks-refresh-editing-and-your-own-page) | A click that opens a panel, refresh and freshness, Pause all, editing a record (drafts), a screen you arrange, *Your page* |
 | [Zoom a panel](#zoom-a-panel) | `Z`: one panel fills the view area; restore with `Esc`; shareable as `#zoom=<panel>` |
 | [The Pivot tab](#the-pivot-tab-slice-a-table-your-way) | Rows, columns, values and filters over a table or a search's results, by drag or by key; totals, drill-down, chart, export |
 | [Keyboard](#keyboard) | Every key in one table |
@@ -1024,6 +1025,33 @@ from position 3 to 1 (side → main)*, and the line diff below it holds only the
 removed panel); the full line diff, where a move reads as a deleted block and an added one, is behind **Full line
 diff**. The promote drawer shows the same before you submit ([Reviews](#reviews-approving-a-sutra)). With review switched off on the server the button
 reads **Publish** and the new version is live at once.
+
+## Screens that respond: clicks, refresh, editing and your own page
+
+Newer screens (every pack screen is built from the same parts) can do more than show a document. What you meet:
+
+- **A click opens more.** On a table with clickable rows (the book desk, `/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`) a click,
+  or Enter or Space on a focused row, marks the row and opens what the screen says: the trade's cash flows under the row, its
+  counterparty and credit limit beside it. A panel waiting for a click says so (*Pick a trade to see its counterparty and credit
+  limit*). A new click replaces what opened. A panel that would follow a value masked for you says **Hidden for you** and is not
+  looked up. If the server that drew the screen goes away, the next click says *Your selections were reset ... Pick again.*: click
+  the row again.
+- **Refresh and freshness.** A panel that refreshes says how fresh it is: *updated 12 s ago*, ticking; *stale* in amber when its
+  source is behind; *trade-endur isn't answering; showing data from 10:42* when a refresh failed (it keeps what it showed). Its header
+  has **pause/resume** and **every …** (only slower than the screen's own interval); **Pause all** above the panels pauses the page.
+  Your choices are kept for you, per screen. A browser tab you are not looking at fetches nothing.
+- **Editing a record.** Where a screen lets you, clicking a row opens a form beside the table, or a pencil on a column lets you edit
+  in the cell, and **New …** opens a guided drawer. Fields you may not change say why; a wrong value is explained under its field.
+  **Save draft** keeps a **draft** that only you see (*You have 2 drafts on this page* offers them again); nothing is written to the
+  source system yet. The page asks before you leave with changes not saved. The reference is
+  [SUTRA_FORMS_GUIDE.md](SUTRA_FORMS_GUIDE.md).
+- **Screens laid out on a grid.** A screen with named areas may have a split you drag (its position kept for you), areas shown as
+  tabs and panels that fold. Where the screen allows it, you may drag panels to another place and resize them, for yourself;
+  **Reset layout** goes back. Such a screen does not offer layout mode (`Alt+L`): the grid replaces it.
+- **Your page.** With the Sutra designer on, **Customize** in a page's header changes the page for you alone (move, hide, columns,
+  what a click opens, refresh, letting people edit); the header then says *Your page*, whose link opens the pack's page.
+  [SCREEN_DESIGNER.md section 31](SCREEN_DESIGNER.md#31-the-sutra-designer-customize-and-describe) and
+  [tutorial 22](../tutorials/22-build-a-screen-with-the-designer.md).
 
 ## Zoom a panel
 

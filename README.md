@@ -115,6 +115,11 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
 - **Calc** (`Alt+C`): Python in your browser on the view you are looking at ([PYTHON_CALC.md](docs/guides/PYTHON_CALC.md)).
 - **The Build workbench** (`/build`; Sutra Studio's page is folded into it; [tutorial 6](docs/tutorials/06-design-a-screen.md)): drag panels and fields onto a live screen, or a YAML editor with completion from the language's JSON Schema, live checks and a
   preview against any entity. A save is a proposal; an approver reviews the diff (four eyes).
+- **Sutra Next** (unreleased, 2.7.0; [SUTRA_NEXT.md](docs/architecture/SUTRA_NEXT.md)): every screen built from the Drishti UI kit's
+  fragments (`config/ui-kit/`, `name@N`, each with a `doc:` docstring) and the packs' own (`trading/deal-ticket@1`); panels that
+  talk (`emits`, `@panel.event`), read other packs (`source:`) and open children on a click; `refresh:` with freshness; a `layout:`
+  grid; `form:` with drafts. The **Sutra designer** (`ui.designer`, off by default): **Customize** a live page, **Describe** a screen
+  in one line, **Outline** and **Grid** ([tutorial 22](docs/tutorials/22-build-a-screen-with-the-designer.md)).
 - **Domain packs**, enabled per server and assigned per user. Seven ship and are on by default: `core`, `market-data`, `trading`
   (125 products), `counterparty-risk`, `market-risk`, `world-economy` (real public data; the IMF figures are for internal demonstrations only)
   and the sample `news-and-markets`. The earlier `finance`, `logistics`, `genomics`, `retail-banking`, `climate-risk`, `operational-risk`
@@ -293,6 +298,7 @@ Start with **[Install and run](docs/guides/GETTING_STARTED.md)**, then the **[tu
 | you load, assign or install a domain pack | [PACKS.md](docs/guides/PACKS.md) |
 | you build a domain pack | [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md) |
 | you learn to build screens in the Build workbench, step by step | [tutorial 6](docs/tutorials/06-design-a-screen.md) |
+| you change a live page in plain words with the Sutra designer | [tutorial 22](docs/tutorials/22-build-a-screen-with-the-designer.md) |
 | you learn to write a Sutra | [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md) |
 | you choose or add a panel kind | [PANELS.md](docs/guides/PANELS.md) (the kinds, and [developing one](docs/guides/PANELS.md#developing-a-panel-kind)) |
 | you need an exact Sutra key, format or expression | [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md) |

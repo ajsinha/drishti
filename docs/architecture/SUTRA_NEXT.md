@@ -18,8 +18,11 @@
 Status: **phases 1 to 3 built (2.7.0)**: the fragment library, the `doc:` docstring and its lint, composite fragments, migrated
 screens (ir-curve and the seven world-economy economics screens) and the library read API (phase 1); per-panel sources over any
 pack's kinds and events evaluated on the server (phase 2, [section 6](#6-sources-over-several-packs), [7](#7-events)); nested child
-panels (phase 3, [section 8](#8-nested-child-panels)); the worked screen is the trading pack's **book desk**. Phases 4 to 8 are
-**design, not built**. Direction of the product owner, 2026-10-22:
+panels (phase 3, [section 8](#8-nested-child-panels)); the worked screen is the trading pack's **book desk**. Also built since:
+refresh and freshness (phase 4, [section 9](#9-live-panels-refresh-control-and-freshness)), forms and drafts (phase 5,
+[section 10](#10-forms-and-data-entry)), the `layout:` grid ([section 13](#13-layout-placing-panels)), every pack screen on
+fragments, and the Sutra designer's four modes behind `ui.designer` ([section 16](#16-the-editor)). Write-back (phase 6) and dynamic
+screens saved to the workspace (phase 7) are **design, not built**. Direction of the product owner, 2026-10-22:
 the board/chip paradigm (UI_BOARD.md, parked on branch `ui-board-preview`) is dropped; Sutra itself grows from an entity browser
 into the UI library, in ONE grammar, built on what Sutras already have (panels, shared blocks, `use:`/`with:`, controls, masks).
 
@@ -805,8 +808,8 @@ the mode they open first (`designerMode` in `/me/settings`: `customize`, `descri
 | 4 | Refresh control and freshness per panel | 2.7.x (**built**) |
 | 5 | Forms and validation; drafts per person (`/api/v1/drafts`) | 2.7.x (**built**; the write is phase 6) |
 | 6 | Actions and write-back through connectors' `writes:` (WRITE_BACK.md) | 2.8.0 |
-| 7 | Dynamic screens saved to the workspace; the `layout:` grid; workspace fragments | 2.8.x / 2.9.0 |
-| 8 | The editor, from the product owner's mock-ups; the component browser | after the mock-ups |
+| 7 | Dynamic screens saved to the workspace; the `layout:` grid; workspace fragments | the `layout:` grid 2.7.x (**built**); the rest 2.8.x / 2.9.0 |
+| 8 | The editor, from the product owner's mock-ups; the component browser | the Sutra designer (Customize, Describe, Outline, Grid) 2.7.x (**built**, behind `ui.designer`); the component browser after the mock-ups |
 
 Each phase migrates screens only where the equivalence test proves the view unchanged; nothing breaks a pack Sutra written today.
 
