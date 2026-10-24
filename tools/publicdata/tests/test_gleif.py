@@ -30,6 +30,8 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 import pdbase as B  # noqa: E402
 import gleif as GL  # noqa: E402
+sys.path.insert(0, str(HERE.parents[1] / "testdata"))
+import publicsnap as SNAP  # noqa: E402  (a build's data: <out>/testdata/<pack>/<kind>/)
 
 FX = HERE / "fixtures" / "gleif"
 APPLE, MOODYS = "HWUPKR0MPOU8FGXBT394", "549300GCEDD8YCF5WU84"
@@ -58,33 +60,40 @@ def ns(cache, **kw):
     return argparse.Namespace(**base)
 
 
-def lines(f: Path) -> list[dict]:
-    return [json.loads(x) for x in f.read_text(encoding="utf-8").splitlines() if x.strip()]
+def snap(pack: Path, kind: str) -> list[dict]:
+    """A build's documents of a kind: its snapshot beside the pack folder (<out>/testdata/<pack>/<kind>/snapshot-<date>.jsonl.gz)."""
+    return SNAP.kind_docs(pack.name, kind, pack.parent.parent / "testdata")
+
+
+def built(pack: Path) -> dict[str, bytes]:
+    """A build's files: the pack's reference samples and its snapshot, by name."""
+    return {str(f.relative_to(pack.parent.parent)): f.read_bytes()
+            for f in [*(pack / "samples").glob("*"), *(pack.parent.parent / "testdata").rglob("*.jsonl.gz")]}
 
 
 def test_offline_build_from_the_recorded_cache_is_complete_and_deterministic(tmp_path, cache, data_dir):
     out = tmp_path / "build"
     assert GL.refresh(ns(cache, offline=True, out=str(out)), log=lambda *_: None) == 0
     pack = out / "packs" / "gleif"
-    ents = {d["LEI"]: d for d in lines(pack / "samples" / "lei-entity.jsonl")}
+    ents = {d["LEI"]: d for d in snap(pack, "lei-entity")}
     assert {APPLE, MOODYS} <= set(ents)
     assert ents[APPLE]["US_COMPANY"] == "AAPL" and ents[APPLE]["SEGMENT"] == "US equities"
     assert ents[APPLE]["BICS"] == "APLEUS66XXX" and ents[APPLE]["LEI_COUNTRY"] == "US"
     kid = next(k for k, d in ents.items() if d.get("DIRECT_PARENT") == APPLE)
     assert ents[kid]["LEI_GROUP"] == APPLE and ents[kid]["PARENTS"][0]["LEI"] == APPLE
-    groups = {d["GROUP_ID"]: d for d in lines(pack / "samples" / "lei-group.jsonl")}
+    groups = {d["GROUP_ID"]: d for d in snap(pack, "lei-group")}
     assert groups[APPLE]["TREE"][0]["LEI"] == APPLE and groups[APPLE]["TREE"][0]["CHILDREN"]
     assert "ALL" in groups and groups["ALL"]["GROUPS"] == 2
-    rels = {d["RELATIONSHIP_ID"]: d for d in lines(pack / "samples" / "lei-relationship.jsonl")}
+    rels = {d["RELATIONSHIP_ID"]: d for d in snap(pack, "lei-relationship")}
     assert rels[f"LEIREL-{kid}-DIRECT"]["PARENT_ENTITY"] == APPLE
-    maps = {d["IDENTIFIER"]: d for d in lines(pack / "samples" / "lei-mapping.jsonl")}
+    maps = {d["IDENTIFIER"]: d for d in snap(pack, "lei-mapping")}
     assert maps["APLEUS66XXX"]["ENTITY_LEI"] == APPLE and maps["APLEUS66XXX"]["TYPE"] == "BIC"
-    countries = {d["COUNTRY"] for d in lines(pack / "samples" / "lei-country.jsonl")}
+    countries = {d["COUNTRY"] for d in snap(pack, "lei-country")}
     assert {"US", "ALL"} <= countries
     assert (pack / "pack.yaml").is_file() and (pack / "guides" / "gleif.md").is_file()
-    first = {f.name: f.read_bytes() for f in (pack / "samples").glob("*")}
+    first = built(pack)
     assert GL.refresh(ns(cache, offline=True, out=str(out)), log=lambda *_: None) == 0
-    assert first == {f.name: f.read_bytes() for f in (pack / "samples").glob("*")}           # the same cache, the same bytes
+    assert first == built(pack)           # the same cache, the same bytes
     man = json.loads((data_dir / "publicdata" / "gleif" / "manifest.json").read_text())
     assert set(man["sources"]) == {"golden", "api", "mapping"} and man["runs"][-1]["ok"]
     assert (out / "manifest.json").is_file()
@@ -112,10 +121,10 @@ def test_scope_name_widens_into_the_data_folder_through_the_api(cache, data_dir)
 
     assert GL.refresh(ns(cache, offline=False, scope="NAME:moody,CAP:5", sources=["api"]), log=logs.append, opener=opener) == 0
     pack = data_dir / "publicdata" / "gleif" / "packs" / "gleif"
-    ents = {d["LEI"] for d in lines(pack / "samples" / "lei-entity.jsonl")}
+    ents = {d["LEI"] for d in snap(pack, "lei-entity")}
     assert {d["id"] for d in moodys_kids} <= ents
     assert any("filter[fulltext]=moody" in u for u in calls)
-    groups = {d["GROUP_ID"]: d for d in lines(pack / "samples" / "lei-group.jsonl")}
+    groups = {d["GROUP_ID"]: d for d in snap(pack, "lei-group")}
     assert "at most 5 a group" in groups[MOODYS]["CAP_NOTE"]                                 # CAP:5, the found entities kept beyond it
     assert GL.F.GROUP_CAP == 50                                                                 # put back
 

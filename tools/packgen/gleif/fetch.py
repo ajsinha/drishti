@@ -56,7 +56,16 @@ API = "https://api.gleif.org/api/v1"
 GOLDEN = "https://goldencopy.gleif.org/api/v2/golden-copies/publishes/latest"
 MAPPING = "https://mapping.gleif.org/api/v2/{name}/latest"
 MAPPINGS = ("bic-lei", "isin-lei", "mic-lei", "oc-lei")
-US_EQUITIES = ROOT / "config" / "packs" / "us-equities" / "samples" / "us-company.jsonl"
+
+
+def newest_snapshot(testdata: Path, pack: str, kind: str) -> Path:
+    """A kind's newest snapshot of the standard test data (<testdata>/<pack>/<kind>/snapshot-<date>.jsonl.gz); a missing path if none."""
+    got = sorted((testdata / pack / kind).glob("snapshot-*.jsonl.gz"))
+    return got[-1] if got else testdata / pack / kind / "snapshot-none.jsonl.gz"
+
+
+#: the us-equities companies the seeds come from: the committed snapshot (a .jsonl or .jsonl.gz file; gleif.py may point it elsewhere)
+US_EQUITIES = newest_snapshot(ROOT / "data" / "testdata", "us-equities", "us-company")
 GROUP_CAP = 50           # entities a group at most (the ultimate parent and the nearest levels first)
 ISIN_SAMPLE = 5          # ISINs kept a seed entity as lei-mapping documents (every entity carries its ISIN count)
 BATCH = 200              # LEIs a lei-records request
@@ -236,7 +245,9 @@ def us_equities_seeds() -> list[dict]:
     if not US_EQUITIES.is_file():
         return []
     out = []
-    for line in US_EQUITIES.read_text(encoding="utf-8").splitlines():
+    raw = US_EQUITIES.read_bytes()
+    text = (gzip.decompress(raw) if US_EQUITIES.name.endswith(".gz") else raw).decode("utf-8")
+    for line in text.splitlines():
         if line.strip():
             d = json.loads(line)
             if d.get("LEI"):

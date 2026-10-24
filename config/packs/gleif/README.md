@@ -35,9 +35,13 @@ commands:
   GLEIF: pack overview
 depends-on:
   packs: []
-  connectors: []
-  plugins: []
-  settings: []
+  connectors:
+  - gleif-store
+  plugins:
+  - delta
+  settings:
+  - DRISHTI_DELTA_ROOT
+  - DRISHTI_LAKE_ENABLED
 sources:
 - name: GLEIF golden copy, level 2 (relationship records, reporting exceptions)
   licence: CC0 1.0 (attribution appreciated)
@@ -70,13 +74,17 @@ ultimate parent with the entities it consolidates, at most 50 a group, the neare
 registration and renewal (late renewals flagged), its parents chain, its children and its BICs and ISIN count. Off by default; with
 us-equities on, a company and its LEI record link both ways.
 
+The documents are committed as standard test data, one snapshot per kind under `data/testdata/gleif/<kind>/`; `tools/drishti.py lake
+demo` builds them into the demo lake and the pack's Delta connector `gleif-store` serves them, so the pack works with the demo
+connector off. `samples/` keeps only a few reference documents.
+
 ## Data structures
 
 Every kind the pack owns, read from its manifest, its samples and its Sutras: how its ids look, its fields (type, an example, what it means), its nested lists and the fields that link to other kinds. A path `A[].B` is field `B` of every element of list `A`.
 
 ### `lei-entity`
 
-**LEI legal entity** · mnemonic `LEI`.
+**LEI legal entity** · mnemonic `LEI` · read through connector `gleif-store`.
 
 **Id:** field `LEI`; pattern `^[0-9A-Z]{18}[0-9]{2}$`; for example `HWUPKR0MPOU8FGXBT394`.
 
@@ -129,7 +137,7 @@ Links: `LEI_COUNTRY` → `lei-country`, `LEI_GROUP` → `lei-group`, `MAPPING_ID
 
 ### `lei-group`
 
-**LEI ownership group** · mnemonic `LEIG`.
+**LEI ownership group** · mnemonic `LEIG` · read through connector `gleif-store`.
 
 **Id:** field `GROUP_ID`; for example `8I5DZWZKVSZI1NUHU748`.
 
@@ -177,7 +185,7 @@ Links: `ENTITY_LEI` → `lei-entity`, `LEI_COUNTRY` → `lei-country`.
 
 ### `lei-relationship`
 
-**LEI parent relationship** · mnemonic `LEIR`.
+**LEI parent relationship** · mnemonic `LEIR` · read through connector `gleif-store`.
 
 **Id:** field `RELATIONSHIP_ID`; pattern `^LEIREL-`; for example `LEIREL-0292001381F1R1IB5B85-DIRECT`.
 
@@ -209,7 +217,7 @@ Links: `CHILD_ENTITY` → `lei-entity`, `LEI_GROUP` → `lei-group`, `PARENT_ENT
 
 ### `lei-country`
 
-**LEI country** · mnemonic `LEIC`.
+**LEI country** · mnemonic `LEIC` · read through connector `gleif-store`.
 
 **Id:** field `COUNTRY`; for example `US`.
 
@@ -243,7 +251,7 @@ Nested structures:
 
 ### `lei-mapping`
 
-**ISIN or BIC to LEI** · mnemonic `LEIM`.
+**ISIN or BIC to LEI** · mnemonic `LEIM` · read through connector `gleif-store`.
 
 **Id:** field `IDENTIFIER`; for example `WABTUS3WXXX`.
 
@@ -312,6 +320,14 @@ The groups use the consolidation relationships only; fund management, sub-fund, 
 ## Enabling and dependencies
 
 Builds on no other pack.
+
+The connectors it brings (written once to `config/connectors/<name>.yaml`, then the site's own):
+
+| Connector | Plugin | Kinds | Enabled |
+|---|---|---|---|
+| `gleif-store` | `delta` | `lei-entity`, `lei-group`, `lei-relationship`, `lei-country`, `lei-mapping` | `${DRISHTI_LAKE_ENABLED:true}` |
+
+Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 

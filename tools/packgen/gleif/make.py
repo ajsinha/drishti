@@ -440,6 +440,13 @@ consolidated, no known person) which its page shows.
 
 Segments of the groups: {segments}.
 
+**Where the data lives.** The documents are committed as Drishti's standard test data: one gzipped JSON Lines snapshot per
+kind, `data/testdata/gleif/<kind>/snapshot-<date>.jsonl.gz`, listed in `data/testdata/testdata.yaml`. `python3 tools/drishti.py lake demo`
+(or `python3 tools/build_demo_lakes.py`) builds them into the demo lake, the same documents on every business day it holds, and the
+pack's Delta connector `gleif-store` serves them. Nothing is served by the demo connector: a server with `DRISHTI_DEMO_ENABLED=false`
+opens every page of the pack from the lake. The pack's `samples/` folder keeps only a few reference documents for this guide and the
+README.
+
 ## Links
 
 An entity links to its direct and ultimate parent, its group, its country, its parent relationship (F7) and its identifiers; a relationship to
@@ -480,6 +487,9 @@ python3 tools/packgen/gleif/fetch.py --cache data/cache/gleif     # the network
 python3 tools/packgen/gleif/make.py --cache data/cache/gleif      # writes data/testdata/gleif/, samples/ and this guide
 python3 tools/packgen/gleif/make.py --check                       # no network: the pack matches its generator
 ```
+
+After a refresh, rebuild the lake so the server reads the new snapshot: `python3 tools/drishti.py lake demo` (or
+`python3 tools/build_demo_lakes.py`), then restart the server or let it pick the tables up at its next refresh.
 
 The picture above is made by `tools/packgen/gleif/shot.py` (its own scratch server and console on 18760 and 18761).
 """

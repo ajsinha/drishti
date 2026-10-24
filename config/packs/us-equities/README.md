@@ -41,9 +41,13 @@ depends-on:
   packs: []
   connectors:
   - us-equities-prices
+  - us-equities-store
   plugins:
+  - delta
   - yfinance
   settings:
+  - DRISHTI_DELTA_ROOT
+  - DRISHTI_LAKE_ENABLED
   - DRISHTI_US_EQUITIES_PRICES_ENABLED
   - DRISHTI_YFINANCE_URL
 sources:
@@ -81,13 +85,17 @@ years of annual financials from their XBRL filings, their LEI, their SIC sector 
 levels, no GICS and no prices are shipped: `price-history` is read live by the `us-equities-prices` connector, off by default and for
 internal use only.
 
+The documents are committed as standard test data, one snapshot per kind under `data/testdata/us-equities/<kind>/`;
+`tools/drishti.py lake demo` builds them into the demo lake and the pack's Delta connector `us-equities-store` serves them, so the pack
+works with the demo connector off. `samples/` keeps only a few reference documents.
+
 ## Data structures
 
 Every kind the pack owns, read from its manifest, its samples and its Sutras: how its ids look, its fields (type, an example, what it means), its nested lists and the fields that link to other kinds. A path `A[].B` is field `B` of every element of list `A`.
 
 ### `us-company`
 
-**US company** · mnemonic `USEQ`.
+**US company** · mnemonic `USEQ` · read through connector `us-equities-store`.
 
 **Id:** field `TICKER`; for example `AAPL`.
 
@@ -157,7 +165,7 @@ Links: `ECONOMY` → `economy`, `FACT_IDS` → `financial-fact`, `FILING_IDS` �
 
 ### `index-membership`
 
-**Index members** · mnemonic `IDX`.
+**Index members** · mnemonic `IDX` · read through connector `us-equities-store`.
 
 **Id:** field `INDEX`; for example `DJIA`.
 
@@ -185,7 +193,7 @@ Nested structures:
 
 ### `sic-sector`
 
-**SIC sector** · mnemonic `SIC`.
+**SIC sector** · mnemonic `SIC` · read through connector `us-equities-store`.
 
 **Id:** field `SIC`; for example `3711`.
 
@@ -214,7 +222,7 @@ Nested structures:
 
 ### `filing-feed`
 
-**EDGAR filings browser** · mnemonic `EDGAR`.
+**EDGAR filings browser** · mnemonic `EDGAR` · read through connector `us-equities-store`.
 
 **Id:** field `FEED`; for example `8-K`.
 
@@ -244,7 +252,7 @@ Nested structures:
 
 ### `filing`
 
-**SEC filing** · mnemonic `FILING`.
+**SEC filing** · mnemonic `FILING` · read through connector `us-equities-store`.
 
 **Id:** field `ACCESSION`; pattern `^[0-9]{10}-[0-9]{2}-[0-9]{6}$`; for example `0001104659-26-117587`.
 
@@ -276,7 +284,7 @@ Links: `COMPANY` → `us-company`.
 
 ### `financial-fact`
 
-**Financial fact** · mnemonic `FACT`.
+**Financial fact** · mnemonic `FACT` · read through connector `us-equities-store`.
 
 **Id:** field `FACT_ID`; for example `ABT-REVENUE`.
 
@@ -389,9 +397,10 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 
 | Connector | Plugin | Kinds | Enabled |
 |---|---|---|---|
+| `us-equities-store` | `delta` | `us-company`, `index-membership`, `sic-sector`, `filing-feed`, `filing`, `financial-fact` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `us-equities-prices` | `yfinance` | `price-history` | `${DRISHTI_US_EQUITIES_PRICES_ENABLED:false}` |
 
-Settings (environment variables) its connectors read: `DRISHTI_US_EQUITIES_PRICES_ENABLED`, `DRISHTI_YFINANCE_URL`.
+Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_US_EQUITIES_PRICES_ENABLED`, `DRISHTI_YFINANCE_URL`.
 
 ## Refreshing the data
 

@@ -54,6 +54,9 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import pdbase as B  # noqa: E402
 
+sys.path.insert(0, str(B.ROOT / "tools" / "testdata"))
+import publicsnap as SNAP  # noqa: E402  (the pack's data: data/testdata/gleif/<kind>/)
+
 GEN = B.ROOT / "tools" / "packgen" / "gleif"
 
 
@@ -275,15 +278,15 @@ class Scope:
 
 
 def tickers_file(spec: str | None) -> Path | None:
-    """TICKERS-FROM: the us-equities companies file (the widened build in the data folder first, else the committed pack)."""
+    """TICKERS-FROM: the us-equities companies file (the widened build's snapshot in the data folder first, else the committed one)."""
     if spec is None:
         return None
     if spec.lower() == "us-equities":
-        wide = B.data_dir() / "publicdata" / "us-equities" / "packs" / "us-equities" / "samples" / "us-company.jsonl"
+        wide = F.newest_snapshot(B.data_dir() / "publicdata" / "us-equities" / "testdata", "us-equities", "us-company")
         return wide if wide.is_file() else F.US_EQUITIES
     p = Path(spec).expanduser()
     if not p.is_file():
-        raise B.Refusal(f"--scope TICKERS-FROM:{spec}: no such file (a us-company.jsonl, or us-equities)")
+        raise B.Refusal(f"--scope TICKERS-FROM:{spec}: no such file (a us-company .jsonl or .jsonl.gz, or us-equities)")
     return p
 
 
@@ -485,10 +488,9 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
     try:
         if a.command == "status":
-            f = COMMITTED / "samples" / "lei-entity.jsonl"
-            n = sum(1 for line in f.read_text(encoding="utf-8").splitlines() if line.strip()) if f.is_file() else 0
-            groups = COMMITTED / "samples" / "lei-group.jsonl"
-            when = json.loads(groups.read_text(encoding="utf-8").splitlines()[0]).get("PROVENANCE", {}).get("RETRIEVED_AT", "?") if groups.is_file() else "-"
+            n = len(SNAP.kind_docs(PACK, "lei-entity"))                        # the committed data: data/testdata/gleif
+            groups = SNAP.kind_docs(PACK, "lei-group")
+            when = groups[0].get("PROVENANCE", {}).get("RETRIEVED_AT", "?") if groups else "-"
             print(f"committed pack: {n} entities, golden copy of {when}")
             return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "publicdata" / "cache" / PACK,
                             "config/packs/gleif; a widened build <data>/publicdata/gleif/packs/gleif")

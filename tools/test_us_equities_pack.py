@@ -26,6 +26,8 @@ GEN = ROOT / "tools" / "packgen" / "us_equities"
 PACK = ROOT / "config" / "packs" / "us-equities"
 sys.path.insert(0, str(ROOT / "tools" / "publicdata"))
 from us_equities import F  # noqa: E402  (the generator's fetch.py by path: tools/realdata has a fetch module too)
+sys.path.insert(0, str(ROOT / "tools" / "testdata"))
+import publicsnap as SNAP  # noqa: E402  (the pack's data: data/testdata/us-equities/<kind>/)
 
 
 def test_make_check_passes_without_a_cache(tmp_path):
@@ -49,12 +51,16 @@ def test_annual_values_take_a_year_long_10k_period_the_latest_filing_and_the_fir
 
 
 def test_the_pack_commits_no_prices_weights_or_gics():
+    snap = SNAP.TESTDATA / "us-equities"
+    assert {p.name for p in snap.iterdir()} == {"us-company", "index-membership", "sic-sector", "filing-feed", "filing", "financial-fact"}
     names = {p.name for p in (PACK / "samples").iterdir()}
     assert not any(n.startswith("price-history") for n in names)
     catalog = json.loads((PACK / "samples" / "catalog.json").read_text(encoding="utf-8"))
-    assert {e["kind"] for e in catalog} == {"us-company", "index-membership", "sic-sector", "filing-feed", "filing", "financial-fact"}
-    first = json.loads((PACK / "samples" / "us-company.jsonl").read_text(encoding="utf-8").splitlines()[0])
-    assert not any(k in first for k in ("PRICE", "CLOSE", "WEIGHT", "GICS", "MARKET_CAP"))
-    assert all("WEIGHT" not in line for line in (PACK / "samples" / "index-membership.jsonl").read_text(encoding="utf-8").splitlines())
-    size = sum(p.stat().st_size for p in (PACK / "samples").iterdir())
-    assert size < 18_000_000, size
+    assert {e["kind"] for e in catalog} <= {"us-company", "index-membership", "sic-sector", "filing-feed", "filing", "financial-fact"}
+    cos = SNAP.kind_docs("us-equities", "us-company")
+    assert len(cos) > 400
+    assert not any(k in d for d in cos for k in ("PRICE", "CLOSE", "WEIGHT", "GICS", "MARKET_CAP"))
+    assert all("WEIGHT" not in json.dumps(d) for d in SNAP.kind_docs("us-equities", "index-membership"))
+    size = sum(p.stat().st_size for p in snap.rglob("*.jsonl.gz"))         # compressed
+    assert size < 4_000_000, size
+    assert sum(p.stat().st_size for p in (PACK / "samples").iterdir()) < 1_000_000   # reference documents only
