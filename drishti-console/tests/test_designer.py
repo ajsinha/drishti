@@ -425,6 +425,20 @@ def test_describe_builds_and_saves(client, on):
     assert "data-describe-offer" in client.get("/build/new").text
 
 
+def test_describe_writes_the_notional_in_the_currency_the_book_s_trades_carry(client, on, backend, monkeypatch):
+    async def raw(kind, id_, ident=None):
+        return {"PORTFOLIO": "BOOK-RATES-2", "TRADES": [{"TRADE_ID": "T-1", "CURRENCY": "EUR"}]} if kind == "portfolio-trades" else {}
+    monkeypatch.setattr(backend, "raw", raw)
+    r = client.post("/designer/describe", json={"text": "TRD BOOK-RATES-2 · edit trades beside"}).json()
+    assert r["ok"] and "type: money" in r["yaml"] and "currency: currency" in r["yaml"] and "bind: CURRENCY" in r["yaml"]
+
+    async def raw_gbp(kind, id_, ident=None):
+        return {"PORTFOLIO": "BOOK-RATES-2", "BASE_CURRENCY": "GBP", "TRADES": [{"TRADE_ID": "T-1"}]}
+    monkeypatch.setattr(backend, "raw", raw_gbp)
+    r = client.post("/designer/describe", json={"text": "TRD BOOK-RATES-2 · edit trades beside"}).json()
+    assert "currency: GBP" in r["yaml"] and "bind: CURRENCY" not in r["yaml"]
+
+
 def test_the_page_is_a_flag_renaming_keeps_it_and_old_pages_are_migrated(client, on, backend):
     draft = client.post("/designer/customize", json={"kind": "trade", "id": "IRS-47102"}).json()["draft"]
     st = client.get(f"/designer/state/{draft}?kind=trade&id=IRS-47102").json()

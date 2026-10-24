@@ -276,8 +276,24 @@ def slug(text: str) -> str:
     return s if len(s) >= 2 else "my-screen"
 
 
-def sutra(p: Parsed, line: str, name: str = "") -> dict:
-    """The Sutra the parse describes, as a document (a fragment for each part; the YAML is :func:`dump`'s)."""
+def currency_of(record) -> str | None:
+    """The notional's currency for Describe's trade form: ``"field"`` when the record's trades carry a CURRENCY, else the record's own
+    currency code (CURRENCY, BASE_CURRENCY or CCY), else None (USD)."""
+    if not isinstance(record, dict):
+        return None
+    trades = record.get("TRADES")
+    if isinstance(trades, list) and any(isinstance(t, dict) and t.get("CURRENCY") for t in trades[:50]):
+        return "field"
+    for k in ("CURRENCY", "BASE_CURRENCY", "CCY"):
+        v = record.get(k)
+        if isinstance(v, str) and re.fullmatch(r"[A-Z]{3}", v):
+            return v
+    return None
+
+
+def sutra(p: Parsed, line: str, name: str = "", currency: str | None = None) -> dict:
+    """The Sutra the parse describes, as a document (a fragment for each part; the YAML is :func:`dump`'s). ``currency`` is the trade
+    form's notional currency (:func:`currency_of`)."""
     doc: dict = {"rachana": 1, "sutra": slug(name or f"my-{p.kind}-{p.id}"), "version": 1, "description": line.strip()[:300],
                  "match": {"kind": p.kind}}
     if p.refresh:
@@ -297,7 +313,7 @@ def sutra(p: Parsed, line: str, name: str = "") -> dict:
             picker["children"] = kids
         if p.edit or p.new:
             from core.designer_forms import trade_form
-            picker["form"] = trade_form(p.edit, p.new)
+            picker["form"] = trade_form(p.edit, p.new, currency)
         doc["panels"] = [picker, *panels, {"use": "data-provenance@1"}]
     else:
         doc["title"] = {"pill": _plain(p.kind).capitalize(), "id": "$.id"}

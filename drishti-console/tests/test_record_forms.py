@@ -80,6 +80,22 @@ def test_drafts_pass_through_as_the_person_with_the_issues_of_a_refusal(client, 
     assert client.post("/api/drafts", content="x", headers={"Content-Type": "text/plain"}).status_code == 415
 
 
+def test_an_entity_lookup_passes_through_as_the_person(client, backend, monkeypatch):
+    calls = []
+
+    async def send(method, path, ident=None, **kw):
+        calls.append((method, path))
+        if "q=deny" in path:
+            raise BackendError(403, "DRS-1003", "tia may not open legal-entity entities")
+        return {"kind": "legal-entity", "q": "bank", "results": [{"id": "LE-FRA", "label": "Drishti Bank Europe AG"}]}
+    monkeypatch.setattr(backend, "_send", send)
+    got = client.get("/api/forms/lookup?kind=legal-entity&pack=core&q=bank&label=NAME&other=x")
+    assert got.status_code == 200 and got.json()["results"][0]["id"] == "LE-FRA"
+    assert calls[-1] == ("GET", "/forms/lookup?kind=legal-entity&pack=core&q=bank&label=NAME")
+    assert client.get("/api/forms/lookup?kind=legal-entity&q=deny").status_code == 403
+    assert client.get("/api/forms/lookup?q=bank").status_code == 400
+
+
 def test_customize_lets_people_edit_a_table_beside_or_in_its_cells():
     doc = {"panels": [{"id": "buckets", "kind": "table", "title": "By bucket", "rows": "$.BUCKETS",
                        "columns": [{"label": "Bucket", "bind": "@.BUCKET"}, {"label": "Limit", "bind": "@.LIMIT", "fmt": "compact"},
@@ -135,3 +151,16 @@ def test_describe_edits_trades_beside_or_in_cells_and_starts_new_ones_in_a_drawe
     assert describe.parse("TRD BOOK-RATES-2 · edit trades in the cells", aliases).edit == "cells"
     q = describe.parse("CPTY CP-1 · edit trades beside", {"CPTY": {"kind": "counterparty"}})
     assert not q.ok and "Customize" in q.messages[0]
+
+
+def test_describe_writes_the_notional_as_money_in_the_trades_currency_else_the_records():
+    p = describe.parse("TRD BOOK-RATES-2 · edit trades beside · new trade in a drawer", {"TRD": {"kind": "trade", "label": "Trade"}})
+    assert describe.currency_of({"TRADES": [{"TRADE_ID": "T1", "CURRENCY": "EUR"}], "CURRENCY": "GBP"}) == "field"
+    assert describe.currency_of({"TRADES": [{"TRADE_ID": "T1"}], "BASE_CURRENCY": "GBP"}) == "GBP"
+    assert describe.currency_of(None) is None and describe.currency_of({"CURRENCY": "lots"}) is None
+    fields = {f["id"]: f for f in describe.sutra(p, "x", currency="field")["panels"][0]["form"]["fields"]}
+    assert fields["notional"]["type"] == "money" and fields["notional"]["currency"] == "currency"
+    assert fields["currency"]["bind"] == "CURRENCY" and "EUR" in fields["currency"]["options"] and fields["currency"]["step"] == "what"
+    fields = {f["id"]: f for f in describe.sutra(p, "x", currency="GBP")["panels"][0]["form"]["fields"]}
+    assert fields["notional"]["currency"] == "GBP" and "currency" not in fields
+    assert {f["id"]: f for f in describe.sutra(p, "x")["panels"][0]["form"]["fields"]}["notional"]["currency"] == "USD"

@@ -24,6 +24,15 @@
   `designerMode`/`refresh` settings in API_GUIDE; `sutra lint config/packs` in CLI_GUIDE; the content store in the backups
   (OPERATIONS, tutorial 17); *Your selections were reset* explained; the nesting limitation (pack screens two levels; Grid edits two
   levels of opened panels); the help centre's designer, forms and Rachana entries; SUTRA_NEXT's status and phases; dead anchors fixed.
+- **An entity field searches the server as people type** ([SUTRA_FORMS_GUIDE.md](docs/guides/SUTRA_FORMS_GUIDE.md#money-a-date-and-time-a-linked-record-a-worked-out-default),
+  [API_GUIDE](docs/guides/API_GUIDE.md#form-drafts)): `GET /api/v1/forms/lookup?kind=&pack=&q=&limit=` answers `{id, label}` for the
+  records of a kind whose id or label holds the text, read as the caller (a masked value never offered or matched, a kind they may not
+  open refused, at most 50, a 2 s budget); the console passes it through as `/api/forms/lookup` and the entity box asks it 250 ms after
+  the last key (*Searching…*, *No match for “…”*, the arrows and Enter), the page's preloaded choices answering when the server cannot.
+  A draft's entity id is read once and an unknown one refused (*Booked in: no legal entity 'LE-NOWHERE' was found*). Describe's
+  `edit trades …` and `new trade in a drawer` write the notional as `money` in the trades' currency field (added when the trades carry
+  a CURRENCY), else the book's currency. SUTRA_NEXT section 10 describes the richer field types as built. `DraftsTest`,
+  `test_record_forms.py`, `test_record_forms_browser.py`, `test_designer.py`.
 - **Every pack screen on UI-kit fragments** ([SUTRA_NEXT.md section 3](docs/architecture/SUTRA_NEXT.md)): the last six migrated, each
   proved identical to its inline layout. The trading pack's four derived pages (`counterparty-trades`, `portfolio-trades`,
   `legal-entity-trades`, `index-trades`) are generated from the new pack fragments `trading/payments-metrics@1` and

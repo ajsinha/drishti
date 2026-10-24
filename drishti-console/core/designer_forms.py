@@ -29,6 +29,7 @@ NUMBER_FMTS = re.compile(r"^(amount|compact|num|int|pct|bp|price|rate|money|qty)
 NUMBER_NAMES = re.compile(r"(NOTIONAL|AMOUNT|LIMIT|USED|PRICE|RATE|QUANTITY|QTY|VALUE|EXPOSURE|SPREAD|STRIKE)", re.I)
 MONEY_NAMES = re.compile(r"(NOTIONAL|AMOUNT|LIMIT|USED|VALUE|EXPOSURE|FEE|PREMIUM|MTM|PNL)", re.I)
 CURRENCY_FIELDS = ("CURRENCY", "CCY")
+CURRENCIES = ("USD", "EUR", "GBP", "JPY", "CHF", "CAD", "AUD")
 TYPES = ("auto", "text", "number", "money", "date", "datetime", "entity")
 
 
@@ -131,9 +132,11 @@ def form_of(entry: dict) -> dict:
             "types": {x.get("bind") or x.get("id"): x.get("type") or "text" for x in f.get("fields") or [] if isinstance(x, dict)}}
 
 
-def trade_form(mode: str, new: bool) -> dict:
+def trade_form(mode: str, new: bool, currency: str | None = None) -> dict:
     """The trades of a book, edited beside (or in the cells) and started in a drawer: Describe's ``edit trades beside`` and ``new trade in
-    a drawer``. The counterparty is chosen from the credit limits, and the drawer shows the limit after the trade."""
+    a drawer``. The counterparty is chosen from the credit limits, and the drawer shows the limit after the trade. The notional is money:
+    ``currency`` is ``"field"`` when the trades carry a CURRENCY (the form gets a currency field and the notional is in it), else the
+    record's currency code (USD when it has none)."""
     form: dict = {"title": "Edit trade", "key": "trade_id"}
     if mode in ("beside", "cells"):
         form["edit"] = mode
@@ -146,8 +149,11 @@ def trade_form(mode: str, new: bool) -> dict:
          "step": "who" if new else None,
          "options": {"source": {"pack": "counterparty-risk", "kind": "credit-limit", "where": "nonblank(@.COUNTERPARTY)"},
                      "value": "COUNTERPARTY", "label": "COUNTERPARTY_NAME", "carry": ["LIMIT", "USED"]}},
-        {"id": "notional", "label": "Notional", "bind": "NOTIONAL", "type": "number", "min": 0, "required": True, "fmt": "amount0",
-         "step": "what" if new else None},
+        {"id": "notional", "label": "Notional", "bind": "NOTIONAL", "type": "money",
+         "currency": "currency" if currency == "field" else (currency if currency and re.fullmatch(r"[A-Z]{3}", currency) else "USD"),
+         "min": 0, "required": True, "fmt": "amount0", "step": "what" if new else None},
+        *([{"id": "currency", "label": "Currency", "bind": "CURRENCY", "type": "enum", "options": list(CURRENCIES), "required": True,
+             "step": "what" if new else None}] if currency == "field" else []),
         {"id": "maturity_date", "label": "Maturity", "bind": "MATURITY_DATE", "type": "date", "min": "today", "step": "what" if new else None},
         {"id": "comment", "label": "Comment", "bind": "COMMENT", "type": "textarea", "max-length": 500, "step": "check" if new else None},
     ]

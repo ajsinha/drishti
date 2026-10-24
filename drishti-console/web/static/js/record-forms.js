@@ -116,10 +116,43 @@
       open.hidden = X.empty(v) || !f.entity;
       if (!open.hidden) { open.href = '/v/' + encodeURIComponent(f.entity.kind) + '/' + encodeURIComponent(v); open.setAttribute('aria-label', 'Open ' + label(v)); }
     }
+    /* The live search: the server's records of the kind (/api/forms/lookup, read as the viewer) for what is typed, 250 ms after the
+       last key; the preloaded choices answer at once and stay the answer when the server cannot be reached. */
+    var timer = 0, asked = '', found = null, searching = false, seq = 0;
+    function query() {
+      var q = n.value.trim();
+      return q.toLowerCase() === label(n.getAttribute('data-value')).toLowerCase() ? '' : q;
+    }
+    function search() {
+      clearTimeout(timer); searching = false;
+      var q = query();
+      if (!f.entity || !f.entity.kind || !q || q === asked) { return; }
+      searching = true;
+      timer = setTimeout(function () {
+        var mine = ++seq, p = new URLSearchParams({ kind: f.entity.kind, q: q, limit: '20' });
+        if (f.entity.pack) { p.set('pack', f.entity.pack); }
+        if (f.entity.label) { p.set('label', f.entity.label); }
+        if (f.entity.value) { p.set('value', f.entity.value); }
+        fetch('/api/forms/lookup?' + p.toString(), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .catch(function () { return null; })
+          .then(function (j) {
+            if (mine !== seq) { return; }
+            searching = false; asked = q;
+            found = j && Array.isArray(j.results) ? j.results.map(function (x) { return { value: String(x.id), label: String(x.label || x.id) }; }) : null;
+            (found || []).forEach(function (o) { if (!opts.some(function (x) { return String(x.value) === o.value; })) { opts.push(o); } });
+            if (!list.hidden || document.activeElement === n) { draw(); }
+          });
+      }, 250);
+    }
     function draw() {
-      var q = n.value.trim().toLowerCase();
-      if (q === label(n.getAttribute('data-value')).toLowerCase()) { q = ''; }
-      shown = opts.filter(function (o) { return !q || String(o.value).toLowerCase().indexOf(q) >= 0 || String(o.label).toLowerCase().indexOf(q) >= 0; }).slice(0, 8);
+      var q = query().toLowerCase();
+      shown = opts.filter(function (o) { return !q || String(o.value).toLowerCase().indexOf(q) >= 0 || String(o.label).toLowerCase().indexOf(q) >= 0; });
+      if (found && q && asked.toLowerCase() === q) {      // the server's answer first, then any preloaded choice it did not name
+        var ids = found.map(function (o) { return o.value; });
+        shown = found.concat(shown.filter(function (o) { return ids.indexOf(String(o.value)) < 0; }));
+      }
+      shown = shown.slice(0, 8);
       pick = Math.min(Math.max(pick, 0), shown.length - 1);
       list.textContent = '';
       shown.forEach(function (o, k) {
@@ -129,13 +162,17 @@
         li.addEventListener('mousedown', function (e) { e.preventDefault(); choose(o); });
         list.appendChild(li);
       });
-      if (!shown.length) { list.appendChild(el('li', 'fm-entity-none', opts.length ? 'Nothing matches “' + n.value.trim() + '”' : 'Nothing you may link to')); }
+      if (searching && q) {
+        var s = el('li', 'fm-entity-status', 'Searching…'); s.setAttribute('aria-live', 'polite'); list.appendChild(s);
+      } else if (!shown.length) {
+        list.appendChild(el('li', 'fm-entity-none', q || opts.length ? 'No match for “' + n.value.trim() + '”' : 'Nothing you may link to'));
+      }
       list.hidden = false; n.setAttribute('aria-expanded', 'true');
       n.setAttribute('aria-activedescendant', pick >= 0 ? id + '-o' + pick : '');
     }
     function close() { list.hidden = true; n.setAttribute('aria-expanded', 'false'); n.removeAttribute('aria-activedescendant'); }
     function choose(o) { set(o.value); close(); onChange(o.value); }
-    n.addEventListener('input', function () { pick = 0; draw(); });
+    n.addEventListener('input', function () { pick = 0; search(); draw(); });
     n.addEventListener('click', function () { if (list.hidden) { draw(); } });
     n.addEventListener('keydown', function (e) {
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {

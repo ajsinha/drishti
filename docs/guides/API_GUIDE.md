@@ -928,8 +928,21 @@ options, then every rule over `values` laid over `was` (for `new`, every field t
 `422 DRS-2060` with `issues: [{record, field, message, severity}]` (and the `warnings`); a warning is kept with the draft. A value (in
 `values` or `was`) for a field masked for the caller is `403` (*Counterparty is hidden for you: a draft cannot carry it*); a change to a
 field the caller may not edit (`readonly`, or `editable-by` roles they do not hold) is `403` (*Status is locked: you can view, not change*).
-At most 200 drafts a person and 500 records a draft. Each save, update, discard and refusal is in the audit log
+An `entity` field's id is read once (within 2 s) to check it names a record of its kind: an unknown one is `422 DRS-2060`
+(*Booked in: no legal entity 'LE-NOWHERE' was found*). At most 200 drafts a person and 500 records a draft. Each save, update, discard and refusal is in the audit log
 (`form-draft-saved`, `-updated`, `-discarded`, `-refused`).
+
+An `entity` field searches as people type through `GET /forms/lookup?kind=&pack=&q=&limit=&label=&value=` (the console passes it
+through as `/api/forms/lookup`): `{kind, q, results: [{id, label}]}`, the records of the kind whose id or label holds `q`, read as the
+caller. The connectors' search answers first; a kind whose sources cannot search is listed (at most 500) and matched on what the caller
+sees. `label` names the field shown (`NAME` when absent), `value` the field kept instead of the record's id. A masked value is never
+offered and a masked label is never matched (the id is shown instead); `limit` is 20 by default and at most 50; each read has a 2 s
+budget; an empty `q` answers nothing. A kind the caller may not open is `403`, a malformed kind or field `400`.
+
+```bash
+curl -s "$DRISHTI/api/v1/forms/lookup?kind=legal-entity&pack=core&q=bank&label=NAME" -H "Authorization: Bearer $TOKEN"
+# {"kind":"legal-entity","q":"bank","results":[{"id":"LE-FRA","label":"Drishti Bank Europe AG"}, ...]}
+```
 
 ```bash
 curl -s -X POST "$DRISHTI/api/v1/drafts" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{

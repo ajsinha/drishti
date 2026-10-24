@@ -272,6 +272,46 @@ def test_an_entity_by_search_money_a_worked_out_default_and_a_time(stack, browse
     pg.close()
 
 
+def test_an_entity_field_searches_the_server_as_people_type(stack, browser):
+    pg = page(browser, stack, DESK)
+    forget_drafts(pg, stack)
+    pg.click("[data-fm-new]")
+    dr = pg.locator("[data-fm-drawer]")
+    dr.wait_for()
+    pg.select_option("[data-fm-drawer] [data-field='counterparty']", index=1)
+    ent = "[data-fm-drawer] [data-field='legal_entity']"
+    with pg.expect_response(lambda r: "/api/forms/lookup" in r.url) as got:
+        pg.fill(ent, "bank")                                      # one ask, 250 ms after the last key, read as the viewer
+    assert "kind=legal-entity" in got.value.url and "q=bank" in got.value.url and got.value.ok
+    results = got.value.json()["results"]
+    assert results and all("bank" in (r["label"] + r["id"]).lower() for r in results)
+    wait(pg, "!document.querySelector('[data-fm-drawer] .fm-entity-status')")
+    assert dr.locator(".fm-entity-list li[role='option']").count() >= 1
+    with pg.expect_response(lambda r: "/api/forms/lookup" in r.url):
+        pg.fill(ent, "zzqx-nothing")
+    wait(pg, "document.querySelector('[data-fm-drawer] .fm-entity-none')")
+    assert dr.locator(".fm-entity-none").inner_text() == "No match for “zzqx-nothing”"
+    pg.route("**/api/forms/lookup**", lambda route: route.abort())  # offline: the choices the page brought still answer
+    pg.fill(ent, "europe")
+    wait(pg, "!document.querySelector('[data-fm-drawer] .fm-entity-status')")
+    assert dr.locator(".fm-entity-list li[role='option']").count() >= 1
+    pg.unroute("**/api/forms/lookup**")
+    with pg.expect_response(lambda r: "/api/forms/lookup" in r.url):
+        pg.fill(ent, "bank")
+    wait(pg, "!document.querySelector('[data-fm-drawer] .fm-entity-status')")
+    pg.keyboard.press("ArrowDown")
+    pg.keyboard.press("ArrowUp")
+    pg.keyboard.press("Enter")                                   # picked with the keys
+    kept = pg.get_attribute(ent, "data-value")
+    assert kept == results[0]["id"] and pg.get_attribute(ent, "aria-expanded") == "false"
+    dr.locator(".fm-save").click()
+    wait(pg, "document.querySelector('[data-fm-drawer] .fm-badge-saved')")
+    [d] = pg.request.get(stack + "/api/drafts?kind=portfolio-trades&id=BOOK-RATES-2").json()
+    assert d["records"][0]["values"]["legal_entity"] == kept
+    forget_drafts(pg, stack)
+    pg.close()
+
+
 @pytest.mark.parametrize("theme", ["terminal", "light"])
 def test_two_themes_draw_the_three_forms(stack, browser, theme):
     pg = page(browser, stack, DESK, theme=theme)
