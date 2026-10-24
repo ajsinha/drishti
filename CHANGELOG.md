@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+## 2.7.0 — Sutra Next: the UI kit, events and children across packs, refresh, layout, forms and the four-mode Sutra designer; the us-equities and gleif packs (2026-10-24)
+
 - **Drill fixes (2.7.0, console suite):** the report designer's YAML tab says whether its text is the draft's yet
   (`data-yaml-current` on the YAML view, `no` while the server is still writing the last change), and the board designer's alert test
   reads the YAML once it is (it read the text from before the alert was set; the WIP wait on the model is gone). A screen grid's
@@ -57,7 +59,6 @@
   with the demo connector off, on lakes built in-test from the committed test data (AAPL, C and F open; type-ahead C and *Ford*; FORM
   ticker C; LEI and LEIG ALL; an entity by LEI and by name). The demo lake now has 77 tables.
 
-## 2.7.0 — Sutra Next: the UI kit, events and children across packs, refresh, layout, forms and the four-mode Sutra designer; the us-equities and gleif packs (2026-10-24)
 
 - **Obsolete designs archived** ([docs/archive/README.md](docs/archive/README.md), history): `RUPAKA_POC.md` and `BI_PARITY_PLAN.md`
   moved there whole; the replaced parts of `BI_MODEL_ARCHITECTURE.md` (the wave plan and risks), `RUPAKA.md` (the 2.1 query engine and

@@ -35,7 +35,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
   over one Sutra — **Customize** the live page, **Describe** a screen in one line, **Outline**, and **Grid** with formulas
   (`B2 = field-list@1(...; source: {... id: @A2.open.ref})`, two levels of click-opened cells); *my version of this page* per person.
   Tutorial 22 builds a screen with it.
-- **New packs (opt-in, `DRISHTI_PACKS`):** **us-equities** (479 US companies from SEC EDGAR, Nasdaq, GLEIF and Wikidata: financials,
+- **New packs (opt-in, `DRISHTI_PACKS`), on the standard data pattern (gzipped snapshots in `data/testdata`, built into lakes, served by a Delta connector each):** **us-equities** (479 US companies from SEC EDGAR, Nasdaq, GLEIF and Wikidata: financials,
   filings, index memberships; `USEQ`, `IDX`, `SIC`, `EDGAR`; prices live and internal only) and **gleif** (9,512 legal entities in 540
   ownership groups; `LEI`, `LEIG`, `LEIC`), linked to each other by LEI.
 - **Public data, one script per pack** ([PUBLIC_DATA.md](docs/guides/PUBLIC_DATA.md)): `tools/publicdata/<pack>.py` (world-economy,
@@ -45,7 +45,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
   the Packs pages (`MKT <GO>`, Admin) and served for AI (`/api/v1/packs/{pack}/readme`); a test enforces it.
 - **Documentation:** a rot check over every document (links, paths, commands, settings, error codes, command words, kinds); stale
   docs fixed; long guides split; obsolete designs moved to `docs/archive/`.
-- **Known open:** server-side refresh push to many viewers; GLEIF groups capped at 50 entities in the committed pack (the script
+- **Known open:** a gleif entity's Country link (`US-DE`) points at world-economy's jurisdictions, which do not hold it (a graph field cannot yet be limited to one pack); server-side refresh push to many viewers; GLEIF groups capped at 50 entities in the committed pack (the script
   widens a group); Wikidata's index memberships are stale in places.
 - **Tested:** the drill passed licence headers, Java 21, Java 25, the tools and the console.
 
