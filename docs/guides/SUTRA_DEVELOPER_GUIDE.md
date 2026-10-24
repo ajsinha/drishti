@@ -787,6 +787,20 @@ The other chart kinds work the same way: `waterfall` (a P&L explain, market-risk
 10](#10-the-panel-kinds) links to the entry of each of the 22 kinds in [PANELS.md](PANELS.md), which explains every kind: its options, what the server computes and what it does when empty, masked or
 live.
 
+### 4.8 Placing panels: `layout:`
+
+Without `layout:` panels flow (main column, `area: right` column, `span` and `height`). To place them yourself, draw the screen as a
+picture of named areas and put each panel in one (`area: trades`):
+
+```yaml
+layout: { areas: ["head head", "trades detail"], columns: [7, 5], split: { between: [trades, detail] }, tabs: [detail], phone: [head, detail, trades] }
+```
+
+Or keep the flow and group panels in folding **sections** (`layout.sections`, `section:` on a panel); `order:` sorts panels, and
+`user-can-arrange: true` lets each reader drag and resize panels for themselves. `sutra lint` checks it (`DRS-2059`); every key is in
+[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#layout-the-grid-areas-split-tabs-sections), and the designer's Outline mode
+([SCREEN_DESIGNER.md](SCREEN_DESIGNER.md#outline)) writes sections, nesting and widths for you.
+
 Put the blocks of 4.2 to 4.7 together under one `panels:` and you have a complete trade view. The [reference's annotated example](RACHANA_REFERENCE.md#a-complete-example-annotated) is the same layout
 with every line commented, and the trading pack's `config/packs/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` is the one the server uses; it is built from shared blocks ([section
 7](#7-how-packs-ship-sutras)).

@@ -36,8 +36,8 @@
 .ol-item[aria-selected="true"] > .ol-row, .ol-sec[aria-selected="true"] > .ol-sec-h { border-color: var(--d-accent); background: var(--d-accent-tint, var(--d-bg-2)); }
 .ol-item:focus-visible, .ol-sec:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
 .ol-children { margin: .15rem 0 .2rem 1.4rem; display: flex; flex-direction: column; gap: .15rem; border-left: 2px solid var(--d-border); padding-left: .4rem; }
-.ol-nest { color: var(--d-muted); font-size: .78rem; padding: .3rem .45rem; border: 1px dashed transparent; border-radius: 8px; display: none; }
-.ol-dragging .ol-nest { display: block; border-color: var(--d-border); }
+.ol-nest { color: var(--d-muted); font-size: .78rem; padding: .3rem .45rem; border: 1px dashed var(--d-border); border-radius: 8px; }
+.ol-dragging .ol-nest { border-color: var(--d-accent); color: var(--d-ink); }
 .ol-over, .ol-row.ol-over, .ol-sec-h.ol-over { outline: 2px dashed var(--d-accent); outline-offset: 1px; background: var(--d-accent-tint, var(--d-bg-2)); }
 .ol-add { align-self: flex-start; }
 .ol-detail { border: 1px solid var(--d-border); border-radius: 12px; background: var(--d-surface); padding: .8rem; display: flex; flex-direction: column; gap: .6rem; }

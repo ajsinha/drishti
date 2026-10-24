@@ -477,6 +477,7 @@ You should see, previewing this block against `MX-20000001` in the workbench (or
 | `strip` | | list | empty | Up to **8** header figures; see [Strip](#strip). |
 | `controls` | | list | empty | Up to **12** controls the reader sets (dropdowns, date ranges, sliders, search ...), read in expressions as `ctl.<id>`; see [Controls](#controls). |
 | `panels` | | list | empty | The panels, in order, and `{ use: <block> }` entries; see [Panels](#panels). |
+| `layout` | | mapping | none (the panels flow) | Where panels go: named areas on the 12-column grid, a split, tabs, collapsible sections, a sticky area, the phone order, `user-can-arrange`; see [Layout](#layout-the-grid-areas-split-tabs-sections). |
 | `keys` | | mapping | empty | Function key → action; see [Function keys](#function-keys). |
 
 Any other top-level key is `DRS-2011` (`unknown key 'pannels' in top level`). A Sutra with no panels is valid: the view then shows
@@ -716,6 +717,62 @@ the Sutra's next version, written with these same keys.
 An entry of `panels:` may also be `{ use: <block>[@<version>], with: { <param>: <value> } }`, replaced by the panels of a
 [shared block](#shared-panel-blocks-use).
 
+### Layout: the grid, areas, split, tabs, sections
+
+Without `layout:` panels flow as they always have: `main` panels down the wide column, `area: right` panels down the narrow one,
+`span` and `height` sizing them on each column's 12-column grid. `layout:` places them instead (SUTRA_NEXT.md section 13, lint
+`DRS-2059`). Sizes are grid units, never pixels.
+
+```yaml
+layout:
+  areas:                                   # a picture of the screen: one string a row, one area name a cell, . an empty cell
+    - "head head"
+    - "trades detail"
+  columns: [7, 5]                          # grid columns of each picture column, summing to 12 (default: equal)
+  split: { between: [trades, detail], resizable: true, remember: user }   # a divider the reader drags; kept per reader
+  tabs: [detail]                           # the panels of an area shown as tabs (two or more)
+  sticky: head                             # an area (or a panel) that stays at the top while the page scrolls
+  user-can-arrange: true                   # readers may drag panels to another place or area and resize them, for themselves
+  phone: [head, detail, trades]            # the stacking order on a phone: areas or panel ids
+  tablet: { areas: ["head head", "trades trades", "detail detail"] }      # optional: the picture at tablet width
+panels:
+  - { id: pay7, kind: metric, value: $.PAY_7D, area: head, span: 4 }
+  - { id: trades, kind: table, rows: $.TRADES, area: trades, columns: [ ... ] }
+  - { id: book, kind: kv, area: detail, columns: [ ... ] }
+  - { id: spread, kind: kv, area: detail, collapsible: true, columns: [ ... ] }
+```
+
+A screen without areas can keep the flow and add **sections** that fold open and shut (each reader's choice is kept):
+
+```yaml
+layout:
+  sections:
+    - { id: payments, title: Payments }
+    - { id: details, title: Book details, collapsed: true }
+panels:
+  - { id: pay7, kind: metric, value: $.PAY_7D, section: payments, span: 6 }
+  - { id: book, kind: kv, section: details, columns: [ ... ] }
+  - { id: trades, kind: table, rows: $.TRADES, columns: [ ... ] }      # no section: above the sections
+```
+
+| Key | Meaning | Checked (`DRS-2059`) |
+|---|---|---|
+| `areas` | The picture. Every area is a rectangle. | every row has the same number of cells (at most 12); no area is an L-shape or cut in two (overlaps) |
+| `columns` | `12` (the flow grid), or one width a picture column | as many widths as columns, summing to 12 |
+| `split` | `{ between: [left, right], resizable: true, remember: user \| none }` | two different areas, side by side, left then right, in some row |
+| `tabs` | Areas whose panels show as tabs, one tab a panel | the area exists and holds two or more panels |
+| `sections` | `{ id, title, collapsed }` in order; panels name theirs with `section:` | ids unique; not with `areas` (a screen with areas uses tabs or `collapsible`) |
+| `sticky` | An area or panel id | it exists |
+| `user-can-arrange` | `true` or `false` | |
+| `phone` | Areas or panel ids, in stacking order | each exists |
+| `tablet` | `{ areas, columns }` | the same areas as `areas` |
+
+Height stays `height` (grid rows); `rows` is always the rows a table reads. On a phone every panel is full width in the phone
+order (else the picture read left to right, top to bottom), with 16 px gutters and no sideways scroll; below the tablet width,
+without a tablet picture, the areas stack. What a reader changes (the split, what is folded, panel moves and widths) is theirs
+alone, kept by the server per reader and Sutra (`/api/v1/me/arrange/<sutra>`) and never written into the Sutra; *Reset layout*
+forgets it. A screen with `layout:` does not offer layout mode (Alt+L): the grid replaces it.
+
 ### Keys every panel takes
 
 | Key | Required | Default | Meaning |
@@ -725,7 +782,10 @@ An entry of `panels:` may also be `{ use: <block>[@<version>], with: { <param>: 
 | `title` | | none | A template: `"Cash flows · leg ${$.LEGS[0].LEG_ID}"`. If it cannot be rendered for a document it is shown as written. |
 | `key` | | none | A function key `F1`–`F12`, unique across panels and `keys` (`DRS-2025`). Pressing it scrolls to the panel and flashes it. Avoid `F1`, which the console uses for help. |
 | `code` | | none | A short tag shown at the right of the panel header (`CRV`, `DES`). |
-| `area` | | `main` | `main` or `right` (any case; anything else is `DRS-2027`). |
+| `area` | | `main` | `main` or `right`, or, on a screen with `layout.areas`, one of its area names (`DRS-2059` for a name the picture does not have, `DRS-2027` for a name without `layout.areas`). On a screen with areas, `main` and `right` go to areas so named, else the first and the last area. |
+| `order` | | as written | A whole number 0 to 999: the panel's place within its area or the flow, lower first (`order: 99` puts the provenance last). Not inside a tab. |
+| `section` | | none | On a screen with `layout.sections`: the id of the section the panel sits in (`DRS-2059` otherwise). |
+| `collapsible` | | `false` | The reader may fold the panel to its heading; each reader's choice is kept for them. |
 | `span` | | `12` | Width in columns of the 12-column grid of its column: a whole number from 1 to 12 (`DRS-2030` otherwise). `span: 8` and `span: 4` share a row. On a phone every panel is full width. |
 | `height` | | content | Height in grid rows of 2.5 rem: a whole number from 1 to 24 (`DRS-2030` otherwise). The panel scrolls inside; printing ignores it. Not on a `tabs` body or a panel inside a tab, which take the size of their panel (`DRS-2030`). |
 | `source` | | | Expression giving a `link(id, kind)`: the panel reads that linked entity's document instead of this one (same sources, business date and field masks), so `$` in its options is the other entity. Every kind but `links` and `provenance` takes it; the title still reads this entity. Example: `{ kind: line, source: "link($.LEGS[0].DISCOUNT_INDEX, 'ir-curve')", rows: $.POINTS, x: TENOR, y: ZERO_RATE }`. A `line` with a source also refreshes live when that entity changes; other kinds refresh with the view. A source of a kind the viewer may not open is never fetched: the panel shows "no access to <kind>" and none of that entity's values. |

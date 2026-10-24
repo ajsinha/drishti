@@ -35,7 +35,7 @@
     var mine = cfg.mine || {};
     var cols = (cfg.columns || []).slice();
     var areasEl = root.querySelector('[data-sg-areas]');
-    var saving = null;
+    var saving = null, seq = 0;
 
     function save() {
       if (!sutra) { return Promise.resolve(); }
@@ -43,10 +43,11 @@
       ['columns', 'collapsed', 'panels'].forEach(function (k) { if (mine[k] !== undefined) { body[k] = mine[k]; } });
       clearTimeout(saving);
       return new Promise(function (ok) {
+        var ticket = ++seq;
         saving = setTimeout(function () {
           fetch('/me/arrange/' + encodeURIComponent(sutra), { method: 'PUT', credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-            .then(function (r) { root.setAttribute('data-sg-saved', String(Date.now())); var b = root.querySelector('[data-sg-reset]'); if (b) { b.hidden = false; } ok(r); })
+            .then(function (r) { if (ticket === seq) { root.setAttribute('data-sg-saved', String(Date.now())); } var b = root.querySelector('[data-sg-reset]'); if (b) { b.hidden = false; } ok(r); })
             .catch(function () { ok(null); });
         }, 150);
       });
@@ -248,16 +249,28 @@
       handle.setAttribute('draggable', 'true'); handle.setAttribute('data-sg-handle', '');
       handle.addEventListener('dragstart', function (e) { dragged = p; e.dataTransfer.setData('text/x-sg-panel', p.getAttribute('data-panel')); e.dataTransfer.effectAllowed = 'move'; });
       handle.addEventListener('dragend', function () { dragged = null; });
+      handle.tabIndex = 0; handle.setAttribute('role', 'button');
+      handle.setAttribute('aria-label', 'Move ' + title + ': arrow up or down within its area, left or right to another area');
+      handle.addEventListener('keydown', function (e) {                    // the keyboard's way to move a panel
+        var cells = p.parentNode, all = [].slice.call(root.querySelectorAll('[data-sg-cells]')), i = all.indexOf(cells);
+        if (e.key === 'ArrowUp' && p.previousElementSibling) { cells.insertBefore(p, p.previousElementSibling); }
+        else if (e.key === 'ArrowDown' && p.nextElementSibling) { cells.insertBefore(p.nextElementSibling, p); }
+        else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && all.length > 1) { all[(i + (e.key === 'ArrowLeft' ? all.length - 1 : 1)) % all.length].appendChild(p); }
+        else { return; }
+        e.preventDefault(); handle.focus(); record();
+      });
       h.insertBefore(handle, h.firstChild);
-      p.addEventListener('dragover', function (e) { if (dragged && dragged !== p) { e.preventDefault(); e.stopPropagation(); p.classList.add('sg-over'); } });
+      // captured: a table's own drag handling (its columns) must not swallow a panel being moved
+      p.addEventListener('dragover', function (e) { if (dragged && dragged !== p) { e.preventDefault(); e.stopPropagation(); p.classList.add('sg-over'); } }, true);
       p.addEventListener('dragleave', function () { p.classList.remove('sg-over'); });
       p.addEventListener('drop', function (e) {
         p.classList.remove('sg-over');
         if (!dragged || dragged === p) { return; }
         e.preventDefault(); e.stopPropagation();
         p.parentNode.insertBefore(dragged, p);
+        dragged = null;
         record();
-      });
+      }, true);
       var grip = document.createElement('span');
       grip.className = 'sg-grip'; grip.tabIndex = 0; grip.setAttribute('role', 'slider'); grip.setAttribute('data-sg-grip', '');
       grip.setAttribute('aria-label', 'Width of ' + title + ' in columns of 12'); grip.setAttribute('aria-valuemin', '2'); grip.setAttribute('aria-valuemax', '12');

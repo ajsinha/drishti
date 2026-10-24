@@ -55,10 +55,11 @@
   function redraw() {
     var w = frame.contentWindow, d = frame.contentDocument;
     var url = '/v/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id) + '?design=' + encodeURIComponent(draft) + '&embed=1';
-    return fetch(url, { credentials: 'same-origin', headers: { Accept: 'text/html' } }).then(function (r) { return r.text(); }).then(function (html) {
+    return fetch(url, { credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'text/html' } }).then(function (r) { return r.text(); }).then(function (html) {
       var fresh = new DOMParser().parseFromString(html, 'text/html').querySelector('[data-view] .vgrid'), old = d && d.querySelector('[data-view] .vgrid');
       var needsGrid = fresh && fresh.hasAttribute('data-sgrid') && !(w && w.drishtiScreenGrid);
-      if (!fresh || !old || needsGrid) { frame.setAttribute('src', url); return; }
+      var needsWire = fresh && fresh.querySelector('section.pnl[data-wire]') && !(w && w.drishtiWire);   // the first click wired: its script starts with the page
+      if (!fresh || !old || needsGrid || needsWire) { frame.setAttribute('src', url); return; }
       var next = d.importNode(fresh, true);
       old.replaceWith(next);
       if (w.drishtiScreenGrid && next.hasAttribute('data-sgrid')) { w.drishtiScreenGrid.init(next); }
@@ -159,7 +160,8 @@
     detail.appendChild(el('div', { 'class': 'dz-sentence' }, ['a row in ', el('b', { text: parent.title }), ' shows ', el('b', { text: (p || {}).title || 'the panel' }), ' in ', where]));
     detail.appendChild(el('div', { 'class': 'dz-row' }, [
       el('button', { type: 'button', 'class': 'dz-btn dz-primary', 'data-ol-nest-apply': '', text: 'Make it so', on: { click: function () {
-        step({ op: 'nest', index: d.index, under: parent.id, place: where.value }); } } }),
+        step({ op: 'nest', index: d.index, under: parent.id, place: where.value }).then(function () {   // the new child picked: its settings shown
+          var c = p && tree.querySelector('[data-ol-child="' + p.id + '"]'); if (c) { c.click(); } }); } } }),
       el('button', { type: 'button', 'class': 'dz-btn', text: 'Cancel', on: { click: function () { detail.innerHTML = ''; } } })]));
     where.focus();
   }

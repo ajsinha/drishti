@@ -680,7 +680,8 @@ See also: [the Sutra command](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sut
 ## 31. The Sutra designer: Customize and Describe
 
 The Sutra designer changes a screen in plain words, on the real page with real data, as you see it. It has one shell with modes:
-**Customize** (change the page you are on) and **Describe** (type a new screen in one line). **Outline** and **Grid** come later. Every
+**Customize** (change the page you are on), **Describe** (type a new screen in one line) and **Outline** (the screen as a list you
+rearrange). **Grid** comes later. Every
 mode edits the same thing: a Sutra (the YAML that lays out a screen, see [SUTRA_NEXT.md](../architecture/SUTRA_NEXT.md)), kept as
 **your own design**. The pack's Sutra is never changed, and nobody else sees your version until you share it.
 
@@ -784,6 +785,38 @@ A linked record writes a child with a `source:` that reads the clicked row (the 
 
 *Its counterparty* writes `source: { pack: core, kind: counterparty, id: "@parent.open.COUNTERPARTY" }` with the record's fields
 (`field-list@1`); *its events* reads the trade (`id: "@parent.open.TRADE_ID"`) and lists `rows: $src.EVENTS`.
+
+**On a screen laid out on the grid** (a Sutra with `layout:`, [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#layout-the-grid-areas-split-tabs-sections)),
+each panel's tools also have **−** and **+** (narrower and wider, in columns of 12; *8/12* between them says the width now) and,
+where the screen has named areas, the **area** the panel sits in. They write `span:` and `area:` on the panel.
+
+### Outline
+
+![Outline: the book page as a list, a metric nested under the trades table, the live preview beside it](img/designer/outline.jpg)
+
+Outline shows the screen as a list: its **sections**, the **panels** in each, and under a table the panels **a click on a row opens**,
+each with a line in plain words saying what it shows (*A table of trades, 9 columns*; a shared part says what its docstring says).
+The live preview beside it is the real page, with real data, as you; every change is drawn in it at once, in place.
+
+Open it from **Customize** (*Outline* in the yellow bar), from **Describe** (*Edit in Outline* under the result), or from the mode
+switcher (type a kind and an id). Then:
+
+1. **Reorder**: drag an item onto another (it goes above it) or onto a section's heading (it goes to the end of that section).
+   *Move up* and *Move down* in the item's settings do the same from the keyboard.
+2. **Nest**: drag a panel onto a table's line *Drop a panel here: it opens on a click on a row of …*. Outline asks where it opens,
+   with the same choices as Customize's *When I click* (*under the clicked row*, *the right column*, *below the table*, *tabs*);
+   **Make it so**. The panel leaves the page and opens on a click (the Sutra gets the table's `emits` and a `children:` group holding
+   the panel). A table opens one thing on a click: nesting another replaces it, and the first goes back to the page.
+3. **Un-nest**: pick the child and press **Un-nest (back on the page)**, or drag it onto the page. It goes back where it was.
+4. **+ Add a section** asks for a title; drag panels into it, or pick a panel and choose its *Section*. A section folds open and
+   shut on the page, each reader's choice kept for them. Pick a section to rename or remove it (its panels stay, in no section).
+   A screen placed by named areas has no sections (it has tabs and panels that fold instead).
+5. **Settings** of the picked item: a panel's *Width* (columns of 12), *Area* (on a screen with areas), *Section*, *The reader may
+   fold it*, and *Refresh every … seconds* where the panel refreshes; a child's *Where it opens* and *When it shows* (*when a row is
+   picked*, *always*, *when the row is opened*).
+
+**Keep as my page** keeps it as your version of the page (as Customize's *Done*); **Cancel** forgets it; **Show the Sutra** shows
+the YAML read-only. Outline, Customize and Describe edit the same Sutra: switch at any time.
 
 ### Describe it
 
