@@ -87,6 +87,12 @@ def test_the_board_designer_builds_a_board_with_an_alert_and_a_hysteresis(stack,
     set_field(page, "[data-tile-crit-value]", "100000000")
     set_field(page, "[data-tile-hysteresis]", "5000000")
     page.check("[data-tile-notify]")
+    want = ("layout: board", "type: tile", "report: live-trading-desk", "visual: mtm", "hysteresis: 5000000", "notify: true", "on: MTM")
+    # the alert's fields are written into the design as each one commits (a change event, then a redraw): under load the last ones land a
+    # moment after the Tab, so the YAML is read until it holds them (a fixed single read was the drill's flake)
+    page.wait_for_function("""want => { const v = window.drishtiBi && window.drishtiBi.design && window.drishtiBi.design.sel && window.drishtiBi.design.sel();
+                                        const a = v && (v.alert || (v.format || {}).alert); return !!a && String(JSON.stringify(a)).indexOf('5000000') >= 0; }""",
+                           arg=list(want), timeout=20000)
     yaml = yaml_of(page)                                                                       # the designer wrote the YAML; nobody typed it
     for line in ("layout: board", "type: tile", "report: live-trading-desk", "visual: mtm", "hysteresis: 5000000", "notify: true", "on: MTM"):
         assert line in yaml, (line, yaml)
