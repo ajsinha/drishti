@@ -517,7 +517,7 @@ class DemoLake:
         print("\nNext:\n"
               "  1. Start the server on the lakes: IDE run configuration 'Drishti server (demo lakes)' (the samples off, so every page reads\n"
               "     the lakes; offline mode on, so quotes and headlines come from the captured snapshot and nothing reaches the internet), or\n"
-              f"     {env}DRISHTI_DEMO_ENABLED=false DRISHTI_OFFLINE=true DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets "
+              f"     {env}DRISHTI_DEMO_ENABLED=false DRISHTI_OFFLINE=true DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif "
               "java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar\n"
               "  2. Start the console: run configuration 'Drishti console' (sign in as drishti-dev-admin / drishti-dev-admin123), or\n"
               "     drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=17480 --backend.url=http://127.0.0.1:18480\n"
