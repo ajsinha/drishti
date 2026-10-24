@@ -1,0 +1,2 @@
+ACT Symbol|Security Name|Exchange|CQS Symbol|ETF|Round Lot Size|Test Issue|NASDAQ Symbol
+File Creation Time: 1023202621:31||||||

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The shared library of the public-data refresh scripts (one script per pack: world_economy.py, news_and_markets.py,
+"""The shared library of the public-data refresh scripts (one script per pack: world_economy.py, news_and_markets.py, us_equities.py,
 official_market_data.py). It is imported, never run. Python standard library only (PyYAML where a pack's own tools need it).
 
     Source      one public source: its licence and use, then fetch -> normalise -> write

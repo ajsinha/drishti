@@ -23,6 +23,7 @@ Some packs carry published public data instead of generated samples. Each of the
 | `world-economy` | `tools/publicdata/world_economy.py` | `tools/publicdata/world-economy.sh` | `tools\windows\publicdata-world-economy.ps1` |
 | `news-and-markets` | `tools/publicdata/news_and_markets.py` | `tools/publicdata/news-and-markets.sh` | `tools\windows\publicdata-news-and-markets.ps1` |
 | `market-data` | `tools/publicdata/official_market_data.py` | `tools/publicdata/market-data.sh` | `tools\windows\publicdata-market-data.ps1` |
+| `us-equities` | `tools/publicdata/us_equities.py` | `tools/publicdata/us-equities.sh` | `tools\windows\publicdata-us-equities.ps1` |
 
 Every script has the same two commands and the same options:
 
@@ -48,9 +49,7 @@ python3 tools/publicdata/<script>.py refresh [SOURCE ...]   # fetch, normalise, 
 `<data>` is the configurable data folder: `DRISHTI_DATA_DIR`, else `data/` in the Drishti folder (git-ignored). Exit codes:
 0 done, 2 done with some downloads failed or a check problem, 1 nothing written, 3 refused (the reason is printed in words).
 
-There is no single script for every pack, on purpose: each pack's sources, licences and output are its own. The
-`us-equities` pack gets its own script from its builder (SEC EDGAR, Nasdaq Trader, GLEIF, Wikidata); it will follow the same
-pattern.
+There is no single script for every pack, on purpose: each pack's sources, licences and output are its own.
 
 ## Sources and licences
 
@@ -66,6 +65,11 @@ pattern.
 | market-data | US Treasury daily par yield curve (`us-treasury`) | public domain (US Government work) | committable |
 | market-data | SOFR, Federal Reserve Bank of New York (`sofr`) | NY Fed terms of use: reuse with attribution | committable, with attribution |
 | market-data | Euro short-term rate, ECB (`estr`) | ECB: free reuse with the source acknowledged | committable, with attribution |
+| us-equities | Wikidata: index membership and company facts (`wikidata`) | CC0 1.0 | committable |
+| us-equities | Nasdaq Trader symbol directory (`nasdaq`) | public symbol directory files | committable |
+| us-equities | SEC EDGAR: tickers, submissions, XBRL company facts (`sec`) | public domain (US Government work); EDGAR fair access policy | committable |
+| us-equities | GLEIF LEI records (`gleif`) | CC0 1.0 | committable |
+| us-equities | Yahoo Finance daily prices, through the us-equities-prices connector (`prices`) | Yahoo terms: no redistribution | **internal only** |
 
 **The internal-only rule.** A source whose terms do not allow redistribution is never written into a committed folder of the
 repository unless you pass `--internal-ok`; without it the script either writes to the data folder (when you did not give
@@ -180,6 +184,46 @@ uv run --with deltalake --with pyarrow --with pyyaml python tools/ingest_jsonl.p
     --domain market --key fx-spot=PAIR,ir-curve=CURVE_ID,rate-fixing=INDEX_ID --date AS_OF --lake data/delta
 ```
 
+## us-equities
+
+`tools/publicdata/us_equities.py` wraps the pack's generator, `tools/packgen/us_equities/fetch.py` (the network) and `make.py`
+(the build, offline): a refresh of the committed pack writes exactly what `make.py` writes, then runs `make.py --check`. The four
+company sources are openly licensed, so a plain refresh rebuilds the committed pack `config/packs/us-equities`. SEC EDGAR gets the
+User-Agent it asks for, `Drishti research ajsinha@gmail.com` (set `DRISHTI_SEC_USER_AGENT` to your own), and fewer than 8 requests a
+second (its limit is 10); GLEIF and Wikidata about one a second.
+
+```bash
+python3 tools/publicdata/us_equities.py status                           # also the committed pack's companies and retrieval date
+python3 tools/publicdata/us_equities.py refresh --dry-run
+python3 tools/publicdata/us_equities.py refresh                          # the committed pack (about 1,100 SEC and 500 GLEIF calls)
+python3 tools/publicdata/us_equities.py refresh --offline                # rebuild the committed pack from the cache only
+python3 tools/publicdata/us_equities.py refresh --scope TSLA,CIK:1326380,FILINGS:40,YEARS:15
+                                                                         # a widened build in <data>/publicdata/us-equities
+python3 tools/publicdata/us_equities.py refresh prices --server http://localhost:18080 --scope AAPL,MSFT
+                                                                         # internal only: a price snapshot in the data folder
+```
+
+- **The cache** (`<data>/publicdata/cache/us-equities`, or `--cache`) holds what `fetch.py` keeps: the Wikidata query results,
+  the Nasdaq files, the SEC ticker file, each company's submissions (metadata of the recent filings) and its XBRL facts reduced
+  to the annual values of the pack's concepts, and the GLEIF records. A file stays until it is removed, so a broken run resumes;
+  `--max-age HOURS` fetches files older than that again (the old one is put back if the new fetch fails). Every file is in
+  `cache-index.json` (URL, time, sha256, size).
+- **`--scope`** widens the build (comma separated): a ticker (`TSLA`) or `CIK:<n>` adds a company (listed under a `SCOPE`
+  membership, "Added with --scope (not an index)"); `INDEX:<CODE>=<Wikidata QID>[=<name>]` adds an index's current members
+  (the QID of the index item in Wikidata); `FILINGS:<n>` keeps more recent filings a company (default 20);
+  `YEARS:<n>` or `--years N` more fiscal years (default 10); `CONCEPT:<NAME>=<tag>[|<tag>...][@<unit>][@instant]` another
+  annual XBRL concept (`CONCEPT:CASH=CashAndCashEquivalentsAtCarryingValue@USD@instant`).
+- **A widened build goes to the data folder**: `<data>/publicdata/us-equities/packs/us-equities`, a whole pack (the hand-written
+  manifest, Sutras and help copied, the samples and guide generated), checked with `make.py --check --pack`. Its cache is
+  `scoped/<hash>` inside the cache, seeded from the plain cache less what the scope changes (submissions for `FILINGS`, facts for
+  `YEARS` and `CONCEPT`, the Wikidata members for `INDEX`). `--into-pack` writes a widened build over the committed pack, on
+  purpose only; without it `--out config/packs/us-equities` with a scope is refused.
+- **Prices are internal only.** The pack ships no prices; the `prices` source reads `price-history/PX-<ticker>` through the
+  pack's `us-equities-prices` connector of a running server where you switched it on (`DRISHTI_US_EQUITIES_PRICES_ENABLED=true`,
+  `--server`, `--token-file`, `--delay` at least 2 s, `--limit N`). It is never part of a default refresh and writes
+  `<data>/publicdata/us-equities/prices/price-history/snapshot-<date>.jsonl.gz`, each document stamped as a snapshot; into a
+  committed folder only with `--internal-ok`. Each ticker is cached under `prices/` in the cache, so `--offline` rebuilds it.
+
 ## Adding a source
 
 A source is a class with its licence and three steps. Here is SONIA from the Bank of England, added to
@@ -231,6 +275,7 @@ The scripts are plain Python: no other program is downloaded or run. The PowerSh
 .\tools\windows\publicdata-world-economy.ps1 refresh --dry-run
 .\tools\windows\publicdata-market-data.ps1 refresh --years 2
 .\tools\windows\publicdata-news-and-markets.ps1 refresh --server http://localhost:18080
+.\tools\windows\publicdata-us-equities.ps1 refresh --scope TSLA,FILINGS:40
 ```
 
 Set `$env:DRISHTI_DATA_DIR` to put the cache and the builds elsewhere.
@@ -243,7 +288,6 @@ Set `$env:DRISHTI_DATA_DIR` to put the cache and the builds elsewhere.
   keeps its own download.
 - **FRED** (the market-data pack's `fred-feed`) needs a personal API key and FRED's terms limit redistribution of some
   series; it is left to the live connector.
-- **us-equities**: its own script, from its builder.
 
 ## Tests
 
