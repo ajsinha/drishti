@@ -342,6 +342,10 @@ docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml:15 warning DRS-20
 docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml:15 warning DRS-2047 field 'HISTORY.EVENT' is shown but has no glossary entry (kinds.ticket.glossary in config/about.yaml, or a vocabulary entry)
 ```
 
+**Lint every pack at once:** `sutra lint config/packs` takes the whole packs root. Each pack is read with its own fragments under
+its namespace (`trading/deal-ticket@1` resolves, beside the UI kit's `config/ui-kit/` fragments), each pack's `tests/` folder is
+skipped and each pack's `history:` block is checked. `--docs` adds the docstring warnings (`DRS-2055`).
+
 `--strict` turns those DRS-2045 to 2047 help warnings into failures (exit 1). `sutra test <pack>` renders every Sutra against
 its `tests/<sutra>/` samples and checks `expect.yaml`; `--junit report.xml` writes a JUnit file; `sutra preview <pack> --out
 build/html` writes an HTML snapshot per sample.

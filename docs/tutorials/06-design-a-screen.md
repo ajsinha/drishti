@@ -240,11 +240,22 @@ fragment (**Ship**) and put it in a pack. [SCREEN_DESIGNER.md](../guides/SCREEN_
 
 You should see, under **Build → My designs**, `Desk book` with the status *draft* and your edits listed.
 
+### Or with the designer
+
+When an administrator has switched the **Sutra designer** on (`ui.designer: true`, or `DRISHTI_UI_DESIGNER=true`), much of this is
+simpler on a page that already exists: open it, press **Customize** in the page header, and move or hide panels, pick a table's
+columns, say what a click on a row opens (*When I click*), refresh a panel every 30 seconds or let people edit, all on the real page
+with real data. **Describe** (Build → New screen) writes a screen from one line, such as
+`TRD BOOK-RATES-2 · click a trade → cash flows + CPTY limits · refresh 30s`. Both keep the result as a design in **My designs**,
+so `drishti.py design list|get|save|check` work on it as on this one. [Tutorial 22](22-build-a-screen-with-the-designer.md) walks
+through it; the workbench stays the place for a screen built from your own sample documents, as here.
+
 ## Next steps
 
 - [Tutorial 7 · Load data daily](07-load-data-daily.md) keeps the screens' data fresh.
+- [Tutorial 22 · Build a screen with the designer](22-build-a-screen-with-the-designer.md): the same kind of work on a live page, in plain words.
 - [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) is the workbench reference; [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) lists every option of every panel and control; [PANELS.md](../guides/PANELS.md)
-  shows each of the 21 panel kinds with a picture; [SUTRA_DEVELOPER_GUIDE.md](../guides/SUTRA_DEVELOPER_GUIDE.md) is the language guide.
+  shows each of the 22 panel kinds with a picture; [SUTRA_DEVELOPER_GUIDE.md](../guides/SUTRA_DEVELOPER_GUIDE.md) is the language guide.
 
 ## If something goes wrong
 

@@ -14,7 +14,7 @@ before the consolidation (for example `/help/quickstart` or `/help/connector-kaf
 ## New here? Read these, in order
 
 1. **[GETTING_STARTED.md](guides/GETTING_STARTED.md)** (*Install and run*): prerequisites, build, start the server and the console, sign-in, Docker, other ways to build, and Windows.
-2. **[tutorials/](tutorials/README.md)**: twenty-one hands-on tutorials on the shipped demo data, with the exact commands, real output and real screenshots. Start with [your first 15 minutes](tutorials/01-first-15-minutes.md).
+2. **[tutorials/](tutorials/README.md)**: twenty-two hands-on tutorials on the shipped demo data, with the exact commands, real output and real screenshots. Start with [your first 15 minutes](tutorials/01-first-15-minutes.md).
 3. **[USER_GUIDE.md](guides/USER_GUIDE.md)**: every feature of the console, as a reference. **[PACKS.md](guides/PACKS.md)**: which industries are available and how to load them; building your own is [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md).
 
 If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md).
@@ -35,7 +35,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 
 | Folder | What is in it |
 |---|---|
-| [tutorials/](tutorials/README.md) | the twenty-one hands-on tutorials: a worked example each, on the demo data, with commands, real output and screenshots |
+| [tutorials/](tutorials/README.md) | the twenty-two hands-on tutorials: a worked example each, on the demo data, with commands, real output and screenshots |
 | [guides/](guides/) | install and run, the user guide, business intelligence (Rūpaka), packs and the command line, the Sutra and Rachana guides, panels, clients, API and troubleshooting; `examples/` holds working Sutras |
 | [connectors/](connectors/) | connecting your data: the Connectors reference, the connector files, TLS and proxy, the developer guide, a design document per store (Delta Lake, PostgreSQL, Aerospike, Cassandra, files …) and demo data |
 | [admin/](admin/) | running Drishti: operations, configuration, users and roles, performance, and the runbooks |
@@ -99,6 +99,8 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | If you want to… | Read |
 |---|---|
 | Learn to build screens in the workbench, step by step, with a picture of each step | [tutorial 6](tutorials/06-design-a-screen.md) |
+| Change a live page in plain words (Customize, Describe, Outline, Grid): a linked record on a click, refresh, let people edit | [tutorial 22](tutorials/22-build-a-screen-with-the-designer.md), [SCREEN_DESIGNER.md section 31](guides/SCREEN_DESIGNER.md#31-the-sutra-designer-customize-and-describe) |
+| Fragments of the UI kit, events, children, per-panel sources, `layout:` and `form:`: the grammar of every screen | [SUTRA_NEXT.md](architecture/SUTRA_NEXT.md), [SUTRA_DEVELOPER_GUIDE.md section 11a](guides/SUTRA_DEVELOPER_GUIDE.md#11a-fragments-events-children-refresh-and-forms) |
 | Learn what a Sutra is and write one, from the first panel to a tested screen | [SUTRA_DEVELOPER_GUIDE.md](guides/SUTRA_DEVELOPER_GUIDE.md) |
 | Choose or configure a panel kind | [PANELS.md](guides/PANELS.md) |
 | Add a new panel kind to Drishti | [PANELS.md: developing a panel kind](guides/PANELS.md#developing-a-panel-kind) |
@@ -229,7 +231,8 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [STATEMENTS.md](guides/STATEMENTS.md) | (2.6.0) statement pages of a report (`layout: statement`): paginated, page-exact paper (size, orientation, margins, header and footer with page numbers, page breaks, repeated column titles, groups kept together), the period and parameters, PDF and Excel, one statement per recipient through subscriptions, the statement designer (the Paper tab), the API and `drishti.py bi statement`, DRS-9038 |
 | [BOARDS.md](guides/BOARDS.md) | board pages of a report (`layout: board`) and their tiles, how 2.3 boards were converted, alerts, the viewer and kiosk, who sees what, the checks and their codes, settings, the API, what is not built (live tables: [DATASETS.md](guides/DATASETS.md#71-live-tables-phase-5); live visuals and Perspective: [REPORTS.md](guides/REPORTS.md#13-live-visuals-and-perspective-phase-5)) |
 | [tutorial 6](tutorials/06-design-a-screen.md) | you are new to the Build workbench: four complete projects with a picture of each step |
-| [SCREEN_DESIGNER.md](guides/SCREEN_DESIGNER.md) | you design or edit a Sutra in the browser, save it and submit it for review |
+| [tutorial 22](tutorials/22-build-a-screen-with-the-designer.md) | you want to change a live page with the Sutra designer: Customize, Describe, Outline and Grid |
+| [SCREEN_DESIGNER.md](guides/SCREEN_DESIGNER.md) | you design or edit a Sutra in the browser (the Sutra designer, or the Build workbench), save it and submit it for review |
 | [SUTRA_DEVELOPER_GUIDE.md](guides/SUTRA_DEVELOPER_GUIDE.md) | you are learning to write Sutras: anatomy, matching, labels, paths, source, row groups, testing and CI, the checklist |
 | [RACHANA_REFERENCE.md](guides/RACHANA_REFERENCE.md) | you are writing a Sutra and need the exact key, panel option, format, expression or problem code |
 | [PANELS.md](guides/PANELS.md) | you choose, configure or debug a panel: all twenty-two kinds, what each means, how it behaves, an example and a picture |

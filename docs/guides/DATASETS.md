@@ -832,8 +832,6 @@ DRS-9021 the join key 'name' (counterparties.NAME of source 'pnl' in 'join-on-na
 * **Impact analysis.** A change to a source dataset is set against the composed and derived datasets built from it as it is against reports: removing `Exposure (EE peak)` from `counterparty-exposure` makes publishing it a breaking change (`DRS-9040`) that names `desk-pnl-vs-exposure` ("measure Exposure (EE peak) (source 'exposure' of desk-pnl-vs-exposure)"), published and in drafts. A report names its datasets for the same purpose (REPORTS.md section 16). Lineage (`GET /bi/items/{id}/lineage`) shows a composed dataset's sources as its upstream, with what it takes of each, and shows it below each source.
 * **The Model view** (`/bi/m/<dataset>`) draws a composed dataset as its sources (each with the columns it is grouped by and its measures, the join keys marked), the joins as labelled lines between the key columns, and the joined table they feed; a derived dataset adds a box for the Transform. The relationship form and proposals are for tables and are hidden. The dataset page lists the sources under **Built from other datasets**, with **Run the Transform now** for a derived one.
 
-![The Model view of the composed sample: two sources, the left join, the joined table](../tutorials/img/t10/28-model-view.jpg)
-
 ### 11.5 The samples
 
 | File | What |

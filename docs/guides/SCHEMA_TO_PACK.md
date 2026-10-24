@@ -350,7 +350,7 @@ description is listed. **Deploy** hands the bundle to Admin → Packs → Deploy
 ![The hand-off: the server's checks and what the deploy would change](img/schemapack/10-deploy.jpg)
 
 The server checks the archive (checksums, `pack.yaml`, server version, `sutra lint` and `sutra test`), shows what changes (breaking changes first, which you must acknowledge), and only on your
-confirmation deploys. The version it replaces is kept: **roll back** there ([OPERATIONALISING §17](OPERATIONALISING.md#17-deploy-from-admin--packs-change-a-data-source-history-and-roll-back)).
+confirmation deploys. The version it replaces is kept: **roll back** there ([OPERATIONALISING §17](OPERATIONALISING.md#17-deploy-from-admin--packs-connectors-history-and-roll-back)).
 
 ### Drafts, keyboard, phone, themes
 

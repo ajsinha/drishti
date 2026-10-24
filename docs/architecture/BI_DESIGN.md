@@ -1291,7 +1291,7 @@ the bell, `drishti.py bi runs`, Admin → BI → Runs, help cards and the browse
 
 **Also in 2.6.7** (product owner, 2026-10-20):
 
-* **Gossip off the busy path** ([DRISHTI_NET.md, Planned, 2.6.7](DRISHTI_NET.md#planned-267-the-transport-between-nodes)): on the
+* **Gossip off the busy path** ([DRISHTI_NET.md, Planned, 2.6.7](DRISHTI_NET.md#the-transport-between-nodes-as-built-267)): on the
   sender, gossip and probes get their own small HTTP client pool and a platform thread (today they share `PeerHttp`'s clients with data
   forwarding, and the round runs on a virtual thread); on the receiver, `/api/v1/net/gossip` and the probes are handled on a reserved
   path that heavy BI work cannot crowd out. Accepted when a heavy BI burst on one node gives **no false *suspect* anywhere**.
