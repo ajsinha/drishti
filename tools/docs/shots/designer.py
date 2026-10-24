@@ -522,9 +522,11 @@ def form_beside(c: Ctx):
     c.page.locator("#p-trades tbody tr[data-frow='1'] td").nth(1).click()
     c.page.fill("[data-fm-side] [data-field='notional']", "40,000,000")
     c.page.fill("[data-fm-side] [data-field='comment']", "Client hedge for the Q4 roll")
+    c.page.fill("[data-fm-side] [data-field='executed_at']", "2026-10-22T09:41")
     c.page.evaluate("document.querySelectorAll('#p-trades tr.wire-kids').forEach(n => n.remove());"
-                    "document.querySelector('#p-trades').scrollIntoView({ block: 'start' }); window.scrollBy(0, -70)")
-    c.save("form-beside.jpg", clip={"x": 0, "y": 0, "width": 1500, "height": 760})
+                    "document.querySelector('#p-trades').scrollIntoView({ block: 'start' }); window.scrollBy(0, -70);"
+                    "document.activeElement.blur(); document.querySelector('[data-fm-side]').scrollTop = 0")
+    c.save("form-beside.jpg", clip={"x": 0, "y": 0, "width": 1500, "height": 900})
 
 
 @shot("form-cells.jpg")
@@ -656,6 +658,7 @@ def outline(c: Ctx):
 def grid_mode(c: Ctx):
     c.page.goto(c.base + "/designer/grid?kind=portfolio-trades&id=BOOK-RATES-2")
     c.until("document.querySelector('[data-gd-rev]')")
-    c.page.locator('[data-gd-cell="A4"]').click()
+    kid = c.page.locator("[data-gd-kid]")                 # a panel a click opens, as a cell of its own, when the screen has one
+    (kid.first if kid.count() else c.page.locator('[data-gd-cell="A4"]')).click()
     c.save("grid-mode.jpg")
     c.page.locator("[data-gd-cancel]").click()

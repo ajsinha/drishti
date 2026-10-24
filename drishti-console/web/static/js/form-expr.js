@@ -195,7 +195,7 @@
     (form.fields || []).forEach(function (f) {
       var v = values[f.id], blank = empty(v) || (typeof v === 'string' && !v.trim());
       var t = blank ? null : typed(f, v);
-      vals[f.id] = t;
+      vals[f.id] = typeof t === 'number' && isNaN(t) ? null : t;           // a value that does not read: the rules cannot tell, as on the server
       if (!checked[f.id]) { return; }
       if (blank) { if (f.required) { out.push({ field: f.id, message: f.label + ' is required', severity: 'error' }); } return; }
       var why = valueProblem(f, v, t);

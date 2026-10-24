@@ -91,11 +91,12 @@ def test_a_form_beside_the_table_with_words_a_draft_and_resuming_it(stack, brows
     assert pg.evaluate("drishtiForms.state().trades.dirty")
     pg.fill("[data-fm-side] [data-field='comment']", "Client hedge for the Q4 roll")
     assert side.locator(".fm-error").count() == 0 and warn.count() == 1
+    pg.fill("[data-fm-side] [data-field='executed_at']", "2026-10-22T09:41")      # a date and time, in its time zone
     IMG.mkdir(parents=True, exist_ok=True)
     wait(pg, "document.querySelector('#p-trades tr.wire-kids')")
     pg.evaluate("document.querySelectorAll('#p-trades tr.wire-kids').forEach(n => n.remove())")   # the cash flows the click opened: not in the picture
-    pg.evaluate("document.querySelector('#p-trades').scrollIntoView({ block: 'start' }); window.scrollBy(0, -70)")
-    pg.screenshot(path=str(IMG / "form-beside.jpg"), type="jpeg", quality=84, clip={"x": 0, "y": 0, "width": 1500, "height": 760})
+    pg.evaluate("document.querySelector('#p-trades').scrollIntoView({ block: 'start' }); window.scrollBy(0, -70); document.activeElement.blur(); document.querySelector('[data-fm-side]').scrollTop = 0")
+    pg.screenshot(path=str(IMG / "form-beside.jpg"), type="jpeg", quality=84, clip={"x": 0, "y": 0, "width": 1500, "height": 900})
     pg.click("[data-fm-side] .fm-save")
     wait(pg, "document.querySelector('[data-fm-side] .fm-badge-saved')")
     assert pg.locator("[data-fm-drafts]").inner_text().count("draft") >= 1

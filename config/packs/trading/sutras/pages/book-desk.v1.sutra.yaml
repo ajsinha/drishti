@@ -76,7 +76,7 @@ panels:
           step: who
           options: { source: { pack: core, kind: legal-entity }, label: NAME }
         - { id: notional, label: Notional, bind: NOTIONAL, type: money, currency: currency, min: 0, required: true, fmt: amount0, step: what }
-        - { id: currency, label: Currency, bind: CURRENCY, type: enum, options: [USD, EUR, GBP, JPY, CHF, CAD], step: what }
+        - { id: currency, label: Currency, bind: CURRENCY, type: enum, options: [USD, EUR, GBP, JPY, CHF, CAD, AUD], step: what }
         - { id: upfront_fee, label: Upfront fee, bind: UPFRONT_FEE, type: money, currency: currency, min: 0, default: "=notional * 0.001",
             fmt: amount0, step: what }
         - { id: executed_at, label: Executed, bind: EXECUTED_AT, type: datetime, tz: Europe/London, step: what }
