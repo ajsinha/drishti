@@ -77,6 +77,8 @@
       openFull.href = r.open;
       var ol = root.querySelector('[data-outline-open]');
       if (ol) { ol.href = '/designer/outline?kind=' + encodeURIComponent(r.kind) + '&id=' + encodeURIComponent(r.id) + '&design=' + encodeURIComponent(r.draft); }
+      var gd = root.querySelector('[data-grid-open]');
+      if (gd) { gd.href = '/designer/grid?kind=' + encodeURIComponent(r.kind) + '&id=' + encodeURIComponent(r.id) + '&design=' + encodeURIComponent(r.draft); }
       yaml.textContent = r.yaml;
       saved.textContent = '';
     }

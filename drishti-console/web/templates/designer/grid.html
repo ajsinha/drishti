@@ -1,0 +1,85 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Grid · {{ PRODUCT }}{% endblock %}
+{% block screen %}build{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/designer.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/designer-grid.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="dz-shell gd-shell" data-grid{% if draft %} data-draft="{{ draft }}"{% endif %} data-kind="{{ kind }}" data-id="{{ id }}">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a>{% if kind and id %} · <a href="/v/{{ kind | urlencode }}/{{ id | urlencode }}">Back to the page</a>{% endif %} · <a href="/help/screen-designer#31-the-sutra-designer-customize-and-describe">Designer guide</a></nav>
+  <h1>Grid</h1>
+  {% include "designer/_modes.html" %}
+  {% if problem %}<p class="dz-note dz-problem" role="alert">{{ problem }}</p>{% endif %}
+  {% if not draft %}
+  <section class="gd-start" aria-label="Start">
+    <p>Grid shows a screen as a spreadsheet: columns A, B, C, rows 1, 2, 3, and in each cell a panel written as a formula, such as
+      <code>B2 = field-list@1(rows: $src; source: {kind: trade, id: @A2.open.trade})</code>. Open any page, press <b>Customize</b>, then <b>Grid</b>;
+      or describe a screen in <a href="/designer/new">Describe</a> and choose <b>Edit in Grid</b>.</p>
+    <form class="dz-line" method="get" action="/designer/grid">
+      <label class="visually-hidden" for="gdKind">Kind</label><input id="gdKind" name="kind" placeholder="kind (trade)" value="{{ kind }}" required>
+      <label class="visually-hidden" for="gdId">Id</label><input id="gdId" name="id" placeholder="id (MX-20000001)" value="{{ id }}" required>
+      <button type="submit" class="dz-btn dz-primary">Open this page as a grid</button>
+    </form>
+  </section>
+  {% else %}
+  <p class="gd-narrow dz-note" data-gd-narrow>Grid needs a wider screen. <a class="dz-btn" href="/designer/outline?kind={{ kind | urlencode }}&amp;id={{ id | urlencode }}&amp;design={{ draft | urlencode }}">Open it in Outline</a></p>
+  <div class="gd-main">
+  <div class="ol-bar gd-bar" role="region" aria-label="Grid">
+    <span class="dz-msg" data-gd-msg role="status" aria-live="polite"></span>
+    <span class="dz-grow"></span>
+    <button type="button" class="dz-btn" data-gd-yaml aria-expanded="false">Show the Sutra</button>
+    <a class="dz-btn" data-gd-open href="/v/{{ kind | urlencode }}/{{ id | urlencode }}?design={{ draft }}">Open full page</a>
+    <button type="button" class="dz-btn" data-gd-cancel>Cancel</button>
+    <button type="button" class="dz-btn dz-primary" data-gd-done title="Keep it as your own version of this page: only you see it until you share">Keep as my page</button>
+  </div>
+  <div class="gd-formula" role="group" aria-label="Formula bar">
+    <output class="gd-name mono" data-gd-name aria-label="The selected cell">A1</output>
+    <span class="gd-fx" aria-hidden="true">=</span>
+    <div class="gd-input">
+      <textarea class="mono" data-gd-formula rows="1" spellcheck="false" autocomplete="off" aria-label="The cell's formula: Enter keeps it, Shift+Enter a new line (another panel in the cell), Esc goes back"
+        aria-autocomplete="list" aria-controls="gdSuggest" aria-describedby="gdHelp"></textarea>
+      <ul class="gd-suggest" id="gdSuggest" role="listbox" data-gd-suggest hidden></ul>
+    </div>
+  </div>
+  <div class="gd-error" data-gd-error role="alert" hidden><div class="gd-bad mono" data-gd-bad></div><p data-gd-why></p><p class="dz-note">Fix the red part: the cell keeps what it had until the formula reads.</p></div>
+  <p class="dz-note gd-help" id="gdHelp" data-gd-info>Pick a cell. Arrows move, Shift+arrows pick a range, Enter edits, Esc goes back; drag a cell onto another to move its panel.</p>
+  <div class="gd-tools" role="toolbar" aria-label="Cells">
+    <button type="button" class="dz-mini" data-gd-merge>Merge</button>
+    <button type="button" class="dz-mini" data-gd-split>Split</button>
+    <button type="button" class="dz-mini" data-gd-insert="row-above">Insert row above</button>
+    <button type="button" class="dz-mini" data-gd-insert="row-below">Insert row below</button>
+    <button type="button" class="dz-mini" data-gd-insert="col-left">Insert column left</button>
+    <button type="button" class="dz-mini" data-gd-insert="col-right">Insert column right</button>
+    <button type="button" class="dz-mini" data-gd-delete="row">Delete row</button>
+    <button type="button" class="dz-mini" data-gd-delete="col">Delete column</button>
+    <button type="button" class="dz-mini" data-gd-make hidden>Make it a grid</button>
+    <label class="gd-nest" data-gd-nest-wrap hidden>Opens on a click in <select class="dz-pill" data-gd-nest aria-label="Opens on a click of a row in"></select></label>
+  </div>
+  <div class="gd-wrap">
+    <div class="gd-sheet" data-gd-sheet role="grid" aria-label="The screen, as a spreadsheet"></div>
+    <section class="ol-preview gd-preview" aria-label="Live preview">
+      <div class="dz-result-h">Live preview · as you · it changes as you type formulas</div>
+      <iframe title="The screen as the grid says" data-gd-preview src="/v/{{ kind | urlencode }}/{{ id | urlencode }}?design={{ draft }}&amp;embed=1"></iframe>
+    </section>
+  </div>
+  <pre class="dz-yaml mono" data-gd-sutra hidden aria-label="The Sutra (read only)"></pre>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/designer-grid.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -31,7 +31,7 @@ from core.csrf import BodyError, json_body
 from routes.common import ident, render
 
 router = APIRouter(prefix="/designer", include_in_schema=False)
-MODES = [("customize", "Customize", True), ("describe", "Describe", True), ("outline", "Outline", True), ("grid", "Grid", False)]
+MODES = [("customize", "Customize", True), ("describe", "Describe", True), ("outline", "Outline", True), ("grid", "Grid", True)]
 _ALIASES: dict = {"at": 0.0, "table": {}, "cat": {}}
 _MIGRATED: set = set()                                # users whose "My page · <kind>" Designs were turned into flags
 
@@ -222,6 +222,9 @@ async def customize(request: Request):
         return _say(str(e))
     except BackendError as e:
         return _problem(e)
+    first = await default_mode(request)                # a person who opens Outline or Grid first goes there with the draft
+    if first in ("outline", "grid"):
+        return {"draft": draft, "url": f"/designer/{first}?kind={quote(kind)}&id={quote(id_)}&design={draft}"}
     return {"draft": draft, "url": f"/v/{quote(kind)}/{quote(id_)}?customize={draft}"}
 
 
@@ -410,9 +413,20 @@ async def reset(request: Request):
 
 # ---- Describe ---------------------------------------------------------------------------------------------------------------------
 
+async def default_mode(request: Request) -> str:
+    """The designer mode this person opens first (``designerMode`` in their settings; Customize when unset)."""
+    try:
+        got = await request.app.state.backend.settings(ident(request))
+    except BackendError:
+        return "customize"
+    mode = got.get("designerMode") if isinstance(got, dict) else None
+    return mode if mode in {m[0] for m in MODES} else "customize"
+
+
 @router.get("")
 async def shell(request: Request):
-    return RedirectResponse("/designer/new", status_code=303)
+    mode = await default_mode(request) if enabled(request) else "describe"
+    return RedirectResponse({"outline": "/designer/outline", "grid": "/designer/grid"}.get(mode, "/designer/new"), status_code=303)
 
 
 @router.get("/new")
@@ -420,7 +434,7 @@ async def new(request: Request, q: str = ""):
     """Build → New screen: Describe mode."""
     if not enabled(request):
         return RedirectResponse("/build/new", status_code=303)
-    return render(request, "designer/describe.html", modes=MODES, mode="describe", line=q[:500], screen="build",
+    return render(request, "designer/describe.html", modes=MODES, mode="describe", line=q[:500], screen="build", default_mode=await default_mode(request),
                   example="TRD BOOK-RATES-2 · click a trade → cash flows + CPTY limits · refresh 30s")
 
 
@@ -492,7 +506,8 @@ async def outline(request: Request, kind: str = "", id: str = "", design: str = 
         except BackendError as e:
             return render(request, "designer/outline.html", modes=MODES, mode="outline", screen="build", problem=e.detail, kind=kind, id=id, draft="")
         return RedirectResponse(f"/designer/outline?kind={quote(kind)}&id={quote(id)}&design={quote(draft)}", status_code=303)
-    return render(request, "designer/outline.html", modes=MODES, mode="outline", screen="build", kind=kind, id=id, draft=design, problem="")
+    return render(request, "designer/outline.html", modes=MODES, mode="outline", screen="build", kind=kind, id=id, draft=design, problem="",
+                  default_mode=await default_mode(request))
 
 
 @router.get("/outline/state/{draft}")

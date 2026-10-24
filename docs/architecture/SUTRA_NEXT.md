@@ -766,6 +766,22 @@ library by its docstrings (search, the doc, the examples rendered on sample data
 on the grid and fill its parameters from the doc's types (a field picker for `field`, a format list for `format`); wire events by
 picking from `emits`; show lint as you type; save a dynamic screen to the workspace or a Sutra file to a pack (`studio-save`).
 
+**As built: the Sutra designer's four modes** (SCREEN_DESIGNER.md section 31, behind `ui.designer`). Customize, Describe, Outline and
+Grid edit ONE Sutra: a draft Design of the person's own, drawn by the server as the viewer after every step (a step the server
+refuses is undone and said in words); the mode switcher carries the page and the draft, so a switch loses nothing. Each person picks
+the mode they open first (`designerMode` in `/me/settings`: `customize`, `describe`, `outline` or `grid`).
+
+- **Grid** (`core/designer_grid.py`, `routes/designer_grid_routes.py`, `static/js/designer-grid.js`): `layout.areas` as a sheet,
+  columns A, B, C and rows 1, 2, 3, an area a cell or a merged range (a screen without areas: one column, a panel a row). A cell's
+  panels are formulas: `name@version(with parameters; panel settings)` for a fragment, `kind(settings)` for an inline panel, one a
+  line; `@<cell>.<event>.<field>` stands for `@<panel>.<event>.<field>` of the panel alone in that cell. What a formula cannot say
+  in one line (`columns`, `emits`, `children`, `panels`, `form`, nested parameters) is kept when a formula is typed; the grid keys
+  (`area`, `span`, `order`, `section`, `height`, `collapsible`) are the cell's. Steps: a formula typed (a line more adds a panel,
+  an empty cell gets an area of its own), merge (a range covering whole areas), split, insert and delete rows and columns (areas
+  stay rectangles; `columns` re-shared), move (swap, or into an empty cell), make it a grid, nest under a table (Outline's). The
+  translation round-trips exactly: Sutra → cells → Sutra gives the same YAML on every pack Sutra and on screens with areas
+  (`test_designer_grid.py`); a formula that does not read is refused with the part to fix (`start`, `end`).
+
 ## 17. Phases
 
 | Phase | What | Release |

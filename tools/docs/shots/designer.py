@@ -552,3 +552,110 @@ def form_drawer(c: Ctx):
     c.page.select_option("[data-fm-drawer] [data-field='currency']", "USD")
     c.page.fill("[data-fm-drawer] [data-field='maturity_date']", "2031-06-30")
     c.save("form-drawer.jpg", clip={"x": 0, "y": 0, "width": 1500, "height": 860})
+
+
+# ---- the designer's later waves: linked records, refresh and freshness, layout, Outline, Grid (the browser tests make the same pictures:
+# test_designer_browser.py, test_refresh_browser.py, test_screen_grid_browser.py, test_designer_grid_browser.py) ---------------------
+
+_GRID_BOOK = """rachana: 1
+sutra: qa-book-grid
+version: 1
+match: { kind: portfolio-trades }
+title: { pill: Book, id: $.PORTFOLIO }
+layout:
+  areas: ["head head", "trades detail"]
+  columns: [7, 5]
+  split: { between: [trades, detail] }
+  tabs: [detail]
+  sticky: head
+panels:
+  - { id: pay7, kind: metric, title: "Payments, next 7 days", value: $.PAY_7D, fmt: signed0, area: head, span: 4 }
+  - { id: pay30, kind: metric, title: "Payments, next 30 days", value: $.PAY_30D, fmt: signed0, area: head, span: 4 }
+  - { id: pay90, kind: metric, title: "Payments, next 90 days", value: $.PAY_90D, fmt: signed0, area: head, span: 4 }
+  - id: trades
+    kind: table
+    title: Trades
+    area: trades
+    rows: $.TRADES
+    columns: [ { label: Trade, bind: "@.TRADE_ID" }, { label: Product, bind: "@.PRODUCT_TYPE" }, { label: Notional, bind: "@.NOTIONAL", fmt: amount0 } ]
+  - { id: book, kind: kv, title: The book, area: detail, columns: [ { label: Trades, bind: $.TRADE_COUNT }, { label: Notional, bind: $.NOTIONAL, fmt: compact } ] }
+  - { id: spread, kind: kv, title: Its spread, area: detail, collapsible: true, columns: [ { label: Currencies, bind: "size($.CURRENCIES)" } ] }
+"""
+
+
+def _book_design(c: Ctx, sutra: str) -> str:
+    return c.base + "/v/portfolio-trades/BOOK-RATES-2?design=" + c.design("", sutra=sutra, kind="portfolio-trades")
+
+
+def _customize_step(c: Ctx, button: str) -> None:
+    rev = c.page.get_attribute("[data-view]", "data-dz-rev")
+    c.page.locator(button).click()
+    c.until("document.querySelector('[data-view]').getAttribute('data-dz-rev') !== %s" % json.dumps(rev))
+
+
+@shot("customize-linked.jpg")
+def customize_linked(c: Ctx):
+    c.page.goto(c.base + "/v/portfolio-trades/BOOK-RATES-2")
+    _designer_on(c)
+    c.page.locator("[data-customize-open]").click()
+    c.until("document.querySelector('[data-dz-ready]')")
+    pick = c.page.locator("[data-dz-click-from] option").first.get_attribute("value")
+    c.page.select_option("[data-dz-click-from]", pick)
+    if pick.startswith("u:"):                                                     # a used table: opened up by the first sentence
+        _customize_step(c, "[data-dz-click-apply]")
+    pid = c.page.locator("[data-dz-click-from] option").first.get_attribute("value")[2:]
+    limits = next(x for x in c.page.locator("[data-dz-click-show] option").all_inner_texts() if "credit limits" in x)
+    c.page.select_option("[data-dz-click-show]", label=limits)
+    c.page.select_option("[data-dz-click-place]", "detail-right")
+    _customize_step(c, "[data-dz-click-apply]")
+    c.page.locator(f"#p-{pid} tbody tr[data-ev]").first.locator("td").nth(1).click()
+    c.until(f"document.querySelector('[data-wire-kids=\"{pid}\"] #p-{pid}-credit-limit tbody tr')")
+    c.save("customize-linked.jpg")
+    c.page.locator("[data-dz-cancel]").click()
+
+
+@shot("refresh-controls.jpg", also=("freshness.jpg",))
+def refresh_controls(c: Ctx):
+    c.page.goto(c.base + "/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk")
+    c.until("window.drishtiRefresh && document.querySelector('[data-fresh] [data-refresh-toggle]')")
+    c.page.locator("[data-fresh] [data-refresh-toggle]").first.click()
+    c.page.locator(".fresh-bar [data-refresh-all]").click()
+    c.page.wait_for_timeout(800)
+    c.save("refresh-controls.jpg", clip={"x": 0, "y": 0, "width": 1500, "height": 700})
+    c.page.locator(".fresh-bar [data-refresh-all]").click()                     # resumed, as the reader had it
+    c.page.locator("[data-fresh] [data-refresh-toggle]").first.click()
+
+    def stale(route):
+        r = route.fetch()
+        body = r.json()
+        body["provenance"].update(stale=True, updatedAt="2026-10-23T10:42:00Z", staleAfter="PT2M")
+        route.fulfill(response=r, body=json.dumps(body))
+    c.page.route("**/panels?*", stale)
+    c.until("document.querySelector('[data-fresh][data-state=\"stale\"]')")
+    c.save("freshness.jpg", clip={"x": 0, "y": 0, "width": 1500, "height": 700})
+    c.page.unroute("**/panels?*")
+
+
+@shot("layout-grid.jpg")
+def layout_grid(c: Ctx):
+    c.page.goto(_book_design(c, _GRID_BOOK))
+    c.until("document.querySelector('[data-sgrid][data-sg-ready] .sg-split')")
+    c.save("layout-grid.jpg")
+
+
+@shot("outline.jpg")
+def outline(c: Ctx):
+    c.page.goto(c.base + "/designer/outline?kind=portfolio-trades&id=BOOK-RATES-2")
+    c.until("document.querySelector('[data-ol-rev]')")
+    c.page.locator('[data-ol-panel="trades"]').first.click()
+    c.save("outline.jpg")
+    c.page.locator("[data-ol-cancel]").click()
+
+
+@shot("grid-mode.jpg")
+def grid_mode(c: Ctx):
+    c.page.goto(c.base + "/designer/grid?kind=portfolio-trades&id=BOOK-RATES-2")
+    c.until("document.querySelector('[data-gd-rev]')")
+    c.page.locator('[data-gd-cell="A4"]').click()
+    c.save("grid-mode.jpg")
+    c.page.locator("[data-gd-cancel]").click()

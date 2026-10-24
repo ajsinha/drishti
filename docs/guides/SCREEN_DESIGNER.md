@@ -680,8 +680,8 @@ See also: [the Sutra command](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sut
 ## 31. The Sutra designer: Customize and Describe
 
 The Sutra designer changes a screen in plain words, on the real page with real data, as you see it. It has one shell with modes:
-**Customize** (change the page you are on), **Describe** (type a new screen in one line) and **Outline** (the screen as a list you
-rearrange). **Grid** comes later. Every
+**Customize** (change the page you are on), **Describe** (type a new screen in one line), **Outline** (the screen as a list you
+rearrange) and **Grid** (the screen as a spreadsheet of formulas). Every
 mode edits the same thing: a Sutra (the YAML that lays out a screen, see [SUTRA_NEXT.md](../architecture/SUTRA_NEXT.md)), kept as
 **your own design**. The pack's Sutra is never changed, and nobody else sees your version until you share it.
 
@@ -816,7 +816,52 @@ switcher (type a kind and an id). Then:
    picked*, *always*, *when the row is opened*).
 
 **Keep as my page** keeps it as your version of the page (as Customize's *Done*); **Cancel** forgets it; **Show the Sutra** shows
-the YAML read-only. Outline, Customize and Describe edit the same Sutra: switch at any time.
+the YAML read-only. Outline, Grid, Customize and Describe edit the same Sutra: switch at any time.
+
+### Grid
+
+![Grid: the book page as a spreadsheet, the trades in A2 and a counterparty in B2 that fills on a click on a trade; the formula bar above, the live preview beside](img/designer/grid-mode.jpg)
+
+Grid is for spreadsheet-minded people. The screen is a sheet: columns **A, B, C** (each header says its width, such as *7/12*) and
+rows **1, 2, 3**. A cell, or a merged range such as *A1:B1*, is an area of the screen (the Sutra's `layout.areas`); the panels in it
+are written as **formulas**. A screen without areas (the automatic flow) is one column, a panel a row; **Make it a grid** gives each
+panel an area of its own so you can merge and split.
+
+Pick a cell: the **formula bar** shows its formula, one line a panel.
+
+```
+A1 = metric(id: pay7, title: "Payments, next 7 days", value: $.PAY_7D, fmt: signed0)
+A2 = row-picker@1(id: trades, title: Trades of the book, rows: $.TRADES, event: open, key: TRADE_ID, ref: COUNTERPARTY)
+B2 = field-list@1(id: who, title: Counterparty, rows: $src; source: {pack: core, kind: counterparty, id: @A2.open.ref})
+```
+
+- A **fragment** of the UI kit is written `name@version(parameters)`; after a `;` come the panel's own settings (such as `source`
+  or `when`). A **panel kind** (`table`, `kv`, `metric`...) is written `kind(settings)`.
+- **`@A2.open.ref`** reads what the panel in A2 emits when a row is clicked (`@trades.open.ref` in the Sutra): B2 waits until a
+  trade is picked, then fills. `@parent.` is what a parent panel emitted, in a panel a click opens.
+- Values are written plainly (`$.TRADES`, `BOOK = 'X'`, `12`, `true`); put text with a comma or a `;` in double quotes.
+- What a formula cannot say in one line (a table's columns, its events, what a click opens, a fragment's nested parameters) is
+  **kept** when you type: the cell says *keeps columns, emits*. Change those in Customize or Outline. The cell's width, height,
+  order and folding are the cell's, not the formula's.
+- **Enter** keeps the formula (**Shift+Enter** adds a line: another panel in the cell; an empty formula clears the cell); **Esc**
+  goes back to the cell as it was. A formula that does not read is shown with **its red part** and what to do (*the formula is
+  not closed: add )*); the cell keeps what it had until it reads. A change the server refuses is said in plain words and not made.
+- **Suggestions** as you type: at the start, the kit's fragments with their one-line docs and the panel kinds; after `(` or `,`
+  the fragment's parameters; after `@`, the panels on the page by cell, with their events and fields (`@A2.open.ref`). Up and Down
+  pick, Tab or Enter takes it.
+
+The tools above the sheet: **Merge** (Shift+click or Shift+arrows a range first: the cells become one area; a range that cuts an
+area in two is refused), **Split** (a merged cell back to its first cell), **Insert row above / below**, **Insert column left / right**
+(an area across the gap grows over it, so every area stays a rectangle; column widths are shared out again), **Delete row /
+column** (a cell only there must be cleared or moved first). **Drag a cell** onto another to swap their panels, or onto an empty
+cell to move them there. *Opens on a click in* puts the cell's panel under a table: it opens when a row is clicked, as Outline's
+nest does. The keyboard: **arrows** move, **Shift+arrows** pick a range, **Enter** or **F2** edits, **Esc** goes back.
+
+The live preview beside the sheet is drawn again in place after every change (no reload). On a phone Grid says *Grid needs a
+wider screen* and offers Outline. **Open first** (beside the modes) is the mode you open first: with Grid or Outline, Customize on a
+page opens that mode with the page's draft, and Build → Designer goes to it.
+
+![A screen laid out in named areas: a heading across, the trades beside a detail shown as tabs, a split you can drag](img/designer/layout-grid.jpg)
 
 ### Describe it
 

@@ -23,9 +23,7 @@
 <div class="dz-shell ol-shell" data-outline{% if draft %} data-draft="{{ draft }}"{% endif %} data-kind="{{ kind }}" data-id="{{ id }}">
   <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a>{% if kind and id %} · <a href="/v/{{ kind | urlencode }}/{{ id | urlencode }}">Back to the page</a>{% endif %} · <a href="/help/screen-designer#31-the-sutra-designer-customize-and-describe">Designer guide</a></nav>
   <h1>Outline</h1>
-  <nav class="dz-modes" aria-label="Designer modes">
-    {% for key, label, on in modes %}<a class="dz-btn" href="{{ '/designer/new' if key == 'describe' else ('/designer/outline' ~ (('?kind=' ~ (kind | urlencode) ~ '&id=' ~ (id | urlencode) ~ ('&design=' ~ draft if draft else '')) if kind else '')) if key == 'outline' else ('/v/' ~ (kind | urlencode) ~ '/' ~ (id | urlencode) if key == 'customize' and kind else '#') }}"{% if key == mode %} aria-current="page"{% endif %}{% if not on %} aria-disabled="true" title="{{ label }}: coming later"{% elif key == 'customize' %} title="Customize: open any page and press Customize"{% endif %}>{{ label }}</a>{% endfor %}
-  </nav>
+  {% include "designer/_modes.html" %}
   {% if problem %}<p class="dz-note dz-problem" role="alert">{{ problem }}</p>{% endif %}
   {% if not draft %}
   <section class="ol-start" aria-label="Start">

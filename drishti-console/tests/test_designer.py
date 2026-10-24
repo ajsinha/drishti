@@ -421,7 +421,7 @@ def test_describe_builds_and_saves(client, on):
     saved = client.post(f"/designer/describe/save/{r['draft']}", json={"name": "My screen · Trades of book BOOK-RATES-2"}).json()
     assert saved["build"] == f"/build/d/{r['draft']}"
     page = client.get("/designer/new?q=TRD%20BOOK-RATES-2").text
-    assert 'value="TRD BOOK-RATES-2"' in page and 'aria-disabled="true"' in page            # Outline and Grid come later
+    assert 'value="TRD BOOK-RATES-2"' in page and 'aria-disabled="true"' not in page        # every mode is built
     assert "data-describe-offer" in client.get("/build/new").text
 
 

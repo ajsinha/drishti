@@ -49,6 +49,7 @@ public class SettingsController {
     static final Set<String> THEMES = Set.of("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark",
             "terminal-green", "terminal-crimson", "terminal-blue");
     static final Set<String> DENSITIES = Set.of("comfortable", "compact");
+    static final Set<String> DESIGNER_MODES = Set.of("customize", "describe", "outline", "grid");
     private static final Pattern LOCALE = Pattern.compile("^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8}){0,3}$");
     private static final Pattern LANDING = Pattern.compile("^/(t|w/[^/?#]{1,64}|m/[^/?#]{1,64}|v/[a-z0-9-]{1,40}/[^/?#]{1,128}|help)$");
     private static final Pattern KIND = Pattern.compile("^[a-z0-9-]{1,40}$");
@@ -81,6 +82,7 @@ public class SettingsController {
             switch (e.getKey()) {
                 case "theme" -> next.put("theme", oneOf(v, THEMES, "theme"));
                 case "density" -> next.put("density", oneOf(v, DENSITIES, "density"));
+                case "designerMode" -> next.put("designerMode", oneOf(v, DESIGNER_MODES, "designerMode"));
                 case "landing" -> {
                     if (!LANDING.matcher(v.asText()).matches()) {
                         throw bad("landing must be /t, /help, a workspace (/w/…), a monitor (/m/…) or a view (/v/kind/id)");
@@ -188,6 +190,7 @@ public class SettingsController {
         out.set("clockZone", s.path("clockZone").isMissingNode() ? json.nullNode() : s.get("clockZone"));
         out.set("locale", s.path("locale").isMissingNode() ? json.nullNode() : s.get("locale"));
         out.put("density", s.path("density").asText("comfortable"));
+        out.put("designerMode", s.path("designerMode").asText("customize"));       // the Sutra designer's mode a person opens first
         out.put("flash", s.path("flash").asBoolean(true));
         out.put("searchLimit", s.path("searchLimit").asInt(100));
         ObjectNode email = json.createObjectNode();

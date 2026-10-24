@@ -1,0 +1,32 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The designer's mode switcher: every mode edits the SAME draft, so a switch carries the page and the draft along (SCREEN_DESIGNER.md 31). #}
+{% set k = kind | default('') %}{% set i = id | default('') %}{% set d = draft | default('') %}
+{% set page_q = ('?kind=' ~ (k | urlencode) ~ '&id=' ~ (i | urlencode) ~ ('&design=' ~ (d | urlencode) if d else '')) if k and i else '' %}
+<nav class="dz-modes" aria-label="Designer modes" data-dz-modes>
+  {% for key, label, on in modes %}
+  {% if key == 'describe' %}{% set href = '/designer/new' %}
+  {% elif key == 'customize' %}{% set href = ('/v/' ~ (k | urlencode) ~ '/' ~ (i | urlencode) ~ ('?customize=' ~ (d | urlencode) if d else '')) if k and i else '#' %}
+  {% else %}{% set href = '/designer/' ~ key ~ page_q %}{% endif %}
+  <a class="dz-btn" data-dz-mode="{{ key }}" href="{{ href }}"{% if key == mode %} aria-current="page"{% endif %}{% if not on %} aria-disabled="true" title="{{ label }}: coming later"{% elif key == 'customize' and not (k and i) %} title="Customize: open any page and press Customize"{% endif %}>{{ label }}</a>
+  {% endfor %}
+  <label class="dz-first">Open first
+    <select class="dz-pill" data-dz-default aria-label="The designer mode you open first">
+      {% for key, label, on in modes %}<option value="{{ key }}"{% if key == (default_mode | default('customize')) %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </label>
+</nav>
+<script src="/static/js/designer-modes.js?v={{ ASSET_V }}" defer></script>

@@ -18,6 +18,18 @@
 ## Unreleased
 
 - The UI Board work is kept on branch ui-board-preview; not in this release.
+- **The Sutra designer's Grid mode** ([SCREEN_DESIGNER.md section 31](docs/guides/SCREEN_DESIGNER.md#grid)): the screen as a
+  spreadsheet, columns A, B, C and rows 1, 2, 3 over the Sutra's `layout.areas` (a screen without areas is one column; *Make it a
+  grid* gives it areas). A cell's panels are formulas (`B2 = field-list@1(id: who, rows: $src; source: {kind: counterparty, id:
+  @A2.open.ref})`): typing one changes the panel, `@A2.open.ref` reads the panel in A2's click, what a formula cannot say (columns,
+  emits, children) is kept; a formula that does not read shows its red part and the cell keeps what it had. Suggestions from the UI
+  kit's fragments (with their one-line docs), the panels on the page and their events and fields. Merge, split, insert and delete
+  rows and columns, drag a cell, Opens on a click in; arrows, Shift+arrows, Enter and Esc; the live preview redrawn in place; on a phone
+  it offers Outline. One translation module (`core/designer_grid.py`) round-trips every pack Sutra exactly. The four modes edit one
+  draft and the switcher carries it; each person picks the mode they open first (`designerMode` in `/me/settings`; Customize on a page
+  then opens Outline or Grid). `test_designer_grid.py`, `test_designer_grid_browser.py`, `SettingsTest`. The screen designer guide's
+  pictures are all made by `tools/docs/shots/designer.py` again (customize-linked, refresh-controls, freshness, layout-grid, outline,
+  grid-mode).
 - **Forms: letting people edit records** (SUTRA_NEXT.md phase 5, [section 10](docs/architecture/SUTRA_NEXT.md#10-forms-and-data-entry);
   [SUTRA_FORMS_GUIDE.md](docs/guides/SUTRA_FORMS_GUIDE.md)): `form:` on a panel or a use, with typed fields (`text`, `number`, `date`,
   `enum`, `bool`, `textarea`, `lookup` over a source with carried values), `required`, `min`/`max`, `pattern`, `max-length`,

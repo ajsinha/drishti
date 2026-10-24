@@ -71,6 +71,7 @@
 .dz-modes { display: flex; gap: .3rem; flex-wrap: wrap; margin-bottom: 1rem; }
 .dz-modes [aria-current="page"] { background: var(--d-accent); border-color: var(--d-accent); color: var(--d-on-accent); }
 .dz-modes [aria-disabled="true"] { opacity: .45; cursor: default; pointer-events: none; }
+.dz-first { margin-left: auto; display: flex; gap: .4rem; align-items: center; font-size: .85rem; color: var(--d-muted); }
 .dz-line { display: flex; gap: .6rem; }
 .dz-line input { flex: 1 1 auto; min-width: 0; min-height: 3rem; padding: 0 1.2rem; border-radius: 999px; border: 1px solid var(--d-accent);
   background: var(--d-surface); color: var(--d-ink); font-family: var(--d-font-mono); font-size: .95rem; }

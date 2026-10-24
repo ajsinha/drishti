@@ -101,6 +101,7 @@
     el('span', { 'class': 'dz-grow' }),
     el('a', { 'class': 'dz-btn dz-quiet', href: '/designer/new', text: 'Describe a change' }),
     el('a', { 'class': 'dz-btn dz-quiet', 'data-dz-outline': '', href: '/designer/outline?kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id) + '&design=' + encodeURIComponent(draft), text: 'Outline' }),
+    el('a', { 'class': 'dz-btn dz-quiet', 'data-dz-grid': '', href: '/designer/grid?kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id) + '&design=' + encodeURIComponent(draft), text: 'Grid' }),
     el('button', { type: 'button', 'class': 'dz-btn', 'data-dz-cancel': '', text: 'Cancel', on: { click: function () {
       api('POST', '/designer/cancel/' + encodeURIComponent(draft)).finally(function () { location.href = page; }); } } }),
     el('button', { type: 'button', 'class': 'dz-btn dz-primary', 'data-dz-done': '', text: 'Done', on: { click: function () {

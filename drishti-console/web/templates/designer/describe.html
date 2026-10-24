@@ -23,9 +23,7 @@
 <div class="dz-shell" data-describe>
   <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/build/new">Other ways to start</a> · <a href="/help/screen-designer#31-the-sutra-designer-customize-and-describe">Designer guide</a></nav>
   <h1>New screen</h1>
-  <nav class="dz-modes" aria-label="Designer modes">
-    {% for key, label, on in modes %}<a class="dz-btn" href="{{ '/designer/new' if key == 'describe' else ('/designer/outline' if key == 'outline' else '#') }}"{% if key == mode %} aria-current="page"{% endif %}{% if not on %} aria-disabled="true" title="{{ label }}: coming later"{% elif key == 'customize' %} title="Customize: open any page and press Customize"{% endif %}>{{ label }}</a>{% endfor %}
-  </nav>
+  {% include "designer/_modes.html" %}
   <form class="dz-describe" data-describe-form autocomplete="off">
     <label for="describe" class="text-muted-d">Describe the screen, the way you would type a command</label>
     <div class="dz-line">
@@ -44,6 +42,7 @@
     <div class="dz-actions">
       <a class="dz-btn" data-open href="#">Open full page</a>
       <a class="dz-btn" data-outline-open href="#">Edit in Outline</a>
+      <a class="dz-btn" data-grid-open href="#">Edit in Grid</a>
       <button type="button" class="dz-btn" data-show-sutra aria-expanded="false">Show the Sutra</button>
       <button type="button" class="dz-btn dz-primary" data-save>Save to my workspace</button>
     </div>

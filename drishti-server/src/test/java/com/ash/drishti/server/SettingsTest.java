@@ -81,6 +81,10 @@ class SettingsTest {
         patchAs(ana, "{\"landing\":\"//evil.example\"}").andExpect(status().isBadRequest());
         patchAs(ana, "{\"searchLimit\":5}").andExpect(status().isBadRequest());
         patchAs(ana, "{\"colour\":\"red\"}").andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/me/settings").header("Authorization", "Bearer " + tokens.mint(bea, List.of("viewer"), 60)))
+                .andExpect(jsonPath("$.designerMode").value("customize"));                  // the designer's mode a person opens first
+        patchAs(ana, "{\"designerMode\":\"grid\"}").andExpect(jsonPath("$.designerMode").value("grid"));
+        patchAs(ana, "{\"designerMode\":\"spreadsheet\"}").andExpect(status().isBadRequest());
         patchAs(ana, "{\"pinned\":[{\"kind\":\"../x\",\"id\":\"1\"}]}").andExpect(status().isBadRequest());
     }
 }

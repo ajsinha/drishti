@@ -1,0 +1,72 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* The designer's Grid mode (SCREEN_DESIGNER.md 31): the formula bar, the sheet (columns A, B, C and rows 1, 2, 3; a cell or merged range
+   an area holding panels), the live preview beside it (below it under 1200 px). Theme tokens only; on a phone it says Grid needs a wider
+   screen and offers Outline. The sheet's tracks are set by script (the CSP allows no style attributes). */
+.gd-shell { max-width: 110rem; }
+.ol-bar.gd-bar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: .6rem; }
+.gd-formula { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: .4rem; align-items: start; border: 1px solid var(--d-border);
+  border-radius: 10px; background: var(--d-surface); padding: .35rem .5rem; }
+.gd-name { min-width: 4.5rem; padding: .35rem .5rem; border-right: 1px solid var(--d-border); color: var(--d-ink); font-weight: 600; }
+.gd-fx { color: var(--d-muted); padding: .35rem 0; font-style: italic; }
+.gd-input { position: relative; min-width: 0; }
+.gd-input textarea { width: 100%; resize: vertical; border: 0; background: transparent; color: var(--d-ink); font-family: var(--d-font-mono);
+  font-size: .9rem; padding: .35rem .2rem; line-height: 1.45; }
+.gd-input textarea:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; border-radius: 4px; }
+.gd-input textarea[aria-invalid="true"] { color: var(--d-bad); }
+.gd-suggest { position: absolute; z-index: 20; left: 0; right: 0; top: 100%; margin: .2rem 0 0; padding: .25rem; list-style: none;
+  background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 8px; box-shadow: var(--d-shadow); max-height: 18rem; overflow: auto; }
+.gd-suggest li { padding: .3rem .45rem; border-radius: 6px; cursor: pointer; color: var(--d-muted); font-size: .82rem; overflow-wrap: anywhere; }
+.gd-suggest li code { color: var(--d-ink); font-size: .85rem; }
+.gd-suggest li[aria-selected="true"] { background: var(--d-accent-tint, var(--d-bg-2)); outline: 1px solid var(--d-accent); }
+.gd-error { margin: .5rem 0 0; padding: .5rem .7rem; border: 1px solid var(--d-bad); border-radius: 10px; background: var(--d-surface); }
+.gd-error p { margin: .25rem 0 0; color: var(--d-ink); }
+.gd-bad { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--d-ink); font-size: .88rem; }
+.gd-red { background: transparent; color: var(--d-bad); text-decoration: underline wavy var(--d-bad); font-weight: 700; }
+.gd-help { margin: .45rem 0; }
+.gd-tools { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; margin-bottom: .6rem; }
+.gd-nest { display: flex; gap: .4rem; align-items: center; font-size: .85rem; color: var(--d-ink); }
+.gd-wrap { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+.gd-sheet { display: grid; gap: 1px; background: var(--d-border); border: 1px solid var(--d-border); border-radius: 10px; overflow: auto; min-width: 0; }
+.gd-corner, .gd-colh, .gd-rowh { background: var(--d-surface-2, var(--d-bg-2)); color: var(--d-muted); font-size: .78rem; display: flex; align-items: center;
+  justify-content: center; user-select: none; }
+.gd-w { color: var(--d-faint, var(--d-muted)); margin-left: .2rem; }
+.gd-cell { background: var(--d-surface); padding: .35rem .45rem .45rem; display: flex; flex-direction: column; gap: .15rem; min-width: 0; cursor: cell;
+  outline: none; position: relative; }
+.gd-cell[draggable="true"] { cursor: grab; }
+.gd-cell.gd-in { background: var(--d-accent-tint, var(--d-bg-2)); }
+.gd-cell.gd-sel { box-shadow: inset 0 0 0 2px var(--d-accent); }
+.gd-cell:focus-visible { box-shadow: inset 0 0 0 3px var(--d-accent); }
+.gd-cell.gd-over { box-shadow: inset 0 0 0 2px dashed var(--d-accent); background: var(--d-accent-tint, var(--d-bg-2)); outline: 2px dashed var(--d-accent); outline-offset: -4px; }
+.gd-ref { font-size: .7rem; color: var(--d-muted); font-family: var(--d-font-mono); }
+.gd-title { color: var(--d-ink); font-size: .86rem; overflow-wrap: anywhere; }
+.gd-f { color: var(--d-link); font-size: .74rem; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.gd-notes { color: var(--d-muted); font-size: .72rem; overflow-wrap: anywhere; }
+.gd-empty { color: var(--d-faint, var(--d-muted)); font-size: .78rem; font-style: italic; }
+.gd-preview { border: 1px solid var(--d-border); border-radius: 12px; background: var(--d-surface); padding: .8rem; min-width: 0; }
+.gd-preview iframe { width: 100%; min-height: 44rem; border: 0; border-radius: 8px; background: var(--d-bg); }
+.gd-start { display: flex; flex-direction: column; gap: .8rem; max-width: 50rem; }
+.gd-narrow { display: none; }
+@media (max-width: 1200px) {
+  .gd-wrap { grid-template-columns: minmax(0, 1fr); }
+  .gd-preview iframe { min-height: 32rem; }
+}
+@media (max-width: 640px) {
+  .gd-shell { padding: .6rem 1rem; }
+  .gd-main { display: none; }
+  .gd-narrow { display: flex; flex-direction: column; gap: .6rem; align-items: flex-start; }
+  .dz-first { margin-left: 0; }
+}
