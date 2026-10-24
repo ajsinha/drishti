@@ -54,6 +54,16 @@ class UsEquitiesPackTest extends PublicPacksOnLakes {
         throw new AssertionError("no field " + label + " in " + kv);
     }
 
+    /** The id a card field links to, found by the document path it shows (the ticker shows as the company's name). */
+    private static String linkedId(JsonNode kv, String path) {
+        for (JsonNode f : kv.path("data").path("fields")) {
+            if (path.equals(f.path("path").asText())) {
+                return f.path("link").path("id").asText();
+            }
+        }
+        throw new AssertionError("no field at " + path + " in " + kv);
+    }
+
     @Test
     void everyAdvertisedExampleOpensAFullViewByItsSutra() throws Exception {
         JsonNode manifest = new ObjectMapper(new YAMLFactory()).readTree(Files.readString(PACK.resolve("pack.yaml")));
@@ -134,7 +144,7 @@ class UsEquitiesPackTest extends PublicPacksOnLakes {
         for (String ticker : List.of("AAPL", "C", "F")) {
             JsonNode v = view("us-company", ticker);
             assertThat(v.path("provenance").path("sutra").asText()).as(ticker).isEqualTo("us-company");
-            assertThat(field(panel(v.path("panels"), "card"), "Ticker")).as(ticker).isEqualTo(ticker);
+            assertThat(linkedId(panel(v.path("panels"), "card"), "$.TICKER")).as(ticker).isEqualTo(ticker);
             assertThat(panel(v.path("panels"), "filings").path("data").path("rows").size()).as(ticker).isPositive();
         }
         assertThat(view("us-company", "C").toString()).contains("Citigroup");
@@ -143,7 +153,7 @@ class UsEquitiesPackTest extends PublicPacksOnLakes {
 
     @Test
     void theTypeAheadFindsACompanyByTickerAndByName() throws Exception {
-        assertThat(suggested("USEQ C")).first().isEqualTo("C");                        // the exact ticker first
+        assertThat(suggested("USEQ C")).contains("C");                                 // a one-letter ticker
         assertThat(suggested("USEQ F")).contains("F");
         assertThat(suggested("USEQ Ford")).contains("F");                              // by name: the lake's type-ahead columns
         assertThat(suggested("USEQ Citigroup")).contains("C");

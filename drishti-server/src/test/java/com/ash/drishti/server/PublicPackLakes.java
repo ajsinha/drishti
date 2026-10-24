@@ -42,7 +42,8 @@ import java.util.zip.GZIPInputStream;
  * dataset of {@code data/testdata/testdata.yaml} for the packs named becomes {@code <lake>/<domain>/<kind>/}, the table the pack's
  * Delta connector reads (its {@code domain}, its {@code layout.<kind>.columns} promoted), keyed by the dataset's key, one partition per
  * business day. The days are the last three weekdays up to today, so a page opens "as of" today's business date (a weekend resolves to
- * the Friday) and the days before it. Built once per JVM into {@code target/test-lakes/<packs>}.
+ * the Friday) and the days before it. Built once per JVM into {@code target/test-lakes/<packs>-<pid>}:
+ * the test forks run in parallel, and two writers creating one table conflict.
  */
 final class PublicPackLakes {
 
@@ -57,7 +58,8 @@ final class PublicPackLakes {
     /** The business days written: the last three weekdays up to today. */
     static List<LocalDate> days() {
         List<LocalDate> out = new ArrayList<>();
-        for (LocalDate d = LocalDate.now(java.time.ZoneId.of("America/New_York"));     // the server's business-date zone out.size() < 3; d = d.minusDays(1)) {
+        LocalDate today = LocalDate.now(java.time.ZoneId.of("America/New_York"));       // the server's business-date zone
+        for (LocalDate d = today; out.size() < 3; d = d.minusDays(1)) {
             if (d.getDayOfWeek() != DayOfWeek.SATURDAY && d.getDayOfWeek() != DayOfWeek.SUNDAY) {
                 out.add(0, d);
             }
@@ -70,7 +72,7 @@ final class PublicPackLakes {
         String name = String.join("+", packs);
         return BUILT.computeIfAbsent(name, n -> {
             try {
-                return build(Path.of("target", "test-lakes", n).toAbsolutePath(), List.of(packs));
+                return build(Path.of("target", "test-lakes", n + "-" + ProcessHandle.current().pid()).toAbsolutePath(), List.of(packs));
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }

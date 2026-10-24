@@ -99,6 +99,27 @@ class DeltaLayoutTest {
         assertThat(p.cacheStats()).containsEntry("partitions", 0L);           // no whole day was loaded
     }
 
+    /**
+     * {@code layout.<kind>.type-ahead}: the values of the named promoted columns join each hit's subtitle, so the type-ahead finds an
+     * entity by them (a company by its name, not only its ticker); undeclared, only ids match.
+     */
+    @Test
+    void typeAheadColumnsFindAnEntityByTheirValues() throws Exception {
+        Map<String, String> s = new HashMap<>(Map.of("root", root.toString(), "domain", "desk", "source-name", "lake", "engine", engine(),
+                "layout.trade.columns", String.join(",", PROMOTED), "layout.trade.type-ahead", "book, counterparty.id"));
+        DeltaSourcePlugin p = new DeltaSourcePlugin();
+        p.start(DatedSourceContract.context(s));
+        var hits = p.search("trade", "CP-1", 100);
+        assertThat(hits).isNotEmpty().allSatisfy(h -> assertThat(h.subtitle()).contains("CP-1").endsWith("trade · lake"));
+        ColumnSet c = p.columns("trade", List.of("counterparty.id"), AsOf.LATEST).orElseThrow();
+        long withCp1 = java.util.stream.IntStream.range(0, c.size()).filter(i -> String.valueOf(c.value("counterparty.id", i)).startsWith("CP-1"))
+                .count();
+        assertThat(hits).hasSize((int) withCp1);
+        var t001 = p.search("trade", "T-001", 5).get(0);
+        assertThat(t001.subtitle()).startsWith(p.fetch(EntityRef.of("trade", "T-001")).orElseThrow().data().get("book").asText() + " · ");
+        assertThat(plugin(true).search("trade", "CP-1", 100)).isEmpty();               // undeclared: ids alone
+    }
+
     @Test
     void columnsAnswerWhatTheDocumentsSay() throws Exception {
         DeltaSourcePlugin p = plugin(true);

@@ -44,13 +44,14 @@ import org.springframework.test.web.servlet.MockMvc;
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false",
         "drishti.packs.enabled=core,world-economy,news-and-markets,us-equities,gleif",
-        "drishti.sources.connectors-dir=" + PublicPacksOnLakes.CONNECTORS, "drishti.sources.plugins.file.enabled=false",
+        "drishti.sources.plugins.file.enabled=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true"})
 @AutoConfigureMockMvc
 abstract class PublicPacksOnLakes {
 
-    static final String CONNECTORS = "target/test-data/public-pack-connectors";
+    /** The connector files written from the packs' templates at start: one folder per test fork (the forks run in parallel). */
+    static final String CONNECTORS = "target/test-data/public-pack-connectors-" + ProcessHandle.current().pid();
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) {
@@ -66,6 +67,7 @@ abstract class PublicPacksOnLakes {
             throw new UncheckedIOException(e);
         }
         r.add("DRISHTI_DELTA_ROOT", lake::toString);
+        r.add("drishti.sources.connectors-dir", () -> CONNECTORS);
     }
 
     @Autowired MockMvc mvc;
@@ -104,9 +106,13 @@ abstract class PublicPacksOnLakes {
 
     /** A search form's criteria compiled and run: the ids it found. */
     List<String> formSearch(String pack, String kind, String criteria) throws Exception {
-        JsonNode compiled = json.readTree(mvc.perform(post("/api/v1/forms/" + pack + "/" + kind + "/compile").header("Authorization", auth())
-                .contentType(MediaType.APPLICATION_JSON).content("{\"criteria\":[" + criteria + "]}")).andExpect(status().isOk()).andReturn()
-                .getResponse().getContentAsString(StandardCharsets.UTF_8));
+        var response = mvc.perform(post("/api/v1/forms/" + pack + "/" + kind + "/compile").header("Authorization", auth())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"criteria\":[" + criteria + "]}")).andReturn().getResponse();
+        String body = response.getContentAsString(StandardCharsets.UTF_8);
+        if (response.getStatus() != 200) {
+            throw new AssertionError("FORM " + pack + " " + kind + " " + criteria + ": " + response.getStatus() + " " + body);
+        }
+        JsonNode compiled = json.readTree(body);
         List<String> ids = new java.util.ArrayList<>();
         getJson("/api/v1/search", "q", compiled.path("command").asText()).path("rows").forEach(r -> ids.add(r.path("ref").path("id").asText()));
         return ids;
