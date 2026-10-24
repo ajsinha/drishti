@@ -24,9 +24,11 @@ A formula is the fragment (``name@version``, its ``with:`` parameters; after ``;
 settings). ``@A2.open.trade`` is ``@<the panel in A2>.open.trade``. What a formula cannot say in one line (a table's columns, emits,
 a fragment's nested parameters) is kept as it is when a formula is typed, and the cell says so; the grid keys (area, span, order, section,
 height, collapsible) belong to the cell. A panel a click opens (a table's ``children``) is a cell of its own under its parent's cell,
-named after it with a letter (A2a, A2b...), its formula ending in where it opens from::
+named after it with a letter (A2a, A2b...), its formula ending in where it opens from; a panel a click in THAT panel opens is a cell
+under it, named with a number (A2a1, A2a2...). Two levels are cells; a deeper one is kept and edited in Outline or Customize::
 
     A2a = cashflow-ladder@1(id: flows, rows: $src.EVENTS) opens from A2
+    A2a1 = field-list@1(id: flow, rows: $src; source: {kind: event, id: "@parent.open.ref"}) opens from A2a
 
 The column widths are ``layout.columns`` (12 units across). :func:`grid` reads a Sutra into cells and :func:`rebuild` writes the cells
 back: the round trip is exact on every pack Sutra. The steps (set a formula, merge, split, insert or delete a row or column, move a cell,
@@ -41,8 +43,9 @@ from core.designer import DesignerError, entry_title
 
 GRID_KEYS = ("area", "span", "order", "section", "height", "collapsible")
 LONG = ("columns", "emits", "children", "panels", "form")      # never in a formula: edited in Customize, Outline or the form editor
-CELL = re.compile(r"[A-Z]{1,2}[1-9]\d{0,2}[a-z]?")
-KID = re.compile(r"([A-Z]{1,2}[1-9]\d{0,2})([a-z])")
+CELL = re.compile(r"[A-Z]{1,2}[1-9]\d{0,2}(?:[a-z](?:[1-9]\d?)?)?")
+KID = re.compile(r"([A-Z]{1,2}[1-9]\d{0,2})([a-z])([1-9]\d?)?")
+LEVELS = 2                                                      # levels of opened panels drawn as cells (A2a, A2a1)
 OPENS = re.compile(r"\s+opens\s+from\s+(\S+)\s*$")
 UNITS = 12
 NAME = re.compile(r"[a-z][a-z0-9-]{0,39}")
@@ -357,7 +360,7 @@ def parse(text: str) -> list[dict]:
     for line in (text or "").split("\n"):
         base, pos = pos, pos + len(line) + 1
         body = line
-        m = re.match(r"\s*(?:[A-Z]{1,2}\d{1,3}[a-z]?(?::[A-Z]{1,2}\d{1,3})?\s*=)?\s*", body)
+        m = re.match(r"\s*(?:[A-Z]{1,2}\d{1,3}(?:[a-z]\d{0,2})?(?::[A-Z]{1,2}\d{1,3})?\s*=)?\s*", body)
         lead = m.end() if m else 0
         if not body[lead:].strip():
             continue
@@ -543,28 +546,51 @@ def grid(doc: dict) -> dict:
         for k in cell["kids"]:
             child = _child(panels, k)
             k["formula"] = formula(child, names) + " opens from " + k["from"]
-            k["kept"] = kept(child)
+            k["kept"] = [x for x in kept(child) if x != "children" or not k["shown"]]     # its children show below, as cells
             k["title"] = entry_title(child)
             k["grid"] = {x: child[x] for x in GRID_KEYS if x in child}
     return out
 
 
 def _kids(cell: dict, panels: list) -> list:
-    """The panels a click in this cell opens (its panels' ``children``), each a cell of its own: A2a, A2b... in order."""
-    out = []
+    """The panels a click in this cell opens (its panels' ``children``), each a cell of its own: A2a, A2b... in order, and under each
+    the panels a click in it opens: A2a1, A2a2... (two levels; a deeper one stays in its parent, *keeps children*). Depth first, so
+    the list reads parent, child, grandchild as drawn."""
+    out: list = []
     for i in cell["panels"]:
         e = panels[i]
-        groups = e.get("children") if isinstance(e, dict) and isinstance(e.get("children"), list) else []
-        for gi, grp in enumerate(groups):
-            for pj, c in enumerate(grp.get("panels") or [] if isinstance(grp, dict) else []):
-                if isinstance(c, dict) and len(out) < 26:
-                    out.append({"ref": cell["ref"] + chr(97 + len(out)), "parent": i, "group": gi, "index": pj, "id": panel_id(c),
-                                "place": grp.get("place") or "", "from": cell["ref"] if len(cell["panels"]) == 1 else panel_id(e) or cell["ref"]})
+        up = cell["ref"] if len(cell["panels"]) == 1 else panel_id(e) or cell["ref"]
+        _opened(out, e, i, [], cell["ref"], up, 1)
     return out
 
 
+def _opened(out: list, e, root: int, path: list, ref: str, up: str, level: int) -> None:
+    groups = e.get("children") if isinstance(e, dict) and isinstance(e.get("children"), list) else []
+    n = 0
+    for gi, grp in enumerate(groups):
+        for pj, c in enumerate(grp.get("panels") or [] if isinstance(grp, dict) else []):
+            if not isinstance(c, dict) or n >= (26 if level == 1 else 99):
+                continue
+            n += 1
+            k = {"ref": ref + (chr(96 + n) if level == 1 else str(n)), "parent": root, "path": path + [[gi, pj]], "group": gi, "index": pj,
+                 "level": level, "id": panel_id(c), "place": grp.get("place") or "", "from": up, "up": ref, "shown": False}
+            out.append(k)
+            if level < LEVELS:
+                at = len(out)
+                _opened(out, c, root, k["path"], k["ref"], k["ref"], level + 1)
+                k["shown"] = len(out) > at
+
+
+def _holder(panels: list, k: dict) -> tuple[dict, list]:
+    """The panel a child cell opens from and its ``children`` groups (the child is ``groups[k.group].panels[k.index]``)."""
+    owner = panels[k["parent"]]
+    for gi, pj in k["path"][:-1]:
+        owner = owner["children"][gi]["panels"][pj]
+    return owner, owner["children"]
+
+
 def _child(panels: list, k: dict) -> dict:
-    return panels[k["parent"]]["children"][k["group"]]["panels"][k["index"]]
+    return _holder(panels, k)[1][k["group"]]["panels"][k["index"]]
 
 
 def _all_ids(panels: list) -> set:
@@ -573,8 +599,7 @@ def _all_ids(panels: list) -> set:
         if isinstance(e, dict):
             out.add(panel_id(e))
             for grp in e.get("children") or [] if isinstance(e.get("children"), list) else []:
-                for c in grp.get("panels") or [] if isinstance(grp, dict) else []:
-                    out.add(panel_id(c))
+                out |= _all_ids([c for c in grp.get("panels") or [] if isinstance(c, dict)] if isinstance(grp, dict) else [])
     return out - {""}
 
 
@@ -605,7 +630,7 @@ def _opens(text: str, k: dict) -> str:
     line = lines[0] if lines else ""
     m = OPENS.search(line)
     if m:
-        if m.group(1) not in (k["from"], k["ref"][:-1]):
+        if m.group(1) not in (k["from"], k["up"]):
             raise FormulaError(f"it opens from {k['from']}: to open it from another table, move it there in Outline", m.start(1), m.end(1))
         line = line[:m.start()]
     return line
@@ -624,7 +649,7 @@ def rebuild(doc: dict, g: dict) -> dict:
         for k in cell.get("kids") or []:
             calls = parse(_opens(k.get("formula") or "", k))
             if calls:
-                grp = panels[k["parent"]]["children"][k["group"]]["panels"]
+                grp = _holder(panels, k)[1][k["group"]]["panels"]
                 grp[k["index"]] = apply_call(grp[k["index"]], calls[0], back)
     if g["mode"] == "areas":
         m = [["."] * g["cols"] for _ in range(g["rows"])]
@@ -673,21 +698,23 @@ def _resolve(call: dict, kit_refs: list | None) -> None:
 
 
 def set_child(doc: dict, ref: str, text: str, kit_refs: list | None = None) -> dict:
-    """A child cell's formula typed (A2a): the panel a click opens changes, keeping what the formula does not show; an empty formula
+    """A child cell's formula typed (A2a, or A2a1 under it): the panel a click opens changes, keeping what the formula does not show; an empty formula
     removes it (and its group when it was the last)."""
     g = grid(doc)
     k = next((x for c in g["cells"] for x in c.get("kids") or [] if x["ref"] == ref), None)
     if k is None:
-        raise DesignerError(f"there is no cell {ref} on this screen: a click in {ref[:-1]} opens fewer panels")
+        up = KID.fullmatch(ref)
+        raise DesignerError(f"there is no cell {ref} on this screen: a click in {up.group(1) + (up.group(2) if up.group(3) else '')} opens "
+                            "fewer panels")
     calls = parse(_opens(text, k))
-    groups = doc["panels"][k["parent"]]["children"]
+    owner, groups = _holder(doc["panels"], k)
     grp = groups[k["group"]]["panels"]
     if not calls:
         grp.pop(k["index"])
         if not grp:
             groups.pop(k["group"])
         if not groups:
-            doc["panels"][k["parent"]].pop("children")
+            owner.pop("children")
         return doc
     _resolve(calls[0], kit_refs)
     grp[k["index"]] = apply_call(grp[k["index"]], calls[0], reader(doc, g))

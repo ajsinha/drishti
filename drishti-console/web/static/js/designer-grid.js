@@ -19,8 +19,8 @@
    and the cell keeps what it had); suggestions come from the UI kit, the panels on the page and what they emit. Merge, split, insert and
    delete rows and columns, drag a cell onto another; arrows, Shift+arrows, Enter and Esc. A column's width (12 units across) is set by
    dragging the edge of its header (or the arrow keys on the edge) or typing it on the header. A panel a click opens is a cell of its own
-   under its parent's cell (A2a, A2b...: "↳ opens from A2"), picked with a click or ArrowDown from the parent, its formula typed the same
-   way. After every step the live preview is drawn again in place (its panels swapped, no reload) and the grid is read again. */
+   under its parent's cell (A2a, A2b...: "↳ opens from A2"; one a click in it opens, one step further in: A2a1, A2a2...), picked with a
+   click or ArrowDown from the parent (ArrowUp goes back), its formula typed the same way. After every step the live preview is drawn again in place (its panels swapped, no reload) and the grid is read again. */
 (function () {
   'use strict';
   var root = document.querySelector('[data-grid]');
@@ -109,14 +109,14 @@
         body.push(el('strong', { 'class': 'gd-title', text: x.titles[k] }));
         body.push(el('code', { 'class': 'gd-f', text: x.formulas[k] }));
         var notes = [];
-        var keeps = (x.kept[k] || []).filter(function (n) { return n !== 'children' || !(x.kids || []).some(function (kd) { return kd.parent === p; }); });   // its children show below, as cells
+        var keeps = (x.kept[k] || []).filter(function (n) { return n !== 'children' || !(x.kids || []).some(function (kd) { return kd.parent === p && kd.level === 1; }); });   // its children show below, as cells
         if (keeps.length) { notes.push('keeps ' + keeps.join(', ')); }
         Object.keys(x.grid[k] || {}).forEach(function (key) { notes.push(key + ' ' + x.grid[k][key]); });
         if (notes.length) { body.push(el('span', { 'class': 'gd-notes', text: notes.join(' · ') })); }
       });
       (x.kids || []).forEach(function (kd) {                                  // a panel a click opens: a cell of its own, under its parent
         var on = sel.kid === kd.ref && x.r <= sel.r && sel.r < x.r + x.rs && x.c <= sel.c && sel.c < x.c + x.cs;
-        var kid = el('div', { 'class': 'gd-kid' + (on ? ' gd-sel' : ''), role: 'gridcell', tabindex: on ? '0' : '-1', 'aria-selected': on ? 'true' : 'false',
+        var kid = el('div', { 'class': 'gd-kid' + (kd.level > 1 ? ' gd-kid2' : '') + (on ? ' gd-sel' : ''), role: 'gridcell', tabindex: on ? '0' : '-1', 'aria-selected': on ? 'true' : 'false',
           'data-gd-cell': kd.ref, 'data-gd-kid': kd.ref, 'aria-label': kd.ref + ', opens from ' + kd.from + (kd.place ? ' (' + kd.place + ')' : '') }, [
           el('span', { 'class': 'gd-ref', text: '↳ ' + kd.ref }), el('strong', { 'class': 'gd-title', text: kd.title }), el('code', { 'class': 'gd-f', text: kd.formula }),
           (kd.kept || []).length ? el('span', { 'class': 'gd-notes', text: 'keeps ' + kd.kept.join(', ') }) : null]);
@@ -295,8 +295,8 @@
   function context() {
     var v = input.value, at = input.selectionStart, start = at;
     while (start > 0 && /[\w@.\-\/$]/.test(v[start - 1])) { start--; }
-    var lineStart = v.lastIndexOf('\n', start - 1) + 1, before = v.slice(lineStart, start).replace(/^\s*[A-Z]{1,2}\d{1,3}[a-z]?\s*=\s*/, '').replace(/^\s*=/, '');
-    var head = (v.slice(lineStart).match(/^\s*(?:[A-Z]{1,2}\d{1,3}[a-z]?\s*=\s*)?=?\s*([\w@\/-]+)\(/) || [])[1] || '';
+    var lineStart = v.lastIndexOf('\n', start - 1) + 1, before = v.slice(lineStart, start).replace(/^\s*[A-Z]{1,2}\d{1,3}(?:[a-z]\d{0,2})?\s*=\s*/, '').replace(/^\s*=/, '');
+    var head = (v.slice(lineStart).match(/^\s*(?:[A-Z]{1,2}\d{1,3}(?:[a-z]\d{0,2})?\s*=\s*)?=?\s*([\w@\/-]+)\(/) || [])[1] || '';
     return { word: v.slice(start, at), start: start, end: at, first: !before.trim(), after: (before.match(/[(,;]\s*$/) || [''])[0], head: head };
   }
   function suggest() {

@@ -69,8 +69,8 @@ def test_every_pack_sutra_round_trips_as_a_one_column_grid(path):
             [call] = dg.parse(f)
             assert dg.apply_call(doc["panels"][i], call, dg.reader(doc, g)) == doc["panels"][i], f
         for k in cell["kids"]:                                            # and every panel a click opens, from its own cell
-            child = doc["panels"][k["parent"]]["children"][k["group"]]["panels"][k["index"]]
-            assert k["formula"].endswith(" opens from " + cell["ref"]) and k["ref"].startswith(cell["ref"])
+            child = dg._child(doc["panels"], k)
+            assert k["formula"].endswith(" opens from " + k["from"]) and k["ref"].startswith(cell["ref"])
             [call] = dg.parse(dg._opens(k["formula"], k))
             assert dg.apply_call(child, call, dg.reader(doc, g)) == child, k["formula"]
             again = copy.deepcopy(doc)
@@ -146,6 +146,86 @@ def test_a_panel_a_click_opens_is_a_cell_of_its_own():
     dg.set_formula(doc, "A1b", "")                                                         # emptied: the panel goes
     dg.set_formula(doc, "A1a", "")
     assert "children" not in doc["panels"][0]
+
+
+DEEP = """rachana: 1
+sutra: qa-deep
+version: 1
+match: { kind: portfolio-trades }
+layout:
+  areas: ["trades side"]
+panels:
+  - id: trades
+    kind: table
+    area: trades
+    rows: $.TRADES
+    columns: [ { label: Trade, bind: "@.TRADE_ID" } ]
+    emits: [ { name: open, on: row-click, payload: { id: "@.TRADE_ID" } } ]
+    children:
+      - place: detail-below
+        source: { kind: trade, id: "@parent.open.id" }
+        panels:
+          - id: flows
+            kind: table
+            rows: $src.EVENTS
+            columns: [ { bind: "@.EVENT_DATE" } ]
+            emits: [ { name: open, on: row-click, payload: { ref: "@.EVENT_ID" } } ]
+            children:
+              - place: expand-row
+                source: { kind: event, id: "@parent.open.ref" }
+                panels:
+                  - { use: field-list@1, with: { id: event, rows: $src, title: "The event" } }
+                  - id: fixings
+                    kind: table
+                    rows: $src.FIXINGS
+                    columns: [ { bind: "@.RATE" } ]
+                    children: [ { place: expand-row, panels: [ { id: deeper, kind: kv, rows: $src } ] } ]
+          - { id: legs, kind: table, rows: $src.LEGS, columns: [ { bind: "@.LEG" } ] }
+  - { id: note, kind: markdown, area: side, text: "See @event.open.x and @flows.open.ref" }
+"""
+
+
+def test_two_levels_of_opened_panels_are_cells():
+    doc = designer.load(DEEP)
+    assert doc["panels"][0]["children"][0]["panels"][0]["emits"][0]["on"] == "row-click"     # 'on' is a key, not YAML 1.1's true
+    assert roundtrip(doc) == designer.dump(doc)
+    g = dg.grid(doc)
+    a1 = next(c for c in g["cells"] if c["ref"] == "A1")
+    assert [(k["ref"], k["level"], k["from"]) for k in a1["kids"]] == [("A1a", 1, "A1"), ("A1a1", 2, "A1a"), ("A1a2", 2, "A1a"), ("A1b", 1, "A1")]
+    kid = {k["ref"]: k for k in a1["kids"]}
+    assert kid["A1a1"]["formula"] == 'field-list@1(id: event, rows: $src, title: The event) opens from A1a'
+    assert kid["A1a"]["kept"] == ["columns", "emits"]                          # its children show as cells
+    assert kid["A1a2"]["kept"] == ["columns", "children"]                      # a third level is kept, unchanged
+    b1 = next(c for c in g["cells"] if c["ref"] == "B1")
+    assert b1["formula"] == 'markdown(id: note, text: See @A1a1.open.x and @A1a.open.ref)'
+    for k in a1["kids"]:                                                       # every child cell typed as it reads: the same document
+        again = copy.deepcopy(doc)
+        dg.set_formula(again, k["ref"], k["formula"])
+        assert designer.dump(again) == designer.dump(doc), k["ref"]
+    dg.set_formula(doc, "A1a1", "field-list(id: event, rows: $src, title: Event @parent.open.ref)", ["field-list@1"])   # 'opens from' left out
+    ev = doc["panels"][0]["children"][0]["panels"][0]["children"][0]["panels"][0]
+    assert ev == {"use": "field-list@1", "with": {"id": "event", "rows": "$src", "title": "Event @parent.open.ref"}}
+    dg.set_formula(doc, "B1", "markdown(id: note, text: See @A1a2.open.x)")      # @A1a1. and @A1a2. read back as the panel's id
+    assert doc["panels"][1]["text"] == "See @fixings.open.x"
+    before = copy.deepcopy(doc)
+    for other in ("A1", "A1b", "flows-not"):
+        text = f"table(id: fixings) opens from {other}"
+        with pytest.raises(dg.FormulaError, match="it opens from A1a") as e:
+            dg.set_formula(doc, "A1a2", text)
+        assert text[e.value.start:e.value.end] == other
+    with pytest.raises(designer.DesignerError, match="no cell A1a3 .* a click in A1a opens"):
+        dg.set_formula(doc, "A1a3", "table(id: x)")
+    with pytest.raises(designer.DesignerError, match="no cell A1b1"):
+        dg.set_formula(doc, "A1b1", "table(id: x)")
+    assert doc == before
+    dg.set_formula(doc, "A1a2", "table(id: fixings, rows: $src.FIX) opens from A1a")
+    fx = doc["panels"][0]["children"][0]["panels"][0]["children"][0]["panels"][1]
+    assert fx["rows"] == "$src.FIX" and fx["children"][0]["panels"][0]["id"] == "deeper"   # the third level kept
+    dg.set_formula(doc, "A1a1", "")                                                       # emptied: the grandchild goes
+    dg.set_formula(doc, "A1a1", "")
+    assert "children" not in doc["panels"][0]["children"][0]["panels"][0]
+    assert [k["ref"] for k in next(c for c in dg.grid(doc)["cells"] if c["ref"] == "A1")["kids"]] == ["A1a", "A1b"]
+    assert roundtrip(doc) == designer.dump(doc)
 
 
 def test_column_widths_in_twelve_units_round_trip():
