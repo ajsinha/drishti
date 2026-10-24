@@ -29,6 +29,19 @@
   isn't answering; showing data from 10:42"; "live" on a live page). The Sutra designer: Describe's `refresh 30s` takes effect, and
   Customize has **Refresh <part> every …**. Tests: `SutraParserTest`, `SutraNextEventsTest`, `SettingsTest`, `test_refresh.py`,
   `test_designer.py`, `test_refresh_browser.py`.
+- **The layout grid** ([SUTRA_NEXT.md](docs/architecture/SUTRA_NEXT.md#13-layout-placing-panels) section 13,
+  [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md#layout-the-grid-areas-split-tabs-sections)): an optional `layout:` on a
+  Sutra places panels on the 12-column grid: named areas drawn as a picture (`areas`, `columns`), a split with a draggable divider
+  (its position kept per reader), areas shown as tabs, a sticky area, the flow grid's collapsible sections, the phone's stacking
+  order and a tablet picture; on a panel `area: <name>`, `order`, `section`, `collapsible`. `user-can-arrange: true` lets readers drag
+  panels to another place or area and resize them, for themselves (`/api/v1/me/arrange/<sutra>`, *Reset layout*). Automatic flow stays
+  the default and `area: main|right` keeps working (mapped onto the areas). Lint `DRS-2059`. A grid screen replaces layout mode
+  (Alt+L). Tests: `ScreenLayoutTest`, `ScreenGridTest`, `MyPagesTest`, `test_screen_grid.py`, `test_screen_grid_browser.py`.
+- **Designer: Outline mode** ([SCREEN_DESIGNER.md](docs/guides/SCREEN_DESIGNER.md#outline) section 31): the screen as a list in plain
+  words (sections, panels, what a click opens under a table) beside the live preview; drag to reorder, to nest a panel under a table
+  (it opens on a click: where is asked with *When I click*'s choices) or out again; *+ Add a section*; the picked item's settings
+  (width, area, section, folding, a child's place and when it shows, refresh where there is one). Customize gets layout handles on a
+  grid screen (narrower, wider, the area). Tests: `test_designer_outline.py`, `test_screen_grid_browser.py`.
 - **One server per screen (sticky routing for Sutra Next screens)** ([SUTRA_NEXT.md](docs/architecture/SUTRA_NEXT.md#7-events)
   section 7, [DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md) 11.1, [NET.md](docs/admin/NET.md)): in a cluster a selection token
   names the node that issued it (`tok_<node>~…`); the console sends a screen's clicks and children carrying tokens to that node

@@ -534,7 +534,8 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
                         pv.businessDate() == null ? null : pv.businessDate().toString(),
                         fresh.lastUpdate() == null ? null : fresh.lastUpdate().toString(),
                         fresh.staleAfter() == null ? null : fresh.staleAfter().toString(), fresh.stale() && current,
-                        s.version() > 0 ? s.name() : null, hidden.count(), hidden.panels()), timings).withControls(resolved.views(), selects(s));
+                        s.version() > 0 ? s.name() : null, hidden.count(), hidden.panels()), timings).withControls(resolved.views(), selects(s))
+                .withLayout(com.ash.drishti.engine.view.ScreenGrid.of(layout.sutra()));
         if (doc.data().get("partial").asBoolean()) {               // some of what makes the document did not answer: the page says so
             List<String> what = new ArrayList<>();
             DataNode m = doc.data().get("missing");

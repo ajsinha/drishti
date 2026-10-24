@@ -95,3 +95,6 @@
   .dz-line { flex-direction: column; }
   .dz-result iframe { min-height: 26rem; }
 }
+/* layout handles on a grid screen (SUTRA_NEXT.md 13): narrower, wider, the area */
+.dz-lay { display: inline-flex; gap: .2rem; align-items: center; }
+.dz-span { font-size: .75rem; color: var(--d-muted); min-width: 2.4rem; text-align: center; }

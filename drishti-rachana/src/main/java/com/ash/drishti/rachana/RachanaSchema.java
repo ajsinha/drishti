@@ -76,6 +76,18 @@ public final class RachanaSchema {
                 "items", controlSchema()));
         p.put("refresh", refreshSchema("Refresh every top-level panel without its own refresh:"));
         p.put("panels", Map.of("type", "array", "items", Map.of("$ref", "#/$defs/panel")));
+        Map<String, Object> grid = new LinkedHashMap<>();         // SUTRA_NEXT.md 13: lint DRS-2059
+        grid.put("areas", Map.of("type", "array", "items", Map.of("type", "string"), "description", "A picture of the screen: one string a row, one area name a cell (. empty)"));
+        grid.put("columns", Map.of("type", List.of("integer", "array"), "description", "12, or the grid columns of each area column (summing to 12)"));
+        grid.put("split", Map.of("type", "object", "description", "{ between: [left, right], resizable: true, remember: user }: a draggable divider between two side-by-side areas"));
+        grid.put("tabs", Map.of("type", "array", "items", Map.of("type", "string"), "description", "Areas whose panels show as tabs"));
+        grid.put("sections", Map.of("type", "array", "description", "Collapsible sections of the flow grid: { id, title, collapsed }"));
+        grid.put("sticky", text("The area (or panel) that stays at the top while the page scrolls"));
+        grid.put("user-can-arrange", Map.of("type", "boolean", "description", "Readers may move and resize panels within the grid for themselves"));
+        grid.put("phone", Map.of("type", "array", "items", Map.of("type", "string"), "description", "The stacking order on a phone: areas or panel ids"));
+        grid.put("tablet", Map.of("type", "object", "description", "{ areas, columns }: the picture at tablet width"));
+        p.put("layout", Map.of("type", "object", "properties", grid, "additionalProperties", false,
+                "description", "Optional placement (SUTRA_NEXT.md 13): without it panels flow in the main and right columns"));
         Map<String, Object> keys = new LinkedHashMap<>();
         KEYS.forEach(k -> keys.put(k, text(EL + ", or impact or raw")));
         p.put("keys", Map.of("type", "object", "properties", keys, "additionalProperties", false,
@@ -148,7 +160,10 @@ public final class RachanaSchema {
         common.put("description", text("What the panel answers, for authors and reviewers"));
         common.put("key", Map.of("type", "string", "enum", KEYS));
         common.put("code", text("A short code at the heading's right (CRV, REFS)"));
-        common.put("area", Map.of("type", "string", "enum", List.of("main", "right")));
+        common.put("area", Map.of("type", "string", "description", "main or right (the flow), or an area named in layout.areas"));
+        common.put("order", Map.of("type", "integer", "minimum", 0, "maximum", 999, "description", "Sort key within the area or the flow (lower first)"));
+        common.put("section", text("The id of one of layout.sections this panel sits in"));
+        common.put("collapsible", Map.of("type", "boolean", "description", "The reader may fold the panel to its heading (remembered per reader)"));
         common.put("span", Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.Panel.MAX_SPAN,
                 "description", "Width in columns of a 12-column grid (default: the whole column)"));
         common.put("height", Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.Panel.MAX_HEIGHT,

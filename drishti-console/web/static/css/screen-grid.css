@@ -1,0 +1,80 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* A screen laid out with layout: (SUTRA_NEXT.md 13): named areas on the 12-column grid, a split's divider, tabs, a sticky area, the
+   flow grid's collapsible sections, panels a reader may fold, arrange and resize. Theme tokens only; the picture's template is set
+   by screen-grid.js. Phone: one column in the phone order, 16 px gutters, never a sideways scroll. */
+.vgrid.sg { display: block; padding: .8rem 1.25rem 1.2rem; }
+.sg-areas { display: grid; gap: .8rem; position: relative; grid-template-columns: minmax(0, 1fr); }
+.sg-area { min-width: 0; display: flex; flex-direction: column; gap: .6rem; }
+.sg-cells { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: .8rem; align-content: start; min-width: 0; }
+.sg-cells > :not([class*="c-span-"]) { grid-column: span 12; }
+.sg-top { margin-bottom: .8rem; }
+.sg-top:empty { display: none; }
+.sg-sticky { position: sticky; top: 0; z-index: 20; background: var(--d-bg, var(--d-surface)); padding-bottom: .4rem; }
+
+/* the split's divider */
+.sg-split { position: absolute; width: .8rem; margin-left: -.4rem; cursor: col-resize; z-index: 15; display: flex; justify-content: center;
+  touch-action: none; border-radius: 4px; }
+.sg-split::before { content: ""; width: 2px; height: 100%; background: var(--d-border); border-radius: 2px; }
+.sg-split:hover::before, .sg-split:focus-visible::before, .sg-split.sg-dragging::before { background: var(--d-accent); width: 3px; }
+.sg-split:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
+
+/* tabs */
+.sg-tablist { display: flex; gap: .2rem; border-bottom: 1px solid var(--d-border); overflow-x: auto; }
+.sg-tab { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--d-muted); padding: .35rem .7rem; font: inherit;
+  white-space: nowrap; cursor: pointer; }
+.sg-tab[aria-selected="true"] { color: var(--d-ink); border-bottom-color: var(--d-accent); }
+.sg-tab:focus-visible { outline: 2px solid var(--d-accent); outline-offset: -2px; }
+
+/* sections and folded panels */
+.sg-sec { margin-top: .4rem; }
+.sg-sec-h { font-size: .95rem; margin: .4rem 0 .6rem; }
+.sg-sec-h button { background: none; border: 0; color: var(--d-ink); font: inherit; font-weight: 600; padding: .2rem 0; cursor: pointer;
+  display: inline-flex; gap: .4rem; align-items: center; }
+.sg-sec-h button:focus-visible, .sg-fold:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
+.sg-sec-h .bi { transition: transform .15s; }
+.sg-closed .sg-sec-h .bi { transform: rotate(-90deg); }
+.sg-count { color: var(--d-muted); font-weight: 400; font-size: .8rem; }
+.sg-fold { background: none; border: 0; color: var(--d-muted); padding: 0 .2rem; cursor: pointer; font: inherit; }
+.sg-fold:hover { color: var(--d-ink); }
+.pnl.sg-folded > .pnl-b { display: none; }
+.pnl.sg-folded { height: auto !important; }
+
+/* a reader arranging */
+.sg-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .8rem; margin-bottom: .6rem; color: var(--d-muted); font-size: .85rem; }
+.sg-reset { background: none; border: 1px solid var(--d-border); border-radius: var(--d-radius, 6px); color: var(--d-ink); padding: .15rem .6rem;
+  font: inherit; cursor: pointer; }
+.sg-reset:hover { border-color: var(--d-accent); }
+.sg-handle { cursor: grab; color: var(--d-muted); padding: 0 .3rem; user-select: none; letter-spacing: -.1em; }
+.sg-grip { position: absolute; right: -2px; top: 0; bottom: 0; width: 8px; cursor: ew-resize; touch-action: none; }
+.sg-grip:hover, .sg-grip:focus-visible { background: var(--d-accent-tint, var(--d-border)); outline: none; }
+[data-sg-arrange] .pnl { position: relative; }
+.pnl.sg-over { outline: 2px dashed var(--d-accent); outline-offset: 3px; }
+.sg-cells.sg-over-area { outline: 2px dashed var(--d-accent); outline-offset: 4px; border-radius: 6px; min-height: 3rem; }
+
+/* tablet: the right column drops under the main one unless the Sutra draws a tablet picture (screen-grid.js) */
+/* phone: one column, in the phone order */
+@media (max-width: 640px) {
+  .vgrid.sg { padding: .6rem 1rem 1rem; }
+  .sg-areas { display: flex !important; flex-direction: column; }
+  .sg-area:not(.sg-tabbed), .sg-area:not(.sg-tabbed) > .sg-cells { display: contents; }
+  .sg-area.sg-tabbed { order: var(--sg-po, 0); }
+  .sg-area > .sg-cells > .pnl, .sg-cells > .pnl { order: var(--sg-po, 0); grid-column: span 12 !important; }
+  .sg-cells { grid-template-columns: minmax(0, 1fr); }
+  .sg-cells > * { grid-column: 1 / -1 !important; }
+  .sg-split, .sg-grip, .sg-handle { display: none; }
+  .sg-sticky { position: static; }
+}

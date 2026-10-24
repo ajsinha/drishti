@@ -25,13 +25,13 @@ from urllib.parse import quote
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core import describe, designer, designer_links
+from core import describe, designer, designer_links, designer_outline, screen_grid
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes.common import ident, render
 
 router = APIRouter(prefix="/designer", include_in_schema=False)
-MODES = [("customize", "Customize", True), ("describe", "Describe", True), ("outline", "Outline", False), ("grid", "Grid", False)]
+MODES = [("customize", "Customize", True), ("describe", "Describe", True), ("outline", "Outline", True), ("grid", "Grid", False)]
 _ALIASES: dict = {"at": 0.0, "table": {}, "cat": {}}
 _MIGRATED: set = set()                                # users whose "My page · <kind>" Designs were turned into flags
 
@@ -216,25 +216,30 @@ async def customize(request: Request):
     if isinstance(body, JSONResponse):
         return body
     kind, id_ = str(body.get("kind") or ""), str(body.get("id") or "")
-    backend, me = request.app.state.backend, ident(request)
     try:
-        mine = await page_design(request, kind)
-        if mine:
-            full = await backend.designs("GET", f"/{mine['id']}", me)
-            text, notes = full.get("sutra") or "", full.get("notes") or ""
-        else:
-            vm = await backend.view(kind, id_, me)
-            at = _pack_sutra(vm)
-            if not at:
-                return _say("This page is laid out by inference alone: there is no Sutra to customise yet. Try Describe instead.")
-            text, notes = await backend.sutra_source(at[0], at[1], me), ""
-        doc = designer.rename(designer.load(text), kind)
-        draft = await backend.designs("POST", "", me, {"name": "", "kind": kind, "sutra": designer.dump(doc), "notes": notes})
+        draft = await _new_draft(request, kind, id_)
     except designer.DesignerError as e:
         return _say(str(e))
     except BackendError as e:
         return _problem(e)
-    return {"draft": draft["id"], "url": f"/v/{quote(kind)}/{quote(id_)}?customize={draft['id']}"}
+    return {"draft": draft, "url": f"/v/{quote(kind)}/{quote(id_)}?customize={draft}"}
+
+
+async def _new_draft(request: Request, kind: str, id_: str) -> str:
+    """A scratch draft of this page's Sutra (the user's own page if they keep one, else the pack's): its id."""
+    backend, me = request.app.state.backend, ident(request)
+    mine = await page_design(request, kind)
+    if mine:
+        full = await backend.designs("GET", f"/{mine['id']}", me)
+        text, notes = full.get("sutra") or "", full.get("notes") or ""
+    else:
+        vm = await backend.view(kind, id_, me)
+        at = _pack_sutra(vm)
+        if not at:
+            raise designer.DesignerError("This page is laid out by inference alone: there is no Sutra to customise yet. Try Describe instead.")
+        text, notes = await backend.sutra_source(at[0], at[1], me), ""
+    doc = designer.rename(designer.load(text), kind)
+    return (await backend.designs("POST", "", me, {"name": "", "kind": kind, "sutra": designer.dump(doc), "notes": notes}))["id"]
 
 
 async def _draft(request: Request, draft: str) -> tuple[dict, dict, dict]:
@@ -261,6 +266,7 @@ async def state(request: Request, draft: str, kind: str = "", id: str = ""):
         brought = (uses.get(i) or {}).get("panels") or []
         ids = [b["id"] for b in brought if b.get("id")] or [str(e.get("id") or "")]
         part = {"index": i, "ids": ids, "title": designer.entry_title(e, brought), "used": bool(e.get("use")), "refresh": designer.refresh_of(e),
+                "span": e.get("span") or 12, "area": e.get("area") or "",
                 "tables": [b["id"] for b in brought if b.get("kind") == "table"] if e.get("use") else []}
         if not e.get("use") and e.get("kind") == "table" and isinstance(e.get("columns"), list):
             chosen = [designer.bound_field(c.get("bind")) for c in e["columns"] if isinstance(c, dict)]
@@ -277,7 +283,8 @@ async def state(request: Request, draft: str, kind: str = "", id: str = ""):
     mine = await page_design(request, kind)
     return {"parts": parts, "tables": tables, "hidden": [{"index": i, "title": h.get("title")} for i, h in enumerate(keep.get("hidden") or [])],
             "kit": designer.search(await _kit(request), "", record), "places": designer.PLACE_LABELS,
-            "mine": {"id": mine["id"], "shared": mine.get("shared")} if mine else None, "yaml": full.get("sutra") or ""}
+            "mine": {"id": mine["id"], "shared": mine.get("shared")} if mine else None, "yaml": full.get("sutra") or "",
+            "grid": bool(doc.get("layout")), "areas": screen_grid.area_names(doc.get("layout"))}
 
 
 @router.get("/kit/{draft}")
@@ -323,6 +330,8 @@ async def op(request: Request, draft: str):
             designer.refresh(doc, body.get("index"), body.get("seconds", 0))
         elif what == "add":
             designer.add(doc, str(body.get("ref") or ""), body.get("with") or {}, body.get("at"))
+        elif what in ("span", "area"):                # layout handles on a grid screen (SUTRA_NEXT.md 13)
+            designer_outline.setting(doc, body.get("index"), what, body.get("value"))
         else:
             return _say("unknown step")
         await backend.designs("PATCH", f"/{draft}", me, {"sutra": designer.dump(doc), "notes": designer.notes_with(full.get("notes") or "", keep)})
@@ -462,3 +471,83 @@ async def describe_save(request: Request, draft: str):
     except BackendError as e:
         return _problem(e)
     return {"design": got.get("id", draft), "name": name, "build": f"/build/d/{got.get('id', draft)}"}
+
+
+# ---- Outline ----------------------------------------------------------------------------------------------------------------------
+
+@router.get("/outline")
+async def outline(request: Request, kind: str = "", id: str = "", design: str = ""):
+    """Outline mode: the screen as a tree in plain words beside its live preview. ``?kind=&id=`` opens a draft of that page's Sutra (as
+    Customize does); ``?design=`` an existing draft (from Customize or Describe)."""
+    if not enabled(request):
+        return RedirectResponse("/build/new", status_code=303)
+    if kind and id and not re.fullmatch(r"[\w-]{1,64}", design or ""):
+        try:
+            draft = await _new_draft(request, kind, id)
+        except designer.DesignerError as e:
+            return render(request, "designer/outline.html", modes=MODES, mode="outline", screen="build", problem=str(e), kind=kind, id=id, draft="")
+        except BackendError as e:
+            return render(request, "designer/outline.html", modes=MODES, mode="outline", screen="build", problem=e.detail, kind=kind, id=id, draft="")
+        return RedirectResponse(f"/designer/outline?kind={quote(kind)}&id={quote(id)}&design={quote(draft)}", status_code=303)
+    return render(request, "designer/outline.html", modes=MODES, mode="outline", screen="build", kind=kind, id=id, draft=design, problem="")
+
+
+@router.get("/outline/state/{draft}")
+async def outline_state(request: Request, draft: str):
+    """The outline of the draft: its sections, panels and children, each in plain words, with what each may set."""
+    if not enabled(request):
+        return _off()
+    try:
+        full, doc, _ = await _draft(request, draft)
+    except designer.DesignerError as e:
+        return _say(str(e))
+    except BackendError as e:
+        return _problem(e)
+    kit = {f.get("ref", ""): (f.get("doc") or {}) for f in await _kit(request)}
+    kit.update({k.split("@")[0]: v for k, v in list(kit.items())})
+    return {**designer_outline.tree(doc, kit), "yaml": full.get("sutra") or "", "name": full.get("name") or ""}
+
+
+@router.post("/outline/op/{draft}")
+async def outline_op(request: Request, draft: str):
+    """One Outline step (``move``, ``nest``, ``unnest``, ``add-section``, ``rename-section``, ``remove-section``, ``set``): the page is drawn
+    with it before it is kept; a step the server refuses is undone and said in plain words."""
+    if not enabled(request):
+        return _off()
+    body = await _body(request)
+    if isinstance(body, JSONResponse):
+        return body
+    backend, me = request.app.state.backend, ident(request)
+    kind, id_, what = str(body.get("kind") or ""), str(body.get("id") or ""), str(body.get("op") or "")
+    try:
+        full, doc, keep = await _draft(request, draft)
+        if what == "move":
+            designer_outline.move(doc, body.get("index"), body.get("to", 0), body.get("section"))
+        elif what == "nest":
+            designer_outline.nest(doc, keep, body.get("index"), str(body.get("under") or ""), str(body.get("place") or "detail-below"))
+        elif what == "unnest":
+            designer_outline.unnest(doc, keep, str(body.get("parent") or ""))
+        elif what == "add-section":
+            designer_outline.add_section(doc, str(body.get("title") or ""))
+        elif what == "rename-section":
+            designer_outline.rename_section(doc, str(body.get("section") or ""), str(body.get("title") or ""))
+        elif what == "remove-section":
+            designer_outline.remove_section(doc, str(body.get("section") or ""))
+        elif what == "set":
+            designer_outline.setting(doc, body.get("index"), str(body.get("key") or ""), body.get("value"), body.get("group"))
+        else:
+            return _say("unknown step")
+        await backend.designs("PATCH", f"/{draft}", me, {"sutra": designer.dump(doc), "notes": designer.notes_with(full.get("notes") or "", keep)})
+        if kind and id_:
+            try:
+                await backend.view(kind, id_, me, design=draft)
+            except BackendError as e:
+                await backend.designs("PATCH", f"/{draft}", me, {"sutra": full.get("sutra") or "", "notes": full.get("notes") or ""})
+                return _say(f"That change would break the page, so it was not made: {e.detail}")
+    except designer.DesignerError as e:
+        return _say(str(e))
+    except (TypeError, ValueError):
+        return _say("that step is missing something: reload the page")
+    except BackendError as e:
+        return _problem(e)
+    return {"ok": True}

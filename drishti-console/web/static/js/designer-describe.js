@@ -75,6 +75,8 @@
       result.hidden = false;
       if (frame.getAttribute('src') !== r.preview) { frame.setAttribute('src', r.preview); } else { frame.contentWindow.location.reload(); }
       openFull.href = r.open;
+      var ol = root.querySelector('[data-outline-open]');
+      if (ol) { ol.href = '/designer/outline?kind=' + encodeURIComponent(r.kind) + '&id=' + encodeURIComponent(r.id) + '&design=' + encodeURIComponent(r.draft); }
       yaml.textContent = r.yaml;
       saved.textContent = '';
     }

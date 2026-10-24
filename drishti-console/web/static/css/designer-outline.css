@@ -1,0 +1,57 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* The designer's Outline mode (SCREEN_DESIGNER.md 31): the tree on the left with the selected item's settings, the live preview on the
+   right. Theme tokens only; one column on a phone, 16 px gutters. */
+.ol-shell { max-width: 96rem; }
+.ol-bar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: .8rem; }
+.ol-wrap { display: grid; grid-template-columns: minmax(18rem, 26rem) minmax(0, 1fr); gap: 1rem; align-items: start; }
+.ol-left { display: flex; flex-direction: column; gap: .7rem; min-width: 0; }
+.ol-tree, .ol-group, .ol-children { list-style: none; margin: 0; padding: 0; }
+.ol-tree { border: 1px solid var(--d-border); border-radius: 12px; background: var(--d-surface); padding: .5rem; }
+.ol-sec { padding: .25rem 0; }
+.ol-sec + .ol-sec { border-top: 1px solid var(--d-border); margin-top: .3rem; padding-top: .5rem; }
+.ol-sec-h { display: flex; align-items: center; gap: .3rem; padding: .3rem .4rem; border-radius: 6px; color: var(--d-ink); font-size: .9rem; }
+.ol-meta { color: var(--d-muted); font-size: .8rem; }
+.ol-group { display: flex; flex-direction: column; gap: .2rem; margin-left: .4rem; }
+.ol-item { border-radius: 8px; }
+.ol-row { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: .45rem; padding: .35rem .45rem; border: 1px solid transparent;
+  border-radius: 8px; cursor: grab; }
+.ol-row:hover { background: var(--d-bg-2); }
+.ol-grip { grid-row: span 2; color: var(--d-muted); user-select: none; letter-spacing: -.1em; }
+.ol-title { font-weight: 600; color: var(--d-ink); font-size: .9rem; overflow-wrap: anywhere; }
+.ol-desc { color: var(--d-muted); font-size: .8rem; overflow-wrap: anywhere; }
+.ol-item[aria-selected="true"] > .ol-row, .ol-sec[aria-selected="true"] > .ol-sec-h { border-color: var(--d-accent); background: var(--d-accent-tint, var(--d-bg-2)); }
+.ol-item:focus-visible, .ol-sec:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
+.ol-children { margin: .15rem 0 .2rem 1.4rem; display: flex; flex-direction: column; gap: .15rem; border-left: 2px solid var(--d-border); padding-left: .4rem; }
+.ol-nest { color: var(--d-muted); font-size: .78rem; padding: .3rem .45rem; border: 1px dashed var(--d-border); border-radius: 8px; }
+.ol-dragging .ol-nest { border-color: var(--d-accent); color: var(--d-ink); }
+.ol-over, .ol-row.ol-over, .ol-sec-h.ol-over { outline: 2px dashed var(--d-accent); outline-offset: 1px; background: var(--d-accent-tint, var(--d-bg-2)); }
+.ol-add { align-self: flex-start; }
+.ol-detail { border: 1px solid var(--d-border); border-radius: 12px; background: var(--d-surface); padding: .8rem; display: flex; flex-direction: column; gap: .6rem; }
+.ol-what { margin: 0; color: var(--d-ink); }
+.ol-set { display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; font-size: .88rem; color: var(--d-ink); }
+.ol-preview { border: 1px solid var(--d-border); border-radius: 12px; background: var(--d-surface); padding: 1rem; min-width: 0; }
+.ol-preview iframe { width: 100%; min-height: 44rem; border: 0; border-radius: 8px; background: var(--d-bg); }
+.ol-start { display: flex; flex-direction: column; gap: .8rem; max-width: 46rem; }
+.dz-problem { color: var(--d-bad); }
+@media (max-width: 900px) {
+  .ol-wrap { grid-template-columns: minmax(0, 1fr); }
+  .ol-preview iframe { min-height: 30rem; }
+}
+@media (max-width: 640px) {
+  .ol-shell { padding: .6rem 1rem; }
+  .ol-preview { padding: .5rem; }
+}

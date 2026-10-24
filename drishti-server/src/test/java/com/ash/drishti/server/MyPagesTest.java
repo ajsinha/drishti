@@ -61,6 +61,24 @@ class MyPagesTest {
     }
 
     @Test
+    void anArrangementIsPerUserCheckedAndReset() throws Exception {
+        String ana = "ana-" + System.nanoTime();
+        String body = "{\"columns\":[6.5,5.5],\"collapsed\":{\"risk\":true},\"panels\":[{\"id\":\"trades\",\"area\":\"detail\",\"span\":6,\"order\":2}],\"junk\":1}";
+        mvc.perform(put("/api/v1/me/arrange/book-desk").header("Authorization", as(ana)).contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.junk").doesNotExist());
+        mvc.perform(get("/api/v1/me/arrange/book-desk").header("Authorization", as(ana)))
+                .andExpect(jsonPath("$.columns[0]").value(6.5)).andExpect(jsonPath("$.collapsed.risk").value(true))
+                .andExpect(jsonPath("$.panels[0].span").value(6));
+        mvc.perform(get("/api/v1/me/arrange/book-desk").header("Authorization", as("bea-" + System.nanoTime()))).andExpect(jsonPath("$.columns").doesNotExist());
+        mvc.perform(put("/api/v1/me/arrange/book-desk").header("Authorization", as(ana)).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"panels\":[{\"id\":\"x\",\"span\":13}]}")).andExpect(status().isBadRequest());
+        mvc.perform(put("/api/v1/me/arrange/Bad_Name").header("Authorization", as(ana)).contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(delete("/api/v1/me/arrange/book-desk").header("Authorization", as(ana))).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/me/arrange/book-desk").header("Authorization", as(ana))).andExpect(jsonPath("$.columns").doesNotExist());
+    }
+
+    @Test
     void packsListTheFieldsThatNameOtherEntities() throws Exception {
         var links = com.ash.drishti.server.api.CatalogController.links(java.util.Map.of("graph", java.util.Map.of("fields",
                 java.util.Map.of("COUNTERPARTY", java.util.Map.of("kind", "counterparty", "label", "Counterparty"), "X", "not a ref"))));

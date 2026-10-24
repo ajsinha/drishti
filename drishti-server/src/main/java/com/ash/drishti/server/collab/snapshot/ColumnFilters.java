@@ -55,7 +55,7 @@ public final class ColumnFilters {
             return v;
         }
         List<PanelView> panels = v.panels().stream().map(p -> panel(p, state, today)).toList();
-        return new ViewModel(v.ref(), v.mnemonic(), v.title(), v.strip(), panels, v.keys(), v.provenance(), v.timings(), v.controls(), v.selects());
+        return new ViewModel(v.ref(), v.mnemonic(), v.title(), v.strip(), panels, v.keys(), v.provenance(), v.timings(), v.controls(), v.selects(), v.layout());
     }
 
     private static PanelView panel(PanelView p, ViewState state, LocalDate today) {

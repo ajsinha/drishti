@@ -666,6 +666,26 @@ panels:
 - **Lint**: every `area:` names an area of `layout.areas`; areas form rectangles (no L-shapes); no two panels pin the same cell;
   spans fit the 12 columns; a `split` names two adjacent areas; `phone:` lists only panels or areas that exist.
 
+**As built (2.8).** `layout:` is read by `LayoutReader` into `ScreenLayout` (rachana) and checked against the panels (`DRS-2059`);
+the view model carries it (`ViewModel.layout`: the layout's keys and each top-level panel's `place`: area, order, section,
+collapsible; `ScreenGrid`), and the console draws it (`core/screen_grid.py`, `terminal/_grid.html`, `static/js/screen-grid.js`,
+`screen-grid.css`, every theme). Differences from the sketch above:
+
+- Height stays `height` (grid rows). `rows: <n>` was not taken: `rows` is the rows a table reads, and a number there stays an error.
+- `tabs:` lists **areas** whose panels show as tabs (one tab a panel, two or more), rather than a tabs panel with `show: on-select`
+  (which still works as a panel kind).
+- **Sections** (`layout.sections: [{ id, title, collapsed }]`, `section:` on a panel) arrange the flow grid; a screen with areas uses
+  tabs or `collapsible: true` instead (lint says so). Panels in no section stay above the sections.
+- **Remembered per reader**: the split's position (when `remember: user`), what is folded (sections and collapsible panels), and,
+  with `user-can-arrange: true`, each panel's area, width and order: one small document per reader and Sutra in the preference
+  store (`GET/PUT/DELETE /api/v1/me/arrange/<sutra>`, `MyArrangementController`; the console's `/me/arrange/<sutra>`), never the
+  shared Sutra. *Reset layout* deletes it. A screen with `layout:` does not offer layout mode (Alt+L); the grid replaces it.
+- **Responsive**: below 1000 px the Sutra's `tablet:` picture, else the areas one a row; below 640 px one column in the `phone:`
+  order (areas or panel ids; the rest as the picture reads), 16 px gutters, no sideways scroll; an area shown as tabs stays together.
+- **Children within the grid** (`into:`) and per-breakpoint panel overrides are not built yet; children open where `place:` says,
+  inside the parent's area.
+- The picture's template is set by script (the console's CSP allows no style attributes); without script the areas stack in order.
+
 ## 14. Lint: what is checked
 
 | Check | Code | Severity | Phase |
@@ -681,7 +701,7 @@ panels:
 | A fragment whose panels emit without `doc.emits` entries (`{ name, on, payload }`), or read `@parent` without `doc.expects` | `DRS-2055` | error: the fragment is not loaded | 2, 3 (built) |
 | A child reading `@parent` where no parent provides it or an event it does not emit; children deeper than 3; `expand-row` under a panel without rows | `DRS-2056` | error | 3 (built) |
 | A form default reading a masked field; a write action naming a missing connector template | `DRS-2058` | warning / error | 5, 6 |
-| Layout: unknown areas, overlaps, spans over 12, non-rectangular areas | `DRS-2059` | error | 7 |
+| Layout: unknown areas, overlaps (non-rectangular areas), rows of different widths, column widths not summing to 12, a split of areas not side by side, tabs or sticky or phone naming nothing, tabs over fewer than two panels, sections with areas, a bad `order` or `section` | `DRS-2059` | error | 7 (built, 2.8) |
 
 The server reports errors per file (the problems the catalogue and Studio show), `sutra lint` prints errors and the help warnings, `sutra lint --docs` adds the
 docstring warnings; neither fails on a docstring warning yet (it will, under `--strict`, once every pack Sutra carries one).

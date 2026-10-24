@@ -21,7 +21,7 @@ from urllib.parse import parse_qs, quote
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core import about_index, asof, collab as collab_core, compare_side, controls
+from core import about_index, asof, collab as collab_core, compare_side, controls, screen_grid
 from core.settings import changed_at
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
@@ -298,6 +298,26 @@ async def compare(request: Request, kind: str, id_: str, from_: str = Query("", 
                   from_known=fromKnownAt)
 
 
+@router.api_route("/me/arrange/{sutra}", methods=["GET", "PUT", "DELETE"])
+async def my_arrangement(request: Request, sutra: str):
+    """The reader's own arrangement of a grid screen (SUTRA_NEXT.md 13), kept by the server per reader and Sutra: GET it, PUT it whole
+    (the split's columns, what is folded, panel moves), DELETE it ("Reset layout")."""
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,63}", sutra or ""):
+        return JSONResponse({"code": "DRS-5001", "detail": "which screen?"}, status_code=400)
+    body = None
+    if request.method == "PUT":
+        try:
+            body = await json_body(request, limit=32768)
+        except BodyError as e:
+            return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
+    try:
+        got = await request.app.state.backend._send(request.method, f"/me/arrange/{quote(sutra)}", ident(request),
+                                                    **({"json": body} if body is not None else {}))
+    except BackendError as e:
+        return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status if 400 <= e.status < 600 else 502)
+    return JSONResponse(got if isinstance(got, dict) else {})
+
+
 @router.get("/v/{kind}/{id_:path}/about")
 async def about(request: Request, kind: str, id_: str, generation: int = 0):
     """The body of the About this page drawer (an HTML fragment), asked for when the drawer first opens, never with the view."""
@@ -346,6 +366,8 @@ async def view_panels(request: Request, kind: str, id_: str, panels: str = ""):
     except BackendError as e:
         return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.page_status)
     layout = await request.app.state.layouts.context(request, vm, False)
+    if vm.get("layout"):
+        layout["panels"] = vm.get("panels") or []      # a grid screen: the Sutra's sizes (screen-grid.js keeps the reader's)
     shown, _pivots = await request.app.state.pivots.view(request, vm, layout["panels"])
     env = request.app.state.templates.env
     parts = env.get_template("_macros/view.html").module
@@ -449,7 +471,9 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
         return render(request, "terminal/missing.html", status_code=e.page_status,
                       kind=kind, id=id_, error=e, embed=bool(embed))
     layout = await request.app.state.layouts.context(request, vm, bool(embed))      # the user's own arrangement, if any
+    grid_mine = await _grid_layout(request, vm, layout)                             # a Sutra with layout: (SUTRA_NEXT.md 13)
     panels, pivots = await request.app.state.pivots.view(request, vm, layout["panels"])   # each Pivot tab as the user saved it
+    grid = screen_grid.arrange(vm.get("layout"), panels, grid_mine) if vm.get("layout") else None
     main = [p for p in panels if p.get("area") != "right"]
     right = [p for p in panels if p.get("area") == "right"]
     if getattr(request.state, "pinned", False):
@@ -464,7 +488,24 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
     calc = {"offered": False} if embed else await request.app.state.calc.context(request, await packs(request), vm["ref"]["kind"])
     return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed), share_url=share_url(request, kind, id_, (vm.get("provenance") or {}).get("generation"), ctl),
                   pin=pin, pin_gen=gen or None, chosen_sutra=chosen, pin_via="history" if request.query_params.get("via") == "history" else None, ctl_query=controls.to_query(ctl), shared=shared, calc=calc, layout=layout, pivots=pivots, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")],
-                  designer=designer_routes.view_context(request, mine))
+                  designer=designer_routes.view_context(request, mine), grid=grid)
+
+
+async def _grid_layout(request: Request, vm: dict, layout: dict) -> dict | None:
+    """For a view whose Sutra has ``layout:``: the grid replaces layout mode (Alt+L), so the panels are the Sutra's, and the reader's own
+    arrangement of this screen is read (``/me/arrange/<sutra>``: the split, what is folded, their panel moves). None for a flowing view."""
+    if not vm.get("layout"):
+        return None
+    layout["panels"] = vm.get("panels") or []
+    layout["offered"] = False
+    sutra = (vm.get("provenance") or {}).get("sutra") or ""
+    if not sutra or ident(request) is None:
+        return {}
+    try:
+        got = await request.app.state.backend._send("GET", f"/me/arrange/{quote(sutra)}", ident(request))
+    except BackendError:
+        return {}                                   # an older server, or one away: the author's layout
+    return got if isinstance(got, dict) else {}
 
 
 def share_url(request: Request, kind: str, id_: str, generation=None, ctl: dict | None = None) -> str:
