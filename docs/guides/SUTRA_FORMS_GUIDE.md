@@ -100,6 +100,11 @@ The same form has four fields of the richer kinds (the book desk, `book-desk.v1.
   `search` narrows them), read as the viewer may see them. Type part of a name or an id, pick with the arrows and Enter (or a click);
   the record's **id** is kept and its **label** shown (*Drishti Bank Europe AG · LE-FRA*), with **Open** beside it. A record whose
   kept value is masked for the viewer is never offered, and a masked label shows the id.
+  The box searches the server as people type (a quarter of a second after the last key, *Searching…* meanwhile, *No match for
+  “…”* when nothing holds the text), so every record of the kind can be found, not only those the page brought; the search reads as
+  the viewer too ([API_GUIDE.md](API_GUIDE.md#form-drafts), `/api/v1/forms/lookup`). When the server cannot be reached, the choices the
+  page brought still answer. On saving, the server reads the kept id once: an unknown one is refused, *Booked in: no legal entity
+  'LE-NOWHERE' was found*.
 - **`default`** starts a new record: a value (`default: PENDING`), or an expression written `=...` over the other fields
   (`=notional * 0.001`), worked out as people type (*Worked out: notional * 0.001 · type to change it*) until they type over it. The
   server fills it too when a new record leaves the field empty, so a draft saved by a script is the same.
@@ -184,7 +189,8 @@ change to a field they may not edit, is refused; each save and discard is in the
   the table has a CURRENCY column too (in that currency); a date format or `*_DATE` a date; `*_AT` or `*_TIME` a date and time; a
   column the packs link a linked record.
 - **Describe**: `TRD BOOK-RATES-2 · click a trade → cash flows · edit trades beside · new trade in a drawer` (or `edit trades in the
-  cells`) gives the trades the form above, with the lookup and the limit hint.
+  cells`) gives the trades the form above, with the lookup and the limit hint. The notional is `money`: in the trades' own currency
+  when they carry one (a Currency field is added and `currency: currency`), else in the book's currency (`currency: GBP`), else USD.
 
 See [SCREEN_DESIGNER.md section 31](SCREEN_DESIGNER.md#31-the-sutra-designer-customize-and-describe).
 

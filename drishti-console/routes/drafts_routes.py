@@ -18,6 +18,7 @@ refuses a masked or a locked field; a refusal comes back with its ``issues`` (fi
 field, what is wrong."""
 from __future__ import annotations
 
+import asyncio
 import re
 from urllib.parse import urlencode
 
@@ -54,6 +55,27 @@ async def _call(request: Request, method: str, path: str, body=None):
     if got is None:
         return Response(status_code=204)
     return JSONResponse(got, status_code=201 if method == "POST" else 200)
+
+
+lookup_router = APIRouter(prefix="/api/forms", include_in_schema=False)
+LOOKUP_KEYS = ("kind", "pack", "q", "limit", "label", "value")
+LOOKUP_WAIT = 3.0                                        # the server answers within 2 s; a slower answer is "Searching..." no more
+
+
+@lookup_router.get("/lookup")
+async def lookup(request: Request):
+    """An entity field's live search (record-forms.js): ``/api/v1/forms/lookup`` as the signed-in person, ``{kind, q, results: [{id,
+    label}]}``. The server reads as the caller (masks, entitlements), caps the limit and keeps a short budget."""
+    q = {k: str(v)[:100] for k, v in request.query_params.items() if k in LOOKUP_KEYS and v}
+    if not q.get("kind"):
+        return _bad("a lookup names a kind")
+    try:
+        got = await asyncio.wait_for(request.app.state.backend._send("GET", "/forms/lookup?" + urlencode(q), ident(request)), LOOKUP_WAIT)
+    except BackendError as e:
+        return _problem(e)
+    except asyncio.TimeoutError:
+        return JSONResponse({"code": "DRS-5001", "detail": "the search took too long: type a little more"}, status_code=504)
+    return JSONResponse(got)
 
 
 @router.get("")

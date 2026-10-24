@@ -565,7 +565,7 @@ panels:
         - { label: "PFE limit after this trade", value: "counterparty.USED + notional", of: "counterparty.LIMIT", step: what }
 ```
 
-- **Field types**: `text`, `number`, `date`, `enum` (`options:` values or `{value, label}`), `bool`, `textarea`, `lookup` (choices read
+- **Field types**: `text`, `number`, `money`, `date`, `datetime`, `entity`, `enum` (`options:` values or `{value, label}`), `bool`, `textarea`, `lookup` (choices read
   from a `source:` of a kind with `where` or `search`, as the viewer may see it; `carry:` names the values hints read as
   `counterparty.LIMIT`). Each field: `label`, `bind` (the record field; the id when absent), `required`, `min`/`max` (a number, a date or
   `today`), `pattern`, `max-length`, `editable-by` roles, `readonly` with a `reason`, `step`, `placeholder`, `fmt`, `new: false`.
@@ -588,8 +588,17 @@ panels:
   `edit trades beside|in the cells` and `new trade in a drawer` write it (SCREEN_DESIGNER.md section 31).
 - **On the packs**: the book desk's trades (beside and a New trade drawer) and a credit limit's buckets (cells).
 
-Still to come: `datetime`, `money` and `entity` fields, defaults from expressions over the record, and `submit` emitting an event
-(the write itself is section 11).
+- **The richer fields (built, 2.7.x)** ([SUTRA_FORMS_GUIDE.md, money, a date and time, a linked record](../guides/SUTRA_FORMS_GUIDE.md#money-a-date-and-time-a-linked-record-a-worked-out-default)):
+  `money` is an amount typed as `1.5m`, `250k` or `1,000,000` in a fixed currency (`currency: USD`) or the one another field holds
+  (`currency: ccy`); `datetime` is a date and a time in a named time zone (`tz`, UTC when absent); `entity` links a record of any
+  pack's kind (`options: { source: { pack, kind }, label }`), its id kept and its label shown, found by a live search
+  (`/api/v1/forms/lookup`, read as the viewer: a masked value is never offered or matched, the limit capped, a short budget) with the
+  page's preloaded choices as the fallback; a draft's entity id is read once on the server and an unknown one refused in words.
+  `default:` starts a new record with a value or an expression (`=notional * 0.001`) worked out as people type, and by the server
+  when a new record leaves the field empty. Describe writes a book's notional as `money` in the trades' currency field, else the
+  record's currency.
+
+Still to come: `submit` emitting an event (the write itself is section 11).
 
 ## 11. Actions that write (2.8.0 write-back)
 

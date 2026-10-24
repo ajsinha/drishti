@@ -455,7 +455,8 @@ async def describe_line(request: Request):
            "refreshNote": f"The page refreshes every {p.refresh} s (refresh: {p.refresh}); readers can pause it or slow it down." if p.refresh else ""}
     if not p.ok:
         return out
-    doc = describe.sutra(p, text)
+    record = await _record(request, p.kind, p.id) if (p.edit or p.new) and p.kind in describe.TRADE_LISTS else None
+    doc = describe.sutra(p, text, currency=describe.currency_of(record))
     yaml_text = describe.dump(doc)
     backend, me = request.app.state.backend, ident(request)
     draft = str(body.get("draft") or "")

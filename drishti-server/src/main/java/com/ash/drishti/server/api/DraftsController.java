@@ -57,7 +57,8 @@ import org.springframework.web.bind.annotation.RestController;
  * new record in the drawer), kept per person in the content store until 2.8.0 sends it through a connector. Every save is checked
  * again here with the same rules the browser ran: the field types, required, min and max, the rules (an error refuses the draft, a
  * warning is kept with it); a value for a field masked for the person is refused, and so is a change to a field they may not edit. A
- * new record takes each field's {@code default} where nothing was given (a written value, or an expression over the values given).
+ * new record takes each field's {@code default} where nothing was given (a written value, or an expression over the values given). An
+ * entity field's id is read once to check it names a record of its kind; an unknown one is refused in words.
  * Each change is written to the audit log. Only the owner ever reads a draft.
  */
 @RestController
@@ -84,6 +85,14 @@ public class DraftsController {
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     void designs(com.ash.drishti.identity.design.DesignService d) {
         this.designs = d;
+    }
+
+    /** The entity lookups: an entity field's id is checked to name a record (absent in a test that makes the controller itself). */
+    private FormLookupController lookups;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void lookups(FormLookupController l) {
+        this.lookups = l;
     }
 
     public DraftsController(PreferenceStore store, SutraRegistry sutras, Entitlements entitlements, AuditLog audit) {
@@ -216,6 +225,23 @@ public class DraftsController {
                 m.put("message", is.message());
                 m.put("severity", is.severity());
                 (is.error() ? problems : warnings).add(m);
+            }
+            for (String fid : checked) {                       // an entity field's id names a record of its kind (one read)
+                Form.Field f = form.field(fid).orElse(null);
+                Object v = all.get(fid);
+                if (lookups == null || f == null || !f.type().equals("entity") || f.lookup() == null || f.lookup().value() != null || blank(v)
+                        || problems.stream().anyMatch(m -> fid.equals(m.get("field")) && Objects.equals(record, m.get("record")))) {
+                    continue;
+                }
+                String why = lookups.exists(p, f.lookup().source().kind(), v.toString().strip());
+                if (why != null) {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("record", record);
+                    m.put("field", fid);
+                    m.put("message", f.label() + ": " + why);
+                    m.put("severity", "error");
+                    problems.add(m);
+                }
             }
         }
         if (!problems.isEmpty()) {

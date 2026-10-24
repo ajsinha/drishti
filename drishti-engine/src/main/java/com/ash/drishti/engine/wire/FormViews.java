@@ -102,7 +102,12 @@ public final class FormViews {
             }
             put(m, "default", fd.defaultValue());
             if (fd.type().equals("entity")) {
-                m.put("entity", Map.of("kind", fd.lookup().source().kind(), "pack", fd.lookup().source().pack() == null ? "" : fd.lookup().source().pack()));
+                Map<String, Object> ent = new LinkedHashMap<>();       // what the live search asks for (/api/v1/forms/lookup)
+                ent.put("kind", fd.lookup().source().kind());
+                ent.put("pack", fd.lookup().source().pack() == null ? "" : fd.lookup().source().pack());
+                put(ent, "label", fd.lookup().label());
+                put(ent, "value", fd.lookup().value());
+                m.put("entity", ent);
             }
             if (fd.readonly()) {
                 m.put("readonly", true);

@@ -225,4 +225,37 @@ class DraftsTest {
         d = json.readTree(send("POST", "/api/v1/drafts", tia, draft, 201));
         assertThat(d.path("records").get(0).path("values").path("upfront_fee").asInt()).as("a value given stays").isEqualTo(2_500);
     }
+
+    private JsonNode lookup(String auth, String query) throws Exception {
+        return json.readTree(mvc.perform(get("/api/v1/forms/lookup?" + query).header("Authorization", auth)).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8)).path("results");
+    }
+
+    @Test
+    void anEntityFieldSearchesLiveAsTheCallerAndAnUnknownIdIsRefused() throws Exception {
+        String tia = as("tia", "trader");
+        JsonNode le = field(panel(read(DESK, tia, "book-desk"), "trades").path("form"), "legal_entity");
+        assertThat(le.path("entity").path("label").asText()).isEqualTo("NAME");
+        String first = le.path("options").get(0).path("label").asText();
+        JsonNode found = lookup(tia, "kind=legal-entity&pack=core&q=" + java.net.URLEncoder.encode(first.substring(0, Math.min(6, first.length())), StandardCharsets.UTF_8));
+        assertThat(found).isNotEmpty();
+        assertThat(found.get(0).path("id").asText()).startsWith("LE-");
+        assertThat(lookup(tia, "kind=legal-entity&q=LE-&limit=1")).hasSize(1);
+        assertThat(lookup(tia, "kind=legal-entity&q=LE-&limit=9999").size()).isLessThanOrEqualTo(50);
+        assertThat(lookup(tia, "kind=legal-entity&q=")).isEmpty();
+        assertThat(lookup(tia, "kind=legal-entity&q=no-such-entity-anywhere")).isEmpty();
+        // a masked value is never offered nor matched: COUNTERPARTY is masked for the masked role, not for the trader
+        assertThat(lookup(tia, "kind=credit-limit&q=ALDERSHOT&value=COUNTERPARTY&label=COUNTERPARTY_NAME")).isNotEmpty();
+        assertThat(lookup(as("max", "masked"), "kind=credit-limit&q=ALDERSHOT&value=COUNTERPARTY&label=COUNTERPARTY_NAME")).isEmpty();
+        mvc.perform(get("/api/v1/forms/lookup?kind=Bad Kind&q=x").header("Authorization", tia)).andExpect(status().isBadRequest());
+        Map<String, Object> values = new java.util.HashMap<>(Map.of("counterparty", "CP-ALDERSHOT", "product_type", "IRS", "notional", "10m",
+                "currency", "USD", "maturity_date", "2031-01-15", "legal_entity", "LE-NOWHERE"));
+        Map<String, Object> draft = Map.of("kind", "portfolio-trades", "id", "BOOK-RATES-2", "sutra", "book-desk", "panel", "trades", "mode", "new",
+                "step", "check", "records", List.of(Map.of("values", values)));
+        JsonNode e = json.readTree(send("POST", "/api/v1/drafts", tia, draft, 422));
+        assertThat(e.path("issues").get(0).path("field").asText()).isEqualTo("legal_entity");
+        assertThat(e.path("issues").get(0).path("message").asText()).isEqualTo("Booked in: no legal entity 'LE-NOWHERE' was found");
+        values.put("legal_entity", found.get(0).path("id").asText());
+        send("POST", "/api/v1/drafts", tia, draft, 201);
+    }
 }

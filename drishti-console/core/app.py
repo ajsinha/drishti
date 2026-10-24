@@ -432,6 +432,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(history_routes.router)          # history queries: before the terminal (/v/{kind}/{id}) and export routes
     app.include_router(terminal_routes.router)
     app.include_router(drafts_routes.router)            # form drafts (SUTRA_NEXT.md 10), before the general API routes
+    app.include_router(drafts_routes.lookup_router)     # an entity field's live search (/api/forms/lookup)
     app.include_router(api_routes.router)
     app.include_router(auth_routes.router)
     app.include_router(studio_routes.router)
