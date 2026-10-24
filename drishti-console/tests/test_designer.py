@@ -386,6 +386,18 @@ def test_customize_done_reopen_and_reset(client, on):
     assert on["views"][-1] is None
 
 
+def test_refresh_this_panel_every_is_written_on_the_part(client, on):
+    draft = client.post("/designer/customize", json={"kind": "trade", "id": "IRS-47102"}).json()["draft"]
+    r = client.post(f"/designer/op/{draft}", json={"op": "refresh", "index": 1, "seconds": 30, "kind": "trade", "id": "IRS-47102"})
+    assert r.json() == {"ok": True}
+    st = client.get(f"/designer/state/{draft}?kind=trade&id=IRS-47102").json()
+    assert [p["refresh"] for p in st["parts"]] == [0, 30, 0] and "refresh: 30" in st["yaml"]
+    client.post(f"/designer/op/{draft}", json={"op": "refresh", "index": 1, "seconds": 0, "kind": "trade", "id": "IRS-47102"})
+    assert "refresh:" not in client.get(f"/designer/state/{draft}?kind=trade&id=IRS-47102").json()["yaml"]
+    bad = client.post(f"/designer/op/{draft}", json={"op": "refresh", "index": 1, "seconds": "soon", "kind": "trade", "id": "IRS-47102"})
+    assert bad.status_code == 400 and "how often" in bad.json()["detail"]
+
+
 def test_a_step_the_server_refuses_is_undone(client, on, backend, monkeypatch):
     draft = client.post("/designer/customize", json={"kind": "trade", "id": "IRS-47102"}).json()["draft"]
     before = client.get(f"/designer/state/{draft}?kind=trade&id=IRS-47102").json()["yaml"]
@@ -400,7 +412,7 @@ def test_a_step_the_server_refuses_is_undone(client, on, backend, monkeypatch):
 
 def test_describe_builds_and_saves(client, on):
     r = client.post("/designer/describe", json={"text": "TRD BOOK-RATES-2 · click a trade → cash flows · refresh 30s"}).json()
-    assert r["ok"] and r["kind"] == "portfolio-trades" and "refresh: 30" in r["yaml"] and "later release" in r["refreshNote"]
+    assert r["ok"] and r["kind"] == "portfolio-trades" and "refresh: 30" in r["yaml"] and "refreshes every 30 s" in r["refreshNote"]
     assert r["preview"] == f"/v/portfolio-trades/BOOK-RATES-2?design={r['draft']}&embed=1" and on["views"][-1] == r["draft"]
     again = client.post("/designer/describe", json={"text": "TRD BOOK-RATES-2", "draft": r["draft"]}).json()
     assert again["draft"] == r["draft"]                                                     # the same draft, rewritten

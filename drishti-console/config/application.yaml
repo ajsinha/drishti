@@ -65,6 +65,9 @@ collab:
 # servers:
 #   - { id: open, name: Drishti, url: "http://127.0.0.1:18480", color: "#2a9d8f" }
 #   - { id: rates-desk, name: Rates desk, url: "http://127.0.0.1:18481", token_secret: "${DRISHTI_TOKEN_SECRET_RATES:}" }
+views:
+  # The fastest any panel refreshes (refresh: in a Sutra, SUTRA_NEXT.md 9), in seconds: a Sutra or a reader asking for faster gets this.
+  refresh_min_seconds: ${DRISHTI_VIEWS_REFRESH_MIN_SECONDS:5}
 ui:
   # About this page: fetch the page's explanation once the page is idle, so labels with a glossary entry are underlined before
   # the drawer opens. Costs the server one explain (a re-run of the view, cached for drishti.explain.cache-ttl) per page view;

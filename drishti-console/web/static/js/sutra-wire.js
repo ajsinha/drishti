@@ -26,6 +26,7 @@
   if (!view || !(view.querySelector('section.pnl[data-wire]') || view.hasAttribute('data-customizing'))) { return; }   // Customize may wire a panel later
   var base = '/v/' + encodeURIComponent(view.dataset.kind) + '/' + view.dataset.id.split('/').map(encodeURIComponent).join('/');
   var held = {};                                     // panel id -> { event: token }
+  var picks = {};                                    // panel id -> the last click { event, row }: a refresh replays it (refresh.js)
   var live = document.createElement('p');
   live.className = 'visually-hidden'; live.setAttribute('role', 'status'); live.setAttribute('aria-live', 'polite');
   view.appendChild(live);
@@ -145,7 +146,9 @@
     if (!old) { return; }
     var fresh = fragment(p.html).firstElementChild;
     if (!fresh) { return; }
+    var y = window.scrollY;
     old.replaceWith(fresh);
+    if (window.scrollY !== y) { window.scrollTo(window.scrollX, y); }
     if (window.drishtiLayout && window.drishtiLayout.decorate) { window.drishtiLayout.decorate(fresh); }
     enhance(fresh);
   }
@@ -173,6 +176,7 @@
     var on = el.tagName === 'TR' ? 'row-click' : 'bar-click';
     var em = (wireOf(sec).emits || []).filter(function (e) { return e.on === on; })[0];
     if (!em) { return; }
+    picks[sec.getAttribute('data-panel')] = { event: em.name, row: Number(el.getAttribute('data-ev')) };
     sec.classList.add('wire-busy'); view.setAttribute('aria-busy', 'true');
     fetch(base + '/events' + query(), {
       method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -220,10 +224,10 @@
       credentials: 'same-origin', headers: { Accept: 'application/json' }
     }).then(json).then(function (j) { close(id); (j.children || []).forEach(function (g) { open(sec, null, g); }); });
   }
-  view.querySelectorAll('section.pnl[data-wire]').forEach(function (sec) {
+  function rewire(sec, refreshed) {             // refreshed: a panel swapped in by refresh.js keeps what is open, it only gets its button back
     var kids = wireOf(sec).children || [];
-    if (kids.some(function (g) { return g.show === 'always'; })) { load(sec).catch(function (e) { if (e.reset) { reset(e.reset); } }); }
-    if (kids.some(function (g) { return g.show === 'on-expand'; })) {
+    if (!refreshed && kids.some(function (g) { return g.show === 'always'; })) { load(sec).catch(function (e) { if (e.reset) { reset(e.reset); } }); }
+    if (kids.some(function (g) { return g.show === 'on-expand'; }) && !sec.querySelector('.wire-open')) {
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'wire-tab wire-open'; b.setAttribute('aria-expanded', 'false');
       b.innerHTML = '<i class="bi bi-chevron-down" aria-hidden="true"></i> Details';
@@ -232,8 +236,26 @@
         if (opened) { close(sec.getAttribute('data-panel')); b.setAttribute('aria-expanded', 'false'); return; }
         load(sec).then(function () { b.setAttribute('aria-expanded', 'true'); }).catch(function (e) { if (e.reset) { reset(e.reset); } else { say('The details could not be loaded: ' + e.message); } });
       });
+      if (refreshed && document.querySelector('[data-wire-kids="' + css(sec.getAttribute('data-panel')) + '"]')) { b.setAttribute('aria-expanded', 'true'); }
       (sec.querySelector('.pnl-b') || sec).appendChild(b);
     }
-  });
-  window.drishtiWire = { held: function () { return JSON.parse(JSON.stringify(held)); }, fire: fire, open: open, close: close };
+  }
+  view.querySelectorAll('section.pnl[data-wire]').forEach(function (sec) { rewire(sec, false); });
+  /** A refresh of the panels a selection drives (SUTRA_NEXT.md 9): the last click of {@code panel} sent again with every selection held,
+   *  and only the listening panels swapped; what the click opened stays open. Resolves with the ids swapped. */
+  function replay(panelId) {
+    var p = picks[panelId];
+    if (!p) { return Promise.resolve([]); }
+    return fetch(base + '/events' + query(), {
+      method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ panel: panelId, event: p.event, row: p.row, selections: tokens() })
+    }).then(json).then(function (j) {
+      var s = j.selection || {};
+      if (s.panel) { held[s.panel] = held[s.panel] || {}; held[s.panel][s.event] = s.token; }
+      (j.panels || []).forEach(swap);
+      return (j.panels || []).map(function (q) { return q.id; });
+    });
+  }
+  window.drishtiWire = { held: function () { return JSON.parse(JSON.stringify(held)); }, fire: fire, open: open, close: close, replay: replay, rewire: rewire,
+                         picked: function () { return JSON.parse(JSON.stringify(picks)); } };
 })();

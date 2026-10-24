@@ -350,8 +350,10 @@ async def view_panels(request: Request, kind: str, id_: str, panels: str = ""):
     env = request.app.state.templates.env
     parts = env.get_template("_macros/view.html").module
     out = [{"id": p["id"], "kind": p["kind"], "title": p.get("title") or "", "html": api_routes._panel_html(request, p, ref={"kind": kind, "id": id_})} for p in shown]
+    prov = vm.get("provenance") or {}
     return JSONResponse({"panels": out, "strip": str(parts.strip(vm)).strip(), "controls": vm.get("controls") or [],
-                         "timings": vm.get("timings")})
+                         "timings": vm.get("timings"),
+                         "provenance": {k: prov.get(k) for k in ("source", "fetchedAt", "updatedAt", "staleAfter", "stale", "live", "generation")}})
 
 
 def _wired_html(request: Request, kind: str, id_: str, panel: dict) -> dict:

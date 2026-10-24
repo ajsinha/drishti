@@ -19,7 +19,7 @@
 Clauses are separated by ``·`` (or ``|`` or ``;``). The first names what the screen is about: a command mnemonic of the enabled packs (the
 command line's table: ``TRD``, ``CPTY``, ``PTRD``...) or a kind's plain name, then an id. ``click a <row> → A + B`` opens A and B for the
 clicked row (``->``, ``=>`` and ``shows`` work too; ``below``, ``beside``, ``under the row`` or ``as tabs`` at the end says where);
-``refresh Ns`` (or ``Nm``) sets ``refresh:``, which the runtime acts on from SUTRA_NEXT.md phase 4. Every clause becomes one token of
+``refresh Ns`` (or ``Nm``) sets ``refresh:``: the page fetches its panels again on that interval (SUTRA_NEXT.md 9). Every clause becomes one token of
 "Understood as"; one the parser is unsure of carries the choices to fix it with, and anything it cannot read says so in plain words."""
 from __future__ import annotations
 

@@ -260,7 +260,7 @@ async def state(request: Request, draft: str, kind: str = "", id: str = ""):
     for i, e in enumerate(doc["panels"]):
         brought = (uses.get(i) or {}).get("panels") or []
         ids = [b["id"] for b in brought if b.get("id")] or [str(e.get("id") or "")]
-        part = {"index": i, "ids": ids, "title": designer.entry_title(e, brought), "used": bool(e.get("use")),
+        part = {"index": i, "ids": ids, "title": designer.entry_title(e, brought), "used": bool(e.get("use")), "refresh": designer.refresh_of(e),
                 "tables": [b["id"] for b in brought if b.get("kind") == "table"] if e.get("use") else []}
         if not e.get("use") and e.get("kind") == "table" and isinstance(e.get("columns"), list):
             chosen = [designer.bound_field(c.get("bind")) for c in e["columns"] if isinstance(c, dict)]
@@ -289,7 +289,7 @@ async def kit(request: Request, draft: str, q: str = "", kind: str = "", id: str
 
 @router.post("/op/{draft}")
 async def op(request: Request, draft: str):
-    """One Customize step on the draft (``move``, ``hide``, ``show``, ``unpack``, ``columns``, ``click``, ``unclick``, ``add``); the page is
+    """One Customize step on the draft (``move``, ``hide``, ``show``, ``unpack``, ``columns``, ``click``, ``unclick``, ``add``, ``refresh``); the page is
     drawn with it before it is kept, and a step the server refuses is undone and said in plain words."""
     if not enabled(request):
         return _off()
@@ -319,6 +319,8 @@ async def op(request: Request, draft: str):
                            body.get("show"), keep)
         elif what == "unclick":
             designer.unclick(doc, str(body.get("panel") or ""), keep)
+        elif what == "refresh":
+            designer.refresh(doc, body.get("index"), body.get("seconds", 0))
         elif what == "add":
             designer.add(doc, str(body.get("ref") or ""), body.get("with") or {}, body.get("at"))
         else:
@@ -422,7 +424,7 @@ async def describe_line(request: Request):
     text = str(body.get("text") or "")[:500]
     p = describe.parse(text, await aliases(request))
     out = {"ok": p.ok, "tokens": [t.as_dict() for t in p.tokens], "messages": p.messages, "refresh": p.refresh,
-           "refreshNote": "Refresh is kept in the Sutra (refresh:); pages act on it from a later release." if p.refresh else ""}
+           "refreshNote": f"The page refreshes every {p.refresh} s (refresh: {p.refresh}); readers can pause it or slow it down." if p.refresh else ""}
     if not p.ok:
         return out
     doc = describe.sutra(p, text)

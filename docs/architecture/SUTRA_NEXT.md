@@ -481,27 +481,46 @@ utilisation panels, which follow it, show nothing but *Hidden for you* (section 
 
 ## 9. Live panels, refresh control and freshness
 
-Today the live stream (LIVE.md) updates a whole page. Phase 4 makes refresh a property of each panel, under the reader's control.
+**Built (phase 4, 2.7.x).** A panel, a use, or the whole Sutra says how often it is fetched again; the reader controls it within that,
+and every panel says how fresh it is.
 
 ```yaml
+refresh: 60                                          # the whole screen: every top-level panel without its own refresh
 panels:
-  - use: series-line@1
-    with: { id: curve, rows: $.POINTS, x: TENOR, y: ZERO_RATE }
-    refresh: { mode: live }                          # live (pushed) | every | manual
-  - use: ranked-bars@1
-    with: { id: by-book, rows: $src.BY_BOOK, label: BOOK, value: PNL }
-    source: { kind: desk-pnl, id: "$.DESK" }
-    refresh: { mode: every, interval: 30s, min: 5s, user-can-change: true }
-    stale-after: 2m                                  # past this the panel shows "stale" in amber
+  - use: row-picker@1
+    with: { id: trades, rows: $.TRADES }
+    refresh: 10                                      # a use: every panel it brings
+  - id: limits
+    kind: kv
+    source: { pack: counterparty-risk, kind: credit-limit, id: "@trades.open.ref" }
+    refresh: { every: 30, user-can-pause: false }    # the reader may slow it down, not pause it
 ```
 
-- **The reader controls it**: each refreshing panel shows a freshness chip ("live", "updated 12 s ago", "paused", "stale 3 min")
-  with pause, resume and an interval picker within `min`; the choice is remembered per person and screen, never in the Sutra.
-- `every` runs on the server's bounded scheduler (no per-viewer threads); identical requests from many viewers share one fetch
-  (the view cache already keys by record, Sutra and mask set).
-- Freshness comes from the source's own timestamps (`fetchedAt`, `updatedAt`, `staleAfter` already in the view's provenance); a
-  panel never claims to be live when its source is not.
-- The whole-page pause (one control) pauses every panel; a paused page says so in the title strip.
+- **Grammar.** `refresh:` is a whole number of seconds (1 to 86400) or `{ every: N, user-can-pause: true|false }` (default `true`), on a
+  top-level panel, a use (`use:` carries it to every panel it brings) or the Sutra itself. A panel inside a tab cannot refresh on its own
+  (put it on the tabs panel). Anything else is `DRS-2012` with its line, in the editor, `drishti lint` and at load; the JSON schema
+  (`/api/v1/rachana/schema`) describes it. The server's view model carries it on each panel as `refresh: {every, userCanPause}`.
+- **Only the refreshing panels move.** The console (`static/js/refresh.js`) fetches the panels that are due through
+  `/v/<kind>/<id>/panels?panels=a,b` (one request for all that are due, with the controls' values, `?sutra=` and `?design=`) and swaps each
+  one in place only when its HTML changed: the old panel's height is held until the new one is drawn (no flicker), the page's and the panel's
+  scroll are kept. A panel a selection drives (SUTRA_NEXT.md 7) is refreshed by sending that selection again (`POST .../events`, only its
+  listening panels swapped), so a refresh never undoes a pick; the picked row stays picked and what it opened (under the row, beside or
+  below the panel, tabs) stays open.
+- **Never too fast.** No panel refreshes faster than the console's `views.refresh_min_seconds` (default 5) or than its Sutra's `every`:
+  the reader may choose a slower interval or pause, never a faster one. Identical requests share the server's view cache.
+- **The reader controls it.** Each refreshing panel has a pause/resume button and an interval picker in its header; the page has
+  **Pause all** above the panels (a paused page says "Refresh paused on this page"). The choices are kept per person and per screen
+  (`<kind>/<sutra>`) in the user's settings (`PATCH /api/v1/me/settings {"refresh": {"trade/my-desk": {"all": false, "panels":
+  {"curve": {"paused": true, "every": 60}}}}}`), never in the Sutra. A hidden browser tab fetches nothing and catches up when shown.
+- **Freshness on every panel.** Each panel's header says "updated 12 s ago" (ticking, from the view's `fetchedAt`, then from each
+  refresh); "stale" in amber when a refreshing panel is older than twice its interval or the source is behind (the provenance's `stale`,
+  `updatedAt` and `staleAfter`); when a refresh fails, the source is named in words: "trade-endur isn't answering; showing data from
+  10:42". A page the live channel updates (LIVE.md) says "live" on every panel instead of a timer, and runs no timers of its own.
+- **The designer.** Describe's `refresh 30s` writes `refresh: 30` and the page acts on it; Customize has **Refresh** in its side panel
+  ("Refresh <part> every <interval>"), which writes `refresh:` on that part (off removes it).
+
+Still to come: a server-side `every` scheduler pushing over the live channel to many viewers at once (today each page asks), and a
+source's own `staleAfter` per panel for panels with their own `source:` (today the page's source decides "stale").
 
 ## 10. Forms and data entry
 
@@ -702,7 +721,7 @@ picking from `emits`; show lint as you type; save a dynamic screen to the worksp
 | 1 | The fragment library (the Drishti UI kit, `config/ui-kit`, with its assets, brand and `GET /api/v1/ui-kit`), the `doc:` docstring and its lint, composite fragments, migrated screens (ir-curve and the seven economics screens, proved identical), `GET /api/v1/sutras/library` | 2.7.0 (**built**) |
 | 2 | Events (`emits`, `@panel.event.path`) and multi-pack sources (`source:`) | 2.7.0 (**built**) |
 | 3 | Nested children (`children:`, `place`, `show`, lazy, depth 3); the book desk | 2.7.0 (**built**) |
-| 4 | Refresh control and freshness per panel | 2.7.x |
+| 4 | Refresh control and freshness per panel | 2.7.x (**built**) |
 | 5 | Forms and validation | 2.8.0 |
 | 6 | Actions and write-back through connectors' `writes:` (WRITE_BACK.md) | 2.8.0 |
 | 7 | Dynamic screens saved to the workspace; the `layout:` grid; workspace fragments | 2.8.x / 2.9.0 |

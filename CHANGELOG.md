@@ -18,6 +18,17 @@
 ## Unreleased
 
 - The UI Board work is kept on branch ui-board-preview; not in this release.
+- **Refresh and freshness** (SUTRA_NEXT.md phase 4, [section 9](docs/architecture/SUTRA_NEXT.md#9-live-panels-refresh-control-and-freshness)):
+  `refresh: 30` or `refresh: { every: 30, user-can-pause: false }` on a panel, a use or the whole Sutra is now acted on (Rachana checks
+  it, `DRS-2012`; the schema describes it; the view model carries `refresh` on each panel). The console fetches only the panels that are
+  due (`/v/<kind>/<id>/panels`, which now answers with the provenance) and swaps the ones that changed in place, with no flicker and the
+  scroll kept; a picked row and what it opened survive, and the panels a pick drives are refreshed by sending that pick again. Each
+  refreshing panel has pause, resume and a slower interval; the page has **Pause all**; the choices are kept per person and per screen
+  (`refresh` in `/me/settings`). A hidden tab fetches nothing. Never faster than the Sutra's `every` or the console's new
+  `views.refresh_min_seconds` (default 5). Every panel says how fresh it is ("updated 12 s ago", ticking; "stale" in amber; "trade-endur
+  isn't answering; showing data from 10:42"; "live" on a live page). The Sutra designer: Describe's `refresh 30s` takes effect, and
+  Customize has **Refresh <part> every …**. Tests: `SutraParserTest`, `SutraNextEventsTest`, `SettingsTest`, `test_refresh.py`,
+  `test_designer.py`, `test_refresh_browser.py`.
 - **One server per screen (sticky routing for Sutra Next screens)** ([SUTRA_NEXT.md](docs/architecture/SUTRA_NEXT.md#7-events)
   section 7, [DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md) 11.1, [NET.md](docs/admin/NET.md)): in a cluster a selection token
   names the node that issued it (`tok_<node>~…`); the console sends a screen's clicks and children carrying tokens to that node

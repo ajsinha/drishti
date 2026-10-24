@@ -136,6 +136,32 @@ def show(doc: dict, keep: dict, h) -> tuple[dict, dict]:
     return doc, keep
 
 
+REFRESH_CHOICES = (0, 10, 15, 30, 60, 300, 900)
+
+
+def refresh(doc: dict, i, seconds) -> dict:
+    """``refresh: N`` on one part of the page (a panel or a use: every panel it brings), or off (0) (SUTRA_NEXT.md 9)."""
+    i = _index(doc, i)
+    try:
+        n = int(seconds)
+    except (TypeError, ValueError):
+        raise DesignerError("how often?") from None
+    if not 0 <= n <= 86400:
+        raise DesignerError("refresh is 0 (off) to 86400 seconds")
+    if n:
+        doc["panels"][i]["refresh"] = n
+    else:
+        doc["panels"][i].pop("refresh", None)
+    return doc
+
+
+def refresh_of(entry: dict) -> int:
+    """The seconds an entry refreshes at (its own ``refresh:``), 0 when it does not."""
+    r = entry.get("refresh")
+    r = r.get("every") if isinstance(r, dict) else r
+    return r if isinstance(r, int) and not isinstance(r, bool) else 0
+
+
 def unpack(doc: dict, i, brought: list) -> dict:
     """A used fragment written out in place (its panels, parameters filled), so one of its tables can take other columns."""
     i = _index(doc, i)

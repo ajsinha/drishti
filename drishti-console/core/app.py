@@ -327,6 +327,7 @@ def create_app(settings: Settings) -> FastAPI:
             "stale_seconds": _bounded(settings.get("bi.live.stale_seconds", 30), 5, 600, 30),
             "rotate_seconds": _bounded(settings.get("bi.board.rotate_seconds", 30), 3, 3600, 30),
         },
+        REFRESH_MIN=_bounded(settings.get("views.refresh_min_seconds", 5), 1, 3600, 5),
         ABOUT_PREFETCH=str(settings.get("ui.about_prefetch", True)).lower() not in ("false", "0", "no", "off"),
     )
     from core.asof import to_local

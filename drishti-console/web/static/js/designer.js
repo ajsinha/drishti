@@ -217,6 +217,23 @@
         set ? el('button', { type: 'button', 'class': 'dz-btn', text: 'Stop', on: { click: function () { step({ op: 'unclick', panel: set.id }).catch(function () {}); } } }) : null
       ]));
     }
+    /* Refresh this panel every … (SUTRA_NEXT.md 9) */
+    side.appendChild(el('h3', { 'class': 'dz-h', text: 'Refresh' }));
+    var rpart = select('the panel to refresh', state.parts.map(function (p) { return [String(p.index), p.title]; }), 'data-dz-refresh-part');
+    var rsecs = select('how often', [['0', 'never (off)'], ['10', '10 seconds'], ['15', '15 seconds'], ['30', '30 seconds'], ['60', 'minute'],
+                                     ['300', '5 minutes'], ['900', '15 minutes']], 'data-dz-refresh-every');
+    function rfill() {
+      var p = state.parts.filter(function (x) { return String(x.index) === rpart.value; })[0] || {};
+      var v = String(p.refresh || 0);
+      if (!rsecs.querySelector('option[value="' + v + '"]')) { rsecs.appendChild(el('option', { value: v, text: v + ' seconds' })); }
+      rsecs.value = v;
+    }
+    rpart.addEventListener('change', rfill); rfill();
+    side.appendChild(el('div', { 'class': 'dz-sentence' }, ['Refresh ', rpart, ' every ', rsecs]));
+    side.appendChild(el('div', { 'class': 'dz-row' }, [
+      el('button', { type: 'button', 'class': 'dz-btn dz-primary', 'data-dz-refresh-apply': '', text: 'Set', on: { click: function () {
+        step({ op: 'refresh', index: +rpart.value, seconds: +rsecs.value }).catch(function () {});
+      } } })]));
     /* Add to this page */
     side.appendChild(el('h3', { 'class': 'dz-h', text: 'Add to this page' }));
     var q = el('input', { type: 'search', 'class': 'dz-search', placeholder: 'Search: limits, chart, map…', 'aria-label': 'Search what to add', 'data-dz-search': '' });

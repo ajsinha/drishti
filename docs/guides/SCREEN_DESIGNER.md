@@ -801,7 +801,8 @@ TRD BOOK-RATES-2 · click a trade → cash flows + CPTY limits · refresh 30s
 - Parts are separated by `·` (or `|` or `;`).
 - `click a trade → A + B` says what a click opens: *cash flows*, *trade details*, *CPTY* (the counterparty), *CPTY limits*. Add
   *below*, *beside*, *under the row* or *as tabs* to say where. `->`, `=>` and *shows* work as well as `→`.
-- `refresh 30s` (or `2m`) is kept in the Sutra as `refresh: 30`. Pages act on it from a later release; the page says so.
+- `refresh 30s` (or `2m`) is kept in the Sutra as `refresh: 30`, and the page acts on it: every panel is fetched again every 30 seconds
+  (see *Refresh and freshness* below).
 
 **Understood as** shows one token per part. A token the parser was unsure of (a bare id, a loose word such as *limits*) has a **fix…**
 list; anything it could not read is red, with a plain sentence saying why. The parser is deterministic: the same line always gives the
@@ -844,3 +845,22 @@ panels:
 ```
 
 ![Describe in the light theme: an unsure token and a part not understood](img/designer/describe-light.jpg)
+
+### Refresh and freshness
+
+![Refresh controls: a paused panel, a slower interval, Pause all](img/designer/refresh-controls.jpg)
+
+A screen whose Sutra says `refresh: 30` (Describe's `refresh 30s`, or **Refresh** in Customize's side panel: *Refresh <part> every
+<interval>*, *never (off)* removes it) fetches its panels again on that interval, without reloading the page: only the panels that are due
+move, a panel that did not change is left alone, the picked row stays picked and what it opened stays open.
+
+- Each refreshing panel has, in its header, **pause/resume** and **every …** (only intervals as slow as the Sutra's or slower; never
+  faster than the console's `views.refresh_min_seconds`). **Pause all**, above the panels, pauses the page and says so. Your choices are
+  kept for you, for this screen, and come back when you open it again. A tab you are not looking at fetches nothing.
+- Every panel says how fresh it is: *updated 12 s ago*, ticking; *paused · updated 3 min ago*; *stale* in amber when it is older than
+  twice its interval or its source is behind; *live* on a page the live stream updates.
+
+![Freshness: a stale source marked in the light theme](img/designer/freshness.jpg)
+
+- When a refresh fails, the panel keeps what it showed and names the source in words: *trade-endur isn't answering; showing data from
+  10:42*. The next refresh tries again.

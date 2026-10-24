@@ -1218,7 +1218,8 @@ Most of this is **nothing to write**, and that is the design.
   the footer says which. Dates *in* the document are data like any other: format them with `fmt: date` or `dmy`, compare them as ISO text (`@.PAYMENT_DATE < today()`), count days with `days(from,
   to)`. `today()` is the business date the view is built for, so a Sutra that says "still to come" answers for the date the reader picked.
 - **Live.** When the source streams, strip figures and table cells update in place; nothing to declare. After a Sutra changes on disk every cached layout is dropped, so the next live tick uses the new
-  one. How ticks travel is in [LIVE.md](../architecture/LIVE.md).
+  one. How ticks travel is in [LIVE.md](../architecture/LIVE.md). A source that does not stream can be fetched again: `refresh: 30` (or `{ every: 30, user-can-pause: false }`) on a panel, a use or
+  the Sutra; the reader may pause it or slow it, never speed it past `every` or the console's `views.refresh_min_seconds` ([SUTRA_NEXT.md, section 9](../architecture/SUTRA_NEXT.md#9-live-panels-refresh-control-and-freshness)).
 - **Imperfect data.** A missing field shows a dash; a panel with no data says *No data available* (or its `empty:` text); a value of the wrong type is shown as text; an extract's empty text is nothing
   to `nonblank`. A Sutra never breaks a screen, which is also why a misspelt path is silent: preview against a thin document and a rich one, and read the Tests tab's *empty* cells (section 16).
 

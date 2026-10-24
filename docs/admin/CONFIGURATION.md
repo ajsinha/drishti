@@ -407,6 +407,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_PRODUCT` | `ui.product` | `Drishti` | The product name shown in pages. |
 | `DRISHTI_USER` | `ui.user` | `ash` | The acting user while sign-in is off. |
 | `DRISHTI_ABOUT_PREFETCH` | `ui.about_prefetch` | `true` | Fetch *About this page* when a view goes idle, so labels with a glossary entry are underlined at once; costs one explain per page view. |
+| `DRISHTI_VIEWS_REFRESH_MIN_SECONDS` | `views.refresh_min_seconds` | `5` | The fastest any panel refreshes (a Sutra's `refresh:`, [SUTRA_NEXT.md, section 9](../architecture/SUTRA_NEXT.md#9-live-panels-refresh-control-and-freshness)), in seconds (1 to 3600): a Sutra or a reader asking for faster gets this. |
 | `DRISHTI_UI_DESIGNER` | `ui.designer` | `false` | The Sutra designer: **Customize** on every entity page and **Describe** under Build, New screen ([SCREEN_DESIGNER.md, section 31](../guides/SCREEN_DESIGNER.md#31-the-sutra-designer-customize-and-describe)). Off: pages and the Build workbench are exactly as before. |
 | `DRISHTI_EMBED_ENABLED` | `embed.enabled` | `false` | Serve `/embed/v1/` for host applications registered at the server (ELEMENTS.md). |
 | `DRISHTI_AUTH_ENABLED` | `auth.enabled` | `false` | Turn console sign-in on. |
