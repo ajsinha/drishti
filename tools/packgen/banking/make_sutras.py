@@ -510,6 +510,8 @@ def files() -> dict[Path, str]:
     trading = PACKS / "trading" / "sutras"
     for name, text in TS.blocks().items():   # the trading pack's fragments every deal screen is made of, written once (sutras/common)
         out[trading / "common" / f"{name}.v1.fragment.yaml"] = sutra_file(text)
+    for name, text in TS.page_fragments().items():   # and the derived trade pages' own (payments-metrics, trade-table)
+        out[trading / "common" / f"{name}.v1.fragment.yaml"] = sutra_file(text)
     trades = sample_trades()
     for p in T.PRODUCTS:          # a deal screen per product type of the taxonomy, in the folder of the system that books it
         system = BK.system_of(p.asset)

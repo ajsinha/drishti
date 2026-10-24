@@ -424,6 +424,91 @@ ENDUR_EXTRA = {
 }
 
 
+# the derived pages' trades table: its columns, passed to trading/trade-table@1 as its columns parameter (YAML flow, one a line)
+TRADE_COLUMNS = [
+    "- { label: Trade, bind: \"link(@.TRADE_ID, 'trade')\" }",
+    "- { label: Source, bind: \"@.SOURCE_SYSTEM\" }",
+    "- { label: Product, bind: \"@.PRODUCT_TYPE\" }",
+    f"- {{ label: Side, bind: {q(side('@.BUY_SELL_CODE'))} }}",
+    "- { label: Currency, bind: \"@.CURRENCY\" }",
+    "- { label: Notional, bind: \"@.NOTIONAL\", fmt: amount0, total: true }",
+    "- { label: Index, bind: \"nonblank(@.INDEX_NAME, '–')\" }",
+    "- { label: Maturity, bind: \"@.MATURITY_DATE\", fmt: date }",
+    "- { label: Status, bind: \"nonblank(@.TRADE_STATUS, '–')\", tone: status }",
+]
+
+
+def _metric(days: int) -> list[str]:
+    return [f"  - id: pay{days}", "    kind: metric", f"    title: Payments, next {days} days", f"    value: \"$.PAY_{days}D\"",
+            "    fmt: signed0", "    tone: sign", f"    caption: \"${{$.PAY_{days}D_EVENTS}} events\"", "    span: 4"]
+
+
+def page_fragments() -> dict[str, str]:
+    """{fragment name: its YAML (after rachana: 1)}: the trading pack's fragments of the derived trade pages (SUTRA_NEXT.md 3a): the
+    payments metrics strip and the trades table whose columns are a parameter, each with its complete doc:."""
+    metrics = [
+        "fragment: payments-metrics",
+        "version: 1",
+        "description: \"The payments of the next 7, 30 and 90 days as three metrics side by side, each with its count of events.\"",
+        "doc:",
+        "  summary: \"The payments of the next 7, 30 and 90 days as three metrics side by side, each with its count of events.\"",
+        "  description: >-",
+        *["    " + ln for ln in _wrap(
+            "Three metrics a third of the row each: the signed sum of the payments due in the next 7, 30 and 90 days (paid "
+            "negative, received positive), each captioned with how many events it adds up. It reads PAY_7D, PAY_30D, PAY_90D and "
+            "their _EVENTS counts, which the trading pack's derived connector computes over every member trade of a "
+            "counterparty's, portfolio's, legal entity's or index's page. Use it first on any such page.")],
+        "  params: {}",
+        "  emits: []",
+        "  expects: []",
+        "  examples:",
+        "    - { use: payments-metrics@1 }",
+        "  since: \"2.7.0\"",
+        "panels:",
+        *_metric(7), *_metric(30), *_metric(90),
+    ]
+    table = [
+        "fragment: trade-table",
+        "version: 1",
+        "description: \"A table of trades with the columns the Sutra passes, filtered by a row condition, pivotable by product and system.\"",
+        "params: { id: trades, title: Trades, rows: $.TRADES, where: '', code: '', key: '', columns: [] }",
+        "doc:",
+        "  summary: \"A table of trades with the columns the Sutra passes, filtered by a row condition, pivotable by product and system.\"",
+        "  description: >-",
+        *["    " + ln for ln in _wrap(
+            "A list of trades (a derived page's TRADES, one row a member trade) as a table whose columns are a parameter: a list "
+            "of columns as a table panel writes them, each a label and a bind with an optional fmt, total and tone. Rows may be "
+            "filtered by a condition over each row (@), typically a control's value (ctl.status); the Pivot tab groups the "
+            "notional by product type and source system, filtered by currency, so the rows carry PRODUCT_TYPE, SOURCE_SYSTEM, "
+            "NOTIONAL and CURRENCY. Use it for any list of the trading pack's trades.")],
+        "  params:",
+        "    id: { type: id, default: trades, meaning: \"The panel id, unique on the screen (a control's panel: names it)\" }",
+        "    title: { type: text, default: Trades, meaning: \"The title over the table; it may count the rows, e.g. Trades (${size($.TRADES)})\" }",
+        "    rows: { type: expression, default: $.TRADES, meaning: \"The list of trades, one row each\" }",
+        "    where: { type: expression, default: '', meaning: \"The condition a row (@) must meet to be listed, e.g. oneOf(@.TRADE_STATUS, ctl.status); every row when empty\" }",
+        "    code: { type: key, default: '', meaning: \"The panel's mnemonic code (TRD), typed in the command line to jump to it; none when empty\" }",
+        "    key: { type: key, default: '', meaning: \"The function key (F2 to F12) that brings the panel forward; none when empty\" }",
+        "    columns: { type: columns, default: [], meaning: \"The columns, in order, each { label, bind, fmt, total, tone } as a table panel writes them\" }",
+        "  emits: []",
+        "  expects: []",
+        "  examples:",
+        "    - { use: trade-table@1, with: { code: TRD, key: F2, columns: [ { label: Trade, bind: \"link(@.TRADE_ID, 'trade')\" }, "
+        "{ label: Notional, bind: \"@.NOTIONAL\", fmt: amount0, total: true } ] } }",
+        "  since: \"2.7.0\"",
+        "panels:",
+        "  - id: %{id}",
+        "    kind: table",
+        "    title: \"%{title}\"",
+        "    code: %{code}",
+        "    where: %{where}",
+        "    key: %{key}",
+        "    rows: %{rows}",
+        "    pivot: { rows: [PRODUCT_TYPE], columns: [SOURCE_SYSTEM], values: [{ field: NOTIONAL, agg: sum }], filters: [CURRENCY] }",
+        "    columns: %{columns}",
+    ]
+    return {"payments-metrics": "\n".join(metrics) + "\n", "trade-table": "\n".join(table) + "\n"}
+
+
 # a committed sample of each derived page, opened by its doc's examples (the book desk's book for the portfolio)
 DERIVED_SAMPLES = {"portfolio-trades": "BOOK-RATES-2"}
 
@@ -466,48 +551,15 @@ def derived_yaml(kind: str) -> str:
         "controls:                       # which trades the table lists: every status by default, or only the live ones",
         "  - { id: status, kind: multi-select, label: Status, options: \"$.TRADES[*].TRADE_STATUS\", default: all, placement: header, panel: trades, remember: user }",
         "panels:",
-        "  - id: pay7",
-        "    kind: metric",
-        "    title: Payments, next 7 days",
-        "    value: \"$.PAY_7D\"",
-        "    fmt: signed0",
-        "    tone: sign",
-        "    caption: \"${$.PAY_7D_EVENTS} events\"",
-        "    span: 4",
-        "  - id: pay30",
-        "    kind: metric",
-        "    title: Payments, next 30 days",
-        "    value: \"$.PAY_30D\"",
-        "    fmt: signed0",
-        "    tone: sign",
-        "    caption: \"${$.PAY_30D_EVENTS} events\"",
-        "    span: 4",
-        "  - id: pay90",
-        "    kind: metric",
-        "    title: Payments, next 90 days",
-        "    value: \"$.PAY_90D\"",
-        "    fmt: signed0",
-        "    tone: sign",
-        "    caption: \"${$.PAY_90D_EVENTS} events\"",
-        "    span: 4",
-        "  - id: trades",
-        "    kind: table",
-        "    title: \"Trades (${size($.TRADES[?oneOf(@.TRADE_STATUS, ctl.status)])} of ${$.TRADE_COUNT})\"",
-        "    code: TRD",
-        "    where: \"oneOf(@.TRADE_STATUS, ctl.status)\"",
-        "    key: F2",
-        "    rows: $.TRADES",
-        "    pivot: { rows: [PRODUCT_TYPE], columns: [SOURCE_SYSTEM], values: [{ field: NOTIONAL, agg: sum }], filters: [CURRENCY] }",
-        "    columns:",
-        "      - { label: Trade, bind: \"link(@.TRADE_ID, 'trade')\" }",
-        "      - { label: Source, bind: \"@.SOURCE_SYSTEM\" }",
-        "      - { label: Product, bind: \"@.PRODUCT_TYPE\" }",
-        f"      - {{ label: Side, bind: {q(side('@.BUY_SELL_CODE'))} }}",
-        "      - { label: Currency, bind: \"@.CURRENCY\" }",
-        "      - { label: Notional, bind: \"@.NOTIONAL\", fmt: amount0, total: true }",
-        "      - { label: Index, bind: \"nonblank(@.INDEX_NAME, '–')\" }",
-        "      - { label: Maturity, bind: \"@.MATURITY_DATE\", fmt: date }",
-        "      - { label: Status, bind: \"nonblank(@.TRADE_STATUS, '–')\", tone: status }",
+        "  - { use: trading/payments-metrics@1 }",
+        "  - use: trading/trade-table@1",
+        "    with:",
+        "      title: \"Trades (${size($.TRADES[?oneOf(@.TRADE_STATUS, ctl.status)])} of ${$.TRADE_COUNT})\"",
+        "      code: TRD",
+        "      key: F2",
+        "      where: \"oneOf(@.TRADE_STATUS, ctl.status)\"",
+        "      columns:",
+        *["        " + c for c in TRADE_COLUMNS],
         "  - id: upcoming",
         "    kind: ladder",
         "    title: \"Upcoming payments, next 90 days${$.TRADE_COUNT > size($.TRADES) ? ' (the ' + size($.TRADES) + ' trades listed)' : ''}\"",
@@ -554,7 +606,7 @@ def derived_yaml(kind: str) -> str:
         f"    rows: \"group({events}, 'EVENT_DATE', 'AMOUNT', 'month')\"",
         "    fmt: signed0",
         "    tone: sign",
-        "  - { id: built, kind: provenance, title: How this view was built }",
+        "  - { use: data-provenance@1 }",
         "keys: { " + (f"F7: \"link($.{id_field}, '{target}')\", " if target else "") + "F9: raw }",
     ]
     return "\n".join(lines) + "\n"

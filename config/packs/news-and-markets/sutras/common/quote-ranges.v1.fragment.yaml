@@ -1,0 +1,52 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# The news-and-markets pack's own fragment (SUTRA_NEXT.md 3a), hand-written, used as { use: news-and-markets/quote-ranges@1 }.
+rachana: 1
+fragment: quote-ranges
+version: 1
+description: "A quote's ranges and size: day and 52-week ranges, volume, market cap, previous close and as of."
+params: { id: range, title: Ranges and size, code: '', key: '', area: '' }
+doc:
+  summary: "A quote's ranges and size: day and 52-week ranges, volume, market cap, previous close and as of."
+  description: >-
+    The ranges and size of one quote as labels and values: the day range, the 52-week range, the volume, the market
+    capitalisation, the previous close and when the quote is as of. It reads the yfinance connector's quote fields
+    (DAY_RANGE, FIFTY_TWO_WEEK_RANGE, VOLUME, MARKET_CAP, PREVIOUS_CLOSE, AS_OF). Use it beside a quote's price line.
+  params:
+    id: { type: id, default: range, meaning: "The panel id, unique on the screen" }
+    title: { type: text, default: Ranges and size, meaning: "The title over the list" }
+    code: { type: key, default: '', meaning: "The panel's mnemonic code, typed in the command line to jump to it; none when empty" }
+    key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
+  emits: []
+  expects: []
+  examples:
+    - { use: quote-ranges@1, with: { key: F3, area: right } }
+  since: "2.7.0"
+panels:
+  - id: %{id}
+    kind: kv
+    title: "%{title}"
+    code: %{code}
+    key: %{key}
+    area: %{area}
+    columns:
+      - { label: Day range, bind: $.DAY_RANGE }
+      - { label: 52-week range, bind: $.FIFTY_TWO_WEEK_RANGE }
+      - { label: Volume, bind: $.VOLUME, fmt: amount0 }
+      - { label: Market cap, bind: $.MARKET_CAP, fmt: compact }
+      - { label: Previous close, bind: $.PREVIOUS_CLOSE, fmt: price2 }
+      - { label: As of, bind: $.AS_OF }

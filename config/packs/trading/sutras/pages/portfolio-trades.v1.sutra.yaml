@@ -46,48 +46,23 @@ strip:
 controls:                       # which trades the table lists: every status by default, or only the live ones
   - { id: status, kind: multi-select, label: Status, options: "$.TRADES[*].TRADE_STATUS", default: all, placement: header, panel: trades, remember: user }
 panels:
-  - id: pay7
-    kind: metric
-    title: Payments, next 7 days
-    value: "$.PAY_7D"
-    fmt: signed0
-    tone: sign
-    caption: "${$.PAY_7D_EVENTS} events"
-    span: 4
-  - id: pay30
-    kind: metric
-    title: Payments, next 30 days
-    value: "$.PAY_30D"
-    fmt: signed0
-    tone: sign
-    caption: "${$.PAY_30D_EVENTS} events"
-    span: 4
-  - id: pay90
-    kind: metric
-    title: Payments, next 90 days
-    value: "$.PAY_90D"
-    fmt: signed0
-    tone: sign
-    caption: "${$.PAY_90D_EVENTS} events"
-    span: 4
-  - id: trades
-    kind: table
-    title: "Trades (${size($.TRADES[?oneOf(@.TRADE_STATUS, ctl.status)])} of ${$.TRADE_COUNT})"
-    code: TRD
-    where: "oneOf(@.TRADE_STATUS, ctl.status)"
-    key: F2
-    rows: $.TRADES
-    pivot: { rows: [PRODUCT_TYPE], columns: [SOURCE_SYSTEM], values: [{ field: NOTIONAL, agg: sum }], filters: [CURRENCY] }
-    columns:
-      - { label: Trade, bind: "link(@.TRADE_ID, 'trade')" }
-      - { label: Source, bind: "@.SOURCE_SYSTEM" }
-      - { label: Product, bind: "@.PRODUCT_TYPE" }
-      - { label: Side, bind: "@.BUY_SELL_CODE == 'B' ? 'Buy' : (@.BUY_SELL_CODE == 'S' ? 'Sell' : nonblank(@.BUY_SELL_CODE, '–'))" }
-      - { label: Currency, bind: "@.CURRENCY" }
-      - { label: Notional, bind: "@.NOTIONAL", fmt: amount0, total: true }
-      - { label: Index, bind: "nonblank(@.INDEX_NAME, '–')" }
-      - { label: Maturity, bind: "@.MATURITY_DATE", fmt: date }
-      - { label: Status, bind: "nonblank(@.TRADE_STATUS, '–')", tone: status }
+  - { use: trading/payments-metrics@1 }
+  - use: trading/trade-table@1
+    with:
+      title: "Trades (${size($.TRADES[?oneOf(@.TRADE_STATUS, ctl.status)])} of ${$.TRADE_COUNT})"
+      code: TRD
+      key: F2
+      where: "oneOf(@.TRADE_STATUS, ctl.status)"
+      columns:
+        - { label: Trade, bind: "link(@.TRADE_ID, 'trade')" }
+        - { label: Source, bind: "@.SOURCE_SYSTEM" }
+        - { label: Product, bind: "@.PRODUCT_TYPE" }
+        - { label: Side, bind: "@.BUY_SELL_CODE == 'B' ? 'Buy' : (@.BUY_SELL_CODE == 'S' ? 'Sell' : nonblank(@.BUY_SELL_CODE, '–'))" }
+        - { label: Currency, bind: "@.CURRENCY" }
+        - { label: Notional, bind: "@.NOTIONAL", fmt: amount0, total: true }
+        - { label: Index, bind: "nonblank(@.INDEX_NAME, '–')" }
+        - { label: Maturity, bind: "@.MATURITY_DATE", fmt: date }
+        - { label: Status, bind: "nonblank(@.TRADE_STATUS, '–')", tone: status }
   - id: upcoming
     kind: ladder
     title: "Upcoming payments, next 90 days${$.TRADE_COUNT > size($.TRADES) ? ' (the ' + size($.TRADES) + ' trades listed)' : ''}"
@@ -134,5 +109,5 @@ panels:
     rows: "group(flatten($.TRADES[*].EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)], 'EVENT_DATE', 'AMOUNT', 'month')"
     fmt: signed0
     tone: sign
-  - { id: built, kind: provenance, title: How this view was built }
+  - { use: data-provenance@1 }
 keys: { F7: "link($.PORTFOLIO, 'book')", F9: raw }

@@ -41,44 +41,10 @@ strip:
   - { label: Market, bind: $.MARKET_STATE }
   - { label: Exchange, bind: $.EXCHANGE }
 panels:
-  - id: history
-    kind: line
-    title: "Closing price"
-    key: F2
-    rows: $.HISTORY
-    x: DATE
-    y: CLOSE
-    fmt: price2
-  - id: range
-    kind: kv
-    title: "Ranges and size"
-    key: F3
-    area: right
-    columns:
-      - { label: Day range, bind: $.DAY_RANGE }
-      - { label: 52-week range, bind: $.FIFTY_TWO_WEEK_RANGE }
-      - { label: Volume, bind: $.VOLUME, fmt: amount0 }
-      - { label: Market cap, bind: $.MARKET_CAP, fmt: compact }
-      - { label: Previous close, bind: $.PREVIOUS_CLOSE, fmt: price2 }
-      - { label: As of, bind: $.AS_OF }
-  - id: bars
-    kind: table
-    title: "Price history"
-    key: F4
-    rows: $.HISTORY
-    columns:
-      - { label: Date, bind: "@.DATE" }
-      - { label: Open, bind: "@.OPEN", fmt: price2 }
-      - { label: High, bind: "@.HIGH", fmt: price2 }
-      - { label: Low, bind: "@.LOW", fmt: price2 }
-      - { label: Close, bind: "@.CLOSE", fmt: price2 }
-      - { label: Volume, bind: "@.VOLUME", fmt: amount0 }
-  - id: snapshot
-    kind: markdown
-    title: "Snapshot"
-    area: right
-    when: "nonblank($.SNAPSHOT)"
-    text: "${$.SNAPSHOT}. Served offline from the demo lake (news-store), not live: the live connector is off or the server runs in offline mode (DRISHTI_OFFLINE=true)."
-  - { id: source, kind: kv, title: Data source and terms, area: right, rows: $.PROVENANCE }
-  - { id: built, kind: provenance, title: How this view was built }
+  - { use: series-line@1, with: { id: history, title: "Closing price", rows: $.HISTORY, x: DATE, y: CLOSE, fmt: price2, key: F2 } }
+  - { use: news-and-markets/quote-ranges@1, with: { key: F3, area: right } }
+  - { use: news-and-markets/price-bars@1, with: { key: F4 } }
+  - { use: news-and-markets/snapshot-note@1, with: { area: right } }
+  - { use: field-list@1, with: { id: source, title: Data source and terms, area: right, rows: $.PROVENANCE } }
+  - { use: data-provenance@1 }
 keys: { F9: raw }

@@ -1,0 +1,52 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# The news-and-markets pack's own fragment (SUTRA_NEXT.md 3a), hand-written, used as { use: news-and-markets/headlines@1 }.
+rachana: 1
+fragment: headlines
+version: 1
+description: "Headlines newest first as a table: when published, the publisher, the headline and its link."
+params: { id: headlines, title: "Headlines, newest first", rows: $.ITEMS, code: '', key: '', area: '' }
+doc:
+  summary: "Headlines newest first as a table: when published, the publisher, the headline and its link."
+  description: >-
+    The news connector's headlines one row each, newest first as the connector orders them: when each was published,
+    its publisher, the headline and the link to the story. It reads ITEMS rows (PUBLISHED, SOURCE, TITLE, LINK). Use it
+    on any page of a name's news.
+  params:
+    id: { type: id, default: headlines, meaning: "The panel id, unique on the screen" }
+    title: { type: text, default: "Headlines, newest first", meaning: "The title over the table" }
+    rows: { type: expression, default: $.ITEMS, meaning: "The list of headlines" }
+    code: { type: key, default: '', meaning: "The panel's mnemonic code, typed in the command line to jump to it; none when empty" }
+    key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
+  emits: []
+  expects: []
+  examples:
+    - { use: headlines@1, with: { key: F2 } }
+  since: "2.7.0"
+panels:
+  - id: %{id}
+    kind: table
+    title: "%{title}"
+    code: %{code}
+    key: %{key}
+    area: %{area}
+    rows: %{rows}
+    columns:
+      - { label: Published, bind: "@.PUBLISHED" }
+      - { label: Source, bind: "@.SOURCE" }
+      - { label: Headline, bind: "@.TITLE" }
+      - { label: Link, bind: "@.LINK" }

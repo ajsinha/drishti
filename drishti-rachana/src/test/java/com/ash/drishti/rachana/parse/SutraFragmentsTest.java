@@ -204,6 +204,52 @@ class SutraFragmentsTest {
         assertThat(SutraBlocks.load(List.of(dir))).extracting(SutraProblem::message).anyMatch(m -> m.contains("doc.uses lists"));
     }
 
+    static final String TABLE = """
+            rachana: 1
+            fragment: probe-table
+            version: 1
+            params: { rows: $.ROWS, columns: [] }
+            doc:
+              summary: A table.
+              description: A table whose columns are a parameter.
+              params:
+                rows: { type: expression, default: $.ROWS, meaning: The rows }
+                columns: { type: columns, default: [], meaning: "The columns, each { label, bind, fmt, total, tone }" }
+              emits: []
+              expects: []
+              examples:
+                - { use: probe-table@1, with: { columns: [ { label: Trade, bind: "@.ID" } ] } }
+              since: "2.7.0"
+            panels:
+              - id: rows
+                kind: table
+                rows: %{rows}
+                columns: %{columns}
+            """;
+
+    @Test
+    void aColumnsParameterIsAListOfColumnsFilledInAsWritten() throws Exception {
+        Files.writeString(dir.resolve("probe-table.v1.fragment.yaml"), TABLE);
+        assertThat(SutraBlocks.load(List.of(dir))).isEmpty();
+        Sutra s = new SutraParser().parse(sutra("""
+                  - use: probe-table@1
+                    with:
+                      rows: $.TRADES
+                      columns:
+                        - { label: Trade, bind: "link(@.TRADE_ID, 'trade')" }
+                        - { label: "Notional \\"x\\"", bind: "@.NOTIONAL", fmt: amount0, total: true }
+                        - { label: Side, bind: "@.SIDE == 'B' ? 'Buy' : '–'", tone: status }
+                """), "probe.v1.sutra.yaml", "x");
+        Panel t = s.panels().get(0);
+        assertThat(t.columns()).extracting(c -> c.label()).containsExactly("Trade", "Notional \"x\"", "Side");
+        assertThat(t.columns()).extracting(c -> c.bind()).containsExactly("link(@.TRADE_ID, 'trade')", "@.NOTIONAL", "@.SIDE == 'B' ? 'Buy' : '–'");
+        assertThat(t.columns().get(1).fmt()).isEqualTo("amount0");
+        assertThat(t.columns().get(1).total()).isTrue();
+        assertThat(new SutraParser().parse(sutra("  - { use: probe-table@1 }\n"), "probe.v1.sutra.yaml", "x").panels().get(0).columns()).isEmpty();
+        Files.writeString(dir.resolve("probe-table.v1.fragment.yaml"), TABLE.replace("default: [], meaning", "default: [x], meaning"));
+        assertThat(SutraBlocks.load(List.of(dir))).extracting(SutraProblem::message).anyMatch(m -> m.contains("is not the declared default"));
+    }
+
     @Test
     void anOlderBlockOrASutraWithoutADocIsAWarningOnly() throws Exception {
         Files.writeString(dir.resolve("ticket.v1.block.yaml"), SutraBlocksTest.TICKET);

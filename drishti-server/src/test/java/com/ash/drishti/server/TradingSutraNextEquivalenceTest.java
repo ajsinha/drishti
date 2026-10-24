@@ -35,11 +35,13 @@ import org.springframework.test.context.DynamicPropertySource;
 /**
  * The trading pack's 130 deal Sutras, built from the pack's own fragments ({@code trading/deal-ticket@1}, legs, flow-schedule,
  * events, payments) and the kit's data-provenance and linked-entities, draw what they drew from the six blocks of before (kept as
- * {@code old-<block>} beside the old layouts), each on the first committed sample trade of its source system and product type.
+ * {@code old-<block>} beside the old layouts), each on the first committed sample trade of its source system and product type; and
+ * the four derived trade pages, built from {@code trading/payments-metrics@1}, {@code trading/trade-table@1} (its columns a
+ * parameter) and the kit's data-provenance, draw what their inline layouts drew on a synthetic page each.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.packs.enabled=trading", "drishti.security.redact=NOTIONAL,COUNTERPARTY,TRADE_DATE",
+        "drishti.packs.enabled=trading", "drishti.sources.connectors.trade-pages.enabled=false", "drishti.security.redact=NOTIONAL,COUNTERPARTY,TRADE_DATE",
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true"})
 @AutoConfigureMockMvc
@@ -50,7 +52,11 @@ class TradingSutraNextEquivalenceTest extends PackSutraNextEquivalence {
     @DynamicPropertySource
     static void site(DynamicPropertyRegistry r) throws Exception {
         site(r, "trading");
+        lake(r, "trading", PAGES);
     }
+
+    /** The derived trade pages: drawn on a synthetic page each (sutra-next-data/trading), the derived connector off. */
+    static final String[] PAGES = {"counterparty-trades", "portfolio-trades", "legal-entity-trades", "index-trades"};
 
     @Override
     String pack() {
@@ -68,14 +74,19 @@ class TradingSutraNextEquivalenceTest extends PackSutraNextEquivalence {
             }
         }
         Map<String, String> out = new LinkedHashMap<>();
+        Map<String, String> pages = lakeRecords("trading", PAGES);
         for (String name : names()) {
+            if (pages.containsKey(name)) {
+                out.put(name, pages.get(name));
+                continue;
+            }
             Matcher m = MATCH.matcher(Files.readString(resources("trading").resolve(name + ".v2.sutra.yaml")));
             assertThat(m.find()).as(name).isTrue();
             String id = first.get(m.group(1) + "|" + m.group(2));
             assertThat(id).as("a committed sample trade for " + name).isNotNull();
             out.put(name, "trade/" + id);
         }
-        assertThat(out).hasSize(130);
+        assertThat(out).hasSize(134);
         return out;
     }
 }

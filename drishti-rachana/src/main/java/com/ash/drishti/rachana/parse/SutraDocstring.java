@@ -50,7 +50,7 @@ public final class SutraDocstring {
     /** A missing or incomplete {@code doc:}. */
     public static final String CODE = "DRS-2055";
     /** The kinds of value a parameter may hold. */
-    public static final Set<String> TYPES = Set.of("text", "expression", "field", "format", "key", "area", "id", "number", "boolean", "kind");
+    public static final Set<String> TYPES = Set.of("text", "expression", "field", "format", "key", "area", "id", "number", "boolean", "kind", "columns");
     /** The longest summary line. */
     public static final int SUMMARY_MAX = 120;
 
@@ -87,8 +87,8 @@ public final class SutraDocstring {
                 }
                 if (!e.map().containsKey("default")) {
                     out.add(problem("fragment " + name + ": doc.params." + p + ".default is missing (write default: '' for none)", file, e.line(), e.column()));
-                } else if (!Objects.equals(nz(text(e.map().get("default"))), nz(params.get(p)))) {
-                    out.add(problem("fragment " + name + ": doc.params." + p + ".default '" + nz(text(e.map().get("default")))
+                } else if (!Objects.equals(nz(SutraBlocks.flow(e.map().get("default")).replace("pXq{", "%{")), nz(params.get(p)))) {
+                    out.add(problem("fragment " + name + ": doc.params." + p + ".default '" + nz(SutraBlocks.flow(e.map().get("default")).replace("pXq{", "%{"))
                             + "' is not the declared default '" + nz(params.get(p)) + "'", file, e.line(), e.column()));
                 }
                 if (blank(text(e.map().get("meaning")))) {

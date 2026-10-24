@@ -1,0 +1,50 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# The news-and-markets pack's own fragment (SUTRA_NEXT.md 3a), hand-written, used as { use: news-and-markets/headline-pipeline@1 }.
+rachana: 1
+fragment: headline-pipeline
+version: 1
+description: "How the headlines were chosen: each relevance step with what it kept and dropped."
+params: { id: pipeline, title: How the headlines were chosen, rows: $.PIPELINE, code: '', key: '', area: '' }
+doc:
+  summary: "How the headlines were chosen: each relevance step with what it kept and dropped."
+  description: >-
+    The news connector's pipeline one row a step (fetched, relevance, duplicates): the step and how many headlines it
+    kept and dropped, so a reader sees why a page has the headlines it has. It reads PIPELINE rows (STEP, KEPT, DROPPED).
+  params:
+    id: { type: id, default: pipeline, meaning: "The panel id, unique on the screen" }
+    title: { type: text, default: How the headlines were chosen, meaning: "The title over the table" }
+    rows: { type: expression, default: $.PIPELINE, meaning: "The list of steps" }
+    code: { type: key, default: '', meaning: "The panel's mnemonic code, typed in the command line to jump to it; none when empty" }
+    key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
+  emits: []
+  expects: []
+  examples:
+    - { use: headline-pipeline@1, with: { key: F4, area: right } }
+  since: "2.7.0"
+panels:
+  - id: %{id}
+    kind: table
+    title: "%{title}"
+    code: %{code}
+    key: %{key}
+    area: %{area}
+    rows: %{rows}
+    columns:
+      - { label: Step, bind: "@.STEP" }
+      - { label: Kept, bind: "@.KEPT", fmt: amount0 }
+      - { label: Dropped, bind: "@.DROPPED", fmt: amount0 }

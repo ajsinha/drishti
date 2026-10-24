@@ -40,41 +40,10 @@ strip:
   - { label: Headlines, bind: $.COUNT, fmt: amount0, emphasis: true }
   - { label: Fetched, bind: $.FETCHED_AT }
 panels:
-  - id: headlines
-    kind: table
-    title: "Headlines, newest first"
-    key: F2
-    rows: $.ITEMS
-    columns:
-      - { label: Published, bind: "@.PUBLISHED" }
-      - { label: Source, bind: "@.SOURCE" }
-      - { label: Headline, bind: "@.TITLE" }
-      - { label: Link, bind: "@.LINK" }
-  - id: bySource
-    kind: hbar
-    title: "Headlines by source"
-    key: F3
-    area: right
-    rows: $.BY_SOURCE
-    label: SOURCE
-    value: COUNT
-    fmt: amount0
-  - id: pipeline
-    kind: table
-    title: "How the headlines were chosen"
-    key: F4
-    area: right
-    rows: $.PIPELINE
-    columns:
-      - { label: Step, bind: "@.STEP" }
-      - { label: Kept, bind: "@.KEPT", fmt: amount0 }
-      - { label: Dropped, bind: "@.DROPPED", fmt: amount0 }
-  - id: snapshot
-    kind: markdown
-    title: "Snapshot"
-    area: right
-    when: "nonblank($.SNAPSHOT)"
-    text: "${$.SNAPSHOT}. Served offline from the demo lake (news-store), not live: the live connector is off or the server runs in offline mode (DRISHTI_OFFLINE=true)."
-  - { id: source, kind: kv, title: Data source and terms, area: right, rows: $.PROVENANCE }
-  - { id: built, kind: provenance, title: How this view was built }
+  - { use: news-and-markets/headlines@1, with: { key: F2 } }
+  - { use: ranked-bars@1, with: { id: bySource, title: "Headlines by source", key: F3, area: right, rows: $.BY_SOURCE, label: SOURCE, value: COUNT, fmt: amount0 } }
+  - { use: news-and-markets/headline-pipeline@1, with: { key: F4, area: right } }
+  - { use: news-and-markets/snapshot-note@1, with: { area: right } }
+  - { use: field-list@1, with: { id: source, title: Data source and terms, area: right, rows: $.PROVENANCE } }
+  - { use: data-provenance@1 }
 keys: { F9: raw }

@@ -321,7 +321,7 @@ public final class SutraBlocks {
         Map<String, String> params = new LinkedHashMap<>();
         PNode ps = m.get("params");
         if (ps != null) {
-            ps.map().forEach((k, v) -> params.put(k, v.text() == null ? "" : v.text().replace("pXq{", "%{")));
+            ps.map().forEach((k, v) -> params.put(k, flow(v).replace("pXq{", "%{")));
         }
         if (fragment) {                                                // a fragment of the library carries a complete doc: (strict)
             List<SutraProblem> doc = new ArrayList<>(SutraDocstring.checkFragment(root, name, params, file));
@@ -331,6 +331,52 @@ public final class SutraBlocks {
             }
         }
         return new Block(name, version, text, Map.copyOf(params), file, path);
+    }
+
+    /**
+     * A parameter's value as the text filled in for its {@code %{name}}: a scalar as written (empty for none), a list or a map
+     * (a {@code columns} parameter: {@code [ { label: Trade, bind: "@.TRADE_ID" }, ... ]}) as one line of YAML flow (JSON), so
+     * {@code columns: %{columns}} in the fragment reads back as the same list.
+     */
+    public static String flow(PNode v) {
+        if (v == null || v.value() == null) {
+            return "";
+        }
+        if (v.isScalar()) {
+            return v.text();
+        }
+        StringBuilder out = new StringBuilder();
+        json(v, out);
+        return out.toString();
+    }
+
+    private static void json(PNode v, StringBuilder out) {
+        var quote = com.fasterxml.jackson.core.io.JsonStringEncoder.getInstance();
+        if (v == null || v.value() == null) {
+            out.append("null");
+        } else if (v.isMap()) {
+            out.append('{');
+            String sep = "";
+            for (Map.Entry<String, PNode> e : v.map().entrySet()) {
+                out.append(sep).append('"').append(quote.quoteAsString(e.getKey())).append("\": ");
+                json(e.getValue(), out);
+                sep = ", ";
+            }
+            out.append('}');
+        } else if (v.isList()) {
+            out.append('[');
+            String sep = "";
+            for (PNode e : v.list()) {
+                out.append(sep);
+                json(e, out);
+                sep = ", ";
+            }
+            out.append(']');
+        } else if (v.value() instanceof String s) {
+            out.append('"').append(quote.quoteAsString(s)).append('"');
+        } else {
+            out.append(v.value());
+        }
     }
 
     /** The block a use names ({@code name@N}, or {@code name} for the newest version), if it is loaded. */
@@ -413,7 +459,7 @@ public final class SutraBlocks {
                                 file, e.getValue().line(), e.getValue().column()));
                         ok = false;
                     } else {
-                        values.put(e.getKey(), e.getValue().text() == null ? "" : e.getValue().text());
+                        values.put(e.getKey(), flow(e.getValue()));
                     }
                 }
             }

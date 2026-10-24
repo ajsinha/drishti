@@ -20,11 +20,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
-/** The news-and-markets pack's hand-migrated news-topic and listed-company Sutras draw what the inline ones drew (quote and news have no committed sample). */
+/**
+ * The news-and-markets pack's four hand-migrated Sutras draw what the inline ones drew: news-topic and listed-company on the pack's
+ * committed samples, quote and news (which the live connectors answer, with no committed sample) on a synthetic quote and headline
+ * set kept with the test resources ({@code sutra-next-data/news-and-markets}) and served by a file connector of the test's own.
+ */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.packs.enabled=news-and-markets",
-        "drishti.security.redact=NAME,TICKER",
+        "drishti.security.redact=NAME,TICKER,ENTITY",
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true"})
 @AutoConfigureMockMvc
@@ -33,6 +37,12 @@ class NewsAndMarketsSutraNextEquivalenceTest extends PackSutraNextEquivalence {
     @DynamicPropertySource
     static void site(DynamicPropertyRegistry r) throws Exception {
         site(r, "news-and-markets");
+        lake(r, "news-and-markets", "quote", "news");
+    }
+
+    @Override
+    java.util.Map<String, String> synthetic() throws Exception {
+        return lakeRecords("news-and-markets", "quote", "news");
     }
 
     @Override

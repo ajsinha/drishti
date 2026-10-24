@@ -73,6 +73,38 @@ abstract class PackSutraNextEquivalence {
         return site;
     }
 
+    /**
+     * Synthetic records for kinds a pack has no committed sample of (derived pages, live connectors' answers): the test resources'
+     * {@code sutra-next-data/<pack>/<kind>.jsonl} (the loaders' rows), copied undated (whatever the business date) into the folder
+     * of a file connector of their own that each kind is routed to.
+     */
+    static void lake(DynamicPropertyRegistry r, String pack, String... kinds) throws Exception {
+        Path day = Path.of("target", "test-data", "sutra-next-" + pack + "-lake").toAbsolutePath();
+        Files.createDirectories(day);
+        String c = "sutra-next-" + pack + "-lake";
+        r.add("drishti.sources.connectors." + c + ".plugin", () -> "file");
+        r.add("drishti.sources.connectors." + c + ".settings.root", day::toString);
+        r.add("drishti.sources.connectors." + c + ".settings.rescan-seconds", () -> "3600");
+        for (int i = 0; i < kinds.length; i++) {
+            String kind = kinds[i];
+            Files.copy(Path.of("src", "test", "resources", "sutra-next-data", pack, kind + ".jsonl"), day.resolve(kind + ".jsonl"),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            r.add("drishti.sources.connectors." + c + ".kinds[" + i + "]", () -> kind);
+            r.add("drishti.sources.routes." + kind, () -> c);
+        }
+    }
+
+    /** The first record of each synthetic kind ({@link #lake}): {@code kind -> kind/id}. */
+    static Map<String, String> lakeRecords(String pack, String... kinds) throws Exception {
+        ObjectMapper json = new ObjectMapper();
+        Map<String, String> out = new LinkedHashMap<>();
+        for (String kind : kinds) {
+            String line = Files.readAllLines(Path.of("src", "test", "resources", "sutra-next-data", pack, kind + ".jsonl")).get(0);
+            out.put(kind, kind + "/" + json.readTree(line).path("id").asText());
+        }
+        return out;
+    }
+
     private Path siteDir() {
         return Path.of("target", "test-data", "sutra-next-" + pack(), "sutras").toAbsolutePath();
     }
@@ -90,6 +122,11 @@ abstract class PackSutraNextEquivalence {
         }
     }
 
+    /** The screens drawn on synthetic records ({@link #lake}) rather than a committed sample: {@code kind -> kind/id}; none by default. */
+    Map<String, String> synthetic() throws Exception {
+        return Map.of();
+    }
+
     /** Each Sutra with an old layout and the record it draws ({@code kind/id}): by default the first committed sample of the kind it is named after. */
     Map<String, String> screens() throws Exception {
         Map<String, String> first = new LinkedHashMap<>();
@@ -97,7 +134,12 @@ abstract class PackSutraNextEquivalence {
             first.putIfAbsent(e.path("kind").asText(), e.path("id").asText());
         }
         Map<String, String> out = new LinkedHashMap<>();
+        Map<String, String> synthetic = synthetic();
         for (String kind : names()) {
+            if (synthetic.containsKey(kind)) {
+                out.put(kind, synthetic.get(kind));
+                continue;
+            }
             assertThat(first).as("a committed sample of " + kind).containsKey(kind);
             out.put(kind, kind + "/" + first.get(kind));
         }

@@ -1,0 +1,80 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+rachana: 1
+sutra: news
+version: 2
+description: "The headlines for one name, as the news connector computed them: newest first, filtered for relevance, duplicates removed."
+doc:
+  summary: "The headlines for one name: newest first, a count by source, how they were chosen, and a snapshot note."
+  description: >-
+    One page per name (a company, a person, a theme; any name works, not only the listed ones): the headlines newest first
+    with their publishers and links, the count of headlines by source, how the headlines were chosen (each relevance step, what
+    it kept and dropped), a note when they are served from the demo lake's snapshot, the data source and its terms, and how
+    the view was built. The headlines are computed on demand by the news connector, filtered for relevance and with duplicates
+    removed. The strip gives the entity, the edition, the relevance filter, the number of headlines and when they were fetched.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/news/NEWS-Bitcoin"
+    - "NEWS NEWS-Bitcoin"
+  since: "2.7.0"
+match: { kind: news, priority: 10 }
+title: { pill: "News · Headlines", id: $.NEWS_ID }
+strip:
+  - { label: Entity, bind: $.ENTITY }
+  - { label: Edition, bind: $.EDITION }
+  - { label: Relevance filter, bind: $.RELEVANCE_FILTER }
+  - { label: Headlines, bind: $.COUNT, fmt: amount0, emphasis: true }
+  - { label: Fetched, bind: $.FETCHED_AT }
+panels:
+  - id: headlines
+    kind: table
+    title: "Headlines, newest first"
+    key: F2
+    rows: $.ITEMS
+    columns:
+      - { label: Published, bind: "@.PUBLISHED" }
+      - { label: Source, bind: "@.SOURCE" }
+      - { label: Headline, bind: "@.TITLE" }
+      - { label: Link, bind: "@.LINK" }
+  - id: bySource
+    kind: hbar
+    title: "Headlines by source"
+    key: F3
+    area: right
+    rows: $.BY_SOURCE
+    label: SOURCE
+    value: COUNT
+    fmt: amount0
+  - id: pipeline
+    kind: table
+    title: "How the headlines were chosen"
+    key: F4
+    area: right
+    rows: $.PIPELINE
+    columns:
+      - { label: Step, bind: "@.STEP" }
+      - { label: Kept, bind: "@.KEPT", fmt: amount0 }
+      - { label: Dropped, bind: "@.DROPPED", fmt: amount0 }
+  - id: snapshot
+    kind: markdown
+    title: "Snapshot"
+    area: right
+    when: "nonblank($.SNAPSHOT)"
+    text: "${$.SNAPSHOT}. Served offline from the demo lake (news-store), not live: the live connector is off or the server runs in offline mode (DRISHTI_OFFLINE=true)."
+  - { id: source, kind: kv, title: Data source and terms, area: right, rows: $.PROVENANCE }
+  - { id: built, kind: provenance, title: How this view was built }
+keys: { F9: raw }
