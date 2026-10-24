@@ -15,7 +15,7 @@
 -->
 # Datasets: the YAML, the expression language and the security rules
 
-Reference for the **dataset** of Drishti Rūpaka (BI), as built (live tables are section 7.1; window functions 4.3; several facts 3.1). For the walk-through see [tutorial 10](../tutorials/10-first-bi-report.md) (step 1, [BI_RECIPES.md](BI_RECIPES.md) for the stored datasets, and [tutorial 12](../tutorials/12-live-bi-and-boards.md) for a live table); for the pages that show a dataset see [BI_GUIDE.md](BI_GUIDE.md) sections 13 and 16; for datasets built from other datasets (joined in YAML, or made by a Python Transform) see
+Reference for the **dataset** of Drishti Rūpaka (BI), as built (live tables are section 7.1; window functions 4.3; several facts 3.1). For the walk-through see [tutorial 10](../tutorials/10-first-bi-report.md) (step 1, [BI_RECIPES.md](BI_RECIPES.md) for the stored datasets, and [tutorial 12](../tutorials/12-live-bi-and-boards.md) for a live table); for the pages that show a dataset see [BI_GUIDE.md](BI_GUIDE.md) sections 13 and 16; for the 2.1 datasets built from other datasets (composed and derived, removed in 2.2: several facts are now one model, a Transform is a Python dataset) see
 [section 11](#11-composed-and-derived-datasets); for the design see [RUPAKA.md](../architecture/RUPAKA.md) sections 6 and 7, "20.2 Phase 2, as built" and "20.10 Several datasets, as built"; for the HTTP API see
 [API_GUIDE.md](API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2); for the settings see
 [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibiquery--the-dataset-query-engine-phase-2).
@@ -50,9 +50,9 @@ security: { rows: [...], masked: [...] }   # section 6
 rollups: [ ... ]            # section 7
 refresh: "daily 06:00"      # when the layers are rebuilt on their own: a schedule or after-load (section 7.2)
 layout: { ... }             # where the Model view draws each table (written by the diagram; the language ignores it)
-from: { ... }               # a composed dataset: other datasets asked as the reader, instead of tables (section 11.1)
+from: { ... }               # 2.1 only, removed in 2.2 (DRS-9190): a composed dataset (section 11.1)
 join: [ ... ]               #   ... and how their answers are joined
-derived: { ... }            # a derived dataset: a Python Transform that returns the table (section 11.2)
+derived: { ... }            # 2.1 only, removed in 2.2 (DRS-9190): a derived dataset (section 11.2)
 columns: { ... }            #   ... and the columns it returns, typed
 ```
 
@@ -160,7 +160,7 @@ SELECT "counterparties.SECTOR", "MTM", "Trades", "Exposure (EE peak)", "Netting 
 
 * Each part is the ordinary query of one fact: its own row rules, filters and masks. The parts are **full-outer-joined** on the fields (a null equals a null), so a sector one fact lacks still shows with the other's figures (and an empty cell for the missing one).
 * With **no fields** the totals sit side by side in one row. A **filter on a shared dimension** reaches every fact; a filter on a measure (`LimitTotal gt 50`) is applied to the joined rows, as are the sort and the limit.
-* **Refused, safely:** a field one fact cannot reach many-to-one (`trades.DESK` beside a measure of `limits`: `DRS-9020`, no many-to-one path); a measure that mixes the facts (`measure('MTM') / measure('LimitTotal')`: combine them in a composed dataset, section 11); a window measure (4.3) with another fact; and a **row rule that reads a fact table** the other fact cannot reach (a desk-head's `trades.DESK in user.desks` against limits): the query is refused rather than shown unrestricted.
+* **Refused, safely:** a field one fact cannot reach many-to-one (`trades.DESK` beside a measure of `limits`: `DRS-9020`, no many-to-one path); a measure that mixes the facts (`measure('MTM') / measure('LimitTotal')`); a window measure (4.3) with another fact; and a **row rule that reads a fact table** the other fact cannot reach (a desk-head's `trades.DESK in user.desks` against limits): the query is refused rather than shown unrestricted.
 * A rollup does not answer a several-facts query; each part reads its own layers.
 
 ## 4. Measures and the expression language
@@ -590,7 +590,7 @@ tables:
         measures: [MTM, Losses, Trades]     # measures of this dataset that aggregate the live table (not Python, not window or time-intelligence measures)
 ```
 
-The model gains a table `history` with a `ts` column (when the sample was taken, a timestamp), one column for each `by` column (the live table's own type) and one `decimal` column for each sampled measure (named like the measure, with anything but letters, digits and underscores replaced by underscores), and one **generated measure** for each sampled measure, `<measure> history`, which adds up that column (`sum(history.MTM)`). So a line of the net MTM over time is `axis: [history.ts], values: [MTM history]`, with a second well field `history.desk` for a line per desk when `by: [desk]` is set. A real query against the sample (`live-trading`, sampled every 10 s) a minute after the first use:
+The model gains a table `history` with a `ts` column (when the sample was taken, a timestamp), one column for each `by` column (the live table's own type) and one `decimal` column for each sampled measure (named like the measure, with anything but letters, digits and underscores replaced by underscores), and one **generated measure** for each sampled measure, `<measure> history`, which adds up that column (`sum(history.MTM)`). So a line of the net MTM over time is `axis: [history.ts], values: [MTM history]`, with a second well field `history.desk` for a line per desk when `by: [desk]` is set. A real query against the sample (`live-trading`, sampled every 10 s) a minute after the first use, captured in 2.1 (since 2.2 the same question is a model query, `POST /api/v1/bi/mq`, and the dataset route answers `410 DRS-9150`):
 
 ```
 POST /api/v1/bi/datasets/file:dataset:live-trading/query
@@ -621,6 +621,7 @@ A sample is stamped to the second.
 
 ## 8. The query
 
+Since 2.2 a dataset is asked through its model: `POST /api/v1/bi/mq` ([BI_MODEL_SPEC.md](../architecture/BI_MODEL_SPEC.md) section 5); `POST /api/v1/bi/datasets/{id}/query` answers `410 DRS-9150` with the equivalent model query. What follows is the 2.1 body, whose fields, filters and limits the model query keeps:
 `POST /api/v1/bi/datasets/{id}/query` with the body of [API_GUIDE.md](API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2): `fields`, `measures`, `filters` (`eq ne in not-in lt le gt ge between contains
 starts-with is-null not-null`; a filter whose field is a measure name filters the aggregate), `dates` (`from`, `to`; one date or a range, at most 400 days, at most 31 not-yet-built dates read per query),
 `orderBy`, `limit`, `layer` (`auto`, `columns`, `rollup`). Every name is checked against the model and quoted; **every value is a bound parameter**; a value of the wrong type for its column is refused
@@ -680,7 +681,7 @@ a window function **in a filter**, with the measures of another fact, or **insid
 the **BI store as a configured connector** (a folder today; S3 by mounting it); **other engines** than DuckDB (the interface exists); **Delta native deletes/updates** are honoured only as far as the Delta connector
 honours them (the engine reads through the connector, not the files); **classification tags** and **per-entry export rules**. (Lineage and impact analysis are phase 4: [BI_GOVERNANCE.md](BI_GOVERNANCE.md).) Reports, the designer and the Model view (a dataset's tables and relationships as a diagram, with the `layout:` key) are built in phase 3: [REPORTS.md](REPORTS.md), [BI_GUIDE.md](BI_GUIDE.md) sections 14 to 16.
 
-**Not built for composed and derived datasets (11):** joins other than on equal columns (no range or expression joins) and other than `inner`, `left` and `full`; a filter of a visual **pushed down into the sources** (a filter on the joined table is applied after the join, the sources are asked for their whole answer, within `compose-source-max-rows`); rollups and relationships on a composed dataset (it has one table); a Transform result **shared between readers** (it is kept per reader); a Transform that is **run in the browser** (server only); a derived dataset's `refresh:` that **re-runs the Transform for every reader in advance** (it drops what was kept; the next reader runs it); **Source** Python items (a table from a Python-only source, [RUPAKA.md section 13.1](../architecture/RUPAKA.md)).
+**Was not built for the 2.1 composed and derived datasets (11, removed in 2.2):** joins other than on equal columns (no range or expression joins) and other than `inner`, `left` and `full`; a filter of a visual **pushed down into the sources** (a filter on the joined table is applied after the join, the sources are asked for their whole answer, within `compose-source-max-rows`); rollups and relationships on a composed dataset (it has one table); a Transform result **shared between readers** (it is kept per reader); a Transform that is **run in the browser** (server only); a derived dataset's `refresh:` that **re-runs the Transform for every reader in advance** (it drops what was kept; the next reader runs it); **Source** Python items (a table from a Python-only source, [RUPAKA.md section 13.1](../architecture/RUPAKA.md)).
 
 ## 11. Composed and derived datasets
 
@@ -689,7 +690,7 @@ honours them (the engine reads through the connector, not the files); **classifi
 > derived one a Python dataset (`source.python`) with a model of the old name ([BI_MODEL_SPEC.md 8.3.1](../architecture/BI_MODEL_SPEC.md#831-as-built-22-wave-a-task-6)).
 > This section describes them as they were, for the conversion.
 
-A dataset does not have to be read from a connector. It may be **built from other datasets**, asked a question each *as the person reading*, and joined: a **composed** dataset joins them in YAML (11.1), a **derived** dataset hands the answers to a Python Transform that returns the table (11.2). Either way the result is an ordinary dataset with one table and measures of its own, so reports, alerts, subscriptions, refresh, Analyse and governance use it as they use any other. The design is [RUPAKA.md section 20.10](../architecture/RUPAKA.md); the sample, built both ways, is *Desk P&L vs counterparty exposure* (11.5).
+In 2.1 a dataset did not have to be read from a connector. It could be **built from other datasets**, asked a question each *as the person reading*, and joined: a **composed** dataset joined them in YAML (11.1), a **derived** dataset handed the answers to a Python Transform that returned the table (11.2). Either way the result was an ordinary dataset with one table and measures of its own. The design is [RUPAKA.md section 20.10](../architecture/RUPAKA.md); the sample, built both ways, was *Desk P&L vs counterparty exposure*; what it became is 11.5.
 
 Why not one dataset with both facts? Because the facts live in different models with different rules: in `trading-risk` a desk-head's row rule is on trades, so exposure by counterparty (netting sets, which do not reach trades) is refused for them (3). A composed dataset keeps each source's own rules and joins what each lets the reader see.
 
@@ -832,17 +833,20 @@ DRS-9021 the join key 'name' (counterparties.NAME of source 'pnl' in 'join-on-na
 * **Impact analysis.** A change to a source dataset is set against the composed and derived datasets built from it as it is against reports: removing `Exposure (EE peak)` from `counterparty-exposure` makes publishing it a breaking change (`DRS-9040`) that names `desk-pnl-vs-exposure` ("measure Exposure (EE peak) (source 'exposure' of desk-pnl-vs-exposure)"), published and in drafts. A report names its datasets for the same purpose (REPORTS.md section 16). Lineage (`GET /bi/items/{id}/lineage`) shows a composed dataset's sources as its upstream, with what it takes of each, and shows it below each source.
 * **The Model view** (`/bi/m/<dataset>`) draws a composed dataset as its sources (each with the columns it is grouped by and its measures, the join keys marked), the joins as labelled lines between the key columns, and the joined table they feed; a derived dataset adds a box for the Transform. The relationship form and proposals are for tables and are hidden. The dataset page lists the sources under **Built from other datasets**, with **Run the Transform now** for a derived one.
 
-### 11.5 The samples
+### 11.5 The samples (as converted in 2.2)
+
+The 2.1 sample files (`counterparty-exposure.dataset.yaml`, the composed `desk-pnl-vs-exposure.dataset.yaml` and the derived
+`desk-pnl-vs-exposure-py.dataset.yaml`) were converted and deleted in 2.2. What ships now:
 
 | File | What |
 |---|---|
-| `config/bi/datasets/counterparty-exposure.dataset.yaml` | the second dataset: netting sets by counterparty, no row rule, names masked |
-| `config/bi/datasets/desk-pnl-vs-exposure.dataset.yaml` | **composed**: P&L from `trading-risk` and exposure from `counterparty-exposure`, joined on the counterparty id |
-| `config/bi/python/pnl-vs-exposure.python.yaml` + `config/bi/datasets/desk-pnl-vs-exposure-py.dataset.yaml` | **derived**: the same table made by a Python Transform |
-| `config/bi/reports/pnl-vs-exposure.report.yaml` | a report over the composed dataset with a slicer and a donut that read the second dataset (REPORTS.md section 16) |
+| `config/bi/models/counterparty-exposure.model.yaml` (tables `counterparty-exposure-netting-sets`, `counterparty-exposure-counterparties` in `config/bi/datasets/`) | the second model: netting sets by counterparty, no row rule, names masked |
+| `config/bi/models/trading-risk.model.yaml` | the composed dataset folded in: P&L of the trades and exposure of the netting sets in one model with two facts (3.1), with `P&L per exposure` |
+| `config/bi/python/pnl-vs-exposure.python.yaml` + `config/bi/datasets/desk-pnl-vs-exposure-py-result.dataset.yaml` + `config/bi/models/desk-pnl-vs-exposure-py.model.yaml` | the derived one: a Python dataset (`source.python`) whose Transform joins two model queries (inputs `pnl` and `exposure`), and a model of the old name over it |
+| `config/bi/reports/pnl-vs-exposure.report.yaml` | a report over `trading-risk@1` with a slicer and a donut that read `counterparty-exposure@1` (REPORTS.md section 16) |
 | `config/bi/notebooks/pnl-vs-exposure-pandas.notebook.yaml` | the join done by hand in pandas over two masked extracts (ANALYSE.md section 2) |
 
-All are `sample: true`. The composed and the derived dataset give the same table; a test compares both with an independent join of the two source datasets (`test_bi_multi_dataset_browser.py`). Tutorials 10 and 14 walk through them.
+All are `sample: true`. A test compares the Python dataset with an independent join of the two models, as each reader (`test_bi_multi_dataset_browser.py`). Tutorials 10 and 14 walk through them.
 
 ## 12. Build a dataset in the browser: the wizard
 
@@ -856,7 +860,7 @@ The wizard keeps the dataset as one document and writes the same YAML sections 1
 
 | Step | What you do | What it writes |
 |---|---|---|
-| 1 Source | one of four: **the packs' kinds**, **a connector** (choose it, then tick its kinds; the connector's name goes into each table's `source.connector`), **combine datasets** (a composed dataset, section 11.1) or **a Python Transform** (a derived dataset, section 11.2); a name, a title, a description | `rachana`, `dataset`, `title`, `description`; for kinds the draft the server starts (`POST /model/start`), for the other two `from:`/`join:` or `derived:`/`columns:` |
+| 1 Source | one of four: **the packs' kinds**, **a connector** (choose it, then tick its kinds; the connector's name goes into each table's `source.connector`), **combine datasets** (a composed dataset, section 11.1) or **a Python Transform** (a derived dataset, section 11.2), the last two refused on save since 2.2 (`DRS-9190`); a name, a title, a description | `rachana`, `dataset`, `title`, `description`; for kinds the draft the server starts (`POST /model/start`), for the other two `from:`/`join:` or `derived:`/`columns:` |
 | 2 Tables and columns | tick the columns to keep, rename each (the column key), see and change its type, mark a key, describe it | `tables.<t>.columns` (shorthand `name: type` when nothing else is set; `path:` when the name differs from the source path); renaming a column follows it through relationships, measures and hierarchies |
 | 3 Relationships | what the packs declare, relationships the values suggest (with the match rate) and same-name-and-type columns, each with **Add**; edit the many side, the one side and the cardinality | `relationships:` |
 | 4 Measures | an aggregation (`sum`, `avg`, `min`, `max`, `count`, `distinct`) and a column, or a **formula** typed with a list of fields to pick from; a format and a description; **Check** runs the server's validation (`POST /datasets/validate`) on the whole draft | `measures:` |

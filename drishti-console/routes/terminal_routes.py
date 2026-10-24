@@ -15,6 +15,7 @@
 """The terminal: home, command dispatch (<GO>) and entity views."""
 from __future__ import annotations
 
+import asyncio
 import re
 from urllib.parse import parse_qs, quote
 
@@ -156,12 +157,34 @@ def _delta(d) -> str:
 
 @router.get("/p/{name}")
 async def pack_overview(request: Request, name: str):
-    """A pack at a glance: every kind you may open, its mnemonic, how many there are, an example, the key fields."""
+    """A pack at a glance: every kind you may open, its mnemonic, how many there are, an example, the key fields; then what its
+    README says (the summary and the Data structures of the kinds you may open: the server leaves the others out)."""
     try:
-        data = await request.app.state.backend.pack_overview(name, ident(request))
+        data, readme = await asyncio.gather(request.app.state.backend.pack_overview(name, ident(request)), _pack_readme(request, name))
     except BackendError as e:
         return render(request, "terminal/missing.html", status_code=e.page_status, kind="pack", id=name, error=e)
-    return render(request, "terminal/pack.html", p=data, screen="pack")
+    return render(request, "terminal/pack.html", p=data, readme=readme, screen="pack")
+
+
+_README_SECTION = re.compile(r"(?ms)^## Data structures[ \t]*\n(.*?)(?=^## |\Z)")
+
+
+async def _pack_readme(request: Request, name: str) -> dict:
+    """The README's summary and its Data structures section as HTML; none (no README, an older server) leaves the section out, never the page."""
+    try:
+        r = await request.app.state.backend.pack_readme(name, ident(request))
+    except Exception:                            # noqa: BLE001
+        return {}
+    if not isinstance(r, dict):
+        return {}
+    meta = r.get("meta") or {}
+    found = _README_SECTION.search(r.get("markdown") or "")
+    html_ = ""
+    if found and found.group(1).strip():
+        from core import readmes
+        from routes.common import library
+        html_ = readmes.render(found.group(1), readmes.source_of(request.app.state.docs_dir, "pack", meta.get("pack") or name), await library(request))
+    return {"summary": meta.get("summary") or "", "html": html_, "sources": meta.get("sources") or []} if (meta.get("summary") or html_) else {}
 
 
 @router.get("/s")

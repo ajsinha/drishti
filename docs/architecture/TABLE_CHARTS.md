@@ -15,11 +15,11 @@
 -->
 # Chart any table
 
-Status: **console wiring built (2.6.7, unreleased):** the engine (C1), the dialog with the `dom`, `records`, `search`, `history` and
+Status: **console wiring built and released in 2.6.7 (2026-10-21):** the engine (C1), the dialog with the `dom`, `records`, `search`, `history` and
 `bi` adapters, the Chart button and the keys (C3, C6, and C7 without its BI-runs path), exports, themes, the browser test and the
 docs; see [section 24](#24-the-console-wiring-as-built-c3-c6-c7). **Not built yet (server lane):** `for=chart` on the records
-endpoint (C2), saved charts (C4, C5), the `chart` panel kind and Promote (C8), Open in BI (C9), Chart all N through BI runs.
-Release **2.6.7** (decided by the product owner, 2026-10-20), beside BI runs
+endpoint (C2), saved charts (C4, C5), the `chart` panel kind and Promote (C8), Open in BI (C9), Chart all N through BI runs; their release is not decided.
+Feature decided by the product owner on 2026-10-20 for 2.6.7, beside BI runs
 ([BI_RUNS.md](BI_RUNS.md)) and the two Drishti\*net transport items ([DRISHTI_NET.md](DRISHTI_NET.md), *Planned, 2.6.7*). Written
 2026-10-20 from the agreed feature, checked against the console and server code on `develop`. Builds on the Pivot tab
 (`pivot.js`, `pivot-engine.js`, `pivot-grid.js`; [USER_GUIDE › The Pivot tab](../guides/USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)),
@@ -569,7 +569,7 @@ All but the last two are reuses or small extensions; nothing new aggregates.
 
 | Method | Path (console → server) | New or changed | Notes |
 |---|---|---|---|
-| `GET` | `/api/pivot/records/{kind}/{id}/{panel}?for=chart` → `/api/v1/views/{kind}/{id}/panels/{panel}/records?for=chart` | **changed** | `for=chart` gives every **column** of a table, ladder or drill level (not only the `pivot:` fields), for any table panel, with each field's `fmt`, `type`, `masked`, `id`/`kind`. `PivotBinder.records` gets the fields from `p.columns()` (each column's `bind`, label and format) when the panel has no `pivot:` or `for=chart`. Refused with `DRS-1040` (*not a table*) for other kinds; `drishti.pivot.enabled: false` does not switch charts off (`drishti.charts.enabled` does). |
+| `GET` | `/api/pivot/records/{kind}/{id}/{panel}?for=chart` → `/api/v1/views/{kind}/{id}/panels/{panel}/records?for=chart` | **changed** | `for=chart` gives every **column** of a table, ladder or drill level (not only the `pivot:` fields), for any table panel, with each field's `fmt`, `type`, `masked`, `id`/`kind`. `PivotBinder.records` gets the fields from `p.columns()` (each column's `bind`, label and format) when the panel has no `pivot:` or `for=chart`. Refused with a planned code (*not a table*) for other kinds; `drishti.pivot.enabled: false` will not switch charts off (a planned charts switch will). |
 | `POST` | `/api/pivot/search/{kind}` | reused | as is; the chart sends one or two values per series (section 11.2) |
 | `GET` | `/export/history/{kind}/{id}.json` | reused | as is |
 | `POST` | `/api/v1/bi/runs` | reused | BI_RUNS 14.2, `source.type: mq` |
@@ -578,12 +578,13 @@ All but the last two are reuses or small extensions; nothing new aggregates.
 | `GET/POST` | `/api/chart/saved/panel/{sutra}/{panel}/promotion` → `/api/v1/me/charts/panel/{sutra}/{panel}/promotion` | **new** | section 12.3 |
 | `POST` | `/api/chart/open-in-bi` → `/api/v1/bi/drafts/from-chart` | **new** | `{source: "bi"|"search", report?, page?, visual?, kind?, q?, settings}` → `201 {draft, visual, href, notes}` |
 
-Error codes: `DRS-1040` (not a table), `DRS-1041` (a chart field is masked or unknown), `DRS-1042` (open in BI: no dataset serves the
-kind), `DRS-1043` (promotion: the panel is not a table). Free numbers in the `DRS-104x` block, to be confirmed against `ErrorCode` at C2.
+Error codes (planned, none in `ErrorCode` yet; numbers to be taken at C2): not a table; a chart field is masked or unknown; open in BI:
+no dataset serves the kind; promotion: the panel is not a table.
 
 ## 17. Settings
 
-Server, `application.yaml`:
+Server, `application.yaml` (planned with C2; not built, nothing reads these yet; the console's limits are constants in
+`table-chart-engine.js` today):
 
 ```yaml
 drishti:
@@ -606,7 +607,7 @@ One console builder and one server builder (two at most, as the release's other 
 | Step | Lane | What | Done when |
 |---|---|---|---|
 | **C1** | console | `table-chart-engine.js`: classify, defaults, normalise, `toArrangement`, `series` (Top N, Others, buckets, sort, percent, abs), the summary, the export grid, the option builder; `charts.js` exports `tokens`, `palette`, `compact`, `axis`, `tooltip` | unit tests of section 19.1 pass under node |
-| **C2** | server | `for=chart` on the records endpoint (`PivotBinder` fields from columns, `type`/`masked` per field), `drishti.charts.*` properties, error codes | `ViewApiTest`/`PivotApiTest` cases: a non-pivot table's records; masked field flagged; a non-table refused |
+| **C2** | server | `for=chart` on the records endpoint (`PivotBinder` fields from columns, `type`/`masked` per field), planned `drishti.charts.*` properties (none was built yet), error codes | `ViewApiTest`/`PivotApiTest` cases: a non-pivot table's records; masked field flagged; a non-table refused |
 | **C3** | console | `table-chart.js` (the dialog, settings, ECharts, keys, live region, View as table, PNG/SVG/CSV/Excel) and `table-chart.css`; the `dom` and `records` adapters; the icon and K in `tables.js` (lazy load) | a Sutra table charts its shown rows and all rows; keys work; phone layout |
 | **C4** | server | `SavedChartController` (`/api/v1/me/charts`, namespace `charts`), `charts` in `StateSync.NAMESPACES` | save, read back, invalidated by a Sutra change, replicated to a peer (`NetStateSyncTest`) |
 | **C5** | console | `routes/chart_routes.py` (saved, promotion, open in BI), `core/table_charts.py` (cache, user stamps); Save / Reset in the dialog | `test_table_chart.py` route cases |
@@ -643,7 +644,7 @@ One console builder and one server builder (two at most, as the release's other 
 * `ChartPanelTest`: the `chart` kind's numbers equal `PivotCube` and the popup's for the same rows; masks; problem codes.
 * `ChartPromotionTest`: the diff, review on and off, the panel inserted after the table with a unique id.
 * `OpenInBiTest`: BI table → draft visual of the right type and wells for every row of the 12.4 table; search kind without a dataset →
-  `DRS-1042`.
+  the planned *no dataset* code.
 
 ### 19.3 Browser (`test_table_chart_browser.py`, one test process, 10K trades at most)
 
@@ -685,7 +686,7 @@ A user whose role masks `MTM` and a row-level rule on one desk:
 | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md), [SUTRA_DEVELOPER_GUIDE.md](../guides/SUTRA_DEVELOPER_GUIDE.md) | the `chart` kind's options; promotion from the popup |
 | `config/help.yaml` | the context help card `table-chart: user-guide#chart-any-table`, and the popup's `?` links it |
 | [Tutorial 21](../tutorials/21-an-entity-over-time.md) and the tables tutorial | a section *Chart it* with UI, keys and the resulting YAML of a promoted chart panel, with screenshots (desktop and phone) |
-| [CONFIGURATION.md](../admin/CONFIGURATION.md) | `drishti.charts.*` |
+| [CONFIGURATION.md](../admin/CONFIGURATION.md) | the planned `drishti.charts.*` (with C2; none was built yet) |
 | [API_GUIDE.md](../guides/API_GUIDE.md) | `for=chart`, `/api/v1/me/charts`, `bi/drafts/from-chart` |
 | [DRISHTI_NET.md](DRISHTI_NET.md) N7 | `charts` among the replicated namespaces |
 | this document | *As built* notes; status to *built* |

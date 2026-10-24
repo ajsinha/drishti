@@ -51,7 +51,7 @@ This guide goes step by step, with a picture of each step. The pictures are made
 - [28. Troubleshooting shipping](#28-troubleshooting-shipping)
 - [29. Limits of shipping](#29-limits-of-shipping)
 - [30. Keyboard reference for shipping](#30-keyboard-reference-for-shipping)
-- [31. The Sutra designer: Customize and Describe](#31-the-sutra-designer-customize-and-describe)
+- [31. The Sutra designer: Customize, Describe, Outline and Grid](#31-the-sutra-designer-customize-describe-outline-and-grid)
 
 ## 1. Start: bring data
 
@@ -215,7 +215,7 @@ The YAML tab is Studio's editor on the design's Sutra: completion of keys and va
 
 **Summary** reads the Sutra back as a page: what it applies to, the strip, each panel with its columns.
 
-**About text.** The Sutra's `description` and each panel's `description` (YAML tab) are what the *About this page* drawer says about your screen, so write them for the person who will press `?`. The sentence with the entity's own numbers, the panels' text and the glossary are the pack's `config/about.yaml` ([About text and glossary](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)); the **About** tab, described next, writes that file beside the Sutra and shows the card it makes.
+**About text.** The Sutra's `description` and each panel's `description` (YAML tab) are what the *About this page* drawer says about your screen, so write them for the person who will press `?`. The sentence with the entity's own numbers, the panels' text and the glossary are the pack's `config/about.yaml` ([About text and glossary](PACK_MODELLING_GUIDE.md#about-text-and-glossary)); the **About** tab, described next, writes that file beside the Sutra and shows the card it makes.
 
 ### The About tab
 
@@ -228,7 +228,7 @@ The **About** tab (right pane, after Versions) is the pack's `config/about.yaml`
 - **Export and import.** *Ship → Export as a pack fragment* adds `config/about.yaml` and `about: config/about.yaml` in the `pack.yaml`; importing a fragment (or a pack folder) puts that file back in the design's About tab.
 - **Keyboard.** The tab is reached like the others (arrow keys between tabs, Enter or Space opens it); the box does **not** trap Tab, so Tab leaves it.
 
-**Not live.** About text authored here is evidence and a draft: *Submit for review* and approval make the **Sutra** live, not the About text, because packs are loaded by administrators. To make the text live, put the exported `config/about.yaml` in the pack ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)); until then the drawer on a live view shows what the pack says. The preview in the tab shows yours over the pack's.
+**Not live.** About text authored here is evidence and a draft: *Submit for review* and approval make the **Sutra** live, not the About text, because packs are loaded by administrators. To make the text live, put the exported `config/about.yaml` in the pack ([PACK_DEVELOPER_GUIDE.md](PACK_MODELLING_GUIDE.md#about-text-and-glossary)); until then the drawer on a live view shows what the pack says. The preview in the tab shows yours over the pack's.
 
 ### The Controls tab
 
@@ -677,7 +677,7 @@ The shared page has no editing keys: the *Preview with a file…*, *Preview a st
 
 See also: [the Sutra command](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci), [Screen Builder design](../architecture/SCREEN_BUILDER.md), [the examples](examples/README.md), [the Rachana reference](RACHANA_REFERENCE.md), [panels in depth](PANELS.md).
 
-## 31. The Sutra designer: Customize and Describe
+## 31. The Sutra designer: Customize, Describe, Outline and Grid
 
 The Sutra designer changes a screen in plain words, on the real page with real data, as you see it. It has one shell with modes:
 **Customize** (change the page you are on), **Describe** (type a new screen in one line), **Outline** (the screen as a list you

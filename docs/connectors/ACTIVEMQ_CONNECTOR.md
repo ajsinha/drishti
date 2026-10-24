@@ -251,7 +251,7 @@ settings:
 ```
 
 A connector file changes only what it says, because it is the whole definition: to change just `broker-url` and `client-id` of the pack's template, copy the template
-into the file and edit those two lines ([CONNECTOR_DEVELOPER_GUIDE.md, Combining connectors](CONNECTOR_DEVELOPER_GUIDE.md#combining-connectors)).
+into the file and edit those two lines ([CONNECTOR_DEVELOPER_GUIDE.md, Combining connectors](CONNECTOR_RECIPES.md#combining-connectors)).
 
 ### 5.3 Which kinds it serves
 
@@ -531,7 +531,7 @@ routes:
 
 The same holds for any dated store (PostgreSQL, Aerospike, files, S3). The broker covers today as it happens; the
 nightly load into the dated store covers history. See
-[CONNECTOR_DEVELOPER_GUIDE.md, Combining connectors](CONNECTOR_DEVELOPER_GUIDE.md#combining-connectors).
+[CONNECTOR_DEVELOPER_GUIDE.md, Combining connectors](CONNECTOR_RECIPES.md#combining-connectors).
 
 ## 13. Failure and recovery
 

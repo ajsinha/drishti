@@ -138,7 +138,11 @@ want to see, and test for: **graceful refusal** (`429 DRS-...` or `503` with a c
 for new work while open views keep ticking, and **recovery** to baseline within a minute after the load stops. What
 fails the test: a crash, an `OutOfMemoryError`, a stuck stream, a refusal without a code, or no recovery.
 
-### 5.4 Soak (to build: a mode of `users.py` plus `tools/bench/memwatch.py`)
+### 5.4 Soak
+
+Part built: the cluster soak `tools/bench/net_soak.py` (with `soak_check.py`: kill windows, the memory slope, the verdict;
+[DRISHTI_NET.md](../architecture/DRISHTI_NET.md) section 17) runs over `users.py`. Still to build: a single-node soak mode of
+`users.py` and a memory watcher script beside it.
 
 Capacity × 0.7 for **8 hours** (a working day) and, before a major release, **72 hours**. Every 5 minutes
 `memwatch.py` records: heap after a full GC (`jcmd <pid> GC.run` then `GC.heap_info`), RSS, native memory summary
@@ -197,7 +201,7 @@ jcmd <pid> GC.class_histogram | head -40 > histo-$(date +%H%M).txt   # what the 
 jcmd <pid> VM.native_memory summary                          # native: threads, code, GC, internal, other
 ```
 
-Take a histogram at the start of a soak, after 1 hour and after 6 hours; **diff** them (`memwatch.py --diff`, to build)
+Take a histogram at the start of a soak, after 1 hour and after 6 hours; **diff** them (with the memory watcher, to build)
 and look at classes whose instance count grows with time but not with the number of open views. Those are the leak
 suspects; for Drishti the likely ones are per-request objects kept in a map keyed by something that never repeats
 (stream ids, session ids, generations).
@@ -217,7 +221,7 @@ rather than retention; it needs `perf_event` access on Linux.
 ### 7.4 The console (Python)
 
 - **Growth:** `tracemalloc` snapshots, taken by a debug-only endpoint (**to build**, `GET /debug/memory`, admin only,
-  off unless `DRISHTI_CONSOLE_DEBUG_MEMORY=true`) that returns the top 30 allocation sites and the difference from the
+  off unless an environment switch to be named when it is built) that returns the top 30 allocation sites and the difference from the
   previous snapshot. RSS comes from `/proc/<pid>/status` (`VmRSS`).
 - **Profiles:** `memray run --live drishti-console/run_drishti_web.py` on a test machine for allocation flame graphs;
   `py-spy dump --pid <pid>` for where the event loop is stuck when latency jumps.

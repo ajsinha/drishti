@@ -15,6 +15,8 @@
 """The terminal: command dispatch, entity views for the four mockups, errors and the JSON proxy."""
 import re
 
+from core.backend import BackendError
+
 
 def text(html):
     return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html))
@@ -411,6 +413,36 @@ def test_a_packs_code_opens_its_overview(client):
     assert "Market data" in page and "FX volatility surface" in page and "1,234" in page
     assert 'href="/s?q=FXV"' in page and 'href="/v/fx-vol-surface/FXV-EURUSD"' in page and "currency, index" in page
     assert client.get("/p/astrology").status_code == 400
+
+
+def test_the_pack_overview_shows_the_readme_summary_and_data_structures_the_user_may_see(client, backend, monkeypatch):
+    """MKT <GO>: below the kinds, the pack README's summary, sources and Data structures (the server leaves out the kinds the
+    user may not open); raw HTML in it is text and unsafe links are not links. No README, or an older server: no section."""
+    asked = []
+
+    async def readme(name, ident=None):
+        asked.append(name)
+        return {"pack": "market-data", "meta": {"pack": "market-data", "summary": "Curves and surfaces of the market.",
+                                                "sources": [{"name": "A vendor", "licence": "Restricted", "internal-only": True}]},
+                "markdown": "# The market-data pack\n\n## What it is\n\nCurves.\n\n## Data structures\n\n### `ir-curve`\n\n"
+                            "| Field | Type | Example | Description |\n|---|---|---|---|\n| `CURVE_ID` | string | `CRV-USD-SOFR` | The curve |\n\n"
+                            "<script>alert(1)</script> [bad](javascript:alert(1))\n\n## Screens and commands\n\nNot shown here.\n"}
+
+    monkeypatch.setattr(backend, "pack_readme", readme)
+    page = client.get("/p/market-data").text
+    assert asked == ["market-data"]
+    assert 'data-pack-readme="market-data"' in page and "Curves and surfaces of the market." in page
+    assert "A vendor (Restricted)" in page and "internal only" in page and "/static/css/readme.css" in page
+    assert "data-readme-structures" in page and "CURVE_ID" in page and "CRV-USD-SOFR" in page
+    assert "<script>alert(1)</script>" not in page and 'href="javascript:' not in page
+    assert "Not shown here." not in page and "Curves.</p>" not in page          # only the summary and the Data structures
+
+    async def none(name, ident=None):
+        raise BackendError(404, "DRS-1001", "no README")
+
+    monkeypatch.setattr(backend, "pack_readme", none)
+    page = client.get("/p/market-data").text
+    assert "Market data" in page and "data-pack-readme" not in page
 
 
 

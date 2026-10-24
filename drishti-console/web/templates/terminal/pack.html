@@ -15,6 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}{{ p.title }} · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/readme.css?v={{ ASSET_V }}">{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
@@ -36,6 +37,21 @@
     {% endfor %}</tbody>
   </table></div></div></section>
   {% else %}<p class="text-muted-d">None of this pack's kinds is open to you.</p>{% endif %}
+  {% if readme and (readme.summary or readme.html) %}
+  <section class="pnl pack-readme" aria-labelledby="packReadme" data-pack-readme="{{ p.name }}">
+    <div class="pnl-b">
+      <h2 class="ws-h" id="packReadme">What the pack holds</h2>
+      {% if readme.summary %}<p data-readme-summary>{{ readme.summary }}</p>{% endif %}
+      {% if readme.sources %}<p class="text-muted-d" data-readme-sources>Sources: {% for s in readme.sources %}{{ s.name }} ({{ s.licence }}){% if s['internal-only'] %} <span class="st st-warn">internal only</span>{% endif %}{{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
+      {% if readme.html %}
+      <details class="pd-readme-body" data-readme-structures>
+        <summary>Data structures: each kind's id, fields and nested structures</summary>
+        <div class="help-article readme-article">{{ readme.html | safe }}</div>
+      </details>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
 </div>
 {% endblock %}
 {% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script>{% endblock %}

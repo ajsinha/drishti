@@ -28,7 +28,7 @@ TRD where QUANTITY > 200m order by QUANTITY desc   →  every trade over 200m, l
 amended trades over 5m in BOOK-RATES-3, biggest first   →  plain words: Drishti shows the search it makes
 ```
 
-**Current release: 2.6.7** (history queries: `TRD <id> 30`) ([release notes](RELEASE_NOTES.md) · [changelog](CHANGELOG.md) ·
+**Current release: 2.6.7** (BI runs, chart any table, Delta and Iceberg side by side; history queries, `TRD <id> 30`, since 2.6.5) ([release notes](RELEASE_NOTES.md) · [changelog](CHANGELOG.md) ·
 [what shipped when](docs/architecture/IMPLEMENTATION_PLAN.md)). **Learn it by doing:** [twenty-two tutorials](docs/tutorials/README.md), from your first 15 minutes to BI, AI, embedding and
 production, each with real screenshots; the [guides](docs/README.md) are the reference.
 
@@ -84,9 +84,9 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
   ([CLIENTS.md](docs/guides/CLIENTS.md)).
 
 **Business intelligence (Rūpaka)**
-- The **BI** menu and the `BI <GO>` keyword (`RUPAKA` still works): a catalogue and workspaces with roles, **datasets** (tables from pack
-  kinds, relationships, measures, row rules and masks) on an embedded query engine, and **several datasets in one report** (composed
-  datasets that join others as the reader, derived ones, a Transform in Python); **reports** with a designer, a Model view, a **map** you
+- The **BI** menu and the `BI <GO>` keyword (`RUPAKA` still works): a catalogue and workspaces with roles, **data models** over
+  **datasets** (tables from pack kinds; relationships, measures, row rules and masks) on an embedded query engine, **several fact tables in one
+  model** and Python datasets made by a Transform; heavy questions as **BI runs** (2.6.7) in a Runs tab ([BI_RUNS_GUIDE.md](docs/guides/BI_RUNS_GUIDE.md)); **reports** with a designer, a Model view, a **map** you
   drill from the world to a country and its regions, **dropdown slicers**, cross-filtering, drill-through, a relative-date slicer, **window functions** and measures that stay correct across several fact tables, **Vega-Lite** charts, expected-value tests that stop a bad publish, and a phone and a tablet layout of their own
   ([BI_GUIDE.md](docs/guides/BI_GUIDE.md), [tutorial 10](docs/tutorials/10-first-bi-report.md), [REPORTS.md](docs/guides/REPORTS.md)).
 - **BI Studio** (2.4.0): the report, model and theme designers in one shell, with an Explorer of your items, open items as tabs and a dock of
@@ -120,9 +120,9 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
   talk (`emits`, `@panel.event`), read other packs (`source:`) and open children on a click; `refresh:` with freshness; a `layout:`
   grid; `form:` with drafts. The **Sutra designer** (`ui.designer`, off by default): **Customize** a live page, **Describe** a screen
   in one line, **Outline** and **Grid** ([tutorial 22](docs/tutorials/22-build-a-screen-with-the-designer.md)).
-- **Domain packs**, enabled per server and assigned per user. Seven ship and are on by default: `core`, `market-data`, `trading`
+- **Domain packs**, enabled per server and assigned per user. Eight ship; seven are on by default: `core`, `market-data`, `trading`
   (125 products), `counterparty-risk`, `market-risk`, `world-economy` (real public data; the IMF figures are for internal demonstrations only)
-  and the sample `news-and-markets`. The earlier `finance`, `logistics`, `genomics`, `retail-banking`, `climate-risk`, `operational-risk`
+  and the sample `news-and-markets`; `us-equities` (SEC EDGAR, GLEIF and Wikidata public data; prices internal-only) is opt-in. The earlier `finance`, `logistics`, `genomics`, `retail-banking`, `climate-risk`, `operational-risk`
   and `liquidity-risk` are retired examples in `examples/packs/` (`DRISHTI_PACKS_EXTRA_DIRS=examples/packs`).
   Packs inherit from each other, load and unload from Admin → Packs, and install from a **signed, versioned
   registry** with rollback ([PACKS.md](docs/guides/PACKS.md)).
@@ -139,7 +139,7 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
   RabbitMQ, Amazon S3 and compatible stores, REST services, JSON and CSV files, and public market data (NY Fed
   SOFR, ECB €STR and FX, US Treasury, FRED), and computed ones such as news headlines for a name and Yahoo Finance quotes.
   Iceberg runs without Hadoop on **drishti-iceberg**, Drishti's own Iceberg engine (with `iceberg-external` for anyone's tables), over
-  **drishti-lakeio**, the shared storage layer (local disk and S3; 2.6.0, arriving with the Iceberg work).
+  **drishti-lakeio**, the shared storage layer of the Delta and Iceberg engines (local disk and S3; 2.6.0).
   Each connector is **one YAML file** in `config/connectors`, changed live in **Admin -> Connectors** with no restart;
   TLS (private CA, mutual TLS) and an outbound HTTP proxy are settings of the file
   ([CONNECTOR_FILES.md](docs/connectors/CONNECTOR_FILES.md), [TLS.md](docs/connectors/TLS.md), [the proxy](docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)).
@@ -262,6 +262,9 @@ drishti/
 ├── drishti-diskcache/           the connectors' RocksDB disk cache
 ├── drishti-messaging/           shared support for message-queue connectors
 ├── drishti-deltalake/           a Delta Kernel engine without Hadoop (local disk, Windows included, and S3)
+├── drishti-lakeio/              the shared storage layer of the lakes: local disk and S3, Parquet footers and pages
+├── drishti-iceberg/             drishti-iceberg, Drishti's own Iceberg engine without Hadoop
+├── drishti-ai/                  the AI layer: model providers, the model registry, call policy, prompt masking, MCP clients (off by default)
 ├── drishti-net/                 Drishti*net: membership by gossip, the cluster key, capability digests (no Spring)
 ├── drishti-server/              the Spring Boot application: API, security, alerts, reports, pack registry
 ├── drishti-stack/               a ready-made local Drishti*net cluster of three servers and a console: start.sh, stop.sh, status.sh
@@ -270,11 +273,11 @@ drishti/
 ├── plugins/drishti-plugin-*/     demo, file, rest, jdbc, delta, aerospike, cassandra, redis, mongodb, iceberg, iceberg-external, duckdb, feeds, news, yfinance, kafka, activemq, rabbitmq, s3
 ├── drishti-console/                     the web console (routes/, core/, web/templates, web/static, tests/)
 ├── clients/python/              drishti_client.py: the standard-library Python client
-├── config/packs/<name>/                the seven domain packs: pack.yaml, Sutras, vocabulary, samples, guides (retired ones in examples/packs/)
+├── config/packs/<name>/                the eight shipped domain packs: pack.yaml, Sutras, vocabulary, samples, guides (retired ones in examples/packs/)
 ├── deploy/                      docker/ (Dockerfiles, compose; ecs/ images), aws/ (Delta lake and ECS scripts), grafana/
 ├── tools/                       packgen/ samplegen/ lake/ (pack data and lakes), rachana/, packreg/ (signed packs),
 │                                drill.sh, license_headers.py
-└── docs/                        tutorials (20), guides, references, runbooks, plan, ADRs
+└── docs/                        tutorials (22), guides, references, runbooks, plan, ADRs
 ```
 
 ## Documentation

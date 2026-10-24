@@ -41,10 +41,22 @@ Drishti is proprietary. It bundles or builds with these third-party components u
 | Delta Kernel, Apache Parquet (parquet-java), snappy-java, AWS SDK for Java 2.x and Apache HttpClient 5 (the Delta connector and its native engine, `drishti-deltalake`) | Apache-2.0 |
 | zstd-jni (Parquet pages compressed with ZSTD) | BSD-2-Clause |
 | Apache Avro (decodes Schema Registry messages in the Kafka connector, `drishti-plugin-kafka`), with Apache Commons Compress | Apache-2.0 |
+| PostgreSQL JDBC driver (pgjdbc; the Drishti database and the `jdbc` connector) | BSD-2-Clause |
+| Apache Hadoop client (`hadoop-client-api`, `hadoop-client-runtime`; the Delta and Iceberg connectors' library engines) and Apache Iceberg Java (`drishti-plugin-iceberg`) | Apache-2.0 |
+| RocksDB (`rocksdbjni`; the disk caches and the message connectors' state store, `drishti-diskcache`) | Apache-2.0 / GPL-2.0 (dual; used under Apache-2.0) |
+| Apache Kafka client (`kafka-clients`, `drishti-plugin-kafka`) | Apache-2.0 |
+| Apache ActiveMQ client (`activemq-client`, `drishti-plugin-activemq`) | Apache-2.0 |
+| Jakarta Messaging API (`jakarta.jms-api`, with the ActiveMQ client) | EPL-2.0 / GPL-2.0 with Classpath Exception |
+| RabbitMQ Java client (`amqp-client`, `drishti-plugin-rabbitmq`) | Apache-2.0 / MPL-2.0 / GPL-2.0 (triple; used under Apache-2.0) |
+| MongoDB Java driver, sync (`mongodb-driver-sync`, `drishti-plugin-mongodb`) | Apache-2.0 |
+| Lettuce (`lettuce-core`, `drishti-plugin-redis`) | MIT |
+| DuckDB JDBC driver (`duckdb_jdbc`, with DuckDB's native library inside, `drishti-plugin-duckdb`) | MIT |
+| Aerospike Java client (`aerospike-client-jdk21`, `drishti-plugin-aerospike`) | Apache-2.0 |
+| Apache Cassandra Java driver (`java-driver-core`, `drishti-plugin-cassandra`) | Apache-2.0 |
 
-## Data bundled in the `economics` and `politics-society` packs
+## Data bundled in the `world-economy` pack
 
-These packs carry published public data (normalised by `tools/realdata`, refreshed with `python3 tools/realdata/realdata.py all`). Every document shows its source,
+This pack (which took over the former `economics` and `politics-society` packs) carries published public data (normalised by `tools/realdata`, refreshed with `python3 tools/realdata/realdata.py all`). Every document shows its source,
 dataset, retrieval date and licence in its *Data source and licence* panel. Details and the refresh procedure: [docs/guides/REAL_DATA.md](docs/guides/REAL_DATA.md).
 
 | Data | Licence and attribution |

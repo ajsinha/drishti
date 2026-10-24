@@ -15,7 +15,7 @@
 -->
 # Server-side pricing: the quant service
 
-**Status: proposed, on the roadmap ([IMPLEMENTATION_PLAN.md › Roadmap](IMPLEMENTATION_PLAN.md#roadmap)); the decision is
+**Status: proposed; not in a planned release, a later candidate in [IMPLEMENTATION_PLAN.md › Roadmap](IMPLEMENTATION_PLAN.md#roadmap); the decision is
 [ADR-019](adr/019-pricing-is-a-quantlib-service-behind-the-server.md).** Nothing here is built yet (checked against 2.0.0: there is no `drishti-quant-gateway` module, no `drishti.quant.*` server setting and no `quant` power; `drishti.quant` below is the small browser library of Calc).
 
 **Relation to Rūpaka (BI).** This is the server-side pricing service for the terminal and Calc. [RUPAKA.md](RUPAKA.md) section 9.2 plans a different, console-side `QuantEngine` for the analyst workbench of BI phase 9, with QLRisk as its first provider, and keeps it a design until QLRisk's API is declared stable. If both are built they should share the pricer mappings of section 6 rather than keep two. Neither is in the BI pages of 1.20 ([BI_GUIDE.md](../guides/BI_GUIDE.md) section 11 lists what BI does not have yet).

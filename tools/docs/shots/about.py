@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of About this page (docs/guides/USER_GUIDE.md "About this page", docs/guides/PACK_DEVELOPER_GUIDE.md "About text and glossary"),
+"""The pictures of About this page (docs/guides/USER_GUIDE.md "About this page", docs/guides/PACK_MODELLING_GUIDE.md "About text and glossary"),
 written to docs/guides/img/about/.
 
 Sign-in is ON with two people, because what the drawer says depends on who asks: `asha` is an author (role `author`, sees every field) and

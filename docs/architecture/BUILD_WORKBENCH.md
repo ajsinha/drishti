@@ -195,7 +195,7 @@ them, with no logic of its own: `/api/v1/builder/designs` (list, create, read, u
 - **Checking cost.** Checks run with a per-user concurrency cap and a time budget, cancel when superseded, and skip
   panels whose inputs did not change.
 
-**Console.** Routes in `drishti-console/routes/build/` (pages and a thin proxy). JavaScript in `static/js/build/` as plain
+**Console.** Routes in `drishti-console/routes/build_routes.py` (pages and a thin proxy). JavaScript in `static/js/build/` as plain
 modules, each under about 400 lines: `editor.js` (from Studio's), `preview.js`, `canvas.js`, `grid-keys.js` (taken out
 of `layout.js` and shared with layout mode), `inspector.js`, `samples.js`, `problems.js`, `tests.js`, `ops.js`,
 `palette.js`, `workbench.js`. Vendored only.

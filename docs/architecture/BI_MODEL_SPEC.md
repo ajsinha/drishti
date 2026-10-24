@@ -50,7 +50,7 @@ model · [3](#3-implicit-models) implicit models · [4](#4-consumers-bind-to-one
 **Language versions.** New items are `rachana: 2`. A `rachana: 1` dataset file is read in W1 by a **compatibility
 reader** (section 8.4) and removed in W4 (no dual support after W4, as BI_PARITY_PLAN section 5.0 requires).
 
-**Code ranges.** New problem codes are `DRS-9100` to `DRS-9199`, unused today: datasets 9100–9119, models 9120–9139,
+**Code ranges.** New problem codes are `DRS-9100` to `DRS-9199` (they were unused when this was written): datasets 9100–9119, models 9120–9139,
 consumers 9140–9149, the query language 9150–9179, standing queries 9180–9189, migration 9190–9199. Existing codes keep
 their meaning (`DRS-9020` and `DRS-9021` are still what the engine answers for a refused or masked query; the MQ
 validator answers the more precise 915x code first).
@@ -708,7 +708,7 @@ measures:                                  # report-local measures: expressions 
 ```
 
 * A local measure uses the model's measures and fields and the expression language; it **cannot** name a dataset the
-  model lacks, declare a relationship, or change security (`DRS-9142`). It travels inside the MQ (`define:`, 5.1), so
+  model lacks, declare a relationship, or change security (it was designed as DRS-9142; as built a bad local measure is `DRS-9154`, `MQ_DEFINE`). It travels inside the MQ (`define:`, 5.1), so
   the engine handles it exactly like a model measure, as the reader.
 * The designer marks local measures and offers *Move into the model* (a draft change of the model, reviewed like any
   model change) when the author owns the model or can propose to it.
@@ -720,7 +720,7 @@ A report may **link** a second model only when the two models have **different o
 ```yaml
 model: trading-risk@1
 also:
-  - { model: treasury-liquidity@2 }            # validated: its owner differs from trading-risk's (DRS-9143 otherwise)
+  - { model: treasury-liquidity@2 }            # validated: its owner differs from trading-risk's (designed as DRS-9143; this check was not built)
 links:
   - fields: [counterparties.id, treasury-liquidity:counterparty.id]
 pages:
@@ -739,8 +739,8 @@ the designer offers **Add these datasets to the model** instead.
 |---|---|
 | `DRS-9140` | a consumer names no model, or two (`model:` and `dataset:`) |
 | `DRS-9141` | a board tile, notebook extract or alert names a field or report on another model |
-| `DRS-9142` | a local measure that names something outside the model, or declares a join |
-| `DRS-9143` | a link between two models with the same owner (use one model) |
+| DRS-9142 | a local measure that names something outside the model, or declares a join (never used: `DRS-9154` was built instead) |
+| DRS-9143 | a link between two models with the same owner (use one model); this check was not built |
 | `DRS-9144` | a consumer pinned to a model major that no longer exists (retired) |
 
 ---
@@ -931,7 +931,7 @@ MQ per visual over one stream.
 | API | `POST /api/v1/bi/mq` (a full MQ), `POST /api/v1/bi/models/{id}/query` (an MQ without `model`), `POST /api/v1/bi/mq/validate`, `GET /api/v1/bi/models/{id}/describe` (fields, measures, hierarchies, types, formats, meanings, contract, `ai:`, as the caller: masked fields marked, hidden ones absent). `POST /datasets/{id}/query` with today's body is accepted until W4 and translated to an MQ on the implicit model |
 | AI *(W5; W1 moves ask to MQ)* | the model is shown `describe` and writes an MQ; the server validates it (5.3), runs it as the user, and on a refusal sends back the code and the `fix` once; numbers always come from the engine |
 | MCP *(W5)* | tools `describe_model(model)`, `query_model(model, mq)`, `explain_change(model, measure, from, to)`, all as the token's user |
-| CLI | `drishti.py bi query <model> --mq file.yaml [--format csv]` |
+| CLI | `drishti.py bi mq file.yaml [--model <model>] [--json]` (as built; the design named it bi query, with CSV output) |
 
 ---
 
@@ -1090,7 +1090,7 @@ items, and regenerated when the pack, its connector layout or its vocabulary cha
 | grain | one row per entity id per business date (`keys: [id]`, plus a declared business key such as `tradeId` when its values equal the id on the sample) |
 | time | `live` when the kind's connector can push (`subscribe`), else `snapshot`; `refresh: { on-load: true }` |
 | security | the kind's entitlements (who may open the pack and kind); masks from `drishti.security.redact` and any field the pack marks sensitive |
-| arrays | one extra dataset per array field the pack lists under a new optional `bi.arrays` key (`pack.trading.trade.legs`, `pack.trading.trade.schedule`), each with `each:` and a `references: trade` back to the parent |
+| arrays | one extra dataset per array field the pack lists under a new optional bi arrays key in the pack (not built; such datasets are written by hand with `each:`) (`pack.trading.trade.legs`, `pack.trading.trade.schedule`), each with `each:` and a `references: trade` back to the parent |
 | tests | the grain test |
 
 A pack may refine the result with an **optional** `bi:` block in `pack.yaml` (no pack needs one):

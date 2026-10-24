@@ -43,7 +43,7 @@ settings:
 - max-redeliveries
 - tls.*
 auth: Broker user and password (password as ${ENV} or file:), TLS and mutual TLS on ssl:// endpoints (tls.*).
-licence: Apache ActiveMQ client 6.3.2 (activemq-client, Jakarta JMS, Apache-2.0) and RocksDB (rocksdbjni, Apache-2.0/GPL-2.0) for the state store, bundled.
+licence: Apache ActiveMQ client 6.3.2 (activemq-client, Apache-2.0) with the Jakarta Messaging API (jakarta.jms-api, EPL-2.0 / GPL-2.0 with Classpath Exception) and RocksDB (rocksdbjni, Apache-2.0/GPL-2.0) for the state store, bundled.
 windows: Works on Windows (pure Java client); the state store's RocksDB library is unpacked from its jar into the server's temp folder (no .exe). The broker runs elsewhere; the Docker tests skip where Docker is not reachable.
 doc: docs/connectors/ACTIVEMQ_CONNECTOR.md
 ---

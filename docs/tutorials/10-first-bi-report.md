@@ -824,6 +824,6 @@ condition: {type: threshold, op: above, value: 1000000}
 | Publish is not offered | the report is in **My workspace**: move it to a shared workspace first |
 | a visual says `DRS-9020` | a slicer or a selection cannot reach that visual through the dataset's relationships |
 | a number is `•••` | the dataset masks it for your role; the report is working as it should |
-| `DRS-9014` or `DRS-9016` on a dataset made of others | a source, column, measure or join key does not exist, key types differ, or the dataset reads itself ([DATASETS.md section 11](../guides/DATASETS.md#11-composed-and-derived-datasets)) |
+| `DRS-9190` on a dataset made of others (`from:` or `derived:`) | a 2.1 composed or derived dataset: removed in 2.2; `drishti.py bi migrate --models` converts it ([DATASETS.md section 11](../guides/DATASETS.md#11-composed-and-derived-datasets)) |
 | `DRS-9021` "the join key ... is masked for you" | a source masks the column the join is made on; join on an unmasked key such as an id |
 | a slicer does not filter a visual of another dataset | no `link` in the report says the two fields are the same ([REPORTS.md section 16](../guides/REPORTS.md#16-reports-over-several-datasets)) |

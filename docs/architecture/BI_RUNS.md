@@ -15,8 +15,9 @@
 -->
 # BI runs: every BI query as a bounded, visible job
 
-Status: **being built** (the steps as built are in section 18.2b; the console contract as built in 14.5). Release **2.6.7** (decided by the product owner, 2026-10-20), between 2.6.6 (QA clean) and 2.7.0
-(write-back). Builds on [BI_DESIGN.md](BI_DESIGN.md) (sections 4.1 the pipeline, 6.1 caches, 6.3 concurrency, 6.5 horizontal scale, 6.7
+Status: **built and released in 2.6.7** (2026-10-21; the steps as built are in section 18.2b, the console contract as built in 14.5).
+Decided by the product owner on 2026-10-20. Since 2.6.7 (unreleased) run records live in the content store
+([CONTENT_STORE.md](CONTENT_STORE.md) section 9), so every Drishti\*net member sees the same runs. Builds on [BI_DESIGN.md](BI_DESIGN.md) (sections 4.1 the pipeline, 6.1 caches, 6.3 concurrency, 6.5 horizontal scale, 6.7
 cost controls), [RUPAKA.md](RUPAKA.md) section 7 (the query engine), [SUPER_SCALE.md](SUPER_SCALE.md) (S4 products and rollups, S5 slices
 and owners, S6 split queries), [DRISHTI_NET.md](DRISHTI_NET.md) (several servers), [DATABASE.md](DATABASE.md) (where relational state
 lives) and the statement bursting of [STATEMENTS.md](../guides/STATEMENTS.md), whose per-recipient masking this reuses.
@@ -134,7 +135,7 @@ Four smaller facts also shaped the design:
 
 * **"Dataset snapshot" does not exist as a stored result.** `snapshot` is a time mode of `DatasetDef.Time`. Promoting a run therefore
   adds a table source type, `run` (`DatasetDef.Source.RUN`), that reads a promoted result's Parquet (section 9.4).
-* **The one Drishti database is 2.7.0 item 0**, not built yet. Run records cannot wait for it, and DATABASE.md forbids a feature
+* **The one Drishti database is item 0 of write-back (2.7.0 when this was written, now 2.8.0)**, not built yet. Run records cannot wait for it, and DATABASE.md forbids a feature
   opening its own SQLite file. They go into today's identity database through its two schema files, as new tables (which needs no
   migration); DATABASE.md's move carries them with everything else.
 * **Synchronous callers exist**: `drishti.py bi mq`, the Python client, Elements, subscriptions and the console. They expect `200`
@@ -1179,7 +1180,7 @@ when the answer is `202`.
 ## 15. Settings: `config/runs/runs.yaml`
 
 There are more than a handful of settings, so they get their own file, following `config/connectors/`, `config/net/` and
-`config/db/database.yaml` (DATABASE.md section 7). `application.yaml` keeps only the pointer:
+the planned `config/db/database.yaml` (DATABASE.md section 7; it was not built when runs shipped). `application.yaml` keeps only the pointer:
 
 ```yaml
 drishti:
@@ -1498,13 +1499,14 @@ It runs as `drishti-it` `BiRunsLoadIT` (excluded from the default build, run in 
 | [DATASETS.md](../guides/DATASETS.md) | `source: {run: …}` snapshot datasets |
 | BI_DESIGN 6.3 | the class caps; correct its code column (busy is `DRS-9025`, not `DRS-9022`) |
 | `drishti-console/config/help.yaml` | cards for the Runs tab, the run card, the confirm dialog, the snapshot dataset |
-| a tutorial, `docs/tutorials/22-heavy-questions-as-runs.md` | a year of P&L at a new grain: estimate, confirm, keep working, the bell, open, share, promote, add the rollup and see it become instant; every step in UI, CLI and YAML |
+| a tutorial (planned; not written yet, the how-to is [BI_RUNS_GUIDE.md](../guides/BI_RUNS_GUIDE.md); number 22 went to the designer tutorial) | a year of P&L at a new grain: estimate, confirm, keep working, the bell, open, share, promote, add the rollup and see it become instant; every step in UI, CLI and YAML |
 | CHANGELOG, RELEASE_NOTES | 2.6.7 |
 
 ## 21. Open questions
 
 1. **Per-node SQLite clusters.** Status from any node needs scatter and forwarding (13.2). Should 2.6.7 require a shared identity
-   database for clusters that use runs, or accept the *unknown* state until 2.7.0's one Drishti database makes sharing the norm?
+   database for clusters that use runs, or accept the *unknown* state until the one Drishti database makes sharing the norm?
+   *Answered after 2.6.7:* run records moved to the content store, which every member shares (CONTENT_STORE.md section 9).
 2. **Store interactive results by default?** `store.keep-interactive: true` makes slow first draws reusable for everyone with the
    same rights, at the cost of disk. It could stay true, or only for certified reports.
 3. **Visibility in shared workspaces.** `owner-and-shared` (default) or `members` (run rows visible to workspace members, results

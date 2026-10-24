@@ -118,7 +118,7 @@ ok      /tmp/genout/trade/trade-default.v1.sutra.yaml
 
 and `/tmp/genout/trade/trade-endur-comswap.v1.sutra.yaml` begins `match: { kind: trade, where: "$.SOURCE_SYSTEM == 'ENDUR' && $.PRODUCT_TYPE == 'ComSwap'", priority: 10 }`, with a `kv` of details, the
 legs as tabs, a pivot and the footer panels: a draft to edit, not a finished screen (it formats a numeric `TRADE_ID` with `amount0` in the strip, for one). Remove `/tmp/gen` and `/tmp/genout` when you
-are done. The whole workflow, including a complete pack and loading the data, is in [Generating a pack from JSON Lines](PACK_DEVELOPER_GUIDE.md#generating-a-pack-from-json-lines).
+are done. The whole workflow, including a complete pack and loading the data, is in [Generating a pack from JSON Lines](PACK_GENERATORS_GUIDE.md#generating-a-pack-from-json-lines).
 
 ### In CI
 

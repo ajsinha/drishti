@@ -20,7 +20,7 @@ Drishti Rūpaka runs **typed Python** where the expression language and the visu
 regression plot). Authors do not paste scripts into a visual: a Python function is a **BI item** of its own, with a manifest, versions, review and publishing like a dataset or a
 report, and a report names it. It runs **sandboxed on the console** (since 2.3.0 never in the browser), always on **the rows the person looking may see**.
 
-A third interface, the **Transform**, turns the frames of several datasets into a table that a **derived dataset** publishes (section 13): it is how Python joins datasets.
+A third interface, the **Transform**, turns the answers of several model queries into a table that a **Python dataset** publishes (section 13; the 2.1 *derived dataset* it replaced is gone): it is how Python joins models.
 
 This is the reference. For a walk-through see [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [RUPAKA.md](../architecture/RUPAKA.md) section 13, what is built is its section 20.8.
 Python in the *terminal* (Calc) is a different thing: [PYTHON_CALC.md](PYTHON_CALC.md).
@@ -335,12 +335,12 @@ The third interface, after the Measure and the Visual, is the **Transform**: Pyt
 rachana: 1
 python: pnl-vs-exposure
 interface: transform            # a table in, a table out
-inputs: [trading-risk, counterparty-exposure]     # the DATASETS it reads, in the order its function receives their frames
+inputs: [pnl, exposure]         # the inputs of the Python dataset (model queries), in the order its function receives their frames
 packages: [pandas]
 target: server                  # a Transform runs on the server and its result is kept for the reader
 timeout: 20
 memory: 512
-params: { floor: 1.0 }          # defaults; the derived dataset may override them (derived.params)
+params: { floor: 1.0 }          # defaults; the dataset may override them
 source: |
   def run(pnl, exposure, params):
       m = pnl.merge(exposure, on="counterparty", how="left")
@@ -353,11 +353,11 @@ source: |
 
 | | |
 |---|---|
-| function | `run(*frames)`: one **pandas DataFrame** per input, in the order of `inputs`. A function that has a parameter named `params` receives the parameters (the manifest's `params` over the derived dataset's); or a class named `Transform` with a method `run(self, *frames)`, which finds the parameters in `self.params` |
-| frames | what the reader may see: each input is a question put to a dataset **as the reader** (`by` + `measures`, or `fields`), so row rules and masks are already applied and a masked column is null. Columns are named by the derived dataset's `inputs` (`as`, else the last part of the field) |
+| function | `run(*frames)`: one **pandas DataFrame** per input, in the order of `inputs`. A function that has a parameter named `params` receives the parameters (the manifest's `params` over the dataset's); or a class named `Transform` with a method `run(self, *frames)`, which finds the parameters in `self.params` |
+| frames | what the reader may see: each input is a model query asked **as the reader**, so row rules and masks are already applied and a masked column is null. Since 2.2 each column is named by the last part of its field or measure name (`counterparties.id` is `id`); the 2.1 derived dataset renamed them with `as` |
 | returns | a DataFrame: no more than `drishti.bi.transform.max-rows` rows; column names of letters, digits and underscore; no duplicate names. Anything else is `DRS-9071` |
 | column types | typed from the frame: `int` is `integer`, `float` and decimals are `decimal`, `bool` is `boolean`, dates and timestamps are `date` and `timestamp`, everything else `string` |
-| `inputs` (manifest) | datasets (a catalogue id, a file name, the dataset's name), not columns: the derived dataset's inputs must be the same datasets in the same order (`DRS-9075` otherwise) |
+| `inputs` (manifest) | the names of the Python dataset's inputs (2.1: datasets), not columns: the dataset's `source.inputs` must name the same in the same order (`DRS-9075` otherwise) |
 | `target` | `server` only: the browser has no business making a table the server keeps |
 
 **Where it runs, and who sees what.** The server asks each input as the reader, writes the answers as Arrow files and starts the console's runner (`drishti-console/core/transform_cli.py`, which uses `core/pyrunner.py` exactly as a Python measure does): `python -I`, an empty environment, a scratch folder, no network, CPU, memory, wall-clock and output limits, an audit hook, the import guard. The frame comes back as a Parquet file the server keeps for **that reader** and the version of the inputs (`drishti.bi.transform.cache-ttl`, `cache-entries`). The code never sees anything the reader may not, and the result is derived only from it; another reader gets their own run. Real output of the sample's first and second run (an author who may read every row):
@@ -678,5 +678,5 @@ The server's `drishti.bi.transform.max-input-rows` (50,000) caps an input, in th
 
 ### 17.9 Not built
 
-AI-written Transforms (P4, the AI release 2.8.0); a precomputed run on refresh for configured roles (the rest of P6); parameters bound to a report (P7); an incremental
+AI-written Transforms (P4, the AI release 2.9.0); a precomputed run on refresh for configured roles (the rest of P6); parameters bound to a report (P7); an incremental
 mode (P8); promoting several Analyse cells as steps (P9); a drift warning when a Transform's columns change (P10); a Python-only Source (rows from an API).

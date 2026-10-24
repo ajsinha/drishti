@@ -393,7 +393,7 @@ Two cautions:
   beyond it the lake answers. A date inside the window whose folder lacks the entity is answered from an older S3
   folder, not from the lake.
 
-The general rules for combining connectors are in [CONNECTOR_DEVELOPER_GUIDE.md, Combining connectors](CONNECTOR_DEVELOPER_GUIDE.md#combining-connectors).
+The general rules for combining connectors are in [CONNECTOR_DEVELOPER_GUIDE.md, Combining connectors](CONNECTOR_RECIPES.md#combining-connectors).
 
 ## 10. Failure and recovery
 
@@ -460,7 +460,7 @@ objects encrypted with a customer-provided key (SSE-C) cannot be read, as there 
 EC2 instance role. Prefer the role or web identity: nothing to store, and credentials rotate. With `access-key` set,
 the connector uses that key and `secret-key` as static credentials, with no session token, so temporary credentials
 must come through the chain. Never write a key in a YAML file; use `${S3_ACCESS_KEY}` placeholders
-([CONNECTOR_DEVELOPER_GUIDE.md, Secrets](CONNECTOR_DEVELOPER_GUIDE.md#secrets)). Health and `/api/v1/sources` never show settings.
+([CONNECTOR_DEVELOPER_GUIDE.md, Secrets](CONNECTOR_RECIPES.md#secrets)). Health and `/api/v1/sources` never show settings.
 
 **TLS.** AWS endpoints are HTTPS, checked against the JVM's authorities. With `endpoint`, the scheme you write is used: write
 `https://` in production (`http://localhost:9000` is for a local MinIO). A store with a **private certificate authority**

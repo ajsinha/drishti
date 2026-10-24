@@ -772,7 +772,9 @@ Subscribe) is listed there.
 
 ## 16. Reports over several datasets
 
-A report reads **one dataset** by default (`dataset:`). A visual may name **another** with its own `dataset:`, and the report's `links:` say which fields of different datasets mean the same, so a slicer or a click on one dataset's visual filters the visuals of another. Each visual's query is still run **as the reader** against its own dataset, with that dataset's row rules and masks. (To put the facts of several datasets in *one* table, build a composed or derived dataset: [DATASETS.md section 11](DATASETS.md#11-composed-and-derived-datasets). The design is [RUPAKA.md section 20.10](../architecture/RUPAKA.md).)
+A report reads **one dataset** by default (`dataset:`). A visual may name **another** with its own `dataset:`, and the report's `links:` say which fields of different datasets mean the same, so a slicer or a click on one dataset's visual filters the visuals of another. Each visual's query is still run **as the reader** against its own dataset, with that dataset's row rules and masks. (To put the facts of several datasets in *one* table, put them in one model with several fact tables ([DATASETS.md 3.1](DATASETS.md#31-several-unrelated-fact-tables-in-one-query)) or join them in a Python dataset; the 2.1 composed and derived datasets are gone: [DATASETS.md section 11](DATASETS.md#11-composed-and-derived-datasets). The design is [RUPAKA.md section 20.10](../architecture/RUPAKA.md).)
+
+The YAML and the query below are the 2.1 shape (`rachana: 1`, `dataset:`), still read. Since 2.2 the shipped sample `pnl-vs-exposure` reads one model, `trading-risk@1`, which holds both facts, so it needs no link; a visual's own `dataset:` and the report's `links:` work as described.
 
 ```yaml
 report: pnl-vs-exposure
@@ -813,7 +815,7 @@ POST /api/v1/bi/reports/file:report:pnl-vs-exposure/query?explain=true   {"page"
 
 **Starting with several datasets.** The *New report* forms (the designer's start page and **My workspace → New item → report**) ask for a **Main dataset** (the report's `dataset:`) and an optional **Also add** list (hold Ctrl or Shift for several). The report is saved with the main dataset, and the designer opens with every chosen dataset in the **Fields** pane, each with its own tree (the same state as **Add dataset**, which now sits at the top of the Fields pane). A dataset that cannot be used is listed **greyed with the reason** instead of hidden: *draft in a private workspace: publish it first*, *a draft: publish it first*, *has errors: open it*. Through the URL, `/bi/design/<id>?also=a,b` does the same for existing reports. In YAML nothing changes: name the datasets in the visuals' `dataset:` keys and the report's `links:` as above.
 
-Not built: a visual that reads **two datasets at once** (compose them: DATASETS.md section 11); links **with a transformation** (a code to a name).
+Not built: a visual that reads **two datasets at once** (put both facts in one model: DATASETS.md section 3.1); links **with a transformation** (a code to a name).
 
 ## 17. Expected values: `tests:`
 

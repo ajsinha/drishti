@@ -15,9 +15,9 @@
 -->
 # Write-back: editing and saving fields on a Sutra page
 
-Status: **design, not built.** Planned for **2.7.0** (decided 2026-10-19; AI moves to 2.8.0); decisions in section 16 (2026-10-19 and
+Status: **design, not built.** Planned for **2.8.0** (decided 2026-10-19 as 2.7.0; moved to 2.8.0 on 2026-10-21; 2.7.0 is Sutra Next since 2026-10-22; AI is 2.9.0); decisions in section 16 (2026-10-19 and
 2026-10-20). Related: [DATABASE.md](DATABASE.md) (the one Drishti database: the edit log, lanes, overlays and owned data live in it;
-2.7.0 item 0), [RUPAKA.md](RUPAKA.md) (Sutra and the renderer), [DRISHTI_NET.md](DRISHTI_NET.md) (several servers),
+2.8.0 item 0), [RUPAKA.md](RUPAKA.md) (Sutra and the renderer), [DRISHTI_NET.md](DRISHTI_NET.md) (several servers),
 [GENUI.md](GENUI.md) section 11 (write-back forms, deferred to this design), [BI_DESIGN.md](BI_DESIGN.md) (review and proposals, reused
 here), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) (connector files, where `writes:` lives).
 
@@ -508,7 +508,7 @@ Overlay and owned targets need the first and third levels only; a source target 
 - **Packs per user apply:** you can edit only kinds of the packs you are given.
 - **API tokens** need the explicit **`edit`** scope (chosen when the token is created); **no token has it by default**, and an existing
   write scope does not imply it. A token never exceeds its user's current roles.
-- **A fresh install or an upgrade behaves exactly as today: read-only.** Upgrading to 2.7.0 changes nothing until an administrator
+- **A fresh install or an upgrade behaves exactly as today: read-only.** Upgrading to 2.8.0 changes nothing until an administrator
   turns editing on.
 
 **Audit.**
@@ -533,16 +533,16 @@ Overlay and owned targets need the first and third levels only; a source target 
 
 | Phase | What | Accepted when |
 |---|---|---|
-| W0 | **The one Drishti database** ([DATABASE.md](DATABASE.md), 2.7.0 item 0): one pool and `config/db/database.yaml`, two complete schema files with a parity test, the schema version stamp, `drishti.py db copy` | a 2.6.5 data folder starts with its users and settings; SQLite → PostgreSQL → SQLite keeps every row; a mismatched stamp refuses to start and names `db copy` |
+| W0 | **The one Drishti database** ([DATABASE.md](DATABASE.md), 2.8.0 item 0): one pool and `config/db/database.yaml`, two complete schema files with a parity test, the schema version stamp, `drishti.py db copy` | a 2.6.5 data folder starts with its users and settings; SQLite → PostgreSQL → SQLite keeps every row; a mismatched stamp refuses to start and names `db copy` |
 | W1 | `edit:` in the Sutra schema and lint; Change API; the off-by-default switches and the roles (section 12); **the edit log on a single node with SQLite**: `drishti_edit_lane` and `drishti_edit_log` in both schema files, acknowledgement after commit, replay from `applied_seq`, the epoch checks (trivially one owner); lanes and handler; **owned** kinds and **overlays** as rows in the same transaction (corrections and notes first, section 16), overlays laid over the document at read time; version check; retention; inline edit and the pending bar | two users editing the same field: the second is conflicted with a diff, never silently overwritten; 100,000 concurrent changes over 1,000,000 entities on 64 lanes apply in per-entity order with no lost update (property test); a server killed after an acknowledgement applies the change once after restart; a fresh install is read-only |
 | W2 | Approval (four eyes), Review → Changes, history, CLI | a change needing approval cannot apply without it; self-approval refused |
 | W3 | **The cluster:** lane ownership by conditional UPDATE (the ring suggests), **fencing** by epoch on every append and apply, forwarding from any node, failover by lease; the **PostgreSQL** shared log, the **S3** log (lease by ETag, fences), the **edit primary** fallback, `edit.log: auto` and its rule, Admin → Edits (store, owners, warnings); the loader folding approved overlays into the next day's lake build (section 16) | the three cluster acceptance tests of section 15 pass on PostgreSQL and on S3; an approved overlay appears in the next lake build and in BI |
 | W4 | `SourcePlugin.write` and **connector `writes:`** (validated at load), **source commands through the outbox** (pending, sent, confirmed; resend by the new owner with the same change id): the one real-amendment pilot (one field of one kind on one connector, JDBC first); pending at source | a source command applied twice by a retry changes the source once; a command without a guard or idempotency clause is refused at load; a command pending when its owner dies is sent once by the new owner |
 | W5 | Form mode, bulk edit, phone, docs and a tutorial (UI, CLI, YAML) | a tutorial edits, approves and sees the change tick on another browser |
 
-Placement: **2.7.0** (product owner, 2026-10-19), after 2.6.0 (statements, field parameters, the Cassandra connector, drishti-iceberg;
+Placement: **2.8.0** (product owner: 2.7.0 on 2026-10-19, 2.8.0 since 2026-10-21; 2.7.0 is Sutra Next), after 2.6.0 (statements, field parameters, the Cassandra connector, drishti-iceberg;
 integration moved after 3.0.0 on 2026-10-20); AI (grounding, AI UI, GenUI, AI management)
-becomes 2.8.0, GenUI's write-back forms build on this. W0 comes first (2026-10-20).
+follows as 2.9.0; GenUI's write-back forms build on this. W0 comes first (2026-10-20).
 
 ## 15. Tests
 
@@ -585,7 +585,7 @@ becomes 2.8.0, GenUI's write-back forms build on this. W0 comes first (2026-10-2
 
 4. **One Drishti database** ([DATABASE.md](DATABASE.md)): the edit log, lanes, overlays and owned data live in the same database as
    identity; PostgreSQL long term, SQLite the default for one node; no migrations (two complete schema files, a parity test, a version
-   stamp, `drishti.py db copy`); its own file `config/db/database.yaml`. Built first, as 2.7.0 item 0 (W0).
+   stamp, `drishti.py db copy`); its own file `config/db/database.yaml`. Built first, as 2.8.0 item 0 (W0).
 5. **A durable shared edit log replaces "replicated like user state"** (sections 7 and 11): `drishti_edit_lane` (ownership by
    conditional UPDATE; the ring only suggests) and `drishti_edit_log` (acknowledged only after commit; order by seq; replay from the
    last applied seq); every apply fenced by the epoch in the same transaction; any console to any server, forwarded to the owner.

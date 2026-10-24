@@ -194,7 +194,7 @@ On a phone the page is one column:
 
 ## Step 7 · From the command line and the API
 
-Creating and editing reports and subscriptions is done in the console (there is no `drishti.py reports` command yet). Reading them is REST, with the token of tutorial 1. A
+Creating and editing reports and subscriptions is done in the console (`drishti.py` has no command for scheduled reports or subscriptions; its `bi` commands, such as `drishti.py bi catalogue list` and `bi runs`, are for BI items: [CLI_GUIDE.md](../guides/CLI_GUIDE.md)). Reading them is REST, with the token of tutorial 1. A
 personal token may read but never change your reports: a `PUT` with it is refused, `403 DRS-5002 API tokens may not call this endpoint`.
 
 ```text

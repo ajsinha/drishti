@@ -286,7 +286,7 @@ application's own configuration (`application.yaml` and the environment, which S
 | **Admin switches**: pack on/off, sample-pack mode, roles and users, API tokens, embedded applications registered in Admin → Embedding, collaboration settings | the identity database and `data/` | at once | refused at save with the reason |
 | **Data loads** (expectations, who is told) | the pack's `loads:` section and the override files written from the Data loads page | read at each use | refused at save |
 | **Console catalogues**: the help library (`config/help.yaml`, pack guides), workspace templates, the competitive page | the console's `config/` | the help library is rebuilt when a loaded pack's version or `help.yaml` changes; the others are read at each request | an unreadable file is reported on that page; nothing else is affected |
-| **BI artifacts** (`config/bi`) | `config/bi/` | being built with the Rupaka work (phase 1) on the same retry and reload utilities ([DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md#510-retry-and-live-reload-utilities)) | see [RUPAKA.md](../architecture/RUPAKA.md) |
+| **BI artifacts** (`config/bi`) | `config/bi/` (`drishti.bi.dir`) | watched (`drishti.bi.watch`: auto, poll, off), on the same retry and reload utilities ([DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md#510-retry-and-live-reload-utilities)) | the last good version of that file stays; the problem shows in Admin, BI settings and on Health ([config/bi/README.md](../../config/bi/README.md)) |
 
 What does **not** change live, and why:
 
@@ -299,7 +299,7 @@ What does **not** change live, and why:
 - **Chat bridge URLs and secrets** and **embedded applications declared in configuration** (the GitOps list, read-only in Admin → Embedding): read at start.
 - **Python code** of the console and **Java code** of the server: a new build.
 
-**Sample packs.** Of the seven shipped packs, `news-and-markets` is marked `sample: true` (so are the example packs `genomics` and `logistics`). Once your own packs exist, set
+**Sample packs.** Of the seven packs enabled by default, `news-and-markets` is marked `sample: true` (so are the example packs `genomics` and `logistics`). Once your own packs exist, set
 `DRISHTI_PACKS_SAMPLES=developers` so only authors and administrators see them, or `hidden` to unload them and stop their connectors; or press
 **Hide samples from business users** in Admin → Packs (saved in `data/packs/samples-mode`, which overrides the variable).
 
@@ -327,7 +327,7 @@ licence and release files, so the help centre works without network access.
 ### 4.2 Provide the secrets
 
 The compose file refuses to start without four values: two secrets and the first administrator. It has no default
-password anywhere and does not create the development admin. Put them in `deploy/.env` (never commit it):
+password anywhere and does not create the development admin. Put them in a file you create, `.env` in the `deploy/` folder (never commit it; it is not in `.gitignore`), and pass it with `--env-file`:
 
 ```bash
 cat > deploy/.env <<EOF
@@ -350,8 +350,8 @@ characters for the session secret).
 ### 4.3 Start
 
 ```bash
-docker compose -f deploy/docker/compose.yaml up -d
-docker compose -f deploy/docker/compose.yaml ps
+docker compose --env-file deploy/.env -f deploy/docker/compose.yaml up -d
+docker compose --env-file deploy/.env -f deploy/docker/compose.yaml ps
 ```
 
 You should see both services `running`, and after about 30 seconds `(healthy)`. If you forgot a secret you get
@@ -1781,7 +1781,7 @@ User actions (sign-ins, user changes, cache purges, Sutra approvals) are not in 
    You should see the new `version`, and `{"status":"UP"}`. Then check **Admin → Health** shows `OK` and open a view.
 
 With Docker: build the new images with the new tag, change the `image:` tags in your compose file, and run
-`docker compose -f deploy/docker/compose.yaml up -d`; the named volumes are kept.
+`docker compose --env-file deploy/.env -f deploy/docker/compose.yaml up -d`; the named volumes are kept.
 
 **Rollback**: stop, put the old jar (or image tag) back, restore the backup if the new version changed stored
 data, start.
@@ -1884,7 +1884,7 @@ the engine's counters and the Python runner. A model with many questions and few
 
 **The 500-viewer load test** is `ViewersLoadTest` (in `drishti-server`): run it **against a real server, never on a laptop**:
 `./mvnw -pl drishti-server test -Dtest=ViewersLoadTest -Ddrishti.load.url=http://server:18480 -Ddrishti.load.queries=/path/visuals.jsonl
--Ddrishti.load.users=rita:…,hana:…` (`drishti.load.viewers`, default 500; `drishti.load.seconds`, default 120). It prints the p95 of cached and columns-layer
+-Ddrishti.load.users=rita:…,hana:…` (test properties, not server settings: `-Ddrishti.load.viewers=500 -Ddrishti.load.seconds=120` are the defaults). It prints the p95 of cached and columns-layer
 answers and the refusals by code, and fails over the SLAs of §6.8.
 
 ## 17. Runbooks

@@ -30,7 +30,7 @@ The standard Sutra file is `<name>.v<N>.sutra.md`: a Markdown document with exac
 marked `sutra` that holds the Rachana layout (YAML syntax, Rachana-EL in string values, as in ADR-003).
 The parser reads only that block; it blanks the other lines instead of removing them, so problems keep
 the Markdown file's line numbers. Plain `*.yaml` Sutras still load. Studio is a Markdown editor (toolbar,
-Rachana snippets, outline, rendered Document tab). `tools/sutra_to_md.py` converts YAML Sutras.
+Rachana snippets, outline, rendered Document tab). `tools/sutra_to_md.py` converted YAML Sutras (it was removed when ADR-017 replaced this decision; `tools/rachana/md_to_yaml.py` converts the other way).
 
 ## Consequences
 Each Sutra carries its own documentation, rendered in Studio and readable on any Git host. The grammar is

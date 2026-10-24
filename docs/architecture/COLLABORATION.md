@@ -16,7 +16,9 @@
 # Collaboration: share with a note, and comment threads anchored to the data
 
 Status: **built through step 10** (share with a note, the inbox, email, comment threads, moderation, retention, legal hold and export; the
-chat bridges and watermarked snapshots, steps 9 and 10, phase 2, are built too). The design below is as it was agreed; each step's
+chat bridges and watermarked snapshots, steps 9 and 10, phase 2, are built too). Since 2.6.7 (unreleased) the records live in the
+content store by default, not the identity database (`drishti.collab.store: content`; [CONTENT_STORE.md](CONTENT_STORE.md) section
+10.3). The design below is as it was agreed; each step's
 *as built* note in the [build plan](#build-plan) lists where the code differs, and the user-facing, operating and configuration documents
 describe what was built. The whole path on one trade is worked through in
 [HOW_IT_FITS.md §3.10](HOW_IT_FITS.md#310-share-and-discussion-end-to-end). Owner: the identity module
@@ -682,8 +684,8 @@ Role powers (`drishti.security.roles.<role>`, stored as `drishti_role_power` row
 without a migration, as `layout` did): `collaborate` (default **true**: share, comment, mention; the bundled `viewer`
 keeps it) and `compliance` (default false: holds, exports, verify, read any share). Moderation is `admin`.
 
-Console (`drishti-console/config/application.yaml`): `collab.enabled` (hide the UI when the server says off),
-`collab.inbox_page_size`. Every new key goes into CONFIGURATION.md's tables and placeholder list
+Console (`drishti-console/config/application.yaml`): as built, the console has no on/off key of its own (it hides the UI when the
+server's capabilities say off) and one key, `collab.bridge_test_timeout_seconds`; the designed `collab.enabled` and an inbox page size were not added. Every new key goes into CONFIGURATION.md's tables and placeholder list
 (`test_docs_settings.py`, `test_docs_placeholders.py` check them).
 
 A new Maven dependency: `spring-boot-starter-mail` (Jakarta Mail, Angus Mail implementation; EPL-2.0 / GPL-2.0 with
@@ -791,7 +793,7 @@ what their reader needs.
 | [ARCHITECTURE.md](ARCHITECTURE.md) | the collab package in the module list and security section (one paragraph, link here) |
 | [HOW_IT_FITS.md](HOW_IT_FITS.md) | a full section, *Share and Discussion, end to end* (§3.10, done in step 8): worked on trade MX-20000001 — the dialog → `POST /shares` with the as-of headers → pin, `mayReach` per recipient, masked spans → one transaction (share, inbox, outbox, access log) → the `notice` SSE event on the channel → the bell → `/share/sh_…` → the view built for the recipient with `asOf`/`knownAt` per request → the banner; then a comment with `@risk` on the VaR contribution panel and *Open as it was*; the genomics variant in a few lines (`link-only` email); collab added to §1's picture and §2's pieces; §7 rows (who may share, email, retention) |
 | `adr/020-collaboration-records-live-in-the-identity-database.md` | why the identity database, a transactional outbox, and links instead of data |
-| `drishti-console/web/guides/monitors-and-alerts.md` | the bell becomes the inbox (notices beside alerts); `help.yaml` `contextual:` gains `inbox` |
+| [USER_GUIDE.md › Monitors](../guides/USER_GUIDE.md#monitors) (help address `monitors-and-alerts`) | the bell becomes the inbox (notices beside alerts); `help.yaml` `contextual:` gains `inbox` |
 | [docs/README.md](../README.md) | this document in the architecture list (done with this design) |
 
 ## Build plan

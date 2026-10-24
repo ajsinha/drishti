@@ -16,6 +16,9 @@
 
 # Drishti Rūpaka vs Microsoft Power BI: gap analysis and parity roadmap
 
+History: a study of 2.1.0 (2026-10-12); Perspective and DuckDB-Wasm, named below as strengths, were removed in 2.3.0. The current plan is
+[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#roadmap)'s roadmap.
+
 Status: the gap analysis behind the agreed plan in BI_MODEL_ARCHITECTURE.md (its roadmap section is superseded). Study date: 2026-10-12. Drishti version studied: 2.1.0 (`drishti-server/pom.xml`). Decisions already taken: no Power Query clone (Python is the data-prep path); breaking BI redesigns are acceptable before production; YAML, Python and datasets + data models stay the foundation.
 
 ## 0. Method, sources and confidence
@@ -555,7 +558,7 @@ Assumptions: the 2.1.0 base; breaking changes are allowed (§5.0); frugal, fast 
 2. **Risk-native semantics.** Business calendars, as-of joins, semi-additive balances, FX calc groups, what-if shocks feeding the QLRisk `QuantEngine` (scenario, VaR and sensitivity measures), and limits/KRIs as first-class datasets.
 3. **Live operational BI.** Perspective plus live boards plus incremental rollups plus drill to the trade. Power BI cannot follow a trading day; Drishti can. Extend with live slicers on boards and live paginated "intraday snapshots".
 4. **Per-reader everything.** Masked extracts, per-recipient subscriptions and narratives, per-reader Transforms, and embed with masks. Make "the same report, different people, provably different numbers" a demo.
-5. **Governance as code with gates.** Git-native YAML, review, tests-before-publish, rename-aware impact and rollback. Add two-way Git sync and CI (a `drishti bi check` CLI in pipelines).
+5. **Governance as code with gates.** Git-native YAML, review, tests-before-publish, rename-aware impact and rollback. Add two-way Git sync and CI (a BI check command in pipelines; `drishti.py bi model check` covers models today).
 6. **Analyst plus developer workbench in one.** Analyse (DuckDB-Wasm, Pyodide, notebooks, promote to visual), typed Python items with tests, and an open semantic SQL endpoint. That is "Power BI plus Jupyter", governed.
 7. **Optional, provider-neutral AI** with masks applied to prompts and model output validated by the same parser.
 

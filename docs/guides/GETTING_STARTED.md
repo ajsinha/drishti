@@ -740,7 +740,7 @@ of Step 6 A (`$env:DRISHTI_SECURITY_ENABLED='true'` and the rest) to sign in. It
 | Option | Default | Meaning |
 |---|---|---|
 | `-JavaHome` | `DRISHTI_JAVA_HOME`, then `JAVA_HOME`, then `java` on the PATH | the JDK folder (21 or newer) |
-| `-Packs` | `DRISHTI_PACKS`, else the server's default (the seven shipped packs) | the packs to load, e.g. `market-risk,counterparty-risk` |
+| `-Packs` | `DRISHTI_PACKS`, else the server's default (the seven default packs) | the packs to load, e.g. `market-risk,counterparty-risk` |
 | `-Port` | `DRISHTI_PORT`, else `18480` | the server's port |
 | `-LakeRoot` | `DRISHTI_DELTA_ROOT`, else `.\data\delta` | the Delta Lake |
 | `-Engine` | `DRISHTI_DELTA_ENGINE`, else `native` | `native`, `hadoop` (needs `winutils.exe`) or `auto` |

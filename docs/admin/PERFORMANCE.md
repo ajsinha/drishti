@@ -48,7 +48,7 @@ How the connectors achieve these figures is in [DELTA_CONNECTOR.md](../connector
 Aerospike, [AEROSPIKE_CONNECTOR.md](../connectors/AEROSPIKE_CONNECTOR.md).
 
 Measured 2026-10-01 on the developer workstation (24 cores, server heap 15.6 GB), the trading pack's lake laid out as
-declared ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#large-kinds-the-lake-layout)), 1,000,000 trades a day over three business days (5.2 GB;
+declared ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_MODELLING_GUIDE.md#large-kinds-the-lake-layout)), 1,000,000 trades a day over three business days (5.2 GB;
 `tools/samplegen/bulk_trades.py --trades 1000000 --days 3`), times over HTTP:
 
 | What | Time |
@@ -333,7 +333,7 @@ costs a little more per keystroke for every user; a program may ask for up to 50
 
 ### 7. Micro-benchmarks (JMH)
 
-`drishti-benchmarks/HotPathBenchmark` times the innermost hot paths against the IRS-48213 reference document
+`HotPathBenchmark` (`drishti-benchmarks/src/main/java/com/ash/drishti/benchmarks/HotPathBenchmark.java`) times the innermost hot paths against the IRS-48213 reference document
 (`examples/packs/finance/samples/trade/IRS-48213.json`). Run it from the repository root, because it reads that file
 by a relative path:
 

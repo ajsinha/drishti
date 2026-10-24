@@ -21,7 +21,7 @@ the feature is for, then walks through an example: the exact text to type and wh
 If Drishti is not running yet, start with [GETTING_STARTED.md](GETTING_STARTED.md) (ten minutes) or
 [GETTING_STARTED.md](GETTING_STARTED.md) (every step explained).
 
-The examples use the seven shipped packs (`core`, `market-data`, `trading`, `counterparty-risk`, `market-risk`, `world-economy`, `news-and-markets`)
+The examples use the seven default packs (`core`, `market-data`, `trading`, `counterparty-risk`, `market-risk`, `world-economy`, `news-and-markets`)
 on the demo lakes of the quick start (`drishti.py lake demo`, business date 2026-10-16; [GETTING_STARTED.md](GETTING_STARTED.md)), so ids such as
 `MX-20000001`, `1000001` and `NS-SUMMIT-NY` exist and the counts are those of 15,000 trades from ENDUR, CALYPSO and MUREX. If your administrator loaded other packs, the
 **Examples** list on the terminal page shows ids that work for you, and every pack's guide (*Help → Help
@@ -200,7 +200,7 @@ several trades (`TRD MX-2000 30`) gives the pick list, and each of its rows open
 `MYBOOK 30` is `BOOK BOOK-RATES-1 30`.
 
 Mnemonics come from the packs that are switched on. The full list, pack by pack, is in
-[PACKS.md](PACKS.md#the-packs-that-ship). The most used ones, from the seven shipped packs:
+[PACKS.md](PACKS.md#the-packs-that-ship). The most used ones, from the seven default packs:
 
 | Mnemonic | Kind | Example |
 |---|---|---|
@@ -312,8 +312,10 @@ The number of suggestions is a server setting (`drishti.commands.suggest-limit`,
 
 Type a pack's code alone, for example `MKT <GO>`, to see what the market-data pack holds: each kind with its mnemonic
 (`CRV`, `FXV`, `IRV`, …), how many there are, an example you can open, and the fields its pick list shows. Click a
-mnemonic to list that kind. Every pack has a code (`BNK`, `MKT`, `TRDS`, `CCR`, `LIQ`, `RTL`, `GENO`, … see
-[PACKS.md](PACKS.md#pack-codes)); the pack's name (`market-data`) works too.
+mnemonic to list that kind. Below the kinds, **What the pack holds** gives the pack README's summary, its data sources (with
+any internal-only flag) and, folded, its *Data structures*: each kind's id rule, fields with an example and a description, and
+nested structures by path, for the kinds you may open only. Every pack has a code (`CORE`, `MKT`, `TRDS`, `CCR`, `MRSK`, `WRLD`,
+`NWMK`, … see [PACKS.md](PACKS.md#pack-codes)); the pack's name (`market-data`) works too.
 
 ## Pick lists: when a command names several entities
 
@@ -733,7 +735,7 @@ On a phone the legs become tabs that scroll along one line, the terms stack, and
 The same layout is what you get from **inference** for any document that holds lists inside a short list of records, even with no Sutra written
 for it ([Inference](../architecture/INFERENCE.md#the-rules)). To build such a screen see
 [Panels inside a tab](RACHANA_REFERENCE.md#panels-inside-a-tab) and
-[Modelling deep documents](PACK_DEVELOPER_GUIDE.md#modelling-deep-documents-legs-cashflows-and-fixings).
+[Modelling deep documents](PACK_MODELLING_GUIDE.md#modelling-deep-documents-legs-cashflows-and-fixings).
 
 ## Reading a view
 
@@ -914,7 +916,7 @@ world-economy pack (`ECON ECON-USA`), in that pack's words:
 - The drawer is fetched the first time you open it, never with the page, so it does not slow a view down.
 - When a live update brings a newer generation of the data, an open drawer asks again (at most once in two seconds).
 - No text? A pack without an `about` entry for the kind still shows the other layers; the pack's author can add one
-  ([how](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary); how it works inside is
+  ([how](PACK_MODELLING_GUIDE.md#about-text-and-glossary); how it works inside is
   [HOW_IT_FITS.md](../architecture/HOW_IT_FITS.md#39-about-this-page-end-to-end)).
 - Hover hints on field labels and a help popover on each panel's `?` come with the glossary stage; today the panel `?`
   still opens that panel kind's page in this guide.
@@ -1050,7 +1052,7 @@ Newer screens (every pack screen is built from the same parts) can do more than 
   **Reset layout** goes back. Such a screen does not offer layout mode (`Alt+L`): the grid replaces it.
 - **Your page.** With the Sutra designer on, **Customize** in a page's header changes the page for you alone (move, hide, columns,
   what a click opens, refresh, letting people edit); the header then says *Your page*, whose link opens the pack's page.
-  [SCREEN_DESIGNER.md section 31](SCREEN_DESIGNER.md#31-the-sutra-designer-customize-and-describe) and
+  [SCREEN_DESIGNER.md section 31](SCREEN_DESIGNER.md#31-the-sutra-designer-customize-describe-outline-and-grid) and
   [tutorial 22](../tutorials/22-build-a-screen-with-the-designer.md).
 
 ## Zoom a panel
@@ -1761,7 +1763,7 @@ A monitor is a **live watchlist**: one row per entity, each row showing that ent
 strip) as they tick. Rows can be of different kinds.
 
 *Views → Monitors* in the top bar (`/m`) lists *Yours* and the *Starters* the packs offer. Opening a starter
-saves a copy to your account. (None of the seven shipped packs offers a starter, so start from a search; the retired example packs
+saves a copy to your account. (None of the shipped packs offers a starter, so start from a search; the retired example packs
 `finance` and `logistics` under `examples/packs/` offer *Credit watch* and *Fleet watch*.)
 
 Step by step (a search, **Watch as a monitor**, adding an entity, removing a row), with pictures: [tutorial 3](../tutorials/03-query-by-form.md) (save a search and a monitor).
@@ -1812,7 +1814,7 @@ In a rule (unlike a search) write `==` for equality, `&&` for and, `||` for or, 
 `fmt(value, 'signed0')` or `fmt(value, 'compact')` format numbers. The full language is in
 [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md).
 
-A pack may suggest rules for its kinds (`alerts:` in its `pack.yaml`; none of the seven shipped packs does, the retired example pack
+A pack may suggest rules for its kinds (`alerts:` in its `pack.yaml`; none of the shipped packs does, the retired example pack
 `finance` suggests *PFE near limit* and *MTM below −450k*); they appear on the Alerts page and fill the form when clicked.
 
 > **Tip:** a condition that cannot be evaluated (a misspelled field, say) is skipped, not alerted.
@@ -1840,7 +1842,7 @@ A workspace puts up to four live views on one screen. A pane can **follow** anot
 in the followed pane opens in the following pane.
 
 *Views → Workspaces* in the top bar (`/w`) lists yours and the starters. Starters come from packs that
-define them (none of the seven shipped packs does; the retired example pack `finance` defines *Credit desk*, *Rates*, *Cross-asset*) and from
+define them (none of the shipped packs does; the retired example pack `finance` defines *Credit desk*, *Rates*, *Cross-asset*) and from
 `drishti-console/config/workspaces.yaml`.
 
 With any packs, start a blank workspace: type a name under **New workspace** on `/w` and press **Create** (or open
@@ -1873,7 +1875,7 @@ Worked example (on the demo lakes, from a blank workspace):
 
 Workspaces are saved to your account (up to 50 each).
 
-**If no starters are listed** (the seven shipped packs ship none: *Starters* then says so), start a blank workspace as above,
+**If no starters are listed** (the shipped packs ship none: *Starters* then says so), start a blank workspace as above,
 or an administrator can add one for everybody
 to `drishti-console/config/workspaces.yaml`; it appears after the console restarts:
 

@@ -215,7 +215,7 @@ Promoting writes a **draft** item in your workspace; nothing is published.
 
 ## 8. Who sees what
 
-The server decides, as everywhere in BI: the extract request goes to `POST /api/v1/bi/datasets/{id}/query` (or the report's query) **as you**, so the same column masks and row rules as a
+The server decides, as everywhere in BI: the extract request is a model query, `POST /api/v1/bi/mq` (or the report's query), **as you**, so the same column masks and row rules as a
 report apply, and a masked column arrives empty. SQL and Python only ever see that extract; the sandbox has no network and no way back to the server. A cell cannot widen access, and a
 saved notebook holds code, not data. Python needs `bi-author` because arbitrary code runs in the console's worker pool (`bi.python.workers`).
 
@@ -259,21 +259,21 @@ uses the existing `POST /api/v1/bi/workspaces/me/items` and `PUT /api/v1/bi/item
 
 ## 12. Built and not built
 
-**Built (phase 9, lean).** The extract, Slice, SQL cells, Python cells on the server and in the browser, notebooks as items, promotion of cells and slices, the `QuantEngine` slot with a stand-in.
+**Built (phase 9, lean).** The extract, Slice, SQL cells, Python cells on the server (in the browser too until 2.3.0), notebooks as items, promotion of cells and slices, the `QuantEngine` slot with a stand-in.
 
 **Built with several datasets (section 2, RUPAKA.md section 20.10).** Several masked extracts in one notebook, `extract("name")` in a Python cell and a table per extract in SQL, the notebook's `extracts:`, and the promotion of a join cell to a Python Transform draft.
 
 **Not built, and not faked.**
 
-* **Further extracts in the browser engine.** The page holds the first extract only; a notebook with further extracts (a SQL cell that joins them) runs on the console. A SQL cell the page cannot read as a query over `extract` is promoted as far as it can be read (section 14).
+* **Promoting a SQL cell the page cannot read** as a query over `extract` goes only as far as it can be read (section 14). (Until 2.3.0 the browser engine held the first extract only; since then every extract is the console's.)
 * **Extracts of a million rows**, Perspective in Analyse, Graphic Walker over an extract (it is in Calc: [PYTHON_CALC.md](PYTHON_CALC.md#19-the-bi-client-and-graphic-walker)), a *Data* tab (editing the extract), *Notes* cells, outputs saved with a notebook, scheduled notebook runs, parameters
-  and widgets, sharing a notebook's outputs, a link *Analyse this* from a report visual or from a terminal view, cell tests, further extracts in the **browser** target (they need the server's sandbox), and an `extract(...)` of a **report visual** (further extracts are datasets).
+  and widgets, sharing a notebook's outputs, a link *Analyse this* from a report visual or from a terminal view, cell tests, and an `extract(...)` of a **report visual** (further extracts are datasets).
 * **Pivot extras**: grand totals and subtotals in the Slice (use a matrix in a report for true totals), sorting by a value, number formats.
 * **Quant:** the real engine (QLRisk).
 
 ## 13. In the browser: DuckDB-Wasm
 
-*Removed in 2.3.0.* Wave B made the servers compute every number and the browser draw ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3): DuckDB-Wasm
+*Removed in 2.3.0; kept as history.* Wave B made the servers compute every number and the browser draw ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3): DuckDB-Wasm
 and the browser's Python (Pyodide) are no longer loaded by Analyse or any BI page, `bi.explore.browser_engine` and `browser_start_seconds` are gone (a
 setting left in a configuration is ignored), and `tools/fetch-duckdb-wasm.sh` is gone. The Slice is the console's, SQL the server's (or the console's
 for a cell over `extract`), Python the console's sandbox. Calc (the terminal's Python) still uses Pyodide in its own worker, and so does the

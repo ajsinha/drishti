@@ -23,20 +23,23 @@ Disabling, uninstalling (to an archive that can be restored) and uploading files
 
 ```
 config/bi/
-  datasets/   <id>.dataset.yaml   the semantic model: tables over connectors (by logical name), relationships, measures, row rules and masks; queried since phase 2
-                                  (commented samples ship: trades-basic, trading-risk, trading-cashflows, the live live-trading and live-exposure, and for several datasets counterparty-exposure, the composed desk-pnl-vs-exposure and the derived desk-pnl-vs-exposure-py: DATASETS.md section 11)
-                                  2.2: rachana: 2 datasets, one table each (<model>-<table>.dataset.yaml), made from those by drishti.py bi migrate --models (BI_MODEL_SPEC.md 8.3.1);
-                                  the rachana: 1 files stay until the 2.1 reader is removed
-  models/     <id>.model.yaml     2.2 data models: datasets as aliases, relationships, measures, hierarchies, rollups (BI_MODEL_SPEC.md section 2); every sample
-                                  dataset above converted, under the same name; the reports (except the two live ones, until W3) read them with `model: <name>@1`
+  datasets/   <id>.dataset.yaml   one table each (rachana: 2, <model>-<table>.dataset.yaml): the table over a connector (by logical name), its columns, row rules and masks
+                                  (BI_MODEL_SPEC.md section 1); the 2.1 rachana: 1 files were converted by drishti.py bi migrate --models and removed in 2.2,
+                                  except the two live ones, live-trading and live-exposure, that their live reports still read. desk-pnl-vs-exposure-py-result is a
+                                  Python dataset (source.python) over two model queries: DATASETS.md section 11 says what the 2.1 composed and derived datasets became
+  models/     <id>.model.yaml     2.2 data models: datasets as aliases, relationships, measures, hierarchies, rollups (BI_MODEL_SPEC.md section 2); samples:
+                                  trades-basic, trading-risk, trading-cashflows, counterparty-exposure, desk-pnl-vs-exposure-py, live-trading, live-exposure,
+                                  region-economics, world-economics; a report reads one with `model: <name>@1`
   reports/    <id>.report.yaml    pages of visuals over a model: filters, bookmarks, drill-through, theme, tooltip pages, interactions; drawn since phase 3;
                                   a page with layout: board is a wall of tiles (2.4.0: the boards desk-wall and python-wall are reports here)
-                                  (seven commented samples: trades-overview, counterparty-risk, cashflow-ladder, live-trading-desk, live-exposure, python-desk-risk, and pnl-vs-exposure over two datasets: REPORTS.md section 16)
-  boards/     <id>.board.yaml     2.3 boards: read as reports with board pages until converted (drishti.py bi migrate --boards config/bi/boards --write)
+                                  (commented samples: trades-overview, counterparty-risk, cashflow-ladder, live-trading-desk, live-exposure, python-desk-risk,
+                                  region-economics, world-economics, the boards desk-wall and python-wall, and pnl-vs-exposure over two datasets: REPORTS.md section 16)
+  boards/     <id>.board.yaml     2.3 boards (no samples ship): read as reports with board pages until converted (drishti.py bi migrate --boards config/bi/boards --write)
   themes/     <id>.theme.yaml     2.4.0 theme items: series colours, good and bad colours, a font, format defaults per kind of visual (samples: corporate, print)
   notebooks/  <id>.notebook.yaml  an analyst notebook: stored, versioned and published like any item, but not run (phase 9; one sample: pnl-vs-exposure-pandas, two extracts joined in pandas)
-  python/     <id>.python.yaml    a Python Measure or Visual with its manifest (inputs, packages, target, limits, source); run by the console's sandboxed runner or in the browser, since phase 6
-                                  (commented samples: desk-pnl-volatility, pnl-histogram, and the Transform pnl-vs-exposure behind the derived dataset desk-pnl-vs-exposure-py; docs/guides/PYTHON_BI.md)
+  python/     <id>.python.yaml    a Python Measure, Visual or Transform with its manifest (inputs, packages, target, limits, source); run by the console's sandboxed runner
+                                  (target: server; the browser target was removed in 2.3.0) (commented samples: desk-pnl-volatility, pnl-histogram, pnl-vega, and the
+                                  Transform pnl-vs-exposure behind the Python dataset desk-pnl-vs-exposure-py-result; docs/guides/PYTHON_BI.md)
 ```
 
 Every file is a **published, read-only item of the catalogue** (workspace "Shipped content", id `file:<kind>:<name>`). The keys `title`, `description`, `owner`, `tags`, `endorsement` (none, promoted,
@@ -51,8 +54,8 @@ Where to read more, in the order a newcomer wants it:
 | For | Read |
 |---|---|
 | a tour of the pages and a walk-through with the samples in this folder | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md) (start here), [docs/tutorials/10-first-bi-report.md](../../docs/tutorials/10-first-bi-report.md) |
-| the dataset format (`datasets/`) | [docs/guides/DATASETS.md](../../docs/guides/DATASETS.md) |
-| the report format (`reports/`): a report names its dataset with `dataset:` (a catalogue id, a file name such as `trades-basic`, or the dataset's name) | [docs/guides/REPORTS.md](../../docs/guides/REPORTS.md) |
+| the dataset and model formats (`datasets/`, `models/`) | [docs/guides/DATASETS.md](../../docs/guides/DATASETS.md) |
+| the report format (`reports/`): a report names its model with `model: <name>@<major>` (a 2.1 live report still names a `dataset:`) | [docs/guides/REPORTS.md](../../docs/guides/REPORTS.md) |
 | boards, report pages of tiles (`layout: board`), and converting a 2.3 board file | [docs/guides/BOARDS.md](../../docs/guides/BOARDS.md) |
 | the theme format (`themes/`) | [docs/guides/REPORTS.md section 5.2](../../docs/guides/REPORTS.md#52-themes) |
 | publishing, review, certification and moving content between servers | [docs/guides/BI_GOVERNANCE.md](../../docs/guides/BI_GOVERNANCE.md) |

@@ -175,7 +175,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 
 ### A pack you expected is missing
 
-- **Cause:** `DRISHTI_PACKS` was set for the server process to a list without it (unset, it is the seven shipped packs,
+- **Cause:** `DRISHTI_PACKS` was set for the server process to a list without it (unset, it is the seven default packs,
   `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets`), or the pack is a retired example under `examples/packs/` that `DRISHTI_PACKS_EXTRA_DIRS` does not name.
 - **Check:** `curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" http://localhost:18480/api/v1/packs | python3 -c "import json,sys; print([p['name'] for p in json.load(sys.stdin)])"`.
 - **Fix:** restart the server with the list you want, for example
@@ -579,7 +579,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
 - **Cause:** the text is written by the domain pack, in its `config/about.yaml`. The drawer's other layers (where the data came from, why the page looks like this, where next) need no pack text. A kind the pack has not written about shows only the Sutra's `description`; a field with no glossary entry has no hint (the glossary layer needs a server with that stage of [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md)).
 - **Check:** a value reading `•••` in the sentence is masked for your role, on purpose. If the file has a mistake, the entry is left out and listed by `GET /api/v1/sutras/problems` (`DRS-2040` to `DRS-2044`, key `<pack>/<file>`) and on the admin *Sutras* page. "About this page could not be loaded" is a failed call: try again; the view itself is unaffected.
-- **Fix:** add or correct the entry: [About text and glossary](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary).
+- **Fix:** add or correct the entry: [About text and glossary](PACK_MODELLING_GUIDE.md#about-text-and-glossary).
 
 ### The Ask box is missing, or says "Ask is unavailable"
 
@@ -938,7 +938,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Check:** run the check that failed, for example `python3 tools/packgen/banking/make_packs.py --check`; the
   message lists the stale files, and `extra=[…]` lists files the generator did not write.
 - **Fix:** move the change into the generator, run it without `--check`, and commit both
-  ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)). To discard a hand edit instead:
+  ([PACK_DEVELOPER_GUIDE.md](PACK_GENERATORS_GUIDE.md#how-the-shipped-packs-are-generated)). To discard a hand edit instead:
   `git checkout -- config/packs/<name>/…`.
 
 ## Connectors
@@ -1265,6 +1265,10 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 
 ### A composed or derived dataset will not answer
 
+*Composed and derived datasets were removed in 2.2: such a file now parses with `DRS-9190` and `drishti.py bi migrate --models` converts it
+(see the migration rows further down). The entries below are for 2.1; the `DRS-9074` one and the Transform cache apply to today's Python
+datasets (`source.python`) too.*
+
 * **`DRS-9014` or `DRS-9016` on the dataset page, and every query `DRS-9010`.** A composed dataset is checked against the datasets it is built from. `no dataset 'x'`: a source is named by catalogue id, file name or the dataset's own name; `source dataset 'x' has errors`: fix that one first; `the key 'k' of 'a' is date but 'k' of 'b' is string`: both sides of a join are of one type; `'k' is not a column of 'a'`: a join is made on the names the frame gives (`trade.desk as d` is `d`). `DRS-9016` names the loop.
 * **`DRS-9021` "the join key 'counterparty' ... is masked for you".** A source masks the column you join on (the server's redact list or the source's `masked:`). Join on an unmasked key (an id), or ask for the raw power. The refusal is the safe answer: joined on a mask, every row would meet every row.
 * **A composed measure is far too high.** `DRS-9015` on the dataset: a join repeats rows, and Check refuses it. Declare `key:` on each source, group the many side by the join key alone, swap the ends, or accept the repetition with `allow-repeat: true` on the join.
@@ -1369,7 +1373,7 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 | `DRS-2040`–`DRS-2044` | a pack's `config/about.yaml` has a problem (unknown key or bad version, kind not in the pack's lineage, a template that does not compile, `use` with no vocabulary entry, a text over the cap); listed by `GET /api/v1/sutras/problems` as `<pack>/about.yaml`; the entry is left out and the page is unaffected; see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#problem-codes) |
 | `DRS-2045`–`DRS-2047` | `sutra lint` help warnings (not load errors): a Sutra binds `F1`, an about `panels.<id>` matches no panel, a shown field has no glossary entry; `--strict` fails the run on them |
 | `DRS-2048` | a shared panel block cannot be used: `use:` names no block or version, `with:` names a parameter the block does not declare, a block uses another block (only a fragment may, at pinned versions, at most 3 deep, without a cycle), or a block file is misnamed ([Shared panel blocks](RACHANA_REFERENCE.md#shared-panel-blocks-use)) |
-| `DRS-2055` | a fragment's `doc:` docstring is missing or incomplete (summary, description, every parameter with type, default and meaning, emits, expects, examples, since; a composite's `uses`): the fragment is not loaded and its uses fail with `DRS-2048`. For a Sutra or an older block it is a warning only (`sutra lint --docs` prints it, never fails on it) ([Fragments and docstrings](PACK_DEVELOPER_GUIDE.md#fragments-and-docstrings)) |
+| `DRS-2055` | a fragment's `doc:` docstring is missing or incomplete (summary, description, every parameter with type, default and meaning, emits, expects, examples, since; a composite's `uses`): the fragment is not loaded and its uses fail with `DRS-2048`. For a Sutra or an older block it is a warning only (`sutra lint --docs` prints it, never fails on it) ([Fragments and docstrings](PACK_MODELLING_GUIDE.md#fragments-and-docstrings)) |
 | `DRS-2056` | a child panel nested more than 3 deep (screen, child, grandchild at most) | flatten the screen: move the deepest children up a level |
 | `DRS-2058` | a panel's `form:` does not read: an unknown key, a field type, a `step` or `key` naming nothing, a rule reading a field the form does not have, a pattern that does not compile | the message names the key; see [SUTRA_FORMS_GUIDE.md](../guides/SUTRA_FORMS_GUIDE.md) |
 | `DRS-2057` | an event or source reference is wrong: a panel named in `@panel.event` or a `source:` that does not exist, a cycle, a panel called `parent`, or a trigger not yet supported | fix the panel name or the event; `sutra lint` names the panel and line |
@@ -1394,6 +1398,7 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 | `DRS-4018` | The AI policy does not allow this feature for your role |
 | `DRS-4019` | The model, provider, MCP server or tool named is not configured: check `config/ai/` or `config/mcp/` |
 | `DRS-4020` | BI with AI: the model's answer could not be used. A draft that did not pass the report check (after one repair) or an answer that is not a query is refused, nothing is changed: say it more plainly, name the measure or field, or try a stronger model (`drishti.bi.ai.model`). With the `mock` provider this is what a question no rule matches answers ([BI_AI.md](BI_AI.md) section 7) |
+| `DRS-4040` | the console: Admin → Connectors → template updates was asked an action it does not have (HTTP 404); only the actions on the page exist |
 | `DRS-4021` | history queries: the range spans more business days than `max-days` (the kind's, else `drishti.history.max-days`). Fix: narrow it with `FROM … TO …` |
 | `DRS-4022` | history queries: the range cannot be read: `TO` before `FROM`, a `FROM` in the future, an unreadable date or range. Use `30`, `30D`, `2W`, `3M`, `1Y`, `YTD`, `MTD`, `QTD` or `FROM yyyy-mm-dd [TO yyyy-mm-dd]` |
 | `DRS-5001` | bad request |
@@ -1541,6 +1546,8 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 | `DRS-9132` | a warning in Check: a measure hidden for some roles (`hidden-for`) reads columns those roles still see, so a default measure or a `define` over them works out the same number. Hide the columns too (the warning lists them for the model's `fields:` under `hidden-for`) |
 | `DRS-9131` | a warning in Check, never a refusal: a model's row rules (its own or its datasets') leave out roles that may read the dataset, so those readers see no rows of it (their answer says *you have no access to rows of <alias> in this model*). Add a rule for them (`where: "true"` to see every row) or leave them out on purpose |
 | `DRS-9130` | the security safeguard (a warning in Check, HTTP 409 when the model is published): a role restricted by a row rule elsewhere in the model would see every row of a dataset that no rule restricts. Give that dataset a rule (in the dataset or in the model's `security.rows`), or say `may-see-all: { <alias>: [<role>] }` under the model's `security` (the publish audits it as `bi-model-may-see-all`) |
+| `DRS-9140` | a report and the model it reads do not fit (HTTP 422 in Check, refused on save): a `rachana: 2` report names a dataset instead of `model: <name>@<major>`, names both `model:` and `dataset:`, or carries its own measures or perspective without a model; the console's model pages answer it when the request names no model (`?ref=<model>@<major>` or `dataset:<name>`). Fix: point the report at one model |
+| `DRS-9141` | a visual of a report on a model reads another dataset; add that dataset to the model, or point the visual at the model |
 | `DRS-9150` | a model query's shape (HTTP 422): an unknown key, a wrong type, `mq` missing or not 1, two time forms, a bad date, `params` (wave W6), a shape or format that is not one of the listed; the `fix` shows what to set |
 | `DRS-9151` | no model by that name and version that you may read (HTTP 404): check `GET /api/v1/bi/models`; a retired major, or a model whose Check has errors (the first is named) |
 | `DRS-9152` | a field, measure, hierarchy or stable id the model lacks (HTTP 422); `fix` names a near match (`trades.Desk` → `trades.desk`) |

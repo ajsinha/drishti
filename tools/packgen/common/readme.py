@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The README standard for packs and connectors (docs/guides/PACK_DEVELOPER_GUIDE.md and
+"""The README standard for packs and connectors (docs/guides/PACK_GENERATORS_GUIDE.md and
 docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md, "The README standard").
 
 Every pack (``config/packs/<pack>/README.md``), every connector type (``plugins/drishti-plugin-<x>/README.md``, the built-ins in

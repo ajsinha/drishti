@@ -501,7 +501,7 @@ The full shape is in [The ViewModel in detail](#the-viewmodel-in-detail).
 
 `?sutra=<name>` draws the view with another Sutra of the entity's kind (the newest version; `400 DRS-5001` for one of another kind):
 `GET /api/v1/views/portfolio-trades/BOOK-RATES-2?sutra=book-desk`. `?design=<id>` draws it with one of the caller's own Designs (the
-Sutra designer's saved page, [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md#31-the-sutra-designer-customize-and-describe)): only the owner's
+Sutra designer's saved page, [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md#31-the-sutra-designer-customize-describe-outline-and-grid)): only the owner's
 (`404 DRS-5006` for anyone else's), and only of the entity's kind (`400 DRS-5001`). Events and child panels take it too.
 
 ### Events and child panels (Sutra Next)
@@ -552,7 +552,7 @@ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" $B/views/trade/1000001/explain
 | Block | Fields |
 |---|---|
 | `ref`, `mnemonic`, `locale`, `generation`, `newer` | the page; `newer` is present (true) only when the server holds a newer generation than `?generation=` |
-| `about` | the pack's words, rendered over the document the caller may see (a field masked for them reads `•••` in `text`): `pack` (`name`, `title`), `kindTitle`, `text`, `sutraDescription` (the Sutra's `description` as written, never evaluated) and `panels` (`id`, `title`, `description`). Authored in the pack's `config/about.yaml` ([pack guide](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)); absent when neither the pack nor the Sutra wrote anything |
+| `about` | the pack's words, rendered over the document the caller may see (a field masked for them reads `•••` in `text`): `pack` (`name`, `title`), `kindTitle`, `text`, `sutraDescription` (the Sutra's `description` as written, never evaluated) and `panels` (`id`, `title`, `description`). Authored in the pack's `config/about.yaml` ([pack guide](PACK_MODELLING_GUIDE.md#about-text-and-glossary)); absent when neither the pack nor the Sutra wrote anything |
 | `data` | `source`, `generation`, `fetchedAt`, `businessDate`, `current`, `live`, `updatedAt`, `staleAfter`, `stale`, `health` (`up`, `degraded` or `down`, as the admin health page reduces it) and `linked` (`fetched`, `pending`, `denied`, `budgetMs`) |
 | `layout.sutra` | the Sutra chosen: `name`, `version`, `priority`, `where` (its source text), `description` (the author's plain text) |
 | `layout.candidates` | every Sutra of the kind in priority order, **the chosen one included** (`chosen: true`; a view that no Sutra matched has none and is inferred), each with its `where` and `result`: `true`, `false`, `error`, or `masked` (the answer depends on a field the caller may not see, so it is not told; the chosen Sutra's own `where` is already in `layout.sutra`) |
@@ -1070,7 +1070,7 @@ curl -s -H "X-Drishti-User: ash" "$B/me/alerts?limit=5"
 ```
 
 A fired alert looks like `{"seq", "at", "user", "rule", "kind", "id", "severity", "message", "generation"}`.
-Suggestions come from the `alerts:` list in installed packs' `pack.yaml`; none of the seven shipped packs declares one, so the answer is `[]`
+Suggestions come from the `alerts:` list in installed packs' `pack.yaml`; none of the shipped packs declares one, so the answer is `[]`
 for every kind until your pack does. An entry has the shape of a rule, for instance (from the retired example pack `examples/packs/finance`):
 `{"kind":"trade","name":"MTM below −450k","when":"$.mtm < -450000","severity":"warn","message":"${$.tradeId}: MTM ${fmt($.mtm, 'signed0')}"}`.
 
@@ -1083,7 +1083,7 @@ Calc needs the `calc` power and `drishti.calc.enabled`.
 |---|---|---|
 | `GET` | `/calc/settings` | `{enabled, allowed, maxColumnRows, maxSnippetChars}`: whether Calc is on and whether the caller may use it |
 | `GET` | `/me/calc-snippets` | your saved snippets `[{name, description, kind, code, updatedAt}]` |
-| `PUT` · `DELETE` | `/me/calc-snippets/{name}` | save `{code, description?, kind?}` (the name is 1 to 80 letters, digits, spaces and `. _ ( ) -`; `code` at most `calc.max-snippet-chars`) → the snippet; delete → `204`, `404 DRS-1001` when there is none |
+| `PUT` · `DELETE` | `/me/calc-snippets/{name}` | save `{code, description?, kind?}` (the name is 1 to 80 letters, digits, spaces and `. _ ( ) -`; `code` at most the server's `drishti.calc.max-snippet-chars`, 50,000) → the snippet; delete → `204`, `404 DRS-1001` when there is none |
 | `GET` | `/search/columns/{kind}?paths=mtm,book&limit=` | as-of. Whole columns of a kind on the business date, as the source that keeps the fields as columns holds them, masked as a search is; without `paths`, the fields kept as columns. `400 DRS-5001` when no source of the kind keeps columns. Needs Calc and the kind |
 | `GET` · `PUT` | `/me/studio-tests/{sutra}` | the entities you test a Sutra against in Studio, `[{kind, id}]` (at most 30; `PUT` replaces the list; `400 DRS-5001` for an entry without a kind or id) |
 
@@ -1169,7 +1169,7 @@ You should see `"title":"Rachana Sutra, language 1"`, `"required":["rachana","su
 number of entity kinds the enabled packs serve, the twenty-two panel kinds (`kv`, `table`, … `metric`) and the first
 functions (`abs`, `coalesce`, …). Any editor that reads JSON Schema can use it: in VS Code with the YAML
 extension, save it next to your Sutras and add `# yaml-language-server: $schema=rachana.schema.json` as the first
-line of a Sutra to get completion and checking as you type. Sutra Studio uses the same schema.
+line of a Sutra to get completion and checking as you type. The Build workbench's YAML editor uses the same schema.
 
 ### Sutra Studio and governance
 
@@ -1429,7 +1429,7 @@ curl -s -X POST "$B/admin/packs/deploy/$ID?acceptBreaking=true" | jq -c '{deploy
 
 ### Packs from a signed registry
 
-Admin → Packs → Registry from a script ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#a-signed-pack-registry-publishing-and-installing) publishes to one;
+Admin → Packs → Registry from a script ([PACK_DEVELOPER_GUIDE.md](PACK_LIFECYCLE_GUIDE.md#a-signed-pack-registry-publishing-and-installing) publishes to one;
 [ADR 018](../architecture/adr/018-signed-pack-registry.md) explains the signing). Administrators only; a personal token needs `packs:admin` for the `POST`s.
 
 | Method | Path | Notes |
@@ -2911,7 +2911,7 @@ patterns, and the server decides in one filter (`TokenScopes`):
 | `design:write` | `POST/PUT/PATCH/DELETE /builder/**` (Designs, shape, suggest, edit, check, propose, share, bind, import), `POST /studio/**`, `POST /sutras`, `POST /sutras/proposals/{id}/withdraw` | `author` |
 | `design:approve` | `POST /sutras/proposals/{id}/approve` and `/reject` | `approve` or admin (not your own proposal, four-eyes) |
 | `loads:write` | `POST /packs/{pack}/loads` (announce that a batch landed or failed; [DATA_LOADS.md](DATA_LOADS.md)) | the roles that open the kind (an administrator needs no more) |
-| `bi:write` | Business intelligence: `POST /bi/datasets/{id}/refresh`, `POST /bi/datasets/{id}/transform/run`, `POST /bi/workspaces`, `POST /bi/workspaces/{id}/items`, `POST /bi/items/{id}/open`, `/move`, `/propose`, `/withdraw`, `/publish`, `/versions/{n}/restore`, `/history/{seq}/restore`, `/impact`, `PUT /bi/items/{id}` and `/favourite`, `DELETE /bi/items/{id}` | the BI power and workspace role each call needs (`bi-author`, contributor or member) |
+| `bi:write` | Business intelligence: `POST /bi/datasets/{id}/refresh`, `POST /bi/workspaces`, `POST /bi/workspaces/{id}/items`, `POST /bi/items/{id}/open`, `/move`, `/propose`, `/withdraw`, `/publish`, `/versions/{n}/restore`, `/history/{seq}/restore`, `/impact`, `PUT /bi/items/{id}` and `/favourite`, `DELETE /bi/items/{id}` | the BI power and workspace role each call needs (`bi-author`, contributor or member) |
 | `bi:approve` | `POST /bi/items/{id}/approve`, `/reject` and `/endorse`, `POST /bi/bundle/import` and `POST /bi/imports/{id}/rollback` | `approve` and workspace member for approving (never your own proposal, four-eyes); promote: owner or member; certify: `bi-steward` |
 | `bi:admin` | `PUT` and `DELETE /bi/workspaces/{id}`, `PUT` and `DELETE /bi/workspaces/{id}/members/{user}`, `PUT /bi/settings` | workspace admin, or `bi-admin` |
 | `packs:admin` | `POST /admin/packs/{name}/load` and `/unload`, `PUT /admin/packs/{name}`, `POST /admin/registry/**` (install and roll back), `POST /admin/connectors/**`, deploy an archive (`POST /admin/packs/deploy`, `POST` and `DELETE /admin/packs/deploy/{id}`), `POST /admin/packs/{name}/rollback`, **Load data** (`POST /admin/packs/{name}/data`), the create-connectors step of a deploy (`POST /admin/packs/deploy/{id}/connectors`), and every write under `/admin/connectors` (`PUT`, `DELETE`, `.../enabled`, `.../reset`, `.../test`, `.../restore/{id}`), and **Retry now** (`POST /admin/retry/{area}`) | `admin` |
