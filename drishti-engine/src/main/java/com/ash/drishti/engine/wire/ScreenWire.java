@@ -128,7 +128,18 @@ public final class ScreenWire {
 
     /** One panel of the screen (at any depth) as the viewer may see it, given the events fired; with its {@code refresh:} (SUTRA_NEXT.md 9). */
     public PanelView bind(Screen s, Panel p) {
-        return refreshed(p, bound(s, p));
+        return formed(s, p, refreshed(p, bound(s, p)));
+    }
+
+    /** {@code v} with the panel's {@code form:} for this viewer (SUTRA_NEXT.md 10): its rows' values and its lookups read as the viewer. */
+    public PanelView formed(Screen s, Panel p, PanelView v) {
+        if (p.form().isEmpty() || v == null || v.denied() != null) {
+            return v;
+        }
+        return FormViews.attach(p, v, s.redact(), FormViews.rows(p, el, s.ctx().eval()), src -> {
+            Pair got = read(s, src, s.rawEval());
+            return got.seen() instanceof DataNode.Arr a ? a.elements() : List.of();
+        });
     }
 
     /** {@code v} refreshing as the Sutra's panel {@code p} says, if it does. */

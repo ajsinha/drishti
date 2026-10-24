@@ -33,6 +33,17 @@ panels:
     title: By tenor bucket
     key: F2
     rows: $.BUCKETS
+    form:
+      title: Bucket limits
+      key: bucket
+      edit: cells
+      fields:
+        - { id: bucket, label: Bucket, bind: BUCKET, readonly: true, reason: "the tenor buckets are set by the limits policy" }
+        - { id: limit, label: Limit, bind: LIMIT, type: number, min: 0, required: true, fmt: amount0 }
+        - { id: used, label: Used, bind: USED, type: number, readonly: true, reason: "measured by the exposure engine" }
+      rules:
+        - { rule: "limit >= used", fields: [limit], message: "The new limit is below what's already used: raise it, or ask the owner first." }
+        - { rule: "limit <= used * 3", severity: warn, fields: [limit], message: "More than three times what's used: the credit committee reviews it." }
     columns:
       - { label: Bucket, bind: "@.BUCKET" }
       - { label: Limit, bind: "@.LIMIT", fmt: compact }

@@ -53,7 +53,7 @@ final class SutraBuilder {
     private static final Set<String> TOP = Set.of("rachana", "sutra", "version", "domain", "match", "title", "strip", "panels", "keys",
             "description", "notes", "controls", "doc", "refresh");
     private static final Set<String> PANEL = Set.of("id", "kind", "title", "key", "code", "area", "infer", "columns", "body", "panels", "description",
-            Panel.SPAN, Panel.HEIGHT, com.ash.drishti.rachana.model.Refresh.KEY);
+            Panel.SPAN, Panel.HEIGHT, com.ash.drishti.rachana.model.Refresh.KEY, com.ash.drishti.rachana.model.Form.KEY);
     private static final Set<String> STRIP = Set.of("label", "bind", "fmt", "tone", "emphasis");
     private static final Set<String> COLUMN = Set.of("label", "bind", "fmt", "tone", "total", "link");
 
@@ -279,6 +279,16 @@ final class SutraBuilder {
                 if (r != null) {
                     options.put(com.ash.drishti.rachana.model.Refresh.KEY, r);
                 }
+            }
+        }
+        PNode form = m.get(com.ash.drishti.rachana.model.Form.KEY);          // SUTRA_NEXT.md 10: how people edit its records
+        if (form != null) {
+            Object raw = form.isScalar() ? form.value() : plain(form);
+            List<String> why = nested ? List.of("a form edits a whole panel's records: put it on the tabs panel")
+                    : com.ash.drishti.rachana.model.Form.problems(raw);
+            why.forEach(w -> problem("DRS-2058", w, form));
+            if (why.isEmpty()) {
+                options.put(com.ash.drishti.rachana.model.Form.KEY, raw);
             }
         }
         if (kind != null) {

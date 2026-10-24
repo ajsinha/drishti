@@ -88,6 +88,22 @@ CONTROLLED = {
                        "extra": ["    where: \"(ctl.asset == '' || @.ASSET_CLASS == ctl.asset) && oneOf(@.PRODUCT, ctl.product) && oneOf(@.STATUS, ctl.status) && (ctl.minNotional == '' || @.NOTIONAL >= ctl.minNotional)\""]},
             "byAsset": {"extra": ["    on-select: { by: asset, field: ASSET, filter: [trades] }"]}},
     },
+    "credit-limit": {
+        # SUTRA_NEXT.md 10: the bucket limits are changed straight in the table (drafts until 2.8.0 write-back)
+        "panels": {"buckets": {"extra": [
+            "    form:",
+            "      title: Bucket limits",
+            "      key: bucket",
+            "      edit: cells",
+            "      fields:",
+            "        - { id: bucket, label: Bucket, bind: BUCKET, readonly: true, reason: \"the tenor buckets are set by the limits policy\" }",
+            "        - { id: limit, label: Limit, bind: LIMIT, type: number, min: 0, required: true, fmt: amount0 }",
+            "        - { id: used, label: Used, bind: USED, type: number, readonly: true, reason: \"measured by the exposure engine\" }",
+            "      rules:",
+            "        - { rule: \"limit >= used\", fields: [limit], message: \"The new limit is below what's already used: raise it, or ask the owner first.\" }",
+            "        - { rule: \"limit <= used * 3\", severity: warn, fields: [limit], message: \"More than three times what's used: the credit committee reviews it.\" }",
+        ]}},
+    },
 }
 
 

@@ -355,6 +355,9 @@ public final class Entitlements {
     public ViewModel restrict(Principal p, ViewModel v) {
         List<ViewModel.PanelView> panels = new ArrayList<>();
         for (ViewModel.PanelView pv : v.panels()) {
+            if (pv.form() != null) {                 // a form's fields this person may not edit are locked and say so (SUTRA_NEXT.md 10)
+                pv = pv.withForm(com.ash.drishti.engine.wire.FormViews.forRoles(pv.form(), p.roles()));
+            }
             if (pv.data() instanceof PanelData.Links l) {
                 List<PanelData.LinkItem> items = l.links().stream().map(i -> i.link() != null && !mayOpen(p, i.link().kind())
                         ? new PanelData.LinkItem(i.label(), i.text(), null, DENIED, "denied") : i).toList();
