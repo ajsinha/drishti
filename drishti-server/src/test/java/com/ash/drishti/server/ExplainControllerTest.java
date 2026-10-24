@@ -111,6 +111,11 @@ class ExplainControllerTest {
     private static String stripTimings(JsonNode view) {
         ((ObjectNode) view).remove("timings");
         ((ObjectNode) view.path("provenance")).remove("fetchedAt");
+        view.path("panels").forEach(p -> {                       // a panel with its own source says when it read it (SUTRA_NEXT.md 9)
+            if (p.path("provenance").isObject()) {
+                ((ObjectNode) p.path("provenance")).remove("fetchedAt");
+            }
+        });
         return view.toString();
     }
 
