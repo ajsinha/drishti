@@ -25,9 +25,11 @@ trade_murex, partitioned by business date (and PRODUCT_TYPE for trades). Each ta
 Datasets of static reference data (world-economy, news-and-markets) are built from their packs' samples, the same on every day.
 The news-and-markets pack's captured market snapshot (data/testdata/news-and-markets/quote and news: real quotes and headlines,
 written by `drishti.py testdata capture-market`) becomes news/quote and news/news, the same snapshot on every day and never re-dated,
-so the pack's quote and headline pages work with no internet (the live connectors off, or DRISHTI_OFFLINE=true).
+so the pack's quote and headline pages work with no internet (the live connectors off, or DRISHTI_OFFLINE=true). The us-equities
+and gleif packs' public data (data/testdata/us-equities and gleif, one snapshot per kind) is built the same way into us-equities/<kind>
+and gleif/<kind>, which their Delta connectors us-equities-store and gleif-store read: no pack needs the demo connector.
 
-Connector files: the seven packs' Delta connectors read ${DRISHTI_DELTA_ROOT:<data>/delta}. With the default lake nothing needs
+Connector files: the packs' Delta connectors read ${DRISHTI_DELTA_ROOT:<data>/delta}. With the default lake nothing needs
 changing; a connector file (config/connectors/<name>.yaml) that points elsewhere, or any of them when --lake is another folder, is
 written to point at the lake (its earlier text kept in <data>/connectors/history/). A missing file is left for the server to
 generate at its first start, except with --lake elsewhere, where it is written from the pack's template.

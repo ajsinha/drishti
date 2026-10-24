@@ -98,7 +98,7 @@ runs is found without a restart. Two engines: `native` (the default; `java.nio` 
 | `domain` | string |  | Domain folder under the root |
 | `kinds` | list |  | Kinds to read |
 | `mode.*` | string |  | Per-kind read mode |
-| `layout.*` | string |  | Per-kind column layout |
+| `layout.*` | string |  | Per-kind layout: layout.<kind>.columns (promoted document paths), layout.<kind>.type-ahead (promoted columns whose values the type-ahead also matches: a name finds its id) |
 | `table.*` | string |  | Per-kind table folder under the domain when it is not the kind's name (table.trade: trade_endur) |
 | `hadoop.*` | string |  | Any Hadoop configuration property (hadoop.fs.s3a.connection.maximum) |
 | `engine` | string |  | Reader engine |

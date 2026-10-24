@@ -102,7 +102,7 @@ plugins:
       - { name: domain, desc: "Domain folder under the root", group: connection }
       - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
       - { name: "mode.*", desc: "Per-kind read mode", group: mapping }
-      - { name: "layout.*", desc: "Per-kind column layout", group: mapping }
+      - { name: "layout.*", desc: "Per-kind layout: layout.<kind>.columns (promoted document paths), layout.<kind>.type-ahead (promoted columns whose values the type-ahead also matches: a name finds its id)", group: mapping }
       - { name: "table.*", desc: "Per-kind table folder under the domain when it is not the kind's name (table.trade: trade_endur)", group: mapping }
       - { name: "hadoop.*", desc: "Any Hadoop configuration property (hadoop.fs.s3a.connection.maximum)", group: tuning }
       - { name: engine, desc: "Reader engine", group: tuning }

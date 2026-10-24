@@ -207,6 +207,7 @@ connectors:
 | Key | Meaning |
 |---|---|
 | `layout.<kind>.columns` | Document paths to promote, as written in the document (`QUANTITY`, `LEGS.CURRENCY`). The column name is the path with `.` replaced by `__`. |
+| `layout.<kind>.type-ahead` | Promoted paths (of `layout.<kind>.columns`) whose values the type-ahead also matches: each hit's subtitle carries them, so `USEQ Ford` finds `F` and a legal name finds its LEI, not only an id prefix (us-equities's us-company: `[NAME, LEI, LEI_LEGAL_NAME]`; gleif's lei-entity: `[NAME, US_COMPANY]`). Read from the promoted columns of the day, no document is read; not set, the type-ahead matches ids only. |
 | `table.<kind>` | The kind's table folder under the domain when it is not the kind's name (`trade_endur`): several connectors then serve one kind from tables side by side. Only the named kinds are this connector's tables. |
 | `layout.<kind>.sort-by` | `id` (the default and the right choice for entity tables): rows sorted by id within each business day. |
 | `layout.<kind>.file-rows` | Rows per file (default 250,000). Each file holds a contiguous id range. |
@@ -802,6 +803,7 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 | `mode.<kind>` | `snapshot` | `snapshot` (every entity every day) or `effective` (a row when an entity changes) |
 | `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
 | `layout.<kind>.columns` | none | promoted paths ([section 4](#4-declaring-the-layout-in-a-pack)) |
+| `layout.<kind>.type-ahead` | none | promoted paths whose values the type-ahead also matches (a name finds its id; [section 4](#4-declaring-the-layout-in-a-pack)) |
 | `table.<kind>` | the kind's name | the kind's table folder under the domain (`trade_endur`); with it, only the named kinds are served ([section 4](#4-declaring-the-layout-in-a-pack)) |
 | `union` | `false` | this connector is one slice of its kinds (one source system of several): reads, searches, type-ahead and BI ask every union connector of the kind ([CONNECTORS.md](CONNECTORS.md#several-connectors-for-one-kind-a-union)) |
 | `layout.<kind>.sort-by`, `file-rows`, `row-group-rows` | `id`, `250000`, `10000` (the trading pack: `1000`) | how writers lay the table out |

@@ -30,8 +30,8 @@ GLEIF gets a polite User-Agent ("Drishti research ajsinha@gmail.com", or DRISHTI
 --scope widens the build (comma separated): LEI:<lei> adds that entity's ownership group; GROUP:<lei> the same (name the ultimate
 parent, or any member); COUNTRY:<XX> every entity with a legal address in that country (the LEI API, at most --max-pages pages of 200,
 or every one from the golden-copy bulk file with the golden-lei source); NAME:<text> the entities GLEIF's full-text search finds (at
-most 200); TICKERS-FROM:us-equities the us-equities companies (the widened us-equities build in the data folder when there is one,
-else the committed pack; or TICKERS-FROM:<path to a us-company.jsonl>); CAP:<n> keeps up to n entities a group (default 50).
+most 200); TICKERS-FROM:us-equities the us-equities companies (the widened us-equities build's snapshot in the data folder when there is one,
+else the committed one; or TICKERS-FROM:<path to a us-company .jsonl or .jsonl.gz>); CAP:<n> keeps up to n entities a group (default 50).
 --years N / --since YEAR keep only the COUNTRY: and NAME: entities whose LEI record was updated in that period. A widened build goes
 to the data folder; --into-pack writes it over the committed pack instead (on purpose only; never with golden-lei). Guide:
 docs/guides/PUBLIC_DATA.md.

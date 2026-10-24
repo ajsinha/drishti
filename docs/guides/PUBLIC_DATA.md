@@ -193,9 +193,15 @@ uv run --with deltalake --with pyarrow --with pyyaml python tools/ingest_jsonl.p
 
 `tools/publicdata/us_equities.py` wraps the pack's generator, `tools/packgen/us_equities/fetch.py` (the network) and `make.py`
 (the build, offline): a refresh of the committed pack writes exactly what `make.py` writes, then runs `make.py --check`. The four
-company sources are openly licensed, so a plain refresh rebuilds the committed pack `config/packs/us-equities`. SEC EDGAR gets the
+company sources are openly licensed, so a plain refresh rebuilds the committed data. SEC EDGAR gets the
 User-Agent it asks for, `Drishti research ajsinha@gmail.com` (set `DRISHTI_SEC_USER_AGENT` to your own), and fewer than 8 requests a
 second (its limit is 10); GLEIF and Wikidata about one a second.
+
+**Where the refresh writes.** The documents follow the standard data pattern: one gzipped JSON Lines snapshot per kind,
+`data/testdata/us-equities/<kind>/snapshot-<date>.jsonl.gz`, listed in `data/testdata/testdata.yaml`; the pack's `samples/` folder keeps
+only a few reference documents and its guide and README are rebuilt. The server reads the data from the demo lake through the pack's
+Delta connector `us-equities-store`, never through the demo connector, so after a refresh rebuild the lake:
+`python3 tools/drishti.py lake demo` (or `python3 tools/build_demo_lakes.py`).
 
 ```bash
 python3 tools/publicdata/us_equities.py status                           # also the committed pack's companies and retrieval date
@@ -219,7 +225,8 @@ python3 tools/publicdata/us_equities.py refresh prices --server http://localhost
   `YEARS:<n>` or `--years N` more fiscal years (default 10); `CONCEPT:<NAME>=<tag>[|<tag>...][@<unit>][@instant]` another
   annual XBRL concept (`CONCEPT:CASH=CashAndCashEquivalentsAtCarryingValue@USD@instant`).
 - **A widened build goes to the data folder**: `<data>/publicdata/us-equities/packs/us-equities`, a whole pack (the hand-written
-  manifest, Sutras and help copied, the samples and guide generated), checked with `make.py --check --pack`. Its cache is
+  manifest, Sutras and help copied, the reference samples and guide generated), with its snapshot beside it in
+  `<data>/publicdata/us-equities/testdata/us-equities/<kind>/`, checked with `make.py --check --pack`. Its cache is
   `scoped/<hash>` inside the cache, seeded from the plain cache less what the scope changes (submissions for `FILINGS`, facts for
   `YEARS` and `CONCEPT`, the Wikidata members for `INDEX`). `--into-pack` writes a widened build over the committed pack, on
   purpose only; without it `--out config/packs/us-equities` with a scope is refused.
@@ -233,9 +240,13 @@ python3 tools/publicdata/us_equities.py refresh prices --server http://localhost
 
 `tools/publicdata/gleif.py` wraps the pack's generator, `tools/packgen/gleif/fetch.py` (the network) and `make.py` (the build,
 offline): a refresh of the committed pack writes exactly what `make.py` writes, then runs `make.py --check`, and an offline refresh
-from an unchanged cache reproduces the committed pack byte for byte. Everything GLEIF publishes is CC0 1.0 (attribution
+from an unchanged cache reproduces the committed data byte for byte. Everything GLEIF publishes is CC0 1.0 (attribution
 appreciated). GLEIF gets the User-Agent `Drishti research ajsinha@gmail.com` (set `DRISHTI_GLEIF_USER_AGENT` to your own) and at
 most one API call a second (GLEIF allows 60 a minute).
+
+**Where the refresh writes.** As for us-equities: one snapshot per kind, `data/testdata/gleif/<kind>/snapshot-<date>.jsonl.gz`,
+listed in `data/testdata/testdata.yaml`, served from the demo lake by the pack's Delta connector `gleif-store` (never the demo
+connector); `samples/` keeps a few reference documents. Rebuild the lake after a refresh: `python3 tools/drishti.py lake demo`.
 
 ```bash
 python3 tools/publicdata/gleif.py status                           # also the committed pack's entities and golden-copy date
@@ -254,7 +265,8 @@ python3 tools/publicdata/gleif.py refresh golden golden-lei api mapping --scope 
   the code lists (entity legal forms, countries, LEI issuers). `mapping`: the BIC, ISIN, MIC and OpenCorporates mapping files
   (the ISIN file is about 33 MB zipped), reduced to the pack's entities. `golden-lei`: the level 1 bulk file (about 480 MB
   zipped), only for `COUNTRY:` pulls into the data folder; never part of a default refresh, never into the committed pack.
-- **The universe.** The seeds are the us-equities companies with an LEI (from that pack's committed samples) and the banks,
+- **The universe.** The seeds are the us-equities companies with an LEI (from that pack's committed snapshot,
+  `data/testdata/us-equities/us-company/`) and the banks,
   insurers, asset managers and market infrastructures pinned in `fetch.py` (`SEEDS`, LEIs resolved once by legal name). Each
   seed brings its ownership group: its ultimate parent and every entity it consolidates, level by level, at most 50 a group
   (`GROUP_CAP`; a group page says when GLEIF has more).
@@ -265,11 +277,13 @@ python3 tools/publicdata/gleif.py refresh golden golden-lei api mapping --scope 
 - **`--scope`** widens the build (comma separated): `LEI:<lei>` or `GROUP:<lei>` adds that entity's group; `COUNTRY:<XX>` the
   entities with a legal address in the country (the LEI API, at most `--max-pages` pages of 200, default 10; every one with
   `golden-lei`); `NAME:<text>` what GLEIF's full-text search finds (one page of 200); `TICKERS-FROM:us-equities` the us-equities
-  companies of the widened us-equities build in the data folder when there is one (or `TICKERS-FROM:<a us-company.jsonl>`);
+  companies of the widened us-equities build's snapshot in the data folder when there is one (or
+  `TICKERS-FROM:<a us-company .jsonl or .jsonl.gz>`);
   `CAP:<n>` up to n entities a group. `--years N` / `--since YEAR` keep only the `COUNTRY:` and `NAME:` entities whose LEI record
   was updated in that period.
 - **A widened build goes to the data folder**: `<data>/publicdata/gleif/packs/gleif`, a whole pack (the hand-written manifest,
-  Sutras and help copied, samples and guide generated), checked with `make.py --check --pack`. `--into-pack` writes it over the
+  Sutras and help copied, reference samples and guide generated), with its snapshot in `<data>/publicdata/gleif/testdata/gleif/`,
+  checked with `make.py --check --pack`. `--into-pack` writes it over the
   committed pack, on purpose only (never with `golden-lei`); without it `--out config/packs/gleif` with a scope is refused.
 
 ## Adding a source
