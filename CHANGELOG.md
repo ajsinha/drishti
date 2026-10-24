@@ -17,6 +17,24 @@
 
 ## Unreleased
 
+- **The gleif pack** ([its guide](config/packs/gleif/guides/gleif.md), [PACKS.md](docs/guides/PACKS.md), [PUBLIC_DATA.md](docs/guides/PUBLIC_DATA.md),
+  gleif): Legal Entity Identifiers and who owns whom, from GLEIF (CC0, attribution appreciated), off by default (`DRISHTI_PACKS`).
+  9,512 legal entities in 540 ownership groups across 132 countries: the groups of the us-equities companies with an LEI and of 114
+  large financial institutions (the FSB's G-SIBs, other large banks, insurers, asset managers, market infrastructures), each the
+  ultimate parent with every entity it consolidates, at most 50 a group (84 groups are larger in GLEIF and say so). Kinds
+  `lei-entity` (`LEI`: facts, addresses, registration and renewal with late renewals flagged, the parents chain, the children with a
+  click opening one beside, BICs, ISIN count, OpenCorporates, reporting exceptions), `lei-group` (`LEIG`: the tree as a tree table,
+  every member, counts by country and legal form; `LEIG ALL` searches the entities and lists the groups), `lei-relationship`
+  (`LEIR`), `lei-country` (`LEIC`; `LEIC ALL`) and `lei-mapping` (`LEIM`: BIC, MIC and ISIN to LEI). Sutras from the UI kit and two
+  pack fragments (`gleif/entity-card`, `gleif/entity-list`) with docstrings. A us-equities company and its LEI record link both ways
+  (the company card's LEI and F5; the entity's listed-company panel and F8; us-equities' data unchanged); a core legal entity or
+  counterparty with a matching LEI links too. `tools/packgen/gleif/` `fetch.py` (golden copy level 2, LEI API, mapping files; cached,
+  one API call a second), `make.py [--check] [--pack]` (offline), `shot.py`; `tools/publicdata/gleif.py` with `gleif.sh` and
+  `tools/windows/publicdata-gleif.ps1` (`status`, `refresh [golden api mapping golden-lei]`, `--scope LEI: GROUP: COUNTRY: NAME:
+  TICKERS-FROM: CAP:`, `--years/--since`, `--out`, `--dry-run`, `--offline`, `--cache`, `--into-pack`; the golden-copy bulk file
+  for full-country pulls into the data folder only). `GleifPackTest`, `tools/test_gleif_pack.py`, `tools/publicdata/tests/test_gleif.py`
+  on a recorded cache.
+
 - **us-equities refresh script** ([PUBLIC_DATA.md](docs/guides/PUBLIC_DATA.md), us-equities): `tools/publicdata/us_equities.py`
   with `us-equities.sh` and `tools/windows/publicdata-us-equities.ps1`, the pack's own script like the others (`status`,
   `refresh [wikidata nasdaq sec gleif prices]`, `--years/--since --scope --out --dry-run --internal-ok --offline --cache`). It wraps

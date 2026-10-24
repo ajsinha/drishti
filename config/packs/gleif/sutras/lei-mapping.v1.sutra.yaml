@@ -1,0 +1,56 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written from the Drishti UI kit (config/ui-kit/fragments) and the pack's own fragments (sutras/common).
+rachana: 1
+sutra: lei-mapping
+version: 1
+description: "An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it."
+doc:
+  summary: "An identifier (ISIN, BIC or MIC) and the LEI it maps to, with the entity's key facts."
+  description: >-
+    One identifier from GLEIF's mapping files: a BIC (with SWIFT), an ISIN (with ANNA, the issuer's LEI) or a MIC (the market's
+    operator). The strip gives its type, the LEI and the entity; the entity's key facts are read from its LEI record beside.
+    The pack keeps every BIC and MIC of the seed entities and of the groups' ultimate parents, and a few ISINs of each seed.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "LEIM APLEUS66XXX"
+    - "LEIM US0378331005"
+  since: "2.7.0"
+match: { kind: lei-mapping, priority: 10 }
+title: { pill: GLEIF · Identifier, id: $.IDENTIFIER, with: $.ENTITY_NAME }
+strip:
+  - { label: Type, bind: $.TYPE, emphasis: true }
+  - { label: LEI, bind: "link($.ENTITY_LEI, 'lei-entity')" }
+  - { label: Entity, bind: $.ENTITY_NAME }
+  - { label: Country, bind: "link($.COUNTRY, 'lei-country')" }
+panels:
+  - id: mapping
+    kind: kv
+    title: The mapping
+    key: F2
+    columns:
+      - { label: Identifier, bind: $.IDENTIFIER }
+      - { label: Type, bind: "$.TYPE == 'BIC' ? 'BIC (business identifier code, with SWIFT)' : ($.TYPE == 'ISIN' ? 'ISIN (securities identifier, with ANNA: the issuer)' : 'MIC (market identifier code: the operator)')" }
+      - { label: Maps to, bind: "link($.ENTITY_LEI, 'lei-entity', $.ENTITY_NAME)" }
+      - { label: Ownership group, bind: "link($.LEI_GROUP, 'lei-group')" }
+      - { label: ISINs of the issuer, bind: $.ISIN_COUNT, fmt: entities0 }
+      - { label: Mapping file, bind: $.MAPPING_FILE }
+  - use: gleif/entity-card@1
+    with: { id: entity, title: The entity, rec: $src, area: right }
+    source: { kind: lei-entity, id: $.ENTITY_LEI }
+  - { use: data-provenance@1 }
+keys: { F5: "link($.ENTITY_LEI, 'lei-entity', 'Entity')", F9: raw }

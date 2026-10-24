@@ -94,7 +94,7 @@ Words used below:
 
 ## The packs that ship
 
-Eight packs ship in `config/packs/`; seven are on by default (`drishti.packs.enabled`, below) and `us-equities` is turned on by adding it to `DRISHTI_PACKS`. Each row lists the
+Nine packs ship in `config/packs/`; seven are on by default (`drishti.packs.enabled`, below) and `us-equities` and `gleif` are turned on by adding them to `DRISHTI_PACKS`. Each row lists the
 pack, its code (typed alone it opens the pack's overview), what it inherits from, its mnemonics, and commands to try. The
 example ids are real: they are in the pack's `samples/` and in the [demo lakes](#the-demo-lakes-where-the-seven-packs-read-their-data).
 
@@ -108,6 +108,7 @@ example ids are real: they are in the pack's `samples/` and in the [demo lakes](
 | `world-economy` | `WRLD` | — | `ECON` economy · `MACRO` macro indicator · `FCST` IMF forecast · `LABR` labour market · `FISC` fiscal position · `ECG` country group · `REGE` region economy · `JUR` jurisdiction · `PARTY` party · `OFFC` office holder · `ELEC` election · `REGN` world region · `SOCI` social indicator (real public data for about 216 countries: World Bank, IMF, CIA World Factbook, UNDP; [REAL_DATA](REAL_DATA.md); not a sample, but the IMF part is for internal demonstrations only) | `ECON ECON-IND` |
 | `news-and-markets` | `NWMK` | — | `TOPIC` news topic · `NEWS` headlines · `CO` listed company · `QUOTE` quote and price history (fifteen topics and twenty well-known companies; headlines from the [news connector](../connectors/NEWS.md), quotes from the [yfinance connector](../connectors/YFINANCE.md); a sample pack, both connectors off as shipped; topics and companies also from the demo lake, connector `news-store`, and offline the quotes and headlines too, from a committed snapshot: [offline mode](#news-and-markets-and-world-economy-offline)) | `TOPIC TOPIC-FED` |
 | `us-equities` | `USEQS` | — | `USEQ` US listed company · `IDX` index members · `SIC` SIC sector · `EDGAR` filings browser · `FILING` SEC filing · `FACT` financial fact · `PXH` price history (real public data on the Dow 30, Nasdaq-100 and S&P 500 companies: SEC EDGAR, GLEIF, Wikidata; **off by default**, add it to `DRISHTI_PACKS`; prices are live only, off and for internal use: [its guide](../../config/packs/us-equities/guides/us-equities.md)) | `USEQ AAPL`, `IDX SP500` |
+| `gleif` | `GLEIF` | — | `LEI` legal entity · `LEIG` ownership group · `LEIR` parent relationship · `LEIC` country · `LEIM` ISIN, BIC or MIC to LEI (real public data from GLEIF, CC0: the ownership groups of the us-equities companies and of the large banks, insurers, asset managers and market infrastructures, at most 50 entities a group; **off by default**, add it to `DRISHTI_PACKS`; with `us-equities` on, a company and its LEI record link both ways: [its guide](../../config/packs/gleif/guides/gleif.md)) | `LEI 8I5DZWZKVSZI1NUHU748`, `LEIG ALL` |
 
 What each pack holds, as shipped (counted in `config/packs/`):
 
@@ -121,6 +122,7 @@ What each pack holds, as shipped (counted in `config/packs/`):
 | `world-economy` | 13 | 13 | 9,582 | 13 | 0 | `macro-store`, `civic-store` (delta) |
 | `news-and-markets` | 4 | 4 | 35 | 0 | 0 | `news` (news), `yfinance` (yfinance), `news-store` (delta) |
 | `us-equities` | 7 | 8 (+ 4 fragments) | 13,504 | 0 | 0 | `us-equities-prices` (yfinance, off, internal use only) |
+| `gleif` | 5 | 7 (+ 2 fragments) | 22,169 | 0 | 0 | none: its samples are its data |
 
 **Links between them.** A `core` counterparty carries its country of risk (`COUNTRY_OF_RISK`, ISO 3166 alpha-2, as the trading
 systems name it on a trade: `COUNTERPARTY_COUNTRY_OF_RISK`) and its `UEN`, and two link fields that open other packs when they are on:
@@ -224,6 +226,7 @@ Typical combinations:
 | Trades and their reference data | `trading` |
 | Only the world economy | `world-economy` |
 | Everything, with the US equities pack | `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities` |
+| Everything, with US equities and their LEIs | `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif` |
 
 You do not have to list `core`, `market-data` or `trading`: the packs that extend them bring them in (see
 [Inheritance](PACK_DEVELOPER_GUIDE.md#inheritance)).
@@ -752,6 +755,7 @@ fields. Each row's mnemonic opens that kind's pick list. Typing the pack's name 
 | world-economy | `WRLD` | | climate-risk | `CLI` |
 | news-and-markets | `NWMK` | | liquidity-risk | `LIQ` |
 | us-equities | `USEQS` | | | |
+| gleif | `GLEIF` | | | |
 
 The codes of the merged packs changed: `BNK` (banking-core) is `CORE`, `ECO` and `POLS` are `WRLD`, `NEWSW` and `MKTW` are `NWMK`.
 

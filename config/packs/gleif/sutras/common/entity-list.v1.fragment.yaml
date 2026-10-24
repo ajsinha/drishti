@@ -1,0 +1,63 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The gleif pack's own fragment (SUTRA_NEXT.md 3a), hand-written, used as { use: gleif/entity-list@1 }.
+rachana: 1
+fragment: entity-list
+version: 1
+description: "Legal entities as a table whose rows, clicked, fire open with the entity's LEI: the master of an entity screen."
+params: { id: entities, title: Entities, rows: $.ROWS, b: COUNTRY, b-label: Country, c: LEVEL, c-label: Level, empty: No entities, code: '', key: '', area: '' }
+doc:
+  summary: "Legal entities as a table whose rows, clicked, fire open with the entity's LEI"
+  description: >-
+    One row a legal entity: its legal name, two more fields (the country and the level in the group on a group page, the city and
+    the late-renewal flag on a country page, the country and the number of its own children for an entity's children) and its
+    LEI. Every column filters. Clicking a row fires open with a payload of two
+    fields, id and ref, both the LEI (an id of lei-entity); give the use children that read @parent.open.id to open the entity's
+    summary beside the table.
+  params:
+    id: { type: id, default: entities, meaning: "The panel id, unique on the screen; other panels read its event as @<id>.open" }
+    title: { type: text, default: Entities, meaning: "The title over the table" }
+    rows: { type: expression, default: $.ROWS, meaning: "The entities (LEI, NAME and the two other fields)" }
+    b: { type: field, default: COUNTRY, meaning: "The second column's field" }
+    b-label: { type: text, default: Country, meaning: "The second column's heading" }
+    c: { type: field, default: LEVEL, meaning: "The third column's field" }
+    c-label: { type: text, default: Level, meaning: "The third column's heading" }
+    empty: { type: text, default: No entities, meaning: "What the table says when there are no rows" }
+    code: { type: key, default: '', meaning: "The panel's mnemonic code, typed in the command line to jump to it; none when empty" }
+    key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
+  emits:
+    - { name: open, on: row-click, payload: { id: id, ref: id } }
+  expects: []
+  examples:
+    - { use: entity-list@1, with: { id: children, title: Children, rows: $.CHILDREN, c: KIDS, c-label: Their children } }
+    - { use: entity-list@1, with: { id: members, rows: $.ROWS, key: F3 } }
+  since: "2.7.0"
+panels:
+  - id: %{id}
+    kind: table
+    title: "%{title}"
+    code: %{code}
+    key: %{key}
+    area: %{area}
+    rows: %{rows}
+    empty: "%{empty}"
+    columns:
+      - { label: Legal name, bind: "@.NAME" }
+      - { label: "%{b-label}", bind: "@.%{b}" }
+      - { label: "%{c-label}", bind: "@.%{c}" }
+      - { label: LEI, bind: "@.LEI" }
+    emits:
+      - { name: open, on: row-click, payload: { id: { bind: "@.LEI", type: id }, ref: { bind: "@.LEI", type: id } } }

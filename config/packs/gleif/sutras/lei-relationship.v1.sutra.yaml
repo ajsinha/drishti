@@ -1,0 +1,80 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written from the Drishti UI kit (config/ui-kit/fragments) and the pack's own fragments (sutras/common).
+rachana: 1
+sutra: lei-relationship
+version: 1
+description: "One consolidation relationship from GLEIF's level 2 data: the child, its direct or ultimate parent, status and periods."
+doc:
+  summary: "A child and its direct or ultimate accounting consolidation parent: status, periods, accounting standard, registration."
+  description: >-
+    One relationship record of GLEIF's level 2 golden copy: the child entity is consolidated by the parent, directly or
+    ultimately. The strip gives the level, the relationship status, its start and the accounting standard; the periods table
+    the accounting and document filing periods the record names; the registration of the relationship record (its own status
+    and renewal). The child's and the parent's key facts are read from their LEI records beside it.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "LEIR LEIREL-0292001381F1R1IB5B85-DIRECT"
+  since: "2.7.0"
+match: { kind: lei-relationship, priority: 10 }
+title: { pill: GLEIF · Relationship, id: $.RELATIONSHIP_ID, with: "$.LEVEL + ' parent'" }
+strip:
+  - { label: Level, bind: "$.LEVEL + ' parent'", emphasis: true }
+  - { label: Status, bind: $.RELATIONSHIP_STATUS, tone: status }
+  - { label: Since, bind: $.START, fmt: date }
+  - { label: Accounting standard, bind: $.ACCOUNTING_STANDARD }
+  - { label: Record, bind: "$.REGISTRATION_STATUS == 'LAPSED' ? 'LAPSED: renewal failed' : $.REGISTRATION_STATUS", tone: status }
+panels:
+  - id: relationship
+    kind: kv
+    title: The relationship
+    key: F2
+    columns:
+      - { label: Child, bind: "link($.CHILD_ENTITY, 'lei-entity')" }
+      - { label: Is consolidated by, bind: "link($.PARENT_ENTITY, 'lei-entity')" }
+      - { label: Level, bind: "$.LEVEL + ' accounting consolidation parent'" }
+      - { label: Relationship status, bind: $.RELATIONSHIP_STATUS }
+      - { label: Relationship start, bind: $.START, fmt: date }
+      - { label: Relationship end, bind: "nonblank($.END, 'Open')" }
+      - { label: Ownership group, bind: "link($.LEI_GROUP, 'lei-group')" }
+  - id: periods
+    kind: table
+    title: Accounting and filing periods the record names
+    rows: $.PERIODS
+    when: "size($.PERIODS) > 0"
+    search: false
+    columns:
+      - { label: Period, bind: "@.TYPE" }
+      - { label: From, bind: "@.START", fmt: date }
+      - { label: To, bind: "nonblank(@.END, 'Open')" }
+  - id: record
+    kind: status
+    title: The relationship record
+    area: right
+    fields:
+      - { label: Registration status, bind: "$.REGISTRATION_STATUS == 'LAPSED' ? 'LAPSED: renewal failed' : $.REGISTRATION_STATUS", tone: status }
+      - { label: First registered, bind: $.INITIAL_REGISTRATION, fmt: date }
+      - { label: Last updated, bind: $.LAST_UPDATE, fmt: date }
+      - { label: Next renewal, bind: $.NEXT_RENEWAL, fmt: date }
+  - use: gleif/entity-card@1
+    with: { id: child, title: The child, rec: $src, area: right }
+    source: { kind: lei-entity, id: $.CHILD_ENTITY }
+  - use: gleif/entity-card@1
+    with: { id: parent-entity, title: The parent, rec: $src, area: right }
+    source: { kind: lei-entity, id: $.PARENT_ENTITY }
+  - { use: data-provenance@1 }
+keys: { F5: "link($.CHILD_ENTITY, 'lei-entity', 'Child')", F6: "link($.PARENT_ENTITY, 'lei-entity', 'Parent')", F7: "link($.LEI_GROUP, 'lei-group', 'Ownership group')", F9: raw }

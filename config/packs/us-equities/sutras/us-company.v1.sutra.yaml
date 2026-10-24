@@ -24,7 +24,7 @@ doc:
     latest fiscal year's revenue, net income, net margin and growth, and diluted EPS. Revenue and net income over up to ten fiscal
     years as a chart and every annual figure in a table (SEC XBRL, 10-K); the latest SEC filings, where a click opens the filing
     beside the table with its links to the document and its EDGAR index; key facts (CIK, LEI, SIC, headquarters, founded,
-    website); the indexes the company belongs to; where the data comes from. F7 opens the SIC sector, F6 the live price history
+    website); the indexes the company belongs to; where the data comes from. F5 opens its LEI record (the gleif pack), F7 the SIC sector, F6 the live price history
     (off as shipped, internal use only).
   params: {}
   emits: []
@@ -71,4 +71,4 @@ panels:
       area: right
       text: "Public data. The company, its SIC industry and its filings come from SEC EDGAR (public domain); the financials are the annual values of its 10-K XBRL filings, a fiscal year being the calendar year its period ends in. Index membership, headquarters and founding come from Wikidata (CC0), the LEI from GLEIF (CC0). No index weights, no GICS and no prices: the price history (F6) is read live, off as shipped, for internal use only."
   - { use: source-footer@1 }
-keys: { F6: "link($.PRICE_HISTORY, 'price-history')", F7: "link($.SIC_SECTOR, 'sic-sector')", F9: raw }
+keys: { F5: "link($.LEI, 'lei-entity', 'LEI record')", F6: "link($.PRICE_HISTORY, 'price-history')", F7: "link($.SIC_SECTOR, 'sic-sector')", F9: raw }

@@ -24,6 +24,7 @@ Some packs carry published public data instead of generated samples. Each of the
 | `news-and-markets` | `tools/publicdata/news_and_markets.py` | `tools/publicdata/news-and-markets.sh` | `tools\windows\publicdata-news-and-markets.ps1` |
 | `market-data` | `tools/publicdata/official_market_data.py` | `tools/publicdata/market-data.sh` | `tools\windows\publicdata-market-data.ps1` |
 | `us-equities` | `tools/publicdata/us_equities.py` | `tools/publicdata/us-equities.sh` | `tools\windows\publicdata-us-equities.ps1` |
+| `gleif` | `tools/publicdata/gleif.py` | `tools/publicdata/gleif.sh` | `tools\windows\publicdata-gleif.ps1` |
 
 Every script has the same two commands and the same options:
 
@@ -70,6 +71,10 @@ There is no single script for every pack, on purpose: each pack's sources, licen
 | us-equities | SEC EDGAR: tickers, submissions, XBRL company facts (`sec`) | public domain (US Government work); EDGAR fair access policy | committable |
 | us-equities | GLEIF LEI records (`gleif`) | CC0 1.0 | committable |
 | us-equities | Yahoo Finance daily prices, through the us-equities-prices connector (`prices`) | Yahoo terms: no redistribution | **internal only** |
+| gleif | GLEIF golden copy, level 2: relationship records and reporting exceptions (`golden`) | CC0 1.0 (attribution appreciated) | committable |
+| gleif | GLEIF LEI API: LEI records, legal forms, countries, LEI issuers (`api`) | CC0 1.0 | committable |
+| gleif | GLEIF mapping files: BIC, ISIN, MIC, OpenCorporates to LEI (`mapping`) | CC0 1.0 | committable |
+| gleif | GLEIF golden copy, level 1 bulk file, for full-country pulls (`golden-lei`, never by default) | CC0 1.0 | data folder only (its size, not its licence) |
 
 **The internal-only rule.** A source whose terms do not allow redistribution is never written into a committed folder of the
 repository unless you pass `--internal-ok`; without it the script either writes to the data folder (when you did not give
@@ -224,6 +229,49 @@ python3 tools/publicdata/us_equities.py refresh prices --server http://localhost
   `<data>/publicdata/us-equities/prices/price-history/snapshot-<date>.jsonl.gz`, each document stamped as a snapshot; into a
   committed folder only with `--internal-ok`. Each ticker is cached under `prices/` in the cache, so `--offline` rebuilds it.
 
+## gleif
+
+`tools/publicdata/gleif.py` wraps the pack's generator, `tools/packgen/gleif/fetch.py` (the network) and `make.py` (the build,
+offline): a refresh of the committed pack writes exactly what `make.py` writes, then runs `make.py --check`, and an offline refresh
+from an unchanged cache reproduces the committed pack byte for byte. Everything GLEIF publishes is CC0 1.0 (attribution
+appreciated). GLEIF gets the User-Agent `Drishti research ajsinha@gmail.com` (set `DRISHTI_GLEIF_USER_AGENT` to your own) and at
+most one API call a second (GLEIF allows 60 a minute).
+
+```bash
+python3 tools/publicdata/gleif.py status                           # also the committed pack's entities and golden-copy date
+python3 tools/publicdata/gleif.py refresh --dry-run                # the universe today, the downloads; changes nothing
+python3 tools/publicdata/gleif.py refresh                          # the committed pack: ~90 MB of golden copy and mapping files, ~70 API calls
+python3 tools/publicdata/gleif.py refresh --offline                # rebuild the committed pack from the cache only
+python3 tools/publicdata/gleif.py refresh --scope GROUP:784F5XWPLTWKTBV3E584,CAP:600
+                                                                   # Goldman Sachs' whole group, in <data>/publicdata/gleif
+python3 tools/publicdata/gleif.py refresh golden golden-lei api mapping --scope COUNTRY:LU --since 2025
+                                                                   # every Luxembourg entity updated since 2025, from the bulk file
+```
+
+- **The sources.** `golden`: the golden copy's level 2 files, the relationship records (`rr`, about 24 MB zipped) and the
+  reporting exceptions (`repex`, about 62 MB), downloaded whole and reduced into `reduced/` (the consolidation relationships;
+  the exceptions of the pack's entities). `api`: the LEI record of every entity of the pack, 200 a request (`filter[lei]`), and
+  the code lists (entity legal forms, countries, LEI issuers). `mapping`: the BIC, ISIN, MIC and OpenCorporates mapping files
+  (the ISIN file is about 33 MB zipped), reduced to the pack's entities. `golden-lei`: the level 1 bulk file (about 480 MB
+  zipped), only for `COUNTRY:` pulls into the data folder; never part of a default refresh, never into the committed pack.
+- **The universe.** The seeds are the us-equities companies with an LEI (from that pack's committed samples) and the banks,
+  insurers, asset managers and market infrastructures pinned in `fetch.py` (`SEEDS`, LEIs resolved once by legal name). Each
+  seed brings its ownership group: its ultimate parent and every entity it consolidates, level by level, at most 50 a group
+  (`GROUP_CAP`; a group page says when GLEIF has more).
+- **The cache** (`<data>/publicdata/cache/gleif`, or `--cache`) keeps every download as served (`golden/`, `mapping/`,
+  `api/records/` batches) and the reductions (`reduced/`); a file stays until removed, so a broken run resumes, and only LEIs
+  not yet cached are asked for. `--max-age HOURS` fetches the golden copy, mapping files and code lists again when older (the old
+  one is put back if the new fetch fails). Every download is in `cache-index.json`.
+- **`--scope`** widens the build (comma separated): `LEI:<lei>` or `GROUP:<lei>` adds that entity's group; `COUNTRY:<XX>` the
+  entities with a legal address in the country (the LEI API, at most `--max-pages` pages of 200, default 10; every one with
+  `golden-lei`); `NAME:<text>` what GLEIF's full-text search finds (one page of 200); `TICKERS-FROM:us-equities` the us-equities
+  companies of the widened us-equities build in the data folder when there is one (or `TICKERS-FROM:<a us-company.jsonl>`);
+  `CAP:<n>` up to n entities a group. `--years N` / `--since YEAR` keep only the `COUNTRY:` and `NAME:` entities whose LEI record
+  was updated in that period.
+- **A widened build goes to the data folder**: `<data>/publicdata/gleif/packs/gleif`, a whole pack (the hand-written manifest,
+  Sutras and help copied, samples and guide generated), checked with `make.py --check --pack`. `--into-pack` writes it over the
+  committed pack, on purpose only (never with `golden-lei`); without it `--out config/packs/gleif` with a scope is refused.
+
 ## Adding a source
 
 A source is a class with its licence and three steps. Here is SONIA from the Bank of England, added to
@@ -276,6 +324,7 @@ The scripts are plain Python: no other program is downloaded or run. The PowerSh
 .\tools\windows\publicdata-market-data.ps1 refresh --years 2
 .\tools\windows\publicdata-news-and-markets.ps1 refresh --server http://localhost:18080
 .\tools\windows\publicdata-us-equities.ps1 refresh --scope TSLA,FILINGS:40
+.\tools\windows\publicdata-gleif.ps1 refresh --scope NAME:allianz,CAP:200
 ```
 
 Set `$env:DRISHTI_DATA_DIR` to put the cache and the builds elsewhere.

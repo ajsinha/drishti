@@ -1,0 +1,66 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The gleif pack's own fragment (SUTRA_NEXT.md 3a), hand-written, used as { use: gleif/entity-card@1 }.
+rachana: 1
+fragment: entity-card
+version: 1
+description: "A legal entity's key facts from its LEI record: name, legal form, where it is registered, its status, its group and parent."
+params: { id: card, title: Key facts, rec: $, code: '', key: '', area: '' }
+doc:
+  summary: "A legal entity's key facts from its LEI record: identity, registration, renewal, parent and group."
+  description: >-
+    One lei-entity record as label and value pairs: the legal name (a link to the entity's page), its LEI, legal form and category,
+    jurisdiction and country (a link to the country), city, the registration number at its business register, the entity and
+    registration status, the next renewal date, the LOU that manages the LEI, the direct parent and the ownership group (links),
+    its children in the pack and its BIC and ISIN counts. rec names the record: $ on the entity's own page, $src in a child that
+    reads the entity as its source.
+  params:
+    id: { type: id, default: card, meaning: "The panel id, unique on the screen" }
+    title: { type: text, default: Key facts, meaning: "The title over the list" }
+    rec: { type: expression, default: $, meaning: "The lei-entity record: $ on its page, $src under a source" }
+    code: { type: key, default: '', meaning: "The panel's mnemonic code, typed in the command line to jump to it; none when empty" }
+    key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
+  emits: []
+  expects: []
+  examples:
+    - { use: entity-card@1, with: { area: right } }
+    - { use: entity-card@1, with: { id: child, title: Child, rec: $src } }
+  since: "2.7.0"
+panels:
+  - id: %{id}
+    kind: kv
+    title: "%{title}"
+    code: %{code}
+    key: %{key}
+    area: %{area}
+    columns:
+      - { label: Legal name, bind: "link(%{rec}.LEI, 'lei-entity', %{rec}.NAME)" }
+      - { label: LEI, bind: "%{rec}.LEI" }
+      - { label: Legal form, bind: "%{rec}.LEGAL_FORM" }
+      - { label: Category, bind: "nonblank(%{rec}.CATEGORY, 'General')" }
+      - { label: Jurisdiction, bind: "nonblank(%{rec}.JURISDICTION, %{rec}.LEI_COUNTRY)" }
+      - { label: Country, bind: "link(%{rec}.LEI_COUNTRY, 'lei-country', %{rec}.COUNTRY_NAME)" }
+      - { label: City, bind: "%{rec}.LEGAL_CITY" }
+      - { label: Registered as, bind: "%{rec}.REGISTERED_AS" }
+      - { label: Entity status, bind: "%{rec}.ENTITY_STATUS" }
+      - { label: Registration, bind: "%{rec}.REGISTRATION_STATUS == 'LAPSED' ? 'LAPSED: renewal failed' : %{rec}.REGISTRATION_STATUS", tone: status }
+      - { label: Next renewal, bind: "%{rec}.NEXT_RENEWAL", fmt: date }
+      - { label: Managing LOU, bind: "%{rec}.MANAGING_LOU" }
+      - { label: Direct parent, bind: "link(%{rec}.DIRECT_PARENT, 'lei-entity')" }
+      - { label: Ownership group, bind: "link(%{rec}.LEI_GROUP, 'lei-group')" }
+      - { label: Children in the pack, bind: "%{rec}.CHILD_COUNT", fmt: entities0 }
+      - { label: BICs, bind: "%{rec}.BICS" }
+      - { label: ISINs (GLEIF mapping), bind: "%{rec}.ISIN_COUNT", fmt: entities0 }

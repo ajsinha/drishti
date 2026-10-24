@@ -1,0 +1,87 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# GLEIF · Legal Entity Identifiers and who owns whom, from the Global Legal Entity Identifier Foundation (CC0): the ownership groups
+# of the us-equities companies and of the large banks, insurers, asset managers and market infrastructures. Hand-written;
+# tools/packgen/gleif/make.py writes samples/ and guides/gleif.md from the cache tools/packgen/gleif/fetch.py fills.
+pack: gleif
+version: 1.0.0
+code: GLEIF            # typed alone, opens this pack's overview
+title: GLEIF legal entities
+description: >-
+  Legal Entity Identifiers from GLEIF (CC0): the legal entities of the us-equities companies' ownership groups and of the large
+  banks (the FSB's G-SIBs and others), insurers, asset managers and market infrastructures, with their parents and children,
+  addresses, registration and renewal, BICs and ISINs. Off by default; with us-equities on, a company and its LEI record link both ways.
+kinds: [lei-entity, lei-group, lei-relationship, lei-country, lei-mapping]
+formats: config/formats.yaml
+mnemonics:
+  LEI:  { kind: lei-entity, label: LEI legal entity }
+  LEIG: { kind: lei-group, label: LEI ownership group }
+  LEIR: { kind: lei-relationship, label: LEI parent relationship }
+  LEIC: { kind: lei-country, label: LEI country }
+  LEIM: { kind: lei-mapping, label: ISIN or BIC to LEI }
+graph:
+  id-patterns:
+    - { pattern: "^[0-9A-Z]{18}[0-9]{2}$", kind: lei-entity }       # an LEI (ISO 17442): 18 characters and two check digits
+    - { pattern: "^LEIREL-", kind: lei-relationship }
+  fields:
+    DIRECT_PARENT:   { kind: lei-entity, label: Direct parent }
+    ULTIMATE_PARENT: { kind: lei-entity, label: Ultimate parent }
+    SUCCESSOR:       { kind: lei-entity, label: Successor entity }
+    CHILD_ENTITY:    { kind: lei-entity, label: Child }
+    PARENT_ENTITY:   { kind: lei-entity, label: Parent }
+    ENTITY_LEI:      { kind: lei-entity, label: LEI record }
+    LEI_GROUP:       { kind: lei-group, label: Ownership group }
+    LEI_COUNTRY:     { kind: lei-country, label: Country (LEI) }
+    MAPPING_IDS:     { kind: lei-mapping, label: Identifier }       # a list: each one a link
+  badges:
+    lei-entity: "$.LEGAL_FORM + ' · ' + $.LEI_COUNTRY"
+    lei-group: "$.MEMBERS + ' entities'"
+    lei-country: "$.ENTITIES + ' entities'"
+    lei-mapping: "$.TYPE"
+    lei-relationship: "$.LEVEL + ' · ' + $.RELATIONSHIP_STATUS"
+roles:
+  entity-analyst: { kinds: [lei-entity, lei-group, lei-relationship, lei-country, lei-mapping], raw: true }
+form:                          # FORM gleif: the search form of each kind
+  lei-entity:
+    - { path: LEI, type: id, group: Identity, help: "One or many: paste a list." }
+    - { path: NAME, label: Legal name, type: text, group: Identity }
+    - { path: LEI_COUNTRY, label: Country, type: enum, group: Where }
+    - { path: LEGAL_CITY, label: City, type: text, group: Where }
+    - { path: LEGAL_FORM, type: text, group: Entity }
+    - { path: REGISTRATION_STATUS, type: enum, group: Registration }
+    - { path: RENEWAL_LATE, label: Late renewal, type: enum, group: Registration }
+    - { path: SEGMENT, type: enum, group: Registration }
+  lei-group:
+    - { path: GROUP_ID, label: Ultimate parent LEI, type: id, group: Group }
+    - { path: NAME, type: text, group: Group }
+    - { path: SEGMENT, type: enum, group: Group }
+    - { path: MEMBERS, type: number, group: Group }
+console:
+  examples:
+    - ["LEI 8I5DZWZKVSZI1NUHU748", "JPMorgan Chase & Co. · parents, children (a click opens one beside), identifiers, the listed company"]
+    - ["LEI HWUPKR0MPOU8FGXBT394", "Apple Inc. · its LEI record and the us-equities company"]
+    - ["LEIG 8I5DZWZKVSZI1NUHU748", "JPMorgan Chase & Co.'s ownership group · the tree, counts by country and legal form"]
+    - ["LEIG MLU0ZO3ML4LN2LL2TL39", "HSBC Holdings · a global bank's group"]
+    - ["LEIG ALL", "Every ownership group, and a search of the entities"]
+    - ["LEIC GB", "United Kingdom · the entities with a British legal address"]
+    - ["LEIC ALL", "Every country of the entities"]
+  help: config/help.yaml
+columns:
+  lei-entity: [LEI, NAME, LEI_COUNTRY, LEGAL_FORM, REGISTRATION_STATUS, NEXT_RENEWAL]
+  lei-group: [GROUP_ID, NAME, LEI_COUNTRY, SEGMENT, MEMBERS]
+  lei-relationship: [RELATIONSHIP_ID, LEVEL, CHILD_ENTITY, PARENT_ENTITY, RELATIONSHIP_STATUS]
+  lei-country: [COUNTRY, NAME, ENTITIES]
+  lei-mapping: [IDENTIFIER, TYPE, ENTITY_LEI, ENTITY_NAME]

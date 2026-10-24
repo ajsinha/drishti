@@ -23,7 +23,7 @@ doc:
   description: >-
     One us-company record as label and value pairs: its name and ticker (a link to the company page), exchange and listing
     market, SIC code (a link to the sector) and division, the indexes it belongs to, the latest fiscal year's revenue, net
-    income and net margin, and its CIK, LEI, headquarters, founding date and website. rec names the record: $ on the company's
+    income and net margin, and its CIK, LEI (a link to its record in the gleif pack), headquarters, founding date and website. rec names the record: $ on the company's
     own page, $src in a child that reads the company as its source.
   params:
     id: { type: id, default: card, meaning: "The panel id, unique on the screen" }
@@ -59,7 +59,7 @@ panels:
       - { label: Diluted EPS (USD), bind: "%{rec}.EPS_DILUTED", fmt: price2 }
       - { label: Shares outstanding, bind: "%{rec}.SHARES_OUTSTANDING", fmt: compact }
       - { label: CIK, bind: "%{rec}.CIK" }
-      - { label: LEI, bind: "%{rec}.LEI" }
+      - { label: LEI, bind: "link(%{rec}.LEI, 'lei-entity', %{rec}.LEI)" }          # the gleif pack's LEI record, when that pack is on
       - { label: Incorporated in, bind: "%{rec}.STATE_OF_INCORPORATION" }
       - { label: Fiscal year end (MM-DD), bind: "%{rec}.FISCAL_YEAR_END" }
       - { label: Headquarters, bind: "nonblank(%{rec}.HEADQUARTERS, %{rec}.BUSINESS_ADDRESS)" }

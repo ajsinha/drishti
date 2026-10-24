@@ -1,0 +1,141 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written from the Drishti UI kit (config/ui-kit/fragments) and the pack's own fragments (sutras/common).
+rachana: 1
+sutra: lei-entity
+version: 1
+description: "A legal entity from its LEI record: key facts, addresses, registration and renewal, parents, children and identifiers."
+doc:
+  summary: "A legal entity's LEI record: facts, renewal (late flagged), its parents chain and its children (a click opens one beside)."
+  description: >-
+    One page per LEI. The strip gives the legal name's country, legal form, entity and registration status, the renewal (red when
+    the renewal is late, amber when it is due within a month), the number of children and the group. The parents chain lists the
+    direct parent and each one above it up to the ultimate parent, each a link; the children table lists the entities it
+    directly consolidates, and a click opens the child's key facts beside the table. On the right: the key facts, the legal and
+    headquarters addresses, the registration (first registered, last updated, next renewal, the managing LOU, GLEIF's record), the
+    identifiers (BICs, ISIN count, MIC, OpenCorporates), the reporting exceptions that say why a parent is not reported, the
+    us-equities company with the same LEI, and every linked entity. F5 opens the group, F6 the country, F7 the parent relationship,
+    F8 the listed company.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/lei-entity/8I5DZWZKVSZI1NUHU748"
+    - "LEI HWUPKR0MPOU8FGXBT394"
+  since: "2.7.0"
+match: { kind: lei-entity, priority: 10 }
+title: { pill: GLEIF · Legal entity, id: $.LEI, with: $.NAME }
+strip:
+  - { label: Country, bind: "link($.LEI_COUNTRY, 'lei-country', $.COUNTRY_NAME)" }
+  - { label: Legal form, bind: $.LEGAL_FORM }
+  - { label: Entity, bind: $.ENTITY_STATUS }
+  - { label: Registration, bind: "$.REGISTRATION_STATUS == 'LAPSED' ? 'LAPSED: renewal failed' : $.REGISTRATION_STATUS", tone: status, emphasis: true }
+  - label: Renewal
+    bind: "$.RENEWAL_LATE ? 'Late: renewal failed by ' + $.NEXT_RENEWAL : (nonblank($.RENEWAL) ? 'Pending: due ' + $.NEXT_RENEWAL : 'Renewed to ' + $.NEXT_RENEWAL)"
+    tone: status
+  - { label: Children, bind: "nonblank($.CHILD_COUNT, 0)", fmt: entities0 }
+  - { label: Ownership group, bind: "link($.LEI_GROUP, 'lei-group', $.LEI_GROUP == $.LEI ? 'Its own group' : last($.PARENTS).NAME)" }
+panels:
+  - id: parents
+    kind: table
+    title: Parents chain (direct parent first, up to the ultimate parent)
+    key: F2
+    code: PAR
+    rows: $.PARENTS
+    search: false
+    when: "size($.PARENTS) > 0"
+    columns:
+      - { label: Level, bind: "@.LEVEL" }
+      - { label: Relationship, bind: "@.RELATIONSHIP" }
+      - { label: Parent, bind: "link(@.LEI, 'lei-entity', @.NAME)" }
+      - { label: LEI, bind: "@.LEI" }
+  - use: gleif/entity-list@1
+    with: { id: children, title: "Children (a click opens one beside)", rows: $.CHILDREN, c: KIDS, c-label: Their children, key: F3, code: KIDS,
+            empty: "No children in the pack: it consolidates no entity that reports it as direct parent" }
+    children:
+      - place: detail-right
+        source: { kind: lei-entity, id: "@parent.open.id" }
+        waits: Pick a child to see its key facts
+        panels:
+          - { use: gleif/entity-card@1, with: { id: child, title: "${@parent.open.id}", rec: $src } }
+  - { use: gleif/entity-card@1, with: { area: right, code: FACTS } }
+  - id: addresses
+    kind: kv
+    title: Addresses
+    area: right
+    columns:
+      - { label: Legal address, bind: $.LEGAL_ADDRESS }
+      - { label: Headquarters, bind: "nonblank($.HQ_ADDRESS, 'Same as the legal address')" }
+      - { label: Headquarters country, bind: "nonblank($.HQ_COUNTRY, $.LEI_COUNTRY)" }
+  - id: registration
+    kind: status
+    title: Registration and renewal
+    area: right
+    key: F4
+    fields:
+      - { label: Registration status, bind: "$.REGISTRATION_STATUS == 'LAPSED' ? 'LAPSED: renewal failed' : $.REGISTRATION_STATUS", tone: status }
+      - label: Renewal
+        bind: "$.RENEWAL_LATE ? 'Late: renewal failed by ' + $.NEXT_RENEWAL : (nonblank($.RENEWAL) ? 'Pending: due ' + $.NEXT_RENEWAL : 'Renewed to ' + $.NEXT_RENEWAL)"
+        tone: status
+      - { label: First registered, bind: $.INITIAL_REGISTRATION, fmt: date }
+      - { label: Last updated, bind: $.LAST_UPDATE, fmt: date }
+      - { label: Next renewal, bind: $.NEXT_RENEWAL, fmt: date }
+      - { label: Entity created, bind: $.CREATED, fmt: date }
+      - { label: Managing LOU, bind: $.MANAGING_LOU }
+      - { label: GLEIF record, bind: "'https://search.gleif.org/#/record/' + $.LEI" }
+  - id: identifiers
+    kind: kv
+    title: Identifiers
+    area: right
+    columns:
+      - { label: LEI, bind: $.LEI }
+      - { label: BICs, bind: "nonblank($.BICS, 'None mapped')" }
+      - { label: ISINs mapped, bind: "nonblank($.ISIN_COUNT, 0)", fmt: entities0 }
+      - { label: MIC, bind: $.MIC }
+      - { label: OpenCorporates, bind: "nonblank($.OPENCORPORATES) ? 'https://opencorporates.com/companies/' + $.OPENCORPORATES : ''" }
+      - { label: Other names, bind: "first($.OTHER_NAMES).NAME" }
+  - id: listed
+    kind: kv
+    title: US listed company (us-equities)
+    area: right
+    when: "nonblank($.US_COMPANY)"
+    columns:
+      - { label: Company, bind: "link($.US_COMPANY, 'us-company', $.US_COMPANY_NAME)" }
+      - { label: Ticker, bind: $.US_COMPANY }
+      - { label: Why in this pack, bind: $.SEGMENT }
+  - id: exceptions
+    kind: table
+    title: Reporting exceptions (why no parent is reported)
+    area: right
+    rows: $.PARENT_EXCEPTIONS
+    search: false
+    when: "size($.PARENT_EXCEPTIONS) > 0"
+    columns:
+      - { label: For, bind: "@.LEVEL" }
+      - { label: Reason, bind: "@.REASON" }
+      - { label: Meaning, bind: "@.MEANING" }
+  - { use: linked-entities@1, with: { title: Linked entities and identifiers } }
+  - use: explainer-note@1
+    with:
+      title: About this page
+      area: right
+      text: "Public data from GLEIF (CC0 1.0; attribution appreciated): the entity's level 1 LEI record, its consolidation relationships from the level 2 golden copy and its identifiers from GLEIF's BIC, ISIN, MIC and OpenCorporates mapping files. A renewal is late when the record lapsed or its next renewal date has passed. The children are those the pack keeps (at most 50 a group, the nearest levels first): the group page says when a group is larger."
+  - { use: data-provenance@1 }
+keys:
+  F5: "link($.LEI_GROUP, 'lei-group', 'Ownership group')"
+  F6: "link($.LEI_COUNTRY, 'lei-country', 'Country')"
+  F7: "link(nonblank($.DIRECT_PARENT) ? 'LEIREL-' + $.LEI + '-DIRECT' : (nonblank($.ULTIMATE_PARENT) ? 'LEIREL-' + $.LEI + '-ULTIMATE' : ''), 'lei-relationship', 'Parent relationship')"
+  F8: "link($.US_COMPANY, 'us-company', 'Listed company')"
+  F9: raw

@@ -1,0 +1,97 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written from the Drishti UI kit (config/ui-kit/fragments) and the pack's own fragments (sutras/common).
+rachana: 1
+sutra: lei-group
+version: 1
+description: "An ownership group: the ultimate parent with its whole tree, every member, and counts by country and legal form."
+doc:
+  summary: "An ownership group: the ultimate parent's tree (a tree table), its members (a click opens one beside), counts by country and legal form."
+  description: >-
+    One page per ultimate parent. The strip counts the members the pack keeps and the members GLEIF has, the levels, the
+    countries and the late renewals. The tree table opens the group from the ultimate parent down, two levels open (each name a
+    link to the entity); members whose direct parent is not reported hang under the ultimate parent. The members table lists
+    every member with its country and level, late renewals highlighted, and a click opens the member's key facts beside it. On
+    the right: the group's facts (with the cap when GLEIF has more members than the pack keeps), members by country and by legal
+    form, the seeds that brought the group into the pack, and the source.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/lei-group/8I5DZWZKVSZI1NUHU748"
+    - "LEIG MLU0ZO3ML4LN2LL2TL39"
+  since: "2.7.0"
+match: { kind: lei-group, where: "$.GROUP_ID != 'ALL'", priority: 10 }
+title: { pill: GLEIF · Ownership group, id: $.GROUP_ID, with: $.NAME }
+strip:
+  - { label: Members (pack), bind: $.MEMBERS, fmt: entities0, emphasis: true }
+  - { label: Members (GLEIF), bind: $.MEMBERS_IN_GLEIF, fmt: entities0 }
+  - { label: Levels, bind: $.LEVELS }
+  - { label: Countries, bind: $.COUNTRIES }
+  - { label: Late renewals, bind: "$.LATE_RENEWALS > 0 ? $.LATE_RENEWALS + ' late: renewal failed' : 'None late'", tone: status }
+  - { label: Home, bind: "link($.LEI_COUNTRY, 'lei-country', $.COUNTRY_NAME)" }
+panels:
+  - id: tree
+    kind: table
+    title: The group tree (from the ultimate parent; two levels open)
+    key: F2
+    code: TREE
+    rows: $.TREE
+    children: "@.CHILDREN"
+    expand: 2
+    columns:
+      - { label: Entity, bind: "link(@.LEI, 'lei-entity', @.NAME)" }
+      - { label: Country, bind: "@.COUNTRY" }
+      - { label: LEI, bind: "@.LEI" }
+  - use: gleif/entity-list@1
+    with: { id: members, title: "Members (a click opens one beside; late renewals highlighted)", rows: $.ROWS, key: F3, code: MEM }
+    children:
+      - place: detail-right
+        source: { kind: lei-entity, id: "@parent.open.id" }
+        waits: Pick a member to see its key facts
+        panels:
+          - { use: gleif/entity-card@1, with: { id: member, title: "${@parent.open.id}", rec: $src } }
+  - id: facts
+    kind: kv
+    title: The group
+    area: right
+    columns:
+      - { label: Ultimate parent, bind: "link($.ENTITY_LEI, 'lei-entity', $.NAME)" }
+      - { label: Legal form, bind: $.LEGAL_FORM }
+      - { label: Segment, bind: $.SEGMENT }
+      - { label: Listed company, bind: "link($.US_COMPANY, 'us-company')" }
+      - { label: Members kept, bind: $.MEMBERS, fmt: entities0 }
+      - { label: Members in GLEIF, bind: $.MEMBERS_IN_GLEIF, fmt: entities0 }
+      - { label: Cap, bind: "nonblank($.CAP_NOTE, 'The whole group is in the pack')" }
+  - { use: ranked-bars@1, with: { id: by-country, title: Members by country, rows: $.BY_COUNTRY, fmt: entities0, area: right, key: F4 } }
+  - { use: ranked-bars@1, with: { id: by-form, title: Members by legal form, rows: $.BY_LEGAL_FORM, fmt: entities0, area: right } }
+  - id: seeds
+    kind: table
+    title: Why the group is in the pack
+    area: right
+    rows: $.SEEDS
+    search: false
+    columns:
+      - { label: Entity, bind: "link(@.LEI, 'lei-entity', @.LABEL)" }
+      - { label: Segment, bind: "@.SEGMENT" }
+      - { label: Ticker, bind: "link(@.TICKER, 'us-company')" }
+  - use: explainer-note@1
+    with:
+      title: About this group
+      area: right
+      text: "Built from GLEIF's level 2 consolidation relationships (CC0): every entity that reports the ultimate parent as its direct or ultimate accounting consolidation parent, level by level. Fund management, sub-fund, feeder and branch relationships are not ownership and are left out. The pack keeps at most 50 entities a group, the nearest levels first; Cap says when GLEIF has more."
+  - { use: field-list@1, with: { id: source, title: Data source and licence, rows: $.PROVENANCE, area: right } }
+  - { use: data-provenance@1 }
+keys: { F5: "link($.ENTITY_LEI, 'lei-entity', 'Ultimate parent')", F6: "link($.LEI_COUNTRY, 'lei-country', 'Country')", F9: raw }

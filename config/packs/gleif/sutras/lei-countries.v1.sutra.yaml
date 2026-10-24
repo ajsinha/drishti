@@ -1,0 +1,54 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written from the Drishti UI kit (config/ui-kit/fragments). Matches the one lei-country record ALL, before the country page.
+rachana: 1
+sutra: lei-countries
+version: 1
+description: "Every country of the pack's legal entities, by the number of entities."
+doc:
+  summary: "Every country of the entities' legal addresses with its entity count, groups headquartered and lapsed registrations."
+  description: >-
+    The directory of countries (LEIC ALL): one row a country of the entities' legal addresses, with the number of entities, the
+    groups headquartered there and the lapsed registrations, largest first; the country opens its page. The right column charts
+    the twenty largest.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/lei-country/ALL"
+    - "LEIC ALL"
+  since: "2.7.0"
+match: { kind: lei-country, where: "$.COUNTRY == 'ALL'", priority: 20 }
+title: { pill: GLEIF · Countries, id: $.COUNTRY, with: $.NAME }
+strip:
+  - { label: Countries, bind: $.COUNTRIES, emphasis: true }
+  - { label: Entities, bind: $.ENTITIES, fmt: entities0 }
+panels:
+  - id: countries
+    kind: table
+    title: Countries by entities
+    key: F2
+    rows: $.ROWS
+    limit: 300
+    columns:
+      - { label: Country, bind: "link(@.COUNTRY, 'lei-country', @.NAME)" }
+      - { label: Code, bind: "@.COUNTRY" }
+      - { label: Entities, bind: "@.ENTITIES", fmt: entities0, total: true }
+      - { label: Groups headquartered, bind: "@.GROUPS_HEADQUARTERED", total: true }
+      - { label: Lapsed, bind: "@.LAPSED", total: true }
+  - { use: ranked-bars@1, with: { id: by-country, title: Entities by country (top 20), rows: $.BY_COUNTRY, fmt: entities0, area: right, key: F3 } }
+  - { use: field-list@1, with: { id: source, title: Data source and licence, rows: $.PROVENANCE, area: right } }
+  - { use: data-provenance@1 }
+keys: { F5: "link('ALL', 'lei-group', 'Every group')", F9: raw }

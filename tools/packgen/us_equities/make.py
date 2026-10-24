@@ -429,7 +429,8 @@ equity. Banks and insurers report revenue under several tags; where none of the 
 A company links to its filings, its financial facts, its SIC sector, its indexes, the United States economy (`world-economy`, for a
 company with a US business address), its market watch page (`news-and-markets`, for the twenty companies there) and to a `core`
 legal entity whose LEI is the company's ({core_matches} match today: core's entities are a fictional bank's). A filing and a fact link
-back to their company; an index and a sector to their members.
+back to their company; an index and a sector to their members. With the `gleif` pack on, the company's LEI (key facts, and F5)
+opens its LEI record, and the record links back to the company.
 
 ## Data sources and licences
 

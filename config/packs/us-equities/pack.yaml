@@ -49,6 +49,7 @@ graph:
     FILING_IDS:    { kind: filing, label: Filing }               # lists of ids: each one a link
     FACT_IDS:      { kind: financial-fact, label: Financial fact }
     INDEX_IDS:     { kind: index-membership, label: Index }
+    US_COMPANY:    { kind: us-company, label: US listed company }   # the gleif pack's lei-entity names its company by ticker
   badges:
     us-company: "$.TICKER + ' · ' + $.SIC_DESCRIPTION"
     filing: "$.FORM + ' · ' + $.FILED"

@@ -1,0 +1,72 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written from the Drishti UI kit (config/ui-kit/fragments) and the pack's own fragments (sutras/common).
+rachana: 1
+sutra: lei-country
+version: 1
+description: "A country's legal entities in the pack: the entities, the groups present, legal forms and cities."
+doc:
+  summary: "The pack's entities with a legal address in one country (a click opens one beside), the groups present, legal forms, cities."
+  description: >-
+    One page per country of the entities' legal addresses. The strip counts the entities, the groups present and those
+    headquartered there, the lapsed registrations and the late renewals. The entities table lists them by name (the first 400 on
+    the largest countries; the counts are of all of them), with the city and the late-renewal flag, late rows highlighted; a click
+    opens the entity's key facts beside the table. The groups table counts each group's entities in the country, a link to the
+    group. On the right: entities by legal form and by city, and the source.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/lei-country/GB"
+    - "LEIC US"
+  since: "2.7.0"
+match: { kind: lei-country, where: "$.COUNTRY != 'ALL'", priority: 10 }
+title: { pill: GLEIF · Country, id: $.COUNTRY, with: $.NAME }
+strip:
+  - { label: Entities, bind: $.ENTITIES, fmt: entities0, emphasis: true }
+  - { label: Groups present, bind: $.GROUPS_PRESENT }
+  - { label: Groups headquartered, bind: "nonblank($.GROUPS_HEADQUARTERED, 0)" }
+  - { label: Lapsed, bind: "nonblank($.LAPSED, 0)" }
+  - { label: Late renewals, bind: "nonblank($.LATE_RENEWALS, 0) > 0 ? $.LATE_RENEWALS + ' late: renewal failed' : 'None late'", tone: status }
+panels:
+  - use: gleif/entity-list@1
+    with: { id: entities, title: "Entities, by name (a click opens one beside)", rows: $.ROWS, b: CITY, b-label: City, c: LATE, c-label: Renewal, key: F2, code: ENT }
+    children:
+      - place: detail-right
+        source: { kind: lei-entity, id: "@parent.open.id" }
+        waits: Pick an entity to see its key facts
+        panels:
+          - { use: gleif/entity-card@1, with: { id: picked, title: "${@parent.open.id}", rec: $src } }
+  - id: groups
+    kind: table
+    title: Groups present (entities here)
+    key: F3
+    rows: $.GROUP_ROWS
+    columns:
+      - { label: Group, bind: "link(@.GROUP_ID, 'lei-group', @.NAME)" }
+      - { label: Home, bind: "link(@.HOME, 'lei-country')" }
+      - { label: Entities here, bind: "@.HERE", fmt: entities0, total: true }
+  - id: note
+    kind: kv
+    title: The list
+    area: right
+    columns:
+      - { label: Entities listed, bind: "nonblank($.ROWS_NOTE, 'Every entity of the country in the pack')" }
+      - { label: Directory, bind: "link('ALL', 'lei-country', 'Every country')" }
+  - { use: ranked-bars@1, with: { id: by-form, title: Entities by legal form, rows: $.BY_LEGAL_FORM, fmt: entities0, area: right, key: F4 } }
+  - { use: ranked-bars@1, with: { id: by-city, title: Entities by city, rows: $.BY_CITY, fmt: entities0, area: right } }
+  - { use: field-list@1, with: { id: source, title: Data source and licence, rows: $.PROVENANCE, area: right } }
+  - { use: data-provenance@1 }
+keys: { F9: raw }
