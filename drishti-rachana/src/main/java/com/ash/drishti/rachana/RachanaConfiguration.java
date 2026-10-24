@@ -48,8 +48,9 @@ public class RachanaConfiguration {
      */
     @Bean(destroyMethod = "close")
     public SutraRegistry sutraRegistry(RachanaProperties props, ElCompiler elCompiler,
-            @org.springframework.beans.factory.annotation.Value("${drishti.ui-kit.dir:./config/ui-kit}") String uiKitDir) {
-        java.nio.file.Path kit = java.nio.file.Path.of(uiKitDir).toAbsolutePath().normalize();
+            @org.springframework.beans.factory.annotation.Value("${drishti.ui-kit.dir:./config/ui-kit}") String uiKitDir,
+            @org.springframework.beans.factory.annotation.Value("${drishti.packs.dir:./config/packs}") String packsDir) {
+        java.nio.file.Path kit = UiKitDir.resolve(uiKitDir, packsDir);         // else beside the packs folder (another working folder)
         if (!java.nio.file.Files.isDirectory(kit.resolve("fragments"))) {
             org.slf4j.LoggerFactory.getLogger(RachanaConfiguration.class).warn("the Drishti UI kit has no fragments folder at {} (drishti.ui-kit.dir, "
                     + "DRISHTI_UI_KIT_DIR): screens that use its fragments do not draw", kit);

@@ -67,8 +67,9 @@ public class UiKit {
     private final Map<Path, Stamp> hashes = new ConcurrentHashMap<>();
 
     public UiKit(@Value("${drishti.ui-kit.dir:./config/ui-kit}") String dir,
-            @Value("${drishti.ui-kit.site-dir:${drishti.data.dir:./data}/ui-kit}") String site) {
-        this.dir = Path.of(dir).toAbsolutePath().normalize();
+            @Value("${drishti.ui-kit.site-dir:${drishti.data.dir:./data}/ui-kit}") String site,
+            @Value("${drishti.packs.dir:./config/packs}") String packsDir) {
+        this.dir = com.ash.drishti.rachana.UiKitDir.resolve(dir, packsDir);     // the same folder the Sutras read the fragments from
         this.site = Path.of(site).toAbsolutePath().normalize();
     }
 
