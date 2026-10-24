@@ -246,6 +246,12 @@ code. `samples/agent.jsonl` holds one agent and `samples/client.jsonl` two clien
 (`{"AGENT_ID":"AGT-07","NAME":"Priya N.","TEAM":"Identity","OPEN_TICKETS":2,"SHIFT":"EMEA early",…}`,
 `{"CLIENT_ID":"CLI-ACME","NAME":"Acme Freight Ltd","TIER":"Gold","COUNTRY":"GB",…}`). A catalogue entry with no document is skipped.
 
+**Never rely on the demo connector to serve a pack's data.** The `demo` source is for building a pack on your own machine; a
+cluster runs with it off (`DRISHTI_DEMO_ENABLED=false`), and every page whose data only `samples/` holds then fails with `DRS-1001
+no source holds …`. A pack that ships data puts it on the standard pattern of [step 16](#step-16-real-data-a-connector-and-a-route)
+(test data, `lake demo`, a Delta connector of the pack); `samples/` then keeps only a few reference documents for the README and
+the guide.
+
 ### Step 4. Load it
 
 Start the scratch server with `helpdesk` in `DRISHTI_PACKS` (above), or copy the folder into the packs folder of a running server.
@@ -669,6 +675,18 @@ pd.DataFrame([{"status": view.doc["STATUS"], "hours": view.doc["AGE_HOURS"]}])
 Only roles with `calc: true` see Calc (here `support-lead`). More in [Calc: Python snippets](#calc-python-snippets).
 
 ### Step 16. Real data: a connector and a route
+
+**Data a pack ships: the standard pattern.** Every document a shipped pack serves follows one pattern, whatever its origin
+(generated, or published public data such as the us-equities and gleif packs):
+
+1. the documents as gzipped JSON Lines under `data/testdata/<pack>/<kind>/` (a snapshot, then a file of changes a business day; or
+   one dated `snapshot-<date>.jsonl.gz` the same on every day), each dataset listed in `data/testdata/testdata.yaml` with its pack,
+   kind, Delta connector and key (`tools/testdata/make_testdata.py` and `tools/testdata/publicsnap.py` write it; never by hand);
+2. `python3 tools/drishti.py lake demo` (or `tools/build_demo_lakes.py`) builds them into the demo lake;
+3. a Delta connector in the pack's `pack.yaml` serves them (`plugin: delta`, its `domain`, the kinds, `layout.<kind>.columns` for the
+   fields searches and the search form filter on, `layout.<kind>.type-ahead` for the columns a name is found by).
+
+`PacksServedWithoutDemoTest` (drishti-server) fails the build when a kind of a shipped pack has no such connector and data.
 
 Samples are for demos. Real tickets live somewhere else; here, the ticketing system exports each business day's tickets as one
 JSON Lines file, the layout the `file` plugin reads ([FILE_CONNECTOR.md](../connectors/FILE_CONNECTOR.md)):

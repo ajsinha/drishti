@@ -14,12 +14,16 @@
 
 """Build the us-equities pack's documents from the cache fetch.py fills (no network).
 
-    python3 tools/packgen/us_equities/make.py [--cache DIR]           write config/packs/us-equities/samples and its guide
+    python3 tools/packgen/us_equities/make.py [--cache DIR]           write data/testdata/us-equities/ and the pack's guide
     python3 tools/packgen/us_equities/make.py --check [--cache DIR]   fail if what would be written differs from the pack
 
-With a cache, --check rebuilds every document from it. Without one (a fresh clone, CI), --check reads the committed samples
-back and rebuilds what is derived from them (the catalogue, the guide, the line format), so it needs no network either.
-The pack's manifest, Sutras, fragments and help are hand-written; this writes samples/ and guides/us-equities.md.
+With a cache, --check rebuilds every document from it. Without one (a fresh clone, CI), --check reads the committed snapshot back
+(data/testdata/us-equities/) and rebuilds what is derived from it (the reference samples, the guide, the README), so it needs no network.
+
+The documents follow Drishti's standard data pattern (tools/testdata/publicsnap.py): one gzipped JSON Lines snapshot per kind under
+data/testdata/us-equities/<kind>/, listed in data/testdata/testdata.yaml, built into the lake by tools/build_demo_lakes.py and served by
+the pack's Delta connector. samples/ keeps only a few reference documents for the README and docs; nothing is served from it.
+The pack's manifest, Sutras, fragments and help are hand-written; this writes the snapshot, samples/ and guides/us-equities.md.
 """
 from __future__ import annotations
 
@@ -35,6 +39,8 @@ import packsamples as PS  # noqa: E402
 import readme as README  # noqa: E402  (the pack README standard)
 sys.path.insert(0, str(HERE))
 import fetch as F  # noqa: E402
+sys.path.insert(0, str(ROOT / "tools" / "testdata"))
+import publicsnap as SNAP  # noqa: E402  (the standard data pattern: data/testdata/<pack>/<kind>/)
 
 PACK = ROOT / "config" / "packs" / "us-equities"
 DEFAULT_CACHE = ROOT / "data" / "cache" / "us-equities"
@@ -425,6 +431,13 @@ year, a balance (assets, liabilities, equity) at the year end, the latest filing
 calendar year its period ends in. Where a filer reports no total liabilities line, it is derived as liabilities and equity less total
 equity. Banks and insurers report revenue under several tags; where none of the standard ones is filed the revenue is left empty.
 
+**Where the data lives.** The documents are committed as Drishti's standard test data: one gzipped JSON Lines snapshot per
+kind, `data/testdata/us-equities/<kind>/snapshot-<date>.jsonl.gz`, listed in `data/testdata/testdata.yaml`. `python3 tools/drishti.py lake demo`
+(or `python3 tools/build_demo_lakes.py`) builds them into the demo lake, the same documents on every business day it holds, and the
+pack's Delta connector `us-equities-store` serves them. Nothing is served by the demo connector: a server with `DRISHTI_DEMO_ENABLED=false`
+opens every page of the pack from the lake. The pack's `samples/` folder keeps only a few reference documents for this guide and the
+README.
+
 ## Links
 
 A company links to its filings, its financial facts, its SIC sector, its indexes, the United States economy (`world-economy`, for a
@@ -470,13 +483,18 @@ generator's two steps, which can also be run by hand:
 
 ```bash
 python3 tools/packgen/us_equities/fetch.py --cache data/cache/us-equities     # the network: about 1,100 SEC requests and 500 GLEIF lookups
-python3 tools/packgen/us_equities/make.py --cache data/cache/us-equities      # writes samples/ and this guide
+python3 tools/packgen/us_equities/make.py --cache data/cache/us-equities      # writes data/testdata/us-equities/, samples/ and this guide
 python3 tools/packgen/us_equities/make.py --check                              # no network: the pack matches its generator
 ```
 
 `fetch.py` keeps what it downloaded (delete a file to fetch it again) and reduces each company's XBRL facts to the annual values of the
 seven concepts, so the cache stays small. Prices are never part of a refresh into the pack: the script's `prices` source writes a
-snapshot to the data folder only (internal use only). Set `DRISHTI_SEC_USER_AGENT` to your own name and contact before running it. The picture
+snapshot to the data folder only (internal use only). Set `DRISHTI_SEC_USER_AGENT` to your own name and contact before running it.
+
+After a refresh, rebuild the lake so the server reads the new snapshot: `python3 tools/drishti.py lake demo` (or
+`python3 tools/build_demo_lakes.py`), then restart the server or let it pick the tables up at its next refresh.
+
+The picture
 above is made by `tools/packgen/us_equities/shot.py` (its own scratch server and console on 18742 and 18743).
 """
 
@@ -498,7 +516,8 @@ def _rel(p: Path) -> str:
 
 
 def files(docs: dict[str, dict[str, dict]]) -> dict[Path, str]:
-    out = {PACK / "samples" / name: text for name, text in PS.files(docs, catalog(docs), catalog_indent=None).items()}
+    ref = SNAP.reference("us-equities", docs)                     # a few reference documents: the data itself is in data/testdata
+    out = {PACK / "samples" / name: text for name, text in PS.files(ref, catalog(ref), catalog_indent=None).items()}
     out[PACK / "guides" / "us-equities.md"] = guide(docs)
     out[PACK / "README.md"] = README.render_pack(PACK, files=out, intro=HERE / "readme" / "us-equities.intro.md")
     return out
@@ -510,36 +529,22 @@ def main(argv: list[str]) -> int:
     p.add_argument("--check", action="store_true")
     p.add_argument("--pack", type=Path, help="the pack folder to write or check (default config/packs/us-equities; "
                                                "tools/publicdata/us_equities.py points a widened build at the data folder)")
+    p.add_argument("--testdata", type=Path, help="the test data folder the snapshot goes to (default data/testdata for the committed "
+                                                  "pack; beside a widened build's pack folder otherwise)")
     a = p.parse_args(argv)
     global PACK
     PACK = a.pack.resolve() if a.pack else ROOT / "config" / "packs" / "us-equities"
+    testdata = a.testdata.resolve() if a.testdata else SNAP.default_testdata(PACK, ROOT / "config" / "packs" / "us-equities")
     if a.cache.joinpath("wikidata.json").is_file():
         docs = build(a.cache)
     elif a.check:
-        docs = PS.read(PACK / "samples")
-        print(f"no cache at {a.cache}: checking the committed samples against what they derive")
+        docs = SNAP.read(testdata, "us-equities")
+        if not docs:
+            raise SystemExit(f"no cache at {a.cache} and no snapshot in {testdata}/us-equities: run tools/packgen/us_equities/fetch.py first")
+        print(f"no cache at {a.cache}: checking the committed snapshot ({testdata}/us-equities) against what it derives")
     else:
         raise SystemExit(f"no cache at {a.cache}: run tools/packgen/us_equities/fetch.py first")
-    want = files(docs)
-    if a.check:
-        bad = [_rel(f) for f, text in want.items() if not f.is_file() or f.read_text(encoding="utf-8") != text]
-        have = {f for f in (PACK / "samples").glob("*") if f.is_file()}
-        bad += [_rel(f) + " (not written by the generator)" for f in have - set(want)]
-        if bad:
-            print("us-equities pack differs from its generator:\n  " + "\n  ".join(bad))
-            return 1
-        print(f"us-equities pack matches its generator ({sum(len(v) for v in docs.values())} documents)")
-        return 0
-    for f, text in want.items():
-        f.parent.mkdir(parents=True, exist_ok=True)
-        f.write_text(text, encoding="utf-8")
-    for f in (PACK / "samples").glob("*"):
-        if f.is_file() and f not in want:
-            f.unlink()
-    sizes = {k: len(v) for k, v in docs.items()}
-    total = sum(f.stat().st_size for f in (PACK / "samples").glob("*"))
-    print(f"wrote {_rel(PACK)}: {sizes}; samples {total / 1e6:.1f} MB")
-    return 0
+    return SNAP.generate("us-equities", PACK, docs, files(docs), a.check, testdata)
 
 
 if __name__ == "__main__":

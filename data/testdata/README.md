@@ -31,12 +31,15 @@ data/testdata/
   market-risk/<kind>/           trade valuations, FRTB sensitivities, VaR, stress scenarios and results, P&L explain
   news-and-markets/quote/       a REAL snapshot of the twenty companies' quotes (a year of daily bars), Yahoo Finance
   news-and-markets/news/        a REAL snapshot of the companies' and topics' headlines, Google News
+  us-equities/<kind>/           REAL public data: the index companies, their filings and financial facts (SEC EDGAR, Wikidata, GLEIF)
+  gleif/<kind>/                 REAL public data: LEI records, ownership groups, relationships, countries, identifiers (GLEIF, CC0)
 ```
 
 Written by `tools/testdata/make_testdata.py` (deterministic; `--check` says whether the files are current), guarded by
 `tools/testdata/test_testdata.py`, read by `drishti.py lake demo` (`tools/lake/demo.py`). The market snapshot under
 `news-and-markets/` is the exception: real data, captured with internet by `tools/testdata/capture_market.py`
-([below](#the-market-snapshot-news-and-markets-offline)), kept as it is by `make_testdata.py`.
+([below](#the-market-snapshot-news-and-markets-offline)), kept as it is by `make_testdata.py`; so are the us-equities and gleif
+packs' public data ([below](#public-data-us-equities-and-gleif)), written by their own generators.
 
 ## Quick start: five steps
 
@@ -60,8 +63,8 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    `RUN_DATE`, `SOURCE_UPDATE_TIME`) move with them, and so does each point of a document's embedded market series (`HISTORY`, `OHLC`,
    `FIXINGS`, `PNL_SERIES`: its `DATE`, by the same number of business days), so a price history has no missing days between the series
    and the stored days. A market document's `CHANGE_1D` is the day's move of its own price (`PRICE`, `LEVEL`, `MID`), and the fields quoted next to the price move with it ([below](#the-datasets)). Measured for sixty days on a fast machine: **943 s (about 15 minutes; up to half an hour on a laptop)**,
-   66 tables, about 2.2 GB on disk (15 tables are static reference data built from the world-economy and
-   news-and-markets packs' samples, 2 the captured quotes and headlines).
+   77 tables, about 2.2 GB on disk (15 tables are static reference data built from the world-economy and
+   news-and-markets packs' samples, 2 the captured quotes and headlines, 11 the us-equities and gleif public data).
 4. **Start** the server and the console: the run configurations **Drishti server (demo lakes)** (the samples off,
    `DRISHTI_DEMO_ENABLED=false`, so every page reads the lakes; with the samples on, a sample answers before the lake for an id both
    hold) and **Drishti console**. The server reads `data/delta` by default (`DRISHTI_DELTA_ROOT` moves it).
@@ -248,6 +251,24 @@ server error. `--server URL` uses a server you run instead. It replaces the olde
 sizes; then run `lake demo` and commit `data/testdata`. Exit 0 all captured, 2 some ids missing (the rest written), 1 nothing.
 Guarded by `tools/testdata/test_capture_market.py` (a stub server, never the internet) and `test_testdata.py`.
 
+## Public data: us-equities and gleif
+
+The us-equities and gleif packs carry published public data, not generated documents. It follows the same pattern as everything
+here: one gzipped JSON Lines snapshot per kind, `us-equities/<kind>/snapshot-<date>.jsonl.gz` (us-company, index-membership,
+sic-sector, filing-feed, filing, financial-fact) and `gleif/<kind>/snapshot-<date>.jsonl.gz` (lei-entity, lei-group, lei-relationship,
+lei-country, lei-mapping), about 4.3 MB in all, each listed in `testdata.yaml` with its key, capture date, source, documents and size.
+
+- **In the lake.** `lake demo` writes each kind into `us-equities/<kind>` and `gleif/<kind>` (the same snapshot on every day, never
+  re-dated); the packs' Delta connectors `us-equities-store` and `gleif-store` serve them, so both packs work with the demo connector
+  off. Their `samples/` folders keep only a few reference documents for their READMEs and guides; nothing is served from there.
+  Both packs are off by default: add `us-equities,gleif` to `DRISHTI_PACKS`.
+- **Writing it.** The packs' generators write the snapshots and their `testdata.yaml` entries (`tools/testdata/publicsnap.py`):
+  `tools/packgen/us_equities/make.py`, `tools/packgen/gleif/make.py`, run by the refresh scripts `tools/publicdata/us_equities.py`
+  and `gleif.py` ([PUBLIC_DATA.md](../../docs/guides/PUBLIC_DATA.md)); `make.py --check` without a cache checks the committed
+  snapshot. `make_testdata.py` keeps both folders as they are and lists them.
+- **Licences.** SEC EDGAR is public domain, GLEIF and Wikidata CC0, the Nasdaq Trader directory a public file; no prices, index
+  weights or GICS are included (the packs' guides).
+
 ## The manual way: one dataset at a time
 
 `lake demo` is `lake build` run for every dataset and day. By hand, build a day's state into the table its connector reads (the
@@ -295,5 +316,6 @@ python3 -m unittest -q tools/testdata/test_testdata.py tools/testdata/test_marke
 ```
 
 The generator builds on the banking generators (`tools/packgen/banking`, `tools/packgen/trades`): change those, regenerate the
-samples, then the test data. It never touches `news-and-markets/` (the captured market snapshot; `capture-market` refreshes it). The world-economy and news-and-markets datasets are those packs' samples; the world-economy figures
+samples, then the test data. It never touches `news-and-markets/` (the captured market snapshot; `capture-market` refreshes it),
+`us-equities/` or `gleif/` (their generators write them). The world-economy and news-and-markets datasets are those packs' samples; the world-economy figures
 include IMF series, so they are for internal demonstrations only.

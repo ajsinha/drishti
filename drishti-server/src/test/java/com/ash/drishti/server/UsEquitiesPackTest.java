@@ -16,75 +16,34 @@
 package com.ash.drishti.server;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.view.PanelData;
 import com.ash.drishti.engine.view.ViewModel;
-import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * The us-equities pack loads beside the packs it links to and draws its screens from the committed public data: every example it
- * advertises opens a view built by its Sutra with every panel filled and no missing link; a click on a company's filing opens the
- * filing beside the table with its EDGAR links; a click on an index member opens the company's summary; the price kind ships no data
- * and its connector is off unless a site switches it on.
+ * The us-equities pack loads beside the packs it links to and draws its screens from the committed public data, read as the user's
+ * cluster reads it: the demo connector off, the documents in the Delta lake built from data/testdata/us-equities
+ * ({@link PublicPacksOnLakes}). Every example it advertises opens a view built by its Sutra with every panel filled and no missing
+ * link; a click on a company's filing opens the filing beside the table with its EDGAR links; a click on an index member opens the
+ * company's summary; the price kind ships no data and its connector is off unless a site switches it on. Citigroup (C) and Ford (F)
+ * open, the type-ahead finds them by ticker and by name, and the search form finds Citigroup by its ticker.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
-        "drishti.packs.enabled=core,world-economy,news-and-markets,us-equities",
-        "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true"})
-@AutoConfigureMockMvc
-class UsEquitiesPackTest {
+class UsEquitiesPackTest extends PublicPacksOnLakes {
 
     static final Path PACK = Path.of("../config/packs/us-equities");
 
     @Autowired ViewPipeline pipeline;
     @Autowired com.ash.drishti.engine.command.CommandParser commands;
-    @Autowired MockMvc mvc;
-    @Autowired TokenVerifier tokens;
-    private final ObjectMapper json = new ObjectMapper();
-
-    private String auth() {
-        return "Bearer " + tokens.mint("u-analyst", List.of("full"), 300);
-    }
-
-    private JsonNode view(String kind, String id) throws Exception {
-        return json.readTree(mvc.perform(get("/api/v1/views/" + kind + "/" + id).header("Authorization", auth())).andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
-    }
-
-    private JsonNode click(String kind, String id, String panel, int row) throws Exception {
-        String body = json.writeValueAsString(Map.of("panel", panel, "event", "open", "row", row, "selections", List.of()));
-        return json.readTree(mvc.perform(post("/api/v1/views/" + kind + "/" + id + "/events").header("Authorization", auth())
-                .contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isOk()).andReturn().getResponse()
-                .getContentAsString(StandardCharsets.UTF_8));
-    }
-
-    private static JsonNode panel(JsonNode panels, String id) {
-        for (JsonNode p : panels) {
-            if (id.equals(p.path("id").asText())) {
-                return p;
-            }
-        }
-        throw new AssertionError("no panel " + id + " in " + panels);
-    }
 
     private static String field(JsonNode kv, String label) {
         for (JsonNode f : kv.path("data").path("fields")) {
@@ -93,6 +52,16 @@ class UsEquitiesPackTest {
             }
         }
         throw new AssertionError("no field " + label + " in " + kv);
+    }
+
+    /** The id a card field links to, found by the document path it shows (the ticker shows as the company's name). */
+    private static String linkedId(JsonNode kv, String path) {
+        for (JsonNode f : kv.path("data").path("fields")) {
+            if (path.equals(f.path("path").asText())) {
+                return f.path("link").path("id").asText();
+            }
+        }
+        throw new AssertionError("no field at " + path + " in " + kv);
     }
 
     @Test
@@ -168,5 +137,31 @@ class UsEquitiesPackTest {
             assertThat(files.map(p -> p.getFileName().toString())).noneMatch(n -> n.startsWith("price-history"));
         }
         assertThat(Files.readString(PACK.resolve("samples/catalog.json"))).doesNotContain("\"price-history\"");
+    }
+
+    @Test
+    void companiesOpenFromTheLakeWithTheDemoConnectorOff() throws Exception {
+        for (String ticker : List.of("AAPL", "C", "F")) {
+            JsonNode v = view("us-company", ticker);
+            assertThat(v.path("provenance").path("sutra").asText()).as(ticker).isEqualTo("us-company");
+            assertThat(linkedId(panel(v.path("panels"), "card"), "$.TICKER")).as(ticker).isEqualTo(ticker);
+            assertThat(panel(v.path("panels"), "filings").path("data").path("rows").size()).as(ticker).isPositive();
+        }
+        assertThat(view("us-company", "C").toString()).contains("Citigroup");
+        assertThat(view("us-company", "F").toString()).contains("Ford");
+    }
+
+    @Test
+    void theTypeAheadFindsACompanyByTickerAndByName() throws Exception {
+        assertThat(suggested("USEQ C")).contains("C");                                 // a one-letter ticker
+        assertThat(suggested("USEQ F")).contains("F");
+        assertThat(suggested("USEQ Ford")).contains("F");                              // by name: the lake's type-ahead columns
+        assertThat(suggested("USEQ Citigroup")).contains("C");
+    }
+
+    @Test
+    void theSearchFormFindsCitigroupByItsTickerAndFordByItsName() throws Exception {
+        assertThat(formSearch("us-equities", "us-company", "{'path':'TICKER','op':'in','values':['C']}".replace('\'', '"'))).containsExactly("C");
+        assertThat(formSearch("us-equities", "us-company", "{'path':'NAME','op':'contains','value':'Ford'}".replace('\'', '"'))).contains("F");
     }
 }

@@ -169,6 +169,11 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     static long diskRetrySeconds = 30;
     /** Kind to the document paths its pack promotes to columns ({@code layout.<kind>.columns}). */
     private final Map<String, List<String>> promoted = new java.util.concurrent.ConcurrentHashMap<>();
+    /**
+     * Kind to the promoted columns the type-ahead also matches ({@code layout.<kind>.type-ahead: NAME,LEI}): their values join the
+     * hit's subtitle, so a name finds its id ({@code Ford} finds {@code F}), not only an id prefix.
+     */
+    private final Map<String, List<String>> typeAhead = new java.util.concurrent.ConcurrentHashMap<>();
     private int maxLoadRows;
     /**
      * Single-entity reads decode a row group each: bounded, so a burst of them cannot exhaust memory; at most {@code max-queued-reads}
@@ -310,6 +315,8 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         ctx.settings().forEach((k, v) -> {
             if (k.startsWith("layout.") && k.endsWith(".columns")) {
                 promoted.put(k.substring(7, k.length() - 8), java.util.Arrays.stream(v.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList());
+            } else if (k.startsWith("layout.") && k.endsWith(".type-ahead")) {
+                typeAhead.put(k.substring(7, k.length() - 11), java.util.Arrays.stream(v.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList());
             }
         });
         this.dated = new DatedHitIndex(sourceName, DatedHitIndex.defaultRoot(), ctx.settings(), this::dayHits, (k, d) -> {
@@ -724,12 +731,52 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         Optional<DeltaTable.Layout> l = layout(kind, null);
         List<EntityHit> out = new ArrayList<>();
         if (l.isPresent() && l.get().files().containsKey(day)) {
-            String subtitle = kind + " · " + sourceName;
-            for (String id : idMap(kind, l.get(), day).ids()) {
-                out.add(new EntityHit(EntityRef.of(kind, id), id, subtitle));
-            }
+            out.addAll(idHits(kind, l.get(), day));
         }
         return out;
+    }
+
+    /**
+     * A day's type-ahead hits: its ids from the id column alone, each with the values of the kind's {@code layout.<kind>.type-ahead}
+     * columns in its subtitle (read from the day's promoted columns), so a name or another identifier finds the entity too.
+     */
+    private List<EntityHit> idHits(String kind, DeltaTable.Layout l, LocalDate day) {
+        String subtitle = kind + " · " + sourceName;
+        Map<String, String> words = typeAheadWords(kind, l, day);
+        List<EntityHit> out = new ArrayList<>();
+        for (String id : idMap(kind, l, day).ids()) {
+            String w = words.get(id);
+            out.add(new EntityHit(EntityRef.of(kind, id), id, w == null ? subtitle : w + " · " + subtitle));
+        }
+        return out;
+    }
+
+    /** Id to the joined values of the kind's type-ahead columns on one day; empty when it declares none or they cannot be read. */
+    private Map<String, String> typeAheadWords(String kind, DeltaTable.Layout l, LocalDate day) {
+        List<String> wanted = typeAhead.getOrDefault(kind, List.of());
+        Map<String, String> cols = promotedColumns(kind, l);
+        if (wanted.stream().noneMatch(cols::containsKey) || l.deletionVectors()) {
+            return Map.of();
+        }
+        try {
+            com.ash.drishti.api.ColumnSet c = columnSet(kind, l, day, cols);
+            Map<String, String> out = new HashMap<>();
+            for (int i = 0; i < c.size(); i++) {
+                StringBuilder b = new StringBuilder();
+                for (String path : wanted) {
+                    Object v = c.has(path) ? c.value(path, i) : null;
+                    if (v != null && !String.valueOf(v).isBlank()) {
+                        b.append(b.isEmpty() ? "" : " · ").append(v);
+                    }
+                }
+                if (!b.isEmpty()) {
+                    out.put(c.ids()[i], b.toString());
+                }
+            }
+            return out;
+        } catch (RuntimeException e) {
+            return Map.of();                                    // ids alone: the type-ahead still finds them by id
+        }
     }
 
     /** The newest commit time among the domain's tables (data loaded, appended or restated). */
@@ -913,10 +960,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             }
         }
         if (!l.files().isEmpty()) {                             // ids from the id column alone: no document is read
-            String subtitle = kind + " · " + sourceName;
-            for (String id : idMap(kind, l, l.files().lastKey()).ids()) {
-                hits.add(new EntityHit(EntityRef.of(kind, id), id, subtitle));
-            }
+            hits.addAll(idHits(kind, l, l.files().lastKey()));
             if (dated.enabled()) {
                 dated.putDay(kind, l.files().lastKey(), hits);
                 dated.plan(kind, l.files().navigableKeySet());

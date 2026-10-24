@@ -35,6 +35,22 @@
   (`UiKitDir`): a server started elsewhere with `DRISHTI_PACKS_DIR` (the embed, news and maps browser tests) loaded no kit, so every
   screen on a kit fragment fell back to an inferred layout (DRS-2048; an embedded valuation's title read *trade-valuation*). The Outline
   browser test edits a book page written out in its own design, since the pack's book page is now made of fragments.
+  for the alert to be written before it reads the YAML.
+- **us-equities and gleif on the standard data pattern: both packs work with the demo connector off** ([data/testdata/README.md](data/testdata/README.md#public-data-us-equities-and-gleif),
+  [PUBLIC_DATA.md](docs/guides/PUBLIC_DATA.md)). Their documents lived in `config/packs/<pack>/samples/`, which only the demo connector
+  serves, so a cluster running with it off found nothing (`DRS-1001 no source holds us-company/AAPL`; the search form for ticker C or
+  F empty). Now each kind is one snapshot, `data/testdata/<pack>/<kind>/snapshot-2026-10-24.jsonl.gz` (11 files, 4.3 MB), listed in
+  `testdata.yaml`; `lake demo` and `build_demo_lakes.py` build it into `us-equities/<kind>` and `gleif/<kind>` on every demo day; the
+  packs' Delta connectors `us-equities-store` and `gleif-store` serve it; `samples/` keeps a few reference documents. The generators
+  write the snapshot (`tools/testdata/publicsnap.py`); the refresh scripts, gleif's `fetch.py` and the tests read it;
+  `make_testdata.py` keeps and lists it. The pack guides and READMEs say where the data lives and to rebuild the lake after a refresh.
+- **Delta connector: `layout.<kind>.type-ahead`** ([DELTA_CONNECTOR.md](docs/connectors/DELTA_CONNECTOR.md)): promoted columns whose
+  values the type-ahead also matches, so `USEQ Ford` finds `F` and a legal name finds its LEI; read from the day's promoted columns.
+- **Never rely on the demo connector to serve a pack's data** ([PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md#step-16-real-data-a-connector-and-a-route)):
+  `PacksServedWithoutDemoTest` fails the build when a kind of a shipped pack has no default-on Delta connector with committed test data
+  (or a derived connector); us-equities `price-history` (live, internal only) is exempt. `UsEquitiesPackTest` and `GleifPackTest` run
+  with the demo connector off, on lakes built in-test from the committed test data (AAPL, C and F open; type-ahead C and *Ford*; FORM
+  ticker C; LEI and LEIG ALL; an entity by LEI and by name). The demo lake now has 77 tables.
 
 ## 2.7.0 — Sutra Next: the UI kit, events and children across packs, refresh, layout, forms and the four-mode Sutra designer; the us-equities and gleif packs (2026-10-24)
 

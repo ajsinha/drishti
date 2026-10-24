@@ -92,6 +92,10 @@ years of annual financials from their XBRL filings, their LEI, their SIC sector 
 levels, no GICS and no prices are shipped: `price-history` is read live by the `us-equities-prices` connector, off by default and for
 internal use only.
 
+The documents are committed as standard test data, one snapshot per kind under `data/testdata/us-equities/<kind>/`;
+`tools/drishti.py lake demo` builds them into the demo lake and the pack's Delta connector `us-equities-store` serves them, so the pack
+works with the demo connector off. `samples/` keeps only a few reference documents.
+
 ## Data sources and licences
 
 Every document names its source, retrieval date and licence in `PROVENANCE`. Filings are metadata and links only; the documents stay

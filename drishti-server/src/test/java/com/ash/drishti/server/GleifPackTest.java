@@ -16,41 +16,27 @@
 package com.ash.drishti.server;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.view.PanelData;
 import com.ash.drishti.engine.view.ViewModel;
-import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * The gleif pack loads beside us-equities and draws its screens from the committed GLEIF data: every example it advertises opens a
- * view built by its Sutra with every panel filled and no missing link; a click on a child opens the child's key facts beside the
- * children table; a group's tree holds its members level under level; a us-equities company and its LEI record link both ways.
+ * The gleif pack loads beside us-equities and draws its screens from the committed GLEIF data, read as the user's cluster reads it: the
+ * demo connector off, the documents in the Delta lake built from data/testdata/gleif ({@link PublicPacksOnLakes}). Every example it
+ * advertises opens a view built by its Sutra with every panel filled and no missing link; a click on a child opens the child's key
+ * facts beside the children table; a group's tree holds its members level under level; a us-equities company and its LEI record link
+ * both ways; an LEI opens, and the type-ahead and the search form find an entity by its LEI and its legal name.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
-        "drishti.packs.enabled=core,us-equities,gleif",
-        "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true"})
-@AutoConfigureMockMvc
-class GleifPackTest {
+class GleifPackTest extends PublicPacksOnLakes {
 
     static final Path PACK = Path.of("../config/packs/gleif");
     static final String JPM = "8I5DZWZKVSZI1NUHU748";
@@ -58,34 +44,6 @@ class GleifPackTest {
 
     @Autowired ViewPipeline pipeline;
     @Autowired com.ash.drishti.engine.command.CommandParser commands;
-    @Autowired MockMvc mvc;
-    @Autowired TokenVerifier tokens;
-    private final ObjectMapper json = new ObjectMapper();
-
-    private String auth() {
-        return "Bearer " + tokens.mint("u-analyst", List.of("full"), 300);
-    }
-
-    private JsonNode view(String kind, String id) throws Exception {
-        return json.readTree(mvc.perform(get("/api/v1/views/" + kind + "/" + id).header("Authorization", auth())).andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
-    }
-
-    private JsonNode click(String kind, String id, String panel, int row) throws Exception {
-        String body = json.writeValueAsString(Map.of("panel", panel, "event", "open", "row", row, "selections", List.of()));
-        return json.readTree(mvc.perform(post("/api/v1/views/" + kind + "/" + id + "/events").header("Authorization", auth())
-                .contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isOk()).andReturn().getResponse()
-                .getContentAsString(StandardCharsets.UTF_8));
-    }
-
-    private static JsonNode panel(JsonNode panels, String id) {
-        for (JsonNode p : panels) {
-            if (id.equals(p.path("id").asText())) {
-                return p;
-            }
-        }
-        throw new AssertionError("no panel " + id + " in " + panels);
-    }
 
     private static JsonNode field(JsonNode kv, String label) {
         for (JsonNode f : kv.path("data").path("fields")) {
@@ -106,7 +64,10 @@ class GleifPackTest {
             assertThat(v.provenance().layout()).as(ref.toString()).startsWith("Sutra ");
             assertThat(v.panels()).as(ref.toString()).allSatisfy(p -> assertThat(p.empty()).as(ref + "/" + p.id()).isFalse());
             assertThat(v.panels().stream().filter(p -> p.data() instanceof PanelData.Links)
-                    .flatMap(p -> ((PanelData.Links) p.data()).links().stream()).toList())
+                    .flatMap(p -> ((PanelData.Links) p.data()).links().stream())
+                    // world-economy's graph field JURISDICTION links every pack's JURISDICTION to its own jurisdiction kind, which
+                    // holds countries, not GLEIF's subdivisions (US-DE): the gleif pack's own links are the ones checked here
+                    .filter(l -> l.link() == null || !"jurisdiction".equals(l.link().kind())).toList())
                     .as(ref + " links").allSatisfy(l -> assertThat(l.status()).as(ref + " -> " + l.text()).isNotEqualTo("missing"));
         }
     }
@@ -167,5 +128,21 @@ class GleifPackTest {
         assertThat(listed.path("link").path("id").asText()).isEqualTo("AAPL");
         assertThat(view("lei-relationship", "LEIREL-" + panel(view("lei-entity", JPM).path("panels"), "children").path("data").path("rows")
                 .get(0).path("cells").get(3).path("text").asText() + "-DIRECT").path("provenance").path("sutra").asText()).isEqualTo("lei-relationship");
+    }
+
+    @Test
+    void anLeiOpensAndTheTypeAheadFindsItByLeiAndLegalName() throws Exception {
+        assertThat(commands.require("LEI " + JPM).kind()).isEqualTo("lei-entity");
+        assertThat(view("lei-entity", JPM).path("provenance").path("sutra").asText()).isEqualTo("lei-entity");
+        assertThat(view("lei-group", "ALL").path("panels").size()).isPositive();             // LEIG ALL
+        assertThat(suggested("LEI " + JPM.substring(0, 8))).contains(JPM);
+        assertThat(suggested("LEI JPMORGAN CHASE & CO")).contains(JPM);                  // by legal name: the lake's type-ahead columns
+        assertThat(suggested("LEIG Ford Motor")).isNotEmpty();
+    }
+
+    @Test
+    void theSearchFormFindsAnEntityByItsLegalName() throws Exception {
+        assertThat(formSearch("gleif", "lei-entity", ("{'path':'LEI','op':'in','values':['" + APPLE + "']}").replace('\'', '"'))).containsExactly(APPLE);
+        assertThat(formSearch("gleif", "lei-entity", "{'path':'NAME','op':'contains','value':'Apple Inc'}".replace('\'', '"'))).contains(APPLE);
     }
 }

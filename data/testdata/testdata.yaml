@@ -21038,3 +21038,113 @@ datasets:
   source: Google News (news connector)
   documents: 71
   bytes: 144798
+- folder: us-equities/us-company
+  pack: us-equities
+  kind: us-company
+  connector: us-equities-store
+  key: TICKER
+  snapshot: snapshot-2026-10-24.jsonl.gz
+  captured: '2026-10-24'
+  source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
+  documents: 479
+  bytes: 425230
+- folder: us-equities/index-membership
+  pack: us-equities
+  kind: index-membership
+  connector: us-equities-store
+  key: INDEX
+  snapshot: snapshot-2026-10-24.jsonl.gz
+  captured: '2026-10-24'
+  source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
+  documents: 3
+  bytes: 24392
+- folder: us-equities/sic-sector
+  pack: us-equities
+  kind: sic-sector
+  connector: us-equities-store
+  key: SIC
+  snapshot: snapshot-2026-10-24.jsonl.gz
+  captured: '2026-10-24'
+  source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
+  documents: 180
+  bytes: 30003
+- folder: us-equities/filing-feed
+  pack: us-equities
+  kind: filing-feed
+  connector: us-equities-store
+  key: FEED
+  snapshot: snapshot-2026-10-24.jsonl.gz
+  captured: '2026-10-24'
+  source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
+  documents: 6
+  bytes: 21757
+- folder: us-equities/filing
+  pack: us-equities
+  kind: filing
+  connector: us-equities-store
+  key: ACCESSION
+  snapshot: snapshot-2026-10-24.jsonl.gz
+  captured: '2026-10-24'
+  source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
+  documents: 9561
+  bytes: 260941
+- folder: us-equities/financial-fact
+  pack: us-equities
+  kind: financial-fact
+  connector: us-equities-store
+  key: FACT_ID
+  snapshot: snapshot-2026-10-24.jsonl.gz
+  captured: '2026-10-24'
+  source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
+  documents: 3275
+  bytes: 481257
+- folder: gleif/lei-entity
+  pack: gleif
+  kind: lei-entity
+  connector: gleif-store
+  key: LEI
+  snapshot: snapshot-2026-10-24.jsonl.gz
+  captured: '2026-10-24'
+  source: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)
+  documents: 9512
+  bytes: 1842419
+- folder: gleif/lei-group
+  pack: gleif
+  kind: lei-group
+  connector: gleif-store
+  key: GROUP_ID
+  snapshot: snapshot-2026-10-24.jsonl.gz
+  captured: '2026-10-24'
+  source: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)
+  documents: 541
+  bytes: 436017
+- folder: gleif/lei-relationship
+  pack: gleif
+  kind: lei-relationship
+  connector: gleif-store
+  key: RELATIONSHIP_ID
+  snapshot: snapshot-2026-10-24.jsonl.gz
+  captured: '2026-10-24'
+  source: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)
+  documents: 8972
+  bytes: 441105
+- folder: gleif/lei-country
+  pack: gleif
+  kind: lei-country
+  connector: gleif-store
+  key: COUNTRY
+  snapshot: snapshot-2026-10-24.jsonl.gz
+  captured: '2026-10-24'
+  source: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)
+  documents: 133
+  bytes: 307736
+- folder: gleif/lei-mapping
+  pack: gleif
+  kind: lei-mapping
+  connector: gleif-store
+  key: IDENTIFIER
+  snapshot: snapshot-2026-10-24.jsonl.gz
+  captured: '2026-10-24'
+  source: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)
+  documents: 3011
+  bytes: 39363

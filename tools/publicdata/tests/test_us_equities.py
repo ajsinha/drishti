@@ -30,6 +30,8 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 import pdbase as B  # noqa: E402
 import us_equities as UE  # noqa: E402
+sys.path.insert(0, str(HERE.parents[1] / "testdata"))
+import publicsnap as SNAP  # noqa: E402  (a build's data: <out>/testdata/<pack>/<kind>/)
 
 FX = HERE / "fixtures" / "us_equities"
 GME = 1326380
@@ -57,8 +59,15 @@ def ns(cache, **kw):
     return argparse.Namespace(**base)
 
 
-def lines(f: Path) -> list[dict]:
-    return [json.loads(x) for x in f.read_text(encoding="utf-8").splitlines() if x.strip()]
+def snap(pack: Path, kind: str) -> list[dict]:
+    """A build's documents of a kind: its snapshot beside the pack folder (<out>/testdata/<pack>/<kind>/snapshot-<date>.jsonl.gz)."""
+    return SNAP.kind_docs(pack.name, kind, pack.parent.parent / "testdata")
+
+
+def built(pack: Path) -> dict[str, bytes]:
+    """A build's files: the pack's reference samples and its snapshot, by name."""
+    return {str(f.relative_to(pack.parent.parent)): f.read_bytes()
+            for f in [*(pack / "samples").glob("*"), *(pack.parent.parent / "testdata").rglob("*.jsonl.gz")]}
 
 
 def sec_opener(calls):
@@ -93,13 +102,13 @@ def test_offline_build_from_the_recorded_cache(tmp_path, cache, data_dir):
     out = tmp_path / "build"
     assert UE.refresh(ns(cache, offline=True, out=str(out)), log=lambda *_: None) == 0
     pack = out / "packs" / "us-equities"
-    cos = {d["TICKER"]: d for d in lines(pack / "samples" / "us-company.jsonl")}
+    cos = {d["TICKER"]: d for d in snap(pack, "us-company")}
     assert set(cos) == {"AAPL", "MSFT"}
     assert cos["AAPL"]["LEI"] and cos["AAPL"]["LISTING"] == "Nasdaq Global Select Market"
     assert (pack / "pack.yaml").is_file() and (pack / "guides" / "us-equities.md").is_file()
-    first = {f.name: f.read_bytes() for f in (pack / "samples").glob("*")}
+    first = built(pack)
     assert UE.refresh(ns(cache, offline=True, out=str(out)), log=lambda *_: None) == 0
-    assert first == {f.name: f.read_bytes() for f in (pack / "samples").glob("*")}          # deterministic
+    assert first == built(pack)          # deterministic
     man = json.loads((data_dir / "publicdata" / "us-equities" / "manifest.json").read_text())
     assert set(man["sources"]) == {"wikidata", "nasdaq", "sec", "gleif"} and man["runs"][-1]["ok"]
     assert (out / "manifest.json").is_file()
@@ -110,11 +119,11 @@ def test_scope_widens_into_the_data_folder(cache, data_dir):
     a = ns(cache, scope="GME,FILINGS:1,CONCEPT:CASH=CashAndCashEquivalentsAtCarryingValue@USD@instant")
     assert UE.refresh(a, log=logs.append, opener=sec_opener(calls)) == 0
     pack = data_dir / "publicdata" / "us-equities" / "packs" / "us-equities"
-    cos = {d["TICKER"]: d for d in lines(pack / "samples" / "us-company.jsonl")}
+    cos = {d["TICKER"]: d for d in snap(pack, "us-company")}
     assert set(cos) == {"AAPL", "MSFT", "GME"}
     assert all(len(d["FILINGS"]) == 1 for d in cos.values())
     assert cos["GME"]["INDEX_TEXT"] == "Added with --scope (not an index)"
-    facts = {d["FACT_ID"] for d in lines(pack / "samples" / "financial-fact.jsonl")}
+    facts = {d["FACT_ID"] for d in snap(pack, "financial-fact")}
     assert {"GME-CASH", "GME-REVENUE"} <= facts
     assert any("CIK0001326380" in u for u in calls) and all("sec.gov/files" not in u for u in calls)
     assert UE.F.FILINGS == 20 and "CASH" not in UE.F.CONCEPTS and "SCOPE" not in UE.M.INDEX_NAMES   # put back

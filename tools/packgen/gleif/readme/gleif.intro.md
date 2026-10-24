@@ -123,6 +123,10 @@ ultimate parent with the entities it consolidates, at most 50 a group, the neare
 registration and renewal (late renewals flagged), its parents chain, its children and its BICs and ISIN count. Off by default; with
 us-equities on, a company and its LEI record link both ways.
 
+The documents are committed as standard test data, one snapshot per kind under `data/testdata/gleif/<kind>/`; `tools/drishti.py lake
+demo` builds them into the demo lake and the pack's Delta connector `gleif-store` serves them, so the pack works with the demo
+connector off. `samples/` keeps only a few reference documents.
+
 ## Data sources and licences
 
 Everything GLEIF publishes is CC0 1.0: free of charge, no restriction; attribution is appreciated ("Source: GLEIF, LEI data").

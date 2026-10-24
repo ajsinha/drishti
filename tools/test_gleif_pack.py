@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The gleif pack's generator: make.py --check passes with no cache (the committed samples against what they derive) and with a cache
+"""The gleif pack's generator: make.py --check passes with no cache (the committed snapshot in data/testdata against what it derives) and with a cache
 (a build from the recorded GLEIF cache, checked against itself), and the committed pack keeps its scope: every seed's group, the cap,
 the links to us-equities, under its size."""
 from __future__ import annotations
@@ -29,10 +29,8 @@ PACK = ROOT / "config" / "packs" / "gleif"
 FX = ROOT / "tools" / "publicdata" / "tests" / "fixtures" / "gleif"
 sys.path.insert(0, str(ROOT / "tools" / "publicdata"))
 from gleif import F  # noqa: E402  (the generator's fetch.py by path: other packs have a fetch module too)
-
-
-def lines(f: Path) -> list[dict]:
-    return [json.loads(x) for x in f.read_text(encoding="utf-8").splitlines() if x.strip()]
+sys.path.insert(0, str(ROOT / "tools" / "testdata"))
+import publicsnap as SNAP  # noqa: E402  (the pack's data: data/testdata/gleif/<kind>/)
 
 
 def test_make_check_passes_without_a_cache(tmp_path):
@@ -46,25 +44,27 @@ def test_make_check_passes_with_a_cache(tmp_path):
     shutil.copytree(FX, cache)
     shutil.copytree(PACK, pack, ignore=shutil.ignore_patterns("samples"))       # the hand-written parts, as a widened build has them
     for args in ([], ["--check"]):
-        r = subprocess.run([sys.executable, str(GEN / "make.py"), *args, "--cache", str(cache), "--pack", str(pack)], capture_output=True, text=True)
+        r = subprocess.run([sys.executable, str(GEN / "make.py"), *args, "--cache", str(cache), "--pack", str(pack),
+                            "--testdata", str(tmp_path / "testdata")], capture_output=True, text=True)
         assert r.returncode == 0, r.stdout + r.stderr
     assert "matches its generator" in r.stdout
     assert {f.name for f in (pack / "samples").iterdir()} >= {"catalog.json", "lei-entity.jsonl", "lei-group.jsonl", "lei-country.jsonl"}
 
 
 def test_the_committed_pack_keeps_its_scope():
-    ents = {d["LEI"]: d for d in lines(PACK / "samples" / "lei-entity.jsonl")}
-    groups = {d["GROUP_ID"]: d for d in lines(PACK / "samples" / "lei-group.jsonl")}
+    ents = {d["LEI"]: d for d in SNAP.kind_docs("gleif", "lei-entity")}
+    groups = {d["GROUP_ID"]: d for d in SNAP.kind_docs("gleif", "lei-group")}
     assert 5_000 < len(ents) < 50_000
     for _, label, lei in F.SEEDS:                                               # every financial institution is in, with its group
         assert lei in ents, label
         assert ents[lei]["LEI_GROUP"] in groups, label
     assert all(d["MEMBERS"] <= F.GROUP_CAP + len(d.get("SEEDS", [])) for k, d in groups.items() if k != "ALL")
     assert any(d.get("CAPPED") and "at most 50" in d["CAP_NOTE"] for d in groups.values())
-    useq = [json.loads(x) for x in (ROOT / "config/packs/us-equities/samples/us-company.jsonl").read_text(encoding="utf-8").splitlines() if x.strip()]
+    useq = SNAP.kind_docs("us-equities", "us-company")
     with_lei = [c for c in useq if c.get("LEI") in ents]
     assert len(with_lei) > 400 and all(ents[c["LEI"]].get("US_COMPANY") == c["TICKER"] for c in with_lei)
     catalog = json.loads((PACK / "samples" / "catalog.json").read_text(encoding="utf-8"))
-    assert {e["kind"] for e in catalog} == {"lei-entity", "lei-group", "lei-relationship", "lei-country", "lei-mapping"}
-    size = sum(p.stat().st_size for p in (PACK / "samples").iterdir())
-    assert size < 21_000_000, size
+    assert {e["kind"] for e in catalog} <= {"lei-entity", "lei-group", "lei-relationship", "lei-country", "lei-mapping"}
+    size = sum(p.stat().st_size for p in (SNAP.TESTDATA / "gleif").rglob("*.jsonl.gz"))      # compressed
+    assert size < 6_000_000, size
+    assert sum(p.stat().st_size for p in (PACK / "samples").iterdir()) < 1_000_000           # reference documents only

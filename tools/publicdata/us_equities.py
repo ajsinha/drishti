@@ -249,10 +249,9 @@ SOURCES = COMPANY_SOURCES + [Prices()]
 
 
 def _companies(pack_dir: Path) -> list[dict]:
-    f = pack_dir / "samples" / "us-company.jsonl"
-    if not f.is_file():
-        f = COMMITTED / "samples" / "us-company.jsonl"
-    return [json.loads(line) for line in f.read_text(encoding="utf-8").splitlines() if line.strip()]
+    """The pack's companies from its us-company snapshot (a widened build's beside its pack folder, else the committed one)."""
+    import publicsnap as SNAP
+    return SNAP.kind_docs(PACK, "us-company", SNAP.default_testdata(pack_dir, COMMITTED)) or SNAP.kind_docs(PACK, "us-company")
 
 
 # ---------------------------------------------------------------- --scope
