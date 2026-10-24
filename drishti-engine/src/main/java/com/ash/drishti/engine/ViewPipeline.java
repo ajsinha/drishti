@@ -499,7 +499,8 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         for (Panel p : layout.sutra().panels()) {
             boolean wired = ScreenWire.wired(p);            // Sutra Next: its own source, events, children (SUTRA_NEXT.md 6 to 8)
             if (values.builds(p.id()) && (wired ? wire.shown(screen, p) : binder.shown(p, eval))) {   // a control changed: only the panels that read it; when: false leaves it out
-                futures.add(CompletableFuture.supplyAsync(() -> wired ? wire.bind(screen, p) : wire.formed(screen, p, ScreenWire.refreshed(p, binder.bind(p, ctx))), bindPool));
+                futures.add(CompletableFuture.supplyAsync(() -> wired ? wire.bind(screen, p)
+                        : linkedSource(p, ctx, wire.formed(screen, p, ScreenWire.refreshed(p, binder.bind(p, ctx)))), bindPool));
             }
         }
         List<PanelView> panels = futures.stream().map(CompletableFuture::join).toList();
@@ -546,6 +547,27 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         }
         return new Built(view, doc, seen, sutra, layout, current,
                 new LinkCounts(linked.size(), pending.size(), denied.size(), graph.linkBudget().toMillis()));
+    }
+
+    /**
+     * A panel that reads a linked entity ({@code source: "link($.QUOTE_ID, 'quote')"}) with that entity's own provenance (SUTRA_NEXT.md
+     * 9): the connector that answered it, when, and how fresh that connector is; the panel as it was when it names none.
+     */
+    private PanelView linkedSource(Panel p, BindContext ctx, PanelView v) {
+        if (v == null || v.denied() != null || !(p.options().get("source") instanceof String)) {
+            return v;
+        }
+        Optional<EntityRef> ref;
+        try {
+            ref = binder.chartSource(p, ctx.eval());
+        } catch (RuntimeException | StackOverflowError e) {
+            return v;
+        }
+        if (ref.isEmpty()) {
+            return v;
+        }
+        EntityDocument d = ctx.linked().get(ref.get());
+        return v.withProvenance(ScreenWire.provenance(router, ref.get().kind(), d == null ? null : d.provenance()));
     }
 
     /** The panels of {@code s} whose rows or bars set a control when clicked. */

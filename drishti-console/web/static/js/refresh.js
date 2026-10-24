@@ -15,7 +15,8 @@
  */
 /* Refresh and freshness on a view page (SUTRA_NEXT.md 9). Every panel says how fresh it is in its header ("updated 12 s ago", ticking;
    "stale" in amber past twice its interval or the source's staleAfter; "trade-endur isn't answering; showing data from 10:42" when a
-   refresh fails; "live" on a page the live channel updates). A panel whose Sutra says refresh: (data-refresh, seconds) is fetched again
+   refresh fails; "live" on a page the live channel updates). A panel with its own source: says these of that source (its provenance,
+   data-prov and the panels endpoint's), any other of the page's. A panel whose Sutra says refresh: (data-refresh, seconds) is fetched again
    on its own: only the panels that are due, through /v/<kind>/<id>/panels (the panels a selection drives replay that selection through
    sutra-wire.js), swapped in place when they changed, with the picked row, what it opened and the scroll kept. The reader pauses,
    resumes and slows a panel (never faster than the Sutra's interval or views.refresh_min_seconds), or pauses the whole page; the
@@ -57,6 +58,17 @@
     var after = duration(d.staleAfter), upd = Date.parse(d.updated);
     return !!(after && upd && now() - upd > after);
   }
+  /* A panel with its own source: (data-prov, the server's panel provenance) answers for itself: its connector, when that had new data,
+     its threshold; any other panel reads the page's record and the page's provenance stands for it. */
+  function staleOf(p) {
+    var o = p.prov;
+    if (!o) { return pageStale(); }
+    if (o.stale) { return true; }
+    var after = duration(o.staleAfter), upd = Date.parse(o.updatedAt);
+    return !!(after && upd && now() - upd > after);
+  }
+  function sourceOf(p) { return (p.prov && p.prov.source) || source; }
+  function updatedOf(p) { return Date.parse(p.prov ? p.prov.updatedAt : d.updated); }
   function allPaused() { return !!prefs.all; }
 
   // ---- each panel -------------------------------------------------------------------------------------------------------------------
@@ -66,8 +78,10 @@
     if (!id || !head || head.querySelector(':scope > .fresh')) { return; }
     var p = panels[id];
     var secs = +sec.getAttribute('data-refresh') || 0;
+    var prov = parse(sec.getAttribute('data-prov'));
+    if (p && prov) { p.prov = prov; }                // swapped in by a refresh: its source's freshness as now drawn
     if (!p) {
-      p = panels[id] = { fetched: ready ? now() : fetched0, failed: null, busy: false };   // drawn after the page: just fetched
+      p = panels[id] = { fetched: ready ? now() : (Date.parse((prov || {}).fetchedAt) || fetched0), failed: null, busy: false, prov: prov };   // drawn after the page: just fetched
       if (secs && !LIVE && !STILL) {
         p.every = secs; p.floor = Math.max(MIN, secs); p.can = sec.getAttribute('data-refresh-pause') !== '0';
         var mine = prefs.panels[id] || {};
@@ -109,7 +123,7 @@
     var paused = p.every && p.can && (p.paused || allPaused());
     if (LIVE) { state = 'live'; words = 'live'; }
     else if (p.failed) { state = 'down'; words = p.failed.source + ' isn’t answering; showing data from ' + clock(p.fetched); }
-    else if (pageStale()) { state = 'stale'; words = 'stale · ' + source + ' last had new data ' + (Date.parse(d.updated) ? clock(Date.parse(d.updated)) : 'a while ago'); }
+    else if (staleOf(p)) { state = 'stale'; words = 'stale · ' + sourceOf(p) + ' last had new data ' + (updatedOf(p) ? clock(updatedOf(p)) : 'a while ago'); }
     else if (p.every && !paused && age > 2 * interval(p) * 1000) { state = 'stale'; words = 'stale · updated ' + ago(age); }
     else { words = (paused ? 'paused · ' : '') + 'updated ' + ago(age); if (paused) { state = 'paused'; } }
     box.setAttribute('data-state', state);
@@ -211,7 +225,7 @@
       if (!p) { return; }
       p.busy = false;
       p.next = t + interval(p) * 1000;
-      if (ok) { p.fetched = t; p.failed = null; } else { p.failed = { source: why || source }; }
+      if (ok) { p.fetched = t; p.failed = null; } else { p.failed = { source: (p.prov && p.prov.source) || why || source }; }   // the panel's own source when it has one
     });
     paint();
   }
@@ -225,7 +239,7 @@
         if (prov.updatedAt) { d.updated = prov.updatedAt; }
         if (prov.staleAfter) { d.staleAfter = prov.staleAfter; }
         view.toggleAttribute('data-stale', !!prov.stale);
-        (j.panels || []).forEach(swap);
+        (j.panels || []).forEach(function (x) { swap(x); if (panels[x.id]) { panels[x.id].prov = x.provenance || null; } });
         done(ids, true);
       })
       .catch(function () { done(ids, false, source); });

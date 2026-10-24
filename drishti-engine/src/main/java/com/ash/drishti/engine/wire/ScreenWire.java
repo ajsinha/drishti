@@ -92,8 +92,28 @@ public final class ScreenWire {
         }
     }
 
-    /** What a source read: as the viewer sees it and as stored (for following a click), or why the viewer may not have it. */
-    public record Pair(Object seen, Object raw, String denied) {}
+    /**
+     * What a source read: as the viewer sees it and as stored (for following a click), or why the viewer may not have it; {@code from}
+     * the document's provenance when it read one entity (its panel's own freshness, SUTRA_NEXT.md 9), else null.
+     */
+    public record Pair(Object seen, Object raw, String denied, com.ash.drishti.api.Provenance from) {
+        public Pair(Object seen, Object raw, String denied) {
+            this(seen, raw, denied, null);
+        }
+    }
+
+    /**
+     * The provenance of a panel with its own source (SUTRA_NEXT.md 9): the connector that answered (the one the document names, else the
+     * kind's first route), when the document was fetched, and that connector's last update, threshold and whether it is past it.
+     */
+    public static ViewModel.PanelProvenance provenance(SourceRouter router, String kind, com.ash.drishti.api.Provenance from) {
+        String named = from == null ? null : from.source();
+        com.ash.drishti.engine.source.SourceRegistry.Freshness f = soft(() -> router.freshness(kind, named));
+        String source = f != null && f.source() != null ? f.source() : named;
+        return new ViewModel.PanelProvenance(source, kind, from == null || from.fetchedAt() == null ? null : from.fetchedAt().toString(),
+                f == null || f.lastUpdate() == null ? null : f.lastUpdate().toString(), f == null || f.staleAfter() == null ? null : f.staleAfter().toString(),
+                f != null && f.stale());
+    }
 
     /**
      * A group of child panels for the console: whose children ({@code parent}), which group, where and when they show, the panels
@@ -161,7 +181,7 @@ public final class ScreenWire {
         if (!binder.shown(p, c.seen.eval())) {                 // when: over an event that fired, not true: it waits again
             return waiting(s, n, null);
         }
-        return binder.bind(p, c.seen).withWire(wire(p, n, null));
+        return binder.bind(p, c.seen).withWire(wire(p, n, null)).withProvenance(c.fresh);
     }
 
     /** Whether a screen panel is drawn at first paint: one whose {@code when} reads an event is (it waits); else its {@code when}. */
@@ -261,7 +281,11 @@ public final class ScreenWire {
     // ---- contexts and sources -------------------------------------------------------------------------------------------------
 
     /** A panel's binding context as the viewer sees it, the raw context the server follows clicks with, and why it is refused. */
-    private record Ctx(BindContext seen, EvalContext raw, String denied) {}
+    private record Ctx(BindContext seen, EvalContext raw, String denied, ViewModel.PanelProvenance fresh) {
+        Ctx(BindContext seen, EvalContext raw, String denied) {
+            this(seen, raw, denied, null);
+        }
+    }
 
     private Ctx context(Screen s, SutraWiring.Node n) {
         EvalContext.Scope seenScope = scope(s, n, false);
@@ -276,7 +300,8 @@ public final class ScreenWire {
         if (got.denied() != null) {
             return new Ctx(s.ctx().withEval(seenEval), rawEval, got.denied());
         }
-        return new Ctx(s.ctx().withEval(seenEval.withScope(seenScope.withSrc(got.seen()))), rawEval.withScope(rawScope.withSrc(got.raw())), null);
+        return new Ctx(s.ctx().withEval(seenEval.withScope(seenScope.withSrc(got.seen()))), rawEval.withScope(rawScope.withSrc(got.raw())), null,
+                provenance(router, src.kind(), got.from()));            // the panel's own freshness (SUTRA_NEXT.md 9)
     }
 
     /** What a panel says when its source follows a value masked for the reader (SUTRA_NEXT.md 15: a followed masked id shows nothing). */
@@ -348,7 +373,7 @@ public final class ScreenWire {
             return s.cache().computeIfAbsent(src.kind() + "|" + id + "|" + at, k -> {
                 EntityRef ref = EntityRef.of(src.kind(), id);
                 EntityDocument d = router.fetchAll(Set.of(ref), budget, at).get(ref);
-                return d == null ? new Pair(DataNode.missing(), DataNode.missing(), null) : new Pair(s.redact().apply(d.data()), d.data(), null);
+                return d == null ? new Pair(DataNode.missing(), DataNode.missing(), null) : new Pair(s.redact().apply(d.data()), d.data(), null, d.provenance());
             });
         }
         List<EntityRef> refs;

@@ -78,10 +78,14 @@ abstract class PackSutraNextEquivalence {
      * {@code sutra-next-data/<pack>/<kind>.jsonl} (the loaders' rows), copied undated (whatever the business date) into the folder
      * of a file connector of their own that each kind is routed to.
      */
-    static void lake(DynamicPropertyRegistry r, String pack, String... kinds) throws Exception {
-        Path day = Path.of("target", "test-data", "sutra-next-" + pack + "-lake").toAbsolutePath();
+    static Path lake(DynamicPropertyRegistry r, String pack, String... kinds) throws Exception {
+        return lakeNamed(r, pack, "sutra-next-" + pack + "-lake", kinds);
+    }
+
+    /** As {@link #lake(DynamicPropertyRegistry, String, String...)}, the connector (and its folder under target/test-data) named {@code c}. */
+    static Path lakeNamed(DynamicPropertyRegistry r, String pack, String c, String... kinds) throws Exception {
+        Path day = Path.of("target", "test-data", c).toAbsolutePath();
         Files.createDirectories(day);
-        String c = "sutra-next-" + pack + "-lake";
         r.add("drishti.sources.connectors." + c + ".plugin", () -> "file");
         r.add("drishti.sources.connectors." + c + ".settings.root", day::toString);
         r.add("drishti.sources.connectors." + c + ".settings.rescan-seconds", () -> "3600");
@@ -92,6 +96,7 @@ abstract class PackSutraNextEquivalence {
             r.add("drishti.sources.connectors." + c + ".kinds[" + i + "]", () -> kind);
             r.add("drishti.sources.routes." + kind, () -> c);
         }
+        return day;
     }
 
     /** The first record of each synthetic kind ({@link #lake}): {@code kind -> kind/id}. */

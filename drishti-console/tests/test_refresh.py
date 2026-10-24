@@ -67,6 +67,29 @@ def test_the_panels_endpoint_answers_with_the_provenance(client):
     assert set(prov) == {"source", "fetchedAt", "updatedAt", "staleAfter", "stale", "live", "generation"}
 
 
+PROV = {"source": "quote-store", "kind": "quote", "fetchedAt": "2026-10-23T10:40:00Z", "updatedAt": "2026-10-23T10:39:00Z",
+        "staleAfter": "PT2M", "stale": True}
+
+
+def test_a_panel_with_its_own_source_carries_that_sources_provenance(client, backend, monkeypatch):
+    base = {"id": "quote", "kind": "kv", "title": "Quote", "data": {"fields": []}}
+    assert "data-prov" not in _panel(client, base)
+    html = _panel(client, {**base, "provenance": PROV})
+    prov = json.loads(re.search(r'data-prov="([^"]*)"', html).group(1).replace("&#34;", '"').replace("&quot;", '"'))
+    assert prov == PROV
+
+    real = backend.view
+
+    async def view(*a, **kw):                              # the server's view: its first panel reads a source of its own
+        vm = await real(*a, **kw)
+        vm["panels"][0]["provenance"] = PROV
+        return vm
+    monkeypatch.setattr(backend, "view", view)
+    out = client.get("/v/trade/IRS-47102/panels").json()["panels"]
+    assert out[0]["provenance"] == PROV and 'data-prov="' in out[0]["html"]
+    assert all("provenance" not in p for p in out[1:])      # the others: the page's provenance stands for them
+
+
 def test_the_designer_writes_refresh_on_one_part_and_takes_it_off():
     doc = {"panels": [{"id": "a", "kind": "kv"}, {"use": "data-provenance@1"}]}
     designer.refresh(doc, 1, 30)

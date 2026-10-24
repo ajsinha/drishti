@@ -18,6 +18,19 @@
 ## Unreleased
 
 - The UI Board work is kept on branch ui-board-preview; not in this release.
+- **Every pack screen on UI-kit fragments** ([SUTRA_NEXT.md section 3](docs/architecture/SUTRA_NEXT.md)): the last six migrated, each
+  proved identical to its inline layout. The trading pack's four derived pages (`counterparty-trades`, `portfolio-trades`,
+  `legal-entity-trades`, `index-trades`) are generated from the new pack fragments `trading/payments-metrics@1` and
+  `trading/trade-table@1` and the kit's `data-provenance@1`; news-and-markets `quote` and `news` use `series-line@1`, `field-list@1`,
+  `ranked-bars@1`, `data-provenance@1` and the pack's new `quote-ranges`, `price-bars`, `headlines`, `headline-pipeline` and
+  `snapshot-note`. A fragment parameter may now be a list (`type: columns`: a table's columns passed by the Sutra;
+  [PACK_DEVELOPER_GUIDE](docs/guides/PACK_DEVELOPER_GUIDE.md#fragments-and-docstrings)). The proofs draw synthetic records (a derived
+  page per kind, a made-up quote and headline set) kept with the server's test resources and served by a file connector of the test's
+  own (`PackSutraNextEquivalence.lake`); `TradingSutraNextEquivalenceTest` now covers 134 screens.
+- **Freshness per panel source** ([SUTRA_NEXT.md section 9](docs/architecture/SUTRA_NEXT.md#9-live-panels-refresh-control-and-freshness)):
+  a panel with its own `source:` carries that source's provenance (`source`, `kind`, `fetchedAt`, `updatedAt`, `staleAfter`,
+  `stale`) in the view model, on the panel and in the panels endpoint; its header says "updated N s ago", "stale" and "X isn't
+  answering" of its own source, the other panels of the page's. `PanelProvenanceTest`, `test_refresh.py`, `test_refresh_browser.py`.
 - **The Sutra designer's Grid mode** ([SCREEN_DESIGNER.md section 31](docs/guides/SCREEN_DESIGNER.md#grid)): the screen as a
   spreadsheet, columns A, B, C and rows 1, 2, 3 over the Sutra's `layout.areas` (a screen without areas is one column; *Make it a
   grid* gives it areas). A cell's panels are formulas (`B2 = field-list@1(id: who, rows: $src; source: {kind: counterparty, id:

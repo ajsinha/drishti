@@ -170,6 +170,45 @@ def test_a_failing_source_is_named_and_a_stale_one_marked(stack, browser):
     pg.close()
 
 
+def test_a_panel_with_its_own_source_says_its_sources_freshness_and_the_others_the_pages(stack, browser):
+    """A panel with its own source: (its provenance in the panels the page asks for) is stale, amber, by that source's own
+    stale-after and names it when the refresh fails; the other panels go by the page's provenance (fresh here) and name the page's source."""
+    pg = screen(browser, stack)
+    other = next(p for p in refreshing(pg) if p != "trades")
+    page_source = pg.locator("[data-view]").get_attribute("data-source") or "The source"
+    own = {"source": "limits-store", "kind": "credit-limit", "fetchedAt": "2026-10-23T10:42:00Z", "updatedAt": "2026-10-23T10:40:00Z",
+           "staleAfter": "PT2M", "stale": False}
+
+    def own_source(route):
+        r = route.fetch()
+        body = r.json()
+        body["provenance"].update(stale=False, staleAfter=None)
+        for p in body.get("panels", []):
+            if p["id"] == "trades":
+                p["provenance"] = own                       # stale by its own clock: updated long before its two minutes
+        route.fulfill(response=r, body=json.dumps(body))
+    pg.route("**/panels?*", own_source)
+    wait(pg, "document.querySelector('[data-fresh=\"trades\"] [data-fresh-text]').textContent.includes('limits-store')")
+    assert pg.locator("[data-fresh='trades']").get_attribute("data-state") == "stale"
+    words = pg.locator("[data-fresh='trades'] [data-fresh-text]").inner_text()
+    assert words.startswith("stale · limits-store last had new data "), words
+    t = fetched(pg, other)
+    wait(pg, "drishtiRefresh.state()[%s].fetched > %d" % (json.dumps(other), t))
+    assert pg.locator(f"[data-fresh='{other}']").get_attribute("data-state") == "ok"
+    assert pg.evaluate("drishtiRefresh.state().trades.prov.source") == "limits-store"
+    pg.unroute("**/panels?*")
+
+    pg.route("**/panels?*", lambda route: route.fulfill(status=502, content_type="application/json",
+                                                        body=json.dumps({"code": "DRS-1003", "detail": "the source failed"})))
+    wait(pg, "document.querySelector('[data-fresh=\"trades\"]').getAttribute('data-state') === 'down'"
+             " && document.querySelector('[data-fresh=\"%s\"]').getAttribute('data-state') === 'down'" % other)
+    assert pg.locator("[data-fresh='trades'] [data-fresh-text]").inner_text().startswith("limits-store isn’t answering; showing data from ")
+    said = pg.locator(f"[data-fresh='{other}'] [data-fresh-text]").inner_text()
+    assert said.startswith(page_source + " isn’t answering") and "limits-store" not in said, said
+    pg.unroute("**/panels?*")
+    pg.close()
+
+
 def test_a_picked_row_and_what_it_opened_survive_refreshes(stack, browser):
     pg = screen(browser, stack)
     pg.locator("#p-trades tbody tr[data-ev]").nth(0).locator("td").nth(1).click()

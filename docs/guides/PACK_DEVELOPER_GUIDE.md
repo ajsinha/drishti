@@ -1816,9 +1816,32 @@ panels:
 
 The docstring is checked strictly (`DRS-2055`; a fragment without a complete one is not loaded, so its uses fail with `DRS-2048`):
 a one-line `summary` (at most 120 characters), a `description`, every parameter under `doc.params` with `type` (`text`,
-`expression`, `field`, `format`, `key`, `area`, `id`, `number`, `boolean`, `kind`), `default` (the same as under `params:`) and
+`expression`, `field`, `format`, `key`, `area`, `id`, `number`, `boolean`, `kind`, `columns`), `default` (the same as under `params:`) and
 `meaning`, and none it does not declare; `emits` and `expects` (`[]` until events and children arrive); at least one example that
-is a use of this fragment with declared parameters; `since`.
+is a use of this fragment with declared parameters (written with the plain name, `trade-table@1`, even for a pack's own); `since`.
+
+**A list as a parameter (`columns`).** A parameter may be a list, typically a table's columns: declare it with a list default
+(`columns: []`), document it as `type: columns`, and write `columns: %{columns}` in the panel. The Sutra passes the columns as a
+table panel writes them, and they are filled in as one line of YAML flow, so labels and binds with quotes and commas keep exactly what
+they say. The trading pack's derived pages use `trading/trade-table@1` this way:
+
+```yaml
+  - use: trading/trade-table@1
+    with:
+      title: "Trades (${size($.TRADES[?oneOf(@.TRADE_STATUS, ctl.status)])} of ${$.TRADE_COUNT})"
+      code: TRD
+      key: F2
+      where: "oneOf(@.TRADE_STATUS, ctl.status)"
+      columns:
+        - { label: Trade, bind: "link(@.TRADE_ID, 'trade')" }
+        - { label: Notional, bind: "@.NOTIONAL", fmt: amount0, total: true }
+```
+
+A text parameter is filled in as written, without the Sutra's quotes: written unquoted in the fragment (`where: %{where}`) an empty
+one leaves the key out, but a value starting with `@`, a quote or a brace would not read, so quote such a parameter in the fragment
+(`title: "%{title}"`), where an empty value is an empty text. The pack fragments that ship: trading's `deal-ticket`, `legs`,
+`flow-schedule`, `events`, `payments`, `payments-metrics` and `trade-table` (generated, `tools/packgen/trades/sutras.py`);
+news-and-markets' `quote-ranges`, `price-bars`, `headlines`, `headline-pipeline` and `snapshot-note` (`sutras/common/`, by hand).
 
 **Composite fragments.** A fragment may use other fragments at a **pinned** version and pass parameters explicitly; it lists them
 under `doc.uses`. At most three fragments deep, no cycles (`DRS-2048`):
