@@ -1,0 +1,70 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The us-equities pack's own fragment (SUTRA_NEXT.md 3a), hand-written, used as { use: us-equities/annual-financials@1 }.
+rachana: 1
+fragment: annual-financials
+version: 1
+description: "A company's annual financials: revenue and net income as a chart over the years, and every figure in a table."
+params: { id: financials, title: "Annual financials (10-K, USD)", chart-title: "Revenue and net income, USD", rows: $.FINANCIALS, key: '', chart-key: '', area: '', chart-area: '' }
+doc:
+  summary: "A company's annual financials: revenue and net income as a chart over the years, and every figure in a table."
+  description: >-
+    Two panels over a list of fiscal years (us-company FINANCIALS rows: YEAR, PERIOD_END, REVENUE, NET_INCOME, NET_MARGIN,
+    ASSETS, LIABILITIES, EQUITY, EPS_DILUTED): an area chart of revenue and net income, one point a year, and a table of every
+    figure, the newest year last. The figures are the annual values of the company's 10-K XBRL filings.
+  params:
+    id: { type: id, default: financials, meaning: "The table's panel id; the chart's is <id>-chart" }
+    title: { type: text, default: "Annual financials (10-K, USD)", meaning: "The title over the table" }
+    chart-title: { type: text, default: "Revenue and net income, USD", meaning: "The title over the chart" }
+    rows: { type: expression, default: $.FINANCIALS, meaning: "The fiscal years, oldest first ($src.FINANCIALS under a source)" }
+    key: { type: key, default: '', meaning: "The function key that brings the table forward; none when empty" }
+    chart-key: { type: key, default: '', meaning: "The function key that brings the chart forward; none when empty" }
+    area: { type: area, default: '', meaning: "Where the table sits: main (the default when empty) or right" }
+    chart-area: { type: area, default: '', meaning: "Where the chart sits: main (the default when empty) or right" }
+  emits: []
+  expects: []
+  examples:
+    - { use: annual-financials@1, with: { key: F2, chart-key: F3 } }
+    - { use: annual-financials@1, with: { id: member-fin, rows: $src.FINANCIALS } }
+  since: "2.7.0"
+panels:
+  - id: %{id}-chart
+    kind: area
+    title: "%{chart-title}"
+    key: %{chart-key}
+    area: %{chart-area}
+    rows: %{rows}
+    x: YEAR
+    unit: USD
+    series:
+      - { label: Revenue, value: REVENUE, tone: link }
+      - { label: Net income, value: NET_INCOME, tone: pos }
+  - id: %{id}
+    kind: table
+    title: "%{title}"
+    key: %{key}
+    area: %{area}
+    rows: %{rows}
+    search: false
+    columns:
+      - { label: Fiscal year, bind: "@.YEAR" }
+      - { label: Period end, bind: "@.PERIOD_END", fmt: date }
+      - { label: Revenue, bind: "@.REVENUE", fmt: compact }
+      - { label: Net income, bind: "@.NET_INCOME", fmt: compact, tone: sign }
+      - { label: Net margin, bind: "@.NET_MARGIN", fmt: margin1, tone: sign }
+      - { label: Total assets, bind: "@.ASSETS", fmt: compact }
+      - { label: Total liabilities, bind: "@.LIABILITIES", fmt: compact }
+      - { label: Equity, bind: "@.EQUITY", fmt: compact }
+      - { label: Diluted EPS, bind: "@.EPS_DILUTED", fmt: price2 }

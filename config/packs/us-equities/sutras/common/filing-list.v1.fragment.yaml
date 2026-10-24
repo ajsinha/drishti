@@ -1,0 +1,62 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The us-equities pack's own fragment (SUTRA_NEXT.md 3a), hand-written, used as { use: us-equities/filing-list@1 }.
+rachana: 1
+fragment: filing-list
+version: 1
+description: "SEC filings as a table whose rows, clicked, fire open with the filing's accession number: the master of a filings screen."
+params: { id: filings, title: Recent filings, rows: $.FILINGS, other: REPORT_DATE, other-label: Report date, ref: FORM, empty: No filings, code: '', key: '', area: '' }
+doc:
+  summary: "SEC filings as a table whose rows, clicked, fire open with the filing's accession number"
+  description: >-
+    One row a filing, newest first: the filing date, the form, what the form is, one more field (the report date on a company's
+    page, the company in a browser of many companies) and the accession number. Clicking a row fires open with a payload of two
+    fields, id (the accession number, a filing id) and ref (the form, or the company when ref names it); give the use children
+    that read @parent.open.id to open the filing beside or under the row.
+  params:
+    id: { type: id, default: filings, meaning: "The panel id, unique on the screen; other panels read its event as @<id>.open" }
+    title: { type: text, default: Recent filings, meaning: "The title over the table" }
+    rows: { type: expression, default: $.FILINGS, meaning: "The filings (ACCESSION, FILED, FORM, DESCRIPTION and the other field)" }
+    other: { type: field, default: REPORT_DATE, meaning: "The fourth column's field (REPORT_DATE, COMPANY)" }
+    other-label: { type: text, default: Report date, meaning: "The fourth column's heading" }
+    ref: { type: field, default: FORM, meaning: "The field the payload carries as ref" }
+    empty: { type: text, default: No filings, meaning: "What the table says when there are no rows" }
+    code: { type: key, default: '', meaning: "The panel's mnemonic code, typed in the command line to jump to it; none when empty" }
+    key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
+  emits:
+    - { name: open, on: row-click, payload: { id: id, ref: id } }
+  expects: []
+  examples:
+    - { use: filing-list@1, with: { key: F4 } }
+    - { use: filing-list@1, with: { id: feed, rows: $.ROWS, other: COMPANY, other-label: Company, ref: COMPANY } }
+  since: "2.7.0"
+panels:
+  - id: %{id}
+    kind: table
+    title: "%{title}"
+    code: %{code}
+    key: %{key}
+    area: %{area}
+    rows: %{rows}
+    empty: "%{empty}"
+    columns:
+      - { label: Filed, bind: "@.FILED", fmt: date }
+      - { label: Form, bind: "@.FORM" }
+      - { label: What it is, bind: "@.DESCRIPTION" }
+      - { label: "%{other-label}", bind: "@.%{other}" }
+      - { label: Accession, bind: "@.ACCESSION" }
+    emits:
+      - { name: open, on: row-click, payload: { id: { bind: "@.ACCESSION", type: id }, ref: { bind: "@.%{ref}", type: id } } }

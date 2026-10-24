@@ -1,0 +1,53 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written from the Drishti UI kit (config/ui-kit/fragments) and the pack's own fragments (sutras/common).
+rachana: 1
+sutra: filing
+version: 1
+description: "One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (metadata only; the document stays on sec.gov)."
+doc:
+  summary: "One SEC filing: company, form, dates, 8-K items and links to the document and its EDGAR index."
+  description: >-
+    The filing's details (accession number, company, form and what it is, filing and report dates, primary document and size) with
+    two links that open on sec.gov: the document and the filing index with every exhibit. A current report (8-K) lists the items it
+    reports, each with what it means. The pack keeps metadata and links only, never the documents.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "FILING <accession number>"
+  since: "2.7.0"
+match: { kind: filing, priority: 10 }
+title: { pill: US equities · Filing, id: $.ACCESSION, with: "link($.COMPANY, 'us-company', $.COMPANY_NAME)" }
+strip:
+  - { label: Company, bind: $.COMPANY, emphasis: true }
+  - { label: Form, bind: $.FORM }
+  - { label: What it is, bind: $.FORM_NAME }
+  - { label: Filed, bind: $.FILED, fmt: date }
+  - { label: Report date, bind: $.REPORT_DATE, fmt: date }
+panels:
+  - { use: us-equities/filing-card@1, with: { key: F2 } }
+  - id: items
+    kind: table
+    title: Items reported (8-K)
+    rows: $.ITEMS
+    search: false
+    empty: No items (only a current report, 8-K, lists items)
+    columns:
+      - { label: Item, bind: "@.ITEM" }
+      - { label: What it reports, bind: "@.DESCRIPTION" }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
+keys: { F7: "link($.COMPANY, 'us-company')", F9: raw }

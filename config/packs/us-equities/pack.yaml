@@ -1,0 +1,115 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# US equities · real public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500: SEC EDGAR (public domain) for the
+# companies, their SIC sectors, filings and annual XBRL financials; Wikidata (CC0) for index membership, headquarters and founding;
+# GLEIF (CC0) for the LEI; the Nasdaq Trader symbol directory for the listing market. Hand-written; tools/packgen/us_equities/make.py
+# writes samples/ and guides/us-equities.md from the cache tools/packgen/us_equities/fetch.py fills. No index weights or levels, no
+# GICS, and no prices: price-history is read live by an off-by-default connector, for internal use only.
+pack: us-equities
+version: 1.0.0
+code: USEQS            # typed alone, opens this pack's overview
+title: US equities
+description: >-
+  Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500: SEC EDGAR companies, SIC sectors, filings and ten years
+  of annual XBRL financials, LEIs from GLEIF and index membership from Wikidata. Prices are not shipped: the price-history kind is read
+  live by a connector that is off by default and for internal use only.
+kinds: [us-company, index-membership, sic-sector, filing-feed, filing, financial-fact, price-history]
+formats: config/formats.yaml
+mnemonics:
+  USEQ:   { kind: us-company, label: US company }
+  IDX:    { kind: index-membership, label: Index members }
+  SIC:    { kind: sic-sector, label: SIC sector }
+  EDGAR:  { kind: filing-feed, label: EDGAR filings browser }
+  FILING: { kind: filing, label: SEC filing }
+  FACT:   { kind: financial-fact, label: Financial fact }
+  PXH:    { kind: price-history, label: Price history (live, internal use only) }
+graph:
+  id-patterns:
+    - { pattern: "^PX-", kind: price-history }
+    - { pattern: "^[0-9]{10}-[0-9]{2}-[0-9]{6}$", kind: filing }
+  fields:
+    COMPANY:       { kind: us-company, label: Company }
+    SIC_SECTOR:    { kind: sic-sector, label: SIC sector }
+    ECONOMY:       { kind: economy, label: Economy }
+    MARKET_WATCH:  { kind: listed-company, label: Market watch }
+    LEGAL_ENTITY:  { kind: legal-entity, label: Legal entity }
+    FILING_IDS:    { kind: filing, label: Filing }               # lists of ids: each one a link
+    FACT_IDS:      { kind: financial-fact, label: Financial fact }
+    INDEX_IDS:     { kind: index-membership, label: Index }
+  badges:
+    us-company: "$.TICKER + ' · ' + $.SIC_DESCRIPTION"
+    filing: "$.FORM + ' · ' + $.FILED"
+    financial-fact: "$.LABEL + ' ' + $.LATEST_YEAR"
+    index-membership: "$.MEMBERS + ' members'"
+    sic-sector: "$.COMPANIES + ' companies'"
+roles:
+  equity-analyst: { kinds: [us-company, index-membership, sic-sector, filing-feed, filing, financial-fact, price-history], raw: true }
+form:                          # FORM us-equities: the search form of each kind
+  us-company:
+    - { path: TICKER, type: id, group: Identity, help: "One or many: paste a list." }
+    - { path: NAME, type: text, group: Identity }
+    - { path: CIK, type: text, group: Identity }
+    - { path: LEI, type: text, group: Identity }
+    - { path: EXCHANGE, type: enum, group: Listing }
+    - { path: INDEX_TEXT, label: Indexes, type: text, group: Listing, help: "Nasdaq-100 finds its members." }
+    - { path: SECTOR, label: SIC division, type: enum, group: Sector }
+    - { path: SIC_DESCRIPTION, label: SIC industry, type: text, group: Sector }
+    - { path: STATE_OF_INCORPORATION, type: enum, group: Sector }
+    - { path: REVENUE, type: number, group: Financials }
+    - { path: NET_MARGIN, label: "Net margin (%)", type: number, group: Financials }
+  filing:
+    - { path: ACCESSION, type: id, group: Filing }
+    - { path: COMPANY, type: text, group: Filing }
+    - { path: FORM, type: enum, group: Filing }
+    - { path: FILED, type: date, group: Filing }
+console:
+  examples:
+    - ["USEQ AAPL", "Apple · key facts, ten years of financials, recent filings, index memberships"]
+    - ["USEQ JPM", "JPMorgan Chase · a bank's financials"]
+    - ["IDX SP500", "S&P 500 · the members, filterable; a click opens the company beside"]
+    - ["IDX DJIA", "Dow Jones Industrial Average · thirty members"]
+    - ["SIC 3674", "Semiconductors · the companies of one SIC code by revenue"]
+    - ["SIC ALL", "Every SIC code covered, by revenue"]
+    - ["EDGAR 8-K", "The latest current reports; a click opens the filing beside"]
+    - ["FACT AAPL-REVENUE", "Apple's revenue over ten fiscal years"]
+  help: config/help.yaml
+columns:
+  us-company: [TICKER, NAME, EXCHANGE, SIC_DESCRIPTION, INDEX_TEXT, REVENUE]
+  filing: [ACCESSION, COMPANY, FORM, FILED, REPORT_DATE]
+  financial-fact: [FACT_ID, COMPANY_NAME, LABEL, LATEST, LATEST_YEAR]
+  sic-sector: [SIC, DESCRIPTION, SECTOR, COMPANIES]
+  index-membership: [INDEX, NAME, MEMBERS]
+  filing-feed: [FEED, NAME, FILINGS]
+# TEMPLATE: written once to config/connectors/us-equities-prices.yaml, DISABLED. INTERNAL USE ONLY: free price feeds forbid
+# redistribution; turning it on sends every ticker opened to Yahoo Finance. Nothing it reads is committed.
+connectors:
+  us-equities-prices:
+    plugin: yfinance
+    enabled: ${DRISHTI_US_EQUITIES_PRICES_ENABLED:false}
+    kinds: [price-history]
+    settings:
+      base-url: ${DRISHTI_YFINANCE_URL:https://query1.finance.yahoo.com/v8/finance/chart}
+      id-prefix: PX-
+      kind: price-history
+      source-name: us-equities-prices (internal use only)
+      range: 1y
+      interval: 1d
+      timeout-seconds: 10
+      cache-ttl-seconds: 300
+      cache-max-symbols: 200
+      user-agent: ${drishti.branding.product:Drishti} us-equities prices (internal use only)
+routes:
+  price-history: us-equities-prices

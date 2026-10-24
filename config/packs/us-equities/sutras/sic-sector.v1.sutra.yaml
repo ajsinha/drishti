@@ -1,0 +1,57 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written from the Drishti UI kit (config/ui-kit/fragments) and the pack's own fragments (sutras/common).
+rachana: 1
+sutra: sic-sector
+version: 1
+description: "A sector by its SIC code: its companies ranked by revenue; a click opens a company's summary beside."
+doc:
+  summary: "The companies of one SIC code ranked by revenue, with a click opening one beside the table."
+  description: >-
+    The covered companies the SEC classifies under one Standard Industrial Classification code, largest revenue first: ticker,
+    name, indexes, latest revenue and fiscal year. Clicking a company opens its key facts and its revenue and net income over the
+    years beside the table. The right column ranks the fifteen largest by revenue. SIC ALL lists every code (sic-directory).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/sic-sector/3674"
+    - "SIC 6021"
+  since: "2.7.0"
+match: { kind: sic-sector, priority: 10 }
+title: { pill: US equities · SIC sector, id: $.SIC, with: $.DESCRIPTION }
+strip:
+  - { label: SIC, bind: $.SIC, emphasis: true }
+  - { label: Industry, bind: $.DESCRIPTION }
+  - { label: Division, bind: $.SECTOR }
+  - { label: Companies, bind: $.COMPANIES }
+  - { label: Revenue, bind: $.REVENUE, fmt: compact }
+  - { label: Net income, bind: $.NET_INCOME, fmt: compact, tone: sign }
+panels:
+  - use: row-picker@1
+    with: { id: companies, title: "Companies by revenue (a click opens one beside)", rows: $.ROWS, event: open, key: TICKER, key-label: Ticker, ref: TICKER,
+            a: NAME, a-label: Company, b: INDEX_TEXT, b-label: Indexes, amount: REVENUE, amount-label: "Revenue, latest FY", amount-fmt: compact,
+            date: FISCAL_YEAR, date-label: Fiscal year, empty: No companies, code: COS }
+    children:
+      - place: detail-right
+        source: { kind: us-company, id: "@parent.open.id" }
+        waits: Pick a company to see its summary
+        panels:
+          - { use: us-equities/company-card@1, with: { id: company, title: "${@parent.open.id}", rec: $src } }
+          - { use: us-equities/annual-financials@1, with: { id: company-fin, rows: $src.FINANCIALS } }
+  - { use: ranked-bars@1, with: { id: by-revenue, title: "Largest by revenue, USD", rows: $.BY_REVENUE, fmt: compact, area: right, key: F3 } }
+  - { use: field-list@1, with: { id: source, title: Data source and licence, rows: $.PROVENANCE, area: right } }
+  - { use: data-provenance@1 }
+keys: { F9: raw }

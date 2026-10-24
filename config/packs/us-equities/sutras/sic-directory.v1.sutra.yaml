@@ -1,0 +1,56 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written from the Drishti UI kit (config/ui-kit/fragments). Matches the one sic-sector record ALL, before the sector page.
+rachana: 1
+sutra: sic-directory
+version: 1
+description: "Every SIC code of the covered companies, by revenue, and revenue by SIC division."
+doc:
+  summary: "Every SIC code of the covered companies with its company count and revenue; revenue by SIC division."
+  description: >-
+    The directory of sectors (SIC ALL): one row a Standard Industrial Classification code that at least one covered company
+    reports, with its description, division, number of companies and their latest revenue, largest first; the code opens its
+    sector page. The right column totals revenue by SIC division (Manufacturing, Finance, Services...).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/sic-sector/ALL"
+    - "SIC ALL"
+  since: "2.7.0"
+match: { kind: sic-sector, where: "$.SIC == 'ALL'", priority: 20 }
+title: { pill: US equities · Sectors, id: $.SIC, with: $.DESCRIPTION }
+strip:
+  - { label: SIC codes, bind: $.CODES, emphasis: true }
+  - { label: Companies, bind: $.COMPANIES }
+  - { label: Revenue, bind: $.REVENUE, fmt: compact }
+  - { label: Net income, bind: $.NET_INCOME, fmt: compact, tone: sign }
+panels:
+  - id: codes
+    kind: table
+    title: SIC codes by revenue
+    key: F2
+    rows: $.CODES_LIST
+    limit: 500
+    columns:
+      - { label: SIC, bind: "link(@.SIC, 'sic-sector')" }
+      - { label: Industry, bind: "@.DESCRIPTION" }
+      - { label: Division, bind: "@.SECTOR" }
+      - { label: Companies, bind: "@.COMPANIES", total: true }
+      - { label: "Revenue, latest FY", bind: "@.REVENUE", fmt: compact, total: true }
+  - { use: ranked-bars@1, with: { id: by-division, title: "Revenue by SIC division, USD", rows: $.BY_DIVISION, fmt: compact, area: right, key: F3 } }
+  - { use: field-list@1, with: { id: source, title: Data source and licence, rows: $.PROVENANCE, area: right } }
+  - { use: data-provenance@1 }
+keys: { F9: raw }

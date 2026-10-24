@@ -1,0 +1,74 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written from the Drishti UI kit (config/ui-kit/fragments) and the pack's own fragments (sutras/common).
+rachana: 1
+sutra: us-company
+version: 1
+description: "A US listed company: key facts, ten years of annual financials, recent SEC filings and index memberships, from public data."
+doc:
+  summary: "A US listed company: key facts, financials over ten years, recent filings (a click opens one beside) and its indexes."
+  description: >-
+    One page per company of the Dow 30, the Nasdaq-100 and the S&P 500. The strip gives the ticker, exchange, SIC industry, the
+    latest fiscal year's revenue, net income, net margin and growth, and diluted EPS. Revenue and net income over up to ten fiscal
+    years as a chart and every annual figure in a table (SEC XBRL, 10-K); the latest SEC filings, where a click opens the filing
+    beside the table with its links to the document and its EDGAR index; key facts (CIK, LEI, SIC, headquarters, founded,
+    website); the indexes the company belongs to; where the data comes from. F7 opens the SIC sector, F6 the live price history
+    (off as shipped, internal use only).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/us-company/AAPL"
+    - "USEQ JPM"
+  since: "2.7.0"
+match: { kind: us-company, priority: 10 }
+title: { pill: US equities · Company, id: $.TICKER, with: $.NAME }
+strip:
+  - { label: Ticker, bind: $.TICKER, emphasis: true }
+  - { label: Industry (SIC), bind: $.SIC_DESCRIPTION }
+  - { label: Fiscal year, bind: $.FISCAL_YEAR }
+  - { label: Revenue, bind: $.REVENUE, fmt: compact }
+  - { label: Net income, bind: $.NET_INCOME, fmt: compact, tone: sign }
+  - { label: Net margin, bind: $.NET_MARGIN, fmt: margin1, tone: sign }
+  - { label: Revenue growth, bind: $.REVENUE_GROWTH, fmt: growth1, tone: sign }
+  - { label: Diluted EPS, bind: $.EPS_DILUTED, fmt: price2 }
+panels:
+  - { use: us-equities/annual-financials@1, with: { chart-key: F2, key: F3 } }
+  - use: us-equities/filing-list@1
+    with: { key: F4, code: FIL, title: "Recent SEC filings (a click opens one beside)" }
+    children:
+      - place: detail-right
+        source: { kind: filing, id: "@parent.open.id" }
+        waits: Pick a filing to see its details and EDGAR links
+        panels:
+          - { use: us-equities/filing-card@1, with: { id: picked-filing, title: "Filing ${@parent.open.id}", rec: $src } }
+  - { use: us-equities/company-card@1, with: { area: right, code: CO } }
+  - id: indexes
+    kind: table
+    title: Index memberships
+    area: right
+    rows: $.INDEXES
+    search: false
+    empty: Not a member of the Dow 30, the Nasdaq-100 or the S&P 500 in Wikidata
+    columns:
+      - { label: Index, bind: "link(@.INDEX, 'index-membership', @.NAME)" }
+      - { label: Member since, bind: "@.SINCE", fmt: date }
+  - use: explainer-note@1
+    with:
+      title: About this page
+      area: right
+      text: "Public data. The company, its SIC industry and its filings come from SEC EDGAR (public domain); the financials are the annual values of its 10-K XBRL filings, a fiscal year being the calendar year its period ends in. Index membership, headquarters and founding come from Wikidata (CC0), the LEI from GLEIF (CC0). No index weights, no GICS and no prices: the price history (F6) is read live, off as shipped, for internal use only."
+  - { use: source-footer@1 }
+keys: { F6: "link($.PRICE_HISTORY, 'price-history')", F7: "link($.SIC_SECTOR, 'sic-sector')", F9: raw }

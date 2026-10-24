@@ -1,0 +1,75 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written from the Drishti UI kit (config/ui-kit/fragments).
+rachana: 1
+sutra: financial-fact
+version: 1
+description: "One financial concept of one company (revenue, net income, assets...) over up to ten fiscal years, from its 10-K XBRL filings."
+doc:
+  summary: "One financial concept of a company over up to ten fiscal years, with the change and the filing each value came from."
+  description: >-
+    A company's revenue, net income, total assets, total liabilities, equity, diluted EPS or shares outstanding, one value a fiscal
+    year: the line over the years, and a table with the period end, the change on the year before, and the 10-K and filing date it
+    was taken from (the latest filing wins when a figure was restated). The right column says what the concept is and which XBRL
+    tags it was read from.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/financial-fact/AAPL-REVENUE"
+    - "FACT MSFT-NET-INCOME"
+  since: "2.7.0"
+match: { kind: financial-fact, priority: 10 }
+title: { pill: US equities · Financial fact, id: $.FACT_ID, with: "link($.COMPANY, 'us-company', $.COMPANY_NAME)" }
+strip:
+  - { label: Company, bind: $.COMPANY }
+  - { label: Concept, bind: $.LABEL }
+  - { label: Latest, bind: $.LATEST, fmt: compact, emphasis: true }
+  - { label: Fiscal year, bind: $.LATEST_YEAR }
+  - { label: Change on the year, bind: $.CHANGE_PCT, fmt: growth1, tone: sign }
+  - { label: Unit, bind: $.UNIT }
+panels:
+  - { use: series-line@1, with: { id: history-line, title: "${$.LABEL} by fiscal year (${$.UNIT})", rows: $.HISTORY, x: YEAR, y: VALUE, fmt: compact, key: F2 } }
+  - id: history
+    kind: table
+    title: Annual values
+    key: F3
+    rows: $.HISTORY
+    search: false
+    columns:
+      - { label: Fiscal year, bind: "@.YEAR" }
+      - { label: Period end, bind: "@.PERIOD_END", fmt: date }
+      - { label: Value, bind: "@.VALUE", fmt: amount2 }
+      - { label: Change, bind: "@.CHANGE_PCT", fmt: growth1, tone: sign }
+      - { label: Form, bind: "@.FORM" }
+      - { label: Filed, bind: "@.FILED", fmt: date }
+      - { label: Accession, bind: "@.ACCESSION" }
+  - id: about
+    kind: kv
+    title: About this concept
+    area: right
+    columns:
+      - { label: Concept, bind: $.CONCEPT }
+      - { label: Unit, bind: $.UNIT }
+      - { label: XBRL tags read, bind: $.XBRL_TAG }
+      - { label: Years, bind: $.YEARS }
+  - use: explainer-note@1
+    with:
+      title: How the values are read
+      area: right
+      text: "Annual values from the company's 10-K XBRL filings (SEC EDGAR, public domain): a flow (revenue, net income, EPS) for a period of about a year, a balance (assets, liabilities, equity) at the year end, the latest filing winning when a figure was restated. A fiscal year is the calendar year its period ends in. Shares outstanding are those on the annual report's cover, dated after the year end."
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
+keys: { F7: "link($.COMPANY, 'us-company')", F9: raw }
