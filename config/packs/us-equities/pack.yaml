@@ -35,7 +35,7 @@ mnemonics:
   EDGAR:  { kind: filing-feed, label: EDGAR filings browser }
   FILING: { kind: filing, label: SEC filing }
   FACT:   { kind: financial-fact, label: Financial fact }
-  PXH:    { kind: price-history, label: Price history (live, internal use only) }
+  PXH:    { kind: price-history, label: "Price history (live, internal use only)" }
 graph:
   id-patterns:
     - { pattern: "^PX-", kind: price-history }

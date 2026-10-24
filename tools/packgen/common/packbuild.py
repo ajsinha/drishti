@@ -224,6 +224,9 @@ def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
         while lines and (lines[0].startswith("#") or not lines[0].strip()):
             lines.pop(0)                                       # the source's own licence header: the generator writes one
         out[base / "config" / src.name] = f"{YAML_HEADER}\n\n# {_generated(spec, 'file')}\n# About this page: {what}.\n" + "\n".join(lines)
+    if not spec.retired:                                       # the README standard (readme.py): from the files above and the intro
+        import readme as README
+        out[base / "README.md"] = README.render_pack(base, files=out)
     return out
 
 
