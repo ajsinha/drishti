@@ -23,8 +23,9 @@ One folder per dataset: trades/endur, trades/calypso, trades/murex (5,000 trades
 then <pack>/<kind> for every kind of core, market-data, counterparty-risk and market-risk (universe.py). Each folder holds the first
 day's snapshot and each later day's changes (history.py). world-economy and news-and-markets are static reference data already in the
 repository (their packs' samples), so the manifest points at them instead of copying them. The news-and-markets pack's quotes and
-headlines are a real snapshot captured by capture_market.py (data/testdata/news-and-markets/, kept here and listed as they are). The manifest, data/testdata/testdata.yaml,
-says for each dataset its pack, kind, connector, key, partitions, files and counts: `lake demo` reads only it. Never reads a real
+headlines are a real snapshot captured by capture_market.py (data/testdata/news-and-markets/, kept here and listed as they are), and
+so are the us-equities and gleif packs' public data (data/testdata/us-equities/, data/testdata/gleif/: written by their generators,
+publicsnap.py; kept and listed as they are). The manifest, data/testdata/testdata.yaml, says for each dataset its pack, kind, connector, key, partitions, files and counts: `lake demo` reads only it. Never reads a real
 extract (`lake demo --with-real` adds those to a local lake only).
 """
 from __future__ import annotations
@@ -41,12 +42,13 @@ sys.path.insert(0, str(HERE))
 import capture_market as CM  # noqa: E402
 import history as H  # noqa: E402
 import marketdays as MK  # noqa: E402
+import publicsnap as PS  # noqa: E402
 import universe as UV  # noqa: E402
 
 PACKS = ("core", "market-data", "trading", "counterparty-risk", "market-risk", "world-economy", "news-and-markets")
 FROM_SAMPLES = ("world-economy", "news-and-markets")
 SYSTEMS = ("ENDUR", "CALYPSO", "MUREX")
-KEEP = (CM.PACK,)          # captured by capture_market.py (real, dated, needs internet): never regenerated here
+KEEP = (CM.PACK, *PS.PACKS)   # real, dated snapshots (capture_market.py, the us-equities and gleif generators): never regenerated here
 
 
 def has_samples(pack: str, kind: str) -> bool:
@@ -128,6 +130,7 @@ def main(argv=None) -> int:
             if pk == pack and has_samples(pack, kind):
                 datasets.append({"samples": f"config/packs/{pack}/samples", "pack": pack, "kind": kind, "connector": connector})
     datasets += CM.captured_datasets(Path(a.captured_from) if a.captured_from else out)
+    datasets += PS.datasets(Path(a.captured_from) if a.captured_from else out)
     write_manifest(out, days.dates, datasets)
     total = sum(f.stat().st_size for f in out.rglob("*.jsonl.gz"))
     biggest = max(out.rglob("*.jsonl.gz"), key=lambda f: f.stat().st_size)
