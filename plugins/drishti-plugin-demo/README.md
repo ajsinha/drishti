@@ -123,5 +123,5 @@ a kind no other connector serves then answers `DRS-1002`. Each pack's generators
 
 - [The full demo connector document](../../docs/connectors/DEMO_CONNECTOR.md): ticks and coherent walks, routing, memory, settings.
 - [The demo data](../../docs/connectors/DEMO_DATA.md) (how the samples are made and loaded into every other store) and
-  [the pack developer's guide](../../docs/guides/PACK_DEVELOPER_GUIDE.md#samples).
+  [the pack developer's guide](../../docs/guides/PACK_MODELLING_GUIDE.md#samples).
 - [Connector files](../../docs/connectors/CONNECTOR_FILES.md) and [the connector developer's guide](../../docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md).
