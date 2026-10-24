@@ -24,8 +24,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 GEN = ROOT / "tools" / "packgen" / "us_equities"
 PACK = ROOT / "config" / "packs" / "us-equities"
-sys.path.insert(0, str(GEN))
-import fetch as F  # noqa: E402
+sys.path.insert(0, str(ROOT / "tools" / "publicdata"))
+from us_equities import F  # noqa: E402  (the generator's fetch.py by path: tools/realdata has a fetch module too)
 
 
 def test_make_check_passes_without_a_cache(tmp_path):

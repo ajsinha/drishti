@@ -17,6 +17,16 @@
 
 ## Unreleased
 
+- **us-equities refresh script** ([PUBLIC_DATA.md](docs/guides/PUBLIC_DATA.md), us-equities): `tools/publicdata/us_equities.py`
+  with `us-equities.sh` and `tools/windows/publicdata-us-equities.ps1`, the pack's own script like the others (`status`,
+  `refresh [wikidata nasdaq sec gleif prices]`, `--years/--since --scope --out --dry-run --internal-ok --offline --cache`). It wraps
+  `tools/packgen/us_equities/fetch.py` and `make.py`: a refresh of the committed pack writes exactly what `make.py` writes, then
+  `make.py --check`; every cached file is in the shared cache index and each run in the pack's manifest. `--scope` adds tickers or
+  `CIK:`, `INDEX:<CODE>=<QID>`, `FILINGS:`, `YEARS:` and `CONCEPT:` to a widened build in the data folder (`--into-pack` only on
+  purpose). Prices (Yahoo, through the `us-equities-prices` connector of a running server) are internal only: a snapshot in the data
+  folder, refused in committed folders without `--internal-ok`. `make.py` gains `--pack DIR`; its generated guide points at the
+  script. Offline tests on a recorded two-company cache.
+
 - **Public-data refresh scripts** ([PUBLIC_DATA.md](docs/guides/PUBLIC_DATA.md)): one script a pack in `tools/publicdata/`, each
   with `status` and `refresh [SOURCE ...] --years/--since --scope --out --dry-run --internal-ok --offline`, a `.sh` and a
   `tools/windows/publicdata-<pack>.ps1` wrapper. `world_economy.py` wraps `tools/realdata` (World Bank, IMF, UNDP, Factbook; a

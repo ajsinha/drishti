@@ -86,6 +86,18 @@ or weeks; it is not an authoritative constituent list.
 
 ## Refreshing the data
 
+The pack's own refresh script fetches, builds and checks in one step (guide: `docs/guides/PUBLIC_DATA.md`, us-equities):
+
+```bash
+python3 tools/publicdata/us_equities.py status                 # licences, last refreshed, cached size
+python3 tools/publicdata/us_equities.py refresh --dry-run      # what would be fetched; changes nothing
+python3 tools/publicdata/us_equities.py refresh                # the network (about 1,100 SEC and 500 GLEIF calls), then make.py and --check
+python3 tools/publicdata/us_equities.py refresh --scope TSLA,FILINGS:40,YEARS:15   # a wider build in the data folder, not this pack
+```
+
+`tools/publicdata/us-equities.sh` and `tools/windows/publicdata-us-equities.ps1` run the same script. Underneath it are the
+generator's two steps, which can also be run by hand:
+
 ```bash
 python3 tools/packgen/us_equities/fetch.py --cache data/cache/us-equities     # the network: about 1,100 SEC requests and 500 GLEIF lookups
 python3 tools/packgen/us_equities/make.py --cache data/cache/us-equities      # writes samples/ and this guide
@@ -93,5 +105,6 @@ python3 tools/packgen/us_equities/make.py --check                              #
 ```
 
 `fetch.py` keeps what it downloaded (delete a file to fetch it again) and reduces each company's XBRL facts to the annual values of the
-seven concepts, so the cache stays small. Set `DRISHTI_SEC_USER_AGENT` to your own name and contact before running it. The picture
+seven concepts, so the cache stays small. Prices are never part of a refresh into the pack: the script's `prices` source writes a
+snapshot to the data folder only (internal use only). Set `DRISHTI_SEC_USER_AGENT` to your own name and contact before running it. The picture
 above is made by `tools/packgen/us_equities/shot.py` (its own scratch server and console on 18742 and 18743).

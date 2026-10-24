@@ -194,8 +194,8 @@ def build(cache: Path) -> dict[str, dict[str, dict]]:
         for r in raw.get("LIABILITIES_AND_EQUITY", []):
             if r["year"] not in liab and r["year"] in eq_total:
                 liab[r["year"]] = {**r, "value": r["value"] - eq_total[r["year"]]["value"], "tag": "LiabilitiesAndStockholdersEquity less equity"}
-        raw["LIABILITIES"] = [liab[y] for y in sorted(liab)][-10:]
-        years = sorted({r["year"] for k in ("REVENUE", "NET_INCOME", "ASSETS", "EQUITY") for r in raw.get(k, [])})[-10:]
+        raw["LIABILITIES"] = [liab[y] for y in sorted(liab)][-F.YEARS:]
+        years = sorted({r["year"] for k in ("REVENUE", "NET_INCOME", "ASSETS", "EQUITY") for r in raw.get(k, [])})[-F.YEARS:]
         series = {k: {r["year"]: r for r in raw.get(k, [])} for k in CONCEPTS}
         fin = []
         for y in years:
@@ -454,6 +454,18 @@ or weeks; it is not an authoritative constituent list.
 
 ## Refreshing the data
 
+The pack's own refresh script fetches, builds and checks in one step (guide: `docs/guides/PUBLIC_DATA.md`, us-equities):
+
+```bash
+python3 tools/publicdata/us_equities.py status                 # licences, last refreshed, cached size
+python3 tools/publicdata/us_equities.py refresh --dry-run      # what would be fetched; changes nothing
+python3 tools/publicdata/us_equities.py refresh                # the network (about 1,100 SEC and 500 GLEIF calls), then make.py and --check
+python3 tools/publicdata/us_equities.py refresh --scope TSLA,FILINGS:40,YEARS:15   # a wider build in the data folder, not this pack
+```
+
+`tools/publicdata/us-equities.sh` and `tools/windows/publicdata-us-equities.ps1` run the same script. Underneath it are the
+generator's two steps, which can also be run by hand:
+
 ```bash
 python3 tools/packgen/us_equities/fetch.py --cache data/cache/us-equities     # the network: about 1,100 SEC requests and 500 GLEIF lookups
 python3 tools/packgen/us_equities/make.py --cache data/cache/us-equities      # writes samples/ and this guide
@@ -461,7 +473,8 @@ python3 tools/packgen/us_equities/make.py --check                              #
 ```
 
 `fetch.py` keeps what it downloaded (delete a file to fetch it again) and reduces each company's XBRL facts to the annual values of the
-seven concepts, so the cache stays small. Set `DRISHTI_SEC_USER_AGENT` to your own name and contact before running it. The picture
+seven concepts, so the cache stays small. Prices are never part of a refresh into the pack: the script's `prices` source writes a
+snapshot to the data folder only (internal use only). Set `DRISHTI_SEC_USER_AGENT` to your own name and contact before running it. The picture
 above is made by `tools/packgen/us_equities/shot.py` (its own scratch server and console on 18742 and 18743).
 """
 
@@ -478,6 +491,10 @@ def guide(docs: dict[str, dict[str, dict]]) -> str:
                         core_matches=sum(1 for c in cos.values() if c.get("LEGAL_ENTITY")))
 
 
+def _rel(p: Path) -> str:
+    return str(p.relative_to(ROOT)) if p.resolve().is_relative_to(ROOT) else str(p)
+
+
 def files(docs: dict[str, dict[str, dict]]) -> dict[Path, str]:
     out = {PACK / "samples" / name: text for name, text in PS.files(docs, catalog(docs), catalog_indent=None).items()}
     out[PACK / "guides" / "us-equities.md"] = guide(docs)
@@ -488,7 +505,11 @@ def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(description="Build the us-equities pack from the fetched cache (no network).")
     p.add_argument("--cache", type=Path, default=DEFAULT_CACHE)
     p.add_argument("--check", action="store_true")
+    p.add_argument("--pack", type=Path, help="the pack folder to write or check (default config/packs/us-equities; "
+                                               "tools/publicdata/us_equities.py points a widened build at the data folder)")
     a = p.parse_args(argv)
+    global PACK
+    PACK = a.pack.resolve() if a.pack else ROOT / "config" / "packs" / "us-equities"
     if a.cache.joinpath("wikidata.json").is_file():
         docs = build(a.cache)
     elif a.check:
@@ -498,9 +519,9 @@ def main(argv: list[str]) -> int:
         raise SystemExit(f"no cache at {a.cache}: run tools/packgen/us_equities/fetch.py first")
     want = files(docs)
     if a.check:
-        bad = [str(f.relative_to(ROOT)) for f, text in want.items() if not f.is_file() or f.read_text(encoding="utf-8") != text]
+        bad = [_rel(f) for f, text in want.items() if not f.is_file() or f.read_text(encoding="utf-8") != text]
         have = {f for f in (PACK / "samples").glob("*") if f.is_file()}
-        bad += [str(f.relative_to(ROOT)) + " (not written by the generator)" for f in have - set(want)]
+        bad += [_rel(f) + " (not written by the generator)" for f in have - set(want)]
         if bad:
             print("us-equities pack differs from its generator:\n  " + "\n  ".join(bad))
             return 1
@@ -514,7 +535,7 @@ def main(argv: list[str]) -> int:
             f.unlink()
     sizes = {k: len(v) for k, v in docs.items()}
     total = sum(f.stat().st_size for f in (PACK / "samples").glob("*"))
-    print(f"wrote {PACK.relative_to(ROOT)}: {sizes}; samples {total / 1e6:.1f} MB")
+    print(f"wrote {_rel(PACK)}: {sizes}; samples {total / 1e6:.1f} MB")
     return 0
 
 
