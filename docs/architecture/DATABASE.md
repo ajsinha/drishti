@@ -17,7 +17,7 @@
 
 Status: **design, not built.** To be built as **item 0 of write-back (2.8.0)**, before write-back itself (decided by the product owner,
 2026-10-20, as 2.7.0 item 0; write-back moved to 2.8.0 on 2026-10-21). The content store ([CONTENT_STORE.md](CONTENT_STORE.md),
-unreleased) was front-loaded from it. Related:
+2.7.0) was front-loaded from it. Related:
 [WRITE_BACK.md](WRITE_BACK.md) (the edit log, lanes and overlays that live here), [DRISHTI_NET.md](DRISHTI_NET.md) (several servers),
 [CONFIGURATION.md](../admin/CONFIGURATION.md) (the settings).
 

@@ -13,6 +13,42 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.7.0 — release notes
+
+*2026-10-24.* **Sutra Next: screens that respond, built from one UI kit, designed in plain words; two public-data packs.**
+Everything since 2.6.7, including the patches pushed to main without a tag.
+
+- **Sutra Next** ([SUTRA_NEXT.md](docs/architecture/SUTRA_NEXT.md), [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md)):
+  - **The Drishti UI kit** (`config/ui-kit/`): reusable fragments (`row-picker@1`, `field-list@1`, `cashflow-ladder@1`...), pack
+    fragments (`trading/trade-table@1`), theme tokens and brand; every fragment and every Sutra carries a `doc:` docstring. Every pack
+    screen now uses fragments, each proven to draw the same as before.
+  - **Events and children:** a click on a row opens linked records under the row, beside, below or in tabs, from any enabled pack
+    (`emits`, `@panel.event`, `@parent`, per-panel `source:`); masked ids stay hidden ("Hidden for you").
+  - **Refresh and freshness:** `refresh:` per panel or screen, with pause, resume and interval per person and Pause all; every panel says
+    "updated N s ago", marks stale data and names a source that is not answering.
+  - **Layout:** named areas on a 12-column grid, splits, tabs, sections, a sticky header, phone order; `user-can-arrange` per reader.
+  - **Forms** ([SUTRA_FORMS_GUIDE.md](docs/guides/SUTRA_FORMS_GUIDE.md)): edit beside a table, in its cells, or New in a guided drawer;
+    money, date-time and linked-record fields (live server search), rules, computed defaults, masks and roles; **drafts only** until
+    2.8.0's write-back.
+  - **One server per screen** on a cluster; "your selections were reset" in words when a server goes away.
+- **The Sutra designer** (`ui.designer`, off by default; [SCREEN_DESIGNER.md section 31](docs/guides/SCREEN_DESIGNER.md)): four modes
+  over one Sutra — **Customize** the live page, **Describe** a screen in one line, **Outline**, and **Grid** with formulas
+  (`B2 = field-list@1(...; source: {... id: @A2.open.ref})`, two levels of click-opened cells); *my version of this page* per person.
+  Tutorial 22 builds a screen with it.
+- **New packs (opt-in, `DRISHTI_PACKS`):** **us-equities** (479 US companies from SEC EDGAR, Nasdaq, GLEIF and Wikidata: financials,
+  filings, index memberships; `USEQ`, `IDX`, `SIC`, `EDGAR`; prices live and internal only) and **gleif** (9,512 legal entities in 540
+  ownership groups; `LEI`, `LEIG`, `LEIC`), linked to each other by LEI.
+- **Public data, one script per pack** ([PUBLIC_DATA.md](docs/guides/PUBLIC_DATA.md)): `tools/publicdata/<pack>.py` (world-economy,
+  news-and-markets, official market data, us-equities, gleif) with `.sh` and Windows wrappers; widen the scope into the data folder;
+  internal-only sources refused in the repository.
+- **READMEs as a standard:** every pack and every connector has a `README.md` with a front matter and its data structures, shown on
+  the Packs pages (`MKT <GO>`, Admin) and served for AI (`/api/v1/packs/{pack}/readme`); a test enforces it.
+- **Documentation:** a rot check over every document (links, paths, commands, settings, error codes, command words, kinds); stale
+  docs fixed; long guides split; obsolete designs moved to `docs/archive/`.
+- **Known open:** server-side refresh push to many viewers; GLEIF groups capped at 50 entities in the committed pack (the script
+  widens a group); Wikidata's index memberships are stale in places.
+- **Tested:** the drill passed licence headers, Java 21, Java 25, the tools and the console.
+
 # Drishti 2.6.7 — release notes
 
 *2026-10-21.* **BI runs: every heavy question becomes a visible, shareable run; chart any table; Delta and Iceberg side by side.**

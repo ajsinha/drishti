@@ -19,7 +19,7 @@
 |---|---|---|
 | Accepted (built through step 7; bridges and snapshots are phase 2) | 2026-10-05 | Ashutosh Sinha |
 
-**Update (after 2.6.7, unreleased):** the *where* part was revised: collaboration records now live in the content store by default
+**Update (2.7.0):** the *where* part was revised: collaboration records now live in the content store by default
 (`drishti.collab.store: content`; `jpa`, the identity database, or `file` remain for one node), so every Drishti\*net member sees
 them ([CONTENT_STORE.md](../CONTENT_STORE.md) section 10.3). The link-not-data rule stands.
 

@@ -15,7 +15,7 @@
 -->
 # Sutra Next: one grammar for every screen
 
-Status: **phases 1 to 3 built for 2.7.0, unreleased** (2.6.7 is the latest release; see [CHANGELOG.md](../../CHANGELOG.md#unreleased)): the fragment library, the `doc:` docstring and its lint, composite fragments, migrated
+Status: **phases 1 to 5 built and released in 2.7.0** (2026-10-24; write-back, phase 6, is 2.8.0; see [CHANGELOG.md](../../CHANGELOG.md)): the fragment library, the `doc:` docstring and its lint, composite fragments, migrated
 screens (ir-curve and the seven world-economy economics screens) and the library read API (phase 1); per-panel sources over any
 pack's kinds and events evaluated on the server (phase 2, [section 6](#6-sources-over-several-packs), [7](#7-events)); nested child
 panels (phase 3, [section 8](#8-nested-child-panels)); the worked screen is the trading pack's **book desk**. Also built since:

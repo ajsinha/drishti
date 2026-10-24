@@ -1031,8 +1031,8 @@ against them.
 **Release order (product owner, 2026-10-20):** 2.6.6 (QA clean) → **2.6.7 BI runs** (wave R, [BI_RUNS.md](BI_RUNS.md), with gossip off the busy path, HTTP/2 between nodes, chart any table,
 [TABLE_CHARTS.md](TABLE_CHARTS.md), and mixed Delta and Iceberg storage, [DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage)) →
 2.7.0 write-back (item 0 the one Drishti database, [DATABASE.md](DATABASE.md)) → 2.8.0 AI and Sajha → the real-life QA → 2.9.0 →
-3.0.0. **Since then:** 2.6.6 and 2.6.7 are released (2026-10-21); 2.7.0 is Sutra Next phase 1+ ([SUTRA_NEXT.md](SUTRA_NEXT.md), built,
-unreleased; the UI Board stays parked on branch `ui-board-preview`), so wave W (write-back) is **2.8.0** and wave I (AI) **2.9.0**; the
+3.0.0. **Since then:** 2.6.6 and 2.6.7 are released (2026-10-21); 2.7.0 is Sutra Next ([SUTRA_NEXT.md](SUTRA_NEXT.md), released
+2026-10-24; the UI Board stays parked on branch `ui-board-preview`), so wave W (write-back) is **2.8.0** and wave I (AI) **2.9.0**; the
 real-life QA and wave E follow. The current order is [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#roadmap)'s roadmap.
 
 #### Wave A — Foundation and languages → 2.2.0

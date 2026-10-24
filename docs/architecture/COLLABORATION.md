@@ -16,7 +16,7 @@
 # Collaboration: share with a note, and comment threads anchored to the data
 
 Status: **built through step 10** (share with a note, the inbox, email, comment threads, moderation, retention, legal hold and export; the
-chat bridges and watermarked snapshots, steps 9 and 10, phase 2, are built too). Since 2.6.7 (unreleased) the records live in the
+chat bridges and watermarked snapshots, steps 9 and 10, phase 2, are built too). Since 2.7.0 the records live in the
 content store by default, not the identity database (`drishti.collab.store: content`; [CONTENT_STORE.md](CONTENT_STORE.md) section
 10.3). The design below is as it was agreed; each step's
 *as built* note in the [build plan](#build-plan) lists where the code differs, and the user-facing, operating and configuration documents

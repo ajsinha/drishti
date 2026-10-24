@@ -16,7 +16,7 @@
 # BI runs: every BI query as a bounded, visible job
 
 Status: **built and released in 2.6.7** (2026-10-21; the steps as built are in section 18.2b, the console contract as built in 14.5).
-Decided by the product owner on 2026-10-20. Since 2.6.7 (unreleased) run records live in the content store
+Decided by the product owner on 2026-10-20. Since 2.7.0 run records live in the content store
 ([CONTENT_STORE.md](CONTENT_STORE.md) section 9), so every Drishti\*net member sees the same runs. Builds on [BI_DESIGN.md](BI_DESIGN.md) (sections 4.1 the pipeline, 6.1 caches, 6.3 concurrency, 6.5 horizontal scale, 6.7
 cost controls), [RUPAKA.md](RUPAKA.md) section 7 (the query engine), [SUPER_SCALE.md](SUPER_SCALE.md) (S4 products and rollups, S5 slices
 and owners, S6 split queries), [DRISHTI_NET.md](DRISHTI_NET.md) (several servers), [DATABASE.md](DATABASE.md) (where relational state

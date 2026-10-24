@@ -28,7 +28,7 @@ TRD where QUANTITY > 200m order by QUANTITY desc   →  every trade over 200m, l
 amended trades over 5m in BOOK-RATES-3, biggest first   →  plain words: Drishti shows the search it makes
 ```
 
-**Current release: 2.6.7** (BI runs, chart any table, Delta and Iceberg side by side; history queries, `TRD <id> 30`, since 2.6.5) ([release notes](RELEASE_NOTES.md) · [changelog](CHANGELOG.md) ·
+**Current release: 2.7.0** (Sutra Next: the Drishti UI kit, clicks that open linked records across packs, refresh and freshness, layout, forms with drafts and the four-mode Sutra designer; the us-equities and gleif packs; BI runs and chart any table since 2.6.7; history queries, `TRD <id> 30`, since 2.6.5) ([release notes](RELEASE_NOTES.md) · [changelog](CHANGELOG.md) ·
 [what shipped when](docs/architecture/IMPLEMENTATION_PLAN.md)). **Learn it by doing:** [twenty-two tutorials](docs/tutorials/README.md), from your first 15 minutes to BI, AI, embedding and
 production, each with real screenshots; the [guides](docs/README.md) are the reference.
 
@@ -115,7 +115,7 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
 - **Calc** (`Alt+C`): Python in your browser on the view you are looking at ([PYTHON_CALC.md](docs/guides/PYTHON_CALC.md)).
 - **The Build workbench** (`/build`; Sutra Studio's page is folded into it; [tutorial 6](docs/tutorials/06-design-a-screen.md)): drag panels and fields onto a live screen, or a YAML editor with completion from the language's JSON Schema, live checks and a
   preview against any entity. A save is a proposal; an approver reviews the diff (four eyes).
-- **Sutra Next** (unreleased, 2.7.0; [SUTRA_NEXT.md](docs/architecture/SUTRA_NEXT.md)): every screen built from the Drishti UI kit's
+- **Sutra Next** (2.7.0; [SUTRA_NEXT.md](docs/architecture/SUTRA_NEXT.md)): every screen built from the Drishti UI kit's
   fragments (`config/ui-kit/`, `name@N`, each with a `doc:` docstring) and the packs' own (`trading/deal-ticket@1`); panels that
   talk (`emits`, `@panel.event`), read other packs (`source:`) and open children on a click; `refresh:` with freshness; a `layout:`
   grid; `form:` with drafts. The **Sutra designer** (`ui.designer`, off by default): **Customize** a live page, **Describe** a screen
@@ -201,7 +201,7 @@ drishti-console/.venv/bin/python tools/drishti.py lake demo
 # (-Djava.io.tmpdir: native libraries unpack in the server's own folder, not /tmp; docs/admin/CONFIGURATION.md)
 mkdir -p data/tmp/server
 DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_STUDIO_SAVE=true \
-  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.6.7-exec.jar
+  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.7.0-exec.jar
 
 # 5. In a second terminal: the console on http://localhost:17480
 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py

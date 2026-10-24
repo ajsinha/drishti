@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+## 2.7.0 — Sutra Next: the UI kit, events and children across packs, refresh, layout, forms and the four-mode Sutra designer; the us-equities and gleif packs (2026-10-24)
+
 - **Obsolete designs archived** ([docs/archive/README.md](docs/archive/README.md), history): `RUPAKA_POC.md` and `BI_PARITY_PLAN.md`
   moved there whole; the replaced parts of `BI_MODEL_ARCHITECTURE.md` (the wave plan and risks), `RUPAKA.md` (the 2.1 query engine and
   architecture diagram), `SCREEN_BUILDER.md` (the build plan), `DATASETS.md` 11.1 to 11.4 and the 2.1 TROUBLESHOOTING entries (composed and

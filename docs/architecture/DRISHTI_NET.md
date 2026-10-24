@@ -17,7 +17,7 @@
 
 Status: **built and released in 2.5.0** (2026-10-19; wave N, decided by the product owner on 2026-10-18, see
 [BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)); the transport between nodes was reworked in 2.6.7 ([below](#the-transport-between-nodes-as-built-267)) and the
-content store followed (unreleased, [11.2](#112-content-every-node-reaches-the-content-store-unreleased)). What is built, and what changed from the design, is in [section 19](#19-as-built). Off by default. Names marked **(new)** do not exist
+content store followed (2.7.0, [11.2](#112-content-every-node-reaches-the-content-store-270)). What is built, and what changed from the design, is in [section 19](#19-as-built). Off by default. Names marked **(new)** do not exist
 in the code today; every other class, file or setting named here does.
 
 ## Contents
@@ -313,7 +313,7 @@ backend:
 - **Without Drishti*net** `backend.urls` still works as a plain list of identical servers (same packs, same lakes), but
   answers are only the same on each when they hold the same data; with Drishti*net any server answers for all.
 
-### 11.2 Content every node reaches: the content store (Unreleased)
+### 11.2 Content every node reaches: the content store (2.7.0)
 
 Build workbench Designs are kept in the **content store** ([CONTENT_STORE.md](CONTENT_STORE.md)), so a console that fails over to another
 member still finds them (before, the other member answered `404 DRS-5006 no design`). **Every member must use the same
