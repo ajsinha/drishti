@@ -157,3 +157,49 @@ def test_the_lists_link_every_name(client, backend, monkeypatch):
     packs = client.get("/admin/packs").text
     for href in ("/admin/packs/trading", "/admin/packs/core"):
         assert f'href="{href}"' in packs, href
+
+
+TYPE_README = {"connector": "delta", "source": "classpath",
+               "meta": {"connector": "delta", "category": "plugin", "summary": "Reads Delta Lake tables.", "capabilities": ["fetch", "search", "history"],
+                        "auth": "Cloud credentials", "licence": "Delta Kernel (Apache-2.0)", "windows": "Works"},
+               "markdown": "# The delta connector\n\n## Data structure\n\n```sql\nCREATE TABLE t (id string)\n```\n\n| Setting | Type |\n|---|---|\n| `root` | path |\n\n"
+                           "<img src=x onerror=alert(1)> [Delta](../../docs/connectors/DELTA_CONNECTOR.md)\n"}
+
+
+def test_the_pack_page_shows_its_readme_with_data_structures_sources_and_safe_links(client, backend, monkeypatch):
+    """The README standard: the pack's README (front matter facts and the rendered markdown, its tables wrapped), raw HTML shown as text,
+    only http(s) links live, a repository document the help centre holds opened there."""
+    serve(backend, monkeypatch)
+    page = client.get("/admin/packs/trading").text
+    for text in ("data-pack-readme", "README: what the pack holds", "Trades in 125 products.", "internal only", "tools/packgen/readme.py trading",
+                 "<code>LEGS[].CASH_FLOWS[]</code>", '<div class="tbl-wrap"><table class="tbl help-tbl">', "/admin/api/packs/trading/readme",
+                 'href="https://example.com"', 'href="/help/packs"'):
+        assert text in page, text
+    assert "<script>alert(1)</script>" not in page and "&lt;script&gt;" in page
+    assert 'href="javascript:' not in page
+    assert client.get("/admin/api/packs/trading/readme").json()["meta"]["kinds"] == ["trade"]
+    assert client.get("/admin/api/packs/core/readme").status_code == 404
+
+
+def test_a_pack_without_a_readme_has_no_readme_section(client, backend, monkeypatch):
+    serve(backend, monkeypatch)
+    page = client.get("/admin/packs/core").text
+    assert "data-pack-readme" not in page and "Summary" in page
+
+
+def test_the_connector_page_shows_its_type_readme(client, backend, monkeypatch):
+    serve(backend, monkeypatch)
+    inner = backend.admin
+
+    async def admin(method, path, ident, body=None, timeout=None, headers=None, **params):
+        if path == "/connectors/types/delta/readme":
+            return TYPE_README
+        return await inner(method, path, ident, body, timeout, headers, **params)
+    monkeypatch.setattr(backend, "admin", admin)
+    page = client.get("/admin/connectors/trading-lake").text
+    for text in ('data-type-readme="delta"', "Reads Delta Lake tables.", "Delta Kernel (Apache-2.0)", "CREATE TABLE t", "<code>root</code>",
+                 "/admin/connectors/api/types/delta/readme"):
+        assert text in page, text
+    assert "<img src=x" not in page
+    assert client.get("/admin/connectors/api/types/delta/readme").json()["meta"]["category"] == "plugin"
+    assert client.get("/admin/connectors/api/types/nope/readme").status_code == 404

@@ -465,6 +465,10 @@ class BackendClient:
         """A pack's kinds with their mnemonics, counts, an example and key columns (MKT <GO>)."""
         return await self._get(f"/packs/{quote(name)}/overview", ident)
 
+    async def pack_readme(self, name: str, ident=None) -> dict:
+        """A pack's README (the README standard): ``meta`` (its front matter) and ``markdown``, without the kinds the user may not open."""
+        return await self._get(f"/packs/{quote(name)}/readme", ident)
+
     async def packs(self, ident=None) -> list:
         return await self._get("/packs", ident)
 

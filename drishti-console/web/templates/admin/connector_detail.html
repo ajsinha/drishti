@@ -74,6 +74,23 @@
     </p>
   </section>
 
+  {% if type_readme and type_readme.html %}{% set m = type_readme.meta %}
+  <section aria-labelledby="cdType" class="det-sec" data-type-readme="{{ c.plugin }}">
+    <h2 class="ws-h" id="cdType">The <span class="mono">{{ c.plugin }}</span> connector type</h2>
+    <dl class="det-kv">
+      {% if m.summary %}<dt>Summary</dt><dd data-readme-summary>{{ m.summary }}</dd>{% endif %}
+      {% if m.capabilities %}<dt>Can</dt><dd>{% for x in m.capabilities %}<span class="det-chip mono">{{ x }}</span> {% endfor %}</dd>{% endif %}
+      {% if m.auth %}<dt>Sign-in</dt><dd>{{ m.auth }}</dd>{% endif %}
+      {% if m.licence %}<dt>Licence</dt><dd>{{ m.licence }}</dd>{% endif %}
+      {% if m.windows %}<dt>Windows</dt><dd>{{ m.windows }}</dd>{% endif %}
+    </dl>
+    <details class="pd-readme-body" data-readme-body>
+      <summary>Its README (what it reads, settings, data structure, examples, troubleshooting) · <a href="/admin/connectors/api/types/{{ c.plugin }}/readme" class="mono">JSON</a></summary>
+      <div class="help-article readme-article">{{ type_readme.html | safe }}</div>
+    </details>
+  </section>
+  {% endif %}
+
   {% if c.plugin == 'file' %}<p class="text-muted-d" data-root-hint>The file connector reads JSON Lines from its <span class="mono">root</span> folder, laid out as
     <span class="mono">&lt;root&gt;/&lt;domain&gt;/&lt;date&gt;/&lt;kind&gt;.jsonl</span>. Set <span class="mono">root</span> in the file, or, when it reads
     <span class="mono">${DRISHTI_FILES_ROOT:…}</span>, set that environment variable and restart. Root now: <span class="mono">{{ (c.settings or {}).get('root', 'not set') }}</span>.</p>{% endif %}

@@ -47,6 +47,7 @@ _IMG = re.compile(r'(<a\b[^>]*>\s*)?(<img\b[^>]*?\bsrc="([^"]+)"[^>]*>)')
 # A link written in a guide: relative links are resolved against the guide's file (DOC-18).
 _LINK = re.compile(r'<a href="([^"]*)"([^>]*)>(.*?)</a>', re.S)
 _EXTERNAL = re.compile(r"^(?:[a-z][a-z0-9+.-]*:|/|#)", re.I)
+_FRONT = re.compile(r"\A(?:\s*<!--.*?-->)*\s*(---\n.*?\n---\n)", re.S)
 # Where an unlisted repository document sits in the help centre, by its top folder.
 _DOC_CATEGORY = {"connectors": "data", "admin": "operate", "guides": "use", "architecture": "build", "tutorials": "start",
                  "qa": "build", "": "operate"}
@@ -180,7 +181,9 @@ class Library:
         """A markdown file as help HTML: examples, boxes, tables, screenshots and links to other documents."""
         md = markdown.Markdown(extensions=["tables", "fenced_code", "sane_lists", "admonition", "attr_list", "toc"],
                                extension_configs={"toc": {"toc_depth": "2-3", "slugify": GithubSlugger()}})
-        body = md.convert(path.read_text(encoding="utf-8"))
+        text = path.read_text(encoding="utf-8")
+        front = _FRONT.match(text)                                                   # a README's YAML front matter (the README standard) is data, not text
+        body = md.convert(text[:front.start(1)] + text[front.end():] if front else text)
         body = _CODE.sub(_figure, body)
         body = re.sub(r'<div class="admonition (\w+)">\s*<p class="admonition-title">',
                       lambda m: f'<div class="help-box {_BOX.get(m.group(1), "concept")}">\n<p class="hb-title">', body)

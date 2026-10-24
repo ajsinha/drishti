@@ -27,10 +27,17 @@ import com.ash.drishti.packs.PackRegistry;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.PackAccess;
 import com.ash.drishti.server.security.Principal;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestAttribute;
@@ -94,6 +101,37 @@ public class PackOverviewController {
         out.put("version", pack.version());
         out.put("extends", pack.parents());
         out.put("kinds", kinds);
+        return out;
+    }
+
+    /**
+     * The pack's README ({@code config/packs/<pack>/README.md}, the README standard): its front matter as {@code meta} and the markdown
+     * after it, for the console and for AI. Like the overview it answers for a pack switched on for the caller, and the Data structures
+     * of kinds the caller may not open are left out (and from {@code meta.kinds} and {@code meta.commands}). 404 when the pack has none.
+     */
+    @GetMapping("/{name}/readme")
+    public Map<String, Object> readme(@PathVariable String name, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        Pack pack = access.byCodeOrName(principal.user(), name).flatMap(n -> registry.packs().stream().filter(p -> p.name().equals(n)).findFirst())
+                .orElseThrow(() -> new DrishtiException(ErrorCode.BAD_REQUEST, "no pack '" + name + "' is switched on"));
+        Path file = pack.dir().resolve("README.md");
+        if (!Files.isRegularFile(file)) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "pack '" + pack.name() + "' has no README.md");
+        }
+        String text;
+        try {
+            text = Files.readString(file, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        Set<String> hidden = new HashSet<>();
+        for (String kind : pack.kinds()) {
+            if (!entitlements.mayOpen(principal, kind)) {
+                hidden.add(kind);
+            }
+        }
+        Map<String, Object> out = Readme.parse(text).withoutKinds(hidden).json("pack", pack.name());
+        out.put("title", pack.title());
+        out.put("version", pack.version());
         return out;
     }
 }

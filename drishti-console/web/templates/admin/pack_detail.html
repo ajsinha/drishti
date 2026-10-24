@@ -55,6 +55,22 @@
     </p>
   </section>
 
+  {% if readme.html %}
+  <section aria-labelledby="pdReadme" class="det-sec pd-readme" data-pack-readme="{{ p.name }}">
+    <h2 class="ws-h" id="pdReadme">README: what the pack holds</h2>
+    {% set m = readme.meta %}
+    <dl class="det-kv">
+      {% if m.summary %}<dt>Summary</dt><dd data-readme-summary>{{ m.summary }}</dd>{% endif %}
+      {% if m.sources %}<dt>Sources</dt><dd data-readme-sources>{% for s in m.sources %}<span>{{ s.name }}</span> <span class="text-muted-d">({{ s.licence }})</span>{% if s['internal-only'] %} <span class="st st-warn">internal only</span>{% endif %}{{ '; ' if not loop.last }}{% endfor %}</dd>{% endif %}
+      {% if m.refresh %}<dt>Refresh</dt><dd class="mono">{{ m.refresh }}</dd>{% endif %}
+    </dl>
+    <details class="pd-readme-body" data-readme-body open>
+      <summary>The README (data structures, screens, sources, dependencies) · <a href="/admin/api/packs/{{ p.name }}/readme" class="mono">JSON</a></summary>
+      <div class="help-article readme-article">{{ readme.html | safe }}</div>
+    </details>
+  </section>
+  {% endif %}
+
   {% if loaded %}
   <section aria-labelledby="pdData" class="det-sec pd-data" id="load-data" data-pack-data="{{ p.name }}">
     <h2 class="ws-h" id="pdData">Load data</h2>

@@ -123,7 +123,34 @@ async def detail_page(request: Request, name: str):
         known = (await _server(request, "GET", "")).get("knownKinds", [])
     except BackendError:
         known = []
-    return render(request, "admin/connector_detail.html", c=c, status=status, known_kinds=known)
+    return render(request, "admin/connector_detail.html", c=c, status=status, known_kinds=known,
+                  type_readme=await _type_readme_html(request, c.get("plugin")))
+
+
+async def _type_readme_html(request: Request, plugin) -> dict:
+    """The connector type's README (the README standard) for the page: its front matter and its markdown as HTML. None is no error."""
+    if not plugin:
+        return {}
+    try:
+        r = await _server(request, "GET", f"/types/{quote(str(plugin))}/readme")
+    except Exception:                            # noqa: BLE001  (an older server without the endpoint, a test stand-in: the page stands without it)
+        return {}
+    if not isinstance(r, dict):
+        return {}
+    from core import readmes
+    from routes.common import library
+    meta = r.get("meta") or {}
+    return {"meta": meta, "html": readmes.render(r.get("markdown", ""), readmes.source_of(request.app.state.docs_dir, "connector", str(plugin), meta),
+                                                 await library(request))}
+
+
+@router.get("/api/types/{type_}/readme")
+async def api_type_readme(request: Request, type_: str):
+    """A connector type's README as the server gives it (front matter and markdown), for tools and AI. Administrators only."""
+    try:
+        return await _server(request, "GET", f"/types/{quote(type_)}/readme")
+    except BackendError as e:
+        return _problem(e)
 
 
 @router.get("/api/stamp")

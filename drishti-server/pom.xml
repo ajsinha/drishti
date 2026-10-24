@@ -72,6 +72,15 @@
     </dependency>
   </dependencies>
   <build>
+    <resources>
+      <resource><directory>src/main/resources</directory></resource>
+      <!-- the README standard: the built-in connector types' READMEs (docs/connectors/types/<type>/README.md), beside the plugins' own -->
+      <resource>
+        <directory>${project.basedir}/../docs/connectors/types</directory>
+        <includes><include>*/README.md</include></includes>
+        <targetPath>drishti/readme/built-in</targetPath>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <!-- each test run starts with no connector files in the forks' folders: a file generated from an older pack template is

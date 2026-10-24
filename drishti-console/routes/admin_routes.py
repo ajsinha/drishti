@@ -164,19 +164,49 @@ async def pack_detail(request: Request, name: str):
         except BackendError:
             return fallback
     loaded = bool(row.get("loaded"))
-    detail, overview, sources, expectations, loads, history, coverage = await asyncio.gather(
+    detail, overview, sources, expectations, loads, history, coverage, readme = await asyncio.gather(
         best(backend.admin("GET", f"/packs/{q}/detail", me), {}) if loaded else asyncio.sleep(0, {}),
         best(backend.pack_overview(name, me), {}) if loaded else asyncio.sleep(0, {}),
         best(backend.admin("GET", f"/packs/{q}/datasource", me), {}) if loaded else asyncio.sleep(0, {}),
         best(backend.admin("GET", f"/loads/{q}/expectations", me), {}) if loaded else asyncio.sleep(0, {}),
         best(backend.admin("GET", f"/loads/{q}", me, limit=3), {}) if loaded else asyncio.sleep(0, {}),
         best(backend.admin("GET", "/packs/history", me, limit=30, pack=name), {"history": [], "kept": {}}),
-        best(backend.pack_coverage(name, me), {}) if loaded else asyncio.sleep(0, {}))
+        best(backend.pack_coverage(name, me), {}) if loaded else asyncio.sleep(0, {}),
+        _pack_readme(backend, name, me) if loaded else asyncio.sleep(0, {}))
     examples = {k.get("kind"): k.get("example") for k in (overview or {}).get("kinds", [])}
     every = {p.get("name") for p in rows}
     return render(request, "admin/pack_detail.html", p=row, d=detail or {}, examples=examples, sources=sources or {}, expectations=expectations or {},
                   loads=(loads or {}).get("loads", []), history=history.get("history", []), kept=(history.get("kept") or {}).get(name, []),
-                  known_packs=every, coverage=(coverage or {}).get("kinds", []), status=await _status(request))
+                  known_packs=every, coverage=(coverage or {}).get("kinds", []), readme=await _readme_html(request, name, readme or {}),
+                  status=await _status(request))
+
+
+async def _pack_readme(backend, name: str, me) -> dict:
+    """The pack's README from the server; none (an older server, a pack without one) leaves the section out, never the page."""
+    try:
+        r = await backend.pack_readme(name, me)
+    except Exception:                            # noqa: BLE001
+        return {}
+    return r if isinstance(r, dict) else {}
+
+
+async def _readme_html(request: Request, name: str, readme: dict) -> dict:
+    """The pack's README for its page: its front matter and its markdown as HTML (links into the help centre where they can go)."""
+    if not readme.get("markdown"):
+        return {}
+    from core import readmes
+    from routes.common import library
+    lib = await library(request)
+    return {"meta": readme.get("meta") or {}, "html": readmes.render(readme["markdown"], readmes.source_of(request.app.state.docs_dir, "pack", name), lib)}
+
+
+@router.get("/api/packs/{name}/readme")
+async def pack_readme(request: Request, name: str):
+    """A pack's README as the server gives it (front matter and markdown): what Admin -> Packs shows, for tools and AI."""
+    try:
+        return await request.app.state.backend.pack_readme(name, ident(request))
+    except BackendError as e:
+        return JSONResponse({"error": e.detail, "code": e.code}, status_code=e.status)
 
 
 @router.post("/api/pack-samples")

@@ -197,6 +197,16 @@
   </dependencies>
 
   <build>
+    <resources>
+      <resource><directory>src/main/resources</directory></resource>
+      <!-- the README standard: a module's README.md (a connector plugin's) travels in its jar at drishti/readme/<artifactId>/README.md,
+           where the server finds it for Admin -> Connectors (GET /api/v1/admin/connectors/types/{type}/readme) -->
+      <resource>
+        <directory>${project.basedir}</directory>
+        <includes><include>README.md</include></includes>
+        <targetPath>drishti/readme/${project.artifactId}</targetPath>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

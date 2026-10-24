@@ -53,3 +53,19 @@
 .act-key { display: inline-block; width: .8rem; height: .5rem; vertical-align: middle; }
 .act-key-bar { background: var(--d-pos); opacity: .7; }
 .act-key-line { background: var(--d-accent); height: .15rem; }
+/* A pack's or a connector type's README (the README standard): rendered markdown in the page's theme; wide tables and code scroll in place. */
+.readme-article { line-height: 1.6; min-width: 0; }
+.readme-article h3 { font-size: 1.05rem; font-weight: 700; margin: 1.2rem 0 .4rem; padding-top: .4rem; border-top: 1px solid var(--d-border); }
+.readme-article h4 { font-size: .98rem; font-weight: 700; margin: 1rem 0 .3rem; }
+.readme-article code { background: var(--d-surface-2); padding: .05rem .3rem; border-radius: 3px; font-size: .88em; color: var(--d-accent); overflow-wrap: anywhere; }
+.readme-article pre { border: 1px solid var(--d-border); border-radius: 6px; padding: .6rem .8rem; background: var(--d-surface); overflow-x: auto; max-width: 100%; }
+.readme-article pre code { background: none; padding: 0; color: var(--d-ink); overflow-wrap: normal; }
+.readme-article .tbl-wrap { overflow-x: auto; max-width: 100%; }
+.readme-article .help-tbl td, .readme-article .help-tbl th { white-space: normal; vertical-align: top; }
+.readme-article a { color: var(--d-link); }
+.readme-article .help-repo { border-bottom: 1px dotted currentColor; cursor: help; }
+.pd-readme-body > summary { cursor: pointer; color: var(--d-muted); margin: .4rem 0; }
+@media (max-width: 640px) {
+  .pd-readme-body > summary { min-height: 44px; display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; }
+  .pd-readme-body > summary a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+}
