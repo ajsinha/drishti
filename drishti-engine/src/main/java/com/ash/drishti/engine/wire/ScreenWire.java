@@ -126,8 +126,17 @@ public final class ScreenWire {
 
     // ---- binding --------------------------------------------------------------------------------------------------------------
 
-    /** One panel of the screen (at any depth) as the viewer may see it, given the events fired. */
+    /** One panel of the screen (at any depth) as the viewer may see it, given the events fired; with its {@code refresh:} (SUTRA_NEXT.md 9). */
     public PanelView bind(Screen s, Panel p) {
+        return refreshed(p, bound(s, p));
+    }
+
+    /** {@code v} refreshing as the Sutra's panel {@code p} says, if it does. */
+    public static PanelView refreshed(Panel p, PanelView v) {
+        return p.refresh().map(r -> v.withRefresh(new com.ash.drishti.engine.view.ViewModel.RefreshView(r.every(), r.userCanPause()))).orElse(v);
+    }
+
+    private PanelView bound(Screen s, Panel p) {
         SutraWiring.Node n = s.nodes().get(p.id());
         Optional<Wiring.Ref> missing = missing(s, n);
         if (missing.isPresent()) {

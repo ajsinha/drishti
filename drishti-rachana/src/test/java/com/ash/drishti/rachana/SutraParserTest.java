@@ -176,12 +176,37 @@ class SutraParserTest {
                 });
     }
 
-    /** {@code refresh:} (seconds) is accepted and checked; the runtime acts on it from SUTRA_NEXT.md phase 4 (the Sutra designer writes it). */
+    /** {@code refresh:} (seconds) on the Sutra goes on every top-level panel without its own (SUTRA_NEXT.md 9); a wrong one is DRS-2012. */
     @Test
     void refreshIsWholeSeconds() {
-        String ok = "rachana: 1\nsutra: my-desk\nversion: 1\nmatch: { kind: trade }\nrefresh: 30\ntitle: { id: $.id }\npanels:\n  - { id: refs, kind: links }\n";
-        assertThat(parser.parse(ok, "ok.yaml", "x").name()).isEqualTo("my-desk");
-        assertThatThrownBy(() -> parser.parse(ok.replace("refresh: 30", "refresh: soon"), "bad.yaml", "x"))
-                .isInstanceOfSatisfying(SutraException.class, e -> assertThat(e.problems()).extracting(SutraProblem::code).contains("DRS-2012"));
+        String ok = "rachana: 1\nsutra: my-desk\nversion: 1\nmatch: { kind: trade }\nrefresh: 30\ntitle: { id: $.id }\npanels:\n  - { id: refs, kind: links }\n"
+                + "  - { id: mine, kind: links, refresh: { every: 60, user-can-pause: false } }\n";
+        var s = parser.parse(ok, "ok.yaml", "x");
+        assertThat(s.name()).isEqualTo("my-desk");
+        assertThat(s.panels().get(0).refresh()).contains(new com.ash.drishti.rachana.model.Refresh(30, true));
+        assertThat(s.panels().get(1).refresh()).contains(new com.ash.drishti.rachana.model.Refresh(60, false));
+        for (String bad : new String[] {"refresh: soon", "refresh: 0", "refresh: 2.5", "refresh: { every: 5, often: true }", "refresh: { user-can-pause: true }",
+                "refresh: { every: 5, user-can-pause: maybe }"}) {
+            assertThatThrownBy(() -> parser.parse(ok.replace("refresh: 30", bad), "bad.yaml", "x"))
+                    .as(bad).isInstanceOfSatisfying(SutraException.class, e -> assertThat(e.problems()).extracting(SutraProblem::code).contains("DRS-2012"));
+        }
+    }
+
+    /** A panel's own {@code refresh:} (a number or {every, user-can-pause}) is checked; a panel inside a tab cannot refresh alone. */
+    @Test
+    void panelRefresh() {
+        String ok = "rachana: 1\nsutra: my-desk\nversion: 1\nmatch: { kind: trade }\ntitle: { id: $.id }\npanels:\n  - { id: refs, kind: links, refresh: 15 }\n"
+                + "  - { id: other, kind: links }\n";
+        var s = parser.parse(ok, "ok.yaml", "x");
+        assertThat(s.panels().get(0).refresh()).contains(new com.ash.drishti.rachana.model.Refresh(15, true));
+        assertThat(s.panels().get(1).refresh()).isEmpty();
+        assertThatThrownBy(() -> parser.parse(ok.replace("refresh: 15", "refresh: { every: 90000 }"), "bad.yaml", "x"))
+                .isInstanceOfSatisfying(SutraException.class, e -> assertThat(e.problems()).extracting(SutraProblem::message)
+                        .anySatisfy(m -> assertThat(m).contains("refresh.every")));
+        String tabs = "rachana: 1\nsutra: my-desk\nversion: 1\nmatch: { kind: trade }\ntitle: { id: $.id }\npanels:\n"
+                + "  - { id: t, kind: tabs, each: $.legs, body: { kind: kv, refresh: 5 } }\n";
+        assertThatThrownBy(() -> parser.parse(tabs, "bad.yaml", "x"))
+                .isInstanceOfSatisfying(SutraException.class, e -> assertThat(e.problems()).extracting(SutraProblem::message)
+                        .anySatisfy(m -> assertThat(m).contains("put it on the tabs panel")));
     }
 }

@@ -238,6 +238,14 @@ public record ViewModel(
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public record Wire(List<Map<String, String>> emits, String waits, List<Map<String, String>> children, Map<String, String> source, String parent) {}
 
+    /**
+     * How often the console fetches a panel again ({@code refresh:} in the Sutra, SUTRA_NEXT.md 9).
+     *
+     * @param every seconds between fetches: the fastest the reader may choose
+     * @param userCanPause whether the reader may pause it
+     */
+    public record RefreshView(int every, boolean userCanPause) {}
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     /**
      * @param empty nothing to show (the document lacks what the panel asks for); the console says "No data available"
@@ -246,7 +254,23 @@ public record ViewModel(
      */
     public record PanelView(
             String id, String kind, String title, String code, String key, String area, boolean inferred,
-            String explanation, PanelData data, String error, boolean empty, Integer span, Integer height, String denied, Wire wire) {
+            String explanation, PanelData data, String error, boolean empty, Integer span, Integer height, String denied, Wire wire, RefreshView refresh) {
+
+        /** A panel that does not refresh on its own. */
+        public PanelView(String id, String kind, String title, String code, String key, String area, boolean inferred,
+                String explanation, PanelData data, String error, boolean empty, Integer span, Integer height, String denied, Wire wire) {
+            this(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, null);
+        }
+
+        /** The same panel refreshing as the Sutra says ({@code refresh:}, SUTRA_NEXT.md 9), or not at all (null). */
+        public PanelView withRefresh(RefreshView next) {
+            return new PanelView(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, next);
+        }
+
+        /** The same panel showing {@code next} (a mask, a filter), everything else kept. */
+        public PanelView withData(PanelData next) {
+            return new PanelView(id, kind, title, code, key, area, inferred, explanation, next, error, empty, span, height, denied, wire, refresh);
+        }
 
         /** A panel without Sutra Next wiring. */
         public PanelView(String id, String kind, String title, String code, String key, String area, boolean inferred,
@@ -256,7 +280,7 @@ public record ViewModel(
 
         /** The same panel with its wiring for the console. */
         public PanelView withWire(Wire next) {
-            return new PanelView(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, next);
+            return new PanelView(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, next, refresh);
         }
 
         /** {@code denied} is set when the panel's {@code source} is an entity the caller may not open (no data, no error). */

@@ -72,8 +72,7 @@ public final class ColumnFilters {
             }
             data = new PanelData.Tabs(tabs.layout(), out);
         }
-        return data == p.data() ? p : new PanelView(p.id(), p.kind(), p.title(), p.code(), p.key(), p.area(), p.inferred(), p.explanation(), data,
-                p.error(), p.empty(), p.span(), p.height(), p.denied(), p.wire());
+        return data == p.data() ? p : p.withData(data);
     }
 
     private static PanelData.Table table(PanelData.Table t, Map<String, String> filters, LocalDate today) {

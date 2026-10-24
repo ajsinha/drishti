@@ -208,4 +208,28 @@ class SutraNextEventsTest {
         mvc.perform(get("/api/v1/views/trade/MX-20000001").param("design", id).header("Authorization", as("designer", "full")))
                 .andExpect(status().isBadRequest());
     }
+
+    /** {@code refresh:} on the Sutra reaches every top-level panel of the view model, and the panels an event answers (SUTRA_NEXT.md 9). */
+    @Test
+    void refreshIsOnEveryPanelOfTheViewAndOfAnEventsAnswer() throws Exception {
+        String text = new String(getClass().getResourceAsStream("/book-desk-design.sutra.yaml").readAllBytes(), StandardCharsets.UTF_8)
+                + "\nrefresh: { every: 30, user-can-pause: false }\n";
+        String made = mvc.perform(post("/api/v1/builder/designs").header("Authorization", as("refresher", "full")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(java.util.Map.of("name", "My page · portfolio-trades", "kind", "portfolio-trades", "sutra", text))))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        String id = json.readTree(made).path("id").asText();
+        JsonNode v = json.readTree(mvc.perform(get(DESK).param("design", id).header("Authorization", as("refresher", "full"))).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+        assertThat(v.path("panels")).allSatisfy(p -> {
+            assertThat(p.path("refresh").path("every").asInt()).isEqualTo(30);
+            assertThat(p.path("refresh").path("userCanPause").asBoolean(true)).isFalse();
+        });
+        String body = json.writeValueAsString(java.util.Map.of("panel", "trades", "event", "open", "row", 0, "selections", List.of()));
+        JsonNode r = json.readTree(mvc.perform(post(DESK + "/events").param("design", id).header("Authorization", as("refresher", "full"))
+                .contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+        assertThat(r.path("panels").get(0).path("refresh").path("every").asInt()).isEqualTo(30);
+        JsonNode plain = json.readTree(mvc.perform(get(DESK).param("sutra", "book-desk").header("Authorization", as("full"))).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+        assertThat(plain.path("panels")).allSatisfy(p -> assertThat(p.has("refresh")).isFalse());     // a Sutra without refresh: none
+    }
 }

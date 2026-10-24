@@ -74,6 +74,7 @@ public final class RachanaSchema {
         p.put("controls", Map.of("type", "array", "maxItems", com.ash.drishti.rachana.model.ControlRules.MAX_CONTROLS,
                 "description", "Controls the reader sets: dropdowns, date ranges, search. Their values are read as ctl.<id> in expressions",
                 "items", controlSchema()));
+        p.put("refresh", refreshSchema("Refresh every top-level panel without its own refresh:"));
         p.put("panels", Map.of("type", "array", "items", Map.of("$ref", "#/$defs/panel")));
         Map<String, Object> keys = new LinkedHashMap<>();
         KEYS.forEach(k -> keys.put(k, text(EL + ", or impact or raw")));
@@ -90,12 +91,24 @@ public final class RachanaSchema {
         return s;
     }
 
+    /** {@code refresh: 30} or {@code { every: 30, user-can-pause: true }} (SUTRA_NEXT.md 9). */
+    private static Map<String, Object> refreshSchema(String what) {
+        Map<String, Object> every = Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.Refresh.MAX, "description", "Seconds between fetches");
+        Map<String, Object> obj = new LinkedHashMap<>();
+        obj.put("type", "object");
+        obj.put("properties", Map.of("every", every, "user-can-pause", Map.of("type", "boolean", "description", "Whether the reader may pause it (default true)")));
+        obj.put("required", List.of("every"));
+        obj.put("additionalProperties", false);
+        return Map.of("description", what, "oneOf", List.of(every, obj));
+    }
+
     /** A use of a shared block in a panels list: {@code { use: legs@1, with: { rate-fmt: pct4 } }} (DRS-2048 when it does not resolve). */
     private static Map<String, Object> use() {
         Map<String, Object> props = new LinkedHashMap<>();
         props.put("use", Map.of("type", "string", "pattern", "^([a-z][a-z0-9-]{0,63}/)?[a-z][a-z0-9-]{1,63}(@[0-9]+)?$",
                 "description", "A Drishti UI kit fragment (name@version) or a pack's own block or fragment (pack/name@version, or its plain name): its panels go here"));
         props.put("with", Map.of("type", "object", "description", "The block's parameters (its params:), each one value; the block's defaults otherwise"));
+        props.put("refresh", refreshSchema("Fetch every panel the use brings again on an interval"));
         Map<String, Object> u = new LinkedHashMap<>();
         u.put("type", "object");
         u.put("description", "A use of a shared block: the block's panels, in its order, as if they were written here");
@@ -140,6 +153,7 @@ public final class RachanaSchema {
                 "description", "Width in columns of a 12-column grid (default: the whole column)"));
         common.put("height", Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.Panel.MAX_HEIGHT,
                 "description", "Height in grid rows of 2.5rem (default: as tall as the content)"));
+        common.put("refresh", refreshSchema("Fetch this panel again on an interval; the reader may slow it down or pause it, never speed it up"));
         common.put("infer", Map.of("type", "boolean", "description", "Let inference fill the columns"));
         common.put("where", text(EL + " that must be true for a row to be shown (it may read ctl.<id>)"));
         common.put("on-select", Map.of("type", "object", "description", "A click on a row or bar sets a control: {filter: [panel ids], by: <control id>, field: <row field>}"));

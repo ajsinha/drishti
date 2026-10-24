@@ -99,7 +99,6 @@ public final class NetServedBy {
         }
         List<ViewModel.Cell> cells = new ArrayList<>(f.fields());
         cells.add(ViewModel.Cell.of(LABEL, line));
-        return new ViewModel.PanelView(pv.id(), pv.kind(), pv.title(), pv.code(), pv.key(), pv.area(), pv.inferred(), pv.explanation(),
-                new PanelData.Fields(cells), pv.error(), pv.empty(), pv.span(), pv.height(), pv.denied());
+        return pv.withData(new PanelData.Fields(cells));
     }
 }

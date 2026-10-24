@@ -110,11 +110,71 @@ public class SettingsController {
                 case "pinned" -> next.set("pinned", pins(v));
                 case "savedSearches" -> next.set("savedSearches", savedSearches(v));
                 case "notify" -> next.set("notify", notify(v, next.path("notify")));
+                case "refresh" -> next.set("refresh", refresh(v, next.path("refresh")));
                 default -> throw bad("unknown setting '" + e.getKey() + "'");
             }
         });
         store.put(p.user(), NS, NS, next);
         return withDefaults(next);
+    }
+
+    private static final Pattern SCREEN = Pattern.compile("^[a-z0-9-]{1,40}/[A-Za-z0-9._@-]{1,80}$");
+    private static final Pattern PANEL = Pattern.compile("^[A-Za-z0-9_.-]{1,64}$");
+    static final int MAX_SCREENS = 100;
+    static final int MAX_PANELS = 40;
+
+    /**
+     * The reader's refresh choices (SUTRA_NEXT.md 9), per screen ({@code <kind>/<sutra>}): {@code {"trade/my-desk": {"all": true, "panels":
+     * {"curve": {"paused": true, "every": 60}}}}}. A patch replaces the screens it names ({@code null} forgets one) and keeps the rest; the
+     * oldest screens go past {@value #MAX_SCREENS}. Whether a panel may be paused, and how fast it may go, the console decides from the Sutra.
+     */
+    private ObjectNode refresh(JsonNode v, JsonNode current) {
+        if (!v.isObject()) {
+            throw bad("refresh is an object of screens");
+        }
+        ObjectNode out = current.isObject() ? ((ObjectNode) current).deepCopy() : json.createObjectNode();
+        v.fields().forEachRemaining(e -> {
+            if (!SCREEN.matcher(e.getKey()).matches()) {
+                throw bad("refresh: '" + e.getKey() + "' is not a screen (<kind>/<sutra>)");
+            }
+            out.remove(e.getKey());
+            JsonNode s = e.getValue();
+            if (s == null || s.isNull()) {
+                return;
+            }
+            if (!s.isObject()) {
+                throw bad("refresh." + e.getKey() + " is an object");
+            }
+            ObjectNode screen = out.putObject(e.getKey());
+            if (s.has("all")) {
+                screen.put("all", bool(s.get("all"), "refresh.all"));
+            }
+            JsonNode panels = s.path("panels");
+            if (!panels.isMissingNode() && !panels.isObject() || panels.size() > MAX_PANELS) {
+                throw bad("refresh panels are an object of at most " + MAX_PANELS + " panels");
+            }
+            ObjectNode kept = screen.putObject("panels");
+            panels.fields().forEachRemaining(pe -> {
+                JsonNode c = pe.getValue();
+                if (!PANEL.matcher(pe.getKey()).matches() || !c.isObject()) {
+                    throw bad("refresh: '" + pe.getKey() + "' is not a panel's choice");
+                }
+                ObjectNode one = kept.putObject(pe.getKey());
+                if (c.has("paused")) {
+                    one.put("paused", bool(c.get("paused"), "refresh paused"));
+                }
+                if (c.has("every")) {
+                    if (!c.get("every").canConvertToInt() || c.get("every").asInt() < 1 || c.get("every").asInt() > 86_400) {
+                        throw bad("refresh every is 1 to 86400 seconds");
+                    }
+                    one.put("every", c.get("every").asInt());
+                }
+            });
+        });
+        while (out.size() > MAX_SCREENS) {
+            out.remove(out.fieldNames().next());
+        }
+        return out;
     }
 
     private ObjectNode stored(String user) {
@@ -133,6 +193,7 @@ public class SettingsController {
         ObjectNode email = json.createObjectNode();
         com.ash.drishti.server.collab.mail.NotifyPrefs.EVENTS.forEach(e -> email.put(e, s.path("notify").path("email").path(e).asBoolean(true)));
         out.putObject("notify").set("email", email);
+        out.set("refresh", s.path("refresh").isObject() ? s.get("refresh") : json.createObjectNode());
         out.set("pinned", s.path("pinned").isArray() ? s.get("pinned") : json.createArrayNode());
         out.set("savedSearches", s.path("savedSearches").isArray() ? s.get("savedSearches") : json.createArrayNode());
         return out;

@@ -53,7 +53,7 @@ final class SutraBuilder {
     private static final Set<String> TOP = Set.of("rachana", "sutra", "version", "domain", "match", "title", "strip", "panels", "keys",
             "description", "notes", "controls", "doc", "refresh");
     private static final Set<String> PANEL = Set.of("id", "kind", "title", "key", "code", "area", "infer", "columns", "body", "panels", "description",
-            Panel.SPAN, Panel.HEIGHT);
+            Panel.SPAN, Panel.HEIGHT, com.ash.drishti.rachana.model.Refresh.KEY);
     private static final Set<String> STRIP = Set.of("label", "bind", "fmt", "tone", "emphasis");
     private static final Set<String> COLUMN = Set.of("label", "bind", "fmt", "tone", "total", "link");
 
@@ -87,10 +87,7 @@ final class SutraBuilder {
                 problem("DRS-2012", "'" + doc + "' is plain text", d);
             }
         }
-        PNode refresh = m.get("refresh");          // seconds between refreshes (SUTRA_NEXT.md 9): accepted and checked, acted on from phase 4
-        if (refresh != null && !(refresh.value() instanceof Long r && r >= 1 && r <= 86_400)) {
-            problem("DRS-2012", "'refresh' is a whole number of seconds, 1 to 86400", refresh);
-        }
+        Object screenRefresh = refresh(m.get("refresh"));   // SUTRA_NEXT.md 9: on every top-level panel without its own
         String name = requiredText(m, "sutra", root);
         if (name != null && !NAME.matcher(name).matches()) {
             problem("DRS-2020", "name '" + name + "' must be lower-case kebab, 2-64 characters", m.get("sutra"));
@@ -121,6 +118,9 @@ final class SutraBuilder {
                 }
                 panels.add(panel);
             }
+        }
+        if (screenRefresh != null) {
+            panels.replaceAll(p -> p.options().containsKey(com.ash.drishti.rachana.model.Refresh.KEY) ? p : withOption(p, com.ash.drishti.rachana.model.Refresh.KEY, screenRefresh));
         }
         childIds(panels, new HashSet<>(ids));
         ControlsReader controlsReader = new ControlsReader(file, problems);
@@ -271,6 +271,16 @@ final class SutraBuilder {
         Map<String, Object> options = new LinkedHashMap<>();
         size(m, Panel.SPAN, Panel.MAX_SPAN, "columns of the 12-column grid", nested, options);
         size(m, Panel.HEIGHT, Panel.MAX_HEIGHT, "grid rows", nested, options);
+        if (m.containsKey(com.ash.drishti.rachana.model.Refresh.KEY)) {
+            if (nested) {
+                problem("DRS-2012", "'refresh' refreshes a whole panel: put it on the tabs panel", m.get(com.ash.drishti.rachana.model.Refresh.KEY));
+            } else {
+                Object r = refresh(m.get(com.ash.drishti.rachana.model.Refresh.KEY));
+                if (r != null) {
+                    options.put(com.ash.drishti.rachana.model.Refresh.KEY, r);
+                }
+            }
+        }
         if (kind != null) {
             m.forEach((opt, val) -> {
                 if (PANEL.contains(opt) || WiringReader.isWiring(opt, val)) {
@@ -372,6 +382,26 @@ final class SutraBuilder {
     }
 
     /** {@code span} and {@code height}: whole numbers within bounds, on top-level panels only; kept with the options. */
+    /** {@code refresh: 30} or {@code { every: 30, user-can-pause: true }} as a panel option ({@link com.ash.drishti.rachana.model.Refresh}); null when absent or wrong. */
+    private Object refresh(PNode n) {
+        if (n == null || n.value() == null && !n.isMap()) {
+            return null;
+        }
+        Object raw = n.isScalar() ? n.value() : plain(n);
+        var why = com.ash.drishti.rachana.model.Refresh.problem(raw);
+        if (why.isPresent()) {
+            problem("DRS-2012", why.get(), n);
+            return null;
+        }
+        return com.ash.drishti.rachana.model.Refresh.fromOption(raw).map(com.ash.drishti.rachana.model.Refresh::asOption).orElse(null);
+    }
+
+    private static Panel withOption(Panel p, String key, Object value) {
+        Map<String, Object> o = new LinkedHashMap<>(p.options());
+        o.put(key, value);
+        return new Panel(p.id(), p.kind(), p.title(), p.key(), p.code(), p.area(), p.infer(), p.columns(), p.body(), o, p.location(), p.parts(), p.wiring());
+    }
+
     private void size(Map<String, PNode> m, String key, int max, String unit, boolean nested, Map<String, Object> options) {
         PNode n = m.get(key);
         if (n == null || n.value() == null) {

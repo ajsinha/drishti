@@ -358,8 +358,7 @@ public final class Entitlements {
             if (pv.data() instanceof PanelData.Links l) {
                 List<PanelData.LinkItem> items = l.links().stream().map(i -> i.link() != null && !mayOpen(p, i.link().kind())
                         ? new PanelData.LinkItem(i.label(), i.text(), null, DENIED, "denied") : i).toList();
-                panels.add(new ViewModel.PanelView(pv.id(), pv.kind(), pv.title(), pv.code(), pv.key(), pv.area(), pv.inferred(),
-                        pv.explanation(), new PanelData.Links(items), pv.error(), pv.empty(), pv.span(), pv.height(), pv.denied()));
+                panels.add(pv.withData(new PanelData.Links(items)));
             } else {
                 panels.add(pv);
             }

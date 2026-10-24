@@ -45,6 +45,21 @@ class SettingsTest {
                 .contentType(MediaType.APPLICATION_JSON).content(body));
     }
 
+    /** The reader's refresh choices (SUTRA_NEXT.md 9): per screen, a patch replaces the screens it names and keeps the rest; checked. */
+    @Test
+    void refreshChoicesArePerScreenAndChecked() throws Exception {
+        String cy = "cy-" + System.nanoTime();
+        patchAs(cy, "{\"refresh\":{\"trade/my-desk\":{\"all\":true,\"panels\":{\"curve\":{\"paused\":true,\"every\":60}}}}}").andExpect(status().isOk())
+                .andExpect(jsonPath("$.refresh['trade/my-desk'].all").value(true))
+                .andExpect(jsonPath("$.refresh['trade/my-desk'].panels.curve.every").value(60));
+        patchAs(cy, "{\"refresh\":{\"book/other\":{\"all\":false}}}").andExpect(jsonPath("$.refresh['trade/my-desk'].all").value(true))
+                .andExpect(jsonPath("$.refresh['book/other'].all").value(false));
+        patchAs(cy, "{\"refresh\":{\"trade/my-desk\":null}}").andExpect(jsonPath("$.refresh['trade/my-desk']").doesNotExist());
+        patchAs(cy, "{\"refresh\":{\"not a screen\":{}}}").andExpect(status().isBadRequest());
+        patchAs(cy, "{\"refresh\":{\"trade/x\":{\"panels\":{\"p\":{\"every\":0}}}}}").andExpect(status().isBadRequest());
+        patchAs(cy, "{\"refresh\":{\"trade/x\":{\"all\":\"yes\"}}}").andExpect(status().isBadRequest());
+    }
+
     @Test
     void settingsArePerUserValidatedAndPatchedFieldByField() throws Exception {
         String ana = "ana-" + System.nanoTime();
