@@ -67,8 +67,19 @@ panels:
             carry: [LIMIT, USED]
         - { id: product_type, label: Product, bind: PRODUCT_TYPE, type: enum, options: [IRS, OIS, XCCY, FRA, ComSwap, Swaption], readonly: true,
             reason: "the product is fixed once booked", required: true, step: what }
-        - { id: notional, label: Notional, bind: NOTIONAL, type: number, min: 0, required: true, fmt: amount0, step: what }
+        - id: legal_entity
+          label: Booked in
+          bind: LEGAL_ENTITY
+          type: entity                        # a linked record of another pack's kind: its id kept, its name shown
+          readonly: true
+          reason: "the booking entity is fixed once booked"
+          step: who
+          options: { source: { pack: core, kind: legal-entity }, label: NAME }
+        - { id: notional, label: Notional, bind: NOTIONAL, type: money, currency: currency, min: 0, required: true, fmt: amount0, step: what }
         - { id: currency, label: Currency, bind: CURRENCY, type: enum, options: [USD, EUR, GBP, JPY, CHF, CAD], step: what }
+        - { id: upfront_fee, label: Upfront fee, bind: UPFRONT_FEE, type: money, currency: currency, min: 0, default: "=notional * 0.001",
+            fmt: amount0, step: what }
+        - { id: executed_at, label: Executed, bind: EXECUTED_AT, type: datetime, tz: Europe/London, step: what }
         - { id: maturity_date, label: Maturity, bind: MATURITY_DATE, type: date, min: today, required: true, step: what }
         - { id: trade_status, label: Status, bind: TRADE_STATUS, type: enum, options: [PENDING, VALIDATED, AMENDED], editable-by: [middle-office],
             new: false }

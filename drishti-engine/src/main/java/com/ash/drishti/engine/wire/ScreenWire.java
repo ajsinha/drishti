@@ -139,7 +139,41 @@ public final class ScreenWire {
         return FormViews.attach(p, v, s.redact(), FormViews.rows(p, el, s.ctx().eval()), src -> {
             Pair got = read(s, src, s.rawEval());
             return got.seen() instanceof DataNode.Arr a ? a.elements() : List.of();
-        });
+        }, src -> entities(s, src));
+    }
+
+    /**
+     * The records a form's entity field offers (SUTRA_NEXT.md 10): each with its id, as the viewer sees it; of a kind the viewer may
+     * open only, the ones a {@code where} keeps or a {@code search} finds (else the kind's first), at most the source's limit.
+     */
+    private List<Map.Entry<String, DataNode>> entities(Screen s, Wiring.Source src) {
+        if (!s.mayOpen().test(src.kind())) {
+            return List.of();
+        }
+        EvalContext lookup = s.rawEval();
+        AsOf at = s.asOf();
+        List<EntityRef> refs;
+        if (src.search() != null) {
+            String text = Values.text(soft(() -> Values.simplify(el.compile(src.search()).eval(lookup))));
+            refs = text == null || text.isBlank() ? List.of() : router.search(src.kind(), text, src.limit(), budget, at).stream().map(EntityHit::ref).toList();
+        } else {
+            refs = router.listAcross(src.kind(), WHERE_SCAN, budget, at, new SourceFailures()).hits().stream().map(EntityHit::ref).toList();
+        }
+        Map<EntityRef, EntityDocument> docs = refs.isEmpty() ? Map.of() : router.fetchAll(new LinkedHashSet<>(refs), budget, at);
+        var cond = src.where() == null ? null : el.compile(src.where());
+        List<Map.Entry<String, DataNode>> out = new ArrayList<>();
+        for (EntityRef r : refs) {
+            EntityDocument d = docs.get(r);
+            if (d == null || out.size() >= src.limit()) {
+                continue;
+            }
+            DataNode visible = s.redact().apply(d.data());
+            int i = out.size();
+            if (cond == null || Values.truthy(soft(() -> cond.eval(lookup.withRow(visible, i))))) {
+                out.add(Map.entry(r.id(), visible));
+            }
+        }
+        return out;
     }
 
     /** {@code v} refreshing as the Sutra's panel {@code p} says, if it does. */

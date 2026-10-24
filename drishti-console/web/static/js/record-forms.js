@@ -24,6 +24,10 @@
                     hints computed as people type (a limit's headroom from the chosen counterparty).
    Saving keeps a draft per person on the server (/api/drafts, checked again there with the same rules); 2.8.0 sends it through the
    connector. "You have N drafts on this page" lets a person resume or discard one; leaving with changes not saved asks first.
+   Field types beyond text, numbers, dates and choices: money (an amount typed as 1.5m, 250k or 1,000,000, shown grouped, with its
+   currency beside it: fixed, or the one another field holds), datetime (a date and a time, the time zone shown beside it) and entity (a
+   linked record picked by search: its id kept, its name shown, Open beside it). A field's default starts a new record: a value, or
+   =<expression> worked out as people type until they type over it.
    window.drishtiForms. */
 (function () {
   'use strict';
@@ -41,17 +45,34 @@
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) { n.className = cls; } if (text !== undefined) { n.textContent = text; } return n; }
   function btn(cls, text, on) { var b = el('button', cls, text); b.type = 'button'; if (on) { b.addEventListener('click', on); } return b; }
   function say(t) { live.textContent = t; }
-  function fmt(f, v) {
+  function numeric(f) { return f.type === 'number' || f.type === 'money'; }
+  /* a money field's currency: a fixed code, or what the field it names holds in vals */
+  function ccy(f, vals) { var c = f.currency || ''; return /^[A-Z]{3}$/.test(c) ? c : (vals && !X.empty(vals[c]) ? String(vals[c]) : ''); }
+  function fmt(f, v, vals) {
     if (X.empty(v)) { return ''; }
-    if (f.type === 'number') { var n = X.typed(f, v); return isNaN(n) ? String(v) : n.toLocaleString('en-US', { maximumFractionDigits: /0$/.test(f.fmt || '') ? 0 : 6 }); }
+    if (numeric(f)) {
+      var n = X.typed(f, v);
+      if (isNaN(n)) { return String(v); }
+      var s = n.toLocaleString('en-US', { maximumFractionDigits: /0$/.test(f.fmt || '') ? 0 : f.type === 'money' ? 2 : 6 }), c = f.type === 'money' && vals ? ccy(f, vals) : '';
+      return c ? s + ' ' + c : s;
+    }
+    if (f.type === 'datetime') { return String(v).replace('T', ' ').slice(0, 16) + ' ' + (f.tz || 'UTC'); }
     if (f.type === 'bool') { return v === true || v === 'true' ? 'Yes' : 'No'; }
-    if (f.type === 'enum' || f.type === 'lookup') { var o = (f.options || []).filter(function (x) { return String(x.value) === String(v); })[0]; return o ? (f.type === 'lookup' && o.label !== o.value ? o.value + ' · ' + o.label : o.label) : String(v); }
+    if (f.type === 'enum' || f.type === 'lookup' || f.type === 'entity') {
+      var o = (f.options || []).filter(function (x) { return String(x.value) === String(v); })[0];
+      if (!o) { return String(v); }
+      return f.type === 'enum' || o.label === o.value ? o.label : f.type === 'entity' ? o.label + ' · ' + o.value : o.value + ' · ' + o.label;
+    }
     return String(v);
   }
   function same(f, a, b) {
     if (X.empty(a) && X.empty(b)) { return true; }
-    if (f.type === 'number') { return X.typed(f, a) === X.typed(f, b); }
+    if (numeric(f)) { return X.typed(f, a) === X.typed(f, b); }
     return String(a) === String(b);
+  }
+  function valueOf(f, n) { return f.type === 'bool' ? n.checked : f.type === 'entity' ? (n.getAttribute('data-value') || '') : n.value; }
+  function paintCcy(st, root, vals) {
+    root.querySelectorAll('[data-ccy-of]').forEach(function (t) { var f = fieldOf(st, t.getAttribute('data-ccy-of')); if (f) { t.textContent = ccy(f, vals) || '—'; } });
   }
   function api(method, path, body) {
     return fetch('/api/drafts' + (path || ''), { method: method, credentials: 'same-origin',
@@ -70,7 +91,7 @@
   }
   function carries(st, values) {
     var out = {};
-    st.form.fields.forEach(function (f) { if (f.type === 'lookup') { var c = carry(st, f, values[f.id]); if (c) { out[f.id] = c; } } });
+    st.form.fields.forEach(function (f) { if (f.type === 'lookup' || f.type === 'entity') { var c = carry(st, f, values[f.id]); if (c) { out[f.id] = c; } } });
     return out;
   }
   function clock() { var d = new Date(); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
@@ -78,8 +99,68 @@
   function why(f) { return f.masked ? 'Hidden for you' : f.locked ? f.locked : f.readonly ? (f.reason ? 'read-only: ' + f.reason : 'locked: you can view, not change') : ''; }
 
   // ---- one field (beside and drawer) --------------------------------------------------------------------------------------
+  /* An entity field: a search box over the records it may link to (as the viewer may see them), the id kept and the name shown. */
+  function entityInput(st, f, value, onChange, id) {
+    var opts = f.options || [], pick = -1, shown = [];
+    var wrap = el('span', 'fm-entity');
+    var n = el('input', 'fm-in fm-entity-in'); n.type = 'search'; n.id = id; n.name = f.id; n.autocomplete = 'off';
+    n.setAttribute('data-field', f.id); n.setAttribute('role', 'combobox'); n.setAttribute('aria-autocomplete', 'list'); n.setAttribute('aria-expanded', 'false');
+    n.placeholder = f.placeholder || 'Search by name or id…';
+    if (f.required) { n.setAttribute('aria-required', 'true'); }
+    var list = el('ul', 'fm-entity-list'); list.id = id + '-list'; list.setAttribute('role', 'listbox'); list.hidden = true;
+    n.setAttribute('aria-controls', list.id);
+    var open = el('a', 'fm-entity-open', 'Open'); open.target = '_blank'; open.rel = 'noopener'; open.setAttribute('data-fm-open', f.id);
+    function label(v) { var o = opts.filter(function (x) { return String(x.value) === String(v); })[0]; return o ? (o.label !== o.value ? o.label + ' · ' + o.value : o.value) : (X.empty(v) ? '' : String(v)); }
+    function set(v) {
+      n.setAttribute('data-value', X.empty(v) ? '' : String(v)); n.value = label(v);
+      open.hidden = X.empty(v) || !f.entity;
+      if (!open.hidden) { open.href = '/v/' + encodeURIComponent(f.entity.kind) + '/' + encodeURIComponent(v); open.setAttribute('aria-label', 'Open ' + label(v)); }
+    }
+    function draw() {
+      var q = n.value.trim().toLowerCase();
+      if (q === label(n.getAttribute('data-value')).toLowerCase()) { q = ''; }
+      shown = opts.filter(function (o) { return !q || String(o.value).toLowerCase().indexOf(q) >= 0 || String(o.label).toLowerCase().indexOf(q) >= 0; }).slice(0, 8);
+      pick = Math.min(Math.max(pick, 0), shown.length - 1);
+      list.textContent = '';
+      shown.forEach(function (o, k) {
+        var li = el('li', k === pick ? 'on' : ''); li.id = id + '-o' + k; li.setAttribute('role', 'option'); li.setAttribute('aria-selected', k === pick ? 'true' : 'false');
+        li.setAttribute('data-value', o.value);
+        li.appendChild(el('b', '', o.label)); if (o.label !== o.value) { li.appendChild(el('span', 'fm-entity-id', ' ' + o.value)); }
+        li.addEventListener('mousedown', function (e) { e.preventDefault(); choose(o); });
+        list.appendChild(li);
+      });
+      if (!shown.length) { list.appendChild(el('li', 'fm-entity-none', opts.length ? 'Nothing matches “' + n.value.trim() + '”' : 'Nothing you may link to')); }
+      list.hidden = false; n.setAttribute('aria-expanded', 'true');
+      n.setAttribute('aria-activedescendant', pick >= 0 ? id + '-o' + pick : '');
+    }
+    function close() { list.hidden = true; n.setAttribute('aria-expanded', 'false'); n.removeAttribute('aria-activedescendant'); }
+    function choose(o) { set(o.value); close(); onChange(o.value); }
+    n.addEventListener('input', function () { pick = 0; draw(); });
+    n.addEventListener('click', function () { if (list.hidden) { draw(); } });
+    n.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (list.hidden) { draw(); return; }
+        pick = shown.length ? (pick + (e.key === 'ArrowDown' ? 1 : shown.length - 1)) % shown.length : -1; draw();
+      } else if (e.key === 'Enter' && !list.hidden && shown[pick]) {
+        e.preventDefault(); e.stopImmediatePropagation(); choose(shown[pick]);
+      } else if (e.key === 'Escape' && !list.hidden) {
+        e.preventDefault(); e.stopImmediatePropagation(); close(); set(n.getAttribute('data-value'));
+      }
+    });
+    n.addEventListener('blur', function () {
+      close();
+      if (!n.value.trim() && n.getAttribute('data-value')) { set(''); onChange(''); } else { set(n.getAttribute('data-value')); }
+    });
+    set(value);
+    wrap.appendChild(n); wrap.appendChild(open); wrap.appendChild(list);
+    n.fmWrap = wrap;
+    return n;
+  }
+
   function input(st, f, value, onChange) {
     var n, id = 'fm-' + st.id + '-' + f.id + '-' + (++st.seq);
+    if (f.type === 'entity') { return entityInput(st, f, value, onChange, id); }
     if (f.type === 'enum' || f.type === 'lookup') {
       n = el('select', 'fm-in');
       n.appendChild(new Option(f.type === 'lookup' ? 'Choose…' : '', ''));
@@ -91,8 +172,8 @@
       n = el('input', 'fm-check'); n.type = 'checkbox'; n.checked = value === true || value === 'true';
     } else {
       n = el('input', 'fm-in');
-      n.type = f.type === 'date' ? 'date' : 'text';
-      if (f.type === 'number') { n.inputMode = 'decimal'; n.value = X.empty(value) ? '' : fmt(f, value); } else { n.value = X.empty(value) ? '' : String(value); }
+      n.type = f.type === 'date' ? 'date' : f.type === 'datetime' ? 'datetime-local' : 'text';
+      if (numeric(f)) { n.inputMode = 'decimal'; n.value = X.empty(value) ? '' : fmt(f, value); } else { n.value = X.empty(value) ? '' : String(value).slice(0, f.type === 'datetime' ? 16 : undefined); }
     }
     if (f.placeholder && 'placeholder' in n) { n.placeholder = f.placeholder; }
     n.id = id; n.name = f.id; n.setAttribute('data-field', f.id);
@@ -100,6 +181,18 @@
     n.addEventListener(f.type === 'bool' || n.tagName === 'SELECT' ? 'change' : 'input', function () {
       onChange(f.type === 'bool' ? n.checked : n.value);
     });
+    if (f.type === 'money' || f.type === 'datetime') {         // the currency or the time zone beside the value
+      var w = el('span', 'fm-adorn'), unit = el('span', 'fm-unit', f.type === 'money' ? (ccy(f, st.vals) || '—') : (f.tz || 'UTC'));
+      unit.title = f.type === 'money' ? 'Currency' : 'Time zone';
+      unit.id = id + '-unit'; n.setAttribute('aria-describedby', unit.id);
+      if (f.type === 'money') {
+        unit.setAttribute('data-ccy-of', f.id);
+        n.placeholder = n.placeholder || '1.5m, 250k or 1,000,000';
+        n.addEventListener('blur', function () { var t = X.typed(f, n.value); if (n.value.trim() && typeof t === 'number' && !isNaN(t)) { n.value = fmt(f, t); } });
+      }
+      w.appendChild(n); w.appendChild(unit);
+      n.fmWrap = w;
+    }
     return n;
   }
 
@@ -117,15 +210,15 @@
     if (!editable(f, isNew)) {
       box.classList.add('fm-locked');
       lab.appendChild(el('span', 'fm-why', ' (' + why(f) + ')'));
-      var ro = el('div', 'fm-ro mono', fmt(f, value) || '—'); ro.setAttribute('aria-readonly', 'true'); ro.setAttribute('data-field', f.id);
+      var ro = el('div', 'fm-ro mono', fmt(f, value, st.vals) || '—'); ro.setAttribute('aria-readonly', 'true'); ro.setAttribute('data-field', f.id);
       box.appendChild(ro);
       return box;
     }
     var n = input(st, f, value, onChange);
     lab.htmlFor = n.id;
-    box.appendChild(n);
+    box.appendChild(n.fmWrap || n);
     var msg = el('div', 'fm-msgs'); msg.id = n.id + '-msg'; msg.setAttribute('data-msgs', f.id);
-    n.setAttribute('aria-describedby', msg.id);
+    n.setAttribute('aria-describedby', ((n.getAttribute('aria-describedby') || '') + ' ' + msg.id).trim());
     box.appendChild(msg);
     return box;
   }
@@ -238,6 +331,7 @@
     var key = recordKey || base.key || '';
     var s = { row: row, key: key, was: was, values: values, dirty: false, saved: !!given };
     st.side = s;
+    st.vals = values;
     st.sec.classList.add('fm-beside-open');
     st.sec.setAttribute('data-editing', '');
     var aside = el('aside', 'fm-side'); aside.setAttribute('aria-label', 'Edit ' + key); aside.setAttribute('data-fm-side', key);
@@ -281,7 +375,7 @@
       if (s.dirty) { bdg.appendChild(badge('Draft · not saved')); } else if (s.saved) { bdg.appendChild(badge('Draft saved' + (s.at ? ' ' + s.at : ''), 'saved')); }
       if (extra && extra.length) { showIssues(aside, issuesOf(), general); }
     }
-    function refresh() { showIssues(aside, issuesOf(), general); paint(); }
+    function refresh() { showIssues(aside, issuesOf(), general); paintCcy(st, aside, values); paint(); }
     s.paint = paint;
     refresh();
     var first = aside.querySelector('.fm-in, .fm-check');
@@ -339,16 +433,17 @@
     var f = fieldOf(st, td.getAttribute('data-fcell')), tr = td.closest('tr'), i = rowIndex(st, tr);
     var r = st.form.rows[i] || { values: {} }, ch = st.cells.changes[i] || {};
     var cur = f.id in ch ? ch[f.id] : r.values[f.id];
+    st.vals = Object.assign({}, r.values, ch);
     var n = input(st, f, cur, function () {});
     n.classList.add('fm-cell-in');
     n.setAttribute('aria-label', f.label);
-    td.textContent = ''; td.appendChild(n); n.focus(); if (n.select) { n.select(); }
+    td.textContent = ''; td.appendChild(n.fmWrap || n); n.focus(); if (n.select) { n.select(); }
     var done = false;
     function finish(keep, move) {
       if (done) { return; }
       done = true;
       if (keep) {
-        var v = f.type === 'bool' ? n.checked : n.value;
+        var v = valueOf(f, n);
         st.cells.changes[i] = st.cells.changes[i] || {};
         if (same(f, v, r.values[f.id])) { delete st.cells.changes[i][f.id]; } else { st.cells.changes[i][f.id] = v; st.cells.saved = false; }
         if (!Object.keys(st.cells.changes[i]).length) { delete st.cells.changes[i]; }
@@ -385,8 +480,8 @@
         td.classList.remove('fm-changed', 'fm-bad', 'fm-warned');
         if (f.id in ch) {
           n++;
-          td.textContent = fmt(f, ch[f.id]);
-          var w = el('small', 'fm-was', 'was ' + (fmt(f, r.values[f.id]) || '—'));
+          td.textContent = fmt(f, ch[f.id], Object.assign({}, r.values, ch));
+          var w = el('small', 'fm-was', 'was ' + (fmt(f, r.values[f.id], r.values) || '—'));
           td.appendChild(w);
           td.classList.add('fm-changed');
           var mine = issues.filter(function (is) { return is.field === f.id; });
@@ -421,7 +516,7 @@
       var r = st.form.rows[i] || { values: {} }, ch = c.changes[i], vals = {};
       Object.keys(ch).forEach(function (fid) {
         var f = fieldOf(st, fid);
-        list.appendChild(el('li', '', (r.key || '') + ' · ' + f.label + ': ' + (fmt(f, r.values[fid]) || '—') + ' → ' + fmt(f, ch[fid])));
+        list.appendChild(el('li', '', (r.key || '') + ' · ' + f.label + ': ' + (fmt(f, r.values[fid], r.values) || '—') + ' → ' + fmt(f, ch[fid], Object.assign({}, r.values, ch))));
         vals[fid] = X.typed(f, ch[fid]);
       });
       cellIssues(st, i).forEach(function (is) { list.appendChild(el('li', 'fm-msg fm-' + (is.severity === 'warn' ? 'warn' : 'error'), (r.key || '') + ': ' + is.message)); if (is.severity === 'warn') { warns++; } });
@@ -457,7 +552,14 @@
     var values = {};
     Object.keys(given || {}).forEach(function (k) { values[k] = given[k]; });
     var at = Math.max(0, steps.map(function (s) { return s.id; }).indexOf(atStep));
-    var d = st.drawer = { values: values, at: at, done: {}, dirty: false };
+    var auto = {};                                   // fields whose default is worked out (=notional * 0.001) until people type over it
+    fields.forEach(function (f) {
+      var dv = f['default'];
+      if (dv === undefined || dv === null || !X.empty(values[f.id])) { return; }
+      if (typeof dv === 'string' && dv.charAt(0) === '=') { auto[f.id] = dv.slice(1); } else { values[f.id] = dv; }
+    });
+    st.vals = values;
+    var d = st.drawer = { values: values, at: at, done: {}, dirty: false, auto: auto };
     if (draftId) { st.draftIds['new'] = draftId; }
     for (var k = 0; k < at; k++) { d.done[k] = true; }
     var scrim = el('div', 'fm-scrim'); scrim.setAttribute('data-fm-scrim', '');
@@ -489,13 +591,23 @@
       });
       body.textContent = '';
       var before = [];
-      for (var j = 0; j < d.at; j++) { stepFields(j).forEach(function (f) { if (!X.empty(values[f.id])) { before.push(f.label + ' ' + fmt(f, values[f.id])); } }); }
+      for (var j = 0; j < d.at; j++) { stepFields(j).forEach(function (f) { if (!X.empty(values[f.id])) { before.push(f.label + ' ' + fmt(f, values[f.id], values)); } }); }
       if (before.length) { body.appendChild(el('p', 'fm-sofar', 'So far: ' + before.join(' · ') + ' · in ' + page.id + '.')); }
       var mine = stepFields(d.at);
-      mine.forEach(function (f) { body.appendChild(fieldBox(st, f, values[f.id], true, function (v) { values[f.id] = v; d.dirty = true; live(); })); });
+      mine.forEach(function (f) {
+        var box = fieldBox(st, f, values[f.id], true, function (v) {
+          if (auto[f.id]) { delete auto[f.id]; var note = box.querySelector('[data-fm-auto]'); if (note) { note.remove(); } }
+          values[f.id] = v; d.dirty = true; live();
+        });
+        if (auto[f.id] && editable(f, true)) {
+          var note = el('p', 'fm-auto', 'Worked out: ' + auto[f.id] + ' · type to change it'); note.setAttribute('data-fm-auto', f.id);
+          box.appendChild(note);
+        }
+        body.appendChild(box);
+      });
       if (lastStep()) {
         var sum = el('dl', 'fm-summary');
-        fields.forEach(function (f) { if (stepOf(f) !== steps[d.at].id) { sum.appendChild(el('dt', '', f.label)); sum.appendChild(el('dd', 'mono', fmt(f, values[f.id]) || '—')); } });
+        fields.forEach(function (f) { if (stepOf(f) !== steps[d.at].id) { sum.appendChild(el('dt', '', f.label)); sum.appendChild(el('dd', 'mono', fmt(f, values[f.id], values) || '—')); } });
         body.appendChild(sum);
       }
       var hints = el('div', 'fm-hints'); hints.setAttribute('data-fm-hints', ''); body.appendChild(hints);
@@ -523,7 +635,20 @@
       var first = body.querySelector('.fm-in, .fm-check');
       if (first) { first.focus(); }
     }
+    function defaults() {
+      var tv = {};
+      fields.forEach(function (f) { tv[f.id] = X.typed(f, values[f.id]); });
+      Object.keys(auto).forEach(function (fid) {
+        var f = fieldOf(st, fid), r = X.evaluate(auto[fid], tv);
+        values[fid] = r === null || r === undefined || (typeof r === 'number' && !isFinite(r)) ? '' : typeof r === 'number' ? Math.round(r * 1e6) / 1e6 : r;
+        tv[fid] = X.typed(f, values[fid]);
+        var inp = body.querySelector('[data-field="' + fid + '"]');
+        if (inp && 'value' in inp && document.activeElement !== inp) { inp.value = X.empty(values[fid]) ? '' : numeric(f) ? fmt(f, values[fid]) : String(values[fid]); }
+      });
+    }
     function live() {
+      defaults();
+      paintCcy(st, body, values);
       var is = issues(d.at).filter(function (x) { return x.severity === 'warn' || touched(x.field); });
       showIssues(body, is, d.general);
       var h = body.querySelector('[data-fm-hints]');

@@ -33,7 +33,9 @@ import java.util.function.Function;
  * A panel's {@code form:} as the console draws it (SUTRA_NEXT.md 10): the fields with what this viewer may do with each (a masked
  * field is marked and carries no value), the rules and hints as written (the browser checks them as people type; the drafts API
  * checks them again), each lookup's choices read as the viewer, and, for a table edited beside or in its cells, every row's values
- * (masked ones left out). Roles are applied by the server ({@link #forRoles}), which knows who asks.
+ * (masked ones left out). Roles are applied by the server ({@link #forRoles}), which knows who asks. An entity field's choices are the
+ * records of its kind with their ids ({@code entities}), each shown by its label; a record whose kept value or label is masked offers
+ * its id, never the masked value.
  */
 public final class FormViews {
 
@@ -55,6 +57,15 @@ public final class FormViews {
      */
     public static PanelView attach(Panel p, PanelView v, java.util.function.UnaryOperator<DataNode> redact, DataNode rows,
             Function<Wiring.Source, List<DataNode>> lookup) {
+        return attach(p, v, redact, rows, lookup, src -> List.of());
+    }
+
+    /**
+     * As {@link #attach(Panel, PanelView, java.util.function.UnaryOperator, DataNode, Function)}, with the records an entity field
+     * offers: {@code entities} gives (id, the record as the viewer sees it) for a source.
+     */
+    public static PanelView attach(Panel p, PanelView v, java.util.function.UnaryOperator<DataNode> redact, DataNode rows,
+            Function<Wiring.Source, List<DataNode>> lookup, Function<Wiring.Source, List<Map.Entry<String, DataNode>>> entities) {
         if (v == null || p.form().isEmpty()) {
             return v;
         }
@@ -85,6 +96,14 @@ public final class FormViews {
             put(m, "step", fd.step());
             m.put("editableBy", fd.editableBy());
             m.put("onNew", fd.onNew());
+            put(m, "currency", fd.currency());
+            if (fd.type().equals("datetime")) {
+                m.put("tz", fd.zone());
+            }
+            put(m, "default", fd.defaultValue());
+            if (fd.type().equals("entity")) {
+                m.put("entity", Map.of("kind", fd.lookup().source().kind(), "pack", fd.lookup().source().pack() == null ? "" : fd.lookup().source().pack()));
+            }
             if (fd.readonly()) {
                 m.put("readonly", true);
                 put(m, "reason", fd.reason());
@@ -101,7 +120,7 @@ public final class FormViews {
             if (!fd.options().isEmpty()) {
                 m.put("options", fd.options().stream().map(o -> Map.of("value", o.value(), "label", o.label())).toList());
             } else if (fd.lookup() != null && !hidden) {
-                m.put("options", choices(fd.lookup(), lookup));
+                m.put("options", fd.type().equals("entity") ? records(fd.lookup(), entities) : choices(fd.lookup(), lookup));
             }
             fields.add(m);
         }
@@ -201,6 +220,44 @@ public final class FormViews {
                 continue;
             }
             DataNode lb = d.get(l.label());
+            Map<String, Object> carry = new LinkedHashMap<>();
+            for (String c : l.carry()) {
+                DataNode cv = d.get(c);
+                carry.put(c, cv == null ? null : cv.isMasked() ? DataNode.MASK : Values.simplify(cv));
+            }
+            Map<String, Object> o = new LinkedHashMap<>();
+            o.put("value", value);
+            o.put("label", lb == null || lb.isMasked() || Values.simplify(lb) == null ? value : Values.text(Values.simplify(lb)));
+            o.put("carry", carry);
+            out.add(o);
+        }
+        return out;
+    }
+
+    /** An entity field's choices: each record's id (or its {@code value} field) and label, its carried values as the viewer sees them. */
+    private static List<Map<String, Object>> records(Form.Lookup l, Function<Wiring.Source, List<Map.Entry<String, DataNode>>> entities) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        List<Map.Entry<String, DataNode>> found;
+        try {
+            found = entities.apply(l.source());
+        } catch (RuntimeException e) {
+            return out;
+        }
+        for (Map.Entry<String, DataNode> e : found) {
+            DataNode d = e.getValue();
+            String value = e.getKey();
+            if (l.value() != null) {
+                DataNode v = d.get(l.value());
+                if (v == null || v.isMasked() || Values.simplify(v) == null) {
+                    continue;                                  // a masked value is never offered
+                }
+                value = Values.text(Values.simplify(v));
+            }
+            if (value == null || !seen.add(value)) {
+                continue;
+            }
+            DataNode lb = l.label() == null ? null : d.get(l.label());
             Map<String, Object> carry = new LinkedHashMap<>();
             for (String c : l.carry()) {
                 DataNode cv = d.get(c);

@@ -279,6 +279,7 @@ async def state(request: Request, draft: str, kind: str = "", id: str = ""):
             tables.append({"id": e.get("id"), "title": part["title"], "fields": part["table"]["fields"],
                            "click": bool(e.get("children")), "place": ((e.get("children") or [{}])[0] or {}).get("place", ""),
                            "columns": [f for f in chosen if f], "form": designer_forms.form_of(e),
+                           "links": [f for f in chosen if f and f in cat.get("links", {})],
                            "shows": await _shows(request, record, e.get("rows"), cat)})
         parts.append(part)
     for t in tables:                                  # an existing panel of the page, moved under the table
@@ -331,7 +332,8 @@ async def op(request: Request, draft: str):
         elif what == "unclick":
             designer.unclick(doc, str(body.get("panel") or ""), keep)
         elif what == "form":                         # Let people edit this table (SUTRA_NEXT.md 10)
-            designer_forms.edit(doc, str(body.get("panel") or ""), str(body.get("mode") or ""), body.get("fields"), bool(body.get("new")))
+            designer_forms.edit(doc, str(body.get("panel") or ""), str(body.get("mode") or ""), body.get("fields"), bool(body.get("new")),
+                                body.get("types"), await link_catalog(request))
         elif what == "refresh":
             designer.refresh(doc, body.get("index"), body.get("seconds", 0))
         elif what == "add":
