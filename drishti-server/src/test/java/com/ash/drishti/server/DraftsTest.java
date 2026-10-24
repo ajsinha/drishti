@@ -190,5 +190,8 @@ class DraftsTest {
         values.remove("notional");
         JsonNode e = json.readTree(send("POST", "/api/v1/drafts", as("tia", "trader"), draft, 422));
         assertThat(e.path("issues").get(0).path("message").asText()).isEqualTo("Notional is required");
+        Map<String, Object> early = Map.of("kind", "portfolio-trades", "id", "BOOK-RATES-2", "sutra", "book-desk", "panel", "trades", "mode", "new",
+                "step", "who", "records", List.of(Map.of("values", Map.of("counterparty", "CP-ALDERSHOT"))));
+        send("POST", "/api/v1/drafts", as("tia", "trader"), early, 201);          // a draft saved at the first step is checked up to it
     }
 }

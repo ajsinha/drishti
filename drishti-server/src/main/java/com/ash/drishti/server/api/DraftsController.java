@@ -77,6 +77,14 @@ public class DraftsController {
     private final AuditLog audit;
     private final ObjectMapper json = new ObjectMapper();
 
+    /** The Designs, for a page drawn with the person's own Design (absent in a test that makes the controller itself). */
+    private com.ash.drishti.identity.design.DesignService designs;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void designs(com.ash.drishti.identity.design.DesignService d) {
+        this.designs = d;
+    }
+
     public DraftsController(PreferenceStore store, SutraRegistry sutras, Entitlements entitlements, AuditLog audit) {
         this.store = store;
         this.sutras = sutras;
@@ -148,12 +156,14 @@ public class DraftsController {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "a draft stays on its page and panel");
         }
         entitlements.requireOpen(p, kind);
-        Form form = form(sutra, panelId);
+        String design = body.path("design").asText("");
+        Form form = form(p, design, sutra, panelId);
         JsonNode records = body.path("records");
         if (!records.isArray() || records.isEmpty() || records.size() > MAX_RECORDS || !mode.equals("cells") && records.size() != 1) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "a draft has one record (" + MAX_RECORDS + " for edited cells)");
         }
         LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        List<String> roles = entitlements.formRoles(p);
         List<Map<String, Object>> problems = new ArrayList<>();
         List<Map<String, Object>> warnings = new ArrayList<>();
         int changed = 0;
@@ -173,7 +183,7 @@ public class DraftsController {
                 if (!differs) {
                     continue;
                 }
-                if (mode.equals("new") ? !form.enterableBy(f, p.roles()) : !form.editableBy(f, p.roles())) {
+                if (mode.equals("new") ? !form.enterableBy(f, roles) : !form.editableBy(f, roles)) {
                     audit.record(p.user(), "form-draft-refused", kind + "/" + sutra + "#" + panelId, f.id() + " is locked");
                     throw new DrishtiException(ErrorCode.FORBIDDEN, f.label() + " is " + (f.readonly() ? "read-only" : "locked: you can view, not change"));
                 }
@@ -181,7 +191,8 @@ public class DraftsController {
                 changed++;
             }
             if (mode.equals("new")) {
-                form.fields().stream().filter(f -> form.enterableBy(f, p.roles()) &&!entitlements.masked(p, f.recordField()))
+                Set<String> reached = reached(form, body.path("step").asText(""));   // a new record is checked up to the step it reached
+                form.fields().stream().filter(f -> reached.contains(stepOf(form, f)) && form.enterableBy(f, roles) && !entitlements.masked(p, f.recordField()))
                         .forEach(f -> checked.add(f.id()));
             }
             Map<String, Object> all = new LinkedHashMap<>(was);
@@ -198,8 +209,8 @@ public class DraftsController {
         }
         if (!problems.isEmpty()) {
             ObjectNode err = json.createObjectNode();
-            err.put("error", ErrorCode.FORM_INVALID.code());
-            err.put("message", problems.get(0).get("message").toString());
+            err.put("code", ErrorCode.FORM_INVALID.code());
+            err.put("detail", problems.get(0).get("message").toString());
             err.set("issues", json.valueToTree(problems));
             err.set("warnings", json.valueToTree(warnings));
             return ResponseEntity.status(422).body(err);
@@ -209,6 +220,7 @@ public class DraftsController {
         d.put("kind", kind);
         d.put("id", body.path("id").asText(""));
         d.put("sutra", sutra);
+        d.put("design", design);
         d.put("panel", panelId);
         d.put("mode", mode);
         d.put("title", body.path("title").asText(form.title() == null ? panelId : form.title()));
@@ -224,8 +236,18 @@ public class DraftsController {
         return ResponseEntity.status(before == null ? 201 : 200).body(d);
     }
 
-    private Form form(String sutra, String panelId) {
-        var s = sutras.latest(sutra).orElseThrow(() -> new DrishtiException(ErrorCode.SUTRA_NOT_FOUND, "no Sutra '" + sutra + "'"));
+    /** The form of a panel: of the person's own Design when the page is drawn with one ({@code design}), else of the named Sutra. */
+    private Form form(Principal who, String design, String sutra, String panelId) {
+        com.ash.drishti.rachana.model.Sutra s;
+        if (!design.isBlank() && designs != null) {
+            var d = designs.get(who.user(), design);
+            if (d.sutra == null || d.sutra.isBlank()) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the design '" + design + "' has no Sutra yet");
+            }
+            s = sutras.check(d.sutra);
+        } else {
+            s = sutras.latest(sutra).orElseThrow(() -> new DrishtiException(ErrorCode.SUTRA_NOT_FOUND, "no Sutra '" + sutra + "'"));
+        }
         for (Panel pn : s.panels()) {
             if (pn.id().equals(panelId)) {
                 return pn.form().orElseThrow(() -> new DrishtiException(ErrorCode.BAD_REQUEST, "panel '" + panelId + "' has no form"));
@@ -239,6 +261,26 @@ public class DraftsController {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "a draft id is d- and 12 hex digits");
         }
         return store.get(p.user(), NS, draft).orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no draft " + draft));
+    }
+
+    /** The drawer's steps up to {@code step} (every step when it names none, or the form has none). */
+    private static Set<String> reached(Form form, String step) {
+        Set<String> out = new HashSet<>();
+        out.add("");
+        for (Form.Step s : form.steps()) {
+            out.add(s.id());
+            if (s.id().equals(step)) {
+                return out;
+            }
+        }
+        return out;
+    }
+
+    private static String stepOf(Form form, Form.Field f) {
+        if (form.steps().isEmpty()) {
+            return "";
+        }
+        return f.step() != null && form.steps().stream().anyMatch(s -> s.id().equals(f.step())) ? f.step() : form.steps().get(0).id();
     }
 
     private static String subject(JsonNode d) {

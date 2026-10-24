@@ -87,7 +87,7 @@ public final class FormViews {
             m.put("onNew", fd.onNew());
             if (fd.readonly()) {
                 m.put("readonly", true);
-                m.put("reason", fd.reason() == null ? "read-only" : fd.reason());
+                put(m, "reason", fd.reason());
             }
             boolean hidden = masked(redact, fd.recordField());
             if (hidden) {
@@ -159,7 +159,7 @@ public final class FormViews {
 
     /**
      * The form of a panel for a person holding {@code roles}: a field they may not edit (its {@code editable-by}, else the form's
-     * {@code roles}) is locked and says so; a masked one stays masked.
+     * {@code roles}) is locked and says so; a masked one stays masked. {@code *} holds every role (sign-in off).
      */
     @SuppressWarnings("unchecked")
     public static Map<String, Object> forRoles(Map<String, Object> form, List<String> roles) {
@@ -172,7 +172,7 @@ public final class FormViews {
             List<String> who = (List<String>) f.getOrDefault("editableBy", List.of());
             List<String> need = who.isEmpty() ? formRoles : who;
             Map<String, Object> m = new LinkedHashMap<>(f);
-            if (!need.isEmpty() && roles.stream().noneMatch(need::contains)) {
+            if (!need.isEmpty() && !roles.contains("*") && roles.stream().noneMatch(need::contains)) {
                 m.put("locked", LOCKED);
             }
             fields.add(m);

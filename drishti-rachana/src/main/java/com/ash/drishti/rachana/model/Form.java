@@ -429,7 +429,7 @@ public record Form(String title, String key, String edit, String create, String 
 
     private boolean allowed(Field f, List<String> held) {
         List<String> who = f.editableBy().isEmpty() ? roles : f.editableBy();
-        return who.isEmpty() || held.stream().anyMatch(who::contains);
+        return who.isEmpty() || held.contains("*") || held.stream().anyMatch(who::contains);
     }
 
     /**
