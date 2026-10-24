@@ -66,7 +66,7 @@ booking system on the last day are the same on every machine. `MX-20000001` is c
 tutorial that shows it live was captured before that. For history, the trades amended most (ten times each) are ENDUR `1000279` and `1001049`, CALYPSO
 `CLY-4000509` and MUREX `MX-30001745`.
 
-The pictures are made, not drawn: `tools/docs/screenshots.py --guide t01` (to `t18`) drives a scratch stack with a real browser and writes them to `img/`. When the screens change, run it again.
+The pictures are made, not drawn: `tools/docs/screenshots.py --guide t01` (to `t19`; the pictures of tutorials 20 to 22 were captured separately) drives a scratch stack with a real browser and writes them to `img/`. When the screens change, run it again.
 
 ## The sample data
 
@@ -81,9 +81,12 @@ The pictures are made, not drawn: `tools/docs/screenshots.py --guide t01` (to `t
 | `data/live-desk.mq.yaml`, `data/night-desk.report.yaml` | a model query over the live table, with its SQL; a board of three live tiles (a report with a board page, 2.4.0) | tutorial 12 |
 | `data/rates-trades.dataset.yaml`, `data/trades-model.model.yaml`, `data/trades-report.report.yaml` | a dataset, the model over it and the report on the model, to review, certify and change | tutorial 13 |
 | `data/notional-by-desk.python.yaml`, `data/desk-python.report.yaml` | a Python visual and a report that uses it | tutorial 14 |
+| `data/endur-trades-cleaned.python.yaml`, `data/endur-trades-cleaned.dataset.yaml` | the Python item the Transform editor writes for ENDUR trades, cleaned, and its dataset | tutorial 14 |
 | `data/ai/mock.yaml`, `data/ai/local-model.yaml` | the mock AI provider with rules for the tutorials, and a provider with nothing listening | tutorial 15 |
 | `data/world-economics-21.dataset.yaml` | the World economics dataset in its 2.1 form, which the upgrade converts to a model | tutorial 17 |
 | `data/pools.py` | the connection-pool sum | tutorial 17 |
+| `data/cp-risk.model.yaml`, `data/cp-risk-view.report.yaml`, `data/cp-table.python.yaml`, `data/cp-table.dataset.yaml`, `data/cp-risk-extracts.notebook.yaml` | one model with two facts, a report on it, a Python Transform and its dataset over two model queries, and the Analyse notebook of the join trap | tutorial 18 |
+| `data/desk-params.model.yaml`, `data/monthly-statement.report.yaml` | a model with two field parameters and a statement on it | tutorial 20 |
 
-Everything else is the demo lakes (`data/delta`, built by `lake demo`) and the packs you already have. The `world-economy` packs hold published data from the World Bank, UNDP, the CIA World Factbook and the IMF
+Everything else is the demo lakes (`data/delta`, built by `lake demo`) and the packs you already have. The `world-economy` pack holds published data from the World Bank, UNDP, the CIA World Factbook and the IMF
 ([REAL_DATA.md](../guides/REAL_DATA.md)); the IMF part is for internal demonstration only, so the tutorials use the world-economy pack.

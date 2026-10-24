@@ -15,7 +15,9 @@
 -->
 # The Drishti database: one store for everything Drishti owns
 
-Status: **design, not built.** Built as **2.7.0 item 0**, before write-back (decided by the product owner, 2026-10-20). Related:
+Status: **design, not built.** To be built as **item 0 of write-back (2.8.0)**, before write-back itself (decided by the product owner,
+2026-10-20, as 2.7.0 item 0; write-back moved to 2.8.0 on 2026-10-21). The content store ([CONTENT_STORE.md](CONTENT_STORE.md),
+unreleased) was front-loaded from it. Related:
 [WRITE_BACK.md](WRITE_BACK.md) (the edit log, lanes and overlays that live here), [DRISHTI_NET.md](DRISHTI_NET.md) (several servers),
 [CONFIGURATION.md](../admin/CONFIGURATION.md) (the settings).
 
@@ -25,12 +27,12 @@ Status: **design, not built.** Built as **2.7.0 item 0**, before write-back (dec
 3. [SQLite or PostgreSQL](#3-sqlite-or-postgresql) · 4. [No migrations: two complete schema files](#4-no-migrations-two-complete-schema-files) ·
 5. [The schema version stamp](#5-the-schema-version-stamp) · 6. [Switching and upgrading: `db copy`](#6-switching-and-upgrading-db-copy) ·
 7. [Configuration: `config/db/database.yaml`](#7-configuration-configdbdatabaseyaml) · 8. [Several servers](#8-several-servers) ·
-9. [Today and the change](#9-today-and-the-change) · 10. [Build plan (2.7.0 item 0)](#10-build-plan-270-item-0) · 11. [Tests](#11-tests) ·
+9. [Today and the change](#9-today-and-the-change) · 10. [Build plan (2.8.0 item 0)](#10-build-plan-280-item-0) · 11. [Tests](#11-tests) ·
 12. [Decisions (product owner, 2026-10-20)](#12-decisions-product-owner-2026-10-20)
 
 ## 1. The decision
 
-All relational state that Drishti owns lives in **one database**, the *Drishti database*. Identity already lives in one; from 2.7.0
+All relational state that Drishti owns lives in **one database**, the *Drishti database*. Identity already lives in one; from 2.8.0
 the write-back edit log, its lanes, overlays and Drishti-owned data live in the same one, and so does anything relational added later.
 There is no second store to back up, secure, size or switch.
 
@@ -44,7 +46,7 @@ There is no second store to back up, secure, size or switch.
   drishti-server ────▶ │ identity: users, roles, packs, preferences, tokens, sessions, audit, notes,  │
   (one pool,           │           shares, threads, alerts, BI workspaces …           (today)        │
    config/db/          │ write-back: drishti_edit_lane, drishti_edit_log, overlays, owned kinds      │
-   database.yaml)      │                                                              (2.7.0)        │
+   database.yaml)      │                                                              (2.8.0)        │
                        │ drishti_schema: the version stamp (section 5)                               │
                        └────────────── SQLite file (default)  or  PostgreSQL (long term) ────────────┘
 
@@ -58,7 +60,7 @@ There is no second store to back up, secure, size or switch.
 | Identity: users, roles, packs per user, preferences, API tokens, sessions, the audit trail | **DuckDB**, the BI engine: it is compute over the lakes and BI files, rebuilt from them, never a system of record |
 | Collaboration: notes, shares, threads, comments, mentions, inbox and outbox | The **lakes** (Delta, Iceberg): source data, written only by the loader (`lake build`, `lake publish`) |
 | BI workspaces, items, versions, usage and BI runs only with `drishti.bi.store: jpa` / `drishti.bi.runs.store: local` (one node); by default they live in the content store and the `drishti_bi_*` and `drishti_bi_run*` tables are legacy, read once by the import and kept ([CONTENT_STORE.md](CONTENT_STORE.md) section 9); the content store's table `drishti_content` when `config/store/store.yaml` says `sqlite` or `postgres` ([CONTENT_STORE.md](CONTENT_STORE.md)) | **Caches** (RocksDB, layout and fingerprint caches): derived, safe to delete |
-| Write-back (2.7.0): `drishti_edit_lane`, `drishti_edit_log`, overlays, Drishti-owned kinds ([WRITE_BACK.md](WRITE_BACK.md) sections 5, 7, 11) | **Source systems** (ENDUR, CALYPSO, MUREX, connector databases): Drishti reads them, and writes to them only through a connector's `writes:` |
+| Write-back (2.8.0): `drishti_edit_lane`, `drishti_edit_log`, overlays, Drishti-owned kinds ([WRITE_BACK.md](WRITE_BACK.md) sections 5, 7, 11) | **Source systems** (ENDUR, CALYPSO, MUREX, connector databases): Drishti reads them, and writes to them only through a connector's `writes:` |
 | Anything relational added later | Files that are documents by nature (Sutras, packs, connector and net configuration): they stay files under `config/` |
 
 The rule for a new feature: **state Drishti owns and must not lose, with rows and keys, goes in the Drishti database.** A feature
@@ -122,7 +124,7 @@ At start, after the idempotent apply:
 | empty (new) | builds it from the complete schema and stamps it with the files' version |
 | stamped with the files' version | starts |
 | stamped with another version (older or newer) | **refuses to start**, naming both versions and the command: `the Drishti database was made by schema 4; this server needs schema 5. Stop the servers and run: drishti.py db copy --from config/db/database.yaml --to <new database.yaml>` |
-| not stamped (made before 2.7.0) | compares its tables with the schema; if every existing table already has the schema's columns and keys it stamps it and starts, otherwise it refuses as above |
+| not stamped (made before 2.8.0) | compares its tables with the schema; if every existing table already has the schema's columns and keys it stamps it and starts, otherwise it refuses as above |
 
 The version moves only when an existing table changes shape; a release that only adds tables keeps it.
 
@@ -206,12 +208,12 @@ Admin → Database say plainly what is not shared.
 | settings in `application.yaml` under `drishti.identity.database-*` | `config/db/database.yaml`; a pointer in `application.yaml` |
 | no stamp, no parity test | `drishti_schema` and the parity test |
 
-## 10. Build plan (2.7.0 item 0)
+## 10. Build plan (2.8.0 item 0)
 
 | Step | What | Accepted when |
 |---|---|---|
 | 0.1 | `DrishtiDatabase` (pool, dialect, idempotent apply), the schema files moved, `drishti_schema`; identity uses it | every identity test passes on SQLite and PostgreSQL unchanged |
-| 0.2 | `config/db/database.yaml`, `config/db.examples/`, the pointer, the moved keys with their warning | a 2.6.5 data folder starts on 2.7.0 with its users, roles and tokens and no setting changed |
+| 0.2 | `config/db/database.yaml`, `config/db.examples/`, the pointer, the moved keys with their warning | a 2.6.5 data folder starts on 2.8.0 with its users, roles and tokens and no setting changed |
 | 0.3 | the parity test; the column fix-ups removed | a column in one file and not the other fails the build |
 | 0.4 | `drishti.py db copy` (and `--check`), the refusal on a version mismatch, Admin → Database | SQLite → PostgreSQL → SQLite round trip gives identical rows; a mismatched stamp refuses to start with the command named |
 | 0.5 | docs: CONFIGURATION, the admin guide, a tutorial step (UI, CLI, YAML) | the docs tests pass |
@@ -237,7 +239,7 @@ The edit-log tables of write-back ([WRITE_BACK.md](WRITE_BACK.md) section 7) are
 4. **Its own configuration file**, `config/db/database.yaml` (`kind: sqlite | postgres`, the SQLite file under the data folder, the
    PostgreSQL url, user and password as `${ENV}`, the pool); the identity database settings move there; `application.yaml` keeps a pointer.
 5. **DuckDB is compute, not this store.**
-6. Built as **2.7.0 item 0**.
+6. Built as **2.8.0 item 0** (2.7.0 when decided).
 
 ---
 

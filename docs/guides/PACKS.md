@@ -39,7 +39,7 @@ pack step by step.
 ## What a pack is
 
 A pack is configuration and content only. It contains no Java and no Python that the server runs (its Calc snippets,
-`python/*.py`, run in the user's browser; see [Calc](PACK_DEVELOPER_GUIDE.md#calc-python-snippets)). Here is a small
+`python/*.py`, run in the user's browser; see [Calc](PACK_MODELLING_GUIDE.md#calc-python-snippets)). Here is a small
 complete pack, the help-desk pack the [Pack developer guide](PACK_DEVELOPER_GUIDE.md) builds
 (`docs/guides/examples/pack/helpdesk/`):
 
@@ -74,7 +74,7 @@ A shipped pack is the same shape, larger. The trading pack, for example, holds 1
 panel blocks, one `samples/trade.jsonl` of 765 trades, a test folder for each Sutra and the templates of the five connectors it
 reads through ([Trading](#trading)).
 
-**Every attribute is UPPER_SNAKE.** The seven shipped packs name every attribute of every kind (counterparties, curves, netting
+**Every attribute is UPPER_SNAKE.** The shipped packs name every attribute of every kind (counterparties, curves, netting
 sets, trades, economies, news topics) the way production systems write them: `COUNTERPARTY_ID`, `NET_MTM`, `ZERO_RATE`,
 `TRADE_ID`, `GDP_USD_BN`. Searches, forms, Sutras, About text, BI datasets and the test data all use those names
 (`TRD PRODUCT_TYPE=ComSwap`, `CPTY COUNTRY_OF_RISK=US`).
@@ -226,7 +226,7 @@ Typical combinations:
 | Everything, with the US equities pack | `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities` |
 
 You do not have to list `core`, `market-data` or `trading`: the packs that extend them bring them in (see
-[Inheritance](PACK_DEVELOPER_GUIDE.md#inheritance)).
+[Inheritance](PACK_LIFECYCLE_GUIDE.md#inheritance)).
 
 ### Retired example packs (examples/packs)
 
@@ -328,7 +328,7 @@ then `drishti.py lake demo` and commit `data/testdata` ([data/testdata/README.md
 ## Turning packs on
 
 The server reads one setting, `drishti.packs.enabled`, from the environment variable `DRISHTI_PACKS` (a
-comma-separated list; default the seven shipped packs, `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets`).
+comma-separated list; default the seven default packs, `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets`).
 Packs are looked for in `drishti.packs.dir` (`DRISHTI_PACKS_DIR`, default `./config/packs`, relative to the directory you start the
 server in), then in the folders of `drishti.packs.extra-dirs` (`DRISHTI_PACKS_EXTRA_DIRS`, comma-separated, default none; set it to
 `examples/packs` for the [retired example packs](#retired-example-packs-examplespacks)).
@@ -494,12 +494,12 @@ answers `DRS-5002` (forbidden). Its mnemonics, suggestions, examples, starter wo
 suggestions disappear too. Kinds no pack owns are not affected. A user who may see
 `market-risk` may also open the kinds of the packs it extends (a VaR result links to its trades and books).
 
-Roles work on top of packs: a role lists the kinds it may open (see [Roles and field masks](PACK_DEVELOPER_GUIDE.md#roles-and-field-masks)).
+Roles work on top of packs: a role lists the kinds it may open (see [Roles and field masks](PACK_MODELLING_GUIDE.md#roles-and-field-masks)).
 
 ## Loading a pack while the server runs
 
 Admin → Packs → **Load** brings in a pack that is on disk but not loaded, without anyone touching the machine and **without a restart**
-(a pack from a signed registry is installed the same way: [the registry](PACK_DEVELOPER_GUIDE.md#a-signed-pack-registry-publishing-and-installing)).
+(a pack from a signed registry is installed the same way: [the registry](PACK_LIFECYCLE_GUIDE.md#a-signed-pack-registry-publishing-and-installing)).
 Every way a pack changes while the server runs (Load, Unload, a deploy, a registry install or rollback, and an edit in the packs folder, below)
 takes the same path, so they all behave alike:
 
@@ -740,7 +740,10 @@ or `drishti.py data landed`); Drishti refreshes, verifies, evaluates alert rules
 
 Every shipped pack has a short `code:`; typed alone on the command line (with `<GO>`) it opens the pack's overview:
 every kind you may open, its mnemonic, how many the sources hold for the business date, an example and the key
-fields. Each row's mnemonic opens that kind's pick list. Typing the pack's name (`market-data`) works too.
+fields. Each row's mnemonic opens that kind's pick list. Typing the pack's name (`market-data`) works too. Below the kinds
+the page shows the pack's README (`config/packs/<pack>/README.md`): its summary, its sources and, folded, the *Data structures*
+of the kinds you may open (the server leaves the others out, as it does for the overview). Administrators see the whole README
+under Admin → Packs → the pack.
 
 | Pack | Code | | Retired example pack | Code |
 |---|---|---|---|---|
@@ -767,7 +770,7 @@ trading TRDS [('TRD', 15000, 'CLY-3000001'), ('CTRD', 24, 'CP-ALDERSHOT'), ('PTR
 ```
 
 A pack author sets the code with `code:` in `pack.yaml` (in a generated pack, in its generator:
-[how the shipped packs are generated](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)).
+[how the shipped packs are generated](PACK_GENERATORS_GUIDE.md#how-the-shipped-packs-are-generated)).
 
 ## Upgrading and removing a pack
 

@@ -168,7 +168,7 @@ Notes, from the code:
 
 In `ticks` mode a view of `TRD MX-20000001` reads from `trade-endur` (its provenance names the lake), shows the live
 dot, and each message for MX-20000001 repaints it within a frame. This is described with the routing in
-[CONNECTOR_DEVELOPER_GUIDE.md, Combining connectors](CONNECTOR_DEVELOPER_GUIDE.md#combining-connectors).
+[CONNECTOR_DEVELOPER_GUIDE.md, Combining connectors](CONNECTOR_RECIPES.md#combining-connectors).
 
 ## 5. Configuration
 
@@ -447,7 +447,7 @@ A topic carrying a million trades whose state changes during the day:
 ### 10.4 With a lake for history
 
 The connector is undated. Configure the same kind on a dated store as well, and the router does the rest
-([CONNECTOR_DEVELOPER_GUIDE.md, Combining connectors](CONNECTOR_DEVELOPER_GUIDE.md#combining-connectors)):
+([CONNECTOR_DEVELOPER_GUIDE.md, Combining connectors](CONNECTOR_RECIPES.md#combining-connectors)):
 
 | The user asks for | Order tried | Who answers |
 |---|---|---|

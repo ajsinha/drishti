@@ -15,9 +15,9 @@
 -->
 # Drishti*net: many servers, one Drishti
 
-Status: **being built for 2.5.0** (wave N); what is built, and what changed from the design, is in [section 19](#19-as-built). Planned for **2.5.0**, a release of its own built straight after 2.4.0 and then fully tested (wave N, decided by the
-product owner on 2026-10-18; see
-[BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)). Off by default when built. Names marked **(new)** do not exist
+Status: **built and released in 2.5.0** (2026-10-19; wave N, decided by the product owner on 2026-10-18, see
+[BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)); the transport between nodes was reworked in 2.6.7 ([below](#the-transport-between-nodes-as-built-267)) and the
+content store followed (unreleased, [11.2](#112-content-every-node-reaches-the-content-store-unreleased)). What is built, and what changed from the design, is in [section 19](#19-as-built). Off by default. Names marked **(new)** do not exist
 in the code today; every other class, file or setting named here does.
 
 ## Contents
@@ -292,7 +292,7 @@ backend:
   counted: `DRS-5050` to `DRS-5059` (a peer that holds the data is down, refuses the connection or failed), and from a server of 2.6.5 or
   older a `DRS-1003` whose detail names a peer (`net:<node> failed reading …`). A peer's time-out is `504 DRS-1014`, never counted.
   A `502 DRS-5052` "this node is still joining Drishti*net" (a node just started or rejoined, section 5; SOAK3-01) is not counted either,
-  and a read that gets it is tried once on another server, which knows the peers' digests (`backend.joining_problem`).
+  and a read that gets it is tried once on another server, which knows the peers' digests (`joining_problem()` in `core/backend.py`).
   In the 2.6.5 soak the console set healthy servers aside 43 times on histories a dying peer could not answer (SOAK-02). A **read** that failed on the way is retried once on the new
   server, so the person sees the page, not an error; a **write** (save a layout, a search, a pivot) is never retried
   automatically: the page says it did not save and offers to try again.
@@ -452,7 +452,7 @@ View forwarding reuses the ordinary `/api/v1/**` endpoints with the hop header a
 | N6 | Live relay; BI queries routed to the model's node | a ticking entity held on A streams to a viewer on B; a BI report on B over A's model answers |
 | N7 | User state across nodes | saved searches, layouts and pivots follow a user to another node after a fail-over |
 
-All of N1–N7 are planned for 2.5.0, in this order; N1–N5 come first and are the minimum for the release.
+N1–N7 were planned for 2.5.0, in this order (N1–N5 the minimum for the release); section 19 says what was built.
 
 <a id="planned-267-the-transport-between-nodes"></a>
 

@@ -261,7 +261,7 @@ notes: |
 
 - `description` is one paragraph: what the layout shows and for which entities. The workbench and the catalogue show it, and so does the *About this page* drawer on every view this Sutra draws (it is
   shown as written, never evaluated). Text that has to change with the entity, such as "VAR-EQD is 70% of its limit", is written in the pack's `config/about.yaml`, not here ([About text and
-  glossary](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)).
+  glossary](PACK_MODELLING_GUIDE.md#about-text-and-glossary)).
 - `notes` is longer text for the next author and for reviewers: why the panels are in this order, what was tried and dropped. Write it as a YAML block (`notes: |` and the lines indented under it); the
   line breaks are kept. It is plain text, not Markdown.
 - A panel can have its own `description` too (`- { id: identity, kind: kv, description: Who they are, … }`) to say what that one panel is for.
@@ -1202,7 +1202,7 @@ panels:
 
 - **Fragments.** `use: name@N` with `with:` parameters; every fragment carries a `doc:` docstring (summary, parameters, emits,
   expects, examples, since), checked strictly (`DRS-2055`). The kit's catalogue is `GET /api/v1/ui-kit`; writing one is in
-  [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#fragments-and-docstrings) and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#shared-panel-blocks-use).
+  [PACK_DEVELOPER_GUIDE.md](PACK_MODELLING_GUIDE.md#fragments-and-docstrings) and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#shared-panel-blocks-use).
 - **Events and sources.** A panel `emits` an event (`open` on a row click, with a payload); another panel reads it as
   `@trades.open.ref` and, through its own `source:`, any enabled pack's kind (`$src`); until then it says its `waits:` text. A
   child reads its parent's event as `@parent.open.<field>`. Problems are `DRS-2057`; children nest at most three deep (`DRS-2056`),
@@ -1386,7 +1386,7 @@ guided build of complete screens, follow the [Build workbench tutorial](../tutor
 | You are doing | In the workbench | Section |
 |---|---|---|
 | starting from data, a schema, an example or an existing Sutra | **Build → New screen** | [§1](SCREEN_DESIGNER.md#1-start-bring-data) |
-| changing a live page in plain words (move, hide, columns, what a click opens, refresh, let people edit), or a screen from one line | the **Sutra designer** (`ui.designer: true`): **Customize** on the page, **Describe**, **Outline**, **Grid** | [§31](SCREEN_DESIGNER.md#31-the-sutra-designer-customize-and-describe), [tutorial 22](../tutorials/22-build-a-screen-with-the-designer.md) |
+| changing a live page in plain words (move, hide, columns, what a click opens, refresh, let people edit), or a screen from one line | the **Sutra designer** (`ui.designer: true`): **Customize** on the page, **Describe**, **Outline**, **Grid** | [§31](SCREEN_DESIGNER.md#31-the-sutra-designer-customize-describe-outline-and-grid), [tutorial 22](../tutorials/22-build-a-screen-with-the-designer.md) |
 | writing the YAML by hand, with completion and a check as you type | the **YAML** tab (or **Split**, with the screen beside it) | [§9](SCREEN_DESIGNER.md#9-the-yaml-tab-the-split-view-and-the-summary) |
 | seeing what is wrong, with the code and the line | the **Problems** tab | [§10](SCREEN_DESIGNER.md#10-problems) |
 | checking every panel against every sample | the **Tests** tab: ok / empty / error / no access | [§11](SCREEN_DESIGNER.md#11-tests-as-you-type) |

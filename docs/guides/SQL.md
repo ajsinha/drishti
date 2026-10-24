@@ -64,7 +64,7 @@ Related: [BI_DESIGN.md §3.4](../architecture/BI_DESIGN.md#34-drishti-sql-dsql-r
 | A model's **SQL tests** (`tests: [{ sql, expect }]`) | the model, as the test's role | 2.2.0 |
 | Analyse SQL cells (Drishti SQL on the server) | one model, as the analyst | 2.2.0 |
 | The PostgreSQL-wire endpoint for outside tools | one model | planned after 3.0.0 |
-| AI and MCP | one model | planned for 2.8.0 |
+| AI and MCP | one model | planned for 2.9.0 |
 | **Not** in measures, row rules or derived columns: those are DEL | — | — |
 
 Free querying needs **read on the model** (as `POST /bi/mq` does): a person who may only view a report cannot send SQL to its model.

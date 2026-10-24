@@ -98,6 +98,7 @@ trading pack ships its three trade connectors this way ([DELTA_CONNECTOR.md](DEL
 | in an existing database schema (your own SQL) | `jdbc` query mode | [postgresql and jdbc](#postgresql-and-jdbc) |
 | in PostgreSQL loaded for Drishti | `jdbc` table mode | [postgresql and jdbc](#postgresql-and-jdbc) |
 | in a Delta Lake or an Iceberg catalog | `delta`, `iceberg` | [delta lake](#delta-lake), [apache iceberg](#apache-iceberg) |
+| in Iceberg tables other engines write (Spark, Flink, Trino, Glue), read-only | `iceberg-external` | [ICEBERG_EXTERNAL_CONNECTOR.md](ICEBERG_EXTERNAL_CONNECTOR.md) |
 | in DuckDB, MongoDB, Redis or Aerospike | `duckdb`, `mongodb`, `redis`, `aerospike` | [duckdb](#duckdb), [mongodb](#mongodb), [redis](#redis), [aerospike](#aerospike) |
 | in Apache Cassandra, ScyllaDB, DataStax Astra or Amazon Keyspaces | `cassandra` | [apache cassandra](#apache-cassandra) |
 | on Kafka, ActiveMQ or RabbitMQ (live) | `kafka`, `activemq`, `rabbitmq` | [kafka](#kafka), [activemq](#activemq), [rabbitmq](#rabbitmq) |
@@ -198,6 +199,9 @@ settings:
 ```
 
 Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [ICEBERG_CONNECTOR.md](ICEBERG_CONNECTOR.md).
+
+Iceberg tables that other engines write, in their own layout, are read (never written) by the plugin `iceberg-external`:
+[ICEBERG_EXTERNAL_CONNECTOR.md](ICEBERG_EXTERNAL_CONNECTOR.md).
 
 ## DuckDB
 

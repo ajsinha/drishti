@@ -97,7 +97,7 @@ scope `ai:use`). Errors as the LLM layer (DRS-4015..4014). Admin -> AI lists the
 SAJHA (`sajhamcpserver`) serves one `/mcp` endpoint (Streamable HTTP, also SSE, WebSocket and stdio) for both spec eras, chosen per
 request; Drishti speaks the session-based 2025-11-25 one. Default `http://localhost:3002/mcp`. Anonymous callers see **no tools**
 by default, so Drishti needs a credential: an `X-API-Key` (Admin -> API keys in SAJHA) or `Authorization: Bearer <JWT>`. Copy
-`config/mcp/sajha.yaml.example` to `config/mcp/sajha.yaml`, export `SAJHA_API_KEY`, set `drishti.mcp.enabled=true`.
+`config/mcp/sajha.yaml.example` to `sajha.yaml` in the same folder, export `SAJHA_API_KEY`, set `drishti.mcp.enabled=true`.
 
 Verified live (a scratch copy of SAJHA on a spare port, its own virtualenv; the project itself untouched), with
 `drishti-ai/src/test/java/com/ash/drishti/ai/SajhaMcpLiveTest.java` (skipped unless `DRISHTI_SAJHA_MCP_URL` and `DRISHTI_SAJHA_MCP_KEY`
@@ -116,7 +116,7 @@ call: Result(text='{\n  "old_value": 80,\n  "new_value": 100,\n  "percentage_cha
 
 To repeat it by hand: copy the SAJHA project to a scratch folder (it writes `data/` and `logs/` next to itself), create a virtualenv,
 `pip install -r requirements.txt` (at the time of writing `sse-starlette<3` in that file conflicts with `mcp>=2.3`; relax it in the
-copy), seed `config/apikeys.json` from `config/apikeys.json.example`, then
+copy), seed SAJHA's own config/apikeys.json from its config/apikeys.json.example (files of the SAJHA project, not of this repository), then
 `SERVER_HOST=127.0.0.1 SERVER_PORT=18991 python run_sajha_web.py`, run the test above, and stop the process by its PID.
 
 ## 6. Tests

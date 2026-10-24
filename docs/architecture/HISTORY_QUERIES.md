@@ -15,7 +15,7 @@
 -->
 # History queries: `TRD 1000015 30 <GO>`
 
-Status: **built and released in 2.6.5** (2026-10-20), between 2.6.0 (wave D) and 2.7.0 (write-back); the *As built* notes say where
+Status: **built and released in 2.6.5** (2026-10-20), between 2.6.0 (wave D) and 2.6.6; the *As built* notes say where
 the build differs from the design. Written 2026-10-20 from the
 design agreed with the product owner, checked against the code on `develop` and against the two connector branches that are not merged
 yet (drishti-iceberg and iceberg-external; Cassandra). Related: [HOW_IT_FITS.md](HOW_IT_FITS.md) (a command becomes a screen),
@@ -317,7 +317,7 @@ history:
 | `max-days` | 1..`drishti.history.max-days` | the server's | |
 
 Unknown keys are warnings, bad values errors, with a new code **`DRS-2061` `HISTORY_INVALID`** (422) beside `DRS-2060` `FORM_INVALID`. The
-checks run where pack manifests are checked: the deploy stage (`deploy/PackDeployService.manifestCheck`), `sutra lint <pack-dir>`
+checks run where pack manifests are checked: the deploy stage (`manifestCheck` in `server/deploy/PackDeployService.java`), `sutra lint <pack-dir>`
 (`server/cli/SutraCli`) and pack reload (a warning in the log and on Admin → Packs, as `FormDefinitions` logs a bad form). The Build
 workbench gets a History tab later (open question 3). `docs/guides/PACK_DEVELOPER_GUIDE.md` gets a step for it.
 
@@ -772,7 +772,7 @@ A dataset could chart a field over time: `source: {history: {kind: trade, ids: [
 table `(business_date, id, PRICE, …)`. It needs a new `DatasetDef.Source` type `HISTORY`, `DatasetDefParser` (its own `DRS-91xx` code),
 `bi/mq/DatasetSources.answer()` and `fingerprint()` (the fingerprint is the history cache key), and `core/model_layer.py` in the console.
 The BI time machinery (`bi/dataset/Histories.java`, live-table history with a `ts` column) is the precedent. **It is specified here and
-built as step H12, which may move to 2.7.0** if 2.6.5 runs long; nothing else depends on it.
+built as step H12**, which was left out of 2.6.5 and is not built yet (release not decided); nothing else depends on it.
 
 ### 15.5 Plain words
 
@@ -875,7 +875,7 @@ as a fixture file; neither touches the other's files. Each step is one push with
 | **H9** | B | Market shape: chart, headline numbers, range buttons, crosshair, embedded series | template tests with the equity fixture | USER_GUIDE |
 | **H10** | B | DIFF mode, export routes (csv, json, xlsx), share links and pick lists carrying the range | export tests (names, BOM, formula guard, masked values as served) | USER_GUIDE, API_GUIDE "console's own JSON routes" |
 | **H11** | B | `drishti.py history`, the Python client's `history()`, `PhraseParser` time phrases | `test_drishti_cli.py` cases, `PhraseParserTest` cases | CLI_GUIDE, USER_GUIDE plain words |
-| **H12** | A | BI source `history` (may move to 2.7.0, section 15.4) | dataset parser and `DatasetSources` tests | DATASETS.md |
+| **H12** | A | BI source `history` (not built; was left out of 2.6.5, section 15.4) | dataset parser and `DatasetSources` tests | DATASETS.md |
 | **H13** | A + B | The shipped packs' `history:` blocks (section 6.3); help card; tutorial 21; CHANGELOG | `sutra lint` of every shipped pack clean | PACKS, tutorial 21, help |
 | **H14** | B, then both | Browser test and the benchmark (section 19.3, 19.4); then the release drill, once | both green under the 10K-trade cap | SCALE_STRATEGY history row, RELEASE_NOTES |
 
@@ -984,7 +984,7 @@ All five were decided by the product owner on 2026-10-20, before the build start
    for them in the shipped packs; turn it on later with a per-day page cache?
    **Decided: off in the shipped packs** (`enabled: false`); a per-day page cache is not planned yet.
 3. **The Build workbench:** a History tab to edit `history:` with a preview, now or with 2.7.0's write-back forms?
-   **Decided: 2.7.0.** In 2.6.5 the block is edited as YAML and checked by `sutra lint` and the deploy check.
+   **Decided: with write-back's forms (2.7.0 when decided, now 2.8.0).** In 2.6.5 the block is edited as YAML and checked by `sutra lint` and the deploy check.
 4. **Ranges over a pick list** (`TRD desk=rates 30`: many trades over time) are BI's job; keep them out of the command for good?
    **Decided: left to BI** (the `history` data source, section 15.4). The command takes a range for one entity only.
 5. **Tutorial numbering:** the ask names tutorial 21; 20 is not used on develop today. Keep 21 (20 left for 2.6.0's tutorial)?

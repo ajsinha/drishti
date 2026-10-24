@@ -16,10 +16,13 @@
 
 # Rūpaka phase 0: the proof of concept, built and measured
 
+History: written for the phase-0 proof of concept (2026-10-10, before 2.2.0); its code was deleted in 2.2. The current plan is
+[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#roadmap)'s roadmap.
+
 Status: built and measured (2026-10-10); the follow-up of phase 2 is section 11, and the Perspective retest of phase 5 is section 12. **Removed in 2.2** (server and console: the `/bi/poc` page, its routes, `drishti.bi.poc` and `bi.poc_enabled`); this document keeps the findings, and the paths and switches below are history. Everything the real BI pages use was rebuilt in phases 1 to 5 ([RUPAKA.md](RUPAKA.md) section 20) and is documented in [BI_GUIDE.md](../guides/BI_GUIDE.md). **Throw-away code**, off by default, that tests the risky parts of
 [RUPAKA.md](RUPAKA.md) before the roadmap (section 20, phase 0) commits to them. Everything is marked `poc`: the server's
 `com.ash.drishti.server.bi.poc` package and `/api/v1/bi/poc/**`, the console's `routes/bi_poc_routes.py`, `/bi/poc`,
-`bi-poc.js`. Switches: server `drishti.bi.poc.enabled`, console `bi.poc_enabled` (both default `false`; see
+`bi-poc.js`. Switches (removed in 2.2): server `drishti.bi.poc.enabled`, console `bi.poc_enabled` (both were `false` by default; see
 [CONFIGURATION.md](../admin/CONFIGURATION.md)). With them off the paths answer 404 as if the code were absent.
 
 ## 1. Verdict for phase 1: **go, with four adjustments**
@@ -56,7 +59,7 @@ in about 15 ms and DuckDB-Wasm re-slices it in about 4 ms; the strict CSP holds 
 | Console page | `/bi/poc` | an administrators-only entry under the **BI** menu, only when enabled. Since phase 1 `RUPAKA <GO>` opens the BI home ([BI_GUIDE.md](../guides/BI_GUIDE.md)), no longer this page; the POC's temporary keyword wiring is gone |
 | Cards | `bi-poc.js` | a. Perspective grid and pivot (group by desk, split by side) on the live feed plus a test publisher of 100, 500 or 1,000 updates/s; b. fetch the masked extract, load it into DuckDB-Wasm, re-slice by group-by and filter with timings; c. masks proven: the same query as you and as a user without `raw` |
 | Live transport | the console's one channel | one more subscription kind, `poc:rows`, relayed by `core/channel.py`; the page opens no stream of its own (`test_pages_never_open_their_own_event_streams` stays green) |
-| Vendoring | `web/static/vendor/VENDOR.md` | Perspective 3.8.0 (3.9 MB, committed), Arrow JS 17 bundle (0.2 MB, committed), DuckDB-Wasm 1.33.1-dev57.0 (36 MB, installed by `tools/fetch-duckdb-wasm.sh`, pinned SHA-256, not committed: over the 40 MB ceiling together) |
+| Vendoring | `web/static/vendor/VENDOR.md` | Perspective 3.8.0 (3.9 MB, committed), Arrow JS 17 bundle (0.2 MB, committed), DuckDB-Wasm 1.33.1-dev57.0 (36 MB, was installed by `tools/fetch-duckdb-wasm.sh`, since removed; pinned SHA-256, not committed: over the 40 MB ceiling together) |
 
 Access: administrators only (at phase 0 a `bi` role power was a nine-argument record change in the role catalogue, not trivial for a
 throw-away; the four BI powers arrived in phase 1, and this page still asks for `admin`). The masks proof therefore uses `preview: masked`, and the tests use a role with `admin` and without `raw`.
@@ -148,7 +151,7 @@ JS heap 15.4 to 16.3 MB at every rate (the table is in the engine's wasm memory:
 | **`<style>` elements** | Perspective writes them (its shadow roots' CSS): `style-src 'self'` blocks them and the grid draws no rows. Six SHA-256 hashes in `POC_STYLE_HASHES` (core/app.py) give zero violations for the grid and pivot. Opening a chart plugin and the settings panel logs about eight more and style attributes (`'unsafe-hashes'`): see adjustment 3. |
 | SharedArrayBuffer, COOP/COEP | not needed. The `eh` DuckDB-Wasm build is single-threaded; `window.crossOriginIsolated` is `false` in the browser test, and everything works. The `coi` (threaded) build would need both headers, which would also break cross-origin embeds; not used. |
 | `unsafe-eval` | not needed. The library's `Function(...)` fallback runs only for `file://` pages. |
-| DuckDB-Wasm import | its module imports the bare name `apache-arrow`, which needs an import map (an inline script). `tools/fetch-duckdb-wasm.sh` points it at the vendored bundle `vendor/apache-arrow/17.0.0/`. |
+| DuckDB-Wasm import | its module imports the bare name `apache-arrow`, which needs an import map (an inline script). `tools/fetch-duckdb-wasm.sh` (removed since) pointed it at the vendored bundle `vendor/apache-arrow/17.0.0/`. |
 
 ## 6. Masks proven
 
@@ -212,7 +215,7 @@ comparison), `PocOffByDefaultTest` (404 for every path). Console: `test_bi_poc.p
 case, libraries loaded on this page only, the CSP on the page and its workers and on no other page, Arrow pass-through, JSON only),
 `test_bi_poc_browser.py` (Chromium: the grid draws and ticks, the pivot is fed, DuckDB-Wasm loads the extract and re-slices to 6, 8 and 1
 groups, the mask reads `•••`, no CSP violation, `crossOriginIsolated` false; the publisher drives the table; skipped without the
-browser or without `tools/fetch-duckdb-wasm.sh`), and the existing `test_assets_policy.py`, `test_docs_*`.
+browser or without `tools/fetch-duckdb-wasm.sh`, since removed), and the existing `test_assets_policy.py`, `test_docs_*`.
 
 ## 10. Reproducing
 
@@ -306,7 +309,7 @@ Section 11 decided strict `style-src 'self'` on every BI page and left the gener
 * A page that holds a `perspective-grid` or `perspective-pivot` is given, **in its own response and nowhere else**, `script-src 'self' 'wasm-unsafe-eval'` and `style-src 'self'` plus the SHA-256 of the styles Perspective writes. On the real pages these are **four** (section 5's six were measured on the phase 0 page, which also loads the chart plugin; the extra two stay on that page only, `POC_EXTRA_HASHES`).
   Never `'unsafe-eval'`, never `'unsafe-inline'`, no blob worker (the engine's worker is `perspective-server.worker.js` of this origin, served with the narrow worker policy of section 5). The report route asks the server whether the report holds a Perspective visual, and when it cannot ask it answers with the strict policy (the visual then falls back to the plain table).
 * **The hash list is generated, and checked.** `python tools/perspective-style-hashes.py --console <url> --user <u> --password <p> [--check]` signs in with Chromium, opens the sample report's grid and pivot pages with the console's header rewritten to *no* style hashes, and reads the hash of every style the browser refused from its console. The Chromium test
-  `test_the_style_hash_list_covers_the_real_pages` runs it against the test stack and **fails, naming the hash to add**, when a library update writes a style `STYLE_HASHES` (`drishti-console/core/perspective_csp.py`) does not allow. The browser tests assert zero policy violations on the live report, the grid, the pivot, the masked grid and the board.
+  `test_the_style_hash_list_covers_the_real_pages` runs it against the test stack and **fails, naming the hash to add**, when a library update writes a style `STYLE_HASHES` (`drishti-console/core/perspective_csp.py`, since removed) did not allow. The browser tests assert zero policy violations on the live report, the grid, the pivot, the masked grid and the board.
 * **Not retested, not offered:** the chart plugin and the settings panel needed about eight more hashes and `'unsafe-hashes'` (section 5, phase 0 measurement): they are not offered (the viewer is configured by the report's YAML, `settings: false`), so the policy stays as narrow as measured.
 * No COOP or COEP header is sent and no `SharedArrayBuffer` is used: the engine is the single-threaded build, as in section 5.
 

@@ -15,16 +15,17 @@
 -->
 # Real data in the world-economy pack
 
-The `world-economy` packs carry **published public data**, not samples: about 213 economies and 216 countries from the World Bank, the IMF, UNDP and
+The `world-economy` pack carries **published public data**, not samples: about 213 economies and 216 countries from the World Bank, the IMF, UNDP and
 the CIA World Factbook. Every number is a published value (a percentage stays a percentage, as the source states it) and every text is as the source publishes it (HTML
-removed). Neither pack is marked `sample: true` any more.
+removed). It is not marked `sample: true`. (It was two packs, `economics` and `politics-society`, until they were merged into `world-economy`;
+the two halves keep their names below.)
 
 The data is fetched and normalised by a repeatable tool, `tools/realdata/`, and committed to git as a small normalised dataset (`tools/realdata/dataset/`, 2.4 MB) plus the
 generated pack documents. The raw downloads are cached outside the repository and are never committed.
 
-> **Licence note: IMF data is for internal demonstration only.** The IMF World Economic Outlook data in these packs (the `economic-forecast` documents, and the
+> **Licence note: IMF data is for internal demonstration only.** The IMF World Economic Outlook data in this pack (the `economic-forecast` documents, and the
 > `debt` and `net_lending` series that feed each economy's debt ratio and fiscal position) is kept for **internal demos only**. The IMF's terms allow reuse with
-> attribution but require its **permission for commercial use** (copyright@imf.org). Before the packs are shown to a client, shipped, sold or used commercially,
+> attribution but require its **permission for commercial use** (copyright@imf.org). Before the pack is shown to a client, shipped, sold or used commercially,
 > either obtain that permission or build without the IMF: `python3 tools/realdata/realdata.py write --no-imf` (see [Building without the IMF](#building-without-the-imf)).
 > The World Bank (CC BY 4.0), UNDP (CC BY 3.0 IGO) and CIA Factbook (public domain) data needs only attribution.
 
@@ -57,9 +58,9 @@ demonstration. Ask copyright@imf.org before any commercial use. **UNDP:** the HD
 indicator also has its own upstream source (for example SIPRI for military spending, the Inter-Parliamentary Union for women in parliament, ILO for labour data) that WDI
 credits; the *About this series* panel shows the World Bank code to look it up.
 
-## What is in the packs
+## What is in the pack
 
-| Pack | Kind | Mnemonic | Documents | One document is |
+| Half of world-economy | Kind | Mnemonic | Documents | One document is |
 |---|---|---|---|---|
 | economics | `economy` | `ECON` | 213 | a country: GDP, growth, inflation, unemployment, debt, current account, sectors, links to its region, income group, labour market, fiscal position, IMF forecast and 16 indicators |
 | economics | `macro-indicator` | `MACRO` | 3,119 | one headline statistic of one country: history 2015 to the latest year, rank among countries, definition |
@@ -68,12 +69,12 @@ credits; the *About this series* panel shows the World Bank code to look it up.
 | economics | `fiscal-position` | `FISC` | 192 | IMF debt and net lending, World Bank revenue, expense, military spending |
 | economics | `country-group` | `ECG` | 12 | a World Bank region, income group or the world, with aggregate series and its largest economies |
 | economics | `region-economy` | `REGE` | 59 | a state or territory (ISO 3166-2, `AU-NSW`, `US-CA`) with population and GDP: an **illustrative sample, rounded from public figures, not for reporting** (`tools/realdata/dataset/regions.json`, not fetched), behind the BI sample report *Region economics* |
-| world-economy | `jurisdiction` | `JUR` | 216 | a country: government type, capital, legislature seats by party, indicators, links to office holders, elections, parties and region |
-| world-economy | `office-holder` | `OFFC` | 430 | the chief of state and head of government as the Factbook publishes them |
-| world-economy | `election` | `ELEC` | 378 | the most recent lower-chamber, upper-chamber and executive election: system, term, seats by party, next election |
-| world-economy | `party` | `PARTY` | 282 | a party that won seats in the lower chamber at the most recent election, with the chamber's full result |
-| world-economy | `region` | `REGN` | 7 | a World Bank region: countries, population, life expectancy, government types |
-| world-economy | `social-indicator` | `SOCI` | 4,297 | one social or governance statistic of one country with a regional comparison |
+| politics | `jurisdiction` | `JUR` | 216 | a country: government type, capital, legislature seats by party, indicators, links to office holders, elections, parties and region |
+| politics | `office-holder` | `OFFC` | 430 | the chief of state and head of government as the Factbook publishes them |
+| politics | `election` | `ELEC` | 378 | the most recent lower-chamber, upper-chamber and executive election: system, term, seats by party, next election |
+| politics | `party` | `PARTY` | 282 | a party that won seats in the lower chamber at the most recent election, with the chamber's full result |
+| politics | `region` | `REGN` | 7 | a World Bank region: countries, population, life expectancy, government types |
+| politics | `social-indicator` | `SOCI` | 4,297 | one social or governance statistic of one country with a regional comparison |
 
 Removed because no open, global dataset backs them: central-bank decisions, trade flows (bilateral), price baskets, opinion polls, bills and candidates. The old
 fictional polities (Valdoria, Kestria) and the invented economies are gone.
@@ -203,50 +204,49 @@ python3 tools/realdata/realdata.py fetch     [--cache DIR] [--refresh] [--pause 
 python3 tools/realdata/realdata.py normalise [--cache DIR]                           raw cache -> tools/realdata/dataset/*.json
 python3 tools/realdata/realdata.py about                                              sources.yaml + about/*.kinds.yaml -> tools/packgen/*/about.yaml
 python3 tools/realdata/realdata.py write                                              dataset -> the pack, its glossary and its Sutra tests
-python3 tools/realdata/realdata.py tests                                              the packs' Sutra tests only (config/packs/*/tests)
+python3 tools/realdata/realdata.py tests                                              the pack's Sutra tests only (config/packs/*/tests)
 python3 tools/realdata/realdata.py docs                                               the generated tables of this guide
 python3 tools/realdata/realdata.py all       [--cache DIR] [--refresh]                fetch, normalise, about, write, docs: everything committed
 python3 tools/realdata/realdata.py check     [--cache DIR]                           fail if anything committed differs from what `all` would write
 ```
 
 `all` from the cached raw data regenerates **everything committed for the pack** byte for byte: the normalised dataset, the glossary source
-(`tools/packgen/*/about.yaml`), the packs (`pack.yaml`, Sutras, samples, guides, help, `config/about.yaml`), the Sutra tests (`tests/`) and the tables of this guide
+(`tools/packgen/*/about.yaml`), the pack (`pack.yaml`, Sutras, samples, guides, help, `config/about.yaml`), the Sutra tests (`tests/`) and the tables of this guide
 between its `<!-- realdata:begin ... -->` markers (sources, the two indicator tables with their country counts, the provenance example). Only `config/formats.yaml` is kept by hand.
-`check` fails on any drift: it re-derives the dataset from the cache (skipped, with a note, when there is no cache), runs both generators with `--check` (pack, glossary and
+`check` fails on any drift: it re-derives the dataset from the cache (skipped, with a note, when there is no cache), runs the generator (`tools/packgen/world/make.py`) with `--check` (pack, glossary and
 tests) and compares the guide tables. A run on the committed state prints:
 
 ```
 $ python3 tools/realdata/realdata.py check
 dataset: no raw cache at /home/ci/.cache/drishti-realdata, not re-derived     (with a cache: nothing)
-economics: 3924 files up to date
-world-economy: 5621 files up to date
+world-economy: <n> files up to date
 ```
 
 ### Building without the IMF
 
 ```
-python3 tools/realdata/realdata.py all --no-imf [--out DIR]     # fetch (never the IMF), normalise, write the packs
+python3 tools/realdata/realdata.py all --no-imf [--out DIR]     # fetch (never the IMF), normalise, write the pack
 python3 tools/realdata/realdata.py write --no-imf               # from the committed dataset, filtered
 python3 tools/realdata/realdata.py check --no-imf               # the --no-imf packs are what the tool would write
 ```
 
 `--no-imf` builds a World Bank, UNDP and Factbook pack set: the IMF is not contacted, the `economic-forecast` kind and its 192 documents are gone, the IMF `debt` and
 `net_lending` series are gone (so an economy has no `debtToGdp` and no `outlook` link), the `fiscal-position` kind keeps only the World Bank revenue, expense and military
-shares (`debt`, `balance` and the two paths are removed), and the glossary, FORM, examples, guide and provenance never name the IMF as a source. The world-economy pack
-never used IMF data and is identical. The one remaining word is the World Bank's definition of *Total reserves* ("... reserve position in the IMF ..."), which describes the
-reserves, not IMF data. The committed dataset, glossary, tests and this guide are never touched: the packs go to `--out` (default `~/.cache/drishti-realdata/no-imf/packs`) and a
-`--no-imf` dataset to `~/.cache/drishti-realdata/no-imf/dataset`; copy the two pack directories into `config/packs/` of the build you ship.
+shares (`debt`, `balance` and the two paths are removed), and the glossary, FORM, examples, guide and provenance never name the IMF as a source. The politics half
+never used IMF data and is unchanged. The one remaining word is the World Bank's definition of *Total reserves* ("... reserve position in the IMF ..."), which describes the
+reserves, not IMF data. The committed dataset, glossary, tests and this guide are never touched: the pack goes to `--out` (default `~/.cache/drishti-realdata/no-imf/packs`) and a
+`--no-imf` dataset to `~/.cache/drishti-realdata/no-imf/dataset`; copy the `world-economy` directory into `config/packs/` of the build you ship.
 
 | File | Role |
 |---|---|
 | `sources.yaml` | the sources (name, API, licence, attribution) and every indicator (code, unit, scale, definition); edit this to add an indicator |
 | `fetch.py` | the downloader: one request per World Bank indicator, per IMF series and per Factbook file, a pause between requests, retries, files already cached are kept |
 | `normalise.py` | pure parsing functions (World Bank, IMF, UNDP, Factbook) and the run that writes `dataset/*.json` |
-| `build_docs.py` | the document builders both pack generators call (`economics()`, `politics()`); `Data(no_imf=True)` drops the IMF |
+| `build_docs.py` | the document builders the pack generator calls (`economics()`, `politics()`, one per half); `Data(no_imf=True)` drops the IMF |
 | `about.py`, `about/*.kinds.yaml` | the glossary source: the vocabulary comes from `sources.yaml`, the per-kind and per-field text from `about/<pack>.kinds.yaml` (edit there, not in `tools/packgen/*/about.yaml`) |
-| `pack_tests.py`, `pack_tests.yaml` | the packs' Sutra tests: which documents ship as tests, what each expects, the help-coverage ratchet |
+| `pack_tests.py`, `pack_tests.yaml` | the pack's Sutra tests: which documents ship as tests, what each expects, the help-coverage ratchet |
 | `doc_snippets.py` | the generated tables of this guide |
-| `packrun.py` | what both pack generators run: glossary, pack and tests, written or (`--check`) compared |
+| `packrun.py` | what the pack generator runs: glossary, pack and tests, written or (`--check`) compared |
 | `tests/` | `test_normalise.py` against small recorded fixtures (`tests/fixtures/`), `test_build_docs.py` against the committed dataset, `test_pipeline.py` (reproducibility, drift, `--no-imf`); no network |
 
 The cache defaults to `~/.cache/drishti-realdata` (outside the repository; use `--cache` to move it). A full fetch is about 50 World Bank calls, 8 IMF calls, one UNDP file and

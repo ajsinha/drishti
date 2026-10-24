@@ -1663,7 +1663,7 @@ Releases are numbered `MAJOR.MINOR.PATCH` and tagged `vX.Y.Z` on `main` (`git ta
    configuration keys, on-disk formats or pack attribute names change.
 4. **Verify locally on a fresh clone.** Clone, build the jar, `lake demo`, start the server and the console as
    [GETTING_STARTED.md](GETTING_STARTED.md) says, and follow the tutorials; `curl -s localhost:18480/api/v1/about` reports the
-   `version` (on this release: `"version":"2.5.0"`).
+   `version` (on 2.6.7: `"version":"2.6.7"`).
 5. **Commit** as `Release X.Y.Z` on `develop`.
 6. **Drill:** `tools/drill.sh`. Nothing reaches `main` unless the whole build, every test, the console tests, the header check and the
    generator checks pass.

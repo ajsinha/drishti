@@ -15,6 +15,13 @@
 -->
 # How Drishti fits together
 
+> **History: captured before 2.3.0** (the 2.2-era packs). Since 2.3.0 trades are production-shaped UPPER_SNAKE records read per
+> source system (`trade-endur`, `trade-calypso`, `trade-murex`, one Delta table each) instead of `trading-store`; the trading pack's
+> samples are one file, `config/packs/trading/samples/trade.jsonl`; its Sutras are kept per source system
+> (`config/packs/trading/sutras/murex/`, `calypso/`, `endur/`); and the risk and banking packs named below are examples under
+> `examples/packs/`. The flow (pack, connector, Sutra, ViewModel, live updates) is unchanged; names and captured outputs are as they were
+> then. The current plan is [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#roadmap)'s roadmap.
+
 *For someone new to Drishti who wants the whole working in one read: how a data store, a pack and a Sutra relate, and
 what happens between typing `TRD MX-20000001` and a live screen.* Every path, key, endpoint and output below is real:
 the files are in this repository and the outputs were captured from a server started with the QUICKSTART packs
@@ -200,7 +207,7 @@ off unless `DRISHTI_STREAM_TRADING=true`.
 
 A second source also serves trades. `drishti.sources.default-route: demo` in `application.yaml` names the **demo**
 plugin, which serves the sample documents in every enabled pack's `samples/` folder
-(`config/packs/trading/samples/trade/MX-20000001.json` is one) and makes their numbers tick. Together:
+(in 2.2 one file per document, such as `MX-20000001.json`; since 2.3.0 `config/packs/trading/samples/trade.jsonl`) and makes their numbers tick. Together:
 
 | You ask for | Answered by | Evidence in the view's `provenance` |
 |---|---|---|
@@ -217,7 +224,7 @@ place).
 ### 3.3 The Sutra that draws it
 
 125 Sutras in `config/packs/trading/sutras/` match kind `trade`, one per product, all at priority 10, each with a `where`
-that picks its product. The one for `MX-20000001` is `config/packs/trading/sutras/rates/irs-fixfloat.v1.sutra.yaml`:
+that picks its product. The one for `MX-20000001` was in `sutras/rates/` then; today it is `config/packs/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml`:
 
 ```yaml
 rachana: 1
@@ -526,7 +533,7 @@ source.
 
 Where each part is changed is section 7; the design, the open decisions and the build plan are in
 [CONTEXT_HELP.md](CONTEXT_HELP.md); how to write the text is in the
-[pack developer guide](../guides/PACK_DEVELOPER_GUIDE.md#about-text-and-glossary).
+[pack developer guide](../guides/PACK_MODELLING_GUIDE.md#about-text-and-glossary).
 
 ### 3.10 Share and Discussion, end to end
 
@@ -834,7 +841,7 @@ documents it draws, and its panels' `$.paths` are checked against your samples. 
 | Decide who may see what | `roles:` in `pack.yaml` (kinds, `raw`), `drishti.security.redact` (fields shown as `•••`), the Admin pages | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
 | Add a command word | `mnemonics:` in `pack.yaml` (or under `drishti.commands` for a site) | PACKS.md |
 | Add a link between kinds | `graph.fields` in `pack.yaml` and `link(...)` in the Sutra | PACKS.md |
-| Change the sentence the About drawer says about a kind | `kinds.<kind>.about` in the pack's `config/about.yaml` (a `${...}` template over the document); for a generated pack, the about source in `tools/packgen/` | [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#about-text-and-glossary) |
+| Change the sentence the About drawer says about a kind | `kinds.<kind>.about` in the pack's `config/about.yaml` (a `${...}` template over the document); for a generated pack, the about source in `tools/packgen/` | [PACK_DEVELOPER_GUIDE.md](../guides/PACK_MODELLING_GUIDE.md#about-text-and-glossary) |
 | Explain a field (term, meaning, unit, sign) | `glossary.<field path>` in `about.yaml`, or a shared `vocabulary.<name>` entry in the lowest pack that owns the concept (the glossary layer and field hints are step 4 of [CONTEXT_HELP.md](CONTEXT_HELP.md); section 3.9 says what is in today) | PACK_DEVELOPER_GUIDE.md |
 | Change how the drawer looks or behaves | `drishti-console/web/templates/_macros/about.html` and `terminal/_about.html`, `static/js/about.js`, `static/css/about.css` | [CONTEXT_HELP.md](CONTEXT_HELP.md) |
 | Change what the explanation says about the layout and the data | `ExplainService`, `PageContext`, `EmptinessReason` (`drishti-engine`, package `explain`), `MatchTrace` (`SutraMatcher.explain`); the endpoint is `ExplainController`; limits under `drishti.explain.*` | [API_GUIDE.md](../guides/API_GUIDE.md), [CONFIGURATION.md](../admin/CONFIGURATION.md) |

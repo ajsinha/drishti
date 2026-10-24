@@ -79,7 +79,7 @@ workspace panes).
 A view offers Calc when both hold:
 
 1. **The pack that owns the view's kind switches Calc on** (`python: { enabled: true }` in its `pack.yaml`, see
-   [section 8](#8-packs-switching-calc-on-and-starter-snippets)). Of the seven shipped packs, core, market-data, trading, counterparty-risk and
+   [section 8](#8-packs-switching-calc-on-and-starter-snippets)). Of the shipped packs, core, market-data, trading, counterparty-risk and
    market-risk do (the retired example pack `finance` too).
 2. **One of your roles has the `calc` power** (see [section 9](#9-roles-who-may-use-calc)).
 
@@ -347,8 +347,8 @@ Rules:
 
 ### The shipped packs' snippets
 
-Five of the seven shipped packs ship **71 snippets** (core 10, counterparty-risk 12, market-data 27, market-risk 13, trading 9; world-economy and
-news-and-markets none), and the retired example pack `finance` **10** (two inline in its `pack.yaml`, eight files): curves,
+Five of the eight shipped packs ship **71 snippets** (core 10, counterparty-risk 12, market-data 27, market-risk 13, trading 9; world-economy,
+news-and-markets and us-equities none), and the retired example pack `finance` **10** (two inline in its `pack.yaml`, eight files): curves,
 FX, vol surfaces, options, bonds, credit, VaR and its backtest, stress, FRTB, exposure, CVA, collateral, SA-CCR,
 desks, books and counterparties, each written the way a trader or a quant would use it on that screen. The
 [Snippet catalogue](#18-snippet-catalogue) lists every one, with the sample entity it was checked on and what it
@@ -357,7 +357,7 @@ computes.
 The shipped ones are written by `tools/packgen/banking/make_packs.py` (the generator kept its name from the banking packs it began with) from their sources,
 `tools/packgen/banking/snippets/<pack>/<name>.py` (read by `calc_snippets.py`; never edit the generated
 `config/packs/<pack>/python/` files: change the source and run the generator, see
-[PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
+[PACK_DEVELOPER_GUIDE.md](PACK_GENERATORS_GUIDE.md#how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
 
 ```python
 # title: Key-rate DV01 by bump and reprice
@@ -824,7 +824,7 @@ drishti_bi.walk(df, "MTM by desk and currency")          # Graphic Walker over t
 
 The picture is real output of that cell on the sample trades dataset: ten desks, their MTM and trade counts (for instance `DESK-COMM` 16,954,390 over 90 trades). `df.attrs` carries what the engine added: `dataset`, `masked` (the masked columns), `asOf` (the business date), `layer` and `millis`.
 
-**As you.** Each call is a message from the worker to the page, which asks the same route a report's visual does (`POST /bi/api/datasets/<id>/query`, the console passing your session to the server): **your row rules apply, and a column masked for you comes back masked** (its name is in `df.attrs["masked"]`; the measures that read it are masked too). You need the BI power; without it the call fails with the server's code (`DRS-9002`) as any read does. The worker still holds no credential and cannot reach the network.
+**As you.** Each call is a message from the worker to the page, which asks the same route a report's visual does (a model query, `POST /bi/api/mq`, the console passing your session to the server): **your row rules apply, and a column masked for you comes back masked** (its name is in `df.attrs["masked"]`; the measures that read it are masked too). You need the BI power; without it the call fails with the server's code (`DRS-9002`) as any read does. The worker still holds no credential and cannot reach the network.
 
 **Graphic Walker, not PygWalker.** [PygWalker](https://github.com/Kanaries/pygwalker) is a Jupyter package: it needs a Python server beside the notebook, installs a dozen dependencies Pyodide does not ship offline, and loads its front end from the internet. What it puts over a DataFrame is **[Graphic Walker](https://github.com/Kanaries/graphic-walker)** (Apache-2.0), a drag-and-drop chart builder: so Calc vendors Graphic Walker 0.5.3 itself and `walk` gives it your frame, with PygWalker's `walk(df)` shape. Drag fields to the axes, colour, size and filters; the chart is drawn; the *Data* tab shows the frame.
 

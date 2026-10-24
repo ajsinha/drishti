@@ -147,7 +147,7 @@ enforcer rule `maxJdkVersion 21` still passes and production runs on JDK 21.
 2. **Register it** (1 minute): either list `com.example.AcmeProvider$Factory` in
    `META-INF/services/com.ash.drishti.ai.ProviderFactory` (a jar on the server's class path is enough), or declare the factory as a
    Spring `@Bean`.
-3. **Write the file** (2 minutes): `config/ai/acme.yaml` with `type: acme`, `base-url`, `api-key: ${ACME_KEY}` and the models.
+3. **Write the file** (2 minutes): `config/ai/<name>.yaml` (here `acme.yaml`; the shipped providers are `config/ai/*.yaml.example`) with `type: acme`, `base-url`, `api-key: ${ACME_KEY}` and the models.
    Anything extra you need goes in the file under your own keys; read it with `config.setting("key", default)` (nested maps are
    flat: `a.b.c`, lists `a.0.b`).
 4. **Test it** (15 minutes) with the `StubServer` pattern from `drishti-ai/src/test/.../StubServer.java` (a loopback HTTP server, no

@@ -17,7 +17,7 @@
 
 | Status | Date | Decider |
 |---|---|---|
-| Proposed (on the roadmap) | 2026-10-01 | Ashutosh Sinha |
+| Proposed (a later candidate, not in a planned release) | 2026-10-01 | Ashutosh Sinha |
 
 ## Context
 Users want proper pricing on what Drishti shows: a model NPV beside the booked MTM, Greeks, scenarios, implied vols.

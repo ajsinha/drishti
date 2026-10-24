@@ -16,7 +16,8 @@
 # Drishti BI: the target design
 
 *Status: target design, written 2026-10-12 after wave W1 was built and QA'd, before any more BI code. Design only;
-section 13 lists the decisions the product owner still has to take.* This is the **single authoritative design** of
+section 13 lists the decisions the product owner still has to take.* Since then waves A, B, C, N, D and R were built and released
+(2.2.0 to 2.6.7); section 12.2 records each wave as planned with *Built* notes; waves W and I are not built. This is the **single authoritative design** of
 Drishti's business intelligence (Rūpaka). Where it overlaps another document, this one wins:
 
 | Document | What still stands | What this design supersedes |
@@ -1030,7 +1031,9 @@ against them.
 **Release order (product owner, 2026-10-20):** 2.6.6 (QA clean) → **2.6.7 BI runs** (wave R, [BI_RUNS.md](BI_RUNS.md), with gossip off the busy path, HTTP/2 between nodes, chart any table,
 [TABLE_CHARTS.md](TABLE_CHARTS.md), and mixed Delta and Iceberg storage, [DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage)) →
 2.7.0 write-back (item 0 the one Drishti database, [DATABASE.md](DATABASE.md)) → 2.8.0 AI and Sajha → the real-life QA → 2.9.0 →
-3.0.0.
+3.0.0. **Since then:** 2.6.6 and 2.6.7 are released (2026-10-21); 2.7.0 is Sutra Next phase 1+ ([SUTRA_NEXT.md](SUTRA_NEXT.md), built,
+unreleased; the UI Board stays parked on branch `ui-board-preview`), so wave W (write-back) is **2.8.0** and wave I (AI) **2.9.0**; the
+real-life QA and wave E follow. The current order is [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#roadmap)'s roadmap.
 
 #### Wave A — Foundation and languages → 2.2.0
 
@@ -1157,7 +1160,7 @@ D and E; Python data prep and the browser Python console moved into C).
    library (as-of joins for prices and FX, unpivot, type fixes), profiling of a Transform's input and output, a step-by-step
    run (each step's rows and profile) for the editor. **Built (2.4.0):** a pack kind through a connector as an input, as the
    reader (`POST /api/v1/bi/python/input`); the fork-server started with the console; 21 snippets each with an example run in
-   pandas and in the sandbox; the profile of inputs, every step and the output; the step-by-step run. Not built: P4 (wave I, 2.8.0),
+   pandas and in the sandbox; the profile of inputs, every step and the output; the step-by-step run. Not built: P4 (wave I, now 2.9.0),
    precompute on refresh (rest of P6), P7 to P10 ([PYTHON_BI.md section 17](../guides/PYTHON_BI.md#17-data-prep-the-transform-editor-240)).
 3. **The browser Python console's server side:** masked extracts of a model for the browser, promotion of a result to run
    on the console backend. **Built (2.4.0):** `POST /pyconsole/extract` (the reader's masked rows, `bi.pyconsole.max_rows`) and
@@ -1245,7 +1248,7 @@ Pivot tab is replaced before a pointer click settles; an in-one-step click was w
    SharePoint push from Forms, connector dump (TEAMS_EMAIL_SHAREPOINT.md) stay designed, not scheduled.
 3. ~~**Integration**~~: **out of 2.6.0, after the 3.0.0 release** (product owner, 2026-10-20): PostgreSQL-wire read-only
    endpoint (decision 5), Excel feed, embed tokens bound to envelopes, SDK events.
-4. ~~**Sajha MCP connector**~~: **moved to wave I, 2.8.0** (product owner, 2026-10-20: it belongs to the release that does the AI work).
+4. ~~**Sajha MCP connector**~~: **moved to wave I, 2.8.0 (now 2.9.0)** (product owner, 2026-10-20: it belongs to the release that does the AI work).
 5. **Field parameters in report wells** (wave C gap 9, decided 2026-10-19): a report visual's well names `param.<name>` and
    the reader's parameter slicer switches the field or measure it draws; checked by the report schema.
    *Built (2.6.0):* `FieldParams` (`DRS-9037`), the report state's `params` (every model query of a report takes them as MQ v2 `params`), a field
@@ -1254,7 +1257,7 @@ Pivot tab is replaced before a pointer click settles; an in-one-step click was w
    *Built (2.6.0):* plugin `cassandra` (Cassandra 4 and 5, ScyllaDB, Astra), its loader (a day appears whole) and every read path, equal to the
    Delta connector over the same data ([CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md)).
 7. **drishti-iceberg**, Drishti's own Iceberg engine with no Hadoop (added 2026-10-20, [DRISHTI_ICEBERG.md](DRISHTI_ICEBERG.md), steps I1–I5),
-   being built.
+   *Built (2.6.0)*: `drishti-lakeio`, `drishti-iceberg` and the `native` engine of the Iceberg plugin (DRISHTI_ICEBERG.md).
 
 **Console lane:**
 
@@ -1272,6 +1275,9 @@ answers equal the MQ answers per user, masked~~ (with integration, after 3.0.0);
 field-parameter slicer; (4) the Cassandra connector answers as the Delta connector over the same data; (5) QA findings fixed before the drill.
 
 #### Wave R — BI runs, the transport between nodes and chart any table → 2.6.7
+
+Released in 2.6.7 (2026-10-21); the server lane of chart any table (saved charts, the `chart` panel, Open in BI) is not built yet
+([TABLE_CHARTS.md](TABLE_CHARTS.md)). The text below is the plan as decided.
 
 Decided by the product owner on 2026-10-20 ([BI_RUNS.md](BI_RUNS.md)): super scale is the architecture at every data size, and
 every BI query goes through one bounded asynchronous pipeline (submit → plan → admission → run → store → notify). An answer within
@@ -1291,7 +1297,7 @@ the bell, `drishti.py bi runs`, Admin → BI → Runs, help cards and the browse
 
 **Also in 2.6.7** (product owner, 2026-10-20):
 
-* **Gossip off the busy path** ([DRISHTI_NET.md, Planned, 2.6.7](DRISHTI_NET.md#the-transport-between-nodes-as-built-267)): on the
+* **Gossip off the busy path** ([DRISHTI_NET.md, as built, 2.6.7](DRISHTI_NET.md#the-transport-between-nodes-as-built-267)): on the
   sender, gossip and probes get their own small HTTP client pool and a platform thread (today they share `PeerHttp`'s clients with data
   forwarding, and the round runs on a virtual thread); on the receiver, `/api/v1/net/gossip` and the probes are handled on a reserved
   path that heavy BI work cannot crowd out. Accepted when a heavy BI burst on one node gives **no false *suspect* anywhere**.
@@ -1311,7 +1317,7 @@ their masks hide; (4) a restart loses no run silently; (5) a heavy BI burst on o
 HTTP/2 soak is no worse than HTTP/1.1 in errors and p95; (7) every table type charts in all ten themes and no masked value reaches a
 chart or its export (TABLE_CHARTS 19); (8) QA findings fixed before the drill.
 
-#### Wave W — Write-back → 2.7.0
+#### Wave W — Write-back → 2.8.0
 
 Editing and saving fields on a Sutra page ([WRITE_BACK.md](WRITE_BACK.md), phases W1–W5): `edit:` in the Sutra, change requests
 applied by a transaction handler over a fixed number of ordered lanes (one change at a time per record, lanes in parallel), version
@@ -1331,7 +1337,7 @@ entities apply in per-record order; an approved overlay appears in the next lake
 killed mid-run and with a network split (only the current epoch writes); a 2.6.5 data folder starts unchanged and read-only; QA
 findings fixed before the drill.
 
-#### Wave I — AI → 2.8.0
+#### Wave I — AI → 2.9.0
 
 **Server lane:**
 
@@ -1358,7 +1364,7 @@ user may see; (2) an agent composes a GenUI screen that streams into a host page
 **After I: the product owner's real-life QA on 2.8.0.** An isolated, full, real-life QA (real users' tasks on real-shaped
 data, outside the builders' own tests). Its findings are triaged first and fixed in wave E before anything else in it.
 
-#### Wave E — QA findings and production readiness → 2.9.0
+#### Wave E — QA findings and production readiness → after 2.9.0
 
 1. **Real-life QA findings** first (server and console).
 2. **Governance:** environment parameter rules in bundles and deployment between environments; two-way git sync

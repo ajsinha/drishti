@@ -17,7 +17,27 @@
 
 ## Unreleased
 
-- **A README for every pack and every connector** (the README standard: [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md#the-readme-standard),
+- **Documentation rot checks and review.** `drishti-console/tests/test_docs_rot.py` (DOC-20) reads every document a reader meets
+  (`docs/**`, the top-level files, every README, the pack guides, the console's help guides) and fails on a relative link or
+  `#anchor` that goes nowhere, a repository path in backticks that does not exist, a `drishti.py` command the CLI does not have,
+  a `DRISHTI_*` variable, `drishti.*` setting or console key nothing reads, a `DRS-` code the code lacks (and a code the code
+  has that neither TROUBLESHOOTING nor RACHANA_REFERENCE lists), and a `<GO>` command word or a kind no pack has. History
+  (CHANGELOG, release notes, QA logs), designs not built and lines that say a thing was removed are exempt; examples a document
+  makes up are in a short, commented allow-list. The findings were fixed across the docs. The pack and connector developer guides
+  were split: [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md) keeps the worked example and `pack.yaml`, with
+  [PACK_MODELLING_GUIDE.md](docs/guides/PACK_MODELLING_GUIDE.md), [PACK_LIFECYCLE_GUIDE.md](docs/guides/PACK_LIFECYCLE_GUIDE.md) and
+  [PACK_GENERATORS_GUIDE.md](docs/guides/PACK_GENERATORS_GUIDE.md); [CONNECTOR_DEVELOPER_GUIDE.md](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md)
+  keeps the SPI and the worked plugin, with [CONNECTOR_RECIPES.md](docs/connectors/CONNECTOR_RECIPES.md) and
+  [CONNECTOR_OPERATIONS.md](docs/connectors/CONNECTOR_OPERATIONS.md) (the old headings point to the new places; its two proxy
+  sections are one). SCREEN_DESIGNER section 31 is now "The Sutra designer: Customize, Describe, Outline and Grid" (every link
+  updated). THIRD-PARTY-NOTICES lists the connectors' client libraries with their licences from the Maven POMs (the ActiveMQ
+  README now gives the Jakarta Messaging API as EPL-2.0 / GPL-2.0 with Classpath Exception).
+- **The pack overview shows the pack's README** (`MKT <GO>`, `/p/<pack>`): below the kinds, *What the pack holds* gives the
+  README's summary, its sources (internal-only flagged) and, folded, its *Data structures*, for the kinds the user may open only
+  (the server's `GET /api/v1/packs/{pack}/readme` leaves the others out). No README, or an older server: the page is as before.
+  The README styles moved to `readme.css`, shared with Admin → Packs and Admin → Connectors.
+
+- **A README for every pack and every connector** (the README standard: [PACK_GENERATORS_GUIDE.md](docs/guides/PACK_GENERATORS_GUIDE.md#the-readme-standard),
   [CONNECTOR_DEVELOPER_GUIDE.md](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md#the-readme-standard)). Each pack has
   `config/packs/<pack>/README.md`: a YAML front matter (pack, version, summary, kinds, commands, depends-on packs, connectors, plugins
   and settings, sources with licences and internal-only flags, refresh) and seven sections; *Data structures* gives every kind its id
@@ -98,7 +118,7 @@
   `trading/trade-table@1` and the kit's `data-provenance@1`; news-and-markets `quote` and `news` use `series-line@1`, `field-list@1`,
   `ranked-bars@1`, `data-provenance@1` and the pack's new `quote-ranges`, `price-bars`, `headlines`, `headline-pipeline` and
   `snapshot-note`. A fragment parameter may now be a list (`type: columns`: a table's columns passed by the Sutra;
-  [PACK_DEVELOPER_GUIDE](docs/guides/PACK_DEVELOPER_GUIDE.md#fragments-and-docstrings)). The proofs draw synthetic records (a derived
+  [PACK_DEVELOPER_GUIDE](docs/guides/PACK_MODELLING_GUIDE.md#fragments-and-docstrings)). The proofs draw synthetic records (a derived
   page per kind, a made-up quote and headline set) kept with the server's test resources and served by a file connector of the test's
   own (`PackSutraNextEquivalence.lake`); `TradingSutraNextEquivalenceTest` now covers 134 screens.
 - **Freshness per panel source** ([SUTRA_NEXT.md section 9](docs/architecture/SUTRA_NEXT.md#9-live-panels-refresh-control-and-freshness)):
@@ -193,7 +213,7 @@
   flattened `NOTIONAL` and `INDEX_NAME`, the derived pages' `store: disk`, 1,000 rows a page, the `PAY_7D/30D/90D` totals) are
   written by the generator; the parsed manifests are unchanged. `make_docs.py` brought up to date (core and counterparty-risk guides).
 - **The Sutra designer, modes 1 and 2: Customize and Describe** (behind `ui.designer`, off by default;
-  [SCREEN_DESIGNER.md](docs/guides/SCREEN_DESIGNER.md#31-the-sutra-designer-customize-and-describe) section 31): one shell with modes
+  [SCREEN_DESIGNER.md](docs/guides/SCREEN_DESIGNER.md#31-the-sutra-designer-customize-describe-outline-and-grid) section 31): one shell with modes
   (Outline and Grid shown, not yet enabled), every mode editing the same Sutra YAML as the user's own Design, never the pack's Sutra.
   - **Customize** (a button on every entity page): the page edited in place with live data as the viewer, under a yellow
     *Customizing · only you see changes until you share* bar (Cancel, Done); panels get a handle (drag or arrows), Hide/Show (hidden
@@ -213,7 +233,7 @@
     API_GUIDE (`?design=`, the events endpoint). Tests: test_designer.py (parser phrasings, unsure and error lines, the steps, the
     routes off and on), test_designer_browser.py (Customize on a trade page end to end, Describe's book desk saved, a phone, three
     themes, the pictures), SutraNextEventsTest, SutraParserTest, BlockOpsTest.
-- **The Sutra designer, UX wave 1A** ([SCREEN_DESIGNER.md](docs/guides/SCREEN_DESIGNER.md#31-the-sutra-designer-customize-and-describe)
+- **The Sutra designer, UX wave 1A** ([SCREEN_DESIGNER.md](docs/guides/SCREEN_DESIGNER.md#31-the-sutra-designer-customize-describe-outline-and-grid)
   section 31):
   - *When I click a row in [table] show [▾]* offers, besides the row's details, **linked records** reachable from the row's fields
     through the packs' `graph.fields`, across packs, in plain words (*its counterparty (core)*, *its events*, *its counterparty's

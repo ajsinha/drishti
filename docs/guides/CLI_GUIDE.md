@@ -31,6 +31,9 @@ and how to run it all from PyCharm.
 - [7. `server`: health and packs; also smoke, `doctor`, `view`, shell completion, and the `connector` commands](#7-server-health-and-packs)
   - [`history`: an entity over time](#history-an-entity-over-time)
   - [`connector`: list, get, apply, delete, test, plugins, enable, disable, reset, history](#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history)
+  - [`net`: Drishti\*net's config/net/ folder](#net-drishtinets-confignet-folder)
+  - [`bi`: workspaces and the catalogue](#bi-workspaces-and-the-catalogue-rupaka), [the BI languages](#bi-expr-bi-migrate-bi-sql-the-bi-languages), [models and model queries](#bi-model-bi-mq-models-and-model-queries), [BI runs](#bi-runs-bi-mq---async-bi-sql---async-bi-runs-267)
+  - `lake` (build, scan, publish, status, demo, maintain): [TOOLS.md section 4](TOOLS.md#4-lake-build-a-large-json-export-into-a-delta-lake)
 - [8. `design`: the Screen Designer over REST](#8-design-the-screen-designer-over-rest)
 - [9. `docs`: screenshots](#9-docs-screenshots)
 - [10. Recipes](#10-recipes)
@@ -1471,9 +1474,9 @@ drishti-console/.venv/bin/python tools/drishti.py testdata capture-market
 
 ### `data load`: the demo data, at three sizes
 
-`data load --store S` runs `tools/load-S.sh`, which builds the **shipped banking packs' demo data** (1,791 sample documents
+`data load --store <store>` runs `tools/load-<store>.sh`, which builds the **shipped banking packs' demo data** (1,791 sample documents
 x 10 business days) in that store, and with `--trades N` a generated trade book of N trades a day for `--days` days. Stores:
-`delta`, `files`, `postgres`, `duckdb`, `iceberg`, `mongodb`, `redis`, `aerospike`. The scripts run from the repository root, so
+`delta`, `files`, `postgres`, `duckdb`, `iceberg`, `mongodb`, `redis`, `aerospike`, `cassandra`. The scripts run from the repository root, so
 a relative root is relative to it. Options after the known ones go to the script unchanged. Everything about the scripts, the
 stores and the sizes is in [DEMO_DATA.md](../connectors/DEMO_DATA.md).
 

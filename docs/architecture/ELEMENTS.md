@@ -961,7 +961,7 @@ console it talks to.
   app or user), `AccessRecorder` `embed:<app>`, `provenance.masked` counts, `ErrorCode` new codes.
 - **Unit (JavaScript)**: the root-scoped modules run in a test page against a `ShadowRoot` (Playwright, as the console's
   browser tests do); the `FetchEventSource` parser (split chunks, comments, multi-line `data:`).
-- **The foreign-origin host page (Playwright)**: `drishti-console/tests/elements/host/` is a tiny host app on a second
+- **The foreign-origin host page (Playwright)**: `tools/elements-demo/` (as built; designed as a folder under the console's tests) is a tiny host app on a second
   port with a strict CSP (section 10), its own "backend" doing the token exchange against a scratch server with the
   banking packs; tests: a live trade ticks; masked fields read `•••` for a viewer and a user with `raw`; clicking a
   counterparty fires `drishti:navigate` and, not cancelled, reloads in place (cancelled, the host's search box takes it
@@ -1041,10 +1041,10 @@ the console in the host's `style-src`).
 its own sign-in, its own `/api/drishti-token` that asks the console for a token server to server, a search box, a recent
 list, an as-of picker, a main `<drishti-view>` and a second, smaller one), `drishti-console/web/embed/drishti-elements.js`
 (the element and one `Connection` per page and server, about 540 lines), `routes/embed_routes.py` and `core/embed_poc.py`
-(the embed endpoints and the DEV-ONLY token path, **off** unless `embed.poc.enabled`; signing key, per-app secret and exact
-origins in config). Run it with [the demo's README](../../tools/elements-demo/README.md).
+(the embed endpoints and the DEV-ONLY token path, which was **off** unless `embed.poc.enabled`; signing key, per-app secret and exact
+origins in config; this PoC token path was later replaced by the server's embed tokens, `core/embed_auth.py`, and `embed.enabled`). Run it with [the demo's README](../../tools/elements-demo/README.md).
 Acceptance: `drishti-console/tests/test_embed_elements_browser.py` (Playwright, Chromium, Firefox and WebKit, against a real
-scratch server, the console and the host on three ports) and `test_embed_poc.py` (CORS, masking, "nothing else changed").
+scratch server, the console and the host on three ports) and `test_embed_poc.py` (CORS, masking, "nothing else changed"; it was later replaced by `test_embed.py`).
 **All ten criteria passed in all three browsers** (40 tests passed). The rapid-switching test was checked by mutation:
 with the sequence guard removed it fails (a stale entity is painted).
 

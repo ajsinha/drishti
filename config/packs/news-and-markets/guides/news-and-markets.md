@@ -22,7 +22,7 @@ links to its own headlines (`newsId`), so `CPTY CP-NORTHBRIDGE` shows a *Headlin
 ## News
 
 A sample pack: fifteen topics (central banks, countries, companies and themes), and for each the news about it, **computed when you open the page**
-by the [news connector](../../../../docs/connectors/NEWS.md) from Google News. The topic list is static reference data in `samples/news-topic/`
+by the [news connector](../../../../docs/connectors/NEWS.md) from Google News. The topic list is static reference data in `samples/news-topic.jsonl`
 (written by `tools/make_samples.py`); the headlines are live.
 
 !!! warning "Off until you turn it on, and names leave your network when you do"
@@ -77,7 +77,7 @@ is code rather than a store. See [Domain packs](../../../../docs/guides/PACKS.md
 A sample pack: twenty well-known listed companies, each with a **quote and a price chart** computed on demand by the
 [yfinance connector](../../../../docs/connectors/YFINANCE.md) and the **news about the company** computed on demand by the
 [news connector](../../../../docs/connectors/NEWS.md). The company list (ticker, name, other names,
-exchange, sector, country) is static reference data in `samples/listed-company/`, written by `config/packs/news-and-markets/tools/make_samples.py`.
+exchange, sector, country) is static reference data in `samples/listed-company.jsonl`, written by `config/packs/news-and-markets/tools/make_samples.py`.
 
 !!! warning "Internal demonstrations only; off until you turn it on"
     Yahoo's chart endpoint is **unofficial** and its terms restrict its use: do not use this pack in production or redistribute what it shows. Both connectors are
@@ -117,7 +117,7 @@ Finance, Google News and the publishers, and is shown for demonstration only.
 | `CO sector=Energy <GO>` | Lists the energy companies. |
 | `FORM news-and-markets <GO>` | The search form: id, ticker, name, other names, exchange, sector, country. |
 | `QUOTE QUOTE-MSFT <GO>` | The quote and the table of bars for any ticker. |
-| `MKTW <GO>` | The pack's overview: its kinds, their mnemonics and how many documents each holds. |
+| `NWMK <GO>` | The pack's overview: its kinds, their mnemonics and how many documents each holds. |
 
 ### What you will see
 

@@ -192,7 +192,7 @@ change to a field they may not edit, is refused; each save and discard is in the
   cells`) gives the trades the form above, with the lookup and the limit hint. The notional is `money`: in the trades' own currency
   when they carry one (a Currency field is added and `currency: currency`), else in the book's currency (`currency: GBP`), else USD.
 
-See [SCREEN_DESIGNER.md section 31](SCREEN_DESIGNER.md#31-the-sutra-designer-customize-and-describe).
+See [SCREEN_DESIGNER.md section 31](SCREEN_DESIGNER.md#31-the-sutra-designer-customize-describe-outline-and-grid).
 
 ## 6. The expressions
 
