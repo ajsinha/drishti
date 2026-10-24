@@ -16,7 +16,7 @@
 ---
 connector: s3
 category: plugin
-summary: Reads one JSON object per entity from Amazon S3 or an S3-compatible store (MinIO, Ceph), optionally in a folder per business date; no index, no table format, no loader.
+summary: Reads one JSON object per entity from Amazon S3 or an S3-compatible store (MinIO, Ceph), optionally in a folder per business date; ids kept for type-ahead (the `index.*` settings), no table format, no loader.
 capabilities:
 - fetch
 - search
