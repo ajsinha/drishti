@@ -32,6 +32,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 sys.path.insert(0, str(HERE.parent / "common"))
 import packsamples as PS  # noqa: E402
+import readme as README  # noqa: E402  (the pack README standard)
 sys.path.insert(0, str(HERE))
 import fetch as F  # noqa: E402
 
@@ -499,6 +500,7 @@ def _rel(p: Path) -> str:
 def files(docs: dict[str, dict[str, dict]]) -> dict[Path, str]:
     out = {PACK / "samples" / name: text for name, text in PS.files(docs, catalog(docs), catalog_indent=None).items()}
     out[PACK / "guides" / "us-equities.md"] = guide(docs)
+    out[PACK / "README.md"] = README.render_pack(PACK, files=out, intro=HERE / "readme" / "us-equities.intro.md")
     return out
 
 

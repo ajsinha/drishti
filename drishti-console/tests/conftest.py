@@ -970,6 +970,19 @@ class FakeBackend:
         """Compare's side by side: the view as of a date (the fake has one view whatever the date)."""
         return await self.view(kind, id_, ident)
 
+    async def pack_readme(self, name, ident=None):
+        """A pack's README (the README standard): the trading pack has one, others none."""
+        if name != "trading":
+            raise BackendError(404, "DRS-1001", f"pack '{name}' has no README.md")
+        return {"pack": "trading", "title": "Trading", "version": "1.2.0",
+                "meta": {"pack": "trading", "summary": "Trades in 125 products.", "kinds": ["trade"], "commands": {"TRD": "trade"},
+                         "sources": [{"name": "Synthetic sample data", "licence": "Proprietary", "internal-only": False},
+                                     {"name": "A feed", "licence": "Restricted", "internal-only": True}], "refresh": "tools/packgen/readme.py trading"},
+                "markdown": "# The trading pack\n\n## What it is\n\nTrades.\n\n## Data structures\n\n### `trade`\n\n"
+                            "| Field | Type | Example | Description |\n|---|---|---|---|\n| `TRADE_ID` | string | `MX-1` | The document's id |\n\n"
+                            "Nested structures:\n\n| Path | Fields |\n|---|---|\n| `LEGS[].CASH_FLOWS[]` | `FLOW_ID` (string) |\n\n"
+                            "<script>alert(1)</script>\n\n[Packs](../../../docs/guides/PACKS.md) [web](https://example.com) [bad](javascript:alert(1))\n"}
+
     async def pack_overview(self, name, ident=None):
         if name.upper() not in ("MKT", "MARKET-DATA"):
             raise BackendError(400, "DRS-5001", f"no pack '{name}' is switched on")

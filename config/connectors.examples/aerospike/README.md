@@ -1,0 +1,117 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+---
+template: aerospike
+category: template
+summary: The six banking data domains (trading, risk, market, reference, credit, collateral) read from Aerospike, one connector file per domain, replacing the former application-aerospike.yaml profile.
+connectors:
+- aerospike
+files:
+- collateral-store.yaml
+- credit-store.yaml
+- market-store.yaml
+- reference-store.yaml
+- risk-store.yaml
+- trading-store.yaml
+doc: docs/connectors/AEROSPIKE_CONNECTOR.md
+---
+# The aerospike connector templates
+
+Six ready-made connector files for the `aerospike` plugin: each reads one data domain of the banking packs from an Aerospike namespace
+that `tools/load-aerospike.sh` (or your own loader keeping the same layout) fills. They do what the deprecated
+`application-aerospike.yaml` profile did, as connector files.
+
+## What it reads
+
+Each file serves the kinds of one domain (`settings.domain`) from three sets in the namespace: `<domain>` (a record per entity per
+business day), `<domain>_ix` (a record per entity: its dates) and `<domain>_kinds` (a record per kind: its dates). Reads are two key
+lookups; searches, pick lists and reverse lookups read the day's promoted bins. `reference-store.yaml` reads its twelve kinds in
+`effective` mode (a record only when the entity changes); the others are snapshots (a record every business day).
+
+## Settings
+
+The settings the files set (every other setting takes the plugin's default; the full list is in the plugin's settings table):
+
+| Setting or variable | Default in the files | Meaning |
+|---|---|---|
+| `domain` | `trading`, `risk`, `market`, `reference`, `credit`, `collateral` (one per file) | The data domain: the names of the three sets |
+| `hosts` ← `DRISHTI_AEROSPIKE_HOSTS` | `localhost:3000` | Seed nodes, `host:port`, comma separated |
+| `namespace` ← `DRISHTI_AEROSPIKE_NAMESPACE` | `test` | The namespace holding the sets |
+| `mode.<kind>` | `effective` for the twelve reference kinds | The newest record on or before the date asked, instead of the record of that date |
+
+No credentials are set: a development node without security. For a secured cluster add `user` and `password` (as `${ENV}` references)
+or mutual TLS with certificate log-in, as `../other/aerospike-tls.yaml` shows.
+
+## Data structure
+
+For each file, the namespace must hold the domain's three sets with the layout the loader writes:
+
+```
+set trading,       key "trade/MX-20000001/20260930"   bins kind, id, date (20260930), doc (the JSON document), promoted bins (TRADE_ID, PORTFOLIO, …)
+set trading_ix,    key "trade/MX-20000001"            bins kind, id, dates [20260928, 20260929, 20260930]
+set trading_kinds, key "trade"                        bins kind, dates [20260917, …, 20260930]
+```
+
+| File | Domain (sets) | Kinds |
+|---|---|---|
+| `trading-store.yaml` | `trading` | `trade` |
+| `risk-store.yaml` | `risk` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` |
+| `market-store.yaml` | `market` | twenty market-data kinds (curves, FX, vol surfaces, equities, commodities, `rate-fixing`, `bond`, …) |
+| `reference-store.yaml` | `reference` | `counterparty`, `book`, `desk`, `trader`, `csa`, `legal-entity` and six more, effective |
+| `credit-store.yaml` | `credit` | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` |
+| `collateral-store.yaml` | `collateral` | `collateral-balance`, `margin-call`, `simm` |
+
+Bin names are at most 15 characters (a longer promoted path is cut and suffixed with a hash); searches need the pack's promoted fields
+as bins (`layout.<kind>.columns`). The record layout and the bin rule are in the Aerospike connector document, section *The record layout*.
+
+## Examples
+
+```bash
+cp config/connectors.examples/aerospike/*.yaml config/connectors/       # or only the domains you want
+export DRISHTI_AEROSPIKE_HOSTS=aero-1.example.com:3000 DRISHTI_AEROSPIKE_NAMESPACE=drishti
+tools/load-aerospike.sh "$DRISHTI_AEROSPIKE_HOSTS" "$DRISHTI_AEROSPIKE_NAMESPACE"          # the samples x 10 days
+tools/load-aerospike.sh "$DRISHTI_AEROSPIKE_HOSTS" "$DRISHTI_AEROSPIKE_NAMESPACE" --ttl-days 90   # records expire after 90 days
+```
+
+A file copied into `config/connectors/` replaces the connector file of the same name (settings are not merged) and is applied within
+seconds. The trading pack routes `trade` to `trade-endur`: save `trading-store.yaml` as `trade-endur.yaml` (and switch off
+`trade-calypso` and `trade-murex`, or give them `union: "true"`).
+
+<!-- files:begin (generated by tools/connector_readmes.py from the files in this folder) -->
+| File | Plugin | Kinds | What it is |
+|---|---|---|---|
+| `collateral-store.yaml` | `aerospike` | `collateral-balance`, `margin-call`, `simm` | collateral-store read from aerospike (the former application-aerospike.yaml profile) |
+| `credit-store.yaml` | `aerospike` | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` | credit-store read from aerospike (the former application-aerospike.yaml profile) |
+| `market-store.yaml` | `aerospike` | `ir-curve`, `repo-curve`, `fx-spot`, `fx-forward-curve`, `fx-vol-surface`, `ir-vol-cube`, `cap-vol-surface`, `equity`, `equity-index`, `dividend-curve`, `equity-vol-surface`, `credit-curve`, `inflation-index`, `inflation-curve`, `commodity`, `commodity-curve`, `commodity-vol-surface`, `rate-fixing`, `bond`, `correlation-matrix` | market-store read from aerospike (the former application-aerospike.yaml profile) |
+| `reference-store.yaml` | `aerospike` | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` | reference-store read from aerospike (the former application-aerospike.yaml profile) |
+| `risk-store.yaml` | `aerospike` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` | risk-store read from aerospike (the former application-aerospike.yaml profile) |
+| `trading-store.yaml` | `aerospike` | `trade` | trading-store read from aerospike (the former application-aerospike.yaml profile) |
+<!-- files:end -->
+
+## Troubleshooting
+
+- `DOWN: not connected to Aerospike`: wrong `hosts`, a closed port or the cluster down (`nc -z <host> 3000`).
+- A snapshot kind shows *gone* for one entity: no record `kind/id/yyyyMMdd` for the newest date; write every entity each date, or
+  `mode.<kind>: effective`.
+- Searches say `partial: true`: the field is not a promoted bin; add it to `layout.<kind>.columns` and reload.
+- Trades from the lake still show: the file was saved as `trading-store.yaml`, which the trading pack does not route to; name it `trade-endur.yaml`.
+- Loader `max connections … would be exceeded`: an old loader; use the current `tools/load-aerospike.sh`.
+
+## See also
+
+- [The Aerospike connector document](../../../docs/connectors/AEROSPIKE_CONNECTOR.md): layout, loading, TTL retention, sizing, security.
+- [Connector files](../../../docs/connectors/CONNECTOR_FILES.md) (copying examples, the trade connectors' names) and [TLS](../../../docs/connectors/TLS.md).
+- [The demo data](../../../docs/connectors/DEMO_DATA.md) (the samples loaded into every store).

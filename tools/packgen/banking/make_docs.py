@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Writes the banking packs' documentation (config/packs/<pack>/guides/*.md and config/help.yaml) from the taxonomy, the
+"""Writes the banking packs' documentation (config/packs/<pack>/guides/*.md, config/help.yaml and README.md) from the taxonomy, the
 layout and the generated data, so it cannot drift from what the packs contain: an overview per pack, the product
 catalogue, the market-data catalogue and the cross-pack data model. The help centre shows them under Domain packs.
 
@@ -34,6 +34,8 @@ import taxonomy as T
 import trade_shape as S
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "trades"))
 import schema as TSCHEMA  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "common"))
+import readme as README  # noqa: E402  (the pack README standard: each pack's README.md, from its intro in readme/)
 
 ROOT = Path(__file__).resolve().parents[3]
 PACKS = ROOT / "config" / "packs"
@@ -260,6 +262,7 @@ def files() -> dict[Path, str]:
         help_yaml = yaml.safe_dump({"guides": entries}, sort_keys=False, allow_unicode=True, width=160)
         out[PACKS / pack / "config" / "help.yaml"] = "\n".join("#" + (" " + x if x.strip() else "") for x in HEADER.splitlines()[1:14]) + \
             f"\n\n# {GENERATED[5:-4]}\n{help_yaml}"
+        out[PACKS / pack / "README.md"] = README.render_pack(PACKS / pack, files=out)
     return out
 
 

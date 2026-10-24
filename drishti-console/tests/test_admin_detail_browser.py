@@ -44,10 +44,24 @@ class DetailBackend(ConnectorBackend):
             return {"configured": False, "packs": []}
         if path.startswith("/loads/lakepack"):
             return {"expectations": [], "loads": []}
+        if path == "/connectors/types/file/readme":
+            return {"connector": "file", "source": "classpath", "meta": {"connector": "file", "category": "plugin", "summary": "Reads JSON Lines files.",
+                    "capabilities": ["fetch", "search", "history"], "licence": "Part of Drishti", "windows": "Works"}, "markdown": README_MD}
         return await super().admin(method, path, ident, body, timeout, headers, **params)
 
     async def pack_overview(self, name, ident=None):
         return {"kinds": [{"kind": "item", "example": "I-1"}]}
+
+    async def pack_readme(self, name, ident=None):
+        return {"pack": "lakepack", "meta": {"pack": "lakepack", "summary": "Items from a lake.", "kinds": ["item"],
+                                             "sources": [{"name": "A licensed feed", "licence": "Restricted", "internal-only": True}]},
+                "markdown": README_MD}
+
+
+# a README with what makes a phone scroll sideways if it is not contained: a wide table, a long code line, long identifiers
+README_MD = ("# The pack\n\n## Data structures\n\n### `item`\n\n| Field | Type | Example | Description |\n|---|---|---|---|\n"
+             + "".join(f"| `ITEM_FIELD_WITH_A_LONG_NAME_{i}` | string | `EXAMPLE-VALUE-{i}-ABCDEFGHIJKLMNOP` | A description that runs on for a while |\n" for i in range(6))
+             + "\nNested: `LEGS[].CASH_FLOWS[].RESETS[]`\n\n```sql\nCREATE TABLE \"trading\".\"trade\" (\"business_date\" date, \"generation\" int, \"bucket\" smallint, \"id\" text, \"doc\" text)\n```\n")
 
 
 @pytest.fixture(scope="module")
@@ -122,9 +136,37 @@ def test_a_phone_shows_both_pages_without_scrolling_sideways_and_with_finger_siz
         for url in ("/admin/connectors/item-store", "/admin/packs/lakepack"):
             page.goto(detail_console + url)
             assert page.evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1"), url
-            small = page.evaluate("""() => [...document.querySelectorAll('.det-sec a, .det-sec button, .adm-crumb a')]
+            small = page.evaluate("""() => [...document.querySelectorAll('.det-sec a, .det-sec button, .adm-crumb a')].filter(e => !e.closest('.readme-article'))
                 .filter(e => { const r = e.getBoundingClientRect(); return r.width && Math.min(r.width, r.height) < 43; })
                 .map(e => e.textContent.trim().slice(0, 30))""")
             assert not small, (url, small)
+    finally:
+        ctx.close()
+
+
+def test_the_pack_and_connector_pages_show_their_readmes_and_a_phone_reads_them_without_scrolling_sideways(browser, detail_console):
+    """The README standard on screen: the pack's README (summary, internal-only source, the data-structure table) and the connector type's
+    (capabilities, then its README folded), on a desktop and on a phone, where wide tables and code scroll inside their own box."""
+    page = browser.new_page()
+    page.goto(detail_console + "/admin/packs/lakepack")
+    sec = page.locator("[data-pack-readme]")
+    assert "Items from a lake." in sec.locator("[data-readme-summary]").inner_text()
+    assert "internal only" in sec.locator("[data-readme-sources]").inner_text()
+    assert sec.locator(".readme-article table th", has_text="Field").count() == 1
+    assert "ITEM_FIELD_WITH_A_LONG_NAME_0" in sec.locator(".readme-article").inner_text()
+    page.goto(detail_console + "/admin/connectors/item-store")
+    t = page.locator("[data-type-readme=file]")
+    assert "Reads JSON Lines files." in t.inner_text() and "history" in t.inner_text()
+    assert not t.locator(".readme-article").is_visible()                                      # folded until asked
+    t.locator("[data-readme-body] > summary").click()
+    assert t.locator(".readme-article pre").is_visible()
+    page.close()
+    ctx = browser.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
+    phone = ctx.new_page()
+    try:
+        for url in ("/admin/packs/lakepack", "/admin/connectors/item-store"):
+            phone.goto(detail_console + url)
+            phone.evaluate("document.querySelectorAll('[data-readme-body]').forEach(d => d.open = true)")
+            assert phone.evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1"), url
     finally:
         ctx.close()

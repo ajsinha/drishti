@@ -44,6 +44,7 @@ def test_make_check_passes_without_a_cache(tmp_path):
 def test_make_check_passes_with_a_cache(tmp_path):
     cache, pack = tmp_path / "cache", tmp_path / "pack"
     shutil.copytree(FX, cache)
+    shutil.copytree(PACK, pack, ignore=shutil.ignore_patterns("samples"))       # the hand-written parts, as a widened build has them
     for args in ([], ["--check"]):
         r = subprocess.run([sys.executable, str(GEN / "make.py"), *args, "--cache", str(cache), "--pack", str(pack)], capture_output=True, text=True)
         assert r.returncode == 0, r.stdout + r.stderr

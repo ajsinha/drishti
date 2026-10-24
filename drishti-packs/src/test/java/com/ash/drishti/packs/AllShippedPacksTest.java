@@ -25,7 +25,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * The seven packs shipped in {@code config/packs} load together (the default {@code drishti.packs.enabled}), any two of them load
+ * The packs shipped in {@code config/packs} load together (the default {@code drishti.packs.enabled}, plus the opt-in public-data packs), any two of them load
  * without a role or mnemonic declared differently by both, and every retired example pack in {@code examples/packs} still loads
  * on top of them (through {@code drishti.packs.extra-dirs}).
  */
@@ -34,9 +34,14 @@ class AllShippedPacksTest {
     static final Path SHIPPED = Path.of("..", "config", "packs").toAbsolutePath().normalize();
     static final Path EXAMPLES = Path.of("..", "examples", "packs").toAbsolutePath().normalize();
 
+    /** Shipped but not on by default: switched on with DRISHTI_PACKS (their READMEs say how). */
+    static final List<String> OPT_IN = List.of("us-equities", "gleif");
+
     @Test
-    void theShippedPacksAreTheSevenAndLoadTogether() {
-        assertThat(PackLoader.folders(List.of(SHIPPED))).containsExactlyInAnyOrder(PackPaths.DEFAULT_ENABLED.split(","));
+    void theShippedPacksAreTheDefaultOnesPlusTheOptInOnesAndLoadTogether() {
+        List<String> shipped = PackLoader.folders(List.of(SHIPPED));
+        assertThat(shipped).contains(PackPaths.DEFAULT_ENABLED.split(","));
+        assertThat(shipped.stream().filter(n -> !List.of(PackPaths.DEFAULT_ENABLED.split(",")).contains(n)).toList()).isSubsetOf(OPT_IN);
         PackLoader loader = new PackLoader();
         Map<String, Object> p = loader.properties(loader.load(SHIPPED, List.of(PackPaths.DEFAULT_ENABLED.split(","))));
         assertThat(p).containsEntry("drishti.commands.mnemonics.TRD.kind", "trade").containsEntry("drishti.commands.mnemonics.CPTY.kind", "counterparty")
@@ -62,7 +67,7 @@ class AllShippedPacksTest {
         Path dir = SHIPPED;
         assertThat(Files.isDirectory(dir)).as("the shipped packs folder").isTrue();
         List<String> all = PackLoader.folders(List.of(dir));
-        assertThat(all).hasSize(7);
+        assertThat(all).hasSizeGreaterThanOrEqualTo(PackPaths.DEFAULT_ENABLED.split(",").length);
         List<String> clashes = new ArrayList<>();
         for (int i = 0; i < all.size(); i++) {
             for (int j = i + 1; j < all.size(); j++) {
