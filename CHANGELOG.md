@@ -39,6 +39,25 @@
     API_GUIDE (`?design=`, the events endpoint). Tests: test_designer.py (parser phrasings, unsure and error lines, the steps, the
     routes off and on), test_designer_browser.py (Customize on a trade page end to end, Describe's book desk saved, a phone, three
     themes, the pictures), SutraNextEventsTest, SutraParserTest, BlockOpsTest.
+- **The Sutra designer, UX wave 1A** ([SCREEN_DESIGNER.md](docs/guides/SCREEN_DESIGNER.md#31-the-sutra-designer-customize-and-describe)
+  section 31):
+  - *When I click a row in [table] show [▾]* offers, besides the row's details, **linked records** reachable from the row's fields
+    through the packs' `graph.fields`, across packs, in plain words (*its counterparty (core)*, *its events*, *its counterparty's
+    credit limits*): a child with a `source:` reading `@parent.open.<field>` (`id:` for the record, `$src.<LIST>` for a list inside
+    it, `where:` for the records of another kind that point at it, found from its key columns or one sample); and **an existing panel
+    on this page**, moved under the table (put back by another sentence or Stop). `core/designer_links.py`.
+  - **Smooth Customize**: a step no longer reloads the page; the page is fetched and only the panels whose HTML changed are swapped
+    in (the others keep their nodes, charts and state), the scroll position kept, no flicker. Sutra wiring now also listens on a page
+    being customised, so a table wired by a step answers clicks at once.
+  - **My version of this page** is a per-user flag (`kind → design id`) kept by the server (`GET /api/v1/me/pages`,
+    `PUT`/`DELETE /api/v1/me/pages/{kind}`, in the preference store), no longer matched by the design's name: renaming the design
+    keeps it; designs named *My page · &lt;kind&gt;* become flags once, the first time the console sees the user.
+  - **Describe**: while the line has errors the live result is cleared and says *Fix the red part to see the screen*.
+  - Server: `GET /api/v1/packs` lists each pack's `links` (its `graph.fields`). Docs: SCREEN_DESIGNER section 31 (linked records, the
+    flag, smooth steps, Describe's error state; new picture `customize-linked.jpg`), API_GUIDE (`/me/pages`, `links`). Tests:
+    test_designer.py (links offered across packs, linked children, moving a panel and back, the flag, rename, the migration),
+    test_designer_browser.py (a credit limit of another pack fills on a click, a moved panel, no navigation on any step and the
+    scroll kept, Describe's error state; dark, light and a phone), MyPagesTest.
 - **Sutra Next, phases 2 and 3 (2.7.0): events, sources over several packs, nested child panels**
   ([SUTRA_NEXT.md](docs/architecture/SUTRA_NEXT.md) sections 6 to 8, 14, 15):
   - **`source:` as a mapping** on any panel: `{ kind, id | where | search, limit, as-of, pack }`, read as the viewer (a kind the viewer

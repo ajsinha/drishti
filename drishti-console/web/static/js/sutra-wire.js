@@ -23,7 +23,7 @@
 (function () {
   'use strict';
   var view = document.querySelector('[data-view]');
-  if (!view || !view.querySelector('section.pnl[data-wire]')) { return; }
+  if (!view || !(view.querySelector('section.pnl[data-wire]') || view.hasAttribute('data-customizing'))) { return; }   // Customize may wire a panel later
   var base = '/v/' + encodeURIComponent(view.dataset.kind) + '/' + view.dataset.id.split('/').map(encodeURIComponent).join('/');
   var held = {};                                     // panel id -> { event: token }
   var live = document.createElement('p');

@@ -14,8 +14,8 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* The Sutra designer's Customize mode (docs/guides/SCREEN_DESIGNER.md section 31): the real page, with real data as the viewer, edited in place.
-   Customize makes a draft of this page's Sutra; each change is one step the console applies to the draft and the page is drawn again
-   with it. Panels get a handle (drag, or the arrows), Hide and, for tables, Columns; the side panel holds "When I click", "Add to this
+   Customize makes a draft of this page's Sutra; each change is one step the console applies to the draft, and only the panels it
+   changed are drawn again (the page is fetched, panels the step did not touch stay as they are: no reload, no flicker, the scroll kept). Panels get a handle (drag, or the arrows), Hide and, for tables, Columns; the side panel holds "When I click", "Add to this
    page" and what is hidden. Done keeps the draft as the user's own page; Cancel forgets it. Plain words only: no pins, wires or YAML
    unless "Show the Sutra" is asked for. */
 (function () {
@@ -49,13 +49,47 @@
   }
   if (!view.hasAttribute('data-customizing')) { return; }
 
-  var draft = view.dataset.design, state = null, msg, side;
+  /* a panel's signature is a hash of the HTML the server drew for it, taken before anything decorates it: a step's answer keeps the
+     panels whose HTML did not change (the same nodes, charts and all) and swaps in only the others */
+  function sig(text) { var h = 5381; for (var i = 0; i < text.length; i++) { h = ((h << 5) + h + text.charCodeAt(i)) | 0; } return String(h); }
+  view.querySelectorAll('section.pnl[id]').forEach(function (s) { s.setAttribute('data-dz-sig', sig(s.outerHTML)); });
+
+  var draft = view.dataset.design, state = null, msg, side, rev = 0;
   function say(text, ok) { msg.textContent = text || ''; msg.className = 'dz-msg' + (ok ? ' dz-ok' : ''); }
   function step(body) {
     body.kind = kind; body.id = id;
     say('Saving…', true);
-    return api('POST', '/designer/op/' + encodeURIComponent(draft), body).then(function () { location.reload(); })
+    return api('POST', '/designer/op/' + encodeURIComponent(draft), body).then(redraw)
       .catch(function (e) { say(e.message); throw e; });
+  }
+  function redraw() {
+    var y = window.scrollY;
+    return fetch(location.href, { credentials: 'same-origin', headers: { Accept: 'text/html' } }).then(function (r) {
+      if (!r.ok) { throw new Error('The page could not be drawn again (HTTP ' + r.status + ')'); }
+      return r.text();
+    }).then(function (html) {
+      var fresh = new DOMParser().parseFromString(html, 'text/html').querySelector('[data-view] .vgrid');
+      if (!fresh) { location.reload(); return null; }                     // not a page any more (signed out...): the only full reload
+      var old = {}, added = [];
+      grid.querySelectorAll('section.pnl[id]').forEach(function (s) { old[s.id] = s; });
+      var next = document.importNode(fresh, true);
+      next.querySelectorAll('section.pnl[id]').forEach(function (s) {
+        var h = sig(s.outerHTML), o = old[s.id];
+        if (o && o.getAttribute('data-dz-sig') === h) { s.replaceWith(o); }
+        else { s.setAttribute('data-dz-sig', h); added.push(s); }
+      });
+      next.querySelectorAll('.dz-tools, .dz-cols').forEach(function (t) { t.remove(); });
+      next.style.minHeight = grid.offsetHeight + 'px';                     // no jump while the new panels draw
+      grid.replaceWith(next); grid = next;
+      (view.querySelector('.vmain') || grid).appendChild(drop);
+      added.forEach(function (s) {
+        if (window.drishtiLayout) { window.drishtiLayout.decorate(s); }
+        if (window.drishti && window.drishti.enhance) { window.drishti.enhance(s); }
+      });
+      function keep() { window.scrollTo({ top: y, left: 0, behavior: 'instant' }); }
+      keep();
+      return load().then(function () { next.style.minHeight = ''; keep(); });
+    }).then(function () { say('Saved', true); });
   }
 
   /* the yellow bar */
@@ -126,13 +160,16 @@
     if (part.index === n - 1) { row.querySelector('[data-dz-down]').disabled = true; }
     sec.classList.add('dz-panel');
     sec.insertBefore(row, sec.firstChild);
+    if (sec.hasAttribute('data-dz-dnd')) { return; }                      // a panel kept across a step: its drop target is set already
+    sec.setAttribute('data-dz-dnd', '');
+    function here() { var t = sec.querySelector('.dz-tools'); return t ? +t.getAttribute('data-dz-part') : -1; }
     sec.addEventListener('dragover', function (e) { if (e.dataTransfer.types.indexOf('text/x-dz-part') >= 0 || e.dataTransfer.types.indexOf('text/x-dz-kit') >= 0) { e.preventDefault(); sec.classList.add('dz-over'); } });
     sec.addEventListener('dragleave', function () { sec.classList.remove('dz-over'); });
     sec.addEventListener('drop', function (e) {
       sec.classList.remove('dz-over');
       var from = e.dataTransfer.getData('text/x-dz-part'), kit = e.dataTransfer.getData('text/x-dz-kit');
-      if (from !== '') { e.preventDefault(); if (+from !== part.index) { step({ op: 'move', index: +from, to: part.index }).catch(function () {}); } }
-      else if (kit) { e.preventDefault(); var k = JSON.parse(kit); step({ op: 'add', ref: k.ref, 'with': k['with'], at: part.index }).catch(function () {}); }
+      if (from !== '') { e.preventDefault(); if (+from !== here()) { step({ op: 'move', index: +from, to: here() }).catch(function () {}); } }
+      else if (kit) { e.preventDefault(); var k = JSON.parse(kit); step({ op: 'add', ref: k.ref, 'with': k['with'], at: here() }).catch(function () {}); }
     });
   }
 
@@ -153,10 +190,19 @@
       side.appendChild(el('p', { 'class': 'dz-note', text: 'This page has no table to click.' }));
     } else {
       var from = select('the table to click', tables, 'data-dz-click-from');
-      var what = select('what to show', [['row', 'the row’s details']], 'data-dz-click-show');
+      var what = select('what to show', [], 'data-dz-click-show');
       var where = select('where to show it', Object.keys(state.places).map(function (k) { return [k, state.places[k]]; }), 'data-dz-click-place');
       var set = state.tables.filter(function (t) { return t.click; })[0];
+      var shows = [];
+      function fillShows() {                                              // the row's details, the records linked from it, a panel of the page
+        var t = state.tables.filter(function (x) { return 't:' + x.id === from.value; })[0];
+        shows = t && t.shows && t.shows.length ? t.shows : [{ label: 'the row’s details', spec: { how: 'row' } }];
+        what.innerHTML = '';
+        shows.forEach(function (c, i) { what.appendChild(el('option', { value: String(i), text: c.label, 'data-how': c.spec.how })); });
+      }
+      from.addEventListener('change', fillShows);
       if (set) { from.value = 't:' + set.id; where.value = set.place || 'expand-row'; }
+      fillShows();
       side.appendChild(el('div', { 'class': 'dz-sentence' }, ['a row in ', from, ' show ', what, ' in ', where]));
       side.appendChild(el('div', { 'class': 'dz-row' }, [
         el('button', { type: 'button', 'class': 'dz-btn dz-primary', 'data-dz-click-apply': '', text: 'Make it so', on: { click: function () {
@@ -165,8 +211,8 @@
             var bits = v.split(':');
             say('Opening up the table…', true);
             api('POST', '/designer/op/' + encodeURIComponent(draft), { op: 'unpack', index: +bits[1], kind: kind, id: id })
-              .then(function () { return step({ op: 'click', panel: bits[2], place: where.value }); }).catch(function (e) { say(e.message); });
-          } else { step({ op: 'click', panel: v.slice(2), place: where.value }).catch(function () {}); }
+              .then(function () { return step({ op: 'click', panel: bits[2], place: where.value, show: (shows[+what.value] || {}).spec }); }).catch(function (e) { say(e.message); });
+          } else { step({ op: 'click', panel: v.slice(2), place: where.value, show: (shows[+what.value] || {}).spec }).catch(function () {}); }
         } } }),
         set ? el('button', { type: 'button', 'class': 'dz-btn', text: 'Stop', on: { click: function () { step({ op: 'unclick', panel: set.id }).catch(function () {}); } } }) : null
       ]));
@@ -232,10 +278,15 @@
     else if (from !== '') { step({ op: 'move', index: +from, to: state.parts.length - 1 }).catch(function () {}); }
   });
 
-  api('GET', '/designer/state/' + encodeURIComponent(draft) + '?kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id)).then(function (s) {
-    state = s;
-    s.parts.forEach(function (part) { sectionsOf(part).forEach(function (sec, i) { tools(part, sec, i === 0); }); });
-    sidePanel();
-    view.setAttribute('data-dz-ready', '');
-  }).catch(function (e) { say(e.message); });
+  function load() {
+    return api('GET', '/designer/state/' + encodeURIComponent(draft) + '?kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id)).then(function (s) {
+      state = s;
+      view.querySelectorAll('.dz-tools').forEach(function (t) { t.remove(); });
+      s.parts.forEach(function (part) { sectionsOf(part).forEach(function (sec, i) { tools(part, sec, i === 0); }); });
+      sidePanel();
+      view.setAttribute('data-dz-ready', '');
+      view.setAttribute('data-dz-rev', String(++rev));                    // a step is drawn (tests wait on it)
+    });
+  }
+  load().catch(function (e) { say(e.message); });
 })();

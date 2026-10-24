@@ -85,6 +85,8 @@
 .dz-result { border: 1px solid var(--d-border); border-radius: 12px; background: var(--d-surface); padding: 1rem; }
 .dz-result-h { font-size: .74rem; letter-spacing: .06em; text-transform: uppercase; color: var(--d-muted); margin-bottom: .6rem; }
 .dz-result iframe { width: 100%; min-height: 34rem; border: 0; border-radius: 8px; background: var(--d-bg); }
+.dz-fix { display: flex; align-items: center; gap: .6rem; min-height: 8rem; justify-content: center; color: var(--d-muted); font-size: 1rem; border-style: dashed; }
+.dz-fix[hidden] { display: none; }
 .dz-actions { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: flex-end; margin-top: .8rem; }
 
 @media (max-width: 700px) {

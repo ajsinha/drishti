@@ -15,7 +15,8 @@
  */
 /* The Sutra designer's Describe mode (docs/guides/SCREEN_DESIGNER.md section 31): a line typed like a command, read by the console's deterministic
    parser; "Understood as" shows one token per part (a token the parser was unsure of offers the fixes), the live result draws the screen
-   as the viewer, "Show the Sutra" shows the YAML read-only, and "Save to my workspace" keeps it as a named design. */
+   as the viewer (while the line has errors the result is cleared and says "Fix the red part to see the screen"), "Show the Sutra" shows
+   the YAML read-only, and "Save to my workspace" keeps it as a named design. */
 (function () {
   'use strict';
   var root = document.querySelector('[data-describe]');
@@ -24,6 +25,7 @@
   var messages = root.querySelector('[data-messages]'), result = root.querySelector('[data-result]'), frame = root.querySelector('[data-preview]');
   var yaml = root.querySelector('[data-yaml]'), showSutra = root.querySelector('[data-show-sutra]'), save = root.querySelector('[data-save]');
   var saved = root.querySelector('[data-saved]'), openFull = root.querySelector('[data-open]');
+  var fix = root.querySelector('[data-fix]');
   var draft = '', last = null, busy = false;
 
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) { e.className = cls; } if (text != null) { e.textContent = text; } return e; }
@@ -62,6 +64,12 @@
     });
     messages.innerHTML = '';
     (r.messages || []).concat(r.refreshNote ? [r.refreshNote] : []).forEach(function (m) { messages.appendChild(el('li', null, m)); });
+    fix.hidden = r.ok;
+    if (!r.ok) {                                                       // no stale screen: the last good one is cleared until the line is whole
+      result.hidden = true;
+      frame.setAttribute('src', 'about:blank');
+      yaml.textContent = ''; saved.textContent = '';
+    }
     if (r.ok) {
       draft = r.draft;
       result.hidden = false;

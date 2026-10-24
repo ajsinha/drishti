@@ -18,7 +18,7 @@ user's own page (the page then drawn with ?design=), Reset, Describe and Save.""
 import pytest
 import yaml
 
-from core import describe, designer
+from core import describe, designer, designer_links
 from core.backend import BackendError
 
 ALIASES = {"TRD": {"kind": "trade", "label": "Trade"}, "CPTY": {"kind": "counterparty", "label": "Counterparty"},
@@ -224,6 +224,63 @@ def test_the_kit_is_searched_by_docstring_and_parameters_guessed_from_the_record
         designer.add(doc, "../../etc", {})
 
 
+# ---- Customize: what a click shows (linked records) ---------------------------------------------------------------------------------
+
+PACKS = [{"name": "trading", "active": True, "kinds": ["trade", "portfolio-trades"], "links": {"TRADE_ID": {"kind": "trade", "label": "Trade"}}},
+         {"name": "core", "active": True, "kinds": ["book"], "links": {"COUNTERPARTY": {"kind": "counterparty", "label": "Counterparty"}}},
+         {"name": "counterparty-risk", "active": True, "kinds": ["counterparty", "credit-limit"], "links": {}},
+         {"name": "off-pack", "active": False, "kinds": ["x"], "links": {"X_ID": {"kind": "x", "label": "X"}}}]
+OVERVIEWS = {"trading": {"kinds": [{"kind": "trade", "mnemonic": "TRD", "label": "Trade"}, {"kind": "portfolio-trades", "mnemonic": "PTRD", "label": "Book"}]},
+             "core": {"kinds": []},
+             "counterparty-risk": {"kinds": [{"kind": "counterparty", "label": "Counterparty", "columns": ["NAME"]},
+                                             {"kind": "credit-limit", "label": "Credit limit", "columns": ["COUNTERPARTY", "LIMIT", "USED"]}]}}
+TRADE = {"TRADE_ID": "MX-1", "EVENTS": [{"EVENT_DATE": "2026-01-01", "AMOUNT": 4.0, "LEG": {"x": 1}}]}
+
+
+def test_a_rows_links_are_offered_in_plain_words_across_packs():
+    cat = designer_links.catalog(PACKS, OVERVIEWS)
+    assert "X_ID" not in cat["links"] and cat["pack_of"]["credit-limit"] == "counterparty-risk"
+    row = {"TRADE_ID": "MX-1", "COUNTERPARTY": "CP-1", "NOTIONAL": 5}
+    got = designer_links.choices(row, cat, {"trade": TRADE, "counterparty": {"NAME": "N"}})
+    assert [c["label"] for c in got] == ["the row’s details", "the trade itself (trading)", "its events", "its counterparty (counterparty-risk)",
+                                         "its counterparty’s credit limits"]
+    assert got[2]["spec"] == {"how": "list", "pack": "trading", "kind": "trade", "field": "TRADE_ID", "list": "EVENTS", "columns": ["EVENT_DATE", "AMOUNT"]}
+    assert got[4]["spec"]["match"] == "COUNTERPARTY" and got[4]["spec"]["pack"] == "counterparty-risk"
+    assert designer_links.first_row({"A": [{"B": [{"C": 1}]}]}, "flatten($.A[*].B)") == {"C": 1}
+
+
+def test_a_linked_record_child_reads_the_clicked_rows_field():
+    doc = designer.load(SUTRA)
+    limits = {"how": "where", "pack": "counterparty-risk", "kind": "credit-limit", "field": "COUNTERPARTY", "match": "COUNTERPARTY", "columns": ["LIMIT"]}
+    designer.click(doc, "flows", "detail-right", ["FLOW_ID", "PAYMENT_DATE"], "Flows", limits, {})
+    p = designer.find_panel(doc, "flows")
+    assert list(p["emits"][0]["payload"]) == ["FLOW_ID", "COUNTERPARTY", "PAYMENT_DATE"]                # the field the link reads is sent
+    kid = p["children"][0]
+    assert kid["source"] == {"pack": "counterparty-risk", "kind": "credit-limit", "where": "@.COUNTERPARTY == @parent.open.COUNTERPARTY", "limit": 20}
+    assert kid["panels"][0]["rows"] == "$src" and kid["panels"][0]["columns"] == [{"label": "Limit", "bind": "@.LIMIT"}]
+    one = {"how": "one", "pack": "trading", "kind": "trade", "field": "FLOW_ID"}
+    designer.click(doc, "flows", "tabs", ["FLOW_ID"], "Flows", one, {})
+    assert p["children"][0]["source"]["id"] == "@parent.open.FLOW_ID" and p["children"][0]["panels"][0]["use"] == "field-list@1"
+    for bad in ({"how": "one", "pack": "x", "kind": "../etc", "field": "F"}, {"how": "where", "pack": "p", "kind": "k", "field": "F", "match": "a b"},
+                {"how": "pizza"}):
+        with pytest.raises(designer.DesignerError):
+            designer.click(doc, "flows", "tabs", ["FLOW_ID"], "Flows", bad, {})
+
+
+def test_an_existing_panel_moves_under_the_table_and_back():
+    doc, keep = designer.load(SUTRA), {}
+    designer.click(doc, "flows", "detail-below", ["FLOW_ID"], "Flows", {"how": "panel", "index": 0}, keep)
+    assert len(doc["panels"]) == 2 and designer.find_panel(doc, "flows")["children"][0]["panels"] == [{"use": "trading/deal-ticket@1", "with": {"rate-fmt": "pct4"}}]
+    assert keep["moved"]["flows"][0]["at"] == 0
+    designer.click(doc, "flows", "detail-below", ["FLOW_ID"], "Flows", {"how": "row"}, keep)          # another sentence: the panel goes back
+    assert doc["panels"][0] == {"use": "trading/deal-ticket@1", "with": {"rate-fmt": "pct4"}} and not keep["moved"]
+    designer.click(doc, "flows", "detail-below", ["FLOW_ID"], "Flows", {"how": "panel", "index": 2}, keep)
+    designer.unclick(doc, "flows", keep)
+    assert doc["panels"][2] == {"use": "data-provenance@1"} and "children" not in designer.find_panel(doc, "flows")
+    with pytest.raises(designer.DesignerError, match="cannot show itself"):
+        designer.click(doc, "flows", "tabs", ["FLOW_ID"], "Flows", {"how": "panel", "index": 1}, keep)
+
+
 # ---- the routes ---------------------------------------------------------------------------------------------------------------------
 
 @pytest.fixture()
@@ -255,16 +312,31 @@ def on(client, backend, monkeypatch):
         return {"fragments": KIT}
 
     async def packs(ident=None):
-        return [{"name": "trading", "active": True}]
+        return PACKS
 
     async def overview(name, ident=None):
-        return {"kinds": [{"kind": "trade", "mnemonic": "TRD", "label": "Trade"}, {"kind": "portfolio-trades", "mnemonic": "PTRD", "label": "Book"}]}
+        return OVERVIEWS[name]
+
+    pages: dict = {}
+    seen["pages"] = pages
+    real_send = backend._send
+
+    async def send(method, path, ident=None, **kw):              # the server's /me/pages: one user's flags
+        if not path.startswith("/me/pages"):
+            return await real_send(method, path, ident, **kw)
+        kind = path[len("/me/pages/"):]
+        if method == "PUT":
+            pages[kind] = kw["json"]["design"]
+        elif method == "DELETE":
+            pages.pop(kind, None)
+        return dict(pages)
 
     for k, v in {"view": view, "designs": designs, "sutra_source": sutra_source, "raw": raw, "ui_kit": ui_kit, "packs": packs,
-                 "pack_overview": overview}.items():
+                 "pack_overview": overview, "_send": send}.items():
         monkeypatch.setattr(backend, k, v, raising=False)
     from routes import designer_routes
     monkeypatch.setitem(designer_routes._ALIASES, "at", 0.0)
+    designer_routes._MIGRATED.clear()
     yield seen
 
 
@@ -336,7 +408,33 @@ def test_describe_builds_and_saves(client, on):
     assert not bad["ok"] and "draft" not in bad and "I do not know 'XYZ'" in bad["messages"][0]
     saved = client.post(f"/designer/describe/save/{r['draft']}", json={"name": "My screen · Trades of book BOOK-RATES-2"}).json()
     assert saved["build"] == f"/build/d/{r['draft']}"
-    assert client.post(f"/designer/describe/save/{r['draft']}", json={"name": "My page · trade"}).status_code == 400
     page = client.get("/designer/new?q=TRD%20BOOK-RATES-2").text
     assert 'value="TRD BOOK-RATES-2"' in page and 'aria-disabled="true"' in page            # Outline and Grid come later
     assert "data-describe-offer" in client.get("/build/new").text
+
+
+def test_the_page_is_a_flag_renaming_keeps_it_and_old_pages_are_migrated(client, on, backend):
+    draft = client.post("/designer/customize", json={"kind": "trade", "id": "IRS-47102"}).json()["draft"]
+    st = client.get(f"/designer/state/{draft}?kind=trade&id=IRS-47102").json()
+    shows = st["tables"][0]["shows"]
+    assert shows[0]["spec"] == {"how": "row"} and any(c["spec"] == {"how": "panel", "index": 0} for c in shows)
+    ok = client.post(f"/designer/op/{draft}", json={"op": "click", "panel": "flows", "place": "tabs", "show": {"how": "panel", "index": 2},
+                                                   "kind": "trade", "id": "IRS-47102"})
+    assert ok.json() == {"ok": True}
+    assert client.post(f"/designer/done/{draft}", json={"kind": "trade"}).json() == {"design": draft}
+    assert on["pages"] == {"trade": draft}                                                  # a flag, not a name
+    for row in backend._kept().values():                                                    # renamed in Build
+        if row["design"]["id"] == draft:
+            row["design"]["name"] = "Rates desk view"
+    client.get("/v/trade/IRS-47102")
+    assert on["views"][-1] == draft                                                        # renamed: still my page
+    assert client.post("/designer/reset", json={"kind": "trade"}).json()["removed"] and on["pages"] == {}
+
+
+def test_a_page_kept_by_name_in_2_7_becomes_a_flag_once(client, on, backend):
+    from routes import designer_routes
+    draft = client.post("/designer/customize", json={"kind": "trade", "id": "IRS-47102"}).json()["draft"]
+    client.post(f"/designer/describe/save/{draft}", json={"name": "My page · trade"})          # how 2.7 kept a page
+    designer_routes._MIGRATED.clear()
+    client.get("/v/trade/IRS-47102")
+    assert on["pages"] == {"trade": draft} and on["views"][-1] == draft

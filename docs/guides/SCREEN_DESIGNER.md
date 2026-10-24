@@ -698,10 +698,21 @@ It is switched on by an administrator: `ui.designer: true` in the console's `app
    *Hidden*, where *Show* brings it back as it was.
 3. **Columns** (tables): pick the fields to show, from the record's own fields. A table that comes from a shared part of the page is
    first written out on the page (one click), then it takes your columns.
-4. **When I click** a row in *[table ▾]* show *[the row's details ▾]* in *[under the clicked row / the right column / below the
-   table / tabs ▾]*, then **Make it so**. Click a row: its details open where you said. **Stop** removes it.
+4. **When I click** a row in *[table ▾]* show *[what ▾]* in *[under the clicked row / the right column / below the table / tabs ▾]*,
+   then **Make it so**. Click a row: what you chose opens where you said. **Stop** removes it. *What* can be:
+   - **the row's details** (its fields, as label and value);
+   - **a linked record**, found from the row's own fields the way the packs link entities (their `graph.fields`: `COUNTERPARTY` is a
+     counterparty, `PORTFOLIO` a book, `TRADE_ID` a trade), across packs, each in plain words with the pack that serves it. On a
+     book's trades: *the trade itself (trading)*, *its events* and *its legs* (lists inside the trade), *its counterparty (core)*,
+     *its counterparty's netting sets*, *its counterparty's credit limits* (records of another pack that point at the counterparty),
+     *its portfolio's trades*;
+   - **an existing panel on this page** (*the panel "Notional by product type" (moved here)*): the panel leaves the page and opens
+     under the table on a click. Another sentence for the table, or **Stop**, puts it back where it was.
 5. **Add to this page**: search the Drishti UI kit by what a part shows (*limits*, *chart*, *note*); what fits this record is listed
    first, with its settings guessed from the record's fields. Click a card, or drag it onto a panel or onto *Drop here*.
+Each change is drawn at once and in place: only the panels it changed are drawn again (the others keep their state, charts and
+filters), the page does not reload or flicker and stays where you scrolled.
+
 6. **Done** keeps it: the page now opens with your version, marked *Your page* in the header (that link opens the pack's page).
    **Cancel** forgets the changes. Customize again to go on; **Reset to the pack's page** removes your version; **Share** makes a
    read-only link to your design. **Describe a change** switches to Describe.
@@ -741,8 +752,38 @@ panels:
   - { use: explainer-note@1, with: { id: note } }                # 5. added from the kit
 ```
 
-A hidden panel (2) is kept in the design's notes, not in the Sutra, so *Show* restores it exactly. Your page is the design named
-*My page · trade* in **Build, My designs**; the server draws it with `?design=<id>` (only for you, only for its kind).
+A hidden panel (2) is kept in the design's notes, not in the Sutra, so *Show* restores it exactly (so is a panel moved under a
+table, so that *Stop* puts it back). Your page is a design in **Build, My designs** (first called *My page · trade*); which design is
+*my version of this page* is a flag of its own kept by the server for you (`/api/v1/me/pages`: `{trade: <design id>}`), so renaming
+the design keeps it your page. The server draws it with `?design=<id>` (only for you, only for its kind). Pages kept by name before
+this (2.7 previews) become flags the first time you open Drishti.
+
+![When I click a trade, show its counterparty's credit limits (counterparty-risk pack)](img/designer/customize-linked.jpg)
+
+A linked record writes a child with a `source:` that reads the clicked row (the row's field is added to what the click sends):
+
+```yaml
+  - id: trades
+    kind: table
+    ...
+    emits:
+      - name: open
+        on: row-click
+        payload: { SOURCE_SYSTEM: { bind: "@.SOURCE_SYSTEM", type: id }, COUNTERPARTY: { bind: "@.COUNTERPARTY", type: any }, ... }
+    children:
+      - place: detail-right
+        waits: Pick a row of Trades to see it here
+        source: { pack: counterparty-risk, kind: credit-limit, where: "@.COUNTERPARTY == @parent.open.COUNTERPARTY", limit: 20 }
+        panels:
+          - id: trades-credit-limit
+            kind: table
+            title: "Credit limits of ${@parent.open.COUNTERPARTY}"
+            rows: $src
+            columns: [ { label: Limit id, bind: "@.LIMIT_ID" }, { label: Counterparty name, bind: "@.COUNTERPARTY_NAME" }, ... ]
+```
+
+*Its counterparty* writes `source: { pack: core, kind: counterparty, id: "@parent.open.COUNTERPARTY" }` with the record's fields
+(`field-list@1`); *its events* reads the trade (`id: "@parent.open.TRADE_ID"`) and lists `rows: $src.EVENTS`.
 
 ### Describe it
 
@@ -765,6 +806,9 @@ TRD BOOK-RATES-2 · click a trade → cash flows + CPTY limits · refresh 30s
 **Understood as** shows one token per part. A token the parser was unsure of (a bare id, a loose word such as *limits*) has a **fix…**
 list; anything it could not read is red, with a plain sentence saying why. The parser is deterministic: the same line always gives the
 same screen, and no AI is involved.
+
+While the line has a red part, the live result is cleared and says *Fix the red part to see the screen* (the last good screen
+is not left standing as if it were the answer); fix it and the screen comes back.
 
 The **live result** below draws the screen as you, with real data: click a trade and its cash flows open under the row, the
 counterparty's limits on the right. **Show the Sutra** shows the YAML read-only; **Save to my workspace** keeps it as a named design

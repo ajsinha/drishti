@@ -919,6 +919,9 @@ It is kept on the server, so it follows the user to any browser.
 |---|---|---|
 | `GET` | `/me/settings` | `{theme, landing, clockZone, density, flash, searchLimit, pinned, notify: {email: {share, mention, reply}}}` with defaults filled in (the notify events are emailed when true) |
 | `PATCH` | `/me/settings` | change only the fields named; `null` resets one; unknown field or bad value → `400 DRS-5001` |
+| `GET` | `/me/pages` | the Sutra designer's "my version of this page" flags: `{kind: designId}` (SCREEN_DESIGNER.md section 31) |
+| `PUT` | `/me/pages/{kind}` | body `{design}`: that Design draws the kind's pages for this user; renaming the Design keeps it; bad kind or id → `400 DRS-5001` |
+| `DELETE` | `/me/pages/{kind}` | clears the flag: the pack's page again |
 | `GET` | `/admin/collab/shares?user=&kind=&id=&from=&to=&limit=&after=` · `/admin/collab/threads?…` | `admin` or `compliance`: search, metadata only (no note text), `{items[], next}` paged by id (`after` = the last id); `user` matches a sender or recipient, or a thread's writers |
 | `GET` | `/admin/collab/threads/{tid}` | `compliance`: the thread as the record has it (hidden and retracted comments, every revision, unscrubbed) with the chain result; audited |
 | `GET` | `/admin/collab/threads/hidden?limit=&after=` | `admin` or `compliance`: the hidden comments, `{items: [{commentId, threadId, kind, entityId, author, createdAt, reason}], next}` (never the text), paged in the scan order of `/admin/collab/threads` |
@@ -1055,7 +1058,7 @@ curl -s $B/calc/settings
 | Method | Path | Notes |
 |---|---|---|
 | `GET` | `/about` | `{product, version, built, java, uptimeSeconds, sutras, sources, securityEnabled, packs, copyright}` |
-| `GET` | `/packs` | every installed pack `{name, version, title, description, console, kinds, assigned, active}` (assigned/active for the caller) |
+| `GET` | `/packs` | every installed pack `{name, version, title, description, console, kinds, links, assigned, active}` (assigned/active for the caller; `links` is the pack's `graph.fields`, `{FIELD: {kind, label}}`, what the Sutra designer offers as linked records) |
 | `GET` | `/packs/{name}/overview` | as-of. One pack's start page: `{name, code, title, description, version, extends, kinds: [{kind, mnemonic, label, count, more, failed, example, columns}]}`, only the kinds the caller may open (`name` may be the pack code, `FIN`); `400` when the pack is not switched on for the caller |
 | `GET` | `/packs/{name}/coverage` | as-of; `kind` (optional). Which Sutra lays out which data: for each kind with Sutras, the fields they match on and show panels by (`when:`), and every combination of them in the data (every connector serving the kind): `{pack, kinds: [{kind, fields, combinations, none, several, failed, rows: [{values, count, example, sutras, shown, state}]}]}`, `state` `one`, `none` (inferred) or `several`. Admin → Packs → a pack shows it as *Sutra coverage* |
 | `GET` | `/sources` | `{sources: [{name, version, kinds, live, search, reverseLookup, health}], failures: {name: reason}}`; `kinds: []` means the source serves any kind |

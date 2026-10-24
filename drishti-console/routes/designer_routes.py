@@ -13,9 +13,9 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The Sutra designer (SCREEN_DESIGNER.md section 31), behind ``ui.designer`` (off by default): one shell with modes over the SAME Sutra YAML, a
-user's own Design. **Customize** edits the page in place (a scratch draft Design while customising; Done keeps it as the Design
-"My page · <kind>", which then draws that page for that user only: ``?design=<id>`` on the server); **Describe** builds a screen from a
-command-style line read by a deterministic parser. Thin: the server keeps the Designs, checks the Sutra and draws every view as the viewer."""
+user's own Design. **Customize** edits the page in place (a scratch draft Design while customising; Done keeps it as a Design and sets
+the user's flag "my version of this page" for the kind, ``/me/pages`` on the server, which then draws that page for that user only:
+``?design=<id>``); **Describe** builds a screen from a command-style line read by a deterministic parser. Thin: the server keeps the Designs, checks the Sutra and draws every view as the viewer."""
 from __future__ import annotations
 
 import re
@@ -25,14 +25,15 @@ from urllib.parse import quote
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core import describe, designer
+from core import describe, designer, designer_links
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes.common import ident, render
 
 router = APIRouter(prefix="/designer", include_in_schema=False)
 MODES = [("customize", "Customize", True), ("describe", "Describe", True), ("outline", "Outline", False), ("grid", "Grid", False)]
-_ALIASES: dict = {"at": 0.0, "table": {}}
+_ALIASES: dict = {"at": 0.0, "table": {}, "cat": {}}
+_MIGRATED: set = set()                                # users whose "My page · <kind>" Designs were turned into flags
 
 
 def enabled(request: Request) -> bool:
@@ -60,13 +61,55 @@ def _say(detail: str, status: int = 400) -> JSONResponse:
     return JSONResponse({"code": "DRS-5001", "detail": detail}, status_code=status)
 
 
-async def page_design(request: Request, kind: str) -> dict | None:
-    """The user's own page for a kind (the named Design "My page · <kind>"), or None."""
+async def my_pages(request: Request) -> dict:
+    """The user's "my version of this page" flags (``{kind: design id}``, ``/me/pages`` on the server). The first time a console sees a
+    user, their Designs named "My page · <kind>" (how 2.7 kept them) become flags: once, and only for kinds with no flag yet."""
+    backend, me = request.app.state.backend, ident(request)
     try:
-        got = await request.app.state.backend.designs("GET", "", ident(request))
+        pages = await backend._send("GET", "/me/pages", me)
     except BackendError:
+        return {}
+    pages = dict(pages) if isinstance(pages, dict) else {}
+    user = getattr(me, "user", "")
+    if user and user not in _MIGRATED:
+        _MIGRATED.add(user)
+        try:
+            got = await backend.designs("GET", "", me)
+            for d in got.get("designs") or []:
+                name = str(d.get("name") or "")
+                if name.startswith(designer.PAGE_PREFIX) and not d.get("scratch"):
+                    kind = name[len(designer.PAGE_PREFIX):].strip()
+                    if re.fullmatch(r"[a-z0-9-]{1,40}", kind) and kind not in pages:
+                        pages = await backend._send("PUT", f"/me/pages/{quote(kind)}", me, json={"design": d["id"]}) or pages
+        except BackendError:
+            _MIGRATED.discard(user)                    # try again next time
+    return pages
+
+
+async def set_page(request: Request, kind: str, design: str | None) -> None:
+    path = f"/me/pages/{quote(kind)}"
+    if design:
+        await request.app.state.backend._send("PUT", path, ident(request), json={"design": design})
+    else:
+        await request.app.state.backend._send("DELETE", path, ident(request))
+
+
+async def page_design(request: Request, kind: str) -> dict | None:
+    """The user's own page for a kind (the Design their flag names, whatever it is called now), or None. A flag whose Design is gone is
+    cleared."""
+    did = (await my_pages(request)).get(kind)
+    if not did:
         return None
-    return next((d for d in got.get("designs") or [] if d.get("name") == designer.page_name(kind) and not d.get("scratch")), None)
+    try:
+        d = await request.app.state.backend.designs("GET", f"/{did}", ident(request))
+    except BackendError as e:
+        if e.status == 404:
+            try:
+                await set_page(request, kind, None)
+            except BackendError:
+                pass
+        return None
+    return {"id": did, "name": d.get("name"), "shared": d.get("shared")}
 
 
 async def design_for(request: Request, kind: str) -> str | None:
@@ -81,8 +124,7 @@ async def design_for(request: Request, kind: str) -> str | None:
             return v
     if q.get("pack") or q.get("sutra"):
         return None
-    d = await page_design(request, kind)
-    return d["id"] if d else None
+    return (await my_pages(request)).get(kind) or None
 
 
 async def design_kw(request: Request, kind: str) -> dict:
@@ -115,22 +157,47 @@ async def _kit(request: Request) -> list:
     return got.get("fragments") or []
 
 
-async def aliases(request: Request) -> dict:
-    """The command line's mnemonic table of the enabled packs (TRD, CPTY, PTRD...), asked of the server once a minute."""
+async def _packs(request: Request) -> None:
+    """The enabled packs' overviews and links, asked of the server once a minute: the command line's mnemonics and the linked records."""
     if time.monotonic() - _ALIASES["at"] < 60 and _ALIASES["table"]:
-        return _ALIASES["table"]
-    backend, me, packs = request.app.state.backend, ident(request), []
+        return
+    backend, me, overviews = request.app.state.backend, ident(request), {}
     try:
-        for p in await backend.packs(me):
-            if p.get("active", True):
-                try:
-                    packs.append(await backend.pack_overview(p["name"], me))
-                except BackendError:
-                    continue
+        listed = [p for p in await backend.packs(me) if p.get("active", True)]
+        for p in listed:
+            try:
+                overviews[p["name"]] = await backend.pack_overview(p["name"], me)
+            except BackendError:
+                continue
     except BackendError:
-        return _ALIASES["table"]
-    _ALIASES.update(at=time.monotonic(), table=describe.aliases_of(packs))
+        return
+    _ALIASES.update(at=time.monotonic(), table=describe.aliases_of(list(overviews.values())), cat=designer_links.catalog(listed, overviews))
+
+
+async def aliases(request: Request) -> dict:
+    """The command line's mnemonic table of the enabled packs (TRD, CPTY, PTRD...)."""
+    await _packs(request)
     return _ALIASES["table"]
+
+
+async def link_catalog(request: Request) -> dict:
+    await _packs(request)
+    return _ALIASES["cat"] or {"links": {}, "pack_of": {}, "labels": {}, "columns": {}}
+
+
+async def _shows(request: Request, record, rows: str, cat: dict) -> list:
+    """What a click on a row of this table can show: the row's details and the records linked from the row (one sample of each linked
+    kind is read for the lists inside it, at most three)."""
+    row = designer_links.first_row(record, rows)
+    samples: dict = {}
+    found = designer_links.targets(row, cat)[:3]
+    for f, kind, _ in found:
+        if kind not in samples:
+            samples[kind] = await _record(request, kind, str(row[f]))
+    others = {k: v for k, v in samples.items() if not any(k == t[1] and t[0].endswith("_ID") for t in found)}   # not the row's own record
+    for kind, value in designer_links.onward(others, cat)[:4]:       # what the linked records name in turn: a counterparty's credit limit
+        samples[kind] = await _record(request, kind, value)
+    return designer_links.choices(row, cat, samples)
 
 
 def _pack_sutra(vm: dict) -> tuple[str, int] | None:
@@ -188,6 +255,7 @@ async def state(request: Request, draft: str, kind: str = "", id: str = ""):
     except (BackendError, designer.DesignerError) as e:
         return _problem(e) if isinstance(e, BackendError) else _say(str(e))
     record = await _record(request, kind, id)
+    cat = await link_catalog(request)
     parts, tables = [], []
     for i, e in enumerate(doc["panels"]):
         brought = (uses.get(i) or {}).get("panels") or []
@@ -200,8 +268,12 @@ async def state(request: Request, draft: str, kind: str = "", id: str = ""):
             part["table"] = {"id": e.get("id"), "chosen": [f for f in chosen if f],
                              "fields": list(dict.fromkeys([f for f in chosen if f] + fields))}
             tables.append({"id": e.get("id"), "title": part["title"], "fields": part["table"]["fields"],
-                           "click": bool(e.get("children")), "place": ((e.get("children") or [{}])[0] or {}).get("place", "")})
+                           "click": bool(e.get("children")), "place": ((e.get("children") or [{}])[0] or {}).get("place", ""),
+                           "shows": await _shows(request, record, e.get("rows"), cat)})
         parts.append(part)
+    for t in tables:                                  # an existing panel of the page, moved under the table
+        t["shows"] += [{"label": f"the panel “{p['title']}” (moved here)", "spec": {"how": "panel", "index": p["index"]}}
+                       for p in parts if not (p.get("table") or {}).get("id") == t["id"]]
     mine = await page_design(request, kind)
     return {"parts": parts, "tables": tables, "hidden": [{"index": i, "title": h.get("title")} for i, h in enumerate(keep.get("hidden") or [])],
             "kit": designer.search(await _kit(request), "", record), "places": designer.PLACE_LABELS,
@@ -243,9 +315,10 @@ async def op(request: Request, draft: str):
         elif what == "click":
             p = designer.find_panel(doc, str(body.get("panel") or "")) or {}
             fields = [designer.bound_field(c.get("bind")) for c in p.get("columns") or [] if isinstance(c, dict)]
-            designer.click(doc, str(body.get("panel") or ""), str(body.get("place") or ""), [f for f in fields if f], str(p.get("title") or ""))
+            designer.click(doc, str(body.get("panel") or ""), str(body.get("place") or ""), [f for f in fields if f], designer.plain_title(p.get("title")),
+                           body.get("show"), keep)
         elif what == "unclick":
-            designer.unclick(doc, str(body.get("panel") or ""))
+            designer.unclick(doc, str(body.get("panel") or ""), keep)
         elif what == "add":
             designer.add(doc, str(body.get("ref") or ""), body.get("with") or {}, body.get("at"))
         else:
@@ -267,7 +340,8 @@ async def op(request: Request, draft: str):
 
 @router.post("/done/{draft}")
 async def done(request: Request, draft: str):
-    """Keeps the draft as the user's page for the kind (replacing the one they kept), and forgets the draft."""
+    """Keeps the draft as the user's page for the kind (replacing the one they kept, whatever it is called now) and sets the flag; the
+    draft is forgotten."""
     if not enabled(request):
         return _off()
     body = await _body(request)
@@ -284,6 +358,7 @@ async def done(request: Request, draft: str):
         else:
             await backend.designs("PATCH", f"/{draft}", me, {"name": designer.page_name(kind)})
             kept = draft
+            await set_page(request, kind, kept)
     except BackendError as e:
         return _problem(e)
     return {"design": kept}
@@ -308,9 +383,11 @@ async def reset(request: Request):
     body = await _body(request)
     if isinstance(body, JSONResponse):
         return body
-    mine = await page_design(request, str(body.get("kind") or ""))
+    kind = str(body.get("kind") or "")
+    mine = await page_design(request, kind)
     if mine:
         try:
+            await set_page(request, kind, None)
             await request.app.state.backend.designs("DELETE", f"/{mine['id']}", ident(request))
         except BackendError as e:
             return _problem(e)
@@ -378,8 +455,6 @@ async def describe_save(request: Request, draft: str):
     if isinstance(body, JSONResponse):
         return body
     name = re.sub(r"\s+", " ", str(body.get("name") or "")).strip()[:100] or "My screen"
-    if name.startswith(designer.PAGE_PREFIX):
-        return _say("pick another name: 'My page · ' names a customised page")
     try:
         got = await request.app.state.backend.designs("PATCH", f"/{draft}", ident(request), {"name": name})
     except BackendError as e:

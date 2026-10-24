@@ -15,13 +15,16 @@
 """The Sutra designer's edits (SCREEN_DESIGNER.md section 31): every mode changes the SAME Sutra YAML, a user's own Design, never the pack's Sutra.
 Customize's steps are plain functions over the Sutra as a document: move a panel, hide or show it, choose a table's columns, "when I click
 a row in A show B in C" (``emits`` and ``children``), add a kit fragment with parameters guessed from the record. Hidden panels are kept in
-the Design's notes, so Show brings them back as they were. The page a user customised is the Design named :data:`PAGE_PREFIX` + kind."""
+the Design's notes, so Show brings them back as they were. A customised page is first named :data:`PAGE_PREFIX` + kind;
+which Design is "my version of this page" is a per-user flag kept by the server (``/me/pages``), so a rename keeps it."""
 from __future__ import annotations
 
 import json
 import re
 
 import yaml
+
+from core import designer_links
 
 PAGE_PREFIX = "My page · "
 NOTES_MARK = "sutra-designer:"
@@ -77,17 +80,24 @@ def rename(doc: dict, kind: str) -> dict:
     return doc
 
 
+def plain_title(t) -> str:
+    """A title as words: what a template (``${...}``) computes is left out ("Trades (${n} of ${m})" reads "Trades")."""
+    t = str(t or "")
+    cut = t.split("${")[0].rstrip(" ([:·-—,")
+    return cut or t
+
+
 def entry_title(e: dict, brought: list | None = None) -> str:
     if not isinstance(e, dict):
         return "Panel"
     if e.get("title"):
-        return str(e["title"])
+        return plain_title(e["title"])
     w = e.get("with") if isinstance(e.get("with"), dict) else {}
     if w.get("title"):
-        return str(w["title"])
+        return plain_title(w["title"])
     for b in brought or []:
         if b.get("title"):
-            return str(b["title"])
+            return plain_title(b["title"])
     return str(e.get("use") or e.get("id") or "Panel").split("@")[0].split("/")[-1].replace("-", " ").capitalize()
 
 
@@ -168,52 +178,64 @@ def columns(doc: dict, pid: str, fields: list) -> dict:
 
 def rows_fields(record, rows: str) -> list:
     """The fields of the first row a table's ``rows:`` reads from the record (``$.A``, ``$.A[*].B``, ``$.A[0].B``): the Columns choices."""
-    text = re.sub(r"^\s*flatten\((.*)\)\s*$", r"\1", str(rows or ""))              # flatten($.LEGS[*].CASH_FLOWS): the same rows, one list
-    m = re.fullmatch(r"\s*\$((?:\.[A-Za-z_]\w*(?:\[(?:\*|\d+)\])?)*)\s*", text)
-    if not m or record is None:
-        return []
-    cur = [record]
-    for part in re.findall(r"\.([A-Za-z_]\w*)(\[(?:\*|\d+)\])?", m.group(1)):
-        nxt = []
-        for c in cur:
-            v = c.get(part[0]) if isinstance(c, dict) else None
-            if part[1] == "[*]" and isinstance(v, list):
-                nxt += v
-            elif part[1] and part[1] != "[*]" and isinstance(v, list):
-                k = int(part[1][1:-1])
-                nxt += v[k:k + 1]
-            elif v is not None:
-                nxt.append(v)
-        cur = nxt
-    rows = [x for c in cur for x in (c if isinstance(c, list) else [c])]
-    first = next((r for r in rows if isinstance(r, dict)), None)
+    first = designer_links.first_row(record, rows)
     return [k for k, v in (first or {}).items() if not isinstance(v, (dict, list))]
 
 
-def click(doc: dict, pid: str, place: str, fields: list, title: str) -> dict:
-    """"When I click a row in <pid> show the row's details in <place>": the table emits ``open`` with the row's fields, and a child kv
-    under it lists them. A new sentence for the same table replaces the old one."""
+def click(doc: dict, pid: str, place: str, fields: list, title: str, show: dict | None = None, keep: dict | None = None) -> dict:
+    """"When I click a row in <pid> show <show> in <place>": the table emits ``open`` with the row's fields, and its child shows the row's
+    details (a kv), a linked record (``source`` reading ``@parent.open.<field>``, see :mod:`core.designer_links`) or an existing panel of
+    the page moved under it. A new sentence for the same table replaces the old one (a panel moved under it goes back to the page)."""
     p = find_panel(doc, pid)
     if p is None or p.get("kind") != "table":
         raise DesignerError("only a table written on this page can be clicked: open it up first")
     if place not in PLACES:
         raise DesignerError("show it under the row, in the right column, below the table or as tabs")
     fields = [f for f in fields if re.fullmatch(r"[A-Za-z_]\w*", f or "")][:8]
+    show = show if isinstance(show, dict) else {"how": "row"}
+    keep = {} if keep is None else keep
+    how = show.get("how") or "row"
+    moving = None
+    if how == "panel":
+        moving = doc["panels"][_index(doc, show.get("index"))]
+        if moving is p:
+            raise DesignerError("a table cannot show itself: pick another panel")
+    linked = None
+    if how not in ("row", "panel"):
+        try:
+            linked = designer_links.child(dict(show), pid)
+        except designer_links.LinkError as e:
+            raise DesignerError(str(e)) from None
+    unclick(doc, pid, keep)
+    p = find_panel(doc, pid)
+    waits = f"Pick a row of {title or 'the table'} to see it here"
+    if how == "row":
+        group = {"panels": [{"id": f"{pid}-row", "kind": "kv", "title": f"{title or 'Row'}: ${{@parent.open.{fields[0]}}}" if fields else title or "Row",
+                             "columns": [{"label": _label(f), "bind": f"@parent.open.{f}"} for f in fields]}]}
+    elif how == "panel":
+        i = next(n for n, e in enumerate(doc["panels"]) if e is moving)
+        doc["panels"].pop(i)
+        keep.setdefault("moved", {}).setdefault(pid, []).append({"entry": moving, "at": i})
+        group = {"panels": [moving]}
+    else:
+        group, need = linked
+        fields = list(dict.fromkeys(([fields[0]] if fields else []) + [need] + fields[1:]))[:8]
     if not fields:
         raise DesignerError("this table's rows have no fields to show")
     p["emits"] = [{"name": "open", "on": "row-click",
                    "payload": {f: {"bind": f"@.{f}", "type": "id" if i == 0 else "any"} for i, f in enumerate(fields)}}]
-    p["children"] = [{"place": place, "waits": f"Pick a row of {title or 'the table'} to see it here",
-                      "panels": [{"id": f"{pid}-row", "kind": "kv", "title": f"{title or 'Row'}: ${{@parent.open.{fields[0]}}}",
-                                  "columns": [{"label": _label(f), "bind": f"@parent.open.{f}"} for f in fields]}]}]
+    p["children"] = [{"place": place, "waits": waits, **group}]
     return doc
 
 
-def unclick(doc: dict, pid: str) -> dict:
+def unclick(doc: dict, pid: str, keep: dict | None = None) -> dict:
+    """Stops a click sentence; a panel that was moved under the table goes back to where it was on the page."""
     p = find_panel(doc, pid)
     if p is not None:
         p.pop("emits", None)
         p.pop("children", None)
+    for m in reversed(((keep or {}).get("moved") or {}).pop(pid, [])):
+        doc["panels"].insert(min(int(m.get("at") or 0), len(doc["panels"])), m["entry"])
     return doc
 
 
