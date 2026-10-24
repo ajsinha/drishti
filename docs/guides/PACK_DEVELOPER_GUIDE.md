@@ -1859,8 +1859,10 @@ kind's description (cut to 120 characters), a description listing its panels, st
 examples opening the kind's first committed sample (`/v/equity/EQ-CSCA`, `EQ EQ-CSCA`); `DOCS` in `make_sutras.py` replaces a
 generated docstring with a hand-written one (ir-curve). The trading pack's deal screens use the pack's own fragments
 (`trading/deal-ticket@1`, `trading/legs@1`, `trading/flow-schedule@1`, `trading/events@1`, `trading/payments@1`, written by
-`tools/packgen/trades/sutras.py` with complete docs) and the kit's footer. Lint such a pack per pack (`sutra lint
-config/packs/trading`): the qualified names resolve against the pack folder, not when linting the whole `config/packs` root.
+`tools/packgen/trades/sutras.py` with complete docs) and the kit's footer. Lint it per pack (`sutra lint config/packs/trading`)
+or the whole packs root (`sutra lint config/packs`): each pack folder (a `pack.yaml` beside a `sutras/` folder) loads its fragments
+under its own namespace either way, so `trading/deal-ticket@1` resolves as it does on the server, and a pack may use another
+pack's fragment by its qualified name when both are linted together. The root's `<pack>/tests` folders are skipped.
 
 Each pack was moved only when its equivalence test (`PackSutraNextEquivalence` and one subclass per pack in drishti-server) drew
 every screen identically, for a full and a masked reader, against the old inline layouts kept as test data
@@ -2185,7 +2187,7 @@ Four layers, from the cheapest. The first three need no server.
 
 | Layer | Command | What it proves |
 |---|---|---|
-| Sutra lint | `sutra lint config/packs/<pack>` | every Sutra and block parses and its keys, expressions and panel options are valid (`DRS-…` codes with the line); help warnings |
+| Sutra lint | `sutra lint config/packs/<pack>` (or the whole `config/packs`) | every Sutra and block parses and its keys, expressions and panel options are valid (`DRS-…` codes with the line); help warnings |
 | Sutra tests | `sutra test config/packs/<pack>` | each Sutra renders against the samples in `tests/<sutra>/` with no panel in error, the panels `expect.yaml` names are filled, and the help coverage |
 | Both, for CI | `drishti.py pack check config/packs/<pack> [--strict] [--junit DIR]` | lint and test in one command, exit `0` / `1` / `2` |
 | The pack's tests in the build | `./mvnw verify` | the manifest loads, every `config/packs/*/sutras/` validates, every Sutra survives imperfect data, `sutra test` runs over every pack that has tests, every shipped example loads |
@@ -2321,6 +2323,11 @@ After a hand edit to `config/packs/trading/pack.yaml`, the first command stops w
 `pack manifests out of date; run make_packs.py: ['config/packs/trading/pack.yaml']`. The packbuild generators also
 refuse files they did not write: an extra Sutra dropped into a generated pack's `sutras/` gives
 `<pack> pack out of date; run tools/packgen/<area>/make.py. stale=[] extra=[…]`.
+
+**Sections the generator does not write.** A top-level section of a banking pack's manifest that the taxonomy does not say (the
+`history:` sections of market-data, market-risk, counterparty-risk and trading, the trading pack's `ingest:`) is kept in
+`tools/packgen/banking/kept/<pack>.yaml` and appended to `pack.yaml` as written, comments and all. Edit it there; a kept section
+the generator also writes is refused (`make_packs.py` names it).
 
 ### Changing a generated pack, step by step
 

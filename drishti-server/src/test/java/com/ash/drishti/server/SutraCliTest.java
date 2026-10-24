@@ -277,16 +277,66 @@ class SutraCliTest {
      * gets no such warning; without --docs nothing about docstrings is printed.
      */
     @Test
-    void lintWithDocsWarnsAboutSutrasWithoutADocstringAndStillPasses() {
-        Run r = run("lint", ROOT.resolve("config/packs/news-and-markets").toString(), "--docs");
+    void lintWithDocsWarnsAboutSutrasWithoutADocstringAndStillPasses() throws IOException {
+        Path undocumented = pack(SUTRA, null);
+        Run r = run("lint", undocumented.toString(), "--docs");
         assertThat(r.code()).as(r.err()).isZero();
-        assertThat(r.err()).contains("warning DRS-2055 2 of 4 Sutras have no doc: block").doesNotContain("news-topic.v1.sutra.yaml");
-        Run documented = run("lint", ROOT.resolve("config/packs/market-data").toString(), "--docs");
-        assertThat(documented.code()).as(documented.err()).isZero();
-        assertThat(documented.err()).doesNotContain("DRS-2055");
-        Run quiet = run("lint", ROOT.resolve("config/packs/news-and-markets").toString());
+        assertThat(r.err()).contains("warning DRS-2055 1 of 1 Sutras have no doc: block");
+        for (String documented : List.of("market-data", "news-and-markets", "trading")) {     // every pack Sutra carries one now
+            Run d = run("lint", ROOT.resolve("config/packs/" + documented).toString(), "--docs");
+            assertThat(d.code()).as(d.err()).isZero();
+            assertThat(d.err()).as(documented).doesNotContain("have no doc: block");
+        }
+        Run quiet = run("lint", undocumented.toString());
         assertThat(quiet.code()).isZero();
         assertThat(quiet.err()).doesNotContain("DRS-2055");
+    }
+
+    /** {@code sutra lint config/packs}: the whole packs root, each pack's fragments under its own namespace (trading/deal-ticket@1). */
+    @Test
+    void lintOverThePacksRootResolvesPackQualifiedFragments() throws IOException {
+        Run all = run("lint", ROOT.resolve("config/packs").toString());
+        assertThat(all.code()).as(all.err()).isZero();
+        assertThat(all.out()).contains("murex/infl-linked-bond.v1.sutra.yaml").doesNotContain("PROBLEM ");
+        assertThat(all.out()).doesNotContain("/tests/");
+
+        Path root = Files.createDirectories(tmp.resolve("packs-" + System.nanoTime()));
+        for (String name : List.of("alpha", "beta")) {
+            Files.createDirectories(root.resolve(name).resolve("sutras"));
+            Files.writeString(root.resolve(name).resolve("pack.yaml"), "pack: " + name + "\nversion: 1.0.0\n");
+        }
+        Files.writeString(root.resolve("alpha/sutras/facts.v1.fragment.yaml"), """
+                rachana: 1
+                fragment: facts
+                version: 1
+                description: "A widget's size"
+                doc:
+                  summary: "A widget's size"
+                  description: The size of a widget, as a list of facts.
+                  params: {}
+                  emits: []
+                  expects: []
+                  examples:
+                    - { use: facts@1 }
+                  since: "2.7.0"
+                panels:
+                  - id: facts
+                    kind: kv
+                    title: Facts
+                    columns:
+                      - { label: Size, bind: $.size }
+                """);
+        Files.writeString(root.resolve("beta/sutras/widget.v1.sutra.yaml"), SUTRA.replace("""
+                  - id: facts
+                    kind: kv
+                    title: Facts
+                    columns:
+                      - { label: Size, bind: $.size }
+                """, "  - { use: alpha/facts@1 }\n"));
+        Run qualified = run("lint", root.toString());
+        assertThat(qualified.code()).as(qualified.out() + qualified.err()).isZero();
+        Run alone = run("lint", root.resolve("beta").toString());                 // beta alone does not have alpha's fragment
+        assertThat(alone.code()).as(alone.out()).isNotZero();
     }
 
     /** Every shipped pack that has a tests/ folder, and the examples: `sutra test` is green. */

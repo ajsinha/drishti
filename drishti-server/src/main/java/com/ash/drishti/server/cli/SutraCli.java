@@ -211,7 +211,12 @@ public final class SutraCli {
     /** The {@code history:} block of each pack folder linted (DRS-2061): an error fails the run, a warning is printed. */
     private boolean historyBlocks(List<Path> paths, List<Case> cases) throws IOException {
         boolean bad = false;
-        for (Path p : paths) {
+        List<Path> packs = new ArrayList<>();
+        for (Path q : paths) {                                         // a pack folder, or each pack of a packs root
+            packs.add(q);
+            packRoot(q.toAbsolutePath().normalize()).forEach(s -> packs.add(s.getParent()));
+        }
+        for (Path p : packs) {
             Path manifest = p.resolve("pack.yaml");
             if (!Files.isRegularFile(manifest)) {
                 continue;
@@ -582,9 +587,12 @@ public final class SutraCli {
             if (Files.isRegularFile(p)) {
                 found.add(unit(p));
             } else if (Files.isDirectory(p)) {
+                boolean root = !packRoot(p.toAbsolutePath().normalize()).isEmpty();      // config/packs: <pack>/tests is each pack's samples
                 try (Stream<Path> walk = Files.walk(p)) {
                     for (Path f : walk.filter(x -> x.getFileName().toString().endsWith(".sutra.yaml"))
-                            .filter(x -> !p.relativize(x).startsWith("tests")).sorted().toList()) {
+                            .filter(x -> !p.relativize(x).startsWith("tests"))
+                            .filter(x -> !root || p.relativize(x).getNameCount() < 2 || !p.relativize(x).getName(1).toString().equals("tests"))
+                            .sorted().toList()) {
                         found.add(unit(f));
                     }
                 }
@@ -614,6 +622,8 @@ public final class SutraCli {
                 dirs.add(up);
             } else if (Files.isDirectory(abs.resolve("sutras"))) {
                 dirs.add(abs.resolve("sutras"));
+            } else if (!packRoot(abs).isEmpty()) {
+                dirs.addAll(packRoot(abs));                           // config/packs: each pack's sutras, namespaced by its pack
             } else {
                 dirs.add(Files.isDirectory(abs) ? abs : abs.getParent());
             }
@@ -654,6 +664,23 @@ public final class SutraCli {
             }
         }
         return null;
+    }
+
+    /**
+     * The {@code sutras} folders of the packs directly under {@code dir} (each a folder with a {@code pack.yaml} and a {@code sutras}
+     * folder), in name order; empty when {@code dir} is not a packs root. Linting {@code config/packs} whole loads each pack's blocks
+     * under its own namespace, so {@code trading/deal-ticket@1} resolves as it does on the server.
+     */
+    static List<Path> packRoot(Path dir) {
+        if (!Files.isDirectory(dir)) {
+            return List.of();
+        }
+        try (Stream<Path> s = Files.list(dir)) {
+            return s.filter(p -> Files.isRegularFile(p.resolve("pack.yaml")) && Files.isDirectory(p.resolve("sutras")))
+                    .map(p -> p.resolve("sutras")).sorted().toList();
+        } catch (IOException e) {
+            return List.of();
+        }
     }
 
     private static boolean hasBlocks(Path dir) {

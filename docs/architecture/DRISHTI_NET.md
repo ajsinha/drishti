@@ -296,6 +296,14 @@ backend:
   In the 2.6.5 soak the console set healthy servers aside 43 times on histories a dying peer could not answer (SOAK-02). A **read** that failed on the way is retried once on the new
   server, so the person sees the page, not an error; a **write** (save a layout, a search, a pivot) is never retried
   automatically: the page says it did not save and offers to try again.
+- **One server per screen (2.7.0).** A Sutra Next screen's selections (SUTRA_NEXT.md section 7) are tokens kept in the memory
+  of the node that issued them, and each token names that node (`tok_<node>~…`). The console sends a click or a panel's children
+  that carry tokens to that node while it is usable, whatever server the session is on now (`ServerPool.for_tokens`); the first
+  click of a screen goes to the session's server. A request that reaches another node anyway (the console has not learnt the node's
+  address yet, or a proxy chose) is forwarded whole to the issuing node for the caller, as a run's calls are (`SelectionForwardFilter`,
+  one hop). When the issuing node is gone the answer is `502 DRS-5052` *your selections were reset because server X went away*
+  (not counted against the server that says it), and the page says so in words above the panels, forgets the selections, closes
+  what they opened and unmarks the picked rows: the reader picks again, on a node that is up.
 - **Nothing to sign in again.** Every node accepts the same tokens (one token secret or OIDC issuer, section 9), so the
   session carries over. Live streams (server-sent events) reconnect to the new server by themselves and resubscribe.
 - **Coming back.** A set-aside server is checked on; once healthy for a minute it is used again for new sessions (not

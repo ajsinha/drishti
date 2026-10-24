@@ -577,6 +577,14 @@ backend:
 - **Visible to administrators.** Admin → Net and Admin → Health show the server the console is on, its list with each server's state, and the
   failovers of the last hour; each failover is a line in the console's log and an audit row on the server it moved to (`net-console-failover`).
 
+### One server per screen
+
+A screen with clickable rows (a Sutra Next screen such as the book desk) keeps what the reader picked on the server that drew it.
+The console sends that screen's clicks and details to the same server, even when the reader's other pages have moved to another;
+any other node that receives them passes them on to it. When that server stops, the next click says *Your selections were reset
+because server X went away. Pick again.*: the reader clicks the row again and carries on, on a server that is up. Nothing to
+configure; Admin → Net lists the passed-on requests with the others (kind `selection`).
+
 ## 9. Admin → Net
 
 **Admin → Net** (`/admin/net`, administrators) is the cluster as the node the console is on sees it. Its summary line says whether the cluster is

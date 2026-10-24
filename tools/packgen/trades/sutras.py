@@ -424,6 +424,26 @@ ENDUR_EXTRA = {
 }
 
 
+# a committed sample of each derived page, opened by its doc's examples (the book desk's book for the portfolio)
+DERIVED_SAMPLES = {"portfolio-trades": "BOOK-RATES-2"}
+
+
+def derived_doc(kind: str) -> list[str]:
+    """A derived page's generated doc: what it shows, its Status control, and the command (and a sample's URL) that opens one."""
+    mnemonic, label, _group, id_field, _target, what = DERIVED[kind]
+    about = (f"{what}, gathered by the derived connector from every member trade (the page lists at most {MAX_MEMBERS:,} of them; "
+             "the totals count every one). The strip gives the trade count, the notional in all currencies, and how many source "
+             "systems, product types and currencies they span, with the last maturity. Three metrics give the payments of the "
+             "next 7, 30 and 90 days; the trades table (filtered by the Status control, pivotable), the upcoming payments ladder, "
+             "notional by product type and by index, the maturity ladder and payments by month follow, then how the view was built.")
+    sample = DERIVED_SAMPLES.get(kind)
+    examples = ([f"/v/{kind}/{sample}", f"{mnemonic} {sample}"] if sample else [mnemonic])
+    return (["doc:", f"  summary: {q(what + ': trades, payments, notional and maturities')}", "  description: >-",
+             *["    " + ln for ln in _wrap(about)], "  params:",
+             "    status: { type: text, default: all, meaning: \"The Status control: the trade statuses the table lists\" }",
+             "  emits: []", "  expects: []", "  examples:", *[f"    - {q(e)}" for e in examples], "  since: \"2.7.0\""])
+
+
 def derived_yaml(kind: str) -> str:
     mnemonic, label, _group, id_field, _target, what = DERIVED[kind]
     target = DERIVED[kind][4]
@@ -433,6 +453,7 @@ def derived_yaml(kind: str) -> str:
         f"sutra: {kind}",
         "version: 1",
         f"description: {q(what + ': its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month.')}",
+        *derived_doc(kind),
         f"match: {{ kind: {kind}, priority: 10 }}",
         f"title: {{ pill: {q(label)}, id: $.{id_field}" + (f", with: \"link($.{id_field}, '{target}')\"" if target else "") + " }",
         "strip:",

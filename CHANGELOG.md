@@ -18,6 +18,24 @@
 ## Unreleased
 
 - The UI Board work is kept on branch ui-board-preview; not in this release.
+- **One server per screen (sticky routing for Sutra Next screens)** ([SUTRA_NEXT.md](docs/architecture/SUTRA_NEXT.md#7-events)
+  section 7, [DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md) 11.1, [NET.md](docs/admin/NET.md)): in a cluster a selection token
+  names the node that issued it (`tok_<node>~…`); the console sends a screen's clicks and children carrying tokens to that node
+  (`ServerPool.for_tokens`), and any other node that receives them forwards them there for the caller (`SelectionForwardFilter`, one
+  hop). When the node is gone, `502 DRS-5052` *your selections were reset because server X went away*: the page says it in words
+  above the panels, forgets the selections and closes what they opened; the reader picks again. Tests: `NetSelectionTest` (two
+  in-process servers), `test_cluster_failover.py`.
+- **Masks across panels: a followed masked id shows nothing** (SUTRA_NEXT.md section 15): a panel whose `source:` reads an event
+  value the reader was shown masked is not looked up; it says *Hidden for you* with the reason, never an empty panel (the book desk's
+  counterparty and limit panels for a reader with `COUNTERPARTY` masked). Tests: `SutraNextEventsTest`, `test_wire_masks.py`.
+- **Every pack Sutra carries a `doc:`**: the four derived trade pages (generated, `derived_doc` in `tools/packgen/trades/sutras.py`)
+  and news-and-markets `quote` and `news` (by hand). SUTRA_NEXT.md section 3 lists the screens still not migrated and why.
+- **`sutra lint config/packs`** lints the whole packs root with each pack's fragments under its own namespace
+  (`trading/deal-ticket@1` resolves), skipping each pack's `tests/` and checking each pack's `history:` (`SutraCliTest`).
+- **`make_packs.py --check` passes again**: the hand-added `history:` and `ingest:` sections are generator inputs
+  (`tools/packgen/banking/kept/<pack>.yaml`, appended as written), and the trading manifest's other hand edits (the lake layout's
+  flattened `NOTIONAL` and `INDEX_NAME`, the derived pages' `store: disk`, 1,000 rows a page, the `PAY_7D/30D/90D` totals) are
+  written by the generator; the parsed manifests are unchanged. `make_docs.py` brought up to date (core and counterparty-risk guides).
 - **The Sutra designer, modes 1 and 2: Customize and Describe** (behind `ui.designer`, off by default;
   [SCREEN_DESIGNER.md](docs/guides/SCREEN_DESIGNER.md#31-the-sutra-designer-customize-and-describe) section 31): one shell with modes
   (Outline and Grid shown, not yet enabled), every mode editing the same Sutra YAML as the user's own Design, never the pack's Sutra.
