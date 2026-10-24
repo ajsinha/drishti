@@ -53,6 +53,10 @@ Each booking system lands in a table of its own and is read by its own connector
 
 `trading-stream` (Kafka, **off by default**; switch it on with `DRISHTI_STREAM_TRADING=true`) streams the day's new trade versions, which **Live** in the top bar reads first. `trade-pages` is a *derived* connector: from the trades of every system it computes the pages of a counterparty (`CTRD`), a portfolio (`PTRD`), a legal entity (`LTRD`) and an index (`ITRD`): the live trades, payments in the next 7, 30 and 90 days, notional by product type and by index, the maturity ladder and payments by month, refreshed every minute. Try `CTRD CP-ALDERSHOT <GO>`.
 
+### Screens built from fragments, and the book desk
+
+Every screen of the pack is built from fragments: the Drishti UI kit's (`config/ui-kit/`, such as `row-picker@1`, `cashflow-ladder@1`, `data-provenance@1`) and the pack's own, named `trading/<name>@<version>` (`trading/deal-ticket@1`, `trading/trade-table@1`, `trading/payments-metrics@1`); `sutra lint config/packs` checks them all. The **book desk** (`/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`) is a master-detail screen across three packs: click a trade and its cash flows open under the row, its counterparty (core) and credit limit (counterparty-risk) fill the right column, and the trades can be edited beside the table or started in a New trade drawer (kept as drafts). See the Sutra developer guide, section 11a, and the forms guide.
+
 Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`.
 
 ## Kinds

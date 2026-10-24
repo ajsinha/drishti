@@ -1178,7 +1178,8 @@ working directory unless you changed them.
 | `data/bi-store/` (`DRISHTI_BI_STORE`) | the BI engine's Parquet layers (columns and rollups) | no | rebuilt from the sources for the business date asked for; may be deleted while the server is stopped |
 | `config/ai/`, `config/mcp/` (`DRISHTI_AI_DIR`, `DRISHTI_MCP_DIR`) | one YAML file per AI provider and per MCP server; no key is written in a file (`${ENV}` references) | yes, with the connector files | copy |
 | `data/collab/` (`DRISHTI_COLLAB_DIR`) | with the file store only: shares, threads and the outbox; compliance exports (kept 24 h). With the database store they are in `data/identity/` | **yes**, if you use the file store | copy |
-| `data/designs/`, `data/loads/`, `data/reports/` | the Build workbench's designs (when `drishti.builder.designs.store` is `file`), the data-load history and expectation overrides, scheduled report output | yes (designs and loads); reports as you need them | copy |
+| `data/fstore/` (the content store, `config/store/store.yaml`, `DRISHTI_STORE_ROOT`) | user content every cluster node reaches: designs (and the Sutra designer's pages and drafts), collaboration, audit, embed apps, pack switches, proposals, load history, BI items and runs; with the `sqlite` or `postgres` backend it is the `drishti_content` table, with `s3` a bucket ([CONTENT_STORE.md](../architecture/CONTENT_STORE.md)) | **yes** | copy the directory (or back up that table or bucket) |
+| `data/designs/`, `data/loads/`, `data/reports/` | the Build workbench's designs (only with the old `drishti.builder.designs.store: file`; the default `content` keeps them in the content store, and an old folder is imported once and renamed `designs-imported-<time>`), the data-load history and expectation overrides, scheduled report output | yes (designs and loads); reports as you need them | copy |
 | `data/packs/` | `installed/` (packs deployed or installed from the registry), `added.yaml` (packs loaded from Admin), `deploy-history.jsonl`, `samples-mode` | **yes**, with `config/packs/` if you deploy through Admin | copy |
 | `config/packs/` | the packs you installed | no, if they come from the release | keep your own packs in version control |
 
@@ -1194,7 +1195,7 @@ if [ -f data/identity/drishti.db ]; then                      # 1.10+: a consist
   sqlite3 data/identity/drishti.db ".backup 'data/identity/backup.db'"
 fi
 keep=()                                                         # only what exists here: a server that never wrote data/designs has none
-for p in data/identity data/governance data/packs data/loads data/designs data/collab sutras config/connectors config/bi config/ai config/mcp application.local.yaml; do
+for p in data/fstore data/identity data/governance data/packs data/loads data/designs data/collab sutras config/connectors config/bi config/ai config/mcp application.local.yaml; do
   [ -e "$p" ] && keep+=("$p")
 done
 tar czf /backup/drishti/drishti-$stamp.tgz --exclude=data/identity/drishti.db* "${keep[@]}"

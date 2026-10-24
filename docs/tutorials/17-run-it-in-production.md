@@ -154,7 +154,7 @@ if [ -f data/identity/drishti.db ]; then
   python3 -c "import sqlite3; s = sqlite3.connect('data/identity/drishti.db'); d = sqlite3.connect('data/identity/backup.db'); s.backup(d); d.close()"
 fi
 keep=()                                    # only what exists here
-for p in data/identity data/governance data/packs data/loads data/designs data/collab sutras config/connectors config/bi config/ai config/mcp application.local.yaml; do
+for p in data/fstore data/identity data/governance data/packs data/loads data/designs data/collab sutras config/connectors config/bi config/ai config/mcp application.local.yaml; do
   [ -e "$p" ] && keep+=("$p")
 done
 tar czf /backup/drishti/drishti-$stamp.tgz --exclude=data/identity/drishti.db* "${keep[@]}"

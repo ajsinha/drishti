@@ -1323,6 +1323,13 @@ The page's kind (or its data) is served by another node of the cluster, and that
 Members (its state) and Routing (*Explain a request* for the kind and id: which node it would go to). **Fix:** start or rejoin that node, or undrain
 it; a slow node: its own Admin → Health. The page works again by itself once the node is back; nothing on this node needs to change.
 
+### A screen says *Your selections were reset ... Pick again.*
+
+A screen with clickable rows (the book desk, or a page the Sutra designer gave a *When I click*) keeps what you picked on the server that
+drew it ([NET.md, One server per screen](../admin/NET.md#one-server-per-screen)). That server went away (*because server X went away*,
+`DRS-5052` from the server), or your selections expired or that server restarted. **Fix:** click the row again; the screen carries on, on
+a server that is up. Nothing is lost but the pick. If it happens often, check Admin → Net → Members for a node that keeps leaving.
+
 ### A search says it is partial and names a node (`node n-c ...` in *failed*)
 
 That node holds data of the kind and did not answer the search in time (`scatter-budget`, 3 s), failed, or is down (`not asked: it cannot be reached
@@ -1411,7 +1418,7 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 | `DRS-5044` | the action does not apply (HTTP 422): a connector a pack's template names (disable or reset it), a pack named in `drishti.packs.enabled` (take it out of the setting, or disable it), a connector with no file (it comes from `application.yaml`), or an uploaded BI file that is not valid (the problems are listed) |
 | `DRS-5050` | Drishti*net is off on this node (HTTP 404): its `config/net/node.yaml` does not say `enabled: true`, or the node left (Admin → Net → Rejoin). See [Drishti*net](#drishtinet) |
 | `DRS-5051` | a call between nodes was refused (HTTP 401): no cluster credential, a bad signature (another key), signed more than 60 s away from this node's clock, or an on-behalf-of token that is expired, for another node or not signed with the key. Admin → Net lists each refusal with the address and the reason |
-| `DRS-5052` | the node a request was forwarded to failed or answered something that is not an answer (HTTP 502); the next node was tried once |
+| `DRS-5052` | the node a request was forwarded to failed or answered something that is not an answer (HTTP 502); the next node was tried once. For a screen's clicks: the node holding the reader's selections went away (*your selections were reset ... pick again*) |
 | `DRS-5053` | the node a request was forwarded to did not answer within `routing.yaml`'s `forward-timeout` (HTTP 504) |
 | `DRS-5054` | the caller's roles may not reach that node (`access.yaml`), or the node is drained and takes no forwarded work (HTTP 403 or 503) |
 | `DRS-5055` | a file of `config/net/` was not written (HTTP 409): it changed since you read it (read it again), or it has an error (the problems are listed, with their lines) |
