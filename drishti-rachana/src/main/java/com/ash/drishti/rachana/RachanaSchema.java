@@ -114,6 +114,59 @@ public final class RachanaSchema {
         return Map.of("description", what, "oneOf", List.of(every, obj));
     }
 
+    /** {@code form:} on a panel (SUTRA_NEXT.md 10): typed fields, rules, hints and how it opens; checked as DRS-2058. */
+    private static Map<String, Object> formSchema() {
+        Map<String, Object> roles = Map.of("type", "array", "items", Map.of("type", "string"), "description", "Role names");
+        Map<String, Object> field = new LinkedHashMap<>();
+        Map<String, Object> fp = new LinkedHashMap<>();
+        fp.put("id", Map.of("type", "string", "pattern", "^[a-z][a-z0-9_]{0,39}$", "description", "The field's id, read by rules and hints"));
+        fp.put("label", Map.of("type", "string"));
+        fp.put("type", Map.of("enum", com.ash.drishti.rachana.model.Form.TYPES, "description", "text (default), number, date, enum, bool, textarea or lookup"));
+        fp.put("bind", Map.of("type", "string", "description", "The record's field it edits (COUNTERPARTY); the id when absent"));
+        fp.put("required", Map.of("type", "boolean"));
+        fp.put("min", Map.of("description", "A number, or a date (2026-12-31) or today"));
+        fp.put("max", Map.of("description", "A number, or a date (2026-12-31) or today"));
+        fp.put("pattern", Map.of("type", "string", "description", "A regular expression the whole text matches"));
+        fp.put("max-length", Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.Form.MAX_TEXT));
+        fp.put("options", Map.of("description", "enum: a list of values or { value, label }; lookup: { source: { pack, kind, where }, value, label, carry }"));
+        fp.put("editable-by", roles);
+        fp.put("readonly", Map.of("type", "boolean"));
+        fp.put("reason", Map.of("type", "string", "description", "Why it is read-only, shown beside it"));
+        fp.put("step", Map.of("type", "string", "description", "The drawer step that asks for it"));
+        fp.put("placeholder", Map.of("type", "string"));
+        fp.put("fmt", Map.of("type", "string"));
+        fp.put("new", Map.of("type", "boolean", "description", "Whether the New drawer asks for it (default true)"));
+        field.put("type", "object");
+        field.put("properties", fp);
+        field.put("required", List.of("id"));
+        field.put("additionalProperties", false);
+        Map<String, Object> rule = Map.of("type", "object", "required", List.of("rule", "message"), "additionalProperties", false,
+                "properties", Map.of("rule", text("An expression over the fields that must hold"), "message", text("What to do, in plain words"),
+                        "severity", Map.of("enum", List.of("error", "warn")), "fields", Map.of("type", "array", "items", Map.of("type", "string"))));
+        Map<String, Object> hint = Map.of("type", "object", "required", List.of("label", "value"), "additionalProperties", false,
+                "properties", Map.of("label", text("The hint's words"), "value", text("An expression over the fields"), "of", text("What the value is of (a percentage is shown)"),
+                        "fmt", text("A format"), "step", text("The drawer step it shows on")));
+        Map<String, Object> props = new LinkedHashMap<>();
+        props.put("title", Map.of("type", "string"));
+        props.put("key", Map.of("type", "string", "description", "The field that identifies a record"));
+        props.put("edit", Map.of("enum", com.ash.drishti.rachana.model.Form.EDIT_MODES, "description", "beside: a form beside the table; cells: edit in the table"));
+        props.put("new", Map.of("enum", com.ash.drishti.rachana.model.Form.NEW_MODES, "description", "drawer: a guided drawer in steps"));
+        props.put("new-label", Map.of("type", "string"));
+        props.put("roles", roles);
+        props.put("steps", Map.of("type", "array", "items", Map.of("type", "object", "required", List.of("id"), "properties",
+                Map.of("id", Map.of("type", "string"), "label", Map.of("type", "string")))));
+        props.put("fields", Map.of("type", "array", "minItems", 1, "maxItems", com.ash.drishti.rachana.model.Form.MAX_FIELDS, "items", field));
+        props.put("rules", Map.of("type", "array", "items", rule));
+        props.put("hints", Map.of("type", "array", "items", hint));
+        Map<String, Object> f = new LinkedHashMap<>();
+        f.put("type", "object");
+        f.put("description", "How people edit this panel's records or start new ones (drafts until 2.8.0's write-back)");
+        f.put("properties", props);
+        f.put("required", List.of("fields"));
+        f.put("additionalProperties", false);
+        return f;
+    }
+
     /** A use of a shared block in a panels list: {@code { use: legs@1, with: { rate-fmt: pct4 } }} (DRS-2048 when it does not resolve). */
     private static Map<String, Object> use() {
         Map<String, Object> props = new LinkedHashMap<>();
@@ -121,6 +174,7 @@ public final class RachanaSchema {
                 "description", "A Drishti UI kit fragment (name@version) or a pack's own block or fragment (pack/name@version, or its plain name): its panels go here"));
         props.put("with", Map.of("type", "object", "description", "The block's parameters (its params:), each one value; the block's defaults otherwise"));
         props.put("refresh", refreshSchema("Fetch every panel the use brings again on an interval"));
+        props.put("form", formSchema());
         Map<String, Object> u = new LinkedHashMap<>();
         u.put("type", "object");
         u.put("description", "A use of a shared block: the block's panels, in its order, as if they were written here");
@@ -168,6 +222,7 @@ public final class RachanaSchema {
                 "description", "Width in columns of a 12-column grid (default: the whole column)"));
         common.put("height", Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.Panel.MAX_HEIGHT,
                 "description", "Height in grid rows of 2.5rem (default: as tall as the content)"));
+        common.put("form", formSchema());
         common.put("refresh", refreshSchema("Fetch this panel again on an interval; the reader may slow it down or pause it, never speed it up"));
         common.put("infer", Map.of("type", "boolean", "description", "Let inference fill the columns"));
         common.put("where", text(EL + " that must be true for a row to be shown (it may read ctl.<id>)"));

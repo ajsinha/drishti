@@ -124,6 +124,11 @@ public record Panel(
         return Refresh.fromOption(options.get(Refresh.KEY));
     }
 
+    /** {@code form} when the panel says how people edit its records or start new ones (SUTRA_NEXT.md 10). */
+    public Optional<Form> form() {
+        return Form.fromOption(options.get(Form.KEY));
+    }
+
     public Optional<String> option(String name) {
         Object v = options.get(name);
         return v == null ? Optional.empty() : Optional.of(v.toString());

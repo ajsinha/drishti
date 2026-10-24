@@ -44,6 +44,42 @@ panels:
     with: { id: trades, title: Trades of the book, rows: $.TRADES, event: open, key: TRADE_ID, key-label: Trade, ref: COUNTERPARTY,
             a: PRODUCT_TYPE, a-label: Product, b: COUNTERPARTY, b-label: Counterparty, amount: NOTIONAL, amount-label: Notional,
             date: MATURITY_DATE, date-label: Maturity, empty: No trades in this book, code: TRD }
+    form:                                     # SUTRA_NEXT.md 10: edit a trade beside the table, start a new one in a drawer
+      title: Edit trade
+      key: trade_id
+      edit: beside
+      new: drawer
+      new-label: New trade
+      steps: [ { id: who, label: Who }, { id: what, label: What }, { id: check, label: Check } ]
+      fields:
+        - { id: trade_id, label: Trade, bind: TRADE_ID, readonly: true, reason: "set by the booking system", new: false }
+        - id: counterparty
+          label: Counterparty
+          bind: COUNTERPARTY
+          type: lookup
+          required: true
+          readonly: true
+          step: who
+          options:
+            source: { pack: counterparty-risk, kind: credit-limit, where: "nonblank(@.COUNTERPARTY)" }
+            value: COUNTERPARTY
+            label: COUNTERPARTY_NAME
+            carry: [LIMIT, USED]
+        - { id: product_type, label: Product, bind: PRODUCT_TYPE, type: enum, options: [IRS, OIS, XCCY, FRA, ComSwap, Swaption], readonly: true,
+            reason: "the product is fixed once booked", required: true, step: what }
+        - { id: notional, label: Notional, bind: NOTIONAL, type: number, min: 0, required: true, fmt: amount0, step: what }
+        - { id: currency, label: Currency, bind: CURRENCY, type: enum, options: [USD, EUR, GBP, JPY, CHF, CAD], step: what }
+        - { id: maturity_date, label: Maturity, bind: MATURITY_DATE, type: date, min: today, required: true, step: what }
+        - { id: trade_status, label: Status, bind: TRADE_STATUS, type: enum, options: [PENDING, VALIDATED, AMENDED], editable-by: [middle-office],
+            new: false }
+        - { id: comment, label: Comment, bind: COMMENT, type: textarea, max-length: 500, placeholder: Reason for the change, step: check }
+      rules:
+        - { rule: "notional <= 30000000", severity: warn, fields: [notional],
+            message: "Above the desk limit of 30,000,000: a second approver is needed." }
+        - { rule: "not (notional > 30000000 and empty(comment))", fields: [comment],
+            message: "Say why the trade is above the desk limit: the second approver reads it." }
+      hints:
+        - { label: "PFE limit after this trade", value: "counterparty.USED + notional", of: "counterparty.LIMIT", fmt: amount0, step: what }
     children:
       - place: expand-row
         source: { pack: trading, kind: trade, id: "@parent.open.id" }

@@ -233,7 +233,7 @@ def create_app(settings: Settings) -> FastAPI:
                         workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes,
                         ai_routes)
 
-    from routes import artifact_routes, history_routes, lake_maint_routes, lake_routes, net_routes
+    from routes import artifact_routes, drafts_routes, history_routes, lake_maint_routes, lake_routes, net_routes
 
     def _lake_schedules(app):
         from core.lake_maint import maintenance
@@ -431,6 +431,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(home_routes.router)
     app.include_router(history_routes.router)          # history queries: before the terminal (/v/{kind}/{id}) and export routes
     app.include_router(terminal_routes.router)
+    app.include_router(drafts_routes.router)            # form drafts (SUTRA_NEXT.md 10), before the general API routes
     app.include_router(api_routes.router)
     app.include_router(auth_routes.router)
     app.include_router(studio_routes.router)

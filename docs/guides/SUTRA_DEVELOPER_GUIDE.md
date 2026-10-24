@@ -1506,9 +1506,8 @@ is malformed, duplicated, reads a missing parent or control, or has a default it
 ## Where next
 
 - [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md): every key, panel kind, format, function and problem code.
-- [PANELS.md](PANELS.md): the 22 panel kinds, one entry each.
-- [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md) and the [Build workbench tutorial](../tutorials/06-design-a-screen.md): build screens visually.
+- [PANELS.md](PANELS.md): the 22 panel kinds, one entry each, and [developing a panel kind](PANELS.md#developing-a-panel-kind) of your own.
+- [SUTRA_FORMS_GUIDE.md](SUTRA_FORMS_GUIDE.md) (forms: edit records beside a table, in its cells, in a drawer); [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md), [Build tutorial](../tutorials/06-design-a-screen.md).
 - [INFERENCE.md](../architecture/INFERENCE.md): what Drishti does without a Sutra, and how to start a Sutra from inference.
 - [LIVE.md](../architecture/LIVE.md): how a view you laid out keeps itself up to date.
 - [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md): packaging Sutras with mnemonics, links, formats and samples.
-- [PANELS.md (developing a panel kind)](PANELS.md#developing-a-panel-kind): adding a panel kind of your own.

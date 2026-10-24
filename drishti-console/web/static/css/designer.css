@@ -98,3 +98,6 @@
 /* layout handles on a grid screen (SUTRA_NEXT.md 13): narrower, wider, the area */
 .dz-lay { display: inline-flex; gap: .2rem; align-items: center; }
 .dz-span { font-size: .75rem; color: var(--d-muted); min-width: 2.4rem; text-align: center; }
+/* Let people edit (forms, designer-forms.js) */
+.dz-cols { display: flex; flex-wrap: wrap; gap: .25rem .75rem; }
+.dz-col { font-size: .85rem; display: inline-flex; gap: .3rem; align-items: center; }

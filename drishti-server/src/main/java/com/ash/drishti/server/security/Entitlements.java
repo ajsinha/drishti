@@ -351,10 +351,18 @@ public final class Entitlements {
         return in.stream().filter(s -> s.kind() == null || mayOpen(p, s.kind())).toList();
     }
 
+    /** The roles a form's editable-by is checked against: {@code *} (every role) when sign-in is off or the principal holds every role. */
+    public List<String> formRoles(Principal p) {
+        return !props.enabled() || p.roles().contains("*") ? List.of("*") : p.roles();
+    }
+
     /** Disables links the principal may not follow: linked-entity rows, cell links and link keys. */
     public ViewModel restrict(Principal p, ViewModel v) {
         List<ViewModel.PanelView> panels = new ArrayList<>();
         for (ViewModel.PanelView pv : v.panels()) {
+            if (pv.form() != null) {                 // a form's fields this person may not edit are locked and say so (SUTRA_NEXT.md 10)
+                pv = pv.withForm(com.ash.drishti.engine.wire.FormViews.forRoles(pv.form(), formRoles(p)));
+            }
             if (pv.data() instanceof PanelData.Links l) {
                 List<PanelData.LinkItem> items = l.links().stream().map(i -> i.link() != null && !mayOpen(p, i.link().kind())
                         ? new PanelData.LinkItem(i.label(), i.text(), null, DENIED, "denied") : i).toList();

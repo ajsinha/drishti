@@ -510,3 +510,45 @@ def sutra_describe(c: Ctx):
     c.page.locator("[data-describe-form] button[type=submit]").click()
     c.until("document.querySelectorAll('[data-token]').length === 3")
     c.save("describe-light.jpg")
+
+
+
+# ---- forms (docs/guides/SUTRA_FORMS_GUIDE.md; tests/test_record_forms_browser.py makes the same pictures) --------------------------
+
+@shot("form-beside.jpg")
+def form_beside(c: Ctx):
+    c.page.goto(c.base + "/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk")
+    c.until("window.drishtiForms && document.querySelector('#p-trades tbody tr[data-frow]')")
+    c.page.locator("#p-trades tbody tr[data-frow='1'] td").nth(1).click()
+    c.page.fill("[data-fm-side] [data-field='notional']", "40,000,000")
+    c.page.fill("[data-fm-side] [data-field='comment']", "Client hedge for the Q4 roll")
+    c.page.evaluate("document.querySelectorAll('#p-trades tr.wire-kids').forEach(n => n.remove());"
+                    "document.querySelector('#p-trades').scrollIntoView({ block: 'start' }); window.scrollBy(0, -70)")
+    c.save("form-beside.jpg", clip={"x": 0, "y": 0, "width": 1500, "height": 760})
+
+
+@shot("form-cells.jpg")
+def form_cells(c: Ctx):
+    c.page.goto(c.base + "/v/credit-limit/LIM-ALDERSHOT")
+    c.until("window.drishtiForms && document.querySelector('#p-buckets td.fm-editable')")
+    for row, value in (("0", "100"), ("1", "400m")):
+        c.page.locator(f"#p-buckets tr[data-frow='{row}'] td[data-fcell='limit']").click()
+        c.page.keyboard.press("Control+A")
+        c.page.keyboard.type(value)
+        c.page.keyboard.press("Enter")
+    c.save("form-cells.jpg", clip={"x": 0, "y": 0, "width": 1500, "height": 700})
+    c.page.locator(".fm-undo").click()
+
+
+@shot("form-drawer.jpg")
+def form_drawer(c: Ctx):
+    c.page.goto(c.base + "/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk")
+    c.until("window.drishtiForms && document.querySelector('[data-fm-new]')")
+    c.page.locator("[data-fm-new]").click()
+    c.page.select_option("[data-fm-drawer] [data-field='counterparty']", index=1)
+    c.page.locator("[data-fm-drawer] .fm-next").click()
+    c.page.select_option("[data-fm-drawer] [data-field='product_type']", "IRS")
+    c.page.fill("[data-fm-drawer] [data-field='notional']", "25m")
+    c.page.select_option("[data-fm-drawer] [data-field='currency']", "USD")
+    c.page.fill("[data-fm-drawer] [data-field='maturity_date']", "2031-06-30")
+    c.save("form-drawer.jpg", clip={"x": 0, "y": 0, "width": 1500, "height": 860})

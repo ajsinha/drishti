@@ -18,6 +18,23 @@
 ## Unreleased
 
 - The UI Board work is kept on branch ui-board-preview; not in this release.
+- **Forms: letting people edit records** (SUTRA_NEXT.md phase 5, [section 10](docs/architecture/SUTRA_NEXT.md#10-forms-and-data-entry);
+  [SUTRA_FORMS_GUIDE.md](docs/guides/SUTRA_FORMS_GUIDE.md)): `form:` on a panel or a use, with typed fields (`text`, `number`, `date`,
+  `enum`, `bool`, `textarea`, `lookup` over a source with carried values), `required`, `min`/`max`, `pattern`, `max-length`,
+  `editable-by` roles, `readonly` with a reason, field and cross-field `rules` (error refuses, warn is said and kept) and computed
+  `hints`, in a small expression language the browser and the server share; checked as `DRS-2058` and in the JSON schema. Three ways
+  in, from the approved mock-ups: `edit: beside` (click a row, a form beside the table, locked fields say why, messages in words under
+  the field, Draft · not saved, Save draft, Discard), `edit: cells` (a pencil on the editable columns, Enter, Esc and Tab, a changed cell
+  tinted with "was …", a bad value red with the reason under the row, "N changes not saved", Undo all, Review N changes) and
+  `new: drawer` (steps Who ✓ → What → Check over the dimmed page, Back, Next, Save as draft, the limit after the trade worked out from
+  the chosen counterparty). Masks and roles decide: a masked field is never shown or editable (*Hidden for you*), another role's field
+  is locked. Saving keeps a **draft** per person in the content store: `/api/v1/drafts` (CRUD, checked again on the server with the
+  same rules, a masked or locked field refused, audited); the page offers "You have 2 drafts on this page" to resume or discard and asks
+  before leaving with changes not saved; a panel being edited is not refreshed under the person. On the packs: the book desk's trades
+  (beside, and a New trade drawer) and a credit limit's buckets (cells, through `make_sutras.py`). The Sutra designer: Customize's
+  **Let people edit** (a table, beside or cells, which columns, New in a drawer) and Describe's `edit trades beside|in the cells` and
+  `new trade in a drawer`. Write-back through the connectors stays 2.8.0. Tests: `FormTest`, `DraftsTest`, `test_record_forms.py`,
+  `test_record_forms_browser.py`; screenshots `form-beside.jpg`, `form-cells.jpg`, `form-drawer.jpg`.
 - **Refresh and freshness** (SUTRA_NEXT.md phase 4, [section 9](docs/architecture/SUTRA_NEXT.md#9-live-panels-refresh-control-and-freshness)):
   `refresh: 30` or `refresh: { every: 30, user-can-pause: false }` on a panel, a use or the whole Sutra is now acted on (Rachana checks
   it, `DRS-2012`; the schema describes it; the view model carries `refresh` on each panel). The console fetches only the panels that are

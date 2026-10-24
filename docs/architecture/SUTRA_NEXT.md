@@ -524,29 +524,61 @@ source's own `staleAfter` per panel for panels with their own `source:` (today t
 
 ## 10. Forms and data entry
 
-A form is a panel of kind `form`: fields with types, defaults and validation, and a submit that emits (phase 5) or writes (phase 6).
+**Built (phase 5, 2.7.x; drafts only, the write is phase 6).** A panel (or a use, which carries it to the one panel it brings) says how
+people edit its records or start new ones with `form:`. The worked guide is [SUTRA_FORMS_GUIDE.md](../guides/SUTRA_FORMS_GUIDE.md); every
+key is in [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#forms-form-on-a-panel).
 
 ```yaml
 panels:
-  - id: new-limit
-    kind: form
-    title: Request a limit change
-    fields:
-      - { id: counterparty, label: Counterparty, type: entity, kind: counterparty, default: "$.COUNTERPARTY", required: true }
-      - { id: limit, label: New limit (USD), type: number, fmt: amount0, min: 0, max: 5e9, required: true }
-      - { id: until, label: Valid until, type: date, min: today, max: "today + 365d" }
-      - { id: reason, label: Reason, type: text, max-length: 500, required: true }
-    validate:
-      - { rule: "limit > $.CURRENT_LIMIT * 0.5", message: "A cut of more than half needs the credit desk: call them" }
-    submit: { label: Send for approval, emits: request }
+  - use: row-picker@1
+    with: { id: trades, rows: $.TRADES, key: TRADE_ID, ... }
+    form:
+      key: trade_id
+      edit: beside                      # beside: a form beside the table | cells: the table's cells
+      new: drawer                       # New opens a guided drawer
+      steps: [ { id: who, label: Who }, { id: what, label: What }, { id: check, label: Check } ]
+      fields:
+        - { id: trade_id, bind: TRADE_ID, readonly: true, reason: "set by the booking system", new: false }
+        - id: counterparty
+          bind: COUNTERPARTY
+          type: lookup
+          required: true
+          step: who
+          options: { source: { pack: counterparty-risk, kind: credit-limit, where: "nonblank(@.COUNTERPARTY)" },
+                     value: COUNTERPARTY, label: COUNTERPARTY_NAME, carry: [LIMIT, USED] }
+        - { id: notional, bind: NOTIONAL, type: number, min: 0, required: true, step: what }
+        - { id: trade_status, bind: TRADE_STATUS, type: enum, options: [PENDING, VALIDATED], editable-by: [middle-office] }
+      rules:
+        - { rule: "notional <= 30000000", severity: warn, fields: [notional], message: "Above the desk limit of 30,000,000: a second approver is needed." }
+      hints:
+        - { label: "PFE limit after this trade", value: "counterparty.USED + notional", of: "counterparty.LIMIT", step: what }
 ```
 
-- **Field types**: `text`, `number`, `date`, `datetime`, `boolean`, `choice` (options as for controls), `entity` (a type-ahead over
-  a kind, as the viewer may see it), `money` (amount and currency).
-- **Validation** runs twice: in the browser for speed, and on the server as the authority (the same Rachana-EL rules). Errors are
-  shown beside the field, in plain words.
-- **Defaults** are expressions over the record, bound as the viewer; a masked field cannot be a default (it would leak), lint warns.
-- Drafts are kept per person in the browser only (an unsent form survives a reload); nothing is saved until submit.
+- **Field types**: `text`, `number`, `date`, `enum` (`options:` values or `{value, label}`), `bool`, `textarea`, `lookup` (choices read
+  from a `source:` of a kind with `where` or `search`, as the viewer may see it; `carry:` names the values hints read as
+  `counterparty.LIMIT`). Each field: `label`, `bind` (the record field; the id when absent), `required`, `min`/`max` (a number, a date or
+  `today`), `pattern`, `max-length`, `editable-by` roles, `readonly` with a `reason`, `step`, `placeholder`, `fmt`, `new: false`.
+- **Rules** (`rules:`) are expressions in a small language the browser and the server share (`FormExpr`; fields by id, `+ - * /`,
+  comparisons, `and or not`, `empty len abs min max`, `today`): `severity: error` (the default) refuses the draft, `warn` is said and kept.
+  The browser checks as people type; the server checks every draft again as the authority. A rule reading a lookup's carried value is
+  checked in the browser only until the write (phase 6) re-reads the record.
+- **Modes**: `edit: beside` (a click on a row opens a form beside the table), `edit: cells` (a field edits the column whose `bind` names
+  its record field), `new: drawer` (steps, Next checks the step, the hints of the step, Save as draft from any step, checked up to it).
+- **Masks and roles decide editability.** The view model carries the form as the viewer may use it: a masked field is marked, left out of
+  every row's values and offers no lookup choices (the console says *Hidden for you*, never an input); a field whose `editable-by` (or the
+  form's `roles`) names roles the viewer does not hold is `locked` ("locked: you can view, not change"); a lookup never offers an entity
+  whose value is masked for the viewer. With sign-in off every role is held.
+- **Drafts, not writes.** Saving keeps a draft per person in the content store through `/api/v1/drafts` (CRUD, per user, checked again
+  with the same rules, a masked or locked field refused, each save and discard audited); the page lists them ("You have 2 drafts on this
+  page") to resume or discard, and warns before leaving with changes not saved. A panel being edited is not refreshed under the person.
+- **Lint**: `DRS-2058` for every form problem, in words (an unknown key, a type, a `step` or `key` naming nothing, a rule reading a field
+  the form does not have, a pattern that does not compile); the JSON schema describes `form:`.
+- **The designer**: Customize's *Let people edit* (a table, beside or cells, which columns, New in a drawer) and Describe's
+  `edit trades beside|in the cells` and `new trade in a drawer` write it (SCREEN_DESIGNER.md section 31).
+- **On the packs**: the book desk's trades (beside and a New trade drawer) and a credit limit's buckets (cells).
+
+Still to come: `datetime`, `money` and `entity` fields, defaults from expressions over the record, and `submit` emitting an event
+(the write itself is section 11).
 
 ## 11. Actions that write (2.8.0 write-back)
 
@@ -700,7 +732,7 @@ collapsible; `ScreenGrid`), and the console draws it (`core/screen_grid.py`, `te
 | An event read (`@panel.event.field`) of a panel, event or field the screen does not have; a panel reading its own event; a cycle; `$src` without a source; a source id reading a `number`, `date` or `bool` field; a trigger not built; a source that names none or several of id, where, search | `DRS-2057` | error | 2 (built) |
 | A fragment whose panels emit without `doc.emits` entries (`{ name, on, payload }`), or read `@parent` without `doc.expects` | `DRS-2055` | error: the fragment is not loaded | 2, 3 (built) |
 | A child reading `@parent` where no parent provides it or an event it does not emit; children deeper than 3; `expand-row` under a panel without rows | `DRS-2056` | error | 3 (built) |
-| A form default reading a masked field; a write action naming a missing connector template | `DRS-2058` | warning / error | 5, 6 |
+| A form: an unknown key, a type, a `step` or `key` naming nothing, a rule reading a field the form does not have, a pattern that does not compile (5, built); a write action naming a missing connector template (6) | `DRS-2058` | error | 5 (built), 6 |
 | Layout: unknown areas, overlaps (non-rectangular areas), rows of different widths, column widths not summing to 12, a split of areas not side by side, tabs or sticky or phone naming nothing, tabs over fewer than two panels, sections with areas, a bad `order` or `section` | `DRS-2059` | error | 7 (built, 2.8) |
 
 The server reports errors per file (the problems the catalogue and Studio show), `sutra lint` prints errors and the help warnings, `sutra lint --docs` adds the
@@ -742,7 +774,7 @@ picking from `emits`; show lint as you type; save a dynamic screen to the worksp
 | 2 | Events (`emits`, `@panel.event.path`) and multi-pack sources (`source:`) | 2.7.0 (**built**) |
 | 3 | Nested children (`children:`, `place`, `show`, lazy, depth 3); the book desk | 2.7.0 (**built**) |
 | 4 | Refresh control and freshness per panel | 2.7.x (**built**) |
-| 5 | Forms and validation | 2.8.0 |
+| 5 | Forms and validation; drafts per person (`/api/v1/drafts`) | 2.7.x (**built**; the write is phase 6) |
 | 6 | Actions and write-back through connectors' `writes:` (WRITE_BACK.md) | 2.8.0 |
 | 7 | Dynamic screens saved to the workspace; the `layout:` grid; workspace fragments | 2.8.x / 2.9.0 |
 | 8 | The editor, from the product owner's mock-ups; the component browser | after the mock-ups |

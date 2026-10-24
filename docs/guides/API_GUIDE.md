@@ -910,6 +910,34 @@ curl -s $B/health/live
 {"streams":0,"topics":0,"frames":11680,"p50Ms":0.886,"p99Ms":1.917}
 ```
 
+### Form drafts
+
+What a person typed into a panel's `form:` ([SUTRA_FORMS_GUIDE.md](SUTRA_FORMS_GUIDE.md), SUTRA_NEXT.md section 10), kept for them on the
+server until 2.8.0 writes it through a connector. Only the owner ever reads a draft. The console passes these through as `/api/drafts`.
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/drafts?kind=&id=&sutra=` | the caller's drafts, newest first, optionally of one page and Sutra |
+| `GET` | `/drafts/{draft}` | one draft (`d-` and 12 hex digits); another person's is `404` |
+| `POST` | `/drafts` | body `{kind, id, sutra, design?, panel, mode: edit\|cells\|new, title?, step?, records: [{record, values, was}]}` → `201` with the draft (`draft`, `changes`, `warnings`, `createdAt`, `updatedAt`) |
+| `PUT` | `/drafts/{draft}` | the same body: replaces it (`200`); a draft stays on its page and panel |
+| `DELETE` | `/drafts/{draft}` | discards it (`204`) |
+
+Every save is checked again with the form's own rules: each changed value's type, `required`, `min`/`max`, `pattern`, `max-length` and
+options, then every rule over `values` laid over `was` (for `new`, every field the drawer asks up to `step`). An error refuses the draft:
+`422 DRS-2060` with `issues: [{record, field, message, severity}]` (and the `warnings`); a warning is kept with the draft. A value (in
+`values` or `was`) for a field masked for the caller is `403` (*Counterparty is hidden for you: a draft cannot carry it*); a change to a
+field the caller may not edit (`readonly`, or `editable-by` roles they do not hold) is `403` (*Status is locked: you can view, not change*).
+At most 200 drafts a person and 500 records a draft. Each save, update, discard and refusal is in the audit log
+(`form-draft-saved`, `-updated`, `-discarded`, `-refused`).
+
+```bash
+curl -s -X POST "$DRISHTI/api/v1/drafts" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{
+  "kind": "portfolio-trades", "id": "BOOK-RATES-2", "sutra": "book-desk", "panel": "trades", "mode": "edit",
+  "records": [{ "record": "MX-20000008", "values": { "notional": 40000000, "comment": "Client hedge" },
+                "was": { "trade_id": "MX-20000008", "notional": 158000000 } }] }'
+```
+
 ### Personal: settings, packs, workspaces, monitors, alerts
 
 Everything under `/me` belongs to the caller (the token's subject, or `X-Drishti-User` with security off).

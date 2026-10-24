@@ -499,7 +499,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         for (Panel p : layout.sutra().panels()) {
             boolean wired = ScreenWire.wired(p);            // Sutra Next: its own source, events, children (SUTRA_NEXT.md 6 to 8)
             if (values.builds(p.id()) && (wired ? wire.shown(screen, p) : binder.shown(p, eval))) {   // a control changed: only the panels that read it; when: false leaves it out
-                futures.add(CompletableFuture.supplyAsync(() -> wired ? wire.bind(screen, p) : ScreenWire.refreshed(p, binder.bind(p, ctx)), bindPool));
+                futures.add(CompletableFuture.supplyAsync(() -> wired ? wire.bind(screen, p) : wire.formed(screen, p, ScreenWire.refreshed(p, binder.bind(p, ctx))), bindPool));
             }
         }
         List<PanelView> panels = futures.stream().map(CompletableFuture::join).toList();

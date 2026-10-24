@@ -446,7 +446,7 @@ public final class SutraBlocks {
     /** Keys a use may carry beside use and with (SUTRA_NEXT.md 6 to 8): put on every panel it brings. */
     private static final java.util.Set<String> USE_ON_ALL = java.util.Set.of("source", "when", "waits", "refresh", "section", "collapsible", "order");
     /** Keys a use may carry only when it brings one panel: that panel's events, children and size. */
-    private static final java.util.Set<String> USE_ON_ONE = java.util.Set.of("emits", "children", "span", "height", "area");
+    private static final java.util.Set<String> USE_ON_ONE = java.util.Set.of("emits", "children", "span", "height", "area", "form");
 
     /**
      * The panels a use brings with the use's own wiring and size on them ({@code { use: series-line@1, with: {...}, source: {...} }}): source,
