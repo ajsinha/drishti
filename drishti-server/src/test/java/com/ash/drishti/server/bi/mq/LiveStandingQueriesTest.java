@@ -233,14 +233,17 @@ class LiveStandingQueriesTest {
         assertThat((Long) standing.stats().get("incremental")).isPositive();
     }
 
-    /** Waits until the live table stopped moving (the feed's frames merged the burst), the bus delivered every notice and the groups applied them. */
+    /**
+     * Waits until the feed applied every pushed document (none waits for the next batch, none is being applied), the bus delivered every notice and the
+     * groups applied them. The generation alone is not enough: a loaded machine can run the feed's next batch later than any fixed pause.
+     */
     void quiesce() throws InterruptedException {
         long until = System.nanoTime() + Duration.ofSeconds(10).toNanos();
         while (System.nanoTime() < until) {
             long g1 = service.live().generation(model.key());
-            Thread.sleep(60);
+            Thread.sleep(20);
             long g2 = service.live().generation(model.key());
-            if (g1 == g2 && service.bus().drained(5_000) && standing.settled(10_000) && service.live().generation(model.key()) == g2) {
+            if (g1 == g2 && service.live().idle(model.key()) && service.bus().drained(5_000) && standing.settled(10_000) && service.live().generation(model.key()) == g2) {
                 return;
             }
         }

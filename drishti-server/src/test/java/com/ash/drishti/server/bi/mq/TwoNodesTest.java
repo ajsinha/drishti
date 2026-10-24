@@ -165,7 +165,7 @@ class TwoNodesTest {
             List<Long> g1 = nodes.values().stream().filter(n -> alive.get(n.name)).map(n -> n.service.live().generation(model.key())).toList();
             Thread.sleep(60);
             List<Long> g2 = nodes.values().stream().filter(n -> alive.get(n.name)).map(n -> n.service.live().generation(model.key())).toList();
-            boolean quiet = g1.equals(g2) && nodes.values().stream().filter(n -> alive.get(n.name)).allMatch(n -> n.service.bus().drained(5_000) && n.standing.settled(10_000));
+            boolean quiet = g1.equals(g2) && nodes.values().stream().filter(n -> alive.get(n.name)).allMatch(n -> n.service.live().idle(model.key()) && n.service.bus().drained(5_000) && n.standing.settled(10_000));
             if (quiet) {
                 return;
             }

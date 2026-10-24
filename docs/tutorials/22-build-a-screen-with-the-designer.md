@@ -59,6 +59,10 @@ Try the basic tools: drag a panel's handle onto another panel (or use ↑ and �
 *Hidden*, where **Show** brings it back); on the trades table, **Columns** picks the fields to show. **Add to this page** searches the
 UI kit by what a part shows (*limits*, *chart*, *note*): click a card or drag it onto the page.
 
+**You should see** the yellow bar, a dashed outline and tools on every panel, and the side panel with *When I click*, *Refresh*
+and *Add to this page*. A part you add opens its **settings** at once (*Which number? [NOTIONAL ▾]*, *Label*, *Format*); a part you
+added has **Remove** (with **Undo** for a few seconds), the pack's panels have **Hide**.
+
 **What it writes.** **Show the Sutra**, at the foot of the side panel, shows the whole YAML read-only. Your page has its own name, so
 it never stands for the pack's Sutra:
 
@@ -87,6 +91,9 @@ counterparty's credit limits (counterparty-risk)** and press **Make it so**. Cli
 **Stop** removes it.
 
 ![When I click a trade, show its counterparty's credit limits (counterparty-risk pack)](../guides/img/designer/customize-linked.jpg)
+
+**You should see** *Pick a row of Trades to see it here* on the right until you click a trade, then a table of that
+counterparty's credit limits titled *Credit limits of CP-...*.
 
 **What it writes.** The table now emits an `open` event on a row click, and a child reads the clicked row through its own `source:`:
 
@@ -137,6 +144,9 @@ When a source is behind, the panel says *stale* in amber; when it fails, the pan
 
 ![Freshness: a stale source marked in the light theme](../guides/img/designer/freshness.jpg)
 
+**You should see** *updated … s ago* ticking in the trades' header, and the panel fetched again every 30 seconds with the
+page left where you scrolled.
+
 **What it writes.** On the panel (or on the use, or the whole Sutra):
 
 ```yaml
@@ -166,6 +176,8 @@ beside the table, the read-only fields saying why, a bad value explained under i
 **New trade** opens the drawer: steps *Who → What → Check* over the dimmed page.
 
 ![The New trade drawer](../guides/img/designer/form-drawer.jpg)
+
+**You should see** a form beside the trades when you click one, the trade id read-only and the notional a number field.
 
 **What it writes.** A `form:` on the table. The first column names the record and is read-only; a number column becomes a number
 field, a `*_DATE` column a date field:
@@ -198,6 +210,8 @@ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "$B/drafts?kind=portfolio-trad
 **In the UI.** Press **Done**. The page now opens with your version, marked *Your page* in the header (that link opens the pack's page).
 Customize again to go on; **Share** makes a read-only link to your design; **Reset to the pack's page** removes your version.
 
+**You should see** the page without the yellow bar, with *Your page* in its header and your changes in place.
+
 **Command line.** Your page is an ordinary design in **Build → My designs** (first called *My page · portfolio-trades*), so the
 `design` commands work on it, and a flag says which design is your version of each kind's page:
 
@@ -226,6 +240,9 @@ counterparty's limits on the right. The parser is deterministic: the same line a
 **Save to my workspace** keeps it as a design (*My screen · Trades of book BOOK-RATES-2*).
 
 ![Describe: the book desk from one line](../guides/img/designer/describe.jpg)
+
+**You should see** one token per part under *Understood as*, none of them red, and the live result filling the cash flows
+under a trade you click.
 
 **What it writes** (shortened; the whole text is under **Show the Sutra**):
 
@@ -265,6 +282,8 @@ The trading pack ships a screen written this way, by hand: the book desk, `/v/po
 ## Step 7 · Outline and Grid: the same draft, two other views
 
 The four modes edit one draft; the switcher carries it from one to the other.
+
+**You should see** the same draft in each mode: a change made in Outline is there in Grid and in Customize.
 
 **Outline** shows the screen as a list: its sections, the panels in each, and under the trades table the panels a click opens, each
 with a line in plain words. Drag to reorder; drag a panel onto a table's *Drop a panel here* line to make it open on a click (*nest*);

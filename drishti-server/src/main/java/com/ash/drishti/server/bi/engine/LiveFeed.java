@@ -56,6 +56,7 @@ final class LiveFeed implements AutoCloseable {
     private volatile ScheduledFuture<?> flusher;
     private volatile ScheduledFuture<?> resyncer;
     private volatile boolean closed;
+    private volatile boolean flushing;
     private volatile int pushing;
     private volatile String note;
 
@@ -148,20 +149,34 @@ final class LiveFeed implements AutoCloseable {
         if (closed || pending.isEmpty()) {
             return;
         }
-        List<EntityDocument> batch = new ArrayList<>();
-        for (String id : new ArrayList<>(pending.keySet())) {
-            EntityDocument d = pending.remove(id);
-            if (d != null) {
-                batch.add(d);
-            }
-        }
+        flushing = true;                                                  // before the pending documents leave: idle() never sees neither
         try {
-            table.apply(batch);
-        } catch (RuntimeException e) {
-            LOG.warn("live table {} could not apply {} updates: {}", def.name(), batch.size(), describe(e));
-            publish(describe(e));
+            List<EntityDocument> batch = new ArrayList<>();
+            for (String id : new ArrayList<>(pending.keySet())) {
+                EntityDocument d = pending.remove(id);
+                if (d != null) {
+                    batch.add(d);
+                }
+            }
+            try {
+                table.apply(batch);
+            } catch (RuntimeException e) {
+                LOG.warn("live table {} could not apply {} updates: {}", def.name(), batch.size(), describe(e));
+                publish(describe(e));
+            }
+            table.sweep();
+        } finally {
+            flushing = false;
         }
-        table.sweep();
+    }
+
+    /**
+     * True when every document pushed so far is in the table and its change was handed to the bus: nothing waits for the next batch and no batch is being
+     * applied. A pushed document sits in {@code pending} until the flusher's next turn, so the table's generation alone cannot say that a push was applied.
+     */
+    boolean idle() {
+        boolean nothingWaits = pending.isEmpty();                         // read first: a flush that took the documents has set flushing already
+        return closed || (nothingWaits && !flushing);
     }
 
     /** Lists the kind again: new entities are read and followed; a feed that cannot push reads every entity again. */

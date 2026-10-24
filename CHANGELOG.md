@@ -17,6 +17,22 @@
 
 ## Unreleased
 
+- **Customize: a part's settings, Remove with Undo, one add per click** ([SCREEN_DESIGNER.md section 31](docs/guides/SCREEN_DESIGNER.md#31-the-sutra-designer-customize-describe-outline-and-grid)):
+  a part added from the UI kit opens its settings in the side panel at once, one plain-word question per parameter of its docstring with
+  choices from the record's real fields (*Which number? [NOTIONAL]*, *Which list?*, *Label*, *Format*; `core/designer_settings.py`,
+  `GET /designer/settings/{draft}`, step `settings`); a key figure's number is guessed from the record's numbers instead of the
+  fragment's `$.VALUE`, which no record holds ("No data available"). A part the person added whose setting names nothing in the record
+  says what to choose, with **Open its settings**. **Remove** on parts the person added (kept in the design's notes; the pack's panels
+  keep **Hide**), with an **Undo** toast. One click, drop or double click adds one panel: an add in flight ignores more clicks, a drop on
+  a panel inside a panel is handled once, each step carries a nonce the console does once, and a draft's steps run one at a time.
+- **Drill fixes (2.7.0 drill):** *When I click* on a book's trades offered the counterparty's credit limits only when the first trade's
+  fields happened to list the counterparty among its first three links (`designer_links.targets` now orders links by name, not by the
+  row's key order, which differs by source system). Tutorial 22 says what each step should show, and the tutorial test counts 22.
+  `LiveStandingQueriesTest` (and `TwoNodesTest`) waited on the live table's generation alone, which cannot see pushed documents the feed
+  has not batched yet: on a loaded machine the burst landed after the wait and the held answer looked stale. `LiveTables.idle(dsKey)`
+  (no pushed document waits for the next batch, none is being applied) is now part of the wait. The board designer's alert test waits
+  for the alert to be written before it reads the YAML.
+
 ## 2.7.0 — Sutra Next: the UI kit, events and children across packs, refresh, layout, forms and the four-mode Sutra designer; the us-equities and gleif packs (2026-10-24)
 
 - **Obsolete designs archived** ([docs/archive/README.md](docs/archive/README.md), history): `RUPAKA_POC.md` and `BI_PARITY_PLAN.md`

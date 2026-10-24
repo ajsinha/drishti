@@ -207,6 +207,16 @@ public final class LiveTables implements AutoCloseable {
         return g;
     }
 
+    /** True when no live table of the dataset holds pushed documents it has not applied and published yet (tests, an orderly shutdown). */
+    public boolean idle(String dsKey) {
+        for (Map.Entry<String, Entry> e : entries.entrySet()) {
+            if (e.getKey().startsWith(dsKey + "|") && !e.getValue().feed().idle()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /** The dataset's live tables, running now. */
     public List<LiveTable> tables(String dsKey) {
         List<LiveTable> out = new ArrayList<>();
