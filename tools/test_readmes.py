@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The README standard (PACK_DEVELOPER_GUIDE.md and CONNECTOR_DEVELOPER_GUIDE.md, "The README standard"): every pack, every
+"""The README standard (PACK_GENERATORS_GUIDE.md and CONNECTOR_DEVELOPER_GUIDE.md, "The README standard"): every pack, every
 connector type (plugin or built-in) and every folder of connector templates has a README.md with a valid front matter and the
 fixed sections, none empty; a pack's README describes every kind it owns under Data structures and is what its generator writes;
 a connector README's generated blocks match the settings catalogue and the template files. Packs, plugins and template folders
