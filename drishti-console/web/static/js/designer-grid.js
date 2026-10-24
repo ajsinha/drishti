@@ -302,15 +302,18 @@
   function suggest() {
     var cx = context(), w = cx.word.toLowerCase(), out = [];
     if (cx.word.charAt(0) === '@') {
-      state.suggest.panels.forEach(function (p) {
-        (p.emits || []).forEach(function (ev) {
+      var events = function (at, title, emits, what) {
+        (emits || []).forEach(function (ev) {
           (ev.fields.length ? ev.fields : ['']).forEach(function (f) {
-            var t = '@' + (p.cell || p.id) + '.' + ev.name + (f ? '.' + f : '');
-            out.push({ text: t, doc: p.title + ': a click on a row (' + ev.name + ')' });
+            out.push({ text: '@' + at + '.' + ev.name + (f ? '.' + f : ''), doc: title + ': ' + what + ' (' + ev.name + ')' });
           });
         });
-      });
-      out.push({ text: '@parent.', doc: 'what the parent panel emitted (a panel a click opens)' });
+      };
+      var kids = state.suggest.kids || [], mine = sel.kid && kids.filter(function (k) { return k.ref === sel.kid; })[0];
+      if (mine) { events('parent', mine.up, mine.parent, 'what the parent emitted'); }       /* inside a child cell: its parent first */
+      state.suggest.panels.forEach(function (p) { events(p.cell || p.id, p.title, p.emits, 'a click on a row'); });
+      kids.forEach(function (k) { events(k.ref, k.title + ' (opens from ' + k.up + ')', k.emits, 'a click on a row'); });
+      if (!mine) { out.push({ text: '@parent.', doc: 'what the parent panel emitted (a panel a click opens)' }); }
     } else if (cx.first) {
       state.suggest.fragments.forEach(function (f) { out.push({ text: f.ref, doc: f.summary, head: true }); });
       state.suggest.kinds.forEach(function (k) { out.push({ text: k, doc: 'a panel of kind ' + k, head: true }); });

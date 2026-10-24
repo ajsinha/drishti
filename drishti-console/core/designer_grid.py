@@ -944,7 +944,8 @@ def move(doc: dict, src: str, dst: str) -> dict:
 
 def suggestions(doc: dict, g: dict, kit: list) -> dict:
     """Autocomplete: the kit's fragments (with their one-line docs and parameters), the panels on the page by cell, and what each emits
-    (the events and their payload fields: ``@A2.open.trade``)."""
+    (the events and their payload fields: ``@A2.open.trade``); the panels a click opens by their own cells (``@A2a.``, ``@A2a1.``),
+    each with what its parent emits (``@parent.`` inside it)."""
     frags = []
     for f in kit or []:
         d = f.get("doc") or {}
@@ -953,19 +954,27 @@ def suggestions(doc: dict, g: dict, kit: list) -> dict:
     names = cell_names(g, doc["panels"])
     docs = {f.get("ref", ""): (f.get("doc") or {}) for f in kit or []}
     docs.update({k.split("@")[0]: v for k, v in list(docs.items())})
-    panels = []
-    for i, e in enumerate(doc["panels"]):
-        if not isinstance(e, dict):
-            continue
-        pid = panel_id(e)
+    def events(e: dict) -> list:
         emits = e.get("emits") or []
         if e.get("use") and not emits:                               # a fragment's events: its doc says them (event: renames one)
             d = docs.get(str(e["use"])) or docs.get(str(e["use"]).split("@")[0]) or {}
             w = e.get("with") if isinstance(e.get("with"), dict) else {}
             emits = [{**x, "name": w.get("event") or x.get("name")} if isinstance(x, dict) and len(d.get("emits") or []) == 1 else x
                      for x in d.get("emits") or []]
-        ev = [{"name": x.get("name"), "fields": list((x.get("payload") or {}).keys())} for x in emits if isinstance(x, dict)]
-        panels.append({"index": i, "id": pid, "cell": names.get(pid, ""), "title": entry_title(e), "emits": ev,
+        return [{"name": x.get("name"), "fields": list((x.get("payload") or {}).keys())} for x in emits if isinstance(x, dict)]
+
+    panels, kids = [], []
+    for i, e in enumerate(doc["panels"]):
+        if not isinstance(e, dict):
+            continue
+        pid = panel_id(e)
+        panels.append({"index": i, "id": pid, "cell": names.get(pid, ""), "title": entry_title(e), "emits": events(e),
                        "table": e.get("kind") == "table" and not e.get("use")})
-    return {"fragments": frags, "panels": panels,
+    for cell in g["cells"]:                                          # the panels a click opens (A2a, A2a1): theirs, and @parent.
+        for k in cell.get("kids") or []:
+            owner, groups = _holder(doc["panels"], k)
+            child = groups[k["group"]]["panels"][k["index"]]
+            kids.append({"ref": k["ref"], "id": k["id"], "up": k["up"], "level": k["level"], "title": entry_title(child),
+                         "emits": events(child), "parent": events(owner)})
+    return {"fragments": frags, "panels": panels, "kids": kids,
             "kinds": ["table", "kv", "metric", "line", "area", "hbar", "ladder", "markdown", "timeline", "status", "pivot", "tabs"]}

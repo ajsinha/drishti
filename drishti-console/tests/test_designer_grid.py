@@ -196,6 +196,10 @@ def test_two_levels_of_opened_panels_are_cells():
     assert kid["A1a1"]["formula"] == 'field-list@1(id: event, rows: $src, title: The event) opens from A1a'
     assert kid["A1a"]["kept"] == ["columns", "emits"]                          # its children show as cells
     assert kid["A1a2"]["kept"] == ["columns", "children"]                      # a third level is kept, unchanged
+    sg = {k["ref"]: k for k in dg.suggestions(doc, g, [])["kids"]}             # the formula bar offers @A1a. and @parent. inside one
+    assert list(sg) == ["A1a", "A1a1", "A1a2", "A1b"]
+    assert sg["A1a"]["emits"] == [{"name": "open", "fields": ["ref"]}] and sg["A1a"]["parent"] == [{"name": "open", "fields": ["id"]}]
+    assert sg["A1a1"]["up"] == "A1a" and sg["A1a1"]["parent"] == [{"name": "open", "fields": ["ref"]}] and sg["A1a1"]["emits"] == []
     b1 = next(c for c in g["cells"] if c["ref"] == "B1")
     assert b1["formula"] == 'markdown(id: note, text: See @A1a1.open.x and @A1a.open.ref)'
     for k in a1["kids"]:                                                       # every child cell typed as it reads: the same document

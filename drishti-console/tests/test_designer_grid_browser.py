@@ -295,6 +295,15 @@ def test_a_panel_a_click_in_an_opened_panel_opens_is_a_cell_one_step_further_in(
     pg.keyboard.press("ArrowUp")
     pg.keyboard.press("ArrowUp")
     assert pg.inner_text("[data-gd-name]") == "A1"
+    # suggestions inside a child cell: @parent. with what the parent emits, and the opened cells by their own names
+    formula_of(pg, "A1a1")
+    for word, want in (("@p", "@parent.open.when"), ("@A1", "@A1a.open.when")):
+        pg.fill("[data-gd-formula]", "kv(id: event, title: " + word[:-1])
+        pg.press("[data-gd-formula]", "End")
+        pg.keyboard.type(word[-1])
+        wait(pg, "!document.querySelector('[data-gd-suggest]').hidden")
+        assert want in pg.locator("[data-gd-suggest]").inner_text(), want
+    pg.press("[data-gd-formula]", "Escape")
     text = formula_of(pg, "A1a1").replace("The flow of", "Picked flow")
     stepped(pg, typed(pg, "A1a1", text))
     grand = sutra_of(pg)["panels"][0]["children"][0]["panels"][0]["children"][0]["panels"][0]

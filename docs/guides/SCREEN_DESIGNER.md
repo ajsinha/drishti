@@ -847,7 +847,8 @@ B2 = field-list@1(id: who, title: Counterparty, rows: $src; source: {pack: core,
   the parent cell (**Up** goes back); type its formula as any other; an empty formula removes it. To open it from another table, move
   it in Outline (a different `opens from` is refused, with that part in red). Another formula may name it, `@A2a.open.x`. A panel a
   click in **A2a** opens is **A2a1**, **A2a2**..., drawn one step further in, its formula ending in `opens from A2a` (**Down** goes
-  parent, child, grandchild; **Up** comes back; `@A2a1.open.x` names it).
+  parent, child, grandchild; **Up** comes back; `@A2a1.open.x` names it). Typing `@` suggests these cells too (`@A2a.open.ref`,
+  with each event's fields), and inside an opened cell `@parent.` with what its parent emits (`@parent.open.ref`) comes first.
 - **Limitation: two levels of opened panels.** Grid shows the panels a click opens two levels deep as cells: a child under its
   parent (`A2a`) and a child of that child (`A2a1`). Pack screens nest at most two levels, so every pack screen is whole in Grid.
   Anything deeper is kept as it is, never dropped, and edited in Outline or Customize.

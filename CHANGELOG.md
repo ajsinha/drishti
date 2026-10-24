@@ -18,6 +18,8 @@
 ## Unreleased
 
 - The UI Board work is kept on branch ui-board-preview; not in this release.
+- **Grid: `@` suggests the opened cells**: the formula bar's suggestions list the cells a click opens (`@A2a.`, `@A2a1.`) with
+  their events and fields, and inside an opened cell offer `@parent.` with what its parent emits (`@parent.open.ref`).
 - **Grid: a second level of opened panels** ([SCREEN_DESIGNER.md section 31](docs/guides/SCREEN_DESIGNER.md#grid)): a panel a
   click in an opened panel opens is its own cell, `A2a1` (then `A2a2`...), drawn one step further in under `A2a`, its formula ending
   in `opens from A2a` (optional when typing; another parent is refused with that part in red); `@A2a1.` names it, Up and Down walk
