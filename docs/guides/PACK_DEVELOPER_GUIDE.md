@@ -43,7 +43,7 @@ Contents:
    [roles and field masks](#roles-and-field-masks) · [fragments and docstrings](#fragments-and-docstrings) ·
    [Calc snippets](#calc-python-snippets) · [inheritance](#inheritance)
 5. Around the pack: [tests](#testing-a-pack) · [generators](#how-the-shipped-packs-are-generated) ·
-   [from JSON Lines](#generating-a-pack-from-json-lines) · [versioning](#versioning-a-pack) ·
+   [the README standard](#the-readme-standard) · [from JSON Lines](#generating-a-pack-from-json-lines) · [versioning](#versioning-a-pack) ·
    [the signed registry](#a-signed-pack-registry-publishing-and-installing) ·
    [loading while the server runs](#loading-a-pack-while-the-server-runs) · [pack fragments from the workbench](#pack-fragments-from-the-build-workbench) ·
    [verifying a pack](#verifying-a-pack)
@@ -2624,6 +2624,80 @@ If an admin assigns packs per user, add `library` to your user under **Admin →
 - Add `library` to the default pack list (`PackPaths.DEFAULT_ENABLED`) if it should ship, so `DomainPacksTest` checks that every example
   command opens with no empty panel and no missing link, and `AllShippedPacksTest` that it loads with the others.
 - `tools/drill.sh` runs every generator with `--check`, so a pack that drifts from its script fails the build.
+
+## The README standard
+
+Every pack has a `README.md` in its folder (`config/packs/<pack>/README.md`): one or two pages that say what the pack holds, for people,
+for the console (Admin → Packs → the pack, *README: what the pack holds*) and for AI (`GET /api/v1/packs/{pack}/readme`, [API_GUIDE.md](API_GUIDE.md)).
+It is **generated**, never edited: `tools/packgen/common/readme.py` reads `pack.yaml`, the samples, the Sutras and `config/about.yaml`,
+and adds a short hand-written **intro**. `tools/test_readmes.py` fails when a pack (any folder under `config/packs`) has no README, a
+missing or invalid front matter, an empty section, a kind missing from *Data structures*, or a README its generator would write
+differently.
+
+**The shape.** The licence comment, a YAML front matter, then seven `## ` sections in this order:
+
+```markdown
+---
+pack: library                 # the folder's name
+version: 1.0.0
+code: LIBS
+title: Library
+summary: One line.
+kinds: [book-copy, loan]
+commands: {BKC: book-copy, LOAN: loan, LIBS: pack overview}
+depends-on: {packs: [core], connectors: [library-store], plugins: [delta], settings: [DRISHTI_LAKE_ENABLED]}
+sources:
+- {name: The library's catalogue, licence: Proprietary, internal-only: false, used-for: book-copy}
+refresh: tools/publicdata/library.py      # or the generator, when the data has no refresh script
+generated-by: tools/packgen/library/make.py
+---
+# The library pack
+## What it is
+## Data structures            # per kind: ### `kind`, its id rule, a field table (Field | Type | Example | Description),
+                              # nested structures by path (LEGS[].CASH_FLOWS[]) and the links to other kinds
+## Screens and commands
+## Data sources and licences
+## Enabling and dependencies
+## Refreshing the data
+## See also
+```
+
+**Where the words come from.** Types and examples from the samples (up to 4,000 documents a kind; a field present in only part of
+them says so), ids from the catalogue and `graph.id-patterns`, links from `graph.fields` (the pack's and those of the packs it
+extends), descriptions from `config/about.yaml` glossaries, then the Sutras' labels, then the intro's `fields:`. A kind without samples
+(read live, or derived) lists the fields its screens show.
+
+**The intro**, `tools/packgen/<generator>/readme/<pack>.intro.md` (or `tools/packgen/intros/<pack>.intro.md` for a pack without a
+generator), holds what cannot be read from the files:
+
+```markdown
+<!-- licence comment -->
+---
+generator: tools/packgen/library/make.py
+sources:
+- name: The library's catalogue
+  licence: Proprietary
+  internal-only: false
+  used-for: book-copy, loan
+fields:
+  loan:
+    _: One loan of one copy to one member.          # a line under the kind's heading
+    DUE: The day the copy is due back
+---
+## What it is
+
+Two or three sentences: what the pack is for and who uses it.
+
+## Data sources and licences
+
+Anything the table of sources does not say (an internal-only source and why).
+```
+
+Any of the seven sections may have intro text; it comes before the generated part. **To write or check it**: a generator that builds
+the pack calls `readme.render_pack(pack_dir, files=out)` with the files it is about to write and adds `README.md` to them (so its
+`--check` covers it: `tools/packgen/banking/make_docs.py`, `tools/packgen/common/packbuild.py`, `tools/packgen/us_equities/make.py`); a
+pack without a generator runs `python3 tools/packgen/readme.py <pack>`, and `python3 tools/packgen/readme.py --all --check` checks
+every pack.
 
 ## Generating a pack from JSON Lines
 
