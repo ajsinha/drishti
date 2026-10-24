@@ -1889,6 +1889,44 @@ the share (when one was asked for) is built with the control values and shows on
 its least privileged recipient are applied (a masked cell never matches a condition). A share sent without any view state, and every share
 made before this was kept, is unchanged. The values are not copied data: they only select what each recipient's own rights show.
 
+## Forms (`form:` on a panel)
+
+Not to be confused with the pack search form below: a panel's `form:` lets people edit the records the panel shows, or start new ones,
+and keeps what they type as **drafts** (2.8.0 writes them through the connectors). A use carries it to the one panel it brings. The
+worked guide is [SUTRA_FORMS_GUIDE.md](SUTRA_FORMS_GUIDE.md); the design is SUTRA_NEXT.md section 10.
+
+| Key | Required | Type | Meaning |
+|---|---|---|---|
+| `edit` | one of `edit`, `new` | `beside` \| `cells` | `beside`: a click on a row opens a form beside the table; `cells`: people type into the table's cells |
+| `new` | one of `edit`, `new` | `drawer` | **New** (its text: `new-label`) opens a guided drawer over the dimmed page |
+| `key` | with `edit` | field id | the field that names a record (the drafts and "Edit <key>" use it) |
+| `title` | | text | the form's heading |
+| `new-label` | | text | the New button's text (default New) |
+| `roles` | | list of roles | who may edit every field without its own `editable-by` (default: anyone who may open the screen) |
+| `steps` | | list of `{id, label}` | the drawer's steps, in order; a field names its `step` (the first step when it names none) |
+| `fields` | yes | list (at most 60) | the fields, below |
+| `rules` | | list of `{rule, message, severity, fields}` | `rule` must hold; `message` says what to do, in words; `severity: error` (default) refuses the draft, `warn` is said and kept; `fields` names where the message shows |
+| `hints` | | list of `{label, value, of, fmt, step}` | computed as people type: "label: value of of (n %)" |
+
+A field:
+
+| Key | Type | Meaning |
+|---|---|---|
+| `id` | lower_snake (required) | read by rules and hints |
+| `label` | text | the field's words (the id when absent) |
+| `type` | `text` (default), `number`, `date`, `enum`, `bool`, `textarea`, `lookup` | a number takes `40,000,000`, `40m`, `1.5bn` |
+| `bind` | a record field (`COUNTERPARTY`) | what it edits, and in `cells` the column whose `bind` names it (the id when absent) |
+| `required`, `min`, `max`, `pattern`, `max-length` | | `min`/`max` a number, or for a date a date or `today`; `pattern` a regular expression the whole text matches |
+| `options` | list, or a mapping for `lookup` | `enum`: values or `{value, label}`; `lookup`: `{source: {pack, kind, where \| search, limit}, value, label, carry}`, the choices read as the viewer may see them, `carry` the values hints read as `<field>.<VALUE>` |
+| `editable-by` | list of roles | only these roles may change it; anyone else sees it locked ("locked: you can view, not change") |
+| `readonly`, `reason` | | shown, never changed once the record exists ("read-only: <reason>"); the New drawer may set it |
+| `step`, `placeholder`, `fmt`, `new` | | the drawer step, a hint in the empty input, the display format, `new: false` to leave it out of New |
+
+A field masked for the viewer is never shown as an input nor sent: the page says *Hidden for you*. Rules and hints are written in a small
+language the browser and the server share: the fields by id, a lookup's carried values, numbers, `'text'`, `true`, `false`, `null`,
+`today`; `+ - * /`; `== != < <= > >=`; `and or not`; brackets; `empty(x) len(x) abs(x) min(a, b) max(a, b)`. An empty value makes a sum or
+a comparison empty, and a rule that comes out empty holds. Problems are `DRS-2058`.
+
 ## Pack search form (`form:` in `pack.yaml`)
 
 Not part of a Sutra: the `form:` section of a pack's `pack.yaml` declares the search form of each kind (`FORM <pack> <GO>`, query by
@@ -2370,7 +2408,7 @@ Common reasons:
 A Sutra file that fails any check is not loaded (or keeps its last good version, see
 [Hot reload](#hot-reload-the-workbench-and-governance)), and each problem is reported as `<file>:<line>:<column> <code> <message>`
 (`sutra lint`: `<file>:<line> <code> <message>`). All problems of a file are reported at once. The grammar's own codes run
-`DRS-2010` to `DRS-2057`; around them are YAML and file problems (`DRS-2001`, `DRS-2004`, `DRS-2009`, `DRS-2032`, `DRS-2033`), the pack about-file
+`DRS-2010` to `DRS-2058`; around them are YAML and file problems (`DRS-2001`, `DRS-2004`, `DRS-2009`, `DRS-2032`, `DRS-2033`), the pack about-file
 family (`DRS-2040` to `DRS-2047`), shared blocks (`DRS-2048`), docstrings (`DRS-2055`) and expressions (`DRS-2101`).
 
 | Code | Message (exact form) | Cause | Fix |
@@ -2410,6 +2448,7 @@ family (`DRS-2040` to `DRS-2047`), shared blocks (`DRS-2048`), docstrings (`DRS-
 | `DRS-2046` | `about text for panel 'ghost' of kind 'widget' matches no panel of any Sutra for the kind` | a lint warning: `panels.<id>` in `about.yaml` names no panel | correct the id or delete the entry |
 | `DRS-2048` | `no block legs@3 (blocks: deal-ticket, legs, events)` | a `use:` names no block, a `with:` names no parameter, a block uses another or its file is misnamed | write the block, fix the name or version, or drop the parameter ([Shared panel blocks](#shared-panel-blocks-use)) |
 | `DRS-2055` | `fragment series-line: doc.params.fmt is missing (type, default, meaning)` | a fragment's `doc:` is missing or incomplete (strict: the fragment is not loaded); for a Sutra or an older block, a warning of `sutra lint` | complete the docstring ([Fragments and docstrings](PACK_DEVELOPER_GUIDE.md#fragments-and-docstrings)) |
+| `DRS-2058` | `rule 'notionl <= 30000000' reads 'notionl', which is not a field of the form`, `'form.edit' is beside (a form beside the table) or cells (edit in the table's cells), not 'inline'`, `field notional: min is a number`, `a form that edits records names the field that identifies one: key: <field id>` | a panel's `form:` that does not read | write the key or value the message names ([Forms](#forms-form-on-a-panel)) |
 | `DRS-2057` | `panel 'limit' reads @trade, which is no panel of this screen (panels: trades, flows, limit)` | an event read of a panel, event or payload field the screen does not have; a panel reading its own event; panels waiting on each other in a cycle; `$src` without a source; a source id reading a `number`, `date` or `bool` field; a trigger not built; a source naming none or several of id, where, search; a BI model source | name a panel and event that exist ([Events, sources and children](#events-sources-and-children-sutra-next)) |
 | `DRS-2056` | `panel 'l4' is nested 4 deep: children nest at most 3` | `@parent` in a panel that is not a child, or of an event its parent does not emit; children deeper than three; `expand-row` under a panel without rows; a group without panels | move the panel up a level, or read the screen panel's event by its id |
 | `DRS-2047` | `field 'colour' is shown but has no glossary entry (kinds.widget.glossary in config/about.yaml, or a vocabulary entry)` | a lint warning: a field a Sutra shows has no glossary entry; fails `sutra lint --strict` | add the entry to the kind's `glossary:` or to `vocabulary:` |

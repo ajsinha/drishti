@@ -25,7 +25,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core import describe, designer, designer_links
+from core import describe, designer, designer_forms, designer_links
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes.common import ident, render
@@ -269,6 +269,7 @@ async def state(request: Request, draft: str, kind: str = "", id: str = ""):
                              "fields": list(dict.fromkeys([f for f in chosen if f] + fields))}
             tables.append({"id": e.get("id"), "title": part["title"], "fields": part["table"]["fields"],
                            "click": bool(e.get("children")), "place": ((e.get("children") or [{}])[0] or {}).get("place", ""),
+                           "columns": [f for f in chosen if f], "form": designer_forms.form_of(e),
                            "shows": await _shows(request, record, e.get("rows"), cat)})
         parts.append(part)
     for t in tables:                                  # an existing panel of the page, moved under the table
@@ -289,7 +290,7 @@ async def kit(request: Request, draft: str, q: str = "", kind: str = "", id: str
 
 @router.post("/op/{draft}")
 async def op(request: Request, draft: str):
-    """One Customize step on the draft (``move``, ``hide``, ``show``, ``unpack``, ``columns``, ``click``, ``unclick``, ``add``, ``refresh``); the page is
+    """One Customize step on the draft (``move``, ``hide``, ``show``, ``unpack``, ``columns``, ``click``, ``unclick``, ``add``, ``refresh``, ``form``); the page is
     drawn with it before it is kept, and a step the server refuses is undone and said in plain words."""
     if not enabled(request):
         return _off()
@@ -319,6 +320,8 @@ async def op(request: Request, draft: str):
                            body.get("show"), keep)
         elif what == "unclick":
             designer.unclick(doc, str(body.get("panel") or ""), keep)
+        elif what == "form":                         # Let people edit this table (SUTRA_NEXT.md 10)
+            designer_forms.edit(doc, str(body.get("panel") or ""), str(body.get("mode") or ""), body.get("fields"), bool(body.get("new")))
         elif what == "refresh":
             designer.refresh(doc, body.get("index"), body.get("seconds", 0))
         elif what == "add":

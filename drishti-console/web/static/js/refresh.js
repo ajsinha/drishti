@@ -177,7 +177,7 @@
   /** One panel swapped in place: nothing moves, the picked row stays picked, what it opened under it stays, the scroll stays. */
   function swap(p) {
     var old = document.getElementById('p-' + p.id), st = panels[p.id];
-    if (!old || (st && st.html === p.html)) { return; }
+    if (!old || (st && st.html === p.html) || old.hasAttribute('data-editing')) { return; }   // a form being edited stays (record-forms.js)
     var fresh = fragment(p.html);
     if (!fresh) { return; }
     var y = window.scrollY, scrolls = [];

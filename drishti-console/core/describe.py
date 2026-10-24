@@ -19,7 +19,8 @@
 Clauses are separated by ``·`` (or ``|`` or ``;``). The first names what the screen is about: a command mnemonic of the enabled packs (the
 command line's table: ``TRD``, ``CPTY``, ``PTRD``...) or a kind's plain name, then an id. ``click a <row> → A + B`` opens A and B for the
 clicked row (``->``, ``=>`` and ``shows`` work too; ``below``, ``beside``, ``under the row`` or ``as tabs`` at the end says where);
-``refresh Ns`` (or ``Nm``) sets ``refresh:``: the page fetches its panels again on that interval (SUTRA_NEXT.md 9). Every clause becomes one token of
+``refresh Ns`` (or ``Nm``) sets ``refresh:``: the page fetches its panels again on that interval (SUTRA_NEXT.md 9). ``edit trades beside`` (or
+``in the cells``) and ``new trade in a drawer`` give the trades a ``form:`` (SUTRA_NEXT.md 10, core/designer_forms.py). Every clause becomes one token of
 "Understood as"; one the parser is unsure of carries the choices to fix it with, and anything it cannot read says so in plain words."""
 from __future__ import annotations
 
@@ -32,6 +33,8 @@ SEPARATORS = re.compile(r"\s*[·|;]\s*")
 ARROW = re.compile(r"\s*(?:→|->|=>|\bshows?\b|\bopens?\b)\s*", re.I)
 CLICK = re.compile(r"^(?:click|clicking|pick|picking|select|selecting|tap)\s+(?:on\s+)?(?:a|an|the|one|any)?\s*(?P<row>[\w -]+?)\s*$", re.I)
 REFRESH = re.compile(r"^(?:refresh|refreshed|update|reload)(?:\s+every)?\s+(?P<n>\d+)\s*(?P<unit>s|sec|secs|seconds?|m|min|mins|minutes?)?$", re.I)
+EDIT = re.compile(r"^(?:edit|change|let people edit)\s+(?:the\s+|a\s+)?(?P<what>[\w -]*?)\s*(?P<how>beside|on the right|aside|in the cells|cells|in the table|inline)$", re.I)
+NEW = re.compile(r"^(?:new|add|create)\s+(?:a\s+)?(?P<what>[\w -]*?)\s*(?:in\s+a\s+|as\s+a\s+|in the\s+)?drawer$", re.I)
 PLACES = {"expand-row": ("under the row", "under row", "below the row", "in the row", "inline"),
           "detail-below": ("below", "underneath", "at the bottom"),
           "detail-right": ("beside", "on the right", "right", "to the right", "the right column", "in the right column", "aside"),
@@ -71,7 +74,7 @@ class Token:
     """One clause as understood: its plain words, what it is, and (when unsure) the choices that fix it."""
     clause: str
     text: str
-    role: str                       # subject | click | show | refresh | error
+    role: str                       # subject | click | show | refresh | form | error
     value: str = ""
     unsure: bool = False
     choices: list = field(default_factory=list)
@@ -90,6 +93,8 @@ class Parsed:
     row: str = ""
     shows: list = field(default_factory=list)          # [(Show, place)]
     refresh: int = 0
+    edit: str = ""                                     # beside | cells: the trades get a form (SUTRA_NEXT.md 10)
+    new: bool = False                                  # New in a drawer
 
     @property
     def ok(self) -> bool:
@@ -191,6 +196,20 @@ def parse(line: str, aliases: dict) -> Parsed:
             out.tokens.append(Token(clause, f"refresh every {n} s", "refresh", str(n),
                                     message="" if n >= 5 else "Refreshing more often than every 5 seconds is heavy for everyone"))
             continue
+        e, n = EDIT.match(clause.strip()), NEW.match(clause.strip())
+        if e or n:
+            if out.kind not in TRADE_LISTS:
+                out.tokens.append(Token(clause, clause, "error", message="Editing is offered on the trades of a book here: start with TRD and a book, "
+                                                                         "or use Customize › Let people edit this table on any page"))
+                continue
+            if e:
+                out.edit = "cells" if e.group("how").lower() in ("in the cells", "cells", "in the table", "inline") else "beside"
+                out.tokens.append(Token(clause, "edit a trade " + ("in the table's cells" if out.edit == "cells" else "in a form beside the table"),
+                                        "form", out.edit, message="Saving keeps a draft; sending it to the source arrives in 2.8.0"))
+            else:
+                out.new = True
+                out.tokens.append(Token(clause, "new trade in a guided drawer (who, what, check)", "form", "new"))
+            continue
         parts = ARROW.split(clause, maxsplit=1)
         click = CLICK.match(parts[0].strip()) if len(parts) == 2 else None
         if not click:
@@ -276,6 +295,9 @@ def sutra(p: Parsed, line: str, name: str = "") -> dict:
                 panels += _listeners(s)
         if kids:
             picker["children"] = kids
+        if p.edit or p.new:
+            from core.designer_forms import trade_form
+            picker["form"] = trade_form(p.edit, p.new)
         doc["panels"] = [picker, *panels, {"use": "data-provenance@1"}]
     else:
         doc["title"] = {"pill": _plain(p.kind).capitalize(), "id": "$.id"}

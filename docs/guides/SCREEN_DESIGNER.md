@@ -846,6 +846,26 @@ panels:
 
 ![Describe in the light theme: an unsure token and a part not understood](img/designer/describe-light.jpg)
 
+### Let people edit (forms)
+
+![A form beside the book desk's trades](img/designer/form-beside.jpg)
+
+Customize's side panel has **Let people edit**: pick a table, *in a form beside it* or *in its cells* (or *not at all*), tick the columns
+people may change and, if you like, *and start new ones in a guided drawer*; **Set** writes `form:` on the table and the page is drawn with
+it. The first column names the record and is read-only; a column with a number format, or a name like NOTIONAL or LIMIT, becomes a number
+field; a date format or a name ending in `_DATE` a date field. A used fragment's table is unpacked first (as for columns).
+
+Describe takes `edit trades beside` (or `edit trades in the cells`) and `new trade in a drawer` on the trades of a book:
+`TRD BOOK-RATES-2 · click a trade → cash flows · edit trades beside · new trade in a drawer`. The form chooses the counterparty from the
+credit limits and shows the limit after the trade as it is typed.
+
+![Editing a credit limit's buckets in the cells](img/designer/form-cells.jpg)
+
+Saving keeps a **draft** for each person; nothing is sent to the source until 2.8.0. Rules, masks and roles, the keys of the cells and the
+drawer are in [SUTRA_FORMS_GUIDE.md](SUTRA_FORMS_GUIDE.md).
+
+![The New trade drawer](img/designer/form-drawer.jpg)
+
 ### Refresh and freshness
 
 ![Refresh controls: a paused panel, a slower interval, Pause all](img/designer/refresh-controls.jpg)

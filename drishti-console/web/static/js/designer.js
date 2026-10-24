@@ -217,6 +217,7 @@
         set ? el('button', { type: 'button', 'class': 'dz-btn', text: 'Stop', on: { click: function () { step({ op: 'unclick', panel: set.id }).catch(function () {}); } } }) : null
       ]));
     }
+    if (window.drishtiDesignerForms) { window.drishtiDesignerForms(side, state, { el: el, select: select, step: step }); }   // Let people edit (forms)
     /* Refresh this panel every … (SUTRA_NEXT.md 9) */
     side.appendChild(el('h3', { 'class': 'dz-h', text: 'Refresh' }));
     var rpart = select('the panel to refresh', state.parts.map(function (p) { return [String(p.index), p.title]; }), 'data-dz-refresh-part');

@@ -95,3 +95,6 @@
   .dz-line { flex-direction: column; }
   .dz-result iframe { min-height: 26rem; }
 }
+/* Let people edit (forms, designer-forms.js) */
+.dz-cols { display: flex; flex-wrap: wrap; gap: .25rem .75rem; }
+.dz-col { font-size: .85rem; display: inline-flex; gap: .3rem; align-items: center; }
