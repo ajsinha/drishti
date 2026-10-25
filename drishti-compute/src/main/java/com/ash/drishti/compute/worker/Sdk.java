@@ -79,7 +79,7 @@ public final class Sdk {
         }
         try {
             Files.createDirectories(sdkRoot);
-            Path tmp = Files.createTempDirectory(sdkRoot, "extracting-");
+            Path tmp = Files.createDirectory(sdkRoot.resolve("extracting-" + java.util.UUID.randomUUID()));   // in the data folder, moved into place
             for (Map.Entry<String, byte[]> e : files.entrySet()) {
                 Path p = tmp.resolve(e.getKey());
                 Files.createDirectories(p.getParent());

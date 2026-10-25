@@ -58,12 +58,8 @@ public final class VarService implements AutoCloseable {
     private final ParallelSums sums;
     private final VarCalc calc;
     private final Map<LocalDate, CompletableFuture<VarDate>> dates = new ConcurrentHashMap<>();
-    private final Map<String, Scoped> cache = java.util.Collections.synchronizedMap(new LinkedHashMap<>(64, 0.75f, true) {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<String, Scoped> e) {
-            return size() > CACHE;
-        }
-    });
+    private final com.github.benmanes.caffeine.cache.Cache<String, Scoped> cache =
+            com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(CACHE).build();      // the answers last asked for
 
     VarService(VarProperties props, VarLoader loader, VarAccess access, VarSaved saved, AuditLog audit, ParallelSums sums) {
         this.props = props;
@@ -128,7 +124,7 @@ public final class VarService implements AutoCloseable {
         for (LocalDate d : ds.subList(Math.min(ds.size(), props.hotDates()), ds.size())) {
             if (!d.equals(keep)) {
                 dates.remove(d);
-                cache.keySet().removeIf(k -> k.startsWith(d + "|"));
+                cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
             }
         }
     }
@@ -136,7 +132,7 @@ public final class VarService implements AutoCloseable {
     /** Drops every loaded date (a new load of the lake: the data-load signal, an administrator). */
     void reload() {
         dates.clear();
-        cache.clear();
+        cache.invalidateAll();
     }
 
     /** What is loaded, for the provenance box and Admin. */
@@ -203,7 +199,7 @@ public final class VarService implements AutoCloseable {
                     + "position; your role sees some of these only in aggregate");
         }
         String key = d.date() + "|" + d.version() + "|" + view.signature() + "|" + res.canonical() + "|" + res.set().digest();
-        Scoped hit = cache.get(key);
+        Scoped hit = cache.getIfPresent(key);
         if (hit != null) {
             return new Scoped(hit.date(), hit.view(), hit.res(), hit.set(), hit.hidden(), hit.vector(), hit.measures(), hit.kind(), hit.label(),
                     (System.nanoTime() - t0) / 1_000_000, true);

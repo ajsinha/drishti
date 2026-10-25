@@ -65,7 +65,7 @@ public final class JavaLibraries {
         try {
             Path dir = target.getParent();
             Files.createDirectories(dir);
-            Path tmp = Files.createTempFile(dir, "staging-", ".jar");
+            Path tmp = Files.createFile(dir.resolve("staging-" + java.util.UUID.randomUUID() + ".jar"));   // beside the target, in the data folder
             Files.write(tmp, bytes);
             List<String> natives = nativeFiles(tmp);
             if (!natives.isEmpty() && !lib.nativeCode()) {

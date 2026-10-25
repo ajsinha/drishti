@@ -39,6 +39,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +57,7 @@ public final class ComputeService implements AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(ComputeService.class);
     private static final boolean WINDOWS = System.getProperty("os.name", "").toLowerCase(Locale.ROOT).startsWith("windows");
 
+    private final ReentrantLock lifecycle = new ReentrantLock();     // start and close
     private final ComputeSettings settings;
     private final String node;
     private final Path configDir;
@@ -112,35 +114,40 @@ public final class ComputeService implements AutoCloseable {
      * Starts the supervisor: removes scratch folders a crash left, extracts the SDK, makes the pools, files approval requests for pools
      * whose environment is not approved, and starts each pool's minimum of workers. Off ({@code compute.enabled: false}): nothing starts.
      */
-    public synchronized ComputeService start() {
-        if (started || !settings.enabled()) {
-            return this;
-        }
+    public ComputeService start() {
+        lifecycle.lock();                              // not synchronized: starting does file IO (virtual threads)
         try {
-            Files.createDirectories(settings.root());
-            Files.createDirectories(settings.work().resolve("tmp"));
-        } catch (IOException e) {
-            throw new UncheckedIOException("could not create " + settings.root(), e);
-        }
-        int swept = Scratch.sweep(settings.scratch());
-        if (swept > 0) {
-            LOG.info("compute: removed {} scratch folder(s) left by an earlier run", swept);
-        }
-        sdk = Sdk.install(settings.sdk());
-        for (PoolSettings p : settings.pools().values()) {
-            pools.put(p.name(), new Pool(p, settings, node, n -> spec(p, n), this::finished));
-            if (!p.systemEnvironment() && approvals != null) {
-                try {
-                    approvals.request("pool:" + p.name(), poolItems(p), "compute.yaml");
-                } catch (RuntimeException e) {
-                    LOG.warn("compute: pool {}: {}", p.name(), e.getMessage());
+            if (started || !settings.enabled()) {
+                return this;
+            }
+            try {
+                Files.createDirectories(settings.root());
+                Files.createDirectories(settings.work().resolve("tmp"));
+            } catch (IOException e) {
+                throw new UncheckedIOException("could not create " + settings.root(), e);
+            }
+            int swept = Scratch.sweep(settings.scratch());
+            if (swept > 0) {
+                LOG.info("compute: removed {} scratch folder(s) left by an earlier run", swept);
+            }
+            sdk = Sdk.install(settings.sdk());
+            for (PoolSettings p : settings.pools().values()) {
+                pools.put(p.name(), new Pool(p, settings, node, n -> spec(p, n), this::finished));
+                if (!p.systemEnvironment() && approvals != null) {
+                    try {
+                        approvals.request("pool:" + p.name(), poolItems(p), "compute.yaml");
+                    } catch (RuntimeException e) {
+                        LOG.warn("compute: pool {}: {}", p.name(), e.getMessage());
+                    }
                 }
             }
+            started = true;
+            ticker = Thread.ofPlatform().daemon().name("compute-supervisor").start(this::tickLoop);
+            LOG.info("compute: on, node {}, {} pool(s): {} (settings {}, data {})", node, pools.size(), describePools(), settings.origin(), settings.root());
+            return this;
+        } finally {
+            lifecycle.unlock();
         }
-        started = true;
-        ticker = Thread.ofPlatform().daemon().name("compute-supervisor").start(this::tickLoop);
-        LOG.info("compute: on, node {}, {} pool(s): {} (settings {}, data {})", node, pools.size(), describePools(), settings.origin(), settings.root());
-        return this;
     }
 
     private String describePools() {
@@ -437,12 +444,17 @@ public final class ComputeService implements AutoCloseable {
     }
 
     @Override
-    public synchronized void close() {
-        Thread t = ticker;
-        if (t != null) {
-            t.interrupt();
+    public void close() {
+        lifecycle.lock();
+        try {
+            Thread t = ticker;
+            if (t != null) {
+                t.interrupt();
+            }
+            pools.values().forEach(Pool::close);
+            started = false;
+        } finally {
+            lifecycle.unlock();
         }
-        pools.values().forEach(Pool::close);
-        started = false;
     }
 }
