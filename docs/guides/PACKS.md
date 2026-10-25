@@ -583,7 +583,8 @@ a loaded pack names them again; after a restart they follow the usual rule (a co
 
 ## Sample packs
 
-A pack that exists to demonstrate Drishti is marked `sample: true` in its `pack.yaml`. The pack that ships marked so is **news-and-markets** (a small list of well-known topics and listed companies, with
+A pack that exists to demonstrate Drishti is marked `sample: true` in its `pack.yaml`. The packs that ship marked so are **compute-demo** (synthetic P&L strips and their sum computed by reactive connectors; not loaded by
+default: [tutorial 23](../tutorials/23-computed-panels.md)) and **news-and-markets** (a small list of well-known topics and listed companies, with
 news and quotes that [connectors compute on demand](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand) from Google News and Yahoo Finance; their
 connectors are off as shipped, the Yahoo endpoint is unofficial and restricted, and names and tickers leave the network when they are on: internal demonstrations only); the retired example packs **genomics** and **logistics** (invented data in domains far from capital
 markets) are samples too; **world-economy** is not a sample: it carries real public data ([REAL_DATA](REAL_DATA.md)); the banking, markets and risk packs

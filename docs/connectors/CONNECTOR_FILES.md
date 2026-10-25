@@ -133,6 +133,16 @@ to decide in Admin → Compute. The person who asked is `requires.requested-by`,
 Editing the connector in the form keeps its `requires:` block. The keys, the lock file and the approval are in
 [COMPUTE.md section 6](../admin/COMPUTE.md#6-requirements-environments-and-approval).
 
+### A computation: `plugin: reactive` (2.8.0)
+
+A connector of the built-in plugin `reactive` computes its kinds ([REACTIVE_CONNECTOR.md](REACTIVE_CONNECTOR.md)). Its file has, besides
+the keys above, `mode: reactive`, `kinds` as a **mapping** of each kind to its typed `params:`, `compute:` and `result:` rules, and the
+top-level keys `reads`, `engine`, `triggers`, `coalesce`, `cache`, `limits`, `history` and `incremental`. On any other plugin these keys
+are refused (*'engine' is part of a computation: only a connector of plugin reactive has it*); `mode:` (`static`, `live`, `on-demand`,
+`reactive`) may be written on any. The server hands the computation to the plugin as the one setting `reactive.spec`; the form, a pack's
+template and a template update keep it as written. Templates in it use single braces (`{id}`, `{params.x}`): `${NAME}` is an environment
+variable, as everywhere in the file.
+
 ## 4. Examples, one per store
 
 **Delta Lake** (`config/connectors/trade-endur.yaml`, exactly as the server generated it from the trading pack's template at its first
@@ -528,7 +538,7 @@ The folder is watched (file events, with polling as a fallback and a safety net,
 ```
 INFO  connector docs-notes started (file)
 INFO  connector docs-notes reconfigured from docs-notes.yaml: RUNNING
-WARN  connector file docs-notes.yaml is not usable; the last good configuration keeps running: docs-notes.yaml: unknown key 'bogus' (allowed: plugin, enabled, kinds, description, settings, requires)
+WARN  connector file docs-notes.yaml is not usable; the last good configuration keeps running: docs-notes.yaml: unknown key 'bogus' (allowed: plugin, enabled, kinds, description, settings, requires; a reactive connector also mode, reads, engine, triggers, coalesce, cache, limits, history)
 INFO  connector file docs-notes.yaml was removed; the connector stops
 ```
 

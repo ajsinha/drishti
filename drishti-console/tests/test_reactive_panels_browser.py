@@ -19,7 +19,7 @@ sample pack and compute workers on (the sample pool, the console's own Python):
 * the progress bar moves from the live channel, and the result fills the panel in place when it lands (no reload);
 * the Python engine (fanned out over the pool's workers) and its Java twin give the same number;
 * a parameter the connector does not allow is refused in words; panels that read no computed kind are unaffected;
-* the screenshots for the tutorial (docs/tutorials/img/t23/computing.jpg, computed-panels.jpg).
+* the screenshots for the tutorial (docs/tutorials/img/t23: computing, computed-panels, connector, computed-kind, refused, pools).
 
 Skipped when Playwright, Chromium, the built server jar or a JDK is missing (wb_live.py)."""
 import sys
@@ -97,3 +97,22 @@ def test_a_parameter_out_of_bounds_is_refused_in_words_and_other_panels_are_unaf
     wait(pg, "document.querySelector('#p-java-sum').dataset.compute === 'ready'", seconds=60)
     assert pg.locator("#p-book").count() == 1 and pg.locator("#p-book[data-compute]").count() == 0
     pg.close()
+
+
+def test_the_connector_the_computed_kind_and_the_pools_for_the_tutorial(stack, browser):
+    pg = browser.new_page(viewport={"width": 1500, "height": 950})
+    IMG.mkdir(parents=True, exist_ok=True)
+    pg.goto(f"{stack}/admin/connectors/path-sum-python")
+    wait(pg, "document.body.innerText.includes('reactive')", seconds=30)
+    pg.screenshot(path=str(IMG / "connector.jpg"), type="jpeg", quality=84, clip={"x": 0, "y": 0, "width": 1500, "height": 760})
+    pg.goto(f"{stack}/v/path-sum-java/BOOK-FX")
+    wait(pg, "document.body.innerText.includes('java:vector-sum')", seconds=60)
+    pg.screenshot(path=str(IMG / "computed-kind.jpg"), type="jpeg", quality=84, clip={"x": 0, "y": 0, "width": 1500, "height": 760})
+    pg.goto(f"{stack}/v/path-sum-java/BOOK-FX~delay-ms=900")
+    assert "at most 500" in pg.content()
+    pg.screenshot(path=str(IMG / "refused.jpg"), type="jpeg", quality=84, clip={"x": 0, "y": 0, "width": 1500, "height": 560})
+    pg.goto(f"{stack}/admin/compute")
+    wait(pg, "document.body.innerText.includes('sample')", seconds=30)
+    pg.screenshot(path=str(IMG / "pools.jpg"), type="jpeg", quality=84, clip={"x": 0, "y": 0, "width": 1500, "height": 760})
+    pg.close()
+

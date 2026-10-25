@@ -41,7 +41,7 @@ console:
   examples:
     - ["PBOOK BOOK-RATES", "A book's path computed twice: by the Python engine and by the Java engine, with progress"]
     - ["PSTRIP STRIP-FX-001", "One strip: its 250 scenario P&Ls"]
-    - ["PSUMJ BOOK-FX~delay-ms=50", "The computed answer itself, with its stamp (the id carries the parameters)"]
+    - ["PSUMJ BOOK-FX", "The computed answer itself, with its stamp (parameters ride on the id: BOOK-FX~delay-ms=50)"]
 columns:
   path-book: [NAME, DESK, STRIP_COUNT]
   path-strip: [BOOK_ID, INSTRUMENT, DAYS]

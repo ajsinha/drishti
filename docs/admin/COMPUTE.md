@@ -23,9 +23,9 @@ approved. The design, with the reasons behind each choice, is [PYTHON_COMPUTE.md
 **It is off as shipped.** With `compute.enabled: false` (the default in `config/compute/compute.yaml`) no worker starts and every compute
 request is refused with `DRS-9201`. Approvals work either way, so requirements can be reviewed before compute is switched on.
 
-**Built in 2.8.0 (unreleased): steps C1 to C3.** Pools, workers, transport, limits, fan-out, environments and approval. The pricer
-interface, QLRisk and the QuantLib Java worker (steps C4 to C6) and the reactive connectors that send work to the pools (R1 to R6) are
-still planned.
+**Built in 2.8.0 (unreleased): steps C1 to C3, and the reactive connectors R1 to R4 that send work to the pools ([section 11](#11-reactive-connectors)).**
+Pools, workers, transport, limits, fan-out, environments and approval. The pricer interface, QLRisk and the QuantLib Java worker (steps
+C4 to C6) and the reactive connectors' cluster and screen-wide as-of (R5, R6) are still planned.
 
 - [1. Switch it on](#1-switch-it-on)
 - [2. Pools and how many workers](#2-pools-and-how-many-workers)
@@ -37,6 +37,7 @@ still planned.
 - [8. Windows](#8-windows)
 - [9. Measured: the load test](#9-measured-the-load-test)
 - [10. When something is wrong](#10-when-something-is-wrong)
+- [11. Reactive connectors](#11-reactive-connectors)
 
 ## 1. Switch it on
 
@@ -241,3 +242,35 @@ request, and throughput then grows with the workers; past the machine's cores, a
 | `failed: ... sandbox refused` | the engine opened a socket, started a process or wrote outside its scratch folder | the engine must not; data arrives as inputs |
 | a connector *waiting for approval* | its `requires:` is not approved | Admin → Compute → Approval requests |
 | Admin → Compute shows no other nodes | Drishti\*net is off, or the other nodes do not serve the pool | [NET.md](NET.md); each node needs the pool in its own `compute.yaml` |
+| a panel says *Not computed: compute is off on this server* | a reactive connector with a Python engine, compute off | switch compute on, or use a Java engine |
+| a panel says *… would run inside the server; this server allows only Drishti's own Java engines there* | a reactive connector's Java engine is not Drishti's own | `compute.in-process-java: true`, after reviewing the engine (it runs in the server's JVM) |
+
+## 11. Reactive connectors
+
+A **reactive connector** (a connector file of plugin `reactive`, [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)) computes
+its kinds when a screen or a program asks, as the person asking, and sends a Python engine's work to a pool of this file: `engine.pool`
+names it; `engine.split` cuts a request over every worker of the pool, here and on the other nodes that serve it. A Java engine runs in
+the server instead; Drishti's own always may, any other only with
+
+```yaml
+compute:
+  in-process-java: true          # Java engines that are not Drishti's own may run in the server's JVM (false as shipped)
+```
+
+**Watching them.** `GET /api/v1/admin/compute/reactive` (`drishti.py compute reactive`) lists each reactive connector: its kinds and
+typed parameters, engine and whether it can run now (*ready*, or why not), its cache (results, hits, misses, late results dropped),
+coalescing (events in, computations), computations running, joined and failed, and each kind's latency. The pools behind them are the
+pools above (queues by class: a person's reads are `interactive`, triggers `event`).
+
+**Events.** Triggers fire on `POST /api/v1/compute/events` (administrators and service tokens): the write-back module sends applied
+changes there once it is built (W6); a feed or a script may send `live` and `schedule` events. Each connector ignores an event id it has
+seen. Loads (`POST /api/v1/packs/{pack}/loads`) reach the `data-version` triggers by themselves.
+
+**Audit.** Every computed answer is `compute.answer` (who, connector, kind and id, parameters, pin, view signature, time, result hash);
+a failure `compute.failed`; events `compute.event`; sandboxes `compute.sandbox.*`.
+
+**Data folder.** Private what-if sandboxes are kept under `<data dir>/compute/sandboxes/<owner hash>/` (one JSON file each); results are
+in memory (`cache.results`, `cache.ttl` per connector).
+
+**The sample.** The `compute-demo` pack (`DRISHTI_PACKS=…,compute-demo`) brings two reactive connectors, `path-sum-python` (pool
+`sample`) and `path-sum-java`; [tutorial 23](../tutorials/23-computed-panels.md) walks through it.

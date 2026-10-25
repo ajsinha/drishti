@@ -379,7 +379,7 @@ A connector may use a Java library (a vendor pricer, an in-house risk library) b
 
 | Library is | Runs | Class loading |
 |---|---|---|
-| pure Java, trusted, light (a few ms per call, bounded memory) | in the server process, if the site allows it (`compute.in-process-java: false` by default) | its own classloader per connector, parent = the API only (no Spring, no server classes), like plugins today |
+| pure Java, trusted, light (a few ms per call, bounded memory) | in the server process (built, R1: Drishti's own engines always; others if the site allows it, `compute.in-process-java: false` by default) | its own classloader per connector, parent = the API only (no Spring, no server classes), like plugins today |
 | heavy, untrusted, or carrying native code | in a Java worker | its own JVM; the approved jars only |
 
 ## 11. Security and sandboxing
@@ -425,7 +425,7 @@ Python venv (pip packages) are allowed.
 | `compute.scheduling.queue.interactive/event/batch` | `256`, `10000`, `100000` | built: waiting requests per pool and class; full: busy |
 | `compute.fan-out.chunk-rows`, `compute.fan-out.peers` | `5000`, `true` | built: chunk size, and whether chunks go to other nodes ([section 7.6](#76-fan-out-and-scale-out)) |
 | `compute.limits.max-result-bytes` | `256MB` | built: the largest result file a worker may hand back |
-| `compute.in-process-java` | `false` | planned (R1): allow trusted Java engines in the server process |
+| `compute.in-process-java` | `false` | built (R1): allow Java engines that are not Drishti's own to run in the server process (Drishti's own, `com.ash.drishti.*`, always may) |
 | `compute.pools.<p>.*` | — | built: `type` (python), `engines`, `environment` (`system` or `{python, lock, index}`), `workers.min/max`, `mode`, `memory`, `cpu-seconds`, `recycle-after`, `batch-share`, `idle-stop`, `timeout`, `timeout-batch`, `start-timeout`, `python-path`; planned: `jvm-args` (C6), `os-user` |
 | `compute.nodes.<node>.pools.<p>.workers` | — | built: this node's own worker counts |
 | `compute.scratch` | `<data dir>/compute/scratch` | built: request folders |
