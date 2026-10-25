@@ -491,3 +491,37 @@ CREATE TABLE IF NOT EXISTS drishti_content (
     deleted    INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS ix_content_updated ON drishti_content (updated_ms);
+
+-- Compute requirements' approval (docs/architecture/PYTHON_COMPUTE.md section 6): requests to approve what a connector or pool requires,
+-- and the approved items (one row per item per approving request; revoked_at set when revoked). Four eyes: requested_by never decides.
+CREATE TABLE IF NOT EXISTS drishti_compute_request (
+    id            VARCHAR(64) PRIMARY KEY,
+    subject       VARCHAR(256) NOT NULL,
+    fingerprint   VARCHAR(64) NOT NULL,
+    items         TEXT NOT NULL,
+    state         VARCHAR(16) NOT NULL,
+    requested_by  VARCHAR(256) NOT NULL,
+    requested_at  TIMESTAMP WITH TIME ZONE NOT NULL,
+    decided_by    VARCHAR(256),
+    decided_at    TIMESTAMP WITH TIME ZONE,
+    reason        TEXT,
+    revoked_by    VARCHAR(256),
+    revoked_at    TIMESTAMP WITH TIME ZONE,
+    revoke_reason TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_compute_request_subject ON drishti_compute_request (subject, state);
+CREATE TABLE IF NOT EXISTS drishti_compute_approval (
+    item_key    VARCHAR(2048) NOT NULL,
+    request_id  VARCHAR(64) NOT NULL,
+    kind        VARCHAR(16) NOT NULL,
+    name        VARCHAR(512) NOT NULL,
+    version     VARCHAR(128) NOT NULL,
+    hash        TEXT NOT NULL,
+    source      VARCHAR(256) NOT NULL,
+    native_code INTEGER NOT NULL,
+    approved_by VARCHAR(256) NOT NULL,
+    approved_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    revoked_at  TIMESTAMP WITH TIME ZONE,
+    PRIMARY KEY (item_key, request_id)
+);
+CREATE INDEX IF NOT EXISTS ix_compute_approval_live ON drishti_compute_approval (item_key, revoked_at);
